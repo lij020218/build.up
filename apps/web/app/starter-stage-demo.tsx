@@ -5990,6 +5990,182 @@ export default function StarterStageDemo({
                 })()}
 
 
+                {/* ── 스토어 및 배송 세팅 가이드 (store_setup) ── */}
+                {currentStage.code === "store_setup" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ display: "grid", gap: "14px", marginBottom: "16px" }}>
+                      {/* 플랫폼별 스토어 세팅 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "플랫폼별 스토어 세팅" : "Platform Store Setup"}</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "각 플랫폼의 필수 설정 항목을 빠짐없이 완료하세요" : "Complete all required settings for each platform"}</div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px", display: "grid", gap: "10px" }}>
+                          {[
+                            {
+                              name: ko ? "네이버 스마트스토어" : "Naver Smartstore",
+                              color: "#03C75A", url: "https://sell.smartstore.naver.com",
+                              steps: ko ? [
+                                "스마트스토어 센터 → 판매자 정보 등록 (사업자등록증 + 통신판매업 신고증)",
+                                "스토어 기본 설정: 스토어명, 로고, 대표 이미지, 소개글",
+                                "배송 템플릿 설정: 배송비 (무료/조건부/유료), 출고지, 반품지 주소",
+                                "교환/반품 정책 작성 (7일 이내 교환/반품, 왕복 택배비 5,000원 등)",
+                                "정산 계좌 등록 (법인/개인 계좌 + 세금계산서 발행 설정)",
+                                "쇼핑윈도 카테고리 신청 (의류, 식품 등 카테고리별 추가 심사 필요)",
+                              ] : [
+                                "Register seller info (business registration + telecom filing)",
+                                "Store basics: name, logo, cover image, description",
+                                "Shipping template: fee policy, warehouse address, return address",
+                                "Return/exchange policy (7 days, round-trip ₩5,000, etc.)",
+                                "Settlement account registration",
+                                "Shopping Window category application if needed",
+                              ],
+                            },
+                            {
+                              name: ko ? "쿠팡 마켓플레이스" : "Coupang Marketplace",
+                              color: "#1460F3", url: "https://wing.coupang.com",
+                              steps: ko ? [
+                                "WING 판매자 센터 가입 → 사업자 인증",
+                                "상품 등록: 카테고리 선택 → 필수 옵션 입력 (사이즈, 색상 등)",
+                                "로켓그로스 입점 검토 (월 55,000원 + 수수료 4~10.8%)",
+                                "배송 설정: 일반 배송 vs 로켓그로스 (쿠팡 물류센터 입고)",
+                                "로켓그로스 입고 시: 바코드 부착 → 쿠팡 물류센터 택배 발송",
+                                "정산 주기 확인: 구매확정 후 영업일 기준 정산 (보통 7~14일)",
+                              ] : [
+                                "Register on WING Seller Center",
+                                "Product listing: category → required options (size, color)",
+                                "Rocket Growth enrollment (₩55K/mo + 4~10.8% commission)",
+                                "Shipping: standard vs Rocket Growth (Coupang warehouse)",
+                                "Rocket Growth: barcode labeling → ship to Coupang warehouse",
+                                "Settlement cycle: ~7-14 business days after purchase confirmation",
+                              ],
+                            },
+                            {
+                              name: ko ? "11번가" : "11st",
+                              color: "#FF0000", url: "https://soffice.11st.co.kr",
+                              steps: ko ? [
+                                "셀러오피스 가입 → 신규 셀러 수수료 6% 혜택 (12개월)",
+                                "상품 등록: 카탈로그 매칭 (기존 상품) 또는 신규 등록",
+                                "배송 설정: 기본 배송비 + 도서산간 추가 배송비 설정",
+                                "SKT 멤버십 연동 설정 (T멤버십 적립/사용 활성화)",
+                                "아마존 글로벌셀링 연동 (해외 판매 시)",
+                              ] : [
+                                "Register on Seller Office → 6% new seller discount (12 months)",
+                                "Product listing: catalog matching or new registration",
+                                "Shipping config: base fee + island surcharge",
+                                "SKT membership integration",
+                                "Amazon global selling integration (for international)",
+                              ],
+                            },
+                          ].map(platform => (
+                            <div key={platform.name} style={{ borderRadius: "16px", border: `1px solid ${platform.color}10`, background: `${platform.color}02`, overflow: "hidden" }}>
+                              <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: platform.name.includes("쿠팡") || platform.name.includes("Coupang") ? platform.color : `${platform.color}12`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <span style={{ fontSize: "14px", fontWeight: 750, color: platform.name.includes("쿠팡") || platform.name.includes("Coupang") ? "#fff" : platform.color }}>{platform.name.charAt(0)}</span>
+                                  </div>
+                                  <span style={{ fontSize: "15px", fontWeight: 660, color: "#0f172a" }}>{platform.name}</span>
+                                </div>
+                                <a href={platform.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ padding: "5px 12px", borderRadius: "8px", background: platform.color, color: "#fff", fontSize: "11px", fontWeight: 650, textDecoration: "none", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  {ko ? "바로가기" : "Go"} <svg width="10" height="10" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </a>
+                              </div>
+                              <div style={{ padding: "0 16px 14px" }}>
+                                {platform.steps.map((step, i) => (
+                                  <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "6px 0", borderBottom: i < platform.steps.length - 1 ? "1px solid rgba(0,0,0,0.03)" : "none" }}>
+                                    <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: `${platform.color}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: platform.color, flexShrink: 0, marginTop: "1px" }}>{i + 1}</div>
+                                    <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>{step}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 택배사 계약 가이드 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "택배 계약 가이드" : "Courier Contract Guide"}</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "초기에는 우체국택배 → 물량 늘면 계약택배로 전환" : "Start with post office → switch to contract when volume grows"}</div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                          {[
+                            { name: ko ? "우체국택배 (시작)" : "Korea Post (start)", price: "2,700원~/건", color: "#004098", desc: ko ? "도서산간 추가 없음. 소량에 최적. 우체국 직접 접수" : "No island surcharge. Best for small volume", tag: ko ? "추천: 일 1-5건" : "Rec: 1-5/day" },
+                            { name: "CJ대한통운", price: "1,850원~/건 (계약)", color: "#003C71", desc: ko ? "점유율 1위. D+1 배송. 편의점 접수. 물량 30건+/월 시 계약 가능" : "#1 courier. D+1. Convenience store pickup", tag: ko ? "추천: 일 5건+" : "Rec: 5+/day" },
+                            { name: ko ? "한진택배" : "Hanjin", price: "3,000원~/건 (계약)", color: "#FF6600", desc: ko ? "중대형 화물 강점. 전국 A/S망" : "Good for mid-large items", tag: ko ? "대형 상품" : "Large items" },
+                            { name: ko ? "로젠택배" : "Logen", price: "3,000원~/건 (계약)", color: "#2B4C9B", desc: ko ? "계약 할인폭 큰 편. 온라인 접수 편리" : "Good contract discounts", tag: ko ? "가격 협상" : "Negotiate" },
+                          ].map(c => (
+                            <div key={c.name} style={{ padding: "12px 14px", borderRadius: "14px", border: `1px solid ${c.color}10`, background: `${c.color}03` }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                <span style={{ fontSize: "13px", fontWeight: 660, color: "#0f172a" }}>{c.name}</span>
+                                <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: `${c.color}0a`, color: c.color }}>{c.tag}</span>
+                              </div>
+                              <div style={{ fontSize: "15px", fontWeight: 740, color: c.color, marginBottom: "4px" }}>{c.price}</div>
+                              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{c.desc}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ margin: "0 22px 18px", padding: "12px 14px", borderRadius: "12px", background: "rgba(217,119,6,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#d97706" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#d97706" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                          <span style={{ fontSize: "12px", color: "rgba(180,95,6,0.8)", lineHeight: 1.55 }}>
+                            {ko ? "택배비 협상 팁: 월 30건 이상이면 계약택배 요청 가능. CJ대한통운 1588-1255로 전화하여 '온라인 셀러 계약 택배' 문의하세요. 초기 단가 2,500~3,000원 가능." : "Negotiate tip: CJ Logistics offers contract rates at 30+ shipments/month. Call 1588-1255 for 'online seller contract'. Starting rate ₩2,500-3,000."}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 필수 설정 체크리스트 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+                        <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", marginBottom: "10px" }}>{ko ? "오픈 전 필수 확인 사항" : "Pre-launch Checklist"}</div>
+                        <div style={{ display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { item: "교환/반품 정책을 스토어에 등록했는가?", why: "미등록 시 고객 분쟁 + 플랫폼 패널티" },
+                            { item: "배송비 정책이 설정되었는가? (무료/조건부/유료)", why: "배송비 무료 설정 시 상품가에 포함해야 마진 유지" },
+                            { item: "정산 계좌가 등록되었는가?", why: "미등록 시 매출금 수령 불가" },
+                            { item: "사업자 정보가 정확히 입력되었는가?", why: "사업자등록증과 불일치 시 정산 보류" },
+                            { item: "테스트 주문을 해봤는가?", why: "실제 결제→배송→정산 전 과정 1회 테스트 필수" },
+                            { item: "고객 문의 응대 채널이 준비되었는가?", why: "채널톡/카카오톡 상담 연동. 24시간 내 응답이 판매자 등급에 영향" },
+                          ] : [
+                            { item: "Return/exchange policy registered?", why: "No policy = disputes + platform penalties" },
+                            { item: "Shipping fee policy set?", why: "Free shipping must be included in product price" },
+                            { item: "Settlement account registered?", why: "No account = cannot receive sales revenue" },
+                            { item: "Business info matches registration?", why: "Mismatch = settlement hold" },
+                            { item: "Test order completed?", why: "Test payment → shipping → settlement flow once" },
+                            { item: "Customer inquiry channel ready?", why: "Channel Talk/KakaoTalk. Response within 24h affects seller grade" },
+                          ]).map((check, i) => (
+                            <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 10px", borderRadius: "10px", background: "rgba(5,150,105,0.02)" }}>
+                              <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: "1.5px solid rgba(5,150,105,0.3)", flexShrink: 0, marginTop: "1px" }} />
+                              <div>
+                                <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{check.item}</div>
+                                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", lineHeight: 1.4 }}>{check.why}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 수수료 비교 */}
+                      <div style={{ borderRadius: "16px", padding: "16px 18px", background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.04)" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 660, color: "#0f172a", marginBottom: "10px" }}>{ko ? "플랫폼 수수료 비교 (2026)" : "Platform Fee Comparison (2026)"}</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                          {[
+                            { name: ko ? "스마트스토어" : "Smartstore", fee: "2.73~5.5%", note: ko ? "주문관리 + 판매 합산" : "Order + sale combined", color: "#03C75A" },
+                            { name: ko ? "쿠팡" : "Coupang", fee: "4~10.8%", note: ko ? "+ 월 55,000원 정액" : "+ ₩55K/mo flat", color: "#1460F3" },
+                            { name: "11번가", fee: "7~13%", note: ko ? "신규 12개월 6%" : "New seller 6% for 12mo", color: "#FF0000" },
+                          ].map(p => (
+                            <div key={p.name} style={{ padding: "10px", borderRadius: "10px", background: "#fff", textAlign: "center" as const }}>
+                              <div style={{ fontSize: "11px", fontWeight: 600, color: p.color, marginBottom: "4px" }}>{p.name}</div>
+                              <div style={{ fontSize: "18px", fontWeight: 760, color: "#0f172a", letterSpacing: "-0.02em" }}>{p.fee}</div>
+                              <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>{p.note}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* ── 상품 소싱 가이드 (sourcing_setup) ── */}
                 {currentStage.code === "sourcing_setup" && (() => {
                   const ko = language === "ko";
