@@ -6103,15 +6103,20 @@ export default function StarterStageDemo({
                         </div>
                         <div style={{ padding: "0 22px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                           {[
-                            { name: ko ? "우체국택배 (시작)" : "Korea Post (start)", price: "2,700원~/건", color: "#004098", desc: ko ? "도서산간 추가 없음. 소량에 최적. 우체국 직접 접수" : "No island surcharge. Best for small volume", tag: ko ? "추천: 일 1-5건" : "Rec: 1-5/day" },
-                            { name: "CJ대한통운", price: "1,850원~/건 (계약)", color: "#003C71", desc: ko ? "점유율 1위. D+1 배송. 편의점 접수. 물량 30건+/월 시 계약 가능" : "#1 courier. D+1. Convenience store pickup", tag: ko ? "추천: 일 5건+" : "Rec: 5+/day" },
-                            { name: ko ? "한진택배" : "Hanjin", price: "3,000원~/건 (계약)", color: "#FF6600", desc: ko ? "중대형 화물 강점. 전국 A/S망" : "Good for mid-large items", tag: ko ? "대형 상품" : "Large items" },
-                            { name: ko ? "로젠택배" : "Logen", price: "3,000원~/건 (계약)", color: "#2B4C9B", desc: ko ? "계약 할인폭 큰 편. 온라인 접수 편리" : "Good contract discounts", tag: ko ? "가격 협상" : "Negotiate" },
+                            { name: ko ? "우체국택배 (시작)" : "Korea Post (start)", price: "2,700원~/건", color: "#004098", desc: ko ? "도서산간 추가 없음. 소량에 최적. 우체국 직접 접수" : "No island surcharge. Best for small volume", tag: ko ? "추천: 일 1-5건" : "Rec: 1-5/day", url: "https://parcel.epost.go.kr" },
+                            { name: "CJ대한통운", price: "1,850원~/건 (계약)", color: "#003C71", desc: ko ? "점유율 1위. D+1 배송. 편의점 접수. 물량 30건+/월 시 계약 가능" : "#1 courier. D+1. Convenience store pickup", tag: ko ? "추천: 일 5건+" : "Rec: 5+/day", url: "https://www.cjlogistics.com" },
+                            { name: ko ? "한진택배" : "Hanjin", price: "3,000원~/건 (계약)", color: "#FF6600", desc: ko ? "중대형 화물 강점. 전국 A/S망" : "Good for mid-large items", tag: ko ? "대형 상품" : "Large items", url: "https://www.hanjin.co.kr" },
+                            { name: ko ? "로젠택배" : "Logen", price: "3,000원~/건 (계약)", color: "#2B4C9B", desc: ko ? "계약 할인폭 큰 편. 온라인 접수 편리" : "Good contract discounts", tag: ko ? "가격 협상" : "Negotiate", url: "https://www.ilogen.com" },
                           ].map(c => (
                             <div key={c.name} style={{ padding: "12px 14px", borderRadius: "14px", border: `1px solid ${c.color}10`, background: `${c.color}03` }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
                                 <span style={{ fontSize: "13px", fontWeight: 660, color: "#0f172a" }}>{c.name}</span>
-                                <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: `${c.color}0a`, color: c.color }}>{c.tag}</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: `${c.color}0a`, color: c.color }}>{c.tag}</span>
+                                  <a href={c.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ width: "22px", height: "22px", borderRadius: "6px", background: `${c.color}0a`, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+                                    <svg width="10" height="10" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke={c.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                  </a>
+                                </div>
                               </div>
                               <div style={{ fontSize: "15px", fontWeight: 740, color: c.color, marginBottom: "4px" }}>{c.price}</div>
                               <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{c.desc}</div>
