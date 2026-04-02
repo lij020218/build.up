@@ -83,6 +83,7 @@ import {
   getScoreLabel,
   type FranchiseBrand,
   getFullToolKit,
+  getRecommendedStack,
 } from "@build-up/shared";
 import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
 import { useEffect, useRef, useState } from "react";
@@ -4081,6 +4082,78 @@ export default function StarterStageDemo({
                         <span style={{ fontSize: "12px", color: "rgba(124,58,237,0.8)", lineHeight: 1.55 }}>
                           {ko ? toolkit.aiTip.ko : toolkit.aiTip.en}
                         </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 추천 기술 스택 (MVP/Launch 스테이지) ── */}
+                {isStartupCategory && (currentStage.code === "mvp_build" || currentStage.code === "launch_stack") && (() => {
+                  const stack = getRecommendedStack(selectedIndustryId ?? "ai-application");
+                  if (!stack) return null;
+                  const ko = language === "ko";
+
+                  return (
+                    <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(15,23,42,0.06)", background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.92))", overflow: "hidden" }}>
+                      <div style={{ padding: "20px 22px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                          <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>
+                            {ko ? stack.name.ko : stack.name.en}
+                          </span>
+                          <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(124,58,237,0.06)", color: "#7c3aed" }}>2026</span>
+                        </div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+                          {ko ? stack.description.ko : stack.description.en}
+                        </div>
+                      </div>
+
+                      {/* 스택 레이어 — 세로 파이프라인 */}
+                      <div style={{ padding: "0 22px 16px" }}>
+                        {stack.layers.map((layer, i) => (
+                          <a key={layer.role} href={layer.url} target="_blank" rel="noopener noreferrer" style={{
+                            display: "flex", alignItems: "center", gap: "12px", padding: "10px 0",
+                            borderBottom: i < stack.layers.length - 1 ? "1px solid rgba(0,0,0,0.04)" : "none",
+                            textDecoration: "none", color: "inherit",
+                          }}>
+                            {/* 아이콘 + 연결선 */}
+                            <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", width: "36px", flexShrink: 0 }}>
+                              <div style={{
+                                width: "32px", height: "32px", borderRadius: "8px",
+                                background: `${layer.color}10`,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: "16px",
+                              }}>
+                                {layer.icon}
+                              </div>
+                            </div>
+                            {/* 정보 */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "1px" }}>
+                                <span style={{ fontSize: "10px", fontWeight: 650, color: layer.color, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+                                  {ko ? layer.role : layer.roleEn}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "1px" }}>{layer.tool}</div>
+                              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{ko ? layer.why.ko : layer.why.en}</div>
+                            </div>
+                            {/* 가격 */}
+                            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", whiteSpace: "nowrap" as const, flexShrink: 0 }}>
+                              {layer.pricing}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+
+                      {/* 총 비용 + 크레딧 */}
+                      <div style={{ margin: "0 22px 18px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        <div style={{ padding: "12px 14px", borderRadius: "14px", background: "rgba(15,23,42,0.02)" }}>
+                          <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "총 월 예상 비용" : "Total Monthly"}</div>
+                          <div style={{ fontSize: "16px", fontWeight: 740, color: "#0f172a" }}>{stack.totalMonthlyCost}</div>
+                        </div>
+                        <div style={{ padding: "12px 14px", borderRadius: "14px", background: "rgba(5,150,105,0.03)" }}>
+                          <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "스타트업 크레딧" : "Startup Credits"}</div>
+                          <div style={{ fontSize: "12px", fontWeight: 600, color: "#059669", lineHeight: 1.4 }}>{ko ? stack.startupCredits.ko : stack.startupCredits.en}</div>
+                        </div>
                       </div>
                     </div>
                   );

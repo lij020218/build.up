@@ -262,3 +262,102 @@ export function getFullToolKit(stageId: string, subIndustryId?: string): {
     monthlyCost: base.estimatedMonthlyCost,
   };
 }
+
+// ─── 추천 기술 스택 조합 (2026) ──────────────────────────────────────────
+
+export type StackLayer = {
+  role: string;           // "프론트엔드", "백엔드", "데이터베이스" 등
+  roleEn: string;
+  tool: string;
+  why: { ko: string; en: string };
+  url: string;
+  pricing: string;
+  icon: string;           // 1글자 아이콘
+  color: string;
+};
+
+export type RecommendedStack = {
+  id: string;
+  name: { ko: string; en: string };
+  description: { ko: string; en: string };
+  targetSubIndustries: string[];  // 해당하는 세부 업종 ID
+  layers: StackLayer[];
+  totalMonthlyCost: string;
+  startupCredits: { ko: string; en: string };
+};
+
+export const RECOMMENDED_STACKS: RecommendedStack[] = [
+  // ── AI 앱 / 에이전트 스택 ──
+  {
+    id: "ai-app-stack",
+    name: { ko: "AI 앱 스택", en: "AI App Stack" },
+    description: { ko: "AI 기반 제품을 빠르게 구축하기 위한 최적 조합", en: "Optimal stack for building AI products fast" },
+    targetSubIndustries: ["ai-application"],
+    layers: [
+      { role: "디자인", roleEn: "Design", tool: "Figma + v0", why: { ko: "Figma로 설계, v0으로 React 컴포넌트 즉시 생성", en: "Design in Figma, generate React with v0" }, url: "https://v0.dev", pricing: "무료", icon: "🎨", color: "#7c3aed" },
+      { role: "프론트엔드", roleEn: "Frontend", tool: "Next.js + Tailwind + shadcn/ui", why: { ko: "React 풀스택. SSR/ISR 기본 지원. Vercel과 최적 통합", en: "React fullstack. SSR/ISR built-in. Best with Vercel" }, url: "https://nextjs.org", pricing: "무료 (오픈소스)", icon: "⚛️", color: "#0f172a" },
+      { role: "배포", roleEn: "Deployment", tool: "Vercel", why: { ko: "Next.js 공식 호스팅. Git push → 자동 배포. Edge Functions", en: "Official Next.js hosting. Git push → auto deploy" }, url: "https://vercel.com", pricing: "$20/월 (Pro)", icon: "▲", color: "#000000" },
+      { role: "백엔드 + DB", roleEn: "Backend + DB", tool: "Supabase", why: { ko: "PostgreSQL + Auth + Storage + Realtime + pgvector(RAG). 올인원", en: "PostgreSQL + Auth + Storage + Realtime + pgvector. All-in-one" }, url: "https://supabase.com", pricing: "$25/월 (Pro)", icon: "⚡", color: "#3ecf8e" },
+      { role: "AI 엔진", roleEn: "AI Engine", tool: "Anthropic Claude API", why: { ko: "가장 안정적인 LLM. 200K 토큰 컨텍스트. 도구 호출 지원", en: "Most reliable LLM. 200K context. Tool use support" }, url: "https://docs.anthropic.com", pricing: "사용량 기반 (~$10-50/월)", icon: "🧠", color: "#d97706" },
+      { role: "AI 프레임워크", roleEn: "AI Framework", tool: "Vercel AI SDK", why: { ko: "스트리밍 + 도구 호출 + 멀티모달. Next.js와 네이티브 통합", en: "Streaming + tool use + multimodal. Native Next.js" }, url: "https://sdk.vercel.ai", pricing: "무료 (오픈소스)", icon: "🔗", color: "#2563eb" },
+      { role: "벡터 검색 (RAG)", roleEn: "Vector Search", tool: "Supabase pgvector", why: { ko: "별도 벡터 DB 불필요. PostgreSQL 안에서 바로 RAG 구현", en: "No separate vector DB. RAG inside PostgreSQL" }, url: "https://supabase.com/docs/guides/ai", pricing: "Supabase 포함", icon: "🔍", color: "#059669" },
+      { role: "코딩 AI", roleEn: "Coding AI", tool: "Claude Code + Cursor", why: { ko: "Claude Code: 터미널 자동화/Skills. Cursor: AI IDE. 병행 사용 최적", en: "Claude Code: terminal automation. Cursor: AI IDE" }, url: "https://claude.ai/code", pricing: "$20+$20/월", icon: "💻", color: "#7c3aed" },
+      { role: "분석", roleEn: "Analytics", tool: "PostHog", why: { ko: "이벤트 분석 + 퍼널 + 세션 리플레이. 100만 이벤트/월 무료", en: "Events + funnels + session replay. 1M events free" }, url: "https://posthog.com", pricing: "무료", icon: "📊", color: "#1d4ed8" },
+      { role: "에러 추적", roleEn: "Error Tracking", tool: "Sentry", why: { ko: "실시간 에러 감지 + AI 자동 분류. 5K 이벤트/월 무료", en: "Real-time errors + AI classification. 5K free" }, url: "https://sentry.io", pricing: "무료", icon: "🛡️", color: "#362d59" },
+      { role: "결제 (한국)", roleEn: "Payments (KR)", tool: "Toss Payments", why: { ko: "한국 결제 1위. 카드/간편결제 통합. API 문서 우수", en: "Korea #1 payments. Card/easy pay. Great API docs" }, url: "https://www.tosspayments.com", pricing: "거래당 수수료", icon: "💳", color: "#0064ff" },
+      { role: "고객 지원", roleEn: "Support", tool: "채널톡 (Channel Talk)", why: { ko: "실시간 채팅 + AI 봇 + CRM. 한국 스타트업 표준", en: "Live chat + AI bot + CRM. Korean standard" }, url: "https://channel.io", pricing: "무료~$36/월", icon: "💬", color: "#3b5998" },
+    ],
+    totalMonthlyCost: "$85~135/월 (약 11~18만원)",
+    startupCredits: { ko: "Vercel $3,500 + Supabase $500 + AWS $5,000 = 스타트업 크레딧 총 $9,000+ 가능", en: "Startup credits: Vercel $3.5K + Supabase $500 + AWS $5K = $9K+ available" },
+  },
+
+  // ── B2B SaaS 스택 ──
+  {
+    id: "saas-stack",
+    name: { ko: "B2B SaaS 스택", en: "B2B SaaS Stack" },
+    description: { ko: "구독 기반 비즈니스 소프트웨어 구축용", en: "For subscription-based business software" },
+    targetSubIndustries: ["b2b-saas", "developer-tools"],
+    layers: [
+      { role: "디자인", roleEn: "Design", tool: "Figma", why: { ko: "팀 협업 디자인. 컴포넌트 라이브러리 + Dev Mode", en: "Team design collaboration. Components + Dev Mode" }, url: "https://figma.com", pricing: "무료~$15/월", icon: "🎨", color: "#7c3aed" },
+      { role: "프론트엔드", roleEn: "Frontend", tool: "Next.js + Tailwind + shadcn/ui", why: { ko: "대시보드 UI에 최적. SSR로 SEO 지원. 마케팅 페이지 겸용", en: "Best for dashboards. SSR for SEO. Marketing pages too" }, url: "https://nextjs.org", pricing: "무료", icon: "⚛️", color: "#0f172a" },
+      { role: "배포", roleEn: "Deployment", tool: "Vercel", why: { ko: "프리뷰 배포 → 팀 리뷰 → 프로덕션. CI/CD 내장", en: "Preview deploy → team review → production. CI/CD built-in" }, url: "https://vercel.com", pricing: "$20/월", icon: "▲", color: "#000000" },
+      { role: "백엔드 + DB", roleEn: "Backend + DB", tool: "Supabase", why: { ko: "Auth + RLS + 실시간 구독. 멀티테넌시 구현 용이", en: "Auth + RLS + realtime subscriptions. Easy multi-tenancy" }, url: "https://supabase.com", pricing: "$25/월", icon: "⚡", color: "#3ecf8e" },
+      { role: "구독 결제", roleEn: "Billing", tool: "Stripe (글로벌) / Toss (한국)", why: { ko: "Stripe: 글로벌 구독 관리. Toss: 한국 카드/계좌이체", en: "Stripe: global subscriptions. Toss: Korean payments" }, url: "https://stripe.com", pricing: "2.9%+30¢/건", icon: "💳", color: "#635bff" },
+      { role: "코딩 AI", roleEn: "Coding AI", tool: "Claude Code + Cursor", why: { ko: "보일러플레이트 자동 생성. CRUD API 10분 내 구현", en: "Auto-generate boilerplate. CRUD API in 10 min" }, url: "https://claude.ai/code", pricing: "$20+$20/월", icon: "💻", color: "#7c3aed" },
+      { role: "분석", roleEn: "Analytics", tool: "PostHog + Mixpanel", why: { ko: "PostHog: 제품 분석. Mixpanel: 코호트/리텐션 심층 분석", en: "PostHog: product. Mixpanel: cohort/retention deep dive" }, url: "https://posthog.com", pricing: "무료", icon: "📊", color: "#1d4ed8" },
+      { role: "고객 성공", roleEn: "Customer Success", tool: "채널톡 / Intercom", why: { ko: "한국 고객: 채널톡. 글로벌: Intercom. AI 봇으로 자동 응대", en: "Korean: Channel Talk. Global: Intercom. AI bot auto-reply" }, url: "https://channel.io", pricing: "무료~$39/월", icon: "💬", color: "#3b5998" },
+      { role: "이메일", roleEn: "Email", tool: "Resend + React Email", why: { ko: "트랜잭션 이메일 API. React로 이메일 템플릿 작성", en: "Transactional email API. React email templates" }, url: "https://resend.com", pricing: "무료~$20/월", icon: "📧", color: "#0f172a" },
+    ],
+    totalMonthlyCost: "$85~120/월 (약 11~16만원)",
+    startupCredits: { ko: "Stripe Atlas: 법인설립 + $5,000+ 크레딧 패키지", en: "Stripe Atlas: incorporation + $5,000+ credits package" },
+  },
+
+  // ── 핀테크 스택 ──
+  {
+    id: "fintech-stack",
+    name: { ko: "핀테크 스택", en: "Fintech Stack" },
+    description: { ko: "금융 서비스 규제 환경에서 안전하게 구축", en: "Build safely in financial regulatory environment" },
+    targetSubIndustries: ["fintech-startup"],
+    layers: [
+      { role: "프론트엔드", roleEn: "Frontend", tool: "Next.js + Tailwind", why: { ko: "보안 헤더 + CSP 설정이 쉬움. 금융 서비스 UI 표준", en: "Easy security headers + CSP. Financial UI standard" }, url: "https://nextjs.org", pricing: "무료", icon: "⚛️", color: "#0f172a" },
+      { role: "배포", roleEn: "Deployment", tool: "AWS (ECS/Lambda)", why: { ko: "금융 규제 준수에 필요한 VPC, WAF, 감사 로그 지원", en: "VPC, WAF, audit logs for financial compliance" }, url: "https://aws.amazon.com", pricing: "사용량 기반", icon: "☁️", color: "#ff9900" },
+      { role: "백엔드", roleEn: "Backend", tool: "Supabase + AWS RDS", why: { ko: "Supabase로 빠른 개발, AWS RDS로 금융 등급 DB 이중화", en: "Supabase for speed, AWS RDS for financial-grade DB" }, url: "https://supabase.com", pricing: "$25+/월", icon: "⚡", color: "#3ecf8e" },
+      { role: "금융 API", roleEn: "Finance API", tool: "오픈뱅킹 API", why: { ko: "은행 계좌 조회/이체. 핀테크센터 등록 필수 (3~6개월)", en: "Bank account inquiry/transfer. Registration required" }, url: "https://www.open-platform.or.kr", pricing: "등록 필요", icon: "🏦", color: "#059669" },
+      { role: "규제 샌드박스", roleEn: "Sandbox", tool: "혁신금융서비스", why: { ko: "2년간 규제 면제. MVP 테스트 필수 경로. 심사 3~6개월", en: "2-year exemption. Required for MVP testing" }, url: "https://www.fss.or.kr", pricing: "무료 (신청)", icon: "🏛️", color: "#1d4ed8" },
+      { role: "보안", roleEn: "Security", tool: "AWS WAF + CloudTrail", why: { ko: "금융 서비스 필수 보안. DDoS 방어 + 감사 추적", en: "Financial security essentials. DDoS + audit trail" }, url: "https://aws.amazon.com/waf", pricing: "$5+/월", icon: "🛡️", color: "#dc2626" },
+      { role: "코딩 AI", roleEn: "Coding AI", tool: "Claude Code", why: { ko: "보안 코드 리뷰 + 규정 준수 체크에 활용", en: "Security code review + compliance checking" }, url: "https://claude.ai/code", pricing: "$20/월", icon: "💻", color: "#7c3aed" },
+    ],
+    totalMonthlyCost: "$100~200+/월 (+ 자본금 5억원 필요)",
+    startupCredits: { ko: "AWS Activate: 최대 $100,000 크레딧 (스타트업 프로그램)", en: "AWS Activate: up to $100K credits" },
+  },
+];
+
+/** 서브 업종 ID에 맞는 추천 스택 반환 */
+export function getRecommendedStack(subIndustryId: string): RecommendedStack | undefined {
+  return RECOMMENDED_STACKS.find(s => s.targetSubIndustries.includes(subIndustryId));
+}
+
+/** 모든 스타트업 서브 업종에 해당하는 기본 스택 (AI/SaaS 공통) */
+export function getDefaultStartupStack(): RecommendedStack {
+  return RECOMMENDED_STACKS[0]; // ai-app-stack as default
+}
