@@ -8,6 +8,7 @@ import { RevenueCalendar } from "./RevenueCalendar";
 import { WeeklyReport } from "./WeeklyReport";
 import { NotificationCenter } from "./NotificationCenter";
 import { MilestoneToast, checkMilestones } from "./MilestoneToast";
+import { ForecastCard } from "./ForecastCard";
 import { supabase } from "../../../../lib/supabase";
 import { calculateHealthMetrics, buildTaxCalendar, getUrgencyColor, getTaxCategoryLabel } from "@build-up/shared";
 
@@ -552,6 +553,18 @@ export default function OperationalDashboard({ d }: Props) {
           </div>
         )}
       </div>}
+
+      {/* ── 매출 예측 + "이대로 가면" 시나리오 (owner only) ── */}
+      {!isStaff && allEntries.length >= 3 && (
+        <ForecastCard
+          ko={ko}
+          dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
+          monthlyCosts={d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number }}
+          capitalLeft={capitalLeft}
+          breakEvenDailySales={breakEvenDailySales}
+          industryCategoryId={d.industryCategoryId}
+        />
+      )}
 
       {!isStaff && <section style={detailSection}>
         <div style={detailSectionHeader}>

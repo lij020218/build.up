@@ -82,7 +82,36 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 수백 개의 한국 �
 6. 정부 지원 해당 시 이름만 짧게 (예: "소상공인 정책자금 활용 가능").
 7. 스타트업: burn rate, runway, PMF 기반.
 8. 한국어. 존댓말이지만 간결하고 실전적.
-9. 설명하지 말고 지시하세요. "~해야 합니다" 대신 "~하세요".`;
+9. 설명하지 말고 지시하세요. "~해야 합니다" 대신 "~하세요".
+
+─── Input 지표 프레임워크 (Jeff Bezos 원칙) ───
+
+Output 지표(매출, 이익)는 결과. 바꿀 수 없음. Input 지표는 사장이 오늘 할 수 있는 행동.
+todayActions는 반드시 Input 지표(행동 가능한 것)에 기반하세요.
+
+## 업종별 핵심 Input 지표
+- 외식업: 리뷰 답변 수, 메뉴 업데이트, 식재료 발주 타이밍, 배달앱 프로모션 설정, 영업시간 조정
+- 카페: SNS 포스팅 빈도, 신메뉴 테스트, 원두 발주 주기, 좌석 배치 최적화
+- 소매: 진열 변경, 재고 회전일 점검, 시즌 상품 교체, 온라인 동시 판매
+- 뷰티: 예약 충전율 확인, 리뷰 요청, 시술 메뉴 가격 조정, 소모품 발주
+- 온라인: 상품 사진 업데이트, 키워드 광고 조정, 반품률 분석, 고객 문의 응대 시간
+
+─── 손실 프레이밍 규칙 (행동경제학) ───
+
+사람은 이득보다 손실에 2배 민감합니다. 경고 시 항상 손실 관점으로 표현하세요.
+- 나쁜 예: "비용을 줄이면 월 50만원 절약됩니다"
+- 좋은 예: "이 추세면 3개월 후 150만원 부족합니다. 지금 재료비를 5%p 낮추세요"
+- 나쁜 예: "리뷰에 답변하면 재방문율이 올라갑니다"
+- 좋은 예: "미답변 리뷰 7건 — 네이버 노출 순위 하락 위험. 오늘 3건만 답변하세요"
+
+─── 이상 감지 규칙 ───
+
+주간 변동(weeklyChange)이 -15% 이하면 반드시 원인 분해를 제시하세요:
+- 객수 감소인지 객단가 감소인지
+- 특정 요일에 집중되었는지
+- 배달 vs 매장 중 어느 쪽인지
+- 계절/날씨 요인인지 구조적 하락인지`;
+
 
 export type DashboardContext = {
   industryCategoryId: string;
@@ -100,6 +129,15 @@ export type DashboardContext = {
   pendingTaxEvents: string[];
   lowStockItems: string[];
   upcomingFixedExpenses: string[];
+  // 예측 데이터
+  forecastNextWeekDaily?: number;
+  forecastNextMonthTotal?: number;
+  forecastConfidence?: "high" | "medium" | "low";
+  months3CashProjection?: number;
+  // Input 지표
+  unansweredReviews?: number;
+  daysSinceLastSnsPost?: number;
+  inventoryTurnoverDays?: number;
 };
 
 export function buildDashboardActionPrompt(ctx: DashboardContext): string {
@@ -157,6 +195,16 @@ ${ctx.lowStockItems.length > 0 ? `⚠ 재고 부족: ${ctx.lowStockItems.join(",
 ${ctx.upcomingFixedExpenses.length > 0 ? `⚠ 고정비 납부: ${ctx.upcomingFixedExpenses.join(", ")}` : "✓ 고정비 납부 여유"}
 ${crisisSignals.length > 0 ? `\n### ⚠ 위기 신호 감지\n${crisisSignals.map(s => `- ${s}`).join("\n")}` : ""}
 ${operationalGaps.length > 0 ? `\n### 🚨 운영 필수 사항 미충족 (최우선 해결 필요)\n${operationalGaps.map(s => `- ${s}`).join("\n")}` : ""}
+
+### 매출 예측 (AI 예측 엔진)
+${ctx.forecastNextWeekDaily ? `- 다음 주 예상 일매출: ${fmtW(ctx.forecastNextWeekDaily)} (신뢰도: ${ctx.forecastConfidence ?? "low"})` : "- 예측 데이터 부족 (3일 이상 기록 필요)"}
+${ctx.forecastNextMonthTotal ? `- 다음 달 예상 총매출: ${fmtW(ctx.forecastNextMonthTotal)}` : ""}
+${ctx.months3CashProjection != null ? `- 3개월 후 예상 현금: ${fmtW(ctx.months3CashProjection)} ${ctx.months3CashProjection < 0 ? "⚠ 현금 부족 예상" : ""}` : ""}
+
+### Input 지표 (사장이 오늘 바꿀 수 있는 것)
+${ctx.unansweredReviews != null && ctx.unansweredReviews > 0 ? `- 미답변 리뷰: ${ctx.unansweredReviews}건 (네이버/카카오 노출 순위 하락 위험)` : ""}
+${ctx.daysSinceLastSnsPost != null && ctx.daysSinceLastSnsPost > 3 ? `- SNS 최근 포스팅: ${ctx.daysSinceLastSnsPost}일 전 (3일 이상 미포스팅 시 도달률 감소)` : ""}
+${ctx.inventoryTurnoverDays != null ? `- 재고 회전일: ${ctx.inventoryTurnoverDays}일` : ""}
 
 위 데이터를 분석하여:
 ${operationalGaps.length > 0 ? `**최우선:** 운영 필수 사항 미충족 항목부터 해결하는 액션을 todayActions 1순위로 배치하세요.` : ""}
