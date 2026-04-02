@@ -5993,8 +5993,19 @@ export default function StarterStageDemo({
                 {/* ── 스토어 및 배송 세팅 가이드 (store_setup) ── */}
                 {currentStage.code === "store_setup" && (() => {
                   const ko = language === "ko";
+                  // 이전 단계에서 선택한 플랫폼 확인
+                  const selectedPlatforms = Object.keys(opsSelections).filter(k => k.startsWith("platform-") && opsSelections[k]).map(k => k.replace("platform-", ""));
                   return (
                     <div style={{ display: "grid", gap: "14px", marginBottom: "16px" }}>
+                      {/* 선택된 플랫폼 안내 */}
+                      {selectedPlatforms.length > 0 && (
+                        <div style={{ padding: "12px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)", display: "flex", gap: "8px", alignItems: "center" }}>
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#2563eb" strokeWidth="1.4"/><path d="M4.5 7l2 2 3-3" stroke="#2563eb" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          <span style={{ fontSize: "12px", fontWeight: 600, color: "#2563eb" }}>
+                            {ko ? `이전 단계에서 선택한 플랫폼: ${selectedPlatforms.length}개 — 아래에서 각 플랫폼의 세부 설정을 완료하세요` : `${selectedPlatforms.length} platforms selected — complete setup for each below`}
+                          </span>
+                        </div>
+                      )}
                       {/* 플랫폼별 스토어 세팅 */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
@@ -6145,21 +6156,11 @@ export default function StarterStageDemo({
                         </div>
                       </div>
 
-                      {/* 수수료 비교 */}
-                      <div style={{ borderRadius: "16px", padding: "16px 18px", background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.04)" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 660, color: "#0f172a", marginBottom: "10px" }}>{ko ? "플랫폼 수수료 비교 (2026)" : "Platform Fee Comparison (2026)"}</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                          {[
-                            { name: ko ? "스마트스토어" : "Smartstore", fee: "2.73~5.5%", note: ko ? "주문관리 + 판매 합산" : "Order + sale combined", color: "#03C75A" },
-                            { name: ko ? "쿠팡" : "Coupang", fee: "4~10.8%", note: ko ? "+ 월 55,000원 정액" : "+ ₩55K/mo flat", color: "#1460F3" },
-                            { name: "11번가", fee: "7~13%", note: ko ? "신규 12개월 6%" : "New seller 6% for 12mo", color: "#FF0000" },
-                          ].map(p => (
-                            <div key={p.name} style={{ padding: "10px", borderRadius: "10px", background: "#fff", textAlign: "center" as const }}>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: p.color, marginBottom: "4px" }}>{p.name}</div>
-                              <div style={{ fontSize: "18px", fontWeight: 760, color: "#0f172a", letterSpacing: "-0.02em" }}>{p.fee}</div>
-                              <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>{p.note}</div>
-                            </div>
-                          ))}
+                      {/* 통합 관리 솔루션 팁 */}
+                      <div style={{ borderRadius: "16px", padding: "16px 18px", background: "rgba(124,58,237,0.03)", border: "1px solid rgba(124,58,237,0.06)" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 660, color: "#7c3aed", marginBottom: "6px" }}>{ko ? "멀티 플랫폼 운영 팁" : "Multi-platform Tip"}</div>
+                        <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>
+                          {ko ? "2개 이상 플랫폼 동시 운영 시 재고·주문 통합 관리 솔루션을 사용하세요. 샵링커(shoplinker.co.kr), 올라(allra.co.kr), 셀러허브(sellerhub.co.kr) 등이 주문 수집 + 재고 연동 + 송장 일괄 처리를 지원합니다. 월 3~5만원으로 실수를 줄이고 시간을 절약할 수 있습니다." : "For 2+ platforms, use an order management solution like Shoplinker, Allra, or SellerHub. They sync inventory, collect orders, and batch process invoices. ₩30-50K/month saves time and reduces errors."}
                         </div>
                       </div>
                     </div>
