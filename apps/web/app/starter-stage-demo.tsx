@@ -81,7 +81,8 @@ import {
   formatFranchiseCost,
   getScoreColor,
   getScoreLabel,
-  type FranchiseBrand
+  type FranchiseBrand,
+  getFullToolKit,
 } from "@build-up/shared";
 import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
 import { useEffect, useRef, useState } from "react";
@@ -3914,6 +3915,172 @@ export default function StarterStageDemo({
                             <div style={{ height: "100%", borderRadius: "2px", width: `${d.survivalRate}%`, background: rateColor, transition: "width 0.6s ease" }} />
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 스타트업 법인설립 가이드 (company_setup) ── */}
+                {currentStage.code === "company_setup" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                      <div style={{ padding: "20px 22px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                          <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "rgba(37,99,235,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 6v4m4-4v4"/></svg>
+                          </div>
+                          <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "한국 법인 설립 가이드" : "Korean Incorporation Guide"}</span>
+                        </div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
+                          {ko ? "자본금 100원부터 가능. 등록면허세 약 13만원. 1-2주 내 완료." : "Minimum capital ₩100. Registration tax ~₩130K. Done in 1-2 weeks."}
+                        </div>
+                      </div>
+                      <div style={{ padding: "0 22px 14px" }}>
+                        {(ko ? [
+                          { step: "1", title: "정관 작성", detail: "사업 목적, 발행 주식 수, 자본금 결정. AI로 초안 작성 가능" },
+                          { step: "2", title: "발기인 총회", detail: "공동 창업자 합의. 지분율, 의사결정 구조 확정" },
+                          { step: "3", title: "자본금 납입", detail: "은행에 자본금 입금 후 잔액 증명서 발급 (100원도 가능)" },
+                          { step: "4", title: "등기 신청", detail: "등기소 방문 또는 온라인 (헬프미 등 대행 서비스 30만원~)" },
+                          { step: "5", title: "사업자등록", detail: "세무서 또는 홈택스. 등기 완료 후 20일 이내" },
+                          { step: "6", title: "법인 통장 개설", detail: "사업자등록증 + 법인 인감 지참. 토스 비즈니스 추천" },
+                        ] : [
+                          { step: "1", title: "Articles of Incorporation", detail: "Business purpose, shares, capital. AI can draft" },
+                          { step: "2", title: "Founders Meeting", detail: "Agree on equity, decision structure" },
+                          { step: "3", title: "Capital Deposit", detail: "Deposit to bank, get balance certificate (min ₩100)" },
+                          { step: "4", title: "Registration", detail: "Registry office or online service (~₩300K)" },
+                          { step: "5", title: "Tax Registration", detail: "Tax office or Hometax within 20 days" },
+                          { step: "6", title: "Business Account", detail: "Bring registration + company seal" },
+                        ]).map(s => (
+                          <div key={s.step} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "8px 0", borderBottom: s.step !== "6" ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                            <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+                            <div>
+                              <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{s.detail}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* 비용 요약 */}
+                      <div style={{ margin: "0 22px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                        {[
+                          { label: ko ? "등록면허세" : "License tax", value: "~13만원" },
+                          { label: ko ? "교육세" : "Education tax", value: "~2.6만원" },
+                          { label: ko ? "대행비 (선택)" : "Agency (optional)", value: "30~50만원" },
+                        ].map(c => (
+                          <div key={c.label} style={{ padding: "8px", borderRadius: "10px", background: "rgba(37,99,235,0.03)", textAlign: "center" as const }}>
+                            <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(0,0,0,0.35)" }}>{c.label}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: "#2563eb" }}>{c.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* 스톡옵션 팁 */}
+                      <div style={{ margin: "0 22px 18px", padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#059669" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#059669" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                        <span style={{ fontSize: "12px", color: "rgba(5,150,105,0.8)", lineHeight: 1.55 }}>
+                          {ko ? "스톡옵션: 직원 1인당 연 5,000만원까지 비과세 혜택. 벤처 인증 후 부여 시 절세 효과 극대화. ZUZU로 캡테이블 관리하세요." : "Stock options: Up to ₩50M/year tax-free per employee. Maximize tax benefits with venture certification. Manage cap table with ZUZU."}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── TIPS/정부지원 안내 (fundraising_readiness) ── */}
+                {currentStage.code === "fundraising_readiness" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                      <div style={{ padding: "20px 22px 14px" }}>
+                        <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "정부 투자·지원 프로그램" : "Government Investment Programs"}</div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "VC 투자 전에 정부 프로그램을 먼저 활용하세요" : "Leverage government programs before VC funding"}</div>
+                      </div>
+                      <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
+                        {[
+                          { name: "TIPS", amount: ko ? "최대 5억원" : "Up to ₩500M", detail: ko ? "R&D 3억 + 운영 2억. 50+ 운영사. 기술 기반 스타트업 필수" : "R&D 300M + Operations 200M", color: "#059669", url: "https://www.k-startup.go.kr" },
+                          { name: ko ? "예비창업패키지" : "Pre-Startup Package", amount: ko ? "최대 1억원" : "Up to ₩100M", detail: ko ? "예비 창업자 대상. 사업화 자금 + 멘토링" : "For pre-entrepreneurs", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                          { name: ko ? "초기창업패키지" : "Early Startup Package", amount: ko ? "최대 1.5억원" : "Up to ₩150M", detail: ko ? "창업 3년 이내. R&D + 마케팅 + 해외 진출" : "Within 3 years of founding", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
+                          { name: ko ? "AI 바우처" : "AI Voucher", amount: ko ? "최대 3억원" : "Up to ₩300M", detail: ko ? "AI 솔루션 도입 비용 70-90% 지원. 2026 신규" : "70-90% AI solution cost covered. New 2026", color: "#d97706", url: "https://www.k-startup.go.kr" },
+                        ].map(prog => (
+                          <a key={prog.name} href={prog.url} target="_blank" rel="noopener noreferrer" style={{
+                            display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 16px", borderRadius: "14px",
+                            border: `1px solid ${prog.color}15`, background: `${prog.color}03`, textDecoration: "none", color: "inherit",
+                          }}>
+                            <div style={{ padding: "4px 10px", borderRadius: "8px", background: `${prog.color}0a`, fontSize: "12px", fontWeight: 700, color: prog.color, whiteSpace: "nowrap" as const, flexShrink: 0 }}>{prog.amount}</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{prog.name}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{prog.detail}</div>
+                            </div>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 스타트업 도구·AI 추천 패널 ── */}
+                {isStartupCategory && (() => {
+                  const stageIdMap: Record<string, string> = {
+                    startup_foundation: "startup-foundation", customer_discovery: "customer-discovery",
+                    mvp_build: "mvp-build", launch_stack: "launch-stack", growth_engine: "growth-engine",
+                    company_setup: "company-setup", fundraising_readiness: "fundraising-readiness",
+                  };
+                  const mappedStageId = stageIdMap[currentStage.code as string];
+                  if (!mappedStageId) return null;
+                  const toolkit = getFullToolKit(mappedStageId, selectedIndustryId);
+                  if (toolkit.essential.length === 0) return null;
+                  const ko = language === "ko";
+
+                  return (
+                    <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                      <div style={{ padding: "18px 22px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#7c3aed" }} />
+                          <span style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{ko ? "추천 도구 · AI" : "Recommended Tools & AI"}</span>
+                        </div>
+                        <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? `예상 월 비용: ${toolkit.monthlyCost}` : `Est. monthly: ${toolkit.monthlyCost}`}</div>
+                      </div>
+
+                      {/* 필수 도구 */}
+                      <div style={{ padding: "0 22px 14px", display: "grid", gap: "8px" }}>
+                        {toolkit.essential.map((tool) => (
+                          <a key={tool.name} href={tool.url} target="_blank" rel="noopener noreferrer" style={{
+                            display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 14px", borderRadius: "14px",
+                            background: tool.recommended ? "rgba(124,58,237,0.03)" : "rgba(0,0,0,0.01)",
+                            border: tool.recommended ? "1px solid rgba(124,58,237,0.08)" : "1px solid rgba(0,0,0,0.04)",
+                            textDecoration: "none", color: "inherit", transition: "all 0.15s ease",
+                          }}>
+                            <div style={{
+                              width: "36px", height: "36px", borderRadius: "10px",
+                              background: tool.aiPowered ? "rgba(124,58,237,0.08)" : "rgba(15,23,42,0.04)",
+                              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                            }}>
+                              {tool.aiPowered ? (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.6"><path d="M12 2l2 4h4l-3 3 1 5-4-3-4 3 1-5-3-3h4l2-4z"/></svg>
+                              ) : (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.35)" strokeWidth="1.6"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                                <span style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a" }}>{tool.name}</span>
+                                {tool.aiPowered && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}>AI</span>}
+                                {tool.koreanSupport && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(5,150,105,0.08)", color: "#059669" }}>KR</span>}
+                              </div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{ko ? tool.description.ko : tool.description.en}</div>
+                              <div style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", marginTop: "3px" }}>{tool.pricing}</div>
+                            </div>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </a>
+                        ))}
+                      </div>
+
+                      {/* AI 팁 */}
+                      <div style={{ margin: "0 22px 18px", padding: "12px 14px", borderRadius: "12px", background: "rgba(124,58,237,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#7c3aed" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#7c3aed" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                        <span style={{ fontSize: "12px", color: "rgba(124,58,237,0.8)", lineHeight: 1.55 }}>
+                          {ko ? toolkit.aiTip.ko : toolkit.aiTip.en}
+                        </span>
                       </div>
                     </div>
                   );
