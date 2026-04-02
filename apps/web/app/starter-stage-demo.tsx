@@ -95,6 +95,9 @@ import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/Da
 import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { WelcomeOnboarding } from "./lib/components/WelcomeOnboarding";
+import { HiringCostCalculator } from "./lib/components/knowledge/HiringCostCalculator";
+import { SecurityChecklist } from "./lib/components/knowledge/SecurityChecklist";
+import { InvestmentGlossary } from "./lib/components/knowledge/InvestmentGlossary";
 import { useLanguage } from "./language-provider";
 import { useNotifications } from "./notification-context";
 import {
@@ -5986,6 +5989,35 @@ export default function StarterStageDemo({
                   );
                 })()}
 
+
+                {/* ── 채용 비용 계산기 ── */}
+                {currentStage.code === "hiring_setup" && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <HiringCostCalculator ko={language === "ko"} />
+                  </div>
+                )}
+
+                {/* ── 보안 체크리스트 ── */}
+                {currentStage.code === "company_setup" && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <SecurityChecklist
+                      ko={language === "ko"}
+                      checks={softOpenChecks as Record<string, boolean>}
+                      onToggle={(id) => {
+                        const prev = softOpenChecks as Record<string, boolean>;
+                        const next = { ...prev, [id]: !prev[id] };
+                        d.setSoftOpenChecks(next as never);
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* ── 투자 용어 사전 ── */}
+                {currentStage.code === "fundraising_readiness" && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <InvestmentGlossary ko={language === "ko"} />
+                  </div>
+                )}
 
                 {currentStage.code === "hiring_setup" && (() => {
                   const ko = language === "ko";
