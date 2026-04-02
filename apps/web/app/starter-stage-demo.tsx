@@ -1362,13 +1362,13 @@ export default function StarterStageDemo({
                 {(() => {
                   // 업종별 아이콘 (SF Symbol 스타일 SVG)
                   const industryIcons: Record<string, string> = {
-                    // food — 업종별 고유 아이콘
-                    "korean-casual": "M6 18h12M4 14h16M5 10c0-4 3-7 7-7s7 3 7 7M9 10v1m6-1v1M8 14c0 1 2 2 4 2s4-1 4-2",              // 뚝배기 (한식)
-                    "delivery-meals": "M5 12h1l2-4h8l2 4h1M4 12v2h16v-2M7 17a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm10 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM7 14v1.5m10-1.5v1.5", // 오토바이 (배달)
-                    "salad-healthy": "M5 15h14M4 15a8 8 0 0116 0M9 9c0-1 1-2 3-2s3 1 3 2M8 11l-1 2m9-2l1 2M12 7V5M10 6l-1-1m5 1l1-1",  // 샐러드 보울 + 잎사귀
-                    "ramen-noodle": "M4 14h16M3 14c0 4 4 7 9 7s9-3 9-7M8 10c1-3 2-5 4-5s3 2 4 5M7 10c.5-2 1.5-4 2-4m6 4c-.5-2-1.5-4-2-4", // 국수 면발 + 그릇
-                    "chicken-burger": "M8 4c-1 0-2 1-2 3 0 1 1 2 2 2M16 4c1 0 2 1 2 3 0 1-1 2-2 2M6 9h12M5 12h14M6 15h12M7 18h10M9 9v3m6-3v3M8 15v3m8-3v3", // 치킨 닭다리
-                    "western-pasta-brunch": "M8 5l4 3 4-3M4 14h16M5 14c0 3 3 6 7 6s7-3 7-6M8 11l2-3m4 0l2 3M10 14v3m4-3v3",             // 스테이크 + 접시
+                    // food — Material Design Icons (viewBox: 0 -960 960 960)
+                    "korean-casual": "MAT:M280-80v-366q-51-14-85.5-56T160-600v-280h80v280h40v-280h80v280h40v-280h80v280q0 56-34.5 98T360-446v366h-80Zm400 0v-320H560v-280q0-83 58.5-141.5T760-880v800h-80Z",  // restaurant (한식 — 뚝배기/수저)
+                    "delivery-meals": "MAT:M195-235q-35-35-35-85H80v-120q0-66 47-113t113-47h160v200h140l140-174v-106H560v-80h120q33 0 56.5 23.5T760-680v134L580-320H400q0 50-35 85t-85 35q-50 0-85-35Zm125-165Zm-11.5 108.5Q320-303 320-320h-80q0 17 11.5 28.5T280-280q17 0 28.5-11.5ZM200-640v-80h200v80H200Zm475 405q-35-35-35-85t35-85q35-35 85-35t85 35q35 35 35 85t-35 85q-35 35-85 35t-85-35Zm113.5-56.5Q800-303 800-320t-11.5-28.5Q777-360 760-360t-28.5 11.5Q720-337 720-320t11.5 28.5Q743-280 760-280t28.5-11.5ZM160-400h160v-120h-80q-33 0-56.5 23.5T160-440v40Z",  // delivery_dining (배달)
+                    "salad-healthy": "MAT:M216-176q-45-45-70.5-104T120-402q0-63 24-124.5T222-642q35-35 86.5-60t122-39.5Q501-756 591.5-759t202.5 7q8 106 5 195t-16.5 160.5q-13.5 71.5-38 125T684-182q-53 53-112.5 77.5T450-80q-65 0-127-25.5T216-176Zm112-16q29 17 59.5 24.5T450-160q46 0 91-18.5t86-59.5q18-18 36.5-50.5t32-85Q709-426 716-500.5t2-177.5q-49-2-110.5-1.5T485-670q-61 9-116 29t-90 55q-45 45-62 89t-17 85q0 59 22.5 103.5T262-246q42-80 111-153.5T534-520q-72 63-125.5 142.5T328-192Z",  // eco (샐러드/건강식)
+                    "ramen-noodle": "MAT:M400-160h160v-44l50-20q65-26 110.5-72.5T786-400H174q20 57 65 103.5T350-224l50 20v44Zm-80 80v-70q-107-42-173.5-130T80-480h80v-320l720-80v60l-460 52v68h460v60H420v160h460q0 112-66.5 200T640-150v70H320Zm0-620h40v-62l-40 5v57Zm-100 0h40v-50l-40 4v46Zm100 220h40v-160h-40v160Zm-100 0h40v-160h-40v160Zm260 80Z",  // ramen_dining (면/국밥)
+                    "chicken-burger": "MAT:M160-120q-33 0-56.5-23.5T80-200v-120h800v120q0 33-23.5 56.5T800-120H160Zm0-120v40h640v-40H160Zm263-160q-21 20-77 20t-76-20q-20-20-56-20t-57 20q-21 20-77 20v-80q36 0 57-20t77-20q56 0 76 20t56 20q36 0 57-20t77-20q56 0 77 20t57 20q36 0 56-20t76-20q56 0 79 20t55 20v80q-56 0-75-20t-55-20q-36 0-58 20t-78 20q-56 0-77-20t-57-20q-36 0-57 20ZM80-560v-40q0-115 108.5-177.5T480-840q183 0 291.5 62.5T880-600v40H80Zm400-200q-124 0-207.5 31T166-640h628q-23-58-106.5-89T480-760Z",  // lunch_dining (치킨/버거)
+                    "western-pasta-brunch": "MAT:m160-120-80-80h800l-80 80H160Zm-40-120q6-18 16-34t24-30v-296h-40v-60h40v-30h-40v-60h40v-30h-40v-60h280q33 0 56.5 23.5T480-760v10h360v60H480v10q0 33-23.5 56.5T400-600h-80v244q14 2 28 6t26 12q26-65 83-103.5T583-480q90 0 153.5 61.5T800-268v28H120Zm334-80h252q-17-36-50-58t-73-22q-42 0-77 21t-52 59ZM320-750h80v-30h-80v30Zm0 90h80v-30h-80v30Zm-100-90h40v-30h-40v30Zm0 90h40v-30h-40v30Zm0 314q10-5 19.5-7.5T260-358v-242h-40v254Zm360 26Z",  // dinner_dining (양식/스테이크)
                     // cafe — 컵, 원두, 디저트
                     "takeout-coffee": "M8 2h8l-1 5H9L8 2zM7 7h10v4a5 5 0 01-5 5 5 5 0 01-5-5V7zm3 14h4",                               // 테이크아웃 컵
                     "specialty-coffee": "M18 8h2a3 3 0 010 6h-2M4 8h14v8a5 5 0 01-5 5H9a5 5 0 01-5-5V8zM9 2c1 2 1 4 0 6m3-6c1 2 1 4 0 6", // 커피 머그 + 김
@@ -1507,12 +1507,20 @@ export default function StarterStageDemo({
                           marginBottom: "8px",
                           transition: "all 0.2s ease",
                         }}>
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke={selected ? color : `${color}80`}
-                            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-                            style={{ transition: "stroke 0.2s ease" }}>
-                            <path d={iconPath ?? "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"} />
-                          </svg>
+                          {iconPath?.startsWith("MAT:") ? (
+                            <svg width="24" height="24" viewBox="0 -960 960 960"
+                              fill={selected ? color : `${color}80`}
+                              style={{ transition: "fill 0.2s ease" }}>
+                              <path d={iconPath.slice(4)} />
+                            </svg>
+                          ) : (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                              stroke={selected ? color : `${color}80`}
+                              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                              style={{ transition: "stroke 0.2s ease" }}>
+                              <path d={iconPath ?? "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"} />
+                            </svg>
+                          )}
                         </div>
                         <div style={{ ...styles.optionTitle, textAlign: "center" as const, color: selected ? color : "#0f172a" }}>{option.title}</div>
                       </button>
