@@ -93,6 +93,7 @@ export async function loadVendorRecommendations(
     .from("vendor_recommendations")
     .select("*")
     .eq("category_id", params.categoryId)
+    .eq("is_active", true)
     .in("startup_type", startupTypes)
     .order("priority", { ascending: true });
 

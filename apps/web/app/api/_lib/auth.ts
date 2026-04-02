@@ -26,7 +26,7 @@ export async function requireApiUser(request: Request): Promise<ApiAuthResult> {
     return {
       ok: false,
       status: 401,
-      error: "로그인이 필요합니다."
+      error: "Authentication required / 로그인이 필요합니다."
     };
   }
 
@@ -36,7 +36,7 @@ export async function requireApiUser(request: Request): Promise<ApiAuthResult> {
     return {
       ok: false,
       status: 401,
-      error: "유효한 계정 세션이 필요합니다."
+      error: "Valid account session required / 유효한 계정 세션이 필요합니다."
     };
   }
 

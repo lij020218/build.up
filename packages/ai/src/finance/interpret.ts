@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import type { FinancialSimulationResult } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiStructuredResponse, AiCallOptions } from "../types/ai";
@@ -6,22 +6,27 @@ import { FINANCE_SYSTEM_PROMPT, buildFinanceUserPrompt } from "./prompt";
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = "gpt-5.4-mini";
+const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
 const DEFAULT_MAX_TOKENS = 1024;
 
 // ─── 응답 파싱 & 검증 ─────────────────────────────────────────────────────────
-// Claude가 JSON 형식을 지키는지 검증합니다.
-// Zod 없이 수동 검증 — 외부 의존성 최소화.
 
 function parseAiResponse(raw: string): AiStructuredResponse {
-  // 마크다운 코드블록 안에 JSON이 감싸진 경우 제거
   const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
+    // JSON 부분만 추출 시도
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) {
+      try { parsed = JSON.parse(match[0]); } catch {
+        throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
+      }
+    } else {
+      throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
+    }
   }
 
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
@@ -55,35 +60,28 @@ function parseAiResponse(raw: string): AiStructuredResponse {
 }
 
 // ─── 메인 함수 ────────────────────────────────────────────────────────────────
-// FinancialSimulationResult를 받아 AI 해석을 반환합니다.
-//
-// 설계 원칙:
-// - API 키는 파라미터로 받아 함수가 순수하게 유지됩니다 (env 직접 읽지 않음).
-// - 네트워크 오류는 그대로 throw합니다 (재시도 정책은 호출부에서 결정).
-// - 파싱 실패 시 AiParseError를 throw합니다.
 
 export async function interpretFinancialSimulation(
   result: FinancialSimulationResult,
   options: AiCallOptions & { categoryLabel?: string }
 ): Promise<AiStructuredResponse> {
-  const client = new OpenAI({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey });
 
   const userMessage = buildFinanceUserPrompt(result, options.categoryLabel);
 
-  const response = await client.chat.completions.create({
+  const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
-    max_completion_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    temperature: 1.0,
+    max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+    system: FINANCE_SYSTEM_PROMPT,
     messages: [
-      { role: "system", content: FINANCE_SYSTEM_PROMPT },
       { role: "user", content: userMessage }
     ]
   });
 
-  const text = response.choices[0]?.message?.content;
-  if (!text) {
-    throw new AiParseError("AI 응답에 텍스트가 없습니다.", JSON.stringify(response.choices));
+  const content = response.content[0];
+  if (!content || content.type !== "text") {
+    throw new AiParseError("AI 응답에 텍스트가 없습니다.", JSON.stringify(response.content));
   }
 
-  return parseAiResponse(text);
+  return parseAiResponse(content.text);
 }

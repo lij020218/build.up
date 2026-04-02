@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import {
   bootstrapAccountWorkspace,
   completeCurrentStage,
@@ -468,7 +469,15 @@ const styles = {
   }
 };
 
-export default function GuideDetailPage() {
+export default function GuideDetailPageWrapper() {
+  return (
+    <Suspense>
+      <GuideDetailPage />
+    </Suspense>
+  );
+}
+
+function GuideDetailPage() {
   const router = useRouter();
   const params = useParams<{ guideId: string }>();
   const searchParams = useSearchParams();

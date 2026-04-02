@@ -1,0 +1,63 @@
+import { NextResponse } from "next/server";
+import { generateStageBrief } from "@build-up/ai";
+import type { StageBriefParams } from "@build-up/ai";
+
+const VALID_STAGE_IDS = [
+  "industry-selection",
+  "startup-type",
+  "business-model",
+  "budget-setup",
+  "location-candidates",
+  "contract-review",
+  "opening-preparation",
+  "permit-guide",
+  "tax-guide",
+  "loan-guide"
+] as const;
+
+type RequestBody = {
+  stageId?: string;
+  categoryId?: string;
+  startupType?: string;
+  capital?: number;
+  businessModelId?: string;
+};
+
+export async function POST(request: Request) {
+  let body: RequestBody;
+  try {
+    body = (await request.json()) as RequestBody;
+  } catch {
+    return NextResponse.json({ error: "요청 본문이 유효한 JSON이 아닙니다." }, { status: 400 });
+  }
+
+  if (!body.stageId || !VALID_STAGE_IDS.includes(body.stageId as (typeof VALID_STAGE_IDS)[number])) {
+    return NextResponse.json(
+      { error: `stageId는 필수이며 유효한 단계 ID여야 합니다: ${VALID_STAGE_IDS.join(", ")}` },
+      { status: 400 }
+    );
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "AI가 설정되지 않았습니다." }, { status: 500 });
+  }
+
+  const params: StageBriefParams = {
+    stageId: body.stageId,
+    categoryId: body.categoryId,
+    startupType: body.startupType,
+    capital: typeof body.capital === "number" ? body.capital : undefined,
+    businessModelId: body.businessModelId
+  };
+
+  try {
+    const brief = await generateStageBrief(params, { apiKey });
+    return NextResponse.json({ stageId: body.stageId, brief });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "단계 브리핑 생성에 실패했습니다." },
+      { status: 500 }
+    );
+  }
+}

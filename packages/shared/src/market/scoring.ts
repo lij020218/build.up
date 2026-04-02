@@ -135,7 +135,8 @@ function scoreCategoryFit(categoryId: string | undefined, style: MarketStyle) {
     pet: { destination: 11, office: 12, residential: 20, balanced: 15 },
     "living-service": { destination: 8, office: 12, residential: 21, balanced: 16 },
     space: { destination: 15, office: 18, residential: 13, balanced: 15 },
-    "online-digital": { destination: 7, office: 9, residential: 8, balanced: 8 }
+    "online-digital": { destination: 7, office: 9, residential: 8, balanced: 8 },
+    "startup-tech": { destination: 9, office: 17, residential: 10, balanced: 14 }
   };
 
   return fitTable[categoryId]?.[style] ?? 14;
@@ -215,6 +216,10 @@ function getCategoryNudge(categoryId?: string, style?: string) {
 
   if (categoryId === "online-digital") {
     return -2;
+  }
+
+  if (categoryId === "startup-tech" && style === "office") {
+    return 4;
   }
 
   return 0;
@@ -424,6 +429,8 @@ function getCategoryLabel(categoryId?: string) {
       return "공간/숙박";
     case "online-digital":
       return "온라인/디지털";
+    case "startup-tech":
+      return "기술 스타트업";
     default:
       return "창업";
   }
@@ -465,6 +472,10 @@ function buildCategoryAwareSummary(
     },
     "online-digital": {
       balanced: `${region} 자체보다 운영 효율과 비용 통제가 더 중요한 ${categoryLabel} 모델 기준 참고 후보입니다.`
+    },
+    "startup-tech": {
+      office: `${region} 안에서 채용, 미팅, 커뮤니티 접근성이 중요한 ${categoryLabel} 허브 후보입니다.`,
+      balanced: `${region} 안에서 채용과 비용 균형을 함께 보려는 ${categoryLabel} 허브 후보입니다.`
     }
   };
 
@@ -524,6 +535,10 @@ function buildCategoryAwareReasons(
     },
     "online-digital": {
       balanced: ["오프라인 입지보다 운영 효율과 비용 구조가 우선인 업종입니다."]
+    },
+    "startup-tech": {
+      office: ["채용, 미팅, 커뮤니티 접근성이 중요한 기술 스타트업과 잘 맞습니다."],
+      balanced: ["비용 통제와 팀 운영의 균형을 보기 좋은 허브 조건입니다."]
     }
   };
 
@@ -549,6 +564,10 @@ function buildCategoryAwareDirectSummary(
     return `${marketName}을 ${categoryLabel} 기준 운영 거점으로 보고 작업 효율, 보관 여력, 물류 동선을 함께 점검했습니다.`;
   }
 
+  if (categoryId === "startup-tech") {
+    return `${marketName}을 ${categoryLabel} 기준 허브로 보고 팀 채용, 고객 미팅, 커뮤니티 접근성을 함께 점검했습니다.`;
+  }
+
   const byStyle: Partial<Record<MarketStyle, string>> = {
     destination: `${marketName}을 ${categoryLabel} 기준 목적형 상권으로 보고 브랜드 노출과 방문 유입 가능성을 함께 점검했습니다.`,
     office: `${marketName}을 ${categoryLabel} 기준 회전형 상권으로 보고 점심·퇴근 수요와 접근성을 함께 계산했습니다.`,
@@ -569,7 +588,9 @@ function buildRegionalCandidate(
   const styles =
     categoryId === "online-digital"
       ? (["balanced", "office", "residential"] as const)
-      : (["destination", "office", "residential"] as const);
+      : categoryId === "startup-tech"
+        ? (["office", "balanced", "residential"] as const)
+        : (["destination", "office", "residential"] as const);
   const suffixes =
     categoryId === "online-digital"
       ? ([
@@ -577,11 +598,17 @@ function buildRegionalCandidate(
           { ko: "물류 접근권", en: "logistics access" },
           { ko: "주거형 운영권", en: "residential base" }
         ] as const)
-      : ([
-          { ko: "중심상권", en: "core market" },
-          { ko: "역세권", en: "station area" },
-          { ko: "주거혼합권", en: "residential mix" }
-        ] as const);
+      : categoryId === "startup-tech"
+        ? ([
+            { ko: "창업 허브", en: "startup hub" },
+            { ko: "균형 운영권", en: "balanced base" },
+            { ko: "원격 친화권", en: "remote-friendly base" }
+          ] as const)
+        : ([
+            { ko: "중심상권", en: "core market" },
+            { ko: "역세권", en: "station area" },
+            { ko: "주거혼합권", en: "residential mix" }
+          ] as const);
   const style = styles[slot] ?? "balanced";
   const meta = buildStyleMeta(style);
   const baseScore = typeof base.score === "number" ? base.score : 74;
@@ -609,6 +636,12 @@ function buildRegionalCandidate(
           : slot === 1
             ? ["택배 접근성은 좋지만 고정비가 빠르게 올라갈 수 있습니다."]
             : ["주거형 거점은 비용은 낮지만 확장성과 외주 동선이 제한될 수 있습니다."]
+        : categoryId === "startup-tech"
+          ? slot === 0
+            ? ["허브 접근성은 좋지만 임대료와 채용 경쟁이 높을 수 있습니다."]
+            : slot === 1
+              ? ["균형형 허브는 무난하지만 밀도 높은 네트워크 효과는 약할 수 있습니다."]
+              : ["원격 친화 거점은 비용은 낮지만 고객·채용 접점이 줄어들 수 있습니다."]
         : slot === 0
           ? ["노출이 강한 만큼 경쟁도도 함께 확인해야 합니다."]
           : slot === 1
@@ -705,14 +738,20 @@ export function evaluateDirectMarket(input: DirectMarketInput): {
       input.signal?.title
         ? input.categoryId === "online-digital"
           ? `${input.signal.title}에 있는 최신 운영 거점 신호를 우선 반영했습니다.`
+          : input.categoryId === "startup-tech"
+            ? `${input.signal.title}에 있는 최신 창업 허브 신호를 우선 반영했습니다.`
           : `${input.signal.title}에 있는 최신 상권 신호를 우선 반영했습니다.`
         : undefined,
       input.region
         ? input.categoryId === "online-digital"
           ? `${input.region} 안에서 비교 가능한 운영 거점으로 평가했습니다.`
+          : input.categoryId === "startup-tech"
+            ? `${input.region} 안에서 비교 가능한 창업 허브로 평가했습니다.`
           : `${input.region} 안에서 비교 가능한 입지로 평가했습니다.`
         : input.categoryId === "online-digital"
           ? "입력한 거점 이름을 기준으로 일반적인 운영 환경 특성을 반영했습니다."
+          : input.categoryId === "startup-tech"
+            ? "입력한 허브 이름을 기준으로 일반적인 창업 운영 환경 특성을 반영했습니다."
           : "입력한 상권 이름을 기준으로 일반적인 입지 특성을 반영했습니다.",
       buildBreakdownReason(breakdown),
       input.categoryId === "online-digital"
@@ -721,6 +760,12 @@ export function evaluateDirectMarket(input: DirectMarketInput): {
           : style === "residential"
             ? "비용 통제에는 유리하지만 보관과 확장성은 다시 확인해야 합니다."
             : "운영 효율과 비용 균형을 기대할 수 있는 거점입니다."
+        : input.categoryId === "startup-tech"
+          ? style === "office"
+            ? "채용과 미팅 접근성은 좋지만 비용과 경쟁 강도도 함께 봐야 합니다."
+            : style === "residential"
+              ? "비용은 낮지만 팀 밀도와 네트워크 효과는 약할 수 있습니다."
+              : "팀 운영과 비용 균형을 기대할 수 있는 허브입니다."
         : style === "office"
           ? "유입 속도는 좋지만 경쟁과 임대료를 함께 봐야 합니다."
           : style === "residential"
@@ -729,8 +774,8 @@ export function evaluateDirectMarket(input: DirectMarketInput): {
     ].filter((reason): reason is string => Boolean(reason)),
     warnings:
       breakdown.total < 70
-        ? [input.categoryId === "online-digital" ? "현재 예산과 운영 구조 기준으로는 리스크가 다소 높은 편입니다." : "현재 예산과 업종 기준으로는 리스크가 다소 높은 편입니다."]
-        : [input.categoryId === "online-digital" ? "최종 결정 전 보관, 택배, 외주 동선은 다시 확인해야 합니다." : "최종 계약 전 임대료와 경쟁도는 다시 확인해야 합니다."],
+        ? [input.categoryId === "online-digital" ? "현재 예산과 운영 구조 기준으로는 리스크가 다소 높은 편입니다." : input.categoryId === "startup-tech" ? "현재 예산과 팀 운영 구조 기준으로는 리스크가 다소 높은 편입니다." : "현재 예산과 업종 기준으로는 리스크가 다소 높은 편입니다."]
+        : [input.categoryId === "online-digital" ? "최종 결정 전 보관, 택배, 외주 동선은 다시 확인해야 합니다." : input.categoryId === "startup-tech" ? "최종 결정 전 팀 채용, 고객 접근성, 비용 구조는 다시 확인해야 합니다." : "최종 계약 전 임대료와 경쟁도는 다시 확인해야 합니다."],
     meta: {
       region: input.region,
       rentBand: meta.rentBand,

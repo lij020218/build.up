@@ -81,10 +81,10 @@ function getStartupTypeLabel(startupType?: string): string {
 }
 
 function formatCapital(capital?: number): string {
-  if (!capital) return "미입력";
+  if (capital == null) return "미입력";
+  if (capital === 0) return "0만 원";
   if (capital >= 100000000) return `${(capital / 100000000).toFixed(1)}억 원`;
-  if (capital >= 10000000) return `${Math.round(capital / 10000000) * 1000}만 원`;
-  return `${(capital / 10000).toFixed(0)}만 원`;
+  return `${Math.round(capital / 10000).toLocaleString()}만 원`;
 }
 
 export function buildStageBriefUserPrompt(params: StageBriefParams): string {

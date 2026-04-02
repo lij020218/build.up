@@ -46,6 +46,7 @@ export type BootstrappedWorkspace = {
 
 type BusinessProfileRow = {
   user_id: string;
+  industry_category_id?: string | null;
   sub_industry_id?: string | null;
   startup_type?: "franchise" | "independent" | "undecided" | null;
   business_model_id?: string | null;
@@ -228,8 +229,14 @@ function buildProfilePatchFromState(
   const startupTypeValue =
     startupTypeDecision?.selectedPrimaryOptionId ?? startupTypeDecision?.inputs?.startupType;
 
+  const industryCategoryId =
+    typeof industryDecision?.inputs?.industryCategoryId === "string"
+      ? industryDecision.inputs.industryCategoryId
+      : null;
+
   return {
     user_id: userId,
+    industry_category_id: industryCategoryId,
     sub_industry_id:
       industryDecision?.selectedPrimaryOptionId ??
       (typeof industryDecision?.inputs?.subIndustryId === "string"
@@ -278,6 +285,7 @@ function hydrateBusinessProfile(row: BusinessProfileRow | null): PersistedBusine
 
   return {
     userId: row.user_id,
+    industryCategoryId: row.industry_category_id ?? undefined,
     subIndustryId: row.sub_industry_id ?? undefined,
     startupType: row.startup_type ?? undefined,
     businessModelId: row.business_model_id ?? undefined,
@@ -333,6 +341,8 @@ export async function saveRoadmapState(
   // 기존 rows를 먼저 삭제 후 재삽입합니다.
   // upsert만 사용하면 빈 decisions(초기화 상태)일 때 삭제가 일어나지 않아
   // 이전 진행 상태가 DB에 남는 버그가 있습니다.
+  //
+  // delete → insert는 원자적이지 않으므로, insert 실패 시 재삽입을 시도합니다.
   const { error: deleteDecisionsError } = await client
     .from("stage_decisions")
     .delete()
@@ -346,7 +356,9 @@ export async function saveRoadmapState(
     const { error } = await client.from("stage_decisions").insert(decisionPayload);
 
     if (error) {
-      throw error;
+      // 삭제 후 insert 실패 — 데이터 유실 방지를 위해 한번 더 시도
+      const { error: retryError } = await client.from("stage_decisions").insert(decisionPayload);
+      if (retryError) throw retryError;
     }
   }
 
@@ -363,7 +375,8 @@ export async function saveRoadmapState(
     const { error } = await client.from("stage_tasks").insert(taskPayload);
 
     if (error) {
-      throw error;
+      const { error: retryError } = await client.from("stage_tasks").insert(taskPayload);
+      if (retryError) throw retryError;
     }
   }
 

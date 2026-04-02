@@ -1,17 +1,35 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ReactNode } from "react";
 import { LanguageProvider } from "./language-provider";
 import { NotificationProvider } from "./notification-context";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
-  title: "build.up",
-  description: "Roadmap-first startup companion"
+  title: "build.up — 창업 로드맵 멘토링",
+  description: "단계별 창업 로드맵, 세무·자금·입지 분석, 지원사업 매칭까지. 예비 창업자를 위한 올인원 멘토링 서비스.",
+  openGraph: {
+    title: "build.up — 창업 로드맵 멘토링",
+    description: "단계별 창업 로드맵, 세무·자금·입지 분석, 지원사업 매칭까지.",
+    type: "website",
+    locale: "ko_KR",
+  },
+  other: {
+    "theme-color": "#1d3557",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         {process.env.NEXT_PUBLIC_KAKAO_JS_KEY && (
           <script

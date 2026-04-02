@@ -19,9 +19,9 @@ export type GuideAiStructuredResponse = {
 // ─── AI 호출 옵션 ─────────────────────────────────────────────────────────────
 
 export type AiCallOptions = {
-  apiKey: string;
-  model?: string;        // 기본값: claude-sonnet-4-6
-  maxTokens?: number;    // 기본값: 1024
+  apiKey: string;         // Anthropic 모듈은 ANTHROPIC_API_KEY, OpenAI 모듈은 OPENAI_API_KEY
+  model?: string;         // Anthropic 기본: claude-sonnet-4-6 | OpenAI 기본: gpt-5.4-mini
+  maxTokens?: number;     // 기본값: 1024
 };
 
 // ─── 파싱 에러 ────────────────────────────────────────────────────────────────

@@ -329,7 +329,8 @@ const categoryCopy: Record<string, { ko: { title: string; summary: string } }> =
   pet: { ko: { title: "반려동물", summary: "펫 서비스, 미용, 용품, 케어형 매장" } },
   "living-service": { ko: { title: "생활 서비스", summary: "세탁, 청소, 수리, 동네 편의 서비스" } },
   space: { ko: { title: "공간/숙박", summary: "스터디룸, 대여 공간, 게스트하우스, 운영형 공간" } },
-  "online-digital": { ko: { title: "온라인/디지털", summary: "이커머스, 디지털 상품, 크리에이터형 비즈니스" } }
+  "online-digital": { ko: { title: "온라인/디지털", summary: "이커머스, 디지털 상품, 크리에이터형 비즈니스" } },
+  "startup-tech": { ko: { title: "기술 스타트업", summary: "AI, SaaS, 핀테크, 개발도구, 소프트웨어 스타트업" } }
 };
 
 export function localizeStarterIndustryCategory<T extends { id: string; title: string; summary: string }>(
@@ -451,6 +452,12 @@ const recCopy: Record<
   "consignment-commerce": { ko: { title: "위탁/마켓플레이스 판매", summary: "재고 부담을 낮추고 수요를 먼저 검증하기 좋은 이커머스 진입형 모델입니다.", reasons: ["초기 재고 부담이 낮음", "여러 상품군 테스트가 빠름"], warnings: ["보유 재고보다 마진 통제가 약할 수 있음"], categoryLabel: "온라인/디지털" } },
   "newsletter-membership": { ko: { title: "뉴스레터/멤버십 콘텐츠", summary: "강한 니치 신뢰가 있을 때 반복 구독을 만들 수 있는 디지털 비즈니스입니다.", reasons: ["고정비가 낮음", "구독형 반복 매출 가능"], warnings: ["니치 신뢰와 꾸준함이 핵심"], categoryLabel: "온라인/디지털" } },
   "global-buying": { ko: { title: "해외구매대행/크로스보더 셀링", summary: "점포 임대 없이 상품을 팔 수 있지만 소싱과 배송 관리가 중요한 판매형 카드입니다.", reasons: ["점포 없이 테스트 가능", "니치 수요를 빨리 볼 수 있음"], warnings: ["배송, 소싱, 환불 관리가 중요"], categoryLabel: "온라인/디지털" } },
+  "ai-application": { ko: { title: "AI 애플리케이션 / 에이전트", summary: "수요가 빠르게 커지고 있지만 유지율과 안정성이 즉시 중요합니다.", reasons: ["2025-2026 가장 강한 수요 신호", "좁은 유스케이스부터 검증 가능"], warnings: ["모델 비용, 평가 품질, 차별화를 빠르게 관리해야 함"], categoryLabel: "기술 스타트업" } },
+  "developer-tools": { ko: { title: "개발자 도구 / 인프라", summary: "기술 창업자가 워크플로 병목을 해결할 때 강한 적합성을 가집니다.", reasons: ["개발 도구 시장 YC 활동 활발", "기술 바이어는 ROI에 민감"], warnings: ["좁고 명확한 타겟이 필요"], categoryLabel: "기술 스타트업" } },
+  "b2b-saas": { ko: { title: "B2B SaaS / 워크플로 소프트웨어", summary: "고통스러운 업무 프로세스를 이해하고 한 팀부터 랜딩할 때 유효합니다.", reasons: ["반복 매출 모델이 복리 성장에 유리", "확장 매출 가능"], warnings: ["긴 세일즈 사이클이 초기 PMF를 가릴 수 있음"], categoryLabel: "기술 스타트업" } },
+  "fintech-startup": { ko: { title: "핀테크 / 결제 / 자금관리", summary: "큰 시장이지만 컴플라이언스와 신뢰 요건이 무겁습니다.", reasons: ["결제, 재무 운영 여전히 큰 소프트웨어 카테고리", "시간 절약/비용 절감 ROI 명확"], warnings: ["규제, 리스크 관리, 통합 복잡성이 빠르게 증가"], categoryLabel: "기술 스타트업" } },
+  "healthtech-startup": { ko: { title: "헬스테크 / 케어 운영", summary: "높은 가치 카테고리지만 워크플로와 규제가 까다롭습니다.", reasons: ["의료 운영이 여전히 파편화", "B2B 워크플로 소프트웨어로 강한 고착"], warnings: ["세일즈와 도입 사이클이 일반 SaaS보다 느림"], categoryLabel: "기술 스타트업" } },
+  "security-startup": { ko: { title: "사이버보안 / 트러스트", summary: "강한 기술팀과 명확한 위협 프레이밍에 적합한 고우선순위 카테고리입니다.", reasons: ["보안 예산은 지속적인 우선순위", "신뢰와 긴급성이 프리미엄 가격 지원"], warnings: ["기술적 깊이와 좁은 공격 표면 집중 필요"], categoryLabel: "기술 스타트업" } },
   "storefront-cafe": { ko: { title: "매장형 카페", summary: "브랜드 노출, 좌석 운영, 지역 충성도까지 균형 있게 가져가는 모델입니다.", reasons: ["동네 반복 고객에 유리", "브랜드와 메뉴 스토리텔링 가능"], warnings: ["더 높은 임대료와 인건비 압박"], categoryLabel: "운영 방식" } },
   "takeout-focused": { ko: { title: "테이크아웃 중심", summary: "작은 공간과 빠른 세팅, 단순한 인력 구조에 유리합니다.", reasons: ["점포 면적 부담이 작음", "예산 통제가 중요할 때 적합"], warnings: ["회전율과 메뉴 포지셔닝이 더 중요"], categoryLabel: "운영 방식" } },
   "delivery-hybrid": { ko: { title: "배달 하이브리드", summary: "배달 비중이 필요한 경우 유용하지만 운영은 더 복잡해집니다.", reasons: ["유입 채널을 넓힐 수 있음", "워크인 외 수요를 확보 가능"], warnings: ["포장, 배차, 수수료 관리가 복잡"], categoryLabel: "운영 방식" } },
@@ -522,6 +529,14 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   biz_registration: { ko: { title: "사업자등록 & 금융 세팅", goal: "세무서 사업자등록을 확인하고 사업용 통장과 세무대리인 여부를 결정합니다.", whyNow: "개업 전에 금융 구조가 잡혀야 첫 달 세금 신고와 비용 관리가 흔들리지 않습니다." } },
   pre_launch_final: { ko: { title: "개업 최종 준비", goal: "초도 재고를 입고하고 직원 최종 교육과 SNS 오픈 예고를 마칩니다.", whyNow: "오픈 당일 준비 부족은 첫 고객 경험을 망가뜨립니다. 마지막 점검이 중요합니다." } },
   first_month_check: { ko: { title: "개업 준비 완료", goal: "일별 현금흐름 기록 방법과 비상금을 확인하고 가게를 열 마지막 준비를 마칩니다.", whyNow: "개업 첫 달이 가장 위험합니다. 일별 숫자를 추적하는 습관이 생존을 좌우합니다." } },
+  // ── Startup path ──────────────────────────────────────────────────────────
+  startup_foundation: { ko: { title: "창업팀·법인 기본 구조", goal: "공동창업자 역할, 지분·베스팅, 법인 설립 방향, 핵심 문제 정의를 먼저 정리합니다.", whyNow: "공동창업자 정렬과 지분 구조가 흐리면 제품보다 먼저 팀이 흔들립니다." } },
+  customer_discovery: { ko: { title: "고객 발굴·문제 검증", goal: "고객 인터뷰를 통해 반복적으로 나타나는 고통과 초기 타겟 세그먼트를 좁힙니다.", whyNow: "누구의 어떤 문제를 푸는지 선명하지 않으면 이후 제품 개발이 전부 낭비될 수 있습니다." } },
+  mvp_build: { ko: { title: "MVP 구축", goal: "가장 좁은 핵심 워크플로 하나를 해결하는 MVP를 출시하고 초기 피드백을 모읍니다.", whyNow: "PMF 전에는 넓은 제품보다 빠른 학습이 훨씬 중요합니다." } },
+  launch_stack: { ko: { title: "출시 스택·계측", goal: "분석, 결제, 에러 모니터링, 고객 피드백 루프를 먼저 깔아 신호를 놓치지 않게 합니다.", whyNow: "계측이 없으면 성장처럼 보이는 착시를 진짜 신호로 오해하기 쉽습니다." } },
+  growth_engine: { ko: { title: "성장·리텐션 루프", goal: "북극성 지표와 주간 성장 리뷰를 정하고, 유지율을 함께 추적하는 체계를 만듭니다.", whyNow: "유지되지 않는 성장은 반복 투자 대비 효과가 낮고 쉽게 무너집니다." } },
+  company_setup: { ko: { title: "회사 운영·보안 기본기", goal: "법인·은행·기장 흐름과 프라이버시·보안 기본기를 갖춰 고객과 투자자 대응을 준비합니다.", whyNow: "기본 운영 인프라가 없으면 고객 도입과 채용, 투자 실사에서 계속 발목이 잡힙니다." } },
+  fundraising_readiness: { ko: { title: "런웨이·투자 준비", goal: "현금 소진 속도, 다음 마일스톤, 투자 필요성, 스토리라인을 명확히 정리합니다.", whyNow: "투자 유치는 돈이 아니라 시간을 사는 일이라, 무엇을 증명할지 먼저 선명해야 합니다." } },
   // ── Offline path ──────────────────────────────────────────────────────────
   permit_check: { ko: { title: "인허가 사전 확인", goal: "계약 전에 내 업종에 필요한 인허가·위생 교육·안전 요건을 확인합니다.", whyNow: "인허가 가능 여부 확인 없이 임대차 계약을 맺으면 오픈이 불가능해질 수 있습니다." } },
   construction_setup: { ko: { title: "인테리어 및 공사", goal: "인테리어 업체를 선정하고 설계를 확정한 뒤 공사를 완료합니다.", whyNow: "시공 업체와 설계를 확정해야 실제 오픈 일정을 잡을 수 있습니다." } },
@@ -583,6 +598,37 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "fc-legal": { ko: "가맹 계약서 법률 검토 (변호사/가맹거래사)" },
   "fc-contract": { ko: "가맹 계약 체결 및 가맹비 납부" },
   "fc-training": { ko: "본사 교육 프로그램 이수 완료" },
+  // startup-foundation
+  "founder-alignment": { ko: "공동창업자 역할·의사결정 권한 문서화" },
+  "equity-plan-defined": { ko: "지분·베스팅·희석 가정 정리" },
+  "company-formation-path": { ko: "법인 설립 경로·계좌·관할 구조 결정" },
+  "83b-safe-basics": { ko: "83(b), SAFE, 캡테이블 기초 검토" },
+  // customer-discovery
+  "customer-interviews-done": { ko: "초기 타겟 고객 인터뷰 10건 이상 완료" },
+  "pain-pattern-documented": { ko: "반복 문제·현재 대안·긴급성 문서화" },
+  "narrow-wedge-defined": { ko: "가장 좁고 절실한 첫 문제 정의" },
+  // mvp-build
+  "core-workflow-defined": { ko: "핵심 사용자 워크플로와 성공 기준 정의" },
+  "mvp-shipped": { ko: "가장 작은 MVP 출시" },
+  "first-user-feedback-loop": { ko: "초기 사용자 피드백 루프 운영 시작" },
+  // launch-stack
+  "analytics-live": { ko: "활성화·전환·리텐션 분석 이벤트 설치" },
+  "billing-or-conversion-live": { ko: "결제 또는 전환 추적 설정" },
+  "support-loop-live": { ko: "창업자가 매일 확인하는 고객지원·피드백 루프 개설" },
+  "error-monitoring-live": { ko: "프로덕션 에러·업타임 모니터링 설치" },
+  // growth-engine
+  "north-star-set": { ko: "북극성 지표와 주간 성장 지표 확정" },
+  "weekly-review-running": { ko: "주간 성장·런웨이·병목 리뷰 루틴 시작" },
+  "retention-check-defined": { ko: "유지율/재방문 체크 기준 정의" },
+  "first-gtm-channel-tested": { ko: "집중 GTM 채널 1개 실험 완료" },
+  // company-setup
+  "banking-finance-stack": { ko: "법인 통장·기장·현금 추적 체계 분리" },
+  "privacy-security-basics": { ko: "프라이버시·접근권한·보안 기본기 정비" },
+  "data-room-basics": { ko: "법인 서류·핵심 KPI 중심 데이터룸 초안 준비" },
+  // fundraising-readiness
+  "runway-model-ready": { ko: "burn·runway·자금 사용 계획 모델링" },
+  "milestone-plan-ready": { ko: "다음 투자 전 증명할 마일스톤 정리" },
+  "investor-material-ready": { ko: "덱·지표 요약·창업자 스토리 준비" },
   // permit-check
   "permit-type-checked": { ko: "업종별 필요 인허가·등록 종류 확인" },
   "health-cert-checked": { ko: "위생 교육 이수 및 건강진단 조건 확인" },

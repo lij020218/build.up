@@ -124,7 +124,7 @@ export default function GuideDetailScreen() {
     }
 
     try {
-      setCompletionState(copy.common.saving);
+      setCompletionState("saving");
       const workspace = await bootstrapAccountWorkspace(supabase);
       const nextDecisions = upsertStageDecision(workspace.state.decisions, params.stageId, {
         stageId: params.stageId,
@@ -151,7 +151,7 @@ export default function GuideDetailScreen() {
 
       router.replace("/(tabs)/current");
     } catch (error) {
-      setCompletionState(error instanceof Error ? error.message : copy.common.guideReviewSaveFailed);
+      setCompletionState("error");
     }
   };
 
@@ -335,11 +335,11 @@ export default function GuideDetailScreen() {
                     style={[styles.button, completionState === "saving" && styles.buttonDisabled]}
                   >
                     <Text style={styles.buttonText}>
-                      {completionState === copy.common.saving ? copy.common.saving : completionLabel}
+                      {completionState === "saving" ? copy.common.saving : completionLabel}
                     </Text>
                   </Pressable>
-                  {completionState !== "idle" && completionState !== copy.common.saving ? (
-                    <Text style={styles.warning}>{completionState}</Text>
+                  {completionState === "error" ? (
+                    <Text style={styles.warning}>{copy.common.guideReviewSaveFailed}</Text>
                   ) : null}
                 </View>
               ) : null}

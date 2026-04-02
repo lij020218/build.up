@@ -9,7 +9,15 @@
       }
     ],
     "allowJs": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@build-up/shared": ["../../packages/shared/src/index.ts"],
+      "@build-up/shared/*": ["../../packages/shared/src/*"],
+      "@build-up/ai": ["../../packages/ai/src/index.ts"],
+      "@build-up/ai/*": ["../../packages/ai/src/*"]
+    }
   },
   "include": [
     "**/*.ts",

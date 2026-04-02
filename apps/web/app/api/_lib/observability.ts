@@ -9,7 +9,8 @@ type LogPayload = {
     | "rate_limited"
     | "fallback_used"
     | "parse_failed"
-    | "request_failed";
+    | "request_failed"
+    | "fetch_failed";
   userId?: string;
   status?: number;
   detail?: string;

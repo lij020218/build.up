@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { interpretMarketScore } from "@build-up/ai";
 import type { RecommendationItem } from "@build-up/shared";
+import { requireApiUser } from "../../../_lib/auth";
+import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 
 type RequestBody = {
   item?: unknown;
@@ -9,6 +11,20 @@ type RequestBody = {
 };
 
 export async function POST(request: Request) {
+  const auth = await requireApiUser(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const rateLimit = checkSimpleRateLimit({
+    key: `market-narrative:${auth.userId}`,
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
+  }
+
   let body: RequestBody;
   try {
     body = (await request.json()) as RequestBody;
@@ -35,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ narrative });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "내러티브 생성에 실패했습니다." },
+      { error: "내러티브 생성에 실패했습니다." },
       { status: 500 }
     );
   }

@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.27.6",
+    "@build-up/ai": "workspace:*",
     "@build-up/shared": "workspace:*",
     "@supabase/supabase-js": "^2.49.4",
     "expo": "^52.0.30",
+    "expo-asset": "^55.0.10",
     "expo-router": "^4.0.17",
     "expo-status-bar": "~2.0.1",
     "react": "^18.3.1",

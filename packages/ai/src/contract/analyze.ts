@@ -1,12 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
-import { CONTRACT_SYSTEM_PROMPT, buildContractUserPrompt } from "./prompt";
-import type { ContractAnalysisResult, ContractClause } from "./prompt";
+import { getSystemPromptForType, buildContractUserPrompt } from "./prompt";
+import type { ContractAnalysisResult, ContractClause, ContractType } from "./prompt";
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
 const DEFAULT_MAX_TOKENS = 2048;
 
 // 계약서는 분석 내용이 많을 수 있어 다른 기능보다 max_tokens를 높게 설정합니다.
@@ -91,17 +91,19 @@ const MAX_CONTRACT_LENGTH = 10_000;
 
 export async function analyzeContract(
   contractText: string,
-  options: AiCallOptions
+  options: AiCallOptions,
+  contractType: ContractType = "commercial_lease"
 ): Promise<ContractAnalysisResult> {
   const truncated = contractText.slice(0, MAX_CONTRACT_LENGTH);
   const client = new Anthropic({ apiKey: options.apiKey });
 
-  const userMessage = buildContractUserPrompt(truncated);
+  const userMessage = buildContractUserPrompt(truncated, contractType);
+  const systemPrompt = getSystemPromptForType(contractType);
 
   const message = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: CONTRACT_SYSTEM_PROMPT,
+    system: systemPrompt,
     messages: [{ role: "user", content: userMessage }]
   });
 

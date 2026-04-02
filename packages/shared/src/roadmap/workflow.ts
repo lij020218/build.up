@@ -97,7 +97,14 @@ export function evaluateStageCompletion(
   decisions: WorkflowDecisionMap,
   tasks: WorkflowTaskMap
 ): CompletionCheck {
-  return evaluateRule(stage.completionRule, decisions[stage.stageId], tasks[stage.stageId]);
+  const decision = decisions[stage.stageId];
+
+  // 기존 가게 온보딩 등으로 명시적으로 완료 처리된 스테이지는 규칙 재평가 없이 완료로 취급
+  if (decision?.completedAt) {
+    return { isComplete: true, missingKeys: [], missingTaskIds: [] };
+  }
+
+  return evaluateRule(stage.completionRule, decision, tasks[stage.stageId]);
 }
 
 function updateStageStatus(

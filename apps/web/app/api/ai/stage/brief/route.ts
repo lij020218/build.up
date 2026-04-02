@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { generateStageBrief } from "@build-up/ai";
 import type { StageBriefParams } from "@build-up/ai";
+import { requireApiUser } from "../../../_lib/auth";
+import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 
 const VALID_STAGE_IDS = [
   "industry-selection",
@@ -24,6 +26,20 @@ type RequestBody = {
 };
 
 export async function POST(request: Request) {
+  const auth = await requireApiUser(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const rateLimit = checkSimpleRateLimit({
+    key: `stage-brief:${auth.userId}`,
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
+  }
+
   let body: RequestBody;
   try {
     body = (await request.json()) as RequestBody;
@@ -56,7 +72,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ stageId: body.stageId, brief });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "단계 브리핑 생성에 실패했습니다." },
+      { error: "단계 브리핑 생성에 실패했습니다." },
       { status: 500 }
     );
   }

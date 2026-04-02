@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { supabase } from "../../../../lib/supabase";
+import { requireApiUser } from "../../_lib/auth";
+import { checkSimpleRateLimit } from "../../_lib/rate-limit";
 
 type RequestBody = {
   question?: string;
@@ -56,6 +58,26 @@ function buildUserPrompt(question: string, chunks: KnowledgeChunk[], industryCat
 }
 
 export async function POST(request: Request) {
+  const auth = await requireApiUser(request);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const rateLimit = checkSimpleRateLimit({
+    key: `knowledge-qa:${auth.userId}`,
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.ok) {
+    return new Response(JSON.stringify({ error: rateLimit.error }), {
+      status: rateLimit.status,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const body = (await request.json()) as RequestBody;
 

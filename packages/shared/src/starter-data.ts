@@ -133,6 +133,11 @@ export const starterIndustryCategories: StarterIndustryCategory[] = [
     id: "online-digital",
     title: "Online & Digital",
     summary: "E-commerce, digital products, and creator-led service businesses."
+  },
+  {
+    id: "startup-tech",
+    title: "Tech Startup",
+    summary: "AI products, SaaS, fintech, developer tools, and venture-backed software companies."
   }
 ];
 
@@ -676,6 +681,60 @@ export const starterIndustryOptions: RecommendationItem[] = [
     reasons: ["No storefront lease needed", "Can test niche demand across channels"],
     warnings: ["Shipping, sourcing, and refund handling matter"],
     meta: { categoryId: "online-digital", categoryLabel: "Online & Digital" }
+  },
+  {
+    id: "ai-application",
+    title: "AI Application / Agent",
+    score: 86,
+    summary: "Fast-moving startup segment with strong demand, but retention and reliability matter immediately.",
+    reasons: ["Clear 2025-2026 demand signal across workflows", "Can validate with a narrow wedge use case first"],
+    warnings: ["Model costs, eval quality, and differentiation must be tightly controlled"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "developer-tools",
+    title: "Developer Tools / Infrastructure",
+    score: 83,
+    summary: "Strong fit for technical founders solving painful workflow or infrastructure bottlenecks.",
+    reasons: ["YC activity remains high in developer tools", "Technical buyers respond well to clear ROI and speed gains"],
+    warnings: ["You need a sharp wedge and a clear buyer, not just a cool tool"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "b2b-saas",
+    title: "B2B SaaS / Workflow Software",
+    score: 82,
+    summary: "Works well when you understand a painful business workflow and can land one team first.",
+    reasons: ["Recurring revenue model is easier to compound", "Expansion revenue can build after initial wedge"],
+    warnings: ["Longer sales cycles can hide weak product-market fit early"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "fintech-startup",
+    title: "Fintech / Payments / Treasury",
+    score: 78,
+    summary: "Large market with strong need, but compliance and trust requirements are heavier.",
+    reasons: ["Payments, finance ops, and treasury remain large software categories", "Clear ROI is possible when you save time or reduce leakage"],
+    warnings: ["Compliance, risk controls, and integration complexity rise quickly"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "healthtech-startup",
+    title: "Healthtech / Care Operations",
+    score: 77,
+    summary: "High-value category with strong inefficiencies to fix, but workflows and compliance are demanding.",
+    reasons: ["Healthcare operations remain fragmented", "B2B workflow software can create deep stickiness"],
+    warnings: ["Sales and implementation cycles are slower than generic SaaS"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "security-startup",
+    title: "Cybersecurity / Trust",
+    score: 79,
+    summary: "High-priority buyer pain category suited to strong technical teams and clear threat framing.",
+    reasons: ["Security remains a persistent budget priority", "Trust and urgency can support premium pricing"],
+    warnings: ["Founders need credible technical depth and a narrow attack surface focus"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
   }
 ];
 
@@ -939,6 +998,40 @@ const starterBusinessModelOptionsByCategory: Record<string, RecommendationItem[]
       reasons: ["Low fixed overhead", "Can support recurring subscriber revenue"],
       warnings: ["Trust and consistency matter more than volume"]
     }
+  ],
+  "startup-tech": [
+    {
+      id: "plg-saas",
+      title: "Product-led SaaS",
+      score: 83,
+      summary: "Good for self-serve or light-touch products where activation speed matters.",
+      reasons: ["Fast feedback loops", "Easier to test onboarding and retention early"],
+      warnings: ["Low activation can quietly kill growth before sales ever matters"]
+    },
+    {
+      id: "sales-led-b2b",
+      title: "Sales-led B2B",
+      score: 80,
+      summary: "Better when pain is expensive, buyer count is small, and pilots lead to expansion.",
+      reasons: ["Works well for enterprise workflow pain", "Can support higher ACV and longer contracts"],
+      warnings: ["Founder sales and long cycles require more runway discipline"]
+    },
+    {
+      id: "usage-based-api",
+      title: "Usage-based API / Infra",
+      score: 78,
+      summary: "Fit for developer-facing tools where value scales with usage or automation volume.",
+      reasons: ["Strong fit for infra and AI building blocks", "Usage growth can compound quickly after integration"],
+      warnings: ["Reliability, docs quality, and margins are make-or-break"]
+    },
+    {
+      id: "hybrid-software-service",
+      title: "Software + Service Hybrid",
+      score: 72,
+      summary: "Useful when founders need manual service to prove demand before product catches up.",
+      reasons: ["Lets you learn customer pain faster", "Can generate early revenue before full automation"],
+      warnings: ["Services can hide weak product leverage if you do not productize aggressively"]
+    }
   ]
 };
 
@@ -1131,6 +1224,12 @@ export const starterStageFlow: RoadmapStageState[] = [
       {
         decisionStageId: "industry-selection",
         decisionKey: "categoryId",
+        matchValue: "startup-tech",
+        stageIds: ["startup-foundation"]
+      },
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "categoryId",
         matchValue: "online-digital",
         stageIds: ["platform-setup"]
       },
@@ -1141,6 +1240,134 @@ export const starterStageFlow: RoadmapStageState[] = [
         stageIds: ["franchise-application"]
       }
     ]
+  },
+
+  // ── Tech startup path: stages 5-11 ───────────────────────────────────────
+  {
+    stageId: "startup-foundation",
+    code: "startup_foundation",
+    title: "Founder and company setup",
+    type: "execution",
+    status: "locked",
+    stepNumber: 5,
+    totalSteps: 11,
+    goal: "Clarify the founding structure, company setup path, equity basics, and the one problem worth solving first.",
+    whyNow: "Founder misalignment and fuzzy ownership destroy startups before customers ever do.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["founder-alignment", "equity-plan-defined", "company-formation-path"]
+    },
+    taskIds: ["founder-alignment", "equity-plan-defined", "company-formation-path", "83b-safe-basics"],
+    riskIds: [],
+    nextStageIds: ["customer-discovery"]
+  },
+  {
+    stageId: "customer-discovery",
+    code: "customer_discovery",
+    title: "Customer discovery",
+    type: "execution",
+    status: "locked",
+    stepNumber: 6,
+    totalSteps: 11,
+    goal: "Run customer interviews, identify repeated pain, and narrow to one wedge problem with real urgency.",
+    whyNow: "A startup dies when it builds for a vague audience instead of a painful problem.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["customer-interviews-done", "pain-pattern-documented", "narrow-wedge-defined"]
+    },
+    taskIds: ["customer-interviews-done", "pain-pattern-documented", "narrow-wedge-defined"],
+    riskIds: [],
+    nextStageIds: ["mvp-build"]
+  },
+  {
+    stageId: "mvp-build",
+    code: "mvp_build",
+    title: "MVP and proof of value",
+    type: "execution",
+    status: "locked",
+    stepNumber: 7,
+    totalSteps: 11,
+    goal: "Ship the minimum useful product that solves one core workflow and captures the first proof of value.",
+    whyNow: "Shipping late or building too broad is the fastest way to burn runway without learning.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["core-workflow-defined", "mvp-shipped", "first-user-feedback-loop"]
+    },
+    taskIds: ["core-workflow-defined", "mvp-shipped", "first-user-feedback-loop"],
+    riskIds: [],
+    nextStageIds: ["launch-stack"]
+  },
+  {
+    stageId: "launch-stack",
+    code: "launch_stack",
+    title: "Launch stack and instrumentation",
+    type: "execution",
+    status: "locked",
+    stepNumber: 8,
+    totalSteps: 11,
+    goal: "Put billing, analytics, error tracking, and customer feedback loops in place before pushing harder on growth.",
+    whyNow: "Without instrumentation, founders mistake noise for signal and waste weeks chasing the wrong problem.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "support-loop-live"]
+    },
+    taskIds: ["analytics-live", "billing-or-conversion-live", "support-loop-live", "error-monitoring-live"],
+    riskIds: [],
+    nextStageIds: ["growth-engine"]
+  },
+  {
+    stageId: "growth-engine",
+    code: "growth_engine",
+    title: "Growth and retention loop",
+    type: "execution",
+    status: "locked",
+    stepNumber: 9,
+    totalSteps: 11,
+    goal: "Define the north-star metric, review growth weekly, and prove that users return or expand over time.",
+    whyNow: "Topline growth without retention is usually a temporary illusion.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["north-star-set", "weekly-review-running", "retention-check-defined"]
+    },
+    taskIds: ["north-star-set", "weekly-review-running", "retention-check-defined", "first-gtm-channel-tested"],
+    riskIds: [],
+    nextStageIds: ["company-setup"]
+  },
+  {
+    stageId: "company-setup",
+    code: "company_setup",
+    title: "Company, finance, and security basics",
+    type: "execution",
+    status: "locked",
+    stepNumber: 10,
+    totalSteps: 11,
+    goal: "Set up incorporation, banking, lightweight finance ops, privacy, and core security foundations.",
+    whyNow: "Weak company plumbing creates painful delays when customers, hires, or investors ask for basic diligence.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["banking-finance-stack", "privacy-security-basics", "data-room-basics"]
+    },
+    taskIds: ["banking-finance-stack", "privacy-security-basics", "data-room-basics"],
+    riskIds: [],
+    nextStageIds: ["fundraising-readiness"]
+  },
+  {
+    stageId: "fundraising-readiness",
+    code: "fundraising_readiness",
+    title: "Runway and fundraising readiness",
+    type: "execution",
+    status: "locked",
+    stepNumber: 11,
+    totalSteps: 11,
+    goal: "Model runway, define milestones, and prepare a crisp investor-ready story only if fundraising is actually needed.",
+    whyNow: "Fundraising without a clear use-of-cash plan usually burns time and leverage.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["runway-model-ready", "milestone-plan-ready", "investor-material-ready"]
+    },
+    taskIds: ["runway-model-ready", "milestone-plan-ready", "investor-material-ready"],
+    riskIds: [],
+    nextStageIds: []
   },
 
   // ── Franchise path: application stage (only for franchise startupType) ─────
@@ -1220,13 +1447,13 @@ export const starterStageFlow: RoadmapStageState[] = [
   {
     stageId: "construction-setup",
     code: "construction_setup",
-    title: "Interior and construction",
+    title: "Interior, fixtures and equipment",
     type: "execution",
     status: "locked",
     stepNumber: 8,
     totalSteps: 14,
-    goal: "Select interior contractors, approve the layout design, and manage the construction timeline.",
-    whyNow: "Interior is usually the largest single cost — locking in a contractor and design early prevents overrun.",
+    goal: "Select interior contractors, approve the layout design, and manage the construction timeline. Also plan furniture, fixtures, and equipment (FF&E) including IT devices if applicable.",
+    whyNow: "Interior and FF&E are usually the largest single cost — locking in contractors, furniture, and equipment early prevents overrun.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["contractor-selected", "design-approved"]
@@ -1437,13 +1664,13 @@ export const starterStageFlow: RoadmapStageState[] = [
   {
     stageId: "loan-guide",
     code: "loan_guide",
-    title: "Review loan guide",
+    title: "Funding and support programs",
     type: "verification",
     status: "locked",
     stepNumber: 15,
     totalSteps: 18,
-    goal: "Review financing guidance so borrowing decisions are based on current requirements and realistic assumptions.",
-    whyNow: "Loan timing and paperwork are easier to prepare once tax setup is clearer.",
+    goal: "Explore government funding, startup support programs, low-interest loans, and grants. Match your profile to available programs before committing personal capital.",
+    whyNow: "Government programs have application deadlines. Missing them means paying full cost out of pocket. Check eligibility early.",
     completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
     taskIds: [],
     riskIds: [],
@@ -1516,6 +1743,45 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "fc-legal", title: "Get legal review of franchise contract", status: "todo", required: false, estimatedMinutes: 120 },
     { taskId: "fc-contract", title: "Sign franchise agreement and pay franchise fee", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "fc-training", title: "Complete HQ training program", status: "todo", required: true, estimatedMinutes: 2400 }
+  ],
+  // ── Tech startup path tasks ───────────────────────────────────────────────
+  "startup-foundation": [
+    { taskId: "founder-alignment", title: "Write founder roles, decision rights, and what each founder owns", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "equity-plan-defined", title: "Define founder equity, vesting, and dilution assumptions", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "company-formation-path", title: "Decide incorporation path, banking plan, and jurisdiction", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "83b-safe-basics", title: "Review 83(b), SAFE, and cap table basics before fundraising", status: "todo", required: false, estimatedMinutes: 30 }
+  ],
+  "customer-discovery": [
+    { taskId: "customer-interviews-done", title: "Run at least 10 customer interviews in one target segment", status: "todo", required: true, estimatedMinutes: 180 },
+    { taskId: "pain-pattern-documented", title: "Document repeated pain patterns, existing workarounds, and urgency", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "narrow-wedge-defined", title: "Choose the narrowest painful workflow to solve first", status: "todo", required: true, estimatedMinutes: 45 }
+  ],
+  "mvp-build": [
+    { taskId: "core-workflow-defined", title: "Define one core user workflow and success outcome", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "mvp-shipped", title: "Ship the smallest MVP that proves this workflow can be solved", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "first-user-feedback-loop", title: "Collect direct feedback from first users and log what blocks repeat use", status: "todo", required: true, estimatedMinutes: 90 }
+  ],
+  "launch-stack": [
+    { taskId: "analytics-live", title: "Install analytics for activation, retention, and funnel events", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "billing-or-conversion-live", title: "Set up billing, pricing, or conversion tracking before launch", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "support-loop-live", title: "Create a support and user-feedback loop founders check every day", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "error-monitoring-live", title: "Install error and uptime monitoring for production", status: "todo", required: false, estimatedMinutes: 30 }
+  ],
+  "growth-engine": [
+    { taskId: "north-star-set", title: "Choose one north-star metric and one weekly growth metric", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "weekly-review-running", title: "Run a weekly review for growth, burn, and biggest bottleneck", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "retention-check-defined", title: "Define a retention check so growth is not judged on acquisition alone", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "first-gtm-channel-tested", title: "Test one focused GTM channel with real users or pilots", status: "todo", required: false, estimatedMinutes: 120 }
+  ],
+  "company-setup": [
+    { taskId: "banking-finance-stack", title: "Separate company banking, bookkeeping, and cash tracking", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "privacy-security-basics", title: "Put basic privacy, access control, and security hygiene in place", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "data-room-basics", title: "Prepare a lightweight data room with incorporation and KPI basics", status: "todo", required: true, estimatedMinutes: 45 }
+  ],
+  "fundraising-readiness": [
+    { taskId: "runway-model-ready", title: "Model burn, runway, and the milestones cash must buy", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "milestone-plan-ready", title: "Define the milestone plan for PMF, revenue, or pilots before raising", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "investor-material-ready", title: "Prepare a crisp deck, metric snapshot, and founder narrative", status: "todo", required: true, estimatedMinutes: 90 }
   ],
   // ── Offline path tasks ─────────────────────────────────────────────────────
   "permit-check": [

@@ -45,10 +45,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "OPENAI_API_KEY is not configured." },
+      { error: "AI 서비스가 설정되지 않았습니다." },
       { status: 500 }
     );
   }

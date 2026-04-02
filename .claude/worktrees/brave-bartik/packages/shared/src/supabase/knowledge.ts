@@ -1,0 +1,324 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RecommendationItem } from "../types/roadmap";
+import type {
+  FreshnessMeta,
+  FreshnessStatus,
+  KnowledgeItemRecord,
+  KnowledgeItemSourceRecord
+} from "../types/freshness";
+import type {
+  StageGuideContent,
+  StageGuideStep,
+  StageGuideWarning,
+  StageGuideAiTool
+} from "../types/stage-guide";
+import type { BuildUpDatabase } from "./client";
+
+type Client = SupabaseClient<BuildUpDatabase>;
+
+type LoadKnowledgeRecommendationsParams = {
+  domain: string;
+  itemType: string;
+  categoryId?: string;
+};
+
+export type LoadKnowledgeRecordsParams = LoadKnowledgeRecommendationsParams;
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function mapKnowledgeItemRow(
+  row: BuildUpDatabase["public"]["Tables"]["knowledge_items"]["Row"]
+): KnowledgeItemRecord {
+  return {
+    id: row.id,
+    itemKey: row.item_key,
+    itemType: row.item_type,
+    domain: row.domain,
+    title: row.title,
+    summary: row.summary ?? undefined,
+    payload: row.payload ?? {},
+    freshnessStatus: row.freshness_status,
+    lastCheckedAt: row.last_checked_at ?? undefined,
+    nextReviewAt: row.next_review_at ?? undefined,
+    notes: row.notes ?? undefined,
+    isActive: row.is_active
+  };
+}
+
+function mapKnowledgeSourceRow(
+  row: BuildUpDatabase["public"]["Tables"]["knowledge_item_sources"]["Row"]
+): KnowledgeItemSourceRecord {
+  return {
+    id: row.id,
+    knowledgeItemId: row.knowledge_item_id,
+    sourceName: row.source_name,
+    sourceUrl: row.source_url,
+    verifiedAt: row.verified_at,
+    expiresAt: row.expires_at ?? undefined,
+    confidence: row.confidence
+  };
+}
+
+function buildFreshnessMeta(
+  item: KnowledgeItemRecord,
+  sources: KnowledgeItemSourceRecord[]
+): FreshnessMeta | undefined {
+  if (!item.lastCheckedAt) {
+    return undefined;
+  }
+
+  return {
+    status: item.freshnessStatus as FreshnessStatus,
+    label:
+      item.freshnessStatus === "fresh"
+        ? "Official source reviewed"
+        : item.freshnessStatus === "review_soon"
+          ? "Review due soon"
+          : item.freshnessStatus === "stale"
+            ? "Stale information"
+            : "Blocked until review",
+    sources: sources.map((source) => ({
+      sourceName: source.sourceName,
+      sourceUrl: source.sourceUrl,
+      verifiedAt: source.verifiedAt,
+      expiresAt: source.expiresAt,
+      confidence: source.confidence
+    })),
+    lastCheckedAt: item.lastCheckedAt,
+    nextReviewAt: item.nextReviewAt,
+    notes: item.notes
+  };
+}
+
+function mapRecommendationItem(
+  item: KnowledgeItemRecord,
+  sources: KnowledgeItemSourceRecord[]
+): RecommendationItem {
+  const payload = item.payload ?? {};
+
+  return {
+    id: item.itemKey,
+    title: item.title,
+    score: typeof payload.score === "number" ? payload.score : undefined,
+    summary: item.summary,
+    reasons: isStringArray(payload.reasons) ? payload.reasons : undefined,
+    warnings: isStringArray(payload.warnings) ? payload.warnings : undefined,
+    meta:
+      payload.meta && typeof payload.meta === "object" && !Array.isArray(payload.meta)
+        ? (payload.meta as Record<string, string | number>)
+        : undefined,
+    freshness: buildFreshnessMeta(item, sources)
+  };
+}
+
+export async function loadKnowledgeRecommendations(
+  client: Client,
+  params: LoadKnowledgeRecommendationsParams
+): Promise<RecommendationItem[]> {
+  const { data: itemRows, error: itemError } = await client
+    .from("knowledge_items")
+    .select("*")
+    .eq("domain", params.domain)
+    .eq("item_type", params.itemType)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false });
+
+  if (itemError) {
+    throw itemError;
+  }
+
+  const items = (itemRows ?? []).map(mapKnowledgeItemRow).filter((item) => {
+    if (!params.categoryId) {
+      return true;
+    }
+
+    return item.payload?.categoryId === params.categoryId;
+  });
+
+  if (items.length === 0) {
+    return [];
+  }
+
+  const itemIds = items.map((item) => item.id);
+  const { data: sourceRows, error: sourceError } = await client
+    .from("knowledge_item_sources")
+    .select("*")
+    .in("knowledge_item_id", itemIds);
+
+  if (sourceError) {
+    throw sourceError;
+  }
+
+  const sources = (sourceRows ?? []).map(mapKnowledgeSourceRow);
+
+  return items.map((item) =>
+    mapRecommendationItem(
+      item,
+      sources.filter((source) => source.knowledgeItemId === item.id)
+    )
+  );
+}
+
+export async function loadKnowledgeRecords(
+  client: Client,
+  params: LoadKnowledgeRecordsParams
+): Promise<Array<KnowledgeItemRecord & { sources: KnowledgeItemSourceRecord[]; freshness?: FreshnessMeta }>> {
+  const { data: itemRows, error: itemError } = await client
+    .from("knowledge_items")
+    .select("*")
+    .eq("domain", params.domain)
+    .eq("item_type", params.itemType)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false });
+
+  if (itemError) {
+    throw itemError;
+  }
+
+  const allItems = (itemRows ?? []).map(mapKnowledgeItemRow);
+  const categoryMatches = params.categoryId
+    ? allItems.filter((item) => item.payload?.categoryId === params.categoryId)
+    : allItems;
+  const items = categoryMatches.length > 0 ? categoryMatches : allItems.slice(0, 1);
+
+  if (items.length === 0) {
+    return [];
+  }
+
+  const itemIds = items.map((item) => item.id);
+  const { data: sourceRows, error: sourceError } = await client
+    .from("knowledge_item_sources")
+    .select("*")
+    .in("knowledge_item_id", itemIds);
+
+  if (sourceError) {
+    throw sourceError;
+  }
+
+  const sources = (sourceRows ?? []).map(mapKnowledgeSourceRow);
+
+  return items.map((item) => {
+    const itemSources = sources.filter((source) => source.knowledgeItemId === item.id);
+
+    return {
+      ...item,
+      sources: itemSources,
+      freshness: buildFreshnessMeta(item, itemSources)
+    };
+  });
+}
+
+export async function loadKnowledgeRecordById(client: Client, guideId: string) {
+  const { data: itemRow, error: itemError } = await client
+    .from("knowledge_items")
+    .select("*")
+    .eq("id", guideId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (itemError) {
+    throw itemError;
+  }
+
+  if (!itemRow) {
+    return null;
+  }
+
+  const item = mapKnowledgeItemRow(itemRow);
+  const { data: sourceRows, error: sourceError } = await client
+    .from("knowledge_item_sources")
+    .select("*")
+    .eq("knowledge_item_id", guideId);
+
+  if (sourceError) {
+    throw sourceError;
+  }
+
+  const sources = (sourceRows ?? []).map(mapKnowledgeSourceRow);
+
+  return {
+    ...item,
+    sources,
+    freshness: buildFreshnessMeta(item, sources)
+  };
+}
+
+export async function loadPermitKnowledge(client: Client, categoryId?: string) {
+  return loadKnowledgeRecords(client, {
+    domain: "permit-guide",
+    itemType: "permit_summary",
+    categoryId
+  });
+}
+
+export async function loadTaxKnowledge(client: Client, categoryId?: string) {
+  return loadKnowledgeRecords(client, {
+    domain: "tax-guide",
+    itemType: "tax_summary",
+    categoryId
+  });
+}
+
+export async function loadLoanKnowledge(client: Client, categoryId?: string) {
+  return loadKnowledgeRecords(client, {
+    domain: "loan-guide",
+    itemType: "loan_product",
+    categoryId
+  });
+}
+
+function mapStageGuideRow(
+  row: BuildUpDatabase["public"]["Tables"]["stage_guide_content"]["Row"]
+): StageGuideContent {
+  return {
+    id: row.id,
+    stageCode: row.stage_code,
+    categoryId: row.category_id,
+    locale: row.locale,
+    summary: row.summary,
+    whyNow: row.why_now,
+    steps: Array.isArray(row.steps) ? (row.steps as StageGuideStep[]) : [],
+    costRange: row.cost_range,
+    timeEstimate: row.time_estimate,
+    warnings: Array.isArray(row.warnings) ? (row.warnings as StageGuideWarning[]) : [],
+    aiTools: Array.isArray(row.ai_tools) ? (row.ai_tools as StageGuideAiTool[]) : [],
+    expertWhen: row.expert_when,
+    expertType: row.expert_type
+  };
+}
+
+export async function loadStageGuideContent(
+  client: Client,
+  stageCode: string,
+  categoryId?: string,
+  locale = "ko"
+): Promise<StageGuideContent | null> {
+  // Try category-specific first, fall back to general (null category_id)
+  if (categoryId) {
+    const { data, error } = await client
+      .from("stage_guide_content")
+      .select("*")
+      .eq("stage_code", stageCode)
+      .eq("category_id", categoryId)
+      .eq("locale", locale)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return mapStageGuideRow(data);
+  }
+
+  const { data, error } = await client
+    .from("stage_guide_content")
+    .select("*")
+    .eq("stage_code", stageCode)
+    .is("category_id", null)
+    .eq("locale", locale)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapStageGuideRow(data) : null;
+}

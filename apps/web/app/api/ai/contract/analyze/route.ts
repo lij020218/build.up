@@ -1,12 +1,15 @@
 import { analyzeContract, AiParseError } from "@build-up/ai";
-import type { ContractAnalysisResult } from "@build-up/ai";
+import type { ContractAnalysisResult, ContractType } from "@build-up/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getRequestId, logApiError, logApiEvent } from "../../../_lib/observability";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 
+const VALID_CONTRACT_TYPES: ContractType[] = ["commercial_lease", "franchise_agreement", "employment"];
+
 type RequestBody = {
   contractText?: string;
+  contractType?: ContractType;
 };
 
 const MIN_LENGTH = 100;
@@ -49,7 +52,7 @@ export async function POST(request: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not configured." },
+      { error: "AI 서비스가 설정되지 않았습니다." },
       { status: 500 }
     );
   }
@@ -62,6 +65,9 @@ export async function POST(request: Request) {
   }
 
   const text = body.contractText?.trim() ?? "";
+  const contractType: ContractType = body.contractType && VALID_CONTRACT_TYPES.includes(body.contractType)
+    ? body.contractType
+    : "commercial_lease";
 
   if (text.length < MIN_LENGTH) {
     return NextResponse.json(
@@ -78,7 +84,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await analyzeContract(text, { apiKey });
+    const result = await analyzeContract(text, { apiKey }, contractType);
     return NextResponse.json(result satisfies ContractAnalysisResult, {
       headers: {
         "x-request-id": requestId

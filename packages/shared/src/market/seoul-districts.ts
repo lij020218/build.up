@@ -213,7 +213,7 @@ export function findMatchingDistricts(regionInput: string): MarketDistrict[] {
   }
 
   // 5. No match at all — return top 3 overall
-  return seoulMarketDistricts
+  return [...seoulMarketDistricts]
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 }

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "../../../_lib/auth";
+import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 
 /**
  * POST /api/ai/business-plan/generate
@@ -35,9 +37,23 @@ type BusinessPlanResponse = {
 };
 
 export async function POST(req: NextRequest) {
+  const auth = await requireApiUser(req);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const rateLimit = checkSimpleRateLimit({
+    key: `business-plan:${auth.userId}`,
+    limit: 5,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });
+    return NextResponse.json({ error: "AI 서비스가 설정되지 않았습니다." }, { status: 500 });
   }
 
   let input: BusinessPlanInput;
@@ -107,7 +123,7 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const err = await res.text();
       console.error("[business-plan] Anthropic API error:", res.status, err);
-      return NextResponse.json({ error: `AI API error: ${res.status}` }, { status: 502 });
+      return NextResponse.json({ error: "AI 응답 생성에 실패했습니다." }, { status: 502 });
     }
 
     const data = await res.json();
@@ -122,21 +138,33 @@ export async function POST(req: NextRequest) {
       // Try to extract JSON from mixed response
       const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+        } catch {
+          return NextResponse.json({ error: "Failed to parse AI response" }, { status: 502 });
+        }
       } else {
         return NextResponse.json({ error: "Failed to parse AI response" }, { status: 502 });
       }
     }
 
-    if (!parsed.sections || !Array.isArray(parsed.sections)) {
+    if (!parsed.sections || !Array.isArray(parsed.sections) || parsed.sections.length === 0) {
       return NextResponse.json({ error: "Invalid AI response structure" }, { status: 502 });
+    }
+
+    // Validate each section has required fields
+    parsed.sections = parsed.sections.filter(
+      (s: Record<string, unknown>) => s && typeof s.title === "string" && typeof s.content === "string"
+    );
+    if (parsed.sections.length === 0) {
+      return NextResponse.json({ error: "AI response sections are empty or malformed" }, { status: 502 });
     }
 
     return NextResponse.json(parsed);
   } catch (err) {
     console.error("[business-plan] Error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Unknown error" },
+      { error: "사업계획서 생성 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }

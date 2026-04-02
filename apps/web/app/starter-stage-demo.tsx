@@ -50,8 +50,6 @@ import {
   starterTaskMap,
   updateTaskStatus,
   upsertStageDecision,
-  type KnowledgeItemRecord,
-  type KnowledgeItemSourceRecord,
   type StageGuideContent,
   type GuideQaAnswer,
   type PersistedBusinessProfile,
@@ -62,6 +60,10 @@ import {
   resolveBusinessContext,
   franchiseBrands,
   getHighlightedPrograms,
+  getMatchedPrograms,
+  getMatchedProgramsV2,
+  getApplicationStatusLabel,
+  getMatchedHighlights,
   getProgramCategoryLabel,
   getProgramCategoryColor,
   startupPrograms,
@@ -86,6 +88,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import { fetchLiveSupportPrograms } from "./lib/services/live-data";
+import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/DashboardContext";
+import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
+import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { useLanguage } from "./language-provider";
 import { useNotifications } from "./notification-context";
 import {
@@ -97,2249 +103,40 @@ import {
   Star, Scissors, AlignLeft, Megaphone, Store, Cpu, RefreshCw,
   Maximize2, MapPin, Monitor, Smile, Building2, LayoutGrid,
   CreditCard, ClipboardList, BarChart2, Bike,
+  Wifi, Camera, Users, Globe,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-
-type GuideRecord = KnowledgeItemRecord & {
-  sources: KnowledgeItemSourceRecord[];
-  freshness?: import("@build-up/shared").FreshnessMeta;
-};
-
-type SavedFinanceSnapshot = {
-  capital: number;
-  marketStyle: string;
-  rentBand: string;
-  monthlyRent?: number;
-  monthlyLaborCost?: number;
-  expectedMonthlyRevenue?: number;
-  riskLevel: "low" | "medium" | "high" | "critical";
-  survivabilityMonths: number;
-  breakEvenMonth: number | null;
-  breakEvenRevenue: number;
-  capitalAfterSetupLow: number;
-  capitalAfterSetupHigh: number;
-  totalMonthlyFixed: number;
-  cogsRate: number;
-  interpretation?: AiStructuredResponse;
-  savedAt?: string;
-};
-
-type SavedContractAnalysisSnapshot = {
-  contractText?: string;
-  analysis: ContractAnalysisResult;
-  savedAt?: string;
-};
-
-type SavedGuideQaSnapshot = {
-  question: string;
-  answer: GuideQaAnswer;
-  savedAt?: string;
-};
-
-const GUIDE_STAGE_CODES = ["tax_guide", "loan_guide"] as const;
-export type DashboardSurface = "home" | "current" | "roadmap" | "guides" | "franchise" | "profile" | "analytics";
-const HOME_GRID_COLUMNS = "minmax(0, 1.18fr) minmax(340px, 0.92fr)";
-const HOME_SHOWCASE_HEIGHT = "640px";
-
-const SURFACE_HREFS: Record<DashboardSurface, string> = {
-  home: "/",
-  current: "/current",
-  roadmap: "/roadmap",
-  guides: "/guides",
-  franchise: "/franchise",
-  profile: "/profile",
-  analytics: "/analytics"
-};
-
-/* ── Kakao Map for Location Analysis ── */
-function LocationMapPanel(props: {
-  candidates: Array<{ id: string; title: string; score?: number | null; meta?: Record<string, unknown> }>;
-  selectedId: string | undefined;
-  onSelect: (id: string) => void;
-  language: "ko" | "en";
-  region: string;
-}) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const ko = props.language === "ko";
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const w = window as any;
-    const kakao = w.kakao;
-    if (!kakao?.maps) {
-      setMapError(ko ? "카카오맵 SDK가 로드되지 않았습니다." : "Kakao Maps SDK not loaded.");
-      return;
-    }
-
-    const init = () => {
-      try {
-        const maps = kakao.maps;
-        const center = new maps.LatLng(37.5665, 126.978);
-        const map = new maps.Map(mapRef.current, { center, level: 7 });
-        setMapLoaded(true);
-
-        if (!maps.services) return;
-        const ps = new maps.services.Places();
-        const geo = new maps.services.Geocoder();
-        const bounds = new maps.LatLngBounds();
-        const overlays: any[] = [];
-        let resolved = 0;
-        const total = props.candidates.length;
-
-        const addPin = (c: typeof props.candidates[0], lat: number, lng: number) => {
-          const pos = new maps.LatLng(lat, lng);
-          bounds.extend(pos);
-
-          const scoreColor = (c.score ?? 0) >= 85 ? "#34c759" : (c.score ?? 0) >= 70 ? "#007aff" : "#ff9f0a";
-          const isSelected = c.id === props.selectedId;
-
-          const el = document.createElement("div");
-          el.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;border-radius:20px;background:${isSelected ? "#1d3557" : "#fff"};border:1.5px solid ${isSelected ? "#1d3557" : "rgba(0,0,0,0.1)"};box-shadow:0 2px 10px rgba(0,0,0,0.15);cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,sans-serif;white-space:nowrap;`;
-          el.innerHTML = `<span style="min-width:24px;height:24px;border-radius:8px;background:${scoreColor}20;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${scoreColor}">${c.score ?? "-"}</span><span style="font-size:12px;font-weight:600;color:${isSelected ? "#fff" : "#1d1d1f"}">${c.title}</span>`;
-          el.onclick = () => props.onSelect(c.id);
-
-          const overlay = new maps.CustomOverlay({ position: pos, content: el, yAnchor: 1.4 });
-          overlay.setMap(map);
-          overlays.push(overlay);
-        };
-
-        const checkDone = () => {
-          resolved++;
-          if (resolved >= total && overlays.length > 0) {
-            map.setBounds(bounds);
-          }
-        };
-
-        // Search candidates SEQUENTIALLY — Kakao Places API cancels concurrent calls
-        const searchNext = (idx: number) => {
-          if (idx >= props.candidates.length) {
-            if (overlays.length > 0) map.setBounds(bounds);
-            return;
-          }
-          const c = props.candidates[idx];
-          const district = c.meta?.districtName ? String(c.meta.districtName) : "";
-          const region = props.region.trim();
-
-          const tryGeo = () => {
-            const addr = district || `${region} ${c.title}`;
-            geo.addressSearch(addr, (result: any[], s: string) => {
-              if (s === maps.services.Status.OK && result.length > 0) {
-                addPin(c, parseFloat(result[0].y), parseFloat(result[0].x));
-              }
-              searchNext(idx + 1);
-            });
-          };
-
-          const tryDistrict = () => {
-            const q = district || c.title;
-            ps.keywordSearch(q, (d: any[], s: string) => {
-              if (s === maps.services.Status.OK && d.length > 0) {
-                addPin(c, parseFloat(d[0].y), parseFloat(d[0].x));
-                searchNext(idx + 1);
-              } else {
-                tryGeo();
-              }
-            }, { size: 1 });
-          };
-
-          const q1 = `${c.title} ${region}`;
-          ps.keywordSearch(q1, (d: any[], s: string) => {
-            if (s === maps.services.Status.OK && d.length > 0) {
-              addPin(c, parseFloat(d[0].y), parseFloat(d[0].x));
-              searchNext(idx + 1);
-            } else {
-              tryDistrict();
-            }
-          }, { size: 1 });
-        };
-        searchNext(0);
-      } catch (err: any) {
-        setMapError(err?.message ?? "Map init failed");
-      }
-    };
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-
-    if (kakao.maps.load) {
-      kakao.maps.load(init);
-    } else {
-      init();
-    }
-  }, [props.candidates, props.selectedId, props.region]);
-
-  return (
-    <div style={{
-      borderRadius: "20px",
-      overflow: "hidden",
-      border: "1px solid var(--border)",
-      background: "#e8e8ed",
-      marginBottom: "16px"
-    }}>
-      {mapError ? (
-        <div style={{ padding: "40px 20px", textAlign: "center", fontSize: "13px", color: "var(--muted)" }}>
-          {mapError}
-        </div>
-      ) : (
-        <div
-          ref={mapRef}
-          style={{ width: "100%", height: "300px" }}
-        />
-      )}
-      <div style={{
-        padding: "10px 16px",
-        background: "rgba(255,255,255,0.88)",
-        borderTop: "1px solid var(--border)",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
-        <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted)" }}>
-          {ko ? `추천 입지 ${props.candidates.length}곳` : `${props.candidates.length} recommended locations`}
-        </span>
-        <span style={{ fontSize: "11px", color: "var(--muted)" }}>
-          {mapLoaded ? (ko ? "지도에서 핀을 클릭하여 선택" : "Click pins to select") : (ko ? "지도 로딩 중..." : "Loading map...")}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function SurfaceIcon(props: { surface: DashboardSurface }) {
-  const common = {
-    width: 16,
-    height: 16,
-    viewBox: "0 0 16 16",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.5,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const
-  };
-
-  if (props.surface === "home") {
-    return (
-      <svg {...common}>
-        <path d="M2.5 7.2 8 2.8l5.5 4.4" />
-        <path d="M4.2 6.7V13h7.6V6.7" />
-      </svg>
-    );
-  }
-
-  if (props.surface === "current") {
-    return (
-      <svg {...common}>
-        <rect x="3" y="2.8" width="10" height="10.4" rx="2.2" />
-        <path d="M5.2 5.6h5.6M5.2 8h3.8" />
-      </svg>
-    );
-  }
-
-  if (props.surface === "roadmap") {
-    return (
-      <svg {...common}>
-        <path d="M4 4.5h8" />
-        <path d="M4 8h8" />
-        <path d="M4 11.5h5.5" />
-        <circle cx="2.8" cy="4.5" r="0.8" fill="currentColor" stroke="none" />
-        <circle cx="2.8" cy="8" r="0.8" fill="currentColor" stroke="none" />
-        <circle cx="2.8" cy="11.5" r="0.8" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  }
-
-  if (props.surface === "guides") {
-    return (
-      <svg {...common}>
-        <path d="M4.2 3.2h7.6a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H4.2a1 1 0 0 1-1-1V4.2a1 1 0 0 1 1-1Z" />
-        <path d="M5.5 5.7h5M5.5 8h5M5.5 10.3h3.2" />
-      </svg>
-    );
-  }
-
-  if (props.surface === "franchise") {
-    return (
-      <svg {...common}>
-        <path d="M3 13V5.5L8 3l5 2.5V13" />
-        <path d="M6 13V9h4v4" />
-        <path d="M3 5.5h10" />
-      </svg>
-    );
-  }
-
-  if (props.surface === "analytics") {
-    return (
-      <svg {...common}>
-        <rect x="2.5" y="9" width="2.5" height="4" rx="0.6" />
-        <rect x="6.75" y="5.5" width="2.5" height="7.5" rx="0.6" />
-        <rect x="11" y="2.5" width="2.5" height="10.5" rx="0.6" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg {...common}>
-      <circle cx="8" cy="5.3" r="2.2" />
-      <path d="M3.8 12.5c1.1-1.8 2.6-2.7 4.2-2.7s3.1.9 4.2 2.7" />
-    </svg>
-  );
-}
-
-function getGuideSections(
-  guide: GuideRecord | null,
-  language: import("@build-up/shared").Language
-) {
-  if (!guide) {
-    return [];
-  }
-
-  return Object.entries(guide.payload)
-    .filter(([, value]) => Array.isArray(value))
-    .map(([key, value]) => ({
-      key,
-      title: formatGuideSectionTitle(key, language),
-      items: (value as unknown[]).map((item) => String(item))
-    }));
-}
-
-function formatConfidenceBadge(
-  confidence: GuideQaAnswer["confidence"],
-  language: "ko" | "en"
-) {
-  if (language === "ko") {
-    if (confidence === "high") return "신뢰 높음";
-    if (confidence === "medium") return "신뢰 보통";
-    return "추가 확인 필요";
-  }
-
-  if (confidence === "high") return "High confidence";
-  if (confidence === "medium") return "Medium confidence";
-  return "Check needed";
-}
-
-function parseManwonInput(value: string) {
-  const digits = value.replace(/[^\d]/g, "");
-  if (!digits) {
-    return undefined;
-  }
-
-  const amount = Number.parseInt(digits, 10);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return undefined;
-  }
-
-  return amount * 10000;
-}
-
-function inferFinanceDefaults(
-  market: RecommendationItem | null,
-  categoryId: string
-) {
-  const marketStyle = String(
-    market?.meta?.marketStyle ??
-      (categoryId === "online-digital"
-        ? "balanced"
-        : categoryId === "food"
-          ? "office"
-          : categoryId === "living-service" || categoryId === "education"
-            ? "residential"
-            : "balanced")
-  );
-
-  const rentBand = String(
-    market?.meta?.rentBand ??
-      (categoryId === "online-digital"
-        ? "mid-low"
-        : categoryId === "cafe-dessert"
-          ? "high"
-          : categoryId === "food"
-            ? "mid-high"
-            : "mid")
-  );
-
-  return { marketStyle, rentBand };
-}
-
-function formatBreakEvenMonth(month: number | null, language: "ko" | "en") {
-  if (month === null) {
-    return language === "ko" ? "6개월 내 미도달" : "Not within 6 months";
-  }
-
-  return language === "ko" ? `${month}개월차` : `Month ${month}`;
-}
-
-function hydrateSavedFinanceSnapshot(
-  decision: WorkflowDecisionMap[string] | undefined
-): SavedFinanceSnapshot | null {
-  const inputs = decision?.inputs;
-
-  if (!inputs || typeof inputs.capital !== "number" || typeof inputs.breakEvenRevenue !== "number") {
-    return null;
-  }
-
-  const rationale = Array.isArray(inputs.aiRationale)
-    ? inputs.aiRationale.filter((item): item is string => typeof item === "string")
-    : [];
-  const warnings = Array.isArray(inputs.aiWarnings)
-    ? inputs.aiWarnings.filter((item): item is string => typeof item === "string")
-    : [];
-  const nextActions = Array.isArray(inputs.aiNextActions)
-    ? inputs.aiNextActions.filter((item): item is string => typeof item === "string")
-    : [];
-
-  return {
-    capital: inputs.capital,
-    marketStyle: typeof inputs.marketStyle === "string" ? inputs.marketStyle : "balanced",
-    rentBand: typeof inputs.rentBand === "string" ? inputs.rentBand : "mid",
-    monthlyRent: typeof inputs.monthlyRent === "number" ? inputs.monthlyRent : undefined,
-    monthlyLaborCost: typeof inputs.monthlyLaborCost === "number" ? inputs.monthlyLaborCost : undefined,
-    expectedMonthlyRevenue:
-      typeof inputs.expectedMonthlyRevenue === "number" ? inputs.expectedMonthlyRevenue : undefined,
-    riskLevel:
-      inputs.riskLevel === "low" ||
-      inputs.riskLevel === "medium" ||
-      inputs.riskLevel === "high" ||
-      inputs.riskLevel === "critical"
-        ? inputs.riskLevel
-        : "medium",
-    survivabilityMonths:
-      typeof inputs.survivabilityMonths === "number" ? inputs.survivabilityMonths : 0,
-    breakEvenMonth:
-      typeof inputs.breakEvenMonth === "number" ? inputs.breakEvenMonth : null,
-    breakEvenRevenue: inputs.breakEvenRevenue,
-    capitalAfterSetupLow:
-      typeof inputs.capitalAfterSetupLow === "number" ? inputs.capitalAfterSetupLow : 0,
-    capitalAfterSetupHigh:
-      typeof inputs.capitalAfterSetupHigh === "number" ? inputs.capitalAfterSetupHigh : 0,
-    totalMonthlyFixed:
-      typeof inputs.totalMonthlyFixed === "number" ? inputs.totalMonthlyFixed : 0,
-    cogsRate: typeof inputs.cogsRate === "number" ? inputs.cogsRate : 0,
-    interpretation:
-      decision?.notes && (rationale.length > 0 || warnings.length > 0 || nextActions.length > 0)
-        ? {
-            summary: decision.notes,
-            rationale,
-            warnings,
-            nextActions
-          }
-        : undefined,
-    savedAt: decision?.completedAt
-  };
-}
-
-function hydrateSavedContractAnalysisSnapshot(
-  decision: WorkflowDecisionMap[string] | undefined
-): SavedContractAnalysisSnapshot | null {
-  const inputs = decision?.inputs;
-
-  if (!inputs || typeof inputs.riskLevel !== "string") {
-    return null;
-  }
-
-  let flaggedClauses: ContractAnalysisResult["flaggedClauses"] = [];
-  if (typeof inputs.flaggedClausesJson === "string") {
-    try {
-      const parsed = JSON.parse(inputs.flaggedClausesJson) as ContractAnalysisResult["flaggedClauses"];
-      if (Array.isArray(parsed)) {
-        flaggedClauses = parsed.filter(
-          (item): item is ContractAnalysisResult["flaggedClauses"][number] =>
-            Boolean(item) &&
-            typeof item.excerpt === "string" &&
-            typeof item.issue === "string" &&
-            (item.severity === "warning" || item.severity === "danger")
-        );
-      }
-    } catch {
-      flaggedClauses = [];
-    }
-  }
-
-  const missingItems = Array.isArray(inputs.missingItems)
-    ? inputs.missingItems.filter((item): item is string => typeof item === "string")
-    : [];
-  const unusualTerms = Array.isArray(inputs.unusualTerms)
-    ? inputs.unusualTerms.filter((item): item is string => typeof item === "string")
-    : [];
-  const nextActions = Array.isArray(inputs.nextActions)
-    ? inputs.nextActions.filter((item): item is string => typeof item === "string")
-    : [];
-
-  return {
-    contractText: typeof inputs.contractText === "string" ? inputs.contractText : undefined,
-    analysis: {
-      riskLevel:
-        inputs.riskLevel === "low" ||
-        inputs.riskLevel === "medium" ||
-        inputs.riskLevel === "high" ||
-        inputs.riskLevel === "critical"
-          ? inputs.riskLevel
-          : "medium",
-      summary: decision?.notes ?? "",
-      flaggedClauses,
-      missingItems,
-      unusualTerms,
-      nextActions
-    },
-    savedAt: decision?.completedAt
-  };
-}
-
-function hydrateSavedGuideQaSnapshot(
-  decision: WorkflowDecisionMap[string] | undefined
-): SavedGuideQaSnapshot | null {
-  const inputs = decision?.inputs;
-
-  if (!inputs || typeof inputs.question !== "string" || !decision?.notes) {
-    return null;
-  }
-
-  const cautions = Array.isArray(inputs.cautions)
-    ? inputs.cautions.filter((item): item is string => typeof item === "string")
-    : [];
-  const reasons = Array.isArray(inputs.reasons)
-    ? inputs.reasons.filter((item): item is string => typeof item === "string")
-    : [];
-  const nextActions = Array.isArray(inputs.nextActions)
-    ? inputs.nextActions.filter((item): item is string => typeof item === "string")
-    : [];
-
-  const confidence =
-    inputs.confidence === "high" || inputs.confidence === "medium" || inputs.confidence === "check_needed"
-      ? inputs.confidence
-      : "medium";
-
-  return {
-    question: inputs.question,
-    answer: {
-      shortAnswer: decision.notes,
-      explanation: typeof inputs.explanation === "string" ? inputs.explanation : "",
-      reasons,
-      cautions,
-      nextActions,
-      confidence,
-      citations: []
-    },
-    savedAt: decision.completedAt
-  };
-}
-
-function getContractAnalysisHints(
-  analysis: ContractAnalysisResult | null,
-  taskId: string,
-  categoryId: string | undefined,
-  language: "ko" | "en"
-) {
-  if (!analysis) {
-    return [];
-  }
-
-  const corpus = [
-    ...analysis.flaggedClauses.flatMap((item) => [item.excerpt, item.issue]),
-    ...analysis.missingItems,
-    ...analysis.unusualTerms
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  const keywordMap =
-    categoryId === "online-digital"
-      ? {
-          "use-check": ["작업", "공간", "보관", "창고", "스튜디오", "workspace", "storage"],
-          "facility-check": ["포장", "택배", "반품", "물류", "pickup", "returns", "shipping"],
-          "restriction-check": ["공급", "외주", "제한", "승인", "특약", "outsourcing", "approval", "restriction"]
-        }
-      : {
-          "use-check": ["용도", "업종", "영업", "건축물", "zoning", "permitted use", "permit"],
-          "facility-check": ["전기", "수도", "배기", "설비", "시설", "공사", "원상복구", "facility", "ventilation", "restoration"],
-          "restriction-check": ["권리금", "승인", "제한", "특약", "해지", "갱신", "관리비", "보증금", "임대료", "key money", "renewal", "termination", "deposit", "restriction"]
-        };
-
-  const matchedKeywords = (keywordMap[taskId as keyof typeof keywordMap] ?? []).filter((keyword) =>
-    corpus.includes(keyword.toLowerCase())
-  );
-
-  if (matchedKeywords.length === 0) {
-    return [];
-  }
-
-  const hints = analysis.flaggedClauses
-    .map((item) => item.issue)
-    .concat(analysis.missingItems, analysis.unusualTerms)
-    .filter((item) =>
-      matchedKeywords.some((keyword) => item.toLowerCase().includes(keyword.toLowerCase()))
-    );
-
-  const uniqueHints = Array.from(new Set(hints)).slice(0, 3);
-
-  if (uniqueHints.length > 0) {
-    return uniqueHints;
-  }
-
-  return [
-    language === "ko"
-      ? "계약서 분석 결과상 이 항목을 우선 확인하는 것이 좋습니다."
-      : "The contract analysis suggests reviewing this item carefully."
-  ];
-}
-
-const styles = {
-  shell: {
-    maxWidth: "1080px",
-    margin: "0 auto",
-    padding: "48px 24px 72px"
-  },
-  hero: {
-    display: "grid",
-    gap: "16px",
-    padding: "52px 0 28px"
-  },
-  eyebrow: {
-    fontSize: "14px",
-    letterSpacing: "0.18em",
-    textTransform: "uppercase" as const,
-    color: "var(--primary)"
-  },
-  title: {
-    fontSize: "clamp(40px, 7vw, 76px)",
-    lineHeight: 0.96,
-    fontWeight: 700,
-    letterSpacing: "-0.05em"
-  },
-  subtitle: {
-    maxWidth: "700px",
-    fontSize: "18px",
-    lineHeight: 1.5,
-    color: "var(--muted)"
-  },
-  cardGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-    gap: "16px",
-    marginTop: "28px"
-  },
-  card: {
-    background: "var(--surface)",
-    backdropFilter: "blur(18px)",
-    border: "1px solid var(--border)",
-    borderRadius: "28px",
-    padding: "24px",
-    display: "grid",
-    gap: "14px"
-  },
-  cardTitle: {
-    fontSize: "22px",
-    fontWeight: 650
-  },
-  list: {
-    margin: 0,
-    paddingLeft: "18px",
-    color: "var(--muted)",
-    lineHeight: 1.8
-  },
-  section: {
-    marginTop: "42px"
-  },
-  surfaceNav: {
-    display: "flex",
-    gap: "8px",
-    flexWrap: "wrap" as const,
-    padding: "7px",
-    borderRadius: "999px",
-    border: "1px solid rgba(255,255,255,0.72)",
-    background: "rgba(255,255,255,0.46)",
-    backdropFilter: "blur(20px)",
-    boxShadow: "0 8px 22px rgba(17,17,17,0.035)",
-    position: "sticky" as const,
-    top: "16px",
-    zIndex: 20
-  },
-  surfaceNavButton: {
-    borderRadius: "999px",
-    border: "1px solid transparent",
-    background: "transparent",
-    padding: "12px 16px",
-    cursor: "pointer",
-    fontSize: "14px",
-    color: "var(--muted)"
-  },
-  surfaceNavButtonInner: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px"
-  },
-  surfaceNavButtonSelected: {
-    border: "1px solid rgba(255,255,255,0.82)",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.62) 100%)",
-    color: "var(--primary)",
-    fontWeight: 600,
-    boxShadow: "0 8px 20px rgba(17,17,17,0.05), inset 0 -1px 0 rgba(29,53,87,0.08)"
-  },
-  sectionTitle: {
-    fontSize: "14px",
-    letterSpacing: "0.14em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)",
-    marginBottom: "14px"
-  },
-  homeShowcase: {
-    display: "grid",
-    gridTemplateColumns: HOME_GRID_COLUMNS,
-    gridTemplateRows: HOME_SHOWCASE_HEIGHT,
-    gap: "20px",
-    alignItems: "stretch"
-  },
-  homeMainPanel: {
-    marginTop: "18px",
-    borderRadius: "34px",
-    padding: "30px",
-    border: "1px solid rgba(255,255,255,0.82)",
-    background:
-      "radial-gradient(circle at top left, rgba(117,163,255,0.12), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.76) 100%)",
-    boxShadow: "0 18px 40px rgba(17,17,17,0.05)",
-    display: "grid",
-    gridTemplateRows: "auto auto auto auto auto auto",
-    gap: "20px",
-    backdropFilter: "blur(20px)"
-  },
-  homePanelEyebrow: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    width: "fit-content",
-    borderRadius: "999px",
-    padding: "8px 12px",
-    border: "1px solid rgba(29,53,87,0.08)",
-    background: "rgba(255,255,255,0.72)",
-    fontSize: "12px",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase" as const,
-    color: "var(--primary)"
-  },
-  homeMainTitle: {
-    fontSize: "clamp(30px, 4vw, 48px)",
-    lineHeight: 1.02,
-    fontWeight: 680,
-    letterSpacing: "-0.04em",
-    maxWidth: "12ch"
-  },
-  homeMainBody: {
-    fontSize: "16px",
-    lineHeight: 1.7,
-    color: "var(--muted)",
-    maxWidth: "52ch"
-  },
-  homeStageRail: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: "12px"
-  },
-  homeStageRailCard: {
-    borderRadius: "20px",
-    padding: "16px 18px",
-    border: "1px solid rgba(17,17,17,0.06)",
-    background: "rgba(255,255,255,0.74)",
-    display: "grid",
-    gap: "8px",
-    minHeight: "132px",
-    alignContent: "start"
-  },
-  homeStageRailLabel: {
-    fontSize: "12px",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)"
-  },
-  homeStageRailTitle: {
-    fontSize: "18px",
-    lineHeight: 1.28,
-    fontWeight: 600
-  },
-  homeStageRailBody: {
-    fontSize: "14px",
-    lineHeight: 1.6,
-    color: "var(--muted)"
-  },
-  homeSideStack: {
-    marginTop: "18px",
-    display: "grid",
-    gap: "20px",
-    gridTemplateRows: "repeat(2, minmax(0, 1fr))",
-    alignSelf: "stretch"
-  },
-  homeInfoPanel: {
-    borderRadius: "28px",
-    padding: "22px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(255,255,255,0.72) 100%)",
-    boxShadow: "0 14px 30px rgba(17,17,17,0.04)",
-    display: "grid",
-    gap: "14px",
-    backdropFilter: "blur(18px)",
-    alignContent: "start"
-  },
-  homeInfoTitle: {
-    fontSize: "13px",
-    letterSpacing: "0.12em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)"
-  },
-  homeMetricGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: "12px"
-  },
-  homeMetricCard: {
-    borderRadius: "18px",
-    padding: "16px",
-    border: "1px solid rgba(17,17,17,0.06)",
-    background: "rgba(255,255,255,0.84)",
-    display: "grid",
-    gap: "6px",
-    minHeight: "92px"
-  },
-  homeMetricLabel: {
-    fontSize: "12px",
-    color: "var(--muted)"
-  },
-  homeMetricValue: {
-    fontSize: "18px",
-    lineHeight: 1.3,
-    fontWeight: 600
-  },
-  homeProgressTrack: {
-    height: "10px",
-    borderRadius: "999px",
-    background: "rgba(17,17,17,0.06)",
-    overflow: "hidden"
-  },
-  homeProgressFill: {
-    height: "100%",
-    borderRadius: "999px",
-    background: "linear-gradient(90deg, rgba(29,53,87,0.92) 0%, rgba(117,163,255,0.82) 100%)"
-  },
-  homeMiniList: {
-    display: "grid",
-    gap: "4px"
-  },
-  homeMiniRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "12px",
-    padding: "14px 0",
-    borderTop: "1px solid rgba(17,17,17,0.06)"
-  },
-  homeMiniLabel: {
-    fontSize: "13px",
-    color: "var(--muted)"
-  },
-  homeMiniValue: {
-    fontSize: "14px",
-    fontWeight: 600,
-    textAlign: "right" as const
-  },
-  homeLowerGrid: {
-    marginTop: "40px",
-    display: "grid",
-    gridTemplateColumns: HOME_GRID_COLUMNS,
-    gap: "20px",
-    alignItems: "stretch"
-  },
-  homeLowerPanel: {
-    borderRadius: "28px",
-    padding: "24px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,255,255,0.72) 100%)",
-    boxShadow: "0 14px 30px rgba(17,17,17,0.04)",
-    display: "grid",
-    gap: "14px",
-    minHeight: "100%"
-  },
-  homePrincipleGrid: {
-    display: "grid",
-    gap: "12px"
-  },
-  homePrincipleCard: {
-    borderRadius: "20px",
-    padding: "16px 18px",
-    border: "1px solid rgba(17,17,17,0.06)",
-    background: "rgba(255,255,255,0.82)",
-    display: "grid",
-    gap: "6px"
-  },
-  homePrincipleTitle: {
-    fontSize: "16px",
-    fontWeight: 600
-  },
-  homePrincipleBody: {
-    fontSize: "14px",
-    lineHeight: 1.6,
-    color: "var(--muted)"
-  },
-  financePanel: {
-    display: "grid",
-    gap: "16px",
-    padding: "22px",
-    borderRadius: "28px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.76) 100%)",
-    boxShadow: "0 12px 28px rgba(17,17,17,0.04)"
-  },
-  financePanelHeader: {
-    display: "grid",
-    gap: "6px"
-  },
-  financePanelTitle: {
-    fontSize: "22px",
-    lineHeight: 1.2,
-    fontWeight: 650
-  },
-  financePanelBody: {
-    fontSize: "14px",
-    lineHeight: 1.65,
-    color: "var(--muted)",
-    maxWidth: "58ch"
-  },
-  financeFieldGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: "14px"
-  },
-  financeField: {
-    display: "grid",
-    gap: "8px"
-  },
-  financeFieldLabel: {
-    fontSize: "13px",
-    color: "var(--muted)"
-  },
-  financeAssistText: {
-    fontSize: "12px",
-    lineHeight: 1.5,
-    color: "var(--muted)"
-  },
-  financeResultGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: "12px"
-  },
-  financeResultCard: {
-    borderRadius: "20px",
-    padding: "16px",
-    border: "1px solid rgba(17,17,17,0.06)",
-    background: "rgba(255,255,255,0.84)",
-    display: "grid",
-    gap: "6px",
-    minHeight: "94px"
-  },
-  financeResultLabel: {
-    fontSize: "12px",
-    color: "var(--muted)"
-  },
-  financeResultValue: {
-    fontSize: "18px",
-    lineHeight: 1.3,
-    fontWeight: 620
-  },
-  financeInlineNote: {
-    fontSize: "12px",
-    color: "var(--muted)"
-  },
-  currentStage: {
-    marginTop: "18px",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.76) 100%)",
-    border: "1px solid rgba(255,255,255,0.76)",
-    borderRadius: "28px",
-    padding: "24px",
-    display: "grid",
-    gap: "16px",
-    boxShadow: "0 14px 34px rgba(17,17,17,0.045)",
-    backdropFilter: "blur(18px)"
-  },
-  currentMeta: {
-    fontSize: "13px",
-    color: "var(--primary)",
-    letterSpacing: "0.14em",
-    textTransform: "uppercase" as const
-  },
-  currentTitle: {
-    fontSize: "28px",
-    lineHeight: 1.1,
-    fontWeight: 650
-  },
-  currentBody: {
-    color: "var(--muted)",
-    lineHeight: 1.6,
-    maxWidth: "760px"
-  },
-  transitionNotice: {
-    borderRadius: "16px",
-    border: "1px solid rgba(29,53,87,0.12)",
-    background: "rgba(29,53,87,0.06)",
-    padding: "12px 14px",
-    display: "grid",
-    gap: "4px"
-  },
-  transitionNoticeTitle: {
-    fontSize: "12px",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase" as const,
-    color: "var(--primary)",
-    fontWeight: 700
-  },
-  transitionNoticeBody: {
-    fontSize: "14px",
-    lineHeight: 1.6,
-    color: "var(--primary)"
-  },
-  helper: {
-    fontSize: "14px",
-    lineHeight: 1.7,
-    color: "var(--muted)"
-  },
-  summaryBar: {
-    display: "flex",
-    flexWrap: "wrap" as const,
-    gap: "0px",
-    borderRadius: "16px",
-    border: "1px solid rgba(255,255,255,0.72)",
-    background: "rgba(255,255,255,0.5)",
-    overflow: "hidden"
-  },
-  summarySegment: {
-    padding: "9px 13px",
-    fontSize: "12px",
-    color: "var(--muted)",
-    borderRight: "1px solid rgba(17,17,17,0.06)"
-  },
-  pillRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const
-  },
-  currentActionRail: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const,
-    alignItems: "center"
-  },
-  currentUtilityButton: {
-    borderRadius: "999px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background: "rgba(255,255,255,0.62)",
-    padding: "12px 14px",
-    cursor: "pointer",
-    fontSize: "14px",
-    color: "var(--muted)"
-  },
-  currentStateChip: {
-    borderRadius: "999px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background: "rgba(255,255,255,0.46)",
-    padding: "12px 14px",
-    fontSize: "14px",
-    color: "var(--muted)"
-  },
-  stageFooter: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const,
-    alignItems: "center",
-    position: "sticky" as const,
-    bottom: "16px",
-    padding: "12px",
-    borderRadius: "20px",
-    border: "1px solid rgba(255,255,255,0.72)",
-    background: "rgba(247,246,243,0.74)",
-    backdropFilter: "blur(18px)"
-  },
-  stageNavRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const,
-    alignItems: "center",
-    justifyContent: "space-between" as const,
-    marginTop: "24px",
-    paddingTop: "16px",
-    borderTop: "1px solid rgba(29,53,87,0.08)"
-  },
-  stageInlineActions: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const,
-    alignItems: "center"
-  },
-  taskChecklist: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "12px"
-  },
-  taskCheckItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-    padding: "20px 24px",
-    borderRadius: "20px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.8) 100%)",
-    cursor: "pointer",
-    textAlign: "left" as const,
-    boxShadow: "0 6px 18px rgba(17,17,17,0.04)",
-    backdropFilter: "blur(16px)"
-  },
-  taskCheckItemDone: {
-    background: "linear-gradient(180deg, rgba(240,248,240,0.92) 0%, rgba(230,245,230,0.8) 100%)",
-    border: "1px solid rgba(34,139,34,0.2)"
-  },
-  taskCheckCircle: {
-    width: "28px",
-    height: "28px",
-    borderRadius: "50%",
-    border: "2px solid rgba(29,53,87,0.25)",
-    background: "transparent",
-    flexShrink: 0,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  taskCheckCircleDone: {
-    background: "var(--primary)",
-    border: "2px solid var(--primary)"
-  },
-  taskCheckTitle: {
-    fontSize: "17px",
-    fontWeight: 580,
-    letterSpacing: "-0.2px",
-    flex: 1
-  },
-  taskCheckTitleDone: {
-    color: "var(--muted)",
-    textDecoration: "line-through"
-  },
-  taskProgress: {
-    fontSize: "13px",
-    color: "var(--muted)",
-    fontWeight: 500
-  },
-  quickActionGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: "12px"
-  },
-  quickActionCard: {
-    display: "grid",
-    gap: "8px",
-    textAlign: "left" as const,
-    borderRadius: "22px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.74) 100%)",
-    padding: "18px",
-    cursor: "pointer",
-    boxShadow: "0 12px 28px rgba(17,17,17,0.05)",
-    backdropFilter: "blur(16px)"
-  },
-  quickActionTitle: {
-    fontSize: "16px",
-    fontWeight: 600
-  },
-  quickActionBody: {
-    fontSize: "14px",
-    lineHeight: 1.6,
-    color: "var(--muted)"
-  },
-  pill: {
-    borderRadius: "999px",
-    border: "1px solid var(--border)",
-    padding: "10px 14px",
-    fontSize: "14px",
-    color: "var(--muted)",
-    background: "var(--surface)"
-  },
-  optionGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: "16px"
-  },
-  optionCard: {
-    display: "grid",
-    gap: "8px",
-    textAlign: "left" as const,
-    borderRadius: "24px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.8) 100%)",
-    padding: "28px",
-    cursor: "pointer",
-    boxShadow: "0 10px 24px rgba(17,17,17,0.04)",
-    backdropFilter: "blur(16px)"
-  },
-  optionCardSelected: {
-    border: "1px solid rgba(29,53,87,0.22)",
-    boxShadow: "0 0 0 4px rgba(29,53,87,0.07), 0 14px 28px rgba(17,17,17,0.05)"
-  },
-  optionTitle: {
-    fontSize: "24px",
-    fontWeight: 660,
-    letterSpacing: "-0.3px"
-  },
-  optionSummary: {
-    color: "var(--muted)",
-    lineHeight: 1.6
-  },
-  compactOptionSummary: {
-    color: "var(--muted)",
-    lineHeight: 1.5,
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical" as const,
-    overflow: "hidden"
-  },
-  recommendationTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "12px"
-  },
-  scoreBadge: {
-    borderRadius: "999px",
-    background: "rgba(29,53,87,0.08)",
-    color: "var(--primary)",
-    padding: "8px 12px",
-    fontSize: "13px",
-    fontWeight: 600
-  },
-  metricRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const
-  },
-  metricChip: {
-    borderRadius: "999px",
-    border: "1px solid var(--border)",
-    padding: "8px 10px",
-    fontSize: "13px",
-    color: "var(--muted)",
-    background: "var(--surface)"
-  },
-  freshnessText: {
-    fontSize: "13px",
-    color: "var(--muted)"
-  },
-  warningText: {
-    fontSize: "14px",
-    lineHeight: 1.6,
-    color: "var(--warning)"
-  },
-  criticalText: {
-    fontSize: "14px",
-    lineHeight: 1.6,
-    color: "#B64C4C"
-  },
-  startupTypeRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const
-  },
-  categoryTabBar: {
-    display: "flex",
-    gap: "8px",
-    flexWrap: "wrap" as const,
-    padding: "4px 0",
-    marginBottom: "4px"
-  },
-  categoryTab: {
-    borderRadius: "999px",
-    border: "1.5px solid transparent",
-    background: "rgba(0,0,0,0.05)",
-    color: "var(--muted)",
-    padding: "10px 18px",
-    cursor: "pointer",
-    fontSize: "15px",
-    fontWeight: 500,
-    transition: "all 0.15s ease"
-  },
-  categoryTabSelected: {
-    background: "#fff",
-    border: "1.5px solid rgba(29,53,87,0.2)",
-    color: "var(--primary)",
-    fontWeight: 600,
-    boxShadow: "0 2px 8px rgba(17,17,17,0.08)"
-  },
-  bigOptionCard: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "6px",
-    textAlign: "left" as const,
-    borderRadius: "24px",
-    border: "1px solid rgba(255,255,255,0.78)",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.8) 100%)",
-    padding: "32px 28px",
-    cursor: "pointer",
-    boxShadow: "0 10px 24px rgba(17,17,17,0.04)",
-    backdropFilter: "blur(16px)",
-    width: "100%"
-  },
-  bigOptionTitle: {
-    fontSize: "22px",
-    fontWeight: 660,
-    letterSpacing: "-0.3px"
-  },
-  bigOptionSubtitle: {
-    fontSize: "15px",
-    color: "var(--muted)",
-    lineHeight: 1.5
-  },
-  budgetPanel: {
-    display: "grid",
-    gap: "18px",
-    padding: "22px",
-    borderRadius: "24px",
-    border: "1px solid var(--border)",
-    background: "rgba(255,255,255,0.88)"
-  },
-  budgetHeader: {
-    display: "grid",
-    gap: "6px"
-  },
-  budgetLabel: {
-    fontSize: "13px",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)"
-  },
-  budgetValue: {
-    fontSize: "34px",
-    lineHeight: 1.05,
-    fontWeight: 650
-  },
-  budgetInput: {
-    width: "100%",
-    borderRadius: "18px",
-    border: "1px solid var(--border)",
-    background: "#fff",
-    padding: "14px 16px",
-    fontSize: "16px",
-    color: "var(--text)"
-  },
-  textInput: {
-    width: "100%",
-    borderRadius: "18px",
-    border: "1px solid var(--border)",
-    background: "#fff",
-    padding: "14px 16px",
-    fontSize: "16px",
-    color: "var(--text)"
-  },
-  textarea: {
-    width: "100%",
-    minHeight: "88px",
-    borderRadius: "18px",
-    border: "1px solid var(--border)",
-    background: "#fff",
-    padding: "14px 16px",
-    fontSize: "15px",
-    lineHeight: 1.6,
-    color: "var(--text)",
-    resize: "vertical" as const,
-    fontFamily: "inherit"
-  },
-  aiTextarea: {
-    minHeight: "76px"
-  },
-  segmentedRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap" as const
-  },
-  inlinePanel: {
-    display: "grid",
-    gap: "14px",
-    padding: "20px",
-    borderRadius: "24px",
-    border: "1px solid var(--border)",
-    background: "rgba(255,255,255,0.88)"
-  },
-  inlinePanelHeader: {
-    display: "grid",
-    gap: "4px"
-  },
-  inlinePanelMetaRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "10px",
-    flexWrap: "wrap" as const
-  },
-  inlineSummaryRow: {
-    display: "grid",
-    gap: "4px",
-    padding: "14px 16px",
-    borderRadius: "18px",
-    border: "1px solid var(--border)",
-    background: "rgba(255,255,255,0.64)"
-  },
-  inlineSummaryLabel: {
-    fontSize: "12px",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)"
-  },
-  inlineSummaryValue: {
-    fontSize: "14px",
-    lineHeight: 1.5,
-    fontWeight: 600,
-    color: "var(--text)"
-  },
-  aiInlineSummaryRow: {
-    padding: "11px 13px",
-    gap: "3px"
-  },
-  confidenceBadge: {
-    borderRadius: "999px",
-    border: "1px solid rgba(17,17,17,0.08)",
-    background: "rgba(255,255,255,0.9)",
-    padding: "6px 10px",
-    fontSize: "12px",
-    color: "var(--muted)"
-  },
-  aiInlinePanel: {
-    gap: "10px",
-    padding: "16px 18px"
-  },
-  aiHelper: {
-    fontSize: "13px",
-    lineHeight: 1.58,
-    color: "var(--muted)",
-    maxWidth: "62ch"
-  },
-  budgetRange: {
-    width: "100%",
-    accentColor: "var(--primary)"
-  },
-  budgetRangeMeta: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "12px",
-    fontSize: "13px",
-    color: "var(--muted)"
-  },
-  compactChoiceGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: "10px"
-  },
-  compactChoiceCard: {
-    borderRadius: "18px",
-    border: "1px solid var(--border)",
-    background: "#fff",
-    padding: "14px 12px",
-    cursor: "pointer",
-    textAlign: "left" as const,
-    display: "grid",
-    gap: "6px"
-  },
-  compactChoiceCardSelected: {
-    border: "1px solid rgba(29,53,87,0.28)",
-    background: "rgba(29,53,87,0.06)"
-  },
-  compactChoiceTitle: {
-    fontSize: "15px",
-    fontWeight: 600
-  },
-  compactChoiceCaption: {
-    fontSize: "13px",
-    lineHeight: 1.5,
-    color: "var(--muted)"
-  },
-  button: {
-    borderRadius: "999px",
-    border: "1px solid var(--border)",
-    background: "#fff",
-    padding: "12px 16px",
-    cursor: "pointer",
-    fontSize: "14px"
-  },
-  buttonSelected: {
-    border: "1px solid rgba(29,53,87,0.28)",
-    color: "var(--primary)",
-    background: "rgba(29,53,87,0.06)"
-  },
-  primaryButton: {
-    borderRadius: "999px",
-    border: "none",
-    background: "var(--primary)",
-    color: "#fff",
-    padding: "14px 18px",
-    fontSize: "15px",
-    fontWeight: 600,
-    cursor: "pointer"
-  },
-  flow: {
-    display: "grid",
-    gap: "12px"
-  },
-  roadmapList: {
-    display: "grid",
-    gap: "10px"
-  },
-  roadmapRow: {
-    display: "grid",
-    gap: "8px",
-    borderRadius: "18px",
-    border: "1px solid var(--border)",
-    background: "rgba(255,255,255,0.72)",
-    padding: "14px 16px"
-  },
-  roadmapRowCurrent: {
-    border: "1px solid rgba(29,53,87,0.22)",
-    background: "rgba(255,255,255,0.96)",
-    boxShadow: "0 0 0 4px rgba(29,53,87,0.05)"
-  },
-  roadmapRowCompleted: {
-    background: "rgba(255,255,255,0.52)",
-    border: "1px solid rgba(17,17,17,0.06)"
-  },
-  roadmapRowTop: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "12px"
-  },
-  roadmapIndex: {
-    fontSize: "13px",
-    color: "var(--primary)",
-    letterSpacing: "0.08em"
-  },
-  roadmapTitle: {
-    fontSize: "17px",
-    fontWeight: 600
-  },
-  roadmapStatus: {
-    fontSize: "13px",
-    color: "var(--muted)"
-  },
-  roadmapStatusQuiet: {
-    color: "rgba(91,97,110,0.72)"
-  },
-  roadmapTitleQuiet: {
-    color: "rgba(17,17,17,0.72)"
-  },
-  step: {
-    background: "var(--surface-strong)",
-    border: "1px solid var(--border)",
-    borderRadius: "24px",
-    padding: "20px 22px",
-    display: "grid",
-    gap: "8px"
-  },
-  stepMeta: {
-    fontSize: "13px",
-    color: "var(--primary)",
-    letterSpacing: "0.14em",
-    textTransform: "uppercase" as const
-  },
-  stepTitle: {
-    fontSize: "20px",
-    fontWeight: 600
-  },
-  stepBody: {
-    color: "var(--muted)",
-    lineHeight: 1.7
-  },
-  profileGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "12px"
-  },
-  profileItem: {
-    borderRadius: "20px",
-    border: "1px solid var(--border)",
-    background: "#fff",
-    padding: "16px",
-    display: "grid",
-    gap: "6px"
-  },
-  profileLabel: {
-    fontSize: "12px",
-    letterSpacing: "0.14em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)"
-  },
-  profileValue: {
-    fontSize: "18px",
-    fontWeight: 600,
-    lineHeight: 1.4
-  },
-  guideSection: {
-    display: "grid",
-    gap: "10px",
-    paddingTop: "6px"
-  },
-  guideSectionTitle: {
-    fontSize: "12px",
-    letterSpacing: "0.14em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)"
-  },
-  sourceLink: {
-    color: "var(--primary)",
-    textDecoration: "none"
-  },
-  authGate: {
-    marginTop: "42px",
-    background: "rgba(255,255,255,0.88)",
-    border: "1px solid var(--border)",
-    borderRadius: "28px",
-    padding: "30px 26px",
-    display: "grid",
-    gap: "14px",
-    maxWidth: "640px"
-  },
-  guideCard: {
-    background: "rgba(255,255,255,0.88)",
-    borderRadius: "24px",
-    padding: "32px 28px 24px",
-    border: "1px solid rgba(17,17,17,0.07)",
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "0px"
-  },
-  guidePager: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between" as const,
-    marginBottom: "28px"
-  },
-  guidePagerLabel: {
-    fontSize: "12px",
-    fontWeight: 500,
-    color: "var(--muted)",
-    letterSpacing: "0.02em"
-  },
-  guideDots: {
-    display: "flex",
-    gap: "6px",
-    alignItems: "center"
-  },
-  guideOverline: {
-    fontSize: "12px",
-    fontWeight: 600,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase" as const,
-    color: "var(--muted)",
-    marginBottom: "10px"
-  },
-  guideHeadline: {
-    fontSize: "22px",
-    fontWeight: 700,
-    color: "var(--text)",
-    letterSpacing: "-0.5px",
-    lineHeight: "1.25",
-    marginBottom: "14px"
-  },
-  guideBody: {
-    fontSize: "15px",
-    lineHeight: "1.75",
-    color: "#444",
-    margin: "0 0 20px"
-  },
-  guideLinkButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    fontSize: "14px",
-    fontWeight: 600,
-    color: "var(--primary)",
-    textDecoration: "none",
-    padding: "10px 18px",
-    borderRadius: "100px",
-    background: "rgba(29,53,87,0.06)",
-    border: "1px solid rgba(29,53,87,0.12)",
-    marginBottom: "20px",
-    alignSelf: "flex-start" as const
-  },
-  guideTip: {
-    fontSize: "13px",
-    lineHeight: "1.65",
-    color: "#555",
-    padding: "12px 16px",
-    background: "rgba(17,17,17,0.03)",
-    borderRadius: "14px",
-    marginBottom: "12px"
-  },
-  guideCostBadge: {
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#1a4a8a",
-    padding: "5px 14px",
-    background: "rgba(100,150,255,0.08)",
-    borderRadius: "100px",
-    display: "inline-block",
-    alignSelf: "flex-start" as const
-  },
-  guideWarningItem: {
-    fontSize: "14px",
-    lineHeight: "1.7",
-    padding: "14px 18px",
-    borderRadius: "16px",
-    marginBottom: "10px"
-  },
-  guideMetaRow: {
-    display: "flex",
-    gap: "8px",
-    flexWrap: "wrap" as const,
-    marginBottom: "24px"
-  },
-  guideMetaChip: {
-    fontSize: "12px",
-    fontWeight: 500,
-    color: "var(--muted)",
-    padding: "5px 14px",
-    borderRadius: "100px",
-    background: "rgba(17,17,17,0.04)",
-    border: "1px solid rgba(17,17,17,0.07)"
-  },
-  guideCardNav: {
-    display: "flex",
-    justifyContent: "space-between" as const,
-    alignItems: "center",
-    marginTop: "28px",
-    paddingTop: "20px",
-    borderTop: "1px solid rgba(17,17,17,0.06)"
-  },
-  // kept for AI tool open link
-  stageGuideStepLink: {
-    fontSize: "13px",
-    fontWeight: 580,
-    color: "var(--primary)",
-    textDecoration: "none",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "4px"
-  }
-};
-
-const baseRoadmap = {
-  roadmapId: starterRoadmap.roadmapId,
-  templateId: starterRoadmap.templateId,
-  stages: starterStageFlow
-};
-
-type ContractTaskDetail = {
-  title: string;
-  summary: string;
-  why: string[];
-  checklist: string[];
-  traps: Array<{ label: string; desc: string }>;
-  actions: Array<{ label: string; href?: string }>;
-  questions: string[];
-};
-
-function getContractTaskDetail(taskId: string, language: "ko" | "en", categoryId?: string): ContractTaskDetail {
-  if (categoryId === "online-digital") {
-    const details: Record<string, { ko: ContractTaskDetail; en: ContractTaskDetail }> = {
-      "use-check": {
-        ko: {
-          title: "작업 공간 적합성 확인",
-          summary: "재고 보관, 포장 작업, 촬영 공간, 택배 픽업 접근성까지 실제 운영 흐름에 맞는 공간인지 먼저 확인하세요.",
-          why: ["집에서 시작해도 재고와 포장 동선이 예상보다 빠르게 복잡해집니다.", "공간이 맞지 않으면 확장 전에 이미 운영 병목이 시작됩니다."],
-          checklist: [
-            "선반·팔레트를 놓을 수 있는 재고 적재 공간 확보 여부",
-            "포장 작업 테이블을 펼칠 공간이 있는지",
-            "제품 촬영용 배경·조명 설치 공간 확인",
-            "택배사 기사 픽업 동선 (엘리베이터, 입구 단차 등)",
-            "주거 공간에서 운영 시 사업자 등록증 주소 사용 가능 여부"
-          ],
-          traps: [
-            { label: "재고 부피 과소 예측", desc: "초기에 재고가 적어 보여도 성수기나 대량 입고 시 공간이 순식간에 포화됩니다. 최대 재고 기준으로 공간을 검토하세요." },
-            { label: "임대인 동의 없는 사업자 등록", desc: "주거용 임대차 계약에서 임대인이 사업 용도 사용을 금지한 경우, 사업자 등록 후 분쟁 또는 계약 해지 리스크가 생깁니다." }
-          ],
-          actions: [
-            { label: "공유창고 서비스 비용 비교 (위킵, 세이브박스 등)" },
-            { label: "택배 계약 전 픽업 가능 시간·횟수 CJ대한통운/한진에 사전 확인" },
-            { label: "입주 전 임대인에게 사업 용도 사용 서면 동의 요청" }
-          ],
-          questions: [
-            "사업 용도로 공간을 사용하는 것에 동의하시나요?",
-            "택배 픽업·반품 물량이 늘어날 경우 제한이 있나요?",
-            "향후 공간 확장 또는 이웃 호실 추가 임대가 가능한가요?"
-          ]
-        },
-        en: {
-          title: "Check workspace fit",
-          summary: "Review whether the space works for storage, packing, content shoots, and courier pickup before signing.",
-          why: ["Even home-based setups become cramped faster than expected.", "Space mismatch creates operational bottlenecks before you can scale."],
-          checklist: [
-            "Room for shelving or pallets to hold peak inventory",
-            "Clear table space for packing work",
-            "Space for product photography setup",
-            "Courier pickup access (elevator, no-step entry)",
-            "Landlord permission to register a business address here"
-          ],
-          traps: [
-            { label: "Underestimating inventory volume", desc: "Stock always seems manageable at first. Plan for your peak inventory scenario, not average." },
-            { label: "Business registration without landlord consent", desc: "Residential leases often prohibit commercial use. Register without consent and you risk lease termination." }
-          ],
-          actions: [
-            { label: "Compare shared-warehouse pricing (local providers)" },
-            { label: "Confirm pickup frequency with your courier before signing" },
-            { label: "Get written landlord consent for business use" }
-          ],
-          questions: [
-            "Do you consent to commercial use of this space?",
-            "Are there limits on daily courier pickups or returns?",
-            "Can I rent an adjacent unit if I need to expand?"
-          ]
-        }
-      },
-      "facility-check": {
-        ko: {
-          title: "보관·포장·택배 동선 확인",
-          summary: "재고 보관, 포장 작업, 택배 출고와 반품 흐름이 막히지 않는지 실제 동선 기준으로 확인하세요.",
-          why: ["온라인 판매는 매장 노출보다 fulfillment 흐름이 성패를 결정합니다.", "출고와 반품이 꼬이면 고객 불만과 운영 비용이 동시에 증가합니다."],
-          checklist: [
-            "냉장·냉동 보관이 필요한 경우 전력 용량(kW) 확인",
-            "택배 박스·완충재 등 포장 자재 보관 공간",
-            "반품 재고 별도 보관 공간 (출고 재고와 혼입 방지)",
-            "폐박스 처리 공간 및 수거 주기 확인",
-            "택배사 픽업 시간대가 운영 시간과 맞는지"
-          ],
-          traps: [
-            { label: "반품 물량 과소 예측", desc: "패션·뷰티 카테고리는 반품률이 20~30%에 달하기도 합니다. 반품 재고를 출고 재고와 분리 보관할 공간이 없으면 혼입 사고가 납니다." },
-            { label: "포장재 발주 주기 불균형", desc: "박스를 대량 발주해 원가를 낮추면 보관 공간이 먼저 막힙니다. 수납 가능 물량 기준으로 발주 주기를 설계하세요." }
-          ],
-          actions: [
-            { label: "쿠팡 로켓배송/네이버 도착보장 입점 시 물류 기준 별도 확인" },
-            { label: "CJ대한통운 계약 전 익일·당일 픽업 가능 여부 확인 (1588-1255)" },
-            { label: "반품 처리 프로세스를 플랫폼별로 미리 작성해두기" }
-          ],
-          questions: [
-            "대형 화물 픽업이나 반품 물량이 많을 때 입구 이용에 제한이 있나요?",
-            "폐박스 등 폐기물 처리 비용이 관리비에 포함되나요?",
-            "인근에 공유창고나 추가 보관 공간을 소개받을 수 있나요?"
-          ]
-        },
-        en: {
-          title: "Review storage and fulfillment flow",
-          summary: "Walk the actual path from receiving inventory to shipping orders and handling returns before you sign.",
-          why: ["Fulfillment flow matters more than foot traffic for online businesses.", "Tangled outbound and return processes drive up cost and customer complaints simultaneously."],
-          checklist: [
-            "Power capacity if refrigeration or freezer is needed",
-            "Dedicated space for shipping materials (boxes, padding)",
-            "Separate returns staging area away from outbound stock",
-            "Waste cardboard disposal space and pickup schedule",
-            "Courier pickup hours match your operating hours"
-          ],
-          traps: [
-            { label: "Underestimating return volume", desc: "Fashion and beauty categories can see 20–30% return rates. Without a separate returns area, stock gets mixed and errors multiply." },
-            { label: "Bulk packaging orders vs. storage space", desc: "Buying packaging in bulk saves money but can fill your workspace before inventory even arrives." }
-          ],
-          actions: [
-            { label: "Check platform logistics requirements (Coupang Rocket, Naver guaranteed delivery)" },
-            { label: "Confirm same-day or next-day pickup availability with your courier" },
-            { label: "Map out your return processing steps per platform in advance" }
-          ],
-          questions: [
-            "Are there restrictions on large-volume pickups or returns at this address?",
-            "Is cardboard disposal included in building fees?",
-            "Can you recommend nearby shared storage if I need to expand?"
-          ]
-        }
-      },
-      "restriction-check": {
-        ko: {
-          title: "공급·외주 제한 확인",
-          summary: "공급업체 접근성, 외주 포장사 조건, 반품 처리 정책처럼 반복 운영에 직접 영향을 주는 제한을 미리 확인하세요.",
-          why: ["단일 공급업체에 의존하면 품절·가격 인상 리스크를 통제할 수 없습니다.", "플랫폼별 반품 정책이 다르면 같은 상품도 운영 복잡도가 크게 올라갑니다."],
-          checklist: [
-            "주요 공급업체 2~3개 이상 확보 및 납기 보장 조건 확인",
-            "외주 포장업체 단가·최소 수량·마감일 조건",
-            "플랫폼별(네이버, 쿠팡, 11번가) 반품 정책 차이 파악",
-            "통신판매업 신고 요건 확인 (공정거래위원회 표준 약관)",
-            "해외 소싱 시 관세·통관 소요 기간 확인"
-          ],
-          traps: [
-            { label: "단일 공급업체 의존", desc: "공급업체가 품절·폐업하거나 가격을 올리면 전체 매출이 멈춥니다. 동일 상품 카테고리에서 예비 공급처를 미리 파악해두세요." },
-            { label: "플랫폼 간 반품 정책 차이 미인지", desc: "쿠팡은 고객 귀책도 무료 반품인 경우가 많습니다. 동일 상품을 여러 플랫폼에서 팔 때 정책을 통일하지 않으면 손실이 납니다." }
-          ],
-          actions: [
-            { label: "공정거래위원회 전자상거래 표준 약관 확인", href: "https://www.ftc.go.kr" },
-            { label: "네이버 스마트스토어 센터에서 반품·교환 정책 설정 가이드 확인" },
-            { label: "관세청 수입신고 필요 여부 사전 확인 (간이통관 한도: 미화 150달러)" }
-          ],
-          questions: [
-            "최소 발주 수량과 납기 보장 조건이 어떻게 되나요?",
-            "품절 발생 시 대체 상품 또는 납기 연장 처리가 가능한가요?",
-            "반품 재고는 재판매 가능한 상태로 돌아오나요, 폐기 처리인가요?"
-          ]
-        },
-        en: {
-          title: "Check sourcing and operational constraints",
-          summary: "Review supplier reliability, outsourced packing terms, and return policies—these directly affect daily operations.",
-          why: ["Relying on a single supplier means one stockout or price hike stops your business.", "Different return policies per platform create compounding complexity as you scale."],
-          checklist: [
-            "At least 2–3 backup suppliers identified for each key product",
-            "Outsourced packing: unit price, minimum quantity, lead time",
-            "Return policies per platform (Naver, Coupang, 11st) compared",
-            "E-commerce business registration requirements confirmed",
-            "Import duties and lead times confirmed if sourcing overseas"
-          ],
-          traps: [
-            { label: "Single-supplier dependency", desc: "If your sole supplier goes out of stock or raises prices, your entire revenue stops. Pre-qualify backup sources now." },
-            { label: "Platform return policy differences", desc: "Coupang often covers return shipping even for buyer fault. Mismatched policies across platforms lead to unplanned losses." }
-          ],
-          actions: [
-            { label: "Check Korea FTC standard e-commerce terms" },
-            { label: "Review return and exchange policy guide in Naver Smart Store center" },
-            { label: "Confirm customs threshold for simplified clearance (USD 150 limit)" }
-          ],
-          questions: [
-            "What is the minimum order quantity and guaranteed lead time?",
-            "Can you handle stockout substitutions or extend lead time gracefully?",
-            "Do returned items come back in resalable condition, or are they write-offs?"
-          ]
-        }
-      }
-    };
-
-    return details[taskId]?.[language] ?? {
-      title: taskId,
-      summary: "",
-      why: [],
-      checklist: [],
-      traps: [],
-      actions: [],
-      questions: []
-    };
-  }
-
-  const details: Record<string, { ko: ContractTaskDetail; en: ContractTaskDetail }> = {
-    "use-check": {
-      ko: {
-        title: "업종 가능 여부 확인",
-        summary: "건물 용도와 영업 업종이 맞지 않으면 계약서에 서명한 뒤에도 구청 허가 단계에서 영업 자체가 막힐 수 있습니다.",
-        why: ["건축물 용도(근린생활시설·판매시설 등)와 실제 영업 업종이 일치해야 합니다.", "위반건축물로 표기된 공간은 보증금 회수와 인허가 모두 리스크가 생깁니다."],
-        checklist: [
-          "건축물대장에서 건물 용도·용도지역 확인 (정부24 무료 열람)",
-          "위반건축물 여부 확인 (건축물대장 상 노란색 표기)",
-          "건축물대장 소유자 = 등기부등본 소유자 일치 여부",
-          "내 업종의 영업신고·허가를 이 용도 건물에서 받을 수 있는지",
-          "토지이음에서 용도지역·지구·구역 확인 (행위 제한 조항)"
-        ],
-        traps: [
-          { label: "층별 용도 제한", desc: "같은 건물도 층마다 허용 용도가 다릅니다. 1층은 판매시설이어도 지하층은 창고·주차장만 허용되는 경우가 있습니다. 건축물대장에서 층별 용도를 반드시 확인하세요." },
-          { label: "일반음식점 vs 휴게음식점 분류", desc: "커피숍이라도 주류를 팔면 일반음식점으로 신고해야 합니다. 분류에 따라 허가 조건과 면적 기준이 달라지므로 구청 위생과에 사전 문의하세요." },
-          { label: "위반건축물 계약", desc: "위반건축물은 건물주가 이행강제금을 납부 중인 상태일 수 있습니다. 향후 철거 명령 시 세입자 보호가 약하고 원상복구 비용이 세입자에게 전가될 수 있습니다." }
-        ],
-        actions: [
-          { label: "정부24에서 건축물대장 무료 열람", href: "https://www.gov.kr" },
-          { label: "토지이음에서 용도지역·지구 확인", href: "https://www.eum.go.kr" },
-          { label: "법원 인터넷 등기소에서 등기부등본 열람 (근저당·가압류 확인)", href: "https://www.iros.go.kr" },
-          { label: "계약 전 관할 구청 건축과 또는 위생과에 업종 허가 가능 여부 직접 문의" }
-        ],
-        questions: [
-          "건축물대장 상 이 공간의 용도가 정확히 무엇인가요?",
-          "위반건축물로 표기된 부분이 있나요?",
-          "이전 세입자가 같은 업종으로 영업신고를 받은 적 있나요?",
-          "혹시 건물에 근저당이나 가압류가 설정되어 있나요?"
-        ]
-      },
-      en: {
-        title: "Check permitted use",
-        summary: "A mismatch between the building's registered use and your business type can block your operating license even after you sign.",
-        why: ["Your business category must match the building's registered use (neighborhood commercial, retail, etc.).", "Buildings flagged as illegal structures create risks for both your deposit recovery and licensing."],
-        checklist: [
-          "Verify building use category from the Building Register (gov.kr, free)",
-          "Check for illegal structure flags (yellow markings on the register)",
-          "Confirm the register owner matches the deed owner",
-          "Confirm your specific business type can be licensed in this building use",
-          "Check land use zone and restrictions on land.e-nara.go.kr"
-        ],
-        traps: [
-          { label: "Floor-by-floor use restrictions", desc: "Different floors of the same building may have different permitted uses. Always check each floor on the Building Register." },
-          { label: "Restaurant classification matters", desc: "A café serving alcohol needs a general restaurant license, not a snack bar license. Requirements differ significantly — ask the local health department." },
-          { label: "Illegal structure risk", desc: "Illegal structures may face demolition orders. Tenants have limited protection and may bear restoration costs if forced out." }
-        ],
-        actions: [
-          { label: "View Building Register free on gov.kr", href: "https://www.gov.kr" },
-          { label: "Check land-use zone on eum.go.kr", href: "https://www.eum.go.kr" },
-          { label: "Check deed (mortgages, injunctions) on iros.go.kr", href: "https://www.iros.go.kr" },
-          { label: "Call or visit your local district office to confirm licensing eligibility before signing" }
-        ],
-        questions: [
-          "What is the exact registered use category of this space?",
-          "Are there any illegal structure flags on the building register?",
-          "Did the previous tenant receive a business license for the same type?",
-          "Are there any mortgages or injunctions registered on the property?"
-        ]
-      }
-    },
-    "facility-check": {
-      ko: {
-        title: "시설과 설비 확인",
-        summary: "전기 용량 부족, 배기 덕트 미비, 숨겨진 노후 설비는 계약 후 수백만 원의 추가 공사 비용으로 돌아옵니다. 입주 전에 직접 확인하세요.",
-        why: ["계약전력이 부족하면 한전에서 경고 후 누진 요금을 부과합니다.", "배기·급배수 공사는 건물주 동의 없이 진행하면 원상복구 대상이 됩니다."],
-        checklist: [
-          "계약전력(kW) 확인 및 내 업종 필요 전력 계산",
-          "3상/단상 전력 여부 확인 (대형 냉장·주방 기기는 3상 필요)",
-          "급배수 위치와 수압·용량 확인",
-          "배기 덕트 위치 및 옥상 인출 가능 여부",
-          "기존 냉난방 설비 용량과 연식 확인",
-          "천장 높이 (후드·덕트 설치 가능한 최소 2.4m 이상 권장)"
-        ],
-        traps: [
-          { label: "계약전력 초과 페널티", desc: "계약전력(kW) × 15시간 × 30일 = 월 허용 전력량입니다. 음식점·카페 기준 커피머신(4.5kW)+냉장고(0.3)+제빙기(0.4)+냉난방(2.5)+온수기(2.5) = 약 12kW 필요. 초과 시 1회 경고 후 3년 내 재초과 시 추가 요금 및 누진세가 부과됩니다." },
-          { label: "배기 전용 설치 문제", desc: "급기(공기 공급) 없이 배기만 설치하면 실내 압력이 낮아져 출입문이 열기 힘들어지고 냄새 역류가 생깁니다. 급기·배기 균형을 설계 단계에서 확인하세요." },
-          { label: "전 세입자 시설 무상 인수 함정", desc: "이전 설비를 무상 인수 조건으로 계약하면 고장 시 수리 책임이 불명확해집니다. 인수 항목을 목록으로 만들어 계약서 특약에 명시하세요." }
-        ],
-        actions: [
-          { label: "한국전력 고객센터(123) 또는 마이한전 앱에서 계약전력 조회" },
-          { label: "전기안전공사(1588-7794)에 전기 설비 현황 진단 요청" },
-          { label: "배기 덕트 공사 가능 여부는 건물 관리사무소 또는 건물주에게 사전 서면 동의 요청" },
-          { label: "설비 증설 계획이 있으면 공사 전 건물주 동의서 징구" }
-        ],
-        questions: [
-          "이 공간의 계약전력이 몇 kW인가요? 3상/단상 전력인가요?",
-          "배기 덕트를 옥상까지 인출할 수 있나요?",
-          "기존 냉난방 설비는 연식이 어떻게 되나요? 수리 이력이 있나요?",
-          "추가 전기 공사나 배기 공사 시 건물주 동의를 받을 수 있나요?",
-          "기존 시설 중 인수 조건이 있는 항목이 있나요?"
-        ]
-      },
-      en: {
-        title: "Review facilities and utilities",
-        summary: "Insufficient power, missing ventilation, or hidden aging equipment can add millions in construction costs after you sign. Verify in person before committing.",
-        why: ["Exceeding your contracted power capacity triggers warnings and then penalty surcharges from KEPCO.", "Ventilation or plumbing work done without landlord consent becomes a full restoration liability."],
-        checklist: [
-          "Contracted power (kW) and calculation of your actual power needs",
-          "Single-phase vs. three-phase power (commercial refrigeration typically needs three-phase)",
-          "Water supply location, pressure, and flow capacity",
-          "Ventilation duct position and whether rooftop exhaust is possible",
-          "Existing HVAC unit capacity and age",
-          "Ceiling height (minimum 2.4m recommended for hood and duct installation)"
-        ],
-        traps: [
-          { label: "Contracted power overage penalty", desc: "Contracted kW × 15hr × 30 days = monthly allowed usage. A café needs roughly 12 kW minimum. Exceed the limit and KEPCO issues a warning; exceed again within 3 years and you get surcharges." },
-          { label: "Exhaust-only ventilation problem", desc: "Installing exhaust without a fresh-air intake drops indoor pressure, making doors hard to open and causing odor backflow. Balance must be designed upfront." },
-          { label: "Taking over previous tenant's fixtures", desc: "Inheriting equipment 'for free' makes repair responsibility ambiguous. List every inherited item in the lease special clauses." }
-        ],
-        actions: [
-          { label: "Check contracted power via KEPCO app or call 123" },
-          { label: "Request electrical safety inspection from Korea Electrical Safety Corporation (1588-7794)" },
-          { label: "Get written landlord consent before any duct or electrical expansion work" },
-          { label: "Document all inherited fixtures with a signed list attached to the contract" }
-        ],
-        questions: [
-          "What is the contracted power in kW, and is it single-phase or three-phase?",
-          "Can I run exhaust ductwork all the way to the rooftop?",
-          "How old is the HVAC unit, and has it needed major repairs?",
-          "Will you consent in writing to electrical or ventilation upgrades?",
-          "Which fixtures am I inheriting, and on what terms?"
-        ]
-      }
-    },
-    "restriction-check": {
-      ko: {
-        title: "계약 제한 조항 확인",
-        summary: "권리금, 업종 제한, 원상복구 범위, 임대료 인상 상한은 계약 후 되돌릴 수 없는 조항입니다. 서명 전에 반드시 특약으로 명시하세요.",
-        why: ["상가임대차보호법상 계약갱신요구권은 만료 6~1개월 사이에만 요구할 수 있고, 이 기간을 놓치면 권리를 잃습니다.", "원상복구 범위가 '전부'로 적혀 있으면 인테리어 전체를 철거해야 할 수 있습니다."],
-        checklist: [
-          "임대차 기간 및 계약갱신요구권 적용 여부 확인 (최대 10년)",
-          "임대료 인상 상한(5%) 조항 계약서 명시 여부",
-          "환산보증금 확인 — 서울 10억원, 수도권 6억5천만원, 광역시 5억5천만원 이하 시 상가임대차보호법 전면 적용",
-          "권리금 수수 조항 및 임대인 방해 금지 조항",
-          "원상복구 범위 명시 (입주 전 사진·영상 기록 필수)",
-          "임대인 동의 없는 전대·양도 금지 조항",
-          "업종 변경 제한 조항 여부"
-        ],
-        traps: [
-          { label: "계약갱신요구권 기간 놓침", desc: "계약 만료 6개월 전~1개월 전 사이에 서면으로 요구해야 합니다. 이 기간을 하루라도 놓치면 법적 보호를 받을 수 없습니다. 달력에 만료일 기준 -7개월, -6개월 알림을 설정하세요." },
-          { label: "환산보증금 초과 시 보호 축소", desc: "환산보증금 = 보증금 + (월세 × 100). 이 금액이 지역 기준을 초과하면 임대료 인상 5% 제한이 적용되지 않을 수 있습니다. 보증금·월세 조합으로 사전 계산하세요." },
-          { label: "권리금 보호 시기 놓침", desc: "권리금 보호는 임대차 종료 6개월 전부터 종료일까지만 적용됩니다. 임대인이 이 기간 외에 새 세입자와 직접 계약하면 법적 보호를 받기 어렵습니다." },
-          { label: "원상복구 '전부' 조항", desc: "'퇴거 시 원상복구'만 적혀 있으면 임대인이 인테리어 전체 철거를 요구할 수 있습니다. 입주 시 상태를 사진·영상으로 기록하고, 특약에 '기존 설치물 제외' 항목을 명시하세요." }
-        ],
-        actions: [
-          { label: "법원 인터넷 등기소에서 등기부등본 열람 (근저당·가압류·가등기 확인)", href: "https://www.iros.go.kr" },
-          { label: "대법원 상가임대차 계산기로 환산보증금 계산", href: "https://www.courts.go.kr" },
-          { label: "입주 당일 공간 전체를 영상 촬영해 클라우드에 저장 (날짜 메타데이터 필수)" },
-          { label: "권리금 계약서는 별도로 작성하고 가급적 공증 진행" },
-          { label: "계약서 특약 사항에 원상복구 제외 항목 목록 명시" }
-        ],
-        questions: [
-          "계약갱신 시 임대료 인상 계획이 있나요? 상한선을 계약서에 명시할 수 있나요?",
-          "권리금 수수에 동의하시나요? 향후 양수인 구하는 데 협조할 의향이 있나요?",
-          "원상복구 범위를 구체적으로 합의해 특약에 명시할 수 있나요?",
-          "업종 변경이나 전대 시 동의 절차가 어떻게 되나요?",
-          "건물에 근저당이나 가압류가 설정되어 있나요?"
-        ]
-      },
-      en: {
-        title: "Review lease restriction clauses",
-        summary: "Lease renewal rights, rent increase caps, restoration scope, and key money terms cannot be changed after signing. Get them in the special clauses now.",
-        why: ["The right to request lease renewal must be exercised 6–1 months before expiry — miss the window and the right is gone.", "A blanket restoration clause can require you to remove your entire fit-out when you leave."],
-        checklist: [
-          "Lease term and applicability of renewal rights (up to 10 years under Korean law)",
-          "Rent increase cap (5%) explicitly stated in the contract",
-          "Converted deposit check — Seoul ≤ ₩1B, Metro ≤ ₩650M, City ≤ ₩550M for full Act protection",
-          "Key money transfer terms and landlord non-interference clause",
-          "Restoration scope explicitly listed (photograph the space before move-in)",
-          "Sub-lease and assignment restrictions",
-          "Business type change restrictions"
-        ],
-        traps: [
-          { label: "Missing the renewal request window", desc: "You must submit a written renewal request between 6 and 1 month before expiry. Miss it by even one day and you lose legal protection. Set a calendar reminder at T-7 months and T-6 months." },
-          { label: "Converted deposit exceeding the threshold", desc: "Converted deposit = security deposit + (monthly rent × 100). If it exceeds the regional cap, the 5% rent increase limit may not apply. Calculate this before agreeing on the rent structure." },
-          { label: "Key money protection timing", desc: "Key money protection only covers the 6 months before lease end through the end date. A landlord who signs a new tenant outside this window is hard to challenge legally." },
-          { label: "Blanket restoration clause", desc: "If the contract just says 'restore to original state,' the landlord can demand full fit-out removal. Record the move-in condition on video and list exclusions in the special clauses." }
-        ],
-        actions: [
-          { label: "Check deed register for mortgages and injunctions on iros.go.kr", href: "https://www.iros.go.kr" },
-          { label: "Calculate converted deposit using the Supreme Court commercial lease calculator", href: "https://www.courts.go.kr" },
-          { label: "Film a walkthrough video of the entire space on move-in day and save to cloud with date metadata" },
-          { label: "Draft a separate key money contract and consider notarization" },
-          { label: "Add a restoration exclusion list to the special clauses section of the lease" }
-        ],
-        questions: [
-          "Do you plan to raise the rent at renewal? Can we cap the increase in the contract?",
-          "Do you consent to key money transfer, and will you cooperate in finding a buyer?",
-          "Can we agree on a specific restoration scope and list it in the special clauses?",
-          "What is the process for approving a business type change or sub-lease?",
-          "Are there any mortgages or injunctions registered on this property?"
-        ]
-      }
-    }
-  };
-
-  return details[taskId]?.[language] ?? {
-    title: taskId,
-    summary: "",
-    why: [],
-    checklist: [],
-    traps: [],
-    actions: [],
-    questions: []
-  };
-}
-
-function buildTransitionNotice(nextRoadmap: typeof starterRoadmap, language: "ko" | "en") {
-  const nextStage =
-    nextRoadmap.stages.find((stage) => stage.stageId === nextRoadmap.currentStageId) ??
-    nextRoadmap.stages[0];
-  const nextTitle = localizeStage(nextStage, language).title;
-  return language === "ko"
-    ? { title: "완료됨", body: `${nextTitle} 단계로 이어집니다.` }
-    : { title: "Saved", body: `Next up: ${nextTitle}.` };
-}
-
-function cloneStarterTaskMap(): WorkflowTaskMap {
-  return Object.fromEntries(
-    Object.entries(starterTaskMap).map(([stageCode, tasks]) => [
-      stageCode,
-      tasks.map((task) => ({ ...task }))
-    ])
-  );
-}
-
-// ── 공급업체 URL 맵 (로드맵 vendor-setup 단계와 공유) ──
-const VENDOR_URL_MAP: Record<string, string> = {
-  "홈택스(Hometax)": "https://www.hometax.go.kr",
-  "비즈플레이(Bizplay)": "https://www.bizplay.co.kr",
-  "캐시노트(CashNote)": "https://cashnote.kr",
-  "마켓컬리 비즈(Kurly Biz)": "https://biz.kurly.com",
-  "쿠팡 비즈니스": "https://biz.coupang.com",
-  "aT 한국농수산식품유통공사": "https://www.at.or.kr",
-  "커피빈코리아 B2B": "https://www.coffeebeankorea.com",
-  "빈브라더스": "https://beanbrothers.co.kr",
-  "테라로사": "https://www.terarosa.com",
-  "모닌(Monin)": "https://www.monin.com/kr",
-  "1883 루아(Routin)": "https://www.routin1883.com",
-  "토라니(Torani)": "https://torani.com",
-  "서울우유 업소용": "https://www.seoulmilk.co.kr",
-  "매일유업 바리스타": "https://www.maeil.com",
-  "오틀리(Oatly)": "https://www.oatly.com/kr",
-  "하나팩": "https://www.hanapack.co.kr",
-  "현진팩": "https://www.hjpack.co.kr",
-  "페이퍼갱": "https://www.papergang.co.kr",
-  "아성다이소 기업구매": "https://b2b.daiso.co.kr",
-  "유한킴벌리 B2B": "https://www.yuhan-kimberly.co.kr",
-  "3M 업소용": "https://www.3mkorea.co.kr",
-  "CJ프레시웨이": "https://www.cjfreshway.com",
-  "마켓컬리 비즈": "https://biz.kurly.com",
-  "아워홈 식자재": "https://www.ourhome.co.kr",
-  "대상 청정원 업소용": "https://www.chungjungone.com",
-  "샘표 기업용": "https://www.sempio.com",
-  "오뚜기 업소용": "https://www.ottogi.co.kr",
-  "대한제분(곰표)": "https://www.dhflour.co.kr",
-  "농협 직거래": "https://www.nonghyup.com",
-  "CJ제일제당 B2B": "https://www.cj.co.kr",
-  "원팩(Wonpak)": "https://www.wonpak.co.kr",
-  "유한킴벌리 업소용": "https://www.yuhan-kimberly.co.kr",
-  "유한양행 업소용": "https://www.yuhan.co.kr",
-  "아모레퍼시픽 프로(에이모스)": "https://www.amorepacificpro.co.kr",
-  "로레알 프로(케라스타즈·레드켄)": "https://www.loreal-professionnel.com/ko-kr",
-  "웰라 코리아(Wella)": "https://www.wella.com/ko-KR",
-  "파나소닉 업소용": "https://panasonic.net/cns/sav/kr",
-  "다이슨 프로(Dyson Pro)": "https://www.dyson.co.kr",
-  "GHD 코리아": "https://www.ghdhair.com/ko-kr",
-  "지에이치 전문부자재": "https://www.ghpro.co.kr",
-  "코스모프로페셔널": "https://www.cosmoprofessional.co.kr",
-  "보령헬스케어": "https://www.boreonghc.co.kr",
-  "라이프피트니스(Life Fitness)": "https://www.lifefitness.com/ko-kr",
-  "테크노짐(Technogym)": "https://www.technogym.com",
-  "오딘피트니스": "https://www.odinfitness.com",
-  "발렉스(Valeo)": "https://www.valeofit.com",
-  "리복 프로(Reebok Pro)": "https://www.reebok.co.kr",
-  "마이단백질(MyProtein) B2B": "https://www.myprotein.com/sports-nutrition",
-  "쿠팡 비즈": "https://biz.coupang.com",
-  "천재교육 B2B": "https://www.chunjae.co.kr",
-  "비상교육": "https://www.visang.com",
-  "메가스터디 교육": "https://www.megastudy.net",
-  "퍼시스(Persis)": "https://www.fursys.com",
-  "리바트(Livart) 에듀": "https://www.livart.co.kr",
-  "코아스(Koas)": "https://www.koas.co.kr",
-  "모나미 B2B": "https://www.monami.com",
-  "교보문고 교육자료": "https://www.kyobobook.co.kr",
-  "로얄캐닌(Royal Canin) B2B": "https://www.royalcanin.com/ko",
-  "힐스(Hill's) 코리아": "https://www.hillspet.co.kr",
-  "퓨리나(Purina) B2B": "https://www.purina.co.kr",
-  "크리스탈 펫": "https://www.crystalpet.co.kr",
-  "바이오그룸(Biogroom)": "https://www.biogroom.com",
-  "아이러브펫": "https://www.ilovepet.co.kr",
-  "리치펫(Richpet)": "https://www.richpet.co.kr",
-  "슈가버블": "https://www.sugarbubble.co.kr",
-  "쿠팡 펫 비즈": "https://biz.coupang.com",
-  "비오킬(Biokil) 코리아": "https://www.biokil.co.kr",
-  "온채널(OnChannel)": "https://www.onch3.co.kr",
-  "동대문 패션타운": "https://www.ddmt.co.kr",
-  "무역협회(KITA) B2B": "https://www.kita.net",
-  "KIS정보통신": "https://www.kisinfo.co.kr",
-  "토스페이먼츠": "https://www.tosspayments.com",
-  "스마트로(Smartro)": "https://www.smartro.co.kr",
-  "한국포장(KPK)": "https://www.kpk.co.kr",
-  "KIS정보통신 소모품": "https://www.kisinfo.co.kr",
-  "LG전자 클로이 B2B": "https://www.lge.co.kr/b2b",
-  "삼성전자 업소용": "https://www.samsung.com/sec/b2b",
-  "일렉트로룩스(Electrolux)": "https://www.electrolux.co.kr",
-  "P&G 업소용(타이드·다우니)": "https://www.pg.co.kr",
-  "애경 B2B(퍼실)": "https://www.aekyung.co.kr",
-  "에코버(Ecover) 코리아": "https://www.ecover.com",
-  "KIS정보통신 POS": "https://www.kisinfo.co.kr",
-  "워드빌(Wordville)": "https://www.wordville.co.kr",
-  "나이스페이(Nicepay)": "https://www.nicepay.co.kr",
-  "시디즈(Sidiz)": "https://www.sidiz.com",
-  "타임키퍼(TimeKeeper)": "https://www.timekeeper.co.kr",
-  "스마트인": "https://www.smartin.co.kr",
-  "스터디유(StudyU)": "https://www.studyu.co.kr",
-  "롯데네슬레 자판기": "https://www.lottene.com",
-  "동서식품 B2B": "https://www.dongsuh.com",
-  "네스프레소 프로": "https://www.nespresso.com/pro/kr",
-};
+import { styles } from "./lib/styles";
+import type { GuideRecord, SavedFinanceSnapshot, SavedContractAnalysisSnapshot, SavedGuideQaSnapshot, DashboardSurface } from "./lib/types";
+import { GUIDE_STAGE_CODES, SURFACE_HREFS, VENDOR_URL_MAP } from "./lib/constants";
+import {
+  getGuideSections,
+  formatConfidenceBadge,
+  parseManwonInput,
+  inferFinanceDefaults,
+  formatBreakEvenMonth,
+  hydrateSavedFinanceSnapshot,
+  hydrateSavedContractAnalysisSnapshot,
+  hydrateSavedGuideQaSnapshot,
+  getContractAnalysisHints,
+  baseRoadmap,
+  getContractTaskDetail,
+  buildTransitionNotice,
+  cloneStarterTaskMap,
+  type ContractTaskDetail,
+} from "./lib/helpers";
+import { LocationMapPanel } from "./lib/components/LocationMapPanel";
+import { SurfaceIcon } from "./lib/components/SurfaceIcon";
+import { ExistingBusinessOnboarding } from "./lib/components/ExistingBusinessOnboarding";
+import TaxCalendarCard from "./lib/components/TaxCalendarCard";
+import HealthDiagnosisCard from "./lib/components/HealthDiagnosisCard";
+import LifecycleCard from "./lib/components/LifecycleCard";
+import OperationalDashboard from "./lib/components/dashboard/OperationalDashboard";
+import RoleSelectionScreen from "./lib/components/RoleSelectionScreen";
+import AIRoadmapWizard from "./lib/components/AIRoadmapWizard";
+import { calculateHealthMetrics, forecastSales } from "@build-up/shared";
+import type { BusinessHealthMetrics, SalesForecast } from "@build-up/shared";
+import { useDashboard, type InventoryItem, type InvForm, type Employee, type DeliveryPlatform, type Product, type TaxSettings, type FixedExpense, type Member, type DailyEntry, type MonthlyCosts, type UnifiedProduct, type ServiceMenuItem } from "./lib/useDashboard";
 
 export default function StarterStageDemo({
   surface = "home",
@@ -2348,2040 +145,643 @@ export default function StarterStageDemo({
   surface?: DashboardSurface;
   showSurfaceNav?: boolean;
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { language, setLanguage } = useLanguage();
-  const copy = getUiCopy(language);
-  const [decisions, setDecisions] = useState<WorkflowDecisionMap>(starterDecisionMap);
-  const [roadmap, setRoadmap] = useState(starterRoadmap);
-  const [taskMap, setTaskMap] = useState<WorkflowTaskMap>(starterTaskMap);
-  const [viewingStageId, setViewingStageId] = useState<string | null>(null);
-  const [selectedIndustryId, setSelectedIndustryId] = useState<string | undefined>();
-  const [selectedIndustryCategoryId, setSelectedIndustryCategoryId] = useState("food");
-  const [selectedBusinessModelId, setSelectedBusinessModelId] = useState<string | undefined>();
-  const [selectedBudget, setSelectedBudget] = useState<number | undefined>();
-  const [budgetInputText, setBudgetInputText] = useState("");
-  const [selectedOpenDate, setSelectedOpenDate] = useState<string | undefined>();
-  const [selectedLocationId, setSelectedLocationId] = useState<string | undefined>();
-  const [preferredRegionInput, setPreferredRegionInput] = useState("");
-  const [locationMode, setLocationMode] = useState<"recommended" | "direct">("recommended");
-  const [recommendedMarkets, setRecommendedMarkets] = useState<RecommendationItem[]>([]);
-  const [customMarketName, setCustomMarketName] = useState("");
-  const [customMarketReason, setCustomMarketReason] = useState("");
-  const [manualMarketEvaluation, setManualMarketEvaluation] = useState<RecommendationItem | null>(null);
-  const [manualAlternative, setManualAlternative] = useState<RecommendationItem | null>(null);
-  const [selectedContractTaskId, setSelectedContractTaskId] = useState<string | undefined>();
-  const [contractText, setContractText] = useState("");
-  const [contractAnalysisStatus, setContractAnalysisStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [contractAnalysisError, setContractAnalysisError] = useState("");
-  const [contractAnalysis, setContractAnalysis] = useState<ContractAnalysisResult | null>(null);
-  const [showFinancePanel, setShowFinancePanel] = useState(false);
-  const [financeCapitalText, setFinanceCapitalText] = useState("");
-  const [financeMonthlyRentText, setFinanceMonthlyRentText] = useState("");
-  const [financeLaborText, setFinanceLaborText] = useState("");
-  const [financeRevenueText, setFinanceRevenueText] = useState("");
-  const [financeMarketStyle, setFinanceMarketStyle] = useState("balanced");
-  const [financeRentBand, setFinanceRentBand] = useState("mid");
-  const [financeStatus, setFinanceStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [financeError, setFinanceError] = useState("");
-  const [financeResult, setFinanceResult] = useState<FinancialSimulationResult | null>(null);
-  const [financeInterpretation, setFinanceInterpretation] = useState<AiStructuredResponse | null>(null);
-  const [selectedGuideSectionKey, setSelectedGuideSectionKey] = useState<string | undefined>();
-  const [guideQuestion, setGuideQuestion] = useState("");
-  const [guideQaStatus, setGuideQaStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [guideQaError, setGuideQaError] = useState("");
-  const [guideAnswer, setGuideAnswer] = useState<GuideQaAnswer | null>(null);
-  const [knowledgeQaText, setKnowledgeQaText] = useState("");
-  const [knowledgeQaStatus, setKnowledgeQaStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [knowledgeQaError, setKnowledgeQaError] = useState("");
-  const [locationOptions, setLocationOptions] = useState(getStarterLocationOptions("food"));
-  const [locationSourceLabel, setLocationSourceLabel] = useState<string>(copy.common.starterFallback);
-  const [permitGuides, setPermitGuides] = useState<Awaited<ReturnType<typeof loadPermitKnowledge>>>([]);
-  const [taxGuides, setTaxGuides] = useState<Awaited<ReturnType<typeof loadTaxKnowledge>>>([]);
-  const [loanGuides, setLoanGuides] = useState<Awaited<ReturnType<typeof loadLoanKnowledge>>>([]);
-  const [startupType, setStartupType] = useState<"franchise" | "independent" | "undecided" | undefined>();
-  const [selectedFranchiseBrandId, setSelectedFranchiseBrandId] = useState<string | null>(null);
-  const [showFranchisePicker, setShowFranchisePicker] = useState(false);
-  const [nearbyFranchiseStores, setNearbyFranchiseStores] = useState<{ totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null>(null);
-  const [nearbyFranchiseLoading, setNearbyFranchiseLoading] = useState(false);
-  const [locationMapReady, setLocationMapReady] = useState(false);
-  const [stageGuideContent, setStageGuideContent] = useState<StageGuideContent | null>(null);
-  const [guideStepIndex, setGuideStepIndex] = useState(0);
-  const [guideSelections, setGuideSelections] = useState<Record<string, string>>({});
-  const [vendorSelections, setVendorSelections] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem("vendorSelections") ?? "{}"); } catch { return {}; }
-  });
-  const [vendorCustomInputs, setVendorCustomInputs] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem("vendorCustomInputs") ?? "{}"); } catch { return {}; }
-  });
-  const [opsSelections, setOpsSelections] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("opsSelections") ?? "{}"); } catch { return {}; }
-  });
-  const [opsPosChecks, setOpsPosChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("opsPosChecks") ?? "{}"); } catch { return {}; }
-  });
-  const [opsStep, setOpsStep] = useState(0);
-  const [softOpenChecks, setSoftOpenChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("softOpenChecks") ?? "{}"); } catch { return {}; }
-  });
-  const [softOpenPricing, setSoftOpenPricing] = useState<string>(() => {
-    try { return localStorage.getItem("softOpenPricing") ?? ""; } catch { return ""; }
-  });
-  const [softOpenStep, setSoftOpenStep] = useState(0);
-  const [softOpenSkips, setSoftOpenSkips] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("softOpenSkips") ?? "{}"); } catch { return {}; }
-  });
-  const [taxChecks, setTaxChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("taxChecks") ?? "{}"); } catch { return {}; }
-  });
-  const [loanChecks, setLoanChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("loanChecks") ?? "{}"); } catch { return {}; }
-  });
-
-  type DailyEntry = { date: string; sales: number; customers: number };
-  type MonthlyCosts = { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-  type InventoryItem = {
-    id: string; name: string; quantity: number; unit: string; minThreshold: number;
-    unitCost: number;
-    category: "fresh" | "dry" | "frozen" | "beverage" | "supply" | "other";
-    expiryDate: string; supplierName: string; supplierUrl: string;
-    leadTimeDays: number; dailyUsage: number; lastOrderedAt: string;
-    wasteLog: { date: string; qty: number; reason: string }[];
-  };
-  type InvForm = {
-    open: boolean; editId: string | null;
-    name: string; qty: string; unit: string; threshold: string; unitCost: string;
-    category: "fresh" | "dry" | "frozen" | "beverage" | "supply" | "other";
-    expiryDate: string; supplierName: string; url: string; leadTimeDays: string; dailyUsage: string;
-  };
-  type Employee = {
-    id: string;
-    name: string;
-    hourlyWage: number;
-    weeklyHours: number;
-    isInsured: boolean;
-  };
-  type DeliveryPlatform = {
-    id: string;
-    name: string;
-    commissionRate: number;   // %
-    adCostMonthly: number;    // 만원
-  };
-  type Product = {
-    id: string;
-    name: string;
-    category: string;
-    price: number;       // 판매가 (원)
-    cost: number;        // 원가 (원)
-    stock: number;       // 재고 수량
-    monthlySold: number; // 이번 달 판매량
-    unit: string;
-  };
-  type TaxSettings = {
-    vatType: "general" | "simplified";
-    hasEmployees: boolean;
-  };
-  type FixedExpense = {
-    id: string;
-    name: string;
-    amount: number;
-    dueDay: number;
-    category: "rent" | "loan" | "insurance" | "other";
-  };
-  const [dailyEntries, setDailyEntries] = useState<DailyEntry[]>(() => {
-    try { return JSON.parse(localStorage.getItem("dailyEntries") ?? "[]"); } catch { return []; }
-  });
-  const [monthlyCosts, setMonthlyCosts] = useState<MonthlyCosts>(() => {
-    try { return JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); }
-    catch { return { ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 }; }
-  });
-  const [inventory, setInventory] = useState<InventoryItem[]>(() => {
-    try { return JSON.parse(localStorage.getItem("inventoryItems") ?? "[]"); } catch { return []; }
-  });
-  const [invForm, setInvForm] = useState<InvForm>({
-    open: false, editId: null, name: "", qty: "", unit: "개", threshold: "",
-    unitCost: "", category: "other", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
-  });
-  const [invCategoryFilter, setInvCategoryFilter] = useState("all");
-  const [invWasteTarget, setInvWasteTarget] = useState<string | null>(null);
-  const [invWasteQty, setInvWasteQty] = useState("");
-  const [invWasteReason, setInvWasteReason] = useState("");
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    try { return JSON.parse(localStorage.getItem("employees") ?? "[]"); } catch { return []; }
-  });
-  const [empFormOpen, setEmpFormOpen] = useState(false);
-  const [empEditId, setEmpEditId] = useState<string | null>(null);
-  const [empName, setEmpName] = useState("");
-  const [empWage, setEmpWage] = useState("");
-  const [empHours, setEmpHours] = useState("");
-  const [empInsured, setEmpInsured] = useState(false);
-  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>(() => {
-    try { return JSON.parse(localStorage.getItem("fixedExpenses") ?? "[]"); } catch { return []; }
-  });
-  const [fexpFormOpen, setFexpFormOpen] = useState(false);
-  const [fexpEditId, setFexpEditId] = useState<string | null>(null);
-  const [fexpName, setFexpName] = useState("");
-  const [fexpAmount, setFexpAmount] = useState("");
-  const [fexpDueDay, setFexpDueDay] = useState("");
-  const [fexpCategory, setFexpCategory] = useState<FixedExpense["category"]>("other");
-  const [deliveryPlatforms, setDeliveryPlatforms] = useState<DeliveryPlatform[]>(() => {
-    try { return JSON.parse(localStorage.getItem("deliveryPlatforms") ?? "[]"); } catch { return []; }
-  });
-  const [monthlyDeliverySales, setMonthlyDeliverySales] = useState<Record<string, number>>(() => {
-    try { return JSON.parse(localStorage.getItem("monthlyDeliverySales") ?? "{}"); } catch { return {}; }
-  });
-  const [dlvFormOpen, setDlvFormOpen] = useState(false);
-  const [dlvEditId, setDlvEditId] = useState<string | null>(null);
-  const [dlvName, setDlvName] = useState("");
-  const [dlvRate, setDlvRate] = useState("");
-  const [dlvAd, setDlvAd] = useState("");
-  const [products, setProducts] = useState<Product[]>(() => {
-    try { return JSON.parse(localStorage.getItem("products") ?? "[]"); } catch { return []; }
-  });
-  const [prodFormOpen, setProdFormOpen] = useState(false);
-  const [prodEditId, setProdEditId] = useState<string | null>(null);
-  const [prodName, setProdName] = useState("");
-  const [prodCategory, setProdCategory] = useState("");
-  const [prodPrice, setProdPrice] = useState("");
-  const [prodCost, setProdCost] = useState("");
-  const [prodStock, setProdStock] = useState("");
-  const [prodUnit, setProdUnit] = useState("개");
-  const [taxSettings, setTaxSettings] = useState<TaxSettings>(() => {
-    try { return JSON.parse(localStorage.getItem("taxSettings") ?? "{}"); }
-    catch { return { vatType: "general", hasEmployees: false }; }
-  });
-  // ── 온라인 채널 카드 상태 ──
-  const [onlinePlatformSales, setOnlinePlatformSales] = useState<Record<string, string>>({});
-  const [onlineSelectedPlatforms, setOnlineSelectedPlatforms] = useState<string[]>([]);
-  const [onlineSelectedCourier, setOnlineSelectedCourier] = useState<string>("cj");
-  const [onlineMonthlyParcels, setOnlineMonthlyParcels] = useState("");
-  // ── 수강생/회원 카드 상태 ──
-  type Member = { id: string; name: string; plan: string; fee: number; startDate: string; endDate: string; };
-  const [members, setMembers] = useState<Member[]>(() => {
-    try { return JSON.parse(localStorage.getItem("members") ?? "[]"); } catch { return []; }
-  });
-  const [memFormOpen, setMemFormOpen] = useState(false);
-  const [memName, setMemName] = useState("");
-  const [memPlan, setMemPlan] = useState("");
-  const [memFee, setMemFee] = useState("");
-  const [memEnd, setMemEnd] = useState("");
-  const { setNotifications } = useNotifications();
-  const [businessLaunched, setBusinessLaunched] = useState(() => {
-    try { return localStorage.getItem("businessLaunched") === "true"; } catch { return false; }
-  });
-  const [storeName, setStoreName] = useState(() => {
-    try { return localStorage.getItem("storeName") ?? ""; } catch { return ""; }
-  });
-  const [costIngredientsText, setCostIngredientsText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return c.ingredients ? String(Math.round(c.ingredients / 10000)) : ""; } catch { return ""; }
-  });
-  const [costLaborText, setCostLaborText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return c.labor ? String(Math.round(c.labor / 10000)) : ""; } catch { return ""; }
-  });
-  const [costRentText, setCostRentText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return c.rent ? String(Math.round(c.rent / 10000)) : ""; } catch { return ""; }
-  });
-  const [costUtilitiesText, setCostUtilitiesText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return c.utilities ? String(Math.round(c.utilities / 10000)) : ""; } catch { return ""; }
-  });
-  const [costOtherText, setCostOtherText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return c.other ? String(Math.round(c.other / 10000)) : ""; } catch { return ""; }
-  });
-  const [dailyDateInput, setDailyDateInput] = useState(() => new Date().toISOString().slice(0, 10));
-  const [dailySalesInput, setDailySalesInput] = useState("");
-  const [dailyCustomersInput, setDailyCustomersInput] = useState("");
-  const [cpaDecision, setCpaDecision] = useState<"cpa" | "self" | null>(() => {
-    try { return (localStorage.getItem("cpaDecision") as "cpa" | "self" | null); } catch { return null; }
-  });
-  const [selectedInteriorConcept, setSelectedInteriorConcept] = useState<string | null>(null);
-  const [contractors, setContractors] = useState<{ id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }[]>([]);
-  const [contractorsLoading, setContractorsLoading] = useState(false);
-  const [contractorsRetryKey, setContractorsRetryKey] = useState(0);
-  const [showProfileDetails, setShowProfileDetails] = useState(false);
-  const [lastUnlocked, setLastUnlocked] = useState<string[]>([]);
-  const [selectedStoreIndex, setSelectedStoreIndex] = useState<number | null>(null);
-  const [authLabel, setAuthLabel] = useState<string>(copy.home.notConnected);
-  const [persistenceLabel, setPersistenceLabel] = useState<string>(copy.home.localDemoMode);
-  const [persistenceReady, setPersistenceReady] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [profile, setProfile] = useState<PersistedBusinessProfile | null>(null);
-  const [authResolved, setAuthResolved] = useState(false);
-  const [requiresAuth, setRequiresAuth] = useState(false);
-  const [transitionNotice, setTransitionNotice] = useState<{ title: string; body: string } | null>(null);
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const transitionNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const displayedStageId = viewingStageId ?? roadmap.currentStageId;
-  const currentStage =
-    roadmap.stages.find((stage) => stage.stageId === displayedStageId) ?? roadmap.stages[0];
-  const traversedStages = roadmap.stages.filter(
-    (s) => s.status === "completed" || s.stageId === roadmap.currentStageId
-  );
-  const traversedIndex = traversedStages.findIndex((s) => s.stageId === displayedStageId);
-  const prevTraversedStage = traversedIndex > 0 ? traversedStages[traversedIndex - 1] : null;
-  const nextTraversedStage =
-    traversedIndex >= 0 && traversedIndex < traversedStages.length - 1
-      ? traversedStages[traversedIndex + 1]
-      : null;
-  const isViewingPastStage =
-    viewingStageId !== null && viewingStageId !== roadmap.currentStageId;
-  const canCompleteIndustryStep = Boolean(selectedIndustryId);
-  const canCompleteStartupTypeStep = Boolean(startupType);
-  const canCompleteBusinessModelStep = Boolean(selectedBusinessModelId);
-  const canCompleteBudgetStep = Boolean(selectedBudget && selectedOpenDate);
-  const canCompleteLocationStep = Boolean(selectedLocationId);
-  const hasPermitGuide = permitGuides.length > 0;
-  const hasTaxGuide = taxGuides.length > 0;
-  const hasLoanGuide = loanGuides.length > 0;
-  const completedCount = roadmap.completedStageIds.length;
-  const preferredRegion = profile?.preferredRegions?.[0];
-  const industryCategoryId =
-    getIndustryCategoryIdByOptionId(
-      selectedIndustryId ??
-        profile?.subIndustryId ??
-        decisions["industry-selection"]?.selectedPrimaryOptionId
-    ) ?? "food";
-  const businessCtx = resolveBusinessContext(industryCategoryId);
-  const isDigitalCategory = industryCategoryId === "online-digital";
-  const pathTotalStages = isDigitalCategory ? 14 : 18;
-  const correctedProgressPercent = Math.min(100, Math.round((completedCount / pathTotalStages) * 100));
-  const allStagesDone = completedCount >= pathTotalStages;
-  const localizedCurrentStage = localizeStage(currentStage, language, industryCategoryId);
-  const isGuideStage = GUIDE_STAGE_CODES.includes(
-    currentStage.code as (typeof GUIDE_STAGE_CODES)[number]
-  );
-  const isFreshAccount =
-    !profile?.subIndustryId &&
-    !profile?.businessModelId &&
-    completedCount === 0 &&
-    currentStage.code === "industry_selection";
-  const startupSummary = [
-    profile?.subIndustryId
-      ? localizeRecommendationItem({ id: profile.subIndustryId, title: profile.subIndustryId }, language)
-          .title
-      : undefined,
-    profile?.startupType ? formatStartupType(profile.startupType, language) : undefined,
-    profile?.businessModelId
-      ? localizeRecommendationItem(
-          { id: profile.businessModelId, title: profile.businessModelId },
-          language
-        ).title
-      : undefined
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const selectedIndustryLabel =
-    selectedIndustryId ??
-    profile?.subIndustryId ??
-    decisions["industry-selection"]?.selectedPrimaryOptionId
-      ? localizeRecommendationItem(
-          {
-            id:
-              selectedIndustryId ??
-              profile?.subIndustryId ??
-              decisions["industry-selection"]?.selectedPrimaryOptionId ??
-              "",
-            title:
-              selectedIndustryId ??
-              profile?.subIndustryId ??
-              decisions["industry-selection"]?.selectedPrimaryOptionId ??
-              ""
-          },
-          language
-        ).title
-      : copy.common.notSetYet;
-  const nextStepSummary =
-    currentStage.code === "industry_selection"
-      ? copy.home.nextStepIndustry
-      : currentStage.code === "startup_type"
-        ? copy.home.nextStepStartupType
-      : currentStage.code === "business_model"
-        ? copy.home.nextStepModel
-        : currentStage.code === "budget_setup"
-          ? copy.home.nextStepBudget
-          : currentStage.code === "location_candidates"
-            ? copy.home.nextStepLocation
-            : currentStage.code === "contract_review"
-              ? copy.home.nextStepContract
-              : currentStage.code === "tax_guide"
-                ? copy.home.nextStepTax
-                : currentStage.code === "loan_guide"
-                  ? copy.home.nextStepLoan
-                  : currentStage.code === "biz_registration"
-                    ? (language === "ko" ? "사업자등록과 금융 세팅을 완료하세요." : "Finalize business registration and banking.")
-                    : currentStage.code === "pre_launch_final"
-                      ? (language === "ko" ? "초도 재고 입고, 직원 교육, SNS 예고를 마치세요." : "Receive inventory, brief staff, and post a teaser.")
-                      : currentStage.code === "first_month_check"
-                        ? (language === "ko" ? "현금흐름 기록 방법을 정하고 개업을 시작하세요." : "Set up cash flow tracking and launch your business.")
-                        : copy.home.nextStepDone;
-  const locationRegionLabel = isDigitalCategory
-    ? (language === "ko" ? "희망 운영 지역" : "Preferred base region")
-    : (language === "ko" ? "희망 지역" : "Preferred region");
-  const locationHelpText = isDigitalCategory
-    ? (language === "ko"
-        ? "운영하고 싶은 권역을 적으면 작업·보관·택배 흐름 기준으로 거점 3곳을 추천하고, 직접 생각한 거점도 점검해드립니다."
-        : "Enter your target area to see three operating-base suggestions focused on storage, packing, and logistics.")
-    : (language === "ko"
-        ? "원하는 지역을 적으면 추천 상권 3곳을 보여드리고, 직접 생각한 상권도 점수로 점검해드립니다."
-        : "Enter your target region to see three suggested markets, or score a market you already have in mind.");
-  const locationRecommendedLabel = isDigitalCategory
-    ? (language === "ko" ? "추천 거점 보기" : "Recommended bases")
-    : (language === "ko" ? "추천 상권 보기" : "Recommended markets");
-  const locationDirectLabel = isDigitalCategory
-    ? (language === "ko" ? "직접 입력하기" : "My own base")
-    : (language === "ko" ? "직접 입력하기" : "My own market");
-  const locationInputPlaceholder = isDigitalCategory
-    ? (language === "ko" ? "예: 구로, 동대문, 일산" : "Example: Guro, Dongdaemun, Ilsan")
-    : (language === "ko" ? "예: 성수동, 수원 영통, 부산 전포" : "Example: Seongsu, Pangyo, Jeonpo");
-  const customLocationLabel = isDigitalCategory
-    ? (language === "ko" ? "직접 생각한 운영 거점" : "Your chosen base")
-    : (language === "ko" ? "직접 생각한 상권" : "Your chosen market");
-  const customLocationPlaceholder = isDigitalCategory
-    ? (language === "ko" ? "예: 구로 물류센터 인근, 집 근처 작업실" : "Example: near Guro logistics, home studio")
-    : (language === "ko" ? "예: 성수역 3번 출구 근처" : "Example: near Seongsu Station exit 3");
-  const customLocationReasonPlaceholder = isDigitalCategory
-    ? (language === "ko" ? "왜 이 거점을 생각했는지 적어주세요." : "Why are you considering this base?")
-    : (language === "ko" ? "왜 이 상권을 생각했는지 적어주세요." : "Why are you considering this market?");
-  const scoreLocationLabel = isDigitalCategory
-    ? (language === "ko" ? "이 거점 평가하기" : "Score this base")
-    : (language === "ko" ? "이 상권 평가하기" : "Score this market");
-  const selectedLocationDetailLabel = isDigitalCategory
-    ? (language === "ko" ? "선택한 운영 거점 자세히 보기" : "Selected base details")
-    : (language === "ko" ? "선택한 상권 자세히 보기" : "Selected market details");
-  const sliderBudgetValue = selectedBudget ?? 1000000;
-  const activeBudgetLabel =
-    typeof selectedBudget === "number"
-      ? formatBudgetPresetLabel(selectedBudget, language)
-      : language === "ko"
-        ? "아직 입력하지 않음"
-        : "Not set yet";
-  const activeOpenDatePreset =
-    starterOpenDatePresets.find((date) => date.value === selectedOpenDate) ?? null;
-  const activeSurface = surface;
-  const currentStageIndex = roadmap.stages.findIndex((stage) => stage.stageId === currentStage.stageId);
-  const roadmapPreviewStages = roadmap.stages.slice(
-    currentStageIndex >= 0 ? currentStageIndex : 0,
-    (currentStageIndex >= 0 ? currentStageIndex : 0) + 2
-  );
-  const nextRoadmapStage = roadmapPreviewStages[1] ?? null;
-  const homePrinciples = starterStepCards
-    .slice(0, 3)
-    .map((card) => localizeStarterStepCard(card, language));
-  const surfaceTabs = [
-    {
-      id: "home" as const,
-      label: language === "ko" ? "홈" : "Home"
-    },
-    {
-      id: "current" as const,
-      label: language === "ko" ? "현재 단계" : "Current step"
-    },
-    {
-      id: "roadmap" as const,
-      label: language === "ko" ? "로드맵" : "Roadmap"
-    },
-    {
-      id: "guides" as const,
-      label: language === "ko" ? "가이드" : "Guides"
-    },
-    {
-      id: "franchise" as const,
-      label: language === "ko" ? "프랜차이즈" : "Franchise"
-    },
-    {
-      id: "profile" as const,
-      label: language === "ko" ? "내 정보" : "Profile"
-    },
-    {
-      id: "analytics" as const,
-      label: language === "ko" ? "내 가게" : "My store"
-    }
-  ];
-  const navigateToSurface = (nextSurface: DashboardSurface) => {
-    router.push(SURFACE_HREFS[nextSurface]);
-  };
-  const openFinanceFromSummary = () => {
-    setShowFinancePanel(true);
-    router.push("/guides?panel=finance");
-  };
-
-  const handleIndustryContinue = () => {
-    if (!selectedIndustryId) {
-      return;
-    }
-
-    const nextDecisions = upsertStageDecision(decisions, "industry-selection", {
-      stageId: "industry-selection",
-      selectedPrimaryOptionId: selectedIndustryId,
-      inputs: {
-        subIndustryId: selectedIndustryId,
-        categoryId: getIndustryCategoryIdByOptionId(selectedIndustryId) ?? ""
-      },
-      completedAt: new Date().toISOString()
-    });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  const resetDemo = () => {
-    const confirmed = window.confirm(
-      language === "ko"
-        ? "데모 진행 상태를 정말 초기화할까요? 현재 저장된 홈 화면과 서버 데이터에도 바로 반영됩니다."
-        : "Reset the demo progress? This will immediately update both your home screen and saved server state."
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-    }
-
-    setPersistenceReady(false);
-
-    const nextDecisions: WorkflowDecisionMap = {};
-    const nextTasks = cloneStarterTaskMap();
-    const nextRoadmap = buildRoadmapState(
-      {
-        ...baseRoadmap,
-        roadmapId:
-          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
-            ? roadmap.roadmapId
-            : baseRoadmap.roadmapId
-      },
-      nextDecisions,
-      nextTasks
-    );
-
-    // localStorage 전체 초기화
-    try {
-      [
-        "businessLaunched", "storeName", "cpaDecision",
-        "vendorSelections", "vendorCustomInputs", "opsSelections", "opsPosChecks",
-        "softOpenChecks", "softOpenPricing", "softOpenSkips",
-        "taxChecks", "loanChecks", "dailyEntries", "monthlyCosts",
-        "employees", "fixedExpenses", "deliveryPlatforms", "monthlyDeliverySales",
-        "products", "taxSettings", "members"
-      ].forEach(k => localStorage.removeItem(k));
-    } catch { /* ignore */ }
-
-    setDecisions(nextDecisions);
-    setTaskMap(nextTasks);
-    setRoadmap(nextRoadmap);
-    setViewingStageId(null);
-    setBusinessLaunched(false);
-    setStoreName("");
-    setCpaDecision(null);
-    setVendorSelections({});
-    setVendorCustomInputs({});
-    setOpsSelections({});
-    setOpsPosChecks({});
-    setSoftOpenChecks({});
-    setSoftOpenPricing("");
-    setSoftOpenSkips({});
-    setTaxChecks({});
-    setLoanChecks({});
-    setDailyEntries([]);
-    setMonthlyCosts({ ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 });
-    setSoftOpenStep(0);
-    setCostIngredientsText("");
-    setCostLaborText("");
-    setCostRentText("");
-    setCostUtilitiesText("");
-    setCostOtherText("");
-    setSelectedIndustryId(undefined);
-    setSelectedIndustryCategoryId("food");
-    setSelectedBusinessModelId(undefined);
-    setSelectedBudget(undefined);
-    setBudgetInputText("");
-    setSelectedOpenDate(undefined);
-    setSelectedLocationId(undefined);
-    setPreferredRegionInput("");
-    setLocationMode("recommended");
-    setRecommendedMarkets([]);
-    setCustomMarketName("");
-    setCustomMarketReason("");
-    setManualMarketEvaluation(null);
-    setManualAlternative(null);
-    setSelectedContractTaskId(undefined);
-    setContractText("");
-    setContractAnalysisStatus("idle");
-    setContractAnalysisError("");
-    setContractAnalysis(null);
-    setSelectedGuideSectionKey(undefined);
-    setGuideQuestion("");
-    setGuideQaStatus("idle");
-    setGuideQaError("");
-    setGuideAnswer(null);
-    setShowFinancePanel(false);
-    setFinanceCapitalText("");
-    setFinanceMonthlyRentText("");
-    setFinanceLaborText("");
-    setFinanceRevenueText("");
-    setFinanceMarketStyle("balanced");
-    setFinanceRentBand("mid");
-    setFinanceStatus("idle");
-    setFinanceError("");
-    setFinanceResult(null);
-    setFinanceInterpretation(null);
-    setLocationOptions(getStarterLocationOptions("food"));
-    setLocationSourceLabel(copy.common.starterFallback);
-    setShowProfileDetails(false);
-    setStartupType(undefined);
-    setLastUnlocked([]);
-    setTransitionNotice(null);
-    setProfile(null);
-    setPersistenceLabel(language === "ko" ? "초기화 중..." : "Resetting...");
-    router.push(SURFACE_HREFS.home);
-
-    void saveRoadmapState(supabase, {
-      roadmap: nextRoadmap,
-      decisions: nextDecisions,
-      tasks: nextTasks
-    })
-      .then((persisted) => {
-        setRoadmap(persisted.roadmap);
-        setDecisions(persisted.decisions);
-        setTaskMap(persisted.tasks);
-        setPersistenceLabel(language === "ko" ? "초기화가 서버에 적용되었습니다." : "Reset applied to server.");
-        setPersistenceReady(true);
-        void loadBusinessProfile(supabase).then(setProfile).catch(() => undefined);
-      })
-      .catch((error) => {
-        setPersistenceReady(true);
-        setPersistenceLabel(
-          error instanceof Error
-            ? `${language === "ko" ? "초기화 저장 실패" : "Reset save failed"}: ${error.message}`
-            : language === "ko"
-              ? "초기화 저장 실패"
-              : "Reset save failed"
-        );
-      });
-  };
-
-  const handleBusinessModelContinue = () => {
-    if (!selectedBusinessModelId) {
-      return;
-    }
-
-    const nextDecisions = upsertStageDecision(decisions, "business-model", {
-      stageId: "business-model",
-      selectedPrimaryOptionId: selectedBusinessModelId,
-      selectedOptionIds: [selectedBusinessModelId],
-      completedAt: new Date().toISOString()
-    });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  const handleStartupTypeContinue = () => {
-    if (!startupType) return;
-
-    // If franchise selected but brand picker not shown yet → show it
-    if (startupType === "franchise" && !showFranchisePicker) {
-      const brands = (() => { const sub = selectedIndustryId ? getFranchiseBrandsForSubIndustry(selectedIndustryId) : []; return sub.length > 0 ? sub : getFranchiseBrandsForCategory(industryCategoryId); })();
-      if (brands.length > 0) {
-        setShowFranchisePicker(true);
-        return;
-      }
-    }
-
-    const nextDecisions = upsertStageDecision(decisions, "startup-type", {
-      stageId: "startup-type",
-      selectedPrimaryOptionId: startupType,
-      selectedOptionIds: [startupType],
-      inputs: {
-        startupType,
-        ...(startupType === "franchise" && selectedFranchiseBrandId ? { franchiseBrandId: selectedFranchiseBrandId } : {})
-      },
-      completedAt: new Date().toISOString()
-    });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setShowFranchisePicker(false);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  const handleBudgetContinue = () => {
-    if (!selectedBudget || !selectedOpenDate) {
-      return;
-    }
-
-    const nextDecisions = upsertStageDecision(decisions, "budget-setup", {
-      stageId: "budget-setup",
-      inputs: {
-        capital: selectedBudget,
-        targetOpenDate: selectedOpenDate
-      },
-      completedAt: new Date().toISOString()
-    });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  const handleLocationContinue = () => {
-    if (!selectedLocationId) {
-      return;
-    }
-
-    const nextDecisions = upsertStageDecision(decisions, "location-candidates", {
-      stageId: "location-candidates",
-      selectedPrimaryOptionId: selectedLocationId,
-      selectedOptionIds: [selectedLocationId],
-      inputs: {
-        preferredRegion: preferredRegionInput,
-        customMarketName,
-        customMarketReason,
-        selectionMode: locationMode,
-        finalMarketTitle: finalSelectedMarket?.title ?? ""
-      },
-      completedAt: new Date().toISOString()
-    });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  const handleContractTaskToggle = (taskId: string) => {
-    const currentTasks = taskMap["contract-review"] ?? [];
-    const existing = currentTasks.find((task) => task.taskId === taskId);
-
-    if (!existing) {
-      return;
-    }
-
-    const nextTaskMap = updateTaskStatus(
-      taskMap,
-      "contract-review",
-      taskId,
-      existing.status === "completed" ? "todo" : "completed"
-    );
-
-    setTaskMap(nextTaskMap);
-    setRoadmap(buildRoadmapState(baseRoadmap, decisions, nextTaskMap));
-  };
-
-  const handleContractContinue = () => {
-    const transition = completeCurrentStage(roadmap, decisions, taskMap);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  const handleTaskToggle = (stageId: string, taskId: string) => {
-    const currentTasks = taskMap[stageId] ?? [];
-    const existing = currentTasks.find((task) => task.taskId === taskId);
-    if (!existing) return;
-    const nextTaskMap = updateTaskStatus(
-      taskMap,
-      stageId,
-      taskId,
-      existing.status === "completed" ? "todo" : "completed"
-    );
-    const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
-    setTaskMap(nextTaskMap);
-    setRoadmap(nextRoadmap);
-    // 모든 체크리스트 완료 시 currentStageId가 다음 단계로 바뀌어도
-    // 사용자가 "다음 단계로" 버튼을 직접 누를 때까지 현재 화면을 유지
-    if (nextRoadmap.currentStageId !== stageId && viewingStageId === null && !searchParams.get("editStage")) {
-      setViewingStageId(stageId);
-    }
-  };
-
-  // analytics → current 단계 화면: ?editStage= 파라미터로 해당 단계 표시
-  // 핵심 규칙: URL에 editStage가 있으면 해당 단계를 보여주고, 없으면 ops 대시보드(또는 기본 stage view)로
-  useEffect(() => {
-    if (activeSurface !== "current") return;
-    const editStage = searchParams.get("editStage");
-    setViewingStageId(editStage ?? null);
-  }, [activeSurface, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // biz_registration: 세무대리인 여부 선택 시 태스크 자동 완료
-  useEffect(() => {
-    const bizStageId = "biz-registration";
-    if (!taskMap[bizStageId]) return;
-    const task = taskMap[bizStageId].find((t) => t.taskId === "cpa-decision-made");
-    if (!task) return;
-    const shouldComplete = cpaDecision !== null;
-    if ((task.status === "completed") === shouldComplete) return;
-    const nextTaskMap = updateTaskStatus(taskMap, bizStageId, "cpa-decision-made", shouldComplete ? "completed" : "todo");
-    const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
-    setTaskMap(nextTaskMap);
-    setRoadmap(nextRoadmap);
-  }, [cpaDecision]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // vendor_setup: 공급처 선택 시 대응 태스크 자동 완료
-  useEffect(() => {
-    const vendorStageId = "vendor-setup";
-    if (!taskMap[vendorStageId]) return;
-
-    const hasStep = (step: number) =>
-      Object.entries(vendorSelections).some(
-        ([k, v]) => k.startsWith(`${vendorStageId}_s${step}_`) && v !== ""
-      );
-
-    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
-      { taskId: "supplier-identified", shouldComplete: hasStep(1) },
-      { taskId: "equipment-planned",   shouldComplete: hasStep(2) },
-      { taskId: "pos-selected",        shouldComplete: hasStep(3) || hasStep(4) },
-    ];
-
-    let nextTaskMap = taskMap;
-    let changed = false;
-    for (const { taskId, shouldComplete } of triggers) {
-      const task = (taskMap[vendorStageId] ?? []).find(t => t.taskId === taskId);
-      if (!task || !shouldComplete || task.status === "completed") continue;
-      nextTaskMap = updateTaskStatus(nextTaskMap, vendorStageId, taskId, "completed");
-      changed = true;
-    }
-
-    if (changed) {
-      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
-      setTaskMap(nextTaskMap);
-      setRoadmap(nextRoadmap);
-      if (nextRoadmap.currentStageId !== vendorStageId && viewingStageId === null && !searchParams.get("editStage")) {
-        setViewingStageId(vendorStageId);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vendorSelections]);
-
-  useEffect(() => {
-    localStorage.setItem("vendorSelections", JSON.stringify(vendorSelections));
-  }, [vendorSelections]);
-
-  useEffect(() => {
-    localStorage.setItem("vendorCustomInputs", JSON.stringify(vendorCustomInputs));
-  }, [vendorCustomInputs]);
-
-  useEffect(() => {
-    localStorage.setItem("opsSelections", JSON.stringify(opsSelections));
-  }, [opsSelections]);
-
-  useEffect(() => {
-    localStorage.setItem("opsPosChecks", JSON.stringify(opsPosChecks));
-  }, [opsPosChecks]);
-  useEffect(() => { localStorage.setItem("softOpenChecks", JSON.stringify(softOpenChecks)); }, [softOpenChecks]);
-  useEffect(() => { localStorage.setItem("softOpenPricing", softOpenPricing); }, [softOpenPricing]);
-  useEffect(() => { localStorage.setItem("softOpenSkips", JSON.stringify(softOpenSkips)); }, [softOpenSkips]);
-  useEffect(() => { localStorage.setItem("taxChecks", JSON.stringify(taxChecks)); }, [taxChecks]);
-  useEffect(() => { localStorage.setItem("loanChecks", JSON.stringify(loanChecks)); }, [loanChecks]);
-
-  // operations_setup: 플랫폼 선택 시 대응 태스크 자동 완료
-  useEffect(() => {
-    const opsStageId = "operations-setup";
-    if (!taskMap[opsStageId]) return;
-
-    const hasDelivery = ["baemin", "coupangeats", "yogiyo", "naver-order"].some(id => opsSelections[`delivery-${id}`]);
-    const allPosChecked = ["menu-check", "payment-check", "receipt-check", "settlement-check"].every(id => opsPosChecks[id]);
-    const hasSns = ["instagram", "naver-place", "kakao-channel", "google-business"].some(id => opsSelections[`sns-${id}`]);
-
-    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
-      { taskId: "delivery-app-registered", shouldComplete: hasDelivery },
-      { taskId: "pos-live",               shouldComplete: allPosChecked },
-      { taskId: "sns-setup",              shouldComplete: hasSns },
-    ];
-
-    let nextTaskMap = taskMap;
-    let changed = false;
-    for (const { taskId, shouldComplete } of triggers) {
-      const task = (taskMap[opsStageId] ?? []).find(t => t.taskId === taskId);
-      if (!task || !shouldComplete || task.status === "completed") continue;
-      nextTaskMap = updateTaskStatus(nextTaskMap, opsStageId, taskId, "completed");
-      changed = true;
-    }
-    if (changed) {
-      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
-      setTaskMap(nextTaskMap);
-      setRoadmap(nextRoadmap);
-      if (nextRoadmap.currentStageId !== opsStageId && viewingStageId === null && !searchParams.get("editStage")) {
-        setViewingStageId(opsStageId);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opsSelections, opsPosChecks]);
-
-  // pre-launch: 소프트오픈 체크 완료 시 태스크 자동 완료
-  useEffect(() => {
-    const stageId = "pre-launch";
-    if (!taskMap[stageId]) return;
-
-    // Step 01: 손님 초대 & 행사 기획 — 1명 이상 게스트 선택 + 가격 정책 선택 + 사전준비 3개 완료
-    const guestIds = ["guest-family", "guest-neighbor", "guest-influencer", "guest-peer"];
-    const guestSelected = guestIds.some(k => softOpenChecks[k]);
-    const prepKeys = ["prep-feedback-form", "prep-invite-sent", "prep-sns-plan"];
-    const allPrepDone = prepKeys.every(k => softOpenChecks[k]);
-    const step01Done = guestSelected && softOpenPricing !== "" && allPrepDone;
-
-    // Step 02: 당일 운영 체크리스트 — 6개 이상 체크
-    const dayKeys = [
-      "day-cleanliness", "day-staff-briefing", "day-pos", "day-ambiance",
-      "day-observation", "day-payment", "day-feedback-card", "day-debrief", "day-settlement", "day-sns",
-      "day-inventory", "day-order-timing", "day-delivery",
-      "day-booking-system", "day-no-show", "day-service-time",
-      "day-display", "day-checkout-test",
-      "day-equipment", "day-crm", "day-class",
-      "day-checkout-online", "day-cs", "day-fulfillment",
-    ];
-    const dayChecked = dayKeys.filter(k => softOpenChecks[k]).length;
-
-    // Step 03: 피드백 수집 4개 이상 + 본오픈 준비 4개 모두 완료
-    const feedbackKeys = [
-      "feedback-service", "feedback-price", "feedback-ambiance",
-      "feedback-taste", "feedback-quality", "feedback-product", "feedback-facility", "feedback-ux",
-      "feedback-booking", "feedback-menu", "feedback-display", "feedback-instructor",
-    ];
-    const feedbackChecked = feedbackKeys.filter(k => softOpenChecks[k]).length;
-    const finalKeys = ["final-naver", "final-instagram", "final-kakao", "final-event"];
-    const finalAllResolved = finalKeys.every(k => softOpenChecks[k] || softOpenSkips[k]);
-    const finalAtLeastOne  = finalKeys.some(k => softOpenChecks[k]);
-
-    const triggers = [
-      { taskId: "soft-open-done",     shouldComplete: step01Done },
-      { taskId: "feedback-collected", shouldComplete: dayChecked >= 6 },
-      { taskId: "final-checklist",    shouldComplete: feedbackChecked >= 4 && finalAllResolved && finalAtLeastOne },
-    ];
-
-    let nextTaskMap = taskMap;
-    let changed = false;
-    for (const { taskId, shouldComplete } of triggers) {
-      const task = (taskMap[stageId] ?? []).find(t => t.taskId === taskId);
-      if (!task || !shouldComplete || task.status === "completed") continue;
-      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
-      changed = true;
-    }
-    if (changed) {
-      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
-      setTaskMap(nextTaskMap);
-      setRoadmap(nextRoadmap);
-      if (nextRoadmap.currentStageId !== stageId && viewingStageId === null && !searchParams.get("editStage")) {
-        setViewingStageId(stageId);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [softOpenChecks, softOpenPricing, softOpenSkips]);
-
-  const handleStageContinue = (stageId: string) => {
-    const nextDecisions = upsertStageDecision(decisions, stageId, {
-      stageId,
-      completedAt: new Date().toISOString()
-    });
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  const handleLaunchBusiness = () => {
-    localStorage.setItem("businessLaunched", "true");
-    if (!localStorage.getItem("businessLaunchedDate")) {
-      localStorage.setItem("businessLaunchedDate", new Date().toISOString().slice(0, 10));
-    }
-    setBusinessLaunched(true);
-    if (!storeName && selectedFranchiseBrandId) {
-      const fb = getFranchiseBrandById(selectedFranchiseBrandId);
-      if (fb) {
-        const autoName = fb.name[language];
-        setStoreName(autoName);
-        localStorage.setItem("storeName", autoName);
-      }
-    }
-    navigateToSurface("analytics");
-  };
-
-  const handleAddDailyEntry = () => {
-    if (!dailySalesInput) return;
-    type DailyEntry = { date: string; sales: number; customers: number };
-    const entry: DailyEntry = {
-      date: dailyDateInput,
-      sales: (Number(dailySalesInput.replace(/[^0-9]/g, "")) || 0) * 10000,
-      customers: Number(dailyCustomersInput.replace(/[^0-9]/g, "")) || 0
-    };
-    const next = [
-      ...(dailyEntries as DailyEntry[]).filter((e) => e.date !== entry.date),
-      entry
-    ].sort((a, b) => b.date.localeCompare(a.date));
-    setDailyEntries(next);
-    localStorage.setItem("dailyEntries", JSON.stringify(next));
-    setDailySalesInput("");
-    setDailyCustomersInput("");
-  };
-
-  const handleSaveMonthlyCosts = () => {
-    const costs = {
-      ingredients: (Number(costIngredientsText.replace(/[^0-9]/g, "")) || 0) * 10000,
-      labor: (Number(costLaborText.replace(/[^0-9]/g, "")) || 0) * 10000,
-      rent: (Number(costRentText.replace(/[^0-9]/g, "")) || 0) * 10000,
-      utilities: (Number(costUtilitiesText.replace(/[^0-9]/g, "")) || 0) * 10000,
-      other: (Number(costOtherText.replace(/[^0-9]/g, "")) || 0) * 10000
-    };
-    setMonthlyCosts(costs);
-    localStorage.setItem("monthlyCosts", JSON.stringify(costs));
-  };
-
-  const saveInventory = (next: InventoryItem[]) => {
-    setInventory(next);
-    localStorage.setItem("inventoryItems", JSON.stringify(next));
-  };
-  const emptyInvForm: InvForm = { open: false, editId: null, name: "", qty: "", unit: "개", threshold: "", unitCost: "", category: "other", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "" };
-  const handleInvSave = () => {
-    if (!invForm.name.trim()) return;
-    const existing = inventory.find(i => i.id === invForm.editId);
-    const item: InventoryItem = {
-      id: invForm.editId ?? Date.now().toString(),
-      name: invForm.name.trim(),
-      quantity: Number(invForm.qty) || 0,
-      unit: invForm.unit,
-      minThreshold: Number(invForm.threshold) || 0,
-      unitCost: Number(invForm.unitCost) || 0,
-      category: invForm.category,
-      expiryDate: invForm.expiryDate,
-      supplierName: invForm.supplierName.trim(),
-      supplierUrl: invForm.url.trim(),
-      leadTimeDays: Number(invForm.leadTimeDays) || 1,
-      dailyUsage: Number(invForm.dailyUsage) || 0,
-      lastOrderedAt: existing?.lastOrderedAt ?? "",
-      wasteLog: existing?.wasteLog ?? [],
-    };
-    saveInventory(invForm.editId
-      ? inventory.map(i => i.id === invForm.editId ? item : i)
-      : [...inventory, item]);
-    setInvForm(emptyInvForm);
-  };
-  const handleInvQty = (id: string, delta: number) => {
-    saveInventory(inventory.map(i =>
-      i.id === id ? { ...i, quantity: Math.max(0, parseFloat((i.quantity + delta).toFixed(2))) } : i
-    ));
-  };
-  const handleInvDelete = (id: string) => {
-    saveInventory(inventory.filter(i => i.id !== id));
-  };
-  const openInvEdit = (item: InventoryItem) => {
-    setInvForm({
-      open: true, editId: item.id, name: item.name, qty: String(item.quantity), unit: item.unit,
-      threshold: String(item.minThreshold), unitCost: item.unitCost ? String(item.unitCost) : "",
-      category: item.category ?? "other", expiryDate: item.expiryDate ?? "",
-      supplierName: item.supplierName ?? "", url: item.supplierUrl ?? "",
-      leadTimeDays: item.leadTimeDays ? String(item.leadTimeDays) : "",
-      dailyUsage: item.dailyUsage ? String(item.dailyUsage) : "",
-    });
-  };
-  const handleInvWaste = (itemId: string) => {
-    const qty = parseFloat(invWasteQty) || 0;
-    if (qty <= 0) return;
-    const today = new Date().toISOString().slice(0, 10);
-    saveInventory(inventory.map(i => i.id !== itemId ? i : {
-      ...i,
-      quantity: Math.max(0, parseFloat((i.quantity - qty).toFixed(2))),
-      wasteLog: [...(i.wasteLog ?? []), { date: today, qty, reason: invWasteReason }],
-    }));
-    setInvWasteTarget(null);
-    setInvWasteQty("");
-    setInvWasteReason("");
-  };
-  const handleMarkOrdered = (itemId: string) => {
-    const today = new Date().toISOString().slice(0, 10);
-    saveInventory(inventory.map(i => i.id === itemId ? { ...i, lastOrderedAt: today } : i));
-  };
-
-  const saveEmployees = (list: Employee[]) => {
-    setEmployees(list);
-    try { localStorage.setItem("employees", JSON.stringify(list)); } catch { /* ignore */ }
-  };
-  const handleEmpSave = () => {
-    const wage = parseInt(empWage.replace(/[^0-9]/g, ""), 10);
-    const hours = parseFloat(empHours.replace(/[^0-9.]/g, ""));
-    if (!empName.trim() || !wage || !hours) return;
-    const autoInsured = hours * 4.345 >= 60;
-    const entry: Employee = {
-      id: empEditId ?? `emp-${Date.now()}`,
-      name: empName.trim(),
-      hourlyWage: wage,
-      weeklyHours: hours,
-      isInsured: empInsured || autoInsured,
-    };
-    const next = empEditId
-      ? employees.map(e => e.id === empEditId ? entry : e)
-      : [...employees, entry];
-    saveEmployees(next);
-    setEmpFormOpen(false); setEmpEditId(null);
-    setEmpName(""); setEmpWage(""); setEmpHours(""); setEmpInsured(false);
-  };
-  const handleEmpDelete = (id: string) => saveEmployees(employees.filter(e => e.id !== id));
-  const openEmpEdit = (emp: Employee) => {
-    setEmpEditId(emp.id); setEmpName(emp.name);
-    setEmpWage(String(emp.hourlyWage)); setEmpHours(String(emp.weeklyHours));
-    setEmpInsured(emp.isInsured); setEmpFormOpen(true);
-  };
-
-  const saveFixedExpenses = (list: FixedExpense[]) => {
-    setFixedExpenses(list);
-    try { localStorage.setItem("fixedExpenses", JSON.stringify(list)); } catch { /* ignore */ }
-  };
-  const handleFexpSave = () => {
-    const amount = parseInt(fexpAmount.replace(/[^0-9]/g, ""), 10) * 10000;
-    const dueDay = parseInt(fexpDueDay.replace(/[^0-9]/g, ""), 10);
-    if (!fexpName.trim() || !amount || !dueDay || dueDay < 1 || dueDay > 31) return;
-    const entry: FixedExpense = {
-      id: fexpEditId ?? `fexp-${Date.now()}`,
-      name: fexpName.trim(),
-      amount,
-      dueDay,
-      category: fexpCategory,
-    };
-    const next = fexpEditId
-      ? fixedExpenses.map(e => e.id === fexpEditId ? entry : e)
-      : [...fixedExpenses, entry];
-    saveFixedExpenses(next);
-    setFexpFormOpen(false); setFexpEditId(null);
-    setFexpName(""); setFexpAmount(""); setFexpDueDay(""); setFexpCategory("other");
-  };
-  const handleFexpDelete = (id: string) => saveFixedExpenses(fixedExpenses.filter(e => e.id !== id));
-  const openFexpEdit = (fe: FixedExpense) => {
-    setFexpEditId(fe.id); setFexpName(fe.name);
-    setFexpAmount(String(Math.round(fe.amount / 10000)));
-    setFexpDueDay(String(fe.dueDay)); setFexpCategory(fe.category);
-    setFexpFormOpen(true);
-  };
-
-  // ── 배달 플랫폼 핸들러 ──
-  const saveDeliveryPlatforms = (list: DeliveryPlatform[]) => {
-    setDeliveryPlatforms(list);
-    try { localStorage.setItem("deliveryPlatforms", JSON.stringify(list)); } catch { /* ignore */ }
-  };
-  const saveMonthlyDeliverySales = (map: Record<string, number>) => {
-    setMonthlyDeliverySales(map);
-    try { localStorage.setItem("monthlyDeliverySales", JSON.stringify(map)); } catch { /* ignore */ }
-  };
-  const handleDlvSave = () => {
-    const rate = parseFloat(dlvRate) || 0;
-    const ad = parseFloat(dlvAd) || 0;
-    if (!dlvName.trim() || rate <= 0) return;
-    const entry: DeliveryPlatform = {
-      id: dlvEditId ?? `dlv-${Date.now()}`,
-      name: dlvName.trim(), commissionRate: rate, adCostMonthly: ad,
-    };
-    const next = dlvEditId
-      ? deliveryPlatforms.map(p => p.id === dlvEditId ? entry : p)
-      : [...deliveryPlatforms, entry];
-    saveDeliveryPlatforms(next);
-    setDlvFormOpen(false); setDlvEditId(null);
-    setDlvName(""); setDlvRate(""); setDlvAd("");
-  };
-  const handleDlvDelete = (id: string) => {
-    saveDeliveryPlatforms(deliveryPlatforms.filter(p => p.id !== id));
-    const next = { ...monthlyDeliverySales }; delete next[id];
-    saveMonthlyDeliverySales(next);
-  };
-  const openDlvEdit = (p: DeliveryPlatform) => {
-    setDlvEditId(p.id); setDlvName(p.name);
-    setDlvRate(String(p.commissionRate)); setDlvAd(String(p.adCostMonthly));
-    setDlvFormOpen(true);
-  };
-
-  // ── 상품/메뉴 핸들러 ──
-  const saveProducts = (list: Product[]) => {
-    setProducts(list);
-    try { localStorage.setItem("products", JSON.stringify(list)); } catch { /* ignore */ }
-  };
-  const handleProdSave = () => {
-    const price = parseInt(prodPrice.replace(/[^0-9]/g, ""), 10);
-    const cost = parseInt(prodCost.replace(/[^0-9]/g, ""), 10) || 0;
-    const stock = parseInt(prodStock.replace(/[^0-9]/g, ""), 10) || 0;
-    if (!prodName.trim() || !price) return;
-    const entry: Product = {
-      id: prodEditId ?? `prod-${Date.now()}`,
-      name: prodName.trim(), category: prodCategory.trim() || (language === "ko" ? "기타" : "Other"),
-      price, cost, stock,
-      monthlySold: prodEditId ? (products.find(p => p.id === prodEditId)?.monthlySold ?? 0) : 0,
-      unit: prodUnit,
-    };
-    const next = prodEditId
-      ? products.map(p => p.id === prodEditId ? entry : p)
-      : [...products, entry];
-    saveProducts(next);
-    setProdFormOpen(false); setProdEditId(null);
-    setProdName(""); setProdCategory(""); setProdPrice(""); setProdCost(""); setProdStock(""); setProdUnit("개");
-  };
-  const handleProdDelete = (id: string) => saveProducts(products.filter(p => p.id !== id));
-  const handleProdSoldChange = (id: string, delta: number) => {
-    saveProducts(products.map(p => p.id === id ? { ...p, monthlySold: Math.max(0, p.monthlySold + delta) } : p));
-  };
-  const openProdEdit = (p: Product) => {
-    setProdEditId(p.id); setProdName(p.name); setProdCategory(p.category);
-    setProdPrice(String(p.price)); setProdCost(String(p.cost)); setProdStock(String(p.stock));
-    setProdUnit(p.unit); setProdFormOpen(true);
-  };
-  const saveTaxSettings = (s: TaxSettings) => {
-    setTaxSettings(s);
-    try { localStorage.setItem("taxSettings", JSON.stringify(s)); } catch { /* ignore */ }
-  };
-
-  const handleContractAnalysis = async () => {
-    const trimmed = contractText.trim();
-
-    if (!trimmed) {
-      return;
-    }
-
-    setContractAnalysisStatus("loading");
-    setContractAnalysisError("");
-    setContractAnalysis(null);
-
-    try {
-      const {
-        data: { session }
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error(language === "ko" ? "로그인 세션을 다시 확인해 주세요." : "Please refresh your login session.");
-      }
-
-      const response = await fetch("/api/ai/contract/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          contractText: trimmed
-        })
-      });
-
-      const payload = (await response.json()) as ContractAnalysisResult & {
-        error?: string;
-        detail?: string;
-      };
-
-      if (!response.ok || payload.error) {
-        throw new Error(
-          payload.detail ??
-            payload.error ??
-            (language === "ko" ? "계약서 분석에 실패했습니다." : "Failed to analyze the contract.")
-        );
-      }
-
-      const nextDecisions = upsertStageDecision(decisions, "contract-analysis", {
-        stageId: "contract-analysis",
-        inputs: {
-          contractText: trimmed,
-          riskLevel: payload.riskLevel,
-          flaggedClausesJson: JSON.stringify(payload.flaggedClauses),
-          missingItems: payload.missingItems,
-          unusualTerms: payload.unusualTerms,
-          nextActions: payload.nextActions
-        },
-        notes: payload.summary,
-        completedAt: new Date().toISOString()
-      });
-
-      setDecisions(nextDecisions);
-      setContractAnalysis(payload);
-      setContractAnalysisStatus("idle");
-      await saveRoadmapState(supabase, {
-        roadmap,
-        decisions: nextDecisions,
-        tasks: taskMap
-      });
-      setPersistenceReady(true);
-      setPersistenceLabel(copy.home.savedToSupabase);
-    } catch (error) {
-      setContractAnalysisStatus("error");
-      setContractAnalysisError(
-        error instanceof Error
-          ? error.message
-          : language === "ko"
-            ? "계약서 분석에 실패했습니다."
-            : "Failed to analyze the contract."
-      );
-    }
-  };
-
-  const handleRunFinancialSimulation = async () => {
-    const capital = parseManwonInput(financeCapitalText);
-    const monthlyRent = parseManwonInput(financeMonthlyRentText);
-    const monthlyLaborCost = parseManwonInput(financeLaborText);
-    const expectedMonthlyRevenue = parseManwonInput(financeRevenueText);
-
-    if (!capital) {
-      setFinanceStatus("error");
-      setFinanceError(
-        language === "ko"
-          ? "자본금을 만원 단위로 입력해 주세요."
-          : "Enter your starting capital in KRW ten-thousands."
-      );
-      return;
-    }
-
-    setFinanceStatus("loading");
-    setFinanceError("");
-    setFinanceResult(null);
-    setFinanceInterpretation(null);
-
-    try {
-      const result = await runFinancialSimulation(supabase, {
-        capital,
-        categoryId: industryCategoryId,
-        marketStyle: financeMarketStyle,
-        rentBand: financeRentBand,
-        monthlyRent,
-        monthlyLaborCost,
-        expectedMonthlyRevenue
-      });
-
-      setFinanceResult(result);
-
-      const {
-        data: { session }
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error(language === "ko" ? "로그인 세션을 다시 확인해 주세요." : "Please refresh your login session.");
-      }
-
-      const response = await fetch("/api/ai/finance/interpret", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          result,
-          categoryLabel: selectedIndustryLabel
-        })
-      });
-
-      const payload = (await response.json()) as AiStructuredResponse & {
-        error?: string;
-      };
-
-      if (!response.ok || payload.error) {
-        throw new Error(
-          payload.error ??
-            (language === "ko"
-              ? "재무 해석에 실패했습니다."
-              : "Failed to interpret the financial result.")
-        );
-      }
-
-      const nextDecisions = upsertStageDecision(decisions, "financial-simulation", {
-        stageId: "financial-simulation",
-        inputs: {
-          capital,
-          marketStyle: financeMarketStyle,
-          rentBand: financeRentBand,
-          ...(typeof monthlyRent === "number" ? { monthlyRent } : {}),
-          ...(typeof monthlyLaborCost === "number" ? { monthlyLaborCost } : {}),
-          ...(typeof expectedMonthlyRevenue === "number" ? { expectedMonthlyRevenue } : {}),
-          riskLevel: result.riskLevel,
-          survivabilityMonths: result.survivabilityMonths,
-          ...(typeof result.breakEven.estimatedBreakEvenMonth === "number"
-            ? { breakEvenMonth: result.breakEven.estimatedBreakEvenMonth }
-            : {}),
-          breakEvenRevenue: result.breakEven.monthlyBreakEvenRevenue,
-          capitalAfterSetupLow: result.capitalAfterSetup.low,
-          capitalAfterSetupHigh: result.capitalAfterSetup.high,
-          totalMonthlyFixed: result.resolvedCosts.totalMonthlyFixed,
-          cogsRate: result.resolvedCosts.cogsRate,
-          aiRationale: payload.rationale,
-          aiWarnings: payload.warnings,
-          aiNextActions: payload.nextActions
-        },
-        notes: payload.summary,
-        completedAt: new Date().toISOString()
-      });
-
-      setDecisions(nextDecisions);
-      setFinanceInterpretation(payload);
-      await saveRoadmapState(supabase, {
-        roadmap,
-        decisions: nextDecisions,
-        tasks: taskMap
-      });
-      setPersistenceReady(true);
-      setPersistenceLabel(copy.home.savedToSupabase);
-      setFinanceStatus("idle");
-    } catch (error) {
-      setFinanceStatus("error");
-      setFinanceError(
-        error instanceof Error
-          ? error.message
-          : language === "ko"
-            ? "재무 시뮬레이션에 실패했습니다."
-            : "Failed to run the financial simulation."
-      );
-    }
-  };
-
-  const handleVerificationContinue = (stageId: "permit-guide" | "tax-guide" | "loan-guide") => {
-    const nextDecisions = upsertStageDecision(decisions, stageId, {
-      stageId,
-      inputs: {
-        reviewed: true
-      },
-      completedAt: new Date().toISOString()
-    });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
-    setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
-  };
-
-  useEffect(() => {
-    if (!transitionNotice) {
-      return;
-    }
-
-    if (transitionNoticeTimerRef.current) {
-      clearTimeout(transitionNoticeTimerRef.current);
-    }
-
-    transitionNoticeTimerRef.current = setTimeout(() => {
-      setTransitionNotice(null);
-    }, 2600);
-
-    return () => {
-      if (transitionNoticeTimerRef.current) {
-        clearTimeout(transitionNoticeTimerRef.current);
-      }
-    };
-  }, [transitionNotice]);
-
-  const contractTasks = taskMap["contract-review"] ?? [];
-  const activeContractTask =
-    contractTasks.find((task) => task.taskId === selectedContractTaskId) ?? contractTasks[0] ?? null;
-  const activeContractTaskDetail = activeContractTask
-    ? getContractTaskDetail(activeContractTask.taskId, language, industryCategoryId)
-    : null;
-  const activeGuide =
-    currentStage.code === "tax_guide"
-      ? taxGuides[0] ?? null
-      : currentStage.code === "loan_guide"
-        ? loanGuides[0] ?? null
-        : null;
-  const activeGuideSections = getGuideSections(activeGuide, language);
-  const activeGuideSection =
-    activeGuideSections.find((section) => section.key === selectedGuideSectionKey) ??
-    activeGuideSections[0] ??
-    null;
-  const activeGuideFreshness = getFreshnessPresentation(activeGuide?.freshness);
-  const activeGuideActionLabel =
-    currentStage.code === "tax_guide"
-      ? copy.home.markTaxReviewed
-      : copy.home.markLoanReviewed;
-  const activeGuideEmptyLabel =
-    currentStage.code === "tax_guide"
-      ? copy.home.noTaxGuide
-      : copy.home.noLoanGuide;
-  const guideDecisionKey = activeGuide ? `guide-qa-${activeGuide.id}` : undefined;
-
-  const handleKnowledgeQuestion = async (domain: "tax" | "loan") => {
-    if (!guideQuestion.trim()) return;
-    setKnowledgeQaStatus("loading");
-    setKnowledgeQaError("");
-    setKnowledgeQaText("");
-    try {
-      const res = await fetch("/api/knowledge/qa", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: guideQuestion.trim(),
-          domain,
-          industryCategoryId,
-        }),
-      });
-      if (!res.ok || !res.body) {
-        const err = await res.json().catch(() => ({ error: "서버 오류가 발생했습니다." }));
-        throw new Error(err.error ?? "서버 오류");
-      }
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
-          if (!line.startsWith("data: ")) continue;
-          const payload = line.slice(6).trim();
-          if (payload === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(payload) as { text?: string; error?: string };
-            if (parsed.error) throw new Error(parsed.error);
-            if (parsed.text) {
-              accumulated += parsed.text;
-              setKnowledgeQaText(accumulated);
-            }
-          } catch { /* skip malformed lines */ }
-        }
-      }
-      setKnowledgeQaStatus("idle");
-    } catch (error) {
-      setKnowledgeQaStatus("error");
-      setKnowledgeQaError(error instanceof Error ? error.message : "답변 요청에 실패했습니다.");
-    }
-  };
-
-  const handleGuideQuestion = async () => {
-    if (!activeGuide || !guideQuestion.trim()) {
-      return;
-    }
-
-    try {
-      setGuideQaStatus("loading");
-      setGuideQaError("");
-      const nextAnswer = answerGuideQuestion({
-        question: guideQuestion,
-        language,
-        guide: activeGuide
-      });
-      const nextDecisions = upsertStageDecision(decisions, `guide-qa-${activeGuide.id}`, {
-        stageId: `guide-qa-${activeGuide.id}`,
-        inputs: {
-          question: guideQuestion.trim(),
-          explanation: nextAnswer.explanation,
-          reasons: nextAnswer.reasons,
-          cautions: nextAnswer.cautions,
-          nextActions: nextAnswer.nextActions,
-          confidence: nextAnswer.confidence
-        },
-        notes: nextAnswer.shortAnswer,
-        completedAt: new Date().toISOString()
-      });
-
-      setDecisions(nextDecisions);
-      setGuideAnswer(nextAnswer);
-      setGuideQaStatus("idle");
-      await saveRoadmapState(supabase, {
-        roadmap,
-        decisions: nextDecisions,
-        tasks: taskMap
-      });
-      setPersistenceReady(true);
-      setPersistenceLabel(copy.home.savedToSupabase);
-    } catch (error) {
-      setGuideQaStatus("error");
-      setGuideQaError(error instanceof Error ? error.message : "Failed to answer question.");
-    }
-  };
-  const activeLocationCandidates =
-    locationMode === "recommended" && !preferredRegionInput.trim()
-      ? []
-      : recommendedMarkets.length > 0
-        ? recommendedMarkets
-        : locationOptions;
-  const finalSelectedMarket =
-    locationMode === "direct"
-      ? selectedLocationId === manualMarketEvaluation?.id
-        ? manualMarketEvaluation
-        : null
-      : activeLocationCandidates.find((item) => item.id === selectedLocationId) ?? null;
-  const savedFinanceSnapshot = hydrateSavedFinanceSnapshot(decisions["financial-simulation"]);
-  const savedContractSnapshot = hydrateSavedContractAnalysisSnapshot(decisions["contract-analysis"]);
-  const savedGuideQaSnapshot = hydrateSavedGuideQaSnapshot(
-    guideDecisionKey ? decisions[guideDecisionKey] : undefined
-  );
-  const effectiveContractAnalysis = contractAnalysis ?? savedContractSnapshot?.analysis ?? null;
-  const effectiveGuideAnswer = guideAnswer ?? savedGuideQaSnapshot?.answer ?? null;
-  const financeDefaults = inferFinanceDefaults(finalSelectedMarket, industryCategoryId);
-
-  useEffect(() => {
-    setFinanceMarketStyle(financeDefaults.marketStyle);
-    setFinanceRentBand(financeDefaults.rentBand);
-  }, [financeDefaults.marketStyle, financeDefaults.rentBand]);
-
-  useEffect(() => {
-    if (!financeCapitalText.trim()) {
-      const nextCapital = selectedBudget ?? profile?.capital;
-      if (typeof nextCapital === "number" && nextCapital > 0) {
-        setFinanceCapitalText(String(Math.round(nextCapital / 10000)));
-      }
-    }
-  }, [selectedBudget, profile?.capital, financeCapitalText]);
-
-  useEffect(() => {
-    if (!contractText.trim() && savedContractSnapshot?.contractText) {
-      setContractText(savedContractSnapshot.contractText);
-    }
-  }, [savedContractSnapshot?.contractText, contractText]);
-
-  const connectAndLoad = async () => {
-    try {
-      const result = await bootstrapAccountWorkspace(supabase);
-      const userLabel = result.user.email ?? copy.common.account;
-      setAuthLabel(`${userLabel} · ${result.user.id.slice(0, 8)}`);
-      setRequiresAuth(false);
-      setAuthResolved(true);
-      setDecisions(result.state.decisions);
-      // Backfill missing tasks from starterTaskMap (handles schema updates)
-      // Only backfill for stages that exist in the current roadmap
-      const loadedTasks = result.state.tasks;
-      const roadmapStageIds = new Set(result.state.roadmap.stages.map((s: { stageId: string }) => s.stageId));
-      const backfilled: WorkflowTaskMap = {};
-      for (const [stageKey, starterTasks] of Object.entries(starterTaskMap)) {
-        // Only backfill if this stage exists in the user's roadmap
-        if (!roadmapStageIds.has(stageKey)) {
-          // Still preserve if loaded data has it
-          if (loadedTasks[stageKey]) backfilled[stageKey] = loadedTasks[stageKey];
-          continue;
-        }
-        const existing = loadedTasks[stageKey] ?? [];
-        const existingIds = new Set(existing.map((t) => t.taskId));
-        const missing = starterTasks.filter((t) => !existingIds.has(t.taskId));
-        backfilled[stageKey] = [...existing, ...missing];
-      }
-      // Preserve any loaded stages not in starterTaskMap
-      for (const [stageKey, tasks] of Object.entries(loadedTasks)) {
-        if (!backfilled[stageKey]) backfilled[stageKey] = tasks;
-      }
-      setTaskMap(backfilled);
-      setRoadmap(result.state.roadmap);
-      /* IMPORTANT: setPersistenceReady MUST come AFTER state restoration.
-         Otherwise the autosave effect fires with stale starter defaults
-         and overwrites the user's saved progress on the server. */
-      setPersistenceReady(true);
-
-      // 로드된 decisions에서 폼 상태 복원 (analytics '수정 →' 및 홈 스냅샷 표시를 위해)
-      const dec = result.state.decisions;
-      const loadedIndustryId = dec["industry-selection"]?.selectedPrimaryOptionId;
-      if (loadedIndustryId) {
-        setSelectedIndustryId(loadedIndustryId);
-        setSelectedIndustryCategoryId(getIndustryCategoryIdByOptionId(loadedIndustryId) ?? "food");
-      }
-      const loadedStartupType = dec["startup-type"]?.selectedPrimaryOptionId;
-      if (loadedStartupType === "franchise" || loadedStartupType === "independent" || loadedStartupType === "undecided") {
-        setStartupType(loadedStartupType);
-      }
-      const loadedFranchiseBrandId = dec["startup-type"]?.inputs?.franchiseBrandId;
-      if (typeof loadedFranchiseBrandId === "string") {
-        setSelectedFranchiseBrandId(loadedFranchiseBrandId);
-        // 상호명이 비어있으면 프랜차이즈 브랜드명으로 자동 채움
-        const currentStoreName = localStorage.getItem("storeName") ?? "";
-        if (!currentStoreName) {
-          const fb = getFranchiseBrandById(loadedFranchiseBrandId);
-          if (fb) { setStoreName(fb.name[language]); localStorage.setItem("storeName", fb.name[language]); }
-        }
-      }
-      const loadedBizModelId = dec["business-model"]?.selectedPrimaryOptionId;
-      if (loadedBizModelId) setSelectedBusinessModelId(loadedBizModelId);
-      const loadedCapital = dec["budget-setup"]?.inputs?.capital;
-      if (typeof loadedCapital === "number") {
-        setSelectedBudget(loadedCapital);
-        setBudgetInputText(String(Math.round(loadedCapital / 10000)));
-      }
-      const loadedOpenDate = dec["budget-setup"]?.inputs?.targetOpenDate;
-      if (typeof loadedOpenDate === "string") setSelectedOpenDate(loadedOpenDate);
-      const loadedLocationId = dec["location-candidates"]?.selectedPrimaryOptionId;
-      if (loadedLocationId) setSelectedLocationId(loadedLocationId);
-      const loadedRegion = dec["location-candidates"]?.inputs?.preferredRegion;
-      if (typeof loadedRegion === "string" && loadedRegion) setPreferredRegionInput(loadedRegion);
-      const loadedMode = dec["location-candidates"]?.inputs?.selectionMode;
-      if (loadedMode === "recommended" || loadedMode === "direct") setLocationMode(loadedMode);
-
-      setProfile(await loadBusinessProfile(supabase, result.user));
-      setPersistenceLabel(result.isNew ? copy.home.starterRoadmapCreated : copy.home.loadedFromSupabase);
-    } catch (error) {
-      if (error instanceof Error && error.message === "AUTH_REQUIRED") {
-        setRequiresAuth(true);
-        setAuthResolved(true);
-        setPersistenceReady(false);
-        setAuthLabel(copy.home.signInRequired);
-        setPersistenceLabel(copy.home.noAccountSession);
-        return;
-      }
-
-      setPersistenceLabel(
-        error instanceof Error ? `${copy.home.loadFailed}: ${error.message}` : copy.home.loadFailed
-      );
-      setAuthResolved(true);
-    }
-  };
-
-  const persistCurrentState = async () => {
-    try {
-      const result = await bootstrapAccountWorkspace(supabase);
-      const user = result.user;
-      const userLabel = user.email ?? copy.common.account;
-      setAuthLabel(`${userLabel} · ${user.id.slice(0, 8)}`);
-
-      const persisted = await saveRoadmapState(supabase, {
-        roadmap,
-        decisions,
-        tasks: taskMap
-      });
-
-      setRoadmap(persisted.roadmap);
-      setProfile(await loadBusinessProfile(supabase, user));
-      setPersistenceLabel(copy.home.savedToSupabase);
-      setPersistenceReady(true);
-    } catch (error) {
-      setPersistenceLabel(
-        error instanceof Error ? `${copy.home.saveFailed}: ${error.message}` : copy.home.saveFailed
-      );
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    void connectAndLoad();
-  }, []);
-
-  useEffect(() => {
-    if (activeSurface === "guides" && searchParams.get("panel") === "finance") {
-      setShowFinancePanel(true);
-    }
-  }, [activeSurface, searchParams]);
-
-  useEffect(() => {
-    void getCurrentUser(supabase).then((user) => {
-      if (!user || user.is_anonymous) {
-        setRequiresAuth(true);
-        setAuthResolved(true);
-      }
-    });
-
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange(() => {
-      void connectAndLoad();
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!persistenceReady) {
-      return;
-    }
-
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-    }
-
-    autosaveTimerRef.current = setTimeout(() => {
-      void saveRoadmapState(supabase, {
-        roadmap,
-        decisions,
-        tasks: taskMap
-      })
-        .then(() => {
-          setPersistenceLabel(copy.home.autosaved);
-          void loadBusinessProfile(supabase).then(setProfile).catch(() => undefined);
-        })
-        .catch((error) => {
-          setPersistenceLabel(
-            error instanceof Error ? `${copy.home.autosaveFailed}: ${error.message}` : copy.home.autosaveFailed
-          );
-        });
-    }, 800);
-
-    return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-      }
-    };
-  }, [roadmap, decisions, taskMap, persistenceReady]);
-
-  useEffect(() => {
-    if (requiresAuth) {
-      return;
-    }
-
-    void loadKnowledgeRecommendations(supabase, {
-      domain: "market-recommendation",
-      itemType: "location_candidate",
-      categoryId: industryCategoryId
-    })
-      .then((items) => {
-        setLocationSourceLabel(
-          items.length > 0 ? copy.common.liveKnowledgeLayer : copy.common.starterFallback
-        );
-        setLocationOptions(
-          (items.length > 0 ? items : getStarterLocationOptions(industryCategoryId)).map((item) =>
-            localizeRecommendationItem(item, language)
-          )
-        );
-      })
-      .catch(() => {
-        setLocationSourceLabel(copy.common.starterFallback);
-        setLocationOptions(getStarterLocationOptions(industryCategoryId).map((item) => localizeRecommendationItem(item, language)));
-      });
-  }, [industryCategoryId, requiresAuth, language]);
-
-  useEffect(() => {
-    if (locationMode !== "recommended") {
-      return;
-    }
-
-    if (!preferredRegionInput.trim()) {
-      setRecommendedMarkets([]);
-      return;
-    }
-
-    void loadMarketSignalRecommendations(supabase, {
-      regionQuery: preferredRegionInput,
-      categoryId: industryCategoryId
-    })
-      .then((signalItems) => {
-        if (signalItems.length > 0) {
-          setRecommendedMarkets(signalItems.map((item) => localizeRecommendationItem(item, language)));
-          setLocationSourceLabel(language === "ko" ? "상권 신호 데이터" : "Market signal data");
-          return;
-        }
-
-        setRecommendedMarkets(
-          buildRecommendedMarkets({
-            region: preferredRegionInput,
-            categoryId: industryCategoryId,
-            capital: selectedBudget,
-            candidates: locationOptions
-          }).map((item) => localizeRecommendationItem(item, language))
-        );
-        setLocationSourceLabel(copy.common.liveKnowledgeLayer);
-      })
-      .catch(() => {
-        setRecommendedMarkets(
-          buildRecommendedMarkets({
-            region: preferredRegionInput,
-            categoryId: industryCategoryId,
-            capital: selectedBudget,
-            candidates: locationOptions
-          }).map((item) => localizeRecommendationItem(item, language))
-        );
-        setLocationSourceLabel(copy.common.starterFallback);
-      });
-  }, [preferredRegionInput, industryCategoryId, selectedBudget, locationOptions, language, locationMode]);
-
-  useEffect(() => {
-    void Promise.all([
-      loadPermitKnowledge(supabase, industryCategoryId),
-      loadTaxKnowledge(supabase, industryCategoryId),
-      loadLoanKnowledge(supabase, industryCategoryId)
-    ])
-      .then(([permits, taxes, loans]) => {
-        setPermitGuides(permits.map((guide) => localizeGuideRecord(guide, language)));
-        setTaxGuides(taxes.map((guide) => localizeGuideRecord(guide, language)));
-        setLoanGuides(loans.map((guide) => localizeGuideRecord(guide, language)));
-      })
-      .catch(() => {
-        setPermitGuides([]);
-        setTaxGuides([]);
-        setLoanGuides([]);
-      });
-  }, [industryCategoryId, language]);
-
-  // 상권이 확정되면 카카오 Places API로 인테리어 업체를 검색
-  useEffect(() => {
-    if (!preferredRegion || !industryCategoryId) return;
-
-    const contractorKeywords: Record<string, string> = {
-      "cafe-dessert": "카페 인테리어",
-      "food": "음식점 인테리어",
-      "beauty": "미용실 인테리어",
-      "fitness": "피트니스 인테리어",
-      "education": "학원 인테리어",
-      "pet": "펫샵 인테리어",
-      "retail": "매장 인테리어",
-      "living-service": "상가 인테리어",
-      "space": "스터디카페 인테리어",
-    };
-    const keyword = contractorKeywords[industryCategoryId] ?? "인테리어 업체";
-    const query = `${preferredRegion} ${keyword}`;
-
-    // Try Kakao Places API first (client-side)
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const w = window as any;
-    const kakao = w.kakao;
-
-    const searchViaKakao = () => {
-      if (!kakao?.maps?.services) return false;
-      setContractorsLoading(true);
-      const runSearch = () => {
-        const ps = new kakao.maps.services.Places();
-        ps.keywordSearch(query, (data: any[], status: string) => {
-          if (status === kakao.maps.services.Status.OK && data.length > 0) {
-            setContractors(data.slice(0, 5).map((d: any, i: number) => ({
-              id: `kakao-${i}`,
-              name: String(d.place_name ?? ""),
-              address: String(d.road_address_name || d.address_name || ""),
-              phone: d.phone ? String(d.phone) : null,
-              description: String(d.category_name ?? ""),
-              mapUrl: d.place_url ? String(d.place_url) : null,
-            })));
-          } else {
-            setContractors([]);
-          }
-          setContractorsLoading(false);
-        }, { size: 5 });
-      };
-      if (kakao.maps.load) { kakao.maps.load(runSearch); } else { runSearch(); }
-      return true;
-    };
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-
-    if (!searchViaKakao()) {
-      // Fallback: server API (OpenAI web search)
-      setContractorsLoading(true);
-      const params = new URLSearchParams({ region: preferredRegion, categoryId: industryCategoryId, keyword });
-      fetch(`/api/contractors/local?${params.toString()}`)
-        .then((r) => r.json() as Promise<{ results: { id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }[] }>)
-        .then(({ results }) => { setContractors(results ?? []); })
-        .catch(() => { setContractors([]); })
-        .finally(() => { setContractorsLoading(false); });
-    }
-  }, [preferredRegion, industryCategoryId, contractorsRetryKey]);
-
-  useEffect(() => {
-    const stageCode = currentStage.stageId;
-    setStageGuideContent(null);
-    setGuideStepIndex(0);
-    void loadStageGuideContent(supabase, stageCode, industryCategoryId, language)
-      .then((content) => {
-        setStageGuideContent(content);
-        setGuideStepIndex(0);
-      })
-      .catch(() => {
-        setStageGuideContent(null);
-      });
-  }, [currentStage.stageId, industryCategoryId, language]);
-
-  // ── 알림 계산 → 헤더 벨로 전달 ──
-  useEffect(() => {
-    type Notif = { id: string; severity: "urgent" | "warning"; title: string; detail: string };
-    const ko = language === "ko";
-    const nowN = new Date();
-    const todayMsN = new Date(nowN.getFullYear(), nowN.getMonth(), nowN.getDate()).getTime();
-    const diffD = (d: Date) => Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() - todayMsN) / 86400000);
-    const yN = nowN.getFullYear();
-    const mN = nowN.getMonth();
-    const domN = nowN.getDate();
-    const todayStrN = nowN.toISOString().slice(0, 10);
-    const in7daysN = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-    const daysInMonthN = new Date(yN, mN + 1, 0).getDate();
-    const items: Notif[] = [];
-
-    // 1. 재고 부족
-    if (businessCtx.hasPhysicalInventory) {
-      (inventory as InventoryItem[]).forEach(item => {
-        if (item.quantity <= 0) {
-          items.push({ id: `inv-${item.id}`, severity: "urgent", title: ko ? `재고 소진: ${item.name}` : `Out of stock: ${item.name}`, detail: ko ? "즉시 주문이 필요합니다" : "Needs immediate reorder" });
-        } else if (item.dailyUsage > 0) {
-          const daysLeft = Math.floor(item.quantity / item.dailyUsage);
-          if (daysLeft <= item.leadTimeDays + 2) {
-            items.push({ id: `inv-${item.id}`, severity: daysLeft <= 1 ? "urgent" : "warning", title: ko ? `재고 부족: ${item.name}` : `Low stock: ${item.name}`, detail: ko ? `${daysLeft}일치 남음 · 리드타임 ${item.leadTimeDays}일` : `${daysLeft}d left · ${item.leadTimeDays}d lead time` });
-          }
-        } else if (item.minThreshold > 0 && item.quantity <= item.minThreshold) {
-          items.push({ id: `inv-${item.id}`, severity: "warning", title: ko ? `재고 부족: ${item.name}` : `Low stock: ${item.name}`, detail: ko ? `현재 ${item.quantity}${item.unit} (최소 기준 ${item.minThreshold}${item.unit})` : `${item.quantity}${item.unit} (min: ${item.minThreshold}${item.unit})` });
-        }
-      });
-    }
-
-    // 2. 세금 D-14
-    if (businessLaunched) {
-      const { vatType, hasEmployees: hasFmEmp } = taxSettings;
-      const whtM = domN >= 10 ? mN + 1 : mN;
-      const withholdingDate = new Date(whtM > 11 ? yN + 1 : yN, whtM % 12, 10);
-      const insuranceDate = new Date(yN, mN + 1, 0);
-      const vatDates = vatType === "simplified" ? [new Date(yN, 0, 25), new Date(yN + 1, 0, 25)] : [new Date(yN, 0, 25), new Date(yN, 6, 25), new Date(yN + 1, 0, 25)];
-      const vatDate = vatDates.find(d => diffD(d) >= 0) ?? vatDates[vatDates.length - 1];
-      const incomeTaxDate = [new Date(yN, 4, 31), new Date(yN + 1, 4, 31)].find(d => diffD(d) >= 0) ?? new Date(yN + 1, 4, 31);
-      const taxEv: { label: string; date: Date }[] = [
-        ...(hasFmEmp ? [
-          { label: ko ? "원천세 신고·납부" : "Withholding tax", date: withholdingDate },
-          { label: ko ? "4대보험료" : "Social insurance", date: insuranceDate },
-        ] : []),
-        { label: ko ? "부가세 신고" : "VAT filing", date: vatDate },
-        { label: ko ? "종합소득세 신고" : "Income tax", date: incomeTaxDate },
-      ];
-      taxEv.forEach(e => {
-        const d = diffD(e.date);
-        if (d >= 0 && d <= 14) {
-          items.push({ id: `tax-${e.label}`, severity: d <= 3 ? "urgent" : "warning", title: e.label, detail: ko ? (d === 0 ? "오늘 마감" : `D-${d} · ${e.date.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}`) : (d === 0 ? "Due today" : `D-${d} · ${e.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`) });
-        }
-      });
-    }
-
-    // 3. 직원 월급 D-7
-    if ((employees as { id: string }[]).length > 0 && businessLaunched) {
-      const payDay = 25;
-      const payDate = domN <= payDay ? new Date(yN, mN, payDay) : new Date(yN, mN + 1, payDay);
-      const pd = diffD(payDate);
-      if (pd >= 0 && pd <= 7) {
-        const totalPay = (employees as { hourlyWage: number; weeklyHours: number }[]).reduce((s, e) => {
-          const weekly = e.weeklyHours >= 15 ? (e.weeklyHours / 5) * e.hourlyWage : 0;
-          return s + Math.round((e.hourlyWage * e.weeklyHours + weekly) * 4.345);
-        }, 0);
-        items.push({ id: "payroll", severity: pd <= 2 ? "urgent" : "warning", title: ko ? `직원 월급 지급일 D-${pd}` : `Payroll in ${pd} days`, detail: ko ? `${(employees as { id: string }[]).length}명 · 예상 ${Math.round(totalPay / 10000)}만원` : `${(employees as { id: string }[]).length} staff · est. ₩${Math.round(totalPay / 10000)}K` });
-      }
-    }
-
-    // 4. 고정비 D-7
-    if (businessLaunched) {
-      (fixedExpenses as FixedExpense[]).forEach(fe => {
-        const effectiveDay = Math.min(fe.dueDay, daysInMonthN);
-        const fDate = effectiveDay >= domN ? new Date(yN, mN, effectiveDay) : new Date(yN, mN + 1, Math.min(fe.dueDay, new Date(yN, mN + 2, 0).getDate()));
-        const fd = diffD(fDate);
-        if (fd >= 0 && fd <= 7) {
-          items.push({ id: `fexp-${fe.id}`, severity: fd <= 2 ? "urgent" : "warning", title: ko ? `고정비 납부: ${fe.name}` : `Expense due: ${fe.name}`, detail: ko ? `${Math.round(fe.amount / 10000)}만원 · D-${fd}` : `₩${Math.round(fe.amount / 10000)}K · D-${fd}` });
-        }
-      });
-    }
-
-    // 5. 회원 만료 D-7
-    if (businessCtx.isRecurringRevenue) {
-      members.forEach(mm => {
-        if (mm.endDate >= todayStrN && mm.endDate <= in7daysN) {
-          const d = Math.ceil((new Date(mm.endDate).getTime() - Date.now()) / 86400000);
-          items.push({ id: `mem-${mm.id}`, severity: d <= 2 ? "urgent" : "warning", title: ko ? `회원 만료 임박: ${mm.name}` : `Member expiring: ${mm.name}`, detail: ko ? `${mm.plan} · D-${d}` : `${mm.plan} · ${d}d left` });
-        }
-      });
-    }
-
-    setNotifications(items);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, inventory, employees, fixedExpenses, members, taxSettings, businessLaunched, businessCtx.hasPhysicalInventory, businessCtx.isRecurringRevenue]);
-
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  // ── Hoisted from conditional render blocks to prevent hook ordering issues ──
+  const [filterCat, setFilterCat] = useState("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [competitorResults, setCompetitorResults] = useState<{ totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null>(null);
+  const [competitorLoading, setCompetitorLoading] = useState(false);
+  const [bpLoading, setBpLoading] = useState(false);
+  const [bpSections, setBpSections] = useState<Array<{ title: string; content: string }> | null>(null);
+  const [bpSummary, setBpSummary] = useState<string | null>(null);
+  const [bpError, setBpError] = useState<string | null>(null);
+  const [bpExpandedIdx, setBpExpandedIdx] = useState<number | null>(null);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [progFilter, setProgFilter] = useState<ProgramCategory | "all">("all");
+  const [liveProgramsData, setLiveProgramsData] = useState<Array<{ id: string; programName: string; organizerName: string; supportCategory: string; isOpen: boolean; url?: string }>>([]);
+  const [liveProgramsLoading, setLiveProgramsLoading] = useState(false);
+  const [liveMarketInsights, setLiveMarketInsights] = useState<{
+    loading: boolean;
+    population?: { total: number; households: number; male: number; female: number };
+  } | null>(null);
+  const [regPage, setRegPage] = useState(0);
+  const [livePermitInsights, setLivePermitInsights] = useState<{
+    loading: boolean;
+    data?: { total: number; operating: number; closed: number; survivalRate: number };
+  } | null>(null);
+  const [liveBudgetBenchmark, setLiveBudgetBenchmark] = useState<{
+    loading: boolean;
+    data?: { avgTotalStartupCost: number; avgFranchiseFee: number; avgDeposit: number; avgEducationFee: number; avgOtherCost: number; industryName: string };
+  } | null>(null);
+
+  const d = useDashboard(surface);
+  const isStartupCategory = d.industryCategoryId === "startup-tech";
+  const startupTypeOptions: Array<"independent" | "franchise" | "undecided"> = isStartupCategory
+    ? ["independent", "undecided"]
+    : ["independent", "franchise", "undecided"];
+  const analyticsInventoryRef = useRef<HTMLElement | null>(null);
+  const analyticsStaffRef = useRef<HTMLElement | null>(null);
+  const lastAnalyticsActionRef = useRef("");
+  const {
+    router, searchParams, language, setLanguage, copy,
+    decisions, setDecisions, roadmap, setRoadmap, taskMap, setTaskMap,
+    viewingStageId, setViewingStageId,
+    selectedIndustryId, setSelectedIndustryId,
+    selectedIndustryCategoryId, setSelectedIndustryCategoryId,
+    selectedBusinessModelId, setSelectedBusinessModelId,
+    selectedBudget, setSelectedBudget, budgetInputText, setBudgetInputText,
+    selectedOpenDate, setSelectedOpenDate,
+    selectedLocationId, setSelectedLocationId,
+    preferredRegionInput, setPreferredRegionInput,
+    locationMode, setLocationMode,
+    recommendedMarkets, setRecommendedMarkets,
+    customMarketName, setCustomMarketName,
+    customMarketReason, setCustomMarketReason,
+    manualMarketEvaluation, setManualMarketEvaluation,
+    manualAlternative, setManualAlternative,
+    selectedContractTaskId, setSelectedContractTaskId,
+    contractText, setContractText,
+    contractAnalysisStatus, contractAnalysisError, contractAnalysis, setContractAnalysis,
+    showFinancePanel, setShowFinancePanel,
+    financeCapitalText, setFinanceCapitalText,
+    financeMonthlyRentText, setFinanceMonthlyRentText,
+    financeLaborText, setFinanceLaborText,
+    financeRevenueText, setFinanceRevenueText,
+    financeMarketStyle, setFinanceMarketStyle,
+    financeRentBand, setFinanceRentBand,
+    financeStatus, financeError, financeResult, financeInterpretation,
+    selectedGuideSectionKey, setSelectedGuideSectionKey,
+    guideQuestion, setGuideQuestion,
+    guideQaStatus, guideQaError, guideAnswer, setGuideAnswer,
+    knowledgeQaText, setKnowledgeQaText,
+    knowledgeQaStatus, knowledgeQaError, setKnowledgeQaError,
+    locationOptions, locationSourceLabel,
+    permitGuides, taxGuides, loanGuides,
+    startupType, setStartupType,
+    selectedFranchiseBrandId, setSelectedFranchiseBrandId,
+    showFranchisePicker, setShowFranchisePicker,
+    nearbyFranchiseStores, setNearbyFranchiseStores,
+    nearbyFranchiseLoading, setNearbyFranchiseLoading,
+    locationMapReady, setLocationMapReady,
+    stageGuideContent, guideStepIndex, setGuideStepIndex,
+    guideSelections, setGuideSelections,
+    vendorSelections, setVendorSelections,
+    vendorCustomInputs, setVendorCustomInputs,
+    opsSelections, setOpsSelections,
+    opsPosChecks, setOpsPosChecks,
+    opsStep, setOpsStep,
+    softOpenChecks, setSoftOpenChecks,
+    softOpenPricing, setSoftOpenPricing,
+    softOpenStep, setSoftOpenStep,
+    softOpenSkips, setSoftOpenSkips,
+    taxChecks, setTaxChecks, loanChecks, setLoanChecks,
+    dailyEntries, setDailyEntries, monthlyCosts, setMonthlyCosts, costHistory,
+    inventory, setInventory, invForm, setInvForm,
+    invCategoryFilter, setInvCategoryFilter,
+    invWasteTarget, setInvWasteTarget,
+    invWasteQty, setInvWasteQty, invWasteReason, setInvWasteReason,
+    employees, setEmployees,
+    empFormOpen, setEmpFormOpen, empEditId, setEmpEditId,
+    empName, setEmpName, empWage, setEmpWage,
+    empHours, setEmpHours, empInsured, setEmpInsured,
+    fixedExpenses, setFixedExpenses,
+    fexpFormOpen, setFexpFormOpen, fexpEditId, setFexpEditId,
+    fexpName, setFexpName, fexpAmount, setFexpAmount,
+    fexpDueDay, setFexpDueDay, fexpCategory, setFexpCategory,
+    deliveryPlatforms, setDeliveryPlatforms,
+    monthlyDeliverySales, setMonthlyDeliverySales,
+    dlvFormOpen, setDlvFormOpen, dlvEditId, setDlvEditId,
+    dlvName, setDlvName, dlvRate, setDlvRate, dlvAd, setDlvAd,
+    products, setProducts,
+    prodFormOpen, setProdFormOpen, prodEditId, setProdEditId,
+    prodName, setProdName, prodCategory, setProdCategory,
+    prodPrice, setProdPrice, prodCost, setProdCost,
+    prodStock, setProdStock, prodUnit, setProdUnit,
+    taxSettings, setTaxSettings,
+    onlinePlatformSales, setOnlinePlatformSales,
+    onlineSelectedPlatforms, setOnlineSelectedPlatforms,
+    onlineSelectedCourier, setOnlineSelectedCourier,
+    onlineMonthlyParcels, setOnlineMonthlyParcels,
+    members, setMembers,
+    memFormOpen, setMemFormOpen,
+    memName, setMemName, memPlan, setMemPlan,
+    memFee, setMemFee, memEnd, setMemEnd,
+    businessLaunched, setBusinessLaunched, storeName, setStoreName,
+    costIngredientsText, setCostIngredientsText,
+    costLaborText, setCostLaborText,
+    costRentText, setCostRentText,
+    costUtilitiesText, setCostUtilitiesText,
+    costOtherText, setCostOtherText,
+    dailyDateInput, setDailyDateInput,
+    dailySalesInput, setDailySalesInput,
+    dailyCustomersInput, setDailyCustomersInput,
+    cpaDecision, setCpaDecision,
+    selectedInteriorConcept, setSelectedInteriorConcept,
+    contractors, contractorsLoading, contractorsRetryKey, setContractorsRetryKey,
+    showProfileDetails, setShowProfileDetails,
+    showMonthlyCostPrompt, setShowMonthlyCostPrompt,
+    lastUnlocked, selectedStoreIndex, setSelectedStoreIndex,
+    authLabel, persistenceLabel, persistenceReady,
+    saveStatus, setSaveStatus,
+    profile, authResolved, requiresAuth,
+    transitionNotice, setTransitionNotice,
+    displayedStageId, currentStage, traversedStages,
+    traversedIndex, prevTraversedStage, nextTraversedStage,
+    isViewingPastStage,
+    canCompleteIndustryStep, canCompleteStartupTypeStep,
+    canCompleteBusinessModelStep, canCompleteBudgetStep, canCompleteLocationStep,
+    hasPermitGuide, hasTaxGuide, hasLoanGuide,
+    completedCount, preferredRegion, industryCategoryId, businessCtx,
+    isDigitalCategory, pathTotalStages, correctedProgressPercent, allStagesDone, businessHealthScore,
+    aiActions, aiActionsLoading, fetchAiActions,
+    localizedCurrentStage, isGuideStage, isFreshAccount,
+    startupSummary, selectedIndustryLabel, nextStepSummary,
+    locationRegionLabel, locationHelpText,
+    locationRecommendedLabel, locationDirectLabel,
+    locationInputPlaceholder, customLocationLabel,
+    customLocationPlaceholder, customLocationReasonPlaceholder,
+    scoreLocationLabel, selectedLocationDetailLabel,
+    sliderBudgetValue, activeBudgetLabel, activeOpenDatePreset,
+    activeSurface, currentStageIndex,
+    roadmapPreviewStages, nextRoadmapStage,
+    homePrinciples, surfaceTabs,
+    showOnboardingChoice, setShowOnboardingChoice,
+    showExistingOnboarding, setShowExistingOnboarding,
+    showAIRoadmapWizard, setShowAIRoadmapWizard,
+    showRoleSelection, setShowRoleSelection,
+    userRole, setUserRole,
+    handleExistingBusinessComplete,
+    handleAIRoadmapComplete,
+    handleSignOut,
+    resetDemo, isResetting, resetProgress,
+    contractTasks, activeContractTask, activeContractTaskDetail,
+    navigateToSurface, openFinanceFromSummary,
+    handleIndustryContinue, handleBusinessModelContinue,
+    handleStartupTypeContinue, handleBudgetContinue,
+    handleLocationContinue, handleContractTaskToggle,
+    handleContractContinue, handleTaskToggle,
+    handleStageContinue, handleLaunchBusiness,
+    handleAddDailyEntry, handleSaveMonthlyCosts,
+    saveInventory, handleInvSave, handleInvQty, handleInvDelete,
+    openInvEdit, handleInvWaste, handleMarkOrdered,
+    emptyInvForm,
+    saveEmployees, handleEmpSave, handleEmpDelete, openEmpEdit,
+    saveFixedExpenses, handleFexpSave, handleFexpDelete, openFexpEdit,
+    saveDeliveryPlatforms, saveMonthlyDeliverySales,
+    handleDlvSave, handleDlvDelete, openDlvEdit,
+    saveProducts, handleProdSave, handleProdDelete, handleProdSoldChange, openProdEdit,
+    unifiedProducts, saveUnifiedProducts,
+    serviceMenuItems, saveServiceMenuItems,
+    saveTaxSettings,
+    handleContractAnalysis, handleRunFinancialSimulation,
+    handleVerificationContinue,
+    handleKnowledgeQuestion, handleGuideQuestion,
+    activeGuide, activeGuideSections, activeGuideSection,
+    activeGuideFreshness, activeGuideActionLabel, activeGuideEmptyLabel,
+    guideDecisionKey,
+    activeLocationCandidates, finalSelectedMarket,
+    savedFinanceSnapshot, savedContractSnapshot, savedGuideQaSnapshot,
+    effectiveContractAnalysis, effectiveGuideAnswer, financeDefaults,
+    connectAndLoad, persistCurrentState,
+    GUIDE_STAGE_CODES, SURFACE_HREFS,
+  } = d;
   /* ── Redirect to landing page if not logged in ── */
-  if (authResolved && requiresAuth) {
-    router.push("/auth");
-    return <main style={{ background: "#000", minHeight: "100vh" }} />;
+  useEffect(() => {
+    if (authResolved && requiresAuth) {
+      router.push("/auth");
+    }
+  }, [authResolved, requiresAuth, router]);
+
+  // Flags for conditional rendering — no early returns here (hooks below)
+  const shouldShowAuth = authResolved && requiresAuth;
+  const shouldShowRoleSelection = showRoleSelection && !shouldShowAuth;
+
+  const roleSelectionNode = shouldShowRoleSelection ? (
+      <RoleSelectionScreen
+        language={language}
+        onSelect={async (role, inviteCode) => {
+          try {
+            if (role === "staff" && inviteCode) {
+              // 직원: 초대 코드로 가게 연결
+              try {
+                const { data: invite } = await supabase
+                  .from("store_invites" as never)
+                  .select("*")
+                  .eq("invite_code", inviteCode)
+                  .is("used_by", null)
+                  .gt("expires_at", new Date().toISOString())
+                  .maybeSingle() as { data: { id: string; owner_user_id: string; role: string } | null };
+
+                if (invite) {
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (user) {
+                    await supabase.from("store_members" as never).upsert({
+                      owner_user_id: invite.owner_user_id,
+                      member_user_id: user.id,
+                      role: invite.role || "staff",
+                    } as never, { onConflict: "owner_user_id,member_user_id" });
+                    await supabase.from("store_invites" as never).update({ used_by: user.id, used_at: new Date().toISOString() } as never).eq("id", invite.id);
+                  }
+                }
+              } catch { /* tables may not exist yet */ }
+            }
+
+            // 역할 저장 (business_profiles에)
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              await supabase.from("business_profiles").update({ user_role: role } as never).eq("user_id", user.id);
+            }
+
+            setUserRole(role);
+            setShowRoleSelection(false);
+            if (role === "owner") setShowOnboardingChoice(true);
+          } catch {
+            setUserRole(role);
+            setShowRoleSelection(false);
+            if (role === "owner") setShowOnboardingChoice(true);
+          }
+        }}
+      />
+  ) : null;
+
+  const shouldShowExistingOnboarding = showExistingOnboarding && !shouldShowAuth && !shouldShowRoleSelection;
+  const shouldShowAIRoadmap = showAIRoadmapWizard && !shouldShowAuth && !shouldShowRoleSelection;
+  // 데이터 로드 완료 후 fresh account면 항상 온보딩 선택 화면 표시 (리셋 후에도)
+  // onboardingDismissed가 true이면 isFreshAccount 자동 표시를 억제 (직접 로드맵 선택 시)
+  const shouldShowOnboardingChoice = (showOnboardingChoice || (isFreshAccount && persistenceReady && !businessLaunched && !onboardingDismissed)) && !shouldShowAuth && !shouldShowRoleSelection && !shouldShowExistingOnboarding && !shouldShowAIRoadmap;
+
+  // NOTE: No early returns here — useEffect below must always execute.
+  // All conditional returns are placed AFTER the useEffect.
+
+  if (false as boolean) { // DEAD CODE: onboarding choice moved after useEffect
+    const ko = language === "ko";
+    void ko;
+    return (
+      <main style={{
+        minHeight: "100vh",
+        background: "radial-gradient(circle at top, rgba(29,53,87,0.08), transparent 32%), #f7f6f3",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "48px 24px",
+      }}>
+        <div style={{ maxWidth: "860px", width: "100%", textAlign: "center" }}>
+          <div style={{
+            fontSize: "13px", fontWeight: 600, letterSpacing: "0.14em",
+            textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "16px",
+            animation: "fadeUp 0.7s cubic-bezier(0.25,0.46,0.45,0.94) 0.1s both",
+          }}>build.up</div>
+          <div style={{
+            fontSize: "clamp(30px, 5vw, 44px)", fontWeight: 700,
+            letterSpacing: "-0.035em", lineHeight: 1.08, color: "var(--text)", marginBottom: "14px",
+            animation: "fadeUp 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.25s both",
+          }}>
+            {ko ? "어떤 상황에 계신가요?" : "Where are you in your journey?"}
+          </div>
+          <div style={{
+            fontSize: "17px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "48px",
+            animation: "fadeUp 0.7s cubic-bezier(0.25,0.46,0.45,0.94) 0.4s both",
+          }}>
+            {ko ? "맞춤형 경험을 제공하기 위해 알려주세요." : "Help us personalize your experience."}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+            {/* Card 1: 신규 창업 */}
+            <button type="button" onClick={() => setShowOnboardingChoice(false)} style={{
+              borderRadius: "28px",
+              border: "1px solid rgba(29,53,87,0.06)",
+              background: "linear-gradient(160deg, rgba(232,243,255,0.8) 0%, rgba(245,249,255,0.95) 50%, rgba(255,255,255,0.98) 100%)",
+              boxShadow: "0 8px 30px rgba(29,53,87,0.06)",
+              backdropFilter: "blur(16px)",
+              padding: "36px 32px 32px",
+              cursor: "pointer",
+              textAlign: "left" as const,
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              animation: "fadeUp 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.55s both",
+              display: "flex",
+              flexDirection: "column" as const,
+              gap: "0",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(29,53,87,0.1)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(29,53,87,0.06)"; }}
+            >
+              <div style={{
+                width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px",
+                background: "linear-gradient(135deg, #e0edff 0%, #c9ddfb 100%)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b7ddd" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5Z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <div style={{ fontSize: "22px", fontWeight: 680, color: "var(--text)", marginBottom: "8px", letterSpacing: "-0.02em" }}>
+                {ko ? "창업을 준비하고 있어요" : "I'm preparing to start"}
+              </div>
+              <div style={{ fontSize: "15px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "16px" }}>
+                {ko
+                  ? "업종 선택부터 개업까지, 단계별 로드맵으로 안내합니다. 재무 시뮬레이션, AI 계약서 분석, 상권 추천까지 모두 포함되어 있어요."
+                  : "Guided from industry selection to grand opening. Includes financial simulation, AI contract analysis, and market recommendations."}
+              </div>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                fontSize: "14px", fontWeight: 600, color: "#3b7ddd",
+              }}>
+                {ko ? "로드맵 시작하기" : "Start roadmap"}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 3l5 5-5 5" />
+                </svg>
+              </div>
+            </button>
+
+            {/* Card 2: 기존 사업자 */}
+            <button type="button" onClick={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }} style={{
+              borderRadius: "28px",
+              border: "1px solid rgba(45,106,79,0.06)",
+              background: "linear-gradient(160deg, rgba(232,250,241,0.8) 0%, rgba(243,252,247,0.95) 50%, rgba(255,255,255,0.98) 100%)",
+              boxShadow: "0 8px 30px rgba(45,106,79,0.06)",
+              backdropFilter: "blur(16px)",
+              padding: "36px 32px 32px",
+              cursor: "pointer",
+              textAlign: "left" as const,
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              animation: "fadeUp 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.7s both",
+              display: "flex",
+              flexDirection: "column" as const,
+              gap: "0",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(45,106,79,0.1)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(45,106,79,0.06)"; }}
+            >
+              <div style={{
+                width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px",
+                background: "linear-gradient(135deg, #ddf5e9 0%, #c4ebd6 100%)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2d8659" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 21V8l9-5 9 5v13" />
+                  <path d="M9 21v-6h6v6" />
+                  <path d="M3 8h18" />
+                </svg>
+              </div>
+              <div style={{ fontSize: "22px", fontWeight: 680, color: "var(--text)", marginBottom: "8px", letterSpacing: "-0.02em" }}>
+                {ko ? "이미 가게를 운영하고 있어요" : "I already run a business"}
+              </div>
+              <div style={{ fontSize: "15px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "16px" }}>
+                {ko
+                  ? "간단한 설정만 하면 매출 분석, 비용 관리, 세금 달력, 재고 알림을 바로 사용할 수 있어요."
+                  : "Quick setup to unlock sales analytics, cost tracking, tax calendar, and inventory alerts."}
+              </div>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                fontSize: "14px", fontWeight: 600, color: "#2d8659",
+              }}>
+                {ko ? "가게 등록하기" : "Register my store"}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 3l5 5-5 5" />
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
-  /* placeholder — old landing removed, now redirects to /auth */
+  const showOperationalHero = !(activeSurface === "home" && mounted && businessLaunched);
+
+  useEffect(() => {
+    if (activeSurface !== "analytics") {
+      lastAnalyticsActionRef.current = "";
+      return;
+    }
+
+    const manage = searchParams.get("manage");
+    const action = searchParams.get("action");
+    const key = `${manage ?? ""}:${action ?? ""}`;
+
+    if (!manage || lastAnalyticsActionRef.current === key) {
+      return;
+    }
+
+    lastAnalyticsActionRef.current = key;
+
+    const scrollToTarget = () => {
+      const target =
+        manage === "inventory"
+          ? analyticsInventoryRef.current
+          : manage === "staff"
+            ? analyticsStaffRef.current
+            : null;
+
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    requestAnimationFrame(scrollToTarget);
+
+    if (manage === "inventory" && action === "add") {
+      setInvForm({ ...emptyInvForm, open: true });
+    }
+
+    if (manage === "staff" && action === "add") {
+      setEmpFormOpen(true);
+      setEmpEditId(null);
+      setEmpName("");
+      setEmpWage("");
+      setEmpHours("");
+      setEmpInsured(false);
+    }
+  }, [
+    activeSurface,
+    searchParams,
+    emptyInvForm,
+    setInvForm,
+    setEmpFormOpen,
+    setEmpEditId,
+    setEmpName,
+    setEmpWage,
+    setEmpHours,
+    setEmpInsured,
+  ]);
+
+  // ── ALL HOOKS CALLED. Conditional returns are safe below. ──
+
+  // Context value: useDashboard 반환값 + 로컬 state 통합
+  const _ctxValue: DashboardContextValue = {
+    ...d,
+    mounted, filterCat, setFilterCat, expandedId, setExpandedId,
+    competitorResults, setCompetitorResults, competitorLoading, setCompetitorLoading,
+    bpLoading, setBpLoading, bpSections, setBpSections, bpSummary, setBpSummary,
+    bpError, setBpError, bpExpandedIdx, setBpExpandedIdx,
+    onboardingDismissed, setOnboardingDismissed,
+    progFilter, setProgFilter,
+    liveProgramsData, setLiveProgramsData, liveProgramsLoading, setLiveProgramsLoading,
+    liveMarketInsights, setLiveMarketInsights,
+    regPage, setRegPage,
+    livePermitInsights, setLivePermitInsights,
+    liveBudgetBenchmark, setLiveBudgetBenchmark,
+  };
+
+  if (shouldShowAuth) {
+    return <main style={{ background: "#000", minHeight: "100vh" }} />;
+  }
+  if (roleSelectionNode) {
+    return roleSelectionNode;
+  }
+  if (shouldShowExistingOnboarding) {
+    return (
+      <ExistingBusinessOnboarding
+        language={language}
+        onComplete={handleExistingBusinessComplete}
+        onBack={() => { setShowExistingOnboarding(false); setShowOnboardingChoice(true); }}
+      />
+    );
+  }
+  if (shouldShowAIRoadmap) {
+    return (
+      <AIRoadmapWizard
+        language={language}
+        onComplete={handleAIRoadmapComplete}
+        onBack={() => { setShowAIRoadmapWizard(false); setShowOnboardingChoice(true); }}
+      />
+    );
+  }
+  if (isResetting) {
+    const ko = language === "ko";
+    return (
+      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "var(--bg, #f7f6f3)" }}>
+        <div style={{ width: "100%", maxWidth: "420px", textAlign: "center" as const }}>
+          <div style={{
+            width: "64px", height: "64px", margin: "0 auto 24px", borderRadius: "20px",
+            background: "linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1.2s linear infinite" }}>
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          </div>
+          <h2 style={{ fontSize: "22px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a", margin: "0 0 8px" }}>
+            {ko ? "모든 진행 과정을 초기화하는 중입니다" : "Resetting all progress"}
+          </h2>
+          <p style={{ fontSize: "14px", color: "rgba(15,23,42,0.45)", margin: "0 0 32px", lineHeight: 1.5 }}>
+            {ko ? "서버 데이터를 정리하고 있습니다. 잠시만 기다려주세요." : "Cleaning up server data. Please wait a moment."}
+          </p>
+          {/* 프로그레스 바 */}
+          <div style={{ width: "100%", height: "6px", borderRadius: "3px", background: "rgba(15,23,42,0.06)", overflow: "hidden" }}>
+            <div style={{
+              height: "100%", borderRadius: "3px",
+              background: "linear-gradient(90deg, #7c3aed, #a78bfa)",
+              width: `${resetProgress}%`,
+              transition: "width 0.4s ease",
+            }} />
+          </div>
+          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.35)", marginTop: "10px" }}>
+            {resetProgress < 40
+              ? (ko ? "로컬 데이터 정리 중..." : "Clearing local data...")
+              : resetProgress < 70
+                ? (ko ? "서버 데이터 초기화 중..." : "Resetting server data...")
+                : resetProgress < 100
+                  ? (ko ? "마무리 중..." : "Finishing up...")
+                  : (ko ? "완료!" : "Done!")}
+          </div>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </main>
+    );
+  }
+  if (shouldShowOnboardingChoice) {
+    const ko = language === "ko";
+    return (
+      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "var(--bg, #f7f6f3)" }}>
+        <div style={{ width: "100%", maxWidth: "1020px" }}>
+          <div style={{ textAlign: "center" as const, marginBottom: "40px" }}>
+            <div style={{ fontSize: "14px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--primary, #1d3557)", marginBottom: "14px" }}>build.up</div>
+            <h1 style={{ fontSize: "clamp(28px, 5vw, 42px)", fontWeight: 720, letterSpacing: "-0.04em", color: "var(--text, #0f172a)", margin: "0 0 10px", lineHeight: 1.1 }}>{ko ? "어떤 상태에서 시작하시나요?" : "Where are you starting from?"}</h1>
+            <p style={{ fontSize: "16px", color: "var(--muted, #5b616e)", lineHeight: 1.6, margin: 0 }}>{ko ? "상황에 맞는 화면을 준비합니다" : "We'll set up the right experience for you"}</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+            {/* Card 1: 직접 로드맵 — 파란색 */}
+            <button type="button" onClick={() => { setOnboardingDismissed(true); setShowOnboardingChoice(false); navigateToSurface("current"); }} style={{
+              borderRadius: "28px", border: "1px solid rgba(29,53,87,0.06)",
+              background: "linear-gradient(160deg, rgba(232,243,255,0.8) 0%, rgba(245,249,255,0.95) 50%, rgba(255,255,255,0.98) 100%)",
+              boxShadow: "0 8px 30px rgba(29,53,87,0.06)", backdropFilter: "blur(16px)",
+              padding: "36px 28px 32px", cursor: "pointer", textAlign: "left" as const,
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              display: "flex", flexDirection: "column" as const,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(29,53,87,0.1)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(29,53,87,0.06)"; }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px", background: "linear-gradient(135deg, #e0edff 0%, #c9ddfb 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b7ddd" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5Z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <div style={{ fontSize: "20px", fontWeight: 680, color: "var(--text, #0f172a)", marginBottom: "8px", letterSpacing: "-0.02em" }}>{ko ? "직접 로드맵 진행" : "Manual Roadmap"}</div>
+              <div style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--muted, #5b616e)", marginBottom: "16px", flex: 1 }}>{ko ? "업종 선택부터 개업까지, 단계별 로드맵으로 안내합니다." : "Guided from industry selection to opening day."}</div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, color: "#3b7ddd" }}>
+                {ko ? "로드맵 시작하기" : "Start roadmap"} <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5" /></svg>
+              </div>
+            </button>
+
+            {/* Card 2: AI 자동 — 보라색 */}
+            <button type="button" onClick={() => { setShowOnboardingChoice(false); setShowAIRoadmapWizard(true); }} style={{
+              borderRadius: "28px", border: "1px solid rgba(99,61,225,0.08)",
+              background: "linear-gradient(160deg, rgba(237,233,254,0.8) 0%, rgba(247,244,255,0.95) 50%, rgba(255,255,255,0.98) 100%)",
+              boxShadow: "0 8px 30px rgba(99,61,225,0.08)", backdropFilter: "blur(16px)",
+              padding: "36px 28px 32px", cursor: "pointer", textAlign: "left" as const,
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              display: "flex", flexDirection: "column" as const,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(99,61,225,0.12)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(99,61,225,0.08)"; }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px", background: "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.8 5.6 21.2 8 14 2 9.2h7.6z" />
+                </svg>
+              </div>
+              <div style={{ fontSize: "20px", fontWeight: 680, color: "var(--text, #0f172a)", marginBottom: "8px", letterSpacing: "-0.02em" }}>{ko ? "AI 자동 로드맵" : "AI Auto Roadmap"}</div>
+              <div style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--muted, #5b616e)", marginBottom: "16px", flex: 1 }}>{ko ? "아이디어만 입력하면 AI가 예산, 상권, 공급업체까지 맞춤 설계합니다." : "Describe your idea and AI builds your entire plan."}</div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, color: "#7c3aed" }}>
+                {ko ? "AI로 시작하기" : "Start with AI"} <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5" /></svg>
+              </div>
+            </button>
+
+            {/* Card 3: 기존 운영 — 초록색 */}
+            <button type="button" onClick={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }} style={{
+              borderRadius: "28px", border: "1px solid rgba(45,106,79,0.06)",
+              background: "linear-gradient(160deg, rgba(232,250,241,0.8) 0%, rgba(243,252,247,0.95) 50%, rgba(255,255,255,0.98) 100%)",
+              boxShadow: "0 8px 30px rgba(45,106,79,0.06)", backdropFilter: "blur(16px)",
+              padding: "36px 28px 32px", cursor: "pointer", textAlign: "left" as const,
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              display: "flex", flexDirection: "column" as const,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(45,106,79,0.1)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(45,106,79,0.06)"; }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px", background: "linear-gradient(135deg, #ddf5e9 0%, #c4ebd6 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2d8659" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 21V8l9-5 9 5v13" /><path d="M9 21v-6h6v6" /><path d="M3 8h18" />
+                </svg>
+              </div>
+              <div style={{ fontSize: "20px", fontWeight: 680, color: "var(--text, #0f172a)", marginBottom: "8px", letterSpacing: "-0.02em" }}>{ko ? "이미 운영 중이에요" : "Already Running"}</div>
+              <div style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--muted, #5b616e)", marginBottom: "16px", flex: 1 }}>{ko ? "기존 가게 정보를 등록하면 바로 운영 대시보드를 사용할 수 있습니다." : "Register your store and start using the dashboard right away."}</div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, color: "#2d8659" }}>
+                {ko ? "가게 등록하기" : "Register store"} <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5" /></svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main style={styles.shell}>
+    <DashboardProvider value={_ctxValue}>
+    <main style={showOperationalHero ? styles.shell : operationalShell}>
+      {showOperationalHero ? (
       <section style={styles.hero}>
         <div style={styles.eyebrow}>build.up</div>
         <div style={styles.title}>
@@ -4393,10 +793,11 @@ export default function StarterStageDemo({
             : copy.home.heroActiveBody}
         </div>
       </section>
+      ) : null}
 
       {showSurfaceNav ? (
-      <section style={styles.section}>
-        <div style={styles.surfaceNav}>
+      <section style={showOperationalHero ? styles.section : operationalNavSection}>
+        <div style={{ ...styles.surfaceNav, ...(showOperationalHero ? {} : operationalSurfaceNav) }}>
           {surfaceTabs.map((tab) => (
             <button
               key={tab.id}
@@ -4418,169 +819,13 @@ export default function StarterStageDemo({
       ) : null}
 
       {activeSurface === "home" ? (
+      mounted && businessLaunched ? (
+        <OperationalDashboard d={d} />
+      ) : (
       <section style={styles.section}>
         <div style={styles.sectionTitle}>{language === "ko" ? "홈" : "Home"}</div>
 
-        {businessLaunched ? (() => {
-          // ── 개업 후 홈 대시보드 ──
-          const ko = language === "ko";
-          const currentMonth = new Date().toISOString().slice(0, 7);
-          type DE = { date: string; sales: number; customers: number };
-          const me = (dailyEntries as DE[]).filter(e => e.date.startsWith(currentMonth));
-          const totalSales = me.reduce((s, e) => s + e.sales, 0);
-          const totalCustomers = me.reduce((s, e) => s + e.customers, 0);
-          const workingDays = me.length;
-          const avgDailySales = workingDays > 0 ? Math.round(totalSales / workingDays) : 0;
-          const avgTicket = totalCustomers > 0 ? Math.round(totalSales / totalCustomers) : 0;
-          const mc = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-          const totalCosts = mc.ingredients + mc.labor + mc.rent + mc.utilities + mc.other;
-          const ingRatio = totalSales > 0 ? (mc.ingredients / totalSales) * 100 : 0;
-          const labRatio = totalSales > 0 ? (mc.labor / totalSales) * 100 : 0;
-          const prime = ingRatio + labRatio;
-          const netProfit = totalSales - totalCosts;
-          const fmt = (n: number) => n >= 10000 ? `${Math.round(n / 10000).toLocaleString()}만원` : `${Math.round(n).toLocaleString()}원`;
-          const pct = (n: number) => `${n.toFixed(1)}%`;
-          const industryId = decisions["industry-selection"]?.selectedPrimaryOptionId ?? profile?.subIndustryId;
-          const industryLabel = industryId ? localizeRecommendationItem({ id: industryId, title: industryId }, language).title : "";
-          type H = "good" | "caution" | "danger";
-          const health = (v: number, g: number, c: number): H => v <= g ? "good" : v <= c ? "caution" : "danger";
-          const hColor = (h: H) => h === "good" ? "#34c759" : h === "caution" ? "#ff9f0a" : "#ff3b30";
-          const primeH = health(prime, 60, 65);
-          const ingH = health(ingRatio, 35, 40);
-          const today = new Date().toISOString().slice(0, 10);
-          const todayEntry = (dailyEntries as DE[]).find(e => e.date === today);
-          return (
-            <div style={styles.homeShowcase}>
-              {/* 메인 패널 */}
-              <article style={styles.homeMainPanel}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#34c759", flexShrink: 0 }} />
-                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#34c759", letterSpacing: "0.04em" }}>
-                    {ko ? "개업 운영 중" : "Open & Running"}
-                  </span>
-                </div>
-                <div style={styles.homeMainTitle}>
-                  {storeName || industryLabel || (ko ? "내 가게" : "My Store")}
-                </div>
-                <div style={styles.homeMainBody}>
-                  {totalSales === 0
-                    ? (ko ? "아직 이번 달 매출 기록이 없습니다. '내 가게' 탭에서 오늘 매출을 입력하세요." : "No sales recorded this month yet. Add today's sales in the My Store tab.")
-                    : (ko ? `이번 달 ${workingDays}일 운영 중입니다.` : `${workingDays} operating days this month.`)}
-                </div>
-
-                {/* 핵심 지표 3종 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", margin: "16px 0" }}>
-                  {[
-                    { label: ko ? "이번달 매출" : "Monthly sales", value: totalSales > 0 ? fmt(totalSales) : "—" },
-                    { label: ko ? "하루 평균" : "Daily avg", value: avgDailySales > 0 ? fmt(avgDailySales) : "—" },
-                    { label: ko ? "객단가" : "Avg ticket", value: avgTicket > 0 ? fmt(avgTicket) : "—" },
-                  ].map(item => (
-                    <div key={item.label} style={{ background: "rgba(0,0,0,0.04)", borderRadius: "12px", padding: "12px 10px" }}>
-                      <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>{item.label}</div>
-                      <div style={{ fontSize: "15px", fontWeight: 700 }}>{item.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* KPI 건강도 */}
-                {totalCosts > 0 && totalSales > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginBottom: "16px" }}>
-                    {[
-                      { label: ko ? "Prime Cost (원가+인건비)" : "Prime Cost", value: prime, h: primeH },
-                      { label: ko ? "재료비율" : "Food cost ratio", value: ingRatio, h: ingH },
-                    ].map(row => (
-                      <div key={row.label}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
-                          <span style={{ color: "var(--muted)" }}>{row.label}</span>
-                          <span style={{ fontWeight: 700, color: hColor(row.h) }}>{pct(row.value)}</span>
-                        </div>
-                        <div style={{ height: "4px", borderRadius: "3px", background: "rgba(0,0,0,0.08)", overflow: "hidden" as const }}>
-                          <div style={{ height: "100%", borderRadius: "3px", background: hColor(row.h), width: `${Math.min(100, row.value)}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                    {netProfit !== 0 && totalCosts > 0 && (
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: netProfit >= 0 ? "#34c759" : "#ff3b30", paddingTop: "4px" }}>
-                        {ko ? "예상 손익" : "Est. profit"}: {netProfit >= 0 ? "+" : ""}{fmt(netProfit)}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button type="button" style={{ ...styles.primaryButton, width: "fit-content" }} onClick={() => navigateToSurface("analytics")}>
-                    {ko ? "내 가게 현황 전체 보기 →" : "Full store dashboard →"}
-                  </button>
-                  {!todayEntry && (
-                    <button type="button" style={{ ...styles.button, width: "fit-content" }} onClick={() => navigateToSurface("current")}>
-                      {ko ? "오늘 매출 입력" : "Log today's sales"}
-                    </button>
-                  )}
-                </div>
-              </article>
-
-              {/* 사이드 패널 */}
-              <div style={styles.homeSideStack}>
-                <article style={styles.homeInfoPanel}>
-                  <div style={styles.homeInfoTitle}>{ko ? "이번 달 현황" : "This month"}</div>
-                  <div style={styles.homeProgressTrack}>
-                    <div style={{ ...styles.homeProgressFill, width: totalCosts > 0 ? `${Math.min(100, Math.round((totalSales / totalCosts) * 100))}%` : "0%", background: netProfit >= 0 ? "#34c759" : "#ff3b30" }} />
-                  </div>
-                  <div style={styles.homeMetricGrid}>
-                    <div style={styles.homeMetricCard}>
-                      <div style={styles.homeMetricLabel}>{ko ? "운영일" : "Days"}</div>
-                      <div style={styles.homeMetricValue}>{workingDays}{ko ? "일" : "d"}</div>
-                    </div>
-                    <div style={styles.homeMetricCard}>
-                      <div style={styles.homeMetricLabel}>{ko ? "총 고객" : "Customers"}</div>
-                      <div style={styles.homeMetricValue}>{totalCustomers > 0 ? `${totalCustomers}명` : "—"}</div>
-                    </div>
-                    <div style={styles.homeMetricCard}>
-                      <div style={styles.homeMetricLabel}>{ko ? "월 비용" : "Monthly cost"}</div>
-                      <div style={styles.homeMetricValue}>{totalCosts > 0 ? fmt(totalCosts) : "—"}</div>
-                    </div>
-                    <div style={styles.homeMetricCard}>
-                      <div style={styles.homeMetricLabel}>{ko ? "오늘 입력" : "Today"}</div>
-                      <div style={styles.homeMetricValue}>{todayEntry ? fmt(todayEntry.sales) : (ko ? "미입력" : "—")}</div>
-                    </div>
-                  </div>
-                </article>
-
-                <article style={styles.homeInfoPanel}>
-                  <div style={styles.homeInfoTitle}>{ko ? "사업 정보" : "Business info"}</div>
-                  <div style={styles.homeMiniList}>
-                    {storeName && (
-                      <div style={{ ...styles.homeMiniRow, borderTop: "none" }}>
-                        <div style={styles.homeMiniLabel}>{ko ? "상호명" : "Store name"}</div>
-                        <div style={styles.homeMiniValue}>{storeName}</div>
-                      </div>
-                    )}
-                    {industryLabel && (
-                      <div style={{ ...styles.homeMiniRow, borderTop: storeName ? undefined : "none" }}>
-                        <div style={styles.homeMiniLabel}>{ko ? "업종" : "Industry"}</div>
-                        <div style={styles.homeMiniValue}>{industryLabel}</div>
-                      </div>
-                    )}
-                    <div style={styles.homeMiniRow}>
-                      <div style={styles.homeMiniLabel}>{ko ? "창업 형태" : "Type"}</div>
-                      <div style={styles.homeMiniValue}>{profile?.startupType ? `${formatStartupType(profile.startupType, language)}${selectedFranchiseBrandId ? ` · ${getFranchiseBrandById(selectedFranchiseBrandId)?.name[language] ?? ""}` : ""}` : copy.common.notSetYet}</div>
-                    </div>
-                    <div style={styles.homeMiniRow}>
-                      <div style={styles.homeMiniLabel}>{ko ? "세무 처리" : "Tax"}</div>
-                      <div style={styles.homeMiniValue}>
-                        {(cpaDecision as string | null) === "cpa" ? (ko ? "세무사 선임" : "CPA hired") : (cpaDecision as string | null) === "self" ? (ko ? "직접 신고" : "Self") : copy.common.notSetYet}
-                      </div>
-                    </div>
-                    <div style={styles.homeMiniRow}>
-                      <div style={styles.homeMiniLabel}>{ko ? "로드맵" : "Roadmap"}</div>
-                      <div style={styles.homeMiniValue}>{correctedProgressPercent}% · {completedCount}/{pathTotalStages}</div>
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </div>
-          );
-        })() : (
+        {/* ── Pre-launch home content ── */}
         <div style={styles.homeShowcase}>
           <article style={styles.homeMainPanel}>
             <div style={styles.homePanelEyebrow}>
@@ -4753,12 +998,11 @@ export default function StarterStageDemo({
             </article>
           </div>
         </div>
-        )}
 
         {/* ── 추천 지원 프로그램 (pre-launch only) ── */}
         {!businessLaunched && (() => {
           const ko = language === "ko";
-          const highlights = getHighlightedPrograms();
+          const highlights = getMatchedHighlights(startupType);
           if (highlights.length === 0) return null;
           return (
             <div style={{ marginTop: "32px" }}>
@@ -4804,6 +1048,7 @@ export default function StarterStageDemo({
         })()}
 
       </section>
+      )
       ) : null}
 
       {activeSurface === "current" ? (
@@ -5024,10 +1269,20 @@ export default function StarterStageDemo({
       <section style={styles.section}>
         <div style={styles.sectionTitle}>{copy.home.today}</div>
         <article style={styles.currentStage}>
-          <div style={styles.currentMeta}>
-            {language === "ko"
-              ? `${currentStage.stepNumber}/${pathTotalStages} 단계 · ${formatStageType(currentStage.type, language)}`
-              : `Step ${currentStage.stepNumber} of ${pathTotalStages} · ${formatStageType(currentStage.type, language)}`}
+          {/* 프로그레시브 바 + 단계 정보 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "2px" }}>
+            <div style={{ flex: 1, display: "flex", gap: "3px" }}>
+              {Array.from({ length: pathTotalStages }).map((_, i) => (
+                <div key={i} style={{
+                  flex: 1, height: "4px", borderRadius: "2px",
+                  background: i < (currentStage.stepNumber ?? 0) ? "var(--primary, #1d3557)" : i === (currentStage.stepNumber ?? 0) ? "rgba(29,53,87,0.35)" : "rgba(0,0,0,0.06)",
+                  transition: "background 0.3s ease",
+                }} />
+              ))}
+            </div>
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.4)", whiteSpace: "nowrap" as const, fontVariantNumeric: "tabular-nums" }}>
+              {currentStage.stepNumber}/{pathTotalStages} · {formatStageType(currentStage.type, language)}
+            </span>
           </div>
           <div style={styles.currentTitle}>{localizedCurrentStage.title}</div>
           <div style={styles.currentBody}>
@@ -5092,26 +1347,166 @@ export default function StarterStageDemo({
                 )})}
               </div>
               <div style={styles.optionGrid}>
-                {starterIndustryOptions
-                  .filter((option) => option.meta?.categoryId === selectedIndustryCategoryId)
-                  .slice(0, 6)
-                  .map((rawOption) => {
-                  const option = localizeRecommendationItem(rawOption, language);
-                  const selected = selectedIndustryId === rawOption.id;
-                  return (
-                    <button
-                      key={rawOption.id}
-                      type="button"
-                      style={{
-                        ...styles.optionCard,
-                        ...(selected ? styles.optionCardSelected : {})
-                      }}
-                      onClick={() => setSelectedIndustryId(rawOption.id)}
-                    >
-                      <div style={styles.optionTitle}>{option.title}</div>
-                    </button>
-                  );
-                })}
+                {(() => {
+                  // 업종별 아이콘 (SF Symbol 스타일 SVG)
+                  const industryIcons: Record<string, string> = {
+                    // food — 접시, 그릇, 음식 관련
+                    "korean-casual": "M3 12h18M5 12a7 7 0 0114 0M3 12a9 9 0 0118 0M12 12v6m-3 0h6",                                    // 밥그릇 + 수저
+                    "delivery-meals": "M5 17h14l1-9H4l1 9zm2-13h10M9 4v4m6-4v4M7 21a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2z", // 배달 봉투 + 바퀴
+                    "salad-healthy": "M7 21h10M12 3a9 9 0 00-9 9h18a9 9 0 00-9-9zM8 8c1-1 2.5-1.5 4-1.5s3 .5 4 1.5",                   // 샐러드 보울 + 잎
+                    "ramen-noodle": "M5 13h14M3 13a9 9 0 0118 0M8 9c1.5-2 3-3 4-3s2.5 1 4 3M8 17c0 2 2 4 4 4s4-2 4-4",                 // 라면 그릇 + 면
+                    "chicken-burger": "M5 12h14M3 12c0-3 4-6 9-6s9 3 9 6M5 14h14c0 3-4 5-7 5s-7-2-7-5M8 9l1-4h6l1 4",                  // 버거 레이어
+                    "western-pasta-brunch": "M12 4a8 8 0 00-8 8h16a8 8 0 00-8-8zM4 14h16M8 14v4m8-4v4M11 18h2",                         // 접시 + 포크나이프
+                    // cafe — 컵, 원두, 디저트
+                    "takeout-coffee": "M8 2h8l-1 5H9L8 2zM7 7h10v4a5 5 0 01-5 5 5 5 0 01-5-5V7zm3 14h4",                               // 테이크아웃 컵
+                    "specialty-coffee": "M18 8h2a3 3 0 010 6h-2M4 8h14v8a5 5 0 01-5 5H9a5 5 0 01-5-5V8zM9 2c1 2 1 4 0 6m3-6c1 2 1 4 0 6", // 커피 머그 + 김
+                    "dessert-cafe": "M8 16h8M12 3c-1 0-2 1-2 3 0 1 .5 2 1 2.5L12 12l1-3.5c.5-.5 1-1.5 1-2.5 0-2-1-3-2-3zM6 16a6 6 0 0012 0M8 20h8", // 케이크
+                    "bakery-studio": "M5 18h14M4 14h16M7 10c0-3 2-5 5-5s5 2 5 5M6 14v-1c0-2 1-3 2-3m8 0c1 0 2 1 2 3v1",                // 빵 모양
+                    "icecream-bingsu": "M12 2c-2 0-3 2-3 4h6c0-2-1-4-3-4zM7 6h10l-1 5c-.5 2-2 3-4 3s-3.5-1-4-3L7 6zm3 12h4m-2-4v4",   // 아이스크림 콘
+                    "self-serve-cafe": "M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1zm4 14h8M12 18v2M8 10h3m2 0h3", // 키오스크/화면
+                    // retail — 가방, 선반, 상점
+                    "convenience-small": "M3 6h18M3 6v14h18V6M3 10h18M9 10v10m6-10v10",                                                  // 진열대 선반
+                    "lifestyle-goods": "M6 2h12v7H6V2zm-2 7h16v13H4V9zm6 4h4m-2-2v4",                                                   // 쇼핑백 + 하트
+                    "beauty-supplies": "M9 2h6l2 7H7l2-7zM5 9h14v2H5V9zm2 4h10v7a2 2 0 01-2 2H9a2 2 0 01-2-2v-7z",                     // 화장품 병
+                    "fashion-accessories": "M12 2a4 4 0 00-4 4c0 3 4 5 4 5s4-2 4-5a4 4 0 00-4-4zM4 14h16l-2 7H6l-2-7z",                // 옷걸이/가방
+                    "health-food-store": "M12 8a4 4 0 100-8 4 4 0 000 8zm-5 2h10l-1 11H8L7 10z",                                        // 건강식품 병
+                    "unmanned-retail": "M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm4 15h8M12 19v2M9 9h6m-3-2v4", // 무인 키오스크
+                    // beauty — 가위, 브러시, 거울
+                    "hair-salon": "M12 2a4 4 0 00-4 4c0 3 1.5 5 4 6v2m0 0c-3 0-5 1-6 3m6-3c3 0 5 1 6 3M16 6a4 4 0 00-4-4M9 6c0 1.5.5 3 1.5 4M14.5 10c1-1 1.5-2.5 1.5-4", // 머리 + 어깨
+                    "nail-studio": "M7 3l3 8h4l3-8M5 14c0 4 3 7 7 7s7-3 7-7H5z",                                                        // 손톱/매니큐어
+                    "skin-care-room": "M12 2a8 8 0 100 16 8 8 0 000-16zm0 4a4 4 0 110 8 4 4 0 010-8zM12 18v4",                          // 얼굴/스파
+                    "waxing-studio": "M8 4c0 3 2 5 4 5s4-2 4-5M6 12h12M8 16c0 2 2 4 4 4s4-2 4-4",                                       // 왁싱 추상
+                    "eyelash-brow": "M2 12c2-4 5.5-7 10-7s8 3 10 7c-2 4-5.5 7-10 7s-8-3-10-7zm10 0a2 2 0 100-4 2 2 0 000 4z",          // 눈
+                    "makeup-bridal": "M12 3c-3 0-5 2-5 5s2 5 5 5 5-2 5-5-2-5-5-5zM7 16l-2 5h14l-2-5",                                  // 거울/화장대
+                    // fitness — 운동 기구
+                    "pilates-studio": "M12 4a2 2 0 100-4 2 2 0 000 4zm-4 6l4 2 4-2M4 18l8-6 8 6",                                       // 필라테스 자세
+                    "pt-gym": "M2 12h4m12 0h4M6 7v10M18 7v10M6 12h12M4 9h4m8 0h4M4 15h4m8 0h4",                                        // 바벨
+                    "yoga-studio": "M12 3a2 2 0 100 4 2 2 0 000-4zm0 4v4m-5 7l5-5 5 5M7 18h10",                                         // 요가 자세
+                    "crossfit-box": "M2 12h4m12 0h4M6 8v8M18 8v8M6 12h12M3 9h6m6 0h6M3 15h6m6 0h6",                                    // 무거운 바벨
+                    "golf-studio": "M12 2v14M9 22c0-2 1.5-4 3-6 1.5 2 3 4 3 6M12 16a5 5 0 100-.01",                                     // 골프 공+티
+                    "unmanned-fitness": "M12 2v2m0 4a3 3 0 100 6 3 3 0 000-6zm-6 8h12m-9 4h6M6 14v6m12-6v6",                            // 24시간 운동기구
+                    // education — 책, 연필, 학교
+                    "study-room": "M2 4h7a3 3 0 013 3v14a2 2 0 00-2-2H2V4zm20 0h-7a3 3 0 00-3 3v14a2 2 0 012-2h8V4z",                  // 펼친 책
+                    "kids-academy": "M12 3l9 5v2l-9 5-9-5V8l9-5zm0 12v5M5 10v5l7 4 7-4v-5",                                             // 학교 건물
+                    "adult-class": "M4 20h16M8 16V8l4-4 4 4v8M10 16v-4h4v4M8 12h8",                                                     // 책상+창문(교실)
+                    "language-academy": "M5 8h8m-4-3v2M13 12a4 4 0 108 0M18 21l-3-6m6 0l-3 6",                                          // 언어(가나다/ABC)
+                    "coding-class": "M7 8l-4 4 4 4m10-8l4 4-4 4M14 4l-4 16",                                                             // 코드 꺽쇠 + 슬래시
+                    "small-study-room": "M4 19V5a2 2 0 012-2h12a2 2 0 012 2v14M4 19h16M4 19H2m18 0h2M8 9h8m-8 4h5",                    // 책상+의자
+                    // pet — 발바닥, 뼈, 동물
+                    "pet-grooming": "M12 10a3 3 0 100-6 3 3 0 000 6zm-1 1c-3 0-6 2-6 5M19 16c0-3-3-5-6-5M8 21l1-3m7 3l-1-3",           // 강아지+가위
+                    "pet-supplies": "M9 2h6v4H9V2zM5 6h14v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6zm4 6h2m2 0h2",                              // 사료 봉투
+                    "pet-hotel": "M4 22V10l8-6 8 6v12M9 22v-5h6v5M12 7v1",                                                               // 집(펫호텔)
+                    "pet-cafe": "M18 8h2a3 3 0 010 6h-2M4 8h14v8a5 5 0 01-5 5H9a5 5 0 01-5-5V8z",                                      // 컵(펫카페)
+                    "pet-training-school": "M12 3l8 5v2l-8 5-8-5V8l8-5zm-4 14a2 2 0 104 0M12 15v5",                                     // 학교+발바닥
+                    "pet-walking-visit": "M12 4a2 2 0 100 4 2 2 0 000-4zM8 22l2-8m4 8l-2-8m-4 0h8M6 11l6 3 6-3",                       // 산책하는 사람
+                    // living — 도구, 서비스
+                    "laundry-service": "M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm7 8a4 4 0 100 8 4 4 0 000-8zM9 6h6", // 세탁기
+                    "cleaning-service": "M12 2v8m0 0l-5 5m5-5l5 5M3 21h18M7 17v4m10-4v4",                                               // 빗자루
+                    "repair-service": "M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z", // 렌치
+                    "self-laundry": "M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm7 9a3 3 0 100 6 3 3 0 000-6zM9 6h6m-4 2h2", // 코인세탁기
+                    "print-copy": "M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z",  // 프린터
+                    "device-repair": "M8 2h8a2 2 0 012 2v16a2 2 0 01-2 2H8a2 2 0 01-2-2V4a2 2 0 012-2zm4 16h.01M10 6h4",               // 스마트폰
+                    // space — 건물, 방
+                    "guesthouse": "M4 22V10l8-6 8 6v12M10 22v-6h4v6M12 7v1",                                                             // 게스트하우스
+                    "rental-studio": "M15 10l5-2.5a1 1 0 011 .87v7.26a1 1 0 01-1 .87L15 14M3 8h10a2 2 0 012 2v6a2 2 0 01-2 2H3V8z",    // 카메라/스튜디오
+                    "party-room": "M12 2v3m5.66.34l-2.12 2.12M22 12h-3m-.34 5.66l-2.12-2.12M12 22v-3m-5.66-.34l2.12-2.12M2 12h3m.34-5.66l2.12 2.12", // 파티 (스파클)
+                    "study-cafe-space": "M18 8h2a3 3 0 010 6h-2M4 8h14v8a5 5 0 01-5 5H9a5 5 0 01-5-5V8zm4-5h8v3H8V3z",                // 스터디카페 컵+책
+                    "shared-office": "M4 21V5a2 2 0 012-2h12a2 2 0 012 2v16M8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M2 21h20",            // 빌딩
+                    "practice-room": "M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z",                   // 음표
+                    // online — 화면, 카트, 클라우드
+                    "smart-store": "M4 4h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm0 4h16M8 14h3m2 0h3",            // 스마트스토어 화면
+                    "digital-products": "M8 17a4 4 0 01-.88-7.9A5 5 0 1115.9 6h.1a5 5 0 011 9.9M12 13v8m-3-3l3 3 3-3",                  // 클라우드 다운로드
+                    "creator-service": "M15 10l5-2.5a1 1 0 011 .87v7.26a1 1 0 01-1 .87L15 14M3 8h10a2 2 0 012 2v6a2 2 0 01-2 2H3V8z",  // 영상 카메라
+                    "consignment-commerce": "M3 3h2l1 9h12l1-6H6M8 20a1 1 0 100 2 1 1 0 000-2zm9 0a1 1 0 100 2 1 1 0 000-2z",           // 장바구니
+                    "newsletter-membership": "M4 7l8 5 8-5M4 7v10a2 2 0 002 2h12a2 2 0 002-2V7M4 7a2 2 0 012-2h12a2 2 0 012 2",         // 봉투/메일
+                    "global-buying": "M12 2a10 10 0 100 20 10 10 0 000-20zM2 12h20M12 2c2.5 2.5 4 6 4 10s-1.5 7.5-4 10c-2.5-2.5-4-6-4-10s1.5-7.5 4-10", // 지구본
+                    // startup — 기술, 코드, 차트
+                    "ai-application": "M12 2l2 4h4l-3 3 1 5-4-3-4 3 1-5-3-3h4l2-4zM4 18h16",                                            // AI 스파크
+                    "developer-tools": "M7 8l-4 4 4 4m10-8l4 4-4 4M14 4l-4 16",                                                          // 코드 </>
+                    "b2b-saas": "M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm0 4h16M4 13h16M8 9v8",              // 대시보드
+                    "fintech-startup": "M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",                                          // 달러 기호
+                    "healthtech-startup": "M12 4v16m-8-8h16",                                                                             // 십자가 (의료)
+                    "security-startup": "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",                                                   // 방패
+                  };
+
+                  // 업종별 테마 색상
+                  const industryColors: Record<string, string> = {
+                    // food — warm orange/red tones
+                    "korean-casual": "#e25822", "delivery-meals": "#d94f00", "salad-healthy": "#16a34a",
+                    "ramen-noodle": "#c2410c", "chicken-burger": "#dc2626", "western-pasta-brunch": "#b45309",
+                    // cafe — brown/warm tones
+                    "takeout-coffee": "#92400e", "specialty-coffee": "#78350f", "dessert-cafe": "#db2777",
+                    "bakery-studio": "#a16207", "icecream-bingsu": "#0891b2", "self-serve-cafe": "#6366f1",
+                    // retail — blue/teal
+                    "convenience-small": "#0d9488", "lifestyle-goods": "#7c3aed", "beauty-supplies": "#db2777",
+                    "fashion-accessories": "#9333ea", "health-food-store": "#16a34a", "unmanned-retail": "#4f46e5",
+                    // beauty — pink/rose
+                    "hair-salon": "#be185d", "nail-studio": "#e11d48", "skin-care-room": "#ec4899",
+                    "waxing-studio": "#d946ef", "eyelash-brow": "#c026d3", "makeup-bridal": "#a21caf",
+                    // fitness — energetic blues/greens
+                    "pilates-studio": "#0ea5e9", "pt-gym": "#1d4ed8", "yoga-studio": "#0d9488",
+                    "crossfit-box": "#dc2626", "golf-studio": "#059669", "unmanned-fitness": "#6366f1",
+                    // education — calm blues
+                    "study-room": "#2563eb", "kids-academy": "#f59e0b", "adult-class": "#7c3aed",
+                    "language-academy": "#0891b2", "coding-class": "#4f46e5", "small-study-room": "#1d4ed8",
+                    // pet — warm friendly
+                    "pet-grooming": "#ea580c", "pet-supplies": "#16a34a", "pet-hotel": "#0891b2",
+                    "pet-cafe": "#92400e", "pet-training-school": "#d97706", "pet-walking-visit": "#059669",
+                    // living — functional teal/gray
+                    "laundry-service": "#0d9488", "cleaning-service": "#2563eb", "repair-service": "#b45309",
+                    "self-laundry": "#0891b2", "print-copy": "#64748b", "device-repair": "#4f46e5",
+                    // space — indigo/purple
+                    "guesthouse": "#7c3aed", "rental-studio": "#6366f1", "party-room": "#ec4899",
+                    "study-cafe-space": "#1d4ed8", "shared-office": "#0f172a", "practice-room": "#9333ea",
+                    // online — modern purple/blue
+                    "smart-store": "#2563eb", "digital-products": "#7c3aed", "creator-service": "#ec4899",
+                    "consignment-commerce": "#0891b2", "newsletter-membership": "#6366f1", "global-buying": "#059669",
+                    // startup — tech blue/indigo
+                    "ai-application": "#7c3aed", "developer-tools": "#0f172a", "b2b-saas": "#2563eb",
+                    "fintech-startup": "#059669", "healthtech-startup": "#dc2626", "security-startup": "#1e40af",
+                  };
+
+                  return starterIndustryOptions
+                    .filter((option) => option.meta?.categoryId === selectedIndustryCategoryId)
+                    .slice(0, 6)
+                    .map((rawOption) => {
+                    const option = localizeRecommendationItem(rawOption, language);
+                    const selected = selectedIndustryId === rawOption.id;
+                    const iconPath = industryIcons[rawOption.id];
+                    const color = industryColors[rawOption.id] ?? "#1d3557";
+                    return (
+                      <button
+                        key={rawOption.id}
+                        type="button"
+                        style={{
+                          ...styles.optionCard,
+                          background: selected
+                            ? `linear-gradient(160deg, ${color}14 0%, ${color}08 100%)`
+                            : `linear-gradient(160deg, ${color}06 0%, rgba(255,255,255,0.9) 100%)`,
+                          border: selected ? `1.5px solid ${color}40` : `1.5px solid ${color}10`,
+                          boxShadow: selected ? `0 0 0 3px ${color}10, 0 4px 12px ${color}0c` : "none",
+                        }}
+                        onClick={() => setSelectedIndustryId(rawOption.id)}
+                      >
+                        <div style={{
+                          width: "48px", height: "48px", borderRadius: "14px",
+                          background: selected ? `${color}18` : `${color}0a`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          marginBottom: "8px",
+                          transition: "all 0.2s ease",
+                        }}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke={selected ? color : `${color}80`}
+                            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ transition: "stroke 0.2s ease" }}>
+                            <path d={iconPath ?? "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"} />
+                          </svg>
+                        </div>
+                        <div style={{ ...styles.optionTitle, textAlign: "center" as const, color: selected ? color : "#0f172a" }}>{option.title}</div>
+                      </button>
+                    );
+                  });
+                })()}
               </div>
 
               <div style={styles.stageFooter}>
@@ -5141,25 +1536,67 @@ export default function StarterStageDemo({
                   <div style={styles.helper}>
                     {copy.home.startupTypeHelp}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {(["independent", "franchise", "undecided"] as const).map((type) => {
-                      const subtitleMap = {
-                        independent: language === "ko" ? "본인이 직접 브랜드와 메뉴를 구성합니다" : "Build your own brand and concept",
-                        franchise: language === "ko" ? "검증된 브랜드로 빠르게 시작합니다" : "Start fast with a proven brand",
-                        undecided: language === "ko" ? "아직 결정하지 않았습니다" : "Haven't decided yet"
+                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${startupTypeOptions.length}, 1fr)`, gap: "10px" }}>
+                    {startupTypeOptions.map((type) => {
+                      const ko = language === "ko";
+                      const selected = startupType === type;
+                      const config: Record<string, { icon: string; color: string; subtitle: string }> = {
+                        independent: {
+                          icon: industryCategoryId === "startup-tech"
+                            ? "M13 10V3L4 14h7v7l9-11h-7z"       // 번개
+                            : "M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7l2-7z", // 별
+                          color: "#2563eb",
+                          subtitle: industryCategoryId === "startup-tech"
+                            ? (ko ? "직접 제품과 회사를 만드는 기술 스타트업입니다" : "Build a product company yourself")
+                            : (ko ? "본인이 직접 브랜드와 메뉴를 구성합니다" : "Build your own brand and concept"),
+                        },
+                        franchise: {
+                          icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 6v4m4-4v4", // 빌딩
+                          color: "#7c3aed",
+                          subtitle: ko ? "검증된 브랜드로 빠르게 시작합니다" : "Start fast with a proven brand",
+                        },
+                        undecided: {
+                          icon: "M12 2a10 10 0 100 20 10 10 0 000-20zm0 14v.01M12 8a2 2 0 012 2c0 1.5-2 2-2 3", // 물음표
+                          color: "#6b7280",
+                          subtitle: ko ? "아직 결정하지 않았습니다" : "Haven't decided yet",
+                        },
                       };
+                      const c = config[type] ?? config.undecided;
                       return (
                       <button
                         key={type}
                         type="button"
                         style={{
-                          ...styles.bigOptionCard,
-                          ...(startupType === type ? styles.optionCardSelected : {})
+                          display: "flex", flexDirection: "column" as const, alignItems: "center", textAlign: "center" as const,
+                          gap: "8px", padding: "32px 20px", borderRadius: "20px", cursor: "pointer", width: "100%",
+                          border: selected ? `1.5px solid ${c.color}40` : "1.5px solid rgba(0,0,0,0.04)",
+                          background: selected
+                            ? `linear-gradient(160deg, ${c.color}10 0%, ${c.color}06 100%)`
+                            : "rgba(255,255,255,0.8)",
+                          boxShadow: selected ? `0 0 0 3px ${c.color}0c, 0 4px 12px ${c.color}0a` : "none",
+                          transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
                         }}
                         onClick={() => { setStartupType(type); if (type !== "franchise") { setSelectedFranchiseBrandId(null); setShowFranchisePicker(false); } }}
                       >
-                        <div style={styles.bigOptionTitle}>{formatStartupType(type, language)}</div>
-                        <div style={styles.bigOptionSubtitle}>{subtitleMap[type]}</div>
+                        <div style={{
+                          width: "56px", height: "56px", borderRadius: "16px",
+                          background: selected ? `${c.color}14` : "rgba(0,0,0,0.035)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          transition: "all 0.2s ease",
+                        }}>
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                            stroke={selected ? c.color : "rgba(15,23,42,0.35)"}
+                            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ transition: "stroke 0.2s ease" }}>
+                            <path d={c.icon} />
+                          </svg>
+                        </div>
+                        <div style={{ fontSize: "17px", fontWeight: 680, letterSpacing: "-0.02em", color: selected ? c.color : "#0f172a" }}>
+                          {formatStartupType(type, language)}
+                        </div>
+                        <div style={{ fontSize: "13px", lineHeight: 1.5, color: "rgba(15,23,42,0.45)" }}>
+                          {c.subtitle}
+                        </div>
                       </button>
                     )})}
                   </div>
@@ -5378,25 +1815,74 @@ export default function StarterStageDemo({
                   ? `${selectedIndustryLabel} 기준으로 운영 방식을 고르세요.`
                   : `Choose the operating model for ${selectedIndustryLabel}.`}
               </div>
-              <div style={styles.optionGrid}>
-                {getStarterBusinessModelOptions(industryCategoryId).map((rawOption) => {
-                  const option = localizeRecommendationItem(rawOption, language);
-                  const selected = selectedBusinessModelId === rawOption.id;
-                  return (
-                    <button
-                      key={rawOption.id}
-                      type="button"
-                      style={{
-                        ...styles.optionCard,
-                        ...(selected ? styles.optionCardSelected : {})
-                      }}
-                      onClick={() => setSelectedBusinessModelId(rawOption.id)}
-                    >
-                      <div style={styles.optionTitle}>{option.title}</div>
-                    </button>
-                  );
-                })}
-              </div>
+              {(() => {
+                const color = "#1d3557"; // 미드나이트 블루
+                const modelIcons: Record<string, string> = {
+                  "dine-in-restaurant": "M3 12h18M5 12a7 7 0 0114 0M12 12v6m-3 0h6",           // 접시 (매장식사)
+                  "takeout-focused": "M8 2h8l-1 5H9L8 2zM7 7h10v4a5 5 0 01-5 5 5 5 0 01-5-5V7zm3 14h4", // 테이크아웃 컵
+                  "delivery-hybrid": "M5 17h14l1-9H4l1 9zM7 21a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000-2z", // 배달
+                  "storefront-cafe": "M3 21V8l9-5 9 5v13M9 21v-6h6v6",                          // 매장
+                  "self-serve-light": "M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm4 15h8M12 19v2", // 키오스크
+                  "small-storefront-retail": "M3 3h18v18H3V3zm0 6h18",                          // 소매 매장
+                  "online-focused-retail": "M4 4h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm0 4h16", // 모니터
+                  "marketplace-seller": "M3 3h2l1 9h12l1-6H6M8 20a1 1 0 100 2 1 1 0 000-2zm9 0a1 1 0 100 2 1 1 0 000-2z", // 장바구니
+                  "brand-own-store": "M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7l2-7z",    // 별 (브랜드)
+                  "content-membership": "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", // 메일
+                  "appointment-service": "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", // 캘린더
+                  "membership-pass": "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm10 0l2 2 4-4", // 멤버십
+                  "class-session": "M12 3l9 5v2l-9 5-9-5V8l9-5zm0 12v5",                        // 수업
+                  "utility-storefront": "M3 21V8l9-5 9 5v13M9 21v-4h6v4",                       // 서비스 매장
+                  "mobile-service": "M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0H3m10 0l5.5 6M3 16l5.5 6", // 출장
+                  "hourly-rental": "M12 2a10 10 0 100 20 10 10 0 000-20zm0 6v4l3 3",            // 시계
+                  "saas-product": "M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm0 4h16M4 13h16M8 9v8", // 대시보드
+                  "platform-model": "M12 2a10 10 0 100 20 10 10 0 000-20zM2 12h20M12 2c2.5 2.5 4 6 4 10s-1.5 7.5-4 10", // 플랫폼
+                  "api-infra": "M16 18l6-6-6-6M8 6l-6 6 6 6",                                   // 코드
+                };
+                const options = getStarterBusinessModelOptions(industryCategoryId);
+                return (
+                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, 1fr)`, gap: "10px" }}>
+                    {options.map((rawOption) => {
+                      const option = localizeRecommendationItem(rawOption, language);
+                      const selected = selectedBusinessModelId === rawOption.id;
+                      const iconPath = modelIcons[rawOption.id] ?? "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5";
+                      return (
+                        <button
+                          key={rawOption.id}
+                          type="button"
+                          style={{
+                            display: "flex", flexDirection: "column" as const, alignItems: "center", textAlign: "center" as const,
+                            gap: "6px", padding: "28px 16px", borderRadius: "18px", cursor: "pointer", width: "100%",
+                            border: selected ? `1.5px solid ${color}50` : "1.5px solid rgba(0,0,0,0.04)",
+                            background: selected
+                              ? `linear-gradient(160deg, ${color}0e 0%, ${color}06 100%)`
+                              : "rgba(255,255,255,0.8)",
+                            boxShadow: selected ? `0 0 0 3px ${color}0a, 0 4px 12px ${color}08` : "none",
+                            transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+                          }}
+                          onClick={() => setSelectedBusinessModelId(rawOption.id)}
+                        >
+                          <div style={{
+                            width: "48px", height: "48px", borderRadius: "14px",
+                            background: selected ? `${color}12` : "rgba(0,0,0,0.035)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            marginBottom: "4px", transition: "all 0.2s ease",
+                          }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                              stroke={selected ? color : "rgba(15,23,42,0.35)"}
+                              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                              style={{ transition: "stroke 0.2s ease" }}>
+                              <path d={iconPath} />
+                            </svg>
+                          </div>
+                          <div style={{ fontSize: "14px", fontWeight: 650, letterSpacing: "-0.01em", color: selected ? color : "#0f172a" }}>
+                            {option.title}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               <div style={styles.stageFooter}>
                 {prevTraversedStage ? (
@@ -5425,6 +1911,68 @@ export default function StarterStageDemo({
               <div style={styles.helper}>
                 {copy.home.budgetHelp}
               </div>
+
+              {/* ── 라이브 업종별 창업비용 벤치마크 ── */}
+              {(() => {
+                const ko = language === "ko";
+
+                const loadBenchmark = async () => {
+                  if (liveBudgetBenchmark && !liveBudgetBenchmark.loading) return;
+                  setLiveBudgetBenchmark({ loading: true });
+                  try {
+                    const session = await supabase.auth.getSession();
+                    const tk = session.data.session?.access_token;
+                    const indsCode = ({ "food": "Q", "cafe-dessert": "Q", "retail": "D", "beauty": "F", "fitness": "R", "education": "P" } as Record<string, string>)[industryCategoryId] ?? "Q";
+                    const res = await fetch(`/api/data/franchise/industry-costs?industryCode=${indsCode}`, { headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(r => r.json()).catch(() => null);
+                    if (res?.data?.length) {
+                      const latest = res.data[0] as { avgTotalStartupCost: number; avgFranchiseFee: number; avgDeposit: number; avgEducationFee: number; avgOtherCost: number; industryName: string };
+                      setLiveBudgetBenchmark({ loading: false, data: latest });
+                    } else {
+                      setLiveBudgetBenchmark({ loading: false });
+                    }
+                  } catch { setLiveBudgetBenchmark({ loading: false }); }
+                };
+
+                if (!liveBudgetBenchmark) void loadBenchmark();
+
+                if (!liveBudgetBenchmark || liveBudgetBenchmark.loading || !liveBudgetBenchmark.data) return null;
+                const b = liveBudgetBenchmark.data;
+                const userBudget = selectedBudget ?? 0;
+                const diff = userBudget > 0 ? Math.round(((userBudget - b.avgTotalStartupCost * 10000) / (b.avgTotalStartupCost * 10000)) * 100) : 0;
+                const diffLabel = diff > 10 ? (ko ? "업종 평균보다 여유" : "Above average") : diff < -10 ? (ko ? "업종 평균보다 부족" : "Below average") : (ko ? "업종 평균 수준" : "Near average");
+                const diffColor = diff > 10 ? "#059669" : diff < -10 ? "#dc2626" : "#d97706";
+
+                return (
+                  <div style={{ marginBottom: "18px", borderRadius: "20px", border: `1px solid ${diffColor}15`, background: `linear-gradient(180deg, ${diffColor}06 0%, rgba(255,255,255,0.92) 100%)`, overflow: "hidden" }} className="bento-fade-in">
+                    <div style={{ padding: "18px 20px 14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: diffColor }} />
+                        <span style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{ko ? "업종 창업비용 벤치마크" : "Industry Startup Cost Benchmark"}</span>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "공정거래위원회 가맹사업 통계 기반" : "Based on KFTC Franchise Statistics"}</div>
+                    </div>
+                    <div style={{ padding: "0 20px 18px" }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "12px" }}>
+                        <span style={{ fontSize: "24px", fontWeight: 760, letterSpacing: "-0.04em", color: "#0f172a" }}>{b.avgTotalStartupCost.toLocaleString()}<span style={{ fontSize: "14px", fontWeight: 500 }}>{ko ? "만원" : "만KRW"}</span></span>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: diffColor }}>{diffLabel} ({diff > 0 ? "+" : ""}{diff}%)</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                        {[
+                          { label: ko ? "가맹비" : "Franchise", value: b.avgFranchiseFee },
+                          { label: ko ? "교육비" : "Education", value: b.avgEducationFee },
+                          { label: ko ? "보증금" : "Deposit", value: b.avgDeposit },
+                          { label: ko ? "기타" : "Other", value: b.avgOtherCost },
+                        ].filter(x => x.value > 0).map(x => (
+                          <div key={x.label} style={{ padding: "10px", borderRadius: "12px", background: `${diffColor}06` }}>
+                            <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(0,0,0,0.4)", marginBottom: "2px" }}>{x.label}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{x.value.toLocaleString()}<span style={{ fontSize: "10px", color: "var(--muted)" }}>{ko ? "만" : "M"}</span></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ── Franchise cost guide panel ── */}
               {startupType === "franchise" && selectedFranchiseBrandId && (() => {
@@ -5708,7 +2256,11 @@ export default function StarterStageDemo({
                   onClick={handleBudgetContinue}
                   disabled={!canCompleteBudgetStep}
                 >
-                  {language === "ko" ? "예산 저장하고 상권 보기" : "Save budget and open markets"}
+                  {industryCategoryId === "startup-tech"
+                    ? (language === "ko" ? "예산 저장하고 스타트업 로드맵 시작" : "Save budget and start startup roadmap")
+                    : language === "ko"
+                      ? "예산 저장하고 상권 보기"
+                      : "Save budget and open markets"}
                 </button>
                 <button type="button" style={styles.button} onClick={resetDemo}>
                   {copy.common.resetDemo}
@@ -5920,8 +2472,7 @@ export default function StarterStageDemo({
                   "space": "스터디카페",
                 };
                 const keyword = categoryKeywords[industryCategoryId] ?? "가게";
-                const [competitorResults, setCompetitorResults] = useState<{ totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null>(null);
-                const [competitorLoading, setCompetitorLoading] = useState(false);
+                // competitorResults / competitorLoading — hoisted to component top
 
                 const searchCompetitors = () => {
                   if (!preferredRegionInput.trim()) return;
@@ -6035,6 +2586,99 @@ export default function StarterStageDemo({
                         )}
                       </div>
                     )}
+                  </div>
+                );
+              })()}
+
+              {/* ── 라이브 상권 인사이트 패널 ── */}
+              {preferredRegionInput.trim() && (() => {
+                const ko = language === "ko";
+
+                const loadMarketInsights = async () => {
+                  if (liveMarketInsights && !liveMarketInsights.loading) return;
+                  setLiveMarketInsights({ loading: true });
+                  try {
+                    const session = await supabase.auth.getSession();
+                    const tk = session.data.session?.access_token;
+                    const parts = preferredRegionInput.trim().replace(/\s+/g, " ").split(" ");
+                    let sido = parts[0] ?? "";
+                    if (sido === "서울") sido = "서울특별시";
+                    else if (sido === "부산") sido = "부산광역시";
+                    else if (sido === "경기") sido = "경기도";
+                    else if (sido === "인천") sido = "인천광역시";
+                    else if (sido === "대구") sido = "대구광역시";
+                    else if (sido === "대전") sido = "대전광역시";
+                    const sigungu = parts[1] ?? "";
+
+                    const popRes = sido
+                      ? await fetch(`/api/data/population?sido=${encodeURIComponent(sido)}&sigungu=${encodeURIComponent(sigungu)}`, { headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(r => r.json()).catch(() => null)
+                      : null;
+
+                    const result: typeof liveMarketInsights = { loading: false };
+                    if (popRes?.data?.length) {
+                      const popArr = popRes.data as Array<{ totalPopulation: number; householdCount: number; malePopulation: number; femalePopulation: number }>;
+                      result.population = {
+                        total: popArr.reduce((s, p) => s + p.totalPopulation, 0),
+                        households: popArr.reduce((s, p) => s + p.householdCount, 0),
+                        male: popArr.reduce((s, p) => s + p.malePopulation, 0),
+                        female: popArr.reduce((s, p) => s + p.femalePopulation, 0),
+                      };
+                    }
+                    setLiveMarketInsights(result);
+                  } catch {
+                    setLiveMarketInsights({ loading: false });
+                  }
+                };
+
+                if (!liveMarketInsights) void loadMarketInsights();
+
+                if (!liveMarketInsights || liveMarketInsights.loading) {
+                  return (
+                    <div style={{ marginBottom: "16px", padding: "18px 20px", borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(219,234,254,0.12) 0%, rgba(255,255,255,0.9) 100%)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb", animation: "bentoPulse 1.5s infinite" }} />
+                        <span style={{ fontSize: "14px", fontWeight: 600 }}>{ko ? "상권 데이터 조회 중..." : "Loading market data..."}</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
+                        {[0, 1, 2].map(i => <div key={i} style={{ height: "52px", borderRadius: "12px", background: "rgba(0,0,0,0.03)" }} />)}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (!liveMarketInsights.population) return null;
+                const pop = liveMarketInsights.population;
+                const femaleRatio = pop.total > 0 ? Math.round((pop.female / pop.total) * 100) : 50;
+
+                return (
+                  <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(219,234,254,0.12) 0%, rgba(255,255,255,0.92) 100%)", overflow: "hidden" }} className="bento-fade-in">
+                    <div style={{ padding: "18px 20px 14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} />
+                        <span style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{ko ? "상권 인구 데이터" : "Market Demographics"}</span>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "행정안전부 인구통계 API" : "MOIS Population API"}</div>
+                    </div>
+                    <div style={{ padding: "0 20px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                      <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.04)" }}>
+                        <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "총 인구" : "Population"}</div>
+                        <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{pop.total.toLocaleString()}</div>
+                        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "명" : "people"}</div>
+                      </div>
+                      <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.04)" }}>
+                        <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "세대 수" : "Households"}</div>
+                        <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{pop.households.toLocaleString()}</div>
+                        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "세대" : "units"}</div>
+                      </div>
+                      <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.04)" }}>
+                        <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "여성 비율" : "Female %"}</div>
+                        <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{femaleRatio}%</div>
+                        <div style={{ display: "flex", gap: "2px", marginTop: "6px" }}>
+                          <div style={{ flex: femaleRatio, height: "4px", borderRadius: "2px", background: "#ec4899" }} />
+                          <div style={{ flex: 100 - femaleRatio, height: "4px", borderRadius: "2px", background: "#3b82f6" }} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 );
               })()}
@@ -6751,6 +3395,13 @@ export default function StarterStageDemo({
             currentStage.code === "sourcing_setup" ||
             currentStage.code === "store_setup" ||
             currentStage.code === "online_marketing" ||
+            currentStage.code === "startup_foundation" ||
+            currentStage.code === "customer_discovery" ||
+            currentStage.code === "mvp_build" ||
+            currentStage.code === "launch_stack" ||
+            currentStage.code === "growth_engine" ||
+            currentStage.code === "company_setup" ||
+            currentStage.code === "fundraising_readiness" ||
             currentStage.code === "biz_registration" ||
             currentStage.code === "pre_launch_final" ||
             currentStage.code === "first_month_check" ||
@@ -6770,6 +3421,13 @@ export default function StarterStageDemo({
               sourcing_setup: "sourcing-setup",
               store_setup: "store-setup",
               online_marketing: "online-marketing",
+              startup_foundation: "startup-foundation",
+              customer_discovery: "customer-discovery",
+              mvp_build: "mvp-build",
+              launch_stack: "launch-stack",
+              growth_engine: "growth-engine",
+              company_setup: "company-setup",
+              fundraising_readiness: "fundraising-readiness",
               biz_registration: "biz-registration",
               pre_launch_final: "pre-launch-final",
               first_month_check: "first-month-check"
@@ -6796,6 +3454,463 @@ export default function StarterStageDemo({
             return (
               <>
                 <div style={styles.helper}>{localizedCurrentStage.goal}</div>
+
+                {/* ── 사업자·통신판매 등록 가이드 (online_registration) ── */}
+                {currentStage.code === "online_registration" && (() => {
+                  const ko = language === "ko";
+                  // regPage — hoisted to component top (0=사업자, 1=통신판매)
+
+                  const pages = [
+                    // ── 페이지 0: 사업자등록 ──
+                    () => (
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.1)", background: "linear-gradient(180deg, rgba(37,99,235,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        {/* 헤더 */}
+                        <div style={{ padding: "24px 24px 16px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                            <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "11px", fontWeight: 650, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Step 1 / 2</div>
+                              <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{ko ? "사업자등록" : "Business Registration"}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+                            {ko ? "사업자등록증은 모든 상거래의 출발점입니다. 스마트스토어·쿠팡 등 판매 플랫폼 입점, 세금계산서 발행, 사업용 통장 개설에 반드시 필요합니다." : "Business registration is the starting point for all commerce — required for platform onboarding, invoicing, and business banking."}
+                          </div>
+                        </div>
+
+                        {/* 어디서 + 바로가기 */}
+                        <div style={{ margin: "0 24px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "2px" }}>{ko ? "신청 장소" : "Where"}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>{ko ? "관할 세무서 또는 홈택스" : "Tax office or Hometax"}</div>
+                          </div>
+                          <a href="https://www.hometax.go.kr" target="_blank" rel="noreferrer" style={{ padding: "8px 16px", borderRadius: "10px", background: "#2563eb", color: "#fff", fontSize: "13px", fontWeight: 650, textDecoration: "none", display: "flex", alignItems: "center", gap: "4px" }}>
+                            {ko ? "홈택스 바로가기" : "Go to Hometax"} <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </a>
+                        </div>
+
+                        {/* 준비물 체크리스트 */}
+                        <div style={{ padding: "0 24px 16px" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>{ko ? "준비물" : "Required Documents"}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                            {(ko ? [
+                              { item: "신분증 (주민등록증/운전면허)", required: true },
+                              { item: "임대차계약서 (자택이면 불필요)", required: false },
+                              { item: "사업계획서 (간단히 1장)", required: false },
+                              { item: "통장 사본 (환급용)", required: true },
+                            ] : [
+                              { item: "Government ID", required: true },
+                              { item: "Lease contract (not needed if home)", required: false },
+                              { item: "Business plan (simple 1 page)", required: false },
+                              { item: "Bank account copy (for refund)", required: true },
+                            ]).map((d, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 10px", borderRadius: "10px", background: "rgba(37,99,235,0.03)" }}>
+                                <div style={{ width: "16px", height: "16px", borderRadius: "4px", background: d.required ? "#2563eb" : "rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                  {d.required && <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                </div>
+                                <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.4 }}>{d.item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 절차 */}
+                        <div style={{ padding: "0 24px 16px" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>{ko ? "신청 절차" : "Process"}</div>
+                          {(ko ? [
+                            { step: "홈택스 접속 → 로그인 (공동인증서)", detail: "공동인증서가 없으면 세무서 방문도 가능합니다" },
+                            { step: "신청/제출 → 사업자등록 신청 클릭", detail: "개인사업자 선택 (법인 아님)" },
+                            { step: "업종코드 입력: 전자상거래 소매업 (47911)", detail: "온라인 판매의 기본 업종코드입니다" },
+                            { step: "사업장 주소 입력", detail: "자택도 가능 — 전입세대열람원으로 대체" },
+                            { step: "제출 후 즉일~3영업일 내 발급", detail: "문자로 발급 알림이 옵니다" },
+                          ] : [
+                            { step: "Log into Hometax (certificate required)", detail: "Visit tax office if no certificate" },
+                            { step: "Apply → Business Registration", detail: "Select sole proprietor (not corporation)" },
+                            { step: "Industry code: 47911 (e-commerce retail)", detail: "Standard code for online selling" },
+                            { step: "Enter business address", detail: "Home address allowed" },
+                            { step: "Submit — issued in 0~3 business days", detail: "SMS notification when ready" },
+                          ]).map((s, i) => (
+                            <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                              <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                              <div>
+                                <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a", marginBottom: "2px" }}>{s.step}</div>
+                                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* 과세 유형 비교 */}
+                        <div style={{ padding: "0 24px 16px" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>{ko ? "간이과세 vs 일반과세" : "Tax Type Comparison"}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.1)" }}>
+                              <div style={{ fontSize: "14px", fontWeight: 680, color: "#059669", marginBottom: "6px" }}>{ko ? "간이과세자" : "Simplified"}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                                {ko ? "연매출 8,000만원 이하 시 선택 가능. 부가세 면제 또는 감면. 세금계산서 발행 불가 (4,800만원 이하)." : "Available under 80M annual. VAT exempt/reduced. Cannot issue tax invoices under 48M."}
+                              </div>
+                              <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#059669", padding: "3px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.08)", display: "inline-block" }}>{ko ? "초기 창업자 추천" : "Recommended for starters"}</div>
+                            </div>
+                            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.03)", border: "1px solid rgba(37,99,235,0.08)" }}>
+                              <div style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb", marginBottom: "6px" }}>{ko ? "일반과세자" : "Standard"}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                                {ko ? "연매출 8,000만원 초과 또는 B2B 거래 시. 부가세 10% 납부. 세금계산서 발행 가능. 매입세액 공제 가능." : "Over 80M annual or B2B. 10% VAT. Can issue tax invoices. Input tax deductible."}
+                              </div>
+                              <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#2563eb", padding: "3px 8px", borderRadius: "6px", background: "rgba(37,99,235,0.06)", display: "inline-block" }}>{ko ? "B2B · 고매출 시" : "For B2B / high revenue"}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 팁 */}
+                        <div style={{ margin: "0 24px 20px", padding: "12px 16px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#2563eb" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#2563eb" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                          <span style={{ fontSize: "12px", color: "rgba(37,99,235,0.8)", lineHeight: 1.55 }}>
+                            {ko ? "자택 사업자도 가능합니다. 임대차계약서 없이 전입세대열람원(주민센터 발급)으로 대체할 수 있습니다. 처리기간은 보통 당일~1일입니다." : "Home-based business is possible. Resident registration document from community center substitutes lease. Usually processed same day."}
+                          </span>
+                        </div>
+                      </div>
+                    ),
+
+                    // ── 페이지 1: 통신판매업 신고 ──
+                    () => (
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.1)", background: "linear-gradient(180deg, rgba(124,58,237,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        {/* 헤더 */}
+                        <div style={{ padding: "24px 24px 16px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                            <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "11px", fontWeight: 650, color: "#7c3aed", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Step 2 / 2</div>
+                              <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{ko ? "통신판매업 신고" : "Telecom Sales Filing"}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+                            {ko ? "온라인으로 상품을 판매하려면 통신판매업 신고가 법적 의무입니다. 미신고 시 과태료 최대 1,000만원이며, 네이버 스마트스토어·쿠팡 입점 시 신고번호를 요구합니다." : "Legally required for all online sales. Up to ₩10M fine if unfiled. Smartstore and Coupang require the filing number."}
+                          </div>
+                        </div>
+
+                        {/* 경고 */}
+                        <div style={{ margin: "0 24px 16px", padding: "12px 16px", borderRadius: "12px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.08)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#dc2626", lineHeight: 1.5 }}>
+                            {ko ? "미신고 시 과태료 최대 1,000만원. 사업자등록 후 반드시 진행하세요." : "Fine up to ₩10M if unfiled. Must complete after business registration."}
+                          </span>
+                        </div>
+
+                        {/* 어디서 + 바로가기 */}
+                        <div style={{ margin: "0 24px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "2px" }}>{ko ? "신청 장소" : "Where"}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>{ko ? "관할 구청 또는 정부24" : "District office or Gov24"}</div>
+                          </div>
+                          <a href="https://www.gov.kr" target="_blank" rel="noreferrer" style={{ padding: "8px 16px", borderRadius: "10px", background: "#7c3aed", color: "#fff", fontSize: "13px", fontWeight: 650, textDecoration: "none", display: "flex", alignItems: "center", gap: "4px" }}>
+                            {ko ? "정부24 바로가기" : "Go to Gov24"} <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </a>
+                        </div>
+
+                        {/* 준비물 */}
+                        <div style={{ padding: "0 24px 16px" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>{ko ? "준비물" : "Required Documents"}</div>
+                          <div style={{ display: "grid", gap: "6px" }}>
+                            {(ko ? [
+                              { item: "사업자등록증 사본", detail: "1단계에서 발급받은 것", required: true },
+                              { item: "신분증", detail: "주민등록증 또는 운전면허증", required: true },
+                              { item: "구매안전서비스(에스크로) 가입증명", detail: "PG사 가입 시 자동 발급", required: true },
+                            ] : [
+                              { item: "Business registration copy", detail: "From Step 1", required: true },
+                              { item: "Government ID", detail: "Resident ID or driver's license", required: true },
+                              { item: "Escrow service certificate", detail: "Auto-issued from PG provider", required: true },
+                            ]).map((d, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.03)" }}>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="#7c3aed"/><path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{d.item}</div>
+                                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)" }}>{d.detail}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 구매안전서비스 설명 */}
+                        <div style={{ margin: "0 24px 16px", padding: "16px", borderRadius: "14px", background: "rgba(124,58,237,0.03)", border: "1px solid rgba(124,58,237,0.06)" }}>
+                          <div style={{ fontSize: "13px", fontWeight: 680, color: "#7c3aed", marginBottom: "6px" }}>{ko ? "구매안전서비스(에스크로)란?" : "What is escrow service?"}</div>
+                          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>
+                            {ko ? "소비자가 결제한 금액을 판매자에게 바로 전달하지 않고, 제3자(PG사)가 보관했다가 상품 수령 확인 후 정산하는 시스템입니다. 통신판매업 신고 시 필수이며, 아래 PG사 중 하나에 가입하면 자동 발급됩니다." : "A system where payment is held by a third party (PG) until the buyer confirms receipt. Required for telecom filing. Auto-issued when signing up with a PG provider below."}
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", marginTop: "10px", flexWrap: "wrap" as const }}>
+                            {["토스페이먼츠", "KG이니시스", "NHN KCP", "네이버페이 (스마트스토어 자동)"].map(pg => (
+                              <span key={pg} style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "8px", background: "rgba(124,58,237,0.06)", color: "#7c3aed" }}>{pg}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 절차 */}
+                        <div style={{ padding: "0 24px 16px" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>{ko ? "신고 절차" : "Filing Process"}</div>
+                          {(ko ? [
+                            { step: "정부24 접속 → '통신판매업 신고' 검색", detail: "공동인증서 로그인 필요" },
+                            { step: "신고서 작성 → 사업자 정보 입력", detail: "사업자등록증의 정보와 일치해야 합니다" },
+                            { step: "구매안전서비스 가입증명 첨부", detail: "PG사에서 발급받은 PDF 업로드" },
+                            { step: "제출 → 즉일~5영업일 내 처리", detail: "신고번호가 문자로 발송됩니다" },
+                            { step: "신고번호를 판매 플랫폼에 입력", detail: "스마트스토어·쿠팡 설정에서 등록" },
+                          ] : [
+                            { step: "Go to Gov24 → Search 'telecom sales filing'", detail: "Certificate login required" },
+                            { step: "Fill form → Enter business info", detail: "Must match business registration" },
+                            { step: "Attach escrow certificate", detail: "Upload PDF from PG provider" },
+                            { step: "Submit → Processed in 0~5 business days", detail: "Filing number sent via SMS" },
+                            { step: "Enter filing number in sales platforms", detail: "Register in Smartstore/Coupang settings" },
+                          ]).map((s, i) => (
+                            <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                              <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                              <div>
+                                <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a", marginBottom: "2px" }}>{s.step}</div>
+                                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* 비용 */}
+                        <div style={{ margin: "0 24px 16px", display: "flex", gap: "8px" }}>
+                          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", textAlign: "center" as const }}>
+                            <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "신고 수수료" : "Filing Fee"}</div>
+                            <div style={{ fontSize: "18px", fontWeight: 740, color: "#059669" }}>{ko ? "무료" : "Free"}</div>
+                          </div>
+                          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(217,119,6,0.04)", textAlign: "center" as const }}>
+                            <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "등록면허세" : "License Tax"}</div>
+                            <div style={{ fontSize: "18px", fontWeight: 740, color: "#d97706" }}>~40,500{ko ? "원" : "₩"}</div>
+                            <div style={{ fontSize: "10px", color: "rgba(0,0,0,0.35)" }}>{ko ? "구청별 상이" : "Varies"}</div>
+                          </div>
+                          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", textAlign: "center" as const }}>
+                            <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "처리기간" : "Processing"}</div>
+                            <div style={{ fontSize: "18px", fontWeight: 740, color: "#2563eb" }}>1~5{ko ? "일" : "d"}</div>
+                          </div>
+                        </div>
+
+                        {/* 팁 */}
+                        <div style={{ margin: "0 24px 20px", padding: "12px 16px", borderRadius: "12px", background: "rgba(124,58,237,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#7c3aed" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#7c3aed" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                          <span style={{ fontSize: "12px", color: "rgba(124,58,237,0.8)", lineHeight: 1.55 }}>
+                            {ko ? "네이버 스마트스토어 가입 시 구매안전서비스가 자동 연동되는 경우가 많습니다. 별도 PG 가입 전에 스마트스토어 센터에서 확인하세요." : "Escrow is often auto-linked when joining Naver Smartstore. Check Smartstore Center before signing up with a separate PG."}
+                          </span>
+                        </div>
+                      </div>
+                    ),
+                  ];
+
+                  return (
+                    <div style={{ marginBottom: "16px" }}>
+                      {pages[regPage]()}
+                      {/* 페이지 네비게이션 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px" }}>
+                        <button type="button" onClick={() => setRegPage(0)} disabled={regPage === 0}
+                          style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: regPage === 0 ? "rgba(0,0,0,0.02)" : "white", color: regPage === 0 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: regPage === 0 ? "default" : "pointer" }}>
+                          ← {ko ? "사업자등록" : "Registration"}
+                        </button>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          {[0, 1].map(i => (
+                            <div key={i} onClick={() => setRegPage(i)} style={{ width: i === regPage ? "20px" : "8px", height: "8px", borderRadius: "100px", background: i === regPage ? "#1d3557" : "rgba(0,0,0,0.1)", cursor: "pointer", transition: "all 0.2s ease" }} />
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => setRegPage(1)} disabled={regPage === 1}
+                          style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: regPage === 1 ? "rgba(0,0,0,0.02)" : "white", color: regPage === 1 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: regPage === 1 ? "default" : "pointer" }}>
+                          {ko ? "통신판매 신고" : "Telecom Filing"} →
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 판매 플랫폼 선택 (platform_setup — 온라인/디지털 업종) ── */}
+                {currentStage.code === "platform_setup" && (() => {
+                  const ko = language === "ko";
+                  type PlatItem = { id: string; name: string; desc: string; color: string; url: string; fee: string; mau: string; pros: string[]; cons: string[] };
+                  const platforms: PlatItem[] = [
+                    { id: "smartstore", name: ko ? "네이버 스마트스토어" : "Naver Smartstore", desc: ko ? "쇼핑 검색 1위 · 결제수수료 최저" : "#1 shopping search · Lowest fee", color: "#03C75A", url: "https://sell.smartstore.naver.com", fee: ko ? "주문 1.98~3.74% + 판매 0.91~2.73%" : "Order 1.98~3.74% + Sale 0.91~2.73%", mau: "536만", pros: ko ? ["네이버 검색 노출 최강", "결제 수수료 최저 수준", "쇼핑라이브 가능", "스마트스토어 센터 무료"] : ["Best Naver search", "Lowest fees", "Shopping Live"], cons: ko ? ["광고 없이 초기 노출 어려움", "경쟁 셀러 매우 많음"] : ["Hard initial exposure", "Many competitors"] },
+                    { id: "coupang-mp", name: ko ? "쿠팡 마켓플레이스" : "Coupang Marketplace", desc: ko ? "이커머스 MAU 1위 · 로켓그로스" : "#1 ecommerce MAU · Rocket Growth", color: "#1460F3", url: "https://wing.coupang.com", fee: ko ? "4~10.8% + 월 55,000원" : "4~10.8% + ₩55K/mo", mau: "3,339만", pros: ko ? ["최대 트래픽 (MAU 3,339만)", "로켓그로스 풀필먼트", "와우 멤버십 노출 우선"] : ["Most traffic", "Rocket Growth", "Wow priority"], cons: ko ? ["월 정액비 55,000원", "가격 경쟁 심화", "수수료 높은 편"] : ["₩55K monthly", "Price competition", "Higher fees"] },
+                    { id: "kakao-store", name: ko ? "카카오톡 스토어" : "KakaoTalk Store", desc: ko ? "카톡 4,700만 사용자 · 선물하기" : "47M KakaoTalk · Gifting", color: "#F9E000", url: "https://store.kakaotalk.com", fee: ko ? "3.3~10% (경로별), 선물하기 ~15%" : "3.3~10%, Gifting ~15%", mau: "4,700만", pros: ko ? ["카톡 메시지 직접 마케팅", "선물하기 입점 가능", "간편결제 연동"] : ["Direct KakaoTalk marketing", "Gift feature"], cons: ko ? ["선물하기 수수료 ~15%", "자체 검색 유입 약함"] : ["~15% gift fee", "Weak organic search"] },
+                    { id: "elevenst", name: ko ? "11번가" : "11st", desc: ko ? "신규 셀러 12개월 수수료 6%로 할인" : "New seller 6% for 12 months", color: "#FF0000", url: "https://soffice.11st.co.kr", fee: ko ? "7~13% (카테고리별), 신규 6%" : "7~13%, new seller 6%", mau: "893만", pros: ko ? ["신규 12개월 수수료 할인", "SKT 멤버십 연계", "아마존 글로벌 연동"] : ["12-month discount", "SKT members"], cons: ko ? ["트래픽 감소 추세", "수수료 높은 편"] : ["Declining traffic", "Higher fees"] },
+                    { id: "gmarket", name: ko ? "G마켓/옥션" : "G-Market/Auction", desc: ko ? "묶음배송 · 해외판매 연동" : "Bundle shipping · Global selling", color: "#00A34F", url: "https://www.gmarket.co.kr", fee: ko ? "4~15% (평균 9%)" : "4~15% (avg 9%)", mau: "706만+296만", pros: ko ? ["묶음 배송 시스템", "해외 판매 eBay 연동", "광고 효율 양호"] : ["Bundle shipping", "eBay global"], cons: ko ? ["트래픽 감소 추세", "수수료 높은 편"] : ["Declining traffic"] },
+                  ];
+
+                  const selectedCount = platforms.filter(p => opsSelections[`platform-${p.id}`]).length;
+
+                  return (
+                    <div style={{ marginBottom: "16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.38)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                          {ko ? "판매 플랫폼 비교 · 선택" : "Compare & Select Platforms"}
+                        </span>
+                        {selectedCount > 0 && (
+                          <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(0,122,255)", background: "rgba(0,122,255,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
+                            {selectedCount}{ko ? "개 선택" : " selected"}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: "grid", gap: "10px" }}>
+                        {platforms.map((item) => {
+                          const selKey = `platform-${item.id}`;
+                          const isSelected = !!opsSelections[selKey];
+                          return (
+                            <div key={item.id}
+                              style={{
+                                background: isSelected ? `${item.color}06` : "white",
+                                borderRadius: "18px", overflow: "hidden", cursor: "pointer",
+                                border: isSelected ? `1.5px solid ${item.color}30` : "1px solid rgba(0,0,0,0.06)",
+                                boxShadow: isSelected ? `0 0 0 3px ${item.color}08` : "0 1px 4px rgba(0,0,0,0.03)",
+                                transition: "all 0.2s ease",
+                              }}
+                              onClick={() => setOpsSelections(prev => ({ ...prev, [selKey]: !prev[selKey] }))}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 18px" }}>
+                                <div style={{ flexShrink: 0, width: "22px", height: "22px", borderRadius: "50%", border: isSelected ? "none" : "1.5px solid rgba(0,0,0,0.15)", background: isSelected ? item.color : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                                  {isSelected && <svg width="11" height="11" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                </div>
+                                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: item.id === "coupang-mp" || item.id === "coupangeats" ? item.color : `${item.color}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                  <span style={{ fontSize: item.id === "elevenst" ? "15px" : "17px", fontWeight: 750, color: item.id === "coupang-mp" || item.id === "coupangeats" ? "#fff" : item.color }}>{item.id === "elevenst" ? "11" : item.name.charAt(0)}</span>
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
+                                    <span style={{ fontSize: "15px", fontWeight: isSelected ? 660 : 600, color: isSelected ? item.color : "var(--text)", letterSpacing: "-0.02em" }}>{item.name}</span>
+                                    <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "6px", background: "rgba(0,0,0,0.04)", color: "rgba(0,0,0,0.4)" }}>MAU {item.mau}</span>
+                                  </div>
+                                  <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)", lineHeight: 1.45 }}>{item.desc}</div>
+                                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "6px", padding: "3px 10px", borderRadius: "8px", background: `${item.color}0a`, fontSize: "11px", fontWeight: 620, color: item.color }}>
+                                    {ko ? "수수료" : "Fee"}: {item.fee}
+                                  </div>
+                                </div>
+                                <a href={item.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ flexShrink: 0, width: "30px", height: "30px", borderRadius: "50%", background: "rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,0,0,0.35)", textDecoration: "none" }}>
+                                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </a>
+                              </div>
+                              {isSelected && (
+                                <div style={{ padding: "0 18px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }} className="bento-fade-in">
+                                  <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(5,150,105,0.04)" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 650, color: "#059669", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "장점" : "Pros"}</div>
+                                    {item.pros.map((p, pi) => (
+                                      <div key={pi} style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5, display: "flex", gap: "4px" }}>
+                                        <span style={{ color: "#059669", flexShrink: 0 }}>+</span> {p}
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(220,38,38,0.03)" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 650, color: "#dc2626", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "주의" : "Cons"}</div>
+                                    {item.cons.map((c, ci) => (
+                                      <div key={ci} style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5, display: "flex", gap: "4px" }}>
+                                        <span style={{ color: "#dc2626", flexShrink: 0 }}>-</span> {c}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "10px 12px", borderRadius: "12px", background: "rgba(0,122,255,0.06)", marginTop: "10px" }}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="7" cy="7" r="6" stroke="rgb(0,122,255)" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="rgb(0,122,255)" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                        <span style={{ fontSize: "12px", color: "rgba(0,80,200,0.75)", lineHeight: 1.5 }}>
+                          {ko ? "스마트스토어는 수수료가 가장 낮아 필수입니다. 쿠팡은 트래픽이 가장 크지만 월 정액비가 있어 매출이 안정된 후 추가하세요." : "Smartstore is essential due to lowest fees. Add Coupang after sales stabilize due to monthly fee."}
+                        </span>
+                      </div>
+
+                      {/* 개설 순서 가이드 */}
+                      <div style={{ marginTop: "20px", padding: "18px", borderRadius: "16px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.04)" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a", marginBottom: "10px" }}>{ko ? "추천 개설 순서" : "Recommended Setup Order"}</div>
+                        {[
+                          { step: "1", text: ko ? "네이버 스마트스토어 개설 (사업자등록증 필요, 당일~1일 심사)" : "Open Naver Smartstore (business registration needed, 0~1 day review)" },
+                          { step: "2", text: ko ? "인스타그램 비즈니스 + 네이버 플레이스 등록 (무료, 즉시)" : "Register Instagram Business + Naver Place (free, instant)" },
+                          { step: "3", text: ko ? "매출 안정 후 쿠팡 마켓플레이스 추가 (월 55,000원 정액비)" : "Add Coupang Marketplace after stable sales (₩55K/month)" },
+                          { step: "4", text: ko ? "카카오톡 스토어 · 11번가 등 추가 채널 확장" : "Expand to KakaoTalk Store, 11st, etc." },
+                        ].map((s) => (
+                          <div key={s.step} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "8px" }}>
+                            <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+                            <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.6)", lineHeight: 1.5 }}>{s.text}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 인허가 스테이지: 라이브 경쟁/생존 데이터 ── */}
+                {currentStage.code === "permit_check" && (() => {
+                  const ko = language === "ko";
+
+                  const loadPermitInsights = async () => {
+                    if (livePermitInsights && !livePermitInsights.loading) return;
+                    setLivePermitInsights({ loading: true });
+                    try {
+                      const session = await supabase.auth.getSession();
+                      const tk = session.data.session?.access_token;
+                      const res = await fetch(`/api/data/permits?pageSize=500`, { headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(r => r.json()).catch(() => null);
+                      if (res?.data?.length) {
+                        const permits = res.data as Array<{ status: string; permitDate?: string; closureDate?: string }>;
+                        const operating = permits.filter(p => p.status === "operating").length;
+                        const closed = permits.filter(p => p.status === "closed").length;
+                        const total = operating + closed;
+                        const survivalRate = total > 0 ? Math.round((operating / total) * 100) : 0;
+                        setLivePermitInsights({ loading: false, data: { total, operating, closed, survivalRate } });
+                      } else {
+                        setLivePermitInsights({ loading: false });
+                      }
+                    } catch { setLivePermitInsights({ loading: false }); }
+                  };
+
+                  if (!livePermitInsights) void loadPermitInsights();
+
+                  if (!livePermitInsights || livePermitInsights.loading) {
+                    return (
+                      <div style={{ marginBottom: "16px", padding: "18px 20px", borderRadius: "20px", border: "1px solid rgba(234,88,12,0.08)", background: "linear-gradient(180deg, rgba(255,237,213,0.1) 0%, rgba(255,255,255,0.9) 100%)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ea580c", animation: "bentoPulse 1.5s infinite" }} />
+                          <span style={{ fontSize: "14px", fontWeight: 600 }}>{ko ? "사업자 현황 데이터 조회 중..." : "Loading permit data..."}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (!livePermitInsights.data) return null;
+                  const d = livePermitInsights.data;
+                  const rateColor = d.survivalRate >= 70 ? "#059669" : d.survivalRate >= 50 ? "#d97706" : "#dc2626";
+
+                  return (
+                    <div style={{ marginBottom: "16px", borderRadius: "20px", border: `1px solid ${rateColor}15`, background: `linear-gradient(180deg, ${rateColor}06 0%, rgba(255,255,255,0.92) 100%)`, overflow: "hidden" }} className="bento-fade-in">
+                      <div style={{ padding: "18px 20px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: rateColor }} />
+                          <span style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{ko ? "영업 현황 데이터" : "Business Permit Status"}</span>
+                        </div>
+                        <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "지방행정인허가 데이터 기반" : "Based on LOCALDATA Permit API"}</div>
+                      </div>
+                      <div style={{ padding: "0 20px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px" }}>
+                        <div style={{ padding: "14px", borderRadius: "14px", background: `${rateColor}08` }}>
+                          <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "전체 등록" : "Total"}</div>
+                          <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{d.total.toLocaleString()}</div>
+                        </div>
+                        <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.06)" }}>
+                          <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "영업 중" : "Active"}</div>
+                          <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#059669" }}>{d.operating.toLocaleString()}</div>
+                        </div>
+                        <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(220,38,38,0.04)" }}>
+                          <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "폐업" : "Closed"}</div>
+                          <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#dc2626" }}>{d.closed.toLocaleString()}</div>
+                        </div>
+                        <div style={{ padding: "14px", borderRadius: "14px", background: `${rateColor}08` }}>
+                          <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "생존율" : "Survival"}</div>
+                          <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: rateColor }}>{d.survivalRate}%</div>
+                          <div style={{ height: "4px", borderRadius: "2px", background: "rgba(0,0,0,0.06)", marginTop: "6px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", borderRadius: "2px", width: `${d.survivalRate}%`, background: rateColor, transition: "width 0.6s ease" }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* ── Franchise Application Guide ── */}
                 {(currentStage.code as string) === "franchise_application" && selectedFranchiseBrandId && (() => {
@@ -6918,8 +4033,9 @@ export default function StarterStageDemo({
                 {/* ── Startup Support Programs (loan_guide stage) ── */}
                 {currentStage.code === "loan_guide" && (() => {
                   const ko = language === "ko";
-                  const [progFilter, setProgFilter] = useState<ProgramCategory | "all">("all");
-                  const filtered = progFilter === "all" ? startupPrograms : startupPrograms.filter(p => p.category === progFilter);
+                  // progFilter — hoisted to component top
+                  const matched = getMatchedPrograms(startupType);
+                  const filtered = progFilter === "all" ? matched : matched.filter(p => p.category === progFilter);
                   const categories: Array<{ id: ProgramCategory | "all"; label: string }> = [
                     { id: "all", label: ko ? "전체" : "All" },
                     { id: "government", label: ko ? "정부" : "Gov" },
@@ -6980,14 +4096,101 @@ export default function StarterStageDemo({
                   );
                 })()}
 
+                {/* ── K-Startup 라이브 지원사업 (loan_guide stage) ── */}
+                {currentStage.code === "loan_guide" && (() => {
+                  const ko = language === "ko";
+
+                  // 라이브 데이터 fetch (최초 1회)
+                  const loadLivePrograms = async () => {
+                    if (liveProgramsData.length > 0 || liveProgramsLoading) return;
+                    setLiveProgramsLoading(true);
+                    try {
+                      const session = await supabase.auth.getSession();
+                      const token = session.data.session?.access_token;
+                      const keyword = industryCategoryId === "startup-tech" ? "창업" : "소상공인";
+                      const res = await fetchLiveSupportPrograms({ keyword, numOfRows: 15 }, token);
+                      setLiveProgramsData(res.data.map(p => ({
+                        id: p.id,
+                        programName: p.programName,
+                        organizerName: p.organizerName,
+                        supportCategory: p.supportCategory,
+                        isOpen: p.isOpen,
+                        url: p.url,
+                      })));
+                    } catch { /* silent */ }
+                    setLiveProgramsLoading(false);
+                  };
+
+                  // 자동 로드 트리거
+                  if (liveProgramsData.length === 0 && !liveProgramsLoading) {
+                    void loadLivePrograms();
+                  }
+
+                  return liveProgramsData.length > 0 || liveProgramsLoading ? (
+                    <div style={{
+                      marginBottom: "18px",
+                      borderRadius: "24px",
+                      border: "1px solid rgba(5,150,105,0.12)",
+                      background: "linear-gradient(180deg, rgba(209,250,229,0.15) 0%, rgba(255,255,255,0.9) 100%)",
+                      boxShadow: "0 8px 20px rgba(17,17,17,0.03)",
+                      overflow: "hidden",
+                    }}>
+                      <div style={{ padding: "18px 22px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#059669", animation: liveProgramsLoading ? "bentoPulse 1.5s infinite" : "none" }} />
+                          <span style={{ fontSize: "16px", fontWeight: 650, letterSpacing: "-0.02em" }}>
+                            {ko ? "실시간 정부 지원사업" : "Live Government Programs"}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.5 }}>
+                          {ko ? "K-Startup API에서 가져온 현재 공모 중인 프로그램입니다." : "Currently open programs from K-Startup API."}
+                        </div>
+                      </div>
+
+                      {liveProgramsLoading ? (
+                        <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
+                          {[0, 1, 2].map(i => (
+                            <div key={i} style={{ padding: "14px", borderRadius: "14px", background: "rgba(0,0,0,0.02)", display: "flex", gap: "12px" }}>
+                              <div style={{ width: "60px", height: "14px", borderRadius: "6px", background: "rgba(0,0,0,0.05)" }} />
+                              <div style={{ flex: 1, display: "grid", gap: "6px" }}>
+                                <div style={{ height: "14px", width: "70%", borderRadius: "6px", background: "rgba(0,0,0,0.05)" }} />
+                                <div style={{ height: "12px", width: "50%", borderRadius: "6px", background: "rgba(0,0,0,0.03)" }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px", maxHeight: "360px", overflowY: "auto" }}>
+                          {liveProgramsData.map(prog => (
+                            <a key={prog.id} href={prog.url ?? "#"} target="_blank" rel="noopener noreferrer" style={{
+                              display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px", borderRadius: "14px",
+                              border: "1px solid rgba(5,150,105,0.08)", background: "rgba(255,255,255,0.7)", textDecoration: "none", color: "inherit",
+                              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                            }}>
+                              <div style={{
+                                padding: "3px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 600, flexShrink: 0, marginTop: "2px", whiteSpace: "nowrap" as const,
+                                background: prog.isOpen ? "rgba(5,150,105,0.08)" : "rgba(0,0,0,0.04)",
+                                color: prog.isOpen ? "#059669" : "var(--muted)",
+                              }}>
+                                {prog.isOpen ? (ko ? "공모중" : "Open") : (ko ? "마감" : "Closed")}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "2px" }}>{prog.programName}</div>
+                                <div style={{ fontSize: "12px", lineHeight: 1.5, color: "var(--muted)" }}>{prog.organizerName} · {prog.supportCategory}</div>
+                              </div>
+                              <span style={{ fontSize: "13px", color: "#059669", flexShrink: 0, marginTop: "2px" }}>↗</span>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
+
                 {/* ── Business Plan Generator (loan_guide stage) ── */}
                 {currentStage.code === "loan_guide" && (() => {
                   const ko = language === "ko";
-                  const [bpLoading, setBpLoading] = useState(false);
-                  const [bpSections, setBpSections] = useState<Array<{ title: string; content: string }> | null>(null);
-                  const [bpSummary, setBpSummary] = useState<string | null>(null);
-                  const [bpError, setBpError] = useState<string | null>(null);
-                  const [bpExpandedIdx, setBpExpandedIdx] = useState<number | null>(null);
+                  // bpLoading / bpSections / bpSummary / bpError / bpExpandedIdx — hoisted to component top
 
                   const generatePlan = async () => {
                     setBpLoading(true);
@@ -7255,7 +4458,7 @@ export default function StarterStageDemo({
                   );
                 })()}
 
-                {stageGuideContent && currentStage.code !== "pre_launch" && currentStage.code !== "operations_setup" && currentStage.code !== "hiring_setup" && (currentStage.code as string) !== "franchise_application" && (() => {
+                {stageGuideContent && currentStage.code !== "pre_launch" && currentStage.code !== "operations_setup" && currentStage.code !== "hiring_setup" && currentStage.code !== "platform_setup" && currentStage.code !== "online_registration" && (currentStage.code as string) !== "franchise_application" && (() => {
                   const steps = stageGuideContent.steps;
                   const totalSlides = 1 + steps.length;
                   const isOverview = guideStepIndex === 0;
@@ -7750,14 +4953,32 @@ export default function StarterStageDemo({
 
                   // ─── operations_setup 인터랙티브 블록 ───
                   const operationsEl: React.ReactNode = (currentStage.code as string) !== "operations_setup" || guideStepIndex === 0 ? null : (() => {
-                    type OpsItem = { id: string; name: string; desc: string; color: string; url: string };
+                    type OpsItem = { id: string; name: string; desc: string; color: string; url: string; fee?: string; mau?: string; pros?: string[]; cons?: string[] };
+                    const ko = language === "ko";
 
-                    const deliveryApps: OpsItem[] = [
-                      { id: "baemin",     name: "배달의민족",    desc: "국내 배달앱 점유율 1위 · 월 주문 8,000만 건 이상",       color: "#00C73C", url: "https://ceo.baemin.com" },
-                      { id: "coupangeats",name: "쿠팡이츠",      desc: "단건 배달 강점 · 빠른 배달 이미지로 2위 급성장",         color: "#E52222", url: "https://store.coupangeats.com" },
-                      { id: "yogiyo",     name: "요기요",        desc: "GS리테일 운영 · 구독 할인·요기패스 강점",                color: "#FF5A00", url: "https://partner.yogiyo.co.kr" },
-                      { id: "naver-order",name: "네이버 주문",   desc: "스마트플레이스 연동 · 네이버 지도·검색 노출 시너지",     color: "#03C75A", url: "https://new.smartplace.naver.com" },
-                    ];
+                    const logisticsItems: OpsItem[] = businessCtx.isDeliveryRelevant
+                      ? [
+                          { id: "baemin",     name: ko ? "배달의민족" : "Baemin",      desc: ko ? "MAU 2,170만 · 배달앱 1위" : "MAU 21.7M · #1 delivery app",       color: "#00C73C", url: "https://ceo.baemin.com",      fee: ko ? "2.0~7.8% (차등제)" : "2.0~7.8% tiered",    mau: "2,170만", pros: ko ? ["최대 고객 풀", "광고 효과 최대", "포장 주문 동시 운영"] : ["Largest customer pool", "Best ad reach"], cons: ko ? ["포장 수수료 6.8%", "광고 경쟁 치열"] : ["6.8% takeout fee", "Ad competition"] },
+                          { id: "coupangeats",name: ko ? "쿠팡이츠" : "Coupang Eats",  desc: ko ? "MAU 1,230만 · 서울 결제액 1위" : "MAU 12.3M · #1 in Seoul GMV", color: "#1460F3", url: "https://store.coupangeats.com", fee: ko ? "2.0~7.8% (차등제)" : "2.0~7.8% tiered",    mau: "1,230만", pros: ko ? ["단건 배달 품질 최고", "와우 멤버십 유입", "포장 수수료 0%"] : ["Best single delivery", "Wow members", "0% takeout"], cons: ko ? ["수도권 외 커버리지 부족", "고가 배달비"] : ["Weak outside metro", "Higher delivery fee"] },
+                          { id: "yogiyo",     name: ko ? "요기요" : "Yogiyo",          desc: ko ? "MAU 440만 · 하위 매출 환급 혜택" : "MAU 4.4M · Low-tier refund", color: "#FF5A00", url: "https://ceo.yogiyo.co.kr",    fee: ko ? "4.7~9.7% (건수별)" : "4.7~9.7% per order", mau: "440만",   pros: ko ? ["광고비 부담 적음", "하위 40% 수수료 환급", "초기 매장 적합"] : ["Low ad cost", "Bottom 40% refund"], cons: ko ? ["점유율 하락 추세", "유입량 감소"] : ["Declining market share"] },
+                          { id: "ddangyo",    name: ko ? "땡겨요" : "Ddangyo",         desc: ko ? "MAU 345만 · 공공배달앱 1위" : "MAU 3.45M · #1 public app",       color: "#FF6B35", url: "https://www.ddangyo.com",     fee: ko ? "2% 고정" : "2% fixed",                     mau: "345만",   pros: ko ? ["수수료 최저", "공공앱 신뢰감", "서울·경기 강세"] : ["Lowest fee", "Public trust"], cons: ko ? ["전국 커버리지 부족", "유입 제한적"] : ["Limited nationwide", "Lower traffic"] },
+                          { id: "naver-order",name: ko ? "네이버 주문" : "Naver Order", desc: ko ? "수수료 ~1.1% · 네이버 검색 연동" : "~1.1% · Naver Search linked", color: "#03C75A", url: "https://new.smartplace.naver.com", fee: ko ? "~1.1% (결제수수료만)" : "~1.1% payment only", mau: "-",   pros: ko ? ["수수료 최저 수준", "네이버 지도·검색 노출", "포장 주문 전환 급증"] : ["Lowest fee", "Naver Maps synergy"], cons: ko ? ["배달 인프라 없음 (포장 전용)", "별도 배달대행 필요"] : ["No delivery infra", "Takeout only"] },
+                        ]
+                      : isDigitalCategory
+                      ? [
+                          { id: "smartstore", name: ko ? "네이버 스마트스토어" : "Naver Smartstore", desc: ko ? "MAU 536만 · 쇼핑 검색 1위" : "MAU 5.36M · #1 shopping search", color: "#03C75A", url: "https://sell.smartstore.naver.com", fee: ko ? "주문 1.98~3.74% + 판매 0.91~2.73%" : "Order 1.98~3.74% + Sale 0.91~2.73%", mau: "536만", pros: ko ? ["네이버 검색 노출 최강", "결제 수수료 최저", "쇼핑라이브 가능"] : ["Best Naver search exposure", "Lowest payment fee"], cons: ko ? ["광고 없이 노출 어려움", "경쟁 치열"] : ["Hard to get exposure without ads"] },
+                          { id: "coupang-mp", name: ko ? "쿠팡 마켓플레이스" : "Coupang Marketplace", desc: ko ? "MAU 3,339만 · 이커머스 1위" : "MAU 33.4M · #1 ecommerce", color: "#E52222", url: "https://wing.coupang.com", fee: ko ? "4~10.8% + 월 55,000원" : "4~10.8% + ₩55K/mo", mau: "3,339만", pros: ko ? ["최대 트래픽", "로켓그로스 풀필먼트", "와우 멤버십 노출"] : ["Most traffic", "Rocket Growth fulfillment"], cons: ko ? ["월 정액비 부담", "가격 경쟁 심화"] : ["Monthly fee", "Price competition"] },
+                          { id: "kakao-store", name: ko ? "카카오톡 스토어" : "KakaoTalk Store", desc: ko ? "카톡 4,700만 사용자 연동" : "Connected to 47M KakaoTalk users", color: "#F9E000", url: "https://store.kakaotalk.com", fee: ko ? "3.3~10% (경로별)" : "3.3~10% by channel", mau: "4,700만", pros: ko ? ["카톡 메시지 마케팅", "선물하기 입점 가능", "간편 결제"] : ["KakaoTalk marketing", "Gift feature"], cons: ko ? ["선물하기 수수료 ~15%", "자체 검색 유입 약함"] : ["~15% gift fee", "Weak search traffic"] },
+                          { id: "elevenst",   name: ko ? "11번가" : "11st",             desc: ko ? "MAU 893만 · 신규 셀러 수수료 6%" : "MAU 8.93M · New seller 6%",  color: "#FF0000", url: "https://soffice.11st.co.kr", fee: ko ? "7~13% (카테고리별)" : "7~13% by category", mau: "893만", pros: ko ? ["신규 12개월 수수료 할인", "SKT 멤버십 연계"] : ["12-month new seller discount"], cons: ko ? ["트래픽 감소 추세"] : ["Declining traffic"] },
+                          { id: "gmarket",     name: ko ? "G마켓/옥션" : "G-Market/Auction", desc: ko ? "G마켓 MAU 706만 + 옥션 296만" : "G-Market 7.06M + Auction 2.96M MAU", color: "#00A34F", url: "https://www.gmarket.co.kr", fee: ko ? "4~15% (평균 9%)" : "4~15% (avg 9%)", mau: "706만+296만", pros: ko ? ["묶음 배송 시스템", "해외 판매 연동"] : ["Bundle shipping", "Global selling"], cons: ko ? ["트래픽 감소 추세", "수수료 높은 편"] : ["Declining traffic", "Higher fees"] },
+                        ]
+                      : [
+                          { id: "cj",    name: ko ? "CJ대한통운" : "CJ Logistics", desc: ko ? "택배 점유율 1위 · D+1 배송" : "#1 courier · D+1 delivery",           color: "#003C71", url: "https://www.cjlogistics.com", fee: ko ? "소형 1,850원~ (계약)" : "Small ₩1,850+ (contract)", pros: ko ? ["전국 커버리지 최강", "D+1 배송", "편의점 접수"] : ["Best nationwide", "D+1"], cons: ko ? ["초기 물량 적으면 할인 적음"] : ["Low volume = low discount"] },
+                          { id: "hanjin",name: ko ? "한진택배" : "Hanjin",          desc: ko ? "중대형 화물 경쟁력" : "Mid-large competitive",                       color: "#FF6600", url: "https://www.hanjin.co.kr",    fee: ko ? "소형 5,000원~" : "Small ₩5,000+",   pros: ko ? ["중대형 화물 강점", "전국 A/S망"] : ["Good for large items"], cons: ko ? ["소형 가격 높음"] : ["Expensive for small items"] },
+                          { id: "epost", name: ko ? "우체국택배" : "Korea Post",    desc: ko ? "최저가 · 도서산간 추가 없음" : "Cheapest · No island surcharge",       color: "#004098", url: "https://parcel.epost.go.kr",  fee: ko ? "3kg 이하 2,700원" : "Under 3kg ₩2,700", pros: ko ? ["최저 요금", "도서산간 추가 없음", "우체국 접수"] : ["Cheapest", "No island surcharge"], cons: ko ? ["D+3 배송", "속도 느림"] : ["D+3 delivery", "Slow"] },
+                        ];
+                    // Alias for backward compatibility with existing render logic
+                    const deliveryApps = logisticsItems;
 
                     const posCheckItems: Array<{ id: string; label: string; hint: string }> = [
                       { id: "menu-check",       label: language === "ko" ? "메뉴·상품 전체 등록 및 가격 확인" : "All items registered with correct prices", hint: language === "ko" ? "옵션·추가 금액·품절 처리도 함께 점검" : "Check options, add-ons and sold-out handling" },
@@ -7767,10 +4988,10 @@ export default function StarterStageDemo({
                     ];
 
                     const snsChannels: OpsItem[] = [
-                      { id: "instagram",      name: "인스타그램 비즈니스", desc: "외식·뷰티·라이프 마케팅 핵심 · 팔로워 기반 단골 형성",   color: "#C13584", url: "https://business.instagram.com" },
-                      { id: "naver-place",    name: "네이버 플레이스",     desc: "네이버 지도·검색 노출 필수 · 리뷰·예약 한 번에 관리",   color: "#03C75A", url: "https://new.smartplace.naver.com" },
-                      { id: "kakao-channel",  name: "카카오 채널",         desc: "메시지 마케팅·예약 알림 · 카카오맵 노출 연동",           color: "#F9E000", url: "https://ch.kakao.com" },
-                      { id: "google-business",name: "구글 비즈니스",       desc: "구글맵 노출 · 외국인 고객 접근성 · 리뷰 관리",           color: "#4285F4", url: "https://business.google.com/ko" },
+                      { id: "instagram",      name: "인스타그램 비즈니스", desc: ko ? "MAU 2,000만+ · 비주얼 마케팅 필수" : "MAU 20M+ · Visual marketing essential", color: "#C13584", url: "https://business.instagram.com", fee: ko ? "0% (별도 PG 3~4%)" : "0% (PG 3~4%)", mau: "2,000만+", pros: ko ? ["무료 개설", "리스/스토리 바이럴", "쇼핑 태그 연동"] : ["Free", "Reels/Story viral", "Shopping tags"], cons: ko ? ["인앱 결제 미지원", "알고리즘 변동"] : ["No in-app payment", "Algorithm changes"] },
+                      { id: "naver-place",    name: "네이버 플레이스",     desc: ko ? "검색 MAU 4,000만+ · 매장 노출 1순위" : "Search MAU 40M+ · #1 store exposure", color: "#03C75A", url: "https://new.smartplace.naver.com", fee: ko ? "무료 (예약 현장결제 0원)" : "Free", mau: "4,000만+", pros: ko ? ["완전 무료", "네이버 검색·지도 노출", "예약·리뷰 통합"] : ["Free", "Naver Search + Maps", "Booking + Reviews"], cons: ko ? ["등록 후 노출까지 시간 소요", "리뷰 관리 필요"] : ["Takes time to rank", "Review management needed"] },
+                      { id: "kakao-channel",  name: "카카오 채널",         desc: ko ? "카톡 4,700만 · 메시지 마케팅" : "KakaoTalk 47M · Message marketing",           color: "#F9E000", url: "https://ch.kakao.com", fee: ko ? "채널 무료, 메시지 건당 15~20원" : "Channel free, msg ₩15~20/ea", mau: "4,700만", pros: ko ? ["카톡 푸시 마케팅", "챗봇 무료", "카카오맵 연동"] : ["KakaoTalk push", "Free chatbot"], cons: ko ? ["메시지 비용 누적", "톡스토어 수수료 별도"] : ["Message costs add up"] },
+                      { id: "google-business",name: "구글 비즈니스",       desc: ko ? "구글맵 노출 · 외국인 필수" : "Google Maps · Essential for foreigners",           color: "#4285F4", url: "https://business.google.com/ko", fee: ko ? "무료" : "Free", pros: ko ? ["완전 무료", "구글맵 노출", "외국인 접근성"] : ["Free", "Google Maps", "Foreign customers"], cons: ko ? ["한국 내 검색 점유율 낮음"] : ["Low domestic search share"] },
                     ];
 
                     const renderPlatformCard = (items: OpsItem[], keyPrefix: string, tip: string) => {
@@ -7780,7 +5001,13 @@ export default function StarterStageDemo({
                           <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", margin: "16px 0 12px" }} />
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                             <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(0,0,0,0.38)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
-                              {keyPrefix === "delivery" ? (language === "ko" ? "배달 플랫폼 입점" : "Delivery Platforms") : (language === "ko" ? "채널 개설 현황" : "Channel Setup")}
+                              {keyPrefix === "delivery"
+                                ? (businessCtx.isDeliveryRelevant
+                                    ? (language === "ko" ? "배달 플랫폼 입점" : "Delivery Platforms")
+                                    : isDigitalCategory
+                                      ? (language === "ko" ? "판매 플랫폼 선택" : "Sales Platforms")
+                                      : (language === "ko" ? "택배사 선택" : "Courier Service"))
+                                : (language === "ko" ? "채널 개설 현황" : "Channel Setup")}
                             </span>
                             {selectedCount > 0 && (
                               <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(0,122,255)", background: "rgba(0,122,255,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
@@ -7788,31 +5015,71 @@ export default function StarterStageDemo({
                               </span>
                             )}
                           </div>
-                          <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)" }}>
-                            {items.map((item, i) => {
+                          <div style={{ display: "grid", gap: "10px" }}>
+                            {items.map((item) => {
                               const selKey = `${keyPrefix}-${item.id}`;
                               const isSelected = !!opsSelections[selKey];
                               return (
-                                <div key={item.id}>
-                                  {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", marginLeft: "72px" }} />}
-                                  <div
-                                    style={{ display: "flex", alignItems: "center", gap: "14px", padding: "13px 18px", cursor: "pointer", background: isSelected ? "rgba(0,122,255,0.04)" : "transparent", transition: "background 0.15s" }}
-                                    onClick={() => setOpsSelections(prev => ({ ...prev, [selKey]: !prev[selKey] }))}
-                                  >
-                                    <div style={{ flexShrink: 0, width: "20px", height: "20px", borderRadius: "50%", border: isSelected ? "none" : "1.5px solid rgba(0,0,0,0.18)", background: isSelected ? "rgb(0,122,255)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
-                                      {isSelected && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                <div key={item.id}
+                                  style={{
+                                    background: isSelected ? `${item.color}06` : "white",
+                                    borderRadius: "18px", overflow: "hidden", cursor: "pointer",
+                                    border: isSelected ? `1.5px solid ${item.color}30` : "1px solid rgba(0,0,0,0.06)",
+                                    boxShadow: isSelected ? `0 0 0 3px ${item.color}08` : "0 1px 4px rgba(0,0,0,0.03)",
+                                    transition: "all 0.2s ease",
+                                  }}
+                                  onClick={() => setOpsSelections(prev => ({ ...prev, [selKey]: !prev[selKey] }))}
+                                >
+                                  <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 18px" }}>
+                                    <div style={{ flexShrink: 0, width: "22px", height: "22px", borderRadius: "50%", border: isSelected ? "none" : "1.5px solid rgba(0,0,0,0.15)", background: isSelected ? item.color : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                                      {isSelected && <svg width="11" height="11" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                                     </div>
-                                    <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: `${item.color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                      <span style={{ fontSize: "16px", fontWeight: 700, color: item.color }}>{item.name.charAt(0)}</span>
+                                    <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: `${item.color}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                      <span style={{ fontSize: "17px", fontWeight: 750, color: item.color }}>{item.name.charAt(0)}</span>
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div style={{ fontSize: "14px", fontWeight: isSelected ? 640 : 590, color: isSelected ? "rgb(0,122,255)" : "var(--text)", letterSpacing: "-0.3px", marginBottom: "2px" }}>{item.name}</div>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
+                                        <span style={{ fontSize: "15px", fontWeight: isSelected ? 660 : 600, color: isSelected ? item.color : "var(--text)", letterSpacing: "-0.02em" }}>{item.name}</span>
+                                        {item.mau && item.mau !== "-" && (
+                                          <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "6px", background: "rgba(0,0,0,0.04)", color: "rgba(0,0,0,0.4)" }}>MAU {item.mau}</span>
+                                        )}
+                                      </div>
                                       <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)", lineHeight: 1.45 }}>{item.desc}</div>
+                                      {item.fee && (
+                                        <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "6px", padding: "3px 10px", borderRadius: "8px", background: `${item.color}0a`, fontSize: "11px", fontWeight: 620, color: item.color }}>
+                                          {ko ? "수수료" : "Fee"}: {item.fee}
+                                        </div>
+                                      )}
                                     </div>
-                                    <a href={item.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ flexShrink: 0, width: "30px", height: "30px", borderRadius: "50%", background: "rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,0,0,0.38)", textDecoration: "none" }}>
+                                    <a href={item.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ flexShrink: 0, width: "30px", height: "30px", borderRadius: "50%", background: "rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,0,0,0.35)", textDecoration: "none" }}>
                                       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                     </a>
                                   </div>
+                                  {/* 장단점 — 선택 시 펼침 */}
+                                  {isSelected && (item.pros?.length || item.cons?.length) && (
+                                    <div style={{ padding: "0 18px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }} className="bento-fade-in">
+                                      {item.pros && item.pros.length > 0 && (
+                                        <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(5,150,105,0.04)" }}>
+                                          <div style={{ fontSize: "10px", fontWeight: 650, color: "#059669", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "장점" : "Pros"}</div>
+                                          {item.pros.map((p, pi) => (
+                                            <div key={pi} style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5, display: "flex", gap: "4px" }}>
+                                              <span style={{ color: "#059669", flexShrink: 0 }}>+</span> {p}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {item.cons && item.cons.length > 0 && (
+                                        <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(220,38,38,0.03)" }}>
+                                          <div style={{ fontSize: "10px", fontWeight: 650, color: "#dc2626", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "주의" : "Cons"}</div>
+                                          {item.cons.map((c, ci) => (
+                                            <div key={ci} style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5, display: "flex", gap: "4px" }}>
+                                              <span style={{ color: "#dc2626", flexShrink: 0 }}>-</span> {c}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
@@ -9665,6 +6932,40 @@ export default function StarterStageDemo({
                       ],
                       contractorKeyword: "스터디카페 공간 인테리어",
                     },
+                    "online-digital": {
+                      materials: [
+                        { icon: Monitor, name: "노트북 (업무용)", desc: "일반 사무: LG gram·삼성 갤럭시북 (90~160만). 디자인: MacBook Pro M4 (250~500만). 개발: ThinkPad T (120~200만)" },
+                        { icon: Maximize2, name: "모니터 (듀얼 추천)", desc: "삼성 S27 FHD (20~40만), LG 울트라와이드 34\" (40~60만). 디자인: Dell UltraSharp 4K (60~80만)" },
+                        { icon: Table2, name: "사무 데스크", desc: "데스커 15~50만 (소규모 최적), 이케아 5~30만 (초기 가성비), 퍼시스 30~150만 (법인)" },
+                        { icon: Gem, name: "인체공학 의자", desc: "시디즈 T50 (50~70만), 듀오백 D-ZERO (10~15만 가성비), 허먼밀러 에어론 (150~220만 프리미엄)" },
+                        { icon: Wifi, name: "네트워크 장비", desc: "ipTIME 기업용 공유기 (5~15만), 시놀로지 NAS (30~80만). 안정적 인터넷이 운영 핵심" },
+                        { icon: Box, name: "포장·물류 장비", desc: "라벨프린터 BIXOLON (15~40만), 포장재 박스코리아·올패키징몰. 풀필먼트: 쿠팡 로켓그로스·품고" },
+                      ],
+                      concepts: [
+                        { id: "minimal-home", icon: Home, name: "미니멀 홈오피스", desc: "데스커+이케아 조합. 최소 비용으로 쾌적한 작업 환경 — 1인 이커머스 최적", tags: ["1인 운영", "최저 비용", "홈오피스"] },
+                        { id: "shared-office", icon: Users, name: "공유오피스 활용", desc: "패스트파이브·위워크·스파크플러스. 초기 보증금 부담 없이 시작 — 네트워크 효과 보너스", tags: ["보증금 절약", "네트워킹", "2~5인 팀"] },
+                        { id: "studio-setup", icon: Camera, name: "촬영 스튜디오 겸용", desc: "조명+배경지+삼각대 세팅. 상품 촬영이 매출 직결 — 자체 스튜디오로 외주비 절약", tags: ["상품 촬영", "SNS 콘텐츠", "브랜드 구축"] },
+                        { id: "warehouse-office", icon: Package, name: "소형 창고+사무 겸용", desc: "재고 보관+포장+사무를 한 공간에. 임대료 절약 — 월 50~100만원대 소형 창고 활용", tags: ["재고 관리", "물류 효율", "성장기"] },
+                      ],
+                      contractorKeyword: "사무실 인테리어 소형",
+                    },
+                    "startup-tech": {
+                      materials: [
+                        { icon: Monitor, name: "개발용 노트북", desc: "MacBook Pro M4 Pro (280~350만, ARM 네이티브), ThinkPad T (120~200만, 리눅스 최적), Dell XPS (150~250만)" },
+                        { icon: Maximize2, name: "외장 모니터 (듀얼/울트라와이드)", desc: "LG 울트라와이드 34\" (40~60만) 개발자 필수. 디자인: Dell UltraSharp 4K. BenQ PD2706U (60~80만)" },
+                        { icon: Table2, name: "사무 가구 (데스크·의자)", desc: "퍼시스/코아스 (법인 대량), 데스커 (소규모), 시디즈 T80 (80~120만), 허먼밀러 에어론 (150~220만)" },
+                        { icon: Wifi, name: "서버·네트워크·클라우드", desc: "AWS/GCP/Vercel 클라우드. ipTIME 기업공유기. 시놀로지 NAS. 기가비트 인터넷 필수" },
+                        { icon: Lightbulb, name: "회의실 장비", desc: "LG 시네빔 프로젝터 (50~150만), 삼성 Flip 전자칠판 (300~500만), 로지텍 Rally 화상회의 (100~200만)" },
+                        { icon: Cpu, name: "SaaS 구독 스택", desc: "Notion·Slack·Figma·GitHub·Linear·Vercel. 월 인당 5~15만원. Adobe CC 디자인팀 월 6만~" },
+                      ],
+                      concepts: [
+                        { id: "garage-mvp", icon: Zap, name: "개러지 MVP 모드", desc: "최소 장비+공유오피스. 검증 전까지 고정비 최소화 — 시드 전 스타트업 정석", tags: ["시드 전", "최소 비용", "빠른 검증"] },
+                        { id: "modern-office", icon: Cpu, name: "모던 테크 오피스", desc: "코아스 시스템가구+허먼밀러 의자+대형 모니터. IT기업 표준 환경 — 채용 경쟁력", tags: ["채용 경쟁력", "5~15인", "시리즈A+"] },
+                        { id: "hybrid-remote", icon: Globe, name: "하이브리드 리모트", desc: "핵심 장비만 사무실 + 재택 장비 지원. Notion·Slack·Zoom 기반 — 고정비 대폭 절감", tags: ["리모트", "고정비 절감", "글로벌 팀"] },
+                        { id: "design-studio", icon: Palette, name: "크리에이티브 스튜디오", desc: "iMac 24\"+듀얼모니터+Adobe CC. 디자인·영상 중심 스타트업 — 컬러 정확도 필수", tags: ["디자인 중심", "영상 제작", "크리에이티브"] },
+                      ],
+                      contractorKeyword: "IT 스타트업 사무실 인테리어",
+                    },
                   };
 
                   const catData = categoryDataMap[industryCategoryId] ?? categoryDataMap["food"];
@@ -9688,7 +6989,9 @@ export default function StarterStageDemo({
                           <div style={{ marginBottom: "28px" }}>
                             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
                               <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>
-                                {language === "ko" ? "핵심 자재" : "Key Materials"}
+                                {language === "ko"
+                                  ? (industryCategoryId === "online-digital" || industryCategoryId === "startup-tech" ? "핵심 장비 · 집기" : "핵심 자재 · 집기")
+                                  : "Key Materials & Equipment"}
                               </span>
                               <span style={{ fontSize: "12px", color: "var(--muted)" }}>
                                 {language === "ko" ? `${materials.length}가지` : `${materials.length} items`}
@@ -12020,2961 +9323,30 @@ export default function StarterStageDemo({
         </section>
       ) : null}
 
-      {activeSurface === "analytics" ? (() => {
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        type DE = { date: string; sales: number; customers: number };
-        const monthEntries = (dailyEntries as DE[]).filter((e) => e.date.startsWith(currentMonth));
-        const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
-        const totalCustomers = monthEntries.reduce((s, e) => s + e.customers, 0);
-        const workingDays = monthEntries.length;
-        const avgDailySales = workingDays > 0 ? totalSales / workingDays : 0;
-        const avgTicket = totalCustomers > 0 ? totalSales / totalCustomers : 0;
-        const { ingredients, labor, rent, utilities, other } = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-        const totalCosts = ingredients + labor + rent + utilities + other;
-        const ingredientRatio = totalSales > 0 ? (ingredients / totalSales) * 100 : 0;
-        const laborRatio = totalSales > 0 ? (labor / totalSales) * 100 : 0;
-        const primeCost = ingredientRatio + laborRatio;
-        const rentRatio = totalSales > 0 ? (rent / totalSales) * 100 : 0;
-        const netProfit = totalSales - totalCosts;
-        const profitMargin = totalSales > 0 ? (netProfit / totalSales) * 100 : 0;
-        const bepProgress = totalCosts > 0 ? Math.min(100, (totalSales / totalCosts) * 100) : 0;
 
-        const fmt = (n: number) => n >= 10000
-          ? `${Math.round(n / 10000).toLocaleString()}만원`
-          : `${Math.round(n).toLocaleString()}원`;
-        const pct = (n: number) => `${n.toFixed(1)}%`;
+      {activeSurface === "analytics" ? <AnalyticsSurface /> : null}
 
-        type HealthLevel = "good" | "caution" | "danger";
-        const health = (val: number, good: number, caution: number): HealthLevel =>
-          val <= good ? "good" : val <= caution ? "caution" : "danger";
-        const healthColor = (h: HealthLevel) =>
-          h === "good" ? "#34c759" : h === "caution" ? "#ff9f0a" : "#ff3b30";
-        const healthLabel = (h: HealthLevel) =>
-          language === "ko"
-            ? h === "good" ? "건강" : h === "caution" ? "주의" : "위험"
-            : h === "good" ? "Good" : h === "caution" ? "Caution" : "Danger";
-
-        const ingHealth = health(ingredientRatio, 35, 40);
-        const labHealth = health(laborRatio, 30, 35);
-        const primeHealth = health(primeCost, 60, 65);
-        const rentHealth = health(rentRatio, 10, 15);
-
-        // 월말 순이익 예측
-        const todayDate = new Date().getDate();
-        const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-        const remainDays = daysInMonth - todayDate;
-        const avgDailySalesNum = workingDays > 0 ? totalSales / workingDays : 0;
-        const projectedSales = workingDays > 0 ? totalSales + avgDailySalesNum * remainDays : 0;
-        const projectedProfit = projectedSales - totalCosts;
-        const hasDangerZone = ingHealth === "danger" || labHealth === "danger" || rentHealth === "danger" || primeHealth === "danger" || (totalSales > 0 && netProfit < 0);
-
-        const diagnostics: string[] = [];
-        if (totalSales > 0) {
-          if (primeHealth === "danger") diagnostics.push(language === "ko"
-            ? `Prime Cost(원가율+인건비율)가 ${pct(primeCost)}입니다. 65% 이하를 유지해야 임대료·세금을 내고 수익이 남습니다.`
-            : `Prime Cost is ${pct(primeCost)}. Keep it under 65% to have margin left after rent and taxes.`);
-          if (ingHealth !== "good") diagnostics.push(language === "ko"
-            ? `재료비율이 ${pct(ingredientRatio)}입니다. 30~35%를 목표로 메뉴 원가를 점검하세요.`
-            : `Food cost ratio is ${pct(ingredientRatio)}. Target 30–35% and review menu costs.`);
-          if (labHealth !== "good") diagnostics.push(language === "ko"
-            ? `인건비율이 ${pct(laborRatio)}입니다. 30% 이하를 유지해야 수익이 납니다. 스케줄 최적화를 검토하세요.`
-            : `Labor ratio is ${pct(laborRatio)}. Keep it under 30% to stay profitable. Review staff scheduling.`);
-          if (rentHealth !== "good") diagnostics.push(language === "ko"
-            ? `임대료 비율이 ${pct(rentRatio)}입니다. 10% 이하를 권장합니다. 매출 증대가 시급합니다.`
-            : `Rent ratio is ${pct(rentRatio)}. Under 10% is recommended — focus on increasing revenue.`);
-          if (netProfit < 0) diagnostics.push(language === "ko"
-            ? `이번 달 예상 적자입니다(${fmt(Math.abs(netProfit))}). 비용 구조를 점검하세요.`
-            : `Projected loss this month (${fmt(Math.abs(netProfit))}). Review your cost structure.`);
-          if (diagnostics.length === 0) diagnostics.push(language === "ko"
-            ? "지표가 모두 건강한 범위에 있습니다. 이 구조를 유지하세요."
-            : "All metrics are in healthy range. Keep up the good work.");
-        }
-
-        const inputStyle = {
-          border: "1px solid rgba(0,0,0,0.12)",
-          borderRadius: "10px",
-          padding: "10px 14px",
-          fontSize: "15px",
-          outline: "none",
-          background: "rgba(255,255,255,0.8)",
-          width: "100%",
-          boxSizing: "border-box" as const
-        };
-        const costRowStyle = { display: "flex", gap: "8px", alignItems: "center" };
-        const costLabelStyle = { fontSize: "13px", color: "var(--muted)", width: "80px", flexShrink: 0 };
-        const kpiRowStyle = { display: "flex", flexDirection: "column" as const, gap: "10px" };
-        const kpiItemStyle = { display: "flex", flexDirection: "column" as const, gap: "4px" };
-        const kpiLabelStyle = { fontSize: "12px", color: "var(--muted)", fontWeight: 500, letterSpacing: "0.04em" };
-        const kpiValueStyle = { fontSize: "18px", fontWeight: 700, letterSpacing: "-0.3px" };
-        const kpiBarBgStyle = { height: "6px", borderRadius: "4px", background: "rgba(0,0,0,0.08)", overflow: "hidden" as const };
-
-        // ── 가게 카드 목록 뷰 ──
-        if (selectedStoreIndex === null) {
-          const ko = language === "ko";
-          const industryId = decisions["industry-selection"]?.selectedPrimaryOptionId ?? profile?.subIndustryId;
-          const industryLabel = industryId
-            ? localizeRecommendationItem({ id: industryId, title: industryId }, language).title
-            : null;
-          const progressPct = Math.min(100, Math.round((roadmap.completedStageIds.length / pathTotalStages) * 100));
-
-          return (
-            <section style={styles.section}>
-              <div style={styles.sectionTitle}>{ko ? "내 가게" : "My Stores"}</div>
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
-
-                {/* ── 현재 가게 카드 ── */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedStoreIndex(0)}
-                  style={{
-                    display: "block", width: "100%", textAlign: "left" as const,
-                    background: "#fff", borderRadius: "18px",
-                    border: "1px solid rgba(0,0,0,0.10)",
-                    padding: "22px 22px 20px", cursor: "pointer",
-                    transition: "background 0.15s ease",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#fff"; }}
-                >
-                  {/* 상단: 상호명 + 상태 뱃지 */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
-                    <div style={{ fontSize: "21px", fontWeight: 700, letterSpacing: "-0.5px", lineHeight: 1.2 }}>
-                      {storeName || (ko ? "내 가게" : "My Store")}
-                    </div>
-                    <div style={{
-                      fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "999px",
-                      background: businessLaunched ? "rgba(52,199,89,0.10)" : "rgba(0,0,0,0.05)",
-                      color: businessLaunched ? "#248a3d" : "var(--muted)",
-                      flexShrink: 0, marginLeft: "10px",
-                    }}>
-                      {businessLaunched ? (ko ? "운영 중" : "Open") : (ko ? "준비 중" : "Preparing")}
-                    </div>
-                  </div>
-
-                  {/* 업종 레이블 */}
-                  <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "20px", letterSpacing: "0.01em" }}>
-                    {industryLabel ?? (ko ? "업종 미설정" : "Industry not set")}
-                  </div>
-
-                  {/* 진행률 */}
-                  <div style={{ height: "3px", borderRadius: "2px", background: "rgba(0,0,0,0.07)", overflow: "hidden", marginBottom: "8px" }}>
-                    <div style={{
-                      height: "100%", borderRadius: "2px",
-                      background: progressPct >= 100 ? "#34c759" : "#007aff",
-                      width: `${progressPct}%`, transition: "width 0.4s ease",
-                    }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-                      {ko ? `${roadmap.completedStageIds.length}/${pathTotalStages} 단계` : `${roadmap.completedStageIds.length} of ${pathTotalStages} stages`}
-                    </span>
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#007aff" }}>
-                      {ko ? "자세히 보기" : "View details"} ›
-                    </span>
-                  </div>
-                </button>
-
-                {/* ── 가게 추가 (준비 중) ── */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: "14px",
-                  padding: "18px 22px",
-                  background: "rgba(0,0,0,0.02)", borderRadius: "18px",
-                  border: "1px dashed rgba(0,0,0,0.13)",
-                }}>
-                  <div style={{
-                    width: "36px", height: "36px", borderRadius: "50%",
-                    border: "1.5px dashed rgba(0,0,0,0.15)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "20px", fontWeight: 300, color: "rgba(0,0,0,0.2)",
-                    flexShrink: 0,
-                  }}>+</div>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 600, color: "rgba(0,0,0,0.25)", marginBottom: "2px" }}>
-                      {ko ? "가게 추가" : "Add a store"}
-                    </div>
-                    <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(0,0,0,0.18)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-                      {ko ? "곧 지원 예정" : "Coming soon"}
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </section>
-          );
-        }
-
-        return (
-          <>
-            <section style={styles.section}>
-              {/* ── 뒤로가기 ── */}
-              <button
-                type="button"
-                onClick={() => setSelectedStoreIndex(null)}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "3px",
-                  background: "none", border: "none", cursor: "pointer",
-                  fontSize: "15px", fontWeight: 400, color: "#007aff",
-                  padding: "0", marginBottom: "20px",
-                }}
-              >
-                ‹ {language === "ko" ? "내 가게" : "My Stores"}
-              </button>
-              <div style={styles.sectionTitle}>{storeName || (language === "ko" ? "내 가게 현황" : "My Store")}</div>
-
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: "16px", marginTop: "16px" }}>
-
-              {/* ── 사업 프로필 대시보드 ── */}
-              {(() => {
-                const ko = language === "ko";
-                const notSet = ko ? "미입력" : "—";
-                const divider = <div style={{ height: "1px", background: "rgba(0,0,0,0.06)" }} />;
-
-                // ── 공통 스타일 헬퍼 ──
-                const tileStyle: React.CSSProperties = { background: "rgba(0,0,0,0.03)", borderRadius: "12px", padding: "12px 13px" };
-                const tileLabelStyle: React.CSSProperties = { fontSize: "11px", color: "var(--muted)", marginBottom: "5px", letterSpacing: "0.02em" };
-                const tileValueStyle = (empty: boolean): React.CSSProperties => ({ fontSize: "14px", fontWeight: 600, letterSpacing: "-0.2px", color: empty ? "var(--muted)" : "inherit" });
-                const sectionLabel = (text: string, editHint?: string) => (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>
-                      {text}
-                    </div>
-                    {editHint && <div style={{ fontSize: "11px", color: "var(--muted)", fontStyle: "italic" }}>{editHint}</div>}
-                  </div>
-                );
-                const chip = (text: string, active = true) => (
-                  <span key={text} style={{ display: "inline-block", fontSize: "11px", fontWeight: 500, color: active ? "#007aff" : "var(--muted)", background: active ? "rgba(0,122,255,0.08)" : "rgba(0,0,0,0.05)", borderRadius: "6px", padding: "3px 8px" }}>
-                    {text}
-                  </span>
-                );
-
-                // 해당 로드맵 단계로 이동 (?editStage= 쿼리 파라미터로 전달)
-                const goToStage = (stageId: string) => {
-                  router.push(`${SURFACE_HREFS.current}?editStage=${stageId}`);
-                };
-
-                // ── 데이터 추출 ──
-                const industryId = decisions["industry-selection"]?.selectedPrimaryOptionId ?? profile?.subIndustryId;
-                const industryLabel = industryId ? localizeRecommendationItem({ id: industryId, title: industryId }, language).title : notSet;
-                const startupTypeVal = decisions["startup-type"]?.selectedPrimaryOptionId ?? profile?.startupType;
-                const startupTypeLabel = startupTypeVal ? formatStartupType(String(startupTypeVal), language) : notSet;
-                const bizModelId = decisions["business-model"]?.selectedPrimaryOptionId ?? profile?.businessModelId;
-                const bizModelLabel = bizModelId ? localizeRecommendationItem({ id: String(bizModelId), title: String(bizModelId) }, language).title : notSet;
-                const capitalVal = decisions["budget-setup"]?.inputs?.capital ?? profile?.capital;
-                const capitalLabel = capitalVal != null ? formatBudgetPresetLabel(Number(capitalVal), language) : notSet;
-                const openDateVal = decisions["budget-setup"]?.inputs?.targetOpenDate;
-                const openDateLabel = openDateVal ? String(openDateVal) : notSet;
-                const locationId = decisions["location-candidates"]?.selectedPrimaryOptionId;
-                const locationLabel = locationId ? localizeRecommendationItem({ id: String(locationId), title: String(locationId) }, language).title : notSet;
-
-                // 재무 시뮬레이션
-                const finSnap = hydrateSavedFinanceSnapshot(decisions["financial-simulation"]);
-                const contractRisk = decisions["contract-analysis"]?.inputs?.riskLevel;
-
-                // 운영 채널
-                const deliveryPlatforms = [
-                  { id: "baemin",       label: "배민" },
-                  { id: "coupangeats",  label: "쿠팡이츠" },
-                  { id: "yogiyo",       label: "요기요" },
-                  { id: "naver-order",  label: "네이버주문" },
-                ].filter(p => (opsSelections as Record<string, boolean>)[`delivery-${p.id}`]);
-                const snsPlatforms = [
-                  { id: "instagram",       label: "인스타그램" },
-                  { id: "naver-place",     label: "네이버플레이스" },
-                  { id: "kakao-channel",   label: "카카오채널" },
-                  { id: "google-business", label: "구글비즈니스" },
-                ].filter(p => (opsSelections as Record<string, boolean>)[`sns-${p.id}`]);
-                const softOpenPricingLabel =
-                  softOpenPricing === "free"     ? (ko ? "무료 제공" : "Free") :
-                  softOpenPricing === "discount" ? (ko ? "30–50% 할인" : "30–50% off") :
-                  softOpenPricing === "full"     ? (ko ? "정가 운영" : "Full price") : null;
-
-                // 로드맵 진행
-                const totalStages = pathTotalStages;
-                const completedCount = roadmap.completedStageIds.length;
-                const progressPct = Math.min(100, Math.round((completedCount / totalStages) * 100));
-
-                // 위험도 색상
-                const riskColor = (r: string | undefined) =>
-                  r === "low" ? "#34c759" : r === "medium" ? "#ff9f0a" : r === "high" || r === "critical" ? "#ff3b30" : "var(--muted)";
-                const riskLabel = (r: string | undefined) =>
-                  !r ? notSet :
-                  ko ? (r === "low" ? "낮음" : r === "medium" ? "보통" : r === "high" ? "높음" : "위험") :
-                       (r === "low" ? "Low" : r === "medium" ? "Medium" : r === "high" ? "High" : "Critical");
-
-                if (!persistenceReady) {
-                  return (
-                    <article style={{ ...styles.card, gap: "12px" }}>
-                      <div style={{ fontSize: "13px", color: "var(--muted)" }}>
-                        {ko ? "데이터 불러오는 중…" : "Loading data…"}
-                      </div>
-                    </article>
-                  );
-                }
-
-                return (
-                  <>
-                    {/* ── 생존 진단 카드 ── */}
-                    {(() => {
-                      const launchDateStr = typeof window !== "undefined" ? localStorage.getItem("businessLaunchedDate") : null;
-                      if (!launchDateStr) return null;
-                      const launchDate = new Date(launchDateStr);
-                      const today = new Date();
-                      const daysSinceLaunch = Math.floor((today.getTime() - launchDate.getTime()) / 86400000);
-                      if (daysSinceLaunch < 0) return null;
-
-                      // 현재 달 매출 데이터
-                      type DE = { date: string; sales: number; customers: number };
-                      const allEntries = dailyEntries as DE[];
-                      const totalRevenue = allEntries.reduce((s, e) => s + e.sales, 0);
-                      const totalDays = allEntries.length;
-                      const avgDaily = totalDays > 0 ? totalRevenue / totalDays : 0;
-                      const monthlyProjected = avgDaily * 30;
-
-                      // BEP 비교
-                      const bepRevenue = savedFinanceSnapshot?.breakEvenRevenue ?? 0;
-                      const bepAchievement = bepRevenue > 0 ? Math.round((monthlyProjected / bepRevenue) * 100) : 0;
-
-                      // 원가율
-                      const mc = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-                      const totalCost = mc.ingredients + mc.labor + mc.rent + mc.utilities + mc.other;
-                      const primeRate = monthlyProjected > 0 ? ((mc.ingredients + mc.labor) / monthlyProjected) * 100 : 0;
-
-                      // 런웨이
-                      const monthlyNet = monthlyProjected - totalCost;
-                      const capitalLeft = (selectedBudget ?? 0) - totalCost * (daysSinceLaunch / 30);
-                      const runway = totalCost > 0 && monthlyNet < 0 ? Math.max(0, Math.round(capitalLeft / Math.abs(monthlyNet))) : 99;
-
-                      // 진단 단계 결정
-                      const checkpoint = daysSinceLaunch >= 90 ? 90 : daysSinceLaunch >= 60 ? 60 : daysSinceLaunch >= 30 ? 30 : 0;
-                      const phaseLabel = checkpoint === 0 ? (ko ? "적응기" : "Settling in")
-                        : checkpoint === 30 ? (ko ? "30일 진단" : "30-Day Check")
-                        : checkpoint === 60 ? (ko ? "60일 진단" : "60-Day Check")
-                        : (ko ? "90일 진단" : "90-Day Check");
-
-                      // 전체 건강 점수
-                      const bepScore = bepAchievement >= 100 ? 3 : bepAchievement >= 70 ? 2 : bepAchievement >= 40 ? 1 : 0;
-                      const primeScore = primeRate <= 60 ? 3 : primeRate <= 65 ? 2 : primeRate <= 70 ? 1 : 0;
-                      const runwayScore = runway >= 6 ? 3 : runway >= 3 ? 2 : runway >= 1 ? 1 : 0;
-                      const totalScore = bepScore + primeScore + runwayScore;
-                      const overallHealth = totalScore >= 7 ? "good" : totalScore >= 4 ? "caution" : "danger";
-                      const healthColor = overallHealth === "good" ? "#34c759" : overallHealth === "caution" ? "#ff9f0a" : "#ff3b30";
-                      const healthMsg = overallHealth === "good"
-                        ? (ko ? "양호한 흐름입니다. 현재 방향을 유지하세요." : "On track. Maintain current direction.")
-                        : overallHealth === "caution"
-                          ? (ko ? "주의가 필요합니다. 비용 구조를 점검하세요." : "Needs attention. Review your cost structure.")
-                          : (ko ? "위험 신호입니다. 즉시 비용 절감과 매출 개선이 필요합니다." : "Warning. Immediate cost reduction and revenue improvement needed.");
-
-                      return (
-                        <article style={{
-                          ...styles.card,
-                          border: `1px solid ${healthColor}20`,
-                          background: `linear-gradient(180deg, rgba(255,255,255,0.92) 0%, ${healthColor}04 100%)`
-                        }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: healthColor, marginBottom: "4px" }}>
-                                {phaseLabel} · D+{daysSinceLaunch}
-                              </div>
-                              <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em" }}>
-                                {ko ? "생존 진단" : "Survival Check"}
-                              </div>
-                            </div>
-                            <div style={{
-                              width: 44, height: 44, borderRadius: 22,
-                              background: `${healthColor}15`,
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              fontSize: "20px"
-                            }}>
-                              {overallHealth === "good" ? "✓" : overallHealth === "caution" ? "!" : "⚠"}
-                            </div>
-                          </div>
-
-                          {/* 핵심 지표 3개 */}
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-                            <div style={{ padding: "10px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", textAlign: "center" }}>
-                              <div style={{ fontSize: "18px", fontWeight: 700, color: bepAchievement >= 100 ? "#34c759" : bepAchievement >= 70 ? "#ff9f0a" : "#ff3b30" }}>
-                                {totalDays > 0 ? `${bepAchievement}%` : "—"}
-                              </div>
-                              <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "BEP 달성률" : "BEP Rate"}</div>
-                            </div>
-                            <div style={{ padding: "10px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", textAlign: "center" }}>
-                              <div style={{ fontSize: "18px", fontWeight: 700, color: primeRate <= 60 ? "#34c759" : primeRate <= 65 ? "#ff9f0a" : "#ff3b30" }}>
-                                {totalDays > 0 ? `${primeRate.toFixed(0)}%` : "—"}
-                              </div>
-                              <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "프라임코스트" : "Prime Cost"}</div>
-                            </div>
-                            <div style={{ padding: "10px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", textAlign: "center" }}>
-                              <div style={{ fontSize: "18px", fontWeight: 700, color: runway >= 6 ? "#34c759" : runway >= 3 ? "#ff9f0a" : "#ff3b30" }}>
-                                {totalCost > 0 ? (runway >= 99 ? "∞" : `${runway}${ko ? "개월" : "mo"}`) : "—"}
-                              </div>
-                              <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "현금 런웨이" : "Runway"}</div>
-                            </div>
-                          </div>
-
-                          {/* 진단 메시지 */}
-                          <div style={{ fontSize: "13px", lineHeight: 1.6, color: "var(--muted)" }}>
-                            {healthMsg}
-                          </div>
-
-                          {/* 위기 대응 가이드 (문제 감지 시) */}
-                          {overallHealth !== "good" && totalDays > 0 && (() => {
-                            type CrisisAction = { icon: string; title: string; actions: string[] };
-                            const crisisGuides: CrisisAction[] = [];
-                            if (bepAchievement < 70) {
-                              crisisGuides.push({
-                                icon: "📈", title: ko ? "매출 증가 전략" : "Revenue Growth",
-                                actions: ko
-                                  ? ["네이버 플레이스 리뷰 관리 — 별점 4.5 이상 유지가 신규 유입 핵심", "배달앱 상위노출 광고 (첫 주 집중)", "오프닝 프로모션 연장 또는 재이벤트", "주변 오피스/주거 타겟 전단지 + 쿠폰"]
-                                  : ["Maintain 4.5+ Naver Place rating", "Delivery app top-exposure ads (focus first week)", "Extend/repeat opening promotions", "Flyers + coupons targeting nearby offices/residents"]
-                              });
-                            }
-                            if (primeRate > 65) {
-                              crisisGuides.push({
-                                icon: "✂️", title: ko ? "비용 절감 전략" : "Cost Reduction",
-                                actions: ko
-                                  ? ["공급업체 2곳 이상 비교 견적 받기", "저마진 메뉴 제거 또는 가격 조정", "피크/비피크 시간대 인력 재배치", "식재료 로스 줄이기 — 일별 사용량 기록 시작"]
-                                  : ["Get quotes from 2+ suppliers", "Remove low-margin items or adjust pricing", "Redistribute staff between peak/off-peak", "Reduce food waste — start daily usage tracking"]
-                              });
-                            }
-                            if (runway < 3) {
-                              crisisGuides.push({
-                                icon: "🚨", title: ko ? "긴급 자금 확보" : "Emergency Funding",
-                                actions: ko
-                                  ? ["소상공인 긴급경영안정자금 신청 (소진공 1357)", "불필요한 고정비 즉시 해지 (미사용 구독, 과잉 보험)", "매출 집중 — 배달 전용 메뉴 추가로 매출원 다변화", "세무사 상담 — 비용 처리 최적화로 현금흐름 개선"]
-                                  : ["Apply for emergency SME stabilization fund (SEMAS 1357)", "Cancel unnecessary fixed costs (unused subscriptions, excess insurance)", "Diversify revenue — add delivery-only menu", "Tax advisor — optimize expense treatment for cash flow"]
-                              });
-                            }
-                            if (crisisGuides.length === 0) return null;
-                            return (
-                              <div style={{ display: "grid", gap: "8px" }}>
-                                {crisisGuides.map((guide, gi) => (
-                                  <div key={gi} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", border: "1px solid var(--border)" }}>
-                                    <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span>{guide.icon}</span> {guide.title}
-                                    </div>
-                                    {guide.actions.map((action, ai) => (
-                                      <div key={ai} style={{ fontSize: "12px", lineHeight: 1.5, color: "var(--muted)", display: "flex", gap: "6px", marginBottom: "3px" }}>
-                                        <span style={{ color: "var(--primary)", flexShrink: 0 }}>•</span>
-                                        <span>{action}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })()}
-
-                          {/* 체크포인트별 추가 안내 */}
-                          {checkpoint >= 30 && totalDays > 0 && (
-                            <div style={{ fontSize: "12px", lineHeight: 1.5, color: "var(--muted)", padding: "10px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", border: "1px solid var(--border)" }}>
-                              {checkpoint === 30 && (ko
-                                ? `개업 30일 경과. 월 예상 매출 ${fmt(monthlyProjected)}으로 BEP(${fmt(bepRevenue)}) 대비 ${bepAchievement}% 달성 중입니다.${bepAchievement < 70 ? " 마케팅 강화와 메뉴 점검을 권장합니다." : ""}`
-                                : `30 days since opening. Projected monthly ${fmt(monthlyProjected)} = ${bepAchievement}% of BEP (${fmt(bepRevenue)}).`)}
-                              {checkpoint === 60 && (ko
-                                ? `개업 60일 경과. 프라임코스트 ${primeRate.toFixed(1)}%${primeRate > 65 ? " — 식재료비 또는 인건비 재검토가 필요합니다." : "로 안정적입니다."} 고정비 구조를 점검하세요.`
-                                : `60 days. Prime cost ${primeRate.toFixed(1)}%.${primeRate > 65 ? " Review ingredient or labor costs." : " Stable."} Check fixed cost structure.`)}
-                              {checkpoint === 90 && (ko
-                                ? `개업 90일 경과. ${monthlyNet >= 0 ? "흑자 구조입니다. 안정적 성장 단계로 진입했습니다." : "적자 구조입니다. 메뉴 가격, 원가, 고정비 중 하나를 반드시 조정해야 합니다."}`
-                                : `90 days. ${monthlyNet >= 0 ? "Profitable. Entering stable growth phase." : "Loss structure. Must adjust menu pricing, costs, or fixed expenses."}`)}
-                            </div>
-                          )}
-                        </article>
-                      );
-                    })()}
-
-                    {/* ── 카드 1: 사업 기본 정보 ── */}
-                    <article style={{ ...styles.card, gap: "14px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        {sectionLabel(ko ? "사업 기본 정보" : "Business Info")}
-                        <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "10px" }}>
-                          <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: businessLaunched ? "#34c759" : "#ff9f0a" }} />
-                          <span style={{ fontSize: "12px", fontWeight: 600, color: businessLaunched ? "#34c759" : "#ff9f0a" }}>
-                            {businessLaunched ? (ko ? "개업 운영 중" : "Open") : (ko ? "준비 중" : "Preparing")}
-                          </span>
-                        </div>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                        {[
-                          { label: ko ? "상호명" : "Store name",       value: storeName || notSet, stageId: "biz-registration" },
-                          { label: ko ? "업종" : "Industry",           value: industryLabel,    stageId: "industry-selection" },
-                          { label: ko ? "창업 형태" : "Startup type",  value: startupTypeLabel, stageId: "startup-type" },
-                          { label: ko ? "운영 방식" : "Model",         value: bizModelLabel,    stageId: "business-model" },
-                          { label: ko ? "초기 자본금" : "Capital",      value: capitalLabel,     stageId: "budget-setup" },
-                          { label: ko ? "개업 목표일" : "Target date",  value: openDateLabel,    stageId: "budget-setup" },
-                          { label: ko ? "상권·입지" : "Location",       value: locationLabel,    stageId: "location-candidates" },
-                        ].map(({ label, value, stageId }) => (
-                          <button
-                            key={label}
-                            onClick={() => goToStage(stageId)}
-                            style={{ ...tileStyle, border: "none", cursor: "pointer", textAlign: "left" as const, display: "block", width: "100%", position: "relative" as const, transition: "background 0.15s" }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,122,255,0.06)")}
-                            onMouseLeave={e => (e.currentTarget.style.background = "rgba(0,0,0,0.03)")}
-                          >
-                            <div style={tileLabelStyle}>{label}</div>
-                            <div style={tileValueStyle(value === notSet)}>{value}</div>
-                            <div style={{ position: "absolute" as const, top: "9px", right: "9px", fontSize: "10px", fontWeight: 600, color: "rgba(0,122,255,0.6)" }}>
-                              {ko ? "수정 →" : "Edit →"}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </article>
-
-                    {/* ── 카드 2: 재무 진단 ── */}
-                    {finSnap && (
-                      <article style={{ ...styles.card, gap: "14px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>
-                            {ko ? "재무 시뮬레이션 결과" : "Financial Forecast"}
-                          </div>
-                          <button
-                            onClick={() => router.push(`${SURFACE_HREFS.guides}?panel=finance`)}
-                            style={{ fontSize: "11px", color: "#007aff", fontWeight: 600, background: "rgba(0,122,255,0.08)", border: "none", borderRadius: "8px", padding: "4px 10px", cursor: "pointer" }}
-                          >
-                            {ko ? "다시 계산" : "Recalculate"}
-                          </button>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                          <div style={tileStyle}>
-                            <div style={tileLabelStyle}>{ko ? "손익분기 월매출" : "Break-even revenue"}</div>
-                            <div style={{ fontSize: "16px", fontWeight: 700 }}>{fmt(finSnap.breakEvenRevenue)}</div>
-                          </div>
-                          <div style={tileStyle}>
-                            <div style={tileLabelStyle}>{ko ? "자본 생존 가능 기간" : "Runway"}</div>
-                            <div style={{ fontSize: "16px", fontWeight: 700 }}>
-                              {finSnap.survivabilityMonths > 0 ? `${finSnap.survivabilityMonths}${ko ? "개월" : "mo"}` : notSet}
-                            </div>
-                          </div>
-                          <div style={tileStyle}>
-                            <div style={tileLabelStyle}>{ko ? "재무 위험 등급" : "Risk level"}</div>
-                            <div style={{ fontSize: "15px", fontWeight: 700, color: riskColor(finSnap.riskLevel) }}>
-                              {riskLabel(finSnap.riskLevel)}
-                            </div>
-                          </div>
-                          <div style={tileStyle}>
-                            <div style={tileLabelStyle}>{ko ? "인테리어 후 잔여 자본" : "Capital after setup"}</div>
-                            <div style={{ fontSize: "14px", fontWeight: 600 }}>
-                              {finSnap.capitalAfterSetupLow > 0
-                                ? `${fmt(finSnap.capitalAfterSetupLow)} ~ ${fmt(finSnap.capitalAfterSetupHigh)}`
-                                : notSet}
-                            </div>
-                          </div>
-                          {finSnap.breakEvenMonth != null && (
-                            <div style={tileStyle}>
-                              <div style={tileLabelStyle}>{ko ? "손익분기 예상 시점" : "BEP month"}</div>
-                              <div style={{ fontSize: "15px", fontWeight: 700 }}>
-                                {ko ? `개업 후 ${finSnap.breakEvenMonth}개월차` : `Month ${finSnap.breakEvenMonth}`}
-                              </div>
-                            </div>
-                          )}
-                          {contractRisk && (
-                            <div style={tileStyle}>
-                              <div style={tileLabelStyle}>{ko ? "임대차 계약 위험도" : "Contract risk"}</div>
-                              <div style={{ fontSize: "15px", fontWeight: 700, color: riskColor(String(contractRisk)) }}>
-                                {riskLabel(String(contractRisk))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </article>
-                    )}
-
-                    {/* ── 카드 3: 운영 채널 & 세팅 ── */}
-                    {(() => {
-                      const allDelivery = [
-                        { id: "baemin",       label: "배민" },
-                        { id: "coupangeats",  label: "쿠팡이츠" },
-                        { id: "yogiyo",       label: "요기요" },
-                        { id: "naver-order",  label: "네이버주문" },
-                      ];
-                      const allSns = [
-                        { id: "instagram",       label: "인스타그램" },
-                        { id: "naver-place",     label: "네이버플레이스" },
-                        { id: "kakao-channel",   label: "카카오채널" },
-                        { id: "google-business", label: "구글비즈니스" },
-                      ];
-                      const toggleChip = (key: string, label: string, active: boolean, onToggle: () => void) => (
-                        <button
-                          key={key}
-                          onClick={onToggle}
-                          style={{
-                            display: "inline-block", fontSize: "11px", fontWeight: 600, border: "none", cursor: "pointer",
-                            color: active ? "#007aff" : "var(--muted)",
-                            background: active ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.05)",
-                            borderRadius: "7px", padding: "5px 10px",
-                            outline: active ? "1.5px solid rgba(0,122,255,0.3)" : "none",
-                            transition: "all 0.15s"
-                          }}
-                        >
-                          {active ? "✓ " : ""}{label}
-                        </button>
-                      );
-                      const pricingOptions = [
-                        { id: "free",     label: ko ? "무료 제공" : "Free" },
-                        { id: "discount", label: ko ? "30–50% 할인" : "Discount" },
-                        { id: "full",     label: ko ? "정가 운영" : "Full price" },
-                      ];
-                      return (
-                        <article style={{ ...styles.card, gap: "14px" }}>
-                          {sectionLabel(ko ? "운영 채널 & 세팅" : "Operations", ko ? "직접 수정 가능" : "Edit inline")}
-                          <div style={{ display: "flex", flexDirection: "column" as const, gap: "14px" }}>
-                            {/* 배달 플랫폼 */}
-                            <div>
-                              <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "7px" }}>{ko ? "배달 플랫폼" : "Delivery platforms"}</div>
-                              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px" }}>
-                                {allDelivery.map(p => {
-                                  const k = `delivery-${p.id}`;
-                                  const active = !!(opsSelections as Record<string, boolean>)[k];
-                                  return toggleChip(k, p.label, active, () => setOpsSelections(prev => ({ ...prev, [k]: !prev[k] })));
-                                })}
-                              </div>
-                            </div>
-                            {divider}
-                            {/* SNS 채널 */}
-                            <div>
-                              <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "7px" }}>{ko ? "SNS 채널" : "SNS channels"}</div>
-                              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px" }}>
-                                {allSns.map(p => {
-                                  const k = `sns-${p.id}`;
-                                  const active = !!(opsSelections as Record<string, boolean>)[k];
-                                  return toggleChip(k, p.label, active, () => setOpsSelections(prev => ({ ...prev, [k]: !prev[k] })));
-                                })}
-                              </div>
-                            </div>
-                            {divider}
-                            {/* 세무 처리 */}
-                            <div>
-                              <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "7px" }}>{ko ? "세무 처리 방식" : "Tax filing"}</div>
-                              <div style={{ display: "flex", gap: "6px" }}>
-                                {toggleChip("cpa", ko ? "세무사 선임" : "CPA hired", cpaDecision === "cpa", () => setCpaDecision(cpaDecision === "cpa" ? null : "cpa"))}
-                                {toggleChip("self", ko ? "직접 신고" : "Self-filing", cpaDecision === "self", () => setCpaDecision(cpaDecision === "self" ? null : "self"))}
-                              </div>
-                            </div>
-                            {divider}
-                            {/* 소프트오픈 가격 전략 */}
-                            <div>
-                              <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "7px" }}>{ko ? "소프트오픈 가격 전략" : "Soft open pricing"}</div>
-                              <div style={{ display: "flex", gap: "6px" }}>
-                                {pricingOptions.map(opt =>
-                                  toggleChip(opt.id, opt.label, softOpenPricing === opt.id, () => setSoftOpenPricing(softOpenPricing === opt.id ? "" : opt.id))
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })()}
-
-                    {/* ── 카드 4: 월 비용 구조 ── */}
-                    {totalCosts > 0 && (
-                      <article style={{ ...styles.card, gap: "14px" }}>
-                        {sectionLabel(ko ? "월 비용 구조" : "Monthly Cost Breakdown", ko ? "아래 비용 설정에서 수정" : "Edit in cost section below")}
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
-                          {[
-                            { label: ko ? "재료비" : "COGS",   value: ingredients, color: "#007aff" },
-                            { label: ko ? "인건비" : "Labor",  value: labor,       color: "#34c759" },
-                            { label: ko ? "임대료" : "Rent",   value: rent,        color: "#ff9f0a" },
-                            { label: ko ? "공과금" : "Util.",  value: utilities,   color: "#af52de" },
-                            { label: ko ? "기타" : "Other",    value: other,       color: "#8e8e93" },
-                          ].filter(r => r.value > 0).map(row => (
-                            <div key={row.label}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                                <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 500 }}>{row.label}</span>
-                                <span style={{ fontSize: "12px", fontWeight: 600 }}>{fmt(row.value)} <span style={{ color: "var(--muted)", fontWeight: 400 }}>({((row.value / totalCosts) * 100).toFixed(0)}%)</span></span>
-                              </div>
-                              <div style={{ height: "5px", borderRadius: "3px", background: "rgba(0,0,0,0.07)", overflow: "hidden" as const }}>
-                                <div style={{ height: "100%", borderRadius: "3px", background: row.color, width: `${(row.value / totalCosts) * 100}%` }} />
-                              </div>
-                            </div>
-                          ))}
-                          <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "4px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                            <span style={{ fontSize: "13px", fontWeight: 700 }}>{ko ? "월 합계" : "Total"}</span>
-                            <span style={{ fontSize: "13px", fontWeight: 700 }}>{fmt(totalCosts)}</span>
-                          </div>
-                        </div>
-                      </article>
-                    )}
-
-                    {/* ── 카드 5: 로드맵 진행 ── */}
-                    <article style={{ ...styles.card, gap: "14px" }}>
-                      {sectionLabel(ko ? "로드맵 진행" : "Roadmap Progress")}
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "2px" }}>
-                        <span style={{ fontSize: "36px", fontWeight: 700, letterSpacing: "-1px" }}>{completedCount}</span>
-                        <span style={{ fontSize: "15px", color: "var(--muted)", fontWeight: 500 }}>/ {totalStages}{ko ? "단계 완료" : " stages"}</span>
-                      </div>
-                      <div style={{ height: "6px", borderRadius: "4px", background: "rgba(0,0,0,0.08)", overflow: "hidden" as const }}>
-                        <div style={{ height: "100%", borderRadius: "4px", background: completedCount >= totalStages ? "#34c759" : "#007aff", width: `${progressPct}%`, transition: "width 0.4s ease" }} />
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
-                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "창업 준비 시작" : "Start"}</span>
-                        <span style={{ fontSize: "12px", fontWeight: 700, color: completedCount >= totalStages ? "#34c759" : "#007aff" }}>{progressPct}%</span>
-                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "개업 완료" : "Open"}</span>
-                      </div>
-                    </article>
-                  </>
-                );
-              })()}
-
-              {/* ── 이달 손익 히어로 카드 ── */}
-              {(() => {
-                const ko = language === "ko";
-                const hasData = totalSales > 0;
-                const hasCosts = totalCosts > 0;
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 위험 경보 배너 */}
-                    {hasDangerZone && hasData && (
-                      <div style={{ padding: "11px 20px", background: "rgba(255,59,48,0.05)", borderBottom: "0.5px solid rgba(255,59,48,0.12)", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                          <path d="M7 1L13 12H1L7 1Z" stroke="#ff3b30" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
-                          <line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#ff3b30" strokeWidth="1.4" strokeLinecap="round"/>
-                          <circle cx="7" cy="10.5" r="0.7" fill="#ff3b30"/>
-                        </svg>
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: "#ff3b30", lineHeight: 1.4 }}>
-                          {ko ? "비용 구조에 위험 신호가 있습니다. 아래 진단을 확인하세요." : "Cost structure alert. Review diagnostics below."}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* 헤더 */}
-                    <div style={{ padding: "20px 22px 16px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                        {ko ? `${new Date().getMonth() + 1}월 손익` : `${new Date().toLocaleString("en", { month: "long" })} P&L`}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginTop: "3px", flexWrap: "wrap" as const }}>
-                        {workingDays > 0 && (
-                          <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-                            {ko ? `${workingDays}일 운영 기록` : `${workingDays} days recorded`}
-                          </div>
-                        )}
-                        {projectedSales > 0 && (
-                          <div style={{ fontSize: "12px", color: projectedProfit >= 0 ? "#34c759" : "#ff3b30", fontWeight: 600 }}>
-                            {ko
-                              ? `월말 예상 ${projectedProfit >= 0 ? "+" : ""}${fmt(projectedProfit)}`
-                              : `Projected month-end ${projectedProfit >= 0 ? "+" : ""}${fmt(projectedProfit)}`}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 3-col 핵심 지표 */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderTop: "0.5px solid rgba(0,0,0,0.08)", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                      {[
-                        { label: ko ? "총 매출" : "Revenue", value: hasData ? fmt(totalSales) : "—", color: "inherit" as const, prefix: "" },
-                        { label: ko ? "총 비용" : "Costs", value: hasCosts ? fmt(totalCosts) : "—", color: "inherit" as const, prefix: "" },
-                        {
-                          label: ko ? "순이익" : "Net profit",
-                          value: hasData && hasCosts ? fmt(Math.abs(netProfit)) : "—",
-                          color: (hasData && hasCosts ? (netProfit >= 0 ? "#34c759" : "#ff3b30") : "inherit") as string,
-                          prefix: hasData && hasCosts ? (netProfit >= 0 ? "+" : "−") : "",
-                        },
-                      ].map((m, idx) => (
-                        <div key={m.label} style={{ padding: "18px 14px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
-                          <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: "8px" }}>
-                            {m.label}
-                          </div>
-                          <div style={{ fontSize: "19px", fontWeight: 700, letterSpacing: "-0.5px", color: m.color, lineHeight: 1.1 }}>
-                            {m.prefix}{m.value}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* BEP + 비율 그리드 */}
-                    {hasData && hasCosts && (
-                      <div style={{ padding: "16px 22px 4px", display: "flex", flexDirection: "column" as const, gap: "14px" }}>
-                        {/* 손익분기점 바 */}
-                        <div>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "7px" }}>
-                            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em" }}>
-                              {ko ? "손익분기점 달성률" : "Break-even progress"}
-                            </span>
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: bepProgress >= 100 ? "#34c759" : "#007aff" }}>
-                              {bepProgress.toFixed(0)}%{bepProgress >= 100 ? (ko ? " · 달성 ✓" : " · Hit ✓") : ""}
-                            </span>
-                          </div>
-                          <div style={{ height: "5px", borderRadius: "3px", background: "rgba(0,0,0,0.07)", overflow: "hidden" as const }}>
-                            <div style={{ height: "100%", borderRadius: "3px", width: `${Math.min(100, bepProgress)}%`, background: bepProgress >= 100 ? "#34c759" : "#007aff", transition: "width 0.5s ease" }} />
-                          </div>
-                        </div>
-                        {/* 비율 2×2 그리드 */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                          {[
-                            { label: ko ? "원가율" : "Food cost", value: ingredientRatio, good: 35, caution: 40 },
-                            { label: ko ? "인건비율" : "Labor", value: laborRatio, good: 30, caution: 35 },
-                            { label: ko ? "임대료율" : "Rent", value: rentRatio, good: 10, caution: 15 },
-                            { label: "Prime Cost", value: primeCost, good: 60, caution: 65 },
-                          ].map(row => {
-                            const h = health(row.value, row.good, row.caution);
-                            return (
-                              <div key={row.label}>
-                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                                  <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600, letterSpacing: "0.03em" }}>{row.label}</span>
-                                  <span style={{ fontSize: "11px", fontWeight: 700, color: healthColor(h) }}>{pct(row.value)}</span>
-                                </div>
-                                <div style={{ height: "3px", borderRadius: "2px", background: "rgba(0,0,0,0.07)", overflow: "hidden" as const }}>
-                                  <div style={{ height: "100%", borderRadius: "2px", width: `${Math.min(100, (row.value / (row.caution * 1.5)) * 100)}%`, background: healthColor(h), transition: "width 0.4s" }} />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 진단 메시지 */}
-                    {diagnostics.length > 0 && hasData && (
-                      <div style={{ padding: "12px 22px 18px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-                        {diagnostics.map((msg, i) => {
-                          const isWarn = msg.includes("위험") || msg.includes("적자") || msg.includes("Danger") || msg.includes("loss");
-                          return (
-                            <div key={i} style={{
-                              display: "flex", gap: "8px", padding: "10px 12px", borderRadius: "10px",
-                              background: isWarn ? "rgba(255,59,48,0.05)" : "rgba(52,199,89,0.05)",
-                              border: `0.5px solid ${isWarn ? "rgba(255,59,48,0.15)" : "rgba(52,199,89,0.15)"}`,
-                              fontSize: "12px", lineHeight: 1.5, color: "rgba(0,0,0,0.72)",
-                            }}>
-                              {isWarn
-                                ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M7 1.5L12.5 12H1.5L7 1.5Z" stroke="#ff3b30" strokeWidth="1.4" strokeLinejoin="round" fill="none"/><line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#ff3b30" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7" cy="10.5" r="0.65" fill="#ff3b30"/></svg>
-                                : <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><polyline points="2,7 5,10 11,3" stroke="#34c759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-                              }
-                              {msg}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* 빈 상태 */}
-                    {!hasData && (
-                      <div style={{ padding: "16px 22px 20px" }}>
-                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
-                          {ko ? "아래에서 오늘 매출과 비용을 입력하면 손익이 실시간 계산됩니다." : "Enter today's sales and costs below to see your P&L in real time."}
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 직원 인건비 계산기 ── */}
-              {(() => {
-                const ko = language === "ko";
-                // 인건비 계산 함수
-                const calcEmployee = (emp: Employee) => {
-                  const weeklyAllowance = emp.weeklyHours >= 15
-                    ? (emp.weeklyHours / 5) * emp.hourlyWage
-                    : 0;
-                  const monthlyWage = Math.round((emp.hourlyWage * emp.weeklyHours + weeklyAllowance) * 4.345);
-                  const insurance = emp.isInsured ? Math.round(monthlyWage * 0.1041) : 0;
-                  return { monthlyWage, insurance, total: monthlyWage + insurance };
-                };
-                const totalEmpBurden = employees.reduce((s, e) => s + calcEmployee(e).total, 0);
-                const manualLabor = (monthlyCosts as { labor: number }).labor;
-                const laborDiff = totalEmpBurden - manualLabor;
-                const fmt = (n: number) => n >= 10000
-                  ? `${Math.round(n / 10000).toLocaleString()}만원`
-                  : `${Math.round(n).toLocaleString()}원`;
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 헤더 */}
-                    <div style={{ padding: "18px 22px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                          {ko ? "직원 인건비" : "Staff Labor Cost"}
-                        </div>
-                        {employees.length > 0 && (
-                          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
-                            {ko ? `${employees.length}명 · 월 총부담 ${fmt(totalEmpBurden)}` : `${employees.length} staff · Est. ${fmt(totalEmpBurden)}/mo`}
-                          </div>
-                        )}
-                      </div>
-                      <button type="button"
-                        onClick={() => { setEmpFormOpen(true); setEmpEditId(null); setEmpName(""); setEmpWage(""); setEmpHours(""); setEmpInsured(false); }}
-                        style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                        {ko ? "+ 직원 추가" : "+ Add staff"}
-                      </button>
-                    </div>
-
-                    {/* monthlyCosts.labor 비교 알림 */}
-                    {employees.length > 0 && manualLabor > 0 && Math.abs(laborDiff) > 10000 && (
-                      <div style={{ margin: "0 22px 12px", padding: "10px 14px", borderRadius: "12px", background: laborDiff > 0 ? "rgba(255,159,10,0.07)" : "rgba(0,122,255,0.06)", border: `0.5px solid ${laborDiff > 0 ? "rgba(255,159,10,0.2)" : "rgba(0,122,255,0.15)"}` }}>
-                        <div style={{ fontSize: "12px", fontWeight: 600, color: laborDiff > 0 ? "#ff9f0a" : "#007aff", lineHeight: 1.5 }}>
-                          {ko
-                            ? laborDiff > 0
-                              ? `비용 카드 인건비(${fmt(manualLabor)})가 실제 예상(${fmt(totalEmpBurden)})보다 ${fmt(laborDiff)} 낮게 입력됨`
-                              : `비용 카드 인건비(${fmt(manualLabor)})가 실제 예상(${fmt(totalEmpBurden)})보다 ${fmt(-laborDiff)} 높게 입력됨`
-                            : laborDiff > 0
-                              ? `Cost card labor (${fmt(manualLabor)}) is ${fmt(laborDiff)} lower than estimated`
-                              : `Cost card labor (${fmt(manualLabor)}) is ${fmt(-laborDiff)} higher than estimated`}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 직원 목록 */}
-                    {employees.length === 0 ? (
-                      <div style={{ padding: "16px 22px 22px" }}>
-                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
-                          {ko ? "직원을 등록하면 월 인건비와 4대보험 사업주 부담을 자동 계산합니다." : "Register staff to auto-calculate monthly wages and employer insurance costs."}
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ borderTop: "0.5px solid rgba(0,0,0,0.08)" }}>
-                        {employees.map((emp, idx) => {
-                          const c = calcEmployee(emp);
-                          const hasAllowance = emp.weeklyHours >= 15;
-                          return (
-                            <div key={emp.id} style={{ padding: "14px 22px", borderBottom: idx < employees.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none" }}>
-                              {/* 이름 행 */}
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(0,122,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#007aff" }}>
-                                    {emp.name.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)" }}>{emp.name}</div>
-                                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "1px" }}>
-                                      {ko
-                                        ? `시급 ${emp.hourlyWage.toLocaleString()}원 · 주 ${emp.weeklyHours}시간${hasAllowance ? " · 주휴수당 포함" : ""}`
-                                        : `₩${emp.hourlyWage.toLocaleString()}/hr · ${emp.weeklyHours}h/wk${hasAllowance ? " · incl. weekly holiday" : ""}`}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                  <button type="button" onClick={() => openEmpEdit(emp)} style={{ fontSize: "12px", color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
-                                    {ko ? "수정" : "Edit"}
-                                  </button>
-                                  <button type="button" onClick={() => handleEmpDelete(emp.id)} style={{ fontSize: "12px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
-                                    {ko ? "삭제" : "Del"}
-                                  </button>
-                                </div>
-                              </div>
-                              {/* 비용 분해 행 */}
-                              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" as const }}>
-                                {[
-                                  { label: ko ? "월 급여" : "Monthly pay", value: fmt(c.monthlyWage), color: "var(--primary)" },
-                                  ...(emp.isInsured ? [{ label: ko ? "4대보험" : "Insurance", value: fmt(c.insurance), color: "var(--muted)" }] : []),
-                                  { label: ko ? "총부담" : "Total", value: fmt(c.total), color: "#007aff" },
-                                ].map(item => (
-                                  <div key={item.label} style={{ background: "rgba(0,0,0,0.03)", borderRadius: "8px", padding: "5px 10px" }}>
-                                    <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>{item.label}</div>
-                                    <div style={{ fontSize: "13px", fontWeight: 700, color: item.color }}>{item.value}</div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {/* 합계 행 */}
-                        <div style={{ padding: "14px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,0,0,0.015)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
-                            {ko ? "월 총 인건비 부담" : "Total Monthly Burden"}
-                          </div>
-                          <div style={{ fontSize: "17px", fontWeight: 700, color: "var(--primary)", letterSpacing: "-0.4px" }}>
-                            {fmt(totalEmpBurden)}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 추가/수정 폼 */}
-                    {empFormOpen && (
-                      <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,122,255,0.03)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#007aff", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-                          {empEditId ? (ko ? "직원 수정" : "Edit Staff") : (ko ? "직원 추가" : "Add Staff")}
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
-                          <input type="text" placeholder={ko ? "이름 (예: 김민지)" : "Name"} value={empName} onChange={e => setEmpName(e.target.value)}
-                            style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "시급 (원)" : "Hourly wage (₩)"}</div>
-                              <input type="text" inputMode="numeric" placeholder="10,030" value={empWage} onChange={e => setEmpWage(e.target.value.replace(/[^0-9]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "주간 근무시간" : "Hours/week"}</div>
-                              <input type="text" inputMode="numeric" placeholder="20" value={empHours} onChange={e => setEmpHours(e.target.value.replace(/[^0-9.]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                          </div>
-                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                            <input type="checkbox" checked={empInsured} onChange={e => setEmpInsured(e.target.checked)} style={{ width: "16px", height: "16px" }} />
-                            <span style={{ fontSize: "13px", color: "var(--primary)" }}>
-                              {ko ? "4대보험 가입 (월 60시간 이상 근무 시 필수)" : "4 major insurances (required if ≥60h/month)"}
-                            </span>
-                          </label>
-                          {empWage && empHours && (
-                            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(0,122,255,0.06)", border: "0.5px solid rgba(0,122,255,0.15)" }}>
-                              {(() => {
-                                const wage = parseInt(empWage, 10) || 0;
-                                const hours = parseFloat(empHours) || 0;
-                                const allowance = hours >= 15 ? (hours / 5) * wage : 0;
-                                const monthly = Math.round((wage * hours + allowance) * 4.345);
-                                const autoInsured = hours * 4.345 >= 60;
-                                const ins = (empInsured || autoInsured) ? Math.round(monthly * 0.1041) : 0;
-                                return (
-                                  <div style={{ fontSize: "12px", color: "#007aff", lineHeight: 1.7 }}>
-                                    <div>{ko ? `월 급여: ${(monthly / 10000).toFixed(1)}만원` : `Monthly wage: ${(monthly / 10000).toFixed(1)}만원`}</div>
-                                    {ins > 0 && <div>{ko ? `4대보험(사업주): ${(ins / 10000).toFixed(1)}만원` : `Insurance: ${(ins / 10000).toFixed(1)}만원`}</div>}
-                                    <div style={{ fontWeight: 700 }}>{ko ? `총부담: ${((monthly + ins) / 10000).toFixed(1)}만원` : `Total: ${((monthly + ins) / 10000).toFixed(1)}만원`}</div>
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          )}
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button type="button" onClick={handleEmpSave}
-                              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#007aff", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
-                              {empEditId ? (ko ? "수정 완료" : "Save changes") : (ko ? "추가" : "Add")}
-                            </button>
-                            <button type="button" onClick={() => { setEmpFormOpen(false); setEmpEditId(null); }}
-                              style={{ padding: "12px 20px", borderRadius: "12px", background: "rgba(0,0,0,0.06)", color: "var(--primary)", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-                              {ko ? "취소" : "Cancel"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 배달 플랫폼 수수료 분석 (food, cafe-dessert only) ── */}
-              {businessCtx.isDeliveryRelevant && (() => {
-                const ko = language === "ko";
-                const fmt = (n: number) => n >= 10000
-                  ? `${Math.round(n / 10000).toLocaleString()}만원`
-                  : `${Math.round(n).toLocaleString()}원`;
-
-                const platformData = deliveryPlatforms.map(p => {
-                  const gross = (monthlyDeliverySales[p.id] ?? 0) * 10000;
-                  const commission = Math.round(gross * (p.commissionRate / 100));
-                  const adCost = p.adCostMonthly * 10000;
-                  const net = gross - commission - adCost;
-                  const realRate = gross > 0 ? ((gross - net) / gross) * 100 : 0;
-                  return { ...p, gross, commission, adCost, net, realRate };
-                });
-                const totalGross = platformData.reduce((s, p) => s + p.gross, 0);
-                const totalNet = platformData.reduce((s, p) => s + p.net, 0);
-                const avgLoss = totalGross > 0 ? ((totalGross - totalNet) / totalGross) * 100 : 0;
-
-                const PLATFORM_PRESETS = [
-                  { name: "배달의민족", commissionRate: 6.8, adCostMonthly: 8 },
-                  { name: "쿠팡이츠", commissionRate: 7.8, adCostMonthly: 0 },
-                  { name: "요기요", commissionRate: 12.5, adCostMonthly: 5 },
-                ];
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 헤더 */}
-                    <div style={{ padding: "18px 22px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                          {ko ? "배달 플랫폼 수수료 분석" : "Delivery Platform Fees"}
-                        </div>
-                        {platformData.length > 0 && totalGross > 0 && (
-                          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
-                            {ko ? `실제 수수료 평균 ${avgLoss.toFixed(1)}% — 매출의 ${avgLoss.toFixed(1)}%가 플랫폼에 지급됨` : `Avg. ${avgLoss.toFixed(1)}% of revenue goes to platforms`}
-                          </div>
-                        )}
-                      </div>
-                      <button type="button"
-                        onClick={() => { setDlvFormOpen(true); setDlvEditId(null); setDlvName(""); setDlvRate(""); setDlvAd(""); }}
-                        style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                        {ko ? "+ 플랫폼 추가" : "+ Add platform"}
-                      </button>
-                    </div>
-
-                    {/* 요약 3-col (데이터 있을 때) */}
-                    {totalGross > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderTop: "0.5px solid rgba(0,0,0,0.08)", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                        {[
-                          { label: ko ? "배달 총 매출" : "Gross", value: fmt(totalGross), color: "inherit" },
-                          { label: ko ? "수수료+광고비" : "Fees+Ads", value: fmt(totalGross - totalNet), color: "#ff3b30" },
-                          { label: ko ? "실 순매출" : "Net revenue", value: fmt(totalNet), color: totalNet > 0 ? "#34c759" : "#ff3b30" },
-                        ].map((col, idx) => (
-                          <div key={col.label} style={{ padding: "14px 12px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
-                            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "6px" }}>{col.label}</div>
-                            <div style={{ fontSize: "16px", fontWeight: 700, color: col.color, letterSpacing: "-0.4px" }}>{col.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* 플랫폼 없을 때 */}
-                    {deliveryPlatforms.length === 0 ? (
-                      <div style={{ padding: "16px 22px 20px" }}>
-                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "12px" }}>
-                          {ko ? "배달 플랫폼별 수수료와 광고비를 입력하면 실제 남는 순매출을 계산합니다." : "Enter commission rates and ad costs per platform to see actual net revenue."}
-                        </div>
-                        {/* 프리셋 빠른 추가 */}
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>
-                          {ko ? "빠른 추가" : "Quick add"}
-                        </div>
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                          {PLATFORM_PRESETS.map(preset => (
-                            <button key={preset.name} type="button"
-                              onClick={() => {
-                                const entry: DeliveryPlatform = { id: `dlv-${Date.now()}-${preset.name}`, ...preset };
-                                saveDeliveryPlatforms([...deliveryPlatforms, entry]);
-                              }}
-                              style={{ fontSize: "12px", fontWeight: 600, padding: "7px 14px", borderRadius: "20px", border: "1px solid rgba(0,0,0,0.12)", background: "transparent", color: "var(--primary)", cursor: "pointer" }}>
-                              + {preset.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {platformData.map((p, idx) => (
-                          <div key={p.id} style={{ padding: "14px 22px", borderBottom: idx < platformData.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none" }}>
-                            {/* 플랫폼 이름 + 수수료 설정 */}
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: "rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: "var(--primary)", textAlign: "center" as const, lineHeight: 1.2 }}>
-                                  {p.name.slice(0, 2)}
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)" }}>{p.name}</div>
-                                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "1px" }}>
-                                    {ko ? `수수료 ${p.commissionRate}% · 광고비 ${p.adCostMonthly}만원/월` : `${p.commissionRate}% commission · ₩${p.adCostMonthly}만 ads/mo`}
-                                  </div>
-                                </div>
-                              </div>
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                <button type="button" onClick={() => openDlvEdit(p)} style={{ fontSize: "12px", color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
-                                <button type="button" onClick={() => handleDlvDelete(p.id)} style={{ fontSize: "12px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
-                              </div>
-                            </div>
-                            {/* 이번 달 매출 입력 + 결과 */}
-                            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" as const }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1, minWidth: "160px" }}>
-                                <span style={{ fontSize: "12px", color: "var(--muted)", whiteSpace: "nowrap" as const }}>{ko ? "이달 매출" : "Month sales"}</span>
-                                <input
-                                  type="text" inputMode="numeric"
-                                  placeholder="0"
-                                  value={monthlyDeliverySales[p.id] ? String(monthlyDeliverySales[p.id]) : ""}
-                                  onChange={e => {
-                                    const v = parseInt(e.target.value.replace(/[^0-9]/g, ""), 10) || 0;
-                                    saveMonthlyDeliverySales({ ...monthlyDeliverySales, [p.id]: v });
-                                  }}
-                                  style={{ width: "80px", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "8px", padding: "6px 10px", fontSize: "14px", outline: "none", textAlign: "right" as const }}
-                                />
-                                <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "만원" : "만원"}</span>
-                              </div>
-                              {p.gross > 0 && (
-                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                                  {[
-                                    { label: ko ? "수수료+광고" : "Fees", value: fmt(p.commission + p.adCost), color: "#ff3b30" },
-                                    { label: ko ? "실순매출" : "Net", value: fmt(p.net), color: p.net > 0 ? "#34c759" : "#ff3b30" },
-                                    { label: ko ? "실질수수료율" : "Real rate", value: `${p.realRate.toFixed(1)}%`, color: p.realRate > 25 ? "#ff3b30" : p.realRate > 15 ? "#ff9f0a" : "var(--muted)" },
-                                  ].map(item => (
-                                    <div key={item.label} style={{ background: "rgba(0,0,0,0.03)", borderRadius: "8px", padding: "4px 10px" }}>
-                                      <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700, textTransform: "uppercase" as const }}>{item.label}</div>
-                                      <div style={{ fontSize: "12px", fontWeight: 700, color: item.color }}>{item.value}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                        {/* 프리셋 빠른 추가 (기존 있을 때) */}
-                        {PLATFORM_PRESETS.filter(pr => !deliveryPlatforms.some(p => p.name === pr.name)).length > 0 && (
-                          <div style={{ padding: "10px 22px 14px", borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
-                            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                              {PLATFORM_PRESETS.filter(pr => !deliveryPlatforms.some(p => p.name === pr.name)).map(preset => (
-                                <button key={preset.name} type="button"
-                                  onClick={() => {
-                                    const entry: DeliveryPlatform = { id: `dlv-${Date.now()}-${preset.name}`, ...preset };
-                                    saveDeliveryPlatforms([...deliveryPlatforms, entry]);
-                                  }}
-                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.10)", background: "transparent", color: "var(--muted)", cursor: "pointer" }}>
-                                  + {preset.name}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* 플랫폼 추가/수정 폼 */}
-                    {dlvFormOpen && (
-                      <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,122,255,0.03)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#007aff", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-                          {dlvEditId ? (ko ? "플랫폼 수정" : "Edit Platform") : (ko ? "플랫폼 추가" : "Add Platform")}
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
-                          <input type="text" placeholder={ko ? "플랫폼명 (예: 배달의민족)" : "Platform name"} value={dlvName} onChange={e => setDlvName(e.target.value)}
-                            style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "중개 수수료 (%)" : "Commission (%)"}</div>
-                              <input type="text" inputMode="decimal" placeholder="6.8" value={dlvRate} onChange={e => setDlvRate(e.target.value.replace(/[^0-9.]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "월 광고비 (만원)" : "Monthly ads (만원)"}</div>
-                              <input type="text" inputMode="numeric" placeholder="0" value={dlvAd} onChange={e => setDlvAd(e.target.value.replace(/[^0-9]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                          </div>
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button type="button" onClick={handleDlvSave}
-                              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#007aff", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
-                              {dlvEditId ? (ko ? "수정 완료" : "Save") : (ko ? "추가" : "Add")}
-                            </button>
-                            <button type="button" onClick={() => { setDlvFormOpen(false); setDlvEditId(null); }}
-                              style={{ padding: "12px 20px", borderRadius: "12px", background: "rgba(0,0,0,0.06)", color: "var(--primary)", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-                              {ko ? "취소" : "Cancel"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 온라인 플랫폼 수수료 + 택배사 (online-digital only) ── */}
-              {businessCtx.isOnlineStore && (() => {
-                const ko = language === "ko";
-                const fmt = (n: number) => n >= 10000
-                  ? `${Math.round(n / 10000).toLocaleString()}만원`
-                  : `${Math.round(n).toLocaleString()}원`;
-
-                // 플랫폼 수수료 데이터 (2026 기준)
-                const platforms = [
-                  { id: "smartstore", name: ko ? "스마트스토어" : "SmartStore", rate: 2.0, adBase: 0, note: ko ? "결제 수수료 별도" : "+payment fee" },
-                  { id: "coupang", name: ko ? "쿠팡 로켓그로스" : "Coupang", rate: 10.8, adBase: 0, note: ko ? "카테고리별 4~15%" : "4–15% by category" },
-                  { id: "gmarket", name: ko ? "G마켓/옥션" : "G마켓", rate: 9.0, adBase: 0, note: ko ? "일반 판매 기준" : "standard seller" },
-                  { id: "29cm", name: "29CM", rate: 12.0, adBase: 0, note: ko ? "패션/라이프스타일" : "fashion/lifestyle" },
-                  { id: "kakao", name: ko ? "카카오쇼핑" : "Kakao Shopping", rate: 5.5, adBase: 0, note: ko ? "톡스토어 기준" : "Talk Store" },
-                ];
-                const couriers = [
-                  { id: "cj", name: ko ? "CJ대한통운" : "CJ Logistics", base: 3000, perKg: 500, note: ko ? "2.5kg 기준 3,000원" : "3,000₩ up to 2.5kg" },
-                  { id: "hanjin", name: ko ? "한진택배" : "Hanjin", base: 3000, perKg: 500, note: ko ? "기본 3,000원~" : "from 3,000₩" },
-                  { id: "lotte", name: ko ? "롯데택배" : "Lotte", base: 3500, perKg: 500, note: ko ? "기본 3,500원~" : "from 3,500₩" },
-                  { id: "post", name: ko ? "우체국택배" : "Korea Post", base: 4000, perKg: 600, note: ko ? "일반소포 기준" : "standard parcel" },
-                ];
-
-                const monthlySales = onlinePlatformSales;
-                const setMonthlySales = setOnlinePlatformSales;
-                const selectedPlatform = onlineSelectedPlatforms;
-                const setSelectedPlatform = setOnlineSelectedPlatforms;
-                const selectedCourier = onlineSelectedCourier;
-                const setSelectedCourier = setOnlineSelectedCourier;
-                const monthlyParcels = onlineMonthlyParcels;
-                const setMonthlyParcels = setOnlineMonthlyParcels;
-
-                const parcelCount = parseInt(monthlyParcels) || 0;
-                const courier = couriers.find(c => c.id === selectedCourier) ?? couriers[0];
-                const totalShipping = parcelCount * courier.base;
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 헤더 */}
-                    <div style={{ padding: "18px 22px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                        {ko ? "온라인 채널 비용 분석" : "Online Channel Costs"}
-                      </div>
-                      <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
-                        {ko ? "플랫폼 수수료 · 택배비 실수령액 계산" : "Platform fee & shipping cost calculator"}
-                      </div>
-                    </div>
-
-                    {/* 플랫폼 섹션 */}
-                    <div style={{ padding: "16px 22px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "12px" }}>
-                        {ko ? "판매 채널 수수료" : "Platform Commission"}
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column" as const, gap: "0" }}>
-                        {platforms.map((p, idx) => {
-                          const grossVal = parseInt(monthlySales[p.id] ?? "") || 0;
-                          const commAmt = Math.round(grossVal * 10000 * (p.rate / 100));
-                          const netAmt = grossVal * 10000 - commAmt;
-                          const isOn = selectedPlatform.includes(p.id);
-                          return (
-                            <div key={p.id} style={{ borderTop: idx > 0 ? "0.5px solid rgba(0,0,0,0.06)" : "none", paddingTop: idx > 0 ? "10px" : "0", paddingBottom: "10px" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <button type="button"
-                                    onClick={() => setSelectedPlatform(prev => isOn ? prev.filter(x => x !== p.id) : [...prev, p.id])}
-                                    style={{ width: "18px", height: "18px", borderRadius: "5px", border: `1.5px solid ${isOn ? "#007aff" : "rgba(0,0,0,0.18)"}`, background: isOn ? "#007aff" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    {isOn && <svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                                  </button>
-                                  <div>
-                                    <span style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "-0.2px" }}>{p.name}</span>
-                                    <span style={{ fontSize: "11px", color: "var(--muted)", marginLeft: "6px" }}>{p.rate}% — {p.note}</span>
-                                  </div>
-                                </div>
-                                {isOn && grossVal > 0 && (
-                                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#34c759" }}>{fmt(netAmt)} {ko ? "수령" : "net"}</div>
-                                )}
-                              </div>
-                              {isOn && (
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "26px" }}>
-                                  <input type="text" inputMode="numeric"
-                                    placeholder={ko ? "이달 매출 (만원)" : "Monthly sales (10K₩)"}
-                                    value={monthlySales[p.id] ?? ""}
-                                    onChange={e => setMonthlySales(prev => ({ ...prev, [p.id]: e.target.value.replace(/[^0-9]/g, "") }))}
-                                    style={{ flex: 1, fontSize: "13px", padding: "8px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
-                                  {grossVal > 0 && (
-                                    <div style={{ fontSize: "11px", color: "#ff3b30", whiteSpace: "nowrap" as const }}>
-                                      {ko ? `수수료 ${fmt(commAmt)}` : `-${fmt(commAmt)}`}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* 총 요약 */}
-                    {selectedPlatform.length > 0 && (() => {
-                      const totalGross = selectedPlatform.reduce((s, id) => s + (parseInt(monthlySales[id] ?? "") || 0), 0) * 10000;
-                      const totalComm = selectedPlatform.reduce((s, id) => {
-                        const p = platforms.find(x => x.id === id);
-                        const g = (parseInt(monthlySales[id] ?? "") || 0) * 10000;
-                        return s + Math.round(g * ((p?.rate ?? 0) / 100));
-                      }, 0);
-                      const totalNet = totalGross - totalComm - totalShipping;
-                      if (totalGross === 0) return null;
-                      return (
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                          {[
-                            { label: ko ? "총 매출" : "Gross", value: fmt(totalGross), color: "inherit" },
-                            { label: ko ? "수수료+배송" : "Fees+Ship", value: `-${fmt(totalComm + totalShipping)}`, color: "#ff3b30" },
-                            { label: ko ? "실수령" : "Net", value: fmt(Math.max(0, totalNet)), color: "#34c759" },
-                          ].map((col, i) => (
-                            <div key={col.label} style={{ padding: "12px 12px", borderLeft: i > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
-                              <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{col.label}</div>
-                              <div style={{ fontSize: "15px", fontWeight: 700, color: col.color, letterSpacing: "-0.3px" }}>{col.value}</div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-
-                    {/* 택배사 섹션 */}
-                    <div style={{ padding: "16px 22px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "12px" }}>
-                        {ko ? "택배비 계산" : "Shipping Cost"}
-                      </div>
-                      {/* 택배사 선택 */}
-                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, marginBottom: "12px" }}>
-                        {couriers.map(c => (
-                          <button key={c.id} type="button"
-                            onClick={() => setSelectedCourier(c.id)}
-                            style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${selectedCourier === c.id ? "#007aff" : "rgba(0,0,0,0.10)"}`, background: selectedCourier === c.id ? "rgba(0,122,255,0.09)" : "transparent", color: selectedCourier === c.id ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
-                            {c.name}
-                          </button>
-                        ))}
-                      </div>
-                      <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "10px" }}>
-                        {courier.note}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <input type="text" inputMode="numeric"
-                          placeholder={ko ? "이달 발송 건수" : "Monthly parcels"}
-                          value={monthlyParcels}
-                          onChange={e => setMonthlyParcels(e.target.value.replace(/[^0-9]/g, ""))}
-                          style={{ flex: 1, fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
-                        {parcelCount > 0 && (
-                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#ff3b30", whiteSpace: "nowrap" as const }}>
-                            {fmt(totalShipping)}
-                          </div>
-                        )}
-                      </div>
-                      {parcelCount > 0 && (
-                        <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "6px" }}>
-                          {ko
-                            ? `${parcelCount.toLocaleString()}건 × ${courier.base.toLocaleString()}원 = ${fmt(totalShipping)}`
-                            : `${parcelCount.toLocaleString()} × ₩${courier.base.toLocaleString()} = ${fmt(totalShipping)}`}
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                );
-              })()}
-
-              {/* ── 주간 매출 차트 ── */}
-              {(() => {
-                const ko = language === "ko";
-                const todayStr = new Date().toISOString().slice(0, 10);
-                const last7 = Array.from({ length: 7 }, (_, i) => {
-                  const d = new Date();
-                  d.setDate(d.getDate() - (6 - i));
-                  return d.toISOString().slice(0, 10);
-                });
-                const entryMap = Object.fromEntries(
-                  (dailyEntries as { date: string; sales: number }[]).map(e => [e.date, e.sales])
-                );
-                const bars = last7.map(date => ({
-                  date,
-                  sales: entryMap[date] ?? 0,
-                  label: ko
-                    ? new Date(date + "T12:00:00").toLocaleDateString("ko-KR", { weekday: "narrow" })
-                    : new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short" }),
-                  isToday: date === todayStr,
-                }));
-                const maxSales = Math.max(...bars.map(b => b.sales), 1);
-                const hasAny = bars.some(b => b.sales > 0);
-                const weekTotal = bars.reduce((s, b) => s + b.sales, 0);
-                const chartH = 72;
-
-                return (
-                  <article style={{ ...styles.card, gap: "0" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                        {ko ? "최근 7일 매출" : "Last 7 Days"}
-                      </div>
-                      {hasAny && (
-                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--muted)" }}>
-                          {ko ? `7일 합계 ${fmt(weekTotal)}` : `7-day total ${fmt(weekTotal)}`}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 바 차트 */}
-                    <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: `${chartH + 36}px` }}>
-                      {bars.map(bar => {
-                        const barH = bar.sales > 0 ? Math.max(6, (bar.sales / maxSales) * chartH) : 0;
-                        return (
-                          <div key={bar.date} style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", flex: 1, justifyContent: "flex-end" }}>
-                            {/* 값 레이블 */}
-                            <div style={{
-                              fontSize: "9px", fontWeight: 700, marginBottom: "4px", lineHeight: 1,
-                              color: bar.isToday ? "#007aff" : bar.sales > 0 ? "rgba(0,0,0,0.55)" : "transparent",
-                              minHeight: "11px",
-                            }}>
-                              {bar.sales > 0 ? `${bar.sales}` : "·"}
-                            </div>
-                            {/* 바 영역 */}
-                            <div style={{ width: "100%", height: `${chartH}px`, display: "flex", alignItems: "flex-end" }}>
-                              <div style={{
-                                width: "100%",
-                                height: bar.sales > 0 ? `${barH}px` : "2px",
-                                borderRadius: "4px 4px 2px 2px",
-                                background: bar.isToday
-                                  ? "#007aff"
-                                  : bar.sales > 0
-                                  ? "rgba(0,122,255,0.20)"
-                                  : "rgba(0,0,0,0.05)",
-                                transition: "height 0.4s ease",
-                              }} />
-                            </div>
-                            {/* 요일 레이블 */}
-                            <div style={{
-                              fontSize: "10px", fontWeight: bar.isToday ? 700 : 500, marginTop: "7px",
-                              color: bar.isToday ? "#007aff" : "var(--muted)",
-                            }}>
-                              {bar.label}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {!hasAny && (
-                      <div style={{ textAlign: "center" as const, marginTop: "10px", fontSize: "12px", color: "var(--muted)" }}>
-                        {ko ? "매출을 기록하면 차트가 표시됩니다" : "Record daily sales to see your chart"}
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 현금흐름 + 세금 달력 2-col grid ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
-
-              {/* ── 현금흐름 캘린더 ── */}
-              {(() => {
-                const ko = language === "ko";
-                const now = new Date();
-                const today = now.getDate();
-                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                const fmt = (n: number) => n >= 10000
-                  ? `${Math.round(n / 10000).toLocaleString()}만원`
-                  : `${Math.round(n).toLocaleString()}원`;
-
-                const items = [...fixedExpenses]
-                  .map(fe => {
-                    const effectiveDay = fe.dueDay > daysInMonth ? daysInMonth : fe.dueDay;
-                    const daysUntil = effectiveDay - today;
-                    return { ...fe, effectiveDay, daysUntil };
-                  })
-                  .sort((a, b) => a.effectiveDay - b.effectiveDay);
-
-                const upcomingTotal = items.filter(i => i.daysUntil >= 0).reduce((s, i) => s + i.amount, 0);
-                const pastTotal = items.filter(i => i.daysUntil < 0).reduce((s, i) => s + i.amount, 0);
-                const monthTotal = items.reduce((s, i) => s + i.amount, 0);
-
-                const catIcon: Record<string, string> = { rent: "건물", loan: "대출", insurance: "보험", other: "기타" };
-                const catColor: Record<string, string> = { rent: "#007aff", loan: "#ff9f0a", insurance: "#34c759", other: "rgba(0,0,0,0.3)" };
-
-                const ddayColor = (d: number) => d < 0 ? "rgba(0,0,0,0.25)" : d <= 3 ? "#ff3b30" : d <= 7 ? "#ff9f0a" : "var(--muted)";
-                const ddayLabel = (d: number) => d < 0 ? (ko ? "완료" : "Done") : d === 0 ? (ko ? "오늘!" : "Today!") : `D-${d}`;
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 헤더 */}
-                    <div style={{ padding: "18px 22px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                          {ko ? "이번 달 고정 지출" : "Monthly Fixed Costs"}
-                        </div>
-                        {items.length > 0 && (
-                          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
-                            {ko ? `총 ${fmt(monthTotal)} · 남은 납부 ${fmt(upcomingTotal)}` : `Total ${fmt(monthTotal)} · Upcoming ${fmt(upcomingTotal)}`}
-                          </div>
-                        )}
-                      </div>
-                      <button type="button"
-                        onClick={() => { setFexpFormOpen(true); setFexpEditId(null); setFexpName(""); setFexpAmount(""); setFexpDueDay(""); setFexpCategory("other"); }}
-                        style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                        {ko ? "+ 항목 추가" : "+ Add item"}
-                      </button>
-                    </div>
-
-                    {/* 요약 3-col */}
-                    {items.length > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderTop: "0.5px solid rgba(0,0,0,0.08)", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                        {[
-                          { label: ko ? "이달 총액" : "Total", value: fmt(monthTotal), color: "inherit" },
-                          { label: ko ? "납부 예정" : "Upcoming", value: fmt(upcomingTotal), color: upcomingTotal > 0 ? "#ff9f0a" : "inherit" },
-                          { label: ko ? "이미 지남" : "Past due", value: pastTotal > 0 ? fmt(pastTotal) : "—", color: "rgba(0,0,0,0.28)" },
-                        ].map((col, idx) => (
-                          <div key={col.label} style={{ padding: "14px 12px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
-                            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "6px" }}>{col.label}</div>
-                            <div style={{ fontSize: "16px", fontWeight: 700, color: col.color, letterSpacing: "-0.4px" }}>{col.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* 납부 일정 목록 */}
-                    {items.length === 0 ? (
-                      <div style={{ padding: "16px 22px 22px" }}>
-                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
-                          {ko ? "임대료, 대출이자, 보험료 등 매월 고정 지출을 등록하면 납부일 D-day와 남은 금액을 한눈에 볼 수 있습니다." : "Register recurring expenses like rent and loan payments to track due dates and remaining amounts."}
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {items.map((fe, idx) => (
-                          <div key={fe.id} style={{
-                            display: "flex", alignItems: "center", gap: "12px", padding: "13px 22px",
-                            borderBottom: idx < items.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none",
-                            opacity: fe.daysUntil < 0 ? 0.5 : 1
-                          }}>
-                            {/* 카테고리 아이콘 */}
-                            <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: `${catColor[fe.category]}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                              <span style={{ fontSize: "10px", fontWeight: 700, color: catColor[fe.category] }}>{catIcon[fe.category]}</span>
-                            </div>
-                            {/* 이름 + 납부일 */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)" }}>{fe.name}</div>
-                              <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                                {ko ? `매월 ${fe.effectiveDay}일 · ${fmt(fe.amount)}` : `Due: ${fe.effectiveDay}th · ${fmt(fe.amount)}`}
-                              </div>
-                            </div>
-                            {/* D-day 뱃지 */}
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <div style={{ fontSize: "12px", fontWeight: 700, color: ddayColor(fe.daysUntil), minWidth: "36px", textAlign: "right" as const }}>
-                                {ddayLabel(fe.daysUntil)}
-                              </div>
-                              <button type="button" onClick={() => openFexpEdit(fe)} style={{ fontSize: "11px", color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
-                                {ko ? "수정" : "Edit"}
-                              </button>
-                              <button type="button" onClick={() => handleFexpDelete(fe.id)} style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
-                                {ko ? "삭제" : "Del"}
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* 추가/수정 폼 */}
-                    {fexpFormOpen && (
-                      <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,122,255,0.03)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#007aff", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-                          {fexpEditId ? (ko ? "항목 수정" : "Edit item") : (ko ? "고정 지출 추가" : "Add fixed expense")}
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
-                          <input type="text" placeholder={ko ? "항목명 (예: 임대료, 대출이자)" : "Name (e.g. Rent, Loan)"} value={fexpName} onChange={e => setFexpName(e.target.value)}
-                            style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "금액 (만원)" : "Amount (10K KRW)"}</div>
-                              <input type="text" inputMode="numeric" placeholder="80" value={fexpAmount} onChange={e => setFexpAmount(e.target.value.replace(/[^0-9]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "납부일 (매월)" : "Due day (monthly)"}</div>
-                              <input type="text" inputMode="numeric" placeholder="25" value={fexpDueDay} onChange={e => setFexpDueDay(e.target.value.replace(/[^0-9]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "분류" : "Category"}</div>
-                            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                              {(["rent", "loan", "insurance", "other"] as const).map(cat => {
-                                const labels: Record<string, string> = { rent: ko ? "임대료" : "Rent", loan: ko ? "대출" : "Loan", insurance: ko ? "보험" : "Insurance", other: ko ? "기타" : "Other" };
-                                const active = fexpCategory === cat;
-                                return (
-                                  <button key={cat} type="button" onClick={() => setFexpCategory(cat)}
-                                    style={{ fontSize: "12px", fontWeight: 600, padding: "6px 14px", borderRadius: "20px", border: `1px solid ${active ? catColor[cat] : "rgba(0,0,0,0.12)"}`, background: active ? `${catColor[cat]}15` : "transparent", color: active ? catColor[cat] : "var(--muted)", cursor: "pointer" }}>
-                                    {labels[cat]}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button type="button" onClick={handleFexpSave}
-                              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#007aff", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
-                              {fexpEditId ? (ko ? "수정 완료" : "Save changes") : (ko ? "추가" : "Add")}
-                            </button>
-                            <button type="button" onClick={() => { setFexpFormOpen(false); setFexpEditId(null); }}
-                              style={{ padding: "12px 20px", borderRadius: "12px", background: "rgba(0,0,0,0.06)", color: "var(--primary)", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-                              {ko ? "취소" : "Cancel"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 세금 · 납부 D-day 캘린더 ── */}
-              {(() => {
-                const ko = language === "ko";
-                const now = new Date();
-                const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                const diffDays = (d: Date) =>
-                  Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() - todayMs) / 86400000);
-                const y = now.getFullYear();
-                const m = now.getMonth();
-                const dom = now.getDate();
-                const { vatType, hasEmployees } = taxSettings;
-
-                // 원천세: 매월 10일 (직원 있을 때만)
-                const whtM = dom >= 10 ? m + 1 : m;
-                const withholdingDate = new Date(whtM > 11 ? y + 1 : y, whtM % 12, 10);
-
-                // 4대보험료: 매월 말일 (직원 있을 때만)
-                const insuranceDate = new Date(y, m + 1, 0);
-
-                // 부가세 — 일반: 1/25·7/25 (확정신고), 간이: 1/25 (연 1회)
-                const vatDates = vatType === "simplified"
-                  ? [new Date(y, 0, 25), new Date(y + 1, 0, 25)]
-                  : [new Date(y, 0, 25), new Date(y, 6, 25), new Date(y + 1, 0, 25)];
-                const vatDate = vatDates.find(d => diffDays(d) >= 0) ?? vatDates[vatDates.length - 1];
-                const vatSub = ko
-                  ? vatType === "simplified" ? "간이과세자 — 연 1회 (1월 25일)" : "일반과세자 — 연 2회 (1·7월 25일)"
-                  : vatType === "simplified" ? "Simplified — once/year (Jan 25)" : "General — twice/year (Jan & Jul 25)";
-
-                // 종합소득세: 5/31
-                const incomeTaxDate = [new Date(y, 4, 31), new Date(y + 1, 4, 31)]
-                  .find(d => diffDays(d) >= 0) ?? new Date(y + 1, 4, 31);
-
-                // 부가세 예정신고 (일반과세자만): 4/25, 10/25
-                const vatProvisionalDates = [new Date(y, 3, 25), new Date(y, 9, 25), new Date(y + 1, 3, 25)];
-                const vatProvisionalDate = vatProvisionalDates.find(d => diffDays(d) >= 0) ?? vatProvisionalDates[vatProvisionalDates.length - 1];
-
-                // 산재보험: 3/31 (사업주 의무)
-                const industrialDate = [new Date(y, 2, 31), new Date(y + 1, 2, 31)]
-                  .find(d => diffDays(d) >= 0) ?? new Date(y + 1, 2, 31);
-
-                const allEvents = [
-                  ...(hasEmployees ? [
-                    { label: ko ? "원천세 신고·납부" : "Withholding tax", sub: ko ? "급여 지급 다음달 10일까지" : "By 10th of following month", date: withholdingDate, icon: "원", color: "#007aff", alwaysShow: true, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
-                    { label: ko ? "4대보험료" : "Social insurance", sub: ko ? "매월 말일 자동이체" : "Auto-debit, end of month", date: insuranceDate, icon: "보", color: "#34c759", alwaysShow: true, url: "https://www.4insure.or.kr", urlLabel: ko ? "4대보험 포털" : "4 Insurance Portal" },
-                  ] : []),
-                  { label: ko ? "부가세 확정신고" : "VAT filing", sub: vatSub, date: vatDate, icon: "부", color: "#ff9f0a", alwaysShow: true, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
-                  ...(vatType === "general" ? [
-                    { label: ko ? "부가세 예정신고" : "VAT provisional", sub: ko ? "일반과세자 — 4·10월 25일" : "General VAT — Apr & Oct 25", date: vatProvisionalDate, icon: "예", color: "#ff6b00", alwaysShow: false, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
-                  ] : []),
-                  { label: ko ? "종합소득세" : "Income tax", sub: ko ? "매년 5월 31일" : "May 31 annually", date: incomeTaxDate, icon: "소", color: "#af52de", alwaysShow: true, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
-                  { label: ko ? "산재보험료 정산" : "Industrial accident ins.", sub: ko ? "매년 3월 31일" : "March 31 annually", date: industrialDate, icon: "산", color: "#5856d6", alwaysShow: false, url: "https://www.comwel.or.kr", urlLabel: ko ? "근로복지공단" : "COMWEL" },
-                ].sort((a, b) => diffDays(a.date) - diffDays(b.date));
-
-                const urgencyColor = (d: Date) => {
-                  const n = diffDays(d);
-                  return n < 0 ? "rgba(0,0,0,0.25)" : n <= 7 ? "#ff3b30" : n <= 30 ? "#ff9f0a" : "var(--muted)";
-                };
-                const dLabel = (d: Date) => {
-                  const n = diffDays(d);
-                  if (n === 0) return ko ? "오늘" : "Today";
-                  if (n < 0) return ko ? `${Math.abs(n)}일 전` : `${Math.abs(n)}d ago`;
-                  return `D-${n}`;
-                };
-                const dateLabel = (d: Date) =>
-                  d.toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" });
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 헤더 + 사업자 유형 설정 */}
-                    <div style={{ padding: "18px 22px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "12px" }}>
-                        {ko ? "세금 · 납부 일정" : "Tax Calendar"}
-                      </div>
-                      {/* 설정 토글 2행 */}
-                      <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                        {/* 과세 유형 */}
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)" }}>{ko ? "과세 유형" : "VAT type"}</span>
-                          <div style={{ display: "flex", gap: "4px" }}>
-                            {(["general", "simplified"] as const).map(type => {
-                              const active = vatType === type;
-                              const label = ko ? (type === "general" ? "일반과세자" : "간이과세자") : (type === "general" ? "General" : "Simplified");
-                              return (
-                                <button key={type} type="button"
-                                  onClick={() => saveTaxSettings({ ...taxSettings, vatType: type })}
-                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#007aff" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(0,122,255,0.10)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
-                                  {label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        {/* 직원 유무 */}
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)" }}>{ko ? "직원 유무" : "Employees"}</span>
-                          <div style={{ display: "flex", gap: "4px" }}>
-                            {([true, false] as const).map(v => {
-                              const active = hasEmployees === v;
-                              const label = ko ? (v ? "있음" : "없음") : (v ? "Yes" : "No");
-                              return (
-                                <button key={String(v)} type="button"
-                                  onClick={() => saveTaxSettings({ ...taxSettings, hasEmployees: v })}
-                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#007aff" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(0,122,255,0.10)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
-                                  {label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* 세금 이벤트 목록 */}
-                    {allEvents.map((ev, idx) => {
-                      const days = diffDays(ev.date);
-                      const isUrgent = days >= 0 && days <= 14;
-                      return (
-                      <div key={`${ev.label}-${idx}`} style={{
-                        display: "flex", alignItems: "center", gap: "14px", padding: "13px 22px",
-                        borderBottom: idx < allEvents.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none",
-                        opacity: days < 0 ? 0.45 : 1,
-                        background: isUrgent ? `${ev.color}06` : "transparent",
-                      }}>
-                        <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: ev.color, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff" }}>
-                          {ev.icon}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px" }}>{ev.label}</div>
-                          <div style={{ fontSize: "11px", color: "var(--muted)" }}>{ev.sub}</div>
-                          {isUrgent && ev.url && (
-                            <a href={ev.url} target="_blank" rel="noopener noreferrer" style={{
-                              display: "inline-flex", alignItems: "center", gap: "3px", marginTop: "4px",
-                              fontSize: "11px", fontWeight: 600, color: ev.color, textDecoration: "none"
-                            }}>
-                              {ev.urlLabel} ↗
-                            </a>
-                          )}
-                        </div>
-                        <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 700, color: urgencyColor(ev.date), letterSpacing: "-0.2px" }}>
-                            {dLabel(ev.date)}
-                          </div>
-                          <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>
-                            {dateLabel(ev.date)}
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    })}
-                    {/* 유용한 링크 */}
-                    <div style={{ padding: "12px 22px 16px", borderTop: "0.5px solid rgba(0,0,0,0.06)", display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                      {[
-                        { label: ko ? "홈택스" : "HomeTax", url: "https://www.hometax.go.kr", color: "#5856d6" },
-                        { label: ko ? "4대보험 포털" : "4 Insurance", url: "https://www.4insure.or.kr", color: "#34c759" },
-                        { label: ko ? "근로복지공단" : "COMWEL", url: "https://www.comwel.or.kr", color: "#007aff" },
-                        { label: ko ? "캐시노트" : "CashNote", url: "https://cashnote.kr", color: "#ff9f0a" },
-                      ].map(link => (
-                        <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" style={{
-                          display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 12px",
-                          borderRadius: "999px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.7)",
-                          fontSize: "11px", fontWeight: 600, color: link.color, textDecoration: "none"
-                        }}>
-                          {link.label} ↗
-                        </a>
-                      ))}
-                    </div>
-                  </article>
-                );
-              })()}
-
-              </div>{/* end 현금흐름 + 세금 달력 grid */}
-
-              {/* ── 메뉴 · 상품 관리 (inventory businesses + online store) ── */}
-              {(businessCtx.hasPhysicalInventory || businessCtx.isOnlineStore) && (() => {
-                const ko = language === "ko";
-                const isRestaurant = businessCtx.isDeliveryRelevant; // food + cafe-dessert
-                const fmt = (n: number) => n >= 10000
-                  ? `${Math.round(n / 10000).toLocaleString()}만원`
-                  : `${Math.round(n).toLocaleString()}원`;
-                const fmtN = (n: number) => n.toLocaleString();
-
-                // 수익성 계산
-                const calcMargin = (p: Product) => p.price > 0 ? ((p.price - p.cost) / p.price) * 100 : 0;
-                const calcRevenue = (p: Product) => p.monthlySold * p.price;
-                const calcProfit = (p: Product) => p.monthlySold * (p.price - p.cost);
-
-                const totalRevenue = products.reduce((s, p) => s + calcRevenue(p), 0);
-                const totalProfit = products.reduce((s, p) => s + calcProfit(p), 0);
-                const overallMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-
-                // 정렬: 월 매출 기여도 내림차순
-                const sorted = [...products].sort((a, b) => calcRevenue(b) - calcRevenue(a));
-                const dangerItems = products.filter(p => p.cost > 0 && calcMargin(p) < 20);
-
-                const marginColor = (m: number) => m < 0 ? "#ff3b30" : m < 20 ? "#ff9f0a" : m < 40 ? "var(--primary)" : "#34c759";
-
-                // 카테고리 목록 (업종별 기본값)
-                const defaultCategories = isRestaurant
-                  ? (ko ? ["메인", "사이드", "음료", "디저트", "세트"] : ["Main", "Side", "Drink", "Dessert", "Set"])
-                  : businessCtx.isOnlineStore
-                    ? (ko ? ["의류", "잡화", "디지털", "홈리빙", "기타"] : ["Apparel", "Accessories", "Digital", "Home", "Other"])
-                    : (ko ? ["상품", "소모품", "악세서리", "기타"] : ["Product", "Supplies", "Accessories", "Other"]);
-
-                const UNITS = ["개", "잔", "그릇", "접시", "병", "캔", "팩"];
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 헤더 */}
-                    <div style={{ padding: "18px 22px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                            {ko ? (isRestaurant ? "메뉴 수익성" : "상품 수익성") : "Product Performance"}
-                          </div>
-                          {products.length > 0 && (
-                            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
-                              {ko ? `${products.length}개 등록 · 이달 매출 기여 ${fmt(totalRevenue)}` : `${products.length} items · ${fmt(totalRevenue)} this month`}
-                            </div>
-                          )}
-                        </div>
-                        <button type="button"
-                          onClick={() => { setProdFormOpen(true); setProdEditId(null); setProdName(""); setProdCategory(""); setProdPrice(""); setProdCost(""); setProdStock(""); setProdUnit("개"); }}
-                          style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                          {ko ? (isRestaurant ? "+ 메뉴 추가" : "+ 상품 추가") : "+ Add item"}
-                        </button>
-                      </div>
-                      {/* 업종 태그 (읽기 전용 — 로드맵 선택에서 자동 결정됨) */}
-                      <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" as const }}>
-                        <span style={{ fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "16px", border: "1px solid #007aff", background: "rgba(0,122,255,0.08)", color: "#007aff" }}>
-                          {isRestaurant ? (ko ? "메뉴 관리" : "Menu") : (ko ? "상품 관리" : "Products")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 위험 경보 */}
-                    {dangerItems.length > 0 && (
-                      <div style={{ padding: "10px 22px", background: "rgba(255,59,48,0.04)", borderBottom: "0.5px solid rgba(255,59,48,0.10)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#ff3b30" }}>
-                          {ko ? `마진 20% 미만 경고: ${dangerItems.map(p => p.name).join(", ")}` : `Low margin (<20%): ${dangerItems.map(p => p.name).join(", ")}`}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 요약 3-col */}
-                    {products.length > 0 && totalRevenue > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                        {[
-                          { label: ko ? "이달 매출" : "Revenue", value: fmt(totalRevenue), color: "inherit" },
-                          { label: ko ? "이달 이익" : "Gross profit", value: fmt(totalProfit), color: totalProfit >= 0 ? "#34c759" : "#ff3b30" },
-                          { label: ko ? "평균 마진율" : "Avg margin", value: `${overallMargin.toFixed(1)}%`, color: marginColor(overallMargin) },
-                        ].map((col, idx) => (
-                          <div key={col.label} style={{ padding: "14px 12px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
-                            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "6px" }}>{col.label}</div>
-                            <div style={{ fontSize: "16px", fontWeight: 700, color: col.color, letterSpacing: "-0.4px" }}>{col.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* 빈 상태 */}
-                    {products.length === 0 ? (
-                      <div style={{ padding: "16px 22px 22px" }}>
-                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
-                          {ko
-                            ? `${isRestaurant ? "메뉴" : "상품"}를 등록하면 판매량 기록, 마진율 계산, 베스트셀러 분석이 가능합니다.`
-                            : `Register ${isRestaurant ? "menu items" : "products"} to track sales, calculate margins, and identify bestsellers.`}
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {sorted.map((p, idx) => {
-                          const margin = calcMargin(p);
-                          const revenue = calcRevenue(p);
-                          const revenueShare = totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0;
-                          return (
-                            <div key={p.id} style={{ padding: "13px 22px", borderBottom: idx < sorted.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none" }}>
-                              {/* 이름 행 */}
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)" }}>{p.name}</span>
-                                    <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "10px", background: "rgba(0,0,0,0.05)", color: "var(--muted)" }}>{p.category}</span>
-                                    {idx === 0 && totalRevenue > 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(0,122,255,0.10)", color: "#007aff" }}>{ko ? "베스트" : "Best"}</span>}
-                                    {margin < 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(255,59,48,0.10)", color: "#ff3b30" }}>{ko ? "적자주의" : "Loss!"}</span>}
-                                  </div>
-                                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "3px" }}>
-                                    {ko ? `판매가 ${fmtN(p.price)}원 · 원가 ${p.cost > 0 ? fmtN(p.cost) + "원" : "미입력"} · 재고 ${p.stock}${p.unit}` : `Price ₩${fmtN(p.price)} · Cost ${p.cost > 0 ? "₩" + fmtN(p.cost) : "N/A"} · Stock ${p.stock}${p.unit}`}
-                                  </div>
-                                </div>
-                                <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                                  <button type="button" onClick={() => openProdEdit(p)} style={{ fontSize: "11px", color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
-                                  <button type="button" onClick={() => handleProdDelete(p.id)} style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
-                                </div>
-                              </div>
-                              {/* 마진율 바 */}
-                              {p.cost > 0 && (
-                                <div style={{ marginBottom: "8px" }}>
-                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                                    <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>{ko ? "마진율" : "Margin"}</span>
-                                    <span style={{ fontSize: "11px", fontWeight: 700, color: marginColor(margin) }}>{margin.toFixed(1)}%</span>
-                                  </div>
-                                  <div style={{ height: "3px", borderRadius: "2px", background: "rgba(0,0,0,0.07)" }}>
-                                    <div style={{ height: "100%", borderRadius: "2px", width: `${Math.max(0, Math.min(100, margin))}%`, background: marginColor(margin) }} />
-                                  </div>
-                                </div>
-                              )}
-                              {/* 판매량 조작 + 월 기여 */}
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" as const }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
-                                  <button type="button" onClick={() => handleProdSoldChange(p.id, -1)}
-                                    style={{ width: "28px", height: "28px", borderRadius: "8px 0 0 8px", border: "1px solid rgba(0,0,0,0.12)", background: "rgba(0,0,0,0.03)", fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>−</button>
-                                  <div style={{ padding: "0 10px", height: "28px", border: "1px solid rgba(0,0,0,0.12)", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", fontSize: "13px", fontWeight: 600, minWidth: "44px", justifyContent: "center" }}>
-                                    {p.monthlySold}{p.unit}
-                                  </div>
-                                  <button type="button" onClick={() => handleProdSoldChange(p.id, 1)}
-                                    style={{ width: "28px", height: "28px", borderRadius: "0 8px 8px 0", border: "1px solid rgba(0,0,0,0.12)", background: "rgba(0,0,0,0.03)", fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>+</button>
-                                </div>
-                                <span style={{ fontSize: "11px", color: "var(--muted)" }}>{ko ? "이달 판매량" : "Sold this month"}</span>
-                                {revenue > 0 && (
-                                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", marginLeft: "auto" }}>
-                                    {ko ? `매출 ${fmt(revenue)}` : `${fmt(revenue)} revenue`}
-                                    {revenueShare > 0 && <span style={{ fontSize: "10px", color: "var(--muted)", marginLeft: "4px" }}>({revenueShare.toFixed(0)}%)</span>}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* 추가/수정 폼 */}
-                    {prodFormOpen && (
-                      <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,122,255,0.03)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#007aff", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-                          {prodEditId ? (ko ? "수정" : "Edit item") : (ko ? (isRestaurant ? "메뉴 추가" : "상품 추가") : "Add item")}
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
-                          <input type="text" placeholder={ko ? (isRestaurant ? "메뉴명 (예: 된장찌개)" : "상품명 (예: 흰티셔츠)") : "Item name"} value={prodName} onChange={e => setProdName(e.target.value)}
-                            style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                          {/* 카테고리 선택 */}
-                          <div>
-                            <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "6px" }}>{ko ? "카테고리" : "Category"}</div>
-                            <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" as const }}>
-                              {defaultCategories.map(cat => (
-                                <button key={cat} type="button" onClick={() => setProdCategory(cat)}
-                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${prodCategory === cat ? "#007aff" : "rgba(0,0,0,0.10)"}`, background: prodCategory === cat ? "rgba(0,122,255,0.09)" : "transparent", color: prodCategory === cat ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
-                                  {cat}
-                                </button>
-                              ))}
-                              <input type="text" placeholder={ko ? "직접 입력" : "Custom"} value={!defaultCategories.includes(prodCategory) ? prodCategory : ""} onChange={e => setProdCategory(e.target.value)}
-                                style={{ width: "80px", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "5px 10px", fontSize: "12px", outline: "none" }} />
-                            </div>
-                          </div>
-                          {/* 가격 + 원가 */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "판매가 (원)" : "Price (₩)"}</div>
-                              <input type="text" inputMode="numeric" placeholder="12000" value={prodPrice} onChange={e => setProdPrice(e.target.value.replace(/[^0-9]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "원가 (원, 선택)" : "Cost (₩, optional)"}</div>
-                              <input type="text" inputMode="numeric" placeholder="4000" value={prodCost} onChange={e => setProdCost(e.target.value.replace(/[^0-9]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                          </div>
-                          {/* 재고 + 단위 */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "재고 수량" : "Stock qty"}</div>
-                              <input type="text" inputMode="numeric" placeholder="0" value={prodStock} onChange={e => setProdStock(e.target.value.replace(/[^0-9]/g, ""))}
-                                style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "단위" : "Unit"}</div>
-                              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" as const }}>
-                                {UNITS.map(u => (
-                                  <button key={u} type="button" onClick={() => setProdUnit(u)}
-                                    style={{ fontSize: "11px", fontWeight: 600, padding: "5px 10px", borderRadius: "12px", border: `1px solid ${prodUnit === u ? "#007aff" : "rgba(0,0,0,0.10)"}`, background: prodUnit === u ? "rgba(0,122,255,0.09)" : "transparent", color: prodUnit === u ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
-                                    {u}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          {/* 마진 미리보기 */}
-                          {prodPrice && prodCost && parseInt(prodPrice) > 0 && (
-                            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(0,122,255,0.05)", border: "0.5px solid rgba(0,122,255,0.12)" }}>
-                              {(() => {
-                                const p = parseInt(prodPrice); const c = parseInt(prodCost);
-                                const m = ((p - c) / p * 100);
-                                return (
-                                  <div style={{ fontSize: "12px", color: marginColor(m), fontWeight: 600 }}>
-                                    {ko ? `마진율 ${m.toFixed(1)}% · 건당 이익 ${(p - c).toLocaleString()}원` : `Margin ${m.toFixed(1)}% · ₩${(p - c).toLocaleString()} per item`}
-                                    {m < 20 && <span style={{ color: "#ff9f0a", marginLeft: "8px", fontWeight: 600 }}>{ko ? "마진 낮음" : "Low margin"}</span>}
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          )}
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button type="button" onClick={handleProdSave}
-                              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#007aff", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
-                              {prodEditId ? (ko ? "수정 완료" : "Save") : (ko ? "추가" : "Add")}
-                            </button>
-                            <button type="button" onClick={() => { setProdFormOpen(false); setProdEditId(null); }}
-                              style={{ padding: "12px 20px", borderRadius: "12px", background: "rgba(0,0,0,0.06)", color: "var(--primary)", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-                              {ko ? "취소" : "Cancel"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 수강생 · 회원 관리 (fitness, education, space only) ── */}
-              {businessCtx.isRecurringRevenue && (() => {
-                const ko = language === "ko";
-                const fmt = (n: number) => n >= 10000
-                  ? `${Math.round(n / 10000).toLocaleString()}만원`
-                  : `${Math.round(n).toLocaleString()}원`;
-
-                const saveMembers = (list: Member[]) => {
-                  setMembers(list);
-                  try { localStorage.setItem("members", JSON.stringify(list)); } catch { /* ignore */ }
-                };
-
-                const todayStr = new Date().toISOString().slice(0, 10);
-                const in7days = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-
-                const enriched = members.map(m => ({
-                  ...m,
-                  status: m.endDate < todayStr ? "expired" as const : m.endDate <= in7days ? "expiring" as const : "active" as const,
-                }));
-
-                const activeCount = enriched.filter(m => m.status === "active").length;
-                const expiringCount = enriched.filter(m => m.status === "expiring").length;
-                const monthlyRevenue = enriched.filter(m => m.status !== "expired").reduce((s, m) => s + m.fee, 0);
-
-                const planPresets = industryCategoryId === "fitness"
-                  ? (ko ? ["1개월", "3개월", "6개월", "12개월", "PT 10회", "PT 20회"] : ["1 Month", "3 Months", "6 Months", "12 Months", "PT 10x", "PT 20x"])
-                  : industryCategoryId === "space"
-                    ? (ko ? ["시간권", "월정액", "주간권", "단기"] : ["Hourly", "Monthly", "Weekly", "Short-term"])
-                    : (ko ? ["월 수강", "분기 수강", "단과", "특강"] : ["Monthly", "Quarterly", "Single", "Special"]);
-
-                const statusColor = (s: string) => s === "expired" ? "#ff3b30" : s === "expiring" ? "#ff9f0a" : "#34c759";
-                const statusLabel = (s: string) => s === "expired" ? (ko ? "만료" : "Expired") : s === "expiring" ? (ko ? "만료임박" : "Expiring") : (ko ? "정상" : "Active");
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-                    {/* 헤더 */}
-                    <div style={{ padding: "18px 22px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                            {industryCategoryId === "fitness" ? (ko ? "회원 관리" : "Member Management")
-                              : industryCategoryId === "space" ? (ko ? "이용자 관리" : "User Management")
-                              : (ko ? "수강생 관리" : "Student Management")}
-                          </div>
-                          {members.length > 0 && (
-                            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
-                              {ko
-                                ? `총 ${members.length}명 · 활성 ${activeCount}명 · 이달 예상 ${fmt(monthlyRevenue * 10000)}`
-                                : `${members.length} total · ${activeCount} active · ${fmt(monthlyRevenue * 10000)} this month`}
-                            </div>
-                          )}
-                        </div>
-                        <button type="button"
-                          onClick={() => { setMemFormOpen(true); setMemName(""); setMemPlan(""); setMemFee(""); setMemEnd(""); }}
-                          style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                          {ko ? "+ 등록" : "+ Add"}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 만료 임박 경보 */}
-                    {expiringCount > 0 && (
-                      <div style={{ padding: "10px 22px", background: "rgba(255,159,10,0.06)", borderBottom: "0.5px solid rgba(255,159,10,0.12)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#ff9f0a" }}>
-                          {ko ? `7일 내 만료 ${expiringCount}명 — 갱신 안내 필요` : `${expiringCount} member${expiringCount > 1 ? "s" : ""} expiring in 7 days`}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 요약 3-col */}
-                    {members.length > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                        {[
-                          { label: ko ? "전체" : "Total", value: `${members.length}명`, color: "inherit" },
-                          { label: ko ? "만료임박" : "Expiring", value: `${expiringCount}명`, color: expiringCount > 0 ? "#ff9f0a" : "inherit" },
-                          { label: ko ? "이달 수입" : "Revenue", value: fmt(monthlyRevenue * 10000), color: "#007aff" },
-                        ].map((col, i) => (
-                          <div key={col.label} style={{ padding: "12px 12px", borderLeft: i > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
-                            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{col.label}</div>
-                            <div style={{ fontSize: "16px", fontWeight: 700, color: col.color, letterSpacing: "-0.4px" }}>{col.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* 빈 상태 */}
-                    {members.length === 0 && !memFormOpen && (
-                      <div style={{ padding: "16px 22px 22px" }}>
-                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
-                          {ko
-                            ? "수강생/회원을 등록하면 만료일 추적, 이달 수입 계산, 갱신 안내 알림 관리가 가능합니다."
-                            : "Register members to track expiry dates, calculate monthly revenue, and manage renewal reminders."}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 회원 목록 */}
-                    {enriched.length > 0 && (
-                      <div>
-                        {enriched.map((m, idx) => {
-                          const daysLeft = Math.ceil((new Date(m.endDate).getTime() - Date.now()) / 86400000);
-                          return (
-                            <div key={m.id} style={{ padding: "12px 22px", borderTop: idx > 0 ? "0.5px solid rgba(0,0,0,0.06)" : "none", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: m.status === "expired" ? 0.5 : 1 }}>
-                              <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <span style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "-0.2px" }}>{m.name}</span>
-                                  <span style={{ fontSize: "10px", fontWeight: 700, color: statusColor(m.status), background: `${statusColor(m.status)}18`, padding: "2px 7px", borderRadius: "20px" }}>
-                                    {statusLabel(m.status)}
-                                  </span>
-                                </div>
-                                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                                  {m.plan} · {fmt(m.fee * 10000)} · {m.endDate}
-                                  {m.status !== "expired" && daysLeft >= 0 && (
-                                    <span style={{ color: m.status === "expiring" ? "#ff9f0a" : "var(--muted)" }}>
-                                      {" "}{ko ? `(D-${daysLeft})` : `(${daysLeft}d left)`}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <button type="button"
-                                onClick={() => saveMembers(members.filter(x => x.id !== m.id))}
-                                style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
-                                {ko ? "삭제" : "Del"}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* 등록 폼 */}
-                    {memFormOpen && (
-                      <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.09)", background: "rgba(0,0,0,0.018)", display: "flex", flexDirection: "column" as const, gap: "12px" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 700 }}>{ko ? "수강생/회원 등록" : "Register Member"}</div>
-                        <input type="text" placeholder={ko ? "이름" : "Name"}
-                          value={memName} onChange={e => setMemName(e.target.value)}
-                          style={{ fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                          {planPresets.map(preset => (
-                            <button key={preset} type="button"
-                              onClick={() => setMemPlan(preset)}
-                              style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "14px", border: `1px solid ${memPlan === preset ? "#007aff" : "rgba(0,0,0,0.10)"}`, background: memPlan === preset ? "rgba(0,122,255,0.09)" : "transparent", color: memPlan === preset ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
-                              {preset}
-                            </button>
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <input type="text" inputMode="numeric" placeholder={ko ? "수강료 (만원)" : "Fee (10K₩)"}
-                            value={memFee} onChange={e => setMemFee(e.target.value.replace(/[^0-9]/g, ""))}
-                            style={{ flex: 1, fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
-                          <input type="date" value={memEnd} onChange={e => setMemEnd(e.target.value)}
-                            style={{ flex: 1, fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button type="button"
-                            disabled={!memName.trim() || !memEnd}
-                            onClick={() => {
-                              if (!memName.trim() || !memEnd) return;
-                              const newMember: Member = { id: `m_${Date.now()}`, name: memName.trim(), plan: memPlan || (ko ? "기타" : "Other"), fee: parseInt(memFee) || 0, startDate: todayStr, endDate: memEnd };
-                              saveMembers([...members, newMember]);
-                              setMemFormOpen(false);
-                            }}
-                            style={{ flex: 1, padding: "12px", borderRadius: "12px", background: memName.trim() && memEnd ? "#007aff" : "rgba(0,0,0,0.08)", color: memName.trim() && memEnd ? "#fff" : "var(--muted)", border: "none", fontSize: "14px", fontWeight: 700, cursor: memName.trim() && memEnd ? "pointer" : "default" }}>
-                            {ko ? "등록" : "Register"}
-                          </button>
-                          <button type="button" onClick={() => setMemFormOpen(false)}
-                            style={{ padding: "12px 20px", borderRadius: "12px", background: "rgba(0,0,0,0.06)", color: "var(--primary)", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-                            {ko ? "취소" : "Cancel"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 재고 현황 (food, cafe, retail, pet only) ── */}
-              {businessCtx.hasPhysicalInventory && (() => {
-                const ko = language === "ko";
-                const todayStr = new Date().toISOString().slice(0, 10);
-                const currentMonth = todayStr.slice(0, 7);
-                const UNITS = ["개", "kg", "g", "L", "ml", "봉지", "박스", "병", "캔"];
-                const invStep = (unit: string) => ["kg", "L", "l"].includes(unit) ? 0.5 : 1;
-
-                // ── 핵심 계산 함수 ──
-                const daysLeft = (item: InventoryItem): number | null =>
-                  item.dailyUsage > 0 ? Math.floor(item.quantity / item.dailyUsage) : null;
-
-                const expiryLeft = (item: InventoryItem): number | null => {
-                  if (!item.expiryDate) return null;
-                  return Math.ceil(
-                    (new Date(item.expiryDate + "T00:00:00").getTime() - new Date(todayStr + "T00:00:00").getTime()) / 86400000
-                  );
-                };
-
-                const needsOrderToday = (item: InventoryItem): boolean => {
-                  const d = daysLeft(item);
-                  return d !== null && d <= (item.leadTimeDays || 1);
-                };
-
-                const itemStatus = (item: InventoryItem): "urgent" | "warning" | "good" => {
-                  if (item.quantity === 0) return "urgent";
-                  if (needsOrderToday(item)) return "urgent";
-                  const exp = expiryLeft(item);
-                  if (exp !== null && exp <= 2) return "urgent";
-                  if (item.minThreshold > 0 && item.quantity <= item.minThreshold) return "warning";
-                  if (exp !== null && exp <= 5) return "warning";
-                  return "good";
-                };
-
-                const CAT: Record<string, { ko: string; en: string; color: string }> = {
-                  fresh:    { ko: "신선", en: "Fresh",    color: "#34c759" },
-                  dry:      { ko: "건식", en: "Dry",      color: "#ff9f0a" },
-                  frozen:   { ko: "냉동", en: "Frozen",   color: "#007aff" },
-                  beverage: { ko: "음료", en: "Beverage", color: "#30b0c7" },
-                  supply:   { ko: "소모품", en: "Supply", color: "#af52de" },
-                  other:    { ko: "기타", en: "Other",    color: "#8e8e93" },
-                };
-                const SC = { urgent: "#ff3b30", warning: "#ff9f0a", good: "#34c759" } as const;
-                const SL = {
-                  urgent: { ko: "긴급", en: "Urgent" },
-                  warning: { ko: "주의", en: "Low" },
-                  good:   { ko: "충분", en: "OK" },
-                } as const;
-
-                // ── 필터 & 정렬 ──
-                const SORT = { urgent: 0, warning: 1, good: 2 } as const;
-                const filtered = invCategoryFilter === "all"
-                  ? inventory
-                  : inventory.filter(i => (i.category ?? "other") === invCategoryFilter);
-                const sorted = [...filtered].sort((a, b) => SORT[itemStatus(a)] - SORT[itemStatus(b)]);
-
-                // ── 통계 ──
-                const urgentList  = inventory.filter(i => itemStatus(i) === "urgent");
-                const orderCount  = inventory.filter(needsOrderToday).length;
-                const totalValue  = inventory.reduce((s, i) => s + i.quantity * (i.unitCost || 0), 0);
-                const wasteCost   = inventory.reduce((s, i) => {
-                  const w = (i.wasteLog ?? []).filter(e => e.date.startsWith(currentMonth)).reduce((a, e) => a + e.qty, 0);
-                  return s + w * (i.unitCost || 0);
-                }, 0);
-
-                const fmtV = (n: number) => n >= 10000 ? `${Math.round(n / 10000).toLocaleString()}만원` : `${Math.round(n).toLocaleString()}원`;
-                const catCounts = Object.fromEntries(
-                  Object.keys(CAT).map(c => [c, inventory.filter(i => (i.category ?? "other") === c).length])
-                );
-
-                // ── 공통 스타일 ──
-                const inputSt: React.CSSProperties = {
-                  border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px",
-                  padding: "10px 13px", fontSize: "14px", outline: "none",
-                  background: "#fff", width: "100%", boxSizing: "border-box" as const,
-                };
-                const secLbl: React.CSSProperties = {
-                  fontSize: "11px", fontWeight: 700, color: "var(--muted)",
-                  textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: "8px",
-                };
-
-                return (
-                  <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
-
-                    {/* ── 헤더 ── */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 22px 16px", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-                      <div>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                          {ko ? "재고 현황" : "Inventory"}
-                        </div>
-                        {inventory.length > 0 && (
-                          <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                            {ko ? `${inventory.length}개 품목 관리 중` : `${inventory.length} items tracked`}
-                          </div>
-                        )}
-                      </div>
-                      <button type="button"
-                        onClick={() => setInvForm({ ...emptyInvForm, open: true })}
-                        style={{ fontSize: "12px", fontWeight: 600, color: "#007aff", background: "rgba(0,122,255,0.08)", border: "none", borderRadius: "9px", padding: "6px 13px", cursor: "pointer" }}>
-                        {ko ? "+ 품목 추가" : "+ Add item"}
-                      </button>
-                    </div>
-
-                    {/* ── 발주 알림 배너 ── */}
-                    {urgentList.length > 0 && (
-                      <div style={{ padding: "12px 22px", background: "rgba(255,59,48,0.04)", borderBottom: "0.5px solid rgba(255,59,48,0.10)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#ff3b30", marginBottom: "2px" }}>
-                          {ko ? `지금 주문하세요 — ${urgentList.map(i => i.name).join(", ")}` : `Order now — ${urgentList.map(i => i.name).join(", ")}`}
-                        </div>
-                        <div style={{ fontSize: "11px", color: "rgba(200,40,30,0.8)", lineHeight: 1.4 }}>
-                          {ko ? "리드타임 기준, 오늘 발주해야 재고 소진을 막을 수 있습니다." : "Based on lead times, order today to prevent stockouts."}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── 3-col 요약 지표 ── */}
-                    {inventory.length > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.07)" }}>
-                        {[
-                          { label: ko ? "총 재고 가치" : "Stock value",      value: totalValue > 0 ? fmtV(totalValue) : "—",                               color: "inherit" as const },
-                          { label: ko ? "이달 폐기 비용" : "Waste this month", value: wasteCost > 0 ? fmtV(wasteCost) : "—",                                color: wasteCost > 0 ? "#ff9f0a" : "inherit" as const },
-                          { label: ko ? "주문 필요" : "To order",             value: orderCount > 0 ? `${orderCount}${ko ? "건" : ""}` : ko ? "없음" : "—", color: orderCount > 0 ? "#ff3b30" : "#34c759" as const },
-                        ].map((m, idx) => (
-                          <div key={m.label} style={{ padding: "12px 14px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.07)" : "none" }}>
-                            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: "5px" }}>{m.label}</div>
-                            <div style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.4px", color: m.color }}>{m.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* ── 카테고리 필터 ── */}
-                    {inventory.length > 1 && (
-                      <div style={{ display: "flex", gap: "6px", padding: "11px 22px", overflowX: "auto" as const, borderBottom: "0.5px solid rgba(0,0,0,0.07)" }}>
-                        {[
-                          { id: "all", label: ko ? "전체" : "All", count: inventory.length },
-                          ...Object.entries(CAT).filter(([c]) => catCounts[c] > 0).map(([c, v]) => ({
-                            id: c, label: ko ? v.ko : v.en, count: catCounts[c],
-                          })),
-                        ].map(tab => (
-                          <button key={tab.id} type="button" onClick={() => setInvCategoryFilter(tab.id)}
-                            style={{
-                              flexShrink: 0, fontSize: "11px", fontWeight: 600, border: "none",
-                              borderRadius: "8px", padding: "5px 11px", cursor: "pointer", transition: "background 0.15s, color 0.15s",
-                              background: invCategoryFilter === tab.id ? "#007aff" : "rgba(0,0,0,0.05)",
-                              color: invCategoryFilter === tab.id ? "#fff" : "var(--muted)",
-                            }}>
-                            {tab.label} {tab.count}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* ── 빈 상태 ── */}
-                    {inventory.length === 0 && !invForm.open && (
-                      <div style={{ padding: "24px 22px" }}>
-                        <div style={{ fontSize: "14px", fontWeight: 600, letterSpacing: "-0.3px", marginBottom: "7px" }}>
-                          {ko ? "재고 관리로 폐업 위험을 줄이세요" : "Track inventory to reduce failure risk"}
-                        </div>
-                        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
-                          {ko
-                            ? "단가와 1일 사용량을 입력하면 소진 예정일과 발주 시점을 자동 계산합니다. 유통기한 알림으로 신선재료 폐기 손실도 방지할 수 있습니다."
-                            : "Enter unit cost and daily usage to auto-predict depletion dates and reorder timing. Expiry alerts prevent fresh ingredient waste."}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── 재고 목록 ── */}
-                    {sorted.map((item, idx) => {
-                      const s   = itemStatus(item);
-                      const sc  = SC[s];
-                      const d   = daysLeft(item);
-                      const exp = expiryLeft(item);
-                      const st  = invStep(item.unit);
-                      const cat = CAT[item.category ?? "other"];
-                      const val = item.quantity * (item.unitCost || 0);
-                      const lastOrderAge = item.lastOrderedAt
-                        ? Math.round((Date.now() - new Date(item.lastOrderedAt).getTime()) / 86400000)
-                        : null;
-                      const isWasting = invWasteTarget === item.id;
-                      const isLast = idx === sorted.length - 1;
-
-                      return (
-                        <div key={item.id} style={{
-                          padding: "16px 22px",
-                          borderBottom: (!isLast || invForm.open) ? "0.5px solid rgba(0,0,0,0.06)" : "none",
-                          background: s === "urgent" ? "rgba(255,59,48,0.018)" : s === "warning" ? "rgba(255,159,10,0.012)" : "transparent",
-                        }}>
-
-                          {/* 이름 · 카테고리 · 상태 */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "7px", minWidth: 0, flex: 1 }}>
-                              <span style={{ fontSize: "14px", fontWeight: 600, letterSpacing: "-0.3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
-                                {item.name}
-                              </span>
-                              <span style={{ fontSize: "10px", fontWeight: 700, color: cat.color, background: `${cat.color}18`, borderRadius: "5px", padding: "2px 7px", flexShrink: 0 }}>
-                                {ko ? cat.ko : cat.en}
-                              </span>
-                            </div>
-                            <div style={{ fontSize: "10px", fontWeight: 700, color: sc, background: `${sc}18`, borderRadius: "6px", padding: "3px 8px", letterSpacing: "0.05em", flexShrink: 0, marginLeft: "8px" }}>
-                              {SL[s][ko ? "ko" : "en"]}
-                            </div>
-                          </div>
-
-                          {/* 핵심 인사이트 줄 */}
-                          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", marginBottom: "12px", alignItems: "center" }}>
-                            {d !== null ? (
-                              <span style={{ fontSize: "12px", fontWeight: 600, color: d <= (item.leadTimeDays || 1) ? "#ff3b30" : d <= 7 ? "#ff9f0a" : "var(--muted)" }}>
-                                {d === 0 ? (ko ? "오늘 소진" : "Depletes today") : d === 1 ? (ko ? "내일 소진" : "Depletes tomorrow") : (ko ? `D-${d} 소진 예정` : `${d}d left`)}
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: "12px", color: "rgba(0,0,0,0.22)", fontStyle: "italic" }}>
-                                {ko ? "사용량 미입력" : "No usage rate"}
-                              </span>
-                            )}
-                            {exp !== null && (
-                              <span style={{ fontSize: "12px", fontWeight: exp <= 2 ? 700 : 500, color: exp <= 0 ? "#ff3b30" : exp <= 2 ? "#ff3b30" : exp <= 5 ? "#ff9f0a" : "var(--muted)" }}>
-                                {exp <= 0 ? (ko ? "유통기한 만료" : "Expired") : (ko ? `유통기한 D+${exp}` : `Exp D+${exp}`)}
-                              </span>
-                            )}
-                            {val > 0 && (
-                              <span style={{ fontSize: "12px", color: "var(--muted)" }}>{fmtV(val)}</span>
-                            )}
-                            {lastOrderAge !== null && (
-                              <span style={{ fontSize: "11px", color: "rgba(0,0,0,0.22)" }}>
-                                {ko ? `발주 ${lastOrderAge}일 전` : `Ordered ${lastOrderAge}d ago`}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* 수량 스테퍼 + 액션 버튼 */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const }}>
-                            {/* +/− 스테퍼 */}
-                            <div style={{ display: "flex", alignItems: "center", border: "1px solid rgba(0,0,0,0.11)", borderRadius: "10px", overflow: "hidden" }}>
-                              <button type="button" onClick={() => handleInvQty(item.id, -st)} disabled={item.quantity <= 0}
-                                style={{ width: "36px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: item.quantity > 0 ? "pointer" : "default", fontSize: "20px", color: item.quantity > 0 ? "var(--primary)" : "rgba(0,0,0,0.18)", fontWeight: 300, lineHeight: 1 }}>
-                                −
-                              </button>
-                              <div style={{ minWidth: "64px", textAlign: "center" as const, fontSize: "13px", fontWeight: 600, padding: "0 6px", borderLeft: "0.5px solid rgba(0,0,0,0.09)", borderRight: "0.5px solid rgba(0,0,0,0.09)" }}>
-                                {item.quantity}{item.unit}
-                              </div>
-                              <button type="button" onClick={() => handleInvQty(item.id, st)}
-                                style={{ width: "36px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", fontSize: "20px", color: "var(--primary)", fontWeight: 300, lineHeight: 1 }}>
-                                +
-                              </button>
-                            </div>
-
-                            {/* 주문하기 (긴급·주의) */}
-                            {(s === "urgent" || s === "warning") && (
-                              item.supplierUrl ? (
-                                <a href={item.supplierUrl} target="_blank" rel="noopener noreferrer"
-                                  style={{ fontSize: "12px", fontWeight: 700, color: "#fff", background: "#007aff", textDecoration: "none", borderRadius: "9px", padding: "7px 14px" }}>
-                                  {ko ? "주문하기 ›" : "Order ›"}
-                                </a>
-                              ) : (
-                                <span style={{ fontSize: "11px", color: "#ff9f0a", background: "rgba(255,159,10,0.09)", borderRadius: "8px", padding: "6px 11px", fontWeight: 600 }}>
-                                  {item.supplierName ? item.supplierName : (ko ? "공급업체 미등록" : "No supplier")}
-                                </span>
-                              )
-                            )}
-
-                            {/* 주문 완료 표시 (긴급·주의) */}
-                            {(s === "urgent" || s === "warning") && (
-                              <button type="button" onClick={() => handleMarkOrdered(item.id)}
-                                style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", background: "rgba(0,0,0,0.05)", border: "none", borderRadius: "8px", padding: "6px 11px", cursor: "pointer" }}>
-                                {ko ? "주문 완료" : "Ordered"}
-                              </button>
-                            )}
-
-                            {/* 폐기 기록 */}
-                            <button type="button"
-                              onClick={() => { setInvWasteTarget(isWasting ? null : item.id); setInvWasteQty(""); setInvWasteReason(""); }}
-                              style={{ fontSize: "11px", fontWeight: 500, color: isWasting ? "#ff3b30" : "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
-                              {ko ? "폐기 기록" : "Log waste"}
-                            </button>
-
-                            {/* 수정·삭제 */}
-                            <div style={{ marginLeft: "auto", display: "flex" }}>
-                              <button type="button" onClick={() => openInvEdit(item)}
-                                style={{ fontSize: "11px", color: "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "4px 9px", fontWeight: 500 }}>
-                                {ko ? "수정" : "Edit"}
-                              </button>
-                              <button type="button" onClick={() => handleInvDelete(item.id)}
-                                style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px 9px", fontWeight: 500 }}>
-                                {ko ? "삭제" : "Del"}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* 폐기 기록 인라인 폼 */}
-                          {isWasting && (
-                            <div style={{ marginTop: "12px", padding: "13px 15px", background: "rgba(255,59,48,0.04)", borderRadius: "12px", border: "0.5px solid rgba(255,59,48,0.13)", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                              <div style={{ fontSize: "11px", fontWeight: 700, color: "#ff3b30", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>
-                                {ko ? "폐기 기록" : "Waste log"}
-                              </div>
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                <input type="text" inputMode="decimal" placeholder={ko ? `수량 (${item.unit})` : `Qty (${item.unit})`}
-                                  value={invWasteQty} onChange={e => setInvWasteQty(e.target.value.replace(/[^0-9.]/g, ""))}
-                                  style={{ ...inputSt, flex: 1, fontSize: "13px", padding: "8px 11px" }} />
-                                <select value={invWasteReason} onChange={e => setInvWasteReason(e.target.value)}
-                                  style={{ ...inputSt, flex: 1, fontSize: "13px", padding: "8px 11px", cursor: "pointer" }}>
-                                  <option value="">{ko ? "사유 선택" : "Reason"}</option>
-                                  <option value="expiry">{ko ? "유통기한 만료" : "Expired"}</option>
-                                  <option value="quality">{ko ? "품질 불량" : "Quality issue"}</option>
-                                  <option value="overstock">{ko ? "과주문" : "Over-ordered"}</option>
-                                  <option value="other">{ko ? "기타" : "Other"}</option>
-                                </select>
-                              </div>
-                              <div style={{ display: "flex", gap: "7px" }}>
-                                <button type="button" disabled={!invWasteQty} onClick={() => handleInvWaste(item.id)}
-                                  style={{ flex: 1, background: invWasteQty ? "#ff3b30" : "rgba(0,0,0,0.08)", color: invWasteQty ? "#fff" : "var(--muted)", border: "none", borderRadius: "9px", padding: "8px 0", fontSize: "12px", fontWeight: 700, cursor: invWasteQty ? "pointer" : "default" }}>
-                                  {ko ? "기록" : "Record"}
-                                </button>
-                                <button type="button" onClick={() => setInvWasteTarget(null)}
-                                  style={{ background: "rgba(0,0,0,0.06)", color: "var(--muted)", border: "none", borderRadius: "9px", padding: "8px 16px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-                                  {ko ? "취소" : "Cancel"}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {/* ── 품목 추가·수정 폼 ── */}
-                    {invForm.open && (
-                      <div style={{ padding: "22px 22px", borderTop: "0.5px solid rgba(0,0,0,0.09)", background: "rgba(0,0,0,0.018)", display: "flex", flexDirection: "column" as const, gap: "18px" }}>
-                        <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "-0.3px" }}>
-                          {invForm.editId ? (ko ? "품목 수정" : "Edit item") : (ko ? "새 품목 추가" : "New item")}
-                        </div>
-
-                        {/* 기본 정보 */}
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                          <div style={secLbl}>{ko ? "기본 정보" : "Basic info"}</div>
-                          <input type="text" placeholder={ko ? "품목명 (예: 닭가슴살)" : "Item name"}
-                            value={invForm.name} onChange={e => setInvForm(f => ({ ...f, name: e.target.value }))} style={inputSt} />
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <select value={invForm.category} onChange={e => setInvForm(f => ({ ...f, category: e.target.value as InvForm["category"] }))}
-                              style={{ ...inputSt, flex: 1, cursor: "pointer" }}>
-                              {Object.entries(CAT).map(([k, v]) => <option key={k} value={k}>{ko ? v.ko : v.en}</option>)}
-                            </select>
-                            <select value={invForm.unit} onChange={e => setInvForm(f => ({ ...f, unit: e.target.value }))}
-                              style={{ ...inputSt, width: "76px", flex: "none", cursor: "pointer" }}>
-                              {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                            </select>
-                          </div>
-                        </div>
-
-                        {/* 수량 & 사용량 */}
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                          <div style={secLbl}>{ko ? "수량 & 사용량" : "Quantity & usage"}</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                            {[
-                              { label: ko ? "현재 수량" : "Current qty", key: "qty" as const, ph: "0" },
-                              { label: ko ? `1일 사용량 (${invForm.unit})` : `Daily usage (${invForm.unit})`, key: "dailyUsage" as const, ph: "e.g. 2.5" },
-                              { label: ko ? `재주문 기준량 (${invForm.unit})` : `Reorder at (${invForm.unit})`, key: "threshold" as const, ph: "e.g. 5" },
-                              { label: ko ? "단가 (원)" : "Unit cost (₩)", key: "unitCost" as const, ph: "e.g. 8500" },
-                            ].map(f => (
-                              <div key={f.key}>
-                                <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "5px" }}>{f.label}</div>
-                                <input type="text" inputMode="decimal" placeholder={f.ph}
-                                  value={invForm[f.key]} onChange={e => setInvForm(p => ({ ...p, [f.key]: e.target.value.replace(/[^0-9.]/g, "") }))} style={inputSt} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* 유통기한 (신선·냉동만) */}
-                        {(invForm.category === "fresh" || invForm.category === "frozen") && (
-                          <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                            <div style={secLbl}>{ko ? "유통기한" : "Expiry date"}</div>
-                            <input type="date" value={invForm.expiryDate} onChange={e => setInvForm(f => ({ ...f, expiryDate: e.target.value }))} style={inputSt} />
-                          </div>
-                        )}
-
-                        {/* 공급업체 */}
-                        {(() => {
-                          // 프랜차이즈 본사 공급업체 추출
-                          const franchiseSuppliers: { name: string; type: string; color: string }[] = [];
-                          if (startupType === "franchise" && selectedFranchiseBrandId) {
-                            const fb = getFranchiseBrandById(selectedFranchiseBrandId);
-                            if (fb) {
-                              const supplyInfo = getFranchiseSupplyInfo(fb);
-                              supplyInfo.forEach(s => {
-                                const typeName = s.type === "hq-exclusive" ? (language === "ko" ? "본사 독점" : "HQ Only")
-                                  : s.type === "hq-designated" ? (language === "ko" ? "본사 지정" : "HQ Designated")
-                                  : "";
-                                if (typeName) {
-                                  franchiseSuppliers.push({
-                                    name: `${fb!.name[language]} ${s.category[language]}`,
-                                    type: typeName,
-                                    color: getSupplyTypeColor(s.type)
-                                  });
-                                }
-                              });
-                            }
-                          }
-
-                          // 로드맵 vendor-setup 단계에서 저장한 공급업체 목록 추출
-                          const savedSuppliers = Object.entries(vendorSelections)
-                            .filter(([, v]) => v !== "")
-                            .map(([k, v]) => {
-                              const name = v.startsWith("__etc__") ? (vendorCustomInputs[k] ?? "").trim() : v;
-                              return { name, url: VENDOR_URL_MAP[name] ?? "" };
-                            })
-                            .filter(({ name }) => name !== "")
-                            .filter((s, i, arr) => arr.findIndex(x => x.name === s.name) === i);
-                          return (
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                          <div style={secLbl}>{ko ? "공급업체" : "Supplier"}</div>
-
-                          {/* 프랜차이즈 본사 공급업체 */}
-                          {franchiseSuppliers.length > 0 && (
-                            <div>
-                              <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.38)", marginBottom: "6px", fontWeight: 500 }}>
-                                {ko ? "프랜차이즈 본사 공급" : "Franchise HQ supply"}
-                              </div>
-                              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px" }}>
-                                {franchiseSuppliers.map(s => {
-                                  const isSelected = invForm.supplierName === s.name;
-                                  return (
-                                    <button
-                                      key={s.name}
-                                      type="button"
-                                      onClick={() => setInvForm(f => ({
-                                        ...f,
-                                        supplierName: isSelected ? "" : s.name,
-                                      }))}
-                                      style={{
-                                        fontSize: "11px", fontWeight: 600, padding: "4px 10px",
-                                        borderRadius: "999px", cursor: "pointer",
-                                        border: isSelected ? `1.5px solid ${s.color}` : `1px solid ${s.color}30`,
-                                        background: isSelected ? `${s.color}15` : `${s.color}06`,
-                                        color: s.color,
-                                        transition: "all 0.15s",
-                                        display: "inline-flex", alignItems: "center", gap: "4px"
-                                      }}
-                                    >
-                                      <span style={{ fontSize: "9px", opacity: 0.7 }}>{s.type}</span>
-                                      {s.name}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {savedSuppliers.length > 0 && (
-                            <div>
-                              <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.38)", marginBottom: "6px", fontWeight: 500 }}>
-                                {ko ? "로드맵에서 저장한 공급업체" : "From your roadmap"}
-                              </div>
-                              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px" }}>
-                                {savedSuppliers.map(s => {
-                                  const isSelected = invForm.supplierName === s.name;
-                                  return (
-                                    <button
-                                      key={s.name}
-                                      type="button"
-                                      onClick={() => setInvForm(f => ({
-                                        ...f,
-                                        supplierName: isSelected ? "" : s.name,
-                                        url: isSelected ? f.url : (s.url || f.url),
-                                      }))}
-                                      style={{
-                                        fontSize: "12px", fontWeight: 600, padding: "5px 11px",
-                                        borderRadius: "999px", cursor: "pointer",
-                                        border: isSelected ? "none" : "1px solid rgba(0,0,0,0.12)",
-                                        background: isSelected ? "#007aff" : "rgba(0,0,0,0.04)",
-                                        color: isSelected ? "#fff" : "var(--primary)",
-                                        transition: "all 0.15s",
-                                      }}
-                                    >
-                                      {s.name}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                          <input type="text" placeholder={savedSuppliers.length > 0 ? (ko ? "또는 직접 입력" : "Or enter manually") : (ko ? "공급업체명 (예: 한국식자재)" : "Supplier name")}
-                            value={invForm.supplierName} onChange={e => setInvForm(f => ({ ...f, supplierName: e.target.value }))} style={inputSt} />
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px", alignItems: "end" }}>
-                            <input type="text" placeholder={ko ? "주문 URL (주문하기 버튼에 연결)" : "Order URL (linked to Order button)"}
-                              value={invForm.url} onChange={e => setInvForm(f => ({ ...f, url: e.target.value }))} style={inputSt} />
-                            <div>
-                              <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "5px", whiteSpace: "nowrap" as const }}>{ko ? "리드타임 (일)" : "Lead time (d)"}</div>
-                              <input type="text" inputMode="numeric" placeholder="1"
-                                value={invForm.leadTimeDays} onChange={e => setInvForm(f => ({ ...f, leadTimeDays: e.target.value.replace(/[^0-9]/g, "") }))}
-                                style={{ ...inputSt, width: "64px" }} />
-                            </div>
-                          </div>
-                        </div>
-                          );
-                        })()}
-
-                        {/* 소진 예측 미리보기 */}
-                        {invForm.qty && invForm.dailyUsage && Number(invForm.dailyUsage) > 0 && (() => {
-                          const days = Math.floor(Number(invForm.qty) / Number(invForm.dailyUsage));
-                          const lead = Number(invForm.leadTimeDays) || 1;
-                          const warn = days <= lead;
-                          return (
-                            <div style={{ padding: "11px 14px", borderRadius: "11px", background: warn ? "rgba(255,59,48,0.05)" : "rgba(52,199,89,0.05)", border: `0.5px solid ${warn ? "rgba(255,59,48,0.15)" : "rgba(52,199,89,0.15)"}` }}>
-                              <div style={{ fontSize: "12px", fontWeight: 600, color: warn ? "#ff3b30" : "#34c759" }}>
-                                {warn
-                                  ? (ko ? `현재 수량으로 ${days}일치 — 리드타임(${lead}일) 고려 시 오늘 주문 필요` : `${days}d of stock — must order today (${lead}d lead time)`)
-                                  : (ko ? `현재 수량으로 ${days}일치 — 당장 주문 불필요` : `${days} days of stock — no immediate order needed`)}
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                        {/* 저장·취소 */}
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button type="button" style={{ ...styles.primaryButton, flex: 1, opacity: invForm.name.trim() ? 1 : 0.45 }}
-                            onClick={handleInvSave} disabled={!invForm.name.trim()}>
-                            {ko ? "저장" : "Save"}
-                          </button>
-                          <button type="button" style={styles.button}
-                            onClick={() => setInvForm(f => ({ ...f, open: false, editId: null }))}>
-                            {ko ? "취소" : "Cancel"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })()}
-
-              {/* ── 이번 달 비용 설정 ── */}
-              <article style={{ ...styles.card, gap: "14px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                  {language === "ko" ? "이번 달 비용 (만원)" : "Monthly costs (10K KRW)"}
-                </div>
-                {[
-                  { label: language === "ko" ? "재료비" : "Ingredients", val: costIngredientsText, set: setCostIngredientsText, ph: "예: 120" },
-                  { label: language === "ko" ? "인건비" : "Labor", val: costLaborText, set: setCostLaborText, ph: "예: 200" },
-                  { label: language === "ko" ? "임대료" : "Rent", val: costRentText, set: setCostRentText, ph: "예: 80" },
-                  { label: language === "ko" ? "공과금·관리비" : "Utilities", val: costUtilitiesText, set: setCostUtilitiesText, ph: "예: 20" },
-                  { label: language === "ko" ? "기타 고정비" : "Other", val: costOtherText, set: setCostOtherText, ph: "예: 15" }
-                ].map((row) => (
-                  <div key={row.label} style={costRowStyle}>
-                    <div style={costLabelStyle}>{row.label}</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={row.val}
-                      onChange={(e) => row.set(e.target.value.replace(/[^0-9]/g, ""))}
-                      placeholder={row.ph}
-                      style={inputStyle}
-                    />
-                  </div>
-                ))}
-                <button type="button" style={styles.primaryButton} onClick={handleSaveMonthlyCosts}>
-                  {language === "ko" ? "비용 저장" : "Save costs"}
-                </button>
-              </article>
-
-              {/* ── 오늘 매출 입력 ── */}
-              <article style={{ ...styles.card, gap: "14px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>
-                  {language === "ko" ? "매출 기록 (만원 단위)" : "Daily sales entry (10K KRW)"}
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <input
-                    type="date"
-                    value={dailyDateInput}
-                    onChange={(e) => setDailyDateInput(e.target.value)}
-                    style={{ ...inputStyle, width: "auto", flex: 1 }}
-                  />
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={dailySalesInput}
-                    onChange={(e) => setDailySalesInput(e.target.value.replace(/[^0-9]/g, ""))}
-                    placeholder={language === "ko" ? "매출 (예: 45)" : "Sales (e.g. 45)"}
-                    style={{ ...inputStyle, flex: 1 }}
-                  />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={dailyCustomersInput}
-                    onChange={(e) => setDailyCustomersInput(e.target.value.replace(/[^0-9]/g, ""))}
-                    placeholder={language === "ko" ? "고객 수 (예: 32)" : "Customers (e.g. 32)"}
-                    style={{ ...inputStyle, flex: 1 }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  style={{ ...styles.primaryButton, opacity: dailySalesInput ? 1 : 0.45 }}
-                  onClick={handleAddDailyEntry}
-                  disabled={!dailySalesInput}
-                >
-                  {language === "ko" ? "기록하기" : "Save entry"}
-                </button>
-
-                {(dailyEntries as { date: string; sales: number; customers: number }[]).slice(0, 7).length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
-                    <div style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
-                      {language === "ko" ? "최근 기록" : "Recent entries"}
-                    </div>
-                    {(dailyEntries as { date: string; sales: number; customers: number }[]).slice(0, 7).map((e) => (
-                      <div key={e.date} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.03)", fontSize: "13px" }}>
-                        <span style={{ color: "var(--muted)" }}>{e.date.slice(5).replace("-", "/")}</span>
-                        <span style={{ fontWeight: 600 }}>{fmt(e.sales)}</span>
-                        <span style={{ color: "var(--muted)" }}>{e.customers > 0 ? `${e.customers}${language === "ko" ? "명" : " pax"} · ${fmt(e.sales / e.customers)}` : "-"}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </article>
-
-              </div>{/* end cards flex column */}
-            </section>
-          </>
-        );
-      })() : null}
 
       {activeSurface === "roadmap" && !isFreshAccount ? (
-        <section style={styles.section}>
-          <div style={styles.roadmapRowTop}>
-            <div style={styles.sectionTitle}>{copy.home.starterFlow}</div>
-          </div>
-            <div style={styles.roadmapList}>
-              {(() => {
-                // Filter stages to only show relevant path
-                const onlineOnlyIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
-                const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "hiring-setup", "operations-setup", "pre-launch"]);
-                const franchiseOnlyIds = new Set(["franchise-application"]);
-                const isFranchise = startupType === "franchise";
-                const hideIds = isDigitalCategory ? offlineOnlyIds : onlineOnlyIds;
-                const visibleStages = roadmap.stages.filter(s => {
-                  if (hideIds.has(s.stageId)) return false;
-                  if (franchiseOnlyIds.has(s.stageId) && !isFranchise) return false;
-                  return true;
-                });
-                return visibleStages;
-              })().map((stage, index) => {
-                const isCurrent = stage.stageId === currentStage.stageId;
-                const isCompleted = stage.status === "completed";
-                const isLocked = stage.status === "locked";
-                const isClickable = !isLocked;
-                const handleCardClick = () => {
-                  router.push(`${SURFACE_HREFS.current}?editStage=${stage.stageId}`);
-                };
-                return (
-                <article
-                  key={stage.code}
-                  onClick={isClickable ? handleCardClick : undefined}
-                  style={{
-                    ...styles.roadmapRow,
-                    ...(isCurrent ? styles.roadmapRowCurrent : {}),
-                    ...(isCompleted ? styles.roadmapRowCompleted : {}),
-                    cursor: isClickable ? "pointer" : "default",
-                    opacity: isLocked ? 0.5 : 1,
-                    transition: "background 0.15s",
-                    userSelect: "none" as const,
-                  }}
-                  onMouseEnter={isClickable ? (e) => {
-                    if (!isCurrent) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.02)";
-                  } : undefined}
-                  onMouseLeave={isClickable ? (e) => {
-                    if (!isCurrent) (e.currentTarget as HTMLElement).style.background = isCompleted ? "rgba(255,255,255,0.52)" : "rgba(255,255,255,0.72)";
-                  } : undefined}
-                >
-                  <div style={styles.roadmapRowTop}>
-                    <div style={styles.roadmapIndex}>
-                      {language === "ko" ? `${index + 1}단계` : `Step ${index + 1}`}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ ...styles.roadmapStatus, ...(isCompleted ? styles.roadmapStatusQuiet : {}) }}>
-                        {formatStageStatus(stage.status, language)}
-                      </div>
-                      {isClickable && (
-                        <span style={{ fontSize: "14px", color: "rgba(0,0,0,0.2)", fontWeight: 400 }}>›</span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ ...styles.roadmapTitle, ...(isCompleted && !isCurrent ? styles.roadmapTitleQuiet : {}) }}>
-                    {localizeStage(stage, language, industryCategoryId).title}
-                  </div>
-                  {/* Feature tags — only for non-completed stages */}
-                  {!isCompleted && (() => {
-                    const ko = language === "ko";
-                    const tagMap: Record<string, Array<{ icon: string; label: string }>> = {
-                      "budget_setup": [{ icon: "📊", label: ko ? "재무 시뮬레이션" : "Finance Sim" }],
-                      "franchise_application": [{ icon: "🏢", label: ko ? "가맹 절차 안내" : "Franchise Guide" }],
-                      "location_candidates": [{ icon: "🗺", label: ko ? "상권 지도" : "Market Map" }],
-                      "contract_review": [{ icon: "🤖", label: ko ? "AI 계약 분석" : "AI Contract" }],
-                      "construction_setup": [{ icon: "🏗", label: ko ? "인테리어 가이드" : "Interior Guide" }],
-                      "vendor_setup": [{ icon: "📦", label: ko ? "공급업체 매칭" : "Supplier Match" }],
-                      "operations_setup": [{ icon: "📱", label: ko ? "배달앱·SNS" : "Delivery·SNS" }],
-                      "pre_launch": [{ icon: "🎪", label: ko ? "소프트오픈" : "Soft Open" }],
-                      "tax_guide": [{ icon: "📋", label: ko ? "절세 포인트" : "Tax Tips" }],
-                      "loan_guide": [{ icon: "💰", label: ko ? "지원사업 안내" : "Support Programs" }],
-                    };
-                    const tags = tagMap[stage.code as string];
-                    if (!tags) return null;
-                    return (
-                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" as const, marginTop: "4px" }}>
-                        {tags.map(t => (
-                          <span key={t.label} style={{
-                            fontSize: "10px", fontWeight: 500, padding: "2px 8px",
-                            borderRadius: "6px", background: "rgba(0,122,255,0.06)",
-                            color: "#007aff", whiteSpace: "nowrap"
-                          }}>
-                            {t.icon} {t.label}
-                          </span>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                  <div style={{ fontSize: "13px", lineHeight: 1.5, color: "var(--muted)", marginTop: "2px" }}>
-                    {localizeStage(stage, language, industryCategoryId).goal}
-                  </div>
-                  {!isCompleted || isCurrent ? (
-                    <div style={{ ...styles.roadmapStatus, ...(isCompleted ? styles.roadmapStatusQuiet : {}) }}>
-                      {formatStageType(stage.type, language)}
-                    </div>
-                  ) : null}
-                </article>
-                );
-              })}
-            </div>
-        </section>
+        <RoadmapSurface />
       ) : null}
     </main>
+    </DashboardProvider>
   );
 }
+
+/* Roadmap surface → RoadmapSurface.tsx */
+const operationalShell: React.CSSProperties = {
+  width: "min(1440px, calc(100vw - 32px))",
+  margin: "0 auto",
+  padding: "92px 0 80px",
+};
+
+const operationalNavSection: React.CSSProperties = {
+  marginTop: "0",
+  marginBottom: "18px",
+};
+
+const operationalSurfaceNav: React.CSSProperties = {
+  maxWidth: "calc(100% - 220px)",
+};

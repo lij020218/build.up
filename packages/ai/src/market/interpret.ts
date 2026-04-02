@@ -4,7 +4,7 @@ import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { MARKET_NARRATIVE_SYSTEM_PROMPT, buildMarketNarrativeUserPrompt } from "./prompt";
 
-const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
 const DEFAULT_MAX_TOKENS = 300;
 
 export async function interpretMarketScore(

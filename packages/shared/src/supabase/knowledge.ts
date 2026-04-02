@@ -181,7 +181,12 @@ export async function loadKnowledgeRecords(
   const categoryMatches = params.categoryId
     ? allItems.filter((item) => item.payload?.categoryId === params.categoryId)
     : allItems;
-  const items = categoryMatches.length > 0 ? categoryMatches : allItems.slice(0, 1);
+  // categoryId가 명시된 경우 해당 카테고리만 반환, 없으면 빈 배열
+  const items = categoryMatches.length > 0
+    ? categoryMatches
+    : params.categoryId
+      ? []
+      : allItems.slice(0, 1);
 
   if (items.length === 0) {
     return [];

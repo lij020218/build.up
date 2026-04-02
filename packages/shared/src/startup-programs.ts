@@ -5,7 +5,9 @@
  *  데이터 기준: 2026년 3월
  * ───────────────────────────────────────────── */
 
-export type ProgramCategory = "government" | "private" | "local";
+export type ProgramCategory = "government" | "private" | "local" | "corporate" | "competition";
+
+export type ApplicationStatus = "open" | "upcoming" | "closed";
 
 export type StartupProgram = {
   id: string;
@@ -23,6 +25,37 @@ export type StartupProgram = {
   forFranchise: boolean;
   highlight?: boolean;
   dataYear: string;
+  /** 최대 나이 제한 (null = 무제한) */
+  maxAge?: number;
+  /** 사업 연차 범위 [min, max] (null = 무제한) */
+  businessYearRange?: [number, number];
+  /** 해당 업종 (null = 전 업종) */
+  industries?: string[];
+  /** 지역 제한 (null = 전국) */
+  regions?: string[];
+  /** 모집 상태 */
+  applicationStatus?: ApplicationStatus;
+  /** 필요 서류 */
+  requiredDocs?: { ko: string; en: string }[];
+};
+
+export type MatchCriteria = {
+  startupType?: string;
+  industryCategoryId?: string;
+  age?: number;
+  businessYears?: number;
+  region?: string;
+  capital?: number;
+  businessStage?: "idea" | "pre-startup" | "early" | "growth" | "established";
+};
+
+export type ProgramMatchResult = {
+  program: StartupProgram;
+  matchScore: number;
+  eligible: boolean;
+  matchReasons: string[];
+  ineligibleReasons: string[];
+  daysUntilDeadline?: number;
 };
 
 export const startupPrograms: StartupProgram[] = [
@@ -40,7 +73,10 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: true,
     forFranchise: false,
     highlight: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    businessYearRange: [0, 0],
+    applicationStatus: "upcoming",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "신분증", en: "ID" }],
   },
   {
     id: "early-startup-package",
@@ -55,7 +91,10 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: true,
     forFranchise: false,
     highlight: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    businessYearRange: [0, 3],
+    applicationStatus: "upcoming",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }],
   },
   {
     id: "youth-startup-fund",
@@ -70,7 +109,11 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: true,
     forFranchise: true,
     highlight: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    maxAge: 39,
+    businessYearRange: [0, 3],
+    applicationStatus: "open",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }, { ko: "신분증", en: "ID" }],
   },
   {
     id: "youth-startup-academy",
@@ -84,7 +127,10 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://start.kosmes.or.kr",
     forSmallBiz: true,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    maxAge: 39,
+    businessYearRange: [0, 3],
+    applicationStatus: "upcoming",
   },
   {
     id: "sme-policy-fund",
@@ -98,7 +144,9 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.semas.or.kr/web/SUP01/SUP0103/SUP010301.kmdc",
     forSmallBiz: true,
     forFranchise: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "open",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }, { ko: "소상공인확인서", en: "SME certificate" }],
   },
   {
     id: "innovative-sme-support",
@@ -111,7 +159,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.bizinfo.go.kr",
     forSmallBiz: true,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "upcoming",
   },
   {
     id: "startup-leap-package",
@@ -124,7 +173,9 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.kised.or.kr/menu.es?mid=a10205030000",
     forSmallBiz: true,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    businessYearRange: [3, 7],
+    applicationStatus: "upcoming",
   },
 
   // ── Private (Foundation / Accelerator) ──
@@ -141,7 +192,10 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: false,
     forFranchise: false,
     highlight: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    maxAge: 29,
+    businessYearRange: [0, 0],
+    applicationStatus: "upcoming",
   },
   {
     id: "jjy-competition",
@@ -277,7 +331,9 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://seoulstartuphub.com",
     forSmallBiz: true,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    regions: ["서울"],
+    applicationStatus: "upcoming",
   },
   {
     id: "campus-town",
@@ -337,10 +393,106 @@ export function getSmallBizPrograms(): StartupProgram[] {
   return startupPrograms.filter(p => p.forSmallBiz);
 }
 
+/** Get programs matched to user profile — franchise-relevant first, then smallBiz */
+export function getMatchedPrograms(startupType?: string): StartupProgram[] {
+  const isFranchise = startupType === "franchise";
+  return [...startupPrograms].sort((a, b) => {
+    // Franchise users: forFranchise items first
+    if (isFranchise) {
+      if (a.forFranchise && !b.forFranchise) return -1;
+      if (!a.forFranchise && b.forFranchise) return 1;
+    }
+    // Then highlight items
+    if (a.highlight && !b.highlight) return -1;
+    if (!a.highlight && b.highlight) return 1;
+    return 0;
+  });
+}
+
+/** Get highlighted programs matched to profile */
+export function getMatchedHighlights(startupType?: string): StartupProgram[] {
+  const isFranchise = startupType === "franchise";
+  const all = startupPrograms.filter(p => p.highlight);
+  if (!isFranchise) return all;
+  // For franchise: include forFranchise programs even if not highlighted
+  const franchiseRelevant = startupPrograms.filter(p => p.forFranchise && !p.highlight);
+  return [...all, ...franchiseRelevant.slice(0, 2)].slice(0, 6);
+}
+
+/** Enhanced program matching with scoring */
+export function getMatchedProgramsV2(criteria: MatchCriteria): (StartupProgram & { matchScore: number; eligible: boolean })[] {
+  const isFranchise = criteria.startupType === "franchise";
+
+  return startupPrograms.map(p => {
+    let score = 0;
+    let eligible = true;
+
+    // Age check
+    if (p.maxAge && criteria.age && criteria.age > p.maxAge) eligible = false;
+    else if (p.maxAge && criteria.age && criteria.age <= p.maxAge) score += 15;
+
+    // Business year check
+    if (p.businessYearRange && criteria.businessYears !== undefined) {
+      const [min, max] = p.businessYearRange;
+      if (criteria.businessYears < min || criteria.businessYears > max) eligible = false;
+      else score += 15;
+    }
+
+    // Franchise match
+    if (isFranchise && p.forFranchise) score += 10;
+    if (isFranchise && !p.forFranchise && !p.forSmallBiz) score -= 5;
+
+    // SmallBiz match
+    if (p.forSmallBiz) score += 10;
+
+    // Region match
+    if (p.regions && criteria.region) {
+      if (p.regions.some(r => criteria.region!.includes(r))) score += 10;
+      else score -= 3;
+    }
+
+    // Industry match
+    if (p.industries && criteria.industryCategoryId) {
+      if (p.industries.includes(criteria.industryCategoryId)) score += 10;
+    }
+
+    // Application status bonus
+    if (p.applicationStatus === "open") score += 20;
+    else if (p.applicationStatus === "upcoming") score += 5;
+    else if (p.applicationStatus === "closed") score -= 10;
+
+    // Highlight bonus
+    if (p.highlight) score += 5;
+
+    return { ...p, matchScore: score, eligible };
+  })
+  .sort((a, b) => {
+    // Eligible first
+    if (a.eligible && !b.eligible) return -1;
+    if (!a.eligible && b.eligible) return 1;
+    // Then by status (open > upcoming > closed)
+    const statusOrder = { open: 0, upcoming: 1, closed: 2 };
+    const aStatus = statusOrder[a.applicationStatus ?? "upcoming"] ?? 1;
+    const bStatus = statusOrder[b.applicationStatus ?? "upcoming"] ?? 1;
+    if (aStatus !== bStatus) return aStatus - bStatus;
+    // Then by score
+    return b.matchScore - a.matchScore;
+  });
+}
+
+/** Get application status label */
+export function getApplicationStatusLabel(status: ApplicationStatus | undefined, lang: "ko" | "en"): { label: string; color: string } {
+  if (status === "open") return { label: lang === "ko" ? "신청 가능" : "Open", color: "#34c759" };
+  if (status === "closed") return { label: lang === "ko" ? "마감" : "Closed", color: "#8e8e93" };
+  return { label: lang === "ko" ? "공고 예정" : "Upcoming", color: "#ff9f0a" };
+}
+
 /** Category label */
 export function getProgramCategoryLabel(cat: ProgramCategory, lang: "ko" | "en"): string {
   if (cat === "government") return lang === "ko" ? "정부 지원" : "Government";
   if (cat === "private") return lang === "ko" ? "민간·재단" : "Private/Foundation";
+  if (cat === "corporate") return lang === "ko" ? "대기업" : "Corporate";
+  if (cat === "competition") return lang === "ko" ? "대회·경진대회" : "Competition";
   return lang === "ko" ? "지자체" : "Local Gov";
 }
 
@@ -348,5 +500,7 @@ export function getProgramCategoryLabel(cat: ProgramCategory, lang: "ko" | "en")
 export function getProgramCategoryColor(cat: ProgramCategory): string {
   if (cat === "government") return "#007aff";
   if (cat === "private") return "#ff9f0a";
+  if (cat === "corporate") return "#5856d6";
+  if (cat === "competition") return "#ff2d55";
   return "#34c759";
 }

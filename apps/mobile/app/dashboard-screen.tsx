@@ -247,7 +247,7 @@ function getGuideSections(guide: GuideRecord | null, language: import("@build-up
 }
 
 function formatBreakEvenMonth(month: number | null | undefined, language: "ko" | "en") {
-  if (!month) {
+  if (month == null) {
     return language === "ko" ? "손익분기 미도달" : "Break-even not reached";
   }
 
@@ -445,9 +445,9 @@ export default function DashboardScreen({
   const router = useRouter();
   const { language } = useLanguage();
   const copy = getUiCopy(language);
-  const [decisions, setDecisions] = useState<WorkflowDecisionMap>(starterDecisionMap);
-  const [roadmap, setRoadmap] = useState(starterRoadmap);
-  const [taskMap, setTaskMap] = useState<WorkflowTaskMap>(starterTaskMap);
+  const [decisions, setDecisions] = useState<WorkflowDecisionMap>(() => ({ ...starterDecisionMap }));
+  const [roadmap, setRoadmap] = useState(() => ({ ...starterRoadmap }));
+  const [taskMap, setTaskMap] = useState<WorkflowTaskMap>(cloneStarterTaskMap);
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | undefined>();
   const [selectedIndustryCategoryId, setSelectedIndustryCategoryId] = useState("food");
   const [selectedBusinessModelId, setSelectedBusinessModelId] = useState<string | undefined>();
@@ -3124,7 +3124,8 @@ const styles = StyleSheet.create({
     shadowColor: "#111111",
     shadowOpacity: 0.045,
     shadowRadius: 14,
-    shadowOffset: { width: 0, height: 10 }
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3
   },
   currentMeta: {
     fontSize: 12,
@@ -3267,7 +3268,8 @@ const styles = StyleSheet.create({
     shadowColor: "#111111",
     shadowOpacity: 0.04,
     shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 }
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 2
   },
   quickActionTitle: {
     fontSize: 16,
@@ -3304,7 +3306,8 @@ const styles = StyleSheet.create({
     shadowColor: "#111111",
     shadowOpacity: 0.04,
     shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 }
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2
   },
   optionCardSelected: {
     borderColor: "rgba(29,53,87,0.28)",
