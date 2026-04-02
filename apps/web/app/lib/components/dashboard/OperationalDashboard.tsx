@@ -9,7 +9,7 @@ import { WeeklyReport } from "./WeeklyReport";
 import { NotificationCenter } from "./NotificationCenter";
 import { MilestoneToast, checkMilestones } from "./MilestoneToast";
 import { supabase } from "../../../../lib/supabase";
-import { calculateHealthMetrics } from "@build-up/shared";
+import { calculateHealthMetrics, buildTaxCalendar, getUrgencyColor, getTaxCategoryLabel } from "@build-up/shared";
 
 type Props = { d: DashboardHook };
 
@@ -132,6 +132,13 @@ export default function OperationalDashboard({ d }: Props) {
     allEntries as Array<{ date: string; sales: number; customers: number }>,
     monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number },
   );
+  // 세금 캘린더
+  const taxCalendar = buildTaxCalendar({
+    isSimplified: ((d.taxSettings as { vatType?: string })?.vatType ?? "general") === "simplified",
+    hasEmployees: (d.employees as unknown[])?.length > 0,
+  });
+  const nextTaxItem = taxCalendar.next;
+
   const breakEvenDailySales = healthMetrics.breakEvenDailySales;
   const daysAboveBreakEven = healthMetrics.daysAboveBreakEven;
   const todaySales = (allEntries.find(e => e.date === todayStr) as { sales: number } | undefined)?.sales ?? 0;
@@ -340,6 +347,16 @@ export default function OperationalDashboard({ d }: Props) {
             : "Add staff",
       tone: "rgba(15, 23, 42, 0.94)",
     },
+    ...(nextTaxItem ? [{
+      label: ko ? "다음 세금 마감" : "Next tax deadline",
+      value: nextTaxItem.daysUntil <= 0
+        ? (ko ? "오늘 마감!" : "Due today!")
+        : nextTaxItem.daysUntil <= 7
+          ? `D-${nextTaxItem.daysUntil}`
+          : `${nextTaxItem.daysUntil}${ko ? "일 후" : "d"}`,
+      note: nextTaxItem.summary,
+      tone: nextTaxItem.daysUntil <= 7 ? "#b42318" : nextTaxItem.daysUntil <= 30 ? "#b54708" : "rgba(15, 23, 42, 0.82)",
+    }] : []),
   ];
 
   return (
@@ -380,7 +397,7 @@ export default function OperationalDashboard({ d }: Props) {
           {headlineStats.map((item, idx) => (
             <div key={item.label} style={{ ...headlineCard, animationDelay: `${idx * 60}ms` }} className="bento-headline bento-fade-in">
               <div style={headlineLabel}>{item.label}</div>
-              <div style={{ ...headlineValue, color: item.tone }}>{item.value}</div>
+              <div style={{ ...headlineValue, color: item.tone }} className="bento-number">{item.value}</div>
               <div style={headlineNote}>{item.note}</div>
             </div>
           ))}
@@ -509,9 +526,28 @@ export default function OperationalDashboard({ d }: Props) {
               <div style={{
                 height: "100%", borderRadius: "3px",
                 width: `${Math.min(100, (streak / 7) * 100)}%`,
-                background: "#2563eb",
-                transition: "width 0.6s ease",
+                background: "linear-gradient(90deg, #2563eb, #457b9d)",
+                transition: "width 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
               }} />
+            </div>
+            {/* 다음 해금 단계 안내 */}
+            <div style={{ marginTop: "14px", display: "flex", justifyContent: "center", gap: "12px" }}>
+              {[
+                { days: 7, label: ko ? "주간 리포트" : "Weekly", icon: "📊", color: "#2563eb" },
+                { days: 30, label: ko ? "월간 트렌드" : "Monthly", icon: "📈", color: "#7c3aed" },
+                { days: 90, label: ko ? "연간 리포트" : "Annual", icon: "💎", color: "#059669" },
+              ].map(tier => (
+                <div key={tier.days} style={{
+                  display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "3px",
+                  opacity: streak >= tier.days ? 1 : 0.4,
+                }}>
+                  <span style={{ fontSize: "16px" }}>{streak >= tier.days ? "✓" : tier.icon}</span>
+                  <span style={{ fontSize: "10px", fontWeight: 600, color: streak >= tier.days ? tier.color : "rgba(15,23,42,0.35)" }}>
+                    {tier.days}{ko ? "일" : "d"}
+                  </span>
+                  <span style={{ fontSize: "9px", color: "rgba(15,23,42,0.3)" }}>{tier.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -719,16 +755,27 @@ function ActivitySnapshotCard({
             }}>
               <div style={activityBarTrack}>
                 <div
+                  className="bento-meter-fill"
                   style={{
                     ...activityBarFill,
                     height,
                     background: bar.isToday
-                      ? "linear-gradient(180deg, rgba(15,23,42,0.92), rgba(15,23,42,0.72))"
-                      : "linear-gradient(180deg, rgba(15,23,42,0.24), rgba(15,23,42,0.12))",
+                      ? "linear-gradient(180deg, #1d3557 0%, #457b9d 100%)"
+                      : bar.sales > 0
+                        ? "linear-gradient(180deg, rgba(29,53,87,0.35) 0%, rgba(29,53,87,0.15) 100%)"
+                        : "linear-gradient(180deg, rgba(15,23,42,0.08) 0%, rgba(15,23,42,0.04) 100%)",
+                    borderRadius: "6px 6px 2px 2px",
+                    boxShadow: bar.isToday ? "0 -4px 12px rgba(29,53,87,0.15)" : "none",
+                    transition: "height 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease",
                   }}
                 />
               </div>
-              <div style={{ ...activityBarLabel, color: bar.isToday ? "#0f172a" : "rgba(15,23,42,0.44)" }}>{bar.label}</div>
+              {bar.sales > 0 && (
+                <div style={{ fontSize: "9px", fontWeight: 650, color: bar.isToday ? "#1d3557" : "rgba(15,23,42,0.3)", marginBottom: "1px", fontVariantNumeric: "tabular-nums" as const }}>
+                  {bar.sales >= 10000 ? `${Math.round(bar.sales / 10000)}` : ""}
+                </div>
+              )}
+              <div style={{ ...activityBarLabel, color: bar.isToday ? "#0f172a" : "rgba(15,23,42,0.38)", fontWeight: bar.isToday ? 650 : 500 }}>{bar.label}</div>
             </div>
           );
         })}
@@ -1393,7 +1440,23 @@ function SurvivalBoardCard({
           <div style={sectionEyebrow}>{isStartupCompany ? (ko ? "스타트업 생존 보드" : "Startup survival board") : ko ? "생존 보드" : "Survival board"}</div>
           <div style={opsTitle}>{isStartupCompany ? (ko ? "오늘의 회사 우선순위" : "Today's company priorities") : ko ? "오늘의 경영 우선순위" : "Today's priorities"}</div>
         </div>
-        <div style={{ ...opsPill, color: healthTone }}>{healthLabel}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* 헬스 점수 미니 게이지 */}
+          <svg width="36" height="36" viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
+            <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(15,23,42,0.06)" strokeWidth="3" />
+            <circle cx="18" cy="18" r="15" fill="none"
+              stroke={healthTone}
+              strokeWidth="3" strokeLinecap="round"
+              strokeDasharray={`${(d.businessHealthScore === "healthy" ? 85 : d.businessHealthScore === "caution" ? 55 : 30) * 0.942} 94.2`}
+              transform="rotate(-90 18 18)"
+              style={{ transition: "stroke-dasharray 0.8s ease" }}
+            />
+            <text x="18" y="20" textAnchor="middle" fontSize="10" fontWeight="750" fill={healthTone}>
+              {d.businessHealthScore === "healthy" ? 85 : d.businessHealthScore === "caution" ? 55 : 30}
+            </text>
+          </svg>
+          <div style={{ ...opsPill, color: healthTone }}>{healthLabel}</div>
+        </div>
       </div>
 
       <div style={survivalMetricGrid}>
@@ -2447,10 +2510,11 @@ const headlineLabel: React.CSSProperties = {
 };
 
 const headlineValue: React.CSSProperties = {
-  fontSize: "24px",
-  fontWeight: 760,
-  letterSpacing: "-0.04em",
-  lineHeight: 1.08,
+  fontSize: "26px",
+  fontWeight: 780,
+  letterSpacing: "-0.045em",
+  lineHeight: 1.05,
+  fontVariantNumeric: "tabular-nums",
 };
 
 const headlineNote: React.CSSProperties = {
@@ -2477,13 +2541,18 @@ const bentoHoverCSS = `
 @keyframes bentoFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bentoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 @keyframes bentoProgress { from { width: 0; } }
+@keyframes bentoBarGrow { from { height: 0; } }
+@keyframes bentoCountUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bentoGlow { 0%, 100% { box-shadow: 0 0 0 rgba(29,53,87,0); } 50% { box-shadow: 0 0 12px rgba(29,53,87,0.08); } }
 .bento-card { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease !important; }
 .bento-card:hover { transform: translateY(-2px) !important; box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 20px 50px rgba(15,23,42,0.065) !important; }
+.bento-headline { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease !important; }
 .bento-headline:hover { transform: translateY(-1px) !important; box-shadow: 0 1px 0 rgba(255,255,255,0.82) inset, 0 14px 32px rgba(15,23,42,0.04) !important; }
 .bento-btn { transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease !important; }
 .bento-btn:active { transform: scale(0.97) !important; }
 .bento-meter-fill { animation: bentoProgress 0.8s cubic-bezier(0.22, 1, 0.36, 1) !important; }
 .bento-fade-in { animation: bentoFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both !important; }
+.bento-number { animation: bentoCountUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; font-variant-numeric: tabular-nums; }
 `;
 
 const activityCard: React.CSSProperties = {
@@ -2942,16 +3011,16 @@ const survivalMetricNote: React.CSSProperties = {
 };
 
 const meterTrack: React.CSSProperties = {
-  height: "8px",
+  height: "6px",
   borderRadius: "999px",
-  background: "rgba(15,23,42,0.08)",
+  background: "rgba(15,23,42,0.06)",
   overflow: "hidden",
 };
 
 const meterFill: React.CSSProperties = {
   height: "100%",
   borderRadius: "999px",
-  transition: "width 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
+  transition: "width 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
 };
 
 const focusCard: React.CSSProperties = {

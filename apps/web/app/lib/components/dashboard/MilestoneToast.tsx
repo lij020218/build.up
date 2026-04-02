@@ -69,6 +69,7 @@ export function checkMilestones(opts: {
   const { streak, totalEntries, bepProgress, healthScore, completedStages, dismissed, ko } = opts;
 
   const milestones: Milestone[] = [
+    // ── 기록 습관 ──
     {
       id: "first-entry",
       title: ko ? "첫 매출 기록!" : "First Sales Entry!",
@@ -84,9 +85,16 @@ export function checkMilestones(opts: {
     {
       id: "streak-30",
       title: ko ? "30일 연속 기록!" : "30-Day Streak!",
-      subtitle: ko ? "습관이 형성되었습니다. 월간 트렌드 분석이 해금됩니다" : "Habit formed. Monthly trend analysis unlocked",
+      subtitle: ko ? "월간 트렌드 분석이 해금됩니다" : "Monthly trend analysis unlocked",
       icon: "⚡",
     },
+    {
+      id: "streak-90",
+      title: ko ? "90일 연속 기록!" : "90-Day Streak!",
+      subtitle: ko ? "AI 연간 경영 리포트가 해금됩니다" : "AI annual business report unlocked",
+      icon: "💎",
+    },
+    // ── 수익 성과 ──
     {
       id: "bep-reached",
       title: ko ? "손익분기 달성!" : "Break-Even Reached!",
@@ -94,11 +102,26 @@ export function checkMilestones(opts: {
       icon: "📈",
     },
     {
+      id: "first-profit-month",
+      title: ko ? "첫 흑자 달성!" : "First Profitable Month!",
+      subtitle: ko ? "축하합니다! 수익 구조가 작동하고 있습니다" : "Congratulations! Your revenue structure is working",
+      icon: "🎉",
+    },
+    // ── 건강 점수 ──
+    {
       id: "health-80",
       title: ko ? "건강한 가게!" : "Healthy Business!",
       subtitle: ko ? "건강점수 80점 이상 — 이 구조를 유지하세요" : "Health score above 80 — maintain this structure",
       icon: "💚",
     },
+    // ── 비용 효율 ──
+    {
+      id: "cost-efficient",
+      title: ko ? "비용 효율 달성!" : "Cost Efficiency!",
+      subtitle: ko ? "원가율이 업종 평균보다 낮습니다" : "Your cost ratio is below industry average",
+      icon: "✂️",
+    },
+    // ── 로드맵 ──
     {
       id: "roadmap-complete",
       title: ko ? "로드맵 완주!" : "Roadmap Complete!",
@@ -111,8 +134,11 @@ export function checkMilestones(opts: {
     "first-entry": totalEntries >= 1,
     "streak-7": streak >= 7,
     "streak-30": streak >= 30,
+    "streak-90": streak >= 90,
     "bep-reached": bepProgress >= 100,
+    "first-profit-month": bepProgress >= 100 && totalEntries >= 20,
     "health-80": healthScore >= 80,
+    "cost-efficient": healthScore >= 65 && totalEntries >= 14,
     "roadmap-complete": completedStages >= 10,
   };
 

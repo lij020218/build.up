@@ -67,12 +67,47 @@ a {
   50% { opacity: 0.7; }
 }
 
-/* Industry / option card hover */
-button[style*="bigOptionCard"]:hover,
-article[style*="compactChoiceCard"]:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset;
+@keyframes numberSlideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Typography scale ── */
+.type-display { font-size: clamp(32px, 5vw, 40px); font-weight: 760; letter-spacing: -0.04em; line-height: 0.98; }
+.type-title { font-size: clamp(20px, 3vw, 24px); font-weight: 720; letter-spacing: -0.03em; line-height: 1.1; }
+.type-body { font-size: 14px; font-weight: 450; line-height: 1.65; color: rgba(15,23,42,0.6); }
+.type-caption { font-size: 12px; font-weight: 550; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(15,23,42,0.4); }
+.type-micro { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+
+/* ── Number animation ── */
+.num-animate { animation: numberSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; font-variant-numeric: tabular-nums; }
+
+/* ── Skeleton loading ── */
+.skeleton {
+  background: linear-gradient(90deg, rgba(15,23,42,0.04) 0%, rgba(15,23,42,0.08) 50%, rgba(15,23,42,0.04) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ── Card interactions ── */
+.card-hover {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(15,23,42,0.06), 0 1px 0 rgba(255,255,255,0.8) inset;
+}
+
+/* ── Positive/negative value glow ── */
+.value-positive { color: #177245; text-shadow: 0 0 20px rgba(23,114,69,0.08); }
+.value-negative { color: #b42318; text-shadow: 0 0 20px rgba(180,35,24,0.08); }
+.value-neutral { color: rgba(15,23,42,0.82); }
 
 /* Primary button press */
 button[style*="primaryButton"]:active,
