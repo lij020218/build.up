@@ -1362,13 +1362,13 @@ export default function StarterStageDemo({
                 {(() => {
                   // 업종별 아이콘 (SF Symbol 스타일 SVG)
                   const industryIcons: Record<string, string> = {
-                    // food — 접시, 그릇, 음식 관련
-                    "korean-casual": "M3 12h18M5 12a7 7 0 0114 0M3 12a9 9 0 0118 0M12 12v6m-3 0h6",                                    // 밥그릇 + 수저
-                    "delivery-meals": "M5 17h14l1-9H4l1 9zm2-13h10M9 4v4m6-4v4M7 21a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2z", // 배달 봉투 + 바퀴
-                    "salad-healthy": "M7 21h10M12 3a9 9 0 00-9 9h18a9 9 0 00-9-9zM8 8c1-1 2.5-1.5 4-1.5s3 .5 4 1.5",                   // 샐러드 보울 + 잎
-                    "ramen-noodle": "M5 13h14M3 13a9 9 0 0118 0M8 9c1.5-2 3-3 4-3s2.5 1 4 3M8 17c0 2 2 4 4 4s4-2 4-4",                 // 라면 그릇 + 면
-                    "chicken-burger": "M5 12h14M3 12c0-3 4-6 9-6s9 3 9 6M5 14h14c0 3-4 5-7 5s-7-2-7-5M8 9l1-4h6l1 4",                  // 버거 레이어
-                    "western-pasta-brunch": "M12 4a8 8 0 00-8 8h16a8 8 0 00-8-8zM4 14h16M8 14v4m8-4v4M11 18h2",                         // 접시 + 포크나이프
+                    // food — 업종별 고유 아이콘
+                    "korean-casual": "M6 18h12M4 14h16M5 10c0-4 3-7 7-7s7 3 7 7M9 10v1m6-1v1M8 14c0 1 2 2 4 2s4-1 4-2",              // 뚝배기 (한식)
+                    "delivery-meals": "M5 12h1l2-4h8l2 4h1M4 12v2h16v-2M7 17a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm10 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM7 14v1.5m10-1.5v1.5", // 오토바이 (배달)
+                    "salad-healthy": "M5 15h14M4 15a8 8 0 0116 0M9 9c0-1 1-2 3-2s3 1 3 2M8 11l-1 2m9-2l1 2M12 7V5M10 6l-1-1m5 1l1-1",  // 샐러드 보울 + 잎사귀
+                    "ramen-noodle": "M4 14h16M3 14c0 4 4 7 9 7s9-3 9-7M8 10c1-3 2-5 4-5s3 2 4 5M7 10c.5-2 1.5-4 2-4m6 4c-.5-2-1.5-4-2-4", // 국수 면발 + 그릇
+                    "chicken-burger": "M8 4c-1 0-2 1-2 3 0 1 1 2 2 2M16 4c1 0 2 1 2 3 0 1-1 2-2 2M6 9h12M5 12h14M6 15h12M7 18h10M9 9v3m6-3v3M8 15v3m8-3v3", // 치킨 닭다리
+                    "western-pasta-brunch": "M8 5l4 3 4-3M4 14h16M5 14c0 3 3 6 7 6s7-3 7-6M8 11l2-3m4 0l2 3M10 14v3m4-3v3",             // 스테이크 + 접시
                     // cafe — 컵, 원두, 디저트
                     "takeout-coffee": "M8 2h8l-1 5H9L8 2zM7 7h10v4a5 5 0 01-5 5 5 5 0 01-5-5V7zm3 14h4",                               // 테이크아웃 컵
                     "specialty-coffee": "M18 8h2a3 3 0 010 6h-2M4 8h14v8a5 5 0 01-5 5H9a5 5 0 01-5-5V8zM9 2c1 2 1 4 0 6m3-6c1 2 1 4 0 6", // 커피 머그 + 김
