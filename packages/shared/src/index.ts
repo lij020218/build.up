@@ -42,3 +42,6 @@ export * from "./adapters/kftc-disclosure";
 export * from "./adapters/commercial-rent";
 export * from "./adapters/building-registry";
 export * from "./startup-tools";
+export * from "./finance/hiring-cost";
+export * from "./knowledge/security-checklist";
+export * from "./knowledge/investment-terms";
