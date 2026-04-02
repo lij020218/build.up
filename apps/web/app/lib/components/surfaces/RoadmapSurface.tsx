@@ -19,7 +19,7 @@ export function RoadmapSurface() {
 
   const onlineOnlyIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
   const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-stack", "growth-engine", "company-setup", "fundraising-readiness"]);
-  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "hiring-setup", "operations-setup", "pre-launch", "biz-registration"]);
+  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "hiring-setup", "operations-setup", "pre-launch"]);
   const franchiseOnlyIds = new Set(["franchise-application"]);
   const isFranchise = startupType === "franchise";
   const hideIds = isStartupCategory

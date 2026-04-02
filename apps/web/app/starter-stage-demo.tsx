@@ -176,6 +176,8 @@ export default function StarterStageDemo({
     population?: { total: number; households: number; male: number; female: number };
   } | null>(null);
   const [regPage, setRegPage] = useState(0);
+  const [mvpPage, setMvpPage] = useState(0);
+  const [mvpToolsOpen, setMvpToolsOpen] = useState(false);
   const [livePermitInsights, setLivePermitInsights] = useState<{
     loading: boolean;
     data?: { total: number; operating: number; closed: number; survivalRate: number };
@@ -1378,67 +1380,67 @@ export default function StarterStageDemo({
                     "self-serve-cafe": "MAT:M280-640q-33 0-56.5-23.5T200-720v-80q0-33 23.5-56.5T280-880h400q33 0 56.5 23.5T760-800v80q0 33-23.5 56.5T680-640H280Zm0-80h400v-80H280v80ZM160-80q-33 0-56.5-23.5T80-160v-40h800v40q0 33-23.5 56.5T800-80H160ZM80-240l139-313q10-22 30-34.5t43-12.5h376q23 0 43 12.5t30 34.5l139 313H80Z",  // point_of_sale
                     // retail — 가방, 선반, 상점
                     "convenience-small": "MAT:M841-518v318q0 33-23.5 56.5T761-120H201q-33 0-56.5-23.5T121-200v-318q-23-21-35.5-54t-.5-72l42-136q8-26 28.5-43t47.5-17h556q27 0 47 16.5t29 43.5l42 136q12 39-.5 71T841-518Z",  // storefront
-                    "lifestyle-goods": "M6 2h12v7H6V2zm-2 7h16v13H4V9zm6 4h4m-2-2v4",                                                   // 쇼핑백 + 하트
-                    "beauty-supplies": "M9 2h6l2 7H7l2-7zM5 9h14v2H5V9zm2 4h10v7a2 2 0 01-2 2H9a2 2 0 01-2-2v-7z",                     // 화장품 병
-                    "fashion-accessories": "M12 2a4 4 0 00-4 4c0 3 4 5 4 5s4-2 4-5a4 4 0 00-4-4zM4 14h16l-2 7H6l-2-7z",                // 옷걸이/가방
-                    "health-food-store": "M12 8a4 4 0 100-8 4 4 0 000 8zm-5 2h10l-1 11H8L7 10z",                                        // 건강식품 병
-                    "unmanned-retail": "M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm4 15h8M12 19v2M9 9h6m-3-2v4", // 무인 키오스크
+                    "lifestyle-goods": "MAT:M240-80q-33 0-56.5-23.5T160-160v-480q0-33 23.5-56.5T240-720h80q0-66 47-113t113-47q66 0 113 47t47 113h80q33 0 56.5 23.5T800-640v480q0 33-23.5 56.5T720-80H240Zm0-80h480v-480h-80v80q0 17-11.5 28.5T600-520q-17 0-28.5-11.5T560-560v-80H400v80q0 17-11.5 28.5T360-520q-17 0-28.5-11.5T320-560v-80h-80v480Zm160-560h160q0-33-23.5-56.5T480-800q-33 0-56.5 23.5T400-720Z",                                                   // 쇼핑백 + 하트
+                    "beauty-supplies": "MAT:M480-80q-73-9-145-39.5T206.5-207Q150-264 115-351T80-560v-40h40q51 0 105 13t101 39q12-86 54.5-176.5T480-880q57 65 99.5 155.5T634-548q47-26 101-39t105-13h40v40q0 122-35 209t-91.5 144q-56.5 57-128 87.5T480-80Z",                     // 화장품 병
+                    "fashion-accessories": "MAT:M120-160q-17 0-28.5-11.5T80-200q0-10 4-18.5T96-232l344-258v-70q0-17 12-28.5t29-11.5q25 0 42-18t17-43q0-25-17.5-42T480-720q-25 0-42.5 17.5T420-660h-80q0-58 41-99t99-41q58 0 99 40.5t41 98.5q0 47-27.5 84T520-526v36l344 258q8 5 12 13.5t4 18.5q0 17-11.5 28.5T840-160H120Z",                // 옷걸이/가방
+                    "health-food-store": "MAT:M281.5-201.5Q200-283 200-400q0-94 55.5-168.5T401-669q-20-5-39-14.5T328-708q-33-33-42.5-78.5T281-879q47-5 92.5 4.5T452-832q23 23 33.5 52t13.5 61q13-31 31.5-58.5T572-828q11-11 28-11t28 11q11 11 11 28t-11 28q-22 22-39 48.5T564-667q88 28 142 101.5T760-400q0 117-81.5 198.5T480-120q-117 0-198.5-81.5Z",                                        // 건강식품 병
+                    "unmanned-retail": "MAT:M120-200q-33 0-56.5-23.5T40-280v-400q0-33 23.5-56.5T120-760h124q7-18 22-29t34-11h80q19 0 34 11t22 29h404q33 0 56.5 23.5T920-680v400q0 33-23.5 56.5T840-200H120Z", // 무인 키오스크
                     // beauty — 가위, 브러시, 거울
                     "hair-salon": "MAT:M760-120 480-400l-94 94q8 15 11 32t3 34q0 66-47 113T240-80q-66 0-113-47T80-240q0-66 47-113t113-47q17 0 34 3t32 11l94-94-94-94q-15 8-32 11t-34 3q-66 0-113-47T80-720q0-66 47-113t113-47q66 0 113 47t47 113q0 17-3 34t-11 32l494 494v40H760Z",  // content_cut (가위)
                     "nail-studio": "MAT:M240-120q-45 0-89-22t-71-58q26 0 53-20.5t27-59.5q0-50 35-85t85-35q50 0 85 35t35 85q0 66-47 113t-113 47Zm230-160L360-470l358-358q11-11 27.5-11.5T774-828l54 54q12 12 12 28t-12 28L470-360Z",  // brush (브러시/네일)
-                    "skin-care-room": "M12 2a8 8 0 100 16 8 8 0 000-16zm0 4a4 4 0 110 8 4 4 0 010-8zM12 18v4",                          // 얼굴/스파
-                    "waxing-studio": "M8 4c0 3 2 5 4 5s4-2 4-5M6 12h12M8 16c0 2 2 4 4 4s4-2 4-4",                                       // 왁싱 추상
-                    "eyelash-brow": "M2 12c2-4 5.5-7 10-7s8 3 10 7c-2 4-5.5 7-10 7s-8-3-10-7zm10 0a2 2 0 100-4 2 2 0 000 4z",          // 눈
-                    "makeup-bridal": "M12 3c-3 0-5 2-5 5s2 5 5 5 5-2 5-5-2-5-5-5zM7 16l-2 5h14l-2-5",                                  // 거울/화장대
+                    "skin-care-room": "MAT:M324.5-324.5Q310-339 310-360t14.5-35.5Q339-410 360-410t35.5 14.5Q410-381 410-360t-14.5 35.5Q381-310 360-310t-35.5-14.5Zm240 0Q550-339 550-360t14.5-35.5Q579-410 600-410t35.5 14.5Q650-381 650-360t-14.5 35.5Q621-310 600-310t-35.5-14.5ZM480-80q134 0 227-93t93-227q0-24-3-46.5T786-490q-21 5-42 7.5t-44 2.5q-91 0-172-39T390-628q-32 78-91.5 135.5T160-406v6q0 134 93 227t227 93Z",                          // 얼굴/스파
+                    "waxing-studio": "MAT:M480-80q-73-9-145-39.5T206.5-207Q150-264 115-351T80-560v-40h40q51 0 105 13t101 39q12-86 54.5-176.5T480-880q57 65 99.5 155.5T634-548q47-26 101-39t105-13h40v40q0 122-35 209t-91.5 144q-56.5 57-128 87.5T480-80Z",                                       // 왁싱 추상
+                    "eyelash-brow": "MAT:M480-320q-75 0-127.5-52.5T300-500q0-75 52.5-127.5T480-680t127.5 52.5Q660-575 660-500t-52.5 127.5T480-320Zm0-72q46 0 77-31t31-77-31-77-77-31-77 31-31 77 31 77 77 31ZM480-500ZM480-200q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-300Zm0 220q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280Z",          // 눈
+                    "makeup-bridal": "MAT:M324.5-324.5Q310-339 310-360t14.5-35.5Q339-410 360-410t35.5 14.5Q410-381 410-360t-14.5 35.5Q381-310 360-310t-35.5-14.5Zm240 0Q550-339 550-360t14.5-35.5Q579-410 600-410t35.5 14.5Q650-381 650-360t-14.5 35.5Q621-310 600-310t-35.5-14.5ZM480-80q134 0 227-93t93-227q0-24-3-46.5T786-490q-21 5-42 7.5t-44 2.5q-91 0-172-39T390-628q-32 78-91.5 135.5T160-406v6q0 134 93 227t227 93Z",                                  // 거울/화장대
                     // fitness — 운동 기구
-                    "pilates-studio": "M12 4a2 2 0 100-4 2 2 0 000 4zm-4 6l4 2 4-2M4 18l8-6 8 6",                                       // 필라테스 자세
+                    "pilates-studio": "MAT:M272-160q-30 0-51-21t-21-51q0-21 12-39.5t32-26.5l156-62v-90q-54 63-125.5 96.5T120-320v-80q68 0 123.5-28T344-508l54-64q12-14 28-21t34-7h40q18 0 34 7t28 21l54 64q45 52 100.5 80T840-400v80q-83 0-154.5-33.5T560-450v90l156 62q20 8 32 26.5t12 39.5q0 30-21 51t-51 21H400v-20q0-26 17-43t43-17h120q9 0 14.5-5.5T600-260q0-9-5.5-14.5T580-280H460q-42 0-71 29t-29 71v20h-88Z",                                       // 필라테스 자세
                     "pt-gym": "MAT:m536-84-56-56 142-142-340-340-142 142-56-56 56-58-56-56 84-84-56-58 56-56 58 56 84-84 56 56 58-56 56 56-142 142 340 340 142-142 56 56-56 58 56 56-84 84 56 58-56 56-58-56-84 84-56-56-58 56Z",  // fitness_center
-                    "yoga-studio": "M12 3a2 2 0 100 4 2 2 0 000-4zm0 4v4m-5 7l5-5 5 5M7 18h10",                                         // 요가 자세
-                    "crossfit-box": "M2 12h4m12 0h4M6 8v8M18 8v8M6 12h12M3 9h6m6 0h6M3 15h6m6 0h6",                                    // 무거운 바벨
-                    "golf-studio": "M12 2v14M9 22c0-2 1.5-4 3-6 1.5 2 3 4 3 6M12 16a5 5 0 100-.01",                                     // 골프 공+티
-                    "unmanned-fitness": "M12 2v2m0 4a3 3 0 100 6 3 3 0 000-6zm-6 8h12m-9 4h6M6 14v6m12-6v6",                            // 24시간 운동기구
+                    "yoga-studio": "MAT:m400-80-20-360-127-73-14 52 81 141-69 40-99-170 48-172 230-132-110-110 56-56 184 183-144 83 48 42 328-268 48 56-340 344-20 400h-80ZM200-680q-33 0-56.5-23.5T120-760q0-33 23.5-56.5T200-840q33 0 56.5 23.5T280-760q0 33-23.5 56.5T200-680Z",                                         // 요가 자세
+                    "crossfit-box": "MAT:m826-585-56-56 30-31-128-128-31 30-57-57 30-31q23-23 57-22.5t57 23.5l129 129q23 23 23 56.5T857-615l-31 30ZM346-104q-23 23-56.5 23T233-104L104-233q-23-23-23-56.5t23-56.5l30-30 57 57-31 30 129 129 30-31 57 57-30 30Z",                                    // 무거운 바벨
+                    "golf-studio": "MAT:M440-80v-40q0-33-23.5-56.5T360-200h-80v-80h400v80h-80q-33 0-56.5 23.5T520-120v40h-80Zm40-520Zm0 120q-66 0-113-47t-47-113 47-113 113-47 113 47 47 113-47 113-113 47Z",                                     // 골프 공+티
+                    "unmanned-fitness": "MAT:m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z",                            // 24시간 운동기구
                     // education — 책, 연필, 학교
                     "study-room": "MAT:M480-120 200-272v-240L40-600l440-240 440 240v320h-80v-276l-80 44v240L480-120Zm0-332 274-148-274-148-274 148 274 148Zm0 241 200-108v-151L480-360 280-470v151l200 108Z",  // school
                     "kids-academy": "MAT:M480-120 200-272v-240L40-600l440-240 440 240v320h-80v-276l-80 44v240L480-120Z",  // school (학교)
-                    "adult-class": "M4 20h16M8 16V8l4-4 4 4v8M10 16v-4h4v4M8 12h8",                                                     // 책상+창문(교실)
-                    "language-academy": "M5 8h8m-4-3v2M13 12a4 4 0 108 0M18 21l-3-6m6 0l-3 6",                                          // 언어(가나다/ABC)
-                    "coding-class": "M7 8l-4 4 4 4m10-8l4 4-4 4M14 4l-4 16",                                                             // 코드 꺽쇠 + 슬래시
-                    "small-study-room": "M4 19V5a2 2 0 012-2h12a2 2 0 012 2v14M4 19h16M4 19H2m18 0h2M8 9h8m-8 4h5",                    // 책상+의자
+                    "adult-class": "MAT:M480-160q-48-38-104-59t-116-21q-42 0-82.5 11T100-198q-21 11-40.5-1T40-234v-482q0-11 5.5-21T62-752q46-24 96-36t102-12q58 0 113.5 15T480-740v484q51-32 107-48t113-16q36 0 70.5 6t69.5 18v-480q15 5 29.5 10.5T898-752q11 5 16.5 15t5.5 21v482q0 23-19.5 35t-40.5 1q-37-20-77.5-31T700-240q-60 0-116 21t-104 59Z",                                                     // 책상+창문(교실)
+                    "language-academy": "MAT:m476-80 182-480h84L924-80h-84l-43-122H603L560-80h-84ZM160-200l-56-56 202-202q-35-35-63.5-80T190-640h84q20 39 40 68t48 58q33-33 68.5-92.5T484-720H40v-80h280v-80h80v80h280v80H564q-21 72-63 148t-83 116l96 98-30 82-122-125-202 201Z",                                          // 언어(가나다/ABC)
+                    "coding-class": "MAT:M320-240 80-480l240-240 57 57-184 184 183 183-56 56Zm320 0-57-57 184-184-183-183 56-56 240 240-240 240Z",                                                             // 코드 꺽쇠 + 슬래시
+                    "small-study-room": "MAT:M560-564v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-600q-38 0-73 9.5T560-564Zm0 220v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-380q-38 0-73 9t-67 27Zm0-110v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-490q-38 0-73 9.5T560-454ZM260-320q47 0 91.5 10.5T440-278v-394q-41-24-87-36t-93-12q-36 0-71.5 7T120-692v396q35-12 69.5-18t70.5-6Z",                    // 책상+의자
                     // pet — 발바닥, 뼈, 동물
                     "pet-grooming": "MAT:M180-475q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29Zm109-189q-29-29-29-71t29-71q29-29 71-29t71 29q29 29 29 71t-29 71q-29 29-71 29t-71-29Zm240 0q-29-29-29-71t29-71q29-29 71-29t71 29q29 29 29 71t-29 71q-29 29-71 29t-71-29Zm251 189q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM266-75q-45 0-75.5-34.5T160-191q0-52 35.5-91t70.5-77q29-31 50-67.5t50-68.5q22-26 51-43t63-17q34 0 63 16t51 42q28 32 49.5 69t50.5 69q35 38 70.5 77t35.5 91q0 47-30.5 81.5T694-75q-54 0-107-9t-107-9q-54 0-107 9t-107 9Z",  // pets (발바닥)
-                    "pet-supplies": "M9 2h6v4H9V2zM5 6h14v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6zm4 6h2m2 0h2",                              // 사료 봉투
-                    "pet-hotel": "M4 22V10l8-6 8 6v12M9 22v-5h6v5M12 7v1",                                                               // 집(펫호텔)
-                    "pet-cafe": "M18 8h2a3 3 0 010 6h-2M4 8h14v8a5 5 0 01-5 5H9a5 5 0 01-5-5V8z",                                      // 컵(펫카페)
-                    "pet-training-school": "M12 3l8 5v2l-8 5-8-5V8l8-5zm-4 14a2 2 0 104 0M12 15v5",                                     // 학교+발바닥
-                    "pet-walking-visit": "M12 4a2 2 0 100 4 2 2 0 000-4zM8 22l2-8m4 8l-2-8m-4 0h8M6 11l6 3 6-3",                       // 산책하는 사람
+                    "pet-supplies": "MAT:M200-80q-33 0-56.5-23.5T120-160v-451q-18-11-29-28.5T80-680v-120q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v120q0 23-11 40.5T840-611v451q0 33-23.5 56.5T760-80H200Zm0-520v440h560v-440H200Zm-40-80h640v-120H160v120Zm200 280h240v-80H360v80Z",                              // 사료 봉투
+                    "pet-hotel": "MAT:M200-160v-366L88-440l-48-64 440-336 160 122v-82h120v174l160 122-48 64-112-86v366H520v-240h-80v240H200Z",                                                               // 집(펫호텔)
+                    "pet-cafe": "MAT:M160-120v-80h640v80H160Zm160-160q-66 0-113-47t-47-113v-400h640q33 0 56.5 23.5T880-760v120q0 33-23.5 56.5T800-560h-80v120q0 66-47 113t-113 47H320Z",                                      // 컵(펫카페)
+                    "pet-training-school": "MAT:M206-206q-41-48-63.5-107.5T120-440q0-150 105-255t255-105h8l-64-64 56-56 160 160-160 160-57-57 63-63h-6q-116 0-198 82t-82 198q0 51 16.5 96t46.5 81l-57 57Z",                                     // 학교+발바닥
+                    "pet-walking-visit": "MAT:m280-40 112-564-72 28v136h-80v-188l202-86q14-6 29.5-7t29.5 4q14 5 26.5 14t20.5 23l40 64q26 42 70.5 69T760-520v80q-70 0-125-29t-94-74l-25 123 84 80v300h-80v-260l-84-64-72 324h-84Z",                       // 산책하는 사람
                     // living — 도구, 서비스
-                    "laundry-service": "M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm7 8a4 4 0 100 8 4 4 0 000-8zM9 6h6", // 세탁기
-                    "cleaning-service": "M12 2v8m0 0l-5 5m5-5l5 5M3 21h18M7 17v4m10-4v4",                                               // 빗자루
-                    "repair-service": "M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z", // 렌치
-                    "self-laundry": "M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm7 9a3 3 0 100 6 3 3 0 000-6zM9 6h6m-4 2h2", // 코인세탁기
-                    "print-copy": "M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z",  // 프린터
-                    "device-repair": "M8 2h8a2 2 0 012 2v16a2 2 0 01-2 2H8a2 2 0 01-2-2V4a2 2 0 012-2zm4 16h.01M10 6h4",               // 스마트폰
+                    "laundry-service": "MAT:M240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h480q33 0 56.5 23.5T800-800v640q0 33-23.5 56.5T720-80H240Zm0-80h480v-640H240v640Zm241.5-98.5Q540-317 540-400t-58.5-141.5Q480-600 480-600t-141.5 58.5Q280-483 280-400t58.5 141.5Z", // 세탁기
+                    "cleaning-service": "MAT:M120-40v-280q0-83 58.5-141.5T320-520h40v-320q0-33 23.5-56.5T440-920h80q33 0 56.5 23.5T600-840v320h40q83 0 141.5 58.5T840-320v280H120Z",                                               // 빗자루
+                    "repair-service": "MAT:M756-120 537-339l84-84 219 219-84 84Zm-552 0-84-84 276-276-68-68-28 28-51-51v82l-28 28-121-121 28-28h82l-50-50 142-142q20-20 43-29t47-9q24 0 47 9t43 29l-92 92 50 50-28 28 68 68 90-90q-4-11-6.5-23t-2.5-24q0-59 40.5-99.5T701-841q15 0 28.5 3t27.5 9l-99 99 72 72 99-99q7 14 9.5 27.5T841-701q0 59-40.5 99.5T701-561q-12 0-24-2t-23-7L204-120Z", // 렌치
+                    "self-laundry": "MAT:M280-80v-240h-64q-40 0-68-28t-28-68q0-29 16-53.5t42-36.5l262-116v-26q-36-13-58-43.5T360-760q0-50 35-85t85-35q50 0 85 35t35 85h-80q0-17-11.5-28.5T480-800q-17 0-28.5 11.5T440-760q0 17 11.5 28.5T480-720t28.5 11.5Q520-697 520-680v58l262 116q26 12 42 36.5t16 53.5q0 40-28 68t-68 28h-64v240H280Z", // 코인세탁기
+                    "print-copy": "MAT:M640-640v-120H320v120h-80v-200h480v200h-80Zm-480 80h640-640Zm560 100q17 0 28.5-11.5T760-500q0-17-11.5-28.5T720-540q-17 0-28.5 11.5T680-500q0 17 11.5 28.5T720-460Zm-80 260v-160H320v160h320Zm80 80H240v-160H80v-240q0-51 35-85.5t85-34.5h560q51 0 85.5 34.5T880-520v240H720v160Z",  // 프린터
+                    "device-repair": "MAT:M280-40q-33 0-56.5-23.5T200-120v-720q0-33 23.5-56.5T280-920h400q33 0 56.5 23.5T760-840v124q18 7 29 22t11 34v80q0 19-11 34t-29 22v404q0 33-23.5 56.5T680-40H280Z",               // 스마트폰
                     // space — 건물, 방
-                    "guesthouse": "M4 22V10l8-6 8 6v12M10 22v-6h4v6M12 7v1",                                                             // 게스트하우스
-                    "rental-studio": "M15 10l5-2.5a1 1 0 011 .87v7.26a1 1 0 01-1 .87L15 14M3 8h10a2 2 0 012 2v6a2 2 0 01-2 2H3V8z",    // 카메라/스튜디오
-                    "party-room": "M12 2v3m5.66.34l-2.12 2.12M22 12h-3m-.34 5.66l-2.12-2.12M12 22v-3m-5.66-.34l2.12-2.12M2 12h3m.34-5.66l2.12 2.12", // 파티 (스파클)
-                    "study-cafe-space": "M18 8h2a3 3 0 010 6h-2M4 8h14v8a5 5 0 01-5 5H9a5 5 0 01-5-5V8zm4-5h8v3H8V3z",                // 스터디카페 컵+책
-                    "shared-office": "M4 21V5a2 2 0 012-2h12a2 2 0 012 2v16M8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M2 21h20",            // 빌딩
-                    "practice-room": "M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z",                   // 음표
+                    "guesthouse": "MAT:M40-200v-600h80v400h320v-320h320q66 0 113 47t47 113v360h-80v-120H120v120H40Z",                                                             // 게스트하우스
+                    "rental-studio": "MAT:M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h480q33 0 56.5 23.5T720-720v180l160-160v440L720-420v180q0 33-23.5 56.5T640-160H160Z",    // 카메라/스튜디오
+                    "party-room": "MAT:m80-80 200-560 360 360L80-80Zm132-132 282-100-182-182-100 282Z", // 파티 (스파클)
+                    "study-cafe-space": "MAT:M160-120v-80h640v80H160Zm160-160q-66 0-113-47t-47-113v-400h640q33 0 56.5 23.5T880-760v120q0 33-23.5 56.5T800-560h-80v120q0 66-47 113t-113 47H320Z",                // 스터디카페 컵+책
+                    "shared-office": "MAT:M120-120v-560h160v-160h400v320h160v400H520v-160h-80v160H120Zm80-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 320h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 480h80v-80h-80v80Zm0-160h80v-80h-80v80Z",            // 빌딩
+                    "practice-room": "MAT:M287-167q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T480-418v-422h240v160H560v400q0 66-47 113t-113 47q-66 0-113-47Z",                   // 음표
                     // online — 화면, 카트, 클라우드
-                    "smart-store": "M4 4h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm0 4h16M8 14h3m2 0h3",            // 스마트스토어 화면
-                    "digital-products": "M8 17a4 4 0 01-.88-7.9A5 5 0 1115.9 6h.1a5 5 0 011 9.9M12 13v8m-3-3l3 3 3-3",                  // 클라우드 다운로드
-                    "creator-service": "M15 10l5-2.5a1 1 0 011 .87v7.26a1 1 0 01-1 .87L15 14M3 8h10a2 2 0 012 2v6a2 2 0 01-2 2H3V8z",  // 영상 카메라
-                    "consignment-commerce": "M3 3h2l1 9h12l1-6H6M8 20a1 1 0 100 2 1 1 0 000-2zm9 0a1 1 0 100 2 1 1 0 000-2z",           // 장바구니
-                    "newsletter-membership": "M4 7l8 5 8-5M4 7v10a2 2 0 002 2h12a2 2 0 002-2V7M4 7a2 2 0 012-2h12a2 2 0 012 2",         // 봉투/메일
-                    "global-buying": "M12 2a10 10 0 100 20 10 10 0 000-20zM2 12h20M12 2c2.5 2.5 4 6 4 10s-1.5 7.5-4 10c-2.5-2.5-4-6-4-10s1.5-7.5 4-10", // 지구본
+                    "smart-store": "MAT:M223.5-103.5Q200-127 200-160t23.5-56.5Q247-240 280-240t56.5 23.5Q360-193 360-160t-23.5 56.5Q313-80 280-80t-56.5-23.5Zm400 0Q600-127 600-160t23.5-56.5Q647-240 680-240t56.5 23.5Q760-193 760-160t-23.5 56.5Q713-80 680-80t-56.5-23.5ZM246-720l96 200h280l110-200H246Zm-38-80h590q23 0 35 20.5t1 41.5L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68-39.5t-2-78.5l54-98-144-304H40v-80h130l38 80Z",            // 스마트스토어 화면
+                    "digital-products": "MAT:M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Z",                  // 클라우드 다운로드
+                    "creator-service": "MAT:M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h480q33 0 56.5 23.5T720-720v180l160-160v440L720-420v180q0 33-23.5 56.5T640-160H160Z",  // 영상 카메라
+                    "consignment-commerce": "MAT:M155-195q-35-35-35-85H40v-440q0-33 23.5-56.5T120-800h560v160h120l120 160v200h-80q0 50-35 85t-85 35q-50 0-85-35t-35-85H360q0 50-35 85t-85 35q-50 0-85-35Z",           // 장바구니
+                    "newsletter-membership": "MAT:M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200Z",         // 봉투/메일
+                    "global-buying": "MAT:M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z", // 지구본
                     // startup — 기술, 코드, 차트
-                    "ai-application": "M12 2l2 4h4l-3 3 1 5-4-3-4 3 1-5-3-3h4l2-4zM4 18h16",                                            // AI 스파크
-                    "developer-tools": "M7 8l-4 4 4 4m10-8l4 4-4 4M14 4l-4 16",                                                          // 코드 </>
-                    "b2b-saas": "M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm0 4h16M4 13h16M8 9v8",              // 대시보드
-                    "fintech-startup": "M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",                                          // 달러 기호
-                    "healthtech-startup": "M12 4v16m-8-8h16",                                                                             // 십자가 (의료)
-                    "security-startup": "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",                                                   // 방패
+                    "ai-application": "MAT:m760-600-50-110-110-50 110-50 50-110 50 110 110 50-110 50-50 110Zm0 560-50-110-110-50 110-50 50-110 50 110 110 50-110 50-50 110ZM360-160 260-380 40-480l220-100 100-220 100 220 220 100-220 100-100 220Z",                                            // AI 스파크
+                    "developer-tools": "MAT:M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H160v400Zm140-40-56-56 103-104-104-104 57-56 160 160-160 160Zm180 0v-80h240v80H480Z",                                                          // 코드 </>
+                    "b2b-saas": "MAT:M520-600v-240h320v240H520ZM120-440v-400h320v400H120Zm400 320v-400h320v400H520Zm-400 0v-240h320v240H120Z",              // 대시보드
+                    "fintech-startup": "MAT:M200-280v-280h80v280h-80Zm240 0v-280h80v280h-80ZM80-120v-80h800v80H80Zm600-160v-280h80v280h-80ZM80-640v-80l400-200 400 200v80H80Z",                                          // 달러 기호
+                    "healthtech-startup": "MAT:M80-600v-120q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v120h-80v-120H160v120H80Zm80 440q-33 0-56.5-23.5T80-240v-120h80v120h640v-120h80v120q0 33-23.5 56.5T800-160H160Zm261-125.5q10-5.5 15-16.5l124-248 44 88q5 11 15 16.5t21 5.5h240v-80H665l-69-138q-5-11-15-15.5t-21-4.5q-11 0-21 4.5T524-658L400-410l-44-88q-5-11-15-16.5t-21-5.5H80v80h215l69 138q5 11 15 16.5t21 5.5q11 0 21-5.5Z",                                                                             // 십자가 (의료)
+                    "security-startup": "MAT:M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q97-30 162-118.5T718-480H480v-315l-240 90v207q0 7 2 18h238v316Z",                                                   // 방패
                   };
 
                   // 업종별 테마 색상
@@ -3857,6 +3859,98 @@ export default function StarterStageDemo({
                   );
                 })()}
 
+                {/* ── 마케팅 및 론칭 가이드 (online_marketing) ── */}
+                {currentStage.code === "online_marketing" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* 네이버 SEO */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(3,199,90,0.1)", background: "linear-gradient(180deg, rgba(3,199,90,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                            <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#03C75A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "13px", fontWeight: 700 }}>N</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "네이버 쇼핑 SEO 최적화" : "Naver Shopping SEO"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>{ko ? "온라인 매출의 60%+가 검색에서 시작됩니다. 첫 1개월이 노출 순위를 결정합니다." : "60%+ of online sales start from search. The first month determines your ranking."}</div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px", display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { title: "상품명 = 핵심 키워드 + 속성", detail: "\"여성 린넨 원피스 여름 A라인 프리사이즈\" — 검색어를 순서대로 넣으세요. 브랜드명은 앞에" },
+                            { title: "카테고리 정확히 매칭", detail: "네이버 쇼핑 카테고리와 상품이 불일치하면 노출 자체가 안 됩니다" },
+                            { title: "상세페이지 텍스트 최적화", detail: "이미지만 넣지 마세요. 검색 크롤러는 텍스트를 읽습니다. 핵심 키워드를 본문에 포함" },
+                            { title: "태그 20개 모두 채우기", detail: "스마트스토어 태그는 검색 노출에 직접 영향. 관련 키워드를 빠짐없이 등록" },
+                            { title: "최신성 점수 — 신상품 등록 주기", detail: "네이버는 신상품을 우대합니다. 주 2-3회 신규 상품 등록이 이상적" },
+                          ] : [
+                            { title: "Product name = keywords + attributes", detail: "Put search terms in order. Brand name first" },
+                            { title: "Category matching", detail: "Mismatched category = zero exposure" },
+                            { title: "Detail page text optimization", detail: "Don't rely on images only. Crawlers read text" },
+                            { title: "Fill all 20 tags", detail: "Tags directly affect search ranking" },
+                            { title: "Freshness score — new product frequency", detail: "Naver favors new products. 2-3 per week ideal" },
+                          ]).map(s => (
+                            <div key={s.title} style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(3,199,90,0.03)", border: "1px solid rgba(3,199,90,0.06)" }}>
+                              <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{s.title}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.detail}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 첫 광고 캠페인 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "첫 광고 캠페인 세팅" : "First Ad Campaign Setup"}</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>{ko ? "초기 2주는 데이터 수집 기간. 일 5,000~10,000원부터 시작하세요." : "First 2 weeks are data collection. Start at ₩5-10K/day."}</div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
+                          {(ko ? [
+                            { platform: "네이버 쇼핑 검색광고", budget: "일 5,000~10,000원", desc: "구매 의도가 가장 높은 채널. CPC 300~800원. ROAS 확인 후 증액", color: "#03C75A", url: "https://searchad.naver.com" },
+                            { platform: "인스타그램 광고", budget: "일 10,000~20,000원", desc: "비주얼 제품에 효과적. 25-34세 여성 타깃. 릴스 광고 CTR 최고", color: "#E4405F", url: "https://business.instagram.com" },
+                            { platform: "쿠팡 CPC 광고", budget: "일 5,000~15,000원", desc: "쿠팡 내 검색 결과 상단 노출. 쿠팡 판매 시 필수", color: "#1460F3", url: "https://wing.coupang.com" },
+                          ] : [
+                            { platform: "Naver Shopping Ads", budget: "₩5-10K/day", desc: "Highest purchase intent. CPC ₩300-800", color: "#03C75A", url: "https://searchad.naver.com" },
+                            { platform: "Instagram Ads", budget: "₩10-20K/day", desc: "Great for visual products. Reels ads best CTR", color: "#E4405F", url: "https://business.instagram.com" },
+                            { platform: "Coupang CPC Ads", budget: "₩5-15K/day", desc: "Top of Coupang search. Essential for Coupang sellers", color: "#1460F3", url: "https://wing.coupang.com" },
+                          ]).map(p => (
+                            <a key={p.platform} href={p.url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: "12px", padding: "14px", borderRadius: "14px", border: `1px solid ${p.color}15`, background: `${p.color}03`, textDecoration: "none", color: "inherit" }}>
+                              <div style={{ padding: "3px 8px", borderRadius: "6px", background: `${p.color}10`, color: p.color, fontSize: "10px", fontWeight: 650, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "2px" }}>{p.budget}</div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{p.platform}</div>
+                                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{p.desc}</div>
+                              </div>
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "4px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 리뷰 전략 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+                        <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "8px" }}>{ko ? "초기 리뷰 확보 전략" : "Early Review Strategy"}</div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginBottom: "10px" }}>{ko ? "리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다." : "Products with 0 reviews get 80% fewer clicks. First 10 reviews are decisive."}</div>
+                        <div style={{ display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { method: "체험단 모집 (소규모)", detail: "블로그 체험단 3~5명. 비용: 제품 원가 + 배송비. 네이버 블로그 리뷰 = 검색 노출 직결", tip: "무료" },
+                            { method: "포토리뷰 이벤트", detail: "구매 고객에게 포토리뷰 작성 시 500~1,000원 적립금. 전환율 대비 가장 효율적", tip: "₩500/건" },
+                            { method: "지인·친구 초기 구매", detail: "솔직하게 부탁하세요. 조작 리뷰는 네이버 패널티 대상. 실제 구매+배송 필수", tip: "실비" },
+                          ] : [
+                            { method: "Micro influencer trials", detail: "3-5 bloggers. Cost: product + shipping. Blog reviews boost search", tip: "Free" },
+                            { method: "Photo review event", detail: "₩500-1K store credit for photo reviews. Most efficient conversion", tip: "₩500/ea" },
+                            { method: "Friends & family first buys", detail: "Be honest. Fake reviews get penalized. Real purchase required", tip: "Cost" },
+                          ]).map(r => (
+                            <div key={r.method} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(217,119,6,0.03)" }}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{r.method}</div>
+                                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{r.detail}</div>
+                              </div>
+                              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(217,119,6,0.08)", color: "#d97706", whiteSpace: "nowrap" as const, flexShrink: 0, alignSelf: "flex-start" }}>{r.tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* ── 인허가 스테이지: 라이브 경쟁/생존 데이터 ── */}
                 {currentStage.code === "permit_check" && (() => {
                   const ko = language === "ko";
@@ -4030,8 +4124,774 @@ export default function StarterStageDemo({
                   );
                 })()}
 
-                {/* ── 스타트업 도구·AI 추천 패널 ── */}
-                {isStartupCategory && (() => {
+                {/* ── 창업팀·기본 구조 가이드 (startup_foundation) ── */}
+                {currentStage.code === "startup_foundation" && (() => {
+                  const ko = language === "ko";
+                  const iconSvg = (d: string, color: string) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d={d} /></svg>;
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* 핵심 원칙 — 만들고 나서 구조를 세워라 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(29,53,87,0.1)", background: "linear-gradient(180deg, rgba(29,53,87,0.03) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "핵심 원칙" : "Core Principle"}</div>
+                        <div style={{ fontSize: "17px", fontWeight: 720, color: "#0f172a", lineHeight: 1.4, marginBottom: "10px" }}>
+                          {ko ? "먼저 만들고, 법인은 나중에." : "Build first. Incorporate later."}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "12px" }}>
+                          {ko
+                            ? "Facebook은 하버드 기숙사에서 런칭한 후 6개월 뒤에 법인을 세웠습니다. 배달의민족은 앱 출시 5개월 후에야 회사를 설립했습니다. Stripe는 \"노트북 줘봐\"라며 직접 설치해주는 것부터 시작했습니다. 지금 당장 필요한 건 법인이 아니라, 해결할 문제와 만들 제품입니다."
+                            : "Facebook launched 6 months before incorporating. Baemin released their app 5 months before founding the company. Stripe started by saying \"give me your laptop\" and installing for users manually. What you need now isn't a corporation — it's a problem to solve and a product to build."}
+                        </div>
+                        <div style={{ display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { quote: "\"스타트업 아이디어를 얻는 방법은 스타트업 아이디어를 생각하는 게 아니라, 문제를 찾는 것이다. 가능하면 당신 자신의 문제를.\"", author: "Paul Graham, Y Combinator" },
+                            { quote: "\"첫 버전이 창피하지 않다면 너무 늦게 출시한 것이다.\"", author: "Reid Hoffman, LinkedIn 창업자" },
+                          ] : [
+                            { quote: "\"The way to get startup ideas is not to try to think of startup ideas. It's to look for problems, preferably problems you have yourself.\"", author: "Paul Graham, Y Combinator" },
+                            { quote: "\"If you're not embarrassed by the first version of your product, you've launched too late.\"", author: "Reid Hoffman, LinkedIn founder" },
+                          ]).map(q => (
+                            <div key={q.author} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(29,53,87,0.03)", borderLeft: "3px solid rgba(29,53,87,0.15)" }}>
+                              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55, fontStyle: "italic" }}>{q.quote}</div>
+                              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "4px", fontWeight: 600 }}>— {q.author}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* STEP 1 — 핵심 문제 정의 (First Principles) */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "해결할 문제를 한 문장으로 정의하세요" : "Define the problem in one sentence"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+                            {ko ? "Elon Musk는 로켓 비용이 비싼 이유를 원자재 가격까지 분해했습니다 (재료비 = 가격의 2%). Peter Thiel은 \"대부분의 사람들이 동의하지 않는, 당신이 아는 중요한 진실은 무엇인가?\"라고 묻습니다. 이 질문에 답하세요." : "Musk broke down why rockets are expensive to raw materials (2% of price). Thiel asks: \"What important truth do few people agree with you on?\" Answer this question."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px" }}>
+                          <div style={{ display: "grid", gap: "6px", marginBottom: "12px" }}>
+                            {(ko ? [
+                              { icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z", title: "나 자신의 문제에서 시작하세요", desc: "YC가 선호하는 아이디어는 창업자가 직접 겪는 문제입니다. 상상이 아닌 경험에서 출발하세요" },
+                              { icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", title: "\"지금 이걸 누가 원하는가?\" 답할 수 있어야 합니다", desc: "많은 사람이 조금 원하는 것보다, 적은 사람이 절실하게 원하는 것을 선택하세요" },
+                              { icon: "M13 10V3L4 14h7v7l9-11h-7z", title: "기존 솔루션의 비용을 분해하세요", desc: "Musk 방식: 재료비·인건비·유통비를 분리하면 10배 싸게 만들 수 있는 지점이 보입니다" },
+                            ] : [
+                              { icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z", title: "Start from your own problem", desc: "YC prefers ideas from founders' own experience, not imagination" },
+                              { icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", title: "Can you answer: \"Who wants this right now?\"", desc: "Choose something few people want desperately over many wanting slightly" },
+                              { icon: "M13 10V3L4 14h7v7l9-11h-7z", title: "Break down existing solution costs", desc: "Musk method: separate materials/labor/distribution to find the 10x opportunity" },
+                            ]).map(s => (
+                              <div key={s.title} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.03)" }}>
+                                {iconSvg(s.icon, "#2563eb")}
+                                <div>
+                                  <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
+                                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.desc}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법" : "How to use AI"}</div>
+                            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(37,99,235,0.03)", fontStyle: "italic" }}>
+                              {ko ? "\"나는 [분야]에서 [타깃]의 [고통]을 해결하려 해. 1) 이 문제가 충분히 구체적인지, 2) 현재 사람들이 어떻게 해결하고 있는지, 3) 기존 솔루션의 비용 구조를 원자재 수준까지 분해해줘. 4) Peter Thiel의 '비밀' 프레임워크로 이 기회를 평가해줘.\"" : "\"I want to solve [pain] for [target] in [field]. 1) Is this specific enough? 2) How do people currently solve it? 3) Break down existing solution costs to raw materials. 4) Evaluate this opportunity using Thiel's 'secret' framework.\""}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* STEP 2 — 팀 구성 (또는 솔로 파운더) */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "팀 구성 방향을 정하세요" : "Decide your team structure"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+                            {ko ? "2026년, AI 도구 덕분에 1인 창업자도 이전의 5인 팀만큼 할 수 있습니다. 공동창업자가 반드시 필요하지는 않습니다." : "In 2026, AI tools let solo founders do what 5-person teams used to. Co-founders aren't always necessary."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px" }}>
+                          {/* 솔로 vs 공동 */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "12px" }}>
+                            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(124,58,237,0.03)", border: "1px solid rgba(124,58,237,0.06)" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                {iconSvg("M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z", "#7c3aed")}
+                                <span style={{ fontSize: "14px", fontWeight: 680, color: "#7c3aed" }}>{ko ? "솔로 파운더" : "Solo Founder"}</span>
+                              </div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                                {ko ? "성공 엑싯의 52%가 솔로 창업. Cursor + Claude로 MVP를 2~6주에 출시. 의사결정 빠름. 법인도 매출 나올 때까지 불필요." : "52% of successful exits by solo founders. Ship MVP in 2-6wk with Cursor + Claude. Fast decisions. No corp needed until revenue."}
+                              </div>
+                            </div>
+                            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.03)", border: "1px solid rgba(37,99,235,0.06)" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                {iconSvg("M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75", "#2563eb")}
+                                <span style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb" }}>{ko ? "공동 창업" : "Co-founders"}</span>
+                              </div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                                {ko ? "Thiel: \"이미 친한 사람과 창업하라. 모르는 사람은 주사위를 굴리는 것.\" 역할 분담으로 속도 UP. 하지만 갈등 리스크도 함께 옴." : "Thiel: \"Founders should share a prehistory.\" Faster with role split. But conflict risk comes too."}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 공동창업 시 합의사항 — 접이식 */}
+                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.06)" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>{ko ? "공동창업 시 반드시 합의할 것" : "Must-agree items for co-founders"}</div>
+                            <div style={{ display: "grid", gap: "4px" }}>
+                              {(ko ? [
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "각자의 역할과 책임 범위 (서면으로)", color: "#059669" },
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "의사결정 방식 — 의견 불일치 시 누가 최종 결정?", color: "#059669" },
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "지분 비율 (YC 추천: 동등 또는 근접 배분)", color: "#059669" },
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "베스팅 조건 (4년/1년 클리프가 표준)", color: "#059669" },
+                                { icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z", text: "퇴사/이탈 시 지분 회수 조건 — 이걸 안 정하면 나중에 전쟁", color: "#d97706" },
+                              ] : [
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Each person's role and responsibility scope (in writing)", color: "#059669" },
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Decision-making — who has final say on disagreements?", color: "#059669" },
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Equity split (YC recommends near-equal)", color: "#059669" },
+                                { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Vesting (4yr / 1yr cliff standard)", color: "#059669" },
+                                { icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z", text: "Buyback terms on departure — skipping this means war later", color: "#d97706" },
+                              ]).map(s => (
+                                <div key={s.text} style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>
+                                  {iconSvg(s.icon, s.color)}
+                                  <span>{s.text}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* STEP 3 — 법인은 언제? (트리거 기반) */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#059669", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "법인 설립 — 이때 하면 됩니다" : "Incorporate — when these triggers hit"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+                            {ko ? "MVP를 만들고, 유저를 모으고, 아래 상황이 발생하면 그때 법인을 세우세요. 그 전에는 불필요합니다." : "Build MVP, get users, then incorporate when these triggers happen. Before that, it's unnecessary."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px", display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { trigger: "첫 고객 결제를 받을 때", why: "개인 계좌로 사업 수익 수령 시 세무·책임 문제", color: "#dc2626", level: "필수" },
+                            { trigger: "투자금을 받을 때", why: "모든 투자자가 법인을 요구합니다", color: "#dc2626", level: "필수" },
+                            { trigger: "첫 직원을 고용할 때", why: "IP 소유권, 4대보험, 스톡옵션 부여에 법인 필요", color: "#dc2626", level: "필수" },
+                            { trigger: "공동창업자와 지분을 나눌 때", why: "서면 합의서 + 베스팅을 법인 구조로 정리", color: "#d97706", level: "권장" },
+                            { trigger: "정부 지원사업에 신청할 때", why: "대부분 법인 또는 사업자등록 필요", color: "#d97706", level: "권장" },
+                          ] : [
+                            { trigger: "First customer payment", why: "Personal account for business revenue = tax/liability issues", color: "#dc2626", level: "Must" },
+                            { trigger: "Accepting investment", why: "All investors require a legal entity", color: "#dc2626", level: "Must" },
+                            { trigger: "First hire", why: "IP ownership, insurance, stock options need a corp", color: "#dc2626", level: "Must" },
+                            { trigger: "Splitting equity with co-founders", why: "Formalize with vesting in corporate structure", color: "#d97706", level: "Rec" },
+                            { trigger: "Government program application", why: "Most require business registration", color: "#d97706", level: "Rec" },
+                          ]).map(t => (
+                            <div key={t.trigger} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: `${t.color}03`, border: `1px solid ${t.color}10` }}>
+                              <span style={{ fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: `${t.color}10`, color: t.color, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "2px" }}>{t.level}</span>
+                              <div>
+                                <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{t.trigger}</div>
+                                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{t.why}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ margin: "0 22px 16px", padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", borderLeft: "3px solid rgba(5,150,105,0.3)" }}>
+                          <div style={{ fontSize: "13px", color: "rgba(5,150,105,0.8)", lineHeight: 1.55 }}>
+                            {ko ? "법인 설립 시: 자본금 100원부터 가능. 헬프미 등 대행 서비스 이용 시 30~50만원, 1~2주. 벤처기업 인증 후 스톡옵션 부여 시 직원당 연 5천만원 비과세." : "When ready: Min capital ₩100. Agency service ₩300-500K, 1-2wk. Venture cert = ₩50M/yr tax-free stock options per employee."}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 실제 사례 — 영감 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(15,23,42,0.06)", background: "rgba(255,255,255,0.95)", padding: "20px 22px" }}>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>{ko ? "그들도 이렇게 시작했습니다" : "They all started this way"}</div>
+                        <div style={{ display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { name: "배달의민족", story: "바닥에 떨어진 전단지를 스캔해서 앱을 만듦. 회사 설립은 앱 출시 5개월 후", year: "2010" },
+                            { name: "토스", story: "8번 실패 후 통장 잔고 2만원. \"또 다른 멍청한 아이디어\"가 7조원 기업이 됨", year: "2015" },
+                            { name: "Airbnb", story: "에어 매트리스 3개로 시작. 시리얼 상자를 팔아 3천만원을 벌고 YC에 들어감", year: "2008" },
+                            { name: "Stripe", story: "\"노트북 줘봐\" — 직접 설치해주는 것으로 첫 고객 확보. 7줄의 코드가 시작", year: "2010" },
+                          ] : [
+                            { name: "Baemin", story: "Scanned restaurant flyers off the ground. Company founded 5mo after app launch", year: "2010" },
+                            { name: "Toss", story: "8 failures, ₩20K in bank. \"Another stupid idea\" became a $7B company", year: "2015" },
+                            { name: "Airbnb", story: "3 air mattresses. Sold cereal boxes for $30K to fund YC application", year: "2008" },
+                            { name: "Stripe", story: "\"Give me your laptop\" — manual installation for first customers. 7 lines of code", year: "2010" },
+                          ]).map(s => (
+                            <div key={s.name} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 0", borderBottom: s.name !== "Stripe" ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.25)", width: "36px", flexShrink: 0, textAlign: "right" as const, marginTop: "2px" }}>{s.year}</div>
+                              <div>
+                                <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.name}</div>
+                                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.story}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 고객 발굴·문제 검증 가이드 (customer_discovery) ── */}
+                {currentStage.code === "customer_discovery" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* WHY — 왜 이 단계가 중요한가 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#dc2626" }} />
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이게 첫 번째인가" : "Why this comes first"}</span>
+                        </div>
+                        <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
+                          {ko ? "스타트업의 42%는 \"시장이 필요로 하지 않는 제품\"을 만들어 실패합니다." : "42% of startups fail by building a product nobody needs."}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+                          {ko ? "코드를 한 줄도 쓰기 전에, 실제 사람과 대화해서 \"이 문제가 정말 돈이나 시간을 쓸 만큼 고통스러운지\" 확인해야 합니다. 이 과정을 건너뛰면 6개월 후 아무도 쓰지 않는 제품이 됩니다. AI를 활용하면 인터뷰 질문 설계, 응답 패턴 분석, 페르소나 정리를 훨씬 빠르게 할 수 있습니다." : "Before writing a single line of code, talk to real people to confirm the pain is real enough to pay for. Skip this and you'll have a product nobody uses in 6 months. AI can help design interview questions, analyze response patterns, and build personas faster."}
+                        </div>
+                      </div>
+
+                      {/* STEP 1 — AI로 인터뷰 스크립트 준비 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "AI로 인터뷰 스크립트 만들기" : "Create interview script with AI"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+                            {ko ? "The Mom Test 원칙: 솔루션을 말하지 말고, 문제만 물어보세요. 아래 질문을 기반으로 AI가 업종에 맞는 스크립트를 만들어줍니다." : "The Mom Test: Don't pitch your solution — only ask about problems. AI will create an industry-specific script based on these questions."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px", display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { q: "이 문제를 지금 어떻게 해결하고 있나요?", why: "현재 대안 파악 → 10배 나은지 판단 가능", color: "#059669" },
+                            { q: "가장 최근에 이 문제를 겪은 게 언제예요?", why: "빈도와 심각도 확인. 기억도 못 하면 중요한 문제가 아님", color: "#2563eb" },
+                            { q: "이 문제 때문에 돈이나 시간을 얼마나 쓰나요?", why: "지불 의사 간접 확인. 0원이면 무료 도구도 안 쓸 것", color: "#7c3aed" },
+                            { q: "이상적으로 어떻게 되면 좋겠어요?", why: "고객 언어로 가치 정의 → 마케팅 카피에 직접 활용", color: "#d97706" },
+                          ] : [
+                            { q: "How do you currently solve this problem?", why: "Understand current alternatives → judge if 10x better", color: "#059669" },
+                            { q: "When was the last time you faced this?", why: "Measure frequency. Can't remember = not important", color: "#2563eb" },
+                            { q: "How much time/money do you spend on this?", why: "Indirect WTP check. Zero = won't use even if free", color: "#7c3aed" },
+                            { q: "What would ideal look like?", why: "Define value in customer's words → use in marketing", color: "#d97706" },
+                          ]).map(item => (
+                            <div key={item.q} style={{ padding: "12px 14px", borderRadius: "12px", border: `1px solid ${item.color}12`, background: `${item.color}03` }}>
+                              <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "3px" }}>"{item.q}"</div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{item.why}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ margin: "0 22px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 인터뷰 스크립트 생성" : "AI — Generate interview script"}</div>
+                          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(37,99,235,0.03)", fontStyle: "italic" }}>
+                            {ko ? "\"나는 [업종]에서 [타깃 고객]의 [구체적 문제]를 해결하려 해. The Mom Test 원칙에 맞는 30분짜리 인터뷰 스크립트를 만들어줘. 도입부 아이스브레이킹 2분, 핵심 질문 5개, 마무리 질문 2개 구성으로. 각 질문에 '왜 이 질문을 하는지' 주석도 달아줘.\"" : "\"I'm solving [problem] for [target] in [industry]. Create a 30-min interview script following The Mom Test. Include 2min icebreaker, 5 core questions, 2 closing questions. Add annotations explaining why each question matters.\""}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* STEP 2 — 인터뷰 대상 찾기 + 실행 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#059669", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "10명 이상 인터뷰를 실행하세요" : "Run 10+ interviews"}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginBottom: "10px" }}>
+                            {(ko ? [
+                              { ch: "링크드인 DM", tip: "타깃 직군에 직접 메시지. 20통 중 4~5통 응답", url: "https://linkedin.com" },
+                              { ch: "디스콰이엇", tip: "한국 스타트업 커뮤니티. 초기 유저 모집에 최적", url: "https://disquiet.io" },
+                              { ch: "블라인드", tip: "직장인 익명 커뮤니티. B2B 타깃에 효과적", url: "https://www.teamblind.com" },
+                              { ch: "지인 2차 소개", tip: "\"이 분야 아는 사람 소개해줄 수 있어?\"가 가장 효과적" },
+                            ] : [
+                              { ch: "LinkedIn DM", tip: "Direct message targets. ~20% response rate", url: "https://linkedin.com" },
+                              { ch: "Disquiet", tip: "Korean startup community. Best for early users", url: "https://disquiet.io" },
+                              { ch: "Blind", tip: "Anonymous work community. Effective for B2B", url: "https://www.teamblind.com" },
+                              { ch: "2nd-degree referrals", tip: "\"Know anyone in this space?\" — most effective" },
+                            ]).map(c => (
+                              <div key={c.ch} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(5,150,105,0.03)" }}>
+                                <div style={{ fontSize: "12px", fontWeight: 640, color: "#0f172a" }}>{c.ch}</div>
+                                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{c.tip}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                            {(ko ? [
+                              { num: "10+명", label: "최소 인터뷰 수", detail: "5명=패턴 감지, 10명=확신" },
+                              { num: "30분", label: "인터뷰 시간", detail: "15분은 짧고 1시간은 부담" },
+                              { num: "24h내", label: "기록 마감", detail: "기억은 빠르게 왜곡됨" },
+                            ] : [
+                              { num: "10+", label: "Min interviews", detail: "5=pattern, 10=confidence" },
+                              { num: "30m", label: "Length", detail: "15min short, 1hr too long" },
+                              { num: "24h", label: "Note deadline", detail: "Memory distorts fast" },
+                            ]).map(s => (
+                              <div key={s.num} style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+                                <div style={{ fontSize: "18px", fontWeight: 780, color: "#059669" }}>{s.num}</div>
+                                <div style={{ fontSize: "11px", fontWeight: 640, color: "#0f172a" }}>{s.label}</div>
+                                <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{s.detail}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* STEP 3 — AI로 인사이트 정리 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "AI로 인터뷰 결과를 분석하세요" : "Analyze results with AI"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+                            {ko ? "인터뷰 노트를 AI에게 넘기면 반복 패턴, 핵심 고통, 초기 타깃 세그먼트를 자동 정리해줍니다." : "Pass your interview notes to AI — it auto-extracts repeated patterns, core pains, and initial target segments."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px" }}>
+                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.08)", marginBottom: "10px" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 인터뷰 분석" : "AI — Interview analysis"}</div>
+                            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(124,58,237,0.03)", fontStyle: "italic" }}>
+                              {ko ? "\"아래는 10명의 고객 인터뷰 노트야. [노트 붙여넣기]. 이 인터뷰에서: 1) 3명 이상이 공통으로 언급한 고통 패턴, 2) 현재 대안과 불만족 이유, 3) 지불 의사가 가장 높아 보이는 세그먼트, 4) 우리가 집중해야 할 '한 가지 문제'를 추천해줘.\"" : "\"Here are notes from 10 customer interviews. [Paste notes]. From these: 1) Pain patterns mentioned by 3+, 2) Current alternatives and dissatisfaction, 3) Segment with highest WTP, 4) Recommend the ONE problem we should focus on.\""}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "6px" }}>{ko ? "이 단계의 결과물" : "Deliverables from this stage"}</div>
+                          <div style={{ display: "grid", gap: "4px" }}>
+                            {(ko ? [
+                              "핵심 고통 패턴 1~2개 (3명 이상 공통)",
+                              "초기 타깃 세그먼트 정의 (누구의, 어떤 상황에서)",
+                              "현재 대안 목록과 각 대안의 불만족 이유",
+                              "\"우리가 해결할 한 가지 문제\" 문장",
+                            ] : [
+                              "1-2 core pain patterns (3+ people in common)",
+                              "Initial target segment (who, in what context)",
+                              "Current alternatives and dissatisfaction reasons",
+                              "\"The one problem we solve\" statement",
+                            ]).map(d => (
+                              <div key={d} style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "3px" }}><circle cx="7" cy="7" r="6" stroke="#7c3aed" strokeWidth="1.4"/><path d="M4.5 7l1.8 1.8 3.2-3.6" stroke="#7c3aed" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                <span>{d}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 성장·리텐션 루프 가이드 (growth_engine) ── */}
+                {currentStage.code === "growth_engine" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* WHY */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#dc2626" }} />
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이 단계가 중요한가" : "Why this matters"}</span>
+                        </div>
+                        <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
+                          {ko ? "리텐션 없는 성장은 밑 빠진 독에 물 붓기입니다." : "Growth without retention is filling a leaky bucket."}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+                          {ko ? "MVP를 출시했고 초기 사용자가 생겼다면, 이제 \"이 사람들이 돌아오는가?\"를 증명해야 합니다. 주간 성장률을 체계적으로 추적하고, 가장 큰 레버를 매주 실험해야 합니다. AI를 활용하면 지표 대시보드 설계, 이탈 원인 분석, 실험 우선순위 결정을 데이터 기반으로 할 수 있습니다." : "If you've launched an MVP and have initial users, now prove they come back. Track weekly growth systematically and experiment on the biggest lever each week. AI helps design dashboards, analyze churn, and prioritize experiments with data."}
+                        </div>
+                      </div>
+
+                      {/* STEP 1 — 북극성 지표 선택 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#059669", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "북극성 지표를 하나 선택하세요" : "Choose one North Star Metric"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+                            {ko ? "회사 전체가 추적하는 하나의 핵심 숫자. 이 숫자가 올라가면 사업이 건강한 것입니다." : "The single number the whole company tracks. If it goes up, the business is healthy."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px", display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { type: "SaaS", metric: "주간 활성 사용자(WAU) 또는 MRR", ex: "Slack: 주간 메시지 발송 팀 수" },
+                            { type: "마켓플레이스", metric: "주간 거래 완료 수(GMV)", ex: "당근: 주간 거래 성사 건수" },
+                            { type: "콘텐츠", metric: "주간 소비 시간 또는 DAU", ex: "YouTube: 주간 시청 시간" },
+                            { type: "커머스", metric: "월간 반복 구매 고객 수", ex: "마켓컬리: 월 2회 이상 주문 고객" },
+                          ] : [
+                            { type: "SaaS", metric: "WAU or MRR", ex: "Slack: weekly messaging teams" },
+                            { type: "Marketplace", metric: "Weekly completed transactions", ex: "Karrot: weekly deals" },
+                            { type: "Content", metric: "Weekly consumption time or DAU", ex: "YouTube: watch time" },
+                            { type: "Commerce", metric: "Monthly repeat buyers", ex: "Kurly: 2+ orders/month" },
+                          ]).map(s => (
+                            <div key={s.type} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "10px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.03)" }}>
+                              <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.08)", color: "#059669", whiteSpace: "nowrap" as const, flexShrink: 0 }}>{s.type}</span>
+                              <div>
+                                <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.metric}</div>
+                                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.ex}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* STEP 2 — 주간 성장 리뷰 + AI */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "매주 월요일, 30분 성장 리뷰를 하세요" : "Run a 30-min growth review every Monday"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "4px" }}>
+                            {ko ? "YC가 가장 강조하는 습관입니다. 주간 5-7% 성장이 목표." : "The habit YC emphasizes most. Target: 5-7% weekly growth."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px" }}>
+                          {(ko ? [
+                            { step: "1", title: "지난주 핵심 지표 확인", detail: "북극성 지표 + 매출 + 신규 가입 + 이탈률" },
+                            { step: "2", title: "WoW 성장률 계산", detail: "3주 연속 0% = 위험 신호. 즉시 원인 진단" },
+                            { step: "3", title: "이번 주 가장 큰 레버 1개 선택", detail: "성장에 가장 영향을 줄 수 있는 실험 1개만 집중" },
+                            { step: "4", title: "실험 결과 기록", detail: "가설 → 실행 → 결과 → 배운 점. 기록 없으면 반복 불가" },
+                          ] : [
+                            { step: "1", title: "Check last week's metrics", detail: "NSM + revenue + signups + churn" },
+                            { step: "2", title: "Calculate WoW growth", detail: "3 weeks at 0% = danger. Diagnose immediately" },
+                            { step: "3", title: "Pick ONE biggest lever", detail: "Focus on one experiment that most impacts growth" },
+                            { step: "4", title: "Record experiment results", detail: "Hypothesis → Action → Result → Learning" },
+                          ]).map(s => (
+                            <div key={s.step} style={{ display: "flex", gap: "10px", padding: "8px 0", borderBottom: s.step !== "4" ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                              <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+                              <div>
+                                <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
+                                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ margin: "0 22px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 주간 리뷰 분석" : "AI — Weekly review analysis"}</div>
+                          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(37,99,235,0.03)", fontStyle: "italic" }}>
+                            {ko ? "\"이번 주 지표: WAU 1,200(+3%), 신규가입 180(+8%), D7 리텐션 18%, 이탈률 12%. 지난 4주 데이터: [붙여넣기]. 1) 가장 우려되는 지표와 원인 가설 3개, 2) 이번 주 집중할 실험 우선순위 3개를 추천해줘.\"" : "\"This week: WAU 1,200(+3%), signups 180(+8%), D7 retention 18%, churn 12%. Last 4 weeks: [paste]. 1) Most concerning metric + 3 hypotheses, 2) Top 3 experiment priorities for this week.\""}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* STEP 3 — 리텐션 벤치마크 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
+                            <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "리텐션이 먼저입니다" : "Retention comes first"}</span>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "4px" }}>
+                            {ko ? "리텐션 없이 광고비를 쓰면 돈만 태웁니다. 먼저 사용자가 돌아오는지 확인하세요." : "Spending on ads without retention burns money. First prove users come back."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                          {(ko ? [
+                            { period: "D1", good: "40%+", desc: "첫날 재방문" },
+                            { period: "D7", good: "20%+", desc: "첫주 유지" },
+                            { period: "D30", good: "10%+", desc: "첫달 유지" },
+                          ] : [
+                            { period: "D1", good: "40%+", desc: "Day 1 return" },
+                            { period: "D7", good: "20%+", desc: "Week 1" },
+                            { period: "D30", good: "10%+", desc: "Month 1" },
+                          ]).map(r => (
+                            <div key={r.period} style={{ padding: "12px", borderRadius: "12px", background: "rgba(124,58,237,0.03)", textAlign: "center" as const }}>
+                              <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const }}>{r.period}</div>
+                              <div style={{ fontSize: "18px", fontWeight: 740, color: "#7c3aed" }}>{r.good}</div>
+                              <div style={{ fontSize: "10px", color: "rgba(0,0,0,0.35)" }}>{r.desc}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ padding: "0 22px 16px", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.55 }}>
+                          {ko ? "B2B SaaS는 D30 40%+, B2C 앱은 D30 15%+가 양호. 이 기준에 못 미치면 성장보다 제품 개선에 집중하세요." : "B2B SaaS needs D30 40%+, B2C app D30 15%+. Below this, focus on product improvement, not growth."}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── MVP 구축 종합 가이드 (mvp_build) — 페이지네이션 ── */}
+                {currentStage.code === "mvp_build" && (() => {
+                  const ko = language === "ko";
+                  type MvpTool = { name: string; desc: string; url: string; free: boolean; tag?: string };
+                  const toolCard = (tool: MvpTool, color: string) => (
+                    <a key={tool.name} href={tool.url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: "10px", padding: "10px 12px", borderRadius: "12px", background: `${color}04`, border: `1px solid ${color}10`, textDecoration: "none", color: "inherit" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{tool.name}</span>
+                          {tool.free && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(5,150,105,0.08)", color: "#059669" }}>{ko ? "무료" : "Free"}</span>}
+                          {tool.tag && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: `${color}10`, color }}>{tool.tag}</span>}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4, marginTop: "2px" }}>{tool.desc}</div>
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "4px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </a>
+                  );
+                  const toolSection = (tools: React.ReactNode, count: number) => (
+                    <div style={{ marginTop: "4px" }}>
+                      <button type="button" onClick={() => setMvpToolsOpen(!mvpToolsOpen)} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                        padding: "10px 14px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)",
+                        background: mvpToolsOpen ? "rgba(0,0,0,0.02)" : "transparent", cursor: "pointer",
+                        transition: "background 0.15s ease",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.4)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                          <span style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{ko ? "추천 도구 · AI" : "Recommended Tools"}</span>
+                          <span style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.3)", background: "rgba(0,0,0,0.04)", padding: "1px 6px", borderRadius: "4px" }}>{count}</span>
+                        </div>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transform: mvpToolsOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s ease" }}>
+                          <path d="M3 5l4 4 4-4" stroke="rgba(15,23,42,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                      {mvpToolsOpen && (
+                        <div style={{ display: "grid", gap: "6px", marginTop: "8px", animation: "bentoFadeIn 0.2s ease" }}>
+                          {tools}
+                        </div>
+                      )}
+                    </div>
+                  );
+
+                  const pages = ko ? [
+                    // PAGE 0 — 개요
+                    { title: "MVP 구축 로드맵", color: "#1d3557", content: (
+                      <div>
+                        <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "10px" }}>가장 좁은 핵심 워크플로 하나를 해결하는 제품을 출시하세요.</div>
+                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>Reid Hoffman: "첫 버전이 창피하지 않다면 너무 늦게 출시한 것이다." Stripe는 7줄의 코드로 시작했습니다. LinkedIn은 런칭 직전 팀이 "Contact Finder를 먼저 만들자"고 했지만 Hoffman은 거절했고 — 7년이 지나도 그 기능은 필요 없었습니다.</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "14px" }}>
+                          {[{ num: "2~6주", label: "목표 기간" }, { num: "1개", label: "핵심 워크플로" }, { num: "10명", label: "첫 사용자" }, { num: "~16만원", label: "월 도구비" }].map(s => (
+                            <div key={s.label} style={{ padding: "10px", borderRadius: "10px", background: "rgba(29,53,87,0.03)", textAlign: "center" as const }}>
+                              <div style={{ fontSize: "18px", fontWeight: 780, color: "var(--primary)" }}>{s.num}</div>
+                              <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(0,0,0,0.35)" }}>{s.label}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>7단계 순서</div>
+                        <div style={{ display: "grid", gap: "4px" }}>
+                          {["제품명 & 미션 정하기", "핵심 워크플로 & 화면 설계", "코드 아키텍처 & DB 설계", "백엔드 & 배포 인프라 선택", "AI와 함께 코딩하기", "디자인 & 브랜딩", "랜딩 페이지 & 론칭"].map((s, i) => (
+                            <div key={i} onClick={() => { setMvpPage(i + 1); setMvpToolsOpen(false); }} style={{ display: "flex", gap: "10px", alignItems: "center", padding: "10px 14px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", cursor: "pointer" }}>
+                              <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                              <span style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{s}</span>
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginLeft: "auto", flexShrink: 0 }}><path d="M5 3l4 4-4 4" stroke="rgba(0,0,0,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )},
+                    // PAGE 1 — 제품명 & 미션
+                    { title: "제품명 & 미션 정하기", color: "#2563eb", content: (
+                      <div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.1)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>한 문장으로 설명할 수 없으면 아직 준비가 안 된 겁니다.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>이 문장이 랜딩 페이지의 헤드라인이 되고, 투자자에게 하는 첫 마디가 되며, 팀원을 설득하는 무기가 됩니다.</div>
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
+                        <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
+                          {["\"[누구]의 [어떤 고통]을 [어떻게] 해결한다\" 한 문장 작성", "제품명 후보 5~10개 + .com 도메인 확인", "30초 엘리베이터 피치 작성 (말로 연습해보세요)", "슬로건 1개 확정"].map(t => (
+                            <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2563eb", flexShrink: 0, marginTop: "7px" }} />
+                              <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)", marginBottom: "14px" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>AI 활용법</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, fontStyle: "italic" }}>"나는 [타깃]을 위한 [핵심 기능] 제품을 만들려고 해. 1) 미션을 한 문장으로, 2) 슬로건 5개, 3) 제품명 후보 10개 (.com 도메인 가용성 고려), 4) 엘리베이터 피치 30초 버전을 만들어줘."</div>
+                        </div>
+                        {toolSection(<>{toolCard({ name: "Namelix", desc: "AI 브랜드명 생성 + 도메인 확인. 선호도 학습", url: "https://namelix.com", free: true }, "#2563eb")}
+                          {toolCard({ name: "Looka", desc: "이름 + 로고 + 브랜드킷 한 번에. 한국어 지원", url: "https://looka.com", free: false, tag: "$20~" }, "#2563eb")}
+                          {toolCard({ name: "Claude / ChatGPT", desc: "미션, 슬로건, 엘리베이터 피치. 한국어 네이티브", url: "https://claude.ai", free: true, tag: "AI" }, "#2563eb")}</>, 3)}
+                      </div>
+                    )},
+                    // PAGE 2 — 워크플로 & 화면 설계
+                    { title: "핵심 워크플로 & 화면 설계", color: "#7c3aed", content: (
+                      <div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.1)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>기능 10개를 넣지 마세요. 핵심 워크플로 하나만 완벽하게.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>사용자가 가입한 후 "아, 이거 좋다"라고 느끼는 순간까지의 최소 동선을 설계하세요. 이 한 화면에서 가치를 느끼지 못하면 나머지는 의미가 없습니다. Paul Graham: "적은 사람이 절실하게 원하는 것을 선택하라."</div>
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
+                        <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
+                          {["사용자의 핵심 동작(Core Action) 1개 정의", "가입 → Core Action까지 화면 수를 최소화 (3~5 화면 이내)", "각 화면의 와이어프레임을 AI로 생성", "불필요한 화면이 있는지 검토 — 없애도 되면 없애세요"].map(t => (
+                            <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#7c3aed", flexShrink: 0, marginTop: "7px" }} />
+                              <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.08)", marginBottom: "14px" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.04em", marginBottom: "6px" }}>AI 활용법</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, fontStyle: "italic" }}>"[제품 설명]. 가입 → 핵심 가치 체험까지의 최소 화면 플로우를 설계해줘. 각 화면에 필요한 UI 요소와 사용자 액션을 정의하고, 불필요한 화면을 줄이는 방법을 제안해줘."</div>
+                        </div>
+                        {toolSection(<>{toolCard({ name: "Google Stitch", desc: "텍스트 → UI 디자인 자동 생성. 월 350회 무료", url: "https://stitch.withgoogle.com", free: true, tag: "추천" }, "#7c3aed")}
+                          {toolCard({ name: "v0 by Vercel", desc: "프롬프트 → 프로덕션 React+Tailwind 코드 출력", url: "https://v0.app", free: true, tag: "$5/mo" }, "#7c3aed")}
+                          {toolCard({ name: "Figma + AI", desc: "화면 설계 업계 표준. Make 기능으로 AI 생성", url: "https://figma.com", free: true }, "#7c3aed")}</>, 3)}
+                      </div>
+                    )},
+                    // PAGE 3 — 코드 아키텍처 & DB
+                    { title: "코드 아키텍처 & DB 설계", color: "#059669", content: (
+                      <div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(5,150,105,0.05)", border: "1px solid rgba(5,150,105,0.1)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>코드를 한 줄 쓰기 전에 전체 구조를 먼저 잡으세요.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>DB 테이블, API, 페이지 구조, 인증 플로우. 이 설계를 건너뛰면 3주 후 "처음부터 다시 만들어야 하는" 상황이 옵니다. AI에게 요구사항을 주면 Mermaid 다이어그램으로 전체 아키텍처를 그려줍니다.</div>
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
+                        <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
+                          {["필요한 DB 테이블과 관계 정의 (AI로 ERD 생성)", "API 엔드포인트 목록 작성", "페이지 구조(라우팅) 설계", "인증 플로우 결정 (이메일/소셜/매직링크)"].map(t => (
+                            <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#059669", flexShrink: 0, marginTop: "7px" }} />
+                              <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.08)", marginBottom: "14px" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#059669", letterSpacing: "0.04em", marginBottom: "6px" }}>AI 프롬프트</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, fontStyle: "italic" }}>"[제품 설명]을 만들려고 해. Next.js + Supabase + Vercel 스택으로. 1) 필요한 DB 테이블과 관계, 2) API 라우트 목록, 3) 페이지 구조, 4) 인증 플로우를 설계해줘. Mermaid 다이어그램으로."</div>
+                        </div>
+                        {toolSection(<>{toolCard({ name: "Eraser.io", desc: "AI 시스템 아키텍처 + ERD 다이어그램 자동 생성", url: "https://eraser.io", free: true }, "#059669")}
+                          {toolCard({ name: "Supabase Studio", desc: "비주얼 테이블 에디터 + 스키마 관리", url: "https://supabase.com", free: true }, "#059669")}
+                          {toolCard({ name: "dbdiagram.io", desc: "간단한 DSL로 DB 다이어그램 생성", url: "https://dbdiagram.io", free: true }, "#059669")}</>, 3)}
+                      </div>
+                    )},
+                    // PAGE 4 — 백엔드 & 인프라
+                    { title: "백엔드 & 배포 인프라", color: "#d97706", content: (
+                      <div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(217,119,6,0.05)", border: "1px solid rgba(217,119,6,0.1)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>2026년에 서버를 직접 관리하는 건 시간 낭비입니다.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>BaaS를 쓰면 인증, DB, 스토리지, 실시간 기능을 코드 몇 줄로 얻습니다. YC 스타트업의 50%+가 React, 25.6%가 Vercel을 사용합니다. 검증된 조합을 선택하세요.</div>
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
+                        <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
+                          {["BaaS 선택 (Supabase 추천 — PostgreSQL + Auth + Storage)", "배포 플랫폼 선택 (Vercel 추천 — Next.js 제로 설정)", "프로젝트 초기 세팅 (npx create-next-app + Supabase 연결)", "환경변수 설정 + 배포 테스트"].map(t => (
+                            <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#d97706", flexShrink: 0, marginTop: "7px" }} />
+                              <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {toolSection(<>{toolCard({ name: "Supabase", desc: "PostgreSQL + 인증 + 스토리지 + 실시간. 무료 50K MAU", url: "https://supabase.com", free: true, tag: "DB 추천" }, "#d97706")}
+                          {toolCard({ name: "Vercel", desc: "Next.js 배포 제로 설정. Edge Function 지원. 무료 시작", url: "https://vercel.com", free: true, tag: "배포 추천" }, "#d97706")}
+                          {toolCard({ name: "Railway", desc: "사용량 기반 과금. 유휴 시 0원. 인디 해커 선호", url: "https://railway.app", free: false, tag: "$5/mo" }, "#d97706")}</>, 3)}
+                      </div>
+                    )},
+                    // PAGE 5 — AI 코딩
+                    { title: "AI와 함께 코딩하기", color: "#dc2626", content: (
+                      <div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.1)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>1인이 5인 팀의 생산성을 냅니다 — AI 도구가 게임을 바꿨습니다.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>Lovable로 프로토타입을 몇 시간 안에 만들고 → 사용자 반응 확인 → 반응이 좋으면 Cursor + Claude Code로 프로덕션을 2~4주에 완성. 프로토타입 코드를 프로덕션으로 옮기지 마세요 — 처음부터 깨끗하게 다시 짜는 게 더 빠릅니다.</div>
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
+                        <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
+                          {["Lovable/Bolt로 작동하는 프로토타입 만들기 (1~2일)", "프로토타입을 5~10명에게 보여주고 반응 확인", "반응이 좋으면 Cursor + Claude Code로 프로덕션 시작", "shadcn/ui 컴포넌트로 UI 구축 + Supabase DB 연결", "매일 배포하고 매일 피드백 받기"].map(t => (
+                            <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#dc2626", flexShrink: 0, marginTop: "7px" }} />
+                              <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {toolSection(<>{toolCard({ name: "Cursor", desc: "AI 코딩 속도 최강. VS Code 포크. 인라인 편집 + 채팅", url: "https://cursor.com", free: false, tag: "속도 $20/mo" }, "#dc2626")}
+                          {toolCard({ name: "Claude Code", desc: "코드 품질 최강. 토큰 5.5배 절약. 터미널 + IDE 통합", url: "https://claude.ai/code", free: false, tag: "품질 $20/mo" }, "#dc2626")}
+                          {toolCard({ name: "Lovable", desc: "비개발자도 OK. 채팅으로 풀스택 앱 생성. 원클릭 배포", url: "https://lovable.dev", free: true, tag: "프로토타입" }, "#dc2626")}
+                          {toolCard({ name: "Bolt.new", desc: "브라우저에서 즉시 코딩. 설치 불필요. 무료 1M토큰/월", url: "https://bolt.new", free: true }, "#dc2626")}
+                          {toolCard({ name: "GitHub Copilot", desc: "인라인 자동완성 최고. 2,000만+ 유저. 무료 플랜 있음", url: "https://github.com/features/copilot", free: true, tag: "$10/mo" }, "#dc2626")}</>, 5)}
+                      </div>
+                    )},
+                    // PAGE 6 — 디자인 & 브랜딩
+                    { title: "디자인 & 브랜딩", color: "#0891b2", content: (
+                      <div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(8,145,178,0.05)", border: "1px solid rgba(8,145,178,0.1)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>MVP라도 디자인이 후지면 사용자는 떠납니다.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>사용자는 제품의 가치를 기능이 아니라 "느낌"으로 먼저 판단합니다. shadcn/ui를 쓰면 Apple 수준의 컴포넌트를 무료로 얻고, 로고는 AI로 1시간 안에 만들 수 있습니다.</div>
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
+                        <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
+                          {["shadcn/ui 컴포넌트로 전체 UI 통일", "Looka 또는 Canva로 로고 + 파비콘 제작", "브랜드 컬러 2~3색 확정 (primary + accent)", "OG 이미지 (소셜 공유용) 제작"].map(t => (
+                            <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0891b2", flexShrink: 0, marginTop: "7px" }} />
+                              <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {toolSection(<>{toolCard({ name: "shadcn/ui", desc: "2026 표준 컴포넌트 라이브러리. Tailwind + Radix. 코드 소유", url: "https://ui.shadcn.com", free: true, tag: "필수" }, "#0891b2")}
+                          {toolCard({ name: "Looka", desc: "AI 로고 + 브랜드킷 한 번에. 한국어 지원", url: "https://looka.com", free: false, tag: "$20~" }, "#0891b2")}
+                          {toolCard({ name: "Canva AI", desc: "마케팅 에셋 만능. 한국어 UI. 무료 티어 충분", url: "https://canva.com", free: true, tag: "한국어" }, "#0891b2")}
+                          {toolCard({ name: "Aceternity UI", desc: "애니메이션 랜딩 컴포넌트. SaaS 페이지에 최적", url: "https://ui.aceternity.com", free: true }, "#0891b2")}</>, 4)}
+                      </div>
+                    )},
+                    // PAGE 7 — 랜딩 & 론칭
+                    { title: "랜딩 페이지 & 론칭", color: "#1d3557", content: (
+                      <div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(29,53,87,0.05)", border: "1px solid rgba(29,53,87,0.1)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>랜딩 페이지는 24시간 작동하는 영업사원입니다.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>헤드라인(무엇), 서브헤딩(왜), 스크린샷(어떻게), CTA(시작) — 이 4가지만 있으면 됩니다. 그리고 Stripe처럼 "노트북 줘봐"라며 직접 설치해주세요.</div>
+                        </div>
+                        <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(29,53,87,0.03)", borderLeft: "3px solid rgba(29,53,87,0.15)", marginBottom: "16px" }}>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.6, fontStyle: "italic" }}>"스타트업이 이륙하는 건 저절로 되는 게 아니라 창업자가 밀어붙여서다. Airbnb는 뉴욕에 매주 날아가 집주인을 직접 만났고, 그 30일의 노력이 성공과 실패를 갈랐다." — Paul Graham</div>
+                        </div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
+                        <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
+                          {["랜딩 페이지 제작 (헤드라인 + 스크린샷 + CTA)", "Product Hunt 론칭 준비 (론칭 데이 전략)", "첫 10명 사용자를 직접 찾아가서 모으기", "피드백 루프 구축 (인터콤/이메일/디스코드)"].map(t => (
+                            <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1d3557", flexShrink: 0, marginTop: "7px" }} />
+                              <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {toolSection(<>{toolCard({ name: "Framer", desc: "디자이너급 랜딩 페이지. AI 레이아웃 자동 생성", url: "https://framer.com", free: false, tag: "$10/mo" }, "#1d3557")}
+                          {toolCard({ name: "Product Hunt", desc: "글로벌 론칭 플랫폼 #1. 론칭 데이 전략 준비 필수", url: "https://producthunt.com", free: true }, "#1d3557")}
+                          {toolCard({ name: "Hacker News (Show HN)", desc: "기술 커뮤니티 피드백. 폭발적 트래픽 가능", url: "https://news.ycombinator.com", free: true }, "#1d3557")}
+                          {toolCard({ name: "CodeRabbit", desc: "AI 코드 리뷰. GitHub PR 자동 리뷰. 무료", url: "https://coderabbit.ai", free: true, tag: "QA" }, "#1d3557")}</>, 4)}
+                      </div>
+                    )},
+                  ] : [
+                    // English pages — same structure, shorter
+                    { title: "MVP Build Roadmap", color: "#1d3557", content: (<div><div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "10px" }}>Ship a product that solves one core workflow in 2-6 weeks.</div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7 }}>Reid Hoffman: "If you're not embarrassed by the first version, you've launched too late." Navigate through 7 steps using the arrows below.</div></div>) },
+                    { title: "Name & Mission", color: "#2563eb", content: (<div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>Explain what your product does in one sentence. This becomes your landing page headline, your first pitch to investors, and your team's north star.</div><div style={{ display: "grid", gap: "6px" }}>{toolCard({ name: "Namelix", desc: "AI brand names + domain check", url: "https://namelix.com", free: true }, "#2563eb")}{toolCard({ name: "Claude / ChatGPT", desc: "Mission, slogan, elevator pitch", url: "https://claude.ai", free: true, tag: "AI" }, "#2563eb")}</div></div>) },
+                    { title: "Core Workflow & Wireframe", color: "#7c3aed", content: (<div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>Design the minimum path from signup to "aha moment." One workflow, perfect. Paul Graham: "Build something a small number of people want a large amount."</div><div style={{ display: "grid", gap: "6px" }}>{toolCard({ name: "Google Stitch", desc: "Text → UI design. 350 free/mo", url: "https://stitch.withgoogle.com", free: true, tag: "Best" }, "#7c3aed")}{toolCard({ name: "v0 by Vercel", desc: "Prompt → production React+Tailwind", url: "https://v0.app", free: true }, "#7c3aed")}</div></div>) },
+                    { title: "Architecture & DB Design", color: "#059669", content: (<div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>Design the full structure before writing code. DB tables, API routes, page structure, auth flow. Skip this and you'll rebuild from scratch later.</div><div style={{ display: "grid", gap: "6px" }}>{toolCard({ name: "Eraser.io", desc: "AI architecture + ERD diagrams", url: "https://eraser.io", free: true }, "#059669")}{toolCard({ name: "Supabase Studio", desc: "Visual table editor + schema", url: "https://supabase.com", free: true }, "#059669")}</div></div>) },
+                    { title: "Backend & Deployment", color: "#d97706", content: (<div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>Don't manage servers. Use BaaS for auth, DB, storage in a few lines. 50%+ of YC startups use React, 25.6% deploy on Vercel.</div><div style={{ display: "grid", gap: "6px" }}>{toolCard({ name: "Supabase", desc: "PostgreSQL + Auth + Storage. Free 50K MAU", url: "https://supabase.com", free: true, tag: "DB" }, "#d97706")}{toolCard({ name: "Vercel", desc: "Zero-config Next.js deploy", url: "https://vercel.com", free: true, tag: "Deploy" }, "#d97706")}</div></div>) },
+                    { title: "Code with AI", color: "#dc2626", content: (<div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>One person with AI tools = 5-person team. Strategy: Lovable for prototype (hours) → Cursor + Claude Code for production (2-4 weeks).</div><div style={{ display: "grid", gap: "6px" }}>{toolCard({ name: "Cursor", desc: "Fastest AI coding. VS Code fork", url: "https://cursor.com", free: false, tag: "Speed $20/mo" }, "#dc2626")}{toolCard({ name: "Claude Code", desc: "Best quality. 5.5x fewer tokens", url: "https://claude.ai/code", free: false, tag: "Quality" }, "#dc2626")}{toolCard({ name: "Lovable", desc: "Chat-to-app. One-click deploy", url: "https://lovable.dev", free: true, tag: "Prototype" }, "#dc2626")}</div></div>) },
+                    { title: "Design & Branding", color: "#0891b2", content: (<div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>Even an MVP needs good design. Users judge by feel first. shadcn/ui gives Apple-level components for free.</div><div style={{ display: "grid", gap: "6px" }}>{toolCard({ name: "shadcn/ui", desc: "2026 standard. Tailwind + Radix", url: "https://ui.shadcn.com", free: true, tag: "Must" }, "#0891b2")}{toolCard({ name: "Looka", desc: "AI logo + brand kit", url: "https://looka.com", free: false, tag: "$20~" }, "#0891b2")}</div></div>) },
+                    { title: "Landing & Launch", color: "#1d3557", content: (<div><div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>"Startups take off because founders make them take off." — Paul Graham. Landing page = 24/7 salesperson. Headline + Screenshot + CTA.</div><div style={{ display: "grid", gap: "6px" }}>{toolCard({ name: "Framer", desc: "Designer-quality landing page", url: "https://framer.com", free: false, tag: "$10/mo" }, "#1d3557")}{toolCard({ name: "Product Hunt", desc: "Global launch platform #1", url: "https://producthunt.com", free: true }, "#1d3557")}</div></div>) },
+                  ];
+
+                  const page = pages[mvpPage] ?? pages[0];
+                  const total = pages.length;
+
+                  return (
+                    <div style={{ marginBottom: "14px" }}>
+                      <div style={{ borderRadius: "20px", border: `1px solid ${page.color}15`, background: `linear-gradient(180deg, ${page.color}04 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
+                        {/* 헤더 */}
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                            {mvpPage > 0 && <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: page.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>{mvpPage}</div>}
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: page.color, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                              {mvpPage === 0 ? (ko ? "개요" : "Overview") : `Step ${mvpPage} / ${total - 1}`}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{page.title}</div>
+                        </div>
+                        {/* 콘텐츠 */}
+                        <div style={{ padding: "0 22px 20px" }}>{page.content}</div>
+                      </div>
+
+                      {/* 페이지네이션 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px" }}>
+                        <button type="button" onClick={() => { setMvpPage(Math.max(0, mvpPage - 1)); setMvpToolsOpen(false); }} disabled={mvpPage === 0}
+                          style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: mvpPage === 0 ? "rgba(0,0,0,0.02)" : "white", color: mvpPage === 0 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: mvpPage === 0 ? "default" : "pointer" }}>
+                          ← {ko ? "이전" : "Prev"}
+                        </button>
+                        <div style={{ display: "flex", gap: "5px" }}>
+                          {pages.map((_, i) => (
+                            <div key={i} onClick={() => { setMvpPage(i); setMvpToolsOpen(false); }} style={{ width: i === mvpPage ? "20px" : "8px", height: "8px", borderRadius: "100px", background: i === mvpPage ? "var(--primary)" : "rgba(0,0,0,0.1)", cursor: "pointer", transition: "all 0.2s ease" }} />
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => { setMvpPage(Math.min(total - 1, mvpPage + 1)); setMvpToolsOpen(false); }} disabled={mvpPage === total - 1}
+                          style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: mvpPage === total - 1 ? "rgba(0,0,0,0.02)" : "white", color: mvpPage === total - 1 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: mvpPage === total - 1 ? "default" : "pointer" }}>
+                          {ko ? "다음" : "Next"} →
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 스타트업 도구·AI 추천 패널 (mvp_build는 자체 가이드에 포함되어 있으므로 제외) ── */}
+                {/* ── 스타트업 도구·AI — 접기/펼치기 (mvp_build, launch_stack 제외) ── */}
+                {isStartupCategory && currentStage.code !== "mvp_build" && currentStage.code !== "launch_stack" && (() => {
                   const stageIdMap: Record<string, string> = {
                     startup_foundation: "startup-foundation", customer_discovery: "customer-discovery",
                     mvp_build: "mvp-build", launch_stack: "launch-stack", growth_engine: "growth-engine",
@@ -4044,131 +4904,359 @@ export default function StarterStageDemo({
                   const ko = language === "ko";
 
                   return (
-                    <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
-                      <div style={{ padding: "18px 22px 14px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#7c3aed" }} />
-                          <span style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{ko ? "추천 도구 · AI" : "Recommended Tools & AI"}</span>
+                    <div style={{ marginBottom: "16px" }}>
+                      <button type="button" onClick={() => setMvpToolsOpen(!mvpToolsOpen)} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                        padding: "10px 14px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)",
+                        background: mvpToolsOpen ? "rgba(0,0,0,0.02)" : "transparent", cursor: "pointer",
+                        transition: "background 0.15s ease",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.4)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                          <span style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{ko ? "추천 도구 · AI" : "Recommended Tools & AI"}</span>
+                          <span style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.3)", background: "rgba(0,0,0,0.04)", padding: "1px 6px", borderRadius: "4px" }}>{toolkit.essential.length}</span>
+                          <span style={{ fontSize: "11px", color: "rgba(0,0,0,0.3)" }}>{ko ? `월 ${toolkit.monthlyCost}` : `${toolkit.monthlyCost}/mo`}</span>
                         </div>
-                        <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? `예상 월 비용: ${toolkit.monthlyCost}` : `Est. monthly: ${toolkit.monthlyCost}`}</div>
-                      </div>
-
-                      {/* 필수 도구 */}
-                      <div style={{ padding: "0 22px 14px", display: "grid", gap: "8px" }}>
-                        {toolkit.essential.map((tool) => (
-                          <a key={tool.name} href={tool.url} target="_blank" rel="noopener noreferrer" style={{
-                            display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 14px", borderRadius: "14px",
-                            background: tool.recommended ? "rgba(124,58,237,0.03)" : "rgba(0,0,0,0.01)",
-                            border: tool.recommended ? "1px solid rgba(124,58,237,0.08)" : "1px solid rgba(0,0,0,0.04)",
-                            textDecoration: "none", color: "inherit", transition: "all 0.15s ease",
-                          }}>
-                            <div style={{
-                              width: "36px", height: "36px", borderRadius: "10px",
-                              background: tool.aiPowered ? "rgba(124,58,237,0.08)" : "rgba(15,23,42,0.04)",
-                              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                            }}>
-                              {tool.aiPowered ? (
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.6"><path d="M12 2l2 4h4l-3 3 1 5-4-3-4 3 1-5-3-3h4l2-4z"/></svg>
-                              ) : (
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.35)" strokeWidth="1.6"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-                              )}
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
-                                <span style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a" }}>{tool.name}</span>
-                                {tool.aiPowered && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}>AI</span>}
-                                {tool.koreanSupport && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(5,150,105,0.08)", color: "#059669" }}>KR</span>}
-                              </div>
-                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{ko ? tool.description.ko : tool.description.en}</div>
-                              <div style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", marginTop: "3px" }}>{tool.pricing}</div>
-                            </div>
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </a>
-                        ))}
-                      </div>
-
-                      {/* AI 팁 */}
-                      <div style={{ margin: "0 22px 18px", padding: "12px 14px", borderRadius: "12px", background: "rgba(124,58,237,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#7c3aed" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#7c3aed" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                        <span style={{ fontSize: "12px", color: "rgba(124,58,237,0.8)", lineHeight: 1.55 }}>
-                          {ko ? toolkit.aiTip.ko : toolkit.aiTip.en}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* ── 추천 기술 스택 (MVP/Launch 스테이지) ── */}
-                {isStartupCategory && (currentStage.code === "mvp_build" || currentStage.code === "launch_stack") && (() => {
-                  const stack = getRecommendedStack(selectedIndustryId ?? "ai-application");
-                  if (!stack) return null;
-                  const ko = language === "ko";
-
-                  return (
-                    <div style={{ marginBottom: "16px", borderRadius: "20px", border: "1px solid rgba(15,23,42,0.06)", background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.92))", overflow: "hidden" }}>
-                      <div style={{ padding: "20px 22px 14px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                          <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>
-                            {ko ? stack.name.ko : stack.name.en}
-                          </span>
-                          <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(124,58,237,0.06)", color: "#7c3aed" }}>2026</span>
-                        </div>
-                        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
-                          {ko ? stack.description.ko : stack.description.en}
-                        </div>
-                      </div>
-
-                      {/* 스택 레이어 — 세로 파이프라인 */}
-                      <div style={{ padding: "0 22px 16px" }}>
-                        {stack.layers.map((layer, i) => (
-                          <a key={layer.role} href={layer.url} target="_blank" rel="noopener noreferrer" style={{
-                            display: "flex", alignItems: "center", gap: "12px", padding: "10px 0",
-                            borderBottom: i < stack.layers.length - 1 ? "1px solid rgba(0,0,0,0.04)" : "none",
-                            textDecoration: "none", color: "inherit",
-                          }}>
-                            {/* 아이콘 + 연결선 */}
-                            <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", width: "36px", flexShrink: 0 }}>
-                              <div style={{
-                                width: "32px", height: "32px", borderRadius: "8px",
-                                background: `${layer.color}10`,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: "16px",
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transform: mvpToolsOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s ease" }}>
+                          <path d="M3 5l4 4 4-4" stroke="rgba(15,23,42,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                      {mvpToolsOpen && (
+                        <div style={{ marginTop: "8px", borderRadius: "16px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden", animation: "bentoFadeIn 0.2s ease" }}>
+                          <div style={{ padding: "14px 18px", display: "grid", gap: "8px" }}>
+                            {toolkit.essential.map((tool) => (
+                              <a key={tool.name} href={tool.url} target="_blank" rel="noopener noreferrer" style={{
+                                display: "flex", alignItems: "flex-start", gap: "12px", padding: "10px 12px", borderRadius: "12px",
+                                background: tool.recommended ? "rgba(124,58,237,0.03)" : "rgba(0,0,0,0.01)",
+                                border: tool.recommended ? "1px solid rgba(124,58,237,0.08)" : "1px solid rgba(0,0,0,0.04)",
+                                textDecoration: "none", color: "inherit",
                               }}>
-                                {layer.icon}
-                              </div>
-                            </div>
-                            {/* 정보 */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "1px" }}>
-                                <span style={{ fontSize: "10px", fontWeight: 650, color: layer.color, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-                                  {ko ? layer.role : layer.roleEn}
-                                </span>
-                              </div>
-                              <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "1px" }}>{layer.tool}</div>
-                              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{ko ? layer.why.ko : layer.why.en}</div>
-                            </div>
-                            {/* 가격 */}
-                            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", whiteSpace: "nowrap" as const, flexShrink: 0 }}>
-                              {layer.pricing}
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-
-                      {/* 총 비용 + 크레딧 */}
-                      <div style={{ margin: "0 22px 18px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                        <div style={{ padding: "12px 14px", borderRadius: "14px", background: "rgba(15,23,42,0.02)" }}>
-                          <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "총 월 예상 비용" : "Total Monthly"}</div>
-                          <div style={{ fontSize: "16px", fontWeight: 740, color: "#0f172a" }}>{stack.totalMonthlyCost}</div>
+                                <div style={{
+                                  width: "32px", height: "32px", borderRadius: "8px",
+                                  background: tool.aiPowered ? "rgba(124,58,237,0.08)" : "rgba(15,23,42,0.04)",
+                                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                                }}>
+                                  {tool.aiPowered ? (
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.6"><path d="M12 2l2 4h4l-3 3 1 5-4-3-4 3 1-5-3-3h4l2-4z"/></svg>
+                                  ) : (
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.35)" strokeWidth="1.6"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                                  )}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                                    <span style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{tool.name}</span>
+                                    {tool.aiPowered && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}>AI</span>}
+                                    {tool.koreanSupport && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(5,150,105,0.08)", color: "#059669" }}>KR</span>}
+                                  </div>
+                                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{ko ? tool.description.ko : tool.description.en}</div>
+                                  <div style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", marginTop: "2px" }}>{tool.pricing}</div>
+                                </div>
+                                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              </a>
+                            ))}
+                          </div>
+                          <div style={{ margin: "0 18px 14px", padding: "10px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#7c3aed" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#7c3aed" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                            <span style={{ fontSize: "12px", color: "rgba(124,58,237,0.8)", lineHeight: 1.55 }}>
+                              {ko ? toolkit.aiTip.ko : toolkit.aiTip.en}
+                            </span>
+                          </div>
                         </div>
-                        <div style={{ padding: "12px 14px", borderRadius: "14px", background: "rgba(5,150,105,0.03)" }}>
-                          <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "스타트업 크레딧" : "Startup Credits"}</div>
-                          <div style={{ fontSize: "12px", fontWeight: 600, color: "#059669", lineHeight: 1.4 }}>{ko ? stack.startupCredits.ko : stack.startupCredits.en}</div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })()}
+
+                {/* ── 출시 스택·계측 가이드 (launch_stack) ── */}
+                {currentStage.code === "launch_stack" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* WHY */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#dc2626" }} />
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이 단계가 중요한가" : "Why this matters"}</span>
+                        </div>
+                        <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.08)" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
+                            {ko ? "계측 없이 성장을 밀면, 소음을 신호로 착각합니다." : "Pushing growth without instrumentation means mistaking noise for signal."}
+                          </div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>
+                            {ko ? "MVP를 출시했다면, 이제 \"사람들이 실제로 쓰고 있는가? 어디서 이탈하는가? 돈을 내는가?\"를 추적할 수 있어야 합니다. 분석, 결제, 에러 모니터링, 피드백 루프 — 이 4가지를 깔아야 의미 있는 의사결정이 가능합니다. Ben Horowitz: \"CEO의 모든 결정은 불완전한 정보를 기반으로 한다\" — 계측은 그 정보를 최대한 완전하게 만드는 일입니다." : "After launching MVP, you need to track: \"Are people actually using it? Where do they drop off? Will they pay?\" Analytics, billing, error monitoring, feedback loop — these 4 enable meaningful decisions."}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* STEP 1 — 분석 (Analytics) */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
+                          <div>
+                            <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "분석(Analytics) 연결" : "Connect Analytics"}</div>
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px" }}>
+                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", marginBottom: "12px" }}>
+                            <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>
+                              {ko ? "사용자가 어디서 오고, 뭘 클릭하고, 어디서 떠나는지 추적하세요. 가입 전환율, 핵심 기능 사용률, 이탈 지점 — 이 3가지를 첫 주에 볼 수 있어야 합니다. 감이 아닌 데이터로 판단해야 합니다." : "Track where users come from, what they click, where they leave. Signup conversion, core feature usage, drop-off points — see these in week 1."}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 할 일" : "What to do"}</div>
+                          <div style={{ display: "grid", gap: "4px", marginBottom: "12px" }}>
+                            {(ko ? [
+                              "Mixpanel 또는 PostHog 연결 (이벤트 기반 분석)",
+                              "핵심 이벤트 5개 정의: 가입, 핵심액션, 결제, 재방문, 이탈",
+                              "퍼널(Funnel) 1개 세팅: 가입 → 핵심 액션 → 재방문",
+                              "주간 대시보드 만들기 — 매주 월요일 확인",
+                            ] : [
+                              "Connect Mixpanel or PostHog (event-based analytics)",
+                              "Define 5 core events: signup, core action, payment, return, churn",
+                              "Set up 1 funnel: signup → core action → return",
+                              "Build weekly dashboard — check every Monday",
+                            ]).map(t => (
+                              <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2563eb", flexShrink: 0, marginTop: "7px" }} />
+                                <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                            {[
+                              { name: "Mixpanel", desc: ko ? "이벤트 기반 분석. 무료 20M 이벤트/월" : "Event analytics. Free 20M events/mo", url: "https://mixpanel.com", color: "#7c3aed" },
+                              { name: "PostHog", desc: ko ? "오픈소스. 분석+세션 리플레이+A/B 테스트" : "Open source. Analytics+session replay+A/B", url: "https://posthog.com", color: "#2563eb" },
+                            ].map(t => (
+                              <a key={t.name} href={t.url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: "8px", padding: "10px 12px", borderRadius: "10px", background: `${t.color}04`, border: `1px solid ${t.color}10`, textDecoration: "none", color: "inherit" }}>
+                                <div>
+                                  <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{t.name}</div>
+                                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{t.desc}</div>
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* STEP 2 — 결제 (Billing) */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#059669", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
+                          <div>
+                            <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "결제 · 전환 흐름 세팅" : "Set up billing & conversion"}</div>
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px" }}>
+                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(5,150,105,0.04)", marginBottom: "12px" }}>
+                            <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>
+                              {ko ? "무료 사용자가 유료로 전환하는 지점을 설계하세요. 결제가 안 붙어있으면 \"사람들이 돈을 낼 것인가?\"라는 가장 중요한 질문에 답할 수 없습니다. Stripe는 7줄 코드로 결제를 연동할 수 있습니다 — 복잡하지 않습니다." : "Design the point where free users convert to paid. Without billing, you can't answer the most important question: \"Will people pay?\" Stripe connects in 7 lines of code."}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 할 일" : "What to do"}</div>
+                          <div style={{ display: "grid", gap: "4px", marginBottom: "12px" }}>
+                            {(ko ? [
+                              "가격 정책 결정: 무료 / 프리미엄(Free+Pro) / 사용량 기반",
+                              "Stripe 연동 — 결제 페이지, 구독 관리, 웹훅 설정",
+                              "무료→유료 전환 트리거 설계 (기능 제한 / 사용량 제한 / 시간 제한)",
+                              "결제 전환율 추적 이벤트 추가 (가격 페이지 방문 → 결제 시작 → 완료)",
+                            ] : [
+                              "Decide pricing: free / freemium / usage-based",
+                              "Integrate Stripe — checkout, subscription, webhooks",
+                              "Design free→paid trigger (feature/usage/time limit)",
+                              "Add conversion tracking events",
+                            ]).map(t => (
+                              <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#059669", flexShrink: 0, marginTop: "7px" }} />
+                                <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <a href="https://stripe.com" target="_blank" rel="noreferrer" style={{ display: "flex", gap: "8px", padding: "10px 12px", borderRadius: "10px", background: "rgba(99,91,255,0.04)", border: "1px solid rgba(99,91,255,0.1)", textDecoration: "none", color: "inherit" }}>
+                            <div>
+                              <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>Stripe</div>
+                              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{ko ? "글로벌 결제 표준. 한국 원화 지원. 7줄 코드로 연동" : "Global payment standard. KRW supported. 7 lines to integrate"}</div>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* STEP 3 — 에러 모니터링 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#d97706", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
+                          <div>
+                            <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "에러 모니터링 연결" : "Connect error monitoring"}</div>
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px" }}>
+                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(217,119,6,0.04)", marginBottom: "12px" }}>
+                            <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>
+                              {ko ? "사용자가 에러를 겪으면 말 없이 떠납니다. Sentry를 연결하면 어떤 에러가 어디서 몇 번 발생하는지 실시간으로 알 수 있습니다. 초기 스타트업에서 \"사용자가 안 쓴다\"고 생각한 것이 사실은 \"에러 때문에 못 쓴 것\"인 경우가 매우 많습니다." : "Users leave silently when they hit errors. Sentry shows what errors happen, where, how often. Many early startups think \"users don't want it\" when actually \"errors prevent them from using it.\""}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 할 일" : "What to do"}</div>
+                          <div style={{ display: "grid", gap: "4px", marginBottom: "12px" }}>
+                            {(ko ? [
+                              "Sentry 연결 — Next.js SDK 설치 (10분이면 끝)",
+                              "Slack 알림 연동 — 에러 발생 시 즉시 알림",
+                              "주요 API 응답 시간 모니터링 (Vercel Analytics 무료)",
+                              "매일 에러 대시보드 확인 습관 만들기",
+                            ] : [
+                              "Connect Sentry — Next.js SDK install (10 min)",
+                              "Slack alert integration — instant error notifications",
+                              "Monitor key API response times (Vercel Analytics free)",
+                              "Build daily error dashboard check habit",
+                            ]).map(t => (
+                              <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#d97706", flexShrink: 0, marginTop: "7px" }} />
+                                <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <a href="https://sentry.io" target="_blank" rel="noreferrer" style={{ display: "flex", gap: "8px", padding: "10px 12px", borderRadius: "10px", background: "rgba(217,119,6,0.04)", border: "1px solid rgba(217,119,6,0.1)", textDecoration: "none", color: "inherit" }}>
+                            <div>
+                              <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>Sentry</div>
+                              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{ko ? "에러 모니터링 표준. 무료 5K 이벤트/월. Next.js 공식 지원" : "Error monitoring standard. Free 5K events/mo. Official Next.js support"}</div>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* STEP 4 — 고객 피드백 루프 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>4</div>
+                          <div>
+                            <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "고객 피드백 루프 구축" : "Build customer feedback loop"}</div>
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px" }}>
+                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", marginBottom: "12px" }}>
+                            <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>
+                              {ko ? "YC Paul Graham: \"사용자와 대화하라. 코드 짜는 것 외에 창업자가 해야 할 유일한 일이다.\" 사용자가 불편을 말할 수 있는 채널이 항상 열려 있어야 합니다. 불만 고객은 말하지 않고 떠납니다 — 채널이 없으면 왜 떠났는지 영원히 모릅니다." : "Paul Graham: \"Talk to users. It's the only thing founders should do besides writing code.\" Users must always have a channel to report issues. Unhappy users leave silently — without a channel, you'll never know why."}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 할 일" : "What to do"}</div>
+                          <div style={{ display: "grid", gap: "4px", marginBottom: "12px" }}>
+                            {(ko ? [
+                              "앱 내 피드백 버튼 추가 (\"의견 보내기\" — 클릭 한 번으로)",
+                              "Discord 또는 카카오 오픈채팅방 개설 — 초기 사용자 커뮤니티",
+                              "가입 후 24시간 내 환영 이메일 + \"뭐가 불편했나요?\" 질문",
+                              "주간 피드백 정리 — AI로 패턴 분석 후 우선순위 결정",
+                            ] : [
+                              "Add in-app feedback button (one click to send)",
+                              "Create Discord or community channel for early users",
+                              "Welcome email within 24h + \"What was frustrating?\"",
+                              "Weekly feedback digest — AI pattern analysis + prioritize",
+                            ]).map(t => (
+                              <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
+                                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#7c3aed", flexShrink: 0, marginTop: "7px" }} />
+                                <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                            {[
+                              { name: "Intercom", desc: ko ? "인앱 채팅 + 이메일 자동화. 스타트업 무료 플랜" : "In-app chat + email. Startup free plan", url: "https://intercom.com", color: "#2563eb" },
+                              { name: "Discord", desc: ko ? "커뮤니티 무료 구축. 초기 사용자와 직접 대화" : "Free community. Talk directly with early users", url: "https://discord.com", color: "#5865F2" },
+                            ].map(t => (
+                              <a key={t.name} href={t.url} target="_blank" rel="noreferrer" style={{ display: "flex", gap: "8px", padding: "10px 12px", borderRadius: "10px", background: `${t.color}04`, border: `1px solid ${t.color}10`, textDecoration: "none", color: "inherit" }}>
+                                <div>
+                                  <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{t.name}</div>
+                                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{t.desc}</div>
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 완료 기준 */}
+                      <div style={{ borderRadius: "16px", border: "1px solid rgba(15,23,42,0.06)", background: "rgba(255,255,255,0.95)", padding: "16px 18px" }}>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계 완료 기준" : "Completion criteria"}</div>
+                        <div style={{ display: "grid", gap: "4px" }}>
+                          {(ko ? [
+                            "분석 대시보드에서 주간 지표 확인 가능",
+                            "결제 또는 전환 흐름이 작동 (테스트 결제 성공)",
+                            "에러 발생 시 Slack 알림 수신",
+                            "사용자 피드백 채널이 열려있고 첫 피드백 수집 완료",
+                          ] : [
+                            "Weekly metrics visible in analytics dashboard",
+                            "Payment/conversion flow working (test payment success)",
+                            "Slack alert on errors",
+                            "Feedback channel open with first feedback collected",
+                          ]).map(d => (
+                            <div key={d} style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "3px" }}><circle cx="7" cy="7" r="6" stroke="#059669" strokeWidth="1.4"/><path d="M4.5 7l1.8 1.8 3.2-3.6" stroke="#059669" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              <span>{d}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 추천 기술 스택 — 접기/펼치기 */}
+                      {(() => {
+                        const stack = getRecommendedStack(selectedIndustryId ?? "ai-application");
+                        if (!stack) return null;
+                        return (
+                          <div style={{ marginTop: "4px" }}>
+                            <button type="button" onClick={() => setMvpToolsOpen(!mvpToolsOpen)} style={{
+                              display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                              padding: "10px 14px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)",
+                              background: mvpToolsOpen ? "rgba(0,0,0,0.02)" : "transparent", cursor: "pointer",
+                              transition: "background 0.15s ease",
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.4)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                                <span style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{ko ? `추천 기술 스택 · ${stack.layers.length}개 도구` : `Recommended Stack · ${stack.layers.length} tools`}</span>
+                                <span style={{ fontSize: "10px", fontWeight: 650, padding: "1px 6px", borderRadius: "4px", background: "rgba(124,58,237,0.06)", color: "#7c3aed" }}>2026</span>
+                              </div>
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transform: mvpToolsOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s ease" }}>
+                                <path d="M3 5l4 4 4-4" stroke="rgba(15,23,42,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                            {mvpToolsOpen && (
+                              <div style={{ marginTop: "8px", borderRadius: "16px", border: "1px solid rgba(15,23,42,0.06)", background: "rgba(255,255,255,0.95)", overflow: "hidden", animation: "bentoFadeIn 0.2s ease" }}>
+                                <div style={{ padding: "14px 18px 10px" }}>
+                                  <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", marginBottom: "2px" }}>{ko ? stack.name.ko : stack.name.en}</div>
+                                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>{ko ? stack.description.ko : stack.description.en}</div>
+                                </div>
+                                <div style={{ padding: "0 18px 12px" }}>
+                                  {stack.layers.map((layer, i) => (
+                                    <a key={layer.role} href={layer.url} target="_blank" rel="noopener noreferrer" style={{
+                                      display: "flex", alignItems: "center", gap: "12px", padding: "8px 0",
+                                      borderBottom: i < stack.layers.length - 1 ? "1px solid rgba(0,0,0,0.04)" : "none",
+                                      textDecoration: "none", color: "inherit",
+                                    }}>
+                                      <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: `${layer.color}10`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>{layer.icon}</div>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: "10px", fontWeight: 650, color: layer.color, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{ko ? layer.role : layer.roleEn}</div>
+                                        <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{layer.tool}</div>
+                                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{ko ? layer.why.ko : layer.why.en}</div>
+                                      </div>
+                                      <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", whiteSpace: "nowrap" as const, flexShrink: 0 }}>{layer.pricing}</div>
+                                    </a>
+                                  ))}
+                                </div>
+                                <div style={{ margin: "0 18px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                                  <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(15,23,42,0.02)" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "2px" }}>{ko ? "총 월 비용" : "Monthly"}</div>
+                                    <div style={{ fontSize: "15px", fontWeight: 740, color: "#0f172a" }}>{stack.totalMonthlyCost}</div>
+                                  </div>
+                                  <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(5,150,105,0.03)" }}>
+                                    <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "2px" }}>{ko ? "스타트업 크레딧" : "Credits"}</div>
+                                    <div style={{ fontSize: "11px", fontWeight: 600, color: "#059669", lineHeight: 1.4 }}>{ko ? stack.startupCredits.ko : stack.startupCredits.en}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
+
+                {/* 기술 스택 패널은 launch_stack 가이드 내부로 통합됨 */}
 
                 {/* ── Franchise Application Guide ── */}
                 {(currentStage.code as string) === "franchise_application" && selectedFranchiseBrandId && (() => {
@@ -4283,6 +5371,82 @@ export default function StarterStageDemo({
                             <span style={{ color: "var(--primary)", fontWeight: 600 }}>↗</span>
                           </a>
                         ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 프랜차이즈 가맹 일반 가이드 (브랜드 미선택 시) ── */}
+                {(currentStage.code as string) === "franchise_application" && !selectedFranchiseBrandId && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* 가맹 절차 개요 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(8,145,178,0.1)", background: "linear-gradient(180deg, rgba(8,145,178,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "프랜차이즈 가맹 절차" : "Franchise Application Process"}</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>{ko ? "위에서 브랜드를 선택하면 맞춤 가이드가 표시됩니다. 아래는 일반적인 가맹 절차입니다." : "Select a brand above for a customized guide. Below is the general franchise process."}</div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px" }}>
+                          {(ko ? [
+                            { step: "1", title: "가맹 상담 신청", detail: "본사 홈페이지 또는 전화로 상담 예약. 사업 경험·자본금·희망 지역 전달", time: "1~2주" },
+                            { step: "2", title: "정보공개서 수령·검토", detail: "가맹본부가 법적 의무로 제공. 가맹점 수·폐업률·영업이익·분쟁 이력 확인", time: "14일 숙려" },
+                            { step: "3", title: "기존 가맹점 방문", detail: "정보공개서에 있는 가맹점 3곳 이상 방문. 실제 매출·본사 지원 만족도 질문", time: "1주" },
+                            { step: "4", title: "가맹계약 체결", detail: "가맹비·교육비·인테리어비·로열티 조건 확인. 중도 해지 조건 반드시 확인", time: "1일" },
+                            { step: "5", title: "본사 교육 이수", detail: "조리법·운영 매뉴얼·POS·위생 교육. 보통 2~4주 소요", time: "2~4주" },
+                          ] : [
+                            { step: "1", title: "Request consultation", detail: "Via HQ website or phone. Share experience, capital, preferred area", time: "1-2wk" },
+                            { step: "2", title: "Review disclosure document", detail: "Legally required. Check store count, closure rate, profit, disputes", time: "14 days" },
+                            { step: "3", title: "Visit existing franchisees", detail: "Visit 3+ stores listed in disclosure. Ask about real revenue and HQ support", time: "1wk" },
+                            { step: "4", title: "Sign franchise agreement", detail: "Check fees, royalty, interior costs, early termination conditions", time: "1 day" },
+                            { step: "5", title: "Complete HQ training", detail: "Recipes, operations, POS, hygiene training. Usually 2-4 weeks", time: "2-4wk" },
+                          ]).map(s => (
+                            <div key={s.step} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "10px 0", borderBottom: s.step !== "5" ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                              <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#0891b2", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a", marginBottom: "2px" }}>{s.title}</div>
+                                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{s.detail}</div>
+                              </div>
+                              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(8,145,178,0.08)", color: "#0891b2", whiteSpace: "nowrap" as const, flexShrink: 0 }}>{s.time}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 정보공개서 읽는 법 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "정보공개서 핵심 체크포인트" : "Disclosure Document Key Checks"}</div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>{ko ? "계약 전 반드시 확인해야 할 항목입니다. 정보공개서를 꼼꼼히 읽지 않아 분쟁이 발생하는 사례가 매우 많습니다." : "Must-check items before signing. Many disputes arise from not reading the disclosure carefully."}</div>
+                        </div>
+                        <div style={{ padding: "0 22px 16px", display: "grid", gap: "6px" }}>
+                          {(ko ? [
+                            { severity: "필수", color: "#dc2626", title: "최근 3년 가맹점 개·폐업 수", detail: "폐업률 30% 이상이면 위험 신호. 신규 가맹 대비 폐업 비율 확인" },
+                            { severity: "필수", color: "#dc2626", title: "가맹점 평균 영업이익", detail: "본사 제공 수치가 아닌 실제 가맹점에서 확인. 본사 수치와 차이가 크면 주의" },
+                            { severity: "필수", color: "#dc2626", title: "가맹비·교육비·보증금 반환 조건", detail: "해지 시 반환 불가 금액과 위약금 확인. 중도 해지 위약금이 총 투자비의 50% 넘으면 주의" },
+                            { severity: "주의", color: "#d97706", title: "영업지역 보장 범위", detail: "독점 지역이 있는지, 반경 몇 미터인지, 온라인 판매 포함인지 확인" },
+                            { severity: "주의", color: "#d97706", title: "필수 구매 물품 비율", detail: "본사에서만 사야 하는 식자재·소모품 비율. 70% 이상이면 원가 부담 주의" },
+                          ] : [
+                            { severity: "Must", color: "#dc2626", title: "3-year store open/close count", detail: "30%+ closure rate = danger. Compare new vs closed ratio" },
+                            { severity: "Must", color: "#dc2626", title: "Average franchisee profit", detail: "Verify with actual stores, not HQ numbers" },
+                            { severity: "Must", color: "#dc2626", title: "Fee/deposit refund conditions", detail: "Check non-refundable amounts and penalty fees" },
+                            { severity: "Note", color: "#d97706", title: "Territory protection", detail: "Exclusive zone? Radius? Does it include online?" },
+                            { severity: "Note", color: "#d97706", title: "Required purchase ratio", detail: "HQ-only ingredients/supplies ratio. 70%+ = high cost risk" },
+                          ]).map(item => (
+                            <div key={item.title} style={{ padding: "10px 14px", borderRadius: "12px", border: `1px solid ${item.color}12`, background: `${item.color}03` }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                                <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 6px", borderRadius: "4px", background: `${item.color}12`, color: item.color }}>{item.severity}</span>
+                                <span style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{item.title}</span>
+                              </div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4, paddingLeft: "2px" }}>{item.detail}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ margin: "0 22px 16px" }}>
+                          <a href="https://franchise.ftc.go.kr" target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "12px", borderRadius: "12px", background: "#0891b2", color: "#fff", fontSize: "14px", fontWeight: 650, textDecoration: "none" }}>
+                            {ko ? "공정거래위원회 정보공개서 조회" : "FTC Disclosure Lookup"} ↗
+                          </a>
+                        </div>
                       </div>
                     </div>
                   );
@@ -4597,6 +5761,120 @@ export default function StarterStageDemo({
                             </button>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── 사업자등록 + 영업허가 절차 가이드 (registration_setup) ── */}
+                {currentStage.code === "registration_setup" && (() => {
+                  const ko = language === "ko";
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* 사업자등록 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.1)", background: "linear-gradient(180deg, rgba(37,99,235,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "rgba(37,99,235,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "11px", fontWeight: 650, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Step 1</div>
+                              <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "사업자등록" : "Business Registration"}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>
+                            {ko ? "세무서 또는 홈택스에서 사업자등록증을 발급받아야 합니다. 매장 임대차계약 완료 후 진행하세요." : "Get your business registration certificate from the tax office or Hometax. Proceed after signing your lease."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", marginBottom: "10px" }}>
+                            <div>
+                              <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{ko ? "신청 장소" : "Where"}</div>
+                              <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{ko ? "관할 세무서 또는 홈택스" : "Tax office or Hometax"}</div>
+                            </div>
+                            <a href="https://www.hometax.go.kr" target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: "8px", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 650, textDecoration: "none" }}>
+                              {ko ? "홈택스" : "Hometax"} ↗
+                            </a>
+                          </div>
+                          {(ko ? [
+                            { step: "홈택스 접속 → 사업자등록 신청", detail: "공동인증서 로그인 필요. 없으면 세무서 방문" },
+                            { step: "업종코드 입력 (업종별 코드 확인)", detail: "음식: 522111, 카페: 522220, 미용: 961101 등" },
+                            { step: "사업장 주소 = 임대차계약서 주소", detail: "계약서 사본 첨부 필수" },
+                            { step: "과세유형 선택 (간이/일반)", detail: "매출 8,000만원 이하 예상 시 간이과세 추천" },
+                            { step: "제출 → 즉일~3영업일 발급", detail: "등록증 수령 후 사업용 통장 개설" },
+                          ] : [
+                            { step: "Log into Hometax → Apply", detail: "Certificate login required" },
+                            { step: "Enter industry code", detail: "Food: 522111, Cafe: 522220, Beauty: 961101" },
+                            { step: "Business address = lease address", detail: "Attach lease copy" },
+                            { step: "Choose tax type (simplified/standard)", detail: "Simplified if expected revenue under 80M" },
+                            { step: "Submit → Issued in 0-3 days", detail: "Open business account after" },
+                          ]).map((s, i) => (
+                            <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 0", borderBottom: i < 4 ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
+                              <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                              <div>
+                                <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{s.step}</div>
+                                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ margin: "0 22px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                          <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(5,150,105,0.04)", textAlign: "center" as const }}>
+                            <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)" }}>{ko ? "비용" : "Cost"}</div>
+                            <div style={{ fontSize: "16px", fontWeight: 740, color: "#059669" }}>{ko ? "무료" : "Free"}</div>
+                          </div>
+                          <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(37,99,235,0.04)", textAlign: "center" as const }}>
+                            <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)" }}>{ko ? "소요기간" : "Duration"}</div>
+                            <div style={{ fontSize: "16px", fontWeight: 740, color: "#2563eb" }}>1~3{ko ? "일" : "d"}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 영업허가/신고 */}
+                      <div style={{ borderRadius: "20px", border: "1px solid rgba(234,88,12,0.1)", background: "linear-gradient(180deg, rgba(234,88,12,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+                        <div style={{ padding: "20px 22px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "rgba(234,88,12,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="1.6" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "11px", fontWeight: 650, color: "#ea580c", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Step 2</div>
+                              <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "영업허가 · 신고" : "Business Permit Filing"}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>
+                            {ko ? "업종에 따라 관할 관청(구청·시청)에 영업허가 또는 영업신고를 해야 합니다. 사업자등록 후 진행하세요." : "Depending on your industry, you need a permit or notification from the district office. Proceed after business registration."}
+                          </div>
+                        </div>
+                        <div style={{ padding: "0 22px 14px", display: "grid", gap: "8px" }}>
+                          {(ko ? [
+                            { type: "필수", color: "#dc2626", title: "위생교육 이수 (음식·카페)", detail: "한국외식산업협회 온라인 교육 (3시간, 25,000원). 영업신고 전 반드시 완료", link: "https://www.foodedu.co.kr" },
+                            { type: "필수", color: "#dc2626", title: "영업신고/허가 (관할 구청)", detail: "일반음식점: 영업신고 / 유흥업: 영업허가. 구청 위생과 방문 또는 정부24", link: "https://www.gov.kr" },
+                            { type: "업종별", color: "#d97706", title: "소방안전교육 (다중이용업소)", detail: "50㎡ 이상 음식점·카페·노래방 등. 한국소방안전원 온라인 교육", link: "https://edu.kfsi.or.kr" },
+                            { type: "업종별", color: "#d97706", title: "미용업 면허 확인 (미용실)", detail: "미용사 면허증 사본 필요. 관할 구청 위생과에 신고", link: "" },
+                            { type: "업종별", color: "#d97706", title: "체육시설업 등록 (피트니스)", detail: "관할 구청 체육과. 시설 면적·설비 기준 충족 필요", link: "" },
+                          ] : [
+                            { type: "Required", color: "#dc2626", title: "Hygiene Training (Food/Cafe)", detail: "KFSIA online course (3h, ₩25K). Must complete before filing", link: "https://www.foodedu.co.kr" },
+                            { type: "Required", color: "#dc2626", title: "Business Permit (District Office)", detail: "Restaurant: notification / Entertainment: permit", link: "https://www.gov.kr" },
+                            { type: "By type", color: "#d97706", title: "Fire Safety Training (Multi-use)", detail: "50㎡+ restaurants, cafes, karaoke", link: "https://edu.kfsi.or.kr" },
+                            { type: "By type", color: "#d97706", title: "Beauty License Check", detail: "Cosmetology license copy required", link: "" },
+                            { type: "By type", color: "#d97706", title: "Fitness Facility Registration", detail: "District sports division. Facility requirements", link: "" },
+                          ]).map((item, idx) => (
+                            <div key={idx} style={{ padding: "12px 14px", borderRadius: "14px", border: `1px solid ${item.color}15`, background: `${item.color}04` }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 6px", borderRadius: "4px", background: `${item.color}12`, color: item.color }}>{item.type}</span>
+                                <span style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{item.title}</span>
+                              </div>
+                              <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(15,23,42,0.5)", paddingLeft: "2px" }}>{item.detail}</div>
+                              {item.link && (
+                                <a href={item.link} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: "4px", fontSize: "12px", color: "#ea580c", textDecoration: "none", fontWeight: 500 }}>
+                                  {ko ? "바로가기 →" : "Go →"}
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   );
@@ -8576,6 +9854,18 @@ export default function StarterStageDemo({
                   { label: "플랫폼 수수료 비용처리", detail: "스마트스토어·쿠팡·크몽 수수료 정산서 월별 보관" },
                   { label: "광고비 전액 비용처리", detail: "네이버·구글·메타 광고비 세금계산서 or 신용카드 영수증 보관" },
                   { label: "프리랜서 용역비 원천세 처리", detail: "디자이너, 개발자 외주 시 3.3% 원천징수 후 다음달 10일 납부" },
+                ],
+                education: [
+                  { label: "교재·학습자료 매입비 비용처리", detail: "교재, 문제집, 인쇄물 구매 영수증 전량 보관. 교육비 또는 소모품비 처리" },
+                  { label: "강사 인건비 원천세 처리", detail: "프리랜서 강사 3.3% 원천징수 의무. 정규직은 근로소득세. 매월 10일 홈택스 신고" },
+                  { label: "학원 시설비 감가상각", detail: "책상·칠판·프로젝터 등 집기는 5년 감가상각. 300만원 미만 소액은 즉시 비용처리" },
+                  { label: "온라인 교육 플랫폼 비용처리", detail: "Zoom, 구글 워크스페이스, LMS 구독료 전액 통신비·지급수수료 처리" },
+                ],
+                pet: [
+                  { label: "반려동물 사료·소모품 전액 비용처리", detail: "사료, 간식, 위생용품, 장난감 등 매입 영수증 보관. 매출원가 또는 소모품비" },
+                  { label: "의료·미용 장비 감가상각", detail: "미용 테이블, 드라이어, 욕조 등 장비는 5년 기준 감가상각" },
+                  { label: "위생·살균 소모품 비용처리", detail: "살균제, 일회용 장갑, 타올 등 위생용품 전액 소모품비 처리" },
+                  { label: "수의사 자문료·위탁 비용처리", detail: "건강 관리 자문, 예방접종 위탁 시 전문가 용역비 비용처리 가능" },
                 ],
               };
               const taxTips = taxTipsMap[industryCategoryId] ?? taxTipsMap["food"];

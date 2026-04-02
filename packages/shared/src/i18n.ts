@@ -495,7 +495,11 @@ const recCopy: Record<
   "market-cafe-dessert-konkuk": { ko: { title: "건대입구", summary: "회전율이 중요한 테이크아웃형 카페에 잘 맞습니다.", reasons: ["학생과 저녁 유동 인구가 강함", "테이크아웃 비중이 높은 모델과 궁합이 좋음", "빠른 회전이 필요한 콘셉트에 유리"], warnings: ["가격 민감도가 높을 수 있음", "주말 수요 변동이 큼"] } },
   "market-food-yeoksam": { ko: { title: "역삼", summary: "패스트캐주얼·건강식 등 오피스 점심 수요가 강한 외식형 상권입니다.", reasons: ["점심 오피스 수요가 밀집", "건강식/패스트캐주얼과 잘 맞음", "주중 반복 수요 예측이 쉬움"], warnings: ["주중 비중이 지나치게 높을 수 있음", "블록별 저녁/주말 편차가 큼"] } },
   "market-food-seongsu": { ko: { title: "성수", summary: "목적형 방문과 브랜드 노출이 필요한 외식 콘셉트에 유리합니다.", reasons: ["콘셉트형 외식 브랜드에 유리", "주거지보다 브랜드 노출이 쉬움", "리테일 유입의 파급을 받을 수 있음"], warnings: ["임대료가 비쌈", "포지셔닝이 더 선명해야 함"] } },
-  "market-food-mangwon": { ko: { title: "망원", summary: "트렌드보다는 지역 반복 수요를 노리는 외식 콘셉트에 잘 맞습니다.", reasons: ["동네 반복 수요가 안정적임", "소형 매장 운영에 적합", "예산을 아끼는 첫 오픈에 유리"], warnings: ["관광객 효과는 덜 예측 가능", "지역 맞춤 메뉴 포지셔닝 필요"] } }
+  "market-food-mangwon": { ko: { title: "망원", summary: "트렌드보다는 지역 반복 수요를 노리는 외식 콘셉트에 잘 맞습니다.", reasons: ["동네 반복 수요가 안정적임", "소형 매장 운영에 적합", "예산을 아끼는 첫 오픈에 유리"], warnings: ["관광객 효과는 덜 예측 가능", "지역 맞춤 메뉴 포지셔닝 필요"] } },
+  "plg-saas": { ko: { title: "제품 주도형 SaaS", summary: "셀프서브 또는 가볍게 터치하는 제품에서 활성화 속도가 중요할 때 적합합니다.", reasons: ["빠른 피드백 루프", "온보딩과 리텐션을 초기에 테스트하기 좋음"], warnings: ["낮은 활성화율이 성장을 조용히 죽일 수 있음"] } },
+  "sales-led-b2b": { ko: { title: "영업 주도형 B2B", summary: "고통이 비싸고 구매자가 적으며 파일럿이 확장으로 이어질 때 유리합니다.", reasons: ["엔터프라이즈 워크플로 문제에 적합", "높은 ACV와 장기 계약 가능"], warnings: ["창업자 세일즈와 긴 사이클에 런웨이 관리 필요"] } },
+  "usage-based-api": { ko: { title: "사용량 기반 API / 인프라", summary: "사용량이나 자동화 볼륨에 따라 가치가 확장되는 개발자 대상 도구에 적합합니다.", reasons: ["인프라와 AI 빌딩블록에 강한 적합성", "통합 후 사용량 성장이 복리로 증가"], warnings: ["안정성, 문서 품질, 마진이 핵심"] } },
+  "hybrid-software-service": { ko: { title: "소프트웨어 + 서비스 하이브리드", summary: "제품이 따라잡기 전에 수동 서비스로 수요를 증명해야 할 때 유용합니다.", reasons: ["고객 고통을 더 빠르게 학습", "완전 자동화 전 초기 매출 가능"], warnings: ["적극적으로 제품화하지 않으면 서비스가 약한 레버리지를 숨길 수 있음"] } }
 };
 
 export function localizeRecommendationItem(item: RecommendationItem, language: Language): RecommendationItem {

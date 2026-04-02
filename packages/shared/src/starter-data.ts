@@ -1242,7 +1242,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     ]
   },
 
-  // ── Tech startup path: stages 5-11 ───────────────────────────────────────
+  // ── Tech startup path: stages 5-11 (+ shared tail 12-16) ─────────────────
   {
     stageId: "startup-foundation",
     code: "startup_foundation",
@@ -1250,7 +1250,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 5,
-    totalSteps: 11,
+    totalSteps: 16,
     goal: "Clarify the founding structure, company setup path, equity basics, and the one problem worth solving first.",
     whyNow: "Founder misalignment and fuzzy ownership destroy startups before customers ever do.",
     completionRule: {
@@ -1268,7 +1268,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 6,
-    totalSteps: 11,
+    totalSteps: 16,
     goal: "Run customer interviews, identify repeated pain, and narrow to one wedge problem with real urgency.",
     whyNow: "A startup dies when it builds for a vague audience instead of a painful problem.",
     completionRule: {
@@ -1286,7 +1286,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 7,
-    totalSteps: 11,
+    totalSteps: 16,
     goal: "Ship the minimum useful product that solves one core workflow and captures the first proof of value.",
     whyNow: "Shipping late or building too broad is the fastest way to burn runway without learning.",
     completionRule: {
@@ -1304,7 +1304,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 8,
-    totalSteps: 11,
+    totalSteps: 16,
     goal: "Put billing, analytics, error tracking, and customer feedback loops in place before pushing harder on growth.",
     whyNow: "Without instrumentation, founders mistake noise for signal and waste weeks chasing the wrong problem.",
     completionRule: {
@@ -1322,7 +1322,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 9,
-    totalSteps: 11,
+    totalSteps: 16,
     goal: "Define the north-star metric, review growth weekly, and prove that users return or expand over time.",
     whyNow: "Topline growth without retention is usually a temporary illusion.",
     completionRule: {
@@ -1340,7 +1340,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 10,
-    totalSteps: 11,
+    totalSteps: 16,
     goal: "Set up incorporation, banking, lightweight finance ops, privacy, and core security foundations.",
     whyNow: "Weak company plumbing creates painful delays when customers, hires, or investors ask for basic diligence.",
     completionRule: {
@@ -1358,7 +1358,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 11,
-    totalSteps: 11,
+    totalSteps: 16,
     goal: "Model runway, define milestones, and prepare a crisp investor-ready story only if fundraising is actually needed.",
     whyNow: "Fundraising without a clear use-of-cash plan usually burns time and leverage.",
     completionRule: {
@@ -1367,7 +1367,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["runway-model-ready", "milestone-plan-ready", "investor-material-ready"],
     riskIds: [],
-    nextStageIds: []
+    nextStageIds: ["tax-guide"]
   },
 
   // ── Franchise path: application stage (only for franchise startupType) ─────
@@ -1561,7 +1561,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "selection",
     status: "locked",
     stepNumber: 5,
-    totalSteps: 11,
+    totalSteps: 14,
     goal: "Select the right sales platform — Smart Store, Coupang, or a custom store — and open a seller account.",
     whyNow: "Platform choice defines fees, customer reach, and fulfillment options from day one.",
     completionRule: {
@@ -1579,7 +1579,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 6,
-    totalSteps: 11,
+    totalSteps: 14,
     goal: "Register the business and file the telecommunications sales notification required for all online sellers.",
     whyNow: "Selling online without a telecom sales filing is a legal violation — this must be done before going live.",
     completionRule: {
@@ -1597,7 +1597,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 7,
-    totalSteps: 11,
+    totalSteps: 14,
     goal: "Contract with suppliers, photograph products, and create detail pages ready for listing.",
     whyNow: "High-quality photos and detail pages are the primary conversion driver in online selling.",
     completionRule: {
@@ -1615,7 +1615,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 8,
-    totalSteps: 11,
+    totalSteps: 14,
     goal: "Configure the storefront, connect shipping carriers, and set up payment.",
     whyNow: "Getting shipping and payment right before launch prevents failed orders and refund requests on opening day.",
     completionRule: {
@@ -1633,7 +1633,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 9,
-    totalSteps: 11,
+    totalSteps: 14,
     goal: "Optimize for search, set up initial ads, and plan a review-building strategy before launch.",
     whyNow: "New stores have no reviews and low search ranking — early marketing investment directly affects first-month revenue.",
     completionRule: {
