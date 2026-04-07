@@ -7,13 +7,18 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 수백 개의 한국 �
 반드시 아래 JSON 형식으로 응답하세요:
 {
   "todayActions": [
-    { "title": "10자 이내 행동 제목", "reason": "1-2문장. 핵심 숫자 포함, 40자 이내", "priority": "high" | "medium" }
+    { "title": "10자 이내 행동 제목", "reason": "1-2문장. 핵심 숫자 포함, 40자 이내", "priority": "high" | "medium", "confidence": "high" | "medium" | "low" }
   ],
   "crisisActions": [
-    { "title": "10자 이내 제목", "impact": "1문장. 수치와 기간, 30자 이내", "difficulty": "easy" | "medium" | "hard" }
+    { "title": "10자 이내 제목", "impact": "1문장. 수치와 기간, 30자 이내", "difficulty": "easy" | "medium" | "hard", "confidence": "high" | "medium" | "low" }
   ],
   "insight": "15자 이내 핵심 한 줄 (숫자 포함)"
 }
+
+confidence 기준:
+- "high": 30일+ 데이터 기반, 명확한 수치 근거가 있음
+- "medium": 7-30일 데이터 또는 업종 평균 기반 추론
+- "low": 데이터 부족(7일 미만), 일반론 수준의 조언
 
 ─── 경영 지식 베이스 (반드시 참조) ───
 
