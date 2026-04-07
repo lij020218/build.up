@@ -44,7 +44,10 @@ function parseResponse(raw: string): RoadmapGenerationResult {
   // 유효한 카테고리 ID 검증
   const validCategories = ["food", "cafe-dessert", "retail", "online-digital", "beauty", "fitness", "education", "pet", "living-service", "startup-tech", "space"];
   if (!validCategories.includes(String(p.industryCategoryId))) {
-    p.industryCategoryId = "food"; // fallback
+    // silent fallback 제거 — 클라이언트에서 사용자에게 업종 선택 UI를 표시하도록
+    // _needsCategoryConfirm 플래그를 결과에 포함
+    p.industryCategoryId = String(p.industryCategoryId ?? "");
+    p._needsCategoryConfirm = true;
   }
 
   // 유효한 세부 업종 ID 검증
@@ -77,7 +80,8 @@ function parseResponse(raw: string): RoadmapGenerationResult {
   // 기본값 채우기
   const result: RoadmapGenerationResult = {
     parsed: {
-      industryCategoryId: String(p.industryCategoryId ?? "food"),
+      industryCategoryId: String(p.industryCategoryId || "food"),
+      _needsCategoryConfirm: Boolean(p._needsCategoryConfirm),
       subIndustryId: String(p.subIndustryId ?? "general"),
       industryLabel: String(p.industryLabel ?? ""),
       startupType: p.startupType === "franchise" ? "franchise" : "independent",

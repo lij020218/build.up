@@ -13,9 +13,10 @@ type ParsedProduct = {
 };
 
 export async function POST(request: Request) {
-  // 인증은 선택적 — 로그인 없이도 엑셀 파싱 가능 (데모 모드 지원)
-  // 로그인된 사용자는 rate limit 등에서 우선 처리
-  const _auth = await requireApiUser(request).catch(() => null);
+  const auth = await requireApiUser(request).catch(() => null);
+  if (!auth) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
 
   const apiKey = getAnthropicApiKey();
   if (!apiKey) {
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
 
   const ko = body.language === "ko";
 
-  console.log("[products/parse] Input text (first 500 chars):", text.slice(0, 500));
+  // 사용자 입력을 로그에 노출하지 않음 (보안)
 
   try {
     const client = new Anthropic({ apiKey });

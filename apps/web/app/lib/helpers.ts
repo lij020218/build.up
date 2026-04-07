@@ -44,18 +44,46 @@ export function formatConfidenceBadge(
   return "Check needed";
 }
 
+/**
+ * 한국식 금액 표현을 원(won) 단위로 변환.
+ * "1억", "5천만", "1억 5000만원", "3000" (만원 단위) 모두 지원.
+ */
+export function parseKoreanCurrency(value: string): number | undefined {
+  const cleaned = value.replace(/\s/g, "").replace(/원$/, "");
+  if (!cleaned) return undefined;
+
+  let total = 0;
+
+  const eokMatch = cleaned.match(/([\d.]+)\s*억/);
+  if (eokMatch) {
+    total += parseFloat(eokMatch[1]) * 100_000_000;
+  }
+
+  const cheonmanMatch = cleaned.match(/([\d.]+)\s*천만/);
+  if (cheonmanMatch) {
+    total += parseFloat(cheonmanMatch[1]) * 10_000_000;
+  } else {
+    const manMatch = cleaned.match(/([\d.]+)\s*만/);
+    if (manMatch) {
+      total += parseFloat(manMatch[1]) * 10_000;
+    }
+  }
+
+  // 단위 없이 숫자만 있으면 만원 단위로 간주
+  if (total === 0) {
+    const digits = cleaned.replace(/[^\d]/g, "");
+    if (!digits) return undefined;
+    const amount = Number.parseInt(digits, 10);
+    if (!Number.isFinite(amount) || amount <= 0) return undefined;
+    return amount * 10_000;
+  }
+
+  return total > 0 ? total : undefined;
+}
+
+/** @deprecated parseKoreanCurrency를 사용하세요 */
 export function parseManwonInput(value: string) {
-  const digits = value.replace(/[^\d]/g, "");
-  if (!digits) {
-    return undefined;
-  }
-
-  const amount = Number.parseInt(digits, 10);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return undefined;
-  }
-
-  return amount * 10000;
+  return parseKoreanCurrency(value);
 }
 
 export function inferFinanceDefaults(

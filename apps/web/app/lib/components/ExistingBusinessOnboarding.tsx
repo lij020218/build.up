@@ -81,7 +81,17 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   const [courierServices, setCourierServices] = useState<string[]>([]);
   const [snsChannels, setSnsChannels] = useState<string[]>([]);
 
-  const parseManwon = (v: string) => (parseInt(v.replace(/[^0-9]/g, ""), 10) || 0) * 10000;
+  const parseManwon = (v: string): number => {
+    const cleaned = v.replace(/\s/g, "").replace(/원$/, "");
+    let total = 0;
+    const eokMatch = cleaned.match(/([\d.]+)\s*억/);
+    if (eokMatch) total += parseFloat(eokMatch[1]) * 100_000_000;
+    const cheonmanMatch = cleaned.match(/([\d.]+)\s*천만/);
+    if (cheonmanMatch) { total += parseFloat(cheonmanMatch[1]) * 10_000_000; }
+    else { const manMatch = cleaned.match(/([\d.]+)\s*만/); if (manMatch) total += parseFloat(manMatch[1]) * 10_000; }
+    if (total === 0) { const digits = cleaned.replace(/[^\d]/g, ""); return (parseInt(digits, 10) || 0) * 10_000; }
+    return total;
+  };
   const canNext = (): boolean => {
     if (step === 1) return Boolean(industryId);
     if (step === 2) return Boolean(storeName.trim()) && Boolean(businessModelId);

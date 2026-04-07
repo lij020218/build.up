@@ -78,8 +78,9 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
       setStep("review");
     } catch (err) {
       clearInterval(interval);
+      setGenProgress(0);
       setError(err instanceof Error ? err.message : String(err));
-      setStep("idea");
+      setStep("idea"); // 이전 입력(ideaText, budget, region, storeName)은 state에 보존됨
     }
   };
 
@@ -302,7 +303,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   // ── Step: 리뷰 ──
   if (step === "review" && result) {
     const ba = result.budgetAllocation;
-    const totalBudget = ba.total || (ba.deposit + ba.interior + ba.equipment + ba.workingCapital);
+    const totalBudget = ba.total ?? (ba.deposit + ba.interior + ba.equipment + ba.workingCapital);
 
     // 예산 비율 계산
     const budgetItems = [
