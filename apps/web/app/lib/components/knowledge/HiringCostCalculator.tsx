@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { calculateHiringCost, MINIMUM_WAGE_2026, checkMinimumWage, annualToMonthly } from "@build-up/shared";
 
-type Props = { ko: boolean };
+type Props = { ko: boolean; industryCategoryId?: string };
 
 const fmt = (n: number) => {
   const abs = Math.abs(Math.round(n));
@@ -11,9 +11,23 @@ const fmt = (n: number) => {
   return `${abs.toLocaleString()}원`;
 };
 
-export function HiringCostCalculator({ ko }: Props) {
-  const [inputMode, setInputMode] = useState<"monthly" | "annual">("annual");
-  const [salaryText, setSalaryText] = useState("3500");
+// 업종별 평균 월급 벤치마크 (만원/월, 2025 한국 소상공인 기준)
+const SALARY_BENCHMARKS: Record<string, { label: string; monthly: number }> = {
+  "food": { label: "외식업", monthly: 230 },
+  "cafe-dessert": { label: "카페·디저트", monthly: 220 },
+  "beauty": { label: "뷰티", monthly: 250 },
+  "fitness": { label: "피트니스", monthly: 280 },
+  "education": { label: "교육", monthly: 260 },
+  "retail": { label: "소매", monthly: 210 },
+  "pet": { label: "반려동물", monthly: 220 },
+  "living-service": { label: "생활서비스", monthly: 220 },
+  "space": { label: "공간·숙박", monthly: 230 },
+};
+
+export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
+  const [inputMode, setInputMode] = useState<"monthly" | "annual">("monthly");
+  const benchmark = SALARY_BENCHMARKS[industryCategoryId ?? ""] ?? SALARY_BENCHMARKS["food"];
+  const [salaryText, setSalaryText] = useState(String(benchmark.monthly));
 
   const monthlySalary = useMemo(() => {
     const raw = Number(salaryText.replace(/[^0-9]/g, "")) || 0;
@@ -40,8 +54,8 @@ export function HiringCostCalculator({ ko }: Props) {
           <div style={title}>{ko ? "실제 사업주 부담은?" : "What does it really cost?"}</div>
         </div>
         <div style={{ display: "flex", gap: "4px", background: "rgba(15,23,42,0.04)", borderRadius: "10px", padding: "3px" }}>
-          {(["annual", "monthly"] as const).map(m => (
-            <button key={m} type="button" onClick={() => setInputMode(m)} style={{
+          {(["monthly", "annual"] as const).map(m => (
+            <button key={m} type="button" onClick={() => { setInputMode(m); setSalaryText(m === "monthly" ? String(benchmark.monthly) : String(benchmark.monthly * 12)); }} style={{
               padding: "5px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 600, cursor: "pointer",
               background: inputMode === m ? "#fff" : "transparent",
               color: inputMode === m ? "#0f172a" : "rgba(15,23,42,0.4)",
@@ -68,6 +82,15 @@ export function HiringCostCalculator({ ko }: Props) {
           {ko ? "만원" : "만₩"} / {inputMode === "annual" ? (ko ? "연" : "yr") : (ko ? "월" : "mo")}
         </span>
       </div>
+
+      {/* 업종별 벤치마크 */}
+      {industryCategoryId && benchmark && (
+        <div style={{ marginTop: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(5,97,252,0.04)", border: "1px solid rgba(5,97,252,0.08)", display: "flex", gap: "6px", alignItems: "center" }}>
+          <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)" }}>
+            {ko ? `${benchmark.label} 평균 월급: 약 ${benchmark.monthly}만원 (2025 소상공인 기준)` : `${benchmark.label} avg: ~${benchmark.monthly}만원/mo (2025 SME benchmark)`}
+          </span>
+        </div>
+      )}
 
       {/* 최저임금 경고 */}
       {monthlySalary > 0 && !minWageCheck.compliant && (

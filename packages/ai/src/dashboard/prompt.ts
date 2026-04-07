@@ -110,7 +110,62 @@ todayActions는 반드시 Input 지표(행동 가능한 것)에 기반하세요.
 - 객수 감소인지 객단가 감소인지
 - 특정 요일에 집중되었는지
 - 배달 vs 매장 중 어느 쪽인지
-- 계절/날씨 요인인지 구조적 하락인지`;
+- 계절/날씨 요인인지 구조적 하락인지
+
+─── 프랜차이즈 코칭 프레임워크 ───
+
+프랜차이즈 벤치마크 데이터가 제공된 경우:
+1. 사용자 매출을 **같은 브랜드** 평균 및 상위 매장과 비교하세요.
+2. 패턴: "같은 브랜드 상위 매장은 [비결]로 월 [X]만원을 달성합니다. 사장님 매장은 현재 평균의 [Y]% 수준입니다"
+3. 비용 구조(재료비/인건비/임대료)를 브랜드별 기준선과 비교하세요.
+4. 상위 매장 성공 요인을 오늘 실행 가능한 액션으로 변환하세요.
+   예: "상위 맘스터치 매장은 17시 이후 치킨 매출 비중 40%. 치킨 세트 프로모션을 저녁에 배달앱 노출하세요"
+5. 프랜차이즈 데이터가 없으면 이 섹션을 완전히 무시하세요.
+
+─── 사례 기반 멘토링 (핵심 차별화) ───
+
+matchedCaseStudies가 제공되면, 아래 3단계 패턴으로 사례를 코칭에 녹이세요:
+
+1. **연결**: 사용자 현재 상황의 숫자를 사례와 직접 연결
+   예: "사장님 런웨이가 2개월입니다. 테슬라도 2008년 런웨이 2개월에서..."
+2. **교훈**: 사례에서 배울 구체적 행동을 추출
+   예: "...머스크가 개인 전 재산을 투입했습니다. 사장님도 이번 주 투자자 미팅 3건을 잡으세요."
+3. **희망**: 사례의 성공 결과로 마무리
+   예: "테슬라는 그렇게 살아남아 시총 1조 달러 기업이 됐습니다."
+
+규칙:
+- todayActions의 reason 1개에만 사례를 녹이세요 (억지 끼워넣기 금지)
+- insight에 사례 기업명을 한 줄로 언급 가능
+- 사례가 상황과 안 맞으면 **절대** 사용하지 마세요
+- 데이터가 없으면 이 섹션을 완전히 무시하세요
+
+─── 업종 내 포지셔닝 ───
+
+industryAvgRevenue/industryTopRevenue가 제공된 경우:
+1. 사용자 매출이 업종 평균 대비 어디인지 한 줄로 알려주세요.
+2. 상위 10%까지의 격차와 그 격차를 좁히기 위한 핵심 액션 1개를 todayActions에 포함하세요.
+3. 하위 25%면 구조 변경이나 리로케이션을 적극 권고하세요.
+4. 데이터가 없으면 이 섹션을 완전히 무시하세요.
+
+─── 창업 준비 단계 코칭 (isPreLaunch=true일 때) ───
+
+개업 전 사용자에게는 운영 데이터 대신 로드맵 진행 상황에 맞는 조언을 제공하세요.
+
+currentRoadmapStage별 코칭 포인트:
+- "vendor-setup": 공급업체 3곳 이상 견적 비교, 계약 시 최소 주문량·결제 조건 확인
+- "construction-setup": 인테리어 예산은 총 투자금의 30-40% 이내, 평당 비용 확인, 시공 기간 2-4주
+- "location-candidates": 유동인구·접근성·임대료 비율(매출 10% 이내) 기준 비교
+- "registration-setup": 간이과세 vs 일반과세 판단, 사업용 신용카드 등록 (매입세액공제)
+- "hiring-setup": 최소 인원 구성, 최저임금 10,320원 기준, 4대보험 사업주 부담 약 9.3%
+
+todayActions는 "오늘 로드맵에서 할 일"로 변환:
+- 예: { title: "견적 3곳 비교", reason: "공급업체 가격 차이가 원가율 5%p를 좌우합니다", priority: "high" }
+
+─── 세금/고정비 코칭 ───
+
+computedTaxEvents가 있으면 가장 급한 세금 일정을 todayActions나 insight에 포함하세요.
+computedFixedExpenses가 있으면 7일 내 납부해야 할 고정비를 알려주세요.
+패턴: "부가세 신고 마감 D-7. 이번 주 안에 매입 자료를 정리하세요"`;
 
 
 export type DashboardContext = {
@@ -138,6 +193,26 @@ export type DashboardContext = {
   unansweredReviews?: number;
   daysSinceLastSnsPost?: number;
   inventoryTurnoverDays?: number;
+  // 프랜차이즈 벤치마크 (enrichment layer가 채움)
+  franchiseBrandId?: string;
+  franchiseBrandName?: string;
+  franchiseAvgRevenue?: number;          // 만원 (월)
+  franchiseTopRevenue?: number;          // 만원 (월)
+  franchiseCostStructure?: { ingredientRatio: number; laborRatio: number; rentRatio: number };
+  franchiseTopStoreInsights?: string[];
+  // 성공 사례 (enrichment layer가 채움)
+  matchedCaseStudies?: Array<{ company: string; oneLiner: string; lesson: string }>;
+  // 업종 벤치마크
+  industryAvgRevenue?: number;           // 만원 (월)
+  industryTopRevenue?: number;           // 만원 (월)
+  // 업종별 비용 레이블
+  expenseLabels?: { ingredients: string; labor: string; rent: string; utilities: string; other: string };
+  // 창업 준비 단계 정보
+  currentRoadmapStage?: string;
+  isPreLaunch?: boolean;
+  // 세금/고정비 (enrichment가 계산)
+  computedTaxEvents?: string[];
+  computedFixedExpenses?: string[];
 };
 
 export function buildDashboardActionPrompt(ctx: DashboardContext): string {
@@ -168,6 +243,9 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
   const prereqs = getPrerequisiteGaps(ctx);
   operationalGaps.push(...prereqs);
 
+  // 업종별 비용 레이블 (없으면 기본값)
+  const el = ctx.expenseLabels ?? { ingredients: "재료비", labor: "인건비", rent: "임대료", utilities: "공과금", other: "기타" };
+
   return `## ${ctx.storeName} 경영 현황
 
 업종: ${ctx.industryLabel} | 개업 ${ctx.daysSinceLaunch}일차 | 성장 단계: ${stage}
@@ -175,11 +253,11 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
 ### 재무 현황
 - 월 매출: ${fmtW(ctx.monthlySales)}
 - 월 비용: ${fmtW(totalCost)}
-  - 재료비: ${fmtW(ctx.monthlyCosts.ingredients)} (매출 대비 ${ingRatio}%, 업계 적정: ${benchmarks.ingredientTarget})
-  - 인건비: ${fmtW(ctx.monthlyCosts.labor)} (매출 대비 ${labRatio}%, 업계 적정: ${benchmarks.laborTarget})
-  - 임대료: ${fmtW(ctx.monthlyCosts.rent)} (매출 대비 ${rentRatio}%, 업계 적정: ${benchmarks.rentTarget})
-  - 공과금: ${fmtW(ctx.monthlyCosts.utilities)}
-  - 기타: ${fmtW(ctx.monthlyCosts.other)}
+  - ${el.ingredients}: ${fmtW(ctx.monthlyCosts.ingredients)} (매출 대비 ${ingRatio}%, 업계 적정: ${benchmarks.ingredientTarget})
+  - ${el.labor}: ${fmtW(ctx.monthlyCosts.labor)} (매출 대비 ${labRatio}%, 업계 적정: ${benchmarks.laborTarget})
+  - ${el.rent}: ${fmtW(ctx.monthlyCosts.rent)} (매출 대비 ${rentRatio}%, 업계 적정: ${benchmarks.rentTarget})
+  - ${el.utilities}: ${fmtW(ctx.monthlyCosts.utilities)}
+  - ${el.other}: ${fmtW(ctx.monthlyCosts.other)}
 - 순이익: ${fmtW(monthlyNet)} (${monthlyNet >= 0 ? "흑자" : "적자"})
 - 프라임코스트: ${ctx.primeRate.toFixed(1)}% (업계 위험선: 65%)
 - 주간 매출 변화: ${ctx.weeklyChange >= 0 ? "+" : ""}${ctx.weeklyChange}%
@@ -190,9 +268,9 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
 - 건강 점수: ${ctx.businessHealthScore}
 
 ### 긴급 사항
-${ctx.pendingTaxEvents.length > 0 ? `⚠ 세금: ${ctx.pendingTaxEvents.join(", ")}` : "✓ 세금 일정 여유"}
+${(ctx.computedTaxEvents ?? ctx.pendingTaxEvents).length > 0 ? `⚠ 세금: ${(ctx.computedTaxEvents ?? ctx.pendingTaxEvents).join(", ")}` : "✓ 세금 일정 여유"}
 ${ctx.lowStockItems.length > 0 ? `⚠ 재고 부족: ${ctx.lowStockItems.join(", ")}` : "✓ 재고 양호"}
-${ctx.upcomingFixedExpenses.length > 0 ? `⚠ 고정비 납부: ${ctx.upcomingFixedExpenses.join(", ")}` : "✓ 고정비 납부 여유"}
+${(ctx.computedFixedExpenses ?? ctx.upcomingFixedExpenses).length > 0 ? `⚠ 고정비 납부: ${(ctx.computedFixedExpenses ?? ctx.upcomingFixedExpenses).join(", ")}` : "✓ 고정비 납부 여유"}
 ${crisisSignals.length > 0 ? `\n### ⚠ 위기 신호 감지\n${crisisSignals.map(s => `- ${s}`).join("\n")}` : ""}
 ${operationalGaps.length > 0 ? `\n### 🚨 운영 필수 사항 미충족 (최우선 해결 필요)\n${operationalGaps.map(s => `- ${s}`).join("\n")}` : ""}
 
@@ -206,6 +284,7 @@ ${ctx.unansweredReviews != null && ctx.unansweredReviews > 0 ? `- 미답변 리�
 ${ctx.daysSinceLastSnsPost != null && ctx.daysSinceLastSnsPost > 3 ? `- SNS 최근 포스팅: ${ctx.daysSinceLastSnsPost}일 전 (3일 이상 미포스팅 시 도달률 감소)` : ""}
 ${ctx.inventoryTurnoverDays != null ? `- 재고 회전일: ${ctx.inventoryTurnoverDays}일` : ""}
 
+${buildPreLaunchSection(ctx)}${buildFranchiseSection(ctx, fmtW)}${buildIndustrySection(ctx, fmtW)}${buildCaseStudySection(ctx)}
 위 데이터를 분석하여:
 ${operationalGaps.length > 0 ? `**최우선:** 운영 필수 사항 미충족 항목부터 해결하는 액션을 todayActions 1순위로 배치하세요.` : ""}
 1. 오늘 당장 실행할 행동 3가지 (업계 벤치마크 대비 분석 포함)
@@ -295,4 +374,76 @@ function getPrerequisiteGaps(ctx: DashboardContext): string[] {
   }
 
   return gaps;
+}
+
+// ─── 프랜차이즈/업종/사례 조건부 프롬프트 섹션 ─────────────────────────────
+
+function buildFranchiseSection(ctx: DashboardContext, fmtW: (n: number) => string): string {
+  if (!ctx.franchiseBrandName || !ctx.franchiseAvgRevenue) return "";
+  const userMonthly = Math.round(ctx.monthlySales / 10000); // 만원
+  const avgPct = ctx.franchiseAvgRevenue > 0
+    ? Math.round((userMonthly / ctx.franchiseAvgRevenue) * 100)
+    : 0;
+  const topMultiplier = ctx.franchiseAvgRevenue > 0 && ctx.franchiseTopRevenue
+    ? (ctx.franchiseTopRevenue / ctx.franchiseAvgRevenue).toFixed(1)
+    : "?";
+
+  let section = `\n### 프랜차이즈 벤치마크 (${ctx.franchiseBrandName} 같은 브랜드 비교)
+- 가맹점 평균 월매출: ${fmtW(ctx.franchiseAvgRevenue * 10000)}
+- 상위 매장 월매출: ${fmtW((ctx.franchiseTopRevenue ?? 0) * 10000)} (평균의 ${topMultiplier}배)
+- 사장님 현재 위치: 평균 대비 ${avgPct}%`;
+
+  if (ctx.franchiseCostStructure) {
+    const cs = ctx.franchiseCostStructure;
+    section += `\n- 상위 매장 비용 구조: 재료비 ${cs.ingredientRatio}%, 인건비 ${cs.laborRatio}%, 임대료 ${cs.rentRatio}%`;
+  }
+  if (ctx.franchiseTopStoreInsights?.length) {
+    section += `\n- 상위 매장 성공 비결:\n${ctx.franchiseTopStoreInsights.map(i => `  - ${i}`).join("\n")}`;
+  }
+  return section + "\n";
+}
+
+function buildIndustrySection(ctx: DashboardContext, fmtW: (n: number) => string): string {
+  if (!ctx.industryAvgRevenue) return "";
+  const userMonthly = Math.round(ctx.monthlySales / 10000);
+  const avgPct = ctx.industryAvgRevenue > 0
+    ? Math.round((userMonthly / ctx.industryAvgRevenue) * 100)
+    : 0;
+  let position = "중위권";
+  if (avgPct >= 200) position = "상위 10%";
+  else if (avgPct >= 130) position = "상위 25%";
+  else if (avgPct >= 70) position = "중위 50%";
+  else if (avgPct >= 50) position = "하위 25%";
+  else if (avgPct > 0) position = "하위 10%";
+
+  return `\n### 업종 내 포지셔닝
+- 업종 평균 월매출: ${fmtW(ctx.industryAvgRevenue * 10000)}
+- 업종 상위 10% 월매출: ${fmtW((ctx.industryTopRevenue ?? 0) * 10000)}
+- 사장님 위치: 업종 ${position} (평균 대비 ${avgPct}%)
+`;
+}
+
+function buildCaseStudySection(ctx: DashboardContext): string {
+  if (!ctx.matchedCaseStudies?.length) return "";
+  return `\n### 참고할 성공 사례 (사장님과 비슷한 상황)
+${ctx.matchedCaseStudies.map(c => `- ${c.company}: ${c.oneLiner}\n  → 교훈: ${c.lesson}`).join("\n")}
+`;
+}
+
+function buildPreLaunchSection(ctx: DashboardContext): string {
+  if (!ctx.isPreLaunch || !ctx.currentRoadmapStage) return "";
+  const stageLabels: Record<string, string> = {
+    "vendor-setup": "공급업체 선정 단계",
+    "construction-setup": "인테리어·시설 단계",
+    "location-candidates": "상권 분석 단계",
+    "registration-setup": "사업자등록 단계",
+    "hiring-setup": "인력 채용 단계",
+    "franchise-application": "가맹 상담·계약 단계",
+    "soft-open": "소프트 오픈(시범 영업) 단계",
+  };
+  const label = stageLabels[ctx.currentRoadmapStage] ?? ctx.currentRoadmapStage;
+  return `\n### 현재 창업 준비 단계
+- 단계: ${label}
+- **개업 전이므로 매출/비용 데이터가 없습니다.** 로드맵 진행에 맞는 준비 조언을 제시하세요.
+`;
 }

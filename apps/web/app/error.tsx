@@ -25,6 +25,12 @@ export default function ErrorPage({
       <p style={{ fontSize: "14px", color: "#666", marginBottom: "20px" }}>
         일시적인 오류입니다. 다시 시도해 주세요.
       </p>
+      {process.env.NODE_ENV === "development" && (
+        <pre style={{ fontSize: "11px", color: "#dc2626", background: "#fef2f2", padding: "12px", borderRadius: "8px", maxWidth: "600px", overflow: "auto", marginBottom: "16px", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+          {error.message}
+          {error.stack?.split("\n").slice(0, 5).join("\n")}
+        </pre>
+      )}
       <button
         onClick={reset}
         style={{

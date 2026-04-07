@@ -1242,7 +1242,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     ]
   },
 
-  // ── Tech startup path: stages 5-11 (+ shared tail 12-16) ─────────────────
+  // ── Tech startup path: stages 5-14 (+ shared tail) ──────────────────────
+  // 순서: 팀·법인 → 법인운영·세무 → 고객발굴 → MVP+IP → 출시+GTM → 성장 → 런웨이·투자 → 벤처인증·지원사업
   {
     stageId: "startup-foundation",
     code: "startup_foundation",
@@ -1250,7 +1251,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 5,
-    totalSteps: 16,
+    totalSteps: 18,
     goal: "Clarify the founding structure, company setup path, equity basics, and the one problem worth solving first.",
     whyNow: "Founder misalignment and fuzzy ownership destroy startups before customers ever do.",
     completionRule: {
@@ -1258,6 +1259,24 @@ export const starterStageFlow: RoadmapStageState[] = [
       requiredTaskIds: ["founder-alignment", "equity-plan-defined", "company-formation-path"]
     },
     taskIds: ["founder-alignment", "equity-plan-defined", "company-formation-path", "83b-safe-basics"],
+    riskIds: [],
+    nextStageIds: ["company-setup"]
+  },
+  {
+    stageId: "company-setup",
+    code: "company_setup",
+    title: "Company, finance, and security basics",
+    type: "execution",
+    status: "locked",
+    stepNumber: 6,
+    totalSteps: 18,
+    goal: "Complete incorporation, open a business bank account, set up bookkeeping, and put basic privacy and security practices in place.",
+    whyNow: "Government grants, investor due diligence, and even hiring all require an active corporation. Delaying this blocks every downstream step.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["banking-finance-stack", "privacy-security-basics", "tax-advisor-selected"]
+    },
+    taskIds: ["banking-finance-stack", "privacy-security-basics", "tax-advisor-selected"],
     riskIds: [],
     nextStageIds: ["customer-discovery"]
   },
@@ -1267,8 +1286,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Customer discovery",
     type: "execution",
     status: "locked",
-    stepNumber: 6,
-    totalSteps: 16,
+    stepNumber: 7,
+    totalSteps: 18,
     goal: "Run customer interviews, identify repeated pain, and narrow to one wedge problem with real urgency.",
     whyNow: "A startup dies when it builds for a vague audience instead of a painful problem.",
     completionRule: {
@@ -1282,36 +1301,36 @@ export const starterStageFlow: RoadmapStageState[] = [
   {
     stageId: "mvp-build",
     code: "mvp_build",
-    title: "MVP and proof of value",
-    type: "execution",
-    status: "locked",
-    stepNumber: 7,
-    totalSteps: 16,
-    goal: "Ship the minimum useful product that solves one core workflow and captures the first proof of value.",
-    whyNow: "Shipping late or building too broad is the fastest way to burn runway without learning.",
-    completionRule: {
-      kind: "required_tasks",
-      requiredTaskIds: ["core-workflow-defined", "mvp-shipped", "first-user-feedback-loop"]
-    },
-    taskIds: ["core-workflow-defined", "mvp-shipped", "first-user-feedback-loop"],
-    riskIds: [],
-    nextStageIds: ["launch-stack"]
-  },
-  {
-    stageId: "launch-stack",
-    code: "launch_stack",
-    title: "Launch stack and instrumentation",
+    title: "MVP, proof of value, and IP protection",
     type: "execution",
     status: "locked",
     stepNumber: 8,
-    totalSteps: 16,
-    goal: "Put billing, analytics, error tracking, and customer feedback loops in place before pushing harder on growth.",
-    whyNow: "Without instrumentation, founders mistake noise for signal and waste weeks chasing the wrong problem.",
+    totalSteps: 18,
+    goal: "Ship the minimum useful product that solves one core workflow, capture first proof of value, and file IP protection before public disclosure.",
+    whyNow: "Shipping late burns runway without learning. Publishing without IP protection can permanently forfeit patent rights.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "support-loop-live"]
+      requiredTaskIds: ["core-workflow-defined", "mvp-shipped", "ip-protection-filed"]
     },
-    taskIds: ["analytics-live", "billing-or-conversion-live", "support-loop-live", "error-monitoring-live"],
+    taskIds: ["core-workflow-defined", "mvp-shipped", "ip-protection-filed"],
+    riskIds: [],
+    nextStageIds: ["launch-gtm"]
+  },
+  {
+    stageId: "launch-gtm",
+    code: "launch_gtm",
+    title: "Launch stack, instrumentation, and GTM",
+    type: "execution",
+    status: "locked",
+    stepNumber: 9,
+    totalSteps: 18,
+    goal: "Put billing, analytics, error tracking in place and define your go-to-market channel before pushing for growth.",
+    whyNow: "Without instrumentation founders mistake noise for signal. Without a GTM plan even great products launch into silence.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "gtm-channel-defined"]
+    },
+    taskIds: ["analytics-live", "billing-or-conversion-live", "gtm-channel-defined"],
     riskIds: [],
     nextStageIds: ["growth-engine"]
   },
@@ -1321,33 +1340,15 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Growth and retention loop",
     type: "execution",
     status: "locked",
-    stepNumber: 9,
-    totalSteps: 16,
+    stepNumber: 10,
+    totalSteps: 18,
     goal: "Define the north-star metric, review growth weekly, and prove that users return or expand over time.",
     whyNow: "Topline growth without retention is usually a temporary illusion.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["north-star-set", "weekly-review-running", "retention-check-defined"]
     },
-    taskIds: ["north-star-set", "weekly-review-running", "retention-check-defined", "first-gtm-channel-tested"],
-    riskIds: [],
-    nextStageIds: ["company-setup"]
-  },
-  {
-    stageId: "company-setup",
-    code: "company_setup",
-    title: "Company, finance, and security basics",
-    type: "execution",
-    status: "locked",
-    stepNumber: 10,
-    totalSteps: 16,
-    goal: "Set up incorporation, banking, lightweight finance ops, privacy, and core security foundations.",
-    whyNow: "Weak company plumbing creates painful delays when customers, hires, or investors ask for basic diligence.",
-    completionRule: {
-      kind: "required_tasks",
-      requiredTaskIds: ["banking-finance-stack", "privacy-security-basics", "data-room-basics"]
-    },
-    taskIds: ["banking-finance-stack", "privacy-security-basics", "data-room-basics"],
+    taskIds: ["north-star-set", "weekly-review-running", "retention-check-defined"],
     riskIds: [],
     nextStageIds: ["fundraising-readiness"]
   },
@@ -1358,14 +1359,51 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 11,
-    totalSteps: 16,
-    goal: "Model runway, define milestones, and prepare a crisp investor-ready story only if fundraising is actually needed.",
-    whyNow: "Fundraising without a clear use-of-cash plan usually burns time and leverage.",
+    totalSteps: 18,
+    goal: "Model burn rate and runway (target 24–30 months at seed), build a milestone-driven use-of-cash plan, and prepare investor-grade materials — only if fundraising is actually needed.",
+    whyNow: "In 2026, investors reward capital efficiency over aggressive growth. Fundraising without a clear runway model and profitability path burns 3–6 months of founder time and destroys negotiation leverage.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["runway-model-ready", "milestone-plan-ready", "investor-material-ready"]
+      requiredTaskIds: [
+        "runway-model-ready",
+        "fundraising-decision-made",
+        "investor-material-ready"
+      ]
     },
-    taskIds: ["runway-model-ready", "milestone-plan-ready", "investor-material-ready"],
+    taskIds: [
+      "runway-model-ready",
+      "fundraising-decision-made",
+      "investor-material-ready"
+    ],
+    riskIds: [
+      "runway-too-short",
+      "dilution-risk"
+    ],
+    nextStageIds: ["venture-certification"]
+  },
+  {
+    stageId: "venture-certification",
+    code: "venture_certification",
+    title: "Venture certification and government programs",
+    type: "verification",
+    status: "locked",
+    stepNumber: 12,
+    totalSteps: 18,
+    goal: "Apply for venture business certification, match to government startup support programs, and secure non-dilutive funding before committing personal capital.",
+    whyNow: "Venture certification unlocks tax breaks, military service exemptions, and program eligibility. Government programs have hard deadlines — missing them means paying full cost out of pocket.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: [
+        "venture-cert-type-checked",
+        "govt-program-matched",
+        "application-submitted"
+      ]
+    },
+    taskIds: [
+      "venture-cert-type-checked",
+      "govt-program-matched",
+      "application-submitted"
+    ],
     riskIds: [],
     nextStageIds: ["tax-guide"]
   },
@@ -1483,18 +1521,36 @@ export const starterStageFlow: RoadmapStageState[] = [
   {
     stageId: "registration-setup",
     code: "registration_setup",
-    title: "Business registration",
+    title: "Business registration and permits",
     type: "execution",
     status: "locked",
     stepNumber: 10,
-    totalSteps: 14,
-    goal: "Complete the business registration, operating permit filing, and insurance setup.",
+    totalSteps: 15,
+    goal: "Complete the business registration at the tax office and file the operating permit with your district office.",
     whyNow: "Registration and permits must be in place before you can legally begin operating.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["business-registered", "permit-filed", "insurance-setup"]
+      requiredTaskIds: ["business-registered", "permit-filed"]
     },
-    taskIds: ["business-registered", "permit-filed", "insurance-setup"],
+    taskIds: ["business-registered", "permit-filed"],
+    riskIds: [],
+    nextStageIds: ["insurance-tax-setup"]
+  },
+  {
+    stageId: "insurance-tax-setup",
+    code: "insurance_tax_setup",
+    title: "Insurance and tax setup",
+    type: "execution",
+    status: "locked",
+    stepNumber: 11,
+    totalSteps: 15,
+    goal: "Set up 4 major insurance policies (national pension, health, employment, industrial accident), register for withholding tax, and configure payroll basics.",
+    whyNow: "Even with 1 employee, insurance registration is mandatory within 14 days of hiring. Late filing triggers penalties and back-payment. Tax setup before first payroll prevents future audit risk.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["insurance-registered", "withholding-tax-set"]
+    },
+    taskIds: ["insurance-registered", "withholding-tax-set", "payroll-method-decided"],
     riskIds: [],
     nextStageIds: ["hiring-setup"]
   },
@@ -1504,15 +1560,15 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Staff hiring and labor",
     type: "execution",
     status: "locked",
-    stepNumber: 11,
+    stepNumber: 12,
     totalSteps: 15,
-    goal: "Decide whether you need staff, post a job listing, write employment contracts, and handle payroll and insurance obligations.",
-    whyNow: "Hiring without a contract or proper insurance registration is a legal violation — and the most common mistake first-time owners make.",
+    goal: "Decide whether you need staff, post a job listing, and write employment contracts.",
+    whyNow: "Hiring without a proper contract is the most common legal violation first-time owners make.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["hiring-decision-made", "employment-contract-signed"]
     },
-    taskIds: ["hiring-decision-made", "employment-contract-signed", "payroll-insurance-filed"],
+    taskIds: ["hiring-decision-made", "employment-contract-signed"],
     riskIds: [],
     nextStageIds: ["operations-setup"]
   },
@@ -1759,29 +1815,32 @@ export const starterTaskMap: WorkflowTaskMap = {
   "mvp-build": [
     { taskId: "core-workflow-defined", title: "Define one core user workflow and success outcome", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "mvp-shipped", title: "Ship the smallest MVP that proves this workflow can be solved", status: "todo", required: true, estimatedMinutes: 240 },
-    { taskId: "first-user-feedback-loop", title: "Collect direct feedback from first users and log what blocks repeat use", status: "todo", required: true, estimatedMinutes: 90 }
+    { taskId: "ip-protection-filed", title: "File trademark and provisional patent before public launch", status: "todo", required: true, estimatedMinutes: 90 }
   ],
-  "launch-stack": [
+  "launch-gtm": [
     { taskId: "analytics-live", title: "Install analytics for activation, retention, and funnel events", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "billing-or-conversion-live", title: "Set up billing, pricing, or conversion tracking before launch", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "support-loop-live", title: "Create a support and user-feedback loop founders check every day", status: "todo", required: true, estimatedMinutes: 30 },
-    { taskId: "error-monitoring-live", title: "Install error and uptime monitoring for production", status: "todo", required: false, estimatedMinutes: 30 }
+    { taskId: "gtm-channel-defined", title: "Define primary GTM channel and run first acquisition experiment", status: "todo", required: true, estimatedMinutes: 60 }
   ],
   "growth-engine": [
     { taskId: "north-star-set", title: "Choose one north-star metric and one weekly growth metric", status: "todo", required: true, estimatedMinutes: 30 },
     { taskId: "weekly-review-running", title: "Run a weekly review for growth, burn, and biggest bottleneck", status: "todo", required: true, estimatedMinutes: 30 },
-    { taskId: "retention-check-defined", title: "Define a retention check so growth is not judged on acquisition alone", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "first-gtm-channel-tested", title: "Test one focused GTM channel with real users or pilots", status: "todo", required: false, estimatedMinutes: 120 }
+    { taskId: "retention-check-defined", title: "Define a retention check so growth is not judged on acquisition alone", status: "todo", required: true, estimatedMinutes: 45 }
   ],
   "company-setup": [
     { taskId: "banking-finance-stack", title: "Separate company banking, bookkeeping, and cash tracking", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "privacy-security-basics", title: "Put basic privacy, access control, and security hygiene in place", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "data-room-basics", title: "Prepare a lightweight data room with incorporation and KPI basics", status: "todo", required: true, estimatedMinutes: 45 }
+    { taskId: "tax-advisor-selected", title: "Select a tax advisor and set up bookkeeping schedule", status: "todo", required: true, estimatedMinutes: 30 }
   ],
   "fundraising-readiness": [
-    { taskId: "runway-model-ready", title: "Model burn, runway, and the milestones cash must buy", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "milestone-plan-ready", title: "Define the milestone plan for PMF, revenue, or pilots before raising", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "investor-material-ready", title: "Prepare a crisp deck, metric snapshot, and founder narrative", status: "todo", required: true, estimatedMinutes: 90 }
+    { taskId: "runway-model-ready", title: "Model burn rate and cash runway with best/base/worst scenarios", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "fundraising-decision-made", title: "Decide fundraising path: VC, bootstrap, or government grants", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "investor-material-ready", title: "Prepare pitch deck, metric snapshot, and financial projection", status: "todo", required: true, estimatedMinutes: 120 }
+  ],
+  "venture-certification": [
+    { taskId: "venture-cert-type-checked", title: "Check venture certification eligibility: investment type, R&D type, or innovation growth type", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "govt-program-matched", title: "Match to K-Startup programs: pre-startup package, early-stage package, TIPS, or growth package", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "application-submitted", title: "Submit venture certification or government program application before deadline", status: "todo", required: true, estimatedMinutes: 90 }
   ],
   // ── Offline path tasks ─────────────────────────────────────────────────────
   "permit-check": [
@@ -1890,36 +1949,45 @@ export const starterTaskMap: WorkflowTaskMap = {
       status: "todo",
       required: true,
       estimatedMinutes: 60
+    }
+  ],
+  "insurance-tax-setup": [
+    {
+      taskId: "insurance-registered",
+      title: "Register 4 major insurance policies at 4insure.or.kr",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 40
     },
     {
-      taskId: "insurance-setup",
-      title: "Set up employment insurance and industrial accident insurance",
+      taskId: "withholding-tax-set",
+      title: "Set up withholding tax via Hometax simplified tax table",
       status: "todo",
       required: true,
       estimatedMinutes: 30
+    },
+    {
+      taskId: "payroll-method-decided",
+      title: "Choose payroll method: manual, tax advisor, or payroll SaaS (flex, Albam)",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 20
     }
   ],
   "hiring-setup": [
     {
       taskId: "hiring-decision-made",
-      title: "직원·알바 필요 여부 및 인원 계획 확정",
+      title: "Decide staffing needs and headcount plan",
       status: "todo",
       required: true,
       estimatedMinutes: 30
     },
     {
       taskId: "employment-contract-signed",
-      title: "근로계약서 작성 및 교부 완료",
+      title: "Write and deliver employment contracts",
       status: "todo",
       required: true,
       estimatedMinutes: 40
-    },
-    {
-      taskId: "payroll-insurance-filed",
-      title: "4대보험 취득 신고 완료",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 60
     }
   ],
   "operations-setup": [

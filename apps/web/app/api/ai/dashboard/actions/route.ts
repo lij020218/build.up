@@ -1,8 +1,9 @@
-import { generateDashboardActions } from "@build-up/ai";
+import { generateDashboardActions, enrichDashboardContext } from "@build-up/ai";
 import type { DashboardContext } from "@build-up/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
+import { getAnthropicApiKey } from "../../../_lib/env";
 
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = getAnthropicApiKey();
   if (!apiKey) {
     return NextResponse.json({ error: "AI is not configured." }, { status: 500 });
   }
@@ -36,7 +37,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await generateDashboardActions(body, { apiKey });
+    const enrichedCtx = enrichDashboardContext(body);
+    const result = await generateDashboardActions(enrichedCtx, { apiKey });
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(

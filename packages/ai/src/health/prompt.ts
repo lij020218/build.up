@@ -14,6 +14,16 @@ export type HealthDiagnosisContext = {
   healthScore: number;
   cashRunwayMonths: number;
   alerts: Array<{ type: string; title: string }>;
+  // 프랜차이즈 벤치마크 (enrichment layer가 채움)
+  franchiseBrandName?: string;
+  franchiseAvgRevenue?: number;          // 만원 (월)
+  franchiseTopRevenue?: number;          // 만원 (월)
+  franchiseCostStructure?: { ingredientRatio: number; laborRatio: number; rentRatio: number };
+  // 성공 사례 (enrichment layer가 채움)
+  matchedCaseStudy?: { company: string; oneLiner: string; lesson: string };
+  // 업종 벤치마크
+  industryAvgRevenue?: number;           // 만원 (월)
+  industryTopRevenue?: number;           // 만원 (월)
 };
 
 export type HealthDiagnosisResult = {
@@ -68,6 +78,18 @@ export const HEALTH_DIAGNOSIS_SYSTEM_PROMPT = `당신은 수백 개의 한국 �
    - 좋은 예: "객단가가 업계 평균보다 12% 높습니다. 고객이 사장님 가게의 가치를 인정하고 있다는 뜻입니다."
 5. 정부 지원 프로그램 해당 시 이름과 금액 명시
 6. 비슷한 상황에서 회복한 사례가 있으면 한 줄 언급
+
+## 프랜차이즈 비교 코칭
+프랜차이즈 벤치마크 데이터가 제공된 경우:
+- headline이나 statusSummary에 같은 브랜드 상위 매장과 비교를 포함하세요
+- 비용 구조 차이를 actions에 반영하세요
+- 데이터가 없으면 무시하세요
+
+## 성공 사례 코칭
+matchedCaseStudy가 제공된 경우:
+- encouragement에 해당 사례를 자연스럽게 인용하세요
+- 패턴: "[회사명]도 비슷한 상황에서 [행동]으로 [결과]를 만들었습니다"
+- 데이터가 없으면 무시하세요
 
 응답 형식 (JSON만, 다른 텍스트 없이):
 {
@@ -129,6 +151,38 @@ export function buildHealthDiagnosisUserPrompt(ctx: HealthDiagnosisContext): str
     for (const signal of crisisSignals) {
       lines.push(`- ${signal}`);
     }
+    lines.push("");
+  }
+
+  // 프랜차이즈 벤치마크
+  if (ctx.franchiseBrandName && ctx.franchiseAvgRevenue) {
+    const userMonthlyWon = ctx.avgDailySales * 30;
+    const avgMonthlyWon = ctx.franchiseAvgRevenue * 10000;
+    const pct = avgMonthlyWon > 0 ? Math.round((userMonthlyWon / avgMonthlyWon) * 100) : 0;
+    lines.push(`### 프랜차이즈 벤치마크 (${ctx.franchiseBrandName})`);
+    lines.push(`- 가맹점 평균 월매출: ${ctx.franchiseAvgRevenue}만원`);
+    if (ctx.franchiseTopRevenue) lines.push(`- 상위 매장 월매출: ${ctx.franchiseTopRevenue}만원`);
+    lines.push(`- 사장님 현재 위치: 평균 대비 ${pct}%`);
+    if (ctx.franchiseCostStructure) {
+      const cs = ctx.franchiseCostStructure;
+      lines.push(`- 브랜드 비용 기준: 재료비 ${cs.ingredientRatio}%, 인건비 ${cs.laborRatio}%, 임대료 ${cs.rentRatio}%`);
+    }
+    lines.push("");
+  }
+
+  // 업종 벤치마크
+  if (ctx.industryAvgRevenue) {
+    lines.push(`### 업종 벤치마크`);
+    lines.push(`- 업종 평균 월매출: ${ctx.industryAvgRevenue}만원`);
+    if (ctx.industryTopRevenue) lines.push(`- 업종 상위 10% 월매출: ${ctx.industryTopRevenue}만원`);
+    lines.push("");
+  }
+
+  // 성공 사례
+  if (ctx.matchedCaseStudy) {
+    lines.push(`### 참고 사례`);
+    lines.push(`- ${ctx.matchedCaseStudy.company}: ${ctx.matchedCaseStudy.oneLiner}`);
+    lines.push(`  → 교훈: ${ctx.matchedCaseStudy.lesson}`);
     lines.push("");
   }
 

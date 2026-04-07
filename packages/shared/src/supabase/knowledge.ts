@@ -327,3 +327,100 @@ export async function loadStageGuideContent(
   if (error) throw error;
   return data ? mapStageGuideRow(data) : null;
 }
+
+// ── 인테리어 디자인 가이드 (업종별 자재·컨셉) ─────────────────────────────
+
+export type InteriorGuideItem = {
+  id: string;
+  guideType: "material" | "concept";
+  nameKo: string;
+  nameEn?: string;
+  descriptionKo: string;
+  descriptionEn?: string;
+  iconName?: string;
+  tags: string[];
+  pros?: string[];
+  cons?: string[];
+  costRangeKo?: string;
+  costRangeEn?: string;
+  trendSource?: string;
+  priority: number;
+};
+
+export type InteriorGuideResult = {
+  materials: InteriorGuideItem[];
+  concepts: InteriorGuideItem[];
+};
+
+/**
+ * 업종별 인테리어 자재·디자인 컨셉 로드.
+ * 3단계 폴백: sub_industry_id → category_id → 전체(null)
+ */
+export async function loadInteriorGuides(
+  client: Client,
+  categoryId: string,
+  subIndustryId?: string
+): Promise<InteriorGuideResult> {
+  type InteriorRow = BuildUpDatabase["public"]["Tables"]["interior_design_guides"]["Row"];
+
+  const mapRow = (row: InteriorRow): InteriorGuideItem => ({
+    id: row.id,
+    guideType: row.guide_type,
+    nameKo: row.name_ko,
+    nameEn: row.name_en ?? undefined,
+    descriptionKo: row.description_ko,
+    descriptionEn: row.description_en ?? undefined,
+    iconName: row.icon_name ?? undefined,
+    tags: row.tags ?? [],
+    pros: row.pros ?? undefined,
+    cons: row.cons ?? undefined,
+    costRangeKo: row.cost_range_ko ?? undefined,
+    costRangeEn: row.cost_range_en ?? undefined,
+    trendSource: row.trend_source ?? undefined,
+    priority: row.priority,
+  });
+
+  const split = (rows: InteriorGuideItem[]): InteriorGuideResult => ({
+    materials: rows.filter((r) => r.guideType === "material").sort((a, b) => a.priority - b.priority),
+    concepts: rows.filter((r) => r.guideType === "concept").sort((a, b) => a.priority - b.priority),
+  });
+
+  // 1차: sub_industry_id 매칭
+  if (subIndustryId) {
+    const { data, error } = await client
+      .from("interior_design_guides")
+      .select("*")
+      .eq("category_id", categoryId)
+      .eq("sub_industry_id", subIndustryId)
+      .eq("is_active", true)
+      .order("priority", { ascending: true });
+    if (!error && data && data.length > 0) {
+      return split(data.map(mapRow));
+    }
+  }
+
+  // 2차: category_id만 매칭 (sub_industry_id IS NULL)
+  const { data: catData, error: catError } = await client
+    .from("interior_design_guides")
+    .select("*")
+    .eq("category_id", categoryId)
+    .is("sub_industry_id", null)
+    .eq("is_active", true)
+    .order("priority", { ascending: true });
+  if (!catError && catData && catData.length > 0) {
+    return split(catData.map(mapRow));
+  }
+
+  // 3차: category_id만으로 전체 (sub_industry_id 무관)
+  const { data: allData, error: allError } = await client
+    .from("interior_design_guides")
+    .select("*")
+    .eq("category_id", categoryId)
+    .eq("is_active", true)
+    .order("priority", { ascending: true });
+  if (!allError && allData && allData.length > 0) {
+    return split(allData.map(mapRow));
+  }
+
+  return { materials: [], concepts: [] };
+}

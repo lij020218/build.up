@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { DashboardHook } from "../../useDashboard";
 import { DetailTabs } from "./DetailTabs";
 import { PLHeroCard } from "./PLHeroCard";
@@ -204,38 +205,50 @@ export default function OperationalDashboard({ d }: Props) {
       : ko
         ? "비교 데이터 없음"
         : "No comparison";
+  // AI 코치에서 가장 높은 우선순위 액션의 제목을 topRiskLabel로 사용
+  const aiTopAction = d.aiActions?.todayActions?.[0];
+  const aiCrisis = d.aiActions?.crisisActions?.[0];
   const topRiskLabel =
-    runwayMonths >= 0 && runwayMonths <= 3
-      ? ko
-        ? `런웨이 ${runwayMonths}개월`
-        : `${runwayMonths} mo runway`
-      : lowStockItems.length > 0
-        ? ko
-          ? `재고 경고 ${lowStockItems.length}건`
-          : `${lowStockItems.length} stock alerts`
-        : employees.length === 0
+    aiCrisis
+      ? aiCrisis.title
+      : aiTopAction?.priority === "high"
+        ? aiTopAction.title
+        : runwayMonths >= 0 && runwayMonths <= 3
           ? ko
-            ? "인력 플랜 필요"
-            : "Team plan needed"
-          : ko
-            ? "핵심 리스크 낮음"
-            : "Low immediate risk";
+            ? `런웨이 ${runwayMonths}개월`
+            : `${runwayMonths} mo runway`
+          : lowStockItems.length > 0
+            ? ko
+              ? `재고 경고 ${lowStockItems.length}건`
+              : `${lowStockItems.length} stock alerts`
+            : employees.length === 0
+              ? ko
+                ? "인력 플랜 필요"
+                : "Team plan needed"
+              : ko
+                ? "핵심 리스크 낮음"
+                : "Low immediate risk";
+  // AI 코치에서 reason/impact를 focusMessage로 사용
   const focusMessage =
-    runwayMonths >= 0 && runwayMonths <= 3
-      ? ko
-        ? "지금은 성장보다 현금 방어가 우선입니다. 고정비와 저효율 지출부터 줄이세요."
-        : "Cash defense comes before growth. Cut fixed and low-efficiency spend first."
-      : weeklySalesChange < 0
-        ? ko
-          ? "전주 대비 하락세입니다. 신규 유입보다 재구매와 전환 병목부터 점검하세요."
-          : "Weekly trend is down. Fix retention and conversion before chasing more acquisition."
-        : lowStockItems.length > 0
+    aiCrisis
+      ? aiCrisis.impact
+      : aiTopAction?.priority === "high"
+        ? aiTopAction.reason
+        : runwayMonths >= 0 && runwayMonths <= 3
           ? ko
-            ? "매출을 만들 수 있어도 재고가 막으면 성장이 멈춥니다. 발주 우선순위를 정하세요."
-            : "Stockouts can kill growth. Prioritize reorder decisions now."
-          : ko
-            ? "오늘은 매출 기록, 병목 점검, 핵심 운영 자산 유지에 집중하면 됩니다."
-            : "Today, focus on logging revenue, checking bottlenecks, and protecting core operations.";
+            ? "지금은 성장보다 현금 방어가 우선입니다. 고정비와 저효율 지출부터 줄이세요."
+            : "Cash defense comes before growth. Cut fixed and low-efficiency spend first."
+          : weeklySalesChange < 0
+            ? ko
+              ? "전주 대비 하락세입니다. 신규 유입보다 재구매와 전환 병목부터 점검하세요."
+              : "Weekly trend is down. Fix retention and conversion before chasing more acquisition."
+            : lowStockItems.length > 0
+              ? ko
+                ? "매출을 만들 수 있어도 재고가 막으면 성장이 멈춥니다. 발주 우선순위를 정하세요."
+                : "Stockouts can kill growth. Prioritize reorder decisions now."
+              : ko
+                ? "오늘은 매출 기록, 병목 점검, 핵심 운영 자산 유지에 집중하면 됩니다."
+                : "Today, focus on logging revenue, checking bottlenecks, and protecting core operations.";
 
   useEffect(() => {
     if (!d.aiActions && !d.aiActionsLoading && d.businessLaunched && d.storeName) {
@@ -276,6 +289,10 @@ export default function OperationalDashboard({ d }: Props) {
     try { localStorage.setItem("dismissedMilestones", JSON.stringify([...next])); } catch {}
   };
 
+  // 전월 대비 손익 변화율
+  const prevNetProfit = (prevMonthSales !== undefined && prevMonthCosts !== undefined) ? prevMonthSales - prevMonthCosts : undefined;
+  const pnlChangePercent = (prevNetProfit !== undefined && prevNetProfit !== 0) ? Math.round(((netProfit - prevNetProfit) / Math.abs(prevNetProfit)) * 100) : undefined;
+
   const headlineStats = isStaff ? [] : [
     {
       label: isStartupCompany ? (ko ? "월 Burn / 손익" : "Monthly burn / P&L") : ko ? "월 손익" : "Monthly P&L",
@@ -289,6 +306,7 @@ export default function OperationalDashboard({ d }: Props) {
             ? "비용 입력 필요"
             : "Need monthly costs",
       tone: netProfit > 0 ? "#177245" : netProfit < 0 ? "#b42318" : "rgba(15, 23, 42, 0.82)",
+      change: pnlChangePercent,
     },
     {
       label: ko ? "현금 런웨이" : "Cash runway",
@@ -309,9 +327,12 @@ export default function OperationalDashboard({ d }: Props) {
             ? "예산 입력 필요"
             : "Need starting cash",
       tone: runwayMonths >= 0 && runwayMonths <= 3 ? "#b42318" : "rgba(15, 23, 42, 0.82)",
+      change: undefined as number | undefined,
     },
     {
-      label: isStartupCompany ? (ko ? "로드맵 실행" : "Roadmap execution") : ko ? "현재 재고" : "Inventory",
+      label: isStartupCompany
+        ? (ko ? "로드맵 실행" : "Roadmap execution")
+        : ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory"),
       value: isStartupCompany
         ? `${d.completedCount}/${d.pathTotalStages}`
         : inventory.length > 0
@@ -331,22 +352,28 @@ export default function OperationalDashboard({ d }: Props) {
             ? `부족 ${lowStockItems.length}개 품목`
             : `${lowStockItems.length} low-stock items`
           : ko
-            ? "재고 상태 안정"
+            ? (d.businessCtx.inventoryMode === "unified" ? "제품 상태 안정" : "재고 상태 안정")
             : "Stock looks stable",
       tone: "rgba(15, 23, 42, 0.94)",
+      change: undefined as number | undefined,
     },
     {
-      label: ko ? "직원 관리" : "Staff",
-      value: employees.length > 0 ? `${employees.length}${ko ? "명" : ""}` : ko ? "미등록" : "No staff",
-      note:
-        employees.length > 0
-          ? ko
-            ? `예상 인건비 ${fmt(estimatedMonthlyPayroll)}`
-            : `Payroll ${fmt(estimatedMonthlyPayroll)}`
-          : ko
-            ? "직원 정보 추가"
-            : "Add staff",
-      tone: "rgba(15, 23, 42, 0.94)",
+      label: ko ? "경영 건강" : "Health",
+      value: totalSales > 0
+        ? `${healthMetrics.healthScore}${ko ? "점" : "pt"}`
+        : "—",
+      note: totalSales > 0
+        ? healthMetrics.healthGrade === "healthy" ? (ko ? "건강한 상태입니다" : "Healthy")
+          : healthMetrics.healthGrade === "caution" ? (ko ? "주의가 필요합니다" : "Needs attention")
+          : healthMetrics.healthGrade === "warning" ? (ko ? "경고 — 비용 점검 필요" : "Warning — check costs")
+          : (ko ? "위험 — 즉시 대응 필요" : "Critical — act now")
+        : ko ? "매출 입력 후 측정" : "Enter sales to measure",
+      tone: totalSales > 0
+        ? healthMetrics.healthScore >= 75 ? "#059669"
+          : healthMetrics.healthScore >= 50 ? "#d97706"
+          : "#dc2626"
+        : "rgba(15, 23, 42, 0.82)",
+      change: undefined as number | undefined,
     },
     ...(nextTaxItem ? [{
       label: ko ? "다음 세금 마감" : "Next tax deadline",
@@ -357,12 +384,66 @@ export default function OperationalDashboard({ d }: Props) {
           : `${nextTaxItem.daysUntil}${ko ? "일 후" : "d"}`,
       note: nextTaxItem.summary,
       tone: nextTaxItem.daysUntil <= 7 ? "#b42318" : nextTaxItem.daysUntil <= 30 ? "#b54708" : "rgba(15, 23, 42, 0.82)",
+      change: undefined as number | undefined,
     }] : []),
   ];
+
+  // CSV 내보내기
+  const handleExportCSV = () => {
+    const rows = [ko ? ["날짜", "매출(원)", "고객수"] : ["Date", "Sales(KRW)", "Customers"]];
+    for (const entry of allEntries) {
+      rows.push([entry.date, String(entry.sales), String(entry.customers)]);
+    }
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `buildup-sales-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <section style={shell}>
       <style>{bentoHoverCSS}</style>
+
+      {/* ── 대시보드 헤더 바 ── */}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "14px 20px", borderRadius: "12px",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.5) 100%)",
+        border: "1px solid rgba(5,97,252,0.06)",
+        boxShadow: "0 21px 94px rgba(0,0,0,0.03)",
+      }} className="bento-fade-in">
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>
+            {ko ? "대시보드" : "Dashboard"}
+          </span>
+          <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.4)" }}>›</span>
+          <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>
+            {ko ? "개요" : "Overview"}
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{
+            padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: 500,
+            color: "rgba(15,23,42,0.6)", background: "rgba(240,244,255,0.6)",
+            border: "1px solid rgba(5,97,252,0.08)",
+          }}>
+            {new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { year: "numeric", month: "short", day: "numeric" })}
+          </div>
+          <button type="button" onClick={handleExportCSV} style={{
+            border: "none", borderRadius: "8px", padding: "6px 14px",
+            background: "#0561fc", color: "#fff", fontSize: "12px", fontWeight: 600,
+            cursor: "pointer", boxShadow: "0 4px 14px rgba(5,97,252,0.25)",
+            display: "flex", alignItems: "center", gap: "6px",
+          }} className="bento-btn">
+            📊 {ko ? "CSV 내보내기" : "Export CSV"}
+          </button>
+        </div>
+      </div>
+
       <div style={heroPanel} className="bento-card">
         <div style={heroHeader}>
           <div>
@@ -397,7 +478,21 @@ export default function OperationalDashboard({ d }: Props) {
         <div style={headlineGrid}>
           {headlineStats.map((item, idx) => (
             <div key={item.label} style={{ ...headlineCard, animationDelay: `${idx * 60}ms` }} className="bento-headline bento-fade-in">
-              <div style={headlineLabel}>{item.label}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={headlineLabel}>{item.label}</div>
+                {item.change !== undefined && item.change !== 0 && (
+                  <div style={{
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    background: item.change > 0 ? "rgba(101, 197, 101, 0.12)" : "rgba(197, 101, 101, 0.12)",
+                    color: item.change > 0 ? "#177245" : "#b42318",
+                  }}>
+                    {item.change > 0 ? "+" : ""}{item.change}%
+                  </div>
+                )}
+              </div>
               <div style={{ ...headlineValue, color: item.tone }} className="bento-number">{item.value}</div>
               <div style={headlineNote}>{item.note}</div>
             </div>
@@ -481,9 +576,12 @@ export default function OperationalDashboard({ d }: Props) {
             todayBepProgress={todayBepProgress}
             daysAboveBreakEven={daysAboveBreakEven}
             totalDaysRecorded={healthMetrics.totalDaysRecorded}
+            cogsLabel={d.businessCtx.expenseFields?.[0]?.label}
           />
         )}
-        <InventoryOpsCard ko={ko} inventory={inventory} lowStockItems={lowStockItems} d={d} />
+        {d.businessCtx.showInventoryCard && (
+          <InventoryOpsCard ko={ko} inventory={inventory} lowStockItems={lowStockItems} d={d} />
+        )}
         <StaffOpsCard
           ko={ko}
           employees={employees}
@@ -564,6 +662,91 @@ export default function OperationalDashboard({ d }: Props) {
           breakEvenDailySales={breakEvenDailySales}
           industryCategoryId={d.industryCategoryId}
         />
+      )}
+
+      {/* ── 인기 상품/서비스 + 최근 활동 2열 그리드 ── */}
+      {!isStaff && (d.businessCtx.inventoryMode as string) !== "minimal" && !isStartupCompany && (
+        <div style={{ display: "grid", gridTemplateColumns: viewportWidth >= 768 ? "1fr 1fr" : "1fr", gap: "16px" }}>
+          {/* 인기 상품/서비스 카드 */}
+          <div style={opsCard} className="bento-card bento-fade-in">
+            <div style={opsHeader}>
+              <div>
+                <div style={sectionEyebrow}>{ko ? "이번 달" : "This Month"}</div>
+                <div style={{ fontSize: "17px", fontWeight: 650, letterSpacing: "-0.02em", color: "#0f172a" }}>
+                  {ko ? (d.businessCtx.inventoryMode === "service" ? "인기 서비스" : d.businessCtx.inventoryMode === "minimal" ? "인기 프로그램" : "인기 상품") : "Top Products"}
+                </div>
+                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>
+                  {ko ? "매출 기준 상위 항목" : "Best selling products this month"}
+                </div>
+              </div>
+            </div>
+            {(d.products as Array<{ id: string; name: string; monthlySales?: number; price?: number }> || []).length > 0 ? (
+              <div style={{ display: "grid", gap: "10px" }}>
+                {(d.products as Array<{ id: string; name: string; monthlySales?: number; price?: number }>)
+                  .sort((a, b) => ((b.monthlySales ?? 0) * (b.price ?? 0)) - ((a.monthlySales ?? 0) * (a.price ?? 0)))
+                  .slice(0, 4)
+                  .map((product, i) => {
+                    const revenue = (product.monthlySales ?? 0) * (product.price ?? 0);
+                    const maxRevenue = Math.max(...(d.products as Array<{ monthlySales?: number; price?: number }>).map(p => (p.monthlySales ?? 0) * (p.price ?? 0)), 1);
+                    const percent = Math.round((revenue / maxRevenue) * 100);
+                    return (
+                      <div key={product.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", marginBottom: "2px" }}>{product.name}</div>
+                          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>
+                            {product.monthlySales ?? 0}{ko ? "개 판매" : " sales"}
+                          </div>
+                          <div style={{ height: "4px", borderRadius: "2px", background: "rgba(5,97,252,0.08)", marginTop: "6px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", borderRadius: "2px", width: `${percent}%`, background: i === 0 ? "#0561fc" : "rgba(5,97,252,0.4)", transition: "width 0.6s ease" }} />
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a", whiteSpace: "nowrap" }}>{fmt(revenue)}</div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div style={emptyState}>{ko ? "상품을 등록하면 매출 순위가 여기에 표시됩니다" : "Add products to see sales ranking here"}</div>
+            )}
+          </div>
+
+          {/* 최근 활동 피드 */}
+          <div style={opsCard} className="bento-card bento-fade-in">
+            <div style={opsHeader}>
+              <div>
+                <div style={sectionEyebrow}>{ko ? "최근" : "Recent"}</div>
+                <div style={{ fontSize: "17px", fontWeight: 650, letterSpacing: "-0.02em", color: "#0f172a" }}>
+                  {ko ? "최근 활동" : "Recent Activity"}
+                </div>
+                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>
+                  {ko ? "대시보드 최근 이벤트" : "Latest events and updates"}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "grid", gap: "8px" }}>
+              {recent7Entries.length > 0 ? recent7Entries.slice(-5).reverse().map((entry, i) => (
+                <div key={entry.date} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: i === 0 ? "rgba(5,97,252,0.04)" : "transparent" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: entry.sales > avgDailySales ? "rgba(101,197,101,0.12)" : "rgba(5,97,252,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>
+                    {entry.sales > avgDailySales ? "📈" : "📊"}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>
+                      {ko ? "매출 기록" : "Sales recorded"} — {fmt(entry.sales)}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>
+                      {ko ? `고객 ${entry.customers}명` : `${entry.customers} customers`} · {entry.date.slice(5).replace("-", "/")}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", whiteSpace: "nowrap" }}>
+                    {i === 0 ? (ko ? "최근" : "Latest") : `${i + 1}${ko ? "일 전" : "d ago"}`}
+                  </div>
+                </div>
+              )) : (
+                <div style={emptyState}>{ko ? "매출을 기록하면 활동 내역이 여기에 표시됩니다" : "Record sales to see activity here"}</div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {!isStaff && <section style={detailSection}>
@@ -751,10 +934,11 @@ function ActivitySnapshotCard({
       </div>
 
       <div style={activityChartWrap}>
-        {bars.map((bar) => {
-          const height = bar.sales > 0 ? Math.max(8, (bar.sales / maxSales) * 92) : 4;
+        {bars.map((bar, barIdx) => {
+          const height = bar.sales > 0 ? Math.max(8, (bar.sales / maxSales) * 100) : 4;
+          const isSelected = d.dailyDateInput === bar.date;
           return (
-            <div key={bar.date} style={{ ...activityBarCol, cursor: "pointer" }} onClick={() => {
+            <div key={bar.date} style={{ ...activityBarCol, cursor: "pointer", position: "relative" as const }} onClick={() => {
               const allE = d.dailyEntries as DailyEntry[];
               const entry = allE.find(e => e.date === bar.date);
               d.setDailyDateInput(bar.date);
@@ -766,36 +950,59 @@ function ActivitySnapshotCard({
                 d.setDailyCustomersInput("");
               }
             }}>
-              <div style={activityBarTrack}>
+              {/* 호버 시 툴팁 */}
+              {isSelected && bar.sales > 0 && (
+                <div style={{
+                  position: "absolute" as const, top: "-36px", left: "50%", transform: "translateX(-50%)",
+                  padding: "4px 10px", borderRadius: "8px", background: "#0f172a", color: "#fff",
+                  fontSize: "11px", fontWeight: 650, whiteSpace: "nowrap" as const, zIndex: 10,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)", fontVariantNumeric: "tabular-nums" as const,
+                }} className="bento-fade-in">
+                  {fmt(bar.sales)}
+                </div>
+              )}
+              <div style={{ ...activityBarTrack, height: "120px" }}>
                 <div
                   className="bento-meter-fill"
                   style={{
                     ...activityBarFill,
                     height,
                     background: bar.isToday
-                      ? "linear-gradient(180deg, #1d3557 0%, #457b9d 100%)"
-                      : bar.sales > 0
-                        ? "linear-gradient(180deg, rgba(29,53,87,0.35) 0%, rgba(29,53,87,0.15) 100%)"
-                        : "linear-gradient(180deg, rgba(15,23,42,0.08) 0%, rgba(15,23,42,0.04) 100%)",
-                    borderRadius: "6px 6px 2px 2px",
-                    boxShadow: bar.isToday ? "0 -4px 12px rgba(29,53,87,0.15)" : "none",
-                    transition: "height 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease",
+                      ? "linear-gradient(180deg, #0561fc 0%, rgba(5,97,252,0.6) 100%)"
+                      : isSelected
+                        ? "linear-gradient(180deg, #0561fc 0%, rgba(5,97,252,0.4) 100%)"
+                        : bar.sales > 0
+                          ? "linear-gradient(180deg, rgba(5,97,252,0.25) 0%, rgba(5,97,252,0.08) 100%)"
+                          : "linear-gradient(180deg, rgba(5,97,252,0.06) 0%, rgba(5,97,252,0.02) 100%)",
+                    borderRadius: "8px 8px 4px 4px",
+                    boxShadow: bar.isToday ? "0 -4px 14px rgba(5,97,252,0.2)" : isSelected ? "0 -2px 8px rgba(5,97,252,0.1)" : "none",
+                    transition: "height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background 0.3s ease",
+                    animationDelay: `${barIdx * 80}ms`,
                   }}
                 />
               </div>
               {bar.sales > 0 && (
-                <div style={{ fontSize: "9px", fontWeight: 650, color: bar.isToday ? "#1d3557" : "rgba(15,23,42,0.3)", marginBottom: "1px", fontVariantNumeric: "tabular-nums" as const }}>
-                  {bar.sales >= 10000 ? `${Math.round(bar.sales / 10000)}` : ""}
+                <div style={{ fontSize: "10px", fontWeight: 650, color: bar.isToday || isSelected ? "#0561fc" : "rgba(15,23,42,0.3)", marginBottom: "1px", fontVariantNumeric: "tabular-nums" as const, transition: "color 0.2s ease" }}>
+                  {bar.sales >= 10000 ? `${Math.round(bar.sales / 10000)}만` : ""}
                 </div>
               )}
-              <div style={{ ...activityBarLabel, color: bar.isToday ? "#0f172a" : "rgba(15,23,42,0.38)", fontWeight: bar.isToday ? 650 : 500 }}>{bar.label}</div>
+              <div style={{
+                ...activityBarLabel,
+                color: bar.isToday ? "#0561fc" : isSelected ? "#0f172a" : "rgba(15,23,42,0.38)",
+                fontWeight: bar.isToday || isSelected ? 650 : 500,
+                transition: "color 0.2s ease",
+              }}>{bar.label}</div>
             </div>
           );
         })}
       </div>
 
-      <div style={{ ...activityFooter, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }}>
-        {/* ── 왼쪽: 오늘 상태 + 입력/수정 폼 + 상품별 매출 ── */}
+      {/* ── 구분선 ── */}
+      <div style={{ height: "1px", background: "rgba(5,97,252,0.06)", margin: "8px 0" }} />
+
+      {/* ── 오늘 입력 + 판매 현황 (풀폭 2열) ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", alignItems: "start" }}>
+        {/* ── 왼쪽: 오늘 상태 + 입력/수정 폼 ── */}
         <div>
         {(() => {
           const allE = d.dailyEntries as DailyEntry[];
@@ -855,115 +1062,109 @@ function ActivitySnapshotCard({
 
           return (
             <>
-              {/* 오늘 상태 요약 */}
-              <div style={activityTodaySummary}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                  <div style={activityMiniLabel}>{isToday ? (ko ? "오늘 상태" : "Today") : new Date(d.dailyDateInput + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" })}</div>
-                  {streak >= 3 && (
-                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#e85d04", background: "rgba(232,93,4,0.08)", borderRadius: "6px", padding: "2px 8px" }}>
-                      🔥 {streak}{ko ? "일 연속" : "d streak"}
-                    </span>
-                  )}
-                  {missedDays.length >= 2 && (
-                    <span style={{ fontSize: "11px", fontWeight: 600, color: "#b42318", background: "rgba(180,35,24,0.06)", borderRadius: "6px", padding: "2px 8px" }}>
-                      {missedDays.length}{ko ? "일째 미기록" : "d not logged"}
-                    </span>
+              {/* ── 오늘 상태 + 입력 통합 카드 (Apple 스타일) ── */}
+              <div style={{ borderRadius: "16px", overflow: "hidden", background: todayEntry ? "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(232,245,233,0.3) 100%)" : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,244,255,0.4) 100%)", border: `1px solid ${todayEntry ? "rgba(5,150,105,0.08)" : "rgba(5,97,252,0.06)"}`, boxShadow: "0 21px 94px rgba(0,0,0,0.03)" }}>
+
+                {/* 상단: 오늘 매출 히어로 */}
+                <div style={{ padding: "20px 22px 16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: todayEntry ? "#059669" : "#0561fc", boxShadow: todayEntry ? "0 0 8px rgba(5,150,105,0.4)" : "0 0 8px rgba(5,97,252,0.3)" }} />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>
+                        {isToday ? (ko ? "오늘" : "Today") : new Date(d.dailyDateInput + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long", day: "numeric" })}
+                      </span>
+                      {streak >= 3 && <span style={{ fontSize: "11px", fontWeight: 700, color: "#e85d04", background: "rgba(232,93,4,0.08)", borderRadius: "8px", padding: "2px 10px" }}>🔥 {streak}{ko ? "일 연속" : "d"}</span>}
+                      {missedDays.length >= 2 && <span style={{ fontSize: "11px", fontWeight: 600, color: "#dc2626", background: "rgba(220,38,38,0.06)", borderRadius: "8px", padding: "2px 10px" }}>{missedDays.length}{ko ? "일째 미기록" : "d missed"}</span>}
+                    </div>
+                    <input type="date" value={d.dailyDateInput} onChange={(event) => enterEdit(event.target.value)}
+                      style={{ fontSize: "12px", padding: "5px 10px", borderRadius: "8px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.8)", color: "#0f172a", fontWeight: 500 }} />
+                  </div>
+
+                  {todayEntry ? (
+                    <div>
+                      <div style={{ fontSize: "36px", fontWeight: 780, letterSpacing: "-0.05em", color: "#0f172a", lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }} className="bento-number">{fmt(todayEntry.sales)}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
+                        {yesterdayDiff != null && (
+                          <span style={{ fontSize: "12px", fontWeight: 650, padding: "3px 10px", borderRadius: "8px", background: yesterdayDiff >= 0 ? "rgba(5,150,105,0.08)" : "rgba(220,38,38,0.06)", color: yesterdayDiff >= 0 ? "#059669" : "#dc2626" }}>
+                            {yesterdayDiff >= 0 ? "↑" : "↓"} {Math.abs(yesterdayDiff)}% {ko ? "어제 대비" : "vs yesterday"}
+                          </span>
+                        )}
+                        <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>
+                          {todayEntry.customers > 0 ? (ko ? `${todayEntry.customers}명 · 객단가 ${fmt(todayEntry.sales / todayEntry.customers)}` : `${todayEntry.customers} · avg ${fmt(todayEntry.sales / todayEntry.customers)}`) : ""}
+                        </span>
+                        <button type="button" onClick={() => enterEdit(todayStr)} style={{ fontSize: "12px", fontWeight: 600, color: "#0561fc", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "auto" }}>{ko ? "수정" : "Edit"}</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: "22px", fontWeight: 700, color: "rgba(15,23,42,0.25)", lineHeight: 1, marginBottom: "6px" }}>{ko ? "아직 미입력" : "Not logged yet"}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)" }}>{ko ? `최근 평균 ${fmt(avgDailySales)}` : `Recent avg ${fmt(avgDailySales)}`}</div>
+                      {missedDays.length > 0 && (
+                        <div style={{ display: "flex", gap: "6px", marginTop: "10px", flexWrap: "wrap" as const }}>
+                          {missedDays.map(ds => (
+                            <button key={ds} type="button" onClick={() => enterEdit(ds)} style={{ fontSize: "11px", fontWeight: 600, padding: "4px 12px", borderRadius: "8px", border: "1px solid rgba(5,97,252,0.1)", background: d.dailyDateInput === ds ? "rgba(5,97,252,0.06)" : "white", color: d.dailyDateInput === ds ? "#0561fc" : "rgba(15,23,42,0.5)", cursor: "pointer", transition: "all 0.15s ease" }}>
+                              {new Date(`${ds}T12:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" })}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                  <div style={activityTodayValue}>
-                    {todayEntry ? fmt(todayEntry.sales) : ko ? "아직 미입력" : "Not logged yet"}
-                  </div>
-                  {/* 수정 버튼 */}
-                  {todayEntry && (
-                    <button type="button" onClick={() => enterEdit(todayStr)}
-                      style={{ fontSize: "12px", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
-                      {ko ? "수정" : "Edit"}
+                {/* 하단: 입력 폼 */}
+                <div style={{ padding: "0 22px 16px", borderTop: "1px solid rgba(5,97,252,0.04)", paddingTop: "12px" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
+                    <div style={{ position: "relative" as const, flex: 1 }}>
+                      <input type="text" inputMode="numeric" value={d.dailySalesInput}
+                        onChange={(event) => d.setDailySalesInput(event.target.value.replace(/[^0-9]/g, ""))}
+                        placeholder="0"
+                        style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 40px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
+                      <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "만원" : "₩"}</span>
+                    </div>
+                    <div style={{ position: "relative" as const, flex: "0 0 90px" }}>
+                      <input type="text" inputMode="numeric" value={d.dailyCustomersInput}
+                        onChange={(event) => d.setDailyCustomersInput(event.target.value.replace(/[^0-9]/g, ""))}
+                        placeholder="0"
+                        style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 28px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
+                      <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "명" : ""}</span>
+                    </div>
+                    <button type="button" onClick={() => {
+                      const salesVal = (Number(d.dailySalesInput.replace(/[^0-9]/g, "")) || 0) * 10000;
+                      const custVal = Number(d.dailyCustomersInput.replace(/[^0-9]/g, "")) || 0;
+                      d.handleAddDailyEntry();
+                      setEditMode(false);
+                      if (salesVal > 0) {
+                        setPostEntryReaction(generatePostEntryReaction(salesVal, custVal));
+                        setTimeout(() => setPostEntryReaction(null), 8000);
+                      }
+                    }} disabled={!d.dailySalesInput}
+                      style={{
+                        flex: "0 0 auto", padding: "10px 16px", borderRadius: "10px", border: "none",
+                        background: d.dailySalesInput ? "#0561fc" : "rgba(5,97,252,0.06)",
+                        color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.25)",
+                        fontSize: "13px", fontWeight: 650, cursor: d.dailySalesInput ? "pointer" : "default",
+                        boxShadow: d.dailySalesInput ? "0 4px 14px rgba(5,97,252,0.25)" : "none",
+                        transition: "all 0.2s ease", whiteSpace: "nowrap" as const,
+                      }} className="bento-btn">
+                      {isEditing ? (ko ? "수정" : "Update") : (ko ? "저장" : "Save")}
                     </button>
-                  )}
-                </div>
-
-                {yesterdayDiff != null && (
-                  <div style={{ fontSize: "12px", fontWeight: 600, color: yesterdayDiff >= 0 ? "#177245" : "#b42318", marginTop: "2px" }}>
-                    {ko ? "어제 대비" : "vs yesterday"} {yesterdayDiff >= 0 ? "+" : ""}{yesterdayDiff}%
                   </div>
-                )}
-
-                <div style={activityTodayMeta}>
-                  {todayEntry
-                    ? todayEntry.customers > 0
-                      ? ko
-                        ? `고객 ${todayEntry.customers}명 · 객단가 ${fmt(todayEntry.sales / todayEntry.customers)}`
-                        : `${todayEntry.customers} customers · avg ${fmt(todayEntry.sales / todayEntry.customers)}`
-                      : ko ? "고객 수 미입력" : "Customer count missing"
-                    : ko ? `최근 평균 ${fmt(avgDailySales)}` : `Recent avg ${fmt(avgDailySales)}`}
-                </div>
-
-                {/* 미입력 날짜 빠른 선택 */}
-                {missedDays.length > 0 && !todayEntry && (
-                  <div style={{ display: "flex", gap: "4px", marginTop: "6px", flexWrap: "wrap" }}>
-                    {missedDays.map(ds => (
-                      <button key={ds} type="button" onClick={() => enterEdit(ds)}
-                        style={{ fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "8px", border: "1px solid rgba(15,23,42,0.08)", background: d.dailyDateInput === ds ? "rgba(15,23,42,0.08)" : "transparent", color: "rgba(15,23,42,0.6)", cursor: "pointer" }}>
-                        {new Date(`${ds}T12:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" })}
+                  {isEditing && (
+                    <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                      <button type="button" onClick={() => handleDelete(d.dailyDateInput)}
+                        style={{ fontSize: "11px", fontWeight: 600, color: "#dc2626", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
+                        {ko ? "삭제" : "Delete"}
                       </button>
-                    ))}
+                      <button type="button" onClick={() => { d.setDailySalesInput(""); d.setDailyCustomersInput(""); d.setDailyDateInput(todayStr); setEditMode(false); }}
+                        style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
+                        {ko ? "취소" : "Cancel"}
+                      </button>
                   </div>
                 )}
-              </div>
 
-              {/* 입력/수정 폼 */}
-              <div style={{ marginTop: "8px" }}>
-                {isEditing && (
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2-7 7H1.5V8.5z" stroke="#2563eb" strokeWidth="1.2" strokeLinejoin="round" /></svg>
-                    {ko ? "수정 모드" : "Edit mode"} — {new Date(d.dailyDateInput + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" })}
-                  </div>
-                )}
-                <div style={activityForm}>
-                  <input type="date" value={d.dailyDateInput}
-                    onChange={(event) => enterEdit(event.target.value)}
-                    style={{ ...inputStyle, flex: "0 0 148px" }} />
-                  <input type="text" inputMode="numeric" value={d.dailySalesInput}
-                    onChange={(event) => d.setDailySalesInput(event.target.value.replace(/[^0-9]/g, ""))}
-                    placeholder={ko ? "매출 (만원)" : "Sales (만원)"}
-                    style={inputStyle} />
-                  <input type="text" inputMode="numeric" value={d.dailyCustomersInput}
-                    onChange={(event) => d.setDailyCustomersInput(event.target.value.replace(/[^0-9]/g, ""))}
-                    placeholder={ko ? "고객 수" : "Customers"}
-                    style={{ ...inputStyle, flex: "0 0 116px" }} />
-                  <button type="button" onClick={() => {
-                    const salesVal = (Number(d.dailySalesInput.replace(/[^0-9]/g, "")) || 0) * 10000;
-                    const custVal = Number(d.dailyCustomersInput.replace(/[^0-9]/g, "")) || 0;
-                    d.handleAddDailyEntry();
-                    setEditMode(false);
-                    if (salesVal > 0) {
-                      setPostEntryReaction(generatePostEntryReaction(salesVal, custVal));
-                      setTimeout(() => setPostEntryReaction(null), 8000);
-                    }
-                  }} disabled={!d.dailySalesInput}
-                    style={{ ...secondaryAction, padding: "12px 18px", background: d.dailySalesInput ? "#0f172a" : "rgba(15,23,42,0.06)", color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.34)", border: "none" }}>
-                    {isEditing ? (ko ? "수정" : "Update") : (ko ? "저장" : "Save")}
-                  </button>
-                </div>
-                {/* 수정 모드에서 삭제 + 취소 */}
-                {isEditing && (
-                  <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                    <button type="button" onClick={() => handleDelete(d.dailyDateInput)}
-                      style={{ fontSize: "12px", fontWeight: 600, color: "#b42318", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                      {ko ? "이 기록 삭제" : "Delete this entry"}
-                    </button>
-                    <button type="button" onClick={() => { d.setDailySalesInput(""); d.setDailyCustomersInput(""); d.setDailyDateInput(todayStr); setEditMode(false); }}
-                      style={{ fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.4)", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
-                      {ko ? "취소" : "Cancel"}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* 매출 입력 후 즉시 반응 */}
-              {postEntryReaction && (
+                {/* 매출 입력 후 즉시 반응 */}
+                {postEntryReaction && (
                 <div style={{
                   marginTop: "10px", padding: "10px 14px", borderRadius: "12px",
                   background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)",
@@ -978,7 +1179,9 @@ function ActivitySnapshotCard({
                     {postEntryReaction}
                   </span>
                 </div>
-              )}
+                )}
+              </div>
+            </div>
             </>
           );
         })()}
@@ -1455,20 +1658,31 @@ function SurvivalBoardCard({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {/* 헬스 점수 미니 게이지 */}
-          <svg width="36" height="36" viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
-            <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(15,23,42,0.06)" strokeWidth="3" />
-            <circle cx="18" cy="18" r="15" fill="none"
-              stroke={healthTone}
-              strokeWidth="3" strokeLinecap="round"
-              strokeDasharray={`${(d.businessHealthScore === "healthy" ? 85 : d.businessHealthScore === "caution" ? 55 : 30) * 0.942} 94.2`}
-              transform="rotate(-90 18 18)"
-              style={{ transition: "stroke-dasharray 0.8s ease" }}
-            />
-            <text x="18" y="20" textAnchor="middle" fontSize="10" fontWeight="750" fill={healthTone}>
-              {d.businessHealthScore === "healthy" ? 85 : d.businessHealthScore === "caution" ? 55 : 30}
-            </text>
-          </svg>
-          <div style={{ ...opsPill, color: healthTone }}>{healthLabel}</div>
+          {(() => {
+            // 실제 데이터 기반 점수 계산 (하드코딩 제거)
+            const score = d.businessHealthScore === "unknown" ? 0
+              : d.businessHealthScore === "healthy" ? 78
+              : d.businessHealthScore === "caution" ? 52
+              : 25; // danger
+            const displayScore = d.businessHealthScore === "unknown" ? "–" : String(score);
+            const gaugeColor = d.businessHealthScore === "unknown" ? "rgba(15,23,42,0.2)" : healthTone;
+            return (
+              <svg width="36" height="36" viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(15,23,42,0.06)" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15" fill="none"
+                  stroke={gaugeColor}
+                  strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray={`${score * 0.942} 94.2`}
+                  transform="rotate(-90 18 18)"
+                  style={{ transition: "stroke-dasharray 0.8s ease" }}
+                />
+                <text x="18" y="20" textAnchor="middle" fontSize="10" fontWeight="750" fill={gaugeColor}>
+                  {displayScore}
+                </text>
+              </svg>
+            );
+          })()}
+          <div style={{ ...opsPill, color: d.businessHealthScore === "unknown" ? "rgba(15,23,42,0.4)" : healthTone }}>{healthLabel}</div>
         </div>
       </div>
 
@@ -1543,6 +1757,22 @@ function SurvivalBoardCard({
         <div style={focusBody}>{focusMessage}</div>
       </div>
 
+      {/* ── AI 코치 인사이트 (성공사례 포함) ── */}
+      {d.aiActions?.insight && (
+        <div style={{
+          padding: "10px 14px", borderRadius: "12px",
+          background: "linear-gradient(135deg, rgba(0,122,255,0.05), rgba(52,199,89,0.04))",
+          border: "0.5px solid rgba(0,122,255,0.1)",
+        }}>
+          <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(0,122,255,0.7)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "4px" }}>
+            {ko ? "AI 코치" : "AI Coach"}
+          </div>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", lineHeight: 1.5 }}>
+            {d.aiActions.insight}
+          </div>
+        </div>
+      )}
+
       <div style={actionList}>
         {(hasActions
           ? actions
@@ -1607,6 +1837,28 @@ function InventoryOpsCard({
   const invForm = d.invForm;
   const isEditing = Boolean(invForm.editId);
   const [showAllInventory, setShowAllInventory] = useState(false);
+  const [inventorySnapshot, setInventorySnapshot] = useState<InventoryEntry[]>([]);
+
+  // 팝업 열릴 때 body 스크롤 잠금 + ESC 키 닫기
+  useEffect(() => {
+    if (showAllInventory) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+      const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAllInventory(false); };
+      document.addEventListener("keydown", handleEsc);
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+        document.removeEventListener("keydown", handleEsc);
+      };
+    }
+  }, [showAllInventory]);
   const categoryLabels: Record<NonNullable<typeof invForm.category>, string> = {
     fresh: ko ? "신선" : "Fresh",
     dry: ko ? "건식" : "Dry",
@@ -1627,8 +1879,11 @@ function InventoryOpsCard({
     boxSizing: "border-box",
   };
 
+  const [excelImportState, setExcelImportState] = useState<{ status: "idle" | "reading" | "parsing" | "saving" | "done" | "error"; total: number; current: number; message: string }>({ status: "idle", total: 0, current: 0, message: "" });
+
   const handleExcelImport = async (file: File) => {
     try {
+      setExcelImportState({ status: "reading", total: 0, current: 0, message: ko ? "파일 읽는 중..." : "Reading file..." });
       let text = "";
       const ext = file.name.split(".").pop()?.toLowerCase();
 
@@ -1665,23 +1920,29 @@ function InventoryOpsCard({
       }
 
       if (!text.trim()) {
+        setExcelImportState({ status: "idle", total: 0, current: 0, message: "" });
         return;
       }
+
+      setExcelImportState({ status: "parsing", total: 0, current: 0, message: ko ? "AI가 데이터 분석 중..." : "AI parsing data..." });
 
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
       const response = await fetch("/api/ai/products/parse", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token ?? ""}`,
-        },
+        headers,
         body: JSON.stringify({ text: text.slice(0, 50000), language: d.language }),
       });
       const payload = await response.json();
       if (!response.ok || payload.error) {
-        alert(payload.error ?? "Parse failed");
+        const errMsg = payload.error ?? "Parse failed";
+        setExcelImportState({ status: "error", total: 0, current: 0, message: errMsg });
+        setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 5000);
         return;
       }
 
@@ -1694,12 +1955,16 @@ function InventoryOpsCard({
         unit: string;
       }>;
       if (!parsed?.length) {
-        alert(ko ? "데이터를 찾을 수 없습니다." : "No data found.");
+        setExcelImportState({ status: "error", total: 0, current: 0, message: ko ? "데이터를 찾을 수 없습니다." : "No data found." });
+        setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 3000);
         return;
       }
 
-      const newItems = parsed.map((product) => ({
-        id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      const total = parsed.length;
+      setExcelImportState({ status: "saving", total, current: 0, message: ko ? `${total}개 품목 등록 중...` : `Adding ${total} items...` });
+
+      const newItems = parsed.map((product, idx) => ({
+        id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}-${idx}`,
         name: product.name,
         quantity: product.stock,
         unit: product.unit || "개",
@@ -1717,12 +1982,20 @@ function InventoryOpsCard({
         wasteLog: [],
       }));
 
-      d.saveInventory([...(d.inventory as typeof newItems), ...newItems]);
-      alert(ko ? `${newItems.length}개 품목 등록 완료` : `${newItems.length} items added`);
+      // 하나씩 등록하는 시각적 효과
+      const existingItems = d.inventory as typeof newItems;
+      for (let i = 0; i < newItems.length; i++) {
+        setExcelImportState({ status: "saving", total, current: i + 1, message: ko ? `${newItems[i].name} 등록 중... (${i + 1}/${total})` : `Adding ${newItems[i].name}... (${i + 1}/${total})` });
+        await new Promise(resolve => setTimeout(resolve, 120));
+      }
+      d.saveInventory([...existingItems, ...newItems]);
+      setExcelImportState({ status: "done", total, current: total, message: ko ? `${total}개 품목 등록 완료!` : `${total} items added!` });
+      setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 3000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error("[Excel import error]", msg);
-      alert(ko ? `파일 처리 오류: ${msg}` : `File error: ${msg}`);
+      setExcelImportState({ status: "error", total: 0, current: 0, message: ko ? `파일 처리 오류: ${msg}` : `File error: ${msg}` });
+      setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 5000);
     }
   };
 
@@ -1731,10 +2004,14 @@ function InventoryOpsCard({
       <div style={opsHeader}>
         <div>
           <div style={sectionEyebrow}>
-            {d.businessCtx.categoryId === "startup-tech" ? (ko ? "운영 자산" : "Ops assets") : ko ? "현재 재고" : "Current inventory"}
+            {ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory")}
           </div>
           <div style={opsTitle}>
-            {d.businessCtx.categoryId === "startup-tech" ? (ko ? "자산·도구 관리" : "Assets and tools") : ko ? "재고 관리" : "Inventory management"}
+            {d.businessCtx.inventoryMode === "unified"
+              ? (ko ? "제품·재고 통합 관리" : "Product & inventory")
+              : d.businessCtx.categoryId === "startup-tech"
+                ? (ko ? "자산·도구 관리" : "Assets and tools")
+                : (ko ? "재고 관리" : "Inventory management")}
           </div>
         </div>
         <div style={opsActionRow}>
@@ -1743,7 +2020,7 @@ function InventoryOpsCard({
             onClick={() => d.setInvForm({ ...d.emptyInvForm, open: true })}
             style={opsActionPrimary}
           >
-            {ko ? "재고 추가" : "Add item"}
+            {ko ? (d.businessCtx.inventoryLabel?.ko === "내 제품" ? "제품 추가" : d.businessCtx.inventoryLabel?.ko === "소모품 관리" ? "소모품 추가" : d.businessCtx.inventoryLabel?.ko === "운영 자산" ? "자산 추가" : "재고 추가") : "Add item"}
           </button>
           <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
             {ko ? "엑셀" : "Excel"}
@@ -1762,6 +2039,48 @@ function InventoryOpsCard({
           />
         </div>
       </div>
+
+      {/* 엑셀 임포트 진행률 */}
+      {excelImportState.status !== "idle" && (
+        <div style={{
+          padding: "12px 16px", borderRadius: "12px", marginBottom: "8px",
+          background: excelImportState.status === "error" ? "rgba(220,38,38,0.04)" : excelImportState.status === "done" ? "rgba(5,150,105,0.04)" : "rgba(5,97,252,0.04)",
+          border: `1px solid ${excelImportState.status === "error" ? "rgba(220,38,38,0.1)" : excelImportState.status === "done" ? "rgba(5,150,105,0.1)" : "rgba(5,97,252,0.1)"}`,
+        }} className="bento-fade-in">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: excelImportState.total > 0 ? "8px" : "0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {excelImportState.status === "error" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+              ) : excelImportState.status === "done" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+              ) : (
+                <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(5,97,252,0.3)", borderTopColor: "#0561fc", animation: "spin 0.8s linear infinite" }} />
+              )}
+              <span style={{
+                fontSize: "13px", fontWeight: 600,
+                color: excelImportState.status === "error" ? "#dc2626" : excelImportState.status === "done" ? "#059669" : "#0561fc",
+              }}>
+                {excelImportState.message}
+              </span>
+            </div>
+            {excelImportState.total > 0 && excelImportState.status === "saving" && (
+              <span style={{ fontSize: "12px", fontWeight: 650, color: "#0561fc", fontVariantNumeric: "tabular-nums" as const }}>
+                {excelImportState.current}/{excelImportState.total}
+              </span>
+            )}
+          </div>
+          {excelImportState.total > 0 && (
+            <div style={{ height: "4px", borderRadius: "2px", background: "rgba(5,97,252,0.08)", overflow: "hidden" }}>
+              <div style={{
+                height: "100%", borderRadius: "2px",
+                width: `${(excelImportState.current / excelImportState.total) * 100}%`,
+                background: excelImportState.status === "done" ? "#059669" : "#0561fc",
+                transition: "width 0.15s ease",
+              }} />
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={opsMetricGrid}>
         <div style={opsMetricCard}>
@@ -1831,7 +2150,7 @@ function InventoryOpsCard({
           </div>
         ) : null}
         {inventory.length > 4 && (
-          <button type="button" onClick={() => setShowAllInventory(true)} style={{
+          <button type="button" onClick={() => { setInventorySnapshot([...inventory]); setShowAllInventory(true); }} style={{
             width: "100%", padding: "10px", marginTop: "6px", borderRadius: "10px",
             border: "none", background: "rgba(15,23,42,0.03)", cursor: "pointer",
             fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.45)",
@@ -1841,10 +2160,10 @@ function InventoryOpsCard({
         )}
       </div>
 
-      {/* 전체 재고 팝업 */}
-      {showAllInventory && (
+      {/* 전체 재고 팝업 — Portal로 body에 직접 렌더링하여 부모 리렌더링 격리 */}
+      {showAllInventory && typeof document !== "undefined" && createPortal(
         <div
-          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)" }}
+          style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowAllInventory(false); }}
         >
           <div style={{ width: "min(600px, 90vw)", maxHeight: "80vh", borderRadius: "24px", background: "#fff", boxShadow: "0 32px 80px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column" as const }}>
@@ -1855,7 +2174,7 @@ function InventoryOpsCard({
                   {ko ? "전체 재고" : "All Inventory"}
                 </div>
                 <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
-                  {inventory.length}{ko ? "개 품목" : " items"} · {ko ? "발주 필요" : "Low stock"} {lowStockItems.length}{ko ? "건" : ""}
+                  {inventorySnapshot.length}{ko ? "개 품목" : " items"}
                 </div>
               </div>
               <button type="button" onClick={() => setShowAllInventory(false)} style={{
@@ -1866,8 +2185,8 @@ function InventoryOpsCard({
             </div>
             {/* list */}
             <div style={{ overflowY: "auto", padding: "12px 24px 24px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-              {inventory.map((item) => {
-                const isLow = lowStockItems.some((c) => c.id === item.id);
+              {inventorySnapshot.map((item) => {
+                const isLow = item.quantity <= (item.minThreshold ?? 0);
                 const urgency = (item.minThreshold ?? 0) > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
                 const urgencyColor = urgency === "critical" ? "#b42318" : urgency === "warning" ? "#e85d04" : "#177245";
                 return (
@@ -1903,7 +2222,7 @@ function InventoryOpsCard({
                       <button type="button" onClick={() => { d.openInvEdit(item as never); setShowAllInventory(false); }} style={tinyAction}>
                         {ko ? "수정" : "Edit"}
                       </button>
-                      <button type="button" onClick={() => d.handleInvDelete(item.id)} style={tinyDangerAction}>
+                      <button type="button" onClick={() => { d.handleInvDelete(item.id); setInventorySnapshot(prev => prev.filter(i => i.id !== item.id)); }} style={tinyDangerAction}>
                         {ko ? "삭제" : "Delete"}
                       </button>
                     </div>
@@ -1912,7 +2231,8 @@ function InventoryOpsCard({
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {invForm.open ? (
@@ -2009,7 +2329,7 @@ function InventoryOpsCard({
                   style={inputStyle}
                 />
               </div>
-              {invForm.sellingPrice && invForm.unitCost && Number(invForm.unitCost) > 0 && (
+              {invForm.sellingPrice && Number(invForm.sellingPrice) > 0 && invForm.unitCost && Number(invForm.unitCost) > 0 && (
                 <div style={{ fontSize: "12px", color: "#2563eb", fontWeight: 600, padding: "4px 0" }}>
                   {ko ? "마진율" : "Margin"}: {Math.round(((Number(invForm.sellingPrice) - Number(invForm.unitCost)) / Number(invForm.sellingPrice)) * 100)}%
                 </div>
@@ -2424,12 +2744,11 @@ const shell: React.CSSProperties = {
 };
 
 const heroPanel: React.CSSProperties = {
-  borderRadius: "28px",
+  borderRadius: "16px",
   padding: "24px",
-  background:
-    "radial-gradient(circle at top left, rgba(255,255,255,0.995) 0%, rgba(241,245,252,0.94) 48%, rgba(252,253,255,0.975) 100%)",
-  border: "1px solid rgba(15, 23, 42, 0.05)",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.76) inset, 0 20px 50px rgba(15, 23, 42, 0.04)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(232,240,255,0.4) 100%)",
+  border: "1px solid rgba(5, 97, 252, 0.06)",
+  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
   display: "grid",
   gap: "20px",
   transition: "box-shadow 0.3s ease, transform 0.3s ease",
@@ -2453,11 +2772,11 @@ const heroEyebrow: React.CSSProperties = {
 
 const heroTitle: React.CSSProperties = {
   margin: 0,
-  fontSize: "clamp(32px, 5vw, 52px)",
-  lineHeight: 0.98,
-  letterSpacing: "-0.058em",
-  fontWeight: 760,
-  color: "#0f172a",
+  fontSize: "clamp(28px, 4vw, 40px)",
+  lineHeight: 1.08,
+  letterSpacing: "-0.025em",
+  fontWeight: 600,
+  color: "#1d1d1f",
 };
 
 const heroBody: React.CSSProperties = {
@@ -2476,26 +2795,26 @@ const heroActions: React.CSSProperties = {
 
 const primaryAction: React.CSSProperties = {
   border: "none",
-  borderRadius: "999px",
+  borderRadius: "8px",
   padding: "12px 18px",
-  background: "linear-gradient(180deg, rgba(19,28,45,0.98), rgba(15,23,42,0.92))",
+  background: "#0561fc",
   color: "#fff",
   fontSize: "14px",
-  fontWeight: 700,
+  fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 10px 24px rgba(15,23,42,0.14)",
+  boxShadow: "0 4px 14px rgba(5, 97, 252, 0.25)",
 };
 
 const secondaryAction: React.CSSProperties = {
-  border: "1px solid rgba(15, 23, 42, 0.065)",
-  borderRadius: "999px",
+  border: "1px solid rgba(5, 97, 252, 0.12)",
+  borderRadius: "8px",
   padding: "12px 18px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.88), rgba(247,249,252,0.78))",
+  background: "rgba(255,255,255,0.9)",
   color: "#0f172a",
   fontSize: "14px",
-  fontWeight: 700,
+  fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.72) inset",
+  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
 };
 
 const headlineGrid: React.CSSProperties = {
@@ -2505,11 +2824,11 @@ const headlineGrid: React.CSSProperties = {
 };
 
 const headlineCard: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "12px",
   padding: "20px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.88), rgba(246,248,252,0.76))",
-  border: "1px solid rgba(15, 23, 42, 0.045)",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.78) inset, 0 10px 24px rgba(15,23,42,0.022)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(240,244,255,0.5) 100%)",
+  border: "1px solid rgba(5, 97, 252, 0.06)",
+  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
   transition: "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease",
   cursor: "default",
 };
@@ -2552,15 +2871,17 @@ const survivalGrid: React.CSSProperties = {
 /* ── Bento micro-interaction: inject global hover styles once ── */
 const bentoHoverCSS = `
 @keyframes bentoFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes bentoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 @keyframes bentoProgress { from { width: 0; } }
-@keyframes bentoBarGrow { from { height: 0; } }
+@keyframes bentoBarGrow { from { height: 0; transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes bentoBarPulse { 0% { opacity: 0.7; transform: scaleY(0.95); } 50% { opacity: 1; transform: scaleY(1.02); } 100% { opacity: 1; transform: scaleY(1); } }
 @keyframes bentoCountUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bentoGlow { 0%, 100% { box-shadow: 0 0 0 rgba(29,53,87,0); } 50% { box-shadow: 0 0 12px rgba(29,53,87,0.08); } }
 .bento-card { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease !important; }
-.bento-card:hover { transform: translateY(-2px) !important; box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 20px 50px rgba(15,23,42,0.065) !important; }
+.bento-card:hover { transform: translateY(-2px) !important; box-shadow: 0 21px 94px rgba(0,0,0,0.06) !important; }
 .bento-headline { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease !important; }
-.bento-headline:hover { transform: translateY(-1px) !important; box-shadow: 0 1px 0 rgba(255,255,255,0.82) inset, 0 14px 32px rgba(15,23,42,0.04) !important; }
+.bento-headline:hover { transform: translateY(-1px) !important; box-shadow: 0 21px 94px rgba(0,0,0,0.04) !important; }
 .bento-btn { transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease !important; }
 .bento-btn:active { transform: scale(0.97) !important; }
 .bento-meter-fill { animation: bentoProgress 0.8s cubic-bezier(0.22, 1, 0.36, 1) !important; }
@@ -2569,11 +2890,11 @@ const bentoHoverCSS = `
 `;
 
 const activityCard: React.CSSProperties = {
-  borderRadius: "24px",
+  borderRadius: "14px",
   padding: "22px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.988), rgba(243,246,251,0.91))",
-  border: "1px solid rgba(15, 23, 42, 0.048)",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.84) inset, 0 18px 42px rgba(15, 23, 42, 0.038)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.45) 100%)",
+  border: "1px solid rgba(5, 97, 252, 0.06)",
+  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
   display: "grid",
   gap: "18px",
 };
@@ -2601,11 +2922,10 @@ const activityStatRail: React.CSSProperties = {
 
 const activityMiniStat: React.CSSProperties = {
   minWidth: "124px",
-  borderRadius: "18px",
+  borderRadius: "10px",
   padding: "12px 14px",
-  background: "linear-gradient(180deg, rgba(248,250,253,0.92), rgba(242,246,250,0.8))",
-  border: "1px solid rgba(15,23,42,0.042)",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.7) inset",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.6) 0%, rgba(248,250,255,0.4) 100%)",
+  border: "1px solid rgba(5,97,252,0.06)",
 };
 
 const activityMiniLabel: React.CSSProperties = {
@@ -2665,11 +2985,10 @@ const activityFooter: React.CSSProperties = {
 };
 
 const activityTodaySummary: React.CSSProperties = {
-  borderRadius: "20px",
+  borderRadius: "12px",
   padding: "16px",
-  background: "linear-gradient(180deg, rgba(248,250,253,0.94), rgba(243,246,250,0.82))",
-  border: "1px solid rgba(15,23,42,0.042)",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.68) inset",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.55) 0%, rgba(248,250,255,0.35) 100%)",
+  border: "1px solid rgba(5,97,252,0.06)",
   display: "grid",
   gap: "6px",
 };
@@ -2696,11 +3015,11 @@ const activityForm: React.CSSProperties = {
 };
 
 const opsCard: React.CSSProperties = {
-  borderRadius: "24px",
+  borderRadius: "14px",
   padding: "22px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.975), rgba(245,247,250,0.9))",
-  border: "1px solid rgba(15, 23, 42, 0.048)",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.76) inset, 0 14px 30px rgba(15, 23, 42, 0.03)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.45) 100%)",
+  border: "1px solid rgba(5, 97, 252, 0.06)",
+  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
   display: "grid",
   gap: "14px",
 };
@@ -2747,26 +3066,25 @@ const opsActionRow: React.CSSProperties = {
 
 const opsActionPrimary: React.CSSProperties = {
   border: "none",
-  borderRadius: "999px",
+  borderRadius: "8px",
   padding: "9px 12px",
-  background: "linear-gradient(180deg, rgba(19,28,45,0.98), rgba(15,23,42,0.92))",
+  background: "#0561fc",
   color: "#fff",
   fontSize: "12px",
-  fontWeight: 700,
+  fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 8px 18px rgba(15,23,42,0.12)",
+  boxShadow: "0 4px 14px rgba(5, 97, 252, 0.25)",
 };
 
 const opsActionSecondary: React.CSSProperties = {
-  border: "1px solid rgba(15, 23, 42, 0.055)",
-  borderRadius: "999px",
+  border: "1px solid rgba(5, 97, 252, 0.12)",
+  borderRadius: "8px",
   padding: "9px 12px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.88), rgba(247,249,252,0.78))",
+  background: "rgba(255,255,255,0.9)",
   color: "#0f172a",
   fontSize: "12px",
-  fontWeight: 700,
+  fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.72) inset",
 };
 
 const opsMetricGrid: React.CSSProperties = {
@@ -2782,9 +3100,10 @@ const startupMetricGrid: React.CSSProperties = {
 };
 
 const startupMetricBlock: React.CSSProperties = {
-  borderRadius: "16px",
+  borderRadius: "10px",
   padding: "14px",
-  background: "linear-gradient(180deg, rgba(238,244,255,0.52), rgba(255,255,255,0.72))",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.55) 0%, rgba(248,250,255,0.35) 100%)",
+  border: "1px solid rgba(5,97,252,0.04)",
   display: "grid",
   gap: "6px",
 };
@@ -2810,20 +3129,20 @@ const startupMetricNote: React.CSSProperties = {
 };
 
 const verifiedNote: React.CSSProperties = {
-  borderRadius: "16px",
+  borderRadius: "10px",
   padding: "12px 14px",
-  background: "linear-gradient(180deg, rgba(247,249,253,0.94), rgba(241,245,250,0.84))",
-  border: "1px solid rgba(15, 23, 42, 0.05)",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.5) 0%, rgba(248,250,255,0.3) 100%)",
+  border: "1px solid rgba(5, 97, 252, 0.06)",
   fontSize: "12px",
   lineHeight: 1.6,
   color: "rgba(15, 23, 42, 0.66)",
 };
 
 const opsMetricCard: React.CSSProperties = {
-  borderRadius: "16px",
+  borderRadius: "10px",
   padding: "14px",
-  background: "linear-gradient(180deg, rgba(247,249,252,0.92), rgba(242,245,249,0.8))",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.68) inset",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.55) 0%, rgba(248,250,255,0.35) 100%)",
+  border: "1px solid rgba(5,97,252,0.04)",
 };
 
 const opsMetricLabel: React.CSSProperties = {
@@ -2877,9 +3196,9 @@ const listRow: React.CSSProperties = {
   alignItems: "center",
   gap: "12px",
   padding: "12px 14px",
-  borderRadius: "14px",
-  background: "linear-gradient(180deg, rgba(247,249,252,0.92), rgba(242,245,249,0.8))",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.66) inset",
+  borderRadius: "10px",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.5) 0%, rgba(248,250,255,0.3) 100%)",
+  border: "1px solid rgba(5,97,252,0.04)",
 };
 
 const listTitle: React.CSSProperties = {
@@ -2896,9 +3215,9 @@ const listMeta: React.CSSProperties = {
 
 const emptyState: React.CSSProperties = {
   padding: "12px 14px",
-  borderRadius: "14px",
-  background: "linear-gradient(180deg, rgba(248,249,252,0.94), rgba(243,246,250,0.82))",
-  boxShadow: "0 1px 0 rgba(255,255,255,0.66) inset",
+  borderRadius: "10px",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.4) 0%, rgba(248,250,255,0.25) 100%)",
+  border: "1px solid rgba(5,97,252,0.04)",
   fontSize: "13px",
   lineHeight: 1.55,
   color: "rgba(15, 23, 42, 0.58)",

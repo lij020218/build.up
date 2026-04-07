@@ -125,6 +125,18 @@ const saladit = b({ id: "saladit", subIndustryIds: ["salad-healthy"], categoryId
 
 const vips = b({ id: "vips", subIndustryIds: ["western-pasta-brunch"], categoryId: "food", name: { ko: "빕스", en: "VIPS" }, tagline: { ko: "CJ 프리미엄 레스토랑, 샐러드바 강점", en: "CJ premium restaurant, salad bar strength" }, startupCostWon: 50000, franchiseFee: 2000, monthlyRoyalty: 55, avgAnnualRevenueWon: 120000, storeCount: 70, closureRate: 1.5, scores: { profitability: 85, stability: 88, accessibility: 20, brandPower: 90, support: 90 }, roadmapNotes: { ko: ["CJ푸드빌 계열 — 안정적 공급망", "창업비용 5억+ — 대형 투자", "점당 매출 12억 — 최상위", "100평 이상 대형 매장 필수"], en: ["CJ Foodville — stable supply", "5B+ startup — large investment", "12B per-store — top-tier", "100+ pyeong large store required"] }, franchiseUrl: "https://www.ivips.co.kr/", costVerified: false, dataYear: "2024" });
 
+const rollingPasta = b({ id: "rolling-pasta", subIndustryIds: ["western-pasta-brunch"], categoryId: "food", name: { ko: "롤링파스타", en: "Rolling Pasta" }, tagline: { ko: "더본코리아 파스타 전문, 월매출 5,866만, 120개 매장", en: "The Born pasta brand, 58.6M monthly revenue, 120 stores" }, startupCostWon: 12418, franchiseFee: 550, monthlyRoyalty: 33, avgAnnualRevenueWon: 70392, storeCount: 120, closureRate: 8.5, scores: { profitability: 68, stability: 50, accessibility: 55, brandPower: 78, support: 72 }, roadmapNotes: { ko: ["더본코리아(백종원) 계열 — 총 창업비 1억 2,418만원", "30평 기준 인테리어 평당 193만원", "최근 폐점률 상승 · 출점 경쟁 주의", "월매출 5,866만원 — 배달 비중 높음"], en: ["The Born (Baek Jongwon) — total 124.18M won startup cost", "30 pyeong, interior 1.93M/pyeong", "Rising closure rate — careful territory analysis", "Monthly revenue 58.66M — high delivery ratio"] }, franchiseUrl: "https://start.theborn.co.kr/", costVerified: true, costSource: "점포라인 정보공개서 2024", basePyeong: 30, costBreakdown: [c("가맹비","Franchise fee",550),c("교육비","Training",550),c("보증금","Deposit",300),c("기타설비","Equipment",5210),c("인테리어","Interior",5808)], dataYear: "2024" });
+
+const pastaEyo = b({ id: "pasta-eyo", subIndustryIds: ["western-pasta-brunch"], categoryId: "food", name: { ko: "파스타예요", en: "Pasta Eyo" }, tagline: { ko: "2030 인기 파스타 전문점, 78개 매장 빠른 확장", en: "Popular pasta specialist, 78 stores fast growth" }, startupCostWon: 2353, franchiseFee: 300, monthlyRoyalty: 22, avgAnnualRevenueWon: 18000, storeCount: 78, closureRate: 3.0, scores: { profitability: 75, stability: 65, accessibility: 90, brandPower: 60, support: 68 }, roadmapNotes: { ko: ["소자본 파스타 창업 가능 (2,353만원)", "서울 중심 78개 매장 — 빠른 성장세", "2023년 설립 신생 브랜드 — 안정성 검증 필요", "SNS 바이럴 마케팅 강점"], en: ["Low-capital pasta startup (23.53M won)", "78 stores Seoul-centric — fast growth", "Est. 2023 — stability unproven", "Strong SNS viral marketing"] }, franchiseUrl: "https://myfranchise.kr/20213360", costVerified: true, costSource: "마이프차 2025", dataYear: "2025" });
+
+const pastaIbnida = b({ id: "pasta-ibnida", subIndustryIds: ["western-pasta-brunch"], categoryId: "food", name: { ko: "파스타입니다", en: "Pasta Ibnida" }, tagline: { ko: "전국 171개 매장, 소자본 파스타 1위", en: "171 stores nationwide, #1 low-capital pasta" }, startupCostWon: 1410, franchiseFee: 200, monthlyRoyalty: 16.5, avgAnnualRevenueWon: 15000, storeCount: 171, closureRate: 4.0, scores: { profitability: 72, stability: 70, accessibility: 95, brandPower: 65, support: 65 }, roadmapNotes: { ko: ["업계 최저 수준 창업비 (1,410만원)", "전국 171개 매장 — 소자본 파스타 1위 (5년 이상 운영)", "배달 전문 모델로 임대료 부담 경감", "본사 레시피 통일 — 조리 난이도 낮음"], en: ["Industry-low startup (14.1M won)", "171 stores — #1 low-capital pasta (5+ years)", "Delivery-focused model saves rent", "Unified HQ recipes — easy cooking"] }, franchiseUrl: "https://myfranchise.kr/20200864", costVerified: true, costSource: "마이프차 2025", dataYear: "2025" });
+
+const pastaJibiYa = b({ id: "pasta-jibiya", subIndustryIds: ["western-pasta-brunch"], categoryId: "food", name: { ko: "파스타집이야", en: "Pasta House" }, tagline: { ko: "가성비 파스타·리조또, 24개 매장", en: "Value pasta & risotto, 24 stores" }, startupCostWon: 8275, franchiseFee: 500, monthlyRoyalty: 27.5, avgAnnualRevenueWon: 25000, storeCount: 24, closureRate: 2.5, scores: { profitability: 78, stability: 62, accessibility: 75, brandPower: 55, support: 70 }, roadmapNotes: { ko: ["파스타·리조또 가성비 콘셉트", "8,200만원대 중간 수준 창업비", "홀+배달 병행 모델", "5년 미만 신생 브랜드"], en: ["Value pasta & risotto concept", "~82M won mid-range startup cost", "Dine-in + delivery hybrid", "Less than 5 years old"] }, franchiseUrl: "https://myfranchise.kr/20211561", costVerified: true, costSource: "마이프차 2025", dataYear: "2024" });
+
+const tuttiCucina = b({ id: "tutti-cucina", subIndustryIds: ["western-pasta-brunch"], categoryId: "food", name: { ko: "뚜띠쿠치나", en: "Tutti Cucina" }, tagline: { ko: "피자·파스타 전문, 18년 운영, 월매출 4,887만", en: "Pizza & pasta, 18yr operation, 48.87M monthly" }, startupCostWon: 20463, franchiseFee: 1430, monthlyRoyalty: 44, avgAnnualRevenueWon: 58644, storeCount: 17, closureRate: 3.0, scores: { profitability: 75, stability: 78, accessibility: 35, brandPower: 60, support: 72 }, roadmapNotes: { ko: ["총 창업비 2억 463만원 — 30평 기준 인테리어 평당 330만원", "2007년 설립 18년 운영 — 안정적 레시피·시스템", "17개 매장 — 소규모 프리미엄 브랜드", "월매출 4,887만원 — 가족 외식 타겟"], en: ["Total 204.63M won — interior 3.3M/pyeong at 30 pyeong", "Est. 2007, 18yr operation — stable recipes/systems", "17 stores — boutique premium brand", "Monthly revenue 48.87M — family dining target"] }, franchiseUrl: "https://www.tutticucina.net/", costVerified: true, costSource: "점포라인 정보공개서 2024", basePyeong: 30, costBreakdown: [c("가맹비","Franchise fee",1430),c("교육비","Training",550),c("보증금","Deposit",300),c("기타설비","Equipment",8283),c("인테리어","Interior",9900)], dataYear: "2024" });
+
+const pastaBilrun = b({ id: "pasta-bilrun", subIndustryIds: ["western-pasta-brunch"], categoryId: "food", name: { ko: "파스타빌런", en: "Pasta Villain" }, tagline: { ko: "초저가 배달 파스타, 1,700만원대 창업", en: "Ultra-low-cost delivery pasta, ~17M won startup" }, startupCostWon: 1782, franchiseFee: 200, monthlyRoyalty: 16.5, avgAnnualRevenueWon: 12000, storeCount: 21, closureRate: 5.0, scores: { profitability: 65, stability: 55, accessibility: 96, brandPower: 40, support: 60 }, roadmapNotes: { ko: ["업계 최저 수준 창업비 (1,780만원)", "배달 전문 — 홀 없는 공유주방 가능", "신생 브랜드 (21개 매장) — 검증 기간 필요", "1인 운영 가능 소규모 모델"], en: ["Ultra-low startup (~17.8M won)", "Delivery-only — ghost kitchen possible", "New brand (21 stores) — needs validation", "Solo-operation small model"] }, franchiseUrl: "https://myfranchise.kr/20211205", costVerified: true, costSource: "마이프차 2025", dataYear: "2024" });
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *  CAFE & DESSERT
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -249,6 +261,30 @@ const seldog24 = b({ id: "seldog24-study", subIndustryIds: ["study-room"], categ
 const sevenStar = b({ id: "seven-star-coin", subIndustryIds: ["study-room"], categoryId: "space", name: { ko: "세븐스타코인노래방", en: "Seven Star Coin Noraebang" }, tagline: { ko: "코인노래방 1위, 320개 매장, 무인 운영", en: "#1 coin noraebang, 320 stores, unmanned" }, startupCostWon: 8500, franchiseFee: 500, monthlyRoyalty: 16.5, avgAnnualRevenueWon: 12000, storeCount: 320, closureRate: 6.0, scores: { profitability: 62, stability: 55, accessibility: 78, brandPower: 72, support: 68 }, roadmapNotes: { ko: ["코인노래방 가맹점 수 1위", "24시간 무인 운영 가능", "1곡 500~1,000원 — 회전율 핵심", "MZ세대 타겟 명확"], en: ["#1 coin noraebang by count", "24h unmanned operation", "500~1,000 KRW per song — turnover key", "Clear MZ generation target"] }, franchiseUrl: "https://www.7star.co.kr/", costVerified: false, dataYear: "2024" });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  SALAD / HEALTHY (추가)
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+const subway = b({ id: "subway", subIndustryIds: ["salad-healthy", "western-pasta-brunch"], categoryId: "food", name: { ko: "써브웨이", en: "Subway" }, tagline: { ko: "글로벌 샌드위치 1위, 521개 매장", en: "Global #1 sandwich, 521 stores" }, startupCostWon: 19750, franchiseFee: 1637, monthlyRoyalty: 55, avgAnnualRevenueWon: 78732, storeCount: 521, closureRate: 4.5, scores: { profitability: 75, stability: 72, accessibility: 40, brandPower: 92, support: 80 }, roadmapNotes: { ko: ["글로벌 브랜드 — 인지도 최상위", "가맹비 1,637만 + 장비·인테리어 1.8억 수준", "25평 기준 인테리어 평당 210만원", "월매출 6,561만원 — 건강식 트렌드 수혜"], en: ["Global brand — top recognition", "Franchise fee 16.37M + equipment/interior ~180M", "25 pyeong, interior 2.1M/pyeong", "Monthly revenue 65.61M — health trend"] }, franchiseUrl: "https://www.subway.co.kr/franchise", costVerified: true, costSource: "점포라인 정보공개서 2024", basePyeong: 25, costBreakdown: [c("가맹비","Franchise fee",1637),c("장비·설비·인테리어","Equipment+interior",18113)], dataYear: "2024" });
+
+const salady = b({ id: "salady", subIndustryIds: ["salad-healthy"], categoryId: "food", name: { ko: "샐러디", en: "Salady" }, tagline: { ko: "샐러드 프랜차이즈 1위, 343개 매장", en: "#1 salad franchise, 343 stores" }, startupCostWon: 9500, franchiseFee: 1100, monthlyRoyalty: 33, avgAnnualRevenueWon: 30000, storeCount: 343, closureRate: 3.5, scores: { profitability: 78, stability: 75, accessibility: 68, brandPower: 80, support: 75 }, roadmapNotes: { ko: ["국내 샐러드 프랜차이즈 가맹점 수 1위 (343개)", "15평 기준 인테리어 평당 231만원", "오피스 상권 특화 — 점심 반복 수요", "서울 평균 연매출 4억+"], en: ["#1 Korean salad franchise (343 stores)", "15 pyeong, interior 2.31M/pyeong", "Office district specialist — lunch repeat demand", "Seoul avg annual revenue 400M+"] }, franchiseUrl: "https://www.salady.co.kr/", costVerified: true, costSource: "마이프차·정보공개서 2024", basePyeong: 15, costBreakdown: [c("가맹비","Franchise fee",1100),c("교육비","Training",330),c("인테리어·설비","Interior+equip",8070)], dataYear: "2024" });
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  BEAUTY 추가 (waxing, eyelash-brow)
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+const sevenDaysSugaring = b({ id: "7days-sugaring", subIndustryIds: ["waxing-studio"], categoryId: "beauty", name: { ko: "세븐데이즈슈가링", en: "7Days Sugaring" }, tagline: { ko: "슈가왁싱 전문, 소자본 5천만원대 창업", en: "Sugar waxing specialist, ~50M won startup" }, startupCostWon: 5000, franchiseFee: 300, monthlyRoyalty: 30, avgAnnualRevenueWon: 12000, storeCount: 35, closureRate: 4.0, scores: { profitability: 72, stability: 65, accessibility: 82, brandPower: 55, support: 68 }, roadmapNotes: { ko: ["15평 기준 약 5천만원 창업 가능", "가맹비 300만 + 교육비 200만 + 인테리어 평당 170만", "비수기(겨울) 매출 하락 주의", "1인 운영 가능 — 인건비 절감"], en: ["~50M won at 15 pyeong", "Franchise 3M + training 2M + interior 1.7M/pyeong", "Watch winter off-season dip", "Solo operation possible"] }, franchiseUrl: "https://www.7dayssugaring.com/", costVerified: false, costSource: "공식사이트 2024", dataYear: "2024" });
+
+const anaden = b({ id: "anaden", subIndustryIds: ["waxing-studio", "eyelash-brow"], categoryId: "beauty", name: { ko: "아나덴", en: "Anaden" }, tagline: { ko: "왁싱·속눈썹 복합, 전국 20개+ 매장", en: "Waxing + lash combo, 20+ stores nationwide" }, startupCostWon: 8000, franchiseFee: 300, monthlyRoyalty: 30, avgAnnualRevenueWon: 18000, storeCount: 20, closureRate: 3.5, scores: { profitability: 75, stability: 62, accessibility: 70, brandPower: 50, support: 65 }, roadmapNotes: { ko: ["왁싱 + 속눈썹 복합 운영 가능", "가맹비 300만 + 마케팅비 800만 + 인테리어 평당 210만", "초도물품비 890만원 포함", "월 로열티 30만원 — 고정비 부담 적음"], en: ["Waxing + lash combo operation", "Franchise 3M + marketing 8M + interior 2.1M/pyeong", "Initial supplies 8.9M included", "Monthly royalty 300K — low fixed cost"] }, franchiseUrl: "https://anaden.co.kr/", costVerified: false, costSource: "공식사이트 2024", dataYear: "2024" });
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  FITNESS 추가 (golf-studio, yoga-studio)
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+const friendsScreen = b({ id: "friends-screen", subIndustryIds: ["golf-studio"], categoryId: "fitness", name: { ko: "프렌즈스크린", en: "Friends Screen (Kakao VX)" }, tagline: { ko: "카카오VX 스크린골프, 무인 운영 가능", en: "Kakao VX screen golf, unmanned operation" }, startupCostWon: 54400, franchiseFee: 1000, monthlyRoyalty: 55, avgAnnualRevenueWon: 38556, storeCount: 450, closureRate: 5.0, scores: { profitability: 72, stability: 65, accessibility: 25, brandPower: 82, support: 78 }, roadmapNotes: { ko: ["카카오VX 운영 — 카카오 캐릭터 UI", "초기 투자 5.44억 — 대형 투자", "월매출 3,213만, 수익률 37.7%", "24시간 무인 운영 가능"], en: ["Kakao VX operation — Kakao character UI", "5.44B initial — large investment", "Monthly 32.13M, profit margin 37.7%", "24h unmanned operation possible"] }, franchiseUrl: "https://www.friendsscreen.kr/", costVerified: false, costSource: "공정거래위원회 자료 2024", dataYear: "2024" });
+
+const golfzon = b({ id: "golfzon-park", subIndustryIds: ["golf-studio"], categoryId: "fitness", name: { ko: "골프존파크", en: "Golfzon Park" }, tagline: { ko: "스크린골프 1위, 시장 점유율 70%+", en: "#1 screen golf, 70%+ market share" }, startupCostWon: 55000, franchiseFee: 1000, monthlyRoyalty: 55, avgAnnualRevenueWon: 40000, storeCount: 6000, closureRate: 4.5, scores: { profitability: 75, stability: 70, accessibility: 22, brandPower: 95, support: 85 }, roadmapNotes: { ko: ["스크린골프 시장 점유율 70% 이상", "투비전 시스템 — 정확한 구질 분석", "초기 투자 5.5억 — 대형 투자 필수", "전국 6,000개+ 매장 — 1위 브랜드"], en: ["70%+ market share in screen golf", "TwoVision system — accurate ball analysis", "5.5B initial — large investment required", "6,000+ stores nationwide — #1 brand"] }, franchiseUrl: "https://www.golfzon.com/", costVerified: false, costSource: "업계 추정 2024", dataYear: "2024" });
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *  EXPORTS
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
@@ -261,18 +297,18 @@ export const franchiseBrands: FranchiseBrand[] = [
   yeokjeonUdon, misoya, halmaeSundae, hyundaeok, yupdduk, sinJeon,
   // delivery-meals (3) — yupdduk/sinJeon cross-listed above
   dookki,
-  // salad-healthy (1)
-  saladit,
-  // western (1)
-  vips,
+  // salad-healthy (3)
+  saladit, subway, salady,
+  // western-pasta-brunch (8)
+  vips, rollingPasta, pastaEyo, pastaIbnida, pastaJibiYa, tuttiCucina, pastaBilrun,
   // cafe-dessert (9)
   megaCoffee, composeCoffee, paiksDabang, ediya, theventi, twosomePlace, baskinRobbins, sulbing, paris, tlj,
   // retail (4)
   cu, gs25, sevenEleven, emart24,
-  // beauty (6)
-  junoHair, lianHair, blueClub, parkSeungChul, goldenNail, yuhuNail,
-  // fitness (2)
-  anytimeFitness, curves,
+  // beauty (8)
+  junoHair, lianHair, blueClub, parkSeungChul, goldenNail, yuhuNail, sevenDaysSugaring, anaden,
+  // fitness (4)
+  anytimeFitness, curves, friendsScreen, golfzon,
   // education (2)
   noonnoppi, kumon,
   // pet (2)
@@ -282,6 +318,118 @@ export const franchiseBrands: FranchiseBrand[] = [
   // space (4)
   zaksim, tozStudy, seldog24, sevenStar
 ];
+
+// ── 독립 창업 평균 비용 데이터 (프랜차이즈 아닌 독립 개인 창업 시) ──────────
+// 출처: 소상공인시장진흥공단 창업비용 통계, 업종별 평균 (2024–2025)
+// 단위: 만원
+
+export type IndependentStartupCost = {
+  subIndustryId: string;
+  label: { ko: string; en: string };
+  deposit: number;       // 보증금
+  interior: number;      // 인테리어
+  equipment: number;     // 장비·설비
+  workingCapital: number; // 운전자금 (3개월)
+  totalEstimate: number; // 합계
+  basePyeong: number;    // 기준 평수
+  note: { ko: string; en: string };
+};
+
+export const INDEPENDENT_STARTUP_COSTS: IndependentStartupCost[] = [
+  // ── FOOD ──
+  { subIndustryId: "korean-casual", label: { ko: "한식 일반", en: "Korean Casual" }, deposit: 3000, interior: 4500, equipment: 2500, workingCapital: 2000, totalEstimate: 12000, basePyeong: 20, note: { ko: "주방 환기·배관 공사비 별도. 위생교육 필수", en: "Kitchen ventilation/plumbing extra. Hygiene training required" } },
+  { subIndustryId: "delivery-meals", label: { ko: "배달 전문점", en: "Delivery Kitchen" }, deposit: 1000, interior: 1500, equipment: 2000, workingCapital: 1500, totalEstimate: 6000, basePyeong: 10, note: { ko: "공유주방 활용 시 2,000만원대 가능", en: "Ghost kitchen option: ~20M won possible" } },
+  { subIndustryId: "chicken-burger", label: { ko: "치킨·버거", en: "Chicken & Burger" }, deposit: 2000, interior: 3500, equipment: 3000, workingCapital: 2000, totalEstimate: 10500, basePyeong: 15, note: { ko: "튀김기·후드 설비가 비용 핵심", en: "Fryer and hood equipment are main cost drivers" } },
+  { subIndustryId: "ramen-noodle", label: { ko: "라멘·면 전문", en: "Ramen & Noodle" }, deposit: 2500, interior: 4000, equipment: 2000, workingCapital: 1500, totalEstimate: 10000, basePyeong: 15, note: { ko: "국물 장비·면 삶는 설비 필수", en: "Broth equipment and noodle cooker required" } },
+  { subIndustryId: "salad-healthy", label: { ko: "샐러드·건강식", en: "Salad & Healthy" }, deposit: 2000, interior: 3000, equipment: 1500, workingCapital: 1500, totalEstimate: 8000, basePyeong: 12, note: { ko: "신선 식재료 관리가 핵심 — 냉장 설비 중요", en: "Fresh ingredient management key — refrigeration critical" } },
+  { subIndustryId: "western-pasta-brunch", label: { ko: "양식·파스타", en: "Western & Pasta" }, deposit: 3000, interior: 5000, equipment: 3000, workingCapital: 2000, totalEstimate: 13000, basePyeong: 20, note: { ko: "오픈 키친 인테리어 시 비용 상승", en: "Open kitchen interior increases cost" } },
+  // ── CAFE ──
+  { subIndustryId: "takeout-coffee", label: { ko: "테이크아웃 커피", en: "Takeout Coffee" }, deposit: 2000, interior: 3500, equipment: 3000, workingCapital: 1500, totalEstimate: 10000, basePyeong: 10, note: { ko: "에스프레소 머신이 설비비 50%+", en: "Espresso machine is 50%+ of equipment cost" } },
+  { subIndustryId: "specialty-coffee", label: { ko: "스페셜티 카페", en: "Specialty Coffee" }, deposit: 3000, interior: 5000, equipment: 4000, workingCapital: 2000, totalEstimate: 14000, basePyeong: 20, note: { ko: "로스팅 장비 추가 시 +2,000만원", en: "Add ~20M won for roasting equipment" } },
+  { subIndustryId: "dessert-cafe", label: { ko: "디저트 카페", en: "Dessert Cafe" }, deposit: 3000, interior: 5000, equipment: 3500, workingCapital: 2000, totalEstimate: 13500, basePyeong: 20, note: { ko: "쇼케이스·오븐·데코 설비 필수", en: "Showcase, oven, decoration equipment required" } },
+  // ── BEAUTY ──
+  { subIndustryId: "hair-salon", label: { ko: "헤어살롱", en: "Hair Salon" }, deposit: 3000, interior: 4000, equipment: 2000, workingCapital: 1500, totalEstimate: 10500, basePyeong: 20, note: { ko: "미용사 면허 필수. 의자·샴푸대가 설비 핵심", en: "Hairdresser license required. Chairs and shampoo units key" } },
+  { subIndustryId: "nail-studio", label: { ko: "네일 스튜디오", en: "Nail Studio" }, deposit: 1500, interior: 2000, equipment: 1000, workingCapital: 1000, totalEstimate: 5500, basePyeong: 10, note: { ko: "소자본 창업 가능. 미용사(네일) 자격증 필요", en: "Low-capital possible. Nail technician license needed" } },
+  { subIndustryId: "waxing-studio", label: { ko: "왁싱 전문", en: "Waxing Studio" }, deposit: 1500, interior: 2000, equipment: 800, workingCapital: 700, totalEstimate: 5000, basePyeong: 10, note: { ko: "1인 운영 가능. 계절 변동(여름 성수기) 주의", en: "Solo operation possible. Watch seasonal variation (summer peak)" } },
+  { subIndustryId: "eyelash-brow", label: { ko: "속눈썹·눈썹", en: "Lash & Brow" }, deposit: 1000, interior: 1500, equipment: 500, workingCapital: 500, totalEstimate: 3500, basePyeong: 8, note: { ko: "초소자본 창업 가능. 미용사 면허 필수", en: "Ultra-low-capital possible. Beautician license required" } },
+  // ── FITNESS ──
+  { subIndustryId: "pilates-studio", label: { ko: "필라테스", en: "Pilates Studio" }, deposit: 3000, interior: 5000, equipment: 6000, workingCapital: 2000, totalEstimate: 16000, basePyeong: 30, note: { ko: "리포머·캐딜락 등 장비비가 핵심. 자격증 강사 확보 중요", en: "Reformer/Cadillac equipment key. Certified instructors critical" } },
+  { subIndustryId: "pt-gym", label: { ko: "PT 전문 헬스장", en: "PT Gym" }, deposit: 3000, interior: 4000, equipment: 5000, workingCapital: 2000, totalEstimate: 14000, basePyeong: 40, note: { ko: "머신·프리웨이트 장비비 비중 높음", en: "Machine and free weight equipment dominant cost" } },
+  { subIndustryId: "yoga-studio", label: { ko: "요가 스튜디오", en: "Yoga Studio" }, deposit: 2000, interior: 3000, equipment: 1000, workingCapital: 1500, totalEstimate: 7500, basePyeong: 25, note: { ko: "장비비 적음. 바닥 난방·방음이 핵심", en: "Low equipment cost. Floor heating and soundproofing key" } },
+  { subIndustryId: "golf-studio", label: { ko: "골프 스크린", en: "Screen Golf" }, deposit: 5000, interior: 8000, equipment: 30000, workingCapital: 3000, totalEstimate: 46000, basePyeong: 50, note: { ko: "스크린 장비가 투자비 60%+ 차지. 대형 투자", en: "Screen equipment is 60%+ of investment. Large scale" } },
+  // ── EDUCATION ──
+  { subIndustryId: "kids-academy", label: { ko: "아동 학원", en: "Kids Academy" }, deposit: 2000, interior: 3000, equipment: 1500, workingCapital: 1500, totalEstimate: 8000, basePyeong: 25, note: { ko: "학원등록 필수 (관할 교육청). 방음 필수", en: "Academy registration required. Soundproofing needed" } },
+  { subIndustryId: "language-academy", label: { ko: "어학원", en: "Language Academy" }, deposit: 2500, interior: 3500, equipment: 1500, workingCapital: 2000, totalEstimate: 9500, basePyeong: 30, note: { ko: "원어민 강사 채용 시 비자 지원 필요", en: "Native instructor hiring requires visa sponsorship" } },
+  { subIndustryId: "coding-class", label: { ko: "코딩 교육", en: "Coding Class" }, deposit: 1500, interior: 2000, equipment: 2000, workingCapital: 1500, totalEstimate: 7000, basePyeong: 20, note: { ko: "PC·모니터 장비비 비중 높음. 학원등록 필요", en: "PC/monitor equipment dominant. Academy registration needed" } },
+  // ── PET ──
+  { subIndustryId: "pet-grooming", label: { ko: "펫 미용", en: "Pet Grooming" }, deposit: 1500, interior: 2000, equipment: 1500, workingCapital: 1000, totalEstimate: 6000, basePyeong: 15, note: { ko: "반려동물 관련 교육 이수 권장. 방음·환기 중요", en: "Pet training recommended. Soundproofing and ventilation important" } },
+  { subIndustryId: "pet-cafe", label: { ko: "펫 카페", en: "Pet Cafe" }, deposit: 3000, interior: 4000, equipment: 2000, workingCapital: 2000, totalEstimate: 11000, basePyeong: 30, note: { ko: "동물전시업 등록 필수. 위생·소독 관리 핵심", en: "Animal display registration required. Hygiene management critical" } },
+  // ── SPACE ──
+  { subIndustryId: "shared-office", label: { ko: "공유오피스", en: "Shared Office" }, deposit: 5000, interior: 8000, equipment: 3000, workingCapital: 3000, totalEstimate: 19000, basePyeong: 60, note: { ko: "대형 면적 필요. 회의실·라운지·네트워크 설비 핵심", en: "Large area needed. Meeting rooms, lounge, network key" } },
+  { subIndustryId: "study-room", label: { ko: "스터디카페", en: "Study Cafe" }, deposit: 3000, interior: 5000, equipment: 3000, workingCapital: 1500, totalEstimate: 12500, basePyeong: 40, note: { ko: "좌석 관리 키오스크·CCTV·조명 설비 핵심", en: "Seat management kiosk, CCTV, lighting key" } },
+  // ── LIVING SERVICE ──
+  { subIndustryId: "self-laundry", label: { ko: "셀프 빨래방", en: "Self Laundry" }, deposit: 2000, interior: 2000, equipment: 5000, workingCapital: 1000, totalEstimate: 10000, basePyeong: 15, note: { ko: "세탁기·건조기 장비가 투자비 50%. 무인 운영 가능", en: "Washer/dryer equipment 50% of cost. Unmanned possible" } },
+
+  // ── CAFE-DESSERT (추가) ──
+  { subIndustryId: "self-serve-cafe", label: { ko: "무인카페(셀프카페)", en: "Self-Serve Cafe" }, deposit: 2000, interior: 1500, equipment: 2500, workingCapital: 500, totalEstimate: 6500, basePyeong: 10, note: { ko: "커피머신·키오스크·CCTV 필수. 무인 운영으로 인건비 절감", en: "Coffee machine, kiosk, CCTV required. Unmanned for labor savings" } },
+  { subIndustryId: "icecream-bingsu", label: { ko: "아이스크림·빙수", en: "Ice Cream & Bingsu" }, deposit: 2000, interior: 3000, equipment: 2500, workingCapital: 1500, totalEstimate: 9000, basePyeong: 12, note: { ko: "냉동 쇼케이스·빙수기 장비 핵심. 여름 성수기 매출 편중 주의", en: "Freezer showcase & bingsu machine key. Summer-heavy revenue risk" } },
+  { subIndustryId: "bakery-studio", label: { ko: "베이커리·제과", en: "Bakery Studio" }, deposit: 3000, interior: 5000, equipment: 5000, workingCapital: 2000, totalEstimate: 15000, basePyeong: 20, note: { ko: "오븐·반죽기·발효기 등 고가 장비 필수. 제과기능사 또는 제조책임자 필요", en: "Oven, mixer, proofer essential. Baker certification or production manager needed" } },
+
+  // ── BEAUTY (추가) ──
+  { subIndustryId: "skin-care-room", label: { ko: "피부관리실", en: "Skin Care Room" }, deposit: 1500, interior: 2500, equipment: 2000, workingCapital: 1000, totalEstimate: 7000, basePyeong: 15, note: { ko: "피부관리 베드·LED 장비 핵심. 1인 운영 시 소자본 가능", en: "Treatment beds & LED devices key. Solo operation low-capital possible" } },
+  { subIndustryId: "makeup-bridal", label: { ko: "메이크업·브라이덜", en: "Makeup & Bridal" }, deposit: 1500, interior: 2000, equipment: 1000, workingCapital: 800, totalEstimate: 5300, basePyeong: 10, note: { ko: "미용사(메이크업) 면허 필수. 예약 기반 운영으로 고정비 절감 가능", en: "Makeup artist license required. Reservation-based for lower fixed costs" } },
+
+  // ── FITNESS (추가) ──
+  { subIndustryId: "crossfit-box", label: { ko: "크로스핏 박스", en: "CrossFit Box" }, deposit: 3000, interior: 3000, equipment: 8000, workingCapital: 2000, totalEstimate: 16000, basePyeong: 50, note: { ko: "CrossFit 본사 연회비 약 400만원. 바벨·링·로잉머신 등 다종 장비 필요", en: "CrossFit HQ annual fee ~$3K. Barbells, rings, rowers, multi-equipment required" } },
+  { subIndustryId: "unmanned-fitness", label: { ko: "무인 헬스장(24시)", en: "Unmanned Fitness 24h" }, deposit: 5000, interior: 5000, equipment: 15000, workingCapital: 2000, totalEstimate: 27000, basePyeong: 60, note: { ko: "체력단련장 생활체육지도자 1인 상주 법적 요건 확인. 스마트 출입·CCTV 필수", en: "Legal requirement: sports instructor on-site. Smart access & CCTV required" } },
+
+  // ── EDUCATION (추가) ──
+  { subIndustryId: "adult-class", label: { ko: "성인 클래스·공방", en: "Adult Class & Workshop" }, deposit: 1500, interior: 2000, equipment: 1000, workingCapital: 1000, totalEstimate: 5500, basePyeong: 15, note: { ko: "원데이 클래스·공방 형태. 학원등록 필요 여부 확인(교육청)", en: "One-day class format. Check academy registration requirement" } },
+  { subIndustryId: "small-study-room", label: { ko: "소형 독서실", en: "Small Study Room" }, deposit: 2000, interior: 3000, equipment: 2000, workingCapital: 1000, totalEstimate: 8000, basePyeong: 25, note: { ko: "좌석 칸막이·조명·냉난방 핵심. 무인 키오스크 운영 가능", en: "Seat partitions, lighting, HVAC key. Unmanned kiosk operation possible" } },
+
+  // ── PET (추가) ──
+  { subIndustryId: "pet-supplies", label: { ko: "펫 용품점", en: "Pet Supplies Store" }, deposit: 2000, interior: 2500, equipment: 1000, workingCapital: 2500, totalEstimate: 8000, basePyeong: 15, note: { ko: "초기 재고 비중 높음. 온라인 병행 판매 권장", en: "High initial inventory cost. Online parallel sales recommended" } },
+  { subIndustryId: "pet-hotel", label: { ko: "펫 호텔·위탁돌봄", en: "Pet Hotel & Boarding" }, deposit: 3000, interior: 4000, equipment: 2000, workingCapital: 1500, totalEstimate: 10500, basePyeong: 25, note: { ko: "동물위탁관리업 등록 필수. 방음·환기·위생 설비 핵심", en: "Animal boarding registration required. Soundproofing, ventilation, hygiene key" } },
+  { subIndustryId: "pet-training-school", label: { ko: "펫 훈련소", en: "Pet Training School" }, deposit: 2000, interior: 2000, equipment: 1000, workingCapital: 1500, totalEstimate: 6500, basePyeong: 30, note: { ko: "반려동물행동지도사 자격 권장. 실내+야외 운동장 확보 필요", en: "Pet behavior specialist cert recommended. Indoor+outdoor space needed" } },
+
+  // ── LIVING-SERVICE (추가) ──
+  { subIndustryId: "laundry-service", label: { ko: "세탁편의점", en: "Laundry Service Shop" }, deposit: 1500, interior: 1500, equipment: 3000, workingCapital: 1000, totalEstimate: 7000, basePyeong: 8, note: { ko: "본사 세탁공장 연계 모델. 접수·인도만 수행하는 소규모 점포", en: "HQ factory-linked model. Small reception/delivery storefront" } },
+  { subIndustryId: "cleaning-service", label: { ko: "청소 대행", en: "Cleaning Service" }, deposit: 0, interior: 0, equipment: 500, workingCapital: 500, totalEstimate: 1000, basePyeong: 0, note: { ko: "차량+장비만으로 창업 가능. 매장 불필요 — 출장형 서비스", en: "Vehicle + equipment only. No storefront needed — mobile service" } },
+  { subIndustryId: "repair-service", label: { ko: "수선·수리점", en: "Repair & Alteration" }, deposit: 1000, interior: 1000, equipment: 500, workingCapital: 500, totalEstimate: 3000, basePyeong: 8, note: { ko: "의류 수선·구두 수선 등. 기술 숙련도가 핵심 경쟁력", en: "Clothing/shoe alteration. Craftsmanship is core competitiveness" } },
+  { subIndustryId: "print-copy", label: { ko: "인쇄·복사 매장", en: "Print & Copy Shop" }, deposit: 1500, interior: 1500, equipment: 3000, workingCapital: 1000, totalEstimate: 7000, basePyeong: 10, note: { ko: "복합기·대형프린터 장비 핵심. 무인 키오스크 운영 가능", en: "Multifunction printer & large-format key. Unmanned kiosk possible" } },
+  { subIndustryId: "device-repair", label: { ko: "전자기기 수리", en: "Device Repair" }, deposit: 1000, interior: 1000, equipment: 1000, workingCapital: 1000, totalEstimate: 4000, basePyeong: 8, note: { ko: "스마트폰·노트북 수리. 부품 재고 확보 및 기술 교육 필수", en: "Phone & laptop repair. Parts inventory and technical training essential" } },
+
+  // ── SPACE (추가) ──
+  { subIndustryId: "guesthouse", label: { ko: "게스트하우스", en: "Guesthouse" }, deposit: 5000, interior: 7000, equipment: 2000, workingCapital: 2000, totalEstimate: 16000, basePyeong: 40, note: { ko: "숙박업 등록 필수 (소방·위생 기준). 외국인관광도시민박업 별도 규정", en: "Accommodation registration required. Fire/hygiene standards apply" } },
+  { subIndustryId: "rental-studio", label: { ko: "렌탈 스튜디오", en: "Rental Studio" }, deposit: 2000, interior: 3000, equipment: 1500, workingCapital: 1000, totalEstimate: 7500, basePyeong: 20, note: { ko: "촬영용 조명·배경 설비 필수. 스페이스클라우드 등 플랫폼 활용", en: "Photo lighting & backdrop essential. Use platforms like SpaceCloud" } },
+  { subIndustryId: "party-room", label: { ko: "파티룸", en: "Party Room" }, deposit: 2000, interior: 3000, equipment: 1500, workingCapital: 1000, totalEstimate: 7500, basePyeong: 20, note: { ko: "프로젝터·스피커·주방시설 필수. 스마트락 무인 운영 가능", en: "Projector, speakers, kitchen required. Smart lock unmanned possible" } },
+  { subIndustryId: "study-cafe-space", label: { ko: "스터디카페 공간", en: "Study Cafe Space" }, deposit: 3000, interior: 5000, equipment: 3000, workingCapital: 1500, totalEstimate: 12500, basePyeong: 40, note: { ko: "좌석 관리 키오스크·CCTV·조명 설비 핵심. 무인 운영 가능", en: "Seat management kiosk, CCTV, lighting key. Unmanned possible" } },
+  { subIndustryId: "practice-room", label: { ko: "연습실(댄스·음악)", en: "Practice Room" }, deposit: 2000, interior: 3000, equipment: 2000, workingCapital: 1000, totalEstimate: 8000, basePyeong: 20, note: { ko: "방음 공사 필수. 거울·음향 장비·환기 시설 핵심", en: "Soundproofing mandatory. Mirrors, audio, ventilation key" } },
+
+  // ── RETAIL (추가) ──
+  { subIndustryId: "convenience-small", label: { ko: "소형 편의점·마트", en: "Small Convenience Store" }, deposit: 3000, interior: 3000, equipment: 2000, workingCapital: 3000, totalEstimate: 11000, basePyeong: 15, note: { ko: "담배·주류 판매허가 별도. 초기 상품 재고비 비중 높음", en: "Tobacco/liquor license separate. High initial inventory cost" } },
+  { subIndustryId: "lifestyle-goods", label: { ko: "라이프스타일 잡화", en: "Lifestyle Goods Shop" }, deposit: 2000, interior: 3000, equipment: 500, workingCapital: 2500, totalEstimate: 8000, basePyeong: 15, note: { ko: "디퓨저·캔들·문구 등 큐레이션 콘셉트. 초기 재고 확보 중요", en: "Diffuser, candle, stationery curation. Initial inventory critical" } },
+  { subIndustryId: "beauty-supplies", label: { ko: "뷰티 용품점", en: "Beauty Supply Store" }, deposit: 2000, interior: 2500, equipment: 500, workingCapital: 3000, totalEstimate: 8000, basePyeong: 12, note: { ko: "화장품·미용도구 전문 매장. 유통기한 관리 필수", en: "Cosmetics & beauty tools. Expiration date management essential" } },
+  { subIndustryId: "fashion-accessories", label: { ko: "패션 액세서리", en: "Fashion Accessories" }, deposit: 2000, interior: 2500, equipment: 500, workingCapital: 2500, totalEstimate: 7500, basePyeong: 10, note: { ko: "동대문·남대문 사입 구조. 트렌드 변화 빠름 — 재고 리스크 주의", en: "Dongdaemun/Namdaemun sourcing. Fast trend changes — inventory risk" } },
+  { subIndustryId: "health-food-store", label: { ko: "건강식품 매장", en: "Health Food Store" }, deposit: 2000, interior: 2000, equipment: 1000, workingCapital: 3000, totalEstimate: 8000, basePyeong: 12, note: { ko: "건강기능식품 판매업 신고 필요. 유통기한·보관 온도 관리 핵심", en: "Health food sales registration needed. Shelf life & temp control key" } },
+  { subIndustryId: "unmanned-retail", label: { ko: "무인 매장(리테일)", en: "Unmanned Retail Store" }, deposit: 2000, interior: 2000, equipment: 2500, workingCapital: 1500, totalEstimate: 8000, basePyeong: 10, note: { ko: "키오스크·CCTV·RFID 필수. 도난 방지 시스템 핵심", en: "Kiosk, CCTV, RFID required. Anti-theft system critical" } },
+
+  // ── ONLINE-DIGITAL (추가) ──
+  { subIndustryId: "smart-store", label: { ko: "스마트스토어·쇼핑몰", en: "Smart Store / E-commerce" }, deposit: 0, interior: 0, equipment: 200, workingCapital: 500, totalEstimate: 700, basePyeong: 0, note: { ko: "네이버 스마트스토어 기준. 위탁판매 시 재고 0원 가능. 통신판매업 신고 필수", en: "Based on Naver Smart Store. Zero inventory via consignment. Telecom sales registration required" } },
+  { subIndustryId: "digital-products", label: { ko: "디지털 제품(템플릿·강의)", en: "Digital Products" }, deposit: 0, interior: 0, equipment: 300, workingCapital: 300, totalEstimate: 600, basePyeong: 0, note: { ko: "노트북+디자인 툴로 시작 가능. 플랫폼(크몽·클래스101) 활용", en: "Laptop + design tools to start. Use platforms like Kmong/Class101" } },
+  { subIndustryId: "creator-service", label: { ko: "크리에이터 서비스", en: "Creator Service" }, deposit: 0, interior: 0, equipment: 500, workingCapital: 500, totalEstimate: 1000, basePyeong: 0, note: { ko: "영상 촬영·편집 장비 핵심. 유튜브·인스타 기반 수익화", en: "Camera & editing equipment key. YouTube/Instagram monetization" } },
+  { subIndustryId: "consignment-commerce", label: { ko: "위탁판매·구독커머스", en: "Consignment & Subscription" }, deposit: 0, interior: 0, equipment: 200, workingCapital: 1000, totalEstimate: 1200, basePyeong: 0, note: { ko: "재고 부담 없음. 마케팅·광고비가 핵심 비용", en: "No inventory burden. Marketing & ads are main cost" } },
+
+  // ── STARTUP-TECH (추가) ──
+  { subIndustryId: "ai-application", label: { ko: "AI 애플리케이션", en: "AI Application" }, deposit: 0, interior: 0, equipment: 500, workingCapital: 3000, totalEstimate: 3500, basePyeong: 0, note: { ko: "클라우드 GPU·API 비용 핵심. 정부 AI 바우처 활용 가능", en: "Cloud GPU & API costs key. Government AI voucher available" } },
+  { subIndustryId: "b2b-saas", label: { ko: "B2B SaaS", en: "B2B SaaS" }, deposit: 0, interior: 0, equipment: 500, workingCapital: 5000, totalEstimate: 5500, basePyeong: 0, note: { ko: "개발 인건비가 비용 70%+. NIPA SaaS 개발 지원사업 활용 권장", en: "Dev salaries 70%+ of cost. NIPA SaaS support program recommended" } },
+  { subIndustryId: "developer-tools", label: { ko: "개발자 도구", en: "Developer Tools" }, deposit: 0, interior: 0, equipment: 500, workingCapital: 4000, totalEstimate: 4500, basePyeong: 0, note: { ko: "오픈소스 커뮤니티 빌딩 필수. 클라우드 인프라 비용 주의", en: "Open source community building essential. Watch cloud infra costs" } },
+  { subIndustryId: "fintech-startup", label: { ko: "핀테크 스타트업", en: "Fintech Startup" }, deposit: 0, interior: 0, equipment: 1000, workingCapital: 8000, totalEstimate: 9000, basePyeong: 0, note: { ko: "금융 라이선스·보안 인증 비용 높음. 전자금융업 등록 필수", en: "High licensing & security cert costs. E-finance registration required" } },
+];
+
+export function getIndependentCostForSubIndustry(subIndustryId: string): IndependentStartupCost | undefined {
+  return INDEPENDENT_STARTUP_COSTS.find((c) => c.subIndustryId === subIndustryId);
+}
 
 /** Get franchise brands matching a sub-industry ID */
 export function getFranchiseBrandsForSubIndustry(subIndustryId: string): FranchiseBrand[] {
@@ -647,6 +795,34 @@ const brandSupplyOverrides: Record<string, FranchiseSupplyItem[]> = {
     { category: { ko: "식재료 전체", en: "All ingredients" }, type: "hq-exclusive", items: [{ ko: "CJ푸드빌 통합 식자재 공급 (CJ프레시웨이 물류)", en: "CJ Foodville integrated supply (CJ Freshway logistics)" }], note: { ko: "CJ그룹 계열 — 안정적 공급망. 샐러드바·스테이크·파스타 전 메뉴 본사 레시피", en: "CJ Group — stable supply chain. All menus HQ recipe" } },
     { category: { ko: "장비·인테리어", en: "Equipment & interior" }, type: "hq-designated", items: [{ ko: "대형 주방설비·샐러드바·인테리어 (100평+ 필수)", en: "Large kitchen, salad bar, interior (100+ pyeong)" }] },
     { category: { ko: "소모품", en: "Consumables" }, type: "free-purchase", items: [{ ko: "세제·위생용품", en: "Detergent, hygiene" }] },
+  ],
+  "rolling-pasta": [
+    { category: { ko: "파스타 소스·면", en: "Pasta sauce & noodles" }, type: "hq-exclusive", items: [{ ko: "더본코리아 통합 물류 공급 (소스·면·토핑)", en: "The Born integrated supply (sauce, noodles, toppings)" }], note: { ko: "더본코리아 계열 — 백종원 레시피 기반. 배달 비중 높아 포장재 소모 많음", en: "The Born brand — Baek Jongwon recipes. High delivery = high packaging use" } },
+    { category: { ko: "포장재", en: "Packaging" }, type: "hq-designated", items: [{ ko: "브랜드 전용 배달 용기·봉투", en: "Brand delivery containers/bags" }] },
+    { category: { ko: "부자재", en: "Sub-ingredients" }, type: "free-purchase", items: [{ ko: "야채·치즈 등 신선재료", en: "Vegetables, cheese, fresh ingredients" }] },
+  ],
+  "pasta-eyo": [
+    { category: { ko: "핵심 식재료", en: "Core ingredients" }, type: "hq-exclusive", items: [{ ko: "본사 레시피 소스·면 공급", en: "HQ recipe sauce & noodle supply" }] },
+    { category: { ko: "부재료", en: "Sub-ingredients" }, type: "free-purchase", items: [{ ko: "야채·해산물·치즈 현지 구매", en: "Vegetables, seafood, cheese local purchase" }] },
+    { category: { ko: "포장재", en: "Packaging" }, type: "hq-designated", items: [{ ko: "브랜드 전용 용기", en: "Brand containers" }] },
+  ],
+  "pasta-ibnida": [
+    { category: { ko: "면·소스", en: "Noodles & sauce" }, type: "hq-exclusive", items: [{ ko: "본사 통일 레시피 소스·면 공급", en: "HQ unified recipe sauce & noodle supply" }], note: { ko: "배달 전문 모델 — 조리 난이도 낮음, 1인 운영 가능", en: "Delivery-focused — easy cooking, solo-operation possible" } },
+    { category: { ko: "포장재", en: "Packaging" }, type: "hq-designated", items: [{ ko: "배달 전용 용기·봉투", en: "Delivery containers/bags" }] },
+  ],
+  "pasta-jibiya": [
+    { category: { ko: "핵심 식재료", en: "Core ingredients" }, type: "hq-exclusive", items: [{ ko: "본사 소스·리조또 베이스 공급", en: "HQ sauce & risotto base supply" }] },
+    { category: { ko: "부재료", en: "Sub-ingredients" }, type: "free-purchase", items: [{ ko: "야채·육류·치즈", en: "Vegetables, meat, cheese" }] },
+    { category: { ko: "포장재", en: "Packaging" }, type: "hq-designated", items: [{ ko: "브랜드 용기", en: "Brand containers" }] },
+  ],
+  "tutti-cucina": [
+    { category: { ko: "핵심 식재료", en: "Core ingredients" }, type: "hq-exclusive", items: [{ ko: "피자 도우·파스타 소스·토핑 본사 공급", en: "Pizza dough, pasta sauce, toppings HQ supply" }], note: { ko: "피자+파스타 듀얼 메뉴 — 30평+ 중대형 매장 필수. 가족형 외식 타겟", en: "Pizza+pasta dual — 30+ pyeong required. Family dining target" } },
+    { category: { ko: "장비", en: "Equipment" }, type: "hq-designated", items: [{ ko: "피자 오븐·파스타 쿠커 본사 사양", en: "Pizza oven, pasta cooker HQ spec" }] },
+    { category: { ko: "부재료", en: "Sub-ingredients" }, type: "free-purchase", items: [{ ko: "야채·음료", en: "Vegetables, beverages" }] },
+  ],
+  "pasta-bilrun": [
+    { category: { ko: "면·소스", en: "Noodles & sauce" }, type: "hq-exclusive", items: [{ ko: "본사 레시피 소스·면 패키지", en: "HQ recipe sauce & noodle package" }], note: { ko: "배달 전문 초저가 모델 — 공유주방 가능, 1인 운영 최적화", en: "Delivery-only ultra-low-cost — ghost kitchen OK, solo-optimized" } },
+    { category: { ko: "포장재", en: "Packaging" }, type: "hq-designated", items: [{ ko: "브랜드 배달 용기", en: "Brand delivery containers" }] },
   ],
   "seven-eleven": [
     { category: { ko: "전체 상품", en: "All products" }, type: "hq-exclusive", items: [{ ko: "코리아세븐 물류센터 자동발주", en: "Korea Seven logistics auto-order" }], note: { ko: "글로벌 표준 발주 시스템, 저효율 점포 구조조정 진행 중 (2024년 978개 순감)", en: "Global standard ordering, low-efficiency store cleanup ongoing (978 net closures 2024)" } },

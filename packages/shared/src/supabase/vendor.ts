@@ -79,6 +79,7 @@ export async function loadVendorRecommendations(
   client: Client,
   params: {
     categoryId: string;
+    subIndustryId?: string;
     startupType: "franchise" | "independent" | "undecided";
   }
 ): Promise<VendorRecommendation[]> {
@@ -89,6 +90,38 @@ export async function loadVendorRecommendations(
         ? ["all", "independent"]
         : ["all"];
 
+  // 1차: sub_industry_id 매칭
+  if (params.subIndustryId) {
+    const { data: subData, error: subError } = await client
+      .from("vendor_recommendations")
+      .select("*")
+      .eq("category_id", params.categoryId)
+      .eq("sub_industry_id", params.subIndustryId)
+      .eq("is_active", true)
+      .in("startup_type", startupTypes)
+      .order("priority", { ascending: true });
+
+    if (!subError && subData && (subData as unknown[]).length > 0) {
+      // sub_industry 데이터 + category 일반 데이터 합산
+      const { data: catData } = await client
+        .from("vendor_recommendations")
+        .select("*")
+        .eq("category_id", params.categoryId)
+        .is("sub_industry_id", null)
+        .eq("is_active", true)
+        .in("startup_type", startupTypes)
+        .order("priority", { ascending: true });
+
+      const subVendors = ((subData ?? []) as VendorRow[]).map(rowToVendor);
+      const catVendors = ((catData ?? []) as VendorRow[]).map(rowToVendor);
+      // sub 데이터 우선, cat 데이터 중 vendor_type 중복 없는 것만 추가
+      const subTypes = new Set(subVendors.map(v => v.vendorType));
+      const merged = [...subVendors, ...catVendors.filter(v => !subTypes.has(v.vendorType))];
+      return merged.sort((a, b) => a.priority - b.priority);
+    }
+  }
+
+  // 2차: category_id만 매칭 (기존 동작)
   const { data, error } = await client
     .from("vendor_recommendations")
     .select("*")

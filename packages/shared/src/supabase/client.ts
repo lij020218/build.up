@@ -258,6 +258,69 @@ export type BuildUpDatabase = {
         Insert: Partial<BuildUpDatabase["public"]["Tables"]["stage_guide_content"]["Row"]>;
         Update: Partial<BuildUpDatabase["public"]["Tables"]["stage_guide_content"]["Row"]>;
       };
+      interior_design_guides: {
+        Row: {
+          id: string;
+          category_id: string;
+          sub_industry_id: string | null;
+          guide_type: "material" | "concept";
+          name_ko: string;
+          name_en: string | null;
+          description_ko: string;
+          description_en: string | null;
+          icon_name: string | null;
+          tags: string[];
+          pros: string[] | null;
+          cons: string[] | null;
+          cost_range_ko: string | null;
+          cost_range_en: string | null;
+          trend_source: string | null;
+          priority: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: Partial<BuildUpDatabase["public"]["Tables"]["interior_design_guides"]["Row"]>;
+        Update: Partial<BuildUpDatabase["public"]["Tables"]["interior_design_guides"]["Row"]>;
+      };
+      customers: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          phone: string | null;
+          email: string | null;
+          notes: string | null;
+          tags: string[];
+          customer_mode: string;
+          total_visits: number;
+          total_spent: number;
+          last_visit_at: string | null;
+          first_visit_at: string | null;
+          meta: Record<string, unknown>;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<BuildUpDatabase["public"]["Tables"]["customers"]["Row"]>;
+        Update: Partial<BuildUpDatabase["public"]["Tables"]["customers"]["Row"]>;
+      };
+      customer_visits: {
+        Row: {
+          id: string;
+          customer_id: string;
+          user_id: string;
+          visit_type: string;
+          visit_date: string;
+          amount: number;
+          service_name: string | null;
+          staff_name: string | null;
+          notes: string | null;
+          meta: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: Partial<BuildUpDatabase["public"]["Tables"]["customer_visits"]["Row"]>;
+        Update: Partial<BuildUpDatabase["public"]["Tables"]["customer_visits"]["Row"]>;
+      };
       user_store_data: {
         Row: {
           id: string;

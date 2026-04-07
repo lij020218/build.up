@@ -22,6 +22,8 @@ type Props = {
   todayBepProgress?: number;
   daysAboveBreakEven?: number;
   totalDaysRecorded?: number;
+  /** 업종별 COGS 레이블 (기본: 재료비/Food) */
+  cogsLabel?: { ko: string; en: string };
 };
 
 const health = (val: number, good: number, caution: number): HealthLevel =>
@@ -36,39 +38,50 @@ export function PLHeroCard({
   prevMonthSales, prevMonthCosts,
   breakEvenDailySales, todaySales, todayBepProgress,
   daysAboveBreakEven, totalDaysRecorded,
+  cogsLabel,
 }: Props) {
   const prevProfit = prevMonthSales != null && prevMonthCosts != null ? prevMonthSales - prevMonthCosts : undefined;
   const pctChange = (cur: number, prev: number | undefined) =>
     prev && prev > 0 ? Math.round(((cur - prev) / prev) * 100) : undefined;
   const hasData = totalSales > 0;
   const hasCosts = totalCosts > 0;
-  const hasDanger = hasData && (
-    health(ingredientRatio, 35, 40) === "danger" ||
-    health(laborRatio, 30, 35) === "danger" ||
-    health(primeCost, 60, 65) === "danger" ||
+  // NaN 방지: 비용 미입력 시 0으로 대체
+  const safeIngredientRatio = isFinite(ingredientRatio) ? ingredientRatio : 0;
+  const safeLaborRatio = isFinite(laborRatio) ? laborRatio : 0;
+  const safeRentRatio = isFinite(rentRatio) ? rentRatio : 0;
+  const safePrimeCost = isFinite(primeCost) ? primeCost : 0;
+  const hasDanger = hasData && hasCosts && (
+    health(safeIngredientRatio, 35, 40) === "danger" ||
+    health(safeLaborRatio, 30, 35) === "danger" ||
+    health(safePrimeCost, 60, 65) === "danger" ||
     netProfit < 0
   );
 
   const currentMonth = new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long" });
 
   const ratios = [
-    { label: ko ? "재료비" : "Food", value: ingredientRatio, target: "30-35%", benchmark: 32, h: health(ingredientRatio, 35, 40) },
-    { label: ko ? "인건비" : "Labor", value: laborRatio, target: "~30%", benchmark: 28, h: health(laborRatio, 30, 35) },
-    { label: ko ? "임대료" : "Rent", value: rentRatio, target: "~10%", benchmark: 9, h: health(rentRatio, 10, 15) },
-    { label: ko ? "원가율" : "Prime", value: primeCost, target: "~60%", benchmark: 58, h: health(primeCost, 60, 65) },
+    { label: cogsLabel ? cogsLabel[ko ? "ko" : "en"] : (ko ? "재료비" : "Food"), value: safeIngredientRatio, target: "30-35%", benchmark: 32, h: hasCosts ? health(safeIngredientRatio, 35, 40) : ("good" as HealthLevel) },
+    { label: ko ? "인건비" : "Labor", value: safeLaborRatio, target: "~30%", benchmark: 28, h: hasCosts ? health(safeLaborRatio, 30, 35) : ("good" as HealthLevel) },
+    { label: ko ? "임대료" : "Rent", value: safeRentRatio, target: "~10%", benchmark: 9, h: hasCosts ? health(safeRentRatio, 10, 15) : ("good" as HealthLevel) },
+    { label: ko ? "원가율" : "Prime", value: safePrimeCost, target: "~60%", benchmark: 58, h: hasCosts ? health(safePrimeCost, 60, 65) : ("good" as HealthLevel) },
   ];
 
   /* diagnostics with specific actions */
   const diag: { text: string; ok: boolean }[] = [];
-  if (hasData) {
-    if (health(primeCost, 60, 65) === "danger") {
-      const gap = primeCost - 65;
+  if (hasData && !hasCosts) {
+    // 매출은 있지만 비용 미입력
+    diag.push({ text: ko
+      ? "월 비용(재료비·인건비·임대료)을 입력하면 손익 분석과 비용 구조 진단이 시작됩니다"
+      : "Enter monthly costs (ingredients, labor, rent) to unlock P&L analysis and cost diagnostics", ok: true });
+  } else if (hasData && hasCosts) {
+    if (health(safePrimeCost, 60, 65) === "danger") {
+      const gap = safePrimeCost - 65;
       diag.push({ text: ko
-        ? `원가율 ${primeCost.toFixed(1)}% (목표 65%). 상위 3개 메뉴 원가를 ${Math.ceil(gap)}%p 낮추면 달성`
-        : `Prime cost ${primeCost.toFixed(1)}% (target 65%). Cut top 3 menu costs by ${Math.ceil(gap)}%p`, ok: false });
+        ? `원가율 ${safePrimeCost.toFixed(1)}% (목표 65%). 상위 3개 메뉴 원가를 ${Math.ceil(gap)}%p 낮추면 달성`
+        : `Prime cost ${safePrimeCost.toFixed(1)}% (target 65%). Cut top 3 menu costs by ${Math.ceil(gap)}%p`, ok: false });
     }
-    if (health(ingredientRatio, 35, 40) === "danger")
-      diag.push({ text: ko ? `재료비 ${ingredientRatio.toFixed(1)}%. 식재료 납품가 재협상 또는 메뉴 가격 조정 필요` : `Food cost ${ingredientRatio.toFixed(1)}%. Renegotiate supplier prices or adjust menu pricing`, ok: false });
+    if (health(safeIngredientRatio, 35, 40) === "danger")
+      diag.push({ text: ko ? `재료비 ${safeIngredientRatio.toFixed(1)}%. 식재료 납품가 재협상 또는 메뉴 가격 조정 필요` : `Food cost ${safeIngredientRatio.toFixed(1)}%. Renegotiate supplier prices or adjust menu pricing`, ok: false });
     if (netProfit < 0) {
       const dailyDeficit = Math.round(Math.abs(netProfit) / 26);
       diag.push({ text: ko

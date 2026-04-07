@@ -6,6 +6,7 @@ export * from "./market/interpret";
 export * from "./stage/brief";
 export * from "./dashboard/actions";
 export type { DashboardContext } from "./dashboard/prompt";
+export { enrichDashboardContext, enrichDashboardContextAsync } from "./dashboard/enrich-context";
 export type { ContractClause, ContractAnalysisResult, ContractType } from "./contract/prompt";
 export { getSystemPromptForType } from "./contract/prompt";
 export { buildFinanceUserPrompt, FINANCE_SYSTEM_PROMPT } from "./finance/prompt";

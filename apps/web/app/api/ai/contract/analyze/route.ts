@@ -2,6 +2,7 @@ import { analyzeContract, AiParseError } from "@build-up/ai";
 import type { ContractAnalysisResult, ContractType } from "@build-up/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
+import { getAnthropicApiKey } from "../../../_lib/env";
 import { getRequestId, logApiError, logApiEvent } from "../../../_lib/observability";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 
@@ -49,11 +50,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = getAnthropicApiKey();
   if (!apiKey) {
     return NextResponse.json(
-      { error: "AI 서비스가 설정되지 않았습니다." },
-      { status: 500 }
+      { error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." },
+      { status: 503 }
     );
   }
 

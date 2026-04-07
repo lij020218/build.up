@@ -127,6 +127,7 @@ export const seoulMarketDistricts: MarketDistrict[] = [
   m({ id: "gireum-mia", guName: "성북구", matchKeywords: ["길음", "길음역", "성북", "성북구", "미아리"], title: { ko: "길음역 상권", en: "Gireum Station" }, score: 75, summary: { ko: "4호선 역세권+대형마트 인접. 주거 밀집 배후에 안정적 생활 수요가 있습니다.", en: "Line 4 + hypermarket adjacent. Stable daily demand from dense residential backing." }, meta: { districtName: "성북구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "steady", footTraffic: "high", growthTrend: "stable", marketStyle: "residential" } }),
   m({ id: "korea-univ", guName: "성북구", matchKeywords: ["고려대", "안암", "안암역", "성신여대"], title: { ko: "고려대·안암 상권", en: "Korea Univ / Anam" }, score: 77, summary: { ko: "고려대 인접 대학가 상권. 학생·직원 수요가 안정적이며 저녁 술집·회식 문화도 강합니다.", en: "Near Korea Univ campus. Stable student/staff demand, strong evening dining/drinking culture." }, meta: { districtName: "성북구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "throughput", footTraffic: "high", growthTrend: "stable", marketStyle: "balanced" } }),
   m({ id: "jeongneung", guName: "성북구", matchKeywords: ["정릉", "국민대", "정릉동"], title: { ko: "정릉·국민대 상권", en: "Jeongneung / Kookmin Univ" }, score: 71, summary: { ko: "국민대 배후 학생 상권. 임대료가 매우 저렴하고 소자본 창업에 유리합니다.", en: "Kookmin Univ student backing. Very affordable rent, good for small-capital startups." }, meta: { districtName: "성북구", rentBand: "low", competitionLevel: "low", customerFit: "throughput", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+  m({ id: "jangwi", guName: "성북구", matchKeywords: ["장위", "장위동", "장위뉴타운", "돌곶이역", "돌곶이"], title: { ko: "장위동 상권", en: "Jangwi-dong" }, score: 72, summary: { ko: "장위뉴타운 재개발 진행 중. 신축 아파트 입주 시작으로 향후 상권 성장이 기대됩니다. 현재 임대료가 매우 저렴합니다.", en: "Jangwi New Town redevelopment underway. New apartment move-ins promise growth. Currently very affordable rent." }, meta: { districtName: "성북구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "rising", marketStyle: "residential" } }),
 
   /* ━━━ 중랑구 ━━━ */
   m({ id: "sangbong", guName: "중랑구", matchKeywords: ["상봉", "상봉역", "중랑", "중랑구"], title: { ko: "상봉역 상권", en: "Sangbong Station" }, score: 74, summary: { ko: "중랑구 최대 상권. 코스트코+홈플러스 배후에 유동인구가 많고 교통 접근성이 좋습니다.", en: "Jungnang's largest. Costco + Homeplus backing with good transport access." }, meta: { districtName: "중랑구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "mixed", footTraffic: "high", growthTrend: "stable", marketStyle: "balanced" } }),
@@ -162,6 +163,85 @@ export const seoulMarketDistricts: MarketDistrict[] = [
   m({ id: "sinchon", guName: "서대문구", matchKeywords: ["신촌", "신촌역", "이대", "서대문", "서대문구"], title: { ko: "신촌·이대 상권", en: "Sinchon / Ewha" }, score: 80, summary: { ko: "연세대·이화여대 대학가. 학생 수요가 견고하나 최근 유동인구가 홍대에 일부 빼앗겼습니다.", en: "Yonsei/Ewha university district. Solid student demand but some traffic lost to Hongdae." }, meta: { districtName: "서대문구", rentBand: "mid", competitionLevel: "high", customerFit: "throughput", footTraffic: "high", growthTrend: "stable", marketStyle: "balanced" } }),
   m({ id: "chunghyeon", guName: "서대문구", matchKeywords: ["충현", "충정로", "아현"], title: { ko: "충정로·아현 상권", en: "Chungjeongno / Ahyeon" }, score: 73, summary: { ko: "2·5호선 환승역. 오피스+주거 혼합 상권으로 점심 수요가 있으며 임대료가 합리적입니다.", en: "Lines 2/5 transfer. Office+residential mix, lunch demand, reasonable rent." }, meta: { districtName: "서대문구", rentBand: "mid-low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "balanced" } }),
   m({ id: "hongje", guName: "서대문구", matchKeywords: ["홍제", "홍제역", "홍은동"], title: { ko: "홍제역 상권", en: "Hongje Station" }, score: 71, summary: { ko: "3호선 역세권 주거 상권. 인왕산·안산 등산 수요와 주거 생활 수요가 혼합됩니다.", en: "Line 3 residential area. Mountain hiking + residential daily demand mixed." }, meta: { districtName: "서대문구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   *  추가 상권 — 25개 구 빠진 핵심 상권 보강 (2025 조사 기반)
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  /* ── 강남구 추가 ── */
+  m({ id: "sinsa-garosu", guName: "강남구", matchKeywords: ["신사", "신사역", "가로수길", "신사동"], title: { ko: "신사·가로수길 상권", en: "Sinsa / Garosu-gil" }, score: 85, summary: { ko: "가로수길 브랜드 플래그십 밀집. 패션·뷰티·카페 트렌드 상권으로 주말 유동인구가 특히 높습니다.", en: "Garosu-gil brand flagship cluster. Fashion/beauty/cafe trend district, especially high weekend traffic." }, meta: { districtName: "강남구", rentBand: "high", competitionLevel: "high", customerFit: "strong", footTraffic: "high", growthTrend: "stable", marketStyle: "destination" } }),
+  m({ id: "seocho-gangnam-terminal", guName: "강남구", matchKeywords: ["고속터미널", "반포", "잠원"], title: { ko: "고속터미널·반포 상권", en: "Express Terminal / Banpo" }, score: 82, summary: { ko: "고속터미널 지하상가+센트럴시티. 교통 허브로 유동인구 안정적이며 반포 주거 배후도 강합니다.", en: "Express Terminal underground mall + Central City. Transport hub with stable traffic and strong Banpo backing." }, meta: { districtName: "강남구", rentBand: "mid-high", competitionLevel: "mid", customerFit: "mixed", footTraffic: "very-high", growthTrend: "stable", marketStyle: "balanced" } }),
+
+  /* ── 서초구 추가 ── */
+  m({ id: "yangjae", guName: "서초구", matchKeywords: ["양재", "양재역", "양재동", "양재시민의숲"], title: { ko: "양재역 상권", en: "Yangjae Station" }, score: 78, summary: { ko: "신분당선+3호선 환승역. IT기업(카카오) 밀집으로 점심 직장인 수요가 강하고 화훼단지 특수 수요도 있습니다.", en: "Shinbundang+Line 3 transfer. IT company (Kakao) cluster, strong office lunch demand." }, meta: { districtName: "서초구", rentBand: "mid-high", competitionLevel: "mid", customerFit: "steady", footTraffic: "high", growthTrend: "stable", marketStyle: "office" } }),
+  m({ id: "seocho-station", guName: "서초구", matchKeywords: ["서초역", "서초동", "서초"], title: { ko: "서초역 상권", en: "Seocho Station" }, score: 77, summary: { ko: "법원·검찰청 인접 법조타운. 점심 수요 안정적이고 주변 아파트 단지 배후도 강합니다.", en: "Legal district near courts. Stable lunch demand with strong apartment backing." }, meta: { districtName: "서초구", rentBand: "mid-high", competitionLevel: "mid", customerFit: "steady", footTraffic: "high", growthTrend: "stable", marketStyle: "office" } }),
+
+  /* ── 마포구 추가 ── */
+  m({ id: "mapo-gongdeok", guName: "마포구", matchKeywords: ["공덕", "공덕역", "마포", "마포구청"], title: { ko: "공덕역·마포 상권", en: "Gongdeok / Mapo" }, score: 80, summary: { ko: "공항철도+5·6호선+경의중앙선 4중 환승역. 오피스+주거 혼합으로 하루 종일 수요가 균등합니다.", en: "Quadruple transfer station. Office+residential mix, balanced demand throughout the day." }, meta: { districtName: "마포구", rentBand: "mid", competitionLevel: "mid", customerFit: "steady", footTraffic: "high", growthTrend: "rising", marketStyle: "balanced" } }),
+  m({ id: "mapo-ahyeon", guName: "마포구", matchKeywords: ["아현", "아현동", "대흥역", "대흥"], title: { ko: "아현·대흥 상권", en: "Ahyeon / Daeheung" }, score: 74, summary: { ko: "6호선 역세권. 아현뉴타운 재개발 완료로 신규 입주 수요가 증가하고 있습니다.", en: "Line 6 station area. Ahyeon New Town redevelopment complete, new resident demand increasing." }, meta: { districtName: "마포구", rentBand: "mid-low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "rising", marketStyle: "residential" } }),
+
+  /* ── 용산구 추가 ── */
+  m({ id: "yongsan-station", guName: "용산구", matchKeywords: ["용산역", "용산구", "용산"], title: { ko: "용산역 상권", en: "Yongsan Station" }, score: 83, summary: { ko: "KTX 터미널+국제업무지구 개발 예정. 용산공원 조성과 대기업 입주로 향후 폭발적 성장이 기대됩니다.", en: "KTX terminal + International Business District planned. Explosive growth expected with park and corporate HQs." }, meta: { districtName: "용산구", rentBand: "mid-high", competitionLevel: "mid", customerFit: "mixed", footTraffic: "high", growthTrend: "rising", marketStyle: "destination" } }),
+  m({ id: "huam-haebang", guName: "용산구", matchKeywords: ["후암", "후암동", "해방촌", "해방"], title: { ko: "해방촌·후암 상권", en: "Haebangchon / Huam" }, score: 76, summary: { ko: "남산 인접 로컬 감성 상권. 외국인+MZ세대 유입이 활발하며 독립 카페·레스토랑이 많습니다.", en: "Local vibe near Namsan. Active foreigner + MZ generation inflow, many indie cafes/restaurants." }, meta: { districtName: "용산구", rentBand: "mid", competitionLevel: "mid", customerFit: "mixed", footTraffic: "mid", growthTrend: "rising", marketStyle: "destination" } }),
+
+  /* ── 성동구 추가 ── */
+  m({ id: "seongsu-cafe", guName: "성동구", matchKeywords: ["성수카페거리", "서울숲", "서울숲역", "뚝섬"], title: { ko: "서울숲·성수카페거리 상권", en: "Seoul Forest / Seongsu Cafe Street" }, score: 88, summary: { ko: "서울숲 인접 카페·팝업 밀집지. MZ세대 성지로 주말 유동인구 폭발. 임대료 급등 중 주의.", en: "Seoul Forest cafe/popup cluster. MZ mecca, weekend traffic explosion. Rising rent — caution." }, meta: { districtName: "성동구", rentBand: "mid-high", competitionLevel: "high", customerFit: "strong", footTraffic: "very-high", growthTrend: "rising", marketStyle: "destination" } }),
+  m({ id: "majang", guName: "성동구", matchKeywords: ["마장", "마장동", "마장역"], title: { ko: "마장동 상권", en: "Majang-dong" }, score: 72, summary: { ko: "축산시장 특화 상권. 고기 전문점·정육식당이 밀집해 있으며 임대료가 저렴합니다.", en: "Livestock market specialty. Meat restaurants clustered, affordable rent." }, meta: { districtName: "성동구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 송파구 추가 ── */
+  m({ id: "bangi-olympic", guName: "송파구", matchKeywords: ["방이", "방이동", "올림픽공원", "올림픽"], title: { ko: "방이·올림픽공원 상권", en: "Bangi / Olympic Park" }, score: 78, summary: { ko: "올림픽공원 인접 먹자골목. 주말 가족 외식 수요가 높고 방이먹자골목이 유명합니다.", en: "Near Olympic Park dining street. High family weekend dining, Bangi food alley famous." }, meta: { districtName: "송파구", rentBand: "mid", competitionLevel: "mid", customerFit: "steady", footTraffic: "high", growthTrend: "stable", marketStyle: "balanced" } }),
+  m({ id: "wirye-newtown", guName: "송파구", matchKeywords: ["위례", "위례신도시", "위례중앙"], title: { ko: "위례신도시 상권", en: "Wirye New Town" }, score: 77, summary: { ko: "신규 택지지구. 젊은 가족 입주 완료로 생활 수요가 빠르게 형성되고 있습니다.", en: "New development. Young family move-ins complete, daily life demand forming rapidly." }, meta: { districtName: "송파구", rentBand: "mid", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "rising", marketStyle: "residential" } }),
+  m({ id: "garakmarket", guName: "송파구", matchKeywords: ["가락", "가락시장", "가락시장역", "가락동"], title: { ko: "가락시장 상권", en: "Garak Market" }, score: 75, summary: { ko: "가락농수산물시장 인접. B2B+B2C 혼합 상권으로 식재료·식당 업종에 유리합니다.", en: "Near Garak wholesale market. B2B+B2C mix, advantageous for food/restaurant businesses." }, meta: { districtName: "송파구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "mixed", footTraffic: "high", growthTrend: "stable", marketStyle: "balanced" } }),
+
+  /* ── 강동구 추가 ── */
+  m({ id: "gangdong-myeongil", guName: "강동구", matchKeywords: ["명일", "명일역", "명일동"], title: { ko: "명일역 상권", en: "Myeongil Station" }, score: 74, summary: { ko: "5호선 역세권. 고덕 재개발 인접으로 향후 인구 유입이 기대됩니다.", en: "Line 5 station. Near Godeok redevelopment, future population inflow expected." }, meta: { districtName: "강동구", rentBand: "mid-low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "rising", marketStyle: "residential" } }),
+  m({ id: "gangil-newtown", guName: "강동구", matchKeywords: ["강일", "강일동", "강일택지"], title: { ko: "강일 택지지구 상권", en: "Gangil New Development" }, score: 73, summary: { ko: "신규 택지지구. 아파트 대단지 입주 진행 중이며 상가 공급이 적어 선점 기회가 있습니다.", en: "New development. Large apartment complexes moving in, low commercial supply = first-mover opportunity." }, meta: { districtName: "강동구", rentBand: "mid-low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "rising", marketStyle: "residential" } }),
+
+  /* ── 영등포구 추가 ── */
+  m({ id: "mullae", guName: "영등포구", matchKeywords: ["문래", "문래동", "문래역", "문래창작촌"], title: { ko: "문래동 상권", en: "Mullae-dong" }, score: 78, summary: { ko: "문래창작촌 인접 신흥 핫플. 공장 리모델링 카페·바·레스토랑 밀집으로 MZ세대 유입 활발.", en: "Near Mullae Creative Village. Factory-remodel cafes/bars/restaurants, active MZ generation inflow." }, meta: { districtName: "영등포구", rentBand: "mid", competitionLevel: "mid", customerFit: "mixed", footTraffic: "high", growthTrend: "rising", marketStyle: "destination" } }),
+  m({ id: "daerim", guName: "영등포구", matchKeywords: ["대림", "대림역", "대림동", "대림차이나타운"], title: { ko: "대림·차이나타운 상권", en: "Daerim / Chinatown" }, score: 72, summary: { ko: "중국·동남아 음식 특화 상권. 다문화 특수 수요가 있으며 임대료가 저렴합니다.", en: "Chinese/SE Asian food specialty. Multicultural niche demand, affordable rent." }, meta: { districtName: "영등포구", rentBand: "low", competitionLevel: "low", customerFit: "mixed", footTraffic: "mid", growthTrend: "stable", marketStyle: "balanced" } }),
+
+  /* ── 구로구 추가 ── */
+  m({ id: "oryu-gocheok", guName: "구로구", matchKeywords: ["오류", "오류동", "고척", "고척돔"], title: { ko: "오류·고척 상권", en: "Oryu / Gocheok" }, score: 71, summary: { ko: "고척돔 인접 주거 상권. 야구 시즌 이벤트 수요+주거 생활 수요가 혼합됩니다.", en: "Near Gocheok Dome residential area. Baseball season event demand + daily residential demand." }, meta: { districtName: "구로구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 광진구 추가 ── */
+  m({ id: "gwangjin-achasan", guName: "광진구", matchKeywords: ["아차산", "아차산역", "광나루역", "광진"], title: { ko: "아차산역 상권", en: "Achasan Station" }, score: 74, summary: { ko: "5호선 역세권. 아차산 등산 수요+주거 배후가 안정적이며 소자본 창업에 적합합니다.", en: "Line 5 station. Achasan hiking demand + stable residential backing, good for small-capital." }, meta: { districtName: "광진구", rentBand: "mid-low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 동대문구 추가 ── */
+  m({ id: "hoegimarket", guName: "동대문구", matchKeywords: ["회기시장", "경희대", "경희대학교"], title: { ko: "회기·경희대 상권", en: "Hoegi / Kyunghee Univ" }, score: 75, summary: { ko: "경희대 학생 수요가 안정적. 회기시장+대학가 먹자골목이 활발합니다.", en: "Stable Kyunghee Univ student demand. Hoegi market + university food alley active." }, meta: { districtName: "동대문구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "throughput", footTraffic: "high", growthTrend: "stable", marketStyle: "balanced" } }),
+  m({ id: "dapsimni", guName: "동대문구", matchKeywords: ["답십리", "답십리역", "답십리동"], title: { ko: "답십리역 상권", en: "Dapsimni Station" }, score: 73, summary: { ko: "5호선 역세권 주거 상권. 소자본 배달 창업에 적합하며 임대료가 저렴합니다.", en: "Line 5 residential area. Good for small-capital delivery, affordable rent." }, meta: { districtName: "동대문구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 종로구 추가 ── */
+  m({ id: "gwanghwamun", guName: "종로구", matchKeywords: ["광화문", "광화문역", "세종로", "정부청사"], title: { ko: "광화문 상권", en: "Gwanghwamun" }, score: 84, summary: { ko: "정부청사+대기업 본사 밀집 오피스 상권. 점심 직장인 수요 최고 수준이나 저녁·주말은 약합니다.", en: "Government + corporate HQ office district. Top lunch demand but weak evenings/weekends." }, meta: { districtName: "종로구", rentBand: "high", competitionLevel: "mid", customerFit: "steady", footTraffic: "very-high", growthTrend: "stable", marketStyle: "office" } }),
+
+  /* ── 중구 추가 ── */
+  m({ id: "namsan-hoehyeon", guName: "중구", matchKeywords: ["회현", "회현역", "남대문", "남대문시장"], title: { ko: "남대문·회현 상권", en: "Namdaemun / Hoehyeon" }, score: 80, summary: { ko: "남대문시장 도매+소매 복합. 외국인 관광객+도매 바이어 수요가 혼합되어 있습니다.", en: "Namdaemun wholesale+retail complex. Tourist + wholesale buyer mixed demand." }, meta: { districtName: "중구", rentBand: "mid-high", competitionLevel: "high", customerFit: "mixed", footTraffic: "very-high", growthTrend: "stable", marketStyle: "destination" } }),
+  m({ id: "sindang", guName: "중구", matchKeywords: ["신당", "신당역", "신당동", "떡볶이타운"], title: { ko: "신당동 상권", en: "Sindang-dong" }, score: 74, summary: { ko: "신당 떡볶이타운으로 유명. 최근 MZ세대 유입으로 카페·디저트도 늘고 있습니다.", en: "Famous for tteokbokki town. Recent MZ inflow bringing cafes and desserts." }, meta: { districtName: "중구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "throughput", footTraffic: "high", growthTrend: "rising", marketStyle: "balanced" } }),
+
+  /* ── 노원구 추가 ── */
+  m({ id: "wolgye", guName: "노원구", matchKeywords: ["월계", "월계역", "월계동", "광운대"], title: { ko: "월계·광운대 상권", en: "Wolgye / Kwangwoon" }, score: 72, summary: { ko: "광운대 학생 수요+주거 배후. 소자본 창업에 적합하며 배달 수요가 높습니다.", en: "Kwangwoon Univ student demand + residential. Good for small-capital, high delivery demand." }, meta: { districtName: "노원구", rentBand: "low", competitionLevel: "low", customerFit: "throughput", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 도봉구 추가 ── */
+  m({ id: "banghak", guName: "도봉구", matchKeywords: ["방학", "방학역", "방학동"], title: { ko: "방학역 상권", en: "Banghak Station" }, score: 71, summary: { ko: "1호선 역세권 주거 상권. 임대료가 서울 최저 수준이며 소자본 생활형 창업에 최적입니다.", en: "Line 1 residential. Seoul's lowest rent level, optimal for small-capital daily-life businesses." }, meta: { districtName: "도봉구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 중랑구 추가 ── */
+  m({ id: "jungnang-market", guName: "중랑구", matchKeywords: ["중랑역", "중랑시장", "묵동", "묵동역"], title: { ko: "중랑·묵동 상권", en: "Jungnang / Muk-dong" }, score: 71, summary: { ko: "중랑시장 인접 주거 상권. 재래시장 수요와 배달 수요가 혼합되며 임대료가 매우 저렴합니다.", en: "Near Jungnang market residential. Traditional market + delivery mixed, very affordable." }, meta: { districtName: "중랑구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 관악구 추가 ── */
+  m({ id: "nakseongdae", guName: "관악구", matchKeywords: ["낙성대", "낙성대역", "인헌동"], title: { ko: "낙성대 상권", en: "Nakseongdae" }, score: 76, summary: { ko: "서울대 교직원+대학원생 배후. 카페·식당 수요가 안정적이며 주거 밀집도도 높습니다.", en: "SNU staff/grad student backing. Stable cafe/restaurant demand, high residential density." }, meta: { districtName: "관악구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "balanced" } }),
+
+  /* ── 동작구 추가 ── */
+  m({ id: "sangdo", guName: "동작구", matchKeywords: ["상도", "상도역", "상도동", "숭실대"], title: { ko: "상도·숭실대 상권", en: "Sangdo / Soongsil Univ" }, score: 74, summary: { ko: "숭실대 학생 수요+주거 혼합. 7호선 역세권으로 접근성 좋고 임대료가 합리적입니다.", en: "Soongsil Univ student demand + residential. Line 7, good access, reasonable rent." }, meta: { districtName: "동작구", rentBand: "mid-low", competitionLevel: "mid", customerFit: "throughput", footTraffic: "mid", growthTrend: "stable", marketStyle: "balanced" } }),
+
+  /* ── 양천구 추가 ── */
+  m({ id: "mok-dong-ice", guName: "양천구", matchKeywords: ["목동아이스링크", "목동종합운동장"], title: { ko: "목동운동장 상권", en: "Mokdong Sports Complex" }, score: 73, summary: { ko: "목동종합운동장 인접. 경기 시즌 이벤트 수요+학원가 학생 수요가 혼합됩니다.", en: "Near Mokdong Sports Complex. Game season events + academy student demand mixed." }, meta: { districtName: "양천구", rentBand: "mid", competitionLevel: "mid", customerFit: "mixed", footTraffic: "mid", growthTrend: "stable", marketStyle: "balanced" } }),
+
+  /* ── 강서구 추가 ── */
+  m({ id: "banghwa", guName: "강서구", matchKeywords: ["방화", "방화역", "방화동", "김포공항"], title: { ko: "방화·김포공항 상권", en: "Banghwa / Gimpo Airport" }, score: 72, summary: { ko: "5호선·9호선 공항 인접. 항공 종사자+주거 수요가 안정적이며 임대료가 저렴합니다.", en: "Lines 5/9 near airport. Airline staff + residential demand stable, affordable rent." }, meta: { districtName: "강서구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+  m({ id: "gayang-yeomchang", guName: "강서구", matchKeywords: ["가양", "가양역", "염창", "염창역"], title: { ko: "가양·염창 상권", en: "Gayang / Yeomchang" }, score: 74, summary: { ko: "9호선 역세권. 한강 인접 주거 단지 배후로 생활 수요가 안정적입니다.", en: "Line 9 station. Near Han River residential, stable daily life demand." }, meta: { districtName: "강서구", rentBand: "mid-low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
+
+  /* ── 은평구 추가 ── */
+  m({ id: "gupabal", guName: "은평구", matchKeywords: ["구파발", "구파발역", "진관동", "은평한옥마을"], title: { ko: "구파발·은평한옥마을 상권", en: "Gupabal / Eunpyeong Hanok" }, score: 72, summary: { ko: "3호선 종착역 인근. 은평한옥마을 관광 수요+진관동 신규 아파트 입주 수요가 있습니다.", en: "Near Line 3 terminus. Eunpyeong Hanok tourism + Jingwan-dong new apartment demand." }, meta: { districtName: "은평구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "rising", marketStyle: "residential" } }),
 
 ];
 
@@ -212,8 +292,39 @@ export function findMatchingDistricts(regionInput: string): MarketDistrict[] {
     return [...base, ...supplement].sort((a, b) => b.score - a.score);
   }
 
-  // 5. No match at all — return top 3 overall
+  // 5. Try to extract 구 name from input and return all markets in that 구
+  const guSuffixMatch = q.match(/([\uAC00-\uD7A3]+구)/);
+  if (guSuffixMatch) {
+    const guName = guSuffixMatch[1];
+    const guResults = seoulMarketDistricts
+      .filter((d) => d.guName === guName || d.guName.includes(guName))
+      .sort((a, b) => b.score - a.score);
+    if (guResults.length > 0) return guResults;
+  }
+
+  // 5b. Try to find the 구 by checking all guNames for any partial match
+  const guFromDong = seoulMarketDistricts.find((d) =>
+    d.matchKeywords.some((kw) => {
+      // 같은 동 이름 패턴 체크: "장위" → "장위동" 등
+      const dongBase = q.replace(/[동로가]/g, "");
+      const kwBase = kw.replace(/[동로가역]/g, "");
+      return dongBase.length >= 2 && kwBase.length >= 2 && (dongBase === kwBase || dongBase.includes(kwBase) || kwBase.includes(dongBase));
+    })
+  );
+  if (guFromDong) {
+    const guResults = seoulMarketDistricts
+      .filter((d) => d.guName === guFromDong.guName)
+      .sort((a, b) => b.score - a.score);
+    if (guResults.length > 0) return guResults;
+  }
+
+  // 5c. Last resort: return nearby 구s based on geography instead of global top 3
+  // For now, return top 3 from the lowest-rent (most accessible) districts
   return [...seoulMarketDistricts]
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      const rentOrder: Record<string, number> = { low: 0, "mid-low": 1, mid: 2, "mid-high": 3, high: 4 };
+      const rentDiff = (rentOrder[a.meta.rentBand] ?? 2) - (rentOrder[b.meta.rentBand] ?? 2);
+      return rentDiff !== 0 ? rentDiff : b.score - a.score;
+    })
     .slice(0, 3);
 }

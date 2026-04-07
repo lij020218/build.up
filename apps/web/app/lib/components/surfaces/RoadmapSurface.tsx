@@ -18,8 +18,8 @@ export function RoadmapSurface() {
   const copy = getUiCopy(language);
 
   const onlineOnlyIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
-  const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-stack", "growth-engine", "company-setup", "fundraising-readiness"]);
-  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "hiring-setup", "operations-setup", "pre-launch"]);
+  const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-gtm", "growth-engine", "company-setup", "fundraising-readiness", "venture-certification"]);
+  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "insurance-tax-setup", "hiring-setup", "operations-setup", "pre-launch"]);
   const franchiseOnlyIds = new Set(["franchise-application"]);
   const isFranchise = startupType === "franchise";
   const hideIds = isStartupCategory
@@ -46,6 +46,8 @@ export function RoadmapSurface() {
     "pre_launch": [{ label: ko ? "소프트오픈" : "Soft Open", color: "#ea580c" }],
     "tax_guide": [{ label: ko ? "절세 가이드" : "Tax Guide", color: "#0d9488" }],
     "loan_guide": [{ label: ko ? "자금조달 · 지원사업" : "Funding · Programs", color: "#059669" }],
+    "venture_certification": [{ label: ko ? "벤처인증 · 지원사업" : "Venture Cert", color: "#059669" }],
+    "launch_gtm": [{ label: ko ? "GTM 전략" : "GTM Strategy", color: "#db2777" }],
   };
 
   return (

@@ -536,17 +536,19 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   // ── Startup path ──────────────────────────────────────────────────────────
   startup_foundation: { ko: { title: "창업팀·법인 기본 구조", goal: "공동창업자 역할, 지분·베스팅, 법인 설립 방향, 핵심 문제 정의를 먼저 정리합니다.", whyNow: "공동창업자 정렬과 지분 구조가 흐리면 제품보다 먼저 팀이 흔들립니다." } },
   customer_discovery: { ko: { title: "고객 발굴·문제 검증", goal: "고객 인터뷰를 통해 반복적으로 나타나는 고통과 초기 타겟 세그먼트를 좁힙니다.", whyNow: "누구의 어떤 문제를 푸는지 선명하지 않으면 이후 제품 개발이 전부 낭비될 수 있습니다." } },
-  mvp_build: { ko: { title: "MVP 구축", goal: "가장 좁은 핵심 워크플로 하나를 해결하는 MVP를 출시하고 초기 피드백을 모읍니다.", whyNow: "PMF 전에는 넓은 제품보다 빠른 학습이 훨씬 중요합니다." } },
-  launch_stack: { ko: { title: "출시 스택·계측", goal: "분석, 결제, 에러 모니터링, 고객 피드백 루프를 먼저 깔아 신호를 놓치지 않게 합니다.", whyNow: "계측이 없으면 성장처럼 보이는 착시를 진짜 신호로 오해하기 쉽습니다." } },
   growth_engine: { ko: { title: "성장·리텐션 루프", goal: "북극성 지표와 주간 성장 리뷰를 정하고, 유지율을 함께 추적하는 체계를 만듭니다.", whyNow: "유지되지 않는 성장은 반복 투자 대비 효과가 낮고 쉽게 무너집니다." } },
-  company_setup: { ko: { title: "회사 운영·보안 기본기", goal: "법인·은행·기장 흐름과 프라이버시·보안 기본기를 갖춰 고객과 투자자 대응을 준비합니다.", whyNow: "기본 운영 인프라가 없으면 고객 도입과 채용, 투자 실사에서 계속 발목이 잡힙니다." } },
-  fundraising_readiness: { ko: { title: "런웨이·투자 준비", goal: "현금 소진 속도, 다음 마일스톤, 투자 필요성, 스토리라인을 명확히 정리합니다.", whyNow: "투자 유치는 돈이 아니라 시간을 사는 일이라, 무엇을 증명할지 먼저 선명해야 합니다." } },
+  company_setup: { ko: { title: "법인 운영·세무·보안 기본기", goal: "법인 설립, 사업자 통장 개설, 기장 체계 구축, 세무사 선임, 프라이버시·보안 기본기를 완료합니다.", whyNow: "정부 지원사업 신청, 투자 유치, 채용 모두 법인이 전제 조건입니다. 미루면 모든 후속 단계가 막힙니다." } },
+  mvp_build: { ko: { title: "MVP 구축 · IP 보호", goal: "핵심 워크플로 하나를 해결하는 MVP를 출시하고, 공개 전에 상표·특허 출원을 완료합니다.", whyNow: "늦은 출시는 런웨이를 태우고, IP 보호 없는 공개는 특허권을 영구히 잃을 수 있습니다." } },
+  launch_gtm: { ko: { title: "출시 스택 · GTM 전략", goal: "결제·분석·에러 추적을 설치하고, 시장 진입 채널을 정해 첫 고객 확보 실험을 시작합니다.", whyNow: "계측 없이는 신호와 소음을 구분할 수 없고, GTM 전략 없이는 좋은 제품도 침묵 속에 출시됩니다." } },
+  fundraising_readiness: { ko: { title: "런웨이·투자 준비", goal: "번레이트와 런웨이를 모델링하고, 자금 조달 방식을 결정한 뒤, 피치덱·지표·재무 전망을 준비합니다.", whyNow: "2026년 투자자는 성장보다 자본 효율성을 봅니다. 런웨이 계획 없이 유치에 나서면 3~6개월의 시간과 협상력을 잃습니다." } },
+  venture_certification: { ko: { title: "벤처인증 · 정부 지원사업", goal: "벤처기업 인증 유형을 확인하고, K-Startup 지원사업(예비창업·초기창업·TIPS 등)에 매칭하여 비희석 자금을 확보합니다.", whyNow: "벤처인증은 세금 감면·병역특례·지원사업 자격의 열쇠입니다. 정부 지원사업은 마감이 있어 타이밍을 놓치면 전액 자비 부담입니다." } },
   // ── Offline path ──────────────────────────────────────────────────────────
   permit_check: { ko: { title: "인허가 사전 확인", goal: "계약 전에 내 업종에 필요한 인허가·위생 교육·안전 요건을 확인합니다.", whyNow: "인허가 가능 여부 확인 없이 임대차 계약을 맺으면 오픈이 불가능해질 수 있습니다." } },
   construction_setup: { ko: { title: "인테리어 및 공사", goal: "인테리어 업체를 선정하고 설계를 확정한 뒤 공사를 완료합니다.", whyNow: "시공 업체와 설계를 확정해야 실제 오픈 일정을 잡을 수 있습니다." } },
   vendor_setup: { ko: { title: "공급처 및 장비 확정", goal: "주요 식재료·자재 공급처와 장비 구매·렌탈 계획을 확정합니다.", whyNow: "공급처 미확정 시 오픈 직전 원가와 재고 관리가 흔들립니다." } },
   registration_setup: { ko: { title: "사업자 등록 및 인허가 신고", goal: "세무서 사업자등록과 관할 관청 영업 신고·허가를 완료합니다.", whyNow: "등록 없이 영업하면 법적 위반이며, 매출 증빙도 불가합니다." } },
-  hiring_setup: { ko: { title: "직원 채용 및 노무 세팅", goal: "직원·알바 채용 공고부터 근로계약서 작성, 4대보험 신고까지 올바른 고용 절차를 완료합니다.", whyNow: "근로계약서 미작성·4대보험 미신고는 과태료와 노동분쟁의 직접 원인입니다. 첫 직원 채용 전에 반드시 처리해야 합니다." } },
+  insurance_tax_setup: { ko: { title: "보험·세무 세팅", goal: "4대보험(국민연금·건강·고용·산재) 가입, 원천세 설정, 급여 지급 방식을 확정합니다.", whyNow: "1인 고용이라도 채용일로부터 14일 이내 보험 신고 의무. 미신고 시 가산세와 소급 납부가 발생합니다." } },
+  hiring_setup: { ko: { title: "직원 채용 및 근로계약", goal: "직원·알바 필요 여부를 판단하고, 근로계약서를 작성·교부합니다.", whyNow: "근로계약서 미작성은 과태료와 노동분쟁의 직접 원인입니다." } },
   operations_setup: { ko: { title: "운영 및 마케팅 준비", goal: "배달앱 입점, POS 점검, SNS 채널 개설 등 오픈 전 운영 준비를 마칩니다.", whyNow: "오픈 당일 운영 준비가 안 되면 첫 고객 경험이 망가집니다." } },
   pre_launch: { ko: { title: "소프트 오픈", goal: "지인·초대 고객 대상으로 시범 운영하고 피드백을 반영합니다.", whyNow: "실제 고객에게 정식 오픈하기 전 운영 문제를 먼저 발견해야 합니다." } },
   // ── Online / Digital path ─────────────────────────────────────────────────
@@ -611,28 +613,33 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "customer-interviews-done": { ko: "초기 타겟 고객 인터뷰 10건 이상 완료" },
   "pain-pattern-documented": { ko: "반복 문제·현재 대안·긴급성 문서화" },
   "narrow-wedge-defined": { ko: "가장 좁고 절실한 첫 문제 정의" },
-  // mvp-build
+  // mvp-build + IP
   "core-workflow-defined": { ko: "핵심 사용자 워크플로와 성공 기준 정의" },
   "mvp-shipped": { ko: "가장 작은 MVP 출시" },
-  "first-user-feedback-loop": { ko: "초기 사용자 피드백 루프 운영 시작" },
-  // launch-stack
+  "ip-protection-filed": { ko: "공개 전 상표 등록 및 특허 출원 (가출원 포함)" },
+  // launch-gtm
   "analytics-live": { ko: "활성화·전환·리텐션 분석 이벤트 설치" },
   "billing-or-conversion-live": { ko: "결제 또는 전환 추적 설정" },
-  "support-loop-live": { ko: "창업자가 매일 확인하는 고객지원·피드백 루프 개설" },
-  "error-monitoring-live": { ko: "프로덕션 에러·업타임 모니터링 설치" },
+  "gtm-channel-defined": { ko: "핵심 시장 진입 채널 확정 및 첫 고객 확보 실험" },
   // growth-engine
   "north-star-set": { ko: "북극성 지표와 주간 성장 지표 확정" },
   "weekly-review-running": { ko: "주간 성장·런웨이·병목 리뷰 루틴 시작" },
   "retention-check-defined": { ko: "유지율/재방문 체크 기준 정의" },
-  "first-gtm-channel-tested": { ko: "집중 GTM 채널 1개 실험 완료" },
   // company-setup
   "banking-finance-stack": { ko: "법인 통장·기장·현금 추적 체계 분리" },
   "privacy-security-basics": { ko: "프라이버시·접근권한·보안 기본기 정비" },
-  "data-room-basics": { ko: "법인 서류·핵심 KPI 중심 데이터룸 초안 준비" },
+  "tax-advisor-selected": { ko: "세무사 선임 및 기장 일정 확정" },
   // fundraising-readiness
-  "runway-model-ready": { ko: "burn·runway·자금 사용 계획 모델링" },
-  "milestone-plan-ready": { ko: "다음 투자 전 증명할 마일스톤 정리" },
-  "investor-material-ready": { ko: "덱·지표 요약·창업자 스토리 준비" },
+  "runway-model-ready": { ko: "번레이트 계산 및 현금 런웨이 시나리오 모델링" },
+  "fundraising-decision-made": { ko: "자금 조달 방식 결정 (투자 유치 / 부트스트랩 / 정부 지원)" },
+  "milestone-plan-ready": { ko: "투자금 용도별 마일스톤 계획 수립 (PMF·매출 목표)" },
+  "cap-table-clean": { ko: "캡테이블 정리 (지분·ESOP 풀·전환권 확인)" },
+  "data-room-ready": { ko: "투자자용 데이터룸 구성 (법률·재무·KPI 자료)" },
+  "investor-material-ready": { ko: "피치덱·핵심 지표·재무 전망 자료 준비" },
+  // venture-certification
+  "venture-cert-type-checked": { ko: "벤처인증 유형 확인 (투자·연구개발·혁신성장)" },
+  "govt-program-matched": { ko: "K-Startup 지원사업 매칭 (예비·초기·TIPS·도약)" },
+  "application-submitted": { ko: "벤처인증 또는 지원사업 신청서 마감 전 제출" },
   // permit-check
   "permit-type-checked": { ko: "업종별 필요 인허가·등록 종류 확인" },
   "health-cert-checked": { ko: "위생 교육 이수 및 건강진단 조건 확인" },
@@ -652,7 +659,13 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   // registration-setup
   "business-registered": { ko: "세무서에서 사업자등록 완료" },
   "permit-filed": { ko: "관할 관청에 영업 신고 또는 허가 신청 완료" },
-  "insurance-setup": { ko: "화재·영업배상·4대보험 가입 확인" },
+  // insurance-tax-setup
+  "insurance-registered": { ko: "4대보험 정보연계센터에서 4대보험 통합 신고 완료" },
+  "withholding-tax-set": { ko: "홈택스 간이세액표로 원천세 설정 완료" },
+  "payroll-method-decided": { ko: "급여 지급 방식 결정 (수기/세무사/급여 SaaS)" },
+  // hiring-setup
+  "hiring-decision-made": { ko: "직원·알바 필요 여부 및 인원 계획 확정" },
+  "employment-contract-signed": { ko: "근로계약서 작성 및 교부 완료" },
   // operations-setup
   "delivery-app-registered": { ko: "배달앱(배민, 쿠팡이츠 등) 입점 등록" },
   "pos-live": { ko: "POS 실거래 테스트 완료" },

@@ -190,11 +190,13 @@ export function calculateHealthMetrics(
     (e) => e.sales >= breakEvenDailySales
   ).length;
 
-  // 현금 런웨이
+  // 현금 런웨이 (currentCash 미입력 시 -1로 표시하여 경고 방지)
   const monthlyBurn = pnl.totalCosts - pnl.totalRevenue;
-  const cashRunwayMonths = monthlyBurn > 0 && currentCash
-    ? Math.round((currentCash / monthlyBurn) * 10) / 10
-    : currentCash && currentCash > 0 ? 99 : 0;
+  const cashRunwayMonths = currentCash == null || currentCash === 0
+    ? -1  // 미입력 — 경고 발생하지 않도록
+    : monthlyBurn > 0
+      ? Math.round((currentCash / monthlyBurn) * 10) / 10
+      : 99; // 흑자 또는 비용 없음
 
   // 경고 생성
   const alerts = generateAlerts({
@@ -426,6 +428,21 @@ type ScoreInput = {
 };
 
 function calculateHealthScore(input: ScoreInput): number {
+  // ─── 데이터 충분성 검증 ───
+  // 비용 데이터가 없으면 정확한 판단 불가 → 최대 40점 (데이터 부족)
+  const hasCostData = input.costToRevenueRatio > 0;
+  const hasEnoughDays = input.totalDaysRecorded >= 7;
+
+  if (!hasCostData || !hasEnoughDays) {
+    // 데이터 부족 시 중립 점수 (unknown 상태에 가까움)
+    let score = 35;
+    // 매출 기록이라도 있으면 약간 가산
+    if (input.totalDaysRecorded >= 3) score += 5;
+    if (input.totalDaysRecorded >= 7) score += 5;
+    return Math.max(0, Math.min(40, score)); // 최대 40점 (데이터 부족 캡)
+  }
+
+  // ─── 충분한 데이터가 있을 때만 정상 스코어링 ───
   let score = 50; // 기본 점수
 
   // 영업이익률 (최대 ±25점)
@@ -451,12 +468,10 @@ function calculateHealthScore(input: ScoreInput): number {
   else if (input.salesTrend === "declining") score -= 10;
 
   // 손익분기 달성률 (최대 ±10점)
-  if (input.totalDaysRecorded >= 7) {
-    const ratio = input.daysAboveBreakEven / input.totalDaysRecorded;
-    if (ratio >= 0.7) score += 10;
-    else if (ratio >= 0.5) score += 5;
-    else score -= 10;
-  }
+  const ratio = input.daysAboveBreakEven / input.totalDaysRecorded;
+  if (ratio >= 0.7) score += 10;
+  else if (ratio >= 0.5) score += 5;
+  else score -= 10;
 
   return Math.max(0, Math.min(100, score));
 }

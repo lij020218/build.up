@@ -276,8 +276,9 @@ export function useDashboard(surface: DashboardSurface = "home") {
     try { return JSON.parse(localStorage.getItem("dailyEntries") ?? "[]"); } catch { return []; }
   });
   const [monthlyCosts, setMonthlyCosts] = useState<MonthlyCosts>(() => {
-    try { return JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); }
-    catch { return { ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 }; }
+    const defaults = { ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 };
+    try { return { ...defaults, ...JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}") }; }
+    catch { return defaults; }
   });
   const [costHistory, setCostHistory] = useState<CostSnapshot[]>(() => {
     try { return JSON.parse(localStorage.getItem("costHistory") ?? "[]"); } catch { return []; }
@@ -343,14 +344,23 @@ export function useDashboard(surface: DashboardSurface = "home") {
     try { return JSON.parse(localStorage.getItem("serviceMenuItems") ?? "[]"); } catch { return []; }
   });
   const [taxSettings, setTaxSettings] = useState<TaxSettings>(() => {
-    try { return JSON.parse(localStorage.getItem("taxSettings") ?? "{}"); }
-    catch { return { vatType: "general", hasEmployees: false }; }
+    const defaults = { vatType: "general" as const, hasEmployees: false };
+    try { return { ...defaults, ...JSON.parse(localStorage.getItem("taxSettings") ?? "{}") }; }
+    catch { return defaults; }
   });
   // ── 온라인 채널 카드 상태 ──
-  const [onlinePlatformSales, setOnlinePlatformSales] = useState<Record<string, string>>({});
-  const [onlineSelectedPlatforms, setOnlineSelectedPlatforms] = useState<string[]>([]);
-  const [onlineSelectedCourier, setOnlineSelectedCourier] = useState<string>("cj");
-  const [onlineMonthlyParcels, setOnlineMonthlyParcels] = useState("");
+  const [onlinePlatformSales, setOnlinePlatformSales] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem("onlinePlatformSales") ?? "{}"); } catch { return {}; }
+  });
+  const [onlineSelectedPlatforms, setOnlineSelectedPlatforms] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("onlineSelectedPlatforms") ?? "[]"); } catch { return []; }
+  });
+  const [onlineSelectedCourier, setOnlineSelectedCourier] = useState<string>(() => {
+    try { return localStorage.getItem("onlineSelectedCourier") ?? "cj"; } catch { return "cj"; }
+  });
+  const [onlineMonthlyParcels, setOnlineMonthlyParcels] = useState(() => {
+    try { return localStorage.getItem("onlineMonthlyParcels") ?? ""; } catch { return ""; }
+  });
   // ── 수강생/회원 카드 상태 ──
   const [members, setMembers] = useState<Member[]>(() => {
     try { return JSON.parse(localStorage.getItem("members") ?? "[]"); } catch { return []; }
@@ -460,8 +470,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const isDigitalCategory = industryCategoryId === "online-digital" || industryCategoryId === "startup-tech";
   const isStartupCategory = industryCategoryId === "startup-tech";
   const onlineOnlyIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
-  const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-stack", "growth-engine", "company-setup", "fundraising-readiness"]);
-  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "hiring-setup", "operations-setup", "pre-launch"]);
+  const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-gtm", "growth-engine", "company-setup", "fundraising-readiness", "venture-certification"]);
+  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "insurance-tax-setup", "hiring-setup", "operations-setup", "pre-launch"]);
   const franchiseOnlyIds = new Set(["franchise-application"]);
   const pathTotalStages = roadmap.stages.filter((stage) => {
     if (isStartupCategory) {
@@ -480,27 +490,53 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const correctedProgressPercent = pathTotalStages > 0 ? Math.min(100, Math.round((completedCount / pathTotalStages) * 100)) : 0;
   const allStagesDone = completedCount >= pathTotalStages;
 
-  // Business health score — 매출 추세 + 비용 대비 수익 기반
+  // Business health score — 데이터 충분성 + 수익성 + 안정성 종합 판단
   const businessHealthScore: "healthy" | "caution" | "danger" | "unknown" = (() => {
     if (!businessLaunched) return "unknown";
     const entries = dailyEntries as DailyEntry[];
+    const mc = monthlyCosts as MonthlyCosts;
+    const totalCost = mc.ingredients + mc.labor + mc.rent + mc.utilities + mc.other;
+
+    // ─── 데이터 충분성 검증 (최소 조건 미충족 시 unknown) ───
+    // 1) 매출 기록 7일 미만이면 판단 불가
     if (entries.length < 7) return "unknown";
+    // 2) 비용을 하나도 입력하지 않았으면 판단 불가
+    if (totalCost === 0) return "unknown";
+    // 3) 임대료가 0이면 필수 고정비 미입력으로 판단 불가
+    if (mc.rent === 0) return "unknown";
+
     const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
     const recent30 = sorted.slice(-30);
     const totalRev = recent30.reduce((s, e) => s + e.sales, 0);
-    const mc = monthlyCosts as MonthlyCosts;
-    const totalCost = mc.ingredients + mc.labor + mc.rent + mc.utilities + mc.other;
-    if (totalRev === 0 && totalCost === 0) return "unknown";
+
+    // 매출 0이면 위험
+    if (totalRev === 0) return "danger";
+
     const monthlyNet = totalRev - totalCost;
-    const primeRate = totalRev > 0 ? (mc.ingredients + mc.labor) / totalRev : 0;
+    const primeRate = (mc.ingredients + mc.labor) / totalRev;
+    const rentRate = mc.rent / totalRev;
+
     // 3개월 비용 추세
     const costTrend = costHistory.length >= 3 ? (() => {
       const s = [...costHistory].sort((a, b) => a.month.localeCompare(b.month)).slice(-3);
       const tots = s.map(c => c.ingredients + c.labor + c.rent + c.utilities + c.other);
       return tots[2] > tots[1] && tots[1] > tots[0]; // 3개월 연속 증가
     })() : false;
+
+    // ─── 위험 판단 (danger) ───
+    // 적자 + 프라임코스트 65% 초과
     if (monthlyNet < 0 && primeRate > 0.65) return "danger";
-    if (monthlyNet < 0 || primeRate > 0.6 || costTrend) return "caution";
+    // 임대료 비율 20% 초과 (구조적 위험)
+    if (rentRate > 0.2) return "danger";
+
+    // ─── 주의 판단 (caution) ───
+    if (monthlyNet < 0) return "caution";
+    if (primeRate > 0.6) return "caution";
+    if (rentRate > 0.15) return "caution";
+    if (costTrend) return "caution";
+    // 재료비 비율이 0이면 미입력 가능성 (외식/카페만)
+    if ((industryCategoryId === "food" || industryCategoryId === "cafe-dessert") && mc.ingredients === 0) return "caution";
+
     return "healthy";
   })();
 
@@ -560,9 +596,27 @@ export function useDashboard(surface: DashboardSurface = "home") {
           employeeCount: (employees as { id: string }[]).length,
           businessHealthScore,
           daysSinceLaunch: daysSinceLaunchCalc,
-          pendingTaxEvents: [],
+          pendingTaxEvents: [],  // enrichment에서 computedTaxEvents로 채움
           lowStockItems: (inventory as InventoryItem[]).filter(i => i.quantity <= i.minThreshold && i.minThreshold > 0).map(i => i.name).slice(0, 3),
-          upcomingFixedExpenses: [],
+          upcomingFixedExpenses: (() => {
+            const today = new Date().getDate();
+            return (fixedExpenses as { name: string; amount: number; dueDay: number }[])
+              .filter(f => f.dueDay >= today && f.dueDay <= today + 7)
+              .map(f => `${f.name} (${f.dueDay}일 ${Math.round(f.amount / 10000)}만원)`)
+              .slice(0, 3);
+          })(),
+          currentRoadmapStage: !businessLaunched ? (currentStage as { code: string })?.code : undefined,
+          isPreLaunch: !businessLaunched || undefined,
+          ...(selectedFranchiseBrandId ? { franchiseBrandId: selectedFranchiseBrandId } : {}),
+          ...(businessCtx.expenseFields ? {
+            expenseLabels: {
+              ingredients: businessCtx.expenseFields[0]?.label?.ko ?? "재료비",
+              labor: businessCtx.expenseFields[1]?.label?.ko ?? "인건비",
+              rent: businessCtx.expenseFields[2]?.label?.ko ?? "임대료",
+              utilities: businessCtx.expenseFields[3]?.label?.ko ?? "공과금",
+              other: businessCtx.expenseFields[4]?.label?.ko ?? "기타",
+            },
+          } : {}),
         }),
       });
       if (res.ok) {
@@ -632,14 +686,16 @@ export function useDashboard(surface: DashboardSurface = "home") {
               ? (language === "ko" ? "인터뷰로 반복되는 문제와 첫 타겟 고객을 좁히세요." : "Use interviews to narrow the first customer and pain wedge.")
               : currentStage.code === "mvp_build"
                 ? (language === "ko" ? "핵심 워크플로 하나를 해결하는 MVP를 빠르게 출시하세요." : "Ship the smallest MVP that solves one core workflow.")
-                : currentStage.code === "launch_stack"
-                  ? (language === "ko" ? "분석, 결제, 피드백 루프를 먼저 깔아 신호를 잡으세요." : "Install analytics, billing, and feedback loops before pushing growth.")
+                : currentStage.code === "launch_gtm"
+                  ? (language === "ko" ? "분석·결제·GTM 채널을 깔고 첫 고객 확보 실험을 시작하세요." : "Install analytics, billing, and GTM channel before pushing growth.")
                   : currentStage.code === "growth_engine"
                     ? (language === "ko" ? "북극성 지표와 유지율을 함께 보는 주간 리뷰를 시작하세요." : "Start a weekly review for north-star growth and retention.")
                     : currentStage.code === "company_setup"
-                      ? (language === "ko" ? "법인, 자금, 보안 기본기를 갖춰 고객과 투자자 대응을 준비하세요." : "Set up company, finance, and security basics for customers and investors.")
+                      ? (language === "ko" ? "법인 설립·세무사 선임·보안 기본기를 완료하세요." : "Complete incorporation, tax advisor, and security basics.")
                       : currentStage.code === "fundraising_readiness"
                         ? (language === "ko" ? "런웨이와 마일스톤을 기준으로 투자 필요성을 정리하세요." : "Model runway and milestones before you fundraise.")
+                        : currentStage.code === "venture_certification"
+                          ? (language === "ko" ? "벤처인증과 정부 지원사업을 매칭하여 비희석 자금을 확보하세요." : "Match to venture certification and government programs for non-dilutive funding.")
         : currentStage.code === "location_candidates"
             ? copy.home.nextStepLocation
             : currentStage.code === "contract_review"
@@ -845,10 +901,10 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const applyStoreData = (data: UserStoreData) => {
     if (data.storeName) { setStoreName(data.storeName); try { localStorage.setItem("storeName", data.storeName); } catch {} }
     if (data.businessLaunched) { setBusinessLaunched(true); try { localStorage.setItem("businessLaunched", "true"); } catch {} }
-    if (data.businessLaunchedDate) { try { localStorage.setItem("businessLaunchedDate", data.businessLaunchedDate); } catch {} }
+    if (data.businessLaunchedDate) { setBusinessLaunchedDate(data.businessLaunchedDate); try { localStorage.setItem("businessLaunchedDate", data.businessLaunchedDate); } catch {} }
     if (data.cpaDecision === "cpa" || data.cpaDecision === "self") { setCpaDecision(data.cpaDecision); try { localStorage.setItem("cpaDecision", data.cpaDecision); } catch {} }
     if (data.taxSettings?.vatType) { setTaxSettings(data.taxSettings as TaxSettings); try { localStorage.setItem("taxSettings", JSON.stringify(data.taxSettings)); } catch {} }
-    if (data.monthlyCosts && (data.monthlyCosts.ingredients || data.monthlyCosts.labor || data.monthlyCosts.rent || data.monthlyCosts.utilities || data.monthlyCosts.other)) {
+    if (data.monthlyCosts && typeof data.monthlyCosts === "object") {
       const mc = data.monthlyCosts;
       setMonthlyCosts(mc);
       try { localStorage.setItem("monthlyCosts", JSON.stringify(mc)); } catch {}
@@ -1020,6 +1076,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     setShowAIRoadmapWizard(false);
     localStorage.removeItem("businessLaunched");
     localStorage.removeItem("businessLaunchedDate");
+    localStorage.removeItem("buildup_onboarding_dismissed");
 
     // Step 2: business_profiles 초기화
     setResetProgress(40);
@@ -1334,6 +1391,10 @@ export function useDashboard(surface: DashboardSurface = "home") {
   useEffect(() => { localStorage.setItem("softOpenSkips", JSON.stringify(softOpenSkips)); }, [softOpenSkips]);
   useEffect(() => { localStorage.setItem("taxChecks", JSON.stringify(taxChecks)); }, [taxChecks]);
   useEffect(() => { localStorage.setItem("loanChecks", JSON.stringify(loanChecks)); }, [loanChecks]);
+  useEffect(() => { try { localStorage.setItem("onlinePlatformSales", JSON.stringify(onlinePlatformSales)); } catch {} }, [onlinePlatformSales]);
+  useEffect(() => { try { localStorage.setItem("onlineSelectedPlatforms", JSON.stringify(onlineSelectedPlatforms)); } catch {} }, [onlineSelectedPlatforms]);
+  useEffect(() => { try { localStorage.setItem("onlineSelectedCourier", onlineSelectedCourier); } catch {} }, [onlineSelectedCourier]);
+  useEffect(() => { try { localStorage.setItem("onlineMonthlyParcels", onlineMonthlyParcels); } catch {} }, [onlineMonthlyParcels]);
   // ── 핵심 상태 localStorage 백업 (새로고침 시 즉시 복원) ──
   useEffect(() => { try { localStorage.setItem("__buildup_decisions", JSON.stringify(decisions)); } catch {} }, [decisions]);
   useEffect(() => { try { localStorage.setItem("__buildup_roadmap", JSON.stringify(roadmap)); } catch {} }, [roadmap]);
@@ -1933,10 +1994,12 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const saveUnifiedProducts = (list: UnifiedProduct[]) => {
     setUnifiedProducts(list);
     try { localStorage.setItem("unifiedProducts", JSON.stringify(list)); } catch { /* ignore */ }
+    flushStoreData();
   };
   const saveServiceMenuItems = (list: ServiceMenuItem[]) => {
     setServiceMenuItems(list);
     try { localStorage.setItem("serviceMenuItems", JSON.stringify(list)); } catch { /* ignore */ }
+    flushStoreData();
   };
   const handleProdSave = () => {
     const price = parseInt(prodPrice.replace(/[^0-9]/g, ""), 10);
@@ -1969,6 +2032,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const saveTaxSettings = (s: TaxSettings) => {
     setTaxSettings(s);
     try { localStorage.setItem("taxSettings", JSON.stringify(s)); } catch { /* ignore */ }
+    flushStoreData();
   };
 
   const handleContractAnalysis = async () => {
@@ -2587,6 +2651,12 @@ export function useDashboard(surface: DashboardSurface = "home") {
     };
   }, []);
 
+  // ── Roadmap autosave: ref 기반으로 최신 값을 항상 사용 (stale closure 방지) ──
+  const roadmapSnapshotRef = useRef({ roadmap, decisions, taskMap });
+  useEffect(() => {
+    roadmapSnapshotRef.current = { roadmap, decisions, taskMap };
+  });
+
   useEffect(() => {
     if (!persistenceReady) {
       return;
@@ -2597,13 +2667,14 @@ export function useDashboard(surface: DashboardSurface = "home") {
     }
 
     autosaveTimerRef.current = setTimeout(() => {
+      // ref에서 최신 값을 읽어서 stale closure 문제 방지
+      const snap = roadmapSnapshotRef.current;
       void Promise.all([
         saveRoadmapState(supabase, {
-          roadmap,
-          decisions,
-          tasks: taskMap
+          roadmap: snap.roadmap,
+          decisions: snap.decisions,
+          tasks: snap.taskMap
         }),
-        // Store data도 함께 autosave
         saveStoreData(supabase, collectLocalStorageData()).catch(() => {}),
       ])
         .then(() => {
@@ -2648,7 +2719,25 @@ export function useDashboard(surface: DashboardSurface = "home") {
       void saveStoreData(supabase, storeDataSnapshotRef.current).catch(() => {});
     }, 5000); // 5초 간격 자동저장
 
-    return () => clearInterval(interval);
+    // 브라우저 탭 닫기/새로고침 시 마지막 데이터 저장
+    const handleBeforeUnload = () => {
+      // sendBeacon은 페이지 unload 중에도 비동기 요청을 보장합니다
+      try {
+        const data = storeDataSnapshotRef.current;
+        if (data && Object.keys(data).length > 0) {
+          // localStorage에 최신 스냅샷 저장 (다음 접속 시 복원용)
+          localStorage.setItem("__buildup_last_snapshot", JSON.stringify(data));
+          localStorage.setItem("__buildup_last_snapshot_at", new Date().toISOString());
+        }
+      } catch { /* ignore — unload 중 에러 무시 */ }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
   }, [persistenceReady]);
 
   useEffect(() => {
@@ -2692,19 +2781,36 @@ export function useDashboard(surface: DashboardSurface = "home") {
       categoryId: industryCategoryId
     })
       .then((signalItems) => {
-        if (signalItems.length > 0) {
+        // 최소 3개 이상의 추천이 있어야 유의미 — 부족하면 내장 데이터로 보충
+        const builtInMarkets = buildRecommendedMarkets({
+          region: preferredRegionInput,
+          categoryId: industryCategoryId,
+          capital: selectedBudget,
+          candidates: locationOptions
+        });
+
+        if (signalItems.length >= 3) {
           setRecommendedMarkets(signalItems.map((item) => localizeRecommendationItem(item, language)));
           setLocationSourceLabel(language === "ko" ? "상권 신호 데이터" : "Market signal data");
           return;
         }
 
+        if (signalItems.length > 0 && builtInMarkets.length > 0) {
+          // signal 데이터 + 내장 데이터 합산, 중복 ID 제거
+          const signalIds = new Set(signalItems.map((s) => s.id));
+          const merged = [
+            ...signalItems.map((item) => localizeRecommendationItem(item, language)),
+            ...builtInMarkets
+              .filter((b) => !signalIds.has(b.id))
+              .map((item) => localizeRecommendationItem(item, language)),
+          ].slice(0, 5);
+          setRecommendedMarkets(merged);
+          setLocationSourceLabel(language === "ko" ? "상권 신호 + 내장 데이터" : "Signal + built-in data");
+          return;
+        }
+
         setRecommendedMarkets(
-          buildRecommendedMarkets({
-            region: preferredRegionInput,
-            categoryId: industryCategoryId,
-            capital: selectedBudget,
-            candidates: locationOptions
-          }).map((item) => localizeRecommendationItem(item, language))
+          builtInMarkets.map((item) => localizeRecommendationItem(item, language))
         );
         setLocationSourceLabel(copy.common.liveKnowledgeLayer);
       })

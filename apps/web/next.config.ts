@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   transpilePackages: ["@build-up/shared", "@build-up/ai"],
   webpack: (config, { dev }) => {
     if (dev) {

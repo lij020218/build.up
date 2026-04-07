@@ -4,12 +4,18 @@
 
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { styles } from "../../styles";
-import { useRef } from "react";
+import { hydrateSavedFinanceSnapshot } from "../../helpers";
+import { SURFACE_HREFS, VENDOR_URL_MAP } from "../../constants";
+import { useRef, useEffect, useState } from "react";
 import { supabase } from "../../../../lib/supabase";
 import {
   formatKRW, calculateHealthMetrics, localizeRecommendationItem,
   getUiCopy, formatBudgetPresetLabel, formatStartupType,
-  resolveBusinessContext, starterIndustryOptions,
+  resolveBusinessContext, starterIndustryOptions, getMatchedProgramsV2,
+  getApplicationStatusLabel, getFranchiseBrandById, getMatchedHighlights,
+  getProgramCategoryColor, getProgramCategoryLabel,
+  getFranchiseSupplyInfo, getSupplyTypeColor,
+  getFranchiseBenchmark, getIndustryBenchmark,
 } from "@build-up/shared";
 
 export function AnalyticsSurface() {
@@ -54,13 +60,31 @@ export function AnalyticsSurface() {
     businessHealthScore, flushStoreData, persistenceReady,
     roadmap, completedCount, pathTotalStages, correctedProgressPercent,
     currentStage, localizedCurrentStage, businessLaunchedDate,
-    handleExcelImport, softOpenChecks, softOpenSkips,
+    handleExcelImport, softOpenChecks, softOpenSkips, softOpenPricing, setSoftOpenPricing,
+    opsSelections, setOpsSelections, vendorSelections, vendorCustomInputs,
+    selectedBudget, saveMembers,
+    savedFinanceSnapshot, selectedIndustryCategoryId, selectedFranchiseBrandId,
     aiActions, aiActionsLoading, fetchAiActions,
     isDigitalCategory, showFinancePanel, setShowFinancePanel,
+    invWasteQty, setInvWasteQty, invWasteReason, setInvWasteReason, invWasteTarget, setInvWasteTarget,
+    prodStock, setProdStock, prodUnit, setProdUnit,
+    dlvAd, setDlvAd, dlvRate, setDlvRate,
+    memEnd, setMemEnd,
   } = _d;
   const analyticsInventoryRef = useRef<HTMLDivElement>(null);
   const analyticsStaffRef = useRef<HTMLDivElement>(null);
   const ko = language === "ko";
+  const [invShowAll, setInvShowAll] = useState(false);
+  const aiLoadedRef = useRef(false);
+
+  // AI 코치 자동 로드 (렌더링 중 setState 방지 — useEffect에서 1회만)
+  useEffect(() => {
+    if (!aiLoadedRef.current && !aiActions && !aiActionsLoading && storeName && businessLaunched) {
+      aiLoadedRef.current = true;
+      const timer = setTimeout(() => fetchAiActions(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [aiActions, aiActionsLoading, storeName, businessLaunched]);
 
 
         const currentMonth = new Date().toISOString().slice(0, 7);
@@ -161,13 +185,14 @@ export function AnalyticsSurface() {
 
           return (
             <section style={styles.section}>
-              <div style={styles.sectionTitle}>{ko ? "내 가게" : "My Stores"}</div>
+              <div style={styles.sectionTitle} role="heading" aria-level={2}>{ko ? "내 가게" : "My Stores"}</div>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
 
                 {/* ── 현재 가게 카드 ── */}
                 <button
                   type="button"
                   onClick={() => setSelectedStoreIndex(0)}
+                  aria-label={ko ? "현재 가게 선택" : "Select current store"}
                   style={{
                     display: "block", width: "100%", textAlign: "left" as const,
                     background: "#fff", borderRadius: "18px",
@@ -253,6 +278,7 @@ export function AnalyticsSurface() {
               <button
                 type="button"
                 onClick={() => setSelectedStoreIndex(null)}
+                aria-label={language === "ko" ? "내 가게 목록으로 돌아가기" : "Back to My Stores"}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "3px",
                   background: "none", border: "none", cursor: "pointer",
@@ -306,10 +332,7 @@ export function AnalyticsSurface() {
               {/* ── AI 오늘 할 일 카드 ── */}
               {businessLaunched && (() => {
                 const ko = language === "ko";
-                // 자동 로드: 처음 한 번만
-                if (!aiActions && !aiActionsLoading && storeName) {
-                  setTimeout(() => fetchAiActions(), 500);
-                }
+                // 자동 로드는 useEffect에서 처리 (렌더링 중 setState 방지)
                 if (!aiActions && !aiActionsLoading) return null;
                 return (
                   <article ref={analyticsInventoryRef} id="inventory-management" style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
@@ -344,6 +367,61 @@ export function AnalyticsSurface() {
                             </div>
                           </div>
                         )}
+
+                        {/* ── 프랜차이즈/업종 벤치마크 비교 바 ── */}
+                        {(() => {
+                          const fBench = selectedFranchiseBrandId ? getFranchiseBenchmark(selectedFranchiseBrandId) : null;
+                          const iBench = selectedIndustryCategoryId ? getIndustryBenchmark(selectedIndustryCategoryId) : null;
+                          const userMonthly = (dailyEntries as { sales: number }[]).reduce((s, e) => s + e.sales, 0);
+                          const userMonthlyMan = Math.round(userMonthly / 10000);
+                          const benchAvg = fBench?.avgMonthlyRevenue ?? (iBench ? Math.round(iBench.avgAnnualRevenue / 12) : 0);
+                          const benchTop = fBench?.topStoreMonthlyRevenue ?? (iBench ? Math.round(iBench.top10PctRevenue / 12) : 0);
+                          const benchLabel = fBench ? (getFranchiseBrandById(selectedFranchiseBrandId!)?.name?.[language] ?? selectedFranchiseBrandId) : (ko ? "업종 평균" : "Industry avg");
+
+                          if (!benchAvg || userMonthly === 0) return null;
+
+                          const pct = Math.min(Math.round((userMonthlyMan / benchTop) * 100), 100);
+                          const avgPct = Math.min(Math.round((benchAvg / benchTop) * 100), 100);
+                          const barColor = userMonthlyMan >= benchAvg ? "#34c759" : userMonthlyMan >= benchAvg * 0.7 ? "#ff9f0a" : "#ff3b30";
+
+                          return (
+                            <div style={{ padding: "0 22px 14px" }}>
+                              <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>
+                                {fBench ? (ko ? `${benchLabel} 같은 브랜드 비교` : `vs ${benchLabel} stores`) : (ko ? "업종 내 포지션" : "Industry position")}
+                              </div>
+                              {/* 비교 바 */}
+                              <div style={{ position: "relative" as const, height: "28px", borderRadius: "8px", background: "rgba(0,0,0,0.03)", overflow: "hidden" }}>
+                                {/* 평균 마커 */}
+                                <div style={{ position: "absolute" as const, left: `${avgPct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(0,0,0,0.15)", zIndex: 2 }} />
+                                <div style={{ position: "absolute" as const, left: `${Math.max(avgPct - 3, 0)}%`, top: "-1px", fontSize: "9px", fontWeight: 700, color: "var(--muted)" }}>
+                                  {ko ? "평균" : "Avg"}
+                                </div>
+                                {/* 사용자 바 */}
+                                <div style={{
+                                  position: "absolute" as const, left: 0, top: "10px", bottom: "4px", width: `${pct}%`,
+                                  borderRadius: "6px", background: barColor, transition: "width 0.6s ease",
+                                  minWidth: "4px",
+                                }} />
+                              </div>
+                              {/* 레이블 */}
+                              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px", fontSize: "10px", color: "var(--muted)" }}>
+                                <span>{ko ? `내 매장 ${userMonthlyMan.toLocaleString()}만` : `You ${userMonthlyMan.toLocaleString()}만`}</span>
+                                <span>{ko ? `상위 매장 ${benchTop.toLocaleString()}만` : `Top ${benchTop.toLocaleString()}만`}</span>
+                              </div>
+                              {/* 상위 매장 비결 (프랜차이즈만) */}
+                              {fBench?.operationalInsights?.[0] && (
+                                <div style={{ marginTop: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(0,122,255,0.03)", border: "0.5px solid rgba(0,122,255,0.08)" }}>
+                                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#007aff", marginBottom: "2px" }}>
+                                    {ko ? "상위 매장 비결" : "Top store insight"}
+                                  </div>
+                                  <div style={{ fontSize: "11px", color: "var(--text)", lineHeight: 1.4 }}>
+                                    {fBench.operationalInsights[0]}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {/* 오늘 할 일 3가지 */}
                         <div style={{ padding: "0 22px 16px", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
@@ -416,6 +494,7 @@ export function AnalyticsSurface() {
                         </div>
                       </div>
                       <button type="button" onClick={() => setShowMonthlyCostPrompt(false)}
+                        aria-label={ko ? "비용 확인 닫기" : "Dismiss cost prompt"}
                         style={{ fontSize: "13px", color: "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "4px", flexShrink: 0 }}>✕</button>
                     </div>
                     {lastSnap && (
@@ -572,6 +651,7 @@ export function AnalyticsSurface() {
                             </div>
                           </div>
                           <button type="button" onClick={() => { setDailyDateInput(todayStr); setDailySalesInput(String(Math.round(todayEntry.sales / 10000))); setDailyCustomersInput(String(todayEntry.customers)); }}
+                            aria-label={ko ? "오늘 매출 수정" : "Edit today's sales"}
                             style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>
                             {ko ? "수정" : "Edit"}
                           </button>
@@ -584,14 +664,17 @@ export function AnalyticsSurface() {
                           </div>
                           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                             <input type="date" value={dailyDateInput} onChange={(e) => setDailyDateInput(e.target.value)}
+                              aria-label={ko ? "매출 날짜" : "Sales date"}
                               style={{ ...inputFieldStyle, flex: "0 0 auto", width: "140px" }} />
                             <input type="text" inputMode="numeric" value={dailySalesInput}
                               onChange={(e) => setDailySalesInput(e.target.value.replace(/[^0-9]/g, ""))}
                               placeholder={ko ? "매출 만원" : "Sales 만원"}
+                              aria-label={ko ? "매출 금액 (만원)" : "Sales amount (10K KRW)"}
                               style={inputFieldStyle} />
                             <input type="text" inputMode="numeric" value={dailyCustomersInput}
                               onChange={(e) => setDailyCustomersInput(e.target.value.replace(/[^0-9]/g, ""))}
                               placeholder={ko ? "고객 수" : "Customers"}
+                              aria-label={ko ? "고객 수" : "Number of customers"}
                               style={{ ...inputFieldStyle, flex: "0 0 90px" }} />
                             <button type="button"
                               style={{
@@ -784,8 +867,8 @@ export function AnalyticsSurface() {
 
                 return (
                   <>
-                    {/* ── 생존 진단 카드 ── */}
-                    {(() => {
+                    {/* 생존 진단 카드는 대시보드 홈 KPI로 이동됨 */}
+                    {false && (() => {
                       const launchDateStr = typeof window !== "undefined" ? localStorage.getItem("businessLaunchedDate") : null;
                       if (!launchDateStr) return null;
                       const launchDate = new Date(launchDateStr);
@@ -1237,7 +1320,7 @@ export function AnalyticsSurface() {
                                 </div>
                               )}
                             </div>
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: "rgba(0,0,0,0.2)" }}>
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ flexShrink: 0, color: "rgba(0,0,0,0.2)" }}>
                               <path d="M2 10L10 2M10 2H5M10 2V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                           </a>
@@ -1269,7 +1352,7 @@ export function AnalyticsSurface() {
                     {/* 위험 경보 배너 */}
                     {hasDangerZone && hasData && (
                       <div style={{ padding: "11px 20px", background: "rgba(255,59,48,0.05)", borderBottom: "0.5px solid rgba(255,59,48,0.12)", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
                           <path d="M7 1L13 12H1L7 1Z" stroke="#ff3b30" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
                           <line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#ff3b30" strokeWidth="1.4" strokeLinecap="round"/>
                           <circle cx="7" cy="10.5" r="0.7" fill="#ff3b30"/>
@@ -1379,8 +1462,8 @@ export function AnalyticsSurface() {
                               fontSize: "12px", lineHeight: 1.5, color: "rgba(0,0,0,0.72)",
                             }}>
                               {isWarn
-                                ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M7 1.5L12.5 12H1.5L7 1.5Z" stroke="#ff3b30" strokeWidth="1.4" strokeLinejoin="round" fill="none"/><line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#ff3b30" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7" cy="10.5" r="0.65" fill="#ff3b30"/></svg>
-                                : <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><polyline points="2,7 5,10 11,3" stroke="#34c759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                                ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M7 1.5L12.5 12H1.5L7 1.5Z" stroke="#ff3b30" strokeWidth="1.4" strokeLinejoin="round" fill="none"/><line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#ff3b30" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7" cy="10.5" r="0.65" fill="#ff3b30"/></svg>
+                                : <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: "1px" }}><polyline points="2,7 5,10 11,3" stroke="#34c759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
                               }
                               {msg}
                             </div>
@@ -1504,9 +1587,9 @@ export function AnalyticsSurface() {
                           {ko ? "+ 직접 추가" : "+ Add"}
                         </button>
                         <label style={{ fontSize: "12px", fontWeight: 600, color: "#34c759", cursor: "pointer", padding: "6px 13px", background: "rgba(52,199,89,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v12M2 8h12" /></svg>
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2v12M2 8h12" /></svg>
                           {ko ? "엑셀" : "Excel"}
-                          <input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" style={{ display: "none" }} onChange={async (e) => {
+                          <input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" aria-label={ko ? "재고 엑셀 파일 업로드" : "Upload inventory Excel file"} style={{ display: "none" }} onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
                             e.target.value = "";
@@ -1624,8 +1707,8 @@ export function AnalyticsSurface() {
                       </div>
                     )}
 
-                    {/* ── 재고 목록 ── */}
-                    {sorted.map((item, idx) => {
+                    {/* ── 재고 목록 (기본 5개, 전체 보기 토글) ── */}
+                    {(invShowAll ? sorted : sorted.slice(0, 5)).map((item, idx) => {
                       const s   = itemStatus(item);
                       const sc  = SC[s];
                       const d   = daysLeft(item);
@@ -1692,13 +1775,15 @@ export function AnalyticsSurface() {
                             {/* +/− 스테퍼 */}
                             <div style={{ display: "flex", alignItems: "center", border: "1px solid rgba(0,0,0,0.11)", borderRadius: "10px", overflow: "hidden" }}>
                               <button type="button" onClick={() => handleInvQty(item.id, -st)} disabled={item.quantity <= 0}
+                                aria-label={ko ? `${item.name} 수량 감소` : `Decrease ${item.name} quantity`}
                                 style={{ width: "36px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: item.quantity > 0 ? "pointer" : "default", fontSize: "20px", color: item.quantity > 0 ? "var(--primary)" : "rgba(0,0,0,0.18)", fontWeight: 300, lineHeight: 1 }}>
                                 −
                               </button>
-                              <div style={{ minWidth: "64px", textAlign: "center" as const, fontSize: "13px", fontWeight: 600, padding: "0 6px", borderLeft: "0.5px solid rgba(0,0,0,0.09)", borderRight: "0.5px solid rgba(0,0,0,0.09)" }}>
+                              <div style={{ minWidth: "64px", textAlign: "center" as const, fontSize: "13px", fontWeight: 600, padding: "0 6px", borderLeft: "0.5px solid rgba(0,0,0,0.09)", borderRight: "0.5px solid rgba(0,0,0,0.09)" }} aria-live="polite">
                                 {item.quantity}{item.unit}
                               </div>
                               <button type="button" onClick={() => handleInvQty(item.id, st)}
+                                aria-label={ko ? `${item.name} 수량 증가` : `Increase ${item.name} quantity`}
                                 style={{ width: "36px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", fontSize: "20px", color: "var(--primary)", fontWeight: 300, lineHeight: 1 }}>
                                 +
                               </button>
@@ -1755,8 +1840,10 @@ export function AnalyticsSurface() {
                               <div style={{ display: "flex", gap: "8px" }}>
                                 <input type="text" inputMode="decimal" placeholder={ko ? `수량 (${item.unit})` : `Qty (${item.unit})`}
                                   value={invWasteQty} onChange={e => setInvWasteQty(e.target.value.replace(/[^0-9.]/g, ""))}
+                                  aria-label={ko ? "폐기 수량" : "Waste quantity"}
                                   style={{ ...inputSt, flex: 1, fontSize: "13px", padding: "8px 11px" }} />
                                 <select value={invWasteReason} onChange={e => setInvWasteReason(e.target.value)}
+                                  aria-label={ko ? "폐기 사유" : "Waste reason"}
                                   style={{ ...inputSt, flex: 1, fontSize: "13px", padding: "8px 11px", cursor: "pointer" }}>
                                   <option value="">{ko ? "사유 선택" : "Reason"}</option>
                                   <option value="expiry">{ko ? "유통기한 만료" : "Expired"}</option>
@@ -1781,6 +1868,17 @@ export function AnalyticsSurface() {
                       );
                     })}
 
+                    {/* 전체 보기 / 접기 */}
+                    {sorted.length > 5 && (
+                      <button type="button" onClick={() => setInvShowAll(v => !v)} style={{
+                        width: "100%", padding: "10px", border: "none", background: "none",
+                        fontSize: "13px", fontWeight: 600, color: "#0561fc", cursor: "pointer",
+                        borderTop: "0.5px solid rgba(0,0,0,0.06)",
+                      }}>
+                        {invShowAll ? (ko ? `접기 ↑` : `Collapse ↑`) : (ko ? `전체 ${sorted.length}개 보기 ↓` : `Show all ${sorted.length} ↓`)}
+                      </button>
+                    )}
+
                     {/* ── 품목 추가·수정 폼 ── */}
                     {invForm.open && (
                       <div style={{ padding: "22px 22px", borderTop: "0.5px solid rgba(0,0,0,0.09)", background: "rgba(0,0,0,0.018)", display: "flex", flexDirection: "column" as const, gap: "18px" }}>
@@ -1792,13 +1890,16 @@ export function AnalyticsSurface() {
                         <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
                           <div style={secLbl}>{ko ? "기본 정보" : "Basic info"}</div>
                           <input type="text" placeholder={ko ? "품목명 (예: 닭가슴살)" : "Item name"}
+                            aria-label={ko ? "품목명" : "Item name"}
                             value={invForm.name} onChange={e => setInvForm(f => ({ ...f, name: e.target.value }))} style={inputSt} />
                           <div style={{ display: "flex", gap: "8px" }}>
                             <select value={invForm.category} onChange={e => setInvForm(f => ({ ...f, category: e.target.value as InvForm["category"] }))}
+                              aria-label={ko ? "카테고리" : "Category"}
                               style={{ ...inputSt, flex: 1, cursor: "pointer" }}>
                               {Object.entries(CAT).map(([k, v]) => <option key={k} value={k}>{ko ? v.ko : v.en}</option>)}
                             </select>
                             <select value={invForm.unit} onChange={e => setInvForm(f => ({ ...f, unit: e.target.value }))}
+                              aria-label={ko ? "단위" : "Unit"}
                               style={{ ...inputSt, width: "76px", flex: "none", cursor: "pointer" }}>
                               {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                             </select>
@@ -1828,7 +1929,7 @@ export function AnalyticsSurface() {
                         {(invForm.category === "fresh" || invForm.category === "frozen") && (
                           <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
                             <div style={secLbl}>{ko ? "유통기한" : "Expiry date"}</div>
-                            <input type="date" value={invForm.expiryDate} onChange={e => setInvForm(f => ({ ...f, expiryDate: e.target.value }))} style={inputSt} />
+                            <input type="date" value={invForm.expiryDate} onChange={e => setInvForm(f => ({ ...f, expiryDate: e.target.value }))} aria-label={ko ? "유통기한" : "Expiry date"} style={inputSt} />
                           </div>
                         )}
 
@@ -1938,13 +2039,16 @@ export function AnalyticsSurface() {
                             </div>
                           )}
                           <input type="text" placeholder={savedSuppliers.length > 0 ? (ko ? "또는 직접 입력" : "Or enter manually") : (ko ? "공급업체명 (예: 한국식자재)" : "Supplier name")}
+                            aria-label={ko ? "공급업체명" : "Supplier name"}
                             value={invForm.supplierName} onChange={e => setInvForm(f => ({ ...f, supplierName: e.target.value }))} style={inputSt} />
                           <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px", alignItems: "end" }}>
                             <input type="text" placeholder={ko ? "주문 URL (주문하기 버튼에 연결)" : "Order URL (linked to Order button)"}
+                              aria-label={ko ? "주문 URL" : "Order URL"}
                               value={invForm.url} onChange={e => setInvForm(f => ({ ...f, url: e.target.value }))} style={inputSt} />
                             <div>
                               <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "5px", whiteSpace: "nowrap" as const }}>{ko ? "리드타임 (일)" : "Lead time (d)"}</div>
                               <input type="text" inputMode="numeric" placeholder="1"
+                                aria-label={ko ? "리드타임 (일)" : "Lead time (days)"}
                                 value={invForm.leadTimeDays} onChange={e => setInvForm(f => ({ ...f, leadTimeDays: e.target.value.replace(/[^0-9]/g, "") }))}
                                 style={{ ...inputSt, width: "64px" }} />
                             </div>
@@ -2114,16 +2218,19 @@ export function AnalyticsSurface() {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
                           <input type="text" placeholder={ko ? "이름 (예: 김민지)" : "Name"} value={empName} onChange={e => setEmpName(e.target.value)}
+                            aria-label={ko ? "직원 이름" : "Employee name"}
                             style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                             <div>
                               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "시급 (원)" : "Hourly wage (₩)"}</div>
                               <input type="text" inputMode="numeric" placeholder="10,030" value={empWage} onChange={e => setEmpWage(e.target.value.replace(/[^0-9]/g, ""))}
+                                aria-label={ko ? "시급 (원)" : "Hourly wage (KRW)"}
                                 style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                             </div>
                             <div>
                               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "주간 근무시간" : "Hours/week"}</div>
                               <input type="text" inputMode="numeric" placeholder="20" value={empHours} onChange={e => setEmpHours(e.target.value.replace(/[^0-9.]/g, ""))}
+                                aria-label={ko ? "주간 근무시간" : "Weekly work hours"}
                                 style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                             </div>
                           </div>
@@ -2293,6 +2400,7 @@ export function AnalyticsSurface() {
                                 <input
                                   type="text" inputMode="numeric"
                                   placeholder="0"
+                                  aria-label={ko ? `${p.name} 이달 매출 (만원)` : `${p.name} monthly sales (10K KRW)`}
                                   value={monthlyDeliverySales[p.id] ? String(monthlyDeliverySales[p.id]) : ""}
                                   onChange={e => {
                                     const v = parseInt(e.target.value.replace(/[^0-9]/g, ""), 10) || 0;
@@ -2347,16 +2455,19 @@ export function AnalyticsSurface() {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
                           <input type="text" placeholder={ko ? "플랫폼명 (예: 배달의민족)" : "Platform name"} value={dlvName} onChange={e => setDlvName(e.target.value)}
+                            aria-label={ko ? "플랫폼명" : "Platform name"}
                             style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                             <div>
                               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "중개 수수료 (%)" : "Commission (%)"}</div>
                               <input type="text" inputMode="decimal" placeholder="6.8" value={dlvRate} onChange={e => setDlvRate(e.target.value.replace(/[^0-9.]/g, ""))}
+                                aria-label={ko ? "중개 수수료 (%)" : "Commission rate (%)"}
                                 style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                             </div>
                             <div>
                               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "월 광고비 (만원)" : "Monthly ads (만원)"}</div>
                               <input type="text" inputMode="numeric" placeholder="0" value={dlvAd} onChange={e => setDlvAd(e.target.value.replace(/[^0-9]/g, ""))}
+                                aria-label={ko ? "월 광고비 (만원)" : "Monthly ad spend (10K KRW)"}
                                 style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                             </div>
                           </div>
@@ -2441,8 +2552,10 @@ export function AnalyticsSurface() {
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                   <button type="button"
                                     onClick={() => setSelectedPlatform(prev => isOn ? prev.filter(x => x !== p.id) : [...prev, p.id])}
+                                    role="checkbox" aria-checked={isOn}
+                                    aria-label={ko ? `${p.name} 선택` : `Select ${p.name}`}
                                     style={{ width: "18px", height: "18px", borderRadius: "5px", border: `1.5px solid ${isOn ? "#007aff" : "rgba(0,0,0,0.18)"}`, background: isOn ? "#007aff" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    {isOn && <svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                    {isOn && <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true"><polyline points="1,4 4,7 9,1" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                                   </button>
                                   <div>
                                     <span style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "-0.2px" }}>{p.name}</span>
@@ -2457,6 +2570,7 @@ export function AnalyticsSurface() {
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "26px" }}>
                                   <input type="text" inputMode="numeric"
                                     placeholder={ko ? "이달 매출 (만원)" : "Monthly sales (10K₩)"}
+                                    aria-label={ko ? `${p.name} 이달 매출 (만원)` : `${p.name} monthly sales (10K KRW)`}
                                     value={monthlySales[p.id] ?? ""}
                                     onChange={e => setMonthlySales(prev => ({ ...prev, [p.id]: e.target.value.replace(/[^0-9]/g, "") }))}
                                     style={{ flex: 1, fontSize: "13px", padding: "8px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
@@ -2520,6 +2634,7 @@ export function AnalyticsSurface() {
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <input type="text" inputMode="numeric"
                           placeholder={ko ? "이달 발송 건수" : "Monthly parcels"}
+                          aria-label={ko ? "이달 발송 건수" : "Monthly parcel count"}
                           value={monthlyParcels}
                           onChange={e => setMonthlyParcels(e.target.value.replace(/[^0-9]/g, ""))}
                           style={{ flex: 1, fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
@@ -2601,11 +2716,11 @@ export function AnalyticsSurface() {
                             {ko ? "+ 직접 추가" : "+ Add manually"}
                           </button>
                           <label style={{ fontSize: "13px", fontWeight: 600, color: "#34c759", cursor: "pointer", padding: "4px 0", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                               <path d="M8 2v12M2 8h12" />
                             </svg>
                             {ko ? "엑셀 업로드" : "Upload Excel"}
-                            <input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" style={{ display: "none" }} onChange={async (e) => {
+                            <input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" aria-label={ko ? "제품 엑셀 파일 업로드" : "Upload product Excel file"} style={{ display: "none" }} onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (!file) return;
                               e.target.value = "";
@@ -2758,11 +2873,13 @@ export function AnalyticsSurface() {
                               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" as const }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
                                   <button type="button" onClick={() => handleProdSoldChange(p.id, -1)}
+                                    aria-label={ko ? `${p.name} 판매량 감소` : `Decrease ${p.name} sold count`}
                                     style={{ width: "28px", height: "28px", borderRadius: "8px 0 0 8px", border: "1px solid rgba(0,0,0,0.12)", background: "rgba(0,0,0,0.03)", fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>−</button>
-                                  <div style={{ padding: "0 10px", height: "28px", border: "1px solid rgba(0,0,0,0.12)", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", fontSize: "13px", fontWeight: 600, minWidth: "44px", justifyContent: "center" }}>
+                                  <div style={{ padding: "0 10px", height: "28px", border: "1px solid rgba(0,0,0,0.12)", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", fontSize: "13px", fontWeight: 600, minWidth: "44px", justifyContent: "center" }} aria-live="polite">
                                     {p.monthlySold}{p.unit}
                                   </div>
                                   <button type="button" onClick={() => handleProdSoldChange(p.id, 1)}
+                                    aria-label={ko ? `${p.name} 판매량 증가` : `Increase ${p.name} sold count`}
                                     style={{ width: "28px", height: "28px", borderRadius: "0 8px 8px 0", border: "1px solid rgba(0,0,0,0.12)", background: "rgba(0,0,0,0.03)", fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>+</button>
                                 </div>
                                 <span style={{ fontSize: "11px", color: "var(--muted)" }}>{ko ? "이달 판매량" : "Sold this month"}</span>
@@ -2787,6 +2904,7 @@ export function AnalyticsSurface() {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
                           <input type="text" placeholder={ko ? "제품명 (예: 아메리카노, 흰티셔츠)" : "Product name"} value={prodName} onChange={e => setProdName(e.target.value)}
+                            aria-label={ko ? "제품명" : "Product name"}
                             style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                           {/* 카테고리 선택 */}
                           <div>
@@ -2799,6 +2917,7 @@ export function AnalyticsSurface() {
                                 </button>
                               ))}
                               <input type="text" placeholder={ko ? "직접 입력" : "Custom"} value={!defaultCategories.includes(prodCategory) ? prodCategory : ""} onChange={e => setProdCategory(e.target.value)}
+                                aria-label={ko ? "사용자 정의 카테고리" : "Custom category"}
                                 style={{ width: "80px", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "5px 10px", fontSize: "12px", outline: "none" }} />
                             </div>
                           </div>
@@ -2807,11 +2926,13 @@ export function AnalyticsSurface() {
                             <div>
                               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "판매가 (원)" : "Price (₩)"}</div>
                               <input type="text" inputMode="numeric" placeholder="12000" value={prodPrice} onChange={e => setProdPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                                aria-label={ko ? "판매가 (원)" : "Selling price (KRW)"}
                                 style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                             </div>
                             <div>
                               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "원가 (원, 선택)" : "Cost (₩, optional)"}</div>
                               <input type="text" inputMode="numeric" placeholder="4000" value={prodCost} onChange={e => setProdCost(e.target.value.replace(/[^0-9]/g, ""))}
+                                aria-label={ko ? "원가 (원)" : "Cost price (KRW)"}
                                 style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                             </div>
                           </div>
@@ -2820,6 +2941,7 @@ export function AnalyticsSurface() {
                             <div>
                               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "재고 수량" : "Stock qty"}</div>
                               <input type="text" inputMode="numeric" placeholder="0" value={prodStock} onChange={e => setProdStock(e.target.value.replace(/[^0-9]/g, ""))}
+                                aria-label={ko ? "재고 수량" : "Stock quantity"}
                                 style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
                             </div>
                             <div>
@@ -2989,6 +3111,7 @@ export function AnalyticsSurface() {
                               </div>
                               <button type="button"
                                 onClick={() => saveMembers(members.filter(x => x.id !== m.id))}
+                                aria-label={ko ? `${m.name} 삭제` : `Delete ${m.name}`}
                                 style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
                                 {ko ? "삭제" : "Del"}
                               </button>
@@ -3004,6 +3127,7 @@ export function AnalyticsSurface() {
                         <div style={{ fontSize: "13px", fontWeight: 700 }}>{ko ? "수강생/회원 등록" : "Register Member"}</div>
                         <input type="text" placeholder={ko ? "이름" : "Name"}
                           value={memName} onChange={e => setMemName(e.target.value)}
+                          aria-label={ko ? "회원 이름" : "Member name"}
                           style={{ fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
                         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                           {planPresets.map(preset => (
@@ -3017,8 +3141,10 @@ export function AnalyticsSurface() {
                         <div style={{ display: "flex", gap: "8px" }}>
                           <input type="text" inputMode="numeric" placeholder={ko ? "수강료 (만원)" : "Fee (10K₩)"}
                             value={memFee} onChange={e => setMemFee(e.target.value.replace(/[^0-9]/g, ""))}
+                            aria-label={ko ? "수강료 (만원)" : "Membership fee (10K KRW)"}
                             style={{ flex: 1, fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
                           <input type="date" value={memEnd} onChange={e => setMemEnd(e.target.value)}
+                            aria-label={ko ? "만료일" : "Expiry date"}
                             style={{ flex: 1, fontSize: "13px", padding: "9px 12px", border: "1px solid rgba(0,0,0,0.10)", borderRadius: "9px", background: "rgba(0,0,0,0.02)", outline: "none", fontFamily: "inherit" }} />
                         </div>
                         <div style={{ display: "flex", gap: "8px" }}>
@@ -3126,12 +3252,13 @@ export function AnalyticsSurface() {
                         {/* 과세 유형 */}
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)" }}>{ko ? "과세 유형" : "VAT type"}</span>
-                          <div style={{ display: "flex", gap: "4px" }}>
+                          <div style={{ display: "flex", gap: "4px" }} role="radiogroup" aria-label={ko ? "과세 유형" : "VAT type"}>
                             {(["general", "simplified"] as const).map(type => {
                               const active = vatType === type;
                               const label = ko ? (type === "general" ? "일반과세자" : "간이과세자") : (type === "general" ? "General" : "Simplified");
                               return (
                                 <button key={type} type="button"
+                                  role="radio" aria-checked={active}
                                   onClick={() => saveTaxSettings({ ...taxSettings, vatType: type })}
                                   style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#007aff" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(0,122,255,0.10)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
                                   {label}
@@ -3143,12 +3270,13 @@ export function AnalyticsSurface() {
                         {/* 직원 유무 */}
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)" }}>{ko ? "직원 유무" : "Employees"}</span>
-                          <div style={{ display: "flex", gap: "4px" }}>
+                          <div style={{ display: "flex", gap: "4px" }} role="radiogroup" aria-label={ko ? "직원 유무" : "Has employees"}>
                             {([true, false] as const).map(v => {
                               const active = hasEmployees === v;
                               const label = ko ? (v ? "있음" : "없음") : (v ? "Yes" : "No");
                               return (
                                 <button key={String(v)} type="button"
+                                  role="radio" aria-checked={active}
                                   onClick={() => saveTaxSettings({ ...taxSettings, hasEmployees: v })}
                                   style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#007aff" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(0,122,255,0.10)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
                                   {label}
@@ -3337,17 +3465,27 @@ export function AnalyticsSurface() {
                     {/* 구분선 */}
                     {totalCosts > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.06)" }} />}
 
-                    {/* 비용 입력 필드 */}
+                    {/* 비용 입력 필드 (업종별 동적 레이블) */}
                     <div style={{ padding: "0 22px 16px", display: "flex", flexDirection: "column" as const, gap: "10px" }}>
-                      {[
-                        { label: ko ? "재료비" : "Ingredients", val: costIngredientsText, set: setCostIngredientsText, ph: "120" },
-                        { label: ko ? "인건비" : "Labor", val: costLaborText, set: setCostLaborText, ph: "200" },
-                        { label: ko ? "임대료" : "Rent", val: costRentText, set: setCostRentText, ph: "80" },
-                        { label: ko ? "공과금" : "Utilities", val: costUtilitiesText, set: setCostUtilitiesText, ph: "20" },
-                        { label: ko ? "기타" : "Other", val: costOtherText, set: setCostOtherText, ph: "15" },
-                      ].map((row) => (
+                      {(() => {
+                        const textMap: Record<string, string> = { ingredients: costIngredientsText, labor: costLaborText, rent: costRentText, utilities: costUtilitiesText, other: costOtherText };
+                        const setMap: Record<string, (v: string) => void> = { ingredients: setCostIngredientsText, labor: setCostLaborText, rent: setCostRentText, utilities: setCostUtilitiesText, other: setCostOtherText };
+                        return (businessCtx.expenseFields ?? [
+                          { fieldKey: "ingredients", label: { ko: "재료비", en: "Ingredients" }, placeholder: "120", description: { ko: "", en: "" } },
+                          { fieldKey: "labor", label: { ko: "인건비", en: "Labor" }, placeholder: "200", description: { ko: "", en: "" } },
+                          { fieldKey: "rent", label: { ko: "임대료", en: "Rent" }, placeholder: "80", description: { ko: "", en: "" } },
+                          { fieldKey: "utilities", label: { ko: "공과금", en: "Utilities" }, placeholder: "20", description: { ko: "", en: "" } },
+                          { fieldKey: "other", label: { ko: "기타", en: "Other" }, placeholder: "15", description: { ko: "", en: "" } },
+                        ]).map((field) => ({
+                          label: field.label[language] ?? field.label.ko,
+                          val: textMap[field.fieldKey] ?? "",
+                          set: setMap[field.fieldKey] ?? (() => {}),
+                          ph: field.placeholder,
+                          desc: field.description?.[language] ?? "",
+                        }));
+                      })().map((row) => (
                         <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div style={{ fontSize: "13px", color: "var(--muted)", width: "60px", flexShrink: 0 }}>{row.label}</div>
+                          <div style={{ fontSize: "13px", color: "var(--muted)", width: "80px", flexShrink: 0 }}>{row.label}</div>
                           <input type="text" inputMode="numeric" value={row.val}
                             onChange={(e) => row.set(e.target.value.replace(/[^0-9]/g, ""))}
                             placeholder={row.ph}
@@ -3400,6 +3538,7 @@ export function AnalyticsSurface() {
                                   </div>
                                 </div>
                                 <button type="button" onClick={() => handleFexpDelete(fe.id)}
+                                  aria-label={ko ? `${fe.name} 삭제` : `Delete ${fe.name}`}
                                   style={{ fontSize: "11px", color: "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "2px", flexShrink: 0 }}>✕</button>
                               </div>
                             );
@@ -3412,11 +3551,14 @@ export function AnalyticsSurface() {
                         <div style={{ marginTop: "10px", padding: "12px", borderRadius: "12px", background: "rgba(0,122,255,0.03)", border: "1px solid rgba(0,122,255,0.08)" }}>
                           <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
                             <input type="text" placeholder={ko ? "항목명 (예: 대출이자)" : "Name"} value={fexpName} onChange={e => setFexpName(e.target.value)}
+                              aria-label={ko ? "고정 지출 항목명" : "Fixed expense name"}
                               style={{ ...inputStyle, fontSize: "14px" }} />
                             <div style={{ display: "flex", gap: "8px" }}>
                               <input type="text" inputMode="numeric" placeholder={ko ? "금액 (만원)" : "Amount"} value={fexpAmount} onChange={e => setFexpAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                                aria-label={ko ? "금액 (만원)" : "Amount (10K KRW)"}
                                 style={{ ...inputStyle, flex: 1, fontSize: "14px" }} />
                               <input type="text" inputMode="numeric" placeholder={ko ? "납부일 (1~31)" : "Due day"} value={fexpDueDay} onChange={e => setFexpDueDay(e.target.value.replace(/[^0-9]/g, ""))}
+                                aria-label={ko ? "납부일 (1~31)" : "Due day (1-31)"}
                                 style={{ ...inputStyle, flex: 1, fontSize: "14px" }} />
                             </div>
                             <div style={{ display: "flex", gap: "4px" }}>
@@ -3475,7 +3617,7 @@ export function AnalyticsSurface() {
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
                         <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: isDanger ? "rgba(255,59,48,0.12)" : "rgba(255,149,0,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                             <path d="M7 1L13 12H1L7 1Z" fill={isDanger ? "#ff3b30" : "#ff9f0a"} />
                             <rect x="6.25" y="5" width="1.5" height="3.5" rx="0.75" fill="white" />
                             <circle cx="7" cy="10" r="0.85" fill="white" />

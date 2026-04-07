@@ -101,9 +101,9 @@ export const STARTUP_STAGE_TOOLS: StageToolKit[] = [
     estimatedMonthlyCost: "6~10만원",
   },
 
-  // ── 4. Launch Stack ──
+  // ── 4. Launch Stack + GTM ──
   {
-    stageId: "launch-stack",
+    stageId: "launch-gtm",
     title: { ko: "런칭 인프라", en: "Launch Stack" },
     description: {
       ko: "결제, 분석, 에러 추적, 고객 피드백 루프 구축",

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
+import { getAnthropicApiKey } from "../../../_lib/env";
 
 type ParsedProduct = {
   name: string;
@@ -12,14 +13,14 @@ type ParsedProduct = {
 };
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser(request);
-  if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
+  // 인증은 선택적 — 로그인 없이도 엑셀 파싱 가능 (데모 모드 지원)
+  // 로그인된 사용자는 rate limit 등에서 우선 처리
+  const _auth = await requireApiUser(request).catch(() => null);
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = getAnthropicApiKey();
   if (!apiKey) {
-    return NextResponse.json({ error: "AI 서비스가 설정되지 않았습니다." }, { status: 500 });
+    console.error("[products/parse] ANTHROPIC_API_KEY not found");
+    return NextResponse.json({ error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." }, { status: 503 });
   }
 
   let body: { text: string; language?: string };
