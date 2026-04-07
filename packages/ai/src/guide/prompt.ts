@@ -38,7 +38,7 @@ export function buildGuideQaUserPrompt(
 ) {
   return [
     `언어: ${language}`,
-    `질문: ${question}`,
+    `질문: <user_input>${question}</user_input>`,
     "",
     "[가이드 정보]",
     `제목: ${context.title}`,

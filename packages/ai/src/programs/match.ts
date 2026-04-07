@@ -190,7 +190,7 @@ export async function matchPrograms(
     })),
   };
 
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
   const userMessage = buildProgramMatchingUserPrompt(context);
 
   const message = await client.messages.create({

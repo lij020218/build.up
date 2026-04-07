@@ -95,7 +95,7 @@ export async function analyzeContract(
   contractType: ContractType = "commercial_lease"
 ): Promise<ContractAnalysisResult> {
   const truncated = contractText.slice(0, MAX_CONTRACT_LENGTH);
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
 
   const userMessage = buildContractUserPrompt(truncated, contractType);
   const systemPrompt = getSystemPromptForType(contractType);

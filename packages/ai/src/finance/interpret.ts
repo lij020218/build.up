@@ -65,7 +65,7 @@ export async function interpretFinancialSimulation(
   result: FinancialSimulationResult,
   options: AiCallOptions & { categoryLabel?: string }
 ): Promise<AiStructuredResponse> {
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
 
   const userMessage = buildFinanceUserPrompt(result, options.categoryLabel);
 

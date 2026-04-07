@@ -144,7 +144,7 @@ export function buildContractUserPrompt(contractText: string, contractType: Cont
 
   return [
     labels.header,
-    trimmed,
+    `<user_input>${trimmed}</user_input>`,
     "",
     "[분석 요청]",
     labels.request,

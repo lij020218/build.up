@@ -85,7 +85,7 @@ export async function generateDashboardActions(
   ctx: DashboardContext,
   options: AiCallOptions
 ): Promise<DashboardActionsResponse> {
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
 
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,

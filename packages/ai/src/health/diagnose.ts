@@ -56,7 +56,7 @@ export async function diagnoseBusinessHealth(
   context: HealthDiagnosisContext,
   options: AiCallOptions
 ): Promise<HealthDiagnosisResult> {
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
   const userMessage = buildHealthDiagnosisUserPrompt(context);
 
   const message = await client.messages.create({

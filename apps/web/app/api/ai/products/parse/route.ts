@@ -79,7 +79,7 @@ Rules:
 - price/cost in integer won. stock as integer.
 - unit from data context. Defaults to "개".
 - Skip header/total rows. Extract ALL product types (clothing, electronics, food, etc).`,
-      messages: [{ role: "user", content: text }],
+      messages: [{ role: "user", content: `<user_input>${text}</user_input>` }],
     });
 
     const content = response.content[0];

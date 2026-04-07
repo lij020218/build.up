@@ -63,7 +63,7 @@ export async function generateStageBrief(
   params: StageBriefParams,
   options: AiCallOptions
 ): Promise<StageBriefResult> {
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
   const userPrompt = buildStageBriefUserPrompt(params);
 
   const message = await client.messages.create({

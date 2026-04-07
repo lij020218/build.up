@@ -63,7 +63,7 @@ export async function interpretGuideQuestion(
   language: Language,
   options: AiCallOptions
 ): Promise<{ answer: GuideAiStructuredResponse; context: GuideContextBlock }> {
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
   const context = buildGuideContextBlock(guide, language);
   const userPrompt = buildGuideQaUserPrompt(question, context, language);
 

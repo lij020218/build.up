@@ -168,7 +168,7 @@ export async function generateRoadmap(
   input: RoadmapGenerationInput,
   options: AiCallOptions
 ): Promise<RoadmapGenerationResult> {
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 60_000 }); // 로드맵 생성은 복잡하므로 60초
 
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,

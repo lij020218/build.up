@@ -12,7 +12,7 @@ export async function interpretMarketScore(
   params: { categoryId?: string; startupType?: string },
   options: AiCallOptions
 ): Promise<string> {
-  const client = new Anthropic({ apiKey: options.apiKey });
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
   const userPrompt = buildMarketNarrativeUserPrompt(item, params);
 
   const message = await client.messages.create({

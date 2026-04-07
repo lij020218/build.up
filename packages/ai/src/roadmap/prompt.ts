@@ -376,14 +376,14 @@ export function buildRoadmapGenerationPrompt(input: RoadmapGenerationInput): str
   const lines: string[] = [];
 
   lines.push(`## 사업 아이디어`);
-  lines.push(input.ideaText);
+  lines.push(`<user_input>${input.ideaText}</user_input>`);
   lines.push("");
 
   if (input.budget || input.region || input.teamSize || input.storeName) {
     lines.push(`## 추가 정보`);
-    if (input.storeName) lines.push(`- 상호명: ${input.storeName}`);
+    if (input.storeName) lines.push(`- 상호명: <user_input>${input.storeName}</user_input>`);
     if (input.budget) lines.push(`- 예산: ${Math.round(input.budget / 10000).toLocaleString()}만원`);
-    if (input.region) lines.push(`- 희망 지역: ${input.region}`);
+    if (input.region) lines.push(`- 희망 지역: <user_input>${input.region}</user_input>`);
     if (input.teamSize) lines.push(`- 팀 규모: ${input.teamSize}명`);
     lines.push("");
   }
