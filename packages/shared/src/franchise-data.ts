@@ -193,11 +193,21 @@ const noonnoppi = b({ id: "noonnoppi", subIndustryIds: ["kids-academy", "adult-c
 
 const kumon = b({ id: "kumon", subIndustryIds: ["kids-academy"], categoryId: "education", name: { ko: "구몬", en: "Kumon" }, tagline: { ko: "글로벌 자기주도학습, 50개국 진출", en: "Global self-learning, 50 countries" }, startupCostWon: 2500, franchiseFee: 100, monthlyRoyalty: 0, avgAnnualRevenueWon: 5500, storeCount: 5000, closureRate: 2.5, scores: { profitability: 62, stability: 82, accessibility: 94, brandPower: 85, support: 85 }, roadmapNotes: { ko: ["자기주도학습 프린트 기반", "초기 비용 2,500만원 이하", "10평~ 소규모 교실 가능", "글로벌 브랜드 인지도"], en: ["Self-paced worksheet based", "Under 25M startup", "Small 10+ pyeong", "Global brand"] }, franchiseUrl: "https://www.kumon.co.kr/inquiry/inquiry", costVerified: false, dataYear: "2024" });
 
+const yoonsaeng = b({ id: "yoonsaeng", subIndustryIds: ["kids-academy", "adult-class"], categoryId: "education", name: { ko: "윤선생", en: "Yoon's English" }, tagline: { ko: "영어 방문학습, 40년 전통, 2,000+ 교사", en: "English home tutoring, 40-year legacy" }, startupCostWon: 2000, franchiseFee: 100, monthlyRoyalty: 0, avgAnnualRevenueWon: 4800, storeCount: 2000, closureRate: 3.0, scores: { profitability: 60, stability: 80, accessibility: 95, brandPower: 82, support: 85 }, roadmapNotes: { ko: ["방문학습 — 매장 없이 시작", "1인 운영 (교사 모델)", "교재·시스템 본사 제공", "초등 영어 시장 안정적"], en: ["Home-visit — no store", "Solo tutor model", "HQ-provided materials", "Stable elementary market"] }, franchiseUrl: "https://www.yoons.com/", costVerified: false, dataYear: "2024" });
+
+const jungsnag = b({ id: "jungsang", subIndustryIds: ["kids-academy"], categoryId: "education", name: { ko: "정상어학원", en: "JLS Academy" }, tagline: { ko: "영어학원 프랜차이즈 1위, 350+ 매장", en: "#1 English academy franchise, 350+ stores" }, startupCostWon: 15000, franchiseFee: 1500, monthlyRoyalty: 50, avgAnnualRevenueWon: 48000, storeCount: 350, closureRate: 5.0, scores: { profitability: 70, stability: 68, accessibility: 45, brandPower: 85, support: 80 }, roadmapNotes: { ko: ["창업비용 1.5~2억 (50평 기준)", "원어민·한국인 강사 채용 필수", "초등~중등 영어 특화", "학부모 입소문 핵심"], en: ["1.5–2B startup (50py)", "Native + Korean teacher hiring required", "Elementary-middle English focus", "Parent word-of-mouth critical"] }, franchiseUrl: "https://www.jls.co.kr/", costVerified: false, dataYear: "2024" });
+
+const milal = b({ id: "milal-coding", subIndustryIds: ["kids-academy"], categoryId: "education", name: { ko: "마이크로비트 코딩학원", en: "Micro:bit Coding Academy" }, tagline: { ko: "코딩 교육 전문, AI 교육 트렌드 선도", en: "Coding education, AI learning trend" }, startupCostWon: 5000, franchiseFee: 500, monthlyRoyalty: 30, avgAnnualRevenueWon: 12000, storeCount: 120, closureRate: 6.0, scores: { profitability: 58, stability: 55, accessibility: 75, brandPower: 55, support: 70 }, roadmapNotes: { ko: ["SW/AI 교육 의무화 수혜", "20평 소규모 가능", "교사 1~2인 운영", "교육 과정 본사 지원"], en: ["Beneficiary of mandatory coding education", "Small 20py viable", "1-2 teacher operation", "HQ curriculum support"] }, franchiseUrl: "", costVerified: false, dataYear: "2024" });
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *  PET
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 const polypark = b({ id: "polypark", subIndustryIds: ["pet-supply", "pet-shop"], categoryId: "pet", name: { ko: "폴리파크", en: "Polypark" }, tagline: { ko: "반려동물 용품점 1위 프랜차이즈", en: "#1 pet supply franchise" }, startupCostWon: 9592, franchiseFee: 440, monthlyRoyalty: 22, avgAnnualRevenueWon: 24000, storeCount: 60, closureRate: 4.0, scores: { profitability: 68, stability: 70, accessibility: 72, brandPower: 65, support: 68 }, roadmapNotes: { ko: ["표준 창업비용 약 9,600만원", "반려동물 시장 연 15% 성장", "용품+간식+미용 복합", "보증금 1,000만원 포함"], en: ["~96M standard startup", "Pet market ~15% annual growth", "Supplies+treats+grooming combo", "Includes 10M deposit"] }, franchiseUrl: "https://www.polypark.co.kr/", costVerified: false, dataYear: "2024" });
+
+const londonPet = b({ id: "london-pet", subIndustryIds: ["pet-grooming"], categoryId: "pet", name: { ko: "런던펫", en: "London Pet" }, tagline: { ko: "프리미엄 애견미용, 반려인 교육 병행", en: "Premium grooming + pet parent education" }, startupCostWon: 7000, franchiseFee: 500, monthlyRoyalty: 20, avgAnnualRevenueWon: 18000, storeCount: 45, closureRate: 5.0, scores: { profitability: 65, stability: 62, accessibility: 68, brandPower: 60, support: 65 }, roadmapNotes: { ko: ["미용 기술 교육 필수 (본사 제공)", "15~20평 소규모 가능", "예약 기반 — 안정적 매출", "반려인 교육 프로그램 차별화"], en: ["Grooming training required (HQ provided)", "Small 15-20py viable", "Reservation-based — stable revenue", "Pet parent education differentiator"] }, franchiseUrl: "", costVerified: false, dataYear: "2024" });
+
+const petFriends = b({ id: "pet-friends", subIndustryIds: ["pet-supply", "pet-shop"], categoryId: "pet", name: { ko: "펫프렌즈", en: "Pet Friends" }, tagline: { ko: "반려동물 용품 전문, 온·오프라인 복합", en: "Pet supply specialist, online+offline" }, startupCostWon: 8000, franchiseFee: 300, monthlyRoyalty: 15, avgAnnualRevenueWon: 20000, storeCount: 30, closureRate: 5.5, scores: { profitability: 62, stability: 60, accessibility: 70, brandPower: 58, support: 62 }, roadmapNotes: { ko: ["온라인 배송 + 오프라인 매장 병행", "반려동물 시장 연평균 9.5% 성장", "사료·간식 정기배송 수익", "20평 이상 권장"], en: ["Online delivery + offline store hybrid", "Pet market ~9.5% CAGR", "Regular food/treat delivery revenue", "20+ pyeong recommended"] }, franchiseUrl: "", costVerified: false, dataYear: "2024" });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *  LIVING SERVICE
@@ -206,6 +216,10 @@ const polypark = b({ id: "polypark", subIndustryIds: ["pet-supply", "pet-shop"],
 const cleantopia = b({ id: "cleantopia", subIndustryIds: ["laundry-cleaning", "unmanned-service"], categoryId: "living-service", name: { ko: "크린토피아", en: "Cleantopia" }, tagline: { ko: "세탁편의점 1위, 최저 창업비용 1,900만", en: "#1 laundry, lowest 19M startup" }, startupCostWon: 1900, franchiseFee: 440, monthlyRoyalty: 0, avgAnnualRevenueWon: 12000, storeCount: 3500, closureRate: 2.0, scores: { profitability: 68, stability: 88, accessibility: 95, brandPower: 92, support: 85 }, roadmapNotes: { ko: ["6평 기준 1,900만원", "로열티 0원 — 세탁물량 수수료", "무인/반무인 운영 가능", "투잡·노후 대비 인기"], en: ["19M for 6-pyeong", "Zero royalty — volume fee", "Unmanned operation", "Popular side job"] }, franchiseUrl: "https://www.cleantopia.com/", costVerified: true, costSource: "정보공개서 2024", basePyeong: 6, costBreakdown: [c("가맹비","Franchise fee",440),c("보증금(반환)","Deposit(refund)",300),c("인테리어(6평)","Interior(6py)",770),c("기타","Other",390)], dataYear: "2024" });
 
 const washnjoy = b({ id: "washnjoy", subIndustryIds: ["laundry-cleaning", "unmanned-service"], categoryId: "living-service", name: { ko: "워시엔조이", en: "Wash & Joy" }, tagline: { ko: "코인세탁 전문, 가맹비·로열티 0원", en: "Coin laundry, zero fee & royalty" }, startupCostWon: 5000, franchiseFee: 0, monthlyRoyalty: 0, avgAnnualRevenueWon: 15000, storeCount: 600, closureRate: 4.5, scores: { profitability: 62, stability: 72, accessibility: 88, brandPower: 70, support: 78 }, roadmapNotes: { ko: ["가맹비·로열티 0원", "완전 무인 운영", "코인세탁기 장비 비용 핵심", "주거 밀집 입지 필수"], en: ["Zero fees & royalty", "Fully unmanned", "Equipment cost is key", "Residential area required"] }, franchiseUrl: "https://washenjoy.co.kr/", costVerified: false, dataYear: "2024" });
+
+const mrWash = b({ id: "mr-wash", subIndustryIds: ["laundry-cleaning"], categoryId: "living-service", name: { ko: "미스터세탁", en: "Mr. Laundry" }, tagline: { ko: "모바일 세탁 수거·배달, 비대면 특화", en: "Mobile laundry pickup/delivery, contactless" }, startupCostWon: 3500, franchiseFee: 300, monthlyRoyalty: 0, avgAnnualRevenueWon: 10000, storeCount: 200, closureRate: 5.0, scores: { profitability: 58, stability: 65, accessibility: 85, brandPower: 55, support: 70 }, roadmapNotes: { ko: ["모바일앱 기반 주문·결제", "배달 차량 필수 (소형 화물)", "1인 운영 → 2인 확장", "주거 밀집 + 오피스 타겟"], en: ["Mobile app-based order/pay", "Delivery vehicle required", "Solo → 2-person expansion", "Residential + office target"] }, franchiseUrl: "", costVerified: false, dataYear: "2024" });
+
+const cleanLab = b({ id: "clean-lab", subIndustryIds: ["repair-service"], categoryId: "living-service", name: { ko: "청소연구소", en: "Clean Lab" }, tagline: { ko: "방문 청소 전문, 정기구독 모델", en: "Home cleaning, subscription model" }, startupCostWon: 2000, franchiseFee: 200, monthlyRoyalty: 10, avgAnnualRevenueWon: 8000, storeCount: 150, closureRate: 6.0, scores: { profitability: 55, stability: 58, accessibility: 90, brandPower: 50, support: 65 }, roadmapNotes: { ko: ["매장 불필요 — 방문 서비스", "정기 구독 고객 확보가 핵심", "청소 인력 수급 관리 중요", "초기 비용 2,000만원 이하"], en: ["No store — mobile service", "Recurring subscription key", "Cleaning staff sourcing critical", "Under 20M startup"] }, franchiseUrl: "", costVerified: false, dataYear: "2024" });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *  SPACE
@@ -309,12 +323,12 @@ export const franchiseBrands: FranchiseBrand[] = [
   junoHair, lianHair, blueClub, parkSeungChul, goldenNail, yuhuNail, sevenDaysSugaring, anaden,
   // fitness (4)
   anytimeFitness, curves, friendsScreen, golfzon,
-  // education (2)
-  noonnoppi, kumon,
-  // pet (2)
-  polypark, petmart,
-  // living-service (2)
-  cleantopia, washnjoy,
+  // education (5)
+  noonnoppi, kumon, yoonsaeng, jungsnag, milal,
+  // pet (4)
+  polypark, petmart, londonPet, petFriends,
+  // living-service (4)
+  cleantopia, washnjoy, mrWash, cleanLab,
   // space (4)
   zaksim, tozStudy, seldog24, sevenStar
 ];
