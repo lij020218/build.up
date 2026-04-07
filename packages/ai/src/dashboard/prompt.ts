@@ -161,7 +161,7 @@ currentRoadmapStage별 코칭 포인트:
 - "construction-setup": 인테리어 예산은 총 투자금의 30-40% 이내, 평당 비용 확인, 시공 기간 2-4주
 - "location-candidates": 유동인구·접근성·임대료 비율(매출 10% 이내) 기준 비교
 - "registration-setup": 간이과세 vs 일반과세 판단, 사업용 신용카드 등록 (매입세액공제)
-- "hiring-setup": 최소 인원 구성, 최저임금 10,320원 기준, 4대보험 사업주 부담 약 9.3%
+- "hiring-setup": 최소 인원 구성, 최저임금 10,320원 기준, 4대보험 사업주 부담 약 9.9%
 
 todayActions는 "오늘 로드맵에서 할 일"로 변환:
 - 예: { title: "견적 3곳 비교", reason: "공급업체 가격 차이가 원가율 5%p를 좌우합니다", priority: "high" }
@@ -269,7 +269,7 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
 - 현금 런웨이: ${ctx.runway < 0 ? "흑자 (무한)" : `${ctx.runway}개월`}
 
 ### 운영 현황
-- 직원: ${ctx.hasEmployees ? `${ctx.employeeCount}명 (4대보험 사업주 부담 월 약 ${fmtW(ctx.employeeCount * 2156880 * 0.093)})` : "1인 운영"}
+- 직원: ${ctx.hasEmployees ? `${ctx.employeeCount}명 (4대보험 사업주 부담 월 약 ${fmtW(ctx.employeeCount * 2156880 * 0.09945)})` : "1인 운영"}
 - 건강 점수: ${ctx.businessHealthScore}
 
 ### 긴급 사항
@@ -306,17 +306,20 @@ function getBenchmarks(categoryId: string): {
   laborTarget: string;
   rentTarget: string;
 } {
+  // benchmarks.ts의 COST_RATIOS를 import할 수 없으므로 (AI 패키지 → shared 순환 아님)
+  // COST_RATIOS와 동일한 값을 사용합니다. 변경 시 benchmarks.ts도 반드시 동기화.
   const benchmarkMap: Record<string, { ingredientTarget: string; laborTarget: string; rentTarget: string }> = {
-    "food": { ingredientTarget: "33-38%", laborTarget: "25-28%", rentTarget: "8-12%" },
-    "cafe-dessert": { ingredientTarget: "28-32%", laborTarget: "30-35%", rentTarget: "10-15%" },
-    "retail": { ingredientTarget: "50-65% (매입원가)", laborTarget: "10-15%", rentTarget: "8-12%" },
-    "beauty": { ingredientTarget: "10-15%", laborTarget: "40-50%", rentTarget: "10-15%" },
-    "fitness": { ingredientTarget: "5-10%", laborTarget: "35-45%", rentTarget: "15-20%" },
-    "education": { ingredientTarget: "5-10%", laborTarget: "40-50%", rentTarget: "12-18%" },
-    "pet": { ingredientTarget: "40-50%", laborTarget: "20-25%", rentTarget: "10-15%" },
-    "living-service": { ingredientTarget: "15-25%", laborTarget: "35-40%", rentTarget: "8-12%" },
-    "online-digital": { ingredientTarget: "0-10%", laborTarget: "20-30%", rentTarget: "3-5%" },
-    "startup-tech": { ingredientTarget: "0-5% (인프라)", laborTarget: "50-70%", rentTarget: "5-10%" },
+    "food": { ingredientTarget: "30-35%", laborTarget: "25-30%", rentTarget: "8-15%" },
+    "cafe-dessert": { ingredientTarget: "25-35%", laborTarget: "20-28%", rentTarget: "10-18%" },
+    "retail": { ingredientTarget: "50-65% (매입원가)", laborTarget: "8-15%", rentTarget: "8-15%" },
+    "beauty": { ingredientTarget: "8-15%", laborTarget: "40-50%", rentTarget: "10-15%" },
+    "fitness": { ingredientTarget: "0-5%", laborTarget: "20-30%", rentTarget: "15-25%" },
+    "education": { ingredientTarget: "10-18%", laborTarget: "30-40%", rentTarget: "12-18%" },
+    "pet": { ingredientTarget: "15-25%", laborTarget: "25-35%", rentTarget: "10-15%" },
+    "living-service": { ingredientTarget: "10-20%", laborTarget: "20-35%", rentTarget: "8-15%" },
+    "space": { ingredientTarget: "3-8%", laborTarget: "10-20%", rentTarget: "20-30%" },
+    "online-digital": { ingredientTarget: "20-40% (매입원가)", laborTarget: "5-15%", rentTarget: "10-20% (플랫폼)" },
+    "startup-tech": { ingredientTarget: "5-15% (인프라)", laborTarget: "50-70%", rentTarget: "5-10%" },
   };
   return benchmarkMap[categoryId] ?? { ingredientTarget: "30-35%", laborTarget: "25-30%", rentTarget: "8-15%" };
 }
