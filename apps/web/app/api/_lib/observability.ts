@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 type LogLevel = "info" | "warn" | "error";
 
 type LogPayload = {
@@ -53,6 +55,11 @@ export function logApiError(route: string, event: LogPayload["event"], error: un
     event,
     detail: toSafeErrorDetail(error),
     ...extras
+  });
+
+  Sentry.captureException(error instanceof Error ? error : new Error(toSafeErrorDetail(error)), {
+    tags: { area: "ai", route, event },
+    extra: { ...extras },
   });
 }
 
