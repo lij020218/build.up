@@ -179,7 +179,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "1997년 파산 90일 전, 잡스는 제품 라인 70%를 삭감하고 4개에만 집중했습니다",
     lesson: "매출 하락 시 메뉴/상품을 줄여 핵심에 집중하세요",
-    applicableTo: ["all"],
+    applicableTo: ["food", "cafe-dessert", "retail", "online-digital"],
   },
   {
     id: "nvidia-cuda",
@@ -195,7 +195,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "1983년 도쿄선언으로 반도체 올인, 불황기 역행 투자로 6개월 만에 64K D램을 개발했습니다",
     lesson: "불황일 때 투자하면 호황에 수확합니다",
-    applicableTo: ["startup-tech", "all"],
+    applicableTo: ["startup-tech", "online-digital"],
   },
   {
     id: "hyundai-warranty",
@@ -203,7 +203,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "미국에서 품질 불신 시절 '10년 10만마일 보증'을 업계 최초로 도입해 판매량이 급증했습니다",
     lesson: "약점을 역으로 파격 보증하면 신뢰로 전환됩니다",
-    applicableTo: ["all"],
+    applicableTo: ["food", "cafe-dessert", "beauty", "fitness", "pet", "living-service"],
   },
   {
     id: "naver-superapp",
@@ -219,7 +219,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "2008년 과잉 확장으로 품질 하락 — 슐츠 복귀 후 7,100개 매장 동시 교육 폐쇄, 900개 폐점했습니다",
     lesson: "확장보다 기본기 회복이 먼저입니다",
-    applicableTo: ["cafe-dessert", "food", "all"],
+    applicableTo: ["cafe-dessert", "food", "beauty", "fitness"],
   },
   {
     id: "lego-2003",
@@ -227,7 +227,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "2003년 파산 직전, 부품을 7,000→3,000개로 축소하고 핵심에 집중해 2008년 불황에도 수익 4배를 달성했습니다",
     lesson: "잘하는 것만 남기고 나머지는 버리세요",
-    applicableTo: ["retail", "all"],
+    applicableTo: ["retail", "food", "cafe-dessert", "pet"],
   },
   {
     id: "adobe-saas",
@@ -245,7 +245,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "competitor-pressure",
     oneLiner: "블록버스터의 연체료라는 약점을 파고들어 구독 모델로 전환, 경쟁자를 파산시켰습니다",
     lesson: "경쟁자의 약점이 곧 당신의 기회입니다",
-    applicableTo: ["all"],
+    applicableTo: ["startup-tech", "online-digital", "retail"],
   },
   {
     id: "zoom-simplicity",
@@ -295,7 +295,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "cost-crisis",
     oneLiner: "1985년 메모리 사업 적자 — '새 CEO라면 어떻게 할까?' 질문 후 CPU로 전환했습니다",
     lesson: "가장 어려운 결정은 잘하던 것을 포기하는 것",
-    applicableTo: ["startup-tech", "all"],
+    applicableTo: ["startup-tech", "food", "retail"],
   },
   {
     id: "danaher-dbs",
@@ -303,7 +303,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "scaling-decision",
     oneLiner: "산업용 도구 회사가 DBS(다나허 경영 시스템)를 만들어 80+ 기업을 인수·개선했습니다",
     lesson: "시스템을 만들면 어떤 사업이든 개선할 수 있습니다",
-    applicableTo: ["all"],
+    applicableTo: ["startup-tech", "retail", "food", "cafe-dessert", "beauty", "fitness"],
   },
   {
     id: "microsoft-cloud",
@@ -345,7 +345,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "scaling-decision",
     oneLiner: "트럼프 카드 제조 120년 역사에서 비디오게임 진입, Wii로 비게이머를 공략해 시장을 키웠습니다",
     lesson: "기존 고객이 아닌 새 고객을 만들면 시장이 커집니다",
-    applicableTo: ["all"],
+    applicableTo: ["startup-tech", "online-digital", "education", "fitness", "space"],
   },
   {
     id: "ridi-webtoon",
@@ -573,7 +573,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "seasonal-slump",
     oneLiner: "반도체 불황기에 오히려 설비 투자를 늘려 경쟁사가 줄일 때 생산 능력을 확보, 호황기에 시장을 석권했습니다",
     lesson: "비수기에 시설/교육 투자하면 성수기에 빛납니다",
-    applicableTo: ["all"],
+    applicableTo: ["food", "cafe-dessert", "fitness", "space", "education", "retail"],
   },
 
   // ═══ 신규: expansion-ready (3) ═══
@@ -591,7 +591,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "expansion-ready",
     oneLiner: "2008년 과잉 확장으로 품질이 하락하자 900개 매장을 폐점하고 기본기를 다시 잡았습니다",
     lesson: "수익성 없는 확장은 전체를 위험에 빠뜨립니다",
-    applicableTo: ["all"],
+    applicableTo: ["food", "cafe-dessert", "beauty", "fitness", "retail"],
   },
   {
     id: "danggeun-expansion",
@@ -651,7 +651,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "rent-crisis",
     oneLiner: "장기 임대+단기 전대 모델에서 고정 임대료가 매출을 초과, 결국 파산 신청에 이르렀습니다",
     lesson: "고정 임대료가 매출의 15%를 넘으면 구조 재검토",
-    applicableTo: ["all"],
+    applicableTo: ["food", "cafe-dessert", "retail", "beauty", "fitness", "space", "living-service"],
   },
 ];
 

@@ -343,7 +343,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     regionalVariance: { highRegion: "서울", highAnnualRevenue: 74600, lowRegion: "경남", lowAnnualRevenue: 40000 },
   },
 
-  // ── 뷰티/피트니스 ──
+  // ── 뷰티 ──
   {
     brandId: "juno-hair",
     avgMonthlyRevenue: 10417,
@@ -354,6 +354,149 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
       "프리미엄 미용 최상위 — 디자이너 개인 역량이 핵심",
       "VIP 멤버십 기반 단골 재방문율 관리",
       "스타일리스트 교육·리텐션이 매출 직결",
+    ],
+  },
+  {
+    brandId: "leekaja-hairbis",
+    avgMonthlyRevenue: 7500,
+    topStoreMonthlyRevenue: 18000,
+    topStoreMultiplier: 2.4,
+    costStructure: { ingredientRatio: 10, laborRatio: 42, rentRatio: 13 },
+    operationalInsights: [
+      "30년+ 브랜드 인지도 기반 안정적 고객 확보",
+      "주니어→시니어 디자이너 육성 시스템 체계화",
+    ],
+  },
+  {
+    brandId: "blue-club",
+    avgMonthlyRevenue: 3500,
+    topStoreMonthlyRevenue: 7500,
+    topStoreMultiplier: 2.1,
+    costStructure: { ingredientRatio: 8, laborRatio: 35, rentRatio: 10 },
+    operationalInsights: [
+      "저가 남성 전문 — 빠른 회전율(15분 컷) 기반 수익 모델",
+      "인건비 대비 매출 효율 극대화 (1인 운영 가능)",
+    ],
+  },
+
+  // ── 피트니스 ──
+  {
+    brandId: "anytime-fitness",
+    avgMonthlyRevenue: 5000,
+    topStoreMonthlyRevenue: 12000,
+    topStoreMultiplier: 2.4,
+    costStructure: { ingredientRatio: 0, laborRatio: 25, rentRatio: 20 },
+    operationalInsights: [
+      "24시간 무인 운영으로 인건비 최소화",
+      "월 회원비 모델 — 안정적 반복 매출",
+      "글로벌 브랜드 인지도 + 상호 이용 혜택",
+    ],
+  },
+  {
+    brandId: "curves",
+    avgMonthlyRevenue: 4200,
+    topStoreMonthlyRevenue: 9000,
+    topStoreMultiplier: 2.1,
+    costStructure: { ingredientRatio: 0, laborRatio: 30, rentRatio: 18 },
+    operationalInsights: [
+      "여성 전용 소규모 서킷 트레이닝 — 낮은 진입 장벽",
+      "소형 매장(20평)으로 임대료 절감",
+    ],
+  },
+
+  // ── 교육 ──
+  {
+    brandId: "eye-level",
+    avgMonthlyRevenue: 4500,
+    topStoreMonthlyRevenue: 10000,
+    topStoreMultiplier: 2.2,
+    costStructure: { ingredientRatio: 15, laborRatio: 35, rentRatio: 15 },
+    operationalInsights: [
+      "대교 브랜드 기반 학부모 신뢰 확보",
+      "교재 로열티 수익 + 수강료 이중 매출 구조",
+    ],
+  },
+  {
+    brandId: "kumon",
+    avgMonthlyRevenue: 3800,
+    topStoreMonthlyRevenue: 8500,
+    topStoreMultiplier: 2.2,
+    costStructure: { ingredientRatio: 12, laborRatio: 30, rentRatio: 12 },
+    operationalInsights: [
+      "자기주도학습 브랜드 — 소규모 운영 가능",
+      "교재 구독 모델 기반 안정적 수익",
+    ],
+  },
+
+  // ── 펫 ──
+  {
+    brandId: "petbox",
+    avgMonthlyRevenue: 5500,
+    topStoreMonthlyRevenue: 12000,
+    topStoreMultiplier: 2.2,
+    costStructure: { ingredientRatio: 40, laborRatio: 20, rentRatio: 12 },
+    operationalInsights: [
+      "펫 용품 + 미용 + 호텔 복합 매장 모델",
+      "반려동물 등록 고객 기반 반복 구매율 높음",
+    ],
+  },
+  {
+    brandId: "dogmate",
+    avgMonthlyRevenue: 3500,
+    topStoreMonthlyRevenue: 8000,
+    topStoreMultiplier: 2.3,
+    costStructure: { ingredientRatio: 15, laborRatio: 35, rentRatio: 15 },
+    operationalInsights: [
+      "반려견 미용 전문 — 기술력 기반 프리미엄 가격",
+      "SNS 비포/애프터로 신규 고객 유입",
+    ],
+  },
+
+  // ── 생활서비스 ──
+  {
+    brandId: "cleanbasket",
+    avgMonthlyRevenue: 4000,
+    topStoreMonthlyRevenue: 9000,
+    topStoreMultiplier: 2.3,
+    costStructure: { ingredientRatio: 20, laborRatio: 30, rentRatio: 10 },
+    operationalInsights: [
+      "모바일 주문 기반 세탁 O2O — 픽업/배달 서비스",
+      "구독 모델(월 정기 세탁)로 안정적 반복 매출",
+    ],
+  },
+  {
+    brandId: "wash-enjoy",
+    avgMonthlyRevenue: 2800,
+    topStoreMonthlyRevenue: 6000,
+    topStoreMultiplier: 2.1,
+    costStructure: { ingredientRatio: 15, laborRatio: 5, rentRatio: 20 },
+    operationalInsights: [
+      "셀프빨래방 — 무인 운영으로 인건비 제로",
+      "장비 투자 대비 안정적 회수 (3-4년 BEP)",
+    ],
+  },
+
+  // ── 공간 ──
+  {
+    brandId: "toc-study-cafe",
+    avgMonthlyRevenue: 5000,
+    topStoreMonthlyRevenue: 12000,
+    topStoreMultiplier: 2.4,
+    costStructure: { ingredientRatio: 5, laborRatio: 15, rentRatio: 25 },
+    operationalInsights: [
+      "스터디카페 시장 선두 — 자동 좌석 관리 시스템",
+      "음료 자판기 부가 매출 + 시간대별 요금 차등",
+    ],
+  },
+  {
+    brandId: "friends-screen-golf",
+    avgMonthlyRevenue: 6000,
+    topStoreMonthlyRevenue: 14000,
+    topStoreMultiplier: 2.3,
+    costStructure: { ingredientRatio: 8, laborRatio: 15, rentRatio: 22 },
+    operationalInsights: [
+      "스크린골프 + F&B 복합 매출 모델",
+      "시뮬레이터 장비 고정비 대비 높은 시간당 매출",
     ],
   },
 ];

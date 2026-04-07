@@ -50,3 +50,4 @@ export * from "./knowledge/investment-terms";
 export * from "./knowledge/franchise-benchmarks";
 export * from "./knowledge/success-case-studies";
 export * from "./sales-collection";
+export * from "./constants/benchmarks";
