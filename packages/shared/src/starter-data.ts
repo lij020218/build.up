@@ -1509,7 +1509,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     stepNumber: 9,
     totalSteps: 14,
     goal: "Confirm suppliers, finalize equipment purchases or rentals, and set up POS.",
-    whyNow: "Supply chain and equipment decisions directly affect day-one cash flow.",
+    whyNow: "Supply chain and equipment decisions directly affect day-one cash flow. Tip: Start vendor research now, but finalize contracts after business registration — most Korean suppliers require a 사업자등록번호 for invoicing.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["supplier-identified", "equipment-planned", "pos-selected"]
@@ -1578,7 +1578,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Operations and marketing",
     type: "execution",
     status: "locked",
-    stepNumber: 12,
+    stepNumber: 13,
     totalSteps: 15,
     goal: "Register on delivery platforms, go live with POS, and prepare SNS and local marketing.",
     whyNow: "Customers need to be able to find you from day one — late marketing setup means lost early revenue.",
@@ -1596,7 +1596,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Soft open",
     type: "execution",
     status: "locked",
-    stepNumber: 13,
+    stepNumber: 14,
     totalSteps: 15,
     goal: "Run a soft open with a limited audience, collect feedback, and complete the final pre-opening checklist.",
     whyNow: "A soft open surfaces operational problems before they reach paying customers at scale.",
