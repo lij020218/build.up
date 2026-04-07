@@ -510,6 +510,133 @@ export const PERMIT_MATRIX: CategoryPermitSet[] = [
       },
     ],
   },
+
+  // ── startup-tech ──────────────────────────────────────────────────────────
+  {
+    categoryId: "startup-tech",
+    label: { ko: "IT·스타트업", en: "Tech Startup" },
+    permits: [
+      bizRegistration,
+      {
+        id: "corporate-registration",
+        name: { ko: "법인 설립 등기", en: "Corporation Registration" },
+        priority: "recommended",
+        agency: { ko: "관할 등기소 (대법원 인터넷등기소)", en: "District Registry Office" },
+        costWon: 450_000,
+        costNote: { ko: "등록면허세 + 교육세 + 등기수수료 (자본금 규모에 따라 변동)", en: "Registration tax + education tax + filing fee (varies by capital)" },
+        duration: { ko: "3~7일 (서류 준비 포함)", en: "3-7 days (including document prep)" },
+        applyUrl: "http://www.iros.go.kr",
+        documents: [
+          { ko: "정관", en: "Articles of incorporation" },
+          { ko: "발기인 총회 의사록", en: "Founders' meeting minutes" },
+          { ko: "주금납입증명서 (은행)", en: "Capital deposit certificate (bank)" },
+          { ko: "대표이사 취임승낙서 + 인감증명서", en: "CEO acceptance letter + seal certificate" },
+          { ko: "법인인감도장", en: "Corporate seal" },
+        ],
+        steps: [
+          { ko: "정관 작성 (사업 목적, 자본금, 주식 구조 결정)", en: "Draft articles of incorporation" },
+          { ko: "발기인 총회 개최 및 의사록 작성", en: "Hold founders' meeting and record minutes" },
+          { ko: "은행에 자본금 납입 → 납입증명서 발급", en: "Deposit capital at bank → get certificate" },
+          { ko: "관할 등기소에 법인 설립 등기 신청", en: "File incorporation at district registry" },
+          { ko: "법인 사업자등록 (세무서)", en: "Register corporate business (tax office)" },
+        ],
+        warnings: [
+          { ko: "1인 법인도 가능하지만, 공동창업 시 주주간계약서 필수", en: "Solo corp OK, but shareholder agreement required for co-founders" },
+          { ko: "법인 설립 후 2주 이내 사업자등록 필요 (지연 시 가산세)", en: "Must register for business within 2 weeks of incorporation (penalty for delay)" },
+        ],
+      },
+      {
+        id: "telecom-sales-report",
+        name: { ko: "통신판매업 신고", en: "Telecom Sales Report" },
+        priority: "conditional",
+        agency: { ko: "관할 구청 (지역경제과)", en: "District Office (Local Economy Dept)" },
+        costWon: 0,
+        duration: { ko: "즉일~3일", en: "Same day to 3 days" },
+        applyUrl: "https://www.gov.kr",
+        documents: [
+          { ko: "사업자등록증 사본", en: "Business registration copy" },
+          { ko: "구매안전서비스 이용 확인증 (에스크로/PG)", en: "Purchase safety service confirmation" },
+        ],
+        steps: [
+          { ko: "PG사 또는 에스크로 서비스 가입", en: "Sign up for PG or escrow service" },
+          { ko: "정부24에서 통신판매업 신고", en: "Report on Gov24" },
+        ],
+        warnings: [
+          { ko: "유료 SaaS, 앱 결제가 있으면 필수", en: "Required if you have paid SaaS or in-app purchases" },
+          { ko: "무료 서비스만 제공하면 불필요", en: "Not required for free-only services" },
+        ],
+      },
+      {
+        id: "venture-certification",
+        name: { ko: "벤처기업 확인 (벤처인증)", en: "Venture Certification" },
+        priority: "recommended",
+        agency: { ko: "벤처확인기관 (기보, 중진공 등)", en: "Venture verification agency (KIBO, KOSME, etc.)" },
+        costWon: 0,
+        costNote: { ko: "신청 무료, 확인서 발급 무료", en: "Application and certificate are free" },
+        duration: { ko: "접수 후 15~30일", en: "15-30 days after submission" },
+        applyUrl: "https://www.smes.go.kr/venturein",
+        documents: [
+          { ko: "사업계획서", en: "Business plan" },
+          { ko: "재무제표 (창업 초기는 추정 재무제표 가능)", en: "Financial statements (projections OK for early-stage)" },
+          { ko: "기술성 증빙 (특허, 소프트웨어 등록증 등)", en: "Tech proof (patents, SW registration, etc.)" },
+        ],
+        steps: [
+          { ko: "벤처인 사이트에서 온라인 신청", en: "Apply online at VentureIn" },
+          { ko: "기술성/사업성 평가 (서면 또는 대면)", en: "Tech/business evaluation (written or in-person)" },
+          { ko: "벤처기업 확인서 발급", en: "Venture certificate issued" },
+        ],
+        warnings: [
+          { ko: "벤처인증 시 소득세·법인세 50% 감면 (최대 5년), 병역특례 가능", en: "50% tax reduction (up to 5yr), military service exemption eligible" },
+          { ko: "기술보증기금 보증 기반이 가장 빠른 경로", en: "KIBO technology guarantee is the fastest path" },
+        ],
+      },
+      {
+        id: "privacy-compliance",
+        name: { ko: "개인정보 처리방침 수립", en: "Privacy Policy Compliance" },
+        priority: "required",
+        agency: { ko: "개인정보보호위원회 (자체 수립)", en: "PIPC (self-established)" },
+        costWon: 0,
+        duration: { ko: "1~3일 (자체 작성)", en: "1-3 days (self-drafted)" },
+        applyUrl: "https://www.privacy.go.kr",
+        documents: [
+          { ko: "개인정보 처리방침 문서", en: "Privacy policy document" },
+          { ko: "개인정보 처리 대장 (내부 관리용)", en: "Personal data processing log (internal)" },
+        ],
+        steps: [
+          { ko: "수집하는 개인정보 항목 정리", en: "List all personal data collected" },
+          { ko: "개인정보 처리방침 작성 (개인정보보호포털 템플릿 활용)", en: "Draft privacy policy (use PIPC template)" },
+          { ko: "서비스 내 공개 게시 (웹사이트/앱)", en: "Publish in service (website/app)" },
+        ],
+        warnings: [
+          { ko: "사용자 1명이라도 개인정보를 수집하면 즉시 의무 발생", en: "Obligation starts from collecting even 1 user's data" },
+          { ko: "위반 시 과태료 최대 5천만원", en: "Up to 50M KRW penalty for violations" },
+        ],
+      },
+      {
+        id: "sw-registration",
+        name: { ko: "소프트웨어 등록 (프로그램 등록)", en: "Software Registration" },
+        priority: "recommended",
+        agency: { ko: "한국저작권위원회", en: "Korea Copyright Commission" },
+        costWon: 0,
+        costNote: { ko: "온라인 신청 무료", en: "Free online application" },
+        duration: { ko: "접수 후 7~14일", en: "7-14 days after submission" },
+        applyUrl: "https://www.cros.or.kr",
+        documents: [
+          { ko: "프로그램 설명서", en: "Program description" },
+          { ko: "소스코드 일부 (30페이지 이상)", en: "Partial source code (30+ pages)" },
+        ],
+        steps: [
+          { ko: "한국저작권위원회 CROS 사이트에서 신청", en: "Apply at CROS website" },
+          { ko: "프로그램 설명서 + 소스코드 제출", en: "Submit description + source code" },
+          { ko: "등록증 발급", en: "Registration certificate issued" },
+        ],
+        warnings: [
+          { ko: "벤처인증 신청 시 기술성 증빙으로 활용 가능", en: "Can be used as tech proof for venture certification" },
+          { ko: "법적 분쟁 시 저작권 입증에 유리", en: "Helpful for proving copyright in legal disputes" },
+        ],
+      },
+    ],
+  },
 ];
 
 // ── 유틸리티 함수 ──────────────────────────────────────────────────────────

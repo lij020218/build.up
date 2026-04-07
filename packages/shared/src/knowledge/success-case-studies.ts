@@ -179,7 +179,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "1997년 파산 90일 전, 잡스는 제품 라인 70%를 삭감하고 4개에만 집중했습니다",
     lesson: "매출 하락 시 메뉴/상품을 줄여 핵심에 집중하세요",
-    applicableTo: ["food", "cafe-dessert", "retail", "online-digital"],
+    applicableTo: ["food", "cafe-dessert", "retail", "online-digital", "startup-tech"],
   },
   {
     id: "nvidia-cuda",
@@ -203,7 +203,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "미국에서 품질 불신 시절 '10년 10만마일 보증'을 업계 최초로 도입해 판매량이 급증했습니다",
     lesson: "약점을 역으로 파격 보증하면 신뢰로 전환됩니다",
-    applicableTo: ["food", "cafe-dessert", "beauty", "fitness", "pet", "living-service"],
+    applicableTo: ["food", "cafe-dessert", "beauty", "fitness", "pet", "living-service", "retail", "education", "space"],
   },
   {
     id: "naver-superapp",
@@ -219,7 +219,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "2008년 과잉 확장으로 품질 하락 — 슐츠 복귀 후 7,100개 매장 동시 교육 폐쇄, 900개 폐점했습니다",
     lesson: "확장보다 기본기 회복이 먼저입니다",
-    applicableTo: ["cafe-dessert", "food", "beauty", "fitness"],
+    applicableTo: ["cafe-dessert", "food", "beauty", "fitness", "retail", "education", "pet"],
   },
   {
     id: "lego-2003",
@@ -227,7 +227,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "revenue-decline",
     oneLiner: "2003년 파산 직전, 부품을 7,000→3,000개로 축소하고 핵심에 집중해 2008년 불황에도 수익 4배를 달성했습니다",
     lesson: "잘하는 것만 남기고 나머지는 버리세요",
-    applicableTo: ["retail", "food", "cafe-dessert", "pet"],
+    applicableTo: ["retail", "food", "cafe-dessert", "pet", "beauty", "online-digital"],
   },
   {
     id: "adobe-saas",
@@ -295,7 +295,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "cost-crisis",
     oneLiner: "1985년 메모리 사업 적자 — '새 CEO라면 어떻게 할까?' 질문 후 CPU로 전환했습니다",
     lesson: "가장 어려운 결정은 잘하던 것을 포기하는 것",
-    applicableTo: ["startup-tech", "food", "retail"],
+    applicableTo: ["startup-tech"],
   },
   {
     id: "danaher-dbs",
@@ -303,7 +303,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "scaling-decision",
     oneLiner: "산업용 도구 회사가 DBS(다나허 경영 시스템)를 만들어 80+ 기업을 인수·개선했습니다",
     lesson: "시스템을 만들면 어떤 사업이든 개선할 수 있습니다",
-    applicableTo: ["startup-tech", "retail", "food", "cafe-dessert", "beauty", "fitness"],
+    applicableTo: ["startup-tech"],
   },
   {
     id: "microsoft-cloud",
@@ -437,7 +437,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "small-biz-turnaround",
     oneLiner: "매출 정체 음식점이 킬러 정보성 콘텐츠를 제작, 팔로워 6배 증가로 방문객 3배를 달성했습니다",
     lesson: "SNS는 광고가 아니라 유용한 정보를 공유하세요",
-    applicableTo: ["food", "cafe-dessert", "beauty", "retail"],
+    applicableTo: ["food", "cafe-dessert", "beauty", "retail", "pet", "fitness"],
   },
   {
     id: "tv-effect",
@@ -471,7 +471,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "marketing-stagnant",
     oneLiner: "매출 꼴찌 마케터가 킬러 정보성 콘텐츠 전략으로 팔로워를 6배 늘리고 매출 1위를 달성했습니다",
     lesson: "SNS는 광고가 아니라 유용한 정보를 공유하세요",
-    applicableTo: ["food", "cafe-dessert", "beauty", "retail", "online-digital"],
+    applicableTo: ["food", "cafe-dessert", "beauty", "retail", "online-digital", "pet", "fitness"],
   },
   {
     id: "dollar-shave-club",
@@ -521,7 +521,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "menu-fatigue",
     oneLiner: "메뉴 20개를 5개로 줄인 후 품질과 회전율이 올라 매출이 2배가 됐습니다",
     lesson: "메뉴를 줄이면 품질과 효율이 올라갑니다",
-    applicableTo: ["food"],
+    applicableTo: ["food", "cafe-dessert"],
   },
 
   // ═══ 신규: delivery-dependency (3) ═══
@@ -573,7 +573,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "seasonal-slump",
     oneLiner: "반도체 불황기에 오히려 설비 투자를 늘려 경쟁사가 줄일 때 생산 능력을 확보, 호황기에 시장을 석권했습니다",
     lesson: "비수기에 시설/교육 투자하면 성수기에 빛납니다",
-    applicableTo: ["food", "cafe-dessert", "fitness", "space", "education", "retail"],
+    applicableTo: ["food", "cafe-dessert", "fitness", "space", "education", "retail", "beauty", "pet"],
   },
 
   // ═══ 신규: expansion-ready (3) ═══
@@ -583,7 +583,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "expansion-ready",
     oneLiner: "1호점의 운영 매뉴얼을 완벽히 만든 후에야 2호점을 열었고, 지금 1,377개 매장으로 성장했습니다",
     lesson: "2호점 전에 1호점이 사장 없이 돌아가는지 확인하세요",
-    applicableTo: ["food", "cafe-dessert", "retail"],
+    applicableTo: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet"],
   },
   {
     id: "starbucks-overexpansion",
@@ -591,7 +591,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "expansion-ready",
     oneLiner: "2008년 과잉 확장으로 품질이 하락하자 900개 매장을 폐점하고 기본기를 다시 잡았습니다",
     lesson: "수익성 없는 확장은 전체를 위험에 빠뜨립니다",
-    applicableTo: ["food", "cafe-dessert", "beauty", "fitness", "retail"],
+    applicableTo: ["food", "cafe-dessert", "beauty", "fitness", "retail", "education", "pet", "space"],
   },
   {
     id: "danggeun-expansion",
@@ -617,7 +617,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "staff-crisis",
     oneLiner: "업계 평균 2배 급여를 지급해 이직률을 업계 최저로 유지, 교육 비용을 절감하고 서비스 품질을 높였습니다",
     lesson: "좋은 대우가 이직률을 낮추고 서비스를 높입니다",
-    applicableTo: ["retail", "food", "cafe-dessert"],
+    applicableTo: ["retail", "food", "cafe-dessert", "beauty", "fitness", "education", "pet", "living-service"],
   },
   {
     id: "toss-hiring",
@@ -635,7 +635,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "rent-crisis",
     oneLiner: "임대료가 비싼 골목에서 학원가로 리로케이션, 매출이 265% 증가하고 면적당 매출 1위가 됐습니다",
     lesson: "비싼 자리가 좋은 자리는 아닙니다. 리로케이션을 검토하세요",
-    applicableTo: ["food", "cafe-dessert", "retail"],
+    applicableTo: ["food", "cafe-dessert", "retail", "beauty", "education"],
   },
   {
     id: "compose-small-store",
@@ -651,7 +651,7 @@ const CASE_STUDIES: CaseStudy[] = [
     situation: "rent-crisis",
     oneLiner: "장기 임대+단기 전대 모델에서 고정 임대료가 매출을 초과, 결국 파산 신청에 이르렀습니다",
     lesson: "고정 임대료가 매출의 15%를 넘으면 구조 재검토",
-    applicableTo: ["food", "cafe-dessert", "retail", "beauty", "fitness", "space", "living-service"],
+    applicableTo: ["food", "cafe-dessert", "retail", "beauty", "fitness", "space", "living-service", "education", "pet"],
   },
 ];
 
