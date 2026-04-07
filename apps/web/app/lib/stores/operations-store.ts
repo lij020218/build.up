@@ -1,0 +1,339 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+// ─── Types (re-exported from useDashboard for backwards compat) ───
+
+export type InventoryItem = {
+  id: string; name: string; quantity: number; unit: string; minThreshold: number;
+  unitCost: number;
+  category: "fresh" | "dry" | "frozen" | "beverage" | "supply" | "other";
+  itemType: "material" | "product";
+  sellingPrice: number;
+  expiryDate: string; supplierName: string; supplierUrl: string;
+  leadTimeDays: number; dailyUsage: number; lastOrderedAt: string;
+  wasteLog: { date: string; qty: number; reason: string }[];
+};
+
+export type InvForm = {
+  open: boolean; editId: string | null;
+  name: string; qty: string; unit: string; threshold: string; unitCost: string;
+  category: "fresh" | "dry" | "frozen" | "beverage" | "supply" | "other";
+  itemType: "material" | "product";
+  sellingPrice: string;
+  expiryDate: string; supplierName: string; url: string; leadTimeDays: string; dailyUsage: string;
+};
+
+export type Employee = {
+  id: string; name: string; hourlyWage: number; weeklyHours: number; isInsured: boolean;
+};
+
+export type DeliveryPlatform = {
+  id: string; name: string; commissionRate: number; adCostMonthly: number;
+};
+
+export type Product = {
+  id: string; name: string; category: string; price: number; cost: number;
+  stock: number; monthlySold: number; unit: string;
+};
+
+export type UnifiedProduct = {
+  id: string; name: string; category: string; price: number; cost: number;
+  stock: number; monthlySold: number; unit: string;
+  minThreshold: number; supplierName: string; supplierUrl: string;
+  leadTimeDays: number; dailyUsage: number; lastOrderedAt: string; isConsumable: boolean;
+};
+
+export type ServiceMenuItem = {
+  id: string; name: string; category: string; price: number; duration: number; monthlySold: number;
+};
+
+export type TaxSettings = { vatType: "general" | "simplified"; hasEmployees: boolean };
+
+export type FixedExpense = {
+  id: string; name: string; amount: number; dueDay: number;
+  category: "rent" | "loan" | "insurance" | "other";
+};
+
+export type Member = {
+  id: string; name: string; plan: string; fee: number; startDate: string; endDate: string;
+};
+
+// ─── Form defaults ───
+
+const EMPTY_INV_FORM: InvForm = {
+  open: false, editId: null, name: "", qty: "", unit: "개", threshold: "",
+  unitCost: "", category: "other", itemType: "material", sellingPrice: "",
+  expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
+};
+
+// ─── Store ───
+
+type OperationsState = {
+  // 재고
+  inventory: InventoryItem[];
+  invForm: InvForm;
+  invCategoryFilter: string;
+  invWasteTarget: string | null;
+  invWasteQty: string;
+  invWasteReason: string;
+  // 직원
+  employees: Employee[];
+  empFormOpen: boolean;
+  empEditId: string | null;
+  empName: string;
+  empWage: string;
+  empHours: string;
+  empInsured: boolean;
+  // 고정비
+  fixedExpenses: FixedExpense[];
+  fexpFormOpen: boolean;
+  fexpEditId: string | null;
+  fexpName: string;
+  fexpAmount: string;
+  fexpDueDay: string;
+  fexpCategory: FixedExpense["category"];
+  // 배달
+  deliveryPlatforms: DeliveryPlatform[];
+  monthlyDeliverySales: Record<string, number>;
+  dlvFormOpen: boolean;
+  dlvEditId: string | null;
+  dlvName: string;
+  dlvRate: string;
+  dlvAd: string;
+  // 상품
+  products: Product[];
+  prodFormOpen: boolean;
+  prodEditId: string | null;
+  prodName: string;
+  prodCategory: string;
+  prodPrice: string;
+  prodCost: string;
+  prodStock: string;
+  prodUnit: string;
+  // 통합상품/서비스/세금/온라인
+  unifiedProducts: UnifiedProduct[];
+  serviceMenuItems: ServiceMenuItem[];
+  taxSettings: TaxSettings;
+  onlinePlatformSales: Record<string, string>;
+  onlineSelectedPlatforms: string[];
+  onlineSelectedCourier: string;
+  onlineMonthlyParcels: string;
+  // 회원
+  members: Member[];
+  memFormOpen: boolean;
+  memName: string;
+  memPlan: string;
+  memFee: string;
+  memEnd: string;
+};
+
+type OperationsActions = {
+  // 재고
+  setInventory: (items: InventoryItem[]) => void;
+  setInvForm: (form: InvForm | ((prev: InvForm) => InvForm)) => void;
+  setInvCategoryFilter: (v: string) => void;
+  setInvWasteTarget: (v: string | null) => void;
+  setInvWasteQty: (v: string) => void;
+  setInvWasteReason: (v: string) => void;
+  emptyInvForm: () => void;
+  // 직원
+  setEmployees: (items: Employee[]) => void;
+  setEmpFormOpen: (v: boolean) => void;
+  setEmpEditId: (v: string | null) => void;
+  setEmpName: (v: string) => void;
+  setEmpWage: (v: string) => void;
+  setEmpHours: (v: string) => void;
+  setEmpInsured: (v: boolean) => void;
+  // 고정비
+  setFixedExpenses: (items: FixedExpense[]) => void;
+  setFexpFormOpen: (v: boolean) => void;
+  setFexpEditId: (v: string | null) => void;
+  setFexpName: (v: string) => void;
+  setFexpAmount: (v: string) => void;
+  setFexpDueDay: (v: string) => void;
+  setFexpCategory: (v: FixedExpense["category"]) => void;
+  // 배달
+  setDeliveryPlatforms: (items: DeliveryPlatform[]) => void;
+  setMonthlyDeliverySales: (v: Record<string, number>) => void;
+  setDlvFormOpen: (v: boolean) => void;
+  setDlvEditId: (v: string | null) => void;
+  setDlvName: (v: string) => void;
+  setDlvRate: (v: string) => void;
+  setDlvAd: (v: string) => void;
+  // 상품
+  setProducts: (items: Product[]) => void;
+  setProdFormOpen: (v: boolean) => void;
+  setProdEditId: (v: string | null) => void;
+  setProdName: (v: string) => void;
+  setProdCategory: (v: string) => void;
+  setProdPrice: (v: string) => void;
+  setProdCost: (v: string) => void;
+  setProdStock: (v: string) => void;
+  setProdUnit: (v: string) => void;
+  // 통합상품/서비스/세금/온라인
+  setUnifiedProducts: (items: UnifiedProduct[]) => void;
+  setServiceMenuItems: (items: ServiceMenuItem[]) => void;
+  setTaxSettings: (v: TaxSettings | ((prev: TaxSettings) => TaxSettings)) => void;
+  setOnlinePlatformSales: (v: Record<string, string>) => void;
+  setOnlineSelectedPlatforms: (v: string[]) => void;
+  setOnlineSelectedCourier: (v: string) => void;
+  setOnlineMonthlyParcels: (v: string) => void;
+  // 회원
+  setMembers: (items: Member[]) => void;
+  setMemFormOpen: (v: boolean) => void;
+  setMemName: (v: string) => void;
+  setMemPlan: (v: string) => void;
+  setMemFee: (v: string) => void;
+  setMemEnd: (v: string) => void;
+  // 리셋
+  resetAll: () => void;
+};
+
+const initialState: OperationsState = {
+  inventory: [],
+  invForm: EMPTY_INV_FORM,
+  invCategoryFilter: "all",
+  invWasteTarget: null,
+  invWasteQty: "",
+  invWasteReason: "",
+  employees: [],
+  empFormOpen: false,
+  empEditId: null,
+  empName: "",
+  empWage: "",
+  empHours: "",
+  empInsured: false,
+  fixedExpenses: [],
+  fexpFormOpen: false,
+  fexpEditId: null,
+  fexpName: "",
+  fexpAmount: "",
+  fexpDueDay: "",
+  fexpCategory: "other",
+  deliveryPlatforms: [],
+  monthlyDeliverySales: {},
+  dlvFormOpen: false,
+  dlvEditId: null,
+  dlvName: "",
+  dlvRate: "",
+  dlvAd: "",
+  products: [],
+  prodFormOpen: false,
+  prodEditId: null,
+  prodName: "",
+  prodCategory: "",
+  prodPrice: "",
+  prodCost: "",
+  prodStock: "",
+  prodUnit: "개",
+  unifiedProducts: [],
+  serviceMenuItems: [],
+  taxSettings: { vatType: "general", hasEmployees: false },
+  onlinePlatformSales: {},
+  onlineSelectedPlatforms: [],
+  onlineSelectedCourier: "cj",
+  onlineMonthlyParcels: "",
+  members: [],
+  memFormOpen: false,
+  memName: "",
+  memPlan: "",
+  memFee: "",
+  memEnd: "",
+};
+
+export const useOperationsStore = create<OperationsState & OperationsActions>()(
+  persist(
+    (set) => ({
+      ...initialState,
+
+      // 재고
+      setInventory: (items) => set({ inventory: items }),
+      setInvForm: (form) =>
+        set((s) => ({ invForm: typeof form === "function" ? form(s.invForm) : form })),
+      setInvCategoryFilter: (v) => set({ invCategoryFilter: v }),
+      setInvWasteTarget: (v) => set({ invWasteTarget: v }),
+      setInvWasteQty: (v) => set({ invWasteQty: v }),
+      setInvWasteReason: (v) => set({ invWasteReason: v }),
+      emptyInvForm: () => set({ invForm: EMPTY_INV_FORM }),
+
+      // 직원
+      setEmployees: (items) => set({ employees: items }),
+      setEmpFormOpen: (v) => set({ empFormOpen: v }),
+      setEmpEditId: (v) => set({ empEditId: v }),
+      setEmpName: (v) => set({ empName: v }),
+      setEmpWage: (v) => set({ empWage: v }),
+      setEmpHours: (v) => set({ empHours: v }),
+      setEmpInsured: (v) => set({ empInsured: v }),
+
+      // 고정비
+      setFixedExpenses: (items) => set({ fixedExpenses: items }),
+      setFexpFormOpen: (v) => set({ fexpFormOpen: v }),
+      setFexpEditId: (v) => set({ fexpEditId: v }),
+      setFexpName: (v) => set({ fexpName: v }),
+      setFexpAmount: (v) => set({ fexpAmount: v }),
+      setFexpDueDay: (v) => set({ fexpDueDay: v }),
+      setFexpCategory: (v) => set({ fexpCategory: v }),
+
+      // 배달
+      setDeliveryPlatforms: (items) => set({ deliveryPlatforms: items }),
+      setMonthlyDeliverySales: (v) => set({ monthlyDeliverySales: v }),
+      setDlvFormOpen: (v) => set({ dlvFormOpen: v }),
+      setDlvEditId: (v) => set({ dlvEditId: v }),
+      setDlvName: (v) => set({ dlvName: v }),
+      setDlvRate: (v) => set({ dlvRate: v }),
+      setDlvAd: (v) => set({ dlvAd: v }),
+
+      // 상품
+      setProducts: (items) => set({ products: items }),
+      setProdFormOpen: (v) => set({ prodFormOpen: v }),
+      setProdEditId: (v) => set({ prodEditId: v }),
+      setProdName: (v) => set({ prodName: v }),
+      setProdCategory: (v) => set({ prodCategory: v }),
+      setProdPrice: (v) => set({ prodPrice: v }),
+      setProdCost: (v) => set({ prodCost: v }),
+      setProdStock: (v) => set({ prodStock: v }),
+      setProdUnit: (v) => set({ prodUnit: v }),
+
+      // 통합상품/서비스/세금/온라인
+      setUnifiedProducts: (items) => set({ unifiedProducts: items }),
+      setServiceMenuItems: (items) => set({ serviceMenuItems: items }),
+      setTaxSettings: (v) =>
+        set((s) => ({ taxSettings: typeof v === "function" ? v(s.taxSettings) : v })),
+      setOnlinePlatformSales: (v) => set({ onlinePlatformSales: v }),
+      setOnlineSelectedPlatforms: (v) => set({ onlineSelectedPlatforms: v }),
+      setOnlineSelectedCourier: (v) => set({ onlineSelectedCourier: v }),
+      setOnlineMonthlyParcels: (v) => set({ onlineMonthlyParcels: v }),
+
+      // 회원
+      setMembers: (items) => set({ members: items }),
+      setMemFormOpen: (v) => set({ memFormOpen: v }),
+      setMemName: (v) => set({ memName: v }),
+      setMemPlan: (v) => set({ memPlan: v }),
+      setMemFee: (v) => set({ memFee: v }),
+      setMemEnd: (v) => set({ memEnd: v }),
+
+      // 리셋
+      resetAll: () => set(initialState),
+    }),
+    {
+      name: "buildup-operations",
+      partialize: (state) => ({
+        // 폼 UI 상태는 persist 하지 않음 — 데이터만 persist
+        inventory: state.inventory,
+        employees: state.employees,
+        fixedExpenses: state.fixedExpenses,
+        deliveryPlatforms: state.deliveryPlatforms,
+        monthlyDeliverySales: state.monthlyDeliverySales,
+        products: state.products,
+        unifiedProducts: state.unifiedProducts,
+        serviceMenuItems: state.serviceMenuItems,
+        taxSettings: state.taxSettings,
+        onlinePlatformSales: state.onlinePlatformSales,
+        onlineSelectedPlatforms: state.onlineSelectedPlatforms,
+        onlineSelectedCourier: state.onlineSelectedCourier,
+        onlineMonthlyParcels: state.onlineMonthlyParcels,
+        members: state.members,
+      }),
+    },
+  ),
+);

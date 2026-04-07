@@ -15,6 +15,7 @@ export type RoadmapGenerationInput = {
 export type RoadmapGenerationResult = {
   parsed: {
     industryCategoryId: string;
+    _needsCategoryConfirm?: boolean;
     subIndustryId: string;
     industryLabel: string;
     startupType: "independent" | "franchise";

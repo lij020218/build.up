@@ -54,6 +54,10 @@ import {
 } from "@build-up/shared";
 import type { AiStructuredResponse, ContractAnalysisResult, DashboardActionsResponse } from "@build-up/ai";
 import { useEffect, useRef, useState } from "react";
+import {
+  useOperationsStore, useFinanceStore, useAiStore,
+  useProfileStore, useRoadmapStore, useOnboardingStore,
+} from "./stores";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../language-provider";
@@ -163,273 +167,201 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const searchParams = useSearchParams();
   const { language, setLanguage } = useLanguage();
   const copy = getUiCopy(language);
-  const [showOnboardingChoice, setShowOnboardingChoice] = useState(false);
-  const [showExistingOnboarding, setShowExistingOnboarding] = useState(false);
-  const [showAIRoadmapWizard, setShowAIRoadmapWizard] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [resetProgress, setResetProgress] = useState(0);
-  const [showRoleSelection, setShowRoleSelection] = useState(false);
-  const [userRole, setUserRole] = useState<"owner" | "staff" | "manager">("owner");
-  const [decisions, setDecisions] = useState<WorkflowDecisionMap>(() => {
-    try {
-      const cached = localStorage.getItem("__buildup_decisions");
-      return cached ? JSON.parse(cached) : starterDecisionMap;
-    } catch { return starterDecisionMap; }
-  });
-  const [roadmap, setRoadmap] = useState<typeof starterRoadmap>(() => {
-    try {
-      const cached = localStorage.getItem("__buildup_roadmap");
-      return cached ? JSON.parse(cached) : starterRoadmap;
-    } catch { return starterRoadmap; }
-  });
-  const [taskMap, setTaskMap] = useState<WorkflowTaskMap>(() => {
-    try {
-      const cached = localStorage.getItem("__buildup_taskmap");
-      return cached ? JSON.parse(cached) : starterTaskMap;
-    } catch { return starterTaskMap; }
-  });
-  const [viewingStageId, setViewingStageId] = useState<string | null>(null);
-  const [selectedIndustryId, setSelectedIndustryId] = useState<string | undefined>();
-  const [selectedIndustryCategoryId, setSelectedIndustryCategoryId] = useState("food");
-  const [selectedBusinessModelId, setSelectedBusinessModelId] = useState<string | undefined>();
-  const [selectedBudget, setSelectedBudget] = useState<number | undefined>();
-  const [budgetInputText, setBudgetInputText] = useState("");
-  const [selectedOpenDate, setSelectedOpenDate] = useState<string | undefined>();
-  const [selectedLocationId, setSelectedLocationId] = useState<string | undefined>();
-  const [preferredRegionInput, setPreferredRegionInput] = useState("");
-  const [locationMode, setLocationMode] = useState<"recommended" | "direct">("recommended");
-  const [recommendedMarkets, setRecommendedMarkets] = useState<RecommendationItem[]>([]);
-  const [customMarketName, setCustomMarketName] = useState("");
-  const [customMarketReason, setCustomMarketReason] = useState("");
-  const [manualMarketEvaluation, setManualMarketEvaluation] = useState<RecommendationItem | null>(null);
-  const [manualAlternative, setManualAlternative] = useState<RecommendationItem | null>(null);
-  const [selectedContractTaskId, setSelectedContractTaskId] = useState<string | undefined>();
-  const [contractText, setContractText] = useState("");
-  const [contractAnalysisStatus, setContractAnalysisStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [contractAnalysisError, setContractAnalysisError] = useState("");
-  const [contractAnalysis, setContractAnalysis] = useState<ContractAnalysisResult | null>(null);
-  const [showFinancePanel, setShowFinancePanel] = useState(false);
-  const [financeCapitalText, setFinanceCapitalText] = useState("");
-  const [financeMonthlyRentText, setFinanceMonthlyRentText] = useState("");
-  const [financeLaborText, setFinanceLaborText] = useState("");
-  const [financeRevenueText, setFinanceRevenueText] = useState("");
-  const [financeMarketStyle, setFinanceMarketStyle] = useState("balanced");
-  const [financeRentBand, setFinanceRentBand] = useState("mid");
-  const [financeStatus, setFinanceStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [financeError, setFinanceError] = useState("");
-  const [financeResult, setFinanceResult] = useState<FinancialSimulationResult | null>(null);
-  const [financeInterpretation, setFinanceInterpretation] = useState<AiStructuredResponse | null>(null);
-  const [selectedGuideSectionKey, setSelectedGuideSectionKey] = useState<string | undefined>();
-  const [guideQuestion, setGuideQuestion] = useState("");
-  const [guideQaStatus, setGuideQaStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [guideQaError, setGuideQaError] = useState("");
-  const [guideAnswer, setGuideAnswer] = useState<GuideQaAnswer | null>(null);
-  const [knowledgeQaText, setKnowledgeQaText] = useState("");
-  const [knowledgeQaStatus, setKnowledgeQaStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [knowledgeQaError, setKnowledgeQaError] = useState("");
-  const [locationOptions, setLocationOptions] = useState(getStarterLocationOptions("food"));
-  const [locationSourceLabel, setLocationSourceLabel] = useState<string>(copy.common.starterFallback);
-  const [permitGuides, setPermitGuides] = useState<Awaited<ReturnType<typeof loadPermitKnowledge>>>([]);
-  const [taxGuides, setTaxGuides] = useState<Awaited<ReturnType<typeof loadTaxKnowledge>>>([]);
-  const [loanGuides, setLoanGuides] = useState<Awaited<ReturnType<typeof loadLoanKnowledge>>>([]);
-  const [startupType, setStartupType] = useState<"franchise" | "independent" | "undecided" | undefined>();
-  const [selectedFranchiseBrandId, setSelectedFranchiseBrandId] = useState<string | null>(null);
-  const [showFranchisePicker, setShowFranchisePicker] = useState(false);
+  // ── Zustand 스토어 연결 ──
+  const {
+    showOnboardingChoice, setShowOnboardingChoice,
+    showExistingOnboarding, setShowExistingOnboarding,
+    showAIRoadmapWizard, setShowAIRoadmapWizard,
+    showRoleSelection, setShowRoleSelection,
+    userRole, setUserRole,
+    isResetting, setIsResetting,
+    resetProgress, setResetProgress,
+    authLabel, setAuthLabel,
+    persistenceLabel, setPersistenceLabel,
+    persistenceReady, setPersistenceReady,
+    authResolved, setAuthResolved,
+    requiresAuth, setRequiresAuth,
+    showProfileDetails, setShowProfileDetails,
+    showMonthlyCostPrompt, setShowMonthlyCostPrompt,
+    lastUnlocked, setLastUnlocked,
+    selectedStoreIndex, setSelectedStoreIndex,
+    transitionNotice, setTransitionNotice,
+  } = useOnboardingStore();
+
+  const {
+    selectedIndustryId, setSelectedIndustryId,
+    selectedIndustryCategoryId, setSelectedIndustryCategoryId,
+    selectedBusinessModelId, setSelectedBusinessModelId,
+    selectedBudget, setSelectedBudget,
+    budgetInputText, setBudgetInputText,
+    selectedOpenDate, setSelectedOpenDate,
+    selectedLocationId, setSelectedLocationId,
+    preferredRegionInput, setPreferredRegionInput,
+    locationMode, setLocationMode,
+    startupType, setStartupType,
+    selectedFranchiseBrandId, setSelectedFranchiseBrandId,
+    showFranchisePicker, setShowFranchisePicker,
+    storeName, setStoreName,
+    cpaDecision, setCpaDecision,
+    selectedInteriorConcept, setSelectedInteriorConcept,
+    profile, setProfile,
+    saveStatus, setSaveStatus,
+    businessLaunched, setBusinessLaunched,
+    businessLaunchedDate, setBusinessLaunchedDate,
+  } = useProfileStore();
+
+  const {
+    decisions, setDecisions,
+    roadmap, setRoadmap,
+    taskMap, setTaskMap,
+    viewingStageId, setViewingStageId,
+    recommendedMarkets, setRecommendedMarkets,
+    customMarketName, setCustomMarketName,
+    customMarketReason, setCustomMarketReason,
+    manualMarketEvaluation, setManualMarketEvaluation,
+    manualAlternative, setManualAlternative,
+    locationOptions, setLocationOptions,
+    locationSourceLabel, setLocationSourceLabel,
+    vendorSelections, setVendorSelections,
+    vendorCustomInputs, setVendorCustomInputs,
+    opsSelections, setOpsSelections,
+    opsPosChecks, setOpsPosChecks,
+    opsStep, setOpsStep,
+    softOpenChecks, setSoftOpenChecks,
+    softOpenPricing, setSoftOpenPricing,
+    softOpenStep, setSoftOpenStep,
+    softOpenSkips, setSoftOpenSkips,
+    taxChecks, setTaxChecks,
+    loanChecks, setLoanChecks,
+    stageGuideContent, setStageGuideContent,
+    guideStepIndex, setGuideStepIndex,
+    guideSelections, setGuideSelections,
+  } = useRoadmapStore();
+
+  const {
+    showFinancePanel, setShowFinancePanel,
+    financeCapitalText, setFinanceCapitalText,
+    financeMonthlyRentText, setFinanceMonthlyRentText,
+    financeLaborText, setFinanceLaborText,
+    financeRevenueText, setFinanceRevenueText,
+    financeMarketStyle, setFinanceMarketStyle,
+    financeRentBand, setFinanceRentBand,
+    financeStatus, setFinanceStatus,
+    financeError, setFinanceError,
+    financeResult, setFinanceResult,
+    financeInterpretation, setFinanceInterpretation,
+    dailyEntries, setDailyEntries,
+    dailyDateInput, setDailyDateInput,
+    dailySalesInput, setDailySalesInput,
+    dailyCustomersInput, setDailyCustomersInput,
+    monthlyCosts, setMonthlyCosts,
+    costHistory, setCostHistory,
+    costIngredientsText, setCostIngredientsText,
+    costLaborText, setCostLaborText,
+    costRentText, setCostRentText,
+    costUtilitiesText, setCostUtilitiesText,
+    costOtherText, setCostOtherText,
+  } = useFinanceStore();
+
+  const {
+    inventory, setInventory,
+    invForm, setInvForm,
+    invCategoryFilter, setInvCategoryFilter,
+    invWasteTarget, setInvWasteTarget,
+    invWasteQty, setInvWasteQty,
+    invWasteReason, setInvWasteReason,
+    employees, setEmployees,
+    empFormOpen, setEmpFormOpen,
+    empEditId, setEmpEditId,
+    empName, setEmpName,
+    empWage, setEmpWage,
+    empHours, setEmpHours,
+    empInsured, setEmpInsured,
+    fixedExpenses, setFixedExpenses,
+    fexpFormOpen, setFexpFormOpen,
+    fexpEditId, setFexpEditId,
+    fexpName, setFexpName,
+    fexpAmount, setFexpAmount,
+    fexpDueDay, setFexpDueDay,
+    fexpCategory, setFexpCategory,
+    deliveryPlatforms, setDeliveryPlatforms,
+    monthlyDeliverySales, setMonthlyDeliverySales,
+    dlvFormOpen, setDlvFormOpen,
+    dlvEditId, setDlvEditId,
+    dlvName, setDlvName,
+    dlvRate, setDlvRate,
+    dlvAd, setDlvAd,
+    products, setProducts,
+    prodFormOpen, setProdFormOpen,
+    prodEditId, setProdEditId,
+    prodName, setProdName,
+    prodCategory, setProdCategory,
+    prodPrice, setProdPrice,
+    prodCost, setProdCost,
+    prodStock, setProdStock,
+    prodUnit, setProdUnit,
+    unifiedProducts, setUnifiedProducts,
+    serviceMenuItems, setServiceMenuItems,
+    taxSettings, setTaxSettings,
+    onlinePlatformSales, setOnlinePlatformSales,
+    onlineSelectedPlatforms, setOnlineSelectedPlatforms,
+    onlineSelectedCourier, setOnlineSelectedCourier,
+    onlineMonthlyParcels, setOnlineMonthlyParcels,
+    members, setMembers,
+    memFormOpen, setMemFormOpen,
+    memName, setMemName,
+    memPlan, setMemPlan,
+    memFee, setMemFee,
+    memEnd, setMemEnd,
+  } = useOperationsStore();
+
+  const {
+    selectedContractTaskId, setSelectedContractTaskId,
+    contractText, setContractText,
+    contractAnalysisStatus, setContractAnalysisStatus,
+    contractAnalysisError, setContractAnalysisError,
+    contractAnalysis, setContractAnalysis,
+    selectedGuideSectionKey, setSelectedGuideSectionKey,
+    guideQuestion, setGuideQuestion,
+    guideQaStatus, setGuideQaStatus,
+    guideQaError, setGuideQaError,
+    guideAnswer, setGuideAnswer,
+    knowledgeQaText, setKnowledgeQaText,
+    knowledgeQaStatus, setKnowledgeQaStatus,
+    knowledgeQaError, setKnowledgeQaError,
+    permitGuides, setPermitGuides,
+    taxGuides, setTaxGuides,
+    loanGuides, setLoanGuides,
+    aiActions, setAiActions,
+    aiActionsLoading, setAiActionsLoading,
+  } = useAiStore();
+
+  // ── 스토어에 포함되지 않는 로컬 상태 ──
   const [nearbyFranchiseStores, setNearbyFranchiseStores] = useState<{ totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null>(null);
   const [nearbyFranchiseLoading, setNearbyFranchiseLoading] = useState(false);
   const [locationMapReady, setLocationMapReady] = useState(false);
-  const [stageGuideContent, setStageGuideContent] = useState<StageGuideContent | null>(null);
-  const [guideStepIndex, setGuideStepIndex] = useState(0);
-  const [guideSelections, setGuideSelections] = useState<Record<string, string>>({});
-  const [vendorSelections, setVendorSelections] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem("vendorSelections") ?? "{}"); } catch { return {}; }
-  });
-  const [vendorCustomInputs, setVendorCustomInputs] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem("vendorCustomInputs") ?? "{}"); } catch { return {}; }
-  });
-  const [opsSelections, setOpsSelections] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("opsSelections") ?? "{}"); } catch { return {}; }
-  });
-  const [opsPosChecks, setOpsPosChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("opsPosChecks") ?? "{}"); } catch { return {}; }
-  });
-  const [opsStep, setOpsStep] = useState(0);
-  const [softOpenChecks, setSoftOpenChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("softOpenChecks") ?? "{}"); } catch { return {}; }
-  });
-  const [softOpenPricing, setSoftOpenPricing] = useState<string>(() => {
-    try { return localStorage.getItem("softOpenPricing") ?? ""; } catch { return ""; }
-  });
-  const [softOpenStep, setSoftOpenStep] = useState(0);
-  const [softOpenSkips, setSoftOpenSkips] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("softOpenSkips") ?? "{}"); } catch { return {}; }
-  });
-  const [taxChecks, setTaxChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("taxChecks") ?? "{}"); } catch { return {}; }
-  });
-  const [loanChecks, setLoanChecks] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("loanChecks") ?? "{}"); } catch { return {}; }
-  });
-
-  /* Analytics types are defined above the function as exports */
-  const [dailyEntries, setDailyEntries] = useState<DailyEntry[]>(() => {
-    try { return JSON.parse(localStorage.getItem("dailyEntries") ?? "[]"); } catch { return []; }
-  });
-  const [monthlyCosts, setMonthlyCosts] = useState<MonthlyCosts>(() => {
-    const defaults = { ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 };
-    try { return { ...defaults, ...JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}") }; }
-    catch { return defaults; }
-  });
-  const [costHistory, setCostHistory] = useState<CostSnapshot[]>(() => {
-    try { return JSON.parse(localStorage.getItem("costHistory") ?? "[]"); } catch { return []; }
-  });
-  const [inventory, setInventory] = useState<InventoryItem[]>(() => {
-    try { return JSON.parse(localStorage.getItem("inventoryItems") ?? "[]"); } catch { return []; }
-  });
-  const [invForm, setInvForm] = useState<InvForm>({
-    open: false, editId: null, name: "", qty: "", unit: "개", threshold: "",
-    unitCost: "", category: "other", itemType: "material", sellingPrice: "",
-    expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "",
-  });
-  const [invCategoryFilter, setInvCategoryFilter] = useState("all");
-  const [invWasteTarget, setInvWasteTarget] = useState<string | null>(null);
-  const [invWasteQty, setInvWasteQty] = useState("");
-  const [invWasteReason, setInvWasteReason] = useState("");
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    try { return JSON.parse(localStorage.getItem("employees") ?? "[]"); } catch { return []; }
-  });
-  const [empFormOpen, setEmpFormOpen] = useState(false);
-  const [empEditId, setEmpEditId] = useState<string | null>(null);
-  const [empName, setEmpName] = useState("");
-  const [empWage, setEmpWage] = useState("");
-  const [empHours, setEmpHours] = useState("");
-  const [empInsured, setEmpInsured] = useState(false);
-  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>(() => {
-    try { return JSON.parse(localStorage.getItem("fixedExpenses") ?? "[]"); } catch { return []; }
-  });
-  const [fexpFormOpen, setFexpFormOpen] = useState(false);
-  const [fexpEditId, setFexpEditId] = useState<string | null>(null);
-  const [fexpName, setFexpName] = useState("");
-  const [fexpAmount, setFexpAmount] = useState("");
-  const [fexpDueDay, setFexpDueDay] = useState("");
-  const [fexpCategory, setFexpCategory] = useState<FixedExpense["category"]>("other");
-  const [deliveryPlatforms, setDeliveryPlatforms] = useState<DeliveryPlatform[]>(() => {
-    try { return JSON.parse(localStorage.getItem("deliveryPlatforms") ?? "[]"); } catch { return []; }
-  });
-  const [monthlyDeliverySales, setMonthlyDeliverySales] = useState<Record<string, number>>(() => {
-    try { return JSON.parse(localStorage.getItem("monthlyDeliverySales") ?? "{}"); } catch { return {}; }
-  });
-  const [dlvFormOpen, setDlvFormOpen] = useState(false);
-  const [dlvEditId, setDlvEditId] = useState<string | null>(null);
-  const [dlvName, setDlvName] = useState("");
-  const [dlvRate, setDlvRate] = useState("");
-  const [dlvAd, setDlvAd] = useState("");
-  const [products, setProducts] = useState<Product[]>(() => {
-    try { return JSON.parse(localStorage.getItem("products") ?? "[]"); } catch { return []; }
-  });
-  const [prodFormOpen, setProdFormOpen] = useState(false);
-  const [prodEditId, setProdEditId] = useState<string | null>(null);
-  const [prodName, setProdName] = useState("");
-  const [prodCategory, setProdCategory] = useState("");
-  const [prodPrice, setProdPrice] = useState("");
-  const [prodCost, setProdCost] = useState("");
-  const [prodStock, setProdStock] = useState("");
-  const [prodUnit, setProdUnit] = useState("개");
-  // ── 통합 제품 (retail, online, pet) ──
-  const [unifiedProducts, setUnifiedProducts] = useState<UnifiedProduct[]>(() => {
-    try { return JSON.parse(localStorage.getItem("unifiedProducts") ?? "[]"); } catch { return []; }
-  });
-  // ── 서비스 메뉴 (beauty, living-service) ──
-  const [serviceMenuItems, setServiceMenuItems] = useState<ServiceMenuItem[]>(() => {
-    try { return JSON.parse(localStorage.getItem("serviceMenuItems") ?? "[]"); } catch { return []; }
-  });
-  const [taxSettings, setTaxSettings] = useState<TaxSettings>(() => {
-    const defaults = { vatType: "general" as const, hasEmployees: false };
-    try { return { ...defaults, ...JSON.parse(localStorage.getItem("taxSettings") ?? "{}") }; }
-    catch { return defaults; }
-  });
-  // ── 온라인 채널 카드 상태 ──
-  const [onlinePlatformSales, setOnlinePlatformSales] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem("onlinePlatformSales") ?? "{}"); } catch { return {}; }
-  });
-  const [onlineSelectedPlatforms, setOnlineSelectedPlatforms] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("onlineSelectedPlatforms") ?? "[]"); } catch { return []; }
-  });
-  const [onlineSelectedCourier, setOnlineSelectedCourier] = useState<string>(() => {
-    try { return localStorage.getItem("onlineSelectedCourier") ?? "cj"; } catch { return "cj"; }
-  });
-  const [onlineMonthlyParcels, setOnlineMonthlyParcels] = useState(() => {
-    try { return localStorage.getItem("onlineMonthlyParcels") ?? ""; } catch { return ""; }
-  });
-  // ── 수강생/회원 카드 상태 ──
-  const [members, setMembers] = useState<Member[]>(() => {
-    try { return JSON.parse(localStorage.getItem("members") ?? "[]"); } catch { return []; }
-  });
-  const [memFormOpen, setMemFormOpen] = useState(false);
-  const [memName, setMemName] = useState("");
-  const [memPlan, setMemPlan] = useState("");
-  const [memFee, setMemFee] = useState("");
-  const [memEnd, setMemEnd] = useState("");
-  const { setNotifications } = useNotifications();
-  const [businessLaunched, setBusinessLaunched] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try { return localStorage.getItem("businessLaunched") === "true"; } catch { return false; }
-  });
-  const [businessLaunchedDate, setBusinessLaunchedDate] = useState(() => {
-    if (typeof window === "undefined") return null;
-    try { return localStorage.getItem("businessLaunchedDate") ?? null; } catch { return null; }
-  });
-  const [storeName, setStoreName] = useState(() => {
-    try { return localStorage.getItem("storeName") ?? ""; } catch { return ""; }
-  });
-  const [costIngredientsText, setCostIngredientsText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return typeof c.ingredients === "number" ? String(Math.round(c.ingredients / 10000)) : ""; } catch { return ""; }
-  });
-  const [costLaborText, setCostLaborText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return typeof c.labor === "number" ? String(Math.round(c.labor / 10000)) : ""; } catch { return ""; }
-  });
-  const [costRentText, setCostRentText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return typeof c.rent === "number" ? String(Math.round(c.rent / 10000)) : ""; } catch { return ""; }
-  });
-  const [costUtilitiesText, setCostUtilitiesText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return typeof c.utilities === "number" ? String(Math.round(c.utilities / 10000)) : ""; } catch { return ""; }
-  });
-  const [costOtherText, setCostOtherText] = useState(() => {
-    try { const c = JSON.parse(localStorage.getItem("monthlyCosts") ?? "{}"); return typeof c.other === "number" ? String(Math.round(c.other / 10000)) : ""; } catch { return ""; }
-  });
-  const [dailyDateInput, setDailyDateInput] = useState(() => new Date().toISOString().slice(0, 10));
-  const [dailySalesInput, setDailySalesInput] = useState("");
-  const [dailyCustomersInput, setDailyCustomersInput] = useState("");
-  const [cpaDecision, setCpaDecision] = useState<"cpa" | "self" | null>(() => {
-    try { return (localStorage.getItem("cpaDecision") as "cpa" | "self" | null); } catch { return null; }
-  });
-  const [selectedInteriorConcept, setSelectedInteriorConcept] = useState<string | null>(null);
   const [contractors, setContractors] = useState<{ id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }[]>([]);
   const [contractorsLoading, setContractorsLoading] = useState(false);
   const [contractorsRetryKey, setContractorsRetryKey] = useState(0);
-  const [showProfileDetails, setShowProfileDetails] = useState(false);
-  const [showMonthlyCostPrompt, setShowMonthlyCostPrompt] = useState(false);
-  const [lastUnlocked, setLastUnlocked] = useState<string[]>([]);
-  const [selectedStoreIndex, setSelectedStoreIndex] = useState<number | null>(null);
-  const [authLabel, setAuthLabel] = useState<string>(copy.home.notConnected);
-  const [persistenceLabel, setPersistenceLabel] = useState<string>(copy.home.localDemoMode);
-  const [persistenceReady, setPersistenceReady] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [profile, setProfile] = useState<PersistedBusinessProfile | null>(null);
-  const [authResolved, setAuthResolved] = useState(false);
-  const [requiresAuth, setRequiresAuth] = useState(false);
-  const [transitionNotice, setTransitionNotice] = useState<{ title: string; body: string } | null>(null);
+  const { setNotifications } = useNotifications();
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const connectLoadingRef = useRef(false);
   const storeDataTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** localStorage 저장 후 즉시 호출 → 1초 debounce로 Supabase에 flush */
+  // ── 초기값 설정 (스토어 기본값이 copy에 의존하는 경우) ──
+  useEffect(() => {
+    if (!authLabel) setAuthLabel(copy.home.notConnected);
+    if (!persistenceLabel) setPersistenceLabel(copy.home.localDemoMode);
+    if (!locationSourceLabel) setLocationSourceLabel(copy.common.starterFallback);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Zustand 스토어에서 읽어서 1초 debounce로 Supabase에 flush */
   const flushStoreData = () => {
-    if (!persistenceReady) return;
+    if (!useOnboardingStore.getState().persistenceReady) return;
     if (storeDataTimerRef.current) clearTimeout(storeDataTimerRef.current);
     storeDataTimerRef.current = setTimeout(() => {
-      void saveStoreData(supabase, collectLocalStorageData()).catch(() => {});
+      void saveStoreData(supabase, collectStoreData()).catch(() => {});
     }, 1000);
   };
 
@@ -540,9 +472,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     return "healthy";
   })();
 
-  // AI 오늘 할 일 + 위기 해결 방법
-  const [aiActions, setAiActions] = useState<DashboardActionsResponse | null>(null);
-  const [aiActionsLoading, setAiActionsLoading] = useState(false);
+  // AI 오늘 할 일 + 위기 해결 방법 (aiActions, setAiActions, aiActionsLoading, setAiActionsLoading는 ai-store에서)
   const aiActionsLoadedRef = useRef(false);
 
   const fetchAiActions = async () => {
@@ -562,7 +492,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
       const totalCost = mc.ingredients + mc.labor + mc.rent + mc.utilities + mc.other;
       const primeRate = monthlySales > 0 ? ((mc.ingredients + mc.labor) / monthlySales) * 100 : 0;
       const monthlyNet = monthlySales - totalCost;
-      const launchDateStr = businessLaunchedDate ?? localStorage.getItem("businessLaunchedDate");
+      const launchDateStr = businessLaunchedDate;
       const daysSinceLaunchCalc = launchDateStr ? Math.max(0, Math.round((Date.now() - new Date(launchDateStr).getTime()) / 86400000)) : 30;
       const capitalLeft = Math.max(0, (selectedBudget ?? 0) - totalCost * (daysSinceLaunchCalc / 30));
       const runway = totalCost > 0 && monthlyNet < 0 ? Math.max(0, Math.round(capitalLeft / Math.abs(monthlyNet))) : -1;
@@ -860,123 +790,105 @@ export function useDashboard(surface: DashboardSurface = "home") {
   ];
 
   const clearLocalUserData = () => {
-    try { LOCAL_STORAGE_KEYS.forEach(k => localStorage.removeItem(k)); } catch { /* ignore */ }
+    try {
+      LOCAL_STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+      // Zustand persist 키도 정리
+      ["buildup-operations", "buildup-finance", "buildup-profile", "buildup-roadmap"].forEach(k => localStorage.removeItem(k));
+    } catch { /* ignore */ }
   };
 
   const resetLocalState = () => {
-    setBusinessLaunched(false);
-    setStoreName("");
-    setCpaDecision(null);
-    setVendorSelections({});
-    setVendorCustomInputs({});
-    setOpsSelections({});
-    setOpsPosChecks({});
-    setSoftOpenChecks({});
-    setSoftOpenPricing("");
-    setSoftOpenSkips({});
-    setTaxChecks({});
-    setLoanChecks({});
-    setDailyEntries([]);
-    setMonthlyCosts({ ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 });
-    setInventory([]);
-    setInvForm({ open: false, editId: null, name: "", qty: "", unit: "개", threshold: "", unitCost: "", category: "other", itemType: "material" as const, sellingPrice: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "" });
-    setEmployees([]);
-    setFixedExpenses([]);
-    setDeliveryPlatforms([]);
-    setMonthlyDeliverySales({});
-    setProducts([]);
-    setTaxSettings({ vatType: "general", hasEmployees: false });
-    setMembers([]);
-    setUnifiedProducts([]);
-    setServiceMenuItems([]);
-    setCostHistory([]);
-    setCostIngredientsText("");
-    setCostLaborText("");
-    setCostRentText("");
-    setCostUtilitiesText("");
-    setCostOtherText("");
+    useOperationsStore.getState().resetAll();
+    useFinanceStore.getState().resetAll();
+    useProfileStore.getState().resetAll();
+    useRoadmapStore.getState().resetAll();
+    useAiStore.getState().resetAll();
+    useOnboardingStore.getState().resetAll();
   };
 
-  /** Apply Supabase-loaded store data to React state + localStorage cache */
+  /** Apply Supabase-loaded store data to Zustand stores (persist auto-syncs to localStorage) */
   const applyStoreData = (data: UserStoreData) => {
-    if (data.storeName) { setStoreName(data.storeName); try { localStorage.setItem("storeName", data.storeName); } catch {} }
-    if (data.businessLaunched) { setBusinessLaunched(true); try { localStorage.setItem("businessLaunched", "true"); } catch {} }
-    if (data.businessLaunchedDate) { setBusinessLaunchedDate(data.businessLaunchedDate); try { localStorage.setItem("businessLaunchedDate", data.businessLaunchedDate); } catch {} }
-    if (data.cpaDecision === "cpa" || data.cpaDecision === "self") { setCpaDecision(data.cpaDecision); try { localStorage.setItem("cpaDecision", data.cpaDecision); } catch {} }
-    if (data.taxSettings?.vatType) { setTaxSettings(data.taxSettings as TaxSettings); try { localStorage.setItem("taxSettings", JSON.stringify(data.taxSettings)); } catch {} }
+    if (data.storeName) setStoreName(data.storeName);
+    if (data.businessLaunched) setBusinessLaunched(true);
+    if (data.businessLaunchedDate) setBusinessLaunchedDate(data.businessLaunchedDate);
+    if (data.cpaDecision === "cpa" || data.cpaDecision === "self") setCpaDecision(data.cpaDecision);
+    if (data.taxSettings?.vatType) setTaxSettings(data.taxSettings as TaxSettings);
     if (data.monthlyCosts && typeof data.monthlyCosts === "object") {
       const mc = data.monthlyCosts;
       setMonthlyCosts(mc);
-      try { localStorage.setItem("monthlyCosts", JSON.stringify(mc)); } catch {}
       setCostIngredientsText(mc.ingredients ? String(Math.round(mc.ingredients / 10000)) : "");
       setCostLaborText(mc.labor ? String(Math.round(mc.labor / 10000)) : "");
       setCostRentText(mc.rent ? String(Math.round(mc.rent / 10000)) : "");
       setCostUtilitiesText(mc.utilities ? String(Math.round(mc.utilities / 10000)) : "");
       setCostOtherText(mc.other ? String(Math.round(mc.other / 10000)) : "");
     }
-    if (data.dailyEntries?.length) { setDailyEntries(data.dailyEntries as DailyEntry[]); try { localStorage.setItem("dailyEntries", JSON.stringify(data.dailyEntries)); } catch {} }
-    if (data.inventoryItems?.length) { setInventory(data.inventoryItems as InventoryItem[]); try { localStorage.setItem("inventoryItems", JSON.stringify(data.inventoryItems)); } catch {} }
-    if (data.employees?.length) { setEmployees(data.employees as Employee[]); try { localStorage.setItem("employees", JSON.stringify(data.employees)); } catch {} }
-    if (data.fixedExpenses?.length) { setFixedExpenses(data.fixedExpenses as FixedExpense[]); try { localStorage.setItem("fixedExpenses", JSON.stringify(data.fixedExpenses)); } catch {} }
-    if (data.deliveryPlatforms?.length) { setDeliveryPlatforms(data.deliveryPlatforms as DeliveryPlatform[]); try { localStorage.setItem("deliveryPlatforms", JSON.stringify(data.deliveryPlatforms)); } catch {} }
-    if (data.monthlyDeliverySales && Object.keys(data.monthlyDeliverySales).length) { setMonthlyDeliverySales(data.monthlyDeliverySales); try { localStorage.setItem("monthlyDeliverySales", JSON.stringify(data.monthlyDeliverySales)); } catch {} }
-    if (data.products?.length) { setProducts(data.products as Product[]); try { localStorage.setItem("products", JSON.stringify(data.products)); } catch {} }
-    if (data.unifiedProducts?.length) { setUnifiedProducts(data.unifiedProducts as UnifiedProduct[]); try { localStorage.setItem("unifiedProducts", JSON.stringify(data.unifiedProducts)); } catch {} }
-    if (data.serviceMenuItems?.length) { setServiceMenuItems(data.serviceMenuItems as ServiceMenuItem[]); try { localStorage.setItem("serviceMenuItems", JSON.stringify(data.serviceMenuItems)); } catch {} }
-    if (data.members?.length) { setMembers(data.members as Member[]); try { localStorage.setItem("members", JSON.stringify(data.members)); } catch {} }
-    if (data.vendorSelections && Object.keys(data.vendorSelections).length) { setVendorSelections(data.vendorSelections); try { localStorage.setItem("vendorSelections", JSON.stringify(data.vendorSelections)); } catch {} }
-    if (data.vendorCustomInputs && Object.keys(data.vendorCustomInputs).length) { setVendorCustomInputs(data.vendorCustomInputs); try { localStorage.setItem("vendorCustomInputs", JSON.stringify(data.vendorCustomInputs)); } catch {} }
-    if (data.opsSelections && Object.keys(data.opsSelections).length) { setOpsSelections(data.opsSelections); try { localStorage.setItem("opsSelections", JSON.stringify(data.opsSelections)); } catch {} }
-    if (data.opsPosChecks && Object.keys(data.opsPosChecks).length) { setOpsPosChecks(data.opsPosChecks); try { localStorage.setItem("opsPosChecks", JSON.stringify(data.opsPosChecks)); } catch {} }
-    if (data.softOpenChecks && Object.keys(data.softOpenChecks).length) { setSoftOpenChecks(data.softOpenChecks); try { localStorage.setItem("softOpenChecks", JSON.stringify(data.softOpenChecks)); } catch {} }
-    if (data.softOpenPricing) { setSoftOpenPricing(data.softOpenPricing); try { localStorage.setItem("softOpenPricing", data.softOpenPricing); } catch {} }
-    if (data.softOpenSkips && Object.keys(data.softOpenSkips).length) { setSoftOpenSkips(data.softOpenSkips); try { localStorage.setItem("softOpenSkips", JSON.stringify(data.softOpenSkips)); } catch {} }
-    if (data.taxChecks && Object.keys(data.taxChecks).length) { setTaxChecks(data.taxChecks); try { localStorage.setItem("taxChecks", JSON.stringify(data.taxChecks)); } catch {} }
-    if (data.loanChecks && Object.keys(data.loanChecks).length) { setLoanChecks(data.loanChecks); try { localStorage.setItem("loanChecks", JSON.stringify(data.loanChecks)); } catch {} }
-    if (data.onlinePlatformSales && Object.keys(data.onlinePlatformSales).length) { setOnlinePlatformSales(data.onlinePlatformSales); try { localStorage.setItem("onlinePlatformSales", JSON.stringify(data.onlinePlatformSales)); } catch {} }
-    if (data.onlineSelectedPlatforms?.length) { setOnlineSelectedPlatforms(data.onlineSelectedPlatforms); try { localStorage.setItem("onlineSelectedPlatforms", JSON.stringify(data.onlineSelectedPlatforms)); } catch {} }
-    if (data.onlineSelectedCourier) { setOnlineSelectedCourier(data.onlineSelectedCourier); try { localStorage.setItem("onlineSelectedCourier", data.onlineSelectedCourier); } catch {} }
-    if (data.onlineMonthlyParcels) { setOnlineMonthlyParcels(data.onlineMonthlyParcels); try { localStorage.setItem("onlineMonthlyParcels", data.onlineMonthlyParcels); } catch {} }
-    if (data.costHistory?.length) { setCostHistory(data.costHistory as CostSnapshot[]); try { localStorage.setItem("costHistory", JSON.stringify(data.costHistory)); } catch {} }
+    if (data.dailyEntries?.length) setDailyEntries(data.dailyEntries as DailyEntry[]);
+    if (data.inventoryItems?.length) setInventory(data.inventoryItems as InventoryItem[]);
+    if (data.employees?.length) setEmployees(data.employees as Employee[]);
+    if (data.fixedExpenses?.length) setFixedExpenses(data.fixedExpenses as FixedExpense[]);
+    if (data.deliveryPlatforms?.length) setDeliveryPlatforms(data.deliveryPlatforms as DeliveryPlatform[]);
+    if (data.monthlyDeliverySales && Object.keys(data.monthlyDeliverySales).length) setMonthlyDeliverySales(data.monthlyDeliverySales);
+    if (data.products?.length) setProducts(data.products as Product[]);
+    if (data.unifiedProducts?.length) setUnifiedProducts(data.unifiedProducts as UnifiedProduct[]);
+    if (data.serviceMenuItems?.length) setServiceMenuItems(data.serviceMenuItems as ServiceMenuItem[]);
+    if (data.members?.length) setMembers(data.members as Member[]);
+    if (data.vendorSelections && Object.keys(data.vendorSelections).length) setVendorSelections(data.vendorSelections);
+    if (data.vendorCustomInputs && Object.keys(data.vendorCustomInputs).length) setVendorCustomInputs(data.vendorCustomInputs);
+    if (data.opsSelections && Object.keys(data.opsSelections).length) setOpsSelections(data.opsSelections);
+    if (data.opsPosChecks && Object.keys(data.opsPosChecks).length) setOpsPosChecks(data.opsPosChecks);
+    if (data.softOpenChecks && Object.keys(data.softOpenChecks).length) setSoftOpenChecks(data.softOpenChecks);
+    if (data.softOpenPricing) setSoftOpenPricing(data.softOpenPricing);
+    if (data.softOpenSkips && Object.keys(data.softOpenSkips).length) setSoftOpenSkips(data.softOpenSkips);
+    if (data.taxChecks && Object.keys(data.taxChecks).length) setTaxChecks(data.taxChecks);
+    if (data.loanChecks && Object.keys(data.loanChecks).length) setLoanChecks(data.loanChecks);
+    if (data.onlinePlatformSales && Object.keys(data.onlinePlatformSales).length) setOnlinePlatformSales(data.onlinePlatformSales);
+    if (data.onlineSelectedPlatforms?.length) setOnlineSelectedPlatforms(data.onlineSelectedPlatforms);
+    if (data.onlineSelectedCourier) setOnlineSelectedCourier(data.onlineSelectedCourier);
+    if (data.onlineMonthlyParcels) setOnlineMonthlyParcels(data.onlineMonthlyParcels);
+    if (data.costHistory?.length) setCostHistory(data.costHistory as CostSnapshot[]);
   };
 
-  /** Collect all localStorage data for one-time migration to Supabase */
-  const collectLocalStorageData = (): Partial<UserStoreData> => {
+  /** Collect store data for Supabase sync (reads from Zustand stores, not localStorage) */
+  const collectStoreData = (): Partial<UserStoreData> => {
+    const ops = useOperationsStore.getState();
+    const fin = useFinanceStore.getState();
+    const prof = useProfileStore.getState();
+    const rm = useRoadmapStore.getState();
     const r: Partial<UserStoreData> = {};
-    try {
-      const sn = localStorage.getItem("storeName"); if (sn) r.storeName = sn;
-      if (localStorage.getItem("businessLaunched") === "true") r.businessLaunched = true;
-      const bld = localStorage.getItem("businessLaunchedDate"); if (bld) r.businessLaunchedDate = bld;
-      const cd = localStorage.getItem("cpaDecision"); if (cd === "cpa" || cd === "self") r.cpaDecision = cd;
-      const ts = localStorage.getItem("taxSettings"); if (ts) r.taxSettings = JSON.parse(ts);
-      const mc = localStorage.getItem("monthlyCosts"); if (mc) r.monthlyCosts = JSON.parse(mc);
-      const de = localStorage.getItem("dailyEntries"); if (de) { const p = JSON.parse(de); if (p.length) r.dailyEntries = p; }
-      const ii = localStorage.getItem("inventoryItems"); if (ii) { const p = JSON.parse(ii); if (p.length) r.inventoryItems = p; }
-      const em = localStorage.getItem("employees"); if (em) { const p = JSON.parse(em); if (p.length) r.employees = p; }
-      const fe = localStorage.getItem("fixedExpenses"); if (fe) { const p = JSON.parse(fe); if (p.length) r.fixedExpenses = p; }
-      const dp = localStorage.getItem("deliveryPlatforms"); if (dp) { const p = JSON.parse(dp); if (p.length) r.deliveryPlatforms = p; }
-      const mds = localStorage.getItem("monthlyDeliverySales"); if (mds) { const p = JSON.parse(mds); if (Object.keys(p).length) r.monthlyDeliverySales = p; }
-      const pr = localStorage.getItem("products"); if (pr) { const p = JSON.parse(pr); if (p.length) r.products = p; }
-      const up = localStorage.getItem("unifiedProducts"); if (up) { const p = JSON.parse(up); if (p.length) r.unifiedProducts = p; }
-      const smi = localStorage.getItem("serviceMenuItems"); if (smi) { const p = JSON.parse(smi); if (p.length) r.serviceMenuItems = p; }
-      const mb = localStorage.getItem("members"); if (mb) { const p = JSON.parse(mb); if (p.length) r.members = p; }
-      const vs = localStorage.getItem("vendorSelections"); if (vs) { const p = JSON.parse(vs); if (Object.keys(p).length) r.vendorSelections = p; }
-      const vci = localStorage.getItem("vendorCustomInputs"); if (vci) { const p = JSON.parse(vci); if (Object.keys(p).length) r.vendorCustomInputs = p; }
-      const os = localStorage.getItem("opsSelections"); if (os) { const p = JSON.parse(os); if (Object.keys(p).length) r.opsSelections = p; }
-      const opc = localStorage.getItem("opsPosChecks"); if (opc) { const p = JSON.parse(opc); if (Object.keys(p).length) r.opsPosChecks = p; }
-      const soc = localStorage.getItem("softOpenChecks"); if (soc) { const p = JSON.parse(soc); if (Object.keys(p).length) r.softOpenChecks = p; }
-      const sop = localStorage.getItem("softOpenPricing"); if (sop) r.softOpenPricing = sop;
-      const sos = localStorage.getItem("softOpenSkips"); if (sos) { const p = JSON.parse(sos); if (Object.keys(p).length) r.softOpenSkips = p; }
-      const tc = localStorage.getItem("taxChecks"); if (tc) { const p = JSON.parse(tc); if (Object.keys(p).length) r.taxChecks = p; }
-      const lc = localStorage.getItem("loanChecks"); if (lc) { const p = JSON.parse(lc); if (Object.keys(p).length) r.loanChecks = p; }
-      const ops = localStorage.getItem("onlinePlatformSales"); if (ops) { const p = JSON.parse(ops); if (Object.keys(p).length) r.onlinePlatformSales = p; }
-      const osp = localStorage.getItem("onlineSelectedPlatforms"); if (osp) { const p = JSON.parse(osp); if (p.length) r.onlineSelectedPlatforms = p; }
-      const osc = localStorage.getItem("onlineSelectedCourier"); if (osc) r.onlineSelectedCourier = osc;
-      const omp = localStorage.getItem("onlineMonthlyParcels"); if (omp) r.onlineMonthlyParcels = omp;
-      const ch = localStorage.getItem("costHistory"); if (ch) { const p = JSON.parse(ch); if (p.length) r.costHistory = p; }
-    } catch { /* ignore parse errors */ }
+    if (prof.storeName) r.storeName = prof.storeName;
+    if (prof.businessLaunched) r.businessLaunched = true;
+    if (prof.businessLaunchedDate) r.businessLaunchedDate = prof.businessLaunchedDate;
+    if (prof.cpaDecision) r.cpaDecision = prof.cpaDecision;
+    r.taxSettings = ops.taxSettings;
+    r.monthlyCosts = fin.monthlyCosts;
+    if (fin.dailyEntries.length) r.dailyEntries = fin.dailyEntries;
+    if (ops.inventory.length) r.inventoryItems = ops.inventory;
+    if (ops.employees.length) r.employees = ops.employees;
+    if (ops.fixedExpenses.length) r.fixedExpenses = ops.fixedExpenses;
+    if (ops.deliveryPlatforms.length) r.deliveryPlatforms = ops.deliveryPlatforms;
+    if (Object.keys(ops.monthlyDeliverySales).length) r.monthlyDeliverySales = ops.monthlyDeliverySales;
+    if (ops.products.length) r.products = ops.products;
+    if (ops.unifiedProducts.length) r.unifiedProducts = ops.unifiedProducts;
+    if (ops.serviceMenuItems.length) r.serviceMenuItems = ops.serviceMenuItems;
+    if (ops.members.length) r.members = ops.members;
+    if (Object.keys(rm.vendorSelections).length) r.vendorSelections = rm.vendorSelections;
+    if (Object.keys(rm.vendorCustomInputs).length) r.vendorCustomInputs = rm.vendorCustomInputs;
+    if (Object.keys(rm.opsSelections).length) r.opsSelections = rm.opsSelections;
+    if (Object.keys(rm.opsPosChecks).length) r.opsPosChecks = rm.opsPosChecks;
+    if (Object.keys(rm.softOpenChecks).length) r.softOpenChecks = rm.softOpenChecks;
+    if (rm.softOpenPricing) r.softOpenPricing = rm.softOpenPricing;
+    if (Object.keys(rm.softOpenSkips).length) r.softOpenSkips = rm.softOpenSkips;
+    if (Object.keys(rm.taxChecks).length) r.taxChecks = rm.taxChecks;
+    if (Object.keys(rm.loanChecks).length) r.loanChecks = rm.loanChecks;
+    if (Object.keys(ops.onlinePlatformSales).length) r.onlinePlatformSales = ops.onlinePlatformSales;
+    if (ops.onlineSelectedPlatforms.length) r.onlineSelectedPlatforms = ops.onlineSelectedPlatforms;
+    if (ops.onlineSelectedCourier) r.onlineSelectedCourier = ops.onlineSelectedCourier;
+    if (ops.onlineMonthlyParcels) r.onlineMonthlyParcels = ops.onlineMonthlyParcels;
+    if (fin.costHistory.length) r.costHistory = fin.costHistory;
     return r;
   };
+  // backward-compat alias
+  const collectLocalStorageData = collectStoreData;
 
   const handleSignOut = async () => {
     clearLocalUserData();
@@ -1074,9 +986,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     setBusinessLaunchedDate(null);
     setShowExistingOnboarding(false);
     setShowAIRoadmapWizard(false);
-    localStorage.removeItem("businessLaunched");
-    localStorage.removeItem("businessLaunchedDate");
-    localStorage.removeItem("buildup_onboarding_dismissed");
+    try { localStorage.removeItem("buildup_onboarding_dismissed"); } catch {}
 
     // Step 2: business_profiles 초기화
     setResetProgress(40);
@@ -1371,36 +1281,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorSelections]);
 
-  useEffect(() => {
-    localStorage.setItem("vendorSelections", JSON.stringify(vendorSelections));
-  }, [vendorSelections]);
-
-  useEffect(() => {
-    localStorage.setItem("vendorCustomInputs", JSON.stringify(vendorCustomInputs));
-  }, [vendorCustomInputs]);
-
-  useEffect(() => {
-    localStorage.setItem("opsSelections", JSON.stringify(opsSelections));
-  }, [opsSelections]);
-
-  useEffect(() => {
-    localStorage.setItem("opsPosChecks", JSON.stringify(opsPosChecks));
-  }, [opsPosChecks]);
-  useEffect(() => { localStorage.setItem("softOpenChecks", JSON.stringify(softOpenChecks)); }, [softOpenChecks]);
-  useEffect(() => { localStorage.setItem("softOpenPricing", softOpenPricing); }, [softOpenPricing]);
-  useEffect(() => { localStorage.setItem("softOpenSkips", JSON.stringify(softOpenSkips)); }, [softOpenSkips]);
-  useEffect(() => { localStorage.setItem("taxChecks", JSON.stringify(taxChecks)); }, [taxChecks]);
-  useEffect(() => { localStorage.setItem("loanChecks", JSON.stringify(loanChecks)); }, [loanChecks]);
-  useEffect(() => { try { localStorage.setItem("onlinePlatformSales", JSON.stringify(onlinePlatformSales)); } catch {} }, [onlinePlatformSales]);
-  useEffect(() => { try { localStorage.setItem("onlineSelectedPlatforms", JSON.stringify(onlineSelectedPlatforms)); } catch {} }, [onlineSelectedPlatforms]);
-  useEffect(() => { try { localStorage.setItem("onlineSelectedCourier", onlineSelectedCourier); } catch {} }, [onlineSelectedCourier]);
-  useEffect(() => { try { localStorage.setItem("onlineMonthlyParcels", onlineMonthlyParcels); } catch {} }, [onlineMonthlyParcels]);
-  // ── 핵심 상태 localStorage 백업 (새로고침 시 즉시 복원) ──
-  useEffect(() => { try { localStorage.setItem("__buildup_decisions", JSON.stringify(decisions)); } catch {} }, [decisions]);
-  useEffect(() => { try { localStorage.setItem("__buildup_roadmap", JSON.stringify(roadmap)); } catch {} }, [roadmap]);
-  useEffect(() => { try { localStorage.setItem("__buildup_taskmap", JSON.stringify(taskMap)); } catch {} }, [taskMap]);
-  useEffect(() => { localStorage.setItem("unifiedProducts", JSON.stringify(unifiedProducts)); }, [unifiedProducts]);
-  useEffect(() => { localStorage.setItem("serviceMenuItems", JSON.stringify(serviceMenuItems)); }, [serviceMenuItems]);
+  // localStorage sync useEffect들 제거됨 — Zustand persist 미들웨어가 자동 처리
 
   // operations_setup: 플랫폼 선택 시 대응 태스크 자동 완료
   useEffect(() => {
@@ -1511,26 +1392,25 @@ export function useDashboard(surface: DashboardSurface = "home") {
 
   const handleLaunchBusiness = () => {
     const launchDate = new Date().toISOString().slice(0, 10);
-    localStorage.setItem("businessLaunched", "true");
-    if (!localStorage.getItem("businessLaunchedDate")) {
-      localStorage.setItem("businessLaunchedDate", launchDate);
-    }
     setBusinessLaunched(true);
+    if (!businessLaunchedDate) setBusinessLaunchedDate(launchDate);
     let finalStoreName = storeName;
     if (!storeName && selectedFranchiseBrandId) {
       const fb = getFranchiseBrandById(selectedFranchiseBrandId);
       if (fb) {
         finalStoreName = fb.name[language];
         setStoreName(finalStoreName);
-        localStorage.setItem("storeName", finalStoreName);
       }
     }
     // ── Supabase에 store data 저장 ──
-    const storeDataToSave = collectLocalStorageData();
-    storeDataToSave.businessLaunched = true;
-    storeDataToSave.businessLaunchedDate = localStorage.getItem("businessLaunchedDate") ?? launchDate;
-    if (finalStoreName) storeDataToSave.storeName = finalStoreName;
-    void saveStoreData(supabase, storeDataToSave).catch(() => {});
+    // setTimeout을 사용하여 Zustand 상태가 업데이트된 후 읽도록 함
+    setTimeout(() => {
+      const storeDataToSave = collectStoreData();
+      storeDataToSave.businessLaunched = true;
+      storeDataToSave.businessLaunchedDate = businessLaunchedDate ?? launchDate;
+      if (finalStoreName) storeDataToSave.storeName = finalStoreName;
+      void saveStoreData(supabase, storeDataToSave).catch(() => {});
+    }, 0);
     navigateToSurface("analytics");
   };
 
@@ -1618,20 +1498,16 @@ export function useDashboard(surface: DashboardSurface = "home") {
 
     // Store name
     setStoreName(result.storeName);
-    localStorage.setItem("storeName", result.storeName);
 
     // Tax settings
     const ts = { vatType: result.vatType, hasEmployees: result.hasEmployees };
     setTaxSettings(ts);
-    localStorage.setItem("taxSettings", JSON.stringify(ts));
 
     // CPA decision
     setCpaDecision(result.cpaDecision);
-    localStorage.setItem("cpaDecision", result.cpaDecision);
 
     // Monthly costs
     setMonthlyCosts(result.monthlyCosts);
-    localStorage.setItem("monthlyCosts", JSON.stringify(result.monthlyCosts));
     setCostIngredientsText(result.monthlyCosts.ingredients ? String(Math.round(result.monthlyCosts.ingredients / 10000)) : "");
     setCostLaborText(result.monthlyCosts.labor ? String(Math.round(result.monthlyCosts.labor / 10000)) : "");
     setCostRentText(result.monthlyCosts.rent ? String(Math.round(result.monthlyCosts.rent / 10000)) : "");
@@ -1643,12 +1519,10 @@ export function useDashboard(surface: DashboardSurface = "home") {
     for (const id of result.deliveryPlatforms) ops[`delivery-${id}`] = true;
     for (const id of result.snsChannels) ops[`sns-${id}`] = true;
     setOpsSelections(ops);
-    localStorage.setItem("opsSelections", JSON.stringify(ops));
 
     // Mark as launched
-    localStorage.setItem("businessLaunched", "true");
-    localStorage.setItem("businessLaunchedDate", result.launchDate);
     setBusinessLaunched(true);
+    setBusinessLaunchedDate(result.launchDate);
 
     // ── Supabase에 먼저 저장 (페이지 전환 전 반드시 완료) ──
     // 로드맵 stage를 전부 completed로 마킹
@@ -1692,7 +1566,6 @@ export function useDashboard(surface: DashboardSurface = "home") {
     // 상호명 설정
     if (wizardStoreName) {
       setStoreName(wizardStoreName);
-      localStorage.setItem("storeName", wizardStoreName);
     }
 
     // decisions 채우기 (handleExistingBusinessComplete와 동일 패턴)
@@ -1737,14 +1610,12 @@ export function useDashboard(surface: DashboardSurface = "home") {
     // 비용
     const mc = result.monthlyCosts;
     setMonthlyCosts(mc);
-    localStorage.setItem("monthlyCosts", JSON.stringify(mc));
 
     // 운영 채널
     const ops: Record<string, boolean> = {};
     for (const id of result.recommendations.deliveryPlatforms) ops[`delivery-${id}`] = true;
     for (const id of result.recommendations.snsChannels) ops[`sns-${id}`] = true;
     setOpsSelections(ops);
-    localStorage.setItem("opsSelections", JSON.stringify(ops));
 
     // AI 로드맵은 businessLaunched = false (아직 개업 전)
     // 로드맵 진행 모드에서 시작 — 하지만 핵심 스테이지(업종/모델/예산/상권)은 완료 마킹
@@ -1790,7 +1661,6 @@ export function useDashboard(surface: DashboardSurface = "home") {
       entry as DailyEntry
     ].sort((a, b) => b.date.localeCompare(a.date));
     setDailyEntries(next);
-    localStorage.setItem("dailyEntries", JSON.stringify(next));
     setDailySalesInput("");
     setDailyCustomersInput("");
     flushStoreData();
@@ -1805,7 +1675,6 @@ export function useDashboard(surface: DashboardSurface = "home") {
       other: (Number(costOtherText.replace(/[^0-9]/g, "")) || 0) * 10000
     };
     setMonthlyCosts(costs);
-    localStorage.setItem("monthlyCosts", JSON.stringify(costs));
     // Archive to costHistory (월별 스냅샷, 최대 12개월)
     const currentMonth = new Date().toISOString().slice(0, 7);
     const snap: CostSnapshot = { ...costs, month: currentMonth };
@@ -1813,13 +1682,11 @@ export function useDashboard(surface: DashboardSurface = "home") {
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12);
     setCostHistory(updatedHistory);
-    localStorage.setItem("costHistory", JSON.stringify(updatedHistory));
     flushStoreData();
   };
 
   const saveInventory = (next: InventoryItem[]) => {
     setInventory(next);
-    localStorage.setItem("inventoryItems", JSON.stringify(next));
     flushStoreData();
   };
   const emptyInvForm: InvForm = { open: false, editId: null, name: "", qty: "", unit: "개", threshold: "", unitCost: "", category: "other", itemType: "material" as const, sellingPrice: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "" };
@@ -1888,7 +1755,6 @@ export function useDashboard(surface: DashboardSurface = "home") {
 
   const saveEmployees = (list: Employee[]) => {
     setEmployees(list);
-    try { localStorage.setItem("employees", JSON.stringify(list)); } catch { /* ignore */ }
     flushStoreData();
   };
   const handleEmpSave = () => {
@@ -1919,7 +1785,6 @@ export function useDashboard(surface: DashboardSurface = "home") {
 
   const saveFixedExpenses = (list: FixedExpense[]) => {
     setFixedExpenses(list);
-    try { localStorage.setItem("fixedExpenses", JSON.stringify(list)); } catch { /* ignore */ }
     flushStoreData();
   };
   const handleFexpSave = () => {
@@ -1951,12 +1816,10 @@ export function useDashboard(surface: DashboardSurface = "home") {
   // ── 배달 플랫폼 핸들러 ──
   const saveDeliveryPlatforms = (list: DeliveryPlatform[]) => {
     setDeliveryPlatforms(list);
-    try { localStorage.setItem("deliveryPlatforms", JSON.stringify(list)); } catch { /* ignore */ }
     flushStoreData();
   };
   const saveMonthlyDeliverySales = (map: Record<string, number>) => {
     setMonthlyDeliverySales(map);
-    try { localStorage.setItem("monthlyDeliverySales", JSON.stringify(map)); } catch { /* ignore */ }
     flushStoreData();
   };
   const handleDlvSave = () => {
@@ -1988,17 +1851,14 @@ export function useDashboard(surface: DashboardSurface = "home") {
   // ── 상품/메뉴 핸들러 ──
   const saveProducts = (list: Product[]) => {
     setProducts(list);
-    try { localStorage.setItem("products", JSON.stringify(list)); } catch { /* ignore */ }
     flushStoreData();
   };
   const saveUnifiedProducts = (list: UnifiedProduct[]) => {
     setUnifiedProducts(list);
-    try { localStorage.setItem("unifiedProducts", JSON.stringify(list)); } catch { /* ignore */ }
     flushStoreData();
   };
   const saveServiceMenuItems = (list: ServiceMenuItem[]) => {
     setServiceMenuItems(list);
-    try { localStorage.setItem("serviceMenuItems", JSON.stringify(list)); } catch { /* ignore */ }
     flushStoreData();
   };
   const handleProdSave = () => {
@@ -2031,7 +1891,6 @@ export function useDashboard(surface: DashboardSurface = "home") {
   };
   const saveTaxSettings = (s: TaxSettings) => {
     setTaxSettings(s);
-    try { localStorage.setItem("taxSettings", JSON.stringify(s)); } catch { /* ignore */ }
     flushStoreData();
   };
 
@@ -2518,10 +2377,10 @@ export function useDashboard(surface: DashboardSurface = "home") {
       if (typeof loadedFranchiseBrandId === "string") {
         setSelectedFranchiseBrandId(loadedFranchiseBrandId);
         // 상호명이 비어있으면 프랜차이즈 브랜드명으로 자동 채움
-        const currentStoreName = localStorage.getItem("storeName") ?? "";
+        const currentStoreName = useProfileStore.getState().storeName;
         if (!currentStoreName) {
           const fb = getFranchiseBrandById(loadedFranchiseBrandId);
-          if (fb) { setStoreName(fb.name[language]); localStorage.setItem("storeName", fb.name[language]); }
+          if (fb) { setStoreName(fb.name[language]); }
         }
       }
       const loadedBizModelId = dec["business-model"]?.selectedPrimaryOptionId;
@@ -2564,7 +2423,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
       // (fresh account regardless of whether workspace was just created or already existed)
       const hasIndustry = loadedIndustryId || loadedProfile?.subIndustryId;
       // businessLaunched는 Supabase에서 복원된 후의 상태를 확인 (localStorage만으로는 새 기기에서 작동 안 함)
-      const isLaunched = localStorage.getItem("businessLaunched") === "true" || businessLaunched;
+      const isLaunched = useProfileStore.getState().businessLaunched || businessLaunched;
       if (!hasIndustry && !isLaunched) {
         setShowOnboardingChoice(true);
       }
