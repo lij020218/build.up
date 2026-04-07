@@ -100,6 +100,7 @@ import { GuidesView } from "./lib/components/surfaces/GuidesView";
 import { HomeView } from "./lib/components/surfaces/HomeView";
 import { CurrentStageView } from "./lib/components/surfaces/CurrentStageView";
 import { WelcomeOnboarding } from "./lib/components/WelcomeOnboarding";
+import { CardErrorBoundary } from "./lib/components/CardErrorBoundary";
 import { HiringCostCalculator } from "./lib/components/knowledge/HiringCostCalculator";
 import { SecurityChecklist } from "./lib/components/knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "./lib/components/knowledge/InvestmentGlossary";
@@ -848,7 +849,9 @@ export default function StarterStageDemo({
 
       {activeSurface === "home" ? (
       mounted && businessLaunched ? (
-        <OperationalDashboard d={d} />
+        <CardErrorBoundary cardLabel="대시보드">
+          <OperationalDashboard d={d} />
+        </CardErrorBoundary>
       ) : (
         <HomeView />
       )
@@ -867,7 +870,11 @@ export default function StarterStageDemo({
       ) : null}
 
 
-      {activeSurface === "analytics" ? <AnalyticsSurface /> : null}
+      {activeSurface === "analytics" ? (
+        <CardErrorBoundary cardLabel="내 가게">
+          <AnalyticsSurface />
+        </CardErrorBoundary>
+      ) : null}
 
 
       {activeSurface === "roadmap" && !isFreshAccount ? (
