@@ -120,3 +120,101 @@ button[style*="primary-button"]:active {
 [data-selected="true"] {
   box-shadow: 0 0 0 3px rgba(29,53,87,0.08), 0 4px 12px rgba(0,0,0,0.04);
 }
+
+/* ── 키보드 포커스 스타일 (접근성) ── */
+:focus-visible {
+  outline: 2px solid rgba(29,53,87,0.4);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(29,53,87,0.4);
+  outline-offset: 2px;
+}
+
+/* 마우스 클릭 시 포커스 링 숨기기 */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── 모바일 반응형 ── */
+@media (max-width: 768px) {
+  /* Surface 네비게이션: 가로 스크롤 */
+  .surface-nav-scroll {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+  .surface-nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .surface-nav-scroll > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* 홈 쇼케이스: 2열 → 1열 */
+  .home-showcase-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+
+  /* 카드 그리드: 1열 */
+  .card-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 셸 패딩 축소 */
+  .shell-responsive {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: 32px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 초소형 화면 */
+  .type-display {
+    font-size: 28px !important;
+  }
+
+  /* 히어로 영역 더 컴팩트 */
+  .hero-responsive {
+    padding-top: 20px !important;
+    padding-bottom: 16px !important;
+  }
+}
+
+/* ── 부드러운 스크롤 ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── 접근성: 움직임 감소 선호 ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── 인쇄 시 불필요한 요소 숨김 ── */
+@media print {
+  .no-print,
+  nav,
+  .surface-nav-scroll {
+    display: none !important;
+  }
+}

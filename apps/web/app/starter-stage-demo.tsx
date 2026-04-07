@@ -101,6 +101,7 @@ import { HomeView } from "./lib/components/surfaces/HomeView";
 import { CurrentStageView } from "./lib/components/surfaces/CurrentStageView";
 import { WelcomeOnboarding } from "./lib/components/WelcomeOnboarding";
 import { CardErrorBoundary } from "./lib/components/CardErrorBoundary";
+import { DashboardSkeleton } from "./lib/components/ui/Skeleton";
 import { HiringCostCalculator } from "./lib/components/knowledge/HiringCostCalculator";
 import { SecurityChecklist } from "./lib/components/knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "./lib/components/knowledge/InvestmentGlossary";
@@ -652,8 +653,13 @@ export default function StarterStageDemo({
     liveBudgetBenchmark, setLiveBudgetBenchmark,
   };
 
+  // 초기 로딩 중 — 인증 확인 전 스켈레톤 표시
+  if (!mounted || !authResolved) {
+    return <DashboardSkeleton />;
+  }
+
   if (shouldShowAuth) {
-    return <main style={{ background: "#000", minHeight: "100vh" }} />;
+    return null; // useEffect에서 /auth로 리다이렉트
   }
   if (roleSelectionNode) {
     return roleSelectionNode;
