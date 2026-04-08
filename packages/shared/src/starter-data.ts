@@ -1319,18 +1319,18 @@ export const starterStageFlow: RoadmapStageState[] = [
   {
     stageId: "launch-gtm",
     code: "launch_gtm",
-    title: "Launch stack, instrumentation, and GTM",
+    title: "Launch stack, app store submission, and GTM",
     type: "execution",
     status: "locked",
     stepNumber: 9,
     totalSteps: 18,
-    goal: "Put billing, analytics, error tracking in place and define your go-to-market channel before pushing for growth.",
-    whyNow: "Without instrumentation founders mistake noise for signal. Without a GTM plan even great products launch into silence.",
+    goal: "Put billing, analytics, error tracking in place. If building a mobile app, submit to Google Play and Apple App Store. Define your go-to-market channel before pushing for growth.",
+    whyNow: "Without instrumentation founders mistake noise for signal. App store submissions take 3-7 days for review — start early. Without a GTM plan even great products launch into silence.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "gtm-channel-defined"]
     },
-    taskIds: ["analytics-live", "billing-or-conversion-live", "gtm-channel-defined"],
+    taskIds: ["analytics-live", "billing-or-conversion-live", "app-store-submission", "gtm-channel-defined"],
     riskIds: [],
     nextStageIds: ["growth-engine"]
   },
@@ -1820,6 +1820,7 @@ export const starterTaskMap: WorkflowTaskMap = {
   "launch-gtm": [
     { taskId: "analytics-live", title: "Install analytics for activation, retention, and funnel events", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "billing-or-conversion-live", title: "Set up billing, pricing, or conversion tracking before launch", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "app-store-submission", title: "Submit app to Google Play and/or Apple App Store", status: "todo", required: false, estimatedMinutes: 240 },
     { taskId: "gtm-channel-defined", title: "Define primary GTM channel and run first acquisition experiment", status: "todo", required: true, estimatedMinutes: 60 }
   ],
   "growth-engine": [
