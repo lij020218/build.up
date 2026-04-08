@@ -1555,13 +1555,42 @@ export function useDashboard(surface: DashboardSurface = "home") {
 
   const handleAIRoadmapComplete = async (result: {
     parsed: { industryCategoryId: string; subIndustryId: string; industryLabel: string; startupType: "independent" | "franchise"; businessModelId: string; preferredRegion: string };
-    budgetAllocation: { total: number };
+    budgetAllocation: { total: number; deposit?: number; interior?: number; equipment?: number; workingCapital?: number };
     monthlyCosts: { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-    recommendations: { deliveryPlatforms: string[]; snsChannels: string[] };
-    timeline: { targetOpenDate: string };
+    recommendations: { deliveryPlatforms: string[]; snsChannels: string[]; suppliers?: Array<{ name: string; category: string; reason: string; priceRange: string }>; interior?: Array<{ item: string; vendor: string; estimatedCost: string }>; permits?: string[]; taxAdvice?: string };
+    timeline: { targetOpenDate: string; totalWeeks?: number; phases?: Array<{ name: string; weeks: number }> };
+    marketAnalysis?: { score: number; grade: string; footTraffic: string; competition: string; rentLevel: string; targetFit: string; summary: string };
+    risks?: Array<{ level: string; description: string; mitigation: string }>;
   }, wizardStoreName?: string) => {
     const now = new Date().toISOString();
     let nextDecisions = decisions;
+
+    // ── AI 로드맵 결과 전체 보존 (기존에는 버려지던 데이터) ──
+    useRoadmapStore.getState().setAiRoadmapResult({
+      generatedAt: now,
+      marketAnalysis: result.marketAnalysis ?? { score: 0, grade: "C", footTraffic: "", competition: "", rentLevel: "", targetFit: "", summary: "" },
+      budgetAllocation: {
+        deposit: result.budgetAllocation.deposit ?? 0,
+        interior: result.budgetAllocation.interior ?? 0,
+        equipment: result.budgetAllocation.equipment ?? 0,
+        workingCapital: result.budgetAllocation.workingCapital ?? 0,
+        total: result.budgetAllocation.total,
+      },
+      recommendations: {
+        suppliers: result.recommendations.suppliers ?? [],
+        interior: result.recommendations.interior ?? [],
+        permits: result.recommendations.permits ?? [],
+        taxAdvice: result.recommendations.taxAdvice ?? "",
+        deliveryPlatforms: result.recommendations.deliveryPlatforms,
+        snsChannels: result.recommendations.snsChannels,
+      },
+      timeline: {
+        targetOpenDate: result.timeline.targetOpenDate,
+        totalWeeks: result.timeline.totalWeeks ?? 16,
+        phases: result.timeline.phases ?? [],
+      },
+      risks: result.risks ?? [],
+    });
 
     // 상호명 설정
     if (wizardStoreName) {

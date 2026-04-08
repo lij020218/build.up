@@ -39,6 +39,35 @@ type RoadmapState = {
   stageGuideContent: StageGuideContent | null;
   guideStepIndex: number;
   guideSelections: Record<string, string>;
+  // AI 로드맵 결과 (생성 후 보존)
+  aiRoadmapResult: AiRoadmapSnapshot | null;
+};
+
+/** AI 로드맵 위저드가 생성한 전체 결과 — 한 번 생성 후 영구 보존 */
+export type AiRoadmapSnapshot = {
+  generatedAt: string; // ISO 8601
+  marketAnalysis: {
+    score: number; grade: string;
+    footTraffic: string; competition: string;
+    rentLevel: string; targetFit: string; summary: string;
+  };
+  budgetAllocation: {
+    deposit: number; interior: number; equipment: number;
+    workingCapital: number; total: number;
+  };
+  recommendations: {
+    suppliers: Array<{ name: string; category: string; reason: string; priceRange: string }>;
+    interior: Array<{ item: string; vendor: string; estimatedCost: string }>;
+    permits: string[];
+    taxAdvice: string;
+    deliveryPlatforms: string[];
+    snsChannels: string[];
+  };
+  timeline: {
+    targetOpenDate: string; totalWeeks: number;
+    phases: Array<{ name: string; weeks: number }>;
+  };
+  risks: Array<{ level: string; description: string; mitigation: string }>;
 };
 
 type RoadmapActions = {
@@ -67,6 +96,7 @@ type RoadmapActions = {
   setStageGuideContent: (v: StageGuideContent | null) => void;
   setGuideStepIndex: (v: number | ((prev: number) => number)) => void;
   setGuideSelections: (v: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
+  setAiRoadmapResult: (v: AiRoadmapSnapshot | null) => void;
   resetAll: () => void;
 };
 
@@ -96,6 +126,7 @@ const initialState: RoadmapState = {
   stageGuideContent: null,
   guideStepIndex: 0,
   guideSelections: {},
+  aiRoadmapResult: null,
 };
 
 // 함수형 업데이트 헬퍼
@@ -131,6 +162,7 @@ export const useRoadmapStore = create<RoadmapState & RoadmapActions>()(
       setStageGuideContent: (v) => set({ stageGuideContent: v }),
       setGuideStepIndex: (v) => set((s) => ({ guideStepIndex: withFn(v, s.guideStepIndex) })),
       setGuideSelections: (v) => set((s) => ({ guideSelections: withFn(v, s.guideSelections) })),
+      setAiRoadmapResult: (v) => set({ aiRoadmapResult: v }),
       resetAll: () => set(initialState),
     }),
     {
@@ -149,6 +181,7 @@ export const useRoadmapStore = create<RoadmapState & RoadmapActions>()(
         taxChecks: state.taxChecks,
         loanChecks: state.loanChecks,
         guideSelections: state.guideSelections,
+        aiRoadmapResult: state.aiRoadmapResult,
       }),
     },
   ),
