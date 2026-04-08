@@ -1706,13 +1706,15 @@ export function useDashboard(surface: DashboardSurface = "home") {
     navigateToSurface("home");
   };
 
-  /** AI 액션 갱신 debounce — 데이터 변경 후 3초 뒤 자동 갱신 */
+  /** AI 액션 갱신 debounce — 데이터 변경 후 5초 뒤 자동 갱신 */
   const aiRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scheduleAiRefresh = () => {
+    if (!businessLaunched || !storeName) return; // 아직 개업 전이면 무시
     if (aiRefreshTimerRef.current) clearTimeout(aiRefreshTimerRef.current);
     aiRefreshTimerRef.current = setTimeout(() => {
-      setAiActions(null); // 기존 결과 초기화 → OperationalDashboard useEffect가 재호출
-    }, 3000);
+      // 직접 fetch 호출 (null 세팅으로 무한 루프 방지)
+      void fetchAiActions();
+    }, 5000);
   };
 
   const handleAddDailyEntry = () => {

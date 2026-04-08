@@ -254,11 +254,16 @@ export default function OperationalDashboard({ d }: Props) {
                 ? "오늘은 매출 기록, 병목 점검, 핵심 운영 자산 유지에 집중하면 됩니다."
                 : "Today, focus on logging revenue, checking bottlenecks, and protecting core operations.";
 
+  const aiLoadAttemptedRef = useRef(false);
   useEffect(() => {
-    if (!d.aiActions && !d.aiActionsLoading && d.businessLaunched && d.storeName) {
-      void d.fetchAiActions();
+    if (!d.aiActions && !d.aiActionsLoading && d.businessLaunched && d.storeName && !aiLoadAttemptedRef.current) {
+      aiLoadAttemptedRef.current = true;
+      void d.fetchAiActions().finally(() => {
+        // 5초 후 다시 시도 가능하도록 (무한 루프 방지)
+        setTimeout(() => { aiLoadAttemptedRef.current = false; }, 5000);
+      });
     }
-  }, [d]);
+  }, [d.aiActions, d.aiActionsLoading, d.businessLaunched, d.storeName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── streak computation ── */
   const streak = (() => {
