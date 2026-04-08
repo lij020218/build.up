@@ -1646,6 +1646,37 @@ export function useDashboard(surface: DashboardSurface = "home") {
     for (const id of result.recommendations.snsChannels) ops[`sns-${id}`] = true;
     setOpsSelections(ops);
 
+    // ── AI 추천 공급업체 → vendorSelections/vendorCustomInputs에 자동 채우기 ──
+    if (result.recommendations.suppliers && result.recommendations.suppliers.length > 0) {
+      const vs: Record<string, string> = {};
+      const vc: Record<string, string> = {};
+      result.recommendations.suppliers.forEach((supplier, i) => {
+        // 카테고리별 step 매핑: 식재료→s1, 포장/소모품→s2, 설비→s3, 기타→s4
+        const step = supplier.category.includes("재료") || supplier.category.includes("식자재") ? 1
+          : supplier.category.includes("포장") || supplier.category.includes("소모품") ? 2
+          : supplier.category.includes("설비") || supplier.category.includes("장비") || supplier.category.includes("POS") ? 3
+          : 4;
+        const key = `vendor-setup_s${step}_c${i}`;
+        // __etc__ 패턴으로 커스텀 공급업체로 등록 (AI 추천은 대부분 사전 목록에 없으므로)
+        vs[key] = `__etc__${key}`;
+        vc[key] = `${supplier.name} — ${supplier.reason} (${supplier.priceRange})`;
+      });
+      setVendorSelections(vs);
+      setVendorCustomInputs(vc);
+    }
+
+    // ── AI 추천 인테리어 컨셉 자동 선택 ──
+    // AI가 추천한 내용은 aiRoadmapResult.recommendations.interior에 저장됨
+    // 여기서는 업종 기본 컨셉을 자동 선택 (첫 번째 컨셉)
+    const conceptMap: Record<string, string> = {
+      "food": "modern-hanok", "cafe-dessert": "industrial", "beauty": "clean-modern",
+      "fitness": "clean-sport", "education": "clean-academic", "pet": "clean-white",
+      "retail": "editorial", "living-service": "clean-tech", "space": "modern-study",
+      "online-digital": "minimal-home", "startup-tech": "minimal-home",
+    };
+    const defaultConcept = conceptMap[result.parsed.industryCategoryId];
+    if (defaultConcept) setSelectedInteriorConcept(defaultConcept);
+
     // AI 로드맵은 businessLaunched = false (아직 개업 전)
     // 로드맵 진행 모드에서 시작 — 하지만 핵심 스테이지(업종/모델/예산/상권)은 완료 마킹
 
