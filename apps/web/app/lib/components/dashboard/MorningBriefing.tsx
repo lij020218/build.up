@@ -82,40 +82,43 @@ function generateFallbackInsight(
 ): string {
   if (!breakdown) {
     return ko
-      ? "데이터가 축적되면 AI 경영 분석이 시작됩니다."
-      : "AI business analysis will begin as data accumulates.";
+      ? "매출 데이터가 쌓이면 매일 아침 경영 브리핑을 드리겠습니다."
+      : "Once you log sales, you'll receive a daily business briefing here.";
   }
-  const parts: string[] = [];
-  if (Math.abs(breakdown.avgTicketChange) > 3) {
-    parts.push(
-      ko
-        ? `객단가 ${changeArrow(breakdown.avgTicketChange)}`
-        : `Avg ticket ${changeArrow(breakdown.avgTicketChange)}`,
-    );
-  }
-  if (Math.abs(breakdown.customersChange) > 3) {
-    parts.push(
-      ko
-        ? `고객수 ${changeArrow(breakdown.customersChange)}`
-        : `Customers ${changeArrow(breakdown.customersChange)}`,
-    );
-  }
-  if (breakdown.primaryDriver === "customers" && breakdown.customersChange < -3) {
-    parts.push(ko ? "단골 이탈 점검 필요" : "Check customer retention");
-  }
-  if (sameWeekdayChange !== null) {
-    parts.push(
-      ko
-        ? `어제 매출 ${formatWon(yesterdaySales, true)}, 전주 동요일 대비 ${changeArrow(sameWeekdayChange)}`
-        : `Yesterday ${formatWon(yesterdaySales, false)}, ${changeArrow(sameWeekdayChange)} vs last week`,
-    );
-  }
-  if (parts.length === 0) {
+
+  const salesStr = formatWon(yesterdaySales, ko);
+  const weekStr = sameWeekdayChange !== null ? `${sameWeekdayChange > 0 ? "+" : ""}${sameWeekdayChange.toFixed(0)}%` : null;
+
+  // 매출 변화의 주된 원인을 문장으로 설명
+  if (breakdown.primaryDriver === "ticket" && Math.abs(breakdown.avgTicketChange) > 3) {
+    const dir = breakdown.avgTicketChange > 0;
     return ko
-      ? "안정적인 영업 흐름입니다. 현재 운영 기조를 유지하세요."
-      : "Operations running steady. Maintain current trajectory.";
+      ? `어제 매출 ${salesStr}${weekStr ? ` (전주 대비 ${weekStr})` : ""}. ${dir ? "객단가가 올랐습니다. 세트메뉴나 추가 주문이 늘고 있는지 확인해보세요." : "객단가가 떨어졌습니다. 메뉴 구성이나 가격 전략을 점검하세요."}`
+      : `Yesterday's sales were ${salesStr}${weekStr ? ` (${weekStr} vs last week)` : ""}. ${dir ? "Average ticket is up — check if upselling is working." : "Average ticket dropped — review menu mix and pricing."}`;
   }
-  return parts.join(ko ? ". " : ". ") + ".";
+
+  if (breakdown.primaryDriver === "customers" && Math.abs(breakdown.customersChange) > 3) {
+    const dir = breakdown.customersChange > 0;
+    return ko
+      ? `어제 매출 ${salesStr}${weekStr ? ` (전주 대비 ${weekStr})` : ""}. ${dir ? "방문 고객이 늘고 있습니다. 이 추세를 유지할 마케팅을 준비하세요." : "고객수가 줄고 있습니다. 단골 이탈이 없는지 점검이 필요합니다."}`
+      : `Yesterday's sales were ${salesStr}${weekStr ? ` (${weekStr} vs last week)` : ""}. ${dir ? "Foot traffic is growing — prepare marketing to sustain this." : "Customer count is dropping — check if regulars are churning."}`;
+  }
+
+  if (breakdown.primaryDriver === "both") {
+    return ko
+      ? `어제 매출 ${salesStr}${weekStr ? ` (전주 대비 ${weekStr})` : ""}. 고객수와 객단가 모두 변동이 있습니다. 주간 추세를 좀 더 지켜보세요.`
+      : `Yesterday's sales were ${salesStr}${weekStr ? ` (${weekStr} vs last week)` : ""}. Both traffic and ticket size shifted — monitor the weekly trend.`;
+  }
+
+  if (weekStr) {
+    return ko
+      ? `어제 매출 ${salesStr}, 전주 동요일 대비 ${weekStr}입니다. 안정적인 흐름이니 현재 운영을 유지하세요.`
+      : `Yesterday's sales were ${salesStr}, ${weekStr} vs the same day last week. Steady operations — maintain your current approach.`;
+  }
+
+  return ko
+    ? "안정적인 영업 흐름입니다. 현재 운영 기조를 유지하세요."
+    : "Operations are running steady. Maintain your current approach.";
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
