@@ -55,7 +55,7 @@ export function LanguageProvider(props: { children: ReactNode }) {
       {/* Fixed top-right: bell + language toggle */}
       <div style={{
         position: "fixed",
-        top: 24,
+        top: 36,
         right: 20,
         zIndex: 1000,
         display: "flex",
