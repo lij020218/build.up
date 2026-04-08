@@ -412,41 +412,7 @@ export default function OperationalDashboard({ d }: Props) {
     <section style={shell}>
       <style>{bentoHoverCSS}</style>
 
-      {/* ── 대시보드 헤더 바 ── */}
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "14px 20px", borderRadius: "12px",
-        background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.5) 100%)",
-        border: "1px solid rgba(5,97,252,0.06)",
-        boxShadow: "0 21px 94px rgba(0,0,0,0.03)",
-      }} className="bento-fade-in">
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>
-            {ko ? "대시보드" : "Dashboard"}
-          </span>
-          <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.4)" }}>›</span>
-          <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>
-            {ko ? "개요" : "Overview"}
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{
-            padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: 500,
-            color: "rgba(15,23,42,0.6)", background: "rgba(240,244,255,0.6)",
-            border: "1px solid rgba(5,97,252,0.08)",
-          }}>
-            {new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { year: "numeric", month: "short", day: "numeric" })}
-          </div>
-          <button type="button" onClick={handleExportCSV} style={{
-            border: "none", borderRadius: "8px", padding: "6px 14px",
-            background: "#0561fc", color: "#fff", fontSize: "12px", fontWeight: 600,
-            cursor: "pointer", boxShadow: "0 4px 14px rgba(5,97,252,0.25)",
-            display: "flex", alignItems: "center", gap: "6px",
-          }} className="bento-btn">
-            📊 {ko ? "CSV 내보내기" : "Export CSV"}
-          </button>
-        </div>
-      </div>
+      {/* 헤더 바 삭제됨 — MorningBriefing이 첫 요소 */}
 
       {/* ━━━ 1단계: 모닝 브리핑 (5초 뷰) ━━━ */}
       <MorningBriefing />

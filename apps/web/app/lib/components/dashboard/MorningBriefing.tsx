@@ -313,6 +313,118 @@ export function MorningBriefing() {
         ))}
       </div>
 
+      {/* ── 7일 매출 미니 차트 ── */}
+      {(() => {
+        const sorted = [...entries]
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .slice(-7);
+        if (sorted.length < 2) return null;
+
+        const maxSales = Math.max(...sorted.map(e => e.sales), 1);
+        const avgSales = sorted.reduce((s, e) => s + e.sales, 0) / sorted.length;
+        const dayLabels = ko
+          ? ["일", "월", "화", "수", "목", "금", "토"]
+          : ["S", "M", "T", "W", "T", "F", "S"];
+
+        return (
+          <div style={{
+            borderRadius: "20px",
+            padding: "18px 20px",
+            background: "rgba(255,255,255,0.82)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid rgba(0,0,0,0.05)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.025)",
+          }}>
+            {/* 헤더 */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div style={{
+                fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
+                textTransform: "uppercase" as const, color: LABEL_COLOR,
+              }}>
+                {ko ? "최근 7일 매출" : "LAST 7 DAYS"}
+              </div>
+              <div style={{
+                fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.5)",
+              }}>
+                {ko ? `일평균 ${formatWon(avgSales, ko)}` : `Avg ${formatWon(avgSales, ko)}/day`}
+              </div>
+            </div>
+
+            {/* 바 차트 */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${sorted.length}, 1fr)`,
+              gap: "6px",
+              alignItems: "end",
+              height: "100px",
+              position: "relative" as const,
+            }}>
+              {/* 평균선 */}
+              <div style={{
+                position: "absolute" as const,
+                left: 0, right: 0,
+                bottom: `${(avgSales / maxSales) * 100}%`,
+                height: "1px",
+                background: "rgba(15,23,42,0.08)",
+                borderTop: "1px dashed rgba(15,23,42,0.12)",
+                zIndex: 1,
+              }} />
+
+              {sorted.map((entry, i) => {
+                const height = maxSales > 0 ? (entry.sales / maxSales) * 100 : 0;
+                const isToday = entry.date === new Date().toISOString().slice(0, 10);
+                const isYesterday = i === sorted.length - 1 && !isToday;
+                const dayOfWeek = new Date(entry.date).getDay();
+                const barColor = isToday
+                  ? PRIMARY
+                  : entry.sales >= avgSales
+                    ? "rgba(52,199,89,0.65)"
+                    : "rgba(15,23,42,0.12)";
+
+                return (
+                  <div key={entry.date} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                    {/* 매출 라벨 (호버 없이 항상 표시 — 마지막 2개만) */}
+                    {(isToday || isYesterday) && (
+                      <div style={{
+                        fontSize: "10px", fontWeight: 600,
+                        color: isToday ? PRIMARY : "rgba(15,23,42,0.5)",
+                        fontVariantNumeric: "tabular-nums",
+                        whiteSpace: "nowrap" as const,
+                      }}>
+                        {formatWon(entry.sales, ko)}
+                      </div>
+                    )}
+
+                    {/* 바 */}
+                    <div style={{
+                      width: "100%",
+                      maxWidth: "32px",
+                      height: `${Math.max(height, 3)}%`,
+                      borderRadius: "6px 6px 4px 4px",
+                      background: barColor,
+                      transition: "height 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
+                      position: "relative" as const,
+                      ...(isToday ? { boxShadow: `0 2px 8px ${PRIMARY}30` } : {}),
+                    }} />
+
+                    {/* 요일 라벨 */}
+                    <div style={{
+                      fontSize: "10px",
+                      fontWeight: isToday ? 700 : 500,
+                      color: isToday ? PRIMARY : "rgba(15,23,42,0.35)",
+                      lineHeight: 1,
+                    }}>
+                      {dayLabels[dayOfWeek]}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Keyframes + responsive grid ── */}
       <style>{`
         @keyframes numberSlideUp {
