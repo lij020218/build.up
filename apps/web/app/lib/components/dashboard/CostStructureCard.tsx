@@ -100,6 +100,7 @@ function resolveThresholds(industryCategoryId: string | undefined): {
 
 export function CostStructureCard() {
   const d = useDashboardCtx();
+  const ko = d.language === "ko";
   const mc = d.monthlyCosts as {
     ingredients: number;
     labor: number;
@@ -167,7 +168,9 @@ export function CostStructureCard() {
           <PieChart size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
         </div>
         <div style={emptyState}>
-          월 비용을 입력하면 비용 구조 진단이 표시됩니다
+          {ko
+            ? "내 가게 탭 → 비용 관리에서 재료비·인건비·임대료를 입력하세요"
+            : "Go to My Store → Cost Management to enter ingredients, labor, and rent"}
         </div>
       </div>
     );

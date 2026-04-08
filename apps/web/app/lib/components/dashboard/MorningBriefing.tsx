@@ -184,12 +184,14 @@ export function MorningBriefing() {
     change: number | null;
     changeLabel: string;
     color?: string;
+    hint?: string; // 데이터 미입력 시 안내 문구
   }[] = [
     {
       label: ko ? "어제 매출" : "YESTERDAY",
-      value: formatWon(yesterdaySales, ko),
+      value: hasData ? formatWon(yesterdaySales, ko) : "--",
       change: weekdayChange !== null ? Math.round(weekdayChange * 10) / 10 : null,
       changeLabel: ko ? "전주 동요일" : "vs last wk",
+      hint: !hasData ? (ko ? "매출을 입력하세요" : "Enter sales") : undefined,
     },
     {
       label: ko ? "영업이익률" : "OP. MARGIN",
@@ -199,6 +201,7 @@ export function MorningBriefing() {
       color: hasCosts
         ? trafficLight(100 - operatingMargin, 85, 95)
         : undefined,
+      hint: !hasCosts ? (ko ? "월 비용을 입력하세요" : "Enter costs") : undefined,
     },
     {
       label: ko ? "원가율" : "PRIME COST",
@@ -206,12 +209,14 @@ export function MorningBriefing() {
       change: null,
       changeLabel: "",
       color: hasCosts ? trafficLight(primeCostPct, 60, 65) : undefined,
+      hint: !hasCosts ? (ko ? "월 비용을 입력하세요" : "Enter costs") : undefined,
     },
     {
       label: ko ? "카드 정산 예정" : "EST. DEPOSIT",
-      value: formatWon(estDeposit, ko),
+      value: hasData ? formatWon(estDeposit, ko) : "--",
       change: null,
       changeLabel: ko ? "D+2 예상" : "D+2 est.",
+      hint: !hasData ? (ko ? "매출을 입력하세요" : "Enter sales") : undefined,
     },
   ];
 
@@ -435,7 +440,7 @@ export function MorningBriefing() {
                 </span>
               </div>
             )}
-            {kpi.change === null && kpi.changeLabel && (
+            {kpi.change === null && kpi.changeLabel && !kpi.hint && (
               <div
                 style={{
                   fontSize: "10px",
@@ -446,6 +451,19 @@ export function MorningBriefing() {
                 }}
               >
                 {kpi.changeLabel}
+              </div>
+            )}
+            {kpi.hint && (
+              <div
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  color: "#FF9F0A",
+                  marginTop: "6px",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {kpi.hint}
               </div>
             )}
           </div>

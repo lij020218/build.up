@@ -18,6 +18,7 @@ const fmtWon = (n: number): string => {
 
 export function MonthlyProgressCard() {
   const d = useDashboardCtx();
+  const ko = d.language === "ko";
   const entries = (d.dailyEntries ?? []) as Array<{ date: string; sales: number; customers: number }>;
   const monthlyTarget = (d.selectedBudget as number | undefined) ?? 25_000_000;
 
@@ -30,7 +31,9 @@ export function MonthlyProgressCard() {
                     <TrendingUp size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
         </div>
         <div style={emptyState}>
-          이번 달 매출을 입력하면 진행률이 표시됩니다
+          {ko
+            ? "이번 달 매출을 1건 이상 기록하면 목표 달성률이 표시됩니다"
+            : "Log at least 1 sale this month to see progress"}
         </div>
       </div>
     );
