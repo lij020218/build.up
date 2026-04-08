@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { calculateSalesBreakdown } from "@build-up/shared";
+import { Users } from "lucide-react";
 
 /* ─── Formatting ─── */
 
@@ -48,7 +49,7 @@ export function SalesBreakdownCard() {
       <div style={card}>
         <div style={headerRow}>
           <span style={{ fontSize: "15px" }}>&#x1F4CA;</span>
-          <span style={cardTitle}>매출 분해</span>
+          <Users size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
         </div>
         <div style={emptyState}>
           매출 데이터가 2주 이상 쌓이면 분석이 시작됩니다
@@ -75,7 +76,7 @@ export function SalesBreakdownCard() {
       {/* Header */}
       <div style={headerRow}>
         <span style={{ fontSize: "15px" }}>&#x1F4CA;</span>
-        <span style={cardTitle}>매출 분해</span>
+        <Users size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
         <span style={periodBadge}>전주 대비</span>
       </div>
 

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { COST_RATIOS } from "@build-up/shared";
+import { PieChart } from "lucide-react";
 
 /* ─── Types ─── */
 
@@ -164,7 +165,7 @@ export function CostStructureCard() {
     return (
       <div style={card}>
         <div style={headerRow}>
-          <span style={cardTitle}>비용 구조</span>
+          <PieChart size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
         </div>
         <div style={emptyState}>
           월 비용을 입력하면 비용 구조 진단이 표시됩니다
@@ -177,7 +178,7 @@ export function CostStructureCard() {
     <div style={card}>
       {/* Header */}
       <div style={headerRow}>
-        <span style={cardTitle}>비용 구조</span>
+        <PieChart size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
       </div>
 
       {/* Cost Rows */}

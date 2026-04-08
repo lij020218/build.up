@@ -435,7 +435,7 @@ export default function OperationalDashboard({ d }: Props) {
           boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
         }}>
           <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.4)", marginBottom: "14px" }}>
-            {ko ? "오늘 할 일" : "TODAY'S ACTIONS"}
+            {ko ? "오늘 할 일" : "TODAY\u2019S ACTIONS"}
           </div>
           {d.aiActions?.todayActions?.slice(0, 3).map((action: { title: string; reason: string; priority: string }, i: number) => (
             <div key={i} style={{ display: "flex", gap: "10px", marginBottom: "12px", alignItems: "flex-start" }}>

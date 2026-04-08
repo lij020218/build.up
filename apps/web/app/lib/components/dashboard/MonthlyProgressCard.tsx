@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { calculateMoM } from "@build-up/shared";
+import { TrendingUp } from "lucide-react";
 
 /* ─── Formatting ─── */
 
@@ -27,7 +28,7 @@ export function MonthlyProgressCard() {
       <div style={card}>
         <div style={headerRow}>
           <span style={{ fontSize: "15px" }}>&#x1F4C8;</span>
-          <span style={cardTitle}>이번 달 진행</span>
+          <TrendingUp size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
         </div>
         <div style={emptyState}>
           이번 달 매출을 입력하면 진행률이 표시됩니다
@@ -52,7 +53,7 @@ export function MonthlyProgressCard() {
       {/* Header */}
       <div style={headerRow}>
         <span style={{ fontSize: "15px" }}>&#x1F4C8;</span>
-        <span style={cardTitle}>이번 달 진행</span>
+        <TrendingUp size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
         <div style={{
           marginLeft: "auto",
           fontSize: "11px",

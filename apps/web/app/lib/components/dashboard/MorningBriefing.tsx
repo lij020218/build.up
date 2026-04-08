@@ -7,6 +7,7 @@ import {
   calculateMonthlyPnL,
 } from "@build-up/shared";
 import type { DailyEntry, MonthlyCosts } from "../../useDashboard";
+import { BarChart3, PenLine } from "lucide-react";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -239,7 +240,7 @@ export function MorningBriefing() {
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 20px", boxShadow: "0 4px 16px rgba(29,53,87,0.2)",
           }}>
-            <span style={{ fontSize: "24px" }}>📊</span>
+            <BarChart3 size={26} color="#fff" strokeWidth={1.8} />
           </div>
           <h2 style={{
             fontSize: "20px", fontWeight: 700, color: "#0f172a",
@@ -328,7 +329,8 @@ export function MorningBriefing() {
           flexWrap: "wrap" as const,
         }}>
           <span style={{ fontSize: "13px", fontWeight: 600, color: PRIMARY, whiteSpace: "nowrap" as const }}>
-            {ko ? "📝 오늘 매출" : "📝 Today"}
+            <PenLine size={14} strokeWidth={2} style={{ display: "inline", verticalAlign: "-2px", marginRight: "4px" }} />
+            {ko ? "오늘 매출" : "Today"}
           </span>
           <input
             type="text"
