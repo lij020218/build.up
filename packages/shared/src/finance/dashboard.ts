@@ -475,3 +475,134 @@ function calculateHealthScore(input: ScoreInput): number {
 
   return Math.max(0, Math.min(100, score));
 }
+
+// ─── 신규 지표 계산 함수 (대시보드 재설계) ────────────────────────────────────
+
+/** 매출 분해: 매출 = 고객수 × 객단가 + 각각의 변화율 */
+export type SalesBreakdown = {
+  customers: number;
+  avgTicket: number;
+  totalSales: number;
+  prevCustomers: number;
+  prevAvgTicket: number;
+  prevTotalSales: number;
+  customersChange: number;   // %
+  avgTicketChange: number;   // %
+  salesChange: number;       // %
+  /** AI 코멘트용: 매출 변화의 주된 원인 */
+  primaryDriver: "customers" | "ticket" | "both" | "none";
+};
+
+export function calculateSalesBreakdown(
+  entries: DailyEntry[],
+  period: "week" | "month" = "week",
+): SalesBreakdown | null {
+  if (entries.length < 2) return null;
+
+  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+  const days = period === "week" ? 7 : 30;
+  const recent = sorted.slice(-days);
+  const previous = sorted.slice(-days * 2, -days);
+
+  if (recent.length === 0 || previous.length === 0) return null;
+
+  const recentSales = recent.reduce((s, e) => s + e.sales, 0);
+  const recentCustomers = recent.reduce((s, e) => s + e.customers, 0);
+  const prevSales = previous.reduce((s, e) => s + e.sales, 0);
+  const prevCustomers = previous.reduce((s, e) => s + e.customers, 0);
+
+  const recentTicket = recentCustomers > 0 ? recentSales / recentCustomers : 0;
+  const prevTicket = prevCustomers > 0 ? prevSales / prevCustomers : 0;
+
+  const custChange = prevCustomers > 0 ? ((recentCustomers - prevCustomers) / prevCustomers) * 100 : 0;
+  const ticketChange = prevTicket > 0 ? ((recentTicket - prevTicket) / prevTicket) * 100 : 0;
+  const salesChange = prevSales > 0 ? ((recentSales - prevSales) / prevSales) * 100 : 0;
+
+  // 주된 원인 판별
+  let primaryDriver: SalesBreakdown["primaryDriver"] = "none";
+  if (Math.abs(salesChange) > 3) {
+    const custImpact = Math.abs(custChange);
+    const ticketImpact = Math.abs(ticketChange);
+    if (custImpact > ticketImpact * 1.5) primaryDriver = "customers";
+    else if (ticketImpact > custImpact * 1.5) primaryDriver = "ticket";
+    else primaryDriver = "both";
+  }
+
+  return {
+    customers: recentCustomers,
+    avgTicket: Math.round(recentTicket),
+    totalSales: recentSales,
+    prevCustomers,
+    prevAvgTicket: Math.round(prevTicket),
+    prevTotalSales: prevSales,
+    customersChange: Math.round(custChange * 10) / 10,
+    avgTicketChange: Math.round(ticketChange * 10) / 10,
+    salesChange: Math.round(salesChange * 10) / 10,
+    primaryDriver,
+  };
+}
+
+/** 전월 대비 (MoM) 계산 */
+export type MoMComparison = {
+  currentMonth: string;       // YYYY-MM
+  currentMTD: number;         // 이번 달 누적 매출
+  prevMTD: number;            // 전월 동기 누적 매출
+  momChangePercent: number;   // MoM 변화율 %
+  currentDays: number;        // 이번 달 기록일 수
+  prevDays: number;           // 전월 동기 기록일 수
+  projectedMonthEnd: number;  // 월말 예상 매출
+};
+
+export function calculateMoM(entries: DailyEntry[]): MoMComparison | null {
+  if (entries.length === 0) return null;
+
+  const now = new Date();
+  const currentMonth = now.toISOString().slice(0, 7);
+  const todayDay = now.getDate();
+
+  // 전월 YYYY-MM 계산
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonth = prevDate.toISOString().slice(0, 7);
+
+  const currentEntries = entries.filter(e => e.date.startsWith(currentMonth));
+  const prevEntries = entries.filter(e => {
+    if (!e.date.startsWith(prevMonth)) return false;
+    const day = parseInt(e.date.slice(8, 10), 10);
+    return day <= todayDay; // 전월 동기(같은 날짜까지)
+  });
+
+  const currentMTD = currentEntries.reduce((s, e) => s + e.sales, 0);
+  const prevMTD = prevEntries.reduce((s, e) => s + e.sales, 0);
+  const momChange = prevMTD > 0 ? ((currentMTD - prevMTD) / prevMTD) * 100 : 0;
+
+  // 월말 예상: 현재 일평균 × 26영업일
+  const avgDaily = currentEntries.length > 0 ? currentMTD / currentEntries.length : 0;
+  const projectedMonthEnd = Math.round(avgDaily * 26);
+
+  return {
+    currentMonth,
+    currentMTD,
+    prevMTD,
+    momChangePercent: Math.round(momChange * 10) / 10,
+    currentDays: currentEntries.length,
+    prevDays: prevEntries.length,
+    projectedMonthEnd,
+  };
+}
+
+/** 1인당 생산성 */
+export function calculateProductivity(
+  dailySales: number,
+  employeeCount: number,
+): { perPerson: number; formatted: string } {
+  if (employeeCount <= 0) return { perPerson: dailySales, formatted: formatWon(dailySales) };
+  // 사장님 본인 포함 = employeeCount + 1
+  const total = employeeCount + 1;
+  const perPerson = Math.round(dailySales / total);
+  return { perPerson, formatted: formatWon(perPerson) };
+}
+
+function formatWon(v: number): string {
+  if (v >= 10000) return `${Math.round(v / 10000)}만`;
+  return `${v.toLocaleString()}원`;
+}

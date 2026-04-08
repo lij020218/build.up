@@ -12,6 +12,10 @@ import { MilestoneToast, checkMilestones } from "./MilestoneToast";
 import { ForecastCard } from "./ForecastCard";
 import { supabase } from "../../../../lib/supabase";
 import { calculateHealthMetrics, buildTaxCalendar, getUrgencyColor, getTaxCategoryLabel } from "@build-up/shared";
+import { MorningBriefing } from "./MorningBriefing";
+import { SalesBreakdownCard } from "./SalesBreakdownCard";
+import { MonthlyProgressCard } from "./MonthlyProgressCard";
+import { CostStructureCard } from "./CostStructureCard";
 
 type Props = { d: DashboardHook };
 
@@ -441,6 +445,52 @@ export default function OperationalDashboard({ d }: Props) {
           }} className="bento-btn">
             📊 {ko ? "CSV 내보내기" : "Export CSV"}
           </button>
+        </div>
+      </div>
+
+      {/* ━━━ 1단계: 모닝 브리핑 (5초 뷰) ━━━ */}
+      <MorningBriefing />
+
+      {/* ━━━ 2단계: 매출 분해 + 월간 진행 + 비용 구조 ━━━ */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "14px" }}>
+        <SalesBreakdownCard />
+        <MonthlyProgressCard />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "14px" }}>
+        <CostStructureCard />
+        {/* AI 코치 액션은 기존 aiActions 섹션에서 재활용 */}
+        <div style={{
+          borderRadius: "20px", padding: "20px",
+          background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px)",
+          border: "1px solid rgba(0,0,0,0.05)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+        }}>
+          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.4)", marginBottom: "14px" }}>
+            {ko ? "오늘 할 일" : "TODAY'S ACTIONS"}
+          </div>
+          {d.aiActions?.todayActions?.slice(0, 3).map((action: { title: string; reason: string; priority: string }, i: number) => (
+            <div key={i} style={{ display: "flex", gap: "10px", marginBottom: "12px", alignItems: "flex-start" }}>
+              <div style={{
+                width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0, marginTop: "6px",
+                background: action.priority === "high" ? "#FF3B30" : "#FF9F0A",
+              }} />
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "2px" }}>{action.title}</div>
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{action.reason}</div>
+              </div>
+            </div>
+          )) ?? (
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.35)" }}>
+              {ko ? "매출 데이터를 입력하면 AI가 오늘 할 일을 추천합니다." : "Log sales data and AI will recommend today's actions."}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ━━━ 기존 대시보드 (3단계: 딥다이브) ━━━ */}
+      <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.35)", marginBottom: "16px" }}>
+          {ko ? "상세 분석" : "DEEP DIVE"}
         </div>
       </div>
 
