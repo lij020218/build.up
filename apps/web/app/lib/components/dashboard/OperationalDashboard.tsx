@@ -971,17 +971,7 @@ function ActivitySnapshotCard({
                 d.setDailyCustomersInput("");
               }
             }}>
-              {/* 호버 시 툴팁 */}
-              {isSelected && bar.sales > 0 && (
-                <div style={{
-                  position: "absolute" as const, top: "-36px", left: "50%", transform: "translateX(-50%)",
-                  padding: "4px 10px", borderRadius: "8px", background: "#0f172a", color: "#fff",
-                  fontSize: "11px", fontWeight: 650, whiteSpace: "nowrap" as const, zIndex: 10,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)", fontVariantNumeric: "tabular-nums" as const,
-                }} className="bento-fade-in">
-                  {fmt(bar.sales)}
-                </div>
-              )}
+              {/* 바 위 금액은 아래 라벨로만 표시 — 떠있는 pill 제거 */}
               <div style={{ ...activityBarTrack, height: "120px" }}>
                 <div
                   className="bento-meter-fill"
