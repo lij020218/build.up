@@ -1706,6 +1706,15 @@ export function useDashboard(surface: DashboardSurface = "home") {
     navigateToSurface("home");
   };
 
+  /** AI 액션 갱신 debounce — 데이터 변경 후 3초 뒤 자동 갱신 */
+  const aiRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleAiRefresh = () => {
+    if (aiRefreshTimerRef.current) clearTimeout(aiRefreshTimerRef.current);
+    aiRefreshTimerRef.current = setTimeout(() => {
+      setAiActions(null); // 기존 결과 초기화 → OperationalDashboard useEffect가 재호출
+    }, 3000);
+  };
+
   const handleAddDailyEntry = () => {
     if (!dailySalesInput) return;
     // 기존 기록의 productSales 등 추가 필드를 보존
@@ -1724,6 +1733,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     setDailySalesInput("");
     setDailyCustomersInput("");
     flushStoreData();
+    scheduleAiRefresh(); // 매출 입력 → AI 경영 우선순위 자동 갱신
   };
 
   const handleSaveMonthlyCosts = () => {
@@ -1743,11 +1753,13 @@ export function useDashboard(surface: DashboardSurface = "home") {
       .slice(-12);
     setCostHistory(updatedHistory);
     flushStoreData();
+    scheduleAiRefresh(); // 비용 변경 → AI 경영 우선순위 자동 갱신
   };
 
   const saveInventory = (next: InventoryItem[]) => {
     setInventory(next);
     flushStoreData();
+    scheduleAiRefresh(); // 재고 변경 → AI 우선순위 갱신
   };
   const emptyInvForm: InvForm = { open: false, editId: null, name: "", qty: "", unit: "개", threshold: "", unitCost: "", category: "other", itemType: "material" as const, sellingPrice: "", expiryDate: "", supplierName: "", url: "", leadTimeDays: "", dailyUsage: "" };
   const handleInvSave = () => {
@@ -1816,6 +1828,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const saveEmployees = (list: Employee[]) => {
     setEmployees(list);
     flushStoreData();
+    scheduleAiRefresh(); // 직원 변경 → AI 우선순위 갱신
   };
   const handleEmpSave = () => {
     const wage = parseInt(empWage.replace(/[^0-9]/g, ""), 10);
