@@ -25,8 +25,7 @@ const getHealth = (val: number, good: number, caution: number): HealthLevel =>
 const healthColor = (h: HealthLevel): string =>
   h === "good" ? "#34C759" : h === "caution" ? "#FF9F0A" : "#FF3B30";
 
-const healthDot = (h: HealthLevel): string =>
-  h === "good" ? "\uD83D\uDFE2" : h === "caution" ? "\uD83D\uDFE1" : "\uD83D\uDD34";
+// healthDot removed — replaced with CSS dot in JSX
 
 /* ─── Resolve industry-specific thresholds ─── */
 
@@ -186,7 +185,6 @@ export function CostStructureCard() {
         {rows.map((row, idx) => {
           const h = getHealth(row.ratio, row.thresholds.good, row.thresholds.caution);
           const color = healthColor(h);
-          const dot = healthDot(h);
           const barWidth = Math.min(row.ratio, 100);
 
           return (
@@ -231,9 +229,13 @@ export function CostStructureCard() {
                   </div>
                 </div>
 
-                {/* Traffic Light */}
+                {/* Traffic Light — CSS dot */}
                 <div style={dotCol}>
-                  <span style={{ fontSize: "12px" }}>{dot}</span>
+                  <div style={{
+                    width: "8px", height: "8px", borderRadius: "50%",
+                    background: color,
+                    boxShadow: `0 0 6px ${color}40`,
+                  }} />
                 </div>
               </div>
 

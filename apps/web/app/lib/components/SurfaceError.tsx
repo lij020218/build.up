@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import { AlertCircle } from "lucide-react";
 
 /**
  * Surface별 에러 바운더리 UI.
@@ -43,10 +44,9 @@ export function SurfaceError({
           alignItems: "center",
           justifyContent: "center",
           marginBottom: "16px",
-          fontSize: "20px",
         }}
       >
-        ⚠
+        <AlertCircle size={24} color="#dc2626" strokeWidth={1.8} />
       </div>
       <h2 style={{ fontSize: "17px", fontWeight: 600, marginBottom: "6px", color: "#0f172a" }}>
         {surfaceLabel ? `${surfaceLabel} 로딩에 실패했습니다` : "이 화면을 불러올 수 없습니다"}
