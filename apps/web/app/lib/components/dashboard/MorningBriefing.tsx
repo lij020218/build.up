@@ -214,26 +214,102 @@ export function MorningBriefing() {
     },
   ];
 
-  // ── Empty state
+  // ── 오늘 매출 미입력 여부 확인
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayEntry = entries.find(e => e.date === todayStr);
+  const needsInput = !todayEntry;
+
+  // ── Empty state → 아름다운 입력 유도 카드
   if (!hasData) {
     return (
       <section style={sectionStyle}>
-        <div style={briefingCardStyle}>
-          <p style={insightTextStyle}>
+        {/* 입력 유도 카드 */}
+        <div style={{
+          borderRadius: "24px",
+          padding: "40px 32px",
+          background: "linear-gradient(135deg, rgba(29,53,87,0.03) 0%, rgba(52,199,89,0.04) 100%)",
+          border: "1px solid rgba(29,53,87,0.06)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          textAlign: "center" as const,
+        }}>
+          <div style={{
+            width: "56px", height: "56px", borderRadius: "16px",
+            background: "linear-gradient(135deg, #1d3557 0%, #2d4a7a 100%)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 20px", boxShadow: "0 4px 16px rgba(29,53,87,0.2)",
+          }}>
+            <span style={{ fontSize: "24px" }}>📊</span>
+          </div>
+          <h2 style={{
+            fontSize: "20px", fontWeight: 700, color: "#0f172a",
+            letterSpacing: "-0.02em", marginBottom: "8px",
+          }}>
+            {ko ? "첫 매출을 기록해 보세요" : "Record your first sales"}
+          </h2>
+          <p style={{
+            fontSize: "14px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6,
+            maxWidth: "340px", margin: "0 auto 24px",
+          }}>
             {ko
-              ? "매출 데이터를 입력하면 AI 모닝 브리핑이 시작됩니다."
-              : "Enter sales data to activate your AI morning briefing."}
+              ? "매출과 고객 수를 입력하면 AI가 매일 경영 브리핑을 제공합니다."
+              : "Enter sales and customers to unlock daily AI business briefings."}
           </p>
-        </div>
-        <div className="morning-kpi-grid" style={gridStyle}>
-          {kpis.map((kpi) => (
-            <div key={kpi.label} style={kpiCardStyle}>
-              <div style={kpiLabelStyle}>{kpi.label}</div>
-              <div style={{ ...kpiValueStyle, color: "rgba(15,23,42,0.2)" }}>
-                --
-              </div>
-            </div>
-          ))}
+
+          {/* 인라인 입력 필드 */}
+          <div style={{
+            display: "flex", gap: "10px", justifyContent: "center",
+            flexWrap: "wrap" as const, maxWidth: "420px", margin: "0 auto",
+          }}>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder={ko ? "매출 (만원)" : "Sales (만원)"}
+              value={d.dailySalesInput}
+              onChange={(e) => d.setDailySalesInput(e.target.value)}
+              style={{
+                flex: "1 1 120px", padding: "14px 16px", borderRadius: "14px",
+                border: "1.5px solid rgba(29,53,87,0.12)", background: "rgba(255,255,255,0.9)",
+                fontSize: "15px", fontWeight: 600, fontFamily: FONT_STACK,
+                outline: "none", textAlign: "center" as const,
+                transition: "border-color 0.2s ease",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.12)"; }}
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder={ko ? "고객 수" : "Customers"}
+              value={d.dailyCustomersInput}
+              onChange={(e) => d.setDailyCustomersInput(e.target.value)}
+              style={{
+                flex: "1 1 100px", padding: "14px 16px", borderRadius: "14px",
+                border: "1.5px solid rgba(29,53,87,0.12)", background: "rgba(255,255,255,0.9)",
+                fontSize: "15px", fontWeight: 600, fontFamily: FONT_STACK,
+                outline: "none", textAlign: "center" as const,
+                transition: "border-color 0.2s ease",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.12)"; }}
+            />
+            <button
+              type="button"
+              onClick={() => d.handleAddDailyEntry()}
+              disabled={!d.dailySalesInput}
+              style={{
+                flex: "0 0 auto", padding: "14px 28px", borderRadius: "14px",
+                border: "none", background: d.dailySalesInput ? PRIMARY : "rgba(15,23,42,0.08)",
+                color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.3)",
+                fontSize: "15px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
+                fontFamily: FONT_STACK,
+                boxShadow: d.dailySalesInput ? "0 4px 14px rgba(29,53,87,0.25)" : "none",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {ko ? "기록" : "Save"}
+            </button>
+          </div>
         </div>
       </section>
     );
@@ -241,6 +317,68 @@ export function MorningBriefing() {
 
   return (
     <section style={sectionStyle}>
+      {/* ── 오늘 매출 미입력 시 상단 입력 바 ── */}
+      {needsInput && (
+        <div style={{
+          borderRadius: "16px",
+          padding: "14px 18px",
+          background: "linear-gradient(135deg, rgba(29,53,87,0.04) 0%, rgba(52,199,89,0.03) 100%)",
+          border: "1.5px solid rgba(29,53,87,0.08)",
+          display: "flex", alignItems: "center", gap: "10px",
+          flexWrap: "wrap" as const,
+        }}>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: PRIMARY, whiteSpace: "nowrap" as const }}>
+            {ko ? "📝 오늘 매출" : "📝 Today"}
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder={ko ? "만원" : "₩10K"}
+            value={d.dailySalesInput}
+            onChange={(e) => d.setDailySalesInput(e.target.value)}
+            style={{
+              flex: "1 1 80px", padding: "10px 14px", borderRadius: "12px",
+              border: "1px solid rgba(29,53,87,0.1)", background: "rgba(255,255,255,0.9)",
+              fontSize: "14px", fontWeight: 600, fontFamily: FONT_STACK,
+              outline: "none", minWidth: "80px",
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.1)"; }}
+          />
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder={ko ? "고객" : "Cust."}
+            value={d.dailyCustomersInput}
+            onChange={(e) => d.setDailyCustomersInput(e.target.value)}
+            style={{
+              flex: "1 1 60px", padding: "10px 14px", borderRadius: "12px",
+              border: "1px solid rgba(29,53,87,0.1)", background: "rgba(255,255,255,0.9)",
+              fontSize: "14px", fontWeight: 600, fontFamily: FONT_STACK,
+              outline: "none", minWidth: "60px",
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.1)"; }}
+          />
+          <button
+            type="button"
+            onClick={() => d.handleAddDailyEntry()}
+            disabled={!d.dailySalesInput}
+            style={{
+              padding: "10px 20px", borderRadius: "12px",
+              border: "none", background: d.dailySalesInput ? PRIMARY : "rgba(15,23,42,0.06)",
+              color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.25)",
+              fontSize: "13px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
+              fontFamily: FONT_STACK, whiteSpace: "nowrap" as const,
+              boxShadow: d.dailySalesInput ? "0 2px 8px rgba(29,53,87,0.2)" : "none",
+              transition: "all 0.2s ease",
+            }}
+          >
+            {ko ? "기록" : "Save"}
+          </button>
+        </div>
+      )}
+
       {/* ── AI Briefing Card ── */}
       <div style={briefingCardStyle}>
         <div

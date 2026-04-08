@@ -417,11 +417,14 @@ export default function OperationalDashboard({ d }: Props) {
       {/* ━━━ 1단계: 모닝 브리핑 (5초 뷰) ━━━ */}
       <MorningBriefing />
 
-      {/* ━━━ 2단계: 매출 분해 + 월간 진행 + 비용 구조 ━━━ */}
+      {/* ━━━ 2단계: 매출 분해 + 월간 진행 + 비용 구조 (데이터 있을 때만) ━━━ */}
+      {allEntries.length >= 2 && (
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "14px" }}>
         <SalesBreakdownCard />
         <MonthlyProgressCard />
       </div>
+      )}
+      {allEntries.length >= 1 && (
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "14px" }}>
         <CostStructureCard />
         {/* AI 코치 액션은 기존 aiActions 섹션에서 재활용 */}
@@ -452,27 +455,24 @@ export default function OperationalDashboard({ d }: Props) {
           )}
         </div>
       </div>
+      )}
 
-      {/* ━━━ 기존 대시보드 (3단계: 딥다이브) ━━━ */}
+      {/* ━━━ 기존 대시보드 (3단계: 딥다이브) — 데이터 있을 때만 표시 ━━━ */}
+      {allEntries.length >= 3 && (
       <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
         <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.35)", marginBottom: "16px" }}>
           {ko ? "상세 분석" : "DEEP DIVE"}
         </div>
       </div>
+      )}
 
-      <div style={heroPanel} className="bento-card">
+      <div style={{ ...heroPanel, display: "none" }} className="bento-card">
         <div style={heroHeader}>
           <div>
             <div style={heroEyebrow}>{ko ? "운영 홈" : "Operations home"}</div>
             <h1 style={heroTitle}>{d.storeName || (ko ? "내 가게" : "My Store")}</h1>
             <p style={heroBody}>
-              {isStartupCompany
-                ? ko
-                  ? "기술 스타트업 모드입니다. 첫 화면에는 런웨이, 주간 성장, 월 burn/손익, 팀, 실행 단계, 오늘의 우선순위만 남겼습니다."
-                  : "Startup mode keeps only the numbers that matter right now: runway, weekly growth, monthly burn/P&L, team, execution progress, and today's priorities."
-                : ko
-                  ? "첫 화면은 매일 경영 판단에 직접 쓰는 숫자만 남겼습니다. 현금, 7일 흐름, 월 손익, 재고, 직원, 그리고 오늘의 우선순위를 한 번에 봅니다."
-                  : "This home screen keeps only the numbers you use to run the business every day: cash, 7-day trend, monthly P&L, inventory, staff, and today's priorities."}
+              {""}
             </p>
           </div>
           <div style={heroActions}>
