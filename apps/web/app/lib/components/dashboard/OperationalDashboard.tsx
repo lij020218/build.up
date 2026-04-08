@@ -16,6 +16,7 @@ import { MorningBriefing } from "./MorningBriefing";
 import { SalesBreakdownCard } from "./SalesBreakdownCard";
 import { MonthlyProgressCard } from "./MonthlyProgressCard";
 import { CostStructureCard } from "./CostStructureCard";
+import { BenchmarkCard } from "./BenchmarkCard";
 
 type Props = { d: DashboardHook };
 
@@ -430,8 +431,9 @@ export default function OperationalDashboard({ d }: Props) {
       </div>
       )}
       {allEntries.length >= 1 && (
-      <div style={{ marginTop: "14px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "14px" }}>
         <CostStructureCard />
+        <BenchmarkCard />
       </div>
       )}
 
