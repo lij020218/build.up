@@ -3920,8 +3920,38 @@ export function CurrentStageView() {
                 {/* ── 고객 발굴·문제 검증 가이드 (customer_discovery) ── */}
                 {currentStage.code === "customer_discovery" && (() => {
                   const ko = language === "ko";
+                  const pg = guideStepIndex;
+                  const totalPg = 4;
+                  const pgLabels = ko
+                    ? ["왜 중요한가", "1. 인터뷰 준비", "2. 인터뷰 실행", "3. AI 분석"]
+                    : ["Why", "1. Prepare", "2. Execute", "3. Analyze"];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+                      {/* 페이지 네비 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <button type="button" disabled={pg === 0} onClick={() => setGuideStepIndex(p => p - 1)} style={{
+                          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+                          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
+                          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
+                        }}>{ko ? "← 이전" : "← Prev"}</button>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {pgLabels.map((l, i) => (
+                            <button key={i} type="button" onClick={() => setGuideStepIndex(i)} style={{
+                              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
+                              background: i === pg ? "#1d3557" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
+                              border: "none", cursor: "pointer",
+                            }}>{l}</button>
+                          ))}
+                        </div>
+                        <button type="button" disabled={pg === totalPg - 1} onClick={() => setGuideStepIndex(p => p + 1)} style={{
+                          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+                          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
+                          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
+                        }}>{ko ? "다음 →" : "Next →"}</button>
+                      </div>
+
+                      {pg === 0 && (
+                      <>
                       {/* WHY — 왜 이 단계가 중요한가 */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -3936,6 +3966,11 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      </>
+                      )}
+
+                      {pg === 1 && (
+                      <>
                       {/* STEP 1 — AI로 인터뷰 스크립트 준비 */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
@@ -3973,6 +4008,11 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      </>
+                      )}
+
+                      {pg === 2 && (
+                      <>
                       {/* STEP 2 — 인터뷰 대상 찾기 + 실행 */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
@@ -4020,6 +4060,11 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      </>
+                      )}
+
+                      {pg === 3 && (
+                      <>
                       {/* STEP 3 — AI로 인사이트 정리 */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
@@ -4059,6 +4104,8 @@ export function CurrentStageView() {
                           </div>
                         </div>
                       </div>
+                      </>
+                      )}
                     </div>
                   );
                 })()}
