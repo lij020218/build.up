@@ -1265,18 +1265,18 @@ export const starterStageFlow: RoadmapStageState[] = [
   {
     stageId: "company-setup",
     code: "company_setup",
-    title: "Company, finance, and security basics",
+    title: "Incorporation, costs, and equity basics",
     type: "execution",
     status: "locked",
     stepNumber: 6,
     totalSteps: 18,
-    goal: "Complete incorporation, open a business bank account, set up bookkeeping, and put basic privacy and security practices in place.",
+    goal: "Complete the 6-step incorporation process, confirm costs, and understand stock option basics for future team building.",
     whyNow: "Government grants, investor due diligence, and even hiring all require an active corporation. Delaying this blocks every downstream step.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["banking-finance-stack", "privacy-security-basics", "tax-advisor-selected"]
+      requiredTaskIds: ["incorporation-done", "cost-plan-confirmed"]
     },
-    taskIds: ["banking-finance-stack", "privacy-security-basics", "tax-advisor-selected"],
+    taskIds: ["incorporation-done", "cost-plan-confirmed", "stock-option-plan"],
     riskIds: [],
     nextStageIds: ["customer-discovery"]
   },
@@ -1828,9 +1828,9 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "retention-check-defined", title: "Define a retention check so growth is not judged on acquisition alone", status: "todo", required: true, estimatedMinutes: 45 }
   ],
   "company-setup": [
-    { taskId: "banking-finance-stack", title: "Separate company banking, bookkeeping, and cash tracking", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "privacy-security-basics", title: "Put basic privacy, access control, and security hygiene in place", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "tax-advisor-selected", title: "Select a tax advisor and set up bookkeeping schedule", status: "todo", required: true, estimatedMinutes: 30 }
+    { taskId: "incorporation-done", title: "Complete incorporation (articles, registration, business account)", status: "todo", required: true, estimatedMinutes: 120 },
+    { taskId: "cost-plan-confirmed", title: "Confirm incorporation costs and choose DIY or agency", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "stock-option-plan", title: "Review stock option and cap table basics for future hires", status: "todo", required: false, estimatedMinutes: 30 },
   ],
   "fundraising-readiness": [
     { taskId: "runway-model-ready", title: "Model burn rate and cash runway with best/base/worst scenarios", status: "todo", required: true, estimatedMinutes: 60 },
