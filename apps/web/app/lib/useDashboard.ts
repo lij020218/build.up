@@ -2499,7 +2499,9 @@ export function useDashboard(surface: DashboardSurface = "home") {
       const hasIndustry = loadedIndustryId || loadedProfile?.subIndustryId;
       // businessLaunched는 Supabase에서 복원된 후의 상태를 확인 (localStorage만으로는 새 기기에서 작동 안 함)
       const isLaunched = useProfileStore.getState().businessLaunched || businessLaunched;
-      if (!hasIndustry && !isLaunched) {
+      // onboardingDismissed가 true이면 사용자가 이미 "직접 로드맵"을 선택한 것이므로 온보딩을 다시 띄우지 않음
+      const dismissed = localStorage.getItem("buildup_onboarding_dismissed") === "true";
+      if (!hasIndustry && !isLaunched && !dismissed) {
         setShowOnboardingChoice(true);
       }
 
