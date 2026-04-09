@@ -617,10 +617,11 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "mvp-shipped": { ko: "가장 작은 MVP 출시" },
   "ip-protection-filed": { ko: "공개 전 상표 등록 및 특허 출원 (가출원 포함)" },
   // launch-gtm
-  "analytics-live": { ko: "활성화·전환·리텐션 분석 이벤트 설치" },
-  "billing-or-conversion-live": { ko: "결제 또는 전환 추적 설정" },
+  "analytics-live": { ko: "분석(Analytics) 연결 — 핵심 이벤트 + 퍼널 세팅" },
+  "billing-or-conversion-live": { ko: "결제·전환 흐름 세팅 — 가격 정책 + 결제 연동" },
+  "error-monitoring-live": { ko: "에러 모니터링 연결 — Sentry + Slack 알림" },
+  "feedback-loop-live": { ko: "고객 피드백 루프 — 인앱 채널 + 주간 리뷰" },
   "app-store-submission": { ko: "Google Play / Apple App Store 앱 제출" },
-  "gtm-channel-defined": { ko: "핵심 시장 진입 채널 확정 및 첫 고객 확보 실험" },
   // growth-engine
   "north-star-set": { ko: "북극성 지표와 주간 성장 지표 확정" },
   "weekly-review-running": { ko: "주간 성장·런웨이·병목 리뷰 루틴 시작" },

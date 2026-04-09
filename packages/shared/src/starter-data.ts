@@ -1324,13 +1324,13 @@ export const starterStageFlow: RoadmapStageState[] = [
     status: "locked",
     stepNumber: 9,
     totalSteps: 18,
-    goal: "Put billing, analytics, error tracking in place. If building a mobile app, submit to Google Play and Apple App Store. Define your go-to-market channel before pushing for growth.",
-    whyNow: "Without instrumentation founders mistake noise for signal. App store submissions take 3-7 days for review — start early. Without a GTM plan even great products launch into silence.",
+    goal: "Put analytics, billing, error monitoring, and a customer feedback loop in place before pushing for growth. If building a mobile app, submit to app stores early.",
+    whyNow: "Without instrumentation founders mistake noise for signal. Analytics, billing, error monitoring, and feedback loop — these 4 enable meaningful decisions. Skipping any one means flying blind.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "gtm-channel-defined"]
+      requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "error-monitoring-live", "feedback-loop-live"]
     },
-    taskIds: ["analytics-live", "billing-or-conversion-live", "app-store-submission", "gtm-channel-defined"],
+    taskIds: ["analytics-live", "billing-or-conversion-live", "error-monitoring-live", "feedback-loop-live", "app-store-submission"],
     riskIds: [],
     nextStageIds: ["growth-engine"]
   },
@@ -1819,8 +1819,9 @@ export const starterTaskMap: WorkflowTaskMap = {
   "launch-gtm": [
     { taskId: "analytics-live", title: "Install analytics for activation, retention, and funnel events", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "billing-or-conversion-live", title: "Set up billing, pricing, or conversion tracking before launch", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "app-store-submission", title: "Submit app to Google Play and/or Apple App Store", status: "todo", required: false, estimatedMinutes: 240 },
-    { taskId: "gtm-channel-defined", title: "Define primary GTM channel and run first acquisition experiment", status: "todo", required: true, estimatedMinutes: 60 }
+    { taskId: "error-monitoring-live", title: "Connect error monitoring (Sentry) and Slack alerts for real-time issue tracking", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "feedback-loop-live", title: "Build customer feedback loop with in-app channel and weekly review habit", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "app-store-submission", title: "Submit app to Google Play and/or Apple App Store", status: "todo", required: false, estimatedMinutes: 240 }
   ],
   "growth-engine": [
     { taskId: "north-star-set", title: "Choose one north-star metric and one weekly growth metric", status: "todo", required: true, estimatedMinutes: 30 },
