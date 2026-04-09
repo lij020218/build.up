@@ -2409,28 +2409,28 @@ export function useDashboard(surface: DashboardSurface = "home") {
       setUserRole(resolvedRole);
 
       setDecisions(result.state.decisions);
-      // Backfill missing tasks from starterTaskMap (handles schema updates)
-      // Only backfill for stages that exist in the current roadmap
+      // Reconcile tasks: starterTaskMap is source of truth for task definitions.
+      // - Keep completion status from server data
+      // - Remove tasks that no longer exist in starterTaskMap (schema changed)
+      // - Add new tasks that weren't in server data
       const loadedTasks = result.state.tasks;
       const roadmapStageIds = new Set(result.state.roadmap.stages.map((s: { stageId: string }) => s.stageId));
-      const backfilled: WorkflowTaskMap = {};
+      const reconciled: WorkflowTaskMap = {};
       for (const [stageKey, starterTasks] of Object.entries(starterTaskMap)) {
-        // Only backfill if this stage exists in the user's roadmap
         if (!roadmapStageIds.has(stageKey)) {
-          // Still preserve if loaded data has it
-          if (loadedTasks[stageKey]) backfilled[stageKey] = loadedTasks[stageKey];
+          if (loadedTasks[stageKey]) reconciled[stageKey] = loadedTasks[stageKey];
           continue;
         }
-        const existing = loadedTasks[stageKey] ?? [];
-        const existingIds = new Set(existing.map((t) => t.taskId));
-        const missing = starterTasks.filter((t) => !existingIds.has(t.taskId));
-        backfilled[stageKey] = [...existing, ...missing];
+        const existingByKey = new Map((loadedTasks[stageKey] ?? []).map((t) => [t.taskId, t]));
+        const validTaskIds = new Set(starterTasks.map((t) => t.taskId));
+        // Start from starterTaskMap (source of truth), preserve completion status from server
+        reconciled[stageKey] = starterTasks.map((starterTask) => {
+          const saved = existingByKey.get(starterTask.taskId);
+          return saved ? { ...starterTask, status: saved.status } : starterTask;
+        });
+        // Note: tasks in server but NOT in starterTaskMap are intentionally dropped (schema changed)
       }
-      // Preserve any loaded stages not in starterTaskMap
-      for (const [stageKey, tasks] of Object.entries(loadedTasks)) {
-        if (!backfilled[stageKey]) backfilled[stageKey] = tasks;
-      }
-      setTaskMap(backfilled);
+      setTaskMap(reconciled);
       setRoadmap(result.state.roadmap);
       /* IMPORTANT: setPersistenceReady MUST come AFTER state restoration.
          Otherwise the autosave effect fires with stale starter defaults
