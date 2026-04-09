@@ -3475,11 +3475,11 @@ export function CurrentStageView() {
                           <div style={{ fontSize: "12px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "정부 보조금 · 무상 지원 (주요 프로그램)" : "Government Grants (Key Programs)"}</div>
                           <div style={{ display: "grid", gap: "6px" }}>
                             {(ko ? [
-                              { name: "예비창업패키지", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자 대상. 매년 2~3월 공모", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                              { name: "초기창업패키지", amount: "최대 1.5억원", detail: "창업 3년 이내. 매년 1~3월 공모", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
+                              { name: "예비창업패키지 2차", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자 대상. 접수: ~11/30 수시", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                              { name: "TIPS 일반트랙", amount: "최대 8억원", detail: "운영사 선투자 → 정부 매칭. 접수: ~12/31 상시", color: "#7c3aed", url: "https://www.jointips.or.kr" },
                             ] : [
-                              { name: "Pre-Startup Package", amount: "Up to ₩100M", detail: "For pre-entrepreneurs. Apply Feb-Mar", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                              { name: "Early Startup Package", amount: "Up to ₩150M", detail: "Within 3yr of founding. Apply Jan-Mar", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
+                              { name: "Pre-Startup 2nd Round", amount: "Up to ₩100M", detail: "Pre-entrepreneurs. Rolling until Nov 30", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                              { name: "TIPS General", amount: "Up to ₩800M", detail: "Operator invest first → gov match. Rolling until Dec 31", color: "#7c3aed", url: "https://www.jointips.or.kr" },
                             ]).map(p => progCard(p))}
                           </div>
                           <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(15,23,42,0.02)", marginTop: "8px", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
@@ -5435,30 +5435,28 @@ export function CurrentStageView() {
                         <div style={{ fontSize: "12px", fontWeight: 700, color: "#d97706", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginTop: "4px" }}>{ko ? "사업화 지원 패키지" : "Commercialization Packages"}</div>
                         <div style={{ display: "grid", gap: "6px" }}>
                           {(ko ? [
-                            { name: "예비창업패키지", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자. 사업화 자금+교육+멘토링. 2026 마감: 3/24(화) 16:00", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                            { name: "초기창업패키지", amount: "최대 1억원", detail: "창업 3년 이내. 평균 5천만원. 딥테크 최대 1.5억원. 2026 마감: 2/13(목) 16:00", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                            { name: "창업도약패키지", amount: "최대 3억원", detail: "창업 3~7년. 성장 단계 스케일업 자금. 2026 마감: 2/13(목) 16:00", color: "#059669", url: "https://www.k-startup.go.kr" },
-                            { name: "AI 바우처", amount: "최대 3억원", detail: "AI 솔루션 도입 비용 70~90% 정부 지원. 2026 수시 모집 (aibiz.or.kr 확인)", color: "#d97706", url: "https://www.aibiz.or.kr" },
-                            { name: "청년창업사관학교", amount: "최대 1억원", detail: "만 39세 이하. 사무공간+자금+멘토링 풀패키지. 연 2회", color: "#dc2626", url: "https://start.kosmes.or.kr" },
+                            { name: "예비창업패키지 2차", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자. 사업화 자금+멘토링. 접수: ~11/30까지 수시", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                            { name: "AI 바우처", amount: "최대 3억원", detail: "AI 솔루션 도입 비용 70~90% 정부 지원. 2026 수시 모집 (nipa.kr 확인)", color: "#d97706", url: "https://www.nipa.kr" },
+                            { name: "데이터바우처", amount: "최대 5천만원", detail: "데이터 구매·가공 비용 지원. 수요기업 수시 모집 (kdata.or.kr)", color: "#7c3aed", url: "https://www.kdata.or.kr" },
+                            { name: "창업중심대학", amount: "최대 1억원", detail: "대학 소속 (예비)창업자. 사업화 자금+공간+멘토링. 대학별 수시 모집", color: "#059669", url: "https://www.k-startup.go.kr" },
                           ] : [
-                            { name: "Pre-Startup Package", amount: "Up to ₩100M", detail: "Pre-entrepreneurs. Funding+education+mentoring. 2026 deadline: Mar 24 16:00", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                            { name: "Early Startup Package", amount: "Up to ₩100M", detail: "Within 3yr. Avg ₩50M. Deep tech ₩150M. 2026 deadline: Feb 13 16:00", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                            { name: "Growth Package", amount: "Up to ₩300M", detail: "3-7yr startups. Scale-up. 2026 deadline: Feb 13 16:00", color: "#059669", url: "https://www.k-startup.go.kr" },
-                            { name: "AI Voucher", amount: "Up to ₩300M", detail: "70-90% AI solution cost covered. 2026: rolling (check aibiz.or.kr)", color: "#d97706", url: "https://www.aibiz.or.kr" },
-                            { name: "Youth Startup Academy", amount: "Up to ₩100M", detail: "Under 39. Office+funds+mentoring. Twice yearly", color: "#dc2626", url: "https://start.kosmes.or.kr" },
+                            { name: "Pre-Startup 2nd Round", amount: "Up to ₩100M", detail: "Pre-entrepreneurs. Rolling until Nov 30", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                            { name: "AI Voucher", amount: "Up to ₩300M", detail: "70-90% AI cost covered. 2026 rolling (nipa.kr)", color: "#d97706", url: "https://www.nipa.kr" },
+                            { name: "Data Voucher", amount: "Up to ₩50M", detail: "Data purchase/processing. Rolling recruitment", color: "#7c3aed", url: "https://www.kdata.or.kr" },
+                            { name: "Startup University", amount: "Up to ₩100M", detail: "University-based founders. Rolling by university", color: "#059669", url: "https://www.k-startup.go.kr" },
                           ]).map(p => progCard(p))}
                         </div>
 
                         <div style={{ fontSize: "12px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginTop: "4px" }}>{ko ? "창업 경진대회" : "Startup Competitions"}</div>
                         <div style={{ display: "grid", gap: "6px" }}>
                           {(ko ? [
-                            { name: "도전! K-스타트업", amount: "최대 1억원", detail: "국내 최대 규모. 예선→본선→왕중왕전. 상금+후속 지원", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                            { name: "K-Startup 그랜드챌린지", amount: "상금+비자", detail: "글로벌 스타트업 대상. 한국 시장 진출 지원. 연 1회", color: "#dc2626", url: "https://www.k-startup.go.kr" },
-                            { name: "소셜벤처 경연대회", amount: "최대 5천만원", detail: "사회적 가치+비즈니스 모델. 소셜 임팩트 스타트업", color: "#059669", url: "https://www.sv-hub.co.kr" },
+                            { name: "도전! K-스타트업 2026", amount: "최대 1억원", detail: "국내 최대 규모 경진대회. 예선→본선→왕중왕전. 하반기 접수 예정 (challengek.org)", color: "#2563eb", url: "https://www.challengek.org" },
+                            { name: "K-Startup 그랜드챌린지", amount: "상금+비자", detail: "글로벌 스타트업 대상. 한국 시장 진출 지원. 하반기 모집 (연 1회)", color: "#dc2626", url: "https://www.k-startup.go.kr" },
+                            { name: "소셜벤처 경연대회", amount: "최대 5천만원", detail: "사회적 가치+비즈니스 모델. 2026 하반기 예정 (sv-hub.co.kr)", color: "#059669", url: "https://www.sv-hub.co.kr" },
                           ] : [
-                            { name: "Challenge! K-Startup", amount: "Up to ₩100M", detail: "Korea's largest. Multi-round. Prize+follow-up", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                            { name: "K-Startup Grand Challenge", amount: "Prize+visa", detail: "For global startups. Korea market entry. Yearly", color: "#dc2626", url: "https://www.k-startup.go.kr" },
-                            { name: "Social Venture Contest", amount: "Up to ₩50M", detail: "Social value + business model", color: "#059669", url: "https://www.sv-hub.co.kr" },
+                            { name: "Challenge! K-Startup 2026", amount: "Up to ₩100M", detail: "Korea's largest competition. Applications open H2 (challengek.org)", color: "#2563eb", url: "https://www.challengek.org" },
+                            { name: "K-Startup Grand Challenge", amount: "Prize+visa", detail: "Global startups. Korea entry. H2 recruitment (yearly)", color: "#dc2626", url: "https://www.k-startup.go.kr" },
+                            { name: "Social Venture Contest", amount: "Up to ₩50M", detail: "Social impact. H2 2026 expected (sv-hub.co.kr)", color: "#059669", url: "https://www.sv-hub.co.kr" },
                           ]).map(p => progCard(p))}
                         </div>
                       </div>
