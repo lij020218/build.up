@@ -4000,12 +4000,139 @@ export function CurrentStageView() {
                             </div>
                           ))}
                         </div>
-                        <div style={{ margin: "0 22px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 인터뷰 스크립트 생성" : "AI — Generate interview script"}</div>
-                          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(37,99,235,0.03)", fontStyle: "italic" }}>
-                            {ko ? "\"나는 [업종]에서 [타깃 고객]의 [구체적 문제]를 해결하려 해. The Mom Test 원칙에 맞는 30분짜리 인터뷰 스크립트를 만들어줘. 도입부 아이스브레이킹 2분, 핵심 질문 5개, 마무리 질문 2개 구성으로. 각 질문에 '왜 이 질문을 하는지' 주석도 달아줘.\"" : "\"I'm solving [problem] for [target] in [industry]. Create a 30-min interview script following The Mom Test. Include 2min icebreaker, 5 core questions, 2 closing questions. Add annotations explaining why each question matters.\""}
+                        {/* ── AI 인터뷰지 생성기 ── */}
+                        <div style={{ margin: "0 22px 16px", padding: "16px 18px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(37,99,235,0.04) 0%, rgba(124,58,237,0.03) 100%)", border: "1px solid rgba(37,99,235,0.1)" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>
+                            {ko ? "AI 인터뷰지 생성기" : "AI INTERVIEW GENERATOR"}
                           </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                            <input
+                              type="text"
+                              placeholder={ko ? "해결하려는 문제 (예: 소상공인의 경영 데이터 분석 시간 부족)" : "Problem to solve"}
+                              value={(guideSelections["interview-problem"] ?? (decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? "")}
+                              onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-problem": e.target.value }))}
+                              style={{
+                                padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(37,99,235,0.12)",
+                                background: "rgba(255,255,255,0.9)", fontSize: "13px", outline: "none",
+                              }}
+                              onFocus={e => { e.currentTarget.style.borderColor = "#2563eb"; }}
+                              onBlur={e => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.12)"; }}
+                            />
+                            <input
+                              type="text"
+                              placeholder={ko ? "타겟 고객 (예: 월매출 3천만원 이하 음식점 사장님)" : "Target customer"}
+                              value={guideSelections["interview-target"] ?? ""}
+                              onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-target": e.target.value }))}
+                              style={{
+                                padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(37,99,235,0.12)",
+                                background: "rgba(255,255,255,0.9)", fontSize: "13px", outline: "none",
+                              }}
+                              onFocus={e => { e.currentTarget.style.borderColor = "#2563eb"; }}
+                              onBlur={e => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.12)"; }}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            disabled={!guideSelections["interview-problem"]?.trim() || !guideSelections["interview-target"]?.trim() || guideSelections["interview-loading"] === "true"}
+                            onClick={async () => {
+                              d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-loading": "true", "interview-error": "" }));
+                              try {
+                                const { data: { session } } = await supabase.auth.getSession();
+                                if (!session?.access_token) throw new Error("로그인 필요");
+                                const res = await fetch("/api/ai/interview", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+                                  body: JSON.stringify({
+                                    industryCategoryId: d.industryCategoryId,
+                                    problemStatement: guideSelections["interview-problem"],
+                                    targetCustomer: guideSelections["interview-target"],
+                                    language: d.language,
+                                  }),
+                                });
+                                if (!res.ok) throw new Error((await res.json()).error ?? "생성 실패");
+                                const script = await res.json();
+                                d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-loading": "false", "interview-result": JSON.stringify(script) }));
+                              } catch (err) {
+                                d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-loading": "false", "interview-error": err instanceof Error ? err.message : String(err) }));
+                              }
+                            }}
+                            style={{
+                              width: "100%", padding: "10px", borderRadius: "10px", border: "none",
+                              background: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim() && guideSelections["interview-loading"] !== "true") ? "#2563eb" : "rgba(37,99,235,0.1)",
+                              color: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "#fff" : "rgba(37,99,235,0.3)",
+                              fontSize: "13px", fontWeight: 700, cursor: "pointer",
+                              boxShadow: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "0 2px 8px rgba(37,99,235,0.2)" : "none",
+                            }}
+                          >
+                            {guideSelections["interview-loading"] === "true"
+                              ? (ko ? "생성 중..." : "Generating...")
+                              : (ko ? "Mom Test 인터뷰지 생성" : "Generate Mom Test Script")}
+                          </button>
+                          {guideSelections["interview-error"] && (
+                            <div style={{ fontSize: "12px", color: "#dc2626", marginTop: "6px" }}>{guideSelections["interview-error"]}</div>
+                          )}
                         </div>
+
+                        {/* ── 생성된 인터뷰지 결과 + PDF 다운로드 ── */}
+                        {guideSelections["interview-result"] && (() => {
+                          const script = JSON.parse(guideSelections["interview-result"]);
+                          const downloadPdf = () => {
+                            // 간단한 텍스트 기반 PDF — HTML to print
+                            const printContent = `
+                              <html><head><meta charset="utf-8"><title>${script.title}</title>
+                              <style>body{font-family:-apple-system,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#111}
+                              h1{font-size:22px;margin-bottom:4px}h2{font-size:16px;color:#2563eb;margin-top:24px}
+                              .q{margin:12px 0;padding:12px 16px;background:#f8fafc;border-radius:8px;border-left:3px solid #2563eb}
+                              .q-text{font-size:14px;font-weight:600}.q-purpose{font-size:12px;color:#666;margin-top:4px}
+                              .pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#2563eb;background:#eff6ff;margin-bottom:4px}
+                              .donot{color:#dc2626;font-size:13px;margin:4px 0}
+                              </style></head><body>
+                              <h1>${script.title}</h1>
+                              <p style="color:#666">${script.duration} · Mom Test 기반</p>
+                              <h2>핵심 원칙</h2>
+                              ${script.principles?.map((p: string) => `<p>• ${p}</p>`).join("") ?? ""}
+                              <h2>아이스브레이커</h2><p>${script.icebreaker}</p>
+                              <h2>질문</h2>
+                              ${script.questions?.map((q: {phase:string;question:string;purpose:string;followUp?:string}, i: number) =>
+                                `<div class="q"><span class="pill">${q.phase}</span><div class="q-text">${i+1}. ${q.question}</div><div class="q-purpose">💡 ${q.purpose}</div>${q.followUp ? `<div class="q-purpose">↪ ${q.followUp}</div>` : ""}</div>`
+                              ).join("") ?? ""}
+                              <h2>마무리</h2><p>${script.closing}</p>
+                              <h2>하지 말 것</h2>
+                              ${script.doNots?.map((d: string) => `<p class="donot">✕ ${d}</p>`).join("") ?? ""}
+                              <p style="margin-top:40px;font-size:11px;color:#999">Generated by build.up AI · Mom Test Interview Script</p>
+                              </body></html>`;
+                            const w = window.open("", "_blank");
+                            if (w) { w.document.write(printContent); w.document.close(); w.print(); }
+                          };
+                          return (
+                            <div style={{ margin: "0 22px 16px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                                <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{script.title}</span>
+                                <button type="button" onClick={downloadPdf} style={{
+                                  padding: "6px 14px", borderRadius: "8px", border: "1px solid rgba(37,99,235,0.15)",
+                                  background: "white", color: "#2563eb", fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                                }}>
+                                  {ko ? "PDF 저장" : "Save PDF"}
+                                </button>
+                              </div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "10px" }}>{script.duration}</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                {script.questions?.slice(0, 5).map((q: {phase:string;question:string;purpose:string}, i: number) => (
+                                  <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(37,99,235,0.03)", borderLeft: "3px solid rgba(37,99,235,0.15)" }}>
+                                    <div style={{ fontSize: "9px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "3px" }}>{q.phase}</div>
+                                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", lineHeight: 1.4 }}>{q.question}</div>
+                                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "3px" }}>{q.purpose}</div>
+                                  </div>
+                                ))}
+                                {(script.questions?.length ?? 0) > 5 && (
+                                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", textAlign: "center" as const, padding: "6px" }}>
+                                    {ko ? `+ ${(script.questions?.length ?? 0) - 5}개 더... PDF에서 전체 확인` : `+ ${(script.questions?.length ?? 0) - 5} more... see full in PDF`}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       </>

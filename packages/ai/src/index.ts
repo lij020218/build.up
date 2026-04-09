@@ -21,3 +21,5 @@ export { diagnoseBusinessHealth } from "./health/diagnose";
 export type { HealthDiagnosisContext, HealthDiagnosisResult } from "./health/prompt";
 export { generateRoadmap } from "./roadmap/generate";
 export type { RoadmapGenerationInput, RoadmapGenerationResult } from "./roadmap/prompt";
+export { generateInterviewScript } from "./interview/generate";
+export type { InterviewInput, InterviewScript, InterviewQuestion } from "./interview/generate";
