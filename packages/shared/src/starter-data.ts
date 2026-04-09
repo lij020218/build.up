@@ -1252,13 +1252,13 @@ export const starterStageFlow: RoadmapStageState[] = [
     status: "locked",
     stepNumber: 5,
     totalSteps: 18,
-    goal: "Clarify the founding structure, company setup path, equity basics, and the one problem worth solving first.",
-    whyNow: "Founder misalignment and fuzzy ownership destroy startups before customers ever do.",
+    goal: "Define the core problem, decide your team structure, and know when to incorporate.",
+    whyNow: "Founder misalignment and fuzzy ownership destroy startups before customers ever do. But first — define the problem worth solving.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["founder-alignment", "equity-plan-defined", "company-formation-path"]
+      requiredTaskIds: ["problem-defined", "founder-alignment", "company-formation-path"]
     },
-    taskIds: ["founder-alignment", "equity-plan-defined", "company-formation-path", "83b-safe-basics"],
+    taskIds: ["problem-defined", "founder-alignment", "company-formation-path"],
     riskIds: [],
     nextStageIds: ["company-setup"]
   },
@@ -1802,10 +1802,9 @@ export const starterTaskMap: WorkflowTaskMap = {
   ],
   // ── Tech startup path tasks ───────────────────────────────────────────────
   "startup-foundation": [
-    { taskId: "founder-alignment", title: "Write founder roles, decision rights, and what each founder owns", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "equity-plan-defined", title: "Define founder equity, vesting, and dilution assumptions", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "company-formation-path", title: "Decide incorporation path, banking plan, and jurisdiction", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "83b-safe-basics", title: "Review 83(b), SAFE, and cap table basics before fundraising", status: "todo", required: false, estimatedMinutes: 30 }
+    { taskId: "problem-defined", title: "Define the core problem in one sentence", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "founder-alignment", title: "Decide team structure (solo or co-founder) and document roles", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "company-formation-path", title: "Decide when to incorporate and choose the formation path", status: "todo", required: true, estimatedMinutes: 45 },
   ],
   "customer-discovery": [
     { taskId: "customer-interviews-done", title: "Run at least 10 customer interviews in one target segment", status: "todo", required: true, estimatedMinutes: 180 },
