@@ -95,26 +95,23 @@ Generate a Mom Test interview script in English based on the above.`;
   if (start === -1 || end === -1) throw new Error("Failed to find JSON in response");
   jsonStr = jsonStr.slice(start, end + 1);
 
-  // 흔한 JSON 오류 수정
-  // 1) 트레일링 콤마 제거 (배열/객체 마지막 요소 뒤 쉼표)
+  // 트레일링 콤마만 제거 (제어 문자는 건드리지 않음 — 파싱 실패 시 2차에서 처리)
   jsonStr = jsonStr.replace(/,\s*([\]}])/g, "$1");
-  // 2) 문자열 내 제어 문자 이스케이프
-  jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, (ch) => {
-    if (ch === "\n") return "\\n";
-    if (ch === "\r") return "\\r";
-    if (ch === "\t") return "\\t";
-    return "";
-  });
 
   try {
     return JSON.parse(jsonStr) as InterviewScript;
-  } catch (e) {
-    // 파싱 실패 시 한 번 더 시도: 줄바꿈 완전 제거
+  } catch (e1) {
+    // 2차 시도: 문자열 값 내부의 실제 줄바꿈을 이스케이프
     try {
-      const singleLine = jsonStr.replace(/\\n/g, " ").replace(/\n/g, " ");
-      return JSON.parse(singleLine) as InterviewScript;
-    } catch {
-      throw new Error(`JSON parse failed: ${e instanceof Error ? e.message : String(e)}`);
+      // JSON 문자열 안의 raw newline만 \\n으로 교체 (키-값 구조 밖의 줄바꿈은 무시)
+      const fixed = jsonStr.replace(/"([^"]*?)"/g, (match) => {
+        return match.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t");
+      });
+      return JSON.parse(fixed) as InterviewScript;
+    } catch (e2) {
+      console.error("[interview/generate] Raw AI response (first 500):", text.slice(0, 500));
+      console.error("[interview/generate] Cleaned JSON (first 500):", jsonStr.slice(0, 500));
+      throw new Error(`JSON parse failed: ${e2 instanceof Error ? e2.message : String(e2)}`);
     }
   }
 }
