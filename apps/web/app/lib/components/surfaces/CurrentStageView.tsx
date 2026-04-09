@@ -3472,35 +3472,18 @@ export function CurrentStageView() {
                           </div>
                         </div>
                         <div style={{ padding: "0 22px 16px" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "정부 보조금 · 무상 지원" : "Government Grants"}</div>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "정부 보조금 · 무상 지원 (주요 프로그램)" : "Government Grants (Key Programs)"}</div>
                           <div style={{ display: "grid", gap: "6px" }}>
                             {(ko ? [
-                              { name: "예비창업패키지", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자 대상. 사업화 자금 + 멘토링. 매년 2~3월 공모", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                              { name: "초기창업패키지", amount: "최대 1.5억원", detail: "창업 3년 이내. R&D + 마케팅 + 해외 진출 자금. 매년 1~3월 공모", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                              { name: "AI 바우처", amount: "최대 3억원", detail: "AI 솔루션 도입 비용 70-90% 정부 지원. 2026 신규 프로그램", color: "#d97706", url: "https://www.aibiz.or.kr" },
-                              { name: "청년창업사관학교", amount: "최대 1억원", detail: "만 39세 이하. 사무공간 + 자금 + 멘토링 풀패키지. 연 2회 모집", color: "#059669", url: "https://start.kosmes.or.kr" },
+                              { name: "예비창업패키지", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자 대상. 매년 2~3월 공모", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                              { name: "초기창업패키지", amount: "최대 1.5억원", detail: "창업 3년 이내. 매년 1~3월 공모", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
                             ] : [
-                              { name: "Pre-Startup Package", amount: "Up to ₩100M", detail: "For pre-entrepreneurs. Funding + mentoring. Apply Feb-Mar", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                              { name: "Early Startup Package", amount: "Up to ₩150M", detail: "Within 3yr of founding. R&D + marketing + global", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                              { name: "AI Voucher", amount: "Up to ₩300M", detail: "70-90% AI solution cost covered. New 2026", color: "#d97706", url: "https://www.aibiz.or.kr" },
-                              { name: "Youth Startup Academy", amount: "Up to ₩100M", detail: "Under 39. Office + funding + mentoring. Twice yearly", color: "#059669", url: "https://start.kosmes.or.kr" },
+                              { name: "Pre-Startup Package", amount: "Up to ₩100M", detail: "For pre-entrepreneurs. Apply Feb-Mar", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                              { name: "Early Startup Package", amount: "Up to ₩150M", detail: "Within 3yr of founding. Apply Jan-Mar", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
                             ]).map(p => progCard(p))}
                           </div>
-                        </div>
-                        <div style={{ padding: "0 22px 16px" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#d97706", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "창업 경진대회 · 공모전" : "Startup Competitions"}</div>
-                          <div style={{ display: "grid", gap: "6px" }}>
-                            {(ko ? [
-                              { name: "K-Startup 그랜드챌린지", amount: "상금 + 비자", detail: "글로벌 스타트업 대상. 한국 진출 지원. 연 1회", color: "#dc2626", url: "https://www.k-startup.go.kr" },
-                              { name: "도전! K-스타트업", amount: "최대 1억원", detail: "국내 최대 규모 창업경진대회. 예선→본선→왕중왕전", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                              { name: "대학 창업경진대회", amount: "500~3,000만원", detail: "각 대학 + 중소벤처기업부 공동. 재학생/졸업생 대상", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                              { name: "소셜벤처 경연대회", amount: "최대 5,000만원", detail: "사회적 가치 + 비즈니스 모델. 소셜 임팩트 스타트업", color: "#059669", url: "https://www.sv-hub.co.kr" },
-                            ] : [
-                              { name: "K-Startup Grand Challenge", amount: "Prize + visa", detail: "For global startups. Korea entry support. Yearly", color: "#dc2626", url: "https://www.k-startup.go.kr" },
-                              { name: "Challenge! K-Startup", amount: "Up to ₩100M", detail: "Korea's largest startup competition. Multi-round", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                              { name: "University Competitions", amount: "₩5-30M", detail: "University + MSIT joint. Students/graduates", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                              { name: "Social Venture Contest", amount: "Up to ₩50M", detail: "Social value + business model", color: "#059669", url: "https://www.sv-hub.co.kr" },
-                            ]).map(p => progCard(p))}
+                          <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(15,23,42,0.02)", marginTop: "8px", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+                            {ko ? "AI 바우처, 청년창업사관학교, 각종 경진대회 등 전체 지원사업 목록은 \"벤처인증 · 정부 지원사업\" 단계에서 상세히 안내합니다." : "Full list of programs (AI Voucher, Youth Academy, competitions) is covered in the Venture Certification stage."}
                           </div>
                         </div>
                       </div>
@@ -3642,10 +3625,10 @@ export function CurrentStageView() {
                         <div style={{ display: "grid", gap: "6px" }}>
                           {(ko ? [
                             { quote: "\"스타트업 아이디어를 얻는 방법은 스타트업 아이디어를 생각하는 게 아니라, 문제를 찾는 것이다. 가능하면 당신 자신의 문제를.\"", author: "Paul Graham, Y Combinator" },
-                            { quote: "\"첫 버전이 창피하지 않다면 너무 늦게 출시한 것이다.\"", author: "Reid Hoffman, LinkedIn 창업자" },
+                            { quote: "\"가장 위험한 것은 시장이 원하지 않는 것을 만드는 것이다. 실패한 스타트업의 42%가 이것 때문이다.\"", author: "CB Insights, 스타트업 실패 분석" },
                           ] : [
                             { quote: "\"The way to get startup ideas is not to try to think of startup ideas. It's to look for problems, preferably problems you have yourself.\"", author: "Paul Graham, Y Combinator" },
-                            { quote: "\"If you're not embarrassed by the first version of your product, you've launched too late.\"", author: "Reid Hoffman, LinkedIn founder" },
+                            { quote: "\"The #1 reason startups fail is building something nobody wants. 42% fail for this exact reason.\"", author: "CB Insights, Startup Failure Analysis" },
                           ]).map(q => (
                             <div key={q.author} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(29,53,87,0.03)", borderLeft: "3px solid rgba(29,53,87,0.15)" }}>
                               <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55, fontStyle: "italic" }}>{q.quote}</div>
@@ -3876,7 +3859,7 @@ export function CurrentStageView() {
                         </div>
                         <div style={{ margin: "0 22px 16px", padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", borderLeft: "3px solid rgba(5,150,105,0.3)" }}>
                           <div style={{ fontSize: "13px", color: "rgba(5,150,105,0.8)", lineHeight: 1.55 }}>
-                            {ko ? "법인 설립 시: 자본금 100원부터 가능. 헬프미 등 대행 서비스 이용 시 30~50만원, 1~2주. 벤처기업 인증 후 스톡옵션 부여 시 직원당 연 5천만원 비과세." : "When ready: Min capital ₩100. Agency service ₩300-500K, 1-2wk. Venture cert = ₩50M/yr tax-free stock options per employee."}
+                            {ko ? "구체적인 설립 절차, 비용, 스톡옵션 설계는 다음 단계(법인 운영·세무·보안 기본기)에서 상세히 안내합니다." : "Detailed procedures, costs, and stock option setup are covered in the next stage (Corp operations & tax basics)."}
                           </div>
                         </div>
                       </div>
@@ -4556,12 +4539,12 @@ export function CurrentStageView() {
                     { title: "제품명 & 미션 정하기", color: "#2563eb", content: (
                       <div>
                         <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.1)", marginBottom: "16px" }}>
-                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>한 문장으로 설명할 수 없으면 아직 준비가 안 된 겁니다.</div>
-                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>이 문장이 랜딩 페이지의 헤드라인이 되고, 투자자에게 하는 첫 마디가 되며, 팀원을 설득하는 무기가 됩니다.</div>
+                          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>앞서 정의한 문제를 제품의 이름과 미션으로 바꾸세요.</div>
+                          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>문제 정의 단계에서 작성한 한 문장이 랜딩 페이지의 헤드라인이 되고, 투자자에게 하는 첫 마디가 되며, 팀원을 설득하는 무기가 됩니다.</div>
                         </div>
                         <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
                         <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
-                          {["\"[누구]의 [어떤 고통]을 [어떻게] 해결한다\" 한 문장 작성", "제품명 후보 5~10개 + .com 도메인 확인", "30초 엘리베이터 피치 작성 (말로 연습해보세요)", "슬로건 1개 확정"].map(t => (
+                          {["문제 정의를 기반으로 제품 미션 한 문장 확정", "제품명 후보 5~10개 + .com 도메인 확인", "30초 엘리베이터 피치 작성 (말로 연습해보세요)", "슬로건 1개 확정"].map(t => (
                             <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
                               <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2563eb", flexShrink: 0, marginTop: "7px" }} />
                               <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
@@ -4690,7 +4673,7 @@ export function CurrentStageView() {
                         </div>
                         <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 단계에서 할 일</div>
                         <div style={{ display: "grid", gap: "4px", marginBottom: "16px" }}>
-                          {["랜딩 페이지 제작 (헤드라인 + 스크린샷 + CTA)", "Product Hunt 론칭 준비 (론칭 데이 전략)", "첫 10명 사용자를 직접 찾아가서 모으기", "피드백 루프 구축 (인터콤/이메일/디스코드)"].map(t => (
+                          {["랜딩 페이지 제작 (헤드라인 + 스크린샷 + CTA)", "Product Hunt 론칭 준비 (론칭 데이 전략)", "첫 10명 사용자를 직접 찾아가서 모으기", "SEO 기본 설정 (메타 태그, OG 이미지, sitemap)"].map(t => (
                             <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
                               <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1d3557", flexShrink: 0, marginTop: "7px" }} />
                               <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
