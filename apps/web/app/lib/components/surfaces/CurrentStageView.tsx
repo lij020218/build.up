@@ -4117,17 +4117,23 @@ export function CurrentStageView() {
                               </div>
                               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "10px" }}>{script.duration}</div>
                               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                                {script.questions?.slice(0, 5).map((q: {phase:string;question:string;purpose:string}, i: number) => (
+                                {(guideSelections["interview-expanded"] === "true" ? script.questions : script.questions?.slice(0, 5))?.map((q: {phase:string;question:string;purpose:string;followUp?:string}, i: number) => (
                                   <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(37,99,235,0.03)", borderLeft: "3px solid rgba(37,99,235,0.15)" }}>
                                     <div style={{ fontSize: "9px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "3px" }}>{q.phase}</div>
-                                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", lineHeight: 1.4 }}>{q.question}</div>
-                                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "3px" }}>{q.purpose}</div>
+                                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", lineHeight: 1.4 }}>{i + 1}. {q.question}</div>
+                                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "3px" }}>💡 {q.purpose}</div>
+                                    {q.followUp && <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "2px" }}>↪ {q.followUp}</div>}
                                   </div>
                                 ))}
                                 {(script.questions?.length ?? 0) > 5 && (
-                                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", textAlign: "center" as const, padding: "6px" }}>
-                                    {ko ? `+ ${(script.questions?.length ?? 0) - 5}개 더... PDF에서 전체 확인` : `+ ${(script.questions?.length ?? 0) - 5} more... see full in PDF`}
-                                  </div>
+                                  <button type="button" onClick={() => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-expanded": prev["interview-expanded"] === "true" ? "false" : "true" }))} style={{
+                                    fontSize: "13px", fontWeight: 600, color: "#2563eb", background: "none", border: "1px solid rgba(37,99,235,0.12)",
+                                    borderRadius: "10px", padding: "8px", cursor: "pointer", textAlign: "center" as const, width: "100%",
+                                  }}>
+                                    {guideSelections["interview-expanded"] === "true"
+                                      ? (ko ? "접기" : "Collapse")
+                                      : (ko ? `전체 ${script.questions?.length ?? 0}개 질문 보기` : `Show all ${script.questions?.length ?? 0} questions`)}
+                                  </button>
                                 )}
                               </div>
                             </div>
