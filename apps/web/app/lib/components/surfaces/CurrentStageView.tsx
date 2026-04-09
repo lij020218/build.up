@@ -3643,6 +3643,45 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      {/* 문제 정의 입력 + 저장 */}
+                      <div style={{
+                        borderRadius: "16px", padding: "18px 20px",
+                        background: "rgba(255,255,255,0.95)", border: "1.5px solid rgba(37,99,235,0.12)",
+                      }}>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+                          {ko ? "나의 문제 정의" : "MY PROBLEM STATEMENT"}
+                        </div>
+                        <textarea
+                          placeholder={ko
+                            ? "예: \"소상공인은 매일 경영 데이터를 분석할 시간이 없다. 기존 솔루션(세무사, 엑셀)은 월 1회 사후 분석만 가능하고, 비용이 월 30만원 이상이다.\""
+                            : "e.g., \"Small business owners don't have time to analyze daily data. Current solutions (accountants, Excel) only offer monthly reviews and cost $300+/mo.\""}
+                          value={(decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            d.setDecisions((prev: Record<string, unknown>) => ({
+                              ...prev,
+                              "startup-foundation": {
+                                ...(prev["startup-foundation"] as Record<string, unknown> ?? {}),
+                                stageId: "startup-foundation",
+                                inputs: { ...((prev["startup-foundation"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), problemStatement: val },
+                              }
+                            }));
+                          }}
+                          style={{
+                            width: "100%", minHeight: "80px", padding: "12px 14px", borderRadius: "12px",
+                            border: "1px solid rgba(37,99,235,0.1)", background: "rgba(248,250,252,0.8)",
+                            fontSize: "14px", lineHeight: 1.6, resize: "vertical",
+                            fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                            outline: "none", color: "#0f172a",
+                          }}
+                          onFocus={(e) => { e.currentTarget.style.borderColor = "#2563eb"; }}
+                          onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.1)"; }}
+                        />
+                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "6px" }}>
+                          {ko ? "자동 저장됩니다. 이 문장이 창업의 나침반이 됩니다." : "Auto-saved. This statement becomes your startup compass."}
+                        </div>
+                      </div>
+
                       </>
                       )}
 
