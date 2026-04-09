@@ -4322,12 +4322,42 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {/* ── 성장·리텐션 루프 가이드 (growth_engine) ── */}
+                {/* ── 성장·리텐션 루프 가이드 (growth_engine) — 페이지네이션 ── */}
                 {currentStage.code === "growth_engine" && (() => {
                   const ko = language === "ko";
+                  const pg = guideStepIndex;
+                  const totalPg = 4;
+                  const pgLabels = ko
+                    ? ["왜 중요한가", "1. 북극성 지표", "2. 주간 리뷰", "3. 리텐션"]
+                    : ["Why", "1. North Star", "2. Weekly Review", "3. Retention"];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-                      {/* WHY */}
+                      {/* 페이지 네비 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <button type="button" disabled={pg === 0} onClick={() => setGuideStepIndex(p => p - 1)} style={{
+                          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+                          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
+                          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
+                        }}>{ko ? "← 이전" : "← Prev"}</button>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {pgLabels.map((l, i) => (
+                            <button key={i} type="button" onClick={() => setGuideStepIndex(i)} style={{
+                              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
+                              background: i === pg ? "#1d3557" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
+                              border: "none", cursor: "pointer",
+                            }}>{l}</button>
+                          ))}
+                        </div>
+                        <button type="button" disabled={pg === totalPg - 1} onClick={() => setGuideStepIndex(p => p + 1)} style={{
+                          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+                          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
+                          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
+                        }}>{ko ? "다음 →" : "Next →"}</button>
+                      </div>
+
+                      {/* PAGE 0 — WHY */}
+                      {pg === 0 && (
+                      <>
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#dc2626" }} />
@@ -4337,11 +4367,35 @@ export function CurrentStageView() {
                           {ko ? "리텐션 없는 성장은 밑 빠진 독에 물 붓기입니다." : "Growth without retention is filling a leaky bucket."}
                         </div>
                         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
-                          {ko ? "MVP를 출시했고 초기 사용자가 생겼다면, 이제 \"이 사람들이 돌아오는가?\"를 증명해야 합니다. 주간 성장률을 체계적으로 추적하고, 가장 큰 레버를 매주 실험해야 합니다. AI를 활용하면 지표 대시보드 설계, 이탈 원인 분석, 실험 우선순위 결정을 데이터 기반으로 할 수 있습니다." : "If you've launched an MVP and have initial users, now prove they come back. Track weekly growth systematically and experiment on the biggest lever each week. AI helps design dashboards, analyze churn, and prioritize experiments with data."}
+                          {ko ? "MVP를 출시했고 초기 사용자가 생겼다면, 이제 \"이 사람들이 돌아오는가?\"를 증명해야 합니다. 주간 성장률을 체계적으로 추적하고, 가장 큰 레버를 매주 실험해야 합니다." : "If you've launched an MVP and have initial users, now prove they come back. Track weekly growth systematically and experiment on the biggest lever each week."}
                         </div>
                       </div>
+                      {/* 3단계 로드맵 미리보기 */}
+                      <div style={{ display: "grid", gap: "6px" }}>
+                        {(ko ? [
+                          { num: 1, title: "북극성 지표 선택", desc: "회사 전체가 추적하는 하나의 핵심 숫자 확정", color: "#059669" },
+                          { num: 2, title: "주간 성장 리뷰", desc: "매주 월요일 30분, 지표 확인 + 실험 1개 선택", color: "#2563eb" },
+                          { num: 3, title: "리텐션 체크", desc: "사용자가 돌아오는지 먼저 확인 → 그 다음 성장", color: "#7c3aed" },
+                        ] : [
+                          { num: 1, title: "Choose North Star Metric", desc: "The single number the whole company tracks", color: "#059669" },
+                          { num: 2, title: "Weekly Growth Review", desc: "30 min every Monday: metrics + 1 experiment", color: "#2563eb" },
+                          { num: 3, title: "Retention Check", desc: "Prove users come back before pushing growth", color: "#7c3aed" },
+                        ]).map(s => (
+                          <div key={s.num} onClick={() => setGuideStepIndex(s.num)} style={{ display: "flex", gap: "10px", alignItems: "center", padding: "12px 14px", borderRadius: "12px", background: `${s.color}04`, border: `1px solid ${s.color}10`, cursor: "pointer" }}>
+                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: s.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.num}</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.desc}</div>
+                            </div>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}><path d="M5 3l4 4-4 4" stroke="rgba(0,0,0,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        ))}
+                      </div>
+                      </>
+                      )}
 
-                      {/* STEP 1 — 북극성 지표 선택 */}
+                      {/* PAGE 1 — 북극성 지표 선택 */}
+                      {pg === 1 && (
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -4374,8 +4428,10 @@ export function CurrentStageView() {
                           ))}
                         </div>
                       </div>
+                      )}
 
-                      {/* STEP 2 — 주간 성장 리뷰 + AI */}
+                      {/* PAGE 2 — 주간 성장 리뷰 */}
+                      {pg === 2 && (
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -4414,8 +4470,10 @@ export function CurrentStageView() {
                           </div>
                         </div>
                       </div>
+                      )}
 
-                      {/* STEP 3 — 리텐션 벤치마크 */}
+                      {/* PAGE 3 — 리텐션 벤치마크 */}
+                      {pg === 3 && (
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -4447,6 +4505,7 @@ export function CurrentStageView() {
                           {ko ? "B2B SaaS는 D30 40%+, B2C 앱은 D30 15%+가 양호. 이 기준에 못 미치면 성장보다 제품 개선에 집중하세요." : "B2B SaaS needs D30 40%+, B2C app D30 15%+. Below this, focus on product improvement, not growth."}
                         </div>
                       </div>
+                      )}
                     </div>
                   );
                 })()}
