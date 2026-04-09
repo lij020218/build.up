@@ -84,8 +84,37 @@ Generate a Mom Test interview script in English based on the above.`;
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Failed to parse interview script JSON");
 
-  return JSON.parse(jsonMatch[0]) as InterviewScript;
+  // JSON 추출 + 정리
+  let jsonStr = text;
+  // markdown 코드블록 제거
+  jsonStr = jsonStr.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  // 가장 바깥 {} 추출
+  const start = jsonStr.indexOf("{");
+  const end = jsonStr.lastIndexOf("}");
+  if (start === -1 || end === -1) throw new Error("Failed to find JSON in response");
+  jsonStr = jsonStr.slice(start, end + 1);
+
+  // 흔한 JSON 오류 수정
+  // 1) 트레일링 콤마 제거 (배열/객체 마지막 요소 뒤 쉼표)
+  jsonStr = jsonStr.replace(/,\s*([\]}])/g, "$1");
+  // 2) 문자열 내 제어 문자 이스케이프
+  jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, (ch) => {
+    if (ch === "\n") return "\\n";
+    if (ch === "\r") return "\\r";
+    if (ch === "\t") return "\\t";
+    return "";
+  });
+
+  try {
+    return JSON.parse(jsonStr) as InterviewScript;
+  } catch (e) {
+    // 파싱 실패 시 한 번 더 시도: 줄바꿈 완전 제거
+    try {
+      const singleLine = jsonStr.replace(/\\n/g, " ").replace(/\n/g, " ");
+      return JSON.parse(singleLine) as InterviewScript;
+    } catch {
+      throw new Error(`JSON parse failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
 }
