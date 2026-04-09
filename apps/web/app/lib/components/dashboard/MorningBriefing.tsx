@@ -7,7 +7,8 @@ import {
   calculateMonthlyPnL,
 } from "@build-up/shared";
 import type { DailyEntry, MonthlyCosts } from "../../useDashboard";
-import { BarChart3, PenLine } from "lucide-react";
+import { BarChart3, PenLine, Target } from "lucide-react";
+import { useRoadmapStore } from "../../stores/roadmap-store";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -472,6 +473,46 @@ export function MorningBriefing() {
           </div>
         ))}
       </div>
+
+      {/* ── 북극성 지표 카드 ── */}
+      {(() => {
+        const rdDecisions = useRoadmapStore.getState().decisions;
+        const geInputs = (rdDecisions["growth-engine"] as Record<string, unknown> | undefined)?.inputs as Record<string, unknown> | undefined;
+        const nsType = (geInputs?.northStarType as string) ?? "";
+        const nsName = (geInputs?.northStarMetricName as string) ?? "";
+        if (!nsType && !nsName) return null;
+        const typeLabel: Record<string, { ko: string; en: string }> = {
+          saas: { ko: "SaaS", en: "SaaS" },
+          marketplace: { ko: "마켓플레이스", en: "Marketplace" },
+          content: { ko: "콘텐츠", en: "Content" },
+          commerce: { ko: "커머스", en: "Commerce" },
+        };
+        const tl = typeLabel[nsType];
+        return (
+          <div style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            padding: "12px 16px", borderRadius: "14px",
+            background: "linear-gradient(135deg, rgba(5,150,105,0.04) 0%, rgba(5,150,105,0.01) 100%)",
+            border: "1px solid rgba(5,150,105,0.1)",
+          }}>
+            <div style={{
+              width: "32px", height: "32px", borderRadius: "9px",
+              background: "rgba(5,150,105,0.08)", display: "flex",
+              alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}>
+              <Target size={16} color="#059669" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "10px", fontWeight: 650, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                {ko ? "북극성 지표" : "NORTH STAR"}{tl ? ` · ${ko ? tl.ko : tl.en}` : ""}
+              </div>
+              <div style={{ fontSize: "14px", fontWeight: 680, color: "#0f172a", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                {nsName || (ko ? "지표명을 입력하세요" : "Set your metric name")}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── 7일 매출 미니 차트 ── */}
       {(() => {

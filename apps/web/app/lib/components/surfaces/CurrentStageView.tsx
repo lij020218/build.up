@@ -4395,7 +4395,43 @@ export function CurrentStageView() {
                       )}
 
                       {/* PAGE 1 — 북극성 지표 선택 */}
-                      {pg === 1 && (
+                      {pg === 1 && (() => {
+                        const nsDec = (decisions["growth-engine"] as Record<string, unknown> | undefined);
+                        const nsInputs = (nsDec?.inputs as Record<string, unknown>) ?? {};
+                        const nsType = (nsInputs.northStarType as string) ?? "";
+                        const nsName = (nsInputs.northStarMetricName as string) ?? "";
+                        const chooseNs = (val: string) => {
+                          d.setDecisions((prev: Record<string, unknown>) => ({
+                            ...prev,
+                            "growth-engine": {
+                              ...(prev["growth-engine"] as Record<string, unknown> ?? {}),
+                              stageId: "growth-engine",
+                              inputs: { ...((prev["growth-engine"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), northStarType: val },
+                            }
+                          }));
+                        };
+                        const setNsName = (val: string) => {
+                          d.setDecisions((prev: Record<string, unknown>) => ({
+                            ...prev,
+                            "growth-engine": {
+                              ...(prev["growth-engine"] as Record<string, unknown> ?? {}),
+                              stageId: "growth-engine",
+                              inputs: { ...((prev["growth-engine"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), northStarMetricName: val },
+                            }
+                          }));
+                        };
+                        const nsOptions = ko ? [
+                          { id: "saas", type: "SaaS", metric: "주간 활성 사용자(WAU) 또는 MRR", ex: "Slack: 주간 메시지 발송 팀 수" },
+                          { id: "marketplace", type: "마켓플레이스", metric: "주간 거래 완료 수(GMV)", ex: "당근: 주간 거래 성사 건수" },
+                          { id: "content", type: "콘텐츠", metric: "주간 소비 시간 또는 DAU", ex: "YouTube: 주간 시청 시간" },
+                          { id: "commerce", type: "커머스", metric: "월간 반복 구매 고객 수", ex: "마켓컬리: 월 2회 이상 주문 고객" },
+                        ] : [
+                          { id: "saas", type: "SaaS", metric: "WAU or MRR", ex: "Slack: weekly messaging teams" },
+                          { id: "marketplace", type: "Marketplace", metric: "Weekly completed transactions", ex: "Karrot: weekly deals" },
+                          { id: "content", type: "Content", metric: "Weekly consumption time or DAU", ex: "YouTube: watch time" },
+                          { id: "commerce", type: "Commerce", metric: "Monthly repeat buyers", ex: "Kurly: 2+ orders/month" },
+                        ];
+                        return (
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -4407,28 +4443,56 @@ export function CurrentStageView() {
                           </div>
                         </div>
                         <div style={{ padding: "0 22px 16px", display: "grid", gap: "6px" }}>
-                          {(ko ? [
-                            { type: "SaaS", metric: "주간 활성 사용자(WAU) 또는 MRR", ex: "Slack: 주간 메시지 발송 팀 수" },
-                            { type: "마켓플레이스", metric: "주간 거래 완료 수(GMV)", ex: "당근: 주간 거래 성사 건수" },
-                            { type: "콘텐츠", metric: "주간 소비 시간 또는 DAU", ex: "YouTube: 주간 시청 시간" },
-                            { type: "커머스", metric: "월간 반복 구매 고객 수", ex: "마켓컬리: 월 2회 이상 주문 고객" },
-                          ] : [
-                            { type: "SaaS", metric: "WAU or MRR", ex: "Slack: weekly messaging teams" },
-                            { type: "Marketplace", metric: "Weekly completed transactions", ex: "Karrot: weekly deals" },
-                            { type: "Content", metric: "Weekly consumption time or DAU", ex: "YouTube: watch time" },
-                            { type: "Commerce", metric: "Monthly repeat buyers", ex: "Kurly: 2+ orders/month" },
-                          ]).map(s => (
-                            <div key={s.type} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "10px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.03)" }}>
-                              <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.08)", color: "#059669", whiteSpace: "nowrap" as const, flexShrink: 0 }}>{s.type}</span>
-                              <div>
+                          {nsOptions.map(s => {
+                            const sel = nsType === s.id;
+                            return (
+                            <button key={s.id} type="button" onClick={() => chooseNs(s.id)} style={{
+                              display: "flex", gap: "12px", alignItems: "flex-start", padding: "12px 14px", borderRadius: "12px",
+                              background: sel ? "rgba(5,150,105,0.08)" : "rgba(5,150,105,0.02)",
+                              border: sel ? "2px solid #059669" : "1px solid rgba(5,150,105,0.06)",
+                              boxShadow: sel ? "0 0 0 3px rgba(5,150,105,0.08)" : "none",
+                              cursor: "pointer", textAlign: "left" as const, transition: "all 0.2s ease", width: "100%",
+                            }}>
+                              <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: sel ? "rgba(5,150,105,0.15)" : "rgba(5,150,105,0.08)", color: "#059669", whiteSpace: "nowrap" as const, flexShrink: 0 }}>{s.type}</span>
+                              <div style={{ flex: 1 }}>
                                 <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.metric}</div>
                                 <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.ex}</div>
                               </div>
+                              {sel && <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: "#059669", padding: "2px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "2px" }}>✓</span>}
+                            </button>
+                            );
+                          })}
+                        </div>
+                        {/* 나의 북극성 지표 입력 */}
+                        <div style={{ padding: "0 22px 18px" }}>
+                          <div style={{ padding: "16px 18px", borderRadius: "14px", background: "rgba(255,255,255,0.95)", border: "1.5px solid rgba(5,150,105,0.12)" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+                              {ko ? "나의 북극성 지표" : "MY NORTH STAR METRIC"}
                             </div>
-                          ))}
+                            <input
+                              type="text"
+                              placeholder={ko
+                                ? (nsType === "saas" ? "예: 주간 활성 사용자(WAU)" : nsType === "marketplace" ? "예: 주간 거래 완료 수" : nsType === "content" ? "예: 주간 시청 시간" : nsType === "commerce" ? "예: 월 2회 이상 구매 고객 수" : "위에서 유형을 먼저 선택하세요")
+                                : (nsType ? `e.g., ${nsOptions.find(o => o.id === nsType)?.metric ?? "Your metric"}` : "Select a type above first")}
+                              value={nsName}
+                              onChange={(e) => setNsName(e.target.value)}
+                              style={{
+                                width: "100%", padding: "10px 14px", borderRadius: "10px",
+                                border: "1px solid rgba(5,150,105,0.12)", background: "rgba(248,250,252,0.8)",
+                                fontSize: "14px", outline: "none", color: "#0f172a",
+                                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                              }}
+                              onFocus={(e) => { e.currentTarget.style.borderColor = "#059669"; }}
+                              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(5,150,105,0.12)"; }}
+                            />
+                            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "6px" }}>
+                              {ko ? "자동 저장됩니다. 이 지표가 운영 대시보드에 표시됩니다." : "Auto-saved. This metric will appear on your dashboard."}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      )}
+                        );
+                      })()}
 
                       {/* PAGE 2 — 주간 성장 리뷰 */}
                       {pg === 2 && (
