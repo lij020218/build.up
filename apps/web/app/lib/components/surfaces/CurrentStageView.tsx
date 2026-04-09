@@ -3699,27 +3699,58 @@ export function CurrentStageView() {
                           </div>
                         </div>
                         <div style={{ padding: "0 22px 16px" }}>
-                          {/* 솔로 vs 공동 */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "12px" }}>
-                            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(124,58,237,0.03)", border: "1px solid rgba(124,58,237,0.06)" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                                {iconSvg("M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z", "#7c3aed")}
-                                <span style={{ fontSize: "14px", fontWeight: 680, color: "#7c3aed" }}>{ko ? "솔로 파운더" : "Solo Founder"}</span>
+                          {/* 솔로 vs 공동 — 선택형 버튼 */}
+                          {(() => {
+                            const teamChoice = (decisions["startup-foundation"]?.inputs?.teamStructure as string) ?? "";
+                            const choose = (val: string) => {
+                              d.setDecisions((prev: Record<string, unknown>) => ({
+                                ...prev,
+                                "startup-foundation": {
+                                  ...(prev["startup-foundation"] as Record<string, unknown> ?? {}),
+                                  stageId: "startup-foundation",
+                                  inputs: { ...((prev["startup-foundation"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), teamStructure: val },
+                                }
+                              }));
+                            };
+                            const isSolo = teamChoice === "solo";
+                            const isCo = teamChoice === "co-founder";
+                            return (
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "12px" }}>
+                                <button type="button" onClick={() => choose("solo")} style={{
+                                  padding: "14px", borderRadius: "14px", textAlign: "left" as const, cursor: "pointer",
+                                  background: isSolo ? "rgba(124,58,237,0.08)" : "rgba(124,58,237,0.02)",
+                                  border: isSolo ? "2px solid #7c3aed" : "1px solid rgba(124,58,237,0.06)",
+                                  boxShadow: isSolo ? "0 0 0 3px rgba(124,58,237,0.08)" : "none",
+                                  transition: "all 0.2s ease",
+                                }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                    {iconSvg("M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z", "#7c3aed")}
+                                    <span style={{ fontSize: "14px", fontWeight: 680, color: "#7c3aed" }}>{ko ? "솔로 파운더" : "Solo Founder"}</span>
+                                    {isSolo && <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: "#7c3aed", padding: "2px 6px", borderRadius: "4px", marginLeft: "auto" }}>✓</span>}
+                                  </div>
+                                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                                    {ko ? "성공 엑싯의 52%가 솔로 창업. Cursor + Claude로 MVP를 2~6주에 출시. 의사결정 빠름." : "52% of exits by solo founders. Ship MVP in 2-6wk with AI. Fast decisions."}
+                                  </div>
+                                </button>
+                                <button type="button" onClick={() => choose("co-founder")} style={{
+                                  padding: "14px", borderRadius: "14px", textAlign: "left" as const, cursor: "pointer",
+                                  background: isCo ? "rgba(37,99,235,0.08)" : "rgba(37,99,235,0.02)",
+                                  border: isCo ? "2px solid #2563eb" : "1px solid rgba(37,99,235,0.06)",
+                                  boxShadow: isCo ? "0 0 0 3px rgba(37,99,235,0.08)" : "none",
+                                  transition: "all 0.2s ease",
+                                }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                    {iconSvg("M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75", "#2563eb")}
+                                    <span style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb" }}>{ko ? "공동 창업" : "Co-founders"}</span>
+                                    {isCo && <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: "#2563eb", padding: "2px 6px", borderRadius: "4px", marginLeft: "auto" }}>✓</span>}
+                                  </div>
+                                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                                    {ko ? "역할 분담으로 속도 UP. 하지만 합의사항 정리 필수. 아래 체크리스트를 확인하세요." : "Faster with role split. But must agree on terms below."}
+                                  </div>
+                                </button>
                               </div>
-                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
-                                {ko ? "성공 엑싯의 52%가 솔로 창업. Cursor + Claude로 MVP를 2~6주에 출시. 의사결정 빠름. 법인도 매출 나올 때까지 불필요." : "52% of successful exits by solo founders. Ship MVP in 2-6wk with Cursor + Claude. Fast decisions. No corp needed until revenue."}
-                              </div>
-                            </div>
-                            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.03)", border: "1px solid rgba(37,99,235,0.06)" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                                {iconSvg("M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75", "#2563eb")}
-                                <span style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb" }}>{ko ? "공동 창업" : "Co-founders"}</span>
-                              </div>
-                              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
-                                {ko ? "Thiel: \"이미 친한 사람과 창업하라. 모르는 사람은 주사위를 굴리는 것.\" 역할 분담으로 속도 UP. 하지만 갈등 리스크도 함께 옴." : "Thiel: \"Founders should share a prehistory.\" Faster with role split. But conflict risk comes too."}
-                              </div>
-                            </div>
-                          </div>
+                            );
+                          })()}
 
                           {/* 공동창업 시 합의사항 — 접이식 */}
                           <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.06)" }}>
