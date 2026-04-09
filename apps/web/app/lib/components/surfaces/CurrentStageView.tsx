@@ -4210,12 +4210,108 @@ export function CurrentStageView() {
                           </div>
                         </div>
                         <div style={{ padding: "0 22px 16px" }}>
-                          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.08)", marginBottom: "10px" }}>
-                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 인터뷰 분석" : "AI — Interview analysis"}</div>
-                            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(124,58,237,0.03)", fontStyle: "italic" }}>
-                              {ko ? "\"아래는 10명의 고객 인터뷰 노트야. [노트 붙여넣기]. 이 인터뷰에서: 1) 3명 이상이 공통으로 언급한 고통 패턴, 2) 현재 대안과 불만족 이유, 3) 지불 의사가 가장 높아 보이는 세그먼트, 4) 우리가 집중해야 할 '한 가지 문제'를 추천해줘.\"" : "\"Here are notes from 10 customer interviews. [Paste notes]. From these: 1) Pain patterns mentioned by 3+, 2) Current alternatives and dissatisfaction, 3) Segment with highest WTP, 4) Recommend the ONE problem we should focus on.\""}
+                          {/* ── AI 인터뷰 분석기 ── */}
+                          <div style={{ padding: "16px 18px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(124,58,237,0.04) 0%, rgba(37,99,235,0.03) 100%)", border: "1px solid rgba(124,58,237,0.1)", marginBottom: "10px" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>
+                              {ko ? "AI 인터뷰 결과 분석기" : "AI INTERVIEW ANALYZER"}
                             </div>
+                            <textarea
+                              placeholder={ko
+                                ? "인터뷰 노트를 여기에 붙여넣으세요.\n\n예시:\n인터뷰 #1 (카페 사장님, 망원동, 3년차)\n- 매출 기록은 엑셀로 하는데 매일 30분씩 걸림\n- 세무사에게 월 30만원 내는데 사후 분석만 해줌\n- 재고 파악이 안 돼서 폐기가 월 50만원...\n\n인터뷰 #2 ..."
+                                : "Paste your interview notes here.\n\nExample:\nInterview #1 (Cafe owner, 3 years)\n- Tracks sales in Excel, takes 30min daily\n- Pays accountant $300/mo but only gets monthly reports\n- Can't track inventory, wastes $500/mo..."}
+                              value={guideSelections["analysis-notes"] ?? ""}
+                              onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "analysis-notes": e.target.value }))}
+                              style={{
+                                width: "100%", minHeight: "120px", padding: "12px 14px", borderRadius: "12px",
+                                border: "1px solid rgba(124,58,237,0.12)", background: "rgba(255,255,255,0.9)",
+                                fontSize: "13px", lineHeight: 1.6, resize: "vertical", outline: "none",
+                                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                              }}
+                              onFocus={e => { e.currentTarget.style.borderColor = "#7c3aed"; }}
+                              onBlur={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.12)"; }}
+                            />
+                            <button
+                              type="button"
+                              disabled={!guideSelections["analysis-notes"]?.trim() || guideSelections["analysis-loading"] === "true"}
+                              onClick={async () => {
+                                d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "analysis-loading": "true", "analysis-error": "" }));
+                                try {
+                                  const { data: { session } } = await supabase.auth.getSession();
+                                  if (!session?.access_token) throw new Error("로그인 필요");
+                                  const res = await fetch("/api/ai/interview/analyze", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+                                    body: JSON.stringify({
+                                      interviewNotes: guideSelections["analysis-notes"],
+                                      industryCategoryId: d.industryCategoryId,
+                                      language: d.language,
+                                    }),
+                                  });
+                                  if (!res.ok) throw new Error((await res.json()).error ?? "분석 실패");
+                                  const result = await res.json();
+                                  d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "analysis-loading": "false", "analysis-result": JSON.stringify(result) }));
+                                } catch (err) {
+                                  d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "analysis-loading": "false", "analysis-error": err instanceof Error ? err.message : String(err) }));
+                                }
+                              }}
+                              style={{
+                                width: "100%", padding: "10px", borderRadius: "10px", border: "none", marginTop: "10px",
+                                background: (guideSelections["analysis-notes"]?.trim() && guideSelections["analysis-loading"] !== "true") ? "#7c3aed" : "rgba(124,58,237,0.1)",
+                                color: guideSelections["analysis-notes"]?.trim() ? "#fff" : "rgba(124,58,237,0.3)",
+                                fontSize: "13px", fontWeight: 700, cursor: "pointer",
+                              }}
+                            >
+                              {guideSelections["analysis-loading"] === "true" ? (ko ? "분석 중..." : "Analyzing...") : (ko ? "인터뷰 결과 분석하기" : "Analyze Interview Results")}
+                            </button>
+                            {guideSelections["analysis-error"] && (
+                              <div style={{ fontSize: "12px", color: "#dc2626", marginTop: "6px" }}>{guideSelections["analysis-error"]}</div>
+                            )}
                           </div>
+
+                          {/* ── 분석 결과 표시 ── */}
+                          {guideSelections["analysis-result"] && (() => {
+                            const r = JSON.parse(guideSelections["analysis-result"]);
+                            return (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "10px" }}>
+                                {/* 핵심 문제 */}
+                                <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.12)" }}>
+                                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
+                                    {ko ? "우리가 해결할 문제" : "THE ONE PROBLEM"}
+                                  </div>
+                                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>{r.oneProblemStatement}</div>
+                                </div>
+
+                                {/* 타겟 세그먼트 */}
+                                <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
+                                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "초기 타겟" : "TARGET"}</div>
+                                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{r.targetSegment}</div>
+                                </div>
+
+                                {/* 패턴 */}
+                                {r.patterns?.map((p: { pattern: string; frequency: string; quotes: string[] }, i: number) => (
+                                  <div key={i} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(248,250,252,0.8)", border: "1px solid rgba(15,23,42,0.05)" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                      <span style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{p.pattern}</span>
+                                      <span style={{ fontSize: "10px", fontWeight: 600, color: "#7c3aed", background: "rgba(124,58,237,0.06)", padding: "2px 8px", borderRadius: "4px" }}>{p.frequency}</span>
+                                    </div>
+                                    {p.quotes?.map((q: string, qi: number) => (
+                                      <div key={qi} style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", fontStyle: "italic", lineHeight: 1.4, marginTop: "3px" }}>"{q}"</div>
+                                    ))}
+                                  </div>
+                                ))}
+
+                                {/* 다음 단계 */}
+                                <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.08)" }}>
+                                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", marginBottom: "6px" }}>{ko ? "다음 행동" : "NEXT STEPS"}</div>
+                                  {r.nextSteps?.map((s: string, i: number) => (
+                                    <div key={i} style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5, display: "flex", gap: "6px", marginBottom: "3px" }}>
+                                      <span style={{ color: "#059669", fontWeight: 700 }}>{i + 1}.</span> {s}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
                           <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "6px" }}>{ko ? "이 단계의 결과물" : "Deliverables from this stage"}</div>
                           <div style={{ display: "grid", gap: "4px" }}>
                             {(ko ? [

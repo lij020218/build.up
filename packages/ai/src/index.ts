@@ -23,3 +23,5 @@ export { generateRoadmap } from "./roadmap/generate";
 export type { RoadmapGenerationInput, RoadmapGenerationResult } from "./roadmap/prompt";
 export { generateInterviewScript } from "./interview/generate";
 export type { InterviewInput, InterviewScript, InterviewQuestion } from "./interview/generate";
+export { analyzeInterviews } from "./interview/analyze";
+export type { InterviewAnalysisInput, InterviewAnalysisResult } from "./interview/analyze";
