@@ -10416,9 +10416,18 @@ export function CurrentStageView() {
                   { label: "스톡옵션 비과세 활용", detail: "벤처기업 인증 후 부여 시 행사 차익 연 5천만원 비과세" },
                 ],
               };
-              const taxTips = taxTipsMap[industryCategoryId] ?? taxTipsMap["food"];
+              const isStartup = industryCategoryId === "startup-tech" || d.industryCategoryId === "startup-tech";
+              const effectiveCat = isStartup ? "startup-tech" : (industryCategoryId || d.industryCategoryId || "food");
+              const taxTips = taxTipsMap[effectiveCat] ?? taxTipsMap["food"];
 
-              const taxCheckItems = [
+              const taxCheckItems = isStartup ? [
+                { id: "tc-hometax",  label: "홈택스 법인 회원가입",           detail: "hometax.go.kr → 법인 공동인증서 가입. 세금계산서 발행·법인세 신고 필수" },
+                { id: "tc-bizcard",  label: "법인카드 개설 + 전 경비 결제",    detail: "법인카드로 모든 경비 결제. 개인카드 사용 시 비용 불인정 위험" },
+                { id: "tc-receipt",  label: "비용 증빙 체계 수립",            detail: "클라우드·SaaS 구독료, 외주비, 출장비 등 전량 법인카드 결제 + 5년 보관" },
+                { id: "tc-r&d",     label: "R&D 비용 분류 체계 설정",        detail: "연구인력개발비 세액공제(최대 25%) 받으려면 R&D 비용을 별도 분류해야 함" },
+                { id: "tc-payroll", label: "급여·4대보험 신고 체계",          detail: "직원 채용 시 매월 10일 원천세 + 4대보험 신고. 세무사 위임 권장" },
+                { id: "tc-venture", label: "벤처인증 후 세제 혜택 확인",       detail: "법인세 50% 감면, 스톡옵션 비과세 등 인증 시점부터 적용" },
+              ] : [
                 { id: "tc-hometax",  label: "홈택스 사업자 회원가입",       detail: "hometax.go.kr → 사업자 공인인증서 가입. 세금계산서 발행·조회 필수" },
                 { id: "tc-bizcard",  label: "사업용 카드 별도 개설",         detail: "개인 카드 혼용 시 비용처리 불인정 위험. 전용 카드 1개 이상 필수" },
                 { id: "tc-pos",      label: "카드단말기 국세청 신고",         detail: "홈택스 → 사업장 현황신고 → 결제단말기 신고. 미신고 시 가산세" },
@@ -10428,14 +10437,24 @@ export function CurrentStageView() {
               ];
               const tcChecked = taxCheckItems.filter(t => taxChecks[t.id]).length;
 
-              const taxSchedule = [
+              const taxSchedule = isStartup ? [
+                { tax: "법인세",     timing: "3월 31일",    cycle: "연 1회", note: "12월 결산법인 기준. 성실신고 시 4/30" },
+                { tax: "부가가치세", timing: "1월·4월·7월·10월 25일", cycle: "분기", note: "법인은 분기별 신고 의무" },
+                { tax: "원천세",    timing: "매월 10일",    cycle: "월납",  note: "직원 급여 지급 시 의무" },
+                { tax: "4대보험",   timing: "매월 10일",    cycle: "월납",  note: "직원 채용 시 가입 의무" },
+              ] : [
                 { tax: "부가가치세", timing: "1월·7월 25일", cycle: "반기", note: "간이과세자는 1월만" },
                 { tax: "종합소득세", timing: "5월 31일",    cycle: "연 1회", note: "성실신고 대상자는 6월" },
                 { tax: "원천세",    timing: "매월 10일",    cycle: "월납",  note: "직원 고용 시만 해당" },
                 { tax: "4대보험",   timing: "매월 10일",    cycle: "월납",  note: "직원 고용 시만 해당" },
               ];
 
-              const cpaNeeded = [
+              const cpaNeeded = isStartup ? [
+                { condition: "첫 직원 고용",             reason: "4대보험·원천세·연말정산 의무 발생. 월 수임료 << 가산세" },
+                { condition: "투자금 유치",              reason: "전환사채·투자금 회계 처리, 법인세 신고 복잡도 급증" },
+                { condition: "R&D 세액공제 신청",         reason: "연구인력개발비 요건 충족 여부 검증 + 증빙 정리 필수" },
+                { condition: "스톡옵션 부여",             reason: "행사 시점 과세·비과세 판단, 캡테이블 관리" },
+              ] : [
                 { condition: "직원 고용",              reason: "4대보험·원천세 신고 오류 가능성 높음. 월 수임료 < 가산세" },
                 { condition: "연 매출 1억 원 초과 예상", reason: "일반과세 전환·부가세·종소세 복잡도 급증" },
                 { condition: "인테리어 비용 3,000만 원+", reason: "감가상각 스케줄 오류 시 수년간 비용 누락" },
@@ -10445,10 +10464,14 @@ export function CurrentStageView() {
               return (
                 <>
                   <article style={styles.step}>
-                    <div style={styles.stepMeta}>세무</div>
-                    <div style={styles.stepTitle}>{activeGuide?.title ?? "세무 기본 가이드"}</div>
-                    <div style={styles.stepBody}>{activeGuide?.summary ?? "오픈 전후 꼭 확인해야 할 세무 기초를 단계별로 정리합니다."}</div>
-                    {activeGuide && (
+                    <div style={styles.stepMeta}>{language === "ko" ? "세무" : "Tax"}</div>
+                    <div style={styles.stepTitle}>{isStartup
+                      ? (language === "ko" ? "스타트업 세무·비용처리 기본 가이드" : "Startup Tax & Expense Basics")
+                      : (activeGuide?.title ?? (language === "ko" ? "세무 기본 가이드" : "Tax Basics Guide"))}</div>
+                    <div style={styles.stepBody}>{isStartup
+                      ? (language === "ko" ? "법인 설립 후 반드시 세팅해야 할 세무 기초와 절세 전략을 정리합니다." : "Essential tax setup and savings strategies after incorporation.")
+                      : (activeGuide?.summary ?? (language === "ko" ? "오픈 전후 꼭 확인해야 할 세무 기초를 단계별로 정리합니다." : "Step-by-step tax basics to review before and after opening."))}</div>
+                    {activeGuide && !isStartup && (
                       <div style={activeGuideFreshness.tone === "critical" ? styles.criticalText : activeGuideFreshness.tone === "warning" ? styles.warningText : styles.freshnessText}>
                         {activeGuideFreshness.summary}
                       </div>
