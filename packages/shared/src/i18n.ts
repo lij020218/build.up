@@ -605,10 +605,9 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "fc-contract": { ko: "가맹 계약 체결 및 가맹비 납부" },
   "fc-training": { ko: "본사 교육 프로그램 이수 완료" },
   // startup-foundation
-  "founder-alignment": { ko: "공동창업자 역할·의사결정 권한 문서화" },
-  "equity-plan-defined": { ko: "지분·베스팅·희석 가정 정리" },
-  "company-formation-path": { ko: "법인 설립 경로·계좌·관할 구조 결정" },
-  "83b-safe-basics": { ko: "83(b), SAFE, 캡테이블 기초 검토" },
+  "problem-defined": { ko: "핵심 문제를 한 문장으로 정의" },
+  "founder-alignment": { ko: "팀 구성 결정 (솔로/공동) 및 역할 문서화" },
+  "company-formation-path": { ko: "법인 설립 시점 결정" },
   // customer-discovery
   "customer-interviews-done": { ko: "초기 타겟 고객 인터뷰 10건 이상 완료" },
   "pain-pattern-documented": { ko: "반복 문제·현재 대안·긴급성 문서화" },
@@ -620,15 +619,16 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   // launch-gtm
   "analytics-live": { ko: "활성화·전환·리텐션 분석 이벤트 설치" },
   "billing-or-conversion-live": { ko: "결제 또는 전환 추적 설정" },
+  "app-store-submission": { ko: "Google Play / Apple App Store 앱 제출" },
   "gtm-channel-defined": { ko: "핵심 시장 진입 채널 확정 및 첫 고객 확보 실험" },
   // growth-engine
   "north-star-set": { ko: "북극성 지표와 주간 성장 지표 확정" },
   "weekly-review-running": { ko: "주간 성장·런웨이·병목 리뷰 루틴 시작" },
   "retention-check-defined": { ko: "유지율/재방문 체크 기준 정의" },
   // company-setup
-  "banking-finance-stack": { ko: "법인 통장·기장·현금 추적 체계 분리" },
-  "privacy-security-basics": { ko: "프라이버시·접근권한·보안 기본기 정비" },
-  "tax-advisor-selected": { ko: "세무사 선임 및 기장 일정 확정" },
+  "incorporation-done": { ko: "법인 설립 완료 (정관·등기·사업자등록·통장)" },
+  "cost-plan-confirmed": { ko: "설립 비용 확인 및 직접/대행 선택" },
+  "stock-option-plan": { ko: "스톡옵션·캡테이블 기초 검토" },
   // fundraising-readiness
   "runway-model-ready": { ko: "번레이트 계산 및 현금 런웨이 시나리오 모델링" },
   "fundraising-decision-made": { ko: "자금 조달 방식 결정 (투자 유치 / 부트스트랩 / 정부 지원)" },
