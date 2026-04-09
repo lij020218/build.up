@@ -181,15 +181,60 @@ export function MorningBriefing() {
     costs.ingredients + costs.labor + costs.rent + costs.utilities + costs.other >
     0;
 
+  // ── Startup detection
+  const isStartup = d.industryCategoryId === "startup-tech" || (d.businessCtx as Record<string, unknown>)?.categoryId === "startup-tech";
+
+  // ── Startup-specific calculations
+  const monthlyBurn = costs.ingredients + costs.labor + costs.rent + costs.utilities + costs.other;
+  const selectedBudget = (d.selectedBudget ?? 0) as number;
+  const runway = monthlyBurn > 0 ? Math.round(selectedBudget / monthlyBurn * 10) / 10 : 0;
+  const userChange = sameWeekday && sameWeekday.customers > 0
+    ? ((yesterdayCustomers - sameWeekday.customers) / sameWeekday.customers) * 100
+    : null;
+
   // ── KPI cards config
-  const kpis: {
+  type KpiCard = {
     label: string;
     value: string;
     change: number | null;
     changeLabel: string;
     color?: string;
-    hint?: string; // 데이터 미입력 시 안내 문구
-  }[] = [
+    hint?: string;
+  };
+
+  const kpis: KpiCard[] = isStartup ? [
+    {
+      label: ko ? "매출 / MRR" : "REVENUE / MRR",
+      value: hasData ? formatWon(yesterdaySales, ko) : "--",
+      change: weekdayChange !== null ? Math.round(weekdayChange * 10) / 10 : null,
+      changeLabel: ko ? "전주 동요일" : "vs last wk",
+      hint: !hasData ? (ko ? "매출을 입력하세요" : "Enter revenue") : undefined,
+    },
+    {
+      label: ko ? "사용자" : "USERS",
+      value: hasData ? yesterdayCustomers.toLocaleString(ko ? "ko-KR" : "en-US") : "--",
+      change: userChange !== null ? Math.round(userChange * 10) / 10 : null,
+      changeLabel: ko ? "전주 동요일" : "vs last wk",
+      hint: !hasData ? (ko ? "사용자 수를 입력하세요" : "Enter users") : undefined,
+    },
+    {
+      label: ko ? "번레이트" : "BURN RATE",
+      value: hasCosts ? formatWon(monthlyBurn, ko) + (ko ? "/월" : "/mo") : "--",
+      change: null,
+      changeLabel: ko ? "월 총 비용" : "monthly total",
+      hint: !hasCosts ? (ko ? "월 비용을 입력하세요" : "Enter costs") : undefined,
+    },
+    {
+      label: ko ? "런웨이" : "RUNWAY",
+      value: hasCosts && selectedBudget > 0 ? `${runway}${ko ? "개월" : "mo"}` : "--",
+      change: null,
+      changeLabel: ko ? "예산 ÷ 번레이트" : "budget ÷ burn",
+      color: hasCosts && selectedBudget > 0
+        ? runway <= 3 ? RED : runway <= 6 ? YELLOW : GREEN
+        : undefined,
+      hint: !hasCosts || selectedBudget <= 0 ? (ko ? "예산과 비용을 입력하세요" : "Enter budget & costs") : undefined,
+    },
+  ] : [
     {
       label: ko ? "어제 매출" : "YESTERDAY",
       value: hasData ? formatWon(yesterdaySales, ko) : "--",
@@ -262,8 +307,8 @@ export function MorningBriefing() {
             maxWidth: "340px", margin: "0 auto 24px",
           }}>
             {ko
-              ? "매출과 고객 수를 입력하면 AI가 매일 경영 브리핑을 제공합니다."
-              : "Enter sales and customers to unlock daily AI business briefings."}
+              ? (isStartup ? "매출과 사용자 수를 입력하면 AI가 매일 경영 브리핑을 제공합니다." : "매출과 고객 수를 입력하면 AI가 매일 경영 브리핑을 제공합니다.")
+              : (isStartup ? "Enter revenue and user count to unlock daily AI briefings." : "Enter sales and customers to unlock daily AI business briefings.")}
           </p>
 
           {/* 인라인 입력 필드 */}
@@ -274,7 +319,7 @@ export function MorningBriefing() {
             <input
               type="text"
               inputMode="numeric"
-              placeholder={ko ? "매출 (만원)" : "Sales (만원)"}
+              placeholder={ko ? (isStartup ? "매출/MRR (만원)" : "매출 (만원)") : (isStartup ? "Revenue (만원)" : "Sales (만원)")}
               value={d.dailySalesInput}
               onChange={(e) => d.setDailySalesInput(e.target.value)}
               style={{
@@ -290,7 +335,7 @@ export function MorningBriefing() {
             <input
               type="text"
               inputMode="numeric"
-              placeholder={ko ? "고객 수" : "Customers"}
+              placeholder={ko ? (isStartup ? "사용자 수" : "고객 수") : (isStartup ? "Users" : "Customers")}
               value={d.dailyCustomersInput}
               onChange={(e) => d.setDailyCustomersInput(e.target.value)}
               style={{
@@ -343,7 +388,7 @@ export function MorningBriefing() {
           <input
             type="text"
             inputMode="numeric"
-            placeholder={ko ? "매출 (만원)" : "Sales (만원)"}
+            placeholder={ko ? (isStartup ? "매출/MRR" : "매출 (만원)") : (isStartup ? "Revenue" : "Sales (만원)")}
             value={d.dailySalesInput}
             onChange={(e) => d.setDailySalesInput(e.target.value)}
             style={{
@@ -358,7 +403,7 @@ export function MorningBriefing() {
           <input
             type="text"
             inputMode="numeric"
-            placeholder={ko ? "고객수" : "Cust."}
+            placeholder={ko ? (isStartup ? "사용자" : "고객수") : (isStartup ? "Users" : "Cust.")}
             value={d.dailyCustomersInput}
             onChange={(e) => d.setDailyCustomersInput(e.target.value)}
             style={{
