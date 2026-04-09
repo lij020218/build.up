@@ -697,18 +697,43 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "biz-reg-confirmed": { ko: "세무서 사업자등록 완료 여부 확인" },
   "biz-account-opened": { ko: "사업 전용 통장 개설 (개인 계좌와 분리)" },
   "cpa-decision-made": { ko: "세무대리인(세무사) 선임 여부 결정" },
+  // biz-registration — startup overrides
+  "biz-reg-confirmed__startup-tech": { ko: "법인 등기 + 사업자등록 완료 확인" },
+  "biz-account-opened__startup-tech": { ko: "법인 통장 개설 (개인 계좌 완전 분리)" },
+  "cpa-decision-made__startup-tech": { ko: "세무사 선임 여부 결정 (법인세·R&D 공제 대비)" },
   // pre-launch-final
   "inventory-first-order": { ko: "초도 재고·식재료 발주 및 입고 완료" },
   "staff-final-brief": { ko: "직원 최종 교육 및 오픈 당일 역할 배분" },
   "sns-open-teaser": { ko: "SNS 오픈 예고 포스팅 게시" },
+  // pre-launch-final — startup overrides
+  "inventory-first-order__startup-tech": { ko: "프로덕션 배포 + 도메인 연결 + 모니터링 확인" },
+  "staff-final-brief__startup-tech": { ko: "론칭 당일 역할 분담 (버그 대응·고객 응대·마케팅)" },
+  "sns-open-teaser__startup-tech": { ko: "Product Hunt · HN 론칭 포스트 예약 + 커뮤니티 알림" },
+  // pre-launch-final — online overrides
+  "inventory-first-order__online-digital": { ko: "초도 상품 소싱 완료 + 상세 페이지 등록" },
+  "staff-final-brief__online-digital": { ko: "주문·배송·CS 운영 플로우 최종 점검" },
+  "sns-open-teaser__online-digital": { ko: "스마트스토어/쿠팡 오픈 알림 + SNS 홍보 게시" },
   // first-month-check
   "cashflow-plan-ready": { ko: "일별 현금흐름 기록 방법 정하기 (앱·엑셀·수기)" },
   "emergency-fund-ready": { ko: "비상금 확보 확인 (최소 1개월치 고정비)" },
-  "key-contacts-list": { ko: "세무사·공급처·장비 AS 연락처 저장 완료" }
+  "key-contacts-list": { ko: "세무사·공급처·장비 AS 연락처 저장 완료" },
+  // first-month-check — startup overrides
+  "cashflow-plan-ready__startup-tech": { ko: "핵심 지표 추적 체계 세팅 (Mixpanel/PostHog + 주간 리뷰)" },
+  "emergency-fund-ready__startup-tech": { ko: "런웨이 확인 — 최소 6개월 운영비 확보" },
+  "key-contacts-list__startup-tech": { ko: "세무사·법무사·투자자·멘토 연락처 정리" },
+  // first-month-check — online overrides
+  "cashflow-plan-ready__online-digital": { ko: "일별 주문·매출·반품 기록 체계 세팅" },
+  "emergency-fund-ready__online-digital": { ko: "비상금 확보 (최소 1개월 광고비+물류비)" },
+  "key-contacts-list__online-digital": { ko: "공급처·물류사·플랫폼 담당자 연락처 정리" }
 };
 
-export function localizeTaskTitle(taskId: string, language: Language): string | undefined {
+export function localizeTaskTitle(taskId: string, language: Language, industryCategoryId?: string): string | undefined {
   if (language === "en") return undefined;
+  // Try industry-specific override first (e.g. "inventory-first-order__startup-tech")
+  if (industryCategoryId) {
+    const overrideKey = `${taskId}__${industryCategoryId}`;
+    if (taskTitleCopy[overrideKey]?.ko) return taskTitleCopy[overrideKey].ko;
+  }
   return taskTitleCopy[taskId]?.ko;
 }
 

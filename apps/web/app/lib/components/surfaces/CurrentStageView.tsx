@@ -10343,7 +10343,7 @@ export function CurrentStageView() {
                             ...styles.taskCheckTitle,
                             ...(done ? styles.taskCheckTitleDone : {})
                           }}>
-                            {localizeTaskTitle(task.taskId, language) ?? task.title}
+                            {localizeTaskTitle(task.taskId, language, industryCategoryId || d.industryCategoryId) ?? task.title}
                           </div>
                           {!done && currentStage.code === "construction_setup" && (() => {
                             const hints: Record<string, string> = {
