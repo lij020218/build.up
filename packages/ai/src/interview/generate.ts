@@ -78,7 +78,7 @@ Generate a Mom Test interview script in English based on the above.`;
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-5-20250929",
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
   });
@@ -109,8 +109,7 @@ Generate a Mom Test interview script in English based on the above.`;
       });
       return JSON.parse(fixed) as InterviewScript;
     } catch (e2) {
-      console.error("[interview/generate] Raw AI response (first 500):", text.slice(0, 500));
-      console.error("[interview/generate] Cleaned JSON (first 500):", jsonStr.slice(0, 500));
+      console.error("[interview/generate] JSON length:", jsonStr.length, "last 100 chars:", jsonStr.slice(-100));
       throw new Error(`JSON parse failed: ${e2 instanceof Error ? e2.message : String(e2)}`);
     }
   }
