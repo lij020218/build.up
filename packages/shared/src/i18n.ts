@@ -623,9 +623,9 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "feedback-loop-live": { ko: "고객 피드백 루프 — 인앱 채널 + 주간 리뷰" },
   "app-store-submission": { ko: "Google Play / Apple App Store 앱 제출" },
   // growth-engine
-  "north-star-set": { ko: "북극성 지표와 주간 성장 지표 확정" },
-  "weekly-review-running": { ko: "주간 성장·런웨이·병목 리뷰 루틴 시작" },
-  "retention-check-defined": { ko: "유지율/재방문 체크 기준 정의" },
+  "north-star-set": { ko: "북극성 지표 하나 선택 — 회사 전체가 추적할 핵심 숫자" },
+  "weekly-review-running": { ko: "매주 월요일 30분 성장 리뷰 — 지표 확인 + 실험 1개" },
+  "retention-check-defined": { ko: "리텐션 체크 — D1/D7/D30 기준 확인 후 개선 집중" },
   // company-setup
   "incorporation-done": { ko: "법인 설립 완료 (정관·등기·사업자등록·통장)" },
   "cost-plan-confirmed": { ko: "설립 비용 확인 및 직접/대행 선택" },
