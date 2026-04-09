@@ -5422,29 +5422,29 @@ export function CurrentStageView() {
                         <div style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "R&D 지원 (TIPS)" : "R&D Support (TIPS)"}</div>
                         <div style={{ display: "grid", gap: "6px" }}>
                           {(ko ? [
-                            { name: "TIPS 일반트랙", amount: "최대 8억원", detail: "R&D 자금. 149개 운영사(VC/액셀러레이터)가 먼저 1~2억 선투자 → 정부 매칭. 서면→발표평가→선정", color: "#059669", url: "https://www.jointips.or.kr" },
-                            { name: "TIPS 딥테크트랙", amount: "최대 15억원", detail: "딥테크(반도체/바이오/우주 등) 전용. 운영사 3억+ 선투자 필요. 기술 난이도 높은 스타트업", color: "#2563eb", url: "https://www.jointips.or.kr" },
-                            { name: "TIPS 비R&D 연계", amount: "최대 3억원", detail: "해외 마케팅, 사업화 자금. TIPS 선정 기업 대상 추가 지원", color: "#7c3aed", url: "https://www.jointips.or.kr" },
+                            { name: "TIPS 일반트랙", amount: "최대 8억원", detail: "R&D 24개월. 149개 운영사가 1~2억 선투자 → 정부 매칭. 2026 접수: 1/26~12/31 상시", color: "#059669", url: "https://www.jointips.or.kr" },
+                            { name: "TIPS 딥테크트랙", amount: "최대 15억원", detail: "딥테크 36개월. 12대 신산업분야. 운영사 3억+ 선투자. 2026 접수: 1/26~12/31 상시", color: "#2563eb", url: "https://www.jointips.or.kr" },
+                            { name: "TIPS 비R&D 연계", amount: "최대 3억원", detail: "사업화 1.5억 + 해외마케팅 1.5억. TIPS 선정 기업 대상. 총 650억원 규모", color: "#7c3aed", url: "https://www.jointips.or.kr" },
                           ] : [
-                            { name: "TIPS General", amount: "Up to ₩800M", detail: "R&D funding. 149 operators (VC/accelerator) invest ₩100-200M first → gov matches", color: "#059669", url: "https://www.jointips.or.kr" },
-                            { name: "TIPS Deep Tech", amount: "Up to ₩1.5B", detail: "Deep tech only (semi/bio/space). Operator invests ₩300M+", color: "#2563eb", url: "https://www.jointips.or.kr" },
-                            { name: "TIPS Non-R&D", amount: "Up to ₩300M", detail: "Global marketing, commercialization. For TIPS-selected companies", color: "#7c3aed", url: "https://www.jointips.or.kr" },
+                            { name: "TIPS General", amount: "Up to ₩800M", detail: "R&D 24mo. 149 operators invest ₩100-200M first → gov match. 2026: Jan 26–Dec 31 rolling", color: "#059669", url: "https://www.jointips.or.kr" },
+                            { name: "TIPS Deep Tech", amount: "Up to ₩1.5B", detail: "Deep tech 36mo. 12 industries. Operator invests ₩300M+. 2026: Jan 26–Dec 31 rolling", color: "#2563eb", url: "https://www.jointips.or.kr" },
+                            { name: "TIPS Non-R&D", amount: "Up to ₩300M", detail: "Commercialization ₩150M + global marketing ₩150M. For TIPS alumni. ₩65B total", color: "#7c3aed", url: "https://www.jointips.or.kr" },
                           ]).map(p => progCard(p))}
                         </div>
 
                         <div style={{ fontSize: "12px", fontWeight: 700, color: "#d97706", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginTop: "4px" }}>{ko ? "사업화 지원 패키지" : "Commercialization Packages"}</div>
                         <div style={{ display: "grid", gap: "6px" }}>
                           {(ko ? [
-                            { name: "예비창업패키지", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자. 사업화 자금+교육+멘토링. 매년 2~3월 공모", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                            { name: "초기창업패키지", amount: "최대 1억원", detail: "창업 3년 이내. 평균 5천만원. 딥테크는 최대 1.5억원. 매년 1~2월 공모", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                            { name: "창업도약패키지", amount: "최대 3억원", detail: "창업 3~7년. 성장 단계 스케일업 자금. 연 1~2회 공모", color: "#059669", url: "https://www.k-startup.go.kr" },
-                            { name: "AI 바우처", amount: "최대 3억원", detail: "AI 솔루션 도입 비용 70~90% 정부 지원. 2026 신규 확대", color: "#d97706", url: "https://www.aibiz.or.kr" },
+                            { name: "예비창업패키지", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자. 사업화 자금+교육+멘토링. 2026 마감: 3/24(화) 16:00", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                            { name: "초기창업패키지", amount: "최대 1억원", detail: "창업 3년 이내. 평균 5천만원. 딥테크 최대 1.5억원. 2026 마감: 2/13(목) 16:00", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
+                            { name: "창업도약패키지", amount: "최대 3억원", detail: "창업 3~7년. 성장 단계 스케일업 자금. 2026 마감: 2/13(목) 16:00", color: "#059669", url: "https://www.k-startup.go.kr" },
+                            { name: "AI 바우처", amount: "최대 3억원", detail: "AI 솔루션 도입 비용 70~90% 정부 지원. 2026 수시 모집 (aibiz.or.kr 확인)", color: "#d97706", url: "https://www.aibiz.or.kr" },
                             { name: "청년창업사관학교", amount: "최대 1억원", detail: "만 39세 이하. 사무공간+자금+멘토링 풀패키지. 연 2회", color: "#dc2626", url: "https://start.kosmes.or.kr" },
                           ] : [
-                            { name: "Pre-Startup Package", amount: "Up to ₩100M", detail: "Pre-entrepreneurs. Funding+education+mentoring. Apply Feb-Mar", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                            { name: "Early Startup Package", amount: "Up to ₩100M", detail: "Within 3yr. Avg ₩50M. Deep tech up to ₩150M. Apply Jan-Feb", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
-                            { name: "Growth Package", amount: "Up to ₩300M", detail: "3-7yr old startups. Scale-up funding. 1-2x yearly", color: "#059669", url: "https://www.k-startup.go.kr" },
-                            { name: "AI Voucher", amount: "Up to ₩300M", detail: "70-90% AI solution cost covered. Expanded 2026", color: "#d97706", url: "https://www.aibiz.or.kr" },
+                            { name: "Pre-Startup Package", amount: "Up to ₩100M", detail: "Pre-entrepreneurs. Funding+education+mentoring. 2026 deadline: Mar 24 16:00", color: "#2563eb", url: "https://www.k-startup.go.kr" },
+                            { name: "Early Startup Package", amount: "Up to ₩100M", detail: "Within 3yr. Avg ₩50M. Deep tech ₩150M. 2026 deadline: Feb 13 16:00", color: "#7c3aed", url: "https://www.k-startup.go.kr" },
+                            { name: "Growth Package", amount: "Up to ₩300M", detail: "3-7yr startups. Scale-up. 2026 deadline: Feb 13 16:00", color: "#059669", url: "https://www.k-startup.go.kr" },
+                            { name: "AI Voucher", amount: "Up to ₩300M", detail: "70-90% AI solution cost covered. 2026: rolling (check aibiz.or.kr)", color: "#d97706", url: "https://www.aibiz.or.kr" },
                             { name: "Youth Startup Academy", amount: "Up to ₩100M", detail: "Under 39. Office+funds+mentoring. Twice yearly", color: "#dc2626", url: "https://start.kosmes.or.kr" },
                           ]).map(p => progCard(p))}
                         </div>
