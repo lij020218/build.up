@@ -3534,9 +3534,45 @@ export function CurrentStageView() {
                 {currentStage.code === "startup_foundation" && (() => {
                   const ko = language === "ko";
                   const iconSvg = (d: string, color: string) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d={d} /></svg>;
+                  // 페이지네이션: 0=핵심원칙, 1=Step1, 2=Step2, 3=Step3, 4=사례
+                  const totalPages = 5;
+                  const pageLabels = ko
+                    ? ["핵심 원칙", "1. 문제 정의", "2. 팀 구성", "3. 법인 설립", "사례"]
+                    : ["Principle", "1. Problem", "2. Team", "3. Incorporate", "Cases"];
+                  const page = guideStepIndex;
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-                      {/* 핵심 원칙 — 만들고 나서 구조를 세워라 */}
+                      {/* 페이지 네비게이션 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 4px" }}>
+                        <button type="button" disabled={page === 0} onClick={() => setGuideStepIndex(p => p - 1)} style={{
+                          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+                          background: page === 0 ? "rgba(0,0,0,0.02)" : "white", color: page === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
+                          fontSize: "13px", fontWeight: 600, cursor: page === 0 ? "default" : "pointer",
+                        }}>
+                          {ko ? "← 이전" : "← Prev"}
+                        </button>
+                        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                          {pageLabels.map((label, i) => (
+                            <button key={i} type="button" onClick={() => setGuideStepIndex(i)} style={{
+                              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === page ? 700 : 500,
+                              background: i === page ? "#1d3557" : "transparent", color: i === page ? "#fff" : "rgba(15,23,42,0.4)",
+                              border: "none", cursor: "pointer", transition: "all 0.2s ease",
+                            }}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <button type="button" disabled={page === totalPages - 1} onClick={() => setGuideStepIndex(p => p + 1)} style={{
+                          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+                          background: page === totalPages - 1 ? "rgba(0,0,0,0.02)" : "white", color: page === totalPages - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
+                          fontSize: "13px", fontWeight: 600, cursor: page === totalPages - 1 ? "default" : "pointer",
+                        }}>
+                          {ko ? "다음 →" : "Next →"}
+                        </button>
+                      </div>
+
+                      {/* 페이지별 콘텐츠 — 현재 페이지만 표시 */}
+                      {page === 0 && (
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(29,53,87,0.1)", background: "linear-gradient(180deg, rgba(29,53,87,0.03) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
                         <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "핵심 원칙" : "Core Principle"}</div>
                         <div style={{ fontSize: "17px", fontWeight: 720, color: "#0f172a", lineHeight: 1.4, marginBottom: "10px" }}>
@@ -3563,6 +3599,10 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      )}
+
+                      {page === 1 && (
+                      <>
                       {/* STEP 1 — 핵심 문제 정의 (First Principles) */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
@@ -3603,6 +3643,11 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      </>
+                      )}
+
+                      {page === 2 && (
+                      <>
                       {/* STEP 2 — 팀 구성 (또는 솔로 파운더) */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
@@ -3664,6 +3709,11 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      </>
+                      )}
+
+                      {page === 3 && (
+                      <>
                       {/* STEP 3 — 법인은 언제? (트리거 기반) */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
                         <div style={{ padding: "20px 22px 14px" }}>
@@ -3705,6 +3755,11 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
+                      </>
+                      )}
+
+                      {page === 4 && (
+                      <>
                       {/* 실제 사례 — 영감 */}
                       <div style={{ borderRadius: "20px", border: "1px solid rgba(15,23,42,0.06)", background: "rgba(255,255,255,0.95)", padding: "20px 22px" }}>
                         <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>{ko ? "그들도 이렇게 시작했습니다" : "They all started this way"}</div>
@@ -3730,6 +3785,8 @@ export function CurrentStageView() {
                           ))}
                         </div>
                       </div>
+                      </>
+                      )}
                     </div>
                   );
                 })()}
