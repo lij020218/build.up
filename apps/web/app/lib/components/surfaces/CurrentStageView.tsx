@@ -10017,17 +10017,89 @@ export function CurrentStageView() {
                 })()}
 
                 {currentStage.code === "pre_launch_final" && (() => {
+                  const isStartupBiz = industryCategoryId === "startup-tech" || d.industryCategoryId === "startup-tech";
+                  const isOnlineBiz = industryCategoryId === "online-digital" || d.industryCategoryId === "online-digital";
                   const s = { display: "flex", flexDirection: "column" as const, gap: "6px" };
                   const card = { background: "rgba(0,0,0,0.03)", borderRadius: "14px", padding: "14px 16px" };
                   const secTitle = { fontSize: "12px", fontWeight: 700 as const, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" };
                   const tag = (c: string) => ({ display: "inline-block" as const, fontSize: "11px", fontWeight: 600 as const, padding: "2px 8px", borderRadius: "20px", background: `${c}18`, color: c });
                   const infoR = { display: "flex", gap: "6px", alignItems: "flex-start", fontSize: "13px", lineHeight: 1.5 as const, color: "rgba(0,0,0,0.7)" };
-                  const d = <span style={{ flexShrink: 0, marginTop: "6px", width: "4px", height: "4px", borderRadius: "50%", background: "rgba(0,0,0,0.25)", display: "inline-block" }} />;
+                  const dot = <span style={{ flexShrink: 0, marginTop: "6px", width: "4px", height: "4px", borderRadius: "50%", background: "rgba(0,0,0,0.25)", display: "inline-block" }} />;
+
+                  if (isStartupBiz) return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "8px" }}>
+                      <div style={s}>
+                        <div style={secTitle}>{language === "ko" ? "론칭 전 최종 점검" : "Pre-launch final checklist"}</div>
+                        <div style={card}>
+                          {(language === "ko" ? [
+                            "프로덕션 환경 배포 + 도메인 연결 완료",
+                            "Sentry 에러 모니터링 + Slack 알림 실제 작동 확인",
+                            "결제 플로우 테스트 결제 성공 (Stripe 테스트 모드)",
+                            "랜딩 페이지 헤드라인·CTA·OG 이미지 최종 확인",
+                            "법적 필수 페이지: 이용약관, 개인정보처리방침, 사업자 정보 표시",
+                          ] : [
+                            "Deploy to production + domain connected",
+                            "Sentry error monitoring + Slack alerts verified",
+                            "Payment flow test payment success (Stripe test mode)",
+                            "Landing page headline, CTA, OG image final check",
+                            "Legal pages: Terms of Service, Privacy Policy, business info disclosure",
+                          ]).map(p => <div key={p} style={{ ...infoR, marginBottom: "4px" }}>{dot}<span>{p}</span></div>)}
+                        </div>
+                      </div>
+                      <div style={s}>
+                        <div style={secTitle}>{language === "ko" ? "론칭 당일 실행 계획" : "Launch day execution"}</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {(language === "ko" ? [
+                            { role: "Product Hunt", task: "론칭 데이 포스트 예약. 태그라인 + 스크린샷 + 메이커 코멘트 준비", color: "#ff6154" },
+                            { role: "Hacker News", task: "Show HN 게시글 작성. 기술적 차별점 중심 서술", color: "#ff9f0a" },
+                            { role: "직접 초대", task: "인터뷰했던 고객 10명에게 개인 메시지로 론칭 알림", color: "#007aff" },
+                            { role: "커뮤니티", task: "Discord/카카오 채널 오픈 공지 + 초기 사용자 피드백 채널", color: "#5865F2" },
+                          ] : [
+                            { role: "Product Hunt", task: "Schedule launch post. Tagline + screenshots + maker comment", color: "#ff6154" },
+                            { role: "Hacker News", task: "Show HN post. Focus on technical differentiation", color: "#ff9f0a" },
+                            { role: "Direct outreach", task: "Message 10 interviewed customers personally about launch", color: "#007aff" },
+                            { role: "Community", task: "Discord/Kakao channel open announcement + feedback channel", color: "#5865F2" },
+                          ]).map(r => (
+                            <div key={r.role} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.03)", alignItems: "flex-start" }}>
+                              <span style={tag(r.color)}>{r.role}</span>
+                              <span style={{ fontSize: "13px", color: "rgba(0,0,0,0.65)", lineHeight: 1.4, paddingTop: "2px" }}>{r.task}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={s}>
+                        <div style={secTitle}>{language === "ko" ? "론칭 전 2주 타임라인" : "2-week pre-launch timeline"}</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {(language === "ko" ? [
+                            { when: "D-14", what: "베타 사용자 5~10명 초대 → 핵심 플로우 테스트 + 피드백 수집", platform: "비공개" },
+                            { when: "D-7", what: "Product Hunt 예약 등록 + 랜딩 페이지 공개 + 메일링 리스트 알림", platform: "PH·이메일" },
+                            { when: "D-1", what: "최종 배포 + 모든 모니터링 확인 + 팀 역할 분담 (응답·버그 대응)", platform: "내부" },
+                            { when: "D-Day", what: "론칭! PH·HN 게시 + SNS 전 채널 공유 + 첫 사용자 실시간 대응", platform: "전 채널" },
+                          ] : [
+                            { when: "D-14", what: "Invite 5-10 beta users → test core flow + collect feedback", platform: "Private" },
+                            { when: "D-7", what: "Schedule PH + publish landing page + notify mailing list", platform: "PH · Email" },
+                            { when: "D-1", what: "Final deploy + verify all monitoring + assign team roles", platform: "Internal" },
+                            { when: "D-Day", what: "Launch! PH + HN + all social channels + real-time user support", platform: "All" },
+                          ]).map(row => (
+                            <div key={row.when} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.03)" }}>
+                              <div style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, color: "#ff9f0a", width: "42px", paddingTop: "2px" }}>{row.when}</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: "13px", fontWeight: 500, marginBottom: "2px" }}>{row.what}</div>
+                                <div style={{ fontSize: "11px", color: "var(--muted)" }}>{row.platform}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+
+                  /* ── 오프라인/온라인 기존 콘텐츠 ── */
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "8px" }}>
 
                       {/* ── 초도 발주 전략 ── */}
-                      <div style={s}>
+                      {!isOnlineBiz && <div style={s}>
                         <div style={secTitle}>{language === "ko" ? "초도 발주 & 재고 전략" : "First inventory order strategy"}</div>
                         <div style={card}>
                           <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>
@@ -10045,17 +10117,9 @@ export function CurrentStageView() {
                             "Stock 1 month of packaging and consumables.",
                             "Adjust next order based on actual turnover from week 1.",
                             "Set waste/loss budget at 5–8% of expected sales.",
-                          ]).map((p) => <div key={p} style={{ ...infoR, marginBottom: "4px" }}>{d}<span>{p}</span></div>)}
+                          ]).map((p) => <div key={p} style={{ ...infoR, marginBottom: "4px" }}>{dot}<span>{p}</span></div>)}
                         </div>
-                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" as const }}>
-                          {(language === "ko"
-                            ? ["유통기한 긴 재료 먼저 발주", "냉동 vs 냉장 비율 확인", "결제조건(현금/카드/월납) 협의"]
-                            : ["Order shelf-stable items first", "Confirm freeze/chill split", "Negotiate payment terms"]
-                          ).map((t) => (
-                            <span key={t} style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "20px", background: "rgba(0,122,255,0.07)", color: "#007aff", fontWeight: 500 }}>{t}</span>
-                          ))}
-                        </div>
-                      </div>
+                      </div>}
 
                       {/* ── 오픈 당일 역할 배분 ── */}
                       <div style={s}>
@@ -10112,12 +10176,11 @@ export function CurrentStageView() {
                 })()}
 
                 {currentStage.code === "first_month_check" && (() => {
+                  const isStartupBiz = industryCategoryId === "startup-tech" || d.industryCategoryId === "startup-tech";
                   const s = { display: "flex", flexDirection: "column" as const, gap: "6px" };
                   const card = { background: "rgba(0,0,0,0.03)", borderRadius: "14px", padding: "14px 16px" };
                   const secTitle = { fontSize: "12px", fontWeight: 700 as const, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" };
                   const tag = (c: string) => ({ display: "inline-block" as const, fontSize: "11px", fontWeight: 600 as const, padding: "2px 8px", borderRadius: "20px", background: `${c}18`, color: c });
-                  const infoR = { display: "flex", gap: "6px", alignItems: "flex-start", fontSize: "13px", lineHeight: 1.5 as const, color: "rgba(0,0,0,0.7)" };
-                  const d = <span style={{ flexShrink: 0, marginTop: "6px", width: "4px", height: "4px", borderRadius: "50%", background: "rgba(0,0,0,0.25)", display: "inline-block" }} />;
 
                   const fixedCosts = (monthlyCosts as { rent: number; labor: number; utilities: number }).rent
                     + (monthlyCosts as { rent: number; labor: number; utilities: number }).labor
@@ -10128,9 +10191,9 @@ export function CurrentStageView() {
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "8px" }}>
 
-                      {/* ── 비상금 계산 ── */}
+                      {/* ── 비상금 / 런웨이 ── */}
                       <div style={s}>
-                        <div style={secTitle}>{language === "ko" ? "비상금 목표 계산" : "Emergency reserve target"}</div>
+                        <div style={secTitle}>{isStartupBiz ? (language === "ko" ? "런웨이 확인" : "Runway check") : (language === "ko" ? "비상금 목표 계산" : "Emergency reserve target")}</div>
                         {emergencyTarget ? (
                           <div style={{ ...card, background: "rgba(52,199,89,0.06)", border: "0.5px solid rgba(52,199,89,0.25)" }}>
                             <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "4px" }}>
@@ -10141,37 +10204,46 @@ export function CurrentStageView() {
                             </div>
                             <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5 }}>
                               {language === "ko"
-                                ? `임대료(${fmt((monthlyCosts as {rent:number}).rent)}) + 인건비(${fmt((monthlyCosts as {labor:number}).labor)}) + 공과금(${fmt((monthlyCosts as {utilities:number}).utilities)}) × 1.5배`
-                                : `Rent + Labor + Utilities × 1.5`}
+                                ? isStartupBiz
+                                  ? `월 번레이트(서버+인건비+도구) × 1.5개월 = 최소 비상금`
+                                  : `임대료(${fmt((monthlyCosts as {rent:number}).rent)}) + 인건비(${fmt((monthlyCosts as {labor:number}).labor)}) + 공과금(${fmt((monthlyCosts as {utilities:number}).utilities)}) × 1.5배`
+                                : `Monthly costs × 1.5`}
                             </div>
                           </div>
                         ) : (
                           <div style={card}>
                             <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>
                               {language === "ko"
-                                ? "내 가게 현황 화면에서 월 비용을 입력하면 비상금 목표액을 자동으로 계산해드립니다."
-                                : "Enter your monthly costs in the My Store screen to auto-calculate your target emergency reserve."}
-                            </div>
-                            <div style={{ fontSize: "13px", fontWeight: 600, marginTop: "8px" }}>
-                              {language === "ko" ? "기본 원칙: 월 고정비 × 1.5개월치" : "Rule of thumb: monthly fixed costs × 1.5 months"}
+                                ? isStartupBiz
+                                  ? "운영 대시보드에서 월 비용을 입력하면 런웨이를 자동 계산합니다. 최소 6개월 런웨이 확보 권장."
+                                  : "내 가게 현황 화면에서 월 비용을 입력하면 비상금 목표액을 자동으로 계산해드립니다."
+                                : "Enter monthly costs to auto-calculate reserve target."}
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {/* ── 현금흐름 기록 도구 ── */}
+                      {/* ── KPI 추적 도구 ── */}
                       <div style={s}>
-                        <div style={secTitle}>{language === "ko" ? "현금흐름 기록 도구 선택" : "Cash flow tracking tool"}</div>
+                        <div style={secTitle}>{language === "ko" ? (isStartupBiz ? "핵심 지표 추적 도구" : "현금흐름 기록 도구 선택") : "Tracking tool"}</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {(language === "ko" ? [
+                          {(isStartupBiz ? (language === "ko" ? [
+                            { name: "build.up 운영 대시보드", desc: "일별 매출 + KPI 자동 분석 + AI 모닝 브리핑", badge: "지금 바로", color: "#007aff" },
+                            { name: "Mixpanel / PostHog", desc: "이벤트 기반 사용자 행동 분석. 퍼널 + 리텐션 추적", badge: "필수", color: "#7c3aed" },
+                            { name: "Notion / Google Sheets", desc: "주간 리뷰 기록 + 실험 로그 + OKR 관리", badge: "주간 리뷰", color: "#ff9f0a" },
+                          ] : [
+                            { name: "build.up Dashboard", desc: "Daily KPI + AI briefing + automated analysis", badge: "Start now", color: "#007aff" },
+                            { name: "Mixpanel / PostHog", desc: "Event-based user behavior analytics. Funnel + retention", badge: "Essential", color: "#7c3aed" },
+                            { name: "Notion / Sheets", desc: "Weekly review log + experiment tracking + OKR", badge: "Weekly", color: "#ff9f0a" },
+                          ]) : (language === "ko" ? [
                             { name: "캐시노트 (CashNote)", desc: "카드사·POS 연동 자동 집계 · 일별 매출 무료 확인 · 소상공인 1위 앱", badge: "가장 쉬움", color: "#34c759" },
                             { name: "build.up 내 가게 현황", desc: "이 앱에서 바로 기록 · 일별 매출 + 비용 구조 + KPI 자동 분석", badge: "지금 바로", color: "#007aff" },
                             { name: "엑셀·구글 스프레드시트", desc: "자유도 최고 · 직접 수식 관리 · 별도 학습 필요", badge: "고급 사용자", color: "#ff9f0a" },
                           ] : [
-                            { name: "CashNote", desc: "Auto-sync with card networks/POS · free daily sales tracking · #1 app for Korean small biz", badge: "Easiest", color: "#34c759" },
-                            { name: "build.up My Store", desc: "Record directly in this app · daily sales + cost structure + KPI analysis", badge: "Start now", color: "#007aff" },
-                            { name: "Excel / Google Sheets", desc: "Maximum flexibility · custom formulas · requires more setup", badge: "Power users", color: "#ff9f0a" },
-                          ]).map((t) => (
+                            { name: "CashNote", desc: "Auto-sync with card/POS · free daily sales · #1 app", badge: "Easiest", color: "#34c759" },
+                            { name: "build.up My Store", desc: "Record here · daily sales + cost + KPI", badge: "Start now", color: "#007aff" },
+                            { name: "Excel / Sheets", desc: "Max flexibility · custom formulas", badge: "Power", color: "#ff9f0a" },
+                          ])).map((t) => (
                             <div key={t.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.03)" }}>
                               <div style={{ flex: 1, marginRight: "8px" }}>
                                 <div style={{ fontSize: "13px", fontWeight: 600 }}>{t.name}</div>
@@ -10183,25 +10255,37 @@ export function CurrentStageView() {
                         </div>
                       </div>
 
-                      {/* ── 첫 달 생존 원칙 ── */}
+                      {/* ── 첫 달 핵심 원칙 ── */}
                       <div style={s}>
-                        <div style={secTitle}>{language === "ko" ? "개업 첫 달 — 가장 중요한 것들" : "First month survival priorities"}</div>
+                        <div style={secTitle}>{language === "ko" ? (isStartupBiz ? "론칭 첫 달 — 생존 원칙" : "개업 첫 달 — 가장 중요한 것들") : "First month priorities"}</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                          {(language === "ko" ? [
-                            { icon: "📊", title: "매일 매출·비용 기록", desc: "감이 아닌 숫자로 판단해야 합니다. 하루라도 빠지면 데이터가 끊깁니다." },
-                            { icon: "💬", title: "고객 피드백 첫 2주 내 수집", desc: "불만 고객은 말하지 않고 떠납니다. 설문지·리뷰 요청을 적극 활용하세요." },
-                            { icon: "⚠️", title: "원가율을 주 단위로 점검", desc: "식재료 낭비·도난·비율 오류가 생기는 건 항상 초반입니다." },
-                            { icon: "📱", title: "네이버 플레이스 리뷰 관리", desc: "초기 리뷰 10개가 검색 노출을 결정합니다. 방문 고객에게 리뷰 요청하세요." },
-                            { icon: "🚨", title: "적자여도 3개월은 지켜봐라", desc: "오픈 초기 적자는 정상입니다. 단, 매주 숫자가 개선되고 있어야 합니다." },
+                          {(isStartupBiz ? (language === "ko" ? [
+                            { title: "매일 핵심 지표 확인", desc: "DAU, 가입 전환율, 핵심 액션 완료율. 하루라도 빠지면 트렌드를 놓칩니다." },
+                            { title: "첫 2주 내 사용자 10명과 직접 대화", desc: "왜 가입했는지, 뭐가 불편한지, 계속 쓸 건지. 이 대화가 PMF의 단서입니다." },
+                            { title: "D7 리텐션 20% 이상인지 확인", desc: "첫 주에 돌아오지 않으면 성장은 무의미합니다. 제품 개선에 집중하세요." },
+                            { title: "주간 실험 1개씩 반드시 실행", desc: "가설 → 실행 → 측정 → 학습. 매주 하나의 실험이 성장의 엔진입니다." },
+                            { title: "번레이트를 매주 체크", desc: "현금이 0이 되면 게임 오버. 런웨이가 6개월 미만이면 즉시 대응하세요." },
                           ] : [
-                            { icon: "📊", title: "Record sales + costs every day", desc: "Decisions based on data, not gut feeling. Missing a day breaks your tracking." },
-                            { icon: "💬", title: "Collect feedback in the first 2 weeks", desc: "Unhappy customers leave without saying a word. Actively request reviews." },
-                            { icon: "⚠️", title: "Check food cost ratio weekly", desc: "Waste, theft, and ratio errors always appear in the first weeks." },
-                            { icon: "📱", title: "Manage Naver Place reviews", desc: "Your first 10 reviews determine search visibility. Ask every visitor." },
-                            { icon: "🚨", title: "A loss in month 1 is normal", desc: "But numbers must be improving week by week. If not, diagnose immediately." },
-                          ]).map((item) => (
+                            { title: "Check key metrics daily", desc: "DAU, signup rate, core action rate. Missing a day means missing trends." },
+                            { title: "Talk to 10 users in first 2 weeks", desc: "Why they signed up, what's frustrating, will they stay. This is the PMF clue." },
+                            { title: "Verify D7 retention ≥ 20%", desc: "If users don't return in week 1, growth is meaningless. Focus on product." },
+                            { title: "Run 1 experiment per week", desc: "Hypothesis → Execute → Measure → Learn. Weekly experiments drive growth." },
+                            { title: "Check burn rate weekly", desc: "Cash at zero = game over. Under 6mo runway = act immediately." },
+                          ]) : (language === "ko" ? [
+                            { title: "매일 매출·비용 기록", desc: "감이 아닌 숫자로 판단해야 합니다. 하루라도 빠지면 데이터가 끊깁니다." },
+                            { title: "고객 피드백 첫 2주 내 수집", desc: "불만 고객은 말하지 않고 떠납니다. 설문지·리뷰 요청을 적극 활용하세요." },
+                            { title: "원가율을 주 단위로 점검", desc: "식재료 낭비·도난·비율 오류가 생기는 건 항상 초반입니다." },
+                            { title: "네이버 플레이스 리뷰 관리", desc: "초기 리뷰 10개가 검색 노출을 결정합니다. 방문 고객에게 리뷰 요청하세요." },
+                            { title: "적자여도 3개월은 지켜봐라", desc: "오픈 초기 적자는 정상입니다. 단, 매주 숫자가 개선되고 있어야 합니다." },
+                          ] : [
+                            { title: "Record sales + costs daily", desc: "Data over gut feeling. Missing a day breaks tracking." },
+                            { title: "Collect feedback in 2 weeks", desc: "Unhappy customers leave silently. Actively request reviews." },
+                            { title: "Check cost ratio weekly", desc: "Waste and errors always appear early." },
+                            { title: "Manage Naver Place reviews", desc: "First 10 reviews determine search visibility." },
+                            { title: "A loss in month 1 is normal", desc: "But numbers must improve week by week." },
+                          ])).map((item) => (
                             <div key={item.title} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.03)", alignItems: "flex-start" }}>
-                              <span style={{ fontSize: "16px", flexShrink: 0, marginTop: "1px" }}>{item.icon}</span>
+                              <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(0,0,0,0.3)", flexShrink: 0, marginTop: "7px" }} />
                               <div>
                                 <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px" }}>{item.title}</div>
                                 <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{item.desc}</div>
