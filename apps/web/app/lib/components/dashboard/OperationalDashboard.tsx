@@ -1759,51 +1759,12 @@ function SurvivalBoardCard({
         </div>
       )}
 
-      <div style={actionList}>
-        {(hasActions
-          ? actions
-          : [
-              {
-                title: ko ? "오늘 기록부터 입력하기" : "Log today's numbers",
-                reason: ko
-                  ? "일매출과 고객 수를 기록해야 추세와 손익, 병목이 정확히 보입니다."
-                  : "Daily sales and customer logs are the foundation for trend and bottleneck detection.",
-                priority: "high" as const,
-              },
-              {
-                title: ko ? "가장 급한 재고/인력 병목 확인" : "Check the biggest ops bottleneck",
-                reason: ko
-                  ? "재고 부족과 인력 공백은 매출이 있어도 성장을 막습니다."
-                  : "Stockouts and staffing gaps block growth even when demand exists.",
-                priority: "medium" as const,
-              },
-            ]
-        ).slice(0, 2).map((action, index) => (
-          <div key={`${action.title}-${index}`} style={actionRow}>
-            <button
-              type="button"
-              onClick={(e) => {
-                const el = e.currentTarget;
-                el.style.background = "#177245";
-                el.style.color = "#fff";
-                el.textContent = "✓";
-                const row = el.closest("[data-action-row]") as HTMLElement | null;
-                if (row) { row.style.opacity = "0.5"; row.style.textDecoration = "line-through"; }
-              }}
-              style={{ ...actionIndex, cursor: "pointer", border: "1px solid rgba(15,23,42,0.1)", transition: "all 0.2s ease" }}
-            >
-              {index + 1}
-            </button>
-            <div data-action-row="">
-              <div style={actionTitle}>{action.title}</div>
-              <div style={actionBody}>{action.reason}</div>
-            </div>
-            <div style={{ ...priorityPill, background: action.priority === "high" ? "rgba(239,68,68,0.12)" : "rgba(37,99,235,0.10)", color: action.priority === "high" ? "#b42318" : "#2563eb" }}>
-              {action.priority === "high" ? (ko ? "긴급" : "High") : ko ? "중요" : "Medium"}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* todayActions는 MorningBriefing으로 이동 — 생존 보드는 지표 모니터링에 집중 */}
+      {!hasActions && (
+        <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", fontSize: "12px", color: "rgba(15,23,42,0.4)", textAlign: "center" as const }}>
+          {ko ? "오늘 할 일은 상단 모닝 브리핑에서 확인하세요" : "Check today's actions in the Morning Briefing above"}
+        </div>
+      )}
     </section>
   );
 }
