@@ -692,12 +692,19 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "application-submitted": { ko: "벤처인증 또는 지원사업 신청서 마감 전 제출" },
   // permit-check
   "permit-type-checked": { ko: "업종별 필요 인허가·등록 종류 확인" },
+  "hygiene-education-done": { ko: "식품위생교육 6시간 이수 + 수료증 발급 완료 (음식·카페)" },
+  "health-exam-obtained": { ko: "보건소 건강진단결과서(보건증) 발급 완료 (음식·카페·뷰티)" },
+  "professional-license-confirmed": { ko: "업종별 전문 면허 확인 (미용사 면허, 학원 강사 자격, 동물 취급 자격 등)" },
+  "fire-safety-cert-obtained": { ko: "소방완비증명서 신청 및 발급 완료 (해당 시)" },
+  "industry-specific-registration": { ko: "업종별 특수 등록 완료 (교육청 학원등록, 체육시설업 신고, 동물관련업 등록 등)" },
   "health-cert-checked": { ko: "위생 교육 이수 및 건강진단 조건 확인 (음식·카페·뷰티 업종)" },
   "safety-requirement-checked": { ko: "소방·시설 안전 요건 확인" },
   // contract-review
   "use-check": { ko: "건물 용도와 업종 적합성 확인" },
   "facility-check": { ko: "설비·환기·전기 상태 검토" },
   "restriction-check": { ko: "임대차 조건·권리금·갱신 조항 확인" },
+  "septic-tank-checked": { ko: "정화조 용량 음식점 영업신고 가능 여부 확인 (음식·카페)" },
+  "certified-date-obtained": { ko: "임대차 계약서 확정일자 받기 (보증금 보호)" },
   // construction-setup
   "contractor-selected": { ko: "인테리어 업체 선정 및 견적 2곳 이상 수령" },
   "design-approved": { ko: "최종 레이아웃 설계 및 공사 계획 확정" },
@@ -707,7 +714,8 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "equipment-planned": { ko: "장비 구매 또는 렌탈 계획 확정" },
   "pos-selected": { ko: "POS 시스템 선택 및 운영 연동" },
   // registration-setup
-  "business-registered": { ko: "세무서에서 사업자등록 완료" },
+  "tax-type-decided": { ko: "간이과세 / 일반과세 선택 결정 (등록 전 필수)" },
+  "business-registered": { ko: "세무서에서 사업자등록 완료 (영업 시작 20일 이내)" },
   "permit-filed": { ko: "관할 관청에 영업 신고 또는 허가 신청 완료" },
   // insurance-tax-setup
   "insurance-registered": { ko: "4대보험 정보연계센터에서 4대보험 통합 신고 완료" },

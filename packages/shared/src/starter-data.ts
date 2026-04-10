@@ -1440,7 +1440,7 @@ export const starterStageFlow: RoadmapStageState[] = [
       kind: "required_tasks",
       requiredTaskIds: ["permit-type-checked"]
     },
-    taskIds: ["permit-type-checked", "health-cert-checked", "safety-requirement-checked"],
+    taskIds: ["permit-type-checked", "hygiene-education-done", "health-exam-obtained", "professional-license-confirmed", "fire-safety-cert-obtained", "industry-specific-registration", "health-cert-checked", "safety-requirement-checked"],
     riskIds: [],
     nextStageIds: ["location-candidates"]
   },
@@ -1478,7 +1478,7 @@ export const starterStageFlow: RoadmapStageState[] = [
       kind: "required_tasks",
       requiredTaskIds: ["use-check", "facility-check", "restriction-check"]
     },
-    taskIds: ["use-check", "facility-check", "restriction-check"],
+    taskIds: ["use-check", "facility-check", "restriction-check", "septic-tank-checked", "certified-date-obtained"],
     riskIds: [],
     nextStageIds: ["construction-setup"]
   },
@@ -1530,9 +1530,9 @@ export const starterStageFlow: RoadmapStageState[] = [
     whyNow: "Registration and permits must be in place before you can legally begin operating.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["business-registered", "permit-filed"]
+      requiredTaskIds: ["tax-type-decided", "business-registered", "permit-filed"]
     },
-    taskIds: ["business-registered", "permit-filed"],
+    taskIds: ["tax-type-decided", "business-registered", "permit-filed"],
     riskIds: [],
     nextStageIds: ["insurance-tax-setup"]
   },
@@ -1853,6 +1853,41 @@ export const starterTaskMap: WorkflowTaskMap = {
       estimatedMinutes: 30
     },
     {
+      taskId: "hygiene-education-done",
+      title: "Complete food hygiene education (6hr) and obtain certificate (food/cafe only)",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 360
+    },
+    {
+      taskId: "health-exam-obtained",
+      title: "Obtain health examination certificate from public health center (food/cafe/beauty)",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 60
+    },
+    {
+      taskId: "professional-license-confirmed",
+      title: "Confirm professional license for your business type (beauty license, academy instructor, pet handler, etc.)",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 30
+    },
+    {
+      taskId: "fire-safety-cert-obtained",
+      title: "Apply for fire safety completion certificate if required (소방완비증명서)",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 60
+    },
+    {
+      taskId: "industry-specific-registration",
+      title: "Complete industry-specific registration: education office (학원), sports facility (체육시설업), animal business (동물관련업), etc.",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 60
+    },
+    {
       taskId: "health-cert-checked",
       title: "Check health certificate and hygiene training requirements (food/cafe/beauty)",
       status: "todo",
@@ -1888,6 +1923,20 @@ export const starterTaskMap: WorkflowTaskMap = {
       status: "todo",
       required: true,
       estimatedMinutes: 25
+    },
+    {
+      taskId: "septic-tank-checked",
+      title: "Confirm septic tank capacity supports food service permit (food/cafe only)",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 15
+    },
+    {
+      taskId: "certified-date-obtained",
+      title: "Obtain 확정일자 (certified date stamp) on lease for deposit protection",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 20
     }
   ],
   "construction-setup": [
@@ -1938,8 +1987,15 @@ export const starterTaskMap: WorkflowTaskMap = {
   ],
   "registration-setup": [
     {
+      taskId: "tax-type-decided",
+      title: "Decide between simplified (간이) and general (일반) taxation before registration",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 15
+    },
+    {
       taskId: "business-registered",
-      title: "Complete business registration at the tax office",
+      title: "Complete business registration at the tax office (within 20 days of starting operations)",
       status: "todo",
       required: true,
       estimatedMinutes: 40
