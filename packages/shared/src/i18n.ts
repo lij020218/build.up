@@ -545,11 +545,11 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   // ── Offline path ──────────────────────────────────────────────────────────
   permit_check: { ko: { title: "인허가 사전 확인", goal: "계약 전에 내 업종에 필요한 인허가·위생 교육·안전 요건을 확인합니다.", whyNow: "인허가 가능 여부 확인 없이 임대차 계약을 맺으면 오픈이 불가능해질 수 있습니다." } },
   construction_setup: { ko: { title: "인테리어 및 공사", goal: "인테리어 업체를 선정하고 설계를 확정한 뒤 공사를 완료합니다.", whyNow: "시공 업체와 설계를 확정해야 실제 오픈 일정을 잡을 수 있습니다." } },
-  vendor_setup: { ko: { title: "공급처 및 장비 확정", goal: "주요 식재료·자재 공급처와 장비 구매·렌탈 계획을 확정합니다.", whyNow: "공급처 미확정 시 오픈 직전 원가와 재고 관리가 흔들립니다." } },
+  vendor_setup: { ko: { title: "공급처 및 장비 확정", goal: "주요 원자재·상품·소모품 공급처와 장비 구매·렌탈 계획을 확정합니다.", whyNow: "공급처 미확정 시 오픈 직전 원가와 재고 관리가 흔들립니다." } },
   registration_setup: { ko: { title: "사업자 등록 및 인허가 신고", goal: "세무서 사업자등록과 관할 관청 영업 신고·허가를 완료합니다.", whyNow: "등록 없이 영업하면 법적 위반이며, 매출 증빙도 불가합니다." } },
   insurance_tax_setup: { ko: { title: "보험·세무 세팅", goal: "4대보험(국민연금·건강·고용·산재) 가입, 원천세 설정, 급여 지급 방식을 확정합니다.", whyNow: "1인 고용이라도 채용일로부터 14일 이내 보험 신고 의무. 미신고 시 가산세와 소급 납부가 발생합니다." } },
   hiring_setup: { ko: { title: "직원 채용 및 근로계약", goal: "직원·알바 필요 여부를 판단하고, 근로계약서를 작성·교부합니다.", whyNow: "근로계약서 미작성은 과태료와 노동분쟁의 직접 원인입니다." } },
-  operations_setup: { ko: { title: "운영 및 마케팅 준비", goal: "배달앱 입점, POS 점검, SNS 채널 개설 등 오픈 전 운영 준비를 마칩니다.", whyNow: "오픈 당일 운영 준비가 안 되면 첫 고객 경험이 망가집니다." } },
+  operations_setup: { ko: { title: "운영 및 마케팅 준비", goal: "POS 점검, SNS 채널 개설, 예약·결제 시스템 등 오픈 전 운영 준비를 마칩니다. 배달 업종은 배달앱 입점도 진행합니다.", whyNow: "오픈 당일 운영 준비가 안 되면 첫 고객 경험이 망가집니다." } },
   pre_launch: { ko: { title: "소프트 오픈", goal: "지인·초대 고객 대상으로 시범 운영하고 피드백을 반영합니다.", whyNow: "실제 고객에게 정식 오픈하기 전 운영 문제를 먼저 발견해야 합니다." } },
   // ── Online / Digital path ─────────────────────────────────────────────────
   platform_setup: { ko: { title: "판매 플랫폼 선택", goal: "스마트스토어·쿠팡·자체몰 중 주요 판매 채널을 선택하고 판매자 계정을 만듭니다.", whyNow: "플랫폼 선택이 수수료, 고객 도달, 풀필먼트 방식을 결정합니다." } },
@@ -563,24 +563,73 @@ function getStageCopyForCategory(
   stage: RoadmapStageState,
   categoryId?: string
 ): { title: string; goal: string; whyNow: string } | undefined {
-  if (categoryId !== "online-digital") {
-    return undefined;
+  // ── startup-tech overrides ──
+  if (categoryId === "startup-tech") {
+    const startupOverrides: Record<string, { title: string; goal: string; whyNow: string }> = {
+      startup_type: {
+        title: "창업 형태 선택",
+        goal: "독립 창업으로 진행할지, 공동 창업팀을 구성할지 방향을 정합니다.",
+        whyNow: "팀 구조에 따라 지분 설계, 법인 형태, 의사결정 방식이 완전히 달라집니다."
+      },
+      business_model: {
+        title: "비즈니스 모델 선택",
+        goal: "SaaS 구독, API 과금, 프리미엄, 마켓플레이스 중 수익 모델을 정합니다.",
+        whyNow: "수익 모델이 제품 설계, 가격 정책, GTM 전략의 출발점입니다."
+      },
+      tax_guide: {
+        title: "스타트업 세무 가이드",
+        goal: "법인세, R&D 세액공제, 스톡옵션 과세 등 서비스 론칭 전 세무 구조를 점검합니다.",
+        whyNow: "세무 구조를 잘못 세팅하면 수천만원의 공제 혜택을 놓칩니다."
+      },
+      loan_guide: {
+        title: "자금 조달 & 정책자금",
+        goal: "정부 R&D 자금, 정책 대출, 신용보증 등 스타트업에 맞는 자금 경로를 검토합니다.",
+        whyNow: "정책자금은 마감이 있습니다. 미리 준비하지 않으면 1년을 기다려야 합니다."
+      },
+      biz_registration: {
+        title: "법인 등기 & 금융 세팅",
+        goal: "법인 등기 완료를 확인하고 법인 통장 개설과 세무사 선임 여부를 결정합니다.",
+        whyNow: "투자 유치와 정부 지원사업 신청에 법인 등기가 필수입니다."
+      },
+      pre_launch_final: {
+        title: "론칭 최종 준비",
+        goal: "프로덕션 배포, 모니터링 확인, 론칭 당일 역할 분담과 채널별 공유 전략을 마칩니다.",
+        whyNow: "론칭 당일의 준비 수준이 첫 사용자 경험과 초기 견인력을 결정합니다."
+      },
+      first_month_check: {
+        title: "론칭 후 생존 점검",
+        goal: "핵심 지표 추적 체계를 세팅하고 런웨이를 확인하며 첫 달 생존 루틴을 시작합니다.",
+        whyNow: "론칭 첫 달이 가장 위험합니다. 매일 지표를 보고 매주 실험해야 살아남습니다."
+      },
+    };
+    return startupOverrides[stage.code];
   }
 
-  if (stage.code === "location_candidates") {
-    return {
-      title: "운영 거점 비교",
-      goal: "작업, 보관, 포장, 택배 운영에 맞는 거점 후보를 비교합니다.",
-      whyNow: "온라인 판매는 오프라인 상권보다 운영 효율과 물류 동선이 더 중요합니다."
+  // ── online-digital overrides ──
+  if (categoryId === "online-digital") {
+    const onlineOverrides: Record<string, { title: string; goal: string; whyNow: string }> = {
+      location_candidates: {
+        title: "운영 거점 비교",
+        goal: "작업, 보관, 포장, 택배 운영에 맞는 거점 후보를 비교합니다.",
+        whyNow: "온라인 판매는 오프라인 상권보다 운영 효율과 물류 동선이 더 중요합니다."
+      },
+      contract_review: {
+        title: "운영 준비 검토",
+        goal: "보관, 포장, 택배, 공급 접근성처럼 운영에 직접 영향을 주는 항목을 확인합니다.",
+        whyNow: "온라인 판매는 임대차보다 작업 환경과 fulfilment 흐름을 먼저 검토해야 합니다."
+      },
+      pre_launch_final: {
+        title: "오픈 최종 준비",
+        goal: "초도 상품 소싱을 완료하고 주문·배송·CS 플로우를 점검한 뒤 오픈 알림을 게시합니다.",
+        whyNow: "첫 주문 처리 실패는 리뷰 악화와 플랫폼 패널티로 이어집니다."
+      },
+      first_month_check: {
+        title: "오픈 후 생존 점검",
+        goal: "주문·매출·반품 기록 체계를 세팅하고 비상금을 확인하며 첫 달 운영 루틴을 시작합니다.",
+        whyNow: "초기 리뷰와 반품률이 플랫폼 노출을 결정합니다. 첫 달이 가장 중요합니다."
+      },
     };
-  }
-
-  if (stage.code === "contract_review") {
-    return {
-      title: "운영 준비 검토",
-      goal: "보관, 포장, 택배, 공급 접근성처럼 운영에 직접 영향을 주는 항목을 확인합니다.",
-      whyNow: "온라인 판매는 임대차보다 작업 환경과 fulfilment 흐름을 먼저 검토해야 합니다."
-    };
+    return onlineOverrides[stage.code];
   }
 
   return undefined;
@@ -643,7 +692,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "application-submitted": { ko: "벤처인증 또는 지원사업 신청서 마감 전 제출" },
   // permit-check
   "permit-type-checked": { ko: "업종별 필요 인허가·등록 종류 확인" },
-  "health-cert-checked": { ko: "위생 교육 이수 및 건강진단 조건 확인" },
+  "health-cert-checked": { ko: "위생 교육 이수 및 건강진단 조건 확인 (음식·카페·뷰티 업종)" },
   "safety-requirement-checked": { ko: "소방·시설 안전 요건 확인" },
   // contract-review
   "use-check": { ko: "건물 용도와 업종 적합성 확인" },
@@ -654,7 +703,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "design-approved": { ko: "최종 레이아웃 설계 및 공사 계획 확정" },
   "construction-complete": { ko: "공사 완료 및 최종 현장 점검" },
   // vendor-setup
-  "supplier-identified": { ko: "주요 식재료·상품·자재 공급처 확정" },
+  "supplier-identified": { ko: "주요 원자재·상품·소모품 공급처 확정" },
   "equipment-planned": { ko: "장비 구매 또는 렌탈 계획 확정" },
   "pos-selected": { ko: "POS 시스템 선택 및 운영 연동" },
   // registration-setup
@@ -668,7 +717,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "hiring-decision-made": { ko: "직원·알바 필요 여부 및 인원 계획 확정" },
   "employment-contract-signed": { ko: "근로계약서 작성 및 교부 완료" },
   // operations-setup
-  "delivery-app-registered": { ko: "배달앱(배민, 쿠팡이츠 등) 입점 등록" },
+  "delivery-app-registered": { ko: "배달앱 입점 등록 (음식·카페 업종 해당 시)" },
   "pos-live": { ko: "POS 실거래 테스트 완료" },
   "sns-setup": { ko: "인스타그램·네이버 플레이스·카카오 채널 개설" },
   // pre-launch

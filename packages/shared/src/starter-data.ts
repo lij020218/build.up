@@ -1438,7 +1438,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     whyNow: "Signing a lease without confirming permit eligibility can permanently block your opening.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["permit-type-checked", "health-cert-checked"]
+      requiredTaskIds: ["permit-type-checked"]
     },
     taskIds: ["permit-type-checked", "health-cert-checked", "safety-requirement-checked"],
     riskIds: [],
@@ -1584,7 +1584,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     whyNow: "Customers need to be able to find you from day one — late marketing setup means lost early revenue.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["delivery-app-registered", "sns-setup"]
+      requiredTaskIds: ["pos-live", "sns-setup"]
     },
     taskIds: ["delivery-app-registered", "pos-live", "sns-setup"],
     riskIds: [],
@@ -1760,8 +1760,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     status: "locked",
     stepNumber: 17,
     totalSteps: 18,
-    goal: "Receive the first inventory order, complete final staff training, and publish an opening teaser post.",
-    whyNow: "Gaps in preparation on opening day directly damage the first customer experience and are hard to recover from.",
+    goal: "Complete final pre-launch preparations: inventory, team readiness, and marketing announcements.",
+    whyNow: "Gaps in preparation on launch day directly damage the first customer experience and are hard to recover from.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["inventory-first-order", "staff-final-brief"]
@@ -1778,8 +1778,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     status: "locked",
     stepNumber: 18,
     totalSteps: 18,
-    goal: "Set up a daily cash flow tracking habit, confirm emergency reserves, and organize key contacts before opening.",
-    whyNow: "The first month is the most dangerous period — 22% of Korean small businesses close within the first year.",
+    goal: "Set up a tracking system for key metrics, confirm reserves, and organize essential contacts before launch.",
+    whyNow: "The first month is the most dangerous period — preparation and daily tracking separate success from failure.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["cashflow-plan-ready", "emergency-fund-ready"]
@@ -1854,9 +1854,9 @@ export const starterTaskMap: WorkflowTaskMap = {
     },
     {
       taskId: "health-cert-checked",
-      title: "Check health certificate and hygiene training requirements",
+      title: "Check health certificate and hygiene training requirements (food/cafe/beauty)",
       status: "todo",
-      required: true,
+      required: false,
       estimatedMinutes: 20
     },
     {
@@ -1996,7 +1996,7 @@ export const starterTaskMap: WorkflowTaskMap = {
       taskId: "delivery-app-registered",
       title: "Register on delivery platforms (Baemin, Coupang Eats, etc.)",
       status: "todo",
-      required: true,
+      required: false,
       estimatedMinutes: 45
     },
     {
