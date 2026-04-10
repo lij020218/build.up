@@ -3569,6 +3569,133 @@ export function CurrentStageView() {
                   );
                 })()}
 
+                {/* ── 사업계획서 생성 (fundraising_readiness) ── */}
+                {currentStage.code === "fundraising_readiness" && (() => {
+                  const ko = language === "ko";
+                  const generatePlanFR = async () => {
+                    setBpLoading(true);
+                    setBpError(null);
+                    try {
+                      const loc = decisions["location-candidates"];
+                      const sfInputs = (decisions["startup-foundation"] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
+                      const geInputs = (decisions["growth-engine"] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
+                      const body = {
+                        industry: industryCategoryId,
+                        subIndustry: selectedIndustryId ?? "",
+                        startupType: startupType ?? "independent",
+                        businessModel: selectedBusinessModelId ?? "",
+                        capital: selectedBudget ?? 0,
+                        targetOpenDate: decisions["budget-setup"]?.inputs?.targetOpenDate ?? "",
+                        location: loc?.selectedPrimaryOptionId ?? "",
+                        bepRevenue: savedFinanceSnapshot?.breakEvenRevenue,
+                        runway: savedFinanceSnapshot?.survivabilityMonths,
+                        riskLevel: savedFinanceSnapshot?.riskLevel,
+                        language,
+                        purpose: "govt-support" as const,
+                        problemStatement: sfInputs?.problemStatement as string | undefined,
+                        teamStructure: sfInputs?.teamStructure as string | undefined,
+                        northStarType: geInputs?.northStarType as string | undefined,
+                        northStarMetricName: geInputs?.northStarMetricName as string | undefined,
+                        targetCustomer: guideSelections["interview-target"] || undefined,
+                      };
+                      const res = await fetch("/api/ai/business-plan/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(body),
+                      });
+                      if (!res.ok) throw new Error(`${res.status}`);
+                      const data = await res.json();
+                      if (data.error) throw new Error(data.error);
+                      setBpSections(data.sections);
+                      setBpSummary(data.summary);
+                    } catch (err) {
+                      setBpError(err instanceof Error ? err.message : "Failed");
+                    }
+                    setBpLoading(false);
+                  };
+
+                  return (
+                    <div style={{
+                      marginBottom: "18px", borderRadius: "24px",
+                      border: "1px solid rgba(29,53,87,0.12)",
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(29,53,87,0.03) 100%)",
+                      boxShadow: "0 8px 20px rgba(17,17,17,0.04)", overflow: "hidden",
+                    }}>
+                      <div style={{ padding: "20px 22px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, var(--primary), rgba(117,163,255,0.9))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em" }}>
+                              {ko ? "AI 사업계획서 생성" : "AI Business Plan"}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "var(--muted)" }}>
+                              {ko ? "PSST 프레임워크 · 정부 지원사업 신청용" : "PSST Framework · For government program applications"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {!bpSections && !bpLoading && !bpError && (
+                          <>
+                            <div style={{ fontSize: "13px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "14px" }}>
+                              {ko
+                                ? "지금까지 입력한 문제 정의, 팀 구성, 재무 데이터를 기반으로 예비창업패키지·초기창업패키지·TIPS 평가 기준에 맞는 사업계획서를 자동 생성합니다."
+                                : "Auto-generates a PSST business plan using your roadmap data, optimized for K-Startup program evaluation criteria."}
+                            </div>
+                            <button type="button" onClick={generatePlanFR} style={{
+                              width: "100%", padding: "14px", borderRadius: "999px",
+                              border: "none", background: "var(--primary)", color: "#fff",
+                              fontSize: "15px", fontWeight: 600, cursor: "pointer",
+                            }}>
+                              {ko ? "사업계획서 생성하기" : "Generate Business Plan"}
+                            </button>
+                          </>
+                        )}
+
+                        {bpLoading && (
+                          <div style={{ textAlign: "center", padding: "20px", color: "var(--muted)", fontSize: "14px" }}>
+                            {ko ? "AI가 PSST 사업계획서를 작성 중입니다... (30초~1분)" : "AI is writing your PSST plan... (30s-1min)"}
+                          </div>
+                        )}
+
+                        {bpError && (
+                          <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.12)", marginTop: "10px" }}>
+                            <div style={{ fontSize: "13px", color: "#ff3b30", fontWeight: 600, marginBottom: "4px" }}>{ko ? "생성 실패" : "Failed"}</div>
+                            <div style={{ fontSize: "12px", color: "var(--muted)" }}>{bpError}</div>
+                            <button type="button" onClick={generatePlanFR} style={{ marginTop: "8px", padding: "8px 16px", borderRadius: "999px", border: "1px solid var(--border)", background: "#fff", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                              {ko ? "다시 시도" : "Retry"}
+                            </button>
+                          </div>
+                        )}
+
+                        {bpSections && (
+                          <div style={{ marginTop: "10px" }}>
+                            {bpSummary && <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)", marginBottom: "12px", lineHeight: 1.5 }}>{bpSummary}</div>}
+                            <div style={{ display: "grid", gap: "6px" }}>
+                              {bpSections.map((sec, idx) => {
+                                const expanded = bpExpandedIdx === idx;
+                                return (
+                                  <div key={idx} style={{ borderRadius: "14px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.7)", overflow: "hidden" }}>
+                                    <button type="button" onClick={() => setBpExpandedIdx(expanded ? null : idx)} style={{ width: "100%", padding: "12px 16px", border: "none", background: "transparent", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", textAlign: "left" }}>
+                                      <span style={{ fontSize: "14px", fontWeight: 600 }}>{sec.title}</span>
+                                      <span style={{ fontSize: "12px", color: "var(--muted)", transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>›</span>
+                                    </button>
+                                    {expanded && <div style={{ padding: "0 16px 14px", fontSize: "13px", lineHeight: 1.7, color: "var(--muted)", whiteSpace: "pre-line" }}>{sec.content}</div>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <button type="button" onClick={() => { const full = bpSections.map(s => `${s.title}\n\n${s.content}`).join("\n\n---\n\n"); navigator.clipboard.writeText(full).catch(() => {}); }} style={{ marginTop: "12px", width: "100%", padding: "12px", borderRadius: "999px", border: "1px solid var(--primary)", background: "rgba(29,53,87,0.04)", color: "var(--primary)", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
+                              {ko ? "전체 텍스트 복사하기" : "Copy Full Text"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* ── 창업팀·기본 구조 가이드 (startup_foundation) ── */}
                 {currentStage.code === "startup_foundation" && (() => {
                   const ko = language === "ko";
@@ -5845,6 +5972,8 @@ export function CurrentStageView() {
                     setBpError(null);
                     try {
                       const loc = decisions["location-candidates"];
+                      const sfInputs = (decisions["startup-foundation"] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
+                      const geInputs = (decisions["growth-engine"] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
                       const body = {
                         industry: industryCategoryId,
                         subIndustry: selectedIndustryId ?? "",
@@ -5858,7 +5987,14 @@ export function CurrentStageView() {
                         bepRevenue: savedFinanceSnapshot?.breakEvenRevenue,
                         runway: savedFinanceSnapshot?.survivabilityMonths,
                         riskLevel: savedFinanceSnapshot?.riskLevel,
-                        language
+                        language,
+                        // 로드맵 데이터
+                        problemStatement: sfInputs?.problemStatement as string | undefined,
+                        teamStructure: sfInputs?.teamStructure as string | undefined,
+                        northStarType: geInputs?.northStarType as string | undefined,
+                        northStarMetricName: geInputs?.northStarMetricName as string | undefined,
+                        targetCustomer: guideSelections["interview-target"] || undefined,
+                        interviewInsights: guideSelections["analysis-result"] ? "고객 인터뷰 분석 완료" : undefined,
                       };
                       const res = await fetch("/api/ai/business-plan/generate", {
                         method: "POST",
