@@ -38,6 +38,13 @@ export type UserStoreData = {
   onlineSelectedCourier: string;
   onlineMonthlyParcels: string;
   costHistory: unknown[];
+  // AI 생성 결과 (localStorage 소실 방지)
+  guideSelections: Record<string, string>;
+  aiRoadmapResult: unknown | null;
+  selectedInteriorConcept: string | null;
+  savedBusinessPlan: unknown | null;
+  savedInterviewScript: unknown | null;
+  savedInterviewAnalysis: unknown | null;
 };
 
 // camelCase → snake_case mapping for DB columns
@@ -72,6 +79,12 @@ const FIELD_TO_COLUMN: Record<keyof UserStoreData, string> = {
   onlineSelectedCourier: "online_selected_courier",
   onlineMonthlyParcels: "online_monthly_parcels",
   costHistory: "cost_history",
+  guideSelections: "guide_selections",
+  aiRoadmapResult: "ai_roadmap_result",
+  selectedInteriorConcept: "selected_interior_concept",
+  savedBusinessPlan: "saved_business_plan",
+  savedInterviewScript: "saved_interview_script",
+  savedInterviewAnalysis: "saved_interview_analysis",
 };
 
 // snake_case → camelCase reverse mapping

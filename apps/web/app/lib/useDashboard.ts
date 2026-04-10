@@ -846,6 +846,16 @@ export function useDashboard(surface: DashboardSurface = "home") {
     if (data.onlineSelectedCourier) setOnlineSelectedCourier(data.onlineSelectedCourier);
     if (data.onlineMonthlyParcels) setOnlineMonthlyParcels(data.onlineMonthlyParcels);
     if (data.costHistory?.length) setCostHistory(data.costHistory as CostSnapshot[]);
+    // AI 생성 결과 복원
+    if (data.guideSelections && Object.keys(data.guideSelections).length) {
+      useRoadmapStore.getState().setGuideSelections(data.guideSelections);
+    }
+    if (data.aiRoadmapResult) {
+      useRoadmapStore.getState().setAiRoadmapResult(data.aiRoadmapResult as import("./stores/roadmap-store").AiRoadmapSnapshot);
+    }
+    if (data.selectedInteriorConcept) {
+      useProfileStore.getState().setSelectedInteriorConcept(data.selectedInteriorConcept);
+    }
   };
 
   /** Collect store data for Supabase sync (reads from Zustand stores, not localStorage) */
@@ -885,6 +895,10 @@ export function useDashboard(surface: DashboardSurface = "home") {
     if (ops.onlineSelectedCourier) r.onlineSelectedCourier = ops.onlineSelectedCourier;
     if (ops.onlineMonthlyParcels) r.onlineMonthlyParcels = ops.onlineMonthlyParcels;
     if (fin.costHistory.length) r.costHistory = fin.costHistory;
+    // AI 생성 결과 — Supabase 동기화 (localStorage 소실 방지)
+    if (Object.keys(rm.guideSelections).length) r.guideSelections = rm.guideSelections;
+    if (rm.aiRoadmapResult) r.aiRoadmapResult = rm.aiRoadmapResult;
+    if (prof.selectedInteriorConcept) r.selectedInteriorConcept = prof.selectedInteriorConcept;
     return r;
   };
   // backward-compat alias

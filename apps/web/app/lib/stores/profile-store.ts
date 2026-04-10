@@ -111,6 +111,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
         cpaDecision: state.cpaDecision,
         businessLaunched: state.businessLaunched,
         businessLaunchedDate: state.businessLaunchedDate,
+        selectedInteriorConcept: state.selectedInteriorConcept,
       }),
     },
   ),
