@@ -418,40 +418,6 @@ export default function OperationalDashboard({ d }: Props) {
     <section style={shell}>
       <style>{bentoHoverCSS}</style>
 
-      {/* ━━━ Build.UP 로고 헤더 ━━━ */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "4px 0 12px",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* B 그라데이션 로고 */}
-          <div style={{
-            width: "34px", height: "34px", borderRadius: "10px",
-            background: "linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 8px rgba(29,53,87,0.2)",
-          }}>
-            <span style={{
-              fontSize: "18px", fontWeight: 800, color: "#fff",
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
-              letterSpacing: "-0.02em",
-            }}>b</span>
-          </div>
-          <div>
-            <div style={{
-              fontSize: "17px", fontWeight: 750, color: "#0f172a",
-              letterSpacing: "-0.03em", lineHeight: 1.1,
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
-            }}>
-              Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
-            </div>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <NotificationCenter d={d} ko={ko} />
-        </div>
-      </div>
-
       {/* ━━━ 1단계: 모닝 브리핑 (5초 뷰) ━━━ */}
       <MorningBriefing />
 

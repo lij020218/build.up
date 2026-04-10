@@ -830,6 +830,35 @@ export default function StarterStageDemo({
       </section>
       ) : null}
 
+      {/* ━━━ Build.UP 로고 — 네비게이션 바 위 ━━━ */}
+      {showSurfaceNav && (
+      <div style={{
+        display: "flex", alignItems: "center", gap: "10px",
+        padding: showOperationalHero ? "0 24px 8px" : "12px 20px 8px",
+      }}>
+        <div style={{
+          width: "32px", height: "32px", borderRadius: "9px",
+          background: "linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 2px 8px rgba(29,53,87,0.15)",
+          flexShrink: 0,
+        }}>
+          <span style={{
+            fontSize: "17px", fontWeight: 800, color: "#fff",
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+            letterSpacing: "-0.02em",
+          }}>b</span>
+        </div>
+        <span style={{
+          fontSize: "16px", fontWeight: 750, color: "#0f172a",
+          letterSpacing: "-0.03em",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+        }}>
+          Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
+        </span>
+      </div>
+      )}
+
       {showSurfaceNav ? (
       <section style={showOperationalHero ? styles.section : operationalNavSection}>
         <div style={{ ...styles.surfaceNav, ...(showOperationalHero ? {} : operationalSurfaceNav) }}>
