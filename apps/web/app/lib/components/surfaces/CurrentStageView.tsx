@@ -3945,10 +3945,29 @@ export function CurrentStageView() {
                           {ko ? "스타트업의 42%는 \"시장이 필요로 하지 않는 제품\"을 만들어 실패합니다." : "42% of startups fail by building a product nobody needs."}
                         </div>
                         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
-                          {ko ? "코드를 한 줄도 쓰기 전에, 실제 사람과 대화해서 \"이 문제가 정말 돈이나 시간을 쓸 만큼 고통스러운지\" 확인해야 합니다. 이 과정을 건너뛰면 6개월 후 아무도 쓰지 않는 제품이 됩니다. AI를 활용하면 인터뷰 질문 설계, 응답 패턴 분석, 페르소나 정리를 훨씬 빠르게 할 수 있습니다." : "Before writing a single line of code, talk to real people to confirm the pain is real enough to pay for. Skip this and you'll have a product nobody uses in 6 months. AI can help design interview questions, analyze response patterns, and build personas faster."}
+                          {ko ? "코드를 한 줄도 쓰기 전에, 실제 사람과 대화해서 \"이 문제가 정말 돈이나 시간을 쓸 만큼 고통스러운지\" 확인해야 합니다. 이 과정을 건너뛰면 6개월 후 아무도 쓰지 않는 제품이 됩니다." : "Before writing a single line of code, talk to real people to confirm the pain is real enough to pay for. Skip this and you'll have a product nobody uses in 6 months."}
                         </div>
                       </div>
-
+                      {/* 이 단계의 경영 기법 — customer_discovery는 스타트업 전용 단계이므로 항상 표시 */}
+                      <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.06)" }}>
+                        <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(0,0,0,0.3)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 적용되는 경영 기법" : "Frameworks applied"}</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {(ko ? [
+                            { name: "Mom Test", desc: "의견이 아닌 과거 행동을 물어라. \"좋아요\"는 데이터가 아니다. 커밋먼트(시간·돈·소개)를 요청하라.", color: "#2563eb" },
+                            { name: "JTBD", desc: "고객이 제품을 '고용'하는 이유를 찾아라. 기능이 아니라 해결하려는 '일(Job)'에 집중.", color: "#7c3aed" },
+                            { name: "Lean Startup", desc: "가설 → 최소 실험 → 측정 → 학습. 2주 이내 사이클. 감이 아닌 데이터로 결정.", color: "#059669" },
+                          ] : [
+                            { name: "Mom Test", desc: "Ask about past behavior, not opinions. Request commitments (time/money/intro).", color: "#2563eb" },
+                            { name: "JTBD", desc: "Find the 'job' customers hire your product for. Focus on the job, not features.", color: "#7c3aed" },
+                            { name: "Lean Startup", desc: "Hypothesis → smallest experiment → measure → learn. 2-week cycles.", color: "#059669" },
+                          ]).map(f => (
+                            <div key={f.name} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: `${f.color}10`, color: f.color, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "1px" }}>{f.name}</span>
+                              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>{f.desc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                       </>
                       )}
 
