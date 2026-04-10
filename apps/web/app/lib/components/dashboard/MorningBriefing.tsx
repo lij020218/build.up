@@ -118,8 +118,8 @@ function generateFallbackInsight(
   }
 
   return ko
-    ? "안정적인 영업 흐름입니다. 현재 운영 기조를 유지하세요."
-    : "Operations are running steady. Maintain your current approach.";
+    ? "전주 대비 변동폭이 크지 않습니다. 안정 구간이니 현재 페이스를 유지하세요."
+    : "Week-over-week variation is minimal. You're in a stable zone — maintain your current pace.";
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -451,6 +451,70 @@ export function MorningBriefing() {
         </div>
         <p style={insightTextStyle}>{insightText}</p>
       </div>
+
+      {/* ── Crisis Alert (최상단 경고) ── */}
+      {(() => {
+        const crisis = d.aiActions?.crisisActions;
+        if (!crisis || crisis.length === 0) return null;
+        return (
+          <div style={{
+            borderRadius: "14px", padding: "12px 16px",
+            background: "linear-gradient(135deg, rgba(255,59,48,0.06) 0%, rgba(255,59,48,0.02) 100%)",
+            border: "1px solid rgba(255,59,48,0.15)", marginBottom: "2px",
+          }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: RED, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
+              {ko ? "긴급 경고" : "CRISIS ALERT"}
+            </div>
+            {crisis.slice(0, 2).map((c, i) => (
+              <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: i < crisis.length - 1 ? "6px" : 0 }}>
+                <div style={{ width: "4px", borderRadius: "2px", background: RED, flexShrink: 0, alignSelf: "stretch", minHeight: "16px" }} />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{c.title}</div>
+                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>{c.impact}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
+      {/* ── Today's Actions (오늘 할 일 — 멘토의 행동 지시) ── */}
+      {(() => {
+        const actions = d.aiActions?.todayActions;
+        if (!actions || actions.length === 0) return null;
+        return (
+          <div style={{
+            borderRadius: "16px", padding: "14px 16px",
+            background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.02)",
+          }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: LABEL_COLOR, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+              {ko ? "오늘 할 일" : "TODAY'S ACTIONS"}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {actions.slice(0, 3).map((a, i) => {
+                const isHigh = a.priority === "high";
+                return (
+                  <div key={i} style={{
+                    display: "flex", gap: "10px", alignItems: "flex-start",
+                    padding: "10px 12px", borderRadius: "12px",
+                    background: isHigh ? "rgba(255,59,48,0.03)" : "rgba(0,0,0,0.02)",
+                    borderLeft: `3px solid ${isHigh ? RED : YELLOW}`,
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{a.title}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>{a.reason}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.3)", marginTop: "8px", textAlign: "center" as const }}>
+              {ko ? "오늘은 이게 전부입니다. 하나씩 실행하세요." : "That's it for today. Execute one at a time."}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── 4 Hero KPI Cards ── */}
       <div className="morning-kpi-grid" style={gridStyle}>
