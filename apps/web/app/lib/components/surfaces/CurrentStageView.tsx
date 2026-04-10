@@ -4802,6 +4802,27 @@ export function CurrentStageView() {
                             </div>
                           ))}
                         </div>
+                        {/* 머스크 5단계 알고리즘 */}
+                        <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(15,23,42,0.02)", border: "1px solid rgba(15,23,42,0.06)", marginTop: "14px" }}>
+                          <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(0,0,0,0.3)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>MVP 구축 원칙 — Elon Musk 5단계 알고리즘</div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            {[
+                              { step: "1", text: "요구사항을 의심하라", desc: "모든 기능에 '누가 요청했나?' 물어라. 이름 없는 요구사항은 삭제 대상" },
+                              { step: "2", text: "삭제하라", desc: "10%를 다시 안 넣었다면 덜 지운 것. 기능을 빼는 게 추가하는 것보다 어렵다" },
+                              { step: "3", text: "단순화하라", desc: "존재하지 말아야 할 것을 최적화하는 게 가장 흔한 실수" },
+                              { step: "4", text: "가속하라", desc: "2주 스프린트를 1주로. 단, 1~3단계를 먼저 통과한 것만" },
+                              { step: "5", text: "자동화는 마지막", desc: "혼란을 자동화하면 혼란만 빨라진다. 프로세스가 안정된 후에" },
+                            ].map(s => (
+                              <div key={s.step} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "6px 0" }}>
+                                <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#0f172a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+                                <div>
+                                  <span style={{ fontSize: "12px", fontWeight: 640, color: "#0f172a" }}>{s.text}</span>
+                                  <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginLeft: "4px" }}>— {s.desc}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )},
                     // PAGE 1 — 제품명 & 미션
