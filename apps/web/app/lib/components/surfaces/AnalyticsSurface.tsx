@@ -43,7 +43,7 @@ export function AnalyticsSurface() {
     empFormOpen, setEmpFormOpen, empEditId, setEmpEditId, empName, setEmpName,
     empWage, setEmpWage, empHours, setEmpHours, empInsured, setEmpInsured,
     userRole, resetDemo, navigateToSurface,
-    selectedStoreIndex, setSelectedStoreIndex, decisions, profile, startupType,
+    selectedStoreIndex, setSelectedStoreIndex, decisions, setDecisions, profile, startupType,
     selectedIndustryId, preferredRegion, showMonthlyCostPrompt, setShowMonthlyCostPrompt,
     cpaDecision, setCpaDecision, onlinePlatformSales, setOnlinePlatformSales,
     onlineSelectedPlatforms, setOnlineSelectedPlatforms, onlineSelectedCourier, setOnlineSelectedCourier,
@@ -1048,14 +1048,92 @@ export function AnalyticsSurface() {
                         </div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        {/* 상호명 — 직접 편집 */}
+                        <div style={tileStyle}>
+                          <div style={tileLabelStyle}>{ko ? "상호명" : "Store name"}</div>
+                          <input
+                            type="text"
+                            value={storeName ?? ""}
+                            placeholder={ko ? "상호명 입력" : "Enter name"}
+                            onChange={(e) => { setStoreName(e.target.value); flushStoreData(); }}
+                            style={{
+                              width: "100%", border: "none", background: "transparent", outline: "none",
+                              fontSize: "15px", fontWeight: 640, color: "#0f172a", padding: 0,
+                              fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                            }}
+                          />
+                        </div>
+                        {/* 초기 자본금 — 직접 편집 */}
+                        <div style={tileStyle}>
+                          <div style={tileLabelStyle}>{ko ? "초기 자본금" : "Capital"}</div>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={capitalVal != null ? String(Math.round(Number(capitalVal) / 10000)) : ""}
+                              placeholder="0"
+                              onChange={(e) => {
+                                const val = Number(e.target.value.replace(/[^0-9]/g, "")) * 10000;
+                                setDecisions((prev: Record<string, unknown>) => ({
+                                  ...prev,
+                                  "budget-setup": { ...(prev["budget-setup"] as Record<string, unknown> ?? {}), stageId: "budget-setup", inputs: { ...((prev["budget-setup"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), capital: val } }
+                                }));
+                                flushStoreData();
+                              }}
+                              style={{
+                                width: "80px", border: "none", background: "transparent", outline: "none",
+                                fontSize: "15px", fontWeight: 640, color: "#0f172a", padding: 0,
+                                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                              }}
+                            />
+                            <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)" }}>{ko ? "만원" : "만₩"}</span>
+                          </div>
+                        </div>
+                        {/* 개업 목표일 — 직접 편집 */}
+                        <div style={tileStyle}>
+                          <div style={tileLabelStyle}>{ko ? "개업 목표일" : "Target date"}</div>
+                          <input
+                            type="date"
+                            value={openDateVal ? String(openDateVal) : ""}
+                            onChange={(e) => {
+                              setDecisions((prev: Record<string, unknown>) => ({
+                                ...prev,
+                                "budget-setup": { ...(prev["budget-setup"] as Record<string, unknown> ?? {}), stageId: "budget-setup", inputs: { ...((prev["budget-setup"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), targetOpenDate: e.target.value } }
+                              }));
+                              flushStoreData();
+                            }}
+                            style={{
+                              width: "100%", border: "none", background: "transparent", outline: "none",
+                              fontSize: "14px", fontWeight: 600, color: "#0f172a", padding: 0,
+                              fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                            }}
+                          />
+                        </div>
+                        {/* 상권·입지 — 직접 편집 */}
+                        <div style={tileStyle}>
+                          <div style={tileLabelStyle}>{ko ? "상권·입지" : "Location"}</div>
+                          <input
+                            type="text"
+                            value={regionInput ? String(regionInput) : ""}
+                            placeholder={ko ? "지역 입력 (예: 강남역)" : "Location"}
+                            onChange={(e) => {
+                              setDecisions((prev: Record<string, unknown>) => ({
+                                ...prev,
+                                "location-candidates": { ...(prev["location-candidates"] as Record<string, unknown> ?? {}), stageId: "location-candidates", inputs: { ...((prev["location-candidates"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), preferredRegion: e.target.value } }
+                              }));
+                              flushStoreData();
+                            }}
+                            style={{
+                              width: "100%", border: "none", background: "transparent", outline: "none",
+                              fontSize: "14px", fontWeight: 600, color: "#0f172a", padding: 0,
+                              fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                            }}
+                          />
+                        </div>
+                        {/* 업종 / 창업 형태 / 운영 방식 — 표시만 (변경 시 로드맵 전체 영향) */}
                         {[
-                          { label: ko ? "상호명" : "Store name",       value: storeName || notSet, stageId: "biz-registration" },
                           { label: ko ? "업종" : "Industry",           value: industryLabel,    stageId: "industry-selection" },
                           { label: ko ? "창업 형태" : "Startup type",  value: startupTypeLabel, stageId: "startup-type" },
                           { label: ko ? "운영 방식" : "Model",         value: bizModelLabel,    stageId: "business-model" },
-                          { label: ko ? "초기 자본금" : "Capital",      value: capitalLabel,     stageId: "budget-setup" },
-                          { label: ko ? "개업 목표일" : "Target date",  value: openDateLabel,    stageId: "budget-setup" },
-                          { label: ko ? "상권·입지" : "Location",       value: locationLabel,    stageId: "location-candidates" },
                         ].map(({ label, value, stageId }) => (
                           <button
                             key={label}
