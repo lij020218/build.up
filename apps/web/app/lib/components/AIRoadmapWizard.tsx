@@ -55,13 +55,20 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
     setGenProgress(0);
     setError(null);
 
-    // 체크마크 애니메이션
-    const interval = setInterval(() => {
-      setGenProgress((prev) => {
-        if (prev >= genSteps.length - 1) { clearInterval(interval); return prev; }
-        return prev + 1;
-      });
-    }, 2000);
+    // 실제 API 시간에 맞춘 점진적 진행 표시
+    // 초반 단계는 빠르게, 뒤로 갈수록 느리게 (AI 분석이 깊어지는 느낌)
+    const stepDelays = [1200, 1500, 2000, 2500, 3000, 3500, 4000]; // 총 ~18초, 마지막은 API 대기
+    let stepIdx = 0;
+    let cancelled = false;
+    const advanceStep = () => {
+      if (cancelled || stepIdx >= genSteps.length - 1) return;
+      stepIdx++;
+      setGenProgress(stepIdx);
+      if (stepIdx < genSteps.length - 1 && stepDelays[stepIdx]) {
+        setTimeout(advanceStep, stepDelays[stepIdx]);
+      }
+    };
+    setTimeout(advanceStep, stepDelays[0]);
 
     try {
       const { supabase } = await import("../../../lib/supabase");
@@ -78,8 +85,16 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           language,
         }),
       });
-      clearInterval(interval);
-      setGenProgress(genSteps.length);
+      cancelled = true;
+      // API 응답 후 남은 단계 빠르게 완료
+      const quickFinish = () => {
+        setGenProgress((prev) => {
+          if (prev >= genSteps.length) return prev;
+          setTimeout(quickFinish, 200);
+          return prev + 1;
+        });
+      };
+      quickFinish();
 
       if (!res.ok) {
         const err = await res.json();
@@ -90,7 +105,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
       setResult(data);
       setStep("review");
     } catch (err) {
-      clearInterval(interval);
+      cancelled = true;
       setGenProgress(0);
       setError(err instanceof Error ? err.message : String(err));
       setStep("idea"); // 이전 입력(ideaText, budget, region, storeName)은 state에 보존됨
