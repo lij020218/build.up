@@ -8,7 +8,7 @@ import {
 import type { RoadmapGenerationInput, RoadmapGenerationResult } from "./prompt";
 
 const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
-const DEFAULT_MAX_TOKENS = 4096;
+const DEFAULT_MAX_TOKENS = 2500; // 4096→2500: 생성 시간 ~40% 절감, JSON 구조는 충분히 수용
 
 function parseResponse(raw: string): RoadmapGenerationResult {
   // 마크다운 블록 제거
@@ -168,7 +168,7 @@ export async function generateRoadmap(
   input: RoadmapGenerationInput,
   options: AiCallOptions
 ): Promise<RoadmapGenerationResult> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 60_000 }); // 로드맵 생성은 복잡하므로 60초
+  const client = new Anthropic({ apiKey: options.apiKey, timeout: 120_000 }); // 120초 — 프롬프트 축소 후에도 여유 확보
 
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
