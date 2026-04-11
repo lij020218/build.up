@@ -274,95 +274,77 @@ export function MorningBriefing() {
   const todayEntry = entries.find(e => e.date === todayStr);
   const needsInput = !todayEntry;
 
-  // ── Empty state → 아름다운 입력 유도 카드
+  // ── Empty state → Apple-grade 온보딩 카드
   if (!hasData) {
+    const inputFieldStyle: React.CSSProperties = {
+      width: "100%", padding: "15px 16px 15px 56px", borderRadius: "14px",
+      border: "1.5px solid rgba(0,0,0,0.06)", background: "rgba(0,0,0,0.02)",
+      fontSize: "17px", fontWeight: 700, fontFamily: FONT_STACK,
+      outline: "none", color: "#0f172a",
+      transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
+    };
+    const inputLabelStyle: React.CSSProperties = {
+      position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)",
+      fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.3)",
+      letterSpacing: "0.04em", textTransform: "uppercase" as const,
+      pointerEvents: "none" as const,
+    };
+    const focusIn = (e: React.FocusEvent<HTMLInputElement>) => {
+      e.currentTarget.style.borderColor = PRIMARY;
+      e.currentTarget.style.background = "white";
+      e.currentTarget.style.boxShadow = "0 0 0 4px rgba(29,53,87,0.08)";
+    };
+    const focusOut = (e: React.FocusEvent<HTMLInputElement>) => {
+      e.currentTarget.style.borderColor = "rgba(0,0,0,0.06)";
+      e.currentTarget.style.background = "rgba(0,0,0,0.02)";
+      e.currentTarget.style.boxShadow = "none";
+    };
     return (
       <section style={sectionStyle}>
-        {/* 입력 유도 카드 */}
         <div style={{
-          borderRadius: "24px",
-          padding: "40px 32px",
-          background: "linear-gradient(135deg, rgba(29,53,87,0.03) 0%, rgba(52,199,89,0.04) 100%)",
-          border: "1px solid rgba(29,53,87,0.06)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          borderRadius: "28px", padding: "48px 32px 40px",
+          background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%)",
+          border: "1px solid rgba(0,0,0,0.04)",
+          backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.02), 0 8px 32px rgba(0,0,0,0.04)",
           textAlign: "center" as const,
         }}>
           <div style={{
-            width: "56px", height: "56px", borderRadius: "16px",
-            background: "linear-gradient(135deg, #1d3557 0%, #2d4a7a 100%)",
+            width: "60px", height: "60px", borderRadius: "18px",
+            background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 20px", boxShadow: "0 4px 16px rgba(29,53,87,0.2)",
+            margin: "0 auto 24px",
+            boxShadow: "0 8px 24px rgba(29,53,87,0.25), 0 0 0 1px rgba(255,255,255,0.1) inset",
           }}>
-            <BarChart3 size={26} color="#fff" strokeWidth={1.8} />
+            <BarChart3 size={28} color="#fff" strokeWidth={1.6} />
           </div>
-          <h2 style={{
-            fontSize: "20px", fontWeight: 700, color: "#0f172a",
-            letterSpacing: "-0.02em", marginBottom: "8px",
-          }}>
-            {ko ? "첫 매출을 기록해 보세요" : "Record your first sales"}
+          <h2 style={{ fontSize: "22px", fontWeight: 750, color: "#0f172a", letterSpacing: "-0.03em", marginBottom: "8px", fontFamily: FONT_STACK }}>
+            {ko ? "오늘의 첫 기록" : "Your first entry"}
           </h2>
-          <p style={{
-            fontSize: "14px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6,
-            maxWidth: "340px", margin: "0 auto 24px",
-          }}>
+          <p style={{ fontSize: "15px", color: "rgba(15,23,42,0.4)", lineHeight: 1.6, maxWidth: "280px", margin: "0 auto 28px", fontFamily: FONT_STACK }}>
             {ko
-              ? (isStartup ? "매출과 사용자 수를 입력하면 AI가 매일 경영 브리핑을 제공합니다." : "매출과 고객 수를 입력하면 AI가 매일 경영 브리핑을 제공합니다.")
-              : (isStartup ? "Enter revenue and user count to unlock daily AI briefings." : "Enter sales and customers to unlock daily AI business briefings.")}
+              ? (isStartup ? "매출과 사용자 수를 입력하면\nAI 경영 브리핑이 시작됩니다." : "매출과 고객 수를 입력하면\nAI 경영 브리핑이 시작됩니다.")
+              : (isStartup ? "Enter revenue and users\nto unlock AI briefings." : "Enter sales and customers\nto unlock AI briefings.")}
           </p>
-
-          {/* 인라인 입력 필드 */}
-          <div style={{
-            display: "flex", gap: "10px", justifyContent: "center",
-            flexWrap: "wrap" as const, maxWidth: "420px", margin: "0 auto",
-          }}>
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder={ko ? (isStartup ? "매출/MRR (만원)" : "매출 (만원)") : (isStartup ? "Revenue (만원)" : "Sales (만원)")}
-              value={d.dailySalesInput}
-              onChange={(e) => d.setDailySalesInput(e.target.value)}
-              style={{
-                flex: "1 1 120px", padding: "14px 16px", borderRadius: "14px",
-                border: "1.5px solid rgba(29,53,87,0.12)", background: "rgba(255,255,255,0.9)",
-                fontSize: "15px", fontWeight: 600, fontFamily: FONT_STACK,
-                outline: "none", textAlign: "center" as const,
-                transition: "border-color 0.2s ease",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.12)"; }}
-            />
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder={ko ? (isStartup ? "사용자 수" : "고객 수") : (isStartup ? "Users" : "Customers")}
-              value={d.dailyCustomersInput}
-              onChange={(e) => d.setDailyCustomersInput(e.target.value)}
-              style={{
-                flex: "1 1 100px", padding: "14px 16px", borderRadius: "14px",
-                border: "1.5px solid rgba(29,53,87,0.12)", background: "rgba(255,255,255,0.9)",
-                fontSize: "15px", fontWeight: 600, fontFamily: FONT_STACK,
-                outline: "none", textAlign: "center" as const,
-                transition: "border-color 0.2s ease",
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.12)"; }}
-            />
-            <button
-              type="button"
-              onClick={() => d.handleAddDailyEntry()}
-              disabled={!d.dailySalesInput}
-              style={{
-                flex: "0 0 auto", padding: "14px 28px", borderRadius: "14px",
-                border: "none", background: d.dailySalesInput ? PRIMARY : "rgba(15,23,42,0.08)",
-                color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.3)",
-                fontSize: "15px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
-                fontFamily: FONT_STACK,
-                boxShadow: d.dailySalesInput ? "0 4px 14px rgba(29,53,87,0.25)" : "none",
-                transition: "all 0.2s ease",
-              }}
-            >
-              {ko ? "기록" : "Save"}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "320px", margin: "0 auto" }}>
+            <div style={{ position: "relative" }}>
+              <div style={inputLabelStyle}>{ko ? (isStartup ? "매출" : "매출") : "Sales"}</div>
+              <input type="text" inputMode="numeric" placeholder={ko ? "만원" : "만원"} value={d.dailySalesInput} onChange={(e) => d.setDailySalesInput(e.target.value)} style={inputFieldStyle} onFocus={focusIn} onBlur={focusOut} />
+            </div>
+            <div style={{ position: "relative" }}>
+              <div style={inputLabelStyle}>{ko ? (isStartup ? "사용자" : "고객") : (isStartup ? "Users" : "Cust.")}</div>
+              <input type="text" inputMode="numeric" placeholder={ko ? "명" : "count"} value={d.dailyCustomersInput} onChange={(e) => d.setDailyCustomersInput(e.target.value)} style={{ ...inputFieldStyle, paddingLeft: "60px" }} onFocus={focusIn} onBlur={focusOut} />
+            </div>
+            <button type="button" onClick={() => d.handleAddDailyEntry()} disabled={!d.dailySalesInput} style={{
+              width: "100%", padding: "16px", borderRadius: "14px", border: "none",
+              background: d.dailySalesInput ? `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)` : "rgba(0,0,0,0.04)",
+              color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.25)",
+              fontSize: "16px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
+              fontFamily: FONT_STACK, letterSpacing: "-0.01em",
+              boxShadow: d.dailySalesInput ? "0 4px 16px rgba(29,53,87,0.2)" : "none",
+              transition: "all 0.3s cubic-bezier(0.22,1,0.36,1)",
+            }}>
+              {ko ? "기록 시작하기" : "Start Recording"}
             </button>
           </div>
         </div>
@@ -372,61 +354,66 @@ export function MorningBriefing() {
 
   return (
     <section style={sectionStyle}>
-      {/* ── 오늘 매출 미입력 시 상단 입력 바 ── */}
+      {/* ── 오늘 매출 미입력 시 — Apple-style pill input ── */}
       {needsInput && (
         <div style={{
-          borderRadius: "12px",
-          padding: "8px 14px",
-          background: "linear-gradient(135deg, rgba(29,53,87,0.03) 0%, rgba(52,199,89,0.02) 100%)",
-          border: "1px solid rgba(29,53,87,0.06)",
+          borderRadius: "16px", padding: "10px 12px",
+          background: "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid rgba(0,0,0,0.05)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03)",
           display: "flex", alignItems: "center", gap: "8px",
         }}>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: PRIMARY, whiteSpace: "nowrap" as const, display: "flex", alignItems: "center", gap: "4px" }}>
-            <PenLine size={12} strokeWidth={2} />
-            {ko ? "오늘" : "Today"}
-          </span>
+          <div style={{
+            width: "28px", height: "28px", borderRadius: "8px",
+            background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)`,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <PenLine size={13} color="#fff" strokeWidth={2.2} />
+          </div>
           <input
-            type="text"
-            inputMode="numeric"
-            placeholder={ko ? (isStartup ? "매출/MRR" : "매출 (만원)") : (isStartup ? "Revenue" : "Sales (만원)")}
+            type="text" inputMode="numeric"
+            placeholder={ko ? (isStartup ? "매출/MRR" : "매출 (만원)") : (isStartup ? "Revenue" : "Sales")}
             value={d.dailySalesInput}
             onChange={(e) => d.setDailySalesInput(e.target.value)}
             style={{
-              flex: "1 1 100px", padding: "7px 12px", borderRadius: "8px",
-              border: "1px solid rgba(29,53,87,0.08)", background: "rgba(255,255,255,0.9)",
-              fontSize: "13px", fontWeight: 600, fontFamily: FONT_STACK,
-              outline: "none",
+              flex: "1 1 90px", padding: "8px 12px", borderRadius: "10px",
+              border: "1.5px solid rgba(0,0,0,0.05)", background: "rgba(0,0,0,0.02)",
+              fontSize: "14px", fontWeight: 650, fontFamily: FONT_STACK,
+              outline: "none", color: "#0f172a",
+              transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.08)"; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; e.currentTarget.style.background = "white"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(29,53,87,0.06)"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.05)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; e.currentTarget.style.boxShadow = "none"; }}
           />
           <input
-            type="text"
-            inputMode="numeric"
-            placeholder={ko ? (isStartup ? "사용자" : "고객수") : (isStartup ? "Users" : "Cust.")}
+            type="text" inputMode="numeric"
+            placeholder={ko ? (isStartup ? "사용자" : "고객") : (isStartup ? "Users" : "Cust.")}
             value={d.dailyCustomersInput}
             onChange={(e) => d.setDailyCustomersInput(e.target.value)}
             style={{
-              flex: "0 1 72px", padding: "7px 12px", borderRadius: "8px",
-              border: "1px solid rgba(29,53,87,0.08)", background: "rgba(255,255,255,0.9)",
-              fontSize: "13px", fontWeight: 600, fontFamily: FONT_STACK,
-              outline: "none",
+              flex: "0 1 68px", padding: "8px 12px", borderRadius: "10px",
+              border: "1.5px solid rgba(0,0,0,0.05)", background: "rgba(0,0,0,0.02)",
+              fontSize: "14px", fontWeight: 650, fontFamily: FONT_STACK,
+              outline: "none", color: "#0f172a",
+              transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(29,53,87,0.08)"; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; e.currentTarget.style.background = "white"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(29,53,87,0.06)"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.05)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; e.currentTarget.style.boxShadow = "none"; }}
           />
           <button
             type="button"
             onClick={() => d.handleAddDailyEntry()}
             disabled={!d.dailySalesInput}
             style={{
-              padding: "7px 16px", borderRadius: "8px",
-              border: "none", background: d.dailySalesInput ? PRIMARY : "rgba(15,23,42,0.05)",
+              padding: "8px 18px", borderRadius: "10px",
+              border: "none",
+              background: d.dailySalesInput ? `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)` : "rgba(0,0,0,0.04)",
               color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.2)",
-              fontSize: "12px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
+              fontSize: "13px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
               fontFamily: FONT_STACK, whiteSpace: "nowrap" as const,
-              boxShadow: d.dailySalesInput ? "0 2px 6px rgba(29,53,87,0.18)" : "none",
-              transition: "all 0.2s ease",
+              boxShadow: d.dailySalesInput ? "0 2px 8px rgba(29,53,87,0.18)" : "none",
+              transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)",
             }}
           >
             {ko ? "기록" : "Save"}
