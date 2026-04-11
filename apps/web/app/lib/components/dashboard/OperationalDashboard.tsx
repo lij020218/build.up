@@ -1081,60 +1081,44 @@ function ActivitySnapshotCard({
                     </div>
                   ) : (
                     <div>
-                      <div style={{ fontSize: "22px", fontWeight: 700, color: "rgba(15,23,42,0.25)", lineHeight: 1, marginBottom: "6px" }}>{ko ? "아직 미입력" : "Not logged yet"}</div>
-                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)" }}>{ko ? `최근 평균 ${fmt(avgDailySales)}` : `Recent avg ${fmt(avgDailySales)}`}</div>
-                      {missedDays.length > 0 && (
-                        <div style={{ display: "flex", gap: "6px", marginTop: "10px", flexWrap: "wrap" as const }}>
-                          {missedDays.map(ds => (
-                            <button key={ds} type="button" onClick={() => enterEdit(ds)} style={{ fontSize: "11px", fontWeight: 600, padding: "4px 12px", borderRadius: "8px", border: "1px solid rgba(5,97,252,0.1)", background: d.dailyDateInput === ds ? "rgba(5,97,252,0.06)" : "white", color: d.dailyDateInput === ds ? "#0561fc" : "rgba(15,23,42,0.5)", cursor: "pointer", transition: "all 0.15s ease" }}>
-                              {new Date(`${ds}T12:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" })}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <div style={{ fontSize: "16px", fontWeight: 650, color: "rgba(15,23,42,0.3)", lineHeight: 1.3, marginBottom: "4px" }}>{ko ? "미입력" : "Not logged"}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.35)" }}>{ko ? "상단 입력 바에서 오늘 매출을 기록하세요" : "Use the input bar above to log today's sales"}</div>
                     </div>
                   )}
                 </div>
 
-                {/* 하단: 입력 폼 */}
-                <div style={{ padding: "0 22px 16px", borderTop: "1px solid rgba(5,97,252,0.04)", paddingTop: "12px" }}>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
-                    <div style={{ position: "relative" as const, flex: 1 }}>
-                      <input type="text" inputMode="numeric" value={d.dailySalesInput}
-                        onChange={(event) => d.setDailySalesInput(event.target.value.replace(/[^0-9]/g, ""))}
-                        placeholder="0"
-                        style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 40px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
-                      <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "만원" : "₩"}</span>
+                {/* 하단: 수정 폼 — 기존 데이터 편집 시에만 표시 (신규 입력은 상단 모닝 브리핑) */}
+                {isEditing && (
+                  <div style={{ padding: "0 22px 16px", borderTop: "1px solid rgba(5,97,252,0.04)", paddingTop: "12px" }}>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
+                      <div style={{ position: "relative" as const, flex: 1 }}>
+                        <input type="text" inputMode="numeric" value={d.dailySalesInput}
+                          onChange={(event) => d.setDailySalesInput(event.target.value.replace(/[^0-9]/g, ""))}
+                          placeholder="0"
+                          style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 40px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
+                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "만원" : "₩"}</span>
+                      </div>
+                      <div style={{ position: "relative" as const, flex: "0 0 90px" }}>
+                        <input type="text" inputMode="numeric" value={d.dailyCustomersInput}
+                          onChange={(event) => d.setDailyCustomersInput(event.target.value.replace(/[^0-9]/g, ""))}
+                          placeholder="0"
+                          style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 28px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
+                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "명" : ""}</span>
+                      </div>
+                      <button type="button" onClick={() => {
+                        d.handleAddDailyEntry();
+                        setEditMode(false);
+                      }} disabled={!d.dailySalesInput}
+                        style={{
+                          flex: "0 0 auto", padding: "10px 16px", borderRadius: "10px", border: "none",
+                          background: d.dailySalesInput ? "#0561fc" : "rgba(5,97,252,0.06)",
+                          color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.25)",
+                          fontSize: "13px", fontWeight: 650, cursor: d.dailySalesInput ? "pointer" : "default",
+                          transition: "all 0.2s ease", whiteSpace: "nowrap" as const,
+                        }} className="bento-btn">
+                        {ko ? "수정" : "Update"}
+                      </button>
                     </div>
-                    <div style={{ position: "relative" as const, flex: "0 0 90px" }}>
-                      <input type="text" inputMode="numeric" value={d.dailyCustomersInput}
-                        onChange={(event) => d.setDailyCustomersInput(event.target.value.replace(/[^0-9]/g, ""))}
-                        placeholder="0"
-                        style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 28px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
-                      <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "명" : ""}</span>
-                    </div>
-                    <button type="button" onClick={() => {
-                      const salesVal = (Number(d.dailySalesInput.replace(/[^0-9]/g, "")) || 0) * 10000;
-                      const custVal = Number(d.dailyCustomersInput.replace(/[^0-9]/g, "")) || 0;
-                      d.handleAddDailyEntry();
-                      setEditMode(false);
-                      if (salesVal > 0) {
-                        setPostEntryReaction(generatePostEntryReaction(salesVal, custVal));
-                        setTimeout(() => setPostEntryReaction(null), 8000);
-                      }
-                    }} disabled={!d.dailySalesInput}
-                      style={{
-                        flex: "0 0 auto", padding: "10px 16px", borderRadius: "10px", border: "none",
-                        background: d.dailySalesInput ? "#0561fc" : "rgba(5,97,252,0.06)",
-                        color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.25)",
-                        fontSize: "13px", fontWeight: 650, cursor: d.dailySalesInput ? "pointer" : "default",
-                        boxShadow: d.dailySalesInput ? "0 4px 14px rgba(5,97,252,0.25)" : "none",
-                        transition: "all 0.2s ease", whiteSpace: "nowrap" as const,
-                      }} className="bento-btn">
-                      {isEditing ? (ko ? "수정" : "Update") : (ko ? "저장" : "Save")}
-                    </button>
-                  </div>
-                  {isEditing && (
                     <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                       <button type="button" onClick={() => handleDelete(d.dailyDateInput)}
                         style={{ fontSize: "11px", fontWeight: 600, color: "#dc2626", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
@@ -1144,28 +1128,10 @@ function ActivitySnapshotCard({
                         style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
                         {ko ? "취소" : "Cancel"}
                       </button>
+                    </div>
                   </div>
                 )}
-
-                {/* 매출 입력 후 즉시 반응 */}
-                {postEntryReaction && (
-                <div style={{
-                  marginTop: "10px", padding: "10px 14px", borderRadius: "12px",
-                  background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)",
-                  display: "flex", alignItems: "center", gap: "8px",
-                  animation: "fadeIn 0.3s ease",
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="7" cy="7" r="6" stroke="#2563eb" strokeWidth="1.2" fill="none" />
-                    <path d="M5 7l1.5 1.5L9 5.5" stroke="#2563eb" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#1e40af", lineHeight: 1.4 }}>
-                    {postEntryReaction}
-                  </span>
-                </div>
-                )}
               </div>
-            </div>
             </>
           );
         })()}
@@ -1735,34 +1701,7 @@ function SurvivalBoardCard({
         </div>
       </div>
 
-      <div style={focusCard}>
-        <div style={focusLabel}>{ko ? "지금 가장 먼저 볼 것" : "What to watch first"}</div>
-        <div style={focusTitle}>{topRiskLabel}</div>
-        <div style={focusBody}>{focusMessage}</div>
-      </div>
-
-      {/* ── AI 코치 인사이트 (성공사례 포함) ── */}
-      {d.aiActions?.insight && (
-        <div style={{
-          padding: "10px 14px", borderRadius: "12px",
-          background: "linear-gradient(135deg, rgba(0,122,255,0.05), rgba(52,199,89,0.04))",
-          border: "0.5px solid rgba(0,122,255,0.1)",
-        }}>
-          <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(0,122,255,0.7)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "4px" }}>
-            {ko ? "AI 코치" : "AI Coach"}
-          </div>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", lineHeight: 1.5 }}>
-            {d.aiActions.insight}
-          </div>
-        </div>
-      )}
-
-      {/* todayActions는 MorningBriefing으로 이동 — 생존 보드는 지표 모니터링에 집중 */}
-      {!hasActions && (
-        <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", fontSize: "12px", color: "rgba(15,23,42,0.4)", textAlign: "center" as const }}>
-          {ko ? "오늘 할 일은 상단 모닝 브리핑에서 확인하세요" : "Check today's actions in the Morning Briefing above"}
-        </div>
-      )}
+      {/* 긴급 경고·AI 인사이트·오늘 할 일은 모닝 브리핑에 통합됨 — 생존 보드는 지표만 */}
     </section>
   );
 }
