@@ -421,36 +421,51 @@ export function MorningBriefing() {
         </div>
       )}
 
-      {/* ── AI 경영 코칭 — 통합 카드 (브리핑 + 경고 + 오늘 할 일) ── */}
+      {/* ── AI 경영 코칭 — Apple Liquid Glass 스타일 ── */}
       <div style={{
-        borderRadius: "20px", overflow: "hidden",
-        background: "rgba(255,255,255,0.88)",
-        backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
-        border: "1px solid rgba(0,0,0,0.05)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.035)",
+        borderRadius: "24px", overflow: "hidden",
+        background: "rgba(255,255,255,0.72)",
+        backdropFilter: "blur(40px) saturate(180%)",
+        WebkitBackdropFilter: "blur(40px) saturate(180%)",
+        border: "0.5px solid rgba(255,255,255,0.5)",
+        boxShadow: "0 0 0 0.5px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.02), 0 12px 40px rgba(0,0,0,0.06)",
       }}>
-        {/* 헤더 */}
+        {/* 헤더 — 미니멀 */}
         <div style={{
-          padding: "16px 18px 12px",
-          display: "flex", alignItems: "center", gap: "8px",
-          borderBottom: "1px solid rgba(0,0,0,0.04)",
+          padding: "18px 22px 14px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <div style={{
-            width: "26px", height: "26px", borderRadius: "8px",
-            background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 6px rgba(29,53,87,0.15)",
-          }}>
-            <span style={{ fontSize: "10px", fontWeight: 800, color: "#fff", fontFamily: FONT_STACK }}>AI</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{
+              width: "28px", height: "28px", borderRadius: "8px",
+              background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 60%, #a8dadc 100%)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(29,53,87,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
+            }}>
+              <span style={{ fontSize: "11px", fontWeight: 800, color: "#fff", fontFamily: FONT_STACK, letterSpacing: "-0.02em" }}>AI</span>
+            </div>
+            <span style={{
+              fontSize: "15px", fontWeight: 700, color: "#0f172a",
+              letterSpacing: "-0.025em", fontFamily: FONT_STACK,
+            }}>
+              {ko ? "AI 경영 코칭" : "AI Coaching"}
+            </span>
           </div>
-          <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", fontFamily: FONT_STACK }}>
-            {ko ? "AI 경영 코칭" : "AI Business Coaching"}
-          </span>
+          <div style={{
+            fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.3)",
+            letterSpacing: "0.02em",
+          }}>
+            {new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric", weekday: "short" })}
+          </div>
         </div>
 
-        {/* AI 브리핑 */}
-        <div style={{ padding: "14px 18px 10px" }}>
-          <p style={{ ...insightTextStyle, margin: 0 }}>{insightText}</p>
+        {/* AI 브리핑 메시지 */}
+        <div style={{ padding: "0 22px 16px" }}>
+          <p style={{
+            margin: 0, fontSize: "14.5px", fontWeight: 500,
+            lineHeight: 1.65, color: "rgba(15,23,42,0.75)",
+            fontFamily: FONT_STACK, letterSpacing: "-0.01em",
+          }}>{insightText}</p>
         </div>
 
         {/* 긴급 경고 (있을 때만) */}
@@ -458,20 +473,25 @@ export function MorningBriefing() {
           const crisis = d.aiActions?.crisisActions;
           if (!crisis || crisis.length === 0) return null;
           return (
-            <div style={{ padding: "0 18px 10px" }}>
+            <div style={{ padding: "0 22px 12px" }}>
               <div style={{
-                borderRadius: "12px", padding: "10px 14px",
-                background: "rgba(255,59,48,0.04)", border: "1px solid rgba(255,59,48,0.1)",
+                borderRadius: "14px", padding: "12px 16px",
+                background: "rgba(255,59,48,0.05)",
+                border: "0.5px solid rgba(255,59,48,0.12)",
               }}>
-                <div style={{ fontSize: "10px", fontWeight: 700, color: RED, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
-                  {ko ? "긴급" : "URGENT"}
-                </div>
                 {crisis.slice(0, 2).map((c, i) => (
-                  <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: i < crisis.length - 1 ? "4px" : 0 }}>
-                    <div style={{ width: "3px", borderRadius: "2px", background: RED, flexShrink: 0, alignSelf: "stretch", minHeight: "14px" }} />
+                  <div key={i} style={{
+                    display: "flex", gap: "10px", alignItems: "flex-start",
+                    padding: i > 0 ? "8px 0 0" : "0",
+                    borderTop: i > 0 ? "0.5px solid rgba(255,59,48,0.08)" : "none",
+                  }}>
+                    <div style={{
+                      width: "6px", height: "6px", borderRadius: "50%",
+                      background: RED, flexShrink: 0, marginTop: "6px",
+                    }} />
                     <div>
-                      <span style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{c.title}</span>
-                      <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginLeft: "6px" }}>{c.impact}</span>
+                      <span style={{ fontSize: "13.5px", fontWeight: 650, color: "#0f172a", letterSpacing: "-0.01em" }}>{c.title}</span>
+                      <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginLeft: "6px" }}>{c.impact}</span>
                     </div>
                   </div>
                 ))}
@@ -485,29 +505,52 @@ export function MorningBriefing() {
           const actions = d.aiActions?.todayActions;
           if (!actions || actions.length === 0) return null;
           return (
-            <div style={{ padding: "0 18px 14px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: LABEL_COLOR, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
-                {ko ? "오늘 할 일" : "TODAY"}
+            <div style={{ padding: "0 22px 20px" }}>
+              <div style={{
+                fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.35)",
+                letterSpacing: "0.04em", textTransform: "uppercase" as const,
+                marginBottom: "8px",
+              }}>
+                {ko ? "오늘 할 일" : "Today"}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {actions.slice(0, 3).map((a, i) => {
                   const isHigh = a.priority === "high";
+                  const accentColor = isHigh ? RED : YELLOW;
                   return (
                     <div key={i} style={{
-                      display: "flex", gap: "10px", alignItems: "flex-start",
-                      padding: "9px 12px", borderRadius: "10px",
-                      background: isHigh ? "rgba(255,59,48,0.03)" : "rgba(0,0,0,0.015)",
-                      borderLeft: `3px solid ${isHigh ? RED : YELLOW}`,
+                      display: "flex", gap: "12px", alignItems: "flex-start",
+                      padding: "11px 14px", borderRadius: "14px",
+                      background: isHigh ? "rgba(255,59,48,0.03)" : "rgba(0,0,0,0.02)",
+                      border: `0.5px solid ${isHigh ? "rgba(255,59,48,0.08)" : "rgba(0,0,0,0.04)"}`,
+                      transition: "transform 0.2s cubic-bezier(0.22,1,0.36,1)",
                     }}>
+                      <div style={{
+                        width: "20px", height: "20px", borderRadius: "6px",
+                        background: `${accentColor}14`, display: "flex",
+                        alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px",
+                      }}>
+                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: accentColor }} />
+                      </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "1px" }}>{a.title}</div>
-                        <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{a.reason}</div>
+                        <div style={{
+                          fontSize: "13.5px", fontWeight: 620, color: "#0f172a",
+                          letterSpacing: "-0.01em", marginBottom: "2px",
+                        }}>{a.title}</div>
+                        <div style={{
+                          fontSize: "12px", color: "rgba(15,23,42,0.45)",
+                          lineHeight: 1.45, letterSpacing: "-0.005em",
+                        }}>{a.reason}</div>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.25)", marginTop: "8px", textAlign: "center" as const }}>
+              <div style={{
+                fontSize: "11px", color: "rgba(15,23,42,0.2)",
+                marginTop: "10px", textAlign: "center" as const,
+                letterSpacing: "0.01em",
+              }}>
                 {ko ? "오늘은 이게 전부입니다." : "That's it for today."}
               </div>
             </div>
