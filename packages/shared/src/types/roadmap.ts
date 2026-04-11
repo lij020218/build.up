@@ -67,6 +67,11 @@ export type TaskState = {
   status: "todo" | "in_progress" | "completed";
   required: boolean;
   estimatedMinutes?: number;
+  // 팔로업 시스템: 완료 후 대기 기간이 있는 태스크
+  completedAt?: string;        // ISO 8601 — 체크한 시점
+  waitDays?: number;           // 예상 대기 기간 (일)
+  followupQuestion?: string;   // AI가 물어볼 팔로업 질문
+  followupAnswered?: boolean;  // 사용자가 팔로업에 응답했는지
 };
 
 // Conditional next-stage routing based on a prior decision value.

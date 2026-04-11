@@ -1814,7 +1814,7 @@ export const starterTaskMap: WorkflowTaskMap = {
   "mvp-build": [
     { taskId: "core-workflow-defined", title: "Define one core user workflow and success outcome", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "mvp-shipped", title: "Ship the smallest MVP that proves this workflow can be solved", status: "todo", required: true, estimatedMinutes: 240 },
-    { taskId: "ip-protection-filed", title: "File trademark and provisional patent before public launch", status: "todo", required: true, estimatedMinutes: 90 }
+    { taskId: "ip-protection-filed", title: "File trademark and provisional patent before public launch", status: "todo", required: true, estimatedMinutes: 90, waitDays: 14, followupQuestion: "특허/상표 출원 접수 확인서를 받으셨나요?" }
   ],
   "launch-gtm": [
     { taskId: "analytics-live", title: "Install analytics for activation, retention, and funnel events", status: "todo", required: true, estimatedMinutes: 60 },
@@ -1829,7 +1829,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "retention-check-defined", title: "Define a retention check so growth is not judged on acquisition alone", status: "todo", required: true, estimatedMinutes: 45 }
   ],
   "company-setup": [
-    { taskId: "incorporation-done", title: "Complete incorporation (articles, registration, business account)", status: "todo", required: true, estimatedMinutes: 120 },
+    { taskId: "incorporation-done", title: "Complete incorporation (articles, registration, business account)", status: "todo", required: true, estimatedMinutes: 120, waitDays: 7, followupQuestion: "법인등기부등본 발급 받으셨나요?" },
     { taskId: "cost-plan-confirmed", title: "Confirm incorporation costs and choose DIY or agency", status: "todo", required: true, estimatedMinutes: 30 },
     { taskId: "stock-option-plan", title: "Review stock option and cap table basics for future hires", status: "todo", required: false, estimatedMinutes: 30 },
   ],
@@ -1841,7 +1841,7 @@ export const starterTaskMap: WorkflowTaskMap = {
   "venture-certification": [
     { taskId: "venture-cert-type-checked", title: "Check venture certification eligibility: investment type, R&D type, or innovation growth type", status: "todo", required: true, estimatedMinutes: 30 },
     { taskId: "govt-program-matched", title: "Match to K-Startup programs: pre-startup package, early-stage package, TIPS, or growth package", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "application-submitted", title: "Submit venture certification or government program application before deadline", status: "todo", required: true, estimatedMinutes: 90 }
+    { taskId: "application-submitted", title: "Submit venture certification or government program application before deadline", status: "todo", required: true, estimatedMinutes: 90, waitDays: 30, followupQuestion: "벤처기업 확인서 또는 지원사업 선정 결과를 받으셨나요?" }
   ],
   // ── Offline path tasks ─────────────────────────────────────────────────────
   "permit-check": [
@@ -1857,14 +1857,18 @@ export const starterTaskMap: WorkflowTaskMap = {
       title: "Complete food hygiene education (6hr) and obtain certificate (food/cafe only)",
       status: "todo",
       required: false,
-      estimatedMinutes: 360
+      estimatedMinutes: 360,
+      waitDays: 1,
+      followupQuestion: "위생교육 수료증 발급 받으셨나요?"
     },
     {
       taskId: "health-exam-obtained",
       title: "Obtain health examination certificate from public health center (food/cafe/beauty)",
       status: "todo",
       required: false,
-      estimatedMinutes: 60
+      estimatedMinutes: 60,
+      waitDays: 5,
+      followupQuestion: "보건증(건강진단결과서) 발급 완료되었나요?"
     },
     {
       taskId: "professional-license-confirmed",
@@ -1878,7 +1882,9 @@ export const starterTaskMap: WorkflowTaskMap = {
       title: "Apply for fire safety completion certificate if required (소방완비증명서)",
       status: "todo",
       required: false,
-      estimatedMinutes: 60
+      estimatedMinutes: 60,
+      waitDays: 14,
+      followupQuestion: "소방 검사 통과 통보 받으셨나요?"
     },
     {
       taskId: "industry-specific-registration",
@@ -1998,14 +2004,18 @@ export const starterTaskMap: WorkflowTaskMap = {
       title: "Complete business registration at the tax office (within 20 days of starting operations)",
       status: "todo",
       required: true,
-      estimatedMinutes: 40
+      estimatedMinutes: 40,
+      waitDays: 3,
+      followupQuestion: "사업자등록증 발급 받으셨나요?"
     },
     {
       taskId: "permit-filed",
       title: "File operating permit or notification with the relevant authority",
       status: "todo",
       required: true,
-      estimatedMinutes: 60
+      estimatedMinutes: 60,
+      waitDays: 7,
+      followupQuestion: "영업신고/허가 수리 완료 통보 받으셨나요?"
     }
   ],
   "insurance-tax-setup": [

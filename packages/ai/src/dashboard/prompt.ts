@@ -248,6 +248,17 @@ currentRoadmapStage별 코칭 포인트:
 todayActions는 "오늘 로드맵에서 할 일"로 변환:
 - 예: { title: "견적 3곳 비교", reason: "공급업체 가격 차이가 원가율 5%p를 좌우합니다", priority: "high" }
 
+─── 대기 중 업무 팔로업 (pendingFollowups) ───
+
+pendingFollowups가 있으면, 해당 업무의 진행 상황을 todayActions 또는 insight에 자연스럽게 포함하세요.
+
+규칙:
+1. 예상 대기 기간 이내면 격려: "사업자등록 신청 후 2일차입니다. 보통 3일 내 발급됩니다. 조금만 기다리세요."
+2. 예상 기간을 넘겼으면 행동 지시: "사업자등록 신청 후 5일 경과. 세무서에 전화해서 진행 상황을 확인하세요."
+3. 팔로업 질문을 todayActions에 포함: { title: "사업자등록 확인", reason: "신청 3일 경과. 세무서(☎ 126)에 발급 여부 확인", priority: "high" }
+4. 여러 팔로업이 동시에 있으면 가장 급한 것(기간 초과 > 기간 임박 > 대기중) 순으로 정렬
+5. 사용자가 followupAnswered=true로 응답하면 더 이상 언급하지 마세요.
+
 ─── 세금/고정비 코칭 ───
 
 computedTaxEvents가 있으면 가장 급한 세금 일정을 todayActions나 insight에 포함하세요.
@@ -300,6 +311,13 @@ export type DashboardContext = {
   // 세금/고정비 (enrichment가 계산)
   computedTaxEvents?: string[];
   computedFixedExpenses?: string[];
+  // 대기 중 업무 팔로업
+  pendingFollowups?: Array<{
+    taskCode: string;
+    question: string;
+    daysSinceCompleted: number;
+    expectedWaitDays: number;
+  }>;
 };
 
 export function buildDashboardActionPrompt(ctx: DashboardContext): string {
@@ -360,6 +378,7 @@ ${ctx.lowStockItems.length > 0 ? `⚠ 재고 부족: ${ctx.lowStockItems.join(",
 ${(ctx.computedFixedExpenses ?? ctx.upcomingFixedExpenses).length > 0 ? `⚠ 고정비 납부: ${(ctx.computedFixedExpenses ?? ctx.upcomingFixedExpenses).join(", ")}` : "✓ 고정비 납부 여유"}
 ${crisisSignals.length > 0 ? `\n### ⚠ 위기 신호 감지\n${crisisSignals.map(s => `- ${s}`).join("\n")}` : ""}
 ${operationalGaps.length > 0 ? `\n### 🚨 운영 필수 사항 미충족 (최우선 해결 필요)\n${operationalGaps.map(s => `- ${s}`).join("\n")}` : ""}
+${(ctx.pendingFollowups ?? []).length > 0 ? `\n### 📋 대기 중 업무 팔로업\n${ctx.pendingFollowups!.map(f => `- ${f.taskCode}: ${f.daysSinceCompleted}일 경과 (예상 ${f.expectedWaitDays}일) → "${f.question}"`).join("\n")}` : ""}
 
 ### 매출 예측 (AI 예측 엔진)
 ${ctx.forecastNextWeekDaily ? `- 다음 주 예상 일매출: ${fmtW(ctx.forecastNextWeekDaily)} (신뢰도: ${ctx.forecastConfidence ?? "low"})` : "- 예측 데이터 부족 (3일 이상 기록 필요)"}

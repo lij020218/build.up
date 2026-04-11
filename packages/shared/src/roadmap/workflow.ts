@@ -318,7 +318,11 @@ export function updateTaskStatus(
       task.taskId === taskId
         ? {
             ...task,
-            status
+            status,
+            // 완료 시 타임스탬프 기록, 미완료로 되돌리면 제거
+            completedAt: status === "completed" ? new Date().toISOString() : undefined,
+            // 미완료로 되돌리면 팔로업 응답도 리셋
+            followupAnswered: status === "completed" ? task.followupAnswered : undefined,
           }
         : task
     )
