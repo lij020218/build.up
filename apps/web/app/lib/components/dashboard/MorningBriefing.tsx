@@ -421,87 +421,99 @@ export function MorningBriefing() {
         </div>
       )}
 
-      {/* ── AI Briefing Card ── */}
-      <div style={briefingCardStyle}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            marginBottom: "6px",
-          }}
-        >
-          <div style={aiBadgeStyle}>AI</div>
-          <span style={aiBadgeLabelStyle}>
-            {ko ? "모닝 브리핑" : "Morning Briefing"}
+      {/* ── AI 경영 코칭 — 통합 카드 (브리핑 + 경고 + 오늘 할 일) ── */}
+      <div style={{
+        borderRadius: "20px", overflow: "hidden",
+        background: "rgba(255,255,255,0.88)",
+        backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+        border: "1px solid rgba(0,0,0,0.05)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.035)",
+      }}>
+        {/* 헤더 */}
+        <div style={{
+          padding: "16px 18px 12px",
+          display: "flex", alignItems: "center", gap: "8px",
+          borderBottom: "1px solid rgba(0,0,0,0.04)",
+        }}>
+          <div style={{
+            width: "26px", height: "26px", borderRadius: "8px",
+            background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 6px rgba(29,53,87,0.15)",
+          }}>
+            <span style={{ fontSize: "10px", fontWeight: 800, color: "#fff", fontFamily: FONT_STACK }}>AI</span>
+          </div>
+          <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", fontFamily: FONT_STACK }}>
+            {ko ? "AI 경영 코칭" : "AI Business Coaching"}
           </span>
         </div>
-        <p style={insightTextStyle}>{insightText}</p>
-      </div>
 
-      {/* ── Crisis Alert (최상단 경고) ── */}
-      {(() => {
-        const crisis = d.aiActions?.crisisActions;
-        if (!crisis || crisis.length === 0) return null;
-        return (
-          <div style={{
-            borderRadius: "14px", padding: "12px 16px",
-            background: "linear-gradient(135deg, rgba(255,59,48,0.06) 0%, rgba(255,59,48,0.02) 100%)",
-            border: "1px solid rgba(255,59,48,0.15)", marginBottom: "2px",
-          }}>
-            <div style={{ fontSize: "10px", fontWeight: 700, color: RED, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
-              {ko ? "긴급 경고" : "CRISIS ALERT"}
-            </div>
-            {crisis.slice(0, 2).map((c, i) => (
-              <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: i < crisis.length - 1 ? "6px" : 0 }}>
-                <div style={{ width: "4px", borderRadius: "2px", background: RED, flexShrink: 0, alignSelf: "stretch", minHeight: "16px" }} />
-                <div>
-                  <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{c.title}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>{c.impact}</div>
+        {/* AI 브리핑 */}
+        <div style={{ padding: "14px 18px 10px" }}>
+          <p style={{ ...insightTextStyle, margin: 0 }}>{insightText}</p>
+        </div>
+
+        {/* 긴급 경고 (있을 때만) */}
+        {(() => {
+          const crisis = d.aiActions?.crisisActions;
+          if (!crisis || crisis.length === 0) return null;
+          return (
+            <div style={{ padding: "0 18px 10px" }}>
+              <div style={{
+                borderRadius: "12px", padding: "10px 14px",
+                background: "rgba(255,59,48,0.04)", border: "1px solid rgba(255,59,48,0.1)",
+              }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, color: RED, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
+                  {ko ? "긴급" : "URGENT"}
                 </div>
-              </div>
-            ))}
-          </div>
-        );
-      })()}
-
-      {/* ── Today's Actions (오늘 할 일 — 멘토의 행동 지시) ── */}
-      {(() => {
-        const actions = d.aiActions?.todayActions;
-        if (!actions || actions.length === 0) return null;
-        return (
-          <div style={{
-            borderRadius: "16px", padding: "14px 16px",
-            background: "rgba(255,255,255,0.82)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.02)",
-          }}>
-            <div style={{ fontSize: "10px", fontWeight: 700, color: LABEL_COLOR, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
-              {ko ? "오늘 할 일" : "TODAY'S ACTIONS"}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              {actions.slice(0, 3).map((a, i) => {
-                const isHigh = a.priority === "high";
-                return (
-                  <div key={i} style={{
-                    display: "flex", gap: "10px", alignItems: "flex-start",
-                    padding: "10px 12px", borderRadius: "12px",
-                    background: isHigh ? "rgba(255,59,48,0.03)" : "rgba(0,0,0,0.02)",
-                    borderLeft: `3px solid ${isHigh ? RED : YELLOW}`,
-                  }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{a.title}</div>
-                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>{a.reason}</div>
+                {crisis.slice(0, 2).map((c, i) => (
+                  <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: i < crisis.length - 1 ? "4px" : 0 }}>
+                    <div style={{ width: "3px", borderRadius: "2px", background: RED, flexShrink: 0, alignSelf: "stretch", minHeight: "14px" }} />
+                    <div>
+                      <span style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{c.title}</span>
+                      <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginLeft: "6px" }}>{c.impact}</span>
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.3)", marginTop: "8px", textAlign: "center" as const }}>
-              {ko ? "오늘은 이게 전부입니다. 하나씩 실행하세요." : "That's it for today. Execute one at a time."}
+          );
+        })()}
+
+        {/* 오늘 할 일 (있을 때만) */}
+        {(() => {
+          const actions = d.aiActions?.todayActions;
+          if (!actions || actions.length === 0) return null;
+          return (
+            <div style={{ padding: "0 18px 14px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, color: LABEL_COLOR, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
+                {ko ? "오늘 할 일" : "TODAY"}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                {actions.slice(0, 3).map((a, i) => {
+                  const isHigh = a.priority === "high";
+                  return (
+                    <div key={i} style={{
+                      display: "flex", gap: "10px", alignItems: "flex-start",
+                      padding: "9px 12px", borderRadius: "10px",
+                      background: isHigh ? "rgba(255,59,48,0.03)" : "rgba(0,0,0,0.015)",
+                      borderLeft: `3px solid ${isHigh ? RED : YELLOW}`,
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "1px" }}>{a.title}</div>
+                        <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{a.reason}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.25)", marginTop: "8px", textAlign: "center" as const }}>
+                {ko ? "오늘은 이게 전부입니다." : "That's it for today."}
+              </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
+      </div>
 
       {/* ── 4 Hero KPI Cards ── */}
       <div className="morning-kpi-grid" style={gridStyle}>
