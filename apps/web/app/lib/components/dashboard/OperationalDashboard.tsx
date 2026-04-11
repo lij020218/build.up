@@ -418,21 +418,21 @@ export default function OperationalDashboard({ d }: Props) {
     <section style={shell}>
       <style>{bentoHoverCSS}</style>
 
-      {/* ━━━ 매장/서비스명 ━━━ */}
+      {/* ━━━ 상호명 ━━━ */}
       <div style={{
-        padding: "2px 0 10px",
-        display: "flex", alignItems: "center", gap: "6px",
+        padding: "4px 0 12px",
+        display: "flex", alignItems: "center", gap: "8px",
       }}>
         <span style={{
-          fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.4)",
-          letterSpacing: "-0.01em",
+          fontSize: "18px", fontWeight: 720, color: "#0f172a",
+          letterSpacing: "-0.02em",
           fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
         }}>
           {d.storeName || (ko ? "내 가게" : "My Store")}
         </span>
         {d.businessLaunched && (
           <span style={{
-            fontSize: "9px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px",
+            fontSize: "10px", fontWeight: 650, padding: "3px 8px", borderRadius: "6px",
             background: "rgba(5,150,105,0.08)", color: "#059669",
             letterSpacing: "0.02em",
           }}>
