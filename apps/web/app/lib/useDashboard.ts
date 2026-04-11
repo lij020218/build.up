@@ -387,7 +387,6 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const hasPermitGuide = permitGuides.length > 0;
   const hasTaxGuide = taxGuides.length > 0;
   const hasLoanGuide = loanGuides.length > 0;
-  const completedCount = roadmap.completedStageIds.length;
   const preferredRegion = profile?.preferredRegions?.[0];
   const industryCategoryId =
     getIndustryCategoryIdByOptionId(
@@ -405,20 +404,25 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-gtm", "growth-engine", "company-setup", "fundraising-readiness", "venture-certification"]);
   const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "insurance-tax-setup", "hiring-setup", "operations-setup", "pre-launch"]);
   const franchiseOnlyIds = new Set(["franchise-application"]);
-  const pathTotalStages = roadmap.stages.filter((stage) => {
+  // 현재 경로에 해당하는 단계만 필터링 (경로 외 단계 제외)
+  const isPathStage = (stageId: string): boolean => {
     if (isStartupCategory) {
-      if (onlineOnlyIds.has(stage.stageId) || offlineOnlyIds.has(stage.stageId) || franchiseOnlyIds.has(stage.stageId)) return false;
+      if (onlineOnlyIds.has(stageId) || offlineOnlyIds.has(stageId) || franchiseOnlyIds.has(stageId)) return false;
       return true;
     }
     if (isDigitalCategory) {
-      if (offlineOnlyIds.has(stage.stageId) || startupOnlyIds.has(stage.stageId)) return false;
-      if (franchiseOnlyIds.has(stage.stageId) && startupType !== "franchise") return false;
+      if (offlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId)) return false;
+      if (franchiseOnlyIds.has(stageId) && startupType !== "franchise") return false;
       return true;
     }
-    if (onlineOnlyIds.has(stage.stageId) || startupOnlyIds.has(stage.stageId)) return false;
-    if (franchiseOnlyIds.has(stage.stageId) && startupType !== "franchise") return false;
+    if (onlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId)) return false;
+    if (franchiseOnlyIds.has(stageId) && startupType !== "franchise") return false;
     return true;
-  }).length;
+  };
+  const pathStageIds = new Set(roadmap.stages.filter(s => isPathStage(s.stageId)).map(s => s.stageId));
+  const pathTotalStages = pathStageIds.size;
+  // completedCount: 현재 경로 단계만 카운트 (다른 경로 단계 제외 — 20/19 버그 수정)
+  const completedCount = roadmap.completedStageIds.filter(id => pathStageIds.has(id)).length;
   const correctedProgressPercent = pathTotalStages > 0 ? Math.min(100, Math.round((completedCount / pathTotalStages) * 100)) : 0;
   const allStagesDone = completedCount >= pathTotalStages;
 
