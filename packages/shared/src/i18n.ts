@@ -694,9 +694,9 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "permit-type-checked": { ko: "업종별 필요 인허가·등록 종류 확인" },
   "hygiene-education-done": { ko: "식품위생교육 6시간 이수 + 수료증 발급 완료 (음식·카페)" },
   "health-exam-obtained": { ko: "보건소 건강진단결과서(보건증) 발급 완료 (음식·카페·뷰티)" },
-  "professional-license-confirmed": { ko: "업종별 전문 면허 확인 (미용사 면허, 학원 강사 자격, 동물 취급 자격 등)" },
+  "professional-license-confirmed": { ko: "업종별 전문 면허/자격 확인 (미용사 면허, 학원 강사 자격+성범죄 경력 조회, 동물 취급 자격 등)" },
   "fire-safety-cert-obtained": { ko: "소방완비증명서 신청 및 발급 완료 (해당 시)" },
-  "industry-specific-registration": { ko: "업종별 특수 등록 완료 (교육청 학원등록, 체육시설업 신고, 동물관련업 등록 등)" },
+  "industry-specific-registration": { ko: "업종별 특수 등록 완료 (교육청 학원등록+배상책임보험, 체육시설업 신고+배상책임보험, 동물관련업 등록 등)" },
   "health-cert-checked": { ko: "위생 교육 이수 및 건강진단 조건 확인 (음식·카페·뷰티 업종)" },
   "safety-requirement-checked": { ko: "소방·시설 안전 요건 확인" },
   // contract-review
@@ -726,7 +726,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "employment-contract-signed": { ko: "근로계약서 작성 및 교부 완료" },
   // operations-setup
   "delivery-app-registered": { ko: "배달앱 입점 등록 (음식·카페 업종 해당 시)" },
-  "pos-live": { ko: "POS 실거래 테스트 완료" },
+  "pos-live": { ko: "POS 설치 + 카드결제 신청 + 실거래 테스트 완료 (개업 15일 전)" },
   "sns-setup": { ko: "인스타그램·네이버 플레이스·카카오 채널 개설" },
   // pre-launch
   "soft-open-done": { ko: "손님 초대 & 행사 기획 완료" },
