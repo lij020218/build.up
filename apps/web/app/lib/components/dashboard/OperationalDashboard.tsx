@@ -526,6 +526,9 @@ export default function OperationalDashboard({ d }: Props) {
             topRiskLabel={topRiskLabel}
             focusMessage={focusMessage}
             d={d}
+            totalSales={totalSales}
+            netProfit={netProfit}
+            totalCosts={totalCosts}
           />
         )}
       </div>
@@ -1580,9 +1583,15 @@ function SurvivalBoardCard({
   topRiskLabel,
   focusMessage,
   d,
+  totalSales,
+  netProfit,
+  totalCosts,
 }: {
   ko: boolean;
   isStartupCompany: boolean;
+  totalSales: number;
+  netProfit: number;
+  totalCosts: number;
   runwayMonths: number;
   capitalLeft: number;
   weeklySalesChange: number;
@@ -1636,68 +1645,38 @@ function SurvivalBoardCard({
         </div>
       </div>
 
-      <div style={survivalMetricGrid}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+        {/* 1. 이번 달 매출 */}
         <div style={survivalMetricCard}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
-              <div style={survivalMetricLabel}>{ko ? "런웨이" : "Runway"}</div>
-              <div style={{ ...survivalMetricValue, color: runwayMonths >= 0 && runwayMonths <= 3 ? "#b42318" : "#0f172a" }}>
-                {runwayMonths < 0 ? (ko ? "흑자" : "Positive") : `${runwayMonths}${ko ? "개월" : " mo"}`}
-              </div>
-              <div style={survivalMetricNote}>{ko ? `가용 현금 ${fmt(capitalLeft)}` : `Cash left ${fmt(capitalLeft)}`}</div>
-            </div>
-            {/* mini semicircle gauge */}
-            <svg width="48" height="28" viewBox="0 0 48 28" style={{ flexShrink: 0 }}>
-              <path d="M4 24 A20 20 0 0 1 44 24" fill="none" stroke="rgba(15,23,42,0.06)" strokeWidth="4" strokeLinecap="round" />
-              <path d="M4 24 A20 20 0 0 1 44 24" fill="none"
-                stroke={runwayMonths >= 0 && runwayMonths <= 3 ? "#ef4444" : runwayMonths <= 6 ? "#f97316" : "#22c55e"}
-                strokeWidth="4" strokeLinecap="round"
-                strokeDasharray={`${runwayProgress * 0.628} 62.8`}
-                style={{ transition: "stroke-dasharray 0.6s ease" }}
-              />
-            </svg>
+          <div style={survivalMetricLabel}>{ko ? "이번 달 매출" : "MTD Revenue"}</div>
+          <div style={{ ...survivalMetricValue, color: totalSales > 0 ? "#0f172a" : "rgba(15,23,42,0.25)" }}>
+            {totalSales > 0 ? fmt(totalSales) : "—"}
           </div>
-          <div style={meterTrack}>
-            <div style={{ ...meterFill, width: `${runwayProgress}%`, background: runwayMonths >= 0 && runwayMonths <= 3 ? "#ef4444" : "#2563eb" }} />
-          </div>
+          <div style={survivalMetricNote}>{ko ? `일평균 ${totalSales > 0 ? fmt(Math.round(totalSales / Math.max(1, new Date().getDate()))) : "—"}` : `Daily avg ${totalSales > 0 ? fmt(Math.round(totalSales / Math.max(1, new Date().getDate()))) : "—"}`}</div>
         </div>
+        {/* 2. 손익 */}
         <div style={survivalMetricCard}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
-              <div style={survivalMetricLabel}>{ko ? "주간 성장 신호" : "Weekly signal"}</div>
-              <div style={{ ...survivalMetricValue, color: weeklySalesChange >= 0 ? "#177245" : "#b42318" }}>
-                {weeklySignalLabel}
-              </div>
-              <div style={survivalMetricNote}>
-                {ko ? "최근 7일 vs 직전 7일" : "Recent 7 days vs previous 7"}
-              </div>
-            </div>
-            {/* sparkline: 7 dots */}
-            <svg width="56" height="28" viewBox="0 0 56 28" style={{ flexShrink: 0 }}>
-              {(() => {
-                const allE = d.dailyEntries as DailyEntry[];
-                const pts: number[] = [];
-                for (let i = 6; i >= 0; i--) {
-                  const dt = new Date(); dt.setDate(dt.getDate() - i);
-                  const e = allE.find(x => x.date === dt.toISOString().slice(0, 10));
-                  pts.push(e?.sales ?? 0);
-                }
-                const mx = Math.max(...pts, 1);
-                const points = pts.map((v, i) => `${4 + i * 8},${24 - (v / mx) * 18}`).join(" ");
-                return (
-                  <>
-                    <polyline points={points} fill="none" stroke={weeklySalesChange >= 0 ? "#22c55e" : "#f97316"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    {pts.map((v, i) => (
-                      <circle key={i} cx={4 + i * 8} cy={24 - (v / mx) * 18} r={i === 6 ? 3 : 1.5} fill={i === 6 ? (weeklySalesChange >= 0 ? "#22c55e" : "#f97316") : "rgba(15,23,42,0.2)"} />
-                    ))}
-                  </>
-                );
-              })()}
-            </svg>
+          <div style={survivalMetricLabel}>{ko ? "이번 달 손익" : "MTD P&L"}</div>
+          <div style={{ ...survivalMetricValue, color: totalSales === 0 && totalCosts === 0 ? "rgba(15,23,42,0.25)" : netProfit >= 0 ? "#059669" : "#dc2626" }}>
+            {totalSales === 0 && totalCosts === 0 ? "—" : `${netProfit >= 0 ? "+" : ""}${fmt(netProfit)}`}
           </div>
-          <div style={meterTrack}>
-            <div style={{ ...meterFill, width: `${weeklyProgress}%`, background: weeklySalesChange >= 0 ? "#22c55e" : "#f97316" }} />
+          <div style={survivalMetricNote}>{totalCosts > 0 ? (ko ? `비용 ${fmt(totalCosts)}` : `Costs ${fmt(totalCosts)}`) : (ko ? "비용 미입력" : "No costs")}</div>
+        </div>
+        {/* 3. 런웨이 */}
+        <div style={survivalMetricCard}>
+          <div style={survivalMetricLabel}>{ko ? "런웨이" : "Runway"}</div>
+          <div style={{ ...survivalMetricValue, color: runwayMonths >= 0 && runwayMonths <= 3 ? "#dc2626" : runwayMonths <= 6 ? "#d97706" : "#0f172a" }}>
+            {runwayMonths < 0 ? (ko ? "흑자" : "Surplus") : `${runwayMonths}${ko ? "개월" : "mo"}`}
           </div>
+          <div style={survivalMetricNote}>{ko ? `현금 ${fmt(capitalLeft)}` : `Cash ${fmt(capitalLeft)}`}</div>
+        </div>
+        {/* 4. 주간 성장 */}
+        <div style={survivalMetricCard}>
+          <div style={survivalMetricLabel}>{ko ? "주간 성장" : "Weekly"}</div>
+          <div style={{ ...survivalMetricValue, color: weeklySalesChange >= 0 ? "#059669" : "#dc2626" }}>
+            {weeklySignalLabel}
+          </div>
+          <div style={survivalMetricNote}>{ko ? "7일 vs 직전 7일" : "7d vs prev 7d"}</div>
         </div>
       </div>
 
