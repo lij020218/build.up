@@ -1603,8 +1603,8 @@ function SurvivalBoardCard({
     <section style={survivalCard} className="bento-card">
       <div style={survivalTop}>
         <div>
-          <div style={sectionEyebrow}>{isStartupCompany ? (ko ? "스타트업 생존 보드" : "Startup survival board") : ko ? "생존 보드" : "Survival board"}</div>
-          <div style={opsTitle}>{isStartupCompany ? (ko ? "오늘의 회사 우선순위" : "Today's company priorities") : ko ? "오늘의 경영 우선순위" : "Today's priorities"}</div>
+          <div style={sectionEyebrow}>{isStartupCompany ? (ko ? "스타트업 지표" : "Startup metrics") : ko ? "경영 지표" : "Metrics"}</div>
+          <div style={opsTitle}>{isStartupCompany ? (ko ? "핵심 생존 지표" : "Survival metrics") : ko ? "경영 건강 지표" : "Health metrics"}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {/* 헬스 점수 미니 게이지 */}
