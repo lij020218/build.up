@@ -229,7 +229,10 @@ ai-application, developer-tools, b2b-saas, fintech-startup
 - 스타트업: 사무가구(퍼시스/시디즈) + 노트북(Mac/Dell) + 모니터 + 소프트웨어(GitHub/Figma/Slack)
 가격 참고: 사무의자 30~100만, 노트북 80~300만, 커피머신 200~2,000만, POS 키오스크 100~300만
 
-구체적 브랜드 예시는 업종별 핵심 가이드 참조. 여기서는 4~6개 핵심 항목만 추천.
+interior 추천 시 반드시 실제 한국에서 구매 가능한 브랜드명과 구체적 가격대를 포함하세요.
+예: {"item": "에스프레소 머신", "vendor": "La Marzocco Linea Mini", "estimatedCost": "600~800만원"}
+예: {"item": "사무 의자", "vendor": "시디즈 T50", "estimatedCost": "50~70만원"}
+가상의 브랜드나 모호한 가격 금지. 모르면 "업종 전문 업체 견적 필요"로 표시.
 ## 필수 인허가 (업종별)
 - 음식점: 일반음식점 영업허가, 위생교육 이수
 - 카페: 일반음식점 영업허가 (제과류 판매 시 제과점 허가), 위생교육
@@ -266,7 +269,8 @@ ai-application, developer-tools, b2b-saas, fintech-startup
     - 온라인/스타트업: 사무 가구(데스크/의자) + IT장비(노트북/모니터) + 네트워크 + 소프트웨어 구독
     - IT장비는 업무 성격에 따라 선택 (디자인=Mac, 개발/윈도우 환경=Dell/LG, 일반사무=가성비 노트북)
     - 예산 규모에 맞게: 저예산이면 가성비 제품, 고예산이면 프리미엄 제품
-    - 최소 4개 이상 항목 추천`;
+    - 최소 4개 이상 항목 추천
+13. **품질 기준**: 모든 추천(suppliers, interior, 상권분석)에서 실제 한국에서 운영 중인 업체/브랜드만 사용. 가상의 이름 절대 금지. 가격은 2025-2026 한국 시세 기준.`;
 
 export function buildRoadmapGenerationPrompt(input: RoadmapGenerationInput): string {
   const ko = input.language === "ko";
