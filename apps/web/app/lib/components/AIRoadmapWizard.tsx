@@ -32,9 +32,22 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   const [genProgress, setGenProgress] = useState(0);
   const [editingSection, setEditingSection] = useState<string | null>(null);
 
+  // 사업 아이디어 텍스트로 업종 유형 추론
+  const ideaLower = ideaText.toLowerCase();
+  const isLikelyTech = /앱|app|saas|ai |플랫폼|platform|소프트웨어|software|api|웹서비스|스타트업|startup|개발/.test(ideaLower);
+  const isLikelyOnline = /온라인|쇼핑몰|스마트스토어|쿠팡|이커머스|e-commerce|online|store|마켓|커머스/.test(ideaLower);
+
   const genSteps = ko
-    ? ["업종 분석", "상권 데이터 조회", "예산 배분 계산", "인테리어 설계", "필수 인허가 확인", "공급업체 추천", "운영 채널 설정", "리스크 분석"]
-    : ["Industry analysis", "Market data", "Budget allocation", "Interior planning", "Permits check", "Supplier matching", "Channel setup", "Risk analysis"];
+    ? (isLikelyTech
+      ? ["사업 아이디어 분석", "시장 규모 조사", "예산 배분 계산", "기술 스택 설계", "법인 설립 요건 확인", "경쟁사 분석", "GTM 전략 설정", "리스크 분석"]
+      : isLikelyOnline
+      ? ["업종 분석", "시장 트렌드 조사", "예산 배분 계산", "플랫폼 선정", "사업자등록 요건 확인", "소싱처 추천", "마케팅 채널 설정", "리스크 분석"]
+      : ["업종 분석", "상권 데이터 조회", "예산 배분 계산", "인테리어 설계", "필수 인허가 확인", "공급업체 추천", "운영 채널 설정", "리스크 분석"])
+    : (isLikelyTech
+      ? ["Idea analysis", "Market sizing", "Budget allocation", "Tech stack", "Legal requirements", "Competitor analysis", "GTM strategy", "Risk analysis"]
+      : isLikelyOnline
+      ? ["Industry analysis", "Market trends", "Budget allocation", "Platform selection", "Registration check", "Sourcing match", "Marketing channels", "Risk analysis"]
+      : ["Industry analysis", "Market data", "Budget allocation", "Interior planning", "Permits check", "Supplier matching", "Channel setup", "Risk analysis"]);
 
   // ── API 호출 ──
   const handleGenerate = async () => {
