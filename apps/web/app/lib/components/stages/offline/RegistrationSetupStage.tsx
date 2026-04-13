@@ -66,6 +66,23 @@ export function RegistrationSetupStage() {
             <div style={{ fontSize: "16px", fontWeight: 740, color: "#2563eb" }}>1~3{ko ? "일" : "d"}</div>
           </div>
         </div>
+        {/* 바로가기 링크 */}
+        <div style={{ margin: "0 22px 16px", display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
+          {[
+            { label: ko ? "홈택스 사업자등록" : "HomeTax Register", url: "https://www.hometax.go.kr", color: "#2563eb" },
+            { label: ko ? "정부24 사업자등록" : "Gov24 Register", url: "https://www.gov.kr/portal/service/serviceInfo/PTR000050466", color: "#059669" },
+            { label: ko ? "업종코드 조회" : "Industry Codes", url: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=2444&cntntsId=7777", color: "#7c3aed" },
+            { label: ko ? "간이과세 기준 확인" : "Tax Type Guide", url: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7693&mi=2272", color: "#d97706" },
+          ].map(link => (
+            <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" style={{
+              display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 12px",
+              borderRadius: "8px", background: `${link.color}06`, border: `1px solid ${link.color}12`,
+              fontSize: "12px", fontWeight: 600, color: link.color, textDecoration: "none",
+            }}>
+              {link.label} ↗
+            </a>
+          ))}
+        </div>
       </div>
 
       {/* 영업허가/신고 실행 */}
@@ -124,10 +141,27 @@ export function RegistrationSetupStage() {
             <div style={{ fontSize: "16px", fontWeight: 740, color: "#ea580c" }}>7~14{ko ? "일" : "d"}</div>
           </div>
         </div>
-        <div style={{ margin: "0 22px 16px", padding: "10px 14px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.08)" }}>
+        <div style={{ margin: "0 22px 10px", padding: "10px 14px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.08)" }}>
           <div style={{ fontSize: "12px", color: "#dc2626", lineHeight: 1.5 }}>
             {ko ? "⚠ 주방과 객석이 벽·칸막이로 구분되어야 합니다. 건물 용도가 '근린생활시설'인지 사전 확인 필수!" : "⚠ Kitchen and dining must be separated. Verify building use is 'neighborhood facility'!"}
           </div>
+        </div>
+        {/* 바로가기 링크 */}
+        <div style={{ margin: "0 22px 16px", display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
+          {[
+            { label: ko ? "정부24 영업신고" : "Gov24 Permit", url: "https://www.gov.kr", color: "#ea580c" },
+            { label: ko ? "위생교육 신청" : "Hygiene Training", url: "https://www.kfoodedu.or.kr", color: "#0891b2" },
+            { label: ko ? "보건증 발급 안내" : "Health Certificate", url: "https://www.g-health.kr", color: "#059669" },
+            { label: ko ? "건축물대장 열람" : "Building Register", url: "https://www.eais.go.kr", color: "#7c3aed" },
+          ].map(link => (
+            <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" style={{
+              display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 12px",
+              borderRadius: "8px", background: `${link.color}06`, border: `1px solid ${link.color}12`,
+              fontSize: "12px", fontWeight: 600, color: link.color, textDecoration: "none",
+            }}>
+              {link.label} ↗
+            </a>
+          ))}
         </div>
       </div>
     </div>
