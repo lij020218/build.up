@@ -659,8 +659,8 @@ export function CurrentStageView() {
                   </div>
                 )}
 
-                {/* ── 보안 체크리스트 ── */}
-                {currentStage.code === "company_setup" && (
+                {/* ── 보안 체크리스트 — 출시 전 점검 ── */}
+                {currentStage.code === "launch_gtm" && (
                   <div style={{ marginBottom: "16px" }}>
                     <SecurityChecklist
                       ko={language === "ko"}
