@@ -1,0 +1,837 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import type { DashboardHook } from "../../useDashboard";
+import { supabase } from "../../../../lib/supabase";
+
+type InventoryEntry = {
+  id: string;
+  name: string;
+  quantity: number;
+  unit?: string;
+  minThreshold?: number;
+  category?: string;
+  unitCost?: number;
+  expiryDate?: string;
+  supplierName?: string;
+  supplierUrl?: string;
+  leadTimeDays?: number;
+  dailyUsage?: number;
+  lastOrderedAt?: string;
+  wasteLog?: Array<{ date: string; qty: number; reason: string }>;
+};
+
+/** 정확한 원화 표시. 반올림 없음. */
+const fmt = (n: number) => {
+  if (!isFinite(n) || isNaN(n)) return "—";
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(Math.round(n));
+  if (abs >= 100000000) {
+    const eok = Math.floor(abs / 100000000);
+    const remain = abs % 100000000;
+    const man = Math.floor(remain / 10000);
+    return man > 0 ? `${sign}${eok}억 ${man.toLocaleString()}만원` : `${sign}${eok}억원`;
+  }
+  if (abs >= 10000) {
+    const man = Math.floor(abs / 10000);
+    const remain = abs % 10000;
+    return remain > 0 ? `${sign}${man.toLocaleString()}만 ${remain.toLocaleString()}원` : `${sign}${man.toLocaleString()}만원`;
+  }
+  return `${sign}${abs.toLocaleString()}원`;
+};
+
+// ── Style constants ──────────────────────────────────────────────────────────
+
+const opsCard: React.CSSProperties = {
+  borderRadius: "14px",
+  padding: "22px",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.45) 100%)",
+  border: "1px solid rgba(5, 97, 252, 0.06)",
+  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
+  display: "grid",
+  gap: "14px",
+};
+
+const opsHeader: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: "12px",
+};
+
+const sectionEyebrow: React.CSSProperties = {
+  fontSize: "11px",
+  letterSpacing: "0.09em",
+  textTransform: "uppercase",
+  color: "rgba(15, 23, 42, 0.46)",
+  marginBottom: "6px",
+};
+
+const opsTitle: React.CSSProperties = {
+  fontSize: "22px",
+  fontWeight: 740,
+  letterSpacing: "-0.04em",
+  color: "#0f172a",
+};
+
+const opsActionRow: React.CSSProperties = {
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap",
+  justifyContent: "flex-end",
+};
+
+const opsActionPrimary: React.CSSProperties = {
+  border: "none",
+  borderRadius: "8px",
+  padding: "9px 12px",
+  background: "#0561fc",
+  color: "#fff",
+  fontSize: "12px",
+  fontWeight: 600,
+  cursor: "pointer",
+  boxShadow: "0 4px 14px rgba(5, 97, 252, 0.25)",
+};
+
+const opsActionSecondary: React.CSSProperties = {
+  border: "1px solid rgba(5, 97, 252, 0.12)",
+  borderRadius: "8px",
+  padding: "9px 12px",
+  background: "rgba(255,255,255,0.9)",
+  color: "#0f172a",
+  fontSize: "12px",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
+const opsMetricGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+};
+
+const opsMetricCard: React.CSSProperties = {
+  borderRadius: "10px",
+  padding: "14px",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.55) 0%, rgba(248,250,255,0.35) 100%)",
+  border: "1px solid rgba(5,97,252,0.04)",
+};
+
+const opsMetricLabel: React.CSSProperties = {
+  fontSize: "11px",
+  color: "rgba(15, 23, 42, 0.46)",
+  marginBottom: "8px",
+};
+
+const opsMetricValue: React.CSSProperties = {
+  fontSize: "16px",
+  fontWeight: 720,
+  letterSpacing: "-0.03em",
+  color: "#0f172a",
+};
+
+const rowActions: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "6px",
+  alignItems: "flex-end",
+};
+
+const tinyAction: React.CSSProperties = {
+  border: "none",
+  background: "none",
+  color: "#1d4ed8",
+  fontSize: "12px",
+  fontWeight: 700,
+  cursor: "pointer",
+  padding: 0,
+};
+
+const tinyDangerAction: React.CSSProperties = {
+  border: "none",
+  background: "none",
+  color: "#b42318",
+  fontSize: "12px",
+  fontWeight: 700,
+  cursor: "pointer",
+  padding: 0,
+};
+
+const listStack: React.CSSProperties = {
+  display: "grid",
+  gap: "8px",
+};
+
+const listRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+  padding: "12px 14px",
+  borderRadius: "10px",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.5) 0%, rgba(248,250,255,0.3) 100%)",
+  border: "1px solid rgba(5,97,252,0.04)",
+};
+
+const listTitle: React.CSSProperties = {
+  fontSize: "14px",
+  fontWeight: 650,
+  color: "#0f172a",
+};
+
+const listMeta: React.CSSProperties = {
+  marginTop: "4px",
+  fontSize: "11px",
+  color: "rgba(15, 23, 42, 0.48)",
+};
+
+const emptyState: React.CSSProperties = {
+  padding: "12px 14px",
+  borderRadius: "10px",
+  background: "linear-gradient(180deg, rgba(240,244,255,0.4) 0%, rgba(248,250,255,0.25) 100%)",
+  border: "1px solid rgba(5,97,252,0.04)",
+  fontSize: "13px",
+  lineHeight: 1.55,
+  color: "rgba(15, 23, 42, 0.58)",
+};
+
+const inlineEditor: React.CSSProperties = {
+  borderTop: "1px solid rgba(15, 23, 42, 0.08)",
+  paddingTop: "14px",
+  display: "grid",
+  gap: "10px",
+};
+
+const inlineEditorTitle: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 700,
+  color: "#2563eb",
+  letterSpacing: "0.02em",
+};
+
+const formGridTwo: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+};
+
+const formGridThree: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "10px",
+};
+
+const editorActions: React.CSSProperties = {
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap",
+};
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+export function InventoryOpsCard({
+  ko,
+  inventory,
+  lowStockItems,
+  d,
+}: {
+  ko: boolean;
+  inventory: InventoryEntry[];
+  lowStockItems: InventoryEntry[];
+  d: DashboardHook;
+}) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const invForm = d.invForm;
+  const isEditing = Boolean(invForm.editId);
+  const [showAllInventory, setShowAllInventory] = useState(false);
+  const [inventorySnapshot, setInventorySnapshot] = useState<InventoryEntry[]>([]);
+
+  // 팝업 열릴 때 body 스크롤 잠금 + ESC 키 닫기
+  useEffect(() => {
+    if (showAllInventory) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+      const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAllInventory(false); };
+      document.addEventListener("keydown", handleEsc);
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+        document.removeEventListener("keydown", handleEsc);
+      };
+    }
+  }, [showAllInventory]);
+
+  const categoryLabels: Record<NonNullable<typeof invForm.category>, string> = {
+    fresh: ko ? "신선" : "Fresh",
+    dry: ko ? "건식" : "Dry",
+    frozen: ko ? "냉동" : "Frozen",
+    beverage: ko ? "음료" : "Beverage",
+    supply: ko ? "소모품" : "Supply",
+    other: ko ? "기타" : "Other",
+  };
+
+  const inputStyle: React.CSSProperties = {
+    border: "1px solid rgba(15,23,42,0.10)",
+    borderRadius: "12px",
+    padding: "10px 12px",
+    fontSize: "14px",
+    outline: "none",
+    background: "#fff",
+    width: "100%",
+    boxSizing: "border-box",
+  };
+
+  const [excelImportState, setExcelImportState] = useState<{ status: "idle" | "reading" | "parsing" | "saving" | "done" | "error"; total: number; current: number; message: string }>({ status: "idle", total: 0, current: 0, message: "" });
+
+  const handleExcelImport = async (file: File) => {
+    try {
+      setExcelImportState({ status: "reading", total: 0, current: 0, message: ko ? "파일 읽는 중..." : "Reading file..." });
+      let text = "";
+      const ext = file.name.split(".").pop()?.toLowerCase();
+
+      if (ext === "csv" || ext === "tsv" || ext === "txt") {
+        // 텍스트 파일: 직접 읽기
+        text = await file.text();
+      } else if (ext === "xlsx" || ext === "xls") {
+        // 엑셀 바이너리: SheetJS로 클라이언트 파싱 → CSV 변환
+        try {
+          const XLSX = (await import("xlsx"));
+          const buffer = await file.arrayBuffer();
+          const workbook = XLSX.read(buffer, { type: "array" });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          text = XLSX.utils.sheet_to_csv(firstSheet);
+        } catch {
+          alert(ko ? "엑셀 파일을 읽을 수 없습니다." : "Cannot read Excel file.");
+          return;
+        }
+      } else {
+        // 기타 텍스트 시도
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        try {
+          text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+        } catch {
+          text = new TextDecoder("euc-kr", { fatal: false }).decode(bytes);
+        }
+        if (text.includes("\0") || text.length < 10) {
+          alert(ko
+            ? "이 파일 형식은 지원하지 않습니다. CSV, TSV, TXT 파일을 업로드해 주세요."
+            : "Unsupported file format. Please upload CSV, TSV, or TXT.");
+          return;
+        }
+      }
+
+      if (!text.trim()) {
+        setExcelImportState({ status: "idle", total: 0, current: 0, message: "" });
+        return;
+      }
+
+      setExcelImportState({ status: "parsing", total: 0, current: 0, message: ko ? "AI가 데이터 분석 중..." : "AI parsing data..." });
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+      const response = await fetch("/api/ai/products/parse", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ text: text.slice(0, 50000), language: d.language }),
+      });
+      const payload = await response.json();
+      if (!response.ok || payload.error) {
+        const errMsg = payload.error ?? "Parse failed";
+        setExcelImportState({ status: "error", total: 0, current: 0, message: errMsg });
+        setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 5000);
+        return;
+      }
+
+      const parsed = payload.products as Array<{
+        name: string;
+        category: string;
+        price: number;
+        cost: number;
+        stock: number;
+        unit: string;
+      }>;
+      if (!parsed?.length) {
+        setExcelImportState({ status: "error", total: 0, current: 0, message: ko ? "데이터를 찾을 수 없습니다." : "No data found." });
+        setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 3000);
+        return;
+      }
+
+      const total = parsed.length;
+      setExcelImportState({ status: "saving", total, current: 0, message: ko ? `${total}개 품목 등록 중...` : `Adding ${total} items...` });
+
+      const newItems = parsed.map((product, idx) => ({
+        id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}-${idx}`,
+        name: product.name,
+        quantity: product.stock,
+        unit: product.unit || "개",
+        minThreshold: 0,
+        unitCost: product.cost,
+        category: "other" as const,
+        itemType: "product" as const,
+        sellingPrice: product.price ?? 0,
+        expiryDate: "",
+        supplierName: "",
+        supplierUrl: "",
+        leadTimeDays: 1,
+        dailyUsage: 0,
+        lastOrderedAt: "",
+        wasteLog: [],
+      }));
+
+      // 하나씩 등록하는 시각적 효과
+      const existingItems = d.inventory as typeof newItems;
+      for (let i = 0; i < newItems.length; i++) {
+        setExcelImportState({ status: "saving", total, current: i + 1, message: ko ? `${newItems[i].name} 등록 중... (${i + 1}/${total})` : `Adding ${newItems[i].name}... (${i + 1}/${total})` });
+        await new Promise(resolve => setTimeout(resolve, 120));
+      }
+      d.saveInventory([...existingItems, ...newItems]);
+      setExcelImportState({ status: "done", total, current: total, message: ko ? `${total}개 품목 등록 완료!` : `${total} items added!` });
+      setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 3000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[Excel import error]", msg);
+      setExcelImportState({ status: "error", total: 0, current: 0, message: ko ? `파일 처리 오류: ${msg}` : `File error: ${msg}` });
+      setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 5000);
+    }
+  };
+
+  return (
+    <section style={opsCard} className="bento-card">
+      <div style={opsHeader}>
+        <div>
+          <div style={sectionEyebrow}>
+            {ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory")}
+          </div>
+          <div style={opsTitle}>
+            {d.businessCtx.inventoryMode === "unified"
+              ? (ko ? "제품·재고 통합 관리" : "Product & inventory")
+              : d.businessCtx.categoryId === "startup-tech"
+                ? (ko ? "자산·도구 관리" : "Assets and tools")
+                : (ko ? "재고 관리" : "Inventory management")}
+          </div>
+        </div>
+        <div style={opsActionRow}>
+          <button
+            type="button"
+            onClick={() => d.setInvForm({ ...d.emptyInvForm, open: true })}
+            style={opsActionPrimary}
+          >
+            {ko ? (d.businessCtx.inventoryLabel?.ko === "내 제품" ? "제품 추가" : d.businessCtx.inventoryLabel?.ko === "소모품 관리" ? "소모품 추가" : d.businessCtx.inventoryLabel?.ko === "운영 자산" ? "자산 추가" : "재고 추가") : "Add item"}
+          </button>
+          <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
+            {ko ? "엑셀" : "Excel"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv,.tsv,.txt"
+            style={{ display: "none" }}
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              event.target.value = "";
+              await handleExcelImport(file);
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 엑셀 임포트 진행률 */}
+      {excelImportState.status !== "idle" && (
+        <div style={{
+          padding: "12px 16px", borderRadius: "12px", marginBottom: "8px",
+          background: excelImportState.status === "error" ? "rgba(220,38,38,0.04)" : excelImportState.status === "done" ? "rgba(5,150,105,0.04)" : "rgba(5,97,252,0.04)",
+          border: `1px solid ${excelImportState.status === "error" ? "rgba(220,38,38,0.1)" : excelImportState.status === "done" ? "rgba(5,150,105,0.1)" : "rgba(5,97,252,0.1)"}`,
+        }} className="bento-fade-in">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: excelImportState.total > 0 ? "8px" : "0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {excelImportState.status === "error" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+              ) : excelImportState.status === "done" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+              ) : (
+                <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(5,97,252,0.3)", borderTopColor: "#0561fc", animation: "spin 0.8s linear infinite" }} />
+              )}
+              <span style={{
+                fontSize: "13px", fontWeight: 600,
+                color: excelImportState.status === "error" ? "#dc2626" : excelImportState.status === "done" ? "#059669" : "#0561fc",
+              }}>
+                {excelImportState.message}
+              </span>
+            </div>
+            {excelImportState.total > 0 && excelImportState.status === "saving" && (
+              <span style={{ fontSize: "12px", fontWeight: 650, color: "#0561fc", fontVariantNumeric: "tabular-nums" as const }}>
+                {excelImportState.current}/{excelImportState.total}
+              </span>
+            )}
+          </div>
+          {excelImportState.total > 0 && (
+            <div style={{ height: "4px", borderRadius: "2px", background: "rgba(5,97,252,0.08)", overflow: "hidden" }}>
+              <div style={{
+                height: "100%", borderRadius: "2px",
+                width: `${(excelImportState.current / excelImportState.total) * 100}%`,
+                background: excelImportState.status === "done" ? "#059669" : "#0561fc",
+                transition: "width 0.15s ease",
+              }} />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={opsMetricGrid}>
+        <div style={opsMetricCard}>
+          <div style={opsMetricLabel}>{ko ? "발주 필요" : "Reorder"}</div>
+          <div style={{ ...opsMetricValue, color: lowStockItems.length > 0 ? "#b42318" : "#177245" }}>
+            {lowStockItems.length}{ko ? "개" : ""}
+          </div>
+        </div>
+        <div style={opsMetricCard}>
+          <div style={opsMetricLabel}>{ko ? "정상 품목" : "Normal"}</div>
+          <div style={opsMetricValue}>{Math.max(inventory.length - lowStockItems.length, 0)}{ko ? "개" : ""}</div>
+        </div>
+      </div>
+
+      <div style={listStack}>
+        {(lowStockItems.length > 0 ? lowStockItems : inventory).slice(0, 4).map((item) => {
+          const isLow = lowStockItems.some((c) => c.id === item.id);
+          const threshold = item.minThreshold ?? 0;
+          const urgency = threshold > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
+          const urgencyColor = urgency === "critical" ? "#b42318" : urgency === "warning" ? "#e85d04" : "#177245";
+          return (
+          <div key={item.id} style={{ ...listRow, borderLeft: `3px solid ${urgencyColor}` }}>
+            <div>
+              <div style={listTitle}>{item.name}</div>
+              <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#2563eb" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(37,99,235,0.08)" : "rgba(15,23,42,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
+                  {(item as { itemType?: string }).itemType === "product" ? (ko ? "상품" : "Product") : (ko ? "재료" : "Material")}
+                </span>
+                <div style={listMeta}>{item.category || (ko ? "일반" : "General")}</div>
+                {urgency !== "ok" && (
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: urgencyColor, background: `${urgencyColor}10`, borderRadius: "4px", padding: "1px 5px" }}>
+                    {urgency === "critical" ? (ko ? "즉시 발주" : "Order now") : (ko ? "발주 필요" : "Low")}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={listTitle}>
+                {item.quantity}{item.unit ? ` ${item.unit}` : ""}
+              </div>
+              {threshold > 0 && (
+                <div style={{ height: "3px", borderRadius: "2px", background: `${urgencyColor}18`, width: "48px", overflow: "hidden", marginTop: "4px", marginLeft: "auto" }}>
+                  <div style={{ height: "100%", borderRadius: "2px", background: urgencyColor, width: `${Math.min(100, (item.quantity / threshold) * 100)}%`, transition: "width 0.3s ease" }} />
+                </div>
+              )}
+            </div>
+            <div style={rowActions}>
+              <button type="button" onClick={() => d.openInvEdit(item as never)} style={tinyAction}>
+                {ko ? "수정" : "Edit"}
+              </button>
+              <button type="button" onClick={() => d.handleInvDelete(item.id)} style={tinyDangerAction}>
+                {ko ? "삭제" : "Delete"}
+              </button>
+            </div>
+          </div>
+          );
+        })}
+        {inventory.length === 0 ? (
+          <div style={emptyState}>
+            {d.businessCtx.categoryId === "startup-tech"
+              ? ko
+                ? "장비, 계정, 테스트 디바이스, 반복 결제 도구 같은 운영 자산을 등록해두면 팀이 한곳에서 관리할 수 있습니다."
+                : "Track equipment, accounts, test devices, and recurring tools here."
+              : ko
+                ? "운영 재고를 등록하면 부족 품목을 바로 확인할 수 있습니다."
+                : "Add inventory items to track low stock here."}
+          </div>
+        ) : null}
+        {inventory.length > 4 && (
+          <button type="button" onClick={() => { setInventorySnapshot([...inventory]); setShowAllInventory(true); }} style={{
+            width: "100%", padding: "10px", marginTop: "6px", borderRadius: "10px",
+            border: "none", background: "rgba(15,23,42,0.03)", cursor: "pointer",
+            fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.45)",
+          }}>
+            {ko ? `전체 ${inventory.length}개 보기` : `View all ${inventory.length} items`}
+          </button>
+        )}
+      </div>
+
+      {/* 전체 재고 팝업 — Portal로 body에 직접 렌더링하여 부모 리렌더링 격리 */}
+      {showAllInventory && typeof document !== "undefined" && createPortal(
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAllInventory(false); }}
+        >
+          <div style={{ width: "min(600px, 90vw)", maxHeight: "80vh", borderRadius: "24px", background: "#fff", boxShadow: "0 32px 80px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column" as const }}>
+            {/* header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid rgba(15,23,42,0.06)" }}>
+              <div>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
+                  {ko ? "전체 재고" : "All Inventory"}
+                </div>
+                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
+                  {inventorySnapshot.length}{ko ? "개 품목" : " items"}
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowAllInventory(false)} style={{
+                width: "32px", height: "32px", borderRadius: "999px", border: "none",
+                background: "rgba(15,23,42,0.06)", cursor: "pointer", fontSize: "16px", color: "rgba(15,23,42,0.4)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>✕</button>
+            </div>
+            {/* list */}
+            <div style={{ overflowY: "auto", padding: "12px 24px 24px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+              {inventorySnapshot.map((item) => {
+                const isLow = item.quantity <= (item.minThreshold ?? 0);
+                const urgency = (item.minThreshold ?? 0) > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
+                const urgencyColor = urgency === "critical" ? "#b42318" : urgency === "warning" ? "#e85d04" : "#177245";
+                return (
+                  <div key={item.id} style={{
+                    display: "flex", alignItems: "center", gap: "12px",
+                    padding: "10px 12px", borderRadius: "12px",
+                    background: urgency !== "ok" ? `${urgencyColor}06` : "rgba(15,23,42,0.02)",
+                    borderLeft: `3px solid ${urgencyColor}`,
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>{item.name}</div>
+                      <div style={{ display: "flex", gap: "4px", alignItems: "center", marginTop: "2px" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#2563eb" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(37,99,235,0.08)" : "rgba(15,23,42,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
+                          {(item as { itemType?: string }).itemType === "product" ? (ko ? "상품" : "Product") : (ko ? "재료" : "Material")}
+                        </span>
+                        <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.35)" }}>{item.category || (ko ? "일반" : "General")}</span>
+                        {urgency !== "ok" && (
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: urgencyColor, background: `${urgencyColor}10`, borderRadius: "4px", padding: "1px 5px" }}>
+                            {urgency === "critical" ? (ko ? "즉시 발주" : "Order now") : (ko ? "발주 필요" : "Low")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
+                      <div style={{ fontSize: "14px", fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>
+                        {item.quantity}{item.unit ? ` ${item.unit}` : ""}
+                      </div>
+                      {(item as { sellingPrice?: number }).sellingPrice ? (
+                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)" }}>{fmt((item as { sellingPrice?: number }).sellingPrice ?? 0)}</div>
+                      ) : null}
+                    </div>
+                    <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                      <button type="button" onClick={() => { d.openInvEdit(item as never); setShowAllInventory(false); }} style={tinyAction}>
+                        {ko ? "수정" : "Edit"}
+                      </button>
+                      <button type="button" onClick={() => { d.handleInvDelete(item.id); setInventorySnapshot(prev => prev.filter(i => i.id !== item.id)); }} style={tinyDangerAction}>
+                        {ko ? "삭제" : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {invForm.open ? (
+        <div style={inlineEditor}>
+          <div style={inlineEditorTitle}>
+            {isEditing ? (ko ? "재고 수정" : "Edit inventory") : (ko ? "재고 추가" : "Add inventory")}
+          </div>
+          {/* 유형 선택: 원재료 / 판매 상품 */}
+          <div style={{ display: "flex", gap: "4px", padding: "3px", borderRadius: "10px", background: "rgba(15,23,42,0.04)", marginBottom: "10px" }}>
+            {([
+              { value: "material" as const, label: ko ? "원재료" : "Material" },
+              { value: "product" as const, label: ko ? "판매 상품" : "Product" },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => d.setInvForm((prev) => ({ ...prev, itemType: opt.value }))}
+                style={{
+                  flex: 1, fontSize: "12px", fontWeight: 600, padding: "8px 0",
+                  borderRadius: "8px", border: "none", cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  background: invForm.itemType === opt.value ? "#fff" : "transparent",
+                  color: invForm.itemType === opt.value ? "#0f172a" : "rgba(15,23,42,0.45)",
+                  boxShadow: invForm.itemType === opt.value ? "0 1px 4px rgba(15,23,42,0.08)" : "none",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <div style={formGridTwo}>
+            <input
+              type="text"
+              value={invForm.name}
+              onChange={(event) => d.setInvForm((prev) => ({ ...prev, name: event.target.value }))}
+              placeholder={ko ? "품목명" : "Item name"}
+              style={inputStyle}
+            />
+            <select
+              value={invForm.category}
+              onChange={(event) =>
+                d.setInvForm((prev) => ({
+                  ...prev,
+                  category: event.target.value as typeof invForm.category,
+                }))
+              }
+              style={inputStyle}
+            >
+              {Object.entries(categoryLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* 판매 상품일 때 판매가 입력 */}
+          {invForm.itemType === "product" && (
+            <div style={{ marginBottom: "2px" }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={invForm.sellingPrice}
+                onChange={(event) => d.setInvForm((prev) => ({ ...prev, sellingPrice: event.target.value.replace(/[^0-9]/g, "") }))}
+                placeholder={ko ? "판매가 (원)" : "Selling price (₩)"}
+                style={inputStyle}
+              />
+            </div>
+          )}
+          {invForm.itemType === "product" ? (
+            /* ── 판매 상품 폼: 판매가 + 수량 + (선택)원가 ── */
+            <>
+              <div style={formGridThree}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.qty}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, qty: event.target.value.replace(/[^0-9.]/g, "") }))}
+                  placeholder={ko ? "재고 수량" : "Stock qty"}
+                  style={inputStyle}
+                />
+                <input
+                  type="text"
+                  value={invForm.unit}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, unit: event.target.value }))}
+                  placeholder={ko ? "단위 (개, 병)" : "Unit"}
+                  style={inputStyle}
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.unitCost}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, unitCost: event.target.value.replace(/[^0-9.]/g, "") }))}
+                  placeholder={ko ? "원가 (선택)" : "Cost (opt)"}
+                  style={inputStyle}
+                />
+              </div>
+              {invForm.sellingPrice && Number(invForm.sellingPrice) > 0 && invForm.unitCost && Number(invForm.unitCost) > 0 && (
+                <div style={{ fontSize: "12px", color: "#2563eb", fontWeight: 600, padding: "4px 0" }}>
+                  {ko ? "마진율" : "Margin"}: {Math.round(((Number(invForm.sellingPrice) - Number(invForm.unitCost)) / Number(invForm.sellingPrice)) * 100)}%
+                </div>
+              )}
+            </>
+          ) : (
+            /* ── 원재료 폼: 단가 + 수량 + 최소수량 + 일사용량 + 리드타임 + 공급처 ── */
+            <>
+              <div style={formGridThree}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.qty}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, qty: event.target.value.replace(/[^0-9.]/g, "") }))}
+                  placeholder={ko ? "수량" : "Qty"}
+                  style={inputStyle}
+                />
+                <input
+                  type="text"
+                  value={invForm.unit}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, unit: event.target.value }))}
+                  placeholder={ko ? "단위" : "Unit"}
+                  style={inputStyle}
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.threshold}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, threshold: event.target.value.replace(/[^0-9.]/g, "") }))}
+                  placeholder={ko ? "최소 수량" : "Min"}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={formGridThree}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.unitCost}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, unitCost: event.target.value.replace(/[^0-9.]/g, "") }))}
+                  placeholder={ko ? "단가 (매입가)" : "Unit cost"}
+                  style={inputStyle}
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.dailyUsage}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, dailyUsage: event.target.value.replace(/[^0-9.]/g, "") }))}
+                  placeholder={ko ? "일 사용량" : "Daily usage"}
+                  style={inputStyle}
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={invForm.leadTimeDays}
+                  onChange={(event) => d.setInvForm((prev) => ({ ...prev, leadTimeDays: event.target.value.replace(/[^0-9]/g, "") }))}
+                  placeholder={ko ? "리드타임" : "Lead days"}
+                  style={inputStyle}
+                />
+              </div>
+            </>
+          )}
+          {invForm.itemType === "material" && (
+          <div style={formGridTwo}>
+            <input
+              type="text"
+              value={invForm.supplierName}
+              onChange={(event) => d.setInvForm((prev) => ({ ...prev, supplierName: event.target.value }))}
+              placeholder={ko ? "공급업체명" : "Supplier"}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              value={invForm.url}
+              onChange={(event) => d.setInvForm((prev) => ({ ...prev, url: event.target.value }))}
+              placeholder={ko ? "주문 URL" : "Order URL"}
+              style={inputStyle}
+            />
+          </div>
+          )}
+          <div style={editorActions}>
+            <button type="button" onClick={d.handleInvSave} style={opsActionPrimary}>
+              {isEditing ? (ko ? "수정 저장" : "Save") : (ko ? "추가 저장" : "Add")}
+            </button>
+            <button
+              type="button"
+              onClick={() => d.setInvForm((prev) => ({ ...prev, ...d.emptyInvForm }))}
+              style={opsActionSecondary}
+            >
+              {ko ? "취소" : "Cancel"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
