@@ -74,10 +74,10 @@ body::after {
   pointer-events: none;
 }
 
-/* 레이어 1: 메인 오로라 — 진한 색, 넓은 범위 */
+/* 레이어 1: 메인 오로라 */
 body::before {
-  opacity: 0.5;
-  filter: blur(18px);
+  opacity: 0.38;
+  filter: blur(20px);
   background-image:
     repeating-linear-gradient(100deg, var(--bg-raw,#f7f6f3) 0%, var(--bg-raw,#f7f6f3) 7%, transparent 10%, transparent 12%, var(--bg-raw,#f7f6f3) 16%),
     repeating-linear-gradient(100deg, var(--aurora-1,#1d3557) 10%, var(--aurora-2,#457b9d) 15%, var(--aurora-3,#a8dadc) 20%, var(--aurora-4,#e0f0ff) 25%, var(--aurora-5,#1d3557) 30%);
@@ -88,13 +88,13 @@ body::before {
     radial-gradient(ellipse at 50% 100%, black 3%, transparent 40%);
   mask-composite: add;
   -webkit-mask-composite: source-over;
-  animation: auroraFlow1 40s ease-in-out infinite;
+  animation: auroraFlow1 80s ease-in-out infinite;
 }
 
-/* 레이어 2: 보조 오로라 — 다른 속도 & 방향, 유기적 흐름 */
+/* 레이어 2: 보조 오로라 */
 body::after {
-  opacity: 0.35;
-  filter: blur(24px);
+  opacity: 0.25;
+  filter: blur(28px);
   background-image:
     repeating-linear-gradient(135deg, transparent 0%, transparent 5%, var(--aurora-2,#457b9d) 8%, transparent 11%, transparent 15%, var(--aurora-3,#a8dadc) 18%, transparent 21%),
     repeating-linear-gradient(80deg, var(--aurora-1,#1d3557) 5%, var(--aurora-4,#e0f0ff) 12%, var(--aurora-2,#457b9d) 20%, var(--aurora-3,#a8dadc) 28%, var(--aurora-1,#1d3557) 35%);
@@ -104,7 +104,7 @@ body::after {
     radial-gradient(ellipse at 75% 70%, black 5%, transparent 45%);
   mask-composite: add;
   -webkit-mask-composite: source-over;
-  animation: auroraFlow2 55s ease-in-out infinite;
+  animation: auroraFlow2 110s ease-in-out infinite;
 }
 
 @keyframes auroraFlow1 {
