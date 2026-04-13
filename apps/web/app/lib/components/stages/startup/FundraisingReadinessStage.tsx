@@ -67,7 +67,10 @@ export function FundraisingReadinessStage() {
         },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setBpSections(data.sections);
