@@ -11,6 +11,11 @@ import { StartupFoundationStage } from "../stages/startup/StartupFoundationStage
 import { CustomerDiscoveryStage } from "../stages/startup/CustomerDiscoveryStage";
 import { MvpBuildStage } from "../stages/startup/MvpBuildStage";
 import { FundraisingReadinessStage } from "../stages/startup/FundraisingReadinessStage";
+import { OnlineRegistrationStage } from "../stages/online/OnlineRegistrationStage";
+import { PlatformSetupStage } from "../stages/online/PlatformSetupStage";
+import { OnlineMarketingStage } from "../stages/online/OnlineMarketingStage";
+import { StoreSetupStage } from "../stages/online/StoreSetupStage";
+import { SourcingSetupStage } from "../stages/online/SourcingSetupStage";
 import {
   buildMarketScoreNarrative,
   buildRecommendedMarkets,
@@ -2658,7 +2663,8 @@ export function CurrentStageView() {
                 <div style={styles.helper}>{localizedCurrentStage.goal}</div>
 
                 {/* ── 사업자·통신판매 등록 가이드 (online_registration) ── */}
-                {currentStage.code === "online_registration" && (() => {
+                {currentStage.code === "online_registration" && <OnlineRegistrationStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   // regPage — hoisted to component top (0=사업자, 1=통신판매)
 
@@ -2928,7 +2934,8 @@ export function CurrentStageView() {
                 })()}
 
                 {/* ── 판매 플랫폼 선택 (platform_setup — 온라인/디지털 업종) ── */}
-                {currentStage.code === "platform_setup" && (() => {
+                {currentStage.code === "platform_setup" && <PlatformSetupStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   type PlatItem = { id: string; name: string; desc: string; color: string; url: string; fee: string; mau: string; pros: string[]; cons: string[] };
                   const platforms: PlatItem[] = [
@@ -3040,7 +3047,8 @@ export function CurrentStageView() {
                 })()}
 
                 {/* ── 마케팅 및 론칭 가이드 (online_marketing) ── */}
-                {currentStage.code === "online_marketing" && (() => {
+                {currentStage.code === "online_marketing" && <OnlineMarketingStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
@@ -7329,7 +7337,8 @@ export function CurrentStageView() {
 
 
                 {/* ── 스토어 및 배송 세팅 가이드 (store_setup) ── */}
-                {currentStage.code === "store_setup" && (() => {
+                {currentStage.code === "store_setup" && <StoreSetupStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   // 이전 단계에서 선택한 플랫폼 확인
                   const selectedPlatforms = Object.keys(opsSelections).filter(k => k.startsWith("platform-") && opsSelections[k]).map(k => k.replace("platform-", ""));
@@ -7511,7 +7520,8 @@ export function CurrentStageView() {
                 })()}
 
                 {/* ── 상품 소싱 가이드 (sourcing_setup) ── */}
-                {currentStage.code === "sourcing_setup" && (() => {
+                {currentStage.code === "sourcing_setup" && <SourcingSetupStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   const sourcingMethods = [
                     { name: ko ? "국내 도매" : "Domestic Wholesale", capital: ko ? "50~300만원" : "₩500K~3M", color: "#2563eb", pros: ko ? "빠른 배송, 소량 가능" : "Fast shipping, small MOQ", cons: ko ? "마진 낮음, 경쟁 심함" : "Low margin, high competition", platforms: "도매꾹, 온채널, 도매매" },
