@@ -16,6 +16,14 @@ import { PlatformSetupStage } from "../stages/online/PlatformSetupStage";
 import { OnlineMarketingStage } from "../stages/online/OnlineMarketingStage";
 import { StoreSetupStage } from "../stages/online/StoreSetupStage";
 import { SourcingSetupStage } from "../stages/online/SourcingSetupStage";
+import { RegistrationSetupStage } from "../stages/offline/RegistrationSetupStage";
+import { InsuranceTaxSetupStage } from "../stages/offline/InsuranceTaxSetupStage";
+import { HiringSetupStage } from "../stages/offline/HiringSetupStage";
+import { OperationsSetupStage } from "../stages/offline/OperationsSetupStage";
+import { PreLaunchStage } from "../stages/offline/PreLaunchStage";
+import { ConstructionSetupStage } from "../stages/offline/ConstructionSetupStage";
+import { PreLaunchFinalStage } from "../stages/shared-tail/PreLaunchFinalStage";
+import { FirstMonthCheckStage } from "../stages/shared-tail/FirstMonthCheckStage";
 import {
   buildMarketScoreNarrative,
   buildRecommendedMarkets,
@@ -5574,7 +5582,8 @@ export function CurrentStageView() {
                 })()}
 
                 {/* ── 사업자등록 + 영업허가 절차 가이드 (registration_setup) ── */}
-                {currentStage.code === "registration_setup" && (() => {
+                {currentStage.code === "registration_setup" && <RegistrationSetupStage />}
+                {false as boolean && currentStage.code === "registration_setup" && (() => {
                   const ko = language === "ko";
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
@@ -5705,7 +5714,8 @@ export function CurrentStageView() {
                 })()}
 
                 {/* ── 보험·세무 세팅 종합 가이드 (insurance_tax_setup) — 페이지네이션 ── */}
-                {currentStage.code === "insurance_tax_setup" && (() => {
+                {currentStage.code === "insurance_tax_setup" && <InsuranceTaxSetupStage />}
+                {false as boolean && currentStage.code === "insurance_tax_setup" && (() => {
                   const ko = language === "ko";
                   const totalPages = 3;
                   const page = insuranceTaxPage;
@@ -7645,7 +7655,8 @@ export function CurrentStageView() {
                   </div>
                 )}
 
-                {currentStage.code === "hiring_setup" && (() => {
+                {currentStage.code === "hiring_setup" && <HiringSetupStage />}
+                {false as boolean && currentStage.code === "hiring_setup" && (() => {
                   const ko = language === "ko";
                   const totalSlides = 4;
                   const isOverview = guideStepIndex === 0;
@@ -7924,7 +7935,8 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {currentStage.code === "operations_setup" && (() => {
+                {currentStage.code === "operations_setup" && <OperationsSetupStage />}
+                {false as boolean && currentStage.code === "operations_setup" && (() => {
                   type OpsDetail = { id: string; name: string; tagline: string; color: string; url: string; pros: string[]; cons: string[]; icon?: React.ReactNode };
 
                   const deliveryPlatforms: OpsDetail[] = [
@@ -8266,7 +8278,8 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {currentStage.code === "pre_launch" && (() => {
+                {currentStage.code === "pre_launch" && <PreLaunchStage />}
+                {false as boolean && currentStage.code === "pre_launch" && (() => {
                   const catLabel: Record<string, string> = {
                     food: "식당", "cafe-dessert": "카페", beauty: "뷰티샵",
                     retail: "리테일 매장", fitness: "피트니스", "online-digital": "온라인몰",
@@ -8686,7 +8699,8 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {currentStage.code === "construction_setup" && (() => {
+                {currentStage.code === "construction_setup" && <ConstructionSetupStage />}
+                {false as boolean && currentStage.code === "construction_setup" && (() => {
                   // Supabase 인테리어 가이드 로딩 (세부 업종별)
                   // 업종 변경 시 리로드를 위해 categoryId를 키로 사용
                   const loadDbGuides = async () => {
@@ -9618,7 +9632,8 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {currentStage.code === "pre_launch_final" && (() => {
+                {currentStage.code === "pre_launch_final" && <PreLaunchFinalStage />}
+                {false as boolean && currentStage.code === "pre_launch_final" && (() => {
                   const isStartupBiz = industryCategoryId === "startup-tech" || d.industryCategoryId === "startup-tech";
                   const isOnlineBiz = industryCategoryId === "online-digital" || d.industryCategoryId === "online-digital";
                   const s = { display: "flex", flexDirection: "column" as const, gap: "6px" };
@@ -9777,7 +9792,8 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {currentStage.code === "first_month_check" && (() => {
+                {currentStage.code === "first_month_check" && <FirstMonthCheckStage />}
+                {false as boolean && currentStage.code === "first_month_check" && (() => {
                   const isStartupBiz = industryCategoryId === "startup-tech" || d.industryCategoryId === "startup-tech";
                   const s = { display: "flex", flexDirection: "column" as const, gap: "6px" };
                   const card = { background: "rgba(0,0,0,0.03)", borderRadius: "14px", padding: "14px 16px" };
