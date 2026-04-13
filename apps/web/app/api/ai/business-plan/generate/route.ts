@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
 
   const apiKey = getAnthropicApiKey();
   if (!apiKey) {
+    const rawKey = process.env.ANTHROPIC_API_KEY;
+    console.error("[business-plan] API key missing! raw exists:", !!rawKey, "raw length:", rawKey?.length, "raw prefix:", rawKey?.substring(0, 10));
     return NextResponse.json({ error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." }, { status: 503 });
   }
 
