@@ -537,7 +537,7 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   startup_foundation: { ko: { title: "창업팀·법인 기본 구조", goal: "공동창업자 역할, 지분·베스팅, 법인 설립 방향, 핵심 문제 정의를 먼저 정리합니다.", whyNow: "공동창업자 정렬과 지분 구조가 흐리면 제품보다 먼저 팀이 흔들립니다." } },
   customer_discovery: { ko: { title: "고객 발굴·문제 검증", goal: "고객 인터뷰를 통해 반복적으로 나타나는 고통과 초기 타겟 세그먼트를 좁힙니다.", whyNow: "누구의 어떤 문제를 푸는지 선명하지 않으면 이후 제품 개발이 전부 낭비될 수 있습니다." } },
   growth_engine: { ko: { title: "성장·리텐션 루프", goal: "북극성 지표와 주간 성장 리뷰를 정하고, 유지율을 함께 추적하는 체계를 만듭니다.", whyNow: "유지되지 않는 성장은 반복 투자 대비 효과가 낮고 쉽게 무너집니다." } },
-  company_setup: { ko: { title: "법인 운영·세무·보안 기본기", goal: "법인 설립, 사업자 통장 개설, 기장 체계 구축, 세무사 선임, 프라이버시·보안 기본기를 완료합니다.", whyNow: "정부 지원사업 신청, 투자 유치, 채용 모두 법인이 전제 조건입니다. 미루면 모든 후속 단계가 막힙니다." } },
+  company_setup: { ko: { title: "사업자등록 · 지식재산 보호 · 세무 기초", goal: "개인사업자/법인 중 선택, 사업자등록 완료, 특허·상표 출원(공개 전 필수), 과세 유형 결정, 개인정보보호 기본 구축을 완료합니다.", whyNow: "사업자등록은 계약·세금계산서·정부지원의 전제 조건이고, 특허는 공개 전에 출원해야 영구적 권리를 확보할 수 있습니다." } },
   mvp_build: { ko: { title: "MVP 구축 · IP 보호", goal: "핵심 워크플로 하나를 해결하는 MVP를 출시하고, 공개 전에 상표·특허 출원을 완료합니다.", whyNow: "늦은 출시는 런웨이를 태우고, IP 보호 없는 공개는 특허권을 영구히 잃을 수 있습니다." } },
   launch_gtm: { ko: { title: "출시 스택 · GTM 전략", goal: "결제·분석·에러 추적을 설치하고, 시장 진입 채널을 정해 첫 고객 확보 실험을 시작합니다.", whyNow: "계측 없이는 신호와 소음을 구분할 수 없고, GTM 전략 없이는 좋은 제품도 침묵 속에 출시됩니다." } },
   fundraising_readiness: { ko: { title: "런웨이·투자 준비", goal: "번레이트와 런웨이를 모델링하고, 자금 조달 방식을 결정한 뒤, 피치덱·지표·재무 전망을 준비합니다.", whyNow: "2026년 투자자는 성장보다 자본 효율성을 봅니다. 런웨이 계획 없이 유치에 나서면 3~6개월의 시간과 협상력을 잃습니다." } },
@@ -675,10 +675,13 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "north-star-set": { ko: "북극성 지표 하나 선택 — 회사 전체가 추적할 핵심 숫자" },
   "weekly-review-running": { ko: "매주 월요일 30분 성장 리뷰 — 지표 확인 + 실험 1개" },
   "retention-check-defined": { ko: "리텐션 체크 — D1/D7/D30 기준 확인 후 개선 집중" },
-  // company-setup
-  "incorporation-done": { ko: "법인 설립 완료 (정관·등기·사업자등록·통장)" },
-  "cost-plan-confirmed": { ko: "설립 비용 확인 및 직접/대행 선택" },
-  "stock-option-plan": { ko: "스톡옵션·캡테이블 기초 검토" },
+  // company-setup (사업자등록 · 지식재산 보호 · 세무 기초)
+  "business-structure-decided": { ko: "사업 형태 선택 — 개인사업자(대부분 초기) vs 법인(투자 유치 시)" },
+  "startup-biz-registered": { ko: "사업자등록 완료 — 홈택스 온라인 신청 (3영업일 소요)" },
+  "ip-protection-planned": { ko: "특허 출원 — 공개(데모·베타·보도자료) 전에 특허로에서 출원 필수" },
+  "trademark-filed": { ko: "상표 출원 — 브랜드명·로고를 특허로(patent.go.kr)에서 출원" },
+  "tax-setup-basics": { ko: "과세 유형 결정 — 간이과세(매출 1억 400만원 미만) vs 일반과세" },
+  "security-basics": { ko: "개인정보보호 정책 · 이용약관 · 고객 데이터 보안 계획 수립" },
   // fundraising-readiness
   "runway-model-ready": { ko: "번레이트 계산 및 현금 런웨이 시나리오 모델링" },
   "fundraising-decision-made": { ko: "자금 조달 방식 결정 (투자 유치 / 부트스트랩 / 정부 지원)" },

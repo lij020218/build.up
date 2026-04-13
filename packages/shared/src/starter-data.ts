@@ -1265,18 +1265,18 @@ export const starterStageFlow: RoadmapStageState[] = [
   {
     stageId: "company-setup",
     code: "company_setup",
-    title: "Incorporation, costs, and equity basics",
+    title: "Business registration, IP protection, and legal foundation",
     type: "execution",
     status: "locked",
     stepNumber: 6,
     totalSteps: 18,
-    goal: "Complete the 6-step incorporation process, confirm costs, and understand stock option basics for future team building.",
-    whyNow: "Government grants, investor due diligence, and even hiring all require an active corporation. Delaying this blocks every downstream step.",
+    goal: "Choose between sole proprietor and corporation, complete business registration, protect your IP before public disclosure, and set up basic tax and security foundations.",
+    whyNow: "Business registration is a legal prerequisite for contracts, invoicing, and government programs. IP protection before public disclosure is permanent — file before any demo, beta, or press.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["incorporation-done", "cost-plan-confirmed"]
+      requiredTaskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned"]
     },
-    taskIds: ["incorporation-done", "cost-plan-confirmed", "stock-option-plan"],
+    taskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "tax-setup-basics", "security-basics"],
     riskIds: [],
     nextStageIds: ["customer-discovery"]
   },
@@ -1829,9 +1829,12 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "retention-check-defined", title: "Define a retention check so growth is not judged on acquisition alone", status: "todo", required: true, estimatedMinutes: 45 }
   ],
   "company-setup": [
-    { taskId: "incorporation-done", title: "Complete incorporation (articles, registration, business account)", status: "todo", required: true, estimatedMinutes: 120, waitDays: 7, followupQuestion: "법인등기부등본 발급 받으셨나요?" },
-    { taskId: "cost-plan-confirmed", title: "Confirm incorporation costs and choose DIY or agency", status: "todo", required: true, estimatedMinutes: 30 },
-    { taskId: "stock-option-plan", title: "Review stock option and cap table basics for future hires", status: "todo", required: false, estimatedMinutes: 30 },
+    { taskId: "business-structure-decided", title: "Choose legal structure: sole proprietor (개인사업자) or corporation (법인) — most startups begin as sole proprietor", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "startup-biz-registered", title: "Complete business registration via HomeTax (홈택스) or tax office — takes 3 business days", status: "todo", required: true, estimatedMinutes: 60, waitDays: 3, followupQuestion: "사업자등록증을 발급받으셨나요?" },
+    { taskId: "ip-protection-planned", title: "File patent application at KIPRIS/특허로 BEFORE any public disclosure (demo, beta, press)", status: "todo", required: true, estimatedMinutes: 90 },
+    { taskId: "trademark-filed", title: "File trademark application for your brand name and logo at 특허로 (patent.go.kr)", status: "todo", required: false, estimatedMinutes: 60 },
+    { taskId: "tax-setup-basics", title: "Choose tax type (간이과세 vs 일반과세) and set up basic bookkeeping", status: "todo", required: false, estimatedMinutes: 45 },
+    { taskId: "security-basics", title: "Set up privacy policy, customer data protection plan, and terms of service", status: "todo", required: false, estimatedMinutes: 45 },
   ],
   "fundraising-readiness": [
     { taskId: "runway-model-ready", title: "Model burn rate and cash runway with best/base/worst scenarios", status: "todo", required: true, estimatedMinutes: 60 },
