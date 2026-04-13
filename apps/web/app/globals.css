@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/* ── Aurora Background animation ── */
+@theme {
+  --animate-aurora: aurora 60s linear infinite;
+}
+
+@keyframes aurora {
+  from { background-position: 50% 50%, 50% 50%; }
+  to { background-position: 350% 50%, 350% 50%; }
+}
+
 :root {
   color-scheme: light;
   --bg: #f7f6f3;
+  --bg-raw: #f7f6f3;
+  --transparent: transparent;
+
+  /* Aurora build.up brand palette */
+  --aurora-1: #1d3557;
+  --aurora-2: #457b9d;
+  --aurora-3: #a8dadc;
+  --aurora-4: #e0f0ff;
+  --aurora-5: #1d3557;
   --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: #ffffff;
   --text: #111111;
