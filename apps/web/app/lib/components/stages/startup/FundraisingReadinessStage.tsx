@@ -10,7 +10,7 @@ export function FundraisingReadinessStage() {
   const {
     decisions, industryCategoryId, selectedIndustryId, startupType,
     selectedBusinessModelId, selectedBudget, savedFinanceSnapshot,
-    guideSelections,
+    guideSelections, setGuideSelections,
     bpLoading, setBpLoading, bpSections, setBpSections, bpSummary, setBpSummary,
     bpError, setBpError, bpExpandedIdx, setBpExpandedIdx,
   } = d;
@@ -243,6 +243,105 @@ export function FundraisingReadinessStage() {
             ))}
           </div>
         </div>
+
+        {/* ── 투자자에게 접근하는 실전 가이드 ── */}
+        <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+          <div style={{ padding: "20px 22px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(124,58,237,0.08)", fontSize: "11px", fontWeight: 700, color: "#7c3aed" }}>{ko ? "실전" : "HOW-TO"}</div>
+              <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "투자자를 만나는 현실적인 방법" : "How to Actually Meet Investors"}</span>
+            </div>
+            <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6, marginTop: "6px" }}>
+              {ko ? "콜드 이메일은 답변율 2% 미만입니다. 아래 방법이 훨씬 효과적입니다." : "Cold emails have <2% response rate. These methods work much better."}
+            </div>
+          </div>
+          <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
+            {(ko ? [
+              { step: "1", title: "TIPS 운영사를 먼저 공략하세요", detail: "TIPS 149개 운영사가 직접 투자합니다. jointips.or.kr에서 우리 분야 운영사를 찾고, 포트폴리오를 확인하세요. 운영사가 선투자 → 정부가 최대 5억 매칭. 이게 가장 현실적인 첫 투자입니다.", color: "#7c3aed" },
+              { step: "2", title: "액셀러레이터 데모데이에 지원하세요", detail: "SparkLabs, 프라이머, 블루포인트, 매쉬업엔젤스 등. 3~6개월 프로그램 후 데모데이에서 VC 앞에 피칭합니다. 투자 확률이 콜드 접근 대비 10배 높습니다. 선발율 3~5%이니 여러 곳 동시 지원하세요.", color: "#2563eb" },
+              { step: "3", title: "스타트업 행사에서 직접 만나세요", detail: "넥스트라이즈, 비론치, 스타트업위크엔드, 코리아핀테크위크 등. 투자자는 행사에서 발굴합니다. 30초 엘리베이터 피치를 준비하고, 명함 대신 1페이지 요약을 건네세요.", color: "#059669" },
+              { step: "4", title: "따뜻한 소개를 만드세요", detail: "LinkedIn에서 타겟 VC의 기존 투자 대표를 찾고, 공통 지인을 통해 소개받으세요. \"OOO 대표님 소개로 연락드립니다\"가 콜드 이메일보다 10배 효과적입니다. 이전 단계의 멘토/액셀러레이터가 소개해줄 수 있습니다.", color: "#d97706" },
+              { step: "5", title: "피칭 전 이것만 준비하세요", detail: "① 10장 피치덱 (문제→솔루션→시장→견인력→팀→자금) ② 재무 모델 (3년 추정, 번레이트, 런웨이) ③ 제품 데모 (실제 동작하는 MVP) ④ 고객 증거 (유저 수, 매출, 후기). 이 4개가 없으면 미팅이 잡혀도 의미가 없습니다.", color: "#dc2626" },
+            ] : [
+              { step: "1", title: "Target TIPS operators first", detail: "149 TIPS operators invest directly. Find ones in your field at jointips.or.kr. They invest first → gov matches up to ₩500M. Most realistic first investment.", color: "#7c3aed" },
+              { step: "2", title: "Apply to accelerator demo days", detail: "SparkLabs, Primer, Bluepoint, MashupAngels. 3-6 month programs ending in demo day with VCs. 10x higher investment chance vs cold outreach. Apply to multiple (3-5% acceptance rate).", color: "#2563eb" },
+              { step: "3", title: "Meet investors at events", detail: "NextRise, beLAUNCH, Startup Weekend, Korea Fintech Week. Prepare a 30-second elevator pitch. Bring a 1-pager instead of business cards.", color: "#059669" },
+              { step: "4", title: "Get warm introductions", detail: "Find target VC's portfolio founders on LinkedIn. Ask mutual connections for intros. \"Introduced by [name]\" is 10x more effective than cold email.", color: "#d97706" },
+              { step: "5", title: "Prepare these before any meeting", detail: "① 10-slide deck ② Financial model (3yr, burn, runway) ③ Product demo (working MVP) ④ Customer evidence (users, revenue, testimonials). Without these 4, even booked meetings are wasted.", color: "#dc2626" },
+            ]).map(s => (
+              <div key={s.step} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "12px 14px", borderRadius: "14px", background: `${s.color}03`, border: `1px solid ${s.color}08` }}>
+                <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: s.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a", marginBottom: "3px" }}>{s.title}</div>
+                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>{s.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "0 22px 16px", display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
+            <a href="https://www.jointips.or.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.1)", fontSize: "12px", fontWeight: 600, color: "#7c3aed", textDecoration: "none" }}>TIPS 운영사 목록 ↗</a>
+            <a href="https://www.k-startup.go.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.1)", fontSize: "12px", fontWeight: 600, color: "#2563eb", textDecoration: "none" }}>K-Startup ↗</a>
+            <a href="https://www.thevc.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.5)", textDecoration: "none" }}>THE VC (투자 DB) ↗</a>
+          </div>
+        </div>
+
+        {/* ── 자금 조달 경로 선택 (저장됨) ── */}
+        {(() => {
+          const fundingPath = (guideSelections["funding-path"] as string | undefined) ?? null;
+          const selectPath = (path: string) => {
+            setGuideSelections((prev: Record<string, string>) => ({ ...prev, "funding-path": path }));
+          };
+          return (
+        <div style={{ borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", marginBottom: "4px" }}>
+            {ko ? "나의 자금 조달 경로를 선택하세요" : "Choose your funding path"}
+          </div>
+          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "12px" }}>
+            {ko ? "선택하면 자동 저장됩니다. 나중에 변경할 수 있어요." : "Auto-saved. You can change later."}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+            {(ko ? [
+              { id: "bootstrap", label: "부트스트랩", desc: "고객 매출로 성장", color: "#059669" },
+              { id: "govt-grant", label: "정부 지원금", desc: "TIPS/창업패키지", color: "#2563eb" },
+              { id: "vc-investment", label: "VC 투자 유치", desc: "시리즈 A 목표", color: "#7c3aed" },
+            ] : [
+              { id: "bootstrap", label: "Bootstrap", desc: "Grow with revenue", color: "#059669" },
+              { id: "govt-grant", label: "Gov Grant", desc: "TIPS/Packages", color: "#2563eb" },
+              { id: "vc-investment", label: "VC Funding", desc: "Target Series A", color: "#7c3aed" },
+            ]).map(opt => {
+              const selected = fundingPath === opt.id;
+              return (
+              <button key={opt.id} type="button" onClick={() => selectPath(opt.id)} style={{
+                padding: "14px 12px", borderRadius: "14px", cursor: "pointer",
+                border: selected ? `2px solid ${opt.color}` : "1px solid rgba(0,0,0,0.08)",
+                background: selected ? `${opt.color}08` : "rgba(0,0,0,0.01)",
+                textAlign: "center" as const, transition: "all 0.2s ease",
+              }}>
+                <div style={{
+                  width: "18px", height: "18px", borderRadius: "50%", margin: "0 auto 8px",
+                  border: selected ? `5px solid ${opt.color}` : "2px solid rgba(0,0,0,0.15)",
+                  transition: "all 0.2s ease",
+                }} />
+                <div style={{ fontSize: "13px", fontWeight: 680, color: selected ? opt.color : "#0f172a" }}>{opt.label}</div>
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{opt.desc}</div>
+              </button>
+              );
+            })}
+          </div>
+          {fundingPath && (
+            <div style={{ marginTop: "10px", padding: "8px 12px", borderRadius: "10px", background: "rgba(217,119,6,0.04)", border: "1px solid rgba(217,119,6,0.1)" }}>
+              <div style={{ fontSize: "12px", fontWeight: 640, color: "#d97706" }}>
+                ✓ {fundingPath === "bootstrap"
+                  ? (ko ? "부트스트랩 선택됨 — 첫 유료 고객 확보에 집중하세요" : "Bootstrap selected — focus on first paying customers")
+                  : fundingPath === "govt-grant"
+                    ? (ko ? "정부 지원금 선택됨 — 아래 사업계획서로 TIPS/창업패키지에 신청하세요" : "Gov grant selected — apply to TIPS/packages with the plan below")
+                    : (ko ? "VC 투자 선택됨 — 피치덱과 재무 모델 준비가 핵심입니다" : "VC funding selected — pitch deck and financial model are key")}
+              </div>
+            </div>
+          )}
+        </div>
+          );
+        })()}
       </div>
 
       {/* ── Block 2: 사업계획서 생성 ── */}
