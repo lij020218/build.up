@@ -39,3 +39,11 @@ export type SavedGuideQaSnapshot = {
 };
 
 export type DashboardSurface = "home" | "current" | "roadmap" | "guides" | "franchise" | "profile" | "analytics";
+
+/** 서브훅에 전달되는 공통 의존성 */
+export type DashboardDeps = {
+  language: "ko" | "en";
+  copy: ReturnType<typeof import("@build-up/shared").getUiCopy>;
+  router: ReturnType<typeof import("next/navigation").useRouter>;
+  searchParams: ReturnType<typeof import("next/navigation").useSearchParams>;
+};
