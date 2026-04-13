@@ -6,6 +6,7 @@ import { styles } from "../../styles";
 import { VentureCertificationStage } from "../stages/startup/VentureCertificationStage";
 import { CompanySetupStage } from "../stages/startup/CompanySetupStage";
 import { GrowthEngineStage } from "../stages/startup/GrowthEngineStage";
+import { LaunchGtmStage } from "../stages/startup/LaunchGtmStage";
 import {
   buildMarketScoreNarrative,
   buildRecommendedMarkets,
@@ -4998,8 +4999,9 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {/* ── 출시 스택·GTM 가이드 (launch_gtm) — 페이지네이션 ── */}
-                {currentStage.code === "launch_gtm" && (() => {
+                {/* ── 출시 스택·GTM (분리됨) ── */}
+                {currentStage.code === "launch_gtm" && <LaunchGtmStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   const pg = guideStepIndex;
                   const totalPg = 5;
