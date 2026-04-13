@@ -2,7 +2,7 @@
 import React, { ReactNode } from "react";
 
 interface AuroraBackgroundProps {
-  children: ReactNode;
+  children?: ReactNode;
   showRadialGradient?: boolean;
   className?: string;
   style?: React.CSSProperties;

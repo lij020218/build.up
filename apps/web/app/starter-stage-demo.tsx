@@ -92,6 +92,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import { fetchLiveSupportPrograms } from "./lib/services/live-data";
 import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/DashboardContext";
+import { AuroraBackground } from "../components/ui/aurora-background";
 import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { FranchiseView } from "./lib/components/surfaces/FranchiseView";
@@ -815,7 +816,8 @@ export default function StarterStageDemo({
 
   return (
     <DashboardProvider value={_ctxValue}>
-    <main style={showOperationalHero ? styles.shell : operationalShell}>
+    <AuroraBackground style={{ minHeight: "100vh", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }} showRadialGradient />
+    <main style={{ ...(showOperationalHero ? styles.shell : operationalShell), position: "relative", zIndex: 1 }}>
       {showOperationalHero ? (
       <section style={styles.hero}>
         <div style={styles.eyebrow}>build.up</div>

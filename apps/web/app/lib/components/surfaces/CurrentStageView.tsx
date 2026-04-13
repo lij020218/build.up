@@ -435,8 +435,7 @@ export function CurrentStageView() {
         })() : (
       <section style={styles.section}>
         <div style={styles.sectionTitle}>{copy.home.today}</div>
-        <AuroraBackground style={{ borderRadius: "24px", minHeight: "auto" }} showRadialGradient>
-        <article style={{ ...styles.currentStage, background: "transparent" }}>
+        <article style={styles.currentStage}>
           {/* 프로그레시브 바 + 단계 정보 */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "2px" }}>
             <div style={{ flex: 1, display: "flex", gap: "3px" }}>
@@ -1162,7 +1161,6 @@ export function CurrentStageView() {
             </>
           )}
         </article>
-        </AuroraBackground>
       </section>
         )}
     </>

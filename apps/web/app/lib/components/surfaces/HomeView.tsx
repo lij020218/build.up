@@ -33,8 +33,7 @@ export function HomeView() {
 
       {/* ── Pre-launch home content ── */}
       <div style={styles.homeShowcase}>
-        <AuroraBackground className="rounded-[24px]" style={{ minHeight: "auto" }}>
-        <article style={{ ...styles.homeMainPanel, background: "transparent", position: "relative", zIndex: 1 }}>
+        <article style={styles.homeMainPanel}>
           <div style={styles.homePanelEyebrow}>
             <span>{language === "ko" ? "Roadmap-first startup OS" : "Roadmap-first startup OS"}</span>
           </div>
@@ -120,7 +119,6 @@ export function HomeView() {
           </button>
 
         </article>
-        </AuroraBackground>
 
         <div style={styles.homeSideStack}>
           <article style={styles.homeInfoPanel}>
