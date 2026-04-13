@@ -205,48 +205,43 @@ export function VentureCertificationStage() {
       </div>
       )}
 
-      {/* PAGE 3 — 정부 지원사업 */}
+      {/* PAGE 3 — 정부 지원사업 → 15단계로 이동 */}
       {pg === 3 && (
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "R&D 지원 (TIPS)" : "R&D Support (TIPS)"}</div>
-        <div style={{ display: "grid", gap: "6px" }}>
-          {(ko ? [
-            { name: "TIPS 일반트랙", amount: "최대 8억원", detail: "R&D 24개월. 149개 운영사가 1~2억 선투자 → 정부 매칭. 2026 접수: 1/26~12/31 상시", color: "#059669", url: "https://www.jointips.or.kr" },
-            { name: "TIPS 딥테크트랙", amount: "최대 15억원", detail: "딥테크 36개월. 12대 신산업분야. 운영사 3억+ 선투자. 2026 접수: 1/26~12/31 상시", color: "#2563eb", url: "https://www.jointips.or.kr" },
-            { name: "TIPS 비R&D 연계", amount: "최대 3억원", detail: "사업화 1.5억 + 해외마케팅 1.5억. TIPS 선정 기업 대상. 총 650억원 규모", color: "#7c3aed", url: "https://www.jointips.or.kr" },
-          ] : [
-            { name: "TIPS General", amount: "Up to ₩800M", detail: "R&D 24mo. 149 operators invest ₩100-200M first → gov match. 2026: Jan 26–Dec 31 rolling", color: "#059669", url: "https://www.jointips.or.kr" },
-            { name: "TIPS Deep Tech", amount: "Up to ₩1.5B", detail: "Deep tech 36mo. 12 industries. Operator invests ₩300M+. 2026: Jan 26–Dec 31 rolling", color: "#2563eb", url: "https://www.jointips.or.kr" },
-            { name: "TIPS Non-R&D", amount: "Up to ₩300M", detail: "Commercialization ₩150M + global marketing ₩150M. For TIPS alumni. ₩65B total", color: "#7c3aed", url: "https://www.jointips.or.kr" },
-          ]).map(p => progCard(p))}
+        <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", marginBottom: "4px" }}>
+          {ko ? "벤처인증이 열어주는 지원사업" : "Programs Unlocked by Venture Cert"}
+        </div>
+        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>
+          {ko
+            ? "벤처인증을 받으면 아래 정부 지원사업에서 가산점을 받거나 신청 자격이 생깁니다. TIPS, 예비창업패키지, AI 바우처, 경진대회 등 상세 목록과 신청 방법은 15단계 「자금 조달 & 정책자금」에서 확인하세요."
+            : "Venture certification gives you bonus points or eligibility for government programs below. Detailed lists and application guides are in Stage 15 \"Funding & Policy\"."}
         </div>
 
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "#d97706", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginTop: "4px" }}>{ko ? "사업화 지원 패키지" : "Commercialization Packages"}</div>
-        <div style={{ display: "grid", gap: "6px" }}>
+        <div style={{ display: "grid", gap: "8px" }}>
           {(ko ? [
-            { name: "예비창업패키지 2차", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자. 사업화 자금+멘토링. 접수: ~11/30까지 수시", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-            { name: "AI 바우처", amount: "최대 3억원", detail: "AI 솔루션 도입 비용 70~90% 정부 지원. 2026 수시 모집 (nipa.kr 확인)", color: "#d97706", url: "https://www.nipa.kr" },
-            { name: "데이터바우처", amount: "최대 5천만원", detail: "데이터 구매·가공 비용 지원. 수요기업 수시 모집 (kdata.or.kr)", color: "#7c3aed", url: "https://www.kdata.or.kr" },
-            { name: "창업중심대학", amount: "최대 1억원", detail: "대학 소속 (예비)창업자. 사업화 자금+공간+멘토링. 대학별 수시 모집", color: "#059669", url: "https://www.k-startup.go.kr" },
+            { title: "TIPS (최대 8억원)", desc: "벤처인증 기업은 운영사 선발 시 우대. R&D + 사업화 자금 정부 매칭", color: "#059669" },
+            { title: "예비창업패키지 (최대 1억원)", desc: "사업자등록 전 예비 창업자 대상. 벤처인증 후 지원 시 가산점", color: "#2563eb" },
+            { title: "AI 바우처 · 데이터바우처", desc: "기술 도입 비용 70~90% 지원. 벤처기업 우대", color: "#7c3aed" },
+            { title: "정책자금 우대 금리", desc: "소진공·중진공 정책자금 신청 시 벤처기업 0.2~0.5%p 금리 인하", color: "#d97706" },
           ] : [
-            { name: "Pre-Startup 2nd Round", amount: "Up to ₩100M", detail: "Pre-entrepreneurs. Rolling until Nov 30", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-            { name: "AI Voucher", amount: "Up to ₩300M", detail: "70-90% AI cost covered. 2026 rolling (nipa.kr)", color: "#d97706", url: "https://www.nipa.kr" },
-            { name: "Data Voucher", amount: "Up to ₩50M", detail: "Data purchase/processing. Rolling recruitment", color: "#7c3aed", url: "https://www.kdata.or.kr" },
-            { name: "Startup University", amount: "Up to ₩100M", detail: "University-based founders. Rolling by university", color: "#059669", url: "https://www.k-startup.go.kr" },
-          ]).map(p => progCard(p))}
+            { title: "TIPS (Up to ₩800M)", desc: "Venture-certified companies preferred by operators. Gov matches R&D funds", color: "#059669" },
+            { title: "Pre-Startup Package (Up to ₩100M)", desc: "For pre-entrepreneurs. Bonus points with venture cert", color: "#2563eb" },
+            { title: "AI/Data Vouchers", desc: "70-90% tech adoption cost covered. Venture companies preferred", color: "#7c3aed" },
+            { title: "Policy Fund Rate Discount", desc: "0.2-0.5%p lower rates on SEMAS/KOSMES policy funds", color: "#d97706" },
+          ]).map(item => (
+            <div key={item.title} style={{ padding: "12px 14px", borderRadius: "12px", background: `${item.color}03`, border: `1px solid ${item.color}08` }}>
+              <div style={{ fontSize: "13px", fontWeight: 640, color: item.color }}>{item.title}</div>
+              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: "2px" }}>{item.desc}</div>
+            </div>
+          ))}
         </div>
 
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginTop: "4px" }}>{ko ? "창업 경진대회" : "Startup Competitions"}</div>
-        <div style={{ display: "grid", gap: "6px" }}>
-          {(ko ? [
-            { name: "도전! K-스타트업 2026", amount: "최대 1억원", detail: "국내 최대 규모 경진대회. 예선→본선→왕중왕전. 하반기 접수 예정 (challengek.org)", color: "#2563eb", url: "https://www.challengek.org" },
-            { name: "K-Startup 그랜드챌린지", amount: "상금+비자", detail: "글로벌 스타트업 대상. 한국 시장 진출 지원. 하반기 모집 (연 1회)", color: "#dc2626", url: "https://www.k-startup.go.kr" },
-            { name: "소셜벤처 경연대회", amount: "최대 5천만원", detail: "사회적 가치+비즈니스 모델. 2026 하반기 예정 (sv-hub.co.kr)", color: "#059669", url: "https://www.sv-hub.co.kr" },
-          ] : [
-            { name: "Challenge! K-Startup 2026", amount: "Up to ₩100M", detail: "Korea's largest competition. Applications open H2 (challengek.org)", color: "#2563eb", url: "https://www.challengek.org" },
-            { name: "K-Startup Grand Challenge", amount: "Prize+visa", detail: "Global startups. Korea entry. H2 recruitment (yearly)", color: "#dc2626", url: "https://www.k-startup.go.kr" },
-            { name: "Social Venture Contest", amount: "Up to ₩50M", detail: "Social impact. H2 2026 expected (sv-hub.co.kr)", color: "#059669", url: "https://www.sv-hub.co.kr" },
-          ]).map(p => progCard(p))}
+        <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: 650, color: "#7c3aed" }}>{ko ? "전체 지원사업 목록 · 신청 가이드" : "Full Program List & Application Guide"}</div>
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{ko ? "TIPS, 바우처, 경진대회, 정책대출 상세는 15단계에서" : "TIPS, vouchers, competitions, policy loans in Stage 15"}</div>
+          </div>
+          <button type="button" onClick={() => d.router.push("/current?editStage=loan-guide")} style={{ padding: "8px 16px", borderRadius: "10px", background: "#7c3aed", color: "#fff", fontSize: "13px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
         </div>
       </div>
       )}

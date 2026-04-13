@@ -150,18 +150,12 @@ export function FundraisingReadinessStage() {
             </div>
           </div>
           <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "정부 보조금 · 무상 지원 (주요 프로그램)" : "Government Grants (Key Programs)"}</div>
-            <div style={{ display: "grid", gap: "6px" }}>
-              {(ko ? [
-                { name: "예비창업패키지 2차", amount: "최대 1억원", detail: "사업자등록 전 예비 창업자 대상. 접수: ~11/30 수시", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                { name: "TIPS 일반트랙", amount: "최대 8억원", detail: "운영사 선투자 → 정부 매칭. 접수: ~12/31 상시", color: "#7c3aed", url: "https://www.jointips.or.kr" },
-              ] : [
-                { name: "Pre-Startup 2nd Round", amount: "Up to ₩100M", detail: "Pre-entrepreneurs. Rolling until Nov 30", color: "#2563eb", url: "https://www.k-startup.go.kr" },
-                { name: "TIPS General", amount: "Up to ₩800M", detail: "Operator invest first → gov match. Rolling until Dec 31", color: "#7c3aed", url: "https://www.jointips.or.kr" },
-              ]).map(p => progCard(p))}
-            </div>
-            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(15,23,42,0.02)", marginTop: "8px", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
-              {ko ? "AI 바우처, 청년창업사관학교, 각종 경진대회 등 전체 지원사업 목록은 \"벤처인증 · 정부 지원사업\" 단계에서 상세히 안내합니다." : "Full list of programs (AI Voucher, Youth Academy, competitions) is covered in the Venture Certification stage."}
+            <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 640, color: "#059669" }}>{ko ? "정부 보조금 · 정책자금 상세" : "Government grants & policy funds"}</div>
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{ko ? "소진공, TIPS, 바우처 등 비지분 자금은 \"자금 조달 & 정책자금\" 단계에서 안내합니다" : "Non-dilutive funding details are in the \"Funding & Policy\" stage"}</div>
+              </div>
+              <button type="button" onClick={() => d.navigateToSurface("current")} style={{ padding: "6px 14px", borderRadius: "8px", background: "#059669", color: "#fff", fontSize: "12px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
             </div>
           </div>
         </div>
@@ -207,15 +201,12 @@ export function FundraisingReadinessStage() {
             </div>
           </div>
           <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "정부 투자 프로그램 (지분 희석 없음)" : "Government Investment (No Dilution)"}</div>
-            <div style={{ display: "grid", gap: "6px" }}>
-              {(ko ? [
-                { name: "TIPS", amount: "최대 5억원", detail: "R&D 3억 + 운영 2억. 50+ 운영사가 먼저 선발 후 정부 매칭. 기술 스타트업 필수", color: "#059669", url: "https://www.k-startup.go.kr" },
-                { name: "TIPS-R (후속 지원)", amount: "최대 8억원", detail: "TIPS 졸업 기업 대상 후속 지원. 스케일업 단계 R&D 자금", color: "#059669", url: "https://www.k-startup.go.kr" },
-              ] : [
-                { name: "TIPS", amount: "Up to ₩500M", detail: "R&D 300M + Ops 200M. 50+ operators select first, gov matches. Must for tech startups", color: "#059669", url: "https://www.k-startup.go.kr" },
-                { name: "TIPS-R (Follow-up)", amount: "Up to ₩800M", detail: "For TIPS graduates. Scale-up R&D funding", color: "#059669", url: "https://www.k-startup.go.kr" },
-              ]).map(p => progCard(p))}
+            <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 640, color: "#2563eb" }}>{ko ? "TIPS · 정부 R&D · 정책자금 상세" : "TIPS, Gov R&D & Policy Funds"}</div>
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{ko ? "비지분 자금 경로 상세는 15단계에서 안내합니다" : "Non-dilutive funding details in Stage 15"}</div>
+              </div>
+              <button type="button" onClick={() => d.navigateToSurface("current")} style={{ padding: "6px 14px", borderRadius: "8px", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
             </div>
           </div>
         </div>
@@ -344,197 +335,24 @@ export function FundraisingReadinessStage() {
         })()}
       </div>
 
-      {/* ── Block 2: 사업계획서 생성 ── */}
+      {/* ── AI 사업계획서는 15단계(자금 조달 & 정책자금)로 이동 ── */}
       <div style={{
-        marginBottom: "18px", borderRadius: "24px",
-        border: "1px solid rgba(29,53,87,0.12)",
-        background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(29,53,87,0.03) 100%)",
-        boxShadow: "0 8px 20px rgba(17,17,17,0.04)", overflow: "hidden",
+        marginBottom: "18px", borderRadius: "20px",
+        border: "1px solid rgba(29,53,87,0.08)",
+        background: "rgba(29,53,87,0.02)",
+        padding: "18px 22px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <div style={{ padding: "20px 22px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, var(--primary), rgba(117,163,255,0.9))", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em" }}>
-                {ko ? "AI 사업계획서 생성" : "AI Business Plan"}
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-                {ko ? "PSST 프레임워크 · 정부 지원사업 신청용" : "PSST Framework · For government program applications"}
-              </div>
-            </div>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            <span style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>{ko ? "AI 사업계획서 생성" : "AI Business Plan"}</span>
           </div>
-
-          {!bpSections && !bpLoading && !bpError && (
-            <>
-              <div style={{ fontSize: "13px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "14px" }}>
-                {ko
-                  ? "지금까지 입력한 문제 정의, 팀 구성, 재무 데이터를 기반으로 예비창업패키지·초기창업패키지·TIPS 평가 기준에 맞는 사업계획서를 자동 생성합니다."
-                  : "Auto-generates a PSST business plan using your roadmap data, optimized for K-Startup program evaluation criteria."}
-              </div>
-              <button type="button" onClick={generatePlanFR} style={{
-                width: "100%", padding: "14px", borderRadius: "999px",
-                border: "none", background: "var(--primary)", color: "#fff",
-                fontSize: "15px", fontWeight: 600, cursor: "pointer",
-              }}>
-                {ko ? "사업계획서 생성하기" : "Generate Business Plan"}
-              </button>
-            </>
-          )}
-
-          {bpLoading && (() => {
-            const steps = ko
-              ? ["시장 데이터 분석 중...", "문제 정의 구조화 중...", "솔루션 차별화 포인트 도출 중...", "TAM/SAM/SOM 추정 중...", "재무 계획 작성 중...", "리스크 분석 중...", "자금 집행 계획 수립 중...", "최종 검토 중..."]
-              : ["Analyzing market data...", "Structuring problem definition...", "Identifying solution differentiators...", "Estimating TAM/SAM/SOM...", "Writing financial plan...", "Analyzing risks...", "Planning fund allocation...", "Final review..."];
-            return (
-            <div style={{ padding: "24px 0", display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "20px" }}>
-              {/* 회전 아이콘 */}
-              <div style={{ position: "relative", width: "64px", height: "64px" }}>
-                <div style={{
-                  width: "64px", height: "64px", borderRadius: "50%",
-                  border: "3px solid rgba(29,53,87,0.08)",
-                  borderTopColor: "var(--primary)",
-                  animation: "bpSpin 1s linear infinite",
-                }} />
-                <div style={{
-                  position: "absolute", inset: "8px", borderRadius: "50%",
-                  background: "linear-gradient(135deg, var(--primary), rgba(117,163,255,0.9))",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
-                  </svg>
-                </div>
-              </div>
-
-              {/* 단계 목록 */}
-              <div style={{ width: "100%", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-                {steps.map((step, i) => (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "center", gap: "10px",
-                    padding: "8px 12px", borderRadius: "10px",
-                    background: "rgba(29,53,87,0.02)",
-                    animation: `bpStepIn 0.4s ease ${i * 4}s both`,
-                    opacity: 0,
-                  }}>
-                    <div style={{
-                      width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0,
-                      background: "rgba(29,53,87,0.06)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <div style={{
-                        width: "6px", height: "6px", borderRadius: "50%",
-                        background: "var(--primary)",
-                        animation: `bpDotPulse 1.5s ease-in-out ${i * 4}s infinite`,
-                      }} />
-                    </div>
-                    <span style={{ fontSize: "13px", fontWeight: 550, color: "rgba(15,23,42,0.6)" }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* 프로그레스 바 */}
-              <div style={{ width: "100%", height: "4px", borderRadius: "2px", background: "rgba(0,0,0,0.04)", overflow: "hidden" }}>
-                <div style={{
-                  height: "100%", borderRadius: "2px",
-                  background: "linear-gradient(90deg, var(--primary), rgba(117,163,255,0.9))",
-                  animation: "bpProgress 35s ease-out forwards",
-                }} />
-              </div>
-
-              <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-                {ko ? "PSST 프레임워크로 사업계획서를 작성하고 있습니다" : "Writing your PSST business plan"}
-              </div>
-
-              <style>{`
-                @keyframes bpSpin { to { transform: rotate(360deg); } }
-                @keyframes bpStepIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
-                @keyframes bpDotPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.8); opacity: 1; } }
-                @keyframes bpProgress { 0% { width: 0%; } 15% { width: 20%; } 40% { width: 50%; } 70% { width: 75%; } 90% { width: 88%; } 100% { width: 95%; } }
-              `}</style>
-            </div>
-            );
-          })()}
-
-          {bpError && (
-            <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.12)", marginTop: "10px" }}>
-              <div style={{ fontSize: "13px", color: "#ff3b30", fontWeight: 600, marginBottom: "4px" }}>{ko ? "생성 실패" : "Failed"}</div>
-              <div style={{ fontSize: "12px", color: "var(--muted)" }}>{bpError}</div>
-              <button type="button" onClick={generatePlanFR} style={{ marginTop: "8px", padding: "8px 16px", borderRadius: "999px", border: "1px solid var(--border)", background: "#fff", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-                {ko ? "다시 시도" : "Retry"}
-              </button>
-            </div>
-          )}
-
-          {bpSections && (
-            <div style={{ marginTop: "10px" }}>
-              {bpSummary && <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)", marginBottom: "12px", lineHeight: 1.5 }}>{bpSummary}</div>}
-              <div style={{ display: "grid", gap: "6px" }}>
-                {bpSections.map((sec, idx) => {
-                  const expanded = bpExpandedIdx === idx;
-                  return (
-                    <div key={idx} style={{ borderRadius: "14px", border: "1px solid var(--border)", background: "rgba(255,255,255,0.7)", overflow: "hidden" }}>
-                      <button type="button" onClick={() => setBpExpandedIdx(expanded ? null : idx)} style={{ width: "100%", padding: "12px 16px", border: "none", background: "transparent", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", textAlign: "left" }}>
-                        <span style={{ fontSize: "14px", fontWeight: 600 }}>{sec.title}</span>
-                        <span style={{ fontSize: "12px", color: "var(--muted)", transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>›</span>
-                      </button>
-                      {expanded && <div style={{ padding: "0 16px 14px", fontSize: "13px", lineHeight: 1.7, color: "var(--muted)", whiteSpace: "pre-line" }}>{sec.content}</div>}
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
-                <button type="button" onClick={() => {
-                  const printWindow = window.open("", "_blank");
-                  if (!printWindow) return;
-                  const date = new Date().toLocaleDateString(ko ? "ko-KR" : "en-US");
-                  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${ko ? "사업계획서" : "Business Plan"} - Build.UP</title>
-<style>
-  @page { margin: 20mm 18mm; size: A4; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; color: #1a1a1a; line-height: 1.7; font-size: 11pt; }
-  .header { border-bottom: 2px solid #1d3557; padding-bottom: 12px; margin-bottom: 24px; }
-  .header h1 { font-size: 18pt; color: #1d3557; margin: 0 0 4px; }
-  .header .meta { font-size: 9pt; color: #888; }
-  .section { margin-bottom: 20px; page-break-inside: avoid; }
-  .section h2 { font-size: 13pt; color: #1d3557; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }
-  .section p { margin: 0; white-space: pre-wrap; font-size: 10.5pt; color: #333; }
-  .footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 8pt; color: #aaa; border-top: 1px solid #eee; padding-top: 4px; }
-  @media print { .no-print { display: none; } }
-</style></head><body>
-<div class="header">
-  <h1>${bpSummary || (ko ? "사업계획서" : "Business Plan")}</h1>
-  <div class="meta">Generated by Build.UP · ${date}</div>
-</div>
-${bpSections.map(s => `<div class="section"><h2>${s.title}</h2><p>${s.content}</p></div>`).join("")}
-<div class="footer">Build.UP · ${ko ? "AI 사업계획서" : "AI Business Plan"}</div>
-</body></html>`;
-                  printWindow.document.write(html);
-                  printWindow.document.close();
-                  setTimeout(() => { printWindow.print(); }, 300);
-                }} style={{
-                  flex: 1, padding: "12px", borderRadius: "999px",
-                  border: "none", background: "var(--primary)", color: "#fff",
-                  fontSize: "14px", fontWeight: 600, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  {ko ? "PDF로 저장" : "Save as PDF"}
-                </button>
-                <button type="button" onClick={() => {
-                  const full = bpSections.map(s => `${s.title}\n\n${s.content}`).join("\n\n---\n\n");
-                  navigator.clipboard.writeText(full).catch(() => {});
-                }} style={{
-                  padding: "12px 20px", borderRadius: "999px",
-                  border: "1px solid var(--border)", background: "#fff",
-                  fontSize: "14px", fontWeight: 600, color: "var(--muted)", cursor: "pointer",
-                }}>
-                  {ko ? "복사" : "Copy"}
-                </button>
-              </div>
-            </div>
-          )}
+          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+            {ko ? "PSST 사업계획서 생성은 \"자금 조달 & 정책자금\" 단계에서 이용할 수 있습니다" : "PSST business plan generation is available in the \"Funding & Policy\" stage"}
+          </div>
         </div>
+        <button type="button" onClick={() => d.navigateToSurface("current")} style={{ padding: "8px 16px", borderRadius: "10px", background: "var(--primary)", color: "#fff", fontSize: "13px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
       </div>
     </>
   );
