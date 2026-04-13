@@ -7,6 +7,7 @@ import { VentureCertificationStage } from "../stages/startup/VentureCertificatio
 import { CompanySetupStage } from "../stages/startup/CompanySetupStage";
 import { GrowthEngineStage } from "../stages/startup/GrowthEngineStage";
 import { LaunchGtmStage } from "../stages/startup/LaunchGtmStage";
+import { StartupFoundationStage } from "../stages/startup/StartupFoundationStage";
 import {
   buildMarketScoreNarrative,
   buildRecommendedMarkets,
@@ -3582,8 +3583,9 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {/* ── 창업팀·기본 구조 가이드 (startup_foundation) ── */}
-                {currentStage.code === "startup_foundation" && (() => {
+                {/* ── 창업팀·기본 구조 (분리됨) ── */}
+                {currentStage.code === "startup_foundation" && <StartupFoundationStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   const iconSvg = (d: string, color: string) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d={d} /></svg>;
                   // 페이지네이션: 0=핵심원칙, 1=Step1, 2=Step2, 3=Step3, 4=사례
