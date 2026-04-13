@@ -3,6 +3,9 @@ import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 
+// 사업계획서 생성은 긴 AI 응답이 필요하므로 타임아웃 확장
+export const maxDuration = 120; // 120초 (Vercel Pro: 최대 300초)
+
 /**
  * POST /api/ai/business-plan/generate
  *
@@ -215,10 +218,14 @@ PSST 프레임워크 (창업진흥원 평가 기준):
 
     return NextResponse.json(parsed);
   } catch (err) {
-    console.error("[business-plan] Error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[business-plan] Error:", msg);
+    const isTimeout = msg.includes("timeout") || msg.includes("ETIMEDOUT") || msg.includes("abort");
     return NextResponse.json(
-      { error: "사업계획서 생성 중 오류가 발생했습니다." },
-      { status: 503 }
+      { error: isTimeout
+          ? "AI 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요."
+          : `사업계획서 생성 중 오류: ${msg}` },
+      { status: isTimeout ? 504 : 503 }
     );
   }
 }
