@@ -164,7 +164,7 @@ PSST 프레임워크 (창업진흥원 평가 기준):
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 8192,
         system: systemPrompt,
         messages: [
