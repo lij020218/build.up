@@ -265,11 +265,79 @@ export function FundraisingReadinessStage() {
             </>
           )}
 
-          {bpLoading && (
-            <div style={{ textAlign: "center", padding: "20px", color: "var(--muted)", fontSize: "14px" }}>
-              {ko ? "AI가 PSST 사업계획서를 작성 중입니다... (30초~1분)" : "AI is writing your PSST plan... (30s-1min)"}
+          {bpLoading && (() => {
+            const steps = ko
+              ? ["시장 데이터 분석 중...", "문제 정의 구조화 중...", "솔루션 차별화 포인트 도출 중...", "TAM/SAM/SOM 추정 중...", "재무 계획 작성 중...", "리스크 분석 중...", "자금 집행 계획 수립 중...", "최종 검토 중..."]
+              : ["Analyzing market data...", "Structuring problem definition...", "Identifying solution differentiators...", "Estimating TAM/SAM/SOM...", "Writing financial plan...", "Analyzing risks...", "Planning fund allocation...", "Final review..."];
+            return (
+            <div style={{ padding: "24px 0", display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "20px" }}>
+              {/* 회전 아이콘 */}
+              <div style={{ position: "relative", width: "64px", height: "64px" }}>
+                <div style={{
+                  width: "64px", height: "64px", borderRadius: "50%",
+                  border: "3px solid rgba(29,53,87,0.08)",
+                  borderTopColor: "var(--primary)",
+                  animation: "bpSpin 1s linear infinite",
+                }} />
+                <div style={{
+                  position: "absolute", inset: "8px", borderRadius: "50%",
+                  background: "linear-gradient(135deg, var(--primary), rgba(117,163,255,0.9))",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                  </svg>
+                </div>
+              </div>
+
+              {/* 단계 목록 */}
+              <div style={{ width: "100%", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+                {steps.map((step, i) => (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: "10px",
+                    padding: "8px 12px", borderRadius: "10px",
+                    background: "rgba(29,53,87,0.02)",
+                    animation: `bpStepIn 0.4s ease ${i * 4}s both`,
+                    opacity: 0,
+                  }}>
+                    <div style={{
+                      width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0,
+                      background: "rgba(29,53,87,0.06)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <div style={{
+                        width: "6px", height: "6px", borderRadius: "50%",
+                        background: "var(--primary)",
+                        animation: `bpDotPulse 1.5s ease-in-out ${i * 4}s infinite`,
+                      }} />
+                    </div>
+                    <span style={{ fontSize: "13px", fontWeight: 550, color: "rgba(15,23,42,0.6)" }}>{step}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* 프로그레스 바 */}
+              <div style={{ width: "100%", height: "4px", borderRadius: "2px", background: "rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                <div style={{
+                  height: "100%", borderRadius: "2px",
+                  background: "linear-gradient(90deg, var(--primary), rgba(117,163,255,0.9))",
+                  animation: "bpProgress 35s ease-out forwards",
+                }} />
+              </div>
+
+              <div style={{ fontSize: "12px", color: "var(--muted)" }}>
+                {ko ? "PSST 프레임워크로 사업계획서를 작성하고 있습니다" : "Writing your PSST business plan"}
+              </div>
+
+              <style>{`
+                @keyframes bpSpin { to { transform: rotate(360deg); } }
+                @keyframes bpStepIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+                @keyframes bpDotPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.8); opacity: 1; } }
+                @keyframes bpProgress { 0% { width: 0%; } 15% { width: 20%; } 40% { width: 50%; } 70% { width: 75%; } 90% { width: 88%; } 100% { width: 95%; } }
+              `}</style>
             </div>
-          )}
+            );
+          })()}
 
           {bpError && (
             <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.12)", marginTop: "10px" }}>
