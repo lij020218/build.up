@@ -30,6 +30,7 @@ import { TaxGuideStage } from "../stages/shared-tail/TaxGuideStage";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { StageGuideViewer } from "../stages/shared/StageGuideViewer";
 import { FranchiseApplicationStage } from "../stages/franchise/FranchiseApplicationStage";
+import { AuroraBackground } from "../../../../components/ui/aurora-background";
 import { FranchiseSupplyPanel } from "../stages/franchise/FranchiseSupplyPanel";
 import { StartupToolkitPanel } from "../stages/startup/StartupToolkitPanel";
 import { IndustrySelectionStage } from "../stages/selection/IndustrySelectionStage";
@@ -434,7 +435,8 @@ export function CurrentStageView() {
         })() : (
       <section style={styles.section}>
         <div style={styles.sectionTitle}>{copy.home.today}</div>
-        <article style={styles.currentStage}>
+        <AuroraBackground style={{ borderRadius: "24px", minHeight: "auto" }} showRadialGradient>
+        <article style={{ ...styles.currentStage, background: "transparent" }}>
           {/* 프로그레시브 바 + 단계 정보 */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "2px" }}>
             <div style={{ flex: 1, display: "flex", gap: "3px" }}>
@@ -1160,6 +1162,7 @@ export function CurrentStageView() {
             </>
           )}
         </article>
+        </AuroraBackground>
       </section>
         )}
     </>
