@@ -261,31 +261,113 @@ export function CompanySetupStage() {
       )}
 
       {/* ── Page 2: 과세 유형 · 세무 기초 ── */}
-      {pg === 2 && (
+      {pg === 2 && (() => {
+        const taxType = (guideSelections["tax-type"] as "simplified" | "general" | undefined) ?? null;
+        const selectTaxType = (type: "simplified" | "general") => {
+          setGuideSelections((prev: Record<string, string>) => ({ ...prev, "tax-type": type }));
+        };
+        const isCorp = bizType === "corp";
+        return (
       <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginBottom: "10px" }}>{ko ? "과세 유형 결정 · 세무 기초" : "Tax Type & Basics"}</div>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginBottom: "14px" }}>
-          {bizType === "corp"
-            ? (ko ? "법인은 일반과세자로 자동 등록됩니다. 복식부기 의무이며 세무사 선임이 권장됩니다." : "Corporations are automatically registered as general taxpayers. Double-entry bookkeeping is required.")
-            : (ko ? "개인사업자는 간이과세자와 일반과세자 중 선택합니다. 초기 매출이 적으면 간이과세가 유리합니다." : "Sole proprietors choose between simplified and general taxation.")}
+          {isCorp
+            ? (ko ? "법인은 일반과세자로 자동 등록됩니다. 복식부기 의무이며 세무사 선임이 권장됩니다." : "Corporations are automatically registered as general taxpayers.")
+            : (ko ? "과세 유형을 선택하세요. 선택에 따라 세금 신고 방식과 부담이 달라집니다." : "Choose your tax type. This affects filing frequency and tax burden.")}
         </div>
-        {bizType !== "corp" && (
+
+        {/* 개인사업자: 간이/일반 선택 */}
+        {!isCorp && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-          <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.03)", border: "1px solid rgba(5,150,105,0.08)" }}>
-            <div style={{ fontSize: "14px", fontWeight: 680, color: "#059669", marginBottom: "4px" }}>{ko ? "간이과세자" : "Simplified"}</div>
+          <button type="button" onClick={() => selectTaxType("simplified")} style={{
+            padding: "16px", borderRadius: "14px", cursor: "pointer", textAlign: "left" as const,
+            background: taxType === "simplified" ? "rgba(5,150,105,0.06)" : "rgba(0,0,0,0.01)",
+            border: taxType === "simplified" ? "2px solid #059669" : "1px solid rgba(0,0,0,0.08)",
+            transition: "all 0.2s ease",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: taxType === "simplified" ? "6px solid #059669" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
+              <div style={{ fontSize: "14px", fontWeight: 680, color: taxType === "simplified" ? "#059669" : "#0f172a" }}>{ko ? "간이과세자" : "Simplified"}</div>
+              <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: "rgba(5,150,105,0.08)", color: "#059669" }}>{ko ? "추천" : "Rec."}</span>
+            </div>
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
-              {ko ? "• 매출 1억 400만원 미만\n• 부가세 1.5~4% 수준\n• 매출 4,800만원 미만: 부가세 면제\n• 세금 신고 연 1회\n• 간편장부 허용" : "• Revenue < ₩104M\n• VAT 1.5-4%\n• Under ₩48M: VAT exempt\n• Annual filing only\n• Simple bookkeeping OK"}
+              {ko ? "• 매출 1억 400만원 미만\n• 부가세 1.5~4% 수준\n• 4,800만원 미만: 부가세 면제\n• 세금 신고 연 1회\n• 간편장부 허용" : "• Revenue < ₩104M\n• VAT 1.5-4%\n• Under ₩48M: VAT exempt\n• Annual filing\n• Simple bookkeeping"}
             </div>
-          </div>
-          <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(0,0,0,0.01)", border: "1px solid rgba(0,0,0,0.06)" }}>
-            <div style={{ fontSize: "14px", fontWeight: 680, color: "rgba(15,23,42,0.6)", marginBottom: "4px" }}>{ko ? "일반과세자" : "General"}</div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
-              {ko ? "• 매출 1억 400만원 이상\n• 부가세 10% (매입세액 공제)\n• 세금계산서 발급 의무\n• 반기 신고 (연 2회)\n• B2B 거래 시 필수" : "• Revenue ≥ ₩104M\n• VAT 10% (input tax deductible)\n• Must issue tax invoices\n• Semi-annual filing\n• Required for B2B"}
+          </button>
+          <button type="button" onClick={() => selectTaxType("general")} style={{
+            padding: "16px", borderRadius: "14px", cursor: "pointer", textAlign: "left" as const,
+            background: taxType === "general" ? "rgba(37,99,235,0.06)" : "rgba(0,0,0,0.01)",
+            border: taxType === "general" ? "2px solid #2563eb" : "1px solid rgba(0,0,0,0.08)",
+            transition: "all 0.2s ease",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: taxType === "general" ? "6px solid #2563eb" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
+              <div style={{ fontSize: "14px", fontWeight: 680, color: taxType === "general" ? "#2563eb" : "#0f172a" }}>{ko ? "일반과세자" : "General"}</div>
             </div>
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
+              {ko ? "• 매출 1억 400만원 이상\n• 부가세 10% (매입세액 공제)\n• 세금계산서 발급 의무\n• 반기 신고 (연 2회)\n• B2B 거래 시 필수" : "• Revenue ≥ ₩104M\n• VAT 10% (input deductible)\n• Must issue invoices\n• Semi-annual filing\n• Required for B2B"}
+            </div>
+          </button>
+        </div>
+        )}
+
+        {/* 선택 확인 메시지 */}
+        {!isCorp && taxType && (
+        <div style={{ padding: "8px 12px", borderRadius: "10px", background: taxType === "simplified" ? "rgba(5,150,105,0.04)" : "rgba(37,99,235,0.04)", border: `1px solid ${taxType === "simplified" ? "rgba(5,150,105,0.1)" : "rgba(37,99,235,0.1)"}`, marginBottom: "14px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 640, color: taxType === "simplified" ? "#059669" : "#2563eb" }}>
+            ✓ {taxType === "simplified"
+              ? (ko ? "간이과세자 선택됨 — 매출 1억 400만원 미만일 때 유리합니다" : "Simplified selected — best for revenue under ₩104M")
+              : (ko ? "일반과세자 선택됨 — B2B 거래나 매입세액 공제가 필요할 때 유리합니다" : "General selected — best for B2B or when you need input tax deduction")}
           </div>
         </div>
         )}
-        {bizType === "corp" && (
+
+        {/* 간이과세 선택 시 상세 */}
+        {!isCorp && taxType === "simplified" && (
+        <div style={{ display: "grid", gap: "8px", marginBottom: "14px" }}>
+          {(ko ? [
+            { title: "부가세 납부", desc: "업종별 부가가치율(15~40%)을 곱해 계산. 실질 부담 매출의 1.5~4%. 매출 4,800만원 미만이면 면제" },
+            { title: "종합소득세", desc: "매년 5월 신고. 누진세율 6~45%. 간편장부 또는 추계신고 가능" },
+            { title: "세금계산서", desc: "매출 4,800만원 이상이면 발급 의무. 미만이면 영수증만 발급" },
+            { title: "전환 시점", desc: "매출 1억 400만원 초과 시 자동으로 일반과세자 전환. 별도 신고 불필요" },
+          ] : [
+            { title: "VAT Payment", desc: "Industry rate 15-40%. Effective burden 1.5-4% of revenue. Exempt under ₩48M" },
+            { title: "Income Tax", desc: "Annual filing in May. Progressive 6-45%. Simple bookkeeping OK" },
+            { title: "Tax Invoices", desc: "Required above ₩48M revenue. Below: receipts only" },
+            { title: "Auto-Conversion", desc: "Auto-converts to general when revenue exceeds ₩104M" },
+          ]).map(t => (
+            <div key={t.title} style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.03)", border: "1px solid rgba(5,150,105,0.06)" }}>
+              <div style={{ fontSize: "13px", fontWeight: 640, color: "#059669" }}>{t.title}</div>
+              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
+            </div>
+          ))}
+        </div>
+        )}
+
+        {/* 일반과세 선택 시 상세 */}
+        {!isCorp && taxType === "general" && (
+        <div style={{ display: "grid", gap: "8px", marginBottom: "14px" }}>
+          {(ko ? [
+            { title: "부가세 납부", desc: "매출세액(10%) - 매입세액 = 납부세액. 매입이 많으면 환급 가능" },
+            { title: "종합소득세", desc: "매년 5월 신고. 누진세율 6~45%. 복식부기 의무 (매출 규모에 따라)" },
+            { title: "세금계산서", desc: "모든 B2B 거래에 발급 의무. 홈택스에서 전자세금계산서 발행" },
+            { title: "신고 주기", desc: "부가세 반기 신고 (1월·7월). 예정신고 포함 시 분기별" },
+          ] : [
+            { title: "VAT Payment", desc: "Output 10% - input tax = payable. Refund possible if input > output" },
+            { title: "Income Tax", desc: "Annual in May. Progressive 6-45%. Double-entry if required" },
+            { title: "Tax Invoices", desc: "Required for all B2B. E-invoice via HomeTax" },
+            { title: "Filing Schedule", desc: "Semi-annual VAT (Jan/Jul). Quarterly with preliminary" },
+          ]).map(t => (
+            <div key={t.title} style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.03)", border: "1px solid rgba(37,99,235,0.06)" }}>
+              <div style={{ fontSize: "13px", fontWeight: 640, color: "#2563eb" }}>{t.title}</div>
+              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
+            </div>
+          ))}
+        </div>
+        )}
+
+        {/* 법인 세무 */}
+        {isCorp && (
         <div style={{ display: "grid", gap: "8px", marginBottom: "14px" }}>
           {(ko ? [
             { title: "법인세", desc: "과세표준 2억 이하: 10% / 2~200억: 20% / 200~3000억: 22% / 3000억 초과: 25%" },
@@ -305,20 +387,26 @@ export function CompanySetupStage() {
           ))}
         </div>
         )}
+
+        {/* 팁 */}
         <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.03)", border: "1px solid rgba(5,150,105,0.06)" }}>
           <div style={{ fontSize: "12px", fontWeight: 640, color: "#059669", marginBottom: "4px" }}>{ko ? "💡 팁" : "💡 Tip"}</div>
           <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
-            {bizType === "corp"
-              ? (ko ? "법인 설립 초기에는 자비스(Jobis)나 삼쩜삼으로 기장 비용을 줄일 수 있습니다. R&D 세액공제(최대 25%)를 활용하면 법인세를 크게 절감할 수 있어요." : "Use Jobis or 3o3 to reduce bookkeeping costs early on. R&D tax credits (up to 25%) can significantly reduce corporate tax.")
-              : (ko ? "초기에는 간이과세로 시작하고, 매출이 늘면 자동 전환됩니다. 무료 회계 앱(캐시노트, 자비스)으로 매출/매입 기록을 시작하세요." : "Start with simplified, auto-converts as revenue grows. Use free apps (CashNote, Jobis) for bookkeeping.")}
+            {isCorp
+              ? (ko ? "법인 설립 초기에는 자비스(Jobis)나 삼쩜삼으로 기장 비용을 줄일 수 있습니다. R&D 세액공제(최대 25%)를 활용하면 법인세를 크게 절감할 수 있어요." : "Use Jobis or 3o3 to reduce bookkeeping costs. R&D tax credits (up to 25%) significantly reduce corporate tax.")
+              : taxType === "general"
+                ? (ko ? "B2B 거래가 주력이라면 일반과세가 맞습니다. 매입세액 공제로 실질 세부담을 줄일 수 있어요. 세무사 상담을 권장합니다." : "General is right for B2B-heavy businesses. Input tax deductions reduce actual burden. Consider a tax consultant.")
+                : (ko ? "초기에는 간이과세로 시작하고, 매출이 늘면 자동 전환됩니다. 무료 회계 앱(캐시노트, 자비스)으로 매출/매입 기록을 시작하세요." : "Start with simplified, auto-converts as revenue grows. Use free apps (CashNote, Jobis) for bookkeeping.")}
           </div>
         </div>
         <div style={{ marginTop: "10px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
           <a href="https://www.hometax.go.kr" target="_blank" rel="noopener noreferrer" style={linkStyle}>홈택스 ↗</a>
           <a href="https://cashnote.kr" target="_blank" rel="noopener noreferrer" style={linkStyle}>캐시노트 (무료) ↗</a>
+          <a href="https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7693&mi=2272" target="_blank" rel="noopener noreferrer" style={linkStyle}>{ko ? "부가세 안내" : "VAT Guide"} ↗</a>
         </div>
       </div>
-      )}
+        );
+      })()}
 
       {/* ── Page 3: 보안 · 약관 ── */}
       {pg === 3 && (
