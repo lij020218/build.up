@@ -149,6 +149,23 @@ export function PreLaunchStage() {
 
                   return (
                     <div style={{ marginBottom: "20px" }}>
+                      {/* 네비게이션 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+                        <button type="button"
+                          style={{ fontSize: "14px", fontWeight: 580, color: softOpenStep === 0 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: softOpenStep === 0 ? "default" : "pointer", padding: "8px 4px", pointerEvents: softOpenStep === 0 ? "none" : "auto" }}
+                          onClick={() => setSoftOpenStep(s => s - 1)}
+                        >← {language === "ko" ? "이전" : "Back"}</button>
+                        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                          {[0, 1, 2].map(i => (
+                            <div key={i} onClick={() => setSoftOpenStep(i)} style={{ width: i === softOpenStep ? "20px" : "6px", height: "6px", borderRadius: "100px", background: i === softOpenStep ? "rgb(0,122,255)" : "rgba(17,17,17,0.15)", cursor: "pointer", transition: "width 0.2s ease" }} />
+                          ))}
+                        </div>
+                        <button type="button"
+                          style={{ fontSize: "14px", fontWeight: 580, color: softOpenStep === 2 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: softOpenStep === 2 ? "default" : "pointer", padding: "8px 4px", pointerEvents: softOpenStep === 2 ? "none" : "auto" }}
+                          onClick={() => setSoftOpenStep(s => s + 1)}
+                        >{language === "ko" ? "다음" : "Next"} →</button>
+                      </div>
+
                       {/* 헤더 */}
                       <div style={{ marginBottom: "18px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "7px" }}>
@@ -409,22 +426,6 @@ export function PreLaunchStage() {
                         </div>
                       )}
 
-                      {/* 네비게이션 */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "18px" }}>
-                        <button type="button"
-                          style={{ fontSize: "14px", fontWeight: 580, color: softOpenStep === 0 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: softOpenStep === 0 ? "default" : "pointer", padding: "8px 4px", pointerEvents: softOpenStep === 0 ? "none" : "auto" }}
-                          onClick={() => setSoftOpenStep(s => s - 1)}
-                        >← {language === "ko" ? "이전" : "Back"}</button>
-                        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                          {[0, 1, 2].map(i => (
-                            <div key={i} onClick={() => setSoftOpenStep(i)} style={{ width: i === softOpenStep ? "20px" : "6px", height: "6px", borderRadius: "100px", background: i === softOpenStep ? "rgb(0,122,255)" : "rgba(17,17,17,0.15)", cursor: "pointer", transition: "width 0.2s ease" }} />
-                          ))}
-                        </div>
-                        <button type="button"
-                          style={{ fontSize: "14px", fontWeight: 580, color: softOpenStep === 2 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: softOpenStep === 2 ? "default" : "pointer", padding: "8px 4px", pointerEvents: softOpenStep === 2 ? "none" : "auto" }}
-                          onClick={() => setSoftOpenStep(s => s + 1)}
-                        >{language === "ko" ? "다음" : "Next"} →</button>
-                      </div>
                     </div>
                   );
 

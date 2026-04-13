@@ -276,24 +276,9 @@ export function MvpBuildStage() {
   const total = pages.length;
 
   return (
-    <div style={{ marginBottom: "14px" }}>
-      <div style={{ borderRadius: "20px", border: `1px solid ${page.color}15`, background: `linear-gradient(180deg, ${page.color}04 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
-        {/* 헤더 */}
-        <div style={{ padding: "20px 22px 14px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-            {mvpPage > 0 && <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: page.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>{mvpPage}</div>}
-            <span style={{ fontSize: "11px", fontWeight: 700, color: page.color, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
-              {mvpPage === 0 ? (ko ? "개요" : "Overview") : `Step ${mvpPage} / ${total - 1}`}
-            </span>
-          </div>
-          <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{page.title}</div>
-        </div>
-        {/* 콘텐츠 */}
-        <div style={{ padding: "0 22px 20px" }}>{page.content}</div>
-      </div>
-
-      {/* 페이지네이션 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px" }}>
+    <div style={{ marginBottom: "14px", display: "flex", flexDirection: "column", gap: "14px" }}>
+      {/* 페이지네이션 — 상단 */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button type="button" onClick={() => { setMvpPage(Math.max(0, mvpPage - 1)); setMvpToolsOpen(false); }} disabled={mvpPage === 0}
           style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: mvpPage === 0 ? "rgba(0,0,0,0.02)" : "white", color: mvpPage === 0 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: mvpPage === 0 ? "default" : "pointer" }}>
           ← {ko ? "이전" : "Prev"}
@@ -307,6 +292,21 @@ export function MvpBuildStage() {
           style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: mvpPage === total - 1 ? "rgba(0,0,0,0.02)" : "white", color: mvpPage === total - 1 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: mvpPage === total - 1 ? "default" : "pointer" }}>
           {ko ? "다음" : "Next"} →
         </button>
+      </div>
+
+      <div style={{ borderRadius: "20px", border: `1px solid ${page.color}15`, background: `linear-gradient(180deg, ${page.color}04 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
+        {/* 헤더 */}
+        <div style={{ padding: "20px 22px 14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+            {mvpPage > 0 && <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: page.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>{mvpPage}</div>}
+            <span style={{ fontSize: "11px", fontWeight: 700, color: page.color, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+              {mvpPage === 0 ? (ko ? "개요" : "Overview") : `Step ${mvpPage} / ${total - 1}`}
+            </span>
+          </div>
+          <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{page.title}</div>
+        </div>
+        {/* 콘텐츠 */}
+        <div style={{ padding: "0 22px 20px" }}>{page.content}</div>
       </div>
     </div>
   );

@@ -150,6 +150,36 @@ export function HiringSetupStage() {
 
   return (
     <div style={styles.guideCard}>
+      {/* 카드 네비 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", padding: "12px 0" }}>
+        <button type="button" disabled={guideStepIndex === 0} onClick={() => setGuideStepIndex((i: number) => Math.max(0, i - 1))} style={{
+          padding: "10px 18px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.1)",
+          background: guideStepIndex === 0 ? "rgba(0,0,0,0.02)" : "white",
+          color: guideStepIndex === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
+          fontSize: "13px", fontWeight: 600, cursor: guideStepIndex === 0 ? "default" : "pointer",
+        }}>
+          ← {ko ? "이전" : "Prev"}
+        </button>
+        <div style={{ display: "flex", gap: "6px" }}>
+          {Array.from({ length: totalSlides }, (_, i) => (
+            <div key={i} onClick={() => setGuideStepIndex(i)} style={{
+              width: i === guideStepIndex ? "20px" : "8px", height: "8px", borderRadius: "100px",
+              background: i === guideStepIndex ? "#0561fc" : "rgba(0,0,0,0.1)",
+              cursor: "pointer", transition: "all 0.2s ease",
+            }} />
+          ))}
+        </div>
+        <button type="button" disabled={guideStepIndex >= totalSlides - 1} onClick={() => setGuideStepIndex((i: number) => Math.min(totalSlides - 1, i + 1))} style={{
+          padding: "10px 18px", borderRadius: "10px", border: "none",
+          background: guideStepIndex >= totalSlides - 1 ? "rgba(0,0,0,0.02)" : "#0561fc",
+          color: guideStepIndex >= totalSlides - 1 ? "rgba(0,0,0,0.2)" : "#fff",
+          fontSize: "13px", fontWeight: 600, cursor: guideStepIndex >= totalSlides - 1 ? "default" : "pointer",
+          boxShadow: guideStepIndex >= totalSlides - 1 ? "none" : "0 4px 14px rgba(5,97,252,0.25)",
+        }}>
+          {ko ? "다음" : "Next"} →
+        </button>
+      </div>
+
       {/* 페이저 */}
       <div style={styles.guidePager}>
         <span style={styles.guidePagerLabel}>
@@ -250,35 +280,6 @@ export function HiringSetupStage() {
         </>
       ) : null}
 
-      {/* 카드 네비 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", padding: "12px 0" }}>
-        <button type="button" disabled={guideStepIndex === 0} onClick={() => setGuideStepIndex((i: number) => Math.max(0, i - 1))} style={{
-          padding: "10px 18px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.1)",
-          background: guideStepIndex === 0 ? "rgba(0,0,0,0.02)" : "white",
-          color: guideStepIndex === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: guideStepIndex === 0 ? "default" : "pointer",
-        }}>
-          ← {ko ? "이전" : "Prev"}
-        </button>
-        <div style={{ display: "flex", gap: "6px" }}>
-          {Array.from({ length: totalSlides }, (_, i) => (
-            <div key={i} onClick={() => setGuideStepIndex(i)} style={{
-              width: i === guideStepIndex ? "20px" : "8px", height: "8px", borderRadius: "100px",
-              background: i === guideStepIndex ? "#0561fc" : "rgba(0,0,0,0.1)",
-              cursor: "pointer", transition: "all 0.2s ease",
-            }} />
-          ))}
-        </div>
-        <button type="button" disabled={guideStepIndex >= totalSlides - 1} onClick={() => setGuideStepIndex((i: number) => Math.min(totalSlides - 1, i + 1))} style={{
-          padding: "10px 18px", borderRadius: "10px", border: "none",
-          background: guideStepIndex >= totalSlides - 1 ? "rgba(0,0,0,0.02)" : "#0561fc",
-          color: guideStepIndex >= totalSlides - 1 ? "rgba(0,0,0,0.2)" : "#fff",
-          fontSize: "13px", fontWeight: 600, cursor: guideStepIndex >= totalSlides - 1 ? "default" : "pointer",
-          boxShadow: guideStepIndex >= totalSlides - 1 ? "none" : "0 4px 14px rgba(5,97,252,0.25)",
-        }}>
-          {ko ? "다음" : "Next"} →
-        </button>
-      </div>
     </div>
   );
 }

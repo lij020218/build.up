@@ -132,6 +132,16 @@ export function TaxGuideStage() {
 
   return (
     <>
+      <div style={styles.stageFooter}>
+        {prevTraversedStage && (
+          <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
+            {language === "ko" ? "← 이전 단계" : "← Back"}
+          </button>
+        )}
+        <button type="button" style={{ ...styles.primaryButton }} onClick={() => handleVerificationContinue("tax-guide")}>
+          {copy.home.markTaxReviewed}
+        </button>
+      </div>
       <article style={styles.step}>
         <div style={styles.stepMeta}>{language === "ko" ? "세무" : "Tax"}</div>
         <div style={styles.stepTitle}>{isStartup
@@ -279,16 +289,6 @@ export function TaxGuideStage() {
           </div>
         </div>
       </article>
-      <div style={styles.stageFooter}>
-        {prevTraversedStage && (
-          <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
-            {language === "ko" ? "← 이전 단계" : "← Back"}
-          </button>
-        )}
-        <button type="button" style={{ ...styles.primaryButton }} onClick={() => handleVerificationContinue("tax-guide")}>
-          {copy.home.markTaxReviewed}
-        </button>
-      </div>
     </>
   );
 }

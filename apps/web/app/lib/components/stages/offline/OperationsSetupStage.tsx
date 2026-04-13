@@ -313,6 +313,25 @@ export function OperationsSetupStage() {
 
                   return (
                     <div style={{ marginBottom: "20px" }}>
+                      {/* 네비게이션 */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+                        <button
+                          type="button"
+                          style={{ fontSize: "14px", fontWeight: 580, color: opsStep === 0 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: opsStep === 0 ? "default" : "pointer", padding: "8px 4px", pointerEvents: opsStep === 0 ? "none" : "auto" }}
+                          onClick={() => setOpsStep(s => s - 1)}
+                        >← {language === "ko" ? "이전" : "Back"}</button>
+                        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                          {[0, 1, 2].map(i => (
+                            <div key={i} onClick={() => setOpsStep(i)} style={{ width: i === opsStep ? "20px" : "6px", height: "6px", borderRadius: "100px", background: i === opsStep ? "rgb(0,122,255)" : "rgba(17,17,17,0.15)", cursor: "pointer", transition: "width 0.2s ease" }} />
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          style={{ fontSize: "14px", fontWeight: 580, color: opsStep === 2 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: opsStep === 2 ? "default" : "pointer", padding: "8px 4px", pointerEvents: opsStep === 2 ? "none" : "auto" }}
+                          onClick={() => setOpsStep(s => s + 1)}
+                        >{language === "ko" ? "다음" : "Next"} →</button>
+                      </div>
+
                       {/* 헤더 */}
                       <div style={{ marginBottom: "18px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "7px" }}>
@@ -332,24 +351,6 @@ export function OperationsSetupStage() {
                       {opsStep === 1 && renderPos()}
                       {opsStep === 2 && renderDetail(snsChannels, "sns")}
 
-                      {/* 네비게이션 */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "18px" }}>
-                        <button
-                          type="button"
-                          style={{ fontSize: "14px", fontWeight: 580, color: opsStep === 0 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: opsStep === 0 ? "default" : "pointer", padding: "8px 4px", pointerEvents: opsStep === 0 ? "none" : "auto" }}
-                          onClick={() => setOpsStep(s => s - 1)}
-                        >← {language === "ko" ? "이전" : "Back"}</button>
-                        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                          {[0, 1, 2].map(i => (
-                            <div key={i} onClick={() => setOpsStep(i)} style={{ width: i === opsStep ? "20px" : "6px", height: "6px", borderRadius: "100px", background: i === opsStep ? "rgb(0,122,255)" : "rgba(17,17,17,0.15)", cursor: "pointer", transition: "width 0.2s ease" }} />
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          style={{ fontSize: "14px", fontWeight: 580, color: opsStep === 2 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: opsStep === 2 ? "default" : "pointer", padding: "8px 4px", pointerEvents: opsStep === 2 ? "none" : "auto" }}
-                          onClick={() => setOpsStep(s => s + 1)}
-                        >{language === "ko" ? "다음" : "Next"} →</button>
-                      </div>
                     </div>
                   );
 

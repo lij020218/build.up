@@ -251,9 +251,8 @@ export function OnlineRegistrationStage() {
 
   return (
     <div style={{ marginBottom: "16px" }}>
-      {pages[regPage]()}
       {/* 페이지 네비게이션 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
         <button type="button" onClick={() => setRegPage(0)} disabled={regPage === 0}
           style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: regPage === 0 ? "rgba(0,0,0,0.02)" : "white", color: regPage === 0 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: regPage === 0 ? "default" : "pointer" }}>
           ← {ko ? "사업자등록" : "Registration"}
@@ -268,6 +267,7 @@ export function OnlineRegistrationStage() {
           {ko ? "통신판매 신고" : "Telecom Filing"} →
         </button>
       </div>
+      {pages[regPage]()}
     </div>
   );
 }

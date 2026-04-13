@@ -39,6 +39,36 @@ export function InsuranceTaxSetupStage() {
 
   return (
     <div style={{ marginBottom: "14px" }} className="bento-fade-in">
+      {/* 페이지 네비게이션 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", padding: "12px 0" }}>
+        <button type="button" disabled={page === 0} onClick={() => setInsuranceTaxPage(p => p - 1)} style={{
+          padding: "10px 18px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.1)",
+          background: page === 0 ? "rgba(0,0,0,0.02)" : "white",
+          color: page === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
+          fontSize: "13px", fontWeight: 600, cursor: page === 0 ? "default" : "pointer",
+        }}>
+          ← {ko ? "이전" : "Prev"}
+        </button>
+        <div style={{ display: "flex", gap: "6px" }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} onClick={() => setInsuranceTaxPage(i)} style={{
+              width: i === page ? "20px" : "8px", height: "8px", borderRadius: "100px",
+              background: i === page ? "#0561fc" : "rgba(0,0,0,0.1)",
+              cursor: "pointer", transition: "all 0.2s ease",
+            }} />
+          ))}
+        </div>
+        <button type="button" disabled={page === totalPages - 1} onClick={() => setInsuranceTaxPage(p => p + 1)} style={{
+          padding: "10px 18px", borderRadius: "10px", border: "none",
+          background: page === totalPages - 1 ? "rgba(0,0,0,0.02)" : "#0561fc",
+          color: page === totalPages - 1 ? "rgba(0,0,0,0.2)" : "#fff",
+          fontSize: "13px", fontWeight: 600, cursor: page === totalPages - 1 ? "default" : "pointer",
+          boxShadow: page === totalPages - 1 ? "none" : "0 4px 14px rgba(5,97,252,0.25)",
+        }}>
+          {ko ? "다음" : "Next"} →
+        </button>
+      </div>
+
       {/* 페이지 인디케이터 + 탭 */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.45)" }}>
@@ -248,35 +278,6 @@ export function InsuranceTaxSetupStage() {
       </div>
       )}
 
-      {/* 페이지 네비게이션 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", padding: "12px 0" }}>
-        <button type="button" disabled={page === 0} onClick={() => setInsuranceTaxPage(p => p - 1)} style={{
-          padding: "10px 18px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.1)",
-          background: page === 0 ? "rgba(0,0,0,0.02)" : "white",
-          color: page === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: page === 0 ? "default" : "pointer",
-        }}>
-          ← {ko ? "이전" : "Prev"}
-        </button>
-        <div style={{ display: "flex", gap: "6px" }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} onClick={() => setInsuranceTaxPage(i)} style={{
-              width: i === page ? "20px" : "8px", height: "8px", borderRadius: "100px",
-              background: i === page ? "#0561fc" : "rgba(0,0,0,0.1)",
-              cursor: "pointer", transition: "all 0.2s ease",
-            }} />
-          ))}
-        </div>
-        <button type="button" disabled={page === totalPages - 1} onClick={() => setInsuranceTaxPage(p => p + 1)} style={{
-          padding: "10px 18px", borderRadius: "10px", border: "none",
-          background: page === totalPages - 1 ? "rgba(0,0,0,0.02)" : "#0561fc",
-          color: page === totalPages - 1 ? "rgba(0,0,0,0.2)" : "#fff",
-          fontSize: "13px", fontWeight: 600, cursor: page === totalPages - 1 ? "default" : "pointer",
-          boxShadow: page === totalPages - 1 ? "none" : "0 4px 14px rgba(5,97,252,0.25)",
-        }}>
-          {ko ? "다음" : "Next"} →
-        </button>
-      </div>
     </div>
   );
 }
