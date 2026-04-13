@@ -21,7 +21,7 @@ export function LoanGuideStage() {
     selectedBusinessModelId,
     selectedBudget,
     decisions,
-    guideSelections,
+    guideSelections, setGuideSelections,
     savedFinanceSnapshot,
     progFilter, setProgFilter,
     liveProgramsData, setLiveProgramsData,
@@ -139,6 +139,64 @@ export function LoanGuideStage() {
             : "Korea allocates trillions of won annually for SME policy funding. Lower rates than banks (1-3%) with repayment grace periods. Most business owners miss these because they don't know they exist or give up on paperwork. This stage matches you with the right programs and guides you through applications step by step."}
         </div>
       </div>
+
+      {/* ── 나의 자금 조달 경로 선택 ── */}
+      {(() => {
+        const fundingPath = (guideSelections["funding-path"] as string | undefined) ?? null;
+        const selectPath = (path: string) => {
+          setGuideSelections((prev: Record<string, string>) => ({ ...prev, "funding-path": path }));
+        };
+        return (
+      <div style={{ marginBottom: "14px", borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+        <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", marginBottom: "4px" }}>
+          {ko ? "나의 자금 조달 경로를 선택하세요" : "Choose your funding path"}
+        </div>
+        <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "12px" }}>
+          {ko ? "선택하면 자동 저장됩니다. 나중에 변경할 수 있어요." : "Auto-saved. You can change later."}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+          {(ko ? [
+            { id: "bootstrap", label: "부트스트랩", desc: "고객 매출로 성장", color: "#059669" },
+            { id: "govt-grant", label: "정부 지원금", desc: "TIPS/창업패키지", color: "#2563eb" },
+            { id: "vc-investment", label: "VC 투자 유치", desc: "시리즈 A 목표", color: "#7c3aed" },
+          ] : [
+            { id: "bootstrap", label: "Bootstrap", desc: "Grow with revenue", color: "#059669" },
+            { id: "govt-grant", label: "Gov Grant", desc: "TIPS/Packages", color: "#2563eb" },
+            { id: "vc-investment", label: "VC Funding", desc: "Target Series A", color: "#7c3aed" },
+          ]).map(opt => {
+            const selected = fundingPath === opt.id;
+            return (
+            <button key={opt.id} type="button" onClick={() => selectPath(opt.id)} style={{
+              padding: "14px 12px", borderRadius: "14px", cursor: "pointer",
+              border: selected ? `2px solid ${opt.color}` : "1px solid rgba(0,0,0,0.08)",
+              background: selected ? `${opt.color}08` : "rgba(0,0,0,0.01)",
+              textAlign: "center" as const, transition: "all 0.2s ease",
+            }}>
+              <div style={{
+                width: "18px", height: "18px", borderRadius: "50%", margin: "0 auto 8px",
+                border: selected ? `5px solid ${opt.color}` : "2px solid rgba(0,0,0,0.15)",
+                transition: "all 0.2s ease",
+              }} />
+              <div style={{ fontSize: "13px", fontWeight: 680, color: selected ? opt.color : "#0f172a" }}>{opt.label}</div>
+              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{opt.desc}</div>
+            </button>
+            );
+          })}
+        </div>
+        {fundingPath && (
+          <div style={{ marginTop: "10px", padding: "8px 12px", borderRadius: "10px", background: "rgba(217,119,6,0.04)", border: "1px solid rgba(217,119,6,0.1)" }}>
+            <div style={{ fontSize: "12px", fontWeight: 640, color: "#d97706" }}>
+              ✓ {fundingPath === "bootstrap"
+                ? (ko ? "부트스트랩 선택됨 — 정부 보조금으로 초기 자금을 확보하고, 매출로 성장하세요" : "Bootstrap selected — secure initial funds via grants, then grow with revenue")
+                : fundingPath === "govt-grant"
+                  ? (ko ? "정부 지원금 선택됨 — 아래에서 맞춤 프로그램을 확인하고 사업계획서를 준비하세요" : "Gov grant selected — check programs below and prepare your business plan")
+                  : (ko ? "VC 투자 선택됨 — 11단계에서 피치덱과 재무 모델을 먼저 준비하세요" : "VC funding selected — prepare pitch deck and financial model in Stage 11 first")}
+            </div>
+          </div>
+        )}
+      </div>
+        );
+      })()}
 
       {/* ── 자금 조달 3가지 경로 ── */}
       <div style={{ marginBottom: "14px", display: "grid", gap: "10px" }}>
