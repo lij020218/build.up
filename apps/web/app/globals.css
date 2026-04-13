@@ -77,7 +77,11 @@ body::before {
     repeating-linear-gradient(100deg, var(--bg-raw,#f7f6f3) 0%, var(--bg-raw,#f7f6f3) 7%, transparent 10%, transparent 12%, var(--bg-raw,#f7f6f3) 16%),
     repeating-linear-gradient(100deg, var(--aurora-1,#1d3557) 10%, var(--aurora-2,#457b9d) 15%, var(--aurora-3,#a8dadc) 20%, var(--aurora-4,#e0f0ff) 25%, var(--aurora-5,#1d3557) 30%);
   background-size: 300% 100%, 200% 100%;
-  mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
+  mask-image:
+    radial-gradient(ellipse at 100% 0%, black 10%, transparent 60%),
+    radial-gradient(ellipse at 0% 60%, black 10%, transparent 60%);
+  mask-composite: add;
+  -webkit-mask-composite: source-over;
   animation: auroraMove 60s linear infinite;
 }
 
