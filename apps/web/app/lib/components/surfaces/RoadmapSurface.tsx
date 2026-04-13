@@ -4,6 +4,7 @@ import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { localizeStage, getUiCopy, formatStageStatus } from "@build-up/shared";
 import { styles } from "../../styles";
 import { useRouter } from "next/navigation";
+import { AuroraBackground } from "../../../../components/ui/aurora-background";
 
 const SURFACE_HREFS = { current: "/current" } as const;
 
@@ -94,20 +95,8 @@ export function RoadmapSurface() {
           const cardClass = `roadmap-card${isCurrent ? " roadmap-card-current" : ""}${isLocked ? " roadmap-card-locked" : ""}`;
           const tags = tagMap[stage.code as string];
 
-          return (
-            <article
-              key={stage.code}
-              onClick={isClickable ? handleCardClick : undefined}
-              className={cardClass}
-              style={{
-                ...styles.roadmapRow,
-                ...(isCurrent ? styles.roadmapRowCurrent : {}),
-                ...(isCompleted ? styles.roadmapRowCompleted : {}),
-                cursor: isClickable ? "pointer" : "default",
-                opacity: isLocked ? 0.4 : 1,
-                userSelect: "none" as const,
-              }}
-            >
+          const cardContent = (
+            <>
               <div className={nodeClass} />
               <div style={styles.roadmapRowTop}>
                 <div style={styles.roadmapIndex}>
@@ -154,6 +143,34 @@ export function RoadmapSurface() {
                 <div style={{ fontSize: isCurrent ? "14px" : "13px", lineHeight: 1.55, color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>
                   {localizeStage(stage, language, industryCategoryId).goal}
                 </div>
+              )}
+            </>
+          );
+
+          return (
+            <article
+              key={stage.code}
+              onClick={isClickable ? handleCardClick : undefined}
+              className={cardClass}
+              style={{
+                ...styles.roadmapRow,
+                ...(isCurrent ? { ...styles.roadmapRowCurrent, padding: 0, overflow: "hidden" as const } : {}),
+                ...(isCompleted ? styles.roadmapRowCompleted : {}),
+                cursor: isClickable ? "pointer" : "default",
+                opacity: isLocked ? 0.4 : 1,
+                userSelect: "none" as const,
+              }}
+            >
+              {isCurrent ? (
+                <AuroraBackground
+                  className="rounded-[inherit]"
+                  style={{ minHeight: "auto", padding: "20px 24px" }}
+                  showRadialGradient
+                >
+                  {cardContent}
+                </AuroraBackground>
+              ) : (
+                cardContent
               )}
             </article>
           );
