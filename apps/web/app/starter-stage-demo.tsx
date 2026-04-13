@@ -816,8 +816,7 @@ export default function StarterStageDemo({
 
   return (
     <DashboardProvider value={_ctxValue}>
-    <AuroraBackground style={{ minHeight: "100vh", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }} showRadialGradient />
-    <main style={{ ...(showOperationalHero ? styles.shell : operationalShell), position: "relative", zIndex: 1 }}>
+    <main style={showOperationalHero ? styles.shell : operationalShell}>
       {showOperationalHero ? (
       <section style={styles.hero}>
         <div style={styles.eyebrow}>build.up</div>

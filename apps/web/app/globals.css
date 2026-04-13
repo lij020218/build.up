@@ -54,15 +54,37 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background:
-    radial-gradient(circle at top, rgba(29, 53, 87, 0.08), transparent 32%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
 }
 
 body {
   min-height: 100vh;
+  position: relative;
+}
+
+/* ── Aurora 배경 효과 (body ::before) ── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.25;
+  filter: blur(12px);
+  background-image:
+    repeating-linear-gradient(100deg, var(--bg-raw,#f7f6f3) 0%, var(--bg-raw,#f7f6f3) 7%, transparent 10%, transparent 12%, var(--bg-raw,#f7f6f3) 16%),
+    repeating-linear-gradient(100deg, var(--aurora-1,#1d3557) 10%, var(--aurora-2,#457b9d) 15%, var(--aurora-3,#a8dadc) 20%, var(--aurora-4,#e0f0ff) 25%, var(--aurora-5,#1d3557) 30%);
+  background-size: 300% 100%, 200% 100%;
+  mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
+  animation: auroraMove 60s linear infinite;
+}
+
+/* 콘텐츠를 Aurora 위에 표시 */
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 a {
