@@ -213,8 +213,8 @@ export function VentureCertificationStage() {
         </div>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>
           {ko
-            ? "벤처인증을 받으면 아래 정부 지원사업에서 가산점을 받거나 신청 자격이 생깁니다. TIPS, 예비창업패키지, AI 바우처, 경진대회 등 상세 목록과 신청 방법은 15단계 「자금 조달 & 정책자금」에서 확인하세요."
-            : "Venture certification gives you bonus points or eligibility for government programs below. Detailed lists and application guides are in Stage 15 \"Funding & Policy\"."}
+            ? "벤처인증을 받으면 아래 정부 지원사업에서 가산점을 받거나 신청 자격이 생깁니다."
+            : "Venture certification gives you bonus points or eligibility for government programs below."}
         </div>
 
         <div style={{ display: "grid", gap: "8px" }}>
@@ -236,12 +236,8 @@ export function VentureCertificationStage() {
           ))}
         </div>
 
-        <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: 650, color: "#7c3aed" }}>{ko ? "전체 지원사업 목록 · 신청 가이드" : "Full Program List & Application Guide"}</div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{ko ? "TIPS, 바우처, 경진대회, 정책대출 상세는 15단계에서" : "TIPS, vouchers, competitions, policy loans in Stage 15"}</div>
-          </div>
-          <button type="button" onClick={() => d.router.push("/current?editStage=loan-guide")} style={{ padding: "8px 16px", borderRadius: "10px", background: "#7c3aed", color: "#fff", fontSize: "13px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
+        <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.04)", fontSize: "12px", color: "#7c3aed", lineHeight: 1.5, fontWeight: 500 }}>
+          {ko ? "💡 벤처인증을 완료하면 이후 단계에서 TIPS/창업패키지/바우처 등 지원사업 신청 시 가산점이 적용됩니다." : "💡 Completing venture certification gives you bonus points when applying for TIPS, packages, and vouchers in later stages."}
         </div>
       </div>
       )}

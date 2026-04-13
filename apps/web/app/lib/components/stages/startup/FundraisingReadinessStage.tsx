@@ -150,12 +150,8 @@ export function FundraisingReadinessStage() {
             </div>
           </div>
           <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 640, color: "#059669" }}>{ko ? "정부 보조금 · 정책자금 상세" : "Government grants & policy funds"}</div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{ko ? "소진공, TIPS, 바우처 등 비지분 자금은 \"자금 조달 & 정책자금\" 단계에서 안내합니다" : "Non-dilutive funding details are in the \"Funding & Policy\" stage"}</div>
-              </div>
-              <button type="button" onClick={() => d.navigateToSurface("current")} style={{ padding: "6px 14px", borderRadius: "8px", background: "#059669", color: "#fff", fontSize: "12px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
+            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(5,150,105,0.04)", fontSize: "12px", color: "#059669", lineHeight: 1.5, fontWeight: 500 }}>
+              {ko ? "💡 이 단계를 완료하면, 다음 단계에서 정부 지원사업(TIPS/창업패키지/바우처)과 정책 대출을 구체적으로 매칭하고 신청합니다." : "💡 After this stage, the next steps will match you with government programs (TIPS/packages/vouchers) and policy loans."}
             </div>
           </div>
         </div>
@@ -201,12 +197,8 @@ export function FundraisingReadinessStage() {
             </div>
           </div>
           <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 640, color: "#2563eb" }}>{ko ? "TIPS · 정부 R&D · 정책자금 상세" : "TIPS, Gov R&D & Policy Funds"}</div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{ko ? "비지분 자금 경로 상세는 15단계에서 안내합니다" : "Non-dilutive funding details in Stage 15"}</div>
-              </div>
-              <button type="button" onClick={() => d.navigateToSurface("current")} style={{ padding: "6px 14px", borderRadius: "8px", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
+            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(37,99,235,0.04)", fontSize: "12px", color: "#2563eb", lineHeight: 1.5, fontWeight: 500 }}>
+              {ko ? "💡 VC 투자 결정 후, 다음 단계에서 비지분 자금(TIPS/R&D/바우처)을 병행 신청하면 런웨이를 더 확보할 수 있습니다." : "💡 After deciding on VC, applying for non-dilutive funds (TIPS/R&D/vouchers) in parallel extends your runway."}
             </div>
           </div>
         </div>
@@ -278,25 +270,6 @@ export function FundraisingReadinessStage() {
 
       </div>
 
-      {/* ── AI 사업계획서는 15단계(자금 조달 & 정책자금)로 이동 ── */}
-      <div style={{
-        marginBottom: "18px", borderRadius: "20px",
-        border: "1px solid rgba(29,53,87,0.08)",
-        background: "rgba(29,53,87,0.02)",
-        padding: "18px 22px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-            <span style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>{ko ? "AI 사업계획서 생성" : "AI Business Plan"}</span>
-          </div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
-            {ko ? "PSST 사업계획서 생성은 \"자금 조달 & 정책자금\" 단계에서 이용할 수 있습니다" : "PSST business plan generation is available in the \"Funding & Policy\" stage"}
-          </div>
-        </div>
-        <button type="button" onClick={() => d.navigateToSurface("current")} style={{ padding: "8px 16px", borderRadius: "10px", background: "var(--primary)", color: "#fff", fontSize: "13px", fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" as const }}>{ko ? "15단계로 →" : "Stage 15 →"}</button>
-      </div>
     </>
   );
 }

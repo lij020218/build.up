@@ -34,6 +34,7 @@ export function LoanGuideStage() {
   } = d;
 
   const ko = language === "ko";
+  const isStartup = industryCategoryId === "startup-tech";
 
   /* ── Startup Support Programs ── */
   const matched = getMatchedPrograms(startupType);
@@ -131,12 +132,18 @@ export function LoanGuideStage() {
           <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이 단계가 중요한가" : "Why this matters"}</span>
         </div>
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
-          {ko ? "적절한 자금 조달은 사업의 생존과 성장 속도를 결정합니다." : "The right funding determines your survival and growth speed."}
+          {isStartup
+            ? (ko ? "지분을 지키면서 성장 자금을 확보하세요." : "Secure growth capital while protecting your equity.")
+            : (ko ? "적절한 자금 조달은 사업의 생존과 성장 속도를 결정합니다." : "The right funding determines your survival and growth speed.")}
         </div>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
-          {ko
-            ? "한국에는 소상공인을 위한 정책자금이 매년 수조원 규모로 집행됩니다. 시중 은행 대출보다 금리가 낮고 (1~3%), 상환 유예 기간도 있습니다. 하지만 대부분의 사장님이 \"존재 자체를 모르거나\" \"서류가 복잡해서\" 포기합니다. 이 단계에서는 내 업종에 맞는 프로그램을 찾고, 신청 방법을 단계별로 안내합니다."
-            : "Korea allocates trillions of won annually for SME policy funding. Lower rates than banks (1-3%) with repayment grace periods. Most business owners miss these because they don't know they exist or give up on paperwork. This stage matches you with the right programs and guides you through applications step by step."}
+          {isStartup
+            ? (ko
+              ? "초기 밸류에이션이 낮을 때 지분을 내어주면 나중에 수십억의 가치를 잃습니다. 대신 정부 R&D 과제(TIPS 최대 8억), 예비창업패키지(최대 1억), AI 바우처 등 비지분 자금으로 마일스톤을 달성한 뒤 기업가치를 높이세요. 이 단계에서는 우리 스타트업에 맞는 프로그램을 매칭하고, AI 사업계획서로 신청까지 도와드립니다."
+              : "Giving up equity at a low valuation costs billions later. Instead, hit milestones with non-dilutive funds — TIPS (up to ₩800M), Pre-Startup Package (₩100M), AI Voucher — then raise at a higher valuation. This stage matches programs to your startup and helps you apply with an AI-generated business plan.")
+            : (ko
+              ? "한국에는 소상공인을 위한 정책자금이 매년 수조원 규모로 집행됩니다. 시중 은행 대출보다 금리가 낮고 (1~3%), 상환 유예 기간도 있습니다. 하지만 대부분의 사장님이 \"존재 자체를 모르거나\" \"서류가 복잡해서\" 포기합니다. 이 단계에서는 내 업종에 맞는 프로그램을 찾고, 신청 방법을 단계별로 안내합니다."
+              : "Korea allocates trillions of won annually for SME policy funding. Lower rates than banks (1-3%) with repayment grace periods. Most business owners miss these because they don't know they exist or give up on paperwork. This stage matches you with programs and guides you through applications.")}
         </div>
       </div>
 
@@ -154,16 +161,20 @@ export function LoanGuideStage() {
         <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "12px" }}>
           {ko ? "선택하면 자동 저장됩니다. 나중에 변경할 수 있어요." : "Auto-saved. You can change later."}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-          {(ko ? [
-            { id: "bootstrap", label: "부트스트랩", desc: "고객 매출로 성장", color: "#059669" },
-            { id: "govt-grant", label: "정부 지원금", desc: "TIPS/창업패키지", color: "#2563eb" },
-            { id: "vc-investment", label: "VC 투자 유치", desc: "시리즈 A 목표", color: "#7c3aed" },
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+          {(isStartup ? (ko ? [
+            { id: "govt-rd", label: "R&D · 지원사업", desc: "TIPS/창업패키지/바우처", color: "#2563eb" },
+            { id: "policy-loan", label: "정책 대출 · 보증", desc: "기보/신보/중진공", color: "#059669" },
           ] : [
-            { id: "bootstrap", label: "Bootstrap", desc: "Grow with revenue", color: "#059669" },
-            { id: "govt-grant", label: "Gov Grant", desc: "TIPS/Packages", color: "#2563eb" },
-            { id: "vc-investment", label: "VC Funding", desc: "Target Series A", color: "#7c3aed" },
-          ]).map(opt => {
+            { id: "govt-rd", label: "R&D & Programs", desc: "TIPS/Packages/Vouchers", color: "#2563eb" },
+            { id: "policy-loan", label: "Policy Loans", desc: "KIBO/KODIT Guarantees", color: "#059669" },
+          ]) : (ko ? [
+            { id: "policy-fund", label: "정부 정책자금", desc: "소진공/중진공 저금리", color: "#2563eb" },
+            { id: "guarantee-loan", label: "보증 대출", desc: "신보/기보 무담보", color: "#059669" },
+          ] : [
+            { id: "policy-fund", label: "Policy Funds", desc: "SEMAS/KOSMES low-rate", color: "#2563eb" },
+            { id: "guarantee-loan", label: "Guarantee Loans", desc: "KODIT/KIBO unsecured", color: "#059669" },
+          ])).map(opt => {
             const selected = fundingPath === opt.id;
             return (
             <button key={opt.id} type="button" onClick={() => selectPath(opt.id)} style={{
@@ -186,11 +197,15 @@ export function LoanGuideStage() {
         {fundingPath && (
           <div style={{ marginTop: "10px", padding: "8px 12px", borderRadius: "10px", background: "rgba(217,119,6,0.04)", border: "1px solid rgba(217,119,6,0.1)" }}>
             <div style={{ fontSize: "12px", fontWeight: 640, color: "#d97706" }}>
-              ✓ {fundingPath === "bootstrap"
-                ? (ko ? "부트스트랩 선택됨 — 정부 보조금으로 초기 자금을 확보하고, 매출로 성장하세요" : "Bootstrap selected — secure initial funds via grants, then grow with revenue")
-                : fundingPath === "govt-grant"
-                  ? (ko ? "정부 지원금 선택됨 — 아래에서 맞춤 프로그램을 확인하고 사업계획서를 준비하세요" : "Gov grant selected — check programs below and prepare your business plan")
-                  : (ko ? "VC 투자 선택됨 — 11단계에서 피치덱과 재무 모델을 먼저 준비하세요" : "VC funding selected — prepare pitch deck and financial model in Stage 11 first")}
+              ✓ {fundingPath === "govt-rd"
+                ? (ko ? "R&D · 지원사업 선택됨 — 아래에서 맞춤 프로그램을 확인하고 사업계획서를 준비하세요" : "R&D & Programs selected — check matching programs below and prepare your plan")
+                : fundingPath === "policy-loan"
+                  ? (ko ? "정책 대출 · 보증 선택됨 — 기보/신보 보증서 발급 후 저금리 대출을 활용하세요" : "Policy loan selected — get KIBO/KODIT guarantee for low-rate loans")
+                  : fundingPath === "policy-fund"
+                    ? (ko ? "정책자금 선택됨 — 소진공/중진공 자금 신청 절차를 아래에서 확인하세요" : "Policy fund selected — check SEMAS/KOSMES application steps below")
+                    : fundingPath === "guarantee-loan"
+                      ? (ko ? "보증 대출 선택됨 — 신보/기보 보증서로 무담보 저금리 대출을 받으세요" : "Guarantee loan selected — use KODIT/KIBO letters for unsecured low-rate loans")
+                      : ""}
             </div>
           </div>
         )}
@@ -198,10 +213,69 @@ export function LoanGuideStage() {
         );
       })()}
 
-      {/* ── 자금 조달 3가지 경로 ── */}
+      {/* ── 자금 경로 상세 (업종별 분기) ── */}
       <div style={{ marginBottom: "14px", display: "grid", gap: "10px" }}>
-        {(ko ? [
-          { num: "1", title: "정부 정책자금 (추천)", desc: "소진공, 중진공, 지자체 정책자금. 금리 1~3%, 상환유예 1~2년. 사업계획서 필요", color: "#2563eb", steps: [
+        {(isStartup ? (ko ? [
+          { num: "1", title: "무상 지원사업 (R&D · 사업화)", desc: "갚을 필요 없음. TIPS 최대 8억, 예비창업패키지 최대 1억, AI바우처 최대 3억", color: "#2563eb", steps: [
+            "K-Startup(k-startup.go.kr)에서 모집 공고 확인",
+            "TIPS: 149개 운영사 중 우리 분야 운영사 찾기 → 운영사가 선투자 → 정부 매칭",
+            "예비창업패키지: 사업자등록 전 예비 창업자 대상. ~11/30까지 수시 접수",
+            "사업계획서(PSST) + 발표 자료 준비 → 온라인 접수 → 서류/발표 심사 → 선정",
+            "tip: 벤처인증(12단계)이 있으면 가산점. 여러 프로그램에 동시 지원 가능",
+          ], links: [
+            { label: "TIPS 운영사 목록", url: "https://www.jointips.or.kr" },
+            { label: "K-Startup 지원사업", url: "https://www.k-startup.go.kr" },
+            { label: "AI 바우처", url: "https://www.nipa.kr" },
+          ]},
+          { num: "2", title: "기술보증 기반 정책 대출", desc: "기보/중진공 보증으로 저금리 대출. 벤처인증 시 우대", color: "#059669", steps: [
+            "기술보증기금(kibo.or.kr)에서 기술평가 → 보증서 발급",
+            "보증서 지참하여 시중은행 방문 → 무담보 저금리 대출",
+            "중진공 청년전용창업자금: 만 39세 이하, 업력 3년 미만, 고정금리 2.5%",
+            "tip: 기보 벤처캠프 프로그램 활용 시 보증료 추가 할인",
+          ], links: [
+            { label: "기술보증기금", url: "https://www.kibo.or.kr" },
+            { label: "중진공 청년전용", url: "https://www.kosmes.or.kr" },
+          ]},
+          { num: "3", title: "바우처 · 인프라 지원", desc: "AI/데이터/클라우드 도입 비용 70~90% 정부 부담", color: "#7c3aed", steps: [
+            "AI 바우처(nipa.kr): AI 솔루션 도입 비용 최대 3억 지원",
+            "데이터바우처(kdata.or.kr): 데이터 구매·가공 최대 5천만원",
+            "클라우드 바우처: AWS/GCP/Azure 크레딧 지원",
+            "tip: 바우처는 사업계획서가 간소. 견적서 + 도입 계획만으로 신청 가능",
+          ], links: [
+            { label: "AI 바우처", url: "https://www.nipa.kr" },
+            { label: "데이터바우처", url: "https://www.kdata.or.kr" },
+          ]},
+        ] : [
+          { num: "1", title: "R&D Grants (No Repayment)", desc: "TIPS up to ₩800M, Pre-Startup ₩100M, AI Voucher ₩300M", color: "#2563eb", steps: [
+            "Check K-Startup (k-startup.go.kr) for open calls",
+            "TIPS: Find matching operator → they invest first → gov matches",
+            "Pre-Startup Package: Pre-entrepreneurs, rolling until Nov 30",
+            "Prepare PSST business plan → apply online → review → selection",
+            "tip: Venture cert (Stage 12) gives bonus points. Apply to multiple",
+          ], links: [
+            { label: "TIPS Operators", url: "https://www.jointips.or.kr" },
+            { label: "K-Startup", url: "https://www.k-startup.go.kr" },
+          ]},
+          { num: "2", title: "Tech Guarantee Loans", desc: "KIBO/KOSMES guarantees for low-rate loans. Venture cert preferred", color: "#059669", steps: [
+            "KIBO (kibo.or.kr): tech assessment → guarantee letter",
+            "Bring guarantee to bank → unsecured low-rate loan",
+            "KOSMES Youth Fund: under 39, <3yr old, fixed 2.5%",
+            "tip: KIBO VentureCamp gives additional guarantee fee discount",
+          ], links: [
+            { label: "KIBO", url: "https://www.kibo.or.kr" },
+            { label: "KOSMES Youth", url: "https://www.kosmes.or.kr" },
+          ]},
+          { num: "3", title: "Vouchers & Infrastructure", desc: "AI/Data/Cloud adoption 70-90% gov covered", color: "#7c3aed", steps: [
+            "AI Voucher (nipa.kr): up to ₩300M for AI adoption",
+            "Data Voucher (kdata.or.kr): up to ₩50M for data",
+            "Cloud Voucher: AWS/GCP/Azure credits",
+            "tip: Vouchers need simpler plans — quotes + adoption plan only",
+          ], links: [
+            { label: "AI Voucher", url: "https://www.nipa.kr" },
+            { label: "Data Voucher", url: "https://www.kdata.or.kr" },
+          ]},
+        ]) : (ko ? [
+          { num: "1", title: "정부 정책자금 (추천)", desc: "소진공, 중진공, 지자체 정책자금. 금리 1~3%, 상환유예 1~2년", color: "#2563eb", steps: [
             "소상공인시장진흥공단(소진공) 홈페이지에서 자격 확인",
             "신청 서류 준비: 사업자등록증, 사업계획서, 재무제표(없으면 추정)",
             "온라인 접수 → 현장 실사(1~2주) → 승인 → 자금 집행",
@@ -210,7 +284,7 @@ export function LoanGuideStage() {
             { label: "소진공 정책자금", url: "https://www.semas.or.kr" },
             { label: "중진공 정책자금", url: "https://www.kosmes.or.kr" },
           ]},
-          { num: "2", title: "시중은행 소상공인 대출", desc: "신용보증기금, 기술보증기금 보증서로 금리 인하. 보증료 0.5~2%", color: "#059669", steps: [
+          { num: "2", title: "시중은행 보증 대출", desc: "신용보증기금, 기술보증기금 보증서로 금리 인하. 무담보 최대 2억", color: "#059669", steps: [
             "신용보증기금(kodit.co.kr) 또는 기보(kibo.or.kr)에서 보증서 발급",
             "보증서 지참하여 시중은행(국민, 신한, 하나 등) 방문",
             "보증서가 있으면 담보 없이 최대 2억까지 가능",
@@ -219,9 +293,9 @@ export function LoanGuideStage() {
             { label: "신용보증기금", url: "https://www.kodit.co.kr" },
             { label: "기술보증기금", url: "https://www.kibo.or.kr" },
           ]},
-          { num: "3", title: "무상 지원금 · 바우처", desc: "갚을 필요 없는 지원금. 특정 사업비에만 사용 가능 (용도 제한)", color: "#7c3aed", steps: [
+          { num: "3", title: "무상 지원금 · 바우처", desc: "갚을 필요 없음. 스마트화 지원, 디지털 바우처 등", color: "#7c3aed", steps: [
             "K-Startup(k-startup.go.kr)에서 내 업종 맞춤 공모 확인",
-            "소상공인 스마트화 지원, AI 바우처, 데이터바우처 등",
+            "소상공인 스마트화 지원, 디지털 전환 바우처 등",
             "사업계획서 + 견적서 준비 → 온라인 접수 → 평가 → 선정",
             "tip: 선정률 10~30%. 여러 프로그램에 동시 지원하세요",
           ], links: [
@@ -229,34 +303,34 @@ export function LoanGuideStage() {
             { label: "소상공인 스마트화", url: "https://www.semas.or.kr" },
           ]},
         ] : [
-          { num: "1", title: "Government Policy Funds (Best)", desc: "SEMAS, KOSMES. Low rates 1-3%, 1-2yr grace. Requires business plan", color: "#2563eb", steps: [
+          { num: "1", title: "Government Policy Funds", desc: "SEMAS, KOSMES. Low rates 1-3%, 1-2yr grace", color: "#2563eb", steps: [
             "Check eligibility at SEMAS (semas.or.kr)",
-            "Prepare: business registration, plan, financials (estimates OK)",
+            "Prepare: registration, plan, financials (estimates OK)",
             "Apply online → site visit (1-2wk) → approval → disbursement",
-            "tip: March-April has the most budget. H2 may be depleted",
+            "tip: March-April has most budget. H2 may be depleted",
           ], links: [
-            { label: "SEMAS Policy Funds", url: "https://www.semas.or.kr" },
-            { label: "KOSMES Funds", url: "https://www.kosmes.or.kr" },
+            { label: "SEMAS", url: "https://www.semas.or.kr" },
+            { label: "KOSMES", url: "https://www.kosmes.or.kr" },
           ]},
-          { num: "2", title: "Bank Loans with Guarantees", desc: "KODIT/KIBO guarantee letters for lower rates. 0.5-2% guarantee fee", color: "#059669", steps: [
-            "Get guarantee from KODIT (kodit.co.kr) or KIBO (kibo.or.kr)",
-            "Bring guarantee to commercial bank (KB, Shinhan, Hana)",
-            "Up to ₩200M without collateral with guarantee letter",
+          { num: "2", title: "Bank Loans with Guarantees", desc: "KODIT/KIBO guarantees for lower rates. Up to ₩200M unsecured", color: "#059669", steps: [
+            "Get guarantee from KODIT or KIBO",
+            "Bring guarantee to commercial bank",
+            "Up to ₩200M without collateral",
             "tip: KIBO has lower rates, better for tech businesses",
           ], links: [
             { label: "KODIT", url: "https://www.kodit.co.kr" },
             { label: "KIBO", url: "https://www.kibo.or.kr" },
           ]},
-          { num: "3", title: "Free Grants & Vouchers", desc: "No repayment. Restricted to specific business expenses", color: "#7c3aed", steps: [
-            "Check K-Startup for matching programs (k-startup.go.kr)",
-            "Smart SME, AI Voucher, Data Voucher, etc.",
-            "Business plan + quotes → apply online → evaluation → selection",
-            "tip: 10-30% selection rate. Apply to multiple simultaneously",
+          { num: "3", title: "Free Grants & Vouchers", desc: "No repayment. Smart SME, digital vouchers", color: "#7c3aed", steps: [
+            "Check K-Startup for matching programs",
+            "Smart SME, digital transformation vouchers",
+            "Plan + quotes → apply online → evaluation → selection",
+            "tip: 10-30% selection. Apply to multiple simultaneously",
           ], links: [
-            { label: "K-Startup Programs", url: "https://www.k-startup.go.kr" },
+            { label: "K-Startup", url: "https://www.k-startup.go.kr" },
             { label: "Smart SME", url: "https://www.semas.or.kr" },
           ]},
-        ]).map(path => (
+        ])).map(path => (
           <div key={path.num} style={{ borderRadius: "20px", border: `1px solid ${path.color}12`, background: `linear-gradient(180deg, ${path.color}03 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
             <div style={{ padding: "18px 22px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
               <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: path.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, flexShrink: 0 }}>{path.num}</div>
