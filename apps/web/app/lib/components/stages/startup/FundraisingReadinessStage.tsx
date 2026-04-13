@@ -30,6 +30,14 @@ export function FundraisingReadinessStage() {
     </a>
   );
 
+  /* ── 사업계획서: decisions에서 복원 ── */
+  const savedBp = (decisions["fundraising-readiness"] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
+  const hasSavedBp = !!(savedBp?.bpSections);
+  if (hasSavedBp && !bpSections && !bpLoading) {
+    setBpSections(savedBp.bpSections as Array<{ title: string; content: string }>);
+    setBpSummary((savedBp.bpSummary as string) ?? null);
+  }
+
   /* ── 사업계획서 생성 ── */
   const generatePlanFR = async () => {
     setBpLoading(true);
@@ -75,6 +83,17 @@ export function FundraisingReadinessStage() {
       if (data.error) throw new Error(data.error);
       setBpSections(data.sections);
       setBpSummary(data.summary);
+      // decisions에 저장 → autosave → Supabase
+      const prev = decisions["fundraising-readiness"] ?? { stageId: "fundraising-readiness" };
+      const prevInputs = (prev as Record<string, unknown>).inputs as Record<string, unknown> ?? {};
+      d.setDecisions({
+        ...decisions,
+        "fundraising-readiness": {
+          ...prev,
+          stageId: "fundraising-readiness",
+          inputs: { ...prevInputs, bpSections: data.sections, bpSummary: data.summary, bpSavedAt: new Date().toISOString() },
+        } as typeof prev,
+      });
     } catch (err) {
       setBpError(err instanceof Error ? err.message : "Failed");
     }

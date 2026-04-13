@@ -25,6 +25,7 @@ import { StaffLaborCard } from "./analytics/StaffLaborCard";
 import { DeliveryPlatformCard } from "./analytics/DeliveryPlatformCard";
 import { ProductPerformanceCard } from "./analytics/ProductPerformanceCard";
 import { MemberManagementCard } from "./analytics/MemberManagementCard";
+import { BusinessPlanCard } from "./analytics/BusinessPlanCard";
 
 export function AnalyticsSurface() {
   const d = useDashboardCtx();
@@ -559,6 +560,9 @@ export function AnalyticsSurface() {
 
               {/* ── 수강생 · 회원 관리 ── */}
               <MemberManagementCard />
+
+              {/* ── AI 사업계획서 ── */}
+              <BusinessPlanCard />
 
               {/* 매출 입력은 상단 7일 차트 카드에 통합됨 */}
 
