@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { supabase } from "../../../../../lib/supabase";
 
 export function FundraisingReadinessStage() {
   const d = useDashboardCtx();
@@ -56,9 +57,14 @@ export function FundraisingReadinessStage() {
         northStarMetricName: geInputs?.northStarMetricName as string | undefined,
         targetCustomer: guideSelections["interview-target"] || undefined,
       };
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error(ko ? "로그인이 필요합니다" : "Login required");
       const res = await fetch("/api/ai/business-plan/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`${res.status}`);
