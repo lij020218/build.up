@@ -5,6 +5,7 @@ import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { styles } from "../../styles";
 import { VentureCertificationStage } from "../stages/startup/VentureCertificationStage";
 import { CompanySetupStage } from "../stages/startup/CompanySetupStage";
+import { GrowthEngineStage } from "../stages/startup/GrowthEngineStage";
 import {
   buildMarketScoreNarrative,
   buildRecommendedMarkets,
@@ -4352,8 +4353,10 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {/* ── 성장·리텐션 루프 가이드 (growth_engine) — 페이지네이션 ── */}
-                {currentStage.code === "growth_engine" && (() => {
+                {/* ── 성장·리텐션 루프 (분리됨) ── */}
+                {currentStage.code === "growth_engine" && <GrowthEngineStage />}
+                {/* ── growth_engine REMOVED — below kept for reference during migration ── */}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   const pg = guideStepIndex;
                   const totalPg = 4;
