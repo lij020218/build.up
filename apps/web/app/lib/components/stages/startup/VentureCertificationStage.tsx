@@ -6,8 +6,12 @@ export function VentureCertificationStage() {
   const d = useDashboardCtx();
   const language = d.language;
   const ko = language === "ko";
-  const { guideStepIndex, setGuideStepIndex } = d;
+  const { guideStepIndex, setGuideStepIndex, guideSelections, setGuideSelections } = d;
   const pg = guideStepIndex;
+  const selectedVentureType = (guideSelections["venture-cert-type"] as string | undefined) ?? null;
+  const selectVentureType = (type: string) => {
+    setGuideSelections((prev: Record<string, string>) => ({ ...prev, "venture-cert-type": type }));
+  };
   const totalPg = 4;
   const pgLabels = ko
     ? ["왜 중요한가", "1. 인증 유형", "2. 혜택 상세", "3. 정부 지원사업"]
@@ -90,22 +94,42 @@ export function VentureCertificationStage() {
       </>
       )}
 
-      {/* PAGE 1 — 인증 유형 */}
-      {pg === 1 && (
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {(ko ? [
-          { type: "벤처투자유형", who: "VC · 액셀러레이터 등 적격 투자기관에서 투자받은 기업", reqs: ["적격 투자기관에서 5,000만원 이상 투자 실적", "자본금 대비 투자 금액 10% 이상"], fast: "가장 빠름 — 투자 실적만 증명하면 됨", color: "#2563eb" },
-          { type: "연구개발유형", who: "기술 R&D에 집중하는 기업 (기업부설연구소 보유)", reqs: ["기업부설연구소 또는 연구개발전담부서 보유", "직전 4분기 R&D비 5,000만원 이상 + 매출의 5~10%", "사업성 평가 우수 판정"], fast: "연구소 필수 — 설립에 2~4주 소요", color: "#7c3aed" },
-          { type: "혁신성장유형", who: "기술성 + 사업성 모두 우수한 고성장 기업", reqs: ["기술성 평가 우수 (기술보증기금 등)", "사업성 평가 우수"], fast: "가장 범용적 — 연구소 없어도 가능", color: "#059669" },
+      {/* PAGE 1 — 인증 유형 선택 */}
+      {pg === 1 && (() => {
+        const types = ko ? [
+          { id: "investment", type: "벤처투자유형", who: "VC · 액셀러레이터 등 적격 투자기관에서 투자받은 기업", reqs: ["적격 투자기관에서 5,000만원 이상 투자 실적", "자본금 대비 투자 금액 10% 이상"], fast: "가장 빠름 — 투자 실적만 증명하면 됨", color: "#2563eb", timing: "처리: 약 20일", cost: "수수료 없음" },
+          { id: "rnd", type: "연구개발유형", who: "기술 R&D에 집중하는 기업 (기업부설연구소 보유)", reqs: ["기업부설연구소 또는 연구개발전담부서 보유", "직전 4분기 R&D비 5,000만원 이상 + 매출의 5~10%", "사업성 평가 우수 판정"], fast: "연구소 필수 — 설립에 2~4주 소요", color: "#7c3aed", timing: "처리: 약 30~45일", cost: "연구소 설립비 50~100만원" },
+          { id: "innovation", type: "혁신성장유형", who: "기술성 + 사업성 모두 우수한 고성장 기업", reqs: ["기술성 평가 우수 (기술보증기금 등)", "사업성 평가 우수"], fast: "가장 범용적 — 연구소 없어도 가능", color: "#059669", timing: "처리: 약 30~45일", cost: "수수료 없음" },
         ] : [
-          { type: "Investment Type", who: "Companies funded by qualified investors (VC, accelerator)", reqs: ["₩50M+ investment from qualified institutions", "Investment ≥ 10% of capital"], fast: "Fastest — just prove investment", color: "#2563eb" },
-          { type: "R&D Type", who: "Tech companies with R&D labs", reqs: ["Own R&D lab or department", "Last 4Q R&D spend ₩50M+ and 5-10% of revenue", "Business viability assessment pass"], fast: "Lab required — 2-4wk to set up", color: "#7c3aed" },
-          { type: "Innovation Growth", who: "High-growth companies with tech + business excellence", reqs: ["Technology assessment pass (KIBO etc.)", "Business viability assessment pass"], fast: "Most versatile — no lab needed", color: "#059669" },
-        ]).map(t => (
-          <div key={t.type} style={{ borderRadius: "16px", border: `1px solid ${t.color}12`, background: `${t.color}02`, overflow: "hidden" }}>
-            <div style={{ padding: "16px 18px 10px" }}>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: t.color, marginBottom: "4px" }}>{t.type}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>{t.who}</div>
+          { id: "investment", type: "Investment Type", who: "Companies funded by qualified investors (VC, accelerator)", reqs: ["₩50M+ investment from qualified institutions", "Investment ≥ 10% of capital"], fast: "Fastest — just prove investment", color: "#2563eb", timing: "~20 days", cost: "Free" },
+          { id: "rnd", type: "R&D Type", who: "Tech companies with R&D labs", reqs: ["Own R&D lab or department", "Last 4Q R&D spend ₩50M+ and 5-10% of revenue", "Business viability assessment pass"], fast: "Lab required — 2-4wk to set up", color: "#7c3aed", timing: "~30-45 days", cost: "Lab setup ₩500K-1M" },
+          { id: "innovation", type: "Innovation Growth", who: "High-growth companies with tech + business excellence", reqs: ["Technology assessment pass (KIBO etc.)", "Business viability assessment pass"], fast: "Most versatile — no lab needed", color: "#059669", timing: "~30-45 days", cost: "Free" },
+        ];
+        return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginBottom: "2px" }}>
+          {ko ? "우리 회사에 맞는 인증 유형을 선택하세요. 선택 결과는 자동 저장됩니다." : "Choose the certification type that fits your company. Selection is auto-saved."}
+        </div>
+        {types.map(t => {
+          const selected = selectedVentureType === t.id;
+          return (
+          <button key={t.id} type="button" onClick={() => selectVentureType(t.id)} style={{
+            borderRadius: "16px",
+            border: selected ? `2px solid ${t.color}` : `1px solid ${t.color}15`,
+            background: selected ? `${t.color}08` : `${t.color}02`,
+            overflow: "hidden", cursor: "pointer", textAlign: "left" as const,
+            transition: "all 0.2s ease",
+          }}>
+            <div style={{ padding: "16px 18px 10px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{
+                width: "22px", height: "22px", borderRadius: "50%", flexShrink: 0,
+                border: selected ? `6px solid ${t.color}` : "2px solid rgba(0,0,0,0.15)",
+                transition: "all 0.2s ease",
+              }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "15px", fontWeight: 700, color: selected ? t.color : "#0f172a", marginBottom: "4px" }}>{t.type}</div>
+                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>{t.who}</div>
+              </div>
             </div>
             <div style={{ padding: "0 18px 12px", display: "grid", gap: "3px" }}>
               {t.reqs.map(r => (
@@ -115,16 +139,42 @@ export function VentureCertificationStage() {
                 </div>
               ))}
             </div>
-            <div style={{ padding: "8px 18px 14px", background: `${t.color}05`, fontSize: "11px", fontWeight: 600, color: t.color }}>
-              {t.fast}
+            <div style={{ padding: "8px 18px 14px", background: `${t.color}05`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: t.color }}>{t.fast}</span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: `${t.color}10`, color: t.color }}>{t.timing}</span>
+                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(0,0,0,0.04)", color: "rgba(15,23,42,0.5)" }}>{t.cost}</span>
+              </div>
             </div>
+          </button>
+          );
+        })}
+
+        {selectedVentureType && (
+        <div style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.1)" }}>
+          <div style={{ fontSize: "12px", fontWeight: 640, color: "#059669" }}>
+            ✓ {ko
+              ? `${types.find(t => t.id === selectedVentureType)?.type} 선택됨 — 아래 링크에서 신청하세요`
+              : `${types.find(t => t.id === selectedVentureType)?.type} selected — apply via the link below`}
           </div>
-        ))}
+        </div>
+        )}
+
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
+          <a href="https://smes.go.kr/venturein" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.1)", fontSize: "12px", fontWeight: 600, color: "#2563eb", textDecoration: "none" }}>
+            {ko ? "벤처확인 신청 바로가기" : "Apply for Venture Cert"} ↗
+          </a>
+          <a href="https://www.kibo.or.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.5)", textDecoration: "none" }}>
+            {ko ? "기술보증기금" : "KIBO"} ↗
+          </a>
+        </div>
+
         <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(15,23,42,0.02)", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
-          {ko ? "신청: 벤처확인종합관리시스템(smes.go.kr/venturein). 소요 기간: 최대 45일. 유효기간: 3년 (재인증 필요)." : "Apply: smes.go.kr/venturein. Processing: up to 45 days. Valid: 3 years (renewal required)."}
+          {ko ? "유효기간: 3년 (재인증 필요). 인증 후 세금 감면은 최초 소득 발생 과세연도부터 5년간 적용됩니다." : "Valid: 3 years (renewal required). Tax benefits apply for 5 years from first taxable income."}
         </div>
       </div>
-      )}
+        );
+      })()}
 
       {/* PAGE 2 — 혜택 상세 */}
       {pg === 2 && (
