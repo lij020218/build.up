@@ -64,25 +64,62 @@ body {
   position: relative;
 }
 
-/* ── Aurora 배경 효과 (body ::before) ── */
-body::before {
+/* ── Aurora 배경 효과 (body ::before + ::after 이중 레이어) ── */
+body::before,
+body::after {
   content: "";
   position: fixed;
-  inset: -10px;
+  inset: -20px;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.25;
-  filter: blur(12px);
+}
+
+/* 레이어 1: 메인 오로라 — 진한 색, 넓은 범위 */
+body::before {
+  opacity: 0.5;
+  filter: blur(18px);
   background-image:
     repeating-linear-gradient(100deg, var(--bg-raw,#f7f6f3) 0%, var(--bg-raw,#f7f6f3) 7%, transparent 10%, transparent 12%, var(--bg-raw,#f7f6f3) 16%),
     repeating-linear-gradient(100deg, var(--aurora-1,#1d3557) 10%, var(--aurora-2,#457b9d) 15%, var(--aurora-3,#a8dadc) 20%, var(--aurora-4,#e0f0ff) 25%, var(--aurora-5,#1d3557) 30%);
   background-size: 300% 100%, 200% 100%;
   mask-image:
-    radial-gradient(ellipse at 100% 0%, black 10%, transparent 60%),
-    radial-gradient(ellipse at 0% 60%, black 10%, transparent 60%);
+    radial-gradient(ellipse at 85% 5%, black 5%, transparent 50%),
+    radial-gradient(ellipse at 10% 55%, black 5%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, black 3%, transparent 40%);
   mask-composite: add;
   -webkit-mask-composite: source-over;
-  animation: auroraMove 60s linear infinite;
+  animation: auroraFlow1 40s ease-in-out infinite;
+}
+
+/* 레이어 2: 보조 오로라 — 다른 속도 & 방향, 유기적 흐름 */
+body::after {
+  opacity: 0.35;
+  filter: blur(24px);
+  background-image:
+    repeating-linear-gradient(135deg, transparent 0%, transparent 5%, var(--aurora-2,#457b9d) 8%, transparent 11%, transparent 15%, var(--aurora-3,#a8dadc) 18%, transparent 21%),
+    repeating-linear-gradient(80deg, var(--aurora-1,#1d3557) 5%, var(--aurora-4,#e0f0ff) 12%, var(--aurora-2,#457b9d) 20%, var(--aurora-3,#a8dadc) 28%, var(--aurora-1,#1d3557) 35%);
+  background-size: 250% 100%, 300% 100%;
+  mask-image:
+    radial-gradient(ellipse at 20% 15%, black 5%, transparent 45%),
+    radial-gradient(ellipse at 75% 70%, black 5%, transparent 45%);
+  mask-composite: add;
+  -webkit-mask-composite: source-over;
+  animation: auroraFlow2 55s ease-in-out infinite;
+}
+
+@keyframes auroraFlow1 {
+  0%   { background-position: 50% 50%, 50% 50%; transform: scale(1) rotate(0deg); }
+  25%  { background-position: 150% 50%, 120% 50%; transform: scale(1.02) rotate(0.5deg); }
+  50%  { background-position: 250% 50%, 200% 50%; transform: scale(1) rotate(0deg); }
+  75%  { background-position: 350% 50%, 280% 50%; transform: scale(1.02) rotate(-0.5deg); }
+  100% { background-position: 450% 50%, 350% 50%; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes auroraFlow2 {
+  0%   { background-position: 0% 50%, 100% 50%; transform: scale(1.01) rotate(-0.3deg); }
+  33%  { background-position: 100% 30%, 200% 60%; transform: scale(1) rotate(0.3deg); }
+  66%  { background-position: 200% 50%, 300% 40%; transform: scale(1.01) rotate(-0.3deg); }
+  100% { background-position: 300% 50%, 400% 50%; transform: scale(1) rotate(0.3deg); }
 }
 
 /* 콘텐츠를 Aurora 위에 표시 */
