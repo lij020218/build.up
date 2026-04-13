@@ -8,6 +8,7 @@ import { CompanySetupStage } from "../stages/startup/CompanySetupStage";
 import { GrowthEngineStage } from "../stages/startup/GrowthEngineStage";
 import { LaunchGtmStage } from "../stages/startup/LaunchGtmStage";
 import { StartupFoundationStage } from "../stages/startup/StartupFoundationStage";
+import { CustomerDiscoveryStage } from "../stages/startup/CustomerDiscoveryStage";
 import {
   buildMarketScoreNarrative,
   buildRecommendedMarkets,
@@ -3915,8 +3916,9 @@ export function CurrentStageView() {
                   );
                 })()}
 
-                {/* ── 고객 발굴·문제 검증 가이드 (customer_discovery) ── */}
-                {currentStage.code === "customer_discovery" && (() => {
+                {/* ── 고객 발굴·문제 검증 (분리됨) ── */}
+                {currentStage.code === "customer_discovery" && <CustomerDiscoveryStage />}
+                {false as boolean && (() => {
                   const ko = language === "ko";
                   const pg = guideStepIndex;
                   const totalPg = 4;
