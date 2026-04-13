@@ -172,7 +172,7 @@ PSST 프레임워크 (창업진흥원 평가 기준):
         messages: [
           {
             role: "user",
-            content: `아래 데이터를 기반으로 사업계획서를 작성해주세요:\n\n${userData}`,
+            content: `아래 데이터를 기반으로 사업계획서를 작성해주세요. 반드시 JSON 형식으로만 응답하세요. 설명이나 머리말 없이 { 로 시작하고 } 로 끝나는 순수 JSON만 출력하세요.\n\n${userData}`,
           },
         ],
       }),
@@ -187,22 +187,33 @@ PSST 프레임워크 (창업진흥원 평가 기준):
     const data = await res.json();
     const text = data.content?.[0]?.text ?? "";
 
-    // Parse JSON from response
-    const cleaned = text.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+    // Parse JSON from response — Claude sometimes wraps in markdown or adds preamble
+    let cleaned = text.trim();
+    // Remove markdown code fences
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?\s*```\s*$/i, "").trim();
+    // Remove any text before the first {
+    const firstBrace = cleaned.indexOf("{");
+    if (firstBrace > 0) cleaned = cleaned.substring(firstBrace);
+    // Remove any text after the last }
+    const lastBrace = cleaned.lastIndexOf("}");
+    if (lastBrace >= 0 && lastBrace < cleaned.length - 1) cleaned = cleaned.substring(0, lastBrace + 1);
+
     let parsed: BusinessPlanResponse;
     try {
       parsed = JSON.parse(cleaned);
-    } catch {
-      // Try to extract JSON from mixed response
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    } catch (parseErr) {
+      console.error("[business-plan] JSON parse failed. First 500 chars:", cleaned.substring(0, 500));
+      console.error("[business-plan] Parse error:", parseErr instanceof Error ? parseErr.message : parseErr);
+      // Last resort: try to find JSON object pattern
+      const jsonMatch = cleaned.match(/\{[\s\S]*"sections"\s*:\s*\[[\s\S]*\]\s*\}/);
       if (jsonMatch) {
         try {
           parsed = JSON.parse(jsonMatch[0]);
         } catch {
-          return NextResponse.json({ error: "Failed to parse AI response" }, { status: 502 });
+          return NextResponse.json({ error: "AI 응답을 파싱할 수 없습니다. 다시 시도해주세요." }, { status: 502 });
         }
       } else {
-        return NextResponse.json({ error: "Failed to parse AI response" }, { status: 502 });
+        return NextResponse.json({ error: "AI 응답을 파싱할 수 없습니다. 다시 시도해주세요." }, { status: 502 });
       }
     }
 
