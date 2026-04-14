@@ -83,7 +83,7 @@ Generate a Mom Test interview script in English based on the above.`;
     messages: [{ role: "user", content: userPrompt }],
   });
 
-  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  const text = (() => { const t = response.content.find((c) => c.type === "text"); return t && t.type === "text" ? t.text : ""; })();
 
   // JSON 추출 + 정리
   let jsonStr = text;

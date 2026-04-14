@@ -24,7 +24,9 @@ function parseResponse(raw: string): RoadmapGenerationResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(cleaned);
-  } catch {
+  } catch (e) {
+    console.error("[roadmap/parse] JSON parse failed. Cleaned length:", cleaned.length, "First 300:", cleaned.substring(0, 300));
+    console.error("[roadmap/parse] Raw length:", raw.length, "First 300:", raw.substring(0, 300));
     throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
   }
 
@@ -179,10 +181,11 @@ export async function generateRoadmap(
     ],
   });
 
-  const content = response.content[0];
-  if (!content || content.type !== "text") {
-    throw new AiParseError("AI 응답에 텍스트가 없습니다.", JSON.stringify(response.content));
+  // Sonnet 4.6은 thinking 블록을 먼저 반환할 수 있음 — text 블록을 찾아야 함
+  const textBlock = response.content.find((c) => c.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new AiParseError("AI 응답에 텍스트가 없습니다.", JSON.stringify(response.content.map(c => c.type)));
   }
 
-  return parseResponse(content.text);
+  return parseResponse(textBlock.text);
 }

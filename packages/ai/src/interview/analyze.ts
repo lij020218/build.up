@@ -70,7 +70,7 @@ ${input.interviewNotes}
     messages: [{ role: "user", content: userPrompt }],
   });
 
-  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  const text = (() => { const t = response.content.find((c) => c.type === "text"); return t && t.type === "text" ? t.text : ""; })();
 
   let jsonStr = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
   const start = jsonStr.indexOf("{");

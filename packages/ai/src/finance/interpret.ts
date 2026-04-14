@@ -78,7 +78,7 @@ export async function interpretFinancialSimulation(
     ]
   });
 
-  const content = response.content[0];
+  const content = response.content.find((c) => c.type === "text") ?? response.content[0];
   if (!content || content.type !== "text") {
     throw new AiParseError("AI 응답에 텍스트가 없습니다.", JSON.stringify(response.content));
   }
