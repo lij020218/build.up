@@ -5,6 +5,7 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 export function BizRegistrationPanel() {
   const d = useDashboardCtx();
   const { language, storeName, setStoreName, cpaDecision, setCpaDecision, industryCategoryId } = d;
+  const isStartup = industryCategoryId === "startup-tech";
 
   const bizInfoStyle = { display: "flex", flexDirection: "column" as const, gap: "6px" };
   const bizCardStyle = { background: "rgba(0,0,0,0.03)", borderRadius: "14px", padding: "14px 16px" };
@@ -68,8 +69,20 @@ export function BizRegistrationPanel() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "8px" }}>
 
-      {/* ── 상호명 입력 ── */}
-      <div style={bizInfoStyle}>
+      {/* ── 스타트업: 법인 등기 확인 안내 ── */}
+      {isStartup && (
+        <div style={{ borderRadius: "16px", border: "1px solid rgba(37,99,235,0.08)", background: "rgba(37,99,235,0.02)", padding: "16px 18px" }}>
+          <div style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb", marginBottom: "6px" }}>{language === "ko" ? "이 단계에서 확인할 것" : "What to check here"}</div>
+          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.6 }}>
+            {language === "ko"
+              ? "사업자등록, 과세유형, 통장 개설은 6단계에서 이미 완료했습니다. 이 단계에서는 세무사 선임 여부만 최종 결정하면 됩니다."
+              : "Business registration, tax type, and bank account were completed in Stage 6. Here you only need to finalize your tax accountant decision."}
+          </div>
+        </div>
+      )}
+
+      {/* ── 상호명 입력 (오프라인 전용) ── */}
+      {!isStartup && <div style={bizInfoStyle}>
         <div style={bizSectionTitle}>{language === "ko" ? "상호명 (가게 이름)" : "Store name"}</div>
         <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "6px" }}>
           {language === "ko"
@@ -91,10 +104,10 @@ export function BizRegistrationPanel() {
             {language === "ko" ? `저장됨: "${storeName}"` : `Saved: "${storeName}"`}
           </div>
         )}
-      </div>
+      </div>}
 
-      {/* ── 사업자등록 방법 ── */}
-      <div style={bizInfoStyle}>
+      {/* ── 사업자등록 방법 (스타트업은 6단계에서 완료) ── */}
+      {!isStartup && <div style={bizInfoStyle}>
         <div style={bizSectionTitle}>{language === "ko" ? "사업자등록 방법 선택" : "How to register"}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
           {[
@@ -126,10 +139,10 @@ export function BizRegistrationPanel() {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
-      {/* ── 업종코드 & 과세유형 ── */}
-      <div style={bizInfoStyle}>
+      {/* ── 업종코드 & 과세유형 (스타트업은 6단계에서 완료) ── */}
+      {!isStartup && <div style={bizInfoStyle}>
         <div style={bizSectionTitle}>{language === "ko" ? "업종코드 & 과세유형" : "Business code & tax type"}</div>
         <div style={bizCardStyle}>
           <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>
@@ -167,9 +180,10 @@ export function BizRegistrationPanel() {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
-      {/* ── 사업용 통장 ── */}
+      {/* ── 사업용 통장 (스타트업은 6단계에서 법인통장 안내 완료) ── */}
+      {!isStartup && (
       <div style={bizInfoStyle}>
         <div style={bizSectionTitle}>{language === "ko" ? "사업용 통장 개설" : "Business bank account"}</div>
         <div style={{ ...bizCardStyle, display: "flex", gap: "10px", alignItems: "flex-start" }}>
@@ -203,8 +217,9 @@ export function BizRegistrationPanel() {
           {language === "ko" ? "준비물: 사업자등록증 원본, 대표자 신분증, 도장(선택)" : "Bring: business registration certificate, ID, seal (optional)"}
         </div>
       </div>
+      )}
 
-      {/* ── 세무대리인 결정 — 실제 선택 ── */}
+      {/* ── 세무대리인 결정 — 실제 선택 (스타트업은 6단계에서 세무사 안내했지만, 최종 선택은 여기서) ── */}
       <div style={bizInfoStyle}>
         <div style={bizSectionTitle}>{language === "ko" ? "세무 처리 방식 선택" : "How will you handle taxes?"}</div>
         <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "4px" }}>
