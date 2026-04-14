@@ -7,7 +7,7 @@ import {
 } from "./prompt";
 import type { RoadmapGenerationInput, RoadmapGenerationResult } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 2500; // 4096→2500: 생성 시간 ~40% 절감, JSON 구조는 충분히 수용
 
 function parseResponse(raw: string): RoadmapGenerationResult {

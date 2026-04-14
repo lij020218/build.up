@@ -13,7 +13,7 @@ import type {
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 2048;
 
 // ─── 결정론적 적격성 필터 ────────────────────────────────────────────────────

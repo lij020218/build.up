@@ -77,7 +77,7 @@ Target customer: ${input.targetCustomer}
 Generate a Mom Test interview script in English based on the above.`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-sonnet-4-6",
     max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],

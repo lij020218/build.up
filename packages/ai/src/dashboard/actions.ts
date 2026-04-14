@@ -4,7 +4,7 @@ import type { AiCallOptions } from "../types/ai";
 import { DASHBOARD_ACTION_SYSTEM_PROMPT, buildDashboardActionPrompt } from "./prompt";
 import type { DashboardContext } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 1024;
 
 export type DashboardAction = {

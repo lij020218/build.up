@@ -6,7 +6,7 @@ import type { ContractAnalysisResult, ContractClause, ContractType } from "./pro
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 2048;
 
 // 계약서는 분석 내용이 많을 수 있어 다른 기능보다 max_tokens를 높게 설정합니다.

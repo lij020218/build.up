@@ -7,7 +7,7 @@ import {
 } from "./prompt";
 import type { HealthDiagnosisContext, HealthDiagnosisResult } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 800;
 
 // ─── 응답 파싱 ──────────────────────────────────────────────────────────────

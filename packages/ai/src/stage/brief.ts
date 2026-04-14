@@ -8,7 +8,7 @@ import {
   type StageBriefResult
 } from "./prompt";
 
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 600;
 
 function parseStageBriefResponse(raw: string): StageBriefResult {

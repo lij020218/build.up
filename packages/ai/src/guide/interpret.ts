@@ -9,7 +9,7 @@ import type { AiCallOptions, GuideAiStructuredResponse } from "../types/ai";
 import { GUIDE_QA_SYSTEM_PROMPT, buildGuideQaUserPrompt } from "./prompt";
 import type { Language } from "@build-up/shared";
 
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 1200;
 
 function parseGuideAiResponse(raw: string): GuideAiStructuredResponse {

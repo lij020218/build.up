@@ -156,7 +156,8 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                 {ko ? "생성에 실패했습니다" : "Generation failed"}
               </div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5, marginBottom: "10px" }}>
-                {ko ? "AI 분석 요청이 많아 지연되고 있습니다. 아래 버튼을 눌러 다시 시도해 주세요. 입력하신 내용은 모두 보존됩니다." : "AI analysis is experiencing high demand. Please retry — your inputs are preserved."}
+                {error ?? (ko ? "AI 분석 요청이 많아 지연되고 있습니다." : "AI analysis is experiencing high demand.")}
+                <br />{ko ? "아래 버튼을 눌러 다시 시도해 주세요. 입력하신 내용은 모두 보존됩니다." : "Please retry — your inputs are preserved."}
               </div>
               <button
                 type="button"
