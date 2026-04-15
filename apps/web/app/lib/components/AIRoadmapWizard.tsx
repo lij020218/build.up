@@ -625,7 +625,7 @@ const shell: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   padding: "24px",
-  background: "var(--bg, #f7f6f3)",
+  background: "transparent",
 };
 
 const card: React.CSSProperties = {

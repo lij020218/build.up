@@ -58,7 +58,7 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
         alignItems: "center",
         justifyContent: "center",
         padding: "24px",
-        background: "var(--bg, #f7f6f3)",
+        background: "transparent",
       }}>
         <div style={{
           width: "100%",

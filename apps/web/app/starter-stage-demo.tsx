@@ -686,7 +686,7 @@ export default function StarterStageDemo({
   if (isResetting) {
     const ko = language === "ko";
     return (
-      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "var(--bg, #f7f6f3)" }}>
+      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "transparent" }}>
         <div style={{ width: "100%", maxWidth: "420px", textAlign: "center" as const }}>
           <div style={{
             width: "64px", height: "64px", margin: "0 auto 24px", borderRadius: "20px",
@@ -732,7 +732,7 @@ export default function StarterStageDemo({
   if (shouldShowOnboardingChoice) {
     const ko = language === "ko";
     return (
-      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "var(--bg, #f7f6f3)" }}>
+      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "transparent" }}>
         <div style={{ width: "100%", maxWidth: "1020px" }}>
           <div style={{ textAlign: "center" as const, marginBottom: "40px" }}>
             <div style={{ fontSize: "14px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--primary, #1d3557)", marginBottom: "14px" }}>build.up</div>

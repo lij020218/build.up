@@ -137,7 +137,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   // Shared styles
   const pageStyle: React.CSSProperties = {
     minHeight: "100vh",
-    background: "radial-gradient(circle at top, rgba(29,53,87,0.08), transparent 32%), #f7f6f3",
+    background: "transparent",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
