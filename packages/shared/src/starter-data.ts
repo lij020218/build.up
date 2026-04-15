@@ -1808,6 +1808,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "founder-alignment", title: "Decide team structure (solo or co-founder) and document roles", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "company-formation-path", title: "Decide when to incorporate and choose the formation path", status: "todo", required: true, estimatedMinutes: 45 },
     { taskId: "brand-identity-draft", title: "Draft initial brand identity (name, logo direction, tone) before public launch", status: "todo", required: false, estimatedMinutes: 60 },
+    { taskId: "nda-ip-agreement", title: "Prepare NDA and IP assignment agreements for co-founders, contractors, and freelancers", status: "todo", required: false, estimatedMinutes: 45 },
   ],
   "customer-discovery": [
     { taskId: "customer-interviews-done", title: "Run at least 10 customer interviews in one target segment", status: "todo", required: true, estimatedMinutes: 180 },
@@ -1824,7 +1825,9 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "billing-or-conversion-live", title: "Set up billing, pricing, or conversion tracking before launch", status: "todo", required: true, estimatedMinutes: 45 },
     { taskId: "error-monitoring-live", title: "Connect error monitoring (Sentry) and Slack alerts for real-time issue tracking", status: "todo", required: true, estimatedMinutes: 30 },
     { taskId: "feedback-loop-live", title: "Build customer feedback loop with in-app channel and weekly review habit", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "app-store-submission", title: "Submit app to Google Play and/or Apple App Store", status: "todo", required: false, estimatedMinutes: 240 }
+    { taskId: "app-store-submission", title: "Submit app to Google Play and/or Apple App Store", status: "todo", required: false, estimatedMinutes: 240 },
+    { taskId: "terms-privacy-published", title: "Publish Terms of Service and Privacy Policy before any user can sign up (legally required)", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "pg-payment-ready", title: "Apply for PG (payment gateway) approval — takes 1-2 weeks, start early", status: "todo", required: false, estimatedMinutes: 30, waitDays: 14, followupQuestion: "PG 심사가 완료되었나요?" },
   ],
   "growth-engine": [
     { taskId: "north-star-set", title: "Choose one north-star metric and one weekly growth metric", status: "todo", required: true, estimatedMinutes: 30 },
@@ -2107,6 +2110,22 @@ export const starterTaskMap: WorkflowTaskMap = {
       status: "todo",
       required: false,
       estimatedMinutes: 60
+    },
+    {
+      taskId: "card-merchant-registered",
+      title: "Register as card merchant via VAN provider (NICE, KIS, Smartro) — takes ~1 week",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 30,
+      waitDays: 7,
+      followupQuestion: "카드 가맹점 등록이 완료되었나요?"
+    },
+    {
+      taskId: "music-license-registered",
+      title: "Register for background music license (KOMCA/매장음악서비스) if store >50㎡",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 15
     }
   ],
   "pre-launch": [
@@ -2231,6 +2250,20 @@ export const starterTaskMap: WorkflowTaskMap = {
       status: "todo",
       required: false,
       estimatedMinutes: 60
+    },
+    {
+      taskId: "cs-channel-ready",
+      title: "Set up customer service channel (KakaoTalk Channel or Naver TalkTalk) and prepare return/exchange policy",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 30
+    },
+    {
+      taskId: "packaging-supplies-ready",
+      title: "Secure packaging supplies: boxes, bubble wrap, tape, invoice printer — test a full packing workflow",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 45
     }
   ],
   "online-marketing": [

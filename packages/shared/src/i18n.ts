@@ -658,8 +658,13 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "founder-alignment": { ko: "팀 구성 결정 (솔로/공동) 및 역할 문서화" },
   "company-formation-path": { ko: "법인 설립 시점 결정" },
   "brand-identity-draft": { ko: "브랜드 아이덴티티 초안 — 이름·로고 방향·톤앤매너 (공개 전 정리)" },
+  "nda-ip-agreement": { ko: "NDA · IP 양도계약서 준비 — 공동창업자·외주·프리랜서 대상 (아이디어 보호 필수)" },
   "brand-identity-offline": { ko: "브랜드 자산 준비 — 간판 디자인·메뉴판·인테리어 브랜딩 요소" },
+  "card-merchant-registered": { ko: "카드 가맹점 등록 — VAN사(나이스·KIS·스마트로) 통해 일괄 신청, 약 1주 소요. 사업자등록 직후 즉시 신청" },
+  "music-license-registered": { ko: "매장 배경음악 저작권 등록 — 50㎡(15평) 이상 매장 필수, 월 4천원~. KOMCA 또는 매장음악서비스 가입" },
   "brand-identity-online": { ko: "브랜드 자산 준비 — 스토어 로고·배너·패키지 디자인" },
+  "cs-channel-ready": { ko: "고객 상담 채널 세팅 — 카카오톡 채널 또는 네이버 톡톡 개설 + 반품/교환 정책 작성" },
+  "packaging-supplies-ready": { ko: "포장재 확보 — 택배 박스·완충재·테이프·송장 프린터. 실제 포장 → 발송 워크플로 테스트 필수" },
   // customer-discovery
   "customer-interviews-done": { ko: "초기 타겟 고객 인터뷰 10건 이상 완료" },
   "pain-pattern-documented": { ko: "반복 문제·현재 대안·긴급성 문서화" },
@@ -674,6 +679,8 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "error-monitoring-live": { ko: "에러 모니터링 연결 — Sentry + Slack 알림" },
   "feedback-loop-live": { ko: "고객 피드백 루프 — 인앱 채널 + 주간 리뷰" },
   "app-store-submission": { ko: "Google Play / Apple App Store 앱 제출" },
+  "terms-privacy-published": { ko: "이용약관 · 개인정보처리방침 게시 — 유저 가입 전 법적 필수. 개인정보보호 포털에서 자동 생성 가능" },
+  "pg-payment-ready": { ko: "PG(전자결제) 가입 심사 신청 — 토스페이먼츠/KCP/이니시스 중 선택, 심사 1~2주 소요. 사이트 완성 후 즉시 신청" },
   // growth-engine
   "north-star-set": { ko: "북극성 지표 하나 선택 — 회사 전체가 추적할 핵심 숫자" },
   "weekly-review-running": { ko: "매주 월요일 30분 성장 리뷰 — 지표 확인 + 실험 1개" },
