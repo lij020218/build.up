@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
@@ -20,6 +21,9 @@ export function BusinessModelSelectionStage() {
     prevTraversedStage, setViewingStageId,
     resetDemo,
   } = d;
+
+  const businessModelRef = useRef<HTMLDivElement>(null);
+  const [shakeWarning, setShakeWarning] = useState(false);
 
   return (
     <>
@@ -56,7 +60,7 @@ export function BusinessModelSelectionStage() {
         };
         const options = getStarterBusinessModelOptions(industryCategoryId);
         return (
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, 1fr)`, gap: "10px" }}>
+          <div ref={businessModelRef} style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, 1fr)`, gap: "10px", ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
             {options.map((rawOption) => {
               const option = localizeRecommendationItem(rawOption, language);
               const selected = selectedBusinessModelId === rawOption.id;
@@ -112,10 +116,19 @@ export function BusinessModelSelectionStage() {
             ...styles.primaryButton,
             opacity: canCompleteBusinessModelStep ? 1 : 0.45
           }}
-          onClick={handleBusinessModelContinue}
-          disabled={!canCompleteBusinessModelStep}
+          onClick={() => {
+            if (!canCompleteBusinessModelStep) {
+              setShakeWarning(true);
+              businessModelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              setTimeout(() => setShakeWarning(false), 2000);
+              return;
+            }
+            handleBusinessModelContinue();
+          }}
         >
-          {language === "ko" ? "운영 방식 확정하고 계속" : "Lock this model and continue"}
+          {canCompleteBusinessModelStep
+            ? (language === "ko" ? "운영 방식 확정하고 계속" : "Lock this model and continue")
+            : (language === "ko" ? "↑ 운영 방식을 선택하세요" : "↑ Select an operating model")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
@@ -20,6 +21,8 @@ export function IndustrySelectionStage() {
     prevTraversedStage, setViewingStageId,
     resetDemo,
   } = d;
+  const optionGridRef = useRef<HTMLDivElement>(null);
+  const [shakeWarning, setShakeWarning] = useState(false);
 
   return (
     <>
@@ -47,7 +50,7 @@ export function IndustrySelectionStage() {
           );
         })}
       </div>
-      <div style={styles.optionGrid}>
+      <div ref={optionGridRef} style={{ ...styles.optionGrid, ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
         {(() => {
           // 업종별 아이콘 (SF Symbol 스타일 SVG)
           const industryIcons: Record<string, string> = {
@@ -226,11 +229,20 @@ export function IndustrySelectionStage() {
         ) : null}
         <button
           type="button"
-          style={{ ...styles.primaryButton, opacity: canCompleteIndustryStep ? 1 : 0.45 }}
-          onClick={handleIndustryContinue}
-          disabled={!canCompleteIndustryStep}
+          style={{ ...styles.primaryButton, opacity: canCompleteIndustryStep ? 1 : 0.7 }}
+          onClick={() => {
+            if (!canCompleteIndustryStep) {
+              setShakeWarning(true);
+              optionGridRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              setTimeout(() => setShakeWarning(false), 2000);
+              return;
+            }
+            handleIndustryContinue();
+          }}
         >
-          {language === "ko" ? "이 업종으로 다음 단계" : "Use this industry and continue"}
+          {canCompleteIndustryStep
+            ? (language === "ko" ? "이 업종으로 다음 단계" : "Use this industry and continue")
+            : (language === "ko" ? "↑ 세부 업종을 선택하세요" : "↑ Select a sub-industry")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

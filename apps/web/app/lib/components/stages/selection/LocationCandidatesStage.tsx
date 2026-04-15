@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
@@ -59,6 +60,9 @@ export function LocationCandidatesStage() {
     // Reset
     resetDemo,
   } = d;
+
+  const locationRef = useRef<HTMLDivElement>(null);
+  const [shakeWarning, setShakeWarning] = useState(false);
 
   return (
     <>
@@ -542,7 +546,7 @@ export function LocationCandidatesStage() {
             region={preferredRegionInput}
           />
         )}
-        <div style={{ display: "grid", gap: "10px" }}>
+        <div ref={locationRef} style={{ display: "grid", gap: "10px", ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
           {activeLocationCandidates.map((item) => {
             const selected = selectedLocationId === item.id;
             const freshness = getFreshnessPresentation(item.freshness);
@@ -791,14 +795,23 @@ export function LocationCandidatesStage() {
             ...styles.primaryButton,
             opacity: canCompleteLocationStep ? 1 : 0.45
           }}
-          onClick={handleLocationContinue}
-          disabled={!canCompleteLocationStep}
+          onClick={() => {
+            if (!canCompleteLocationStep) {
+              setShakeWarning(true);
+              locationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              setTimeout(() => setShakeWarning(false), 2000);
+              return;
+            }
+            handleLocationContinue();
+          }}
         >
-          {isDigitalCategory
-            ? language === "ko"
-              ? "이 거점으로 운영 준비 시작"
-              : "Use this base and continue"
-            : copy.home.selectMarketAndContinue}
+          {canCompleteLocationStep
+            ? (isDigitalCategory
+                ? language === "ko"
+                  ? "이 거점으로 운영 준비 시작"
+                  : "Use this base and continue"
+                : copy.home.selectMarketAndContinue)
+            : (language === "ko" ? "↑ 상권을 선택하세요" : "↑ Select a market")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

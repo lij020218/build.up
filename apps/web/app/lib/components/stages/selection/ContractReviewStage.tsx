@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
@@ -31,6 +32,11 @@ export function ContractReviewStage() {
     resetDemo,
   } = d;
 
+  const contractRef = useRef<HTMLDivElement>(null);
+  const [shakeWarning, setShakeWarning] = useState(false);
+
+  const canCompleteContractStep = contractTasks.every((task) => task.status === "completed");
+
   return (
     <>
       <div style={styles.helper}>
@@ -43,7 +49,7 @@ export function ContractReviewStage() {
       <div style={styles.budgetLabel}>
         {language === "ko" ? "꼭 볼 것 3개" : "Three must-check items"}
       </div>
-        <div style={styles.optionGrid}>
+        <div ref={contractRef} style={{ ...styles.optionGrid, ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
           {contractTasks.map((task) => {
             const completed = task.status === "completed";
             const selected = activeContractTask?.taskId === task.taskId;
@@ -389,12 +395,21 @@ export function ContractReviewStage() {
           type="button"
           style={{
             ...styles.primaryButton,
-            opacity: contractTasks.every((task) => task.status === "completed") ? 1 : 0.45
+            opacity: canCompleteContractStep ? 1 : 0.45
           }}
-          onClick={handleContractContinue}
-          disabled={!contractTasks.every((task) => task.status === "completed")}
+          onClick={() => {
+            if (!canCompleteContractStep) {
+              setShakeWarning(true);
+              contractRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              setTimeout(() => setShakeWarning(false), 2000);
+              return;
+            }
+            handleContractContinue();
+          }}
         >
-          {copy.home.completeContractReview}
+          {canCompleteContractStep
+            ? copy.home.completeContractReview
+            : (language === "ko" ? "↑ 항목을 모두 확인하세요" : "↑ Complete all checklist items")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

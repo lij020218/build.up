@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
@@ -31,6 +32,9 @@ export function BudgetSetupStage() {
     resetDemo,
     liveBudgetBenchmark, setLiveBudgetBenchmark,
   } = d;
+
+  const budgetRef = useRef<HTMLDivElement>(null);
+  const [shakeWarning, setShakeWarning] = useState(false);
 
   return (
     <>
@@ -240,7 +244,7 @@ export function BudgetSetupStage() {
         );
       })()}
 
-      <div style={styles.budgetPanel}>
+      <div ref={budgetRef} style={{ ...styles.budgetPanel, ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
         <div style={styles.budgetHeader}>
           <div style={styles.budgetLabel}>
             {language === "ko" ? "시작 자본금" : "Starting capital"}
@@ -379,14 +383,23 @@ export function BudgetSetupStage() {
             ...styles.primaryButton,
             opacity: canCompleteBudgetStep ? 1 : 0.45
           }}
-          onClick={handleBudgetContinue}
-          disabled={!canCompleteBudgetStep}
+          onClick={() => {
+            if (!canCompleteBudgetStep) {
+              setShakeWarning(true);
+              budgetRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              setTimeout(() => setShakeWarning(false), 2000);
+              return;
+            }
+            handleBudgetContinue();
+          }}
         >
-          {industryCategoryId === "startup-tech"
-            ? (language === "ko" ? "예산 저장하고 스타트업 로드맵 시작" : "Save budget and start startup roadmap")
-            : language === "ko"
-              ? "예산 저장하고 상권 보기"
-              : "Save budget and open markets"}
+          {canCompleteBudgetStep
+            ? (industryCategoryId === "startup-tech"
+                ? (language === "ko" ? "예산 저장하고 스타트업 로드맵 시작" : "Save budget and start startup roadmap")
+                : language === "ko"
+                  ? "예산 저장하고 상권 보기"
+                  : "Save budget and open markets")
+            : (language === "ko" ? "↑ 예산을 설정하세요" : "↑ Set your budget")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

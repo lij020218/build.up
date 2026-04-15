@@ -8,7 +8,7 @@ import {
 import type { RoadmapGenerationInput, RoadmapGenerationResult } from "./prompt";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
-const DEFAULT_MAX_TOKENS = 2500; // 4096→2500: 생성 시간 ~40% 절감, JSON 구조는 충분히 수용
+const DEFAULT_MAX_TOKENS = 4096; // Sonnet 4.6은 더 긴 응답 생성 가능 — 잘림 방지
 
 function parseResponse(raw: string): RoadmapGenerationResult {
   // 마크다운 블록 제거
@@ -25,9 +25,11 @@ function parseResponse(raw: string): RoadmapGenerationResult {
   try {
     parsed = JSON.parse(cleaned);
   } catch (e) {
-    console.error("[roadmap/parse] JSON parse failed. Cleaned length:", cleaned.length, "First 300:", cleaned.substring(0, 300));
-    console.error("[roadmap/parse] Raw length:", raw.length, "First 300:", raw.substring(0, 300));
-    throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
+    const parseMsg = e instanceof Error ? e.message : String(e);
+    console.error("[roadmap/parse] JSON parse error:", parseMsg);
+    console.error("[roadmap/parse] Cleaned length:", cleaned.length, "Last 200:", cleaned.substring(cleaned.length - 200));
+    console.error("[roadmap/parse] First 300:", cleaned.substring(0, 300));
+    throw new AiParseError(`AI 응답 파싱 실패: ${parseMsg}`, raw);
   }
 
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
@@ -182,10 +184,12 @@ export async function generateRoadmap(
   });
 
   // Sonnet 4.6은 thinking 블록을 먼저 반환할 수 있음 — text 블록을 찾아야 함
+  console.log("[roadmap/generate] stop_reason:", response.stop_reason, "content types:", response.content.map(c => c.type).join(", "));
   const textBlock = response.content.find((c) => c.type === "text");
   if (!textBlock || textBlock.type !== "text") {
-    throw new AiParseError("AI 응답에 텍스트가 없습니다.", JSON.stringify(response.content.map(c => c.type)));
+    throw new AiParseError("AI 응답에 텍스트가 없습니다. Types: " + response.content.map(c => c.type).join(", "), JSON.stringify(response.content));
   }
+  console.log("[roadmap/generate] Text block length:", textBlock.text.length, "First 200:", textBlock.text.substring(0, 200));
 
   return parseResponse(textBlock.text);
 }

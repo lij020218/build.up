@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
@@ -28,6 +29,9 @@ export function StartupTypeSelectionStage() {
     resetDemo,
   } = d;
 
+  const startupTypeRef = useRef<HTMLDivElement>(null);
+  const [shakeWarning, setShakeWarning] = useState(false);
+
   const isStartupCategory = industryCategoryId === "startup-tech";
   const startupTypeOptions: Array<"independent" | "franchise" | "undecided"> = isStartupCategory
     ? ["independent", "undecided"]
@@ -41,7 +45,7 @@ export function StartupTypeSelectionStage() {
           <div style={styles.helper}>
             {copy.home.startupTypeHelp}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${startupTypeOptions.length}, 1fr)`, gap: "10px" }}>
+          <div ref={startupTypeRef} style={{ display: "grid", gridTemplateColumns: `repeat(${startupTypeOptions.length}, 1fr)`, gap: "10px", ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
             {startupTypeOptions.map((type) => {
               const ko = language === "ko";
               const selected = startupType === type;
@@ -115,12 +119,21 @@ export function StartupTypeSelectionStage() {
             <button
               type="button"
               style={{ ...styles.primaryButton, opacity: canCompleteStartupTypeStep ? 1 : 0.45 }}
-              onClick={handleStartupTypeContinue}
-              disabled={!canCompleteStartupTypeStep}
+              onClick={() => {
+                if (!canCompleteStartupTypeStep) {
+                  setShakeWarning(true);
+                  startupTypeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  setTimeout(() => setShakeWarning(false), 2000);
+                  return;
+                }
+                handleStartupTypeContinue();
+              }}
             >
-              {startupType === "franchise"
-                ? (language === "ko" ? "브랜드 선택하기 →" : "Choose brand →")
-                : (language === "ko" ? "이 창업 형태로 계속" : "Use this startup type and continue")}
+              {canCompleteStartupTypeStep
+                ? (startupType === "franchise"
+                    ? (language === "ko" ? "브랜드 선택하기 →" : "Choose brand →")
+                    : (language === "ko" ? "이 창업 형태로 계속" : "Use this startup type and continue"))
+                : (language === "ko" ? "↑ 창업 형태를 선택하세요" : "↑ Select a startup type")}
             </button>
             <button type="button" style={styles.button} onClick={resetDemo}>
               {copy.common.resetDemo}
