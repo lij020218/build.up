@@ -121,6 +121,18 @@ export function TaxGuideStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      {/* ── 단계 네비게이션 (이전 단계 / 확인 완료) ── */}
+      <div style={styles.stageFooter}>
+        {prevTraversedStage && (
+          <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
+            {ko ? "← 이전 단계" : "← Back"}
+          </button>
+        )}
+        <button type="button" style={styles.primaryButton} onClick={() => handleVerificationContinue("tax-guide")}>
+          {copy.home.markTaxReviewed}
+        </button>
+      </div>
+
       {/* ── 페이지 네비 ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button type="button" disabled={pg === 0} onClick={() => setGuideStepIndex((p: number) => p - 1)} style={{
