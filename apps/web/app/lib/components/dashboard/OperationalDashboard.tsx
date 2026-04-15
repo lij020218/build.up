@@ -20,6 +20,7 @@ import { SurvivalBoardCard } from "./SurvivalBoardCard";
 import { StartupMetricsCard } from "./StartupMetricsCard";
 import { InventoryOpsCard } from "./InventoryOpsCard";
 import { StaffOpsCard } from "./StaffOpsCard";
+import { CashFlowForecastCard } from "./CashFlowForecastCard";
 import {
   shell,
   bentoHoverCSS,
@@ -97,6 +98,7 @@ export default function OperationalDashboard({ d }: Props) {
   const ko = d.language === "ko";
   const isStaff = d.userRole === "staff";
   const isStartupCompany = d.businessCtx.categoryId === "startup-tech";
+  const isOnlineCategory = d.businessCtx.categoryId === "online-digital";
   const [viewportWidth, setViewportWidth] = useState(1440);
   const [showCalendar, setShowCalendar] = useState(false);
   const [dismissedMilestones, setDismissedMilestones] = useState<Set<string>>(() => {
@@ -485,8 +487,9 @@ export default function OperationalDashboard({ d }: Props) {
       </div>
       )}
       {allEntries.length >= 1 && (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "14px" }}>
-        <CostStructureCard />
+      <div style={{ display: "grid", gridTemplateColumns: !isStartupCompany && !isOnlineCategory ? "1fr 1fr" : "1fr", gap: "14px", marginTop: "14px" }}>
+        {/* CostStructure: 오프라인 전용 (식재료/인건비 비율 — 스타트업/온라인에 불필요) */}
+        {!isStartupCompany && !isOnlineCategory && <CostStructureCard />}
         <BenchmarkCard />
       </div>
       )}
@@ -589,6 +592,9 @@ export default function OperationalDashboard({ d }: Props) {
         )}
       </div>
 
+      {/* ── 정산 예정 타임라인 (오프라인/온라인 — 스타트업은 숨김) ── */}
+      {!isStartupCompany && <CashFlowForecastCard />}
+
       <div
         style={{
           ...coreGrid,
@@ -632,17 +638,66 @@ export default function OperationalDashboard({ d }: Props) {
             cogsLabel={d.businessCtx.expenseFields?.[0]?.label}
           />
         )}
+        {/* ── 재고 요약 (읽기 전용) — CRUD는 내 가게 탭 ── */}
         {d.businessCtx.showInventoryCard && (
-          <InventoryOpsCard ko={ko} inventory={inventory} lowStockItems={lowStockItems} d={d} />
+          <article style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "재고 현황" : "Inventory"}</span>
+                <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(29,53,87,0.06)", color: "var(--primary)" }}>{inventory.length}{ko ? "개" : ""}</span>
+              </div>
+              <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", background: "none", border: "none", cursor: "pointer" }}>{ko ? "관리하기 →" : "Manage →"}</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+              <div style={{ padding: "10px", borderRadius: "10px", background: lowStockItems.length > 0 ? "rgba(255,59,48,0.04)" : "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+                <div style={{ fontSize: "18px", fontWeight: 740, color: lowStockItems.length > 0 ? "#ff3b30" : "#0f172a" }}>{lowStockItems.length}</div>
+                <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "부족" : "Low"}</div>
+              </div>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+                <div style={{ fontSize: "18px", fontWeight: 740, color: "#0f172a" }}>{inventory.filter((i: InventoryEntry) => { const exp = i.expiryDate ? new Date(i.expiryDate) : null; return exp && exp.getTime() - Date.now() < 3 * 86400000 && exp.getTime() > Date.now(); }).length}</div>
+                <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "유통기한 임박" : "Expiring"}</div>
+              </div>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+                <div style={{ fontSize: "18px", fontWeight: 740, color: "#0f172a" }}>{inventory.length}</div>
+                <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "총 항목" : "Total"}</div>
+              </div>
+            </div>
+            {inventory.length === 0 && (
+              <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px dashed rgba(0,0,0,0.1)", background: "transparent", cursor: "pointer", fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>
+                {ko ? "📦 재고를 등록하면 부족 알림을 받을 수 있어요" : "📦 Register inventory to get low-stock alerts"}
+              </button>
+            )}
+          </article>
         )}
-        <StaffOpsCard
-          ko={ko}
-          employees={employees}
-          estimatedMonthlyPayroll={estimatedMonthlyPayroll}
-          insuredEmployees={insuredEmployees}
-          totalSales={totalSales}
-          d={d}
-        />
+        {/* ── 팀 요약 (읽기 전용) — CRUD는 내 가게 탭 ── */}
+        <article style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "팀 현황" : "Team"}</span>
+              <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(29,53,87,0.06)", color: "var(--primary)" }}>{employees.length}{ko ? "명" : ""}</span>
+            </div>
+            <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", background: "none", border: "none", cursor: "pointer" }}>{ko ? "관리하기 →" : "Manage →"}</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+            <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+              <div style={{ fontSize: "18px", fontWeight: 740, color: "#0f172a" }}>{employees.length}</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "인원" : "Staff"}</div>
+            </div>
+            <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+              <div style={{ fontSize: "18px", fontWeight: 740, color: "#0f172a" }}>{fmt(estimatedMonthlyPayroll)}</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "예상 급여" : "Payroll"}</div>
+            </div>
+            <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+              <div style={{ fontSize: "18px", fontWeight: 740, color: "#0f172a" }}>{insuredEmployees}</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "4대보험" : "Insured"}</div>
+            </div>
+          </div>
+          {employees.length === 0 && (
+            <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px dashed rgba(0,0,0,0.1)", background: "transparent", cursor: "pointer", fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>
+              {ko ? "👥 직원을 등록하면 급여·보험 현황을 한눈에 볼 수 있어요" : "👥 Add staff to see payroll & insurance at a glance"}
+            </button>
+          )}
+        </article>
       </div>
 
       {/* ── Weekly Report (owner only) ── */}

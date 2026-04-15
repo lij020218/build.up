@@ -500,52 +500,61 @@ export function MorningBriefing() {
           );
         })()}
 
-        {/* 오늘 할 일 (있을 때만) */}
+        {/* 오늘의 #1 액션 — 풀너비 CTA 배너 */}
         {(() => {
           const actions = d.aiActions?.todayActions;
           if (!actions || actions.length === 0) return null;
+          const top = actions[0];
+          const rest = actions.slice(1, 3);
+          const isHigh = top.priority === "high";
           return (
             <div style={{ padding: "0 22px 20px" }}>
+              {/* #1 액션 — 큰 CTA 카드 */}
               <div style={{
-                fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.35)",
-                letterSpacing: "0.04em", textTransform: "uppercase" as const,
-                marginBottom: "8px",
+                padding: "16px 18px", borderRadius: "16px",
+                background: isHigh
+                  ? "linear-gradient(135deg, rgba(255,59,48,0.06) 0%, rgba(255,59,48,0.02) 100%)"
+                  : "linear-gradient(135deg, rgba(29,53,87,0.06) 0%, rgba(29,53,87,0.02) 100%)",
+                border: `1.5px solid ${isHigh ? "rgba(255,59,48,0.12)" : "rgba(29,53,87,0.1)"}`,
+                marginBottom: rest.length > 0 ? "10px" : "0",
               }}>
-                {ko ? "오늘 할 일" : "Today"}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: isHigh ? RED : "var(--primary)", animation: "bentoPulse 2s ease-in-out infinite" }} />
+                  <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: isHigh ? RED : "var(--primary)" }}>
+                    {ko ? "오늘의 핵심 액션" : "Today's Key Action"}
+                  </span>
+                </div>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.4, marginBottom: "6px" }}>
+                  {top.title}
+                </div>
+                <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginBottom: "12px" }}>
+                  {top.reason}
+                </div>
+                <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{
+                  padding: "10px 20px", borderRadius: "10px", border: "none",
+                  background: isHigh ? RED : "var(--primary)", color: "#fff",
+                  fontSize: "13px", fontWeight: 650, cursor: "pointer",
+                  display: "inline-flex", alignItems: "center", gap: "6px",
+                }}>
+                  {ko ? "확인하기 →" : "Take action →"}
+                </button>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {actions.slice(0, 3).map((a, i) => {
-                  const isHigh = a.priority === "high";
-                  const accentColor = isHigh ? RED : YELLOW;
-                  return (
-                    <div key={i} style={{
-                      display: "flex", gap: "12px", alignItems: "flex-start",
-                      padding: "11px 14px", borderRadius: "14px",
-                      background: isHigh ? "rgba(255,59,48,0.03)" : "rgba(0,0,0,0.02)",
-                      border: `0.5px solid ${isHigh ? "rgba(255,59,48,0.08)" : "rgba(0,0,0,0.04)"}`,
-                      transition: "transform 0.2s cubic-bezier(0.22,1,0.36,1)",
-                    }}>
-                      <div style={{
-                        width: "20px", height: "20px", borderRadius: "6px",
-                        background: `${accentColor}14`, display: "flex",
-                        alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px",
-                      }}>
-                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: accentColor }} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{
-                          fontSize: "13.5px", fontWeight: 620, color: "#0f172a",
-                          letterSpacing: "-0.01em", marginBottom: "2px",
-                        }}>{a.title}</div>
-                        <div style={{
-                          fontSize: "12px", color: "rgba(15,23,42,0.45)",
-                          lineHeight: 1.45, letterSpacing: "-0.005em",
-                        }}>{a.reason}</div>
-                      </div>
-                    </div>
-                  );
-                })}
+
+              {/* 나머지 액션 — 작게 */}
+              {rest.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                {rest.map((a, i) => (
+                  <div key={i} style={{
+                    display: "flex", gap: "10px", alignItems: "center",
+                    padding: "8px 12px", borderRadius: "10px",
+                    background: "rgba(0,0,0,0.015)", border: "0.5px solid rgba(0,0,0,0.04)",
+                  }}>
+                    <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: a.priority === "high" ? RED : YELLOW, flexShrink: 0 }} />
+                    <div style={{ fontSize: "12px", fontWeight: 550, color: "rgba(15,23,42,0.6)", flex: 1 }}>{a.title}</div>
+                  </div>
+                ))}
               </div>
+              )}
               <div style={{
                 fontSize: "11px", color: "rgba(15,23,42,0.2)",
                 marginTop: "10px", textAlign: "center" as const,
