@@ -128,13 +128,19 @@ function updateStageStatus(
   return "locked";
 }
 
-function getFirstAvailableStageId(stages: RoadmapStageState[]): string {
-  const activeStage =
-    stages.find((stage) => stage.status === "in_progress") ??
-    stages.find((stage) => stage.status === "available") ??
-    stages[0];
+function getFirstAvailableStageId(stages: RoadmapStageState[], reachableIds?: Set<string>): string {
+  // 1. 명시적으로 in_progress인 단계
+  const inProgress = stages.find((s) => s.status === "in_progress" && (!reachableIds || reachableIds.has(s.stageId)));
+  if (inProgress) return inProgress.stageId;
 
-  return activeStage.stageId;
+  // 2. reachable 셋이 있으면 경로 내 available만
+  if (reachableIds) {
+    const reachableAvailable = stages.find((s) => s.status === "available" && reachableIds.has(s.stageId));
+    if (reachableAvailable) return reachableAvailable.stageId;
+  }
+
+  // 3. fallback
+  return stages.find((s) => s.status === "available")?.stageId ?? stages[0].stageId;
 }
 
 function resolveDecisionValue(
@@ -184,14 +190,24 @@ export function buildRoadmapState(
   }
 
   const completedStageIds = new Set<string>();
+  // 첫 번째 단계에서 조건부 분기를 따라 도달 가능한 단계만 추적
+  const reachableIds = new Set<string>();
+  if (baseRoadmap.stages.length > 0) {
+    reachableIds.add(baseRoadmap.stages[0].stageId);
+  }
 
   for (const stage of baseRoadmap.stages) {
     const completion = evaluateStageCompletion(stage, decisions, tasks);
 
     if (completion.isComplete) {
       completedStageIds.add(stage.stageId);
-      for (const nextStageId of resolveNextStageIds(stage, decisions)) {
+      const nextIds = resolveNextStageIds(stage, decisions);
+      for (const nextStageId of nextIds) {
         unlockedStageIds.add(nextStageId);
+        // reachable 체인: 이 단계가 reachable이면 다음 단계도 reachable
+        if (reachableIds.has(stage.stageId)) {
+          reachableIds.add(nextStageId);
+        }
       }
     }
   }
@@ -226,7 +242,7 @@ export function buildRoadmapState(
 
   return {
     ...baseRoadmap,
-    currentStageId: getFirstAvailableStageId(stages),
+    currentStageId: getFirstAvailableStageId(stages, reachableIds),
     progressPercent,
     completedStageIds: Array.from(completedStageIds),
     unlockedStageIds: Array.from(unlockedStageIds),
