@@ -134,6 +134,17 @@ export function OnlineRegistrationStage() {
               <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{ko ? "통신판매업 신고" : "Telecom Sales Filing"}</div>
             </div>
           </div>
+          {/* 필수 행정 순서 안내 */}
+          <div style={{ margin: "0 24px 12px", padding: "12px 16px", borderRadius: "12px", background: "rgba(217,119,6,0.06)", border: "1px solid rgba(217,119,6,0.12)" }}>
+            <div style={{ fontSize: "12px", fontWeight: 680, color: "#d97706", marginBottom: "4px" }}>
+              {ko ? "⚠ 필수 행정 순서 (반드시 이 순서대로)" : "⚠ Required Admin Sequence (follow this order)"}
+            </div>
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.6 }}>
+              {ko
+                ? "① 사업자등록 → ② 사업용 통장 개설 → ③ 에스크로(구매안전서비스) 가입 → ④ 통신판매업 신고"
+                : "① Business registration → ② Business bank account → ③ Escrow service → ④ Telecom sales filing"}
+            </div>
+          </div>
           <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
             {ko ? "온라인으로 상품을 판매하려면 통신판매업 신고가 법적 의무입니다. 미신고 시 과태료 최대 1,000만원이며, 네이버 스마트스토어·쿠팡 입점 시 신고번호를 요구합니다." : "Legally required for all online sales. Up to ₩10M fine if unfiled. Smartstore and Coupang require the filing number."}
           </div>

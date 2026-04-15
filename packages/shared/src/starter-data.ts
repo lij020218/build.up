@@ -1260,6 +1260,26 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["problem-defined", "founder-alignment", "company-formation-path"],
     riskIds: [],
+    nextStageIds: ["customer-discovery"]
+  },
+  // 순서: 팀 → 고객발굴(6) → 사업자등록(7) → MVP
+  // 이유: 고객 검증 전 사업자등록은 예비창업패키지 자격 상실 위험
+  {
+    stageId: "customer-discovery",
+    code: "customer_discovery",
+    title: "Customer discovery",
+    type: "execution",
+    status: "locked",
+    stepNumber: 6,
+    totalSteps: 18,
+    goal: "Run customer interviews, identify repeated pain, and narrow to one wedge problem with real urgency.",
+    whyNow: "A startup dies when it builds for a vague audience instead of a painful problem. Validate before you register.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["customer-interviews-done", "pain-pattern-documented", "narrow-wedge-defined"]
+    },
+    taskIds: ["customer-interviews-done", "pain-pattern-documented", "narrow-wedge-defined"],
+    riskIds: [],
     nextStageIds: ["company-setup"]
   },
   {
@@ -1268,33 +1288,15 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Business registration, IP protection, and legal foundation",
     type: "execution",
     status: "locked",
-    stepNumber: 6,
+    stepNumber: 7,
     totalSteps: 18,
     goal: "Choose between sole proprietor and corporation, complete business registration, protect your IP before public disclosure, and set up basic tax and security foundations.",
-    whyNow: "Business registration is a legal prerequisite for contracts, invoicing, and government programs. IP protection before public disclosure is permanent — file before any demo, beta, or press.",
+    whyNow: "Now that you've validated the problem, register your business to unlock contracts, invoicing, and government programs. File IP before any public disclosure.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned"]
     },
     taskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "tax-setup-basics", "security-basics"],
-    riskIds: [],
-    nextStageIds: ["customer-discovery"]
-  },
-  {
-    stageId: "customer-discovery",
-    code: "customer_discovery",
-    title: "Customer discovery",
-    type: "execution",
-    status: "locked",
-    stepNumber: 7,
-    totalSteps: 18,
-    goal: "Run customer interviews, identify repeated pain, and narrow to one wedge problem with real urgency.",
-    whyNow: "A startup dies when it builds for a vague audience instead of a painful problem.",
-    completionRule: {
-      kind: "required_tasks",
-      requiredTaskIds: ["customer-interviews-done", "pain-pattern-documented", "narrow-wedge-defined"]
-    },
-    taskIds: ["customer-interviews-done", "pain-pattern-documented", "narrow-wedge-defined"],
     riskIds: [],
     nextStageIds: ["mvp-build"]
   },
@@ -1805,6 +1807,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "problem-defined", title: "Define the core problem in one sentence", status: "todo", required: true, estimatedMinutes: 30 },
     { taskId: "founder-alignment", title: "Decide team structure (solo or co-founder) and document roles", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "company-formation-path", title: "Decide when to incorporate and choose the formation path", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "brand-identity-draft", title: "Draft initial brand identity (name, logo direction, tone) before public launch", status: "todo", required: false, estimatedMinutes: 60 },
   ],
   "customer-discovery": [
     { taskId: "customer-interviews-done", title: "Run at least 10 customer interviews in one target segment", status: "todo", required: true, estimatedMinutes: 180 },
@@ -1848,6 +1851,13 @@ export const starterTaskMap: WorkflowTaskMap = {
   ],
   // ── Offline path tasks ─────────────────────────────────────────────────────
   "permit-check": [
+    {
+      taskId: "building-registry-checked",
+      title: "Verify building registry (건축물대장) confirms permitted use for your business type",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 20,
+    },
     {
       taskId: "permit-type-checked",
       title: "Confirm which permit or registration your category requires",
@@ -1969,6 +1979,15 @@ export const starterTaskMap: WorkflowTaskMap = {
       status: "todo",
       required: false,
       estimatedMinutes: 30
+    },
+    {
+      taskId: "fire-health-parallel",
+      title: "Apply for fire safety certificate (소방필증) and health certificate (보건증) in parallel with construction",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 30,
+      waitDays: 14,
+      followupQuestion: "소방필증/보건증 신청 완료하셨나요?"
     }
   ],
   "vendor-setup": [
@@ -2081,6 +2100,13 @@ export const starterTaskMap: WorkflowTaskMap = {
       status: "todo",
       required: true,
       estimatedMinutes: 60
+    },
+    {
+      taskId: "brand-identity-offline",
+      title: "Prepare brand assets: signage design, menu/price list, and interior brand elements",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 60
     }
   ],
   "pre-launch": [
@@ -2133,6 +2159,13 @@ export const starterTaskMap: WorkflowTaskMap = {
       estimatedMinutes: 40
     },
     {
+      taskId: "escrow-registered",
+      title: "Open business bank account and register for escrow service (구매안전서비스) before telecom filing",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 40
+    },
+    {
       taskId: "telecom-sale-filed",
       title: "File telecommunications sales notification with local government",
       status: "todo",
@@ -2141,6 +2174,13 @@ export const starterTaskMap: WorkflowTaskMap = {
     }
   ],
   "sourcing-setup": [
+    {
+      taskId: "kc-trademark-reviewed",
+      title: "Review KC certification requirements and trademark registration before sourcing products",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 45,
+    },
     {
       taskId: "supplier-contracted",
       title: "Contract with at least one reliable supplier or wholesaler",
@@ -2184,6 +2224,13 @@ export const starterTaskMap: WorkflowTaskMap = {
       status: "todo",
       required: false,
       estimatedMinutes: 30
+    },
+    {
+      taskId: "brand-identity-online",
+      title: "Prepare brand assets: store logo, banner images, and packaging design",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 60
     }
   ],
   "online-marketing": [

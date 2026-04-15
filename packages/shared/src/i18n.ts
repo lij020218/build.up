@@ -657,6 +657,9 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "problem-defined": { ko: "핵심 문제를 한 문장으로 정의" },
   "founder-alignment": { ko: "팀 구성 결정 (솔로/공동) 및 역할 문서화" },
   "company-formation-path": { ko: "법인 설립 시점 결정" },
+  "brand-identity-draft": { ko: "브랜드 아이덴티티 초안 — 이름·로고 방향·톤앤매너 (공개 전 정리)" },
+  "brand-identity-offline": { ko: "브랜드 자산 준비 — 간판 디자인·메뉴판·인테리어 브랜딩 요소" },
+  "brand-identity-online": { ko: "브랜드 자산 준비 — 스토어 로고·배너·패키지 디자인" },
   // customer-discovery
   "customer-interviews-done": { ko: "초기 타겟 고객 인터뷰 10건 이상 완료" },
   "pain-pattern-documented": { ko: "반복 문제·현재 대안·긴급성 문서화" },
@@ -694,6 +697,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "govt-program-matched": { ko: "K-Startup 지원사업 매칭 (예비·초기·TIPS·도약)" },
   "application-submitted": { ko: "벤처인증 또는 지원사업 신청서 마감 전 제출" },
   // permit-check
+  "building-registry-checked": { ko: "건축물대장 용도 확인 — 업종 영업 가능 여부 사전 점검 (근린생활시설 등)" },
   "permit-type-checked": { ko: "업종별 필요 인허가·등록 종류 확인" },
   "hygiene-education-done": { ko: "식품위생교육 6시간 이수 + 수료증 발급 완료 (음식·카페)" },
   "health-exam-obtained": { ko: "보건소 건강진단결과서(보건증) 발급 완료 (음식·카페·뷰티)" },
@@ -712,6 +716,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "contractor-selected": { ko: "인테리어 업체 선정 및 견적 2곳 이상 수령" },
   "design-approved": { ko: "최종 레이아웃 설계 및 공사 계획 확정" },
   "construction-complete": { ko: "공사 완료 및 최종 현장 점검" },
+  "fire-health-parallel": { ko: "공사 중 소방필증·보건증 병행 신청 (인테리어 완료 전 미리 진행)" },
   // vendor-setup
   "supplier-identified": { ko: "주요 원자재·상품·소모품 공급처 확정" },
   "equipment-planned": { ko: "장비 구매 또는 렌탈 계획 확정" },
@@ -740,7 +745,9 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "seller-account-created": { ko: "선택 플랫폼 판매자 계정 생성 및 인증" },
   // online-registration
   "business-registered-online": { ko: "세무서에서 사업자등록 완료" },
+  "escrow-registered": { ko: "사업용 통장 개설 + 구매안전서비스(에스크로) 가입 — 통신판매업 신고 전 필수" },
   "telecom-sale-filed": { ko: "통신판매업 신고 (지자체)" },
+  "kc-trademark-reviewed": { ko: "KC인증 필요 여부 확인 + 상표권 검토 (소싱 전 필수 확인)" },
   // sourcing-setup
   "supplier-contracted": { ko: "신뢰할 공급사 또는 도매상과 계약" },
   "product-photographed": { ko: "초기 상품 전체 사진 촬영 완료" },
