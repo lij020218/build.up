@@ -163,4 +163,60 @@ export function useTaskAutoCompletion(
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [softOpenChecks, softOpenPricing, softOpenSkips]);
+
+  // startup-foundation: 입력 확인 시 대응 태스크 자동 완료
+  useEffect(() => {
+    const stageId = "startup-foundation";
+    if (!taskMap[stageId]) return;
+    const inputs = (decisions[stageId] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
+    if (!inputs) return;
+
+    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
+      { taskId: "problem-defined", shouldComplete: !!(inputs.problemConfirmed && (inputs.problemStatement as string)?.trim()?.length >= 10) },
+      { taskId: "founder-alignment", shouldComplete: !!(inputs.teamStructure && (inputs.teamStructure as string).length > 0) },
+      { taskId: "company-formation-path", shouldComplete: !!(inputs.formationPath && (inputs.formationPath as string).length > 0) },
+    ];
+
+    let nextTaskMap = taskMap;
+    let changed = false;
+    for (const { taskId, shouldComplete } of triggers) {
+      const task = (taskMap[stageId] ?? []).find(t => t.taskId === taskId);
+      if (!task || !shouldComplete || task.status === "completed") continue;
+      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
+      changed = true;
+    }
+    if (changed) {
+      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
+      setTaskMap(nextTaskMap);
+      setRoadmap(nextRoadmap);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisions]);
+
+  // company-setup: 사업자등록 선택 확인 시 태스크 자동 완료
+  useEffect(() => {
+    const stageId = "company-setup";
+    if (!taskMap[stageId]) return;
+    const { guideSelections } = useRoadmapStore.getState();
+
+    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
+      { taskId: "business-structure-decided", shouldComplete: !!(guideSelections["biz-structure"]) },
+      { taskId: "tax-setup-basics", shouldComplete: !!(guideSelections["tax-type"]) },
+    ];
+
+    let nextTaskMap = taskMap;
+    let changed = false;
+    for (const { taskId, shouldComplete } of triggers) {
+      const task = (taskMap[stageId] ?? []).find(t => t.taskId === taskId);
+      if (!task || !shouldComplete || task.status === "completed") continue;
+      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
+      changed = true;
+    }
+    if (changed) {
+      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
+      setTaskMap(nextTaskMap);
+      setRoadmap(nextRoadmap);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisions]);
 }

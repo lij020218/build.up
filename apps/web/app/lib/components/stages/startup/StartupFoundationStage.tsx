@@ -156,9 +156,39 @@ export function StartupFoundationStage() {
           onFocus={(e) => { e.currentTarget.style.borderColor = "#2563eb"; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.1)"; }}
         />
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "6px" }}>
-          {ko ? "자동 저장됩니다. 이 문장이 창업의 나침반이 됩니다." : "Auto-saved. This statement becomes your startup compass."}
-        </div>
+        {(() => {
+          const val = (decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? "";
+          const confirmed = !!val.trim() && val.trim().length >= 10;
+          return (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
+            <button type="button" onClick={() => {
+              if (!confirmed) return;
+              // 확인 시 자동 저장 + 체크리스트 연동은 useTaskAutoCompletion에서 처리
+              d.setDecisions((prev: Record<string, unknown>) => ({
+                ...prev,
+                "startup-foundation": {
+                  ...(prev["startup-foundation"] as Record<string, unknown> ?? {}),
+                  stageId: "startup-foundation",
+                  inputs: { ...((prev["startup-foundation"] as Record<string, unknown>)?.inputs as Record<string, unknown> ?? {}), problemConfirmed: true },
+                }
+              }));
+            }} style={{
+              padding: "8px 20px", borderRadius: "10px", border: "none",
+              background: confirmed ? "#2563eb" : "rgba(0,0,0,0.06)",
+              color: confirmed ? "#fff" : "rgba(0,0,0,0.25)",
+              fontSize: "13px", fontWeight: 600, cursor: confirmed ? "pointer" : "default",
+              transition: "all 0.2s ease",
+            }}>
+              {(decisions["startup-foundation"]?.inputs as Record<string, unknown>)?.problemConfirmed
+                ? (ko ? "✓ 확인됨" : "✓ Confirmed")
+                : (ko ? "확인" : "Confirm")}
+            </button>
+            <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)" }}>
+              {ko ? "10자 이상 입력 후 확인을 누르면 체크리스트에 자동 반영됩니다" : "Type 10+ characters and confirm to auto-check the task"}
+            </span>
+          </div>
+          );
+        })()}
       </div>
 
       </>
