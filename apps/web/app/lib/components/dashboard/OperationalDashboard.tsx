@@ -638,8 +638,52 @@ export default function OperationalDashboard({ d }: Props) {
             cogsLabel={d.businessCtx.expenseFields?.[0]?.label}
           />
         )}
-        {/* ── 재고 요약 (읽기 전용) — CRUD는 내 가게 탭 ── */}
-        {d.businessCtx.showInventoryCard && (
+        {/* ── 스타트업: SaaS 핵심 지표 / 기타: 재고 요약 ── */}
+        {isStartupCompany ? (
+          <article style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, #fff 100%)", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "SaaS 핵심 지표" : "SaaS Metrics"}</span>
+              <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ fontSize: "12px", fontWeight: 600, color: "#7c3aed", background: "none", border: "none", cursor: "pointer" }}>{ko ? "상세 →" : "Details →"}</button>
+            </div>
+            {(() => {
+              const monthEntries = allEntries.filter((e: { date: string }) => e.date.startsWith(new Date().toISOString().slice(0, 7)));
+              const mrr = monthEntries.reduce((s: number, e: { sales: number }) => s + e.sales, 0);
+              const prevMonth = new Date(); prevMonth.setMonth(prevMonth.getMonth() - 1);
+              const prevKey = prevMonth.toISOString().slice(0, 7);
+              const prevEntries = allEntries.filter((e: { date: string }) => e.date.startsWith(prevKey));
+              const prevMrr = prevEntries.reduce((s: number, e: { sales: number }) => s + e.sales, 0);
+              const mrrGrowth = prevMrr > 0 ? Math.round(((mrr - prevMrr) / prevMrr) * 100) : 0;
+              const totalUsers = monthEntries.reduce((s: number, e: { customers?: number }) => s + (e.customers ?? 0), 0);
+              const churnRate = totalUsers > 0 ? Math.max(0, Math.round((1 - (totalUsers / Math.max(prevEntries.reduce((s: number, e: { customers?: number }) => s + (e.customers ?? 0), 0), 1))) * 100)) : 0;
+              return (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                <div style={{ padding: "12px", borderRadius: "12px", background: "rgba(124,58,237,0.03)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "4px" }}>MRR</div>
+                  <div style={{ fontSize: "20px", fontWeight: 740, color: "#7c3aed", letterSpacing: "-0.02em" }}>{fmt(mrr)}</div>
+                  {mrrGrowth !== 0 && <div style={{ fontSize: "11px", fontWeight: 600, color: mrrGrowth > 0 ? "#059669" : "#dc2626", marginTop: "2px" }}>{mrrGrowth > 0 ? "+" : ""}{mrrGrowth}% MoM</div>}
+                </div>
+                <div style={{ padding: "12px", borderRadius: "12px", background: "rgba(37,99,235,0.03)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "4px" }}>{ko ? "이달 유저" : "Users MTD"}</div>
+                  <div style={{ fontSize: "20px", fontWeight: 740, color: "#2563eb", letterSpacing: "-0.02em" }}>{totalUsers.toLocaleString()}</div>
+                </div>
+                <div style={{ padding: "12px", borderRadius: "12px", background: "rgba(5,150,105,0.03)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "4px" }}>{ko ? "전환율" : "Conversion"}</div>
+                  <div style={{ fontSize: "20px", fontWeight: 740, color: "#059669" }}>{totalUsers > 0 && mrr > 0 ? `${Math.min(100, Math.round((mrr / totalUsers / 100) * 100))}%` : "—"}</div>
+                </div>
+                <div style={{ padding: "12px", borderRadius: "12px", background: churnRate > 10 ? "rgba(220,38,38,0.04)" : "rgba(0,0,0,0.02)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "4px" }}>{ko ? "이탈률 추정" : "Churn Est."}</div>
+                  <div style={{ fontSize: "20px", fontWeight: 740, color: churnRate > 10 ? "#dc2626" : "#0f172a" }}>{churnRate > 0 ? `${churnRate}%` : "—"}</div>
+                </div>
+              </div>
+              );
+            })()}
+            {allEntries.length === 0 && (
+              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.03)", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+                {ko ? "💡 매출을 기록하면 MRR·유저·전환율·이탈률이 자동 계산됩니다" : "💡 Log revenue to auto-calculate MRR, users, conversion, churn"}
+              </div>
+            )}
+          </article>
+        ) : d.businessCtx.showInventoryCard ? (
           <article style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -668,7 +712,7 @@ export default function OperationalDashboard({ d }: Props) {
               </button>
             )}
           </article>
-        )}
+        ) : null}
         {/* ── 팀 요약 (읽기 전용) — CRUD는 내 가게 탭 ── */}
         <article style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
