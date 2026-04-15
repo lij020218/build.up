@@ -139,7 +139,11 @@ function getFirstAvailableStageId(stages: RoadmapStageState[], reachableIds?: Se
     if (reachableAvailable) return reachableAvailable.stageId;
   }
 
-  // 3. fallback
+  // 3. fallback — reachable 내에서 미완료 단계, 없으면 전체에서 available
+  if (reachableIds) {
+    const reachableFallback = stages.find((s) => s.status !== "completed" && reachableIds.has(s.stageId));
+    if (reachableFallback) return reachableFallback.stageId;
+  }
   return stages.find((s) => s.status === "available")?.stageId ?? stages[0].stageId;
 }
 
