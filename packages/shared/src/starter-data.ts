@@ -1766,9 +1766,9 @@ export const starterStageFlow: RoadmapStageState[] = [
     whyNow: "Gaps in preparation on launch day directly damage the first customer experience and are hard to recover from.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["inventory-first-order", "staff-final-brief"]
+      requiredTaskIds: ["inventory-first-order", "staff-final-brief", "payment-system-tested", "launch-day-roles-assigned"]
     },
-    taskIds: ["inventory-first-order", "staff-final-brief", "sns-open-teaser"],
+    taskIds: ["inventory-first-order", "staff-final-brief", "payment-system-tested", "launch-day-roles-assigned", "sns-open-teaser", "emergency-plan-ready"],
     riskIds: [],
     nextStageIds: ["first-month-check"]
   },
@@ -2315,24 +2315,45 @@ export const starterTaskMap: WorkflowTaskMap = {
   "pre-launch-final": [
     {
       taskId: "inventory-first-order",
-      title: "Place and receive first inventory or ingredient order",
+      title: "Place and receive first inventory/ingredient order (or deploy to production for startups)",
       status: "todo",
       required: true,
       estimatedMinutes: 60
     },
     {
       taskId: "staff-final-brief",
-      title: "Complete final staff training and assign opening-day roles",
+      title: "Complete final staff training and rehearse the opening-day workflow end to end",
       status: "todo",
       required: true,
       estimatedMinutes: 60
     },
     {
+      taskId: "payment-system-tested",
+      title: "Test full payment flow with real transaction (card terminal / PG / Stripe) — confirm receipt prints",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 20
+    },
+    {
+      taskId: "launch-day-roles-assigned",
+      title: "Assign specific roles for launch day — who handles what when things go wrong",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 30
+    },
+    {
       taskId: "sns-open-teaser",
-      title: "Publish SNS opening teaser post",
+      title: "Publish opening teaser on SNS / Product Hunt / community channels",
       status: "todo",
       required: false,
       estimatedMinutes: 30
+    },
+    {
+      taskId: "emergency-plan-ready",
+      title: "Prepare emergency plan: Wi-Fi backup, card terminal failure, stock-out response, customer complaint escalation",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 20
     }
   ],
   "first-month-check": [

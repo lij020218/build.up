@@ -778,15 +778,24 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   // pre-launch-final
   "inventory-first-order": { ko: "초도 재고·식재료 발주 및 입고 완료" },
   "staff-final-brief": { ko: "직원 최종 교육 및 오픈 당일 역할 배분" },
+  "payment-system-tested": { ko: "결제 시스템 실제 테스트 — 카드단말기/PG 결제·취소·영수증 출력 확인" },
+  "launch-day-roles-assigned": { ko: "론칭/오픈 당일 역할 분담 — 누가 무엇을 맡을지 확정 (비상 상황 포함)" },
   "sns-open-teaser": { ko: "SNS 오픈 예고 포스팅 게시" },
+  "emergency-plan-ready": { ko: "비상 대응 계획 — Wi-Fi 백업, 카드 단말기 장애, 재고 소진, 고객 불만 에스컬레이션" },
   // pre-launch-final — startup overrides
   "inventory-first-order__startup-tech": { ko: "프로덕션 배포 + 도메인 연결 + 모니터링 확인" },
   "staff-final-brief__startup-tech": { ko: "론칭 당일 역할 분담 (버그 대응·고객 응대·마케팅)" },
   "sns-open-teaser__startup-tech": { ko: "Product Hunt · HN 론칭 포스트 예약 + 커뮤니티 알림" },
+  "payment-system-tested__startup-tech": { ko: "결제 플로우 실제 테스트 (Stripe/토스페이먼츠 테스트 모드 결제 성공)" },
+  "launch-day-roles-assigned__startup-tech": { ko: "론칭 당일 역할 분담 확정 (버그 대응·고객 응대·마케팅)" },
+  "emergency-plan-ready__startup-tech": { ko: "비상 대응 계획 — 서버 다운 시 롤백, 결제 장애 시 고객 안내, 트래픽 급증 대비" },
   // pre-launch-final — online overrides
   "inventory-first-order__online-digital": { ko: "초도 상품 소싱 완료 + 상세 페이지 등록" },
   "staff-final-brief__online-digital": { ko: "주문·배송·CS 운영 플로우 최종 점검" },
+  "payment-system-tested__online-digital": { ko: "주문→포장→송장출력→발송 전체 워크플로 테스트" },
+  "launch-day-roles-assigned__online-digital": { ko: "첫 주문 처리 역할 분담 — 주문확인·포장·발송·CS" },
   "sns-open-teaser__online-digital": { ko: "스마트스토어/쿠팡 오픈 알림 + SNS 홍보 게시" },
+  "emergency-plan-ready__online-digital": { ko: "비상 대응 — 반품·환불·재고소진·배송지연 시나리오 대비" },
   // first-month-check
   "cashflow-plan-ready": { ko: "일별 현금흐름 기록 방법 정하기 (앱·엑셀·수기)" },
   "emergency-fund-ready": { ko: "비상금 확보 확인 (최소 1개월치 고정비)" },
