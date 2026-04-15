@@ -10,6 +10,7 @@ export function TaxGuideStage() {
     industryCategoryId,
     taxChecks, setTaxChecks,
     guideStepIndex, setGuideStepIndex,
+    cpaDecision, setCpaDecision,
     knowledgeQaText, setKnowledgeQaText,
     knowledgeQaStatus, knowledgeQaError, setKnowledgeQaError,
     handleKnowledgeQuestion,
@@ -280,6 +281,55 @@ export function TaxGuideStage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* 세무사 선임 여부 선택 — 여기서 결정 */}
+        <div style={{ borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", marginBottom: "4px" }}>
+            {ko ? "나의 세무 처리 방식을 선택하세요" : "Choose your tax handling method"}
+          </div>
+          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "12px" }}>
+            {ko ? "선택하면 자동 저장됩니다. 나중에 변경할 수 있어요." : "Auto-saved. You can change later."}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            <button type="button" onClick={() => { setCpaDecision("self"); localStorage.setItem("cpaDecision", "self"); }} style={{
+              padding: "16px", borderRadius: "14px", cursor: "pointer", textAlign: "left" as const,
+              background: cpaDecision === "self" ? "rgba(5,150,105,0.06)" : "rgba(0,0,0,0.01)",
+              border: cpaDecision === "self" ? "2px solid #059669" : "1px solid rgba(0,0,0,0.08)",
+              transition: "all 0.2s ease",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: cpaDecision === "self" ? "6px solid #059669" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
+                <div style={{ fontSize: "14px", fontWeight: 680, color: cpaDecision === "self" ? "#059669" : "#0f172a" }}>{ko ? "직접 신고" : "Self-file"}</div>
+              </div>
+              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
+                {ko ? "캐시노트·자비스·삼쩜삼 등 SaaS 활용. 직원 없고 매출 단순하면 가능" : "Use CashNote/Jobis/3o3 SaaS. Viable if no employees and simple revenue"}
+              </div>
+            </button>
+            <button type="button" onClick={() => { setCpaDecision("cpa"); localStorage.setItem("cpaDecision", "cpa"); }} style={{
+              padding: "16px", borderRadius: "14px", cursor: "pointer", textAlign: "left" as const,
+              background: cpaDecision === "cpa" ? "rgba(37,99,235,0.06)" : "rgba(0,0,0,0.01)",
+              border: cpaDecision === "cpa" ? "2px solid #2563eb" : "1px solid rgba(0,0,0,0.08)",
+              transition: "all 0.2s ease",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: cpaDecision === "cpa" ? "6px solid #2563eb" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
+                <div style={{ fontSize: "14px", fontWeight: 680, color: cpaDecision === "cpa" ? "#2563eb" : "#0f172a" }}>{ko ? "세무사 선임" : "Hire CPA"}</div>
+              </div>
+              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
+                {ko ? "월 10~30만원. 직원 채용·투자·R&D 공제 시 필수. 가산세 방어" : "₩100-300K/mo. Required for hiring, investment, R&D credits. Penalty defense"}
+              </div>
+            </button>
+          </div>
+          {cpaDecision && (
+            <div style={{ marginTop: "10px", padding: "8px 12px", borderRadius: "10px", background: cpaDecision === "self" ? "rgba(5,150,105,0.04)" : "rgba(37,99,235,0.04)", border: `1px solid ${cpaDecision === "self" ? "rgba(5,150,105,0.1)" : "rgba(37,99,235,0.1)"}` }}>
+              <div style={{ fontSize: "12px", fontWeight: 640, color: cpaDecision === "self" ? "#059669" : "#2563eb" }}>
+                ✓ {cpaDecision === "self"
+                  ? (ko ? "직접 신고 선택됨 — 캐시노트나 자비스로 증빙 관리를 시작하세요" : "Self-file selected — start tracking with CashNote or Jobis")
+                  : (ko ? "세무사 선임 선택됨 — 지인 추천이나 세무사닷컴에서 상담받으세요" : "CPA selected — get referrals or consult via taxaccountant.com")}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 세무 Q&A */}

@@ -75,8 +75,8 @@ export function BizRegistrationPanel() {
           <div style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb", marginBottom: "6px" }}>{language === "ko" ? "이 단계에서 확인할 것" : "What to check here"}</div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.6 }}>
             {language === "ko"
-              ? "사업자등록, 과세유형, 통장 개설은 6단계에서 이미 완료했습니다. 이 단계에서는 세무사 선임 여부만 최종 결정하면 됩니다."
-              : "Business registration, tax type, and bank account were completed in Stage 6. Here you only need to finalize your tax accountant decision."}
+              ? `사업자등록·과세유형·통장 개설은 이전 단계에서 완료했고, 세무사 선임 여부도 세무 가이드에서 결정했습니다.${cpaDecision ? (cpaDecision === "cpa" ? " (세무사 선임 선택됨)" : " (직접 신고 선택됨)") : ""} 이 단계에서는 최종 확인만 하면 됩니다.`
+              : `Registration, tax type, and bank account are done. Tax accountant decision was made in the Tax Guide.${cpaDecision ? (cpaDecision === "cpa" ? " (CPA selected)" : " (Self-file selected)") : ""} Just confirm here.`}
           </div>
         </div>
       )}
