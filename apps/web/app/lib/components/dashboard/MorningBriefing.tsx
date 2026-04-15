@@ -530,14 +530,34 @@ export function MorningBriefing() {
                 <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginBottom: "12px" }}>
                   {top.reason}
                 </div>
-                <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{
-                  padding: "10px 20px", borderRadius: "10px", border: "none",
-                  background: isHigh ? RED : "var(--primary)", color: "#fff",
-                  fontSize: "13px", fontWeight: 650, cursor: "pointer",
-                  display: "inline-flex", alignItems: "center", gap: "6px",
-                }}>
-                  {ko ? "확인하기 →" : "Take action →"}
-                </button>
+                {(() => {
+                  const titleLower = (top.title || "").toLowerCase();
+                  const isCofounderAction = titleLower.includes("공동창업") || titleLower.includes("co-founder") || titleLower.includes("cofounder") || titleLower.includes("팀원") || titleLower.includes("recruit");
+                  if (isCofounderAction) {
+                    return (
+                      <a href="https://www.linkedin.com/search/results/people/?keywords=cofounder%20startup%20korea" target="_blank" rel="noopener noreferrer" style={{
+                        padding: "10px 20px", borderRadius: "10px", border: "none",
+                        background: "#0a66c2", color: "#fff",
+                        fontSize: "13px", fontWeight: 650, cursor: "pointer",
+                        display: "inline-flex", alignItems: "center", gap: "6px",
+                        textDecoration: "none",
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        {ko ? "LinkedIn에서 공동창업자 찾기 →" : "Find co-founders on LinkedIn →"}
+                      </a>
+                    );
+                  }
+                  return (
+                    <button type="button" onClick={() => d.navigateToSurface("current")} style={{
+                      padding: "10px 20px", borderRadius: "10px", border: "none",
+                      background: isHigh ? RED : "var(--primary)", color: "#fff",
+                      fontSize: "13px", fontWeight: 650, cursor: "pointer",
+                      display: "inline-flex", alignItems: "center", gap: "6px",
+                    }}>
+                      {ko ? "확인하기 →" : "Take action →"}
+                    </button>
+                  );
+                })()}
               </div>
 
               {/* 나머지 액션 — 작게 */}
