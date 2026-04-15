@@ -219,4 +219,110 @@ export function useTaskAutoCompletion(
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
+
+  // customer-discovery: 인터뷰 입력 시 태스크 자동 완료
+  useEffect(() => {
+    const stageId = "customer-discovery";
+    if (!taskMap[stageId]) return;
+    const { guideSelections } = useRoadmapStore.getState();
+
+    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
+      { taskId: "customer-interviews-done", shouldComplete: !!(guideSelections["interview-target"] && (guideSelections["interview-target"] as string).length > 0) },
+      { taskId: "pain-pattern-documented", shouldComplete: !!(guideSelections["analysis-notes"] && (guideSelections["analysis-notes"] as string).length >= 10) },
+      { taskId: "narrow-wedge-defined", shouldComplete: !!(guideSelections["analysis-result"]) },
+    ];
+
+    let nextTaskMap = taskMap;
+    let changed = false;
+    for (const { taskId, shouldComplete } of triggers) {
+      const task = (taskMap[stageId] ?? []).find(t => t.taskId === taskId);
+      if (!task || !shouldComplete || task.status === "completed") continue;
+      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
+      changed = true;
+    }
+    if (changed) {
+      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
+      setTaskMap(nextTaskMap);
+      setRoadmap(nextRoadmap);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisions]);
+
+  // growth-engine: 북극성 지표 선택 시 자동 완료
+  useEffect(() => {
+    const stageId = "growth-engine";
+    if (!taskMap[stageId]) return;
+    const geInputs = (decisions[stageId] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
+
+    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
+      { taskId: "north-star-set", shouldComplete: !!(geInputs?.northStarType && geInputs?.northStarMetricName && (geInputs.northStarMetricName as string).length > 0) },
+    ];
+
+    let nextTaskMap = taskMap;
+    let changed = false;
+    for (const { taskId, shouldComplete } of triggers) {
+      const task = (taskMap[stageId] ?? []).find(t => t.taskId === taskId);
+      if (!task || !shouldComplete || task.status === "completed") continue;
+      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
+      changed = true;
+    }
+    if (changed) {
+      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
+      setTaskMap(nextTaskMap);
+      setRoadmap(nextRoadmap);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisions]);
+
+  // fundraising-readiness: AI 사업계획서 생성 시 자동 완료
+  useEffect(() => {
+    const stageId = "fundraising-readiness";
+    if (!taskMap[stageId]) return;
+    const frInputs = (decisions[stageId] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
+
+    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
+      { taskId: "investor-material-ready", shouldComplete: !!(frInputs?.bpSections) },
+    ];
+
+    let nextTaskMap = taskMap;
+    let changed = false;
+    for (const { taskId, shouldComplete } of triggers) {
+      const task = (taskMap[stageId] ?? []).find(t => t.taskId === taskId);
+      if (!task || !shouldComplete || task.status === "completed") continue;
+      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
+      changed = true;
+    }
+    if (changed) {
+      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
+      setTaskMap(nextTaskMap);
+      setRoadmap(nextRoadmap);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisions]);
+
+  // venture-certification: 인증 유형 선택 시 자동 완료
+  useEffect(() => {
+    const stageId = "venture-certification";
+    if (!taskMap[stageId]) return;
+    const { guideSelections } = useRoadmapStore.getState();
+
+    const triggers: Array<{ taskId: string; shouldComplete: boolean }> = [
+      { taskId: "venture-cert-type-checked", shouldComplete: !!(guideSelections["venture-cert-type"]) },
+    ];
+
+    let nextTaskMap = taskMap;
+    let changed = false;
+    for (const { taskId, shouldComplete } of triggers) {
+      const task = (taskMap[stageId] ?? []).find(t => t.taskId === taskId);
+      if (!task || !shouldComplete || task.status === "completed") continue;
+      nextTaskMap = updateTaskStatus(nextTaskMap, stageId, taskId, "completed");
+      changed = true;
+    }
+    if (changed) {
+      const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
+      setTaskMap(nextTaskMap);
+      setRoadmap(nextRoadmap);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisions]);
 }
