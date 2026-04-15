@@ -92,7 +92,7 @@ export function CompanySetupStage() {
                 <div style={{ fontSize: "14px", fontWeight: 680, color: bizType === "corp" ? "#7c3aed" : "#0f172a" }}>{ko ? "법인 (주식회사)" : "Corporation"}</div>
               </div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
-                {ko ? "• 설립비 30~65만원 · 등기소 등록 필요\n• 복식부기 의무 · 세무사 필수\n• 투자 유치 · 지분 구조 설계에 유리\n• 매출 2억 초과 시 세율 유리" : "• ₩300-650K setup, registry required\n• Double-entry bookkeeping required\n• Better for raising VC / equity splits\n• Tax-efficient above ₩200M revenue"}
+                {ko ? "• 설립비 30~65만원 · 등기소 등록 필요\n• 복식부기 의무\n• 투자 유치 · 지분 구조 설계에 유리\n• 매출 2억 초과 시 세율 유리" : "• ₩300-650K setup, registry required\n• Double-entry bookkeeping required\n• Better for raising VC / equity splits\n• Tax-efficient above ₩200M revenue"}
               </div>
             </button>
           </div>
@@ -272,7 +272,7 @@ export function CompanySetupStage() {
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginBottom: "10px" }}>{ko ? "과세 유형 결정 · 세무 기초" : "Tax Type & Basics"}</div>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginBottom: "14px" }}>
           {isCorp
-            ? (ko ? "법인은 일반과세자로 자동 등록됩니다. 복식부기 의무이며 세무사 선임이 권장됩니다." : "Corporations are automatically registered as general taxpayers.")
+            ? (ko ? "법인은 일반과세자로 자동 등록됩니다. 복식부기 의무입니다." : "Corporations are automatically registered as general taxpayers. Double-entry bookkeeping required.")
             : (ko ? "과세 유형을 선택하세요. 선택에 따라 세금 신고 방식과 부담이 달라집니다." : "Choose your tax type. This affects filing frequency and tax burden.")}
         </div>
 
@@ -373,7 +373,7 @@ export function CompanySetupStage() {
             { title: "법인세", desc: "과세표준 2억 이하: 10% / 2~200억: 20% / 200~3000억: 22% / 3000억 초과: 25%" },
             { title: "부가가치세", desc: "일반과세자 자동 등록. 매출세액 10% - 매입세액 공제. 분기 신고" },
             { title: "원천징수", desc: "급여·용역비 지급 시 원천세 공제 후 납부. 매월 10일까지 신고" },
-            { title: "세무사 선임", desc: "복식부기 의무. 월 기장료 10~30만원. 삼쩜삼·자비스 등 SaaS 활용도 가능" },
+            { title: "복식부기 의무", desc: "법인은 복식부기 필수. 삼쩜삼·자비스 등 SaaS로 기장 가능 (세무 상세는 세무 가이드 단계에서)" },
           ] : [
             { title: "Corporate Tax", desc: "10% (≤₩200M) / 20% (≤₩20B) / 22% (≤₩300B) / 25% (>₩300B)" },
             { title: "VAT", desc: "Auto general taxpayer. 10% output - input deduction. Quarterly filing" },
@@ -395,7 +395,7 @@ export function CompanySetupStage() {
             {isCorp
               ? (ko ? "법인 설립 초기에는 자비스(Jobis)나 삼쩜삼으로 기장 비용을 줄일 수 있습니다. R&D 세액공제(최대 25%)를 활용하면 법인세를 크게 절감할 수 있어요." : "Use Jobis or 3o3 to reduce bookkeeping costs. R&D tax credits (up to 25%) significantly reduce corporate tax.")
               : taxType === "general"
-                ? (ko ? "B2B 거래가 주력이라면 일반과세가 맞습니다. 매입세액 공제로 실질 세부담을 줄일 수 있어요. 세무사 상담을 권장합니다." : "General is right for B2B-heavy businesses. Input tax deductions reduce actual burden. Consider a tax consultant.")
+                ? (ko ? "B2B 거래가 주력이라면 일반과세가 맞습니다. 매입세액 공제로 실질 세부담을 줄일 수 있어요." : "General is right for B2B-heavy businesses. Input tax deductions reduce actual burden.")
                 : (ko ? "초기에는 간이과세로 시작하고, 매출이 늘면 자동 전환됩니다. 무료 회계 앱(캐시노트, 자비스)으로 매출/매입 기록을 시작하세요." : "Start with simplified, auto-converts as revenue grows. Use free apps (CashNote, Jobis) for bookkeeping.")}
           </div>
         </div>
