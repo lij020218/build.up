@@ -22,6 +22,7 @@ export function LoanGuideStage() {
     selectedBudget,
     decisions,
     guideSelections, setGuideSelections,
+    guideStepIndex, setGuideStepIndex,
     savedFinanceSnapshot,
     progFilter, setProgFilter,
     liveProgramsData, setLiveProgramsData,
@@ -123,8 +124,39 @@ export function LoanGuideStage() {
     setBpLoading(false);
   };
 
+  const pg = guideStepIndex;
+  const totalPg = 5;
+  const pgLabels = ko
+    ? ["왜 중요한가", "자금 경로", "성공 전략", "지원사업 매칭", "사업계획서"]
+    : ["Why", "Funding Paths", "Strategy", "Programs", "Business Plan"];
+
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      {/* ── 페이지 네비 ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button type="button" disabled={pg === 0} onClick={() => setGuideStepIndex((p: number) => p - 1)} style={{
+          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
+          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
+        }}>← {ko ? "이전" : "Prev"}</button>
+        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "center" }}>
+          {pgLabels.map((l, i) => (
+            <button key={i} type="button" onClick={() => setGuideStepIndex(i)} style={{
+              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
+              background: i === pg ? "#2563eb" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
+              border: "none", cursor: "pointer",
+            }}>{l}</button>
+          ))}
+        </div>
+        <button type="button" disabled={pg === totalPg - 1} onClick={() => setGuideStepIndex((p: number) => p + 1)} style={{
+          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
+          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
+          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
+        }}>{ko ? "다음" : "Next"} →</button>
+      </div>
+
+      {/* ── Page 0: 왜 중요한가 + 자금 경로 선택 ── */}
+      {pg === 0 && (<>
       {/* ── WHY — 이 단계가 중요한 이유 ── */}
       <div style={{ marginBottom: "14px", borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -213,6 +245,10 @@ export function LoanGuideStage() {
         );
       })()}
 
+      </>)}
+
+      {/* ── Page 1: 자금 경로 상세 ── */}
+      {pg === 1 && (<>
       {/* ── 자금 경로 상세 (업종별 분기) ── */}
       <div style={{ marginBottom: "14px", display: "grid", gap: "10px" }}>
         {(isStartup ? (ko ? [
@@ -365,6 +401,10 @@ export function LoanGuideStage() {
         ))}
       </div>
 
+      </>)}
+
+      {/* ── Page 2: 성공 전략 + 맞춤 프로그램 ── */}
+      {pg === 2 && (<>
       {/* ── 사업계획서 팁 ── */}
       <div style={{ marginBottom: "14px", borderRadius: "16px", border: "1px solid rgba(217,119,6,0.08)", background: "rgba(217,119,6,0.02)", padding: "16px 20px" }}>
         <div style={{ fontSize: "13px", fontWeight: 650, color: "#d97706", marginBottom: "6px" }}>{ko ? "💡 자금 조달 성공률을 높이는 핵심 팁" : "💡 Key Tips for Funding Success"}</div>
@@ -440,6 +480,10 @@ export function LoanGuideStage() {
         </div>
       </div>
 
+      </>)}
+
+      {/* ── Page 3: 실시간 정부 지원사업 ── */}
+      {pg === 3 && (<>
       {/* ── K-Startup Live Programs ── */}
       {(liveProgramsData.length > 0 || liveProgramsLoading) && (
         <div style={{
@@ -500,7 +544,10 @@ export function LoanGuideStage() {
           )}
         </div>
       )}
+      </>)}
 
+      {/* ── Page 4: AI 사업계획서 ── */}
+      {pg === 4 && (<>
       {/* ── Business Plan Generator ── */}
       <div style={{
         marginBottom: "18px",
@@ -614,6 +661,7 @@ export function LoanGuideStage() {
           )}
         </div>
       </div>
-    </>
+    </>)}
+    </div>
   );
 }
