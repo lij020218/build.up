@@ -395,7 +395,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
           businessLaunchedDate: null,
           cpaDecision: null,
           taxSettings: { vatType: "general", hasEmployees: false },
-          monthlyCosts: { ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 },
+          monthlyCosts: { ingredients: 0, labor: 0, rent: 0, utilities: 0, sga: 0, marketing: 0, other: 0, interest: 0 },
           dailyEntries: [],
           inventoryItems: [],
           employees: [],

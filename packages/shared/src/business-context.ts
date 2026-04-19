@@ -47,7 +47,7 @@ export type CustomerMode = "membership" | "appointment" | "repeat" | "pipeline" 
 export type ExpenseMode = "food-cogs" | "purchase" | "supply" | "facility" | "content" | "infra" | "general";
 
 export type ExpenseFieldConfig = {
-  fieldKey: "ingredients" | "labor" | "rent" | "utilities" | "other";
+  fieldKey: "ingredients" | "labor" | "rent" | "utilities" | "sga" | "marketing" | "other" | "interest";
   label: { ko: string; en: string };
   placeholder: string;
   description: { ko: string; en: string };
@@ -196,14 +196,34 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
     description: { ko: "전기, 수도, 가스, 인터넷, 전화 요금", en: "Electricity, water, gas, internet, phone" },
   };
 
-  // ingredients(COGS)와 other는 업종별로 다름
+  // 공통 마케팅·기타 필드
+  const marketing: ExpenseFieldConfig = {
+    fieldKey: "marketing",
+    label: { ko: "마케팅·광고비", en: "Marketing & Ads" },
+    placeholder: "30",
+    description: { ko: "네이버 광고, SNS 광고, 블로그 체험단, 전단지 등 홍보 비용", en: "Naver ads, social media ads, influencer marketing, flyers" },
+  };
+  const otherGeneral: ExpenseFieldConfig = {
+    fieldKey: "other",
+    label: { ko: "기타 비용", en: "Other" },
+    placeholder: "10",
+    description: { ko: "위 항목에 해당하지 않는 기타 운영 비용", en: "Other operating costs not covered above" },
+  };
+  const interest: ExpenseFieldConfig = {
+    fieldKey: "interest",
+    label: { ko: "대출이자", en: "Loan Interest" },
+    placeholder: "0",
+    description: { ko: "사업자 대출, 시설 리스 등의 월 이자 비용 (없으면 0)", en: "Monthly loan/lease interest payments (0 if none)" },
+  };
+
+  // ingredients(원가)와 sga(운영비)는 업종별로 다름
   switch (mode) {
     case "food-cogs": {
       const isCafe = categoryId === "cafe-dessert";
       return [
         {
           fieldKey: "ingredients",
-          label: isCafe ? { ko: "원재료비", en: "Raw Materials" } : { ko: "식재료비", en: "Ingredients" },
+          label: isCafe ? { ko: "원재료비 (원가)", en: "Raw Materials (COGS)" } : { ko: "식재료비 (원가)", en: "Ingredients (COGS)" },
           placeholder: isCafe ? "80" : "120",
           description: isCafe
             ? { ko: "원두, 우유, 시럽, 디저트 재료 등 매출에 비례하는 변동비", en: "Coffee beans, milk, syrup, dessert ingredients — variable costs" }
@@ -211,11 +231,12 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
         },
         labor, rent, utilities,
         {
-          fieldKey: "other",
-          label: { ko: "배달수수료·기타", en: "Delivery Fees & Other" },
+          fieldKey: "sga",
+          label: { ko: "배달수수료·운영비 (운영비)", en: "Delivery & Ops (SGA)" },
           placeholder: "50",
           description: { ko: "배달앱 수수료, 카드수수료, 포장재, 소모품 등", en: "Delivery platform fees, card processing, packaging, misc" },
         },
+        marketing, otherGeneral, interest,
       ];
     }
     case "purchase": {
@@ -223,21 +244,22 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
       return [
         {
           fieldKey: "ingredients",
-          label: { ko: "상품 매입원가", en: "Product Purchase" },
+          label: { ko: "상품 매입원가 (원가)", en: "Product Purchase (COGS)" },
           placeholder: isOnline ? "200" : "300",
           description: { ko: "판매할 상품의 도매/제조 매입 비용", en: "Wholesale or manufacturing cost of products for sale" },
         },
         labor, rent, utilities,
         {
-          fieldKey: "other",
+          fieldKey: "sga",
           label: isOnline
-            ? { ko: "광고·플랫폼수수료", en: "Ads & Platform Fees" }
-            : { ko: "배송비·기타", en: "Shipping & Other" },
+            ? { ko: "플랫폼수수료·배송비 (운영비)", en: "Platform Fees & Shipping (SGA)" }
+            : { ko: "배송비·카드수수료 (운영비)", en: "Shipping & Card Fees (SGA)" },
           placeholder: isOnline ? "100" : "50",
           description: isOnline
-            ? { ko: "네이버/쿠팡 수수료, 키워드 광고비, 택배비", en: "Platform commissions, keyword ads, shipping costs" }
-            : { ko: "택배비, 포장재, 카드수수료, 마케팅비", en: "Shipping, packaging, card fees, marketing" },
+            ? { ko: "네이버/쿠팡 수수료, 택배비, 카드수수료", en: "Platform commissions, shipping costs, card fees" }
+            : { ko: "택배비, 포장재, 카드수수료", en: "Shipping, packaging, card fees" },
         },
+        marketing, otherGeneral, interest,
       ];
     }
     case "supply":
@@ -245,8 +267,8 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
         {
           fieldKey: "ingredients",
           label: categoryId === "pet"
-            ? { ko: "미용재료·소모품", en: "Grooming Supplies" }
-            : { ko: "시술재료·소모품", en: "Treatment Supplies" },
+            ? { ko: "미용재료·소모품 (원가)", en: "Grooming Supplies (COGS)" }
+            : { ko: "시술재료·소모품 (원가)", en: "Treatment Supplies (COGS)" },
           placeholder: "30",
           description: categoryId === "pet"
             ? { ko: "미용 도구, 샴푸, 소모품, 사료/간식 매입", en: "Grooming tools, shampoo, supplies, food/treats" }
@@ -254,17 +276,18 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
         },
         labor, rent, utilities,
         {
-          fieldKey: "other",
-          label: { ko: "교육비·기타", en: "Training & Other" },
+          fieldKey: "sga",
+          label: { ko: "교육비·운영비 (운영비)", en: "Training & Ops (SGA)" },
           placeholder: "20",
-          description: { ko: "직원 교육/연수비, 마케팅비, 카드수수료", en: "Staff training, marketing, card processing fees" },
+          description: { ko: "직원 교육/연수비, 카드수수료, 소모품", en: "Staff training, card processing, supplies" },
         },
+        marketing, otherGeneral, interest,
       ];
     case "facility":
       return [
         {
           fieldKey: "ingredients",
-          label: { ko: "장비유지·소모품", en: "Equipment & Supplies" },
+          label: { ko: "장비유지·소모품 (원가)", en: "Equipment & Supplies (COGS)" },
           placeholder: "30",
           description: categoryId === "space"
             ? { ko: "시설 유지보수, 가구/집기 교체, 청소용품", en: "Facility maintenance, furniture replacement, cleaning supplies" }
@@ -272,60 +295,64 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
         },
         labor, rent, utilities,
         {
-          fieldKey: "other",
-          label: { ko: "시설관리·기타", en: "Facility & Other" },
+          fieldKey: "sga",
+          label: { ko: "시설관리·운영비 (운영비)", en: "Facility & Ops (SGA)" },
           placeholder: "20",
-          description: { ko: "청소 외주, 보험료, 마케팅비, 카드수수료", en: "Cleaning service, insurance, marketing, card fees" },
+          description: { ko: "청소 외주, 보험료, 카드수수료", en: "Cleaning service, insurance, card fees" },
         },
+        marketing, otherGeneral, interest,
       ];
     case "content":
       return [
         {
           fieldKey: "ingredients",
-          label: { ko: "교재·교구비", en: "Teaching Materials" },
+          label: { ko: "교재·교구비 (원가)", en: "Teaching Materials (COGS)" },
           placeholder: "40",
           description: { ko: "교재, 교구, 프린트 비용, 온라인 콘텐츠 제작비", en: "Textbooks, teaching aids, printing, content production" },
         },
         labor, rent, utilities,
         {
-          fieldKey: "other",
-          label: { ko: "콘텐츠제작·기타", en: "Content & Other" },
+          fieldKey: "sga",
+          label: { ko: "LMS·플랫폼비 (운영비)", en: "LMS & Platform (SGA)" },
           placeholder: "20",
-          description: { ko: "LMS 구독, 학습 플랫폼 비용, 마케팅비", en: "LMS subscriptions, learning platform fees, marketing" },
+          description: { ko: "LMS 구독, 학습 플랫폼 비용, 카드수수료", en: "LMS subscriptions, learning platform fees, card fees" },
         },
+        marketing, otherGeneral, interest,
       ];
     case "infra":
       return [
         {
           fieldKey: "ingredients",
-          label: { ko: "서버·클라우드·SaaS", en: "Server & SaaS" },
+          label: { ko: "서버·클라우드·SaaS (원가)", en: "Server & SaaS (COGS)" },
           placeholder: "50",
           description: { ko: "AWS/GCP, Vercel, GitHub, Figma, Slack 등 인프라·SaaS 구독 비용", en: "Cloud hosting, SaaS subscriptions (AWS, Vercel, GitHub, etc.)" },
         },
         labor, rent, utilities,
         {
-          fieldKey: "other",
-          label: { ko: "외주비·기타", en: "Outsourcing & Other" },
+          fieldKey: "sga",
+          label: { ko: "외주비·법률비 (운영비)", en: "Outsourcing & Legal (SGA)" },
           placeholder: "100",
-          description: { ko: "외주 개발/디자인, 법률 자문, 마케팅, 기타 운영비", en: "Outsourced dev/design, legal, marketing, operations" },
+          description: { ko: "외주 개발/디자인, 법률 자문, 기타 운영비", en: "Outsourced dev/design, legal, operations" },
         },
+        marketing, otherGeneral, interest,
       ];
     case "general":
     default:
       return [
         {
           fieldKey: "ingredients",
-          label: { ko: "재료·소모품", en: "Materials & Supplies" },
+          label: { ko: "재료·소모품 (원가)", en: "Materials & Supplies (COGS)" },
           placeholder: "50",
-          description: { ko: "영업에 필요한 재료, 소모품, 차량 유지비 등", en: "Business materials, supplies, vehicle maintenance" },
+          description: { ko: "영업에 필요한 재료, 소모품 등", en: "Business materials, supplies" },
         },
         labor, rent, utilities,
         {
-          fieldKey: "other",
-          label: { ko: "차량비·기타", en: "Vehicle & Other" },
+          fieldKey: "sga",
+          label: { ko: "차량비·운영비 (운영비)", en: "Vehicle & Ops (SGA)" },
           placeholder: "30",
-          description: { ko: "차량 유류비, 보험료, 마케팅비, 카드수수료", en: "Vehicle fuel, insurance, marketing, card fees" },
+          description: { ko: "차량 유류비, 보험료, 카드수수료", en: "Vehicle fuel, insurance, card fees" },
         },
+        marketing, otherGeneral, interest,
       ];
   }
 }

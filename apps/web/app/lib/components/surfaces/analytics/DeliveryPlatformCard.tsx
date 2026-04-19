@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
@@ -6,7 +5,6 @@ import { styles } from "../../../styles";
 
 export function DeliveryPlatformCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
   const {
     language,
     businessCtx,
@@ -22,7 +20,7 @@ export function DeliveryPlatformCard() {
     dlvName, setDlvName,
     dlvRate, setDlvRate,
     dlvAd, setDlvAd,
-  } = _d;
+  } = d;
 
   if (!businessCtx.isDeliveryRelevant && !businessCtx.isOnlineStore) return null;
 

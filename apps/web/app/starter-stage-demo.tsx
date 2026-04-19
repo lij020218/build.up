@@ -95,6 +95,7 @@ import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/Da
 import { AuroraBackground } from "../components/ui/aurora-background";
 import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
+import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
 import { FranchiseView } from "./lib/components/surfaces/FranchiseView";
 import { ProfileView } from "./lib/components/surfaces/ProfileView";
 import { GuidesView } from "./lib/components/surfaces/GuidesView";
@@ -846,14 +847,14 @@ export default function StarterStageDemo({
         }}>
           <span style={{
             fontSize: "17px", fontWeight: 800, color: "#fff",
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+            fontFamily: "inherit",
             letterSpacing: "-0.02em",
           }}>b</span>
         </div>
         <span style={{
           fontSize: "16px", fontWeight: 750, color: "#0f172a",
           letterSpacing: "-0.03em",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+          fontFamily: "inherit",
         }}>
           Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
         </span>
@@ -912,6 +913,11 @@ export default function StarterStageDemo({
         </CardErrorBoundary>
       ) : null}
 
+      {activeSurface === "marketing" ? (
+        <CardErrorBoundary cardLabel="마케팅">
+          <MarketingSurface />
+        </CardErrorBoundary>
+      ) : null}
 
       {activeSurface === "roadmap" && !isFreshAccount ? (
         <RoadmapSurface />

@@ -1,13 +1,12 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { supabase } from "../../../../../lib/supabase";
+import type { Product } from "../../../stores/operations-store";
 
 export function ProductPerformanceCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
   const {
     language,
     businessCtx,
@@ -25,7 +24,7 @@ export function ProductPerformanceCard() {
     prodCost, setProdCost,
     prodStock, setProdStock,
     prodUnit, setProdUnit,
-  } = _d;
+  } = d;
 
   if (!businessCtx.showProductCard) return null;
 
@@ -37,9 +36,9 @@ export function ProductPerformanceCard() {
   const fmtN = (n: number) => n.toLocaleString();
 
   // 수익성 계산
-  const calcMargin = (p) => p.price > 0 ? ((p.price - p.cost) / p.price) * 100 : 0;
-  const calcRevenue = (p) => p.monthlySold * p.price;
-  const calcProfit = (p) => p.monthlySold * (p.price - p.cost);
+  const calcMargin = (p: Product) => p.price > 0 ? ((p.price - p.cost) / p.price) * 100 : 0;
+  const calcRevenue = (p: Product) => p.monthlySold * p.price;
+  const calcProfit = (p: Product) => p.monthlySold * (p.price - p.cost);
 
   const totalRevenue = products.reduce((s, p) => s + calcRevenue(p), 0);
   const totalProfit = products.reduce((s, p) => s + calcProfit(p), 0);

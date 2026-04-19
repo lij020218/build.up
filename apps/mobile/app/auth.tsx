@@ -351,7 +351,7 @@ function Field(props: {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F7F6F3"
+    backgroundColor: "#F5F7FA"
   },
   content: {
     paddingHorizontal: 20,
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     gap: 9,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.76)"
@@ -378,18 +378,18 @@ const styles = StyleSheet.create({
   brandDot: {
     width: 8,
     height: 8,
-    borderRadius: 999,
-    backgroundColor: "#1D3557"
+    borderRadius: 8,
+    backgroundColor: "#075E66"
   },
   brandText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   ghostButton: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.76)"
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   ghostButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#111111"
+    color: "#101820"
   },
   hero: {
     gap: 14,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.74)"
@@ -419,14 +419,14 @@ const styles = StyleSheet.create({
   eyebrowDot: {
     width: 6,
     height: 6,
-    borderRadius: 999,
-    backgroundColor: "#1D3557"
+    borderRadius: 8,
+    backgroundColor: "#075E66"
   },
   eyebrowText: {
     fontSize: 11,
     letterSpacing: 1.8,
     textTransform: "uppercase",
-    color: "#1D3557"
+    color: "#075E66"
   },
   title: {
     fontSize: 42,
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     lineHeight: 28,
-    color: "#5B616E"
+    color: "#637083"
   },
   authCard: {
     backgroundColor: "rgba(255,255,255,0.82)",
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.88)",
     padding: 18,
     gap: 16,
-    shadowColor: "#111111",
+    shadowColor: "#101820",
     shadowOpacity: 0.05,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 14 }
@@ -466,18 +466,18 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     fontWeight: "700",
     letterSpacing: -1.2,
-    color: "#111111"
+    color: "#101820"
   },
   authBody: {
     fontSize: 14,
     lineHeight: 23,
-    color: "#5B616E"
+    color: "#637083"
   },
   modeRow: {
     gap: 10
   },
   modeChip: {
-    borderRadius: 22,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.86)",
@@ -486,16 +486,16 @@ const styles = StyleSheet.create({
     gap: 4
   },
   modeChipSelected: {
-    borderColor: "rgba(29,53,87,0.2)",
-    backgroundColor: "rgba(29,53,87,0.06)"
+    borderColor: "rgba(7,94,102,0.2)",
+    backgroundColor: "rgba(7,94,102,0.06)"
   },
   modeTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   modeTitleSelected: {
-    color: "#1D3557"
+    color: "#075E66"
   },
   modeHint: {
     fontSize: 12,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     color: "#7B8290"
   },
   formCard: {
-    borderRadius: 24,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.07)",
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -514,12 +514,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 22,
     fontWeight: "700",
-    color: "#111111"
+    color: "#101820"
   },
   formBody: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#5B616E"
+    color: "#637083"
   },
   form: {
     gap: 14
@@ -533,14 +533,14 @@ const styles = StyleSheet.create({
     color: "#324255"
   },
   input: {
-    borderRadius: 18,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: "#111111"
+    color: "#101820"
   },
   buttonRow: {
     flexDirection: "row",
@@ -548,8 +548,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap"
   },
   primaryButton: {
-    borderRadius: 999,
-    backgroundColor: "#1D3557",
+    borderRadius: 8,
+    backgroundColor: "#075E66",
     paddingHorizontal: 18,
     paddingVertical: 14,
     alignItems: "center",
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   secondaryButton: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -571,15 +571,15 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   secondaryButtonText: {
-    color: "#111111",
+    color: "#101820",
     fontSize: 15,
     fontWeight: "500"
   },
   statusCard: {
-    borderRadius: 20,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.07)",
-    backgroundColor: "rgba(247,246,243,0.9)",
+    backgroundColor: "rgba(245,247,250,0.9)",
     padding: 14,
     gap: 6
   },
@@ -598,13 +598,13 @@ const styles = StyleSheet.create({
     gap: 14
   },
   storyCard: {
-    borderRadius: 28,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.88)",
     backgroundColor: "rgba(255,255,255,0.78)",
     padding: 20,
     gap: 16,
-    shadowColor: "#111111",
+    shadowColor: "#101820",
     shadowOpacity: 0.04,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 10 }
@@ -620,18 +620,18 @@ const styles = StyleSheet.create({
     lineHeight: 29,
     fontWeight: "700",
     letterSpacing: -1,
-    color: "#111111"
+    color: "#101820"
   },
   storyBody: {
     fontSize: 15,
     lineHeight: 25,
-    color: "#5B616E"
+    color: "#637083"
   },
   storyMetrics: {
     gap: 10
   },
   storyMetric: {
-    borderRadius: 20,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.07)",
     backgroundColor: "rgba(255,255,255,0.72)",
@@ -648,11 +648,11 @@ const styles = StyleSheet.create({
     fontSize: 19,
     lineHeight: 21,
     fontWeight: "700",
-    color: "#111111"
+    color: "#101820"
   },
   storyMetricBody: {
     fontSize: 13,
     lineHeight: 20,
-    color: "#5B616E"
+    color: "#637083"
   }
 });

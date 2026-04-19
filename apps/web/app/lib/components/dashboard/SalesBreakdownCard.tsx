@@ -139,7 +139,7 @@ const card: React.CSSProperties = {
   WebkitBackdropFilter: "blur(20px)",
   border: "1px solid rgba(0,0,0,0.05)",
   boxShadow: "0 4px 24px rgba(15,23,42,0.03), 0 1px 2px rgba(15,23,42,0.02)",
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif",
+  fontFamily: "inherit",
   display: "flex",
   flexDirection: "column",
   gap: "16px",
@@ -184,7 +184,7 @@ const formulaSegment: React.CSSProperties = {
 
 const mainValue: React.CSSProperties = {
   fontSize: "22px",
-  fontWeight: 750,
+  fontWeight: 700,
   color: "#0f172a",
   letterSpacing: "-0.03em",
   fontVariantNumeric: "tabular-nums",

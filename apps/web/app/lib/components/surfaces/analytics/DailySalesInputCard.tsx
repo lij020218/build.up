@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
@@ -11,14 +10,13 @@ const fmt = (n: number) =>
 
 export function DailySalesInputCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
   const {
     language, dailyEntries,
     dailySalesInput, setDailySalesInput,
     dailyCustomersInput, setDailyCustomersInput,
     dailyDateInput, setDailyDateInput,
     handleAddDailyEntry,
-  } = _d;
+  } = d;
 
   const ko = language === "ko";
   const todayStr = new Date().toISOString().slice(0, 10);

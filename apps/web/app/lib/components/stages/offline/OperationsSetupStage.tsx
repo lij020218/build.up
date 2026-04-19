@@ -2,7 +2,7 @@
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import {
-  CreditCard, ClipboardList, BarChart2, Bike,
+  CreditCard, ClipboardList, BarChart2, Bike, Lightbulb,
 } from "lucide-react";
 
 export function OperationsSetupStage() {
@@ -298,7 +298,12 @@ export function OperationsSetupStage() {
                                     <div style={{ flex: 1 }}>
                                       <div style={{ fontSize: "15px", fontWeight: 500, color: checked ? "rgba(0,0,0,0.3)" : "var(--text)", textDecoration: checked ? "line-through" : "none", letterSpacing: "-0.2px", transition: "all 0.15s" }}>{check.label}</div>
                                       <div style={{ fontSize: "12.5px", color: checked ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.45)", marginTop: "3px", lineHeight: 1.45 }}>{check.detail}</div>
-                                      {!checked && <div style={{ fontSize: "11.5px", color: "rgba(180,100,0,0.85)", marginTop: "6px", padding: "5px 10px", borderRadius: "8px", background: "rgba(255,149,0,0.07)", lineHeight: 1.4 }}>💡 {check.hint}</div>}
+                                      {!checked && (
+                                        <div style={{ fontSize: "11.5px", color: "rgba(180,100,0,0.85)", marginTop: "6px", padding: "5px 10px", borderRadius: "8px", background: "rgba(255,149,0,0.07)", lineHeight: 1.4, display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                                          <Lightbulb size={12} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
+                                          <span>{check.hint}</span>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>

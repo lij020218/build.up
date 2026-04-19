@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
@@ -6,8 +5,7 @@ import { styles } from "../../../styles";
 
 export function WeeklySummaryCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
-  const { language, dailyEntries } = _d;
+  const { language, dailyEntries } = d;
 
   const ko = language === "ko";
   const entries = dailyEntries as { date: string; sales: number; customers: number }[];

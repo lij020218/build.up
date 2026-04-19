@@ -29,7 +29,7 @@ export default function GlobalError({
             alignItems: "center",
             justifyContent: "center",
             padding: "40px 20px",
-            fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+            fontFamily: "inherit",
             background: "#fafafa",
           }}
         >

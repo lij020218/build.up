@@ -36,7 +36,7 @@ export function BenchmarkCard() {
   const d = useDashboardCtx();
   const ko = d.language === "ko";
   const entries = (d.dailyEntries ?? []) as Array<{ date: string; sales: number; customers: number }>;
-  const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number } | undefined;
+  const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number } | undefined;
   const catId = d.industryCategoryId ?? d.selectedIndustryCategoryId ?? "food";
   const empCount = (d.employees as Array<unknown>)?.length ?? 0;
 
@@ -44,8 +44,8 @@ export function BenchmarkCard() {
     const currentMonth = new Date().toISOString().slice(0, 7);
     const monthEntries = entries.filter(e => e.date.startsWith(currentMonth));
     const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
-    const costs = mc ?? { ingredients: 0, labor: 0, rent: 0, utilities: 0, other: 0 };
-    const totalCosts = costs.ingredients + costs.labor + costs.rent + costs.utilities + costs.other;
+    const costs = mc ?? { ingredients: 0, labor: 0, rent: 0, utilities: 0, sga: 0, marketing: 0, other: 0, interest: 0 };
+    const totalCosts = (costs.ingredients ?? 0) + (costs.labor ?? 0) + (costs.rent ?? 0) + (costs.utilities ?? 0) + (costs.sga ?? 0) + (costs.marketing ?? 0) + (costs.other ?? 0) + (costs.interest ?? 0);
 
     // 전주 대비 매출 변화
     const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));

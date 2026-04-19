@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Flame } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { ProductSalesEntry } from "./ProductSalesEntry";
 import { TodaySalesSummary } from "./TodaySalesSummary";
@@ -286,7 +287,12 @@ export function ActivitySnapshotCard({
                       <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>
                         {isToday ? (ko ? "오늘" : "Today") : new Date(d.dailyDateInput + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long", day: "numeric" })}
                       </span>
-                      {streak >= 3 && <span style={{ fontSize: "11px", fontWeight: 700, color: "#e85d04", background: "rgba(232,93,4,0.08)", borderRadius: "8px", padding: "2px 10px" }}>🔥 {streak}{ko ? "일 연속" : "d"}</span>}
+                      {streak >= 3 && (
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#e85d04", background: "rgba(232,93,4,0.08)", borderRadius: "8px", padding: "2px 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          <Flame size={11} strokeWidth={1.5} />
+                          {streak}{ko ? "일 연속" : "d"}
+                        </span>
+                      )}
                       {missedDays.length >= 2 && <span style={{ fontSize: "11px", fontWeight: 600, color: "#dc2626", background: "rgba(220,38,38,0.06)", borderRadius: "8px", padding: "2px 10px" }}>{missedDays.length}{ko ? "일째 미기록" : "d missed"}</span>}
                     </div>
                     <input type="date" value={d.dailyDateInput} onChange={(event) => enterEdit(event.target.value)}

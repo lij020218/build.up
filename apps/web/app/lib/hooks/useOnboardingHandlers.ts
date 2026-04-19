@@ -181,7 +181,7 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setCpaDecision(result.cpaDecision);
 
     // Monthly costs
-    setMonthlyCosts(result.monthlyCosts);
+    setMonthlyCosts({ ...result.monthlyCosts, sga: 0, marketing: 0, interest: 0 });
     setCostIngredientsText(result.monthlyCosts.ingredients ? String(Math.round(result.monthlyCosts.ingredients / 10000)) : "");
     setCostLaborText(result.monthlyCosts.labor ? String(Math.round(result.monthlyCosts.labor / 10000)) : "");
     setCostRentText(result.monthlyCosts.rent ? String(Math.round(result.monthlyCosts.rent / 10000)) : "");
@@ -315,7 +315,7 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
 
     // 비용
     const mc = result.monthlyCosts;
-    setMonthlyCosts(mc);
+    setMonthlyCosts({ ...mc, sga: 0, marketing: 0, interest: 0 });
 
     // 운영 채널
     const ops: Record<string, boolean> = {};

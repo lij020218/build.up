@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
@@ -22,8 +21,7 @@ const healthColor = (h: HealthLevel) =>
 
 export function MonthlyPLCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
-  const { language, dailyEntries, monthlyCosts } = _d;
+  const { language, dailyEntries, monthlyCosts } = d;
 
   const ko = language === "ko";
 

@@ -84,12 +84,16 @@ export function applyStoreData(data: UserStoreData): void {
   if (data.taxSettings?.vatType) ops.setTaxSettings(data.taxSettings as TaxSettings);
   if (data.monthlyCosts && typeof data.monthlyCosts === "object") {
     const mc = data.monthlyCosts;
-    fin.setMonthlyCosts(mc);
+    fin.setMonthlyCosts({ ...mc, sga: (mc as Record<string, number>).sga ?? 0, marketing: (mc as Record<string, number>).marketing ?? 0, interest: (mc as Record<string, number>).interest ?? 0 });
     fin.setCostIngredientsText(mc.ingredients ? String(Math.round(mc.ingredients / 10000)) : "");
     fin.setCostLaborText(mc.labor ? String(Math.round(mc.labor / 10000)) : "");
     fin.setCostRentText(mc.rent ? String(Math.round(mc.rent / 10000)) : "");
     fin.setCostUtilitiesText(mc.utilities ? String(Math.round(mc.utilities / 10000)) : "");
     fin.setCostOtherText(mc.other ? String(Math.round(mc.other / 10000)) : "");
+    const mcAny = mc as Record<string, number>;
+    if (mcAny.sga) fin.setCostSgaText(String(Math.round(mcAny.sga / 10000)));
+    if (mcAny.marketing) fin.setCostMarketingText(String(Math.round(mcAny.marketing / 10000)));
+    if (mcAny.interest) fin.setCostInterestText(String(Math.round(mcAny.interest / 10000)));
   }
   if (data.dailyEntries?.length) fin.setDailyEntries(data.dailyEntries as DailyEntry[]);
   if (data.inventoryItems?.length) ops.setInventory(data.inventoryItems as InventoryItem[]);
@@ -125,6 +129,17 @@ export function applyStoreData(data: UserStoreData): void {
   if (data.selectedInteriorConcept) {
     prof.setSelectedInteriorConcept(data.selectedInteriorConcept);
   }
+  // 구독 관리 복원
+  if (data.usesSubscriptions) prof.setUsesSubscriptions(true);
+  if ((data.subscriptionPlans as unknown[])?.length) ops.setSubscriptionPlans(data.subscriptionPlans as never);
+  if ((data.subscribers as unknown[])?.length) ops.setSubscribers(data.subscribers as never);
+  // 마케팅 복원
+  try {
+    const { useMarketingStore } = require("../stores/marketing-store");
+    const mkt = useMarketingStore.getState();
+    if ((data.marketingCampaigns as unknown[])?.length) mkt.setCampaigns(data.marketingCampaigns);
+    if (data.marketingMonthlyBudget && data.marketingMonthlyBudget > 0) mkt.setMonthlyBudget(data.marketingMonthlyBudget);
+  } catch { /* marketing store not loaded yet */ }
 }
 
 /** Collect store data for Supabase sync (reads from Zustand stores, not localStorage) */
@@ -168,6 +183,17 @@ export function collectStoreData(): Partial<UserStoreData> {
   if (Object.keys(rm.guideSelections).length) r.guideSelections = rm.guideSelections;
   if (rm.aiRoadmapResult) r.aiRoadmapResult = rm.aiRoadmapResult;
   if (prof.selectedInteriorConcept) r.selectedInteriorConcept = prof.selectedInteriorConcept;
+  // 구독 관리
+  r.usesSubscriptions = prof.usesSubscriptions ?? false;
+  if (ops.subscriptionPlans.length) r.subscriptionPlans = ops.subscriptionPlans;
+  if (ops.subscribers.length) r.subscribers = ops.subscribers;
+  // 마케팅
+  try {
+    const { useMarketingStore } = require("../stores/marketing-store");
+    const mkt = useMarketingStore.getState();
+    if (mkt.campaigns.length) r.marketingCampaigns = mkt.campaigns;
+    if (mkt.monthlyBudget > 0) r.marketingMonthlyBudget = mkt.monthlyBudget;
+  } catch { /* marketing store not loaded yet */ }
   return r;
 }
 

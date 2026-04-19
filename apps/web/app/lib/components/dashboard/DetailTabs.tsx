@@ -63,15 +63,24 @@ export function DetailTabs({ d, fmt }: Props) {
 /* ═══ Tab Panels ═══ */
 
 function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: number) => string }) {
-  const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-  const total = mc.ingredients + mc.labor + mc.rent + mc.utilities + mc.other;
+  const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number };
+  const total = mc.ingredients + mc.labor + mc.rent + mc.utilities + (mc.sga ?? 0) + (mc.marketing ?? 0) + mc.other;
+
+  const ef = d.businessCtx?.expenseFields ?? [];
+  const getLabel = (key: string) => {
+    const f = ef.find((e: { fieldKey: string; label: { ko: string; en: string } }) => e.fieldKey === key);
+    return f ? (ko ? f.label.ko : f.label.en) : key;
+  };
 
   const items = [
-    { label: ko ? "재료비" : "Ingredients", value: mc.ingredients, color: "#ff6b35" },
-    { label: ko ? "인건비" : "Labor", value: mc.labor, color: "#007aff" },
-    { label: ko ? "임대료" : "Rent", value: mc.rent, color: "#5856d6" },
-    { label: ko ? "공과금" : "Utilities", value: mc.utilities, color: "#34c759" },
-    { label: ko ? "기타" : "Other", value: mc.other, color: "#86868b" },
+    { label: getLabel("ingredients"), value: mc.ingredients, color: "#ff6b35" },
+    { label: getLabel("labor"), value: mc.labor, color: "#007aff" },
+    { label: getLabel("rent"), value: mc.rent, color: "#5856d6" },
+    { label: getLabel("utilities"), value: mc.utilities, color: "#34c759" },
+    { label: getLabel("sga"), value: mc.sga ?? 0, color: "#ff9500" },
+    { label: getLabel("marketing"), value: mc.marketing ?? 0, color: "#af52de" },
+    { label: getLabel("other"), value: mc.other, color: "#86868b" },
+    { label: getLabel("interest"), value: (mc as Record<string, number>).interest ?? 0, color: "#ef4444" },
   ];
 
   const inputStyle: React.CSSProperties = {
@@ -133,11 +142,14 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
         <div style={panelLabel}>{ko ? "비용 수정" : "Edit Costs"}</div>
         <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginTop: "12px" }}>
           {[
-            { label: ko ? "재료비" : "Ingredients", state: d.costIngredientsText, setter: d.setCostIngredientsText },
-            { label: ko ? "인건비" : "Labor", state: d.costLaborText, setter: d.setCostLaborText },
-            { label: ko ? "임대료" : "Rent", state: d.costRentText, setter: d.setCostRentText },
-            { label: ko ? "공과금" : "Utilities", state: d.costUtilitiesText, setter: d.setCostUtilitiesText },
-            { label: ko ? "기타" : "Other", state: d.costOtherText, setter: d.setCostOtherText },
+            { label: getLabel("ingredients"), state: d.costCogsText ?? d.costIngredientsText ?? "", setter: d.setCostCogsText ?? d.setCostIngredientsText },
+            { label: getLabel("labor"), state: d.costLaborText, setter: d.setCostLaborText },
+            { label: getLabel("rent"), state: d.costRentText, setter: d.setCostRentText },
+            { label: getLabel("utilities"), state: d.costUtilitiesText, setter: d.setCostUtilitiesText },
+            { label: getLabel("sga"), state: d.costSgaText ?? "", setter: d.setCostSgaText },
+            { label: getLabel("marketing"), state: d.costMarketingText ?? "", setter: d.setCostMarketingText },
+            { label: getLabel("other"), state: d.costOtherText, setter: d.setCostOtherText },
+            { label: getLabel("interest"), state: d.costInterestText ?? "", setter: d.setCostInterestText },
           ].map((field) => (
             <div key={field.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "13px", color: "#86868b", width: "56px", flexShrink: 0 }}>{field.label}</span>

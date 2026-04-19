@@ -2,9 +2,13 @@ import {
   buildMarketScoreNarrative,
   buildRecommendedMarkets,
   buildRoadmapState,
+  calculateHealthMetrics,
+  calculateMoM,
+  calculateMonthlyPnL,
   bootstrapAccountWorkspace,
   completeCurrentStage,
   evaluateDirectMarket,
+  forecastSales,
   formatBudgetPresetLabel,
   formatMarketMetaValue,
   formatGuideSectionTitle,
@@ -13,6 +17,11 @@ import {
   formatStageStatus,
   formatStageType,
   formatStartupType,
+  franchiseBrands,
+  computeOverallScore,
+  formatFranchiseCost,
+  getScoreLabel,
+  getMatchedHighlights,
   getIndustryCategoryIdByOptionId,
   getFreshnessPresentation,
   getCurrentUser,
@@ -24,14 +33,17 @@ import {
   localizeStage,
   localizeStarterIndustryCategory,
   localizeStarterStepCard,
+  localizeTaskTitle,
   loadKnowledgeRecommendations,
   loadLoanKnowledge,
   loadBestMarketSignal,
   loadBusinessProfile,
   loadMarketSignalRecommendations,
   loadPermitKnowledge,
+  loadStoreData,
   runFinancialSimulation,
   saveRoadmapState,
+  saveStoreData,
   loadTaxKnowledge,
   starterIndustryCategories,
   starterBudgetPresets,
@@ -51,10 +63,11 @@ import {
   type GuideQaAnswer,
   type PersistedBusinessProfile,
   type RecommendationItem,
+  type UserStoreData,
   type WorkflowTaskMap,
   type WorkflowDecisionMap
 } from "@build-up/shared";
-import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
+import type { AiStructuredResponse, ContractAnalysisResult, RoadmapGenerationResult } from "@build-up/ai";
 import { useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -62,15 +75,171 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { supabase } from "../lib/supabase";
 import { useLanguage } from "./language-provider";
 
-export type DashboardSurface = "home" | "current" | "roadmap" | "guides" | "profile";
+export type DashboardSurface =
+  | "home"
+  | "current"
+  | "roadmap"
+  | "guides"
+  | "profile"
+  | "analytics"
+  | "franchise"
+  | "marketing";
 
-const SURFACE_HREFS: Record<DashboardSurface, string> = {
+const SURFACE_HREFS = {
   home: "/(tabs)/home",
   current: "/(tabs)/current",
   roadmap: "/(tabs)/roadmap",
   guides: "/(tabs)/guides",
-  profile: "/(tabs)/profile"
+  profile: "/(tabs)/profile",
+  analytics: "/analytics",
+  franchise: "/franchise",
+  marketing: "/marketing"
+} as const satisfies Record<DashboardSurface, string>;
+
+type MarketingChannelKey =
+  | "naver-place"
+  | "instagram"
+  | "delivery-ads"
+  | "naver-keyword"
+  | "daangn"
+  | "blog-review"
+  | "kakao"
+  | "google-ads"
+  | "meta-ads"
+  | "offline";
+
+type MobileDailyEntry = {
+  date: string;
+  sales: number;
+  customers: number;
 };
+
+type MobileMonthlyCosts = UserStoreData["monthlyCosts"];
+
+type MobileProduct = {
+  id: string;
+  name: string;
+  price: number;
+  cost: number;
+  stock: number;
+};
+
+type MobileInventoryItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  minThreshold: number;
+};
+
+type MobileEmployee = {
+  id: string;
+  name: string;
+  hourlyWage: number;
+  weeklyHours: number;
+  isInsured: boolean;
+};
+
+const emptyMobileMonthlyCosts: MobileMonthlyCosts = {
+  ingredients: 0,
+  labor: 0,
+  rent: 0,
+  utilities: 0,
+  sga: 0,
+  marketing: 0,
+  other: 0,
+  interest: 0
+};
+
+const mobileMarketingChannels: Array<{
+  key: MarketingChannelKey;
+  label: { ko: string; en: string };
+  body: { ko: string; en: string };
+}> = [
+  { key: "naver-place", label: { ko: "네이버 플레이스", en: "Naver Place" }, body: { ko: "지도 검색, 리뷰, 방문 전환을 관리합니다.", en: "Manage map search, reviews, and visit conversion." } },
+  { key: "instagram", label: { ko: "인스타그램", en: "Instagram" }, body: { ko: "비주얼 콘텐츠와 첫 고객 반응을 만듭니다.", en: "Build visual demand and early customer response." } },
+  { key: "delivery-ads", label: { ko: "배달앱 광고", en: "Delivery Ads" }, body: { ko: "배달·포장 매출의 노출과 수수료를 같이 봅니다.", en: "Track exposure and fees for delivery and pickup sales." } },
+  { key: "naver-keyword", label: { ko: "네이버 키워드", en: "Naver Keyword" }, body: { ko: "검색 의도가 높은 고객을 잡습니다.", en: "Capture customers with active search intent." } },
+  { key: "daangn", label: { ko: "당근", en: "Daangn" }, body: { ko: "반경 기반 동네 고객을 빠르게 만납니다.", en: "Reach neighborhood customers by radius." } },
+  { key: "blog-review", label: { ko: "블로그·체험단", en: "Blog Review" }, body: { ko: "검색 신뢰와 방문 전 확신을 쌓습니다.", en: "Build search trust before the first visit." } },
+  { key: "kakao", label: { ko: "카카오 채널", en: "Kakao Channel" }, body: { ko: "재방문, 예약, 공지 흐름을 만듭니다.", en: "Create repeat visit, booking, and notice loops." } },
+  { key: "google-ads", label: { ko: "구글 애즈", en: "Google Ads" }, body: { ko: "온라인·테크 사업의 검색 수요를 검증합니다.", en: "Validate search demand for online and tech businesses." } },
+  { key: "meta-ads", label: { ko: "Meta 광고", en: "Meta Ads" }, body: { ko: "타깃 테스트와 초기 전환 실험에 씁니다.", en: "Run targeting and early conversion tests." } },
+  { key: "offline", label: { ko: "오프라인", en: "Offline" }, body: { ko: "전단, 제휴, 현장 프로모션을 기록합니다.", en: "Track flyers, partnerships, and local promotions." } }
+];
+
+const mobileRecommendedMarketingChannels: Record<string, MarketingChannelKey[]> = {
+  food: ["naver-place", "delivery-ads", "instagram", "daangn", "blog-review"],
+  "cafe-dessert": ["instagram", "blog-review", "naver-place", "daangn"],
+  retail: ["daangn", "naver-keyword", "instagram"],
+  beauty: ["naver-place", "blog-review", "kakao", "instagram"],
+  pet: ["naver-place", "blog-review", "kakao", "instagram"],
+  fitness: ["daangn", "instagram", "naver-place", "kakao"],
+  education: ["daangn", "instagram", "naver-place", "kakao"],
+  space: ["naver-place", "instagram", "daangn"],
+  "online-digital": ["naver-keyword", "meta-ads", "instagram", "google-ads"],
+  "startup-tech": ["meta-ads", "google-ads", "instagram", "blog-review"],
+  "living-service": ["daangn", "naver-place", "kakao"]
+};
+
+function getMobileStageAssistCopy(stageId: string, language: "ko" | "en") {
+  const ko = language === "ko";
+  const startupStages = new Set([
+    "startup-foundation",
+    "customer-discovery",
+    "company-setup",
+    "mvp-build",
+    "launch-gtm",
+    "growth-engine",
+    "fundraising-readiness",
+    "venture-certification"
+  ]);
+  const onlineStages = new Set([
+    "platform-setup",
+    "online-registration",
+    "sourcing-setup",
+    "store-setup",
+    "online-marketing"
+  ]);
+  const offlineStages = new Set([
+    "permit-check",
+    "construction-setup",
+    "vendor-setup",
+    "registration-setup",
+    "insurance-tax-setup",
+    "hiring-setup",
+    "operations-setup",
+    "pre-launch"
+  ]);
+
+  if (stageId === "franchise-application") {
+    return ko
+      ? "정보공개서, 가맹본부 상담, 기존 점주 인터뷰처럼 돈을 쓰기 전에 확인해야 하는 항목부터 끝내세요."
+      : "Clear disclosure, HQ consultation, and owner interview tasks before committing capital.";
+  }
+
+  if (startupStages.has(stageId)) {
+    return ko
+      ? "아이디어를 문서로만 남기지 말고 고객 검증, 출시 준비, 지표 관리까지 실행 단위로 쪼개 진행합니다."
+      : "Move from idea to customer validation, launch readiness, and metrics in concrete execution tasks.";
+  }
+
+  if (onlineStages.has(stageId)) {
+    return ko
+      ? "온라인 판매는 계정, 통신판매 신고, 소싱, 상세페이지, 광고 준비가 서로 이어지므로 완료 순서를 지키는 게 중요합니다."
+      : "Online sales depend on account setup, filings, sourcing, product pages, and ads working in sequence.";
+  }
+
+  if (offlineStages.has(stageId)) {
+    return ko
+      ? "오프라인 창업은 인허가, 공사, 공급처, 고용, 오픈 운영이 비용과 일정에 직접 연결됩니다."
+      : "Offline launch tasks connect permits, construction, vendors, hiring, and opening operations to cost and timing.";
+  }
+
+  return ko
+    ? "필수 항목을 모두 체크하면 다음 로드맵 단계가 열립니다. 선택 항목은 리스크를 줄이는 보조 작업입니다."
+    : "Complete every required item to unlock the next roadmap step. Optional items reduce risk.";
+}
 
 function getContractTaskDetail(taskId: string, language: "ko" | "en", categoryId?: string) {
   if (categoryId === "online-digital") {
@@ -228,6 +397,76 @@ function parseManwonInput(raw: string) {
   }
 
   return parsed * 10000;
+}
+
+function formatWonCompact(value: number, language: "ko" | "en") {
+  if (!Number.isFinite(value) || value <= 0) {
+    return language === "ko" ? "0원" : "KRW 0";
+  }
+
+  if (value >= 10000) {
+    return language === "ko"
+      ? `${Math.round(value / 10000).toLocaleString()}만원`
+      : `KRW ${Math.round(value).toLocaleString()}`;
+  }
+
+  return language === "ko"
+    ? `${Math.round(value).toLocaleString()}원`
+    : `KRW ${Math.round(value).toLocaleString()}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function toMobileDailyEntries(value: unknown[] | undefined): MobileDailyEntry[] {
+  return (value ?? [])
+    .filter(isRecord)
+    .map((entry) => ({
+      date: typeof entry.date === "string" ? entry.date : new Date().toISOString().slice(0, 10),
+      sales: typeof entry.sales === "number" ? entry.sales : 0,
+      customers: typeof entry.customers === "number" ? entry.customers : 0
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function toMobileProducts(value: unknown[] | undefined): MobileProduct[] {
+  return (value ?? [])
+    .filter(isRecord)
+    .map((item) => ({
+      id: typeof item.id === "string" ? item.id : `prod-${Date.now()}`,
+      name: typeof item.name === "string" ? item.name : "",
+      price: typeof item.price === "number" ? item.price : 0,
+      cost: typeof item.cost === "number" ? item.cost : 0,
+      stock: typeof item.stock === "number" ? item.stock : 0
+    }))
+    .filter((item) => item.name);
+}
+
+function toMobileInventoryItems(value: unknown[] | undefined): MobileInventoryItem[] {
+  return (value ?? [])
+    .filter(isRecord)
+    .map((item) => ({
+      id: typeof item.id === "string" ? item.id : `inv-${Date.now()}`,
+      name: typeof item.name === "string" ? item.name : "",
+      quantity: typeof item.quantity === "number" ? item.quantity : 0,
+      unit: typeof item.unit === "string" ? item.unit : "개",
+      minThreshold: typeof item.minThreshold === "number" ? item.minThreshold : 0
+    }))
+    .filter((item) => item.name);
+}
+
+function toMobileEmployees(value: unknown[] | undefined): MobileEmployee[] {
+  return (value ?? [])
+    .filter(isRecord)
+    .map((item) => ({
+      id: typeof item.id === "string" ? item.id : `emp-${Date.now()}`,
+      name: typeof item.name === "string" ? item.name : "",
+      hourlyWage: typeof item.hourlyWage === "number" ? item.hourlyWage : 0,
+      weeklyHours: typeof item.weeklyHours === "number" ? item.weeklyHours : 0,
+      isInsured: typeof item.isInsured === "boolean" ? item.isInsured : false
+    }))
+    .filter((item) => item.name);
 }
 
 const GUIDE_STAGE_CODES = ["permit_guide", "tax_guide", "loan_guide"] as const;
@@ -482,6 +721,9 @@ export default function DashboardScreen({
   const [financeError, setFinanceError] = useState("");
   const [financeResult, setFinanceResult] = useState<FinancialSimulationResult | null>(null);
   const [financeInterpretation, setFinanceInterpretation] = useState<AiStructuredResponse | null>(null);
+  const [franchiseFilterCat, setFranchiseFilterCat] = useState("all");
+  const [expandedFranchiseId, setExpandedFranchiseId] = useState<string | null>(null);
+  const [selectedMarketingChannel, setSelectedMarketingChannel] = useState<MarketingChannelKey | null>(null);
   const [locationOptions, setLocationOptions] = useState(getStarterLocationOptions("food"));
   const [locationSourceLabel, setLocationSourceLabel] = useState<string>(copy.common.starterFallback);
   const [permitGuides, setPermitGuides] = useState<Awaited<ReturnType<typeof loadPermitKnowledge>>>([]);
@@ -497,6 +739,54 @@ export default function DashboardScreen({
   const [authResolved, setAuthResolved] = useState(false);
   const [requiresAuth, setRequiresAuth] = useState(false);
   const [transitionNotice, setTransitionNotice] = useState<{ title: string; body: string } | null>(null);
+  const [onboardingMode, setOnboardingMode] = useState<"ai" | "existing" | null>(null);
+  const [existingStep, setExistingStep] = useState(1);
+  const [existingCategoryId, setExistingCategoryId] = useState("food");
+  const [existingIndustryId, setExistingIndustryId] = useState<string | undefined>();
+  const [existingStoreName, setExistingStoreName] = useState("");
+  const [existingBusinessModelId, setExistingBusinessModelId] = useState<string | undefined>();
+  const [existingStartupType, setExistingStartupType] = useState<"independent" | "franchise">("independent");
+  const [existingRegion, setExistingRegion] = useState("");
+  const [existingLaunchDate, setExistingLaunchDate] = useState(new Date().toISOString().slice(0, 10));
+  const [existingRentText, setExistingRentText] = useState("");
+  const [existingLaborText, setExistingLaborText] = useState("");
+  const [existingCapitalText, setExistingCapitalText] = useState("");
+  const [aiStep, setAiStep] = useState<"idea" | "budget" | "region" | "review">("idea");
+  const [aiIdeaText, setAiIdeaText] = useState("");
+  const [aiBudgetText, setAiBudgetText] = useState("");
+  const [aiRegion, setAiRegion] = useState("");
+  const [aiStoreName, setAiStoreName] = useState("");
+  const [aiStatus, setAiStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [aiError, setAiError] = useState("");
+  const [aiRoadmapResult, setAiRoadmapResult] = useState<RoadmapGenerationResult | null>(null);
+  const [storeName, setStoreName] = useState("");
+  const [businessLaunched, setBusinessLaunched] = useState(false);
+  const [businessLaunchedDate, setBusinessLaunchedDate] = useState<string | null>(null);
+  const [dailyEntries, setDailyEntries] = useState<MobileDailyEntry[]>([]);
+  const [dailyDateInput, setDailyDateInput] = useState(new Date().toISOString().slice(0, 10));
+  const [dailySalesInput, setDailySalesInput] = useState("");
+  const [dailyCustomersInput, setDailyCustomersInput] = useState("");
+  const [monthlyCosts, setMonthlyCosts] = useState<MobileMonthlyCosts>(emptyMobileMonthlyCosts);
+  const [costIngredientsText, setCostIngredientsText] = useState("");
+  const [costLaborText, setCostLaborText] = useState("");
+  const [costRentText, setCostRentText] = useState("");
+  const [costUtilitiesText, setCostUtilitiesText] = useState("");
+  const [costMarketingText, setCostMarketingText] = useState("");
+  const [products, setProducts] = useState<MobileProduct[]>([]);
+  const [productNameInput, setProductNameInput] = useState("");
+  const [productPriceInput, setProductPriceInput] = useState("");
+  const [productCostInput, setProductCostInput] = useState("");
+  const [productStockInput, setProductStockInput] = useState("");
+  const [inventoryItems, setInventoryItems] = useState<MobileInventoryItem[]>([]);
+  const [inventoryNameInput, setInventoryNameInput] = useState("");
+  const [inventoryQtyInput, setInventoryQtyInput] = useState("");
+  const [inventoryThresholdInput, setInventoryThresholdInput] = useState("");
+  const [employees, setEmployees] = useState<MobileEmployee[]>([]);
+  const [employeeNameInput, setEmployeeNameInput] = useState("");
+  const [employeeWageInput, setEmployeeWageInput] = useState("");
+  const [employeeHoursInput, setEmployeeHoursInput] = useState("");
+  const [storeSaveStatus, setStoreSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [storeSaveError, setStoreSaveError] = useState("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const apiBaseUrl = process.env.EXPO_PUBLIC_WEB_API_BASE ?? "http://localhost:3001";
@@ -627,10 +917,164 @@ export default function DashboardScreen({
     starterOpenDatePresets.find((date) => date.value === selectedOpenDate) ?? null;
   const activeSurface = surface;
   const currentStageIndex = roadmap.stages.findIndex((stage) => stage.stageId === currentStage.stageId);
-  const roadmapPreviewStages = roadmap.stages.slice(
-    currentStageIndex >= 0 ? currentStageIndex : 0,
-    (currentStageIndex >= 0 ? currentStageIndex : 0) + 2
+  const isStartupCategory = industryCategoryId === "startup-tech";
+  const isFranchisePath = startupType === "franchise" || profile?.startupType === "franchise";
+  const onlineOnlyStageIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
+  const startupOnlyStageIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-gtm", "growth-engine", "company-setup", "fundraising-readiness", "venture-certification"]);
+  const offlineOnlyStageIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "insurance-tax-setup", "hiring-setup", "operations-setup", "pre-launch"]);
+  const hiddenStageIds = isStartupCategory
+    ? new Set([...offlineOnlyStageIds, ...onlineOnlyStageIds])
+    : isDigitalCategory
+      ? new Set([...offlineOnlyStageIds, ...startupOnlyStageIds])
+      : new Set([...onlineOnlyStageIds, ...startupOnlyStageIds]);
+  const visibleRoadmapStages = roadmap.stages.filter((stage) => {
+    if (hiddenStageIds.has(stage.stageId)) return false;
+    if (stage.stageId === "franchise-application" && !isFranchisePath) return false;
+    return true;
+  });
+  const visibleCurrentStageIndex = visibleRoadmapStages.findIndex((stage) => stage.stageId === currentStage.stageId);
+  const nextVisibleStage = visibleCurrentStageIndex >= 0 ? visibleRoadmapStages[visibleCurrentStageIndex + 1] ?? null : null;
+  const visibleCompletedCount = visibleRoadmapStages.filter((stage) => stage.status === "completed").length;
+  const visibleProgressPercent =
+    visibleRoadmapStages.length > 0 ? Math.round((visibleCompletedCount / visibleRoadmapStages.length) * 100) : roadmap.progressPercent;
+  const roadmapPreviewStages = visibleRoadmapStages.slice(
+    visibleCurrentStageIndex >= 0 ? visibleCurrentStageIndex : 0,
+    (visibleCurrentStageIndex >= 0 ? visibleCurrentStageIndex : 0) + 2
   );
+  const localizedNextVisibleStage = nextVisibleStage ? localizeStage(nextVisibleStage, language, industryCategoryId) : null;
+  const currentStageTasks = taskMap[currentStage.stageId] ?? [];
+  const requiredCurrentStageTasks = currentStageTasks.filter((task) => task.required);
+  const completedCurrentStageTasks = currentStageTasks.filter((task) => task.status === "completed");
+  const currentStageRequiredDone = requiredCurrentStageTasks.every(
+    (task) => task.status === "completed"
+  );
+  const currentStageTaskProgress =
+    currentStageTasks.length > 0
+      ? Math.round((completedCurrentStageTasks.length / currentStageTasks.length) * 100)
+      : 0;
+  const canUseGenericTaskStage =
+    currentStageTasks.length > 0 && currentStage.code !== "contract_review";
+  const currentStageAssistCopy = getMobileStageAssistCopy(currentStage.stageId, language);
+  const stageBriefCards = [
+    {
+      label: language === "ko" ? "지금" : "Now",
+      title: localizedCurrentStage.title,
+      body: nextStepSummary
+    },
+    {
+      label: language === "ko" ? "왜 지금" : "Why now",
+      title: language === "ko" ? "순서를 지키면 비용이 줄어듭니다" : "Sequence protects the budget",
+      body: localizedCurrentStage.whyNow
+    },
+    {
+      label: language === "ko" ? "다음" : "Next",
+      title: localizedNextVisibleStage?.title ?? (language === "ko" ? "마무리 단계" : "Wrap-up"),
+      body: localizedNextVisibleStage?.goal ?? (language === "ko" ? "현재 단계가 끝나면 개업 준비 흐름이 정리됩니다." : "Finish this step to keep the launch flow clean.")
+    }
+  ];
+  const financeRentPresets = ["120", "220", "350"];
+  const financeLaborPresets = ["0", "220", "420"];
+  const financeRevenuePresets = ["800", "1500", "3000"];
+  const franchiseCategories = [
+    { id: "all", label: language === "ko" ? "전체" : "All" },
+    { id: "food", label: language === "ko" ? "음식" : "Food" },
+    { id: "cafe-dessert", label: language === "ko" ? "카페" : "Cafe" },
+    { id: "retail", label: language === "ko" ? "소매" : "Retail" },
+    { id: "beauty", label: language === "ko" ? "뷰티" : "Beauty" },
+    { id: "fitness", label: language === "ko" ? "피트니스" : "Fitness" },
+    { id: "education", label: language === "ko" ? "교육" : "Education" },
+    { id: "pet", label: language === "ko" ? "반려동물" : "Pet" },
+    { id: "living-service", label: language === "ko" ? "생활서비스" : "Living" },
+    { id: "space", label: language === "ko" ? "공간" : "Space" }
+  ];
+  const filteredFranchiseBrands = franchiseBrands
+    .filter((brand) => franchiseFilterCat === "all" || brand.categoryId === franchiseFilterCat)
+    .sort((a, b) => computeOverallScore(b.scores) - computeOverallScore(a.scores))
+    .slice(0, 18);
+  const recommendedMarketingKeys =
+    mobileRecommendedMarketingChannels[industryCategoryId] ?? mobileRecommendedMarketingChannels.food;
+  const recommendedMarketingChannels = recommendedMarketingKeys
+    .map((key) => mobileMarketingChannels.find((channel) => channel.key === key))
+    .filter((channel): channel is (typeof mobileMarketingChannels)[number] => Boolean(channel));
+  const selectedMarketingChannelMeta =
+    mobileMarketingChannels.find((channel) => channel.key === selectedMarketingChannel) ??
+    recommendedMarketingChannels[0] ??
+    mobileMarketingChannels[0];
+  const supportHighlights = getMatchedHighlights(startupType);
+  const existingIndustryOptions = starterIndustryOptions
+    .filter((option) => option.meta?.categoryId === existingCategoryId)
+    .slice(0, 6);
+  const existingBusinessModelOptions = getStarterBusinessModelOptions(existingCategoryId);
+  const existingCanContinue =
+    existingStep === 1
+      ? Boolean(existingIndustryId)
+      : existingStep === 2
+        ? Boolean(existingStoreName.trim()) && Boolean(existingBusinessModelId)
+        : existingStep === 3
+          ? Boolean(existingLaunchDate.trim())
+          : true;
+  const aiCanContinue =
+    aiStep === "idea"
+      ? aiIdeaText.trim().length >= 5
+      : aiStep === "review"
+        ? Boolean(aiRoadmapResult)
+        : true;
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const monthEntries = dailyEntries.filter((entry) => entry.date.startsWith(currentMonth));
+  const monthSales = monthEntries.reduce((sum, entry) => sum + entry.sales, 0);
+  const monthCustomers = monthEntries.reduce((sum, entry) => sum + entry.customers, 0);
+  const totalMonthlyCosts = Object.values(monthlyCosts).reduce((sum, value) => sum + value, 0);
+  const estimatedMonthlyProfit = monthSales - totalMonthlyCosts;
+  const lowInventoryCount = inventoryItems.filter(
+    (item) => item.minThreshold > 0 && item.quantity <= item.minThreshold
+  ).length;
+  const weeklyLaborCost = employees.reduce(
+    (sum, employee) => sum + employee.hourlyWage * employee.weeklyHours,
+    0
+  );
+  const operatingPnl = calculateMonthlyPnL(monthEntries, monthlyCosts);
+  const currentCashForRunway = selectedBudget ?? profile?.capital ?? 0;
+  const healthMetrics = calculateHealthMetrics(
+    monthEntries,
+    monthlyCosts,
+    undefined,
+    currentCashForRunway
+  );
+  const salesForecast = forecastSales(dailyEntries);
+  const momComparison = calculateMoM(dailyEntries);
+  const healthGradeLabel =
+    healthMetrics.healthGrade === "healthy"
+      ? language === "ko" ? "건강" : "Healthy"
+      : healthMetrics.healthGrade === "caution"
+        ? language === "ko" ? "주의" : "Caution"
+        : healthMetrics.healthGrade === "warning"
+          ? language === "ko" ? "경고" : "Warning"
+          : language === "ko" ? "위험" : "Critical";
+  const forecastConfidenceLabel =
+    salesForecast.confidence === "high"
+      ? language === "ko" ? "높음" : "High"
+      : salesForecast.confidence === "medium"
+        ? language === "ko" ? "보통" : "Medium"
+        : language === "ko" ? "낮음" : "Low";
+  const costBreakdownItems = [
+    { key: "ingredients", label: language === "ko" ? "재료/매입" : "COGS", value: monthlyCosts.ingredients },
+    { key: "labor", label: language === "ko" ? "인건비" : "Labor", value: monthlyCosts.labor },
+    { key: "rent", label: language === "ko" ? "임대료" : "Rent", value: monthlyCosts.rent },
+    { key: "utilities", label: language === "ko" ? "공과금" : "Utilities", value: monthlyCosts.utilities },
+    { key: "marketing", label: language === "ko" ? "마케팅" : "Marketing", value: monthlyCosts.marketing },
+    { key: "other", label: language === "ko" ? "기타" : "Other", value: monthlyCosts.other + monthlyCosts.sga + monthlyCosts.interest }
+  ];
+  const storeDataPayload = (): Partial<UserStoreData> => ({
+    storeName,
+    businessLaunched,
+    businessLaunchedDate,
+    dailyEntries,
+    monthlyCosts,
+    products,
+    inventoryItems,
+    employees,
+    aiRoadmapResult
+  });
   const surfaceTabs = [
     { id: "home" as const, label: language === "ko" ? "홈" : "Home" },
     { id: "current" as const, label: language === "ko" ? "현재 단계" : "Current" },
@@ -640,6 +1084,489 @@ export default function DashboardScreen({
   ];
   const navigateToSurface = (nextSurface: DashboardSurface) => {
     router.push(SURFACE_HREFS[nextSurface]);
+  };
+  const onboardingChoiceCards = [
+    {
+      id: "manual-roadmap",
+      label: language === "ko" ? "직접 로드맵" : "Manual roadmap",
+      title: language === "ko" ? "로드맵으로 진행할게요" : "Start with the roadmap",
+      body:
+        language === "ko"
+          ? "업종 선택부터 개업까지 단계별로 직접 확인하며 진행합니다."
+          : "Move step by step from industry selection to opening day.",
+      actionLabel: language === "ko" ? "로드맵 시작하기" : "Start roadmap",
+      onPress: () => navigateToSurface("current")
+    },
+    {
+      id: "ai-roadmap",
+      label: language === "ko" ? "AI 생성" : "AI generated",
+      title: language === "ko" ? "AI가 로드맵을 만들게 할게요" : "Let AI build the roadmap",
+      body:
+        language === "ko"
+          ? "아이디어, 예산, 지역을 바탕으로 맞춤 로드맵을 생성하는 플로우입니다."
+          : "Generate a tailored roadmap from your idea, budget, and region.",
+      actionLabel: language === "ko" ? "AI로 시작하기" : "Start with AI",
+      onPress: () => {
+        setOnboardingMode("ai");
+        setAiStep("idea");
+      }
+    },
+    {
+      id: "existing-store",
+      label: language === "ko" ? "기존 가게" : "Existing store",
+      title: language === "ko" ? "이미 운영 중인 가게를 등록할게요" : "Register an existing store",
+      body:
+        language === "ko"
+          ? "가게 정보를 등록하고 운영 대시보드로 바로 들어가는 플로우입니다."
+          : "Register store details and move straight into the operations dashboard.",
+      actionLabel: language === "ko" ? "가게 등록하기" : "Register store",
+      onPress: () => {
+        setOnboardingMode("existing");
+        setExistingStep(1);
+      }
+    }
+  ];
+
+  const closeMobileOnboarding = () => {
+    setOnboardingMode(null);
+    setAiStatus("idle");
+    setAiError("");
+  };
+
+  const completeExistingBusinessOnboarding = async () => {
+    if (!existingIndustryId || !existingBusinessModelId) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    let nextDecisions: WorkflowDecisionMap = decisions;
+    nextDecisions = upsertStageDecision(nextDecisions, "industry-selection", {
+      stageId: "industry-selection",
+      selectedPrimaryOptionId: existingIndustryId,
+      inputs: {
+        subIndustryId: existingIndustryId,
+        industryCategoryId: existingCategoryId
+      },
+      completedAt: now
+    });
+    nextDecisions = upsertStageDecision(nextDecisions, "startup-type", {
+      stageId: "startup-type",
+      selectedPrimaryOptionId: existingStartupType,
+      inputs: {
+        startupType: existingStartupType
+      },
+      completedAt: now
+    });
+    nextDecisions = upsertStageDecision(nextDecisions, "business-model", {
+      stageId: "business-model",
+      selectedPrimaryOptionId: existingBusinessModelId,
+      completedAt: now
+    });
+    nextDecisions = upsertStageDecision(nextDecisions, "budget-setup", {
+      stageId: "budget-setup",
+      inputs: {
+        ...(parseManwonInput(existingCapitalText)
+          ? { capital: parseManwonInput(existingCapitalText) as number }
+          : {}),
+        targetOpenDate: existingLaunchDate
+      },
+      completedAt: now
+    });
+    nextDecisions = upsertStageDecision(nextDecisions, "location-candidates", {
+      stageId: "location-candidates",
+      inputs: {
+        preferredRegion: existingRegion,
+        selectionMode: "direct",
+        storeName: existingStoreName.trim()
+      },
+      completedAt: now
+    });
+
+    for (const stage of starterStageFlow) {
+      if (!nextDecisions[stage.stageId]?.completedAt) {
+        nextDecisions = upsertStageDecision(nextDecisions, stage.stageId, {
+          stageId: stage.stageId,
+          completedAt: now
+        });
+      }
+    }
+
+    const completedRoadmap = buildRoadmapState(
+      {
+        roadmapId:
+          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
+            ? roadmap.roadmapId
+            : starterRoadmap.roadmapId,
+        templateId: starterRoadmap.templateId,
+        stages: starterStageFlow
+      },
+      nextDecisions,
+      taskMap
+    );
+
+    setDecisions(nextDecisions);
+    setSelectedIndustryId(existingIndustryId);
+    setSelectedIndustryCategoryId(existingCategoryId);
+    setStartupType(existingStartupType);
+    setSelectedBusinessModelId(existingBusinessModelId);
+    setSelectedBudget(parseManwonInput(existingCapitalText) || undefined);
+    setBudgetInputText(existingCapitalText.replace(/[^0-9]/g, ""));
+    setSelectedOpenDate(existingLaunchDate);
+    setPreferredRegionInput(existingRegion);
+    setFinanceMonthlyRentText(existingRentText.replace(/[^0-9]/g, ""));
+    setFinanceLaborText(existingLaborText.replace(/[^0-9]/g, ""));
+    setStoreName(existingStoreName.trim());
+    setBusinessLaunched(true);
+    setBusinessLaunchedDate(existingLaunchDate);
+    const existingCosts: MobileMonthlyCosts = {
+      ...emptyMobileMonthlyCosts,
+      rent: parseManwonInput(existingRentText) ?? 0,
+      labor: parseManwonInput(existingLaborText) ?? 0
+    };
+    setMonthlyCosts(existingCosts);
+    setRoadmap(completedRoadmap);
+    setPersistenceLabel(language === "ko" ? "기존 가게 저장 중..." : "Saving existing store...");
+
+    try {
+      const persisted = await saveRoadmapState(supabase, {
+        roadmap: completedRoadmap,
+        decisions: nextDecisions,
+        tasks: taskMap
+      });
+      await saveStoreData(supabase, {
+        storeName: existingStoreName.trim(),
+        businessLaunched: true,
+        businessLaunchedDate: existingLaunchDate,
+        monthlyCosts: existingCosts
+      }).catch(() => {});
+      setRoadmap(persisted.roadmap);
+      setDecisions(persisted.decisions);
+      setTaskMap(persisted.tasks);
+      setProfile(await loadBusinessProfile(supabase));
+      setPersistenceReady(true);
+      setPersistenceLabel(language === "ko" ? "기존 가게가 저장되었습니다." : "Existing store saved.");
+    } catch (error) {
+      setPersistenceLabel(
+        error instanceof Error
+          ? `${language === "ko" ? "저장 실패" : "Save failed"}: ${error.message}`
+          : language === "ko"
+            ? "저장 실패"
+            : "Save failed"
+      );
+    }
+
+    setOnboardingMode(null);
+    navigateToSurface("analytics");
+  };
+
+  const generateAiRoadmap = async () => {
+    if (!aiIdeaText.trim()) {
+      return;
+    }
+
+    setAiStatus("loading");
+    setAiError("");
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const response = await fetch(`${apiBaseUrl}/api/ai/roadmap/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.session?.access_token ?? ""}`
+        },
+        body: JSON.stringify({
+          ideaText: aiIdeaText,
+          budget: parseManwonInput(aiBudgetText) || undefined,
+          region: aiRegion || undefined,
+          storeName: aiStoreName || undefined,
+          language
+        })
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Failed to generate roadmap");
+      }
+
+      const payload = (await response.json()) as RoadmapGenerationResult;
+      setAiRoadmapResult(payload);
+      setAiStep("review");
+      setAiStatus("idle");
+    } catch (error) {
+      setAiStatus("error");
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : language === "ko"
+            ? "AI 로드맵 생성에 실패했습니다."
+            : "AI roadmap generation failed."
+      );
+    }
+  };
+
+  const applyAiRoadmap = async () => {
+    if (!aiRoadmapResult) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    let nextDecisions: WorkflowDecisionMap = decisions;
+    nextDecisions = upsertStageDecision(nextDecisions, "industry-selection", {
+      stageId: "industry-selection",
+      selectedPrimaryOptionId: aiRoadmapResult.parsed.subIndustryId,
+      inputs: {
+        subIndustryId: aiRoadmapResult.parsed.subIndustryId,
+        industryCategoryId: aiRoadmapResult.parsed.industryCategoryId
+      },
+      completedAt: now
+    });
+    nextDecisions = upsertStageDecision(nextDecisions, "startup-type", {
+      stageId: "startup-type",
+      selectedPrimaryOptionId: aiRoadmapResult.parsed.startupType,
+      completedAt: now
+    });
+    nextDecisions = upsertStageDecision(nextDecisions, "business-model", {
+      stageId: "business-model",
+      selectedPrimaryOptionId: aiRoadmapResult.parsed.businessModelId,
+      completedAt: now
+    });
+    nextDecisions = upsertStageDecision(nextDecisions, "budget-setup", {
+      stageId: "budget-setup",
+      inputs: {
+        capital: aiRoadmapResult.budgetAllocation.total,
+        targetOpenDate: aiRoadmapResult.timeline.targetOpenDate
+      },
+      completedAt: now
+    });
+    if (aiRoadmapResult.parsed.preferredRegion) {
+      nextDecisions = upsertStageDecision(nextDecisions, "location-candidates", {
+        stageId: "location-candidates",
+        inputs: {
+          preferredRegion: aiRoadmapResult.parsed.preferredRegion,
+          selectionMode: "direct",
+          storeName: aiStoreName
+        },
+        completedAt: now
+      });
+    }
+
+    const nextRoadmap = buildRoadmapState(
+      {
+        roadmapId:
+          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
+            ? roadmap.roadmapId
+            : starterRoadmap.roadmapId,
+        templateId: starterRoadmap.templateId,
+        stages: starterStageFlow
+      },
+      nextDecisions,
+      taskMap
+    );
+
+    setDecisions(nextDecisions);
+    setSelectedIndustryId(aiRoadmapResult.parsed.subIndustryId);
+    setSelectedIndustryCategoryId(aiRoadmapResult.parsed.industryCategoryId);
+    setStartupType(aiRoadmapResult.parsed.startupType);
+    setSelectedBusinessModelId(aiRoadmapResult.parsed.businessModelId);
+    setSelectedBudget(aiRoadmapResult.budgetAllocation.total);
+    setBudgetInputText(String(Math.round(aiRoadmapResult.budgetAllocation.total / 10000)));
+    setSelectedOpenDate(aiRoadmapResult.timeline.targetOpenDate);
+    setPreferredRegionInput(aiRoadmapResult.parsed.preferredRegion);
+    setFinanceCapitalText(String(Math.round(aiRoadmapResult.budgetAllocation.total / 10000)));
+    setFinanceMonthlyRentText(String(Math.round(aiRoadmapResult.monthlyCosts.rent / 10000)));
+    setFinanceLaborText(String(Math.round(aiRoadmapResult.monthlyCosts.labor / 10000)));
+    setRoadmap(nextRoadmap);
+    setPersistenceLabel(language === "ko" ? "AI 로드맵 저장 중..." : "Saving AI roadmap...");
+
+    try {
+      const persisted = await saveRoadmapState(supabase, {
+        roadmap: nextRoadmap,
+        decisions: nextDecisions,
+        tasks: taskMap
+      });
+      await saveStoreData(supabase, {
+        ...storeDataPayload(),
+        aiRoadmapResult
+      }).catch(() => {});
+      setRoadmap(persisted.roadmap);
+      setDecisions(persisted.decisions);
+      setTaskMap(persisted.tasks);
+      setProfile(await loadBusinessProfile(supabase));
+      setPersistenceReady(true);
+      setPersistenceLabel(language === "ko" ? "AI 로드맵이 저장되었습니다." : "AI roadmap saved.");
+    } catch (error) {
+      setPersistenceLabel(
+        error instanceof Error
+          ? `${language === "ko" ? "저장 실패" : "Save failed"}: ${error.message}`
+          : language === "ko"
+            ? "저장 실패"
+            : "Save failed"
+      );
+    }
+
+    setOnboardingMode(null);
+    navigateToSurface("home");
+  };
+
+  const applyMobileStoreData = (data: UserStoreData | null) => {
+    if (!data) {
+      return;
+    }
+
+    setStoreName(data.storeName ?? "");
+    setBusinessLaunched(Boolean(data.businessLaunched));
+    setBusinessLaunchedDate(data.businessLaunchedDate ?? null);
+    setDailyEntries(toMobileDailyEntries(data.dailyEntries));
+    setMonthlyCosts({ ...emptyMobileMonthlyCosts, ...(data.monthlyCosts ?? {}) });
+    setProducts(toMobileProducts(data.products));
+    setInventoryItems(toMobileInventoryItems(data.inventoryItems));
+    setEmployees(toMobileEmployees(data.employees));
+    if (isRecord(data.aiRoadmapResult)) {
+      setAiRoadmapResult(data.aiRoadmapResult as unknown as RoadmapGenerationResult);
+    }
+
+    if (data.monthlyCosts) {
+      setCostIngredientsText(data.monthlyCosts.ingredients ? String(Math.round(data.monthlyCosts.ingredients / 10000)) : "");
+      setCostLaborText(data.monthlyCosts.labor ? String(Math.round(data.monthlyCosts.labor / 10000)) : "");
+      setCostRentText(data.monthlyCosts.rent ? String(Math.round(data.monthlyCosts.rent / 10000)) : "");
+      setCostUtilitiesText(data.monthlyCosts.utilities ? String(Math.round(data.monthlyCosts.utilities / 10000)) : "");
+      setCostMarketingText(data.monthlyCosts.marketing ? String(Math.round(data.monthlyCosts.marketing / 10000)) : "");
+    }
+  };
+
+  const persistMobileStoreData = async (patch?: Partial<UserStoreData>) => {
+    setStoreSaveStatus("saving");
+    setStoreSaveError("");
+
+    try {
+      await saveStoreData(supabase, {
+        ...storeDataPayload(),
+        ...(patch ?? {})
+      });
+      setStoreSaveStatus("saved");
+      setPersistenceLabel(language === "ko" ? "운영 데이터가 저장되었습니다." : "Operations data saved.");
+    } catch (error) {
+      setStoreSaveStatus("error");
+      setStoreSaveError(
+        error instanceof Error
+          ? error.message
+          : language === "ko"
+            ? "운영 데이터 저장 실패"
+            : "Failed to save operations data"
+      );
+    }
+  };
+
+  const handleAddDailyEntry = () => {
+    const sales = parseManwonInput(dailySalesInput) ?? 0;
+    const customers = Number(dailyCustomersInput.replace(/[^0-9]/g, "")) || 0;
+
+    if (!sales) {
+      return;
+    }
+
+    const entry: MobileDailyEntry = {
+      date: dailyDateInput || new Date().toISOString().slice(0, 10),
+      sales,
+      customers
+    };
+    const nextEntries = [
+      ...dailyEntries.filter((item) => item.date !== entry.date),
+      entry
+    ].sort((a, b) => b.date.localeCompare(a.date));
+
+    setDailyEntries(nextEntries);
+    setDailySalesInput("");
+    setDailyCustomersInput("");
+    void persistMobileStoreData({ dailyEntries: nextEntries });
+  };
+
+  const handleSaveMonthlyCosts = () => {
+    const nextCosts: MobileMonthlyCosts = {
+      ...emptyMobileMonthlyCosts,
+      ingredients: parseManwonInput(costIngredientsText) ?? 0,
+      labor: parseManwonInput(costLaborText) ?? 0,
+      rent: parseManwonInput(costRentText) ?? 0,
+      utilities: parseManwonInput(costUtilitiesText) ?? 0,
+      marketing: parseManwonInput(costMarketingText) ?? 0
+    };
+
+    setMonthlyCosts(nextCosts);
+    void persistMobileStoreData({ monthlyCosts: nextCosts });
+  };
+
+  const handleAddProduct = () => {
+    if (!productNameInput.trim()) {
+      return;
+    }
+
+    const nextProducts = [
+      ...products,
+      {
+        id: `prod-${Date.now()}`,
+        name: productNameInput.trim(),
+        price: parseManwonInput(productPriceInput) ?? 0,
+        cost: parseManwonInput(productCostInput) ?? 0,
+        stock: Number(productStockInput.replace(/[^0-9]/g, "")) || 0
+      }
+    ];
+
+    setProducts(nextProducts);
+    setProductNameInput("");
+    setProductPriceInput("");
+    setProductCostInput("");
+    setProductStockInput("");
+    void persistMobileStoreData({ products: nextProducts });
+  };
+
+  const handleAddInventoryItem = () => {
+    if (!inventoryNameInput.trim()) {
+      return;
+    }
+
+    const nextItems = [
+      ...inventoryItems,
+      {
+        id: `inv-${Date.now()}`,
+        name: inventoryNameInput.trim(),
+        quantity: Number(inventoryQtyInput.replace(/[^0-9.]/g, "")) || 0,
+        unit: "개",
+        minThreshold: Number(inventoryThresholdInput.replace(/[^0-9.]/g, "")) || 0
+      }
+    ];
+
+    setInventoryItems(nextItems);
+    setInventoryNameInput("");
+    setInventoryQtyInput("");
+    setInventoryThresholdInput("");
+    void persistMobileStoreData({ inventoryItems: nextItems });
+  };
+
+  const handleAddEmployee = () => {
+    const hourlyWage = Number(employeeWageInput.replace(/[^0-9]/g, "")) || 0;
+    const weeklyHours = Number(employeeHoursInput.replace(/[^0-9.]/g, "")) || 0;
+
+    if (!employeeNameInput.trim() || !hourlyWage || !weeklyHours) {
+      return;
+    }
+
+    const nextEmployees = [
+      ...employees,
+      {
+        id: `emp-${Date.now()}`,
+        name: employeeNameInput.trim(),
+        hourlyWage,
+        weeklyHours,
+        isInsured: weeklyHours * 4.345 >= 60
+      }
+    ];
+
+    setEmployees(nextEmployees);
+    setEmployeeNameInput("");
+    setEmployeeWageInput("");
+    setEmployeeHoursInput("");
+    void persistMobileStoreData({ employees: nextEmployees });
   };
 
   const handleIndustryContinue = () => {
@@ -873,21 +1800,71 @@ export default function DashboardScreen({
       existing.status === "completed" ? "todo" : "completed"
     );
 
+    const nextRoadmap = buildRoadmapState(
+      {
+        roadmapId:
+          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
+            ? roadmap.roadmapId
+            : starterRoadmap.roadmapId,
+        templateId: starterRoadmap.templateId,
+        stages: starterStageFlow
+      },
+      decisions,
+      nextTaskMap
+    );
+
     setTaskMap(nextTaskMap);
     setRoadmap(
-      buildRoadmapState(
-        {
-          roadmapId: starterRoadmap.roadmapId,
-          templateId: starterRoadmap.templateId,
-          stages: starterStageFlow
-        },
-        decisions,
-        nextTaskMap
-      )
+      roadmap.currentStageId === "contract-review"
+        ? { ...nextRoadmap, currentStageId: "contract-review" }
+        : nextRoadmap
     );
   };
 
   const handleContractContinue = () => {
+    const transition = completeCurrentStage(roadmap, decisions, taskMap);
+    setRoadmap(transition.roadmap);
+    setLastUnlocked(transition.newlyUnlockedStageIds);
+    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
+  };
+
+  const handleGenericTaskToggle = (stageId: string, taskId: string) => {
+    const currentTasks = taskMap[stageId] ?? [];
+    const existing = currentTasks.find((task) => task.taskId === taskId);
+
+    if (!existing) {
+      return;
+    }
+
+    const nextTaskMap = updateTaskStatus(
+      taskMap,
+      stageId,
+      taskId,
+      existing.status === "completed" ? "todo" : "completed"
+    );
+
+    const nextRoadmap = buildRoadmapState(
+      {
+        roadmapId:
+          roadmap.roadmapId && roadmap.roadmapId !== starterRoadmap.roadmapId
+            ? roadmap.roadmapId
+            : starterRoadmap.roadmapId,
+        templateId: starterRoadmap.templateId,
+        stages: starterStageFlow
+      },
+      decisions,
+      nextTaskMap
+    );
+
+    setTaskMap(nextTaskMap);
+    setRoadmap(
+      roadmap.currentStageId === stageId
+        ? { ...nextRoadmap, currentStageId: stageId }
+        : nextRoadmap
+    );
+  };
+
+  const handleGenericTaskStageContinue = () => {
     const transition = completeCurrentStage(roadmap, decisions, taskMap);
     setRoadmap(transition.roadmap);
     setLastUnlocked(transition.newlyUnlockedStageIds);
@@ -1279,6 +2256,7 @@ export default function DashboardScreen({
       setTaskMap(result.state.tasks);
       setRoadmap(result.state.roadmap);
       setProfile(await loadBusinessProfile(supabase, result.user));
+      applyMobileStoreData(await loadStoreData(supabase, result.user).catch(() => null));
       setPersistenceLabel(result.isNew ? copy.home.starterRoadmapCreated : copy.home.loadedFromSupabase);
     } catch (error) {
       if (error instanceof Error && error.message === "AUTH_REQUIRED") {
@@ -1308,6 +2286,7 @@ export default function DashboardScreen({
         decisions,
         tasks: taskMap
       });
+      await saveStoreData(supabase, storeDataPayload()).catch(() => {});
 
       setRoadmap(persisted.roadmap);
       setProfile(await loadBusinessProfile(supabase, user));
@@ -1471,7 +2450,27 @@ export default function DashboardScreen({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.appBar}>
+          <View style={styles.brandLockup}>
+            <View style={styles.brandMark}>
+              <Text style={styles.brandMarkText}>b</Text>
+            </View>
+            <View>
+              <Text style={styles.brandText}>Build.UP</Text>
+              <Text style={styles.brandSubText}>
+                {language === "ko" ? "창업 로드맵 OS" : "Startup roadmap OS"}
+              </Text>
+            </View>
+          </View>
+          {!requiresAuth ? (
+            <View style={styles.progressPill}>
+              <Text style={styles.progressPillValue}>{visibleProgressPercent}%</Text>
+              <Text style={styles.progressPillLabel}>{language === "ko" ? "진행" : "done"}</Text>
+            </View>
+          ) : null}
+        </View>
+
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>build.up</Text>
           <Text style={styles.title}>
@@ -1525,19 +2524,549 @@ export default function DashboardScreen({
         </View>
         ) : null}
 
-        {activeSurface === "home" ? (
+        {activeSurface === "home" && onboardingMode === "existing" ? (
+        <View style={styles.section}>
+          <View style={styles.currentStageCard}>
+            <Text style={styles.currentMeta}>
+              {language === "ko" ? `기존 가게 등록 · ${existingStep}/4` : `Existing store · ${existingStep}/4`}
+            </Text>
+            <Text style={styles.currentTitle}>
+              {existingStep === 1
+                ? language === "ko" ? "어떤 사업을 운영하고 계신가요?" : "What business do you run?"
+                : existingStep === 2
+                  ? language === "ko" ? "가게 기본 정보를 알려주세요" : "Tell us the store basics"
+                  : existingStep === 3
+                    ? language === "ko" ? "세무와 오픈 정보를 맞춥니다" : "Set tax and launch basics"
+                    : language === "ko" ? "운영 숫자를 입력하세요" : "Enter operating numbers"}
+            </Text>
+            <Text style={styles.currentBody}>
+              {language === "ko"
+                ? "입력한 내용으로 창업 로드맵을 완료 처리하고 운영 분석 화면을 바로 열겠습니다."
+                : "This will complete the startup roadmap and open the operations analytics surface."}
+            </Text>
+
+            {existingStep === 1 ? (
+              <>
+                <View style={styles.toggleRow}>
+                  {starterIndustryCategories.map((rawCategory) => {
+                    const category = localizeStarterIndustryCategory(rawCategory, language);
+                    return (
+                      <Pressable
+                        key={rawCategory.id}
+                        onPress={() => {
+                          setExistingCategoryId(rawCategory.id);
+                          setExistingIndustryId(undefined);
+                          setExistingBusinessModelId(undefined);
+                        }}
+                        style={[
+                          styles.toggleChip,
+                          existingCategoryId === rawCategory.id && styles.toggleChipSelected
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.toggleChipText,
+                            existingCategoryId === rawCategory.id && styles.toggleChipTextSelected
+                          ]}
+                        >
+                          {category.title}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <View style={styles.optionList}>
+                  {existingIndustryOptions.map((rawOption) => {
+                    const option = localizeRecommendationItem(rawOption, language);
+                    const selected = existingIndustryId === rawOption.id;
+                    return (
+                      <Pressable
+                        key={rawOption.id}
+                        onPress={() => setExistingIndustryId(rawOption.id)}
+                        style={[styles.optionCard, selected && styles.optionCardSelected]}
+                      >
+                        <Text style={styles.optionTitle}>{option.title}</Text>
+                        <Text style={styles.optionSummary} numberOfLines={2}>{option.summary}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
+            ) : null}
+
+            {existingStep === 2 ? (
+              <View style={styles.optionList}>
+                <View style={styles.budgetPanel}>
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "가게 이름" : "Store name"}</Text>
+                  <TextInput
+                    value={existingStoreName}
+                    onChangeText={setExistingStoreName}
+                    placeholder={language === "ko" ? "예: 성수 커피랩" : "Example: Seongsu Coffee Lab"}
+                    placeholderTextColor="#8A909C"
+                    style={styles.budgetInput}
+                  />
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "지역" : "Region"}</Text>
+                  <TextInput
+                    value={existingRegion}
+                    onChangeText={setExistingRegion}
+                    placeholder={language === "ko" ? "예: 서울 성수동" : "Example: Seongsu, Seoul"}
+                    placeholderTextColor="#8A909C"
+                    style={styles.budgetInput}
+                  />
+                </View>
+                <View style={styles.toggleRow}>
+                  {(["independent", "franchise"] as const).map((type) => (
+                    <Pressable
+                      key={type}
+                      onPress={() => setExistingStartupType(type)}
+                      style={[
+                        styles.toggleChip,
+                        existingStartupType === type && styles.toggleChipSelected
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleChipText,
+                          existingStartupType === type && styles.toggleChipTextSelected
+                        ]}
+                      >
+                        {formatStartupType(type, language)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                {existingBusinessModelOptions.map((rawOption) => {
+                  const option = localizeRecommendationItem(rawOption, language);
+                  const selected = existingBusinessModelId === rawOption.id;
+                  return (
+                    <Pressable
+                      key={rawOption.id}
+                      onPress={() => setExistingBusinessModelId(rawOption.id)}
+                      style={[styles.optionCard, selected && styles.optionCardSelected]}
+                    >
+                      <Text style={styles.optionTitle}>{option.title}</Text>
+                      <Text style={styles.optionSummary}>{option.summary}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
+
+            {existingStep === 3 ? (
+              <View style={styles.optionList}>
+                <View style={styles.budgetPanel}>
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "오픈일" : "Launch date"}</Text>
+                  <TextInput
+                    value={existingLaunchDate}
+                    onChangeText={setExistingLaunchDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#8A909C"
+                    style={styles.budgetInput}
+                  />
+                  <Text style={styles.helper}>
+                    {language === "ko"
+                      ? "정확한 날짜가 아니어도 됩니다. 운영 분석의 기준일로 사용합니다."
+                      : "An approximate date is fine. It anchors the operations dashboard."}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
+            {existingStep === 4 ? (
+              <View style={styles.optionList}>
+                <View style={styles.budgetPanel}>
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "월 임대료" : "Monthly rent"}</Text>
+                  <TextInput
+                    value={existingRentText}
+                    onChangeText={(value) => setExistingRentText(value.replace(/[^0-9]/g, ""))}
+                    keyboardType="number-pad"
+                    placeholder={language === "ko" ? "만원 단위, 예: 250" : "10K KRW, e.g. 250"}
+                    placeholderTextColor="#8A909C"
+                    style={styles.budgetInput}
+                  />
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "월 인건비" : "Monthly labor"}</Text>
+                  <TextInput
+                    value={existingLaborText}
+                    onChangeText={(value) => setExistingLaborText(value.replace(/[^0-9]/g, ""))}
+                    keyboardType="number-pad"
+                    placeholder={language === "ko" ? "만원 단위, 예: 420" : "10K KRW, e.g. 420"}
+                    placeholderTextColor="#8A909C"
+                    style={styles.budgetInput}
+                  />
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "보유 운영자금" : "Operating capital"}</Text>
+                  <TextInput
+                    value={existingCapitalText}
+                    onChangeText={(value) => setExistingCapitalText(value.replace(/[^0-9]/g, ""))}
+                    keyboardType="number-pad"
+                    placeholder={language === "ko" ? "만원 단위, 예: 1500" : "10K KRW, e.g. 1500"}
+                    placeholderTextColor="#8A909C"
+                    style={styles.budgetInput}
+                  />
+                </View>
+              </View>
+            ) : null}
+
+            <View style={styles.stageFooter}>
+              <Pressable onPress={closeMobileOnboarding} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>{language === "ko" ? "처음으로" : "Back"}</Text>
+              </Pressable>
+              {existingStep > 1 ? (
+                <Pressable onPress={() => setExistingStep((step) => Math.max(1, step - 1))} style={styles.secondaryButton}>
+                  <Text style={styles.secondaryButtonText}>{language === "ko" ? "이전" : "Previous"}</Text>
+                </Pressable>
+              ) : null}
+              <Pressable
+                onPress={() => {
+                  if (existingStep < 4) {
+                    setExistingStep((step) => step + 1);
+                  } else {
+                    void completeExistingBusinessOnboarding();
+                  }
+                }}
+                disabled={!existingCanContinue}
+                style={[styles.primaryButton, !existingCanContinue && styles.primaryButtonDisabled]}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {existingStep < 4
+                    ? language === "ko" ? "다음" : "Continue"
+                    : language === "ko" ? "가게 등록 완료" : "Finish setup"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+        ) : null}
+
+        {activeSurface === "home" && onboardingMode === "ai" ? (
+        <View style={styles.section}>
+          <View style={styles.currentStageCard}>
+            <Text style={styles.currentMeta}>{language === "ko" ? "AI 자동 로드맵" : "AI roadmap"}</Text>
+            <Text style={styles.currentTitle}>
+              {aiStep === "idea"
+                ? language === "ko" ? "사업 아이디어를 설명해주세요" : "Describe your business idea"
+                : aiStep === "budget"
+                  ? language === "ko" ? "예산을 알려주세요" : "Set the budget"
+                  : aiStep === "region"
+                    ? language === "ko" ? "지역과 이름을 정해주세요" : "Set region and name"
+                    : language === "ko" ? "AI가 만든 로드맵을 확인하세요" : "Review the generated roadmap"}
+            </Text>
+            <Text style={styles.currentBody}>
+              {language === "ko"
+                ? "웹의 AI 로드맵 생성 흐름을 모바일 입력 단계로 옮겼습니다."
+                : "This ports the web AI roadmap flow into a native mobile intake."}
+            </Text>
+
+            {aiStep === "idea" ? (
+              <View style={styles.budgetPanel}>
+                <Text style={styles.budgetLabel}>{language === "ko" ? "아이디어" : "Idea"}</Text>
+                <TextInput
+                  value={aiIdeaText}
+                  onChangeText={setAiIdeaText}
+                  multiline
+                  placeholder={language === "ko" ? "예: 강남역 근처에서 직장인 대상 포케 가게를 열고 싶어요." : "Example: I want to open a poke shop near Gangnam for office workers."}
+                  placeholderTextColor="#8A909C"
+                  style={[styles.budgetInput, styles.multilineInput]}
+                />
+                <View style={styles.presetRow}>
+                  {[
+                    language === "ko" ? "마포 1인 카페" : "Solo cafe in Mapo",
+                    language === "ko" ? "온라인 반려동물 용품몰" : "Online pet supplies",
+                    language === "ko" ? "AI B2B SaaS" : "AI B2B SaaS"
+                  ].map((example) => (
+                    <Pressable key={example} onPress={() => setAiIdeaText(example)} style={styles.presetChip}>
+                      <Text style={styles.presetChipText}>{example}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            {aiStep === "budget" ? (
+              <View style={styles.budgetPanel}>
+                <Text style={styles.budgetLabel}>{language === "ko" ? "창업 예산" : "Startup budget"}</Text>
+                <TextInput
+                  value={aiBudgetText}
+                  onChangeText={(value) => setAiBudgetText(value.replace(/[^0-9]/g, ""))}
+                  keyboardType="number-pad"
+                  placeholder={language === "ko" ? "만원 단위, 예: 5000" : "10K KRW, e.g. 5000"}
+                  placeholderTextColor="#8A909C"
+                  style={styles.budgetInput}
+                />
+                <View style={styles.choiceGrid}>
+                  {[
+                    { label: language === "ko" ? "3천만원" : "30M", value: "3000" },
+                    { label: language === "ko" ? "5천만원" : "50M", value: "5000" },
+                    { label: language === "ko" ? "1억원" : "100M", value: "10000" },
+                    { label: language === "ko" ? "1.5억원" : "150M", value: "15000" }
+                  ].map((preset) => (
+                    <Pressable
+                      key={preset.value}
+                      onPress={() => setAiBudgetText(preset.value)}
+                      style={[styles.choiceCard, aiBudgetText === preset.value && styles.choiceCardSelected]}
+                    >
+                      <Text style={[styles.choiceTitle, aiBudgetText === preset.value && styles.choiceTitleSelected]}>
+                        {preset.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            {aiStep === "region" ? (
+              <View style={styles.budgetPanel}>
+                <Text style={styles.budgetLabel}>{language === "ko" ? "희망 지역" : "Preferred region"}</Text>
+                <TextInput
+                  value={aiRegion}
+                  onChangeText={setAiRegion}
+                  placeholder={language === "ko" ? "예: 서울 마포구" : "Example: Mapo, Seoul"}
+                  placeholderTextColor="#8A909C"
+                  style={styles.budgetInput}
+                />
+                <Text style={styles.budgetLabel}>{language === "ko" ? "상호명" : "Store name"}</Text>
+                <TextInput
+                  value={aiStoreName}
+                  onChangeText={setAiStoreName}
+                  placeholder={language === "ko" ? "정하지 않았으면 비워도 됩니다." : "Leave blank if undecided."}
+                  placeholderTextColor="#8A909C"
+                  style={styles.budgetInput}
+                />
+                {aiError ? <Text style={styles.warningText}>{aiError}</Text> : null}
+              </View>
+            ) : null}
+
+            {aiStep === "review" && aiRoadmapResult ? (
+              <View style={styles.optionList}>
+                <View style={styles.budgetPanel}>
+                  <View style={styles.recommendationTop}>
+                    <View style={styles.flexOne}>
+                      <Text style={styles.budgetLabel}>{language === "ko" ? "추천 업종" : "Recommended category"}</Text>
+                      <Text style={styles.optionTitle}>{aiRoadmapResult.parsed.industryLabel}</Text>
+                    </View>
+                    <View style={styles.scoreBadge}>
+                      <Text style={styles.scoreBadgeText}>
+                        {aiRoadmapResult.marketAnalysis.grade} · {aiRoadmapResult.marketAnalysis.score}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.optionSummary}>{aiRoadmapResult.marketAnalysis.summary}</Text>
+                  <View style={styles.progressTrack}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        { width: `${Math.max(7, Math.min(100, aiRoadmapResult.marketAnalysis.score))}%` }
+                      ]}
+                    />
+                  </View>
+                  <View style={styles.metricWrap}>
+                    <View style={styles.metricChip}>
+                      <Text style={styles.metricChipText}>
+                        {language === "ko" ? "유동" : "Traffic"} {aiRoadmapResult.marketAnalysis.footTraffic}
+                      </Text>
+                    </View>
+                    <View style={styles.metricChip}>
+                      <Text style={styles.metricChipText}>
+                        {language === "ko" ? "경쟁" : "Competition"} {aiRoadmapResult.marketAnalysis.competition}
+                      </Text>
+                    </View>
+                    <View style={styles.metricChip}>
+                      <Text style={styles.metricChipText}>
+                        {language === "ko" ? "임대료" : "Rent"} {aiRoadmapResult.marketAnalysis.rentLevel}
+                      </Text>
+                    </View>
+                    <View style={styles.metricChip}>
+                      <Text style={styles.metricChipText}>
+                        {language === "ko" ? "타깃" : "Fit"} {aiRoadmapResult.marketAnalysis.targetFit}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.metricGrid}>
+                  <ProfileItem label={language === "ko" ? "예산" : "Budget"} value={formatBudgetPresetLabel(aiRoadmapResult.budgetAllocation.total, language)} />
+                  <ProfileItem label={language === "ko" ? "지역" : "Region"} value={aiRoadmapResult.parsed.preferredRegion || "-"} />
+                  <ProfileItem label={language === "ko" ? "오픈 목표" : "Target"} value={aiRoadmapResult.timeline.targetOpenDate} />
+                  <ProfileItem label={language === "ko" ? "총 기간" : "Timeline"} value={`${aiRoadmapResult.timeline.totalWeeks}${language === "ko" ? "주" : " weeks"}`} />
+                </View>
+                <View style={styles.budgetPanel}>
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "예산 배분" : "Budget allocation"}</Text>
+                  {([
+                    { key: "deposit", label: language === "ko" ? "보증금" : "Deposit", value: aiRoadmapResult.budgetAllocation.deposit },
+                    { key: "interior", label: language === "ko" ? "인테리어" : "Interior", value: aiRoadmapResult.budgetAllocation.interior },
+                    { key: "equipment", label: language === "ko" ? "집기/장비" : "Equipment", value: aiRoadmapResult.budgetAllocation.equipment },
+                    { key: "workingCapital", label: language === "ko" ? "운영자금" : "Working capital", value: aiRoadmapResult.budgetAllocation.workingCapital }
+                  ]).map((item) => {
+                    const percent =
+                      aiRoadmapResult.budgetAllocation.total > 0
+                        ? Math.round((item.value / aiRoadmapResult.budgetAllocation.total) * 100)
+                        : 0;
+                    return (
+                      <View key={item.key} style={styles.inlineSummaryRow}>
+                        <Text style={styles.inlineSummaryLabel}>{item.label}</Text>
+                        <Text style={styles.inlineSummaryValue}>
+                          {formatWonCompact(item.value, language)} · {percent}%
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                <View style={styles.budgetPanel}>
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "예상 월 비용" : "Estimated monthly costs"}</Text>
+                  {([
+                    { key: "ingredients", label: language === "ko" ? "재료/매입" : "COGS", value: aiRoadmapResult.monthlyCosts.ingredients },
+                    { key: "labor", label: language === "ko" ? "인건비" : "Labor", value: aiRoadmapResult.monthlyCosts.labor },
+                    { key: "rent", label: language === "ko" ? "임대료" : "Rent", value: aiRoadmapResult.monthlyCosts.rent },
+                    { key: "utilities", label: language === "ko" ? "공과금" : "Utilities", value: aiRoadmapResult.monthlyCosts.utilities },
+                    { key: "other", label: language === "ko" ? "기타" : "Other", value: aiRoadmapResult.monthlyCosts.other }
+                  ]).map((item) => (
+                    <View key={item.key} style={styles.inlineSummaryRow}>
+                      <Text style={styles.inlineSummaryLabel}>{item.label}</Text>
+                      <Text style={styles.inlineSummaryValue}>{formatWonCompact(item.value, language)}</Text>
+                    </View>
+                  ))}
+                </View>
+                {aiRoadmapResult.timeline.phases.length > 0 ? (
+                  <View style={styles.budgetPanel}>
+                    <Text style={styles.budgetLabel}>{language === "ko" ? "실행 타임라인" : "Execution timeline"}</Text>
+                    {aiRoadmapResult.timeline.phases.map((phase, index) => (
+                      <View key={`${phase.name}-${index}`} style={styles.inlineSummaryRow}>
+                        <Text style={styles.inlineSummaryLabel}>
+                          {language === "ko" ? `${index + 1}단계` : `Phase ${index + 1}`}
+                        </Text>
+                        <Text style={styles.inlineSummaryValue}>
+                          {phase.name} · {phase.weeks}{language === "ko" ? "주" : " weeks"}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+                <View style={styles.budgetPanel}>
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "추천 실행 자원" : "Recommended resources"}</Text>
+                  {aiRoadmapResult.recommendations.permits.slice(0, 4).map((permit) => (
+                    <View key={`permit-${permit}`} style={styles.inlineSummaryRow}>
+                      <Text style={styles.inlineSummaryLabel}>{language === "ko" ? "인허가" : "Permit"}</Text>
+                      <Text style={styles.inlineSummaryValue}>{permit}</Text>
+                    </View>
+                  ))}
+                  {[...aiRoadmapResult.recommendations.deliveryPlatforms, ...aiRoadmapResult.recommendations.snsChannels]
+                    .slice(0, 5)
+                    .map((channel) => (
+                      <View key={`channel-${channel}`} style={styles.inlineSummaryRow}>
+                        <Text style={styles.inlineSummaryLabel}>{language === "ko" ? "채널" : "Channel"}</Text>
+                        <Text style={styles.inlineSummaryValue}>{channel}</Text>
+                      </View>
+                    ))}
+                  {aiRoadmapResult.recommendations.suppliers.slice(0, 3).map((supplier) => (
+                    <View key={`${supplier.name}-${supplier.category}`} style={styles.inlineSummaryRow}>
+                      <Text style={styles.inlineSummaryLabel}>{supplier.category}</Text>
+                      <Text style={styles.inlineSummaryValue}>
+                        {supplier.name} · {supplier.priceRange}
+                      </Text>
+                      <Text style={styles.helper}>{supplier.reason}</Text>
+                    </View>
+                  ))}
+                  {aiRoadmapResult.recommendations.taxAdvice ? (
+                    <View style={styles.inlineSummaryRow}>
+                      <Text style={styles.inlineSummaryLabel}>{language === "ko" ? "세무" : "Tax"}</Text>
+                      <Text style={styles.inlineSummaryValue}>{aiRoadmapResult.recommendations.taxAdvice}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                {aiRoadmapResult.recommendations.interior.length > 0 ? (
+                  <View style={styles.budgetPanel}>
+                    <Text style={styles.budgetLabel}>{language === "ko" ? "공간/설비 추천" : "Interior and equipment"}</Text>
+                    {aiRoadmapResult.recommendations.interior.slice(0, 4).map((item) => (
+                      <View key={`${item.item}-${item.vendor}`} style={styles.inlineSummaryRow}>
+                        <Text style={styles.inlineSummaryLabel}>{item.vendor}</Text>
+                        <Text style={styles.inlineSummaryValue}>
+                          {item.item} · {item.estimatedCost}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+                {aiRoadmapResult.risks.slice(0, 4).map((risk) => (
+                  <View key={`${risk.level}-${risk.description}`} style={styles.budgetPanel}>
+                    <Text style={risk.level === "high" ? styles.criticalText : risk.level === "medium" ? styles.warningText : styles.freshnessText}>
+                      {risk.level === "high"
+                        ? language === "ko" ? "위험 높음" : "High risk"
+                        : risk.level === "medium"
+                          ? language === "ko" ? "주의" : "Medium risk"
+                          : language === "ko" ? "낮음" : "Low risk"}
+                    </Text>
+                    <Text style={styles.optionTitle}>{risk.description}</Text>
+                    <Text style={styles.helper}>{risk.mitigation}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            <View style={styles.stageFooter}>
+              <Pressable onPress={closeMobileOnboarding} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>{language === "ko" ? "처음으로" : "Back"}</Text>
+              </Pressable>
+              {aiStep !== "idea" ? (
+                <Pressable
+                  onPress={() =>
+                    setAiStep(aiStep === "review" ? "region" : aiStep === "region" ? "budget" : "idea")
+                  }
+                  style={styles.secondaryButton}
+                >
+                  <Text style={styles.secondaryButtonText}>{language === "ko" ? "이전" : "Previous"}</Text>
+                </Pressable>
+              ) : null}
+              <Pressable
+                onPress={() => {
+                  if (aiStep === "idea") setAiStep("budget");
+                  else if (aiStep === "budget") setAiStep("region");
+                  else if (aiStep === "region") void generateAiRoadmap();
+                  else void applyAiRoadmap();
+                }}
+                disabled={!aiCanContinue || aiStatus === "loading"}
+                style={[
+                  styles.primaryButton,
+                  (!aiCanContinue || aiStatus === "loading") && styles.primaryButtonDisabled
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {aiStatus === "loading"
+                    ? language === "ko" ? "생성 중..." : "Generating..."
+                    : aiStep === "review"
+                      ? language === "ko" ? "이 로드맵 적용" : "Apply roadmap"
+                      : aiStep === "region"
+                        ? language === "ko" ? "AI 로드맵 생성" : "Generate roadmap"
+                        : language === "ko" ? "다음" : "Continue"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+        ) : null}
+
+        {activeSurface === "home" && !onboardingMode ? (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>{language === "ko" ? "홈" : "Home"}</Text>
+          {isFreshAccount ? (
+            <View style={styles.onboardingChoiceGrid}>
+              {onboardingChoiceCards.map((card) => (
+                <Pressable key={card.id} onPress={card.onPress} style={styles.onboardingChoiceCard}>
+                  <Text style={styles.stageBriefLabel}>{card.label}</Text>
+                  <Text style={styles.onboardingChoiceTitle}>{card.title}</Text>
+                  <Text style={styles.stageBriefBody}>{card.body}</Text>
+                  <Text style={styles.onboardingChoiceAction}>{card.actionLabel}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : (
             <View style={styles.currentStageCard}>
               <Text style={styles.currentMeta}>{language === "ko" ? "오늘의 진행" : "Today"}</Text>
               <Text style={styles.currentTitle}>{language === "ko" ? "지금 해야 할 일" : "What to do next"}</Text>
               <Text style={styles.currentBody}>{localizedCurrentStage.title}</Text>
             <View style={styles.summaryBar}>
               <View style={styles.summarySegment}>
-                <Text style={styles.summarySegmentText}>{copy.home.progress} {roadmap.progressPercent}%</Text>
+                <Text style={styles.summarySegmentText}>{copy.home.progress} {visibleProgressPercent}%</Text>
               </View>
               <View style={styles.summarySegment}>
-                <Text style={styles.summarySegmentText}>{copy.home.completed} {completedCount} / {roadmap.stages.length}</Text>
+                <Text style={styles.summarySegmentText}>{copy.home.completed} {visibleCompletedCount} / {visibleRoadmapStages.length}</Text>
               </View>
               {startupSummary ? (
                 <View style={styles.summarySegment}>
@@ -1549,6 +3078,9 @@ export default function DashboardScreen({
                   <Text style={styles.summarySegmentText}>{copy.home.region} {preferredRegion}</Text>
                 </View>
               ) : null}
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${Math.max(7, visibleProgressPercent)}%` }]} />
             </View>
             {savedFinanceSnapshot ? (
               <Pressable onPress={() => navigateToSurface("guides")} style={styles.inlineSummaryRow}>
@@ -1565,6 +3097,38 @@ export default function DashboardScreen({
             <Pressable onPress={() => navigateToSurface("current")} style={styles.primaryButton}>
               <Text style={styles.primaryButtonText}>{language === "ko" ? "현재 단계로 가기" : "Go to current step"}</Text>
             </Pressable>
+            <View style={styles.mobileFeatureGrid}>
+              {([
+                {
+                  surface: "analytics" as const,
+                  label: language === "ko" ? "분석" : "Analytics",
+                  title: language === "ko" ? "운영 지표 보기" : "View operating signals",
+                  body: language === "ko" ? "진행률, 비용, 지원사업 후보를 한 번에 봅니다." : "See progress, finance, and program signals together."
+                },
+                {
+                  surface: "franchise" as const,
+                  label: language === "ko" ? "프랜차이즈" : "Franchise",
+                  title: language === "ko" ? "브랜드 비교" : "Compare brands",
+                  body: language === "ko" ? "창업비용, 매출, 폐점률, 안정성을 비교합니다." : "Compare cost, revenue, closure rate, and stability."
+                },
+                {
+                  surface: "marketing" as const,
+                  label: language === "ko" ? "마케팅" : "Marketing",
+                  title: language === "ko" ? "첫 고객 채널" : "First customer channels",
+                  body: language === "ko" ? "업종에 맞는 초기 채널과 실행 순서를 봅니다." : "Review early channels and execution order for your category."
+                }
+              ]).map((item) => (
+                <Pressable
+                  key={item.surface}
+                  onPress={() => navigateToSurface(item.surface)}
+                  style={styles.mobileFeatureCard}
+                >
+                  <Text style={styles.stageBriefLabel}>{item.label}</Text>
+                  <Text style={styles.stageBriefTitle}>{item.title}</Text>
+                  <Text style={styles.stageBriefBody}>{item.body}</Text>
+                </Pressable>
+              ))}
+            </View>
             {isFreshAccount ? null : (
               <View style={styles.roadmapList}>
                 {roadmapPreviewStages.map((stage, index) => (
@@ -1584,6 +3148,7 @@ export default function DashboardScreen({
               </View>
             )}
           </View>
+          )}
         </View>
         ) : null}
 
@@ -1606,14 +3171,23 @@ export default function DashboardScreen({
                 <Text style={styles.transitionNoticeText}>{transitionNotice.body}</Text>
               </View>
             ) : null}
+            <View style={styles.stageBriefGrid}>
+              {stageBriefCards.map((card) => (
+                <View key={card.label} style={styles.stageBriefCard}>
+                  <Text style={styles.stageBriefLabel}>{card.label}</Text>
+                  <Text style={styles.stageBriefTitle}>{card.title}</Text>
+                  <Text style={styles.stageBriefBody} numberOfLines={3}>{card.body}</Text>
+                </View>
+              ))}
+            </View>
             {isFreshAccount ? null : (
               <>
                 <View style={styles.summaryBar}>
                   <View style={styles.summarySegment}>
-                    <Text style={styles.summarySegmentText}>{copy.home.progress} {roadmap.progressPercent}%</Text>
+                    <Text style={styles.summarySegmentText}>{copy.home.progress} {visibleProgressPercent}%</Text>
                   </View>
                   <View style={styles.summarySegment}>
-                    <Text style={styles.summarySegmentText}>{copy.home.completed} {completedCount} / {roadmap.stages.length}</Text>
+                    <Text style={styles.summarySegmentText}>{copy.home.completed} {visibleCompletedCount} / {visibleRoadmapStages.length}</Text>
                   </View>
                   {startupSummary ? (
                     <View style={styles.summarySegment}>
@@ -1625,6 +3199,9 @@ export default function DashboardScreen({
                       <Text style={styles.summarySegmentText}>{copy.home.region} {preferredRegion}</Text>
                     </View>
                   ) : null}
+                </View>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${Math.max(7, visibleProgressPercent)}%` }]} />
                 </View>
 
                 <View style={styles.currentActionRail}>
@@ -2629,6 +4206,118 @@ export default function DashboardScreen({
                   </Pressable>
                 </View>
               </>
+            ) : canUseGenericTaskStage ? (
+              <>
+                <Text style={styles.helper}>{currentStageAssistCopy}</Text>
+                <View style={styles.budgetPanel}>
+                  <View style={styles.recommendationTop}>
+                    <View style={styles.flexOne}>
+                      <Text style={styles.budgetLabel}>
+                        {language === "ko" ? "단계 진행률" : "Stage progress"}
+                      </Text>
+                      <Text style={styles.optionTitle}>
+                        {language === "ko"
+                          ? `완료 ${completedCurrentStageTasks.length} / ${currentStageTasks.length}`
+                          : `${completedCurrentStageTasks.length} of ${currentStageTasks.length} done`}
+                      </Text>
+                    </View>
+                    <View style={styles.scoreBadge}>
+                      <Text style={styles.scoreBadgeText}>{currentStageTaskProgress}%</Text>
+                    </View>
+                  </View>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, { width: `${Math.max(7, currentStageTaskProgress)}%` }]} />
+                  </View>
+                  <Text style={styles.helper}>
+                    {language === "ko"
+                      ? `필수 ${requiredCurrentStageTasks.filter((task) => task.status === "completed").length} / ${requiredCurrentStageTasks.length}개를 완료하면 다음 단계로 넘어갑니다.`
+                      : `Complete ${requiredCurrentStageTasks.filter((task) => task.status === "completed").length} of ${requiredCurrentStageTasks.length} required items to continue.`}
+                  </Text>
+                </View>
+
+                <View style={styles.optionList}>
+                  {currentStageTasks.map((task) => {
+                    const completed = task.status === "completed";
+                    const title =
+                      localizeTaskTitle(task.taskId, language, industryCategoryId) ?? task.title;
+
+                    return (
+                      <Pressable
+                        key={task.taskId}
+                        onPress={() => handleGenericTaskToggle(currentStage.stageId, task.taskId)}
+                        style={[styles.optionCard, completed && styles.optionCardSelected]}
+                      >
+                        <View style={styles.recommendationTop}>
+                          <View style={styles.flexOne}>
+                            <Text style={styles.optionTitle}>{title}</Text>
+                          </View>
+                          <View style={[styles.scoreBadge, completed && styles.scoreBadgeDone]}>
+                            <Text style={[styles.scoreBadgeText, completed && styles.scoreBadgeDoneText]}>
+                              {completed
+                                ? language === "ko"
+                                  ? "완료"
+                                  : "Done"
+                                : task.required
+                                  ? language === "ko"
+                                    ? "필수"
+                                    : "Required"
+                                  : language === "ko"
+                                    ? "선택"
+                                    : "Optional"}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={styles.metricWrap}>
+                          <View style={styles.metricChip}>
+                            <Text style={styles.metricChipText}>
+                              {formatStageType(currentStage.type, language)}
+                            </Text>
+                          </View>
+                          {task.estimatedMinutes ? (
+                            <View style={styles.metricChip}>
+                              <Text style={styles.metricChipText}>
+                                {language === "ko"
+                                  ? `예상 ${task.estimatedMinutes}분`
+                                  : `${task.estimatedMinutes} min`}
+                              </Text>
+                            </View>
+                          ) : null}
+                          {task.waitDays ? (
+                            <View style={styles.metricChip}>
+                              <Text style={styles.metricChipText}>
+                                {language === "ko"
+                                  ? `대기 약 ${task.waitDays}일`
+                                  : `Wait ${task.waitDays} days`}
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
+                        {task.followupQuestion ? (
+                          <Text style={styles.helper}>{task.followupQuestion}</Text>
+                        ) : null}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.stageFooter}>
+                  <Pressable
+                    onPress={handleGenericTaskStageContinue}
+                    disabled={!currentStageRequiredDone}
+                    style={[
+                      styles.primaryButton,
+                      !currentStageRequiredDone && styles.primaryButtonDisabled
+                    ]}
+                  >
+                    <Text style={styles.primaryButtonText}>
+                      {language === "ko" ? "필수 항목 완료하고 다음 단계" : "Complete required items and continue"}
+                    </Text>
+                  </Pressable>
+                  <Pressable onPress={resetDemo} style={styles.secondaryButton}>
+                    <Text style={styles.secondaryButtonText}>{copy.common.resetDemo}</Text>
+                  </Pressable>
+                </View>
+              </>
             ) : (
               <>
                 <Text style={styles.helper}>
@@ -2806,6 +4495,19 @@ export default function DashboardScreen({
                   placeholderTextColor="#8A909C"
                   keyboardType="numeric"
                 />
+                <View style={styles.presetRow}>
+                  {financeRentPresets.map((value) => (
+                    <Pressable
+                      key={value}
+                      onPress={() => setFinanceMonthlyRentText(value)}
+                      style={[styles.presetChip, financeMonthlyRentText === value && styles.presetChipSelected]}
+                    >
+                      <Text style={[styles.presetChipText, financeMonthlyRentText === value && styles.presetChipTextSelected]}>
+                        {language === "ko" ? `${value}만원` : `${value}0k KRW`}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
                 <Text style={styles.budgetLabel}>
                   {language === "ko" ? "월 인건비 (만원, 선택)" : "Monthly labor (10k KRW, optional)"}
                 </Text>
@@ -2817,6 +4519,21 @@ export default function DashboardScreen({
                   placeholderTextColor="#8A909C"
                   keyboardType="numeric"
                 />
+                <View style={styles.presetRow}>
+                  {financeLaborPresets.map((value) => (
+                    <Pressable
+                      key={value}
+                      onPress={() => setFinanceLaborText(value)}
+                      style={[styles.presetChip, financeLaborText === value && styles.presetChipSelected]}
+                    >
+                      <Text style={[styles.presetChipText, financeLaborText === value && styles.presetChipTextSelected]}>
+                        {value === "0"
+                          ? language === "ko" ? "직원 없음" : "No staff"
+                          : language === "ko" ? `${value}만원` : `${value}0k KRW`}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
                 <Text style={styles.budgetLabel}>
                   {language === "ko" ? "예상 월 매출 (만원, 선택)" : "Expected revenue (10k KRW, optional)"}
                 </Text>
@@ -2830,6 +4547,19 @@ export default function DashboardScreen({
                   placeholderTextColor="#8A909C"
                   keyboardType="numeric"
                 />
+                <View style={styles.presetRow}>
+                  {financeRevenuePresets.map((value) => (
+                    <Pressable
+                      key={value}
+                      onPress={() => setFinanceRevenueText(value)}
+                      style={[styles.presetChip, financeRevenueText === value && styles.presetChipSelected]}
+                    >
+                      <Text style={[styles.presetChipText, financeRevenueText === value && styles.presetChipTextSelected]}>
+                        {language === "ko" ? `${value}만원` : `${value}0k KRW`}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
                 <Text style={styles.aiHelper}>
                   {language === "ko"
                     ? `현재 선택 기준: ${selectedIndustryLabel} · ${formatMarketMetaValue("marketStyle", financeMarketStyle, language)} · ${formatMarketMetaValue("rentBand", financeRentBand, language)}`
@@ -2971,7 +4701,7 @@ export default function DashboardScreen({
               <Text style={styles.sectionLabel}>{copy.home.starterFlow}</Text>
             </View>
             <View style={styles.roadmapList}>
-                {roadmap.stages.map((stage, index) => {
+                {visibleRoadmapStages.map((stage, index) => {
                   const isCurrent = stage.stageId === currentStage.stageId;
                   const isCompleted = stage.status === "completed";
                   return (
@@ -3008,6 +4738,417 @@ export default function DashboardScreen({
               </View>
           </View>
         ) : null}
+
+        {activeSurface === "analytics" && !isFreshAccount ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>{language === "ko" ? "분석" : "Analytics"}</Text>
+            <View style={styles.currentStageCard}>
+              <Text style={styles.currentMeta}>{language === "ko" ? "운영 신호" : "Operating signals"}</Text>
+              <Text style={styles.currentTitle}>{language === "ko" ? "지금까지의 준비 상태" : "Readiness so far"}</Text>
+              <Text style={styles.currentBody}>
+                {language === "ko"
+                  ? "모바일에서는 먼저 창업 준비, 재무 위험, 지원사업 후보를 빠르게 확인합니다."
+                  : "On mobile, start with launch readiness, finance risk, and support program signals."}
+              </Text>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${Math.max(7, visibleProgressPercent)}%` }]} />
+              </View>
+              <View style={styles.metricGrid}>
+                <ProfileItem label={language === "ko" ? "로드맵" : "Roadmap"} value={`${visibleCompletedCount}/${visibleRoadmapStages.length}`} />
+                <ProfileItem label={language === "ko" ? "현재 단계" : "Current"} value={localizedCurrentStage.title} />
+                <ProfileItem
+                  label={language === "ko" ? "최근 재무 위험" : "Finance risk"}
+                  value={savedFinanceSnapshot ? getRiskLevelLabel(savedFinanceSnapshot.riskLevel as never, language) : copy.common.notSetYet}
+                />
+                <ProfileItem
+                  label={language === "ko" ? "손익분기" : "Break-even"}
+                  value={savedFinanceSnapshot ? formatBreakEvenMonth(savedFinanceSnapshot.breakEvenMonth, language) : copy.common.notSetYet}
+                />
+              </View>
+            </View>
+            <View style={styles.step}>
+              <Text style={styles.stepMeta}>{language === "ko" ? "운영 입력" : "Operations input"}</Text>
+              <Text style={styles.stepTitle}>
+                {storeName || (language === "ko" ? "내 가게 운영 코어" : "Store operations core")}
+              </Text>
+              <Text style={styles.stepGoal}>
+                {language === "ko"
+                  ? "웹 운영 대시보드의 핵심 입력을 모바일에서 먼저 저장합니다. 매출, 비용, 상품, 재고, 직원을 여기서 빠르게 업데이트하세요."
+                  : "Save the core web operations inputs on mobile first: sales, costs, products, inventory, and staff."}
+              </Text>
+              <View style={styles.metricGrid}>
+                <ProfileItem label={language === "ko" ? "이번 달 매출" : "Monthly sales"} value={formatWonCompact(monthSales, language)} />
+                <ProfileItem label={language === "ko" ? "이번 달 고객" : "Customers"} value={`${monthCustomers.toLocaleString()}${language === "ko" ? "명" : ""}`} />
+                <ProfileItem label={language === "ko" ? "월 고정비" : "Monthly costs"} value={formatWonCompact(totalMonthlyCosts, language)} />
+                <ProfileItem label={language === "ko" ? "추정 손익" : "Est. profit"} value={formatWonCompact(estimatedMonthlyProfit, language)} />
+                <ProfileItem label={language === "ko" ? "재고 주의" : "Low stock"} value={`${lowInventoryCount}`} />
+                <ProfileItem label={language === "ko" ? "주 인건비" : "Weekly labor"} value={formatWonCompact(weeklyLaborCost, language)} />
+              </View>
+              {storeSaveStatus === "saving" ? (
+                <Text style={styles.freshnessText}>{language === "ko" ? "운영 데이터 저장 중..." : "Saving operations data..."}</Text>
+              ) : storeSaveStatus === "saved" ? (
+                <Text style={styles.freshnessText}>{language === "ko" ? "운영 데이터 저장 완료" : "Operations data saved"}</Text>
+              ) : storeSaveError ? (
+                <Text style={styles.warningText}>{storeSaveError}</Text>
+              ) : null}
+            </View>
+            <View style={styles.budgetPanel}>
+              <View style={styles.recommendationTop}>
+                <View style={styles.flexOne}>
+                  <Text style={styles.budgetLabel}>{language === "ko" ? "경영 건강도" : "Business health"}</Text>
+                  <Text style={styles.optionTitle}>{healthGradeLabel}</Text>
+                </View>
+                <View style={styles.scoreBadge}>
+                  <Text style={styles.scoreBadgeText}>{healthMetrics.healthScore}</Text>
+                </View>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${Math.max(7, healthMetrics.healthScore)}%` }]} />
+              </View>
+              <View style={styles.metricGrid}>
+                <ProfileItem label={language === "ko" ? "평균 일매출" : "Avg daily"} value={formatWonCompact(healthMetrics.avgDailySales, language)} />
+                <ProfileItem label={language === "ko" ? "객단가" : "Ticket"} value={formatWonCompact(healthMetrics.avgTicketSize, language)} />
+                <ProfileItem label={language === "ko" ? "손익분기 일매출" : "Break-even daily"} value={formatWonCompact(healthMetrics.breakEvenDailySales, language)} />
+                <ProfileItem
+                  label={language === "ko" ? "현금 생존" : "Runway"}
+                  value={
+                    healthMetrics.cashRunwayMonths < 0
+                      ? "-"
+                      : healthMetrics.cashRunwayMonths >= 90
+                        ? language === "ko" ? "흑자" : "Profitable"
+                        : `${healthMetrics.cashRunwayMonths}${language === "ko" ? "개월" : " mo"}`
+                  }
+                />
+              </View>
+              {healthMetrics.alerts.slice(0, 2).map((alert) => (
+                <View key={`${alert.title}-${alert.message}`} style={styles.inlineSummaryRow}>
+                  <Text
+                    style={
+                      alert.type === "danger"
+                        ? styles.criticalText
+                        : alert.type === "warning"
+                          ? styles.warningText
+                          : styles.freshnessText
+                    }
+                  >
+                    {alert.title}
+                  </Text>
+                  <Text style={styles.inlineSummaryValue}>{alert.message}</Text>
+                </View>
+              ))}
+              {healthMetrics.alerts.length === 0 ? (
+                <Text style={styles.helper}>
+                  {monthEntries.length < 7
+                    ? language === "ko"
+                      ? "7일 이상 매출을 입력하면 건강도 판단이 더 정확해집니다."
+                      : "Add at least 7 days of sales for a stronger health read."
+                    : language === "ko"
+                      ? "현재 입력 기준으로 큰 경고는 없습니다."
+                      : "No major alerts from the current inputs."}
+                </Text>
+              ) : null}
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "월 손익" : "Monthly P&L"}</Text>
+              <View style={styles.metricGrid}>
+                <ProfileItem label={language === "ko" ? "매출" : "Revenue"} value={formatWonCompact(operatingPnl.totalRevenue, language)} />
+                <ProfileItem label={language === "ko" ? "총비용" : "Costs"} value={formatWonCompact(operatingPnl.totalCosts, language)} />
+                <ProfileItem label={language === "ko" ? "영업이익" : "Operating profit"} value={formatWonCompact(operatingPnl.operatingProfit, language)} />
+                <ProfileItem label={language === "ko" ? "순현금흐름" : "Net cashflow"} value={formatWonCompact(operatingPnl.netCashFlow, language)} />
+                <ProfileItem label={language === "ko" ? "매출총이익률" : "Gross margin"} value={`${operatingPnl.grossMargin}%`} />
+                <ProfileItem label={language === "ko" ? "영업이익률" : "Op. margin"} value={`${operatingPnl.operatingMargin}%`} />
+              </View>
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "비용 구조" : "Cost structure"}</Text>
+              {costBreakdownItems.map((item) => {
+                const share = totalMonthlyCosts > 0 ? Math.round((item.value / totalMonthlyCosts) * 100) : 0;
+                return (
+                  <View key={item.key} style={styles.inlineSummaryRow}>
+                    <Text style={styles.inlineSummaryLabel}>{item.label}</Text>
+                    <Text style={styles.inlineSummaryValue}>
+                      {formatWonCompact(item.value, language)} · {share}%
+                    </Text>
+                    <View style={styles.progressTrack}>
+                      <View style={[styles.progressFill, { width: `${Math.max(7, share)}%` }]} />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "예측" : "Forecast"}</Text>
+              <View style={styles.metricGrid}>
+                <ProfileItem label={language === "ko" ? "다음 주 일매출" : "Next week daily"} value={formatWonCompact(salesForecast.nextWeekDaily, language)} />
+                <ProfileItem label={language === "ko" ? "다음 달 매출" : "Next month"} value={formatWonCompact(salesForecast.nextMonthTotal, language)} />
+                <ProfileItem label={language === "ko" ? "신뢰도" : "Confidence"} value={forecastConfidenceLabel} />
+                <ProfileItem label={language === "ko" ? "기록일" : "Days"} value={`${dailyEntries.length}`} />
+              </View>
+              <Text style={styles.helper}>
+                {salesForecast.nextWeekDaily > 0
+                  ? salesForecast.basis
+                  : language === "ko"
+                    ? "최소 7일 매출을 입력하면 다음 주와 다음 달 매출을 예측합니다."
+                    : "Add at least 7 days of sales to forecast next week and next month."}
+              </Text>
+              {momComparison ? (
+                <View style={styles.inlineSummaryRow}>
+                  <Text style={styles.inlineSummaryLabel}>{language === "ko" ? "전월 동기 대비" : "MoM pace"}</Text>
+                  <Text style={styles.inlineSummaryValue}>
+                    {formatWonCompact(momComparison.currentMTD, language)} · {momComparison.momChangePercent > 0 ? "+" : ""}{momComparison.momChangePercent}%
+                  </Text>
+                  <Text style={styles.helper}>
+                    {language === "ko"
+                      ? `월말 예상 ${formatWonCompact(momComparison.projectedMonthEnd, language)}`
+                      : `Projected month-end ${formatWonCompact(momComparison.projectedMonthEnd, language)}`}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "오늘 매출" : "Daily sales"}</Text>
+              <TextInput
+                value={dailyDateInput}
+                onChangeText={setDailyDateInput}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#8A909C"
+                style={styles.budgetInput}
+              />
+              <TextInput
+                value={dailySalesInput}
+                onChangeText={(value) => setDailySalesInput(value.replace(/[^0-9]/g, ""))}
+                keyboardType="number-pad"
+                placeholder={language === "ko" ? "매출, 만원 단위 예: 45" : "Sales in 10K KRW, e.g. 45"}
+                placeholderTextColor="#8A909C"
+                style={styles.budgetInput}
+              />
+              <TextInput
+                value={dailyCustomersInput}
+                onChangeText={(value) => setDailyCustomersInput(value.replace(/[^0-9]/g, ""))}
+                keyboardType="number-pad"
+                placeholder={language === "ko" ? "고객 수, 예: 32" : "Customers, e.g. 32"}
+                placeholderTextColor="#8A909C"
+                style={styles.budgetInput}
+              />
+              <Pressable
+                onPress={handleAddDailyEntry}
+                disabled={!dailySalesInput.trim()}
+                style={[styles.primaryButton, !dailySalesInput.trim() && styles.primaryButtonDisabled]}
+              >
+                <Text style={styles.primaryButtonText}>{language === "ko" ? "오늘 매출 저장" : "Save sales"}</Text>
+              </Pressable>
+              {dailyEntries.slice(0, 3).map((entry) => (
+                <View key={entry.date} style={styles.inlineSummaryRow}>
+                  <Text style={styles.inlineSummaryLabel}>{entry.date}</Text>
+                  <Text style={styles.inlineSummaryValue}>
+                    {formatWonCompact(entry.sales, language)} · {entry.customers.toLocaleString()}{language === "ko" ? "명" : " customers"}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "월 비용" : "Monthly costs"}</Text>
+              <TextInput value={costIngredientsText} onChangeText={(value) => setCostIngredientsText(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "재료/매입비, 만원" : "COGS, 10K KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={costLaborText} onChangeText={(value) => setCostLaborText(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "인건비, 만원" : "Labor, 10K KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={costRentText} onChangeText={(value) => setCostRentText(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "임대료, 만원" : "Rent, 10K KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={costUtilitiesText} onChangeText={(value) => setCostUtilitiesText(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "공과금, 만원" : "Utilities, 10K KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={costMarketingText} onChangeText={(value) => setCostMarketingText(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "마케팅비, 만원" : "Marketing, 10K KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <Pressable onPress={handleSaveMonthlyCosts} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>{language === "ko" ? "월 비용 저장" : "Save monthly costs"}</Text>
+              </Pressable>
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "상품/메뉴" : "Products"}</Text>
+              <TextInput value={productNameInput} onChangeText={setProductNameInput} placeholder={language === "ko" ? "상품명" : "Product name"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={productPriceInput} onChangeText={(value) => setProductPriceInput(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "판매가, 만원" : "Price, 10K KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={productCostInput} onChangeText={(value) => setProductCostInput(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "원가, 만원" : "Cost, 10K KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={productStockInput} onChangeText={(value) => setProductStockInput(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "재고 수량" : "Stock count"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <Pressable onPress={handleAddProduct} disabled={!productNameInput.trim()} style={[styles.secondaryButton, !productNameInput.trim() && styles.primaryButtonDisabled]}>
+                <Text style={styles.secondaryButtonText}>{language === "ko" ? "상품 추가" : "Add product"}</Text>
+              </Pressable>
+              {products.slice(0, 3).map((product) => (
+                <View key={product.id} style={styles.inlineSummaryRow}>
+                  <Text style={styles.inlineSummaryLabel}>{product.name}</Text>
+                  <Text style={styles.inlineSummaryValue}>{formatWonCompact(product.price, language)} · {language === "ko" ? "재고" : "Stock"} {product.stock}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "재고" : "Inventory"}</Text>
+              <TextInput value={inventoryNameInput} onChangeText={setInventoryNameInput} placeholder={language === "ko" ? "재고명" : "Inventory item"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={inventoryQtyInput} onChangeText={(value) => setInventoryQtyInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "현재 수량" : "Quantity"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={inventoryThresholdInput} onChangeText={(value) => setInventoryThresholdInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "최소 수량" : "Minimum threshold"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <Pressable onPress={handleAddInventoryItem} disabled={!inventoryNameInput.trim()} style={[styles.secondaryButton, !inventoryNameInput.trim() && styles.primaryButtonDisabled]}>
+                <Text style={styles.secondaryButtonText}>{language === "ko" ? "재고 추가" : "Add inventory"}</Text>
+              </Pressable>
+              {inventoryItems.slice(0, 3).map((item) => (
+                <View key={item.id} style={styles.inlineSummaryRow}>
+                  <Text style={styles.inlineSummaryLabel}>{item.name}</Text>
+                  <Text style={styles.inlineSummaryValue}>{item.quantity}{item.unit} · {language === "ko" ? "최소" : "Min"} {item.minThreshold}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.budgetPanel}>
+              <Text style={styles.budgetLabel}>{language === "ko" ? "직원" : "Staff"}</Text>
+              <TextInput value={employeeNameInput} onChangeText={setEmployeeNameInput} placeholder={language === "ko" ? "직원 이름" : "Employee name"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={employeeWageInput} onChangeText={(value) => setEmployeeWageInput(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "시급, 원 단위" : "Hourly wage, KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <TextInput value={employeeHoursInput} onChangeText={(value) => setEmployeeHoursInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "주 근무시간" : "Weekly hours"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+              <Pressable onPress={handleAddEmployee} disabled={!employeeNameInput.trim() || !employeeWageInput.trim() || !employeeHoursInput.trim()} style={[styles.secondaryButton, (!employeeNameInput.trim() || !employeeWageInput.trim() || !employeeHoursInput.trim()) && styles.primaryButtonDisabled]}>
+                <Text style={styles.secondaryButtonText}>{language === "ko" ? "직원 추가" : "Add staff"}</Text>
+              </Pressable>
+              {employees.slice(0, 3).map((employee) => (
+                <View key={employee.id} style={styles.inlineSummaryRow}>
+                  <Text style={styles.inlineSummaryLabel}>{employee.name}</Text>
+                  <Text style={styles.inlineSummaryValue}>{formatWonCompact(employee.hourlyWage, language)} · {employee.weeklyHours}h/w</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.step}>
+              <Text style={styles.stepMeta}>{language === "ko" ? "다음 행동" : "Next actions"}</Text>
+              <Text style={styles.stepTitle}>{language === "ko" ? "분석을 채우는 빠른 입력" : "Quick inputs to improve analysis"}</Text>
+              <Pressable onPress={() => navigateToSurface("guides")} style={styles.inlineSummaryRow}>
+                <Text style={styles.inlineSummaryLabel}>{language === "ko" ? "재무 시뮬레이션" : "Financial simulation"}</Text>
+                <Text style={styles.inlineSummaryValue}>{language === "ko" ? "자본금·임대료·매출을 넣어 위험도를 계산합니다." : "Add capital, rent, and revenue to calculate risk."}</Text>
+              </Pressable>
+              <Pressable onPress={() => navigateToSurface("current")} style={styles.inlineSummaryRow}>
+                <Text style={styles.inlineSummaryLabel}>{language === "ko" ? "현재 단계" : "Current step"}</Text>
+                <Text style={styles.inlineSummaryValue}>{nextStepSummary}</Text>
+              </Pressable>
+            </View>
+            {supportHighlights.length > 0 ? (
+              <View style={styles.step}>
+                <Text style={styles.stepMeta}>{language === "ko" ? "지원사업 후보" : "Support matches"}</Text>
+                <Text style={styles.stepTitle}>{language === "ko" ? "지금 같이 확인할 지원 프로그램" : "Programs to review now"}</Text>
+                {supportHighlights.slice(0, 3).map((program) => (
+                  <View key={program.id} style={styles.optionCard}>
+                    <Text style={styles.optionTitle}>{program.name[language]}</Text>
+                    <Text style={styles.optionSummary}>{program.benefit[language]}</Text>
+                    <Text style={styles.freshnessText}>{program.organizer[language]}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {activeSurface === "franchise" ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>{language === "ko" ? "프랜차이즈" : "Franchise"}</Text>
+            <View style={styles.currentStageCard}>
+              <Text style={styles.currentMeta}>{language === "ko" ? "브랜드 비교" : "Brand comparison"}</Text>
+              <Text style={styles.currentTitle}>{language === "ko" ? "비용과 안정성을 같이 봅니다" : "Compare cost and stability together"}</Text>
+              <Text style={styles.currentBody}>
+                {language === "ko"
+                  ? "웹의 프랜차이즈 비교 데이터를 모바일에서도 먼저 볼 수 있게 가져왔습니다."
+                  : "The web franchise comparison data is now available on mobile first."}
+              </Text>
+              <View style={styles.toggleRow}>
+                {franchiseCategories.map((category) => (
+                  <Pressable
+                    key={category.id}
+                    onPress={() => {
+                      setFranchiseFilterCat(category.id);
+                      setExpandedFranchiseId(null);
+                    }}
+                    style={[styles.toggleChip, franchiseFilterCat === category.id && styles.toggleChipSelected]}
+                  >
+                    <Text style={[styles.toggleChipText, franchiseFilterCat === category.id && styles.toggleChipTextSelected]}>
+                      {category.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+            <View style={styles.optionList}>
+              {filteredFranchiseBrands.map((brand) => {
+                const overall = computeOverallScore(brand.scores);
+                const expanded = expandedFranchiseId === brand.id;
+                return (
+                  <Pressable
+                    key={brand.id}
+                    onPress={() => setExpandedFranchiseId(expanded ? null : brand.id)}
+                    style={[styles.optionCard, expanded && styles.optionCardSelected]}
+                  >
+                    <View style={styles.recommendationTop}>
+                      <View style={styles.flexOne}>
+                        <Text style={styles.optionTitle}>{brand.name[language]}</Text>
+                        <Text style={styles.optionSummary}>{brand.tagline[language]}</Text>
+                      </View>
+                      <View style={styles.scoreBadge}>
+                        <Text style={styles.scoreBadgeText}>{overall}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.metricGrid}>
+                      <ProfileItem label={language === "ko" ? "창업비용" : "Startup"} value={formatFranchiseCost(brand.startupCostWon)} />
+                      <ProfileItem label={language === "ko" ? "연매출" : "Revenue"} value={formatFranchiseCost(brand.avgAnnualRevenueWon)} />
+                      <ProfileItem label={language === "ko" ? "폐점률" : "Closure"} value={`${brand.closureRate}%`} />
+                      <ProfileItem label={language === "ko" ? "평가" : "Score"} value={getScoreLabel(overall, language)} />
+                    </View>
+                    {expanded ? (
+                      <View style={styles.budgetPanel}>
+                        <Text style={styles.budgetLabel}>{language === "ko" ? "특이사항" : "Key notes"}</Text>
+                        {brand.roadmapNotes[language].slice(0, 3).map((note) => (
+                          <Text key={note} style={styles.aiHelper}>• {note}</Text>
+                        ))}
+                        <Text style={styles.freshnessText}>
+                          {brand.costVerified
+                            ? language === "ko" ? `검증 비용 · ${brand.costSource ?? brand.dataYear}` : `Verified cost · ${brand.costSource ?? brand.dataYear}`
+                            : language === "ko" ? "비용 검증 필요" : "Cost needs verification"}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+
+        {activeSurface === "marketing" ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>{language === "ko" ? "마케팅" : "Marketing"}</Text>
+            <View style={styles.currentStageCard}>
+              <Text style={styles.currentMeta}>{language === "ko" ? "첫 고객" : "First customers"}</Text>
+              <Text style={styles.currentTitle}>{language === "ko" ? "업종에 맞는 채널부터 시작합니다" : "Start with channels that fit the business"}</Text>
+              <Text style={styles.currentBody}>
+                {language === "ko"
+                  ? `${selectedIndustryLabel} 기준으로 초기 고객을 만들 채널을 우선순위로 정리했습니다.`
+                  : `Prioritized first-customer channels for ${selectedIndustryLabel}.`}
+              </Text>
+            </View>
+            <View style={styles.optionList}>
+              {recommendedMarketingChannels.map((channel, index) => {
+                const selected = selectedMarketingChannelMeta.key === channel.key;
+                return (
+                  <Pressable
+                    key={channel.key}
+                    onPress={() => setSelectedMarketingChannel(channel.key)}
+                    style={[styles.optionCard, selected && styles.optionCardSelected]}
+                  >
+                    <View style={styles.recommendationTop}>
+                      <Text style={styles.optionTitle}>{channel.label[language]}</Text>
+                      <View style={styles.scoreBadge}>
+                        <Text style={styles.scoreBadgeText}>{index + 1}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.optionSummary}>{channel.body[language]}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={styles.step}>
+              <Text style={styles.stepMeta}>{language === "ko" ? "이번 주 실행" : "This week"}</Text>
+              <Text style={styles.stepTitle}>{selectedMarketingChannelMeta.label[language]}</Text>
+              {[
+                language === "ko" ? "프로필/소개 문구를 오늘 안에 정리합니다." : "Finish the profile and intro copy today.",
+                language === "ko" ? "첫 혜택 또는 첫 방문 이유를 하나만 만듭니다." : "Create one reason to try or visit first.",
+                language === "ko" ? "성과는 지출보다 문의·저장·방문 같은 초기 신호부터 봅니다." : "Read early signals such as inquiries, saves, and visits before spend."
+              ].map((item) => (
+                <Text key={item} style={styles.aiHelper}>• {item}</Text>
+              ))}
+            </View>
+          </View>
+        ) : null}
           </>
         )}
       </ScrollView>
@@ -3027,36 +5168,99 @@ function ProfileItem(props: { label: string; value: string }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F7F6F3"
+    backgroundColor: "#F5F7FA"
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingTop: 18,
+    paddingBottom: 112,
     gap: 16
   },
+  appBar: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    paddingRight: 92
+  },
+  brandLockup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    minWidth: 0
+  },
+  brandMark: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#075E66"
+  },
+  brandMarkText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: -0.2
+  },
+  brandText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#101820",
+    letterSpacing: -0.2
+  },
+  brandSubText: {
+    marginTop: 1,
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#637083"
+  },
+  progressPill: {
+    minWidth: 58,
+    minHeight: 40,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(7,94,102,0.12)",
+    backgroundColor: "rgba(7,94,102,0.07)"
+  },
+  progressPillValue: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#075E66",
+    lineHeight: 18
+  },
+  progressPillLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#637083",
+    letterSpacing: 0.3,
+    textTransform: "uppercase"
+  },
   hero: {
-    gap: 12,
-    paddingTop: 20,
-    paddingBottom: 8
+    gap: 10,
+    paddingTop: 8,
+    paddingBottom: 4
   },
   eyebrow: {
     fontSize: 13,
     letterSpacing: 2.8,
     textTransform: "uppercase",
-    color: "#1D3557"
+    color: "#075E66"
   },
   title: {
-    fontSize: 38,
-    lineHeight: 40,
+    fontSize: 32,
+    lineHeight: 35,
     fontWeight: "700",
-    letterSpacing: -1.4,
-    color: "#111111"
+    letterSpacing: -1.1,
+    color: "#101820"
   },
   subtitle: {
     fontSize: 15,
     lineHeight: 24,
-    color: "#5B616E"
+    color: "#637083"
   },
   section: {
     gap: 12
@@ -3066,13 +5270,13 @@ const styles = StyleSheet.create({
     gap: 8,
     flexWrap: "wrap",
     padding: 7,
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.72)",
     backgroundColor: "rgba(255,255,255,0.46)"
   },
   surfaceNavButton: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "transparent",
     backgroundColor: "transparent",
@@ -3085,43 +5289,43 @@ const styles = StyleSheet.create({
   },
   surfaceNavButtonText: {
     fontSize: 14,
-    color: "#5B616E"
+    color: "#637083"
   },
   surfaceNavButtonTextSelected: {
-    color: "#1D3557",
+    color: "#075E66",
     fontWeight: "600"
   },
   card: {
     backgroundColor: "rgba(255,255,255,0.85)",
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
-    borderRadius: 24,
+    borderRadius: 8,
     padding: 20,
     gap: 10
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   cardSummary: {
     fontSize: 15,
     lineHeight: 24,
-    color: "#5B616E"
+    color: "#637083"
   },
   cardPoint: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#5B616E"
+    color: "#637083"
   },
   currentStageCard: {
     backgroundColor: "rgba(255,255,255,0.84)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.76)",
-    borderRadius: 24,
+    borderRadius: 8,
     padding: 20,
     gap: 9,
-    shadowColor: "#111111",
+    shadowColor: "#101820",
     shadowOpacity: 0.045,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 10 },
@@ -3131,24 +5335,98 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 2,
     textTransform: "uppercase",
-    color: "#1D3557"
+    color: "#075E66"
   },
   currentTitle: {
     fontSize: 24,
     lineHeight: 28,
     fontWeight: "700",
-    color: "#111111"
+    color: "#101820"
   },
   currentBody: {
     fontSize: 15,
     lineHeight: 22,
-    color: "#5B616E"
+    color: "#637083"
+  },
+  stageBriefGrid: {
+    gap: 8
+  },
+  mobileFeatureGrid: {
+    gap: 9
+  },
+  onboardingChoiceGrid: {
+    gap: 10
+  },
+  onboardingChoiceCard: {
+    minHeight: 148,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.07)",
+    backgroundColor: "rgba(255,255,255,0.86)",
+    paddingHorizontal: 18,
+    paddingVertical: 17,
+    gap: 8,
+    shadowColor: "#101820",
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2
+  },
+  onboardingChoiceTitle: {
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "700",
+    color: "#101820"
+  },
+  onboardingChoiceAction: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#075E66"
+  },
+  mobileFeatureCard: {
+    minHeight: 100,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.07)",
+    backgroundColor: "rgba(255,255,255,0.78)",
+    paddingHorizontal: 15,
+    paddingVertical: 14,
+    gap: 5
+  },
+  stageBriefCard: {
+    minHeight: 92,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.07)",
+    backgroundColor: "rgba(255,255,255,0.74)",
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    gap: 5
+  },
+  stageBriefLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#075E66",
+    letterSpacing: 1.1,
+    textTransform: "uppercase"
+  },
+  stageBriefTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "700",
+    color: "#101820"
+  },
+  stageBriefBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#637083"
   },
   transitionNotice: {
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(29,53,87,0.12)",
-    backgroundColor: "rgba(29,53,87,0.06)",
+    borderColor: "rgba(7,94,102,0.12)",
+    backgroundColor: "rgba(7,94,102,0.06)",
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 4
@@ -3157,25 +5435,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "#1D3557",
+    color: "#075E66",
     fontWeight: "700"
   },
   transitionNoticeText: {
     fontSize: 14,
     lineHeight: 21,
-    color: "#1D3557"
+    color: "#075E66"
   },
   helper: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#5B616E"
+    color: "#637083"
   },
   summaryBar: {
     flexDirection: "row",
     flexWrap: "wrap",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.72)",
-    borderRadius: 14,
+    borderRadius: 8,
     overflow: "hidden",
     backgroundColor: "rgba(255,255,255,0.52)"
   },
@@ -3190,10 +5468,21 @@ const styles = StyleSheet.create({
   },
   summarySegmentText: {
     fontSize: 12,
-    color: "#5B616E"
+    color: "#637083"
+  },
+  progressTrack: {
+    height: 7,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "rgba(15,23,42,0.07)"
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 8,
+    backgroundColor: "#12A8A0"
   },
   inlineSummaryRow: {
-    borderRadius: 18,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.66)",
@@ -3210,13 +5499,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.4,
     textTransform: "uppercase",
-    color: "#5B616E"
+    color: "#637083"
   },
   inlineSummaryValue: {
     fontSize: 14,
     lineHeight: 21,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   pillRow: {
     flexDirection: "row",
@@ -3230,7 +5519,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   currentUtilityButton: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
     backgroundColor: "rgba(255,255,255,0.62)",
@@ -3240,10 +5529,10 @@ const styles = StyleSheet.create({
   currentUtilityButtonText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#5B616E"
+    color: "#637083"
   },
   currentStateChip: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
     backgroundColor: "rgba(255,255,255,0.46)",
@@ -3253,7 +5542,7 @@ const styles = StyleSheet.create({
   currentStateChipText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#5B616E"
+    color: "#637083"
   },
   quickActionGrid: {
     gap: 10
@@ -3262,10 +5551,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.82)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 16,
     gap: 6,
-    shadowColor: "#111111",
+    shadowColor: "#101820",
     shadowOpacity: 0.04,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
@@ -3274,15 +5563,15 @@ const styles = StyleSheet.create({
   quickActionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   quickActionBody: {
     fontSize: 14,
     lineHeight: 21,
-    color: "#5B616E"
+    color: "#637083"
   },
   pill: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.82)",
@@ -3291,7 +5580,7 @@ const styles = StyleSheet.create({
   },
   pillText: {
     fontSize: 13,
-    color: "#5B616E"
+    color: "#637083"
   },
   optionList: {
     gap: 10
@@ -3300,18 +5589,18 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.86)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 16,
     gap: 8,
-    shadowColor: "#111111",
+    shadowColor: "#101820",
     shadowOpacity: 0.04,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
     elevation: 2
   },
   optionCardSelected: {
-    borderColor: "rgba(29,53,87,0.28)",
-    backgroundColor: "rgba(29,53,87,0.04)"
+    borderColor: "rgba(7,94,102,0.28)",
+    backgroundColor: "rgba(7,94,102,0.04)"
   },
   optionCardDisabled: {
     opacity: 0.56
@@ -3319,12 +5608,12 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   optionSummary: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#5B616E"
+    color: "#637083"
   },
   recommendationTop: {
     flexDirection: "row",
@@ -3333,15 +5622,21 @@ const styles = StyleSheet.create({
     gap: 8
   },
   scoreBadge: {
-    borderRadius: 999,
-    backgroundColor: "rgba(29,53,87,0.08)",
+    borderRadius: 8,
+    backgroundColor: "rgba(7,94,102,0.08)",
     paddingHorizontal: 10,
     paddingVertical: 6
+  },
+  scoreBadgeDone: {
+    backgroundColor: "#075E66"
   },
   scoreBadgeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#1D3557"
+    color: "#075E66"
+  },
+  scoreBadgeDoneText: {
+    color: "#FFFFFF"
   },
   metricWrap: {
     flexDirection: "row",
@@ -3349,7 +5644,7 @@ const styles = StyleSheet.create({
     gap: 8
   },
   metricChip: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     paddingHorizontal: 10,
@@ -3358,12 +5653,12 @@ const styles = StyleSheet.create({
   },
   metricChipText: {
     fontSize: 12,
-    color: "#5B616E"
+    color: "#637083"
   },
   freshnessText: {
     fontSize: 12,
     lineHeight: 18,
-    color: "#5B616E"
+    color: "#637083"
   },
   warningText: {
     fontSize: 13,
@@ -3380,11 +5675,39 @@ const styles = StyleSheet.create({
     gap: 8,
     flexWrap: "wrap"
   },
+  presetRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+    marginTop: -2
+  },
+  presetChip: {
+    minHeight: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.08)",
+    backgroundColor: "rgba(255,255,255,0.78)",
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    justifyContent: "center"
+  },
+  presetChipSelected: {
+    borderColor: "rgba(7,94,102,0.28)",
+    backgroundColor: "rgba(7,94,102,0.07)"
+  },
+  presetChipText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#637083"
+  },
+  presetChipTextSelected: {
+    color: "#075E66"
+  },
   budgetPanel: {
     backgroundColor: "rgba(255,255,255,0.9)",
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
-    borderRadius: 22,
+    borderRadius: 8,
     padding: 18,
     gap: 10
   },
@@ -3402,15 +5725,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.8,
     textTransform: "uppercase",
-    color: "#5B616E"
+    color: "#637083"
   },
   confidenceBadge: {
     fontSize: 11,
-    color: "#1D3557",
-    backgroundColor: "rgba(29,53,87,0.08)",
+    color: "#075E66",
+    backgroundColor: "rgba(7,94,102,0.08)",
     borderWidth: 1,
-    borderColor: "rgba(29,53,87,0.1)",
-    borderRadius: 999,
+    borderColor: "rgba(7,94,102,0.1)",
+    borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 5,
     overflow: "hidden"
@@ -3419,17 +5742,17 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 34,
     fontWeight: "700",
-    color: "#111111"
+    color: "#101820"
   },
   budgetInput: {
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 16,
-    color: "#111111"
+    color: "#101820"
   },
   multilineInput: {
     minHeight: 82,
@@ -3438,7 +5761,7 @@ const styles = StyleSheet.create({
   aiHelper: {
     fontSize: 13,
     lineHeight: 20,
-    color: "#5B616E"
+    color: "#637083"
   },
   choiceGrid: {
     flexDirection: "row",
@@ -3448,7 +5771,7 @@ const styles = StyleSheet.create({
   choiceCard: {
     width: "48%",
     minHeight: 74,
-    borderRadius: 18,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -3458,25 +5781,25 @@ const styles = StyleSheet.create({
     gap: 4
   },
   choiceCardSelected: {
-    borderColor: "rgba(29,53,87,0.28)",
-    backgroundColor: "rgba(29,53,87,0.06)"
+    borderColor: "rgba(7,94,102,0.28)",
+    backgroundColor: "rgba(7,94,102,0.06)"
   },
   choiceTitle: {
     fontSize: 15,
     lineHeight: 21,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   choiceTitleSelected: {
-    color: "#1D3557"
+    color: "#075E66"
   },
   choiceCaption: {
     fontSize: 13,
     lineHeight: 19,
-    color: "#5B616E"
+    color: "#637083"
   },
   toggleChip: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     paddingHorizontal: 14,
@@ -3484,15 +5807,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF"
   },
   toggleChipSelected: {
-    borderColor: "rgba(29,53,87,0.28)",
-    backgroundColor: "rgba(29,53,87,0.06)"
+    borderColor: "rgba(7,94,102,0.28)",
+    backgroundColor: "rgba(7,94,102,0.06)"
   },
   toggleChipText: {
     fontSize: 14,
-    color: "#5B616E"
+    color: "#637083"
   },
   toggleChipTextSelected: {
-    color: "#1D3557",
+    color: "#075E66",
     fontWeight: "600"
   },
   actionRow: {
@@ -3506,10 +5829,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     alignItems: "center",
     padding: 12,
-    borderRadius: 20,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.72)",
-    backgroundColor: "rgba(247,246,243,0.74)"
+    backgroundColor: "rgba(245,247,250,0.74)"
   },
   stageInlineActions: {
     flexDirection: "row",
@@ -3518,8 +5841,8 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   primaryButton: {
-    borderRadius: 999,
-    backgroundColor: "#1D3557",
+    borderRadius: 8,
+    backgroundColor: "#075E66",
     paddingHorizontal: 16,
     paddingVertical: 13
   },
@@ -3532,7 +5855,7 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   secondaryButton: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -3540,7 +5863,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13
   },
   secondaryButtonText: {
-    color: "#111111",
+    color: "#101820",
     fontSize: 14,
     fontWeight: "500"
   },
@@ -3550,21 +5873,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 2,
     textTransform: "uppercase",
-    color: "#5B616E"
+    color: "#637083"
   },
   roadmapList: {
     gap: 10
   },
   roadmapRow: {
     backgroundColor: "rgba(255,255,255,0.82)",
-    borderRadius: 18,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     padding: 14,
     gap: 8
   },
   roadmapRowCurrent: {
-    borderColor: "rgba(29,53,87,0.22)",
+    borderColor: "rgba(7,94,102,0.22)",
     backgroundColor: "#FFFFFF"
   },
   roadmapRowCompleted: {
@@ -3580,16 +5903,16 @@ const styles = StyleSheet.create({
   roadmapIndex: {
     fontSize: 12,
     letterSpacing: 1.4,
-    color: "#1D3557"
+    color: "#075E66"
   },
   roadmapTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   roadmapStatus: {
     fontSize: 13,
-    color: "#5B616E"
+    color: "#637083"
   },
   roadmapStatusQuiet: {
     color: "rgba(91,97,110,0.72)"
@@ -3599,7 +5922,7 @@ const styles = StyleSheet.create({
   },
   step: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 22,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     padding: 18,
@@ -3609,23 +5932,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 2,
     textTransform: "uppercase",
-    color: "#1D3557"
+    color: "#075E66"
   },
   stepTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   },
   stepGoal: {
     fontSize: 15,
     lineHeight: 24,
-    color: "#5B616E"
+    color: "#637083"
   },
   profileGrid: {
     gap: 10
   },
+  metricGrid: {
+    gap: 8
+  },
+  flexOne: {
+    flex: 1
+  },
   profileItem: {
-    borderRadius: 18,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -3637,12 +5966,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.8,
     textTransform: "uppercase",
-    color: "#5B616E"
+    color: "#637083"
   },
   profileValue: {
     fontSize: 17,
     lineHeight: 24,
     fontWeight: "600",
-    color: "#111111"
+    color: "#101820"
   }
 });

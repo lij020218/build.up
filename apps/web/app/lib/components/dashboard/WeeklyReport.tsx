@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { CalendarDays } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
+import { EmptyStateCard } from "./EmptyStateCard";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -31,7 +33,26 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
   const thisWeek = entries.filter((e) => e.date >= toIso(thisMonday) && e.date <= todayStr);
   const lastWeek = entries.filter((e) => e.date >= toIso(lastMonday) && e.date <= toIso(lastSunday));
 
-  if (thisWeek.length < 2 && lastWeek.length < 2) return null;
+  if (thisWeek.length < 2 && lastWeek.length < 2) {
+    const current = Math.max(thisWeek.length, lastWeek.length);
+    return (
+      <EmptyStateCard
+        ko={ko}
+        eyebrow={ko ? "주간 리포트" : "Weekly Report"}
+        title={ko ? "이번 주 기록이 쌓이면 보여드려요" : "Weekly summary opens after 2 days of logging"}
+        description={ko
+          ? "이번 주 vs 지난 주 매출·고객 비교, 최고/최저 매출일까지 한눈에 확인할 수 있어요."
+          : "Compare this week vs last, see peak and slow days at a glance."}
+        Icon={CalendarDays}
+        progress={{
+          current,
+          target: 2,
+          unitKo: "일",
+          unitEn: "days",
+        }}
+      />
+    );
+  }
 
   const thisTotal = thisWeek.reduce((s, e) => s + e.sales, 0);
   const lastTotal = lastWeek.reduce((s, e) => s + e.sales, 0);
@@ -46,8 +67,8 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
   const bestDay = thisWeek.length > 0 ? thisWeek.reduce((a, b) => (a.sales > b.sales ? a : b)) : null;
   const worstDay = thisWeek.length > 0 ? thisWeek.reduce((a, b) => (a.sales < b.sales ? a : b)) : null;
 
-  const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-  const weeklyCosts = (mc.ingredients + mc.labor + mc.rent + mc.utilities + mc.other) / 4.34;
+  const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number };
+  const weeklyCosts = ((mc.ingredients ?? 0) + (mc.labor ?? 0) + (mc.rent ?? 0) + (mc.utilities ?? 0) + (mc.sga ?? 0) + (mc.marketing ?? 0) + (mc.other ?? 0) + (mc.interest ?? 0)) / 4.34;
   const weeklyProfit = thisTotal - weeklyCosts;
 
   const dateRange = `${new Date(toIso(thisMonday) + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" })} — ${new Date(todayStr + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric" })}`;
@@ -56,7 +77,7 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
   const aiInsight = d.aiActions?.insight;
 
   return (
-    <section style={card}>
+    <section style={card} data-weekly-report>
       <button type="button" onClick={() => setExpanded(!expanded)} style={headerBtn}>
         <div>
           <div style={eyebrow}>{ko ? "주간 리포트" : "Weekly Report"}</div>

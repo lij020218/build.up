@@ -45,3 +45,29 @@ export function getOpenAiApiKey(): string | undefined {
   const key = getEnvVar("OPENAI_API_KEY");
   return key && key.length >= 10 ? key : undefined;
 }
+
+/** 네이버 DataLab·Search API — Client ID/Secret 쌍 */
+export function getNaverApiCreds(): { clientId: string; clientSecret: string } | undefined {
+  const clientId = getEnvVar("NAVER_CLIENT_ID");
+  const clientSecret = getEnvVar("NAVER_CLIENT_SECRET");
+  if (!clientId || !clientSecret || clientId.length < 5 || clientSecret.length < 5) return undefined;
+  return { clientId, clientSecret };
+}
+
+/** Tavily AI 검색 API */
+export function getTavilyApiKey(): string | undefined {
+  const key = getEnvVar("TAVILY_API_KEY");
+  return key && key.length >= 10 ? key : undefined;
+}
+
+/** Supabase service_role 키 — RLS 우회 (cron·서버 쓰기 전용) */
+export function getSupabaseServiceRoleKey(): string | undefined {
+  const key = getEnvVar("SUPABASE_SERVICE_ROLE_KEY");
+  return key && key.length >= 20 ? key : undefined;
+}
+
+/** Vercel cron 보호용 secret */
+export function getCronSecret(): string | undefined {
+  const secret = getEnvVar("CRON_SECRET");
+  return secret && secret.length >= 10 ? secret : undefined;
+}

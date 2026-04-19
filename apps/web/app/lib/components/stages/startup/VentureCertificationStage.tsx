@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 
 export function VentureCertificationStage() {
@@ -236,8 +237,9 @@ export function VentureCertificationStage() {
           ))}
         </div>
 
-        <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.04)", fontSize: "12px", color: "#7c3aed", lineHeight: 1.5, fontWeight: 500 }}>
-          {ko ? "💡 벤처인증을 완료하면 이후 단계에서 TIPS/창업패키지/바우처 등 지원사업 신청 시 가산점이 적용됩니다." : "💡 Completing venture certification gives you bonus points when applying for TIPS, packages, and vouchers in later stages."}
+        <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.04)", fontSize: "12px", color: "#7c3aed", lineHeight: 1.5, fontWeight: 500, display: "flex", alignItems: "flex-start", gap: "6px" }}>
+          <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
+          <span>{ko ? "벤처인증을 완료하면 이후 단계에서 TIPS/창업패키지/바우처 등 지원사업 신청 시 가산점이 적용됩니다." : "Completing venture certification gives you bonus points when applying for TIPS, packages, and vouchers in later stages."}</span>
         </div>
       </div>
       )}

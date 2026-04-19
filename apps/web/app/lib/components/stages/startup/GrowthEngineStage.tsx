@@ -183,7 +183,7 @@ export function GrowthEngineStage() {
                 width: "100%", padding: "10px 14px", borderRadius: "10px",
                 border: "1px solid rgba(5,150,105,0.12)", background: "rgba(248,250,252,0.8)",
                 fontSize: "14px", outline: "none", color: "#0f172a",
-                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                fontFamily: "inherit",
               }}
               onFocus={(e) => { e.currentTarget.style.borderColor = "#059669"; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(5,150,105,0.12)"; }}

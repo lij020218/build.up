@@ -54,31 +54,32 @@ export function useLanguage() {
 const styles = StyleSheet.create({
   overlay: {
     position: "absolute",
-    top: 14,
+    top: 52,
     right: 18,
     zIndex: 1000
   },
   toggle: {
     flexDirection: "row",
-    gap: 6,
-    borderRadius: 999,
+    gap: 4,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(17,17,17,0.08)",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    padding: 6
+    borderColor: "rgba(15,23,42,0.08)",
+    backgroundColor: "rgba(255,255,255,0.76)",
+    padding: 4
   },
   button: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 8
+    minHeight: 32,
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 7
   },
   buttonActive: {
-    backgroundColor: "#1D3557"
+    backgroundColor: "#075E66"
   },
   buttonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
-    color: "#111111"
+    color: "#4B5563"
   },
   buttonTextActive: {
     color: "#FFFFFF"

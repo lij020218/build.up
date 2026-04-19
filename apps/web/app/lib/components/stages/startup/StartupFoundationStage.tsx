@@ -150,7 +150,7 @@ export function StartupFoundationStage() {
             width: "100%", minHeight: "80px", padding: "12px 14px", borderRadius: "12px",
             border: "1px solid rgba(37,99,235,0.1)", background: "rgba(248,250,252,0.8)",
             fontSize: "14px", lineHeight: 1.6, resize: "vertical",
-            fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+            fontFamily: "inherit",
             outline: "none", color: "#0f172a",
           }}
           onFocus={(e) => { e.currentTarget.style.borderColor = "#2563eb"; }}

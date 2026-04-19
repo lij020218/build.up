@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 
 export function CompanySetupStage() {
@@ -198,7 +199,10 @@ export function CompanySetupStage() {
 
           {/* 스톡옵션 팁 */}
           <div style={{ marginTop: "14px", padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.03)", border: "1px solid rgba(5,150,105,0.08)" }}>
-            <div style={{ fontSize: "12px", fontWeight: 640, color: "#059669", marginBottom: "4px" }}>{ko ? "💡 스톡옵션 · 캡테이블" : "💡 Stock Options & Cap Table"}</div>
+            <div style={{ fontSize: "12px", fontWeight: 640, color: "#059669", marginBottom: "4px", display: "flex", alignItems: "center", gap: "5px" }}>
+              <Lightbulb size={12} strokeWidth={1.5} color="#f59e0b" />
+              {ko ? "스톡옵션 · 캡테이블" : "Stock Options & Cap Table"}
+            </div>
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
               {ko
                 ? "벤처기업 인증 후 스톡옵션 부여 시 직원 1인당 연 5,000만원까지 비과세. 4년 베스팅/1년 클리프가 업계 표준. ZUZU로 캡테이블 관리 권장."
@@ -390,7 +394,10 @@ export function CompanySetupStage() {
 
         {/* 팁 */}
         <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.03)", border: "1px solid rgba(5,150,105,0.06)" }}>
-          <div style={{ fontSize: "12px", fontWeight: 640, color: "#059669", marginBottom: "4px" }}>{ko ? "💡 팁" : "💡 Tip"}</div>
+          <div style={{ fontSize: "12px", fontWeight: 640, color: "#059669", marginBottom: "4px", display: "flex", alignItems: "center", gap: "5px" }}>
+            <Lightbulb size={12} strokeWidth={1.5} color="#f59e0b" />
+            {ko ? "팁" : "Tip"}
+          </div>
           <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
             {isCorp
               ? (ko ? "법인 설립 초기에는 자비스(Jobis)나 삼쩜삼으로 기장 비용을 줄일 수 있습니다. R&D 세액공제(최대 25%)를 활용하면 법인세를 크게 절감할 수 있어요." : "Use Jobis or 3o3 to reduce bookkeeping costs. R&D tax credits (up to 25%) significantly reduce corporate tax.")

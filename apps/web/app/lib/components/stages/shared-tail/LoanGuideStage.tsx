@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb, FileText } from "lucide-react";
 import {
   getMatchedPrograms,
   getProgramCategoryColor,
@@ -381,8 +382,9 @@ export function LoanGuideStage() {
                 return (
                 <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "6px 10px", borderRadius: "8px", background: isTip ? `${path.color}06` : "transparent" }}>
                   {!isTip && <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: path.color, flexShrink: 0, marginTop: "7px" }} />}
+                  {isTip && <Lightbulb size={12} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "3px" }} />}
                   <span style={{ fontSize: isTip ? "12px" : "13px", fontWeight: isTip ? 600 : 500, color: isTip ? path.color : "rgba(15,23,42,0.65)", lineHeight: 1.5 }}>
-                    {isTip ? `💡 ${step.replace("tip: ", "")}` : step}
+                    {isTip ? step.replace("tip: ", "") : step}
                   </span>
                 </div>
                 );
@@ -407,7 +409,10 @@ export function LoanGuideStage() {
       {pg === 2 && (<>
       {/* ── 사업계획서 팁 ── */}
       <div style={{ marginBottom: "14px", borderRadius: "16px", border: "1px solid rgba(217,119,6,0.08)", background: "rgba(217,119,6,0.02)", padding: "16px 20px" }}>
-        <div style={{ fontSize: "13px", fontWeight: 650, color: "#d97706", marginBottom: "6px" }}>{ko ? "💡 자금 조달 성공률을 높이는 핵심 팁" : "💡 Key Tips for Funding Success"}</div>
+        <div style={{ fontSize: "13px", fontWeight: 650, color: "#d97706", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px" }}>
+          <Lightbulb size={13} strokeWidth={1.5} />
+          {ko ? "자금 조달 성공률을 높이는 핵심 팁" : "Key Tips for Funding Success"}
+        </div>
         <div style={{ display: "grid", gap: "4px" }}>
           {(ko ? [
             "사업계획서의 \"자금 사용 계획\"이 가장 중요합니다 — \"운전자금\"이 아닌 항목별 구체 금액을 적으세요",
@@ -559,8 +564,8 @@ export function LoanGuideStage() {
       }}>
         <div style={{ padding: "20px 22px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, var(--primary), rgba(117,163,255,0.9))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "16px" }}>
-              📄
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, var(--primary), rgba(117,163,255,0.9))", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+              <FileText size={18} strokeWidth={1.5} />
             </div>
             <div>
               <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em" }}>

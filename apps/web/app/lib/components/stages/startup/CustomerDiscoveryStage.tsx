@@ -335,7 +335,7 @@ export function CustomerDiscoveryStage() {
                 width: "100%", minHeight: "120px", padding: "12px 14px", borderRadius: "12px",
                 border: "1px solid rgba(124,58,237,0.12)", background: "rgba(255,255,255,0.9)",
                 fontSize: "13px", lineHeight: 1.6, resize: "vertical", outline: "none",
-                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                fontFamily: "inherit",
               }}
               onFocus={e => { e.currentTarget.style.borderColor = "#7c3aed"; }}
               onBlur={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.12)"; }}

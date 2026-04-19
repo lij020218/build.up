@@ -11,12 +11,29 @@ export type DailyEntry = {
 };
 
 export type MonthlyCosts = {
-  ingredients: number;
-  labor: number;
-  rent: number;
-  utilities: number;
-  other: number;
+  ingredients: number;    // 매출원가 (업종별: 재료비/매입비/서버비)
+  labor: number;          // 인건비 (급여·4대보험)
+  rent: number;           // 임대료 (월세·관리비)
+  utilities: number;      // 공과금 (전기·수도·가스)
+  sga: number;            // 운영비 (배달수수료·카드수수료 등)
+  marketing: number;      // 마케팅·광고비
+  other: number;          // 기타 비용
+  interest: number;       // 대출이자 (영업외비용)
 };
+
+/** 하위 호환: 기존 5칸(sga/marketing/interest 없음)을 8칸으로 정규화 */
+export function normalizeCosts(raw: Partial<MonthlyCosts>): MonthlyCosts {
+  return {
+    ingredients: raw.ingredients ?? 0,
+    labor: raw.labor ?? 0,
+    rent: raw.rent ?? 0,
+    utilities: raw.utilities ?? 0,
+    sga: raw.sga ?? 0,
+    marketing: raw.marketing ?? 0,
+    other: raw.other ?? 0,
+    interest: raw.interest ?? 0,
+  };
+}
 
 export type DeliveryPlatformSales = {
   platformName: string;
@@ -33,9 +50,11 @@ export type MonthlyPnL = {
   costBreakdown: MonthlyCosts;
   grossProfit: number;     // 매출 - 재료비
   grossMargin: number;     // % (0~100)
-  operatingProfit: number; // 매출 - 전체 비용
+  operatingProfit: number; // 매출 - 영업비용 (이자 제외)
   operatingMargin: number; // % (0~100)
-  netCashFlow: number;     // 영업이익 (= operatingProfit, 단순 모델)
+  interestExpense: number; // 대출이자 (영업외비용)
+  netIncome: number;       // 순이익 = 영업이익 - 이자
+  netCashFlow: number;     // = netIncome (단순 모델)
 };
 
 /** 경영 건강 지표 */
@@ -99,14 +118,10 @@ export function calculateMonthlyPnL(
     : 0;
   const totalRevenue = offlineRevenue + deliveryRevenue;
 
-  const totalCosts =
-    monthlyCosts.ingredients +
-    monthlyCosts.labor +
-    monthlyCosts.rent +
-    monthlyCosts.utilities +
-    monthlyCosts.other;
+  const c = normalizeCosts(monthlyCosts);
+  const totalCosts = c.ingredients + c.labor + c.rent + c.utilities + c.sga + c.marketing + c.other;
 
-  const grossProfit = totalRevenue - monthlyCosts.ingredients;
+  const grossProfit = totalRevenue - c.ingredients;
   const grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
   const operatingProfit = totalRevenue - totalCosts;
   const operatingMargin = totalRevenue > 0 ? (operatingProfit / totalRevenue) * 100 : 0;
@@ -120,12 +135,14 @@ export function calculateMonthlyPnL(
     offlineRevenue,
     deliveryRevenue,
     totalCosts,
-    costBreakdown: monthlyCosts,
+    costBreakdown: c,
     grossProfit,
     grossMargin: Math.round(grossMargin * 10) / 10,
     operatingProfit,
     operatingMargin: Math.round(operatingMargin * 10) / 10,
-    netCashFlow: operatingProfit,
+    interestExpense: c.interest,
+    netIncome: operatingProfit - c.interest,
+    netCashFlow: operatingProfit - c.interest,
   };
 }
 
@@ -162,24 +179,25 @@ export function calculateHealthMetrics(
     else if (salesTrendPercent < -5) salesTrend = "declining";
   }
 
-  // 비용 지표
+  // 비용 지표 (normalized)
+  const nc = normalizeCosts(monthlyCosts);
   const costToRevenueRatio = pnl.totalRevenue > 0
     ? (pnl.totalCosts / pnl.totalRevenue) * 100
     : 100;
   const laborCostRatio = pnl.totalRevenue > 0
-    ? (monthlyCosts.labor / pnl.totalRevenue) * 100
+    ? (nc.labor / pnl.totalRevenue) * 100
     : 0;
   const rentCostRatio = pnl.totalRevenue > 0
-    ? (monthlyCosts.rent / pnl.totalRevenue) * 100
+    ? (nc.rent / pnl.totalRevenue) * 100
     : 0;
   const primeCostRatio = pnl.totalRevenue > 0
-    ? ((monthlyCosts.ingredients + monthlyCosts.labor) / pnl.totalRevenue) * 100
+    ? ((nc.ingredients + nc.labor) / pnl.totalRevenue) * 100
     : 0;
 
   // 손익분기 일매출
-  const dailyFixedCosts = (monthlyCosts.rent + monthlyCosts.labor + monthlyCosts.utilities + monthlyCosts.other) / 26;
+  const dailyFixedCosts = (nc.rent + nc.labor + nc.utilities + nc.sga + nc.marketing + nc.other) / 26;
   const cogsRate = pnl.totalRevenue > 0
-    ? monthlyCosts.ingredients / pnl.totalRevenue
+    ? nc.ingredients / pnl.totalRevenue
     : 0.33;
   const breakEvenDailySales = cogsRate < 1
     ? Math.round(dailyFixedCosts / (1 - cogsRate))

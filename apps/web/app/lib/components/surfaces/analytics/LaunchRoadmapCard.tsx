@@ -1,7 +1,8 @@
-// @ts-nocheck
 "use client";
 
 import React from "react";
+import { TrendingUp, Scissors, AlertOctagon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { hydrateSavedFinanceSnapshot } from "../../../helpers";
@@ -14,7 +15,6 @@ import {
 
 export function LaunchRoadmapCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
   const {
     language,
     dailyEntries,
@@ -38,7 +38,7 @@ export function LaunchRoadmapCard() {
     roadmap,
     pathTotalStages,
     selectedBudget,
-  } = _d;
+  } = d;
 
   const fmt = (n: number) =>
     n >= 10000
@@ -141,7 +141,7 @@ export function LaunchRoadmapCard() {
       {false && (() => {
         const launchDateStr = typeof window !== "undefined" ? localStorage.getItem("businessLaunchedDate") : null;
         if (!launchDateStr) return null;
-        const launchDate = new Date(launchDateStr);
+        const launchDate = new Date(launchDateStr!);
         const today = new Date();
         const daysSinceLaunch = Math.floor((today.getTime() - launchDate.getTime()) / 86400000);
         if (daysSinceLaunch < 0) return null;
@@ -242,11 +242,11 @@ export function LaunchRoadmapCard() {
 
             {/* 위기 대응 가이드 (문제 감지 시) */}
             {overallHealth !== "good" && totalDays > 0 && (() => {
-              type CrisisAction = { icon: string; title: string; actions: string[] };
+              type CrisisAction = { Icon: LucideIcon; iconColor: string; title: string; actions: string[] };
               const crisisGuides: CrisisAction[] = [];
               if (bepAchievement < 70) {
                 crisisGuides.push({
-                  icon: "📈", title: ko ? "매출 증가 전략" : "Revenue Growth",
+                  Icon: TrendingUp, iconColor: "#059669", title: ko ? "매출 증가 전략" : "Revenue Growth",
                   actions: ko
                     ? ["네이버 플레이스 리뷰 관리 — 별점 4.5 이상 유지가 신규 유입 핵심", "배달앱 상위노출 광고 (첫 주 집중)", "오프닝 프로모션 연장 또는 재이벤트", "주변 오피스/주거 타겟 전단지 + 쿠폰"]
                     : ["Maintain 4.5+ Naver Place rating", "Delivery app top-exposure ads (focus first week)", "Extend/repeat opening promotions", "Flyers + coupons targeting nearby offices/residents"]
@@ -254,7 +254,7 @@ export function LaunchRoadmapCard() {
               }
               if (primeRate > 65) {
                 crisisGuides.push({
-                  icon: "✂️", title: ko ? "비용 절감 전략" : "Cost Reduction",
+                  Icon: Scissors, iconColor: "#0891b2", title: ko ? "비용 절감 전략" : "Cost Reduction",
                   actions: ko
                     ? ["공급업체 2곳 이상 비교 견적 받기", "저마진 메뉴 제거 또는 가격 조정", "피크/비피크 시간대 인력 재배치", "식재료 로스 줄이기 — 일별 사용량 기록 시작"]
                     : ["Get quotes from 2+ suppliers", "Remove low-margin items or adjust pricing", "Redistribute staff between peak/off-peak", "Reduce food waste — start daily usage tracking"]
@@ -262,7 +262,7 @@ export function LaunchRoadmapCard() {
               }
               if (runway < 3) {
                 crisisGuides.push({
-                  icon: "🚨", title: ko ? "긴급 자금 확보" : "Emergency Funding",
+                  Icon: AlertOctagon, iconColor: "#b91c1c", title: ko ? "긴급 자금 확보" : "Emergency Funding",
                   actions: ko
                     ? ["소상공인 긴급경영안정자금 신청 (소진공 1357)", "불필요한 고정비 즉시 해지 (미사용 구독, 과잉 보험)", "매출 집중 — 배달 전용 메뉴 추가로 매출원 다변화", "세무사 상담 — 비용 처리 최적화로 현금흐름 개선"]
                     : ["Apply for emergency SME stabilization fund (SEMAS 1357)", "Cancel unnecessary fixed costs (unused subscriptions, excess insurance)", "Diversify revenue — add delivery-only menu", "Tax advisor — optimize expense treatment for cash flow"]
@@ -274,7 +274,7 @@ export function LaunchRoadmapCard() {
                   {crisisGuides.map((guide, gi) => (
                     <div key={gi} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", border: "1px solid var(--border)" }}>
                       <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span>{guide.icon}</span> {guide.title}
+                        <guide.Icon size={14} strokeWidth={1.5} color={guide.iconColor} /> {guide.title}
                       </div>
                       {guide.actions.map((action, ai) => (
                         <div key={ai} style={{ fontSize: "12px", lineHeight: 1.5, color: "var(--muted)", display: "flex", gap: "6px", marginBottom: "3px" }}>
@@ -329,7 +329,7 @@ export function LaunchRoadmapCard() {
               style={{
                 width: "100%", border: "none", background: "transparent", outline: "none",
                 fontSize: "15px", fontWeight: 640, color: "#0f172a", padding: 0,
-                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                fontFamily: "inherit",
               }}
             />
           </div>
@@ -352,7 +352,7 @@ export function LaunchRoadmapCard() {
                 style={{
                   width: "80px", border: "none", background: "transparent", outline: "none",
                   fontSize: "15px", fontWeight: 640, color: "#0f172a", padding: 0,
-                  fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                  fontFamily: "inherit",
                 }}
               />
               <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)" }}>{ko ? "만원" : "만₩"}</span>
@@ -374,7 +374,7 @@ export function LaunchRoadmapCard() {
               style={{
                 width: "100%", border: "none", background: "transparent", outline: "none",
                 fontSize: "14px", fontWeight: 600, color: "#0f172a", padding: 0,
-                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                fontFamily: "inherit",
               }}
             />
           </div>
@@ -395,7 +395,7 @@ export function LaunchRoadmapCard() {
               style={{
                 width: "100%", border: "none", background: "transparent", outline: "none",
                 fontSize: "14px", fontWeight: 600, color: "#0f172a", padding: 0,
-                fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+                fontFamily: "inherit",
               }}
             />
           </div>

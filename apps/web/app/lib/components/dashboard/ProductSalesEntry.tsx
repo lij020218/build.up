@@ -261,7 +261,7 @@ export function ProductSalesEntry({
                   <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>
                     {ko ? "합계" : "Total"}
                   </div>
-                  <div style={{ fontSize: "18px", fontWeight: 750, color: totalFromProducts > 0 ? "#0f172a" : "rgba(15,23,42,0.25)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", marginTop: "2px" }}>
+                  <div style={{ fontSize: "18px", fontWeight: 700, color: totalFromProducts > 0 ? "#0f172a" : "rgba(15,23,42,0.25)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", marginTop: "2px" }}>
                     {totalFromProducts > 0 ? fmt(totalFromProducts) : "—"}
                   </div>
                 </div>

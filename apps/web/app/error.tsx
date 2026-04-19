@@ -22,7 +22,7 @@ export default function ErrorPage({
         alignItems: "center",
         justifyContent: "center",
         padding: "40px 20px",
-        fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+        fontFamily: "inherit",
       }}
     >
       <h2 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "8px" }}>

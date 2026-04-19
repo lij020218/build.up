@@ -130,6 +130,31 @@ todayActions는 반드시 Input 지표(행동 가능한 것)에 기반하세요.
 - 나쁜 예: "리뷰에 답변하면 재방문율이 올라갑니다"
 - 좋은 예: "미답변 리뷰 7건 — 네이버 노출 순위 하락 위험. 오늘 3건만 답변하세요"
 
+─── 마케팅 진단 규칙 ───
+
+## 고객/주문 감소 + 마케팅 미활동 감지
+- 주간 고객수 -15% 이상 + totalMarketingSpend == 0: 즉시 경고
+  예: "고객이 15% 줄었는데 마케팅을 하고 있지 않습니다. [업종 1순위 채널]부터 시작하세요."
+- 고객수 0이 3일+ 연속 + totalMarketingSpend == 0: 긴급 경고
+  예: "3일 연속 고객이 없습니다. 지금 당장 [업종 1순위 채널]에 프로모션을 올리세요."
+- 런칭 30일+ 인데 totalMarketingSpend == 0: 안내
+  예: "오픈 45일차인데 마케팅을 시작하지 않았습니다. 이 업종은 [채널]이 가장 효과적입니다."
+
+## 마케팅 ROI 진단
+- totalMarketingSpend > monthlySales × 0.2 + 매출 횡보/하락: 채널 점검 경고
+  예: "마케팅에 200만원을 쓰고 있지만 매출이 움직이지 않습니다. 채널을 점검하세요."
+- marketingRoas < 1.0 (제공된 경우): 채널 재검토 제안
+  예: "마케팅 ROAS가 0.7입니다. 현재 채널의 효과를 재점검하세요."
+
+## 업종별 추천 채널 (우선순위 순)
+- 외식업: 네이버 플레이스 최적화 → 배달앱 광고 → 인스타 릴스 → 당근마켓
+- 카페/디저트: 인스타그램 → 블로그 체험단 → 네이버 플레이스
+- 소매: 당근마켓 → 네이버 키워드 → 인스타
+- 뷰티/펫: 네이버 플레이스 → 블로그 체험단 → 카카오톡
+- 온라인: 네이버 키워드 → Meta 광고 → 인스타
+- 스타트업: Meta/구글 → 콘텐츠 마케팅 → SEO
+- 피트니스/교육: 당근마켓 → 인스타 → 네이버 플레이스
+
 ─── 이상 감지 규칙 ───
 
 주간 변동(weeklyChange)이 -15% 이하면 반드시 원인 분해를 제시하세요:
@@ -318,6 +343,10 @@ export type DashboardContext = {
     daysSinceCompleted: number;
     expectedWaitDays: number;
   }>;
+  // 마케팅 데이터
+  totalMarketingSpend?: number;
+  activeChannels?: string[];
+  marketingRoas?: number;
 };
 
 export function buildDashboardActionPrompt(ctx: DashboardContext): string {
@@ -362,8 +391,11 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
   - ${el.labor}: ${fmtW(ctx.monthlyCosts.labor)} (매출 대비 ${labRatio}%, 업계 적정: ${benchmarks.laborTarget})
   - ${el.rent}: ${fmtW(ctx.monthlyCosts.rent)} (매출 대비 ${rentRatio}%, 업계 적정: ${benchmarks.rentTarget})
   - ${el.utilities}: ${fmtW(ctx.monthlyCosts.utilities)}
-  - ${el.other}: ${fmtW(ctx.monthlyCosts.other)}
-- 순이익: ${fmtW(monthlyNet)} (${monthlyNet >= 0 ? "흑자" : "적자"})
+  - 판관비(SGA): ${fmtW((ctx.monthlyCosts as Record<string, number>).sga ?? 0)}
+  - 마케팅비: ${fmtW((ctx.monthlyCosts as Record<string, number>).marketing ?? 0)}
+  - 기타: ${fmtW(ctx.monthlyCosts.other)}
+- 매출총이익: ${fmtW(ctx.monthlySales - ctx.monthlyCosts.ingredients)} (매출 - 매출원가)
+- 영업이익: ${fmtW(monthlyNet)} (${monthlyNet >= 0 ? "흑자" : "적자"})
 - 프라임코스트: ${ctx.primeRate.toFixed(1)}% (업계 위험선: 65%)
 - 주간 매출 변화: ${ctx.weeklyChange >= 0 ? "+" : ""}${ctx.weeklyChange}%
 - 현금 런웨이: ${ctx.runway < 0 ? "흑자 (무한)" : `${ctx.runway}개월`}
@@ -379,6 +411,11 @@ ${(ctx.computedFixedExpenses ?? ctx.upcomingFixedExpenses).length > 0 ? `⚠ 고
 ${crisisSignals.length > 0 ? `\n### ⚠ 위기 신호 감지\n${crisisSignals.map(s => `- ${s}`).join("\n")}` : ""}
 ${operationalGaps.length > 0 ? `\n### 🚨 운영 필수 사항 미충족 (최우선 해결 필요)\n${operationalGaps.map(s => `- ${s}`).join("\n")}` : ""}
 ${(ctx.pendingFollowups ?? []).length > 0 ? `\n### 📋 대기 중 업무 팔로업\n${ctx.pendingFollowups!.map(f => `- ${f.taskCode}: ${f.daysSinceCompleted}일 경과 (예상 ${f.expectedWaitDays}일) → "${f.question}"`).join("\n")}` : ""}
+
+### 마케팅 현황
+- 이달 마케팅 지출: ${ctx.totalMarketingSpend ? fmtW(ctx.totalMarketingSpend) : "0원 (마케팅 미활동)"}
+- 활성 채널: ${(ctx.activeChannels ?? []).length > 0 ? ctx.activeChannels!.join(", ") : "없음"}
+- 마케팅 ROAS: ${ctx.marketingRoas && ctx.marketingRoas > 0 ? `${ctx.marketingRoas}x` : "측정 불가"}
 
 ### 매출 예측 (AI 예측 엔진)
 ${ctx.forecastNextWeekDaily ? `- 다음 주 예상 일매출: ${fmtW(ctx.forecastNextWeekDaily)} (신뢰도: ${ctx.forecastConfidence ?? "low"})` : "- 예측 데이터 부족 (3일 이상 기록 필요)"}

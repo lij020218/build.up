@@ -13,7 +13,7 @@ export type UserStoreData = {
   businessLaunchedDate: string | null;
   cpaDecision: string | null;
   taxSettings: { vatType: string; hasEmployees: boolean };
-  monthlyCosts: { ingredients: number; labor: number; rent: number; utilities: number; other: number };
+  monthlyCosts: { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number };
   dailyEntries: unknown[];
   inventoryItems: unknown[];
   employees: unknown[];
@@ -45,6 +45,13 @@ export type UserStoreData = {
   savedBusinessPlan: unknown | null;
   savedInterviewScript: unknown | null;
   savedInterviewAnalysis: unknown | null;
+  // 구독 관리
+  usesSubscriptions: boolean;
+  subscriptionPlans: unknown[];
+  subscribers: unknown[];
+  // 마케팅
+  marketingCampaigns: unknown[];
+  marketingMonthlyBudget: number;
 };
 
 // camelCase → snake_case mapping for DB columns
@@ -85,6 +92,11 @@ const FIELD_TO_COLUMN: Record<keyof UserStoreData, string> = {
   savedBusinessPlan: "saved_business_plan",
   savedInterviewScript: "saved_interview_script",
   savedInterviewAnalysis: "saved_interview_analysis",
+  usesSubscriptions: "uses_subscriptions",
+  subscriptionPlans: "subscription_plans",
+  subscribers: "subscribers",
+  marketingCampaigns: "marketing_campaigns",
+  marketingMonthlyBudget: "marketing_monthly_budget",
 };
 
 // snake_case → camelCase reverse mapping

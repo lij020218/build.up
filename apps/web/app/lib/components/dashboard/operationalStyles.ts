@@ -209,7 +209,7 @@ export const activityHeader: React.CSSProperties = {
 
 export const activityTitle: React.CSSProperties = {
   fontSize: "24px",
-  fontWeight: 740,
+  fontWeight: 700,
   letterSpacing: "-0.04em",
   color: "#0f172a",
 };
@@ -236,7 +236,7 @@ export const activityMiniLabel: React.CSSProperties = {
 
 export const activityMiniValue: React.CSSProperties = {
   fontSize: "22px",
-  fontWeight: 750,
+  fontWeight: 700,
   letterSpacing: "-0.05em",
   color: "#0f172a",
   lineHeight: 1,

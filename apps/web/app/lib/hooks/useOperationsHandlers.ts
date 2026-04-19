@@ -56,7 +56,8 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     setDailySalesInput, setDailyCustomersInput,
     setMonthlyCosts,
     costHistory, setCostHistory,
-    costIngredientsText, costLaborText, costRentText, costUtilitiesText, costOtherText,
+    costCogsText, costIngredientsText, costLaborText, costRentText, costUtilitiesText, costOtherText,
+    costSgaText, costMarketingText, costInterestText,
   } = useFinanceStore();
 
   // ─────────────────────────────────────────────
@@ -86,11 +87,14 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const handleSaveMonthlyCosts = () => {
     const costs = {
-      ingredients: (Number(costIngredientsText.replace(/[^0-9]/g, "")) || 0) * 10000,
+      ingredients: (Number((costCogsText ?? costIngredientsText ?? "").replace(/[^0-9]/g, "")) || 0) * 10000,
       labor: (Number(costLaborText.replace(/[^0-9]/g, "")) || 0) * 10000,
       rent: (Number(costRentText.replace(/[^0-9]/g, "")) || 0) * 10000,
       utilities: (Number(costUtilitiesText.replace(/[^0-9]/g, "")) || 0) * 10000,
-      other: (Number(costOtherText.replace(/[^0-9]/g, "")) || 0) * 10000
+      sga: (Number((costSgaText ?? "").replace(/[^0-9]/g, "")) || 0) * 10000,
+      marketing: (Number((costMarketingText ?? "").replace(/[^0-9]/g, "")) || 0) * 10000,
+      other: (Number(costOtherText.replace(/[^0-9]/g, "")) || 0) * 10000,
+      interest: (Number((costInterestText ?? "").replace(/[^0-9]/g, "")) || 0) * 10000
     };
     setMonthlyCosts(costs);
     // Archive to costHistory (월별 스냅샷, 최대 12개월)

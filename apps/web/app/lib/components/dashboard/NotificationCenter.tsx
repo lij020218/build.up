@@ -139,13 +139,13 @@ export function NotificationCenter({ d, ko }: Props) {
     }
 
     /* Cost anomaly */
-    const costHistory = d.costHistory as Array<{ month: string; ingredients: number; labor: number; rent: number; utilities: number; other: number }>;
+    const costHistory = d.costHistory as Array<{ month: string; ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }>;
     if (costHistory.length >= 2) {
       const sorted = [...costHistory].sort((a, b) => b.month.localeCompare(a.month));
       const cur = sorted[0];
       const prev = sorted[1];
-      const curTotal = cur.ingredients + cur.labor + cur.rent + cur.utilities + cur.other;
-      const prevTotal = prev.ingredients + prev.labor + prev.rent + prev.utilities + prev.other;
+      const curTotal = (cur.ingredients ?? 0) + (cur.labor ?? 0) + (cur.rent ?? 0) + (cur.utilities ?? 0) + (cur.sga ?? 0) + (cur.marketing ?? 0) + (cur.other ?? 0) + (cur.interest ?? 0);
+      const prevTotal = (prev.ingredients ?? 0) + (prev.labor ?? 0) + (prev.rent ?? 0) + (prev.utilities ?? 0) + (prev.sga ?? 0) + (prev.marketing ?? 0) + (prev.other ?? 0) + (prev.interest ?? 0);
       if (prevTotal > 0 && ((curTotal - prevTotal) / prevTotal) > 0.2) {
         items.push({
           id: "cost-spike",

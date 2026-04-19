@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -6,6 +5,7 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { VENDOR_URL_MAP } from "../../../constants";
 import { supabase } from "../../../../../lib/supabase";
+import type { InventoryItem, InvForm } from "../../../stores/operations-store";
 import {
   getFranchiseBrandById,
   getFranchiseSupplyInfo,
@@ -14,8 +14,6 @@ import {
 
 export function InventoryManagementCard() {
   const d = useDashboardCtx();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const _d = d as any;
   const {
     language,
     inventory,
@@ -32,7 +30,7 @@ export function InventoryManagementCard() {
     selectedFranchiseBrandId,
     vendorSelections,
     vendorCustomInputs,
-  } = _d;
+  } = d;
 
   const [invShowAll, setInvShowAll] = useState(false);
 

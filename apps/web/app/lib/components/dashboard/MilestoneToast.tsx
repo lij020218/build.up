@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Target, Flame, Zap, Gem, TrendingUp, PartyPopper, Heart, Scissors, Map } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type Milestone = {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
+  Icon: LucideIcon;
+  iconColor: string;
 };
 
 type Props = {
@@ -44,7 +47,9 @@ export function MilestoneToast({ milestone, onDismiss }: Props) {
       }}
     >
       <div style={toast}>
-        <div style={iconCircle}>{milestone.icon}</div>
+        <div style={iconCircle}>
+          <milestone.Icon size={22} strokeWidth={1.5} color={milestone.iconColor} />
+        </div>
         <div>
           <div style={toastTitle}>{milestone.title}</div>
           <div style={toastSub}>{milestone.subtitle}</div>
@@ -74,59 +79,68 @@ export function checkMilestones(opts: {
       id: "first-entry",
       title: ko ? "첫 매출 기록!" : "First Sales Entry!",
       subtitle: ko ? "매일 기록하면 경영의 흐름이 보입니다" : "Daily logging reveals your business rhythm",
-      icon: "🎯",
+      Icon: Target,
+      iconColor: "#2563eb",
     },
     {
       id: "streak-7",
       title: ko ? "7일 연속 기록!" : "7-Day Streak!",
       subtitle: ko ? "주간 리포트가 해금되었습니다" : "Weekly report unlocked",
-      icon: "🔥",
+      Icon: Flame,
+      iconColor: "#ea580c",
     },
     {
       id: "streak-30",
       title: ko ? "30일 연속 기록!" : "30-Day Streak!",
       subtitle: ko ? "월간 트렌드 분석이 해금됩니다" : "Monthly trend analysis unlocked",
-      icon: "⚡",
+      Icon: Zap,
+      iconColor: "#eab308",
     },
     {
       id: "streak-90",
       title: ko ? "90일 연속 기록!" : "90-Day Streak!",
       subtitle: ko ? "AI 연간 경영 리포트가 해금됩니다" : "AI annual business report unlocked",
-      icon: "💎",
+      Icon: Gem,
+      iconColor: "#059669",
     },
     // ── 수익 성과 ──
     {
       id: "bep-reached",
       title: ko ? "손익분기 달성!" : "Break-Even Reached!",
       subtitle: ko ? "이번 달 매출이 비용을 넘었습니다" : "This month's revenue exceeded costs",
-      icon: "📈",
+      Icon: TrendingUp,
+      iconColor: "#7c3aed",
     },
     {
       id: "first-profit-month",
       title: ko ? "첫 흑자 달성!" : "First Profitable Month!",
       subtitle: ko ? "축하합니다! 수익 구조가 작동하고 있습니다" : "Congratulations! Your revenue structure is working",
-      icon: "🎉",
+      Icon: PartyPopper,
+      iconColor: "#db2777",
     },
     // ── 건강 점수 ──
     {
       id: "health-80",
       title: ko ? "건강한 가게!" : "Healthy Business!",
       subtitle: ko ? "건강점수 80점 이상 — 이 구조를 유지하세요" : "Health score above 80 — maintain this structure",
-      icon: "💚",
+      Icon: Heart,
+      iconColor: "#059669",
     },
     // ── 비용 효율 ──
     {
       id: "cost-efficient",
       title: ko ? "비용 효율 달성!" : "Cost Efficiency!",
       subtitle: ko ? "원가율이 업종 평균보다 낮습니다" : "Your cost ratio is below industry average",
-      icon: "✂️",
+      Icon: Scissors,
+      iconColor: "#0891b2",
     },
     // ── 로드맵 ──
     {
       id: "roadmap-complete",
       title: ko ? "로드맵 완주!" : "Roadmap Complete!",
       subtitle: ko ? "모든 준비를 마쳤습니다. 이제 운영에 집중하세요" : "All preparation done. Focus on operations now",
-      icon: "🏁",
+      Icon: Map,
+      iconColor: "#1d3557",
     },
   ];
 

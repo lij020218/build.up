@@ -1,8 +1,8 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
+import type { Employee } from "../../../stores/operations-store";
 
 /** Format number as Korean currency */
 const fmt = (n: number) =>
@@ -12,19 +12,18 @@ const fmt = (n: number) =>
 
 export function StaffLaborCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
   const {
     language, employees, monthlyCosts,
     empFormOpen, setEmpFormOpen, empEditId, setEmpEditId,
     empName, setEmpName, empWage, setEmpWage,
     empHours, setEmpHours, empInsured, setEmpInsured,
     handleEmpSave, handleEmpDelete, openEmpEdit,
-  } = _d;
+  } = d;
 
   const ko = language === "ko";
 
   // Labor calculation
-  const calcEmployee = (emp) => {
+  const calcEmployee = (emp: Employee) => {
     const weeklyAllowance = emp.weeklyHours >= 15
       ? (emp.weeklyHours / 5) * emp.hourlyWage
       : 0;

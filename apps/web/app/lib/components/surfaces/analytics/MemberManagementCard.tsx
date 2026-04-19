@@ -1,8 +1,8 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
+import type { Member } from "../../../stores/operations-store";
 
 /** Format number as Korean currency */
 const fmt = (n: number) =>
@@ -12,18 +12,17 @@ const fmt = (n: number) =>
 
 export function MemberManagementCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
   const {
     language, members, setMembers, industryCategoryId, businessCtx,
     memFormOpen, setMemFormOpen, memName, setMemName,
     memPlan, setMemPlan, memFee, setMemFee, memEnd, setMemEnd,
-  } = _d;
+  } = d;
 
   const ko = language === "ko";
 
   if (!businessCtx.isRecurringRevenue) return null;
 
-  const saveMembers = (list) => {
+  const saveMembers = (list: Member[]) => {
     setMembers(list);
     try { localStorage.setItem("members", JSON.stringify(list)); } catch { /* ignore */ }
   };

@@ -23,6 +23,8 @@ export function BudgetSetupStage() {
     selectedFranchiseBrandId,
     selectedBudget, setSelectedBudget,
     budgetInputText, setBudgetInputText,
+    initialOperatingCapital, setInitialOperatingCapital,
+    operatingCapitalInputText, setOperatingCapitalInputText,
     sliderBudgetValue,
     activeBudgetLabel,
     selectedOpenDate, setSelectedOpenDate,
@@ -327,6 +329,147 @@ export function BudgetSetupStage() {
           ))}
         </div>
       </div>
+
+      {/* ── 초기 운영자본금 (창업비용과 별도) ── */}
+      {(() => {
+        const ko = language === "ko";
+        const capitalWon = initialOperatingCapital ?? 0;
+        const capitalManwon = Math.round(capitalWon / 10000);
+        const sliderValue = initialOperatingCapital ?? 0;
+
+        // 권장 운영자본금 — 업종별 월 예상 비용의 3~6배
+        const monthlyCostEstimate: Record<string, number> = {
+          "food": 8_000_000,
+          "cafe-dessert": 6_000_000,
+          "retail": 5_000_000,
+          "beauty": 4_500_000,
+          "fitness": 7_000_000,
+          "education": 4_000_000,
+          "online-digital": 2_500_000,
+          "startup-tech": 10_000_000,
+        };
+        const estimatedMonthly = monthlyCostEstimate[industryCategoryId] ?? 5_000_000;
+        const recommendedMin = estimatedMonthly * 3;
+        const recommendedMax = estimatedMonthly * 6;
+        const ratio = estimatedMonthly > 0 ? capitalWon / estimatedMonthly : 0;
+        const ratioLabel = ratio >= 6
+          ? (ko ? "매우 여유 (6개월+)" : "Very safe (6+ months)")
+          : ratio >= 3
+            ? (ko ? "적정 (3~6개월)" : "Adequate (3-6 months)")
+            : ratio >= 1
+              ? (ko ? "부족 (3개월 미만)" : "Tight (<3 months)")
+              : capitalWon > 0
+                ? (ko ? "매우 부족 (1개월 미만)" : "Critical (<1 month)")
+                : (ko ? "아직 입력하지 않음" : "Not set yet");
+        const ratioColor = ratio >= 3 ? "#059669" : ratio >= 1 ? "#d97706" : capitalWon > 0 ? "#dc2626" : "rgba(15,23,42,0.35)";
+
+        const fmt = (won: number) => {
+          if (won >= 10000) return `${Math.round(won / 10000).toLocaleString()}만원`;
+          return `${won.toLocaleString()}원`;
+        };
+
+        return (
+          <div style={styles.budgetPanel}>
+            <div style={styles.budgetHeader}>
+              <div style={styles.budgetLabel}>
+                {ko ? "초기 운영자본금 (자본금과 별도)" : "Initial operating capital (separate)"}
+              </div>
+              <div style={styles.budgetValue}>
+                {capitalWon > 0 ? fmt(capitalWon) : (ko ? "미입력" : "Not set")}
+              </div>
+              <div style={styles.helper}>
+                {ko
+                  ? "오픈 직후 몇 달간 월세·인건비·공과금·재료비로 쓸 현금입니다. 매출이 적자를 덮기 전까지 버티는 연료예요."
+                  : "Cash for rent, wages, utilities, and materials during the first months before revenue covers costs."}
+              </div>
+              <div style={{
+                marginTop: "4px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 12px",
+                borderRadius: "12px",
+                background: `${ratioColor}12`,
+                border: `1px solid ${ratioColor}22`,
+              }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: ratioColor }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "12px", fontWeight: 660, color: ratioColor }}>{ratioLabel}</div>
+                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                    {ko
+                      ? `권장 범위: ${fmt(recommendedMin)} ~ ${fmt(recommendedMax)} (월 예상 비용의 3~6배)`
+                      : `Recommended: ${fmt(recommendedMin)} - ${fmt(recommendedMax)} (3-6 months of expenses)`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <input
+              type="range"
+              min={0}
+              max={200_000_000}
+              step={500_000}
+              value={sliderValue}
+              onChange={(event) => {
+                const nextValue = Number(event.target.value);
+                setInitialOperatingCapital(nextValue > 0 ? nextValue : undefined);
+                setOperatingCapitalInputText(String(Math.round(nextValue / 10000)));
+              }}
+              style={styles.budgetRange}
+            />
+            <div style={styles.budgetRangeMeta}>
+              <span>{ko ? "0원" : "0"}</span>
+              <span>{ko ? "2억원" : "200M KRW"}</span>
+            </div>
+
+            <input
+              type="text"
+              inputMode="numeric"
+              value={operatingCapitalInputText}
+              onChange={(event) => {
+                const digitsOnly = event.target.value.replace(/[^0-9]/g, "");
+                setOperatingCapitalInputText(digitsOnly);
+                if (!digitsOnly) {
+                  setInitialOperatingCapital(undefined);
+                  return;
+                }
+                const nextValue = Number(digitsOnly);
+                const nextCapital = nextValue * 10000;
+                setInitialOperatingCapital(Math.min(200_000_000, Math.max(0, nextCapital)));
+              }}
+              placeholder={ko ? "예: 1500 (만원 단위)" : "Example: 1500 (ten-thousand KRW)"}
+              style={styles.budgetInput}
+            />
+
+            <div style={styles.compactChoiceGrid}>
+              {[
+                { label: ko ? "3개월분" : "3 months", value: recommendedMin },
+                { label: ko ? "6개월분" : "6 months", value: recommendedMax },
+                { label: ko ? "1년분" : "1 year", value: estimatedMonthly * 12 },
+              ].map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  style={{
+                    ...styles.compactChoiceCard,
+                    ...(Math.abs(capitalWon - preset.value) < 500_000
+                      ? styles.compactChoiceCardSelected
+                      : {}),
+                  }}
+                  onClick={() => {
+                    setInitialOperatingCapital(preset.value);
+                    setOperatingCapitalInputText(String(Math.round(preset.value / 10000)));
+                  }}
+                >
+                  <div style={styles.compactChoiceTitle}>
+                    {preset.label} · {fmt(preset.value)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       <div style={styles.budgetPanel}>
         <div style={styles.budgetHeader}>

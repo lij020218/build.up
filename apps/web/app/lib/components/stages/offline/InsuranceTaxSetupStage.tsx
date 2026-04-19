@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { BarChart3, UserCog, Laptop } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 
 export function InsuranceTaxSetupStage() {
@@ -217,18 +219,18 @@ export function InsuranceTaxSetupStage() {
           </div>
         </div>
         <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
-          {(ko ? [
-            { icon: "📊", title: "수기 관리 (엑셀)", desc: "직원 1~2명 시 가능. 예스폼 급여대장 양식 활용. 4대보험·세금 직접 계산.", cost: "무료", fit: "1~2명" },
-            { icon: "🧑‍💼", title: "세무사 위임", desc: "월 수임료 10~30만원. 급여·4대보험·원천세 전부 대행. 가장 안전한 방법.", cost: "월 10~30만원", fit: "전 규모" },
-            { icon: "💻", title: "급여 SaaS (flex, 알밤 등)", desc: "자동 급여 계산+명세서 발송+4대보험 연동. 직원 수 기반 과금.", cost: "월 0~5만원", fit: "3명+" },
+          {((ko ? [
+            { Icon: BarChart3 as LucideIcon, title: "수기 관리 (엑셀)", desc: "직원 1~2명 시 가능. 예스폼 급여대장 양식 활용. 4대보험·세금 직접 계산.", cost: "무료", fit: "1~2명" },
+            { Icon: UserCog as LucideIcon, title: "세무사 위임", desc: "월 수임료 10~30만원. 급여·4대보험·원천세 전부 대행. 가장 안전한 방법.", cost: "월 10~30만원", fit: "전 규모" },
+            { Icon: Laptop as LucideIcon, title: "급여 SaaS (flex, 알밤 등)", desc: "자동 급여 계산+명세서 발송+4대보험 연동. 직원 수 기반 과금.", cost: "월 0~5만원", fit: "3명+" },
           ] : [
-            { icon: "📊", title: "Manual (Excel)", desc: "Viable for 1-2 employees. Use payroll templates. Calculate insurance/tax manually.", cost: "Free", fit: "1-2 staff" },
-            { icon: "🧑‍💼", title: "Tax Advisor", desc: "10-30K/mo. Full payroll, insurance, tax handling. Safest option.", cost: "₩10-30K/mo", fit: "All sizes" },
-            { icon: "💻", title: "Payroll SaaS (flex, Albam)", desc: "Auto payroll + payslip + insurance sync. Per-employee pricing.", cost: "₩0-50K/mo", fit: "3+ staff" },
-          ]).map((item, i) => (
+            { Icon: BarChart3 as LucideIcon, title: "Manual (Excel)", desc: "Viable for 1-2 employees. Use payroll templates. Calculate insurance/tax manually.", cost: "Free", fit: "1-2 staff" },
+            { Icon: UserCog as LucideIcon, title: "Tax Advisor", desc: "10-30K/mo. Full payroll, insurance, tax handling. Safest option.", cost: "₩10-30K/mo", fit: "All sizes" },
+            { Icon: Laptop as LucideIcon, title: "Payroll SaaS (flex, Albam)", desc: "Auto payroll + payslip + insurance sync. Per-employee pricing.", cost: "₩0-50K/mo", fit: "3+ staff" },
+          ])).map((item, i) => (
             <div key={i} style={{ padding: "14px 16px", borderRadius: "12px", border: "1px solid rgba(5,150,105,0.06)", background: "rgba(5,150,105,0.02)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                <span style={{ fontSize: "18px" }}>{item.icon}</span>
+                <item.Icon size={18} strokeWidth={1.5} color="#059669" />
                 <span style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a" }}>{item.title}</span>
               </div>
               <div style={{ fontSize: "12px", lineHeight: 1.55, color: "rgba(15,23,42,0.55)", marginBottom: "6px", paddingLeft: "26px" }}>{item.desc}</div>

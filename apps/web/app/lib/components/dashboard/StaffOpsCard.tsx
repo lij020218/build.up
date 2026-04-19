@@ -371,7 +371,7 @@ const sectionEyebrow: React.CSSProperties = {
 
 const opsTitle: React.CSSProperties = {
   fontSize: "22px",
-  fontWeight: 740,
+  fontWeight: 700,
   letterSpacing: "-0.04em",
   color: "#0f172a",
 };

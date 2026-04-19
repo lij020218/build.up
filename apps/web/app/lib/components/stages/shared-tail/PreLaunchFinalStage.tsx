@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 
 export function PreLaunchFinalStage() {
@@ -209,8 +210,9 @@ export function PreLaunchFinalStage() {
           ))}
         </div>
         {!isStartup && (
-          <div style={{ marginTop: "10px", padding: "10px 14px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", fontSize: "12px", color: "#dc2626", lineHeight: 1.5, fontWeight: 500 }}>
-            {ko ? "💡 1인 운영이라면 주문→제조→서빙 순서를 사전 리허설하세요. 첫 러시(rush)가 가장 힘듭니다." : "💡 If solo, rehearse the order→prep→serve sequence. The first rush is the hardest."}
+          <div style={{ marginTop: "10px", padding: "10px 14px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", fontSize: "12px", color: "#dc2626", lineHeight: 1.5, fontWeight: 500, display: "flex", alignItems: "flex-start", gap: "6px" }}>
+            <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
+            <span>{ko ? "1인 운영이라면 주문→제조→서빙 순서를 사전 리허설하세요. 첫 러시(rush)가 가장 힘듭니다." : "If solo, rehearse the order→prep→serve sequence. The first rush is the hardest."}</span>
           </div>
         )}
       </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { LineChart } from "lucide-react";
+import { EmptyStateCard } from "./EmptyStateCard";
 
 /**
  * 매출 예측 + "이대로 가면" 시나리오 카드.
@@ -10,7 +12,7 @@ import { useMemo } from "react";
  */
 
 type DailyEntry = { date: string; sales: number; customers: number };
-type MonthlyCosts = { ingredients: number; labor: number; rent: number; utilities: number; other: number };
+type MonthlyCosts = { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number };
 
 type Props = {
   ko: boolean;
@@ -19,6 +21,7 @@ type Props = {
   capitalLeft: number;
   breakEvenDailySales: number;
   industryCategoryId: string;
+  initialOperatingCapital?: number;
 };
 
 const fmt = (n: number) => {
@@ -27,7 +30,7 @@ const fmt = (n: number) => {
   return `${abs.toLocaleString()}원`;
 };
 
-export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, breakEvenDailySales, industryCategoryId }: Props) {
+export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, breakEvenDailySales, industryCategoryId, initialOperatingCapital }: Props) {
   const sorted = useMemo(() =>
     [...dailyEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
     [dailyEntries]
@@ -35,7 +38,25 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
 
   // 최근 14일 실적
   const recent14 = sorted.slice(-14);
-  if (recent14.length < 3) return null; // 데이터 부족 시 미표시
+  if (recent14.length < 3) {
+    return (
+      <EmptyStateCard
+        ko={ko}
+        eyebrow={ko ? "매출 예측" : "Sales Forecast"}
+        title={ko ? "3일치 데이터가 모이면 예측이 시작돼요" : "Forecast unlocks with 3 days of data"}
+        description={ko
+          ? "지난 2주 매출을 기반으로 다음 주 일매출과 3개월 현금 시나리오를 그립니다."
+          : "We'll chart next week's daily sales and a 3-month cash scenario from your recent 14 days."}
+        Icon={LineChart}
+        progress={{
+          current: recent14.length,
+          target: 3,
+          unitKo: "일",
+          unitEn: "days",
+        }}
+      />
+    );
+  }
 
   // 예측: 가중 이동평균
   const last7 = sorted.slice(-7);
@@ -67,7 +88,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
   const maxSales = Math.max(...allPoints.map(p => p.sales + confidenceBand), breakEvenDailySales * 1.2, 1);
 
   // 3개월 현금 예측
-  const totalMonthlyCosts = monthlyCosts.ingredients + monthlyCosts.labor + monthlyCosts.rent + monthlyCosts.utilities + monthlyCosts.other;
+  const totalMonthlyCosts = (monthlyCosts.ingredients ?? 0) + (monthlyCosts.labor ?? 0) + (monthlyCosts.rent ?? 0) + (monthlyCosts.utilities ?? 0) + (monthlyCosts.sga ?? 0) + (monthlyCosts.marketing ?? 0) + (monthlyCosts.other ?? 0) + (monthlyCosts.interest ?? 0);
   const projectedMonthlySales = avg7 * 26;
   const monthlyNet = projectedMonthlySales - totalMonthlyCosts;
   const months3Cash = capitalLeft + monthlyNet * 3;
@@ -228,7 +249,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
             <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
               {ko ? "월 순이익 예상" : "Monthly net"}
             </div>
-            <div style={{ fontSize: "18px", fontWeight: 740, letterSpacing: "-0.03em", color: monthlyNet >= 0 ? "#059669" : "#dc2626" }}>
+            <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em", color: monthlyNet >= 0 ? "#059669" : "#dc2626" }}>
               {monthlyNet >= 0 ? "+" : ""}{fmt(monthlyNet)}
             </div>
           </div>
@@ -236,11 +257,24 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
             <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
               {ko ? "3개월 후 예상 현금" : "Cash in 3 months"}
             </div>
-            <div style={{ fontSize: "18px", fontWeight: 740, letterSpacing: "-0.03em", color: months3Cash >= 0 ? "#059669" : "#dc2626" }}>
+            <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em", color: months3Cash >= 0 ? "#059669" : "#dc2626" }}>
               {months3Cash >= 0 ? "" : ""}{fmt(months3Cash)}
             </div>
           </div>
         </div>
+
+        {/* 운영자본 내역 표시 — 사용자가 자본 구성을 이해할 수 있게 */}
+        {(initialOperatingCapital ?? 0) > 0 && (
+          <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid rgba(15,23,42,0.05)", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
+            <span>{ko ? "운영자본금 포함" : "Incl. operating capital"}</span>
+            <span style={{ color: "#059669", fontWeight: 600 }}>
+              +{fmt(initialOperatingCapital ?? 0)}
+            </span>
+            <span style={{ color: "rgba(15,23,42,0.3)" }}>
+              · {ko ? "첫 몇 달 버티는 현금" : "Runway buffer"}
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -269,7 +303,7 @@ const eyebrow: React.CSSProperties = {
 
 const title: React.CSSProperties = {
   fontSize: "20px",
-  fontWeight: 740,
+  fontWeight: 700,
   letterSpacing: "-0.03em",
   color: "#0f172a",
   lineHeight: 1.1,

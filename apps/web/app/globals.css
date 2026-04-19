@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-dynamic-subset.min.css');
 
 /* ── Aurora Background animation ── */
 @theme {
@@ -50,13 +51,33 @@
   box-sizing: border-box;
 }
 
+/* ── Pretendard Typography System ── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Tabular nums for data-heavy UI */
+[data-numeric], .tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  font-feature-settings: "ss01" on, "cv01" on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
 body {
@@ -258,6 +279,18 @@ textarea:focus-visible {
     padding-right: 16px !important;
     padding-top: 32px !important;
   }
+
+  /* Detail tabs: smooth iOS scrolling */
+  .detail-tab-bar {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .detail-tab-bar::-webkit-scrollbar { display: none; }
+}
+
+@media (max-width: 640px) {
+  /* Marketing surface */
+  .marketing-kpi-grid { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 480px) {

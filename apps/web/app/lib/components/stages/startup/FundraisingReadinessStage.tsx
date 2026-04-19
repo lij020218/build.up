@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { supabase } from "../../../../../lib/supabase";
 
@@ -150,8 +151,9 @@ export function FundraisingReadinessStage() {
             </div>
           </div>
           <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(5,150,105,0.04)", fontSize: "12px", color: "#059669", lineHeight: 1.5, fontWeight: 500 }}>
-              {ko ? "💡 이 단계를 완료하면, 다음 단계에서 정부 지원사업(TIPS/창업패키지/바우처)과 정책 대출을 구체적으로 매칭하고 신청합니다." : "💡 After this stage, the next steps will match you with government programs (TIPS/packages/vouchers) and policy loans."}
+            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(5,150,105,0.04)", fontSize: "12px", color: "#059669", lineHeight: 1.5, fontWeight: 500, display: "flex", alignItems: "flex-start", gap: "6px" }}>
+              <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
+              <span>{ko ? "이 단계를 완료하면, 다음 단계에서 정부 지원사업(TIPS/창업패키지/바우처)과 정책 대출을 구체적으로 매칭하고 신청합니다." : "After this stage, the next steps will match you with government programs (TIPS/packages/vouchers) and policy loans."}</span>
             </div>
           </div>
         </div>
@@ -197,8 +199,9 @@ export function FundraisingReadinessStage() {
             </div>
           </div>
           <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(37,99,235,0.04)", fontSize: "12px", color: "#2563eb", lineHeight: 1.5, fontWeight: 500 }}>
-              {ko ? "💡 VC 투자 결정 후, 다음 단계에서 비지분 자금(TIPS/R&D/바우처)을 병행 신청하면 런웨이를 더 확보할 수 있습니다." : "💡 After deciding on VC, applying for non-dilutive funds (TIPS/R&D/vouchers) in parallel extends your runway."}
+            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(37,99,235,0.04)", fontSize: "12px", color: "#2563eb", lineHeight: 1.5, fontWeight: 500, display: "flex", alignItems: "flex-start", gap: "6px" }}>
+              <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
+              <span>{ko ? "VC 투자 결정 후, 다음 단계에서 비지분 자금(TIPS/R&D/바우처)을 병행 신청하면 런웨이를 더 확보할 수 있습니다." : "After deciding on VC, applying for non-dilutive funds (TIPS/R&D/vouchers) in parallel extends your runway."}</span>
             </div>
           </div>
         </div>

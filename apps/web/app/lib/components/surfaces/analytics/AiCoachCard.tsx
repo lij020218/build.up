@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
@@ -9,16 +8,15 @@ import {
 
 export function AiCoachCard() {
   const d = useDashboardCtx();
-  const _d = d as any;
   const {
     language, businessLaunched, aiActions, aiActionsLoading, fetchAiActions,
     dailyEntries, selectedFranchiseBrandId, selectedIndustryCategoryId,
-  } = _d;
+  } = d;
 
   const ko = language === "ko";
 
   if (!businessLaunched) return null;
-  if (!aiActions && !aiActionsLoading) return null;
+  const hasError = !aiActions && !aiActionsLoading;
 
   return (
     <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
@@ -36,6 +34,31 @@ export function AiCoachCard() {
           {aiActionsLoading ? (ko ? "\ubd84\uc11d \uc911..." : "Loading...") : (ko ? "\uc0c8\ub85c\uace0\uce68" : "Refresh")}
         </button>
       </div>
+
+      {hasError && (
+        <div style={{ padding: "12px 22px 20px" }}>
+          <div style={{
+            padding: "20px", borderRadius: "16px",
+            background: "rgba(245,158,11,0.04)",
+            border: "1px solid rgba(245,158,11,0.1)",
+            textAlign: "center" as const,
+          }}>
+            <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "6px" }}>
+              {ko ? "AI 코칭을 불러올 수 없습니다" : "Could not load AI coaching"}
+            </div>
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginBottom: "12px" }}>
+              {ko ? "네트워크 연결을 확인하고 다시 시도해주세요" : "Check your connection and try again"}
+            </div>
+            <button type="button" onClick={fetchAiActions} style={{
+              padding: "8px 16px", borderRadius: "8px",
+              border: "1px solid rgba(15,23,42,0.1)", background: "#fff",
+              fontSize: "13px", fontWeight: 620, cursor: "pointer",
+            }}>
+              {ko ? "다시 시도" : "Retry"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {aiActionsLoading && !aiActions && (
         <div style={{ padding: "20px 22px 24px", textAlign: "center" as const }}>

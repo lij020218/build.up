@@ -58,6 +58,24 @@ export type Member = {
   id: string; name: string; plan: string; fee: number; startDate: string; endDate: string;
 };
 
+export type SubscriptionPlan = {
+  id: string;
+  name: string;           // "Free", "Standard", "Pro"
+  price: number;          // 월 가격 (원)
+  billingCycle: "monthly" | "annual";
+  isActive: boolean;
+};
+
+export type Subscriber = {
+  id: string;
+  name: string;
+  email?: string;
+  planId: string;          // references SubscriptionPlan.id
+  status: "active" | "churned" | "trial";
+  joinedAt: string;        // ISO date
+  churnedAt?: string;
+};
+
 // ─── Form defaults ───
 
 const EMPTY_INV_FORM: InvForm = {
@@ -125,6 +143,19 @@ type OperationsState = {
   memPlan: string;
   memFee: string;
   memEnd: string;
+  // 구독 플랜 (SaaS)
+  subscriptionPlans: SubscriptionPlan[];
+  subPlanFormOpen: boolean;
+  subPlanEditId: string | null;
+  subPlanName: string;
+  subPlanPrice: string;
+  subPlanCycle: "monthly" | "annual";
+  // 구독 고객
+  subscribers: Subscriber[];
+  subCustomerFormOpen: boolean;
+  subCustomerName: string;
+  subCustomerEmail: string;
+  subCustomerPlanId: string;
 };
 
 type OperationsActions = {
@@ -185,6 +216,19 @@ type OperationsActions = {
   setMemPlan: (v: string) => void;
   setMemFee: (v: string) => void;
   setMemEnd: (v: string) => void;
+  // 구독 플랜
+  setSubscriptionPlans: (items: SubscriptionPlan[]) => void;
+  setSubPlanFormOpen: (v: boolean) => void;
+  setSubPlanEditId: (v: string | null) => void;
+  setSubPlanName: (v: string) => void;
+  setSubPlanPrice: (v: string) => void;
+  setSubPlanCycle: (v: "monthly" | "annual") => void;
+  // 구독 고객
+  setSubscribers: (items: Subscriber[]) => void;
+  setSubCustomerFormOpen: (v: boolean) => void;
+  setSubCustomerName: (v: string) => void;
+  setSubCustomerEmail: (v: string) => void;
+  setSubCustomerPlanId: (v: string) => void;
   // 리셋
   resetAll: () => void;
 };
@@ -239,6 +283,17 @@ const initialState: OperationsState = {
   memPlan: "",
   memFee: "",
   memEnd: "",
+  subscriptionPlans: [],
+  subPlanFormOpen: false,
+  subPlanEditId: null,
+  subPlanName: "",
+  subPlanPrice: "",
+  subPlanCycle: "monthly",
+  subscribers: [],
+  subCustomerFormOpen: false,
+  subCustomerName: "",
+  subCustomerEmail: "",
+  subCustomerPlanId: "",
 };
 
 export const useOperationsStore = create<OperationsState & OperationsActions>()(
@@ -312,6 +367,21 @@ export const useOperationsStore = create<OperationsState & OperationsActions>()(
       setMemFee: (v) => set({ memFee: v }),
       setMemEnd: (v) => set({ memEnd: v }),
 
+      // 구독 플랜
+      setSubscriptionPlans: (items) => set({ subscriptionPlans: items }),
+      setSubPlanFormOpen: (v) => set({ subPlanFormOpen: v }),
+      setSubPlanEditId: (v) => set({ subPlanEditId: v }),
+      setSubPlanName: (v) => set({ subPlanName: v }),
+      setSubPlanPrice: (v) => set({ subPlanPrice: v }),
+      setSubPlanCycle: (v) => set({ subPlanCycle: v }),
+
+      // 구독 고객
+      setSubscribers: (items) => set({ subscribers: items }),
+      setSubCustomerFormOpen: (v) => set({ subCustomerFormOpen: v }),
+      setSubCustomerName: (v) => set({ subCustomerName: v }),
+      setSubCustomerEmail: (v) => set({ subCustomerEmail: v }),
+      setSubCustomerPlanId: (v) => set({ subCustomerPlanId: v }),
+
       // 리셋
       resetAll: () => set(initialState),
     }),
@@ -333,6 +403,8 @@ export const useOperationsStore = create<OperationsState & OperationsActions>()(
         onlineSelectedCourier: state.onlineSelectedCourier,
         onlineMonthlyParcels: state.onlineMonthlyParcels,
         members: state.members,
+        subscriptionPlans: state.subscriptionPlans,
+        subscribers: state.subscribers,
       }),
     },
   ),

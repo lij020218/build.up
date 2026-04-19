@@ -86,6 +86,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
     selectedBusinessModelId, setSelectedBusinessModelId,
     selectedBudget, setSelectedBudget,
     budgetInputText, setBudgetInputText,
+    initialOperatingCapital, setInitialOperatingCapital,
+    operatingCapitalInputText, setOperatingCapitalInputText,
     selectedOpenDate, setSelectedOpenDate,
     selectedLocationId, setSelectedLocationId,
     preferredRegionInput, setPreferredRegionInput,
@@ -94,6 +96,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     selectedFranchiseBrandId, setSelectedFranchiseBrandId,
     storeName, setStoreName,
     cpaDecision, setCpaDecision,
+    usesSubscriptions, setUsesSubscriptions,
     selectedInteriorConcept, setSelectedInteriorConcept,
     profile,
     saveStatus, setSaveStatus,
@@ -144,11 +147,15 @@ export function useDashboard(surface: DashboardSurface = "home") {
     dailyCustomersInput, setDailyCustomersInput,
     monthlyCosts, setMonthlyCosts,
     costHistory,
+    costCogsText, setCostCogsText,
     costIngredientsText, setCostIngredientsText,
     costLaborText, setCostLaborText,
     costRentText, setCostRentText,
     costUtilitiesText, setCostUtilitiesText,
+    costSgaText, setCostSgaText,
+    costMarketingText, setCostMarketingText,
     costOtherText, setCostOtherText,
+    costInterestText, setCostInterestText,
   } = financeStore;
 
   const {
@@ -201,6 +208,17 @@ export function useDashboard(surface: DashboardSurface = "home") {
     memPlan, setMemPlan,
     memFee, setMemFee,
     memEnd, setMemEnd,
+    subscriptionPlans, setSubscriptionPlans,
+    subPlanFormOpen, setSubPlanFormOpen,
+    subPlanEditId, setSubPlanEditId,
+    subPlanName, setSubPlanName,
+    subPlanPrice, setSubPlanPrice,
+    subPlanCycle, setSubPlanCycle,
+    subscribers, setSubscribers,
+    subCustomerFormOpen, setSubCustomerFormOpen,
+    subCustomerName, setSubCustomerName,
+    subCustomerEmail, setSubCustomerEmail,
+    subCustomerPlanId, setSubCustomerPlanId,
   } = operationsStore;
 
   const {
@@ -263,7 +281,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
       const monthlyNet = monthlySales - totalCost;
       const launchDateStr = businessLaunchedDate;
       const daysSinceLaunchCalc = launchDateStr ? Math.max(0, Math.round((Date.now() - new Date(launchDateStr).getTime()) / 86400000)) : 30;
-      const capitalLeft = Math.max(0, (selectedBudget ?? 0) - totalCost * (daysSinceLaunchCalc / 30));
+      const totalCapital = (selectedBudget ?? 0) + (initialOperatingCapital ?? 0);
+      const capitalLeft = Math.max(0, totalCapital - totalCost * (daysSinceLaunchCalc / 30));
       const runway = totalCost > 0 && monthlyNet < 0 ? Math.max(0, Math.round(capitalLeft / Math.abs(monthlyNet))) : -1;
 
       const now = new Date();
@@ -315,6 +334,23 @@ export function useDashboard(surface: DashboardSurface = "home") {
               other: businessCtx.expenseFields[4]?.label?.ko ?? "기타",
             },
           } : {}),
+          // 마케팅 데이터
+          ...(() => {
+            try {
+              const { useMarketingStore: mktStore } = require("./stores/marketing-store");
+              const mktState = mktStore.getState();
+              const curMonth = new Date().toISOString().slice(0, 7);
+              const monthCamps = (mktState.campaigns ?? []).filter((c: { month: string }) => c.month === curMonth);
+              const totalMktSpend = monthCamps.reduce((s: number, c: { spend: number }) => s + c.spend, 0);
+              const totalAttrRev = monthCamps.reduce((s: number, c: { attributedRevenue?: number }) => s + (c.attributedRevenue ?? 0), 0);
+              const channels = [...new Set(monthCamps.map((c: { channel: string }) => c.channel))];
+              return {
+                totalMarketingSpend: totalMktSpend,
+                activeChannels: channels,
+                marketingRoas: totalMktSpend > 0 ? Math.round((totalAttrRev / totalMktSpend) * 10) / 10 : 0,
+              };
+            } catch { return {}; }
+          })(),
         }),
       });
       if (res.ok) {
@@ -440,6 +476,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
     selectedIndustryCategoryId, setSelectedIndustryCategoryId,
     selectedBusinessModelId, setSelectedBusinessModelId,
     selectedBudget, setSelectedBudget, budgetInputText, setBudgetInputText,
+    initialOperatingCapital, setInitialOperatingCapital,
+    operatingCapitalInputText, setOperatingCapitalInputText,
     selectedOpenDate, setSelectedOpenDate,
     selectedLocationId, setSelectedLocationId,
     preferredRegionInput, setPreferredRegionInput,
@@ -450,6 +488,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     setShowFranchisePicker: profileStore.setShowFranchisePicker,
     storeName, setStoreName,
     cpaDecision, setCpaDecision,
+    usesSubscriptions, setUsesSubscriptions,
     selectedInteriorConcept, setSelectedInteriorConcept,
     profile, saveStatus, setSaveStatus,
     businessLaunched, setBusinessLaunched,
@@ -489,11 +528,15 @@ export function useDashboard(surface: DashboardSurface = "home") {
     dailyDateInput, setDailyDateInput,
     dailySalesInput, setDailySalesInput,
     dailyCustomersInput, setDailyCustomersInput,
+    costCogsText, setCostCogsText,
     costIngredientsText, setCostIngredientsText,
     costLaborText, setCostLaborText,
     costRentText, setCostRentText,
     costUtilitiesText, setCostUtilitiesText,
+    costSgaText, setCostSgaText,
+    costMarketingText, setCostMarketingText,
     costOtherText, setCostOtherText,
+    costInterestText, setCostInterestText,
 
     // ── Bare store state/setters (operations) ──
     inventory, setInventory, invForm, setInvForm,
@@ -528,6 +571,17 @@ export function useDashboard(surface: DashboardSurface = "home") {
     memFormOpen, setMemFormOpen,
     memName, setMemName, memPlan, setMemPlan,
     memFee, setMemFee, memEnd, setMemEnd,
+    subscriptionPlans, setSubscriptionPlans,
+    subPlanFormOpen, setSubPlanFormOpen,
+    subPlanEditId, setSubPlanEditId,
+    subPlanName, setSubPlanName,
+    subPlanPrice, setSubPlanPrice,
+    subPlanCycle, setSubPlanCycle,
+    subscribers, setSubscribers,
+    subCustomerFormOpen, setSubCustomerFormOpen,
+    subCustomerName, setSubCustomerName,
+    subCustomerEmail, setSubCustomerEmail,
+    subCustomerPlanId, setSubCustomerPlanId,
 
     // ── Bare store state/setters (AI) ──
     selectedContractTaskId, setSelectedContractTaskId,

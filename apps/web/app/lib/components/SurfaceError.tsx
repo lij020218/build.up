@@ -30,7 +30,7 @@ export function SurfaceError({
         alignItems: "center",
         justifyContent: "center",
         padding: "60px 20px",
-        fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+        fontFamily: "inherit",
         minHeight: "40vh",
       }}
     >

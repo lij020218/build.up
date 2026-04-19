@@ -1,7 +1,7 @@
-// @ts-nocheck
-// TODO: Add proper types after decomposition stabilizes
 "use client";
 
+import { Home, Landmark, Shield, ClipboardList } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { styles } from "../../styles";
 import { SURFACE_HREFS, VENDOR_URL_MAP } from "../../constants";
@@ -29,8 +29,6 @@ import { BusinessPlanCard } from "./analytics/BusinessPlanCard";
 
 export function AnalyticsSurface() {
   const d = useDashboardCtx();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const _d = d as any;
   const {
     language, dailyEntries, monthlyCosts, inventory, setInventory, invForm, setInvForm,
     employees, setEmployees, fixedExpenses, setFixedExpenses,
@@ -57,14 +55,14 @@ export function AnalyticsSurface() {
     fexpAmount, setFexpAmount, fexpDueDay, setFexpDueDay, fexpCategory, setFexpCategory,
     businessHealthScore, flushStoreData, persistenceReady,
     roadmap, completedCount, pathTotalStages, correctedProgressPercent,
-    currentStage, localizedCurrentStage, businessLaunchedDate,
-    handleExcelImport, softOpenChecks, softOpenSkips, softOpenPricing, setSoftOpenPricing,
+    currentStage, localizedCurrentStage,
+    softOpenChecks, softOpenSkips, softOpenPricing, setSoftOpenPricing,
     opsSelections, setOpsSelections, vendorSelections, vendorCustomInputs,
-    selectedBudget, saveMembers,
+    selectedBudget,
     savedFinanceSnapshot, selectedIndustryCategoryId, selectedFranchiseBrandId,
     aiActions, aiActionsLoading, fetchAiActions,
     isDigitalCategory, showFinancePanel, setShowFinancePanel,
-  } = _d;
+  } = d;
   const ko = language === "ko";
   const aiLoadedRef = useRef(false);
 
@@ -85,8 +83,8 @@ export function AnalyticsSurface() {
         const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
         const totalCustomers = monthEntries.reduce((s, e) => s + e.customers, 0);
         const workingDays = monthEntries.length;
-        const { ingredients, labor, rent, utilities, other } = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-        const totalCosts = ingredients + labor + rent + utilities + other;
+        const { ingredients, labor, rent, utilities, sga, marketing, other, interest } = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number };
+        const totalCosts = (ingredients ?? 0) + (labor ?? 0) + (rent ?? 0) + (utilities ?? 0) + (sga ?? 0) + (marketing ?? 0) + (other ?? 0) + (interest ?? 0);
         const netProfit = totalSales - totalCosts;
         const bepProgress = totalCosts > 0 ? Math.min(100, (totalSales / totalCosts) * 100) : 0;
 
@@ -236,7 +234,7 @@ export function AnalyticsSurface() {
 
               {/* ── KPI 요약 바 (매출 / 비용 / 순이익 / BEP) ── */}
               {totalSales > 0 && (
-                <div style={{
+                <div className="card-grid-responsive" style={{
                   display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px",
                   marginBottom: "8px",
                 }}>
@@ -264,7 +262,7 @@ export function AnalyticsSurface() {
 
               {/* ── 월 비용 확인 프롬프트 ── */}
               {showMonthlyCostPrompt && (() => {
-                const lastSnap = costHistory.length > 0 ? (costHistory as { month: string; ingredients: number; labor: number; rent: number; utilities: number; other: number }[]).sort((a, b) => b.month.localeCompare(a.month))[0] : null;
+                const lastSnap = costHistory.length > 0 ? (costHistory as { month: string; ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }[]).sort((a, b) => b.month.localeCompare(a.month))[0] : null;
                 return (
                   <article style={{ ...styles.card, padding: "18px 22px", background: "linear-gradient(135deg, rgba(0,122,255,0.04), rgba(52,199,89,0.04))", border: "1px solid rgba(0,122,255,0.12)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -319,7 +317,7 @@ export function AnalyticsSurface() {
               <WeeklySummaryCard />
 
               {/* ── 2컬럼 레이아웃 ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 340px) minmax(0, 1fr)", gap: "16px", alignItems: "stretch" }}>
+              <div className="card-grid-responsive" style={{ display: "grid", gridTemplateColumns: "minmax(0, 340px) minmax(0, 1fr)", gap: "16px", alignItems: "stretch" }}>
 
               {/* ════ LEFT COLUMN ════ */}
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "14px" }}>
@@ -460,10 +458,11 @@ export function AnalyticsSurface() {
                   { id: "post", name: ko ? "우체국택배" : "Korea Post", base: 4000, perKg: 600, note: ko ? "일반소포 기준" : "standard parcel" },
                 ];
 
-                const monthlySales = onlinePlatformSales;
-                const setMonthlySales = setOnlinePlatformSales;
-                const selectedPlatform = onlineSelectedPlatforms;
-                const setSelectedPlatform = setOnlineSelectedPlatforms;
+                const selectedPlatform = onlineSelectedPlatforms[0] ?? "";
+                const setSelectedPlatform = (id: string) => setOnlineSelectedPlatforms([id]);
+                const monthlySales = onlinePlatformSales[selectedPlatform] ?? "";
+                const setMonthlySales = (val: string) =>
+                  setOnlinePlatformSales({ ...onlinePlatformSales, [selectedPlatform]: val });
                 const selectedCourier = onlineSelectedCourier;
                 const setSelectedCourier = setOnlineSelectedCourier;
                 const monthlyParcels = onlineMonthlyParcels;
@@ -740,7 +739,8 @@ export function AnalyticsSurface() {
                 const today = now.getDate();
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
                 const fmtD = (n: number) => n >= 10000 ? `${Math.round(n / 10000).toLocaleString()}만원` : `${Math.round(n).toLocaleString()}원`;
-                const catIcon: Record<string, string> = { rent: "🏠", loan: "🏦", insurance: "🛡", other: "📋" };
+                const catIcon: Record<string, LucideIcon> = { rent: Home, loan: Landmark, insurance: Shield, other: ClipboardList };
+                const catColor: Record<string, string> = { rent: "#7c3aed", loan: "#6366f1", insurance: "#0891b2", other: "#64748b" };
                 const catLabel: Record<string, { ko: string; en: string }> = {
                   rent: { ko: "임대료", en: "Rent" }, loan: { ko: "대출", en: "Loan" },
                   insurance: { ko: "보험", en: "Insurance" }, other: { ko: "기타", en: "Other" },
@@ -770,7 +770,10 @@ export function AnalyticsSurface() {
                             { value: labor, color: "#34c759" },
                             { value: rent, color: "#ff9f0a" },
                             { value: utilities, color: "#af52de" },
+                            { value: sga ?? 0, color: "#ff9500" },
+                            { value: marketing ?? 0, color: "#af52de" },
                             { value: other, color: "#8e8e93" },
+                            { value: interest ?? 0, color: "#ef4444" },
                           ].filter(r => r.value > 0).map((r, i) => (
                             <div key={i} style={{ width: `${(r.value / totalCosts) * 100}%`, background: r.color, minWidth: "2px" }} />
                           ))}
@@ -782,7 +785,10 @@ export function AnalyticsSurface() {
                             { label: ko ? "인건비" : "Labor", value: labor, color: "#34c759" },
                             { label: ko ? "임대료" : "Rent", value: rent, color: "#ff9f0a" },
                             { label: ko ? "공과금" : "Util.", value: utilities, color: "#af52de" },
+                            { label: ko ? "운영비" : "SGA", value: sga ?? 0, color: "#ff9500" },
+                            { label: ko ? "마케팅" : "Mktg.", value: marketing ?? 0, color: "#af52de" },
                             { label: ko ? "기타" : "Other", value: other, color: "#8e8e93" },
+                            { label: ko ? "이자" : "Interest", value: interest ?? 0, color: "#ef4444" },
                           ].filter(r => r.value > 0).map(r => (
                             <div key={r.label} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                               <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: r.color }} />
@@ -797,8 +803,8 @@ export function AnalyticsSurface() {
 
                     {/* 비용 추세 (2개월 이상 이력) */}
                     {costHistory.length >= 2 && (() => {
-                      const sorted = [...(costHistory as { month: string; ingredients: number; labor: number; rent: number; utilities: number; other: number }[])].sort((a, b) => a.month.localeCompare(b.month)).slice(-3);
-                      const totals = sorted.map(s => s.ingredients + s.labor + s.rent + s.utilities + s.other);
+                      const sorted = [...(costHistory as { month: string; ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }[])].sort((a, b) => a.month.localeCompare(b.month)).slice(-3);
+                      const totals = sorted.map(s => (s.ingredients ?? 0) + (s.labor ?? 0) + (s.rent ?? 0) + (s.utilities ?? 0) + (s.sga ?? 0) + (s.marketing ?? 0) + (s.other ?? 0) + (s.interest ?? 0));
                       const maxT = Math.max(...totals, 1);
                       const latest = sorted[sorted.length - 1];
                       const prevT = totals[totals.length - 2];
@@ -858,7 +864,7 @@ export function AnalyticsSurface() {
                     {/* 비용 입력 필드 (업종별 동적 레이블) */}
                     <div style={{ padding: "0 22px 16px", display: "flex", flexDirection: "column" as const, gap: "10px" }}>
                       {(() => {
-                        const textMap: Record<string, string> = { ingredients: costIngredientsText, labor: costLaborText, rent: costRentText, utilities: costUtilitiesText, other: costOtherText };
+                        const textMap: Record<string, string> = { ingredients: costIngredientsText ?? "", labor: costLaborText ?? "", rent: costRentText ?? "", utilities: costUtilitiesText ?? "", other: costOtherText ?? "" };
                         const setMap: Record<string, (v: string) => void> = { ingredients: setCostIngredientsText, labor: setCostLaborText, rent: setCostRentText, utilities: setCostUtilitiesText, other: setCostOtherText };
                         return (businessCtx.expenseFields ?? [
                           { fieldKey: "ingredients", label: { ko: "재료비", en: "Ingredients" }, placeholder: "120", description: { ko: "", en: "" } },
@@ -915,7 +921,10 @@ export function AnalyticsSurface() {
                                 padding: "8px 10px", borderRadius: "10px",
                                 background: urgent ? "rgba(255,59,48,0.04)" : "rgba(0,0,0,0.02)",
                               }}>
-                                <span style={{ fontSize: "16px" }}>{catIcon[fe.category] ?? "📋"}</span>
+                                {(() => {
+                                  const CatIcon = catIcon[fe.category] ?? ClipboardList;
+                                  return <CatIcon size={16} strokeWidth={1.5} color={catColor[fe.category] ?? "#64748b"} />;
+                                })()}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{fe.name}</div>
                                   <div style={{ fontSize: "11px", color: "var(--muted)" }}>
@@ -952,12 +961,16 @@ export function AnalyticsSurface() {
                                 style={{ ...inputStyle, flex: 1, fontSize: "14px" }} />
                             </div>
                             <div style={{ display: "flex", gap: "4px" }}>
-                              {(["rent", "loan", "insurance", "other"] as const).map(cat => (
-                                <button key={cat} type="button" onClick={() => setFexpCategory(cat)}
-                                  style={{ fontSize: "11px", fontWeight: fexpCategory === cat ? 600 : 500, padding: "4px 10px", borderRadius: "8px", border: fexpCategory === cat ? "1px solid var(--primary)" : "1px solid var(--border)", background: fexpCategory === cat ? "rgba(29,53,87,0.06)" : "transparent", color: fexpCategory === cat ? "var(--primary)" : "var(--muted)", cursor: "pointer" }}>
-                                  {catIcon[cat]} {catLabel[cat][language]}
-                                </button>
-                              ))}
+                              {(["rent", "loan", "insurance", "other"] as const).map(cat => {
+                                const CatIcon = catIcon[cat];
+                                return (
+                                  <button key={cat} type="button" onClick={() => setFexpCategory(cat)}
+                                    style={{ fontSize: "11px", fontWeight: fexpCategory === cat ? 600 : 500, padding: "4px 10px", borderRadius: "8px", border: fexpCategory === cat ? "1px solid var(--primary)" : "1px solid var(--border)", background: fexpCategory === cat ? "rgba(29,53,87,0.06)" : "transparent", color: fexpCategory === cat ? "var(--primary)" : "var(--muted)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                    <CatIcon size={12} strokeWidth={1.5} />
+                                    {catLabel[cat][language]}
+                                  </button>
+                                );
+                              })}
                             </div>
                             <div style={{ display: "flex", gap: "8px" }}>
                               <button type="button" onClick={handleFexpSave} style={{ ...styles.primaryButton, flex: 1, fontSize: "13px" }}>
@@ -983,7 +996,7 @@ export function AnalyticsSurface() {
             {businessLaunched && (() => {
               const isDanger = businessHealthScore === "danger";
               const isCaution = businessHealthScore === "caution";
-              const mc = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
+              const mc = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number };
               const monthlyRent = mc.rent;
               const empCount = (employees as { id: string }[]).length;
 
@@ -1049,7 +1062,7 @@ export function AnalyticsSurface() {
                         <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "10px" }}>
                           {ko ? "폐업 시 예상 비용" : "Estimated closure costs"}
                         </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        <div className="card-grid-responsive" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                           {[
                             { label: ko ? "잔여 임대료 (3개월)" : "Remaining lease (3mo)", value: remainingLease },
                             ...(empCount > 0 ? [{ label: ko ? `퇴직금 (${empCount}명)` : `Severance (${empCount})`, value: severance }] : []),

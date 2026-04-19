@@ -555,12 +555,16 @@ export function useComputedDashboard(
       label: language === "ko" ? "프랜차이즈" : "Franchise",
     },
     {
-      id: "profile" as const,
-      label: language === "ko" ? "내 정보" : "Profile",
+      id: "marketing" as const,
+      label: language === "ko" ? "마케팅" : "Marketing",
     },
     {
       id: "analytics" as const,
       label: language === "ko" ? "내 가게" : "My store",
+    },
+    {
+      id: "profile" as const,
+      label: language === "ko" ? "내 정보" : "Profile",
     },
   ];
 

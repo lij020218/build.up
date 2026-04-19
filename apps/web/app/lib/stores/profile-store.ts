@@ -8,6 +8,8 @@ type ProfileState = {
   selectedBusinessModelId: string | undefined;
   selectedBudget: number | undefined;
   budgetInputText: string;
+  initialOperatingCapital: number | undefined;
+  operatingCapitalInputText: string;
   selectedOpenDate: string | undefined;
   selectedLocationId: string | undefined;
   preferredRegionInput: string;
@@ -17,6 +19,7 @@ type ProfileState = {
   showFranchisePicker: boolean;
   storeName: string;
   cpaDecision: "cpa" | "self" | null;
+  usesSubscriptions: boolean;
   selectedInteriorConcept: string | null;
   profile: PersistedBusinessProfile | null;
   saveStatus: "idle" | "saving" | "saved" | "error";
@@ -30,6 +33,8 @@ type ProfileActions = {
   setSelectedBusinessModelId: (v: string | undefined) => void;
   setSelectedBudget: (v: number | undefined) => void;
   setBudgetInputText: (v: string) => void;
+  setInitialOperatingCapital: (v: number | undefined) => void;
+  setOperatingCapitalInputText: (v: string) => void;
   setSelectedOpenDate: (v: string | undefined) => void;
   setSelectedLocationId: (v: string | undefined) => void;
   setPreferredRegionInput: (v: string) => void;
@@ -39,6 +44,7 @@ type ProfileActions = {
   setShowFranchisePicker: (v: boolean) => void;
   setStoreName: (v: string) => void;
   setCpaDecision: (v: "cpa" | "self" | null) => void;
+  setUsesSubscriptions: (v: boolean) => void;
   setSelectedInteriorConcept: (v: string | null) => void;
   setProfile: (v: PersistedBusinessProfile | null) => void;
   setSaveStatus: (v: "idle" | "saving" | "saved" | "error") => void;
@@ -53,6 +59,8 @@ const initialState: ProfileState = {
   selectedBusinessModelId: undefined,
   selectedBudget: undefined,
   budgetInputText: "",
+  initialOperatingCapital: undefined,
+  operatingCapitalInputText: "",
   selectedOpenDate: undefined,
   selectedLocationId: undefined,
   preferredRegionInput: "",
@@ -62,6 +70,7 @@ const initialState: ProfileState = {
   showFranchisePicker: false,
   storeName: "",
   cpaDecision: null,
+  usesSubscriptions: false,
   selectedInteriorConcept: null,
   profile: null,
   saveStatus: "idle",
@@ -78,6 +87,8 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       setSelectedBusinessModelId: (v) => set({ selectedBusinessModelId: v }),
       setSelectedBudget: (v) => set({ selectedBudget: v }),
       setBudgetInputText: (v) => set({ budgetInputText: v }),
+      setInitialOperatingCapital: (v) => set({ initialOperatingCapital: v }),
+      setOperatingCapitalInputText: (v) => set({ operatingCapitalInputText: v }),
       setSelectedOpenDate: (v) => set({ selectedOpenDate: v }),
       setSelectedLocationId: (v) => set({ selectedLocationId: v }),
       setPreferredRegionInput: (v) => set({ preferredRegionInput: v }),
@@ -87,6 +98,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       setShowFranchisePicker: (v) => set({ showFranchisePicker: v }),
       setStoreName: (v) => set({ storeName: v }),
       setCpaDecision: (v) => set({ cpaDecision: v }),
+      setUsesSubscriptions: (v) => set({ usesSubscriptions: v }),
       setSelectedInteriorConcept: (v) => set({ selectedInteriorConcept: v }),
       setProfile: (v) => set({ profile: v }),
       setSaveStatus: (v) => set({ saveStatus: v }),
@@ -101,6 +113,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
         selectedIndustryCategoryId: state.selectedIndustryCategoryId,
         selectedBusinessModelId: state.selectedBusinessModelId,
         selectedBudget: state.selectedBudget,
+        initialOperatingCapital: state.initialOperatingCapital,
         selectedOpenDate: state.selectedOpenDate,
         selectedLocationId: state.selectedLocationId,
         preferredRegionInput: state.preferredRegionInput,
@@ -109,6 +122,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
         selectedFranchiseBrandId: state.selectedFranchiseBrandId,
         storeName: state.storeName,
         cpaDecision: state.cpaDecision,
+        usesSubscriptions: state.usesSubscriptions,
         businessLaunched: state.businessLaunched,
         businessLaunchedDate: state.businessLaunchedDate,
         selectedInteriorConcept: state.selectedInteriorConcept,

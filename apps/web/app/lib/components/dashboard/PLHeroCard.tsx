@@ -125,7 +125,7 @@ export function PLHeroCard({
             ].map((m) => (
               <div key={m.label} style={{ background: "rgba(255,255,255,0.9)", padding: "16px 12px", textAlign: "center" as const }}>
                 <div style={{ fontSize: "10px", fontWeight: 600, color: "#86868b", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>{m.label}</div>
-                <div style={{ fontSize: "20px", fontWeight: 750, color: m.color, letterSpacing: "-0.03em", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
+                <div style={{ fontSize: "20px", fontWeight: 700, color: m.color, letterSpacing: "-0.03em", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{m.value}</div>
                 {m.change != null && (
                   <div style={{ fontSize: "11px", fontWeight: 600, color: m.label === (ko ? "비용" : "Costs") ? (m.change <= 0 ? "#177245" : "#b42318") : (m.change >= 0 ? "#177245" : "#b42318"), marginTop: "2px" }}>
                     {m.change >= 0 ? "↑" : "↓"}{Math.abs(m.change)}% {ko ? "전월" : "MoM"}

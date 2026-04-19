@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useLanguage } from "../language-provider";
 
 function TabIcon(props: { name: "home" | "current" | "roadmap" | "guides" | "profile"; focused: boolean }) {
-  const tint = props.focused ? "#1D3557" : "#8A909C";
+  const tint = props.focused ? "#075E66" : "#8E98A4";
 
   if (props.name === "home") {
     return (
@@ -64,17 +64,29 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarActiveTintColor: "#1D3557",
-        tabBarInactiveTintColor: "#8A909C",
+        tabBarActiveTintColor: "#075E66",
+        tabBarInactiveTintColor: "#8E98A4",
         tabBarStyle: {
-          backgroundColor: "rgba(255,255,255,0.88)",
-          borderTopColor: "rgba(255,255,255,0.72)",
-          height: 78,
-          paddingTop: 8
+          position: "absolute",
+          left: 14,
+          right: 14,
+          bottom: 10,
+          height: 72,
+          paddingTop: 8,
+          paddingBottom: 12,
+          borderTopWidth: 0,
+          borderRadius: 8,
+          backgroundColor: "rgba(255,255,255,0.94)",
+          shadowColor: "#101820",
+          shadowOpacity: 0.09,
+          shadowRadius: 22,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 12
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600"
+          fontSize: 11,
+          fontWeight: "700",
+          letterSpacing: 0.1
         },
         tabBarIcon: ({ focused }) => (
           <TabIcon
