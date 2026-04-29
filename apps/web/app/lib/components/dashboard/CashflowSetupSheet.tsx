@@ -1,7 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { X, Plus, Trash2, Check, AlertCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { X, Plus, Trash2, Check, AlertCircle, Info, TrendingUp, Calendar, Wallet, Bell } from "lucide-react";
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  type NotificationPermStatus,
+} from "../../services/notifications";
 import {
   useCashflowStore,
   CHANNEL_PRESETS,
@@ -17,11 +23,14 @@ type Props = {
 };
 
 /**
- * Cash-flow 설정 시트.
- * - 현재 통장 잔고 입력
- * - 판매 채널 비율 (합 100%)
- * - 월 고정비 캘린더 CRUD
- * - 알림 설정
+ * Cash-flow 설정 시트 — 미드나이트 블루 + 글래스모피즘 톤으로 재설계
+ *  1. 통장 잔고
+ *  2. 판매 채널 비율 (정확한 2025-Q1 수수료/정산주기 + ⓘ 툴팁)
+ *  3. 월 고정비 캘린더
+ *  4. 알림·옵션
+ *
+ * 입력 데이터는 Supabase 의 cashflow_settings JSONB 컬럼에 자동 저장됨
+ * (usePersistence collectStoreData 가 매 변경마다 동기화).
  */
 export function CashflowSetupSheet({ ko, onClose }: Props) {
   const {
@@ -49,6 +58,35 @@ export function CashflowSetupSheet({ ko, onClose }: Props) {
   const [balanceInput, setBalanceInput] = useState(
     currentBalance > 0 ? String(Math.round(currentBalance / 10000)) : ""
   );
+  const [hoveredChannel, setHoveredChannel] = useState<SalesChannelId | null>(null);
+
+  // SSR-safe portal mount: 첫 클라이언트 렌더 후에 portal 활성화
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  // 알림 권한 상태 — 토글 ON 시 자동 요청
+  const [permStatus, setPermStatus] = useState<NotificationPermStatus>("default");
+  useEffect(() => { if (mounted) setPermStatus(getNotificationPermission()); }, [mounted]);
+
+  // 권한 요청 핸들러 — notifyOnCrisis 또는 dailyMorningBriefing 토글 ON 시 호출
+  const handleNotificationToggle = async (
+    setter: (v: boolean) => void,
+    nextValue: boolean,
+  ) => {
+    setter(nextValue);
+    // OFF → ON 전환 시 권한이 default 면 요청
+    if (nextValue && permStatus === "default") {
+      const result = await requestNotificationPermission();
+      setPermStatus(result);
+    }
+  };
+
+  // body 스크롤 잠금 — 모달 열린 동안 뒤 스크롤 방지
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   const [newExpense, setNewExpense] = useState<{
     label: string;
@@ -64,12 +102,11 @@ export function CashflowSetupSheet({ ko, onClose }: Props) {
 
   const channelSum = useMemo(() => sumActiveChannelRatios(salesChannels), [salesChannels]);
   const allChannelIds: SalesChannelId[] = [
-    "cash", "card", "baemin", "coupangeats", "yogiyo", "naverpay",
-    "kakaopay", "naverbooking", "smartstore", "coupangwing", "other",
+    "cash", "card", "baemin", "coupangeats", "yogiyo", "ttanggyeoyo",
+    "naverpay", "kakaopay", "naverbooking", "smartstore", "coupangwing", "other",
   ];
 
   const handleSaveAndClose = () => {
-    // balance 먼저 저장
     if (balanceInput) {
       const won = parseInt(balanceInput, 10) * 10000;
       if (!isNaN(won) && won >= 0) {
@@ -100,403 +137,411 @@ export function CashflowSetupSheet({ ko, onClose }: Props) {
     setNewExpense({ label: "", amount: "", dayOfMonth: "25", category: "rent" });
   };
 
-  const channelRatioValid = channelSum >= 99 && channelSum <= 101; // 오차 허용
+  const channelRatioValid = channelSum >= 99 && channelSum <= 101;
   const canSave = !!balanceInput && channelRatioValid;
 
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 210,
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "center",
-        background: "rgba(15,23,42,0.4)",
-        backdropFilter: "blur(8px)",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+  // 월 고정비 합계 (활성만)
+  const fixedTotal = fixedExpenses.filter((e) => e.isActive).reduce((s, e) => s + e.amount, 0);
+
+  // SSR 가드 — 마운트 전에는 렌더 안 함 (createPortal 은 document.body 필요)
+  if (!mounted) return null;
+
+  const modalContent = (
+    <>
+      <style>{KEYFRAMES}</style>
       <div
-        style={{
-          width: "100%",
-          maxWidth: "640px",
-          maxHeight: "92vh",
-          borderRadius: "28px 28px 0 0",
-          background: "#fff",
-          boxShadow: "0 -10px 60px rgba(15,23,42,0.2)",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="cfs-backdrop"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
-        {/* 헤더 */}
-        <div style={headerBar}>
-          <div>
-            <div style={eyebrow}>{ko ? "현금흐름 설정" : "Cash-flow Setup"}</div>
-            <div style={title}>
-              {setupCompletedAt
-                ? ko ? "채널·고정비 수정" : "Edit channels & expenses"
-                : ko ? "2분 빠른 설정" : "2-minute quick setup"}
-            </div>
-          </div>
-          <button type="button" onClick={onClose} style={closeBtn} aria-label={ko ? "닫기" : "Close"}>
-            <X size={18} strokeWidth={1.8} color="rgba(15,23,42,0.5)" />
-          </button>
-        </div>
-
-        {/* 본문 */}
-        <div style={{ overflowY: "auto", flex: 1, padding: "20px" }}>
-          {/* 1. 현재 통장 잔고 */}
-          <section style={sectionBox}>
-            <div style={sectionTitle}>
-              <span style={sectionNum}>1</span>
-              {ko ? "현재 통장 잔고" : "Current bank balance"}
-            </div>
-            <div style={sectionDesc}>
-              {ko
-                ? "사업 계좌에 있는 실제 가용 현금을 입력하세요. 매주 한 번 업데이트를 권장해요."
-                : "Enter cash available in your business account. Update weekly for best accuracy."}
-            </div>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "10px" }}>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={balanceInput}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/[^0-9]/g, "");
-                  setBalanceInput(digits);
-                }}
-                placeholder={ko ? "예: 300 (만원 단위)" : "e.g., 3000000 (KRW)"}
-                style={fieldInput}
-              />
-              <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", fontWeight: 650 }}>
-                {ko ? "만원" : "× 10,000 KRW"}
-              </span>
-            </div>
-            {balanceInput && (
-              <div style={{ marginTop: "6px", fontSize: "12px", color: "rgba(15,23,42,0.55)" }}>
-                = {parseInt(balanceInput, 10).toLocaleString()}만원 ({(parseInt(balanceInput, 10) * 10000).toLocaleString()}원)
+        <div className="cfs-panel" role="dialog" aria-modal="true">
+          {/* ───────── Header ───────── */}
+          <header className="cfs-header">
+            <div className="cfs-header-left">
+              <div className="cfs-header-icon-wrap">
+                <Wallet size={16} color="#fff" strokeWidth={2.2} />
               </div>
-            )}
-          </section>
-
-          {/* 2. 판매 채널 비율 */}
-          <section style={sectionBox}>
-            <div style={sectionTitle}>
-              <span style={sectionNum}>2</span>
-              {ko ? "판매 채널 비율" : "Sales channel mix"}
-              <span
-                style={{
-                  marginLeft: "auto",
-                  fontSize: "11px",
-                  fontWeight: 650,
-                  color: channelRatioValid ? "#059669" : "#b91c1c",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                {channelRatioValid ? <Check size={12} strokeWidth={2.2} /> : <AlertCircle size={12} strokeWidth={2} />}
-                {ko ? "합계" : "Sum"} {Math.round(channelSum)}%
-              </span>
+              <div>
+                <div className="cfs-header-eyebrow">{ko ? "현금흐름 설정" : "Cash-flow Setup"}</div>
+                <div className="cfs-header-title">
+                  {setupCompletedAt
+                    ? ko ? "채널·고정비 수정" : "Edit channels & expenses"
+                    : ko ? "2분 빠른 설정" : "2-minute quick setup"}
+                </div>
+              </div>
             </div>
-            <div style={sectionDesc}>
-              {ko
-                ? "매출이 어떤 경로로 들어오는지 비율로 입력하세요. 배민·쿠팡이츠는 수수료·정산주기가 다릅니다."
-                : "What % comes from each channel? Each has different fees and settlement timing."}
-            </div>
+            <button type="button" onClick={onClose} className="cfs-close" aria-label={ko ? "닫기" : "Close"}>
+              <X size={16} strokeWidth={1.8} />
+            </button>
+          </header>
 
-            <div style={{ display: "grid", gap: "6px", marginTop: "12px" }}>
-              {allChannelIds.map((id) => {
-                const existing = salesChannels.find((c) => c.id === id);
-                const preset = CHANNEL_PRESETS[id];
-                const isActive = existing?.isActive ?? false;
-                const ratio = existing?.salesRatio ?? 0;
+          {/* ───────── Body ───────── */}
+          <div className="cfs-body">
 
-                return (
-                  <div key={id} style={{
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    background: isActive ? "rgba(37,99,235,0.04)" : "rgba(15,23,42,0.02)",
-                    border: `1px solid ${isActive ? "rgba(37,99,235,0.1)" : "rgba(15,23,42,0.04)"}`,
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <input
-                        type="checkbox"
-                        checked={isActive}
-                        onChange={() => toggleChannel(id)}
-                        style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#2563eb" }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>
-                          {preset.label[ko ? "ko" : "en"]}
+            {/* ─── 1. 통장 잔고 ─── */}
+            <section className="cfs-section">
+              <SectionHeader
+                num={1}
+                Icon={Wallet}
+                title={ko ? "현재 통장 잔고" : "Current bank balance"}
+                desc={ko
+                  ? "사업 계좌에 있는 실제 가용 현금을 입력하세요. 매주 한 번 업데이트를 권장해요."
+                  : "Cash available in your business account. Update weekly."}
+              />
+              <div className="cfs-balance-input-wrap">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={balanceInput}
+                  onChange={(e) => setBalanceInput(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder={ko ? "예: 300" : "e.g., 300"}
+                  className="cfs-balance-input"
+                />
+                <span className="cfs-balance-unit">{ko ? "만원" : "× 10K KRW"}</span>
+              </div>
+              {balanceInput && (
+                <div className="cfs-balance-preview">
+                  = {parseInt(balanceInput, 10).toLocaleString()}만원 ({(parseInt(balanceInput, 10) * 10000).toLocaleString()}원)
+                </div>
+              )}
+            </section>
+
+            {/* ─── 2. 판매 채널 비율 ─── */}
+            <section className="cfs-section">
+              <SectionHeader
+                num={2}
+                Icon={TrendingUp}
+                title={ko ? "판매 채널 비율" : "Sales channel mix"}
+                desc={ko
+                  ? "매출이 들어오는 경로를 비율로 입력하세요. 배민·쿠팡이츠 등은 정산이 늦고 수수료가 높아 현금흐름에 큰 영향을 줍니다."
+                  : "Each channel has different fees and settlement timing — critical for cashflow."}
+                rightSlot={
+                  <span className={`cfs-sum-badge ${channelRatioValid ? "cfs-sum-ok" : "cfs-sum-bad"}`}>
+                    {channelRatioValid
+                      ? <Check size={12} strokeWidth={2.4} />
+                      : <AlertCircle size={12} strokeWidth={2.2} />
+                    }
+                    {ko ? "합계" : "Sum"} {Math.round(channelSum)}%
+                  </span>
+                }
+              />
+
+              <div className="cfs-channel-list">
+                {allChannelIds.map((id) => {
+                  const existing = salesChannels.find((c) => c.id === id);
+                  const preset = CHANNEL_PRESETS[id];
+                  const isActive = existing?.isActive ?? false;
+                  const ratio = existing?.salesRatio ?? 0;
+                  const totalFee = preset.commissionRate + preset.paymentFeeRate;
+
+                  return (
+                    <div
+                      key={id}
+                      className={`cfs-channel-row ${isActive ? "cfs-channel-active" : ""}`}
+                    >
+                      <label className="cfs-channel-checkbox-wrap">
+                        <input
+                          type="checkbox"
+                          checked={isActive}
+                          onChange={() => toggleChannel(id)}
+                          className="cfs-checkbox"
+                        />
+                        <div className="cfs-channel-meta">
+                          <div className="cfs-channel-name">
+                            {preset.label[ko ? "ko" : "en"]}
+                            {preset.rateNote && (
+                              <button
+                                type="button"
+                                className="cfs-info-btn"
+                                onMouseEnter={() => setHoveredChannel(id)}
+                                onMouseLeave={() => setHoveredChannel(null)}
+                                onClick={(e) => { e.preventDefault(); setHoveredChannel(hoveredChannel === id ? null : id); }}
+                                aria-label={ko ? "수수료 상세" : "Fee details"}
+                              >
+                                <Info size={11} strokeWidth={2} />
+                              </button>
+                            )}
+                          </div>
+                          <div className="cfs-channel-detail">
+                            <span className="cfs-channel-detail-pill">D+{preset.settlementDays}</span>
+                            {totalFee > 0 && (
+                              <span className="cfs-channel-detail-pill cfs-channel-fee-pill">
+                                {ko ? "수수료" : "Fee"} {totalFee.toFixed(1)}%
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.5)", marginTop: "1px" }}>
-                          D+{preset.settlementDays}
-                          {(preset.commissionRate + preset.paymentFeeRate) > 0 && (
-                            <> · {ko ? "수수료" : "Fee"} {(preset.commissionRate + preset.paymentFeeRate).toFixed(1)}%</>
-                          )}
-                        </div>
-                      </div>
+                      </label>
                       {isActive && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <div className="cfs-channel-ratio-wrap">
                           <input
                             type="number"
                             min="0"
                             max="100"
                             value={ratio}
                             onChange={(e) => updateChannelRatio(id, parseInt(e.target.value) || 0)}
-                            style={{
-                              width: "56px",
-                              padding: "4px 6px",
-                              borderRadius: "6px",
-                              border: "1px solid rgba(15,23,42,0.1)",
-                              fontSize: "13px",
-                              fontWeight: 650,
-                              textAlign: "center" as const,
-                              fontVariantNumeric: "tabular-nums",
-                            }}
+                            className="cfs-ratio-input"
                           />
-                          <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", fontWeight: 650 }}>%</span>
+                          <span className="cfs-ratio-pct">%</span>
+                        </div>
+                      )}
+
+                      {/* 수수료 상세 툴팁 */}
+                      {hoveredChannel === id && preset.rateNote && (
+                        <div className="cfs-tooltip">
+                          {preset.rateNote[ko ? "ko" : "en"]}
                         </div>
                       )}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {!channelRatioValid && (
-              <div style={{ marginTop: "8px", padding: "8px 12px", borderRadius: "8px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.1)", fontSize: "11px", color: "#b91c1c" }}>
-                {ko
-                  ? `채널 비율 합계는 100%가 되어야 해요. 현재 ${Math.round(channelSum)}%`
-                  : `Channel ratios must sum to 100%. Current: ${Math.round(channelSum)}%`}
+                  );
+                })}
               </div>
-            )}
-          </section>
 
-          {/* 3. 월 고정비 */}
-          <section style={sectionBox}>
-            <div style={sectionTitle}>
-              <span style={sectionNum}>3</span>
-              {ko ? "월 고정비" : "Monthly fixed expenses"}
-            </div>
-            <div style={sectionDesc}>
-              {ko
-                ? "월세·급여·대출 이자 등 매월 정해진 날 나가는 돈을 등록하세요."
-                : "Register rent, payroll, loan interest — anything that leaves on a set day each month."}
-            </div>
+              {!channelRatioValid && (
+                <div className="cfs-warn-box">
+                  {ko
+                    ? `채널 비율 합계는 100%가 되어야 해요. 현재 ${Math.round(channelSum)}%`
+                    : `Channel ratios must sum to 100%. Current: ${Math.round(channelSum)}%`}
+                </div>
+              )}
+            </section>
 
-            {/* 기존 고정비 리스트 */}
-            {fixedExpenses.length > 0 && (
-              <div style={{ display: "grid", gap: "6px", marginTop: "10px" }}>
-                {fixedExpenses.map((e) => (
-                  <div key={e.id} style={{
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    background: e.isActive ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.03)",
-                    border: `1px solid ${e.isActive ? "rgba(15,23,42,0.06)" : "rgba(15,23,42,0.02)"}`,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    opacity: e.isActive ? 1 : 0.5,
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={e.isActive}
-                      onChange={() => updateFixedExpense(e.id, { isActive: !e.isActive })}
-                      style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#2563eb" }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{e.label}</div>
-                      <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "1px" }}>
-                        {ko ? `매월 ${e.dayOfMonth}일` : `Day ${e.dayOfMonth}`} · {CATEGORY_LABEL[e.category][ko ? "ko" : "en"]}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#b91c1c", fontVariantNumeric: "tabular-nums" }}>
-                      {Math.round(e.amount / 10000).toLocaleString()}만원
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeFixedExpense(e.id)}
-                      style={{
-                        width: "28px",
-                        height: "28px",
-                        borderRadius: "6px",
-                        background: "rgba(220,38,38,0.06)",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                      aria-label={ko ? "삭제" : "Delete"}
+            {/* ─── 3. 월 고정비 ─── */}
+            <section className="cfs-section">
+              <SectionHeader
+                num={3}
+                Icon={Calendar}
+                title={ko ? "월 고정비" : "Monthly fixed expenses"}
+                desc={ko
+                  ? "월세·급여·대출 이자 등 매월 정해진 날 나가는 돈을 등록하세요."
+                  : "Rent, payroll, loan interest — anything that leaves on a set day."}
+                rightSlot={
+                  fixedExpenses.length > 0 ? (
+                    <span className="cfs-total-pill">
+                      {ko ? "월 합계" : "Monthly"} {Math.round(fixedTotal / 10000).toLocaleString()}만원
+                    </span>
+                  ) : null
+                }
+              />
+
+              {fixedExpenses.length > 0 && (
+                <div className="cfs-expense-list">
+                  {fixedExpenses.map((e) => (
+                    <div
+                      key={e.id}
+                      className={`cfs-expense-row ${e.isActive ? "" : "cfs-expense-inactive"}`}
                     >
-                      <Trash2 size={14} strokeWidth={1.6} color="#b91c1c" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 새 고정비 추가 폼 */}
-            <div style={{ marginTop: "12px", padding: "12px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", border: "1px dashed rgba(37,99,235,0.2)" }}>
-              <div style={{ fontSize: "12px", fontWeight: 650, color: "#1d3557", marginBottom: "8px" }}>
-                {ko ? "새 고정비 추가" : "Add new expense"}
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 0.8fr 0.8fr", gap: "6px", marginBottom: "8px" }}>
-                <input
-                  type="text"
-                  placeholder={ko ? "예: 월세, A직원 급여" : "e.g., Rent, Staff A wage"}
-                  value={newExpense.label}
-                  onChange={(e) => setNewExpense({ ...newExpense, label: e.target.value })}
-                  style={fieldInputSmall}
-                />
-                <input
-                  type="number"
-                  placeholder={ko ? "금액 (만원)" : "Amt (×10k)"}
-                  min="0"
-                  value={newExpense.amount}
-                  onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
-                  style={fieldInputSmall}
-                />
-                <input
-                  type="number"
-                  placeholder={ko ? "몇일" : "Day"}
-                  min="1"
-                  max="31"
-                  value={newExpense.dayOfMonth}
-                  onChange={(e) => setNewExpense({ ...newExpense, dayOfMonth: e.target.value })}
-                  style={fieldInputSmall}
-                />
-                <select
-                  value={newExpense.category}
-                  onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value as FixedExpenseCategory })}
-                  style={fieldInputSmall}
-                >
-                  {Object.entries(CATEGORY_LABEL).map(([k, v]) => (
-                    <option key={k} value={k}>{v[ko ? "ko" : "en"]}</option>
+                      <input
+                        type="checkbox"
+                        checked={e.isActive}
+                        onChange={() => updateFixedExpense(e.id, { isActive: !e.isActive })}
+                        className="cfs-checkbox"
+                      />
+                      <div className="cfs-expense-meta">
+                        <div className="cfs-expense-label">{e.label}</div>
+                        <div className="cfs-expense-detail">
+                          {ko ? `매월 ${e.dayOfMonth}일` : `Day ${e.dayOfMonth}`} · {CATEGORY_LABEL[e.category][ko ? "ko" : "en"]}
+                        </div>
+                      </div>
+                      <div className="cfs-expense-amount">
+                        {Math.round(e.amount / 10000).toLocaleString()}만원
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFixedExpense(e.id)}
+                        className="cfs-trash-btn"
+                        aria-label={ko ? "삭제" : "Delete"}
+                      >
+                        <Trash2 size={13} strokeWidth={1.8} />
+                      </button>
+                    </div>
                   ))}
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={handleAddExpense}
-                disabled={!newExpense.label.trim() || !newExpense.amount}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: newExpense.label.trim() && newExpense.amount ? "#2563eb" : "rgba(15,23,42,0.08)",
-                  color: newExpense.label.trim() && newExpense.amount ? "#fff" : "rgba(15,23,42,0.4)",
-                  fontSize: "12px",
-                  fontWeight: 650,
-                  cursor: newExpense.label.trim() && newExpense.amount ? "pointer" : "not-allowed",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                }}
-              >
-                <Plus size={14} strokeWidth={2} />
-                {ko ? "추가" : "Add"}
-              </button>
-            </div>
-          </section>
-
-          {/* 4. 알림 및 고급 옵션 */}
-          <section style={sectionBox}>
-            <div style={sectionTitle}>
-              <span style={sectionNum}>4</span>
-              {ko ? "알림 및 옵션" : "Alerts & Options"}
-            </div>
-            <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
-              <ToggleRow
-                label={ko ? "위기 경고 푸시" : "Crisis warning push"}
-                desc={ko ? `${crisisThresholdDays}일 내 잔고가 마이너스로 갈 때 알림` : `Alert when balance goes negative within ${crisisThresholdDays} days`}
-                value={notifyOnCrisis}
-                onChange={setNotifyOnCrisis}
-              />
-              <ToggleRow
-                label={ko ? "매일 아침 요약" : "Daily morning summary"}
-                desc={ko ? "매일 오전 8시 통장 현황 요약" : "Balance snapshot every morning at 8am"}
-                value={dailyMorningBriefing}
-                onChange={setDailyMorningBriefing}
-              />
-              <ToggleRow
-                label={ko ? "부가세 10% 적립" : "VAT 10% reserve"}
-                desc={ko ? "입금액의 10%를 세금 적립으로 미리 제외하고 표시" : "Exclude 10% of inflow as VAT reserve"}
-                value={vatReserveEnabled}
-                onChange={setVatReserveEnabled}
-              />
-
-              {/* 위기 임계일 조정 */}
-              <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(15,23,42,0.02)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                  <span style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>
-                    {ko ? "위기 감지 기간" : "Crisis detection window"}
-                  </span>
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#2563eb" }}>
-                    {crisisThresholdDays}{ko ? "일" : "d"}
-                  </span>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="14"
-                  value={crisisThresholdDays}
-                  onChange={(e) => setCrisisThresholdDays(parseInt(e.target.value))}
-                  style={{ width: "100%" }}
+              )}
+
+              {/* 신규 고정비 입력 카드 */}
+              <div className="cfs-add-expense-card">
+                <div className="cfs-add-expense-title">
+                  {ko ? "새 고정비 추가" : "Add new expense"}
+                </div>
+                <div className="cfs-add-expense-grid">
+                  <input
+                    type="text"
+                    placeholder={ko ? "이름 (예: 월세)" : "Name (e.g., Rent)"}
+                    value={newExpense.label}
+                    onChange={(e) => setNewExpense({ ...newExpense, label: e.target.value })}
+                    className="cfs-mini-input"
+                  />
+                  <input
+                    type="number"
+                    placeholder={ko ? "만원" : "×10k"}
+                    min="0"
+                    value={newExpense.amount}
+                    onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                    className="cfs-mini-input"
+                  />
+                  <input
+                    type="number"
+                    placeholder={ko ? "일" : "Day"}
+                    min="1"
+                    max="31"
+                    value={newExpense.dayOfMonth}
+                    onChange={(e) => setNewExpense({ ...newExpense, dayOfMonth: e.target.value })}
+                    className="cfs-mini-input"
+                  />
+                  <select
+                    value={newExpense.category}
+                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value as FixedExpenseCategory })}
+                    className="cfs-mini-input"
+                  >
+                    {Object.entries(CATEGORY_LABEL).map(([k, v]) => (
+                      <option key={k} value={k}>{v[ko ? "ko" : "en"]}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddExpense}
+                  disabled={!newExpense.label.trim() || !newExpense.amount}
+                  className={`cfs-add-btn ${newExpense.label.trim() && newExpense.amount ? "cfs-add-btn-active" : ""}`}
+                >
+                  <Plus size={14} strokeWidth={2.2} />
+                  {ko ? "추가" : "Add"}
+                </button>
+              </div>
+            </section>
+
+            {/* ─── 4. 알림·옵션 ─── */}
+            <section className="cfs-section">
+              <SectionHeader
+                num={4}
+                Icon={Bell}
+                title={ko ? "알림 및 옵션" : "Alerts & Options"}
+                desc={ko ? "위기 감지 기간과 부가세 적립 등 운영 옵션" : "Crisis window & VAT reserve"}
+              />
+              {/* 권한 상태 안내 — denied 면 시스템 설정으로 가야함 */}
+              {(notifyOnCrisis || dailyMorningBriefing) && permStatus === "denied" && (
+                <div className="cfs-perm-warn">
+                  <AlertCircle size={13} strokeWidth={2.2} />
+                  <span>{ko
+                    ? "브라우저가 알림을 차단했습니다. 주소창 좌측 자물쇠 → 알림 → 허용으로 변경하세요."
+                    : "Browser blocked notifications. Click the lock icon in the URL bar → Notifications → Allow."}</span>
+                </div>
+              )}
+              {(notifyOnCrisis || dailyMorningBriefing) && permStatus === "granted" && (
+                <div className="cfs-perm-ok">
+                  <Check size={13} strokeWidth={2.4} />
+                  <span>{ko ? "알림 권한 허용됨 — 페이지가 열려있을 때 알림이 옵니다" : "Notifications allowed — fires when page is open"}</span>
+                </div>
+              )}
+              {(notifyOnCrisis || dailyMorningBriefing) && permStatus === "unsupported" && (
+                <div className="cfs-perm-warn">
+                  <AlertCircle size={13} strokeWidth={2.2} />
+                  <span>{ko ? "이 브라우저는 알림을 지원하지 않습니다" : "This browser does not support notifications"}</span>
+                </div>
+              )}
+
+              <div className="cfs-options-list">
+                <ToggleRow
+                  label={ko ? "위기 경고" : "Crisis warning"}
+                  desc={ko ? `${crisisThresholdDays}일 내 잔고가 마이너스로 갈 때 시스템 알림` : `System alert if balance goes negative within ${crisisThresholdDays} days`}
+                  value={notifyOnCrisis}
+                  onChange={(v) => handleNotificationToggle(setNotifyOnCrisis, v)}
                 />
-                <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>
-                  {ko ? "이 기간 내 통장 마이너스 가능성 있으면 경고" : "Alert if balance may go negative within this window"}
+                <ToggleRow
+                  label={ko ? "매일 아침 요약" : "Daily morning summary"}
+                  desc={ko ? "매일 오전 8~11시 사이 어제 매출 + 오늘 잔고 요약 알림" : "Morning briefing 8-11am with yesterday's sales + today's balance"}
+                  value={dailyMorningBriefing}
+                  onChange={(v) => handleNotificationToggle(setDailyMorningBriefing, v)}
+                />
+                <ToggleRow
+                  label={ko ? "부가세 10% 적립" : "VAT 10% reserve"}
+                  desc={ko ? "입금액의 10%를 세금 적립으로 미리 빼고 예측" : "Exclude 10% of inflow as VAT reserve in projections"}
+                  value={vatReserveEnabled}
+                  onChange={setVatReserveEnabled}
+                />
+
+                {/* 위기 임계일 슬라이더 */}
+                <div className="cfs-slider-row">
+                  <div className="cfs-slider-header">
+                    <span className="cfs-slider-label">
+                      {ko ? "위기 감지 기간" : "Crisis detection window"}
+                    </span>
+                    <span className="cfs-slider-value">
+                      {crisisThresholdDays}{ko ? "일" : "d"}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="14"
+                    value={crisisThresholdDays}
+                    onChange={(e) => setCrisisThresholdDays(parseInt(e.target.value))}
+                    className="cfs-slider"
+                  />
+                  <div className="cfs-slider-desc">
+                    {ko ? "이 기간 내 통장 마이너스 가능성 있으면 경고" : "Alert if balance may go negative within this window"}
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
-        </div>
+            </section>
 
-        {/* 하단 저장 버튼 */}
-        <div style={{ padding: "14px 20px", borderTop: "1px solid rgba(15,23,42,0.05)", display: "flex", gap: "8px" }}>
-          <button type="button" onClick={onClose} style={cancelBtn}>
-            {ko ? "취소" : "Cancel"}
-          </button>
-          <button
-            type="button"
-            onClick={handleSaveAndClose}
-            disabled={!canSave}
-            style={{
-              flex: 1,
-              padding: "12px",
-              borderRadius: "12px",
-              border: "none",
-              background: canSave ? "#2563eb" : "rgba(15,23,42,0.08)",
-              color: canSave ? "#fff" : "rgba(15,23,42,0.4)",
-              fontSize: "14px",
-              fontWeight: 650,
-              cursor: canSave ? "pointer" : "not-allowed",
-              fontFamily: "inherit",
-            }}
-          >
-            {setupCompletedAt ? (ko ? "저장" : "Save") : (ko ? "설정 완료" : "Finish setup")}
-          </button>
+            {/* 하단 미니 안내 */}
+            <div className="cfs-disclaimer">
+              {ko
+                ? "ⓘ 입력한 모든 정보는 사장님 계정에 안전하게 저장됩니다 (Supabase). 다른 기기에서도 동일하게 보입니다."
+                : "ⓘ All settings are saved securely to your account (Supabase) and synced across devices."}
+            </div>
+          </div>
+
+          {/* ───────── Footer ───────── */}
+          <div className="cfs-footer">
+            <button type="button" onClick={onClose} className="cfs-cancel-btn">
+              {ko ? "취소" : "Cancel"}
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveAndClose}
+              disabled={!canSave}
+              className={`cfs-save-btn ${canSave ? "cfs-save-btn-active" : ""}`}
+            >
+              {setupCompletedAt ? (ko ? "저장" : "Save") : (ko ? "설정 완료" : "Finish setup")}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
+  );
+
+  // Portal — document.body 에 렌더해서 모든 stacking context (transform/filter/will-change) 탈출
+  return createPortal(modalContent, document.body);
+}
+
+// ─── Sub-components ─────────────────────────────────────────────────
+
+function SectionHeader({
+  num, Icon, title, desc, rightSlot,
+}: {
+  num: number;
+  Icon: typeof Wallet;
+  title: string;
+  desc: string;
+  rightSlot?: React.ReactNode;
+}) {
+  return (
+    <>
+      <div className="cfs-section-header">
+        <span className="cfs-section-num">{num}</span>
+        <Icon size={14} strokeWidth={2} color="#1d3557" style={{ flexShrink: 0 }} />
+        <span className="cfs-section-title">{title}</span>
+        {rightSlot && <div className="cfs-section-right">{rightSlot}</div>}
+      </div>
+      <div className="cfs-section-desc">{desc}</div>
+    </>
   );
 }
 
-// ─── Subcomponents ───
-
 function ToggleRow({
-  label,
-  desc,
-  value,
-  onChange,
+  label, desc, value, onChange,
 }: {
   label: string;
   desc: string;
@@ -504,30 +549,20 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label style={{
-      padding: "10px 12px",
-      borderRadius: "10px",
-      background: "rgba(15,23,42,0.02)",
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      cursor: "pointer",
-    }}>
+    <label className="cfs-toggle-row">
       <input
         type="checkbox"
         checked={value}
         onChange={(e) => onChange(e.target.checked)}
-        style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "#2563eb", flexShrink: 0 }}
+        className="cfs-checkbox"
       />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{label}</div>
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "1px" }}>{desc}</div>
+      <div className="cfs-toggle-meta">
+        <div className="cfs-toggle-label">{label}</div>
+        <div className="cfs-toggle-desc">{desc}</div>
       </div>
     </label>
   );
 }
-
-// ─── Constants ───
 
 const CATEGORY_LABEL: Record<FixedExpenseCategory, { ko: string; en: string }> = {
   rent: { ko: "월세", en: "Rent" },
@@ -540,111 +575,479 @@ const CATEGORY_LABEL: Record<FixedExpenseCategory, { ko: string; en: string }> =
   other: { ko: "기타", en: "Other" },
 };
 
-// ─── Styles ───
+// ─── CSS (Glassmorphism + Midnight Blue tone) ─────────────────────
+const KEYFRAMES = `
+@keyframes cfsBackdropIn {
+  from { opacity: 0; backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(28px) saturate(160%); -webkit-backdrop-filter: blur(28px) saturate(160%); }
+}
+@keyframes cfsPanelIn {
+  from { opacity: 0; transform: scale(.94) translateY(8px); filter: blur(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+@keyframes cfsTooltipIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
-const headerBar: React.CSSProperties = {
-  padding: "18px 20px 14px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  borderBottom: "1px solid rgba(15,23,42,0.05)",
-};
+.cfs-backdrop {
+  position: fixed; inset: 0; z-index: 210;
+  display: flex; align-items: center; justify-content: center;
+  /* 더 깊고 균일한 미드나이트 톤 + 강한 블러로 뒤 화면 정리 */
+  background:
+    radial-gradient(ellipse at center, rgba(10,25,41,0.55) 0%, rgba(10,25,41,0.7) 100%);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  animation: cfsBackdropIn .32s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+  padding: 32px 16px;  /* 모달 주변 여유 — 패널이 화면 끝에 붙지 않게 */
+}
 
-const eyebrow: React.CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 650,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
-};
+.cfs-panel {
+  width: 100%; max-width: 680px;
+  height: min(720px, calc(100vh - 64px));   /* 위·아래 32px 여백 보장 */
+  max-height: calc(100vh - 64px);
+  /* 4면 모두 둥글게 — 정중앙 떠있는 모달 */
+  border-radius: 28px;
+  /* 솔리드 화이트 — 모달 안 컨텐츠 선명도 보장 (backdrop-filter 제거: 외부 backdrop 만으로 충분) */
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  /* 입체감 있는 그림자 — 떠있는 느낌 */
+  box-shadow:
+    0 0 0 1px rgba(10, 25, 41, 0.03),
+    0 24px 80px rgba(10, 25, 41, 0.32),
+    0 8px 24px rgba(10, 25, 41, 0.12);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  animation: cfsPanelIn .42s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-const title: React.CSSProperties = {
-  fontSize: "18px",
-  fontWeight: 700,
-  letterSpacing: "-0.03em",
-  color: "#0f172a",
-  marginTop: "2px",
-};
+/* 모바일 — 좌우·상하 여백 최소화 */
+@media (max-width: 520px) {
+  .cfs-backdrop { padding: 12px; }
+  .cfs-panel {
+    border-radius: 24px;
+    height: calc(100vh - 24px);
+  }
+}
 
-const closeBtn: React.CSSProperties = {
-  width: "36px",
-  height: "36px",
-  borderRadius: "10px",
-  background: "rgba(15,23,42,0.04)",
-  border: "none",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
+/* ===== Header ===== */
+.cfs-header {
+  padding: 18px 22px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 0.5px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+  flex-shrink: 0;
+}
+.cfs-header-left { display: flex; align-items: center; gap: 12px; }
+.cfs-header-icon-wrap {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: linear-gradient(135deg, #0a1929 0%, #1d3557 55%, #3b5c8c 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(10,25,41,0.35), inset 0 0.5px 0 rgba(255,255,255,0.22);
+}
+.cfs-header-eyebrow {
+  font-size: 10.5px; font-weight: 700; color: #1d3557;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 1px;
+}
+.cfs-header-title {
+  font-size: 18px; font-weight: 700; color: #0f172a;
+  letter-spacing: -0.025em;
+}
+.cfs-close {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: rgba(15,23,42,0.04); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(15,23,42,0.5);
+  transition: background .15s ease;
+}
+.cfs-close:hover { background: rgba(15,23,42,0.08); color: #0f172a; }
 
-const sectionBox: React.CSSProperties = {
-  padding: "16px",
-  borderRadius: "16px",
-  background: "#fff",
-  border: "1px solid rgba(15,23,42,0.05)",
-  marginBottom: "14px",
-};
+/* ===== Body ===== */
+.cfs-body {
+  overflow-y: auto; flex: 1;
+  padding: 22px;
+  background: #fafbfc;  /* 섹션 카드 대비를 위한 옅은 회색 배경 */
+}
+.cfs-body::-webkit-scrollbar { width: 8px; }
+.cfs-body::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.1); border-radius: 4px; }
 
-const sectionTitle: React.CSSProperties = {
-  fontSize: "14px",
-  fontWeight: 700,
-  color: "#0f172a",
-  letterSpacing: "-0.02em",
-  marginBottom: "4px",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-};
+/* ===== Section ===== */
+.cfs-section {
+  padding: 18px 18px 18px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(10,25,41,0.04);
+}
 
-const sectionNum: React.CSSProperties = {
-  width: "22px",
-  height: "22px",
-  borderRadius: "6px",
-  background: "#2563eb",
-  color: "#fff",
-  fontSize: "11px",
-  fontWeight: 700,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
+.cfs-section-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 4px;
+}
+.cfs-section-num {
+  width: 22px; height: 22px; border-radius: 7px;
+  background: linear-gradient(135deg, #1d3557 0%, #2c4a7a 100%);
+  color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 3px rgba(29,53,87,0.3);
+  flex-shrink: 0;
+}
+.cfs-section-title {
+  font-size: 14px; font-weight: 700; color: #0f172a;
+  letter-spacing: -0.02em;
+}
+.cfs-section-right { margin-left: auto; }
+.cfs-section-desc {
+  font-size: 12px; color: rgba(15, 23, 42, 0.55);
+  line-height: 1.55; margin-top: 4px; padding-left: 30px;
+  letter-spacing: -0.005em;
+}
 
-const sectionDesc: React.CSSProperties = {
-  fontSize: "12px",
-  color: "rgba(15,23,42,0.55)",
-  lineHeight: 1.55,
-  marginTop: "2px",
-};
+/* ===== Sum badge ===== */
+.cfs-sum-badge {
+  font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 999px;
+}
+.cfs-sum-ok {
+  background: rgba(34, 197, 94, 0.1); color: #15803d;
+  border: 0.5px solid rgba(34, 197, 94, 0.25);
+}
+.cfs-sum-bad {
+  background: rgba(220, 38, 38, 0.08); color: #b91c1c;
+  border: 0.5px solid rgba(220, 38, 38, 0.22);
+}
 
-const fieldInput: React.CSSProperties = {
-  flex: 1,
-  padding: "10px 12px",
-  borderRadius: "10px",
-  border: "1px solid rgba(15,23,42,0.1)",
-  fontSize: "14px",
-  fontFamily: "inherit",
-  background: "#fff",
-};
+/* ===== Balance input ===== */
+.cfs-balance-input-wrap {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 14px;
+}
+.cfs-balance-input {
+  flex: 1;
+  padding: 12px 14px; border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  font-size: 16px; font-weight: 600; color: #0f172a;
+  background: #fff; outline: none;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: border-color .15s, box-shadow .15s;
+}
+.cfs-balance-input:focus {
+  border-color: rgba(29, 53, 87, 0.45);
+  box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.08);
+}
+.cfs-balance-unit {
+  font-size: 13px; color: rgba(15,23,42,0.5); font-weight: 650;
+}
+.cfs-balance-preview {
+  margin-top: 8px;
+  font-size: 12px; color: rgba(15,23,42,0.6);
+  font-weight: 600; padding-left: 4px;
+}
 
-const fieldInputSmall: React.CSSProperties = {
-  padding: "6px 8px",
-  borderRadius: "6px",
-  border: "1px solid rgba(15,23,42,0.1)",
-  fontSize: "12px",
-  fontFamily: "inherit",
-  background: "#fff",
-  minWidth: 0,
-};
+/* ===== Channel list ===== */
+.cfs-channel-list {
+  display: grid; gap: 6px; margin-top: 14px;
+}
+.cfs-channel-row {
+  position: relative;
+  padding: 12px 14px; border-radius: 12px;
+  background: #f8f9fb;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  transition: background .15s, border-color .15s;
+}
+.cfs-channel-active {
+  background: #eef3fa;
+  border-color: rgba(29, 53, 87, 0.18);
+}
+.cfs-channel-checkbox-wrap {
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+}
+.cfs-channel-meta { flex: 1; min-width: 0; }
+.cfs-channel-name {
+  font-size: 13px; font-weight: 650; color: #0f172a;
+  display: flex; align-items: center; gap: 5px;
+  letter-spacing: -0.01em;
+}
+.cfs-channel-detail {
+  display: flex; gap: 4px; margin-top: 4px;
+}
+.cfs-channel-detail-pill {
+  font-size: 9.5px; font-weight: 700; padding: 2px 7px;
+  border-radius: 999px; background: rgba(15, 23, 42, 0.05);
+  color: rgba(15, 23, 42, 0.55);
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.cfs-channel-fee-pill {
+  background: rgba(220, 38, 38, 0.06);
+  color: #b91c1c;
+}
+.cfs-info-btn {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: none; background: rgba(29,53,87,0.08);
+  cursor: pointer; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #1d3557;
+  transition: background .15s;
+}
+.cfs-info-btn:hover { background: rgba(29,53,87,0.18); }
+.cfs-channel-ratio-wrap {
+  display: flex; align-items: center; gap: 4px; margin-left: 12px;
+}
+.cfs-ratio-input {
+  width: 56px; padding: 5px 8px; border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  font-size: 13px; font-weight: 700; text-align: center;
+  background: #fff;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s;
+}
+.cfs-ratio-input:focus { border-color: rgba(29,53,87,0.4); }
+.cfs-ratio-pct {
+  font-size: 12px; color: rgba(15,23,42,0.5); font-weight: 700;
+}
+.cfs-channel-checkbox-wrap input[type="checkbox"]::before {
+  content: ""; display: block;
+}
+.cfs-checkbox {
+  width: 16px; height: 16px;
+  cursor: pointer; accent-color: #1d3557;
+  flex-shrink: 0;
+}
 
-const cancelBtn: React.CSSProperties = {
-  padding: "12px 20px",
-  borderRadius: "12px",
-  border: "1px solid rgba(15,23,42,0.1)",
-  background: "#fff",
-  color: "rgba(15,23,42,0.6)",
-  fontSize: "14px",
-  fontWeight: 620,
-  cursor: "pointer",
-  fontFamily: "inherit",
-};
+/* ===== Tooltip ===== */
+.cfs-tooltip {
+  position: absolute; left: 14px; right: 14px; bottom: calc(100% + 4px);
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(10, 25, 41, 0.95);
+  backdrop-filter: blur(8px);
+  color: #fff; font-size: 11.5px; line-height: 1.5;
+  font-weight: 500; letter-spacing: -0.005em;
+  box-shadow: 0 4px 16px rgba(10,25,41,0.3);
+  z-index: 5;
+  animation: cfsTooltipIn .18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ===== Warn box ===== */
+.cfs-warn-box {
+  margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(220, 38, 38, 0.05);
+  border: 0.5px solid rgba(220, 38, 38, 0.18);
+  font-size: 11.5px; color: #b91c1c; font-weight: 600;
+}
+
+/* ===== Total pill ===== */
+.cfs-total-pill {
+  font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(29, 53, 87, 0.08);
+  color: #1d3557;
+  border: 0.5px solid rgba(29, 53, 87, 0.18);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Expense list ===== */
+.cfs-expense-list { display: grid; gap: 6px; margin-top: 14px; }
+.cfs-expense-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 12px;
+  background: #fafbfc;
+  border: 0.5px solid rgba(15, 23, 42, 0.06);
+}
+.cfs-expense-inactive { opacity: 0.45; background: #f4f6f8; }
+.cfs-expense-meta { flex: 1; min-width: 0; }
+.cfs-expense-label {
+  font-size: 13px; font-weight: 650; color: #0f172a;
+  letter-spacing: -0.01em;
+}
+.cfs-expense-detail {
+  font-size: 11px; color: rgba(15,23,42,0.55);
+  margin-top: 1px; font-weight: 500;
+}
+.cfs-expense-amount {
+  font-size: 13.5px; font-weight: 700; color: #b91c1c;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.cfs-trash-btn {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(220, 38, 38, 0.06); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #b91c1c;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.cfs-trash-btn:hover { background: rgba(220, 38, 38, 0.14); }
+
+/* ===== Add expense card ===== */
+.cfs-add-expense-card {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(29, 53, 87, 0.04), rgba(44, 74, 122, 0.02));
+  border: 1px dashed rgba(29, 53, 87, 0.22);
+}
+.cfs-add-expense-title {
+  font-size: 12px; font-weight: 700; color: #1d3557;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+.cfs-add-expense-grid {
+  display: grid; grid-template-columns: 2fr 1fr 0.8fr 1fr; gap: 6px;
+  margin-bottom: 10px;
+}
+.cfs-mini-input {
+  padding: 8px 10px; border-radius: 9px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  font-size: 12.5px; font-weight: 500; color: #0f172a;
+  background: #fff; outline: none;
+  font-family: inherit;
+  min-width: 0;
+  transition: border-color .15s;
+}
+.cfs-mini-input:focus { border-color: rgba(29,53,87,0.4); }
+.cfs-add-btn {
+  width: 100%; padding: 9px; border-radius: 10px;
+  border: none;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.4);
+  font-size: 12.5px; font-weight: 700;
+  cursor: not-allowed;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: all .18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cfs-add-btn-active {
+  background: linear-gradient(135deg, #1d3557 0%, #2c4a7a 100%) !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(29,53,87,0.3), inset 0 0.5px 0 rgba(255,255,255,0.18);
+}
+.cfs-add-btn-active:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(29,53,87,0.4); }
+
+/* ===== Permission status banners ===== */
+.cfs-perm-warn,
+.cfs-perm-ok {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+  font-size: 11.5px; font-weight: 600;
+  letter-spacing: -0.005em; line-height: 1.45;
+}
+.cfs-perm-warn {
+  background: rgba(220, 38, 38, 0.06);
+  border: 0.5px solid rgba(220, 38, 38, 0.22);
+  color: #b91c1c;
+}
+.cfs-perm-warn svg { flex-shrink: 0; }
+.cfs-perm-ok {
+  background: rgba(34, 197, 94, 0.07);
+  border: 0.5px solid rgba(34, 197, 94, 0.22);
+  color: #15803d;
+}
+.cfs-perm-ok svg { flex-shrink: 0; }
+
+/* ===== Options list ===== */
+.cfs-options-list { display: grid; gap: 8px; margin-top: 14px; }
+.cfs-toggle-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 12px;
+  background: #fafbfc;
+  border: 0.5px solid rgba(15, 23, 42, 0.05);
+  cursor: pointer;
+  transition: background .15s;
+}
+.cfs-toggle-row:hover { background: #f4f6f8; }
+.cfs-toggle-meta { flex: 1; }
+.cfs-toggle-label {
+  font-size: 13px; font-weight: 650; color: #0f172a;
+  letter-spacing: -0.01em;
+}
+.cfs-toggle-desc {
+  font-size: 11.5px; color: rgba(15,23,42,0.55);
+  margin-top: 2px; font-weight: 500;
+}
+
+/* Slider row */
+.cfs-slider-row {
+  padding: 12px 14px; border-radius: 12px;
+  background: #fafbfc;
+  border: 0.5px solid rgba(15, 23, 42, 0.05);
+}
+.cfs-slider-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.cfs-slider-label {
+  font-size: 13px; font-weight: 650; color: #0f172a;
+  letter-spacing: -0.01em;
+}
+.cfs-slider-value {
+  font-size: 14px; font-weight: 700; color: #1d3557;
+  font-variant-numeric: tabular-nums;
+}
+.cfs-slider {
+  width: 100%; accent-color: #1d3557;
+  cursor: pointer;
+}
+.cfs-slider-desc {
+  font-size: 11px; color: rgba(15,23,42,0.5);
+  margin-top: 4px; font-weight: 500;
+}
+
+/* Disclaimer */
+.cfs-disclaimer {
+  margin-top: 8px; padding: 12px 14px; border-radius: 12px;
+  background: rgba(34, 197, 94, 0.04);
+  border: 0.5px solid rgba(34, 197, 94, 0.18);
+  font-size: 11.5px; color: #15803d;
+  line-height: 1.55; font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+/* ===== Footer ===== */
+.cfs-footer {
+  padding: 14px 22px;
+  border-top: 0.5px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  display: flex; gap: 10px;
+  flex-shrink: 0;
+}
+.cfs-cancel-btn {
+  padding: 12px 22px; border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  color: rgba(15, 23, 42, 0.6);
+  font-size: 14px; font-weight: 650;
+  cursor: pointer; font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background .15s;
+}
+.cfs-cancel-btn:hover { background: rgba(15,23,42,0.04); }
+.cfs-save-btn {
+  flex: 1;
+  padding: 12px; border-radius: 12px;
+  border: none;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.4);
+  font-size: 14px; font-weight: 700;
+  cursor: not-allowed; font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: all .18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cfs-save-btn-active {
+  background: linear-gradient(135deg, #0a1929 0%, #1d3557 55%, #3b5c8c 100%) !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(10,25,41,0.35), inset 0 0.5px 0 rgba(255,255,255,0.22);
+}
+.cfs-save-btn-active:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(10,25,41,0.45); }
+.cfs-save-btn-active:active { transform: translateY(0); }
+`;

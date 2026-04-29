@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
 
 export function ProductSalesEntry({
@@ -8,15 +8,24 @@ export function ProductSalesEntry({
   ko,
   fmt,
   onSalesApplied,
+  /** 외부에서 펼침 상태 강제 — "+ 오늘 입력" 클릭 시 자동 펼침에 사용 */
+  forceExpanded,
 }: {
   d: DashboardHook;
   ko: boolean;
   fmt: (n: number) => string;
   onSalesApplied?: (sales: number, customers: number) => void;
+  forceExpanded?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [soldCounts, setSoldCounts] = useState<Record<string, number>>({});
+
+  // forceExpanded prop 변경 시 internal state 동기화
+  // (true → 펼침, false 가 들어오면 닫지 않음 — 사용자 자체 토글 보존)
+  useEffect(() => {
+    if (forceExpanded) setExpanded(true);
+  }, [forceExpanded]);
 
   // 판매 상품: inventory에서 itemType=product이거나, products 배열에서 가져옴
   const invProducts = (d.inventory as Array<{ id: string; name: string; sellingPrice?: number; itemType?: string; unitCost?: number }>)

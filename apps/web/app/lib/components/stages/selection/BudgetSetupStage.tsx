@@ -19,12 +19,14 @@ export function BudgetSetupStage() {
     language,
     copy,
     industryCategoryId,
+    selectedIndustryId,
     startupType,
     selectedFranchiseBrandId,
     selectedBudget, setSelectedBudget,
     budgetInputText, setBudgetInputText,
     initialOperatingCapital, setInitialOperatingCapital,
     operatingCapitalInputText, setOperatingCapitalInputText,
+    startupOperatingMode, setStartupOperatingMode,
     sliderBudgetValue,
     activeBudgetLabel,
     selectedOpenDate, setSelectedOpenDate,
@@ -37,6 +39,11 @@ export function BudgetSetupStage() {
 
   const budgetRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
+  // ── 스타트업 운영 모드 ──
+  //  profile-store 에 영속됨 — 다른 단계 (FundraisingReadiness 등) 에서 동일 모드 활용.
+  //  default: bootstrap (대부분의 초기 창업자가 여기에 해당)
+  const startupMode = startupOperatingMode;
+  const setStartupMode = setStartupOperatingMode;
 
   return (
     <>
@@ -330,15 +337,50 @@ export function BudgetSetupStage() {
         </div>
       </div>
 
-      {/* ── 초기 운영자본금 (창업비용과 별도) ── */}
+      {/* ── 초기 운영자본금 / 런웨이 자본 (업종 + 세부업종 + 운영 모드 분기) ── */}
       {(() => {
         const ko = language === "ko";
         const capitalWon = initialOperatingCapital ?? 0;
         const capitalManwon = Math.round(capitalWon / 10000);
         const sliderValue = initialOperatingCapital ?? 0;
+        const isStartup = industryCategoryId === "startup-tech";
 
-        // 권장 운영자본금 — 업종별 월 예상 비용의 3~6배
-        const monthlyCostEstimate: Record<string, number> = {
+        // ── 월 번레이트 매트릭스 (모드 × 세부 업종) ──
+        //  검증 출처:
+        //   • Indie hacker tool stack 2026: $19-50/mo (≈ 5만원), 1년 총 $15-30K (월 200-350만)
+        //     - SaaSRanger·We Are Founders·Lovable·EntrepreneurLoop 분석
+        //   • Pre-seed gross burn: $33K/mo (≈ 4500만원)
+        //     - Zeni / WinSavvy / HSBC Innovation Banking 2026 burn rate benchmarks
+        //   • Seed-stage burn: $45-50K/mo (≈ 6000-6700만원), 12-18개월 런웨이
+        //   • Payroll dominates 50-70% of bootstrapped budget
+        //   • 한국 시리즈A: SaaS 30-100억 / 반도체·하드웨어 100-900억대 (디노티시아 900억·BOS 870억)
+        //
+        //  단위: 원/월. 한국 표준 인건비 기준 (서울).
+        //  4단계 모드:
+        //   • indie  : 1인, 인건비 X, 도구·서버만
+        //   • bootstrap : 1-3명, 낮은 자기 인건비 (200-300만/명)
+        //   • seed   : 3-5명, 표준 인건비 (400-500만/명) + 시드 자금
+        //   • seriesA : 5-10명, 정규 인건비 + 마케팅·세일즈
+        const STARTUP_MATRIX: Record<string, Record<string, number>> = {
+          // 소프트웨어 — 도구는 거의 무료, 인건비가 핵심 변수
+          "ai-application":     { indie:    300_000, bootstrap:  8_000_000, seed: 30_000_000, seriesA:   70_000_000 },
+          "developer-tools":    { indie:    300_000, bootstrap:  7_000_000, seed: 28_000_000, seriesA:   65_000_000 },
+          "b2b-saas":           { indie:    400_000, bootstrap:  8_000_000, seed: 30_000_000, seriesA:   70_000_000 },
+          "fintech-startup":    { indie:    500_000, bootstrap: 12_000_000, seed: 40_000_000, seriesA:  100_000_000 }, // 컴플라이언스
+          "healthtech-startup": { indie:    400_000, bootstrap: 10_000_000, seed: 35_000_000, seriesA:   80_000_000 },
+          "security-startup":   { indie:    400_000, bootstrap:  9_000_000, seed: 32_000_000, seriesA:   75_000_000 },
+          // 하드웨어 — 부품·금형·인증 비용 추가
+          "hardware-iot":       { indie:  1_000_000, bootstrap: 20_000_000, seed: 50_000_000, seriesA:  150_000_000 },
+          // 로보틱스·딥테크 — 인디 거의 불가능
+          "robotics-physical-ai": { indie: 2_000_000, bootstrap: 50_000_000, seed: 150_000_000, seriesA: 350_000_000 },
+          // 반도체 — 인디 사실상 불가능 (EDA 라이선스만 수억원)
+          "semiconductor":      { indie:  5_000_000, bootstrap: 100_000_000, seed: 300_000_000, seriesA: 800_000_000 },
+          // 바이오·의료기기
+          "biotech-medtech":    { indie:  3_000_000, bootstrap: 50_000_000, seed: 150_000_000, seriesA: 350_000_000 },
+          // 클린테크 — 소프트웨어 vs 인프라 양극단
+          "climate-energy":     { indie:  1_000_000, bootstrap: 30_000_000, seed: 100_000_000, seriesA: 300_000_000 },
+        };
+        const offlineMonthlyByCategory: Record<string, number> = {
           "food": 8_000_000,
           "cafe-dessert": 6_000_000,
           "retail": 5_000_000,
@@ -346,42 +388,146 @@ export function BudgetSetupStage() {
           "fitness": 7_000_000,
           "education": 4_000_000,
           "online-digital": 2_500_000,
-          "startup-tech": 10_000_000,
         };
-        const estimatedMonthly = monthlyCostEstimate[industryCategoryId] ?? 5_000_000;
-        const recommendedMin = estimatedMonthly * 3;
-        const recommendedMax = estimatedMonthly * 6;
+        const subMatrix = STARTUP_MATRIX[selectedIndustryId ?? ""] ?? STARTUP_MATRIX["ai-application"];
+        const estimatedMonthly = isStartup
+          ? (subMatrix[startupMode] ?? subMatrix.bootstrap)
+          : (offlineMonthlyByCategory[industryCategoryId] ?? 5_000_000);
+
+        // ── 권장 범위 ──
+        //  스타트업: 12~24개월 런웨이 (시리즈A 평균 21개월 — ZUZU 분석)
+        //  인디 모드는 현실적으로 1년치 생활비 + 도구
+        //  오프라인: 3~6개월 비상금
+        const recommendedMin = isStartup ? estimatedMonthly * 12 : estimatedMonthly * 3;
+        const recommendedMax = isStartup ? estimatedMonthly * 24 : estimatedMonthly * 6;
         const ratio = estimatedMonthly > 0 ? capitalWon / estimatedMonthly : 0;
-        const ratioLabel = ratio >= 6
-          ? (ko ? "매우 여유 (6개월+)" : "Very safe (6+ months)")
-          : ratio >= 3
-            ? (ko ? "적정 (3~6개월)" : "Adequate (3-6 months)")
-            : ratio >= 1
-              ? (ko ? "부족 (3개월 미만)" : "Tight (<3 months)")
-              : capitalWon > 0
-                ? (ko ? "매우 부족 (1개월 미만)" : "Critical (<1 month)")
-                : (ko ? "아직 입력하지 않음" : "Not set yet");
-        const ratioColor = ratio >= 3 ? "#059669" : ratio >= 1 ? "#d97706" : capitalWon > 0 ? "#dc2626" : "rgba(15,23,42,0.35)";
+
+        // ── 건강 신호 ──
+        let ratioLabel: string;
+        let ratioColor: string;
+        if (capitalWon === 0) {
+          ratioLabel = ko ? "아직 입력하지 않음" : "Not set yet";
+          ratioColor = "rgba(15,23,42,0.35)";
+        } else if (isStartup) {
+          if (ratio >= 24) { ratioLabel = ko ? "넉넉 (24개월+ 런웨이)" : "Strong (24+ mo runway)"; ratioColor = "#059669"; }
+          else if (ratio >= 18) { ratioLabel = ko ? "적정 (18~24개월)" : "Adequate (18-24 mo)"; ratioColor = "#059669"; }
+          else if (ratio >= 12) { ratioLabel = ko ? "타이트 (12~18개월)" : "Tight (12-18 mo)"; ratioColor = "#d97706"; }
+          else if (ratio >= 6) { ratioLabel = ko ? "부족 (6~12개월)" : "Short (6-12 mo)"; ratioColor = "#d97706"; }
+          else { ratioLabel = ko ? "심각 — 시리즈A 전 소진 위험" : "Critical — risk of running out before Series A"; ratioColor = "#dc2626"; }
+        } else {
+          if (ratio >= 6) { ratioLabel = ko ? "매우 여유 (6개월+)" : "Very safe (6+ months)"; ratioColor = "#059669"; }
+          else if (ratio >= 3) { ratioLabel = ko ? "적정 (3~6개월)" : "Adequate (3-6 months)"; ratioColor = "#059669"; }
+          else if (ratio >= 1) { ratioLabel = ko ? "부족 (3개월 미만)" : "Tight (<3 months)"; ratioColor = "#d97706"; }
+          else { ratioLabel = ko ? "매우 부족 (1개월 미만)" : "Critical (<1 month)"; ratioColor = "#dc2626"; }
+        }
+
+        // ── 슬라이더 상한 (모드 × 세부 업종 기반) ──
+        //  추정 월 번레이트의 36개월치 정도면 충분 — 그 이상은 거의 시리즈B 영역
+        const sliderMax = isStartup
+          ? Math.max(estimatedMonthly * 36, 100_000_000)
+          : 200_000_000;
+        const sliderStep = sliderMax >= 1_000_000_000 ? 10_000_000
+          : sliderMax >= 100_000_000 ? 1_000_000
+          : 500_000;
+        const maxLabel = sliderMax >= 100_000_000
+          ? `${(sliderMax / 100_000_000).toFixed(sliderMax % 100_000_000 === 0 ? 0 : 1)}억원`
+          : `${Math.round(sliderMax / 10_000).toLocaleString()}만원`;
 
         const fmt = (won: number) => {
-          if (won >= 10000) return `${Math.round(won / 10000).toLocaleString()}만원`;
+          if (won >= 100_000_000) return `${(won / 100_000_000).toFixed(won % 100_000_000 === 0 ? 0 : 1)}억원`;
+          if (won >= 10_000) return `${Math.round(won / 10_000).toLocaleString()}만원`;
           return `${won.toLocaleString()}원`;
         };
 
+        // ── 라벨·헬퍼 텍스트 (스타트업: "런웨이 자본" / 그 외: "운영 자본금") ──
+        const titleLabel = isStartup
+          ? (ko ? "런웨이 자본 (자본금과 별도)" : "Runway capital (separate)")
+          : (ko ? "초기 운영자본금 (자본금과 별도)" : "Initial operating capital (separate)");
+        const helperText = isStartup
+          ? (ko
+              ? "월 번레이트 × 운영 가능 개월 수입니다. 시리즈A 평균 21개월 런웨이가 표준이며, 매출이 비용을 못 덮는 동안 버틸 자금이에요."
+              : "Monthly burn × runway months. Series A teams target 21 mo runway. This is the cash to survive until revenue covers costs.")
+          : (ko
+              ? "오픈 직후 몇 달간 월세·인건비·공과금·재료비로 쓸 현금입니다. 매출이 적자를 덮기 전까지 버티는 연료예요."
+              : "Cash for rent, wages, utilities, and materials during the first months before revenue covers costs.");
+
+        // ── 스타트업 운영 모드 옵션 ──
+        const MODE_OPTIONS: Array<{
+          id: "indie" | "bootstrap" | "seed" | "seriesA";
+          label: string;
+          desc: string;
+        }> = [
+          {
+            id: "indie",
+            label: ko ? "1인 인디" : "Solo indie",
+            desc: ko ? "혼자, 인건비 X, 도구·서버만" : "Solo, no salary, tools only",
+          },
+          {
+            id: "bootstrap",
+            label: ko ? "부트스트랩" : "Bootstrapped",
+            desc: ko ? "1-3명, 자비 또는 낮은 인건비" : "1-3 people, low salary",
+          },
+          {
+            id: "seed",
+            label: ko ? "시드 단계" : "Seed-funded",
+            desc: ko ? "3-5명, 표준 인건비 + 시드 자금" : "3-5 people, market salary",
+          },
+          {
+            id: "seriesA",
+            label: ko ? "시리즈A 이상" : "Series A+",
+            desc: ko ? "5-10명, 정규 인건비 + 마케팅" : "5-10 people, full team",
+          },
+        ];
+
         return (
           <div style={styles.budgetPanel}>
-            <div style={styles.budgetHeader}>
-              <div style={styles.budgetLabel}>
-                {ko ? "초기 운영자본금 (자본금과 별도)" : "Initial operating capital (separate)"}
+            {/* ── 운영 모드 선택 (스타트업 전용) ── */}
+            {isStartup && (
+              <div style={{ marginBottom: "16px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.04em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+                  {ko ? "운영 모드 — 비용 추정용" : "Operating mode — for cost estimate"}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
+                  {MODE_OPTIONS.map((mode) => {
+                    const isActive = startupMode === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => setStartupMode(mode.id)}
+                        style={{
+                          textAlign: "left" as const,
+                          padding: "10px 12px",
+                          borderRadius: "12px",
+                          border: isActive ? "1.5px solid #191970" : "1px solid rgba(15,23,42,0.1)",
+                          background: isActive ? "rgba(25,25,112,0.05)" : "white",
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div style={{
+                          fontSize: "13px", fontWeight: 700,
+                          color: isActive ? "#191970" : "var(--text)",
+                          letterSpacing: "-0.01em", marginBottom: "2px",
+                        }}>
+                          {mode.label}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>
+                          {mode.desc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            )}
+
+            <div style={styles.budgetHeader}>
+              <div style={styles.budgetLabel}>{titleLabel}</div>
               <div style={styles.budgetValue}>
                 {capitalWon > 0 ? fmt(capitalWon) : (ko ? "미입력" : "Not set")}
               </div>
-              <div style={styles.helper}>
-                {ko
-                  ? "오픈 직후 몇 달간 월세·인건비·공과금·재료비로 쓸 현금입니다. 매출이 적자를 덮기 전까지 버티는 연료예요."
-                  : "Cash for rent, wages, utilities, and materials during the first months before revenue covers costs."}
-              </div>
+              <div style={styles.helper}>{helperText}</div>
               <div style={{
                 marginTop: "4px",
                 display: "flex",
@@ -396,9 +542,13 @@ export function BudgetSetupStage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: "12px", fontWeight: 660, color: ratioColor }}>{ratioLabel}</div>
                   <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                    {ko
-                      ? `권장 범위: ${fmt(recommendedMin)} ~ ${fmt(recommendedMax)} (월 예상 비용의 3~6배)`
-                      : `Recommended: ${fmt(recommendedMin)} - ${fmt(recommendedMax)} (3-6 months of expenses)`}
+                    {isStartup
+                      ? (ko
+                          ? `권장 범위: ${fmt(recommendedMin)} ~ ${fmt(recommendedMax)} (월 번레이트 ${fmt(estimatedMonthly)} × 12-24개월)`
+                          : `Recommended: ${fmt(recommendedMin)} - ${fmt(recommendedMax)} (monthly burn ${fmt(estimatedMonthly)} × 12-24 mo)`)
+                      : (ko
+                          ? `권장 범위: ${fmt(recommendedMin)} ~ ${fmt(recommendedMax)} (월 예상 비용 ${fmt(estimatedMonthly)} × 3-6개월)`
+                          : `Recommended: ${fmt(recommendedMin)} - ${fmt(recommendedMax)} (monthly cost ${fmt(estimatedMonthly)} × 3-6 mo)`)}
                   </div>
                 </div>
               </div>
@@ -407,9 +557,9 @@ export function BudgetSetupStage() {
             <input
               type="range"
               min={0}
-              max={200_000_000}
-              step={500_000}
-              value={sliderValue}
+              max={sliderMax}
+              step={sliderStep}
+              value={Math.min(sliderValue, sliderMax)}
               onChange={(event) => {
                 const nextValue = Number(event.target.value);
                 setInitialOperatingCapital(nextValue > 0 ? nextValue : undefined);
@@ -419,7 +569,7 @@ export function BudgetSetupStage() {
             />
             <div style={styles.budgetRangeMeta}>
               <span>{ko ? "0원" : "0"}</span>
-              <span>{ko ? "2억원" : "200M KRW"}</span>
+              <span>{maxLabel}</span>
             </div>
 
             <input
@@ -435,18 +585,22 @@ export function BudgetSetupStage() {
                 }
                 const nextValue = Number(digitsOnly);
                 const nextCapital = nextValue * 10000;
-                setInitialOperatingCapital(Math.min(200_000_000, Math.max(0, nextCapital)));
+                setInitialOperatingCapital(Math.min(sliderMax, Math.max(0, nextCapital)));
               }}
               placeholder={ko ? "예: 1500 (만원 단위)" : "Example: 1500 (ten-thousand KRW)"}
               style={styles.budgetInput}
             />
 
             <div style={styles.compactChoiceGrid}>
-              {[
+              {(isStartup ? [
+                { label: ko ? "12개월분 (최소)" : "12 mo (min)", value: estimatedMonthly * 12 },
+                { label: ko ? "18개월분" : "18 mo", value: estimatedMonthly * 18 },
+                { label: ko ? "24개월분 (시리즈A 표준)" : "24 mo (Series A)", value: estimatedMonthly * 24 },
+              ] : [
                 { label: ko ? "3개월분" : "3 months", value: recommendedMin },
                 { label: ko ? "6개월분" : "6 months", value: recommendedMax },
                 { label: ko ? "1년분" : "1 year", value: estimatedMonthly * 12 },
-              ].map((preset) => (
+              ]).map((preset) => (
                 <button
                   key={preset.label}
                   type="button"

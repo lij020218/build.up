@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, ArrowDownRight, ArrowUpRight, Calendar } from "lucide-react";
 import { useCashflowStore } from "../../stores/cashflow-store";
 import type { DayProjection } from "../../services/cashflow-projection";
@@ -18,6 +20,15 @@ type Props = {
  */
 export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
   const { salesChannels, fixedExpenses, currentBalance, vatReserveEnabled } = useCashflowStore();
+
+  // SSR-safe portal mount + body 스크롤 잠금
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   // 14일 요약
   const totalInflow = projections.reduce((s, p) => s + p.inflow, 0);
@@ -46,7 +57,9 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
     })
     .sort((a, b) => b.total - a.total);
 
-  return (
+  if (!mounted) return null;
+
+  const content = (
     <div
       style={{
         position: "fixed",
@@ -318,6 +331,9 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
       </div>
     </div>
   );
+
+  // Portal — stacking context 탈출
+  return createPortal(content, document.body);
 }
 
 function SummaryMetric({ label, value, color }: { label: string; value: string; color: string }) {

@@ -174,7 +174,13 @@ function resolveNextStageIds(
 
   for (const condition of stage.nextStageConditions) {
     const value = resolveDecisionValue(decisions, condition);
-    if (value === condition.matchValue) {
+    if (value === undefined) continue;
+    // matchValueIn (배열) — 값이 배열에 포함되면 매치 (클러스터 단위 분기)
+    if (condition.matchValueIn && condition.matchValueIn.includes(value)) {
+      return condition.stageIds;
+    }
+    // matchValue (단일) — 정확히 일치 시 매치
+    if (condition.matchValue !== undefined && value === condition.matchValue) {
       return condition.stageIds;
     }
   }

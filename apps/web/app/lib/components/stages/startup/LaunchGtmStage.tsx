@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { BarChart3, CreditCard, MessageSquare } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { getRecommendedStack } from "@build-up/shared";
+import { ModePathCard } from "./ModePathCard";
+import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
 
 export function LaunchGtmStage() {
   const d = useDashboardCtx();
@@ -37,28 +40,37 @@ export function LaunchGtmStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      {/* ── 모드별 경로 카드 (최상단) ── */}
+      <ModePathCard stageId="launch-gtm" />
+
+      {/* KEY ACTION 미드나이트 hero */}
+      <StartupKeyActionHero
+        eyebrow="KEY ACTION"
+        title={ko ? "계측 없이 성장을 밀지 마세요" : "Don't push growth without instrumentation"}
+        subtitle={
+          ko
+            ? "MVP 출시 후 4가지를 깔아야 의미 있는 의사결정이 가능합니다: 분석, 결제, 에러 모니터링, 피드백 루프."
+            : "After MVP launch, install 4 things to enable real decisions: analytics, billing, error monitoring, and feedback loop."
+        }
+        miniCards={[
+          { icon: BarChart3, label: ko ? "분석" : "Analytics", detail: ko ? "행동 추적" : "Track behavior" },
+          { icon: CreditCard, label: ko ? "결제" : "Billing", detail: ko ? "지불 의사 검증" : "WTP test" },
+          { icon: MessageSquare, label: ko ? "피드백" : "Feedback", detail: ko ? "이탈 이유" : "Why leave" },
+        ]}
+      />
+
+      <StartupReferenceLabel>
+        {ko ? "↓ 심화 참고 — 출시 스택·분석·결제·모니터링 표준 도구" : "↓ Reference — launch stack, analytics, billing, monitoring"}
+      </StartupReferenceLabel>
+
       {/* 페이지 네비 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button type="button" disabled={pg === 0} onClick={() => d.setGuideStepIndex((p: number) => p - 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
-        }}>{ko ? "← 이전" : "← Prev"}</button>
-        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "center" }}>
-          {pgLabels.map((l, i) => (
-            <button key={i} type="button" onClick={() => d.setGuideStepIndex(i)} style={{
-              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
-              background: i === pg ? "#1d3557" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
-              border: "none", cursor: "pointer",
-            }}>{l}</button>
-          ))}
-        </div>
-        <button type="button" disabled={pg === totalPg - 1} onClick={() => d.setGuideStepIndex((p: number) => p + 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
-        }}>{ko ? "다음 →" : "Next →"}</button>
-      </div>
+      <StartupPageNav
+        page={pg}
+        totalPages={totalPg}
+        labels={pgLabels}
+        onChange={(p) => d.setGuideStepIndex(p)}
+        ko={ko}
+      />
 
       {/* PAGE 0 — WHY */}
       {pg === 0 && (

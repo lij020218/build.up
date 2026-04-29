@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import { getSystemPromptForType, buildContractUserPrompt } from "./prompt";
 import type { ContractAnalysisResult, ContractClause, ContractType } from "./prompt";
 
@@ -103,7 +104,8 @@ export async function analyzeContract(
   const message = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: systemPrompt,
+    // ✦ Prompt Caching — 같은 contract type 반복 분석 시 90% 절감
+    system: systemWithCache(systemPrompt),
     messages: [{ role: "user", content: userMessage }]
   });
 

@@ -1,28 +1,75 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { isValidFeatureId } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import { DASHBOARD_ACTION_SYSTEM_PROMPT, buildDashboardActionPrompt } from "./prompt";
 import type { DashboardContext } from "./prompt";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
-const DEFAULT_MAX_TOKENS = 1024;
+// 1024 → 1536: insight 가 4단계 서사 (150~300자) 로 확장되어 토큰 여유 필요
+const DEFAULT_MAX_TOKENS = 1536;
+
+/**
+ * AI 가 K-히트 사례를 인용했을 때 함께 넘기는 메타데이터.
+ * UI 에서 [사례:성심당] 같은 배지로 노출되어, 사장님이 "이 조언이 어디서 왔는지" 즉시 확인 가능.
+ */
+export type ReferencedCase = {
+  /** k-hit-cases.ts 의 KHitCase.id (예: "sungsimdang") */
+  id: string;
+  /** 표시용 이름 (예: "성심당") — UI 배지 라벨 */
+  name: string;
+};
+
+/**
+ * AI 의 판단 근거 — 사장님이 "왜 이렇게 추천했지?" 펼쳐볼 때 노출되는 데이터 포인트.
+ * 각 항목은 짧은 한 문장 (50자 내외) 으로 "어떤 숫자/패턴을 봤는지" 설명.
+ * 예) "이번 주 매출 ${formatWon(salesThisWeek)} (지난 주 대비 -18%)"
+ *     "재료비 비율 42% — 동일 업종 평균 32% 초과"
+ *     "월말까지 13일, 누적 적자 280만원 추세"
+ * AI 환각 방지용: prompt 에서 "ctx 에 실제로 존재하는 숫자만 인용" 강제.
+ */
+export type ActionEvidence = {
+  /** 짧은 한 문장 — 데이터 포인트 (숫자·기간·비교 포함) */
+  text: string;
+};
 
 export type DashboardAction = {
   title: string;
   reason: string;
   priority: "high" | "medium";
+  /** AI 가 이 액션의 reason 에서 K-히트 사례를 인용했을 때 함께 넘김 */
+  referencedCase?: ReferencedCase;
+  /**
+   * AI 가 이 액션을 실행하기 위해 사장님께 추천하는 build.up 기능 ID.
+   * features-catalog.ts 의 ID 와 일치해야 함 (parseResponse 에서 검증).
+   * UI 에서 "→ [기능 이름] 보러 가기" CTA 배지로 노출 → 클릭 시 해당 surface 로 navigate.
+   */
+  feature?: string;
+  /**
+   * AI 가 이 액션을 추천한 근거 — 데이터 포인트 1~3 개.
+   * UI 에서 "왜 이렇게 판단?" 펼침으로 노출 → 신뢰도 표시.
+   */
+  evidence?: ActionEvidence[];
 };
 
 export type CrisisAction = {
   title: string;
   impact: string;
   difficulty: "easy" | "medium" | "hard";
+  referencedCase?: ReferencedCase;
+  /** todayActions 와 동일 — 위기 상황에서 사장님이 즉시 사용할 수 있는 build.up 기능. */
+  feature?: string;
+  /** 위기 판단 근거 — 데이터 포인트 1~3 개. */
+  evidence?: ActionEvidence[];
 };
 
 export type DashboardActionsResponse = {
   todayActions: DashboardAction[];
   crisisActions: CrisisAction[];
   insight: string;
+  /** insight 에서 인용한 사례 — 있으면 insight 옆에 [사례:XX] 배지 노출 */
+  insightReferencedCase?: ReferencedCase;
 };
 
 function parseResponse(raw: string): DashboardActionsResponse {
@@ -54,6 +101,45 @@ function parseResponse(raw: string): DashboardActionsResponse {
     throw new AiParseError("todayActions 필드가 배열이 아닙니다.", raw);
   }
 
+  // referencedCase 추출 헬퍼 — { id, name } 두 필드 모두 string 일 때만 통과
+  const parseRefCase = (v: unknown): ReferencedCase | undefined => {
+    if (!v || typeof v !== "object") return undefined;
+    const o = v as Record<string, unknown>;
+    if (typeof o.id !== "string" || typeof o.name !== "string") return undefined;
+    const id = o.id.trim();
+    const name = o.name.trim();
+    if (!id || !name) return undefined;
+    return { id, name };
+  };
+
+  // feature ID 검증 헬퍼 — 카탈로그에 등록된 ID 만 통과 (가짜 ID 자동 제거)
+  const parseFeature = (v: unknown): string | undefined =>
+    isValidFeatureId(v) ? v : undefined;
+
+  // evidence 추출 — 배열의 string 또는 { text } 객체를 ActionEvidence[] 로 정규화.
+  // 각 항목 5~80자 길이 가드 + 최대 3개 제한 (UI 과부하 방지).
+  const parseEvidence = (v: unknown): ActionEvidence[] | undefined => {
+    if (!Array.isArray(v)) return undefined;
+    const items: ActionEvidence[] = v
+      .map((raw): ActionEvidence | null => {
+        if (typeof raw === "string") {
+          const t = raw.trim();
+          return t.length >= 5 && t.length <= 120 ? { text: t } : null;
+        }
+        if (raw && typeof raw === "object") {
+          const t = (raw as Record<string, unknown>).text;
+          if (typeof t === "string") {
+            const trimmed = t.trim();
+            return trimmed.length >= 5 && trimmed.length <= 120 ? { text: trimmed } : null;
+          }
+        }
+        return null;
+      })
+      .filter((x): x is ActionEvidence => x !== null)
+      .slice(0, 3);
+    return items.length > 0 ? items : undefined;
+  };
+
   const todayActions = (obj.todayActions as Record<string, unknown>[])
     .filter(a => typeof a.title === "string" && typeof a.reason === "string")
     .slice(0, 3)
@@ -61,6 +147,9 @@ function parseResponse(raw: string): DashboardActionsResponse {
       title: (a.title as string).trim(),
       reason: (a.reason as string).trim(),
       priority: (a.priority === "high" ? "high" : "medium") as "high" | "medium",
+      referencedCase: parseRefCase(a.referencedCase),
+      feature: parseFeature(a.feature),
+      evidence: parseEvidence(a.evidence),
     }));
 
   const crisisActions = Array.isArray(obj.crisisActions)
@@ -71,6 +160,9 @@ function parseResponse(raw: string): DashboardActionsResponse {
           title: (a.title as string).trim(),
           impact: (a.impact as string).trim(),
           difficulty: (["easy", "medium", "hard"].includes(a.difficulty as string) ? a.difficulty : "medium") as "easy" | "medium" | "hard",
+          referencedCase: parseRefCase(a.referencedCase),
+          feature: parseFeature(a.feature),
+          evidence: parseEvidence(a.evidence),
         }))
     : [];
 
@@ -78,6 +170,7 @@ function parseResponse(raw: string): DashboardActionsResponse {
     todayActions,
     crisisActions,
     insight: typeof obj.insight === "string" ? obj.insight.trim() : "",
+    insightReferencedCase: parseRefCase(obj.insightReferencedCase),
   };
 }
 
@@ -90,7 +183,8 @@ export async function generateDashboardActions(
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: DASHBOARD_ACTION_SYSTEM_PROMPT,
+    // ✦ Prompt Caching (5m TTL) — 같은 사용자가 짧은 시간 내 여러 번 요청 (대시보드 진입·refresh)
+    system: systemWithCache(DASHBOARD_ACTION_SYSTEM_PROMPT),
     messages: [
       { role: "user", content: buildDashboardActionPrompt(ctx) },
     ],

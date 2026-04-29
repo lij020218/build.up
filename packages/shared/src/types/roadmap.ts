@@ -77,10 +77,14 @@ export type TaskState = {
 // Conditional next-stage routing based on a prior decision value.
 // When a stage completes, the engine checks conditions in order.
 // The first matching condition wins; if none match, nextStageIds is used.
+//
+// `matchValue` (단일 값) 또는 `matchValueIn` (값 배열) 중 하나를 사용.
+// — 클러스터 단위 분기 (예: 로보틱스 OR 바이오 → 같은 다음 단계) 시 matchValueIn 으로 표현.
 export type NextStageCondition = {
   decisionStageId: string;   // which stage's decision to read
   decisionKey: string;       // "selectedPrimaryOptionId" | "categoryId" | inputs key
-  matchValue: string;        // value to compare against
+  matchValue?: string;       // value to compare against (단일 매치)
+  matchValueIn?: string[];   // OR-매치 (이 중 하나라도 일치하면 통과)
   stageIds: string[];        // stages to unlock when matched
 };
 

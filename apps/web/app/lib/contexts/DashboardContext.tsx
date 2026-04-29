@@ -21,6 +21,12 @@ export type LocalStageState = {
   competitorLoading: boolean;
   setCompetitorLoading: (v: boolean) => void;
 
+  // AI + Kakao 라이브 상권 추천 로딩/에러 상태
+  aiMarketLoading: boolean;
+  setAiMarketLoading: (v: boolean) => void;
+  aiMarketError: string | null;
+  setAiMarketError: (v: string | null) => void;
+
   // 사업계획서
   bpLoading: boolean;
   setBpLoading: (v: boolean) => void;

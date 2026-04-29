@@ -1,5 +1,6 @@
 const HOME_GRID_COLUMNS = "minmax(0, 1.18fr) minmax(340px, 0.92fr)";
-const HOME_SHOWCASE_HEIGHT = "640px";
+// auto: 콘텐츠 기준으로 카드 높이 자동 정렬 (이전 fixed 640px 는 좌/우 카드 높이 어긋남 발생)
+const HOME_SHOWCASE_HEIGHT = "auto";
 
 export const styles = {
   shell: {
@@ -184,7 +185,8 @@ export const styles = {
     marginTop: "18px",
     display: "grid",
     gap: "20px",
-    gridTemplateRows: "repeat(2, minmax(0, 1fr))",
+    // auto: 두 사이드 카드를 콘텐츠 기반 높이로 (좌측 메인 카드와 자연스럽게 정렬)
+    gridTemplateRows: "auto auto",
     alignSelf: "stretch"
   },
   homeInfoPanel: {
@@ -907,13 +909,15 @@ export const styles = {
   primaryButton: {
     borderRadius: "14px",
     border: "none",
-    background: "linear-gradient(180deg, #1d3557 0%, #15293f 100%)",
+    // 미드나이트 블루 (#191970) 포인트 — top 은 살짝 밝게, bottom 으로 갈수록 깊은 미드나이트
+    background: "linear-gradient(180deg, #1d2b7a 0%, #0d0d4d 100%)",
     color: "#fff",
     padding: "14px 22px",
     fontSize: "15px",
     fontWeight: 650,
     cursor: "pointer",
-    boxShadow: "0 4px 14px rgba(29,53,87,0.2), 0 1px 0 rgba(255,255,255,0.1) inset",
+    // glow 도 미드나이트 톤 — 떠 있는 느낌이 푸르스름하게
+    boxShadow: "0 6px 18px rgba(25,25,112,0.28), 0 1px 0 rgba(255,255,255,0.12) inset",
     transition: "all 0.2s ease",
     letterSpacing: "-0.01em",
   },

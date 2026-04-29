@@ -362,7 +362,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
       <main style={{ ...shell, alignItems: "flex-start", paddingTop: "48px" }}>
         <div style={{ width: "100%", maxWidth: "820px" }}>
           {/* 헤더 */}
-          <div style={{ textAlign: "center" as const, marginBottom: "36px" }}>
+          <div style={{ textAlign: "center" as const, marginBottom: "20px" }}>
             <div style={{ ...eyebrow, justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.8 5.6 21.2 8 14 2 9.2h7.6z" /></svg>
               build.up AI
@@ -370,6 +370,52 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             <h1 style={{ ...title, fontSize: "clamp(26px, 4vw, 34px)", textAlign: "center" as const }}>{ko ? "로드맵 초안이 완성되었습니다" : "Your roadmap is ready"}</h1>
             <p style={{ ...subtitle, textAlign: "center" as const }}>{storeName ? `${storeName} · ` : ""}{result.parsed.industryLabel} · {result.parsed.preferredRegion || (ko ? "지역 미정" : "Location TBD")} · {fmt(totalBudget)}</p>
           </div>
+
+          {/* ⭐ 사업 컨셉 hero 박스 — 사용자 아이디어를 정제한 2-3줄 정의 */}
+          {result.conceptSummary && (
+            <div style={{
+              marginBottom: "20px",
+              padding: "22px 26px",
+              borderRadius: "20px",
+              background: "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(59,125,221,0.04) 100%)",
+              border: "1px solid rgba(124,58,237,0.10)",
+              display: "flex", flexDirection: "column" as const, gap: "10px",
+            }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.08em",
+                textTransform: "uppercase" as const, color: "#7c3aed",
+              }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="5" stroke="#7c3aed" strokeWidth="1.4" fill="rgba(124,58,237,0.1)" />
+                  <circle cx="6" cy="6" r="2" fill="#7c3aed" />
+                </svg>
+                {ko ? "이 사업은" : "Concept"}
+              </div>
+              <p style={{
+                margin: 0,
+                fontSize: "16px",
+                fontWeight: 550,
+                lineHeight: 1.65,
+                color: "#0f172a",
+                letterSpacing: "-0.012em",
+                whiteSpace: "pre-wrap" as const,
+              }}>
+                {result.conceptSummary}
+              </p>
+              {/* 핵심 태그 — 업종/타입/상권 */}
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px", marginTop: "4px" }}>
+                <span style={conceptTagStyle("#7c3aed")}>{result.parsed.industryLabel}</span>
+                <span style={conceptTagStyle("#3b7ddd")}>
+                  {result.parsed.startupType === "franchise" ? (ko ? "프랜차이즈" : "Franchise") : (ko ? "독립 창업" : "Independent")}
+                </span>
+                {result.parsed.preferredRegion && (
+                  <span style={conceptTagStyle("#d97706")}>📍 {result.parsed.preferredRegion}</span>
+                )}
+                <span style={conceptTagStyle("#059669")}>{fmt(totalBudget)}</span>
+              </div>
+            </div>
+          )}
 
           {/* 카드 레이아웃 */}
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "14px" }}>
@@ -731,3 +777,16 @@ const rvValue: React.CSSProperties = {
 const rvSub: React.CSSProperties = {
   fontSize: "13px", color: "rgba(15,23,42,0.45)", marginTop: "2px",
 };
+
+/** 사업 컨셉 hero 박스의 핵심 태그 — 업종/타입/상권/예산 */
+const conceptTagStyle = (color: string): React.CSSProperties => ({
+  fontSize: "11.5px",
+  fontWeight: 650,
+  padding: "4px 10px",
+  borderRadius: "999px",
+  background: `${color}10`,
+  color,
+  border: `1px solid ${color}20`,
+  letterSpacing: "-0.005em",
+  whiteSpace: "nowrap",
+});

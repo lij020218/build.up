@@ -4,6 +4,14 @@
     {
       "path": "/api/cron/marketing-trends",
       "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/cron/portone-sync",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/tossplace-sync",
+      "schedule": "15 * * * *"
     }
   ]
 }

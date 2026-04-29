@@ -329,12 +329,16 @@ export function useAiAnalysisHandlers(
     }
   };
 
-  // ── Handler: verification continue (permit/tax/loan guide) ──
-  const handleVerificationContinue = (stageId: "permit-guide" | "tax-guide" | "loan-guide") => {
+  // ── Handler: verification continue (permit/tax/loan/financial-review) ──
+  const handleVerificationContinue = (
+    stageId: "permit-guide" | "tax-guide" | "loan-guide" | "financial-review",
+    extraInputs: Record<string, unknown> = {},
+  ) => {
     const nextDecisions = upsertStageDecision(decisions, stageId, {
       stageId,
       inputs: {
         reviewed: true,
+        ...extraInputs,
       },
       completedAt: new Date().toISOString(),
     });

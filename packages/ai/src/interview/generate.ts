@@ -2,6 +2,7 @@
 // Mom Test 원칙 기반 고객 인터뷰 질문지를 자동 생성합니다.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { systemWithCache } from "../utils/client";
 
 export type InterviewInput = {
   industryCategoryId: string;
@@ -79,7 +80,8 @@ Generate a Mom Test interview script in English based on the above.`;
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 8192,
-    system: SYSTEM_PROMPT,
+    // ✦ Prompt Caching — interview generation system prompt
+    system: systemWithCache(SYSTEM_PROMPT),
     messages: [{ role: "user", content: userPrompt }],
   });
 

@@ -1,5 +1,32 @@
 import type React from "react";
 
+/**
+ * ───────────────────────────────────────────────────────────────
+ * 디자인 토큰 — 운영 대시보드 및 전체 surface 공통 기준.
+ *
+ * Radius 계층 (Apple HIG + Mercury/Stripe 참조):
+ *   OUTER_CARD  = 20px  — 화면 최상위 카드 (MorningBriefing, Activity, Survival 등)
+ *   INNER_BLOCK = 14px  — 카드 안에 들어가는 서브 블록 (KPI 미니카드, 알림 박스)
+ *   INPUT       = 10px  — 인풋·버튼
+ *   PILL        = 999px — 둥근 pill 버튼·배지
+ *   BADGE       = 8px   — 작은 라벨·칩
+ *   TINY        = 3px   — 진행바, hairline 인디케이터
+ *   MODAL       = 24px  — 모달·오버레이 (예외적으로 좀 더 큼)
+ *
+ * 모든 신규 컴포넌트는 이 상수를 import 해서 사용.
+ * 기존 inline radius는 점진 교체.
+ * ───────────────────────────────────────────────────────────────
+ */
+export const RADIUS = {
+  OUTER_CARD: 20,
+  INNER_BLOCK: 14,
+  INPUT: 10,
+  PILL: 9999,
+  BADGE: 8,
+  TINY: 3,
+  MODAL: 24,
+} as const;
+
 export const shell: React.CSSProperties = {
   display: "grid",
   gap: "18px",
@@ -283,10 +310,91 @@ export const bentoHoverCSS = `
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes bentoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 @keyframes bentoProgress { from { width: 0; } }
-@keyframes bentoBarGrow { from { height: 0; transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes bentoBarGrow { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
 @keyframes bentoBarPulse { 0% { opacity: 0.7; transform: scaleY(0.95); } 50% { opacity: 1; transform: scaleY(1.02); } 100% { opacity: 1; transform: scaleY(1); } }
 @keyframes bentoCountUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bentoGlow { 0%, 100% { box-shadow: 0 0 0 rgba(29,53,87,0); } 50% { box-shadow: 0 0 12px rgba(29,53,87,0.08); } }
+
+/* ── Dashboard entry animations (Phase 1+2+3, refined Apple/Mercury 톤) ── */
+
+/* Apple iOS spring 감각 — translateY + scale + blur 3중 계층 */
+@keyframes dashStaggerIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    filter: blur(2px);
+  }
+  60% {
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* 탭 surface 전환 — 페이지 fade + 살짝 위로 */
+@keyframes dashSurfaceEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashBarGrow {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+@keyframes dashProgressFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(var(--target-scale, 1)); }
+}
+@keyframes dashPathDraw {
+  from { stroke-dashoffset: var(--path-len, 1000); }
+  to { stroke-dashoffset: 0; }
+}
+
+.dash-stagger-item {
+  /* 0.65s + Apple iOS spring approximation easing */
+  animation: dashStaggerIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+/* 자식 컴포넌트가 null 반환하여 비어있는 wrapper는 grid gap 차지 안 하도록 숨김 */
+.dash-stagger-item:empty { display: none !important; }
+
+/* Surface 전환 — 탭 변경 시 페이지 전체 등장 (key 기반 remount 트리거) */
+.dash-surface-enter {
+  animation: dashSurfaceEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+.dash-bar-grow {
+  transform-origin: bottom center;
+  will-change: transform;
+  animation: dashBarGrow 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dash-progress-fill {
+  transform-origin: left center;
+  will-change: transform;
+  animation: dashProgressFill 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dash-path-draw {
+  stroke-dasharray: var(--path-len, 1000);
+  stroke-dashoffset: var(--path-len, 1000);
+  animation: dashPathDraw 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* 접근성 ON 시에도 fade는 유지하되 transform은 줄임 */
+  .dash-stagger-item, .dash-bar-grow, .dash-progress-fill, .dash-path-draw {
+    animation-duration: 0.2s !important;
+  }
+}
+
 .bento-card { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease !important; }
 .bento-card:hover { transform: translateY(-2px) !important; box-shadow: 0 21px 94px rgba(0,0,0,0.06) !important; }
 .bento-headline { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease !important; }

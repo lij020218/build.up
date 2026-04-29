@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Rocket, Code2, Sparkles } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { ModePathCard } from "./ModePathCard";
+import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
 
 export function MvpBuildStage() {
   const d = useDashboardCtx();
@@ -274,25 +277,41 @@ export function MvpBuildStage() {
 
   const page = pages[mvpPage] ?? pages[0];
   const total = pages.length;
+  const pageDotLabels = pages.map((_, i) => (i === 0 ? (ko ? "개요" : "Overview") : `${i}`));
 
   return (
     <div style={{ marginBottom: "14px", display: "flex", flexDirection: "column", gap: "14px" }}>
-      {/* 페이지네이션 — 상단 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button type="button" onClick={() => { setMvpPage(Math.max(0, mvpPage - 1)); setMvpToolsOpen(false); }} disabled={mvpPage === 0}
-          style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: mvpPage === 0 ? "rgba(0,0,0,0.02)" : "white", color: mvpPage === 0 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: mvpPage === 0 ? "default" : "pointer" }}>
-          ← {ko ? "이전" : "Prev"}
-        </button>
-        <div style={{ display: "flex", gap: "5px" }}>
-          {pages.map((_, i) => (
-            <div key={i} onClick={() => { setMvpPage(i); setMvpToolsOpen(false); }} style={{ width: i === mvpPage ? "20px" : "8px", height: "8px", borderRadius: "100px", background: i === mvpPage ? "var(--primary)" : "rgba(0,0,0,0.1)", cursor: "pointer", transition: "all 0.2s ease" }} />
-          ))}
-        </div>
-        <button type="button" onClick={() => { setMvpPage(Math.min(total - 1, mvpPage + 1)); setMvpToolsOpen(false); }} disabled={mvpPage === total - 1}
-          style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.06)", background: mvpPage === total - 1 ? "rgba(0,0,0,0.02)" : "white", color: mvpPage === total - 1 ? "rgba(0,0,0,0.2)" : "#0f172a", fontSize: "13px", fontWeight: 600, cursor: mvpPage === total - 1 ? "default" : "pointer" }}>
-          {ko ? "다음" : "Next"} →
-        </button>
-      </div>
+      {/* ── 모드별 경로 카드 (최상단) ── */}
+      <ModePathCard stageId="mvp-build" />
+
+      {/* KEY ACTION 미드나이트 hero */}
+      <StartupKeyActionHero
+        eyebrow="KEY ACTION"
+        title={ko ? "2~6주 안에 가장 좁은 워크플로 하나로 출시하세요" : "Ship one narrowest workflow in 2-6 weeks"}
+        subtitle={
+          ko
+            ? "Reid Hoffman: \"첫 버전이 창피하지 않다면 너무 늦게 출시한 것이다.\" 기능 추가가 아니라 삭제가 어렵습니다. 7단계로 끝내세요."
+            : "Reid Hoffman: \"If you're not embarrassed, you launched too late.\" Removing features is harder than adding. 7 steps to launch."
+        }
+        miniCards={[
+          { icon: Rocket, label: ko ? "2~6주" : "2-6 wks", detail: ko ? "목표 기간" : "Timebox" },
+          { icon: Code2, label: ko ? "1개" : "One", detail: ko ? "핵심 워크플로" : "Core workflow" },
+          { icon: Sparkles, label: ko ? "AI 코딩" : "AI Code", detail: ko ? "1인=5인 팀" : "1=5 team" },
+        ]}
+      />
+
+      <StartupReferenceLabel>
+        {ko ? "↓ 심화 참고 — MVP 빌드 도구·아키텍처·테스트 표준" : "↓ Reference — MVP build tools, architecture, testing"}
+      </StartupReferenceLabel>
+
+      {/* 페이지네이션 — 미드나이트 */}
+      <StartupPageNav
+        page={mvpPage}
+        totalPages={total}
+        labels={pageDotLabels}
+        onChange={(p) => { setMvpPage(p); setMvpToolsOpen(false); }}
+        ko={ko}
+      />
 
       <div style={{ borderRadius: "20px", border: `1px solid ${page.color}15`, background: `linear-gradient(180deg, ${page.color}04 0%, rgba(255,255,255,0.98) 100%)`, overflow: "hidden" }}>
         {/* 헤더 */}

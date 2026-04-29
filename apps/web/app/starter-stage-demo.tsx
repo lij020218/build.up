@@ -86,7 +86,7 @@ import {
   getRecommendedStack,
 } from "@build-up/shared";
 import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../lib/supabase";
@@ -94,6 +94,7 @@ import { fetchLiveSupportPrograms } from "./lib/services/live-data";
 import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/DashboardContext";
 import { AuroraBackground } from "../components/ui/aurora-background";
 import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
+import { ResetAnimationOverlay } from "./lib/components/reset/ResetAnimationOverlay";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
 import { FranchiseView } from "./lib/components/surfaces/FranchiseView";
@@ -101,6 +102,8 @@ import { ProfileView } from "./lib/components/surfaces/ProfileView";
 import { GuidesView } from "./lib/components/surfaces/GuidesView";
 import { HomeView } from "./lib/components/surfaces/HomeView";
 import { CurrentStageView } from "./lib/components/surfaces/CurrentStageView";
+import { FloatingAIPartner } from "./lib/components/dashboard/FloatingAIPartner";
+import { useCashflowNotifications } from "./lib/hooks/useCashflowNotifications";
 import { WelcomeOnboarding } from "./lib/components/WelcomeOnboarding";
 import { CardErrorBoundary } from "./lib/components/CardErrorBoundary";
 import { DashboardSkeleton } from "./lib/components/ui/Skeleton";
@@ -166,11 +169,30 @@ export default function StarterStageDemo({
   });
   useEffect(() => { setMounted(true); }, []);
 
+  // ── 🔒 reset 직후 무조건 onboarding 첫 화면 노출 ──────────────────────────
+  //  resetDemo 가 reload 직전 localStorage 에 `pending_force_onboarding` 을 set 하고
+  //  `?reset=...` 쿼리로 redirect. 둘 중 하나라도 있으면 useState 초기값 / 다른 데이터 로딩
+  //  결과를 무시하고 강제로 onboarding 화면을 띄운다. 이게 없으면 server 데이터 race / RLS
+  //  검증 실패 / hasIndustry 잔재 등으로 reset 후에도 옛 화면이 보이는 corner case 발생.
+  const justReset = (() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const flagged = localStorage.getItem("pending_force_onboarding");
+      const urlReset = new URLSearchParams(window.location.search).has("reset");
+      return !!flagged || urlReset;
+    } catch {
+      return false;
+    }
+  })();
+
   // ── Hoisted from conditional render blocks to prevent hook ordering issues ──
   const [filterCat, setFilterCat] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [competitorResults, setCompetitorResults] = useState<{ totalCount: number; places: Array<{ name: string; address: string; phone: string; url: string }> } | null>(null);
   const [competitorLoading, setCompetitorLoading] = useState(false);
+  // AI + Kakao 라이브 상권 추천
+  const [aiMarketLoading, setAiMarketLoading] = useState(false);
+  const [aiMarketError, setAiMarketError] = useState<string | null>(null);
   const [bpLoading, setBpLoading] = useState(false);
   const [bpSections, setBpSections] = useState<Array<{ title: string; content: string }> | null>(null);
   const [bpSummary, setBpSummary] = useState<string | null>(null);
@@ -206,6 +228,41 @@ export default function StarterStageDemo({
   } | null>(null);
 
   const d = useDashboard(surface);
+  // Cashflow 알림 자동 발송 — 위기 감지 + 매일 아침 8~11시 요약
+  // (cashflow-store 의 notifyOnCrisis / dailyMorningBriefing 토글이 ON 일 때만 동작)
+  useCashflowNotifications();
+
+  // ─── AI 코치 → 기능 navigate 이벤트 listener ─────────────────────────
+  // AiCoachCard 의 feature CTA 클릭 시 dispatch 되는 'bup:navigate-feature' 이벤트를
+  // 받아 surface 전환 + (옵션) 카드 ID 로 부드럽게 scroll + 청록 halo 강조.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { surface?: import("./lib/types").DashboardSurface; scrollTargetId?: string }
+        | undefined;
+      if (!detail?.surface) return;
+      d.navigateToSurface(detail.surface);
+      if (!detail.scrollTargetId) return;
+      // surface 전환 애니메이션(dash-surface-enter ~0.45s) 끝 무렵에 scroll
+      window.setTimeout(() => {
+        const el = document.getElementById(detail.scrollTargetId!);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        // 시각적 강조 — 청록 halo 1.4s
+        const prevBoxShadow = el.style.boxShadow;
+        const prevTransition = el.style.transition;
+        el.style.transition = "box-shadow 0.4s cubic-bezier(0.22,1,0.36,1)";
+        el.style.boxShadow = "0 0 0 4px rgba(45, 212, 191, 0.45), 0 12px 32px rgba(45, 212, 191, 0.2)";
+        window.setTimeout(() => {
+          el.style.boxShadow = prevBoxShadow;
+          window.setTimeout(() => { el.style.transition = prevTransition; }, 400);
+        }, 1400);
+      }, 320);
+    };
+    window.addEventListener("bup:navigate-feature", handler);
+    return () => window.removeEventListener("bup:navigate-feature", handler);
+  }, [d]);
+
   const isStartupCategory = d.industryCategoryId === "startup-tech";
   const startupTypeOptions: Array<"independent" | "franchise" | "undecided"> = isStartupCategory
     ? ["independent", "undecided"]
@@ -435,11 +492,36 @@ export default function StarterStageDemo({
       />
   ) : null;
 
-  const shouldShowExistingOnboarding = showExistingOnboarding && !shouldShowAuth && !shouldShowRoleSelection;
-  const shouldShowAIRoadmap = showAIRoadmapWizard && !shouldShowAuth && !shouldShowRoleSelection;
+  const shouldShowExistingOnboarding = !justReset && showExistingOnboarding && !shouldShowAuth && !shouldShowRoleSelection;
+  const shouldShowAIRoadmap = !justReset && showAIRoadmapWizard && !shouldShowAuth && !shouldShowRoleSelection;
   // 데이터 로드 완료 후 fresh account면 항상 온보딩 선택 화면 표시 (리셋 후에도)
   // onboardingDismissed가 true이면 isFreshAccount 자동 표시를 억제 (직접 로드맵 선택 시)
-  const shouldShowOnboardingChoice = (showOnboardingChoice || (isFreshAccount && persistenceReady && !businessLaunched && !onboardingDismissed)) && !shouldShowAuth && !shouldShowRoleSelection && !shouldShowExistingOnboarding && !shouldShowAIRoadmap;
+  // justReset=true 이면 모든 조건 우회 — reset 직후엔 무조건 onboarding 첫 화면.
+  const shouldShowOnboardingChoice =
+    !shouldShowAuth && !shouldShowRoleSelection && !shouldShowExistingOnboarding && !shouldShowAIRoadmap &&
+    (justReset || showOnboardingChoice || (isFreshAccount && persistenceReady && !businessLaunched && !onboardingDismissed));
+
+  // ── reset flag clear: onboarding 화면이 떴고 사용자가 mount 한 후 한 번만 정리 ──
+  //  너무 일찍 지우면 다시 다른 페이지 갔다 올 때 force 효과 사라짐.
+  //  너무 늦게 지우면 다음 mount 에서도 force 가 계속 걸림.
+  //  → onboarding 카드를 "표시하기 시작" 한 직후 (mount 완료 + flag 사용 끝났을 때) 정리.
+  useEffect(() => {
+    if (!justReset) return;
+    if (!shouldShowOnboardingChoice) return;
+    // onboarding 카드가 실제로 보이는 첫 frame 다음에 정리.
+    const timer = window.setTimeout(() => {
+      try {
+        localStorage.removeItem("pending_force_onboarding");
+        // URL 의 ?reset=... 도 제거 — 새로고침 시 재발동 방지
+        if (window.history.replaceState) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("reset");
+          window.history.replaceState({}, "", url.toString());
+        }
+      } catch { /* noop */ }
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [justReset, shouldShowOnboardingChoice]);
 
   // NOTE: No early returns here — useEffect below must always execute.
   // All conditional returns are placed AFTER the useEffect.
@@ -582,6 +664,26 @@ export default function StarterStageDemo({
   }
 
   const showOperationalHero = !(activeSurface === "home" && mounted && businessLaunched);
+  // 운영 중 (창업 완료 후) → 모든 페이지에서 좌측 사이드바, 상단 nav 숨김
+  // (이전엔 홈에서만 사이드바였으나 사용자 결정으로 통일)
+  const isHomeOperational = mounted && businessLaunched;
+
+  // 사이드바 접기/펼치기 (Linear/Notion 표준 패턴)
+  //   접힘: 60px (아이콘만, 라벨 tooltip)
+  //   펼침: 200px (아이콘 + 라벨)
+  // localStorage 영속.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("buildup-sidebar-collapsed") === "true"; }
+    catch { return false; }
+  });
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((v) => {
+      const next = !v;
+      try { localStorage.setItem("buildup-sidebar-collapsed", String(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (activeSurface !== "analytics") {
@@ -644,6 +746,7 @@ export default function StarterStageDemo({
     ...d,
     mounted, filterCat, setFilterCat, expandedId, setExpandedId,
     competitorResults, setCompetitorResults, competitorLoading, setCompetitorLoading,
+    aiMarketLoading, setAiMarketLoading, aiMarketError, setAiMarketError,
     bpLoading, setBpLoading, bpSections, setBpSections, bpSummary, setBpSummary,
     bpError, setBpError, bpExpandedIdx, setBpExpandedIdx,
     onboardingDismissed, setOnboardingDismissed,
@@ -685,47 +788,7 @@ export default function StarterStageDemo({
     );
   }
   if (isResetting) {
-    const ko = language === "ko";
-    return (
-      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "transparent" }}>
-        <div style={{ width: "100%", maxWidth: "420px", textAlign: "center" as const }}>
-          <div style={{
-            width: "64px", height: "64px", margin: "0 auto 24px", borderRadius: "20px",
-            background: "linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1.2s linear infinite" }}>
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          </div>
-          <h2 style={{ fontSize: "22px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a", margin: "0 0 8px" }}>
-            {ko ? "모든 진행 과정을 초기화하는 중입니다" : "Resetting all progress"}
-          </h2>
-          <p style={{ fontSize: "14px", color: "rgba(15,23,42,0.45)", margin: "0 0 32px", lineHeight: 1.5 }}>
-            {ko ? "서버 데이터를 정리하고 있습니다. 잠시만 기다려주세요." : "Cleaning up server data. Please wait a moment."}
-          </p>
-          {/* 프로그레스 바 */}
-          <div style={{ width: "100%", height: "6px", borderRadius: "3px", background: "rgba(15,23,42,0.06)", overflow: "hidden" }}>
-            <div style={{
-              height: "100%", borderRadius: "3px",
-              background: "linear-gradient(90deg, #7c3aed, #a78bfa)",
-              width: `${resetProgress}%`,
-              transition: "width 0.4s ease",
-            }} />
-          </div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.35)", marginTop: "10px" }}>
-            {resetProgress < 40
-              ? (ko ? "로컬 데이터 정리 중..." : "Clearing local data...")
-              : resetProgress < 70
-                ? (ko ? "서버 데이터 초기화 중..." : "Resetting server data...")
-                : resetProgress < 100
-                  ? (ko ? "마무리 중..." : "Finishing up...")
-                  : (ko ? "완료!" : "Done!")}
-          </div>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </main>
-    );
+    return <ResetAnimationOverlay progress={resetProgress} ko={language === "ko"} />;
   }
   if (shouldShowOnboardingChoice && !welcomed) {
     return <WelcomeOnboarding language={language} onComplete={() => setWelcomed(true)} />;
@@ -817,7 +880,246 @@ export default function StarterStageDemo({
 
   return (
     <DashboardProvider value={_ctxValue}>
-    <main style={showOperationalHero ? styles.shell : operationalShell}>
+    {/* 전역 surface 전환 애니메이션 — 탭 변경 시 페이지 전체 fade+slide-up */}
+    <style>{`
+      @keyframes dashSurfaceEnter {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .dash-surface-enter {
+        animation: dashSurfaceEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+        will-change: transform, opacity;
+      }
+
+      /* ━━━ 홈 사이드바 ━━━ */
+      @keyframes bupSidebarIn {
+        from { opacity: 0; transform: translateX(-12px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      .bup-sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        width: 200px;
+        padding: 28px 16px 24px;
+        /* Liquid glass — 더 투명하게, 뒷배경 색감이 강하게 비침 */
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(248,250,252,0.20) 100%),
+          radial-gradient(circle at top left, rgba(29,53,87,0.05), transparent 60%);
+        backdrop-filter: blur(40px) saturate(200%);
+        -webkit-backdrop-filter: blur(40px) saturate(200%);
+        border-right: 1px solid rgba(255,255,255,0.5);
+        /* 우측에 미세한 그림자 (페이지와 분리) + 좌상단 highlight */
+        box-shadow:
+          1px 0 0 rgba(255,255,255,0.6) inset,
+          0 1px 0 rgba(255,255,255,0.6) inset,
+          4px 0 24px rgba(15,23,42,0.06),
+          1px 0 0 rgba(15,23,42,0.04);
+        display: flex; flex-direction: column;
+        z-index: 50;
+        animation: bupSidebarIn .35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+        /* overflow: visible — 우측 가장자리 토글 버튼이 -11px 외부로 나오도록 */
+      }
+      /* 사이드바 내부 미세한 sheen (위→아래 빛 반사) */
+      .bup-sidebar::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 60%;
+        background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
+        pointer-events: none;
+        z-index: -1;
+      }
+      .bup-sidebar-logo {
+        display: flex; align-items: center; gap: 10px;
+        padding: 4px 6px 24px;
+        /* 글래스 톤에 맞는 미세 separator (흰색 highlight + 어두운 그림자) */
+        border-bottom: 0.5px solid rgba(255,255,255,0.7);
+        box-shadow: 0 1px 0 rgba(15,23,42,0.06);
+        margin-bottom: 16px;
+        position: relative; z-index: 1;
+      }
+      .bup-sidebar-logo-mark {
+        width: 32px; height: 32px; border-radius: 9px;
+        background: linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(29,53,87,0.18);
+        font-size: 17px; font-weight: 800; color: #fff;
+        letter-spacing: -0.02em;
+        flex-shrink: 0;
+      }
+      .bup-sidebar-logo-text {
+        font-size: 15px; font-weight: 700; color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+      .bup-sidebar-nav {
+        display: flex; flex-direction: column; gap: 3px;
+        flex: 1;
+        position: relative; z-index: 1;
+      }
+      .bup-sidebar-btn {
+        display: flex; align-items: center; gap: 11px;
+        padding: 10px 12px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 13.5px; font-weight: 600;
+        color: rgba(15,23,42,0.62);
+        text-align: left;
+        letter-spacing: -0.01em;
+        transition: background .15s ease, color .15s ease, transform .12s ease;
+        position: relative;
+      }
+      .bup-sidebar-btn:hover {
+        /* 호버에도 글래스 톤 — 흰색 반투명 + inset highlight */
+        background: rgba(255,255,255,0.45);
+        color: #0f172a;
+        box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.7);
+      }
+      .bup-sidebar-btn:active { transform: scale(0.98); }
+      .bup-sidebar-btn-active {
+        /* 활성 — 미드나이트 틴티드 글래스 */
+        background: linear-gradient(135deg, rgba(29,53,87,0.12) 0%, rgba(69,123,157,0.06) 100%) !important;
+        color: #1d3557 !important;
+        font-weight: 700;
+        box-shadow:
+          inset 0 0.5px 0 rgba(255,255,255,0.6),
+          inset 0 0 0 0.5px rgba(29,53,87,0.2),
+          0 1px 2px rgba(29,53,87,0.06);
+      }
+      .bup-sidebar-btn-active::before {
+        content: "";
+        position: absolute; left: 0; top: 25%; bottom: 25%;
+        width: 3px; border-radius: 0 2px 2px 0;
+        background: linear-gradient(180deg, #1d3557 0%, #457b9d 100%);
+      }
+      .bup-sidebar-btn-label {
+        flex: 1; min-width: 0;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      /* ━━━ 사이드바 collapsed 모드 (아이콘만, 60px) ━━━ */
+      .bup-sidebar { transition: width .25s cubic-bezier(0.16, 1, 0.3, 1); }
+      .bup-sidebar[data-collapsed="true"] {
+        width: 60px;
+        padding: 28px 8px 24px;
+      }
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-logo {
+        justify-content: center;
+        padding: 4px 0 24px;
+      }
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-logo-text {
+        display: none;
+      }
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn-label {
+        display: none;
+      }
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn {
+        justify-content: center;
+        padding: 10px 8px;
+      }
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn-active::before {
+        /* 접힌 상태에선 left bar 살짝 숨김 (아이콘 가운데 정렬 깨지지 않게) */
+        opacity: 0.6;
+      }
+
+      /* ━━━ 사이드바 우측 가장자리 토글 버튼 (Linear/Notion 표준) ━━━ */
+      .bup-sidebar-toggle {
+        position: absolute;
+        right: -11px;
+        top: 30px;
+        width: 22px; height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        border: 0.5px solid rgba(15,23,42,0.12);
+        box-shadow:
+          0 1px 3px rgba(15,23,42,0.08),
+          0 0 0 0.5px rgba(255,255,255,0.6) inset;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(15,23,42,0.5);
+        z-index: 51;
+        opacity: 0;
+        transition: opacity .18s ease, transform .18s ease, background .15s ease, color .15s ease;
+        padding: 0;
+      }
+      .bup-sidebar:hover .bup-sidebar-toggle,
+      .bup-sidebar[data-collapsed="true"] .bup-sidebar-toggle {
+        opacity: 1;
+      }
+      .bup-sidebar-toggle:hover {
+        background: #1d3557;
+        color: #fff;
+        transform: scale(1.08);
+      }
+      .bup-sidebar-toggle:active {
+        transform: scale(0.95);
+      }
+
+      /* main 의 좌측 padding 도 사이드바 폭에 맞춰 동적 */
+      .bup-shell-sidebar { transition: padding-left .25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+      /* 좁은 화면 — 사이드바 숨김 + main 좌측 padding 0으로 (HTML class 로 보정) */
+      @media (max-width: 1080px) {
+        .bup-sidebar { display: none; }
+        .bup-shell-sidebar { padding-left: 0 !important; }
+      }
+    `}</style>
+    {/* ━━━ 사이드바 — 운영 중일 때 모든 페이지 (좌측 고정 vertical nav) ━━━ */}
+    {isHomeOperational && showSurfaceNav && (
+      <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} aria-label="Navigation">
+        <div className="bup-sidebar-logo">
+          <div className="bup-sidebar-logo-mark">b</div>
+          <span className="bup-sidebar-logo-text">
+            Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
+          </span>
+        </div>
+        {/* 접기/펼치기 토글 — 우측 가장자리 floating */}
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="bup-sidebar-toggle"
+          title={sidebarCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+            <path
+              d={sidebarCollapsed ? "M4.5 3l3 3-3 3" : "M7.5 3l-3 3 3 3"}
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <nav className="bup-sidebar-nav">
+          {surfaceTabs.map((tab) => {
+            const active = activeSurface === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => navigateToSurface(tab.id)}
+                className={`bup-sidebar-btn ${active ? "bup-sidebar-btn-active" : ""}`}
+                title={sidebarCollapsed ? tab.label : undefined}
+              >
+                <SurfaceIcon surface={tab.id} />
+                <span className="bup-sidebar-btn-label">{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+    )}
+
+    <main
+      className={isHomeOperational ? "bup-shell-sidebar" : undefined}
+      data-collapsed={isHomeOperational ? sidebarCollapsed : undefined}
+      style={showOperationalHero
+        ? styles.shell
+        : (isHomeOperational ? (sidebarCollapsed ? operationalShellSidebarCollapsed : operationalShellSidebar) : operationalShell)}
+    >
       {showOperationalHero ? (
       <section style={styles.hero}>
         <div style={styles.eyebrow}>build.up</div>
@@ -832,8 +1134,8 @@ export default function StarterStageDemo({
       </section>
       ) : null}
 
-      {/* ━━━ Build.UP 로고 — 네비게이션 바 위 ━━━ */}
-      {showSurfaceNav && (
+      {/* ━━━ Build.UP 로고 — 네비게이션 바 위 (사이드바 모드에서는 숨김 → 사이드바 안에 노출) ━━━ */}
+      {showSurfaceNav && !isHomeOperational && (
       <div style={{
         display: "flex", alignItems: "center", gap: "10px",
         padding: showOperationalHero ? "0 24px 8px" : "12px 20px 8px",
@@ -861,7 +1163,8 @@ export default function StarterStageDemo({
       </div>
       )}
 
-      {showSurfaceNav ? (
+      {/* 상단 nav — 사이드바 모드에선 숨김 (사이드바에 동일 nav 노출) */}
+      {showSurfaceNav && !isHomeOperational ? (
       <section style={showOperationalHero ? styles.section : operationalNavSection}>
         <div style={{ ...styles.surfaceNav, ...(showOperationalHero ? {} : operationalSurfaceNav) }}>
           {surfaceTabs.map((tab) => (
@@ -884,44 +1187,138 @@ export default function StarterStageDemo({
       </section>
       ) : null}
 
-      {activeSurface === "home" ? (
-      mounted && businessLaunched ? (
-        <CardErrorBoundary cardLabel="대시보드">
-          <OperationalDashboard d={d} />
-        </CardErrorBoundary>
-      ) : (
-        <HomeView />
-      )
-      ) : null}
+      {/* surface 전환 애니메이션 — key={activeSurface} 변경 시 React 가 div 를 remount → CSS animation 자동 재시작 */}
+      <div key={activeSurface} className="dash-surface-enter">
+        {activeSurface === "home" ? (
+        mounted && businessLaunched ? (
+          <CardErrorBoundary cardLabel="대시보드">
+            <OperationalDashboard d={d} />
+          </CardErrorBoundary>
+        ) : (
+          <HomeView />
+        )
+        ) : null}
 
-      {activeSurface === "current" ? <CurrentStageView /> : null}
-      {activeSurface === "franchise" ? <FranchiseView /> : null}
+        {activeSurface === "current" ? <CurrentStageView /> : null}
+        {activeSurface === "franchise" ? <FranchiseView /> : null}
 
-      {activeSurface === "profile" && !isFreshAccount ? (
-        <ProfileView />
-      ) : null}
+        {activeSurface === "profile" && !isFreshAccount ? (
+          <ProfileView />
+        ) : null}
 
+        {activeSurface === "guides" && !isFreshAccount && !isGuideStage ? (
+          <GuidesView />
+        ) : null}
 
-      {activeSurface === "guides" && !isFreshAccount && !isGuideStage ? (
-        <GuidesView />
-      ) : null}
+        {activeSurface === "analytics" ? (
+          <CardErrorBoundary cardLabel="내 가게">
+            <AnalyticsSurface />
+          </CardErrorBoundary>
+        ) : null}
 
+        {activeSurface === "marketing" ? (
+          <CardErrorBoundary cardLabel="마케팅">
+            <MarketingSurface />
+          </CardErrorBoundary>
+        ) : null}
 
-      {activeSurface === "analytics" ? (
-        <CardErrorBoundary cardLabel="내 가게">
-          <AnalyticsSurface />
-        </CardErrorBoundary>
-      ) : null}
+        {activeSurface === "roadmap" && !isFreshAccount ? (
+          <RoadmapSurface />
+        ) : null}
+      </div>
 
-      {activeSurface === "marketing" ? (
-        <CardErrorBoundary cardLabel="마케팅">
-          <MarketingSurface />
-        </CardErrorBoundary>
-      ) : null}
+      {/* ── 전역 AI 파트너 챗봇 — 모든 surface 에서 오른쪽 하단에 떠있음 ──
+           "AI 가 사용자의 모든 정보를 알게" — 매출·비용·직원·재고·고정비·마케팅·이상신호·로드맵 종합 주입 */}
+      {(() => {
+        if (!d.businessLaunched) return null;  // 운영 시작 후에만 노출
 
-      {activeSurface === "roadmap" && !isFreshAccount ? (
-        <RoadmapSurface />
-      ) : null}
+        // 1) 매출 집계 (이번 달 / 어제 / 주간 변화)
+        const entries = (d.dailyEntries as Array<{ date: string; sales: number }>) ?? [];
+        const curMonth = new Date().toISOString().slice(0, 7);
+        const thisMonth = entries.filter((e) => e.date.startsWith(curMonth));
+        const monthlySalesSum = thisMonth.reduce((s, e) => s + e.sales, 0);
+        const yesterdayIso = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+        const yesterdaySales = entries.find((e) => e.date === yesterdayIso)?.sales;
+
+        // 2) 비용 분해
+        const costs = (d.monthlyCosts as Record<string, number>) ?? {};
+        const monthlyCostsSum =
+          (costs.ingredients ?? 0) + (costs.labor ?? 0) + (costs.rent ?? 0) +
+          (costs.utilities ?? 0) + (costs.sga ?? 0) + (costs.marketing ?? 0) +
+          (costs.other ?? 0) + (costs.interest ?? 0);
+        const marginPct = monthlySalesSum > 0 ? ((monthlySalesSum - monthlyCostsSum) / monthlySalesSum) * 100 : undefined;
+        const primeRate = monthlySalesSum > 0
+          ? (((costs.ingredients ?? 0) + (costs.labor ?? 0)) / monthlySalesSum) * 100
+          : undefined;
+
+        // 3) 운영 정보
+        const employees = (d.employees as Array<{ id: string }> | undefined) ?? [];
+        const inventory = (d.inventory as Array<{ name: string; quantity: number; minThreshold: number }> | undefined) ?? [];
+        const lowStockItems = inventory
+          .filter((i) => i.quantity <= i.minThreshold && i.minThreshold > 0)
+          .map((i) => i.name)
+          .slice(0, 5);
+        const fixedExpensesData = (d.fixedExpenses as Array<{ name: string; amount: number; dueDay: number }> | undefined) ?? [];
+        const today = new Date().getDate();
+        const upcomingFixedExpenses = fixedExpensesData
+          .filter((f) => f.dueDay >= today && f.dueDay <= today + 7)
+          .map((f) => `${f.name} (${f.dueDay}일 ${Math.round(f.amount / 10000)}만원)`)
+          .slice(0, 5);
+
+        // 4) 개업 후 경과일 — profile.businessLaunchedDate 가 있으면 계산
+        const profile = d.profile as { businessLaunchedDate?: string; subIndustryId?: string } | null;
+        const launchedDate = profile?.businessLaunchedDate;
+        const daysSinceLaunch = launchedDate
+          ? Math.max(0, Math.round((Date.now() - new Date(launchedDate).getTime()) / 86_400_000))
+          : undefined;
+
+        return (
+          <FloatingAIPartner
+            ko={d.language === "ko"}
+            context={{
+              // 가게 기본
+              storeName: d.storeName,
+              industryCategoryId: d.industryCategoryId,
+              industryLabel: d.industryCategoryId,
+              industrySubIndustryId: profile?.subIndustryId,
+              startupType: d.startupType,
+              businessLaunched: d.businessLaunched,
+              daysSinceLaunch,
+              region: d.preferredRegionInput || undefined,
+              selectedBudget: d.selectedBudget ?? undefined,
+
+              // 매출/비용
+              monthlySales: monthlySalesSum,
+              monthlyCosts: monthlyCostsSum,
+              marginPct,
+              monthlyCostBreakdown: {
+                ingredients: costs.ingredients,
+                labor: costs.labor,
+                rent: costs.rent,
+                utilities: costs.utilities,
+                sga: costs.sga,
+                marketing: costs.marketing,
+                other: costs.other,
+                interest: costs.interest,
+              },
+              yesterdaySales,
+              primeRate,
+              businessHealthScore: d.businessHealthScore as "healthy" | "caution" | "danger" | "unknown" | undefined,
+
+              // 운영
+              employeeCount: employees.length,
+              lowStockItems: lowStockItems.length > 0 ? lowStockItems : undefined,
+              upcomingFixedExpenses: upcomingFixedExpenses.length > 0 ? upcomingFixedExpenses : undefined,
+
+              // 마케팅 비용 (이번 달 분해에 marketing 카테고리로 이미 포함됨)
+              totalMarketingSpend: costs.marketing,
+
+              // 프랜차이즈
+              franchiseBrandId: d.selectedFranchiseBrandId ?? undefined,
+            }}
+          />
+        );
+      })()}
     </main>
     </DashboardProvider>
   );
@@ -932,6 +1329,20 @@ const operationalShell: React.CSSProperties = {
   width: "min(1440px, calc(100vw - 32px))",
   margin: "0 auto",
   padding: "92px 0 80px",
+};
+
+/** 홈 + 운영 중 — 좌측 사이드바 폭만큼 좌측 패딩 추가 (좁은 화면에선 사이드바 숨김 → CSS) */
+const operationalShellSidebar: React.CSSProperties = {
+  width: "min(1440px, calc(100vw - 32px))",
+  margin: "0 auto",
+  padding: "32px 0 80px 220px",   // 좌측 사이드바 200px + 여백 20px
+};
+
+/** 사이드바 collapsed (60px) 일 때 — 좌측 padding 80px (60 + 20 여백) */
+const operationalShellSidebarCollapsed: React.CSSProperties = {
+  width: "min(1440px, calc(100vw - 32px))",
+  margin: "0 auto",
+  padding: "32px 0 80px 80px",
 };
 
 const operationalNavSection: React.CSSProperties = {

@@ -300,7 +300,8 @@ function hydrateBusinessProfile(row: BusinessProfileRow | null): PersistedBusine
 export async function saveRoadmapState(
   client: Client,
   state: PersistedRoadmapState,
-  userOverride?: User
+  userOverride?: User,
+  options?: { forceReset?: boolean }
 ): Promise<PersistedRoadmapState> {
   const user = userOverride ?? (await ensureAccountUser(client));
   await ensureBusinessProfile(client, user);
@@ -338,21 +339,58 @@ export async function saveRoadmapState(
   const decisionPayload = serializeDecisions(state.decisions, roadmapRow.id);
   const taskPayload = serializeTasks(state.tasks, roadmapRow.id);
 
+  // ⚠️ 데이터 유실 방지 가드 (2026-04-21 추가, 2026-04-27 forceReset 옵션 추가)
+  // 기존에 발생한 심각한 버그: 빈 decisions/tasks 상태가 autosave 레이스로 Supabase에 반영되어
+  // 18/18 완료된 유저의 로드맵이 0단계로 리셋되는 문제.
+  //
+  // 규칙:
+  //   - payload가 비어 있을 때(delete만 일어나는 상황)는 DB에 기존 row가 있는지 먼저 확인.
+  //   - DB에 기존 진행 상태가 존재하면 이 save를 전체 skip → 자동 race 가 기존 진행을 덮어쓰는 것을 차단.
+  //   - payload에 내용이 있다면 정상적으로 delete → insert 수행.
+  //   - 단, 사용자가 명시적으로 reset 한 경우 (forceReset=true) 는 가드 우회 + DB 비우기.
+  //     (이 가드가 reset 도 막아서 "초기화 후에도 20단계 완료 상태로 복구되는" 버그 발생했었음)
+  if (decisionPayload.length === 0 && taskPayload.length === 0) {
+    if (options?.forceReset) {
+      // 명시적 reset: 기존 decisions / tasks 강제 DELETE
+      await Promise.all([
+        client.from("stage_decisions").delete().eq("roadmap_id", roadmapRow.id),
+        client.from("stage_tasks").delete().eq("roadmap_id", roadmapRow.id),
+      ]);
+      await syncBusinessProfileFromState(client, user, state);
+      return {
+        ...state,
+        roadmap: { ...state.roadmap, roadmapId: roadmapRow.id }
+      };
+    }
+    const [{ count: existingDecisions }, { count: existingTasks }] = await Promise.all([
+      client.from("stage_decisions").select("*", { count: "exact", head: true }).eq("roadmap_id", roadmapRow.id),
+      client.from("stage_tasks").select("*", { count: "exact", head: true }).eq("roadmap_id", roadmapRow.id)
+    ]);
+    if ((existingDecisions ?? 0) > 0 || (existingTasks ?? 0) > 0) {
+      // 기존 진행 상태가 있는데 빈 payload로 저장하려는 상황 → 절대 덮어쓰지 않음
+      await syncBusinessProfileFromState(client, user, state);
+      return {
+        ...state,
+        roadmap: { ...state.roadmap, roadmapId: roadmapRow.id }
+      };
+    }
+  }
+
   // 기존 rows를 먼저 삭제 후 재삽입합니다.
   // upsert만 사용하면 빈 decisions(초기화 상태)일 때 삭제가 일어나지 않아
   // 이전 진행 상태가 DB에 남는 버그가 있습니다.
   //
   // delete → insert는 원자적이지 않으므로, insert 실패 시 재삽입을 시도합니다.
-  const { error: deleteDecisionsError } = await client
-    .from("stage_decisions")
-    .delete()
-    .eq("roadmap_id", roadmapRow.id);
-
-  if (deleteDecisionsError) {
-    throw deleteDecisionsError;
-  }
-
   if (decisionPayload.length > 0) {
+    const { error: deleteDecisionsError } = await client
+      .from("stage_decisions")
+      .delete()
+      .eq("roadmap_id", roadmapRow.id);
+
+    if (deleteDecisionsError) {
+      throw deleteDecisionsError;
+    }
+
     const { error } = await client.from("stage_decisions").insert(decisionPayload);
 
     if (error) {
@@ -362,16 +400,16 @@ export async function saveRoadmapState(
     }
   }
 
-  const { error: deleteTasksError } = await client
-    .from("stage_tasks")
-    .delete()
-    .eq("roadmap_id", roadmapRow.id);
-
-  if (deleteTasksError) {
-    throw deleteTasksError;
-  }
-
   if (taskPayload.length > 0) {
+    const { error: deleteTasksError } = await client
+      .from("stage_tasks")
+      .delete()
+      .eq("roadmap_id", roadmapRow.id);
+
+    if (deleteTasksError) {
+      throw deleteTasksError;
+    }
+
     const { error } = await client.from("stage_tasks").insert(taskPayload);
 
     if (error) {

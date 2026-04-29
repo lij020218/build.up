@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Target, Flame, Gem, TrendingUp, Heart, CheckCircle2 } from "lucide-react";
+import { Target, TrendingUp, ShieldCheck, CheckCircle2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DailyEntry } from "../../stores/finance-store";
 
@@ -72,19 +72,9 @@ export function ProgressMilestonesCard({
 
   const totalEntries = dailyEntries.length;
 
-  // 핵심 마일스톤 정의 (4개)
+  // 핵심 마일스톤 정의 — 게이미피케이션 streak 2개(7일/30일) 제거.
+  // 의미 있는 비즈니스 지표(BEP·건강도) 만 유지. 사용자 피드백: "사장님은 게임하러 온 게 아냐."
   const milestones: Milestone[] = [
-    {
-      id: "first-streak",
-      titleKo: "기록 습관 (7일 연속)",
-      titleEn: "Record habit (7-day)",
-      captionKo: "주간 리포트 해금",
-      captionEn: "Weekly report unlocks",
-      current: Math.min(streak, 7),
-      target: 7,
-      Icon: Flame,
-      color: "#ea580c",
-    },
     {
       id: "bep-reached",
       titleKo: "손익분기 달성",
@@ -104,19 +94,8 @@ export function ProgressMilestonesCard({
       captionEn: "Top tier health",
       current: Math.min(healthScore, 80),
       target: 80,
-      Icon: Heart,
-      color: "#dc2626",
-    },
-    {
-      id: "streak-30",
-      titleKo: "30일 연속 기록",
-      titleEn: "30-day streak",
-      captionKo: "월간 트렌드 해금",
-      captionEn: "Monthly trend unlocks",
-      current: Math.min(streak, 30),
-      target: 30,
-      Icon: Gem,
-      color: "#7c3aed",
+      Icon: ShieldCheck,
+      color: "#059669",
     },
   ];
 

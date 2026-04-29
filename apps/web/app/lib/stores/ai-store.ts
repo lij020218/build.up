@@ -29,6 +29,10 @@ type AiState = {
   // AI 대시보드 코치
   aiActions: DashboardActionsResponse | null;
   aiActionsLoading: boolean;
+  /** AI 코칭 생성을 skip한 이유 (null=정상, "stale-data"=매출 오래됨, "not-launched"=미런칭, "no-session"=로그인 안됨, "error"=API 실패) */
+  aiActionsSkipReason: "stale-data" | "not-launched" | "no-session" | "error" | null;
+  /** API 에러 메시지 (debugging) */
+  aiActionsError: string | null;
 };
 
 type AiActions = {
@@ -50,6 +54,8 @@ type AiActions = {
   setLoanGuides: (v: KnowledgeGuide[]) => void;
   setAiActions: (v: DashboardActionsResponse | null) => void;
   setAiActionsLoading: (v: boolean) => void;
+  setAiActionsSkipReason: (v: AiState["aiActionsSkipReason"]) => void;
+  setAiActionsError: (v: string | null) => void;
   resetAll: () => void;
 };
 
@@ -72,6 +78,8 @@ const initialState: AiState = {
   loanGuides: [],
   aiActions: null,
   aiActionsLoading: false,
+  aiActionsSkipReason: null,
+  aiActionsError: null,
 };
 
 export const useAiStore = create<AiState & AiActions>()((set) => ({
@@ -94,5 +102,7 @@ export const useAiStore = create<AiState & AiActions>()((set) => ({
   setLoanGuides: (v) => set({ loanGuides: v }),
   setAiActions: (v) => set({ aiActions: v }),
   setAiActionsLoading: (v) => set({ aiActionsLoading: v }),
+  setAiActionsSkipReason: (v) => set({ aiActionsSkipReason: v }),
+  setAiActionsError: (v) => set({ aiActionsError: v }),
   resetAll: () => set(initialState),
 }));

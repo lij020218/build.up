@@ -27,7 +27,11 @@ function readEnvFile(): Record<string, string> {
   return _envFileCache;
 }
 
-function getEnvVar(name: string): string | undefined {
+/**
+ * 임의 env var 조회 (typed helpers 가 없는 신규 변수용).
+ * 항상 process.env 우선, .env.local 폴백. 빈 문자열은 undefined 취급.
+ */
+export function getEnvVar(name: string): string | undefined {
   // 1. process.env (non-empty)
   const fromEnv = process.env[name]?.trim();
   if (fromEnv && fromEnv.length > 0) return fromEnv;

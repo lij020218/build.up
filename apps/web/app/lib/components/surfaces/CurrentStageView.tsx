@@ -11,6 +11,21 @@ import { StartupFoundationStage } from "../stages/startup/StartupFoundationStage
 import { CustomerDiscoveryStage } from "../stages/startup/CustomerDiscoveryStage";
 import { MvpBuildStage } from "../stages/startup/MvpBuildStage";
 import { FundraisingReadinessStage } from "../stages/startup/FundraisingReadinessStage";
+// ── Cluster B: Hardware/IoT NPI ──
+import { HardwarePrototypeStage } from "../stages/startup/HardwarePrototypeStage";
+import { BomSupplyChainStage } from "../stages/startup/BomSupplyChainStage";
+import { CertificationKcCeStage } from "../stages/startup/CertificationKcCeStage";
+import { ManufacturingPartnerStage } from "../stages/startup/ManufacturingPartnerStage";
+// ── Cluster C: Deep Tech Lab (로보틱스/바이오) ──
+import { LabSetupStage } from "../stages/startup/LabSetupStage";
+import { PrototypeIterationStage } from "../stages/startup/PrototypeIterationStage";
+import { FieldOrClinicalTestStage } from "../stages/startup/FieldOrClinicalTestStage";
+import { RegulatorySubmissionStage } from "../stages/startup/RegulatorySubmissionStage";
+// ── Cluster D: Extreme Deep Tech (반도체/클린테크) ──
+import { EdaToolingSetupStage } from "../stages/startup/EdaToolingSetupStage";
+import { MpwOrPilotTapeOutStage } from "../stages/startup/MpwOrPilotTapeOutStage";
+import { PackagingAndTestStage } from "../stages/startup/PackagingAndTestStage";
+import { PartnerFoundationOrPilotLineStage } from "../stages/startup/PartnerFoundationOrPilotLineStage";
 import { OnlineRegistrationStage } from "../stages/online/OnlineRegistrationStage";
 import { PlatformSetupStage } from "../stages/online/PlatformSetupStage";
 import { OnlineMarketingStage } from "../stages/online/OnlineMarketingStage";
@@ -18,16 +33,19 @@ import { StoreSetupStage } from "../stages/online/StoreSetupStage";
 import { SourcingSetupStage } from "../stages/online/SourcingSetupStage";
 import { RegistrationSetupStage } from "../stages/offline/RegistrationSetupStage";
 import { InsuranceTaxSetupStage } from "../stages/offline/InsuranceTaxSetupStage";
+import { VendorSetupStage } from "../stages/offline/VendorSetupStage";
 import { HiringSetupStage } from "../stages/offline/HiringSetupStage";
 import { OperationsSetupStage } from "../stages/offline/OperationsSetupStage";
 import { PermitCheckPanels } from "../stages/offline/PermitCheckPanels";
 import { BizRegistrationPanel } from "../stages/offline/BizRegistrationPanel";
 import { PreLaunchStage } from "../stages/offline/PreLaunchStage";
 import { ConstructionSetupStage } from "../stages/offline/ConstructionSetupStage";
+import { FRANCHISE_INTERIOR_DATA } from "../stages/offline/franchise-interior-data";
 import { PreLaunchFinalStage } from "../stages/shared-tail/PreLaunchFinalStage";
 import { FirstMonthCheckStage } from "../stages/shared-tail/FirstMonthCheckStage";
 import { TaxGuideStage } from "../stages/shared-tail/TaxGuideStage";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
+import { FinancialReviewStage } from "../stages/shared-tail/FinancialReviewStage";
 import { StageGuideViewer } from "../stages/shared/StageGuideViewer";
 import { FranchiseApplicationStage } from "../stages/franchise/FranchiseApplicationStage";
 import { AuroraBackground } from "../../../../components/ui/aurora-background";
@@ -525,6 +543,22 @@ export function CurrentStageView() {
             currentStage.code === "biz_registration" ||
             currentStage.code === "pre_launch_final" ||
             currentStage.code === "first_month_check" ||
+            currentStage.code === "financial_review" ||
+            // ── Cluster B: Hardware/IoT NPI 4 ──
+            currentStage.code === "hardware_prototype" ||
+            currentStage.code === "bom_supply_chain" ||
+            currentStage.code === "certification_kc_ce" ||
+            currentStage.code === "manufacturing_partner" ||
+            // ── Cluster C: Deep Tech Lab 4 ──
+            currentStage.code === "lab_setup" ||
+            currentStage.code === "prototype_iteration" ||
+            currentStage.code === "field_or_clinical_test" ||
+            currentStage.code === "regulatory_submission" ||
+            // ── Cluster D: Extreme Deep Tech 4 ──
+            currentStage.code === "eda_tooling_setup" ||
+            currentStage.code === "mpw_or_pilot_tape_out" ||
+            currentStage.code === "packaging_and_test" ||
+            currentStage.code === "partner_foundation_or_pilot_line" ||
             (currentStage.code as string) === "franchise_application"
           ) ? (() => {
             const stageIdMap: Record<string, string> = {
@@ -552,7 +586,22 @@ export function CurrentStageView() {
               venture_certification: "venture-certification",
               biz_registration: "biz-registration",
               pre_launch_final: "pre-launch-final",
-              first_month_check: "first-month-check"
+              first_month_check: "first-month-check",
+              // Cluster B
+              hardware_prototype: "hardware-prototype",
+              bom_supply_chain: "bom-supply-chain",
+              certification_kc_ce: "certification-kc-ce",
+              manufacturing_partner: "manufacturing-partner",
+              // Cluster C
+              lab_setup: "lab-setup",
+              prototype_iteration: "prototype-iteration",
+              field_or_clinical_test: "field-or-clinical-test",
+              regulatory_submission: "regulatory-submission",
+              // Cluster D
+              eda_tooling_setup: "eda-tooling-setup",
+              mpw_or_pilot_tape_out: "mpw-or-pilot-tape-out",
+              packaging_and_test: "packaging-and-test",
+              partner_foundation_or_pilot_line: "partner-foundation-or-pilot-line",
             };
             const stageId = stageIdMap[currentStage.code] ?? currentStage.code.replace(/_/g, "-");
             const stageTasks = taskMap[stageId] ?? [];
@@ -623,11 +672,32 @@ export function CurrentStageView() {
                 {/* ── 벤처인증 · 정부 지원사업 (분리됨) ── */}
                 {currentStage.code === "venture_certification" && <VentureCertificationStage />}
 
+                {/* ── Cluster B: Hardware/IoT NPI 4단계 ── */}
+                {currentStage.code === "hardware_prototype" && <HardwarePrototypeStage />}
+                {currentStage.code === "bom_supply_chain" && <BomSupplyChainStage />}
+                {currentStage.code === "certification_kc_ce" && <CertificationKcCeStage />}
+                {currentStage.code === "manufacturing_partner" && <ManufacturingPartnerStage />}
+
+                {/* ── Cluster C: Deep Tech Lab (로보틱스/바이오) 4단계 ── */}
+                {currentStage.code === "lab_setup" && <LabSetupStage />}
+                {currentStage.code === "prototype_iteration" && <PrototypeIterationStage />}
+                {currentStage.code === "field_or_clinical_test" && <FieldOrClinicalTestStage />}
+                {currentStage.code === "regulatory_submission" && <RegulatorySubmissionStage />}
+
+                {/* ── Cluster D: Extreme Deep Tech (반도체/클린테크) 4단계 ── */}
+                {currentStage.code === "eda_tooling_setup" && <EdaToolingSetupStage />}
+                {currentStage.code === "mpw_or_pilot_tape_out" && <MpwOrPilotTapeOutStage />}
+                {currentStage.code === "packaging_and_test" && <PackagingAndTestStage />}
+                {currentStage.code === "partner_foundation_or_pilot_line" && <PartnerFoundationOrPilotLineStage />}
+
                 {/* ── Franchise Application Guide ── */}
                 {(currentStage.code as string) === "franchise_application" && <FranchiseApplicationStage />}
 
                 {/* ── loan_guide stage: support programs + live programs + business plan ── */}
                 {currentStage.code === "loan_guide" && <LoanGuideStage />}
+
+                {/* ── financial_review stage: 월 운영비 자동 집계·확인 (b+c 하이브리드 UI) ── */}
+                {currentStage.code === "financial_review" && <FinancialReviewStage />}
 
 
                 {/* ── 사업자등록 + 영업허가 절차 가이드 (registration_setup) ── */}
@@ -641,7 +711,12 @@ export function CurrentStageView() {
                   <FranchiseSupplyPanel />
                 )}
 
-                {stageGuideContent && currentStage.code !== "pre_launch" && currentStage.code !== "operations_setup" && currentStage.code !== "hiring_setup" && currentStage.code !== "platform_setup" && currentStage.code !== "online_registration" && (currentStage.code as string) !== "franchise_application" && currentStage.code !== "fundraising_readiness" && currentStage.code !== "registration_setup" && currentStage.code !== "insurance_tax_setup" && currentStage.code !== "loan_guide" && (
+                {/* ── Independent / non-franchise vendor setup — sub-industry-aware Korean vendor & equipment data ── */}
+                {currentStage.code === "vendor_setup" && startupType !== "franchise" && (
+                  <VendorSetupStage />
+                )}
+
+                {stageGuideContent && currentStage.code !== "pre_launch" && currentStage.code !== "operations_setup" && currentStage.code !== "hiring_setup" && currentStage.code !== "platform_setup" && currentStage.code !== "online_registration" && (currentStage.code as string) !== "franchise_application" && currentStage.code !== "fundraising_readiness" && currentStage.code !== "registration_setup" && currentStage.code !== "insurance_tax_setup" && currentStage.code !== "loan_guide" && (currentStage.code as string) !== "financial_review" && currentStage.code !== "vendor_setup" && (
                   <StageGuideViewer />
                 )}
 
@@ -739,10 +814,56 @@ export function CurrentStageView() {
                             ...styles.taskCheckTitle,
                             ...(done ? styles.taskCheckTitleDone : {})
                           }}>
-                            {localizeTaskTitle(task.taskId, language, industryCategoryId || d.industryCategoryId) ?? task.title}
+                            {(() => {
+                              // ── 본사 지정 시공 프랜차이즈 → construction-setup 체크리스트 분기 ──
+                              const franchiseData = currentStage.code === "construction_setup" && startupType === "franchise" && selectedFranchiseBrandId
+                                ? FRANCHISE_INTERIOR_DATA[selectedFranchiseBrandId]
+                                : undefined;
+                              if (franchiseData?.flexibility === "strict") {
+                                const franchiseLabels: Record<string, { ko: string; en: string }> = {
+                                  "contractor-selected": {
+                                    ko: "본사 가맹 담당자에게 시공 일정·비용 분담 협의 완료",
+                                    en: "Confirm timing and cost-sharing with HQ franchise manager",
+                                  },
+                                  "design-approved": {
+                                    ko: "본사 표준 도면·자재·집기 패키지 승인 (점주 변경 불가)",
+                                    en: "Approve HQ standard drawings, materials, and equipment package (no owner edits)",
+                                  },
+                                  "construction-complete": {
+                                    ko: "본사 지정 시공업체 시공 완료 + 본사 감리·BI 검수 통과",
+                                    en: "HQ-mandated contractor finishes + HQ inspection / BI audit passes",
+                                  },
+                                  "fire-health-parallel": {
+                                    ko: "공사 중 소방필증·보건증 병행 신청 (본사 매뉴얼 따름)",
+                                    en: "File fire safety / health certificates during construction (per HQ manual)",
+                                  },
+                                };
+                                const override = franchiseLabels[task.taskId];
+                                if (override) return language === "ko" ? override.ko : override.en;
+                              }
+                              return localizeTaskTitle(task.taskId, language, industryCategoryId || d.industryCategoryId) ?? task.title;
+                            })()}
                           </div>
                           {!done && currentStage.code === "construction_setup" && (() => {
-                            const hints: Record<string, string> = {
+                            const franchiseData = startupType === "franchise" && selectedFranchiseBrandId
+                              ? FRANCHISE_INTERIOR_DATA[selectedFranchiseBrandId]
+                              : undefined;
+                            const isStrictFranchise = franchiseData?.flexibility === "strict";
+
+                            const hints: Record<string, string> = isStrictFranchise ? {
+                              "contractor-selected": language === "ko"
+                                ? "외부 업체 견적·시공이 불가능합니다. 본사 가맹 담당자가 표준 시공 일정과 비용 분담(본사 부담 vs 점주 부담)을 안내해 줍니다."
+                                : "External contractors not allowed. The HQ franchise manager defines timing and cost-sharing.",
+                              "design-approved": language === "ko"
+                                ? "본사가 도면·자재·집기를 일괄 공급하므로 점주 임의 변경은 계약 위반 사유가 될 수 있어요. 본사 패키지 명세서를 받아 보관하세요."
+                                : "HQ supplies all drawings/materials/equipment in a fixed package — owner edits may breach the franchise contract.",
+                              "construction-complete": language === "ko"
+                                ? "본사 감리(현장 점검)와 BI 검수가 끝나야 오픈 승인을 받을 수 있어요. 시공 후 사진·체크리스트를 본사에 제출하세요."
+                                : "HQ inspection and BI audit must pass before opening — submit post-construction photos & checklist to HQ.",
+                              "fire-health-parallel": language === "ko"
+                                ? "본사가 소방·위생 매뉴얼을 제공하지만, 신청자(영업자)는 점주 본인입니다. 보건증은 인테리어와 무관하므로 미리 받아 두세요."
+                                : "HQ provides the fire/health manual, but the applicant is the owner. Get the health card early — it's independent of construction.",
+                            } : {
                               "contractor-selected": language === "ko"
                                 ? "위 자재 목록과 선택한 컨셉을 업체에 전달하면 더 정확한 견적을 받을 수 있어요."
                                 : "Share the material list and chosen concept above for more accurate quotes.",
@@ -830,9 +951,23 @@ export function CurrentStageView() {
           })() : isGuideStage ? (
             currentStage.code === "tax_guide" ? (
               <TaxGuideStage />
+            ) : currentStage.code === "loan_guide" ? (
+              <>
+                <LoanGuideStage />
+                <div style={styles.stageFooter}>
+                  {prevTraversedStage && (
+                    <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
+                      {language === "ko" ? "← 이전 단계" : "← Back"}
+                    </button>
+                  )}
+                  <button type="button" style={{ ...styles.primaryButton }} onClick={() => handleVerificationContinue("loan-guide")}>
+                    {copy.home.markLoanReviewed}
+                  </button>
+                </div>
+              </>
             ) : (
             (() => {
-              // ── 정책자금 종류 ──
+              // ── (legacy fallback for other guide stages) ──
               const loanFunds = [
                 { name: "성장기반자금", target: "소공인 (제조업 10인 미만)", rate: "3.56%", limit: "최대 7천만 원", tag: "" },
                 { name: "일반경영안정자금", target: "업력 무관 소상공인 전체", rate: "3.56%", limit: "최대 7천만 원", tag: "" },

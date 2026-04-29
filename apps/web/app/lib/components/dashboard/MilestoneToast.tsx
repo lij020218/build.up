@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Target, Flame, Zap, Gem, TrendingUp, PartyPopper, Heart, Scissors, Map } from "lucide-react";
+import { Target, Flame, Trophy, Gem, TrendingUp, Crown, ShieldCheck, Percent, Flag } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 type Milestone = {
@@ -93,7 +93,7 @@ export function checkMilestones(opts: {
       id: "streak-30",
       title: ko ? "30일 연속 기록!" : "30-Day Streak!",
       subtitle: ko ? "월간 트렌드 분석이 해금됩니다" : "Monthly trend analysis unlocked",
-      Icon: Zap,
+      Icon: Trophy,
       iconColor: "#eab308",
     },
     {
@@ -115,7 +115,7 @@ export function checkMilestones(opts: {
       id: "first-profit-month",
       title: ko ? "첫 흑자 달성!" : "First Profitable Month!",
       subtitle: ko ? "축하합니다! 수익 구조가 작동하고 있습니다" : "Congratulations! Your revenue structure is working",
-      Icon: PartyPopper,
+      Icon: Crown,
       iconColor: "#db2777",
     },
     // ── 건강 점수 ──
@@ -123,7 +123,7 @@ export function checkMilestones(opts: {
       id: "health-80",
       title: ko ? "건강한 가게!" : "Healthy Business!",
       subtitle: ko ? "건강점수 80점 이상 — 이 구조를 유지하세요" : "Health score above 80 — maintain this structure",
-      Icon: Heart,
+      Icon: ShieldCheck,
       iconColor: "#059669",
     },
     // ── 비용 효율 ──
@@ -131,7 +131,7 @@ export function checkMilestones(opts: {
       id: "cost-efficient",
       title: ko ? "비용 효율 달성!" : "Cost Efficiency!",
       subtitle: ko ? "원가율이 업종 평균보다 낮습니다" : "Your cost ratio is below industry average",
-      Icon: Scissors,
+      Icon: Percent,
       iconColor: "#0891b2",
     },
     // ── 로드맵 ──
@@ -139,7 +139,7 @@ export function checkMilestones(opts: {
       id: "roadmap-complete",
       title: ko ? "로드맵 완주!" : "Roadmap Complete!",
       subtitle: ko ? "모든 준비를 마쳤습니다. 이제 운영에 집중하세요" : "All preparation done. Focus on operations now",
-      Icon: Map,
+      Icon: Flag,
       iconColor: "#1d3557",
     },
   ];

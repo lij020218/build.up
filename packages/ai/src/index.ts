@@ -25,3 +25,6 @@ export { generateInterviewScript } from "./interview/generate";
 export type { InterviewInput, InterviewScript, InterviewQuestion } from "./interview/generate";
 export { analyzeInterviews } from "./interview/analyze";
 export type { InterviewAnalysisInput, InterviewAnalysisResult } from "./interview/analyze";
+export { askQuickQuery } from "./quick-query/ask";
+export type { QuickQueryContext, QuickQueryResult } from "./quick-query/prompt";
+export { QUICK_QUERY_SYSTEM_PROMPT, buildQuickQueryUserPrompt } from "./quick-query/prompt";

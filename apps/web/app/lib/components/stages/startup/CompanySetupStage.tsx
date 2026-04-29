@@ -1,7 +1,9 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, FileText, Shield, Calculator } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { ModePathCard } from "./ModePathCard";
+import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
 
 export function CompanySetupStage() {
   const d = useDashboardCtx();
@@ -28,28 +30,37 @@ export function CompanySetupStage() {
 
   return (
     <div style={{ marginBottom: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
+      {/* ── 모드별 경로 카드 (최상단) ── */}
+      <ModePathCard stageId="company-setup" />
+
+      {/* KEY ACTION 미드나이트 hero */}
+      <StartupKeyActionHero
+        eyebrow="KEY ACTION"
+        title={ko ? "사업자등록 → IP 보호 → 세무 셋업" : "Register → Protect IP → Set up taxes"}
+        subtitle={
+          ko
+            ? "MVP 검증 후 본격 운영 단계입니다. 개인/법인 결정 → 상표·특허 출원 → 과세 유형 → 약관·개인정보 처리방침까지 4가지를 순서대로 처리하세요."
+            : "After MVP validation, set up properly: business structure → IP filing → tax type → privacy & terms — in order."
+        }
+        miniCards={[
+          { icon: FileText, label: ko ? "사업자등록" : "Register", detail: ko ? "홈택스 즉시" : "HomeTax instant" },
+          { icon: Shield, label: ko ? "특허·상표" : "IP", detail: ko ? "출원 우선권" : "Filing priority" },
+          { icon: Calculator, label: ko ? "과세 유형" : "Tax", detail: ko ? "간이/일반/법인" : "Pick one" },
+        ]}
+      />
+
+      <StartupReferenceLabel>
+        {ko ? "↓ 심화 참고 — 사업자등록·법인·IP 보호 표준 절차" : "↓ Reference — standard procedures for incorporation and IP"}
+      </StartupReferenceLabel>
+
       {/* 페이지 네비 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button type="button" disabled={pg === 0} onClick={() => d.setGuideStepIndex((p: number) => p - 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(37,99,235,0.08)",
-          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
-        }}>← {ko ? "이전" : "Prev"}</button>
-        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "center" }}>
-          {pgLabels.map((l, i) => (
-            <button key={i} type="button" onClick={() => d.setGuideStepIndex(i)} style={{
-              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
-              background: i === pg ? "#2563eb" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
-              border: "none", cursor: "pointer",
-            }}>{l}</button>
-          ))}
-        </div>
-        <button type="button" disabled={pg === totalPg - 1} onClick={() => d.setGuideStepIndex((p: number) => p + 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(37,99,235,0.08)",
-          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
-        }}>{ko ? "다음" : "Next"} →</button>
-      </div>
+      <StartupPageNav
+        page={pg}
+        totalPages={totalPg}
+        labels={pgLabels}
+        onChange={(p) => d.setGuideStepIndex(p)}
+        ko={ko}
+      />
 
       {/* ── Page 0: 사업자등록 ── */}
       {pg === 0 && (

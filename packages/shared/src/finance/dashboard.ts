@@ -1,6 +1,12 @@
 // ─── 실시간 손익 대시보드 엔진 ───────────────────────────────────────────────
 // user_store_data의 실제 매출/비용 데이터를 기반으로 경영 지표를 계산합니다.
 // 시뮬레이션(simulation.ts)이 "예측"이라면, 이 모듈은 "실적"입니다.
+//
+// ─── 점수·등급 산정의 SSOT ───
+// healthScore / healthGrade 는 unified-health.ts 의 calculateUnifiedHealthScore 가 산출.
+// 본 모듈의 calculateHealthMetrics 는 호환 layer — 같은 결과를 기존 시그니처로 노출.
+
+import { calculateUnifiedHealthScore } from "./unified-health";
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
@@ -229,22 +235,22 @@ export function calculateHealthMetrics(
     totalDaysRecorded,
   });
 
-  // 종합 점수 (0~100)
-  const healthScore = calculateHealthScore({
-    operatingMargin: pnl.operatingMargin,
-    costToRevenueRatio,
-    primeCostRatio,
-    cashRunwayMonths,
-    salesTrend,
-    daysAboveBreakEven,
-    totalDaysRecorded,
+  // ─── 종합 점수·등급은 unified-health.ts (SSOT) 에 위임 ───
+  // 동적 import 회피용 — 같은 파일이 import 했다가 순환할 수 있어 require 패턴 사용 X.
+  // unified-health 가 dashboard.ts 의 calculateMonthlyPnL/normalizeCosts 만 가져오므로 단방향 OK.
+  const unified = calculateUnifiedHealthScore({
+    dailyEntries,
+    monthlyCosts,
+    previousMonthRevenue,
+    currentCash,
+    deliverySales,
+    industry: "general", // 호환 호출은 업종 정보가 없음 — 보수적 기본값
+    stage: "growth",
   });
-
+  // ready=false (데이터 부족) 일 때는 unknown → 호환을 위해 점수만 노출하고 등급은 근사 매핑
+  const healthScore = Number.isFinite(unified.score) ? unified.score : 0;
   const healthGrade: BusinessHealthMetrics["healthGrade"] =
-    healthScore >= 75 ? "healthy"
-    : healthScore >= 50 ? "caution"
-    : healthScore >= 25 ? "warning"
-    : "critical";
+    unified.grade === "unknown" ? "warning" : unified.grade;
 
   return {
     avgDailySales: Math.round(avgDailySales),
@@ -435,64 +441,8 @@ function generateAlerts(input: AlertInput): HealthAlert[] {
   return alerts;
 }
 
-type ScoreInput = {
-  operatingMargin: number;
-  costToRevenueRatio: number;
-  primeCostRatio: number;
-  cashRunwayMonths: number;
-  salesTrend: string;
-  daysAboveBreakEven: number;
-  totalDaysRecorded: number;
-};
-
-function calculateHealthScore(input: ScoreInput): number {
-  // ─── 데이터 충분성 검증 ───
-  // 비용 데이터가 없으면 정확한 판단 불가 → 최대 40점 (데이터 부족)
-  const hasCostData = input.costToRevenueRatio > 0;
-  const hasEnoughDays = input.totalDaysRecorded >= 7;
-
-  if (!hasCostData || !hasEnoughDays) {
-    // 데이터 부족 시 중립 점수 (unknown 상태에 가까움)
-    let score = 35;
-    // 매출 기록이라도 있으면 약간 가산
-    if (input.totalDaysRecorded >= 3) score += 5;
-    if (input.totalDaysRecorded >= 7) score += 5;
-    return Math.max(0, Math.min(40, score)); // 최대 40점 (데이터 부족 캡)
-  }
-
-  // ─── 충분한 데이터가 있을 때만 정상 스코어링 ───
-  let score = 50; // 기본 점수
-
-  // 영업이익률 (최대 ±25점)
-  if (input.operatingMargin >= 15) score += 25;
-  else if (input.operatingMargin >= 5) score += 15;
-  else if (input.operatingMargin >= 0) score += 5;
-  else if (input.operatingMargin >= -10) score -= 10;
-  else score -= 25;
-
-  // 프라임 코스트 (최대 ±15점)
-  if (input.primeCostRatio <= 60) score += 15;
-  else if (input.primeCostRatio <= 65) score += 10;
-  else if (input.primeCostRatio <= 70) score += 0;
-  else score -= 15;
-
-  // 현금 런웨이 (최대 ±15점)
-  if (input.cashRunwayMonths >= 6) score += 15;
-  else if (input.cashRunwayMonths >= 3) score += 5;
-  else if (input.cashRunwayMonths > 0) score -= 15;
-
-  // 매출 추세 (최대 ±10점)
-  if (input.salesTrend === "growing") score += 10;
-  else if (input.salesTrend === "declining") score -= 10;
-
-  // 손익분기 달성률 (최대 ±10점)
-  const ratio = input.daysAboveBreakEven / input.totalDaysRecorded;
-  if (ratio >= 0.7) score += 10;
-  else if (ratio >= 0.5) score += 5;
-  else score -= 10;
-
-  return Math.max(0, Math.min(100, score));
-}
+// (구 calculateHealthScore 는 unified-health.ts/calculateUnifiedHealthScore 로 대체됨.
+//  본 모듈의 calculateHealthMetrics 가 그것을 호출함.)
 
 // ─── 신규 지표 계산 함수 (대시보드 재설계) ────────────────────────────────────
 

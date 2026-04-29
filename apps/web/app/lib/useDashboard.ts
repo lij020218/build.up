@@ -71,7 +71,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     showRoleSelection, setShowRoleSelection,
     userRole, setUserRole,
     isResetting, resetProgress,
-    authLabel, persistenceLabel, persistenceReady,
+    authLabel, userName, persistenceLabel, persistenceReady,
     authResolved, requiresAuth,
     showProfileDetails, setShowProfileDetails,
     showMonthlyCostPrompt, setShowMonthlyCostPrompt,
@@ -83,6 +83,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const {
     selectedIndustryId, setSelectedIndustryId,
     selectedIndustryCategoryId, setSelectedIndustryCategoryId,
+    selectedSpecialtyId, setSelectedSpecialtyId,
     selectedBusinessModelId, setSelectedBusinessModelId,
     selectedBudget, setSelectedBudget,
     budgetInputText, setBudgetInputText,
@@ -102,6 +103,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     saveStatus, setSaveStatus,
     businessLaunched, setBusinessLaunched,
     businessLaunchedDate,
+    startupOperatingMode, setStartupOperatingMode,
   } = profileStore;
 
   const {
@@ -127,6 +129,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     softOpenSkips, setSoftOpenSkips,
     taxChecks, setTaxChecks,
     loanChecks, setLoanChecks,
+    contractSubChecks, setContractSubChecks,
     stageGuideContent,
     guideStepIndex, setGuideStepIndex,
     guideSelections, setGuideSelections,
@@ -232,6 +235,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     knowledgeQaStatus, knowledgeQaError, setKnowledgeQaError,
     permitGuides, taxGuides, loanGuides,
     aiActions, aiActionsLoading, setAiActions, setAiActionsLoading,
+    aiActionsSkipReason, aiActionsError, setAiActionsSkipReason, setAiActionsError,
   } = aiStore;
 
   // ── 3. Init effect (store defaults that depend on copy) ──
@@ -252,9 +256,33 @@ export function useDashboard(surface: DashboardSurface = "home") {
     pathTotalStages,
   } = computed;
 
+  // ── 5b. Migration: 스타트업/온라인 업종은 자동 추정된 rent/utilities 정리 ──
+  //  과거 버전에서 estimateMonthlyCosts() 가 startup-tech/online-digital 에도
+  //  자동으로 rent/utilities 를 채워넣던 버그가 있었음. 사용자가 직접 입력한 적이 없으면
+  //  (costRentText, costUtilitiesText 가 비어있으면) 자동으로 0 으로 정리.
+  const migrationDoneRef = useRef(false);
+  useEffect(() => {
+    if (migrationDoneRef.current) return;
+    if (!industryCategoryId) return;
+    const isPlaceless = industryCategoryId === "startup-tech" || industryCategoryId === "online-digital";
+    if (!isPlaceless) { migrationDoneRef.current = true; return; }
+    const mc = monthlyCosts as { rent?: number; utilities?: number } | undefined;
+    if (!mc) return;
+    const hasGhostRent = (mc.rent ?? 0) > 0 && !costRentText;
+    const hasGhostUtilities = (mc.utilities ?? 0) > 0 && !costUtilitiesText;
+    if (hasGhostRent || hasGhostUtilities) {
+      setMonthlyCosts({
+        ...(monthlyCosts as Record<string, number>),
+        rent: hasGhostRent ? 0 : (mc.rent ?? 0),
+        utilities: hasGhostUtilities ? 0 : (mc.utilities ?? 0),
+      } as typeof monthlyCosts);
+    }
+    migrationDoneRef.current = true;
+  }, [industryCategoryId, monthlyCosts, costRentText, costUtilitiesText, setMonthlyCosts]);
+
   // ── 6. Sub-hook: persistence ──
   const persistence = usePersistence(deps, surface);
-  const { collectStoreData, flushStoreData } = persistence;
+  const { collectStoreData, flushStoreData, cancelAllAutosaves, setResetting } = persistence;
 
   // ── 7. fetchAiActions (defined here — used by onboarding & data loading) ──
   const aiActionsLoadedRef = useRef(false);
@@ -263,12 +291,38 @@ export function useDashboard(surface: DashboardSurface = "home") {
   type InventoryItemLocal = { id: string; name: string; quantity: number; minThreshold: number; [key: string]: unknown };
 
   const fetchAiActions = async () => {
-    if (aiActionsLoading || !businessLaunched || !storeName) return;
+    if (aiActionsLoading) return;
+
+    // ── 가드 A: 미런칭
+    if (!businessLaunched || !storeName) {
+      setAiActionsSkipReason("not-launched");
+      return;
+    }
+
+    const entries = dailyEntries as DailyEntryLocal[];
+
+    // ── 가드 B: 매출 미기록 2일 이상 → 할루시네이션 방지 (MorningBriefing hero가 "매출 입력" 프롬프트 담당)
+    if (entries.length > 0) {
+      const latestDate = entries.reduce((acc, e) => (e.date > acc ? e.date : acc), entries[0].date);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const last = new Date(latestDate); last.setHours(0, 0, 0, 0);
+      const daysSinceLast = Math.max(0, Math.round((today.getTime() - last.getTime()) / 86400000));
+      if (daysSinceLast >= 2) {
+        setAiActionsSkipReason("stale-data");
+        return;
+      }
+    }
+
+    // 정상 시작 — skip/error 상태 초기화
+    setAiActionsSkipReason(null);
+    setAiActionsError(null);
     setAiActionsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-      const entries = dailyEntries as DailyEntryLocal[];
+      if (!session?.access_token) {
+        setAiActionsSkipReason("no-session");
+        return;
+      }
       const recent30 = entries.filter(e => {
         const d = new Date(e.date);
         const ago = new Date(); ago.setDate(ago.getDate() - 30);
@@ -297,11 +351,56 @@ export function useDashboard(surface: DashboardSurface = "home") {
       const lastWeekSales = entries.filter(e => e.date >= toIso(lastMonday) && e.date <= toIso(lastSunday)).reduce((s, e) => s + e.sales, 0);
       const weeklyChange = lastWeekSales > 0 ? Math.round((thisWeekSales - lastWeekSales) / lastWeekSales * 100) : 0;
 
+      // ── 룰 기반 선제 진단 (AI 호출 컨텍스트로 전달) ──
+      // 사장님 화면에 이미 알림 표시된 anomaly 를 LLM 컨텍스트로 보내서
+      // AI 코칭이 단순 데이터 분석을 넘어 "재료비 +8% 인상이 진짜 원인" 같은
+      // 구체적 멘토링을 생성할 수 있도록 함.
+      let proactiveInsightsForAI: Array<{ kind: string; severity: "critical" | "warning" | "info"; headline: string; analysis: string; suggestedAction: string }> = [];
+      try {
+        const { detectProactiveInsights } = await import("./services/profit-anomaly-detector");
+        const curMonth = new Date().toISOString().slice(0, 7);
+        const prevMonthDate = new Date(); prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        const prevMonthKey = prevMonthDate.toISOString().slice(0, 7);
+        const thisMonthEntries = entries.filter(e => e.date.startsWith(curMonth));
+        const prevMonthEntries = entries.filter(e => e.date.startsWith(prevMonthKey));
+        const costSnapshots = (costHistory as Array<{ month: string; ingredients: number; labor: number; rent: number; utilities: number; other: number }>) ?? [];
+        const prevSnap = costSnapshots.find(h => h.month === prevMonthKey);
+        // 재고·마케팅 데이터도 함께 (없으면 해당 anomaly 자동 skip)
+        let mktCampaigns: Array<{ channel: string; spend: number; attributedRevenue?: number; month: string }> | undefined;
+        try {
+          const { useMarketingStore: mktStore } = require("./stores/marketing-store");
+          mktCampaigns = mktStore.getState().campaigns ?? undefined;
+        } catch { /* skip */ }
+        const insights = detectProactiveInsights({
+          thisMonthEntries,
+          prevMonthEntries,
+          monthlyCosts: mc,
+          prevMonthCosts: prevSnap,
+          inventory: inventory as Array<{ name: string; quantity: number; minThreshold?: number; dailyUsage?: number; lastOrderedAt?: string }> | undefined,
+          marketingCampaigns: mktCampaigns,
+        });
+        // critical/warning 만 LLM 에 전달 (info 는 화면 표시용)
+        proactiveInsightsForAI = insights
+          .filter(i => i.severity === "critical" || i.severity === "warning")
+          .slice(0, 3)
+          .map(i => ({
+            kind: i.kind,
+            severity: i.severity,
+            headline: i.headline,
+            analysis: i.analysis,
+            suggestedAction: i.action,
+          }));
+      } catch (err) {
+        console.warn("[fetchAiActions] anomaly detection failed:", err);
+      }
+
       const res = await fetch("/api/ai/dashboard/actions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
           industryCategoryId,
+          // 세부업종 — 있으면 K-히트 사례 매칭 정밀도 향상 (예: chicken-burger > food)
+          industrySubIndustryId: (profile as { subIndustryId?: string } | null)?.subIndustryId,
           industryLabel: industryCategoryId,
           storeName,
           monthlySales,
@@ -324,6 +423,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
           })(),
           currentRoadmapStage: !businessLaunched ? (currentStage as { code: string })?.code : undefined,
           isPreLaunch: !businessLaunched || undefined,
+          // ✦ 룰 기반 선제 진단 — AI 가 데이터를 한 단계 깊이 코칭하도록 컨텍스트 보강
+          proactiveInsights: proactiveInsightsForAI.length > 0 ? proactiveInsightsForAI : undefined,
           ...(selectedFranchiseBrandId ? { franchiseBrandId: selectedFranchiseBrandId } : {}),
           ...(businessCtx.expenseFields ? {
             expenseLabels: {
@@ -356,8 +457,23 @@ export function useDashboard(surface: DashboardSurface = "home") {
       if (res.ok) {
         const data = await res.json();
         setAiActions(data);
+      } else {
+        // API 에러 — 상태 + 메시지 저장 (사용자에게 "다시 시도" 버튼 제공 가능)
+        let msg = `HTTP ${res.status}`;
+        try {
+          const errBody = await res.json();
+          if (errBody?.error) msg = String(errBody.error);
+        } catch { /* body 없음 */ }
+        console.error("[fetchAiActions] API error:", res.status, msg);
+        setAiActionsSkipReason("error");
+        setAiActionsError(msg);
       }
-    } catch { /* silent */ }
+    } catch (err) {
+      // 네트워크/기타 예외 — 로그 남기고 사용자에게 표면화
+      console.error("[fetchAiActions] Exception:", err);
+      setAiActionsSkipReason("error");
+      setAiActionsError(err instanceof Error ? err.message : "Unknown error");
+    }
     finally { setAiActionsLoading(false); }
   };
 
@@ -390,6 +506,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
     finalSelectedMarket,
     locationMode,
     autosaveTimerRef,
+    cancelAllAutosaves,
+    setResetting,
   });
 
   // ── 10. Sub-hook: task handlers ──
@@ -452,7 +570,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
 
     // ── Orchestrator-level computed ──
     activeLocationCandidates, finalSelectedMarket, financeDefaults,
-    aiActions, aiActionsLoading, fetchAiActions,
+    aiActions, aiActionsLoading, aiActionsSkipReason, aiActionsError, fetchAiActions,
 
     // ── Context hooks ──
     router, searchParams, language, setLanguage, copy,
@@ -464,7 +582,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     showRoleSelection, setShowRoleSelection,
     userRole, setUserRole,
     isResetting, resetProgress,
-    authLabel, persistenceLabel, persistenceReady,
+    authLabel, userName, persistenceLabel, persistenceReady,
     authResolved, requiresAuth,
     showProfileDetails, setShowProfileDetails,
     showMonthlyCostPrompt, setShowMonthlyCostPrompt,
@@ -474,6 +592,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     // ── Bare store state/setters (profile) ──
     selectedIndustryId, setSelectedIndustryId,
     selectedIndustryCategoryId, setSelectedIndustryCategoryId,
+    selectedSpecialtyId, setSelectedSpecialtyId,
     selectedBusinessModelId, setSelectedBusinessModelId,
     selectedBudget, setSelectedBudget, budgetInputText, setBudgetInputText,
     initialOperatingCapital, setInitialOperatingCapital,
@@ -492,6 +611,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     selectedInteriorConcept, setSelectedInteriorConcept,
     profile, saveStatus, setSaveStatus,
     businessLaunched, setBusinessLaunched,
+    startupOperatingMode, setStartupOperatingMode,
 
     // ── Bare store state/setters (roadmap) ──
     decisions, setDecisions, roadmap, setRoadmap, taskMap, setTaskMap,
@@ -512,6 +632,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     softOpenStep, setSoftOpenStep,
     softOpenSkips, setSoftOpenSkips,
     taxChecks, setTaxChecks, loanChecks, setLoanChecks,
+    contractSubChecks, setContractSubChecks,
     stageGuideContent, guideStepIndex, setGuideStepIndex,
     guideSelections, setGuideSelections,
 

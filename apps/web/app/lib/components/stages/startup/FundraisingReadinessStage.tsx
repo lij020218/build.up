@@ -1,8 +1,17 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, ExternalLink, HelpCircle, DollarSign, Trophy } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { supabase } from "../../../../../lib/supabase";
+import {
+  getProgramsForMode,
+  RECOMMENDED_PROGRAM_COUNT_BY_MODE,
+  type FundingProgram,
+  type OperatingMode,
+} from "@build-up/shared";
+import { StartupKeyActionHero } from "./StartupStageShell";
+
+const MIDNIGHT = "#191970";
 
 export function FundraisingReadinessStage() {
   const d = useDashboardCtx();
@@ -14,7 +23,47 @@ export function FundraisingReadinessStage() {
     guideSelections, setGuideSelections,
     bpLoading, setBpLoading, bpSections, setBpSections, bpSummary, setBpSummary,
     bpError, setBpError, bpExpandedIdx, setBpExpandedIdx,
+    startupOperatingMode, setStartupOperatingMode,
   } = d;
+
+  // ── 운영 모드 + 클러스터 → 검증된 자금 프로그램 추천 ──
+  const isDeeptechSub = ["robotics-physical-ai", "biotech-medtech", "semiconductor", "climate-energy", "hardware-iot"]
+    .includes(selectedIndustryId ?? "");
+  const recommendedPrograms: FundingProgram[] = getProgramsForMode(startupOperatingMode, {
+    isDeeptech: isDeeptechSub,
+    limit: RECOMMENDED_PROGRAM_COUNT_BY_MODE[startupOperatingMode],
+  });
+
+  const modeLabels: Record<OperatingMode, { ko: string; en: string; desc: { ko: string; en: string } }> = {
+    indie: { ko: "1인 인디", en: "Solo indie", desc: { ko: "혼자, 인건비 X, 도구·서버만", en: "Solo, no salary, tools only" } },
+    bootstrap: { ko: "부트스트랩", en: "Bootstrapped", desc: { ko: "1-3명, 자비 또는 낮은 인건비", en: "1-3 people, low salary" } },
+    seed: { ko: "시드 단계", en: "Seed-funded", desc: { ko: "3-5명, 표준 인건비 + 시드 자금", en: "3-5 people, market salary" } },
+    seriesA: { ko: "시리즈A 이상", en: "Series A+", desc: { ko: "5-10명, 정규 인건비 + 마케팅", en: "5-10 people, full team" } },
+  };
+
+  const categoryColors: Record<string, string> = {
+    "government-grant": "#059669",
+    "policy-loan": "#0891b2",
+    "matching-fund": "#7c3aed",
+    "vc-investment": "#2563eb",
+    "accelerator": "#ec4899",
+    "crowdfunding": "#f59e0b",
+    "competition": "#dc2626",
+    "facility-support": "#64748b",
+    "deeptech": MIDNIGHT,
+  };
+
+  const categoryLabels: Record<string, { ko: string; en: string }> = {
+    "government-grant": { ko: "정부 보조금", en: "Govt Grant" },
+    "policy-loan": { ko: "정책 융자", en: "Policy Loan" },
+    "matching-fund": { ko: "매칭 펀드", en: "Matching" },
+    "vc-investment": { ko: "VC 투자", en: "VC" },
+    "accelerator": { ko: "액셀러레이터", en: "Accelerator" },
+    "crowdfunding": { ko: "크라우드펀딩", en: "Crowdfunding" },
+    "competition": { ko: "공모전·대회", en: "Competition" },
+    "facility-support": { ko: "공간·컨설팅", en: "Facility" },
+    "deeptech": { ko: "딥테크 특화", en: "Deeptech" },
+  };
 
   /* ── TIPS/정부지원 안내 ── */
   const progCard = (p: { name: string; amount: string; detail: string; color: string; url: string }) => (
@@ -105,18 +154,21 @@ export function FundraisingReadinessStage() {
     <>
       {/* ── Block 1: TIPS/정부지원 안내 ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-        {/* WHY — 이 단계의 핵심 */}
-        <div style={{ borderRadius: "20px", border: "1px solid rgba(29,53,87,0.1)", background: "linear-gradient(180deg, rgba(29,53,87,0.03) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계의 핵심" : "Core Question"}</div>
-          <div style={{ padding: "16px 18px", borderRadius: "16px", background: "rgba(29,53,87,0.04)", border: "1px solid rgba(29,53,87,0.08)" }}>
-            <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
-              {ko ? "투자가 정말 필요한가? 아니면 고객 매출로 충분한가?" : "Do you actually need investment? Or can customer revenue sustain you?"}
-            </div>
-            <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7 }}>
-              {ko ? "모든 스타트업이 투자를 받아야 하는 건 아닙니다. 토스의 이승건은 8번 실패 후 개인 자금이 2만원까지 떨어졌지만, 많은 성공적인 SaaS/AI 제품은 첫 달부터 매출로 운영됩니다. 2026년 솔로 파운더의 52%가 외부 투자 없이 엑싯에 성공했습니다. 투자는 \"성장 속도를 높이는 도구\"이지 \"생존을 위한 필수\"가 아닐 수 있습니다." : "Not every startup needs investment. Many successful SaaS/AI products run on revenue from month 1. In 2026, 52% of solo founders exited without external funding. Investment accelerates growth — it's not always survival."}
-            </div>
-          </div>
-        </div>
+        {/* KEY ACTION 미드나이트 hero */}
+        <StartupKeyActionHero
+          eyebrow="KEY ACTION"
+          title={ko ? "투자가 정말 필요한가? 아니면 매출로 충분한가?" : "Do you really need investment, or is revenue enough?"}
+          subtitle={
+            ko
+              ? "2026년 솔로 파운더의 52%가 외부 투자 없이 엑싯했습니다. 투자는 성장 가속 도구이지 생존 필수가 아닐 수 있습니다. 두 갈래(부트스트랩 / 투자) 모두 검증하고 결정하세요."
+              : "52% of solo founders exited without external funding in 2026. Investment accelerates growth — it's not always survival. Evaluate both paths (bootstrap / fundraise) before deciding."
+          }
+          miniCards={[
+            { icon: HelpCircle, label: ko ? "PATH A" : "PATH A", detail: ko ? "부트스트랩" : "Bootstrap" },
+            { icon: DollarSign, label: ko ? "PATH B" : "PATH B", detail: ko ? "정부지원/VC" : "Grant/VC" },
+            { icon: Trophy, label: ko ? "70+ 프로그램" : "70+ progs", detail: ko ? "맞춤 추천" : "Tailored" },
+          ]}
+        />
 
         {/* PATH A — 투자 없이 시작하기 */}
         <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
@@ -204,6 +256,168 @@ export function FundraisingReadinessStage() {
               <span>{ko ? "VC 투자 결정 후, 다음 단계에서 비지분 자금(TIPS/R&D/바우처)을 병행 신청하면 런웨이를 더 확보할 수 있습니다." : "After deciding on VC, applying for non-dilutive funds (TIPS/R&D/vouchers) in parallel extends your runway."}</span>
             </div>
           </div>
+        </div>
+
+        {/* ══════════ 운영 모드별 자금 프로그램 추천 ══════════ */}
+        <div style={{
+          borderRadius: "20px",
+          border: `1px solid ${MIDNIGHT}1A`,
+          background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`,
+          padding: "20px 22px",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexWrap: "wrap" as const, gap: "12px" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontSize: "11px", fontWeight: 700, color: MIDNIGHT,
+                letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: "4px",
+              }}>
+                {ko ? "내 운영 모드에 맞는 자금" : "Funding for your mode"}
+              </div>
+              <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
+                {ko
+                  ? `${modeLabels[startupOperatingMode].ko} 단계 — 검증된 ${recommendedPrograms.length}개 프로그램`
+                  : `${modeLabels[startupOperatingMode].en} stage — ${recommendedPrograms.length} verified programs`}
+              </div>
+              <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.55)", marginTop: "4px", lineHeight: 1.5 }}>
+                {ko
+                  ? "1인 인디든 시리즈A 팀이든 모두 자금이 필요합니다. 다만 적합한 자금원이 다를 뿐 — 아래는 당신의 단계에 맞는 검증된 프로그램입니다."
+                  : "Every founder needs funding — just different sources by stage. Programs below are verified and matched to your mode."}
+              </div>
+            </div>
+          </div>
+
+          {/* 모드 전환 칩 */}
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, marginBottom: "14px" }}>
+            {(["indie", "bootstrap", "seed", "seriesA"] as OperatingMode[]).map((m) => {
+              const active = startupOperatingMode === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setStartupOperatingMode(m)}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "999px",
+                    fontSize: "12px",
+                    fontWeight: active ? 700 : 600,
+                    background: active ? MIDNIGHT : "transparent",
+                    color: active ? "#fff" : "rgba(15,23,42,0.55)",
+                    border: active ? "none" : "1px solid rgba(25,25,112,0.12)",
+                    cursor: "pointer",
+                    boxShadow: active ? "0 2px 6px rgba(25,25,112,0.22)" : "none",
+                  }}
+                >
+                  {modeLabels[m].ko}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 프로그램 카드 그리드 */}
+          <div style={{ display: "grid", gap: "10px" }}>
+            {recommendedPrograms.map((p) => {
+              const cColor = categoryColors[p.category] ?? MIDNIGHT;
+              const cLabel = categoryLabels[p.category]?.ko ?? p.category;
+              return (
+                <a
+                  key={p.id}
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "block",
+                    padding: "14px 16px",
+                    borderRadius: "14px",
+                    background: "white",
+                    border: "1px solid rgba(0,0,0,0.06)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                    textDecoration: "none",
+                    color: "inherit",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "6px" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        display: "inline-block",
+                        padding: "2px 8px",
+                        borderRadius: "6px",
+                        background: `${cColor}12`,
+                        color: cColor,
+                        fontSize: "10.5px",
+                        fontWeight: 700,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase" as const,
+                        marginBottom: "5px",
+                      }}>
+                        {cLabel}
+                      </div>
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
+                        {p.name}
+                      </div>
+                      <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.45)", marginTop: "2px" }}>
+                        {p.organizer}
+                      </div>
+                    </div>
+                    <div style={{
+                      padding: "4px 10px",
+                      borderRadius: "8px",
+                      background: `${MIDNIGHT}10`,
+                      color: MIDNIGHT,
+                      fontSize: "11.5px",
+                      fontWeight: 700,
+                      whiteSpace: "nowrap" as const,
+                      flexShrink: 0,
+                    }}>
+                      {p.amount}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.65)", lineHeight: 1.55, marginTop: "4px" }}>
+                    {p.summary}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.5)", lineHeight: 1.5, marginTop: "6px" }}>
+                    {p.description}
+                  </div>
+                  {p.eligibility && (
+                    <div style={{
+                      marginTop: "8px",
+                      padding: "6px 10px",
+                      borderRadius: "8px",
+                      background: "rgba(0,0,0,0.03)",
+                      fontSize: "11.5px",
+                      color: "rgba(0,0,0,0.6)",
+                    }}>
+                      <span style={{ fontWeight: 700 }}>{ko ? "자격: " : "Eligibility: "}</span>
+                      {p.eligibility}
+                    </div>
+                  )}
+                  {p.deadlineNote && (
+                    <div style={{ marginTop: "6px", fontSize: "11.5px", color: "#dc2626", fontWeight: 600 }}>
+                      ⏰ {p.deadlineNote}
+                    </div>
+                  )}
+                  <div style={{
+                    marginTop: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    fontSize: "11.5px",
+                    color: MIDNIGHT,
+                    fontWeight: 700,
+                  }}>
+                    <span>{ko ? "공식 페이지로" : "Visit official page"}</span>
+                    <ExternalLink size={12} />
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+
+          {recommendedPrograms.length === 0 && (
+            <div style={{ padding: "16px", textAlign: "center" as const, fontSize: "13px", color: "rgba(0,0,0,0.5)" }}>
+              {ko ? "이 모드에 매칭된 프로그램이 없습니다 — 다른 모드를 시도해 주세요." : "No programs matched — try another mode."}
+            </div>
+          )}
         </div>
 
         {/* 런웨이 계산 도우미 */}

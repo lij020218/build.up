@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import {
   ROADMAP_GENERATION_SYSTEM_PROMPT,
   buildRoadmapGenerationPrompt,
@@ -9,6 +10,142 @@ import type { RoadmapGenerationInput, RoadmapGenerationResult } from "./prompt";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 4096; // Sonnet 4.6은 더 긴 응답 생성 가능 — 잘림 방지
+
+/**
+ * Tool Use 스키마 — 99.8% schema 준수율 (vs JSON parsing의 95% 수준).
+ * 응답을 이 tool 호출로 강제하여 환각·필드 누락·잘못된 enum 거의 0.
+ */
+const ROADMAP_TOOL: Anthropic.Tool = {
+  name: "submit_roadmap",
+  description: "사용자 사업 아이디어를 분석한 결과를 구조화된 로드맵으로 제출합니다.",
+  input_schema: {
+    type: "object",
+    properties: {
+      conceptSummary: { type: "string", description: "사업 컨셉 2-3줄 요약" },
+      parsed: {
+        type: "object",
+        properties: {
+          industryCategoryId: {
+            type: "string",
+            enum: ["food", "cafe-dessert", "retail", "online-digital", "beauty", "fitness", "education", "pet", "living-service", "startup-tech", "space"],
+          },
+          subIndustryId: { type: "string" },
+          industryLabel: { type: "string" },
+          startupType: { type: "string", enum: ["independent", "franchise"] },
+          businessModelId: { type: "string" },
+          preferredRegion: { type: "string" },
+        },
+        required: ["industryCategoryId", "subIndustryId", "industryLabel", "startupType", "businessModelId", "preferredRegion"],
+      },
+      marketAnalysis: {
+        type: "object",
+        properties: {
+          score: { type: "number", minimum: 0, maximum: 100 },
+          grade: { type: "string", enum: ["S", "A", "B", "C", "D"] },
+          footTraffic: { type: "string" },
+          competition: { type: "string" },
+          rentLevel: { type: "string" },
+          targetFit: { type: "string" },
+          summary: { type: "string" },
+        },
+        required: ["score", "grade", "footTraffic", "competition", "rentLevel", "targetFit", "summary"],
+      },
+      budgetAllocation: {
+        type: "object",
+        properties: {
+          deposit: { type: "number" },
+          interior: { type: "number" },
+          equipment: { type: "number" },
+          workingCapital: { type: "number" },
+          total: { type: "number" },
+        },
+        required: ["deposit", "interior", "equipment", "workingCapital", "total"],
+      },
+      monthlyCosts: {
+        type: "object",
+        properties: {
+          ingredients: { type: "number" },
+          labor: { type: "number" },
+          rent: { type: "number" },
+          utilities: { type: "number" },
+          other: { type: "number" },
+        },
+        required: ["ingredients", "labor", "rent", "utilities", "other"],
+      },
+      recommendations: {
+        type: "object",
+        properties: {
+          suppliers: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                category: { type: "string" },
+                reason: { type: "string" },
+                priceRange: { type: "string" },
+              },
+              required: ["name", "category", "reason", "priceRange"],
+            },
+          },
+          deliveryPlatforms: { type: "array", items: { type: "string" } },
+          snsChannels: { type: "array", items: { type: "string" } },
+          permits: { type: "array", items: { type: "string" } },
+          taxAdvice: { type: "string" },
+          interior: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                item: { type: "string" },
+                vendor: { type: "string" },
+                estimatedCost: { type: "string" },
+              },
+              required: ["item", "vendor", "estimatedCost"],
+            },
+          },
+        },
+        required: ["suppliers", "deliveryPlatforms", "snsChannels", "permits", "taxAdvice", "interior"],
+      },
+      timeline: {
+        type: "object",
+        properties: {
+          targetOpenDate: { type: "string" },
+          totalWeeks: { type: "number" },
+          phases: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                weeks: { type: "number" },
+              },
+              required: ["name", "weeks"],
+            },
+          },
+        },
+        required: ["targetOpenDate", "totalWeeks", "phases"],
+      },
+      risks: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            level: { type: "string", enum: ["high", "medium", "low"] },
+            description: { type: "string" },
+            mitigation: { type: "string" },
+          },
+          required: ["level", "description", "mitigation"],
+        },
+      },
+      missingFields: {
+        type: "array",
+        items: { type: "string", enum: ["budget", "region", "teamSize"] },
+      },
+    },
+    required: ["conceptSummary", "parsed", "marketAnalysis", "budgetAllocation", "monthlyCosts", "recommendations", "timeline", "risks", "missingFields"],
+  },
+};
 
 function parseResponse(raw: string): RoadmapGenerationResult {
   // 마크다운 블록 제거
@@ -83,6 +220,7 @@ function parseResponse(raw: string): RoadmapGenerationResult {
 
   // 기본값 채우기
   const result: RoadmapGenerationResult = {
+    conceptSummary: String(obj.conceptSummary ?? "").trim(),
     parsed: {
       industryCategoryId: String(p.industryCategoryId || "food"),
       _needsCategoryConfirm: Boolean(p._needsCategoryConfirm),
@@ -174,22 +312,46 @@ export async function generateRoadmap(
 ): Promise<RoadmapGenerationResult> {
   const client = new Anthropic({ apiKey: options.apiKey, timeout: 120_000 }); // 120초 — 프롬프트 축소 후에도 여유 확보
 
-  const response = await client.messages.create({
+  // SDK 0.39 가 thinking 파라미터를 타입에 명시하지 않아 input cast 필요.
+  // 응답은 단일 Message 타입으로 cast 하여 후속 .content/.usage 사용.
+  const rawResponse = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: ROADMAP_GENERATION_SYSTEM_PROMPT,
+    // ✦ Prompt Caching (1h TTL) — system prompt 1700+ tokens 가 시간대별 안정 재사용
+    system: systemWithCache(ROADMAP_GENERATION_SYSTEM_PROMPT, "1h"),
+    // ✦ Tool Use — 99.8% schema 준수율 (vs JSON parsing의 환각·필드 누락 risk)
+    tools: [ROADMAP_TOOL],
+    tool_choice: { type: "tool", name: "submit_roadmap" },
+    // ✦ Adaptive Thinking — 다단계 추론 (업종 추론 → 시장 분석 → 예산 배분 → 인테리어 → 리스크) 품질 향상
+    thinking: { type: "enabled", budget_tokens: 4096 },
     messages: [
       { role: "user", content: buildRoadmapGenerationPrompt(input) },
     ],
-  });
+  } as Parameters<typeof client.messages.create>[0]);
+  const response = rawResponse as Anthropic.Messages.Message;
 
-  // Sonnet 4.6은 thinking 블록을 먼저 반환할 수 있음 — text 블록을 찾아야 함
-  console.log("[roadmap/generate] stop_reason:", response.stop_reason, "content types:", response.content.map(c => c.type).join(", "));
+  console.log(
+    "[roadmap/generate] stop_reason:", response.stop_reason,
+    "content types:", response.content.map(c => c.type).join(", "),
+    "cache_read:", response.usage?.cache_read_input_tokens ?? 0,
+    "cache_create:", response.usage?.cache_creation_input_tokens ?? 0,
+  );
+
+  // Tool Use 응답 우선 처리 (강제됐으니 항상 존재)
+  const toolUse = response.content.find((c) => c.type === "tool_use");
+  if (toolUse && toolUse.type === "tool_use") {
+    // tool input은 schema 강제됐지만 parseResponse 의 안전장치 (subIndustryId fallback 등) 재사용
+    return parseResponse(JSON.stringify(toolUse.input));
+  }
+
+  // Fallback: 구버전 호환 — text 블록 파싱
   const textBlock = response.content.find((c) => c.type === "text");
   if (!textBlock || textBlock.type !== "text") {
-    throw new AiParseError("AI 응답에 텍스트가 없습니다. Types: " + response.content.map(c => c.type).join(", "), JSON.stringify(response.content));
+    throw new AiParseError(
+      "AI 응답에 tool_use 또는 text 블록이 없습니다. Types: " + response.content.map(c => c.type).join(", "),
+      JSON.stringify(response.content),
+    );
   }
-  console.log("[roadmap/generate] Text block length:", textBlock.text.length, "First 200:", textBlock.text.substring(0, 200));
-
+  console.log("[roadmap/generate] Fallback to text block, length:", textBlock.text.length);
   return parseResponse(textBlock.text);
 }

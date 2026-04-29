@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
+import { getEnvVar } from "../../_lib/env";
 
 export type ContractorResult = {
   id: string;
@@ -38,10 +39,18 @@ async function searchContractorsViaKakao(
     sort: "accuracy",
   });
 
+  // ⚠️ Kakao Local API 정책 (2025+): `KA` 헤더에 `os` + `origin` 필드 둘 다 필수.
+  //    없으면 401 "KA Header is required but neither os nor origin field is given".
+  const origin = getEnvVar("NEXT_PUBLIC_APP_URL")
+    ?? getEnvVar("VERCEL_URL")?.replace(/^/, "https://")
+    ?? "http://localhost:3000";
   const res = await fetch(
     `https://dapi.kakao.com/v2/local/search/keyword.json?${searchParams.toString()}`,
     {
-      headers: { Authorization: `KakaoAK ${apiKey}` },
+      headers: {
+        Authorization: `KakaoAK ${apiKey}`,
+        KA: `sdk/1.0.0 os/javascript origin/${origin}`,
+      },
     }
   );
 
@@ -92,7 +101,8 @@ export async function GET(request: Request) {
     );
   }
 
-  const kakaoKey = process.env.KAKAO_REST_API_KEY;
+  // ⚠ Claude Code 가 process.env.KAKAO_REST_API_KEY="" 로 덮어쓰는 케이스 대비 — _lib/env 사용.
+  const kakaoKey = getEnvVar("KAKAO_REST_API_KEY");
   if (!kakaoKey) {
     return NextResponse.json({ results: [], source: "no_api_key" });
   }

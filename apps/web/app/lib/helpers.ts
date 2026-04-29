@@ -535,197 +535,263 @@ export function getContractTaskDetail(taskId: string, language: "ko" | "en", cat
     "use-check": {
       ko: {
         title: "업종 가능 여부 확인",
-        summary: "건물 용도와 영업 업종이 맞지 않으면 계약서에 서명한 뒤에도 구청 허가 단계에서 영업 자체가 막힐 수 있습니다.",
-        why: ["건축물 용도(근린생활시설·판매시설 등)와 실제 영업 업종이 일치해야 합니다.", "위반건축물로 표기된 공간은 보증금 회수와 인허가 모두 리스크가 생깁니다."],
+        summary: "건물 용도와 영업 업종이 안 맞으면 계약 후에도 구청에서 영업이 막힙니다.",
+        why: ["건축물 용도와 영업 업종이 일치해야 영업신고가 가능합니다.", "위반건축물은 보증금·인허가 모두 리스크."],
         checklist: [
-          "건축물대장에서 건물 용도·용도지역 확인 (정부24 무료 열람)",
-          "위반건축물 여부 확인 (건축물대장 상 노란색 표기)",
-          "건축물대장 소유자 = 등기부등본 소유자 일치 여부",
-          "내 업종의 영업신고·허가를 이 용도 건물에서 받을 수 있는지",
-          "토지이음에서 용도지역·지구·구역 확인 (행위 제한 조항)"
+          "건축물대장 용도·층별 용도 확인 (정부24 무료)",
+          "위반건축물 여부 — 노란 표기",
+          "건축물대장 소유자 = 등기부등본 소유자 일치",
+          "내 업종 영업신고가 이 용도에서 가능한지 구청 사전 문의",
         ],
         traps: [
-          { label: "층별 용도 제한", desc: "같은 건물도 층마다 허용 용도가 다릅니다. 1층은 판매시설이어도 지하층은 창고·주차장만 허용되는 경우가 있습니다. 건축물대장에서 층별 용도를 반드시 확인하세요." },
-          { label: "일반음식점 vs 휴게음식점 분류", desc: "커피숍이라도 주류를 팔면 일반음식점으로 신고해야 합니다. 분류에 따라 허가 조건과 면적 기준이 달라지므로 구청 위생과에 사전 문의하세요." },
-          { label: "위반건축물 계약", desc: "위반건축물은 건물주가 이행강제금을 납부 중인 상태일 수 있습니다. 향후 철거 명령 시 세입자 보호가 약하고 원상복구 비용이 세입자에게 전가될 수 있습니다." }
+          { label: "층별 용도 제한", desc: "같은 건물도 1층은 판매시설, 지하는 창고만 허용되는 경우. 층별로 따로 확인." },
+          { label: "위반건축물 함정", desc: "건물주 이행강제금 납부 중일 수 있고 철거 명령 시 세입자 보호 약함." },
         ],
         actions: [
-          { label: "정부24에서 건축물대장 무료 열람", href: "https://www.gov.kr" },
-          { label: "토지이음에서 용도지역·지구 확인", href: "https://www.eum.go.kr" },
-          { label: "법원 인터넷 등기소에서 등기부등본 열람 (근저당·가압류 확인)", href: "https://www.iros.go.kr" },
-          { label: "계약 전 관할 구청 건축과 또는 위생과에 업종 허가 가능 여부 직접 문의" }
+          { label: "정부24 건축물대장 무료 열람", href: "https://www.gov.kr" },
+          { label: "토지이음 용도지역 확인", href: "https://www.eum.go.kr" },
+          { label: "관할 구청 건축과·위생과 전화로 업종 가능 여부 사전 확인" },
         ],
         questions: [
-          "건축물대장 상 이 공간의 용도가 정확히 무엇인가요?",
-          "위반건축물로 표기된 부분이 있나요?",
-          "이전 세입자가 같은 업종으로 영업신고를 받은 적 있나요?",
-          "혹시 건물에 근저당이나 가압류가 설정되어 있나요?"
-        ]
+          "이 공간의 정확한 용도가 무엇인가요?",
+          "위반건축물 표기가 있나요?",
+          "이전 세입자가 같은 업종으로 영업신고를 받았나요?",
+        ],
       },
       en: {
         title: "Check permitted use",
-        summary: "A mismatch between the building's registered use and your business type can block your operating license even after you sign.",
-        why: ["Your business category must match the building's registered use (neighborhood commercial, retail, etc.).", "Buildings flagged as illegal structures create risks for both your deposit recovery and licensing."],
+        summary: "A mismatch between registered use and your business type can block your license after signing.",
+        why: ["Your business type must match the building's registered use.", "Illegal-structure flags risk both deposit and licensing."],
         checklist: [
-          "Verify building use category from the Building Register (gov.kr, free)",
-          "Check for illegal structure flags (yellow markings on the register)",
-          "Confirm the register owner matches the deed owner",
-          "Confirm your specific business type can be licensed in this building use",
-          "Check land use zone and restrictions on land.e-nara.go.kr"
+          "Building Register use code + per-floor use (gov.kr)",
+          "Illegal-structure flag (yellow marking)",
+          "Register owner = deed owner",
+          "Confirm your business type is licensable here (call district office)",
         ],
         traps: [
-          { label: "Floor-by-floor use restrictions", desc: "Different floors of the same building may have different permitted uses. Always check each floor on the Building Register." },
-          { label: "Restaurant classification matters", desc: "A café serving alcohol needs a general restaurant license, not a snack bar license. Requirements differ significantly — ask the local health department." },
-          { label: "Illegal structure risk", desc: "Illegal structures may face demolition orders. Tenants have limited protection and may bear restoration costs if forced out." }
+          { label: "Floor-by-floor restrictions", desc: "1F may be retail while basement is storage-only. Always check per floor." },
+          { label: "Illegal structure", desc: "Owner may be paying enforcement fines; tenant protection is weak under demolition orders." },
         ],
         actions: [
-          { label: "View Building Register free on gov.kr", href: "https://www.gov.kr" },
+          { label: "View Building Register on gov.kr", href: "https://www.gov.kr" },
           { label: "Check land-use zone on eum.go.kr", href: "https://www.eum.go.kr" },
-          { label: "Check deed (mortgages, injunctions) on iros.go.kr", href: "https://www.iros.go.kr" },
-          { label: "Call or visit your local district office to confirm licensing eligibility before signing" }
+          { label: "Call your district office to confirm licensability" },
         ],
         questions: [
-          "What is the exact registered use category of this space?",
-          "Are there any illegal structure flags on the building register?",
-          "Did the previous tenant receive a business license for the same type?",
-          "Are there any mortgages or injunctions registered on the property?"
-        ]
-      }
+          "What is the exact registered use of this space?",
+          "Any illegal-structure flags?",
+          "Did the previous tenant get a license for the same business type?",
+        ],
+      },
     },
     "facility-check": {
       ko: {
         title: "시설과 설비 확인",
-        summary: "전기 용량 부족, 배기 덕트 미비, 숨겨진 노후 설비는 계약 후 수백만 원의 추가 공사 비용으로 돌아옵니다. 입주 전에 직접 확인하세요.",
-        why: ["계약전력이 부족하면 한전에서 경고 후 누진 요금을 부과합니다.", "배기·급배수 공사는 건물주 동의 없이 진행하면 원상복구 대상이 됩니다."],
+        summary: "전기·배기·급배수 부족은 계약 후 수백만~수천만 원 추가 공사로 돌아옵니다. 입주 전 직접 점검.",
+        why: ["계약전력 부족 → 한전 경고 + 누진세.", "배기·급배수 공사는 건물주 동의 없이 하면 원상복구 부담."],
         checklist: [
-          "계약전력(kW) 확인 및 내 업종 필요 전력 계산",
-          "3상/단상 전력 여부 확인 (대형 냉장·주방 기기는 3상 필요)",
-          "급배수 위치와 수압·용량 확인",
-          "배기 덕트 위치 및 옥상 인출 가능 여부",
-          "기존 냉난방 설비 용량과 연식 확인",
-          "천장 높이 (후드·덕트 설치 가능한 최소 2.4m 이상 권장)"
+          "계약전력(kW) — 음식점/카페는 보통 12kW+ 필요",
+          "3상/단상 — 대형 냉장·주방기기는 3상 필수",
+          "배기 덕트 옥상 인출 가능 여부",
+          "급배수 위치·수압",
         ],
         traps: [
-          { label: "계약전력 초과 페널티", desc: "계약전력(kW) × 15시간 × 30일 = 월 허용 전력량입니다. 음식점·카페 기준 커피머신(4.5kW)+냉장고(0.3)+제빙기(0.4)+냉난방(2.5)+온수기(2.5) = 약 12kW 필요. 초과 시 1회 경고 후 3년 내 재초과 시 추가 요금 및 누진세가 부과됩니다." },
-          { label: "배기 전용 설치 문제", desc: "급기(공기 공급) 없이 배기만 설치하면 실내 압력이 낮아져 출입문이 열기 힘들어지고 냄새 역류가 생깁니다. 급기·배기 균형을 설계 단계에서 확인하세요." },
-          { label: "전 세입자 시설 무상 인수 함정", desc: "이전 설비를 무상 인수 조건으로 계약하면 고장 시 수리 책임이 불명확해집니다. 인수 항목을 목록으로 만들어 계약서 특약에 명시하세요." }
+          { label: "계약전력 초과", desc: "초과 시 한전 경고 → 3년 내 재초과 시 누진세. 음식점/카페는 12kW+ 가 안전." },
+          { label: "급기 없는 배기", desc: "배기만 설치하면 실내 음압으로 문이 안 열리고 냄새 역류. 급기·배기 균형 설계 필수." },
         ],
         actions: [
-          { label: "한국전력 고객센터(123) 또는 마이한전 앱에서 계약전력 조회" },
-          { label: "전기안전공사(1588-7794)에 전기 설비 현황 진단 요청" },
-          { label: "배기 덕트 공사 가능 여부는 건물 관리사무소 또는 건물주에게 사전 서면 동의 요청" },
-          { label: "설비 증설 계획이 있으면 공사 전 건물주 동의서 징구" }
+          { label: "한국전력 123 / 마이한전 앱에서 계약전력 조회" },
+          { label: "전기안전공사 1588-7794 진단 요청" },
+          { label: "배기·전기 증설 시 건물주 서면 동의서 징구" },
         ],
         questions: [
-          "이 공간의 계약전력이 몇 kW인가요? 3상/단상 전력인가요?",
-          "배기 덕트를 옥상까지 인출할 수 있나요?",
-          "기존 냉난방 설비는 연식이 어떻게 되나요? 수리 이력이 있나요?",
-          "추가 전기 공사나 배기 공사 시 건물주 동의를 받을 수 있나요?",
-          "기존 시설 중 인수 조건이 있는 항목이 있나요?"
-        ]
+          "이 공간 계약전력은 몇 kW, 3상인가요 단상인가요?",
+          "배기 덕트를 옥상까지 인출 가능한가요?",
+          "추가 전기·배기 공사 시 동의서 받을 수 있나요?",
+        ],
       },
       en: {
         title: "Review facilities and utilities",
-        summary: "Insufficient power, missing ventilation, or hidden aging equipment can add millions in construction costs after you sign. Verify in person before committing.",
-        why: ["Exceeding your contracted power capacity triggers warnings and then penalty surcharges from KEPCO.", "Ventilation or plumbing work done without landlord consent becomes a full restoration liability."],
+        summary: "Power, vent, water shortages turn into millions in post-signing construction. Verify in person.",
+        why: ["Exceeding contracted power → KEPCO warning + surcharge.", "Vent/plumbing work without landlord consent becomes restoration liability."],
         checklist: [
-          "Contracted power (kW) and calculation of your actual power needs",
-          "Single-phase vs. three-phase power (commercial refrigeration typically needs three-phase)",
-          "Water supply location, pressure, and flow capacity",
-          "Ventilation duct position and whether rooftop exhaust is possible",
-          "Existing HVAC unit capacity and age",
-          "Ceiling height (minimum 2.4m recommended for hood and duct installation)"
+          "Contracted power (kW) — café/restaurant typically needs 12kW+",
+          "Single vs three-phase — heavy refrigeration needs three-phase",
+          "Whether exhaust ducting can reach the rooftop",
+          "Water supply location, pressure",
         ],
         traps: [
-          { label: "Contracted power overage penalty", desc: "Contracted kW × 15hr × 30 days = monthly allowed usage. A café needs roughly 12 kW minimum. Exceed the limit and KEPCO issues a warning; exceed again within 3 years and you get surcharges." },
-          { label: "Exhaust-only ventilation problem", desc: "Installing exhaust without a fresh-air intake drops indoor pressure, making doors hard to open and causing odor backflow. Balance must be designed upfront." },
-          { label: "Taking over previous tenant's fixtures", desc: "Inheriting equipment 'for free' makes repair responsibility ambiguous. List every inherited item in the lease special clauses." }
+          { label: "Contracted power overage", desc: "Exceed → KEPCO warns, second exceedance within 3 years → surcharge. 12kW+ is safe baseline." },
+          { label: "Exhaust without intake", desc: "Negative indoor pressure → doors hard to open + odor backflow. Design intake/exhaust balance upfront." },
         ],
         actions: [
-          { label: "Check contracted power via KEPCO app or call 123" },
-          { label: "Request electrical safety inspection from Korea Electrical Safety Corporation (1588-7794)" },
-          { label: "Get written landlord consent before any duct or electrical expansion work" },
-          { label: "Document all inherited fixtures with a signed list attached to the contract" }
+          { label: "Check contracted power via KEPCO app / call 123" },
+          { label: "Request electrical inspection: 1588-7794" },
+          { label: "Get written landlord consent for any vent/electrical upgrade" },
         ],
         questions: [
-          "What is the contracted power in kW, and is it single-phase or three-phase?",
-          "Can I run exhaust ductwork all the way to the rooftop?",
-          "How old is the HVAC unit, and has it needed major repairs?",
-          "Will you consent in writing to electrical or ventilation upgrades?",
-          "Which fixtures am I inheriting, and on what terms?"
-        ]
-      }
+          "What's the contracted power in kW, and is it single or three-phase?",
+          "Can exhaust ductwork reach the rooftop?",
+          "Will you consent in writing to vent/electrical upgrades?",
+        ],
+      },
     },
     "restriction-check": {
       ko: {
         title: "계약 제한 조항 확인",
-        summary: "권리금, 업종 제한, 원상복구 범위, 임대료 인상 상한은 계약 후 되돌릴 수 없는 조항입니다. 서명 전에 반드시 특약으로 명시하세요.",
-        why: ["상가임대차보호법상 계약갱신요구권은 만료 6~1개월 사이에만 요구할 수 있고, 이 기간을 놓치면 권리를 잃습니다.", "원상복구 범위가 '전부'로 적혀 있으면 인테리어 전체를 철거해야 할 수 있습니다."],
+        summary: "권리금·임대료 상한·원상복구·갱신요구권은 서명 후 못 바꿉니다. 특약으로 명시하세요.",
+        why: ["계약갱신요구권은 만료 6~1개월 사이만 행사 가능 — 놓치면 권리 소멸.", "원상복구 '전부' 조항은 인테리어 철거 비용 전가."],
         checklist: [
-          "임대차 기간 및 계약갱신요구권 적용 여부 확인 (최대 10년)",
-          "임대료 인상 상한(5%) 조항 계약서 명시 여부",
-          "환산보증금 확인 — 서울 10억원, 수도권 6억5천만원, 광역시 5억5천만원 이하 시 상가임대차보호법 전면 적용",
-          "권리금 수수 조항 및 임대인 방해 금지 조항",
-          "원상복구 범위 명시 (입주 전 사진·영상 기록 필수)",
-          "임대인 동의 없는 전대·양도 금지 조항",
-          "업종 변경 제한 조항 여부"
+          "임대료 인상 5% 상한 명시 + 갱신요구권 10년",
+          "환산보증금 = 보증금 + (월세 × 100) — 서울 10억 / 수도권 6.5억 / 광역시 5.5억 이하면 보호 전면 적용",
+          "원상복구 범위 — '입주 시 상태 영상 첨부' 특약",
+          "권리금·전대·업종변경 조항",
         ],
         traps: [
-          { label: "계약갱신요구권 기간 놓침", desc: "계약 만료 6개월 전~1개월 전 사이에 서면으로 요구해야 합니다. 이 기간을 하루라도 놓치면 법적 보호를 받을 수 없습니다. 달력에 만료일 기준 -7개월, -6개월 알림을 설정하세요." },
-          { label: "환산보증금 초과 시 보호 축소", desc: "환산보증금 = 보증금 + (월세 × 100). 이 금액이 지역 기준을 초과하면 임대료 인상 5% 제한이 적용되지 않을 수 있습니다. 보증금·월세 조합으로 사전 계산하세요." },
-          { label: "권리금 보호 시기 놓침", desc: "권리금 보호는 임대차 종료 6개월 전부터 종료일까지만 적용됩니다. 임대인이 이 기간 외에 새 세입자와 직접 계약하면 법적 보호를 받기 어렵습니다." },
-          { label: "원상복구 '전부' 조항", desc: "'퇴거 시 원상복구'만 적혀 있으면 임대인이 인테리어 전체 철거를 요구할 수 있습니다. 입주 시 상태를 사진·영상으로 기록하고, 특약에 '기존 설치물 제외' 항목을 명시하세요." }
+          { label: "갱신요구권 시기 놓침", desc: "만료 6~1개월 전 서면 요구. 하루 늦어도 보호 소멸. 만료 -7·-6개월 알림 필수." },
+          { label: "원상복구 '전부' 함정", desc: "'퇴거 시 원상복구' 만 있으면 인테리어 전체 철거 가능. 입주 영상 + '기존 설치물 제외' 특약." },
         ],
         actions: [
-          { label: "법원 인터넷 등기소에서 등기부등본 열람 (근저당·가압류·가등기 확인)", href: "https://www.iros.go.kr" },
-          { label: "대법원 상가임대차 계산기로 환산보증금 계산", href: "https://www.courts.go.kr" },
-          { label: "입주 당일 공간 전체를 영상 촬영해 클라우드에 저장 (날짜 메타데이터 필수)" },
-          { label: "권리금 계약서는 별도로 작성하고 가급적 공증 진행" },
-          { label: "계약서 특약 사항에 원상복구 제외 항목 목록 명시" }
+          { label: "인터넷등기소 등기부등본 열람 (근저당·가압류)", href: "https://www.iros.go.kr" },
+          { label: "입주 당일 공간 전체 영상 촬영 → 날짜 메타데이터로 클라우드 저장" },
+          { label: "권리금 계약서 별도 작성 + 공증" },
         ],
         questions: [
-          "계약갱신 시 임대료 인상 계획이 있나요? 상한선을 계약서에 명시할 수 있나요?",
-          "권리금 수수에 동의하시나요? 향후 양수인 구하는 데 협조할 의향이 있나요?",
-          "원상복구 범위를 구체적으로 합의해 특약에 명시할 수 있나요?",
-          "업종 변경이나 전대 시 동의 절차가 어떻게 되나요?",
-          "건물에 근저당이나 가압류가 설정되어 있나요?"
-        ]
+          "임대료 인상 상한선을 계약서에 명시할 수 있나요?",
+          "원상복구 범위를 특약으로 합의 가능한가요?",
+          "건물에 근저당·가압류가 있나요?",
+        ],
       },
       en: {
         title: "Review lease restriction clauses",
-        summary: "Lease renewal rights, rent increase caps, restoration scope, and key money terms cannot be changed after signing. Get them in the special clauses now.",
-        why: ["The right to request lease renewal must be exercised 6–1 months before expiry — miss the window and the right is gone.", "A blanket restoration clause can require you to remove your entire fit-out when you leave."],
+        summary: "Renewal rights, rent caps, restoration scope, key money — unchangeable after signing. Lock into special clauses.",
+        why: ["Renewal request window is 6–1 months before expiry — miss it and the right is gone.", "Blanket restoration clauses can force full fit-out removal."],
         checklist: [
-          "Lease term and applicability of renewal rights (up to 10 years under Korean law)",
-          "Rent increase cap (5%) explicitly stated in the contract",
-          "Converted deposit check — Seoul ≤ ₩1B, Metro ≤ ₩650M, City ≤ ₩550M for full Act protection",
-          "Key money transfer terms and landlord non-interference clause",
-          "Restoration scope explicitly listed (photograph the space before move-in)",
-          "Sub-lease and assignment restrictions",
-          "Business type change restrictions"
+          "Rent cap 5% + renewal right (up to 10y) explicit in contract",
+          "Converted deposit = deposit + (monthly rent × 100). Seoul ≤ ₩1B / Metro ≤ ₩650M / City ≤ ₩550M for full protection",
+          "Restoration scope — attach move-in condition video as exhibit",
+          "Key money / sub-lease / business-type change clauses",
         ],
         traps: [
-          { label: "Missing the renewal request window", desc: "You must submit a written renewal request between 6 and 1 month before expiry. Miss it by even one day and you lose legal protection. Set a calendar reminder at T-7 months and T-6 months." },
-          { label: "Converted deposit exceeding the threshold", desc: "Converted deposit = security deposit + (monthly rent × 100). If it exceeds the regional cap, the 5% rent increase limit may not apply. Calculate this before agreeing on the rent structure." },
-          { label: "Key money protection timing", desc: "Key money protection only covers the 6 months before lease end through the end date. A landlord who signs a new tenant outside this window is hard to challenge legally." },
-          { label: "Blanket restoration clause", desc: "If the contract just says 'restore to original state,' the landlord can demand full fit-out removal. Record the move-in condition on video and list exclusions in the special clauses." }
+          { label: "Renewal window missed", desc: "Submit written request 6–1 months before expiry. Miss by a day → protection lost. Set T-7 + T-6 month alerts." },
+          { label: "Blanket restoration", desc: "'Restore to original state' alone allows full fit-out removal. Film move-in condition + add 'existing fixtures excluded' clause." },
         ],
         actions: [
-          { label: "Check deed register for mortgages and injunctions on iros.go.kr", href: "https://www.iros.go.kr" },
-          { label: "Calculate converted deposit using the Supreme Court commercial lease calculator", href: "https://www.courts.go.kr" },
-          { label: "Film a walkthrough video of the entire space on move-in day and save to cloud with date metadata" },
-          { label: "Draft a separate key money contract and consider notarization" },
-          { label: "Add a restoration exclusion list to the special clauses section of the lease" }
+          { label: "Check deed register on iros.go.kr (mortgages, injunctions)", href: "https://www.iros.go.kr" },
+          { label: "Film entire space on move-in day; save with date metadata" },
+          { label: "Draft separate key-money contract + notarize" },
         ],
         questions: [
-          "Do you plan to raise the rent at renewal? Can we cap the increase in the contract?",
-          "Do you consent to key money transfer, and will you cooperate in finding a buyer?",
-          "Can we agree on a specific restoration scope and list it in the special clauses?",
-          "What is the process for approving a business type change or sub-lease?",
-          "Are there any mortgages or injunctions registered on this property?"
-        ]
-      }
-    }
+          "Can we cap the rent increase explicitly in the contract?",
+          "Can restoration scope be agreed in writing?",
+          "Any mortgages/injunctions on this property?",
+        ],
+      },
+    },
+    "septic-tank-checked": {
+      ko: {
+        title: "정화조 용량 확인 (음식·카페)",
+        summary: "용량 부족 시 영업신고가 거부됩니다. 계약 전 건축물대장으로 반드시 확인.",
+        why: ["음식점 영업신고는 정화조 용량이 좌석·면적 기준 충족 필수.", "사후 발견 시 정화조 증축 500~2,000만원 + 일정 지연."],
+        checklist: [
+          "건축물대장 정화조 용량(인용/L) 확인",
+          "필요 용량 = 예상 좌석·면적 기준 (구청 위생과 문의)",
+          "공공하수도 연결 여부 — 연결되면 정화조 제약 해소",
+          "공유 정화조 → 다른 음식점 입점 현황 확인",
+        ],
+        traps: [
+          { label: "대장 누락", desc: "오래된 건물은 용량 미기재. 청소업체 영수증 또는 위생과 실용량 확인 필수." },
+          { label: "공유 정화조 과부하", desc: "다세대 음식점은 일찍 한도 도달. 구청에서 다른 영업신고 현황 사전 확인." },
+        ],
+        actions: [
+          { label: "정부24 건축물대장 발급 → 정화조 항목", href: "https://www.gov.kr" },
+          { label: "관할 구청 위생과 전화로 영업신고 가능 용량 확인" },
+          { label: "공공하수도 연결 여부 임대인에게 확인" },
+        ],
+        questions: [
+          "정화조 용량이 영업신고에 충분한가요?",
+          "공공하수도 연결 상태는요?",
+          "다른 음식점이 입점해 있다면 정화조 사용량은 얼마인가요?",
+        ],
+      },
+      en: {
+        title: "Check septic tank capacity (food/cafe)",
+        summary: "Insufficient capacity → permit denied. Verify via building registry before signing.",
+        why: ["Food permits require septic capacity matching seating/area.", "Post-signing fix costs ₩5–20M + schedule delay."],
+        checklist: [
+          "Septic capacity from building registry (liters or persons)",
+          "Required capacity for planned seating/area (call district hygiene office)",
+          "Public sewer connection — removes septic constraint",
+          "Shared septic → check other food permits in the building",
+        ],
+        traps: [
+          { label: "Capacity not in registry", desc: "Older buildings often omit it. Verify via cleaning receipts or hygiene office." },
+          { label: "Shared septic overload", desc: "Multi-tenant food buildings hit limits early. Check existing permits at the district office." },
+        ],
+        actions: [
+          { label: "Get building registry from gov.kr", href: "https://www.gov.kr" },
+          { label: "Call district hygiene office to confirm permit-eligible capacity" },
+          { label: "Confirm public sewer connection with landlord" },
+        ],
+        questions: [
+          "Is septic capacity sufficient for a food permit?",
+          "Is public sewer connected?",
+          "If other food tenants exist, what's current septic load?",
+        ],
+      },
+    },
+    "certified-date-obtained": {
+      ko: {
+        title: "확정일자 받기 (보증금 보호)",
+        summary: "임대인 파산·경매 시 보증금 우선 변제 받는 법적 장치. 계약 당일 신청 원칙.",
+        why: ["확정일자 없으면 경매 시 후순위로 밀려 보증금 손실 위험.", "하루 늦으면 그 사이 설정된 근저당이 우선."],
+        checklist: [
+          "계약서 원본 + 신분증 지참",
+          "관할 세무서 또는 정부24 신청 (사업자등록과 동시 처리 가능)",
+          "수수료 600원",
+          "건물 등기부등본 — 근저당 합계가 매매가의 70%↑면 위험",
+        ],
+        traps: [
+          { label: "신청 지연", desc: "계약 당일 신청 원칙. 하루 늦으면 그 사이 근저당이 우선 — 보증금 회수 0% 케이스 발생." },
+          { label: "근저당 무시", desc: "기존 근저당이 있으면 확정일자도 그 뒤. 등기부등본 근저당 합계 매매가 70% 초과면 위험." },
+        ],
+        actions: [
+          { label: "정부24 온라인 확정일자 신청 (당일 처리)", href: "https://www.gov.kr" },
+          { label: "인터넷등기소 등기부등본 열람", href: "https://www.iros.go.kr" },
+          { label: "사업자등록 신청 시 확정일자도 동시 처리" },
+        ],
+        questions: [
+          "기존 근저당 합계는 매매가의 몇 % 인가요?",
+          "보증금 반환 일정은 어떻게 되나요?",
+          "전세권 설정 등기가 가능한가요? (더 강력한 보호)",
+        ],
+      },
+      en: {
+        title: "Obtain certified date for deposit protection",
+        summary: "Legal device for priority deposit recovery in foreclosure. Same-day filing is the rule.",
+        why: ["Without it, you're a junior creditor in foreclosure.", "One day late → new mortgages take priority over you."],
+        checklist: [
+          "Bring original lease + ID",
+          "File at district tax office or gov.kr (combine with business registration)",
+          "Fee: ₩600",
+          "Pre-check deed register — if mortgages > 70% of property value, high risk",
+        ],
+        traps: [
+          { label: "Late filing", desc: "Same-day rule. One day late = new mortgages outrank you — 0% recovery cases exist." },
+          { label: "Ignoring mortgages", desc: "Existing mortgages outrank certified date. If total > 70% of property value, walk away." },
+        ],
+        actions: [
+          { label: "File online via gov.kr (same-day)", href: "https://www.gov.kr" },
+          { label: "Check deed register on iros.go.kr", href: "https://www.iros.go.kr" },
+          { label: "Combine with business registration at the tax office" },
+        ],
+        questions: [
+          "What % of property value do existing mortgages total?",
+          "What's the deposit refund timeline?",
+          "Can a 전세권 (jeonse-right) registration be filed? (stronger protection)",
+        ],
+      },
+    },
   };
 
   return details[taskId]?.[language] ?? {

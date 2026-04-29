@@ -59,8 +59,16 @@ export function useTaskHandlers(
       existing.status === "completed" ? "todo" : "completed"
     );
 
+    const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
     setTaskMap(nextTaskMap);
-    setRoadmap(buildRoadmapState(baseRoadmap, decisions, nextTaskMap));
+    setRoadmap(nextRoadmap);
+
+    // ⚠️ 자동 이동 방지 — 모든 필수 task 가 완료되어 roadmap.currentStageId 가
+    //  자동으로 다음 단계로 advance 되더라도, 사용자가 명시적으로 "다음 단계로" 버튼을
+    //  누를 때까지 현재 contract-review 화면 유지 (다른 단계의 handleTaskToggle 과 동일 패턴).
+    if (nextRoadmap.currentStageId !== "contract-review" && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId("contract-review");
+    }
   };
 
   // ── Contract continue (no Supabase save) ──

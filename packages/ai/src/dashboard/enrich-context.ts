@@ -12,6 +12,8 @@ import {
   getIndustryBenchmark,
   detectBusinessSituation,
   matchCaseStudies,
+  matchKHitCases,
+  type KHitTheme,
 } from "@build-up/shared";
 
 // franchise-data.ts에서 브랜드 조회용
@@ -81,6 +83,36 @@ export function enrichDashboardContext(base: DashboardContext): DashboardContext
         lesson: c.lesson,
       }));
     }
+  }
+
+  // 3-2. 한국 비프랜차이즈 K-히트 사례 매칭 (업종 기반, 상황과 무관하게 항상 시도)
+  //     - 상황(situation)으로부터 테마 유추 → 매칭 가중치 부여
+  //     - 글로벌 사례와 별개 트랙으로 AI 코칭에 지역 맥락 제공
+  const themesFromSituation: KHitTheme[] = [];
+  if (situation === "menu-fatigue" || situation === "marketing-stagnant") themesFromSituation.push("product-innovation", "brand-building");
+  if (situation === "competitor-pressure") themesFromSituation.push("differentiation", "scarcity-strategy");
+  if (situation === "rent-crisis") themesFromSituation.push("space-as-product");
+  if (situation === "small-biz-turnaround") themesFromSituation.push("tradition-heritage", "community-loyalty");
+  if (situation === "expansion-ready") themesFromSituation.push("scarcity-strategy", "brand-building");
+  if (situation === "staff-crisis") themesFromSituation.push("people-first");
+
+  const kHits = matchKHitCases({
+    categoryId: base.industryCategoryId,
+    subIndustryId: base.industrySubIndustryId,  // 있으면 +3점 가중치 — 정밀 매칭
+    themes: themesFromSituation.length > 0 ? themesFromSituation : undefined,
+    limit: 3,
+  });
+  if (kHits.length > 0) {
+    enriched.matchedKHitCases = kHits.map(c => ({
+      id: c.id,
+      name: c.name.ko,
+      location: c.location,
+      foundedYear: c.foundedYear,
+      oneLiner: c.oneLiner.ko,
+      lesson: c.lesson.ko,
+      founderQuote: c.founderQuote?.ko,
+      themes: c.themes,
+    }));
   }
 
   // 4. 세금 캘린더 계산 (7일 내 마감 이벤트)

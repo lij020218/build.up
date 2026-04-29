@@ -8,6 +8,10 @@ export { useMarketingStore } from "./marketing-store";
 export { useCashflowStore } from "./cashflow-store";
 export { useAgentsStore } from "./agents-store";
 export { useTimeLogStore } from "./time-log-store";
+export { useInterviewStore } from "./interview-store";
+export type { CustomerInterview, CustomerInterviewType, InterviewPatternAnalysis } from "./interview-store";
+export { useUsageStore } from "./usage-store";
+export type { UsageEvent } from "./usage-store";
 
 // Type re-exports for backwards compatibility
 export type {

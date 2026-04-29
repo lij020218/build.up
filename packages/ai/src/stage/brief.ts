@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import {
   STAGE_BRIEF_SYSTEM_PROMPT,
   buildStageBriefUserPrompt,
@@ -69,7 +70,8 @@ export async function generateStageBrief(
   const message = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: STAGE_BRIEF_SYSTEM_PROMPT,
+    // ✦ Prompt Caching — stage brief system prompt 안정 재사용
+    system: systemWithCache(STAGE_BRIEF_SYSTEM_PROMPT),
     messages: [{ role: "user", content: userPrompt }]
   });
 

@@ -55,6 +55,8 @@ export function LocationCandidatesStage() {
     competitorLoading, setCompetitorLoading,
     // Live market insights
     liveMarketInsights, setLiveMarketInsights,
+    // AI + Kakao 라이브 상권 추천
+    aiMarketLoading, setAiMarketLoading, aiMarketError, setAiMarketError,
     // Navigation
     prevTraversedStage, setViewingStageId,
     // Reset
@@ -63,6 +65,57 @@ export function LocationCandidatesStage() {
 
   const locationRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
+
+  // ── AI 라이브 추천 핸들러 ────────────────────────────────────────
+  //  사용자가 입력한 희망 지역 → 카카오 Local 라이브 검색 → Claude 점수화 → recommendedMarkets 갱신.
+  //  결과는 LocationMapPanel 이 meta.lat/lng 를 직접 사용해 즉시 핀 표시.
+  const requestAiMarketRecommend = async () => {
+    const region = preferredRegionInput.trim();
+    if (!region) return;
+    setAiMarketLoading(true);
+    setAiMarketError(null);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) {
+        setAiMarketError(language === "ko" ? "로그인이 필요합니다." : "Sign-in required");
+        setAiMarketLoading(false);
+        return;
+      }
+      const res = await fetch("/api/data/market-recommend", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          region,
+          categoryId: industryCategoryId,
+          subIndustryId: selectedIndustryId,
+          capital: selectedBudget,
+          language,
+        }),
+      });
+      const data = await res.json().catch(() => ({} as Record<string, unknown>));
+      if (!res.ok || !data?.ok) {
+        setAiMarketError(
+          typeof data?.error === "string"
+            ? data.error
+            : (language === "ko" ? "AI 추천에 실패했습니다." : "AI recommendation failed"),
+        );
+        setAiMarketLoading(false);
+        return;
+      }
+      // 점수 높은 순으로 정렬해 selectedLocation 자동 첫 번째 (사용자 클릭 우선)
+      const items = (data.items as Array<{ score?: number }>).slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+      setRecommendedMarkets(items as never);
+      setLocationMode("recommended");
+      setLocationMapReady(true);
+      setManualMarketEvaluation(null);
+      setManualAlternative(null);
+    } catch (e) {
+      setAiMarketError(e instanceof Error ? e.message : (language === "ko" ? "네트워크 오류" : "Network error"));
+    } finally {
+      setAiMarketLoading(false);
+    }
+  };
 
   return (
     <>
@@ -427,7 +480,9 @@ export function LocationCandidatesStage() {
           }
         };
 
-        if (!liveMarketInsights) void loadMarketInsights();
+        // ⚠️ render 중 setState 금지. Promise.resolve() 로 마이크로태스크 큐에 넣어
+        //  현재 render commit 이후에 setLiveMarketInsights 가 호출되도록 한다.
+        if (!liveMarketInsights) void Promise.resolve().then(loadMarketInsights);
 
         if (!liveMarketInsights || liveMarketInsights.loading) {
           return (
@@ -530,6 +585,64 @@ export function LocationCandidatesStage() {
             }}
           >
             {locationDirectLabel}
+          </button>
+        </div>
+
+        {/* ── AI + Kakao 라이브 추천 CTA ────────────────────────────
+            서버 내장 데이터로는 모든 지역(특히 비-서울)을 커버 못 함 →
+            "AI로 실시간 추천" 버튼으로 Kakao Local 라이브 검색 + Claude 점수화. */}
+        <div style={{
+          marginTop: "12px",
+          padding: "14px 16px",
+          borderRadius: "14px",
+          background: "linear-gradient(180deg, rgba(25,25,112,0.04) 0%, rgba(255,255,255,0.96) 100%)",
+          border: "1px solid rgba(25,25,112,0.14)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          flexWrap: "wrap" as const,
+        }}>
+          <div style={{ flex: 1, minWidth: "200px" }}>
+            <div style={{ fontSize: "13px", fontWeight: 650, color: "#191970", letterSpacing: "-0.01em", marginBottom: "2px" }}>
+              {language === "ko" ? "AI로 실시간 상권 추천" : "AI live market scout"}
+            </div>
+            <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5 }}>
+              {language === "ko"
+                ? `Kakao Local + Claude 가 입력하신 "${preferredRegionInput.trim() || "지역"}" 주변을 분석해 3~5개 후보를 점수와 함께 추천합니다.`
+                : `Kakao Local + Claude analyse around "${preferredRegionInput.trim() || "region"}" and score 3–5 candidates.`}
+            </div>
+            {aiMarketError ? (
+              <div style={{ marginTop: "6px", fontSize: "12px", color: "#dc2626", lineHeight: 1.5 }}>
+                {aiMarketError}
+              </div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={requestAiMarketRecommend}
+            disabled={!preferredRegionInput.trim() || aiMarketLoading}
+            style={{
+              padding: "10px 18px",
+              borderRadius: "12px",
+              border: "none",
+              background: preferredRegionInput.trim() && !aiMarketLoading
+                ? "linear-gradient(180deg, #1d2b7a 0%, #0d0d4d 100%)"
+                : "rgba(0,0,0,0.06)",
+              color: preferredRegionInput.trim() && !aiMarketLoading ? "#fff" : "rgba(0,0,0,0.45)",
+              fontSize: "13px",
+              fontWeight: 650,
+              letterSpacing: "-0.01em",
+              cursor: preferredRegionInput.trim() && !aiMarketLoading ? "pointer" : "default",
+              boxShadow: preferredRegionInput.trim() && !aiMarketLoading
+                ? "0 4px 14px rgba(25,25,112,0.24), 0 1px 0 rgba(255,255,255,0.1) inset"
+                : "none",
+              flexShrink: 0,
+              transition: "all 0.15s ease",
+            }}
+          >
+            {aiMarketLoading
+              ? (language === "ko" ? "분석 중…" : "Analysing…")
+              : (language === "ko" ? "AI 추천 받기" : "Get AI picks")}
           </button>
         </div>
       </div>

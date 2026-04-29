@@ -35,6 +35,8 @@ type RoadmapState = {
   softOpenSkips: Record<string, boolean>;
   taxChecks: Record<string, boolean>;
   loanChecks: Record<string, boolean>;
+  // 계약 전 검토 — task 별 sub-checklist (key: `${taskId}:${idx}`)
+  contractSubChecks: Record<string, boolean>;
   // 스테이지 가이드
   stageGuideContent: StageGuideContent | null;
   guideStepIndex: number;
@@ -93,6 +95,7 @@ type RoadmapActions = {
   setSoftOpenSkips: (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
   setTaxChecks: (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
   setLoanChecks: (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
+  setContractSubChecks: (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
   setStageGuideContent: (v: StageGuideContent | null) => void;
   setGuideStepIndex: (v: number | ((prev: number) => number)) => void;
   setGuideSelections: (v: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
@@ -123,6 +126,7 @@ const initialState: RoadmapState = {
   softOpenSkips: {},
   taxChecks: {},
   loanChecks: {},
+  contractSubChecks: {},
   stageGuideContent: null,
   guideStepIndex: 0,
   guideSelections: {},
@@ -159,6 +163,7 @@ export const useRoadmapStore = create<RoadmapState & RoadmapActions>()(
       setSoftOpenSkips: (v) => set((s) => ({ softOpenSkips: withFn(v, s.softOpenSkips) })),
       setTaxChecks: (v) => set((s) => ({ taxChecks: withFn(v, s.taxChecks) })),
       setLoanChecks: (v) => set((s) => ({ loanChecks: withFn(v, s.loanChecks) })),
+      setContractSubChecks: (v) => set((s) => ({ contractSubChecks: withFn(v, s.contractSubChecks) })),
       setStageGuideContent: (v) => set({ stageGuideContent: v }),
       setGuideStepIndex: (v) => set((s) => ({ guideStepIndex: withFn(v, s.guideStepIndex) })),
       setGuideSelections: (v) => set((s) => ({ guideSelections: withFn(v, s.guideSelections) })),
@@ -180,6 +185,7 @@ export const useRoadmapStore = create<RoadmapState & RoadmapActions>()(
         softOpenSkips: state.softOpenSkips,
         taxChecks: state.taxChecks,
         loanChecks: state.loanChecks,
+        contractSubChecks: state.contractSubChecks,
         guideSelections: state.guideSelections,
         aiRoadmapResult: state.aiRoadmapResult,
       }),

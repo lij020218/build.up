@@ -1,7 +1,9 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, Award, Percent, Building } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { ModePathCard } from "./ModePathCard";
+import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
 
 export function VentureCertificationStage() {
   const d = useDashboardCtx();
@@ -34,28 +36,37 @@ export function VentureCertificationStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      {/* ── 모드별 경로 카드 (최상단) ── */}
+      <ModePathCard stageId="venture-certification" />
+
+      {/* KEY ACTION 미드나이트 hero */}
+      <StartupKeyActionHero
+        eyebrow="KEY ACTION"
+        title={ko ? "벤처인증 하나로 수천만원 절세 + 지원사업 자격" : "One cert: tens of millions saved + program access"}
+        subtitle={
+          ko
+            ? "법인세 50% 감면(5년) + 취득세 75% 감면 + 스톡옵션 비과세(연 2억) + TIPS·창업패키지 우대. 마감을 놓치면 1년을 기다려야 합니다."
+            : "50% tax cut (5yr) + 75% acquisition tax cut + tax-free stock options (₩200M/yr) + TIPS/package priority. Miss deadlines and wait a year."
+        }
+        miniCards={[
+          { icon: Award, label: ko ? "3가지 유형" : "3 Types", detail: ko ? "투자/R&D/혁신" : "Invest/R&D/Innov" },
+          { icon: Percent, label: ko ? "법인세 50%" : "50% Tax", detail: ko ? "5년 감면" : "5 years cut" },
+          { icon: Building, label: ko ? "지원사업" : "Programs", detail: ko ? "TIPS·예창패" : "TIPS+pkg" },
+        ]}
+      />
+
+      <StartupReferenceLabel>
+        {ko ? "↓ 심화 참고 — 벤처기업 유형·정부지원·세제 혜택" : "↓ Reference — venture cert types, govt programs, tax benefits"}
+      </StartupReferenceLabel>
+
       {/* 페이지 네비 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button type="button" disabled={pg === 0} onClick={() => setGuideStepIndex((p: number) => p - 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
-        }}>{ko ? "← 이전" : "← Prev"}</button>
-        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "center" }}>
-          {pgLabels.map((l, i) => (
-            <button key={i} type="button" onClick={() => setGuideStepIndex(i)} style={{
-              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
-              background: i === pg ? "#1d3557" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
-              border: "none", cursor: "pointer",
-            }}>{l}</button>
-          ))}
-        </div>
-        <button type="button" disabled={pg === totalPg - 1} onClick={() => setGuideStepIndex((p: number) => p + 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
-        }}>{ko ? "다음 →" : "Next →"}</button>
-      </div>
+      <StartupPageNav
+        page={pg}
+        totalPages={totalPg}
+        labels={pgLabels}
+        onChange={(p) => setGuideStepIndex(p)}
+        ko={ko}
+      />
 
       {/* PAGE 0 — WHY */}
       {pg === 0 && (

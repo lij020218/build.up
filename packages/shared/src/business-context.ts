@@ -248,7 +248,9 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
           placeholder: isOnline ? "200" : "300",
           description: { ko: "판매할 상품의 도매/제조 매입 비용", en: "Wholesale or manufacturing cost of products for sale" },
         },
-        labor, rent, utilities,
+        labor,
+        // 온라인 스토어는 사무실 임대료/공과금이 기본 X (재택·코워킹 가정)
+        ...(isOnline ? [] : [rent, utilities]),
         {
           fieldKey: "sga",
           label: isOnline
@@ -320,6 +322,8 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
         marketing, otherGeneral, interest,
       ];
     case "infra":
+      // 스타트업/테크는 사무실 임대료/공과금 기본 X (재택·코워킹 가정).
+      // 사용자가 사무실을 별도로 운영하면 "기타 비용" 또는 별도 입력으로 처리.
       return [
         {
           fieldKey: "ingredients",
@@ -327,7 +331,7 @@ function getExpenseFields(mode: ExpenseMode, categoryId: BusinessCategory | null
           placeholder: "50",
           description: { ko: "AWS/GCP, Vercel, GitHub, Figma, Slack 등 인프라·SaaS 구독 비용", en: "Cloud hosting, SaaS subscriptions (AWS, Vercel, GitHub, etc.)" },
         },
-        labor, rent, utilities,
+        labor,
         {
           fieldKey: "sga",
           label: { ko: "외주비·법률비 (운영비)", en: "Outsourcing & Legal (SGA)" },

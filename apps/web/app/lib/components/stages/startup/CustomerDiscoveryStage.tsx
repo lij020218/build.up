@@ -1,7 +1,10 @@
 "use client";
 
+import { MessageCircle, AlertTriangle, Search } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { supabase } from "../../../../../lib/supabase";
+import { ModePathCard } from "./ModePathCard";
+import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
 
 export function CustomerDiscoveryStage() {
   const d = useDashboardCtx();
@@ -18,28 +21,37 @@ export function CustomerDiscoveryStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      {/* ── 모드별 경로 카드 (최상단) ── */}
+      <ModePathCard stageId="customer-discovery" />
+
+      {/* KEY ACTION 미드나이트 hero */}
+      <StartupKeyActionHero
+        eyebrow="KEY ACTION"
+        title={ko ? "코드 한 줄 전에, 10명과 대화하세요" : "Talk to 10 people before writing code"}
+        subtitle={
+          ko
+            ? "스타트업의 42%는 \"시장이 원하지 않는 제품\"을 만들어 실패합니다. 의견이 아닌 과거 행동을 물어, 진짜 고통이 있는지 검증하세요."
+            : "42% of startups fail by building a product nobody needs. Ask about past behavior, not opinions, to validate real pain."
+        }
+        miniCards={[
+          { icon: MessageCircle, label: ko ? "Mom Test" : "Mom Test", detail: ko ? "과거 행동 질문" : "Past behavior" },
+          { icon: AlertTriangle, label: ko ? "고통 강도" : "Pain", detail: ko ? "돈·시간 지출 확인" : "$$ or time?" },
+          { icon: Search, label: ko ? "JTBD" : "JTBD", detail: ko ? "고용 이유 발견" : "Why hired" },
+        ]}
+      />
+
+      <StartupReferenceLabel>
+        {ko ? "↓ 심화 참고 — 모든 모드에 공통되는 인터뷰 스크립트·검증 방법" : "↓ Reference — universal interview scripts and validation methods"}
+      </StartupReferenceLabel>
+
       {/* 페이지 네비 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button type="button" disabled={pg === 0} onClick={() => setGuideStepIndex(p => p - 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
-        }}>{ko ? "← 이전" : "← Prev"}</button>
-        <div style={{ display: "flex", gap: "4px" }}>
-          {pgLabels.map((l, i) => (
-            <button key={i} type="button" onClick={() => setGuideStepIndex(i)} style={{
-              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
-              background: i === pg ? "#1d3557" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
-              border: "none", cursor: "pointer",
-            }}>{l}</button>
-          ))}
-        </div>
-        <button type="button" disabled={pg === totalPg - 1} onClick={() => setGuideStepIndex(p => p + 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
-        }}>{ko ? "다음 →" : "Next →"}</button>
-      </div>
+      <StartupPageNav
+        page={pg}
+        totalPages={totalPg}
+        labels={pgLabels}
+        onChange={(p) => setGuideStepIndex(p)}
+        ko={ko}
+      />
 
       {pg === 0 && (
       <>

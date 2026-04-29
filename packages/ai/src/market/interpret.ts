@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { RecommendationItem } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import { MARKET_NARRATIVE_SYSTEM_PROMPT, buildMarketNarrativeUserPrompt } from "./prompt";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -18,7 +19,8 @@ export async function interpretMarketScore(
   const message = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: MARKET_NARRATIVE_SYSTEM_PROMPT,
+    // ✦ Prompt Caching — market narrative system prompt
+    system: systemWithCache(MARKET_NARRATIVE_SYSTEM_PROMPT),
     messages: [{ role: "user", content: userPrompt }]
   });
 

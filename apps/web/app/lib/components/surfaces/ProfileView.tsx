@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { styles } from "../../styles";
 import { supabase } from "../../../../lib/supabase";
+import { PortOneConnectCard } from "../profile/PortOneConnectCard";
+import { TossPlaceConnectCard } from "../profile/TossPlaceConnectCard";
+import { CsvUploadCard } from "../profile/CsvUploadCard";
+import { CodefConnectCard } from "../profile/CodefConnectCard";
 
 // ── Local styles ──
 const card: React.CSSProperties = {
@@ -40,7 +44,7 @@ export function ProfileView() {
   const d = useDashboardCtx();
   const router = useRouter();
   const {
-    language, copy, persistenceReady, authLabel,
+    language, copy, persistenceReady, authLabel, userName,
     businessLaunched, businessHealthScore,
     completedCount, pathTotalStages, correctedProgressPercent,
     setLanguage, resetDemo, persistenceLabel,
@@ -53,8 +57,12 @@ export function ProfileView() {
   const isSignedIn = persistenceReady;
   const emailPart = authLabel.includes(" · ") ? authLabel.split(" · ")[0] : null;
   const idPart = authLabel.includes(" · ") ? authLabel.split(" · ")[1] : null;
-  const avatarLetter = emailPart ? emailPart[0].toUpperCase() : "?";
+  // 회원가입 시 입력한 이름을 우선, 없으면 이메일 첫 글자.
+  const avatarLetter = userName
+    ? userName.trim()[0]?.toUpperCase() ?? "?"
+    : emailPart ? emailPart[0].toUpperCase() : "?";
   const isAnonymous = !emailPart || emailPart === copy.home.signInRequired;
+  const displayName = userName && userName.trim().length > 0 ? userName.trim() : null;
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -137,12 +145,18 @@ export function ProfileView() {
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
-            {isAnonymous ? (ko ? "로그인이 필요합니다" : "Not signed in") : emailPart}
+            {isAnonymous
+              ? (ko ? "로그인이 필요합니다" : "Not signed in")
+              : displayName
+                ? (ko ? `${displayName}님` : displayName)
+                : emailPart}
           </div>
-          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
             {isAnonymous
               ? (ko ? "계정을 만들면 진행 상황이 저장됩니다" : "Create an account to save your progress")
-              : (ko ? "이메일 계정" : "Email account")}
+              : displayName && emailPart
+                ? emailPart
+                : (ko ? "이메일 계정" : "Email account")}
           </div>
         </div>
       </div>
@@ -150,6 +164,12 @@ export function ProfileView() {
       {/* ── 카드 1: 계정 정보 ── */}
       <article style={card}>
         <div style={sectionLabel}>{ko ? "계정 정보" : "Account"}</div>
+        {isSignedIn && displayName && !isAnonymous && (
+          <div style={row}>
+            <span style={rowKey}>{ko ? "이름" : "Name"}</span>
+            <span style={rowVal}>{displayName}</span>
+          </div>
+        )}
         {isSignedIn && emailPart && !isAnonymous && (
           <div style={row}>
             <span style={rowKey}>{ko ? "이메일" : "Email"}</span>
@@ -232,6 +252,12 @@ export function ProfileView() {
           </div>
         </div>
       </article>
+
+      {/* ── 카드 3.5: 외부 데이터 연결 (4가지 trail) ── */}
+      <PortOneConnectCard ko={ko} />
+      <TossPlaceConnectCard ko={ko} />
+      <CodefConnectCard ko={ko} />
+      <CsvUploadCard ko={ko} />
 
       {/* ── 카드 4: 계정 관리 ── */}
       <article style={{ ...card, marginTop: "12px" }}>

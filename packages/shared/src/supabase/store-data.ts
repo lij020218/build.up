@@ -52,6 +52,16 @@ export type UserStoreData = {
   // 마케팅
   marketingCampaigns: unknown[];
   marketingMonthlyBudget: number;
+  // 고객 인터뷰 (Mom Test 노트 + AI 패턴 분석) — 사장님이 직접 입력한 데이터, 손실 시 큰 손실
+  customerInterviews: unknown[];
+  interviewPatternAnalysis: unknown | null;
+  // 시간 로그 (Drucker "시간이 어디로 가는지 알라" — 매일 저녁 5분 체크인) — 사장님 직접 입력
+  timeLogEntries: unknown[];
+  timeLogEnabled: boolean;
+  // 현금흐름 설정 (Cash-flow Crunch Tracker) — 사장님 직접 입력, 손실 시 큰 손실
+  //   { currentBalance, currentBalanceUpdatedAt, salesChannels[], crisisThresholdDays,
+  //     notifyOnCrisis, dailyMorningBriefing, vatReserveEnabled, setupCompletedAt }
+  cashflowSettings: Record<string, unknown> | null;
 };
 
 // camelCase → snake_case mapping for DB columns
@@ -97,6 +107,11 @@ const FIELD_TO_COLUMN: Record<keyof UserStoreData, string> = {
   subscribers: "subscribers",
   marketingCampaigns: "marketing_campaigns",
   marketingMonthlyBudget: "marketing_monthly_budget",
+  customerInterviews: "customer_interviews",
+  interviewPatternAnalysis: "interview_pattern_analysis",
+  timeLogEntries: "time_log_entries",
+  timeLogEnabled: "time_log_enabled",
+  cashflowSettings: "cashflow_settings",
 };
 
 // snake_case → camelCase reverse mapping

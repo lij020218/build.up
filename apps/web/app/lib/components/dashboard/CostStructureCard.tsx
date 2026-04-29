@@ -113,6 +113,15 @@ export function CostStructureCard() {
   } | undefined;
   const entries = (d.dailyEntries ?? []) as Array<{ date: string; sales: number; customers: number }>;
   const industryCategoryId = d.selectedIndustryId as string | undefined;
+  // 업종별 비용 라벨 — 스타트업이면 ingredients = "서버·SaaS", labor = "인건비" 등
+  const expenseFields = (d.businessCtx as { expenseFields?: Array<{ fieldKey: string; label: { ko: string; en: string } }> } | undefined)?.expenseFields;
+  const labelOf = (fieldKey: string, fallback: string): string => {
+    const found = expenseFields?.find((f) => f.fieldKey === fieldKey);
+    return found?.label[ko ? "ko" : "en"] ?? fallback;
+  };
+  const ingredientsLabel = labelOf("ingredients", ko ? "재료비" : "Materials");
+  const laborLabel = labelOf("labor", ko ? "인건비" : "Labor");
+  const rentLabel = labelOf("rent", ko ? "임대료" : "Rent");
 
   const { totalSales, rows, hasCosts } = useMemo(() => {
     if (!mc || !entries.length) {
@@ -138,17 +147,17 @@ export function CostStructureCard() {
 
     const costRows: CostRow[] = [
       {
-        label: t.ingredients.label,
+        label: ingredientsLabel,
         ratio: Math.round(ingredientRatio * 10) / 10,
         thresholds: { good: t.ingredients.good, caution: t.ingredients.caution },
       },
       {
-        label: "인건비",
+        label: laborLabel,
         ratio: Math.round(laborRatio * 10) / 10,
         thresholds: { good: t.labor.good, caution: t.labor.caution },
       },
       {
-        label: "임대료",
+        label: rentLabel,
         ratio: Math.round(rentRatio * 10) / 10,
         thresholds: { good: t.rent.good, caution: t.rent.caution },
       },
@@ -162,7 +171,7 @@ export function CostStructureCard() {
     ];
 
     return { totalSales: sales, rows: costRows, hasCosts: mc.ingredients + mc.labor + mc.rent > 0 };
-  }, [mc, entries, industryCategoryId]);
+  }, [mc, entries, industryCategoryId, ingredientsLabel, laborLabel, rentLabel]);
 
   if (!hasCosts || rows.length === 0) {
     return (
@@ -172,8 +181,8 @@ export function CostStructureCard() {
         </div>
         <div style={emptyState}>
           {ko
-            ? "내 가게 탭 → 비용 관리에서 재료비·인건비·임대료를 입력하세요"
-            : "Go to My Store → Cost Management to enter ingredients, labor, and rent"}
+            ? `내 가게 탭 → 비용 관리에서 ${ingredientsLabel}·${laborLabel}·${rentLabel}을 입력하세요`
+            : `Go to My Store → Cost Management to enter ${ingredientsLabel}, ${laborLabel}, ${rentLabel}`}
         </div>
       </div>
     );

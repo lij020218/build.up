@@ -6,9 +6,6 @@ import {
   completeCurrentStage,
   getIndustryCategoryIdByOptionId,
   getStarterLocationOptions,
-  loadBusinessProfile,
-  saveRoadmapState,
-  saveStoreData,
   starterRoadmap,
   upsertStageDecision,
   getFranchiseBrandsForSubIndustry,
@@ -31,10 +28,11 @@ import {
   resetLocalState,
   applyStoreData,
   collectStoreData,
+  hardWipeBuildupStorage,
 } from "./usePersistence";
 
 // Re-export pure helpers so callers have a single import point
-export { clearLocalUserData, resetLocalState, applyStoreData, collectStoreData };
+export { clearLocalUserData, resetLocalState, applyStoreData, collectStoreData, hardWipeBuildupStorage };
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -47,12 +45,23 @@ export type SelectionHandlersDeps = DashboardDeps & {
   locationMode: "recommended" | "direct";
   /** Ref that tracks the ongoing autosave timer (needed to cancel during resetDemo) */
   autosaveTimerRef: MutableRefObject<ReturnType<typeof setTimeout> | null>;
+  /**
+   * usePersistence 가 노출하는 autosave 차단 헬퍼.
+   *  ⚠️ usePersistence 내부의 timer ref 는 별도 인스턴스라 위 autosaveTimerRef 로는
+   *  못 잡음 → resetDemo 시 반드시 이 함수로 차단해야 race 가 사라진다.
+   */
+  cancelAllAutosaves: () => void;
+  /**
+   * Reset 중 동기 차단 플래그. setTimeout 콜백이 fire 할 때도 즉시 차단하기 위해
+   *  (cancelAllAutosaves 는 future timer 만 막고, 이미 fire 된 콜백은 못 막음).
+   */
+  setResetting: (value: boolean) => void;
 };
 
 // ── Hook ───────────────────────────────────────────────────────────────────────
 
 export function useSelectionHandlers(deps: SelectionHandlersDeps) {
-  const { language, copy, router, industryCategoryId, finalSelectedMarket, autosaveTimerRef } = deps;
+  const { language, copy, router, industryCategoryId, finalSelectedMarket, autosaveTimerRef, cancelAllAutosaves, setResetting } = deps;
 
   // ── Profile store ──────────────────────────────────────────────────────────
   const {
@@ -268,16 +277,202 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
     if (!confirmed) return;
 
+    // ── ⓿ Reset race-condition 차단 (가장 먼저, 동기적) ────────────────────
+    //  setTimeout 콜백이 fire 할 때 isResettingRef.current 를 검사해 saveRoadmapState
+    //  실행을 즉시 막는다. 이게 없으면 reset 도중 자동저장이 fire 되어 saveRoadmapState
+    //  → ensureBusinessProfile + roadmaps UPSERT 가 row 를 재생성 → 검증 실패.
+    setResetting(true);
+
     // 초기화 오버레이 표시
     setIsResetting(true);
     setResetProgress(0);
 
+    // ── ① autosave 차단 (timer 클리어) ─────────────────────────────────────
+    //  미래 timer 차단. setResetting(true) 가 이미 fire 된 콜백까지 차단.
     if (autosaveTimerRef.current) {
       clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
     }
-
+    cancelAllAutosaves();
     setPersistenceReady(false);
 
+    // ── ② 서버 풀-와이프 + 검증 ────────────────────────────────────────────
+    //  실제로 row 가 지워졌는지 SELECT count 로 확인. 검증 실패 시 사용자에게 명확히 알림.
+    setResetProgress(20);
+    type WipeReport = {
+      apiOk: boolean;
+      apiDeleted: number;
+      apiFailures: Array<{ table: string; error: string }>;
+      clientWipeErrors: Array<{ table: string; error: string }>;
+      verifyFailures: Array<{ table: string; remaining: number }>;
+      fatalError: string | null;
+    };
+    const report: WipeReport = {
+      apiOk: false,
+      apiDeleted: 0,
+      apiFailures: [],
+      clientWipeErrors: [],
+      verifyFailures: [],
+      fatalError: null,
+    };
+
+    let userId: string | undefined;
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      userId = session.data.session?.user?.id;
+
+      if (!token || !userId) {
+        report.fatalError = language === "ko"
+          ? "세션이 없어 초기화할 수 없습니다. 다시 로그인 후 시도해 주세요."
+          : "No session — please sign in again.";
+        throw new Error("NO_SESSION");
+      }
+
+      console.log("[reset] start", { userId: userId.slice(0, 8) });
+
+      // ── 1차: API 풀-와이프 (service role) ──
+      setResetProgress(30);
+      const apiStarted = Date.now();
+      const res = await fetch("/api/account/reset", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      const apiElapsed = Date.now() - apiStarted;
+      const data = await res.json().catch(() => ({}));
+      report.apiOk = !!data?.ok;
+      report.apiDeleted = data?.totalDeleted ?? 0;
+      report.apiFailures = data?.failures ?? [];
+
+      console.log("[reset] api", {
+        status: res.status,
+        ok: report.apiOk,
+        deleted: report.apiDeleted,
+        failures: report.apiFailures.length,
+        elapsedMs: apiElapsed,
+      });
+
+      // ── 2차: client-side 직접 삭제 (RLS 사용) ──
+      //  API 가 부분 실패해도 자기 권한으로 핵심 테이블만 다시 시도.
+      //  stage_decisions / stage_tasks 는 user_id 가 없고 roadmaps FK cascade 가 처리.
+      setResetProgress(50);
+      const CORE_TABLES_USERID = [
+        "user_store_data",
+        "business_profiles",
+        "roadmaps",
+      ] as const;
+      const wipeResults = await Promise.all(
+        CORE_TABLES_USERID.map(async (t) => {
+          try {
+            const { error } = await (supabase as unknown as {
+              from: (n: string) => {
+                delete: () => {
+                  eq: (k: string, v: string) => Promise<{ error: unknown }>;
+                };
+              };
+            })
+              .from(t)
+              .delete()
+              .eq("user_id", userId!);
+            return { table: t, error: error ? String((error as { message?: string }).message ?? error) : null };
+          } catch (e) {
+            return { table: t, error: e instanceof Error ? e.message : String(e) };
+          }
+        }),
+      );
+      for (const r of wipeResults) {
+        if (r.error) {
+          console.warn(`[reset] client wipe failed: ${r.table}`, r.error);
+          report.clientWipeErrors.push({ table: r.table, error: r.error });
+        }
+      }
+
+      // ── 3차: 검증 (SELECT count) ──
+      //  진짜 지워졌는지 확인. 0 row 이면 OK, > 0 이면 reset 실패로 간주.
+      //  단, RLS GRANT 가 없는 테이블은 SELECT 자체가 42501 → "검증 불가" 로 분류 (실패 아님).
+      setResetProgress(70);
+      const verifyTables = ["business_profiles", "roadmaps", "user_store_data"] as const;
+      const verifyResults = await Promise.all(
+        verifyTables.map(async (t) => {
+          try {
+            const { count, error } = await (supabase as unknown as {
+              from: (n: string) => {
+                select: (cols: string, opts: { count: "exact"; head: true }) => {
+                  eq: (k: string, v: string) => Promise<{ count: number | null; error: unknown }>;
+                };
+              };
+            })
+              .from(t)
+              .select("*", { count: "exact", head: true })
+              .eq("user_id", userId!);
+            return { table: t, count: count ?? 0, error };
+          } catch (e) {
+            return { table: t, count: 0, error: e };
+          }
+        }),
+      );
+      for (const r of verifyResults) {
+        if (r.error) {
+          // 42501 (permission denied) 은 GRANT 누락 — 검증 불가 (실제 wipe 는 service role 로 됐을 수도)
+          const code = (r.error as { code?: string })?.code;
+          console.warn(`[reset] verify ${r.table}: error code=${code}`, r.error);
+          continue;
+        }
+        if (r.count > 0) {
+          console.error(`[reset] verify FAILED: ${r.table} still has ${r.count} rows`);
+          report.verifyFailures.push({ table: r.table, remaining: r.count });
+        } else {
+          console.log(`[reset] verify ok: ${r.table} = 0 rows`);
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message !== "NO_SESSION") {
+        report.fatalError = error.message;
+      }
+      console.error("[reset] phase ② error", error);
+    }
+
+    // ── 검증 실패 시 reload 차단 ───────────────────────────────────────────
+    //  fatalError 또는 verifyFailures 가 있으면 사용자에게 명확히 알리고 reload 안 함.
+    //  "진짜 지워졌는지 확인 못함" 상태로 사용자가 다시 로그인 화면 보는 것 방지.
+    if (report.fatalError) {
+      console.error("[reset] FATAL", report);
+      setIsResetting(false);
+      setResetProgress(0);
+      window.alert(
+        language === "ko"
+          ? `초기화 실패: ${report.fatalError}\n\n다시 시도해 주세요.`
+          : `Reset failed: ${report.fatalError}\n\nPlease retry.`,
+      );
+      return;
+    }
+    if (report.verifyFailures.length > 0) {
+      console.error("[reset] VERIFY FAILED", report);
+      setIsResetting(false);
+      setResetProgress(0);
+      const failed = report.verifyFailures.map((f) => `${f.table} (${f.remaining}건 남음)`).join(", ");
+      window.alert(
+        language === "ko"
+          ? `초기화 검증 실패 — 일부 데이터가 남아있습니다: ${failed}\n\n` +
+            `Supabase RLS GRANT 설정을 확인해 주세요. (브라우저 console 에 상세 로그 있음)`
+          : `Reset verification failed — data remains: ${failed}\n\n` +
+            `Check Supabase RLS GRANT setup. (See browser console.)`,
+      );
+      return;
+    }
+    if (report.apiFailures.length > 0 || report.clientWipeErrors.length > 0) {
+      // API/client wipe 일부 실패했지만 verify 통과 = 부분적으로 다른 경로로 정리됨
+      console.warn("[reset] partial errors but verified empty", report);
+    }
+
+    setPersistenceLabel(
+      language === "ko"
+        ? `초기화 완료 — 서버 ${report.apiDeleted}건 삭제`
+        : `Reset complete — ${report.apiDeleted} rows deleted on server`,
+    );
+
+    // ── ③ 클라이언트 상태 reset ─────────────────────────────────────────────
+    setResetProgress(80);
     const nextDecisions: WorkflowDecisionMap = {};
     const nextTasks = cloneStarterTaskMap();
     const nextRoadmap = buildRoadmapState(
@@ -292,8 +487,6 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       nextTasks,
     );
 
-    // Step 1: 로컬 상태 초기화
-    setResetProgress(20);
     clearLocalUserData();
     resetLocalState();
 
@@ -344,7 +537,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     setLocationOptions(getStarterLocationOptions("food"));
     setLocationSourceLabel(copy.common.starterFallback);
 
-    // Onboarding flags (use getState() to avoid subscribing as reactive)
+    // Onboarding flags
     useOnboardingStore.getState().setShowProfileDetails(false);
     setStartupType(undefined);
     setLastUnlocked([]);
@@ -354,105 +547,35 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     setBusinessLaunchedDate(null);
     useOnboardingStore.getState().setShowExistingOnboarding(false);
     useOnboardingStore.getState().setShowAIRoadmapWizard(false);
+    setShowOnboardingChoice(true);
+
+    // ── ④ 마지막 hard wipe — Zustand persist 가 위 setter 들로 다시 써넣은 것까지
+    //     모두 제거. 다음 마운트에서 store 들은 initialState 로 시작.
+    setResetProgress(90);
     try {
       localStorage.removeItem("buildup_onboarding_dismissed");
+      localStorage.removeItem("__buildup_uid");
+      localStorage.removeItem("__buildup_last_snapshot");
+      localStorage.removeItem("__buildup_last_snapshot_at");
     } catch { /* ignore */ }
+    hardWipeBuildupStorage();
 
-    // Step 2: business_profiles 초기화
-    setResetProgress(40);
+    // ── ⑤ Force-onboarding 신호 ───────────────────────────────────────────
+    //  hardWipe 가 buildup* / __buildup* 키만 지우므로 이름이 다르면 살아남음.
+    //  next mount 에서 starter-stage-demo 가 이 키를 즉시 감지 → 무조건 onboarding 첫 화면.
+    //  data load·hasIndustry 체크·persist hydration 어떤 것도 우회 가능 — 사용자 의도 명확.
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from("business_profiles")
-          .update({
-            industry_category_id: null,
-            sub_industry_id: null,
-            startup_type: null,
-            business_model_id: null,
-            capital: null,
-            target_open_date: null,
-            preferred_regions: null,
-          } as never)
-          .eq("user_id", user.id);
-      }
-    } catch { /* ignore */ }
+      localStorage.setItem("pending_force_onboarding", String(Date.now()));
+    } catch { /* localStorage disabled — URL 파라미터가 backup */ }
 
-    // Step 3: 서버 데이터 초기화
-    setResetProgress(60);
-    try {
-      const [persisted] = await Promise.all([
-        saveRoadmapState(supabase, {
-          roadmap: nextRoadmap,
-          decisions: nextDecisions,
-          tasks: nextTasks,
-        }),
-        saveStoreData(supabase, {
-          storeName: "",
-          businessLaunched: false,
-          businessLaunchedDate: null,
-          cpaDecision: null,
-          taxSettings: { vatType: "general", hasEmployees: false },
-          monthlyCosts: { ingredients: 0, labor: 0, rent: 0, utilities: 0, sga: 0, marketing: 0, other: 0, interest: 0 },
-          dailyEntries: [],
-          inventoryItems: [],
-          employees: [],
-          fixedExpenses: [],
-          deliveryPlatforms: [],
-          monthlyDeliverySales: {},
-          products: [],
-          unifiedProducts: [],
-          serviceMenuItems: [],
-          members: [],
-          vendorSelections: {},
-          vendorCustomInputs: {},
-          opsSelections: {},
-          opsPosChecks: {},
-          softOpenChecks: {},
-          softOpenPricing: "",
-          softOpenSkips: {},
-          taxChecks: {},
-          loanChecks: {},
-          onlinePlatformSales: {},
-          onlineSelectedPlatforms: [],
-          onlineSelectedCourier: "",
-          onlineMonthlyParcels: "",
-          costHistory: [],
-        }).catch(() => {}),
-      ]);
-
-      setResetProgress(90);
-      setRoadmap(persisted.roadmap);
-      setDecisions(persisted.decisions);
-      setTaskMap(persisted.tasks);
-      setPersistenceLabel(
-        language === "ko" ? "초기화가 서버에 적용되었습니다." : "Reset applied to server.",
-      );
-      setPersistenceReady(true);
-      void loadBusinessProfile(supabase)
-        .then((p) => {
-          if (p) setProfile(p);
-        })
-        .catch(() => {});
-    } catch (error) {
-      setPersistenceReady(true);
-      setPersistenceLabel(
-        error instanceof Error
-          ? `${language === "ko" ? "초기화 저장 실패" : "Reset save failed"}: ${error.message}`
-          : language === "ko"
-            ? "초기화 저장 실패"
-            : "Reset save failed",
-      );
-    }
-
-    // Step 4: 완료 → 온보딩 화면으로 전환
+    // ── ⑥ 하드 리로드 → onboarding 화면 강제 노출 ───────────────────────────
     setResetProgress(100);
-    await new Promise((r) => setTimeout(r, 600));
-    setShowOnboardingChoice(true);
     setIsResetting(false);
     setResetProgress(0);
+    if (typeof window !== "undefined") {
+      // location.replace 보다 location.assign 이 더 일관됨 (history stack 의 corner case 회피)
+      window.location.assign(`/?reset=${Date.now()}`);
+    }
   };
 
   return {

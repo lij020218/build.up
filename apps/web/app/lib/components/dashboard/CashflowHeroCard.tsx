@@ -13,10 +13,17 @@ import {
 import { CashflowSetupSheet } from "./CashflowSetupSheet";
 import { CashflowDetailSheet } from "./CashflowDetailSheet";
 import { CashflowCrisisActions } from "./CashflowCrisisActions";
+import { AnimatedBar } from "./animations";
 
 type Props = {
   ko: boolean;
   dailyEntries: DailyEntry[];
+  /**
+   * 사용자가 대시보드에 입력한 월 비용 총액 (totalCosts).
+   * cashflow-store 의 fixedExpenses 가 비어있을 때 fallback 으로 사용됨 →
+   * 가짜 예측 곡선 방지. 미전달 시 (또는 0) 단순 매출 정산만 반영.
+   */
+  fallbackMonthlyCostsTotal?: number;
 };
 
 /**
@@ -28,7 +35,7 @@ type Props = {
  * - 안전: 녹색 타임라인 + 다음 이벤트
  * - 위기 (3일 내 음수): 앰버/레드 경고 + 원버튼 액션
  */
-export function CashflowHeroCard({ ko, dailyEntries }: Props) {
+export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }: Props) {
   const {
     currentBalance,
     currentBalanceUpdatedAt,
@@ -50,8 +57,9 @@ export function CashflowHeroCard({ ko, dailyEntries }: Props) {
         salesChannels,
         fixedExpenses,
         vatReserveEnabled,
+        fallbackMonthlyCostsTotal,
       }),
-    [currentBalance, dailyEntries, salesChannels, fixedExpenses, vatReserveEnabled]
+    [currentBalance, dailyEntries, salesChannels, fixedExpenses, vatReserveEnabled, fallbackMonthlyCostsTotal]
   );
 
   const crisis = useMemo(() => detectCrisis(projections, crisisThresholdDays), [projections, crisisThresholdDays]);
@@ -214,14 +222,25 @@ export function CashflowHeroCard({ ko, dailyEntries }: Props) {
                   title={`${p.date.slice(5)}: ${formatWon(p.endBalance)}`}
                   style={{
                     flex: 1,
-                    height: `${heightPct}%`,
-                    minHeight: "4px",
-                    background: color,
-                    opacity: isToday ? 1 : 0.65,
-                    borderRadius: "2px 2px 0 0",
-                    transition: "all 0.2s",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    minWidth: 0,
                   }}
-                />
+                >
+                  <AnimatedBar
+                    heightPct={heightPct}
+                    delay={0.3 + idx * 0.035}
+                    duration={0.65}
+                    style={{
+                      width: "100%",
+                      minHeight: "4px",
+                      background: color,
+                      opacity: isToday ? 1 : 0.65,
+                      borderRadius: "2px 2px 0 0",
+                    }}
+                  />
+                </div>
               );
             })}
           </div>
@@ -424,7 +443,7 @@ const toneColors = {
 } as const;
 
 const cardBase: React.CSSProperties = {
-  borderRadius: "24px",
+  borderRadius: "20px",
   padding: "22px",
   background: "linear-gradient(180deg, rgba(255,255,255,0.988), rgba(243,246,251,0.91))",
   border: "1px solid rgba(15, 23, 42, 0.048)",

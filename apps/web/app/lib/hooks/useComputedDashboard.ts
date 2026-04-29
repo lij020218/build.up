@@ -147,7 +147,33 @@ export function useComputedDashboard(
     "company-setup",
     "fundraising-readiness",
     "venture-certification",
+    // Cluster B: Hardware/IoT NPI 4
+    "hardware-prototype",
+    "bom-supply-chain",
+    "certification-kc-ce",
+    "manufacturing-partner",
+    // Cluster C: Deep Tech Lab 4
+    "lab-setup",
+    "prototype-iteration",
+    "field-or-clinical-test",
+    "regulatory-submission",
+    // Cluster D: Extreme Deep Tech 4
+    "eda-tooling-setup",
+    "mpw-or-pilot-tape-out",
+    "packaging-and-test",
+    "partner-foundation-or-pilot-line",
   ]);
+
+  // ── 클러스터별 stage 가시성 — 다른 클러스터의 단계는 숨김 ──
+  const clusterBStages = new Set(["hardware-prototype", "bom-supply-chain", "certification-kc-ce", "manufacturing-partner"]);
+  const clusterCStages = new Set(["lab-setup", "prototype-iteration", "field-or-clinical-test", "regulatory-submission"]);
+  const clusterDStages = new Set(["eda-tooling-setup", "mpw-or-pilot-tape-out", "packaging-and-test", "partner-foundation-or-pilot-line"]);
+  const allClusterStages = new Set([...clusterBStages, ...clusterCStages, ...clusterDStages]);
+
+  const subInd = selectedIndustryId ?? "";
+  const isClusterB = subInd === "hardware-iot";
+  const isClusterC = subInd === "robotics-physical-ai" || subInd === "biotech-medtech";
+  const isClusterD = subInd === "semiconductor" || subInd === "climate-energy";
   const offlineOnlyIds = new Set([
     "permit-check",
     "location-candidates",
@@ -170,6 +196,11 @@ export function useComputedDashboard(
         franchiseOnlyIds.has(stageId)
       )
         return false;
+      // ── 클러스터 단계는 해당 sub-industry 만 표시 ──
+      // hardware-iot → Cluster B / robotics·biotech → Cluster C / 반도체·클린테크 → Cluster D
+      if (clusterBStages.has(stageId)) return isClusterB;
+      if (clusterCStages.has(stageId)) return isClusterC;
+      if (clusterDStages.has(stageId)) return isClusterD;
       return true;
     }
     if (isDigitalCategory) {
@@ -180,6 +211,7 @@ export function useComputedDashboard(
       return true;
     }
     if (onlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId)) return false;
+    if (allClusterStages.has(stageId)) return false;
     if (franchiseOnlyIds.has(stageId) && startupType !== "franchise")
       return false;
     return true;
@@ -190,14 +222,40 @@ export function useComputedDashboard(
   );
   const pathTotalStages = pathStageIds.size;
 
-  const completedCount = roadmap.completedStageIds.filter((id) =>
+  const rawCompletedCount = roadmap.completedStageIds.filter((id) =>
     pathStageIds.has(id),
   ).length;
+
+  // ── 런치 완료된 가게 보호 장치 ──
+  // 1) 유저가 이미 `businessLaunched=true`로 오픈했다면 로드맵은 반드시 완료 상태로 표시해야 한다.
+  // 2) 그렇지 않으면 신규 stage 추가·autosave 레이스·hydration 실패 등으로
+  //    persist된 completedStageIds가 줄어들면서 "0단계로 리셋"되는 증상이 발생함.
+  // 3) UI 레이어에서 강제로 끌어올리되, 실제 복구는 usePersistence.connectAndLoad에서 수행.
+  //
+  // ⚠️ 일관성 sanity check: businessLaunched=true 인데 로드맵에 진행이 0개이면
+  //    이건 "stale launched flag" — 데모 초기화는 됐는데 user_store_data 의 businessLaunched
+  //    flag wipe 가 실패했거나 (RLS / 비인증 / 부분 실패), 다른 데이터와 동기화가 깨진 상태.
+  //    이런 경우 override 를 적용하면 "현재 단계 = 첫 단계" + "21/21 완료" 모순 화면이 보임.
+  //    플래그를 stale 로 간주하고 override 를 끈다 (실제 자가복구는 connectAndLoad 가 수행).
+  const launchedFlagLooksStale = businessLaunched && rawCompletedCount === 0;
+  const effectiveLaunched = businessLaunched && !launchedFlagLooksStale;
+
+  const completedCount = effectiveLaunched
+    ? pathTotalStages
+    : rawCompletedCount;
   const correctedProgressPercent =
     pathTotalStages > 0
       ? Math.min(100, Math.round((completedCount / pathTotalStages) * 100))
-      : 0;
-  const allStagesDone = completedCount >= pathTotalStages;
+      : effectiveLaunched
+        ? 100
+        : 0;
+  // ⚠️ pathTotalStages > 0 guard 필수.
+  //   pathTotalStages=0 (초기 렌더 race / hydration 미완 / 잘못된 카테고리 필터) 인 경우
+  //   `0 >= 0 = true` 라 allStagesDone 가 true 로 잘못 평가되어 "20단계 완료" 화면이
+  //   reset 직후 잠깐 노출되는 버그가 있었음.
+  const allStagesDone =
+    effectiveLaunched ||
+    (pathTotalStages > 0 && completedCount >= pathTotalStages);
 
   // ── Business health score ──
   const businessHealthScore: "healthy" | "caution" | "danger" | "unknown" =
@@ -536,19 +594,28 @@ export function useComputedDashboard(
     .slice(0, 3)
     .map((card) => localizeStarterStepCard(card, language));
 
+  // "현재 단계" 탭은 로드맵 진행 중에만 가치가 있음.
+  // 오픈(businessLaunched=true) 이후엔:
+  //   - 타임라인·진행률은 "로드맵" 탭이 이미 제공
+  //   - 매출 입력은 "운영 대시보드"(홈)에서 더 잘 처리됨
+  //   → nav에서 숨김. 경로(/current?editStage=...)는 로드맵 카드 클릭으로 여전히 접근 가능.
+  const showCurrentTab = !businessLaunched;
+
   const surfaceTabs = [
     { id: "home" as const, label: language === "ko" ? "홈" : "Home" },
-    {
-      id: "current" as const,
-      label: language === "ko" ? "현재 단계" : "Current step",
-    },
+    ...(showCurrentTab
+      ? [{
+          id: "current" as const,
+          label: language === "ko" ? "현재 단계" : "Current step",
+        }]
+      : []),
     {
       id: "roadmap" as const,
       label: language === "ko" ? "로드맵" : "Roadmap",
     },
     {
       id: "guides" as const,
-      label: language === "ko" ? "가이드" : "Guides",
+      label: language === "ko" ? "펀딩" : "Funding",
     },
     {
       id: "franchise" as const,

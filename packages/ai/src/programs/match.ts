@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import {
   PROGRAM_MATCHING_SYSTEM_PROMPT,
   buildProgramMatchingUserPrompt,
@@ -196,7 +197,8 @@ export async function matchPrograms(
   const message = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: PROGRAM_MATCHING_SYSTEM_PROMPT,
+    // ✦ Prompt Caching — program 매칭 system prompt 안정 재사용
+    system: systemWithCache(PROGRAM_MATCHING_SYSTEM_PROMPT),
     messages: [{ role: "user", content: userMessage }],
   });
 

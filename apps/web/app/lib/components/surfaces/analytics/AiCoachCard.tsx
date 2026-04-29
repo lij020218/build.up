@@ -1,10 +1,91 @@
 "use client";
 
+import { useState } from "react";
+import { ArrowRight, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
   getFranchiseBenchmark, getIndustryBenchmark, getFranchiseBrandById,
+  FEATURES_BY_ID, type FeatureCatalogItem,
 } from "@build-up/shared";
+
+type ActionEvidenceItem = { text: string };
+
+/**
+ * "왜 이렇게 판단?" — AI 가 판단에 사용한 데이터 포인트를 펼쳐 보여주는 drawer.
+ * Bezos "Disagree-and-commit 의 전제는 데이터" — 신뢰의 시작은 근거 노출.
+ */
+function EvidenceDrawer({ ko, evidence, idPrefix, inset = true }: { ko: boolean; evidence: ActionEvidenceItem[]; idPrefix: string; inset?: boolean }) {
+  const [open, setOpen] = useState(false);
+  if (!evidence || evidence.length === 0) return null;
+  return (
+    <div style={{ marginLeft: inset ? "36px" : 0 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={`${idPrefix}-evidence`}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: "5px",
+          padding: "4px 10px", borderRadius: "999px",
+          border: "1px solid rgba(15,23,42,0.08)",
+          background: open ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.7)",
+          fontSize: "11px", fontWeight: 620, color: "rgba(15,23,42,0.6)",
+          cursor: "pointer", letterSpacing: "-0.005em",
+          transition: "background 0.12s ease",
+        }}
+      >
+        <FileText size={11} strokeWidth={1.7} />
+        <span>{ko ? `왜 이렇게 판단? · 근거 ${evidence.length}` : `Why this? · ${evidence.length} cite${evidence.length > 1 ? "s" : ""}`}</span>
+        {open ? <ChevronUp size={11} strokeWidth={2} /> : <ChevronDown size={11} strokeWidth={2} />}
+      </button>
+      {open && (
+        <div
+          id={`${idPrefix}-evidence`}
+          style={{
+            marginTop: "6px",
+            padding: "9px 12px",
+            borderRadius: "10px",
+            background: "rgba(15,23,42,0.025)",
+            border: "1px solid rgba(15,23,42,0.05)",
+            display: "grid", gap: "5px",
+          }}
+        >
+          {evidence.map((e, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex", gap: "7px", alignItems: "flex-start",
+                fontSize: "11.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.5,
+              }}
+            >
+              <span style={{ color: "rgba(15,23,42,0.35)", fontWeight: 700, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                {i + 1}.
+              </span>
+              <span>{e.text}</span>
+            </div>
+          ))}
+          <div style={{ marginTop: "3px", fontSize: "10px", color: "rgba(15,23,42,0.4)", lineHeight: 1.4 }}>
+            {ko ? "AI 가 컨텍스트에서 직접 인용한 데이터 — 환각 방지 검증 통과" : "Cited directly from your context — hallucination-checked"}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * AI 가 추천한 feature 를 클릭했을 때 실행되는 navigation.
+ * starter-stage-demo 의 navigation listener 가 이 이벤트를 받아 surface 전환 + scroll 처리.
+ */
+function navigateToFeature(feature: FeatureCatalogItem) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent("bup:navigate-feature", {
+      detail: { surface: feature.surface, scrollTargetId: feature.scrollTargetId },
+    }),
+  );
+}
 
 export function AiCoachCard() {
   const d = useDashboardCtx();
@@ -134,26 +215,70 @@ export function AiCoachCard() {
 
           {/* \uc624\ub298 \ud560 \uc77c 3\uac00\uc9c0 */}
           <div style={{ padding: "0 22px 16px", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-            {aiActions.todayActions.map((action, i) => (
+            {aiActions.todayActions.map((action, i) => {
+              const feature = action.feature ? FEATURES_BY_ID[action.feature] : undefined;
+              return (
               <div key={i} style={{
-                display: "flex", gap: "12px", padding: "12px 14px", borderRadius: "14px",
+                display: "flex", flexDirection: "column" as const, gap: "10px",
+                padding: "12px 14px", borderRadius: "14px",
                 background: action.priority === "high" ? "rgba(0,122,255,0.04)" : "rgba(0,0,0,0.02)",
                 border: action.priority === "high" ? "0.5px solid rgba(0,122,255,0.1)" : "0.5px solid rgba(0,0,0,0.04)",
               }}>
-                <div style={{
-                  width: "24px", height: "24px", borderRadius: "8px", flexShrink: 0,
-                  background: action.priority === "high" ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.06)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "12px", fontWeight: 700, color: action.priority === "high" ? "#007aff" : "var(--muted)",
-                }}>
-                  {i + 1}
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <div style={{
+                    width: "24px", height: "24px", borderRadius: "8px", flexShrink: 0,
+                    background: action.priority === "high" ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.06)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "12px", fontWeight: 700, color: action.priority === "high" ? "#007aff" : "var(--muted)",
+                  }}>
+                    {i + 1}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{action.title}</div>
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.4 }}>{action.reason}</div>
+                  </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{action.title}</div>
-                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.4 }}>{action.reason}</div>
-                </div>
+
+                {/* AI \uac00 \ucd94\ucc9c\ud55c build.up \uae30\ub2a5 \u2014 \ud074\ub9ad \uc2dc \ud574\ub2f9 surface \ub85c \uc774\ub3d9 */}
+                {feature && (
+                  <button
+                    type="button"
+                    onClick={() => navigateToFeature(feature)}
+                    style={{
+                      alignSelf: "flex-start" as const,
+                      marginLeft: "36px",
+                      display: "inline-flex", alignItems: "center", gap: "6px",
+                      padding: "5px 12px",
+                      borderRadius: "999px",
+                      border: "1px solid rgba(45, 212, 191, 0.32)",
+                      background: "linear-gradient(135deg, rgba(45,212,191,0.1) 0%, rgba(45,212,191,0.04) 100%)",
+                      color: "#0d9488",
+                      fontSize: "11.5px", fontWeight: 650,
+                      letterSpacing: "-0.005em",
+                      cursor: "pointer",
+                      transition: "transform 0.15s ease, background 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateX(2px)";
+                      e.currentTarget.style.background = "linear-gradient(135deg, rgba(45,212,191,0.18) 0%, rgba(45,212,191,0.08) 100%)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateX(0)";
+                      e.currentTarget.style.background = "linear-gradient(135deg, rgba(45,212,191,0.1) 0%, rgba(45,212,191,0.04) 100%)";
+                    }}
+                  >
+                    <span>{ko ? feature.labelKo : feature.labelEn}</span>
+                    <ArrowRight size={12} strokeWidth={2.25} />
+                  </button>
+                )}
+
+                {/* "\uc65c \uc774\ub807\uac8c \ud310\ub2e8?" \u2014 AI \uc758 \ub370\uc774\ud130 \uadfc\uac70 \ud3bc\uce68 */}
+                {action.evidence && action.evidence.length > 0 && (
+                  <EvidenceDrawer ko={ko} evidence={action.evidence} idPrefix={`today-${i}`} />
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* \uc704\uae30 \ud574\uacb0 \ubc29\ubc95 (\uc788\uc744 \ub54c\ub9cc) */}
@@ -166,15 +291,54 @@ export function AiCoachCard() {
                 {aiActions.crisisActions.map((action, i) => {
                   const diffColor = action.difficulty === "easy" ? "#34c759" : action.difficulty === "hard" ? "#ff9f0a" : "#007aff";
                   const diffLabel = action.difficulty === "easy" ? (ko ? "\uc26c\uc6c0" : "Easy") : action.difficulty === "hard" ? (ko ? "\uc5b4\ub824\uc6c0" : "Hard") : (ko ? "\ubcf4\ud1b5" : "Medium");
+                  const feature = action.feature ? FEATURES_BY_ID[action.feature] : undefined;
                   return (
-                    <div key={i} style={{ display: "flex", gap: "12px", padding: "12px 14px", borderRadius: "14px", background: "rgba(255,59,48,0.03)", border: "0.5px solid rgba(255,59,48,0.08)" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{action.title}</div>
-                        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.4 }}>{action.impact}</div>
+                    <div key={i} style={{ display: "flex", flexDirection: "column" as const, gap: "10px", padding: "12px 14px", borderRadius: "14px", background: "rgba(255,59,48,0.03)", border: "0.5px solid rgba(255,59,48,0.08)" }}>
+                      <div style={{ display: "flex", gap: "12px" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{action.title}</div>
+                          <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.4 }}>{action.impact}</div>
+                        </div>
+                        <div style={{ fontSize: "10px", fontWeight: 700, color: diffColor, padding: "3px 8px", borderRadius: "6px", background: `${diffColor}12`, flexShrink: 0, alignSelf: "flex-start" }}>
+                          {diffLabel}
+                        </div>
                       </div>
-                      <div style={{ fontSize: "10px", fontWeight: 700, color: diffColor, padding: "3px 8px", borderRadius: "6px", background: `${diffColor}12`, flexShrink: 0, alignSelf: "flex-start" }}>
-                        {diffLabel}
-                      </div>
+
+                      {feature && (
+                        <button
+                          type="button"
+                          onClick={() => navigateToFeature(feature)}
+                          style={{
+                            alignSelf: "flex-start" as const,
+                            display: "inline-flex", alignItems: "center", gap: "6px",
+                            padding: "5px 12px",
+                            borderRadius: "999px",
+                            border: "1px solid rgba(45, 212, 191, 0.32)",
+                            background: "linear-gradient(135deg, rgba(45,212,191,0.1) 0%, rgba(45,212,191,0.04) 100%)",
+                            color: "#0d9488",
+                            fontSize: "11.5px", fontWeight: 650,
+                            letterSpacing: "-0.005em",
+                            cursor: "pointer",
+                            transition: "transform 0.15s ease, background 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = "translateX(2px)";
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(45,212,191,0.18) 0%, rgba(45,212,191,0.08) 100%)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateX(0)";
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(45,212,191,0.1) 0%, rgba(45,212,191,0.04) 100%)";
+                          }}
+                        >
+                          <span>{ko ? feature.labelKo : feature.labelEn}</span>
+                          <ArrowRight size={12} strokeWidth={2.25} />
+                        </button>
+                      )}
+
+                      {/* "왜 이렇게 판단?" — 위기 액션의 데이터 근거 (좌측 들여쓰기 X — 위기 카드는 번호 prefix 가 없음) */}
+                      {action.evidence && action.evidence.length > 0 && (
+                        <EvidenceDrawer ko={ko} evidence={action.evidence} idPrefix={`crisis-${i}`} inset={false} />
+                      )}
                     </div>
                   );
                 })}

@@ -14,11 +14,22 @@ type MonthlyCosts = {
   interest: number;
 };
 
+type ExpenseFieldLabel = {
+  fieldKey: string;
+  label: { ko: string; en: string };
+};
+
 type Props = {
   ko: boolean;
   monthlySales: number;
   monthlyCosts: MonthlyCosts;
   capitalLeft: number;
+  /**
+   * 업종별 비용 항목 라벨 (business-context.ts 의 expenseFields).
+   * 미전달 시 음식점 디폴트 라벨로 fallback.
+   * 스타트업이면 ingredients 라벨이 "서버·클라우드·SaaS" 등으로 자동 분기됨.
+   */
+  expenseFields?: ExpenseFieldLabel[];
 };
 
 /**
@@ -26,7 +37,12 @@ type Props = {
  * 슬라이더로 매출/비용 조정 → 월 순익, 런웨이, BEP 실시간 재계산.
  * "진단"에서 "의사결정"으로 진화.
  */
-export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }: Props) {
+export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, expenseFields }: Props) {
+  // 업종별 라벨 lookup — 카테고리에 따라 ingredients = "재료비"/"서버·SaaS"/"매입원가" 등으로 분기
+  const labelFor = (fieldKey: string, fallback: { ko: string; en: string }) => {
+    const found = expenseFields?.find((f) => f.fieldKey === fieldKey);
+    return found?.label ?? fallback;
+  };
   // 배수 조정 (100% = 현재값)
   const [salesMult, setSalesMult] = useState(100);
   const [ingredientsMult, setIngredientsMult] = useState(100);
@@ -71,6 +87,55 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }:
 
   const [showSecondOrder, setShowSecondOrder] = useState(false);
 
+  // ── 시나리오 현실성 평가 (자연어 해석) ─────────────
+  // 3400% 같은 비현실 숫자가 단독으로 노출되지 않도록 "공격적/비현실적" 라벨 + 이유 문장으로 해석.
+  // 거장 인용: Munger "Invert" — "이게 현실에서 실패할 시나리오인가?" 부터 묻는다.
+  const realism = useMemo(() => {
+    const revChange = salesMult - 100;       // -50 ~ +100
+    const ingChange = ingredientsMult - 100; // -70 ~ +50
+    const labChange = laborMult - 100;
+    const rentChange = rentMult - 100;
+    const mktChange = marketingMult - 100;
+
+    const intensity = Math.abs(revChange) + Math.abs(ingChange) + Math.abs(labChange) + Math.abs(rentChange) + Math.abs(mktChange);
+
+    const ingLabel = labelFor("ingredients", { ko: "재료비", en: "Ingredients" });
+
+    const flags: { ko: string; en: string }[] = [];
+    if (revChange >= 50 && ingChange <= -30) {
+      flags.push({
+        ko: `매출 +${revChange}% 와 ${ingLabel.ko} ${Math.abs(ingChange)}% 절감을 동시에 — 실무에선 거의 불가능합니다`,
+        en: `Sales +${revChange}% AND ${ingLabel.en} -${Math.abs(ingChange)}% together — almost impossible in practice`,
+      });
+    }
+    if (revChange >= 80) {
+      flags.push({
+        ko: `매출 +${revChange}% — 가격 인상만으론 불가능 (수요 탄력성 -0.5 가정 시 가격 ${(revChange / 0.5).toFixed(0)}% 인상 필요)`,
+        en: `Sales +${revChange}% — price hike alone won't work (would need +${(revChange / 0.5).toFixed(0)}% price w/ -0.5 elasticity)`,
+      });
+    }
+    if (rentChange <= -50) {
+      flags.push({
+        ko: `임대료 ${Math.abs(rentChange)}% 인하 — 이전·재계약 외엔 비현실적`,
+        en: `Rent -${Math.abs(rentChange)}% — only realistic via relocation/renegotiation`,
+      });
+    }
+    const costCutsCount = [ingChange, labChange, rentChange, mktChange].filter(c => c <= -20).length;
+    if (costCutsCount >= 3) {
+      flags.push({
+        ko: `비용 ${costCutsCount}개 항목을 동시에 -20% 이상 — 실행 가능성 낮음`,
+        en: `${costCutsCount} cost categories -20%+ at once — low feasibility`,
+      });
+    }
+
+    let level: "realistic" | "aggressive" | "unrealistic";
+    if (flags.length >= 2 || intensity >= 200) level = "unrealistic";
+    else if (flags.length >= 1 || intensity >= 100) level = "aggressive";
+    else level = "realistic";
+
+    return { level, intensity, flags };
+  }, [salesMult, ingredientsMult, laborMult, rentMult, marketingMult, expenseFields]);  // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── 2차 결과 전개 (Munger Second-Order Thinking) ─────────
   // 1차 결정이 "그 다음" 어떤 연쇄 효과를 일으킬지 문장으로 전개.
   // 수치 반영은 안 하고 경고·인지 유도 중심 (사용자 판단 공간 유지).
@@ -112,16 +177,17 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }:
       });
     }
 
-    // 재료비 -15%+
+    // ingredients -15%+ — 라벨은 업종별로 동적 (예: "재료비"/"서버·SaaS"/"매입원가")
     if (ingredientsMult <= 85) {
       const delta = 100 - ingredientsMult;
+      const ingLabel = labelFor("ingredients", { ko: "재료비", en: "Ingredients" });
       chain.push({
-        trigger: ko ? `재료비 ${delta}% 감소` : `Ingredients -${delta}%`,
+        trigger: ko ? `${ingLabel.ko} ${delta}% 감소` : `${ingLabel.en} -${delta}%`,
         firstOrder: ko ? "월 순익 +" : "Monthly net +",
         nextEffects: [
-          ko ? "품질 저하 가능 (원재료 등급·공급처 변경 시)" : "Quality may drop (if grade/supplier changes)",
-          ko ? "리뷰 점수 하락 → 고객 이탈 가능" : "Review scores may drop → customer churn",
-          ko ? "대안: 낭비·재고 관리로 재료비 줄이는 게 안전" : "Safer: cut via waste management, not grade",
+          ko ? "품질·신뢰성 저하 가능 (등급·공급처 변경 시)" : "Quality/reliability may drop (if grade/supplier changes)",
+          ko ? "리뷰·만족도 하락 → 고객 이탈 가능" : "Review/satisfaction may drop → customer churn",
+          ko ? `대안: 낭비·재고 관리로 ${ingLabel.ko} 줄이는 게 안전` : `Safer: cut via waste/inventory management, not grade`,
         ],
         severity: delta >= 20 ? "high" : "medium",
       });
@@ -158,7 +224,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }:
     }
 
     return chain;
-  }, [salesMult, ingredientsMult, laborMult, rentMult, marketingMult, ko]);
+  }, [salesMult, ingredientsMult, laborMult, rentMult, marketingMult, ko, expenseFields]);
 
   const hasSecondOrderConcerns = secondOrderChain.length > 0;
 
@@ -183,12 +249,15 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }:
     baseAmount: number;
     direction: "positive" | "negative"; // positive = 높이면 좋음, negative = 낮추면 좋음
   }> = [
-    { label: { ko: "매출", en: "Revenue" }, value: salesMult, setValue: setSalesMult, baseAmount: monthlySales, direction: "positive" },
-    { label: { ko: "재료비", en: "Ingredients" }, value: ingredientsMult, setValue: setIngredientsMult, baseAmount: monthlyCosts.ingredients, direction: "negative" },
-    { label: { ko: "인건비", en: "Labor" }, value: laborMult, setValue: setLaborMult, baseAmount: monthlyCosts.labor, direction: "negative" },
-    { label: { ko: "임대료", en: "Rent" }, value: rentMult, setValue: setRentMult, baseAmount: monthlyCosts.rent, direction: "negative" },
-    { label: { ko: "마케팅비", en: "Marketing" }, value: marketingMult, setValue: setMarketingMult, baseAmount: monthlyCosts.marketing, direction: "negative" },
-  ];
+    { label: { ko: "매출", en: "Revenue" }, value: salesMult, setValue: setSalesMult, baseAmount: monthlySales, direction: "positive" as const },
+    { label: labelFor("ingredients", { ko: "재료비", en: "Ingredients" }), value: ingredientsMult, setValue: setIngredientsMult, baseAmount: monthlyCosts.ingredients, direction: "negative" as const },
+    { label: labelFor("labor", { ko: "인건비", en: "Labor" }), value: laborMult, setValue: setLaborMult, baseAmount: monthlyCosts.labor, direction: "negative" as const },
+    { label: labelFor("rent", { ko: "임대료", en: "Rent" }), value: rentMult, setValue: setRentMult, baseAmount: monthlyCosts.rent, direction: "negative" as const },
+    { label: labelFor("marketing", { ko: "마케팅비", en: "Marketing" }), value: marketingMult, setValue: setMarketingMult, baseAmount: monthlyCosts.marketing, direction: "negative" as const },
+  ]
+  // ⚠ baseAmount 가 0 인 비용 항목은 슬라이더 숨김 (스타트업이 "임대료 0원" 슬라이더 보는 것 방지).
+  //    매출은 항상 노출 (시나리오 도구의 핵심).
+  .filter((s) => s.label.ko === "매출" || s.label.en === "Revenue" || (s.baseAmount ?? 0) > 0);
 
   return (
     <section style={card} className="bento-card">
@@ -277,10 +346,14 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }:
               color: scenario.bep <= 80 ? "#059669" : scenario.bep <= 95 ? "#d97706" : "#dc2626",
               lineHeight: 1.1,
             }}>
-              {Math.round(scenario.bep)}%
+              {/* 매출이 비용 대비 너무 작으면 비율이 1000% 를 훨씬 초과 → 사용자에겐 무의미한 숫자.
+                  300% 초과 시 "300%+" 로 표기하고 시각적으로 적자 강조. */}
+              {scenario.bep > 300 ? "300%+" : `${Math.round(scenario.bep)}%`}
             </div>
             <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
-              {ko ? "매출 대비" : "of revenue"}
+              {scenario.bep > 300
+                ? (ko ? "매출 대비 적자 과다" : "deep loss vs revenue")
+                : (ko ? "매출 대비" : "of revenue")}
             </div>
           </div>
         </div>
@@ -344,10 +417,44 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }:
         })}
       </div>
 
+      {/* ── 시나리오 현실성 자연어 해석 ── */}
+      {hasChanges && realism.level !== "realistic" && (
+        <div
+          style={{
+            marginTop: "14px",
+            padding: "10px 12px",
+            borderRadius: "10px",
+            background: realism.level === "unrealistic" ? "rgba(220,38,38,0.05)" : "rgba(217,119,6,0.05)",
+            border: `1px solid ${realism.level === "unrealistic" ? "rgba(220,38,38,0.14)" : "rgba(217,119,6,0.14)"}`,
+            fontSize: "12px",
+            color: "rgba(15,23,42,0.75)",
+            lineHeight: 1.5,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+            <AlertTriangle size={12} strokeWidth={1.6} color={realism.level === "unrealistic" ? "#dc2626" : "#d97706"} />
+            <span style={{ fontWeight: 700, color: realism.level === "unrealistic" ? "#dc2626" : "#d97706", fontSize: "12px" }}>
+              {realism.level === "unrealistic"
+                ? (ko ? "비현실적 시나리오 — 숫자만 보지 마세요" : "Unrealistic scenario — don't trust the numbers alone")
+                : (ko ? "공격적 시나리오 — 실행 난이도 높음" : "Aggressive scenario — hard to execute")}
+            </span>
+          </div>
+          <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55, paddingLeft: "18px" }}>
+            {realism.flags.length > 0
+              ? realism.flags.map((f, i) => (
+                  <div key={i} style={{ marginTop: i > 0 ? "3px" : 0 }}>· {ko ? f.ko : f.en}</div>
+                ))
+              : (ko
+                  ? "여러 변수를 동시에 큰 폭으로 움직이고 있어요 — 현장에서 한 번에 다 바꾸기 어렵습니다."
+                  : "You're moving many variables at once — hard to execute simultaneously in the field.")}
+          </div>
+        </div>
+      )}
+
       {/* 인사이트 메시지 */}
       {hasChanges && (
         <div style={{
-          marginTop: "14px",
+          marginTop: "10px",
           padding: "10px 12px",
           borderRadius: "10px",
           background: "rgba(37,99,235,0.04)",
@@ -483,7 +590,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft }:
 /* ─── Styles ─── */
 
 const card: React.CSSProperties = {
-  borderRadius: "24px",
+  borderRadius: "20px",
   padding: "22px",
   background: "linear-gradient(180deg, rgba(255,255,255,0.988), rgba(243,246,251,0.91))",
   border: "1px solid rgba(15, 23, 42, 0.048)",

@@ -235,7 +235,9 @@ export function useDataLoading(
       });
   }, [industryCategoryId, language]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 4. Contractor search (Kakao Maps + fallback) ──
+  // ── 4. Contractor search (Kakao REST via server + client-side SDK fallback) ──
+  // ⚠ 클라이언트 Kakao JS SDK는 도메인 화이트리스트가 필요해 dev 환경에서 silent fail 발생.
+  //    안정적인 server REST API (KAKAO_REST_API_KEY + KA header) 를 primary 로 사용.
   useEffect(() => {
     if (!preferredRegion || !industryCategoryId) return;
 
@@ -253,17 +255,44 @@ export function useDataLoading(
     const keyword = contractorKeywords[industryCategoryId] ?? "인테리어 업체";
     const query = `${preferredRegion} ${keyword}`;
 
-    // Try Kakao Places API first (client-side)
+    let cancelled = false;
+    setContractorsLoading(true);
+
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const w = window as any;
     const kakao = w.kakao;
 
-    const searchViaKakao = () => {
+    // ── Primary: Server REST API (auth Bearer token 필요) ──
+    const searchViaServer = async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) return false; // 비로그인 → SDK fallback 시도
+      try {
+        const params = new URLSearchParams({ region: preferredRegion, categoryId: industryCategoryId, keyword });
+        const res = await fetch(`/api/contractors/local?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return false;
+        const json = await res.json() as { results?: Array<{ id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }>; source?: string };
+        if (cancelled) return true;
+        if (json.results && json.results.length > 0) {
+          setContractors(json.results);
+          return true;
+        }
+        return false; // 결과 없음 → SDK fallback 시도
+      } catch (err) {
+        console.warn("[contractors] server API failed:", err);
+        return false;
+      }
+    };
+
+    // ── Fallback: Client-side Kakao JS SDK (domain whitelist 필요) ──
+    const searchViaKakaoSDK = () => {
       if (!kakao?.maps?.services) return false;
-      setContractorsLoading(true);
       const runSearch = () => {
         const ps = new kakao.maps.services.Places();
         ps.keywordSearch(query, (data: any[], status: string) => {
+          if (cancelled) return;
           if (status === kakao.maps.services.Status.OK && data.length > 0) {
             setContractors(data.slice(0, 5).map((d: any, i: number) => ({
               id: `kakao-${i}`,
@@ -284,16 +313,22 @@ export function useDataLoading(
     };
     /* eslint-enable @typescript-eslint/no-explicit-any */
 
-    if (!searchViaKakao()) {
-      // Fallback: server API (OpenAI web search)
-      setContractorsLoading(true);
-      const params = new URLSearchParams({ region: preferredRegion, categoryId: industryCategoryId, keyword });
-      fetch(`/api/contractors/local?${params.toString()}`)
-        .then((r) => r.json() as Promise<{ results: { id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }[] }>)
-        .then(({ results }) => { setContractors(results ?? []); })
-        .catch(() => { setContractors([]); })
-        .finally(() => { setContractorsLoading(false); });
-    }
+    (async () => {
+      const ok = await searchViaServer();
+      if (cancelled) return;
+      if (ok) {
+        setContractorsLoading(false);
+        return;
+      }
+      // 서버 실패 → SDK 시도
+      if (!searchViaKakaoSDK()) {
+        setContractors([]);
+        setContractorsLoading(false);
+      }
+      // SDK 가 잡히면 콜백 안에서 setContractorsLoading(false)
+    })();
+
+    return () => { cancelled = true; };
   }, [preferredRegion, industryCategoryId, contractorsRetryKey]);
 
   // ── 5. Stage guide content ──

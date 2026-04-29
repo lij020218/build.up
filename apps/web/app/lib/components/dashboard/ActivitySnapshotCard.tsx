@@ -4,22 +4,11 @@ import { useState } from "react";
 import { Flame } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { ProductSalesEntry } from "./ProductSalesEntry";
+import { SubscriptionPlanEntry } from "./SubscriptionPlanEntry";
 import { TodaySalesSummary } from "./TodaySalesSummary";
-import {
-  activityCard,
-  activityHeader,
-  sectionEyebrow,
-  activityTitle,
-  activityStatRail,
-  activityMiniStat,
-  activityMiniLabel,
-  activityMiniValue,
-  activityChartWrap,
-  activityBarCol,
-  activityBarTrack,
-  activityBarFill,
-  activityBarLabel,
-} from "./operationalStyles";
+import { activityCard } from "./operationalStyles";
+import { AnimatedBar, CountUp } from "./animations";
+import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -49,8 +38,31 @@ export function ActivitySnapshotCard({
   const [editMode, setEditMode] = useState(false);
   const [postEntryReaction, setPostEntryReaction] = useState<string | null>(null);
 
-  // suppress unused variable warning
+  // suppress unused variable warnings
   void postEntryReaction;
+  void weeklySalesChange; // SurvivalBoard로 소유권 이관 (25.04.20)
+
+  // ── 업종별 라벨 분기 — 음식점/소매(객수·명) vs 스타트업/구독(사용자) vs 온라인(주문) ──
+  const categoryId = (d.businessCtx as { categoryId?: string } | undefined)?.categoryId ?? "";
+  const isStartupCat = categoryId === "startup-tech";
+  const isOnlineCat = categoryId === "online-digital";
+  const usesSubs = !!d.usesSubscriptions;
+  const salesLabel = ko
+    ? (usesSubs ? "MRR" : "매출")
+    : (usesSubs ? "MRR" : "Sales");
+  // 단위 (한국은 만원, EN 은 ₩ 표기 그대로) — 통화는 업종 무관 동일
+  const salesUnit = ko ? "만원" : "₩";
+  // 사용자수 종류
+  const userKindKo = usesSubs || isStartupCat ? "사용자" : isOnlineCat ? "주문" : "고객";
+  const userKindEn = usesSubs || isStartupCat ? "Users" : isOnlineCat ? "Orders" : "Cust.";
+  const userKind = ko ? userKindKo : userKindEn;
+  // suffix (한국 단위) — "사용자 N명" / "주문 N건" / "고객 N명"
+  const userUnitKo = isOnlineCat ? "건" : "명";
+  const userUnitSuffix = ko ? userUnitKo : "";
+  // 평균 단가 라벨 — ARPU(SaaS) / 객단가(default) / 주문단가(online)
+  const avgTicketLabel = ko
+    ? (usesSubs ? "ARPU" : isOnlineCat ? "주문단가" : "객단가")
+    : (usesSubs ? "ARPU" : isOnlineCat ? "AOV" : "Avg ticket");
 
   // 매출 입력 후 즉시 반응 생성 (AI 호출 없이 수식 기반)
   const generatePostEntryReaction = (sales: number, customers: number) => {
@@ -91,10 +103,15 @@ export function ActivitySnapshotCard({
     // 기본
     if (customers > 0 && sales > 0) {
       const ticket = Math.round(sales / customers);
-      return ko ? `객단가 ${fmt(ticket)}. 기록 완료` : `Avg ticket ${fmt(ticket)}. Logged`;
+      return ko ? `${avgTicketLabel} ${fmt(ticket)}. 기록 완료` : `${avgTicketLabel} ${fmt(ticket)}. Logged`;
     }
     return ko ? "기록 완료" : "Logged";
   };
+
+  // ── 통합 자동 매출 (PortOne·TOSS Place·CSV·CODEF — 사장님이 연결한 출처들) ──
+  // 같은 날 자동 + manual 둘 다 있으면 자동 우선 (실제 결제 데이터).
+  const unifiedRev = useUnifiedRevenue(30);
+  const portoneMap = Object.fromEntries(unifiedRev.entries.map((e) => [e.date, e]));
 
   const last7 = Array.from({ length: 7 }, (_, index) => {
     const date = new Date();
@@ -102,123 +119,398 @@ export function ActivitySnapshotCard({
     return date.toISOString().slice(0, 10);
   });
   const entryMap = Object.fromEntries(recent7Entries.map((entry) => [entry.date, entry]));
-  const bars = last7.map((date) => ({
-    date,
-    sales: entryMap[date]?.sales ?? 0,
-    label: new Date(`${date}T12:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", {
-      weekday: ko ? "narrow" : "short",
-    }),
-    isToday: date === todayStr,
-  }));
-  const maxSales = Math.max(...bars.map((bar) => bar.sales), 1);
+  const bars = last7.map((date) => {
+    const auto = portoneMap[date];
+    const manual = entryMap[date];
+    const sales = auto?.sales ?? manual?.sales ?? 0;
+    return {
+      date,
+      sales,
+      label: new Date(`${date}T12:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", {
+        weekday: ko ? "narrow" : "short",
+      }),
+      isToday: date === todayStr,
+      isAuto: !!auto,                   // PortOne 자동 데이터인지
+      hasManualOverride: !!manual && !auto,
+    };
+  });
+  // ── 일 손익분기 (BEP daily) — 매출 흐름에 흑/적자 가이드 라인 표시용 ──
+  // 흑자/적자 갭 시각화 (Profit Gap) — 사용자 피드백 P1: "매출 + 비용 통합 차트 = 적자 갭"
+  const bepDailyForChart = (() => {
+    const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number; sga?: number; marketing?: number; interest?: number };
+    const fixedMonthly = mc.labor + mc.rent + mc.utilities + mc.other + (mc.sga ?? 0) + (mc.marketing ?? 0) + (mc.interest ?? 0);
+    const fixedDaily = fixedMonthly / 26; // 월 26 영업일 가정 (외식·소매 평균)
+    const allE = d.dailyEntries as DailyEntry[];
+    const totalRev = allE.reduce((s, e) => s + e.sales, 0);
+    const cogsRate = totalRev > 0 ? Math.min(0.95, mc.ingredients / totalRev) : 0.33;
+    if (cogsRate >= 1) return 0;
+    const bep = Math.round(fixedDaily / (1 - cogsRate));
+    return bep > 0 ? bep : 0;
+  })();
+  const showBepLine = bepDailyForChart > 0;
+  // BEP 라인을 maxSales 보다 살짝 위로 빼서 잘리지 않도록 trackMax 보정 (BEP 가 차트 max 보다 클 때)
+  const maxSales = Math.max(
+    ...bars.map((bar) => bar.sales),
+    showBepLine ? bepDailyForChart * 1.15 : 1,
+    1,
+  );
+  const bepHeightPct = showBepLine ? (bepDailyForChart / maxSales) * 100 : 0;
+
+  // ── 오늘/선택 매출 hero 숫자 결정 ──
+  const heroBar = bars.find((b) => b.date === d.dailyDateInput) ?? bars.find((b) => b.isToday) ?? bars[bars.length - 1];
+  const heroSales = heroBar?.sales ?? 0;
+  const heroIsToday = heroBar?.isToday ?? false;
+  const heroDateObj = heroBar ? new Date(`${heroBar.date}T12:00:00`) : new Date();
+  const heroDateLabel = heroIsToday
+    ? (ko ? "오늘" : "Today")
+    : heroDateObj.toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long", day: "numeric" });
 
   return (
-    <section style={activityCard} className="bento-card">
-      <div style={activityHeader}>
-        <div>
-          <div style={sectionEyebrow}>{ko ? "오늘 + 최근 7일" : "Today + last 7 days"}</div>
-          <div style={activityTitle}>{ko ? "매출 흐름과 오늘 입력" : "Revenue flow and today's log"}</div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={activityStatRail}>
-            <div style={activityMiniStat}>
-              <div style={activityMiniLabel}>{ko ? "최근 7일" : "Last 7 days"}</div>
-              <div style={activityMiniValue}>{fmt(recent7Sales)}</div>
-            </div>
-            <div style={activityMiniStat}>
-              <div style={activityMiniLabel}>{ko ? "주간 변화" : "Weekly change"}</div>
-              <div style={{ ...activityMiniValue, color: weeklySalesChange >= 0 ? "#177245" : "#b42318" }}>
-                {weeklySalesChange >= 0 ? "+" : ""}{weeklySalesChange}%
-              </div>
-            </div>
+    <section style={activityCard} className="bento-card" data-sales-input>
+      {/* ── 헤더: eyebrow + hero 숫자 + CTA pill + 캘린더 ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "20px" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em",
+            textTransform: "uppercase" as const, color: "rgba(15,23,42,0.42)", marginBottom: "6px",
+            display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const,
+          }}>
+            <span>{ko ? "매출 흐름 · 최근 7일" : "Revenue flow · last 7 days"}</span>
+            {unifiedRev.anyConnected && (
+              <span
+                title={ko
+                  ? `자동 동기화 중: ${connectedSourceList(unifiedRev.sources, ko)}${unifiedRev.lastFetched ? ` · 마지막 ${formatRelativeTime(unifiedRev.lastFetched, ko)}` : ""}`
+                  : `Auto-synced: ${connectedSourceList(unifiedRev.sources, ko)}${unifiedRev.lastFetched ? ` · last ${formatRelativeTime(unifiedRev.lastFetched, ko)}` : ""}`}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "5px",
+                  padding: "2px 8px", borderRadius: "999px",
+                  background: "linear-gradient(135deg, rgba(29,53,87,0.06), rgba(59,92,140,0.04))",
+                  border: "0.5px solid rgba(29,53,87,0.18)",
+                  fontSize: "9.5px", fontWeight: 700,
+                  color: "#1d3557",
+                  letterSpacing: "0.04em",
+                  textTransform: "none" as const,
+                }}
+              >
+                <span style={{
+                  width: "5px", height: "5px", borderRadius: "50%",
+                  background: "#22c55e",
+                  boxShadow: "0 0 4px rgba(34,197,94,0.5)",
+                }} />
+                {ko ? `자동 ${connectedSourceCount(unifiedRev.sources)}곳` : `Auto ${connectedSourceCount(unifiedRev.sources)} src`}
+              </span>
+            )}
           </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" as const }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.55)", letterSpacing: "-0.005em" }}>
+              {heroDateLabel}
+            </span>
+            <span style={{
+              fontSize: "clamp(26px, 3.5vw, 32px)", fontWeight: 700,
+              letterSpacing: "-0.04em", color: "#0f172a",
+              fontVariantNumeric: "tabular-nums" as const, lineHeight: 1.05,
+            }}>
+              {heroSales > 0 ? fmt(heroSales) : "—"}
+            </span>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
           <button
             type="button"
             onClick={onOpenCalendar}
             title={ko ? "매출 캘린더" : "Revenue calendar"}
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
-              width: "34px", height: "34px", borderRadius: "9px",
-              border: "1px solid rgba(15,23,42,0.08)", background: "rgba(255,255,255,0.82)",
-              cursor: "pointer", flexShrink: 0, transition: "background 0.15s ease",
+              width: "32px", height: "32px", borderRadius: "9px",
+              border: "1px solid rgba(15,23,42,0.08)",
+              background: "rgba(255,255,255,0.82)",
+              cursor: "pointer",
+              transition: "background 0.15s ease",
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
               <rect x="2" y="3" width="12" height="11" rx="2" stroke="rgba(15,23,42,0.55)" strokeWidth="1.3" fill="none" />
               <path d="M2 6.5h12" stroke="rgba(15,23,42,0.55)" strokeWidth="1.3" />
               <path d="M5.5 1.5v3M10.5 1.5v3" stroke="rgba(15,23,42,0.55)" strokeWidth="1.3" strokeLinecap="round" />
-              <circle cx="5.5" cy="9.5" r="0.75" fill="rgba(15,23,42,0.45)" />
-              <circle cx="8" cy="9.5" r="0.75" fill="rgba(15,23,42,0.45)" />
-              <circle cx="10.5" cy="9.5" r="0.75" fill="rgba(15,23,42,0.45)" />
-              <circle cx="5.5" cy="11.75" r="0.75" fill="rgba(15,23,42,0.45)" />
-              <circle cx="8" cy="11.75" r="0.75" fill="rgba(15,23,42,0.45)" />
             </svg>
           </button>
         </div>
       </div>
 
-      <div style={activityChartWrap}>
-        {bars.map((bar, barIdx) => {
-          const height = bar.sales > 0 ? Math.max(8, (bar.sales / maxSales) * 100) : 4;
-          const isSelected = d.dailyDateInput === bar.date;
+      {/* ── 차트: 매출 0일이면 empty state, 1일이라도 있으면 막대 차트 ── */}
+      {(() => {
+        const daysWithSales = bars.filter((b) => b.sales > 0).length;
+
+        if (daysWithSales < 1) {
           return (
-            <div key={bar.date} style={{ ...activityBarCol, cursor: "pointer", position: "relative" as const }} onClick={() => {
-              const allE = d.dailyEntries as DailyEntry[];
-              const entry = allE.find(e => e.date === bar.date);
-              d.setDailyDateInput(bar.date);
-              if (entry) {
-                d.setDailySalesInput(String(Math.round(entry.sales / 10000)));
-                d.setDailyCustomersInput(String(entry.customers));
-              } else {
-                d.setDailySalesInput("");
-                d.setDailyCustomersInput("");
-              }
+            <div style={{
+              padding: "28px 22px 24px",
+              borderRadius: "16px",
+              background: "linear-gradient(135deg, rgba(29,53,87,0.04) 0%, rgba(168,218,220,0.06) 100%)",
+              border: "1px dashed rgba(29,53,87,0.18)",
+              display: "flex", flexDirection: "column" as const, gap: "14px",
             }}>
-              {/* 바 위 금액은 아래 라벨로만 표시 — 떠있는 pill 제거 */}
-              <div style={{ ...activityBarTrack, height: "120px" }}>
-                <div
-                  className="bento-meter-fill"
+              {/* 라벨 */}
+              <span style={{
+                fontSize: "11px", fontWeight: 700, color: "#1d3557",
+                letterSpacing: "0.04em", textTransform: "uppercase" as const,
+              }}>
+                {ko ? "분석 준비 중" : "Analysis Building"}
+              </span>
+
+              {/* 메시지 — 동료 톤 */}
+              <div>
+                <div style={{
+                  fontSize: "15px", fontWeight: 700, color: "#0f172a",
+                  letterSpacing: "-0.02em", marginBottom: "8px", lineHeight: 1.35,
+                }}>
+                  {ko ? "오늘 매출만 한 번 기록해 보세요" : "Just log today's sales once"}
+                </div>
+                <div style={{
+                  fontSize: "12.5px", fontWeight: 500,
+                  color: "rgba(15,23,42,0.6)", lineHeight: 1.55,
+                  letterSpacing: "-0.005em",
+                }}>
+                  {ko
+                    ? <>한 번만 기록해도 <strong style={{ color: "#1d3557" }}>일평균 매출, 성장률, 예상 월매출</strong>을 바로 계산해 드릴게요. 5초면 돼요.</>
+                    : <>Just one entry unlocks <strong style={{ color: "#1d3557" }}>daily average, growth rate, and projected monthly revenue</strong>. Takes 5 seconds.</>}
+                </div>
+              </div>
+
+              {/* 살짝 보이는 빈 mini bars (심심하지 않게) */}
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "8px",
+                alignItems: "end", height: "44px", opacity: 0.35,
+              }}>
+                {bars.map((bar, i) => (
+                  <div key={bar.date} style={{
+                    height: "8%",
+                    background: "rgba(15,23,42,0.1)",
+                    borderRadius: "4px 4px 1px 1px",
+                    animation: `bento-bar-grow 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${0.04 * i}s both`,
+                  }} />
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+        <div style={{ position: "relative" as const }}>
+        {/* ── BEP 가이드 라인 — 일 손익분기 가로선 (Profit Gap 시각화) ──
+            막대가 이 선 위면 흑자, 아래면 적자. 사용자가 "어제 흑자였나?" 직관적 인지. */}
+        {showBepLine && (
+          <div
+            style={{
+              position: "absolute" as const,
+              // 바 트랙 (140px) 의 시작점 = 라벨(15px) + margin(10px) = 25px from top
+              top: `${25 + (140 - (bepHeightPct / 100) * 140)}px`,
+              left: "4px",
+              right: "4px",
+              height: "0",
+              borderTop: "1.5px dashed rgba(220,38,38,0.45)",
+              pointerEvents: "none" as const,
+              zIndex: 1,
+            }}
+          >
+            <span
+              style={{
+                position: "absolute" as const,
+                top: "-9px",
+                right: 0,
+                background: "rgba(255,255,255,0.95)",
+                color: "#dc2626",
+                fontSize: "9.5px",
+                fontWeight: 700,
+                padding: "2px 7px",
+                borderRadius: "999px",
+                border: "1px solid rgba(220,38,38,0.25)",
+                letterSpacing: "-0.005em",
+                whiteSpace: "nowrap" as const,
+                lineHeight: 1.3,
+              }}
+            >
+              {ko ? `손익분기 ${fmt(bepDailyForChart)}/일` : `BEP ${fmt(bepDailyForChart)}/d`}
+            </span>
+          </div>
+        )}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+          gap: "16px",
+          alignItems: "end",
+          padding: "0 4px",
+        }}>
+        {bars.map((bar, barIdx) => {
+          const height = bar.sales > 0 ? Math.max(6, (bar.sales / maxSales) * 100) : 3;
+          const isSelected = d.dailyDateInput === bar.date;
+          const isHighlight = bar.isToday || isSelected;
+          // 흑자/적자 컬러: BEP 라인 있고 매출 기록이 있을 때만 적용 (선택 시에는 진한 indigo 유지)
+          const profitable = showBepLine && bar.sales > 0 && bar.sales >= bepDailyForChart;
+          const lossy = showBepLine && bar.sales > 0 && bar.sales < bepDailyForChart;
+          const dateObj = new Date(`${bar.date}T12:00:00`);
+          const monthDay = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+
+          return (
+            <button
+              key={bar.date}
+              type="button"
+              onClick={() => {
+                const allE = d.dailyEntries as DailyEntry[];
+                const entry = allE.find(e => e.date === bar.date);
+                d.setDailyDateInput(bar.date);
+                if (entry) {
+                  d.setDailySalesInput(String(Math.round(entry.sales / 10000)));
+                  d.setDailyCustomersInput(String(entry.customers));
+                } else {
+                  d.setDailySalesInput("");
+                  d.setDailyCustomersInput("");
+                }
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "column" as const,
+                alignItems: "center",
+                gap: 0,
+                padding: 0,
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              {/* 바 위 금액 라벨 */}
+              <div style={{
+                fontSize: "11px",
+                fontWeight: isHighlight ? 700 : 500,
+                letterSpacing: "-0.01em",
+                color: isHighlight ? "#1d3557" : "rgba(17,17,17,0.32)",
+                fontVariantNumeric: "tabular-nums" as const,
+                minHeight: "15px",
+                marginBottom: "10px",
+                transition: "color 0.2s ease, font-weight 0.2s ease",
+              }}>
+                {bar.sales >= 10000 ? `₩${Math.round(bar.sales / 10000).toLocaleString()}만` : ""}
+              </div>
+
+              {/* 바 트랙 — 고정 140px 높이 컨테이너, 바는 28px 고정 너비 */}
+              <div style={{
+                width: "100%",
+                height: "140px",
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "center",
+              }}>
+                <AnimatedBar
+                  heightPct={height}
+                  delay={0.25 + barIdx * 0.06}
+                  duration={0.7}
                   style={{
-                    ...activityBarFill,
-                    height,
-                    background: bar.isToday
-                      ? "linear-gradient(180deg, #0561fc 0%, rgba(5,97,252,0.6) 100%)"
-                      : isSelected
-                        ? "linear-gradient(180deg, #0561fc 0%, rgba(5,97,252,0.4) 100%)"
-                        : bar.sales > 0
-                          ? "linear-gradient(180deg, rgba(5,97,252,0.25) 0%, rgba(5,97,252,0.08) 100%)"
-                          : "linear-gradient(180deg, rgba(5,97,252,0.06) 0%, rgba(5,97,252,0.02) 100%)",
-                    borderRadius: "8px 8px 4px 4px",
-                    boxShadow: bar.isToday ? "0 -4px 14px rgba(5,97,252,0.2)" : isSelected ? "0 -2px 8px rgba(5,97,252,0.1)" : "none",
-                    transition: "height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background 0.3s ease",
-                    animationDelay: `${barIdx * 80}ms`,
+                    width: "28px",
+                    minHeight: "6px",
+                    borderRadius: "10px 10px 3px 3px",
+                    // 우선순위: 선택/오늘 (진한 indigo) > 흑자(soft green) > 적자(soft red) > 기본(회색)
+                    background: isHighlight
+                      ? "linear-gradient(180deg, #1d3557 0%, #2d4a6b 100%)"
+                      : profitable
+                        ? "linear-gradient(180deg, #16a34a 0%, #22c55e 100%)"
+                        : lossy
+                          ? "linear-gradient(180deg, #ef4444 0%, #fca5a5 100%)"
+                          : "linear-gradient(180deg, #e8ebef 0%, #eff2f5 100%)",
+                    boxShadow: isHighlight
+                      ? "0 -3px 12px rgba(29,53,87,0.14)"
+                      : profitable
+                        ? "0 -2px 8px rgba(22,163,74,0.16)"
+                        : lossy
+                          ? "0 -2px 8px rgba(239,68,68,0.14)"
+                          : "none",
+                    transition: "background 0.25s ease, box-shadow 0.25s ease",
                   }}
                 />
               </div>
-              {bar.sales > 0 && (
-                <div style={{ fontSize: "10px", fontWeight: 650, color: bar.isToday || isSelected ? "#0561fc" : "rgba(15,23,42,0.3)", marginBottom: "1px", fontVariantNumeric: "tabular-nums" as const, transition: "color 0.2s ease" }}>
-                  {bar.sales >= 10000 ? `${Math.round(bar.sales / 10000)}만` : ""}
-                </div>
-              )}
-              <div style={{
-                ...activityBarLabel,
-                color: bar.isToday ? "#0561fc" : isSelected ? "#0f172a" : "rgba(15,23,42,0.38)",
-                fontWeight: bar.isToday || isSelected ? 650 : 500,
-                transition: "color 0.2s ease",
-              }}>{bar.label}</div>
-            </div>
+
+              {/* X축 2줄 — 요일(굵게) + 날짜(연하게) */}
+              <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "3px", marginTop: "12px" }}>
+                <span style={{
+                  fontSize: "12px",
+                  fontWeight: isHighlight ? 700 : 500,
+                  color: isHighlight ? "#0f172a" : "rgba(17,17,17,0.42)",
+                  letterSpacing: "-0.005em",
+                  transition: "color 0.2s ease",
+                }}>
+                  {bar.label}
+                </span>
+                <span style={{
+                  fontSize: "10.5px",
+                  fontWeight: 500,
+                  color: isHighlight ? "rgba(17,17,17,0.5)" : "rgba(17,17,17,0.28)",
+                  fontVariantNumeric: "tabular-nums" as const,
+                  letterSpacing: "-0.005em",
+                }}>
+                  {monthDay}
+                </span>
+              </div>
+            </button>
           );
         })}
+        </div>
+        </div>
+        );
+      })()}
+
+      {/* ── 푸터: 7일 합계 + Profit Gap 카운터 (BEP 라인 있을 때만) ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: "12px",
+        marginTop: "14px", paddingTop: "14px",
+        borderTop: "1px solid rgba(15,23,42,0.05)",
+        fontSize: "11.5px", color: "rgba(15,23,42,0.5)",
+        flexWrap: "wrap" as const,
+      }}>
+        <span>
+          {ko ? "7일 합계 " : "7-day total "}
+          <CountUp
+            to={recent7Sales}
+            duration={1.0}
+            format={fmt}
+            style={{ color: "#0f172a", fontWeight: 650, letterSpacing: "-0.005em" }}
+          />
+        </span>
+        {showBepLine && (() => {
+          const profitDays = bars.filter((b) => b.sales > 0 && b.sales >= bepDailyForChart).length;
+          const lossDays = bars.filter((b) => b.sales > 0 && b.sales < bepDailyForChart).length;
+          if (profitDays + lossDays === 0) return null;
+          return (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginLeft: "auto" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "linear-gradient(180deg, #16a34a 0%, #22c55e 100%)" }} />
+                <span style={{ color: "#15803d", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{profitDays}</span>
+                <span>{ko ? "흑자" : "profit"}</span>
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "linear-gradient(180deg, #ef4444 0%, #fca5a5 100%)" }} />
+                <span style={{ color: "#b91c1c", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{lossDays}</span>
+                <span>{ko ? "적자" : "loss"}</span>
+              </span>
+            </span>
+          );
+        })()}
       </div>
 
       {/* ── 구분선 ── */}
       <div style={{ height: "1px", background: "rgba(5,97,252,0.06)", margin: "8px 0" }} />
 
-      {/* ── 오늘 입력 + 판매 현황 (풀폭 2열) ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", alignItems: "start" }}>
-        {/* ── 왼쪽: 오늘 상태 + 입력/수정 폼 ── */}
+      {/* ── 오늘 입력 + 판매 현황 — TodaySalesSummary 가 렌더할 상품 있을 때만 2-col, 없으면 풀폭 ── */}
+      {(() => {
+        const invCount = (d.inventory as Array<{ sellingPrice?: number; itemType?: string }>)
+          .filter((item) => item.itemType === "product" && (item.sellingPrice ?? 0) > 0).length;
+        const stdCount = (d.products as unknown as Array<{ price?: number }>)
+          .filter((p) => (p.price ?? 0) > 0).length;
+        const hasProductSummary = invCount + stdCount > 0;
+        return (
+      <div style={{ display: "grid", gridTemplateColumns: hasProductSummary ? "1fr 1fr" : "1fr", gap: "14px", alignItems: "start" }}>
+        {/* ── 왼쪽: 오늘 상태 + 입력/수정 폼 (구독제 사장님은 SubscriptionPlanEntry 만 사용 → 숨김) ── */}
         <div>
-        {(() => {
+        {!usesSubs && (() => {
           const allE = d.dailyEntries as DailyEntry[];
           const isEditing = editMode;
           const isToday = d.dailyDateInput === todayStr;
@@ -309,16 +601,120 @@ export function ActivitySnapshotCard({
                           </span>
                         )}
                         <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>
-                          {todayEntry.customers > 0 ? (ko ? `${todayEntry.customers}명 · 객단가 ${fmt(todayEntry.sales / todayEntry.customers)}` : `${todayEntry.customers} · avg ${fmt(todayEntry.sales / todayEntry.customers)}`) : ""}
+                          {todayEntry.customers > 0 ? (ko ? `${todayEntry.customers}${userUnitSuffix} · ${avgTicketLabel} ${fmt(todayEntry.sales / todayEntry.customers)}` : `${todayEntry.customers} ${userKindEn} · ${avgTicketLabel} ${fmt(todayEntry.sales / todayEntry.customers)}`) : ""}
                         </span>
                         <button type="button" onClick={() => enterEdit(todayStr)} style={{ fontSize: "12px", fontWeight: 600, color: "#0561fc", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "auto" }}>{ko ? "수정" : "Edit"}</button>
                       </div>
                     </div>
                   ) : (
-                    <div>
-                      <div style={{ fontSize: "16px", fontWeight: 650, color: "rgba(15,23,42,0.3)", lineHeight: 1.3, marginBottom: "4px" }}>{ko ? "미입력" : "Not logged"}</div>
-                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.35)" }}>{ko ? "상단 입력 바에서 오늘 매출을 기록하세요" : "Use the input bar above to log today's sales"}</div>
-                    </div>
+                    /* ── Apple-style 인라인 1-step 입력 (soft-fill 필드 + system blue pill) ── */
+                    <form
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (d.dailySalesInput) {
+                          if (!d.dailyDateInput) d.setDailyDateInput(todayStr);
+                          d.handleAddDailyEntry();
+                          setEditMode(false);
+                        }
+                      }}
+                      style={{ marginTop: "2px" }}
+                    >
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        {/* 매출 — 큰 숫자 soft-fill */}
+                        <label style={{ position: "relative" as const, flex: 1, minWidth: 0, display: "flex", alignItems: "center" }}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            autoFocus
+                            value={d.dailySalesInput}
+                            onChange={(event) => {
+                              if (!d.dailyDateInput) d.setDailyDateInput(todayStr);
+                              d.setDailySalesInput(event.target.value.replace(/[^0-9]/g, ""));
+                            }}
+                            placeholder="0"
+                            aria-label={ko ? `오늘 ${salesLabel} (${salesUnit})` : `Today's ${salesLabel}`}
+                            style={{
+                              width: "100%",
+                              fontSize: "22px",
+                              fontWeight: 600,
+                              padding: "12px 54px 12px 16px",
+                              borderRadius: "12px",
+                              border: "none",
+                              background: "rgba(118,118,128,0.08)",
+                              color: "#0f172a",
+                              fontVariantNumeric: "tabular-nums" as const,
+                              outline: "none",
+                              letterSpacing: "-0.022em",
+                              transition: "background 0.18s ease",
+                            }}
+                            onFocus={(event) => { event.currentTarget.style.background = "rgba(118,118,128,0.12)"; }}
+                            onBlur={(event) => { event.currentTarget.style.background = "rgba(118,118,128,0.08)"; }}
+                          />
+                          <span style={{ position: "absolute" as const, right: "16px", fontSize: "13px", color: "rgba(60,60,67,0.55)", fontWeight: 500, pointerEvents: "none" as const }}>
+                            {salesUnit}
+                          </span>
+                        </label>
+
+                        {/* 사용자/주문/객수 — 보조 */}
+                        <label style={{ position: "relative" as const, width: "98px", display: "flex", alignItems: "center" }}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={d.dailyCustomersInput}
+                            onChange={(event) => d.setDailyCustomersInput(event.target.value.replace(/[^0-9]/g, ""))}
+                            placeholder="0"
+                            aria-label={userKind}
+                            style={{
+                              width: "100%",
+                              fontSize: "17px",
+                              fontWeight: 500,
+                              padding: "12px 28px 12px 14px",
+                              borderRadius: "12px",
+                              border: "none",
+                              background: "rgba(118,118,128,0.08)",
+                              color: "#0f172a",
+                              fontVariantNumeric: "tabular-nums" as const,
+                              outline: "none",
+                              letterSpacing: "-0.012em",
+                              transition: "background 0.18s ease",
+                            }}
+                            onFocus={(event) => { event.currentTarget.style.background = "rgba(118,118,128,0.12)"; }}
+                            onBlur={(event) => { event.currentTarget.style.background = "rgba(118,118,128,0.08)"; }}
+                          />
+                          <span style={{ position: "absolute" as const, right: "13px", fontSize: "12px", color: "rgba(60,60,67,0.55)", fontWeight: 500, pointerEvents: "none" as const }}>
+                            {userUnitSuffix}
+                          </span>
+                        </label>
+
+                        {/* Submit — system blue pill */}
+                        <button
+                          type="submit"
+                          disabled={!d.dailySalesInput}
+                          style={{
+                            padding: "10px 18px",
+                            borderRadius: "999px",
+                            border: "none",
+                            background: d.dailySalesInput ? "#007aff" : "rgba(118,118,128,0.12)",
+                            color: d.dailySalesInput ? "#fff" : "rgba(60,60,67,0.32)",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            cursor: d.dailySalesInput ? "pointer" : "default",
+                            whiteSpace: "nowrap" as const,
+                            letterSpacing: "-0.01em",
+                            transition: "background 0.15s ease, transform 0.1s ease",
+                            height: "44px",
+                          }}
+                          onMouseDown={(event) => { if (d.dailySalesInput) event.currentTarget.style.transform = "scale(0.97)"; }}
+                          onMouseUp={(event) => { event.currentTarget.style.transform = "scale(1)"; }}
+                          onMouseLeave={(event) => { event.currentTarget.style.transform = "scale(1)"; }}
+                        >
+                          {ko ? "기록" : "Log"}
+                        </button>
+                      </div>
+                      <div style={{ fontSize: "11.5px", color: "rgba(60,60,67,0.45)", marginTop: "10px", letterSpacing: "-0.005em" }}>
+                        {ko ? `Enter ↵ 로 저장 · ${userKindKo}는 비워둬도 OK` : `Press ↵ to save · ${userKindEn} optional`}
+                      </div>
+                    </form>
                   )}
                 </div>
 
@@ -331,14 +727,15 @@ export function ActivitySnapshotCard({
                           onChange={(event) => d.setDailySalesInput(event.target.value.replace(/[^0-9]/g, ""))}
                           placeholder="0"
                           style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 40px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
-                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "만원" : "₩"}</span>
+                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{salesUnit}</span>
                       </div>
                       <div style={{ position: "relative" as const, flex: "0 0 90px" }}>
                         <input type="text" inputMode="numeric" value={d.dailyCustomersInput}
                           onChange={(event) => d.setDailyCustomersInput(event.target.value.replace(/[^0-9]/g, ""))}
                           placeholder="0"
+                          aria-label={userKind}
                           style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 28px 10px 12px", borderRadius: "10px", border: "1px solid rgba(5,97,252,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
-                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{ko ? "명" : ""}</span>
+                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{userUnitSuffix}</span>
                       </div>
                       <button type="button" onClick={() => {
                         d.handleAddDailyEntry();
@@ -371,16 +768,62 @@ export function ActivitySnapshotCard({
           );
         })()}
 
-        {/* ── 상품별 매출 입력 (접히는 영역) ── */}
-        <ProductSalesEntry d={d} ko={ko} fmt={fmt} onSalesApplied={(sales, customers) => {
-          setPostEntryReaction(generatePostEntryReaction(sales, customers));
-          setTimeout(() => setPostEntryReaction(null), 8000);
-        }} />
+        {/* ── 상품별 매출 입력 (자영업 — 메뉴/상품 등록 시) ──
+            "+ 오늘 입력" 클릭(editMode=true) 시 자동 펼쳐짐. 구독제는 ProductSales 숨김. */}
+        {!usesSubs && (
+          <ProductSalesEntry
+            d={d}
+            ko={ko}
+            fmt={fmt}
+            forceExpanded={editMode}
+            onSalesApplied={(sales, customers) => {
+              setPostEntryReaction(generatePostEntryReaction(sales, customers));
+              setTimeout(() => setPostEntryReaction(null), 8000);
+            }}
+          />
+        )}
+
+        {/* ── 구독 플랜별 가입/이탈 (구독제 사장님만) ──
+            usesSubscriptions=true 일 때만 노출. 구독제는 핵심 입력이므로 항상 펼친 상태. */}
+        {d.usesSubscriptions && (
+          <SubscriptionPlanEntry
+            d={d}
+            ko={ko}
+            fmt={fmt}
+            forceExpanded
+          />
+        )}
         </div>
 
-        {/* ── 오른쪽: 오늘 판매 현황 ── */}
-        <TodaySalesSummary d={d} ko={ko} fmt={fmt} />
+        {/* ── 오른쪽: 오늘 판매 현황 (상품 등록 시만) ── */}
+        {hasProductSummary && <TodaySalesSummary d={d} ko={ko} fmt={fmt} />}
       </div>
+        );
+      })()}
     </section>
   );
+}
+
+// ─── 통합 출처 라벨 helper ─────────────────────────────────────────
+function connectedSourceList(s: { portone: boolean; tossplace: boolean; codef: boolean; csv: boolean }, ko: boolean): string {
+  const list: string[] = [];
+  if (s.portone) list.push(ko ? "포트원" : "PortOne");
+  if (s.tossplace) list.push("TOSS Place");
+  if (s.codef) list.push(ko ? "10개 카드사 (CODEF)" : "10 cards");
+  if (s.csv) list.push("CSV");
+  return list.join(" · ");
+}
+function connectedSourceCount(s: { portone: boolean; tossplace: boolean; codef: boolean; csv: boolean }): number {
+  return Number(s.portone) + Number(s.tossplace) + Number(s.codef) + Number(s.csv);
+}
+
+// ─── 마지막 N분 전 라벨 ─────────────────────────────────────
+function formatRelativeTime(ts: number, ko: boolean): string {
+  const diff = Date.now() - ts;
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return ko ? "방금" : "just now";
+  if (minutes < 60) return ko ? `${minutes}분 전` : `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return ko ? `${hours}시간 전` : `${hours}h ago`;
+  return ko ? `${Math.floor(hours / 24)}일 전` : `${Math.floor(hours / 24)}d ago`;
 }

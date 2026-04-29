@@ -51,6 +51,13 @@ export type ProjectionInput = {
   vatReserveEnabled: boolean;       // 매출의 10% 부가세 적립
   projectionDays?: number;          // 기본 14
   today?: Date;                      // 테스트용 주입
+  /**
+   * Fallback 월 고정비 총액 (사용자가 cashflow-store 의 fixedExpenses 를 별도 설정 안 했지만
+   * 대시보드 monthlyCosts 에 비용 입력은 있을 때).
+   * fixedExpenses 가 비어있고 이 값이 > 0 이면 영업일에 균등 분배해 outflow 로 반영.
+   * 사용자 실제 데이터를 기반으로 가짜 예측 곡선 방지.
+   */
+  fallbackMonthlyCostsTotal?: number;
 };
 
 /**
@@ -172,7 +179,7 @@ function computeDayOutflow(
  * 메인: 14일 예측 시퀀스 생성.
  */
 export function projectCashflow(input: ProjectionInput): DayProjection[] {
-  const { currentBalance, recentDailyEntries, salesChannels, fixedExpenses, vatReserveEnabled } = input;
+  const { currentBalance, recentDailyEntries, salesChannels, fixedExpenses, vatReserveEnabled, fallbackMonthlyCostsTotal } = input;
   const projectionDays = input.projectionDays ?? 14;
   const today = input.today ? new Date(input.today) : new Date();
   today.setHours(0, 0, 0, 0);
@@ -180,6 +187,13 @@ export function projectCashflow(input: ProjectionInput): DayProjection[] {
   const avgDailySales = computeAverageDailySales(recentDailyEntries);
   const projections: DayProjection[] = [];
   let runningBalance = currentBalance;
+
+  // ── Fallback outflow: fixedExpenses 비어있고 사용자 monthlyCosts 입력은 있을 때
+  //    월 비용을 26 영업일에 균등 분배해 일일 outflow 로 반영 (가짜 예측 방지)
+  const useFallbackOutflow = fixedExpenses.length === 0 && (fallbackMonthlyCostsTotal ?? 0) > 0;
+  const fallbackDailyOutflow = useFallbackOutflow
+    ? Math.round((fallbackMonthlyCostsTotal as number) / 26)
+    : 0;
 
   for (let i = 0; i < projectionDays; i++) {
     const date = new Date(today);
@@ -193,6 +207,16 @@ export function projectCashflow(input: ProjectionInput): DayProjection[] {
       : computeDayInflow(date, avgDailySales, salesChannels, vatReserveEnabled);
     // Outflow는 모든 날 (고정비는 주말도 발생 가능 — 예: 월세 25일이 토요일이어도 이체)
     const outflowEvents = computeDayOutflow(date, fixedExpenses);
+
+    // Fallback: fixedExpenses 비어있을 때 월 비용을 영업일에 균등 분배
+    if (useFallbackOutflow && !isWeekend && fallbackDailyOutflow > 0) {
+      outflowEvents.push({
+        id: `outflow-fallback-${toIso(date)}`,
+        type: "outflow",
+        amount: fallbackDailyOutflow,
+        label: { ko: "월 고정비 (일할)", en: "Daily fixed costs" },
+      });
+    }
 
     const dayInflow = inflowEvents.reduce((s, e) => s + e.amount, 0);
     const dayOutflow = outflowEvents.reduce((s, e) => s + e.amount, 0);

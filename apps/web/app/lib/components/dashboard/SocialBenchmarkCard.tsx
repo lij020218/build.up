@@ -107,6 +107,33 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
     return `${abs.toLocaleString()}원`;
   };
 
+  // ── 최근 4주 내 매장 주간 매출 (환산 월 추정) ──────────────
+  // 각 주마다 (주간 매출 합 × 4.33) = 월 환산 추정
+  const weeklyProjections: Array<{ label: string; value: number }> = (() => {
+    const result: Array<{ label: string; value: number }> = [];
+    const today = new Date();
+    for (let w = 3; w >= 0; w--) {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - (w * 7 + 6));
+      const weekEnd = new Date(today);
+      weekEnd.setDate(today.getDate() - w * 7);
+      const startStr = weekStart.toISOString().slice(0, 10);
+      const endStr = weekEnd.toISOString().slice(0, 10);
+      const weekEntries = dailyEntries.filter((e) => e.date >= startStr && e.date <= endStr);
+      const weekSales = weekEntries.reduce((s, e) => s + e.sales, 0);
+      const workedDays = weekEntries.length;
+      const projected = workedDays > 0 ? (weekSales / workedDays) * 26 : 0;
+      const label = `${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+      result.push({ label, value: projected });
+    }
+    return result;
+  })();
+  const hasWeeklyTrend = weeklyProjections.filter((w) => w.value > 0).length >= 2;
+
+  const momDelta = weeklyProjections.length >= 2 && weeklyProjections[weeklyProjections.length - 2].value > 0
+    ? ((weeklyProjections[weeklyProjections.length - 1].value - weeklyProjections[weeklyProjections.length - 2].value) / weeklyProjections[weeklyProjections.length - 2].value) * 100
+    : null;
+
   // 위치별 색상·메시지
   const { tone, message } = (() => {
     if (percentile >= 75) {
@@ -191,64 +218,40 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
         </div>
       </div>
 
-      {/* 내 매장 */}
-      <div style={{ marginBottom: "10px" }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px" }}>
-          <span style={{ fontSize: "11.5px", fontWeight: 650, color: "rgba(15,23,42,0.6)" }}>
-            {ko ? "내 매장 (이번 달 예상)" : "My store (this month est.)"}
-          </span>
-          <span style={{ fontSize: "14px", fontWeight: 720, color: toneColor, fontVariantNumeric: "tabular-nums" as const }}>
-            {fmt(projectedMonthly)}
-          </span>
+      {/* 주간 매출 3-라인 차트 (내 가게 라인 + 평균·상위 10% 수평 기준선) */}
+      {hasWeeklyTrend ? (
+        <WeeklyBenchmarkChart
+          ko={ko}
+          weekly={weeklyProjections}
+          avgMonthly={avgMonthly}
+          top10Monthly={top10Monthly}
+          toneColor={toneColor}
+          momDelta={momDelta}
+          fmt={fmt}
+        />
+      ) : (
+        // 주간 데이터 부족 시 기존 단일 바 표시
+        <div style={{ marginBottom: "10px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px" }}>
+            <span style={{ fontSize: "11.5px", fontWeight: 650, color: "rgba(15,23,42,0.6)" }}>
+              {ko ? "내 매장 (이번 달 예상)" : "My store (this month est.)"}
+            </span>
+            <span style={{ fontSize: "14px", fontWeight: 720, color: toneColor, fontVariantNumeric: "tabular-nums" as const }}>
+              {fmt(projectedMonthly)}
+            </span>
+          </div>
+          <div style={{ height: "6px", background: "rgba(15,23,42,0.04)", borderRadius: "3px", position: "relative" as const, overflow: "hidden" as const }}>
+            <div style={{ height: "100%", width: `${userPct}%`, background: toneColor, borderRadius: "3px", opacity: 0.85, transition: "width 0.4s ease" }} />
+            <div style={{ position: "absolute" as const, left: `${avgPct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(15,23,42,0.4)" }} />
+            <div style={{ position: "absolute" as const, left: `${top10Pct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(5,150,105,0.6)" }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "4px", fontWeight: 600 }}>
+            <span>{ko ? "0" : "0"}</span>
+            <span>{ko ? `평균 ${fmt(avgMonthly)}` : `Avg ${fmt(avgMonthly)}`}</span>
+            <span style={{ color: "rgba(5,150,105,0.7)" }}>{ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}</span>
+          </div>
         </div>
-        <div
-          style={{
-            height: "6px",
-            background: "rgba(15,23,42,0.04)",
-            borderRadius: "3px",
-            position: "relative" as const,
-            overflow: "hidden" as const,
-          }}
-        >
-          <div
-            style={{
-              height: "100%",
-              width: `${userPct}%`,
-              background: toneColor,
-              borderRadius: "3px",
-              opacity: 0.85,
-              transition: "width 0.4s ease",
-            }}
-          />
-          {/* 평균 라인 */}
-          <div
-            style={{
-              position: "absolute" as const,
-              left: `${avgPct}%`,
-              top: 0,
-              bottom: 0,
-              width: "1.5px",
-              background: "rgba(15,23,42,0.4)",
-            }}
-          />
-          {/* 상위10% 라인 */}
-          <div
-            style={{
-              position: "absolute" as const,
-              left: `${top10Pct}%`,
-              top: 0,
-              bottom: 0,
-              width: "1.5px",
-              background: "rgba(5,150,105,0.6)",
-            }}
-          />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "4px", fontWeight: 600 }}>
-          <span>{ko ? "0" : "0"}</span>
-          <span>{ko ? `평균 ${fmt(avgMonthly)}` : `Avg ${fmt(avgMonthly)}`}</span>
-          <span style={{ color: "rgba(5,150,105,0.7)" }}>{ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}</span>
-        </div>
-      </div>
+      )}
 
       {/* 인사이트 메시지 */}
       <div
@@ -273,5 +276,131 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
           : "Source: Fair Trade Commission franchise disclosures · SMB survey"}
       </div>
     </section>
+  );
+}
+
+// ─── 3-라인 벤치마크 차트 (내 가게 solid + 평균·상위 10% dashed) ──────────
+
+function WeeklyBenchmarkChart({
+  ko,
+  weekly,
+  avgMonthly,
+  top10Monthly,
+  toneColor,
+  momDelta,
+  fmt,
+}: {
+  ko: boolean;
+  weekly: Array<{ label: string; value: number }>;
+  avgMonthly: number;
+  top10Monthly: number;
+  toneColor: string;
+  momDelta: number | null;
+  fmt: (n: number) => string;
+}) {
+  const w = 320;
+  const h = 140;
+  const pad = { top: 12, right: 12, bottom: 28, left: 12 };
+  const iw = w - pad.left - pad.right;
+  const ih = h - pad.top - pad.bottom;
+
+  const allValues = [...weekly.map((v) => v.value), avgMonthly, top10Monthly];
+  const max = Math.max(...allValues) * 1.1;
+  const min = 0;
+  const range = max - min || 1;
+
+  const x = (i: number) => pad.left + (i / Math.max(1, weekly.length - 1)) * iw;
+  const y = (v: number) => pad.top + ih - ((v - min) / range) * ih;
+
+  // 내 가게 라인 (smoothed cubic bezier)
+  const points = weekly.map((v, i) => ({ x: x(i), y: y(v.value) }));
+  const myPath = points
+    .map((p, i) => {
+      if (i === 0) return `M ${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
+      const prev = points[i - 1];
+      const cpx = (prev.x + p.x) / 2;
+      return `C ${cpx.toFixed(2)} ${prev.y.toFixed(2)}, ${cpx.toFixed(2)} ${p.y.toFixed(2)}, ${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
+    })
+    .join(" ");
+  const fillPath = `${myPath} L ${points[points.length - 1].x.toFixed(2)} ${(pad.top + ih).toFixed(2)} L ${points[0].x.toFixed(2)} ${(pad.top + ih).toFixed(2)} Z`;
+
+  const avgY = y(avgMonthly);
+  const topY = y(top10Monthly);
+  const endPoint = points[points.length - 1];
+  const gradId = `bench-fill-${Math.random().toString(36).slice(2, 8)}`;
+
+  return (
+    <div style={{ marginBottom: "10px" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "8px" }}>
+        <span style={{ fontSize: "11.5px", fontWeight: 650, color: "rgba(15,23,42,0.6)" }}>
+          {ko ? "주간 매출 (월 환산, 최근 4주)" : "Weekly revenue (monthly est., last 4w)"}
+        </span>
+        {momDelta !== null && (
+          <span style={{ fontSize: "12px", fontWeight: 650, color: momDelta >= 0 ? "#059669" : "#dc2626", fontVariantNumeric: "tabular-nums" as const }}>
+            {momDelta >= 0 ? "↑" : "↓"} {Math.abs(momDelta).toFixed(1)}%
+          </span>
+        )}
+      </div>
+
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} style={{ display: "block" }}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={toneColor} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={toneColor} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* 평균 dashed 수평선 (gray) */}
+        <line
+          x1={pad.left} x2={w - pad.right} y1={avgY} y2={avgY}
+          stroke="rgba(15,23,42,0.32)" strokeWidth={1.2} strokeDasharray="4 4"
+        />
+        <text x={w - pad.right - 4} y={avgY - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="rgba(15,23,42,0.5)">
+          {ko ? `평균 ${fmt(avgMonthly)}` : `Avg ${fmt(avgMonthly)}`}
+        </text>
+
+        {/* 상위 10% dashed 수평선 (mint) */}
+        <line
+          x1={pad.left} x2={w - pad.right} y1={topY} y2={topY}
+          stroke="rgba(5,150,105,0.5)" strokeWidth={1.2} strokeDasharray="4 4"
+        />
+        <text x={w - pad.right - 4} y={topY - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="rgba(5,150,105,0.8)">
+          {ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}
+        </text>
+
+        {/* 내 가게 그라디언트 fill */}
+        <path d={fillPath} fill={`url(#${gradId})`} />
+
+        {/* 내 가게 solid 라인 */}
+        <path d={myPath} fill="none" stroke={toneColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* 끝점 dot */}
+        <circle cx={endPoint.x} cy={endPoint.y} r={4} fill={toneColor} />
+        <circle cx={endPoint.x} cy={endPoint.y} r={7} fill={toneColor} opacity={0.18} />
+
+        {/* X축 label */}
+        {weekly.map((w2, i) => (
+          <text key={i} x={x(i)} y={h - 8} textAnchor="middle" fontSize="9.5" fontWeight="500" fill="rgba(15,23,42,0.4)">
+            {w2.label}
+          </text>
+        ))}
+      </svg>
+
+      {/* Legend */}
+      <div style={{ display: "flex", alignItems: "center", gap: "14px", fontSize: "11px", fontWeight: 550, marginTop: "6px" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(15,23,42,0.7)" }}>
+          <span style={{ width: "12px", height: "2px", background: toneColor, borderRadius: "1px" }} />
+          {ko ? "내 가게" : "My store"} <strong style={{ color: toneColor, fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{fmt(weekly[weekly.length - 1].value)}</strong>
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(15,23,42,0.4)" }}>
+          <span style={{ width: "12px", height: "1.5px", background: "rgba(15,23,42,0.32)", borderRadius: "1px" }} />
+          {ko ? "평균" : "Avg"}
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(5,150,105,0.75)" }}>
+          <span style={{ width: "12px", height: "1.5px", background: "rgba(5,150,105,0.5)", borderRadius: "1px" }} />
+          {ko ? "상위 10%" : "Top 10%"}
+        </span>
+      </div>
+    </div>
   );
 }

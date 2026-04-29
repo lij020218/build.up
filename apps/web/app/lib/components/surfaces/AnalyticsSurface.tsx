@@ -105,11 +105,33 @@ export function AnalyticsSurface() {
 
         // ── 가게 카드 목록 뷰 ──
         if (selectedStoreIndex === null) {
-          const industryId = decisions["industry-selection"]?.selectedPrimaryOptionId ?? profile?.subIndustryId;
+          // 업종 라벨 — 3단 fallback: 세부업종 → profile 세부업종 → selectedIndustryId → 11 대분류
+          const industryId = decisions["industry-selection"]?.selectedPrimaryOptionId
+            ?? profile?.subIndustryId
+            ?? selectedIndustryId;
+          const CATEGORY_LABELS_KO: Record<string, string> = {
+            food: "외식업", "cafe-dessert": "카페·디저트", retail: "소매",
+            beauty: "뷰티", pet: "펫", fitness: "피트니스", education: "교육",
+            space: "공유공간", "online-digital": "온라인", "startup-tech": "스타트업",
+            "living-service": "생활서비스",
+          };
+          const CATEGORY_LABELS_EN: Record<string, string> = {
+            food: "Restaurant", "cafe-dessert": "Cafe & Dessert", retail: "Retail",
+            beauty: "Beauty", pet: "Pet", fitness: "Fitness", education: "Education",
+            space: "Space & Stay", "online-digital": "Online & Digital",
+            "startup-tech": "Tech Startup", "living-service": "Living Service",
+          };
           const industryLabel = industryId
             ? localizeRecommendationItem({ id: industryId, title: industryId }, language).title
-            : null;
-          const progressPct = Math.min(100, Math.round((roadmap.completedStageIds.length / pathTotalStages) * 100));
+            : industryCategoryId
+              ? (ko ? (CATEGORY_LABELS_KO[industryCategoryId] ?? industryCategoryId) : (CATEGORY_LABELS_EN[industryCategoryId] ?? industryCategoryId))
+              : null;
+
+          // 진행률 — path-filtered completedCount 사용 (운영 대시보드와 일관)
+          // businessLaunched면 항상 100% (오픈한 순간 준비 완료로 간주)
+          const progressPct = businessLaunched
+            ? 100
+            : pathTotalStages > 0 ? Math.min(100, Math.round((completedCount / pathTotalStages) * 100)) : 0;
 
           return (
             <section style={styles.section}>
@@ -151,7 +173,7 @@ export function AnalyticsSurface() {
                     {industryLabel ?? (ko ? "업종 미설정" : "Industry not set")}
                   </div>
 
-                  {/* 진행률 */}
+                  {/* 진행률 + 단계/상태 표시 */}
                   <div style={{ height: "3px", borderRadius: "2px", background: "rgba(0,0,0,0.07)", overflow: "hidden", marginBottom: "8px" }}>
                     <div style={{
                       height: "100%", borderRadius: "2px",
@@ -161,7 +183,9 @@ export function AnalyticsSurface() {
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-                      {ko ? `${roadmap.completedStageIds.length}/${pathTotalStages} 단계` : `${roadmap.completedStageIds.length} of ${pathTotalStages} stages`}
+                      {businessLaunched
+                        ? (ko ? "로드맵 완료 · 운영 중" : "Roadmap done · Operating")
+                        : (ko ? `${completedCount}/${pathTotalStages} 단계` : `${completedCount} of ${pathTotalStages} stages`)}
                     </span>
                     <span style={{ fontSize: "13px", fontWeight: 600, color: "#007aff" }}>
                       {ko ? "자세히 보기" : "View details"} ›
@@ -325,7 +349,7 @@ export function AnalyticsSurface() {
               {/* ── 사업 프로필 대시보드 ── */}
               <LaunchRoadmapCard />
 
-              {/* ── 지원사업·대출 정보 카드 ── */}
+              {/* ── 펀딩·대출 정보 카드 ── */}
               {(() => {
                 const allMatched = getMatchedProgramsV2({ startupType, industryCategoryId: selectedIndustryCategoryId });
                 const programs = allMatched.filter(p => p.eligible).slice(0, 10);
@@ -339,7 +363,7 @@ export function AnalyticsSurface() {
                   }}>
                     <div style={{ padding: "18px 20px 14px" }}>
                       <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: "4px" }}>
-                        {ko ? "지원사업 · 대출" : "Funding & Support"}
+                        {ko ? "펀딩" : "Funding"}
                       </div>
                       <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.5 }}>
                         {ko ? "내 사업에 맞는 프로그램" : "Programs matched to your business"}
@@ -413,7 +437,7 @@ export function AnalyticsSurface() {
                     <div style={{ padding: "0 20px 14px" }}>
                       <button type="button" onClick={() => navigateToSurface("guides")}
                         style={{ fontSize: "12px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                        {ko ? "전체 지원사업 보기 →" : "View all programs →"}
+                        {ko ? "전체 펀딩 보기 →" : "View all funding →"}
                       </button>
                     </div>
                   </article>

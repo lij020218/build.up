@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
 import type { SubscriptionPlan } from "../../stores/operations-store";
 
@@ -12,16 +12,24 @@ export function SubscriptionPlanEntry({
   ko,
   fmt,
   onSignupsApplied,
+  /** 외부 펼침 강제 — "+ 오늘 입력" 클릭 시 자동 펼침 */
+  forceExpanded,
 }: {
   d: DashboardHook;
   ko: boolean;
   fmt: (n: number) => string;
   onSignupsApplied?: (totalRevenue: number, totalSignups: number) => void;
+  forceExpanded?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(forceExpanded ?? false);
   const [signupCounts, setSignupCounts] = useState<Record<string, number>>({});
   const [churnCounts, setChurnCounts] = useState<Record<string, number>>({});
   const [mode, setMode] = useState<"signup" | "churn">("signup");
+
+  // forceExpanded → internal expanded 동기화 (true 들어오면 펼침)
+  useEffect(() => {
+    if (forceExpanded) setExpanded(true);
+  }, [forceExpanded]);
 
   const plans = (d.subscriptionPlans as SubscriptionPlan[]).filter((p) => p.isActive);
 
@@ -111,16 +119,20 @@ export function SubscriptionPlanEntry({
       border: expanded ? "1px solid rgba(124,58,237,0.1)" : "1px solid rgba(124,58,237,0.05)",
       overflow: expanded ? "visible" : "hidden", transition: "all 0.2s ease",
     }}>
-      {/* Header toggle */}
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        style={{
-          width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
-          padding: "14px 16px", background: "none", border: "none", cursor: "pointer",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      {/* Header — 좌: 토글, 우: 구독 관리 CTA + chevron */}
+      <div style={{
+        width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "14px 16px", gap: "8px",
+      }}>
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
+          style={{
+            display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0,
+            background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left",
+          }}
+        >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <rect x="2" y="3" width="14" height="12" rx="3" stroke="rgba(124,58,237,0.5)" strokeWidth="1.2" fill="none" />
             <path d="M5 7.5h8M5 10.5h5" stroke="rgba(124,58,237,0.5)" strokeWidth="1.2" strokeLinecap="round" />
@@ -133,11 +145,54 @@ export function SubscriptionPlanEntry({
               +{totalSignups}{ko ? "건" : ""}
             </span>
           )}
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          {/* 구독 관리 카드 (운영 관리 DeepDive) 로 이동 — DeepDive 펼치고 스크롤 */}
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                window.dispatchEvent(new CustomEvent("buildup:open-deepdive", { detail: { id: "ops-mgmt" } }));
+              } catch { /* SSR safety */ }
+              // DeepDive 가 펼쳐질 시간 확보 후 스크롤
+              setTimeout(() => {
+                const el = document.getElementById("subscription-manager");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 80);
+            }}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "4px",
+              padding: "5px 10px", borderRadius: "999px",
+              border: "1px solid rgba(124,58,237,0.18)",
+              background: "rgba(124,58,237,0.04)",
+              fontSize: "11.5px", fontWeight: 650, color: "#7c3aed",
+              cursor: "pointer", fontFamily: FONT_STACK, letterSpacing: "-0.005em",
+              whiteSpace: "nowrap" as const, transition: "background 0.15s ease",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(124,58,237,0.09)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(124,58,237,0.04)"; }}
+          >
+            {ko ? "구독 관리" : "Manage plans"} →
+          </button>
+
+          {/* Toggle chevron */}
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            aria-label={expanded ? (ko ? "접기" : "Collapse") : (ko ? "펼치기" : "Expand")}
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: "26px", height: "26px", borderRadius: "8px",
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "rotate(0)" }}>
+              <path d="M3.5 5.5L7 9l3.5-3.5" stroke="rgba(15,23,42,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "rotate(0)" }}>
-          <path d="M3.5 5.5L7 9l3.5-3.5" stroke="rgba(15,23,42,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+      </div>
 
       {expanded && (
         <div style={{ padding: "0 16px 16px" }}>

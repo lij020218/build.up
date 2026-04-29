@@ -2,6 +2,7 @@
 // 인터뷰 노트를 입력하면 패턴, 핵심 고통, 초기 타겟 세그먼트를 추출합니다.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { systemWithCache } from "../utils/client";
 
 export type InterviewAnalysisInput = {
   interviewNotes: string;
@@ -66,7 +67,8 @@ ${input.interviewNotes}
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 4096,
-    system: SYSTEM_PROMPT,
+    // ✦ Prompt Caching — interview analysis system prompt 안정 재사용
+    system: systemWithCache(SYSTEM_PROMPT),
     messages: [{ role: "user", content: userPrompt }],
   });
 

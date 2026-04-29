@@ -7,7 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Cpu, Package, Coffee, Droplets, Waves, Leaf, Flame, Layers,
   Sparkles, Zap, Scissors, Shield, Dumbbell, Heart, Box, BookOpen,
-  AlignLeft, Sprout, Star, Store, Monitor, RefreshCw, PanelLeft, Home,
+  AlignLeft, Sprout, Star, Store, Monitor, RefreshCw, PanelLeft, Home, Wine,
 } from "lucide-react";
 import { VENDOR_URL_MAP } from "../../../constants";
 
@@ -23,6 +23,7 @@ export function StageGuideViewer() {
     opsSelections, setOpsSelections,
     opsPosChecks, setOpsPosChecks,
     industryCategoryId,
+    selectedIndustryId,
     isDigitalCategory,
     businessCtx,
   } = useDashboardCtx();
@@ -374,17 +375,338 @@ export function StageGuideViewer() {
       },
     };
     const industryStepData = stepDataMap[industryCategoryId] ?? stepDataMap["food"];
+
+    // ── 운영 장비·기계 (vendor-setup 전용 — construction-setup의 인테리어/설비/가구와 명확히 분리) ──
+    //  · construction-setup: 마감재·건축 설비·매장 가구·조명·사이니지 (건물에 부착·고정되는 것)
+    //  · vendor-setup:        원자재·식자재·소모품 + 본 섹션의 운영 장비·기계 (들고 다니거나 교체 가능한 기기)
+    type EquipmentItem = { name: string; desc: string; tier: "premium" | "standard" | "budget" };
+    type EquipmentCategory = { icon: LucideIcon; label: string; items: EquipmentItem[] };
+    const equipmentByCategory: Record<string, EquipmentCategory[]> = {
+      "cafe-dessert": [
+        { icon: Coffee, label: language === "ko" ? "에스프레소·추출 장비" : "Espresso Equipment", items: [
+          { name: "라마르조코 리네아 미니", desc: "스페셜티 카페 표준 · 약 700~900만원 · 안정적 추출", tier: "premium" },
+          { name: "라심발리 M26 / M100", desc: "중·대형 카페 다용도 · 약 400~700만원 · A/S 강함", tier: "standard" },
+          { name: "ECM Synchronika", desc: "1그룹 소형 카페 · 약 350~450만원 · 가성비 프리미엄", tier: "standard" },
+        ]},
+        { icon: RefreshCw, label: language === "ko" ? "그라인더·블렌더" : "Grinders & Blenders", items: [
+          { name: "메저 코니컬 EK / 메저 필립스 (Mahlkönig)", desc: "스페셜티 에스프레소용 · 약 200~400만원", tier: "premium" },
+          { name: "마조 마이저(Mazzer Major)", desc: "전국 카페 표준 그라인더 · 약 100~150만원", tier: "standard" },
+          { name: "바이타믹스(Vitamix) The Quiet One", desc: "프라페·스무디용 정음 블렌더 · 약 150~200만원", tier: "premium" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "냉장·진열·제빙" : "Refrigeration & Ice", items: [
+          { name: "호시자키 IM-65 제빙기", desc: "큐브얼음 일 65kg · 카페 표준 · 약 250~350만원", tier: "premium" },
+          { name: "유니맥스 디저트 쇼케이스", desc: "케이크·디저트 진열 · 약 150~250만원", tier: "standard" },
+          { name: "캐리어 카페냉장고 1200L", desc: "원두·우유 보관 대형 냉장고 · 약 80~150만원", tier: "standard" },
+        ]},
+        { icon: Box, label: language === "ko" ? "POS·키오스크·결제" : "POS & Kiosks", items: [
+          { name: "토스플레이스 키오스크", desc: "카드·페이 통합 · 월 0원~ · 카페 80%+ 사용", tier: "budget" },
+          { name: "포스뱅크 / 포스링크", desc: "카페 전용 POS · 단말기 100~200만원", tier: "standard" },
+          { name: "오케이포스(OKPOS)", desc: "프랜차이즈 표준 · 본부 매출 연동", tier: "standard" },
+        ]},
+      ],
+      "food": [
+        { icon: Flame, label: language === "ko" ? "주방 화구·튀김기" : "Stoves & Fryers", items: [
+          { name: "린나이 상업용 가스레인지", desc: "2~6구 · 약 80~250만원 · 한식·분식 표준", tier: "standard" },
+          { name: "헨켈만(Henkelman) 진공포장기", desc: "수비드·저장식 · 약 200~400만원", tier: "premium" },
+          { name: "유니맥스 튀김기 18L 듀얼", desc: "치킨·돈가스 매장 · 약 80~150만원", tier: "standard" },
+        ]},
+        { icon: Layers, label: language === "ko" ? "오븐·그릴·샐러맨더" : "Ovens & Grills", items: [
+          { name: "라치오날 컴비오븐 6단", desc: "수비드·로스팅 통합 · 약 1,500~2,500만원", tier: "premium" },
+          { name: "유니맥스 가스 컨벡션 오븐", desc: "베이커리·피자 · 약 250~500만원", tier: "standard" },
+          { name: "린나이 샐러맨더", desc: "치즈 토핑·돈가스 마무리 · 약 80~150만원", tier: "standard" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "냉장·냉동·작업대" : "Refrigeration & Prep", items: [
+          { name: "유니맥스 워크인 냉장고", desc: "대용량 식자재 보관 · 약 400~800만원", tier: "standard" },
+          { name: "그랜드우성 4도어 냉장고", desc: "주방 표준 · 약 200~350만원", tier: "standard" },
+          { name: "에버레스트 작업대 냉장고", desc: "바트형 토핑 보관 · 약 150~250만원", tier: "standard" },
+        ]},
+        { icon: Box, label: language === "ko" ? "POS·주문·배달 통합" : "POS & Order Systems", items: [
+          { name: "토스플레이스 + 배민·쿠팡 연동", desc: "주문·결제·배달 통합 키오스크", tier: "budget" },
+          { name: "오케이포스(OKPOS)", desc: "프랜차이즈 표준 POS · 매출 통합", tier: "standard" },
+          { name: "캐시노트 매출관리", desc: "POS 수기 입력 가능 · 무료", tier: "budget" },
+        ]},
+      ],
+      "beauty": [
+        { icon: Zap, label: language === "ko" ? "헤어 시술 장비" : "Hair Equipment", items: [
+          { name: "다이슨 슈퍼소닉 프로", desc: "프리미엄 살롱 표준 · 약 50~70만원/대", tier: "premium" },
+          { name: "파나소닉 EH-NA98 업소용", desc: "보급형 살롱 표준 · 약 15~30만원/대", tier: "standard" },
+          { name: "바비리스 프로 매직기·고데기", desc: "스타일링 기본 도구 · 약 8~20만원/대", tier: "standard" },
+        ]},
+        { icon: Heart, label: language === "ko" ? "피부·네일·왁싱 기기" : "Skin · Nail · Waxing", items: [
+          { name: "LED 마스크 전용기 (셀리턴)", desc: "피부 시술 · 약 200~400만원", tier: "premium" },
+          { name: "전동 네일드릴·자외선 램프 세트", desc: "네일샵 표준 · 약 30~80만원", tier: "standard" },
+          { name: "왁싱 워머·슈가링 페이스트 워머", desc: "왁싱샵 필수 · 약 20~50만원", tier: "standard" },
+        ]},
+        { icon: Box, label: language === "ko" ? "POS·예약 시스템" : "POS & Booking", items: [
+          { name: "헤어인덱스 / 셀럽시스템", desc: "미용실 전용 예약·CRM · 월 5~10만원", tier: "standard" },
+          { name: "네이버 예약·카카오톡 채널", desc: "예약 1순위 채널 · 무료", tier: "budget" },
+          { name: "토스플레이스 결제 단말기", desc: "카드·페이 통합 · 월 0원~", tier: "budget" },
+        ]},
+      ],
+      "fitness": [
+        { icon: Dumbbell, label: language === "ko" ? "유산소·웨이트 머신" : "Cardio & Strength", items: [
+          { name: "Life Fitness / Hammer Strength", desc: "글로벌 1위 · 대당 300~600만원 · 프리미엄 짐", tier: "premium" },
+          { name: "테크노짐 엑사이트 라인", desc: "디자인+기능 균형 · 대당 250~500만원", tier: "premium" },
+          { name: "한솔 / 인티엠 국산 머신", desc: "보급형 · 대당 100~200만원 · 가성비", tier: "standard" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "필라테스·요가 기구" : "Pilates & Yoga", items: [
+          { name: "발란스드바디 리포머", desc: "필라테스 정통 브랜드 · 약 400~600만원", tier: "premium" },
+          { name: "스토트 필라테스 V2 맥스", desc: "공인 강사 표준 · 약 350~500만원", tier: "premium" },
+          { name: "국산 리포머 (PMA·하트만)", desc: "보급형 · 약 150~250만원/대", tier: "standard" },
+        ]},
+        { icon: Heart, label: language === "ko" ? "측정·체크인 시스템" : "Measurement & Check-in", items: [
+          { name: "인바디 770 / 270", desc: "체성분 분석 표준 · 약 700~1,800만원", tier: "premium" },
+          { name: "스마트짐(SmartGym) 출입·CRM", desc: "키카드·앱 출입 · 약 200~400만원 초기설치", tier: "standard" },
+          { name: "토스플레이스 회원권 결제", desc: "정기결제·카드 통합 · 월 0원~", tier: "budget" },
+        ]},
+      ],
+      "education": [
+        { icon: Monitor, label: language === "ko" ? "강의실 디스플레이·전자칠판" : "Classroom Displays", items: [
+          { name: "삼성 Flip 65/75인치", desc: "전자칠판 표준 · 약 400~600만원", tier: "premium" },
+          { name: "LG 시네빔 4K 프로젝터", desc: "보급 학원 · 약 150~300만원", tier: "standard" },
+          { name: "에듀팩 화이트보드 + 빔", desc: "최저비용 셋업 · 약 50~100만원", tier: "budget" },
+        ]},
+        { icon: Cpu, label: language === "ko" ? "수업 운영·온라인 도구" : "Class Management", items: [
+          { name: "클라썸(Classum) / 클래스팅", desc: "수업·과제·소통 통합 LMS · 무료~월 5만", tier: "budget" },
+          { name: "줌(Zoom) Education", desc: "라이브·하이브리드 수업 · 월 2~5만/계정", tier: "standard" },
+          { name: "에듀비(Eduby) 출결·문자", desc: "학원 출결 자동화 · 월 5~10만", tier: "standard" },
+        ]},
+        { icon: PanelLeft, label: language === "ko" ? "교재·도서 디지털화" : "Materials & Library", items: [
+          { name: "EBS·메가스터디 교재 라이센스", desc: "외부 교재 도입 · 학원별 견적", tier: "standard" },
+          { name: "구몬·아이스크림 디지털 학습", desc: "B2B 라이센스 · 학생당 월 단가", tier: "standard" },
+          { name: "캠스캐너+자체 교재", desc: "디지털화 직접 운영 · 무료~월 1만", tier: "budget" },
+        ]},
+      ],
+      "pet": [
+        { icon: Scissors, label: language === "ko" ? "그루밍 장비" : "Grooming Equipment", items: [
+          { name: "오스터(Oster) 클리퍼·블레이드", desc: "프리미엄 그루밍 표준 · 약 30~80만원/세트", tier: "premium" },
+          { name: "안디스(Andis) 펄스 ZR2", desc: "전문 그루머 1순위 · 약 25~40만원", tier: "premium" },
+          { name: "코디(Codi) 국산 클리퍼", desc: "보급형 · 약 5~15만원/세트", tier: "standard" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "목욕·드라이 시설" : "Bath & Dry", items: [
+          { name: "K9-III 강력 드라이어", desc: "전문 펫샵 표준 · 약 200~350만원", tier: "premium" },
+          { name: "PetMaster 자동 욕조", desc: "온도·수량 조절 · 약 150~300만원", tier: "standard" },
+          { name: "스탠드 드라이어 스탠드형", desc: "보급형 · 약 50~100만원", tier: "budget" },
+        ]},
+        { icon: Box, label: language === "ko" ? "POS·예약·CRM" : "POS & Booking", items: [
+          { name: "펫프렌즈 비즈 / 펫닥터 SaaS", desc: "펫샵·동물병원 전용 · 월 5~15만", tier: "standard" },
+          { name: "네이버 예약·카카오톡 채널", desc: "예약 1순위 · 무료", tier: "budget" },
+          { name: "토스플레이스 결제 단말기", desc: "카드·페이 통합", tier: "budget" },
+        ]},
+      ],
+      "retail": [
+        { icon: Box, label: language === "ko" ? "POS·바코드·재고" : "POS & Inventory", items: [
+          { name: "오케이포스 / 포스뱅크", desc: "리테일 표준 POS · 단말기 150~300만원", tier: "standard" },
+          { name: "토스플레이스 + 셀러문스마트", desc: "POS·재고·온라인 통합 · 월 0~5만", tier: "budget" },
+          { name: "스마트스토어 사장님센터(픽업)", desc: "온·오프 통합 재고 · 무료", tier: "budget" },
+        ]},
+        { icon: AlignLeft, label: language === "ko" ? "보안·고객 카운터" : "Security & Counters", items: [
+          { name: "Sensormatic EAS 게이트", desc: "도난 방지 게이트 · 약 200~400만원", tier: "premium" },
+          { name: "한화비전 IP CCTV 4채널 세트", desc: "매장 표준 보안 · 약 80~150만원", tier: "standard" },
+          { name: "기본 NVR 세트(아이피타임 등)", desc: "최저 비용 · 약 30~60만원", tier: "budget" },
+        ]},
+      ],
+      "living-service": [
+        { icon: Droplets, label: language === "ko" ? "상업용 세탁기·건조기" : "Commercial Laundry", items: [
+          { name: "지르바우(Girbau) 상업용", desc: "프리미엄 코인세탁 · 대당 500~800만원", tier: "premium" },
+          { name: "엘렉트로룩스 프로페셔널", desc: "프랜차이즈 표준 · 대당 350~600만원", tier: "standard" },
+          { name: "LG 상업용 트롬 / 휘센", desc: "보급형 · 대당 200~400만원", tier: "standard" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "다림질·드라이클리닝" : "Press & Dry-clean", items: [
+          { name: "유니맥스 / 마이크로테크 다림기", desc: "스팀 다림 · 약 80~150만원", tier: "standard" },
+          { name: "상업용 드라이클리닝 머신", desc: "친환경 모델 · 약 1,500~3,000만원", tier: "premium" },
+          { name: "보급형 핸드 스팀러 + 프레스", desc: "소형 매장 · 약 30~80만원", tier: "budget" },
+        ]},
+        { icon: Box, label: language === "ko" ? "무인 운영·결제" : "Self-service & Payment", items: [
+          { name: "코인워시365 무인 키오스크", desc: "24시 무인 운영 · 약 300~500만원", tier: "standard" },
+          { name: "토스플레이스 + 카카오페이", desc: "QR·카드 무인 결제", tier: "budget" },
+          { name: "한화비전 CCTV + 출입 보안", desc: "무인 매장 필수 · 약 80~150만원", tier: "standard" },
+        ]},
+      ],
+      "space": [
+        { icon: Box, label: language === "ko" ? "무인 키오스크·출입 시스템" : "Self-service & Access", items: [
+          { name: "스마트키오스크(SmartKiosk)", desc: "스터디카페 무인 결제·예약 · 약 250~400만원", tier: "standard" },
+          { name: "탑존 / 코웨이 출입카드 시스템", desc: "키카드·QR 출입 · 약 100~200만원", tier: "standard" },
+          { name: "토스플레이스 + 카카오페이", desc: "QR·카드 무인 결제 · 월 0원~", tier: "budget" },
+        ]},
+        { icon: Coffee, label: language === "ko" ? "음료·간식 디스펜서" : "Beverage & Snack", items: [
+          { name: "코웨이 정수기·커피머신 임대", desc: "월 임대 · 무료 설치 + A/S", tier: "standard" },
+          { name: "유니맥스 자동판매기", desc: "스낵·캔음료 · 약 200~400만원", tier: "standard" },
+          { name: "셀프 커피·차 머신 (드롱기 등)", desc: "보급형 · 약 30~80만원", tier: "budget" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "보안·CCTV" : "Security & CCTV", items: [
+          { name: "한화비전 IP CCTV 8채널", desc: "무인 운영 표준 · 약 150~300만원", tier: "standard" },
+          { name: "에스원 / KT텔레캅 보안 서비스", desc: "월 정액 · 무인 매장 권장", tier: "standard" },
+          { name: "기본 NVR + IP 카메라", desc: "최저 비용 · 약 50~100만원", tier: "budget" },
+        ]},
+      ],
+    };
+
+    // ── Sub-industry overrides (sub-industry > category) ──
+    //  · 국밥집, 한식백반, 이자카야 같이 sub-industry 가 카테고리 평균과 크게 다른 경우 전용 데이터 노출
+    //  · 카테고리 fallback 보다 우선 적용
+    const subIndustryEquipment: Record<string, EquipmentCategory[]> = {
+      // 면/국밥/해장국 — 국밥집·해장국집·국수 전문점
+      "ramen-noodle": [
+        { icon: Flame, label: language === "ko" ? "국솥·압력솥·화구 (국물 우리기)" : "Stockpot, Pressure Cooker, Burner", items: [
+          { name: "동광 대형 국솥 100~200L", desc: "사골·잡뼈 우리기 · 약 80~180만원 · 국밥집 핵심 장비", tier: "standard" },
+          { name: "PN풍년 업소용 압력솥 70~100L", desc: "사골 추출 시간 1/3 단축 · 약 150~300만원", tier: "premium" },
+          { name: "린나이 강력 화구 (300,000~500,000kcal/h)", desc: "대형 국솥 가열용 강력 화구 · 약 60~150만원", tier: "standard" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "보온고·밥솥·뚝배기" : "Warming Cabinet, Rice Cooker, Bowls", items: [
+          { name: "그랜드 밥보온고 WS-HC050 (50그릇)", desc: "공기밥 대량 보온 · 약 150~250만원 · 점심 회전율 핵심", tier: "standard" },
+          { name: "쿠쿠 업소용 IH 밥솥 30인용", desc: "대용량 밥솥 · 약 80~150만원 · 일 200~400공기 매장 표준", tier: "standard" },
+          { name: "토가마 업소용 뚝배기 (500ml/700ml)", desc: "여주 직매 토가마 · 개당 약 5,000~12,000원 · 50~100개 초도", tier: "budget" },
+        ]},
+        { icon: Box, label: language === "ko" ? "냉장·반찬·식기세척" : "Refrigeration & Dishwasher", items: [
+          { name: "그랜드우성 4도어 냉장·냉동고", desc: "사골육수·내장·반찬 보관 · 약 200~350만원", tier: "standard" },
+          { name: "프리미어 김치냉장고 업소용 600L", desc: "깍두기·열무·배추김치 보관 · 약 150~250만원", tier: "standard" },
+          { name: "린나이 도어형 식기세척기", desc: "뚝배기·반찬그릇 회전율 핵심 · 약 250~450만원", tier: "premium" },
+        ]},
+        { icon: Box, label: language === "ko" ? "POS·주문·키오스크" : "POS & Kiosk", items: [
+          { name: "토스플레이스 키오스크 + 배민·요기요 연동", desc: "한식당 표준 · 월 0원~", tier: "budget" },
+          { name: "오케이포스(OKPOS) 한식당 패키지", desc: "POS + 주문 + 매출 통합 · 단말기 150~250만원", tier: "standard" },
+          { name: "캐시노트 매출관리", desc: "수기 매출 입력 가능 · 무료 (POS 없는 노포 활용)", tier: "budget" },
+        ]},
+      ],
+      // 한식·백반·캐주얼 식사
+      "korean-casual": [
+        { icon: Flame, label: language === "ko" ? "한식 화구·웍·찜기" : "Korean Burners & Steamers", items: [
+          { name: "린나이 상업용 4구 가스레인지", desc: "찌개·전·반찬 동시 조리 · 약 150~250만원", tier: "standard" },
+          { name: "PN풍년 업소용 압력솥 30~50L", desc: "갈비찜·찜닭 등 찜요리 · 약 80~150만원", tier: "standard" },
+          { name: "동광 대형 찜기 2단 스테인리스", desc: "만두·전 등 대량 찜 조리 · 약 50~100만원", tier: "budget" },
+        ]},
+        { icon: Sparkles, label: language === "ko" ? "반찬 보관·김치냉장고·밥솥" : "Banchan Storage & Rice Cooker", items: [
+          { name: "프리미어 김치냉장고 업소용 1000L+", desc: "김치 5종+ 보관 · 약 250~400만원 · 백반집 필수", tier: "standard" },
+          { name: "유니맥스 반찬 토핑 냉장고", desc: "30~40종 반찬 디스플레이 · 약 200~350만원", tier: "standard" },
+          { name: "쿠쿠 업소용 IH 밥솥 30인용 ×2대", desc: "대용량 밥솥 2대 운영 · 약 160~300만원", tier: "standard" },
+        ]},
+        { icon: Box, label: language === "ko" ? "반찬 자동화·식기세척" : "Banchan Automation & Dishwasher", items: [
+          { name: "린나이 도어형 식기세척기 + 보조 싱크", desc: "한정식·백반 회전율 핵심 · 약 350~600만원", tier: "premium" },
+          { name: "그랜드우성 작업대 냉장고 1500mm", desc: "반찬 전처리 작업대 · 약 200~300만원", tier: "standard" },
+          { name: "동광 스테인리스 반찬 진열 매대", desc: "셀프바형 반찬 진열 · 약 80~150만원", tier: "budget" },
+        ]},
+        { icon: Box, label: language === "ko" ? "POS·키오스크" : "POS & Kiosk", items: [
+          { name: "토스플레이스 키오스크 + 배민·쿠팡 통합", desc: "월 0원~ · 한식당 1순위", tier: "budget" },
+          { name: "오케이포스 한식당 + 테이블오더", desc: "테이블 QR 주문 · 약 200~350만원", tier: "standard" },
+        ]},
+      ],
+      // 이자카야·주점·포차
+      "izakaya-pub": [
+        { icon: Flame, label: language === "ko" ? "그릴·꼬치·튀김 장비" : "Grill, Skewer, Fryer", items: [
+          { name: "야키도리 숯불 그릴 (린나이 비장탄용)", desc: "꼬치 전문 그릴 · 약 150~300만원", tier: "premium" },
+          { name: "유니맥스 튀김기 듀얼 18L", desc: "가라아게·튀김 메뉴 · 약 80~150만원", tier: "standard" },
+          { name: "린나이 다코야끼·철판 그리들", desc: "철판 안주 메뉴 · 약 100~200만원", tier: "standard" },
+        ]},
+        { icon: Wine, label: language === "ko" ? "주류 디스펜서·냉장" : "Drink Dispenser & Refrigeration", items: [
+          { name: "타프리 비어 디스펜서 (생맥주 4탭)", desc: "생맥주 매장 필수 · 약 250~400만원", tier: "premium" },
+          { name: "사케 전용 냉장고 (-2°C ~ 5°C)", desc: "사케·일본 술 보관 · 약 150~250만원", tier: "standard" },
+          { name: "캐리어 음료냉장고 1200L 글래스도어", desc: "병맥주·음료·하이볼 진열 · 약 100~200만원", tier: "standard" },
+        ]},
+        { icon: Box, label: language === "ko" ? "POS·테이블오더·결제" : "POS, Table Order, Payment", items: [
+          { name: "오케이포스 + 테이블오더 (셀프 주문)", desc: "테이블당 QR 주문 · 약 200~350만원", tier: "standard" },
+          { name: "토스플레이스 키오스크", desc: "분리 결제·계산 자동화 · 월 0원~", tier: "budget" },
+        ]},
+      ],
+    };
+
+    const subIndustrySupplies: Record<string, { [step: number]: SupplyCategory[] }> = {
+      // 면/국밥/해장국 — 국밥집 식자재
+      "ramen-noodle": {
+        1: [
+          { icon: Layers, label: language === "ko" ? "사골·잡뼈·내장 (국물 베이스)" : "Bones & Offal", items: [
+            { name: "마장축산물시장 (1차 도매)", desc: "사골·잡뼈·내장 직매 · 도매가 가장 저렴 · 새벽 직접 픽업", tier: "budget" },
+            { name: "한국식자재유통", desc: "사골·잡뼈 정육 가공 후 배송 · 안정적 납품", tier: "standard" },
+            { name: "CJ프레시웨이 한식 라인", desc: "사골 농축액·완제 육수까지 공급 · 표준화 강점", tier: "standard" },
+          ]},
+          { icon: Flame, label: language === "ko" ? "순대·내장 가공품 (순대국용)" : "Sundae & Offal (for Sundae-soup)", items: [
+            { name: "전주 풍년식품 / 신정사 순대", desc: "순대 전문 OEM · 박스 단위 도매 · 보관 -18°C", tier: "standard" },
+            { name: "마장 직거래 양·곱창·머리고기", desc: "1차 도축장 직매 · 신선도 최고 · 가격 변동 큼", tier: "budget" },
+          ]},
+          { icon: Sprout, label: language === "ko" ? "쌀·반찬 재료 (밥·깍두기·열무)" : "Rice & Banchan Base", items: [
+            { name: "농협 직거래 쌀 (이천·여주산)", desc: "20kg 단위 · 한식당 표준 품질 · 월 단위 계약", tier: "standard" },
+            { name: "가락시장 새벽 도매 (배추·무·열무)", desc: "김치 자체 담그는 매장용 · 시세 변동 모니터링 필수", tier: "budget" },
+            { name: "풀무원·CJ제일제당 김치 OEM", desc: "깍두기·열무 완제품 · 인건비 절감 · 단가 ↑", tier: "standard" },
+          ]},
+          { icon: Sparkles, label: language === "ko" ? "양념·소금·기름 (간 맞추기)" : "Seasoning, Salt, Oil", items: [
+            { name: "샘표 / 대상 청정원 업소용 간장·다시다", desc: "한식 표준 양념 · B2B 대용량", tier: "standard" },
+            { name: "신안천일염 (3년 간수 뺀 것)", desc: "한식 짠맛 핵심 · 20kg 단위", tier: "standard" },
+            { name: "오뚜기 들기름·참기름 업소용", desc: "고소한 풍미 · 1.8L 대용량", tier: "budget" },
+            { name: "광천 새우젓 (육젓)", desc: "순대국·국밥 간 핵심 · 5kg 단위", tier: "standard" },
+          ]},
+        ],
+        2: [
+          { icon: Package, label: language === "ko" ? "포장재 (배달·테이크아웃)" : "Packaging (Delivery & To-go)", items: [
+            { name: "하나팩 국물 누설 방지 용기 (PP)", desc: "국밥 배달 표준 용기 · 1,200ml · 단가 200~400원", tier: "standard" },
+            { name: "원팩 다용도 국물 용기 + 뚜껑", desc: "1회용 누설 방지 · 박스 단위 도매", tier: "standard" },
+            { name: "현진팩 친환경 종이 용기", desc: "친환경 트렌드 대응 · 단가 1.5배", tier: "premium" },
+          ]},
+          { icon: Shield, label: language === "ko" ? "주방 위생 소모품" : "Kitchen Hygiene", items: [
+            { name: "유한킴벌리 B2B 행주·위생장갑", desc: "한식당 위생 표준 · 대량 공급", tier: "standard" },
+            { name: "3M 업소용 수세미·세제", desc: "뚝배기 전용 강력 세척용", tier: "standard" },
+            { name: "아성다이소 기업구매", desc: "일반 청소 소모품 최저가 · 일괄 조달", tier: "budget" },
+          ]},
+        ],
+      },
+      // 한식·백반
+      "korean-casual": {
+        1: [
+          { icon: Leaf, label: language === "ko" ? "신선 식재료 (반찬 30종~)" : "Fresh Ingredients (30+ Banchan)", items: [
+            { name: "CJ프레시웨이", desc: "식자재 1위 · 반찬 OEM 공급 가능 · 안정적 납품", tier: "standard" },
+            { name: "마켓컬리 비즈", desc: "신선도 최고 · 새벽배송 · 소규모 백반집 최적", tier: "standard" },
+            { name: "가락시장 새벽 도매", desc: "직접 픽업 · 가격 가장 저렴 · 인력 필요", tier: "budget" },
+          ]},
+          { icon: Flame, label: language === "ko" ? "양념·소스·장류" : "Seasoning, Sauce, Fermented", items: [
+            { name: "샘표·해찬들 된장·고추장 업소용", desc: "한식당 장류 표준 · 5kg 대용량", tier: "standard" },
+            { name: "대상 청정원 다시다·간장 업소용", desc: "조미료·간장 1위 · B2B 라인", tier: "standard" },
+            { name: "오뚜기 들기름·참기름·식초", desc: "한식 기름 표준 · 1.8L 단위", tier: "budget" },
+          ]},
+          { icon: Sprout, label: language === "ko" ? "쌀·잡곡·김치 (대량)" : "Rice, Grains, Kimchi (Bulk)", items: [
+            { name: "농협 직거래 쌀 (이천·진상)", desc: "백반집 표준 품질 · 20kg 단위 · 월 계약", tier: "standard" },
+            { name: "풀무원·종갓집 김치 OEM 5종", desc: "김치 자체 담그기 어려운 매장용 · 일정 단가", tier: "standard" },
+            { name: "대상 청정원 김치·반찬 완제품", desc: "30~40종 반찬 외부 조달 · 인건비 절감", tier: "standard" },
+          ]},
+        ],
+        2: [
+          { icon: Package, label: language === "ko" ? "포장재·반찬 용기" : "Packaging & Banchan Containers", items: [
+            { name: "하나팩 다용도 한식 포장 용기", desc: "백반·도시락 배달 표준 · 박스 단위", tier: "standard" },
+            { name: "원팩 반찬 칸막이 용기", desc: "5칸·7칸 분리 용기 · 백반 도시락 전용", tier: "standard" },
+            { name: "현진팩 친환경 종이 용기", desc: "친환경 트렌드 대응 · 단가 1.5배", tier: "premium" },
+          ]},
+        ],
+      },
+    };
+
     const stepLabels: Record<number, string> = {
       1: language === "ko" ? "원자재 공급처 추천" : "Raw Material Suppliers",
       2: language === "ko" ? "포장재·소모품 추천" : "Packaging & Consumables",
       3: language === "ko" ? "계약 관리 도구 추천" : "Invoice & Contract Tools",
       4: language === "ko" ? "발주 플랫폼 추천" : "B2B Order Platforms",
     };
+
+    // ── Resolve supplies & equipment with sub-industry override priority ──
+    const subSupplyData = selectedIndustryId ? subIndustrySupplies[selectedIndustryId] : undefined;
     const supplies: SupplyCategory[] =
       guideStepIndex === 3 ? step3Supplies :
       guideStepIndex === 4 ? step4Supplies :
-      industryStepData[guideStepIndex] ?? [];
-    if (supplies.length === 0) return null;
+      // sub-industry 가 우선, 없으면 category 폴백
+      (subSupplyData?.[guideStepIndex] ?? industryStepData[guideStepIndex] ?? []);
+
+    // 운영 장비·기계는 step 1 (원자재 공급처) 진입 시에만 함께 노출 → vendor-setup 단계의 정체성을 강화
+    const equipmentList: EquipmentCategory[] = guideStepIndex === 1
+      ? (
+          (selectedIndustryId ? subIndustryEquipment[selectedIndustryId] : undefined)
+          ?? equipmentByCategory[industryCategoryId]
+          ?? []
+        )
+      : [];
+
+    // 사용자에게 sub-industry 맞춤 데이터임을 표시할 라벨
+    const usingSubIndustry = guideStepIndex === 1
+      && selectedIndustryId
+      && (!!subIndustryEquipment[selectedIndustryId] || !!subIndustrySupplies[selectedIndustryId]);
+
+    if (supplies.length === 0 && equipmentList.length === 0) return null;
     const urlMap = VENDOR_URL_MAP;
     const tierConfig = {
       premium: { bg: "rgba(88,86,214,0.12)", fg: "rgb(88,86,214)", label: language === "ko" ? "프리미엄" : "Premium" },
@@ -405,10 +727,92 @@ export function StageGuideViewer() {
     };
     return (
       <>
+        {/* ── 운영 장비·기계 (vendor-setup 전용 — 인테리어 단계와 분리) ── */}
+        {equipmentList.length > 0 && (
+          <>
+            <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", margin: "16px 0 12px" }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", flexWrap: "wrap" as const, gap: "6px" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, color: "rgba(0,0,0,0.38)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+                {language === "ko" ? "운영 장비·기계 추천" : "Operating Equipment & Machines"}
+                {usingSubIndustry && (
+                  <span style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: "999px",
+                    background: "#191970",
+                    color: "#ffffff",
+                    letterSpacing: "0",
+                    textTransform: "none" as const,
+                    boxShadow: "0 1px 2px rgba(25,25,112,0.25)",
+                  }}>
+                    {language === "ko" ? "✓ 업종 맞춤" : "✓ Sub-industry"}
+                  </span>
+                )}
+              </span>
+              <span style={{ fontSize: "11px", color: "rgba(0,0,0,0.4)" }}>
+                {language === "ko" ? "구매·렌탈 비교" : "buy vs lease"}
+              </span>
+            </div>
+            <div style={{
+              fontSize: "12.5px",
+              color: "rgba(0,80,200,0.85)",
+              lineHeight: 1.55,
+              padding: "10px 14px",
+              borderRadius: "12px",
+              background: "rgba(0,122,255,0.06)",
+              marginBottom: "12px",
+            }}>
+              {language === "ko"
+                ? "💡 인테리어 단계에서는 마감재·설비·매장 가구를, 이 단계에서는 매장 운영에 쓰는 장비·기계를 다룹니다. 렌탈·할부도 가능하니 초도 자본 부담을 분산하세요."
+                : "💡 Construction stage covers finishes, fixtures, and store furniture. This stage covers operating equipment & machines. Rental/installment options can ease initial capital burden."}
+            </div>
+            {equipmentList.map((eq, ei) => {
+              const catColor = categoryColors[ei % categoryColors.length];
+              const Icon = eq.icon;
+              const selKey = `${currentStage.stageId}_eq_c${ei}`;
+              const selectedName = vendorSelections[selKey] ?? "";
+              return (
+                <div key={`eq-${ei}`} style={{ marginBottom: "10px" }}>
+                  <div style={{ fontSize: "11.5px", fontWeight: 600, color: "rgba(0,0,0,0.38)", letterSpacing: "0.04em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
+                    {eq.label}
+                  </div>
+                  <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)" }}>
+                    {eq.items.map((item, ii) => {
+                      const tier = tierConfig[item.tier];
+                      const isSelected = selectedName === item.name;
+                      return (
+                        <div key={ii}>
+                          {ii > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", marginLeft: "68px" }} />}
+                          <div
+                            style={{ display: "flex", alignItems: "center", gap: "14px", padding: "13px 18px", cursor: "pointer", background: isSelected ? "rgba(0,122,255,0.04)" : "transparent", transition: "background 0.15s" }}
+                            onClick={() => setVendorSelections(prev => ({ ...prev, [selKey]: isSelected ? "" : item.name }))}
+                          >
+                            <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: catColor.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: catColor.fg }}>
+                              <Icon size={18} strokeWidth={1.8} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: "14px", fontWeight: 590, color: "var(--text)", letterSpacing: "-0.3px", marginBottom: "2px" }}>{item.name}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.5)", lineHeight: 1.45 }}>{item.desc}</div>
+                            </div>
+                            <span style={{ fontSize: "10.5px", fontWeight: 700, padding: "3px 8px", borderRadius: "999px", background: tier.bg, color: tier.fg, flexShrink: 0, letterSpacing: "0.02em" }}>{tier.label}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {supplies.length > 0 && (<>
         <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", margin: "16px 0 12px" }} />
         <div style={{ fontSize: "12px", fontWeight: 600, color: "rgba(0,0,0,0.38)", letterSpacing: "0.04em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
           {stepLabels[guideStepIndex]}
         </div>
+        </>)}
         {supplies.map((supply, si) => {
           const catColor = categoryColors[si % categoryColors.length];
           const Icon = supply.icon;

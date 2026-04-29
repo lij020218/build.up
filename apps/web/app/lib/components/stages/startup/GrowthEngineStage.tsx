@@ -1,6 +1,9 @@
 "use client";
 
+import { Star, TrendingUp, RotateCcw } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { ModePathCard } from "./ModePathCard";
+import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
 
 export function GrowthEngineStage() {
   const d = useDashboardCtx();
@@ -51,28 +54,37 @@ export function GrowthEngineStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      {/* ── 모드별 경로 카드 (최상단) ── */}
+      <ModePathCard stageId="growth-engine" />
+
+      {/* KEY ACTION 미드나이트 hero */}
+      <StartupKeyActionHero
+        eyebrow="KEY ACTION"
+        title={ko ? "리텐션 없는 성장은 밑 빠진 독" : "Growth without retention is a leaky bucket"}
+        subtitle={
+          ko
+            ? "초기 사용자가 \"돌아오는가?\"를 먼저 증명하세요. 북극성 지표 → 주간 리뷰 → 리텐션 코호트 순서로 성장 엔진을 만드세요."
+            : "Prove your users come back first. North Star → Weekly review → Retention cohort — build the growth engine."
+        }
+        miniCards={[
+          { icon: Star, label: ko ? "북극성" : "North Star", detail: ko ? "단 1개 지표" : "One metric" },
+          { icon: TrendingUp, label: ko ? "주간 리뷰" : "Weekly", detail: ko ? "월요일 30분" : "Mon 30min" },
+          { icon: RotateCcw, label: ko ? "리텐션" : "Retention", detail: ko ? "코호트 추적" : "Cohort track" },
+        ]}
+      />
+
+      <StartupReferenceLabel>
+        {ko ? "↓ 심화 참고 — North Star · 코호트 · 실험 표준" : "↓ Reference — North Star, cohort, experiment frameworks"}
+      </StartupReferenceLabel>
+
       {/* 페이지 네비 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button type="button" disabled={pg === 0} onClick={() => d.setGuideStepIndex((p: number) => p - 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === 0 ? "rgba(0,0,0,0.02)" : "white", color: pg === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === 0 ? "default" : "pointer",
-        }}>{ko ? "← 이전" : "← Prev"}</button>
-        <div style={{ display: "flex", gap: "4px" }}>
-          {pgLabels.map((l, i) => (
-            <button key={i} type="button" onClick={() => d.setGuideStepIndex(i)} style={{
-              padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: i === pg ? 700 : 500,
-              background: i === pg ? "#1d3557" : "transparent", color: i === pg ? "#fff" : "rgba(15,23,42,0.4)",
-              border: "none", cursor: "pointer",
-            }}>{l}</button>
-          ))}
-        </div>
-        <button type="button" disabled={pg === totalPg - 1} onClick={() => d.setGuideStepIndex((p: number) => p + 1)} style={{
-          padding: "8px 16px", borderRadius: "10px", border: "1px solid rgba(29,53,87,0.08)",
-          background: pg === totalPg - 1 ? "rgba(0,0,0,0.02)" : "white", color: pg === totalPg - 1 ? "rgba(0,0,0,0.2)" : "#0f172a",
-          fontSize: "13px", fontWeight: 600, cursor: pg === totalPg - 1 ? "default" : "pointer",
-        }}>{ko ? "다음 →" : "Next →"}</button>
-      </div>
+      <StartupPageNav
+        page={pg}
+        totalPages={totalPg}
+        labels={pgLabels}
+        onChange={(p) => d.setGuideStepIndex(p)}
+        ko={ko}
+      />
 
       {/* PAGE 0 — WHY */}
       {pg === 0 && (

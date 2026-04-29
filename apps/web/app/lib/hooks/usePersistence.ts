@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import {
   bootstrapAccountWorkspace,
+  buildRoadmapState,
   getCurrentUser,
   getIndustryCategoryIdByOptionId,
   getFranchiseBrandById,
@@ -12,9 +13,12 @@ import {
   saveRoadmapState,
   saveStoreData,
   starterTaskMap,
+  upsertStageDecision,
   type UserStoreData,
+  type WorkflowDecisionMap,
   type WorkflowTaskMap,
 } from "@build-up/shared";
+import { baseRoadmap } from "../helpers";
 import {
   useOperationsStore,
   useFinanceStore,
@@ -51,13 +55,48 @@ const LOCAL_STORAGE_KEYS = [
 export function clearLocalUserData(): void {
   try {
     LOCAL_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
-    // Zustand persist 키도 정리
-    ["buildup-operations", "buildup-finance", "buildup-profile", "buildup-roadmap"].forEach((k) =>
-      localStorage.removeItem(k),
-    );
+    // Zustand persist 키 — 모든 buildup-* store. 한 곳에 빠지면 hydration 시 stale 상태가 살아남는다.
+    [
+      "buildup-operations",
+      "buildup-finance",
+      "buildup-profile",
+      "buildup-roadmap",
+      "buildup-cashflow",
+      "buildup-marketing",
+      "buildup-agents",
+      "buildup-customer-interviews",
+      "buildup-time-log",
+      "buildup-usage-stats-v1",
+    ].forEach((k) => localStorage.removeItem(k));
   } catch {
     /* ignore */
   }
+}
+
+/**
+ * Hard wipe — `clearLocalUserData` 보다 더 공격적.
+ * 데모 초기화 직전 (페이지 reload 직전) 호출해서 Zustand persist 가 set 으로 다시 써넣은
+ * 모든 "buildup*" / "__buildup*" 키를 통째로 제거. 다음 마운트에서 store 들은 initialState 로 시작.
+ */
+export function hardWipeBuildupStorage(): void {
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (k.startsWith("buildup") || k.startsWith("__buildup")) toRemove.push(k);
+    }
+    for (const k of toRemove) localStorage.removeItem(k);
+    // sessionStorage 에도 hint 가 남아있을 수 있으므로 정리.
+    try {
+      const sToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i);
+        if (k && (k.startsWith("buildup") || k.startsWith("__buildup"))) sToRemove.push(k);
+      }
+      for (const k of sToRemove) sessionStorage.removeItem(k);
+    } catch { /* ignore */ }
+  } catch { /* ignore */ }
 }
 
 /** Reset all 6 Zustand stores to their initial values */
@@ -78,8 +117,10 @@ export function applyStoreData(data: UserStoreData): void {
   const rm = useRoadmapStore.getState();
 
   if (data.storeName) prof.setStoreName(data.storeName);
-  if (data.businessLaunched) prof.setBusinessLaunched(true);
-  if (data.businessLaunchedDate) prof.setBusinessLaunchedDate(data.businessLaunchedDate);
+  // businessLaunched / launchedDate: 양방향 sync. Supabase 가 명시적으로 false/null 이면 로컬도 그렇게.
+  // 단, 키 자체가 row 에 없으면 (undefined) 손대지 않음 — 부분 update 시 안전.
+  if (typeof data.businessLaunched === "boolean") prof.setBusinessLaunched(data.businessLaunched);
+  if (data.businessLaunchedDate !== undefined) prof.setBusinessLaunchedDate(data.businessLaunchedDate);
   if (data.cpaDecision === "cpa" || data.cpaDecision === "self") prof.setCpaDecision(data.cpaDecision);
   if (data.taxSettings?.vatType) ops.setTaxSettings(data.taxSettings as TaxSettings);
   if (data.monthlyCosts && typeof data.monthlyCosts === "object") {
@@ -140,6 +181,54 @@ export function applyStoreData(data: UserStoreData): void {
     if ((data.marketingCampaigns as unknown[])?.length) mkt.setCampaigns(data.marketingCampaigns);
     if (data.marketingMonthlyBudget && data.marketingMonthlyBudget > 0) mkt.setMonthlyBudget(data.marketingMonthlyBudget);
   } catch { /* marketing store not loaded yet */ }
+  // 고객 인터뷰 복원 — Mom Test 노트 + AI 패턴 분석 (다른 기기 접속 시에도 유지)
+  try {
+    const { useInterviewStore } = require("../stores/interview-store");
+    const iv = useInterviewStore.getState();
+    if ((data.customerInterviews as unknown[])?.length) {
+      iv.setCustomerInterviews(data.customerInterviews as never);
+    }
+    if (data.interviewPatternAnalysis) {
+      iv.setPatternAnalysis(data.interviewPatternAnalysis as never);
+    }
+  } catch { /* interview store not loaded yet */ }
+  // 시간 로그 복원 — Drucker 5분 체크인 (다른 기기 접속 시에도 유지)
+  try {
+    const { useTimeLogStore } = require("../stores/time-log-store");
+    const tl = useTimeLogStore.getState();
+    if ((data.timeLogEntries as unknown[])?.length) {
+      tl.setEntries(data.timeLogEntries as never);
+    }
+    if (data.timeLogEnabled === false) {
+      tl.setEnabled(false);
+    }
+  } catch { /* time-log store not loaded yet */ }
+  // 현금흐름 설정 복원 — 통장 잔고·판매 채널·알림 설정
+  try {
+    const { useCashflowStore } = require("../stores/cashflow-store");
+    const cf = useCashflowStore.getState();
+    const settings = data.cashflowSettings as Record<string, unknown> | null | undefined;
+    if (settings && typeof settings === "object") {
+      if (typeof settings.currentBalance === "number") cf.setCurrentBalance(settings.currentBalance);
+      if (Array.isArray(settings.salesChannels) && settings.salesChannels.length > 0) {
+        cf.setSalesChannels(settings.salesChannels as never);
+      }
+      if (Array.isArray(settings.fixedExpenses) && settings.fixedExpenses.length > 0) {
+        // 기존 cashflow-store fixedExpenses 를 통째로 교체 (action 이 add 만 있어 reduce 가 필요)
+        const current = cf.fixedExpenses as unknown[];
+        // 중복 방지: id 기준
+        const existingIds = new Set(current.map((e) => (e as { id: string }).id));
+        for (const exp of settings.fixedExpenses as Array<{ id: string }>) {
+          if (!existingIds.has(exp.id)) cf.addFixedExpense(exp as never);
+        }
+      }
+      if (typeof settings.crisisThresholdDays === "number") cf.setCrisisThresholdDays(settings.crisisThresholdDays);
+      if (typeof settings.notifyOnCrisis === "boolean") cf.setNotifyOnCrisis(settings.notifyOnCrisis);
+      if (typeof settings.dailyMorningBriefing === "boolean") cf.setDailyMorningBriefing(settings.dailyMorningBriefing);
+      if (typeof settings.vatReserveEnabled === "boolean") cf.setVatReserveEnabled(settings.vatReserveEnabled);
+      // setupCompletedAt 은 markSetupCompleted action 만 있어, 이미 완료된 상태면 그대로 둠
+    }
+  } catch { /* cashflow store not loaded yet */ }
 }
 
 /** Collect store data for Supabase sync (reads from Zustand stores, not localStorage) */
@@ -194,6 +283,45 @@ export function collectStoreData(): Partial<UserStoreData> {
     if (mkt.campaigns.length) r.marketingCampaigns = mkt.campaigns;
     if (mkt.monthlyBudget > 0) r.marketingMonthlyBudget = mkt.monthlyBudget;
   } catch { /* marketing store not loaded yet */ }
+  // 고객 인터뷰 — Mom Test 노트 + AI 패턴 분석
+  try {
+    const { useInterviewStore } = require("../stores/interview-store");
+    const iv = useInterviewStore.getState();
+    if (iv.customerInterviews && iv.customerInterviews.length > 0) {
+      r.customerInterviews = iv.customerInterviews;
+    }
+    if (iv.patternAnalysis) {
+      r.interviewPatternAnalysis = iv.patternAnalysis;
+    }
+  } catch { /* interview store not loaded yet */ }
+  // 시간 로그 — Drucker 매일 저녁 5분 체크인 (사장님 직접 입력)
+  try {
+    const { useTimeLogStore } = require("../stores/time-log-store");
+    const tl = useTimeLogStore.getState();
+    if (tl.entries && tl.entries.length > 0) {
+      r.timeLogEntries = tl.entries;
+    }
+    r.timeLogEnabled = tl.enabled;
+  } catch { /* time-log store not loaded yet */ }
+  // 현금흐름 설정 — Cash-flow Crunch Tracker (사장님 직접 입력, 손실 시 큰 손실)
+  try {
+    const { useCashflowStore } = require("../stores/cashflow-store");
+    const cf = useCashflowStore.getState();
+    // setupCompletedAt 이 있을 때만 의미 있는 설정으로 간주해 저장
+    if (cf.setupCompletedAt || cf.currentBalance > 0 || cf.fixedExpenses.length > 0) {
+      r.cashflowSettings = {
+        currentBalance: cf.currentBalance,
+        currentBalanceUpdatedAt: cf.currentBalanceUpdatedAt,
+        salesChannels: cf.salesChannels,
+        fixedExpenses: cf.fixedExpenses,
+        crisisThresholdDays: cf.crisisThresholdDays,
+        notifyOnCrisis: cf.notifyOnCrisis,
+        dailyMorningBriefing: cf.dailyMorningBriefing,
+        vatReserveEnabled: cf.vatReserveEnabled,
+        setupCompletedAt: cf.setupCompletedAt,
+      };
+    }
+  } catch { /* cashflow store not loaded yet */ }
   return r;
 }
 
@@ -205,7 +333,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   // Zustand selectors (reactive values for effects)
   const {
     persistenceReady, setPersistenceReady,
-    setAuthLabel, setPersistenceLabel,
+    setAuthLabel, setUserName, setPersistenceLabel,
     setRequiresAuth, setAuthResolved,
     setShowOnboardingChoice, setShowMonthlyCostPrompt,
     setUserRole,
@@ -236,14 +364,35 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const connectLoadingRef = useRef(false);
   const storeDataTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * Reset 도중 autosave 콜백이 실행되는 것을 차단하는 동기 플래그.
+   *  React state (`persistenceReady`) 는 비동기라 setTimeout 콜백이 fire 할 때
+   *  이미 false 가 됐다고 보장 못 함. 이 ref 로 콜백 시작 시점에 즉시 차단.
+   */
+  const isResettingRef = useRef(false);
 
   // ── connectAndLoad ──
   const connectAndLoad = async () => {
     if (connectLoadingRef.current) return;
     connectLoadingRef.current = true;
     try {
+      console.log("[connectAndLoad] start");
       const result = await bootstrapAccountWorkspace(supabase);
+      console.log("[connectAndLoad] bootstrap done", {
+        userId: result.user.id?.slice(0, 8),
+        isNew: result.isNew,
+        roadmapStageId: result.state.roadmap.currentStageId,
+        completedStages: result.state.roadmap.completedStageIds.length,
+        decisionsKeys: Object.keys(result.state.decisions),
+      });
       const userLabel = result.user.email ?? copy.common.account;
+      // 회원가입 시 입력한 이름 추출 — auth.users.user_metadata.name 에 저장됨.
+      // 인사말·프로필 헤더 등 UI 에서 사용. 비어있으면 null.
+      const meta = (result.user.user_metadata ?? {}) as Record<string, unknown>;
+      const rawName = typeof meta.name === "string" ? meta.name.trim()
+        : typeof meta.full_name === "string" ? meta.full_name.trim()
+        : "";
+      setUserName(rawName.length > 0 ? rawName : null);
 
       // CRITICAL: Detect user switch — clear previous user's localStorage data
       const previousUserId = localStorage.getItem("__buildup_uid");
@@ -346,17 +495,43 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       // ── Store data sync: Supabase ↔ localStorage ──
       try {
         const storeData = await loadStoreData(supabase, result.user);
+        console.log("[connectAndLoad] storeData", {
+          exists: !!storeData,
+          businessLaunched: storeData?.businessLaunched,
+          storeName: storeData?.storeName,
+        });
         if (storeData) {
           applyStoreData(storeData);
         } else {
           // First time: migrate localStorage → Supabase
           const localData = collectStoreData();
+          console.log("[connectAndLoad] no server storeData; migrating localData", { keys: Object.keys(localData) });
           if (Object.keys(localData).length > 0) {
             await saveStoreData(supabase, localData, result.user).catch(() => {});
           }
         }
-      } catch {
+      } catch (err) {
+        console.warn("[connectAndLoad] storeData load failed", err);
         // Silent fail — localStorage already loaded via useState initializers
+      }
+
+      // ── ⚠️ Stale `businessLaunched` 플래그 자가복구 ──
+      // 시나리오: 데모 초기화(/api/account/reset)가 일부 테이블 삭제에 실패하거나 (RLS·권한·partial fail),
+      //  비인증 상태에서 client-only reset 만 일어나는 경우, server 의 user_store_data.businessLaunched=true
+      //  flag 가 살아남는다. 다음 마운트에서 applyStoreData 가 이걸 다시 setBusinessLaunched(true) 로 적용 →
+      //  로드맵은 첫 단계로 리셋됐는데 home 의 progress 100% / 21/21 완료가 표시되는 모순 화면이 발생.
+      // 자가복구: 로드맵에 완료된 stage 가 0개인데 businessLaunched=true 면 stale 로 판정 → 양쪽 wipe.
+      const profileLaunched = useProfileStore.getState().businessLaunched;
+      const completedFromRoadmap = result.state.roadmap.completedStageIds.length;
+      if (profileLaunched && completedFromRoadmap === 0) {
+        useProfileStore.getState().setBusinessLaunched(false);
+        useProfileStore.getState().setBusinessLaunchedDate(null);
+        // Server 에도 false 강제 반영 — 다음 새로고침에 다시 살아나지 않게
+        void saveStoreData(
+          supabase,
+          { businessLaunched: false, businessLaunchedDate: null },
+          result.user,
+        ).catch(() => { /* silent — UI 는 이미 일관 */ });
       }
 
       // Show onboarding choice when no industry has been selected yet
@@ -365,6 +540,47 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       const dismissed = localStorage.getItem("buildup_onboarding_dismissed") === "true";
       if (!hasIndustry && !isLaunched && !dismissed) {
         setShowOnboardingChoice(true);
+      }
+
+      // ── ⚠️ 로드맵 0단계 리셋 자동 복구 (Auto-heal) ──
+      // 증상: 18/18 완료된 유저의 completedStageIds가 0으로 돌아가는 문제.
+      // 원인: (1) starter-data.ts에 신규 stage 추가 시 기존 유저의 decisions에 해당 stage completedAt 누락
+      //       (2) autosave delete-then-insert 레이스에서 순간적으로 decisions 빈 상태가 Supabase에 저장
+      //       (3) Zustand persist hydration 실패 등
+      // 해결: businessLaunched=true인 유저의 모든 path-stage에 completedAt을 보강하고 Supabase에 재저장.
+      if (isLaunched) {
+        const currentDecisions = result.state.decisions;
+        const currentStages = result.state.roadmap.stages;
+        const missing = currentStages.filter(
+          (s: { stageId: string }) => !currentDecisions[s.stageId]?.completedAt,
+        );
+        // 안전장치: 결정값이 0개거나 거의 모든 stage 가 비어있으면 "초기화 직후" 상태이므로
+        // auto-heal 금지 (그렇지 않으면 reset 후 isLaunched 가 잠깐 true 일 때 20단계 자동 완료됨).
+        const decisionCount = Object.keys(currentDecisions).length;
+        const looksLikeFreshReset = decisionCount === 0 || missing.length === currentStages.length;
+        if (missing.length > 0 && !looksLikeFreshReset) {
+          const nowIso = new Date().toISOString();
+          let healedDecisions: WorkflowDecisionMap = currentDecisions;
+          for (const stage of missing) {
+            healedDecisions = upsertStageDecision(healedDecisions, stage.stageId, {
+              stageId: stage.stageId,
+              completedAt: nowIso,
+            });
+          }
+          const healedRoadmap = buildRoadmapState(
+            { ...baseRoadmap, roadmapId: result.state.roadmap.roadmapId },
+            healedDecisions,
+            reconciled,
+          );
+          setDecisions(healedDecisions);
+          setRoadmap(healedRoadmap);
+          // Supabase에 즉시 반영 (다음 새로고침에도 복구 상태가 유지되도록)
+          void saveRoadmapState(supabase, {
+            roadmap: healedRoadmap,
+            decisions: healedDecisions,
+            tasks: reconciled,
+          }).catch(() => { /* silent — UI에서는 이미 보강됨 */ });
+        }
       }
 
       // Monthly cost prompt: 매월 1~7일, 이번 달 비용 미입력 시 표시
@@ -481,6 +697,13 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     }
 
     autosaveTimerRef.current = setTimeout(() => {
+      // 동기 가드: reset 도중이면 콜백 즉시 종료 (saveRoadmapState 가 ensureBusinessProfile +
+      // roadmaps UPSERT 를 무조건 수행하기 때문에 — 즉, 자동저장이 reset 직후 row 를 재생성하는
+      // race 를 차단해야 함).
+      if (isResettingRef.current) {
+        console.log("[autosave] blocked — reset in progress");
+        return;
+      }
       const snap = roadmapSnapshotRef.current;
       void Promise.all([
         saveRoadmapState(supabase, {
@@ -524,6 +747,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     if (!persistenceReady) return;
 
     const interval = setInterval(() => {
+      // reset 도중 차단
+      if (isResettingRef.current) return;
       void saveStoreData(supabase, storeDataSnapshotRef.current).catch(() => {});
     }, 5000);
 
@@ -547,6 +772,31 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     };
   }, [persistenceReady]);
 
+  /**
+   * Reset 직전 호출 — 모든 autosave 채널을 즉시 차단.
+   *  ⚠️ setPersistenceReady(false) 만으로는 부족. useEffect cleanup 으로 timer 가
+   *  지워지지만, "현재 살아있는 800ms 타이머" 는 closure 안에서 ref 로만 잡혀있어
+   *  외부에서 명시적으로 clearTimeout 해야 함.
+   */
+  const cancelAllAutosaves = () => {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    if (storeDataTimerRef.current) {
+      clearTimeout(storeDataTimerRef.current);
+      storeDataTimerRef.current = null;
+    }
+  };
+
+  /**
+   * Reset 동안 autosave 콜백 실행을 동기적으로 차단/해제.
+   * resetDemo 시작 시 setResetting(true), 마지막에 setResetting(false) (또는 reload).
+   */
+  const setResetting = (value: boolean) => {
+    isResettingRef.current = value;
+  };
+
   return {
     connectAndLoad,
     persistCurrentState,
@@ -555,5 +805,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     resetLocalState,
     applyStoreData,
     collectStoreData,
+    cancelAllAutosaves,
+    setResetting,
   };
 }

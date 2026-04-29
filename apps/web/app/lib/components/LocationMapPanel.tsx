@@ -11,6 +11,11 @@ export function LocationMapPanel(props: {
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const overlaysRef = useRef<unknown[]>([]);
+  // 후보별 좌표 캐시 — 카드 클릭 시 panTo 가능하도록
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const pinPosRef = useRef<Map<string, any>>(new Map());
+  const mapInstanceRef = useRef<any>(null);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const ko = props.language === "ko";
@@ -37,6 +42,8 @@ export function LocationMapPanel(props: {
         const maps = kakao.maps;
         const center = new maps.LatLng(37.5665, 126.978);
         const map = new maps.Map(mapRef.current, { center, level: 7 });
+        mapInstanceRef.current = map;
+        pinPosRef.current = new Map();
         setMapLoaded(true);
 
         if (!maps.services) return;
@@ -44,10 +51,28 @@ export function LocationMapPanel(props: {
         const geo = new maps.services.Geocoder();
         const bounds = new maps.LatLngBounds();
         const overlays: any[] = [];
+        // 동일 좌표 충돌 방지 — 동일 lat/lng 에 핀이 이미 있으면 미세하게 offset.
+        //  built-in 데이터가 같은 districtName 만 가지고 있을 때 (예: "도봉구") 여러 후보가
+        //  같은 구청 좌표로 매칭되는 경우 시각적으로 구분되지 않음 → 작은 분산.
+        const usedKeys = new Set<string>();
+        const ensureUnique = (lat: number, lng: number): { lat: number; lng: number } => {
+          let l = lat, g = lng, attempt = 0;
+          while (usedKeys.has(`${l.toFixed(4)},${g.toFixed(4)}`) && attempt < 8) {
+            // 작은 spiral offset (~50m 단위)
+            const angle = attempt * (Math.PI / 4);
+            l = lat + Math.cos(angle) * 0.0005;
+            g = lng + Math.sin(angle) * 0.0005;
+            attempt++;
+          }
+          usedKeys.add(`${l.toFixed(4)},${g.toFixed(4)}`);
+          return { lat: l, lng: g };
+        };
 
         const addPin = (c: typeof props.candidates[0], lat: number, lng: number) => {
-          const pos = new maps.LatLng(lat, lng);
+          const unique = ensureUnique(lat, lng);
+          const pos = new maps.LatLng(unique.lat, unique.lng);
           bounds.extend(pos);
+          pinPosRef.current.set(c.id, pos);
 
           const scoreColor = (c.score ?? 0) >= 85 ? "#34c759" : (c.score ?? 0) >= 70 ? "#007aff" : "#ff9f0a";
           const isSelected = c.id === props.selectedId;
@@ -63,47 +88,127 @@ export function LocationMapPanel(props: {
           overlaysRef.current.push(overlay);
         };
 
-        // Search candidates SEQUENTIALLY — Kakao Places API cancels concurrent calls
+        // Geocoding — title 에서 noise suffix 를 벗겨 core POI 를 추출하고,
+        //  검색 결과 중 카테고리 우선순위로 픽 (SW8 지하철역 > AT4 관광명소 > AG2 부동산 > 첫 결과).
+        //  Kakao keyword search 가 "도봉역 상권" 같은 컴파운드 query 에 산(山) POI 를 첫 결과로
+        //  돌려주는 fuzzy 매칭 문제 해결.
+        //
+        //  ① meta.lat/lng (AI 라이브)              — instant
+        //  ② strip suffix → core POI keyword search → SW8/AT4 우선 픽
+        //  ③ address(districtName) — districtName 이 ≥2 토큰일 때만
+        //  ④ keyword(districtName)
+        //  ⑤ address("서울 " + core)
+        const NOISE_SUFFIXES = ["상권", "거리", "골목", "역세권", "타운"];
+        const stripNoise = (t: string): string => {
+          let core = t.trim();
+          for (let pass = 0; pass < 3; pass++) {
+            let changed = false;
+            for (const sfx of NOISE_SUFFIXES) {
+              if (core.endsWith(sfx)) {
+                core = core.slice(0, -sfx.length).trim();
+                changed = true;
+                break;
+              }
+            }
+            if (!changed) break;
+          }
+          return core;
+        };
+        // 카테고리 우선순위 — 지하철역이면 SW8 가 가장 정확한 좌표
+        const PREFERRED_CATEGORIES = ["SW8", "AT4", "AG2", "FD6", "CE7"];
+        const pickBestResult = (results: any[]): any | null => {
+          if (!results || results.length === 0) return null;
+          for (const code of PREFERRED_CATEGORIES) {
+            const hit = results.find((r) => r.category_group_code === code);
+            if (hit) return hit;
+          }
+          return results[0];
+        };
+
         const searchNext = (idx: number) => {
           if (idx >= props.candidates.length) {
-            if (overlays.length > 0) map.setBounds(bounds);
+            const selectedPos = props.selectedId ? pinPosRef.current.get(props.selectedId) : null;
+            if (selectedPos) {
+              map.setLevel(4, { animate: true });
+              map.panTo(selectedPos);
+            } else if (overlays.length > 0) {
+              map.setBounds(bounds);
+            }
             return;
           }
           const c = props.candidates[idx];
-          const district = c.meta?.districtName ? String(c.meta.districtName) : "";
-          const region = props.region.trim();
+          const next = () => searchNext(idx + 1);
 
-          const tryGeo = () => {
-            const addr = district || `${region} ${c.title}`;
-            geo.addressSearch(addr, (result: any[], s: string) => {
+          // ① Fast path
+          const metaLat = typeof c.meta?.lat === "number" ? c.meta.lat : Number(c.meta?.lat);
+          const metaLng = typeof c.meta?.lng === "number" ? c.meta.lng : Number(c.meta?.lng);
+          if (isFinite(metaLat) && isFinite(metaLng) && metaLat !== 0 && metaLng !== 0) {
+            addPin(c, metaLat, metaLng);
+            next();
+            return;
+          }
+
+          const district = c.meta?.districtName ? String(c.meta.districtName).trim() : "";
+          const title = c.title.trim();
+          const core = stripNoise(title);  // "창동역 상권" → "창동역", "홍대 거리" → "홍대"
+          const districtIsPrecise = district.split(/\s+/).length >= 2;
+
+          const tryAddrWithCity = () => {
+            const variants = [`서울 ${core}`, `서울특별시 ${core}`];
+            const tryOne = (i: number) => {
+              if (i >= variants.length) return next();
+              geo.addressSearch(variants[i], (result: any[], s: string) => {
+                if (s === maps.services.Status.OK && result.length > 0) {
+                  addPin(c, parseFloat(result[0].y), parseFloat(result[0].x));
+                  next();
+                } else {
+                  tryOne(i + 1);
+                }
+              });
+            };
+            tryOne(0);
+          };
+
+          const tryKeywordDistrict = () => {
+            if (!district) return tryAddrWithCity();
+            ps.keywordSearch(district, (d: any[], s: string) => {
+              if (s === maps.services.Status.OK && d.length > 0) {
+                const pick = pickBestResult(d);
+                if (pick) {
+                  addPin(c, parseFloat(pick.y), parseFloat(pick.x));
+                  return next();
+                }
+              }
+              tryAddrWithCity();
+            }, { size: 15 });
+          };
+
+          const tryAddrDistrict = () => {
+            if (!districtIsPrecise) return tryKeywordDistrict();
+            geo.addressSearch(district, (result: any[], s: string) => {
               if (s === maps.services.Status.OK && result.length > 0) {
                 addPin(c, parseFloat(result[0].y), parseFloat(result[0].x));
+                next();
+              } else {
+                tryKeywordDistrict();
               }
-              searchNext(idx + 1);
             });
           };
 
-          const tryDistrict = () => {
-            const q = district || c.title;
-            ps.keywordSearch(q, (d: any[], s: string) => {
-              if (s === maps.services.Status.OK && d.length > 0) {
-                addPin(c, parseFloat(d[0].y), parseFloat(d[0].x));
-                searchNext(idx + 1);
-              } else {
-                tryGeo();
+          // ② keyword search on core (suffix-stripped) + SW8/AT4 우선 픽.
+          //   "창동역 상권" → core="창동역" → SW8 우선 → 정확히 창동역
+          //   "홍대 거리" → core="홍대" → SW8 우선 → 홍대입구역 (없으면 첫 결과)
+          //   "도봉역 상권" → core="도봉역" → SW8 우선 → 도봉역 (도봉산 X)
+          ps.keywordSearch(core, (d: any[], s: string) => {
+            if (s === maps.services.Status.OK && d && d.length > 0) {
+              const pick = pickBestResult(d);
+              if (pick) {
+                addPin(c, parseFloat(pick.y), parseFloat(pick.x));
+                return next();
               }
-            }, { size: 1 });
-          };
-
-          const q1 = `${c.title} ${region}`;
-          ps.keywordSearch(q1, (d: any[], s: string) => {
-            if (s === maps.services.Status.OK && d.length > 0) {
-              addPin(c, parseFloat(d[0].y), parseFloat(d[0].x));
-              searchNext(idx + 1);
-            } else {
-              tryDistrict();
             }
-          }, { size: 1 });
+            tryAddrDistrict();
+          }, { size: 15 });
         };
         searchNext(0);
       } catch (err: any) {

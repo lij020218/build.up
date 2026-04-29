@@ -52,9 +52,9 @@ export function LanguageProvider(props: { children: ReactNode }) {
         />
       )}
 
-      {/* Fixed top-right: bell + language toggle */}
+      {/* Top-right: bell + language toggle — absolute (페이지 최상단 기준) → 스크롤 시 함께 위로 사라짐 */}
       <div style={{
-        position: "fixed",
+        position: "absolute",
         top: 36,
         right: 20,
         zIndex: 1000,
@@ -205,6 +205,7 @@ export function LanguageProvider(props: { children: ReactNode }) {
           border: "1px solid rgba(17,17,17,0.08)",
           backdropFilter: "blur(12px)",
         }}>
+          {/* 작은 chip 톤 — KO/EN 짧은 라벨 (사용자 피드백: "매번 보이는 시각 잡음") */}
           {(["ko", "en"] as const).map((next) => (
             <button
               key={next}
@@ -213,15 +214,17 @@ export function LanguageProvider(props: { children: ReactNode }) {
               style={{
                 border: "none",
                 borderRadius: 999,
-                padding: "8px 12px",
+                padding: "4px 10px",
                 background: language === next ? "#1D3557" : "transparent",
-                color: language === next ? "#fff" : "#111",
+                color: language === next ? "#fff" : "rgba(17,17,17,0.55)",
                 cursor: "pointer",
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
               }}
             >
-              {next === "ko" ? "한국어" : "English"}
+              {next === "ko" ? "KO" : "EN"}
             </button>
           ))}
         </div>

@@ -69,19 +69,68 @@ export default function AuthPage() {
     }
   };
 
+  /**
+   * Bootstrap 단계에서 발생한 raw DB/Postgres 오류를 사용자가 이해할 수 있는 메시지로 변환.
+   * 원본 에러는 console 에 남겨 디버깅 유지.
+   */
+  const formatBootstrapError = (error: unknown, fallback: string): string => {
+    const ko = language === "ko";
+    if (error instanceof Error) console.error("[auth] bootstrap failed:", error);
+
+    const raw = error instanceof Error ? error.message : String(error ?? "");
+    if (raw.includes("AUTH_REQUIRED") || raw.includes("Authentication") || raw.includes("session")) {
+      return ko
+        ? "세션 만료 — 다시 로그인해 주세요"
+        : "Session expired — please sign in again";
+    }
+    if (raw.toLowerCase().includes("network") || raw.toLowerCase().includes("fetch")) {
+      return ko
+        ? "네트워크 연결을 확인해 주세요"
+        : "Check your network connection";
+    }
+    // RLS · permission · duplicate key 등 모든 DB 오류는 일반화된 메시지로
+    if (raw.includes("violates") || raw.includes("permission") || raw.includes("policy") || raw.includes("duplicate")) {
+      return ko
+        ? "계정 데이터 초기화 중 문제가 발생했어요. 잠시 후 다시 시도하거나 지원팀에 문의해 주세요."
+        : "There was a problem setting up your account data. Please try again shortly or contact support.";
+    }
+    return fallback;
+  };
+
   const handleSignup = () =>
     run(async () => {
+      // 1) Supabase auth.users 생성 (이메일·비밀번호·이름)
       await signUpWithEmail(supabase, { name, email, password });
-      const result = await bootstrapAccountWorkspace(supabase);
-      setMessage(result.isNew ? copy.auth.accountCreatedNew : copy.auth.accountCreatedExisting);
+      // 2) business_profiles + roadmaps 행 생성. 실패 시 친절한 메시지 + 홈으로 진입.
+      //    auth 는 이미 성공했으므로 다음 마운트의 connectAndLoad 가 자동 재시도 (idempotent).
+      try {
+        const result = await bootstrapAccountWorkspace(supabase);
+        setMessage(result.isNew ? copy.auth.accountCreatedNew : copy.auth.accountCreatedExisting);
+      } catch (error) {
+        setMessage(formatBootstrapError(
+          error,
+          language === "ko"
+            ? "가입은 완료됐지만 초기 설정 중 오류가 발생했어요. 홈으로 이동합니다."
+            : "Account created, but initial setup failed. Continuing to home.",
+        ));
+      }
       router.push("/");
     });
 
   const handleLogin = () =>
     run(async () => {
       await signInWithEmail(supabase, { email, password });
-      const result = await bootstrapAccountWorkspace(supabase);
-      setMessage(result.isNew ? copy.auth.loggedInNew : copy.auth.loggedIn);
+      try {
+        const result = await bootstrapAccountWorkspace(supabase);
+        setMessage(result.isNew ? copy.auth.loggedInNew : copy.auth.loggedIn);
+      } catch (error) {
+        setMessage(formatBootstrapError(
+          error,
+          language === "ko"
+            ? "로그인은 됐지만 데이터 로딩 중 오류가 발생했어요. 홈으로 이동합니다."
+            : "Logged in, but data loading failed. Continuing to home.",
+        ));
+      }
       router.push("/");
     });
 
@@ -1101,7 +1150,7 @@ function HeroDashboardPreview({ lang }: { lang: Language }) {
 
       {/* top nav mockup */}
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-        {(ko ? ["홈", "현재 단계", "로드맵", "가이드", "분석"] : ["Home", "Current", "Roadmap", "Guides", "Analytics"]).map((tab, i) => (
+        {(ko ? ["홈", "현재 단계", "로드맵", "펀딩", "분석"] : ["Home", "Current", "Roadmap", "Funding", "Analytics"]).map((tab, i) => (
           <div key={tab} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: i === 0 ? "rgba(0,122,255,0.15)" : "rgba(255,255,255,0.05)", color: i === 0 ? "#5B8CFF" : "rgba(255,255,255,0.4)" }}>
             {tab}
           </div>

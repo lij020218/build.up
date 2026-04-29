@@ -1,283 +1,276 @@
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import {
+  ShieldCheck, CheckCircle2, Building2, ChevronRight, ExternalLink,
+  AlertTriangle,
+} from "lucide-react";
 
+const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러
+
+/**
+ * 사업자등록 최종 확인 단계 (biz-registration / 17번).
+ *
+ * 위치: 소프트오픈(15) → 대출 가이드(16) → **이 단계(17)** → 재무 검토(18) → 그랜드오픈 직전(19)
+ *
+ * 역할: 이전 단계들에서 이미 결정·완료된 사항을 한눈에 확인 +
+ *       아직 안 했을 가능성 높은 "사업용 통장 개설" 만 가이드.
+ *
+ * 중복 제거 (이전 단계에서 이미 다룬 내용):
+ *   ❌ 사업자등록 방법 (홈택스/세무서) — RegistrationSetupStage(10번) 동일
+ *   ❌ 업종코드 — RegistrationSetupStage(10번) 동일
+ *   ❌ 과세유형 (간이/일반) — RegistrationSetupStage(10번) + TaxGuideStage(11번) `tc-vat-type`
+ *   ❌ 세무 처리 방식 (cpaDecision) — TaxGuideStage(11번) Page 3 와 같은 변수
+ *
+ * 고유 가치 (이 단계에만 있음):
+ *   ✅ 상호명 (storeName) 최종 확정
+ *   ✅ 사업용 통장 개설 (IBK·카카오뱅크·우리은행 등)
+ *   ✅ 이전 결정 요약 (사업자등록 완료 / 과세유형 / 세무사 — read-only)
+ */
 export function BizRegistrationPanel() {
   const d = useDashboardCtx();
-  const { language, storeName, setStoreName, cpaDecision, setCpaDecision, industryCategoryId } = d;
+  const {
+    language, storeName, setStoreName,
+    cpaDecision,
+    industryCategoryId,
+    taxChecks,
+    decisions,
+  } = d;
+  const ko = language === "ko";
   const isStartup = industryCategoryId === "startup-tech";
 
-  const bizInfoStyle = { display: "flex", flexDirection: "column" as const, gap: "6px" };
-  const bizCardStyle = { background: "rgba(0,0,0,0.03)", borderRadius: "14px", padding: "14px 16px" };
-  const bizSectionTitle = { fontSize: "12px", fontWeight: 700 as const, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" };
-  const bizTag = (color: string) => ({ display: "inline-block", fontSize: "11px", fontWeight: 600 as const, padding: "2px 8px", borderRadius: "20px", background: `${color}18`, color });
-  const infoRow = { display: "flex", gap: "6px", alignItems: "flex-start", fontSize: "13px", lineHeight: 1.5 as const, color: "rgba(0,0,0,0.7)" };
-  const dot = <span style={{ flexShrink: 0, marginTop: "6px", width: "4px", height: "4px", borderRadius: "50%", background: "rgba(0,0,0,0.25)", display: "inline-block" }} />;
+  // 이전 결정 요약 (TaxGuideStage / RegistrationSetupStage 결과)
+  const taxTypeChecked = !!taxChecks["tc-vat-type"];
+  const hometaxChecked = !!taxChecks["tc-hometax"];
+  const bizCardChecked = !!taxChecks["tc-bizcard"];
+  const bizRegConfirmed = !!decisions["registration-setup"];
 
-  const bizCodes: Record<string, { code: string; name: string; note: string }[]> = {
-    food: [
-      { code: "522111", name: "한식 음식점업", note: "찌개·구이·한정식 등 일반 한식" },
-      { code: "522121", name: "외국식 음식점업", note: "이탈리안·일식·중식 등" },
-      { code: "522141", name: "기타 간이음식점업", note: "분식·포장마차·푸드트럭" },
-    ],
-    "cafe-dessert": [
-      { code: "522220", name: "커피 음료점업", note: "카페·테이크아웃 커피 전문점" },
-      { code: "522290", name: "기타 비알코올음료점업", note: "버블티·착즙주스·스무디" },
-      { code: "522210", name: "제과점업", note: "베이커리·디저트 카페" },
-    ],
-    beauty: [
-      { code: "961101", name: "미용업", note: "헤어 커트·펌·염색" },
-      { code: "961201", name: "피부미용업", note: "피부관리·반영구·속눈썹" },
-      { code: "961301", name: "기타 미용업", note: "네일·화장·종합 뷰티" },
-    ],
-    "online-digital": [
-      { code: "479901", name: "전자상거래 소매업", note: "스마트스토어·쿠팡 판매" },
-      { code: "749901", name: "기타 전문 서비스업", note: "디지털 콘텐츠·컨설팅" },
-    ],
-    retail: [
-      { code: "523110", name: "종합소매업", note: "편의점·슈퍼마켓·잡화점" },
-      { code: "524110", name: "섬유·의복 소매업", note: "의류·패션 소매" },
-      { code: "524900", name: "기타 상품 전문 소매업", note: "생활잡화·건강식품 등" },
-    ],
-    fitness: [
-      { code: "912110", name: "체육시설 운영업", note: "헬스장·필라테스·요가" },
-      { code: "912120", name: "골프장 운영업", note: "스크린골프·연습장" },
-    ],
-    education: [
-      { code: "856101", name: "일반 교과학원", note: "학원·과외 교습소" },
-      { code: "856901", name: "기타 기술 및 직업훈련 학원", note: "코딩·어학·직업 교육" },
-    ],
-    pet: [
-      { code: "462420", name: "애완동물 및 관련용품 소매업", note: "펫샵·용품 판매" },
-      { code: "961909", name: "기타 개인 서비스업", note: "펫 미용·호텔·돌봄" },
-    ],
-    "living-service": [
-      { code: "961020", name: "세탁업", note: "세탁·빨래방" },
-      { code: "952100", name: "전기·전자제품 수리업", note: "기기 수리" },
-    ],
-    space: [
-      { code: "551001", name: "숙박업", note: "게스트하우스·민박" },
-      { code: "681099", name: "기타 부동산 임대업", note: "공유오피스·스터디카페" },
-    ],
-    "startup-tech": [
-      { code: "620201", name: "컴퓨터 프로그래밍 서비스업", note: "소프트웨어 개발·SaaS" },
-      { code: "620209", name: "기타 정보기술 서비스업", note: "AI·핀테크·플랫폼" },
-    ],
+  const sectionLabel: React.CSSProperties = {
+    fontSize: "12.5px",
+    fontWeight: 600,
+    color: "rgba(0,0,0,0.45)",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.06em",
+    marginBottom: "10px",
   };
-  const codes = bizCodes[industryCategoryId] ?? bizCodes["food"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginBottom: "8px" }}>
 
-      {/* ── 스타트업: 법인 등기 확인 안내 ── */}
-      {isStartup && (
-        <div style={{ borderRadius: "16px", border: "1px solid rgba(37,99,235,0.08)", background: "rgba(37,99,235,0.02)", padding: "16px 18px" }}>
-          <div style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb", marginBottom: "6px" }}>{language === "ko" ? "이 단계에서 확인할 것" : "What to check here"}</div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.6 }}>
-            {language === "ko"
-              ? `사업자등록·과세유형·통장 개설은 이전 단계에서 완료했고, 세무사 선임 여부도 세무 가이드에서 결정했습니다.${cpaDecision ? (cpaDecision === "cpa" ? " (세무사 선임 선택됨)" : " (직접 신고 선택됨)") : ""} 이 단계에서는 최종 확인만 하면 됩니다.`
-              : `Registration, tax type, and bank account are done. Tax accountant decision was made in the Tax Guide.${cpaDecision ? (cpaDecision === "cpa" ? " (CPA selected)" : " (Self-file selected)") : ""} Just confirm here.`}
+      {/* ── KEY ACTION 히어로 카드 ── */}
+      <div style={{
+        display: "flex", gap: "14px", alignItems: "flex-start",
+        padding: "16px 18px", borderRadius: "16px",
+        background: `linear-gradient(135deg, ${MIDNIGHT} 0%, rgba(25,25,112,0.92) 100%)`,
+        color: "#fff",
+        boxShadow: "0 6px 20px rgba(25,25,112,0.28)",
+      }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 12,
+          background: "rgba(255,255,255,0.18)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <ShieldCheck size={20} strokeWidth={2.2} color="#fff" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "11.5px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, opacity: 0.7, marginBottom: "4px" }}>
+            {ko ? "이 단계에서 꼭 할 일" : "Do this in this stage"}
           </div>
-        </div>
-      )}
-
-      {/* ── 상호명 입력 (오프라인 전용) ── */}
-      {!isStartup && <div style={bizInfoStyle}>
-        <div style={bizSectionTitle}>{language === "ko" ? "상호명 (가게 이름)" : "Store name"}</div>
-        <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "6px" }}>
-          {language === "ko"
-            ? "사업자등록증에 기재할 상호명을 입력하세요. 나중에 수정할 수 있습니다."
-            : "Enter the name as it will appear on your business registration. You can change it later."}
-        </div>
-        <input
-          type="text"
-          value={storeName}
-          onChange={(e) => {
-            setStoreName(e.target.value);
-            localStorage.setItem("storeName", e.target.value);
-          }}
-          placeholder={language === "ko" ? "예: 홍길동 떡볶이, 카페 온도" : "e.g. Happy Café, Sunrise Bakery"}
-          style={{ border: storeName ? "1.5px solid #34c759" : "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none", background: "rgba(255,255,255,0.8)", width: "100%", boxSizing: "border-box" as const }}
-        />
-        {storeName && (
-          <div style={{ fontSize: "12px", color: "#34c759", fontWeight: 600, marginTop: "4px" }}>
-            {language === "ko" ? `저장됨: "${storeName}"` : `Saved: "${storeName}"`}
+          <div style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.4, marginBottom: "5px" }}>
+            {ko ? "사업용 통장 개설 + 상호명 최종 확정" : "Open business account + finalize store name"}
           </div>
-        )}
-      </div>}
-
-      {/* ── 사업자등록 방법 (스타트업은 6단계에서 완료) ── */}
-      {!isStartup && <div style={bizInfoStyle}>
-        <div style={bizSectionTitle}>{language === "ko" ? "사업자등록 방법 선택" : "How to register"}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-          {[
-            {
-              title: language === "ko" ? "홈택스 온라인" : "Hometax (online)",
-              badge: language === "ko" ? "추천" : "Recommended",
-              color: "#34c759",
-              points: language === "ko"
-                ? ["24시간 신청 가능", "처리 기간 2~3일", "공동인증서(구 공인인증서) 필요", "국세청 홈택스 → 신청/제출 → 사업자등록신청"]
-                : ["24/7 submission", "2–3 day processing", "Requires joint certificate", "Hometax → Application → Business Registration"]
-            },
-            {
-              title: language === "ko" ? "세무서 직접 방문" : "Tax office visit",
-              badge: language === "ko" ? "즉시 처리" : "Same-day",
-              color: "#007aff",
-              points: language === "ko"
-                ? ["처리 당일 완료", "복잡한 인허가 업종 추천", "준비물: 신분증 + 임대차계약서", "평일 09:00~18:00, 주민등록등본 선택"]
-                : ["Same-day completion", "Best for complex permits", "Bring: ID + lease contract", "Weekdays 09:00–18:00"]
-            }
-          ].map((m) => (
-            <div key={m.title} style={{ ...bizCardStyle, position: "relative" as const }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "13px", fontWeight: 700 }}>{m.title}</span>
-                <span style={bizTag(m.color)}>{m.badge}</span>
-              </div>
-              {m.points.map((p) => (
-                <div key={p} style={{ ...infoRow, marginBottom: "3px" }}>{dot}<span>{p}</span></div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>}
-
-      {/* ── 업종코드 & 과세유형 (스타트업은 6단계에서 완료) ── */}
-      {!isStartup && <div style={bizInfoStyle}>
-        <div style={bizSectionTitle}>{language === "ko" ? "업종코드 & 과세유형" : "Business code & tax type"}</div>
-        <div style={bizCardStyle}>
-          <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>
-            {language === "ko" ? "업종에 맞는 코드를 선택하세요. 잘 모르면 세무서 직원에게 물어보면 됩니다." : "Choose the code that best fits your business."}
+          <div style={{ fontSize: "13.5px", lineHeight: 1.55, opacity: 0.92 }}>
+            {ko
+              ? "사업자등록·과세유형·세무사 결정은 이전 단계에서 완료. 이 단계는 마지막 두 가지 — 사업용 통장과 상호명 — 만 처리합니다."
+              : "Registration, tax type, and CPA decision are done. Just finalize the bank account and store name."}
           </div>
-          {codes.map((c) => (
-            <div key={c.code} style={{ display: "flex", gap: "8px", padding: "7px 0", borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
-              <span style={{ fontFamily: "monospace", fontSize: "12px", fontWeight: 700, color: "#007aff", flexShrink: 0, paddingTop: "1px" }}>{c.code}</span>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600 }}>{c.name}</div>
-                <div style={{ fontSize: "12px", color: "var(--muted)" }}>{c.note}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "4px" }}>
-          {[
-            {
-              type: language === "ko" ? "간이과세자" : "Simplified VAT",
-              cond: language === "ko" ? "연 매출 1억 400만원 미만 예상" : "Est. annual revenue < ₩104M",
-              pros: language === "ko" ? "세금계산서 발행 의무 없음 · 부가세 부담 낮음" : "No invoice issuance · lower VAT burden",
-              color: "#34c759"
-            },
-            {
-              type: language === "ko" ? "일반과세자" : "General VAT",
-              cond: language === "ko" ? "연 매출 1억 400만원 이상 or 매입세액 환급 필요 시" : "Revenue ≥ ₩104M or need input VAT refund",
-              pros: language === "ko" ? "매입세금계산서 전액 환급 가능 · 기업 거래 유리" : "Full input VAT refund · better for B2B",
-              color: "#007aff"
-            }
-          ].map((v) => (
-            <div key={v.type} style={bizCardStyle}>
-              <div style={{ ...bizTag(v.color), marginBottom: "6px" }}>{v.type}</div>
-              <div style={{ fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>{v.cond}</div>
-              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{v.pros}</div>
-            </div>
-          ))}
-        </div>
-      </div>}
-
-      {/* ── 사업용 통장 (스타트업은 6단계에서 법인통장 안내 완료) ── */}
-      {!isStartup && (
-      <div style={bizInfoStyle}>
-        <div style={bizSectionTitle}>{language === "ko" ? "사업용 통장 개설" : "Business bank account"}</div>
-        <div style={{ ...bizCardStyle, display: "flex", gap: "10px", alignItems: "flex-start" }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="8" cy="8" r="6.5" stroke="#ff9f0a" strokeWidth="1.4"/><path d="M8 5.5V8.5M8 10v.5" stroke="#ff9f0a" strokeWidth="1.5" strokeLinecap="round"/></svg>
-          <div style={{ fontSize: "13px", lineHeight: 1.6, color: "rgba(0,0,0,0.7)" }}>
-            {language === "ko"
-              ? "개인 통장과 사업 통장은 반드시 분리하세요. 세무조사 시 사업 비용 입증이 안 되면 전부 과세 대상이 됩니다."
-              : "Keep personal and business accounts strictly separate. Mixed accounts make it impossible to prove deductible expenses during tax audits."}
-          </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {(language === "ko" ? [
-            { bank: "기업은행 IBK", desc: "소상공인 특화 상품 다수 · 정책자금 연계 유리 · 전국 지점", badge: "정책자금 연계" },
-            { bank: "카카오뱅크 사업자", desc: "비대면 즉시 개설 · 수수료 0원 · 앱 거래 관리 간편", badge: "비대면 추천" },
-            { bank: "우리은행 위비기업", desc: "지역 네트워크 강점 · 세무사·노무사 무료 상담 서비스 포함", badge: "상담 서비스" },
-          ] : [
-            { bank: "IBK Industrial Bank", desc: "Best for policy fund connections · many SME products", badge: "Policy funds" },
-            { bank: "KakaoBank Business", desc: "Instant non-face-to-face opening · zero fees · easy app management", badge: "Digital" },
-            { bank: "Woori Bank", desc: "Free tax/labor consultation included · regional network", badge: "Consulting" },
-          ]).map((b) => (
-            <div key={b.bank} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.03)" }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600 }}>{b.bank}</div>
-                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{b.desc}</div>
-              </div>
-              <span style={bizTag("#007aff")}>{b.badge}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize: "12px", color: "var(--muted)", padding: "4px 2px" }}>
-          {language === "ko" ? "준비물: 사업자등록증 원본, 대표자 신분증, 도장(선택)" : "Bring: business registration certificate, ID, seal (optional)"}
         </div>
       </div>
-      )}
 
-      {/* ── 세무대리인 결정 — 실제 선택 (스타트업은 6단계에서 세무사 안내했지만, 최종 선택은 여기서) ── */}
-      <div style={bizInfoStyle}>
-        <div style={bizSectionTitle}>{language === "ko" ? "세무 처리 방식 선택" : "How will you handle taxes?"}</div>
-        <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "4px" }}>
-          {language === "ko"
-            ? "어떤 선택이든 유효합니다. 아래에서 본인 상황에 맞는 방식을 선택하면 완료 처리됩니다."
-            : "Both are valid. Choose one based on your situation to mark this step done."}
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {[
+      {/* ── 이전 결정 요약 (read-only) ── */}
+      <div>
+        <div style={sectionLabel}>{ko ? "이전 단계에서 결정된 사항" : "Decisions from prior stages"}</div>
+        <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+          {([
             {
-              id: "self" as const,
-              title: language === "ko" ? "직접 신고로 진행" : "Self-file",
-              desc: language === "ko" ? "홈택스로 부가세·종합소득세 직접 신고. 직원 없고 매출이 단순할 때 적합합니다." : "File VAT and income tax yourself via Hometax. Works well if you have no staff and simple revenue.",
-              when: language === "ko" ? "적합한 경우: 직원 없음 · 연 매출 3,000만원 미만 · 업종 단순" : "Good if: no employees · revenue < ₩30M · simple business",
-              color: "#34c759"
+              label: ko ? "사업자등록·영업신고" : "Business registration",
+              status: bizRegConfirmed ? (ko ? "완료" : "Done") : (ko ? "미확인" : "Pending"),
+              done: bizRegConfirmed,
+              hint: ko ? "10번 단계 — 홈택스 또는 세무서" : "Stage 10 — Hometax or tax office",
             },
             {
-              id: "cpa" as const,
-              title: language === "ko" ? "세무사(세무대리인) 선임 예정" : "Hire a tax accountant",
-              desc: language === "ko" ? "기장료 월 5~15만원. 원천세·4대보험·부가세·소득세 전부 위임합니다." : "Monthly ₩50K–150K. Delegate payroll tax, VAT, and income tax filing.",
-              when: language === "ko" ? "권장 경우: 직원 1명 이상 · 매출 5,000만원+ 예상 · 정책자금 신청 예정" : "Recommended if: any employees · revenue > ₩50M · applying for policy funds",
-              color: "#007aff"
-            }
-          ].map((opt) => {
-            const selected = cpaDecision === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => {
-                  const next = selected ? null : opt.id;
-                  setCpaDecision(next);
-                  if (next) localStorage.setItem("cpaDecision", next);
-                  else localStorage.removeItem("cpaDecision");
-                }}
-                style={{
-                  textAlign: "left" as const,
-                  padding: "14px 16px",
-                  borderRadius: "14px",
-                  border: selected ? `1.5px solid ${opt.color}` : "1.5px solid rgba(0,0,0,0.08)",
-                  background: selected ? `${opt.color}08` : "rgba(0,0,0,0.02)",
-                  cursor: "pointer",
-                  transition: "all 0.15s"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                  <div style={{
-                    width: "16px", height: "16px", borderRadius: "50%",
-                    border: selected ? `4.5px solid ${opt.color}` : "1.5px solid rgba(0,0,0,0.2)",
-                    flexShrink: 0, transition: "all 0.15s"
-                  }} />
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: selected ? opt.color : "inherit" }}>{opt.title}</span>
+              label: ko ? "과세유형 결정 (간이/일반)" : "Tax type (Simplified/Standard)",
+              status: taxTypeChecked ? (ko ? "결정됨" : "Decided") : (ko ? "미결정" : "Pending"),
+              done: taxTypeChecked,
+              hint: ko ? "11번 단계 세무 가이드 — 1억 4천만 미만 시 간이" : "Stage 11 Tax Guide — Simplified if <140M KRW",
+            },
+            {
+              label: ko ? "홈택스 회원가입" : "Hometax registration",
+              status: hometaxChecked ? (ko ? "완료" : "Done") : (ko ? "미확인" : "Pending"),
+              done: hometaxChecked,
+              hint: ko ? "11번 단계 세무 가이드 체크리스트" : "Stage 11 Tax Guide checklist",
+            },
+            {
+              label: ko ? "사업용 카드 분리" : "Dedicated business card",
+              status: bizCardChecked ? (ko ? "완료" : "Done") : (ko ? "미확인" : "Pending"),
+              done: bizCardChecked,
+              hint: ko ? "11번 단계 세무 가이드 — 개인카드 혼용 = 비용 불인정" : "Stage 11 — mixed personal = rejected expenses",
+            },
+            {
+              label: ko ? "세무 처리 방식" : "Tax handling method",
+              status: cpaDecision === "cpa" ? (ko ? "세무사 선임" : "CPA hired") : cpaDecision === "self" ? (ko ? "직접 신고" : "Self-file") : (ko ? "미결정" : "Pending"),
+              done: !!cpaDecision,
+              hint: ko ? "11번 단계 세무 가이드 Page 4" : "Stage 11 Tax Guide Page 4",
+            },
+          ]).map((row, i, arr) => (
+            <div key={row.label}>
+              {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginLeft: "56px" }} />}
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "13px 16px" }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 10,
+                  background: row.done ? "rgba(34,167,73,0.12)" : "rgba(0,0,0,0.05)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                  color: row.done ? "rgb(34,167,73)" : "rgba(0,0,0,0.35)",
+                }}>
+                  {row.done
+                    ? <CheckCircle2 size={17} strokeWidth={2} />
+                    : <span style={{ fontSize: "12px", fontWeight: 800 }}>{i + 1}</span>}
                 </div>
-                <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.65)", lineHeight: 1.5, paddingLeft: "24px" }}>{opt.desc}</div>
-                <div style={{ fontSize: "12px", color: selected ? opt.color : "var(--muted)", lineHeight: 1.4, paddingLeft: "24px", marginTop: "4px", fontWeight: selected ? 500 : 400 }}>{opt.when}</div>
-              </button>
-            );
-          })}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>{row.label}</div>
+                  <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.5)", marginTop: "2px" }}>{row.hint}</div>
+                </div>
+                <span style={{
+                  fontSize: "11.5px", fontWeight: 700,
+                  padding: "3px 9px", borderRadius: "999px",
+                  background: row.done ? "rgba(34,167,73,0.1)" : "rgba(0,0,0,0.05)",
+                  color: row.done ? "rgb(34,167,73)" : "rgba(0,0,0,0.5)",
+                  letterSpacing: "-0.01em",
+                  whiteSpace: "nowrap" as const,
+                  flexShrink: 0,
+                }}>
+                  {row.status}
+                </span>
+              </div>
+              {/* dummy for last separator */}
+              {i === arr.length - 1 && null}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 1. 상호명 (가게 이름) — 고유 입력 ── */}
+      {!isStartup && (
+        <div>
+          <div style={sectionLabel}>{ko ? "상호명 (가게 이름) 최종 확정" : "Finalize store name"}</div>
+          <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", padding: "16px" }}>
+            <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55, marginBottom: "10px" }}>
+              {ko
+                ? "사업자등록증·간판·메뉴판·SNS 모두 동일하게 사용할 이름이에요. 변경하려면 사업자등록증 재발급 필요."
+                : "Same name will appear on registration, signage, menu, and social media. Changing requires re-issuing the certificate."}
+            </div>
+            <input
+              type="text"
+              value={storeName}
+              onChange={(e) => {
+                setStoreName(e.target.value);
+                if (typeof window !== "undefined") localStorage.setItem("storeName", e.target.value);
+              }}
+              placeholder={ko ? "예: 홍길동 떡볶이, 카페 온도" : "e.g. Happy Café, Sunrise Bakery"}
+              style={{
+                border: storeName ? `1.5px solid ${MIDNIGHT}` : "1px solid rgba(0,0,0,0.12)",
+                borderRadius: "10px",
+                padding: "12px 14px",
+                fontSize: "15px",
+                outline: "none",
+                background: "white",
+                width: "100%",
+                boxSizing: "border-box" as const,
+                fontWeight: 600,
+                color: "var(--text)",
+              }}
+            />
+            {storeName && (
+              <div style={{
+                fontSize: "12.5px", fontWeight: 600, color: MIDNIGHT,
+                marginTop: "8px",
+                display: "flex", alignItems: "center", gap: "5px",
+              }}>
+                <CheckCircle2 size={13} strokeWidth={2.4} />
+                {ko ? `저장됨: "${storeName}"` : `Saved: "${storeName}"`}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── 2. 사업용 통장 개설 — 고유 가이드 ── */}
+      <div>
+        <div style={sectionLabel}>{ko ? "사업용 통장 개설" : "Business bank account"}</div>
+        <div style={{
+          padding: "12px 14px", marginBottom: "10px",
+          borderRadius: "12px",
+          background: "rgba(220,60,30,0.06)",
+          border: "1px solid rgba(200,60,30,0.16)",
+          display: "flex", gap: "10px", alignItems: "flex-start",
+        }}>
+          <AlertTriangle size={16} strokeWidth={2} style={{ color: "#b83020", flexShrink: 0, marginTop: "1px" }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#b83020", marginBottom: "3px", letterSpacing: "-0.01em" }}>
+              {ko ? "개인 통장과 사업 통장은 반드시 분리" : "Personal and business accounts MUST be separated"}
+            </div>
+            <div style={{ fontSize: "12.5px", color: "rgba(184,48,32,0.85)", lineHeight: 1.55 }}>
+              {ko
+                ? "혼용 시 세무조사에서 사업 비용 입증 불가 → 전부 과세 대상. 사업자등록증 발급 직후 즉시 개설하세요."
+                : "Mixed accounts can't prove business expenses during audit — all gets taxed. Open right after receiving registration cert."}
+            </div>
+          </div>
+        </div>
+        <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+          {(ko ? [
+            { bank: "기업은행 IBK", desc: "소상공인 특화 상품 多 · 정책자금 연계 유리 · 전국 지점", badge: "정책자금 연계", href: "https://www.ibk.co.kr" },
+            { bank: "카카오뱅크 사업자", desc: "비대면 즉시 개설 · 수수료 0원 · 앱 거래 관리 간편", badge: "비대면", href: "https://www.kakaobank.com" },
+            { bank: "우리은행 위비기업", desc: "지역 네트워크 강점 · 세무사·노무사 무료 상담 포함", badge: "상담 포함", href: "https://spot.wooribank.com" },
+            { bank: "신한은행 SOL Biz", desc: "디지털 전환 강점 · 신한카드 결제 단말 연계", badge: "디지털", href: "https://www.shinhan.com" },
+          ] : [
+            { bank: "IBK Industrial Bank", desc: "Best for policy fund connections · many SME products", badge: "Policy", href: "https://www.ibk.co.kr" },
+            { bank: "KakaoBank Business", desc: "Instant non-face-to-face opening · zero fees", badge: "Digital", href: "https://www.kakaobank.com" },
+            { bank: "Woori Bank", desc: "Free tax/labor consultation · regional network", badge: "Consulting", href: "https://spot.wooribank.com" },
+            { bank: "Shinhan SOL Biz", desc: "Strong digital · Shinhan card terminal integration", badge: "Digital", href: "https://www.shinhan.com" },
+          ]).map((b, i) => (
+            <a key={b.bank} href={b.href} target="_blank" rel="noopener noreferrer" style={{
+              display: "flex", alignItems: "center", gap: "14px",
+              padding: "13px 16px",
+              borderTop: i > 0 ? "0.5px solid rgba(0,0,0,0.07)" : "none",
+              textDecoration: "none", color: "inherit",
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: "rgba(25,25,112,0.08)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+                color: MIDNIGHT,
+              }}>
+                <Building2 size={17} strokeWidth={2} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const, marginBottom: "2px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>{b.bank}</span>
+                  <span style={{ fontSize: "10.5px", fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: "999px", letterSpacing: "-0.01em" }}>
+                    {b.badge}
+                  </span>
+                </div>
+                <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.5)", lineHeight: 1.5 }}>{b.desc}</div>
+              </div>
+              <ChevronRight size={16} strokeWidth={2} style={{ color: "rgba(0,0,0,0.25)", flexShrink: 0 }} />
+              <ExternalLink size={12} strokeWidth={2} style={{ color: "rgba(0,0,0,0.2)", flexShrink: 0 }} />
+            </a>
+          ))}
+        </div>
+        <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.4)", marginTop: "8px", padding: "0 4px" }}>
+          {ko ? "준비물: 사업자등록증 원본 · 대표자 신분증 · 도장(선택)" : "Bring: business registration cert, ID, seal (optional)"}
         </div>
       </div>
 

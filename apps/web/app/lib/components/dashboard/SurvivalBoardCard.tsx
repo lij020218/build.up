@@ -2,6 +2,99 @@
 
 import React from "react";
 import type { DashboardHook } from "../../useDashboard";
+import { AnimatedPath, AnimatedProgressBar, CountUp } from "./animations";
+
+/**
+ * Inline sparkline — 24px tall, axisless, clean polyline (no smoothing artifacts).
+ * 소규모 데이터에서 cubic bezier는 overshoot·wobble을 만들므로 직선 segment 사용.
+ */
+function Sparkline({
+  values,
+  color = "#1d3557",
+  fill = false,
+}: {
+  values: number[];
+  color?: string;
+  fill?: boolean;
+}) {
+  // 의미 있는 데이터가 2개 이상일 때만 렌더
+  const nonZero = values.filter((v) => v > 0);
+  if (nonZero.length < 2) return <div style={{ height: 26 }} />;
+
+  const max = Math.max(...values, 1);
+  const min = Math.min(...values, 0);
+  const range = max - min || 1;
+  const w = 100;
+  const h = 24;
+  const pad = 2;
+  const iw = w - pad * 2;
+  const ih = h - pad * 2;
+  const step = iw / (values.length - 1);
+  const points = values.map((v, i) => ({
+    x: pad + i * step,
+    y: pad + ih - ((v - min) / range) * ih,
+  }));
+
+  // 직선 segment (smoothing 제거 — 깔끔)
+  const path = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+    .join(" ");
+  const fillPath = `${path} L ${points[points.length - 1].x.toFixed(2)} ${(pad + ih).toFixed(2)} L ${points[0].x.toFixed(2)} ${(pad + ih).toFixed(2)} Z`;
+  const gradId = `spark-${Math.random().toString(36).slice(2, 8)}`;
+  const endPoint = points[points.length - 1];
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} preserveAspectRatio="none" style={{ display: "block", marginTop: 6 }}>
+      {fill && (
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      )}
+      {fill && <path d={fillPath} fill={`url(#${gradId})`} opacity={0.9} />}
+      <AnimatedPath d={path} stroke={color} strokeWidth={1.4} duration={1.2} delay={0.3} />
+      {/* 끝점 dot */}
+      <circle cx={endPoint.x} cy={endPoint.y} r={1.8} fill={color} />
+    </svg>
+  );
+}
+
+/**
+ * 런웨이 fuel gauge — 12개월 기준 연료 게이지.
+ * <=3개월: 빨강 25%, <=6개월: 주황 50%, >6개월: 녹색, >=12개월: full.
+ */
+function RunwayGauge({ runwayMonths }: { runwayMonths: number }) {
+  const pct = Math.min(100, (runwayMonths / 12) * 100);
+  const color =
+    runwayMonths <= 3 ? "#ff3b30"
+    : runwayMonths <= 6 ? "#ff9f0a"
+    : "#34c759";
+  return (
+    <div style={{ marginTop: 10, position: "relative" as const }}>
+      <AnimatedProgressBar
+        pct={Math.max(4, pct)}
+        color={color}
+        height={6}
+        borderRadius={3}
+        delay={0.35}
+        duration={0.95}
+      />
+      {/* 12개월 기준 마커 */}
+      {runwayMonths < 12 && (
+        <div style={{
+          position: "absolute" as const,
+          right: 0, top: -1,
+          width: "1px", height: "8px",
+          background: "rgba(17,17,17,0.18)",
+        }} />
+      )}
+    </div>
+  );
+}
+
+type DailyEntry = { date: string; sales: number; customers: number };
 
 const fmt = (n: number): string => {
   if (!isFinite(n) || isNaN(n)) return "—";
@@ -63,6 +156,21 @@ export function SurvivalBoardCard({
   void runwayProgress;
   void weeklyProgress;
 
+  // 최근 14일 매출 시리즈 (스파크라인용)
+  const last14 = (() => {
+    const map = new Map<string, number>((d.dailyEntries as DailyEntry[]).map((e) => [e.date, e.sales]));
+    const days: number[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const dt = new Date();
+      dt.setDate(dt.getDate() - i);
+      days.push(map.get(dt.toISOString().slice(0, 10)) ?? 0);
+    }
+    return days;
+  })();
+  const hasSalesSeries = last14.filter((v) => v > 0).length >= 2;
+  const dailyFixed = totalCosts > 0 ? totalCosts / 30 : 0;
+  const profitSeries = last14.map((v) => v - dailyFixed);
+
   return (
     <section style={survivalCard} className="bento-card">
       <div style={survivalTop}>
@@ -101,29 +209,40 @@ export function SurvivalBoardCard({
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-        {/* 1. 이번 달 매출 */}
+        {/* 1. 이번 달 매출 — 보조 메트릭 (hero는 MorningBriefing 노스스타) */}
         <div style={survivalMetricCard}>
-          <div style={survivalMetricLabel}>{ko ? "이번 달 매출" : "MTD Revenue"}</div>
-          <div style={{ ...survivalMetricValue, color: totalSales > 0 ? "#0f172a" : "rgba(15,23,42,0.25)" }}>
-            {totalSales > 0 ? fmt(totalSales) : "—"}
+          <div style={survivalMetricLabel}>{ko ? "MTD 매출" : "MTD Revenue"}</div>
+          <div style={{ ...survivalMetricValueSecondary, color: totalSales > 0 ? "#0f172a" : "rgba(15,23,42,0.25)" }}>
+            {totalSales > 0 ? <CountUp to={totalSales} duration={1.0} format={fmt} /> : "—"}
           </div>
           <div style={survivalMetricNote}>{ko ? `일평균 ${totalSales > 0 ? fmt(Math.round(totalSales / Math.max(1, new Date().getDate()))) : "—"}` : `Daily avg ${totalSales > 0 ? fmt(Math.round(totalSales / Math.max(1, new Date().getDate()))) : "—"}`}</div>
+          {hasSalesSeries && <Sparkline values={last14} color="#1d3557" fill />}
         </div>
-        {/* 2. 손익 */}
+        {/* 2. 손익 — 보조 메트릭 */}
         <div style={survivalMetricCard}>
-          <div style={survivalMetricLabel}>{ko ? "이번 달 손익" : "MTD P&L"}</div>
-          <div style={{ ...survivalMetricValue, color: totalSales === 0 && totalCosts === 0 ? "rgba(15,23,42,0.25)" : netProfit >= 0 ? "#059669" : "#dc2626" }}>
-            {totalSales === 0 && totalCosts === 0 ? "—" : `${netProfit >= 0 ? "+" : ""}${fmt(netProfit)}`}
+          <div style={survivalMetricLabel}>{ko ? "MTD 손익" : "MTD P&L"}</div>
+          <div style={{ ...survivalMetricValueSecondary, color: totalSales === 0 && totalCosts === 0 ? "rgba(15,23,42,0.25)" : netProfit >= 0 ? "#059669" : "#dc2626" }}>
+            {totalSales === 0 && totalCosts === 0
+              ? "—"
+              : <>{netProfit >= 0 ? "+" : ""}<CountUp to={netProfit} duration={1.0} format={fmt} /></>}
           </div>
           <div style={survivalMetricNote}>{totalCosts > 0 ? (ko ? `비용 ${fmt(totalCosts)}` : `Costs ${fmt(totalCosts)}`) : (ko ? "비용 미입력" : "No costs")}</div>
+          {hasSalesSeries && totalCosts > 0 && (
+            <Sparkline values={profitSeries} color={netProfit >= 0 ? "#34c759" : "#ff3b30"} fill />
+          )}
         </div>
-        {/* 3. 런웨이 */}
+        {/* 3. 런웨이 — 보조 메트릭 (hero는 MorningBriefing 노스스타) */}
         <div style={survivalMetricCard}>
           <div style={survivalMetricLabel}>{ko ? "런웨이" : "Runway"}</div>
-          <div style={{ ...survivalMetricValue, color: runwayMonths >= 0 && runwayMonths <= 3 ? "#dc2626" : runwayMonths <= 6 ? "#d97706" : "#0f172a" }}>
-            {runwayMonths < 0 ? (ko ? "흑자" : "Surplus") : `${runwayMonths}${ko ? "개월" : "mo"}`}
+          <div style={{ ...survivalMetricValueSecondary, color: runwayMonths >= 0 && runwayMonths <= 3 ? "#dc2626" : runwayMonths <= 6 ? "#d97706" : "#0f172a" }}>
+            {runwayMonths < 0
+              ? (ko ? "흑자" : "Surplus")
+              : <><CountUp to={runwayMonths} duration={0.9} format={(n) => Math.round(n).toString()} />{ko ? "개월" : "mo"}</>}
           </div>
           <div style={survivalMetricNote}>{ko ? `현금 ${fmt(capitalLeft)}` : `Cash ${fmt(capitalLeft)}`}</div>
+          {runwayMonths >= 0 && (
+            <RunwayGauge runwayMonths={runwayMonths} />
+          )}
         </div>
         {/* 4. 주간 성장 */}
         <div style={survivalMetricCard}>
@@ -132,6 +251,9 @@ export function SurvivalBoardCard({
             {weeklySignalLabel}
           </div>
           <div style={survivalMetricNote}>{ko ? "7일 vs 직전 7일" : "7d vs prev 7d"}</div>
+          {hasSalesSeries && (
+            <Sparkline values={last14.slice(-7)} color={weeklySalesChange >= 0 ? "#34c759" : "#ff3b30"} fill />
+          )}
         </div>
       </div>
 
@@ -167,7 +289,7 @@ const opsPill: React.CSSProperties = {
 };
 
 const survivalCard: React.CSSProperties = {
-  borderRadius: "24px",
+  borderRadius: "20px",
   padding: "20px",
   background: "linear-gradient(180deg, rgba(255,255,255,0.982), rgba(243,246,250,0.9))",
   color: "#0f172a",
@@ -207,6 +329,15 @@ const survivalMetricValue: React.CSSProperties = {
   fontWeight: 760,
   letterSpacing: "-0.05em",
   lineHeight: 1,
+};
+
+/** 노스스타화 후 — 매출/손익 같은 중복 메트릭은 hero 격하 (MorningBriefing 노스스타가 진짜 hero) */
+const survivalMetricValueSecondary: React.CSSProperties = {
+  fontSize: "18px",
+  fontWeight: 700,
+  letterSpacing: "-0.025em",
+  lineHeight: 1.1,
+  fontVariantNumeric: "tabular-nums",
 };
 
 const survivalMetricNote: React.CSSProperties = {

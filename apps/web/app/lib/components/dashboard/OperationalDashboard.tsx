@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BarChart3, TrendingUp, Gem, Check, Lightbulb } from "lucide-react";
+import { BarChart3, TrendingUp, Lightbulb } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { DetailTabs } from "./DetailTabs";
 import { PLHeroCard } from "./PLHeroCard";
 import { RevenueCalendar } from "./RevenueCalendar";
 import { WeeklyReport } from "./WeeklyReport";
-import { NotificationCenter } from "./NotificationCenter";
+// NotificationCenter import 제거 — legacy hidden hero panel과 함께 삭제됨
 import { MilestoneToast, checkMilestones } from "./MilestoneToast";
 import { ForecastCard } from "./ForecastCard";
 import { FirstCustomersCard } from "./FirstCustomersCard";
@@ -18,38 +18,32 @@ import { WeeklyTimeReport } from "./WeeklyTimeReport";
 import { SocialBenchmarkCard } from "./SocialBenchmarkCard";
 import { ProgressMilestonesCard } from "./ProgressMilestonesCard";
 import { DailyImprovementCard } from "./DailyImprovementCard";
+import { DailyOpsRitualCard } from "./DailyOpsRitualCard";
+import { CustomerInterviewCard } from "./CustomerInterviewCard";
 import { RitualBanner } from "./RitualBanner";
 import { calculateHealthMetrics, buildTaxCalendar } from "@build-up/shared";
 import type { MonthlyCosts } from "@build-up/shared";
 import { AlertStripBanner } from "./AlertStripBanner";
 import { DeepDiveSection } from "./DeepDiveSection";
 import { MorningBriefing } from "./MorningBriefing";
+import OperationalBootIntro from "./OperationalBootIntro";
+import { DailyKpiStrip, type KpiValue } from "./DailyKpiStrip";
+// HealthBadge 는 MorningBriefing 헤더로 통합됨
 import { SalesBreakdownCard } from "./SalesBreakdownCard";
 import { MonthlyProgressCard } from "./MonthlyProgressCard";
 import { CostStructureCard } from "./CostStructureCard";
 import { BenchmarkCard } from "./BenchmarkCard";
 import { ActivitySnapshotCard } from "./ActivitySnapshotCard";
 import { SurvivalBoardCard } from "./SurvivalBoardCard";
-import { StartupMetricsCard } from "./StartupMetricsCard";
+// StartupMetricsCard 는 CostCompositionDonutCard (모든 업종 보편 비용 구조 도넛) 으로 교체됨
+import { CostCompositionDonutCard } from "./CostCompositionDonutCard";
 import { InventoryOpsCard } from "./InventoryOpsCard";
 import { StaffOpsCard } from "./StaffOpsCard";
+import { SubscriptionWebhookConnectCard } from "../profile/SubscriptionWebhookConnectCard";
 import type { SubscriptionPlan, Subscriber } from "../../stores/operations-store";
 import {
   shell,
   bentoHoverCSS,
-  heroPanel,
-  heroHeader,
-  heroEyebrow,
-  heroTitle,
-  heroBody,
-  heroActions,
-  primaryAction,
-  secondaryAction,
-  headlineGrid,
-  headlineCard,
-  headlineLabel,
-  headlineValue,
-  headlineNote,
   survivalGrid,
   coreGrid,
   opsCard,
@@ -167,11 +161,11 @@ function CustomerSummaryCard({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fm
   })();
 
   const emptyMsg: Record<string, { ko: string; en: string }> = {
-    membership: { ko: "🏋️ 회원을 등록하면 만료·갱신 현황을 추적할 수 있어요", en: "🏋️ Add members to track expiry & renewal" },
-    appointment: { ko: "✂️ 고객을 등록하면 예약·시술 이력을 관리할 수 있어요", en: "✂️ Add clients to track visits & services" },
-    repeat: { ko: "☕ 단골을 등록하면 재방문 패턴을 볼 수 있어요", en: "☕ Add regulars to see return patterns" },
-    ecommerce: { ko: "📦 구매자를 등록하면 재구매율을 추적할 수 있어요", en: "📦 Add buyers to track repeat purchases" },
-    pipeline: { ko: "🚀 리드를 등록하면 파이프라인을 추적할 수 있어요", en: "🚀 Add leads to track your pipeline" },
+    membership:  { ko: "회원을 등록하면 만료·갱신 현황을 추적할 수 있어요", en: "Add members to track expiry & renewal" },
+    appointment: { ko: "고객을 등록하면 예약·시술 이력을 관리할 수 있어요", en: "Add clients to track visits & services" },
+    repeat:      { ko: "단골을 등록하면 재방문 패턴을 볼 수 있어요", en: "Add regulars to see return patterns" },
+    ecommerce:   { ko: "구매자를 등록하면 재구매율을 추적할 수 있어요", en: "Add buyers to track repeat purchases" },
+    pipeline:    { ko: "리드를 등록하면 파이프라인을 추적할 수 있어요", en: "Add leads to track your pipeline" },
   };
 
   const emptyText = emptyMsg[mode] ?? emptyMsg.repeat;
@@ -290,15 +284,26 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
     return sum + (p.billingCycle === "annual" ? Math.round(p.price / 12) : p.price);
   }, 0);
 
+  const isEmpty = plans.length === 0 && subs.length === 0;
+
   return (
-    <article style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
+    <article style={{
+      borderRadius: "20px",
+      border: "1px solid rgba(124,58,237,0.08)",
+      background: isEmpty
+        ? "linear-gradient(180deg, rgba(124,58,237,0.04) 0%, rgba(168,85,247,0.02) 100%)"
+        : "#fff",
+      padding: "18px 22px", display: "grid", gap: "12px",
+    }} className="bento-card">
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "구독 관리" : "Subscriptions"}</span>
-          <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(124,58,237,0.06)", color: "#7c3aed" }}>
-            {activeSubs.length}{ko ? "명" : ""}
-          </span>
+          <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "구독 관리" : "Subscriptions"}</span>
+          {!isEmpty && (
+            <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}>
+              {activeSubs.length}{ko ? "명" : ""}
+            </span>
+          )}
           {currentMrr > 0 && (
             <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.06)", color: "#059669" }}>
               MRR {fmt(currentMrr)}
@@ -306,33 +311,148 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
           )}
         </div>
         <button type="button" onClick={() => d.setUsesSubscriptions(false)} style={{
-          fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.35)", background: "none", border: "none", cursor: "pointer",
+          fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.32)", background: "none", border: "none", cursor: "pointer",
+          padding: "2px 6px", borderRadius: "6px",
         }}>
           {ko ? "비활성화" : "Disable"}
         </button>
       </div>
 
-      {/* Tab toggle */}
-      <div style={{ display: "flex", gap: "4px", background: "rgba(15,23,42,0.03)", borderRadius: "10px", padding: "3px" }}>
-        {(["customers", "plans"] as const).map((t) => (
-          <button key={t} type="button" onClick={() => setTab(t)} style={{
-            flex: 1, padding: "7px 0", borderRadius: "8px", border: "none", cursor: "pointer",
-            fontSize: "12px", fontWeight: 650,
-            background: tab === t ? "#fff" : "transparent",
-            color: tab === t ? "#0f172a" : "rgba(15,23,42,0.4)",
-            boxShadow: tab === t ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
-            transition: "all 0.15s ease",
+      {/* Empty state — 깔끔한 hero CTA (폼 안 열렸을 때만) */}
+      {isEmpty && !d.subPlanFormOpen && (
+        <div style={{
+          padding: "20px 16px 18px",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
+          textAlign: "center" as const,
+        }}>
+          <div style={{
+            width: "44px", height: "44px", borderRadius: "12px",
+            background: "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(168,85,247,0.08) 100%)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: "1px solid rgba(124,58,237,0.12)",
           }}>
-            {t === "customers" ? (ko ? `고객 ${activeSubs.length}` : `Customers ${activeSubs.length}`) : (ko ? `플랜 ${plans.length}` : `Plans ${plans.length}`)}
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 2.5l1.85 4.94L17 8.13l-3.85 3.27.92 5.1L10 14l-4.07 2.5.92-5.1L3 8.13l5.15-.69L10 2.5z" fill="#7c3aed" opacity="0.85"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
+              {ko ? "구독제 비즈니스 시작" : "Start your subscription business"}
+            </div>
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "5px", lineHeight: 1.55, maxWidth: "260px" }}>
+              {ko
+                ? "플랜을 만들고 고객을 추가하면 MRR·이탈률·전환율이 자동으로 계산됩니다"
+                : "Create plans and add customers — MRR, churn, and conversion are tracked automatically"}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setTab("plans"); d.setSubPlanFormOpen(true); }}
+            style={{
+              marginTop: "2px",
+              padding: "10px 18px", borderRadius: "10px", border: "none", cursor: "pointer",
+              background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+              color: "#fff", fontSize: "13px", fontWeight: 650, letterSpacing: "-0.01em",
+              boxShadow: "0 6px 18px rgba(124,58,237,0.22)",
+              display: "inline-flex", alignItems: "center", gap: "6px",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M6 2v8M2 6h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            {ko ? "첫 플랜 만들기" : "Create first plan"}
           </button>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Empty + 폼 열림 — 인라인 첫 플랜 추가 폼 (취소 버튼 포함) */}
+      {isEmpty && d.subPlanFormOpen && (
+        <div style={{
+          padding: "16px",
+          borderRadius: "14px",
+          background: "rgba(255,255,255,0.85)",
+          border: "1px solid rgba(124,58,237,0.12)",
+          display: "flex", flexDirection: "column", gap: "10px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+              {ko ? "첫 플랜 만들기" : "Create first plan"}
+            </div>
+            <button
+              type="button"
+              onClick={() => { d.setSubPlanFormOpen(false); d.setSubPlanName(""); d.setSubPlanPrice(""); }}
+              style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
+            >
+              {ko ? "취소" : "Cancel"}
+            </button>
+          </div>
+          <input
+            type="text"
+            placeholder={ko ? "플랜 이름 (예: Pro, Basic)" : "Plan name (e.g. Pro, Basic)"}
+            value={d.subPlanName ?? ""}
+            onChange={(e) => d.setSubPlanName(e.target.value)}
+            autoFocus
+            style={{ padding: "10px 12px", borderRadius: "9px", border: "1px solid rgba(15,23,42,0.1)", background: "#fff", fontSize: "13px", fontWeight: 600, outline: "none" }}
+          />
+          <div style={{ display: "flex", gap: "6px" }}>
+            <input
+              type="text" inputMode="numeric"
+              placeholder={ko ? "가격 (원)" : "Price (KRW)"}
+              value={d.subPlanPrice ?? ""}
+              onChange={(e) => d.setSubPlanPrice(e.target.value)}
+              style={{ flex: 1, padding: "10px 12px", borderRadius: "9px", border: "1px solid rgba(15,23,42,0.1)", background: "#fff", fontSize: "13px", fontWeight: 600, outline: "none" }}
+            />
+            <select
+              value={(d.subPlanCycle as string) ?? "monthly"}
+              onChange={(e) => d.setSubPlanCycle(e.target.value as "monthly" | "annual")}
+              style={{ padding: "10px 12px", borderRadius: "9px", border: "1px solid rgba(15,23,42,0.1)", background: "#fff", fontSize: "13px", fontWeight: 600, outline: "none", cursor: "pointer" }}
+            >
+              <option value="monthly">{ko ? "월" : "Monthly"}</option>
+              <option value="annual">{ko ? "연" : "Annual"}</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddPlan}
+            disabled={!(d.subPlanName ?? "").trim() || !(d.subPlanPrice ?? "")}
+            style={{
+              padding: "10px", borderRadius: "9px", border: "none", cursor: "pointer",
+              background: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "")
+                ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)"
+                : "rgba(15,23,42,0.06)",
+              color: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "") ? "#fff" : "rgba(15,23,42,0.3)",
+              fontSize: "13px", fontWeight: 650, letterSpacing: "-0.01em",
+              boxShadow: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "") ? "0 4px 12px rgba(124,58,237,0.18)" : "none",
+            }}
+          >
+            {ko ? "플랜 만들기" : "Create plan"}
+          </button>
+        </div>
+      )}
+
+      {/* Tab toggle — 데이터 있을 때만 */}
+      {!isEmpty && (
+        <div style={{ display: "flex", gap: "4px", background: "rgba(15,23,42,0.03)", borderRadius: "10px", padding: "3px" }}>
+          {(["customers", "plans"] as const).map((t) => (
+            <button key={t} type="button" onClick={() => setTab(t)} style={{
+              flex: 1, padding: "7px 0", borderRadius: "8px", border: "none", cursor: "pointer",
+              fontSize: "12px", fontWeight: 650,
+              background: tab === t ? "#fff" : "transparent",
+              color: tab === t ? "#0f172a" : "rgba(15,23,42,0.4)",
+              boxShadow: tab === t ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
+              transition: "all 0.15s ease",
+            }}>
+              {t === "customers" ? (ko ? `고객 ${activeSubs.length}` : `Customers ${activeSubs.length}`) : (ko ? `플랜 ${plans.length}` : `Plans ${plans.length}`)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ── Customers tab ── */}
-      {tab === "customers" && (
+      {!isEmpty && tab === "customers" && (
         <>
-          {/* Plan summary chips */}
-          {activePlans.length > 0 && (
+          {/* Plan summary chips — 구독자가 있을 때만 의미 있음 */}
+          {activeSubs.length > 0 && activePlans.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
               {activePlans.map((plan, i) => {
                 const count = activeSubs.filter((s) => s.planId === plan.id).length;
@@ -409,22 +529,65 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
                 );
               })}
             </div>
-          ) : plans.length > 0 ? (
-            <button type="button" onClick={() => d.setSubCustomerFormOpen(true)} style={{
-              width: "100%", padding: "14px", borderRadius: "12px",
-              border: "1px dashed rgba(124,58,237,0.15)", background: "transparent",
-              cursor: "pointer", fontSize: "13px", color: "rgba(15,23,42,0.4)", fontWeight: 500,
+          ) : plans.length > 0 && !d.subCustomerFormOpen ? (
+            // 빈 상태 — 통합 hero CTA (chip + dashed + add 버튼 → 한 박스로)
+            <div style={{
+              padding: "22px 16px",
+              borderRadius: "14px",
+              background: "linear-gradient(180deg, rgba(124,58,237,0.04) 0%, rgba(168,85,247,0.015) 100%)",
+              border: "1px solid rgba(124,58,237,0.08)",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
+              textAlign: "center" as const,
             }}>
-              {ko ? "첫 번째 고객을 등록하세요" : "Register your first customer"}
-            </button>
-          ) : (
+              <div style={{
+                width: "40px", height: "40px", borderRadius: "11px",
+                background: "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(168,85,247,0.08) 100%)",
+                border: "1px solid rgba(124,58,237,0.12)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <circle cx="9" cy="6" r="3" stroke="#7c3aed" strokeWidth="1.5" fill="none"/>
+                  <path d="M3 15.5c0-3 2.7-5 6-5s6 2 6 5" stroke="#7c3aed" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  <circle cx="14.5" cy="3.5" r="2.5" fill="#7c3aed" opacity="0.15"/>
+                  <path d="M14.5 2.5v2M13.5 3.5h2" stroke="#7c3aed" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.015em" }}>
+                  {ko ? "첫 고객을 등록하세요" : "Register your first customer"}
+                </div>
+                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "4px", lineHeight: 1.55, maxWidth: "280px" }}>
+                  {ko
+                    ? `${plans.length}개의 플랜이 준비됐어요 — 첫 고객을 추가하면 MRR이 시작됩니다`
+                    : `${plans.length} plan${plans.length > 1 ? "s" : ""} ready — add your first customer to start MRR`}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => d.setSubCustomerFormOpen(true)}
+                style={{
+                  marginTop: "2px",
+                  padding: "9px 18px", borderRadius: "10px", border: "none", cursor: "pointer",
+                  background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+                  color: "#fff", fontSize: "12.5px", fontWeight: 650, letterSpacing: "-0.01em",
+                  boxShadow: "0 6px 16px rgba(124,58,237,0.2)",
+                  display: "inline-flex", alignItems: "center", gap: "6px",
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                  <path d="M5.5 2v7M2 5.5h7" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                {ko ? "고객 추가" : "Add customer"}
+              </button>
+            </div>
+          ) : !plans.length && (
             <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.02)", fontSize: "12px", color: "rgba(15,23,42,0.4)", lineHeight: 1.5 }}>
               {ko ? "먼저 [플랜] 탭에서 구독 플랜을 등록하세요" : "First register plans in the [Plans] tab"}
             </div>
           )}
 
-          {/* Add customer form */}
-          {plans.length > 0 && (
+          {/* Add customer form / button — subs 있을 때 작은 add 버튼만, 빈 상태는 위 hero가 처리 */}
+          {plans.length > 0 && (activeSubs.length > 0 || d.subCustomerFormOpen) && (
             <div style={{ display: "flex", gap: "6px" }}>
               {!d.subCustomerFormOpen ? (
                 <button type="button" onClick={() => d.setSubCustomerFormOpen(true)} style={{
@@ -502,38 +665,127 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
       )}
 
       {/* ── Plans tab ── */}
-      {tab === "plans" && (
+      {!isEmpty && tab === "plans" && (
         <>
           {plans.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {plans.map((plan, i) => {
                 const c = getPlanColor(i);
                 const subCount = subs.filter((s) => s.planId === plan.id && s.status !== "churned").length;
+                const isInactive = !plan.isActive;
                 return (
-                  <div key={plan.id} style={{
-                    display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px",
-                    borderRadius: "12px", background: plan.isActive ? c.bg : "rgba(15,23,42,0.02)",
-                    border: `1px solid ${plan.isActive ? c.border : "rgba(15,23,42,0.04)"}`,
-                    opacity: plan.isActive ? 1 : 0.5, transition: "all 0.15s ease",
-                  }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{plan.name}</span>
+                  <div
+                    key={plan.id}
+                    className="bento-card sub-plan-card"
+                    style={{
+                      position: "relative" as const,
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr auto",
+                      alignItems: "center",
+                      gap: "14px",
+                      padding: "14px 16px 14px 18px",
+                      borderRadius: "14px",
+                      background: isInactive
+                        ? "rgba(15,23,42,0.015)"
+                        : `linear-gradient(135deg, ${c.bg} 0%, rgba(255,255,255,0.92) 65%)`,
+                      border: `1px solid ${isInactive ? "rgba(15,23,42,0.05)" : c.border}`,
+                      opacity: isInactive ? 0.55 : 1,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Linear-style 좌측 accent bar (3px) */}
+                    <div style={{
+                      position: "absolute" as const, left: 0, top: 0, bottom: 0,
+                      width: "3px",
+                      background: isInactive
+                        ? "rgba(15,23,42,0.15)"
+                        : `linear-gradient(180deg, ${c.text} 0%, ${c.text}cc 100%)`,
+                    }} />
+
+                    {/* Stripe-style 이니셜 avatar */}
+                    <div style={{
+                      width: "38px", height: "38px", borderRadius: "11px",
+                      background: isInactive
+                        ? "rgba(15,23,42,0.05)"
+                        : `linear-gradient(135deg, ${c.text} 0%, ${c.text}d0 100%)`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "15px", fontWeight: 700,
+                      color: isInactive ? "rgba(15,23,42,0.4)" : "#fff",
+                      letterSpacing: "-0.02em", flexShrink: 0,
+                      boxShadow: isInactive ? "none" : `0 4px 10px ${c.text}24`,
+                    }}>
+                      {plan.name.charAt(0).toUpperCase()}
+                    </div>
+
+                    {/* Center: 이름 + chip · 가격 */}
+                    <div style={{ minWidth: 0, display: "grid", gap: "4px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                        <span style={{
+                          fontSize: "14.5px", fontWeight: 700, color: "#0f172a",
+                          letterSpacing: "-0.015em",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
+                        }}>
+                          {plan.name}
+                        </span>
                         {subCount > 0 && (
-                          <span style={{ fontSize: "10px", fontWeight: 700, color: c.text }}>{subCount}{ko ? "명" : ""}</span>
+                          <span style={{
+                            fontSize: "10.5px", fontWeight: 650,
+                            padding: "2px 8px", borderRadius: "999px",
+                            background: isInactive ? "rgba(15,23,42,0.05)" : `${c.text}14`,
+                            color: isInactive ? "rgba(15,23,42,0.45)" : c.text,
+                            letterSpacing: "-0.005em", flexShrink: 0,
+                            display: "inline-flex", alignItems: "center", gap: "3px",
+                          }}>
+                            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                              <circle cx="4.5" cy="3" r="1.5" fill="currentColor" />
+                              <path d="M1.5 7.5c0-1.5 1.3-2.5 3-2.5s3 1 3 2.5" stroke="currentColor" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+                            </svg>
+                            {subCount}{ko ? "명" : ""}
+                          </span>
                         )}
                       </div>
-                      <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)" }}>
-                        {fmt(plan.price)}/{plan.billingCycle === "monthly" ? (ko ? "월" : "mo") : (ko ? "연" : "yr")}
+                      <div style={{
+                        display: "flex", alignItems: "baseline", gap: "4px",
+                        fontVariantNumeric: "tabular-nums" as const,
+                      }}>
+                        <span style={{
+                          fontSize: "16px", fontWeight: 700, color: "#0f172a",
+                          letterSpacing: "-0.025em",
+                        }}>
+                          {fmt(plan.price)}
+                        </span>
+                        <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", fontWeight: 500 }}>
+                          / {plan.billingCycle === "monthly" ? (ko ? "월" : "mo") : (ko ? "연" : "yr")}
+                        </span>
                       </div>
                     </div>
-                    <button type="button" onClick={() => handleDeletePlan(plan.id)} style={{
-                      width: "24px", height: "24px", borderRadius: "6px", border: "none",
-                      background: "rgba(15,23,42,0.04)", cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 2l6 6M8 2l-6 6" stroke="rgba(15,23,42,0.3)" strokeWidth="1.2" strokeLinecap="round" />
+
+                    {/* Right: 미니멀 delete (기본은 subtle, hover 시 빨강) */}
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePlan(plan.id)}
+                      title={ko ? "플랜 삭제" : "Delete plan"}
+                      className="sub-plan-delete"
+                      style={{
+                        width: "30px", height: "30px", borderRadius: "9px",
+                        border: "none", background: "transparent",
+                        cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "rgba(15,23,42,0.3)",
+                        transition: "background 0.15s ease, color 0.15s ease",
+                        flexShrink: 0,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(220,38,38,0.08)";
+                        e.currentTarget.style.color = "#dc2626";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "rgba(15,23,42,0.3)";
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M3.5 3.5l6 6M9.5 3.5l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                     </button>
                   </div>
@@ -598,6 +850,15 @@ export default function OperationalDashboard({ d }: Props) {
   const usesSubscriptions = !!(d.usesSubscriptions);
   const [viewportWidth, setViewportWidth] = useState(1440);
   const [showCalendar, setShowCalendar] = useState(false);
+  // CSS-only stagger: 각 자식 카드에 animationDelay = idx * 70ms 부여
+  const STAGGER_STEP_MS = 70;
+  let staggerIdx = 0;
+  const nextStaggerStyle = (): React.CSSProperties => ({
+    animationDelay: `${staggerIdx++ * STAGGER_STEP_MS}ms`,
+  });
+  // 부팅 인트로 종료 여부 — 이 값이 false 면 대시보드 콘텐츠 자체를 mount 하지 않음
+  // → 인트로 끝나는 순간 자식 카드들이 새로 mount → 기존 dashStaggerIn 자연 발화
+  const [introDone, setIntroDone] = useState(false);
   const [dismissedMilestones, setDismissedMilestones] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem("dismissedMilestones");
@@ -654,6 +915,10 @@ export default function OperationalDashboard({ d }: Props) {
     (monthlyCosts.other ?? 0) +
     (monthlyCosts.interest ?? 0);
   const netProfit = totalSales - totalCosts;
+  // 위기 elevation flag — 런웨이 6개월 미만이면 CashflowHeroCard 를 Tier 2 → Tier 1 으로 끌어올림
+  const _budgetForRunway = (d.selectedBudget ?? 0) as number;
+  const _runwayMonths = totalCosts > 0 && _budgetForRunway > 0 ? _budgetForRunway / totalCosts : Infinity;
+  const cashflowCriticalElevation = Number.isFinite(_runwayMonths) && _runwayMonths < 6;
   const projectedSales =
     workingDays > 0
       ? totalSales +
@@ -834,104 +1099,7 @@ export default function OperationalDashboard({ d }: Props) {
     try { localStorage.setItem("dismissedMilestones", JSON.stringify([...next])); } catch {}
   };
 
-  // 전월 대비 손익 변화율
-  const prevNetProfit = (prevMonthSales !== undefined && prevMonthCosts !== undefined) ? prevMonthSales - prevMonthCosts : undefined;
-  const pnlChangePercent = (prevNetProfit !== undefined && prevNetProfit !== 0) ? Math.round(((netProfit - prevNetProfit) / Math.abs(prevNetProfit)) * 100) : undefined;
-
-  const headlineStats = isStaff ? [] : [
-    {
-      label: isStartupCompany ? (ko ? "월 Burn / 손익" : "Monthly burn / P&L") : ko ? "월 손익" : "Monthly P&L",
-      value: totalSales > 0 || totalCosts > 0 ? `${netProfit >= 0 ? "+" : ""}${fmt(netProfit)}` : "—",
-      note:
-        totalCosts > 0
-          ? ko
-            ? `월 비용 ${fmt(totalCosts)}`
-            : `Costs ${fmt(totalCosts)}`
-          : ko
-            ? "비용 입력 필요"
-            : "Need monthly costs",
-      tone: netProfit > 0 ? "#177245" : netProfit < 0 ? "#b42318" : "rgba(15, 23, 42, 0.82)",
-      change: pnlChangePercent,
-    },
-    {
-      label: ko ? "현금 런웨이" : "Cash runway",
-      value:
-        totalCosts > 0
-          ? runwayMonths < 0
-            ? ko
-              ? "흑자"
-              : "Positive"
-            : `${runwayMonths}${ko ? "개월" : " mo"}`
-          : "—",
-      note:
-        d.selectedBudget
-          ? ko
-            ? `가용 현금 ${fmt(capitalLeft)}`
-            : `Cash left ${fmt(capitalLeft)}`
-          : ko
-            ? "예산 입력 필요"
-            : "Need starting cash",
-      tone: runwayMonths >= 0 && runwayMonths <= 3 ? "#b42318" : "rgba(15, 23, 42, 0.82)",
-      change: undefined as number | undefined,
-    },
-    {
-      label: isStartupCompany
-        ? (ko ? "로드맵 실행" : "Roadmap execution")
-        : ko ? (d.businessCtx.inventoryLabel?.ko ?? "현재 재고") : (d.businessCtx.inventoryLabel?.en ?? "Inventory"),
-      value: isStartupCompany
-        ? `${d.completedCount}/${d.pathTotalStages}`
-        : inventory.length > 0
-          ? `${inventory.length}${ko ? "개" : ""}`
-          : ko
-            ? "미등록"
-            : "Empty",
-      note:
-        isStartupCompany
-          ? d.nextRoadmapStage
-            ? `${d.nextRoadmapStage.title}`
-            : ko
-              ? "현재 단계 완료"
-              : "Current stage complete"
-          : lowStockItems.length > 0
-          ? ko
-            ? `부족 ${lowStockItems.length}개 품목`
-            : `${lowStockItems.length} low-stock items`
-          : ko
-            ? (d.businessCtx.inventoryMode === "unified" ? "제품 상태 안정" : "재고 상태 안정")
-            : "Stock looks stable",
-      tone: "rgba(15, 23, 42, 0.94)",
-      change: undefined as number | undefined,
-    },
-    {
-      label: ko ? "경영 건강" : "Health",
-      value: totalSales > 0
-        ? `${healthMetrics.healthScore}${ko ? "점" : "pt"}`
-        : "—",
-      note: totalSales > 0
-        ? healthMetrics.healthGrade === "healthy" ? (ko ? "건강한 상태입니다" : "Healthy")
-          : healthMetrics.healthGrade === "caution" ? (ko ? "주의가 필요합니다" : "Needs attention")
-          : healthMetrics.healthGrade === "warning" ? (ko ? "경고 — 비용 점검 필요" : "Warning — check costs")
-          : (ko ? "위험 — 즉시 대응 필요" : "Critical — act now")
-        : ko ? "매출 입력 후 측정" : "Enter sales to measure",
-      tone: totalSales > 0
-        ? healthMetrics.healthScore >= 75 ? "#059669"
-          : healthMetrics.healthScore >= 50 ? "#d97706"
-          : "#dc2626"
-        : "rgba(15, 23, 42, 0.82)",
-      change: undefined as number | undefined,
-    },
-    ...(nextTaxItem ? [{
-      label: ko ? "다음 세금 마감" : "Next tax deadline",
-      value: nextTaxItem.daysUntil <= 0
-        ? (ko ? "오늘 마감!" : "Due today!")
-        : nextTaxItem.daysUntil <= 7
-          ? `D-${nextTaxItem.daysUntil}`
-          : `${nextTaxItem.daysUntil}${ko ? "일 후" : "d"}`,
-      note: nextTaxItem.summary,
-      tone: nextTaxItem.daysUntil <= 7 ? "#b42318" : nextTaxItem.daysUntil <= 30 ? "#b54708" : "rgba(15, 23, 42, 0.82)",
-      change: undefined as number | undefined,
-    }] : []),
-  ];
+  // headlineStats + pnlChangePercent 제거됨 (display:none 상태에서 중복 계산만 하던 죽은 코드)
 
   // CSV 내보내기
   const handleExportCSV = () => {
@@ -957,24 +1125,47 @@ export default function OperationalDashboard({ d }: Props) {
     <section style={shell}>
       <style>{bentoHoverCSS}</style>
 
-      {/* ━━━ 상호명 ━━━ */}
-      <div style={{
-        padding: "4px 0 12px",
-        display: "flex", alignItems: "center", gap: "8px",
+      {/* ━━━ 운영 대시보드 진입 부팅 인트로 (마운트 마다 / 자비스 톤 / 2.2초) ━━━ */}
+      <OperationalBootIntro trigger onComplete={() => setIntroDone(true)} />
+
+      {/* ━━━ 인트로 종료 후에만 콘텐츠 reveal — dashStaggerIn 자연 발화 ━━━ */}
+      {introDone ? (
+        <>
+      {/* ━━━ 상호명 — Apple 페이지 타이틀 톤 ━━━ */}
+      <div className="dash-stagger-item" style={{
+        ...nextStaggerStyle(),
+        padding: "4px 0 0",
+        display: "flex", alignItems: "center", gap: "12px",
       }}>
         <span style={{
-          fontSize: "18px", fontWeight: 720, color: "#0f172a",
-          letterSpacing: "-0.02em",
+          fontSize: "clamp(24px, 2.6vw, 30px)",
+          fontWeight: 720,
+          color: "#0f172a",
+          letterSpacing: "-0.028em",
+          lineHeight: 1.1,
           fontFamily: "inherit",
         }}>
           {d.storeName || (ko ? "내 가게" : "My Store")}
         </span>
         {d.businessLaunched && (
           <span style={{
-            fontSize: "10px", fontWeight: 650, padding: "3px 8px", borderRadius: "6px",
-            background: "rgba(5,150,105,0.08)", color: "#059669",
-            letterSpacing: "0.02em",
+            fontSize: "11.5px",
+            fontWeight: 650,
+            padding: "4px 10px",
+            borderRadius: "999px",
+            background: "rgba(5,150,105,0.08)",
+            color: "#059669",
+            letterSpacing: "0.01em",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            lineHeight: 1,
           }}>
+            <span style={{
+              width: "6px", height: "6px", borderRadius: "50%",
+              background: "#059669",
+              boxShadow: "0 0 0 3px rgba(5,150,105,0.15)",
+            }} />
             {ko ? "운영 중" : "LIVE"}
           </span>
         )}
@@ -982,33 +1173,33 @@ export default function OperationalDashboard({ d }: Props) {
 
       {/* ━━━ 0단계: 경영 리추얼 배너 (주간/월간 프롬프트) ━━━ */}
       {!isStaff && (
-        <RitualBanner
-          ko={ko}
-          onOpenWeekly={() => {
-            const el = document.querySelector("[data-weekly-report]");
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-          }}
-          onOpenMonthly={() => d.navigateToSurface("analytics")}
-        />
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <RitualBanner
+            ko={ko}
+            onOpenWeekly={() => {
+              const el = document.querySelector("[data-weekly-report]");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+            onOpenMonthly={() => d.navigateToSurface("analytics")}
+          />
+        </div>
       )}
 
       {/* ━━━ 긴급 Alert Strip (있을 때만 렌더) ━━━ */}
-      {!isStaff && <AlertStripBanner />}
-
-      {/* ━━━ 1단계: AI 경영 브리핑 (통합 허브 — 오늘의 1가지 + 분석·행동 + 다른 제안 접힘형 + KPI) ━━━ */}
-      <MorningBriefing />
-
-      {/* ━━━ 2단계: 매출 흐름 + 오늘 입력 · 핵심 생존 지표 — AI 코칭 바로 아래 ━━━ */}
       {!isStaff && (
-        <div
-          style={{
-            display: "grid",
-            gap: "14px",
-            gridTemplateColumns: isWide
-              ? "minmax(0, 1.15fr) minmax(360px, 0.85fr)"
-              : "1fr",
-          }}
-        >
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <AlertStripBanner />
+        </div>
+      )}
+
+      {/* ━━━ 1단계: AI 경영 코칭 (KPI 는 외부 DailyKpiStrip 이 담당 → hideKpis) ━━━ */}
+      <div className="dash-stagger-item" style={nextStaggerStyle()}>
+        <MorningBriefing hideKpis />
+      </div>
+
+      {/* ━━━ Tier 1.1: 매출 흐름 (full width) — BEP 라인 + 흑/적 zone ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <ActivitySnapshotCard
             d={d}
             ko={ko}
@@ -1021,65 +1212,232 @@ export default function OperationalDashboard({ d }: Props) {
             fmt={fmt}
             onOpenCalendar={() => setShowCalendar(true)}
           />
-          <SurvivalBoardCard
+        </div>
+      )}
+
+      {/* ━━━ Tier 1.2: 현금흐름(+런웨이) | 수익성 — Buffett #1 metric + CFO 표준 ━━━ */}
+      {!isStaff && (
+        <div
+          className="dash-stagger-item"
+          style={{
+            ...nextStaggerStyle(),
+            display: "grid",
+            gap: "14px",
+            gridTemplateColumns: isWide ? "minmax(0, 1fr) minmax(0, 1fr)" : "1fr",
+            alignItems: "stretch",
+          }}
+        >
+          <CashflowHeroCard
             ko={ko}
-            isStartupCompany={isStartupCompany}
-            runwayMonths={runwayMonths}
-            capitalLeft={capitalLeft}
-            weeklySalesChange={weeklySalesChange}
-            weeklySignalLabel={weeklySignalLabel}
-            healthLabel={healthLabel}
-            healthTone={healthTone}
-            topRiskLabel={topRiskLabel}
-            focusMessage={focusMessage}
-            d={d}
+            dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
+            fallbackMonthlyCostsTotal={totalCosts}
+          />
+          <PLHeroCard
             totalSales={totalSales}
-            netProfit={netProfit}
             totalCosts={totalCosts}
+            netProfit={netProfit}
+            bepProgress={bepProgress}
+            ingredientRatio={ingredientRatio}
+            laborRatio={laborRatio}
+            rentRatio={rentRatio}
+            primeCost={primeCost}
+            projectedProfit={projectedProfit}
+            workingDays={workingDays}
+            ko={ko}
+            fmt={fmt}
+            prevMonthSales={prevMonthSales}
+            prevMonthCosts={prevMonthCosts}
+            breakEvenDailySales={breakEvenDailySales}
+            todaySales={todaySales}
+            todayBepProgress={todayBepProgress}
+            daysAboveBreakEven={daysAboveBreakEven}
+            totalDaysRecorded={healthMetrics.totalDaysRecorded}
+            cogsLabel={d.businessCtx.expenseFields?.[0]?.label}
+            expenseFields={d.businessCtx.expenseFields?.map((f) => ({ fieldKey: f.fieldKey, label: f.label }))}
           />
         </div>
       )}
 
-      {/* ━━━ 3단계: 현금흐름 레이더 (14일 시각화 + 설정) ━━━ */}
-      {!isStaff && (
-        <CashflowHeroCard
-          ko={ko}
-          dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
-        />
-      )}
+      {/* ━━━ 1.2단계: 업종별 KPI Strip (5칸 — 임계값 색만 봐도 OK/위기 즉시 판단) ━━━ */}
+      {!isStaff && (() => {
+        // Tier 1 Daily Hub 5칸 KPI 값 계산 — 업종별 cell.id 와 매칭
+        const lastEntry = allEntries[allEntries.length - 1];
+        const prevWeekSameDay = allEntries[allEntries.length - 8];
+        const yesterdaySales = lastEntry?.sales ?? null;
+        const yesterdayCustomers = lastEntry?.customers ?? null;
+        const ySalesTrend = (yesterdaySales != null && prevWeekSameDay?.sales)
+          ? ((yesterdaySales - prevWeekSameDay.sales) / prevWeekSameDay.sales) * 100
+          : undefined;
+        const yCustTrend = (yesterdayCustomers != null && prevWeekSameDay?.customers)
+          ? ((yesterdayCustomers - prevWeekSameDay.customers) / prevWeekSameDay.customers) * 100
+          : undefined;
+        const primeCost = totalSales > 0
+          ? ((monthlyCosts.ingredients + monthlyCosts.labor) / totalSales) * 100
+          : null;
+        const selectedBudget = (d.selectedBudget ?? 0) as number;
+        const cashRunway = totalCosts > 0 && selectedBudget > 0 ? selectedBudget / totalCosts : null;
+        const avgTicket = totalCustomers > 0 ? totalSales / totalCustomers : null;
+        const cogsRatio = totalSales > 0 && monthlyCosts.ingredients
+          ? (monthlyCosts.ingredients / totalSales) * 100
+          : null;
+        const laborRatio = totalSales > 0 && monthlyCosts.labor
+          ? (monthlyCosts.labor / totalSales) * 100
+          : null;
+        const rentRatio = totalSales > 0 && monthlyCosts.rent
+          ? (monthlyCosts.rent / totalSales) * 100
+          : null;
+        // SaaS / 구독 metric
+        const subs = (d as { subscribers?: { active?: number } }).subscribers;
+        const activeUsers = subs?.active ?? null;
+        // 업종별 cell.id → KpiValue 매핑 (모든 업종 cell 들 한 번에 정의, 카탈로그가 알아서 5개만 사용)
+        const values: Record<string, KpiValue | undefined> = {
+          "yesterday-sales":      { value: yesterdaySales, trendPct: ySalesTrend },
+          "yesterday-customers":  { value: yesterdayCustomers, trendPct: yCustTrend },
+          "prime-cost":           { value: primeCost ?? undefined },
+          "cash-runway":          { value: cashRunway ?? undefined },
+          "avg-ticket":           { value: avgTicket ?? undefined },
+          "cogs-ratio":           { value: cogsRatio ?? undefined },
+          "labor-ratio":          { value: laborRatio ?? undefined },
+          "rent-ratio":           { value: rentRatio ?? undefined },
+          "inventory-days":       { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "booking-utilization":  { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "seat-utilization":     { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "renewal-rate":         { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "repeat-rate":          { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "active-members":       { value: activeUsers ?? undefined },
+          "active-users":         { value: activeUsers ?? undefined },
+          "cumulative-users":     { value: activeUsers ?? undefined },
+          "wau":                  { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "pmf-score":            { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "mrr":                  { value: yesterdaySales ?? undefined },
+          "net-new":              { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "nrr":                  { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "arpu":                 { value: avgTicket ?? undefined },
+        };
+        return (
+          <div className="dash-stagger-item" style={nextStaggerStyle()}>
+            <DailyKpiStrip
+              ko={ko}
+              industryCategoryId={d.businessCtx.categoryId ?? undefined}
+              values={values}
+            />
+          </div>
+        );
+      })()}
 
-      {/* ━━━ Vital: 업종 벤치마크 (한국형 차별화, 항상 표시) ━━━ */}
+      {/* ━━━ 1.5단계 (a): 오늘의 운영 리추얼 — 재고·청결·리뷰·sub-industry 정밀 점검 ━━━ */}
       {!isStaff && (
-        <SocialBenchmarkCard
-          ko={ko}
-          industryCategoryId={d.industryCategoryId}
-          dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
-        />
-      )}
-
-      {/* ━━━ Deep Dive: 성장 도구 — 시간 패턴 · 마일스톤 · 일일 개선 (접이식) ━━━ */}
-      {!isStaff && (
-        <DeepDiveSection
-          id="growth-tools"
-          title={ko ? "성장 도구" : "Growth Tools"}
-          subtitle={ko ? "시간 패턴 · 마일스톤 · 일일 개선" : "Time log · Milestones · Daily improvement"}
-          defaultOpen={false}
-        >
-          <WeeklyTimeReport ko={ko} />
-          <ProgressMilestonesCard
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <DailyOpsRitualCard
             ko={ko}
-            dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
-            healthScore={healthScore}
-            bepProgress={bepProgress}
-            completedStages={d.completedCount ?? 0}
+            industryCategoryId={d.industryCategoryId}
+            selectedIndustryId={d.selectedIndustryId}
+            startupType={d.startupType}
           />
+        </div>
+      )}
+
+      {/* ━━━ 1.5단계 (b): 오늘의 작은 개선 — Bezos Day-1 nudge ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <DailyImprovementCard ko={ko} industryCategoryId={d.industryCategoryId} />
-        </DeepDiveSection>
+        </div>
+      )}
+
+      {/* ━━━ Tier 2: 이번 주 점검 (생존지표·비용구조·매출분해·벤치마크 — 주 1회 클릭) ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <DeepDiveSection
+            id="weekly-pulse"
+            title={ko ? "이번 주 점검" : "Weekly Pulse"}
+            subtitle={ko ? "생존 지표 · 비용 구조 · 매출 분해 · 월간 진행 · 벤치마크 — 주 1회 점검" : "Survival · Cost · Sales breakdown · Monthly · Benchmark — review weekly"}
+            defaultOpen={false}
+            ko={ko}
+          >
+            <div style={{ display: "grid", gridTemplateColumns: isWide ? "minmax(0, 1fr) minmax(0, 1fr)" : "1fr", gap: "14px" }}>
+              <SurvivalBoardCard
+                ko={ko}
+                isStartupCompany={isStartupCompany}
+                runwayMonths={runwayMonths}
+                capitalLeft={capitalLeft}
+                weeklySalesChange={weeklySalesChange}
+                weeklySignalLabel={weeklySignalLabel}
+                healthLabel={healthLabel}
+                healthTone={healthTone}
+                topRiskLabel={topRiskLabel}
+                focusMessage={focusMessage}
+                d={d}
+                totalSales={totalSales}
+                netProfit={netProfit}
+                totalCosts={totalCosts}
+              />
+              <CostCompositionDonutCard
+                ko={ko}
+                totalSales={totalSales}
+                monthlyCosts={monthlyCosts}
+                industryCategoryId={d.industryCategoryId}
+                fmt={fmt}
+                expenseFields={d.businessCtx.expenseFields?.map((f) => ({ fieldKey: f.fieldKey, label: f.label }))}
+              />
+            </div>
+            <SocialBenchmarkCard
+              ko={ko}
+              industryCategoryId={d.industryCategoryId}
+              dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
+            />
+            {allEntries.length >= 2 && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <SalesBreakdownCard />
+                <MonthlyProgressCard />
+              </div>
+            )}
+            {allEntries.length >= 1 && (
+              <div style={{ display: "grid", gridTemplateColumns: !isStartupCompany && !isOnlineCategory ? "1fr 1fr" : "1fr", gap: "14px" }}>
+                {!isStartupCompany && !isOnlineCategory && <CostStructureCard />}
+                <BenchmarkCard />
+              </div>
+            )}
+          </DeepDiveSection>
+        </div>
+      )}
+
+      {/* ━━━ Tier 4: 성장 도구 — What-If · 시간 · 마일스톤 · 인터뷰 · 주간 리포트 (접이식) ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <DeepDiveSection
+            id="growth-tools"
+            title={ko ? "성장 도구" : "Growth Tools"}
+            subtitle={ko ? "What-If 시뮬 · 시간 패턴 · 마일스톤 · 인터뷰 · 주간 리포트" : "What-If · Time · Milestones · Interviews · Weekly report"}
+            defaultOpen={false}
+            ko={ko}
+          >
+            {(totalSales > 0 || totalCosts > 0) && (
+              <WhatIfSimulator
+                ko={ko}
+                monthlySales={totalSales}
+                monthlyCosts={d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }}
+                capitalLeft={capitalLeft}
+                expenseFields={d.businessCtx.expenseFields?.map((f) => ({ fieldKey: f.fieldKey, label: f.label }))}
+              />
+            )}
+            <WeeklyTimeReport ko={ko} />
+            <ProgressMilestonesCard
+              ko={ko}
+              dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
+              healthScore={healthScore}
+              bepProgress={bepProgress}
+              completedStages={d.completedCount ?? 0}
+            />
+            <CustomerInterviewCard ko={ko} industryCategoryId={d.industryCategoryId} />
+            {streak >= 7 && <WeeklyReport d={d} ko={ko} fmt={fmt} />}
+          </DeepDiveSection>
+        </div>
       )}
 
       {/* ── 비용 미입력 안내 ── */}
       {!isStaff && allEntries.length >= 1 && totalCosts === 0 && (
-        <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{
+        <button className="dash-stagger-item" type="button" onClick={() => d.navigateToSurface("analytics")} style={{
+          ...nextStaggerStyle(),
           width: "100%", marginTop: "10px", padding: "14px 18px",
           borderRadius: "16px", border: "1px solid rgba(245,158,11,0.15)",
           background: "linear-gradient(180deg, rgba(245,158,11,0.04) 0%, rgba(255,255,255,0.9) 100%)",
@@ -1101,9 +1459,15 @@ export default function OperationalDashboard({ d }: Props) {
               {ko ? "월 비용을 입력하면 손익 분석이 시작됩니다" : "Enter monthly costs to unlock P&L analysis"}
             </div>
             <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
-              {ko
-                ? `${d.businessCtx.expenseFields?.[0]?.label?.ko ?? "재료비"}, 인건비, 임대료 등 실제 비용을 입력하세요`
-                : `Enter actual costs: ${d.businessCtx.expenseFields?.[0]?.label?.en ?? "materials"}, labor, rent, etc.`}
+              {(() => {
+                const ef = d.businessCtx.expenseFields;
+                const ing = ef?.find((f) => f.fieldKey === "ingredients")?.label ?? { ko: "재료비", en: "materials" };
+                const lab = ef?.find((f) => f.fieldKey === "labor")?.label ?? { ko: "인건비", en: "labor" };
+                const rnt = ef?.find((f) => f.fieldKey === "rent")?.label ?? { ko: "임대료", en: "rent" };
+                return ko
+                  ? `${ing.ko}, ${lab.ko}, ${rnt.ko} 등 실제 비용을 입력하세요`
+                  : `Enter actual costs: ${ing.en}, ${lab.en}, ${rnt.en}, etc.`;
+              })()}
             </div>
           </div>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
@@ -1112,94 +1476,30 @@ export default function OperationalDashboard({ d }: Props) {
         </button>
       )}
 
-      {/* ━━━ 2단계: 매출 분해 + 월간 진행 + 비용 구조 (데이터 있을 때만) ━━━ */}
-      {allEntries.length >= 2 && (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "14px" }}>
-        <SalesBreakdownCard />
-        <MonthlyProgressCard />
-      </div>
-      )}
-      {allEntries.length >= 1 && (
-      <div style={{ display: "grid", gridTemplateColumns: !isStartupCompany && !isOnlineCategory ? "1fr 1fr" : "1fr", gap: "14px", marginTop: "14px" }}>
-        {/* CostStructure: 오프라인 전용 (식재료/인건비 비율 — 스타트업/온라인에 불필요) */}
-        {!isStartupCompany && !isOnlineCategory && <CostStructureCard />}
-        <BenchmarkCard />
-      </div>
-      )}
+      {/* SalesBreakdown / MonthlyProgress / CostStructure / BenchmarkCard
+          → Tier 2 "이번 주 점검" DeepDive 안으로 이동됨 (위에 weekly-pulse DeepDive 참조) */}
 
-      {/* ━━━ 기존 대시보드 (3단계: 딥다이브) — 데이터 있을 때만 표시 ━━━ */}
-      {allEntries.length >= 3 && (
-      <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.35)", marginBottom: "16px" }}>
-          {ko ? "상세 분석" : "DEEP DIVE"}
-        </div>
-      </div>
-      )}
-
-      <div style={{ ...heroPanel, display: "none" }} className="bento-card">
-        <div style={heroHeader}>
-          <div>
-            <div style={heroEyebrow}>{ko ? "운영 홈" : "Operations home"}</div>
-            <h1 style={heroTitle}>{d.storeName || (ko ? "내 가게" : "My Store")}</h1>
-            <p style={heroBody}>
-              {""}
-            </p>
-          </div>
-          <div style={heroActions}>
-            <NotificationCenter d={d} ko={ko} />
-            {!isStaff && (
-              <>
-                <button type="button" onClick={() => d.router.push("/analysis")} style={primaryAction} className="bento-btn">
-                  {ko ? "경영 분석" : "Analysis"}
-                </button>
-                <button type="button" onClick={() => { d.setSelectedStoreIndex(0); d.navigateToSurface("analytics"); }} style={secondaryAction} className="bento-btn">
-                  {ko ? "가게 정보" : "Store Info"}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {headlineStats.length > 0 && (
-        <div style={headlineGrid}>
-          {headlineStats.map((item, idx) => (
-            <div key={item.label} style={{ ...headlineCard, animationDelay: `${idx * 60}ms` }} className="bento-headline bento-fade-in">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={headlineLabel}>{item.label}</div>
-                {item.change !== undefined && item.change !== 0 && (
-                  <div style={{
-                    padding: "2px 8px",
-                    borderRadius: "12px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    background: item.change > 0 ? "rgba(101, 197, 101, 0.12)" : "rgba(197, 101, 101, 0.12)",
-                    color: item.change > 0 ? "#177245" : "#b42318",
-                  }}>
-                    {item.change > 0 ? "+" : ""}{item.change}%
-                  </div>
-                )}
-              </div>
-              <div style={{ ...headlineValue, color: item.tone }} className="bento-number">{item.value}</div>
-              <div style={headlineNote}>{item.note}</div>
-            </div>
-          ))}
-        </div>
-        )}
-      </div>
-
-      {/* ActivitySnapshotCard와 SurvivalBoardCard 모두 위로 이동됨 (AI 경영 코칭 바로 아래 grid) */}
-
-      {/* ── 정산 예정 타임라인: CashflowHeroCard로 통합됨 (14일 시각화 + 위기 감지 + 설정) ── */}
+      {/* ━━━ Tier 3: 운영 관리 — 구독·재고·고객·팀·인기상품 (월/주 단위 관리) ━━━ */}
+      {!isStaff && (
+      <div className="dash-stagger-item" style={nextStaggerStyle()}>
+      <DeepDiveSection
+        id="ops-mgmt"
+        title={ko ? "운영 관리" : "Operations"}
+        subtitle={ko ? "구독 · 재고 · 고객 · 팀 · 인기 상품 · 최근 활동" : "Subscription · Inventory · Customer · Team · Top items · Activity"}
+        defaultOpen={false}
+        ko={ko}
+      >
 
       {/* ── 스타트업: 구독제 활성화 안내 (아직 안 켠 경우) ── */}
       {isStartupCompany && !usesSubscriptions && (
         <article style={{
+          ...nextStaggerStyle(),
           borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)",
           background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, #fff 100%)",
           padding: "20px 22px", marginTop: "14px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: "12px",
-        }} className="bento-card bento-fade-in">
+        }} className="bento-card dash-stagger-item">
           <div>
             <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
               {ko ? "구독제를 운영하시나요?" : "Do you run a subscription model?"}
@@ -1259,7 +1559,7 @@ export default function OperationalDashboard({ d }: Props) {
           }).filter((p) => p.count > 0);
 
           return (
-          <article style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, #fff 100%)", padding: "20px 22px", marginTop: "14px" }} className="bento-card bento-fade-in">
+          <article style={{ ...nextStaggerStyle(), borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, #fff 100%)", padding: "20px 22px", marginTop: "14px" }} className="bento-card dash-stagger-item">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
               <span style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "SaaS 핵심 지표" : "SaaS Key Metrics"}</span>
               <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ fontSize: "12px", fontWeight: 600, color: "#7c3aed", background: "none", border: "none", cursor: "pointer" }}>{ko ? "상세 →" : "Details →"}</button>
@@ -1308,200 +1608,95 @@ export default function OperationalDashboard({ d }: Props) {
         })()
       )}
 
-      <div
-        style={{
-          ...coreGrid,
-          gridTemplateColumns: (isStartupCompany && usesSubscriptions)
-            ? (isWide ? "minmax(0, 1fr) minmax(0, 1fr)" : "1fr")
-            : (isThreeUp ? "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)" : isWide ? "minmax(0, 1fr) minmax(0, 1fr)" : "1fr"),
-        }}
-      >
-        {!isStaff && isStartupCompany ? (
-          <StartupMetricsCard
-            ko={ko}
-            recent7Customers={recent7Customers}
-            activeDays7={activeDays7}
-            weeklySalesChange={weeklySalesChange}
-            monthlyBurn={monthlyBurn}
-            runwayMonths={runwayMonths}
-            employeesCount={employees.length}
-            roadmapProgress={d.pathTotalStages > 0 ? Math.round((d.completedCount / d.pathTotalStages) * 100) : 0}
-            fmt={fmt}
-          />
-        ) : null}
-        {!isStaff && (
-          <PLHeroCard
-            totalSales={totalSales}
-            totalCosts={totalCosts}
-            netProfit={netProfit}
-            bepProgress={bepProgress}
-            ingredientRatio={ingredientRatio}
-            laborRatio={laborRatio}
-            rentRatio={rentRatio}
-            primeCost={primeCost}
-            projectedProfit={projectedProfit}
-            workingDays={workingDays}
-            ko={ko}
-            fmt={fmt}
-            prevMonthSales={prevMonthSales}
-            prevMonthCosts={prevMonthCosts}
-            breakEvenDailySales={breakEvenDailySales}
-            todaySales={todaySales}
-            todayBepProgress={todayBepProgress}
-            daysAboveBreakEven={daysAboveBreakEven}
-            totalDaysRecorded={healthMetrics.totalDaysRecorded}
-            cogsLabel={d.businessCtx.expenseFields?.[0]?.label}
-          />
-        )}
-        {/* ── 구독제: 구독 관리 (구독제 활성화 시만) ── */}
-        {usesSubscriptions && (
-          <SubscriptionPlanManager d={d} ko={ko} fmt={fmt} />
-        )}
-        {/* ── 재고/제품 관리 (CRUD + 엑셀 — 구독제 사용 시엔 구독 카드로 대체) ── */}
-        {!usesSubscriptions && d.businessCtx.showInventoryCard ? (
-          <InventoryOpsCard ko={ko} inventory={inventory} lowStockItems={lowStockItems} d={d} />
-        ) : null}
-        {/* ── 고객/회원 관리 요약 (업종별) ── */}
-        {!usesSubscriptions && d.businessCtx.showCustomerCard && (
-          <CustomerSummaryCard d={d} ko={ko} fmt={fmt} />
-        )}
-        {/* ── 팀 요약 (읽기 전용) — CRUD는 내 가게 탭 ── */}
-        <article style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "팀 현황" : "Team"}</span>
-              <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(29,53,87,0.06)", color: "var(--primary)" }}>{employees.length}{ko ? "명" : ""}</span>
+      {(() => {
+        const teamCard = (
+          <article key="team" style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "팀 현황" : "Team"}</span>
+                <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(29,53,87,0.06)", color: "var(--primary)" }}>{employees.length}{ko ? "명" : ""}</span>
+              </div>
+              <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", background: "none", border: "none", cursor: "pointer" }}>{ko ? "관리하기 →" : "Manage →"}</button>
             </div>
-            <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", background: "none", border: "none", cursor: "pointer" }}>{ko ? "관리하기 →" : "Manage →"}</button>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+                <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{employees.length}</div>
+                <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "인원" : "Staff"}</div>
+              </div>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+                <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{fmt(estimatedMonthlyPayroll)}</div>
+                <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "예상 급여" : "Payroll"}</div>
+              </div>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+                <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{insuredEmployees}</div>
+                <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "4대보험" : "Insured"}</div>
+              </div>
+            </div>
+            {employees.length === 0 && (
+              <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px dashed rgba(0,0,0,0.1)", background: "transparent", cursor: "pointer", fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>
+                {ko ? "직원을 등록하면 급여·보험 현황을 한눈에 볼 수 있어요" : "Add staff to see payroll & insurance at a glance"}
+              </button>
+            )}
+          </article>
+        );
+
+        const cards: React.ReactNode[] = [];
+        // SurvivalBoardCard → Tier 2 "이번 주 점검" 으로 이동됨
+        // PLHeroCard → Tier 1 "수익성 지표" 로 이동됨
+        if (usesSubscriptions) {
+          cards.push(
+            <div key="sub" id="subscription-manager" style={{ scrollMarginTop: "80px" }}>
+              <SubscriptionPlanManager d={d} ko={ko} fmt={fmt} />
+            </div>
+          );
+          cards.push(<SubscriptionWebhookConnectCard key="webhook-connect" ko={ko} />);
+        }
+        if (!usesSubscriptions && d.businessCtx.showInventoryCard) {
+          cards.push(<InventoryOpsCard key="inv" ko={ko} inventory={inventory} lowStockItems={lowStockItems} d={d} />);
+        }
+        if (!usesSubscriptions && d.businessCtx.showCustomerCard) {
+          cards.push(<CustomerSummaryCard key="cust" d={d} ko={ko} fmt={fmt} />);
+        }
+        cards.push(teamCard);
+
+        // 카드 갯수에 맞춰 cols 동적 결정 — 마지막 행에 카드 1개만 단독으로 떨어지면
+        // cols 를 한 단계 줄여서 모든 행이 균등하게 채워지도록 한다.
+        // 예: 카드 4개 + maxCols=3 → cols=2 (2x2 균등)
+        //     카드 5개 + maxCols=3 → cols=3 (3+2, 마지막 행 2개도 50%씩)
+        //     카드 6개 + maxCols=3 → cols=3 (3+3 균등)
+        const maxCols = isThreeUp ? 3 : isWide ? 2 : 1;
+        let cols = maxCols;
+        while (cols > 1 && cards.length > cols && cards.length % cols === 1) {
+          cols--;
+        }
+        const rows: React.ReactNode[][] = [];
+        for (let i = 0; i < cards.length; i += cols) {
+          rows.push(cards.slice(i, i + cols));
+        }
+
+        return rows.map((rowCards, rowIdx) => (
+          <div
+            key={`row-${rowIdx}`}
+            className="dash-stagger-item"
+            style={{
+              ...nextStaggerStyle(),
+              display: "grid",
+              gridTemplateColumns: `repeat(${rowCards.length}, minmax(0, 1fr))`,
+              gap: "14px",
+              marginTop: rowIdx === 0 ? "14px" : 0,
+              alignItems: "stretch",
+            }}
+          >
+            {rowCards}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
-            <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{employees.length}</div>
-              <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "인원" : "Staff"}</div>
-            </div>
-            <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{fmt(estimatedMonthlyPayroll)}</div>
-              <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "예상 급여" : "Payroll"}</div>
-            </div>
-            <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{insuredEmployees}</div>
-              <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "4대보험" : "Insured"}</div>
-            </div>
-          </div>
-          {employees.length === 0 && (
-            <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px dashed rgba(0,0,0,0.1)", background: "transparent", cursor: "pointer", fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>
-              {ko ? "👥 직원을 등록하면 급여·보험 현황을 한눈에 볼 수 있어요" : "👥 Add staff to see payroll & insurance at a glance"}
-            </button>
-          )}
-        </article>
-      </div>
+        ));
+      })()}
 
-      {/* ── Weekly Report (owner only) ── */}
-      {!isStaff && <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "16px" }}>
-        {streak >= 7 ? (
-          <WeeklyReport d={d} ko={ko} fmt={fmt} />
-        ) : (
-          <div style={{
-            borderRadius: "28px", padding: "24px", textAlign: "center" as const,
-            background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.88))",
-            border: "1px solid rgba(15,23,42,0.06)",
-          }}>
-            <div style={{ marginBottom: "8px", display: "flex", justifyContent: "center" }}>
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <rect x="6" y="13" width="16" height="11" rx="3" stroke="rgba(15,23,42,0.35)" strokeWidth="1.5" fill="rgba(15,23,42,0.04)" />
-                <path d="M10 13V9.5a4 4 0 1 1 8 0V13" stroke="rgba(15,23,42,0.35)" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="14" cy="18.5" r="1.5" fill="rgba(15,23,42,0.3)" />
-                <path d="M14 20v1.5" stroke="rgba(15,23,42,0.3)" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a" }}>
-              {ko ? "주간 리포트" : "Weekly Report"}
-            </div>
-            <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.48)", marginTop: "4px", lineHeight: 1.5 }}>
-              {ko
-                ? `7일 연속 매출 기록 시 해금됩니다 (현재 ${streak}일)`
-                : `Unlocks at 7-day streak (current: ${streak}d)`}
-            </div>
-            <div style={{
-              marginTop: "12px", height: "6px", borderRadius: "3px",
-              background: "rgba(15,23,42,0.06)", overflow: "hidden", maxWidth: "200px", marginInline: "auto",
-            }}>
-              <div style={{
-                height: "100%", borderRadius: "3px",
-                width: `${Math.min(100, (streak / 7) * 100)}%`,
-                background: "linear-gradient(90deg, #2563eb, #457b9d)",
-                transition: "width 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              }} />
-            </div>
-            {/* 다음 해금 단계 안내 */}
-            <div style={{ marginTop: "14px", display: "flex", justifyContent: "center", gap: "12px" }}>
-              {[
-                { days: 7, label: ko ? "주간 리포트" : "Weekly", Icon: BarChart3, color: "#2563eb" },
-                { days: 30, label: ko ? "월간 트렌드" : "Monthly", Icon: TrendingUp, color: "#7c3aed" },
-                { days: 90, label: ko ? "연간 리포트" : "Annual", Icon: Gem, color: "#059669" },
-              ].map(tier => {
-                const unlocked = streak >= tier.days;
-                const IconComp = unlocked ? Check : tier.Icon;
-                return (
-                  <div key={tier.days} style={{
-                    display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "3px",
-                    opacity: unlocked ? 1 : 0.4,
-                  }}>
-                    <IconComp
-                      size={16}
-                      strokeWidth={1.5}
-                      color={unlocked ? tier.color : "rgba(15,23,42,0.5)"}
-                    />
-                    <span style={{ fontSize: "10px", fontWeight: 600, color: unlocked ? tier.color : "rgba(15,23,42,0.35)" }}>
-                      {tier.days}{ko ? "일" : "d"}
-                    </span>
-                    <span style={{ fontSize: "9px", color: "rgba(15,23,42,0.3)" }}>{tier.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>}
-
-      {/* ── 매출 예측 + "이대로 가면" 시나리오 (owner only) ── */}
-      {!isStaff && allEntries.length >= 3 && (
-        <ForecastCard
-          ko={ko}
-          dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
-          monthlyCosts={d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }}
-          capitalLeft={capitalLeft}
-          breakEvenDailySales={breakEvenDailySales}
-          industryCategoryId={d.industryCategoryId}
-          initialOperatingCapital={d.initialOperatingCapital}
-        />
-      )}
-
-      {/* ── 첫 100명 고객 확보 플레이북 (owner only, 초기 90일 또는 100명 미만) ── */}
-      {!isStaff && (daysSinceLaunch <= 90 || daysSinceLaunch === 0) && (
-        <FirstCustomersCard
-          ko={ko}
-          industryCategoryId={d.industryCategoryId}
-          businessLaunched={d.businessLaunched}
-          businessLaunchedDate={launchDateText}
-        />
-      )}
-
-      {/* ── What-If 시뮬레이터 (owner only, 매출 or 비용 있을 때) ── */}
-      {!isStaff && (totalSales > 0 || totalCosts > 0) && (
-        <WhatIfSimulator
-          ko={ko}
-          monthlySales={totalSales}
-          monthlyCosts={d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }}
-          capitalLeft={capitalLeft}
-        />
-      )}
-
-      {/* ── 인기 상품/서비스 + 최근 활동 2열 그리드 ── */}
-      {!isStaff && (d.businessCtx.inventoryMode as string) !== "minimal" && !(isStartupCompany && usesSubscriptions) && (
-        <div style={{ display: "grid", gridTemplateColumns: viewportWidth >= 768 ? "1fr 1fr" : "1fr", gap: "16px" }}>
+      {/* ── 인기 상품/서비스 + 최근 활동 (운영 관리 안쪽) ── */}
+      {(d.businessCtx.inventoryMode as string) !== "minimal" && !(isStartupCompany && usesSubscriptions) && (
+        <div className="dash-stagger-item" style={{ ...nextStaggerStyle(), display: "grid", gridTemplateColumns: viewportWidth >= 768 ? "1fr 1fr" : "1fr", gap: "16px", marginTop: "14px" }}>
           {/* 인기 상품/서비스 카드 */}
-          <div style={opsCard} className="bento-card bento-fade-in">
+          <div style={opsCard} className="bento-card">
             <div style={opsHeader}>
               <div>
                 <div style={sectionEyebrow}>{ko ? "이번 달" : "This Month"}</div>
@@ -1544,7 +1739,7 @@ export default function OperationalDashboard({ d }: Props) {
           </div>
 
           {/* 최근 활동 피드 */}
-          <div style={opsCard} className="bento-card bento-fade-in">
+          <div style={opsCard} className="bento-card">
             <div style={opsHeader}>
               <div>
                 <div style={sectionEyebrow}>{ko ? "최근" : "Recent"}</div>
@@ -1584,28 +1779,81 @@ export default function OperationalDashboard({ d }: Props) {
         </div>
       )}
 
-      {/* ── 데이터 Export (owner only) ── */}
-      {!isStaff && (totalSales > 0 || inventory.length > 0 || employees.length > 0) && (
-        <ExportPanel
-          ko={ko}
-          storeName={d.storeName}
-          entries={allEntries as Array<{ date: string; sales: number; customers: number }>}
-          monthlyCosts={d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }}
-          inventory={inventory as unknown as import("../../stores/operations-store").InventoryItem[]}
-          employees={employees as unknown as import("../../stores/operations-store").Employee[]}
-          products={d.products as import("../../stores/operations-store").Product[] | undefined}
-          unifiedProducts={d.unifiedProducts as import("../../stores/operations-store").UnifiedProduct[] | undefined}
-        />
+      </DeepDiveSection>
+      </div>
+      )}
+      {/* ━━━ 운영 관리 DeepDive 끝 ━━━ */}
+
+      {/* ── Tier 5: 예측 · 첫 고객 플레이북 · 내보내기 (DeepDive 접힘 기본) ── */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <DeepDiveSection
+            id="forecast-tools"
+            title={ko ? "예측 · 플레이북 · 내보내기" : "Forecast · Playbook · Export"}
+            subtitle={ko ? "매출 예측 · 첫 100명 플레이북 · 데이터 내보내기" : "Sales forecast · First 100 customers playbook · Data export"}
+            defaultOpen={false}
+            ko={ko}
+          >
+            {/* 매출 예측 */}
+            {allEntries.length >= 3 && (
+              <ForecastCard
+                ko={ko}
+                dailyEntries={allEntries as Array<{ date: string; sales: number; customers: number }>}
+                monthlyCosts={d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }}
+                capitalLeft={capitalLeft}
+                breakEvenDailySales={breakEvenDailySales}
+                industryCategoryId={d.industryCategoryId}
+                initialOperatingCapital={d.initialOperatingCapital}
+              />
+            )}
+            {/* 첫 100명 플레이북 */}
+            {(daysSinceLaunch <= 90 || daysSinceLaunch === 0) && (
+              <FirstCustomersCard
+                ko={ko}
+                industryCategoryId={d.industryCategoryId}
+                businessLaunched={d.businessLaunched}
+                businessLaunchedDate={launchDateText}
+              />
+            )}
+            {/* 데이터 내보내기 */}
+            {(totalSales > 0 || inventory.length > 0 || employees.length > 0) && (
+              <ExportPanel
+                ko={ko}
+                storeName={d.storeName}
+                entries={allEntries as Array<{ date: string; sales: number; customers: number }>}
+                monthlyCosts={d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }}
+                inventory={inventory as unknown as import("../../stores/operations-store").InventoryItem[]}
+                employees={employees as unknown as import("../../stores/operations-store").Employee[]}
+                products={d.products as import("../../stores/operations-store").Product[] | undefined}
+                unifiedProducts={d.unifiedProducts as import("../../stores/operations-store").UnifiedProduct[] | undefined}
+              />
+            )}
+          </DeepDiveSection>
+        </div>
       )}
 
-      {!isStaff && <section style={detailSection}>
-        <div style={detailSectionHeader}>
-          <div>
-            <div style={sectionEyebrow}>{ko ? "추가 관리" : "More controls"}</div>
-            <div style={detailSectionTitle}>
-              {ko ? "세부 입력과 편집은 아래에서 필요할 때만 펼쳐보세요" : "Open detailed controls below only when you need them"}
-            </div>
+      {/* 인기 상품 + 최근 활동 → 운영 관리 DeepDive 안으로 이동됨 */}
+
+      {!isStaff && <section className="dash-stagger-item" style={{ ...nextStaggerStyle(), display: "flex", flexDirection: "column" as const, gap: "14px", marginTop: "8px" }}>
+        <div>
+          <div style={{
+            fontSize: "10.5px", fontWeight: 650, letterSpacing: "0.1em",
+            textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "4px",
+          }}>
+            {ko ? "세부 관리" : "Admin"}
           </div>
+          <h2 style={{
+            margin: 0, fontSize: "20px", fontWeight: 700,
+            letterSpacing: "-0.025em", color: "var(--text)", lineHeight: 1.2,
+          }}>
+            {ko ? "필요할 때만 여는 입력·편집" : "Detailed controls"}
+          </h2>
+          <p style={{
+            margin: "4px 0 0", fontSize: "13px", color: "var(--muted)",
+            lineHeight: 1.5, letterSpacing: "-0.005em",
+          }}>
+            {ko ? "비용 · 재고 · 직원 · 배달 · 메뉴 · 회원 · 세금 — 탭으로 전환" : "Costs · Inventory · Staff · Delivery · Menu · Members · Tax"}
+          </p>
         </div>
         <DetailTabs d={d} fmt={fmt} />
       </section>}
@@ -1635,6 +1883,8 @@ export default function OperationalDashboard({ d }: Props) {
           </div>
         </div>
       )}
+        </>
+      ) : null}
     </section>
   );
 }

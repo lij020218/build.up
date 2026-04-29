@@ -735,6 +735,52 @@ export const starterIndustryOptions: RecommendationItem[] = [
     reasons: ["Security remains a persistent budget priority", "Trust and urgency can support premium pricing"],
     warnings: ["Founders need credible technical depth and a narrow attack surface focus"],
     meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  // ── 하드웨어·딥테크 — 자본 구조 자체가 SaaS 와 완전히 다름 ──
+  {
+    id: "hardware-iot",
+    title: "Hardware / IoT Device",
+    score: 76,
+    summary: "Consumer or industrial hardware, IoT, wearables — physical product with manufacturing complexity.",
+    reasons: ["CES 2026 한국 60%+ 수상 — 피지컬 AI 모멘텀", "정부 슈퍼-갭 12개 미래산업 자금 가능"],
+    warnings: ["부품·금형·인증·재고 자본 부담 큼 — SaaS 대비 10-20배 자본 필요", "공급망·BOM·인증 (KC·CE·FCC) 리드타임 6-12개월"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "robotics-physical-ai",
+    title: "Robotics / Physical AI",
+    score: 88,
+    summary: "Robot arms, autonomous mobility, humanoid — physical AI category attracting record 2026 funding.",
+    reasons: ["디노티시아 900억·BOS 870억·UVify·홀리데이로보틱스 등 대규모 투자 활발", "정부 7.45조 국가성장펀드 + 슈퍼-갭 우선 배정"],
+    warnings: ["엔지니어 인건비·랩·프로토타입 월 1-3억 번레이트 정상", "시리즈A 평균 100억+ 필요 — 일반 SaaS 대비 5-10배"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "semiconductor",
+    title: "Semiconductor / Chip Design",
+    score: 84,
+    summary: "AI chip, fabless, IP — extremely capital-intensive deep tech with multi-year tape-out cycles.",
+    reasons: ["AI 반도체 2026년 시리즈A 평균 870-900억원대", "팹리스·IP·EDA 정부 지원 폭 가장 넓음 (반도체 특별법 등)"],
+    warnings: ["EDA 라이선스·MPW·테이프아웃 비용만 분기당 수억원", "IP 라이브러리·검증·인증 (AEC-Q 등) 리드타임 1-2년"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "biotech-medtech",
+    title: "Biotech / Medical Device",
+    score: 75,
+    summary: "Diagnostics, drug discovery, medical AI, lab equipment — heavy regulation + clinical validation.",
+    reasons: ["고령화·만성질환 시장 지속 확대", "임상 데이터 + 인허가가 강력한 진입장벽 형성"],
+    warnings: ["식약처·FDA 임상 통과 평균 3-5년", "랩·시약·임상 비용으로 시드부터 수십억 필요"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
+  },
+  {
+    id: "climate-energy",
+    title: "Climate Tech / Energy",
+    score: 73,
+    summary: "Battery, energy efficiency, carbon capture — varies from software-light to heavy infrastructure.",
+    reasons: ["탄소중립 정책 + ESG 투자 우선순위", "에너지 안보 — 정부 R&D 지원 확대"],
+    warnings: ["설비·필드테스트 자본 매우 큼 (수십~수백억)", "정책 사이클·인허가·사업화 리드타임 길음"],
+    meta: { categoryId: "startup-tech", categoryLabel: "Tech Startup" }
   }
 ];
 
@@ -1316,7 +1362,32 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["core-workflow-defined", "mvp-shipped", "ip-protection-filed"],
     riskIds: [],
-    nextStageIds: ["launch-gtm"]
+    // ── 클러스터별 분기: MVP 직후 흐름이 갈림 ──
+    //   • Hardware/IoT → NPI 4단계 (prototype/BOM/cert/manufacturing)
+    //   • Deep Tech Lab (로보틱스/바이오) → lab + 임상/필드 4단계
+    //   • Extreme Deep Tech (반도체/클린테크) → EDA·tape-out 4단계
+    //   • Software (default) → 바로 launch-gtm
+    nextStageIds: ["launch-gtm"],
+    nextStageConditions: [
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "selectedPrimaryOptionId",
+        matchValue: "hardware-iot",
+        stageIds: ["hardware-prototype"]
+      },
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "selectedPrimaryOptionId",
+        matchValueIn: ["robotics-physical-ai", "biotech-medtech"],
+        stageIds: ["lab-setup"]
+      },
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "selectedPrimaryOptionId",
+        matchValueIn: ["semiconductor", "climate-energy"],
+        stageIds: ["eda-tooling-setup"]
+      }
+    ]
   },
   {
     stageId: "launch-gtm",
@@ -1410,6 +1481,240 @@ export const starterStageFlow: RoadmapStageState[] = [
     nextStageIds: ["tax-guide"]
   },
 
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Cluster B — Hardware / IoT NPI 4단계
+  //  mvp-build → hardware-prototype → bom-supply-chain → certification-kc-ce → manufacturing-partner → launch-gtm
+  //  검증 출처: MistyWest·Xavor NPI 가이드, IB-Lenhardt KC 인증 절차, EMC FastPass
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    stageId: "hardware-prototype",
+    code: "hardware_prototype",
+    title: "Hardware prototype: EVT → DVT → PVT",
+    type: "execution",
+    status: "locked",
+    stepNumber: 9,
+    totalSteps: 22,
+    goal: "Run engineering, design, and production validation tests (EVT/DVT/PVT) to take the device from breadboard to factory-ready.",
+    whyNow: "Skipping any of EVT/DVT/PVT means you discover defects in mass production — by then it's too late and 1000s of units are scrap.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["evt-passed", "dvt-passed", "pvt-passed"]
+    },
+    taskIds: ["evt-passed", "dvt-passed", "pvt-passed"],
+    riskIds: [],
+    nextStageIds: ["bom-supply-chain"]
+  },
+  {
+    stageId: "bom-supply-chain",
+    code: "bom_supply_chain",
+    title: "BOM and supply chain lock",
+    type: "execution",
+    status: "locked",
+    stepNumber: 10,
+    totalSteps: 22,
+    goal: "Build a complete bill of materials, secure suppliers, lock leadtimes, and identify single-source risks.",
+    whyNow: "Single-source components without alternatives can stall production for 6-12 months. Lock leadtimes before you commit to a launch date.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["bom-finalized", "suppliers-locked", "single-source-risks-identified"]
+    },
+    taskIds: ["bom-finalized", "suppliers-locked", "single-source-risks-identified"],
+    riskIds: [],
+    nextStageIds: ["certification-kc-ce"]
+  },
+  {
+    stageId: "certification-kc-ce",
+    code: "certification_kc_ce",
+    title: "Certification: KC, CE, FCC",
+    type: "verification",
+    status: "locked",
+    stepNumber: 11,
+    totalSteps: 22,
+    goal: "Plan and submit certifications required for sale: KC (Korea, 4-16 weeks; 8-10 standard for non-wireless, longer for wireless products needing KC-RRA + Safety + EMC), CE (EU), FCC (US).",
+    whyNow: "Selling without certification is illegal — pre-compliance testing now saves months later. Wireless products need KC-RRA + Safety + EMC (3 separate certs), so start before manufacturing.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["pre-compliance-test-done", "cert-bodies-selected", "cert-application-submitted"]
+    },
+    taskIds: ["pre-compliance-test-done", "cert-bodies-selected", "cert-application-submitted"],
+    riskIds: [],
+    nextStageIds: ["manufacturing-partner"]
+  },
+  {
+    stageId: "manufacturing-partner",
+    code: "manufacturing_partner",
+    title: "Manufacturing partner (EMS / CM) selection",
+    type: "execution",
+    status: "locked",
+    stepNumber: 12,
+    totalSteps: 22,
+    goal: "Select EMS/CM partner, negotiate MOQ, payment terms, and quality standards. Plan first production run.",
+    whyNow: "Choosing the wrong manufacturing partner can result in defective products, missed deadlines, or quality issues. Audit before committing.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["ems-shortlist-done", "ems-audited", "first-run-planned"]
+    },
+    taskIds: ["ems-shortlist-done", "ems-audited", "first-run-planned"],
+    riskIds: [],
+    nextStageIds: ["launch-gtm"]
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Cluster C — Deep Tech with Lab (로보틱스·바이오) 4단계
+  //  mvp-build → lab-setup → prototype-iteration → field-or-clinical-test → regulatory-submission → launch-gtm
+  //  검증 출처: 한국 MFDS Fast-Track 80-140일, IND 4-6주 (IntoInWorld 2026), 슈퍼-갭 12개 미래산업
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    stageId: "lab-setup",
+    code: "lab_setup",
+    title: "Lab and prototyping facility setup",
+    type: "execution",
+    status: "locked",
+    stepNumber: 9,
+    totalSteps: 22,
+    goal: "Set up a research lab or prototyping workshop with safety protocols, equipment, and (for biotech) GLP-compliant procedures.",
+    whyNow: "Prototype iteration speed depends on lab quality. Skipping safety setup leads to incidents that shut down operations entirely.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["lab-facility-secured", "safety-protocol-defined", "core-equipment-installed"]
+    },
+    taskIds: ["lab-facility-secured", "safety-protocol-defined", "core-equipment-installed"],
+    riskIds: [],
+    nextStageIds: ["prototype-iteration"]
+  },
+  {
+    stageId: "prototype-iteration",
+    code: "prototype_iteration",
+    title: "Prototype iteration cycles",
+    type: "execution",
+    status: "locked",
+    stepNumber: 10,
+    totalSteps: 22,
+    goal: "Run iterative prototype cycles — robotics: hardware v0 → v3 with weekly testing / biotech: candidate compound screening with go/no-go gates. For digital health (45-50% of 2025 device IND): SaMD prototype with clinical workflow integration.",
+    whyNow: "Deep-tech founders fail by 'spending 3 years perfecting v1' — set explicit go/no-go gates and ship intermediate prototypes for feedback. Korea Digital Medical Device Product Act (Jan 2025) enables fast SaMD pathway.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["iteration-plan-set", "v1-prototype-shipped", "feedback-cycle-running"]
+    },
+    taskIds: ["iteration-plan-set", "v1-prototype-shipped", "feedback-cycle-running"],
+    riskIds: [],
+    nextStageIds: ["field-or-clinical-test"]
+  },
+  {
+    stageId: "field-or-clinical-test",
+    code: "field_or_clinical_test",
+    title: "Field test or clinical trial",
+    type: "execution",
+    status: "locked",
+    stepNumber: 11,
+    totalSteps: 22,
+    goal: "Run field testing (robotics) or clinical trial (biotech). For Korea biotech: IND submission (4-6 weeks / 30 working days) + IRB ethics review (parallel — total 6-8 weeks). Pre-IND consultation can shorten review to ~7 days.",
+    whyNow: "Real-world performance data is the gating evidence for regulatory approval and customer adoption. Korean MFDS IND is among the fastest globally; subject injury compensation insurance is mandatory for the IND dossier.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["test-protocol-approved", "test-cohort-secured", "first-results-collected"]
+    },
+    taskIds: ["test-protocol-approved", "test-cohort-secured", "first-results-collected"],
+    riskIds: [],
+    nextStageIds: ["regulatory-submission"]
+  },
+  {
+    stageId: "regulatory-submission",
+    code: "regulatory_submission",
+    title: "Regulatory submission and approval",
+    type: "verification",
+    status: "locked",
+    stepNumber: 12,
+    totalSteps: 22,
+    goal: "Submit for regulatory approval — robotics: KC + safety certification (4-16 weeks) / biotech: MFDS approval (Fast-Track 80-140 days for innovative devices, was 490 days).",
+    whyNow: "Without regulatory approval you cannot legally sell. MFDS Fast-Track shortens 490 days → 80-140 days for qualifying innovative devices (199 device categories qualify, including 113 AI-based digital devices).",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["pre-consultation-done", "regulatory-package-submitted", "approval-pathway-confirmed"]
+    },
+    taskIds: ["pre-consultation-done", "regulatory-package-submitted", "approval-pathway-confirmed"],
+    riskIds: [],
+    nextStageIds: ["launch-gtm"]
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Cluster D — Extreme Deep Tech (반도체·클린테크) 4단계
+  //  mvp-build → eda-tooling-setup → mpw-or-pilot-tape-out → packaging-and-test → partner-foundation-or-pilot-line → launch-gtm
+  //  검증 출처: AnySilicon Tape-out 가이드, Synopsys/Cadence 라이선스 비용, X-FAB MPW
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    stageId: "eda-tooling-setup",
+    code: "eda_tooling_setup",
+    title: "EDA and design tooling",
+    type: "execution",
+    status: "locked",
+    stepNumber: 9,
+    totalSteps: 22,
+    goal: "License EDA software (Synopsys / Cadence — vary by toolset; premium tools can exceed $750K/seat. Multi-year commitments offer 10-25% discount), set up design environment, define IP/library strategy.",
+    whyNow: "EDA licenses are typically 6-12+ month subscriptions and the bottleneck for chip design progress. Multi-year commitments lock pricing — startup-tier shared tools or token-based pricing models can cut initial cost.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["eda-licenses-secured", "design-env-set-up", "ip-library-strategy-defined"]
+    },
+    taskIds: ["eda-licenses-secured", "design-env-set-up", "ip-library-strategy-defined"],
+    riskIds: [],
+    nextStageIds: ["mpw-or-pilot-tape-out"]
+  },
+  {
+    stageId: "mpw-or-pilot-tape-out",
+    code: "mpw_or_pilot_tape_out",
+    title: "MPW or pilot tape-out",
+    type: "execution",
+    status: "locked",
+    stepNumber: 10,
+    totalSteps: 22,
+    goal: "Run a Multi-Project Wafer (MPW) shared run for cost-efficient prototyping (90-95% cheaper), OR a full mask set when volumes justify ($1M+ for 28nm, $10M+ for 7nm/below).",
+    whyNow: "MPW reduces tape-out cost 90-95% but production time is still 6-9 months. Plan early — TSMC 2/3nm capacity is booked through 2027-2028, advanced packaging (CoWoS) leadtime 52-78 weeks.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["foundry-process-selected", "tape-out-package-ready", "tape-out-submitted"]
+    },
+    taskIds: ["foundry-process-selected", "tape-out-package-ready", "tape-out-submitted"],
+    riskIds: [],
+    nextStageIds: ["packaging-and-test"]
+  },
+  {
+    stageId: "packaging-and-test",
+    code: "packaging_and_test",
+    title: "Packaging and test",
+    type: "execution",
+    status: "locked",
+    stepNumber: 11,
+    totalSteps: 22,
+    goal: "Source OSAT (Outsourced Semiconductor Assembly and Test) partner, define test plan, and validate first samples.",
+    whyNow: "OSAT prices rising 5-20% in 2026 (some specialists +30%) due to AI demand — providers running ~90% utilization. Choosing the wrong package locks you in. Test coverage decides yield (= profitability).",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["osat-partner-selected", "test-plan-defined", "first-samples-validated"]
+    },
+    taskIds: ["osat-partner-selected", "test-plan-defined", "first-samples-validated"],
+    riskIds: [],
+    nextStageIds: ["partner-foundation-or-pilot-line"]
+  },
+  {
+    stageId: "partner-foundation-or-pilot-line",
+    code: "partner_foundation_or_pilot_line",
+    title: "Foundry partnership or pilot line",
+    type: "execution",
+    status: "locked",
+    stepNumber: 12,
+    totalSteps: 22,
+    goal: "Lock foundry partnership (TSMC / Samsung Foundry / UMC / X-FAB) for volume production, OR establish a pilot line for cleantech infrastructure.",
+    whyNow: "TSMC's 2nm/3nm sold out through 2027-2028. CoWoS advanced packaging 52-78 weeks (some 78-104 weeks). Without a partnership commitment locked early you cannot scale beyond MPW samples.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["foundry-partnership-discussion", "volume-production-plan", "scale-up-budget-modeled"]
+    },
+    taskIds: ["foundry-partnership-discussion", "volume-production-plan", "scale-up-budget-modeled"],
+    riskIds: [],
+    nextStageIds: ["launch-gtm"]
+  },
+
   // ── Franchise path: application stage (only for franchise startupType) ─────
   {
     stageId: "franchise-application",
@@ -1440,9 +1745,17 @@ export const starterStageFlow: RoadmapStageState[] = [
     whyNow: "Signing a lease without confirming permit eligibility can permanently block your opening.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["permit-type-checked"]
+      requiredTaskIds: ["building-registry-checked", "permit-type-checked"]
     },
-    taskIds: ["permit-type-checked", "hygiene-education-done", "health-exam-obtained", "professional-license-confirmed", "fire-safety-cert-obtained", "industry-specific-registration", "health-cert-checked", "safety-requirement-checked"],
+    // 의도된 5개 — 위 패널 (PermitCheckPanels) 에서 업종별 상세 정보를 보고
+    // 사용자가 "확인했음" 을 마킹하는 verification 체크리스트. 동일 의미 중복 제거됨.
+    taskIds: [
+      "building-registry-checked",
+      "permit-type-checked",
+      "hygiene-health-checked",
+      "license-registration-checked",
+      "fire-safety-checked",
+    ],
     riskIds: [],
     nextStageIds: ["location-candidates"]
   },
@@ -1536,7 +1849,9 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["tax-type-decided", "business-registered", "permit-filed"],
     riskIds: [],
-    nextStageIds: ["insurance-tax-setup"]
+    // 사업자등록 직후 세무 가이드(홈택스·과세유형·법인카드)가 황금 타이밍.
+    // 이전: insurance-tax-setup 직행 → 변경: tax-guide → insurance-tax-setup
+    nextStageIds: ["tax-guide"]
   },
   {
     stageId: "insurance-tax-setup",
@@ -1544,7 +1859,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Insurance and tax setup",
     type: "execution",
     status: "locked",
-    stepNumber: 11,
+    stepNumber: 12,
     totalSteps: 15,
     goal: "Set up 4 major insurance policies (national pension, health, employment, industrial accident), register for withholding tax, and configure payroll basics.",
     whyNow: "Even with 1 employee, insurance registration is mandatory within 14 days of hiring. Late filing triggers penalties and back-payment. Tax setup before first payroll prevents future audit risk.",
@@ -1562,7 +1877,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Staff hiring and labor",
     type: "execution",
     status: "locked",
-    stepNumber: 12,
+    stepNumber: 13,
     totalSteps: 15,
     goal: "Decide whether you need staff, post a job listing, and write employment contracts.",
     whyNow: "Hiring without a proper contract is the most common legal violation first-time owners make.",
@@ -1580,7 +1895,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Operations and marketing",
     type: "execution",
     status: "locked",
-    stepNumber: 13,
+    stepNumber: 14,
     totalSteps: 15,
     goal: "Register on delivery platforms, go live with POS, and prepare SNS and local marketing.",
     whyNow: "Customers need to be able to find you from day one — late marketing setup means lost early revenue.",
@@ -1598,7 +1913,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Soft open",
     type: "execution",
     status: "locked",
-    stepNumber: 14,
+    stepNumber: 15,
     totalSteps: 15,
     goal: "Run a soft open with a limited audience, collect feedback, and complete the final pre-opening checklist.",
     whyNow: "A soft open surfaces operational problems before they reach paying customers at scale.",
@@ -1608,7 +1923,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["soft-open-done", "feedback-collected", "final-checklist"],
     riskIds: [],
-    nextStageIds: ["tax-guide"]
+    // ★ 순서 조정: tax-guide 가 사업자등록 직후로 이동했으므로, pre-launch 다음은 loan-guide 로 직행
+    nextStageIds: ["loan-guide"]
   },
 
   // ── Online / Digital path: stages 5-9 ─────────────────────────────────────
@@ -1710,14 +2026,18 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Review tax guide",
     type: "verification",
     status: "locked",
-    stepNumber: 14,
+    // ★ 순서 조정 (이전 14 → 11): 사업자등록 직후가 세무 세팅 황금 타이밍
+    //   - Offline: registration-setup → tax-guide → insurance-tax-setup
+    //   - Online/Startup: tax-guide 도달 시 insurance-tax-setup 이 hidden 이라 다음 visible 인 loan-guide 로 진행
+    stepNumber: 11,
     totalSteps: 18,
     goal: "Check the first tax setup and filing guidance before operations begin.",
     whyNow: "Tax structure, receipts, and proof handling are easier to set correctly before opening.",
     completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
     taskIds: [],
     riskIds: [],
-    nextStageIds: ["loan-guide"]
+    // multi-edge: insurance-tax-setup (offline 우선) / loan-guide (online·startup 폴백)
+    nextStageIds: ["insurance-tax-setup", "loan-guide"]
   },
   {
     stageId: "loan-guide",
@@ -1725,7 +2045,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Funding and support programs",
     type: "verification",
     status: "locked",
-    stepNumber: 15,
+    // ★ 순서 조정: 소프트오픈 직후 운영 자금 확보 단계로 이동 (16번)
+    stepNumber: 16,
     totalSteps: 18,
     goal: "Explore government funding, startup support programs, low-interest loans, and grants. Match your profile to available programs before committing personal capital.",
     whyNow: "Government programs have application deadlines. Missing them means paying full cost out of pocket. Check eligibility early.",
@@ -1742,7 +2063,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Business registration finalization",
     type: "execution",
     status: "locked",
-    stepNumber: 16,
+    stepNumber: 17,
     totalSteps: 18,
     goal: "Confirm the tax office registration, open a dedicated business account, and decide on a tax accountant.",
     whyNow: "Getting the financial structure right before opening prevents tax filing and expense tracking problems from day one.",
@@ -1752,6 +2073,21 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["biz-reg-confirmed", "biz-account-opened", "cpa-decision-made"],
     riskIds: [],
+    nextStageIds: ["financial-review"]
+  },
+  {
+    stageId: "financial-review",
+    code: "financial_review",
+    title: "Monthly operating costs review",
+    type: "verification",
+    status: "locked",
+    stepNumber: 18,
+    totalSteps: 19,
+    goal: "Review and confirm the monthly cost structure auto-estimated from prior stages (rent, staff, operations, loan). Ensures operational dashboard has accurate baseline from Day 1.",
+    whyNow: "Oversights here directly cause cash shortages in the first three months. Confirming the structure once prevents re-entering the same data after launch.",
+    completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
+    taskIds: [],
+    riskIds: [],
     nextStageIds: ["pre-launch-final"]
   },
   {
@@ -1760,13 +2096,14 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Final opening preparation",
     type: "execution",
     status: "locked",
-    stepNumber: 17,
-    totalSteps: 18,
+    stepNumber: 19,
+    totalSteps: 19,
     goal: "Complete final pre-launch preparations: inventory, team readiness, and marketing announcements.",
     whyNow: "Gaps in preparation on launch day directly damage the first customer experience and are hard to recover from.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["inventory-first-order", "staff-final-brief", "payment-system-tested", "launch-day-roles-assigned"]
+      // 모든 보이는 task가 체크되어야 단계 완료 — 체크리스트 진행률과 일치
+      requiredTaskIds: ["inventory-first-order", "staff-final-brief", "payment-system-tested", "launch-day-roles-assigned", "sns-open-teaser", "emergency-plan-ready"]
     },
     taskIds: ["inventory-first-order", "staff-final-brief", "payment-system-tested", "launch-day-roles-assigned", "sns-open-teaser", "emergency-plan-ready"],
     riskIds: [],
@@ -1778,13 +2115,14 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Launch readiness check",
     type: "execution",
     status: "locked",
-    stepNumber: 18,
+    stepNumber: 20,
     totalSteps: 18,
     goal: "Set up a tracking system for key metrics, confirm reserves, and organize essential contacts before launch.",
     whyNow: "The first month is the most dangerous period — preparation and daily tracking separate success from failure.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["cashflow-plan-ready", "emergency-fund-ready"]
+      // 모든 보이는 task가 체크되어야 단계 완료 — 체크리스트 진행률과 일치
+      requiredTaskIds: ["cashflow-plan-ready", "emergency-fund-ready", "key-contacts-list"]
     },
     taskIds: ["cashflow-plan-ready", "emergency-fund-ready", "key-contacts-list"],
     riskIds: [],
@@ -1852,77 +2190,111 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "govt-program-matched", title: "Match to K-Startup programs: pre-startup package, early-stage package, TIPS, or growth package", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "application-submitted", title: "Submit venture certification or government program application before deadline", status: "todo", required: true, estimatedMinutes: 90, waitDays: 30, followupQuestion: "벤처기업 확인서 또는 지원사업 선정 결과를 받으셨나요?" }
   ],
+  // ── Cluster B (Hardware/IoT) — NPI 4단계 ──
+  // 검증 출처: Titoma·OnLogic·Kaizen Dynamic·Hatch (EVT/DVT/PVT 정의), IB-Lenhardt·BlueAsiaLabs·MPR Korea (KC), CISA HBOM Framework
+  "hardware-prototype": [
+    { taskId: "evt-passed", title: "EVT (Engineering Validation Test) 통과 — 10-50 유닛, 4-6주, 핵심 회로/펌웨어 결함 검증", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "dvt-passed", title: "DVT (Design Validation Test) 통과 — 50-200 유닛, 양산 공정과 동일하게 제작, 내구성·신뢰성 테스트", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "pvt-passed", title: "PVT (Production Validation Test) 통과 — 첫 정식 양산의 5-10%, 최소 4주, 양산 가능성·목표 단가 확인", status: "todo", required: true, estimatedMinutes: 180 },
+  ],
+  "bom-supply-chain": [
+    { taskId: "bom-finalized", title: "BOM (Bill of Materials) 완성 — 모든 부품·하위조립·원재료 + 공급사·리드타임·대안 부품 명시", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "suppliers-locked", title: "공급사 락인 — 핵심 부품 1차/2차 공급사 계약 (CISA HBOM 권장: dual-sourcing)", status: "todo", required: true, estimatedMinutes: 180 },
+    { taskId: "single-source-risks-identified", title: "Single-source 리스크 식별 — 대체 부품 없는 항목 명시 + 안전재고(safety stock) 계획", status: "todo", required: true, estimatedMinutes: 120 },
+  ],
+  "certification-kc-ce": [
+    { taskId: "pre-compliance-test-done", title: "Pre-compliance 테스트 — 정식 KC 인증 전 자체 EMC/Safety 테스트 (몇 달 단축 효과)", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "cert-bodies-selected", title: "인증기관 선정 — 한국 RRA/NTC 등 공인 시험소 + 한국 대리인 지정 (KC 필수)", status: "todo", required: true, estimatedMinutes: 90 },
+    { taskId: "cert-application-submitted", title: "KC 인증 신청 — 비무선 4-8주 / 무선 (KC-RRA + Safety + EMC) 8-16주", status: "todo", required: true, estimatedMinutes: 180, waitDays: 56 },
+  ],
+  "manufacturing-partner": [
+    { taskId: "ems-shortlist-done", title: "EMS/CM 후보 3-5개 비교 — 능력·캐파·품질 표준·QC 시스템 점검", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "ems-audited", title: "EMS 현장 감사 — 직접 방문 또는 화상 라인 점검, ISO 9001 등 인증 확인", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "first-run-planned", title: "1차 양산 계획 — MOQ 협상, 결제조건 (T/T·L/C), 불량률 임계치, IPI 검사 포인트", status: "todo", required: true, estimatedMinutes: 180 },
+  ],
+  // ── Cluster C (Deep Tech Lab — 로보틱스/바이오) — 4단계 ──
+  // 검증 출처: IntoInWorld 2026 Korea Clinical Trials, MFDS 가이드, KoreaBiomed (의료기기 IND 4-6주)
+  "lab-setup": [
+    { taskId: "lab-facility-secured", title: "랩/시제품 작업장 확보 — 로보틱스: 안전 펜스·EMC 차폐 / 바이오: GLP 또는 BSL-1/2 시설", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "safety-protocol-defined", title: "안전 매뉴얼 — 로보틱스: 비상정지·전원 격리 / 바이오: 화학물질·생물학적 폐기물 처리", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "core-equipment-installed", title: "핵심 장비 설치·교정 — 로보틱스: 모션캡처·계측 / 바이오: 유전자 분석기·세포배양기", status: "todo", required: true, estimatedMinutes: 480 },
+  ],
+  "prototype-iteration": [
+    { taskId: "iteration-plan-set", title: "반복 일정 + go/no-go 게이트 — 로봇 v0~v3 주간 / 바이오: 스크리닝 단계별 결정 기준", status: "todo", required: true, estimatedMinutes: 180 },
+    { taskId: "v1-prototype-shipped", title: "v1 프로토타입 완성 — 핵심 기능 동작 + 실험 데이터 수집 가능 상태", status: "todo", required: true, estimatedMinutes: 720 },
+    { taskId: "feedback-cycle-running", title: "피드백 사이클 가동 — 매주 사용자/실험 결과 → 다음 v 정의", status: "todo", required: true, estimatedMinutes: 120 },
+  ],
+  "field-or-clinical-test": [
+    { taskId: "test-protocol-approved", title: "테스트 프로토콜 승인 — 로봇: 필드 안전 평가 / 바이오: IRB 윤리 심사 + 임상시험계획서", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "test-cohort-secured", title: "참가자/환경 확보 — 로봇: 필드 사이트 + 모니터링 / 바이오: 임상시험 기관 + 피험자 + 보상보험", status: "todo", required: true, estimatedMinutes: 360 },
+    { taskId: "first-results-collected", title: "첫 결과 수집 — 로봇: 동작 로그·고장 통계 / 바이오: IND 4-6주 (30 working days) 후 1상 데이터", status: "todo", required: true, estimatedMinutes: 240, waitDays: 42 },
+  ],
+  "regulatory-submission": [
+    { taskId: "pre-consultation-done", title: "MFDS pre-consultation 완료 — 정식 심사 전 사전 협의 (최단 7일로 단축 가능)", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "regulatory-package-submitted", title: "인허가 패키지 제출 — 로봇: KC + 안전인증 / 바이오: MFDS Fast-Track (199개 카테고리·113개 AI 디지털 의료기기)", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "approval-pathway-confirmed", title: "승인 경로 확정 — 일반 (490일→295일) vs Fast-Track (80-140일) 결정 + 일정 락인", status: "todo", required: true, estimatedMinutes: 180, waitDays: 100 },
+  ],
+  // ── Cluster D (Extreme Deep Tech — 반도체/클린테크) — 4단계 ──
+  // 검증 출처: AnySilicon·Wikipedia (MPW), Vendr·EDABoard·Datagravity (EDA), Silicon Analysts (TSMC 2/3nm 2027-2028 매진), TrendForce (OSAT 5-30% 인상)
+  "eda-tooling-setup": [
+    { taskId: "eda-licenses-secured", title: "EDA 라이선스 확보 — 스타트업 티어 (token-based, full-service) 비교 후 multi-year 협상 (10-25% 할인)", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "design-env-set-up", title: "설계 환경 구축 — 서버, OS, 백업, 라이선스 서버, 시뮬레이션 클러스터", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "ip-library-strategy-defined", title: "IP/라이브러리 전략 — 자체 vs 라이선스 IP, 표준셀 라이브러리, 메모리/PHY/AnalogIP 결정", status: "todo", required: true, estimatedMinutes: 240 },
+  ],
+  "mpw-or-pilot-tape-out": [
+    { taskId: "foundry-process-selected", title: "공정 노드 선정 — TSMC/Samsung/UMC/X-FAB/SkyWater 등 + 노드 (28nm·12nm·7nm) 결정", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "tape-out-package-ready", title: "테이프아웃 패키지 준비 — GDS-II, DRC/LVS clean, 검증 보고서, schedule 등록", status: "todo", required: true, estimatedMinutes: 720 },
+    { taskId: "tape-out-submitted", title: "MPW shuttle 또는 full-mask 테이프아웃 제출 — MPW 90-95% 절감 / Full mask: 28nm $1M+ · 7nm $10M+", status: "todo", required: true, estimatedMinutes: 120, waitDays: 180 },
+  ],
+  "packaging-and-test": [
+    { taskId: "osat-partner-selected", title: "OSAT 파트너 선정 — ASE·Amkor·JCET·Powertech 등 (2026 가격 5-30% 인상, 90% 가동률)", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "test-plan-defined", title: "테스트 플랜 정의 — wafer-level/package-level, ATE, burn-in, yield 임계치", status: "todo", required: true, estimatedMinutes: 240 },
+    { taskId: "first-samples-validated", title: "첫 샘플 검증 — 기능·성능·전력·온도, customer 샘플 발송 준비", status: "todo", required: true, estimatedMinutes: 360 },
+  ],
+  "partner-foundation-or-pilot-line": [
+    { taskId: "foundry-partnership-discussion", title: "파운드리 파트너십 협의 — TSMC 2/3nm 2027-2028 매진, Samsung 대안 / 구형 노드는 SkyWater·Tower·X-FAB", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "volume-production-plan", title: "양산 수량 계획 — 첫 12개월 wafer-out 예상, CoWoS 등 advanced packaging 52-78주 leadtime 반영", status: "todo", required: true, estimatedMinutes: 360 },
+    { taskId: "scale-up-budget-modeled", title: "Scale-up 예산 모델링 — Full mask 전환비 + OSAT 캐파·인상률 + 채널/디스트리뷰터 비용", status: "todo", required: true, estimatedMinutes: 240 },
+  ],
   // ── Offline path tasks ─────────────────────────────────────────────────────
   "permit-check": [
+    // ⓘ 이 단계는 "사전 확인" — 발급/신청은 registration-setup 단계에서 수행.
+    //   따라서 모든 항목은 "확인했나요?" 형태의 verification 으로 통일.
     {
       taskId: "building-registry-checked",
-      title: "Verify building registry (건축물대장) confirms permitted use for your business type",
+      title: "건축물대장 용도가 내 업종 영업을 허용하는지 확인 — 근린생활시설 등 코드 점검",
       status: "todo",
       required: true,
-      estimatedMinutes: 20,
+      estimatedMinutes: 15,
     },
     {
       taskId: "permit-type-checked",
-      title: "Confirm which permit or registration your category requires",
+      title: "위 패널에서 내 업종에 필요한 인허가·등록 종류를 모두 확인",
       status: "todo",
       required: true,
-      estimatedMinutes: 30
-    },
-    {
-      taskId: "hygiene-education-done",
-      title: "Complete food hygiene education (6hr) and obtain certificate (food/cafe only)",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 360,
-      waitDays: 1,
-      followupQuestion: "위생교육 수료증 발급 받으셨나요?"
-    },
-    {
-      taskId: "health-exam-obtained",
-      title: "Obtain health examination certificate from public health center (food/cafe/beauty)",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 60,
-      waitDays: 5,
-      followupQuestion: "보건증(건강진단결과서) 발급 완료되었나요?"
-    },
-    {
-      taskId: "professional-license-confirmed",
-      title: "Confirm professional license for your business type (beauty license, academy instructor, pet handler, etc.)",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 30
-    },
-    {
-      taskId: "fire-safety-cert-obtained",
-      title: "Apply for fire safety completion certificate if required (소방완비증명서)",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 60,
-      waitDays: 14,
-      followupQuestion: "소방 검사 통과 통보 받으셨나요?"
-    },
-    {
-      taskId: "industry-specific-registration",
-      title: "Complete industry-specific registration: education office (학원), sports facility (체육시설업), animal business (동물관련업), etc.",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 60
-    },
-    {
-      taskId: "health-cert-checked",
-      title: "Check health certificate and hygiene training requirements (food/cafe/beauty)",
-      status: "todo",
-      required: false,
       estimatedMinutes: 20
     },
     {
-      taskId: "safety-requirement-checked",
-      title: "Verify fire safety and facility safety requirements",
+      taskId: "hygiene-health-checked",
+      title: "위생교육 6시간·보건증 발급 요건 확인 (음식/카페/뷰티) — 절차·기간·발급처",
       status: "todo",
       required: false,
-      estimatedMinutes: 20
-    }
+      estimatedMinutes: 15
+    },
+    {
+      taskId: "license-registration-checked",
+      title: "전문 면허·업종별 등록 요건 확인 (미용사 면허, 학원·체육시설·동물관련업 등록 등)",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 15
+    },
+    {
+      taskId: "fire-safety-checked",
+      title: "소방완비증명서·시설 안전 요건 확인 — 영업장 면적·층수별 기준 점검",
+      status: "todo",
+      required: false,
+      estimatedMinutes: 15
+    },
   ],
   "contract-review": [
     {

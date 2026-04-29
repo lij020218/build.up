@@ -6,6 +6,7 @@ import {
 } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions, GuideAiStructuredResponse } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import { GUIDE_QA_SYSTEM_PROMPT, buildGuideQaUserPrompt } from "./prompt";
 import type { Language } from "@build-up/shared";
 
@@ -70,7 +71,8 @@ export async function interpretGuideQuestion(
   const message = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: GUIDE_QA_SYSTEM_PROMPT,
+    // ✦ Prompt Caching — guide QA 같은 가이드 반복 질문 시 절감
+    system: systemWithCache(GUIDE_QA_SYSTEM_PROMPT),
     messages: [{ role: "user", content: userPrompt }]
   });
 

@@ -9,9 +9,8 @@ import {
   formatFranchiseCost,
   getScoreColor,
   getScoreLabel,
-  getFranchiseSupplyInfo,
-  getSupplyTypeColor,
 } from "@build-up/shared";
+import { FranchiseDetailModal } from "./FranchiseDetailModal";
 
 export function FranchiseView() {
   const { language } = useDashboardCtx();
@@ -30,9 +29,10 @@ export function FranchiseView() {
     { id: "space", label: ko ? "공간" : "Space" },
   ];
   const [filterCat, setFilterCat] = useState("all");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const filtered = filterCat === "all" ? allBrands : allBrands.filter(b => b.categoryId === filterCat);
   const sorted = [...filtered].sort((a, b) => computeOverallScore(b.scores) - computeOverallScore(a.scores));
+  const selectedBrand = selectedBrandId ? allBrands.find(b => b.id === selectedBrandId) ?? null : null;
 
   return (
     <section style={styles.section}>
@@ -41,10 +41,10 @@ export function FranchiseView() {
         <div style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: "8px" }}>
           {ko ? "프랜차이즈 브랜드" : "Franchise Brands"}
         </div>
-        <div style={{ fontSize: "16px", lineHeight: 1.6, color: "var(--muted)", maxWidth: "560px" }}>
+        <div style={{ fontSize: "16px", lineHeight: 1.6, color: "var(--muted)", maxWidth: "640px" }}>
           {ko
-            ? "각 브랜드의 수익성, 안정성, 창업비용을 비교하고 나에게 맞는 프랜차이즈를 찾아보세요."
-            : "Compare profitability, stability, and startup costs to find the right franchise for you."}
+            ? `${allBrands.length}개 브랜드의 수익성·안정성·창업비용을 비교하세요. 카드를 클릭하면 점수·장단점·출처가 담긴 상세 페이지가 열립니다.`
+            : `Compare profitability, stability, and startup costs across ${allBrands.length} brands. Click any card for detailed scores, pros/cons, and sources.`}
         </div>
       </div>
 
@@ -57,7 +57,7 @@ export function FranchiseView() {
             <button
               key={cat.id}
               type="button"
-              onClick={() => { setFilterCat(cat.id); setExpandedId(null); }}
+              onClick={() => setFilterCat(cat.id)}
               style={{
                 padding: "8px 16px",
                 borderRadius: "999px",
@@ -79,31 +79,47 @@ export function FranchiseView() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "14px" }}>
         {sorted.map(fb => {
           const overall = computeOverallScore(fb.scores);
-          const expanded = expandedId === fb.id;
-          const supplyInfo = getFranchiseSupplyInfo(fb);
+          const hasDetailedData = !!(fb.sources?.length || fb.pros || fb.cons);
 
           return (
             <button
               key={fb.id}
               type="button"
-              onClick={() => setExpandedId(expanded ? null : fb.id)}
+              onClick={() => setSelectedBrandId(fb.id)}
               style={{
                 display: "grid",
-                gap: expanded ? "14px" : "10px",
+                gap: "10px",
                 padding: "20px",
                 borderRadius: "24px",
-                border: expanded ? "2px solid var(--primary)" : "1px solid var(--border)",
-                background: expanded ? "rgba(29,53,87,0.03)" : "rgba(255,255,255,0.82)",
-                boxShadow: expanded ? "0 0 0 4px rgba(29,53,87,0.05)" : "0 2px 8px rgba(17,17,17,0.03)",
+                border: "1px solid var(--border)",
+                background: "rgba(255,255,255,0.82)",
+                boxShadow: "0 2px 8px rgba(17,17,17,0.03)",
                 cursor: "pointer",
                 textAlign: "left" as const,
-                transition: "all 0.2s ease"
+                transition: "transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,17,17,0.08)";
+                e.currentTarget.style.borderColor = "rgba(29,53,87,0.25)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(17,17,17,0.03)";
+                e.currentTarget.style.borderColor = "var(--border)";
               }}
             >
               {/* Row 1: Name + score */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "3px" }}>{fb.name[language]}</div>
+                  <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "3px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    {fb.name[language]}
+                    {hasDetailedData && (
+                      <span title={ko ? "상세 데이터 보강" : "Detailed data available"} style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "999px", background: "rgba(34,197,94,0.1)", color: "#15803d", fontWeight: 600 }}>
+                        ✓
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.4 }}>{fb.tagline[language]}</div>
                 </div>
                 <div style={{
@@ -111,7 +127,7 @@ export function FranchiseView() {
                   background: `conic-gradient(${getScoreColor(overall)} ${overall * 3.6}deg, rgba(0,0,0,0.04) 0deg)`,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
                 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 19, background: expanded ? "rgba(255,255,255,0.95)" : "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 19, background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                     <span style={{ fontSize: "15px", fontWeight: 700, lineHeight: 1, color: getScoreColor(overall) }}>{overall}</span>
                     <span style={{ fontSize: "7px", color: "var(--muted)" }}>{getScoreLabel(overall, language)}</span>
                   </div>
@@ -126,7 +142,7 @@ export function FranchiseView() {
                   { l: ko ? "폐점률" : "Closure", v: `${fb.closureRate}%` },
                   { l: ko ? "매장수" : "Stores", v: fb.storeCount.toLocaleString() },
                 ].map(m => (
-                  <div key={m.l} style={{ padding: "6px 4px", borderRadius: "8px", background: expanded ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.02)", textAlign: "center" }}>
+                  <div key={m.l} style={{ padding: "6px 4px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", textAlign: "center" }}>
                     <div style={{ fontSize: "13px", fontWeight: 700 }}>{m.v}</div>
                     <div style={{ fontSize: "9px", color: "var(--muted)" }}>{m.l}</div>
                   </div>
@@ -152,68 +168,16 @@ export function FranchiseView() {
                 ))}
               </div>
 
-              {/* Expanded: Details */}
-              {expanded && (
-                <>
-                  {/* Roadmap notes */}
-                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: "12px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "8px" }}>
-                      {ko ? "특이사항" : "Key Notes"}
-                    </div>
-                    {fb.roadmapNotes[language].map((note, i) => (
-                      <div key={i} style={{ fontSize: "12px", lineHeight: 1.5, color: "var(--muted)", display: "flex", gap: "5px", marginBottom: "3px" }}>
-                        <span style={{ color: "var(--primary)", flexShrink: 0 }}>•</span>
-                        <span>{note}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Supply structure summary */}
-                  {supplyInfo.length > 0 && (
-                    <div style={{ borderTop: "1px solid var(--border)", paddingTop: "12px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "8px" }}>
-                        {ko ? "공급 구조" : "Supply Structure"}
-                      </div>
-                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" as const }}>
-                        {supplyInfo.map((s, i) => (
-                          <span key={i} style={{
-                            fontSize: "10px", fontWeight: 500, padding: "3px 8px", borderRadius: "6px",
-                            background: `${getSupplyTypeColor(s.type)}10`, color: getSupplyTypeColor(s.type),
-                            border: `1px solid ${getSupplyTypeColor(s.type)}20`
-                          }}>
-                            {s.category[language]}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Cost + CTA */}
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" as const, borderTop: "1px solid var(--border)", paddingTop: "12px" }}>
-                    <div style={{ fontSize: "12px", color: "var(--muted)", display: "flex", gap: "10px", flex: 1, alignItems: "center" }}>
-                      <span>{ko ? `가맹비 ${formatFranchiseCost(fb.franchiseFee)}원` : `Fee ${formatFranchiseCost(fb.franchiseFee)}`}</span>
-                      <span>·</span>
-                      <span>{ko ? `로열티 ${fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "만/월" : "없음"}` : `Royalty ${fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "K/mo" : "None"}`}</span>
-                    </div>
-                    {fb.franchiseUrl && (
-                      <a
-                        href={fb.franchiseUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          padding: "8px 16px", borderRadius: "999px",
-                          background: "var(--primary)", color: "#fff",
-                          fontSize: "12px", fontWeight: 600,
-                          textDecoration: "none", whiteSpace: "nowrap"
-                        }}
-                      >
-                        {ko ? "가맹 문의 →" : "Inquiry →"}
-                      </a>
-                    )}
-                  </div>
-                </>
-              )}
+              {/* Row 4: Click hint */}
+              <div style={{ marginTop: "2px", fontSize: "11px", color: "var(--muted)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>
+                  {ko ? `가맹비 ${formatFranchiseCost(fb.franchiseFee)}` : `Fee ${formatFranchiseCost(fb.franchiseFee)}`}
+                  {fb.monthlyRoyalty > 0 && (ko ? ` · 로열티 ${fb.monthlyRoyalty}만/월` : ` · ${fb.monthlyRoyalty}K/mo`)}
+                </span>
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>
+                  {ko ? "상세보기 →" : "View detail →"}
+                </span>
+              </div>
             </button>
           );
         })}
@@ -223,6 +187,15 @@ export function FranchiseView() {
         <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--muted)" }}>
           {ko ? "이 카테고리에 등록된 프랜차이즈가 없습니다." : "No franchises in this category."}
         </div>
+      )}
+
+      {/* Detail modal */}
+      {selectedBrand && (
+        <FranchiseDetailModal
+          brand={selectedBrand}
+          language={language}
+          onClose={() => setSelectedBrandId(null)}
+        />
       )}
     </section>
   );

@@ -37,6 +37,8 @@ type TimeLogState = {
 type TimeLogActions = {
   addEntry: (entry: TimeLogEntry) => void;
   removeEntry: (date: string) => void;
+  /** Supabase 동기화에서 통째로 복원 시 사용 */
+  setEntries: (v: TimeLogEntry[]) => void;
   dismissTodayPrompt: () => void;
   setEnabled: (v: boolean) => void;
   resetAll: () => void;
@@ -63,6 +65,7 @@ export const useTimeLogStore = create<TimeLogState & TimeLogActions>()(
         }),
       removeEntry: (date) =>
         set((s) => ({ entries: s.entries.filter((e) => e.date !== date) })),
+      setEntries: (v) => set({ entries: v }),
       dismissTodayPrompt: () =>
         set({ lastPromptDismissedAt: new Date().toISOString() }),
       setEnabled: (v) => set({ enabled: v }),

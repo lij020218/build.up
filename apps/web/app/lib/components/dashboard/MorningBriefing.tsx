@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import {
   calculateSalesBreakdown,
@@ -8,19 +8,25 @@ import {
   calculateMonthlyPnL,
 } from "@build-up/shared";
 import type { DailyEntry, MonthlyCosts } from "../../useDashboard";
-import { BarChart3, PenLine, Target, AlertTriangle, Package, Ticket, Camera, Star, Sparkles, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
+import { BarChart3, Target, AlertTriangle, Package, Ticket, Camera, Star, Sparkles, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRoadmapStore } from "../../stores/roadmap-store";
-import { SubscriptionPlanEntry } from "./SubscriptionPlanEntry";
+// SubscriptionPlanEntry 는 ActivitySnapshotCard 안에 통합되어 직접 import 불필요
 import { useCashflowStore } from "../../stores/cashflow-store";
 import { useAgentsStore, agentUrgencyScore, type AgentProposal, type AgentKind } from "../../stores/agents-store";
 import { useProfileStore } from "../../stores/profile-store";
 import { useMarketingStore, type PromoCode } from "../../stores/marketing-store";
+import { useUsageStore } from "../../stores/usage-store";
+// QuickQueryBar 카드 형식은 FloatingAIPartner (오른쪽 하단 챗봇)로 이전됨 — starter-stage-demo 에서 전역 마운트
 import { useOperationsStore } from "../../stores/operations-store";
 import { projectCashflow, detectCrisis, type CrisisDetection } from "../../services/cashflow-projection";
+import { detectProactiveInsights, type ProactiveInsight } from "../../services/profit-anomaly-detector";
+import { updateAnomalyHistory, getAnomalyContext } from "../../services/anomaly-history";
 import { useIndustryInsight, type IndustryInsight } from "../../hooks/useIndustryInsight";
 import { useTimeLogStore, shouldPromptToday } from "../../stores/time-log-store";
 import { TimeLogCheckIn } from "./TimeLogCheckIn";
+import { calculateUnifiedHealthScore, HEALTH_COLORS } from "@build-up/shared";
+import { HealthDot, type HealthGrade } from "./HealthSignal";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -33,6 +39,19 @@ const LABEL_COLOR = "rgba(15,23,42,0.4)";
 const CARD_RATIO = 0.85; // rough card-payment ratio for deposit estimate
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+// unified.domains[*].components[*] → 값 표기 (한국어 톤)
+function formatComponentValue(name: string, value: number, ko: boolean): string {
+  if (!Number.isFinite(value)) return "—";
+  if (name.includes("런웨이") || name.toLowerCase().includes("runway"))
+    return ko ? `${value.toFixed(1)}개월` : `${value.toFixed(1)}mo`;
+  if (name.includes("이자보상") || name.includes("배율"))
+    return `×${value.toFixed(1)}`;
+  if (name.includes("성장률") || name.includes("growth"))
+    return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+  // 그 외 비율·점수성 지표
+  return `${value.toFixed(1)}%`;
+}
 
 function formatWon(v: number, ko: boolean): string {
   if (ko) {
@@ -135,7 +154,7 @@ function generateFallbackInsight(
 
 // ─── Hero resolver (분석 + 행동 1개) ────────────────────────────────────────
 
-type HeroSource = "crisis" | "reorder-urgent" | "ai-action" | "agent" | "industry" | "drucker";
+type HeroSource = "stale-sales" | "crisis" | "anomaly" | "reorder-urgent" | "ai-action" | "agent" | "industry" | "drucker";
 type HeroTone = "crisis" | "warning" | "neutral";
 
 type Hero = {
@@ -150,6 +169,8 @@ type Hero = {
   ctaKo: string;                      // CTA 라벨
   ctaEn: string;
   agentProposalId?: string;           // hero가 agent 출처일 때 id
+  /** AI 가 K-히트 사례를 인용했을 때 — UI 에 [사례:성심당] 배지로 노출 */
+  referencedCase?: { id: string; name: string };
 };
 
 type OtherItem = {
@@ -182,11 +203,53 @@ function fmtWon(n: number, ko: boolean): string {
 function resolveHero(input: {
   ko: boolean;
   cashflowCrisis: CrisisDetection | null;
+  /** 룰 기반 이상 감지 (이익률 하락·매출 하락·비용 급증·프라임코스트 돌파) — critical/warning 우선 활용 */
+  topAnomaly: ProactiveInsight | null;
+  /** anomaly history 컨텍스트 — "오늘 새로 발생", "어제부터 2일째", "5일째 지속" 등 */
+  anomalyContext: { isNew: boolean; consecutiveDays: number; label: string } | null;
   topProposal: AgentProposal | null;
-  aiTopAction: { title: string; reason: string; priority: "high" | "medium" } | undefined;
+  aiTopAction: { title: string; reason: string; priority: "high" | "medium"; referencedCase?: { id: string; name: string } } | undefined;
   industryInsight: IndustryInsight | null;
+  businessLaunched: boolean;
+  daysSinceLastSalesEntry: number | null;
+  totalEntries: number;
+  /** 월 비용 합계 — 매출 공백 시 누적 손실 추정용 */
+  monthlyBurn: number;
 }): Hero {
-  const { ko, cashflowCrisis, topProposal, aiTopAction, industryInsight } = input;
+  const { ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, aiTopAction, industryInsight, businessLaunched, daysSinceLastSalesEntry, totalEntries, monthlyBurn } = input;
+
+  // 0. 매출 미기록 2일 이상 (AI 코칭 정확도 보호 — 오래된 데이터로 코칭 생성 차단)
+  //    - 운영 중(businessLaunched)이고
+  //    - 과거 매출 기록이 하나라도 있어야 함 (첫 기록 전에는 Drucker fallback이 담당)
+  //    - 마지막 기록이 2일 이상 지남
+  if (
+    businessLaunched &&
+    totalEntries > 0 &&
+    daysSinceLastSalesEntry !== null &&
+    daysSinceLastSalesEntry >= 2
+  ) {
+    const days = daysSinceLastSalesEntry;
+    // ⚡ 능동 진단 — 비용 데이터 있으면 누적 손실 추정 (사용자 피드백: AI가 빈 상태에서도 일하는 느낌이어야)
+    const accumLossWon = monthlyBurn > 0 ? Math.round((monthlyBurn / 30) * days) : 0;
+    const accumLossManwon = Math.round(accumLossWon / 10000);
+    const hasBurn = monthlyBurn > 0;
+    return {
+      source: "stale-sales",
+      tone: "warning",
+      tagKo: "AI 진단 — 데이터는 부족하지만 가능한 추정",
+      tagEn: "AI Diagnosis — best estimate from available data",
+      analysisKo: hasBurn
+        ? `최근 ${days}일간 매출 기록 공백입니다. 월 비용 ${fmtWon(monthlyBurn, true)}이 계속 나가고 있어 누적 손실은 약 ${accumLossManwon.toLocaleString()}만원으로 추정합니다. 오늘 매출 한 번만 입력하면 진단 정확도가 70% 이상으로 올라갑니다.`
+        : `최근 ${days}일간 매출 기록 공백입니다. 비용 데이터가 없어 손실 추정도 불가합니다. 오늘 매출 + 월 비용 입력하면 정확한 손익 진단이 가능합니다.`,
+      analysisEn: hasBurn
+        ? `${days} days without sales data. Monthly burn of ${fmtWon(monthlyBurn, false)} continues — estimated accumulated loss ~${fmtWon(accumLossWon, false)}. Just one sales entry will boost diagnostic accuracy to 70%+.`
+        : `${days} days without sales data. No cost data either — can't estimate loss. Add today's sales + monthly costs for accurate P&L diagnosis.`,
+      actionKo: "5초면 됩니다. 아래 '매출 흐름' 카드 상단 입력 바에서 어제·오늘 매출만 기록해 주세요.",
+      actionEn: "Takes 5 seconds. Just log yesterday's and today's sales in the 'Revenue flow' input bar.",
+      ctaKo: "매출 기록하러 가기",
+      ctaEn: "Log sales",
+    };
+  }
 
   // 1. Cashflow 위기
   if (cashflowCrisis) {
@@ -195,14 +258,40 @@ function resolveHero(input: {
     return {
       source: "crisis",
       tone: "crisis",
-      tagKo: "긴급 대응",
-      tagEn: "Urgent",
-      analysisKo: `${days}일 후 통장 잔고가 ${fmtWon(-short, true)}로 떨어질 수 있어요. 최근 매출 정산 일정과 월 고정비를 합산한 결과입니다.`,
-      analysisEn: `In ${days} days your balance may drop to ${fmtWon(-short, false)}. Based on recent settlement schedules and fixed costs.`,
-      actionKo: "아래 현금흐름 레이더에서 광고비 감액·공급처 연기·긴급자금 등 7가지 해결책을 고르세요.",
-      actionEn: "Pick from 7 one-tap solutions in the Cash-flow Radar below.",
-      ctaKo: "해결책 보기",
-      ctaEn: "See solutions",
+      tagKo: "사장님, 솔직히 말씀드릴게요",
+      tagEn: "Let's be honest",
+      analysisKo: `${days}일 후 통장 잔고가 ${fmtWon(-short, true)} 부족할 수 있어요. 지금이 가장 중요한 순간입니다 — 최근 매출 정산 일정과 월 고정비를 함께 봤습니다.`,
+      analysisEn: `In ${days} days your balance may fall short by ${fmtWon(-short, false)}. This is the moment that matters — based on recent settlements and fixed costs.`,
+      actionKo: "아래 현금흐름 레이더에 광고비 감액·공급처 연기·긴급자금 등 7가지 해결책 준비해뒀어요. 같이 골라봐요.",
+      actionEn: "I've prepped 7 one-tap solutions in the Cash-flow Radar below — let's pick together.",
+      ctaKo: "해결책 같이 보기",
+      ctaEn: "Solve together",
+    };
+  }
+
+  // 1.5. 룰 기반 이상 감지 (이익률 -3%p+ 하락, 매출 -10%+ 하락, 비용 +20%+ 급증, 프라임코스트 65%+)
+  //      AI 코칭이 데이터 분석으로 못 잡는 추세 변화를 룰 기반으로 사전에 짚어준다.
+  //      LLM 호출 없이 즉시 응답 → MorningBriefing 의 hero 로 직접 노출.
+  if (topAnomaly && (topAnomaly.severity === "critical" || topAnomaly.severity === "warning")) {
+    const tone: HeroTone = topAnomaly.severity === "critical" ? "crisis" : "warning";
+    const baseTag = topAnomaly.severity === "critical" ? "이상 신호" : "주의 신호";
+    // History label 통합 — "주의 신호 · 어제부터 2일째" 또는 "주의 신호 · 5일째 지속"
+    const tagKo = anomalyContext ? `${baseTag} · ${anomalyContext.label}` : baseTag;
+    // 만성화된 anomaly (3일+) 는 분석 톤 강화
+    const chronicNote = anomalyContext && anomalyContext.consecutiveDays >= 3
+      ? ` ${anomalyContext.consecutiveDays}일째 같은 신호가 지속되고 있어요 — 즉시 조치가 필요합니다.`
+      : "";
+    return {
+      source: "anomaly",
+      tone,
+      tagKo,
+      tagEn: topAnomaly.severity === "critical" ? "Critical Signal" : "Watch Signal",
+      analysisKo: `${topAnomaly.headline}. ${topAnomaly.analysis}${chronicNote}`,
+      analysisEn: `${topAnomaly.headline}. ${topAnomaly.analysis}`,
+      actionKo: topAnomaly.action,
+      actionEn: topAnomaly.action,
+      ctaKo: "상세 보기",
+      ctaEn: "See details",
     };
   }
 
@@ -212,12 +301,12 @@ function resolveHero(input: {
     return {
       source: "reorder-urgent",
       tone: "warning",
-      tagKo: "긴급 재주문",
-      tagEn: "Urgent reorder",
-      analysisKo: `${c.itemName} 재고가 ${c.currentQuantity}개 남았어요. 현재 소비 속도로 ${c.daysUntilStockout}일 후 소진 예상입니다.`,
-      analysisEn: `${c.itemName} has only ${c.currentQuantity} left — estimated to run out in ${c.daysUntilStockout} days at current pace.`,
-      actionKo: `${c.recommendedQuantity}개 주문 권장. 공급처 카톡 초안이 준비돼 있어 한 번에 전송할 수 있어요.`,
-      actionEn: `${c.recommendedQuantity} units recommended. Supplier KakaoTalk draft ready — one-tap send.`,
+      tagKo: "재주문 시점이에요",
+      tagEn: "Time to reorder",
+      analysisKo: `${c.itemName} 재고가 ${c.currentQuantity}개 남았어요. 지금 속도면 ${c.daysUntilStockout}일 후 다 떨어져요. 같이 발주 정리해볼까요?`,
+      analysisEn: `${c.itemName} is down to ${c.currentQuantity} units — about ${c.daysUntilStockout} days left. Let's prep the order.`,
+      actionKo: `${c.recommendedQuantity}개 주문 추천드려요. 공급처에 보낼 카톡 초안 준비해뒀어요 — 한 번에 보낼 수 있어요.`,
+      actionEn: `Suggested ${c.recommendedQuantity} units. KakaoTalk draft ready — one-tap to send.`,
       ctaKo: "주문 메시지 복사",
       ctaEn: "Copy order message",
       agentProposalId: topProposal.id,
@@ -237,6 +326,7 @@ function resolveHero(input: {
       actionEn: aiTopAction.title,
       ctaKo: "확인하기",
       ctaEn: "Take action",
+      referencedCase: aiTopAction.referencedCase,
     };
   }
 
@@ -336,7 +426,12 @@ const HERO_TONE_STYLES: Record<HeroTone, {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function MorningBriefing() {
+type MorningBriefingProps = {
+  /** true 면 4 KPI grid 숨김. DailyKpiStrip 이 외부에 별도 마운트되는 경우 중복 방지. */
+  hideKpis?: boolean;
+};
+
+export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {}) {
   const d = useDashboardCtx();
 
   const ko = d.language === "ko";
@@ -351,6 +446,102 @@ export function MorningBriefing() {
     other: 0,
     interest: 0,
   }) as MonthlyCosts;
+
+  // ─── 사업 건강도 (SSOT) ───
+  // unified-health.calculateUnifiedHealthScore 가 4영역 가중합 + 데이터 충분성 게이트 모두 처리.
+  // → 같은 점수가 다른 카드/AI 프롬프트와 항상 일치
+  const unified = useMemo(
+    () => calculateUnifiedHealthScore({
+      dailyEntries: entries,
+      monthlyCosts: costs,
+      industry: "general", // TODO: dashboard ctx 의 industryCategoryId → mapIndustryToGroup 으로 정밀화
+      stage: "growth",
+    }),
+    [entries, costs]
+  );
+  const healthSignalReady = unified.ready;
+  const healthGrade: HealthGrade = (unified.grade === "unknown" ? "warning" : unified.grade) as HealthGrade;
+  const healthGradeLabelKo: Record<HealthGrade, string> = {
+    healthy: "건강", caution: "주의", warning: "위험", critical: "긴급",
+  };
+  const healthGradeLabelEn: Record<HealthGrade, string> = {
+    healthy: "Healthy", caution: "Caution", warning: "Warning", critical: "Critical",
+  };
+  const healthGradeColor: Record<HealthGrade, string> = {
+    healthy: HEALTH_COLORS.healthy.text,
+    caution: HEALTH_COLORS.caution.text,
+    warning: HEALTH_COLORS.warning.text,
+    critical: HEALTH_COLORS.critical.text,
+  };
+
+  // ─── 위험 신호 도출 (AI 코칭 카드 내부 큰 박스에 표시) ───
+  // 데이터 충분: unified.domains 중 critical/warning 영역의 가장 안 좋은 컴포넌트
+  // 데이터 부족: 명백한 사실 (매출 vs 비용 큰 gap, 매출 0원 등) 만 회색 톤으로
+  type RiskSignal = { grade: HealthGrade; title: string; message: string };
+  const riskSignals = useMemo<RiskSignal[]>(() => {
+    const signals: RiskSignal[] = [];
+    const totalCostsAll =
+      costs.ingredients + costs.labor + costs.rent + costs.utilities +
+      costs.sga + costs.marketing + costs.other + (costs.interest ?? 0);
+    const totalRev = entries.reduce((s, e) => s + e.sales, 0);
+    const days = entries.length;
+
+    // ① 데이터 부족이라도 명백한 신호: 매출 vs 비용 극단 gap
+    if (!healthSignalReady && days > 0 && totalCostsAll > 0) {
+      const avgDaily = totalRev / days;
+      const monthEst = avgDaily * 26; // 월 26영업일 가정
+      const ratio = monthEst / totalCostsAll;
+      if (ratio < 0.3 && totalCostsAll > 100000) {
+        signals.push({
+          grade: "critical",
+          title: ko ? "매출이 비용 대비 너무 적어요" : "Revenue much lower than costs",
+          message: ko
+            ? `이 페이스라면 월 매출 추정 ${formatWon(Math.round(monthEst), ko)}, 월 비용 ${formatWon(totalCostsAll, ko)} — 비용의 ${Math.round(ratio * 100)}% 수준이에요. 매출 확보가 가장 시급합니다.`
+            : `Projected monthly revenue ${formatWon(Math.round(monthEst), ko)} vs costs ${formatWon(totalCostsAll, ko)} — only ${Math.round(ratio * 100)}% of costs. Revenue is the priority.`,
+        });
+      } else if (ratio >= 0.3 && ratio < 0.7) {
+        signals.push({
+          grade: "warning",
+          title: ko ? "매출이 비용을 못 따라가요" : "Revenue lagging costs",
+          message: ko
+            ? `현재 페이스로 월 비용의 ${Math.round(ratio * 100)}%만 매출. 이 추세가 한 달 이어지면 적자가 ${formatWon(Math.round(totalCostsAll - monthEst), ko)} 쌓여요.`
+            : `On track for ${Math.round(ratio * 100)}% of costs. A month at this pace = ${formatWon(Math.round(totalCostsAll - monthEst), ko)} loss.`,
+        });
+      }
+    }
+
+    // ② 데이터 충분: unified.domains 의 critical/warning 영역
+    if (healthSignalReady) {
+      const order: Array<keyof typeof unified.domains> = ["cash", "profit", "efficiency", "growth"];
+      const titleByDomain: Record<string, { ko: string; en: string }> = {
+        cash:       { ko: "현금 흐름 위험",   en: "Cash flow risk" },
+        profit:     { ko: "수익성 위험",       en: "Profitability risk" },
+        efficiency: { ko: "비용 효율 위험",   en: "Cost efficiency risk" },
+        growth:     { ko: "성장 둔화",         en: "Growth slowdown" },
+      };
+      for (const key of order) {
+        const dm = unified.domains[key];
+        if (dm.grade !== "critical" && dm.grade !== "warning") continue;
+        // 가장 점수 낮은 컴포넌트 1개를 메시지화
+        const worst = dm.components
+          .filter((c) => Number.isFinite(c.score))
+          .sort((a, b) => a.score - b.score)[0];
+        if (!worst) continue;
+        const headline = titleByDomain[key as string][ko ? "ko" : "en"];
+        const valueText = formatComponentValue(worst.name, worst.value, ko);
+        signals.push({
+          grade: dm.grade,
+          title: headline,
+          message: ko
+            ? `${worst.name} ${valueText} — 영역 점수 ${Math.round(dm.score)}점`
+            : `${worst.name} ${valueText} — domain score ${Math.round(dm.score)}`,
+        });
+        if (signals.length >= 3) break;
+      }
+    }
+
+    return signals.slice(0, 3);
+  }, [entries, costs, unified, healthSignalReady, ko]);
 
   // ── Yesterday's data
   const yesterday = getYesterday(entries);
@@ -432,6 +623,14 @@ export function MorningBriefing() {
   const inventory = useOperationsStore((s) => s.inventory);
   const setInventory = useOperationsStore((s) => s.setInventory);
 
+  // ── Adaptive Interface — 마운트 시 view tracking + 세션 시작 ──
+  const trackView = useUsageStore((s) => s.trackView);
+  const startSession = useUsageStore((s) => s.startSession);
+  useEffect(() => {
+    startSession();
+    trackView("morning-briefing");
+  }, [startSession, trackView]);
+
   const activeProposals = useMemo(() => {
     return proposals
       .filter((p) => p.status === "pending" && new Date(p.expiresAt) > new Date())
@@ -463,14 +662,75 @@ export function MorningBriefing() {
     enabled: hasData || !!d.industryCategoryId,
   });
 
+  // 매출 미기록 일수 계산 (기록이 있을 때만 의미 — 없으면 null)
+  const daysSinceLastSalesEntry = useMemo<number | null>(() => {
+    if (entries.length === 0) return null;
+    const latest = entries.reduce((acc, e) => (e.date > acc ? e.date : acc), entries[0].date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const last = new Date(latest);
+    last.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.round((today.getTime() - last.getTime()) / 86400000));
+  }, [entries]);
+
+  // ── 룰 기반 이상 감지 (이익률 하락·매출 하락·비용 급증·프라임코스트) ──
+  // LLM 호출 없이 이번 달 vs 지난 달 + 최근 7일 vs 직전 7일 데이터 분해.
+  const topAnomaly = useMemo<ProactiveInsight | null>(() => {
+    if (entries.length < 5) return null;  // 최소 5건 데이터 필요
+    const curMonth = new Date().toISOString().slice(0, 7);
+    const prevMonthDate = new Date(); prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+    const prevMonthKey = prevMonthDate.toISOString().slice(0, 7);
+    const thisMonthEntries = entries.filter((e) => e.date.startsWith(curMonth));
+    const prevMonthEntries = entries.filter((e) => e.date.startsWith(prevMonthKey));
+    const costHistory = (d.costHistory ?? []) as Array<{ month: string; ingredients: number; labor: number; rent: number; utilities: number; other: number }>;
+    const prevSnap = costHistory.find((h) => h.month === prevMonthKey);
+    // 재고·마케팅·신규고객 데이터 (소스에 없으면 undefined → 해당 anomaly skip)
+    const inventory = (d.inventory as Array<{ name: string; quantity: number; minThreshold?: number; dailyUsage?: number; lastOrderedAt?: string }> | undefined) ?? undefined;
+    let marketingCampaigns: Array<{ channel: string; spend: number; attributedRevenue?: number; month: string }> | undefined;
+    try {
+      const { useMarketingStore: mktStore } = require("../../stores/marketing-store");
+      marketingCampaigns = mktStore.getState().campaigns ?? undefined;
+    } catch { /* marketing store 없으면 skip */ }
+
+    const insights = detectProactiveInsights({
+      thisMonthEntries,
+      prevMonthEntries,
+      monthlyCosts: costs as Parameters<typeof detectProactiveInsights>[0]["monthlyCosts"],
+      prevMonthCosts: prevSnap,
+      inventory,
+      marketingCampaigns,
+    });
+    // ── History 갱신 (오늘 감지된 kind들 추적) ──
+    if (insights.length > 0) {
+      updateAnomalyHistory(insights.map((i) => i.kind));
+    }
+    return insights[0] ?? null;
+  }, [entries, costs, d.costHistory, d.inventory]);
+
+  // 현재 hero anomaly 의 history 컨텍스트 (오늘 새로 / N일째 지속)
+  const anomalyContext = useMemo(() => {
+    if (!topAnomaly) return null;
+    return getAnomalyContext(topAnomaly.kind);
+  }, [topAnomaly]);
+
+  // 월 비용 합계 — Hero 의 stale-sales 진단 (누적 손실 추정) 에서 사용.
+  // 아래쪽 startup-specific 블록에서도 동일 식이 한 번 더 쓰이므로 여기서 계산.
+  const monthlyBurnForHero = costs.ingredients + costs.labor + costs.rent + costs.utilities + (costs.sga ?? 0) + (costs.marketing ?? 0) + costs.other + (costs.interest ?? 0);
+
   // Hero 선택: 우선순위별 "오늘의 1가지" 결정
   const hero = useMemo(() => resolveHero({
     ko,
     cashflowCrisis,
+    topAnomaly,
+    anomalyContext,
     topProposal,
     aiTopAction: d.aiActions?.todayActions?.[0],
     industryInsight,
-  }), [ko, cashflowCrisis, topProposal, d.aiActions, industryInsight]);
+    businessLaunched: !!d.businessLaunched,
+    daysSinceLastSalesEntry,
+    totalEntries: entries.length,
+    monthlyBurn: monthlyBurnForHero,
+  }), [ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, d.aiActions, industryInsight, d.businessLaunched, daysSinceLastSalesEntry, entries.length, monthlyBurnForHero]);
 
   // "다른 제안들" = AI 액션 나머지 + Hero에 쓰이지 않은 agent proposals
   const otherItems = useMemo(() => {
@@ -532,7 +792,10 @@ export function MorningBriefing() {
 
   // Hero CTA 실행 핸들러
   const handleHeroCta = () => {
-    if (hero.source === "crisis") {
+    if (hero.source === "stale-sales") {
+      const el = document.querySelector("[data-sales-input]");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else if (hero.source === "crisis") {
       const el = document.querySelector("[data-cashflow-hero]");
       if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     } else if (hero.source === "agent" && hero.agentProposalId) {
@@ -582,22 +845,54 @@ export function MorningBriefing() {
   const showTimeLogPrompt = shouldPromptToday(timeLogEntries, timeLogDismissed, timeLogEnabled);
 
   // ── Startup-specific calculations
-  const monthlyBurn = costs.ingredients + costs.labor + costs.rent + costs.utilities + (costs.sga ?? 0) + (costs.marketing ?? 0) + costs.other + (costs.interest ?? 0);
+  // (resolveHero 호출 위에서 monthlyBurnForHero 로 이미 동일 계산 — 별칭으로 재사용)
+  const monthlyBurn = monthlyBurnForHero;
   const selectedBudget = (d.selectedBudget ?? 0) as number;
   const runway = monthlyBurn > 0 ? Math.round(selectedBudget / monthlyBurn * 10) / 10 : 0;
   const userChange = sameWeekday && sameWeekday.customers > 0
     ? ((yesterdayCustomers - sameWeekday.customers) / sameWeekday.customers) * 100
     : null;
 
+  // ── 14일 시계열 데이터 (스파크라인용 실제 데이터) ──
+  const last14 = (() => {
+    const map = new Map(entries.map((e) => [e.date, e]));
+    const out: { sales: number; customers: number }[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const dt = new Date();
+      dt.setDate(dt.getDate() - i);
+      const key = dt.toISOString().slice(0, 10);
+      const entry = map.get(key);
+      out.push({ sales: entry?.sales ?? 0, customers: entry?.customers ?? 0 });
+    }
+    return out;
+  })();
+  const revenueSeries = last14.map((e) => e.sales);
+  const customerSeries = last14.map((e) => e.customers);
+  const hasRevenueSeries = revenueSeries.filter((v) => v > 0).length >= 2;
+  const hasCustomerSeries = customerSeries.filter((v) => v > 0).length >= 2;
+
   // ── KPI cards config
   type KpiCard = {
     label: string;
+    /** Apple 톤: 숫자 본체 (예: "2,450,000") */
     value: string;
+    /** Apple 톤: 작은 단위/맥락 라벨 (예: "원 · 월간", "개월 남음"). 없으면 value에서 자동 분리 */
+    unit?: string;
     change: number | null;
     changeLabel: string;
     color?: string;
     hint?: string;
+    /** Mercury 톤: hero 카드 차트 위 보조 정보 라인 (예: "잔고 4,850만원 · 월 340만 소진") */
+    extraInfo?: string;
+    /** 인라인 미니 차트 — 실제 데이터 있을 때만 표시 */
+    chart?:
+      | { kind: "line"; series: number[]; color: string }
+      | { kind: "gauge"; currentPct: number; color: string }
+      | { kind: "targetBar"; currentPct: number; targetPct: number; color: string };
   };
+
+  const revColor = weekdayChange !== null && weekdayChange < 0 ? "#ff3b30" : "#34c759";
+  const userColor = userChange !== null && userChange < 0 ? "#ff3b30" : "#34c759";
 
   const kpis: KpiCard[] = isStartup ? [
     {
@@ -606,6 +901,7 @@ export function MorningBriefing() {
       change: weekdayChange !== null ? Math.round(weekdayChange * 10) / 10 : null,
       changeLabel: ko ? "전주 동요일" : "vs last wk",
       hint: !hasData ? (ko ? "매출을 입력하세요" : "Enter revenue") : undefined,
+      chart: hasRevenueSeries ? { kind: "line", series: revenueSeries, color: revColor } : undefined,
     },
     {
       label: ko ? "사용자" : "USERS",
@@ -613,6 +909,7 @@ export function MorningBriefing() {
       change: userChange !== null ? Math.round(userChange * 10) / 10 : null,
       changeLabel: ko ? "전주 동요일" : "vs last wk",
       hint: !hasData ? (ko ? "사용자 수를 입력하세요" : "Enter users") : undefined,
+      chart: hasCustomerSeries ? { kind: "line", series: customerSeries, color: userColor } : undefined,
     },
     {
       label: ko ? "번레이트" : "BURN RATE",
@@ -620,6 +917,10 @@ export function MorningBriefing() {
       change: null,
       changeLabel: ko ? "월 총 비용" : "monthly total",
       hint: !hasCosts ? (ko ? "월 비용을 입력하세요" : "Enter costs") : undefined,
+      // 번레이트 대비 가용 자본 사용량 — 월 소진율 게이지
+      chart: hasCosts && selectedBudget > 0
+        ? { kind: "gauge", currentPct: Math.min(100, (monthlyBurn / selectedBudget) * 100), color: "#ff9f0a" }
+        : undefined,
     },
     {
       label: ko ? "런웨이" : "RUNWAY",
@@ -630,6 +931,20 @@ export function MorningBriefing() {
         ? runway <= 3 ? RED : runway <= 6 ? YELLOW : GREEN
         : undefined,
       hint: !hasCosts || selectedBudget <= 0 ? (ko ? "예산과 비용을 입력하세요" : "Enter budget & costs") : undefined,
+      // Mercury 톤: 잔고 + 월 소진 페이스 (런웨이의 분자·분모를 명시)
+      extraInfo: hasCosts && selectedBudget > 0
+        ? (ko
+            ? `잔고 ${formatWon(selectedBudget, true)} · 월 ${formatWon(monthlyBurn, true)} 소진`
+            : `Cash ${formatWon(selectedBudget, false)} · ${formatWon(monthlyBurn, false)}/mo burn`)
+        : undefined,
+      // 12개월 기준 런웨이 게이지
+      chart: hasCosts && selectedBudget > 0
+        ? {
+            kind: "gauge",
+            currentPct: Math.min(100, (runway / 12) * 100),
+            color: runway <= 3 ? "#ff3b30" : runway <= 6 ? "#ff9f0a" : "#34c759",
+          }
+        : undefined,
     },
   ] : [
     {
@@ -638,6 +953,7 @@ export function MorningBriefing() {
       change: weekdayChange !== null ? Math.round(weekdayChange * 10) / 10 : null,
       changeLabel: ko ? "전주 동요일" : "vs last wk",
       hint: !hasData ? (ko ? "매출을 입력하세요" : "Enter sales") : undefined,
+      chart: hasRevenueSeries ? { kind: "line", series: revenueSeries, color: revColor } : undefined,
     },
     {
       label: ko ? "영업이익률" : "OP. MARGIN",
@@ -648,6 +964,15 @@ export function MorningBriefing() {
         ? trafficLight(100 - operatingMargin, 85, 95)
         : undefined,
       hint: !hasCosts ? (ko ? "월 비용을 입력하세요" : "Enter costs") : undefined,
+      // 목표 10% 대비 현재 OP 마진 target 바
+      chart: hasCosts
+        ? {
+            kind: "targetBar",
+            currentPct: Math.max(0, Math.min(100, operatingMargin * 5)), // 20%=100%
+            targetPct: 50, // 10%=50%
+            color: operatingMargin >= 10 ? "#34c759" : operatingMargin >= 5 ? "#ff9f0a" : "#ff3b30",
+          }
+        : undefined,
     },
     {
       label: ko ? "원가율" : "PRIME COST",
@@ -656,6 +981,15 @@ export function MorningBriefing() {
       changeLabel: "",
       color: hasCosts ? trafficLight(primeCostPct, 60, 65) : undefined,
       hint: !hasCosts ? (ko ? "월 비용을 입력하세요" : "Enter costs") : undefined,
+      // 목표 60% 대비 원가율 (낮을수록 좋음)
+      chart: hasCosts
+        ? {
+            kind: "targetBar",
+            currentPct: Math.max(0, Math.min(100, primeCostPct)),
+            targetPct: 60,
+            color: primeCostPct <= 60 ? "#34c759" : primeCostPct <= 65 ? "#ff9f0a" : "#ff3b30",
+          }
+        : undefined,
     },
     {
       label: ko ? "카드 정산 예정" : "EST. DEPOSIT",
@@ -663,13 +997,18 @@ export function MorningBriefing() {
       change: null,
       changeLabel: ko ? "D+2 예상" : "D+2 est.",
       hint: !hasData ? (ko ? "매출을 입력하세요" : "Enter sales") : undefined,
+      chart: hasRevenueSeries ? { kind: "line", series: revenueSeries.slice(-7), color: "#1d3557" } : undefined,
     },
   ];
+
+  // ── 4 균등 KPI: 라벨 + 상태 dot + 숫자(+단위) + sparkline + 변화 chip (참조 디자인)
+  // 스타트업: 매출/MRR · 사용자 · 번레이트 · 런웨이
+  // 오프라인: 어제 매출 · 영업이익률 · 원가율 · 카드 정산
 
   // ── 오늘 매출 미입력 여부 확인
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayEntry = entries.find(e => e.date === todayStr);
-  const needsInput = !todayEntry;
+  // needsInput 변수는 헤더 chip 제거로 미사용 → 제거됨
 
   // ── Empty state → Apple-grade 온보딩 카드
   if (!hasData) {
@@ -751,85 +1090,11 @@ export function MorningBriefing() {
 
   return (
     <section style={sectionStyle}>
-      {/* ── 오늘 매출 미입력 시 — Apple-style pill input ── */}
-      {needsInput && (
-        <div style={{
-          borderRadius: "16px", padding: "10px 12px",
-          background: "rgba(255,255,255,0.85)",
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          border: "1px solid rgba(0,0,0,0.05)",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03)",
-          display: "flex", alignItems: "center", gap: "8px",
-        }}>
-          <div style={{
-            width: "28px", height: "28px", borderRadius: "8px",
-            background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)`,
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          }}>
-            <PenLine size={13} color="#fff" strokeWidth={2.2} />
-          </div>
-          <input
-            type="text" inputMode="numeric"
-            placeholder={ko ? (hasSubs ? "매출/MRR" : isStartup ? "매출" : "매출 (만원)") : (hasSubs ? "MRR" : isStartup ? "Revenue" : "Sales")}
-            value={d.dailySalesInput}
-            onChange={(e) => d.setDailySalesInput(e.target.value)}
-            style={{
-              flex: "1 1 90px", padding: "8px 12px", borderRadius: "10px",
-              border: "1.5px solid rgba(0,0,0,0.05)", background: "rgba(0,0,0,0.02)",
-              fontSize: "14px", fontWeight: 650, fontFamily: FONT_STACK,
-              outline: "none", color: "#0f172a",
-              transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
-            }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; e.currentTarget.style.background = "white"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(29,53,87,0.06)"; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.05)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; e.currentTarget.style.boxShadow = "none"; }}
-          />
-          <input
-            type="text" inputMode="numeric"
-            placeholder={ko ? (isStartup ? "사용자" : "고객") : (isStartup ? "Users" : "Cust.")}
-            value={d.dailyCustomersInput}
-            onChange={(e) => d.setDailyCustomersInput(e.target.value)}
-            style={{
-              flex: "0 1 68px", padding: "8px 12px", borderRadius: "10px",
-              border: "1.5px solid rgba(0,0,0,0.05)", background: "rgba(0,0,0,0.02)",
-              fontSize: "14px", fontWeight: 650, fontFamily: FONT_STACK,
-              outline: "none", color: "#0f172a",
-              transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
-            }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = PRIMARY; e.currentTarget.style.background = "white"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(29,53,87,0.06)"; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.05)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; e.currentTarget.style.boxShadow = "none"; }}
-          />
-          <button
-            type="button"
-            onClick={() => d.handleAddDailyEntry()}
-            disabled={!d.dailySalesInput}
-            style={{
-              padding: "8px 18px", borderRadius: "10px",
-              border: "none",
-              background: d.dailySalesInput ? `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)` : "rgba(0,0,0,0.04)",
-              color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.2)",
-              fontSize: "13px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
-              fontFamily: FONT_STACK, whiteSpace: "nowrap" as const,
-              boxShadow: d.dailySalesInput ? "0 2px 8px rgba(29,53,87,0.18)" : "none",
-              transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)",
-            }}
-          >
-            {ko ? "기록" : "Save"}
-          </button>
-        </div>
-      )}
-
-      {/* ── 구독제: 플랜별 가입 기록 (사용자가 구독제 활성화 시만) ── */}
-      {d.usesSubscriptions && (
-        <SubscriptionPlanEntry
-          d={d}
-          ko={ko}
-          fmt={(n: number) => formatWon(n, ko)}
-        />
-      )}
+      {/* 매출 입력 chip 제거됨 — 입력은 ActivitySnapshotCard 의 인라인 폼에서만 처리 */}
 
       {/* ── AI 경영 코칭 — Apple Liquid Glass 스타일 ── */}
       <div style={{
-        borderRadius: "24px", overflow: "hidden",
+        borderRadius: "20px", overflow: "hidden",
         background: "rgba(255,255,255,0.72)",
         backdropFilter: "blur(40px) saturate(180%)",
         WebkitBackdropFilter: "blur(40px) saturate(180%)",
@@ -841,7 +1106,7 @@ export function MorningBriefing() {
           padding: "18px 22px 14px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" as const }}>
             <div style={{
               width: "28px", height: "28px", borderRadius: "8px",
               background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 60%, #a8dadc 100%)`,
@@ -856,6 +1121,69 @@ export function MorningBriefing() {
             }}>
               {ko ? "AI 경영 코칭" : "AI Coaching"}
             </span>
+            {/* 인라인 건강 신호 — 데이터 충분(7일 + 비용)일 때만 등급/점수 노출.
+                미달 시 회색 "준비 중" 으로 부드럽게 표시 (오해 방지). */}
+            {entries.length > 0 && (
+              healthSignalReady ? (
+                <span
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "5px",
+                    padding: "3px 9px", borderRadius: "999px",
+                    background: "rgba(15,23,42,0.04)",
+                    border: "0.5px solid rgba(15,23,42,0.06)",
+                    fontFamily: FONT_STACK,
+                  }}
+                  title={ko ? `사업 건강도 ${Math.round(unified.score)}점` : `Business health ${Math.round(unified.score)}/100`}
+                >
+                  <HealthDot grade={healthGrade} size={6} />
+                  <span style={{
+                    fontSize: "10.5px", fontWeight: 700,
+                    color: healthGradeColor[healthGrade],
+                    letterSpacing: "-0.005em",
+                  }}>
+                    {ko ? healthGradeLabelKo[healthGrade] : healthGradeLabelEn[healthGrade]}
+                  </span>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.45)",
+                    fontVariantNumeric: "tabular-nums" as const,
+                  }}>
+                    {Math.round(unified.score)}점
+                  </span>
+                </span>
+              ) : (
+                <span
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "5px",
+                    padding: "3px 9px", borderRadius: "999px",
+                    background: "rgba(15,23,42,0.03)",
+                    border: "0.5px solid rgba(15,23,42,0.05)",
+                    fontFamily: FONT_STACK,
+                  }}
+                  title={ko
+                    ? `정확한 건강도는 7일 이상 매출 + 월 비용이 모이면 보여드릴게요. (${entries.length}일 / 7일)`
+                    : `Need 7+ days of sales and monthly costs to show health. (${entries.length} / 7 days)`}
+                >
+                  <span style={{
+                    width: "6px", height: "6px", borderRadius: "50%",
+                    background: "rgba(15,23,42,0.2)",
+                    boxShadow: "0 0 4px rgba(15,23,42,0.15)",
+                  }} />
+                  <span style={{
+                    fontSize: "10.5px", fontWeight: 600,
+                    color: "rgba(15,23,42,0.5)",
+                    letterSpacing: "-0.005em",
+                  }}>
+                    {ko ? "분석 준비 중" : "Analyzing"}
+                  </span>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.35)",
+                    fontVariantNumeric: "tabular-nums" as const,
+                  }}>
+                    {entries.length}/7일
+                  </span>
+                </span>
+              )
+            )}
           </div>
           <div style={{
             fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.3)",
@@ -865,6 +1193,70 @@ export function MorningBriefing() {
           </div>
         </div>
 
+        {/* ── 위험 신호 영역 — AI 코칭 카드 안에 시각적으로 강하게 통합 ──
+            기존 별도 HealthBadge 대신 본 카드 내부에서 큰 컬러 박스로 노출.
+            데이터 충분 + warning/critical 영역 OR 데이터 부족 + 명백한 사실 신호. */}
+        {riskSignals.length > 0 && (
+          <div style={{ padding: "0 22px 14px", display: "grid", gap: "8px" }}>
+            {riskSignals.map((s, i) => {
+              const c = HEALTH_COLORS[s.grade];
+              return (
+                <div key={i} style={{
+                  position: "relative",
+                  borderRadius: "14px",
+                  padding: "13px 15px 13px 16px",
+                  background: c.bg,
+                  border: `0.5px solid ${c.border}`,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "11px",
+                  fontFamily: FONT_STACK,
+                }}>
+                  {/* 좌측 dot — glow 펄스 */}
+                  <span style={{
+                    width: "9px", height: "9px", borderRadius: "50%",
+                    background: c.dot,
+                    boxShadow: `0 0 8px ${c.glow}, inset 0 0.5px 0 rgba(255,255,255,0.4)`,
+                    flexShrink: 0,
+                    marginTop: "5px",
+                  }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      display: "flex", alignItems: "baseline", gap: "8px",
+                      marginBottom: "3px",
+                    }}>
+                      <span style={{
+                        fontSize: "13px", fontWeight: 700,
+                        color: c.text,
+                        letterSpacing: "-0.012em",
+                      }}>
+                        {s.title}
+                      </span>
+                      <span style={{
+                        fontSize: "10px", fontWeight: 700,
+                        color: c.text,
+                        opacity: 0.7,
+                        letterSpacing: "0.02em",
+                        textTransform: "uppercase" as const,
+                      }}>
+                        {ko ? healthGradeLabelKo[s.grade] : healthGradeLabelEn[s.grade]}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: "12.5px", fontWeight: 500,
+                      color: "rgba(15,23,42,0.7)",
+                      lineHeight: 1.5,
+                      letterSpacing: "-0.005em",
+                    }}>
+                      {s.message}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* AI 브리핑 메시지 */}
         <div style={{ padding: "0 22px 16px" }}>
           <p style={{
@@ -872,29 +1264,82 @@ export function MorningBriefing() {
             lineHeight: 1.65, color: "rgba(15,23,42,0.75)",
             fontFamily: FONT_STACK, letterSpacing: "-0.01em",
           }}>{insightText}</p>
+          {/* AI insight 가 K-히트 사례를 인용했을 때 — [사례:XX] 배지 노출 */}
+          {d.aiActions?.insightReferencedCase && (
+            <div style={{ marginTop: "8px" }}>
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "3px 9px",
+                borderRadius: "999px",
+                background: "rgba(99,102,241,0.07)",
+                border: "0.5px solid rgba(99,102,241,0.16)",
+                fontSize: "10.5px",
+                fontWeight: 650,
+                color: "#4f46e5",
+                fontFamily: FONT_STACK,
+                letterSpacing: "-0.01em",
+              }}>
+                <span style={{ opacity: 0.7, fontSize: "10px" }}>{ko ? "사례" : "Case"}</span>
+                <span>·</span>
+                <span>{d.aiActions.insightReferencedCase.name}</span>
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* AI 코칭 로드 실패 시 간단한 안내 */}
-        {!d.aiActions && !d.aiActionsLoading && (
-          <div style={{ padding: "0 22px 12px" }}>
-            <div style={{
-              padding: "10px 14px", borderRadius: "12px",
-              background: "rgba(245,158,11,0.04)",
-              border: "0.5px solid rgba(245,158,11,0.08)",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>
-                {ko ? "AI 코칭을 불러오지 못했습니다" : "AI coaching unavailable"}
-              </span>
-              <button type="button" onClick={d.fetchAiActions} style={{
-                fontSize: "11px", fontWeight: 620, color: "#007aff",
-                background: "none", border: "none", cursor: "pointer",
+        {/* AI 코칭 로드 실패/skip 시 — 이유에 따라 다른 메시지 */}
+        {!d.aiActions && !d.aiActionsLoading && (() => {
+          const reason = d.aiActionsSkipReason;
+          // 매출 미기록 2일 이상 — Hero가 이미 "매출 기록" 안내 중이므로 여기선 숨김 (중복 방지)
+          if (reason === "stale-data") return null;
+          // 미런칭 — 정상 상태, 메시지 불필요
+          if (reason === "not-launched") return null;
+          // 세션 없음 — 로그인 필요
+          if (reason === "no-session") {
+            return (
+              <div style={{ padding: "0 22px 12px" }}>
+                <div style={{
+                  padding: "10px 14px", borderRadius: "12px",
+                  background: "rgba(245,158,11,0.04)",
+                  border: "0.5px solid rgba(245,158,11,0.08)",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                }}>
+                  <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)" }}>
+                    {ko ? "로그인 상태를 확인해주세요" : "Please sign in to enable AI coaching"}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+          // error 또는 reason=null (아직 시도 전) — 에러 메시지 + 재시도 버튼
+          const errMsg = d.aiActionsError;
+          return (
+            <div style={{ padding: "0 22px 12px" }}>
+              <div style={{
+                padding: "10px 14px", borderRadius: "12px",
+                background: "rgba(245,158,11,0.04)",
+                border: "0.5px solid rgba(245,158,11,0.08)",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                gap: "8px",
               }}>
-                {ko ? "다시 시도" : "Retry"}
-              </button>
+                <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                  {errMsg
+                    ? (ko ? `AI 코칭 불러오기 실패 — ${errMsg}` : `AI coaching failed — ${errMsg}`)
+                    : (ko ? "AI 코칭을 불러오지 못했습니다" : "AI coaching unavailable")}
+                </span>
+                <button type="button" onClick={d.fetchAiActions} style={{
+                  fontSize: "11px", fontWeight: 620, color: "#007aff",
+                  background: "none", border: "none", cursor: "pointer",
+                  flexShrink: 0,
+                }}>
+                  {ko ? "다시 시도" : "Retry"}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* 긴급 경고 (있을 때만) */}
         {(() => {
@@ -920,6 +1365,22 @@ export function MorningBriefing() {
                     <div>
                       <span style={{ fontSize: "13.5px", fontWeight: 650, color: "#0f172a", letterSpacing: "-0.01em" }}>{c.title}</span>
                       <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginLeft: "6px" }}>{c.impact}</span>
+                      {c.referencedCase && (
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: "3px",
+                          marginLeft: "8px",
+                          padding: "1px 7px", borderRadius: "999px",
+                          background: "rgba(255,59,48,0.06)",
+                          border: "0.5px solid rgba(255,59,48,0.16)",
+                          fontSize: "10px", fontWeight: 650, color: "#b91c1c",
+                          letterSpacing: "-0.01em",
+                          verticalAlign: "middle",
+                        }}>
+                          <span style={{ opacity: 0.7 }}>{ko ? "사례" : "Case"}</span>
+                          <span>·</span>
+                          <span>{c.referencedCase.name}</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -974,6 +1435,30 @@ export function MorningBriefing() {
                 }}>
                   {analysis}
                 </div>
+
+                {/* [사례] 배지 — AI 가 K-히트 사례를 인용했을 때만 노출 */}
+                {hero.referencedCase && (
+                  <div style={{ marginBottom: "10px" }}>
+                    <span style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "4px 10px",
+                      borderRadius: "999px",
+                      background: "rgba(99,102,241,0.08)",
+                      border: "0.5px solid rgba(99,102,241,0.18)",
+                      fontSize: "11px",
+                      fontWeight: 650,
+                      color: "#4f46e5",
+                      fontFamily: FONT_STACK,
+                      letterSpacing: "-0.01em",
+                    }}>
+                      <span style={{ opacity: 0.7, fontSize: "10px" }}>{ko ? "사례" : "Case"}</span>
+                      <span>·</span>
+                      <span>{hero.referencedCase.name}</span>
+                    </span>
+                  </div>
+                )}
 
                 {/* Action (무엇) — 보조 텍스트 */}
                 {action && (
@@ -1153,72 +1638,66 @@ export function MorningBriefing() {
         })()}
       </div>
 
-      {/* ── 4 Hero KPI Cards ── */}
-      <div className="morning-kpi-grid" style={gridStyle}>
-        {kpis.map((kpi) => (
-          <div key={kpi.label} style={kpiCardStyle}>
-            <div style={kpiLabelStyle}>{kpi.label}</div>
-            <div
-              className="num-animate"
-              style={{
-                ...kpiValueStyle,
-                color: kpi.color ?? PRIMARY,
-              }}
-            >
-              {kpi.value}
+      {/* ── 4 균등 컴팩트 KPI (참조 디자인: 라벨 + dot + 숫자+단위 + 가로 sparkline + 변화 chip) ── */}
+      {/* hideKpis=true 면 외부 DailyKpiStrip 이 KPI 노출 담당 → 여기서는 숨김 (런웨이 등 중복 방지) */}
+      {!hideKpis && (
+      <div className="morning-kpi-grid" style={kpiCompactGridStyle}>
+        {kpis.map((kpi) => {
+          const dotColor =
+            kpi.color === RED ? "#ff3b30"
+            : kpi.color === YELLOW ? "#ff9f0a"
+            : kpi.color === GREEN ? "#34c759"
+            : null;
+          const { numPart, unitPart } = splitValueAndUnit(kpi.value, kpi.unit);
+          const changeC = kpi.change !== null ? changeColor(kpi.change) : null;
+          const sparklineColor = dotColor ?? (changeC === RED ? "#ff3b30" : changeC === GREEN ? "#34c759" : "#1d3557");
+          return (
+            <div key={kpi.label} style={kpiCompactCardStyle}>
+              {/* 1행: 라벨 + 우상단 상태 dot */}
+              <div style={kpiCompactHeaderStyle}>
+                <span style={kpiCompactLabelStyle}>{kpi.label}</span>
+                {dotColor && (
+                  <span style={{
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: dotColor,
+                    boxShadow: `0 0 0 3px ${dotColor}1a`,
+                    flexShrink: 0,
+                  }} />
+                )}
+              </div>
+
+              {/* 2행: 숫자+단위 (좌측) · sparkline (우측) 가로 배치 */}
+              <div style={kpiCompactValueRowStyle}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "4px", minWidth: 0 }}>
+                  <span className="num-animate" style={kpiCompactValueStyle}>{numPart}</span>
+                  {unitPart && <span style={kpiCompactUnitStyle}>{unitPart}</span>}
+                </div>
+                {kpi.chart && kpi.chart.kind === "line" && (
+                  <div style={kpiCompactSparklineSlotStyle}>
+                    <CompactSparkline series={kpi.chart.series} color={sparklineColor} />
+                  </div>
+                )}
+              </div>
+
+              {/* 3행: 변화 chip 또는 보조 정보 */}
+              {kpi.change !== null ? (
+                <div style={{ ...kpiCompactChangeStyle, color: changeC ?? LABEL_COLOR }}>
+                  {changeArrow(kpi.change)} {Math.abs(kpi.change).toFixed(1)}% <span style={kpiCompactChangeLabelStyle}>{kpi.changeLabel}</span>
+                </div>
+              ) : kpi.extraInfo ? (
+                <div style={kpiCompactExtraInfoStyle}>{kpi.extraInfo}</div>
+              ) : kpi.hint ? (
+                <div style={kpiCompactHintStyle}>{kpi.hint}</div>
+              ) : kpi.changeLabel ? (
+                <div style={kpiCompactChangeLabelStyle}>{kpi.changeLabel}</div>
+              ) : null}
             </div>
-            {kpi.change !== null && (
-              <div
-                style={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: changeColor(kpi.change),
-                  marginTop: "4px",
-                  fontFamily: FONT_STACK,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {changeArrow(kpi.change)}{" "}
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 500,
-                    color: LABEL_COLOR,
-                  }}
-                >
-                  {kpi.changeLabel}
-                </span>
-              </div>
-            )}
-            {kpi.change === null && kpi.changeLabel && !kpi.hint && (
-              <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 500,
-                  color: LABEL_COLOR,
-                  marginTop: "6px",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                {kpi.changeLabel}
-              </div>
-            )}
-            {kpi.hint && (
-              <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  color: "#FF9F0A",
-                  marginTop: "6px",
-                  letterSpacing: "0.01em",
-                }}
-              >
-                {kpi.hint}
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
+      )}
+
+      {/* ── AI 파트너 챗봇은 starter-stage-demo 의 FloatingAIPartner 로 전역 마운트됨 (오른쪽 하단 FAB) ── */}
 
       {/* ── 북극성 지표 카드 ── */}
       {(() => {
@@ -1260,117 +1739,7 @@ export function MorningBriefing() {
         );
       })()}
 
-      {/* ── 7일 매출 미니 차트 ── */}
-      {(() => {
-        const sorted = [...entries]
-          .sort((a, b) => a.date.localeCompare(b.date))
-          .slice(-7);
-        if (sorted.length < 2) return null;
-
-        const maxSales = Math.max(...sorted.map(e => e.sales), 1);
-        const avgSales = sorted.reduce((s, e) => s + e.sales, 0) / sorted.length;
-        const dayLabels = ko
-          ? ["일", "월", "화", "수", "목", "금", "토"]
-          : ["S", "M", "T", "W", "T", "F", "S"];
-
-        return (
-          <div style={{
-            borderRadius: "20px",
-            padding: "18px 20px",
-            background: "rgba(255,255,255,0.82)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(0,0,0,0.05)",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.025)",
-          }}>
-            {/* 헤더 */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <div style={{
-                fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
-                textTransform: "uppercase" as const, color: LABEL_COLOR,
-              }}>
-                {ko ? "최근 7일 매출" : "LAST 7 DAYS"}
-              </div>
-              <div style={{
-                fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.5)",
-              }}>
-                {ko ? `일평균 ${formatWon(avgSales, ko)}` : `Avg ${formatWon(avgSales, ko)}/day`}
-              </div>
-            </div>
-
-            {/* 바 차트 */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${sorted.length}, 1fr)`,
-              gap: "6px",
-              alignItems: "end",
-              height: "160px",
-              position: "relative" as const,
-            }}>
-              {/* 평균선 */}
-              <div style={{
-                position: "absolute" as const,
-                left: 0, right: 0,
-                bottom: `${(avgSales / maxSales) * 100}%`,
-                height: "1px",
-                background: "rgba(15,23,42,0.08)",
-                borderTop: "1px dashed rgba(15,23,42,0.12)",
-                zIndex: 1,
-              }} />
-
-              {sorted.map((entry, i) => {
-                const height = maxSales > 0 ? (entry.sales / maxSales) * 100 : 0;
-                const isToday = entry.date === new Date().toISOString().slice(0, 10);
-                const isYesterday = i === sorted.length - 1 && !isToday;
-                const dayOfWeek = new Date(entry.date).getDay();
-                const barColor = isToday
-                  ? PRIMARY
-                  : entry.sales >= avgSales
-                    ? "rgba(52,199,89,0.65)"
-                    : "rgba(15,23,42,0.12)";
-
-                return (
-                  <div key={entry.date} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                    {/* 매출 라벨 (호버 없이 항상 표시 — 마지막 2개만) */}
-                    {(isToday || isYesterday) && (
-                      <div style={{
-                        fontSize: "10px", fontWeight: 600,
-                        color: isToday ? PRIMARY : "rgba(15,23,42,0.5)",
-                        fontVariantNumeric: "tabular-nums",
-                        whiteSpace: "nowrap" as const,
-                      }}>
-                        {formatWon(entry.sales, ko)}
-                      </div>
-                    )}
-
-                    {/* 바 */}
-                    <div style={{
-                      width: "100%",
-                      maxWidth: "32px",
-                      height: `${Math.max(height, 3)}%`,
-                      borderRadius: "6px 6px 4px 4px",
-                      background: barColor,
-                      transition: "height 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
-                      position: "relative" as const,
-                      ...(isToday ? { boxShadow: `0 2px 8px ${PRIMARY}30` } : {}),
-                    }} />
-
-                    {/* 요일 라벨 */}
-                    <div style={{
-                      fontSize: "10px",
-                      fontWeight: isToday ? 700 : 500,
-                      color: isToday ? PRIMARY : "rgba(15,23,42,0.35)",
-                      lineHeight: 1,
-                    }}>
-                      {dayLabels[dayOfWeek]}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
+      {/* 7일 매출 미니 차트는 ActivitySnapshotCard (Tier 1.1 매출 흐름 카드) 와 중복이므로 제거됨 */}
 
       {/* ── Keyframes + responsive grid ── */}
       <style>{`
@@ -1449,6 +1818,300 @@ const gridStyle: React.CSSProperties = {
   gap: "10px",
 };
 
+// ─── 노스스타화: 듀얼 Hero + Chip Strip 스타일 (Apple 톤) ────────────────────
+
+/** Apple 패턴: "8.8개월" → { numPart: "8.8", unitPart: "개월" }
+ *  "₩2,450,000" 또는 "10만원" 처럼 통화는 그대로 두고 unit 비움
+ *  unit prop이 명시되어 있으면 그대로 사용 */
+function splitValueAndUnit(value: string, explicitUnit?: string): { numPart: string; unitPart: string | null } {
+  if (explicitUnit) return { numPart: value, unitPart: explicitUnit };
+  // "8.8개월", "8.8mo" 같은 패턴
+  const m = value.match(/^([0-9.,+\-−]+)\s*(개월|mo|%|시간|h|일|d|명|건|건수)$/);
+  if (m) return { numPart: m[1], unitPart: m[2] };
+  // 통화·기타는 분리하지 않음
+  return { numPart: value, unitPart: null };
+}
+
+const dualHeroGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "10px",
+  alignItems: "start",  /* 좌우 카드 height 자연 적응 — 빈 공간 제거 */
+};
+
+/* ─── 참조 디자인: 4 균등 컴팩트 KPI 카드 (가로 layout + 인라인 sparkline) ─── */
+const kpiCompactGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: "8px",
+};
+
+const kpiCompactCardStyle: React.CSSProperties = {
+  borderRadius: "14px",
+  padding: "12px 14px 12px",
+  background: "rgba(255,255,255,0.92)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(15,23,42,0.05)",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.02), 0 4px 10px rgba(0,0,0,0.025)",
+  display: "flex",
+  flexDirection: "column",
+  minWidth: 0,
+  gap: "6px",
+};
+
+const kpiCompactHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "6px",
+  minWidth: 0,
+};
+
+const kpiCompactLabelStyle: React.CSSProperties = {
+  fontSize: "10.5px",
+  fontWeight: 650,
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  color: LABEL_COLOR,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const kpiCompactValueRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "8px",
+  minWidth: 0,
+};
+
+const kpiCompactValueStyle: React.CSSProperties = {
+  fontSize: "clamp(20px, 2.2vw, 26px)",
+  fontWeight: 750,
+  letterSpacing: "-0.03em",
+  lineHeight: 1.05,
+  fontVariantNumeric: "tabular-nums",
+  fontFamily: FONT_STACK,
+  color: PRIMARY,
+  whiteSpace: "nowrap",
+};
+
+const kpiCompactUnitStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 600,
+  color: LABEL_COLOR,
+  letterSpacing: "-0.005em",
+  whiteSpace: "nowrap",
+};
+
+const kpiCompactSparklineSlotStyle: React.CSSProperties = {
+  width: "42%",
+  maxWidth: "80px",
+  height: "28px",
+  flexShrink: 0,
+  display: "flex",
+  alignItems: "center",
+};
+
+const kpiCompactChangeStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 650,
+  fontVariantNumeric: "tabular-nums",
+  letterSpacing: "-0.005em",
+  display: "flex",
+  alignItems: "center",
+  gap: "4px",
+  minWidth: 0,
+  overflow: "hidden",
+};
+
+const kpiCompactChangeLabelStyle: React.CSSProperties = {
+  fontSize: "10.5px",
+  fontWeight: 500,
+  color: LABEL_COLOR,
+  letterSpacing: "-0.005em",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const kpiCompactExtraInfoStyle: React.CSSProperties = {
+  fontSize: "10.5px",
+  fontWeight: 500,
+  color: LABEL_COLOR,
+  letterSpacing: "-0.005em",
+  fontVariantNumeric: "tabular-nums",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+
+const kpiCompactHintStyle: React.CSSProperties = {
+  fontSize: "10.5px",
+  fontWeight: 600,
+  color: "#FF9F0A",
+  letterSpacing: "-0.005em",
+};
+
+const heroKpiCardStyle: React.CSSProperties = {
+  borderRadius: "14px",
+  padding: "12px 14px 14px",
+  background: "rgba(255,255,255,0.92)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(15,23,42,0.05)",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.025)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  minWidth: 0,
+  transition: "transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s ease",
+};
+
+const heroKpiHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "8px",
+  marginBottom: "6px",
+};
+
+const heroKpiLabelStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 650,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: LABEL_COLOR,
+  lineHeight: 1,
+};
+
+const heroKpiTrendChipStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 650,
+  padding: "3px 9px",
+  borderRadius: "999px",
+  letterSpacing: "-0.005em",
+  fontVariantNumeric: "tabular-nums",
+  whiteSpace: "nowrap",
+};
+
+const heroKpiStatusPillStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 650,
+  padding: "3px 10px 3px 8px",
+  borderRadius: "999px",
+  letterSpacing: "-0.005em",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  whiteSpace: "nowrap",
+};
+
+const heroKpiValueRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "baseline",
+  gap: "8px",
+  flexWrap: "wrap",
+};
+
+/** Hero number — 압축 후 22-28px clamp, 항상 PRIMARY 톤 */
+const heroKpiValueStyle: React.CSSProperties = {
+  fontSize: "clamp(22px, 2.6vw, 28px)",
+  fontWeight: 720,
+  letterSpacing: "-0.03em",
+  lineHeight: 1.05,
+  fontVariantNumeric: "tabular-nums",
+  fontFamily: FONT_STACK,
+  color: PRIMARY,
+};
+
+/** Unit label — hero 옆 baseline 정렬 */
+const heroKpiUnitStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 600,
+  color: LABEL_COLOR,
+  letterSpacing: "-0.005em",
+};
+
+const heroKpiHintStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 600,
+  color: "#FF9F0A",
+  marginTop: "5px",
+  letterSpacing: "-0.005em",
+};
+
+/** Mercury 톤: hero 숫자 바로 아래 잔고/소진 페이스 같은 분자·분모 정보 */
+const heroKpiExtraInfoStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 500,
+  color: LABEL_COLOR,
+  marginTop: "5px",
+  letterSpacing: "-0.005em",
+  fontVariantNumeric: "tabular-nums",
+};
+
+const heroKpiCaptionStyle: React.CSSProperties = {
+  fontSize: "10.5px",
+  fontWeight: 500,
+  color: LABEL_COLOR,
+  marginTop: "5px",
+  letterSpacing: "-0.005em",
+};
+
+const chipStripStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "6px",
+  marginTop: "6px",
+};
+
+const chipKpiStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "6px 12px",
+  borderRadius: "999px",
+  background: "rgba(15,23,42,0.035)",
+  border: "1px solid rgba(15,23,42,0.04)",
+  flex: "1 1 200px",
+  minWidth: 0,
+};
+
+const chipKpiLabelStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 650,
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  color: LABEL_COLOR,
+  flexShrink: 0,
+};
+
+const chipKpiValueStyle: React.CSSProperties = {
+  fontSize: "14px",
+  fontWeight: 700,
+  color: "#0f172a",
+  fontVariantNumeric: "tabular-nums",
+  letterSpacing: "-0.015em",
+  marginLeft: "auto",
+};
+
+const chipKpiChangeStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 650,
+  fontVariantNumeric: "tabular-nums",
+};
+
+const chipKpiHintStyle: React.CSSProperties = {
+  fontSize: "10.5px",
+  fontWeight: 600,
+  color: "#FF9F0A",
+  marginLeft: "auto",
+  letterSpacing: "-0.005em",
+};
+
 // Responsive: we use a CSS media query via <style> for 2-col mobile,
 // but also set a min-width to ensure graceful degradation.
 // For inline-style only approach, the grid will naturally wrap via
@@ -1465,9 +2128,150 @@ const kpiCardStyle: React.CSSProperties = {
     "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.025)",
   display: "flex",
   flexDirection: "column",
-  alignItems: "flex-start",
+  alignItems: "stretch",
   minWidth: 0,
 };
+
+/* ─── 컴팩트 sparkline (KPI 카드 우측 인라인) — 참조 디자인 톤
+ *  - Catmull-Rom spline → cubic bezier 변환으로 부드러운 곡선
+ *  - 두꺼운 stroke (2.0) + 그라디언트 fill + 끝점 강조 dot (흰 테두리) */
+function CompactSparkline({ series, color }: { series: number[]; color: string }) {
+  const nonZero = series.filter((v) => v > 0);
+  if (nonZero.length < 2) {
+    // 데이터 부족 시 일정한 placeholder — 카드 정렬 유지
+    return (
+      <svg width="100%" height="28" viewBox="0 0 80 28" preserveAspectRatio="none" style={{ display: "block" }}>
+        <line x1="2" y1="24" x2="78" y2="24" stroke="rgba(15,23,42,0.08)" strokeWidth="1" strokeDasharray="2 3" />
+      </svg>
+    );
+  }
+  const max = Math.max(...series, 1);
+  const min = Math.min(...series, 0);
+  const range = max - min || 1;
+  const w = 80, h = 28, pad = 4;
+  const iw = w - pad * 2, ih = h - pad * 2;
+  const step = iw / (series.length - 1);
+  const pts = series.map((v, i) => ({
+    x: pad + i * step,
+    y: pad + ih - ((v - min) / range) * ih,
+  }));
+
+  // Catmull-Rom → Bezier 변환 (부드러운 곡선, overshoot 최소)
+  const smooth = (() => {
+    if (pts.length < 2) return "";
+    let p = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] ?? pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] ?? p2;
+      // tension 0.2 — 참조 디자인처럼 완만
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      p += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return p;
+  })();
+
+  const endPt = pts[pts.length - 1];
+  const fillPath = `${smooth} L ${endPt.x.toFixed(2)} ${(pad + ih).toFixed(2)} L ${pts[0].x.toFixed(2)} ${(pad + ih).toFixed(2)} Z`;
+  const gradId = `cspark-${color.replace("#", "")}-${pts.length}`;
+  return (
+    <svg width="100%" height="28" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={fillPath} fill={`url(#${gradId})`} />
+      <path d={smooth} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      {/* 끝점 강조 — 흰 테두리 후광 + 메인 dot */}
+      <circle cx={endPt.x} cy={endPt.y} r="3.5" fill="#fff" />
+      <circle cx={endPt.x} cy={endPt.y} r="2.6" fill={color} />
+    </svg>
+  );
+}
+
+// ─── KPI 인라인 미니 차트 ───────────────────────────────────────────
+type KpiChart =
+  | { kind: "line"; series: number[]; color: string }
+  | { kind: "gauge"; currentPct: number; color: string }
+  | { kind: "targetBar"; currentPct: number; targetPct: number; color: string };
+
+function KpiMiniChart({ chart }: { chart: KpiChart }) {
+  if (chart.kind === "line") {
+    const nonZero = chart.series.filter((v) => v > 0);
+    if (nonZero.length < 2) return null;
+    const max = Math.max(...chart.series, 1);
+    const min = Math.min(...chart.series, 0);
+    const range = max - min || 1;
+    const w = 100;
+    const h = 26;
+    const pad = 2;
+    const iw = w - pad * 2;
+    const ih = h - pad * 2;
+    const step = iw / (chart.series.length - 1);
+    const points = chart.series.map((v, i) => ({
+      x: pad + i * step,
+      y: pad + ih - ((v - min) / range) * ih,
+    }));
+    const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
+    const fillPath = `${path} L ${points[points.length - 1].x.toFixed(2)} ${(pad + ih).toFixed(2)} L ${points[0].x.toFixed(2)} ${(pad + ih).toFixed(2)} Z`;
+    const gradId = `kpi-spark-${Math.random().toString(36).slice(2, 8)}`;
+    const endPoint = points[points.length - 1];
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} preserveAspectRatio="none" style={{ display: "block", marginTop: 10 }}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={chart.color} stopOpacity="0.22" />
+            <stop offset="100%" stopColor={chart.color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={fillPath} fill={`url(#${gradId})`} />
+        <path d={path} fill="none" stroke={chart.color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={endPoint.x} cy={endPoint.y} r={1.9} fill={chart.color} />
+      </svg>
+    );
+  }
+
+  if (chart.kind === "gauge") {
+    return (
+      <div style={{ marginTop: 12, height: 6, borderRadius: 3, background: "rgba(17,17,17,0.06)", overflow: "hidden" }}>
+        <div style={{
+          width: `${Math.max(4, chart.currentPct)}%`,
+          height: "100%",
+          background: chart.color,
+          borderRadius: 3,
+          transition: "width 0.5s cubic-bezier(0.22,1,0.36,1)",
+        }} />
+      </div>
+    );
+  }
+
+  // targetBar — 현재값 바 + 목표 위치 마커
+  return (
+    <div style={{ marginTop: 12, height: 6, borderRadius: 3, background: "rgba(17,17,17,0.06)", position: "relative" as const, overflow: "hidden" }}>
+      <div style={{
+        width: `${Math.max(4, chart.currentPct)}%`,
+        height: "100%",
+        background: chart.color,
+        borderRadius: 3,
+        transition: "width 0.5s cubic-bezier(0.22,1,0.36,1)",
+      }} />
+      <div style={{
+        position: "absolute" as const,
+        left: `${chart.targetPct}%`,
+        top: -2, bottom: -2,
+        width: "2px",
+        background: "rgba(17,17,17,0.35)",
+        borderRadius: 1,
+      }} />
+    </div>
+  );
+}
 
 const kpiLabelStyle: React.CSSProperties = {
   fontSize: "10px",

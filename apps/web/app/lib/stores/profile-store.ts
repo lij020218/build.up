@@ -5,6 +5,8 @@ import type { PersistedBusinessProfile } from "@build-up/shared";
 type ProfileState = {
   selectedIndustryId: string | undefined;
   selectedIndustryCategoryId: string;
+  /** 세부 컨셉/특화 — sub-industry 안에서 한 번 더 분기 (예: korean-casual → "국밥집") */
+  selectedSpecialtyId: string | undefined;
   selectedBusinessModelId: string | undefined;
   selectedBudget: number | undefined;
   budgetInputText: string;
@@ -25,11 +27,14 @@ type ProfileState = {
   saveStatus: "idle" | "saving" | "saved" | "error";
   businessLaunched: boolean;
   businessLaunchedDate: string | null;
+  /** 스타트업 운영 모드 — 같은 sub-industry 라도 인디/부트스트랩/시드/시리즈A 비용·자금원 다름 */
+  startupOperatingMode: "indie" | "bootstrap" | "seed" | "seriesA";
 };
 
 type ProfileActions = {
   setSelectedIndustryId: (v: string | undefined) => void;
   setSelectedIndustryCategoryId: (v: string) => void;
+  setSelectedSpecialtyId: (v: string | undefined) => void;
   setSelectedBusinessModelId: (v: string | undefined) => void;
   setSelectedBudget: (v: number | undefined) => void;
   setBudgetInputText: (v: string) => void;
@@ -50,12 +55,14 @@ type ProfileActions = {
   setSaveStatus: (v: "idle" | "saving" | "saved" | "error") => void;
   setBusinessLaunched: (v: boolean) => void;
   setBusinessLaunchedDate: (v: string | null) => void;
+  setStartupOperatingMode: (v: "indie" | "bootstrap" | "seed" | "seriesA") => void;
   resetAll: () => void;
 };
 
 const initialState: ProfileState = {
   selectedIndustryId: undefined,
   selectedIndustryCategoryId: "food",
+  selectedSpecialtyId: undefined,
   selectedBusinessModelId: undefined,
   selectedBudget: undefined,
   budgetInputText: "",
@@ -76,6 +83,7 @@ const initialState: ProfileState = {
   saveStatus: "idle",
   businessLaunched: false,
   businessLaunchedDate: null,
+  startupOperatingMode: "bootstrap",
 };
 
 export const useProfileStore = create<ProfileState & ProfileActions>()(
@@ -84,6 +92,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       ...initialState,
       setSelectedIndustryId: (v) => set({ selectedIndustryId: v }),
       setSelectedIndustryCategoryId: (v) => set({ selectedIndustryCategoryId: v }),
+      setSelectedSpecialtyId: (v) => set({ selectedSpecialtyId: v }),
       setSelectedBusinessModelId: (v) => set({ selectedBusinessModelId: v }),
       setSelectedBudget: (v) => set({ selectedBudget: v }),
       setBudgetInputText: (v) => set({ budgetInputText: v }),
@@ -104,6 +113,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       setSaveStatus: (v) => set({ saveStatus: v }),
       setBusinessLaunched: (v) => set({ businessLaunched: v }),
       setBusinessLaunchedDate: (v) => set({ businessLaunchedDate: v }),
+      setStartupOperatingMode: (v) => set({ startupOperatingMode: v }),
       resetAll: () => set(initialState),
     }),
     {
@@ -111,6 +121,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       partialize: (state) => ({
         selectedIndustryId: state.selectedIndustryId,
         selectedIndustryCategoryId: state.selectedIndustryCategoryId,
+        selectedSpecialtyId: state.selectedSpecialtyId,
         selectedBusinessModelId: state.selectedBusinessModelId,
         selectedBudget: state.selectedBudget,
         initialOperatingCapital: state.initialOperatingCapital,
@@ -125,6 +136,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
         usesSubscriptions: state.usesSubscriptions,
         businessLaunched: state.businessLaunched,
         businessLaunchedDate: state.businessLaunchedDate,
+        startupOperatingMode: state.startupOperatingMode,
         selectedInteriorConcept: state.selectedInteriorConcept,
       }),
     },

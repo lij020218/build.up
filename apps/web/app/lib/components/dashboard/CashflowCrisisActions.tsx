@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, ExternalLink, UtensilsCrossed, Ticket, MessageCircle, Landmark, Users, CreditCard, Package } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, Megaphone, Ticket, MessageCircle, Landmark, Users, CreditCard, Package } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { CrisisDetection } from "../../services/cashflow-projection";
 
@@ -42,7 +42,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
   const actions: CrisisAction[] = [
     {
       id: "reduce-delivery-ad",
-      Icon: UtensilsCrossed,
+      Icon: Megaphone,
       iconColor: "#b45309",
       label: {
         ko: "배달앱 광고비 감액",

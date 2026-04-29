@@ -14,11 +14,15 @@ import {
   Bike, Wifi, Camera, Users, Globe,
 } from "lucide-react";
 import { supabase } from "../../../../../lib/supabase";
+import { SUB_INDUSTRY_INTERIOR_DATA } from "./sub-industry-interior-data";
+import { FRANCHISE_INTERIOR_DATA } from "./franchise-interior-data";
+import { getFranchiseBrandById } from "@build-up/shared";
 
 export function ConstructionSetupStage() {
   const d = useDashboardCtx();
   const {
     language, industryCategoryId, selectedIndustryId,
+    startupType, selectedFranchiseBrandId,
     selectedInteriorConcept, setSelectedInteriorConcept,
     contractors, contractorsLoading, contractorsRetryKey, setContractorsRetryKey,
     preferredRegion,
@@ -242,7 +246,18 @@ export function ConstructionSetupStage() {
 
                   const catData = categoryDataMap[industryCategoryId] ?? categoryDataMap["food"];
                   // Supabase 데이터가 있으면 우선 사용, 없으면 하드코딩 폴백
-                  const iconMap: Record<string, LucideIcon> = { Layers, Lightbulb, Factory, Wind, Package, Shield, Droplets, Palette, Monitor, Leaf, Zap, Globe, Star, Home, Heart, Sparkles, PanelLeft, Table2, Box, Frame, Trees: Leaf, Diamond: Gem, GlassWater: Droplets, ScanFace: Scan, Armchair: Home, Footprints: Bike, Maximize: Maximize2, MonitorUp: Monitor, ShieldOff: Shield, Code: Cpu, Eye: Scan, UtensilsCrossed: Coffee, ChefHat: Award, Minimize: Layers, TreePine: Leaf, PaintBucket: Paintbrush, Wine };
+                  const iconMap: Record<string, LucideIcon> = {
+                    Layers, Lightbulb, Factory, Wind, Package, Shield, Droplets, Palette, Monitor, Leaf, Zap,
+                    Globe, Star, Home, Heart, Sparkles, PanelLeft, Table2, Box, Frame, Lock, Plug,
+                    Grid3X3, DoorOpen, Sun, Film, Compass, Beer, Wine, Sprout, Flower2, Crown,
+                    Dumbbell, Waves, BookOpen, Award, Scissors, AlignLeft, Megaphone, Store,
+                    Cpu, RefreshCw, Maximize2, MapPin, Smile, Building2, LayoutGrid, Bike, Wifi, Camera, Users,
+                    Scan, VolumeX, Coffee, Gem, Paintbrush, Thermometer, Flame,
+                    Trees: Leaf, Diamond: Gem, GlassWater: Droplets, ScanFace: Scan, Armchair: Home,
+                    Footprints: Bike, Maximize: Maximize2, MonitorUp: Monitor, ShieldOff: Shield,
+                    Code: Cpu, Eye: Scan, UtensilsCrossed: Coffee, ChefHat: Award, Minimize: Layers,
+                    TreePine: Leaf, PaintBucket: Paintbrush,
+                  };
                   const dbMaterials = interiorGuidesData?.materials?.map((m) => ({
                     icon: iconMap[m.iconName ?? ""] ?? Layers,
                     name: language === "ko" ? m.nameKo : (m.nameEn ?? m.nameKo),
@@ -255,13 +270,179 @@ export function ConstructionSetupStage() {
                     desc: language === "ko" ? c.descriptionKo : (c.descriptionEn ?? c.descriptionKo),
                     tags: c.tags,
                   })) ?? [];
-                  const materials = dbMaterials.length > 0 ? dbMaterials : catData.materials;
-                  const concepts = dbConcepts.length > 0 ? dbConcepts : catData.concepts;
-                  const contractorKeyword = catData.contractorKeyword;
+
+                  // sub-industry 매핑 — Supabase 폴백 시 SUB_INDUSTRY_INTERIOR_DATA 우선 사용.
+                  //  hardcoded category 데이터로 떨어지기 전에 sub-industry 별 정밀 데이터를 먼저 시도.
+                  const subData = selectedIndustryId ? SUB_INDUSTRY_INTERIOR_DATA[selectedIndustryId] : undefined;
+                  const subMaterials: MaterialItem[] = subData
+                    ? subData.materials.map((m) => ({
+                        icon: iconMap[m.iconName] ?? Layers,
+                        name: m.nameKo,
+                        desc: m.descriptionKo,
+                      }))
+                    : [];
+                  const subConcepts: ConceptItem[] = subData
+                    ? subData.concepts.map((c) => ({
+                        id: c.id,
+                        icon: iconMap[c.iconName] ?? Layers,
+                        name: c.nameKo,
+                        desc: c.descriptionKo,
+                        tags: c.tags,
+                      }))
+                    : [];
+
+                  const materials =
+                    dbMaterials.length > 0 ? dbMaterials :
+                    subMaterials.length > 0 ? subMaterials :
+                    catData.materials;
+                  const concepts =
+                    dbConcepts.length > 0 ? dbConcepts :
+                    subConcepts.length > 0 ? subConcepts :
+                    catData.concepts;
+                  const contractorKeyword = subData?.contractorKeyword ?? catData.contractorKeyword;
                   const regionLabel = preferredRegion ?? (language === "ko" ? "선택한 상권" : "your area");
+
+                  // 프랜차이즈 본사 공급 인테리어 데이터 (있으면 우선 노출)
+                  const franchiseData = startupType === "franchise" && selectedFranchiseBrandId
+                    ? FRANCHISE_INTERIOR_DATA[selectedFranchiseBrandId]
+                    : undefined;
 
                   return (
                     <>
+                      {/* ── 프랜차이즈 본사 공급 패키지 (선택 시 우선 노출) ── */}
+                      {franchiseData ? (() => {
+                        const flexLabel = language === "ko"
+                          ? (franchiseData.flexibility === "strict" ? "본사 지정 (자율도 낮음)" : franchiseData.flexibility === "moderate" ? "본사 표준 (일부 자율)" : "본사 가이드 (점주 자율)")
+                          : (franchiseData.flexibility === "strict" ? "HQ-mandated (low flex)" : franchiseData.flexibility === "moderate" ? "HQ standard (partial flex)" : "HQ guideline (owner flex)");
+                        const flexColor = franchiseData.flexibility === "strict" ? "#dc2626" : franchiseData.flexibility === "moderate" ? "#f59e0b" : "#16a34a";
+                        return (
+                          <div style={{ marginBottom: "28px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap" as const, gap: "8px" }}>
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>
+                                <Building2 size={17} strokeWidth={1.8} style={{ color: "#191970" }} />
+                                {language === "ko" ? "본사 공급 패키지" : "HQ-Supplied Package"}
+                              </span>
+                              <span style={{
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                padding: "3px 10px",
+                                borderRadius: "999px",
+                                background: `${flexColor}15`,
+                                color: flexColor,
+                                letterSpacing: "0.02em",
+                              }}>
+                                {flexLabel}
+                              </span>
+                            </div>
+
+                            {/* 본사 공급 자재 / 집기 */}
+                            <div style={{
+                              background: "white",
+                              borderRadius: "20px",
+                              overflow: "hidden",
+                              boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
+                              marginBottom: "12px",
+                            }}>
+                              {franchiseData.hqSuppliedItems.map((item, i) => {
+                                const Icon = iconMap[item.iconName] ?? Layers;
+                                return (
+                                  <div key={item.nameKo}>
+                                    {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", marginLeft: "68px" }} />}
+                                    <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "13px 18px" }}>
+                                      <div style={{
+                                        width: "38px", height: "38px", borderRadius: "10px",
+                                        background: "rgba(25,25,112,0.08)",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        flexShrink: 0, color: "rgb(25,25,112)",
+                                      }}>
+                                        <Icon size={18} strokeWidth={1.5} />
+                                      </div>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: "14px", fontWeight: 590, color: "var(--text)", letterSpacing: "-0.3px", marginBottom: "2px" }}>
+                                          {item.nameKo}
+                                        </div>
+                                        <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.55)", lineHeight: 1.45 }}>
+                                          {item.descriptionKo}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* 표준 인테리어 컨셉 */}
+                            {(() => {
+                              const ConceptIcon = iconMap[franchiseData.standardConcept.iconName] ?? Layers;
+                              return (
+                                <div style={{
+                                  background: "linear-gradient(180deg, rgba(25,25,112,0.04) 0%, rgba(255,255,255,0.96) 100%)",
+                                  border: "1px solid rgba(25,25,112,0.16)",
+                                  borderRadius: "20px",
+                                  padding: "20px 22px",
+                                  marginBottom: "12px",
+                                }}>
+                                  <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                                    <div style={{
+                                      width: "44px", height: "44px", borderRadius: "12px",
+                                      background: "rgba(25,25,112,0.12)",
+                                      display: "flex", alignItems: "center", justifyContent: "center",
+                                      flexShrink: 0, color: "rgb(25,25,112)",
+                                    }}>
+                                      <ConceptIcon size={22} strokeWidth={1.6} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", color: "rgb(25,25,112)", textTransform: "uppercase" as const, marginBottom: "4px" }}>
+                                        {language === "ko" ? "표준 인테리어 컨셉" : "Standard Concept"}
+                                      </div>
+                                      <div style={{ fontSize: "16px", fontWeight: 660, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: "6px" }}>
+                                        {franchiseData.standardConcept.nameKo}
+                                      </div>
+                                      <div style={{ fontSize: "13.5px", lineHeight: 1.55, color: "rgba(0,0,0,0.65)", marginBottom: "8px" }}>
+                                        {franchiseData.standardConcept.descriptionKo}
+                                      </div>
+                                      <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: "rgba(25,25,112,0.85)", fontWeight: 600 }}>
+                                        <span>•</span>
+                                        <span>{language === "ko" ? "시그니처 컬러:" : "Signature:"}</span>
+                                        <span>{franchiseData.standardConcept.signatureColors}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* 추정 비용 + 주의사항 */}
+                            {(franchiseData.estimatedInteriorCostWon || franchiseData.notes.length > 0) && (
+                              <div style={{
+                                background: "white",
+                                borderRadius: "16px",
+                                padding: "16px 20px",
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                                border: "1px solid rgba(0,0,0,0.06)",
+                              }}>
+                                {franchiseData.estimatedInteriorCostWon ? (
+                                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: franchiseData.notes.length > 0 ? "12px" : 0, paddingBottom: franchiseData.notes.length > 0 ? "12px" : 0, borderBottom: franchiseData.notes.length > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
+                                    <span style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.5)", fontWeight: 500 }}>
+                                      {language === "ko" ? "인테리어·집기 추정 비용" : "Estimated interior+FF&E"}
+                                    </span>
+                                    <span style={{ fontSize: "15px", fontWeight: 680, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                                      약 {franchiseData.estimatedInteriorCostWon.toLocaleString()}만원
+                                    </span>
+                                  </div>
+                                ) : null}
+                                {franchiseData.notes.map((note, i) => (
+                                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: i < franchiseData.notes.length - 1 ? "6px" : 0 }}>
+                                    <span style={{ flexShrink: 0, color: "rgb(25,25,112)", fontSize: "12px", marginTop: "2px" }}>▸</span>
+                                    <span style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.6)", lineHeight: 1.55 }}>{note}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })() : null}
+
                       {/* ── 자재 추천 ── */}
                       {(() => {
                         // Apple iOS system color palette — 6색 순환
@@ -275,15 +456,27 @@ export function ConstructionSetupStage() {
                         ];
                         return (
                           <div style={{ marginBottom: "28px" }}>
-                            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
+                            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "8px" }}>
                               <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>
-                                {language === "ko"
-                                  ? (industryCategoryId === "online-digital" || industryCategoryId === "startup-tech" ? "핵심 장비 · 집기" : "핵심 자재 · 집기")
-                                  : "Key Materials & Equipment"}
+                                {language === "ko" ? "마감재 · 설비 · 매장 가구" : "Finishes · Fixtures · Store Furniture"}
                               </span>
                               <span style={{ fontSize: "12px", color: "var(--muted)" }}>
                                 {language === "ko" ? `${materials.length}가지` : `${materials.length} items`}
                               </span>
+                            </div>
+                            {/* ── 단계 분리 안내 (인테리어 vs 공급처·장비) ── */}
+                            <div style={{
+                              fontSize: "12.5px",
+                              color: "rgba(180,100,0,0.85)",
+                              lineHeight: 1.55,
+                              padding: "10px 14px",
+                              borderRadius: "12px",
+                              background: "rgba(255,149,0,0.08)",
+                              marginBottom: "12px",
+                            }}>
+                              {language === "ko"
+                                ? "💡 이 단계는 건물에 부착·고정되는 마감재(타일·페인트), 건축 설비(후드·배관·전기), 매장 가구(카운터·진열대·거울)만 다룹니다. 운영 장비(커피머신·오븐·POS·기계류)는 다음 단계 「공급처 및 장비 확정」에서 결정합니다."
+                                : "💡 This stage covers only finishes (tiles, paint), fixtures (hood, plumbing, electrical), and store furniture (counter, displays, mirrors). Operating equipment (coffee machines, ovens, POS, machinery) is handled in the next stage 'Supply & Equipment'."}
                             </div>
                             {/* 단일 컨테이너 카드 — Apple grouped list 스타일 */}
                             <div style={{
@@ -475,6 +668,76 @@ export function ConstructionSetupStage() {
                       })()}
 
                       {/* ── 인테리어 업체 추천 ── */}
+                      {/* 본사 지정 시공(strict) 프랜차이즈 → 업체 검색 대신 본사 문의 안내 */}
+                      {franchiseData?.flexibility === "strict" ? (() => {
+                        const brand = selectedFranchiseBrandId ? getFranchiseBrandById(selectedFranchiseBrandId) : undefined;
+                        const brandName = brand ? brand.name[language] : (language === "ko" ? "본사" : "the franchise HQ");
+                        return (
+                          <div style={{ marginBottom: "24px" }}>
+                            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "14px" }}>
+                              <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>
+                                {language === "ko" ? "인테리어 업체" : "Interior Contractor"}
+                              </span>
+                              <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+                                {language === "ko" ? "본사 지정" : "HQ-mandated"}
+                              </span>
+                            </div>
+                            <div style={{
+                              background: "linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%)",
+                              border: "1px solid rgba(25,25,112,0.10)",
+                              borderRadius: "20px",
+                              padding: "22px 20px",
+                              boxShadow: "0 2px 16px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.03)",
+                              display: "flex",
+                              gap: "14px",
+                              alignItems: "flex-start",
+                            }}>
+                              <div style={{
+                                width: "40px",
+                                height: "40px",
+                                borderRadius: "12px",
+                                background: "rgba(25,25,112,0.08)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                                color: "#191970",
+                              }}>
+                                <Building2 size={20} strokeWidth={1.8} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", marginBottom: "6px" }}>
+                                  {language === "ko"
+                                    ? `${brandName} 본사가 지정 업체로 시공합니다`
+                                    : `${brandName} HQ uses its mandated contractor`}
+                                </div>
+                                <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55, marginBottom: "10px" }}>
+                                  {language === "ko"
+                                    ? "외부 업체 견적·시공이 불가능합니다. 도면·자재·집기 모두 본사가 일괄 공급하므로, 시공 일정·비용 분담은 본사 가맹 담당자와 직접 협의하세요."
+                                    : "External contractors are not allowed. All drawings, materials and equipment are supplied by HQ. Discuss timing and cost-sharing with your HQ franchise manager."}
+                                </div>
+                                <div style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  fontSize: "12.5px",
+                                  fontWeight: 600,
+                                  padding: "7px 14px",
+                                  borderRadius: "100px",
+                                  background: "rgba(25,25,112,0.08)",
+                                  color: "#191970",
+                                  letterSpacing: "-0.01em",
+                                }}>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 .01h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+                                  </svg>
+                                  {language === "ko" ? "본사 가맹 담당자에게 문의" : "Contact HQ franchise manager"}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })() : (
                       <div style={{ marginBottom: "24px" }}>
                         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "14px" }}>
                           <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>
@@ -689,6 +952,7 @@ export function ConstructionSetupStage() {
                           </span>
                         </div>
                       </div>
+                      )}
                     </>
                   );
 

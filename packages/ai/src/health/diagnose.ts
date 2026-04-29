@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import {
   HEALTH_DIAGNOSIS_SYSTEM_PROMPT,
   buildHealthDiagnosisUserPrompt,
@@ -59,12 +60,16 @@ export async function diagnoseBusinessHealth(
   const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
   const userMessage = buildHealthDiagnosisUserPrompt(context);
 
-  const message = await client.messages.create({
+  const rawMessage = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: HEALTH_DIAGNOSIS_SYSTEM_PROMPT,
+    // ✦ Prompt Caching — 같은 사용자가 시간차 진단 시 절감
+    system: systemWithCache(HEALTH_DIAGNOSIS_SYSTEM_PROMPT),
+    // ✦ Adaptive Thinking — 다지표 종합 진단 (재무·운영·마케팅·리스크 교차 분석)
+    thinking: { type: "enabled", budget_tokens: 2048 },
     messages: [{ role: "user", content: userMessage }],
-  });
+  } as Parameters<typeof client.messages.create>[0]);
+  const message = rawMessage as Anthropic.Messages.Message;
 
   const textBlock = message.content.find((block) => block.type === "text");
   if (!textBlock || textBlock.type !== "text") {

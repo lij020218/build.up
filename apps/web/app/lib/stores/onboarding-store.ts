@@ -9,6 +9,8 @@ type OnboardingState = {
   isResetting: boolean;
   resetProgress: number;
   authLabel: string;
+  /** 회원가입 시 입력한 이름 (auth.users.user_metadata.name) — 인사말·프로필 헤더에 사용 */
+  userName: string | null;
   persistenceLabel: string;
   persistenceReady: boolean;
   authResolved: boolean;
@@ -30,6 +32,7 @@ type OnboardingActions = {
   setIsResetting: (v: boolean) => void;
   setResetProgress: (v: number) => void;
   setAuthLabel: (v: string) => void;
+  setUserName: (v: string | null) => void;
   setPersistenceLabel: (v: string) => void;
   setPersistenceReady: (v: boolean) => void;
   setAuthResolved: (v: boolean) => void;
@@ -51,6 +54,7 @@ const initialState: OnboardingState = {
   isResetting: false,
   resetProgress: 0,
   authLabel: "",
+  userName: null,
   persistenceLabel: "",
   persistenceReady: false,
   authResolved: false,
@@ -72,6 +76,7 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
   setIsResetting: (v) => set({ isResetting: v }),
   setResetProgress: (v) => set({ resetProgress: v }),
   setAuthLabel: (v) => set({ authLabel: v }),
+  setUserName: (v) => set({ userName: v }),
   setPersistenceLabel: (v) => set({ persistenceLabel: v }),
   setPersistenceReady: (v) => set({ persistenceReady: v }),
   setAuthResolved: (v) => set({ authResolved: v }),

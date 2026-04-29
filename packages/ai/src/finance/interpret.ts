@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { FinancialSimulationResult } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiStructuredResponse, AiCallOptions } from "../types/ai";
+import { systemWithCache } from "../utils/client";
 import { FINANCE_SYSTEM_PROMPT, buildFinanceUserPrompt } from "./prompt";
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
@@ -72,7 +73,8 @@ export async function interpretFinancialSimulation(
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    system: FINANCE_SYSTEM_PROMPT,
+    // ✦ Prompt Caching — finance interpretation system prompt
+    system: systemWithCache(FINANCE_SYSTEM_PROMPT),
     messages: [
       { role: "user", content: userMessage }
     ]

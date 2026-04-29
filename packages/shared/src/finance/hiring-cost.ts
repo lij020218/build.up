@@ -147,3 +147,65 @@ export function checkMinimumWage(monthlySalary: number, weeklyHours = 40): {
     shortfall: Math.max(0, minimumMonthly - monthlySalary),
   };
 }
+
+// ─── 팀 단위 월 인건비 집계 (FinancialReviewStage용) ─────────────────────
+
+export type StaffPlan = {
+  /** 정직원 수 */
+  fullTimeCount?: number;
+  /** 알바·파트타임 수 */
+  partTimeCount?: number;
+  /** 정직원 월 기본급 (없으면 최저시급 × 주 40시간 자동 계산) */
+  fullTimeMonthlyBase?: number;
+  /** 알바 시급 (없으면 최저시급) */
+  partTimeHourlyWage?: number;
+  /** 알바 주 평균 근무시간 (기본 20) */
+  partTimeHoursPerWeek?: number;
+};
+
+/** 업종별 기본 인력 계획 (오픈 시점 권장값) */
+export function getDefaultStaffPlan(categoryId: string): StaffPlan {
+  const defaults: Record<string, StaffPlan> = {
+    food:              { fullTimeCount: 1, partTimeCount: 2, partTimeHoursPerWeek: 25 },
+    "cafe-dessert":    { fullTimeCount: 1, partTimeCount: 1, partTimeHoursPerWeek: 25 },
+    retail:            { fullTimeCount: 0, partTimeCount: 1, partTimeHoursPerWeek: 30 },
+    beauty:            { fullTimeCount: 1, partTimeCount: 1, partTimeHoursPerWeek: 20 },
+    pet:               { fullTimeCount: 0, partTimeCount: 1, partTimeHoursPerWeek: 25 },
+    fitness:           { fullTimeCount: 1, partTimeCount: 0 },
+    education:         { fullTimeCount: 1, partTimeCount: 1, partTimeHoursPerWeek: 15 },
+    space:             { fullTimeCount: 0, partTimeCount: 1, partTimeHoursPerWeek: 20 },
+    "online-digital":  { fullTimeCount: 1, partTimeCount: 0 },
+    "startup-tech":    { fullTimeCount: 1, partTimeCount: 0 },
+    "living-service":  { fullTimeCount: 1, partTimeCount: 0 },
+  };
+  return defaults[categoryId] ?? defaults.food;
+}
+
+/**
+ * 팀 단위 월 인건비 (사업주 총 부담 = 기본급 + 주휴 + 4대보험 + 퇴직 적립).
+ * 정직원·알바 섞인 팀을 한 번에 계산해 monthlyCosts.labor 필드에 바로 투입 가능.
+ */
+export function calculateMonthlyTeamLaborCost(plan: StaffPlan): {
+  fullTimeCost: number;
+  partTimeCost: number;
+  total: number;
+} {
+  const fullTimeCount = Math.max(0, plan.fullTimeCount ?? 0);
+  const partTimeCount = Math.max(0, plan.partTimeCount ?? 0);
+
+  const fullTimeBase = plan.fullTimeMonthlyBase ?? hourlyToMonthly(MINIMUM_WAGE_2026, 40);
+  const fullTimeSingle = calculateHiringCost({ monthlySalary: fullTimeBase, weeklyHours: 40 });
+  const fullTimeCost = fullTimeCount * fullTimeSingle.totalEmployerCostMonthly;
+
+  const partTimeHourly = plan.partTimeHourlyWage ?? MINIMUM_WAGE_2026;
+  const partTimeHours = plan.partTimeHoursPerWeek ?? 20;
+  const partTimeMonthly = hourlyToMonthly(partTimeHourly, partTimeHours);
+  const partTimeSingle = calculateHiringCost({ monthlySalary: partTimeMonthly, weeklyHours: partTimeHours });
+  const partTimeCost = partTimeCount * partTimeSingle.totalEmployerCostMonthly;
+
+  return {
+    fullTimeCost,
+    partTimeCost,
+    total: fullTimeCost + partTimeCost,
+  };
+}
