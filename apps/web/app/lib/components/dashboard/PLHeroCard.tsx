@@ -152,27 +152,27 @@ export function PLHeroCard({
 
       {hasData ? (
         <>
-          {/* 3 hero metrics */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1px", background: "rgba(0,0,0,0.04)", borderRadius: "16px", overflow: "hidden", marginTop: "8px" }}>
+          {/* 3 hero metrics — 미드나이트 톤으로 통일 */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1px", background: "rgba(25,25,112,0.08)", borderRadius: "14px", overflow: "hidden", marginTop: "10px", border: "1px solid rgba(25,25,112,0.06)" }}>
             {[
-              { label: ko ? "매출" : "Revenue", raw: totalSales, signed: false, color: "#1d3557", change: pctChange(totalSales, prevMonthSales), projection: undefined as number | undefined },
-              { label: ko ? "비용" : "Costs", raw: totalCosts, signed: false, color: "#86868b", change: pctChange(totalCosts, prevMonthCosts), projection: undefined },
+              { label: ko ? "매출" : "Revenue", raw: totalSales, signed: false, color: "#191970", change: pctChange(totalSales, prevMonthSales), projection: undefined as number | undefined },
+              { label: ko ? "비용" : "Costs", raw: totalCosts, signed: false, color: "rgba(15,23,42,0.7)", change: pctChange(totalCosts, prevMonthCosts), projection: undefined },
               { label: ko ? "순이익" : "Profit", raw: netProfit, signed: true, color: netProfit >= 0 ? "#34c759" : "#ff3b30", change: pctChange(netProfit, prevProfit), projection: hasCosts ? projectedProfit : undefined },
             ].map((m) => (
-              <div key={m.label} style={{ background: "rgba(255,255,255,0.9)", padding: "16px 12px", textAlign: "center" as const }}>
-                <div style={{ fontSize: "10px", fontWeight: 600, color: "#86868b", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>{m.label}</div>
-                <div style={{ fontSize: "20px", fontWeight: 700, color: m.color, letterSpacing: "-0.03em", marginTop: "4px" }}>
+              <div key={m.label} style={{ background: "#ffffff", padding: "16px 12px", textAlign: "center" as const }}>
+                <div style={{ fontSize: "10.5px", fontWeight: 700, color: "#191970", opacity: 0.6, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{m.label}</div>
+                <div style={{ fontSize: "20px", fontWeight: 700, color: m.color, letterSpacing: "-0.03em", marginTop: "4px", fontVariantNumeric: "tabular-nums" as const }}>
                   {m.signed && m.raw >= 0 && "+"}
                   <CountUp to={m.raw} duration={1.0} format={fmt} />
                 </div>
                 {m.change != null && (
-                  <div style={{ fontSize: "11px", fontWeight: 600, color: m.label === (ko ? "비용" : "Costs") ? (m.change <= 0 ? "#177245" : "#b42318") : (m.change >= 0 ? "#177245" : "#b42318"), marginTop: "2px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: m.label === (ko ? "비용" : "Costs") ? (m.change <= 0 ? "#177245" : "#b42318") : (m.change >= 0 ? "#177245" : "#b42318"), marginTop: "3px", letterSpacing: "-0.005em" }}>
                     {m.change >= 0 ? "↑" : "↓"}{Math.abs(m.change)}% {ko ? "전월" : "MoM"}
                   </div>
                 )}
                 {m.projection != null && (
                   <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.45)", marginTop: m.change != null ? "4px" : "6px", letterSpacing: "-0.005em" }}>
-                    {ko ? "월말" : "EoM"} <span style={{ fontWeight: 650, color: m.projection >= 0 ? "#177245" : "#b42318" }}>{m.projection >= 0 ? "+" : ""}{fmt(m.projection)}</span>
+                    {ko ? "월말" : "EoM"} <span style={{ fontWeight: 700, color: m.projection >= 0 ? "#177245" : "#b42318" }}>{m.projection >= 0 ? "+" : ""}{fmt(m.projection)}</span>
                   </div>
                 )}
               </div>
@@ -181,16 +181,17 @@ export function PLHeroCard({
 
           {/* BEP progress */}
           {hasCosts && (
-            <div style={{ marginTop: "12px" }}>
+            <div style={{ marginTop: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <span style={{ fontSize: "11px", color: "#86868b" }}>{ko ? "손익분기 달성" : "Break-even"}</span>
-                <span style={{ fontSize: "11px", fontWeight: 700, color: bepProgress >= 100 ? "#34c759" : "#007aff" }}>
+                <span style={{ fontSize: "11.5px", color: "#191970", opacity: 0.7, fontWeight: 600 }}>{ko ? "손익분기 달성" : "Break-even"}</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: bepProgress >= 100 ? "#34c759" : "#191970", fontVariantNumeric: "tabular-nums" as const }}>
                   <CountUp to={bepProgress} duration={1.0} format={(n) => `${Math.round(n)}%`} />
                 </span>
               </div>
               <AnimatedProgressBar
                 pct={bepProgress}
-                color={bepProgress >= 100 ? "#34c759" : "#007aff"}
+                color={bepProgress >= 100 ? "#34c759" : "#191970"}
+                trackColor="rgba(25,25,112,0.08)"
                 height={6}
                 borderRadius={3}
                 delay={0.4}
@@ -199,17 +200,20 @@ export function PLHeroCard({
             </div>
           )}
 
-          {/* daily BEP real-time tracking
-              - 매출 SSOT 원칙: "오늘 매출 원숫자" 는 ActivitySnapshotCard 가 책임진다.
-              - 여기선 BEP 까지 격차 (gap) 만 보여줘서 같은 숫자가 두 번 나오지 않게.
-              - 미달성: "BEP까지 X만원 남음", 달성: "BEP +Y만원 초과" */}
+          {/* daily BEP real-time tracking */}
           {breakEvenDailySales != null && breakEvenDailySales > 0 && (
-            <div style={{ marginTop: "12px", padding: "10px 12px", borderRadius: "12px", background: todayBepProgress != null && todayBepProgress >= 100 ? "rgba(52,199,89,0.05)" : "rgba(0,0,0,0.02)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <span style={{ fontSize: "11px", fontWeight: 600, color: "#86868b" }}>
+            <div style={{
+              marginTop: "12px",
+              padding: "11px 13px",
+              borderRadius: "12px",
+              background: todayBepProgress != null && todayBepProgress >= 100 ? "rgba(52,199,89,0.05)" : "rgba(25,25,112,0.03)",
+              border: todayBepProgress != null && todayBepProgress >= 100 ? "1px solid rgba(52,199,89,0.16)" : "1px solid rgba(25,25,112,0.06)",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
+                <span style={{ fontSize: "11.5px", fontWeight: 600, color: "#191970", opacity: 0.7 }}>
                   {ko ? "오늘 손익분기" : "Today's BEP"}
                 </span>
-                <span style={{ fontSize: "12px", fontWeight: 700, color: todayBepProgress != null && todayBepProgress >= 100 ? "#34c759" : "#0f172a", fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: todayBepProgress != null && todayBepProgress >= 100 ? "#34c759" : "#0f0f4a", fontVariantNumeric: "tabular-nums" as const }}>
                   {(() => {
                     const gap = (todaySales ?? 0) - breakEvenDailySales;
                     if (gap >= 0) return ko ? `BEP +${fmt(gap)} 초과` : `BEP +${fmt(gap)}`;
@@ -219,14 +223,15 @@ export function PLHeroCard({
               </div>
               <AnimatedProgressBar
                 pct={todayBepProgress ?? 0}
-                color={todayBepProgress != null && todayBepProgress >= 100 ? "#34c759" : "#2563eb"}
+                color={todayBepProgress != null && todayBepProgress >= 100 ? "#34c759" : "#191970"}
+                trackColor="rgba(25,25,112,0.08)"
                 height={6}
                 borderRadius={3}
                 delay={0.5}
                 duration={0.95}
               />
               {daysAboveBreakEven != null && totalDaysRecorded != null && totalDaysRecorded > 0 && (
-                <div style={{ fontSize: "11px", color: "#86868b", marginTop: "6px" }}>
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "7px", fontWeight: 500 }}>
                   {ko
                     ? `이번 달 ${totalDaysRecorded}일 중 ${daysAboveBreakEven}일 달성`
                     : `${daysAboveBreakEven} of ${totalDaysRecorded} days above BEP`}
@@ -235,19 +240,20 @@ export function PLHeroCard({
             </div>
           )}
 
-          {/* ratio bars — 이상치(200% 초과)는 "데이터 확인 필요"로 대체 */}
+          {/* ratio bars */}
           {hasCosts && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "12px" }}>
               {ratios.map((r) => {
                 const isOutlier = r.value > 200 || r.value < 0;
                 return (
-                <div key={r.label} style={{ padding: "8px 10px", background: "rgba(0,0,0,0.02)", borderRadius: "10px" }}>
+                <div key={r.label} style={{ padding: "10px 12px", background: "rgba(25,25,112,0.025)", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.05)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "11px", color: "#86868b" }}>{r.label}</span>
+                    <span style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.6)", fontWeight: 600 }}>{r.label}</span>
                     <span style={{
                       fontSize: "12px", fontWeight: 700,
-                      color: isOutlier ? "#86868b" : hColor(r.h),
-                      fontVariantNumeric: "tabular-nums",
+                      color: isOutlier ? "rgba(15,23,42,0.4)" : hColor(r.h),
+                      fontVariantNumeric: "tabular-nums" as const,
+                      letterSpacing: "-0.005em",
                     }}>
                       {isOutlier ? (ko ? "확인 필요" : "Check data") : `${r.value.toFixed(1)}%`}
                     </span>
@@ -256,7 +262,7 @@ export function PLHeroCard({
                     <AnimatedProgressBar
                       pct={isOutlier ? 0 : Math.min(r.value, 100)}
                       color={hColor(r.h)}
-                      trackColor={`${hColor(r.h)}18`}
+                      trackColor={`${hColor(r.h)}14`}
                       height={3}
                       borderRadius={2}
                       delay={0.55}
@@ -266,11 +272,11 @@ export function PLHeroCard({
                     <div style={{
                       position: "absolute", top: "-2px",
                       left: `${Math.min(r.benchmark, 100)}%`,
-                      width: "1px", height: "7px",
-                      background: "rgba(0,0,0,0.3)",
+                      width: "1.5px", height: "7px",
+                      background: "rgba(25,25,112,0.45)",
                     }} title={`${ko ? "업계 평균" : "Industry avg"} ${r.benchmark}%`} />
                   </div>
-                  <div style={{ fontSize: "9px", color: "rgba(0,0,0,0.3)", marginTop: "3px" }}>
+                  <div style={{ fontSize: "10px", color: "rgba(25,25,112,0.45)", marginTop: "4px", fontWeight: 500 }}>
                     {ko ? "업계" : "avg"} {r.benchmark}%
                   </div>
                 </div>
@@ -281,14 +287,20 @@ export function PLHeroCard({
 
           {/* diagnostics */}
           {diag.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column" as const, gap: "4px", marginTop: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px", marginTop: "14px" }}>
               {diag.map((d, i) => (
                 <div key={i} style={{
-                  fontSize: "12px", lineHeight: 1.4, padding: "8px 10px", borderRadius: "8px",
+                  fontSize: "12.5px", lineHeight: 1.5, padding: "10px 12px", borderRadius: "10px",
                   background: d.ok ? "rgba(52,199,89,0.06)" : "rgba(255,59,48,0.05)",
-                  color: d.ok ? "#248a3d" : "#ff3b30",
+                  color: d.ok ? "#177245" : "#b91c1c",
+                  border: d.ok ? "1px solid rgba(52,199,89,0.18)" : "1px solid rgba(255,59,48,0.18)",
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "6px",
                 }}>
-                  {d.ok ? "✓" : "⚠"} {d.text}
+                  <span style={{ fontSize: "13px", lineHeight: 1.4, flexShrink: 0 }}>{d.ok ? "✓" : "⚠"}</span>
+                  <span>{d.text}</span>
                 </div>
               ))}
             </div>
@@ -305,23 +317,23 @@ export function PLHeroCard({
   );
 }
 
-/* ─── Styles ─── */
+/* ─── Styles — 미드나이트 톤으로 통일 (CashflowHeroCard와 같은 카드 patterns) ─── */
 
 const card: React.CSSProperties = {
   borderRadius: "20px",
-  padding: "20px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.84))",
-  border: "1px solid rgba(17,17,17,0.06)",
-  backdropFilter: "blur(20px)",
-  boxShadow: "0 8px 24px rgba(17,17,17,0.035)",
+  padding: "22px",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   display: "flex",
   flexDirection: "column",
 };
 
 const eyebrow: React.CSSProperties = {
-  fontSize: "10px",
+  fontSize: "11px",
   fontWeight: 700,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "#86868b",
+  color: "#191970",
+  opacity: 0.7,
 };

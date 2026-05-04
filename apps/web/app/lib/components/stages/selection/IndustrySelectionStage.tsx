@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
+import { StageWrapup } from "../shared/StageWrapup";
+import { getSpecialtyOptions } from "./specialty-data";
 import {
   localizeRecommendationItem,
   localizeStarterIndustryCategory,
@@ -176,12 +178,19 @@ export function IndustrySelectionStage() {
     copy,
     selectedIndustryCategoryId, setSelectedIndustryCategoryId,
     selectedIndustryId, setSelectedIndustryId,
+    selectedSpecialtyId, setSelectedSpecialtyId,
     canCompleteIndustryStep, handleIndustryContinue,
     prevTraversedStage, setViewingStageId,
     resetDemo,
   } = d;
   const optionGridRef = useRef<HTMLDivElement>(null);
+  const specialtyRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
+
+  const ko = language === "ko";
+  const specialtyOptions = getSpecialtyOptions(selectedIndustryId);
+  const requiresSpecialty = specialtyOptions.length > 0;
+  const canContinue = !!selectedIndustryId && (!requiresSpecialty || !!selectedSpecialtyId);
 
   return (
     <>
@@ -257,6 +266,116 @@ export function IndustrySelectionStage() {
           })}
       </div>
 
+      {/* ── 세부 specialty 선택 (industry 선택 후 노출) ─────────────────────
+          한식/캐주얼 → 국밥집 vs 한정식 처럼, 같은 industry 안에서 무엇을 할지 명확화.
+          이게 결정돼야 vendor·permit·construction 추천이 정확해짐. */}
+      {requiresSpecialty && (
+        <div ref={specialtyRef} style={{ marginTop: "20px" }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            marginBottom: "12px", paddingLeft: "2px",
+          }}>
+            <span style={{
+              fontSize: "11px", fontWeight: 700, color: "#191970",
+              letterSpacing: "0.06em", textTransform: "uppercase" as const,
+              padding: "3px 9px", borderRadius: "999px",
+              background: "rgba(25,25,112,0.08)",
+            }}>
+              {ko ? "Step 2 — 정확히 무엇을 하나" : "Step 2 — what exactly"}
+            </span>
+            <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)" }}>
+              {ko
+                ? "같은 업종 안에서도 메뉴·고객·운영 모델이 다릅니다. 하나만 선택하세요."
+                : "Same category, very different menus/customers/ops. Pick one."}
+            </span>
+          </div>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: "10px",
+          }}>
+            {specialtyOptions.map((spec) => {
+              const selected = selectedSpecialtyId === spec.id;
+              return (
+                <button
+                  key={spec.id}
+                  type="button"
+                  onClick={() => setSelectedSpecialtyId(spec.id)}
+                  style={{
+                    display: "flex", flexDirection: "column" as const,
+                    alignItems: "flex-start", gap: "5px",
+                    padding: "14px 16px",
+                    borderRadius: "14px",
+                    background: selected
+                      ? "linear-gradient(160deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.02) 100%)"
+                      : "white",
+                    border: selected
+                      ? "1.5px solid rgba(25,25,112,0.30)"
+                      : "1px solid rgba(0,0,0,0.08)",
+                    boxShadow: selected
+                      ? "0 4px 16px rgba(25,25,112,0.12)"
+                      : "0 1px 3px rgba(0,0,0,0.03)",
+                    cursor: "pointer",
+                    textAlign: "left" as const,
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
+                    <span style={{
+                      width: "18px", height: "18px", borderRadius: "50%",
+                      background: selected ? "#191970" : "white",
+                      border: selected ? "none" : "1.5px solid rgba(15,23,42,0.20)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {selected && (
+                        <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "white" }} />
+                      )}
+                    </span>
+                    <span style={{
+                      fontSize: "14.5px", fontWeight: 700,
+                      color: selected ? "#191970" : "#0f172a",
+                      letterSpacing: "-0.015em", lineHeight: 1.35,
+                      flex: 1, minWidth: 0,
+                    }}>
+                      {spec.label}
+                    </span>
+                  </div>
+                  <div style={{
+                    fontSize: "12.5px", color: "rgba(15,23,42,0.62)",
+                    lineHeight: 1.5, paddingLeft: "26px",
+                  }}>
+                    {spec.desc}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <StageWrapup
+        ko={language === "ko"}
+        nextStageLabelKo="창업 유형 선택"
+        nextStageLabelEn="Startup Type"
+        doneItemsKo={[
+          { label: "1. 카테고리 탐색", detail: "외식·카페·소매·뷰티·피트니스·교육·펫·라이프 등 9개 대분류 검토" },
+          { label: "2. 세부 업종 선택", detail: "관심 카테고리 안에서 한 가지 세부 업종 확정 (예: 케어 살롱, 베이커리 스튜디오)" },
+          { label: "3. 추천 데이터 확인", detail: "업종별 평균 창업비·마진·트렌드·진입난이도 검토" },
+          { label: "4. 후속 단계 준비", detail: "업종에 맞는 창업 유형(오프라인·온라인·스타트업)으로 진입 준비" },
+        ]}
+        verifyItemsKo={[
+          "선택 업종이 본인 자본·시간·체력 한계에 맞는지 — 평균 창업비 vs 보유 자본 비교 (창업자금 70% 이하 권장)",
+          "업종 시장 포화도 확인 — 동네 반경 500m 동일 업종 5개 이상이면 차별화 포인트 필수",
+          "업종별 「영업신고 vs 영업허가」 차이 확인 — 식품·미용·의료기기 등은 별도 허가 필수",
+          "필수 자격증·교육 미리 확인 — 식품접객업 위생교육, 미용업 면허, 헬스 트레이너 자격 등",
+          "업종 트렌드 1~2년 지속성 검토 — 단기 유행이면 손익분기 도달 전 침체 리스크",
+          "유사 업종 대비 차별점 1줄로 정리 — 차별점 없으면 가격 경쟁에 휘말림",
+        ]}
+        nextSummaryKo="업종 확정 → 창업 유형(오프라인·온라인·스타트업) 선택 단계로 진입"
+        nextSummaryEn="Industry locked → enter startup type selection"
+      />
+
       <div style={styles.stageFooter}>
         {prevTraversedStage ? (
           <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
@@ -265,20 +384,30 @@ export function IndustrySelectionStage() {
         ) : null}
         <button
           type="button"
-          style={{ ...styles.primaryButton, opacity: canCompleteIndustryStep ? 1 : 0.7 }}
+          style={{ ...styles.primaryButton, opacity: canCompleteIndustryStep && canContinue ? 1 : 0.7 }}
           onClick={() => {
+            // 1차: industry 미선택 → 업종 그리드로 스크롤
             if (!canCompleteIndustryStep) {
               setShakeWarning(true);
               optionGridRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
               setTimeout(() => setShakeWarning(false), 2000);
               return;
             }
+            // 2차: industry 선택했지만 specialty 미선택 → specialty 그리드로 스크롤
+            if (requiresSpecialty && !selectedSpecialtyId) {
+              setShakeWarning(true);
+              specialtyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              setTimeout(() => setShakeWarning(false), 2000);
+              return;
+            }
             handleIndustryContinue();
           }}
         >
-          {canCompleteIndustryStep
-            ? (language === "ko" ? "이 업종으로 다음 단계" : "Use this industry and continue")
-            : (language === "ko" ? "↑ 세부 업종을 선택하세요" : "↑ Select a sub-industry")}
+          {!canCompleteIndustryStep
+            ? (ko ? "↑ 세부 업종을 선택하세요" : "↑ Select a sub-industry")
+            : requiresSpecialty && !selectedSpecialtyId
+              ? (ko ? "↑ 정확히 무엇을 할지 선택하세요" : "↑ Pick what exactly")
+              : (ko ? "이 업종으로 다음 단계" : "Use this industry and continue")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

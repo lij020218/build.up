@@ -1,6 +1,29 @@
 "use client";
 
-import { Lightbulb, ExternalLink, HelpCircle, DollarSign, Trophy } from "lucide-react";
+/**
+ * FundraisingReadinessStage — 런웨이·투자 준비 (Stage 12)
+ *
+ * 2026-04 전면 재설계:
+ *   • 4페이지 페이지네이션 (스크롤 길이 1/4 단축)
+ *   • Page 0: 왜·런웨이 진단 (WHY)
+ *   • Page 1: 부트스트랩 vs 투자 결정 (HOW + PATH)
+ *   • Page 2: 모드별 70+ 검증 프로그램 (PATH·구체)
+ *   • Page 3: 투자자 만나기 + AI 사업계획서 (실행)
+ *
+ * 검증 출처 (2026-04 영어·한국어 양쪽):
+ *   • 18+ months runway 표준 (wearepresta.com 2026 capital efficiency)
+ *   • Net Burn < 2x Net New ARR (seedscope.ai)
+ *   • TIPS 2026: 운영사 추천 + R&D 최대 5억, 10% 환수만
+ *   • 한국 액셀러레이터 (SparkLabs·Primer·Bluepoint·MashupAngels)
+ *   • Default Alive vs Default Dead (Paul Graham, 2026 투자 표준)
+ *   • Solo founder 52% exited without external funding (2026)
+ */
+
+import { useState } from "react";
+import {
+  Lightbulb, ExternalLink, HelpCircle, DollarSign, Trophy,
+  AlertTriangle, Target, Sparkles, FileText, Calculator,
+} from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { supabase } from "../../../../../lib/supabase";
 import {
@@ -9,9 +32,15 @@ import {
   type FundingProgram,
   type OperatingMode,
 } from "@build-up/shared";
-import { StartupKeyActionHero } from "./StartupStageShell";
-
-const MIDNIGHT = "#191970";
+import {
+  MIDNIGHT,
+  MIDNIGHT_SOFT,
+  MIDNIGHT_BORDER,
+  StartupKeyActionHero,
+  StartupPageNav,
+} from "./StartupStageShell";
+import type { LucideIcon } from "lucide-react";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function FundraisingReadinessStage() {
   const d = useDashboardCtx();
@@ -20,13 +49,21 @@ export function FundraisingReadinessStage() {
   const {
     decisions, industryCategoryId, selectedIndustryId, startupType,
     selectedBusinessModelId, selectedBudget, savedFinanceSnapshot,
-    guideSelections, setGuideSelections,
+    guideSelections,
     bpLoading, setBpLoading, bpSections, setBpSections, bpSummary, setBpSummary,
-    bpError, setBpError, bpExpandedIdx, setBpExpandedIdx,
+    bpError, setBpError,
     startupOperatingMode, setStartupOperatingMode,
   } = d;
 
-  // ── 운영 모드 + 클러스터 → 검증된 자금 프로그램 추천 ──
+  // ── 페이지네이션 (4페이지) ──
+  const rawPg = d.guideStepIndex;
+  const pg = (typeof rawPg === "number" && rawPg >= 0 && rawPg <= 3) ? rawPg : 0;
+  const totalPg = 4;
+  const pgLabels = ko
+    ? ["왜·런웨이 진단", "부트스트랩 vs 투자", "추천 프로그램", "AI 사업계획서"]
+    : ["Why & Runway", "Bootstrap vs VC", "Programs", "AI Plan"];
+
+  // ── 모드 + 클러스터 → 검증된 자금 프로그램 ──
   const isDeeptechSub = ["robotics-physical-ai", "biotech-medtech", "semiconductor", "climate-energy", "hardware-iot"]
     .includes(selectedIndustryId ?? "");
   const recommendedPrograms: FundingProgram[] = getProgramsForMode(startupOperatingMode, {
@@ -34,23 +71,11 @@ export function FundraisingReadinessStage() {
     limit: RECOMMENDED_PROGRAM_COUNT_BY_MODE[startupOperatingMode],
   });
 
-  const modeLabels: Record<OperatingMode, { ko: string; en: string; desc: { ko: string; en: string } }> = {
-    indie: { ko: "1인 인디", en: "Solo indie", desc: { ko: "혼자, 인건비 X, 도구·서버만", en: "Solo, no salary, tools only" } },
-    bootstrap: { ko: "부트스트랩", en: "Bootstrapped", desc: { ko: "1-3명, 자비 또는 낮은 인건비", en: "1-3 people, low salary" } },
-    seed: { ko: "시드 단계", en: "Seed-funded", desc: { ko: "3-5명, 표준 인건비 + 시드 자금", en: "3-5 people, market salary" } },
-    seriesA: { ko: "시리즈A 이상", en: "Series A+", desc: { ko: "5-10명, 정규 인건비 + 마케팅", en: "5-10 people, full team" } },
-  };
-
-  const categoryColors: Record<string, string> = {
-    "government-grant": "#059669",
-    "policy-loan": "#0891b2",
-    "matching-fund": "#7c3aed",
-    "vc-investment": "#2563eb",
-    "accelerator": "#ec4899",
-    "crowdfunding": "#f59e0b",
-    "competition": "#dc2626",
-    "facility-support": "#64748b",
-    "deeptech": MIDNIGHT,
+  const modeLabels: Record<OperatingMode, { ko: string; en: string }> = {
+    indie: { ko: "1인 인디", en: "Solo indie" },
+    bootstrap: { ko: "부트스트랩", en: "Bootstrapped" },
+    seed: { ko: "시드 단계", en: "Seed-funded" },
+    seriesA: { ko: "시리즈A 이상", en: "Series A+" },
   };
 
   const categoryLabels: Record<string, { ko: string; en: string }> = {
@@ -65,22 +90,7 @@ export function FundraisingReadinessStage() {
     "deeptech": { ko: "딥테크 특화", en: "Deeptech" },
   };
 
-  /* ── TIPS/정부지원 안내 ── */
-  const progCard = (p: { name: string; amount: string; detail: string; color: string; url: string }) => (
-    <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" style={{
-      display: "flex", alignItems: "flex-start", gap: "10px", padding: "12px 14px", borderRadius: "12px",
-      border: `1px solid ${p.color}12`, background: `${p.color}03`, textDecoration: "none", color: "inherit",
-    }}>
-      <div style={{ padding: "3px 8px", borderRadius: "6px", background: `${p.color}0a`, fontSize: "11px", fontWeight: 700, color: p.color, whiteSpace: "nowrap" as const, flexShrink: 0 }}>{p.amount}</div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "1px" }}>{p.name}</div>
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{p.detail}</div>
-      </div>
-      <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    </a>
-  );
-
-  /* ── 사업계획서: decisions에서 복원 ── */
+  // ── 사업계획서: decisions에서 복원 ──
   const savedBp = (decisions["fundraising-readiness"] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
   const hasSavedBp = !!(savedBp?.bpSections);
   if (hasSavedBp && !bpSections && !bpLoading) {
@@ -88,7 +98,7 @@ export function FundraisingReadinessStage() {
     setBpSummary((savedBp.bpSummary as string) ?? null);
   }
 
-  /* ── 사업계획서 생성 ── */
+  // ── 사업계획서 생성 ──
   const generatePlanFR = async () => {
     setBpLoading(true);
     setBpError(null);
@@ -119,10 +129,7 @@ export function FundraisingReadinessStage() {
       if (!session?.access_token) throw new Error(ko ? "로그인이 필요합니다" : "Login required");
       const res = await fetch("/api/ai/business-plan/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify(body),
       });
       if (!res.ok) {
@@ -133,7 +140,6 @@ export function FundraisingReadinessStage() {
       if (data.error) throw new Error(data.error);
       setBpSections(data.sections);
       setBpSummary(data.summary);
-      // decisions에 저장 → autosave → Supabase
       const prev = decisions["fundraising-readiness"] ?? { stageId: "fundraising-readiness" };
       const prevInputs = (prev as Record<string, unknown>).inputs as Record<string, unknown> ?? {};
       d.setDecisions({
@@ -151,342 +157,522 @@ export function FundraisingReadinessStage() {
   };
 
   return (
-    <>
-      {/* ── Block 1: TIPS/정부지원 안내 ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-        {/* KEY ACTION 미드나이트 hero */}
-        <StartupKeyActionHero
-          eyebrow="KEY ACTION"
-          title={ko ? "투자가 정말 필요한가? 아니면 매출로 충분한가?" : "Do you really need investment, or is revenue enough?"}
-          subtitle={
-            ko
-              ? "2026년 솔로 파운더의 52%가 외부 투자 없이 엑싯했습니다. 투자는 성장 가속 도구이지 생존 필수가 아닐 수 있습니다. 두 갈래(부트스트랩 / 투자) 모두 검증하고 결정하세요."
-              : "52% of solo founders exited without external funding in 2026. Investment accelerates growth — it's not always survival. Evaluate both paths (bootstrap / fundraise) before deciding."
-          }
-          miniCards={[
-            { icon: HelpCircle, label: ko ? "PATH A" : "PATH A", detail: ko ? "부트스트랩" : "Bootstrap" },
-            { icon: DollarSign, label: ko ? "PATH B" : "PATH B", detail: ko ? "정부지원/VC" : "Grant/VC" },
-            { icon: Trophy, label: ko ? "70+ 프로그램" : "70+ progs", detail: ko ? "맞춤 추천" : "Tailored" },
-          ]}
-        />
+    <div className="bento-fade-in" style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      <StartupKeyActionHero
+        eyebrow="KEY ACTION"
+        title={ko ? "투자가 정말 필요한가? 런웨이 18개월 + Default Alive 가 표준" : "Is investment really needed? 18-month runway + Default Alive"}
+        subtitle={
+          ko ? (
+            <>
+              2026 투자 표준: <strong style={{ fontWeight: 700 }}>런웨이 18+개월</strong>, <strong style={{ fontWeight: 700 }}>Net Burn &lt; 2x Net New ARR</strong>, Default Alive (자체 매출로 생존). 솔로 파운더 52%가 외부 투자 없이 엑싯. 투자는 가속 도구일 뿐 — 매출이 답일 수도 있습니다.
+            </>
+          ) : (
+            <>
+              2026 standard: <strong>18+ months runway</strong>, <strong>Net Burn &lt; 2x Net New ARR</strong>, Default Alive. 52% of solo founders exited without VC.
+            </>
+          )
+        }
+        miniCards={[
+          { icon: HelpCircle, label: ko ? "PATH A" : "PATH A", detail: ko ? "부트스트랩" : "Bootstrap" },
+          { icon: DollarSign, label: ko ? "PATH B" : "PATH B", detail: ko ? "정부지원·VC" : "Grant·VC" },
+          { icon: Trophy, label: ko ? "70+ 프로그램" : "70+ progs", detail: ko ? "모드별 매칭" : "Mode-matched" },
+        ]}
+      />
 
-        {/* PATH A — 투자 없이 시작하기 */}
-        <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
-          <div style={{ padding: "20px 22px 14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(5,150,105,0.08)", fontSize: "11px", fontWeight: 700, color: "#059669" }}>PATH A</div>
-              <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "투자 없이 시작하기" : "Bootstrap — No Investment"}</span>
+      <StartupPageNav
+        page={pg}
+        totalPages={totalPg}
+        labels={pgLabels}
+        onChange={(p) => d.setGuideStepIndex(p)}
+        ko={ko}
+      />
+
+      {/* ═════════════ PAGE 0 — 왜 + 런웨이 자가 진단 ═════════════ */}
+      {pg === 0 && (
+        <>
+          <Section icon={Lightbulb} title={ko ? "왜 런웨이·투자 준비 단계가 중요한가" : "Why this stage matters"}>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
+                {(ko ? [
+                  {
+                    accent: "#dc2626",
+                    title: "Default Dead vs Default Alive — 2026 투자 표준",
+                    body: "Paul Graham 의 분류. \"Default Dead\" = 현재 매출 추세 + 현금으로 죽음 → 외부 투자 없이는 생존 불가. \"Default Alive\" = 자체 매출로 생존 가능 → 투자는 가속 옵션. 2026 투자자는 Default Alive 만 선호 — 폭발적 성장 아니면 Default Dead 거의 펀딩 안 받음.",
+                  },
+                  {
+                    accent: MIDNIGHT,
+                    title: "런웨이 18+개월 = 절대 표준 (12개월은 너무 짧음)",
+                    body: "현재 현금 ÷ 월 burn rate = 런웨이. 12개월 = 시리즈A 라운드 9-12개월 걸리니 자금 끊기 직전에 협상 = 협상력 0. 18개월 = 6개월 안전 마진 + 9-12개월 라운드 + 다음 6개월 가속.",
+                  },
+                  {
+                    accent: "#0561fc",
+                    title: "Net Burn < 2x Net New ARR (capital efficiency)",
+                    body: "월 신규 ARR 1억 추가 시 = 월 burn 2억 이내. 이 비율 못 맞추면 \"비효율적 성장\" 으로 시리즈A·B 거절. 이건 SaaS 표준이며 한국 VC 도 점점 중시.",
+                  },
+                  {
+                    accent: "#059669",
+                    title: "솔로 파운더 52%는 투자 없이 엑싯 (2026)",
+                    body: "Marc Lou·Pieter Levels 처럼 부트스트랩으로 $1M+ ARR 가능. 투자는 강제 아님. \"빠른 성장 시장\" 이거나 \"네트워크 효과\" 가 핵심일 때만 진짜 필요.",
+                  },
+                ] : [
+                  { accent: "#dc2626", title: "Default Dead vs Default Alive", body: "Paul Graham. 2026 VCs only fund Default Alive." },
+                  { accent: MIDNIGHT, title: "18+ month runway = standard", body: "12mo too short — Series A takes 9-12mo." },
+                  { accent: "#0561fc", title: "Net Burn < 2x Net New ARR", body: "Standard SaaS metric." },
+                  { accent: "#059669", title: "52% solo founders exit no VC", body: "Marc Lou, Pieter Levels: $1M+ bootstrapped." },
+                ]).map((item, idx, arr) => (
+                  <div key={idx}>
+                    <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "100px", background: item.accent, marginTop: "8px", flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", lineHeight: 1.4, marginBottom: "4px" }}>{item.title}</div>
+                        <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>{item.body}</div>
+                      </div>
+                    </div>
+                    {idx < arr.length - 1 && <div style={{ height: "1px", background: "rgba(0,0,0,0.05)", marginLeft: "18px", marginTop: "10px" }} />}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7, marginTop: "6px" }}>
-              {ko ? "고객이 돈을 내는 순간부터 당신은 자유입니다. 지분 희석 없이, 이사회 승인 없이, 당신의 속도로 성장할 수 있습니다." : "From the moment customers pay, you're free. No dilution, no board approval, grow at your own pace."}
-            </div>
-          </div>
-          <div style={{ padding: "0 22px 14px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 할 일" : "What to do"}</div>
-            <div style={{ display: "grid", gap: "4px", marginBottom: "12px" }}>
+          </Section>
+
+          {/* 런웨이 자가 진단 */}
+          <Section icon={Calculator} title={ko ? "런웨이 자가 진단 — 3가지 숫자만 알면 됨" : "Runway self-check"}>
+            <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
               {(ko ? [
-                "런웨이 계산: 현재 현금 ÷ 월 비용 = 남은 개월 수",
-                "월 매출 목표 설정: 최소 월 비용을 커버하는 매출 수준",
-                "정부 보조금 · 공모전으로 초기 자금 확보 (아래 참조)",
-                "첫 유료 고객 10명을 목표로 집중 — 이게 가장 강력한 증거",
+                {
+                  label: "1. 현재 통장 잔고", hint: "사업용·개인 합산. 정확한 숫자 (약 X천만 X)",
+                  ex: "예: 5,000만원",
+                },
+                {
+                  label: "2. 월 고정비용 (BURN RATE)", hint: "서버·도구·인건비·생활비 모두 포함. 빠짐없이 계산.",
+                  ex: "예: 600만원/월 (인건비 400 + 도구 100 + 생활비 100)",
+                },
+                {
+                  label: "3. 런웨이 = 잔고 ÷ 월 비용", hint: "예 5,000만 ÷ 600만 = 약 8개월. 6개월 미만 = 즉시 행동 필요. 18개월 미만 = 라운드 시작.",
+                  ex: "예: 5,000 ÷ 600 = 8.3개월 (위험)",
+                },
               ] : [
-                "Calculate runway: current cash ÷ monthly costs = months left",
-                "Set monthly revenue target: minimum to cover costs",
-                "Secure initial funds via government grants/competitions (below)",
-                "Focus on first 10 paying customers — strongest proof",
-              ]).map(t => (
-                <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#059669", flexShrink: 0, marginTop: "7px" }} />
-                  <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
+                { label: "1. Current cash", hint: "Personal + business combined", ex: "e.g., $50K" },
+                { label: "2. Monthly burn", hint: "All-in: salary + tools + living", ex: "e.g., $6K/mo" },
+                { label: "3. Runway = cash ÷ burn", hint: "<6 mo = act now. <18 mo = start round.", ex: "8.3 months (danger)" },
+              ]).map((q, i) => (
+                <div key={i} style={{ padding: "12px 14px", borderRadius: "12px", background: "white", border: `1px solid ${MIDNIGHT_BORDER}` }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, marginBottom: "4px" }}>{q.label}</div>
+                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.55, marginBottom: "4px" }}>{q.hint}</div>
+                  <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.5)", fontFamily: "ui-monospace, SFMono-Regular, monospace" }}>{q.ex}</div>
                 </div>
               ))}
             </div>
-          </div>
-          <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(5,150,105,0.04)", fontSize: "12px", color: "#059669", lineHeight: 1.5, fontWeight: 500, display: "flex", alignItems: "flex-start", gap: "6px" }}>
-              <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
-              <span>{ko ? "이 단계를 완료하면, 다음 단계에서 정부 지원사업(TIPS/창업패키지/바우처)과 정책 대출을 구체적으로 매칭하고 신청합니다." : "After this stage, the next steps will match you with government programs (TIPS/packages/vouchers) and policy loans."}</span>
-            </div>
-          </div>
-        </div>
+          </Section>
 
-        {/* PATH B — 투자 유치 */}
-        <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
-          <div style={{ padding: "20px 22px 14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(37,99,235,0.08)", fontSize: "11px", fontWeight: 700, color: "#2563eb" }}>PATH B</div>
-              <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "투자 유치하기" : "Raise Investment"}</span>
-            </div>
-            <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.65)", lineHeight: 1.7, marginTop: "6px" }}>
-              {ko ? "투자는 시장을 빠르게 선점해야 할 때 필요합니다. \"승자독식\" 시장이거나, 네트워크 효과가 핵심이거나, 기술 개발에 큰 초기 비용이 드는 경우. Peter Thiel: \"CEO 연봉이 15만 달러를 넘으면 정치인이 되기 시작한다.\"" : "Investment is needed when you must capture a market fast — winner-takes-all, network effects, or high R&D costs. Peter Thiel: \"A CEO earning over $150K starts becoming a politician.\""}
-            </div>
-          </div>
-          <div style={{ padding: "0 22px 14px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "투자 유치 전 준비할 것" : "Before fundraising"}</div>
-            <div style={{ display: "grid", gap: "4px", marginBottom: "12px" }}>
+          {/* 모드별 한 줄 권장 */}
+          <Section icon={Target} title={ko ? "본인 모드에 맞는 한 줄 권장" : "By your mode"}>
+            <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
               {(ko ? [
-                "런웨이 모델링: 현재 현금으로 몇 개월 버틸 수 있는지 정확히 계산",
-                "다음 마일스톤 정의: 투자금으로 달성할 구체적 목표 (유저 수, MRR, PMF)",
-                "투자 필요성 판단: 이 돈이 없으면 정말 못 하는 건지? 느려질 뿐인지?",
-                "투자자 스토리라인: 문제 → 솔루션 → 시장 → 견인력 → 팀 → 필요 금액",
-                "법인 설립 완료 (투자자는 법인만 투자합니다)",
+                { mode: "indie", title: "1인 인디", line: "투자 X. 정부 보조금 (예비창업패키지 1억) + 매출이 답. 부트스트랩으로 $1M ARR 가능." },
+                { mode: "bootstrap", title: "부트스트랩", line: "정부지원 (TIPS·R&D) 우선 + 매출. 투자는 PMF 입증 후 시리즈A 만 검토." },
+                { mode: "seed", title: "시드 단계", line: "1-2억 시드 라운드 + TIPS 매칭으로 R&D 5억까지. 18-24개월 안에 시리즈A 마일스톤." },
+                { mode: "seriesA", title: "시리즈A 이상", line: "30-100억 시리즈A. ARR $1M+ + 18+개월 런웨이 + Net Burn < 2x ARR 표준." },
               ] : [
-                "Runway modeling: exactly how many months with current cash",
-                "Define next milestone: specific goal for the funds (users, MRR, PMF)",
-                "Justify need: can't do it at all without money? Or just slower?",
-                "Investor storyline: problem → solution → market → traction → team → ask",
-                "Incorporate (investors only invest in corporations)",
-              ]).map(t => (
-                <div key={t} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "8px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.02)" }}>
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2563eb", flexShrink: 0, marginTop: "7px" }} />
-                  <span style={{ fontSize: "14px", color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>{t}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)", marginBottom: "12px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 피치덱 작성" : "AI — Pitch deck"}</div>
-              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, fontStyle: "italic" }}>
-                {ko ? "\"우리 스타트업 데이터: [제품, 유저 수, MRR, 성장률, 시장 크기, 팀]. 한국 VC가 좋아하는 형식의 10장짜리 피치덱 구조를 만들어줘. 각 슬라이드에 들어갈 핵심 메시지와 데이터 포인트를 제안해줘.\"" : "\"Our data: [product, users, MRR, growth, market, team]. Create a 10-slide pitch deck structure that Korean VCs prefer. Suggest key message and data points for each slide.\""}
-              </div>
-            </div>
-          </div>
-          <div style={{ padding: "0 22px 16px" }}>
-            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(37,99,235,0.04)", fontSize: "12px", color: "#2563eb", lineHeight: 1.5, fontWeight: 500, display: "flex", alignItems: "flex-start", gap: "6px" }}>
-              <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
-              <span>{ko ? "VC 투자 결정 후, 다음 단계에서 비지분 자금(TIPS/R&D/바우처)을 병행 신청하면 런웨이를 더 확보할 수 있습니다." : "After deciding on VC, applying for non-dilutive funds (TIPS/R&D/vouchers) in parallel extends your runway."}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ══════════ 운영 모드별 자금 프로그램 추천 ══════════ */}
-        <div style={{
-          borderRadius: "20px",
-          border: `1px solid ${MIDNIGHT}1A`,
-          background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`,
-          padding: "20px 22px",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexWrap: "wrap" as const, gap: "12px" }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontSize: "11px", fontWeight: 700, color: MIDNIGHT,
-                letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: "4px",
-              }}>
-                {ko ? "내 운영 모드에 맞는 자금" : "Funding for your mode"}
-              </div>
-              <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
-                {ko
-                  ? `${modeLabels[startupOperatingMode].ko} 단계 — 검증된 ${recommendedPrograms.length}개 프로그램`
-                  : `${modeLabels[startupOperatingMode].en} stage — ${recommendedPrograms.length} verified programs`}
-              </div>
-              <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.55)", marginTop: "4px", lineHeight: 1.5 }}>
-                {ko
-                  ? "1인 인디든 시리즈A 팀이든 모두 자금이 필요합니다. 다만 적합한 자금원이 다를 뿐 — 아래는 당신의 단계에 맞는 검증된 프로그램입니다."
-                  : "Every founder needs funding — just different sources by stage. Programs below are verified and matched to your mode."}
-              </div>
-            </div>
-          </div>
-
-          {/* 모드 전환 칩 */}
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, marginBottom: "14px" }}>
-            {(["indie", "bootstrap", "seed", "seriesA"] as OperatingMode[]).map((m) => {
-              const active = startupOperatingMode === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setStartupOperatingMode(m)}
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: "999px",
-                    fontSize: "12px",
-                    fontWeight: active ? 700 : 600,
-                    background: active ? MIDNIGHT : "transparent",
-                    color: active ? "#fff" : "rgba(15,23,42,0.55)",
-                    border: active ? "none" : "1px solid rgba(25,25,112,0.12)",
-                    cursor: "pointer",
-                    boxShadow: active ? "0 2px 6px rgba(25,25,112,0.22)" : "none",
-                  }}
-                >
-                  {modeLabels[m].ko}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* 프로그램 카드 그리드 */}
-          <div style={{ display: "grid", gap: "10px" }}>
-            {recommendedPrograms.map((p) => {
-              const cColor = categoryColors[p.category] ?? MIDNIGHT;
-              const cLabel = categoryLabels[p.category]?.ko ?? p.category;
-              return (
-                <a
-                  key={p.id}
-                  href={p.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "block",
-                    padding: "14px 16px",
-                    borderRadius: "14px",
-                    background: "white",
-                    border: "1px solid rgba(0,0,0,0.06)",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
-                    textDecoration: "none",
-                    color: "inherit",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "6px" }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        display: "inline-block",
-                        padding: "2px 8px",
-                        borderRadius: "6px",
-                        background: `${cColor}12`,
-                        color: cColor,
-                        fontSize: "10.5px",
-                        fontWeight: 700,
-                        letterSpacing: "0.04em",
-                        textTransform: "uppercase" as const,
-                        marginBottom: "5px",
+                { mode: "indie", title: "Solo Indie", line: "No VC. Govt grant + revenue." },
+                { mode: "bootstrap", title: "Bootstrap", line: "Govt + revenue. VC only post-PMF." },
+                { mode: "seed", title: "Seed", line: "1-2억 + TIPS 5억. 18-24mo to Series A." },
+                { mode: "seriesA", title: "Series A+", line: "30-100억. ARR $1M+ + 18mo runway." },
+              ]).map((m) => {
+                const active = startupOperatingMode === m.mode;
+                return (
+                  <div key={m.mode} style={{
+                    padding: "12px 14px", borderRadius: "12px",
+                    background: active ? MIDNIGHT_SOFT : "white",
+                    border: `1px solid ${active ? MIDNIGHT : MIDNIGHT_BORDER}`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
+                      <span style={{
+                        fontSize: "10.5px", fontWeight: 700, padding: "2px 8px", borderRadius: "5px",
+                        background: active ? MIDNIGHT : "rgba(0,0,0,0.05)",
+                        color: active ? "#fff" : "rgba(15,23,42,0.55)",
                       }}>
-                        {cLabel}
-                      </div>
-                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
-                        {p.name}
-                      </div>
-                      <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.45)", marginTop: "2px" }}>
-                        {p.organizer}
-                      </div>
+                        {m.title}
+                      </span>
+                      {active && <span style={{ fontSize: "10.5px", fontWeight: 700, color: MIDNIGHT }}>← 본인 모드</span>}
                     </div>
-                    <div style={{
-                      padding: "4px 10px",
-                      borderRadius: "8px",
-                      background: `${MIDNIGHT}10`,
-                      color: MIDNIGHT,
-                      fontSize: "11.5px",
-                      fontWeight: 700,
-                      whiteSpace: "nowrap" as const,
-                      flexShrink: 0,
-                    }}>
-                      {p.amount}
-                    </div>
+                    <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.6 }}>{m.line}</div>
                   </div>
-                  <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.65)", lineHeight: 1.55, marginTop: "4px" }}>
-                    {p.summary}
+                );
+              })}
+            </div>
+          </Section>
+        </>
+      )}
+
+      {/* ═════════════ PAGE 1 — 부트스트랩 vs 투자 의사결정 ═════════════ */}
+      {pg === 1 && (
+        <>
+          <Section icon={HelpCircle} title={ko ? "PATH A — 투자 없이 시작 (Bootstrap)" : "PATH A — Bootstrap"}>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65, marginBottom: "12px" }}>
+                {ko
+                  ? "고객이 돈을 내는 순간부터 자유. 지분 희석 X, 이사회 승인 X, 본인 속도. Marc Lou ($70K/월), Pieter Levels ($3M+/년) 모두 부트스트랩."
+                  : "Free from day-1 of customer payments. Marc Lou, Pieter Levels both bootstrap."}
+              </div>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>이 경로 선택 조건</div>
+              <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.7, marginBottom: "10px" }}>
+                {(ko ? [
+                  "고객이 돈을 낼 의사 명확 (PMF 입증 또는 빠른 검증 가능)",
+                  "B2B SaaS·정보 상품·콘텐츠 비즈니스 (낮은 초기 비용)",
+                  "5-15명 팀이 적정 규모 (대규모 영업 X)",
+                  "지분 100% 보유 + 본인 결정권 우선",
+                ] : [
+                  "Clear customer WTP",
+                  "Low initial cost biz model",
+                  "5-15 person team OK",
+                  "Want 100% equity + control",
+                ]).map((t, i) => <li key={i}>{t}</li>)}
+              </ul>
+              <div style={{ padding: "10px 12px", borderRadius: "10px", background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT_BORDER}` }}>
+                <div style={{ fontSize: "11.5px", fontWeight: 700, color: MIDNIGHT, marginBottom: "2px" }}>다음 액션</div>
+                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>
+                  ① 정부 보조금·공모전 (Page 2) — 비희석 자금<br />
+                  ② 첫 유료 고객 10명 (Stage 9 launch_gtm 참고)<br />
+                  ③ 월 매출 → 월 비용 커버 시점까지 단축
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          <Section icon={DollarSign} title={ko ? "PATH B — 투자 유치 (Fundraise)" : "PATH B — Raise Investment"}>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65, marginBottom: "12px" }}>
+                {ko
+                  ? "시장을 빠르게 선점해야 할 때. \"승자독식\" 시장, 네트워크 효과 핵심, 큰 R&D 비용. Peter Thiel: \"CEO 연봉 15만 달러 넘으면 정치인이 시작.\""
+                  : "When market needs fast capture — winner-takes-all, network effects, high R&D."}
+              </div>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>투자 유치 전 5가지 준비</div>
+              {(ko ? [
+                { num: 1, title: "런웨이 모델링 (3가지 시나리오)", detail: "Best/Base/Worst. 각 시나리오에서 18+개월 유지하는 burn rate 도출. Excel·Notion·Causal 활용." },
+                { num: 2, title: "다음 마일스톤 정의 + 자금 사용 계획", detail: "투자금으로 달성할 구체적 목표 (ARR $1M, 사용자 10K, PMF Sean Ellis 40%+). 각 단계별 자금 배분 명시." },
+                { num: 3, title: "투자 필요성 정당화 (Default Alive 검증)", detail: "이 돈이 없으면 정말 못 하는 건지? 느려질 뿐인지? VC 가 묻는 가장 첫 질문. 명확한 답이 없으면 투자 안 받는 게 좋음." },
+                { num: 4, title: "투자자 스토리라인 (10장 피치덱)", detail: "문제 → 솔루션 → 시장 (TAM/SAM/SOM) → 견인력 → 비즈니스 모델 → 팀 → 재무 → 자금 사용 → 마일스톤 → Ask." },
+                { num: 5, title: "법인 설립 + Cap table 정리", detail: "투자자는 개인사업자 X 법인만. SAFE·CB 또는 우선주 결정. Cap table 깔끔히 (벤처기업 인증 + 옵션풀 사전 확보)." },
+              ] : [
+                { num: 1, title: "Runway model (3 scenarios)", detail: "Best/Base/Worst. 18+ months in all." },
+                { num: 2, title: "Next milestone + use of funds", detail: "ARR $1M, 10K users, PMF 40%+." },
+                { num: 3, title: "Justify need (Default Alive check)", detail: "Can't do without money? Or just slower?" },
+                { num: 4, title: "Investor storyline (10-slide deck)", detail: "Problem→Solution→Market→Traction→Model→Team→Financial→Use→Milestone→Ask." },
+                { num: 5, title: "Incorporate + clean cap table", detail: "Corp only. SAFE/CB/preferred. Venture cert + option pool." },
+              ]).map((s) => (
+                <div key={s.num} style={{ display: "flex", gap: "12px", padding: "10px 12px", borderRadius: "10px", background: MIDNIGHT_SOFT, marginBottom: "6px" }}>
+                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.num}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>{s.title}</div>
+                    <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55 }}>{s.detail}</div>
                   </div>
-                  <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.5)", lineHeight: 1.5, marginTop: "6px" }}>
-                    {p.description}
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          {/* 의사결정 매트릭스 */}
+          <Section icon={Sparkles} title={ko ? "결정 매트릭스 — 본인 상황 체크" : "Decision matrix"}>
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.2)" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#059669", marginBottom: "6px" }}>Bootstrap 권장 ✓</div>
+                  <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "11.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65 }}>
+                    {(ko ? [
+                      "솔로 또는 1-3명 팀",
+                      "B2B SaaS·정보 상품",
+                      "고객이 즉시 돈 낼 의사 있음",
+                      "한국 시장 위주",
+                      "지분 100% 유지 원함",
+                    ] : ["Solo or 1-3 team", "B2B SaaS", "Immediate WTP", "Korea focus", "Want 100% equity"]).map((t, i) => <li key={i}>{t}</li>)}
+                  </ul>
+                </div>
+                <div style={{ padding: "12px 14px", borderRadius: "10px", background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT}30` }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: MIDNIGHT, marginBottom: "6px" }}>VC 투자 권장 ✓</div>
+                  <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "11.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65 }}>
+                    {(ko ? [
+                      "승자독식·네트워크 효과 시장",
+                      "큰 초기 R&D (딥테크·바이오)",
+                      "글로벌 동시 진출 필요",
+                      "공동창업자 2-5명 + 채용 필요",
+                      "PMF 입증 후 가속이 핵심",
+                    ] : ["Winner-takes-all", "Heavy R&D upfront", "Global simultaneous", "Multiple co-founders + hires", "Post-PMF acceleration"]).map((t, i) => <li key={i}>{t}</li>)}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </Section>
+        </>
+      )}
+
+      {/* ═════════════ PAGE 2 — 모드별 70+ 검증 프로그램 ═════════════ */}
+      {pg === 2 && (
+        <>
+          <Section icon={Trophy} title={ko ? `${modeLabels[startupOperatingMode].ko} — ${recommendedPrograms.length}개 검증 프로그램` : `${modeLabels[startupOperatingMode].en} — ${recommendedPrograms.length} verified programs`}>
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, marginBottom: "12px" }}>
+                {ko
+                  ? "1인 인디든 시리즈A 팀이든 모두 자금이 필요. 적합한 자금원이 다를 뿐 — 본인 모드에 맞는 검증된 프로그램만 표시. 모드 변경하려면 예산 설정 단계로."
+                  : "Every founder needs funding — different sources by stage."}
+              </div>
+
+              {/* 모드 비교 토글 */}
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, marginBottom: "14px" }}>
+                {(["indie", "bootstrap", "seed", "seriesA"] as OperatingMode[]).map((m) => {
+                  const active = startupOperatingMode === m;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setStartupOperatingMode(m)}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "999px",
+                        fontSize: "12px",
+                        fontWeight: active ? 700 : 600,
+                        background: active ? MIDNIGHT : "transparent",
+                        color: active ? "#fff" : "rgba(15,23,42,0.55)",
+                        border: active ? "none" : `1px solid ${MIDNIGHT_BORDER}`,
+                        cursor: "pointer",
+                        boxShadow: active ? "0 2px 6px rgba(25,25,112,0.22)" : "none",
+                      }}
+                    >
+                      {ko ? modeLabels[m].ko : modeLabels[m].en}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 프로그램 카드 그리드 */}
+              <div style={{ display: "grid", gap: "10px" }}>
+                {recommendedPrograms.map((p) => {
+                  const cLabel = ko ? (categoryLabels[p.category]?.ko ?? p.category) : (categoryLabels[p.category]?.en ?? p.category);
+                  return (
+                    <a
+                      key={p.id}
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "block",
+                        padding: "14px 16px",
+                        borderRadius: "12px",
+                        background: "white",
+                        border: `1px solid ${MIDNIGHT_BORDER}`,
+                        textDecoration: "none",
+                        color: "inherit",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "6px" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{
+                            display: "inline-block",
+                            padding: "2px 8px", borderRadius: "5px",
+                            background: MIDNIGHT_SOFT, color: MIDNIGHT,
+                            fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.04em",
+                            marginBottom: "5px",
+                          }}>{cLabel}</span>
+                          <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{p.name}</div>
+                          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>{p.organizer}</div>
+                        </div>
+                        <div style={{
+                          padding: "4px 10px", borderRadius: "8px",
+                          background: MIDNIGHT, color: "#fff",
+                          fontSize: "11.5px", fontWeight: 700, whiteSpace: "nowrap" as const, flexShrink: 0,
+                        }}>{p.amount}</div>
+                      </div>
+                      <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55, marginBottom: "6px" }}>{p.summary}</div>
+                      {p.eligibility && (
+                        <div style={{ padding: "6px 10px", borderRadius: "8px", background: "rgba(0,0,0,0.025)", fontSize: "11.5px", color: "rgba(15,23,42,0.6)", marginBottom: "4px" }}>
+                          <span style={{ fontWeight: 700 }}>{ko ? "자격: " : "Eligibility: "}</span>{p.eligibility}
+                        </div>
+                      )}
+                      {p.deadlineNote && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "5px", fontSize: "11.5px", color: MIDNIGHT, fontWeight: 700 }}>
+                          <AlertTriangle size={11} strokeWidth={2.4} />
+                          {p.deadlineNote}
+                        </div>
+                      )}
+                      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "4px", marginTop: "8px", fontSize: "11px", color: MIDNIGHT, fontWeight: 600 }}>
+                        {ko ? "공식 페이지" : "Official page"}
+                        <ExternalLink size={11} strokeWidth={2.2} />
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+
+              {recommendedPrograms.length === 0 && (
+                <div style={{ padding: "20px", textAlign: "center" as const, fontSize: "12.5px", color: "rgba(15,23,42,0.5)" }}>
+                  {ko ? "이 모드 매칭 프로그램 X — 다른 모드 시도" : "No matches — try another mode"}
+                </div>
+              )}
+            </div>
+          </Section>
+        </>
+      )}
+
+      {/* ═════════════ PAGE 3 — 투자자 만나기 + AI 사업계획서 ═════════════ */}
+      {pg === 3 && (
+        <>
+          <Section icon={Target} title={ko ? "투자자를 만나는 5가지 현실 방법" : "5 realistic ways to meet investors"}>
+            <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+              <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.6, marginBottom: "8px" }}>
+                {ko ? "콜드 이메일 답변율 < 2%. 아래 방법이 10배 효과적." : "Cold email <2% response. These work 10x better."}
+              </div>
+              {(ko ? [
+                { num: 1, title: "TIPS 운영사를 먼저 공략", detail: "TIPS 149개 운영사가 직접 투자. jointips.or.kr에서 우리 분야 운영사 찾고 포트폴리오 확인. 운영사 1억+ 선투자 → 정부 5억 매칭. 가장 현실적인 첫 투자.", url: "https://www.jointips.or.kr" },
+                { num: 2, title: "액셀러레이터 데모데이 지원", detail: "SparkLabs·프라이머·블루포인트·매쉬업엔젤스. 3-6개월 프로그램 후 데모데이에서 VC 앞 피칭. 콜드 대비 10배. 선발율 3-5%, 여러 곳 동시 지원.", url: "https://www.k-startup.go.kr" },
+                { num: 3, title: "스타트업 행사에서 직접", detail: "넥스트라이즈·비론치·스타트업위크엔드·코리아핀테크위크. 30초 엘리베이터 피치 + 명함 대신 1페이지 요약 건네기.", url: "https://nextrise.kr" },
+                { num: 4, title: "따뜻한 소개 만들기", detail: "LinkedIn 에서 타겟 VC 의 포트폴리오 대표 찾고 공통 지인 통해 소개. \"OOO 대표 소개로 연락\" 이 콜드보다 10배. 액셀러레이터·멘토 활용.", url: "https://www.linkedin.com" },
+                { num: 5, title: "피칭 전 4가지 필수 준비", detail: "① 10장 피치덱 ② 재무 모델 (3년·burn·runway) ③ 제품 데모 (작동 MVP) ④ 고객 증거 (유저·매출·후기). 이 4개 없으면 미팅 잡혀도 의미 X.", url: "" },
+              ] : [
+                { num: 1, title: "Target TIPS operators first", detail: "149 operators direct invest.", url: "https://www.jointips.or.kr" },
+                { num: 2, title: "Apply to accelerator demo days", detail: "SparkLabs, Primer, Bluepoint.", url: "https://www.k-startup.go.kr" },
+                { num: 3, title: "Meet at startup events", detail: "NextRise, beLAUNCH.", url: "https://nextrise.kr" },
+                { num: 4, title: "Get warm intros", detail: "10x more effective than cold.", url: "https://www.linkedin.com" },
+                { num: 5, title: "4 things before any meeting", detail: "Deck, model, demo, evidence.", url: "" },
+              ]).map((s) => (
+                <div key={s.num} style={{ display: "flex", gap: "12px", padding: "12px 14px", borderRadius: "12px", background: "white", border: `1px solid ${MIDNIGHT_BORDER}` }}>
+                  <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.num}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", marginBottom: "3px" }}>{s.title}</div>
+                    <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55, marginBottom: s.url ? "6px" : 0 }}>{s.detail}</div>
+                    {s.url && (
+                      <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11.5px", fontWeight: 600, color: MIDNIGHT, textDecoration: "none" }}>
+                        {ko ? "공식 페이지" : "Official"} <ExternalLink size={11} strokeWidth={2.2} />
+                      </a>
+                    )}
                   </div>
-                  {p.eligibility && (
-                    <div style={{
-                      marginTop: "8px",
-                      padding: "6px 10px",
-                      borderRadius: "8px",
-                      background: "rgba(0,0,0,0.03)",
-                      fontSize: "11.5px",
-                      color: "rgba(0,0,0,0.6)",
-                    }}>
-                      <span style={{ fontWeight: 700 }}>{ko ? "자격: " : "Eligibility: "}</span>
-                      {p.eligibility}
-                    </div>
-                  )}
-                  {p.deadlineNote && (
-                    <div style={{ marginTop: "6px", fontSize: "11.5px", color: "#dc2626", fontWeight: 600 }}>
-                      ⏰ {p.deadlineNote}
-                    </div>
-                  )}
-                  <div style={{
-                    marginTop: "10px",
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          {/* AI 사업계획서 생성 */}
+          <Section icon={FileText} title={ko ? "AI 사업계획서 자동 생성 — 정부지원사업용" : "AI Business Plan Generator"}>
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, marginBottom: "12px" }}>
+                {ko
+                  ? "이전 단계 (문제 정의·팀·고객 발견·성장 엔진) 의 입력 + 본인 모드를 기반으로 AI 가 한국 정부 지원사업 (예비창업·초기창업·TIPS) 표준 양식의 사업계획서를 자동 생성. 검토 후 그대로 제출 가능."
+                  : "AI generates Korean government grant-ready business plan from your prior inputs."}
+              </div>
+
+              {!bpSections && !bpLoading && (
+                <button
+                  type="button"
+                  onClick={generatePlanFR}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: "12px",
+                    background: MIDNIGHT,
+                    color: "#fff",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(25,25,112,0.25)",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
-                    fontSize: "11.5px",
-                    color: MIDNIGHT,
-                    fontWeight: 700,
-                  }}>
-                    <span>{ko ? "공식 페이지로" : "Visit official page"}</span>
-                    <ExternalLink size={12} />
-                  </div>
-                </a>
-              );
-            })}
-          </div>
+                    justifyContent: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <Sparkles size={14} strokeWidth={2.4} />
+                  {ko ? "AI 사업계획서 생성하기" : "Generate Business Plan"}
+                </button>
+              )}
 
-          {recommendedPrograms.length === 0 && (
-            <div style={{ padding: "16px", textAlign: "center" as const, fontSize: "13px", color: "rgba(0,0,0,0.5)" }}>
-              {ko ? "이 모드에 매칭된 프로그램이 없습니다 — 다른 모드를 시도해 주세요." : "No programs matched — try another mode."}
-            </div>
-          )}
-        </div>
-
-        {/* 런웨이 계산 도우미 */}
-        <div style={{ borderRadius: "20px", border: "1px solid rgba(15,23,42,0.06)", background: "rgba(255,255,255,0.95)", padding: "20px 22px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(0,0,0,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>{ko ? "런웨이 자가 진단" : "Runway Self-Check"}</div>
-          <div style={{ display: "grid", gap: "6px" }}>
-            {(ko ? [
-              { q: "현재 통장 잔고는?", hint: "정확한 숫자를 알아야 합니다", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
-              { q: "월 고정비용은? (서버+도구+생활비)", hint: "빠짐없이 계산. 생활비 포함", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3" },
-              { q: "남은 개월 수 = 잔고 ÷ 월 비용", hint: "6개월 미만이면 즉시 행동 필요", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-            ] : [
-              { q: "Current bank balance?", hint: "Know the exact number", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
-              { q: "Monthly costs? (server+tools+living)", hint: "Include everything. Living costs too", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3" },
-              { q: "Months left = balance ÷ monthly costs", hint: "Under 6 months = act now", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-            ]).map(item => (
-              <div key={item.q} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "10px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.02)" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(15,23,42,0.3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "1px" }}><path d={item.icon}/></svg>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a", lineHeight: 1.4 }}>{item.q}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{item.hint}</div>
+              {bpLoading && (
+                <div style={{ padding: "30px", textAlign: "center" as const, fontSize: "12.5px", color: MIDNIGHT, background: MIDNIGHT_SOFT, borderRadius: "12px" }}>
+                  {ko ? "AI 가 사업계획서 생성 중... (10-30초)" : "Generating... (10-30s)"}
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              )}
 
-        {/* ── 투자자에게 접근하는 실전 가이드 ── */}
-        <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
-          <div style={{ padding: "20px 22px 14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(124,58,237,0.08)", fontSize: "11px", fontWeight: 700, color: "#7c3aed" }}>{ko ? "실전" : "HOW-TO"}</div>
-              <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "투자자를 만나는 현실적인 방법" : "How to Actually Meet Investors"}</span>
-            </div>
-            <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6, marginTop: "6px" }}>
-              {ko ? "콜드 이메일은 답변율 2% 미만입니다. 아래 방법이 훨씬 효과적입니다." : "Cold emails have <2% response rate. These methods work much better."}
-            </div>
-          </div>
-          <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
-            {(ko ? [
-              { step: "1", title: "TIPS 운영사를 먼저 공략하세요", detail: "TIPS 149개 운영사가 직접 투자합니다. jointips.or.kr에서 우리 분야 운영사를 찾고, 포트폴리오를 확인하세요. 운영사가 선투자 → 정부가 최대 5억 매칭. 이게 가장 현실적인 첫 투자입니다.", color: "#7c3aed" },
-              { step: "2", title: "액셀러레이터 데모데이에 지원하세요", detail: "SparkLabs, 프라이머, 블루포인트, 매쉬업엔젤스 등. 3~6개월 프로그램 후 데모데이에서 VC 앞에 피칭합니다. 투자 확률이 콜드 접근 대비 10배 높습니다. 선발율 3~5%이니 여러 곳 동시 지원하세요.", color: "#2563eb" },
-              { step: "3", title: "스타트업 행사에서 직접 만나세요", detail: "넥스트라이즈, 비론치, 스타트업위크엔드, 코리아핀테크위크 등. 투자자는 행사에서 발굴합니다. 30초 엘리베이터 피치를 준비하고, 명함 대신 1페이지 요약을 건네세요.", color: "#059669" },
-              { step: "4", title: "따뜻한 소개를 만드세요", detail: "LinkedIn에서 타겟 VC의 기존 투자 대표를 찾고, 공통 지인을 통해 소개받으세요. \"OOO 대표님 소개로 연락드립니다\"가 콜드 이메일보다 10배 효과적입니다. 이전 단계의 멘토/액셀러레이터가 소개해줄 수 있습니다.", color: "#d97706" },
-              { step: "5", title: "피칭 전 이것만 준비하세요", detail: "① 10장 피치덱 (문제→솔루션→시장→견인력→팀→자금) ② 재무 모델 (3년 추정, 번레이트, 런웨이) ③ 제품 데모 (실제 동작하는 MVP) ④ 고객 증거 (유저 수, 매출, 후기). 이 4개가 없으면 미팅이 잡혀도 의미가 없습니다.", color: "#dc2626" },
-            ] : [
-              { step: "1", title: "Target TIPS operators first", detail: "149 TIPS operators invest directly. Find ones in your field at jointips.or.kr. They invest first → gov matches up to ₩500M. Most realistic first investment.", color: "#7c3aed" },
-              { step: "2", title: "Apply to accelerator demo days", detail: "SparkLabs, Primer, Bluepoint, MashupAngels. 3-6 month programs ending in demo day with VCs. 10x higher investment chance vs cold outreach. Apply to multiple (3-5% acceptance rate).", color: "#2563eb" },
-              { step: "3", title: "Meet investors at events", detail: "NextRise, beLAUNCH, Startup Weekend, Korea Fintech Week. Prepare a 30-second elevator pitch. Bring a 1-pager instead of business cards.", color: "#059669" },
-              { step: "4", title: "Get warm introductions", detail: "Find target VC's portfolio founders on LinkedIn. Ask mutual connections for intros. \"Introduced by [name]\" is 10x more effective than cold email.", color: "#d97706" },
-              { step: "5", title: "Prepare these before any meeting", detail: "① 10-slide deck ② Financial model (3yr, burn, runway) ③ Product demo (working MVP) ④ Customer evidence (users, revenue, testimonials). Without these 4, even booked meetings are wasted.", color: "#dc2626" },
-            ]).map(s => (
-              <div key={s.step} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "12px 14px", borderRadius: "14px", background: `${s.color}03`, border: `1px solid ${s.color}08` }}>
-                <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: s.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a", marginBottom: "3px" }}>{s.title}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>{s.detail}</div>
+              {bpError && (
+                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.18)", fontSize: "12px", color: "#dc2626", marginTop: "10px" }}>
+                  {ko ? "오류: " : "Error: "}{bpError}
                 </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ padding: "0 22px 16px", display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-            <a href="https://www.jointips.or.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.1)", fontSize: "12px", fontWeight: 600, color: "#7c3aed", textDecoration: "none" }}>TIPS 운영사 목록 ↗</a>
-            <a href="https://www.k-startup.go.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.1)", fontSize: "12px", fontWeight: 600, color: "#2563eb", textDecoration: "none" }}>K-Startup ↗</a>
-            <a href="https://www.thevc.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.5)", textDecoration: "none" }}>THE VC (투자 DB) ↗</a>
-          </div>
-        </div>
+              )}
 
+              {bpSections && bpSections.length > 0 && (
+                <div style={{ marginTop: "14px", display: "flex", flexDirection: "column" as const, gap: "10px" }}>
+                  {bpSummary && (
+                    <div style={{ padding: "12px 14px", borderRadius: "10px", background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT_BORDER}` }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, marginBottom: "4px", letterSpacing: "0.06em" }}>요약</div>
+                      <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.78)", lineHeight: 1.6 }}>{bpSummary}</div>
+                    </div>
+                  )}
+                  {bpSections.map((sec, i) => (
+                    <details key={i} style={{ padding: "12px 14px", borderRadius: "10px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white" }}>
+                      <summary style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, cursor: "pointer", listStyle: "none" }}>
+                        <span style={{ marginRight: "6px" }}>{i + 1}.</span>{sec.title}
+                      </summary>
+                      <div style={{ marginTop: "8px", fontSize: "12.5px", color: "rgba(15,23,42,0.78)", lineHeight: 1.7, whiteSpace: "pre-wrap" as const }}>
+                        {sec.content}
+                      </div>
+                    </details>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={generatePlanFR}
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      background: "white",
+                      color: MIDNIGHT,
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      border: `1px solid ${MIDNIGHT_BORDER}`,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {ko ? "다시 생성하기" : "Regenerate"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </Section>
+        </>
+      )}
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="벤처 인증"
+        doneItemsKo={[
+          { label: "1. 캡테이블·런웨이 정리", detail: "지분 구조 + 옵션 풀 + 18개월 런웨이 + 마일스톤" },
+          { label: "2. 펀딩 라운드 결정", detail: "TIPS·시드·시리즈 A 비교 + 정부지원금 매칭" },
+          { label: "3. 데크·재무 모델", detail: "10~15페이지 데크 + 5년 재무 모델 + 시나리오 3종" },
+          { label: "4. 투자자 매칭·미팅", detail: "VC·엔젤 매칭 + 1차 미팅 + 듀딜 자료 사전 준비" },
+        ]}
+        verifyItemsKo={[
+          "캡테이블 — 공동창업자 vesting 미설정 시 투자 거절 1순위, 1년 cliff + 4년 vesting 표준",
+          "정부지원금 — TIPS·예비창업·초기창업 등 신청 후 입금까지 평균 4~12주, 일정 역산",
+          "런웨이 — 18개월 미만이면 fundraising에 집중, 12개월 미만이면 위기",
+          "데크 — 「Big Idea + Team + Traction」 3축 명확, 모호한 사업 모델은 즉시 거절",
+          "텀시트 — Liquidation Preference·Anti-dilution·Drag-along 등 핵심 조항 변호사 검토",
+          "정관 — 우선주·전환사채·전환우선주 사전 정의, 미정의 시 투자 단계에서 재작성 비용",
+        ]}
+        nextSummaryKo="캡테이블·런웨이·데크·투자자 매칭 완료 → 벤처 인증 단계로 진입"
+      />
+    </div>
+  );
+}
+
+function Section({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "0 4px" }}>
+        <div style={{ width: "30px", height: "30px", borderRadius: "8px", background: MIDNIGHT_SOFT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon size={16} strokeWidth={2.2} color={MIDNIGHT} />
+        </div>
+        <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{title}</div>
       </div>
-
-    </>
+      <div style={{ background: "white", borderRadius: "14px", border: `1px solid ${MIDNIGHT_BORDER}`, overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
+        {children}
+      </div>
+    </div>
   );
 }

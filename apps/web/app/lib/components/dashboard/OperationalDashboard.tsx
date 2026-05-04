@@ -26,6 +26,7 @@ import type { MonthlyCosts } from "@build-up/shared";
 import { AlertStripBanner } from "./AlertStripBanner";
 import { DeepDiveSection } from "./DeepDiveSection";
 import { MorningBriefing } from "./MorningBriefing";
+import { CEOMorningHero } from "./CEOMorningHero";
 import OperationalBootIntro from "./OperationalBootIntro";
 import { DailyKpiStrip, type KpiValue } from "./DailyKpiStrip";
 // HealthBadge 는 MorningBriefing 헤더로 통합됨
@@ -34,6 +35,7 @@ import { MonthlyProgressCard } from "./MonthlyProgressCard";
 import { CostStructureCard } from "./CostStructureCard";
 import { BenchmarkCard } from "./BenchmarkCard";
 import { ActivitySnapshotCard } from "./ActivitySnapshotCard";
+import { UserActivityCard } from "./UserActivityCard";
 import { SurvivalBoardCard } from "./SurvivalBoardCard";
 // StartupMetricsCard 는 CostCompositionDonutCard (모든 업종 보편 비용 구조 도넛) 으로 교체됨
 import { CostCompositionDonutCard } from "./CostCompositionDonutCard";
@@ -41,6 +43,7 @@ import { InventoryOpsCard } from "./InventoryOpsCard";
 import { StaffOpsCard } from "./StaffOpsCard";
 import { SubscriptionWebhookConnectCard } from "../profile/SubscriptionWebhookConnectCard";
 import type { SubscriptionPlan, Subscriber } from "../../stores/operations-store";
+import { getBusinessDay } from "../../utils/business-day";
 import {
   shell,
   bentoHoverCSS,
@@ -171,11 +174,11 @@ function CustomerSummaryCard({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fm
   const emptyText = emptyMsg[mode] ?? emptyMsg.repeat;
 
   return (
-    <article style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
+    <article style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.10)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card bento-fade-in">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{title}</span>
-          <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(29,53,87,0.06)", color: "var(--primary)" }}>
+          <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.06)", color: "var(--primary)" }}>
             {members.length}{mode === "membership" ? (ko ? "명" : "") : (ko ? "명" : "")}
           </span>
         </div>
@@ -208,7 +211,7 @@ function CustomerSummaryCard({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fm
 
 const PLAN_COLORS: Record<number, { bg: string; text: string; border: string }> = {
   0: { bg: "rgba(124,58,237,0.08)", text: "#7c3aed", border: "rgba(124,58,237,0.15)" },
-  1: { bg: "rgba(37,99,235,0.08)", text: "#2563eb", border: "rgba(37,99,235,0.15)" },
+  1: { bg: "rgba(25,25,112,0.08)", text: "#191970", border: "rgba(25,25,112,0.15)" },
   2: { bg: "rgba(5,150,105,0.08)", text: "#059669", border: "rgba(5,150,105,0.15)" },
   3: { bg: "rgba(234,88,12,0.08)", text: "#ea580c", border: "rgba(234,88,12,0.15)" },
   4: { bg: "rgba(220,38,38,0.08)", text: "#dc2626", border: "rgba(220,38,38,0.15)" },
@@ -419,7 +422,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
               padding: "10px", borderRadius: "9px", border: "none", cursor: "pointer",
               background: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "")
                 ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)"
-                : "rgba(15,23,42,0.06)",
+                : "rgba(25,25,112,0.05)",
               color: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "") ? "#fff" : "rgba(15,23,42,0.3)",
               fontSize: "13px", fontWeight: 650, letterSpacing: "-0.01em",
               boxShadow: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "") ? "0 4px 12px rgba(124,58,237,0.18)" : "none",
@@ -432,7 +435,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
 
       {/* Tab toggle — 데이터 있을 때만 */}
       {!isEmpty && (
-        <div style={{ display: "flex", gap: "4px", background: "rgba(15,23,42,0.03)", borderRadius: "10px", padding: "3px" }}>
+        <div style={{ display: "flex", gap: "4px", background: "rgba(25,25,112,0.035)", borderRadius: "10px", padding: "3px" }}>
           {(["customers", "plans"] as const).map((t) => (
             <button key={t} type="button" onClick={() => setTab(t)} style={{
               flex: 1, padding: "7px 0", borderRadius: "8px", border: "none", cursor: "pointer",
@@ -518,7 +521,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
                     {/* Churn button */}
                     <button type="button" onClick={() => handleChurn(sub.id)} title={ko ? "이탈 처리" : "Mark churned"} style={{
                       width: "24px", height: "24px", borderRadius: "6px", border: "none",
-                      background: "rgba(15,23,42,0.04)", cursor: "pointer",
+                      background: "rgba(25,25,112,0.04)", cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                     }}>
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -625,7 +628,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
                       disabled={!(d.subCustomerName ?? "").trim() || !(d.subCustomerPlanId)}
                       style={{
                         padding: "8px 16px", borderRadius: "8px", border: "none", cursor: "pointer",
-                        background: (d.subCustomerName ?? "").trim() && d.subCustomerPlanId ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)" : "rgba(15,23,42,0.06)",
+                        background: (d.subCustomerName ?? "").trim() && d.subCustomerPlanId ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)" : "rgba(25,25,112,0.05)",
                         color: (d.subCustomerName ?? "").trim() && d.subCustomerPlanId ? "#fff" : "rgba(15,23,42,0.3)",
                         fontSize: "13px", fontWeight: 650, whiteSpace: "nowrap",
                       }}>
@@ -688,7 +691,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
                       background: isInactive
                         ? "rgba(15,23,42,0.015)"
                         : `linear-gradient(135deg, ${c.bg} 0%, rgba(255,255,255,0.92) 65%)`,
-                      border: `1px solid ${isInactive ? "rgba(15,23,42,0.05)" : c.border}`,
+                      border: `1px solid ${isInactive ? "rgba(25,25,112,0.05)" : c.border}`,
                       opacity: isInactive ? 0.55 : 1,
                       overflow: "hidden",
                     }}
@@ -706,7 +709,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
                     <div style={{
                       width: "38px", height: "38px", borderRadius: "11px",
                       background: isInactive
-                        ? "rgba(15,23,42,0.05)"
+                        ? "rgba(25,25,112,0.05)"
                         : `linear-gradient(135deg, ${c.text} 0%, ${c.text}d0 100%)`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: "15px", fontWeight: 700,
@@ -731,7 +734,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
                           <span style={{
                             fontSize: "10.5px", fontWeight: 650,
                             padding: "2px 8px", borderRadius: "999px",
-                            background: isInactive ? "rgba(15,23,42,0.05)" : `${c.text}14`,
+                            background: isInactive ? "rgba(25,25,112,0.05)" : `${c.text}14`,
                             color: isInactive ? "rgba(15,23,42,0.45)" : c.text,
                             letterSpacing: "-0.005em", flexShrink: 0,
                             display: "inline-flex", alignItems: "center", gap: "3px",
@@ -828,7 +831,7 @@ function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: boolean
                 disabled={!(d.subPlanName ?? "").trim() || !(d.subPlanPrice ?? "")}
                 style={{
                   padding: "8px", borderRadius: "8px", border: "none", cursor: "pointer",
-                  background: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "") ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)" : "rgba(15,23,42,0.06)",
+                  background: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "") ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)" : "rgba(25,25,112,0.05)",
                   color: (d.subPlanName ?? "").trim() && (d.subPlanPrice ?? "") ? "#fff" : "rgba(15,23,42,0.3)",
                   fontSize: "13px", fontWeight: 650,
                 }}>
@@ -876,12 +879,22 @@ export default function OperationalDashboard({ d }: Props) {
   const isWide = viewportWidth >= 980;
   const isThreeUp = viewportWidth >= 1220;
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const allEntries = d.dailyEntries as DailyEntry[];
+  // 일자 컷오프: 오프라인은 사장이 입력한 closeTime+30분 기준, 온라인·스타트업은 자정 KST.
+  // utils/business-day.ts 의 getBusinessDay 가 단일 진실의 원천 (SSOT).
+  const todayStr = getBusinessDay(new Date(), {
+    categoryId: d.industryCategoryId,
+    closeTime: d.businessCloseTime,
+  });
+  const currentMonth = todayStr.slice(0, 7);
+  // ⚠️ dailyEntries는 finance-store의 handleAddDailyEntry 안에서 DESC(최신→오래) 정렬됨.
+  // 따라서 "최근 7일"은 slice(0,7) — 이전엔 slice(-7)로 가장 오래된 7개를 가져오는 버그가 있었음
+  // (8개 이상 entry가 쌓이면 오늘 입력이 차트에 안 보이고, 7일 합계가 0원으로 표시됨).
+  // 안전을 위해 ASC 정렬해서 slice — 입력 직전·직후·과거 데이터 모두 일관.
+  const allEntriesRaw = d.dailyEntries as DailyEntry[];
+  const allEntries = [...allEntriesRaw].sort((a, b) => a.date.localeCompare(b.date)); // ASC by date
   const monthEntries = allEntries.filter((entry) => entry.date.startsWith(currentMonth));
   const todayEntry = allEntries.find((entry) => entry.date === todayStr);
-  const recent7Entries = allEntries.slice(-7);
+  const recent7Entries = allEntries.slice(-7);   // 최신 7개 (ASC 정렬이므로 .slice(-7)이 정확)
   const previous7Entries = allEntries.slice(-14, -7);
 
   const totalSales = monthEntries.reduce((sum, entry) => sum + entry.sales, 0);
@@ -1185,6 +1198,15 @@ export default function OperationalDashboard({ d }: Props) {
         </div>
       )}
 
+      {/* ━━━ Hero: CEO Morning Hero — 거장 리서치 기반 (Bezos·Chesky·캐시노트) ━━━ */}
+      {/* MorningBriefing 의 AI 분석 두뇌(useMorningBriefingBrain + resolveHero)를 흡수해 통합. */}
+      {/* 매출 그래프가 스크롤 없이 보이게 하기 위해 brief 카드는 별도 마운트하지 않음. */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <CEOMorningHero d={d} />
+        </div>
+      )}
+
       {/* ━━━ 긴급 Alert Strip (있을 때만 렌더) ━━━ */}
       {!isStaff && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
@@ -1192,26 +1214,37 @@ export default function OperationalDashboard({ d }: Props) {
         </div>
       )}
 
-      {/* ━━━ 1단계: AI 경영 코칭 (KPI 는 외부 DailyKpiStrip 이 담당 → hideKpis) ━━━ */}
-      <div className="dash-stagger-item" style={nextStaggerStyle()}>
-        <MorningBriefing hideKpis />
-      </div>
-
-      {/* ━━━ Tier 1.1: 매출 흐름 (full width) — BEP 라인 + 흑/적 zone ━━━ */}
+      {/* ━━━ Tier 1.1: 매출 흐름 + 사용자 변화 (2-column) ━━━ */}
+      {/* 좁은 화면(< 1100px)에서는 1-column 으로 자동 wrap. */}
       {!isStaff && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <ActivitySnapshotCard
-            d={d}
-            ko={ko}
-            todayStr={todayStr}
-            recent7Entries={recent7Entries}
-            recent7Sales={recent7Sales}
-            weeklySalesChange={weeklySalesChange}
-            todayEntry={todayEntry ?? null}
-            avgDailySales={avgDailySales}
-            fmt={fmt}
-            onOpenCalendar={() => setShowCalendar(true)}
-          />
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: viewportWidth >= 1100 ? "minmax(0, 1.35fr) minmax(0, 1fr)" : "1fr",
+            gap: "14px",
+            alignItems: "stretch",
+          }}>
+            <ActivitySnapshotCard
+              d={d}
+              ko={ko}
+              todayStr={todayStr}
+              recent7Entries={recent7Entries}
+              recent7Sales={recent7Sales}
+              weeklySalesChange={weeklySalesChange}
+              todayEntry={todayEntry ?? null}
+              avgDailySales={avgDailySales}
+              fmt={fmt}
+              onOpenCalendar={() => setShowCalendar(true)}
+            />
+            <UserActivityCard
+              d={d}
+              ko={ko}
+              todayStr={todayStr}
+              recent7Entries={recent7Entries}
+              todayEntry={todayEntry ?? null}
+              fmt={fmt}
+            />
+          </div>
         </div>
       )}
 
@@ -1570,9 +1603,9 @@ export default function OperationalDashboard({ d }: Props) {
                 <div style={{ fontSize: "22px", fontWeight: 700, color: "#7c3aed", letterSpacing: "-0.02em" }}>{fmt(mrr)}</div>
                 {mrrGrowth !== 0 && <div style={{ fontSize: "12px", fontWeight: 600, color: mrrGrowth > 0 ? "#059669" : "#dc2626", marginTop: "3px" }}>{mrrGrowth > 0 ? "+" : ""}{mrrGrowth}% MoM</div>}
               </div>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.03)" }}>
+              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)" }}>
                 <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>{ko ? "이달 신규" : "New MTD"}</div>
-                <div style={{ fontSize: "22px", fontWeight: 700, color: "#2563eb", letterSpacing: "-0.02em" }}>+{monthSignups.toLocaleString()}</div>
+                <div style={{ fontSize: "22px", fontWeight: 700, color: "#191970", letterSpacing: "-0.02em" }}>+{monthSignups.toLocaleString()}</div>
                 {netNew !== monthSignups && <div style={{ fontSize: "12px", fontWeight: 600, color: netNew >= 0 ? "#059669" : "#dc2626", marginTop: "3px" }}>net {netNew >= 0 ? "+" : ""}{netNew}</div>}
               </div>
               <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.03)" }}>
@@ -1610,24 +1643,24 @@ export default function OperationalDashboard({ d }: Props) {
 
       {(() => {
         const teamCard = (
-          <article key="team" style={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card">
+          <article key="team" style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.10)", background: "#fff", padding: "18px 22px", display: "grid", gap: "10px" }} className="bento-card">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "팀 현황" : "Team"}</span>
-                <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(29,53,87,0.06)", color: "var(--primary)" }}>{employees.length}{ko ? "명" : ""}</span>
+                <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.06)", color: "var(--primary)" }}>{employees.length}{ko ? "명" : ""}</span>
               </div>
               <button type="button" onClick={() => d.navigateToSurface("analytics")} style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", background: "none", border: "none", cursor: "pointer" }}>{ko ? "관리하기 →" : "Manage →"}</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
-              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(25,25,112,0.025)", textAlign: "center" as const }}>
                 <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{employees.length}</div>
                 <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "인원" : "Staff"}</div>
               </div>
-              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(25,25,112,0.025)", textAlign: "center" as const }}>
                 <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{fmt(estimatedMonthlyPayroll)}</div>
                 <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "예상 급여" : "Payroll"}</div>
               </div>
-              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
+              <div style={{ padding: "10px", borderRadius: "10px", background: "rgba(25,25,112,0.025)", textAlign: "center" as const }}>
                 <div style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>{insuredEmployees}</div>
                 <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "4대보험" : "Insured"}</div>
               </div>
@@ -1724,8 +1757,8 @@ export default function OperationalDashboard({ d }: Props) {
                           <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>
                             {product.monthlySales ?? 0}{ko ? "개 판매" : " sales"}
                           </div>
-                          <div style={{ height: "4px", borderRadius: "2px", background: "rgba(5,97,252,0.08)", marginTop: "6px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", borderRadius: "2px", width: `${percent}%`, background: i === 0 ? "#0561fc" : "rgba(5,97,252,0.4)", transition: "width 0.6s ease" }} />
+                          <div style={{ height: "4px", borderRadius: "2px", background: "rgba(25,25,112,0.08)", marginTop: "6px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", borderRadius: "2px", width: `${percent}%`, background: i === 0 ? "#191970" : "rgba(25,25,112,0.4)", transition: "width 0.6s ease" }} />
                           </div>
                         </div>
                         <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a", whiteSpace: "nowrap" }}>{fmt(revenue)}</div>
@@ -1753,11 +1786,11 @@ export default function OperationalDashboard({ d }: Props) {
             </div>
             <div style={{ display: "grid", gap: "8px" }}>
               {recent7Entries.length > 0 ? recent7Entries.slice(-5).reverse().map((entry, i) => (
-                <div key={entry.date} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: i === 0 ? "rgba(5,97,252,0.04)" : "transparent" }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: entry.sales > avgDailySales ? "rgba(101,197,101,0.12)" : "rgba(5,97,252,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div key={entry.date} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: i === 0 ? "rgba(25,25,112,0.04)" : "transparent" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: entry.sales > avgDailySales ? "rgba(101,197,101,0.12)" : "rgba(25,25,112,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {entry.sales > avgDailySales
                       ? <TrendingUp size={14} strokeWidth={1.5} color="#059669" />
-                      : <BarChart3 size={14} strokeWidth={1.5} color="#2563eb" />}
+                      : <BarChart3 size={14} strokeWidth={1.5} color="#191970" />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>
@@ -1870,7 +1903,7 @@ export default function OperationalDashboard({ d }: Props) {
           <div style={{ width: "min(520px, 90vw)", maxHeight: "85vh", overflowY: "auto", borderRadius: "28px", background: "#fff", boxShadow: "0 32px 80px rgba(0,0,0,0.18)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px 0" }}>
               <div />
-              <button type="button" onClick={() => setShowCalendar(false)} style={{ background: "rgba(15,23,42,0.06)", border: "none", borderRadius: "999px", width: "32px", height: "32px", cursor: "pointer", fontSize: "16px", color: "rgba(15,23,42,0.5)" }}>✕</button>
+              <button type="button" onClick={() => setShowCalendar(false)} style={{ background: "rgba(25,25,112,0.05)", border: "none", borderRadius: "999px", width: "32px", height: "32px", cursor: "pointer", fontSize: "16px", color: "rgba(15,23,42,0.5)" }}>✕</button>
             </div>
             <div style={{ padding: "0 0 24px" }}>
               <RevenueCalendar

@@ -63,7 +63,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
     {
       id: "issue-coupon",
       Icon: Ticket,
-      iconColor: "#2563eb",
+      iconColor: "#191970",
       label: {
         ko: "긴급 할인 쿠폰 발급",
         en: "Issue emergency discount coupon",
@@ -265,7 +265,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
               padding: "12px 14px",
               borderRadius: "12px",
               background: "#fff",
-              border: `1px solid ${action.severity === "last-resort" ? "rgba(220,38,38,0.15)" : "rgba(15,23,42,0.06)"}`,
+              border: `1px solid ${action.severity === "last-resort" ? "rgba(220,38,38,0.15)" : "rgba(25,25,112,0.05)"}`,
               cursor: "pointer",
               textAlign: "left" as const,
               fontFamily: "inherit",
@@ -275,12 +275,12 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
               transition: "all 0.15s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(37,99,235,0.03)";
-              e.currentTarget.style.borderColor = "rgba(37,99,235,0.15)";
+              e.currentTarget.style.background = "rgba(25,25,112,0.03)";
+              e.currentTarget.style.borderColor = "rgba(25,25,112,0.15)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "#fff";
-              e.currentTarget.style.borderColor = action.severity === "last-resort" ? "rgba(220,38,38,0.15)" : "rgba(15,23,42,0.06)";
+              e.currentTarget.style.borderColor = action.severity === "last-resort" ? "rgba(220,38,38,0.15)" : "rgba(25,25,112,0.05)";
             }}
           >
             <div style={{
@@ -344,7 +344,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
           {expanded
             ? (ko ? "간단히 보기" : "Show less")
             : (ko ? `더 많은 방법 (+${otherActions.length})` : `More options (+${otherActions.length})`)}
-          {expanded ? <ChevronUp size={12} strokeWidth={2} /> : <ChevronDown size={12} strokeWidth={2} />}
+          {expanded ? <ChevronUp size={12} strokeWidth={1.5} /> : <ChevronDown size={12} strokeWidth={1.5} />}
         </button>
       )}
     </div>

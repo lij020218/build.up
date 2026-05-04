@@ -12,8 +12,9 @@ import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AuroraBackground, colors, radii, shadows } from "../lib/design";
 import { supabase } from "../lib/supabase";
-import { useLanguage } from "./language-provider";
+import { useLanguage } from "../lib/language-provider";
 
 type AuthMode = "signup" | "login" | "password";
 
@@ -81,6 +82,7 @@ export default function AuthScreen() {
     });
 
   return (
+    <AuroraBackground>
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
@@ -203,6 +205,7 @@ export default function AuthScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </AuroraBackground>
   );
 }
 
@@ -351,7 +354,7 @@ function Field(props: {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F5F7FA"
+    backgroundColor: "transparent"
   },
   content: {
     paddingHorizontal: 20,
@@ -362,7 +365,8 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
+    paddingRight: 172
   },
   brand: {
     flexDirection: "row",
@@ -370,16 +374,17 @@ const styles = StyleSheet.create({
     gap: 9,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
-    backgroundColor: "rgba(255,255,255,0.76)"
+    backgroundColor: "rgba(255,255,255,0.76)",
+    ...shadows.glassCard
   },
   brandDot: {
     width: 8,
     height: 8,
-    borderRadius: 8,
-    backgroundColor: "#075E66"
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary
   },
   brandText: {
     fontSize: 15,
@@ -389,7 +394,7 @@ const styles = StyleSheet.create({
   ghostButton: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.76)"
@@ -411,7 +416,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.74)"
@@ -419,20 +424,20 @@ const styles = StyleSheet.create({
   eyebrowDot: {
     width: 6,
     height: 6,
-    borderRadius: 8,
-    backgroundColor: "#075E66"
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary
   },
   eyebrowText: {
     fontSize: 11,
     letterSpacing: 1.8,
     textTransform: "uppercase",
-    color: "#075E66"
+    color: colors.primary
   },
   title: {
-    fontSize: 42,
-    lineHeight: 42,
+    fontSize: 36,
+    lineHeight: 38,
     fontWeight: "700",
-    letterSpacing: -1.9,
+    letterSpacing: -1.35,
     color: "#0E1116"
   },
   subtitle: {
@@ -447,10 +452,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.88)",
     padding: 18,
     gap: 16,
-    shadowColor: "#101820",
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 14 }
+    ...shadows.glassCard
   },
   authHeader: {
     gap: 8
@@ -462,10 +464,10 @@ const styles = StyleSheet.create({
     color: "#7B8290"
   },
   authTitle: {
-    fontSize: 28,
-    lineHeight: 30,
+    fontSize: 24,
+    lineHeight: 27,
     fontWeight: "700",
-    letterSpacing: -1.2,
+    letterSpacing: -0.8,
     color: "#101820"
   },
   authBody: {
@@ -477,7 +479,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   modeChip: {
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.86)",
@@ -486,8 +488,8 @@ const styles = StyleSheet.create({
     gap: 4
   },
   modeChipSelected: {
-    borderColor: "rgba(7,94,102,0.2)",
-    backgroundColor: "rgba(7,94,102,0.06)"
+    borderColor: "rgba(29,53,87,0.2)",
+    backgroundColor: "rgba(29,53,87,0.06)"
   },
   modeTitle: {
     fontSize: 15,
@@ -495,7 +497,7 @@ const styles = StyleSheet.create({
     color: "#101820"
   },
   modeTitleSelected: {
-    color: "#075E66"
+    color: colors.primary
   },
   modeHint: {
     fontSize: 12,
@@ -503,7 +505,7 @@ const styles = StyleSheet.create({
     color: "#7B8290"
   },
   formCard: {
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.07)",
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -533,7 +535,7 @@ const styles = StyleSheet.create({
     color: "#324255"
   },
   input: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -548,12 +550,13 @@ const styles = StyleSheet.create({
     flexWrap: "wrap"
   },
   primaryButton: {
-    borderRadius: 8,
-    backgroundColor: "#075E66",
+    borderRadius: radii.md,
+    backgroundColor: colors.primaryBottom,
     paddingHorizontal: 18,
     paddingVertical: 14,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    ...shadows.primaryButton
   },
   primaryButtonText: {
     color: "#FFFFFF",
@@ -561,7 +564,7 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   secondaryButton: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -576,7 +579,7 @@ const styles = StyleSheet.create({
     fontWeight: "500"
   },
   statusCard: {
-    borderRadius: 8,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.07)",
     backgroundColor: "rgba(245,247,250,0.9)",
@@ -598,16 +601,13 @@ const styles = StyleSheet.create({
     gap: 14
   },
   storyCard: {
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.88)",
     backgroundColor: "rgba(255,255,255,0.78)",
     padding: 20,
     gap: 16,
-    shadowColor: "#101820",
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 }
+    ...shadows.glassCard
   },
   storyLabel: {
     fontSize: 11,
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   storyMetric: {
-    borderRadius: 8,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.07)",
     backgroundColor: "rgba(255,255,255,0.72)",

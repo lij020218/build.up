@@ -23,9 +23,85 @@ export type RoadmapGenerationResult = {
     startupType: "independent" | "franchise";
     businessModelId: string;
     preferredRegion: string;
+    /** 왜 이 sub-industry 로 매칭됐는지 한 줄 설명 (사용자가 검토 가능) */
+    matchingReason: string;
+    /** 매칭 신뢰도 0-100 (50 미만이면 사용자에게 확인 요청) */
+    matchingConfidence: number;
+    /** 차선책 (사용자가 수정할 수 있도록 2-3개 alternative) */
+    alternativeSubIndustries: Array<{ id: string; reason: string }>;
   };
+  /** 사장의 정체성·운영 기본 정보 — 사용자 텍스트에서 추출하거나 업종 best practice 추천 */
+  identity: {
+    /** AI 가 추천하는 상호명 (사용자가 안 정했을 때) — 1-2 글자 한글/영문 */
+    suggestedStoreName: string;
+    /** 미션 1~2 문장 — 의사결정의 북극성 */
+    mission: string;
+    /** 타겟 고객 한 줄 정의 */
+    targetCustomer: string;
+    /** 영업 시작 HH:MM (오프라인만, 온라인·스타트업은 빈 문자열) */
+    businessOpenTime: string;
+    /** 영업 종료 HH:MM */
+    businessCloseTime: string;
+  };
+  /** 팀 구성 추천 */
+  team: {
+    initialSize: number;
+    roles: Array<{
+      role: string;        // 예: "사장(겸 매니저)", "주방", "홀 알바"
+      timing: "now" | "later";
+      reason: string;
+    }>;
+  };
+  /** 법적 셋업 추천 */
+  legal: {
+    /** 간이 / 일반 / 법인 */
+    taxType: "simplified" | "standard" | "corporation";
+    taxTypeReason: string;
+    /** 업종코드 (홈택스용) */
+    industryCode: string;
+    /** 4대보험 사업장 성립 의무 (직원 1명+ 시 true) */
+    fourInsuranceRequired: boolean;
+    /** 인허가 상세 — 단순 string 배열 대신 구조화 */
+    permitsDetailed: Array<{
+      name: string;          // 예: "일반음식점 영업신고"
+      kind: string;          // "신고" | "허가" | "등록" | "면허"
+      where: string;         // 신청 장소
+      cost: string;          // "약 6.6만원"
+      duration: string;      // "7~14일"
+      required: boolean;
+    }>;
+  };
+  /** 권장 보험 (업종별) */
+  insurance: Array<{
+    name: string;            // "화재배상책임보험"
+    type: string;            // "fire" | "general-liability" | "workers-comp" | "product-liability" | "auto" | "property" | "professional" | "cyber" | "other"
+    required: boolean;
+    annualPremiumEstimate: number;  // 연 보험료 (원)
+    reason: string;
+  }>;
+  /** 자금 인프라 추천 */
+  moneyInfra: {
+    /** 추천 사업용 통장 (은행) */
+    recommendedBank: string;     // "ibk" | "kakaobank" | "woori" | "shinhan" | "kb" | "hana" | "nh" | "kbank" | "toss" | "other"
+    recommendedBankReason: string;
+    /** 추천 카드단말기/PG */
+    recommendedPos: string;      // "tossplace" | "kis" | "nice" | "smartro" | "kcp" | "inicis" | "kakaopay" | "naverpay" | "stripe" | "other"
+    recommendedPosReason: string;
+    /** 세무 처리 방식 */
+    cpaDecision: "self" | "cpa" | "hybrid";
+    cpaReason: string;
+  };
+  /** 적용 가능한 정부지원·창업 프로그램 */
+  fundingPrograms: Array<{
+    name: string;              // "예비창업패키지"
+    kind: "preliminary-startup" | "youth-startup" | "venture-cert" | "innobiz" | "mainbiz" | "rnd" | "tips" | "other";
+    eligibility: string;       // 자격 요건 (한 줄)
+    amount: string;            // 지원금 ("최대 1억" 등)
+    deadline?: string;         // 다음 마감 추정 (있을 때)
+    fitScore: number;          // 0-100, 사용자 사업과의 적합도
+  }>;
   marketAnalysis: {
-    score: number; // 0-100
+    score: number;
     grade: "S" | "A" | "B" | "C" | "D";
     footTraffic: string;
     competition: string;
@@ -49,6 +125,8 @@ export type RoadmapGenerationResult = {
   };
   recommendations: {
     suppliers: Array<{
+      /** vendor_recommendations.id (DB 풀 선택 시) */
+      id?: string;
       name: string;
       category: string;
       reason: string;
@@ -56,9 +134,59 @@ export type RoadmapGenerationResult = {
     }>;
     deliveryPlatforms: string[];
     snsChannels: string[];
+    /** @deprecated — legal.permitsDetailed 사용 권장. 하위호환 위해 유지 */
     permits: string[];
     taxAdvice: string;
-    interior: Array<{ item: string; vendor: string; estimatedCost: string }>;
+    interior: Array<{
+      /** interior_design_guides.id (DB 풀 선택 시, material) */
+      id?: string;
+      item: string;
+      vendor: string;
+      estimatedCost: string;
+      /** 사용자 상황 맞춤 reasoning (Pass 2 AI 가 작성) */
+      reason?: string;
+    }>;
+    /** 인테리어 시공 업체 (vendor_recommendations.vendor_type='interior') — 자재와 분리 */
+    interiorVendors?: Array<{
+      id: string;
+      title: string;
+      description: string;
+      checkItems: string[];
+      reason: string;
+    }>;
+    /** Pass 2 AI 가 풀에서 고른 디자인 컨셉 1개 + reasoning */
+    selectedConcept?: {
+      id: string;
+      nameKo: string;
+      descriptionKo: string;
+      costRangeKo?: string;
+      pros: string[];
+      cons: string[];
+      reason: string;
+    };
+    /** Pass 2 AI 가 풀에서 고른 운영 채널 + 우선순위 + reasoning. 기존 deliveryPlatforms/snsChannels 보다 풍부. */
+    operationalChannels?: Array<{
+      id: string;
+      nameKo: string;
+      type: string;            // delivery | online-marketplace | social-commerce | reservation | pos-payment | courier | delivery-agency
+      typeLabelKo: string;
+      commissionRate: number;  // %
+      priority: 1 | 2;         // 1=주력 2=보조
+      reason: string;
+    }>;
+  };
+  /** 업종 특화 — food/cafe (메뉴), retail (상품), beauty/fitness (시술/회원권) */
+  industrySpecific?: {
+    /** 메뉴/시그니처 (food, cafe-dessert) */
+    menu?: Array<{ name: string; price: number; reason: string }>;
+    /** 시술 메뉴 (beauty) */
+    services?: Array<{ name: string; durationMin: number; price: number }>;
+    /** 회원권 상품 (fitness) */
+    memberships?: Array<{ name: string; durationMonths: number; price: number }>;
+    /** 상품 카탈로그 시드 (retail, online-digital) */
+    products?: Array<{ name: string; targetMargin: number; reason: string }>;
+    /** 핵심 자산 (장비·기구) */
+    coreAssets?: Array<{ name: string; estimatedCost: number; priority: "must" | "nice" }>;
   };
   timeline: {
     targetOpenDate: string;
@@ -72,6 +200,39 @@ export type RoadmapGenerationResult = {
   }>;
   /** Step 2에서 물어봐야 할 질문들 (AI가 텍스트에서 추출 못 한 것) */
   missingFields: Array<"budget" | "region" | "teamSize">;
+
+  /** 서비스 DB에서 검증된 공급업체·인테리어 풀 — 서버에서 sub-industry 매칭 후 enrich */
+  serviceRecommendations?: {
+    vendors: Array<{
+      id: string;
+      vendorType: string;       // ingredient | equipment | interior | pos | packaging | ...
+      vendorTypeLabel: string;  // 한국어 라벨 ("식재료 공급" 등)
+      title: string;            // 예: "닭고기 공급 (하림·마니커·올품)"
+      description: string;
+      checkItems: string[];     // 체크 포인트
+      franchiseNote?: string;
+      priority: number;
+    }>;
+    interiorMaterials: Array<{
+      id: string;
+      nameKo: string;
+      descriptionKo: string;
+      costRangeKo?: string;
+      tags: string[];
+      trendSource?: string;
+      priority: number;
+    }>;
+    interiorConcepts: Array<{
+      id: string;
+      nameKo: string;
+      descriptionKo: string;
+      costRangeKo?: string;
+      pros: string[];
+      cons: string[];
+      tags: string[];
+      priority: number;
+    }>;
+  };
 };
 
 export const ROADMAP_GENERATION_SYSTEM_PROMPT = `<role>
@@ -131,31 +292,117 @@ conceptSummary 필드는 사용자 입력을 정제한 사업 핵심 정의입�
 - startup-tech: 스타트업/테크
 - space: 공간/숙박
 
-## 세부 업종 ID (subIndustryId — 반드시 아래 목록에서만 선택)
-### food
-korean-casual, delivery-meals, salad-healthy, ramen-noodle, chicken-burger, western-pasta-brunch
-### cafe-dessert
-takeout-coffee, specialty-coffee, dessert-cafe, bakery-studio, icecream-bingsu, self-serve-cafe
-### retail
-convenience-small, lifestyle-goods, beauty-supplies, fashion-accessories, health-food-store, unmanned-retail
-### beauty
-hair-salon, nail-studio, skin-care-room, waxing-studio, eyelash-brow, makeup-bridal
-### fitness
-pilates-studio, pt-gym, yoga-studio, crossfit-box, golf-studio, unmanned-fitness
-### education
-study-room, kids-academy, adult-class, language-academy, coding-class, small-study-room
-### pet
-pet-grooming, pet-supplies, pet-hotel, pet-cafe, pet-training-school, pet-walking-visit
-### living-service
-laundry-service, cleaning-service, repair-service, self-laundry, print-copy, device-repair
-### space
-guesthouse, rental-studio, party-room, study-cafe-space, shared-office, practice-room
-### online-digital
-smart-store, digital-products, creator-service, consignment-commerce, newsletter-membership, global-buying
-### startup-tech
-ai-application, developer-tools, b2b-saas, fintech-startup
+## 세부 업종 ID (subIndustryId) — 반드시 71개 목록 안에서만 선택. 임의 ID 절대 금지.
 
-⚠ subIndustryId는 반드시 위 목록의 값만 사용하세요. 임의의 ID(fashion-accessories-socks 등)를 만들지 마세요. 사용자 아이디어에 가장 가까운 기존 ID를 선택하세요. 예: "양말 전문점" → fashion-accessories, "온라인 양말 쇼핑몰" → smart-store
+⚠️ **매칭 우선순위** — 사용자 텍스트 → 가장 가까운 sub-industry:
+1. **명시 키워드** (예: "필라테스" → pilates-studio) 가 있으면 직접 매칭
+2. **컨셉 유사성** (예: "건강 도시락" → salad-healthy) 으로 추론
+3. **운영 모델** (예: "무인 24시간" → unmanned-* 우선)
+4. **커머스 채널** (예: "온라인 + 오프라인 병행" → 메인 채널 우선, 오프라인 매장이 핵심이면 오프라인 카테고리)
+5. **모르겠으면** 카테고리의 가장 일반적인 옵션 (food=korean-casual, retail=lifestyle-goods)
+
+### food (음식점) — 6개
+- **korean-casual**: 한식 일반 (국밥·김밥·백반·분식·고깃집·찌개·한정식)
+- **delivery-meals**: 배달 전문 (공유주방·소형 매장, 도시락·1인분 식사 배달)
+- **salad-healthy**: 샐러드·헬시푸드·포케·아사이볼·다이어트식·저칼로리 식단
+- **ramen-noodle**: 라멘·우동·국수·쌀국수·짬뽕·면류 전문
+- **chicken-burger**: 치킨·버거·피자·핫도그·간편 fast food
+- **western-pasta-brunch**: 양식·파스타·브런치·스테이크·이탈리안·프렌치
+
+### cafe-dessert (카페·디저트) — 6개
+- **takeout-coffee**: 테이크아웃 커피 (소형, 카운터 위주, 좌석 최소)
+- **specialty-coffee**: 스페셜티 커피 (로스팅·핸드드립·원두 강조)
+- **dessert-cafe**: 디저트 카페 (케이크·마카롱·푸딩·크로플)
+- **bakery-studio**: 베이커리 스튜디오 (제과·제빵·식빵·페이스트리)
+- **icecream-bingsu**: 아이스크림·빙수·젤라또·프로즌요거트 (계절성)
+- **self-serve-cafe**: 무인 셀프서브 카페 (24시간·키오스크 주문)
+
+### retail (소매) — 6개
+- **convenience-small**: 동네 편의점·소형 마트·식품점
+- **lifestyle-goods**: 라이프스타일 잡화 (홈데코·문구·생활용품·디자인 소품)
+- **beauty-supplies**: 화장품·뷰티 용품 판매 (드럭스토어 X, 멀티숍·브랜드 매장)
+- **fashion-accessories**: 패션·액세서리 (의류·신발·가방·주얼리·양말)
+- **health-food-store**: 건강기능식품·영양제·자연식품 판매
+- **unmanned-retail**: 무인 매장 (밀키트·아이스크림·과일·라면 등 무인 판매)
+
+### beauty (뷰티) — 6개
+- **hair-salon**: 헤어 미용실 (컷·펌·염색)
+- **nail-studio**: 네일 스튜디오 (네일아트·페디큐어)
+- **skin-care-room**: 피부관리실 (얼굴 관리·관리실·에스테틱)
+- **waxing-studio**: 왁싱 전문
+- **eyelash-brow**: 속눈썹·눈썹 (반영구·연장)
+- **makeup-bridal**: 메이크업 (출장·웨딩·셀프스튜디오)
+
+### fitness (피트니스·운동) — 6개
+- **pilates-studio**: 필라테스 스튜디오 (리포머·매트)
+- **pt-gym**: PT 짐 (1:1 트레이닝·소규모 헬스)
+- **yoga-studio**: 요가 스튜디오 (하타·빈야사·핫요가)
+- **crossfit-box**: 크로스핏 박스 (대형 기구·박스 운영)
+- **golf-studio**: 골프 (스크린·시뮬레이터·레슨)
+- **unmanned-fitness**: 무인 24시간 헬스 (출입통제·CCTV)
+
+### education (교육·학원) — 6개
+- **study-room**: 독서실·스터디카페 (자습 공간 임대 위주)
+- **kids-academy**: 어린이·청소년 학원 (영어·수학·논술·미술 등 종합)
+- **adult-class**: 성인 클래스 (와인·요리·플라워·DIY 평생교육)
+- **language-academy**: 어학원 (영어·중국어·일본어·스페인어 등)
+- **coding-class**: 코딩 학원 (어린이·성인 프로그래밍)
+- **small-study-room**: 소형 스터디룸 임대 (시간제·1-4인용)
+
+### pet (반려동물) — 6개
+- **pet-grooming**: 펫 미용 (강아지·고양이 미용)
+- **pet-supplies**: 펫 용품 판매 (사료·간식·장난감·목줄)
+- **pet-hotel**: 펫 호텔 (24h 숙박·돌봄)
+- **pet-cafe**: 펫 카페 (음료 + 동물 동반)
+- **pet-training-school**: 펫 훈련소 (훈련사 자격)
+- **pet-walking-visit**: 펫 산책·방문 케어 (출장형, 보호자 부재 시)
+
+### living-service (생활서비스) — 6개
+- **laundry-service**: 세탁·드라이클리닝 (사장 + 직원 운영)
+- **cleaning-service**: 청소·정리 (출장형 — 가정·사무실 청소)
+- **repair-service**: 수리 (가전·가구·잡화 수리)
+- **self-laundry**: 무인 빨래방 (24h 셀프 세탁)
+- **print-copy**: 인쇄·복사 (소량 인쇄·출력·바인딩)
+- **device-repair**: 전자기기 수리 (휴대폰·태블릿·노트북 수리)
+
+### space (공간 임대·숙박) — 6개
+- **guesthouse**: 게스트하우스·민박 (외국인 + 국내 여행자 숙박)
+- **rental-studio**: 촬영 스튜디오 (사진·영상 촬영용 공간)
+- **party-room**: 파티룸 (생일·모임 시간제 임대)
+- **study-cafe-space**: 스터디카페 (좌석 시간제 + 음료 판매 결합)
+- **shared-office**: 공유 오피스 (1인 사무실·핫데스크·회의실 임대)
+- **practice-room**: 연습실 (악기·댄스·합주실 — 방음 시설)
+
+### online-digital (온라인·디지털) — 6개
+- **smart-store**: 스마트스토어·쿠팡 등 오픈마켓 셀러 (제품 도매 + 온라인 판매)
+- **digital-products**: 디지털 상품 (강의·이북·템플릿·플러그인)
+- **creator-service**: 크리에이터 서비스 (유튜브·인스타·블로그 콘텐츠 제작·1인 미디어)
+- **consignment-commerce**: 위탁판매 / 셀렉트샵 (디자이너·소형 브랜드 큐레이션)
+- **newsletter-membership**: 뉴스레터·멤버십 구독 (Stibee·Substack 형태)
+- **global-buying**: 구매대행·해외직구 (직구·통관·배송 대행)
+
+### startup-tech (스타트업·테크) — 11개 (반드시 모두 사용 가능)
+- **ai-application**: AI 앱·서비스 (LLM 활용·생성형 AI·AI 챗봇 등)
+- **developer-tools**: 개발자 도구 (라이브러리·CLI·IDE 플러그인·DevTools)
+- **b2b-saas**: B2B SaaS (기업 대상 클라우드 소프트웨어 — CRM·ERP 등)
+- **fintech-startup**: 핀테크 (결제·송금·자산관리·증권·뱅킹)
+- **healthtech-startup**: 헬스테크 (의료·헬스케어·웰니스 — 의료기기 인증 가능성)
+- **security-startup**: 보안 (사이버보안·정보보안·ISMS 등)
+- **hardware-iot**: 하드웨어·IoT (커넥티드 디바이스·센서·웨어러블 — KC 인증 필수)
+- **robotics-physical-ai**: 로보틱스·Physical AI (산업용·서비스 로봇·자율주행)
+- **semiconductor**: 반도체 (Fab·MPW·Tape-out·EDA — 매우 자본집약적)
+- **biotech-medtech**: 바이오·의료기기 (식약처 IND·임상시험)
+- **climate-energy**: 기후·에너지 (탄소·재생에너지·환경 기술)
+
+### 매칭 disambiguation (모호한 경우)
+- "치킨집 + 호프" → chicken-burger (주류는 별도 면허로 처리)
+- "1인 디저트 카페" → dessert-cafe (1인 ≠ takeout-coffee)
+- "스마트스토어로 옷 판매" → smart-store (online-digital 카테고리, fashion-accessories 가 아님)
+- "오프라인 매장 + 스마트스토어 병행" → 매장이 메인이면 오프라인 카테고리, 스마트스토어 메인이면 smart-store
+- "AI SaaS 스타트업" → b2b-saas (B2B 명시) / ai-application (B2C 또는 일반)
+- "온라인 강의" → digital-products / creator-service (강의 본인이 만들면 creator, 외부 강사 + 플랫폼이면 b2b-saas)
+- "직접 출장 청소" → cleaning-service (living-service 카테고리)
+- "어린이집" → 의료·복지 시설은 본 서비스 미지원, 가장 가까운 kids-academy 로 매핑하되 매칭 사유에 명시
 
 ## 상권 분석 기준 (score 0-100)
 - S등급(90-100): 유동인구 상위 10% + 경쟁 밀도 낮음 + 타겟 적합도 높음
@@ -267,6 +514,124 @@ interior 추천 시 반드시 실제 한국에서 구매 가능한 브랜드명�
 - 법인설립 등기 직후 사업자등록 (세무서, 사업개시일 20일 이내)
 
 </knowledge_base>
+
+<identity_extraction>
+identity 필드는 사장의 정체성·운영 기본을 추출/추천:
+
+1. **suggestedStoreName** — 사용자가 상호 안 정했으면 업종 + 컨셉 + 톤에 맞춰 제안 (1-3 글자 한글, 또는 짧은 영문). 사용자가 이미 정했으면 그대로.
+2. **mission** — Apple "Think different", Stripe "Increase the GDP of the internet" 톤으로 1-2 문장 한국어. 사용자 텍스트에서 추출 안 되면 컨셉을 미션으로 정제.
+3. **targetCustomer** — 한 줄 ("강남역 직장인 25-35세 점심·저녁" 형태)
+4. **businessOpenTime / businessCloseTime** — 업종별 표준:
+   - 카페·디저트: "07:00" ~ "22:00"
+   - 음식점: "11:00" ~ "22:00", 주점 추가 시 "17:00" ~ "01:00"
+   - 미용: "10:00" ~ "20:00"
+   - 피트니스: "06:00" ~ "23:00", 24시간 무인이면 빈 문자열
+   - 학원: "10:00" ~ "22:00" (초중고는 "14:00" ~ "22:00")
+   - 펫: "10:00" ~ "20:00"
+   - 온라인·스타트업: 빈 문자열 (영업 시간 없음)
+</identity_extraction>
+
+<team_extraction>
+team 필드는 초기 팀 구성을 추천:
+
+- **initialSize** — 사용자 명시 우선, 없으면 업종 표준:
+  · 카페 takeout: 1, 일반음식점: 2, 미용 1인 스튜디오: 1, 피트니스: 2-3, 학원: 2-3, 온라인: 1, 스타트업: 2-3 (CEO + 1)
+- **roles** — 각 역할마다 timing("now" 즉시 / "later" 6개월+) 명시. 이유 한 줄.
+  예: [{ role: "사장(겸 주방)", timing: "now", reason: "초기 인건비 절감" }, { role: "홀 알바", timing: "later", reason: "월 매출 1500만원 돌파 후 채용" }]
+
+teamSize 가 입력으로 들어왔으면 우선 적용. 없고 텍스트에 "1인" 명시되면 1, "팀" 또는 "공동창업" 명시되면 2+.
+</team_extraction>
+
+<legal_extraction>
+legal 필드는 행정·세무 셋업 추천:
+
+1. **taxType** —
+   - 신규 사업자 + 예상 연매출 1억 400만 미만 → "simplified" (간이과세)
+   - 1억 400만 이상 또는 B2B 거래 위주 → "standard" (일반과세)
+   - 스타트업·테크 (법인) → "corporation"
+2. **industryCode** — 업종코드 (홈택스 표준):
+   - 한식: 552111, 카페·휴게음식: 552302, 미용: 961101, 학원: 855010
+   - 펫미용: 749930, 통신판매: 525101, 소프트웨어 개발: 620100
+   - 모르면 "552111" (음식점) 안전 fallback
+3. **fourInsuranceRequired** — initialSize >= 2 이면 true (직원 1명+ 채용 시 사업장 성립 의무)
+4. **permitsDetailed** — 위 인허가 지식 기반 + 업종별 정확한 행정 절차. 각 항목:
+   - kind: "신고" | "허가" | "등록" | "면허" 정확히
+   - where: 구체적 (예: "마포구청 위생과", "관할 교육청")
+   - cost: "약 6.6만원" 형태 (위생교육 + 보건증 + 신고수수료 합산)
+   - duration: "7~14일" 형태 (현장점검 포함)
+   - required: 법적 의무는 true, 권장은 false
+</legal_extraction>
+
+<insurance_extraction>
+insurance 필드는 업종별 권장 보험:
+
+- 음식점·카페: **화재배상책임 (의무)** + 생산물책임 (식중독 대응) + (직원 시) 근재
+- 미용: 배상책임 (시술 사고) + 화재배상책임
+- 피트니스: 체육시설 배상책임 (의무) + 화재
+- 학원 (어린이): 어린이 안전공제 (의무) + 배상책임
+- 펫호텔: 동물 사고/탈출 + 화재 강화
+- 온라인: 사이버 책임보험 (선택)
+- 스타트업 (법인): 사이버 + 전문직 책임 (E&O)
+- 출장형 (cleaning, makeup-bridal, pet-walking): + 자동차보험 (영업용)
+
+각 보험마다:
+- type: "fire" | "general-liability" | "workers-comp" | "product-liability" | "auto" | "property" | "professional" | "cyber" 중 정확히
+- annualPremiumEstimate: 한국 시세 (원). 화재배상 30~80만, 근재 50~150만 등
+- required: 법적 의무만 true, 권장은 false
+</insurance_extraction>
+
+<money_infra_extraction>
+moneyInfra 필드는 자금 인프라 추천:
+
+- **recommendedBank** — 업종/예산별:
+  · 정부지원사업 활용 가능성 큰 경우 → "ibk" (IBK 정책자금 연계)
+  · 비대면·즉시 개설·디지털 우선 → "kakaobank" 또는 "toss"
+  · 지역 네트워크 강한 자영업 → "woori"
+  · 디지털 전환 + 카드 단말기 연계 → "shinhan"
+- **recommendedPos** — 업종별:
+  · 음식점·카페·소매: "tossplace" 또는 "kis"
+  · 온라인 (스마트스토어 등): "naverpay" / "kakaopay"
+  · 자체몰: "inicis" / "kcp"
+  · 스타트업 SaaS: "stripe"
+- **cpaDecision** —
+  · 1인 + 간이과세 + 월 매출 1500만 미만 → "self" (셀프 신고)
+  · 직원 1명+ 또는 일반과세 또는 법인 → "cpa" (세무사 위임)
+  · 중간 → "hybrid" (월 셀프 + 연 세무사 컨설팅)
+</money_infra_extraction>
+
+<funding_extraction>
+fundingPrograms 필드는 한국 주요 정부지원사업 적용 가능성:
+
+기준 프로그램 (2026 기준):
+- **예비창업패키지** (preliminary-startup) — 사업자 미등록 + 만 39세 이하 또는 39+여성. 최대 1억. 매년 2-3월 모집.
+- **청년창업사관학교** (youth-startup) — 만 39세 이하 + 창업 3년 이내. 1년 보육 + 최대 1억. 매년 2-3월.
+- **벤처기업 인증** (venture-cert) — 기술 보증, 연구개발비 5% 등 충족 시. 세제·자금 혜택.
+- **이노비즈** (innobiz) — 기술 혁신 강조 인증 (벤처와 별도).
+- **TIPS** — 민간 투자 + 정부 R&D 매칭 (테크 스타트업 전용). 최대 5억.
+- **R&D 과제** (rnd) — 정부 R&D 사업 (TIPA·중기부·정통부 등).
+- **메인비즈** (mainbiz) — 경영 혁신.
+
+각 프로그램마다:
+- fitScore (0-100): 사용자 사업·연령·지역·예산과의 적합도
+- 적합도 70+ 만 추천 (5개 이내)
+- eligibility 한 줄로 명확히
+- amount: 실제 지원 한도
+</funding_extraction>
+
+<industry_specific>
+industrySpecific 필드는 업종에 따라:
+
+- **food / cafe-dessert**: menu 3-5개 (시그니처)
+  · name + price + reason ("객단가 1.2만원 맞춤")
+- **beauty**: services 3-5개 (시술 메뉴)
+  · name + durationMin + price
+- **fitness**: memberships 2-4개 (회원권)
+  · name + durationMonths + price ("3개월 무제한 18만원")
+- **retail / online-digital**: products 3-5개 (주력 상품)
+  · name + targetMargin (%)
+- **모든 업종**: coreAssets 3-6개 (필수 장비/기구)
+  · name + estimatedCost (원) + priority ("must" | "nice")
+</industry_specific>
 
 <rules>
 1. 사용자 텍스트에서 최대한 많은 정보를 추출하세요. 업종, 위치, 예산, 팀 규모, 비즈니스 모델 등.

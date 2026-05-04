@@ -31,7 +31,7 @@ import { HealthDot, type HealthGrade } from "./HealthSignal";
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const FONT_STACK = "inherit";
-const PRIMARY = "#1d3557";
+const PRIMARY = "#191970";
 const GREEN = "#34C759";
 const YELLOW = "#FF9F0A";
 const RED = "#FF3B30";
@@ -154,10 +154,19 @@ function generateFallbackInsight(
 
 // ─── Hero resolver (분석 + 행동 1개) ────────────────────────────────────────
 
-type HeroSource = "stale-sales" | "crisis" | "anomaly" | "reorder-urgent" | "ai-action" | "agent" | "industry" | "drucker";
-type HeroTone = "crisis" | "warning" | "neutral";
+export type HeroSource = "stale-sales" | "crisis" | "anomaly" | "reorder-urgent" | "ai-action" | "agent" | "industry" | "drucker";
+export type HeroTone = "crisis" | "warning" | "neutral";
+/**
+ * CTA 클릭 시 어디로 안내할지 명시.
+ * - "sales": 매출 입력 (ActivitySnapshotCard, [data-sales-input])
+ * - "users": 사용자 변화 (UserActivityCard, [data-user-activity]) — DAU/WAU/리텐션·고객수 인사이트
+ * - "cashflow": 현금흐름 레이더 (CashflowHeroCard, [data-cashflow-hero])
+ * - "costs": 비용 구조 (CostStructureCard, [data-cost-structure])
+ * - "marketing": 마케팅·이벤트 트리거 (외부 라우트)
+ */
+export type HeroCtaTarget = "sales" | "users" | "cashflow" | "costs" | "marketing";
 
-type Hero = {
+export type Hero = {
   source: HeroSource;
   tone: HeroTone;
   tagKo: string;                     // "오늘의 집중" | "긴급 대응" 등
@@ -168,6 +177,7 @@ type Hero = {
   actionEn: string;
   ctaKo: string;                      // CTA 라벨
   ctaEn: string;
+  ctaTarget: HeroCtaTarget;          // 클릭 시 어디로 안내할지 — 거짓 기능 방지
   agentProposalId?: string;           // hero가 agent 출처일 때 id
   /** AI 가 K-히트 사례를 인용했을 때 — UI 에 [사례:성심당] 배지로 노출 */
   referencedCase?: { id: string; name: string };
@@ -184,7 +194,7 @@ type OtherItem = {
 };
 
 const AGENT_ICON: Record<AgentKind, { Icon: LucideIcon; color: string }> = {
-  coupon:  { Icon: Ticket,  color: "#2563eb" },
+  coupon:  { Icon: Ticket,  color: "#191970" },
   reorder: { Icon: Package, color: "#b45309" },
   content: { Icon: Camera,  color: "#a855f7" },
   review:  { Icon: Star,    color: "#059669" },
@@ -200,7 +210,7 @@ function fmtWon(n: number, ko: boolean): string {
   return `${sign}₩${abs.toLocaleString()}`;
 }
 
-function resolveHero(input: {
+export function resolveHero(input: {
   ko: boolean;
   cashflowCrisis: CrisisDetection | null;
   /** 룰 기반 이상 감지 (이익률 하락·매출 하락·비용 급증·프라임코스트 돌파) — critical/warning 우선 활용 */
@@ -215,8 +225,10 @@ function resolveHero(input: {
   totalEntries: number;
   /** 월 비용 합계 — 매출 공백 시 누적 손실 추정용 */
   monthlyBurn: number;
+  /** 업종 카테고리 — industry insight CTA 타깃 라우팅 보정용 (LLM 분류 신뢰도 낮음) */
+  categoryId?: string;
 }): Hero {
-  const { ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, aiTopAction, industryInsight, businessLaunched, daysSinceLastSalesEntry, totalEntries, monthlyBurn } = input;
+  const { ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, aiTopAction, industryInsight, businessLaunched, daysSinceLastSalesEntry, totalEntries, monthlyBurn, categoryId } = input;
 
   // 0. 매출 미기록 2일 이상 (AI 코칭 정확도 보호 — 오래된 데이터로 코칭 생성 차단)
   //    - 운영 중(businessLaunched)이고
@@ -248,6 +260,7 @@ function resolveHero(input: {
       actionEn: "Takes 5 seconds. Just log yesterday's and today's sales in the 'Revenue flow' input bar.",
       ctaKo: "매출 기록하러 가기",
       ctaEn: "Log sales",
+      ctaTarget: "sales",
     };
   }
 
@@ -266,6 +279,7 @@ function resolveHero(input: {
       actionEn: "I've prepped 7 one-tap solutions in the Cash-flow Radar below — let's pick together.",
       ctaKo: "해결책 같이 보기",
       ctaEn: "Solve together",
+      ctaTarget: "cashflow",
     };
   }
 
@@ -292,6 +306,13 @@ function resolveHero(input: {
       actionEn: topAnomaly.action,
       ctaKo: "상세 보기",
       ctaEn: "See details",
+      // anomaly 종류에 따라 타깃 분기 — 비용 이상은 비용 카드, 고객 이상은 사용자 카드, 그 외 매출
+      ctaTarget:
+        topAnomaly.kind === "cost-spike" || topAnomaly.kind === "prime-cost-breach" || topAnomaly.kind === "labor-ratio-high"
+          ? "costs"
+          : topAnomaly.kind === "customer-decline" || topAnomaly.kind === "new-customer-low"
+            ? "users"
+            : "sales",
     };
   }
 
@@ -310,6 +331,7 @@ function resolveHero(input: {
       ctaKo: "주문 메시지 복사",
       ctaEn: "Copy order message",
       agentProposalId: topProposal.id,
+      ctaTarget: "costs", // 재주문은 비용·재고 영역 — 비용 카드로 안내 (재고 카드가 있으면 향후 ctaTarget 확장)
     };
   }
 
@@ -327,6 +349,8 @@ function resolveHero(input: {
       ctaKo: "확인하기",
       ctaEn: "Take action",
       referencedCase: aiTopAction.referencedCase,
+      // AI Top Action은 행동 텍스트 기반 — 일단 sales (가장 자주 매출 입력 후 검증)
+      ctaTarget: "sales",
     };
   }
 
@@ -363,11 +387,40 @@ function resolveHero(input: {
       ctaKo: "적용하기",
       ctaEn: "Apply",
       agentProposalId: topProposal.id,
+      // 종류별: coupon/content/review = 마케팅 영역(사용자 변화 카드로 효과 검증), reorder = costs
+      ctaTarget: kind === "reorder" ? "costs" : "users",
     };
   }
 
   // 5. Industry Insight
   if (industryInsight) {
+    // ── CTA 타깃 라우팅 (3단계 우선순위) ──
+    // (A) 업종 컨텍스트 우선 — startup-tech / online-digital은 사용자 트래킹이 본질
+    //     LLM이 카테고리를 "operations"로 잘못 분류해도 "사용자 카드"로 안내해야 의미 있음.
+    // (B) 그 외 업종은 LLM이 분류한 category 사용
+    // (C) action 텍스트에 사용자/고객 키워드가 있으면 강제 users (안전망)
+    const isStartupOrOnline = categoryId === "startup-tech" || categoryId === "online-digital";
+    const actionMentionsUsers = /사용자|고객|user|customer|DAU|WAU|MAU|retention|리텐션/i.test(
+      `${industryInsight.action} ${industryInsight.body}`
+    );
+    const target: HeroCtaTarget =
+      isStartupOrOnline ? "users"
+      : industryInsight.category === "revenue" ? "sales"
+      : industryInsight.category === "cost" ? "costs"
+      : industryInsight.category === "marketing" ? "users"
+      : industryInsight.category === "growth" ? "users"
+      : actionMentionsUsers ? "users"
+      : "sales";
+    // CTA 라벨도 타깃에 맞게 — "오늘 체크인"은 무엇을 체크인하는지 모호 → 명확화
+    // industry 카테고리는 sales / users / costs 만 도출 (cashflow는 cashflowCrisis 분기에서만 발생)
+    const ctaKo =
+      target === "users" ? "사용자 추적 시작"
+      : target === "costs" ? "비용 점검하기"
+      : "매출 기록하기";
+    const ctaEn =
+      target === "users" ? "Start tracking users"
+      : target === "costs" ? "Review costs"
+      : "Log sales";
     return {
       source: "industry",
       tone: "neutral",
@@ -377,8 +430,9 @@ function resolveHero(input: {
       analysisEn: industryInsight.headline ? `${industryInsight.headline}. ${industryInsight.body}` : industryInsight.body,
       actionKo: industryInsight.action,
       actionEn: industryInsight.action,
-      ctaKo: "오늘 체크인",
-      ctaEn: "Check in",
+      ctaKo,
+      ctaEn,
+      ctaTarget: target,
     };
   }
 
@@ -392,8 +446,9 @@ function resolveHero(input: {
     analysisEn: "Log one sale daily — build.up will deliver fresh business insights each day.",
     actionKo: "오늘 가장 중요한 한 가지는 무엇인가요?",
     actionEn: "What's the one important thing today?",
-    ctaKo: "오늘 체크인",
-    ctaEn: "Check in",
+    ctaKo: "매출 기록하기",
+    ctaEn: "Log sales",
+    ctaTarget: "sales",
   };
 }
 
@@ -418,8 +473,8 @@ const HERO_TONE_STYLES: Record<HeroTone, {
   },
   neutral: {
     cardBorder: "rgba(0,0,0,0.06)",
-    tagColor: "#1d3557",
-    ctaBg: "#1d3557",
+    tagColor: "#191970",
+    ctaBg: "#191970",
     ctaHoverBg: "#162b45",
   },
 };
@@ -730,7 +785,8 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
     daysSinceLastSalesEntry,
     totalEntries: entries.length,
     monthlyBurn: monthlyBurnForHero,
-  }), [ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, d.aiActions, industryInsight, d.businessLaunched, daysSinceLastSalesEntry, entries.length, monthlyBurnForHero]);
+    categoryId: d.industryCategoryId,
+  }), [ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, d.aiActions, industryInsight, d.businessLaunched, daysSinceLastSalesEntry, entries.length, monthlyBurnForHero, d.industryCategoryId]);
 
   // "다른 제안들" = AI 액션 나머지 + Hero에 쓰이지 않은 agent proposals
   const otherItems = useMemo(() => {
@@ -997,7 +1053,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
       change: null,
       changeLabel: ko ? "D+2 예상" : "D+2 est.",
       hint: !hasData ? (ko ? "매출을 입력하세요" : "Enter sales") : undefined,
-      chart: hasRevenueSeries ? { kind: "line", series: revenueSeries.slice(-7), color: "#1d3557" } : undefined,
+      chart: hasRevenueSeries ? { kind: "line", series: revenueSeries.slice(-7), color: "#191970" } : undefined,
     },
   ];
 
@@ -1014,7 +1070,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
   if (!hasData) {
     const inputFieldStyle: React.CSSProperties = {
       width: "100%", padding: "15px 16px 15px 56px", borderRadius: "14px",
-      border: "1.5px solid rgba(0,0,0,0.06)", background: "rgba(0,0,0,0.02)",
+      border: "1.5px solid rgba(0,0,0,0.06)", background: "rgba(25,25,112,0.025)",
       fontSize: "17px", fontWeight: 700, fontFamily: FONT_STACK,
       outline: "none", color: "#0f172a",
       transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
@@ -1028,7 +1084,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
     const focusIn = (e: React.FocusEvent<HTMLInputElement>) => {
       e.currentTarget.style.borderColor = PRIMARY;
       e.currentTarget.style.background = "white";
-      e.currentTarget.style.boxShadow = "0 0 0 4px rgba(29,53,87,0.08)";
+      e.currentTarget.style.boxShadow = "0 0 0 4px rgba(25,25,112,0.08)";
     };
     const focusOut = (e: React.FocusEvent<HTMLInputElement>) => {
       e.currentTarget.style.borderColor = "rgba(0,0,0,0.06)";
@@ -1040,7 +1096,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
         <div style={{
           borderRadius: "28px", padding: "48px 32px 40px",
           background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%)",
-          border: "1px solid rgba(0,0,0,0.04)",
+          border: "1px solid rgba(25,25,112,0.06)",
           backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
           boxShadow: "0 1px 2px rgba(0,0,0,0.02), 0 8px 32px rgba(0,0,0,0.04)",
           textAlign: "center" as const,
@@ -1050,7 +1106,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
             background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 100%)`,
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 24px",
-            boxShadow: "0 8px 24px rgba(29,53,87,0.25), 0 0 0 1px rgba(255,255,255,0.1) inset",
+            boxShadow: "0 8px 24px rgba(25,25,112,0.25), 0 0 0 1px rgba(255,255,255,0.1) inset",
           }}>
             <BarChart3 size={28} color="#fff" strokeWidth={1.6} />
           </div>
@@ -1077,7 +1133,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
               color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.25)",
               fontSize: "16px", fontWeight: 700, cursor: d.dailySalesInput ? "pointer" : "default",
               fontFamily: FONT_STACK, letterSpacing: "-0.01em",
-              boxShadow: d.dailySalesInput ? "0 4px 16px rgba(29,53,87,0.2)" : "none",
+              boxShadow: d.dailySalesInput ? "0 4px 16px rgba(25,25,112,0.2)" : "none",
               transition: "all 0.3s cubic-bezier(0.22,1,0.36,1)",
             }}>
               {ko ? "기록 시작하기" : "Start Recording"}
@@ -1111,7 +1167,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
               width: "28px", height: "28px", borderRadius: "8px",
               background: `linear-gradient(135deg, ${PRIMARY} 0%, #457b9d 60%, #a8dadc 100%)`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(29,53,87,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
+              boxShadow: "0 2px 8px rgba(25,25,112,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
             }}>
               <span style={{ fontSize: "11px", fontWeight: 800, color: "#fff", fontFamily: FONT_STACK, letterSpacing: "-0.02em" }}>AI</span>
             </div>
@@ -1129,7 +1185,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                   style={{
                     display: "inline-flex", alignItems: "center", gap: "5px",
                     padding: "3px 9px", borderRadius: "999px",
-                    background: "rgba(15,23,42,0.04)",
+                    background: "rgba(25,25,112,0.04)",
                     border: "0.5px solid rgba(15,23,42,0.06)",
                     fontFamily: FONT_STACK,
                   }}
@@ -1155,7 +1211,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                   style={{
                     display: "inline-flex", alignItems: "center", gap: "5px",
                     padding: "3px 9px", borderRadius: "999px",
-                    background: "rgba(15,23,42,0.03)",
+                    background: "rgba(25,25,112,0.035)",
                     border: "0.5px solid rgba(15,23,42,0.05)",
                     fontFamily: FONT_STACK,
                   }}
@@ -1330,7 +1386,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                     : (ko ? "AI 코칭을 불러오지 못했습니다" : "AI coaching unavailable")}
                 </span>
                 <button type="button" onClick={d.fetchAiActions} style={{
-                  fontSize: "11px", fontWeight: 620, color: "#007aff",
+                  fontSize: "11px", fontWeight: 620, color: "#191970",
                   background: "none", border: "none", cursor: "pointer",
                   flexShrink: 0,
                 }}>
@@ -1497,7 +1553,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                     }}
                   >
                     {ko ? "LinkedIn에서 공동창업자 찾기" : "Find co-founders on LinkedIn"}
-                    <ArrowRight size={14} strokeWidth={2} />
+                    <ArrowRight size={14} strokeWidth={1.5} />
                   </a>
                 ) : (
                   <button
@@ -1522,7 +1578,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                     onMouseLeave={(e) => (e.currentTarget.style.background = toneStyles.ctaBg)}
                   >
                     {ctaLabel}
-                    <ArrowRight size={14} strokeWidth={2} />
+                    <ArrowRight size={14} strokeWidth={1.5} />
                   </button>
                 )}
               </div>
@@ -1558,7 +1614,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                     {moreOpen
                       ? (ko ? `다른 제안 ${otherItems.length}개 접기` : `Collapse ${otherItems.length} more`)
                       : (ko ? `다른 제안 ${otherItems.length}개 보기` : `Show ${otherItems.length} more`)}
-                    {moreOpen ? <ChevronUp size={12} strokeWidth={2} /> : <ChevronDown size={12} strokeWidth={2} />}
+                    {moreOpen ? <ChevronUp size={12} strokeWidth={1.5} /> : <ChevronDown size={12} strokeWidth={1.5} />}
                   </button>
                   {moreOpen && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "6px" }}>
@@ -1581,8 +1637,8 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                             transition: "all 0.15s",
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "rgba(29,53,87,0.03)";
-                            e.currentTarget.style.borderColor = "rgba(29,53,87,0.08)";
+                            e.currentTarget.style.background = "rgba(25,25,112,0.03)";
+                            e.currentTarget.style.borderColor = "rgba(25,25,112,0.08)";
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = "rgba(0,0,0,0.015)";
@@ -1650,7 +1706,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
             : null;
           const { numPart, unitPart } = splitValueAndUnit(kpi.value, kpi.unit);
           const changeC = kpi.change !== null ? changeColor(kpi.change) : null;
-          const sparklineColor = dotColor ?? (changeC === RED ? "#ff3b30" : changeC === GREEN ? "#34c759" : "#1d3557");
+          const sparklineColor = dotColor ?? (changeC === RED ? "#ff3b30" : changeC === GREEN ? "#34c759" : "#191970");
           return (
             <div key={kpi.label} style={kpiCompactCardStyle}>
               {/* 1행: 라벨 + 우상단 상태 dot */}
@@ -1725,7 +1781,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
               background: "rgba(5,150,105,0.08)", display: "flex",
               alignItems: "center", justifyContent: "center", flexShrink: 0,
             }}>
-              <Target size={16} color="#059669" strokeWidth={2} />
+              <Target size={16} color="#059669" strokeWidth={1.5} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: "10px", fontWeight: 650, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
@@ -1775,7 +1831,7 @@ const briefingCardStyle: React.CSSProperties = {
   padding: "18px 20px",
   background:
     "linear-gradient(135deg, rgba(219,234,254,0.28) 0%, rgba(209,250,229,0.18) 100%)",
-  border: "1px solid rgba(0,0,0,0.04)",
+  border: "1px solid rgba(25,25,112,0.06)",
   backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
 };
@@ -1787,7 +1843,7 @@ const aiBadgeStyle: React.CSSProperties = {
   width: "22px",
   height: "16px",
   borderRadius: "4px",
-  background: "linear-gradient(135deg, #1d3557, #457b9d)",
+  background: "linear-gradient(135deg, #191970, #457b9d)",
   color: "#fff",
   fontSize: "8px",
   fontWeight: 720,
@@ -2123,7 +2179,7 @@ const kpiCardStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.82)",
   backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(0,0,0,0.05)",
+  border: "1px solid rgba(25,25,112,0.08)",
   boxShadow:
     "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.025)",
   display: "flex",

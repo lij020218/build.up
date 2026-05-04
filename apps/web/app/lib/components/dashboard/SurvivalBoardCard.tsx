@@ -10,7 +10,7 @@ import { AnimatedPath, AnimatedProgressBar, CountUp } from "./animations";
  */
 function Sparkline({
   values,
-  color = "#1d3557",
+  color = "#191970",
   fill = false,
 }: {
   values: number[];
@@ -190,7 +190,7 @@ export function SurvivalBoardCard({
             const gaugeColor = d.businessHealthScore === "unknown" ? "rgba(15,23,42,0.2)" : healthTone;
             return (
               <svg width="36" height="36" viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
-                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(15,23,42,0.06)" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(25,25,112,0.05)" strokeWidth="3" />
                 <circle cx="18" cy="18" r="15" fill="none"
                   stroke={gaugeColor}
                   strokeWidth="3" strokeLinecap="round"
@@ -216,12 +216,12 @@ export function SurvivalBoardCard({
             {totalSales > 0 ? <CountUp to={totalSales} duration={1.0} format={fmt} /> : "—"}
           </div>
           <div style={survivalMetricNote}>{ko ? `일평균 ${totalSales > 0 ? fmt(Math.round(totalSales / Math.max(1, new Date().getDate()))) : "—"}` : `Daily avg ${totalSales > 0 ? fmt(Math.round(totalSales / Math.max(1, new Date().getDate()))) : "—"}`}</div>
-          {hasSalesSeries && <Sparkline values={last14} color="#1d3557" fill />}
+          {hasSalesSeries && <Sparkline values={last14} color="#191970" fill />}
         </div>
         {/* 2. 손익 — 보조 메트릭 */}
         <div style={survivalMetricCard}>
           <div style={survivalMetricLabel}>{ko ? "MTD 손익" : "MTD P&L"}</div>
-          <div style={{ ...survivalMetricValueSecondary, color: totalSales === 0 && totalCosts === 0 ? "rgba(15,23,42,0.25)" : netProfit >= 0 ? "#059669" : "#dc2626" }}>
+          <div style={{ ...survivalMetricValueSecondary, color: totalSales === 0 && totalCosts === 0 ? "rgba(15,23,42,0.25)" : netProfit >= 0 ? "#0e7c3a" : "#dc2626" }}>
             {totalSales === 0 && totalCosts === 0
               ? "—"
               : <>{netProfit >= 0 ? "+" : ""}<CountUp to={netProfit} duration={1.0} format={fmt} /></>}
@@ -247,7 +247,7 @@ export function SurvivalBoardCard({
         {/* 4. 주간 성장 */}
         <div style={survivalMetricCard}>
           <div style={survivalMetricLabel}>{ko ? "주간 성장" : "Weekly"}</div>
-          <div style={{ ...survivalMetricValue, color: weeklySalesChange >= 0 ? "#059669" : "#dc2626" }}>
+          <div style={{ ...survivalMetricValue, color: weeklySalesChange >= 0 ? "#0e7c3a" : "#dc2626" }}>
             {weeklySignalLabel}
           </div>
           <div style={survivalMetricNote}>{ko ? "7일 vs 직전 7일" : "7d vs prev 7d"}</div>
@@ -280,7 +280,7 @@ const opsTitle: React.CSSProperties = {
 const opsPill: React.CSSProperties = {
   borderRadius: "999px",
   padding: "8px 12px",
-  background: "rgba(15, 23, 42, 0.04)",
+  background: "rgba(25,25,112,0.04)",
   boxShadow: "0 1px 0 rgba(255,255,255,0.6) inset",
   fontSize: "12px",
   fontWeight: 700,
@@ -291,9 +291,9 @@ const opsPill: React.CSSProperties = {
 const survivalCard: React.CSSProperties = {
   borderRadius: "20px",
   padding: "20px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.982), rgba(243,246,250,0.9))",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
   color: "#0f172a",
-  border: "1px solid rgba(15, 23, 42, 0.048)",
+  border: "1px solid rgba(25,25,112,0.10)",
   boxShadow: "0 1px 0 rgba(255,255,255,0.8) inset, 0 16px 38px rgba(15, 23, 42, 0.035)",
   display: "grid",
   gap: "12px",
@@ -309,8 +309,8 @@ const survivalTop: React.CSSProperties = {
 const survivalMetricCard: React.CSSProperties = {
   borderRadius: "16px",
   padding: "14px",
-  background: "linear-gradient(180deg, rgba(248,250,253,0.92), rgba(242,246,250,0.82))",
-  border: "1px solid rgba(15,23,42,0.04)",
+  background: "linear-gradient(180deg, #f7f8fe 0%, #eef0fb 100%)",
+  border: "1px solid rgba(25,25,112,0.04)",
   boxShadow: "0 1px 0 rgba(255,255,255,0.7) inset",
   display: "grid",
   gap: "8px",

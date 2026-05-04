@@ -1,0 +1,211 @@
+/**
+ * 내 가게 — 공유 스타일 토큰.
+ * Apple Settings + Linear + Stripe Sigma 톤. 미니멀, 회계 차분함, 사진/차트 강조.
+ */
+
+export const PALETTE = {
+  MIDNIGHT: "#191970",
+  MIDNIGHT_DEEP: "#0f0f4a",
+  MIDNIGHT_4: "rgba(25,25,112,0.04)",
+  MIDNIGHT_6: "rgba(25,25,112,0.06)",
+  MIDNIGHT_8: "rgba(25,25,112,0.08)",
+  MIDNIGHT_BORDER: "rgba(25,25,112,0.10)",
+  HAIRLINE: "rgba(25,25,112,0.07)",
+  INK: "#0f172a",
+  MUTED: "rgba(15,23,42,0.55)",
+  HINT: "rgba(15,23,42,0.4)",
+  GHOST: "rgba(15,23,42,0.28)",
+  SUBTLE: "rgba(25,25,112,0.04)",
+  SUCCESS: "#34c759",
+  WARN: "#ff9f0a",
+  DANGER: "#ff3b30",
+} as const;
+
+/** 섹션 카드 — 흰색 베이스, hairline 보더, 부드러운 그림자 */
+export const card: React.CSSProperties = {
+  borderRadius: 20,
+  padding: 0,
+  background: "white",
+  border: `1px solid ${PALETTE.MIDNIGHT_BORDER}`,
+  boxShadow: "0 1px 3px rgba(25,25,112,0.03), 0 12px 28px -16px rgba(25,25,112,0.12)",
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden", // hairline divider가 깔끔하게 보이도록
+};
+
+/** 섹션 헤더 — 카드 상단 영역 (padding 별도) */
+export const sectionHeader: React.CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 12,
+  padding: "20px 24px 16px",
+  borderBottom: `1px solid ${PALETTE.HAIRLINE}`,
+};
+
+export const sectionTitle: React.CSSProperties = {
+  fontSize: 17,
+  fontWeight: 700,
+  color: PALETTE.MIDNIGHT_DEEP,
+  letterSpacing: "-0.02em",
+  lineHeight: 1.3,
+};
+
+export const sectionSubtitle: React.CSSProperties = {
+  fontSize: 12.5,
+  color: PALETTE.MUTED,
+  fontWeight: 500,
+  marginTop: 3,
+  lineHeight: 1.45,
+};
+
+export const sectionBody: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+};
+
+/** Settings-style row: label (left) | input/value (right) */
+export const settingsRow: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "minmax(140px, 200px) 1fr",
+  alignItems: "center",
+  gap: 16,
+  padding: "12px 24px",
+  minHeight: 52,
+  borderBottom: `1px solid ${PALETTE.HAIRLINE}`,
+  transition: "background 0.15s ease",
+};
+
+export const settingsRowFull: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+  padding: "14px 24px",
+  borderBottom: `1px solid ${PALETTE.HAIRLINE}`,
+};
+
+export const rowLabel: React.CSSProperties = {
+  fontSize: 13,
+  fontWeight: 600,
+  color: PALETTE.INK,
+  letterSpacing: "-0.005em",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+};
+
+export const rowLabelOptional: React.CSSProperties = {
+  ...rowLabel,
+  color: PALETTE.MUTED,
+  fontWeight: 500,
+};
+
+export const rowHelper: React.CSSProperties = {
+  fontSize: 11.5,
+  color: PALETTE.HINT,
+  fontWeight: 500,
+  lineHeight: 1.5,
+  marginTop: 4,
+};
+
+/** Inline input — borderless 기본, 하단 hairline */
+export const inlineInput = (filled: boolean): React.CSSProperties => ({
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "8px 0",
+  border: "none",
+  borderBottom: `1px solid ${filled ? PALETTE.MIDNIGHT_BORDER : "transparent"}`,
+  fontSize: 14,
+  fontWeight: filled ? 600 : 400,
+  color: filled ? PALETTE.INK : PALETTE.GHOST,
+  background: "transparent",
+  outline: "none",
+  fontFamily: "inherit",
+  letterSpacing: "-0.005em",
+  transition: "border-color 0.15s ease, color 0.15s ease",
+  textAlign: "right" as const,
+});
+
+/** 우측 정렬용 number/won/percent input */
+export const numberInput = (filled: boolean): React.CSSProperties => ({
+  ...inlineInput(filled),
+  fontVariantNumeric: "tabular-nums" as const,
+  textAlign: "right" as const,
+});
+
+/** Textarea — full-width, soft fill */
+export const textareaInput = (filled: boolean): React.CSSProperties => ({
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "10px 12px",
+  borderRadius: 10,
+  border: `1px solid ${filled ? PALETTE.MIDNIGHT_BORDER : PALETTE.HAIRLINE}`,
+  background: filled ? "white" : PALETTE.MIDNIGHT_4,
+  fontSize: 13.5,
+  fontWeight: 500,
+  color: PALETTE.INK,
+  outline: "none",
+  fontFamily: "inherit",
+  letterSpacing: "-0.005em",
+  resize: "vertical" as const,
+  minHeight: 64,
+  lineHeight: 1.55,
+  transition: "border-color 0.15s ease, background 0.15s ease",
+});
+
+export const ddayPill = (days: number): React.CSSProperties => {
+  const isCritical = days <= 7;
+  const isWarn = days <= 30;
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    padding: "2px 8px",
+    borderRadius: 999,
+    fontSize: 10.5,
+    fontWeight: 700,
+    color: isCritical ? PALETTE.DANGER : isWarn ? PALETTE.WARN : PALETTE.MIDNIGHT,
+    background: isCritical ? "rgba(255,59,48,0.10)" : isWarn ? "rgba(255,159,10,0.10)" : PALETTE.MIDNIGHT_8,
+    fontVariantNumeric: "tabular-nums" as const,
+    letterSpacing: "-0.01em",
+    whiteSpace: "nowrap" as const,
+  };
+};
+
+export const ghostButton: React.CSSProperties = {
+  fontSize: 12.5,
+  fontWeight: 600,
+  padding: "10px 16px",
+  borderRadius: 10,
+  border: `1px dashed ${PALETTE.MIDNIGHT_BORDER}`,
+  background: "transparent",
+  color: PALETTE.MIDNIGHT,
+  cursor: "pointer",
+  fontFamily: "inherit",
+  letterSpacing: "-0.005em",
+  transition: "background 0.15s ease, border-color 0.15s ease",
+};
+
+export const subtleButton: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  padding: "5px 11px",
+  borderRadius: 8,
+  border: `1px solid ${PALETTE.MIDNIGHT_BORDER}`,
+  background: "white",
+  color: PALETTE.MIDNIGHT,
+  cursor: "pointer",
+  fontFamily: "inherit",
+};
+
+/** legacy aliases (다른 곳에서 사용) — 새 디자인에 맞게 매핑 */
+export const fieldLabel: React.CSSProperties = rowLabel;
+export const fieldHelper: React.CSSProperties = rowHelper;
+export const inputBase = textareaInput;
+export const inputFocus = (filled: boolean): React.CSSProperties => ({
+  borderColor: filled ? PALETTE.MIDNIGHT : PALETTE.MIDNIGHT_BORDER,
+});
+export const optionalBadge: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 500,
+  color: PALETTE.GHOST,
+};

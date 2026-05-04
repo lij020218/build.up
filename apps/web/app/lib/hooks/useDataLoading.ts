@@ -82,6 +82,7 @@ export function useDataLoading(
     setStageGuideContent,
     setGuideStepIndex,
     roadmap,
+    decisions,
   } = useRoadmapStore();
 
   const {
@@ -103,7 +104,34 @@ export function useDataLoading(
   } = useFinanceStore();
 
   // Derived values needed for effects
-  const preferredRegion = profile?.preferredRegions?.[0];
+  // ⚠ profile?.preferredRegions 만으로는 부족하다:
+  //   ① 첫 마운트 시 profile 이 아직 hydrate 되지 않아 undefined
+  //   ② DB에 빈 문자열 [""] 이 저장된 레거시 케이스
+  //   ③ AI Roadmap Wizard 에서 region 입력을 안 한 경우 — locationDecision 에만 존재
+  //   → 모든 가용 소스를 fallback chain 으로 묶어 contractor 검색이 silent fail 되지 않도록.
+  const locationDecision = decisions["location-candidates"];
+  const profileRegion = profile?.preferredRegions?.[0]?.trim();
+  const inputRegion =
+    typeof locationDecision?.inputs?.preferredRegion === "string"
+      ? locationDecision.inputs.preferredRegion.trim()
+      : "";
+  const customRegion =
+    typeof locationDecision?.inputs?.customMarketName === "string"
+      ? locationDecision.inputs.customMarketName.trim()
+      : "";
+  const finalTitleRegion =
+    typeof locationDecision?.inputs?.finalMarketTitle === "string"
+      ? locationDecision.inputs.finalMarketTitle.trim()
+      : "";
+  const inputRegionFromStore = preferredRegionInput?.trim() ?? "";
+  const preferredRegion =
+    (profileRegion && profileRegion.length > 0 ? profileRegion : null)
+    ?? (inputRegion.length > 0 ? inputRegion : null)
+    ?? (customRegion.length > 0 ? customRegion : null)
+    ?? (finalTitleRegion.length > 0 ? finalTitleRegion : null)
+    ?? (inputRegionFromStore.length > 0 ? inputRegionFromStore : null)
+    ?? locationDecision?.selectedPrimaryOptionId
+    ?? undefined;
 
   const isDigitalCategory = industryCategoryId === "online-digital" || industryCategoryId === "startup-tech";
   const isStartupCategory = industryCategoryId === "startup-tech";
@@ -239,7 +267,18 @@ export function useDataLoading(
   // ⚠ 클라이언트 Kakao JS SDK는 도메인 화이트리스트가 필요해 dev 환경에서 silent fail 발생.
   //    안정적인 server REST API (KAKAO_REST_API_KEY + KA header) 를 primary 로 사용.
   useEffect(() => {
-    if (!preferredRegion || !industryCategoryId) return;
+    if (!preferredRegion || !industryCategoryId) {
+      // 진단용 로그 — 검색이 안 될 때 어떤 입력이 비어있는지 즉시 확인 가능.
+      if (process.env.NODE_ENV !== "production") {
+        console.debug("[contractors] skip — preferredRegion or industryCategoryId missing", {
+          preferredRegion,
+          industryCategoryId,
+          profileRegion: profile?.preferredRegions?.[0],
+          locationDecisionInputs: locationDecision?.inputs,
+        });
+      }
+      return;
+    }
 
     const contractorKeywords: Record<string, string> = {
       "cafe-dessert": "카페 인테리어",
@@ -263,27 +302,44 @@ export function useDataLoading(
     const kakao = w.kakao;
 
     // ── Primary: Server REST API (auth Bearer token 필요) ──
-    const searchViaServer = async () => {
+    // 키워드를 두 번 시도: ① 업종별 정밀 키워드 → ② "인테리어" 만으로 광범위 검색.
+    //   "강남구 논현동 카페 인테리어" 같이 너무 구체적이면 결과 0인 케이스가 있어 폴백 필요.
+    const searchViaServer = async (): Promise<boolean> => {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
-      if (!token) return false; // 비로그인 → SDK fallback 시도
-      try {
-        const params = new URLSearchParams({ region: preferredRegion, categoryId: industryCategoryId, keyword });
-        const res = await fetch(`/api/contractors/local?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return false;
-        const json = await res.json() as { results?: Array<{ id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }>; source?: string };
-        if (cancelled) return true;
-        if (json.results && json.results.length > 0) {
-          setContractors(json.results);
-          return true;
-        }
-        return false; // 결과 없음 → SDK fallback 시도
-      } catch (err) {
-        console.warn("[contractors] server API failed:", err);
+      if (!token) {
+        console.warn("[contractors] no auth token — falling back to SDK");
         return false;
       }
+      const tryFetch = async (kw: string): Promise<boolean> => {
+        try {
+          const params = new URLSearchParams({ region: preferredRegion, categoryId: industryCategoryId, keyword: kw });
+          const res = await fetch(`/api/contractors/local?${params.toString()}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) {
+            console.warn(`[contractors] server returned ${res.status} for keyword "${kw}"`);
+            return false;
+          }
+          const json = await res.json() as { results?: Array<{ id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }>; source?: string };
+          if (cancelled) return true;
+          if (json.results && json.results.length > 0) {
+            setContractors(json.results);
+            return true;
+          }
+          console.debug(`[contractors] 0 results for keyword "${kw}" (source=${json.source})`);
+          return false;
+        } catch (err) {
+          console.warn(`[contractors] server API threw for keyword "${kw}":`, err);
+          return false;
+        }
+      };
+      // ① 정밀 키워드 (e.g. "카페 인테리어")
+      if (await tryFetch(keyword)) return true;
+      if (cancelled) return true;
+      // ② 광범위 키워드 ("인테리어")
+      if (keyword !== "인테리어" && (await tryFetch("인테리어"))) return true;
+      return false;
     };
 
     // ── Fallback: Client-side Kakao JS SDK (domain whitelist 필요) ──

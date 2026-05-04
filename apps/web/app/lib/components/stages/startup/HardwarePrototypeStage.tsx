@@ -60,6 +60,24 @@ const defaultContent: ClusterStageContent = {
     { name: "EVT/DVT/PVT 정의 — Titoma (영문)", href: "https://titoma.com/blog/evt-dvt-pvt-testing/", desc: "검증된 NPI 단계별 가이드" },
     { name: "Hardware NPI 종합 가이드 — MistyWest", href: "https://www.mistywest.com/complete-guide-to-hardware-product-development/" },
   ],
+  wrapup: {
+    nextStageLabelKo: "BOM·공급망 셋업",
+    doneItemsKo: [
+      { label: "1. EVT 10~50대 제작·검증", detail: "회로·펌웨어·핵심 기능 검증 + 합격 기준 명문화" },
+      { label: "2. DVT 50~200대 환경 테스트", detail: "낙하·EMC·열사이클·습도 매트릭스 통과" },
+      { label: "3. PVT 첫 양산 5~10%", detail: "양산 가능성·목표 단가·수율 검증 — 판매 가능 수준 입증" },
+      { label: "4. NPI 리드타임 시뮬", detail: "EVT~PVT 12~24주 + 인증 별도, 일정·자본 역산" },
+    ],
+    verifyItemsKo: [
+      "디자인 권리 — 회로도·PCB·펌웨어 IP 보호 (특허 출원·NDA·소스코드 깃 보관)",
+      "EMC·안전 인증 — 한국 KC·미국 FCC·EU CE 사전 일정 + 인증 비용 사전 견적",
+      "BOM 잠금 — DVT 통과 후 BOM 동결, 양산 직전 변경 시 재인증·재테스트 비용 수천만원",
+      "공급사 의존도 — 단일 공급사 부품 비중 확인, 단종 리스크 + 대체 부품 사전 검증",
+      "수율 한계 — PVT 95% → 양산 시 새 결함 가능, 양산 수율 보장 X",
+      "리콜 대비 — 시리얼 번호·로트 추적 가능한 펌웨어·라벨 시스템 EVT 단계부터 도입",
+    ],
+    nextSummaryKo: "EVT·DVT·PVT 통과 + IP·인증·BOM 점검 → BOM·공급망 셋업 단계로 진입",
+  },
 };
 
 export function HardwarePrototypeStage() {

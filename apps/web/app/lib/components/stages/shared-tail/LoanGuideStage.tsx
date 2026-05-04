@@ -15,6 +15,7 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { fetchLiveSupportPrograms } from "../../../services/live-data";
 import { supabase } from "../../../../../lib/supabase";
 import { styles } from "../../../styles";
+import { StageWrapup } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러
 
@@ -726,6 +727,26 @@ export function LoanGuideStage() {
           <TrapsCard />
         </>
       )}
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="사업자등록·인허가"
+        doneItemsKo={[
+          { label: "1. 자금 수요·구조 진단", detail: "초기 시설자금 vs 운영자금 분리 + 대출 vs 정부지원금 우선순위 결정" },
+          { label: "2. 정책자금 후보군 매칭", detail: "소상공인시장진흥공단·신보·기보·중기부 매칭 — 업종·기간·자본 자동 필터" },
+          { label: "3. 신용·재무 점검", detail: "개인신용 점수·기존 부채·연체 기록 사전 정리, 사업자 신용평가 사전 시뮬" },
+          { label: "4. 신청 일정·서류 준비", detail: "사업계획서·매출 시뮬·자금 사용 계획 3종 + 추천 기관 면담 일정 확보" },
+        ]}
+        verifyItemsKo={[
+          "정책자금 — 1순위는 「보증부 대출」 (소상공인시장진흥공단·신보·기보 보증서 80~90% 보증)",
+          "이자 부담 — 매출 0원 가정 6개월 운영자본 대비 월 이자 한계점 시뮬, 「운영자본 잠식」 1순위 부도 원인",
+          "보증 한도 — 신보·기보 통합 한도 (1인 8억 등) 인지, 다중 신청 시 보증 거절 위험",
+          "사업계획서 — 「자금 사용 계획」 + 「상환 계획」 명확해야 심사 통과율 상승, 두루뭉술하면 거절",
+          "정부지원금 — 「선정 후 입금」까지 평균 4~12주, 일정 역산 필수 (오픈 직전 신청 X)",
+          "사기 주의 — 「대출 100% 보장」 「선수수료」 요구하는 브로커는 모두 사기, 직접 신청 원칙",
+        ]}
+        nextSummaryKo="자금 구조·대출 후보 확정 → 사업자등록·인허가 단계로 진입"
+      />
 
       {/* ── 단계 푸터는 부모(CurrentStageView)에서 자동 렌더링됨 ── */}
 

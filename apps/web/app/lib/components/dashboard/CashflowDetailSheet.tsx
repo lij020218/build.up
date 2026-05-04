@@ -119,7 +119,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
             style={{
               padding: "14px",
               borderRadius: "14px",
-              background: "rgba(15,23,42,0.03)",
+              background: "rgba(25,25,112,0.035)",
               marginBottom: "18px",
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",
@@ -144,7 +144,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
           </div>
 
           {vatReserveEnabled && (
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginBottom: "14px", padding: "8px 12px", background: "rgba(37,99,235,0.04)", borderRadius: "8px" }}>
+            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginBottom: "14px", padding: "8px 12px", background: "rgba(25,25,112,0.04)", borderRadius: "8px" }}>
               {ko
                 ? "※ 부가세 10% 적립이 활성화되어 있어요. 입금액에서 10%를 미리 뺀 실가용 금액이 표시됩니다."
                 : "※ 10% VAT reserve enabled. Displayed amounts have 10% deducted for tax."}
@@ -182,7 +182,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                           )}
                           <span>{channel.salesRatio}%</span>
                         </div>
-                        <div style={{ height: "3px", background: "rgba(15,23,42,0.06)", borderRadius: "2px", overflow: "hidden" }}>
+                        <div style={{ height: "3px", background: "rgba(25,25,112,0.05)", borderRadius: "2px", overflow: "hidden" }}>
                           <div style={{ height: "100%", width: `${pct}%`, background: "#059669", borderRadius: "2px" }} />
                         </div>
                       </div>
@@ -246,21 +246,21 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                       padding: "10px 12px",
                       borderRadius: "10px",
                       background: isToday
-                        ? "rgba(37,99,235,0.04)"
+                        ? "rgba(25,25,112,0.04)"
                         : isNegative
                           ? "rgba(220,38,38,0.03)"
                           : hasEvents
                             ? "rgba(255,255,255,0.8)"
                             : "transparent",
                       border: isToday
-                        ? "1px solid rgba(37,99,235,0.1)"
+                        ? "1px solid rgba(25,25,112,0.1)"
                         : isNegative
                           ? "1px solid rgba(220,38,38,0.08)"
                           : "1px solid transparent",
                     }}
                   >
                     <div style={{ width: "56px", flexShrink: 0 }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: isToday ? "#2563eb" : "rgba(15,23,42,0.6)" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: isToday ? "#191970" : "rgba(15,23,42,0.6)" }}>
                         {isToday ? (ko ? "오늘" : "Today") : p.date.slice(5)}
                       </div>
                       <div style={{ fontSize: "10px", color: p.isWeekend ? "#b91c1c" : "rgba(15,23,42,0.4)", fontWeight: 600 }}>
@@ -377,7 +377,7 @@ const closeBtn: React.CSSProperties = {
   width: "36px",
   height: "36px",
   borderRadius: "10px",
-  background: "rgba(15,23,42,0.04)",
+  background: "rgba(25,25,112,0.04)",
   border: "none",
   cursor: "pointer",
   display: "flex",
@@ -401,7 +401,7 @@ const channelRow: React.CSSProperties = {
   display: "flex",
   padding: "10px 12px",
   borderRadius: "10px",
-  background: "rgba(15,23,42,0.02)",
+  background: "rgba(25,25,112,0.025)",
   border: "1px solid rgba(15,23,42,0.04)",
 };
 
@@ -410,6 +410,6 @@ const expenseRow: React.CSSProperties = {
   alignItems: "center",
   padding: "10px 12px",
   borderRadius: "10px",
-  background: "rgba(15,23,42,0.02)",
+  background: "rgba(25,25,112,0.025)",
   border: "1px solid rgba(15,23,42,0.04)",
 };

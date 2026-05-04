@@ -49,7 +49,7 @@ export function SalesBreakdownCard() {
     return (
       <div style={card}>
         <div style={headerRow}>
-                    <Users size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
+                    <Users size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
         </div>
         <div style={emptyState}>
           {ko ? "매출을 7일 이상 기록하면 고객수 × 객단가 분석이 시작됩니다" : "Log 7+ days of sales to unlock customer × ticket analysis"}
@@ -75,7 +75,7 @@ export function SalesBreakdownCard() {
     <div style={card}>
       {/* Header */}
       <div style={headerRow}>
-                <Users size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
+                <Users size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
         <span style={periodBadge}>전주 대비</span>
       </div>
 
@@ -92,7 +92,7 @@ export function SalesBreakdownCard() {
         </div>
         <div style={equalsSign}>=</div>
         <div style={formulaSegment}>
-          <div style={{ ...mainValue, color: "#1d3557", fontSize: "26px" }}>
+          <div style={{ ...mainValue, color: "#191970", fontSize: "26px" }}>
             &yen;{fmtWon(totalSales)}
           </div>
           <div style={label}>총매출</div>
@@ -134,11 +134,9 @@ export function SalesBreakdownCard() {
 const card: React.CSSProperties = {
   borderRadius: "20px",
   padding: "22px",
-  background: "rgba(255,255,255,0.82)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(0,0,0,0.05)",
-  boxShadow: "0 4px 24px rgba(15,23,42,0.03), 0 1px 2px rgba(15,23,42,0.02)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   fontFamily: "inherit",
   display: "flex",
   flexDirection: "column",
@@ -163,7 +161,7 @@ const periodBadge: React.CSSProperties = {
   fontSize: "11px",
   fontWeight: 600,
   color: "rgba(15,23,42,0.4)",
-  background: "rgba(15,23,42,0.04)",
+  background: "rgba(25,25,112,0.04)",
   padding: "3px 8px",
   borderRadius: "6px",
   letterSpacing: "0.02em",
@@ -234,7 +232,7 @@ const changePill = (positive: boolean): React.CSSProperties => ({
 
 const separator: React.CSSProperties = {
   height: "1px",
-  background: "rgba(15,23,42,0.06)",
+  background: "rgba(25,25,112,0.05)",
   margin: "0 -2px",
 };
 

@@ -95,7 +95,9 @@ import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/Da
 import { AuroraBackground } from "../components/ui/aurora-background";
 import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
 import { ResetAnimationOverlay } from "./lib/components/reset/ResetAnimationOverlay";
+import { OnboardingChoiceScreen } from "./lib/components/onboarding/OnboardingChoiceScreen";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
+import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
 import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
 import { FranchiseView } from "./lib/components/surfaces/FranchiseView";
 import { ProfileView } from "./lib/components/surfaces/ProfileView";
@@ -794,88 +796,12 @@ export default function StarterStageDemo({
     return <WelcomeOnboarding language={language} onComplete={() => setWelcomed(true)} />;
   }
   if (shouldShowOnboardingChoice) {
-    const ko = language === "ko";
-    return (
-      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "transparent" }}>
-        <div style={{ width: "100%", maxWidth: "1020px" }}>
-          <div style={{ textAlign: "center" as const, marginBottom: "40px" }}>
-            <div style={{ fontSize: "14px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--primary, #1d3557)", marginBottom: "14px" }}>build.up</div>
-            <h1 style={{ fontSize: "clamp(28px, 5vw, 42px)", fontWeight: 720, letterSpacing: "-0.04em", color: "var(--text, #0f172a)", margin: "0 0 10px", lineHeight: 1.1 }}>{ko ? "어떤 상태에서 시작하시나요?" : "Where are you starting from?"}</h1>
-            <p style={{ fontSize: "16px", color: "var(--muted, #5b616e)", lineHeight: 1.6, margin: 0 }}>{ko ? "상황에 맞는 화면을 준비합니다" : "We'll set up the right experience for you"}</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-            {/* Card 1: 직접 로드맵 — 파란색 */}
-            <button type="button" onClick={() => { setOnboardingDismissed(true); localStorage.setItem("buildup_onboarding_dismissed", "true"); setShowOnboardingChoice(false); navigateToSurface("current"); }} style={{
-              borderRadius: "28px", border: "1px solid rgba(29,53,87,0.06)",
-              background: "linear-gradient(160deg, rgba(232,243,255,0.8) 0%, rgba(245,249,255,0.95) 50%, rgba(255,255,255,0.98) 100%)",
-              boxShadow: "0 8px 30px rgba(29,53,87,0.06)", backdropFilter: "blur(16px)",
-              padding: "36px 28px 32px", cursor: "pointer", textAlign: "left" as const,
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              display: "flex", flexDirection: "column" as const,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(29,53,87,0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(29,53,87,0.06)"; }}>
-              <div style={{ width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px", background: "linear-gradient(135deg, #e0edff 0%, #c9ddfb 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b7ddd" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5Z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <div style={{ fontSize: "20px", fontWeight: 680, color: "var(--text, #0f172a)", marginBottom: "8px", letterSpacing: "-0.02em" }}>{ko ? "직접 로드맵 진행" : "Manual Roadmap"}</div>
-              <div style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--muted, #5b616e)", marginBottom: "16px", flex: 1 }}>{ko ? "업종 선택부터 개업까지, 단계별 로드맵으로 안내합니다." : "Guided from industry selection to opening day."}</div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, color: "#3b7ddd" }}>
-                {ko ? "로드맵 시작하기" : "Start roadmap"} <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5" /></svg>
-              </div>
-            </button>
-
-            {/* Card 2: AI 자동 — 보라색 */}
-            <button type="button" onClick={() => { setShowOnboardingChoice(false); setShowAIRoadmapWizard(true); }} style={{
-              borderRadius: "28px", border: "1px solid rgba(99,61,225,0.08)",
-              background: "linear-gradient(160deg, rgba(237,233,254,0.8) 0%, rgba(247,244,255,0.95) 50%, rgba(255,255,255,0.98) 100%)",
-              boxShadow: "0 8px 30px rgba(99,61,225,0.08)", backdropFilter: "blur(16px)",
-              padding: "36px 28px 32px", cursor: "pointer", textAlign: "left" as const,
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              display: "flex", flexDirection: "column" as const,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(99,61,225,0.12)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(99,61,225,0.08)"; }}>
-              <div style={{ width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px", background: "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.8 5.6 21.2 8 14 2 9.2h7.6z" />
-                </svg>
-              </div>
-              <div style={{ fontSize: "20px", fontWeight: 680, color: "var(--text, #0f172a)", marginBottom: "8px", letterSpacing: "-0.02em" }}>{ko ? "AI 자동 로드맵" : "AI Auto Roadmap"}</div>
-              <div style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--muted, #5b616e)", marginBottom: "16px", flex: 1 }}>{ko ? "아이디어만 입력하면 AI가 예산, 상권, 공급업체까지 맞춤 설계합니다." : "Describe your idea and AI builds your entire plan."}</div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, color: "#7c3aed" }}>
-                {ko ? "AI로 시작하기" : "Start with AI"} <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5" /></svg>
-              </div>
-            </button>
-
-            {/* Card 3: 기존 운영 — 초록색 */}
-            <button type="button" onClick={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }} style={{
-              borderRadius: "28px", border: "1px solid rgba(45,106,79,0.06)",
-              background: "linear-gradient(160deg, rgba(232,250,241,0.8) 0%, rgba(243,252,247,0.95) 50%, rgba(255,255,255,0.98) 100%)",
-              boxShadow: "0 8px 30px rgba(45,106,79,0.06)", backdropFilter: "blur(16px)",
-              padding: "36px 28px 32px", cursor: "pointer", textAlign: "left" as const,
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              display: "flex", flexDirection: "column" as const,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(45,106,79,0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(45,106,79,0.06)"; }}>
-              <div style={{ width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px", background: "linear-gradient(135deg, #ddf5e9 0%, #c4ebd6 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2d8659" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 21V8l9-5 9 5v13" /><path d="M9 21v-6h6v6" /><path d="M3 8h18" />
-                </svg>
-              </div>
-              <div style={{ fontSize: "20px", fontWeight: 680, color: "var(--text, #0f172a)", marginBottom: "8px", letterSpacing: "-0.02em" }}>{ko ? "이미 운영 중이에요" : "Already Running"}</div>
-              <div style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--muted, #5b616e)", marginBottom: "16px", flex: 1 }}>{ko ? "기존 가게 정보를 등록하면 바로 운영 대시보드를 사용할 수 있습니다." : "Register your store and start using the dashboard right away."}</div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: 600, color: "#2d8659" }}>
-                {ko ? "가게 등록하기" : "Register store"} <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3l5 5-5 5" /></svg>
-              </div>
-            </button>
-          </div>
-        </div>
-      </main>
-    );
+    return <OnboardingChoiceScreen
+      ko={language === "ko"}
+      onChooseManual={() => { setOnboardingDismissed(true); localStorage.setItem("buildup_onboarding_dismissed", "true"); setShowOnboardingChoice(false); navigateToSurface("current"); }}
+      onChooseAI={() => { setShowOnboardingChoice(false); setShowAIRoadmapWizard(true); }}
+      onChooseExisting={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }}
+    />;
   }
 
   return (
@@ -1202,8 +1128,13 @@ export default function StarterStageDemo({
         {activeSurface === "current" ? <CurrentStageView /> : null}
         {activeSurface === "franchise" ? <FranchiseView /> : null}
 
-        {activeSurface === "profile" && !isFreshAccount ? (
-          <ProfileView />
+        {/* /profile (내 정보) — 항상 렌더 (설정·언어·계정 관리·매장 정보는 fresh 계정에도 유용).
+            이전엔 !isFreshAccount 로 차단했으나 마이그레이션 미적용으로 profile 로드 실패 시
+            isFreshAccount=true 로 판정되어 페이지 통째로 빈 화면이 나오는 회귀가 있었음. */}
+        {activeSurface === "profile" ? (
+          <CardErrorBoundary cardLabel="내 정보">
+            <ProfileView />
+          </CardErrorBoundary>
         ) : null}
 
         {activeSurface === "guides" && !isFreshAccount && !isGuideStage ? (
@@ -1212,7 +1143,7 @@ export default function StarterStageDemo({
 
         {activeSurface === "analytics" ? (
           <CardErrorBoundary cardLabel="내 가게">
-            <AnalyticsSurface />
+            <MyStoreView />
           </CardErrorBoundary>
         ) : null}
 
@@ -1347,7 +1278,7 @@ const operationalShellSidebarCollapsed: React.CSSProperties = {
 
 const operationalNavSection: React.CSSProperties = {
   marginTop: "0",
-  marginBottom: "18px",
+  marginBottom: "32px",  // 18 → 32: nav 바와 surface 첫 카드 사이 간격 확대 (사용자 피드백)
 };
 
 const operationalSurfaceNav: React.CSSProperties = {

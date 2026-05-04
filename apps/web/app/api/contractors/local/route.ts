@@ -109,12 +109,13 @@ export async function GET(request: Request) {
 
   try {
     const results = await searchContractorsViaKakao(region, keyword, kakaoKey);
+    console.log(`[contractors/local] OK region="${region}" keyword="${keyword}" → ${results.length} results`);
     return NextResponse.json(
       { results, source: "kakao" },
       { headers: { "Cache-Control": "public, max-age=3600" } }
     );
   } catch (err) {
-    console.error("[contractors/local] Kakao search failed:", err);
+    console.error(`[contractors/local] Kakao search FAILED region="${region}" keyword="${keyword}":`, err);
     return NextResponse.json({ error: "업체 검색 실패", results: [], source: "error" }, { status: 502 });
   }
 }

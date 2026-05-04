@@ -1,5 +1,6 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function SourcingSetupStage() {
   const d = useDashboardCtx();
@@ -94,6 +95,26 @@ export function SourcingSetupStage() {
           ))}
         </div>
       </div>
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="스토어 셋업"
+        doneItemsKo={[
+          { label: "1. 소싱 방식 결정", detail: "국내도매·중국직구·자체제작·OEM·드롭배송 등 5축 비교 후 결정" },
+          { label: "2. 1차 공급처 검증", detail: "샘플 주문 + 품질·납기·CS 응답 3축 직접 테스트 후 채택" },
+          { label: "3. 마진 계산", detail: "원가 + 부가세 + 배송비 + 플랫폼 수수료 + 광고비 → 마진 30% 이상 확보" },
+          { label: "4. 재고·물류 모델", detail: "직접 배송 vs 풀필먼트(쿠팡 로켓그로스·품고·셀러허브) 비교" },
+        ]}
+        verifyItemsKo={[
+          "중국 직구 — 200달러 초과 시 통관 부담, KC 인증 의무 카테고리(전자제품·유아용품 등) 사전 확인",
+          "위탁판매·드롭배송 — 공급처 결품 시 본인 책임, CS 분쟁 시 자체 환불 의무 발생",
+          "OEM 제작 — MOQ(최소주문량) 보통 500~3000개, 자본·재고 회전 부담 인식",
+          "원산지 표시 — 「Made in China」 누락 시 표시광고법 위반, 모든 상품 의무 표시",
+          "지식재산 — 캐릭터·로고·디자인 무단 도용 시 상표·디자인권 침해, 시작 전 검색 필수",
+          "수입 통관 — 식품·화장품·의료기기는 별도 수입신고 + KC·KFDA·식약처 승인 필수",
+        ]}
+        nextSummaryKo="소싱·공급처 검증 완료 → 스토어 셋업(상품 등록·배송·CS) 단계로 진입"
+      />
     </div>
   );
 }

@@ -25,7 +25,7 @@ type Props = { ko: boolean; industryCategoryId?: string };
 const TYPE_META: Record<CustomerInterviewType, { ko: string; en: string; color: string; bg: string }> = {
   regular:   { ko: "단골",      en: "Regular",   color: "#059669", bg: "rgba(5,150,105,0.08)" },
   lapsed:    { ko: "이탈 단골", en: "Lapsed",    color: "#d97706", bg: "rgba(217,119,6,0.08)" },
-  new:       { ko: "신규",      en: "New",       color: "#2563eb", bg: "rgba(37,99,235,0.08)" },
+  new:       { ko: "신규",      en: "New",       color: "#191970", bg: "rgba(25,25,112,0.08)" },
   potential: { ko: "잠재",      en: "Potential", color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
 };
 
@@ -314,7 +314,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
             : (ko ? "AI 패턴 분석" : "AI Patterns");
           return (
             <button key={t} type="button" onClick={() => setTab(t)} style={{ ...tabBtn, ...(tab === t ? tabBtnActive : {}), display: "inline-flex", alignItems: "center", gap: "5px" }}>
-              <TabIcon size={12.5} strokeWidth={2} />
+              <TabIcon size={12.5} strokeWidth={1.5} />
               {tabLabel}
             </button>
           );
@@ -365,7 +365,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               disabled={!newNotes.trim()}
               style={{
                 padding: "9px 14px", borderRadius: "10px", border: "none", cursor: newNotes.trim() ? "pointer" : "default",
-                background: newNotes.trim() ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)" : "rgba(15,23,42,0.06)",
+                background: newNotes.trim() ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)" : "rgba(25,25,112,0.05)",
                 color: newNotes.trim() ? "#fff" : "rgba(15,23,42,0.3)",
                 fontSize: "13px", fontWeight: 650, letterSpacing: "-0.01em",
                 display: "inline-flex", alignItems: "center", gap: "5px",
@@ -390,7 +390,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               fontSize: "12px", fontWeight: 700, color: "#0d9488",
               letterSpacing: "-0.005em",
             }}>
-              <Download size={13} strokeWidth={2} />
+              <Download size={13} strokeWidth={1.5} />
               <span>{ko ? "구글 폼 응답 자동 가져오기" : "Auto-import Google Form responses"}</span>
               <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "10.5px", fontWeight: 600, color: "rgba(15,23,42,0.42)" }}>
                 <span>{ko ? "펼치기" : "Expand"}</span>
@@ -455,7 +455,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                   cursor: importLoading || !importUrl.trim() ? "default" : "pointer",
                   background: importUrl.trim() && !importLoading
                     ? "linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)"
-                    : "rgba(15,23,42,0.06)",
+                    : "rgba(25,25,112,0.05)",
                   color: importUrl.trim() && !importLoading ? "#fff" : "rgba(15,23,42,0.3)",
                   fontSize: "13px", fontWeight: 650, letterSpacing: "-0.01em",
                   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px",
@@ -477,7 +477,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 }}>
                   {importMsg.kind === "ok"
                     ? <Check size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-                    : <AlertCircle size={13} strokeWidth={2} style={{ flexShrink: 0 }} />}
+                    : <AlertCircle size={13} strokeWidth={1.5} style={{ flexShrink: 0 }} />}
                   <span>{importMsg.text}</span>
                 </div>
               )}
@@ -502,7 +502,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                         {iv.date.slice(5).replace("-", "/")}
                       </span>
                       <button type="button" onClick={() => removeInterview(iv.id)} style={removeBtn} title={ko ? "삭제" : "Delete"}>
-                        <X size={11} strokeWidth={2} />
+                        <X size={11} strokeWidth={1.5} />
                       </button>
                     </div>
                     <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.5, whiteSpace: "pre-wrap" as const }}>
@@ -556,7 +556,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                   boxShadow: analysisLoading ? "none" : "0 4px 12px rgba(124,58,237,0.22)",
                 }}
               >
-                {analysisLoading ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} strokeWidth={2} />}
+                {analysisLoading ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} strokeWidth={1.5} />}
                 {ko ? "패턴 분석 실행" : "Run pattern analysis"}
               </button>
             </div>
@@ -588,9 +588,9 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               "Sean Ellis (PMF)": "#7c3aed",
               "JTBD": "#0891b2",
               "NPS": "#059669",
-              "CSAT": "#2563eb",
+              "CSAT": "#191970",
               "YC": "#ea580c",
-              "build.up": "#1d3557",
+              "build.up": "#191970",
             };
 
             return (
@@ -602,7 +602,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 border: "1px solid rgba(13,148,136,0.14)",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
-                  <BookOpen size={13} strokeWidth={2} color="#0d9488" />
+                  <BookOpen size={13} strokeWidth={1.5} color="#0d9488" />
                   <div style={{ fontSize: "12px", fontWeight: 700, color: "#0d9488", letterSpacing: "-0.005em" }}>
                     {ko ? `검증된 템플릿 (${filteredTemplates.length}개)` : `Proven templates (${filteredTemplates.length})`}
                   </div>
@@ -672,7 +672,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 </div>
 
                 <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px", fontSize: "10.5px", color: "rgba(15,23,42,0.5)", marginTop: "2px", lineHeight: 1.45, alignSelf: "center" }}>
-                  <ChevronUp size={11} strokeWidth={2} />
+                  <ChevronUp size={11} strokeWidth={1.5} />
                   <span>{ko
                     ? "클릭만 하면 질문이 채워져요. 직접 편집·복사·폼 발송 가능."
                     : "Click to load questions. Edit, copy, send via forms."}</span>
@@ -714,13 +714,13 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 cursor: scriptLoading || !guideTopic.trim() ? "default" : "pointer",
                 background: guideTopic.trim() && !scriptLoading
                   ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)"
-                  : "rgba(15,23,42,0.06)",
+                  : "rgba(25,25,112,0.05)",
                 color: guideTopic.trim() && !scriptLoading ? "#fff" : "rgba(15,23,42,0.3)",
                 fontSize: "13px", fontWeight: 650,
                 display: "inline-flex", alignItems: "center", gap: "5px",
               }}
             >
-              {scriptLoading ? <Loader2 size={13} className="spin" /> : <Sparkles size={13} strokeWidth={2} />}
+              {scriptLoading ? <Loader2 size={13} className="spin" /> : <Sparkles size={13} strokeWidth={1.5} />}
               {ko ? "AI 질문지 생성" : "Generate script"}
             </button>
             {scriptError && <div style={errorHint}>{scriptError}</div>}
@@ -786,7 +786,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 display: "flex", flexDirection: "column", gap: "10px",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Share2 size={13} strokeWidth={2} color="#7c3aed" />
+                  <Share2 size={13} strokeWidth={1.5} color="#7c3aed" />
                   <div style={{ fontSize: "12px", fontWeight: 700, color: "#7c3aed", letterSpacing: "-0.005em" }}>
                     {ko ? "이제 질문을 손님께 보내세요" : "Now send to customers"}
                   </div>
@@ -820,7 +820,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                     {copyFeedback === "questions" ? (
                       <><Check size={13} strokeWidth={2.5} /> {ko ? "복사됨!" : "Copied!"}</>
                     ) : (
-                      <><Copy size={13} strokeWidth={2} /> {ko ? "질문만 복사 (폼 붙여넣기용)" : "Copy questions (for forms)"}</>
+                      <><Copy size={13} strokeWidth={1.5} /> {ko ? "질문만 복사 (폼 붙여넣기용)" : "Copy questions (for forms)"}</>
                     )}
                   </button>
                   <button
@@ -841,7 +841,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                     {copyFeedback === "intro" ? (
                       <><Check size={12} strokeWidth={2.5} /> {ko ? "복사됨!" : "Copied!"}</>
                     ) : (
-                      <><Copy size={12} strokeWidth={2} /> {ko ? "인사말 + 질문 묶음 복사 (카톡용)" : "Copy intro + questions (KakaoTalk)"}</>
+                      <><Copy size={12} strokeWidth={1.5} /> {ko ? "인사말 + 질문 묶음 복사 (카톡용)" : "Copy intro + questions (KakaoTalk)"}</>
                     )}
                   </button>
                 </div>
@@ -866,7 +866,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                       color: "#fff", fontSize: 10, fontWeight: 800, fontFamily: "Roboto, Arial, sans-serif",
                     }}>F</span>
                     <span>{ko ? "구글 폼 만들기" : "Open Google Forms"}</span>
-                    <ExternalLink size={11} strokeWidth={2} style={{ marginLeft: "auto", opacity: 0.5 }} />
+                    <ExternalLink size={11} strokeWidth={1.5} style={{ marginLeft: "auto", opacity: 0.5 }} />
                   </a>
                   <a
                     href="https://office.naver.com/forms/create"
@@ -882,7 +882,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                       color: "#fff", fontSize: 11, fontWeight: 800, fontFamily: "Pretendard, sans-serif",
                     }}>N</span>
                     <span>{ko ? "네이버 폼 만들기" : "Open Naver Forms"}</span>
-                    <ExternalLink size={11} strokeWidth={2} style={{ marginLeft: "auto", opacity: 0.5 }} />
+                    <ExternalLink size={11} strokeWidth={1.5} style={{ marginLeft: "auto", opacity: 0.5 }} />
                   </a>
                 </div>
 
@@ -960,7 +960,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 <InsightSection
                   title={ko ? "발견된 고객 세그먼트" : "Customer segments"}
                   items={patternAnalysis.segments}
-                  color="#2563eb"
+                  color="#191970"
                   Icon={Users}
                 />
               )}
@@ -987,7 +987,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                   fontSize: "12px", fontWeight: 700, color: "#7c3aed",
                   marginBottom: "4px", letterSpacing: "-0.005em",
                 }}>
-                  <Sparkles size={13} strokeWidth={2} />
+                  <Sparkles size={13} strokeWidth={1.5} />
                   <span>{ko ? "AI 패턴 분석이란?" : "What is AI Pattern Analysis?"}</span>
                 </div>
                 <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>
@@ -1006,7 +1006,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                   exampleKo: "예: '결제 줄이 항상 길다', '주차장 좁다'", exampleEn: "e.g., 'checkout lines always long', 'parking is tight'" },
                 { Icon: Heart, color: "#059669", titleKo: "재방문 동기", titleEn: "Return motivations",
                   exampleKo: "예: '맛 일관됨', '사장 친절', '가격 합리적'", exampleEn: "e.g., 'consistent taste', 'kind staff', 'fair price'" },
-                { Icon: Users, color: "#2563eb", titleKo: "발견된 고객 세그먼트", titleEn: "Customer segments",
+                { Icon: Users, color: "#191970", titleKo: "발견된 고객 세그먼트", titleEn: "Customer segments",
                   exampleKo: "예: '점심 직장인', '주말 가족', '저녁 술안주'", exampleEn: "e.g., 'lunch workers', 'weekend families', 'late-night drinkers'" },
                 { Icon: Lightbulb, color: "#7c3aed", titleKo: "추천 액션 3-5개", titleEn: "3-5 recommended actions",
                   exampleKo: "예: '셀프 키오스크 도입', '주말 가족 메뉴 출시'", exampleEn: "e.g., 'add self-kiosk', 'launch weekend family menu'" },
@@ -1023,7 +1023,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                     display: "flex", alignItems: "center", justifyContent: "center",
                     color: p.color, flexShrink: 0,
                   }}>
-                    <p.Icon size={14} strokeWidth={2} />
+                    <p.Icon size={14} strokeWidth={1.5} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "12.5px", fontWeight: 650, color: p.color, letterSpacing: "-0.005em" }}>
@@ -1048,7 +1048,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               }}>
                 {interviews.length < 3 ? (
                   <>
-                    <Lock size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
+                    <Lock size={13} strokeWidth={1.5} style={{ flexShrink: 0 }} />
                     <span>{ko
                       ? `최소 3건의 인터뷰 기록이 필요합니다. (현재 ${interviews.length}건 — ${3 - interviews.length}건 더 필요)`
                       : `Need at least 3 interviews. (current ${interviews.length} — ${3 - interviews.length} more)`}</span>
@@ -1124,7 +1124,7 @@ const title: React.CSSProperties = {
 
 const tabBar: React.CSSProperties = {
   display: "flex", gap: "4px",
-  background: "rgba(15,23,42,0.03)",
+  background: "rgba(25,25,112,0.035)",
   borderRadius: "10px", padding: "3px",
 };
 
@@ -1169,7 +1169,7 @@ const hintBox: React.CSSProperties = {
 const interviewItemStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: "10px",
-  background: "rgba(15,23,42,0.025)",
+  background: "rgba(25,25,112,0.025)",
   border: "1px solid rgba(15,23,42,0.04)",
 };
 

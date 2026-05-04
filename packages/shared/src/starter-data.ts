@@ -1297,14 +1297,15 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 5,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Define the core problem, decide your team structure, and know when to incorporate.",
     whyNow: "Founder misalignment and fuzzy ownership destroy startups before customers ever do. But first — define the problem worth solving.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["problem-defined", "founder-alignment", "company-formation-path"]
     },
-    taskIds: ["problem-defined", "founder-alignment", "company-formation-path"],
+    // taskIds 는 5개 (3 필수 + 2 선택). 본문 페이지(문제 정의·팀·법인·사례) 와 일대일 매칭.
+    taskIds: ["problem-defined", "founder-alignment", "company-formation-path", "case-study-review", "build-in-public-setup"],
     riskIds: [],
     nextStageIds: ["customer-discovery"]
   },
@@ -1317,7 +1318,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 6,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Run customer interviews, identify repeated pain, and narrow to one wedge problem with real urgency.",
     whyNow: "A startup dies when it builds for a vague audience instead of a painful problem. Validate before you register.",
     completionRule: {
@@ -1335,14 +1336,14 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 7,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Choose between sole proprietor and corporation, complete business registration, protect your IP before public disclosure, and set up basic tax and security foundations.",
     whyNow: "Now that you've validated the problem, register your business to unlock contracts, invoicing, and government programs. File IP before any public disclosure.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned"]
+      requiredTaskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "terms-privacy-published"]
     },
-    taskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "tax-setup-basics", "security-basics"],
+    taskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "tax-setup-basics", "security-basics", "terms-privacy-published", "pg-payment-ready"],
     riskIds: [],
     nextStageIds: ["mvp-build"]
   },
@@ -1353,7 +1354,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 8,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Ship the minimum useful product that solves one core workflow, capture first proof of value, and file IP protection before public disclosure.",
     whyNow: "Shipping late burns runway without learning. Publishing without IP protection can permanently forfeit patent rights.",
     completionRule: {
@@ -1396,14 +1397,39 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 9,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Put analytics, billing, error monitoring, and a customer feedback loop in place before pushing for growth. If building a mobile app, submit to app stores early.",
     whyNow: "Without instrumentation founders mistake noise for signal. Analytics, billing, error monitoring, and feedback loop — these 4 enable meaningful decisions. Skipping any one means flying blind.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "error-monitoring-live", "feedback-loop-live"]
+      requiredTaskIds: ["analytics-live", "billing-or-conversion-live", "error-monitoring-live", "feedback-loop-live", "first-100-users-acquired", "marketing-content-cadence"]
     },
-    taskIds: ["analytics-live", "billing-or-conversion-live", "error-monitoring-live", "feedback-loop-live", "app-store-submission"],
+    // 본문 4페이지(출시스택·첫100명·콘텐츠·채널) 와 일대일 매칭. 실제 출시는 go-live 단계로 분리.
+    taskIds: ["analytics-live", "billing-or-conversion-live", "error-monitoring-live", "feedback-loop-live", "first-100-users-acquired", "marketing-content-cadence", "security-checklist-reviewed"],
+    riskIds: [],
+    nextStageIds: ["go-live"]
+  },
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Stage 10 — 실제 출시 (Go Live)
+  //  분리 이유: 출시는 단순 sub-task 가 아닌 명확한 milestone. 절차·기간이 채널마다 크게 다름.
+  //  검증 출처: Apple Developer 2026 (iOS 26 SDK 의무 4.28~), Google Play 12 testers x 14 days,
+  //              Product Hunt 화·수 12am PT, Hacker News Show HN 가이드라인.
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    stageId: "go-live",
+    code: "go_live",
+    title: "Go Live — actual launch",
+    type: "execution",
+    status: "locked",
+    stepNumber: 10,
+    totalSteps: 19,
+    goal: "Launch publicly through 1-3 verified channels (web, App Store, Google Play, Product Hunt, Hacker News). Each channel has different procedures and review times.",
+    whyNow: "Launch is a milestone, not a sub-task. iOS 26 SDK mandatory after 4/28. Google Play requires 12 testers × 14 days closed testing. Product Hunt and HN single-shot launches need 1-2 weeks prep.",
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["web-go-live", "launch-channel-active"]
+    },
+    taskIds: ["web-go-live", "launch-channel-active", "apple-app-store-submitted", "google-play-submitted", "launch-day-monitored"],
     riskIds: [],
     nextStageIds: ["growth-engine"]
   },
@@ -1413,8 +1439,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Growth and retention loop",
     type: "execution",
     status: "locked",
-    stepNumber: 10,
-    totalSteps: 18,
+    stepNumber: 11,
+    totalSteps: 19,
     goal: "Define the north-star metric, review growth weekly, and prove that users return or expand over time.",
     whyNow: "Topline growth without retention is usually a temporary illusion.",
     completionRule: {
@@ -1431,8 +1457,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Runway and fundraising readiness",
     type: "execution",
     status: "locked",
-    stepNumber: 11,
-    totalSteps: 18,
+    stepNumber: 12,
+    totalSteps: 19,
     goal: "Model burn rate and runway (target 24–30 months at seed), build a milestone-driven use-of-cash plan, and prepare investor-grade materials — only if fundraising is actually needed.",
     whyNow: "In 2026, investors reward capital efficiency over aggressive growth. Fundraising without a clear runway model and profitability path burns 3–6 months of founder time and destroys negotiation leverage.",
     completionRule: {
@@ -1440,12 +1466,15 @@ export const starterStageFlow: RoadmapStageState[] = [
       requiredTaskIds: [
         "runway-model-ready",
         "fundraising-decision-made",
+        "funding-programs-matched",
         "investor-material-ready"
       ]
     },
+    // 본문 4페이지 (런웨이 / 부트스트랩 vs 투자 / 프로그램 매칭 / 사업계획서) 와 일대일 매칭
     taskIds: [
       "runway-model-ready",
       "fundraising-decision-made",
+      "funding-programs-matched",
       "investor-material-ready"
     ],
     riskIds: [
@@ -1460,22 +1489,24 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Venture certification and government programs",
     type: "verification",
     status: "locked",
-    stepNumber: 12,
-    totalSteps: 18,
+    stepNumber: 13,
+    totalSteps: 19,
     goal: "Apply for venture business certification, match to government startup support programs, and secure non-dilutive funding before committing personal capital.",
     whyNow: "Venture certification unlocks tax breaks, military service exemptions, and program eligibility. Government programs have hard deadlines — missing them means paying full cost out of pocket.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: [
         "venture-cert-type-checked",
-        "govt-program-matched",
-        "application-submitted"
+        "application-submitted",
+        "venture-benefits-activated"
       ]
     },
+    // 정부 지원사업 매칭 (govt-program-matched) 은 이전 'fundraising-readiness' 단계의
+    // funding-programs-matched 로 이관됨. 여기는 인증 자체 + 인증 후 활용에 집중.
     taskIds: [
       "venture-cert-type-checked",
-      "govt-program-matched",
-      "application-submitted"
+      "application-submitted",
+      "venture-benefits-activated"
     ],
     riskIds: [],
     nextStageIds: ["tax-guide"]
@@ -1723,7 +1754,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 5,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Complete the franchise application process before proceeding with permits and location.",
     whyNow: "The franchise contract defines your budget, location options, interior, and suppliers. Everything else depends on this.",
     completionRule: { kind: "required_tasks", requiredTaskIds: ["fc-inquiry", "fc-disclosure", "fc-visit", "fc-contract", "fc-training"] },
@@ -1743,12 +1774,19 @@ export const starterStageFlow: RoadmapStageState[] = [
     totalSteps: 14,
     goal: "Identify which permits, licenses, and certifications your category requires before signing a lease.",
     whyNow: "Signing a lease without confirming permit eligibility can permanently block your opening.",
+    // ⚠️ 5개 모두 필수 — 이전엔 ["building-registry-checked","permit-type-checked"] 만 required 라
+    //    사용자가 2개만 체크해도 다음 단계로 자동 진행되는 버그 (사용자 보고 2026-05-03).
+    //    permit-check 는 「건물·인허가·위생·면허·소방」 5축 모두 확인해야 영업신고 가능 여부 결정 가능.
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["building-registry-checked", "permit-type-checked"]
+      requiredTaskIds: [
+        "building-registry-checked",
+        "permit-type-checked",
+        "hygiene-health-checked",
+        "license-registration-checked",
+        "fire-safety-checked",
+      ]
     },
-    // 의도된 5개 — 위 패널 (PermitCheckPanels) 에서 업종별 상세 정보를 보고
-    // 사용자가 "확인했음" 을 마킹하는 verification 체크리스트. 동일 의미 중복 제거됨.
     taskIds: [
       "building-registry-checked",
       "permit-type-checked",
@@ -1789,9 +1827,11 @@ export const starterStageFlow: RoadmapStageState[] = [
     totalSteps: 14,
     goal: "Check the lease and operating constraints before committing to a location.",
     whyNow: "Contract mistakes are expensive and hard to reverse.",
+    // ⚠️ certified-date-obtained 는 required:true 인데 이전엔 requiredTaskIds 누락 — 사용자가 확정일자 안 받아도 진행 가능했음.
+    //    septic-tank-checked 만 음식점·카페 한정 옵션 (required:false) 으로 유지.
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["use-check", "facility-check", "restriction-check"]
+      requiredTaskIds: ["use-check", "facility-check", "restriction-check", "certified-date-obtained"]
     },
     taskIds: ["use-check", "facility-check", "restriction-check", "septic-tank-checked", "certified-date-obtained"],
     riskIds: [],
@@ -1807,11 +1847,26 @@ export const starterStageFlow: RoadmapStageState[] = [
     totalSteps: 14,
     goal: "Select interior contractors, approve the layout design, and manage the construction timeline. Also plan furniture, fixtures, and equipment (FF&E) including IT devices if applicable.",
     whyNow: "Interior and FF&E are usually the largest single cost — locking in contractors, furniture, and equipment early prevents overrun.",
+    // ⚠️ 5개 모두 필수 — 인테리어 단계는 가장 변수 많은 phase 라 partial-check advance 가
+    //    개업 직전 치명적인 누락으로 이어진다 (사용자 보고: 2026-05-03 "체크리스트 3개만 했는데 다음 단계로").
+    //    legally required: 소방필증·보건증 신청 (open 전 필수). business-essential: 컨셉 결정.
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["contractor-selected", "design-approved"]
+      requiredTaskIds: [
+        "interior-concept-selected",
+        "contractor-selected",
+        "design-approved",
+        "construction-complete",
+        "fire-health-parallel"
+      ]
     },
-    taskIds: ["contractor-selected", "design-approved", "construction-complete"],
+    taskIds: [
+      "interior-concept-selected",
+      "contractor-selected",
+      "design-approved",
+      "construction-complete",
+      "fire-health-parallel"
+    ],
     riskIds: [],
     nextStageIds: ["vendor-setup"]
   },
@@ -1853,41 +1908,81 @@ export const starterStageFlow: RoadmapStageState[] = [
     // 이전: insurance-tax-setup 직행 → 변경: tax-guide → insurance-tax-setup
     nextStageIds: ["tax-guide"]
   },
+  // ⚠️ tax-guide 는 registration-setup 직후 위치 — pathStepNumber 가 array index 기반이라
+  //    array 순서 = 플로우 순서 일치 시키려고 여기에 둠. (이전엔 array 끝쪽에 있어
+  //    offline 사용자에게 tax-guide 가 15단계로 표시되는 버그 있었음. 2026-05-01 수정.)
   {
-    stageId: "insurance-tax-setup",
-    code: "insurance_tax_setup",
-    title: "Insurance and tax setup",
-    type: "execution",
+    stageId: "tax-guide",
+    code: "tax_guide",
+    title: "Review tax guide",
+    type: "verification",
     status: "locked",
-    stepNumber: 12,
-    totalSteps: 15,
-    goal: "Set up 4 major insurance policies (national pension, health, employment, industrial accident), register for withholding tax, and configure payroll basics.",
-    whyNow: "Even with 1 employee, insurance registration is mandatory within 14 days of hiring. Late filing triggers penalties and back-payment. Tax setup before first payroll prevents future audit risk.",
-    completionRule: {
-      kind: "required_tasks",
-      requiredTaskIds: ["insurance-registered", "withholding-tax-set"]
-    },
-    taskIds: ["insurance-registered", "withholding-tax-set", "payroll-method-decided"],
+    // ★ 순서 조정 (이전 14 → 11): 사업자등록 직후가 세무 세팅 황금 타이밍
+    //   - Offline: registration-setup → tax-guide → insurance-tax-setup
+    //   - Online/Startup: tax-guide 도달 시 insurance-tax-setup 이 hidden 이라 다음 visible 인 loan-guide 로 진행
+    stepNumber: 11,
+    totalSteps: 19,
+    goal: "Check the first tax setup and filing guidance before operations begin.",
+    whyNow: "Tax structure, receipts, and proof handling are easier to set correctly before opening.",
+    completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
+    taskIds: [],
     riskIds: [],
-    nextStageIds: ["hiring-setup"]
+    // ⚠️ category-aware 분기: offline → insurance-tax-setup, online·startup → loan-guide
+    // 이전엔 multi-edge ["insurance-tax-setup", "loan-guide"] 만 두어 online·startup 사용자에게도
+    // hidden insurance-tax-setup이 currentStageId로 잡히는 버그가 있었음.
+    nextStageIds: ["loan-guide"], // default: online·startup·non-food
+    nextStageConditions: [
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "categoryId",
+        matchValueIn: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space"],
+        stageIds: ["hiring-setup"]  // ★ 2026-05-03: 채용·근로계약 먼저 → 그 후 4대보험·원천세 (14일 내)
+      }
+    ]
   },
+  // ★ 2026-05-03 순서 수정: 한국 노동법 실무 흐름 반영.
+  //   채용 결정 → 근로계약서 작성·교부 (근기법 17조, 미체결 1차 500만원 과태료) → 근로 개시
+  //   → 4대보험 사업장 성립·자격취득 신고 (14일 이내) → 원천세 (월 10일) → 급여 시스템.
+  //   이전: insurance-tax-setup(12) → hiring-setup(13) — 의무 처리가 채용보다 앞서있어
+  //         "근로계약 미작성 직원의 4대보험"이라는 모순. 사용자 피드백으로 수정.
   {
     stageId: "hiring-setup",
     code: "hiring_setup",
-    title: "Staff hiring and labor",
+    title: "Staff hiring and employment contract",
     type: "execution",
     status: "locked",
-    stepNumber: 13,
+    stepNumber: 12, // ← was 13
     totalSteps: 15,
-    goal: "Decide whether you need staff, post a job listing, and write employment contracts.",
-    whyNow: "Hiring without a proper contract is the most common legal violation first-time owners make.",
+    goal: "Decide staffing needs, run hiring, and sign + deliver employment contracts BEFORE the first work day.",
+    whyNow: "Labor Standards Act §17: contract must be written and delivered before work starts (penalty up to ₩5M if missing). Once signed, you have 14 days to register 4-insurance — that's the next stage.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["hiring-decision-made", "employment-contract-signed"]
     },
     taskIds: ["hiring-decision-made", "employment-contract-signed"],
     riskIds: [],
-    nextStageIds: ["operations-setup"]
+    nextStageIds: ["insurance-tax-setup"]  // ← was operations-setup
+  },
+  {
+    stageId: "insurance-tax-setup",
+    code: "insurance_tax_setup",
+    title: "Post-hire obligations — 4 insurance, withholding tax, payroll",
+    type: "execution",
+    status: "locked",
+    stepNumber: 13, // ← was 12
+    totalSteps: 15,
+    goal: "After signing the employment contract: register 4-insurance (within 14 days of work start), set up withholding tax (monthly 10th filing), and pick a payroll method (manual / CPA / SaaS).",
+    whyNow: "These 3 obligations trigger automatically once your first employee starts work. 4-insurance late = penalty + back-payment retroactively to start date. Withholding tax misfiling = monthly penalty.",
+    // ⚠️ 3개 모두 필수 (사용자 보고 2026-05-04 "2개만 체크해도 다음 단계로 자동 진행"):
+    //    이전엔 payroll-method-decided 가 required:false → 4대보험·원천세만 체크해도 advance.
+    //    급여 처리 방식 결정 안 하면 첫 달부터 매월 수기 혼선·세무사 누락 발생 → 운영 가능 상태가 아님.
+    completionRule: {
+      kind: "required_tasks",
+      requiredTaskIds: ["insurance-registered", "withholding-tax-set", "payroll-method-decided"]
+    },
+    taskIds: ["insurance-registered", "withholding-tax-set", "payroll-method-decided"],
+    riskIds: [],
+    nextStageIds: ["operations-setup"]  // ← was hiring-setup
   },
   {
     stageId: "operations-setup",
@@ -1899,11 +1994,15 @@ export const starterStageFlow: RoadmapStageState[] = [
     totalSteps: 15,
     goal: "Register on delivery platforms, go live with POS, and prepare SNS and local marketing.",
     whyNow: "Customers need to be able to find you from day one — late marketing setup means lost early revenue.",
+    // ⚠️ 6개 task 모두 필수 (사용자 보고 2026-05-04 "6개 중 3개만 체크해도 다음 단계 자동 진행"):
+    //    이전 룰(2개만 required) + 누락된 taskIds → UI는 6개 표시인데 룰은 일부만 평가 →
+    //    핵심 운영 인프라(VAN·간판·음악) 미완 상태로 advance → 오픈 후 카드 결제 X · 간판 X · 저작권 위반 리스크.
+    //    operations-setup 은 매장 오픈 직전 단계라 6개 모두 완료해야 영업 가능.
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["pos-live", "sns-setup"]
+      requiredTaskIds: ["delivery-app-registered", "pos-live", "sns-setup", "brand-identity-offline", "card-merchant-registered", "music-license-registered"]
     },
-    taskIds: ["delivery-app-registered", "pos-live", "sns-setup"],
+    taskIds: ["delivery-app-registered", "pos-live", "sns-setup", "brand-identity-offline", "card-merchant-registered", "music-license-registered"],
     riskIds: [],
     nextStageIds: ["pre-launch"]
   },
@@ -1917,9 +2016,11 @@ export const starterStageFlow: RoadmapStageState[] = [
     totalSteps: 15,
     goal: "Run a soft open with a limited audience, collect feedback, and complete the final pre-opening checklist.",
     whyNow: "A soft open surfaces operational problems before they reach paying customers at scale.",
+    // ⚠️ 3개 모두 필수 — feedback-collected 가 빠지면 「피드백 수집 안 해도 본오픈」 가능. 사용자 정신 어긋남.
+    //    이전엔 ["soft-open-done","final-checklist"] 만 required.
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["soft-open-done", "final-checklist"]
+      requiredTaskIds: ["soft-open-done", "feedback-collected", "final-checklist"]
     },
     taskIds: ["soft-open-done", "feedback-collected", "final-checklist"],
     riskIds: [],
@@ -2019,26 +2120,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     nextStageIds: ["tax-guide"]
   },
 
-  // ── Shared tail: tax and loan guides (both paths) ──────────────────────────
-  {
-    stageId: "tax-guide",
-    code: "tax_guide",
-    title: "Review tax guide",
-    type: "verification",
-    status: "locked",
-    // ★ 순서 조정 (이전 14 → 11): 사업자등록 직후가 세무 세팅 황금 타이밍
-    //   - Offline: registration-setup → tax-guide → insurance-tax-setup
-    //   - Online/Startup: tax-guide 도달 시 insurance-tax-setup 이 hidden 이라 다음 visible 인 loan-guide 로 진행
-    stepNumber: 11,
-    totalSteps: 18,
-    goal: "Check the first tax setup and filing guidance before operations begin.",
-    whyNow: "Tax structure, receipts, and proof handling are easier to set correctly before opening.",
-    completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
-    taskIds: [],
-    riskIds: [],
-    // multi-edge: insurance-tax-setup (offline 우선) / loan-guide (online·startup 폴백)
-    nextStageIds: ["insurance-tax-setup", "loan-guide"]
-  },
+  // ── Shared tail: loan guide (tax-guide 는 registration-setup 직후로 이동됨) ──
   {
     stageId: "loan-guide",
     code: "loan_guide",
@@ -2047,7 +2129,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     status: "locked",
     // ★ 순서 조정: 소프트오픈 직후 운영 자금 확보 단계로 이동 (16번)
     stepNumber: 16,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Explore government funding, startup support programs, low-interest loans, and grants. Match your profile to available programs before committing personal capital.",
     whyNow: "Government programs have application deadlines. Missing them means paying full cost out of pocket. Check eligibility early.",
     completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
@@ -2064,7 +2146,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 17,
-    totalSteps: 18,
+    totalSteps: 19,
     goal: "Confirm the tax office registration, open a dedicated business account, and decide on a tax accountant.",
     whyNow: "Getting the financial structure right before opening prevents tax filing and expense tracking problems from day one.",
     completionRule: {
@@ -2102,30 +2184,25 @@ export const starterStageFlow: RoadmapStageState[] = [
     whyNow: "Gaps in preparation on launch day directly damage the first customer experience and are hard to recover from.",
     completionRule: {
       kind: "required_tasks",
-      // 모든 보이는 task가 체크되어야 단계 완료 — 체크리스트 진행률과 일치
-      requiredTaskIds: ["inventory-first-order", "staff-final-brief", "payment-system-tested", "launch-day-roles-assigned", "sns-open-teaser", "emergency-plan-ready"]
+      // 본문 4페이지를 핵심 액션 5개로 압축
+      requiredTaskIds: [
+        "launch-date-locked",       // Page 0 — D-Day 확정 + 베타 10명
+        "production-deployed",      // Page 1 — 배포 + Sentry/Slack 검증
+        "payment-and-legal-ready",  // Page 1 — 라이브 결제 + PIPA 풋터
+        "runbook-prepared",         // Page 2 — 당일 매뉴얼 (시간대별·템플릿·응급)
+        "calendar-alarms-set",      // Page 3 — 13개 알림 + PH 예약 + D-Day 봉인
+      ]
     },
-    taskIds: ["inventory-first-order", "staff-final-brief", "payment-system-tested", "launch-day-roles-assigned", "sns-open-teaser", "emergency-plan-ready"],
+    taskIds: [
+      "launch-date-locked",
+      "production-deployed",
+      "payment-and-legal-ready",
+      "runbook-prepared",
+      "calendar-alarms-set",
+    ],
     riskIds: [],
-    nextStageIds: ["first-month-check"]
-  },
-  {
-    stageId: "first-month-check",
-    code: "first_month_check",
-    title: "Launch readiness check",
-    type: "execution",
-    status: "locked",
-    stepNumber: 20,
-    totalSteps: 18,
-    goal: "Set up a tracking system for key metrics, confirm reserves, and organize essential contacts before launch.",
-    whyNow: "The first month is the most dangerous period — preparation and daily tracking separate success from failure.",
-    completionRule: {
-      kind: "required_tasks",
-      // 모든 보이는 task가 체크되어야 단계 완료 — 체크리스트 진행률과 일치
-      requiredTaskIds: ["cashflow-plan-ready", "emergency-fund-ready", "key-contacts-list"]
-    },
-    taskIds: ["cashflow-plan-ready", "emergency-fund-ready", "key-contacts-list"],
-    riskIds: [],
+    // 로드맵 마지막 단계 — 다음은 운영 대시보드(businessLaunched=true)로 이동
+    // 출시 후 생존 점검(KPI·런웨이·비상금·연락처)은 MorningBriefing/Cashflow Hero 등 대시보드에서 처리
     nextStageIds: []
   }
 ];
@@ -2142,11 +2219,11 @@ export const starterTaskMap: WorkflowTaskMap = {
   ],
   // ── Tech startup path tasks ───────────────────────────────────────────────
   "startup-foundation": [
-    { taskId: "problem-defined", title: "Define the core problem in one sentence", status: "todo", required: true, estimatedMinutes: 30 },
-    { taskId: "founder-alignment", title: "Decide team structure (solo or co-founder) and document roles", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "company-formation-path", title: "Decide when to incorporate and choose the formation path", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "brand-identity-draft", title: "Draft initial brand identity (name, logo direction, tone) before public launch", status: "todo", required: false, estimatedMinutes: 60 },
-    { taskId: "nda-ip-agreement", title: "Prepare NDA and IP assignment agreements for co-founders, contractors, and freelancers", status: "todo", required: false, estimatedMinutes: 45 },
+    { taskId: "problem-defined", title: "Define the core problem in one sentence (Musk first-principles + Thiel contrarian truth)", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "founder-alignment", title: "Decide team structure (solo or co-founder) and document roles, equity vesting, and exit clauses", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "company-formation-path", title: "Decide: sole proprietor vs corporation (actual registration happens in next 'Company Setup' stage)", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "case-study-review", title: "Review 5 verified founder cases for your mode (indie/bootstrap/seed/seriesA) and document 3 takeaways", status: "todo", required: false, estimatedMinutes: 30 },
+    { taskId: "build-in-public-setup", title: "Set up build-in-public channel (X/Twitter or blog) — Marc Lou & Pieter Levels pattern", status: "todo", required: false, estimatedMinutes: 30 },
   ],
   "customer-discovery": [
     { taskId: "customer-interviews-done", title: "Run at least 10 customer interviews in one target segment", status: "todo", required: true, estimatedMinutes: 180 },
@@ -2159,13 +2236,26 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "ip-protection-filed", title: "File trademark and provisional patent before public launch", status: "todo", required: true, estimatedMinutes: 90, waitDays: 14, followupQuestion: "특허/상표 출원 접수 확인서를 받으셨나요?" }
   ],
   "launch-gtm": [
-    { taskId: "analytics-live", title: "Install analytics for activation, retention, and funnel events", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "billing-or-conversion-live", title: "Set up billing, pricing, or conversion tracking before launch", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "error-monitoring-live", title: "Connect error monitoring (Sentry) and Slack alerts for real-time issue tracking", status: "todo", required: true, estimatedMinutes: 30 },
-    { taskId: "feedback-loop-live", title: "Build customer feedback loop with in-app channel and weekly review habit", status: "todo", required: true, estimatedMinutes: 45 },
-    { taskId: "app-store-submission", title: "Submit app to Google Play and/or Apple App Store", status: "todo", required: false, estimatedMinutes: 240 },
-    { taskId: "terms-privacy-published", title: "Publish Terms of Service and Privacy Policy before any user can sign up (legally required)", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "pg-payment-ready", title: "Apply for PG (payment gateway) approval — takes 1-2 weeks, start early", status: "todo", required: false, estimatedMinutes: 30, waitDays: 14, followupQuestion: "PG 심사가 완료되었나요?" },
+    // ── Page 1: 출시 스택 (4가지 도구) ──
+    { taskId: "analytics-live", title: "Install analytics (PostHog or Mixpanel) — 5 core events + 1 funnel + weekly dashboard", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "billing-or-conversion-live", title: "Set up Stripe billing or conversion tracking — pricing decision + free→paid trigger", status: "todo", required: true, estimatedMinutes: 45 },
+    { taskId: "error-monitoring-live", title: "Connect Sentry error monitoring + Slack alerts (10-min Next.js SDK setup)", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "feedback-loop-live", title: "Build feedback loop — in-app button + Discord/Cal.com + 24h welcome email", status: "todo", required: true, estimatedMinutes: 45 },
+    // ── Page 2: 첫 100명 (GTM 핵심) ──
+    { taskId: "first-100-users-acquired", title: "Acquire first 100 users hand-delivered — DM/cold email + community + PH/HN launch", status: "todo", required: true, estimatedMinutes: 1200 },
+    // ── Page 3: 마케팅·콘텐츠 ──
+    { taskId: "marketing-content-cadence", title: "Pick 1-2 marketing channels + start weekly content cadence (Build in Public, SEO, etc)", status: "todo", required: true, estimatedMinutes: 240 },
+    // ── 선택 ──
+    { taskId: "security-checklist-reviewed", title: "Review 47-item security checklist before launch (AI prompts, SOC2, privacy, DDoS)", status: "todo", required: false, estimatedMinutes: 120 },
+    // ⚠️ terms-privacy-published 와 pg-payment-ready 는 company-setup 단계로 이관.
+    // ⚠️ app-store 제출은 go-live 단계로 분리.
+  ],
+  "go-live": [
+    { taskId: "web-go-live", title: "Web go-live — domain + SSL + SEO meta + Google Search Console", status: "todo", required: true, estimatedMinutes: 180 },
+    { taskId: "launch-channel-active", title: "Launch on at least 1 channel — Product Hunt, Hacker News, or Disquiet (build log)", status: "todo", required: true, estimatedMinutes: 480 },
+    { taskId: "apple-app-store-submitted", title: "Submit to Apple App Store (iOS only) — Xcode 16 + iOS 26 SDK + TestFlight", status: "todo", required: false, estimatedMinutes: 480, waitDays: 7, followupQuestion: "App Store 심사 결과 받으셨나요?" },
+    { taskId: "google-play-submitted", title: "Submit to Google Play (Android only) — 12 testers × 14 days closed testing", status: "todo", required: false, estimatedMinutes: 600, waitDays: 14, followupQuestion: "Google Play 폐쇄 테스트 완료되셨나요?" },
+    { taskId: "launch-day-monitored", title: "Launch day — 24h monitoring + reply to every comment + share on Twitter/HN/PH", status: "todo", required: false, estimatedMinutes: 480 },
   ],
   "growth-engine": [
     { taskId: "north-star-set", title: "Choose one north-star metric and one weekly growth metric", status: "todo", required: true, estimatedMinutes: 30 },
@@ -2178,17 +2268,28 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "ip-protection-planned", title: "File patent application at KIPRIS/특허로 BEFORE any public disclosure (demo, beta, press)", status: "todo", required: true, estimatedMinutes: 90 },
     { taskId: "trademark-filed", title: "File trademark application for your brand name and logo at 특허로 (patent.go.kr)", status: "todo", required: false, estimatedMinutes: 60 },
     { taskId: "tax-setup-basics", title: "Choose tax type (간이과세 vs 일반과세) and set up basic bookkeeping", status: "todo", required: false, estimatedMinutes: 45 },
-    { taskId: "security-basics", title: "Set up privacy policy, customer data protection plan, and terms of service", status: "todo", required: false, estimatedMinutes: 45 },
+    { taskId: "security-basics", title: "Set up customer data protection plan + security baseline (TLS, RLS, env vars)", status: "todo", required: false, estimatedMinutes: 45 },
+    // ── launch-gtm 에서 이관 — 사업자등록 후 즉시 처리 ──
+    { taskId: "terms-privacy-published", title: "Publish Terms of Service and Privacy Policy before any user can sign up (legally required, generate via 개인정보보호 포털)", status: "todo", required: true, estimatedMinutes: 60 },
+    { taskId: "pg-payment-ready", title: "Apply for PG (payment gateway) — Toss Payments / KCP / Inicis. Review takes 1-2 weeks, start as soon as site is ready", status: "todo", required: false, estimatedMinutes: 30, waitDays: 14, followupQuestion: "PG 심사가 완료되었나요?" },
   ],
   "fundraising-readiness": [
-    { taskId: "runway-model-ready", title: "Model burn rate and cash runway with best/base/worst scenarios", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "fundraising-decision-made", title: "Decide fundraising path: VC, bootstrap, or government grants", status: "todo", required: true, estimatedMinutes: 30 },
-    { taskId: "investor-material-ready", title: "Prepare pitch deck, metric snapshot, and financial projection", status: "todo", required: true, estimatedMinutes: 120 }
+    // ── Page 0: 왜·런웨이 진단 ──
+    { taskId: "runway-model-ready", title: "Runway model — Best/Base/Worst scenarios + Net Burn < 2x Net New ARR check + 18+ month target", status: "todo", required: true, estimatedMinutes: 60 },
+    // ── Page 1: 부트스트랩 vs 투자 결정 ──
+    { taskId: "fundraising-decision-made", title: "Decide path: PATH A (Bootstrap) vs PATH B (Fundraise) — Default Alive check + 5 prep items", status: "todo", required: true, estimatedMinutes: 45 },
+    // ── Page 2: 프로그램 매칭 (신규) ──
+    { taskId: "funding-programs-matched", title: "Pick 1-3 funding programs from your mode (TIPS/예비창업/액셀러레이터/VC) and start applications", status: "todo", required: true, estimatedMinutes: 90 },
+    // ── Page 3: AI 사업계획서 + 투자자 만나기 ──
+    { taskId: "investor-material-ready", title: "AI business plan generated + 10-slide pitch deck + 3-yr financial model + product demo", status: "todo", required: true, estimatedMinutes: 120 },
   ],
   "venture-certification": [
-    { taskId: "venture-cert-type-checked", title: "Check venture certification eligibility: investment type, R&D type, or innovation growth type", status: "todo", required: true, estimatedMinutes: 30 },
-    { taskId: "govt-program-matched", title: "Match to K-Startup programs: pre-startup package, early-stage package, TIPS, or growth package", status: "todo", required: true, estimatedMinutes: 60 },
-    { taskId: "application-submitted", title: "Submit venture certification or government program application before deadline", status: "todo", required: true, estimatedMinutes: 90, waitDays: 30, followupQuestion: "벤처기업 확인서 또는 지원사업 선정 결과를 받으셨나요?" }
+    // ── Page 1: 인증 유형 결정 ──
+    { taskId: "venture-cert-type-checked", title: "Check venture certification type: investment type, R&D type, or innovation growth type", status: "todo", required: true, estimatedMinutes: 30 },
+    // ── Page 3: 신청 절차 ──
+    { taskId: "application-submitted", title: "Submit venture certification application at venture.or.kr — review takes 30 days", status: "todo", required: true, estimatedMinutes: 90, waitDays: 30, followupQuestion: "벤처기업 확인서 받으셨나요?" },
+    // ── Page 3: 인증 후 활용 (신규) ──
+    { taskId: "venture-benefits-activated", title: "Activate post-cert benefits — 5-yr corp tax 50% cut + tax-free stock options + 50% option pool + military exemption", status: "todo", required: true, estimatedMinutes: 60 },
   ],
   // ── Cluster B (Hardware/IoT) — NPI 4단계 ──
   // 검증 출처: Titoma·OnLogic·Kaizen Dynamic·Hatch (EVT/DVT/PVT 정의), IB-Lenhardt·BlueAsiaLabs·MPR Korea (KC), CISA HBOM Framework
@@ -2274,25 +2375,28 @@ export const starterTaskMap: WorkflowTaskMap = {
       required: true,
       estimatedMinutes: 20
     },
+    // ⚠️ 5개 모두 required: true — 영업신고에 직결되는 인허가 사전 점검 항목.
+    //    이전엔 false 였으나 사용자가 "체크리스트 2개만 해도 다음 단계로 넘어간다" 고 보고 (2026-05-03).
+    //    위생·면허·소방 빠지면 영업신고 거부되니 모두 필수.
     {
       taskId: "hygiene-health-checked",
       title: "위생교육 6시간·보건증 발급 요건 확인 (음식/카페/뷰티) — 절차·기간·발급처",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 15
     },
     {
       taskId: "license-registration-checked",
       title: "전문 면허·업종별 등록 요건 확인 (미용사 면허, 학원·체육시설·동물관련업 등록 등)",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 15
     },
     {
       taskId: "fire-safety-checked",
       title: "소방완비증명서·시설 안전 요건 확인 — 영업장 면적·층수별 기준 점검",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 15
     },
   ],
@@ -2335,6 +2439,15 @@ export const starterTaskMap: WorkflowTaskMap = {
   ],
   "construction-setup": [
     {
+      // 자동 완료: 사용자가 ConstructionSetupStage UI 에서 selectedInteriorConcept 를
+      //   선택하면 useTaskAutoCompletion 이 이 task 를 mark-complete.
+      taskId: "interior-concept-selected",
+      title: "Pick a design concept direction (industrial / natural / parisian / etc.)",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 10
+    },
+    {
       taskId: "contractor-selected",
       title: "Select interior contractor and collect at least two estimates",
       status: "todo",
@@ -2352,14 +2465,16 @@ export const starterTaskMap: WorkflowTaskMap = {
       taskId: "construction-complete",
       title: "Confirm construction complete and pass final walkthrough",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 30
     },
     {
+      // ⚠ 법적 필수 — 소방필증·보건증 없이는 영업 신고 불가. 이전엔 optional 이었지만
+      //   다음 단계 진입 전에 신청만이라도 시작돼야 14일 대기시간 안에 개업 일정 맞출 수 있음.
       taskId: "fire-health-parallel",
       title: "Apply for fire safety certificate (소방필증) and health certificate (보건증) in parallel with construction",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 30,
       waitDays: 14,
       followupQuestion: "소방필증/보건증 신청 완료하셨나요?"
@@ -2434,7 +2549,7 @@ export const starterTaskMap: WorkflowTaskMap = {
       taskId: "payroll-method-decided",
       title: "Choose payroll method: manual, tax advisor, or payroll SaaS (flex, Albam)",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 20
     }
   ],
@@ -2459,14 +2574,14 @@ export const starterTaskMap: WorkflowTaskMap = {
       taskId: "delivery-app-registered",
       title: "Register on delivery platforms (Baemin, Coupang Eats, etc.)",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 45
     },
     {
       taskId: "pos-live",
       title: "Confirm POS is live and tested with real transactions",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 30
     },
     {
@@ -2480,7 +2595,7 @@ export const starterTaskMap: WorkflowTaskMap = {
       taskId: "brand-identity-offline",
       title: "Prepare brand assets: signage design, menu/price list, and interior brand elements",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 60
     },
     {
@@ -2496,7 +2611,7 @@ export const starterTaskMap: WorkflowTaskMap = {
       taskId: "music-license-registered",
       title: "Register for background music license (KOMCA/매장음악서비스) if store >50㎡",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 15
     }
   ],
@@ -2512,7 +2627,7 @@ export const starterTaskMap: WorkflowTaskMap = {
       taskId: "feedback-collected",
       title: "Collect guest feedback (taste · service · price · ambiance)",
       status: "todo",
-      required: false,
+      required: true,
       estimatedMinutes: 30
     },
     {
@@ -2685,72 +2800,48 @@ export const starterTaskMap: WorkflowTaskMap = {
     }
   ],
   "pre-launch-final": [
+    // ── Page 0 — D-Day 확정 + 베타 10명 ──
     {
-      taskId: "inventory-first-order",
-      title: "Place and receive first inventory/ingredient order (or deploy to production for startups)",
+      taskId: "launch-date-locked",
+      title: "Lock D-Day + list 10 beta users / pre-open contacts in calendar+sheet",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 40
+    },
+    // ── Page 1 — 배포 + 모니터링 ──
+    {
+      taskId: "production-deployed",
+      title: "Production deploy + domain + SSL + Sentry/Slack alarm triggered with real error",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 90
+    },
+    // ── Page 1 — 결제 + 법적 (통합) ──
+    {
+      taskId: "payment-and-legal-ready",
+      title: "Live 100 KRW payment cycle + legal footer + PIPA 2025 (consent, portability, refund)",
+      status: "todo",
+      required: true,
+      estimatedMinutes: 90
+    },
+    // ── Page 2 — 당일 매뉴얼 ──
+    {
+      taskId: "runbook-prepared",
+      title: "Day-of runbook: hour-by-hour schedule + 5 reply templates + 5 emergency playbooks + roles",
       status: "todo",
       required: true,
       estimatedMinutes: 60
     },
+    // ── Page 3 — 캘린더 봉인 ──
     {
-      taskId: "staff-final-brief",
-      title: "Complete final staff training and rehearse the opening-day workflow end to end",
+      taskId: "calendar-alarms-set",
+      title: "13 calendar alarms (D-28~D+14) + PH/store schedule + D-Day/D-1/D+1 blocked",
       status: "todo",
       required: true,
-      estimatedMinutes: 60
-    },
-    {
-      taskId: "payment-system-tested",
-      title: "Test full payment flow with real transaction (card terminal / PG / Stripe) — confirm receipt prints",
-      status: "todo",
-      required: true,
-      estimatedMinutes: 20
-    },
-    {
-      taskId: "launch-day-roles-assigned",
-      title: "Assign specific roles for launch day — who handles what when things go wrong",
-      status: "todo",
-      required: true,
-      estimatedMinutes: 30
-    },
-    {
-      taskId: "sns-open-teaser",
-      title: "Publish opening teaser on SNS / Product Hunt / community channels",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 30
-    },
-    {
-      taskId: "emergency-plan-ready",
-      title: "Prepare emergency plan: Wi-Fi backup, card terminal failure, stock-out response, customer complaint escalation",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 20
-    }
-  ],
-  "first-month-check": [
-    {
-      taskId: "cashflow-plan-ready",
-      title: "Set up a method to track daily cash flow",
-      status: "todo",
-      required: true,
-      estimatedMinutes: 15
-    },
-    {
-      taskId: "emergency-fund-ready",
-      title: "Confirm at least one month of fixed costs is in reserve",
-      status: "todo",
-      required: true,
-      estimatedMinutes: 10
-    },
-    {
-      taskId: "key-contacts-list",
-      title: "Save key contacts: tax accountant, suppliers, equipment repair",
-      status: "todo",
-      required: false,
-      estimatedMinutes: 20
+      estimatedMinutes: 95
     }
   ]
+  // ⚠️ "first-month-check"는 운영 대시보드(MorningBriefing/Cashflow Hero)로 이전됨 — taskMap 엔트리 삭제.
 };
 
 export const starterDecisionMap: WorkflowDecisionMap = {};

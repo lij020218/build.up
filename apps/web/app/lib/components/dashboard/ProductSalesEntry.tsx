@@ -120,7 +120,7 @@ export function ProductSalesEntry({
   return (
     <div style={{
       marginTop: "12px", borderRadius: "16px",
-      background: expanded ? "rgba(255,255,255,0.98)" : "rgba(15,23,42,0.025)",
+      background: expanded ? "rgba(255,255,255,0.98)" : "rgba(25,25,112,0.025)",
       border: expanded ? "1px solid rgba(15,23,42,0.08)" : "1px solid rgba(15,23,42,0.04)",
       overflow: expanded ? "visible" : "hidden", transition: "all 0.2s ease",
     }}>
@@ -142,7 +142,7 @@ export function ProductSalesEntry({
             {ko ? "상품별 매출 입력" : "Sales by product"}
           </span>
           {!expanded && totalFromProducts > 0 && (
-            <span style={{ fontSize: "12px", fontWeight: 650, color: "#2563eb" }}>
+            <span style={{ fontSize: "12px", fontWeight: 650, color: "#191970" }}>
               {fmt(totalFromProducts)}
             </span>
           )}
@@ -166,14 +166,14 @@ export function ProductSalesEntry({
                 <button type="button" onClick={() => setPickerOpen(!pickerOpen)} style={{
                   width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
                   padding: "12px 14px", borderRadius: "12px",
-                  border: pickerOpen ? "1.5px solid #2563eb" : "1px solid rgba(15,23,42,0.1)",
+                  border: pickerOpen ? "1.5px solid #191970" : "1px solid rgba(15,23,42,0.1)",
                   background: "#fff", cursor: "pointer", transition: "all 0.15s ease",
                 }}>
-                  <span style={{ fontSize: "14px", color: pickerOpen ? "#2563eb" : "rgba(15,23,42,0.45)" }}>
+                  <span style={{ fontSize: "14px", color: pickerOpen ? "#191970" : "rgba(15,23,42,0.45)" }}>
                     {ko ? "상품을 선택하세요" : "Select a product"}
                   </span>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transition: "transform 0.2s", transform: pickerOpen ? "rotate(180deg)" : "rotate(0)" }}>
-                    <path d="M3.5 5.5L7 9l3.5-3.5" stroke={pickerOpen ? "#2563eb" : "rgba(15,23,42,0.35)"} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3.5 5.5L7 9l3.5-3.5" stroke={pickerOpen ? "#191970" : "rgba(15,23,42,0.35)"} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
 
@@ -194,7 +194,7 @@ export function ProductSalesEntry({
                           style={{
                             width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
                             padding: "12px 14px", border: "none", borderBottom: "1px solid rgba(15,23,42,0.04)",
-                            background: alreadyAdded ? "rgba(37,99,235,0.03)" : "transparent",
+                            background: alreadyAdded ? "rgba(25,25,112,0.03)" : "transparent",
                             cursor: "pointer", transition: "background 0.1s ease",
                             textAlign: "left" as const,
                           }}
@@ -204,7 +204,7 @@ export function ProductSalesEntry({
                             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginTop: "1px" }}>{fmt(p.price ?? 0)}</div>
                           </div>
                           {alreadyAdded ? (
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", background: "rgba(37,99,235,0.08)", borderRadius: "6px", padding: "2px 8px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#191970", background: "rgba(25,25,112,0.08)", borderRadius: "6px", padding: "2px 8px" }}>
                               {soldCounts[p.id]}{ko ? "개 추가됨" : " added"}
                             </span>
                           ) : (
@@ -230,8 +230,8 @@ export function ProductSalesEntry({
                       <div key={id} style={{
                         display: "flex", alignItems: "center", gap: "10px",
                         padding: "10px 12px", borderRadius: "12px",
-                        background: "rgba(37,99,235,0.035)",
-                        border: "1px solid rgba(37,99,235,0.1)",
+                        background: "rgba(25,25,112,0.035)",
+                        border: "1px solid rgba(25,25,112,0.1)",
                       }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{p.name}</div>
@@ -242,13 +242,13 @@ export function ProductSalesEntry({
                             style={{ width: "32px", height: "34px", border: "none", cursor: "pointer", background: "transparent", fontSize: "15px", fontWeight: 500, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                           <input type="text" inputMode="numeric" value={String(count)}
                             onChange={(e) => { const val = parseInt(e.target.value.replace(/[^0-9]/g, ""), 10); setSoldCounts((prev) => ({ ...prev, [id]: Number.isNaN(val) ? 0 : Math.max(0, val) })); }}
-                            style={{ width: "40px", height: "34px", border: "none", borderLeft: "1px solid rgba(15,23,42,0.06)", borderRight: "1px solid rgba(15,23,42,0.06)", textAlign: "center", fontSize: "14px", fontWeight: 700, color: "#2563eb", outline: "none", background: "transparent", fontVariantNumeric: "tabular-nums" }} />
+                            style={{ width: "40px", height: "34px", border: "none", borderLeft: "1px solid rgba(15,23,42,0.06)", borderRight: "1px solid rgba(15,23,42,0.06)", textAlign: "center", fontSize: "14px", fontWeight: 700, color: "#191970", outline: "none", background: "transparent", fontVariantNumeric: "tabular-nums" }} />
                           <button type="button" onClick={() => handleTap(id)}
                             style={{ width: "32px", height: "34px", border: "none", cursor: "pointer", background: "transparent", fontSize: "15px", fontWeight: 500, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                         </div>
                         {/* 삭제 버튼 */}
                         <button type="button" onClick={() => setSoldCounts((prev) => { const next = { ...prev }; delete next[id]; return next; })}
-                          style={{ width: "28px", height: "28px", borderRadius: "8px", border: "none", background: "rgba(15,23,42,0.04)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          style={{ width: "28px", height: "28px", borderRadius: "8px", border: "none", background: "rgba(25,25,112,0.04)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                             <path d="M3 3l6 6M9 3l-6 6" stroke="rgba(15,23,42,0.35)" strokeWidth="1.3" strokeLinecap="round" />
                           </svg>
@@ -263,8 +263,8 @@ export function ProductSalesEntry({
               <div style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
                 padding: "12px 14px", borderRadius: "12px",
-                background: totalFromProducts > 0 ? "rgba(37,99,235,0.05)" : "rgba(15,23,42,0.02)",
-                border: totalFromProducts > 0 ? "1px solid rgba(37,99,235,0.1)" : "1px solid transparent",
+                background: totalFromProducts > 0 ? "rgba(25,25,112,0.05)" : "rgba(25,25,112,0.025)",
+                border: totalFromProducts > 0 ? "1px solid rgba(25,25,112,0.1)" : "1px solid transparent",
               }}>
                 <div>
                   <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>
@@ -275,7 +275,7 @@ export function ProductSalesEntry({
                   </div>
                 </div>
                 <button type="button" onClick={handleApply} disabled={totalFromProducts <= 0}
-                  style={{ fontSize: "13px", fontWeight: 650, padding: "10px 18px", borderRadius: "10px", border: "none", cursor: totalFromProducts > 0 ? "pointer" : "default", background: totalFromProducts > 0 ? "#0f172a" : "rgba(15,23,42,0.06)", color: totalFromProducts > 0 ? "#fff" : "rgba(15,23,42,0.3)", transition: "all 0.15s ease" }}>
+                  style={{ fontSize: "13px", fontWeight: 650, padding: "10px 18px", borderRadius: "10px", border: "none", cursor: totalFromProducts > 0 ? "pointer" : "default", background: totalFromProducts > 0 ? "#0f172a" : "rgba(25,25,112,0.05)", color: totalFromProducts > 0 ? "#fff" : "rgba(15,23,42,0.3)", transition: "all 0.15s ease" }}>
                   {ko ? "매출에 반영" : "Apply"}
                 </button>
               </div>

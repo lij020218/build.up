@@ -60,6 +60,24 @@ const semiconductor: ClusterStageContent = {
     { name: "TSMC capacity sold through 2028 — Dataconomy", href: "https://dataconomy.com/2026/03/31/tsmcs-advanced-chip-capacity-is-booked-out-through-2028/" },
     { name: "Samsung Foundry 21,000 wafers — Digitimes", href: "https://www.digitimes.com/news/a20251121PD240/samsung-2026-tsmc-2nm-qualcomm.html" },
   ],
+  wrapup: {
+    nextStageLabelKo: "법인 설립·운영",
+    doneItemsKo: [
+      { label: "1. 파운드리 파트너 락인", detail: "TSMC·Samsung·UMC·SkyWater 비교 + 2~3년 전 booking" },
+      { label: "2. CoWoS·advanced packaging", detail: "52~78주 leadtime 일정 역산 + 캐파 사전 확보" },
+      { label: "3. 노드 vs 시장 포지셔닝", detail: "AI/모바일·automotive·IoT 별 적정 노드 매칭" },
+      { label: "4. 양산 자본 확보", detail: "28nm $1M+·7nm $10M+ 이상, 시드 자본 또는 시리즈 A 사전 확보" },
+    ],
+    verifyItemsKo: [
+      "TSMC N2/N3 — 2027~2028 매진, 락인 늦으면 양산 1~2년 지연",
+      "CoWoS 무시 — AI 칩은 HBM + interposer + die 필수, 52~78주 leadtime 일정 반영",
+      "수출 통제 — 14nm 이하·HBM 등 첨단 노드는 미·중·EU 수출 통제, 외국 고객 사전 검토",
+      "노드 선택 — 28nm 진입 장벽 낮지만 차세대 시장 놓침, 시장 포지셔닝과 일치 필수",
+      "Foundry 캐파 — 단일 Foundry 의존 시 부도·파업 리스크, 백업 Foundry 사전 검토",
+      "지정학 — TSMC 의존 시 대만 지정학 리스크, Samsung·미국 Foundry 분산 검토",
+    ],
+    nextSummaryKo: "Foundry 락인·CoWoS 캐파·자본 확보 → 법인 설립·운영 단계로 진입",
+  },
 };
 
 const climate: ClusterStageContent = {
@@ -83,6 +101,24 @@ const climate: ClusterStageContent = {
   traps: [
     { label: "직접 파일럿 라인 무리하게 구축 → 자본 소진", text: "초기엔 위탁 양산으로 자본 효율. 매출·검증 후 직접 라인 검토." },
   ],
+  wrapup: {
+    nextStageLabelKo: "법인 설립·운영",
+    doneItemsKo: [
+      { label: "1. 양산 모델 결정", detail: "직접 파일럿 라인 vs 위탁 양산 비교 — 자본 효율 우선" },
+      { label: "2. 한국 대기업 파트너십", detail: "LG에너지솔루션·삼성SDI·한화큐셀 등 위탁 양산 협의" },
+      { label: "3. 정부 R&D 지원", detail: "탄소중립·녹색금융·KDB 국가성장펀드 활용" },
+      { label: "4. ESG 인증·환경 표준", detail: "친환경 인증 사전 확보, 글로벌 시장 진입 자격" },
+    ],
+    verifyItemsKo: [
+      "자본 — 직접 라인 100억+ 자본 필요, 매출·검증 전 무리 시 자본 소진",
+      "환경법 — 폐기물·배출량 사전 인허가, 미준수 시 영업정지 + 환경법 위반",
+      "ESG — 글로벌 시장 진입 시 ESG 인증 필수, 미보유 시 대기업 위탁 거절",
+      "원자재 — 리튬·코발트·실리콘 등 글로벌 공급망 리스크, 다중 공급사 확보",
+      "탄소배출권 — 탄소중립 정책 활용, 미활용 시 비용 부담 증가",
+      "정부 지원 — 신청 후 입금 4~12주, 일정 역산 필수",
+    ],
+    nextSummaryKo: "양산 모델·파트너·ESG 점검 → 법인 설립·운영 단계로 진입",
+  },
 };
 
 export function PartnerFoundationOrPilotLineStage() {

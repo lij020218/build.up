@@ -70,6 +70,24 @@ const defaultContent: ClusterStageContent = {
     { name: "글로벌 인증 가이드 — EMC FastPass", href: "https://emcfastpass.com/cert-ebook/" },
     { name: "한국 RRA (전파응용기기 인증)", href: "https://rra.go.kr/", desc: "공식 KC-RRA 인증기관" },
   ],
+  wrapup: {
+    nextStageLabelKo: "양산 파트너 셋업",
+    doneItemsKo: [
+      { label: "1. Pre-compliance 자체 시험", detail: "정식 신청 전 EMC·Safety 사전 검증 — 'fail and re-submit' 방지" },
+      { label: "2. 한국 대리인 지정", detail: "수입자·인증대행사 계약 — 외국 기업 KC 신청 필수" },
+      { label: "3. KC·CE·FCC 동시 진행", detail: "글로벌 3대 인증 일정·비용 통합 관리로 절감" },
+      { label: "4. 무선 3종 인증", detail: "무선 제품은 RRA + Safety + EMC 3개 인증 누락 없이 완료" },
+    ],
+    verifyItemsKo: [
+      "DVT 단계부터 인증 병행 — PVT 후 신청은 양산 일정 8~16주 지연 (1순위 출시 지연 원인)",
+      "무선 — RRA·Safety·EMC 중 1개라도 누락 시 불법 판매, 즉시 회수·과태료 + 형사책임",
+      "유럽 CE — Notified Body 지정·DoC 작성 의무, 위반 시 EU 시장 진입 차단",
+      "미국 FCC — Title 47 Part 15·18 별도 인증, Class B 가정용·Class A 산업용 구분",
+      "어린이 제품 — 안전인증 별도, 위반 시 5천만원 이하 과징금 + 영업정지 가능",
+      "인증 라벨 — KC·CE·FCC 마크 누락·위조 시 표시광고법 + 인증기관 행정처분",
+    ],
+    nextSummaryKo: "KC·CE·FCC 인증 + 한국 대리인 지정 완료 → 양산 파트너 셋업 단계로 진입",
+  },
 };
 
 export function CertificationKcCeStage() {

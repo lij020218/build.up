@@ -9,10 +9,61 @@ import {
   hasSpecialties,
   localizeRecommendationItem,
 } from "@build-up/shared";
+import { BusinessHoursInput } from "../shared/BusinessHoursInput";
+import { StageWrapup } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
+
+type RevenueOption = {
+  id: string;
+  ko: { title: string; sub: string; example: string };
+  en: { title: string; sub: string; example: string };
+  // 어떤 industryCategory에 적용 가능한가 (빈 배열 = 모든 카테고리)
+  applicableTo: string[];
+};
+
+// 수익 모델 — 어떻게 돈을 받는가. business-model 단계의 두 번째 질문.
+// SaaS 거장(Salesforce·Stripe 패턴) + 한국 SMB(배달앱·구독커머스) 통합 분류.
+const REVENUE_OPTIONS: RevenueOption[] = [
+  {
+    id: "subscription",
+    ko: { title: "정기 구독 (월·연)", sub: "매월/매년 자동 결제", example: "예: 넷플릭스 · 노션 · 토스" },
+    en: { title: "Subscription (monthly/yearly)", sub: "Auto-renewing recurring", example: "e.g., Netflix · Notion · Toss" },
+    applicableTo: ["startup-tech", "online-digital"],
+  },
+  {
+    id: "api-usage",
+    ko: { title: "API 사용량 (호출·토큰 단위)", sub: "쓴 만큼 청구", example: "예: OpenAI · Stripe · Twilio" },
+    en: { title: "API usage (per call/token)", sub: "Pay-as-you-go metering", example: "e.g., OpenAI · Stripe · Twilio" },
+    applicableTo: ["startup-tech"],
+  },
+  {
+    id: "one-time",
+    ko: { title: "일회 구매", sub: "한 번 결제, 그 후 사용", example: "예: 음식점 · 옷가게 · 디지털 상품 단건" },
+    en: { title: "One-time purchase", sub: "Pay once, use forever", example: "e.g., restaurant · digital goods" },
+    applicableTo: [], // 모든 카테고리
+  },
+  {
+    id: "freemium",
+    ko: { title: "무료 + 프리미엄", sub: "무료 체험 후 유료 전환", example: "예: 디스코드 · 줌 · 노션 무료 플랜" },
+    en: { title: "Freemium", sub: "Free tier + paid upgrade", example: "e.g., Discord · Zoom · Notion free" },
+    applicableTo: ["startup-tech", "online-digital"],
+  },
+  {
+    id: "marketplace-fee",
+    ko: { title: "거래 수수료", sub: "매출 발생 시 % 수수료", example: "예: 우버이츠 · 에어비앤비 · 크몽" },
+    en: { title: "Marketplace fee", sub: "% commission on transactions", example: "e.g., Uber Eats · Airbnb · Kmong" },
+    applicableTo: ["startup-tech", "online-digital"],
+  },
+  {
+    id: "hybrid",
+    ko: { title: "복합 (둘 이상)", sub: "구독 + API · 무료 + 광고 등", example: "예: AWS · Slack · Spotify" },
+    en: { title: "Hybrid (mix)", sub: "Subscription + usage / freemium + ads", example: "e.g., AWS · Slack · Spotify" },
+    applicableTo: ["startup-tech", "online-digital"],
+  },
+];
 
 export function BusinessModelSelectionStage() {
   const d = useDashboardCtx();
@@ -24,6 +75,7 @@ export function BusinessModelSelectionStage() {
     selectedIndustryLabel,
     selectedSpecialtyId, setSelectedSpecialtyId,
     selectedBusinessModelId, setSelectedBusinessModelId,
+    selectedRevenueModelId, setSelectedRevenueModelId,
     canCompleteBusinessModelStep,
     handleBusinessModelContinue,
     prevTraversedStage, setViewingStageId,
@@ -36,6 +88,14 @@ export function BusinessModelSelectionStage() {
   const specialties = getSpecialties(selectedIndustryId);
   const showSpecialty = hasSpecialties(selectedIndustryId);
   const ko = language === "ko";
+
+  // 수익 모델 옵션 필터 — 카테고리에 맞는 것만 표시
+  const revenueOptions = REVENUE_OPTIONS.filter(
+    (opt) => opt.applicableTo.length === 0 || opt.applicableTo.includes(industryCategoryId ?? ""),
+  );
+  // 외식·뷰티·피트니스·펫 등 대부분 오프라인은 "one-time" 또는 "subscription" 정도만 의미.
+  // startup-tech / online-digital은 6개 모두 노출.
+  const showRevenueModel = (industryCategoryId === "startup-tech" || industryCategoryId === "online-digital") && !!selectedBusinessModelId;
 
   return (
     <>
@@ -245,6 +305,104 @@ export function BusinessModelSelectionStage() {
         );
       })()}
 
+      {/* ═══════════════════════════════════════════════════════════
+          REVENUE MODEL SECTION — 수익 모델 (어떻게 돈을 받는가)
+          startup-tech / online-digital 만 표시. 외식·뷰티 등은 자동 "one-time".
+          ═════════════════════════════════════════════════════════ */}
+      {showRevenueModel && (
+        <div style={{ marginTop: "24px", padding: "20px 22px", borderRadius: "20px", background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)", border: `1px solid ${MIDNIGHT_BORDER}`, boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+            <div style={{ padding: "3px 9px", borderRadius: "6px", background: MIDNIGHT, color: "#fff", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em" }}>
+              {ko ? "수익 모델" : "REVENUE MODEL"}
+            </div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f0f4a", letterSpacing: "-0.01em" }}>
+              {ko ? "어떻게 돈을 받으실 건가요?" : "How will you charge?"}
+            </div>
+          </div>
+          <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.6)", marginBottom: "16px", lineHeight: 1.55 }}>
+            {ko
+              ? "수익 모델은 운영 대시보드의 KPI(MRR·재구매율·ARPU 등)와 가격 설계 단계의 추천 콘텐츠를 결정합니다. 결합 모델이면 '복합'을 선택하세요."
+              : "Revenue model determines your dashboard KPIs (MRR / repeat rate / ARPU) and pricing recommendations. Pick 'Hybrid' if combining multiple."}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(220px, 1fr))`, gap: "10px" }}>
+            {revenueOptions.map((opt) => {
+              const sel = selectedRevenueModelId === opt.id;
+              const t = ko ? opt.ko : opt.en;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSelectedRevenueModelId(opt.id)}
+                  style={{
+                    display: "flex", flexDirection: "column" as const, alignItems: "flex-start",
+                    textAlign: "left" as const, gap: "4px",
+                    padding: "14px 16px",
+                    borderRadius: "14px",
+                    cursor: "pointer",
+                    width: "100%",
+                    border: sel ? `1.5px solid ${MIDNIGHT}` : "1.5px solid rgba(25,25,112,0.10)",
+                    background: sel
+                      ? `linear-gradient(160deg, ${MIDNIGHT_SOFT} 0%, rgba(25,25,112,0.03) 100%)`
+                      : "#ffffff",
+                    boxShadow: sel
+                      ? "0 0 0 3px rgba(25,25,112,0.08), 0 4px 12px rgba(25,25,112,0.10)"
+                      : "0 1px 2px rgba(25,25,112,0.03)",
+                    transition: "all 0.18s cubic-bezier(0.22, 1, 0.36, 1)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: "999px",
+                      background: sel ? MIDNIGHT : "rgba(25,25,112,0.18)",
+                      flexShrink: 0, transition: "background 0.18s ease",
+                    }} />
+                    <div style={{ fontSize: "13.5px", fontWeight: 700, color: sel ? MIDNIGHT : "#0f172a", letterSpacing: "-0.005em" }}>
+                      {t.title}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "12px", fontWeight: 500, color: "rgba(15,23,42,0.6)", marginTop: "2px", marginLeft: "16px", lineHeight: 1.45 }}>
+                    {t.sub}
+                  </div>
+                  <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(25,25,112,0.55)", marginTop: "4px", marginLeft: "16px", letterSpacing: "-0.005em" }}>
+                    {t.example}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 영업 시간 입력 — 오프라인 path 만 (online·startup은 자정 KST 컷오프 자동) */}
+      {industryCategoryId !== "online-digital" && industryCategoryId !== "startup-tech" && selectedBusinessModelId && (
+        <div style={{ marginTop: "20px", marginBottom: "8px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px", opacity: 0.7 }}>
+            {ko ? "STEP 3 — 영업 시간 (대시보드 일자 기준)" : "STEP 3 — Operating hours (dashboard cutoff)"}
+          </div>
+          <BusinessHoursInput />
+        </div>
+      )}
+
+      <StageWrapup
+        ko={language === "ko"}
+        nextStageLabelKo="자본·일정 설정"
+        doneItemsKo={[
+          { label: "1. 운영 모델 선택", detail: "고정매장 / 배달 중심 / 하이브리드 / 무인 등 업종별 운영 모델 결정" },
+          { label: "2. 시그니처 메뉴·서비스 확정", detail: "스페셜티 4-tier(코어·시그니처·확장·실험) 분기로 메뉴 우선순위 정의" },
+          { label: "3. 영업시간·요일 설정", detail: "주중·주말·휴무일 패턴 + 피크타임 시간대 정의" },
+          { label: "4. 수익 모델 결정", detail: "단품 판매·구독·멤버십·시간제 등 카테고리별 매출 흐름 모델 확정" },
+        ]}
+        verifyItemsKo={[
+          "운영 모델별 인허가 차이 확인 — 배달 전문은 「휴게음식점 미허가 시」 영업불가, 무인은 24시간 신고 별도",
+          "시그니처 메뉴 — 식자재 원가율 30% 이내 + 조리 시간 5분 이내 + 폐기율 10% 이하 모두 충족 검증",
+          "영업시간 — 근로기준법 1주 52시간 한도 + 1일 11시간 휴게(주휴) 사전 시뮬",
+          "수익 모델 — 객단가 × 회전수 × 영업일수로 월매출 시뮬 후 손익분기 계산 (BEP < 보유자본 6개월)",
+          "프랜차이즈인 경우 본사 정해진 메뉴·시간 변경 가능 여부 (계약서 「본사 동의 필수」 조항 확인)",
+          "배달 중심 모델 — 배민·쿠팡이츠 수수료(평균 17~28%) 반영 후에도 마진 20% 이상 확보 가능한지",
+        ]}
+        nextSummaryKo="운영 모델·메뉴·시간 확정 → 자본·일정 설정 단계로 진입"
+      />
+
       <div style={styles.stageFooter}>
         {prevTraversedStage ? (
           <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
@@ -255,7 +413,8 @@ export function BusinessModelSelectionStage() {
           type="button"
           style={{
             ...styles.primaryButton,
-            opacity: canCompleteBusinessModelStep ? 1 : 0.45
+            // 수익 모델이 필요한 카테고리는 그것까지 선택해야 진행 가능
+            opacity: (canCompleteBusinessModelStep && (!showRevenueModel || !!selectedRevenueModelId)) ? 1 : 0.45
           }}
           onClick={() => {
             if (!canCompleteBusinessModelStep) {
@@ -264,12 +423,19 @@ export function BusinessModelSelectionStage() {
               setTimeout(() => setShakeWarning(false), 2000);
               return;
             }
+            if (showRevenueModel && !selectedRevenueModelId) {
+              setShakeWarning(true);
+              setTimeout(() => setShakeWarning(false), 2000);
+              return;
+            }
             handleBusinessModelContinue();
           }}
         >
-          {canCompleteBusinessModelStep
-            ? (language === "ko" ? "운영 방식 확정하고 계속" : "Lock this model and continue")
-            : (language === "ko" ? "↑ 운영 방식을 선택하세요" : "↑ Select an operating model")}
+          {canCompleteBusinessModelStep && (!showRevenueModel || !!selectedRevenueModelId)
+            ? (language === "ko" ? "운영·수익 모델 확정하고 계속" : "Lock model and continue")
+            : showRevenueModel && !selectedRevenueModelId
+              ? (language === "ko" ? "↑ 수익 모델을 선택하세요" : "↑ Select a revenue model")
+              : (language === "ko" ? "↑ 운영 방식을 선택하세요" : "↑ Select an operating model")}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

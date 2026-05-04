@@ -40,9 +40,9 @@ export function RevenueCalendar({ dailyEntries, ko, fmt, onDateClick }: Props) {
 
   const getCellColor = (sales: number) => {
     if (sales <= 0) return "transparent";
-    if (sales >= q75 && q75 > 0) return "rgba(37,99,235,0.18)";
+    if (sales >= q75 && q75 > 0) return "rgba(25,25,112,0.18)";
     if (sales <= q25 && q25 > 0) return "rgba(239,68,68,0.12)";
-    return "rgba(15,23,42,0.06)";
+    return "rgba(25,25,112,0.05)";
   };
 
   const weekdays = ko
@@ -85,8 +85,8 @@ export function RevenueCalendar({ dailyEntries, ko, fmt, onDateClick }: Props) {
 
       {/* legend */}
       <div style={legend}>
-        <span style={legendItem}><span style={{ ...legendDot, background: "rgba(37,99,235,0.18)" }} />{ko ? "상위 25%" : "Top 25%"}</span>
-        <span style={legendItem}><span style={{ ...legendDot, background: "rgba(15,23,42,0.06)" }} />{ko ? "중간" : "Mid"}</span>
+        <span style={legendItem}><span style={{ ...legendDot, background: "rgba(25,25,112,0.18)" }} />{ko ? "상위 25%" : "Top 25%"}</span>
+        <span style={legendItem}><span style={{ ...legendDot, background: "rgba(25,25,112,0.05)" }} />{ko ? "중간" : "Mid"}</span>
         <span style={legendItem}><span style={{ ...legendDot, background: "rgba(239,68,68,0.12)" }} />{ko ? "하위 25%" : "Bottom 25%"}</span>
         <span style={legendItem}><span style={{ ...legendDot, background: "transparent", border: "1px dashed rgba(15,23,42,0.15)" }} />{ko ? "미입력" : "No data"}</span>
       </div>
@@ -187,7 +187,7 @@ const titleStyle: React.CSSProperties = {
 };
 
 const navBtn: React.CSSProperties = {
-  background: "rgba(15,23,42,0.04)",
+  background: "rgba(25,25,112,0.04)",
   border: "none",
   borderRadius: "8px",
   padding: "6px 12px",

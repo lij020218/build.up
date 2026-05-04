@@ -57,7 +57,8 @@ export const styles = {
     lineHeight: 1.8
   },
   section: {
-    marginTop: "42px"
+    marginTop: "42px",
+    marginBottom: "32px",  // ← nav 바와 surface 첫 카드 사이 간격 (사용자 피드백: 너무 붙어있어)
   },
   surfaceNav: {
     display: "flex",

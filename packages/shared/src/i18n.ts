@@ -538,7 +538,7 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   biz_registration: { ko: { title: "사업자등록 & 금융 세팅", goal: "세무서 사업자등록을 확인하고 사업용 통장과 세무대리인 여부를 결정합니다.", whyNow: "개업 전에 금융 구조가 잡혀야 첫 달 세금 신고와 비용 관리가 흔들리지 않습니다." } },
   financial_review: { ko: { title: "월 운영비", goal: "이전 단계에서 결정된 임대료·인건비·수수료·이자 등을 자동 집계해 월 비용 8개 필드를 확인·조정합니다.", whyNow: "오픈 Day 1부터 운영 대시보드가 정확한 비용 구조로 작동하려면 지금 한 번 정리해야 합니다." } },
   pre_launch_final: { ko: { title: "개업 최종 준비", goal: "초도 재고를 입고하고 직원 최종 교육과 SNS 오픈 예고를 마칩니다.", whyNow: "오픈 당일 준비 부족은 첫 고객 경험을 망가뜨립니다. 마지막 점검이 중요합니다." } },
-  first_month_check: { ko: { title: "개업 준비 완료", goal: "일별 현금흐름 기록 방법과 비상금을 확인하고 가게를 열 마지막 준비를 마칩니다.", whyNow: "개업 첫 달이 가장 위험합니다. 일별 숫자를 추적하는 습관이 생존을 좌우합니다." } },
+  // ⚠️ first_month_check는 운영 대시보드로 이전됨 — 라벨 삭제.
   // ── Startup path ──────────────────────────────────────────────────────────
   startup_foundation: { ko: { title: "창업팀·법인 기본 구조", goal: "공동창업자 역할, 지분·베스팅, 법인 설립 방향, 핵심 문제 정의를 먼저 정리합니다.", whyNow: "공동창업자 정렬과 지분 구조가 흐리면 제품보다 먼저 팀이 흔들립니다." } },
   customer_discovery: { ko: { title: "고객 발굴·문제 검증", goal: "고객 인터뷰를 통해 반복적으로 나타나는 고통과 초기 타겟 세그먼트를 좁힙니다.", whyNow: "누구의 어떤 문제를 푸는지 선명하지 않으면 이후 제품 개발이 전부 낭비될 수 있습니다." } },
@@ -546,6 +546,7 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   company_setup: { ko: { title: "사업자등록 · 지식재산 보호 · 세무 기초", goal: "개인사업자/법인 중 선택, 사업자등록 완료, 특허·상표 출원(공개 전 필수), 과세 유형 결정, 개인정보보호 기본 구축을 완료합니다.", whyNow: "사업자등록은 계약·세금계산서·정부지원의 전제 조건이고, 특허는 공개 전에 출원해야 영구적 권리를 확보할 수 있습니다." } },
   mvp_build: { ko: { title: "MVP 구축 · IP 보호", goal: "핵심 워크플로 하나를 해결하는 MVP를 출시하고, 공개 전에 상표·특허 출원을 완료합니다.", whyNow: "늦은 출시는 런웨이를 태우고, IP 보호 없는 공개는 특허권을 영구히 잃을 수 있습니다." } },
   launch_gtm: { ko: { title: "출시 스택 · GTM 전략", goal: "결제·분석·에러 추적을 설치하고, 시장 진입 채널을 정해 첫 고객 확보 실험을 시작합니다.", whyNow: "계측 없이는 신호와 소음을 구분할 수 없고, GTM 전략 없이는 좋은 제품도 침묵 속에 출시됩니다." } },
+  go_live: { ko: { title: "🚀 실제 출시 (Go Live)", goal: "1-3개 검증된 채널을 통해 공개적으로 출시 — 웹, App Store, Google Play, Product Hunt, Hacker News. 각 채널마다 절차와 심사 기간이 크게 다릅니다.", whyNow: "출시는 sub-task 가 아닌 명확한 milestone. iOS 26 SDK 4.28부터 의무, Google Play 12명 14일 폐쇄 테스트 의무, PH·HN 단일 론칭은 1-2주 사전 준비 필요." } },
   fundraising_readiness: { ko: { title: "런웨이·투자 준비", goal: "번레이트와 런웨이를 모델링하고, 자금 조달 방식을 결정한 뒤, 피치덱·지표·재무 전망을 준비합니다.", whyNow: "2026년 투자자는 성장보다 자본 효율성을 봅니다. 런웨이 계획 없이 유치에 나서면 3~6개월의 시간과 협상력을 잃습니다." } },
   venture_certification: { ko: { title: "벤처인증 · 정부 지원사업", goal: "벤처기업 인증 유형을 확인하고, K-Startup 지원사업(예비창업·초기창업·TIPS 등)에 매칭하여 비희석 자금을 확보합니다.", whyNow: "벤처인증은 세금 감면·병역특례·지원사업 자격의 열쇠입니다. 정부 지원사업은 마감이 있어 타이밍을 놓치면 전액 자비 부담입니다." } },
   // ── Cluster B (Hardware/IoT) — NPI 4단계 ──
@@ -568,7 +569,7 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   construction_setup: { ko: { title: "인테리어 및 공사", goal: "인테리어 업체를 선정하고 설계를 확정한 뒤 공사를 완료합니다.", whyNow: "시공 업체 3곳 이상의 견적·일정·포트폴리오를 동시에 비교해야 비용 대비 품질을 극대화할 수 있습니다." } },
   vendor_setup: { ko: { title: "공급처 및 장비 확정", goal: "주요 원자재·상품·소모품 공급처와 장비 구매·렌탈 계획을 확정합니다.", whyNow: "공급처별 원가·납기·최소주문량(MOQ)을 비교해야 초도 주문 규모와 이후 재고 회전 속도를 맞출 수 있습니다." } },
   registration_setup: { ko: { title: "사업자 등록 및 인허가 신고", goal: "세무서 사업자등록과 관할 관청 영업 신고·허가를 완료합니다.", whyNow: "등록 없이 영업하면 법적 위반이며, 매출 증빙도 불가합니다." } },
-  insurance_tax_setup: { ko: { title: "보험·세무 세팅", goal: "4대보험(국민연금·건강·고용·산재) 가입, 원천세 설정, 급여 지급 방식을 확정합니다.", whyNow: "보험과 세무 초기 세팅이 첫 해 세금 신고의 정확성과 향후 정부 지원사업 자격을 결정합니다." } },
+  insurance_tax_setup: { ko: { title: "직원 채용 의무 — 근로계약·4대보험·급여 세팅", goal: "첫 직원 채용 시 즉시 발생하는 4가지 의무: ① 근로계약서 작성 (미체결 시 500만원 과태료) ② 4대보험 가입 (14일 이내) ③ 원천세 매월 신고 ④ 급여 시스템 결정 (수기·세무사·SaaS).", whyNow: "직원 1명만 채용해도 14일 이내 4대보험 신고 의무. 미신고 = 가산세 + 소급납부. 두루누리 80% 지원 (270만 미만, 10인 미만, 36개월) 신고 시점에만 신청 가능 — 놓치면 비용 폭증." } },
   hiring_setup: { ko: { title: "직원 채용 및 근로계약", goal: "직원·알바 필요 여부를 판단하고, 근로계약서를 작성·교부합니다.", whyNow: "필요 인원·급여 체계·계약 항목을 먼저 정해야 오픈 직전 인건비 손실과 노무 분쟁을 예방할 수 있습니다." } },
   operations_setup: { ko: { title: "운영 및 마케팅 준비", goal: "POS 점검, SNS 채널 개설, 예약·결제 시스템 등 오픈 전 운영 준비를 마칩니다. 배달 업종은 배달앱 입점도 진행합니다.", whyNow: "POS·결제·배송 시스템을 실제 테스트해야 오픈 당일 운영 장애를 예방할 수 있습니다." } },
   pre_launch: { ko: { title: "소프트 오픈", goal: "지인·초대 고객 대상으로 시범 운영하고 피드백을 반영합니다.", whyNow: "실제 고객에게 정식 오픈하기 전 운영 문제를 먼저 발견해야 합니다." } },
@@ -617,11 +618,7 @@ function getStageCopyForCategory(
         goal: "프로덕션 배포, 모니터링 확인, 론칭 당일 역할 분담과 채널별 공유 전략을 마칩니다.",
         whyNow: "론칭 당일의 준비 수준이 첫 사용자 경험과 초기 견인력을 결정합니다."
       },
-      first_month_check: {
-        title: "론칭 후 생존 점검",
-        goal: "핵심 지표 추적 체계를 세팅하고 런웨이를 확인하며 첫 달 생존 루틴을 시작합니다.",
-        whyNow: "론칭 첫 달이 가장 위험합니다. 매일 지표를 보고 매주 실험해야 살아남습니다."
-      },
+      // first_month_check는 운영 대시보드로 이전 — override 삭제.
     };
     return startupOverrides[stage.code];
   }
@@ -644,11 +641,7 @@ function getStageCopyForCategory(
         goal: "초도 상품 소싱을 완료하고 주문·배송·CS 플로우를 점검한 뒤 오픈 알림을 게시합니다.",
         whyNow: "첫 주문 처리 실패는 리뷰 악화와 플랫폼 패널티로 이어집니다."
       },
-      first_month_check: {
-        title: "오픈 후 생존 점검",
-        goal: "주문·매출·반품 기록 체계를 세팅하고 비상금을 확인하며 첫 달 운영 루틴을 시작합니다.",
-        whyNow: "초기 리뷰와 반품률이 플랫폼 노출을 결정합니다. 첫 달이 가장 중요합니다."
-      },
+      // first_month_check는 운영 대시보드로 이전 — override 삭제.
     };
     return onlineOverrides[stage.code];
   }
@@ -716,9 +709,11 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "fc-contract": { ko: "가맹 계약 체결 및 가맹비 납부" },
   "fc-training": { ko: "본사 교육 프로그램 이수 완료" },
   // startup-foundation
-  "problem-defined": { ko: "핵심 문제를 한 문장으로 정의" },
-  "founder-alignment": { ko: "팀 구성 결정 (솔로/공동) 및 역할 문서화" },
-  "company-formation-path": { ko: "법인 설립 시점 결정" },
+  "problem-defined": { ko: "핵심 문제를 한 문장으로 정의 (Musk 원리 분해 + Thiel 반대 진실)" },
+  "founder-alignment": { ko: "팀 구성 결정 (솔로/공동) 및 역할·지분 베스팅·이탈 조항 문서화" },
+  "company-formation-path": { ko: "법인 vs 개인사업자 결정 (실제 등록은 다음 '법인 설립·등록' 단계에서)" },
+  "case-study-review": { ko: "본인 모드(인디/부트스트랩/시드/시리즈A)의 5개 검증 사례 검토 + 교훈 3개 메모" },
+  "build-in-public-setup": { ko: "빌드 인 퍼블릭 채널 셋업 (X/트위터 또는 블로그) — Marc Lou·Pieter Levels 패턴" },
   "brand-identity-draft": { ko: "브랜드 아이덴티티 초안 — 이름·로고 방향·톤앤매너 (공개 전 정리)" },
   "nda-ip-agreement": { ko: "NDA · IP 양도계약서 준비 — 공동창업자·외주·프리랜서 대상 (아이디어 보호 필수)" },
   "brand-identity-offline": { ko: "브랜드 자산 준비 — 간판 디자인·메뉴판·인테리어 브랜딩 요소" },
@@ -736,11 +731,19 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "mvp-shipped": { ko: "가장 작은 MVP 출시" },
   "ip-protection-filed": { ko: "공개 전 상표 등록 및 특허 출원 (가출원 포함)" },
   // launch-gtm
-  "analytics-live": { ko: "분석(Analytics) 연결 — 핵심 이벤트 + 퍼널 세팅" },
-  "billing-or-conversion-live": { ko: "결제·전환 흐름 세팅 — 가격 정책 + 결제 연동" },
-  "error-monitoring-live": { ko: "에러 모니터링 연결 — Sentry + Slack 알림" },
-  "feedback-loop-live": { ko: "고객 피드백 루프 — 인앱 채널 + 주간 리뷰" },
-  "app-store-submission": { ko: "Google Play / Apple App Store 앱 제출" },
+  "analytics-live": { ko: "분석 도구 연결 (PostHog·Mixpanel) — 핵심 이벤트 5개 + 퍼널 + 주간 대시보드" },
+  "billing-or-conversion-live": { ko: "결제·전환 흐름 세팅 (Stripe) — 가격 결정 + 무료→유료 트리거" },
+  "error-monitoring-live": { ko: "에러 모니터링 연결 (Sentry) + Slack 알림 (10분 셋업)" },
+  "feedback-loop-live": { ko: "피드백 루프 구축 — 인앱 버튼 + Discord/Cal.com + 24시간 환영 메일" },
+  "first-100-users-acquired": { ko: "첫 100명 사용자 직접 확보 — DM·콜드메일·커뮤니티·PH/HN 론칭 (Airbnb·Stripe 패턴)" },
+  "marketing-content-cadence": { ko: "마케팅 채널 1-2개 선택 + 매주 콘텐츠 1개+ (Build in Public·SEO 등)" },
+  "security-checklist-reviewed": { ko: "보안 체크리스트 47개 검토 (AI 프롬프트·SOC2·개인정보·DDoS) — 출시 전 권장" },
+  // go-live (Stage 10) — 실제 출시
+  "web-go-live": { ko: "웹 출시 — 도메인 + SSL + SEO 메타 + Google Search Console (1-3시간)" },
+  "launch-channel-active": { ko: "최소 1개 채널 론칭 — Product Hunt / Hacker News Show HN / 디스콰이엇 빌드 로그" },
+  "apple-app-store-submitted": { ko: "Apple App Store 제출 (iOS만) — Xcode 16 + iOS 26 SDK + TestFlight (4.28부터 SDK 의무)" },
+  "google-play-submitted": { ko: "Google Play 제출 (Android만) — 12명 테스터 × 14일 폐쇄 테스트 의무 (개인 계정)" },
+  "launch-day-monitored": { ko: "론칭 데이 24시간 모니터링 — 모든 댓글 답변 + Twitter·HN·PH 동시 공유" },
   "terms-privacy-published": { ko: "이용약관 · 개인정보처리방침 게시 — 유저 가입 전 법적 필수. 개인정보보호 포털에서 자동 생성 가능" },
   "pg-payment-ready": { ko: "PG(전자결제) 가입 심사 신청 — 토스페이먼츠/KCP/이니시스 중 선택, 심사 1~2주 소요. 사이트 완성 후 즉시 신청" },
   // growth-engine
@@ -755,16 +758,18 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "tax-setup-basics": { ko: "과세 유형 결정 — 간이과세(매출 1억 400만원 미만) vs 일반과세" },
   "security-basics": { ko: "개인정보보호 정책 · 이용약관 · 고객 데이터 보안 계획 수립" },
   // fundraising-readiness
-  "runway-model-ready": { ko: "번레이트 계산 및 현금 런웨이 시나리오 모델링" },
-  "fundraising-decision-made": { ko: "자금 조달 방식 결정 (투자 유치 / 부트스트랩 / 정부 지원)" },
+  "runway-model-ready": { ko: "런웨이 모델링 — Best/Base/Worst 시나리오 + 18개월 목표 + Net Burn 비율 점검" },
+  "fundraising-decision-made": { ko: "자금 조달 방식 결정 — 부트스트랩 vs 투자 유치 (Default Alive 검증)" },
+  "funding-programs-matched": { ko: "본인 모드별 자금 프로그램 1-3개 매칭 + 신청 시작 (TIPS·예비창업·액셀러레이터·VC)" },
+  "investor-material-ready": { ko: "AI 사업계획서 + 10장 피치덱 + 3년 재무 모델 + 제품 데모 준비" },
   "milestone-plan-ready": { ko: "투자금 용도별 마일스톤 계획 수립 (PMF·매출 목표)" },
   "cap-table-clean": { ko: "캡테이블 정리 (지분·ESOP 풀·전환권 확인)" },
   "data-room-ready": { ko: "투자자용 데이터룸 구성 (법률·재무·KPI 자료)" },
-  "investor-material-ready": { ko: "피치덱·핵심 지표·재무 전망 자료 준비" },
   // venture-certification
-  "venture-cert-type-checked": { ko: "벤처인증 유형 확인 (투자·연구개발·혁신성장)" },
-  "govt-program-matched": { ko: "K-Startup 지원사업 매칭 (예비·초기·TIPS·도약)" },
-  "application-submitted": { ko: "벤처인증 또는 지원사업 신청서 마감 전 제출" },
+  "venture-cert-type-checked": { ko: "벤처인증 유형 결정 — 투자유치형 / 연구개발형 / 혁신성장형 중 선택" },
+  "application-submitted": { ko: "벤처인 (venture.or.kr) 에서 신청서 제출 — 심사 30일 소요" },
+  "venture-benefits-activated": { ko: "인증 후 혜택 활성화 — 법인세 50% 감면 (5년) + 스톡옵션 비과세 + 옵션풀 50% + 병역특례" },
+  "govt-program-matched": { ko: "[이관됨] 자금 프로그램 매칭은 이전 '런웨이·투자' 단계 참고" },
   // permit-check
   // permit-check (인허가 사전 확인) — 9개 → 5개로 통합. 모두 verification 어조.
   "building-registry-checked": { ko: "건축물대장 용도가 내 업종 영업을 허용하는지 확인 — 근린생활시설 등 코드 점검" },
@@ -779,6 +784,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "septic-tank-checked": { ko: "정화조 용량 음식점 영업신고 가능 여부 확인 (음식·카페)" },
   "certified-date-obtained": { ko: "임대차 계약서 확정일자 받기 (보증금 보호)" },
   // construction-setup
+  "interior-concept-selected": { ko: "디자인 컨셉 방향 선택 (인더스트리얼 / 내추럴 / 파리지앵 등)" },
   "contractor-selected": { ko: "인테리어 업체 선정 및 견적 2곳 이상 수령" },
   "design-approved": { ko: "최종 레이아웃 설계 및 공사 계획 확정" },
   "construction-complete": { ko: "공사 완료 및 최종 현장 점검" },
@@ -834,39 +840,25 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "biz-reg-confirmed__startup-tech": { ko: "법인 등기 + 사업자등록 완료 확인" },
   "biz-account-opened__startup-tech": { ko: "법인 통장 개설 (개인 계좌 완전 분리)" },
   "cpa-decision-made__startup-tech": { ko: "세무사 선임 여부 결정 (법인세·R&D 공제 대비)" },
-  // pre-launch-final
-  "inventory-first-order": { ko: "초도 재고·식재료 발주 및 입고 완료" },
-  "staff-final-brief": { ko: "직원 최종 교육 및 오픈 당일 역할 배분" },
-  "payment-system-tested": { ko: "결제 시스템 실제 테스트 — 카드단말기/PG 결제·취소·영수증 출력 확인" },
-  "launch-day-roles-assigned": { ko: "론칭/오픈 당일 역할 분담 — 누가 무엇을 맡을지 확정 (비상 상황 포함)" },
-  "sns-open-teaser": { ko: "SNS 오픈 예고 포스팅 게시" },
-  "emergency-plan-ready": { ko: "비상 대응 계획 — Wi-Fi 백업, 카드 단말기 장애, 재고 소진, 고객 불만 에스컬레이션" },
-  // pre-launch-final — startup overrides
-  "inventory-first-order__startup-tech": { ko: "프로덕션 배포 + 도메인 연결 + 모니터링 확인" },
-  "staff-final-brief__startup-tech": { ko: "론칭 당일 역할 분담 (버그 대응·고객 응대·마케팅)" },
-  "sns-open-teaser__startup-tech": { ko: "Product Hunt · HN 론칭 포스트 예약 + 커뮤니티 알림" },
-  "payment-system-tested__startup-tech": { ko: "결제 플로우 실제 테스트 (Stripe/토스페이먼츠 테스트 모드 결제 성공)" },
-  "launch-day-roles-assigned__startup-tech": { ko: "론칭 당일 역할 분담 확정 (버그 대응·고객 응대·마케팅)" },
-  "emergency-plan-ready__startup-tech": { ko: "비상 대응 계획 — 서버 다운 시 롤백, 결제 장애 시 고객 안내, 트래픽 급증 대비" },
-  // pre-launch-final — online overrides
-  "inventory-first-order__online-digital": { ko: "초도 상품 소싱 완료 + 상세 페이지 등록" },
-  "staff-final-brief__online-digital": { ko: "주문·배송·CS 운영 플로우 최종 점검" },
-  "payment-system-tested__online-digital": { ko: "주문→포장→송장출력→발송 전체 워크플로 테스트" },
-  "launch-day-roles-assigned__online-digital": { ko: "첫 주문 처리 역할 분담 — 주문확인·포장·발송·CS" },
-  "sns-open-teaser__online-digital": { ko: "스마트스토어/쿠팡 오픈 알림 + SNS 홍보 게시" },
-  "emergency-plan-ready__online-digital": { ko: "비상 대응 — 반품·환불·재고소진·배송지연 시나리오 대비" },
-  // first-month-check
-  "cashflow-plan-ready": { ko: "일별 현금흐름 기록 방법 정하기 (앱·엑셀·수기)" },
-  "emergency-fund-ready": { ko: "비상금 확보 확인 (최소 1개월치 고정비)" },
-  "key-contacts-list": { ko: "세무사·공급처·장비 AS 연락처 저장 완료" },
-  // first-month-check — startup overrides
-  "cashflow-plan-ready__startup-tech": { ko: "핵심 지표 추적 체계 세팅 (Mixpanel/PostHog + 주간 리뷰)" },
-  "emergency-fund-ready__startup-tech": { ko: "런웨이 확인 — 최소 6개월 운영비 확보" },
-  "key-contacts-list__startup-tech": { ko: "세무사·법무사·투자자·멘토 연락처 정리" },
-  // first-month-check — online overrides
-  "cashflow-plan-ready__online-digital": { ko: "일별 주문·매출·반품 기록 체계 세팅" },
-  "emergency-fund-ready__online-digital": { ko: "비상금 확보 (최소 1개월 광고비+물류비)" },
-  "key-contacts-list__online-digital": { ko: "공급처·물류사·플랫폼 담당자 연락처 정리" }
+  // pre-launch-final — base (offline / 외식·매장 기본)
+  "launch-date-locked":      { ko: "오픈 D-Day 확정 + 사전 알릴 단골·커뮤니티 10명 명단 (위생교육·단말기·식자재 입고 후 평일)" },
+  "production-deployed":     { ko: "단말기·POS·Wi-Fi·간판·메뉴판 4중 점검 + 백업 핫스팟 자동전환 검증" },
+  "payment-and-legal-ready": { ko: "카드 단말기 실제 결제·취소·영수증 1사이클 + 사업자 정보·환불 정책·전기·가스·수도 명의 변경" },
+  "runbook-prepared":        { ko: "오픈 당일 매뉴얼 — 직원 1시간 모의운영 + 비상 연락처 5종 + 첫 손님 응대 5문장 + 역할 분담" },
+  "calendar-alarms-set":     { ko: "D-28~D+14 13개 알림 + 네이버 플레이스·인스타 D-7 콘텐츠 7개 예약 + D-Day 일정 봉인" },
+  // pre-launch-final — startup-tech overrides
+  "launch-date-locked__startup-tech":      { ko: "D-Day 화·수 12:01 PT 확정 (4~6주 후) + 베타 사용자 10명 명단 (인터뷰·waitlist 추출)" },
+  "production-deployed__startup-tech":     { ko: "프로덕션 배포 + 도메인·SSL + Sentry/Slack 알람 실제 에러 트리거 검증" },
+  "payment-and-legal-ready__startup-tech": { ko: "Stripe/Toss 라이브 100원 결제 1사이클 + 법적 풋터 + PIPA 2025 (이동권·동의 분리·국내대리인)" },
+  "runbook-prepared__startup-tech":        { ko: "D-Day 매뉴얼 — 시간대별 11슬롯 + 댓글 5종 템플릿 + 응급 5종 + 역할 분담" },
+  "calendar-alarms-set__startup-tech":     { ko: "13개 알림 (D-28~D+14) + Product Hunt 예약 (D-7 publish) + D-Day 24h·D-1·D+1 봉인" },
+  // pre-launch-final — online-digital overrides
+  "launch-date-locked__online-digital":      { ko: "오픈 D-Day 확정 (자기 주문 시뮬·재고 동기화 후) + 알림받기 100명 사전 모집" },
+  "production-deployed__online-digital":     { ko: "스토어 카테고리·상세페이지·반품정책 + 박스·완충재·라벨지 5묶음 백업 입고" },
+  "payment-and-legal-ready__online-digital": { ko: "본인 주문 → 포장 → 송장 → 발송 1번 완주 + 사업자·통신판매업 정보 + 환불 템플릿 5종" },
+  "runbook-prepared__online-digital":        { ko: "주문 알림 30분 룰 + 톡톡 12시간 SLA + 분쟁 대비 포장 사진 자동 저장 + CS 템플릿" },
+  "calendar-alarms-set__online-digital":     { ko: "D-7 매일 1콘텐츠 예약 + 첫 구매 쿠폰 + D+7 광고 시작 알림 + 발송 마감 시간 봉인" },
+  // ⚠️ "first-month-check" 단계는 운영 대시보드로 이전 — 관련 task 라벨 삭제.
 };
 
 export function localizeTaskTitle(taskId: string, language: Language, industryCategoryId?: string): string | undefined {

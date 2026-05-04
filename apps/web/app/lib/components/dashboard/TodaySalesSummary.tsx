@@ -42,10 +42,10 @@ export function TodaySalesSummary({ d, ko, fmt }: { d: DashboardHook; ko: boolea
               return (
                 <div key={id} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "8px 12px", borderRadius: "10px", background: "rgba(15,23,42,0.02)",
+                  padding: "8px 12px", borderRadius: "10px", background: "rgba(25,25,112,0.025)",
                 }}>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{p.name}</span>
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#2563eb", fontVariantNumeric: "tabular-nums" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#191970", fontVariantNumeric: "tabular-nums" }}>
                     {qty}{ko ? "개" : ""}
                   </span>
                 </div>

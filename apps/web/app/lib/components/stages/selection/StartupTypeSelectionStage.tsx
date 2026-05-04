@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
+import { StageWrapup } from "../shared/StageWrapup";
 import {
   computeOverallScore,
   formatFranchiseCost,
@@ -109,6 +110,26 @@ export function StartupTypeSelectionStage() {
               </button>
             )})}
           </div>
+
+          <StageWrapup
+            ko={language === "ko"}
+            nextStageLabelKo={isStartupCategory ? "운영 모델" : "운영 모델"}
+            doneItemsKo={[
+              { label: "1. 창업 형태 검토", detail: "독립창업·프랜차이즈·미정 3옵션 비교 (스타트업은 독립·미정만 노출)" },
+              { label: "2. 형태별 장단점 인식", detail: "독립=자유도/리스크, 프랜차이즈=즉시런칭/로열티" },
+              { label: "3. 본인 성향 매칭", detail: "운영 자유도·자본 여력·시장 검증 욕구로 자가 진단" },
+              { label: "4. 형태 확정", detail: "프랜차이즈 선택 시 브랜드 후보 5개 비교 후 1개 확정" },
+            ]}
+            verifyItemsKo={[
+              "프랜차이즈 — 공정위 정보공개서(franchise.ftc.go.kr)에서 가맹사업자 신고 여부·매출액·폐점률 직접 확인",
+              "프랜차이즈 — 가맹금 vs 인테리어비 vs 로열티 3개 항목별 별도 견적 (계약서 1식 표기 시 위반)",
+              "독립창업 — 메뉴·인테리어·시스템 모두 본인 부담 인식, 6개월~1년 안정화 기간 자본 별도 확보",
+              "프랜차이즈 — 가맹점 폐점률 20% 이상 브랜드 회피, 점주 평균 운영기간 5년 미만이면 위험",
+              "프랜차이즈 — 본사 변경 약관(인테리어 강제 교체·식자재 단가) 5년 차에 인상되는 경우 다수",
+              "독립창업 — 검증된 레퍼런스(타 매장 분석·메뉴 시연·POS 시뮬) 1개 이상 확보 후 진입",
+            ]}
+            nextSummaryKo="창업 형태 확정 → 운영 모델(고정매장·홀 중심·배달 중심·하이브리드) 선택 진입"
+          />
 
           <div style={styles.stageFooter}>
             {prevTraversedStage ? (

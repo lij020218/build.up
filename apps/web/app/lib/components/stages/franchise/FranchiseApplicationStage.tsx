@@ -6,6 +6,25 @@ import {
   getFranchiseBrandById,
 } from "@build-up/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { StageWrapup } from "../shared/StageWrapup";
+
+const FRANCHISE_WRAPUP = {
+  done: [
+    { label: "1. 정보공개서 검토", detail: "공정위 franchise.ftc.go.kr — 가맹점 수·폐점률·평균 매출·가맹비 4항목 직접 확인" },
+    { label: "2. 본사 미팅·교육", detail: "본사 담당자 직접 면담 + 가맹점 운영 교육 4~12주 일정 확인" },
+    { label: "3. 입지·계약 진행", detail: "본사 추천 입지 vs 자율 입지 비교 + 가맹계약서·인테리어 견적 검토" },
+    { label: "4. 가맹비·로열티 확정", detail: "가맹금·교육비·인테리어 강제·로열티 5년 총비용 시뮬" },
+  ],
+  verify: [
+    "정보공개서 — 최근 3년 폐점률 30% 이상 브랜드 회피, 가맹점주 평균 운영기간 5년 미만 위험",
+    "가맹계약 14일 숙려기간 — 가맹사업법 의무, 본사가 압박 시 위반 (공정위 신고 가능)",
+    "인테리어 강제 — 본사 지정 업체만 가능 시 시장가 대비 30~50% 부풀림 흔함, 견적 비교 필수",
+    "필수 구매 비율 — 70% 이상이면 식자재 단가 협상력 X, 마진 압박 위험",
+    "영업지역 보호 — 반경 OO미터 내 추가 가맹점 금지 조항 명문화 (없으면 잠식 리스크)",
+    "본사 광고비 — 분담률·집행 내역 공개 의무, 불투명하면 가맹사업법 위반 신고 가능",
+  ],
+  next: "정보공개서·계약서 검토 완료 → 인테리어 시공·운영 준비 단계로 진입",
+};
 
 export function FranchiseApplicationStage() {
   const d = useDashboardCtx();
@@ -129,6 +148,14 @@ export function FranchiseApplicationStage() {
             </a>
           ))}
         </div>
+
+        <StageWrapup
+          ko={ko}
+          nextStageLabelKo="인테리어 시공"
+          doneItemsKo={FRANCHISE_WRAPUP.done}
+          verifyItemsKo={FRANCHISE_WRAPUP.verify}
+          nextSummaryKo={FRANCHISE_WRAPUP.next}
+        />
       </div>
     );
   }
@@ -203,6 +230,14 @@ export function FranchiseApplicationStage() {
           </a>
         </div>
       </div>
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="인테리어 시공"
+        doneItemsKo={FRANCHISE_WRAPUP.done}
+        verifyItemsKo={FRANCHISE_WRAPUP.verify}
+        nextSummaryKo={FRANCHISE_WRAPUP.next}
+      />
     </div>
   );
 }

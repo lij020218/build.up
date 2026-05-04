@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { MapPin, BarChart3, Users } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
@@ -15,6 +16,13 @@ import {
 } from "@build-up/shared";
 import { LocationMapPanel } from "../../LocationMapPanel";
 import { supabase } from "../../../../../lib/supabase";
+import {
+  KeyActionHero,
+  StageTabNav,
+  StageOverview,
+  WorkStep,
+} from "../shared/StageActionHero";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function LocationCandidatesStage() {
   const d = useDashboardCtx();
@@ -61,10 +69,27 @@ export function LocationCandidatesStage() {
     prevTraversedStage, setViewingStageId,
     // Reset
     resetDemo,
+    // Edit
+    handleStageEdit,
+    decisions,
+    editSaveStatus,
   } = d;
+  const isStageCompleted = !!decisions["location-candidates"]?.completedAt;
+  // 수정 저장 진행 상태 → 버튼 라벨/색 동기화
+  const _editStatus = editSaveStatus?.stageId === "location-candidates" ? editSaveStatus.status : null;
+  const _editLabel = _editStatus === "saving"
+    ? (language === "ko" ? "저장 중..." : "Saving...")
+    : _editStatus === "saved"
+      ? (language === "ko" ? "✓ 수정 완료" : "✓ Saved")
+      : _editStatus === "error"
+        ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
+        : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
+  const _editBg = _editStatus === "saved" ? "#16a34a" : _editStatus === "error" ? "#dc2626" : "#34c759";
 
   const locationRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
+  // ⚠️ 페이지네이션 — 한 화면 = 한 흐름. 사용자 피드백으로 스크롤 분량 줄임.
+  const [pageIdx, setPageIdx] = useState(0);
 
   // ── AI 라이브 추천 핸들러 ────────────────────────────────────────
   //  사용자가 입력한 희망 지역 → 카카오 Local 라이브 검색 → Claude 점수화 → recommendedMarkets 갱신.
@@ -117,8 +142,163 @@ export function LocationCandidatesStage() {
     }
   };
 
+  // ─── 4단 흐름: 왜 중요 → 뭘 해야 → 뭘 주의 → 사장님 상황에 유리한 길 ───
+  const ko = language === "ko";
+  // ★ 페이지 0 = 개요. 그 후 작업 흐름.
+  const pageLabels = ko
+    ? ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "후보 비교·결정"]
+    : ["Overview", "1. Region·AI", "2. Visit", "3. Score", "Decide"];
+
+  // 카테고리·예산 별 사장님 상황 권장 — 페이지 2 (점수 비교) 의 inline favorable
+  const budgetTier = (selectedBudget ?? 0) >= 200_000_000 ? "high" : (selectedBudget ?? 0) >= 80_000_000 ? "mid" : "low";
+  const compareFavorable: Record<string, { context: string; recommendation: string; rationale: string }> = {
+    food: {
+      context: budgetTier === "low" ? "예산 8천만원 이하 + 음식점" : budgetTier === "mid" ? "예산 8천~2억 + 음식점" : "예산 2억+ + 음식점",
+      recommendation: budgetTier === "low" ? "메인 1블록 안쪽 이면 골목 — 임대료 30~40% 절감 + 단골 모델"
+        : budgetTier === "mid" ? "준메인 + 점심·저녁 직장인 수요 가시권"
+        : "메인 상권 + 코너·1층 가시성 — 회전율 모델",
+      rationale: budgetTier === "low" ? "유동 1/3 손실 vs 임대료 1/2 절감 = 단골 60%+ 흑자 가능. 인스타·네이버 플레이스로 메인 효과 일부 회복."
+        : budgetTier === "mid" ? "메인은 임대료 회수 4~5년. 준메인은 회전 + 단골 모두 노려 수지 균형 좋음."
+        : "메인은 회전율 = 매출. 임대료 부담 크지만 매출 천장 높아 객단가 8천~1.2만 모델 BEP 빠름.",
+    },
+    "cafe-dessert": {
+      context: "카페 / 디저트",
+      recommendation: budgetTier === "low" ? "주거지 인접 + 산책 동선 — 단골 모델" : "메인 + 인스타 가능한 외관 — SNS 바이럴",
+      rationale: budgetTier === "low" ? "동네 카페는 단골 70%+ 가 매출 결정. 일관 동선 + 친절이 더 효율." : "메인 + 사진 잘 나오는 외관 = 인스타 자동 마케팅, 광고비 0.",
+    },
+    retail: { context: "리테일 / 셀렉트샵", recommendation: "메인 1블록 안쪽 골목 셀렉트샵 — 인스타로 발견되는 모델",
+      rationale: "메인 1층 임대료 부담 ↑. 골목 + 컨셉 외관 + SNS 마케팅으로 「발견하는 가게」 포지셔닝." },
+    beauty: { context: "미용·뷰티", recommendation: "지하철 도보 5분 + 1~2층 (3층+ 회피)",
+      rationale: "예약 모델은 접근성이 매출 직결. 3층+ 신규 유입 50% 감소." },
+    fitness: { context: "필라테스·요가·PT", recommendation: "주거 밀집 + 도보 10분 + 지하·1층 (2층+ 회피)",
+      rationale: "회원제는 집 근처가 재계약률 2배. 기구 운반 위해 1층 또는 엘리베이터 필수." },
+    education: { context: "학원 / 교육", recommendation: "초·중등 학원은 학교 도보 10분 + 1층 + 주차 가능",
+      rationale: "픽업 시 주차 못하면 다른 학원으로. 학교 가까울수록 신규 등록 ↑." },
+    pet: { context: "펫", recommendation: "주거 단독 입지 + 1층 + 분리 동선 (다른 매장 X)",
+      rationale: "짖음·털 알레르기 민원이 시간 제한 1순위. 상가 단독 또는 펫 클러스터 선호." },
+    "online-digital": { context: "온라인·디지털", recommendation: "물리 매장 X — 작업·창고만 필요. 주거 겸용 사무실로 시작",
+      rationale: "고객 방문 0. 임대료 절감이 마진 직결. 매출 안정화 후 별도 사무실·창고로 분리." },
+  };
+  const myCompareTip = compareFavorable[industryCategoryId] ?? compareFavorable.food;
+
   return (
     <>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko ? "최종 1곳을 정하기 전 — 후보 3곳 이상 동일 기준 점수화" : "Score 3+ candidates on the same rubric before final pick",
+          detail: ko
+            ? "상권 선택은 1~2년 묶이는 의사결정. 임대료·유동인구·경쟁 밀도·타겟 적합도를 동일 기준으로 비교해야 후회 없음."
+            : "Market choice locks 1-2 years. Compare rent / traffic / competition / target fit on unified rubric.",
+        }}
+        pillars={[
+          { icon: <MapPin size={12} strokeWidth={1.5} />, label: ko ? "유동인구" : "Traffic", meta: ko ? "일평균 통행량" : "Daily count" },
+          { icon: <BarChart3 size={12} strokeWidth={1.5} />, label: ko ? "임대료" : "Rent", meta: ko ? "평당 월세" : "Per sqm/mo" },
+          { icon: <Users size={12} strokeWidth={1.5} />, label: ko ? "타겟 적합도" : "Target Fit", meta: ko ? "연령·소득" : "Age · Income" },
+        ]}
+      />
+
+      <StageTabNav
+        ko={ko}
+        pageIndex={pageIdx}
+        pageLabels={pageLabels}
+        onPrev={() => setPageIdx(p => Math.max(0, p - 1))}
+        onNext={() => setPageIdx(p => Math.min(pageLabels.length - 1, p + 1))}
+        onJump={setPageIdx}
+      />
+
+      {/* ── 페이지 0: 단계 개요 ── */}
+      {pageIdx === 0 && (
+        <StageOverview
+          ko={ko}
+          headline={ko
+            ? "상권 = 매출 천장. 후회 없는 1곳을 정하기 위한 25분"
+            : "Market = revenue ceiling. 25 min to pick the right one"}
+          why={ko
+            ? "상권은 1~2년 묶이는 의사결정. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. AI 라이브 데이터 + 직접 답사 후보 + 4지표 점수화로 후회 없는 결정."
+            : "Market locks 1-2 years. Wrong pick caps everything else — sales can't catch rent no matter how well you market. AI live data + your visits + 4-metric scoring = no regret."}
+          stat={{
+            value: ko ? "47%" : "47%",
+            label: ko ? "초기 폐점 = 상권 후회" : "early closures cite market",
+          }}
+          workOutline={[
+            { stepLabel: ko ? "1. 지역·AI" : "1. Region·AI", title: ko ? "구체적 지역 입력 → AI 라이브 추천" : "Specific region → AI live scout", time: ko ? "5분" : "5m" },
+            { stepLabel: ko ? "2. 답사 후보" : "2. Visit", title: ko ? "직접 답사한 매물 1-2곳 추가 (정성 요소)" : "Add 1-2 properties you visited", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "3. 점수 비교" : "3. Score", title: ko ? "4지표 (유동·임대료·경쟁·타겟) 점수 + 직관 검증" : "4 metrics + gut check", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "결정" : "Decide", title: ko ? "최종 1곳 선택 → 계약 검토 단계로" : "Pick one → Contract Review" },
+          ]}
+          outcome={ko
+            ? "최종 상권 1곳이 build.up 에 저장됩니다. 그 상권의 임대료·유동·경쟁·타겟 정보를 다음 단계 (계약 전 검토) 가 자동으로 받아서 맞춤 체크리스트를 생성."
+            : "Your final market is saved. Next stage (Contract Review) auto-receives rent/traffic/competition/target data for tailored checklists."}
+          nextStage={ko ? "계약 전 검토 (contract-review)" : "Contract review"}
+        />
+      )}
+
+      {/* ── 페이지 1: 희망 지역 입력 + AI 라이브 추천 ── */}
+      {pageIdx === 1 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "1. 지역·AI 추천" : "1. Region · AI"}
+          time={ko ? "5분" : "5m"}
+          headline={ko ? "구체적 지역 입력 → AI 가 라이브 데이터로 후보 추천" : "Specific region → AI scouts via live data"}
+          why={ko
+            ? "「강남구」 같이 넓은 입력은 추천 정확도 ↓. 「강남역 도보 10분」, 「홍대 메인」 처럼 좁힐수록 평균 임대료·공실률·경쟁 밀도 정확."
+            : "Wide input like 'Gangnam-gu' = poor recommendations. Narrow like '10-min walk Gangnam' = accurate rent/vacancy/density."}
+          how={[
+            { title: ko ? "희망 지역 입력 (구체적으로)" : "Enter region (specific)", detail: ko ? "지하철역·핫스폿 + 도보 시간 또는 「~동·구 메인」. 카카오 Local 라이브 + 공공데이터 조회." : "Subway + walking distance or 'main street of ~dong'. Pulls Kakao Local + public data." },
+            { title: ko ? "AI 라이브 추천 받기" : "AI scout", detail: ko ? "AI 가 그 지역의 평균 임대료·공실률·경쟁 밀도·유동인구·타겟 적합도 즉시 분석. 후보 3~5곳 점수와 함께." : "AI returns 3-5 candidates with rent / vacancy / competition / traffic / target-fit scores." },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 1: 답사 후보 추가 (사장님이 직접 본 매물) ── */}
+      {pageIdx === 2 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "2. 답사 후보 추가" : "2. Visit candidates"}
+          time={ko ? "10분" : "10m"}
+          headline={ko ? "AI 추천만 ≠ 결정. 직접 답사한 매물 1-2곳 추가해야 함" : "AI scout alone ≠ decision. Add 1-2 properties you visited"}
+          why={ko
+            ? "AI 는 정량 데이터 (임대료·유동) 만 봄. 사장님이 직접 본 「분위기·동선·소음」 같은 정성 요소는 직접 답사 매물에서만 확인 가능."
+            : "AI only sees quantitative data. Qualitative factors (vibe, flow, noise) must come from your in-person visits."}
+          how={[
+            { title: ko ? "직접 답사한 매물 입력" : "Add visited properties", detail: ko ? "주소·평수·임대료·메모. AI 추천 매물과 동일한 점수 기준으로 비교됨." : "Address, area, rent, notes. Scored on same rubric as AI suggestions." },
+            { title: ko ? "최소 3곳 이상 비교 필수" : "Minimum 3 candidates", detail: ko ? "1곳만 보면 「이게 좋아 보인다」 가 끝. 3곳 이상 동일 기준으로 보면 차이가 명확." : "Single candidate = no comparison. 3+ on same rubric reveals real differences." },
+          ]}
+          watchouts={ko ? [
+            { label: "권리금 매물 — 매출 추정 없이 지불 = 묻힘", text: "매도자가 부르는 권리금은 매출 6~12개월치. 양수 후 본인 매출이 70%+ 유지돼야 회수 가능. 매출 떨어지는 이유 (사장 변경·메뉴 변경) 사전 검증." },
+          ] : [
+            { label: "Goodwill (key money) trap", text: "Asking goodwill = 6-12 months revenue. Need 70%+ retention post-acquisition. Pre-verify revenue drop reasons." },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 2: 4지표 점수 비교 ── */}
+      {pageIdx === 3 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "3. 점수 비교" : "3. Score comparison"}
+          time={ko ? "10분" : "10m"}
+          headline={ko ? "유동인구·임대료·경쟁 밀도·타겟 적합도 — 4지표로 동일 채점" : "Traffic / rent / competition / target fit — 4 metrics"}
+          why={ko
+            ? "주관적 「느낌」 만으로 결정하면 후회 1순위. 객관 4지표로 채점한 후 본인 직관과 교차 검증해야 후회 없음."
+            : "'Gut feeling' alone is the #1 regret. Score on 4 objective metrics, then cross-check intuition."}
+          how={[
+            { title: ko ? "4지표 점수 확인" : "Review 4-metric scores", detail: ko ? "유동(일평균 통행) · 임대료(평당 월세) · 경쟁(반경 500m 동종 수) · 타겟(연령·소득). 각 25점, 총 100." : "Traffic (daily) · rent (per sqm) · competition (within 500m) · target (age/income). 25 each, 100 total." },
+            { title: ko ? "점수 1위 + 본인 직관 교차 검증" : "Top score × intuition", detail: ko ? "1위가 직관과 맞으면 결정. 다르면 그 이유를 메모 — 보통 직관이 놓친 요소가 보임." : "Match = decide. Mismatch = note why; reveals overlooked factor." },
+          ]}
+          watchouts={ko ? [
+            { label: "「임대료 싸 보임」 함정", text: "월세 100만원 싸도 매출 잠재력이 200만원 적으면 손해. 평당 임대료 / 평당 매출 잠재력 비율로 판단." },
+          ] : [
+            { label: "Cheap rent trap", text: "₩1M lower rent but ₩30M lower revenue = ₩8M monthly loss. Use rent/revenue ratio per sqm." },
+          ]}
+          favorable={{ context: myCompareTip.context, recommendation: myCompareTip.recommendation, rationale: myCompareTip.rationale }}
+        />
+      )}
+
+      {/* ── 페이지 3 (후보 비교·결정) — 실제 후보 입력·점수화·선택 패널 ── */}
+      {pageIdx === 4 && (
+        <>
       <div style={styles.helper}>{locationHelpText}</div>
 
       {/* ── Franchise nearby store search ── */}
@@ -895,18 +1075,65 @@ export function LocationCandidatesStage() {
           ))}
         </div>
       ) : null}
+        </>
+      )}
+
+      <StageWrapup
+        ko={language === "ko"}
+        nextStageLabelKo="계약서 검토"
+        doneItemsKo={[
+          { label: "1. 113개 상권 데이터 검토", detail: "유동인구·평균임대료·동종업종 밀도 비교 — 점수화된 상권 추천" },
+          { label: "2. 상위 후보 3곳 선정", detail: "AI 점수 + 본인 자본 + 업종 적합도로 1차 압축" },
+          { label: "3. 직접 상권 평가", detail: "지도에서 직접 입력한 위치도 분석 — 동일 점수 모델 적용" },
+          { label: "4. 최종 1곳 확정", detail: "현장 답사·임대료 견적·매물 확인 후 1곳 결정" },
+        ]}
+        verifyItemsKo={[
+          "임대 매물 상태 직접 확인 — 누수·결로·소방·주차·하수도·전기용량 5개 항목 사진 기록",
+          "상권 유동인구 — 평일·주말·야간 3시간대 직접 카운트 검증 (행정 데이터는 평균값에 불과)",
+          "동종업종 반경 200m 안 5개 이상이면 → 차별화 메뉴·시간·가격 1개 이상 확보 필수",
+          "임대인 신원·등기부등본 직접 열람 — 가압류·근저당 있으면 보증금 보호 못 받을 위험",
+          "용도지역(주거·상업·일반·전용) 확인 — 음식점은 일반·근린상업 가능, 주거지역은 면적 제한",
+          "건물주의 「다음 임차인」 정책 — 5년 이내 강제 갱신·인테리어 잔존가치 분쟁 사전 점검",
+        ]}
+        nextSummaryKo="입지 1곳 확정 → 임대 계약서 검토 단계로 진입"
+      />
 
       <div style={styles.stageFooter}>
-        {prevTraversedStage ? (
-          <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
-            {language === "ko" ? "← 이전 단계" : "← Back"}
+        {/* ⚠️ 항상 노출 — prevTraversedStage 가 null 이어도 (사용자가 미완료 단계를 viewing 중) 로드맵으로 돌아가는 fallback */}
+        <button
+          type="button"
+          style={styles.button}
+          onClick={() => {
+            if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+            else setViewingStageId(null);
+          }}
+        >
+          {language === "ko" ? "← 이전 단계" : "← Back"}
+        </button>
+        {/* "수정 저장" — 이미 완료된 단계일 때만 노출. editSaveStatus 따라 라벨/색 변경. */}
+        {isStageCompleted && (
+          <button
+            type="button"
+            style={{
+              ...styles.primaryButton,
+              opacity: canCompleteLocationStep && _editStatus !== "saving" ? 1 : 0.5,
+              background: _editBg,
+              cursor: _editStatus === "saving" ? "wait" : "pointer",
+            }}
+            disabled={_editStatus === "saving"}
+            onClick={() => {
+              if (!canCompleteLocationStep) return;
+              void handleStageEdit("location-candidates");
+            }}
+          >
+            {_editLabel}
           </button>
-        ) : null}
+        )}
         <button
           type="button"
           style={{
             ...styles.primaryButton,
-            opacity: canCompleteLocationStep ? 1 : 0.45
+            opacity: canCompleteLocationStep ? 1 : 0.45,
           }}
           onClick={() => {
             if (!canCompleteLocationStep) {
@@ -918,13 +1145,13 @@ export function LocationCandidatesStage() {
             handleLocationContinue();
           }}
         >
-          {canCompleteLocationStep
-            ? (isDigitalCategory
-                ? language === "ko"
-                  ? "이 거점으로 운영 준비 시작"
-                  : "Use this base and continue"
-                : copy.home.selectMarketAndContinue)
-            : (language === "ko" ? "↑ 상권을 선택하세요" : "↑ Select a market")}
+          {!canCompleteLocationStep
+            ? (language === "ko" ? "↑ 상권을 선택하세요" : "↑ Select a market")
+            : (isDigitalCategory
+              ? language === "ko"
+                ? "이 거점으로 운영 준비 시작"
+                : "Use this base and continue"
+              : copy.home.selectMarketAndContinue)}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

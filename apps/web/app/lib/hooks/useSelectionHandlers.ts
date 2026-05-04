@@ -3,7 +3,6 @@
 import type { MutableRefObject } from "react";
 import {
   buildRoadmapState,
-  completeCurrentStage,
   getIndustryCategoryIdByOptionId,
   getStarterLocationOptions,
   starterRoadmap,
@@ -22,7 +21,7 @@ import {
 } from "../stores";
 import { supabase } from "../../../lib/supabase";
 import type { DashboardDeps } from "../types";
-import { buildTransitionNotice, cloneStarterTaskMap, baseRoadmap } from "../helpers";
+import { advanceStageWithChainBackfill, buildTransitionNotice, cloneStarterTaskMap, baseRoadmap } from "../helpers";
 import {
   clearLocalUserData,
   resetLocalState,
@@ -140,41 +139,31 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
 
   const handleIndustryContinue = () => {
     if (!selectedIndustryId) return;
-
-    const nextDecisions = upsertStageDecision(decisions, "industry-selection", {
-      stageId: "industry-selection",
+    const result = advanceStageWithChainBackfill("industry-selection", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: selectedIndustryId,
       inputs: {
         subIndustryId: selectedIndustryId,
         categoryId: getIndustryCategoryIdByOptionId(selectedIndustryId) ?? "",
       },
-      completedAt: new Date().toISOString(),
     });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
     setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
   };
 
   const handleBusinessModelContinue = () => {
     if (!selectedBusinessModelId) return;
-
-    const nextDecisions = upsertStageDecision(decisions, "business-model", {
-      stageId: "business-model",
+    const result = advanceStageWithChainBackfill("business-model", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: selectedBusinessModelId,
       selectedOptionIds: [selectedBusinessModelId],
-      completedAt: new Date().toISOString(),
     });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
     setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
   };
 
   const handleStartupTypeContinue = () => {
@@ -194,8 +183,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       }
     }
 
-    const nextDecisions = upsertStageDecision(decisions, "startup-type", {
-      stageId: "startup-type",
+    const result = advanceStageWithChainBackfill("startup-type", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: startupType,
       selectedOptionIds: [startupType],
       inputs: {
@@ -204,43 +192,33 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
           ? { franchiseBrandId: selectedFranchiseBrandId }
           : {}),
       },
-      completedAt: new Date().toISOString(),
     });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
     setViewingStageId(null);
     setShowFranchisePicker(false);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
   };
 
   const handleBudgetContinue = () => {
     if (!selectedBudget || !selectedOpenDate) return;
-
-    const nextDecisions = upsertStageDecision(decisions, "budget-setup", {
-      stageId: "budget-setup",
+    const result = advanceStageWithChainBackfill("budget-setup", decisions, roadmap, taskMap, {
       inputs: {
         capital: selectedBudget,
         targetOpenDate: selectedOpenDate,
       },
-      completedAt: new Date().toISOString(),
     });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
     setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
   };
 
   const handleLocationContinue = () => {
     if (!selectedLocationId) return;
-
-    const nextDecisions = upsertStageDecision(decisions, "location-candidates", {
-      stageId: "location-candidates",
+    const result = advanceStageWithChainBackfill("location-candidates", decisions, roadmap, taskMap, {
       selectedPrimaryOptionId: selectedLocationId,
       selectedOptionIds: [selectedLocationId],
       inputs: {
@@ -250,15 +228,12 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
         selectionMode: deps.locationMode,
         finalMarketTitle: finalSelectedMarket?.title ?? "",
       },
-      completedAt: new Date().toISOString(),
     });
-
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
     setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
   };
 
   const handleSignOut = async () => {

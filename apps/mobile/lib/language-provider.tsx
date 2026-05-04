@@ -1,6 +1,7 @@
 import type { Language } from "@build-up/shared";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, radii, shadows } from "./design";
 
 let memoryLanguage: Language = "en";
 
@@ -61,25 +62,26 @@ const styles = StyleSheet.create({
   toggle: {
     flexDirection: "row",
     gap: 4,
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.08)",
-    backgroundColor: "rgba(255,255,255,0.76)",
-    padding: 4
+    borderColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "rgba(255,255,255,0.82)",
+    padding: 4,
+    ...shadows.glassCard
   },
   button: {
     minHeight: 32,
-    borderRadius: 8,
+    borderRadius: radii.sm,
     paddingHorizontal: 9,
     paddingVertical: 7
   },
   buttonActive: {
-    backgroundColor: "#075E66"
+    backgroundColor: colors.primary
   },
   buttonText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#4B5563"
+    color: colors.muted
   },
   buttonTextActive: {
     color: "#FFFFFF"

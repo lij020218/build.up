@@ -110,7 +110,7 @@ export function ProgressMilestonesCard({
       current: completedStages,
       target: 15,
       Icon: Target,
-      color: "#2563eb",
+      color: "#191970",
     });
   }
 
@@ -186,8 +186,8 @@ export function ProgressMilestonesCard({
               style={{
                 padding: "10px 12px",
                 borderRadius: "11px",
-                background: isDone ? `${m.color}08` : "rgba(15,23,42,0.02)",
-                border: `1px solid ${isDone ? `${m.color}1f` : "rgba(15,23,42,0.04)"}`,
+                background: isDone ? `${m.color}08` : "rgba(25,25,112,0.025)",
+                border: `1px solid ${isDone ? `${m.color}1f` : "rgba(25,25,112,0.04)"}`,
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
@@ -196,7 +196,7 @@ export function ProgressMilestonesCard({
                     width: "26px",
                     height: "26px",
                     borderRadius: "8px",
-                    background: isDone ? `${m.color}18` : "rgba(15,23,42,0.04)",
+                    background: isDone ? `${m.color}18` : "rgba(25,25,112,0.04)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -245,7 +245,7 @@ export function ProgressMilestonesCard({
                 <div
                   style={{
                     height: "4px",
-                    background: "rgba(15,23,42,0.05)",
+                    background: "rgba(25,25,112,0.05)",
                     borderRadius: "2px",
                     overflow: "hidden" as const,
                     marginLeft: "36px",

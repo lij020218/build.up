@@ -9,7 +9,10 @@ import {
 import type { RoadmapGenerationInput, RoadmapGenerationResult } from "./prompt";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
-const DEFAULT_MAX_TOKENS = 4096; // Sonnet 4.6은 더 긴 응답 생성 가능 — 잘림 방지
+// 스키마 확장 (identity + team + legal.permitsDetailed + insurance + moneyInfra
+// + fundingPrograms + industrySpecific + recommendations.suppliers/interior 등)
+// 으로 응답이 길어졌으므로 최소 16384 필요. 8192 에서도 stop_reason="max_tokens" 잘림 발생.
+const DEFAULT_MAX_TOKENS = 16384;
 
 /**
  * Tool Use 스키마 — 99.8% schema 준수율 (vs JSON parsing의 95% 수준).
@@ -29,13 +32,27 @@ const ROADMAP_TOOL: Anthropic.Tool = {
             type: "string",
             enum: ["food", "cafe-dessert", "retail", "online-digital", "beauty", "fitness", "education", "pet", "living-service", "startup-tech", "space"],
           },
-          subIndustryId: { type: "string" },
+          subIndustryId: { type: "string", description: "정확히 71개 sub-industry 중 하나" },
           industryLabel: { type: "string" },
           startupType: { type: "string", enum: ["independent", "franchise"] },
           businessModelId: { type: "string" },
           preferredRegion: { type: "string" },
+          matchingReason: { type: "string", description: "이 sub-industry 로 매칭한 이유 1줄" },
+          matchingConfidence: { type: "number", minimum: 0, maximum: 100, description: "매칭 신뢰도 0-100" },
+          alternativeSubIndustries: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                reason: { type: "string" },
+              },
+              required: ["id", "reason"],
+            },
+            description: "차선책 sub-industry 2-3개 (사용자가 수정 가능하도록)",
+          },
         },
-        required: ["industryCategoryId", "subIndustryId", "industryLabel", "startupType", "businessModelId", "preferredRegion"],
+        required: ["industryCategoryId", "subIndustryId", "industryLabel", "startupType", "businessModelId", "preferredRegion", "matchingReason", "matchingConfidence", "alternativeSubIndustries"],
       },
       marketAnalysis: {
         type: "object",
@@ -142,8 +159,169 @@ const ROADMAP_TOOL: Anthropic.Tool = {
         type: "array",
         items: { type: "string", enum: ["budget", "region", "teamSize"] },
       },
+      identity: {
+        type: "object",
+        properties: {
+          suggestedStoreName: { type: "string" },
+          mission: { type: "string" },
+          targetCustomer: { type: "string" },
+          businessOpenTime: { type: "string", description: "HH:MM 24h, 온라인·24h 영업이면 빈 문자열" },
+          businessCloseTime: { type: "string", description: "HH:MM 24h" },
+        },
+        required: ["suggestedStoreName", "mission", "targetCustomer", "businessOpenTime", "businessCloseTime"],
+      },
+      team: {
+        type: "object",
+        properties: {
+          initialSize: { type: "number", minimum: 1 },
+          roles: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                role: { type: "string" },
+                timing: { type: "string", enum: ["now", "later"] },
+                reason: { type: "string" },
+              },
+              required: ["role", "timing", "reason"],
+            },
+          },
+        },
+        required: ["initialSize", "roles"],
+      },
+      legal: {
+        type: "object",
+        properties: {
+          taxType: { type: "string", enum: ["simplified", "standard", "corporation"] },
+          taxTypeReason: { type: "string" },
+          industryCode: { type: "string" },
+          fourInsuranceRequired: { type: "boolean" },
+          permitsDetailed: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                kind: { type: "string", enum: ["신고", "허가", "등록", "면허"] },
+                where: { type: "string" },
+                cost: { type: "string" },
+                duration: { type: "string" },
+                required: { type: "boolean" },
+              },
+              required: ["name", "kind", "where", "cost", "duration", "required"],
+            },
+          },
+        },
+        required: ["taxType", "taxTypeReason", "industryCode", "fourInsuranceRequired", "permitsDetailed"],
+      },
+      insurance: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            type: { type: "string", enum: ["fire", "general-liability", "workers-comp", "product-liability", "auto", "property", "professional", "cyber", "other"] },
+            required: { type: "boolean" },
+            annualPremiumEstimate: { type: "number" },
+            reason: { type: "string" },
+          },
+          required: ["name", "type", "required", "annualPremiumEstimate", "reason"],
+        },
+      },
+      moneyInfra: {
+        type: "object",
+        properties: {
+          recommendedBank: { type: "string", enum: ["ibk", "kakaobank", "woori", "shinhan", "kb", "hana", "nh", "kbank", "toss", "other"] },
+          recommendedBankReason: { type: "string" },
+          recommendedPos: { type: "string", enum: ["tossplace", "kis", "nice", "smartro", "kcp", "inicis", "kakaopay", "naverpay", "stripe", "other"] },
+          recommendedPosReason: { type: "string" },
+          cpaDecision: { type: "string", enum: ["self", "cpa", "hybrid"] },
+          cpaReason: { type: "string" },
+        },
+        required: ["recommendedBank", "recommendedBankReason", "recommendedPos", "recommendedPosReason", "cpaDecision", "cpaReason"],
+      },
+      fundingPrograms: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            kind: { type: "string", enum: ["preliminary-startup", "youth-startup", "venture-cert", "innobiz", "mainbiz", "rnd", "tips", "other"] },
+            eligibility: { type: "string" },
+            amount: { type: "string" },
+            deadline: { type: "string" },
+            fitScore: { type: "number", minimum: 0, maximum: 100 },
+          },
+          required: ["name", "kind", "eligibility", "amount", "fitScore"],
+        },
+      },
+      industrySpecific: {
+        type: "object",
+        properties: {
+          menu: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                price: { type: "number" },
+                reason: { type: "string" },
+              },
+              required: ["name", "price", "reason"],
+            },
+          },
+          services: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                durationMin: { type: "number" },
+                price: { type: "number" },
+              },
+              required: ["name", "durationMin", "price"],
+            },
+          },
+          memberships: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                durationMonths: { type: "number" },
+                price: { type: "number" },
+              },
+              required: ["name", "durationMonths", "price"],
+            },
+          },
+          products: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                targetMargin: { type: "number" },
+                reason: { type: "string" },
+              },
+              required: ["name", "targetMargin", "reason"],
+            },
+          },
+          coreAssets: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                estimatedCost: { type: "number" },
+                priority: { type: "string", enum: ["must", "nice"] },
+              },
+              required: ["name", "estimatedCost", "priority"],
+            },
+          },
+        },
+      },
     },
-    required: ["conceptSummary", "parsed", "marketAnalysis", "budgetAllocation", "monthlyCosts", "recommendations", "timeline", "risks", "missingFields"],
+    required: ["conceptSummary", "parsed", "identity", "team", "legal", "insurance", "moneyInfra", "fundingPrograms", "marketAnalysis", "budgetAllocation", "monthlyCosts", "recommendations", "timeline", "risks", "missingFields"],
   },
 };
 
@@ -191,7 +369,8 @@ function parseResponse(raw: string): RoadmapGenerationResult {
     p._needsCategoryConfirm = true;
   }
 
-  // 유효한 세부 업종 ID 검증
+  // 유효한 세부 업종 ID 검증 — 71개 sub-industry 전부 등록 (starter-data.ts 와 1:1 일치)
+  // ⚠️ starter-data 의 모든 세부업종이 여기에 있어야 함. 누락 시 AI 응답이 fallback 으로 잘못 매핑됨.
   const validSubIndustries: Record<string, string[]> = {
     "food": ["korean-casual", "delivery-meals", "salad-healthy", "ramen-noodle", "chicken-burger", "western-pasta-brunch"],
     "cafe-dessert": ["takeout-coffee", "specialty-coffee", "dessert-cafe", "bakery-studio", "icecream-bingsu", "self-serve-cafe"],
@@ -203,14 +382,26 @@ function parseResponse(raw: string): RoadmapGenerationResult {
     "living-service": ["laundry-service", "cleaning-service", "repair-service", "self-laundry", "print-copy", "device-repair"],
     "space": ["guesthouse", "rental-studio", "party-room", "study-cafe-space", "shared-office", "practice-room"],
     "online-digital": ["smart-store", "digital-products", "creator-service", "consignment-commerce", "newsletter-membership", "global-buying"],
-    "startup-tech": ["ai-application", "developer-tools", "b2b-saas", "fintech-startup"],
+    "startup-tech": [
+      "ai-application", "developer-tools", "b2b-saas",
+      "fintech-startup", "healthtech-startup", "security-startup",
+      "hardware-iot", "robotics-physical-ai",
+      "semiconductor", "biotech-medtech", "climate-energy",
+    ],
   };
   const allValid = Object.values(validSubIndustries).flat();
   const rawSubId = String(p.subIndustryId ?? "");
+  const catId = String(p.industryCategoryId);
   if (!allValid.includes(rawSubId)) {
-    // fallback: 해당 카테고리의 첫 번째 ID
-    const catId = String(p.industryCategoryId);
+    // fallback: 해당 카테고리의 첫 번째 ID — 동시에 매칭 신뢰도 0으로 강제 (사용자 확인 필요)
     p.subIndustryId = validSubIndustries[catId]?.[0] ?? "korean-casual";
+    p.matchingConfidence = 0;
+    p.matchingReason = `AI 가 추천한 "${rawSubId}" 가 등록된 sub-industry 가 아니라 ${p.subIndustryId} 로 fallback 되었습니다. 직접 선택해주세요.`;
+  } else if (validSubIndustries[catId] && !validSubIndustries[catId].includes(rawSubId)) {
+    // sub-industry 가 카테고리와 안 맞는 경우 (예: industryCategoryId="food" 인데 subIndustryId="hair-salon")
+    // → category 를 수정해야 하지만 정상 sub-industry 이므로 그대로 두고 _needsCategoryConfirm 플래그
+    p._needsCategoryConfirm = true;
+    p.matchingConfidence = Math.min(Number(p.matchingConfidence) || 0, 40);
   }
 
   // marketAnalysis 파싱
@@ -229,6 +420,14 @@ function parseResponse(raw: string): RoadmapGenerationResult {
       startupType: p.startupType === "franchise" ? "franchise" : "independent",
       businessModelId: String(p.businessModelId ?? "dine-in"),
       preferredRegion: String(p.preferredRegion ?? ""),
+      matchingReason: String(p.matchingReason ?? ""),
+      matchingConfidence: Math.max(0, Math.min(100, Number(p.matchingConfidence) || 50)),
+      alternativeSubIndustries: Array.isArray(p.alternativeSubIndustries)
+        ? (p.alternativeSubIndustries as Array<Record<string, unknown>>)
+            .map(a => ({ id: String(a.id ?? ""), reason: String(a.reason ?? "") }))
+            .filter(a => allValid.includes(a.id))
+            .slice(0, 3)
+        : [],
     },
     marketAnalysis: {
       score: Math.min(100, Math.max(0, Number(ma.score) || 65)),
@@ -301,6 +500,128 @@ function parseResponse(raw: string): RoadmapGenerationResult {
     missingFields: Array.isArray(obj.missingFields)
       ? (obj.missingFields as string[]).filter(f => ["budget", "region", "teamSize"].includes(f)) as Array<"budget" | "region" | "teamSize">
       : [],
+
+    // ── 신규 확장 필드 (안전 fallback) ──
+    identity: (() => {
+      const id = (obj.identity as Record<string, unknown> | undefined) ?? {};
+      return {
+        suggestedStoreName: String(id.suggestedStoreName ?? ""),
+        mission: String(id.mission ?? ""),
+        targetCustomer: String(id.targetCustomer ?? ""),
+        businessOpenTime: String(id.businessOpenTime ?? ""),
+        businessCloseTime: String(id.businessCloseTime ?? ""),
+      };
+    })(),
+    team: (() => {
+      const t = (obj.team as Record<string, unknown> | undefined) ?? {};
+      const rolesRaw = Array.isArray(t.roles) ? (t.roles as Array<Record<string, unknown>>) : [];
+      return {
+        initialSize: Math.max(1, Number(t.initialSize) || 1),
+        roles: rolesRaw.map(r => ({
+          role: String(r.role ?? ""),
+          timing: r.timing === "later" ? "later" as const : "now" as const,
+          reason: String(r.reason ?? ""),
+        })),
+      };
+    })(),
+    legal: (() => {
+      const l = (obj.legal as Record<string, unknown> | undefined) ?? {};
+      const validTaxTypes = ["simplified", "standard", "corporation"];
+      const rawTaxType = String(l.taxType ?? "simplified");
+      const permitsRaw = Array.isArray(l.permitsDetailed) ? (l.permitsDetailed as Array<Record<string, unknown>>) : [];
+      const validKinds = ["신고", "허가", "등록", "면허"];
+      return {
+        taxType: (validTaxTypes.includes(rawTaxType) ? rawTaxType : "simplified") as "simplified" | "standard" | "corporation",
+        taxTypeReason: String(l.taxTypeReason ?? ""),
+        industryCode: String(l.industryCode ?? ""),
+        fourInsuranceRequired: Boolean(l.fourInsuranceRequired),
+        permitsDetailed: permitsRaw.map(p => ({
+          name: String(p.name ?? ""),
+          kind: validKinds.includes(String(p.kind)) ? String(p.kind) : "신고",
+          where: String(p.where ?? ""),
+          cost: String(p.cost ?? ""),
+          duration: String(p.duration ?? ""),
+          required: Boolean(p.required),
+        })),
+      };
+    })(),
+    insurance: Array.isArray(obj.insurance)
+      ? (obj.insurance as Array<Record<string, unknown>>).map(ins => {
+          const validTypes = ["fire", "general-liability", "workers-comp", "product-liability", "auto", "property", "professional", "cyber", "other"];
+          const rawType = String(ins.type ?? "other");
+          return {
+            name: String(ins.name ?? ""),
+            type: validTypes.includes(rawType) ? rawType : "other",
+            required: Boolean(ins.required),
+            annualPremiumEstimate: Number(ins.annualPremiumEstimate) || 0,
+            reason: String(ins.reason ?? ""),
+          };
+        })
+      : [],
+    moneyInfra: (() => {
+      const mi = (obj.moneyInfra as Record<string, unknown> | undefined) ?? {};
+      const validBanks = ["ibk", "kakaobank", "woori", "shinhan", "kb", "hana", "nh", "kbank", "toss", "other"];
+      const validPos = ["tossplace", "kis", "nice", "smartro", "kcp", "inicis", "kakaopay", "naverpay", "stripe", "other"];
+      const validCpa = ["self", "cpa", "hybrid"];
+      const rawBank = String(mi.recommendedBank ?? "ibk");
+      const rawPos = String(mi.recommendedPos ?? "tossplace");
+      const rawCpa = String(mi.cpaDecision ?? "self");
+      return {
+        recommendedBank: validBanks.includes(rawBank) ? rawBank : "ibk",
+        recommendedBankReason: String(mi.recommendedBankReason ?? ""),
+        recommendedPos: validPos.includes(rawPos) ? rawPos : "tossplace",
+        recommendedPosReason: String(mi.recommendedPosReason ?? ""),
+        cpaDecision: (validCpa.includes(rawCpa) ? rawCpa : "self") as "self" | "cpa" | "hybrid",
+        cpaReason: String(mi.cpaReason ?? ""),
+      };
+    })(),
+    fundingPrograms: Array.isArray(obj.fundingPrograms)
+      ? (obj.fundingPrograms as Array<Record<string, unknown>>).map(fp => {
+          const validKinds = ["preliminary-startup", "youth-startup", "venture-cert", "innobiz", "mainbiz", "rnd", "tips", "other"];
+          const rawKind = String(fp.kind ?? "other");
+          return {
+            name: String(fp.name ?? ""),
+            kind: (validKinds.includes(rawKind) ? rawKind : "other") as "preliminary-startup" | "youth-startup" | "venture-cert" | "innobiz" | "mainbiz" | "rnd" | "tips" | "other",
+            eligibility: String(fp.eligibility ?? ""),
+            amount: String(fp.amount ?? ""),
+            deadline: fp.deadline ? String(fp.deadline) : undefined,
+            fitScore: Math.max(0, Math.min(100, Number(fp.fitScore) || 0)),
+          };
+        })
+      : [],
+    industrySpecific: (() => {
+      const isRaw = obj.industrySpecific as Record<string, unknown> | undefined;
+      if (!isRaw) return undefined;
+      const result: NonNullable<RoadmapGenerationResult["industrySpecific"]> = {};
+      if (Array.isArray(isRaw.menu)) {
+        result.menu = (isRaw.menu as Array<Record<string, unknown>>).map(m => ({
+          name: String(m.name ?? ""), price: Number(m.price) || 0, reason: String(m.reason ?? ""),
+        }));
+      }
+      if (Array.isArray(isRaw.services)) {
+        result.services = (isRaw.services as Array<Record<string, unknown>>).map(s => ({
+          name: String(s.name ?? ""), durationMin: Number(s.durationMin) || 0, price: Number(s.price) || 0,
+        }));
+      }
+      if (Array.isArray(isRaw.memberships)) {
+        result.memberships = (isRaw.memberships as Array<Record<string, unknown>>).map(m => ({
+          name: String(m.name ?? ""), durationMonths: Number(m.durationMonths) || 0, price: Number(m.price) || 0,
+        }));
+      }
+      if (Array.isArray(isRaw.products)) {
+        result.products = (isRaw.products as Array<Record<string, unknown>>).map(p => ({
+          name: String(p.name ?? ""), targetMargin: Number(p.targetMargin) || 0, reason: String(p.reason ?? ""),
+        }));
+      }
+      if (Array.isArray(isRaw.coreAssets)) {
+        result.coreAssets = (isRaw.coreAssets as Array<Record<string, unknown>>).map(a => ({
+          name: String(a.name ?? ""),
+          estimatedCost: Number(a.estimatedCost) || 0,
+          priority: a.priority === "nice" ? "nice" as const : "must" as const,
+        }));
+      }
+      return result;
+    })(),
   };
 
   return result;
@@ -314,6 +635,9 @@ export async function generateRoadmap(
 
   // SDK 0.39 가 thinking 파라미터를 타입에 명시하지 않아 input cast 필요.
   // 응답은 단일 Message 타입으로 cast 하여 후속 .content/.usage 사용.
+  // ⚠️ Anthropic 제약: extended thinking + forced tool_choice 동시 사용 불가
+  //    → schema 강제(forced tool_choice)를 우선 (응답 형식 안정성이 추론 품질보다 중요).
+  //    추론은 system prompt 의 명확한 가이드라인 + 풍부한 예시로 보강.
   const rawResponse = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
@@ -322,20 +646,30 @@ export async function generateRoadmap(
     // ✦ Tool Use — 99.8% schema 준수율 (vs JSON parsing의 환각·필드 누락 risk)
     tools: [ROADMAP_TOOL],
     tool_choice: { type: "tool", name: "submit_roadmap" },
-    // ✦ Adaptive Thinking — 다단계 추론 (업종 추론 → 시장 분석 → 예산 배분 → 인테리어 → 리스크) 품질 향상
-    thinking: { type: "enabled", budget_tokens: 4096 },
     messages: [
       { role: "user", content: buildRoadmapGenerationPrompt(input) },
     ],
   } as Parameters<typeof client.messages.create>[0]);
   const response = rawResponse as Anthropic.Messages.Message;
 
+  const usage = response.usage;
   console.log(
     "[roadmap/generate] stop_reason:", response.stop_reason,
     "content types:", response.content.map(c => c.type).join(", "),
-    "cache_read:", response.usage?.cache_read_input_tokens ?? 0,
-    "cache_create:", response.usage?.cache_creation_input_tokens ?? 0,
+    "cache_read:", usage?.cache_read_input_tokens ?? 0,
+    "cache_create:", usage?.cache_creation_input_tokens ?? 0,
+    "input:", usage?.input_tokens ?? 0,
+    "output:", usage?.output_tokens ?? 0,
   );
+
+  if (response.stop_reason === "max_tokens") {
+    // tool_use input 의 후반 필드 (suppliers, interior, fundingPrograms 등) 가 잘렸을 가능성 큼.
+    // schema 강제로 인해 일부 required 필드도 누락될 수 있음.
+    console.warn(
+      "[roadmap/generate] ⚠️ max_tokens 도달 — 응답 잘림. " +
+      `output_tokens=${usage?.output_tokens ?? 0}. DEFAULT_MAX_TOKENS 추가 인상 필요할 수 있음.`,
+    );
+  }
 
   // Tool Use 응답 우선 처리 (강제됐으니 항상 존재)
   const toolUse = response.content.find((c) => c.type === "tool_use");

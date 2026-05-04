@@ -3,7 +3,16 @@
 import { Target, Users, Building2 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { ModePathCard } from "./ModePathCard";
-import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
+import { SuccessCasesShowcase } from "./SuccessCasesShowcase";
+import {
+  MIDNIGHT,
+  MIDNIGHT_SOFT,
+  MIDNIGHT_BORDER,
+  StartupKeyActionHero,
+  StartupPageNav,
+  StartupReferenceLabel,
+} from "./StartupStageShell";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function StartupFoundationStage() {
   const d = useDashboardCtx();
@@ -18,16 +27,13 @@ export function StartupFoundationStage() {
   // 페이지네이션: 0=핵심원칙, 1=Step1, 2=Step2, 3=Step3, 4=사례
   const totalPages = 5;
   const pageLabels = ko
-    ? ["핵심 원칙", "1. 문제 정의", "2. 팀 구성", "3. 법인 설립", "사례"]
-    : ["Principle", "1. Problem", "2. Team", "3. Incorporate", "Cases"];
+    ? ["핵심 원칙", "1. 문제 정의", "2. 팀 구성", "3. 법인 vs 개인", "사례"]
+    : ["Principle", "1. Problem", "2. Team", "3. Corp vs Sole", "Cases"];
   const page = guideStepIndex;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-      {/* ── 모드별 경로 카드 (최상단 — 자기 상황에 맞는 길 먼저) ── */}
-      <ModePathCard stageId="startup-foundation" />
-
-      {/* KEY ACTION 미드나이트 hero */}
+      {/* KEY ACTION 미드나이트 hero (최상단) */}
       <StartupKeyActionHero
         eyebrow="KEY ACTION"
         title={ko ? "먼저 만들고, 법인은 나중에" : "Build first. Incorporate later."}
@@ -57,8 +63,9 @@ export function StartupFoundationStage() {
       />
 
       {/* 페이지별 콘텐츠 — 현재 페이지만 표시 */}
+      {page === 0 && <ModePathCard stageId="startup-foundation" />}
       {page === 0 && (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(29,53,87,0.1)", background: "linear-gradient(180deg, rgba(29,53,87,0.03) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", padding: "20px 22px", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "핵심 원칙" : "Core Principle"}</div>
         <div style={{ fontSize: "17px", fontWeight: 720, color: "#0f172a", lineHeight: 1.4, marginBottom: "10px" }}>
           {ko ? "먼저 만들고, 법인은 나중에." : "Build first. Incorporate later."}
@@ -76,7 +83,7 @@ export function StartupFoundationStage() {
             { quote: "\"The way to get startup ideas is not to try to think of startup ideas. It's to look for problems, preferably problems you have yourself.\"", author: "Paul Graham, Y Combinator" },
             { quote: "\"The #1 reason startups fail is building something nobody wants. 42% fail for this exact reason.\"", author: "CB Insights, Startup Failure Analysis" },
           ]).map(q => (
-            <div key={q.author} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(29,53,87,0.03)", borderLeft: "3px solid rgba(29,53,87,0.15)" }}>
+            <div key={q.author} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", borderLeft: "3px solid rgba(25,25,112,0.15)" }}>
               <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55, fontStyle: "italic" }}>{q.quote}</div>
               <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "4px", fontWeight: 600 }}>— {q.author}</div>
             </div>
@@ -89,10 +96,10 @@ export function StartupFoundationStage() {
       {page === 1 && (
       <>
       {/* STEP 1 — 핵심 문제 정의 (First Principles) */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "해결할 문제를 한 문장으로 정의하세요" : "Define the problem in one sentence"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
@@ -110,8 +117,8 @@ export function StartupFoundationStage() {
               { icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", title: "Can you answer: \"Who wants this right now?\"", desc: "Choose something few people want desperately over many wanting slightly" },
               { icon: "M13 10V3L4 14h7v7l9-11h-7z", title: "Break down existing solution costs", desc: "Musk method: separate materials/labor/distribution to find the 10x opportunity" },
             ]).map(s => (
-              <div key={s.title} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.03)" }}>
-                {iconSvg(s.icon, "#2563eb")}
+              <div key={s.title} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)" }}>
+                {iconSvg(s.icon, MIDNIGHT)}
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
                   <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.desc}</div>
@@ -119,9 +126,9 @@ export function StartupFoundationStage() {
               </div>
             ))}
           </div>
-          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법" : "How to use AI"}</div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(37,99,235,0.03)", fontStyle: "italic" }}>
+          <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법" : "How to use AI"}</div>
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(25,25,112,0.03)", fontStyle: "italic" }}>
               {ko ? "\"나는 [분야]에서 [타깃]의 [고통]을 해결하려 해. 1) 이 문제가 충분히 구체적인지, 2) 현재 사람들이 어떻게 해결하고 있는지, 3) 기존 솔루션의 비용 구조를 원자재 수준까지 분해해줘. 4) Peter Thiel의 '비밀' 프레임워크로 이 기회를 평가해줘.\"" : "\"I want to solve [pain] for [target] in [field]. 1) Is this specific enough? 2) How do people currently solve it? 3) Break down existing solution costs to raw materials. 4) Evaluate this opportunity using Thiel's 'secret' framework.\""}
             </div>
           </div>
@@ -131,12 +138,13 @@ export function StartupFoundationStage() {
       {/* 문제 정의 입력 + 저장 */}
       <div style={{
         borderRadius: "16px", padding: "18px 20px",
-        background: "rgba(255,255,255,0.95)", border: "1.5px solid rgba(37,99,235,0.12)",
+        background: "rgba(255,255,255,0.95)", border: "1.5px solid rgba(25,25,112,0.12)",
       }}>
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
           {ko ? "나의 문제 정의" : "MY PROBLEM STATEMENT"}
         </div>
         <textarea
+          data-task-input="problem-defined"
           placeholder={ko
             ? "예: \"소상공인은 매일 경영 데이터를 분석할 시간이 없다. 기존 솔루션(세무사, 엑셀)은 월 1회 사후 분석만 가능하고, 비용이 월 30만원 이상이다.\""
             : "e.g., \"Small business owners don't have time to analyze daily data. Current solutions (accountants, Excel) only offer monthly reviews and cost $300+/mo.\""}
@@ -154,13 +162,13 @@ export function StartupFoundationStage() {
           }}
           style={{
             width: "100%", minHeight: "80px", padding: "12px 14px", borderRadius: "12px",
-            border: "1px solid rgba(37,99,235,0.1)", background: "rgba(248,250,252,0.8)",
+            border: "1px solid rgba(25,25,112,0.1)", background: "rgba(248,250,252,0.8)",
             fontSize: "14px", lineHeight: 1.6, resize: "vertical",
             fontFamily: "inherit",
             outline: "none", color: "#0f172a",
           }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = "#2563eb"; }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.1)"; }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = MIDNIGHT; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.1)"; }}
         />
         {(() => {
           const val = (decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? "";
@@ -180,7 +188,7 @@ export function StartupFoundationStage() {
               }));
             }} style={{
               padding: "8px 20px", borderRadius: "10px", border: "none",
-              background: confirmed ? "#2563eb" : "rgba(0,0,0,0.06)",
+              background: confirmed ? MIDNIGHT : "rgba(0,0,0,0.06)",
               color: confirmed ? "#fff" : "rgba(0,0,0,0.25)",
               fontSize: "13px", fontWeight: 600, cursor: confirmed ? "pointer" : "default",
               transition: "all 0.2s ease",
@@ -428,14 +436,14 @@ export function StartupFoundationStage() {
 
             {/* KEY DECISIONS */}
             <div style={{ padding: "0 22px 16px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
                 {ko ? "이 모드에서 꼭 결정해야 할 것" : "Key decisions for this mode"}
               </div>
-              <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.15)", display: "grid", gap: "10px" }}>
+              <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.15)", display: "grid", gap: "10px" }}>
                 {c.decisions.map((dec, i) => (
                   <div key={i}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "rgba(5,150,105,0.95)", marginBottom: "2px" }}>{dec.item}</div>
-                    <div style={{ fontSize: "12.5px", color: "rgba(5,150,105,0.85)", lineHeight: 1.55 }}>→ {dec.recommendation}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "rgba(25,25,112,0.95)", marginBottom: "2px" }}>{dec.item}</div>
+                    <div style={{ fontSize: "12.5px", color: "rgba(25,25,112,0.85)", lineHeight: 1.55 }}>→ {dec.recommendation}</div>
                   </div>
                 ))}
               </div>
@@ -476,8 +484,178 @@ export function StartupFoundationStage() {
 
       {page === 3 && (
       <>
-      {/* ── 법인 설립 — 모드별 구체 가이드 (검증된 출처) ── */}
+      {/* ──────────────────────────────────────────────────────────────
+          🚨 책임 분리: 이 단계는 의사결정만 다룸 (법인 vs 개인사업자)
+          실제 등록·KIPRIS·과세유형 절차는 모두 CompanySetupStage 에서 처리
+          ───────────────────────────────────────────────────────────── */}
       {(() => {
+        // ── 모드별 의사결정 권장 ──
+        const decisionGuide: Record<string, {
+          recommend: "sole" | "corp";
+          headline: string;
+          reason: string;
+        }> = {
+          indie: {
+            recommend: "sole",
+            headline: ko ? "1인 인디 → 개인사업자 우선" : "Solo Indie → Sole proprietor first",
+            reason: ko
+              ? "매출 1억 4천만 미만이면 간이과세로 부가세 1.5%만 부담. 법인 설립 비용 50-100만원 + 법인 통장·세무·노무 부담은 솔로한테 ROI 안 맞음. 매출 7억+, 외부 투자, 직원 채용 시 법인 전환."
+              : "Under 140M KRW revenue = 1.5% simplified VAT. Corp setup ($500-1K) + tax/payroll overhead = bad ROI for solo. Convert to corp at 700M+ revenue, first investment, or first hire.",
+          },
+          bootstrap: {
+            recommend: "corp",
+            headline: ko ? "부트스트랩 → 법인 + SHA 동시 권장" : "Bootstrap → Corp + SHA from start",
+            reason: ko
+              ? "공동창업자가 있으면 법인이 표준. 지분 = 주식 = 법적 효력. 개인사업자에서 '지분 합의' 는 거의 무효. 1차 매출 없어도 SHA 통한 베스팅·근속 의무 사전 확보가 6-12개월 후 갈등 회복 어려움 방지."
+              : "Co-founders = corp standard. Equity in sole prop has no legal force. SHA + vesting prevent 6-12mo conflict from killing the company.",
+          },
+          seed: {
+            recommend: "corp",
+            headline: ko ? "시드 단계 → 법인 + 옵션풀 10-15% + 벤처기업 인증" : "Seed → Corp + 10-15% pool + venture cert",
+            reason: ko
+              ? "시드 받은 시점부터 시리즈A 마감 18-24개월. 이 기간 안에 법인 + SHA + 옵션풀 + IP + 벤처기업 인증 모두 정비해야 due diligence 통과. 옵션풀 부족 시 시리즈A 시 5-10% 추가 희석."
+              : "Seed → Series A is 18-24 months. Need corp + SHA + option pool + IP + venture cert all aligned. Insufficient pool = 5-10% extra dilution at Series A.",
+          },
+          seriesA: {
+            recommend: "corp",
+            headline: ko ? "시리즈A+ → 법인 + 옵션풀 추가 5-10% + Delaware C-Corp 검토" : "Series A+ → Corp + additional pool + Delaware sub",
+            reason: ko
+              ? "시리즈A 클로징 시 옵션풀 추가 5-10% (총 15-25%). 글로벌 진출 시 Delaware C-Corp 자회사 검토. 한국 본사 + 미국 sub 가 글로벌 VC·세무·exit 표준."
+              : "Series A close = +5-10% pool (total 15-25%). For global, set up Delaware C-Corp sub. Korea HQ + US sub is standard for global VC/exit.",
+          },
+        };
+        const guide = decisionGuide[startupOperatingMode] ?? decisionGuide.bootstrap;
+        const isSole = guide.recommend === "sole";
+
+        return (
+          <>
+            {/* ─── 헤더 + 모드별 권장 ─── */}
+            <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT}1A`, background: `linear-gradient(180deg, ${MIDNIGHT}05 0%, rgba(255,255,255,0.98) 100%)`, padding: "20px 22px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
+                <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "법인 vs 개인사업자 — 의사결정만" : "Corp vs Sole — decision only"}</span>
+              </div>
+              <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55, marginBottom: "16px" }}>
+                {ko
+                  ? "이 단계에서는 어느 형태로 시작할지만 결정합니다. 실제 등록·KIPRIS·과세유형·약관 등의 절차는 다음 '법인 설립·등록' 단계에서 처리합니다."
+                  : "Just decide which form to start with. Actual registration, IP filing, tax setup happens in the next 'Company Setup' stage."}
+              </div>
+
+              {/* 모드별 권장 */}
+              <div style={{
+                padding: "14px 16px",
+                borderRadius: "14px",
+                background: isSole ? "rgba(5,150,105,0.06)" : `${MIDNIGHT}10`,
+                border: `1px solid ${isSole ? "rgba(5,150,105,0.18)" : MIDNIGHT + "30"}`,
+                marginBottom: "12px",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "6px",
+                    background: isSole ? "#059669" : MIDNIGHT, color: "#fff",
+                    letterSpacing: "0.06em",
+                  }}>
+                    {ko
+                      ? `${({ indie: "1인 인디", bootstrap: "부트스트랩", seed: "시드", seriesA: "시리즈A+" } as const)[startupOperatingMode]} 권장`
+                      : `${startupOperatingMode.toUpperCase()} REC`}
+                  </span>
+                  <span style={{ fontSize: "14.5px", fontWeight: 700, color: "#0f172a" }}>{guide.headline}</span>
+                </div>
+                <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.7)", lineHeight: 1.6, marginTop: "6px" }}>
+                  {guide.reason}
+                </div>
+              </div>
+
+              {/* 결정 트리거 (공통) */}
+              <div style={{ marginTop: "16px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+                  {ko ? "법인이 필요한 시점 — 4가지 트리거 중 하나라도 해당 시" : "When you need to incorporate — any of these 4"}
+                </div>
+                <div style={{ display: "grid", gap: "6px" }}>
+                  {(ko ? [
+                    { trigger: "(a) 외부 투자 (시드·VC·엔젤)", reason: "투자 = 주식 매입. 개인사업자는 주식 발행 불가." },
+                    { trigger: "(b) 공동창업자 + 지분 합의", reason: "지분 = 주식. SHA 효력은 법인에서만 성립." },
+                    { trigger: "(c) 첫 정규직 채용", reason: "4대보험·근로기준법 적용 + 직원 스톡옵션 부여." },
+                    { trigger: "(d) 매출 7억+ 또는 순이익 2억+", reason: "성실신고 대상 전환 + 건강보험 부담 폭발 — 법인이 절세." },
+                  ] : [
+                    { trigger: "(a) External investment", reason: "Investment = stock purchase. Sole prop can't issue shares." },
+                    { trigger: "(b) Co-founder equity agreement", reason: "Equity = shares. SHA only valid for corp." },
+                    { trigger: "(c) First full-time hire", reason: "Insurance + labor law + ESOP grants." },
+                    { trigger: "(d) Revenue 700M+ or profit 200M+", reason: "Sincere filing transition + health insurance spike — corp tax-efficient." },
+                  ]).map((t, i) => (
+                    <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "10px 12px", borderRadius: "10px", background: "rgba(0,0,0,0.025)" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, flexShrink: 0, minWidth: "40px" }}>{t.trigger.split(" ")[0]}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", lineHeight: 1.45 }}>{t.trigger.split(" ").slice(1).join(" ")}</div>
+                        <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5, marginTop: "2px" }}>{t.reason}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ─── Cross-reference: 다음 단계 안내 ─── */}
+            <div style={{
+              marginTop: "12px",
+              padding: "16px 18px",
+              borderRadius: "14px",
+              background: `${MIDNIGHT}08`,
+              border: `1px solid ${MIDNIGHT}30`,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "12px",
+            }}>
+              <div style={{
+                width: "30px", height: "30px", borderRadius: "8px",
+                background: `${MIDNIGHT}15`, display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MIDNIGHT} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "13.5px", fontWeight: 700, color: MIDNIGHT, marginBottom: "4px" }}>
+                  {ko ? "실제 등록·IP·과세 절차는 → '법인 설립·등록' 단계에서" : "Actual registration → 'Company Setup' stage"}
+                </div>
+                <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.7)", lineHeight: 1.6 }}>
+                  {ko ? (
+                    <>
+                      여기서는 <strong style={{ fontWeight: 700, color: MIDNIGHT }}>의사결정만</strong>. 다음 절차는 모두 다음 단계에서 다룹니다:
+                      <br />
+                      • 홈택스 사업자등록 + 법인 등기 절차
+                      <br />
+                      • KIPRIS·USPTO 트레이드마크·특허 출원
+                      <br />
+                      • 간이과세 vs 일반과세 vs 법인세 — 과세 유형 결정
+                      <br />
+                      • 보안·약관·개인정보 처리방침
+                      <br />
+                      • 헬프미·ZUZU·자비스 등 등록 대행 도구
+                    </>
+                  ) : (
+                    <>
+                      Here we just <strong>decide</strong>. Next stage handles all execution:
+                      <br />• HomeTax sole prop registration / corporation incorporation
+                      <br />• KIPRIS/USPTO trademark + patent filing
+                      <br />• Simplified vs standard VAT vs corp tax — tax type selection
+                      <br />• Privacy policy + terms of service
+                      <br />• Help-me / ZUZU / Jobis registration tools
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+      </>
+      )}
+
+      {/* ─── 미사용 코드: 이전 풀 액션·도구 가이드 (CompanySetupStage 로 이관) ─── */}
+      {false && (() => {
         const MIDNIGHT = "#191970";
         // 검증된 데이터 (이중 출처):
         // - 헬프미·자비스: 법인 등록면허세 11.25만 + 지방교육세 (등록면허세 20%) + 법원수수료 2-3.5만 = 14-16만 + 법무사 30-50만
@@ -715,12 +893,12 @@ export function StartupFoundationStage() {
 
             {/* ADVANTAGES (이렇게 하면 유리한 점) */}
             <div style={{ padding: "0 22px 16px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
                 {ko ? "이 길로 가면 유리한 점" : "Why this path wins"}
               </div>
-              <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.15)" }}>
+              <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.15)" }}>
                 {c.advantages.map((adv, i) => (
-                  <div key={i} style={{ fontSize: "13px", color: "rgba(5,150,105,0.9)", lineHeight: 1.65, marginBottom: i < c.advantages.length - 1 ? "4px" : 0 }}>
+                  <div key={i} style={{ fontSize: "13px", color: "rgba(25,25,112,0.9)", lineHeight: 1.65, marginBottom: i < c.advantages.length - 1 ? "4px" : 0 }}>
                     {adv}
                   </div>
                 ))}
@@ -762,38 +940,100 @@ export function StartupFoundationStage() {
           </div>
         );
       })()}
-      </>
-      )}
 
       {page === 4 && (
-      <>
-      {/* 실제 사례 — 영감 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(15,23,42,0.06)", background: "rgba(255,255,255,0.95)", padding: "20px 22px" }}>
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>{ko ? "그들도 이렇게 시작했습니다" : "They all started this way"}</div>
-        <div style={{ display: "grid", gap: "6px" }}>
-          {(ko ? [
-            { name: "배달의민족", story: "바닥에 떨어진 전단지를 스캔해서 앱을 만듦. 회사 설립은 앱 출시 5개월 후", year: "2010" },
-            { name: "토스", story: "8번 실패 후 통장 잔고 2만원. \"또 다른 멍청한 아이디어\"가 7조원 기업이 됨", year: "2015" },
-            { name: "Airbnb", story: "에어 매트리스 3개로 시작. 시리얼 상자를 팔아 3천만원을 벌고 YC에 들어감", year: "2008" },
-            { name: "Stripe", story: "\"노트북 줘봐\" — 직접 설치해주는 것으로 첫 고객 확보. 7줄의 코드가 시작", year: "2010" },
-          ] : [
-            { name: "Baemin", story: "Scanned restaurant flyers off the ground. Company founded 5mo after app launch", year: "2010" },
-            { name: "Toss", story: "8 failures, ₩20K in bank. \"Another stupid idea\" became a $7B company", year: "2015" },
-            { name: "Airbnb", story: "3 air mattresses. Sold cereal boxes for $30K to fund YC application", year: "2008" },
-            { name: "Stripe", story: "\"Give me your laptop\" — manual installation for first customers. 7 lines of code", year: "2010" },
-          ]).map(s => (
-            <div key={s.name} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 0", borderBottom: s.name !== "Stripe" ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.25)", width: "36px", flexShrink: 0, textAlign: "right" as const, marginTop: "2px" }}>{s.year}</div>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.name}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.story}</div>
-              </div>
+        <>
+          {/* 풀-사이즈 사례 쇼케이스 — 현재 모드의 5개 검증된 전설 founders/회사 */}
+          <SuccessCasesShowcase mode={startupOperatingMode} ko={ko} />
+
+          {/* 영감용 한국 사례 (보조) */}
+          <div
+            style={{
+              borderRadius: "16px",
+              border: `1px solid ${MIDNIGHT_BORDER}`,
+              background: "white",
+              padding: "20px 22px",
+              marginTop: "16px",
+            }}
+          >
+            <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>
+              {ko ? "한국 사례 — 작게 시작한 전설들" : "Korean Cases — Legends that started small"}
             </div>
-          ))}
-        </div>
-      </div>
-      </>
+            <div style={{ display: "grid", gap: "8px" }}>
+              {(ko
+                ? [
+                    { name: "배달의민족", story: "바닥에 떨어진 전단지를 스캔해서 앱을 만듦. 회사 설립은 앱 출시 5개월 후. 2019년 DH(독일) 가 ₩4.8조 인수.", year: "2010" },
+                    { name: "토스 (비바리퍼블리카)", story: "8번 실패 후 통장 잔고 2만원. 송금 앱으로 시작 → 현재 시총 ₩7조+ (시리즈G $410M @ $7B).", year: "2015" },
+                    { name: "당근마켓", story: "판교 직원 8명 사이드 프로젝트로 시작. 2024 시리즈D $2B valuation. 월 사용자 1,800만+.", year: "2015" },
+                    { name: "쿠팡", story: "그루폰 클론으로 시작 → 로켓배송 전환. 2021 NYSE 상장 시총 $69B (역대 한국 IPO 최대).", year: "2010" },
+                  ]
+                : [
+                    { name: "Baemin (Woowa Brothers)", story: "Scanned restaurant flyers off the ground. Founded 5mo after app launch. Acquired by DH for $4B in 2019.", year: "2010" },
+                    { name: "Toss (Viva Republica)", story: "8 failures, ₩20K in bank. Money transfer → fintech super-app. Series G $410M @ $7B.", year: "2015" },
+                    { name: "Karrot (Daangn)", story: "Side project by 8 Kakao employees. Series D 2024 @ $2B. 18M+ monthly users.", year: "2015" },
+                    { name: "Coupang", story: "Groupon clone → Rocket Delivery pivot. NYSE IPO 2021 at $69B (largest Korean IPO ever).", year: "2010" },
+                  ]
+              ).map((s) => (
+                <div
+                  key={s.name}
+                  style={{
+                    display: "flex",
+                    gap: "12px",
+                    alignItems: "flex-start",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    background: `${MIDNIGHT}05`,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                      background: `${MIDNIGHT}10`,
+                      fontSize: "10.5px",
+                      fontWeight: 700,
+                      color: MIDNIGHT,
+                      fontVariantNumeric: "tabular-nums",
+                      flexShrink: 0,
+                      marginTop: "2px",
+                    }}
+                  >
+                    {s.year}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", marginBottom: "3px" }}>
+                      {s.name}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55 }}>
+                      {s.story}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="고객 발견"
+        doneItemsKo={[
+          { label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting(보통 4년 1년 cliff) 명문화" },
+          { label: "2. 시장·문제 정의", detail: "타깃 고객 ICP + 핵심 문제 3개 + 가설 1줄 정리" },
+          { label: "3. 비전·미션·OKR", detail: "북극성 지표 + 분기 OKR 3~5개 + 측정 시스템 셋업" },
+          { label: "4. 팀·자문·스폰서", detail: "초기 팀·자문·외부 스폰서 1명 이상 확보" },
+        ]}
+        verifyItemsKo={[
+          "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위, 1년 cliff + 4년 vesting 표준",
+          "지분 합의 — 시간·자본·아이디어 기여도 별도 명문화, 모호한 합의는 분쟁 후 해결 불가",
+          "근로계약 — 공동창업자도 근로계약·임원 등기 분리, 4대보험·세무 별도 처리",
+          "지분 매수권 — 퇴사 시 회사가 매수권 보유 명문화, 미명시 시 외부에 팔릴 위험",
+          "IP 양도 — 공동창업자·초기 직원 모두 IP 회사 양도 계약, 미체결 시 IP 분쟁",
+          "비밀유지 — NDA·경업금지 사전 체결, 핵심 정보 유출 방지 (5년 이내 한계)",
+        ]}
+        nextSummaryKo="공동창업자·지분·비전·팀 셋업 완료 → 고객 발견 단계로 진입"
+      />
     </div>
   );
 }

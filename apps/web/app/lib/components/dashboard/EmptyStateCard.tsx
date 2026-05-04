@@ -97,7 +97,7 @@ export function EmptyStateCard({
               width: "32px",
               height: "32px",
               borderRadius: "9px",
-              background: "rgba(15,23,42,0.04)",
+              background: "rgba(25,25,112,0.04)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -167,7 +167,7 @@ export function EmptyStateCard({
           <div
             style={{
               height: "4px",
-              background: "rgba(15,23,42,0.06)",
+              background: "rgba(25,25,112,0.05)",
               borderRadius: "2px",
               overflow: "hidden" as const,
             }}

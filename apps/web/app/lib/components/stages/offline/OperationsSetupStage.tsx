@@ -1,11 +1,15 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import {
   CreditCard, ClipboardList, BarChart2, Bike, Lightbulb,
   ShieldCheck, AlertTriangle, ExternalLink, Calendar,
-  MessageSquare, Star, TrendingUp,
+  MessageSquare, Star, TrendingUp, Target, ListChecks,
+  Workflow, AlertCircle, ChevronRight, ChevronDown, ChevronLeft,
+  Cog, Megaphone, Check, ArrowRight, Sparkles,
 } from "lucide-react";
+import { StageWrapup } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러 (PermitCheck/ContractReview/Hiring 과 통일)
 
@@ -21,6 +25,9 @@ export function OperationsSetupStage() {
   type OpsDetail = { id: string; name: string; tagline: string; color: string; url: string; pros: string[]; cons: string[]; icon?: React.ReactNode };
   type Trap = { label: string; text: string };
   type KeyAction = { title: string; detail: string };
+  type WhyItem = { headline: string; impact?: string; metric?: string };
+  type HowStep = { day: string; title: string; detail?: string };
+  type WhatItem = { label: string; note?: string };
 
   // ─────────────────────────────────────────────────────────────
   // 데이터 — 2026년 4월 기준 검증
@@ -279,6 +286,240 @@ export function OperationsSetupStage() {
       : { title: "Order signage, menu, logo from ONE designer 2 weeks before opening", detail: "Consistent tone requires one source. Always require AI/EPS vector files — JPG-only causes print/signage quality issues." },
   };
 
+  // ─── WHY (왜 이 단계가 중요한가 — 안 하면 어떻게 되나) ───
+  const whyMatters: Record<number, WhyItem[]> = {
+    0: ko ? [
+      { headline: "첫 달 매출의 30~50%가 배달앱에서 발생", impact: "F&B 신규 매장 평균: 배달 비중 30~50%, 카페·디저트도 점차 상승. 입점 늦으면 그만큼 첫 달 매출이 비어버립니다.", metric: "지연 1주 = 평균 매출 300~800만원 손실" },
+      { headline: "심사 2~5 영업일 + 메뉴 등록 1~2일 = 최소 1주", impact: "오픈일 맞춰 신청하면 첫 주는 배달 없이 운영. 워크인만으로는 손익분기 도달 어려움.", metric: "동시 신청 시 D-7 신청이 골든타임" },
+      { headline: "광고 없이 신규 노출 ≈ 0", impact: "배민·쿠팡이츠 모두 알고리즘이 신규 매장에 노출 가중치 X. 첫 주 노출 폭발 = 광고비 + 5~10건 초기 리뷰 셋업.", metric: "초기 광고 예산: 매출 5~15% 권장" },
+    ] : [
+      { headline: "Delivery is 30-50% of revenue in month 1", impact: "Late onboarding = direct loss of week-1 sales.", metric: "1 week delay ≈ 3-8M KRW lost" },
+      { headline: "Approval 2-5 BD + menu setup 1-2d = ~1 week", impact: "Apply at D-7 to be live by opening." },
+      { headline: "No ads = ~0 organic exposure", impact: "Algorithms don't favor new stores. Reviews + small ad budget required week 1." },
+    ],
+    1: ko ? [
+      { headline: "POS 미세팅 = 오픈 첫날 결제 거절", impact: "메뉴 미등록·카드 미연동 시 손님 앞에서 결제 실패. 신뢰 회복은 수개월 소요.", metric: "온보딩 영상 후기: 첫날 결제 오류 매장 평균 별점 -0.4점" },
+      { headline: "정산·세금계산서 데이터가 한 단말에서 시작", impact: "오픈 후 매출 정산·VAT 신고 자동화는 POS 데이터 정확성에 의존. 초기 미스 = 분기말 정정 작업 폭증.", metric: "사장님 평균 월 4시간 정산 정정에 소비" },
+      { headline: "배달앱 자동 수신 여부에 따라 운영 부담 -50%", impact: "POS가 배민·쿠팡이츠 주문을 자동 수신 안 하면 손으로 옮겨 적기. 점심 피크 시 누락·지연 발생." },
+    ] : [
+      { headline: "Unconfigured POS = day-1 payment failures", impact: "Lost trust takes months to rebuild." },
+      { headline: "Settlement & VAT data depends on POS accuracy", impact: "Early errors snowball into quarterly cleanup." },
+      { headline: "Native delivery integration cuts operational burden by ~50%" },
+    ],
+    2: ko ? [
+      { headline: "한국 음식점 검색의 80%가 네이버", impact: "미등록 시 검색 자체가 안 됨. 인스타로 보고 와도 위치 확인은 네이버 — 길찾기·전화 모두 막힘.", metric: "네이버 미등록 매장 첫 주 신규 방문 평균 -60%" },
+      { headline: "등록 후 검색 노출까지 최대 7일", impact: "오픈 1주 전 등록이 안전선. 당일 등록 시 첫 주 노출 0회 가능.", metric: "D-7 등록 권장" },
+      { headline: "'실질 상호작용' 지수가 상위 노출 결정", impact: "단순 등록만으론 노출 X. 첫 주 전화 클릭·길찾기·저장이 폭발해야 알고리즘이 인지. 지인 동원이 합리적.", metric: "1주차 상호작용 50건 = 상위 노출 진입선" },
+    ] : [
+      { headline: "80% of Korean place searches use Naver", impact: "No listing = invisible. Even Instagram visits check Naver for directions." },
+      { headline: "Up to 7 days to appear in search", impact: "Register 1 week before opening." },
+      { headline: "'Real interactions' drive ranking", impact: "Calls, directions, saves in week 1 = ranking trigger." },
+    ],
+    3: ko ? [
+      { headline: "VAN 가입 없이 카드 결제 = 0건", impact: "사업자등록 후 즉시 신청 안 하면 오픈 후 현금만 받게 됨. 신청 → 활성화 약 7일.", metric: "사업자등록 후 D+0 신청이 골든타임" },
+      { headline: "통합 솔루션(토스플레이스 등) 사용 시 별도 신청 불필요", impact: "이미 VAN 포함된 솔루션 쓰는데 또 신청하면 단말기 2대 + 정산 분리 → 회계 복잡도 폭증." },
+      { headline: "VAN 수수료는 카드 수수료와 별개", impact: "건당 100~150원 추가. 객단가 5천원 매장은 매출의 2~3% 추가 부담." },
+    ] : [
+      { headline: "No VAN = zero card sales", impact: "Apply right after business registration; activation ~7 days." },
+      { headline: "Skip VAN if integrated solution covers it", impact: "Double signup = split settlement + duplicate terminals." },
+      { headline: "VAN fee is separate from card fee", impact: "100-150 KRW/tx adds up on low-ticket stores." },
+    ],
+    4: ko ? [
+      { headline: "50㎡ 이상 미가입 시 형사처벌 + 손해배상", impact: "공연권법 위반 — 손해배상 + 최대 5년 이하 징역 또는 5천만원 이하 벌금. 단속 사례 빈번.", metric: "1년 미가입 누적 손해배상 평균 100~300만원" },
+      { headline: "유튜브·스포티파이 매장 사용 = 명백한 위반", impact: "개인 약관은 비상업적 사용만 허용. 매장 사용은 적발 시 변명 불가." },
+      { headline: "사업자등록 직후 처리 = 누락 리스크 0", impact: "오픈 후 처리하려다 잊어버리는 케이스가 가장 많음. 등록 직후 일괄 처리가 최선.", metric: "월 4천원~9천원 (선택지에 따라)" },
+    ] : [
+      { headline: "Stores ≥50㎡ face criminal penalties if unlicensed", impact: "Damages + up to 5y prison or 50M KRW fine. Enforcement is active." },
+      { headline: "YouTube/Spotify in store = clear violation", impact: "Personal TOS forbid commercial use." },
+      { headline: "Handle right after business registration", impact: "Most common miss is post-opening procrastination." },
+    ],
+    5: ko ? [
+      { headline: "간판 시공 5~7일 + 디자인 7~14일 = 최소 3주 리드타임", impact: "발주 늦으면 오픈일 미뤄짐. 인테리어 완료 직후 간판이 없으면 '있는 것 같은데 없는 매장'.", metric: "오픈 D-21 디자이너 견적 시작 권장" },
+      { headline: "톤 일관성이 첫인상의 70%", impact: "간판·메뉴판·로고가 디자이너 따로면 손님이 '저렴해 보인다'고 느낌. 한 디자이너에게 일괄 의뢰가 정답." },
+      { headline: "JPG만 받으면 인쇄·간판에서 깨짐 발생", impact: "확대 시 픽셀 깨짐 → 간판·메뉴판 재의뢰. 평균 30~80만원 추가 비용.", metric: "AI/EPS 벡터 원본 파일 요청 필수" },
+    ] : [
+      { headline: "Sign fab 5-7d + design 7-14d = ~3 week lead", impact: "Late order delays opening day." },
+      { headline: "Tonal consistency drives 70% of first impression", impact: "Order sign/menu/logo from one designer." },
+      { headline: "JPG-only files break at print scale", impact: "Always require AI/EPS vector source." },
+    ],
+  };
+
+  // ─── HOW (어떻게 진행하는가 — D-day 기준 단계별 절차) ───
+  const howFlow: Record<number, HowStep[]> = {
+    0: ko ? [
+      { day: "D-14", title: "필요 서류 PDF 준비", detail: "통신판매업 신고증, 영업신고증, 사업자등록증, 통장사본 — 모바일에 PDF로 저장해두면 신청 시 즉시 첨부 가능." },
+      { day: "D-10", title: "메뉴 사진 촬영 + 가격표 확정", detail: "정사각 1080×1080 권장. 자연광에서 촬영 후 보정. 메뉴별 옵션·추가 금액·품절 처리 정책 정리." },
+      { day: "D-7", title: "배민 + 쿠팡이츠 + 요기요 동시 신청", detail: "한 번에 3사 모두 신청. 심사 2~5 BD 소요라 동시 진행이 가장 빠름. 광고는 D-1까지 보류." },
+      { day: "D-3", title: "메뉴·사진·영업시간 등록 + 운영 시뮬", detail: "심사 통과 후 즉시 메뉴 등록. 사장님 앱으로 가짜 주문 1건 받아 흐름 확인." },
+      { day: "D-Day", title: "라이브 + 첫 주문 케어", detail: "광고는 매출 5~10% 예산으로 시작. 첫 10건은 손편지·서비스 등으로 리뷰 부탁." },
+    ] : [
+      { day: "D-14", title: "Prepare PDFs", detail: "Telecom sales filing, business license, biz registration, bank passbook." },
+      { day: "D-10", title: "Menu photos + price list", detail: "1080x1080, natural light. Define options/sold-out flow." },
+      { day: "D-7", title: "Apply Baemin + CoupangEats + Yogiyo same day", detail: "All three in parallel; approval 2-5 BD." },
+      { day: "D-3", title: "Register menu/photos + dry-run", detail: "Place a fake order via partner app." },
+      { day: "D-Day", title: "Go live + first-order care", detail: "Ads at 5-10% of sales. Hand-write notes for first 10 reviews." },
+    ],
+    1: ko ? [
+      { day: "D-14", title: "POS 견적 3사 비교", detail: "토스플레이스(무료) vs KIS·오더플레이스(월정액) — 배달 비중·예산·매장 규모로 결정." },
+      { day: "D-10", title: "계약 + 단말기 주문", detail: "토스플레이스는 신청 후 약 2~3일 배송. 약정·해지 위약금 조건 사전 확인." },
+      { day: "D-7", title: "단말기 수령 + 메뉴·옵션 등록", detail: "전 메뉴 + 옵션 + 가격 + 품절 정책 + 영수증 정보(상호·사업자번호) 입력." },
+      { day: "D-3", title: "배달앱 연동 + 카드 결제 테스트", detail: "배민·쿠팡이츠 주문 자동 수신 확인. 카드 1건 실결제 후 즉시 취소." },
+      { day: "D-1", title: "정산 시뮬레이션 + 영수증 검증", detail: "일 마감 정산 = 실 매출 합계인지 비교. 영수증에 사업자번호·부가세 정확한지 확인." },
+    ] : [
+      { day: "D-14", title: "Compare 3 POS quotes" },
+      { day: "D-10", title: "Sign + order terminal", detail: "Confirm contract terms upfront." },
+      { day: "D-7", title: "Receive + register menu/options" },
+      { day: "D-3", title: "Delivery integration + 1 real card test" },
+      { day: "D-1", title: "Settlement dry-run + receipt check" },
+    ],
+    2: ko ? [
+      { day: "D-14", title: "매장 사진 촬영 (외관·내부·메뉴 5장 이상)", detail: "낮 자연광 필수. 외관·간판·메뉴 클로즈업·매장 분위기 4종을 기본으로." },
+      { day: "D-10", title: "네이버 플레이스 등록", detail: "사업자등록증·영업신고증 PDF 첨부. 영업시간·전화·메뉴·가격·주차정보 모두 입력." },
+      { day: "D-7", title: "인스타 비즈니스 + 카카오 채널 개설", detail: "프로필·하이라이트 셋업. 첫 게시물 3개 + 릴스 1개 미리 업로드 (예약 가능)." },
+      { day: "D-3", title: "구글 비즈니스 등록 + 콘텐츠 예약", detail: "외국인 관광객 매장이면 필수. 이후 1주일치 인스타 게시물 예약 발행." },
+      { day: "D-Day", title: "지인 5명 영수증 리뷰 + 인스타 라이브", detail: "별점 4점 이상. 인스타 스토리에 위치 태그 + 매장 사진." },
+      { day: "D+3", title: "지인 10명에게 검색 → 길찾기·전화 클릭 부탁", detail: "'실질 상호작용' 폭발 = 알고리즘 상위 노출 트리거." },
+    ] : [
+      { day: "D-14", title: "Photograph store (5+ shots)" },
+      { day: "D-10", title: "Register Naver Place" },
+      { day: "D-7", title: "Open Instagram Business + Kakao Channel" },
+      { day: "D-3", title: "Google Business + scheduled content" },
+      { day: "D-Day", title: "5 receipt reviews + Instagram Live" },
+      { day: "D+3", title: "Ask 10 friends to search/call/get-directions" },
+    ],
+    3: ko ? [
+      { day: "D-14", title: "사업자등록증·통장·영업신고증 준비", detail: "VAN사 신청서에 첨부. 사업자등록 후 즉시 신청이 골든타임." },
+      { day: "D-12", title: "VAN사 1곳 가맹점 등록 신청", detail: "NICE·KIS·스마트로·KICC 중 1곳. 통합 POS(토스플레이스 등) 사용 중이면 별도 신청 불필요." },
+      { day: "D-7", title: "단말기 수령 (임대 vs 구매 결정)", detail: "1년 이상 운영 예정이면 구매(20~50만원)가 유리. 단기·이전 가능성이 있으면 임대(월 1~3만원)." },
+      { day: "D-3", title: "카드사·간편결제 연계 확인", detail: "VISA·MC·국내 카드사·카카오·네이버·애플페이가 단말기에 모두 표시되는지." },
+      { day: "D-1", title: "실결제 1건 + 정산 흐름 확인", detail: "결제 → 영수증 → VAN 정산 → 통장 입금까지 한 사이클 점검." },
+    ] : [
+      { day: "D-14", title: "Prepare biz docs" },
+      { day: "D-12", title: "Apply to one VAN provider" },
+      { day: "D-7", title: "Decide lease vs buy" },
+      { day: "D-3", title: "Verify all card networks + simple-pay" },
+      { day: "D-1", title: "1 real transaction + settlement check" },
+    ],
+    4: ko ? [
+      { day: "D-14", title: "영업장 면적 측정", detail: "건축물대장 또는 임대차 계약서 기준. 50㎡(15.1평) 미만이면 의무 X." },
+      { day: "D-10", title: "옵션 비교 (직접 신고 vs 매장음악서비스)", detail: "직접 신고: 월 4천원~ (3개 단체 별도). 샵캐스트·멜론비즈: 월 9천원~ 통합." },
+      { day: "D-7", title: "신청·납부 + 영수증 보관", detail: "사업자등록 후 1개월 이내 처리 권장. 단속 시 영수증 제시." },
+      { day: "D-Day", title: "라이브 음원 시작", detail: "유튜브·스포티파이 사용 금지. 매장음악서비스 또는 자체 보유 음원만 재생." },
+    ] : [
+      { day: "D-14", title: "Measure floor area", detail: "Under 50㎡ = exempt." },
+      { day: "D-10", title: "Compare direct filing vs music service" },
+      { day: "D-7", title: "Apply + pay + keep receipt" },
+      { day: "D-Day", title: "Use only licensed sources" },
+    ],
+    5: ko ? [
+      { day: "D-21", title: "디자이너 견적 3곳 (크몽·라우드·숨고)", detail: "포트폴리오·후기 확인 후 1명 선택. 로고·간판·메뉴판·명함 일괄 의뢰." },
+      { day: "D-14", title: "1차 시안 수령 + 피드백", detail: "톤·컬러·폰트 일치 확인. 간판은 LED 채널 vs 평판 사인 결정." },
+      { day: "D-10", title: "최종 시안 확정 + 벡터 원본 수령", detail: "AI/EPS 파일 필수. JPG만 받으면 간판·인쇄에서 픽셀 깨짐 발생." },
+      { day: "D-7", title: "간판 시공업체 발주 + 메뉴판 인쇄", detail: "디자이너 ≠ 시공. 시공업체 별도 섭외 (또는 디자이너에게 시공 가능 여부 확인)." },
+      { day: "D-3", title: "간판 설치 + 메뉴판·명함 매장 비치", detail: "전기 연결·조명 점검. 메뉴판은 라미네이팅 또는 아크릴 거치." },
+    ] : [
+      { day: "D-21", title: "Get 3 designer quotes" },
+      { day: "D-14", title: "Receive draft + feedback" },
+      { day: "D-10", title: "Finalize + receive vector source" },
+      { day: "D-7", title: "Order sign fab + print menus" },
+      { day: "D-3", title: "Install sign + place menus/cards" },
+    ],
+  };
+
+  // ─── WHAT (사전 준비물 — 무엇을 챙겨야 하는가) ───
+  const whatNeeded: Record<number, WhatItem[]> = {
+    0: ko ? [
+      { label: "통신판매업 신고증 PDF", note: "지자체 발급, 사업자등록 후 1개월 이내 신고" },
+      { label: "영업신고증 PDF", note: "F&B 매장은 식품접객업 영업신고" },
+      { label: "사업자등록증 PDF" },
+      { label: "통장사본 PDF (사업용 통장)" },
+      { label: "메뉴 사진 (메뉴별 1080×1080 정사각)", note: "최소 10장. 자연광 추천" },
+      { label: "메뉴 가격표·옵션 정책", note: "기본·옵션·추가 금액 + 품절 처리" },
+      { label: "영업시간 + 휴무일 + 주문 가능 시간" },
+    ] : [
+      { label: "E-commerce filing PDF" },
+      { label: "Business permit PDF" },
+      { label: "Biz registration PDF" },
+      { label: "Bank passbook PDF" },
+      { label: "Menu photos 1080x1080" },
+      { label: "Price list + options policy" },
+      { label: "Hours + holidays + order window" },
+    ],
+    1: ko ? [
+      { label: "사업자등록증" },
+      { label: "통장사본 (정산 입금용)" },
+      { label: "영업신고증" },
+      { label: "메뉴·가격·옵션 전체 목록", note: "POS 등록용 — 엑셀 또는 메모로 사전 정리" },
+      { label: "영수증 정보 (상호·사업자번호·전화)" },
+      { label: "배달앱 연동 필요 여부 결정", note: "배달 비중 30%↑ 매장은 자동 수신 POS 우선" },
+    ] : [
+      { label: "Biz registration" },
+      { label: "Bank passbook" },
+      { label: "Business permit" },
+      { label: "Full menu/price/options" },
+      { label: "Receipt info" },
+      { label: "Delivery integration decision" },
+    ],
+    2: ko ? [
+      { label: "매장 사진 5장 이상", note: "외관·내부·메뉴·간판·분위기" },
+      { label: "사업자등록증·영업신고증 PDF" },
+      { label: "영업시간·전화·주차·휴무" },
+      { label: "메뉴 + 가격 (대표 메뉴 5~10개)" },
+      { label: "위치 좌표 (네이버 플레이스 자동 검색)" },
+      { label: "인스타 첫 게시물 3개 + 릴스 1개 (사전 준비)" },
+      { label: "지인 10명 동원 명단 (D+3 상호작용 폭발용)" },
+    ] : [
+      { label: "5+ store photos" },
+      { label: "Biz registration / permit PDFs" },
+      { label: "Hours / phone / parking / off-days" },
+      { label: "Menu + prices (5-10 highlights)" },
+      { label: "Location coordinates" },
+      { label: "3 IG posts + 1 reel ready" },
+      { label: "10 friends to drive interactions" },
+    ],
+    3: ko ? [
+      { label: "사업자등록증" },
+      { label: "통장사본" },
+      { label: "신분증 (대표자)" },
+      { label: "영업신고증" },
+      { label: "현재 사용 POS의 VAN 포함 여부 확인", note: "토스플레이스 등은 별도 신청 불필요" },
+      { label: "단말기 임대 vs 구매 결정", note: "운영 기간으로 결정" },
+    ] : [
+      { label: "Biz registration" },
+      { label: "Bank passbook" },
+      { label: "ID (representative)" },
+      { label: "Business permit" },
+      { label: "Confirm if current POS includes VAN" },
+      { label: "Lease vs buy decision" },
+    ],
+    4: ko ? [
+      { label: "영업장 면적 (㎡)", note: "건축물대장 또는 임대차 계약서" },
+      { label: "사업자등록증" },
+      { label: "매장 카테고리 (커피·음식점·뷰티 등)" },
+      { label: "납부 옵션 결정", note: "직접 신고(저렴) vs 매장음악서비스(편의)" },
+    ] : [
+      { label: "Floor area (㎡)" },
+      { label: "Biz registration" },
+      { label: "Store category" },
+      { label: "Payment option choice" },
+    ],
+    5: ko ? [
+      { label: "매장 컨셉 정리 (1~2 문장)", note: "디자이너에게 톤 전달용" },
+      { label: "선호 색상 톤 + 폰트 방향" },
+      { label: "사용 위치 정리 (간판·메뉴판·명함·포장재 등)" },
+      { label: "간판 종류 결정", note: "LED 채널 vs 평판 vs 입체 — 예산·인테리어와 맞춤" },
+      { label: "벡터 원본 (AI/EPS) 요구사항 명시" },
+      { label: "참고 매장 사진 3~5장", note: "Pinterest·인스타에서 톤 비슷한 매장" },
+    ] : [
+      { label: "Concept summary (1-2 sentences)" },
+      { label: "Color tone + font direction" },
+      { label: "Asset usage list" },
+      { label: "Sign type decision" },
+      { label: "Demand AI/EPS vector source" },
+      { label: "3-5 reference photos" },
+    ],
+  };
+
   // ─── 트랩 (실수 패턴) ───
   const traps: Record<number, Trap[]> = {
     0: ko ? [
@@ -325,20 +566,42 @@ export function OperationsSetupStage() {
     ],
   };
 
+  // ─── steps 의 subtitle = "이 step 이 다른 단계와 어떻게 연결되는지" (서비스 흐름의 일부) ───
+  //   사용자가 사업 시작 흐름을 따라가면서 "이전에 끝낸 것이 여기서 어떻게 쓰이는지" 자연스럽게 이해.
   const steps = [
-    { key: "delivery", title: ko ? "배달앱 입점 등록" : "Delivery App Registration",    subtitle: ko ? "첫 주문이 들어오는 채널을 오픈 전에 열어두세요." : "Open your order channels before launch.", taskId: "delivery-app-registered" },
-    { key: "pos",      title: ko ? "POS 실거래 테스트" : "POS Live Test",              subtitle: ko ? "오픈 전날 실결제로 데이터 흐름까지 확인하세요." : "Verify real-card flow the day before opening.", taskId: "pos-live" },
-    { key: "sns",      title: ko ? "SNS·플레이스 + 런칭 캠페인" : "SNS & Launch Campaign",     subtitle: ko ? "단순 등록을 넘어 첫 주 캠페인까지 — 리뷰·전화·길찾기를 폭발시키세요." : "Beyond registration — week-1 campaign for reviews and traffic.", taskId: "sns-setup" },
-    { key: "van",      title: ko ? "카드 가맹점 등록 (VAN)" : "Card Merchant Registration (VAN)",  subtitle: ko ? "VAN사 1곳에 신청하면 모든 카드·간편결제 자동 연계. 약 1주 소요." : "One VAN application covers all card networks. ~1 week.", taskId: "card-merchant-registered" },
-    { key: "music",    title: ko ? "매장 배경음악 저작권" : "Background Music License",  subtitle: ko ? "50㎡(15평) 이상 매장 의무. 미가입 시 형사처벌까지 가능합니다." : "Mandatory for stores ≥50㎡. Non-compliance carries criminal risk.", taskId: "music-license-registered" },
-    { key: "brand",    title: ko ? "브랜드 자산 (간판·메뉴판·로고)" : "Brand Assets (Signage, Menu, Logo)",  subtitle: ko ? "한 디자이너에게 일괄 의뢰해 톤 일관성 확보 — 오픈 2주 전 발주." : "Order from one designer for tonal consistency — 2 weeks before opening.", taskId: "brand-identity-offline" },
+    { key: "delivery", title: ko ? "배달앱 입점 등록" : "Delivery App Registration",    subtitle: ko ? "사업자등록·통신판매업 신고가 끝났으니 이제 첫 주문 채널을 엽니다. 메뉴 사진은 인테리어 단계에서 찍어둔 매장 사진과 함께 등록." : "Now that biz registration is done, open the order channels.", taskId: "delivery-app-registered" },
+    { key: "pos",      title: ko ? "POS 실거래 테스트" : "POS Live Test",              subtitle: ko ? "공급처·메뉴·가격이 확정됐으니 결제 흐름의 중심을 만듭니다. 사업자등록증·통장사본을 준비해두세요." : "Suppliers and prices are set — now build your payment hub.", taskId: "pos-live" },
+    { key: "sns",      title: ko ? "SNS·플레이스 + 런칭 캠페인" : "SNS & Launch Campaign",     subtitle: ko ? "매장 사진과 브랜드 톤이 준비됐으니 손님이 찾아올 길을 만듭니다. 등록만으로는 부족 — 첫 주 상호작용까지." : "Photos and brand tone ready — now make customers find you.", taskId: "sns-setup" },
+    { key: "van",      title: ko ? "카드 가맹점 등록 (VAN)" : "Card Merchant Registration (VAN)",  subtitle: ko ? "POS 결정이 끝났다면 VAN 한 곳만 신청. 카드·간편결제가 모두 자동 연계됩니다." : "POS decided — now apply to one VAN to enable all cards.", taskId: "card-merchant-registered" },
+    { key: "music",    title: ko ? "매장 배경음악 저작권" : "Background Music License",  subtitle: ko ? "인테리어 단계에서 확정된 매장 면적이 50㎡(15평) 이상이면 등록 의무. 사업자등록 직후 한 번에 끝내세요." : "If your store ≥50㎡ (set in interior stage), licensing is required.", taskId: "music-license-registered" },
+    { key: "brand",    title: ko ? "브랜드 자산 (간판·메뉴판·로고)" : "Brand Assets (Signage, Menu, Logo)",  subtitle: ko ? "인테리어 단계의 컨셉을 그대로 이어 간판·메뉴판·로고를 한 디자이너에게 일괄 의뢰 — 톤이 통일돼야 손님이 '제대로 된 매장'이라고 느낍니다." : "Carry the interior concept — order all assets from one designer.", taskId: "brand-identity-offline" },
   ];
 
   const currentOpsStep = steps[opsStep];
   const currentKeyAction = keyActions[opsStep];
   const currentTraps = traps[opsStep] ?? [];
+  const currentWhy = whyMatters[opsStep] ?? [];
+  const currentHow = howFlow[opsStep] ?? [];
+  const currentWhat = whatNeeded[opsStep] ?? [];
   const tasks = taskMap["operations-setup"] ?? [];
   const isTaskDone = (id: string) => tasks.find(t => t.taskId === id)?.status === "completed";
+
+  // ─── 2-Track 분리 (밀도 감소 — 운영 인프라 vs 마케팅·브랜드) ───
+  //   운영 트랙: 0(배달앱·실은 인프라 측면) / 1(POS) / 3(VAN) / 4(음악) — 영업 가능 인프라
+  //   마케팅 트랙: 2(SNS·플레이스) / 5(브랜드 자산) — 노출과 첫인상
+  const operationsStepIds: number[] = [0, 1, 3, 4];
+  const marketingStepIds: number[] = [2, 5];
+  const trackOf = (idx: number): "operations" | "marketing" =>
+    operationsStepIds.includes(idx) ? "operations" : "marketing";
+  const [activeTrack, setActiveTrack] = useState<"operations" | "marketing">(trackOf(opsStep));
+  // opsStep 이 외부에서 바뀌면(흐름도 클릭 등) 자동으로 해당 트랙 전환.
+  useEffect(() => { setActiveTrack(trackOf(opsStep)); }, [opsStep]);
+  const currentTrackStepIds: number[] = activeTrack === "operations" ? operationsStepIds : marketingStepIds;
+
+  // ─── 상세 카드 점진적 공개 (collapsible — 기본은 닫힘) ───
+  const [expandedSection, setExpandedSection] = useState<"why" | "how" | "what" | null>(null);
+  // step / track 전환 시 상세는 자동으로 닫음 (밀도 감소 핵심).
+  useEffect(() => { setExpandedSection(null); }, [opsStep, activeTrack]);
 
   const sectionLabel: React.CSSProperties = {
     fontSize: "12.5px",
@@ -381,6 +644,368 @@ export function OperationsSetupStage() {
       </div>
     </div>
   );
+
+  // ─── 접기/펼치기 헤더 (collapsible 공통) ───
+  const SectionToggle = ({
+    icon: Icon, label, hint, sectionId, count,
+  }: {
+    icon: React.ElementType; label: string; hint?: string;
+    sectionId: "why" | "how" | "what"; count?: number;
+  }) => {
+    const open = expandedSection === sectionId;
+    return (
+      <button
+        type="button"
+        onClick={() => setExpandedSection(open ? null : sectionId)}
+        aria-expanded={open}
+        style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          width: "100%", padding: "12px 14px",
+          background: "white", borderRadius: "14px",
+          border: "0.5px solid rgba(0,0,0,0.08)",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+          cursor: "pointer",
+          textAlign: "left" as const,
+          transition: "all 0.15s",
+        }}
+      >
+        <div style={{ width: "26px", height: "26px", borderRadius: "8px", background: "rgba(25,25,112,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Icon size={14} strokeWidth={2.2} color={MIDNIGHT} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "-0.01em" }}>
+            {label}
+          </div>
+          {hint && (
+            <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.5)", marginTop: "1px", lineHeight: 1.4 }}>
+              {hint}
+            </div>
+          )}
+        </div>
+        {typeof count === "number" && count > 0 && (
+          <span style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: "999px", letterSpacing: "0.02em" }}>
+            {count}
+          </span>
+        )}
+        <ChevronDown
+          size={16} strokeWidth={2.2}
+          style={{ color: "rgba(0,0,0,0.4)", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+        />
+      </button>
+    );
+  };
+
+  // ─── WHY 카드 (왜 이 단계가 중요한가) — collapsible ───
+  const WhyCard = () => (
+    currentWhy.length === 0 ? null : (
+      <div style={{ marginBottom: "10px" }}>
+        <SectionToggle
+          icon={Target}
+          label={ko ? "왜 이 단계가 중요한가" : "Why this matters"}
+          hint={ko ? "놓치면 어떤 손실이 발생하는지" : "What you lose by skipping"}
+          sectionId="why"
+          count={currentWhy.length}
+        />
+        {expandedSection !== "why" ? null : (
+        <div style={{ marginTop: "8px", background: "white", borderRadius: "16px", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.05), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
+          {currentWhy.map((why, i) => (
+            <div key={why.headline}>
+              {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.06)", marginLeft: "44px" }} />}
+              <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "14px 16px" }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(25,25,112,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px", fontWeight: 800, color: MIDNIGHT }}>
+                  {i + 1}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", marginBottom: "5px", lineHeight: 1.4, letterSpacing: "-0.01em" }}>
+                    {why.headline}
+                  </div>
+                  {why.impact && (
+                    <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.62)", lineHeight: 1.55, marginBottom: why.metric ? "6px" : 0 }}>
+                      {why.impact}
+                    </div>
+                  )}
+                  {why.metric && (
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "3px 9px", borderRadius: "6px", background: "rgba(25,25,112,0.07)", fontSize: "11.5px", fontWeight: 600, color: MIDNIGHT, fontVariantNumeric: "tabular-nums" }}>
+                      <AlertCircle size={11} strokeWidth={2.2} />
+                      {why.metric}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        )}
+      </div>
+    )
+  );
+
+  // ─── HOW 카드 (D-day 기준 단계별 절차) — collapsible ───
+  const HowCard = () => (
+    currentHow.length === 0 ? null : (
+      <div style={{ marginBottom: "10px" }}>
+        <SectionToggle
+          icon={Workflow}
+          label={ko ? "어떻게 진행하나" : "How to execute"}
+          hint={ko ? "오픈일 기준 권장 일정 (예시 — 본인 일정에 맞춰 조정)" : "Suggested timeline by opening date"}
+          sectionId="how"
+          count={currentHow.length}
+        />
+        {expandedSection !== "how" ? null : (
+        <div style={{ marginTop: "8px", background: "white", borderRadius: "16px", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.05), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
+          {currentHow.map((step, i) => (
+            <div key={step.day} style={{ position: "relative" }}>
+              {i > 0 && <div style={{ position: "absolute", top: 0, bottom: "50%", left: "29px", width: "1px", background: "rgba(25,25,112,0.18)" }} />}
+              {i < currentHow.length - 1 && <div style={{ position: "absolute", top: "50%", bottom: 0, left: "29px", width: "1px", background: "rgba(25,25,112,0.18)" }} />}
+              <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "14px 16px", position: "relative" }}>
+                <div style={{ width: 18, height: 18, borderRadius: "50%", background: MIDNIGHT, marginLeft: "10px", flexShrink: 0, marginTop: "2px", border: "3px solid white", boxShadow: "0 0 0 1px rgba(25,25,112,0.18)" }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", padding: "2px 9px", borderRadius: "999px", background: "rgba(25,25,112,0.08)", fontSize: "11px", fontWeight: 700, color: MIDNIGHT, marginBottom: "4px", letterSpacing: "0.02em", fontVariantNumeric: "tabular-nums" }}>
+                    {step.day}
+                  </div>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)", marginBottom: "3px", letterSpacing: "-0.01em" }}>
+                    {step.title}
+                  </div>
+                  {step.detail && (
+                    <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.6)", lineHeight: 1.55 }}>
+                      {step.detail}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        )}
+      </div>
+    )
+  );
+
+  // ─── WHAT 카드 (사전 준비물) — collapsible ───
+  const WhatCard = () => (
+    currentWhat.length === 0 ? null : (
+      <div style={{ marginBottom: "16px" }}>
+        <SectionToggle
+          icon={ListChecks}
+          label={ko ? "무엇을 준비하나" : "What to prepare"}
+          hint={ko ? "사전에 챙겨야 할 서류·정보·결정" : "Documents, info, decisions"}
+          sectionId="what"
+          count={currentWhat.length}
+        />
+        {expandedSection !== "what" ? null : (
+        <div style={{ marginTop: "8px", background: "white", borderRadius: "16px", padding: "14px 16px", boxShadow: "0 2px 16px rgba(0,0,0,0.05), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
+          {currentWhat.map((item, i) => (
+            <div key={item.label} style={{ display: "flex", alignItems: "flex-start", gap: "9px", padding: "7px 0", borderTop: i > 0 ? "0.5px solid rgba(0,0,0,0.05)" : "none" }}>
+              <ChevronRight size={14} strokeWidth={2.4} style={{ color: MIDNIGHT, marginTop: "2px", flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text)", lineHeight: 1.45, letterSpacing: "-0.01em" }}>
+                  {item.label}
+                </div>
+                {item.note && (
+                  <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.5)", marginTop: "2px", lineHeight: 1.5 }}>
+                    {item.note}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        )}
+      </div>
+    )
+  );
+
+  // ─── 사업 시작 여정 카드 (이전 → 현재 → 다음 — 우리 서비스 전체 흐름의 위치) ───
+  //   사용자가 "이 단계가 왜 지금 나오는지", "끝나면 무엇이 시작되는지" 자연스럽게 이해.
+  //   기존 14단계 starter-data.ts 흐름의 12~14단계 위치임.
+  const JourneyContextCard = () => {
+    const previous = ko ? [
+      "사업자등록·통신판매업 신고",
+      "공급처·POS·장비 결정",
+      "직원 채용·근로계약·4대보험",
+    ] : [
+      "Biz registration · e-commerce filing",
+      "Suppliers · POS · equipment",
+      "Hiring · contracts · 4-insurance",
+    ];
+    return (
+      <div style={{
+        marginBottom: "20px",
+        padding: "16px 18px",
+        borderRadius: "16px",
+        background: `linear-gradient(135deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.02) 100%)`,
+        border: "0.5px solid rgba(25,25,112,0.15)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <Sparkles size={14} strokeWidth={2.2} color={MIDNIGHT} />
+          <span style={{ fontSize: "11px", fontWeight: 800, color: MIDNIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+            {ko ? "사업 시작 여정" : "Your launch journey"}
+          </span>
+          <span style={{ fontSize: "11px", color: "rgba(0,0,0,0.4)", marginLeft: "auto", fontWeight: 600 }}>
+            {ko ? "12 / 14 단계" : "Step 12 / 14"}
+          </span>
+        </div>
+        <div style={{ fontSize: "15.5px", fontWeight: 700, color: "var(--text)", lineHeight: 1.45, letterSpacing: "-0.015em", marginBottom: "10px" }}>
+          {ko
+            ? "지금까지 만든 것을 손님이 만나는 채널과 운영 인프라로 연결합니다"
+            : "Connect what you built into operations and customer-facing channels"}
+        </div>
+        {/* 3-step horizontal flow: 이전 / 현재 / 다음 */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto 1fr", alignItems: "stretch", gap: "8px", marginTop: "12px" }}>
+          {/* 이전 */}
+          <div style={{ background: "white", borderRadius: "12px", padding: "11px 12px", border: "0.5px solid rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px" }}>
+              <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(25,25,112,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Check size={9} strokeWidth={3} color={MIDNIGHT} />
+              </div>
+              <span style={{ fontSize: "10.5px", fontWeight: 700, color: "rgba(0,0,0,0.5)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+                {ko ? "끝낸 것" : "Done"}
+              </span>
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              {previous.map((p) => (
+                <li key={p} style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.62)", lineHeight: 1.45, marginBottom: "2px" }}>
+                  · {p}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <ArrowRight size={16} strokeWidth={2.2} style={{ color: MIDNIGHT, alignSelf: "center", flexShrink: 0 }} />
+          {/* 현재 */}
+          <div style={{
+            background: MIDNIGHT,
+            borderRadius: "12px", padding: "11px 12px",
+            color: "white",
+            boxShadow: "0 4px 14px rgba(25,25,112,0.22)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px" }}>
+              <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "white" }} />
+              </div>
+              <span style={{ fontSize: "10.5px", fontWeight: 700, opacity: 0.85, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+                {ko ? "지금 단계" : "Now"}
+              </span>
+            </div>
+            <div style={{ fontSize: "13px", fontWeight: 700, lineHeight: 1.4, letterSpacing: "-0.01em", marginBottom: "3px" }}>
+              {ko ? "운영·마케팅 준비" : "Operations & Marketing"}
+            </div>
+            <div style={{ fontSize: "11px", opacity: 0.85, lineHeight: 1.45 }}>
+              {ko
+                ? "운영 인프라 4 + 마케팅·브랜드 2"
+                : "4 ops + 2 marketing"}
+            </div>
+          </div>
+          <ArrowRight size={16} strokeWidth={2.2} style={{ color: "rgba(0,0,0,0.3)", alignSelf: "center", flexShrink: 0 }} />
+          {/* 다음 */}
+          <div style={{ background: "white", borderRadius: "12px", padding: "11px 12px", border: "0.5px dashed rgba(25,25,112,0.25)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px" }}>
+              <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(25,25,112,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Star size={9} strokeWidth={2.5} color={MIDNIGHT} />
+              </div>
+              <span style={{ fontSize: "10.5px", fontWeight: 700, color: "rgba(0,0,0,0.5)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+                {ko ? "다음" : "Next"}
+              </span>
+            </div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)", lineHeight: 1.4, letterSpacing: "-0.01em", marginBottom: "3px" }}>
+              {ko ? "소프트 오픈" : "Soft Open"}
+            </div>
+            <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.55)", lineHeight: 1.45 }}>
+              {ko
+                ? "지인 초대 → 운영 시뮬 → 본 오픈"
+                : "Invite friends → dry-run → launch"}
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", marginTop: "12px", lineHeight: 1.55, padding: "8px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.6)" }}>
+          {ko
+            ? "💡 이 단계가 끝나면 손님이 매장을 찾을 수 있고, 들어왔을 때 모든 것이 작동합니다. 그 다음은 소프트 오픈으로 운영을 검증하는 단계입니다."
+            : "💡 After this stage: customers can find you, and everything works when they arrive. Next: soft open to validate operations."}
+        </div>
+      </div>
+    );
+  };
+
+  // ─── 단계 흐름도 (전체 6 step의 시간선·의존성 — 트랙별 필터링) ───
+  const StageFlowOverview = () => {
+    const allFlow: { step: number; label: string; window: string; depends?: string }[] = ko ? [
+      { step: 0, label: "배달앱 입점", window: "D-7 신청 → D-3 메뉴 등록", depends: "통신판매업·영업신고증 필요" },
+      { step: 3, label: "VAN (카드)", window: "사업자등록 직후 → D-3 활성화", depends: "POS 결정 후" },
+      { step: 1, label: "POS 세팅", window: "D-14 견적 → D-1 실결제", depends: "VAN 결정과 동기화" },
+      { step: 5, label: "브랜드 자산", window: "D-21 발주 → D-3 설치", depends: "최장 리드타임 — 가장 먼저" },
+      { step: 4, label: "음악 저작권", window: "사업자등록 직후", depends: "50㎡ 이상 의무" },
+      { step: 2, label: "SNS·플레이스", window: "D-10 등록 → D+3 상호작용 폭발", depends: "사진·콘텐츠 사전 준비" },
+    ] : [
+      { step: 0, label: "Delivery apps", window: "D-7 apply → D-3 menu" },
+      { step: 3, label: "VAN (cards)", window: "Right after biz reg → D-3" },
+      { step: 1, label: "POS setup", window: "D-14 quote → D-1 test" },
+      { step: 5, label: "Brand assets", window: "D-21 order → D-3 install" },
+      { step: 4, label: "Music license", window: "Right after biz reg" },
+      { step: 2, label: "SNS & Place", window: "D-10 register → D+3 push" },
+    ];
+    // 트랙별 필터링 — 한 화면에 6개 다 보이지 않도록.
+    const flow = allFlow.filter((f) => currentTrackStepIds.includes(f.step));
+    return (
+      <div style={{ marginBottom: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+          <div style={{ width: "26px", height: "26px", borderRadius: "8px", background: "rgba(25,25,112,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Calendar size={14} strokeWidth={2.2} color={MIDNIGHT} />
+          </div>
+          <span style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "-0.1px" }}>
+            {activeTrack === "operations"
+              ? (ko ? "운영 인프라 흐름 — 영업 가능 상태 만들기" : "Operations flow — get ready to sell")
+              : (ko ? "마케팅 흐름 — 손님이 찾아오게 만들기" : "Marketing flow — get found")}
+          </span>
+        </div>
+        <div style={{ background: "white", borderRadius: "16px", padding: "14px 6px", boxShadow: "0 2px 16px rgba(0,0,0,0.05), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
+          {flow.map((f) => {
+            const active = f.step === opsStep;
+            return (
+              <button
+                key={f.step}
+                type="button"
+                onClick={() => setOpsStep(f.step)}
+                style={{
+                  display: "flex", alignItems: "flex-start", gap: "12px",
+                  width: "100%", padding: "10px 14px", borderRadius: "10px",
+                  background: active ? "rgba(25,25,112,0.06)" : "transparent",
+                  border: "none", cursor: "pointer",
+                  textAlign: "left" as const,
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.025)"; }}
+                onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              >
+                <div style={{
+                  width: 24, height: 24, borderRadius: "50%",
+                  background: active ? MIDNIGHT : "rgba(25,25,112,0.10)",
+                  color: active ? "white" : MIDNIGHT,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, fontSize: "11px", fontWeight: 800,
+                  marginTop: "2px",
+                }}>
+                  {f.step + 1}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "13.5px", fontWeight: 700, color: active ? MIDNIGHT : "var(--text)", letterSpacing: "-0.01em" }}>
+                    {f.label}
+                  </div>
+                  <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.55)", marginTop: "2px", fontVariantNumeric: "tabular-nums" }}>
+                    {f.window}
+                  </div>
+                  {f.depends && (
+                    <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.4)", marginTop: "2px", fontStyle: "italic" }}>
+                      {f.depends}
+                    </div>
+                  )}
+                </div>
+                <ChevronRight size={14} strokeWidth={2} style={{ color: active ? MIDNIGHT : "rgba(0,0,0,0.3)", marginTop: "5px", flexShrink: 0 }} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // ─── 트랩 카드 ───
   const TrapsCard = () => (
@@ -565,188 +1190,394 @@ export function OperationsSetupStage() {
     { day: "D+7", Icon: TrendingUp, title: "Week 1 checkpoint", detail: "5+ reviews / 3+ Instagram posts / 30+ Kakao Channel friends — push acquaintances if behind." },
   ];
 
-  return (
-    <div style={{ marginBottom: "20px" }}>
-      {/* 네비게이션 — 6단계 도트 */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
-        <button
-          type="button"
-          style={{ fontSize: "14px", fontWeight: 580, color: opsStep === 0 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: opsStep === 0 ? "default" : "pointer", padding: "8px 4px", pointerEvents: opsStep === 0 ? "none" : "auto" }}
-          onClick={() => setOpsStep(s => s - 1)}
-        >← {ko ? "이전" : "Back"}</button>
-        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-          {[0, 1, 2, 3, 4, 5].map(i => (
-            <div key={i} onClick={() => setOpsStep(i)} style={{ width: i === opsStep ? "20px" : "6px", height: "6px", borderRadius: "100px", background: i === opsStep ? MIDNIGHT : "rgba(17,17,17,0.15)", cursor: "pointer", transition: "width 0.2s ease" }} />
-          ))}
-        </div>
-        <button
-          type="button"
-          style={{ fontSize: "14px", fontWeight: 580, color: opsStep === 5 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: opsStep === 5 ? "default" : "pointer", padding: "8px 4px", pointerEvents: opsStep === 5 ? "none" : "auto" }}
-          onClick={() => setOpsStep(s => s + 1)}
-        >{ko ? "다음" : "Next"} →</button>
-      </div>
+  // ─── Step Bridge: 이 step 이 어디서 데이터 받고 어디로 흐르는지 (서비스 흐름 가시화) ───
+  type StepBridge = { from: string; to: string };
+  const stepBridges: Record<number, StepBridge> = ko ? {
+    0: { from: "사업자등록증 · 통신판매업 신고증 · 메뉴 사진", to: "오픈 첫날부터 배민·쿠팡이츠 주문 수신 가능" },
+    1: { from: "사업자등록증 · 통장 · 메뉴 가격(공급처 단가 반영)", to: "결제·정산·세금계산서 자동 흐름의 중심" },
+    2: { from: "매장 사진 · 브랜드 톤(인테리어 단계)", to: "검색·SNS에서 손님이 매장을 찾는 첫 접점" },
+    3: { from: "사업자등록증 · 통장 · POS 결정", to: "카드·간편결제 모두 연결된 결제 단말" },
+    4: { from: "매장 면적(인테리어 단계 확정)", to: "법적 리스크 없이 매장 음악 재생" },
+    5: { from: "매장 컨셉 · 색상 톤(인테리어 단계)", to: "오픈 D-3 간판·메뉴판·로고 톤 통일 완료" },
+  } : {
+    0: { from: "Biz reg · e-commerce filing · menu photos", to: "Receive orders from day 1" },
+    1: { from: "Biz reg · bank · menu prices", to: "Central payment/settlement hub" },
+    2: { from: "Store photos · brand tone", to: "First touchpoint for customers" },
+    3: { from: "Biz reg · bank · POS choice", to: "All-in-one card terminal" },
+    4: { from: "Floor area (from interior stage)", to: "Play store music legally" },
+    5: { from: "Interior concept & tone", to: "Unified brand assets installed by D-3" },
+  };
+  const currentBridge = stepBridges[opsStep];
 
-      {/* 진행도 표시 — 6 step 명확히 보이도록 */}
-      <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.4)", marginBottom: "10px", letterSpacing: "0.04em", fontWeight: 600 }}>
-        {ko ? `${opsStep + 1} / ${steps.length} 단계` : `Step ${opsStep + 1} / ${steps.length}`}
-      </div>
+  // 트랙 안에서의 step 인덱스 (네비 도트 + 진행도 표시용)
+  const idxInTrack = currentTrackStepIds.indexOf(opsStep);
+  const goPrev = () => { if (idxInTrack > 0) setOpsStep(currentTrackStepIds[idxInTrack - 1]); };
+  const goNext = () => { if (idxInTrack < currentTrackStepIds.length - 1) setOpsStep(currentTrackStepIds[idxInTrack + 1]); };
+  const switchTrack = (track: "operations" | "marketing") => {
+    if (track === activeTrack) return;
+    setActiveTrack(track);
+    const firstStep = (track === "operations" ? operationsStepIds : marketingStepIds)[0];
+    setOpsStep(firstStep);
+  };
 
-      {/* 헤더 */}
-      <div style={{ marginBottom: "18px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-          <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: isTaskDone(currentOpsStep.taskId) ? "rgba(25,25,112,0.14)" : "rgba(25,25,112,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            {isTaskDone(currentOpsStep.taskId)
-              ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4.5" stroke={MIDNIGHT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              : <span style={{ fontSize: "11px", fontWeight: 800, color: MIDNIGHT, letterSpacing: "-0.5px" }}>0{opsStep + 1}</span>
-            }
-          </div>
-          <h3 style={{ margin: 0, fontSize: "20px", fontWeight: 700, letterSpacing: "-0.5px", color: "var(--text)" }}>{currentOpsStep.title}</h3>
-        </div>
-        <p style={{ margin: 0, fontSize: "13.5px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55, paddingLeft: "40px" }}>{currentOpsStep.subtitle}</p>
-      </div>
+  // ─── Step 한 줄 가이드 (accordion 카드 헤더에 표시) ───
+  const stepOneLineGuide: Record<number, string> = ko ? {
+    0: "어디 입점할지 1~3곳 선택 → 동시 신청 (심사 2~5일)",
+    1: "POS 1곳 선택 → 메뉴 등록 → 카드 1건 실결제로 흐름 검증",
+    2: "필수 채널 등록 후 첫 주 '실질 상호작용' 폭발이 핵심",
+    3: "VAN 1곳에 신청 (통합 POS 사용 시 스킵 가능)",
+    4: "면적 50㎡ 이상이면 의무 — 직접 신고 vs 매장음악서비스",
+    5: "한 디자이너에게 일괄 의뢰 — 톤 통일 + 벡터 원본 필수",
+  } : {
+    0: "Pick 1-3 platforms → apply simultaneously",
+    1: "Pick 1 POS → register menu → 1 real-card test",
+    2: "List in must-have channels, then drive week-1 interactions",
+    3: "Apply to 1 VAN (skip if integrated POS)",
+    4: "Required if ≥50㎡ — direct file vs music service",
+    5: "One designer, all assets, vector source required",
+  };
 
-      {/* ── KEY ACTION 히어로 카드 (모든 step 공통) ── */}
-      <KeyActionCard />
+  // ─── 트랙별 step 진행 카운트 (accordion 헤더 배지) ───
+  const stepProgress = (sid: number): { done: number; total: number } | null => {
+    if (sid === 0) {
+      const total = deliveryPlatforms.length;
+      const done = deliveryPlatforms.filter(p => opsSelections[`delivery-${p.id}`]).length;
+      return { done, total };
+    }
+    if (sid === 1) {
+      const done = posSystems.filter(p => opsSelections[`pos-system-${p.id}`]).length;
+      return { done: done > 0 ? 1 : 0, total: 1 };
+    }
+    if (sid === 2) {
+      const total = snsChannels.length;
+      const done = snsChannels.filter(p => opsSelections[`sns-${p.id}`]).length;
+      return { done, total };
+    }
+    if (sid === 3) {
+      const done = vanProviders.filter(p => opsSelections[`van-${p.id}`]).length;
+      return { done: done > 0 ? 1 : 0, total: 1 };
+    }
+    if (sid === 4) {
+      const done = musicLicenseOptions.filter(p => opsSelections[`music-${p.id}`]).length;
+      return { done: done > 0 ? 1 : 0, total: 1 };
+    }
+    if (sid === 5) {
+      const done = designPlatforms.filter(p => opsSelections[`design-${p.id}`]).length;
+      return { done: done > 0 ? 1 : 0, total: 1 };
+    }
+    return null;
+  };
 
-      {/* 컨텐츠 */}
-      {opsStep === 0 && (
-        <>
-          <div style={sectionLabel}>{ko ? "배달앱 플랫폼 — 클릭하면 입점 신청 페이지로 이동" : "Delivery platforms — tap to apply"}</div>
-          {renderDetail(deliveryPlatforms, "delivery")}
-          <div style={{ marginTop: "16px" }}>
-            <TrapsCard />
-          </div>
-        </>
-      )}
-      {opsStep === 1 && (
-        <>
-          {renderPos()}
-          <div style={{ marginTop: "16px" }}>
-            <TrapsCard />
-          </div>
-        </>
-      )}
-      {opsStep === 3 && (
-        <>
-          <div style={sectionLabel}>{ko ? "VAN 사 — 클릭하면 가맹점 등록 페이지로 이동" : "VAN providers — tap to register"}</div>
-          {renderDetail(vanProviders, "van")}
-          <div style={{ marginTop: "14px", fontSize: "12.5px", color: MIDNIGHT, opacity: 0.85, lineHeight: 1.55, padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.06)" }}>
-            {ko
-              ? "💡 단말기 임대(월 1~3만원) vs 구매(20~50만원) — 1년 이상 운영 예정이면 구매가 유리합니다. VAN 수수료(건당 100~150원)와 카드 수수료(2.5~3%)는 별개로 계산하세요."
-              : "💡 Lease (10-30K KRW/mo) vs buy (200-500K) — buy if running 1y+. VAN fee (~100-150 KRW/tx) is separate from card fee (2.5-3%)."}
-          </div>
-          <div style={{ marginTop: "16px" }}>
-            <TrapsCard />
-          </div>
-        </>
-      )}
-      {opsStep === 4 && (
-        <>
-          <div style={sectionLabel}>{ko ? "음악 저작권 옵션 — 매장 규모·편의성 비교" : "Music license options"}</div>
-          {renderDetail(musicLicenseOptions, "music")}
-          <div style={{ marginTop: "14px", fontSize: "12.5px", color: MIDNIGHT, opacity: 0.85, lineHeight: 1.55, padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.06)" }}>
-            {ko
-              ? "💡 50㎡(15평) 미만 매장은 면제. 신청·납부는 사업자등록 직후 처리하면 추후 누락 리스크 0. 직접 신고가 어려우면 매장음악서비스(샵캐스트·멜론비즈)로 시작하세요."
-              : "💡 Stores under 50㎡ are exempt. File right after business registration to avoid gaps. Use a music service (ShopCast/Melon Biz) if direct filing feels complex."}
-          </div>
-          <div style={{ marginTop: "16px" }}>
-            <TrapsCard />
-          </div>
-        </>
-      )}
-      {opsStep === 5 && (
-        <>
-          <div style={sectionLabel}>{ko ? "필수 브랜드 자산 (4종)" : "Required brand assets (4)"}</div>
-          <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
-            {([
-              { label: ko ? "외부 간판" : "External signage", detail: ko ? "조명 LED 채널 사인 또는 평판 사인 · 약 80~300만원" : "LED channel sign or flat sign · 800K-3M KRW" },
-              { label: ko ? "메뉴판" : "Menu board",          detail: ko ? "인쇄 5~30만원 · 디지털 메뉴 보드 80~150만원" : "Print 50-300K · Digital board 800K-1.5M KRW" },
-              { label: ko ? "로고 (간판·메뉴판·포장재 통일)" : "Logo (unify across signage/menu/packaging)", detail: ko ? "5천원~80만원 (크몽), 50~200만원 (라우드소싱)" : "5K-800K (Kmong) / 500K-2M (Loud)" },
-              { label: ko ? "명함·스티커·영수증 푸터" : "Business cards, stickers, receipt footer", detail: ko ? "디자인 + 인쇄 합 5~15만원" : "Design + print 50-150K KRW" },
-            ] as const).map((asset, i) => (
-              <div key={asset.label}>
-                {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginLeft: "60px" }} />}
-                <div style={{ display: "flex", gap: "14px", alignItems: "flex-start", padding: "14px 18px" }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(25,25,112,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "13px", fontWeight: 800, color: MIDNIGHT }}>
-                    {i + 1}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", marginBottom: "3px" }}>{asset.label}</div>
-                    <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55 }}>{asset.detail}</div>
-                  </div>
+  // ─── 펼친 step 의 컨텐츠 렌더링 ───
+  const renderStepBody = (sid: number) => {
+    const traps_ = traps[sid] ?? [];
+    const body = (() => {
+      if (sid === 0) return <>{renderDetail(deliveryPlatforms, "delivery")}</>;
+      if (sid === 1) return renderPos();
+      if (sid === 2) return <>{renderDetail(snsChannels, "sns")}</>;
+      if (sid === 3) return <>{renderDetail(vanProviders, "van")}</>;
+      if (sid === 4) return <>{renderDetail(musicLicenseOptions, "music")}</>;
+      if (sid === 5) return <>{renderDetail(designPlatforms, "design")}</>;
+      return null;
+    })();
+    return (
+      <div style={{ padding: "0 14px 14px" }}>
+        {body}
+        {traps_.length > 0 && (
+          <div style={{ marginTop: "12px", display: "grid", gap: "6px" }}>
+            {traps_.map((trap) => (
+              <div key={trap.label} style={{
+                display: "flex", gap: "9px", alignItems: "flex-start",
+                padding: "10px 12px", borderRadius: "10px",
+                background: "rgba(220,60,30,0.05)", border: "0.5px solid rgba(200,60,30,0.14)",
+              }}>
+                <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#b83020", flexShrink: 0, marginTop: "1px" }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b83020", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
+                  <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(184,48,32,0.8)" }}>{trap.text}</div>
                 </div>
               </div>
             ))}
           </div>
+        )}
+      </div>
+    );
+  };
 
-          <div style={sectionLabel}>{ko ? "디자인 의뢰 플랫폼" : "Design platforms"}</div>
-          {renderDetail(designPlatforms, "design")}
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      {/* ── 트랙 토글 (운영 인프라 / 마케팅·브랜드) — 밀도 분리의 핵심 ── */}
+      <div
+        role="tablist"
+        style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px",
+          padding: "5px",
+          background: "rgba(25,25,112,0.06)", borderRadius: "14px",
+          marginBottom: "18px",
+        }}
+      >
+        {([
+          { id: "operations" as const, Icon: Cog,       label: ko ? "운영 인프라" : "Operations",  hint: ko ? "POS · 카드 · 배달 · 음악" : "POS · Cards · Delivery · Music", count: operationsStepIds.length },
+          { id: "marketing" as const,  Icon: Megaphone, label: ko ? "마케팅·브랜드" : "Marketing",  hint: ko ? "SNS · 플레이스 · 간판" : "SNS · Place · Signage", count: marketingStepIds.length },
+        ]).map(({ id, Icon, label, hint, count }) => {
+          const active = activeTrack === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => switchTrack(id)}
+              style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                padding: "10px 12px", borderRadius: "10px",
+                background: active ? "white" : "transparent",
+                border: "none",
+                boxShadow: active ? "0 2px 8px rgba(25,25,112,0.10)" : "none",
+                cursor: "pointer",
+                textAlign: "left" as const,
+                transition: "all 0.18s",
+              }}
+            >
+              <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: active ? MIDNIGHT : "rgba(25,25,112,0.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon size={15} strokeWidth={2.2} color={active ? "white" : MIDNIGHT} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: active ? MIDNIGHT : "rgba(0,0,0,0.65)", letterSpacing: "-0.01em", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {label}
+                  <span style={{ fontSize: "10.5px", fontWeight: 700, color: active ? "white" : MIDNIGHT, background: active ? MIDNIGHT : "rgba(25,25,112,0.10)", padding: "1px 7px", borderRadius: "999px" }}>
+                    {count}
+                  </span>
+                </div>
+                <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.5)", marginTop: "1px", lineHeight: 1.35, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {hint}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-          <div style={{ marginTop: "16px" }}>
-            <TrapsCard />
+      {/* ── 트랙 라벨 + 진행 ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", paddingLeft: "2px" }}>
+        <span style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.45)", letterSpacing: "0.04em", fontWeight: 600 }}>
+          {activeTrack === "operations"
+            ? (ko ? "운영 인프라 — 영업 가능 상태" : "Operations — get ready to sell")
+            : (ko ? "마케팅·브랜드 — 손님이 찾아오게" : "Marketing — get found")}
+        </span>
+        <span style={{ fontSize: "11px", marginLeft: "auto", color: MIDNIGHT, fontWeight: 700, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: "999px" }}>
+          {idxInTrack + 1} / {currentTrackStepIds.length}
+        </span>
+      </div>
+
+      {/* ── 페이지네이션 (이전 ◁ · 도트 · 다음 ▷) ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+        <button
+          type="button"
+          aria-label={ko ? "이전" : "Previous"}
+          onClick={goPrev}
+          disabled={idxInTrack <= 0}
+          style={{
+            width: "32px", height: "32px", borderRadius: "10px",
+            background: idxInTrack <= 0 ? "transparent" : "rgba(25,25,112,0.06)",
+            border: "0.5px solid rgba(25,25,112,0.10)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: idxInTrack <= 0 ? "default" : "pointer",
+            opacity: idxInTrack <= 0 ? 0.3 : 1,
+            color: MIDNIGHT,
+          }}
+        >
+          <ChevronLeft size={16} strokeWidth={2.2} />
+        </button>
+        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+          {currentTrackStepIds.map((sid, ti) => {
+            const active = sid === opsStep;
+            const sdone = isTaskDone(steps[sid].taskId);
+            return (
+              <button
+                key={sid}
+                type="button"
+                onClick={() => setOpsStep(sid)}
+                aria-label={`Step ${ti + 1}: ${steps[sid].title}`}
+                style={{
+                  width: active ? "24px" : "8px", height: "8px", borderRadius: "100px",
+                  background: active ? MIDNIGHT : sdone ? "rgba(25,25,112,0.45)" : "rgba(17,17,17,0.15)",
+                  cursor: "pointer", border: "none", padding: 0,
+                  transition: "width 0.2s ease",
+                }}
+              />
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          aria-label={ko ? "다음" : "Next"}
+          onClick={goNext}
+          disabled={idxInTrack >= currentTrackStepIds.length - 1}
+          style={{
+            width: "32px", height: "32px", borderRadius: "10px",
+            background: idxInTrack >= currentTrackStepIds.length - 1 ? "transparent" : "rgba(25,25,112,0.06)",
+            border: "0.5px solid rgba(25,25,112,0.10)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: idxInTrack >= currentTrackStepIds.length - 1 ? "default" : "pointer",
+            opacity: idxInTrack >= currentTrackStepIds.length - 1 ? 0.3 : 1,
+            color: MIDNIGHT,
+          }}
+        >
+          <ChevronRight size={16} strokeWidth={2.2} />
+        </button>
+      </div>
+
+      {/* ── 현재 step 헤더 (단일 페이지) ── */}
+      <div style={{ marginBottom: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+          <div style={{
+            width: "30px", height: "30px", borderRadius: "9px",
+            background: isTaskDone(currentOpsStep.taskId) ? MIDNIGHT : "rgba(25,25,112,0.08)",
+            color: isTaskDone(currentOpsStep.taskId) ? "white" : MIDNIGHT,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            fontSize: "12px", fontWeight: 800, letterSpacing: "-0.3px",
+          }}>
+            {isTaskDone(currentOpsStep.taskId) ? <Check size={14} strokeWidth={3} /> : `0${idxInTrack + 1}`}
           </div>
-        </>
-      )}
-      {opsStep === 2 && (
-        <>
-          <div style={sectionLabel}>{ko ? "필수 채널 — 우선순위 순" : "Channels — by priority"}</div>
-          {renderDetail(snsChannels, "sns")}
+          <h3 style={{ margin: 0, fontSize: "19px", fontWeight: 700, letterSpacing: "-0.4px", color: "var(--text)" }}>{currentOpsStep.title}</h3>
+          {(() => {
+            const prog = stepProgress(opsStep);
+            if (!prog || prog.done === 0) return null;
+            return (
+              <span style={{ marginLeft: "auto", fontSize: "10.5px", fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: "999px", fontVariantNumeric: "tabular-nums" }}>
+                {prog.total === 1 ? "✓ 선택됨" : `${prog.done}곳`}
+              </span>
+            );
+          })()}
+        </div>
+        {stepOneLineGuide[opsStep] && (
+          <p style={{ margin: 0, fontSize: "13px", color: "rgba(0,0,0,0.6)", lineHeight: 1.55, paddingLeft: "40px" }}>
+            {stepOneLineGuide[opsStep]}
+          </p>
+        )}
+      </div>
 
-          {/* ── 런칭 첫 주 마케팅 캠페인 (NEW) ── */}
-          <div style={{ marginTop: "20px" }}>
-            <div style={sectionLabel}>{ko ? "런칭 첫 주 마케팅 캠페인" : "Week-1 Launch Campaign"}</div>
-            <div style={{
-              fontSize: "12.5px", color: MIDNIGHT, opacity: 0.85, lineHeight: 1.55,
-              padding: "10px 14px", borderRadius: "12px",
-              background: "rgba(25,25,112,0.06)",
-              marginBottom: "10px",
+      {/* ── 핵심 한 줄 (KEY ACTION) ── */}
+      {currentKeyAction && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "9px", padding: "11px 13px", borderRadius: "12px", background: "rgba(25,25,112,0.05)", border: "0.5px solid rgba(25,25,112,0.12)", marginBottom: "14px" }}>
+          <Sparkles size={14} strokeWidth={2.2} style={{ color: MIDNIGHT, marginTop: "1px", flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "12.5px", fontWeight: 700, color: MIDNIGHT, lineHeight: 1.45, letterSpacing: "-0.005em", marginBottom: "2px" }}>
+              {currentKeyAction.title}
+            </div>
+            <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.65)", lineHeight: 1.5 }}>
+              {currentKeyAction.detail}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 선택 카드 (현재 step 만) ── */}
+      <div style={{ marginBottom: "14px" }}>
+        {(() => {
+          if (opsStep === 0) return renderDetail(deliveryPlatforms, "delivery");
+          if (opsStep === 1) return renderPos();
+          if (opsStep === 2) return renderDetail(snsChannels, "sns");
+          if (opsStep === 3) return renderDetail(vanProviders, "van");
+          if (opsStep === 4) return renderDetail(musicLicenseOptions, "music");
+          if (opsStep === 5) return renderDetail(designPlatforms, "design");
+          return null;
+        })()}
+      </div>
+
+      {/* ── 트랩 (작게, 마지막에) ── */}
+      {currentTraps.length > 0 && (
+        <div style={{ display: "grid", gap: "6px", marginBottom: "16px" }}>
+          {currentTraps.map((trap) => (
+            <div key={trap.label} style={{
+              display: "flex", gap: "9px", alignItems: "flex-start",
+              padding: "10px 12px", borderRadius: "10px",
+              background: "rgba(220,60,30,0.05)", border: "0.5px solid rgba(200,60,30,0.14)",
             }}>
-              {ko
-                ? "💡 네이버 플레이스는 단순 등록만으로는 노출이 안 됩니다. 첫 주에 '실질 상호작용'(전화·길찾기·저장·리뷰)을 폭발시켜야 상위 노출 기준선을 넘습니다."
-                : "💡 Just registering Naver Place isn't enough — week-1 'real interactions' (calls, directions, saves, reviews) drive your initial ranking."}
+              <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#b83020", flexShrink: 0, marginTop: "1px" }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b83020", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
+                <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(184,48,32,0.8)" }}>{trap.text}</div>
+              </div>
             </div>
-            <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
-              {launchCampaign.map((step, idx) => {
-                const Icon = step.Icon;
-                return (
-                  <div key={step.day}>
-                    {idx > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginLeft: "60px" }} />}
-                    <div style={{ display: "flex", gap: "14px", alignItems: "flex-start", padding: "14px 18px" }}>
-                      <div style={{
-                        width: 40, height: 40, borderRadius: 11,
-                        background: MIDNIGHT,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0, color: "#fff",
-                        boxShadow: "0 2px 6px rgba(25,25,112,0.22)",
-                      }}>
-                        <Icon size={18} strokeWidth={2} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "4px", flexWrap: "wrap" as const }}>
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: "999px", letterSpacing: "0.02em" }}>
-                            {step.day}
-                          </span>
-                          <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em" }}>
-                            {step.title}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.6)", lineHeight: 1.55 }}>
-                          {step.detail}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ marginTop: "16px" }}>
-            <TrapsCard />
-          </div>
-        </>
+          ))}
+        </div>
       )}
 
+      {/* ── 하단 페이지네이션 (이전 / 다음 step CTA) ── */}
+      <div style={{ display: "grid", gridTemplateColumns: idxInTrack > 0 ? "1fr 1fr" : "1fr", gap: "8px", marginTop: "8px" }}>
+        {idxInTrack > 0 && (
+          <button
+            type="button"
+            onClick={goPrev}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              padding: "11px 14px", borderRadius: "11px",
+              background: "white", border: "0.5px solid rgba(0,0,0,0.10)",
+              color: "rgba(0,0,0,0.65)", fontSize: "12.5px", fontWeight: 700,
+              cursor: "pointer", letterSpacing: "-0.005em",
+            }}
+          >
+            <ChevronLeft size={13} strokeWidth={2.2} />
+            {ko ? `이전: ${steps[currentTrackStepIds[idxInTrack - 1]].title}` : `Prev: ${steps[currentTrackStepIds[idxInTrack - 1]].title}`}
+          </button>
+        )}
+        {idxInTrack < currentTrackStepIds.length - 1 ? (
+          <button
+            type="button"
+            onClick={goNext}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              padding: "11px 14px", borderRadius: "11px",
+              background: MIDNIGHT, border: "none",
+              color: "white", fontSize: "12.5px", fontWeight: 700,
+              cursor: "pointer", letterSpacing: "-0.005em",
+              boxShadow: "0 2px 10px rgba(25,25,112,0.22)",
+            }}
+          >
+            {ko ? `다음: ${steps[currentTrackStepIds[idxInTrack + 1]].title}` : `Next: ${steps[currentTrackStepIds[idxInTrack + 1]].title}`}
+            <ChevronRight size={13} strokeWidth={2.2} />
+          </button>
+        ) : (
+          activeTrack === "operations" ? (
+            <button
+              type="button"
+              onClick={() => switchTrack("marketing")}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                padding: "11px 14px", borderRadius: "11px",
+                background: MIDNIGHT, border: "none",
+                color: "white", fontSize: "12.5px", fontWeight: 700,
+                cursor: "pointer", letterSpacing: "-0.005em",
+                boxShadow: "0 2px 10px rgba(25,25,112,0.22)",
+              }}
+            >
+              {ko ? "마케팅·브랜드 트랙으로 →" : "Go to Marketing →"}
+            </button>
+          ) : null
+        )}
+      </div>
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="프리오픈·본 오픈 준비"
+        doneItemsKo={[
+          { label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스/배민·쿠팡이츠 연동 + 키오스크·테이블 오더 셋업" },
+          { label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·재고·민원 대응 SOP" },
+          { label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰" },
+          { label: "4. 손익 모니터링 셋업", detail: "일별 매출·재료비·인건비 자동 기록 + 손익분기 추적" },
+        ]}
+        verifyItemsKo={[
+          "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
+          "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
+          "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
+          "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
+          "원산지 표시 — 농수산물 원산지 표시법 위반 시 1억원 이하 과징금, 전 메뉴 표시 의무",
+          "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
+        ]}
+        nextSummaryKo="POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입"
+      />
     </div>
   );
 

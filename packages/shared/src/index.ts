@@ -1,6 +1,7 @@
 export * from "./roadmap/workflow";
 export * from "./roadmap/clusters";
 export * from "./roadmap/startup-mode-content";
+export * from "./roadmap/startup-success-cases";
 export * from "./funding/programs";
 export * from "./market/scoring";
 export * from "./finance/simulation";

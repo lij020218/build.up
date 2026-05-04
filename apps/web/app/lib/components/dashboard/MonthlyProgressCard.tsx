@@ -28,7 +28,7 @@ export function MonthlyProgressCard() {
     return (
       <div style={card}>
         <div style={headerRow}>
-                    <TrendingUp size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
+                    <TrendingUp size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
         </div>
         <div style={emptyState}>
           {ko
@@ -54,7 +54,7 @@ export function MonthlyProgressCard() {
     <div style={card}>
       {/* Header */}
       <div style={headerRow}>
-                <TrendingUp size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
+                <TrendingUp size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
         <div style={{
           marginLeft: "auto",
           fontSize: "11px",
@@ -134,11 +134,9 @@ export function MonthlyProgressCard() {
 const card: React.CSSProperties = {
   borderRadius: "20px",
   padding: "22px",
-  background: "rgba(255,255,255,0.82)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(0,0,0,0.05)",
-  boxShadow: "0 4px 24px rgba(15,23,42,0.03), 0 1px 2px rgba(15,23,42,0.02)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   fontFamily: "inherit",
   display: "flex",
   flexDirection: "column",
@@ -173,7 +171,7 @@ const figuresLeft: React.CSSProperties = {
 const currentAmount: React.CSSProperties = {
   fontSize: "26px",
   fontWeight: 700,
-  color: "#1d3557",
+  color: "#191970",
   letterSpacing: "-0.03em",
   fontVariantNumeric: "tabular-nums",
   lineHeight: 1.1,
@@ -204,7 +202,7 @@ const barTrack: React.CSSProperties = {
   position: "relative",
   height: "8px",
   borderRadius: "4px",
-  background: "rgba(15,23,42,0.06)",
+  background: "rgba(25,25,112,0.05)",
   overflow: "visible",
 };
 
@@ -251,7 +249,7 @@ const barLabelText: React.CSSProperties = {
 
 const separator: React.CSSProperties = {
   height: "1px",
-  background: "rgba(15,23,42,0.06)",
+  background: "rgba(25,25,112,0.05)",
 };
 
 const insightsGrid: React.CSSProperties = {

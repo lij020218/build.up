@@ -21,6 +21,15 @@ export { diagnoseBusinessHealth } from "./health/diagnose";
 export type { HealthDiagnosisContext, HealthDiagnosisResult } from "./health/prompt";
 export { generateRoadmap } from "./roadmap/generate";
 export type { RoadmapGenerationInput, RoadmapGenerationResult } from "./roadmap/prompt";
+export { selectFromPool } from "./roadmap/select-from-pool";
+export type {
+  SelectFromPoolInput,
+  SelectFromPoolResult,
+  PoolVendor,
+  PoolMaterial,
+  PoolConcept,
+  PoolChannel,
+} from "./roadmap/select-from-pool";
 export { generateInterviewScript } from "./interview/generate";
 export type { InterviewInput, InterviewScript, InterviewQuestion } from "./interview/generate";
 export { analyzeInterviews } from "./interview/analyze";

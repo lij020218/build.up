@@ -1,5 +1,6 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function StoreSetupStage() {
   const d = useDashboardCtx();
@@ -182,6 +183,26 @@ export function StoreSetupStage() {
           {ko ? "2개 이상 플랫폼 동시 운영 시 재고·주문 통합 관리 솔루션을 사용하세요. 샵링커(shoplinker.co.kr), 올라(allra.co.kr), 셀러허브(sellerhub.co.kr) 등이 주문 수집 + 재고 연동 + 송장 일괄 처리를 지원합니다. 월 3~5만원으로 실수를 줄이고 시간을 절약할 수 있습니다." : "For 2+ platforms, use an order management solution like Shoplinker, Allra, or SellerHub. They sync inventory, collect orders, and batch process invoices. ₩30-50K/month saves time and reduces errors."}
         </div>
       </div>
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="온라인 마케팅"
+        doneItemsKo={[
+          { label: "1. 상품 페이지 작성", detail: "메인 이미지 + 상세 페이지 + 옵션·재고·가격 설정 — 검색 키워드 최적화" },
+          { label: "2. 배송·반품 정책", detail: "기본 배송비 + 무료배송 조건 + 반품·교환 정책 명시" },
+          { label: "3. CS·상담 채널", detail: "카톡 채널·이메일·전화 1개 이상 + 운영 시간·응답 기준 명시" },
+          { label: "4. 통합 관리 솔루션", detail: "샵링커·올라·셀러허브 등 멀티 채널 통합 도입 검토" },
+        ]}
+        verifyItemsKo={[
+          "상품 등록 — 상세페이지 효능·효과 표현 시 「의약품·의료기기 광고」 위반 위험, 표시광고법 사전 점검",
+          "배송비 — 「조건부 무료배송」 표시 시 조건 명문화 필수, 「실비 청구」도 표시광고법 대상",
+          "재고 동기화 — 멀티 플랫폼 운영 시 통합 솔루션 없으면 품절 분쟁 + 패널티 누적 위험",
+          "CS 응답 — 7일 이내 청약철회 의무 + 환불 3영업일 이내 의무, 위반 시 분쟁조정 신청 가능",
+          "리뷰 정책 — 자작·바이럴 리뷰 적발 시 표시광고법 + 플랫폼 영구정지, 진성 리뷰 유도 시스템",
+          "택배사 계약 — CJ대한통운·롯데·한진 직계약 vs 대행 비교, 월 100건 이상 시 직계약 유리",
+        ]}
+        nextSummaryKo="상품·배송·CS·통합관리 셋업 완료 → 온라인 마케팅 단계로 진입"
+      />
     </div>
   );
 }

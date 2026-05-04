@@ -34,6 +34,24 @@ const robotics: ClusterStageContent = {
   traps: [
     { label: "인증 없이 시연·판매 → 영업정지 + 형사처벌", text: "산업안전법·전기용품안전법 위반 시 영업정지·과태료·형사처벌. 시연 영상 SNS 노출만으로도 처벌 사례 있음." },
   ],
+  wrapup: {
+    nextStageLabelKo: "법인 설립·운영",
+    doneItemsKo: [
+      { label: "1. 인증 종류 확정", detail: "산업용: KOSHA + KC 전기 / 서비스용: KC 전기·EMC + 안전" },
+      { label: "2. 무선 통신 모듈", detail: "KC-RRA 추가 인증 (8~16주), 누락 시 통신 기능 사용 불가" },
+      { label: "3. 인증 시험 완료", detail: "한국 시험소·한국 대리인 지정 + 한국어 문서 + 샘플 제출" },
+      { label: "4. 인증 라벨·표시", detail: "KC·CE·FCC 마크 정확 표시, 위조·누락 시 표시광고법 위반" },
+    ],
+    verifyItemsKo: [
+      "산업안전법 — 인증 없이 시연·판매 시 영업정지 + 형사처벌, SNS 노출만으로도 처벌",
+      "전기용품안전법 — 위반 시 영업정지 + 과태료 + 회수 명령, 비용 막대",
+      "PL — 인증 통과해도 결함 발생 시 PL 책임, 보험 가입 + 위험 평가 사전 수행",
+      "유럽 CE·미국 FCC — 동시 진행 시 비용·일정 절감, 한국 출시만 하면 미국·유럽 차단",
+      "사후 관리 — 인증 후에도 정기 검증 의무, 미준수 시 인증 취소 + 영업정지",
+      "지속적 개선 — 펌웨어 업데이트로 인증 변경 위험, 변경 사전 신고 의무",
+    ],
+    nextSummaryKo: "KC·KOSHA·RRA 인증 완료 → 법인 설립·운영 단계로 진입",
+  },
 };
 
 const biotech: ClusterStageContent = {
@@ -76,6 +94,24 @@ const biotech: ClusterStageContent = {
     { name: "Fast-Track 시스템 분석 — Complife Group", href: "https://www.complifegroup.com/2026/02/18/south-korea-medical-devices/" },
     { name: "Digital Medical Products Act — Emergo by UL", href: "https://www.emergobyul.com/news/south-koreas-digital-medical-products-act-now-enforced" },
   ],
+  wrapup: {
+    nextStageLabelKo: "법인 설립·운영",
+    doneItemsKo: [
+      { label: "1. Fast-Track 자격 검토", detail: "199개 카테고리 중 자격 사전 확인 — 진입 시간 80~140일 단축" },
+      { label: "2. Pre-consultation 진행", detail: "MFDS 사전 협의로 우려사항 식별 + 자격 확정" },
+      { label: "3. IND·인허가 dossier", detail: "프로토콜·임상 데이터·CMC·GMP·피험자 보험 모두 통합" },
+      { label: "4. 시판 후 안전 시스템", detail: "PMS(시판 후 안전관리) 시스템 + AE(이상사례) 보고 체계" },
+    ],
+    verifyItemsKo: [
+      "Fast-Track 자격 — 미확인 시 일반 경로 295일, AI 디지털 의료기기는 자격 가능성 높음 미리 확인",
+      "임상 데이터 — Fast-Track은 강화된 임상 평가, 데이터 부족 시 일반 경로 재시작",
+      "GMP 검사 — 인허가와 별도, 사전 GMP 인증 확보 못하면 시판 불가",
+      "피험자 보상 보험 — 임상 시작 전 가입, 미가입 시 사고 보상 무한 책임",
+      "변경 신고 — 시판 후 제조 변경 사전 신고 의무, 미신고 시 인증 취소",
+      "AE 보고 — 중대한 이상사례 24~48시간 내 MFDS 보고 의무, 누락 시 인증 취소",
+    ],
+    nextSummaryKo: "MFDS 인허가 + GMP·PMS·AE 시스템 완비 → 법인 설립·운영 단계로 진입",
+  },
 };
 
 export function RegulatorySubmissionStage() {

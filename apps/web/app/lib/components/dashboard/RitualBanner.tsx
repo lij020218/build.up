@@ -82,9 +82,9 @@ export function RitualBanner({ ko, onOpenWeekly, onOpenMonthly }: Props) {
   const config = ritual === "weekly"
     ? {
         Icon: Calendar,
-        color: "#2563eb",
-        bg: "rgba(37,99,235,0.04)",
-        border: "rgba(37,99,235,0.12)",
+        color: "#191970",
+        bg: "rgba(25,25,112,0.04)",
+        border: "rgba(25,25,112,0.12)",
         titleKo: "이번 주 계획 세우기 (15분)",
         titleEn: "Plan this week (15 min)",
         descKo: "지난주 하이라이트를 돌아보고 이번 주 한 가지 집중 목표를 정해보세요.",

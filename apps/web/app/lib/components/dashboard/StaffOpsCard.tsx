@@ -164,7 +164,7 @@ export function StaffOpsCard({
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ margin: "0 auto 8px", display: "block" }}>
                 <circle cx="12" cy="8" r="4" stroke="rgba(15,23,42,0.5)" strokeWidth="1.5" fill="none" />
                 <path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="rgba(15,23,42,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                <path d="M17 8l2 2 2-2" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M17 8l2 2 2-2" stroke="#191970" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a" }}>{ko ? "네, 회원이에요" : "Yes, member"}</div>
               <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "4px" }}>
@@ -246,8 +246,8 @@ export function StaffOpsCard({
                 {ko ? "아래 초대 코드를 직원에게 전달하세요." : "Share this invite code with your employee."}
               </div>
               <div style={{
-                padding: "20px", borderRadius: "14px", background: "rgba(37,99,235,0.04)",
-                border: "1px solid rgba(37,99,235,0.1)", textAlign: "center" as const, marginBottom: "12px",
+                padding: "20px", borderRadius: "14px", background: "rgba(25,25,112,0.04)",
+                border: "1px solid rgba(25,25,112,0.1)", textAlign: "center" as const, marginBottom: "12px",
               }}>
                 <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
                   {ko ? "초대 코드" : "Invite Code"}
@@ -256,7 +256,7 @@ export function StaffOpsCard({
                   {generatedCode}
                 </div>
                 <button type="button" onClick={() => { void navigator.clipboard.writeText(generatedCode ?? ""); }}
-                  style={{ fontSize: "12px", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", marginTop: "8px" }}>
+                  style={{ fontSize: "12px", fontWeight: 600, color: "#191970", background: "none", border: "none", cursor: "pointer", marginTop: "8px" }}>
                   {ko ? "코드 복사" : "Copy code"}
                 </button>
               </div>
@@ -348,7 +348,7 @@ const opsCard: React.CSSProperties = {
   borderRadius: "14px",
   padding: "22px",
   background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.45) 100%)",
-  border: "1px solid rgba(5, 97, 252, 0.06)",
+  border: "1px solid rgba(25,25,112, 0.06)",
   boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
   display: "grid",
   gap: "14px",
@@ -379,7 +379,7 @@ const opsTitle: React.CSSProperties = {
 const opsPill: React.CSSProperties = {
   borderRadius: "999px",
   padding: "8px 12px",
-  background: "rgba(15, 23, 42, 0.04)",
+  background: "rgba(25,25,112,0.04)",
   boxShadow: "0 1px 0 rgba(255,255,255,0.6) inset",
   fontSize: "12px",
   fontWeight: 700,
@@ -398,16 +398,16 @@ const opsActionPrimary: React.CSSProperties = {
   border: "none",
   borderRadius: "8px",
   padding: "9px 12px",
-  background: "#0561fc",
+  background: "#191970",
   color: "#fff",
   fontSize: "12px",
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 4px 14px rgba(5, 97, 252, 0.25)",
+  boxShadow: "0 4px 14px rgba(25,25,112, 0.25)",
 };
 
 const opsActionSecondary: React.CSSProperties = {
-  border: "1px solid rgba(5, 97, 252, 0.12)",
+  border: "1px solid rgba(25,25,112, 0.12)",
   borderRadius: "8px",
   padding: "9px 12px",
   background: "rgba(255,255,255,0.9)",
@@ -427,7 +427,7 @@ const opsMetricCard: React.CSSProperties = {
   borderRadius: "10px",
   padding: "14px",
   background: "linear-gradient(180deg, rgba(240,244,255,0.55) 0%, rgba(248,250,255,0.35) 100%)",
-  border: "1px solid rgba(5,97,252,0.04)",
+  border: "1px solid rgba(25,25,112,0.04)",
 };
 
 const opsMetricLabel: React.CSSProperties = {
@@ -483,7 +483,7 @@ const listRow: React.CSSProperties = {
   padding: "12px 14px",
   borderRadius: "10px",
   background: "linear-gradient(180deg, rgba(240,244,255,0.5) 0%, rgba(248,250,255,0.3) 100%)",
-  border: "1px solid rgba(5,97,252,0.04)",
+  border: "1px solid rgba(25,25,112,0.04)",
 };
 
 const listTitle: React.CSSProperties = {
@@ -502,7 +502,7 @@ const emptyState: React.CSSProperties = {
   padding: "12px 14px",
   borderRadius: "10px",
   background: "linear-gradient(180deg, rgba(240,244,255,0.4) 0%, rgba(248,250,255,0.25) 100%)",
-  border: "1px solid rgba(5,97,252,0.04)",
+  border: "1px solid rgba(25,25,112,0.04)",
   fontSize: "13px",
   lineHeight: 1.55,
   color: "rgba(15, 23, 42, 0.58)",
@@ -518,7 +518,7 @@ const inlineEditor: React.CSSProperties = {
 const inlineEditorTitle: React.CSSProperties = {
   fontSize: "13px",
   fontWeight: 700,
-  color: "#2563eb",
+  color: "#191970",
   letterSpacing: "0.02em",
 };
 

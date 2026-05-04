@@ -126,8 +126,8 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
                   <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", width: "36px", flexShrink: 0 }}>
                     {new Date(e.date + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short" })}
                   </div>
-                  <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "rgba(15,23,42,0.05)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", borderRadius: "3px", background: e.date === bestDay?.date ? "#2563eb" : "rgba(15,23,42,0.18)", width: `${pct}%`, transition: "width 0.4s ease" }} />
+                  <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "rgba(25,25,112,0.05)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", borderRadius: "3px", background: e.date === bestDay?.date ? "#191970" : "rgba(15,23,42,0.18)", width: `${pct}%`, transition: "width 0.4s ease" }} />
                   </div>
                   <div style={{ fontSize: "12px", fontWeight: 600, fontVariantNumeric: "tabular-nums", width: "64px", textAlign: "right" as const }}>
                     {fmt(e.sales)}
@@ -143,7 +143,7 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
           {/* AI insight */}
           {aiInsight && (
             <div style={insightBox}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "4px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "4px" }}>
                 AI Insight
               </div>
               <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.72)", lineHeight: 1.5 }}>{aiInsight}</div>
@@ -162,7 +162,7 @@ function KPI({ label, value, change, lastTotal, sub, color, ko }: {
     <div style={kpiCard}>
       <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>{label}</div>
       <div style={{ fontSize: "17px", fontWeight: 720, color: color || "#0f172a", letterSpacing: "-0.02em", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{value}</div>
-      {sub && <div style={{ fontSize: "11px", fontWeight: 600, color: "#2563eb", marginTop: "1px" }}>{sub}</div>}
+      {sub && <div style={{ fontSize: "11px", fontWeight: 600, color: "#191970", marginTop: "1px" }}>{sub}</div>}
       {change != null && lastTotal != null && lastTotal > 0 && (
         <div style={{ fontSize: "11px", fontWeight: 600, color: change >= 0 ? "#177245" : "#b42318", marginTop: "2px" }}>
           {change >= 0 ? "↑" : "↓"}{Math.abs(change)}% {ko ? "전주" : "WoW"}
@@ -225,7 +225,7 @@ const kpiGrid: React.CSSProperties = {
 const kpiCard: React.CSSProperties = {
   padding: "12px 14px",
   borderRadius: "14px",
-  background: "rgba(15,23,42,0.025)",
+  background: "rgba(25,25,112,0.025)",
 };
 
 const breakdownSection: React.CSSProperties = {};
@@ -240,6 +240,6 @@ const breakdownRow: React.CSSProperties = {
 const insightBox: React.CSSProperties = {
   padding: "14px 16px",
   borderRadius: "14px",
-  background: "rgba(37,99,235,0.04)",
-  border: "1px solid rgba(37,99,235,0.08)",
+  background: "rgba(25,25,112,0.04)",
+  border: "1px solid rgba(25,25,112,0.08)",
 };

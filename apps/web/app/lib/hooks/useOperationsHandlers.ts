@@ -18,11 +18,12 @@ import type { DashboardDeps } from "../types";
 /** useOperationsHandlers 전용 추가 deps */
 export type OperationsHandlersDeps = DashboardDeps & {
   flushStoreData: () => void;
+  flushStoreDataImmediate?: () => Promise<void>;
   scheduleAiRefresh: () => void;
 };
 
 export function useOperationsHandlers(deps: OperationsHandlersDeps) {
-  const { language, flushStoreData, scheduleAiRefresh } = deps;
+  const { language, flushStoreData, flushStoreDataImmediate, scheduleAiRefresh } = deps;
 
   // ── Operations store ──
   const {
@@ -64,24 +65,48 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   // 매출 / 비용
   // ─────────────────────────────────────────────
 
-  const handleAddDailyEntry = () => {
-    if (!dailySalesInput) return;
+  const handleAddDailyEntry = async () => {
+    console.info("[buildup] handleAddDailyEntry called", { dailySalesInput, dailyCustomersInput, dailyDateInput });
+    // ⚠️ 빈 input은 저장 X (사용자 입력 의지 없음 = 누름 실수).
+    // 단, "0"은 정당한 입력 (휴무일·매출 없는 날) → 그대로 저장.
+    if (dailySalesInput === undefined || dailySalesInput === null || dailySalesInput === "") {
+      console.warn("[buildup] handleAddDailyEntry: empty dailySalesInput, skipping");
+      return;
+    }
+    const parsedSales = Number(dailySalesInput.replace(/[^0-9]/g, "")) || 0;
+    console.info("[buildup] handleAddDailyEntry: saving", { parsedSales, dailyDateInput });
     // 기존 기록의 productSales 등 추가 필드를 보존
     const existing = (dailyEntries as Array<Record<string, unknown>>).find((e) => e.date === dailyDateInput);
     const entry = {
       ...(existing ?? {}),
       date: dailyDateInput,
-      sales: (Number(dailySalesInput.replace(/[^0-9]/g, "")) || 0) * 10000,
+      sales: parsedSales * 10000,
       customers: Number(dailyCustomersInput.replace(/[^0-9]/g, "")) || 0
     };
+    // 같은 날짜의 기존 entry는 새 값으로 덮어쓰기 (날짜 unique 보장)
     const next = [
       ...(dailyEntries as DailyEntry[]).filter((e) => e.date !== dailyDateInput),
       entry as DailyEntry
     ].sort((a, b) => b.date.localeCompare(a.date));
     setDailyEntries(next);
+    console.info("[buildup] handleAddDailyEntry: setDailyEntries called", { totalEntries: next.length, newEntry: entry });
     setDailySalesInput("");
     setDailyCustomersInput("");
-    flushStoreData();
+    // ⚠️ 매출은 critical data → 즉시 Supabase 저장 (debounce 건너뛰기).
+    // 모바일·다른 기기 동기화에 필수. 실패 시 사용자 가시 (persistStatus="error").
+    if (flushStoreDataImmediate) {
+      try {
+        await flushStoreDataImmediate();
+        console.info("[buildup] handleAddDailyEntry: Supabase save SUCCESS");
+      } catch (err) {
+        // 에러는 이미 onboarding store에 기록됨 — 사용자가 헤더 indicator로 확인
+        // localStorage 백업은 Zustand persist가 처리하므로 여기서 추가 작업 불필요
+        console.error("[buildup] handleAddDailyEntry: Supabase save FAILED", err);
+      }
+    } else {
+      console.warn("[buildup] handleAddDailyEntry: flushStoreDataImmediate not available, falling back to debounced flush");
+      flushStoreData();
+    }
     scheduleAiRefresh(); // 매출 입력 → AI 경영 우선순위 자동 갱신
   };
 

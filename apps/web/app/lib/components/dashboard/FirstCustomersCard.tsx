@@ -96,7 +96,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
           <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", fontWeight: 650 }}>
             {ko ? "목표 일수" : "Target days"}
           </div>
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#1d3557" }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#191970" }}>
             {playbook.targetDays}{ko ? "일" : "d"}
             {daysSinceLaunch >= 0 && (
               <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginLeft: "6px", fontWeight: 500 }}>
@@ -108,7 +108,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
       </div>
 
       {/* 고객 수 입력 + 진행률 */}
-      <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(29,53,87,0.03)", border: "1px solid rgba(29,53,87,0.06)", marginBottom: "14px" }}>
+      <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.06)", marginBottom: "14px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
           <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(15,23,42,0.5)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             {ko ? "지금까지 확보한 고객" : "Customers so far"}
@@ -138,24 +138,24 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
             </button>
           </div>
         </div>
-        <div style={{ height: "8px", background: "rgba(15,23,42,0.06)", borderRadius: "4px", overflow: "hidden" }}>
+        <div style={{ height: "8px", background: "rgba(25,25,112,0.05)", borderRadius: "4px", overflow: "hidden" }}>
           <div style={{
             height: "100%",
             width: `${customerProgress * 100}%`,
-            background: customerProgress >= 1 ? "linear-gradient(90deg, #059669, #10b981)" : "linear-gradient(90deg, #1d3557, #457b9d)",
+            background: customerProgress >= 1 ? "linear-gradient(90deg, #059669, #10b981)" : "linear-gradient(90deg, #191970, #457b9d)",
             transition: "width 0.4s ease",
           }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px", fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
           <span>{currentCustomerCount} / 100 {ko ? "명" : "customers"}</span>
-          <span style={{ color: "#1d3557", fontWeight: 650 }}>
+          <span style={{ color: "#191970", fontWeight: 650 }}>
             {ko ? "현재 단계:" : "Current phase:"} {currentPhase.name[ko ? "ko" : "en"]}
           </span>
         </div>
       </div>
 
       {/* 탭 */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "12px", padding: "3px", background: "rgba(15,23,42,0.04)", borderRadius: "10px" }}>
+      <div style={{ display: "flex", gap: "4px", marginBottom: "12px", padding: "3px", background: "rgba(25,25,112,0.04)", borderRadius: "10px" }}>
         <button
           type="button"
           onClick={() => setActiveTab("playbook")}
@@ -186,8 +186,8 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
               <span>{ko ? "전체 진행률" : "Overall progress"}</span>
               <span>{Math.round(progressRatio * 100)}%</span>
             </div>
-            <div style={{ height: "6px", background: "rgba(15,23,42,0.06)", borderRadius: "3px", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progressRatio * 100}%`, background: "#2563eb", transition: "width 0.4s ease" }} />
+            <div style={{ height: "6px", background: "rgba(25,25,112,0.05)", borderRadius: "3px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progressRatio * 100}%`, background: "#191970", transition: "width 0.4s ease" }} />
             </div>
           </div>
 
@@ -206,15 +206,15 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                   marginBottom: "8px",
                   padding: "10px 12px",
                   borderRadius: "10px",
-                  background: isActive ? "rgba(37,99,235,0.08)" : "rgba(15,23,42,0.02)",
-                  border: `1px solid ${isActive ? "rgba(37,99,235,0.15)" : "rgba(15,23,42,0.04)"}`,
+                  background: isActive ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.025)",
+                  border: `1px solid ${isActive ? "rgba(25,25,112,0.15)" : "rgba(25,25,112,0.04)"}`,
                 }}>
                   <div style={{
                     fontSize: "10px",
                     fontWeight: 700,
                     padding: "3px 7px",
                     borderRadius: "6px",
-                    background: isActive ? "#2563eb" : "rgba(15,23,42,0.1)",
+                    background: isActive ? "#191970" : "rgba(15,23,42,0.1)",
                     color: isActive ? "#fff" : "rgba(15,23,42,0.6)",
                   }}>
                     {phase.customerRange.from}-{phase.customerRange.to}
@@ -227,7 +227,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                       {phase.description[ko ? "ko" : "en"]}
                     </div>
                   </div>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: isActive ? "#2563eb" : "rgba(15,23,42,0.5)" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: isActive ? "#191970" : "rgba(15,23,42,0.5)" }}>
                     {phaseDone}/{phaseTacticIds.length}
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                           padding: "10px 12px",
                           borderRadius: "10px",
                           background: done ? "rgba(5,150,105,0.04)" : "rgba(255,255,255,0.6)",
-                          border: `1px solid ${done ? "rgba(5,150,105,0.1)" : "rgba(15,23,42,0.04)"}`,
+                          border: `1px solid ${done ? "rgba(5,150,105,0.1)" : "rgba(25,25,112,0.04)"}`,
                           cursor: "pointer",
                           transition: "all 0.15s",
                         }}
@@ -265,7 +265,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                           }}>
                             {tac.title[ko ? "ko" : "en"]}
                             {tac.targetCount && (
-                              <span style={{ fontSize: "11px", color: "#2563eb", marginLeft: "6px", fontWeight: 600 }}>
+                              <span style={{ fontSize: "11px", color: "#191970", marginLeft: "6px", fontWeight: 600 }}>
                                 · +{tac.targetCount}{ko ? "명" : ""}
                               </span>
                             )}
@@ -287,8 +287,8 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
       {activeTab === "codes" && (
         <div>
           {/* 쿠폰 발급 폼 */}
-          <div style={{ padding: "12px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)", marginBottom: "12px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 660, color: "#1d3557", marginBottom: "8px" }}>
+          <div style={{ padding: "12px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)", marginBottom: "12px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 660, color: "#191970", marginBottom: "8px" }}>
               {ko ? "새 코드 발급" : "Issue new code"}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginBottom: "6px" }}>
@@ -350,7 +350,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                   padding: "8px 16px",
                   borderRadius: "8px",
                   border: "none",
-                  background: newCode.code.trim() ? "#2563eb" : "rgba(15,23,42,0.1)",
+                  background: newCode.code.trim() ? "#191970" : "rgba(15,23,42,0.1)",
                   color: "#fff",
                   fontSize: "12px",
                   fontWeight: 650,
@@ -375,8 +375,8 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                   style={{
                     padding: "10px 12px",
                     borderRadius: "10px",
-                    background: code.isActive ? "rgba(255,255,255,0.7)" : "rgba(15,23,42,0.03)",
-                    border: `1px solid ${code.isActive ? "rgba(15,23,42,0.06)" : "rgba(15,23,42,0.03)"}`,
+                    background: code.isActive ? "rgba(255,255,255,0.7)" : "rgba(25,25,112,0.035)",
+                    border: `1px solid ${code.isActive ? "rgba(25,25,112,0.05)" : "rgba(25,25,112,0.035)"}`,
                     opacity: code.isActive ? 1 : 0.6,
                   }}
                 >
@@ -385,8 +385,8 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                       <code style={{
                         fontSize: "13px",
                         fontWeight: 700,
-                        color: code.kind === "invite" ? "#059669" : "#2563eb",
-                        background: code.kind === "invite" ? "rgba(5,150,105,0.08)" : "rgba(37,99,235,0.08)",
+                        color: code.kind === "invite" ? "#059669" : "#191970",
+                        background: code.kind === "invite" ? "rgba(5,150,105,0.08)" : "rgba(25,25,112,0.08)",
                         padding: "3px 8px",
                         borderRadius: "6px",
                         letterSpacing: "0.04em",
@@ -396,7 +396,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                       <span style={{
                         fontSize: "10px",
                         fontWeight: 700,
-                        color: code.kind === "invite" ? "#059669" : "#2563eb",
+                        color: code.kind === "invite" ? "#059669" : "#191970",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                       }}>
@@ -443,11 +443,11 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                       {code.usageCount}{code.usageLimit > 0 ? ` / ${code.usageLimit}` : ""} {ko ? "사용" : "used"}
                     </span>
                     {code.usageLimit > 0 && (
-                      <div style={{ flex: 1, height: "3px", background: "rgba(15,23,42,0.06)", borderRadius: "2px", overflow: "hidden" }}>
+                      <div style={{ flex: 1, height: "3px", background: "rgba(25,25,112,0.05)", borderRadius: "2px", overflow: "hidden" }}>
                         <div style={{
                           height: "100%",
                           width: `${Math.min(100, (code.usageCount / code.usageLimit) * 100)}%`,
-                          background: "#2563eb",
+                          background: "#191970",
                         }} />
                       </div>
                     )}
@@ -517,7 +517,7 @@ const stepBtn: React.CSSProperties = {
   cursor: "pointer",
   fontSize: "14px",
   fontWeight: 700,
-  color: "#1d3557",
+  color: "#191970",
 };
 
 const fieldInput: React.CSSProperties = {

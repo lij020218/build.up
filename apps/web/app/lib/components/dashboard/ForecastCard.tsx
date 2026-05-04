@@ -148,13 +148,13 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
           <defs>
             {/* 실적 라인 그라데이션 */}
             <linearGradient id="fg-actual" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#1d3557" stopOpacity="0.15" />
-              <stop offset="100%" stopColor="#1d3557" stopOpacity="0.02" />
+              <stop offset="0%" stopColor="#191970" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#191970" stopOpacity="0.02" />
             </linearGradient>
             {/* 예측 신뢰구간 */}
             <linearGradient id="fg-band" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.02" />
+              <stop offset="0%" stopColor="#191970" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#191970" stopOpacity="0.02" />
             </linearGradient>
           </defs>
 
@@ -176,21 +176,21 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
           <path d={bandPath} fill="url(#fg-band)" />
 
           {/* 실적 라인 */}
-          <path d={actualPath} fill="none" stroke="#1d3557" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={actualPath} fill="none" stroke="#191970" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
           {/* 예측 라인 (점선) */}
-          <path d={forecastPath} fill="none" stroke="#2563eb" strokeWidth="2" strokeDasharray="6 4" strokeLinecap="round" opacity="0.7" />
+          <path d={forecastPath} fill="none" stroke="#191970" strokeWidth="2" strokeDasharray="6 4" strokeLinecap="round" opacity="0.7" />
 
           {/* 실적 포인트 */}
           {actualDays.map((e, i) => (
-            <circle key={e.date} cx={toX(i)} cy={toY(e.sales)} r="3.5" fill="#fff" stroke="#1d3557" strokeWidth="2">
+            <circle key={e.date} cx={toX(i)} cy={toY(e.sales)} r="3.5" fill="#fff" stroke="#191970" strokeWidth="2">
               <animate attributeName="r" from="0" to="3.5" dur="0.4s" begin={`${i * 0.06}s`} fill="freeze" />
             </circle>
           ))}
 
           {/* 예측 포인트 */}
           {forecastPoints.map((s, i) => (
-            <circle key={`f-${i}`} cx={toX(actualDays.length + i)} cy={toY(s)} r="3" fill="#fff" stroke="#2563eb" strokeWidth="1.5" opacity="0.6">
+            <circle key={`f-${i}`} cx={toX(actualDays.length + i)} cy={toY(s)} r="3" fill="#fff" stroke="#191970" strokeWidth="1.5" opacity="0.6">
               <animate attributeName="r" from="0" to="3" dur="0.3s" begin={`${0.5 + i * 0.06}s`} fill="freeze" />
             </circle>
           ))}
@@ -200,7 +200,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
 
           {/* 레이블 */}
           <text x={toX(3)} y={chartH - 4} textAnchor="middle" fontSize="9" fill="rgba(15,23,42,0.35)">{ko ? "실적" : "Actual"}</text>
-          <text x={toX(actualDays.length + 3)} y={chartH - 4} textAnchor="middle" fontSize="9" fill="rgba(37,99,235,0.5)">{ko ? "예측" : "Forecast"}</text>
+          <text x={toX(actualDays.length + 3)} y={chartH - 4} textAnchor="middle" fontSize="9" fill="rgba(25,25,112,0.5)">{ko ? "예측" : "Forecast"}</text>
         </svg>
       </div>
 
@@ -208,11 +208,11 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
         <div style={metricBox}>
           <div style={metricLabel}>{ko ? "다음 주 예상 일매출" : "Next week daily"}</div>
-          <div className="bento-number" style={{ ...metricValue, color: "#1d3557" }}>{fmt(Math.round(avg7))}</div>
+          <div className="bento-number" style={{ ...metricValue, color: "#191970" }}>{fmt(Math.round(avg7))}</div>
         </div>
         <div style={metricBox}>
           <div style={metricLabel}>{ko ? "다음 달 예상 총매출" : "Next month total"}</div>
-          <div className="bento-number" style={{ ...metricValue, color: "#1d3557" }}>{fmt(Math.round(avg7 * 26))}</div>
+          <div className="bento-number" style={{ ...metricValue, color: "#191970" }}>{fmt(Math.round(avg7 * 26))}</div>
         </div>
         <div style={metricBox}>
           <div style={metricLabel}>{ko ? "신뢰도" : "Confidence"}</div>

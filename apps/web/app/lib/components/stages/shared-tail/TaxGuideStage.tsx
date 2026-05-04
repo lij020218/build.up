@@ -6,6 +6,7 @@ import {
   ShieldCheck, AlertTriangle, Calendar, FileText, Banknote,
   Sparkles, ClipboardList, ExternalLink, ChevronRight, type LucideIcon,
 } from "lucide-react";
+import { StageWrapup } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러 (다른 단계와 통일)
 
@@ -36,7 +37,20 @@ export function TaxGuideStage() {
     handleKnowledgeQuestion,
     prevTraversedStage, setViewingStageId,
     handleVerificationContinue,
+    handleStageEdit,
+    decisions,
+    editSaveStatus,
   } = d;
+  const isStageCompleted = !!decisions["tax-guide"]?.completedAt;
+  const _editStatus = editSaveStatus?.stageId === "tax-guide" ? editSaveStatus.status : null;
+  const _editLabel = _editStatus === "saving"
+    ? (language === "ko" ? "저장 중..." : "Saving...")
+    : _editStatus === "saved"
+      ? (language === "ko" ? "✓ 수정 완료" : "✓ Saved")
+      : _editStatus === "error"
+        ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
+        : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
+  const _editBg = _editStatus === "saved" ? "#16a34a" : _editStatus === "error" ? "#dc2626" : "#34c759";
 
   const ko = language === "ko";
   const isStartup = industryCategoryId === "startup-tech";
@@ -50,17 +64,17 @@ export function TaxGuideStage() {
   const keyActions: Record<number, { title: string; detail: string }> = isStartup
     ? {
         0: ko
-          ? { title: "법인세·부가세·원천세 신고 캘린더 등록 — 1건 누락 = 가산세 20%", detail: "법인세 3월 31일 / 부가세 분기별 25일 / 원천세·4대보험 매월 10일. 무신고 가산세 20%, 납부지연 일 0.022% 추가." }
-          : { title: "Add corp tax/VAT/withholding deadlines to calendar", detail: "Corp tax Mar 31 / VAT quarterly 25 / Withholding+insurance monthly 10. 20% non-filing penalty + 0.022%/day delay." },
+          ? { title: "2026 법인세 1%p 인상 — 신고 캘린더 미등록 = 가산세 20% + 일 0.022%", detail: "2026년부터 법인세율 인상: 2억 이하 9%→10% / 2-200억 19%→20% / 200억+ 22%. 가공 세금계산서 가산세 3%→4%. 법인세 3월 31일 / 부가세 분기 25일 / 원천세·4대보험 매월 10일." }
+          : { title: "2026 corp tax up 1%p — calendar required", detail: "2026: under ₩200M 9→10%, 200M-20B 19→20%. Fake invoice penalty 3%→4%. Corp tax Mar 31 / VAT quarterly 25 / Withholding monthly 10." },
         1: ko
-          ? { title: "지금 홈택스 법인 가입 + 법인카드 개설 — 모든 경비 법인카드로", detail: "공동인증서 가입 → 세금계산서 발행·법인세 신고 가능. 개인카드 사용 시 비용 불인정 위험." }
-          : { title: "Hometax corp signup + corp card now", detail: "Cert signup → invoice/tax filing enabled. Personal card = rejected expense risk." },
+          ? { title: "홈택스 법인 가입 + 법인카드 의무 — 개인카드 = 비용 불인정", detail: "공동인증서 → 세금계산서 발행·법인세 신고 활성화. 모든 경비 법인카드 결제. 영수증 5년 보관 (앱 백업 권장). R&D 인건비는 별도 분류 — 25% 세액공제 받기 위해." }
+          : { title: "Hometax corp signup + corp card mandatory", detail: "Cert → invoice/tax filing enabled. All expenses on corp card. 5-year retention." },
         2: ko
-          ? { title: "벤처인증 신청 — 법인세 5년 감면(2년 100%·3년 50%) + 스톡옵션 비과세 연 2억", detail: "2027.12.31 이전 부여 스톡옵션 행사이익 연 2억·누적 5억 비과세. R&D 세액공제 최대 25%(중소기업)." }
-          : { title: "Apply for venture cert — 5-yr corp tax cut + stock option tax-free", detail: "Stock options granted before 2027.12.31: 200M/yr, 500M cumulative tax-free. R&D credit up to 25%." },
+          ? { title: "벤처인증 후 절세 — 법인세 5년 50% 감면 + 스톡옵션 5억 비과세 + R&D 25%", detail: "청년창업 (만 39세 이하) 인증 시 5년 동안 법인세 50% 감면. 스톡옵션 행사이익 연 2억·누적 5억 비과세 (2027.12.31 부여분까지). R&D 인건비 세액공제 중소기업 25% (벤처 가산). 누락 시 수천만원 손실." }
+          : { title: "Post-cert savings — 50% tax cut 5yr + ₩500M stock option + 25% R&D", detail: "Youth (≤39) startup: 50% corp tax cut for 5 years. Stock option ₩200M/yr·₩500M cumulative tax-free. R&D credit 25% (SME)." },
         3: ko
-          ? { title: "첫 직원·투자·R&D 공제 시 세무사 위임 결정", detail: "월 수임료 10~30만원이 가산세·놓친 공제보다 압도적으로 저렴. 자비스·삼쩜삼 같은 SaaS 도구 + 세무사 조합 권장." }
-          : { title: "Hire CPA when hiring first employee, raising funds, or claiming R&D", detail: "Monthly 100-300K KRW fee is far cheaper than penalties + missed credits." },
+          ? { title: "본인 모드에 맞는 세무 처리 결정 — 1인 인디는 DIY OK, 시드+ 는 세무사 필수", detail: "인디·솔로 1인 = 자비스·삼쩜삼 SaaS + 분기당 1회 세무사 검토 (10-30만). 부트스트랩 3-5명 = 월 기장 10만+ 세무조정 30만. 시드 이상 = 월 위임 30-50만 (R&D·스톡옵션 처리)." }
+          : { title: "Pick by mode — Indie DIY, seed+ CPA mandatory", detail: "Solo: SaaS + quarterly review. Bootstrap 3-5: monthly bookkeeping. Seed+: full delegation." },
       }
     : {
         0: ko
@@ -161,10 +175,12 @@ export function TaxGuideStage() {
       { icon: Sparkles, label: "상품 촬영·디자인 외주비", detail: "상품 사진·상세페이지 외주 제작비 전액 비용처리" },
     ],
     "startup-tech": [
-      { icon: Banknote, label: "클라우드·SaaS 구독료 전액 처리", detail: "AWS·Vercel·GitHub·Notion 구독료 전액 지급수수료" },
-      { icon: Sparkles, label: "R&D 인건비 세액공제 (최대 25%)", detail: "연구인력개발비 세액공제. 벤처인증 시 추가 혜택. 연구노트·증빙 필수" },
-      { icon: ClipboardList, label: "법인카드 사용 의무화", detail: "모든 경비 법인카드. 개인카드 사용 시 비용 불인정 위험" },
-      { icon: FileText, label: "스톡옵션 비과세 연 2억 / 누적 5억", detail: "벤처기업 인증 후 부여 + 2027.12.31 이전 행사 시 비과세 (~2억/연·~5억/누적)" },
+      { icon: Sparkles, label: "청년창업 5년 50% 법인세 감면 (만 39세 이하)", detail: "벤처인증 + 만 39세 이하 대표 + 수도권과밀억제권역 외 = 5년간 법인세 50% 감면. 일부 사업은 3년 75% 감면. 신청은 세무서 통해" },
+      { icon: Banknote, label: "스톡옵션 비과세 연 2억 / 누적 5억", detail: "벤처기업 인증 후 부여 + 2027.12.31 이전 행사 시 비과세. 임직원에게 부여한 스톡옵션 행사이익 연 2억·누적 5억까지 비과세 — ZUZU·Carta 로 캡테이블 관리" },
+      { icon: Sparkles, label: "R&D 인건비 세액공제 (중소기업 25%)", detail: "연구전담요원·보조원 인건비 25% 세액공제. 벤처기업·코스닥 추가 가산. 연구노트·과제계획서·실적보고서 5년 보관 필수. 미증빙 시 추징" },
+      { icon: FileText, label: "연구원 비과세 (월 20만원)", detail: "기업부설연구소 연구활동 직접 종사자 — 연구보조비 또는 활동비 월 20만원 비과세. 인건비 절감 효과" },
+      { icon: Banknote, label: "클라우드·SaaS 전액 비용처리", detail: "AWS·Vercel·GitHub·Notion·Cursor·Claude 모두 지급수수료. 매월 영수증 자동 보관. 사업용 구독만 인정" },
+      { icon: ClipboardList, label: "법인카드 사용 의무 + 영수증 5년", detail: "모든 경비 법인카드. 개인카드 사용 시 비용 불인정 위험. 자비스·삼쩜삼 SaaS 로 자동 영수증 분류" },
     ],
   };
   const effectiveCat = isStartup ? "startup-tech" : (industryCategoryId || "food");
@@ -190,10 +206,10 @@ export function TaxGuideStage() {
 
   // ─── 세무사 필요 시점 ───
   const cpaNeeded = isStartup ? (ko ? [
-    { condition: "첫 직원 고용", reason: "4대보험·원천세·연말정산 의무 발생. 월 수임료 < 가산세" },
-    { condition: "투자금 유치", reason: "전환사채·투자금 회계 처리, 법인세 신고 복잡도 급증" },
-    { condition: "R&D 세액공제 신청", reason: "연구인력개발비 요건 검증 + 증빙 정리 필수" },
-    { condition: "스톡옵션 부여", reason: "행사 시점 과세·비과세 판단, 캡테이블 관리" },
+    { condition: "1인 인디 — 매출 < 1.4억", reason: "DIY 가능. 자비스·삼쩜삼 SaaS (월 0~3만) + 분기당 세무사 검토 1회 (10-30만). 종소세 1년 1회만 신경 쓰면 됨" },
+    { condition: "부트스트랩 3-5명 / 시드 전", reason: "월 기장 10-15만 + 종소세 조정 30만. 자비스 ASSIST + 비대면 세무사 추천. R&D 25% 공제 받으려면 필수" },
+    { condition: "시드 라운드 받음 (1억+)", reason: "투자금 회계·전환사채 처리 복잡도 ↑. 월 위임 20-30만 필수. 벤처인증 후 5년 50% 감면 신청 누락 = 수천만 손실" },
+    { condition: "시리즈A 이상 / 직원 5명+", reason: "월 30-50만 또는 인하우스 회계담당자. 스톡옵션·R&D 25%·해외 자회사·옵션풀 50% 모두 위임 필수" },
   ] : [
     { condition: "First employee hire", reason: "Insurance/withholding obligations arise" },
     { condition: "Investment received", reason: "Convertible notes/accounting complexity" },
@@ -594,15 +610,77 @@ export function TaxGuideStage() {
         </>
       )}
 
-      {/* ── 단계 네비게이션 (다른 단계와 동일하게 컨텐츠 맨 아래에 배치) ── */}
+      {/* ── 단계 네비게이션 (다른 단계와 동일하게 컨텐츠 맨 아래에 배치) ──
+          ⚠️ 필수 세팅 체크리스트 100% 완료 강제 — 부분 체크 자동 진행 방지.
+          미완료 시 버튼 비활성화 + 페이지 1 (필수 세팅) 로 자동 이동 + shake 경고. */}
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="채용·운영 세팅"
+        doneItemsKo={[
+          { label: "1. 부가세 신고 일정", detail: "1·7월(개인 일반)·1·4·7·10월(법인) 분기별 신고일 + 자동이체 셋업" },
+          { label: "2. 종합소득세 시뮬", detail: "추정 매출·비용 기반 5월 종소세 신고 사전 시뮬, 누진세율 구간 점검" },
+          { label: "3. 비용처리 인식", detail: "사업자 카드·홈택스 현금영수증·전자세금계산서 모든 매입 자동 수집 셋업" },
+          { label: "4. 절세 포인트 점검", detail: "창업중소기업 세액감면(50~100%)·청년 추가 감면·연구개발비 세액공제 검토" },
+        ]}
+        verifyItemsKo={[
+          "부가세 — 매입세액 공제 위해 모든 매입 「세금계산서」 받기, 간이영수증은 공제 불가",
+          "종소세 — 5월 신고 누락 시 무신고 가산세 20% + 일별 지연이자, 폐업해도 신고 의무 잔존",
+          "창업 세액감면 — 청년창업·수도권 외 지역 창업 시 5년간 50~100% 감면 (신청 필수, 자동 X)",
+          "현금영수증 — 사업자 의무발급 업종(음식·미용·헬스 등)은 1만원 이상 거래 시 의무, 위반 시 거래액 20% 과태료",
+          "사업용 카드 — 홈택스 등록 시 매입세액 공제·경비 자동 분류, 미등록 시 매번 수동 입력 부담",
+          "전자세금계산서 — 일정 매출 이상 의무, 종이 세금계산서 발급 시 가산세 + 매입자 공제 거부 위험",
+        ]}
+        nextSummaryKo="세무 신고 일정·비용처리·절세 포인트 셋업 완료 → 채용·운영 세팅 단계로 진입"
+      />
+
       <div style={{ ...styles.stageFooter, marginTop: "8px" }}>
-        {prevTraversedStage && (
-          <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
-            {ko ? "← 이전 단계" : "← Back"}
+        <button type="button" style={styles.button} onClick={() => {
+          if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+          else setViewingStageId(null);
+        }}>
+          {ko ? "← 이전 단계" : "← Back"}
+        </button>
+        {/* "수정 저장" — editSaveStatus 따라 라벨/색 변경. */}
+        {isStageCompleted && tcChecked === taxCheckItems.length && (
+          <button
+            type="button"
+            style={{
+              ...styles.primaryButton,
+              opacity: _editStatus === "saving" ? 0.6 : 1,
+              background: _editBg,
+              cursor: _editStatus === "saving" ? "wait" : "pointer",
+            }}
+            disabled={_editStatus === "saving"}
+            onClick={() => { void handleStageEdit("tax-guide"); }}
+          >
+            {_editLabel}
           </button>
         )}
-        <button type="button" style={styles.primaryButton} onClick={() => handleVerificationContinue("tax-guide")}>
-          {copy.home.markTaxReviewed}
+        <button
+          type="button"
+          style={{
+            ...styles.primaryButton,
+            opacity: tcChecked === taxCheckItems.length ? 1 : 0.45,
+            cursor: tcChecked === taxCheckItems.length ? "pointer" : "not-allowed",
+          }}
+          title={
+            tcChecked === taxCheckItems.length
+              ? undefined
+              : ko ? `필수 세팅 ${tcChecked}/${taxCheckItems.length} — 모두 체크해야 진행 가능` : `Complete all ${taxCheckItems.length} required setup items first`
+          }
+          onClick={() => {
+            if (tcChecked !== taxCheckItems.length) {
+              // 페이지 1 (필수 세팅) 로 이동 + 사용자에게 시각적 안내
+              setGuideStepIndex(1);
+              return;
+            }
+            handleVerificationContinue("tax-guide");
+          }}
+        >
+          {tcChecked !== taxCheckItems.length
+            ? (ko ? `↑ 필수 세팅 ${tcChecked}/${taxCheckItems.length}` : `↑ Setup ${tcChecked}/${taxCheckItems.length}`)
+            : copy.home.markTaxReviewed}
         </button>
       </div>
     </div>

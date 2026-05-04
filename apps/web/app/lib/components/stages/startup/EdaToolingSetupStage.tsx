@@ -51,6 +51,24 @@ const semiconductor: ClusterStageContent = {
     { name: "Synopsys Pricing — Vendr Marketplace", href: "https://www.vendr.com/marketplace/synopsys" },
     { name: "Semiconductor Founder Playbook — JIM", href: "https://www.jim.com/blog/how-to-start-a-semiconductor-company" },
   ],
+  wrapup: {
+    nextStageLabelKo: "MPW·파일럿 테이프아웃",
+    doneItemsKo: [
+      { label: "1. EDA 라이선스 모델", detail: "Startup-tier·token·풀 라이선스 비교 + multi-year 협상 (10~25% 할인)" },
+      { label: "2. 설계 환경 구축", detail: "RHEL 작업 서버 + 시뮬레이션 클러스터 + GIT 형상관리" },
+      { label: "3. IP 라이브러리·표준셀", detail: "Foundry IP·SerDes·메모리 컴파일러 라이선스 사전 확보" },
+      { label: "4. 보안·NDA", detail: "Foundry NDA + IP NDA + 직원 NDA 모두 체결, IP 유출 방지" },
+    ],
+    verifyItemsKo: [
+      "라이선스 — 1년 계약 후 갱신 시 가격 인상, 처음부터 2~3년 multi-year 락인",
+      "Token 모델 — 단기·가변 사용량 시 비용 효율, 풀 라이선스 자본 소진 방지",
+      "IP 보호 — Foundry NDA·IP NDA 체결 없이 EDA 시작 시 IP 유출 + 법적 분쟁",
+      "백업·DR — 설계 데이터 다중 백업, EDA 라이선스 서버 다운 시 설계 정지",
+      "퇴사자 — 직원 퇴사 시 NDA·경업 금지 강제 가능 한도 확인 (5년 이내가 한계)",
+      "Foundry 선정 — TSMC·Samsung·UMC·SMIC 비교, 노드별 가격·캐파·NDA 정책 차이",
+    ],
+    nextSummaryKo: "EDA 라이선스·설계 환경 셋업 완료 → MPW·파일럿 테이프아웃 단계로 진입",
+  },
 };
 
 const climate: ClusterStageContent = {
@@ -65,6 +83,24 @@ const climate: ClusterStageContent = {
   traps: [
     { label: "시뮬레이션 없이 실제 인프라 투자 → 수억 손실", text: "에너지·배터리는 직접 만들기 전 모델 검증 필수. 시뮬레이션 비용 100만원 vs 실패한 시제품 1억." },
   ],
+  wrapup: {
+    nextStageLabelKo: "MPW·파일럿 테이프아웃",
+    doneItemsKo: [
+      { label: "1. 시뮬레이션 도구", detail: "MATLAB·Simulink·Comsol·HOMER·EnergyPLAN 도입" },
+      { label: "2. 디지털 트윈 모델", detail: "에너지·배터리·열역학 모델로 1차 검증 — 시제품 비용 80% 절감" },
+      { label: "3. HPC 환경", detail: "CFD·FEM 시뮬레이션용 GPU·클러스터 또는 AWS/Azure HPC" },
+      { label: "4. 실험 데이터 저장", detail: "raw data + 환경 + 모델 버전 자동 로깅, 재현성 보장" },
+    ],
+    verifyItemsKo: [
+      "시뮬레이션 — 미실시 시 실제 인프라 1억 vs 시뮬 100만원, 자본 효율 큰 차이",
+      "안전 — 배터리·고전압 시제품은 PL 보험 + 사고 대비 시설 필수",
+      "환경법 — 화학·폐기물 처리 사전 위탁, 자가 처리 시 환경법 위반",
+      "특허 — 모델·알고리즘 특허 출원, 외부 발표 전 출원 완료",
+      "데이터 — raw data + 환경 메타데이터 보관, 인증 자료 활용",
+      "외부 자문 — 영역 전문가 자문, 미상황 결정 방지",
+    ],
+    nextSummaryKo: "시뮬레이션·디지털 트윈·HPC 셋업 완료 → 파일럿 테이프아웃 단계로 진입",
+  },
 };
 
 export function EdaToolingSetupStage() {

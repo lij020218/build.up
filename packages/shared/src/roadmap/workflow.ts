@@ -235,7 +235,9 @@ export function buildRoadmapState(
     };
   });
 
+  // ⚠️ path-aware: reachableIds 안에서 첫 available을 선택해야 hidden stage가 currentStage로 잡히지 않음
   const nextCurrentStageId =
+    stageStatuses.find((stage) => stage.status === "available" && reachableIds.has(stage.stageId))?.stageId ??
     stageStatuses.find((stage) => stage.status === "available")?.stageId ??
     baseRoadmap.stages[baseRoadmap.stages.length - 1]?.stageId;
 
@@ -247,8 +249,12 @@ export function buildRoadmapState(
     };
   });
 
+  // ⚠️ path-aware: progressPercent는 reachable(사용자 path) stage 기준으로 계산
+  // 이전엔 stages.length(전체 ~46개) 기준이라 online 셀러가 9/9 완료해도 ~27% 표시되는 버그.
+  const reachableTotal = reachableIds.size;
+  const reachableCompleted = Array.from(completedStageIds).filter((id) => reachableIds.has(id)).length;
   const progressPercent =
-    stages.length === 0 ? 0 : Math.round((completedStageIds.size / stages.length) * 100);
+    reachableTotal === 0 ? 0 : Math.round((reachableCompleted / reachableTotal) * 100);
 
   return {
     ...baseRoadmap,

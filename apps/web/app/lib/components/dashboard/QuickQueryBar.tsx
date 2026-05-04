@@ -98,7 +98,7 @@ export function QuickQueryBar({ ko, context }: Props) {
       <div style={headerRow}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={iconWrap}>
-            <Sparkles size={14} color="#fff" strokeWidth={2} />
+            <Sparkles size={14} color="#fff" strokeWidth={1.5} />
           </div>
           <div>
             <div style={eyebrow}>{ko ? "AI 파트너에게 묻기" : "Ask AI Partner"}</div>
@@ -125,12 +125,12 @@ export function QuickQueryBar({ ko, context }: Props) {
           disabled={!question.trim() || loading}
           style={{
             ...sendBtn,
-            background: question.trim() && !loading ? "linear-gradient(135deg, #1d3557 0%, #457b9d 100%)" : "rgba(15,23,42,0.06)",
+            background: question.trim() && !loading ? "linear-gradient(135deg, #191970 0%, #457b9d 100%)" : "rgba(25,25,112,0.05)",
             color: question.trim() && !loading ? "#fff" : "rgba(15,23,42,0.3)",
             cursor: question.trim() && !loading ? "pointer" : "default",
           }}
         >
-          {loading ? <Loader2 size={14} className="spin" /> : <Send size={14} strokeWidth={2} />}
+          {loading ? <Loader2 size={14} className="spin" /> : <Send size={14} strokeWidth={1.5} />}
         </button>
       </div>
 
@@ -150,7 +150,7 @@ export function QuickQueryBar({ ko, context }: Props) {
         <div style={errorBox}>
           <span>⚠ {error}</span>
           <button type="button" onClick={() => setError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626" }}>
-            <X size={12} strokeWidth={2} />
+            <X size={12} strokeWidth={1.5} />
           </button>
         </div>
       )}
@@ -182,7 +182,7 @@ export function QuickQueryBar({ ko, context }: Props) {
               style={{ ...closeBtn }}
               title={ko ? "닫기" : "Close"}
             >
-              <X size={12} strokeWidth={2} />
+              <X size={12} strokeWidth={1.5} />
             </button>
           </div>
         </div>
@@ -212,13 +212,13 @@ const headerRow: React.CSSProperties = {
 
 const iconWrap: React.CSSProperties = {
   width: "26px", height: "26px", borderRadius: "8px",
-  background: "linear-gradient(135deg, #1d3557 0%, #457b9d 100%)",
+  background: "linear-gradient(135deg, #191970 0%, #457b9d 100%)",
   display: "flex", alignItems: "center", justifyContent: "center",
-  boxShadow: "0 2px 6px rgba(29,53,87,0.18)",
+  boxShadow: "0 2px 6px rgba(25,25,112,0.18)",
 };
 
 const eyebrow: React.CSSProperties = {
-  fontSize: "10.5px", fontWeight: 700, color: "#1d3557",
+  fontSize: "10.5px", fontWeight: 700, color: "#191970",
   letterSpacing: "0.06em", textTransform: "uppercase" as const,
 };
 
@@ -255,8 +255,8 @@ const chipRow: React.CSSProperties = {
 const suggestionChip: React.CSSProperties = {
   fontSize: "11.5px", fontWeight: 600,
   padding: "5px 11px", borderRadius: "999px",
-  background: "rgba(29,53,87,0.04)", color: "#1d3557",
-  border: "1px solid rgba(29,53,87,0.08)",
+  background: "rgba(25,25,112,0.04)", color: "#191970",
+  border: "1px solid rgba(25,25,112,0.08)",
   cursor: "pointer", whiteSpace: "nowrap" as const,
   transition: "background 0.15s ease",
 };

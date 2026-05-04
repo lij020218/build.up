@@ -82,16 +82,16 @@ export function DeepDiveSection({ id, title, subtitle, defaultOpen = false, chil
 
   // 헤더 background — open / hover 상태에 따라 변화
   const headerBg = open
-    ? "linear-gradient(135deg, rgba(29,53,87,0.06) 0%, rgba(29,53,87,0.025) 100%)"
+    ? "linear-gradient(135deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.025) 100%)"
     : hover
-    ? "linear-gradient(135deg, rgba(29,53,87,0.045) 0%, rgba(29,53,87,0.018) 100%)"
-    : "linear-gradient(135deg, rgba(29,53,87,0.03) 0%, rgba(255,255,255,0.5) 100%)";
+    ? "linear-gradient(135deg, rgba(25,25,112,0.045) 0%, rgba(25,25,112,0.018) 100%)"
+    : "linear-gradient(135deg, rgba(25,25,112,0.03) 0%, rgba(255,255,255,0.5) 100%)";
 
   const headerBorder = open
-    ? "1px solid rgba(29,53,87,0.18)"
+    ? "1px solid rgba(25,25,112,0.18)"
     : hover
-    ? "1px solid rgba(29,53,87,0.14)"
-    : "1px solid rgba(29,53,87,0.08)";
+    ? "1px solid rgba(25,25,112,0.14)"
+    : "1px solid rgba(25,25,112,0.08)";
 
   return (
     <section
@@ -121,7 +121,7 @@ export function DeepDiveSection({ id, title, subtitle, defaultOpen = false, chil
           cursor: "pointer",
           textAlign: "left",
           transition: "background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease",
-          boxShadow: hover && !open ? "0 4px 14px rgba(29,53,87,0.08)" : "none",
+          boxShadow: hover && !open ? "0 4px 14px rgba(25,25,112,0.08)" : "none",
         }}
       >
         {/* 좌측: 제목 + 부제 + 카운트 dot */}
@@ -142,8 +142,8 @@ export function DeepDiveSection({ id, title, subtitle, defaultOpen = false, chil
               minWidth: "20px", height: "18px",
               padding: "0 6px",
               borderRadius: "999px",
-              background: open ? "rgba(29,53,87,0.85)" : "rgba(29,53,87,0.12)",
-              color: open ? "#fff" : "rgba(29,53,87,0.85)",
+              background: open ? "rgba(25,25,112,0.85)" : "rgba(25,25,112,0.12)",
+              color: open ? "#fff" : "rgba(25,25,112,0.85)",
               fontSize: "10.5px", fontWeight: 700,
               letterSpacing: "0.01em",
               transition: "background 0.18s ease, color 0.18s ease",
@@ -171,9 +171,9 @@ export function DeepDiveSection({ id, title, subtitle, defaultOpen = false, chil
           gap: "6px",
           padding: "6px 11px",
           borderRadius: "999px",
-          background: open ? "rgba(29,53,87,0.92)" : "#fff",
-          border: open ? "1px solid rgba(29,53,87,0.92)" : "1px solid rgba(29,53,87,0.18)",
-          color: open ? "#fff" : "rgba(29,53,87,0.85)",
+          background: open ? "rgba(25,25,112,0.92)" : "#fff",
+          border: open ? "1px solid rgba(25,25,112,0.92)" : "1px solid rgba(25,25,112,0.18)",
+          color: open ? "#fff" : "rgba(25,25,112,0.85)",
           fontSize: "11.5px",
           fontWeight: 650,
           letterSpacing: "-0.005em",

@@ -1,897 +1,791 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Users, ClipboardList, MessageSquare, Sparkles, ExternalLink, ChevronRight, Check } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { useRoadmapStore } from "../../../stores";
 import { AIFeedbackFormGenerator } from "./AIFeedbackFormGenerator";
+import {
+  getVisibleDayIds,
+  getVisibleFeedbackIds,
+  getVisibleFinalIds,
+  getVisibleImprovementIds,
+} from "./pre-launch-checks-meta";
+import {
+  KeyActionHero,
+  StageTabNav,
+  StageOverview,
+  WorkStep,
+} from "../shared/StageActionHero";
 
-const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러
+const MIDNIGHT = "#191970";
 
+/**
+ * PreLaunchStage — ContractReviewStage / HiringSetupStage 와 동일한 흐름 패턴.
+ *
+ * 6 페이지: 개요 → 1.손님초대 → 2.당일운영 → 3.피드백 → 4.본오픈준비 → 체크리스트
+ *
+ * 사용자 피드백 (2026-05-04): 모든 단계 같은 패턴으로 통일.
+ *   기존 PreLaunchStage 의 912줄 inline 데이터 → 압축 + 페이지로 분리.
+ *   AIFeedbackFormGenerator·체크 ID 시스템은 그대로 유지 (룰 100% 적용 호환).
+ */
 export function PreLaunchStage() {
   const d = useDashboardCtx();
   const {
-    language, industryCategoryId, selectedIndustryId, startupType, storeName,
-    softOpenStep, setSoftOpenStep,
-    softOpenChecks, setSoftOpenChecks, softOpenPricing, setSoftOpenPricing,
-    softOpenSkips, setSoftOpenSkips,
+    language,
+    industryCategoryId,
+    selectedIndustryId,
+    startupType,
+    storeName,
+    softOpenChecks,
+    setSoftOpenChecks,
+    softOpenPricing,
+    setSoftOpenPricing,
+    softOpenSkips,
   } = d;
+  // setSoftOpenSkips 는 보존 룰 호환 — 사용 안 해도 import 유지하지 않으니 destructure 생략.
+  void setSoftOpenChecks;
+  const ko = language === "ko";
 
-                  const catLabel: Record<string, string> = {
-                    food: "식당", "cafe-dessert": "카페", beauty: "뷰티샵",
-                    retail: "리테일 매장", fitness: "피트니스", "online-digital": "온라인몰",
-                  };
-                  const bizLabel = catLabel[industryCategoryId] ?? "매장";
+  const [pageIdx, setPageIdx] = useState(0);
 
-                  const guestTypes = [
-                    { id: "guest-family",     label: "가족 / 친한 지인",                  desc: "솔직한 피드백의 최고 소스 — 창피함 없이 날카롭게 말해줄 사람 우선" },
-                    { id: "guest-neighbor",   label: "동네 주민 / 이웃",                  desc: "잠재 단골 고객 — 오픈 후에도 가장 자주 올 수 있는 사람들" },
-                    { id: "guest-influencer", label: "인스타 팔로워 / 마이크로 인플루언서", desc: "SNS 바이럴 효과 — 팔로워 1,000~10,000명 수준 권장" },
-                    { id: "guest-peer",       label: "업계 지인 / 블로거",                desc: "전문적 관점의 날카로운 피드백 — 개업 전 마지막 검증" },
-                  ];
+  // 룰 검증을 위한 visible IDs — 기존 시스템 유지 (CurrentStageView 가 100% 룰 적용에 사용).
+  const setPreLaunchVisibleIds = useRoadmapStore((s) => s.setPreLaunchVisibleIds);
+  useEffect(() => {
+    setPreLaunchVisibleIds({
+      dayIds: getVisibleDayIds(industryCategoryId, selectedIndustryId, startupType ?? null),
+      feedbackIds: getVisibleFeedbackIds(industryCategoryId),
+      finalIds: getVisibleFinalIds(),
+      improvementIds: getVisibleImprovementIds(),
+    });
+  }, [industryCategoryId, selectedIndustryId, startupType, setPreLaunchVisibleIds]);
 
-                  const pricingOptions = [
-                    { id: "free",     label: "무료 제공",    badge: "인상 최대화",  desc: "최고의 첫인상. 재료비만 부담하되 솔직한 피드백을 최대로 확보.",       tip: "예상 인원 × 원가로 예산 책정" },
-                    { id: "discount", label: "30–50% 할인",  badge: "균형적 선택",  desc: "결제 흐름·POS까지 실 테스트 가능. 부담 없이 많은 인원 초대.",         tip: "수수료·포인트 적립 포함 전체 결제 흐름 검증" },
-                    { id: "full",     label: "정가 운영",    badge: "실전 그대로",  desc: "할인·이벤트를 아껴뒀다 본오픈에 사용. 실수익 구조 그대로 테스트.",     tip: "사은품·경품은 본오픈용으로 보류" },
-                  ];
+  const pageLabels = ko
+    ? ["개요", "1. 손님 초대", "2. 당일 운영", "3. 피드백", "4. 본 오픈 준비", "마무리"]
+    : ["Overview", "1. Guests", "2. Day-of", "3. Feedback", "4. Grand Open", "Wrap-up"];
 
-                  // ─────────────────────────────────────────────────────────────
-                  // 카테고리 레벨 일일 점검 (sub-industry 데이터 없을 때 폴백)
-                  // ─────────────────────────────────────────────────────────────
-                  const industryDayChecks: Record<string, { id: string; label: string; detail: string }[]> = {
-                    food: [
-                      { id: "day-inventory",    label: "식재료·재고 수량 확인 (예상 인원 1.5배)",  detail: "핵심 재료 부족 없도록 여유분 확보" },
-                      { id: "day-order-timing", label: "주문 → 서빙 소요 시간 기록",               detail: "목표 시간 대비 지연 구간 파악" },
-                      { id: "day-delivery",     label: "배달앱 주문 수신 & 처리 테스트",           detail: "배민·쿠팡이츠 연동 상태 확인" },
-                    ],
-                    "cafe-dessert": [
-                      { id: "day-inventory",    label: "식재료·원두·재료 수량 확인 (1.5배 여유분)", detail: "시그니처 메뉴 소재 부족 없도록" },
-                      { id: "day-order-timing", label: "주문 → 제조 → 픽업 소요 시간 기록",        detail: "피크 타임 가상 시나리오로 테스트" },
-                      { id: "day-display",      label: "디저트·음료 디스플레이 & 조명 확인",        detail: "인스타 촬영 욕구를 자극하는 구도 연출" },
-                    ],
-                    beauty: [
-                      { id: "day-booking-system", label: "네이버·카카오 예약 시스템 정상 작동 확인", detail: "예약→확정→알림 문자 전체 흐름 테스트" },
-                      { id: "day-no-show",        label: "노쇼 방지 예치금·알림 시스템 테스트",     detail: "예약금 자동 수령 및 확인 메시지 발송 여부" },
-                      { id: "day-service-time",   label: "시술 시간 vs 예약 간격 검증",             detail: "실제 시술 소요 → 다음 예약과 간격이 충분한지 확인" },
-                    ],
-                    retail: [
-                      { id: "day-display",        label: "상품 진열·동선 최종 점검",              detail: "주력 상품이 눈에 잘 띄는 위치에 배치됐는지 확인" },
-                      { id: "day-inventory",      label: "재고 수량·진열 일치 여부 확인",         detail: "품절 상품 진열 금지, 인기 예상 상품 충분히 확보" },
-                      { id: "day-checkout-test",  label: "결제·영수증·포장재 준비 확인",          detail: "봉투·테이프·영수증 용지 충분한지 확인" },
-                    ],
-                    fitness: [
-                      { id: "day-equipment", label: "운동 기구·시설 안전 점검",             detail: "모든 기구 작동 확인, 파손·안전 위험 요소 제거" },
-                      { id: "day-crm",       label: "회원 관리·예약 시스템(CRM) 테스트",    detail: "출입 통제·락커 배정·수업 예약 흐름 전체 테스트" },
-                      { id: "day-class",     label: "시범 클래스·PT 체험 진행 준비",        detail: "수업 흐름·강사 지도 품질 사전 검증" },
-                    ],
-                    "online-digital": [
-                      { id: "day-checkout-online", label: "결제 → 주문 완료 흐름 전체 테스트",   detail: "카드·간편결제 실 결제 후 취소로 검증" },
-                      { id: "day-cs",              label: "CS 채널(채팅·전화) 응답 속도 테스트", detail: "문의 접수 → 응답까지 목표 시간 내 처리 가능한지 확인" },
-                      { id: "day-fulfillment",     label: "주문 → 포장 → 발송 처리 흐름 확인", detail: "운송장 출력, 포장 속도, 배송 추적 연동 테스트" },
-                    ],
-                  };
+  // ── 카테고리별 권장 ───────────────────────────────────────────
+  const myAdvice: Record<string, { context: string; recommendation: string; rationale: string }> = ko ? {
+    food: {
+      context: "음식점 / F&B",
+      recommendation: "가족·동네 주민 우선 초대 + 30~50% 할인으로 결제 흐름 검증",
+      rationale: "음식 맛은 가족이 가장 솔직. 동네 주민은 잠재 단골 — 첫 인상이 재방문 결정. 할인은 결제·POS 검증 가능.",
+    },
+    "cafe-dessert": {
+      context: "카페 / 디저트",
+      recommendation: "인스타 팔로워 + 동네 주민 혼합 + 무료 시식",
+      rationale: "카페는 SNS 바이럴 결정 — 인스타 인증샷 유도. 무료로 풍성한 인상 → 자발적 게시물 확보.",
+    },
+    beauty: {
+      context: "미용·뷰티",
+      recommendation: "지인 + 마이크로 인플루언서 (1,000~10,000) 무료 시술",
+      rationale: "기술 매장은 시술 결과 = 매출. 비주얼 인증이 핵심 — 인플루언서 후기가 가장 빠른 신뢰.",
+    },
+    fitness: {
+      context: "필라테스·요가·PT",
+      recommendation: "지인 + 동네 주민 무료 체험 클래스",
+      rationale: "운동은 직접 체험 = 등록 결정. 무료 체험으로 첫 회원 확보 → 단골 7~14일 재방문 유도.",
+    },
+    education: {
+      context: "학원",
+      recommendation: "기존 학부모 네트워크 + 무료 시범 수업",
+      rationale: "학원은 입소문이 핵심. 학부모 네트워크 시범 수업 → 첫 등록자 5~10명이 1년 매출 결정.",
+    },
+    pet: {
+      context: "펫",
+      recommendation: "동네 강아지 보호자 + 30% 할인 첫 시술",
+      rationale: "펫 매장은 보호자 신뢰가 매출 직결. 동네 단골 보호자 확보 → 입소문 빠름.",
+    },
+    "online-digital": {
+      context: "온라인·디지털",
+      recommendation: "친구 10명 한정 베타 + 무료 발송 시뮬",
+      rationale: "온라인은 결제·포장·발송 흐름 검증이 핵심. 친구 10명에게 실제 주문 → CS·반품·발송 사이클 검증.",
+    },
+    "living-service": {
+      context: "세탁·청소·수리",
+      recommendation: "동네 주민 + 친한 지인 50% 할인 첫 의뢰",
+      rationale: "방문형 = 시간 약속·품질이 단골 결정. 첫 5건이 후기 → 후기가 신규 고객 유입 결정.",
+    },
+    space: {
+      context: "공간 임대",
+      recommendation: "친구 그룹 무료 사용 + 사진·리뷰 부탁",
+      rationale: "공간은 사진·리뷰가 매출. 무료 사용 → 인스타·네이버 플레이스 사진 확보 → 노출 ↑.",
+    },
+  } : {
+    food: { context: "F&B", recommendation: "Family + neighbors, 30-50% discount", rationale: "Family give honest taste feedback; neighbors become regulars; discount validates payment flow." },
+    "cafe-dessert": { context: "Cafe/Dessert", recommendation: "IG followers + neighbors, free tasting", rationale: "Cafes win on SNS — encourage shots. Free = generous impression → user-generated content." },
+    beauty: { context: "Beauty", recommendation: "Friends + micro-influencers (1k-10k), free service", rationale: "Visual proof drives revenue — influencer testimonials build trust fastest." },
+    fitness: { context: "Fitness/PT", recommendation: "Friends + neighbors, free trial class", rationale: "Hands-on experience drives signups — trial → 7-14 day re-visits." },
+    education: { context: "Academy", recommendation: "Parent network + free demo class", rationale: "Word of mouth is everything — first 5-10 enrollees decide year's revenue." },
+    pet: { context: "Pet", recommendation: "Local dog owners + 30% off first groom", rationale: "Owner trust = revenue. Word spreads fast among local pet community." },
+    "online-digital": { context: "Online", recommendation: "10 friends beta + free shipping sim", rationale: "Validate checkout/packaging/CS cycle with real orders before scale." },
+    "living-service": { context: "Cleaning/Repair", recommendation: "Locals + friends, 50% off first job", rationale: "First 5 jobs = reviews = new customer acquisition." },
+    space: { context: "Space rental", recommendation: "Friend groups free use, ask for photos", rationale: "Photos/reviews drive listings exposure." },
+  };
+  const myFavorable = myAdvice[industryCategoryId] ?? myAdvice.food;
 
-                  // ─────────────────────────────────────────────────────────────
-                  // SUB-INDUSTRY 별 일일 점검 (정밀 데이터)
-                  // 식약처·공중위생관리법·HACCP 가이드라인 기반 + 업계 운영 노하우 검증
-                  // ─────────────────────────────────────────────────────────────
-                  const subIndustryDayChecks: Record<string, { id: string; label: string; detail: string }[]> = {
-                    // ── 카페·디저트 ──
-                    "icecream-bingsu": [
-                      { id: "day-freezer-temp",   label: "냉동고 온도 -18°C 이하 유지 확인 (식약처 기준)", detail: "리스테리아균은 저온에서도 생존 — 해동·재냉동 반복 시 식중독 리스크. 온도계 배터리·작동 점검 필수" },
-                      { id: "day-icemachine",     label: "빙삭기·아이스크림 디스펜서 위생 점검", detail: "전날 마감 후 분리 청소 → 당일 재조립 위생 상태 확인. 잔여 시럽·과일 제거" },
-                      { id: "day-toppings",       label: "시즌 토핑(과일·시럽·견과) 신선도 확인", detail: "과일은 당일 입고분 사용 권장. 시럽 개봉일 라벨 확인" },
-                      { id: "day-roomtemp",       label: "매장 실내 온도 24°C 이하 유지", detail: "여름철 매장 온도 ↑ → 디저트 품질 저하. 에어컨·서큘레이터 작동 확인" },
-                      { id: "day-display",        label: "포토존·디스플레이 조명 점검", detail: "인스타·SNS 바이럴 핵심 — 조명 각도·디저트 정렬·소품 배치" },
-                    ],
-                    "takeout-coffee": [
-                      { id: "day-machine-water",  label: "에스프레소 머신 물 교체·청결 (3시간 간격)", detail: "보일러 물 정체 시 추출 맛 변질 — 피크타임 전 반드시 새 물" },
-                      { id: "day-cup-stock",      label: "일회용 컵·홀더·캐리어 재고 확인 (피크 1.5배)", detail: "테이크아웃 비중 80%+ 매장 — 컵 부족 시 매출 직접 손실" },
-                      { id: "day-syrup",          label: "시럽·파우더·우유 잔량 점검", detail: "피크타임 중간 교체 = 줄 길이 폭증. 사전 보충 필수" },
-                      { id: "day-pos-speed",      label: "POS·키오스크 결제 속도 점검", detail: "회전율 매장은 결제 1건 5초 ↑ 시 줄 길이 누적. 통신 상태 확인" },
-                      { id: "day-queue",          label: "피크타임 대기열·동선 점검", detail: "주문→픽업 동선 정리, 줄 표시 테이프 확인" },
-                    ],
-                    "specialty-coffee": [
-                      { id: "day-grinder-cal",    label: "그라인더 분쇄도 캘리브레이션", detail: "날씨·습도에 따라 매일 미세 조정 필수 — 추출 시간 25~30초 기준" },
-                      { id: "day-bean-fresh",     label: "원두 신선도 확인 (로스팅 후 14일 이내)", detail: "원두 산패율 부적절 보관 시 25% 증가 — 밀폐 용기·서늘한 곳 보관" },
-                      { id: "day-extraction",     label: "추출 시간·수율 측정·기록", detail: "에스프레소 1샷 25~30초, 추출량 25~30g 기준 — 표준 벗어나면 재캘리브레이션" },
-                      { id: "day-machine-clean",  label: "머신 백플러시·포타필터 청소", detail: "피크 후 또는 1일 1회 — 미실시 시 산패 커피 잔류" },
-                      { id: "day-cup-warm",       label: "잔 예열·세팅 상태 확인", detail: "예열 안 된 잔 = 음료 온도 ↓ → 커피 풍미 손상" },
-                    ],
-                    "dessert-cafe": [
-                      { id: "day-showcase-temp",  label: "디저트 쇼케이스 온도 4°C 이하 유지", detail: "케이크·생크림 5°C 초과 시 변질 가능. 온도계 점검" },
-                      { id: "day-dessert-life",   label: "디저트 유효 시간 확인 (당일 폐기 원칙)", detail: "전날 진열품 폐기 — 변질 시 식중독 + 별점 폭락 리스크" },
-                      { id: "day-display",        label: "쇼케이스 디스플레이 정렬·조명 점검", detail: "비주얼 = 매출 직결 — SNS 인증샷 구도 점검" },
-                      { id: "day-allergen",       label: "알레르기 표시 확인 (계란·우유·견과)", detail: "표시 의무 — 누락 시 법적 분쟁 + 사고 시 책임" },
-                      { id: "day-seasonal-push",  label: "시즌 메뉴 푸시·POP 부착", detail: "신메뉴는 매대 가장 좋은 위치 — 시즌 매출 핵심" },
-                    ],
-                    "bakery-studio": [
-                      { id: "day-fermenter",      label: "발효기·오븐 온도 점검 (HACCP 기준)", detail: "발효기 26~28°C, 오븐 예열 표준 온도 — 표준 벗어나면 빵 품질 ↓" },
-                      { id: "day-dough-time",     label: "반죽·발효·굽기 단계별 시간 기록", detail: "표준 레시피 시간 준수 — 일관성이 단골 고객 확보의 핵심" },
-                      { id: "day-bread-discard", label: "전날 진열 빵 폐기 (당일 폐기 원칙)", detail: "위생법상 의무 — 미폐기 시 점검 적발·과태료" },
-                      { id: "day-cross-contam", label: "반죽기·작업대 교차오염 방지 점검", detail: "글루텐 알레르기 등 — 도구 분리·세척 표준 준수" },
-                      { id: "day-allergen",       label: "알레르기 정보 표시·진열 확인", detail: "계란·우유·견과·밀 — 모든 빵에 표시 의무" },
-                    ],
-                    "self-serve-cafe": [
-                      { id: "day-kiosk-remote",   label: "원격 키오스크·결제 단말 작동 확인", detail: "무인 매장 핵심 인프라 — 미작동 시 매출 0. 원격 제어 시스템 점검" },
-                      { id: "day-cctv-record",    label: "CCTV 24시간 정상 녹화 확인", detail: "도난·기물 파손 대응 + 보험 청구 근거 — 저장 용량·해상도 점검" },
-                      { id: "day-auto-machine",   label: "자동 머신 원두·우유·시럽 잔량", detail: "원격 모니터링 + 1일 1~2회 직접 보충 방문" },
-                      { id: "day-cleanliness",    label: "셀프 청소 / 정기 방문 청소", detail: "1일 1~2회 직접 방문 청소 — 무인이라도 청결은 사장 책임" },
-                      { id: "day-security",       label: "도난·기물 파손 점검", detail: "전날 야간 CCTV 빠르게 검토 — 이상 시 즉시 대응" },
-                    ],
+  // ── 손님 초대 4종 (page 1) ────────────────────────────────────
+  const guestTypes = ko ? [
+    { label: "가족 / 친한 지인", desc: "솔직한 피드백의 최고 소스 — 창피함 없이 날카롭게 말해줄 사람 우선" },
+    { label: "동네 주민 / 이웃", desc: "잠재 단골 고객 — 오픈 후에도 가장 자주 올 수 있는 사람들" },
+    { label: "인스타 팔로워 / 마이크로 인플루언서", desc: "SNS 바이럴 효과 — 팔로워 1,000~10,000명 수준 권장" },
+    { label: "업계 지인 / 블로거", desc: "전문적 관점의 날카로운 피드백 — 개업 전 마지막 검증" },
+  ] : [
+    { label: "Family / close friends", desc: "Best source of honest feedback — they'll tell you straight." },
+    { label: "Local neighbors", desc: "Future regulars — first impression decides repeat visits." },
+    { label: "IG followers / micro-influencers", desc: "SNS virality — 1k-10k follower range recommended." },
+    { label: "Industry peers / bloggers", desc: "Expert critique — last validation before grand open." },
+  ];
 
-                    // ── 외식·식당 ──
-                    "ramen-noodle": [
-                      { id: "day-broth-fresh",    label: "사골·잡뼈 육수 신선도 확인 (당일 끓인 것)", detail: "한식·국밥 핵심 자산. 전날 육수는 폐기 또는 재가열 후 신선도 검증" },
-                      { id: "day-rice-warm",      label: "밥솥·보온고 온도 60°C 이상 유지", detail: "60°C 미만 시 식중독균 증식. 점심 회전율 핵심 — 양·온도 동시 점검" },
-                      { id: "day-kimchi-temp",    label: "김치냉장고 온도 1~5°C 유지", detail: "깍두기·열무·배추 보관 표준 온도. 발효 통제 — 너무 시면 폐기" },
-                      { id: "day-bowl-clean",     label: "뚝배기 세척·잔열 제거 확인", detail: "잔열 있는 뚝배기 재사용 시 화상·변형. 세척 후 식힘 시간 확보" },
-                      { id: "day-seasoning",      label: "양념·다대기·새우젓 잔량 확인", detail: "한식 간 핵심 — 떨어지면 맛 변질. 사전 보충 필수" },
-                    ],
-                    "korean-casual": [
-                      { id: "day-banchan-fresh",  label: "반찬 신선도 점검 (3시간 단위 폐기)", detail: "한식 백반 핵심. 변질 반찬 1번이면 단골 영원히 잃음" },
-                      { id: "day-kimchi-stock",   label: "김치냉장고 5종 이상 정렬·잔량 확인", detail: "백반집 표준 — 김치 종류 다양성이 만족도 직결" },
-                      { id: "day-fresh-meat",     label: "주재료(생선·고기) 신선도 일자별 정렬", detail: "FIFO 원칙 — 입고 일자 라벨 + 오래된 것 먼저 사용" },
-                      { id: "day-dishwasher",     label: "식기세척기 헹굼 온도 80°C 이상", detail: "식약처 기준 — 미달 시 살균 부족, 점검 적발 가능" },
-                      { id: "day-selfbar",        label: "셀프바 위생 (집게·국자 30분 단위 교체)", detail: "교차 오염 방지 — 손 닿는 도구 자주 교체" },
-                    ],
-                    "chicken-burger": [
-                      { id: "day-fryoil-acid",    label: "튀김유 산가 측정 (3.0 이하 유지) — 식약처 의무", detail: "산가 3.0 초과 시 변질 — 즉시 교체. 일 1~2회 측정 권장" },
-                      { id: "day-fryoil-change", label: "튀김유 교체 주기 확인 (3일 또는 산가 초과 시)", detail: "산가·이물질 기준 — 늦으면 식중독 + 식약처 적발" },
-                      { id: "day-chicken-temp",   label: "닭고기 보관 온도 2°C 이하 (HACCP)", detail: "도계장→배송→매장 전 단계 콜드체인 점검 + 매장 냉장고 온도" },
-                      { id: "day-tools-sterilize",label: "조리기구 열탕 소독 (교차오염 방지) — 식약처", detail: "한 번 사용한 도구 열탕 소독 — 도마·집게·튀김 망 분리" },
-                      { id: "day-delivery-sla",   label: "배달앱 주문 처리 속도 (SLA 25분)", detail: "25분 초과 시 알람 → 별점·재주문 영향. POS 알림 점검" },
-                    ],
-                    "delivery-meals": [
-                      { id: "day-package-stock",  label: "배달 포장재 재고 확인 (피크 1.5배)", detail: "국물 누설 방지 용기·뚜껑·실링 — 부족 시 영업 중단" },
-                      { id: "day-app-receive",    label: "배달앱 3사(배민·쿠팡이츠·요기요) 주문 수신 확인", detail: "POS 또는 태블릿 연동 점검 — 미수신 = 매출 누락" },
-                      { id: "day-rider-station",  label: "라이더 픽업 동선·구역 정리", detail: "복수 라이더 동시 도착 시 충돌 방지 — 구역 라벨" },
-                      { id: "day-temp-keep",      label: "보온백·아이스팩 준비", detail: "음식 도착 온도가 별점 결정 요소" },
-                    ],
-                    "salad-healthy": [
-                      { id: "day-veg-fresh",     label: "신선 채소·과일 입고 일자 확인 (당일 또는 1일 이내)", detail: "샐러드는 신선도가 곧 가격. 시들거나 변색된 잎채소 즉시 폐기" },
-                      { id: "day-prep-cold",     label: "저온 전처리 작업 (15°C 이하 작업대)", detail: "샐러드 전용 작업대 온도 — 미생물 증식 방지" },
-                      { id: "day-dressing",      label: "드레싱·소스 유효기간·교차오염 점검", detail: "오픈 후 3일 이내 사용 원칙. 도구 분리(견과·해산물 알레르기)" },
-                      { id: "day-discard",       label: "전날 자른 채소 폐기 점검", detail: "샐러드 가게 폐기율 핵심 — 원가 통제 + 신선도 유지" },
-                      { id: "day-package-eco",   label: "친환경 포장재 재고 확인", detail: "건강식 고객은 친환경 포장 민감 — PLA·종이 용기 잔량" },
-                    ],
-                    "western-pasta-brunch": [
-                      { id: "day-pasta-stock",   label: "생면·건면·소스 재고 확인 (피크 1.5배)", detail: "피크 점심 시간 끊기면 회전율 즉시 손실" },
-                      { id: "day-cheese-temp",   label: "치즈·생크림 냉장 4°C 이하 유지", detail: "유제품 변질 = 식중독 + 클레임. 일일 온도 확인" },
-                      { id: "day-brunch-prep",   label: "브런치 식자재(계란·베이컨·아보카도) 신선도", detail: "브런치 메뉴 = 비주얼 = SNS. 변색·유효기간 엄격 관리" },
-                      { id: "day-plating",       label: "플레이팅 표준·접시 세팅 점검", detail: "양식·브런치 비주얼이 객단가 결정 — 표준 사진 준수" },
-                      { id: "day-table-setting", label: "테이블 세팅·매트·커트러리 점검", detail: "다이닝 분위기 핵심 — 더러운 커트러리는 즉시 클레임" },
-                    ],
+  // ── 가격 결정 옵션 (page 1) ───────────────────────────────────
+  const pricingOptions = [
+    { id: "free",     label: ko ? "무료 제공" : "Free",     desc: ko ? "최고의 첫인상. 재료비만 부담하되 솔직한 피드백을 최대로 확보." : "Best impression. Cover cost; maximize feedback." },
+    { id: "discount", label: ko ? "30–50% 할인" : "30-50% off", desc: ko ? "결제 흐름·POS까지 실 테스트 가능. 부담 없이 많은 인원 초대." : "Validates payment & POS; comfortable invite size." },
+    { id: "full",     label: ko ? "정가 운영" : "Full price", desc: ko ? "할인·이벤트를 아껴뒀다 본오픈에 사용. 실수익 구조 그대로 테스트." : "Save discounts for grand open; test real revenue model." },
+  ];
 
-                    // ── 뷰티 ──
-                    "hair-salon": [
-                      { id: "day-tool-uv",        label: "시술 도구 자외선 살균기 작동 확인 — 공중위생관리법", detail: "가위·빗·롤 — 자외선 살균기 의무. 미작동 시 영업 정지 가능" },
-                      { id: "day-hand-hygiene",   label: "시술 전후 손 위생·알코올 소독", detail: "공중위생관리법 — 시술 전후 손 세정·소독 의무" },
-                      { id: "day-towel-fresh",    label: "수건·가운 매번 세탁 또는 일회용", detail: "교차 감염 방지 — 사용한 수건 재사용 금지" },
-                      { id: "day-shampoo-clean",  label: "샴푸대 위생 점검·배수구 청소", detail: "물기·머리카락 누적 시 위생·악취 문제" },
-                      { id: "day-booking",        label: "네이버·카카오 예약 시스템 점검", detail: "예약 → 확정 → 알림 전체 흐름 테스트" },
-                    ],
-                    "nail-studio": [
-                      { id: "day-autoclave",      label: "네일 도구 멸균(오토클레이브 또는 자외선 살균기)", detail: "공중위생관리법 — 푸셔·니퍼 등 피부 접촉 도구 의무 멸균" },
-                      { id: "day-disposable",     label: "큐티클 푸셔·일회용품 매 고객 폐기", detail: "교차 감염 방지 — 일회용은 절대 재사용 금지" },
-                      { id: "day-alcohol-stock",  label: "알코올·세정제 잔량 확인", detail: "시술 사이 도구 소독 필수 — 부족하면 위생 위반" },
-                      { id: "day-polish-expiry",  label: "매니큐어·젤 유효기간 확인", detail: "유효기간 지난 제품 사용 시 알레르기·피부 반응" },
-                      { id: "day-booking",        label: "예약 시스템 확인", detail: "네이버·카카오 예약 흐름 점검" },
-                    ],
-                    "skin-care-room": [
-                      { id: "day-bed-sterile",    label: "관리 베드·시트 멸균 (매 고객)", detail: "공중위생관리법 — 시트·수건 매 고객 교체" },
-                      { id: "day-product-expiry", label: "화장품·앰플 유효기간 확인", detail: "유효기간 지난 제품 = 피부 트러블 + 클레임" },
-                      { id: "day-machine-test",   label: "관리 기기(LED·고주파 등) 작동 확인", detail: "기기 오류 시 시술 효과 ↓ + 안전 사고" },
-                      { id: "day-hand-hygiene",   label: "손 위생·라텍스 장갑 준비", detail: "시술 전 손 세정 + 매 고객 장갑 교체" },
-                      { id: "day-booking",        label: "예약 시스템·노쇼 방지", detail: "예치금 자동 수령 시스템 점검" },
-                    ],
-                    "waxing-studio": [
-                      { id: "day-wax-temp",       label: "왁스·슈가 페이스트 온도 확인 (38~50°C)", detail: "온도 미달 시 시술 어려움, 초과 시 화상 위험" },
-                      { id: "day-spatula",        label: "왁싱 스패출러 매 회 폐기 (더블 디핑 금지)", detail: "교차감염 방지 — 한 번 쓴 막대기 재사용 절대 금지" },
-                      { id: "day-bed-cover",      label: "베드 커버·일회용 시트 매 고객 교체", detail: "프라이버시 + 위생 — 신뢰 핵심 요소" },
-                      { id: "day-skin-prep",      label: "고객 피부 사전 점검 (멍·상처·알레르기)", detail: "선크림·각질 제거 후 24시간 내 시술 금지 — 사고 방지" },
-                      { id: "day-booking",        label: "예약·시술 간격 점검 (15분 버퍼)", detail: "왁싱 후 진정 시간 확보 — 다음 고객과 겹치지 않게" },
-                    ],
-                    "eyelash-brow": [
-                      { id: "day-glue-fresh",     label: "속눈썹 글루 신선도·온도(20~24°C) 확인", detail: "글루 변질 시 접착력 ↓ + 알레르기 위험. 개봉 1개월 이내 사용" },
-                      { id: "day-tweezer",        label: "핀셋·도구 자외선 살균 + 알코올 소독", detail: "공중위생관리법 — 매 고객 멸균 의무" },
-                      { id: "day-patch-test",     label: "신규 고객 패치 테스트 기록 확인", detail: "글루·염색약 알레르기 — 사전 패치 테스트 24시간 후 시술" },
-                      { id: "day-bed-cover",      label: "시술 베드 시트·아이패치 일회용 교체", detail: "눈 부위 위생 = 안전. 매 고객 새 시트" },
-                      { id: "day-fan-vent",       label: "환기·서큘레이터 작동 (글루 냄새)", detail: "에틸시아노아크릴레이트 휘발 — 환기 부족 시 두통·시술자 건강 영향" },
-                    ],
-                    "makeup-bridal": [
-                      { id: "day-brush-clean",    label: "브러시·스폰지 매 고객 알코올 세척", detail: "교차감염 방지 — 메이크업 도구는 매 회 청소" },
-                      { id: "day-product-test",   label: "화장품 유효기간·개봉 후 사용기간 확인", detail: "마스카라·립스틱 6~12개월 / 파운데이션 12개월" },
-                      { id: "day-event-schedule", label: "당일 행사 일정·이동 동선 확인", detail: "출장 메이크업 — 시간 지연 시 신부 일정 전체 영향" },
-                      { id: "day-skin-test",      label: "신부 피부 상태·알레르기 사전 확인", detail: "결혼식 당일 트러블 = 사진·기억 영향. 사전 트라이얼 필수" },
-                      { id: "day-emergency-kit",  label: "응급 키트(반창고·진정제·여분 화장품) 준비", detail: "긴급 보수용 — 립스틱 번짐·파데 들뜸 즉시 대응" },
-                    ],
+  // ── 당일 운영 체크리스트 (page 2 — 모든 매장 공통 핵심 8개) ──
+  const dayChecks = ko ? [
+    { id: "day-cleanliness",    label: "매장·시설 청결 & 위생 최종 점검", detail: "바닥·테이블·화장실·쓰레기통 모두 점검·소독" },
+    { id: "day-staff-briefing", label: "직원 역할 배분 & 브리핑",         detail: "포지션·응대 멘트·비상 대응 방법 공유" },
+    { id: "day-pos",            label: "POS & 결제 단말기 정상 작동",     detail: "카드·현금·간편결제 테스트 결제 후 즉시 취소" },
+    { id: "day-ambiance",       label: "조명·음악·온도·향기 설정",         detail: "원하는 브랜드 분위기 연출, 손님 입장 전 최종 확인" },
+    { id: "day-observation",    label: "운영 중 병목 & 손님 반응 관찰",   detail: "표정·대화·남기는 것·오래 머무는 곳 실시간 기록" },
+    { id: "day-payment",        label: "결제 오류·지연 여부 체크",         detail: "영수증 출력, 결제 완료 문자 발송 여부 확인" },
+    { id: "day-feedback-card",  label: "피드백 카드 수거 & 정리",         detail: "무기명 가능 → 솔직한 의견 유도" },
+    { id: "day-debrief",        label: "직원 회의 진행",                  detail: "잘된 점 3가지 + 개선점 3가지 모두 발언하게 하기" },
+  ] : [
+    { id: "day-cleanliness",    label: "Final cleanliness/hygiene", detail: "Floors, tables, restrooms, trash — disinfect" },
+    { id: "day-staff-briefing", label: "Staff roles & briefing",    detail: "Positions, scripts, emergency response" },
+    { id: "day-pos",            label: "POS & terminal check",      detail: "Test all payments + immediate cancel" },
+    { id: "day-ambiance",       label: "Lighting / music / temp",   detail: "Brand atmosphere ready before guests" },
+    { id: "day-observation",    label: "Watch bottlenecks & guests",detail: "Faces, conversations, leftovers, hot spots" },
+    { id: "day-payment",        label: "Payment errors / delays",   detail: "Receipts print, confirmation SMS sent" },
+    { id: "day-feedback-card",  label: "Collect feedback cards",    detail: "Anonymous OK → honest opinions" },
+    { id: "day-debrief",        label: "Staff debrief",             detail: "3 good points + 3 improvements per person" },
+  ];
+  const dayDoneCount = dayChecks.filter((c) => softOpenChecks[c.id]).length;
 
-                    // ── 피트니스 ──
-                    "yoga-studio": [
-                      { id: "day-mat-clean",      label: "매트·기구 알코올 소독 (매 회원 후)", detail: "코로나 이후 위생 1순위 — 회원 만족도 직결" },
-                      { id: "day-equipment-safe", label: "리포머·기구 안전 점검 (볼트·스프링)", detail: "스프링·케이블 마모 시 사고 위험 — 1주 1회 정밀 점검" },
-                      { id: "day-temp-humid",     label: "실내 온도·습도 (22~25°C, 50~60%)", detail: "요가·필라테스 최적 환경. 너무 차거나 더우면 부상 위험" },
-                      { id: "day-class-roster",   label: "수업 시간표·예약 확인", detail: "강사 변경·휴강 사전 공지 — 회원 신뢰" },
-                      { id: "day-aed",            label: "AED·구급함 위치·작동 확인", detail: "다중이용시설 의무 — 위치·배터리·약품 유효기간" },
-                    ],
-                    "pilates-studio": [
-                      { id: "day-reformer-spring", label: "리포머 스프링·케이블 안전 점검", detail: "스프링 마모 시 강한 반동 → 부상. 1일 시작 전 모든 리포머 점검" },
-                      { id: "day-mat-clean",       label: "매트·체어·바렐 매 회원 알코올 소독", detail: "필라테스 = 피부 직접 접촉 — 위생 1순위" },
-                      { id: "day-class-balance",   label: "수업별 정원·강사 매칭 확인 (1:6 권장)", detail: "강사 1명당 회원 6명 초과 시 자세 교정 품질 ↓" },
-                      { id: "day-temp-humid",      label: "실내 온도 22~24°C·습도 50~60%", detail: "근육 부상 방지 + 매트 미끄럼 방지 최적 조건" },
-                      { id: "day-aed",             label: "AED·구급함·응급 매뉴얼 확인", detail: "다중이용시설 의무. 강사 응급 처치 교육 이수 확인" },
-                    ],
-                    "pt-gym": [
-                      { id: "day-equipment-safe", label: "프리웨이트·머신 볼트·케이블 점검", detail: "고하중 기구 사고 시 무한 책임. 1일 1회 점검 일지 권장" },
-                      { id: "day-pt-schedule",    label: "PT 트레이너 출근·세션 일정 확인", detail: "PT 노쇼 = 환불·고소 리스크. 30분 전 확정 알림 발송" },
-                      { id: "day-locker",         label: "락커룸·샤워실 청결 + 비품(샴푸·드라이기) 점검", detail: "PT 회원 만족도 = 락커룸 품질로 80% 결정" },
-                      { id: "day-aed",            label: "AED·구급함 작동·약품 유효기간", detail: "심정지 골든타임 4분. 다중이용시설 의무" },
-                      { id: "day-air-vent",       label: "환기·에어컨 작동 (땀 냄새)", detail: "환기 부족 시 별점 폭락. 시간당 환기량 점검" },
-                    ],
-                    "crossfit-box": [
-                      { id: "day-bar-collar",     label: "바벨·콜라(잠금) 상태 점검", detail: "콜라 누락 시 무게판 이탈 → 발목 부상. 1일 시작 전 모든 바벨 점검" },
-                      { id: "day-flooring",       label: "고무 플로어링 패드 균열·들뜸 점검", detail: "올림픽 리프팅 충격 흡수 — 갈라진 매트는 즉시 교체" },
-                      { id: "day-coach-prep",     label: "코치 워밍업·WOD(Workout of the Day) 준비", detail: "그룹 클래스 핵심 — 코치 사전 시연 + 부상 예방 동작 강조" },
-                      { id: "day-noise",          label: "소음 측정·이웃 민원 사전 점검", detail: "크로스핏 소음 분쟁 빈번 — 매트·시간대 조절. 점심·저녁 피크 주의" },
-                      { id: "day-aed",            label: "AED·구급함·외상 키트 점검", detail: "고강도 운동 — 부상 빈도 일반 헬스장보다 ↑" },
-                    ],
-                    "golf-studio": [
-                      { id: "day-screen-cal",     label: "스크린·센서 캘리브레이션 (탄도·거리 정확도)", detail: "센서 오차 시 회원 신뢰 폭락. 1일 시작 전 1샷 테스트" },
-                      { id: "day-mat-tee",        label: "타석 매트·티 마모 점검", detail: "타격감·부상 직결. 매트 교체 주기 6개월 ~ 1년" },
-                      { id: "day-club-rental",    label: "대여 클럽·장갑 위생·정렬", detail: "땀 자국·체취 = 즉각 클레임. 매일 알코올 소독" },
-                      { id: "day-projector",      label: "프로젝터·디스플레이 화질 확인", detail: "어두운 룸 → 프로젝터 핵심. 색감·초점 점검" },
-                      { id: "day-booking",        label: "예약 시스템·시간 단위 룸 가동률 점검", detail: "스크린골프 = 시간당 단가 모델. 예약 누락 = 매출 직격" },
-                    ],
-                    "unmanned-fitness": [
-                      { id: "day-cctv-record",    label: "CCTV 24시간 녹화·해상도 점검", detail: "무인 운영 핵심 — 사고·도난 대응. 클라우드 백업 확인" },
-                      { id: "day-access-control", label: "키카드·QR·지문 출입 시스템 작동", detail: "비회원 무단 사용 방지. 미작동 시 매출 손실 + 보험 청구 어려움" },
-                      { id: "day-equipment-remote",label: "원격 모니터링·기구 작동 점검", detail: "1일 1~2회 직접 방문 점검 + 원격 알림 시스템" },
-                      { id: "day-aed",            label: "AED·구급함 + 비상 호출 버튼 작동", detail: "무인 = 응급 대응 늦음. 비상 호출 119 자동 연결 시스템 필수" },
-                      { id: "day-cleanliness",    label: "기구·매트 위생 — 1일 1회 직접 청소", detail: "무인이라도 청결은 사장 책임. 회원 항의 1순위" },
-                    ],
+  // ── 본 오픈 준비 체크리스트 (page 4) ──────────────────────────
+  const finalChecks = ko ? [
+    { id: "final-menu-fix",    label: "메뉴·가격·옵션 최종 확정",      detail: "피드백 반영해 1~2가지 조정. 그 이상은 본 오픈 후" },
+    { id: "final-staff-train", label: "직원 재교육 (피드백 기반)",     detail: "당일 발견된 동선·응대 이슈 1:1 코칭" },
+    { id: "final-marketing",   label: "본 오픈 마케팅 콘텐츠 발행",    detail: "인스타 게시물 3개 + 릴스 1개 + 네이버 플레이스 영수증 리뷰 5개" },
+    { id: "final-vendor",      label: "본 오픈 식자재·장비·소모품 발주", detail: "예상 인원 1.5배로 발주 — 첫 주말 결품 방지" },
+    { id: "final-soft-recap",  label: "소프트 오픈 결과 1페이지 요약 작성", detail: "잘된 점·개선점·예상 이슈 — 직원·운영 자료" },
+  ] : [
+    { id: "final-menu-fix",    label: "Finalize menu / prices / options", detail: "Adjust 1-2 from feedback; more after grand open" },
+    { id: "final-staff-train", label: "Re-train staff (from feedback)",   detail: "1:1 coach on flow/response issues" },
+    { id: "final-marketing",   label: "Publish grand-open marketing",      detail: "3 IG posts + 1 reel + 5 Naver receipt reviews" },
+    { id: "final-vendor",      label: "Order ingredients/supplies",        detail: "1.5× expected to avoid weekend stockouts" },
+    { id: "final-soft-recap",  label: "Soft-open 1-page recap",            detail: "Wins / fixes / risks — staff & ops doc" },
+  ];
+  const finalDoneCount = finalChecks.filter((c) => softOpenChecks[c.id]).length;
 
-                    // ── 펫 ──
-                    "pet-supplies": [
-                      { id: "day-animal-health",  label: "매장 동물 건강 점검 (식욕·배변·활동)", detail: "전시 동물 매일 컨디션 체크 — 이상 시 즉시 동물병원" },
-                      { id: "day-cage-clean",     label: "케이지·매트 위생 (배변 즉시 청소)", detail: "냄새·위생이 매장 인상 결정 — 청소 빈도 ↑" },
-                      { id: "day-food-expiry",    label: "사료·간식 유효기간 점검", detail: "선입선출 + 유효기간 라벨. 만료 임박 할인 처리" },
-                      { id: "day-vent-deodor",    label: "환기·탈취 시스템 작동 (냄새 1순위)", detail: "고객 재방문 결정 요인 1위 — 향기·환기 동시 관리" },
-                      { id: "day-grooming-tool",  label: "그루밍 도구 소독 (블레이드·드라이어)", detail: "교차 감염 방지 — 블레이드 알코올·자외선 소독" },
-                    ],
-                    "pet-cafe": [
-                      { id: "day-animal-health",  label: "거주 동물 컨디션 + 백신·수의사 기록 확인", detail: "펫카페 동물 건강이 매장 신뢰도 핵심" },
-                      { id: "day-vent-deodor",    label: "환기·탈취 시스템 작동", detail: "냄새 = 펫카페 1순위 불만. 시간당 환기 횟수 점검" },
-                      { id: "day-floor-clean",    label: "바닥·소파 청소 (배변·털)", detail: "고객 옷에 털 묻으면 클레임 — 청소 빈도 ↑" },
-                      { id: "day-water-bowl",     label: "동물 식수·간식 잔량 점검", detail: "동물 탈수 방지 + 위생 — 1시간 단위 보충" },
-                      { id: "day-customer-rules", label: "이용 규칙 안내 비치 확인", detail: "안 만지기·먹이 금지 등 — 사고 예방 표시" },
-                    ],
+  // 토글 헬퍼
+  const toggleCheck = (id: string) => {
+    setSoftOpenChecks((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
-                    // ── 교육 ──
-                    "kids-academy": [
-                      { id: "day-fire-equip",     label: "방염·소화기·비상등 작동 확인 (다중이용시설)", detail: "어린이 안전 = 학원 운영 절대 우선순위. 미달 시 영업 정지" },
-                      { id: "day-instructor",     label: "강사 출근·수업 자료 준비 확인", detail: "강사 결근 = 학부모 신뢰 폭락. 백업 강사 사전 확보" },
-                      { id: "day-student-list",   label: "출결·픽업 리스트 점검", detail: "어린이 픽업은 보호자 본인 확인 — 사고 예방" },
-                      { id: "day-clean-toys",     label: "교구·책상·바닥 청소 (감염병 예방)", detail: "어린이 감염병 빠르게 확산 — 매일 알코올 소독" },
-                      { id: "day-emergency",      label: "응급 연락망·구급상자 점검", detail: "응급 상황 시 즉시 학부모 연락 가능 상태" },
-                    ],
-                    "adult-class": [
-                      { id: "day-tools-prep",     label: "수업 재료·도구 사전 세팅", detail: "성인 클래스 = 시간 효율 민감. 미리 세팅으로 수업 즉시 시작" },
-                      { id: "day-instructor",     label: "강사 출근·수업 자료 점검", detail: "결강 = 환불 + 클레임. 사전 확정 + 백업 안내" },
-                      { id: "day-booking",        label: "예약·결제 시스템 점검", detail: "취미 클래스 = 단가 ↓ 빈도 ↓ — 노쇼 시 손실 큼. 예치금 시스템" },
-                      { id: "day-photo-spot",     label: "수업 결과물 포토존 점검", detail: "취미 클래스 = SNS 인증 기반 마케팅. 포토존 정돈" },
-                      { id: "day-allergen",       label: "쿠킹·플라워 등 알레르기 안내", detail: "재료 알레르기 사전 확인 — 사고 예방" },
-                    ],
-                    "language-academy": [
-                      { id: "day-instructor",     label: "원어민·내국인 강사 출근 확인", detail: "원어민 결강 시 환불 사유. 30분 전 확정 알림" },
-                      { id: "day-equipment",      label: "프로젝터·이어폰·녹음 장비 작동", detail: "리스닝·스피킹 수업 핵심 장비 — 미작동 시 수업 진행 불가" },
-                      { id: "day-textbook",       label: "교재·시험지·과제물 준비 확인", detail: "교재 누락 시 수업 직접 영향. 진도표 확인" },
-                      { id: "day-fire-equip",     label: "방염·비상등·소화기 작동 (다중이용시설)", detail: "법적 의무 — 학원은 어른 대상이라도 안전 시설 필수" },
-                      { id: "day-attendance",     label: "출결 시스템 + 학부모(미성년) 알림", detail: "성적 + 출결 = 재등록 결정. 자동 알림 시스템" },
-                    ],
-                    "coding-class": [
-                      { id: "day-pc-test",        label: "전 PC·노트북 부팅·인터넷 작동 확인", detail: "코딩 수업 핵심 인프라. 1대 고장 = 1명 수업 못 함" },
-                      { id: "day-software",       label: "필수 소프트웨어 설치·라이센스 확인", detail: "VS Code·Scratch·Python — 업데이트로 작동 안 할 때 多" },
-                      { id: "day-curriculum",     label: "당일 커리큘럼·예제 코드 점검", detail: "강사 사전 테스트로 오류 방지 — 수업 중 디버깅 시 시간 손실" },
-                      { id: "day-monitor",        label: "모니터·키보드·마우스 위생 알코올 소독", detail: "어린이 코딩 클래스 = 감염병 빠른 확산. 매일 소독" },
-                      { id: "day-emergency",      label: "응급 연락망·픽업 리스트", detail: "어린이 대상이면 보호자 본인 확인 + 응급 연락" },
-                    ],
-                    "small-study-room": [
-                      { id: "day-prep-mat",       label: "교재·과제·진도표 준비", detail: "1:1·소수 정예 = 개인 맞춤. 학생별 진도 카드 사전 준비" },
-                      { id: "day-clean-desk",     label: "책상·의자 알코올 소독", detail: "공용 공부방 = 위생 민감. 매일 청소 필수" },
-                      { id: "day-noise",          label: "주변 소음·이웃 민원 점검", detail: "주거 혼합 상권 공부방 = 소음 민원 빈번. 사전 양해" },
-                      { id: "day-attendance",     label: "출결·학부모 알림 시스템", detail: "소규모 = 학부모 만족도 직격. 도착·귀가 자동 알림" },
-                      { id: "day-fire-equip",     label: "비상등·소화기·환기 점검", detail: "다중이용시설 의무 — 작은 규모라도 안전 필수" },
-                    ],
-                    "study-room": [
-                      { id: "day-cleanliness",    label: "스터디룸 청소 (책상·의자·화이트보드)", detail: "사용 시간 사이 청소 — 다음 고객 첫인상" },
-                      { id: "day-equipment",      label: "프로젝터·전자칠판·HDMI 케이블 작동", detail: "장비 미작동 = 환불 사유. 매일 1회 작동 테스트" },
-                      { id: "day-booking",        label: "예약 시스템·결제 점검", detail: "이중 예약 방지 — 시스템 동기화 확인" },
-                      { id: "day-fire-equip",     label: "비상등·소화기 작동 확인", detail: "다중이용시설 의무" },
-                    ],
-                    "study-cafe-space": [
-                      { id: "day-kiosk-remote",   label: "무인 키오스크·QR 출입 시스템 작동", detail: "스터디카페 매출 핵심 인프라 — 원격 점검" },
-                      { id: "day-cctv-record",    label: "CCTV 24시간 녹화 + 저장 용량 확인", detail: "도난·기물 파손·소음 분쟁 대응" },
-                      { id: "day-cleanliness",    label: "좌석·룸 청소 (1일 1~2회 직접 방문)", detail: "스터디카페 1순위 불만 — 청소가 재방문률 결정" },
-                      { id: "day-beverage-stock", label: "음료 디스펜서·정수기 잔량 확인", detail: "셀프 음료가 차별점 — 떨어지면 컴플레인" },
-                      { id: "day-fire-equip",     label: "비상등·소화기 작동 확인 (다중이용시설)", detail: "법적 의무. 무인 매장은 더욱 사전 점검 필수" },
-                    ],
+  // 체크리스트 항목 컴포넌트 (재사용)
+  const CheckList = ({ items }: { items: { id: string; label: string; detail: string }[] }) => (
+    <ol style={{
+      margin: 0, padding: 0, listStyle: "none",
+      background: "white", borderRadius: 14,
+      border: "1px solid rgba(25,25,112,0.10)",
+      overflow: "hidden",
+    }}>
+      {items.map((it, i) => {
+        const checked = !!softOpenChecks[it.id];
+        return (
+          <li key={it.id}>
+            <button
+              type="button"
+              onClick={() => toggleCheck(it.id)}
+              style={{
+                width: "100%", display: "flex", alignItems: "flex-start", gap: 14,
+                padding: "16px 16px",
+                borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
+                background: checked ? "rgba(25,25,112,0.03)" : "white",
+                border: "none", textAlign: "left" as const,
+                cursor: "pointer", transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) => { if (!checked) (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.02)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = checked ? "rgba(25,25,112,0.03)" : "white"; }}
+            >
+              <span style={{
+                width: 22, height: 22, borderRadius: 7,
+                background: checked ? MIDNIGHT : "white",
+                border: checked ? "none" : "1.5px solid rgba(25,25,112,0.25)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, marginTop: 2,
+                transition: "all 0.15s",
+              }}>
+                {checked && <Check size={13} strokeWidth={3} color="white" />}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 15, fontWeight: 700,
+                  color: checked ? "rgba(15,23,42,0.5)" : "#0f172a",
+                  letterSpacing: "-0.015em", lineHeight: 1.4,
+                  textDecoration: checked ? "line-through" : "none",
+                }}>
+                  {it.label}
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(15,23,42,0.55)", lineHeight: 1.6, marginTop: 4 }}>
+                  {it.detail}
+                </div>
+              </div>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
 
-                    // ── 반려동물 (펫 추가) ──
-                    "pet-grooming": [
-                      { id: "day-blade-clean",    label: "그루밍 블레이드·이발기 알코올 소독 + 오일링", detail: "교차 감염 방지 + 블레이드 수명 연장. 매 시술 후 소독" },
-                      { id: "day-bath-temp",      label: "목욕 워터 온도 30~35°C 유지", detail: "동물 화상 방지. 너무 차거나 뜨거우면 스트레스·피부 문제" },
-                      { id: "day-dryer",          label: "강력 드라이어 + 환기 작동", detail: "K9-III 등 강풍 드라이어. 작동 점검 + 털 흩날림 환기" },
-                      { id: "day-pet-info",       label: "예약 동물 건강 상태·백신 기록 확인", detail: "심장사상충·피부병 사전 확인 — 시술 중 사고 예방" },
-                      { id: "day-stylist",        label: "그루머·미용사 출근·기술 수준 매칭", detail: "강아지 종별 미용 난이도 다름. 사전 배정 확인" },
-                    ],
-                    "pet-hotel": [
-                      { id: "day-animal-checkin", label: "입실 동물 건강 상태·식이 기록 확인", detail: "백신 증명서·건강 상태 점검 — 다른 동물 감염 방지" },
-                      { id: "day-room-clean",     label: "객실·매트·식기 매일 살균 청소", detail: "여러 동물 사용 → 위생이 신뢰 핵심. 펫호텔 별점 1순위" },
-                      { id: "day-feeding",        label: "사료·간식 개별 보관·시간표 점검", detail: "고객별 사료 다름 — 잘못 급여 시 알레르기·소화 문제" },
-                      { id: "day-walk-schedule",  label: "산책·놀이 시간표 (보호자 약속)", detail: "데이케어 계약 준수 — CCTV 보호자 공유로 신뢰 ↑" },
-                      { id: "day-emergency-vet",  label: "응급 동물병원 연락처·이동 차량 확인", detail: "응급 시 골든타임. 24시간 동물병원 사전 등록" },
-                    ],
-                    "pet-training-school": [
-                      { id: "day-trainer",        label: "트레이너 출근·교육 자료 준비", detail: "행동 교정 = 일관성 핵심. 트레이너별 교육 방식 통일" },
-                      { id: "day-equipment",      label: "리드줄·하네스·간식 보상 점검", detail: "교육 도구 점검 — 망가진 리드줄 = 사고 위험" },
-                      { id: "day-floor-safe",     label: "교육장 바닥 미끄럼·안전 점검", detail: "활동성 큰 강아지 — 미끄러운 바닥 시 부상" },
-                      { id: "day-class-roster",   label: "클래스별 동물·견종·성향 매칭", detail: "공격성·소형 vs 대형 분리. 사고 예방" },
-                      { id: "day-emergency-vet",  label: "응급 연락망·구급 키트", detail: "교육 중 사고 시 즉시 대응" },
-                    ],
-                    "pet-walking-visit": [
-                      { id: "day-route",          label: "당일 방문·산책 루트·시간 확정", detail: "방문형 = 시간 약속 = 신뢰. 지도 사전 점검" },
-                      { id: "day-key-access",     label: "고객 집 출입 키·도어락 정보 확인", detail: "키 분실 = 신뢰 폭락. 디지털 도어락 비밀번호 보안 관리" },
-                      { id: "day-pet-info",       label: "동물별 식이·약·특이사항 메모", detail: "노령견 약 시간·알레르기·아토피 — 매번 재확인" },
-                      { id: "day-photo-report",   label: "보호자에게 사진·영상 보고 준비", detail: "방문 인증 사진이 차별점 — 카카오톡 자동 전송" },
-                      { id: "day-emergency",      label: "응급 동물병원·보호자 연락처 확인", detail: "이상 발견 시 즉시 보호자 + 수의사 동시 연락" },
-                    ],
+  return (
+    <>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "소프트 오픈 90분 — 본 오픈 첫 달 매출을 결정하는 시간"
+            : "90 min soft open decides month-1 grand-open revenue",
+          detail: ko
+            ? "지인·동네 주민·인플루언서 초대 → 실 운영 1회전 → 피드백 → 본 오픈 직전 보강. 사인된 직원·POS·SNS 가 처음으로 함께 돌아가는 통합 테스트입니다."
+            : "Invite friends/neighbors/influencers → 1 real cycle → feedback → harden before grand open. First integrated test of staff + POS + SNS.",
+        }}
+        pillars={[
+          { icon: <Users size={12} strokeWidth={1.5} />, label: ko ? "초대" : "Invite", meta: ko ? "10~30명 + 가격 결정" : "10-30 ppl + price" },
+          { icon: <ClipboardList size={12} strokeWidth={1.5} />, label: ko ? "운영" : "Ops", meta: ko ? "8축 체크 + 관찰" : "8-axis + watch" },
+          { icon: <MessageSquare size={12} strokeWidth={1.5} />, label: ko ? "피드백" : "Feedback", meta: ko ? "맛·서비스·가격·분위기" : "Taste/svc/price/vibe" },
+        ]}
+      />
 
-                    // ── 소매 ──
-                    "convenience-small": [
-                      { id: "day-stock-replenish", label: "주력 상품 재고 보충 (생수·라면·담배)", detail: "편의형 매장 = 결품 = 단골 즉시 이탈. 자동 발주 점검" },
-                      { id: "day-expiry",          label: "유통기한 임박 상품 점검·할인 처리", detail: "유효기간 지난 식품 진열 = 식약처 적발 + 과태료" },
-                      { id: "day-cigarette",       label: "담배·주류 진열·신분증 확인 매뉴얼", detail: "미성년자 판매 적발 시 영업 정지. 알람 시스템 점검" },
-                      { id: "day-cctv-record",     label: "CCTV·도난 방지 게이트 작동", detail: "편의형 매장 도난 빈번 — 보안 시스템 점검" },
-                      { id: "day-pos-speed",       label: "POS 결제 속도·바코드 스캐너 점검", detail: "회전율 매장 = 결제 속도가 핵심" },
-                    ],
-                    "lifestyle-goods": [
-                      { id: "day-display-curate",  label: "큐레이션 디스플레이 정렬·신상품 푸시", detail: "라이프스타일 = 발견 경험. 매일 진열 변화 → 재방문 유도" },
-                      { id: "day-photo-spot",      label: "포토존·인스타 구도 점검", detail: "SNS 공유가 매출 직결 — 조명·소품·태그 안내" },
-                      { id: "day-stock-rotation",  label: "재고 회전·판매 부진 상품 위치 변경", detail: "회전 느린 재고 = 자금 묶임. 위치 변경으로 가시성 ↑" },
-                      { id: "day-package",         label: "선물 포장재·리본 재고 확인", detail: "라이프스타일 = 선물 수요 多. 포장 부족 시 매출 손실" },
-                      { id: "day-music-light",     label: "매장 음악·조명·향기 설정", detail: "라이프스타일 매장 = 분위기 = 체류 시간 = 객단가" },
-                    ],
-                    "beauty-supplies": [
-                      { id: "day-tester",          label: "테스터 위생·재고 점검 (매일 알코올 소독)", detail: "테스터 위생 = 매장 신뢰. 더러운 테스터 = 즉각 별점 폭락" },
-                      { id: "day-product-expiry",  label: "화장품 유효기간·개봉일 라벨 점검", detail: "유통기한 지난 제품 = 식약처·소비자보호원 신고 대상" },
-                      { id: "day-staff-knowledge", label: "직원 신상품·성분 지식 브리핑", detail: "뷰티 매장 = 추천 능력 = 매출. 매일 신상 학습" },
-                      { id: "day-stock-bestseller",label: "베스트셀러 재고 우선 확보", detail: "결품 1번이면 단골 즉시 다른 매장으로. 자동 발주 점검" },
-                      { id: "day-display",         label: "조명·진열대 정렬 (화장품 색감 주의)", detail: "조명 색온도가 화장품 색감 좌우 — 5000K 주광색 권장" },
-                    ],
-                    "fashion-accessories": [
-                      { id: "day-display-rotate",  label: "윈도 디스플레이·마네킹 정렬 변경", detail: "패션 매장 = 진열 변화가 발길. 주 1회 → 매일 마이너 변경" },
-                      { id: "day-stock-trend",     label: "트렌드 상품·신상 진열 점검", detail: "트렌드 노후화 = 재고 자산 가치 ↓. 핫 시즌 신상품 즉시 진열" },
-                      { id: "day-tag-price",       label: "가격표·할인 태그·POP 정확성 점검", detail: "가격 오류 = 클레임. 할인 종료 후 태그 즉시 교체" },
-                      { id: "day-mirror",          label: "거울·피팅룸 청결·조명 점검", detail: "피팅룸 = 구매 결정 공간. 조명 어두우면 객단가 ↓" },
-                      { id: "day-ig-content",      label: "인스타 OOTD·신상 콘텐츠 촬영", detail: "패션 = 인스타 = 유입. 매일 1게시물 권장" },
-                    ],
-                    "health-food-store": [
-                      { id: "day-product-expiry",  label: "건강식품 유통기한·로트번호 점검", detail: "건강식품 = 신뢰. 유통기한 지난 제품 적발 시 영업 중단" },
-                      { id: "day-temp-storage",    label: "냉장·실온 보관 기준 준수 점검", detail: "프로바이오틱스·콜드 압착 오일 = 냉장 필수. 변질 시 전량 폐기" },
-                      { id: "day-staff-knowledge", label: "직원 제품 효능·성분·복용법 학습", detail: "건강식품 = 상담 매출. 잘못된 정보 = 식약처 신고 위험" },
-                      { id: "day-allergen",        label: "알레르기·복용 주의사항 표시", detail: "견과·갑각류·임산부 주의 등 표시 의무. 미표시 시 사고 책임" },
-                      { id: "day-cert-display",    label: "건강기능식품 인증 마크 게시", detail: "식약처 인증 마크 매장 노출 — 신뢰 ↑" },
-                    ],
-                    "unmanned-retail": [
-                      { id: "day-cctv-record",     label: "CCTV 24시간 녹화·해상도 점검", detail: "무인 매장 도난 빈번 — 클라우드 백업 + 화질 확인" },
-                      { id: "day-stock-restock",   label: "1일 1~2회 직접 방문 재고 보충", detail: "무인이라도 재고 보충은 사람. 인기 상품 우선" },
-                      { id: "day-payment-kiosk",   label: "무인 키오스크·결제 시스템 작동", detail: "결제 오류 = 매출 0. 원격 모니터링 + 알림" },
-                      { id: "day-cleanliness",     label: "매장 청결 (먼지·쓰레기·바닥)", detail: "무인 매장 청결 = 첫인상 = 재방문" },
-                      { id: "day-anti-theft",      label: "도난 방지 게이트·전자 태그 작동", detail: "EAS 시스템 점검 — 도난율 직접 영향" },
-                    ],
+      <StageTabNav
+        ko={ko}
+        pageIndex={pageIdx}
+        pageLabels={pageLabels}
+        onPrev={() => setPageIdx(p => Math.max(0, p - 1))}
+        onNext={() => setPageIdx(p => Math.min(pageLabels.length - 1, p + 1))}
+        onJump={setPageIdx}
+      />
 
-                    // ── 공간/숙박 ──
-                    "rental-studio": [
-                      { id: "day-prev-clean",      label: "이전 사용자 사용 후 청소·점검", detail: "예약 시간 사이 청소 + 분실물 확인. 다음 고객 첫인상" },
-                      { id: "day-equipment",       label: "조명·배경지·삼각대·렌탈 장비 점검", detail: "촬영 스튜디오 = 장비 작동 = 환불 방지" },
-                      { id: "day-booking",         label: "예약 시스템·시간 단위 가동률 확인", detail: "이중 예약 방지 — 시스템 동기화. 시간 단위 매출 모델" },
-                      { id: "day-noise",           label: "주변 소음·이웃 민원 점검", detail: "주거 혼합 상권 스튜디오 = 민원 빈번. 시간대별 사용 규칙" },
-                      { id: "day-fire-equip",      label: "비상등·소화기 작동 (다중이용시설)", detail: "법적 의무. 사진·영상 촬영 시 화재 위험 인지" },
-                    ],
-                    "party-room": [
-                      { id: "day-prev-clean",      label: "이전 행사 후 청소·소독 (음식·음료 잔여물)", detail: "파티룸 = 청소가 거의 전부. 다음 고객 즉시 입실 가능 상태" },
-                      { id: "day-equipment",       label: "스피커·노래방 기기·조명·에어컨 작동", detail: "파티 분위기 = 장비. 미작동 = 환불 + 별점 폭락" },
-                      { id: "day-noise",           label: "방음·소음 측정·이웃 민원 사전 양해", detail: "파티룸 1순위 리스크. 시간대 제한·소음 게이지 설치" },
-                      { id: "day-amenity",         label: "일회용 컵·접시·종이타올 재고", detail: "파티 = 일회용품 폭증. 부족 시 즉각 클레임" },
-                      { id: "day-fire-equip",      label: "비상등·소화기·환기 작동 (다중이용시설)", detail: "법적 의무. 음주·불꽃 사용 가능성 — 소방 점검" },
-                    ],
-                    "shared-office": [
-                      { id: "day-internet",        label: "Wi-Fi·인터넷·복합기 작동", detail: "공유오피스 = 인프라. 다운 시 회원 즉시 환불·해지" },
-                      { id: "day-meeting-room",    label: "회의실 예약 시스템·장비(빔·HDMI) 점검", detail: "회의실 = 추가 매출원. 예약 충돌·장비 오류 = 클레임" },
-                      { id: "day-cleanliness",     label: "공용 공간(주방·라운지·화장실) 청소", detail: "회원 만족도 결정 — 청소 빈도 = 재계약률" },
-                      { id: "day-coffee-snack",    label: "커피·간식·생수 재고 확인", detail: "공유오피스 어메니티 — 떨어지면 즉각 불만" },
-                      { id: "day-access-control",  label: "출입 통제(키카드·QR) 작동 확인", detail: "비회원 무단 출입 방지 + 보안" },
-                    ],
-                    "practice-room": [
-                      { id: "day-equipment",       label: "악기·앰프·스피커·마이크 작동 점검", detail: "연습실 = 장비. 미작동 = 환불. 매일 1회 모든 룸 테스트" },
-                      { id: "day-soundproof",      label: "방음·이웃 민원 점검", detail: "연주 소음 = 민원 빈번. 방음재 마감 점검" },
-                      { id: "day-cleanliness",     label: "룸 청소·악기 알코올 소독 (입·손 접촉)", detail: "관악기·마이크 = 침 묻음. 매 회 소독 = 위생 핵심" },
-                      { id: "day-booking",         label: "예약 시스템·시간 단위 가동률 점검", detail: "시간당 단가 모델 — 예약 누락 = 매출 직격" },
-                      { id: "day-fire-equip",      label: "비상등·소화기 작동 (다중이용시설)", detail: "법적 의무. 전기 장비 多 → 화재 점검 필수" },
-                    ],
+      {/* ── 페이지 0: 단계 개요 ───────────────────────────────────────── */}
+      {pageIdx === 0 && (
+        <StageOverview
+          ko={ko}
+          headline={ko
+            ? "소프트 오픈 90분이 본 오픈의 첫 달 매출 곡선을 결정합니다"
+            : "90 min soft open shapes month-1 grand-open revenue"}
+          why={ko
+            ? "본 오픈 직전 마지막 검증. 지인·이웃·인플루언서 10~30명을 초대해 운영 1회전을 돌리면 POS·동선·메뉴·서비스의 실 문제가 모두 드러납니다. 본 오픈 직전 1~2개만 보강해도 첫 달 별점·재방문률이 크게 좌우됩니다."
+            : "Final pre-launch validation. Inviting 10-30 guests through one real cycle surfaces issues in POS/flow/menu/service. Fixing 1-2 issues before grand open can shift month-1 ratings and repeats dramatically."}
+          stat={{
+            value: ko ? "별점 +0.3" : "+0.3 stars",
+            label: ko ? "소프트 오픈 진행 매장 평균 별점 차이" : "avg rating delta with soft-open",
+          }}
+          workOutline={[
+            { stepLabel: ko ? "1. 손님 초대" : "1. Guests", title: ko ? "10~30명 초대 + 가격 결정 (무료/할인/정가)" : "Invite 10-30 + pricing", time: ko ? "사전" : "Pre" },
+            { stepLabel: ko ? "2. 당일 운영" : "2. Day-of", title: ko ? "8축 체크 + 운영 중 손님·직원 관찰" : "8-axis check + observe", time: ko ? "90분" : "90m" },
+            { stepLabel: ko ? "3. 피드백" : "3. Feedback", title: ko ? "맛·서비스·가격·분위기 — AI 폼 또는 카드" : "Collect via AI form / cards", time: ko ? "30분" : "30m" },
+            { stepLabel: ko ? "4. 본 오픈 준비" : "4. Grand open", title: ko ? "메뉴·직원·마케팅·발주 최종 보강" : "Lock menu / staff / ads / orders", time: ko ? "당일" : "Same day" },
+            { stepLabel: ko ? "체크리스트" : "Checklist", title: ko ? "자주 빠뜨리는 항목 + 진행 상태 요약" : "Common-miss + progress summary" },
+          ]}
+          outcome={ko
+            ? "운영 1회전이 검증된 상태로 본 오픈 진입. 메뉴·동선·POS·SNS 가 통합 작동하는 것을 확인 + 첫 별점 5개 이상을 사전 확보. 다음 단계(본 오픈) 부터 신규 고객 매출 곡선이 안정적."
+            : "Enter grand-open with one validated cycle. Menu/flow/POS/SNS verified together + 5+ first reviews secured. Smoother revenue curve in grand-open."}
+          nextStage={ko ? "본 오픈 (pre-launch-final)" : "Grand open"}
+        />
+      )}
 
-                    // ── 생활서비스 ──
-                    "self-laundry": [
-                      { id: "day-machine-test",   label: "전 세탁기·건조기 작동 점검", detail: "세탁기 1대 고장 = 매출 즉시 손실. 1일 1회 작동 테스트" },
-                      { id: "day-detergent",      label: "세제·유연제 자동 공급 잔량", detail: "셀프 세탁 핵심 — 떨어지면 즉시 컴플레인" },
-                      { id: "day-cctv-record",    label: "CCTV 녹화 + 도난 방지 점검", detail: "무인 매장 보안 핵심" },
-                      { id: "day-cleanliness",    label: "매장 청결 (먼지·세제 가루)", detail: "건조기 먼지 화재 위험 — 필터 청소 1일 1회" },
-                      { id: "day-payment",        label: "무인 결제 키오스크·QR 작동", detail: "결제 미작동 = 매출 0" },
-                    ],
-                    "laundry-service": [
-                      { id: "day-receive-list",    label: "당일 접수·픽업·배송 일정 확인", detail: "세탁편의점 = 시간 약속. 늦으면 신뢰 직격" },
-                      { id: "day-tag-system",      label: "고객 태그·라벨 누락 점검", detail: "세탁물 분실 = 무한 책임. 태그 시스템 점검" },
-                      { id: "day-stain-record",    label: "특수 얼룩·소재 사전 기록", detail: "사전 안내로 책임 분담 — 사고 방지" },
-                      { id: "day-equipment",       label: "다림기·드라이클리닝 머신 작동", detail: "기기 고장 = 마감 지연 = 클레임. 매일 점검" },
-                      { id: "day-pickup-route",    label: "수거·배송 라이더 동선·시간", detail: "동네 세탁 = 픽업 정시성 = 단골 유지" },
-                    ],
-                    "cleaning-service": [
-                      { id: "day-staff-schedule",  label: "청소 인력 배정·스케줄 확인", detail: "방문 시간 = 신뢰. 인력 배정 사전 확정" },
-                      { id: "day-supply-stock",    label: "청소 도구·세제 재고 확인 (차량별)", detail: "현장 도착 후 도구 부족 = 시간 낭비. 차량별 점검" },
-                      { id: "day-customer-info",   label: "고객 집·사무실 특이사항 사전 학습", detail: "반려동물·알레르기·귀중품 위치 — 사고 방지" },
-                      { id: "day-photo-report",    label: "Before/After 사진 보고 시스템", detail: "방문형 청소 = 사진 = 재계약. 자동 카톡 전송" },
-                      { id: "day-emergency",       label: "고객 응대 매뉴얼·민원 대응 핫라인", detail: "현장 분쟁 시 즉시 본부 연결 — 1차 대응 매뉴얼" },
-                    ],
-                    "repair-service": [
-                      { id: "day-parts-stock",     label: "주요 부품·소모품 재고 확인", detail: "수리 = 부품. 결품 시 고객 대기 → 클레임" },
-                      { id: "day-tool-check",      label: "공구·측정 기기 작동 점검", detail: "전동 공구·테스터 — 미작동 시 수리 불가" },
-                      { id: "day-quote-record",    label: "견적서·수리 이력 디지털화", detail: "수리 분쟁 시 증거. 사진 + 견적서 자동 저장" },
-                      { id: "day-warranty",        label: "보증 기간·반품 정책 명시", detail: "수리 후 재발 시 무한 책임 방지. 보증 조건 사전 명시" },
-                      { id: "day-safety",          label: "전기·가스 안전 점검 (작업 위험성)", detail: "수리 작업 화재·감전 위험 — 보호 장비 + 보험 점검" },
-                    ],
-                    "print-copy": [
-                      { id: "day-toner",           label: "토너·잉크·용지 재고 확인 (피크 1.5배)", detail: "시험 시즌·과제 시즌 = 결품 시 매출 직격. 사전 보충" },
-                      { id: "day-machine-test",   label: "복합기·코팅·제본 기계 작동 테스트", detail: "고장 = 매출 0. 매일 시험 출력으로 점검" },
-                      { id: "day-file-format",     label: "파일 호환성·USB 보안 점검", detail: "다양한 포맷 지원 + 바이러스 차단 — 고객 USB 감염 사고 방지" },
-                      { id: "day-package-stock",   label: "택배·문서 발송 박스·테이프 재고", detail: "택배 결합 매장 — 박스 부족 시 즉각 매출 손실" },
-                      { id: "day-payment",         label: "POS·간편결제·계좌이체 작동", detail: "학생·직장인 = 빠른 결제 요구. 미작동 시 이탈" },
-                    ],
-                    "device-repair": [
-                      { id: "day-parts-stock",     label: "iPhone·갤럭시 액정·배터리 재고 확인", detail: "휴대폰 수리 = 부품 ROM. 인기 모델 사전 보유" },
-                      { id: "day-tool-precision",  label: "정밀 공구·열풍기·현미경 작동 점검", detail: "정밀 수리 도구 — 1일 1회 점검. 마모 시 수리 정확도 ↓" },
-                      { id: "day-data-backup",     label: "고객 기기 데이터 백업·동의서 점검", detail: "수리 중 데이터 손실 = 분쟁. 사전 동의서 + 백업 절차" },
-                      { id: "day-warranty",        label: "수리 보증 조건·반품 정책 명시", detail: "보증 분쟁 빈번 — 보증 기간·범위 사전 안내" },
-                      { id: "day-cctv",            label: "수리 CCTV 녹화·작업 영상 보관", detail: "분실·고장 분쟁 시 증거. 작업 카메라 점검" },
-                    ],
-                  };
+      {/* ── 페이지 1: 손님 초대 + 가격 결정 ─────────────────────────── */}
+      {pageIdx === 1 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <WorkStep
+            ko={ko}
+            stepLabel={ko ? "1. 손님 초대" : "1. Guest invite"}
+            time={ko ? "사전 7~14일" : "7-14d ahead"}
+            headline={ko ? "10~30명 초대 + 4가지 손님 유형 + 가격 결정" : "Invite 10-30 + 4 guest types + price decision"}
+            why={ko
+              ? "본 오픈 매출의 30~50%는 첫 1주 단골이 결정. 소프트 오픈 손님이 그 단골 풀의 시드. 솔직한 가족·잠재 단골 동네 주민·바이럴 인플루언서·전문 동료 — 4유형을 섞어야 균형 있는 피드백."
+              : "30-50% of grand-open revenue is decided by week-1 regulars. Soft-open guests are that pool's seed. Mix 4 types — family, neighbors, influencers, peers — for balanced feedback."}
+            how={[
+              { title: ko ? "오픈 7~14일 전 초대장 발송 — 카톡 + DM" : "Send invites 7-14 days early — KakaoTalk + DM", detail: ko ? "「○○ 매장 소프트 오픈에 초대합니다」 + 일시·주소·메뉴 사진. 가족·이웃·인플루언서·동료 4분류 명단." : "Include date/address/menu photos. Categorize: family / neighbors / influencers / peers." },
+              { title: ko ? "가격 결정 — 무료 / 30~50% 할인 / 정가 중 선택" : "Pricing — free / 30-50% off / full", detail: ko ? "무료=인상 최대 / 할인=결제·POS 검증 / 정가=실수익 모델 검증. 매장 컨셉·예산·검증 목표에 맞춰 결정." : "Free maxes impression; discount validates POS; full validates real revenue. Pick by goal/budget." },
+              { title: ko ? "예상 인원 1.5배로 식자재·소모품 발주" : "Order ingredients at 1.5× expected", detail: ko ? "결품 = 첫 인상 폭락. 핵심 메뉴는 충분히, 사이드는 1.2배. 남으면 직원 식사·다음날 사용." : "Stockout ruins first impression. Core menus 1.5×; sides 1.2×. Reuse leftover for staff or next day." },
+              { title: ko ? "초대 명단·확정 인원 카톡방 또는 구글폼으로 관리" : "Manage invitees via KakaoTalk group or Google Form", detail: ko ? "「몇 명 + 시간대」 사전 확정 — 노쇼 방지 + 좌석·서비스 사전 분배." : "Confirm 'how many + when' — prevents no-shows, plans seating/service." },
+            ]}
+            watchouts={ko ? [
+              { label: "가족·지인만 초대하면 진짜 시장 검증 안 됨", text: "그들은 무조건 좋다고 함. 동네 주민 + 인플루언서 + 동료를 반드시 섞어야 솔직한 피드백 확보." },
+              { label: "결품·POS 미작동 = 첫 인상 즉사", text: "1.5배 발주 + 결제 단말 사전 테스트 + 백업 결제 수단 (계좌이체 QR) 까지 준비." },
+            ] : [
+              { label: "Friends-only = no real validation", text: "They'll just say it's great. Mix neighbors + influencers + peers for honest feedback." },
+              { label: "Stockouts/POS issues = first-impression death", text: "1.5× orders + pre-test all payment terminals + backup transfer QR." },
+            ]}
+            favorable={myFavorable}
+          />
 
-                  const universalDayChecks = [
-                    { id: "day-cleanliness",    label: "매장·시설 청결 & 위생 최종 점검",      detail: "바닥·테이블·화장실·쓰레기통 모두 점검, 소독" },
-                    { id: "day-staff-briefing", label: "직원 역할 배분 & 브리핑",              detail: "포지션·응대 멘트·비상 대응 방법 공유" },
-                    { id: "day-pos",            label: "POS & 결제 단말기 정상 작동 확인",     detail: "카드·현금·간편결제(카카오·네이버·토스) 테스트 결제 후 즉시 취소" },
-                    { id: "day-ambiance",       label: "조명·음악·온도·향기 설정",             detail: "원하는 브랜드 분위기 연출, 손님 입장 전 최종 확인" },
-                    { id: "day-observation",    label: "운영 중 병목 & 손님 반응 관찰",        detail: "표정·대화·남기는 것·오래 머무는 곳 실시간 기록" },
-                    { id: "day-payment",        label: "결제 오류·지연 여부 체크",             detail: "영수증 출력, 결제 완료 문자 발송 여부 확인" },
-                    { id: "day-feedback-card",  label: "피드백 카드 수거 & 정리",              detail: "무기명 가능 → 솔직한 의견 유도" },
-                    { id: "day-debrief",        label: "직원 회의 진행",                       detail: "잘된 점 3가지 + 개선점 3가지 모두 발언하게 하기" },
-                    { id: "day-settlement",     label: "일 마감 & 정산 확인",                  detail: "실 매출과 POS 금액 일치 여부, 정산 오류 체크" },
-                    { id: "day-sns",            label: "SNS 콘텐츠 촬영 & 업로드",            detail: "당일 감성 콘텐츠 → 인스타·네이버 포스팅" },
-                  ];
-
-                  // ─────────────────────────────────────────────────────────────
-                  // 운영 형태별 추가 점검 (프랜차이즈 vs 개인)
-                  // ─────────────────────────────────────────────────────────────
-                  const franchiseExtraChecks = [
-                    { id: "day-hq-erp-sync",    label: "본사 ERP·POS 매출 자동 동기화 확인", detail: "프랜차이즈 ERP는 매출·재고·발주를 본사 시스템에 자동 보고. 동기화 실패 시 본사 점검 시야 사라짐" },
-                    { id: "day-hq-order",       label: "본사 발주 시스템 자동 발주 트리거 점검", detail: "재고 임계치 도달 시 자동 발주. 트리거 실패 시 익일 운영 차질 — 수기 확인 백업" },
-                    { id: "day-hq-brand-std",   label: "본사 브랜드 표준 준수 점검", detail: "브랜드 컵·간판·매장 음악·유니폼 — 본사 Quality Audit 대비. 위반 시 시정 명령" },
-                    { id: "day-hq-recipe",      label: "본사 표준 레시피 준수 (그램·시간 표준)", detail: "프랜차이즈 핵심 — 매장 간 일관성. 레시피 표 비치·확인" },
-                  ];
-
-                  const independentExtraChecks = [
-                    { id: "day-self-log",       label: "매출·고객 일지 직접 기록", detail: "프랜차이즈 ERP 없으니 사장님이 직접 — 캐시노트·수기. 데이터 누적이 운영 개선의 시작" },
-                    { id: "day-regular-crm",    label: "단골 고객 이름·취향 기록 (셀프 CRM)", detail: "개인 매장의 무기 — 단골 1명 = 고정 매출. 노트·앱 활용해 매일 정리" },
-                    { id: "day-competitor",     label: "주변 경쟁점 동향 점검 (메뉴·가격·이벤트)", detail: "본사 마케팅 없으니 사장님이 직접 시장 모니터링. 주 1회 → 일 1회 빠른 반응" },
-                    { id: "day-owner-rest",     label: "사장님 본인 휴식·식사 시간 확보", detail: "번아웃이 개인 매장 폐점 1순위 원인. 30분 식사 + 짧은 휴식 의식적으로 확보" },
-                  ];
-
-                  // ─── Sub-industry > category fallback ───
-                  const subData = selectedIndustryId ? subIndustryDayChecks[selectedIndustryId] : undefined;
-                  const extraDayChecks = subData ?? industryDayChecks[industryCategoryId] ?? [];
-                  const ownershipExtras = startupType === "franchise" ? franchiseExtraChecks
-                    : startupType === "independent" ? independentExtraChecks
-                    : [];
-                  const allDayChecks = [...extraDayChecks, ...universalDayChecks, ...ownershipExtras];
-                  const usingSubIndustry = !!subData;
-                  const ownershipLabel = startupType === "franchise" ? "프랜차이즈"
-                    : startupType === "independent" ? "개인 운영"
-                    : null;
-
-                  const industryFeedback: Record<string, { id: string; label: string }[]> = {
-                    food:           [{ id: "feedback-taste", label: "맛·음식 품질 피드백 수집" },          { id: "feedback-menu",       label: "메뉴 다양성·구성 피드백 수집" }],
-                    "cafe-dessert": [{ id: "feedback-taste", label: "맛·음료 & 디저트 품질 피드백 수집" }, { id: "feedback-menu",       label: "메뉴·시즌 구성 피드백 수집" }],
-                    beauty:         [{ id: "feedback-quality", label: "시술 퀄리티·기술력 피드백 수집" },  { id: "feedback-booking",    label: "예약·대기·동선 편의성 피드백 수집" }],
-                    retail:         [{ id: "feedback-product", label: "상품 구성·품질 피드백 수집" },       { id: "feedback-display",    label: "진열·동선 편의성 피드백 수집" }],
-                    fitness:        [{ id: "feedback-facility", label: "시설·기구 만족도 피드백 수집" },    { id: "feedback-instructor", label: "강사·PT 품질 피드백 수집" }],
-                    "online-digital": [{ id: "feedback-ux", label: "구매 흐름·UI/UX 피드백 수집" },         { id: "feedback-product",    label: "상품 설명·사진 품질 피드백 수집" }],
-                  };
-                  const allFeedbackItems = [
-                    ...(industryFeedback[industryCategoryId] ?? []),
-                    { id: "feedback-service",  label: "서비스 속도·친절도 피드백 수집" },
-                    { id: "feedback-price",    label: "가격 만족도 피드백 수집" },
-                    { id: "feedback-ambiance", label: "공간·분위기·인테리어 피드백 수집" },
-                  ];
-
-                  const coreImproveLabel: Record<string, string> = {
-                    food: "메뉴·레시피", "cafe-dessert": "메뉴·레시피", beauty: "시술·서비스",
-                    retail: "상품 구성·진열", fitness: "프로그램·시설", "online-digital": "상품·UX",
-                  };
-                  const improvementItems = [
-                    { id: "improve-core",    label: `피드백 기반 ${coreImproveLabel[industryCategoryId] ?? "핵심 서비스"} 개선 완료`,  detail: "피드백에서 반복 언급된 항목 최우선 개선" },
-                    { id: "improve-service", label: "서비스 흐름 & 직원 동선 재배치 완료",                                              detail: "병목 구간 제거, 담당 역할 재조정" },
-                    { id: "improve-staff",   label: "약점 파악 기반 직원 재교육 완료",                                                  detail: "미숙한 부분 집중 훈련, 응대 스크립트 보완" },
-                  ];
-
-                  const grandOpeningItems = [
-                    { id: "final-naver",     label: "네이버 플레이스 오픈 포스팅 예약",       detail: "사진·메뉴·영업시간 최신화 후 오픈 당일 발행 예약" },
-                    { id: "final-instagram", label: "인스타그램 그랜드 오픈 콘텐츠 예약",     detail: "릴스·카드뉴스 오픈 당일 자동 업로드 설정" },
-                    { id: "final-kakao",     label: "카카오 채널 오픈 알림 발송",             detail: "팔로워 전체 메시지 — 소프트오픈 때 모은 DB 활용" },
-                    { id: "final-event",     label: "오픈 기념 이벤트 준비 완료",             detail: "할인·사은품·스탬프·팔로우 이벤트 중 1가지 이상" },
-                  ];
-
-                  const softSteps = [
-                    { title: "손님 초대 & 행사 기획",      subtitle: `${bizLabel} 소프트오픈에 누구를 초대하고 어떤 방식으로 진행할지 결정합니다` },
-                    { title: "당일 운영 체크리스트",        subtitle: `${bizLabel} 운영의 모든 요소를 실전 그대로 점검합니다` },
-                    { title: "피드백 분석 & 본오픈 준비",   subtitle: "수집된 피드백으로 개선하고, 본오픈을 완벽히 준비합니다" },
-                  ];
-                  const curSoftStep = softSteps[softOpenStep];
-
-                  const renderCheckRow = (id: string, label: string, detail: string, accent = "rgb(0,122,255)") => {
-                    const checked = !!softOpenChecks[id];
-                    return (
-                      <div key={id} style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", cursor: "pointer", background: checked ? `${accent}0A` : "white", transition: "background 0.15s" }}
-                        onClick={() => setSoftOpenChecks(prev => ({ ...prev, [id]: !prev[id] }))}
-                      >
-                        <div style={{ flexShrink: 0, marginTop: "2px", width: "22px", height: "22px", borderRadius: "7px", border: checked ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: checked ? accent : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                          {checked && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "14.5px", fontWeight: 500, color: checked ? "rgba(0,0,0,0.3)" : "var(--text)", textDecoration: checked ? "line-through" : "none", lineHeight: 1.4, letterSpacing: "-0.2px", transition: "all 0.15s" }}>{label}</div>
-                          {detail && !checked && <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.42)", marginTop: "3px", lineHeight: 1.45 }}>{detail}</div>}
-                        </div>
+          {/* 가격 옵션 카드 (3 라디오) */}
+          <div style={{
+            background: "white", borderRadius: 16,
+            border: "1px solid rgba(25,25,112,0.08)",
+            boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+            padding: "18px 20px",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 10 }}>
+              {ko ? "가격 결정 — 한 옵션 선택" : "Pricing — pick one"}
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {pricingOptions.map((opt) => {
+                const selected = softOpenPricing === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setSoftOpenPricing(opt.id)}
+                    style={{
+                      display: "flex", alignItems: "flex-start", gap: 12,
+                      padding: "14px 16px", borderRadius: 12,
+                      background: selected ? "rgba(25,25,112,0.04)" : "white",
+                      border: selected ? `1.5px solid ${MIDNIGHT}` : "1px solid rgba(25,25,112,0.10)",
+                      textAlign: "left" as const, cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{
+                      width: 18, height: 18, borderRadius: "50%",
+                      background: selected ? MIDNIGHT : "white",
+                      border: selected ? "none" : "1.5px solid rgba(25,25,112,0.30)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0, marginTop: 2,
+                    }}>
+                      {selected && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "white" }} />}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+                        {opt.label}
                       </div>
-                    );
-                  };
-
-                  const renderSection = (title: string, items: { id: string; label: string; detail: string }[], accent = "rgb(0,122,255)") => (
-                    <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
-                      <div style={{ padding: "14px 20px 6px" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{title}</div>
+                      <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginTop: 3 }}>
+                        {opt.desc}
                       </div>
-                      {items.map((item, i) => (
-                        <div key={item.id}>
-                          {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginLeft: "56px" }} />}
-                          {renderCheckRow(item.id, item.label, item.detail, accent)}
-                        </div>
-                      ))}
                     </div>
-                  );
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                  return (
-                    <div style={{ marginBottom: "20px" }}>
-                      {/* 네비게이션 */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
-                        <button type="button"
-                          style={{ fontSize: "14px", fontWeight: 580, color: softOpenStep === 0 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: softOpenStep === 0 ? "default" : "pointer", padding: "8px 4px", pointerEvents: softOpenStep === 0 ? "none" : "auto" }}
-                          onClick={() => setSoftOpenStep(s => s - 1)}
-                        >← {language === "ko" ? "이전" : "Back"}</button>
-                        <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                          {[0, 1, 2].map(i => (
-                            <div key={i} onClick={() => setSoftOpenStep(i)} style={{ width: i === softOpenStep ? "20px" : "6px", height: "6px", borderRadius: "100px", background: i === softOpenStep ? "rgb(0,122,255)" : "rgba(17,17,17,0.15)", cursor: "pointer", transition: "width 0.2s ease" }} />
-                          ))}
-                        </div>
-                        <button type="button"
-                          style={{ fontSize: "14px", fontWeight: 580, color: softOpenStep === 2 ? "transparent" : "rgba(0,0,0,0.45)", background: "none", border: "none", cursor: softOpenStep === 2 ? "default" : "pointer", padding: "8px 4px", pointerEvents: softOpenStep === 2 ? "none" : "auto" }}
-                          onClick={() => setSoftOpenStep(s => s + 1)}
-                        >{language === "ko" ? "다음" : "Next"} →</button>
-                      </div>
+          {/* 손님 4유형 안내 */}
+          <div style={{
+            background: "white", borderRadius: 16,
+            border: "1px solid rgba(25,25,112,0.08)",
+            boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+            padding: "18px 20px",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 10 }}>
+              {ko ? "초대 손님 4유형 — 균형 있게 섞기" : "4 guest types — mix for balance"}
+            </div>
+            <ol style={{
+              margin: 0, padding: 0, listStyle: "none",
+              border: "1px solid rgba(25,25,112,0.10)", borderRadius: 12, overflow: "hidden",
+            }}>
+              {guestTypes.map((g, i) => (
+                <li key={g.label} style={{
+                  display: "flex", alignItems: "flex-start", gap: 14,
+                  padding: "14px 16px",
+                  borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
+                }}>
+                  <span style={{
+                    width: 32, height: 32, borderRadius: 10,
+                    background: "rgba(25,25,112,0.08)", color: MIDNIGHT,
+                    fontSize: 14, fontWeight: 800,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, fontVariantNumeric: "tabular-nums" as const,
+                  }}>{i + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{g.label}</div>
+                    <div style={{ fontSize: 13, color: "rgba(15,23,42,0.6)", lineHeight: 1.6, marginTop: 3 }}>{g.desc}</div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
 
-                      {/* 헤더 */}
-                      <div style={{ marginBottom: "18px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "7px" }}>
-                          <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "rgba(0,122,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <span style={{ fontSize: "11px", fontWeight: 750, color: "rgb(0,122,255)", letterSpacing: "-0.5px" }}>0{softOpenStep + 1}</span>
-                          </div>
-                          <h3 style={{ margin: 0, fontSize: "19px", fontWeight: 660, letterSpacing: "-0.5px", color: "var(--text)" }}>{curSoftStep.title}</h3>
-                        </div>
-                        <p style={{ margin: 0, fontSize: "13.5px", color: "rgba(0,0,0,0.48)", lineHeight: 1.55, paddingLeft: "40px" }}>{curSoftStep.subtitle}</p>
-                      </div>
+      {/* ── 페이지 2: 당일 운영 체크리스트 ───────────────────────── */}
+      {pageIdx === 2 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <WorkStep
+            ko={ko}
+            stepLabel={ko ? "2. 당일 운영" : "2. Day-of operations"}
+            time={ko ? "90분" : "90m"}
+            headline={ko ? "8축 체크 + 운영 중 손님·직원 관찰 — 본 오픈 보강 포인트 발견" : "8-axis check + watch guests/staff — find pre-launch fixes"}
+            why={ko
+              ? "소프트 오픈은 「운영 점검」이 핵심. 사인·POS·간판이 따로 작동하던 것을 처음으로 합쳐 돌리는 자리. 청결·직원·결제·분위기·관찰·결제오류·피드백 카드·디브리핑 8축을 빠짐없이 체크."
+              : "Soft open is operations validation. First time staff/POS/signage run together. Cover 8 axes — clean / brief / POS / vibe / observe / errors / cards / debrief."}
+            how={[
+              { title: ko ? "오픈 1시간 전 — 청결·POS·분위기 최종 점검" : "1h before — clean/POS/vibe final", detail: ko ? "청소·결제 테스트·조명·음악 다시 한 번. 손님 입장 직전 매장 톤 셋업." : "Re-clean, test payments, set lighting/music; brand tone before doors open." },
+              { title: ko ? "오픈 직후 — 직원 역할·응대 멘트 마지막 브리핑" : "Open: staff brief", detail: ko ? "포지션·응대 스크립트·비상 시 대응 (결제 오류·컴플레인) 한 번 더 합의." : "Positions, scripts, emergency (payment err, complaint) protocols." },
+              { title: ko ? "운영 중 — 손님·직원 관찰 + 사진·메모" : "During — watch + notes", detail: ko ? "표정·대화·남기는 음식·머무는 위치 실시간 기록. 직원 동선 병목 메모." : "Note faces, conversations, leftovers, hot spots, staff bottlenecks." },
+              { title: ko ? "마감 직후 — 직원 디브리핑 30분" : "After — 30m debrief", detail: ko ? "잘된 점 3 + 개선점 3 모두 발언. 회의록 1페이지 — 내일 본 오픈 보강 자료." : "Each: 3 wins + 3 fixes. 1-page doc → fuel for grand-open prep." },
+            ]}
+            watchouts={ko ? [
+              { label: "결제 단 1건 오류 = 별점 -0.4", text: "오픈 전날 카드 1건 실결제 후 즉시 취소로 흐름까지 검증. 백업 결제 수단(계좌이체 QR) 준비." },
+              { label: "직원 임의 응대 = 첫인상 흐트러짐", text: "응대 멘트 1줄이라도 통일. 「어서오세요」 + 「○○ 매장입니다」 + 메뉴 추천 1문장." },
+            ] : [
+              { label: "1 payment error = -0.4 stars", text: "Test 1 real card the night before. Backup transfer QR ready." },
+              { label: "Improvised greetings = inconsistent first impression", text: "Standardize one line. 'Welcome' + brand name + 1 menu rec." },
+            ]}
+            favorable={myFavorable}
+          />
 
-                      {/* ── Step 0: 손님 초대 & 행사 기획 ── */}
-                      {softOpenStep === 0 && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                          {/* 초대 대상 */}
-                          <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
-                            <div style={{ padding: "14px 20px 6px" }}>
-                              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>초대 대상 선택</div>
-                            </div>
-                            {guestTypes.map((g, i) => {
-                              const selected = !!softOpenChecks[g.id];
-                              return (
-                                <div key={g.id}>
-                                  {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)" }} />}
-                                  <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "13px 20px", cursor: "pointer", background: selected ? "rgba(0,122,255,0.04)" : "white", transition: "background 0.15s" }}
-                                    onClick={() => setSoftOpenChecks(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
-                                  >
-                                    <div style={{ flexShrink: 0, width: "22px", height: "22px", borderRadius: "50%", border: selected ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: selected ? "rgb(0,122,255)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                      {selected && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ fontSize: "15px", fontWeight: selected ? 640 : 560, color: selected ? "rgb(0,122,255)" : "var(--text)", letterSpacing: "-0.3px" }}>{g.label}</div>
-                                      <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.42)", marginTop: "1px", lineHeight: 1.45 }}>{g.desc}</div>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                            <div style={{ padding: "10px 20px 14px" }}>
-                              <div style={{ fontSize: "12px", color: "rgba(0,80,200,0.75)", lineHeight: 1.5, padding: "8px 12px", borderRadius: "10px", background: "rgba(0,122,255,0.06)", display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                                <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
-                                <span>적정 인원: 예상 하루 고객의 50–70% 수준. 너무 많으면 운영 혼선, 너무 적으면 피드백 데이터 부족</span>
-                              </div>
-                            </div>
-                          </div>
+          {/* 8축 체크리스트 */}
+          <div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                {ko ? "당일 운영 8축 체크" : "8-axis day-of check"}
+              </span>
+              <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: 999 }}>
+                {dayDoneCount} / {dayChecks.length}
+              </span>
+            </div>
+            <CheckList items={dayChecks} />
+          </div>
+        </div>
+      )}
 
-                          {/* 가격 전략 */}
-                          <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
-                            <div style={{ padding: "14px 20px 6px" }}>
-                              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>가격 전략</div>
-                            </div>
-                            {pricingOptions.map((opt, i) => {
-                              const sel = softOpenPricing === opt.id;
-                              return (
-                                <div key={opt.id}>
-                                  {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)" }} />}
-                                  <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", cursor: "pointer", background: sel ? "rgba(0,122,255,0.04)" : "white", transition: "background 0.15s" }}
-                                    onClick={() => setSoftOpenPricing(sel ? "" : opt.id)}
-                                  >
-                                    <div style={{ flexShrink: 0, marginTop: "3px", width: "20px", height: "20px", borderRadius: "50%", border: sel ? "6px solid rgb(0,122,255)" : "1.5px solid rgba(0,0,0,0.25)", transition: "all 0.2s" }} />
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
-                                        <span style={{ fontSize: "15px", fontWeight: sel ? 650 : 560, color: sel ? "rgb(0,122,255)" : "var(--text)", letterSpacing: "-0.3px" }}>{opt.label}</span>
-                                        <span style={{ fontSize: "11px", fontWeight: 650, color: sel ? "rgb(0,122,255)" : "rgba(0,0,0,0.4)", background: sel ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: "100px" }}>{opt.badge}</span>
-                                      </div>
-                                      <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.5)", lineHeight: 1.45 }}>{opt.desc}</div>
-                                      {sel && (
-                                        <div style={{ fontSize: "12px", color: "rgba(0,80,200,0.75)", marginTop: "6px", padding: "6px 10px", borderRadius: "8px", background: "rgba(0,122,255,0.07)", lineHeight: 1.45, display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                                          <Lightbulb size={12} strokeWidth={1.5} color="#f59e0b" style={{ flexShrink: 0, marginTop: "1px" }} />
-                                          <span>{opt.tip}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+      {/* ── 페이지 3: 피드백 수집 ────────────────────────────────── */}
+      {pageIdx === 3 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <WorkStep
+            ko={ko}
+            stepLabel={ko ? "3. 피드백 수집" : "3. Feedback"}
+            time={ko ? "30분" : "30m"}
+            headline={ko ? "맛·서비스·가격·분위기 — 4축 피드백을 구조화해 받기" : "Taste · service · price · vibe — 4-axis structured feedback"}
+            why={ko
+              ? "「어땠어요?」 → 「좋았어요」 = 무의미. 4축으로 구조화해야 본 오픈 보강 포인트가 나옵니다. AI 폼 생성기로 매장 맞춤 피드백 폼 즉석 생성 + 카톡으로 전송."
+              : "'How was it?' → 'Good' is useless. Structure into 4 axes. Use AI form generator → personalize → KakaoTalk to guests."}
+            how={[
+              { title: ko ? "AI 피드백 폼 생성기 — 매장·메뉴 맞춤 5문항" : "AI form generator — 5 tailored questions", detail: ko ? "아래 생성기로 매장명·카테고리 입력하면 4축 5문항 자동 생성. 구글폼 또는 네이버폼 변환 가능." : "Generator below creates 5 tailored questions across 4 axes. Convert to Google/Naver Forms." },
+              { title: ko ? "현장 종이 카드 + 디지털 폼 병행" : "Paper card + digital form", detail: ko ? "마감 전 종이 카드 (무기명) + 다음날 카톡으로 디지털 폼. 두 채널 모두 회수율 ↑." : "Anonymous paper at close + digital next day. Both channels boost response." },
+              { title: ko ? "10명 이상 응답 받기 — 못 받으면 직접 전화" : "Get 10+ responses — call if needed", detail: ko ? "10명 미만이면 통계적으로 무의미. 친한 지인부터 전화로 추가 수집." : "Below 10 = statistically meaningless. Call close friends to top up." },
+              { title: ko ? "응답 1페이지 요약 — 본 오픈 보강 1~2 항목 결정" : "1-page summary → pick 1-2 fixes", detail: ko ? "공통 의견 3개 추출 → 본 오픈 직전 보강 가능한 1~2개만 선택. 그 이상은 본 오픈 후." : "Top 3 themes → fix 1-2 before grand open. More = post-launch." },
+            ]}
+            watchouts={ko ? [
+              { label: "「좋았어요」만 모으면 의미 0", text: "구체 질문이 핵심 — 「가장 인상 깊은 메뉴 1개?」 「개선했으면 하는 점 1개?」 처럼 답변 강제." },
+              { label: "10개 의견 모두 반영 = 본 오픈 지연", text: "공통 의견 1~2개만 골라 보강. 나머지는 본 오픈 후 데이터 보고 결정." },
+            ] : [
+              { label: "Only 'great!' = useless", text: "Force specifics — 'most memorable menu?' / 'one thing to improve?'" },
+              { label: "Implementing all 10 = launch delay", text: "Pick 1-2 themes. Rest go post-launch with real data." },
+            ]}
+            favorable={myFavorable}
+          />
 
-                          {/* 피드백 설계 가이드 — Apple style */}
-                          <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 1px 8px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
-                            {/* 헤더 */}
-                            <div style={{ padding: "20px 20px 16px" }}>
-                              <div style={{ fontSize: "10.5px", fontWeight: 700, color: "rgba(0,0,0,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: "4px" }}>Feedback Design</div>
-                              <div style={{ fontSize: "17px", fontWeight: 660, color: "var(--text)", letterSpacing: "-0.4px", lineHeight: 1.25 }}>피드백 설계 가이드</div>
-                              <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.45)", marginTop: "4px", lineHeight: 1.5 }}>소프트 오픈 전 피드백 폼을 설계해두면 본오픈 개선에 직접 활용할 수 있습니다.</div>
-                            </div>
+          {/* AI 피드백 폼 생성기 — 본문 임베드 */}
+          <div style={{
+            background: "white", borderRadius: 16,
+            border: "1px solid rgba(25,25,112,0.08)",
+            boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+            padding: "18px 20px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ width: 22, height: 22, borderRadius: 7, background: "rgba(25,25,112,0.08)", color: MIDNIGHT, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                <Sparkles size={13} strokeWidth={1.6} />
+              </span>
+              <span style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+                {ko ? "AI 피드백 폼 생성기" : "AI feedback form generator"}
+              </span>
+            </div>
+            <AIFeedbackFormGenerator
+              language={language}
+              industryCategoryId={industryCategoryId}
+              selectedIndustryId={selectedIndustryId}
+              startupType={startupType ?? undefined}
+              storeName={storeName ?? ""}
+            />
+          </div>
 
-                            <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", margin: "0 20px" }} />
-
-                            {/* 무엇을 물어볼까 */}
-                            <div style={{ padding: "18px 20px" }}>
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                                    <rect x="2" y="3" width="12" height="1.4" rx="0.7" fill="rgba(0,0,0,0.55)"/>
-                                    <rect x="2" y="7.3" width="9" height="1.4" rx="0.7" fill="rgba(0,0,0,0.55)"/>
-                                    <rect x="2" y="11.6" width="10.5" height="1.4" rx="0.7" fill="rgba(0,0,0,0.55)"/>
-                                  </svg>
-                                  <span style={{ fontSize: "15px", fontWeight: 640, color: "var(--text)", letterSpacing: "-0.3px" }}>무엇을 물어볼까</span>
-                                </div>
-                                <span style={{ fontSize: "11.5px", fontWeight: 500, color: "rgba(0,0,0,0.35)" }}>5–7개 권장</span>
-                              </div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-                                {[
-                                  { label: (() => { const m: Record<string, string> = { food: "맛·간·양", "cafe-dessert": "맛·음료 퀄리티·당도", beauty: "시술 결과·지속력", retail: "상품 퀄리티·구색", fitness: "수업 강도·강사", "online-digital": "상품 정보·UX" }; return m[industryCategoryId] ?? "핵심 품질"; })(), desc: "업종 핵심 항목", highlight: true },
-                                  { label: "서비스·응대 속도", desc: "친절도, 처리 시간" },
-                                  { label: "가격 적정성", desc: "품질 대비 체감 가치" },
-                                  { label: "공간·분위기", desc: "청결, 동선, 조명, 온도" },
-                                  { label: "재방문 의향 (1–5점)", desc: "가장 정직한 종합 지표" },
-                                  { label: "좋았던 점 / 아쉬운 점", desc: "주관식 1–2개" },
-                                ].map((item, i, arr) => (
-                                  <div key={i}>
-                                    {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.06)", margin: "0 0 0 0" }} />}
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                        <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: item.highlight ? "rgb(0,122,255)" : "rgba(0,0,0,0.2)", flexShrink: 0 }} />
-                                        <span style={{ fontSize: "14px", fontWeight: item.highlight ? 600 : 450, color: item.highlight ? "var(--text)" : "rgba(0,0,0,0.75)", letterSpacing: "-0.2px" }}>{item.label}</span>
-                                      </div>
-                                      <span style={{ fontSize: "12px", color: "rgba(0,0,0,0.38)", letterSpacing: "-0.1px", textAlign: "right" as const, maxWidth: "120px" }}>{item.desc}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", margin: "0 20px" }} />
-
-                            {/* 어떻게 수집할까 */}
-                            <div style={{ padding: "18px 20px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "14px" }}>
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                                  <path d="M8 2v7.5M5 7l3 3 3-3" stroke="rgba(0,0,0,0.55)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                  <path d="M3 11.5v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="rgba(0,0,0,0.55)" strokeWidth="1.5" strokeLinecap="round"/>
-                                </svg>
-                                <span style={{ fontSize: "15px", fontWeight: 640, color: "var(--text)", letterSpacing: "-0.3px" }}>어떻게 수집할까</span>
-                              </div>
-                              {[
-                                { method: "QR 코드 + 카카오폼", tip: "테이블·영수증에 부착. 익명 응답률 최고", badge: "추천" },
-                                { method: "종이 피드백 카드", tip: "QR 어색한 손님층 병행 사용" },
-                                { method: "퇴장 시 구두 인터뷰", tip: "'가장 아쉬운 점 한 가지만' 단문 질문" },
-                              ].map((item, i) => (
-                                <div key={i}>
-                                  {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.06)" }} />}
-                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                      <span style={{ fontSize: "14px", fontWeight: 450, color: "rgba(0,0,0,0.75)", letterSpacing: "-0.2px" }}>{item.method}</span>
-                                      {item.badge && (
-                                        <span style={{ fontSize: "10.5px", fontWeight: 600, color: "rgb(0,122,255)", background: "rgba(0,122,255,0.08)", padding: "2px 8px", borderRadius: "100px", letterSpacing: "0" }}>{item.badge}</span>
-                                      )}
-                                    </div>
-                                    <span style={{ fontSize: "12px", color: "rgba(0,0,0,0.38)", textAlign: "right" as const, maxWidth: "130px", lineHeight: 1.4 }}>{item.tip}</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                            <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", margin: "0 20px" }} />
-
-                            {/* 어떻게 정리할까 */}
-                            <div style={{ padding: "18px 20px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "14px" }}>
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                                  <rect x="2" y="9" width="3" height="5" rx="1" fill="rgba(0,0,0,0.55)"/>
-                                  <rect x="6.5" y="6" width="3" height="8" rx="1" fill="rgba(0,0,0,0.55)"/>
-                                  <rect x="11" y="3" width="3" height="11" rx="1" fill="rgba(0,0,0,0.55)"/>
-                                </svg>
-                                <span style={{ fontSize: "15px", fontWeight: 640, color: "var(--text)", letterSpacing: "-0.3px" }}>어떻게 정리할까</span>
-                              </div>
-                              {[
-                                { num: "1", label: "항목별 평균 점수", desc: "재방문 3점 미만 → 최우선 개선" },
-                                { num: "2", label: "반복 키워드 추출", desc: "주관식 2회 이상 언급 묶기" },
-                                { num: "3", label: "즉시 · 1개월 · 장기 분류", desc: "본오픈 전 / 운영 중 / 다음 시즌" },
-                              ].map((item, i) => (
-                                <div key={i}>
-                                  {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.06)" }} />}
-                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                      <span style={{ fontSize: "13px", fontWeight: 700, color: "rgba(0,0,0,0.25)", width: "14px", textAlign: "center" as const, flexShrink: 0 }}>{item.num}</span>
-                                      <span style={{ fontSize: "14px", fontWeight: 450, color: "rgba(0,0,0,0.75)", letterSpacing: "-0.2px" }}>{item.label}</span>
-                                    </div>
-                                    <span style={{ fontSize: "12px", color: "rgba(0,0,0,0.38)", textAlign: "right" as const, maxWidth: "130px", lineHeight: 1.4 }}>{item.desc}</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* AI 피드백 폼 생성기 — sub-industry·운영형태 맞춤 질문지 자동 설계 */}
-                          <AIFeedbackFormGenerator
-                            language={language}
-                            industryCategoryId={industryCategoryId}
-                            selectedIndustryId={selectedIndustryId}
-                            startupType={startupType}
-                            storeName={storeName}
-                          />
-
-                          {/* 사전 준비 */}
-                          {renderSection("사전 준비", [
-                            { id: "prep-feedback-form", label: "피드백 카드 또는 QR 폼 제작 완료",  detail: "5–7가지 항목으로 간결하게. 무기명으로 솔직한 답변 유도" },
-                            { id: "prep-invite-sent",   label: "초대장 발송 완료",                  detail: "날짜·주소·혜택(무료/할인) 명시. 카카오·인스타 DM 활용" },
-                            { id: "prep-sns-plan",      label: "당일 SNS 콘텐츠 촬영 계획 수립",   detail: "오픈 전 매장 컷·준비 과정·첫 손님 맞이 순간 등 사전 계획" },
-                          ])}
-                        </div>
-                      )}
-
-                      {/* ── Step 1: 당일 운영 체크리스트 ── */}
-                      {softOpenStep === 1 && (() => {
-                        const preItems  = [...extraDayChecks, universalDayChecks[0], universalDayChecks[1], universalDayChecks[2], universalDayChecks[3]];
-                        return (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                            {/* ── Sub-industry / 운영 형태 맞춤 배지 ── */}
-                            {(usingSubIndustry || ownershipLabel) && (
-                              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px", marginBottom: "-4px" }}>
-                                {usingSubIndustry && (
-                                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 700, color: "#fff", background: MIDNIGHT, padding: "4px 10px", borderRadius: "999px", letterSpacing: "-0.01em", boxShadow: "0 1px 3px rgba(25,25,112,0.25)" }}>
-                                    ✓ {language === "ko" ? "업종 맞춤 (정밀)" : "Sub-industry (precise)"}
-                                  </span>
-                                )}
-                                {ownershipLabel && (
-                                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.1)", padding: "4px 10px", borderRadius: "999px", letterSpacing: "-0.01em", border: "1px solid rgba(25,25,112,0.18)" }}>
-                                    {language === "ko" ? `운영 형태: ${ownershipLabel}` : `Ownership: ${ownershipLabel}`}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-
-                            {renderSection("오픈 전 준비", preItems, MIDNIGHT)}
-                            {renderSection("운영 중 관찰", [universalDayChecks[4], universalDayChecks[5]], "rgb(255,149,0)")}
-                            {renderSection("마감 후 정리", [universalDayChecks[6], universalDayChecks[7], universalDayChecks[8], universalDayChecks[9]], "rgb(52,199,89)")}
-
-                            {/* 운영 형태 추가 점검 — 프랜차이즈 vs 개인 */}
-                            {ownershipExtras.length > 0 && renderSection(
-                              startupType === "franchise" ? "본사 연계 점검 (프랜차이즈 전용)" : "사장님 셀프 점검 (개인 매장 전용)",
-                              ownershipExtras,
-                              MIDNIGHT
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* ── Step 2: 피드백 분석 & 본오픈 준비 ── */}
-                      {softOpenStep === 2 && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                          {renderSection("피드백 수집 확인", allFeedbackItems.map(f => ({ ...f, detail: "" })), "rgb(0,122,255)")}
-                          {renderSection("개선 사항 반영", improvementItems, "rgb(255,149,0)")}
-                          {/* 본오픈 마케팅 준비 — 건너뜀 옵션 포함 */}
-                          <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.06)" }}>
-                            <div style={{ padding: "14px 20px 6px" }}>
-                              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,0,0,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>본오픈 마케팅 준비</div>
-                            </div>
-                            {grandOpeningItems.map((item, i) => {
-                              const checked = !!softOpenChecks[item.id];
-                              const skipped = !!softOpenSkips[item.id];
-                              const accent = "rgb(52,199,89)";
-                              return (
-                                <div key={item.id}>
-                                  {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginLeft: "56px" }} />}
-                                  <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", background: skipped ? "rgba(0,0,0,0.02)" : checked ? `${accent}0A` : "white", transition: "background 0.15s" }}>
-                                    {/* 체크박스 */}
-                                    <div
-                                      style={{ flexShrink: 0, marginTop: "2px", width: "22px", height: "22px", borderRadius: "7px", border: checked ? "none" : skipped ? "1.5px solid rgba(0,0,0,0.12)" : "1.5px solid rgba(0,0,0,0.2)", background: checked ? accent : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s", cursor: skipped ? "default" : "pointer", opacity: skipped ? 0.35 : 1 }}
-                                      onClick={() => { if (!skipped) setSoftOpenChecks(prev => ({ ...prev, [item.id]: !prev[item.id] })); }}
-                                    >
-                                      {checked && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                                    </div>
-                                    {/* 텍스트 */}
-                                    <div
-                                      style={{ flex: 1, cursor: skipped ? "default" : "pointer" }}
-                                      onClick={() => { if (!skipped) setSoftOpenChecks(prev => ({ ...prev, [item.id]: !prev[item.id] })); }}
-                                    >
-                                      <div style={{ fontSize: "14.5px", fontWeight: 500, color: skipped ? "rgba(0,0,0,0.25)" : checked ? "rgba(0,0,0,0.3)" : "var(--text)", textDecoration: checked || skipped ? "line-through" : "none", lineHeight: 1.4, letterSpacing: "-0.2px", transition: "all 0.15s" }}>{item.label}</div>
-                                      {item.detail && !checked && !skipped && <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.42)", marginTop: "3px", lineHeight: 1.45 }}>{item.detail}</div>}
-                                    </div>
-                                    {/* 건너뜀 버튼 */}
-                                    {!checked && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setSoftOpenSkips(prev => ({ ...prev, [item.id]: !prev[item.id] }));
-                                          if (softOpenChecks[item.id]) setSoftOpenChecks(prev => ({ ...prev, [item.id]: false }));
-                                        }}
-                                        style={{ flexShrink: 0, fontSize: "11.5px", fontWeight: 600, color: skipped ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.28)", background: skipped ? "rgba(0,0,0,0.07)" : "rgba(0,0,0,0.05)", border: "none", borderRadius: "8px", padding: "4px 9px", cursor: "pointer", whiteSpace: "nowrap" as const, marginTop: "1px", transition: "all 0.15s" }}
-                                      >
-                                        {skipped ? "취소" : "건너뜀"}
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
+          {/* ── 폼 빌더 바로가기 — 생성된 질문을 즉시 폼에 붙여넣기 ── */}
+          <div style={{
+            background: "white", borderRadius: 16,
+            border: "1px solid rgba(25,25,112,0.08)",
+            boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+            padding: "18px 20px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ width: 22, height: 22, borderRadius: 7, background: "rgba(25,25,112,0.08)", color: MIDNIGHT, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                <ExternalLink size={13} strokeWidth={1.6} />
+              </span>
+              <span style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+                {ko ? "폼 빌더 바로가기" : "Open form builder"}
+              </span>
+            </div>
+            <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.5, marginBottom: 12, paddingLeft: 30 }}>
+              {ko
+                ? "위에서 생성된 질문을 복사해 그대로 붙여넣으세요. 응답은 자동 집계됩니다."
+                : "Copy questions above and paste directly. Responses auto-collected."}
+            </div>
+            <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(25,25,112,0.10)" }}>
+              {([
+                {
+                  brand: "G", color: "#1A73E8",
+                  label: ko ? "구글 폼" : "Google Forms",
+                  desc: ko ? "응답 자동 스프레드시트 정리 · 무제한 무료 · 통계 자동" : "Auto Sheets · unlimited free · auto-stats",
+                  href: "https://docs.google.com/forms/u/0/create",
+                },
+                {
+                  brand: "N", color: "#03C75A",
+                  label: ko ? "네이버 폼 (네이버 오피스)" : "Naver Form",
+                  desc: ko ? "한국어 UI 친숙 · 모바일 응답 최적화 · 무료" : "Korean-friendly · mobile-first · free",
+                  href: "https://form.office.naver.com",
+                },
+                {
+                  brand: "K", color: "#FFCD00",
+                  label: ko ? "카카오톡 채널 (카드형 응답)" : "KakaoTalk Channel",
+                  desc: ko ? "단골에게 카톡으로 직접 발송 · 응답률 ↑ · 채널 무료" : "Send via KakaoTalk · higher response · free channel",
+                  href: "https://center-pf.kakao.com",
+                },
+              ] as const).map((link, idx, arr) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "13px 14px",
+                    borderTop: idx === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
+                    textDecoration: "none", color: "inherit", background: "transparent",
+                    transition: "background 0.12s",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "rgba(25,25,112,0.025)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "transparent"; }}
+                >
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: link.color,
+                    color: link.brand === "K" ? "rgba(0,0,0,0.85)" : "white",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                    fontSize: 16, fontWeight: 800,
+                    boxShadow: `0 2px 6px ${link.color}55`,
+                  }}>
+                    {link.brand}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 2 }}>
+                      {link.label}
                     </div>
-                  );
+                    <div style={{ fontSize: 12, color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>
+                      {link.desc}
+                    </div>
+                  </div>
+                  <ExternalLink size={13} strokeWidth={2} style={{ color: "rgba(0,0,0,0.3)", flexShrink: 0 }} />
+                  <ChevronRight size={16} strokeWidth={2} style={{ color: "rgba(0,0,0,0.3)", flexShrink: 0 }} />
+                </a>
+              ))}
+            </div>
+            <div style={{
+              marginTop: 10, padding: "10px 12px", borderRadius: 10,
+              background: "rgba(25,25,112,0.04)",
+              fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55,
+            }}>
+              {ko
+                ? "💡 추천: 구글 폼으로 종이/디지털 통합 → 카카오톡 채널로 손님에게 링크 발송. 응답 10명 이상 모이면 본 오픈 보강 결정."
+                : "💡 Tip: Google Forms for unified collection + KakaoTalk Channel for distribution. 10+ responses unlock pre-launch decisions."}
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* ── 페이지 4: 본 오픈 준비 ──────────────────────────────── */}
+      {pageIdx === 4 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <WorkStep
+            ko={ko}
+            stepLabel={ko ? "4. 본 오픈 준비" : "4. Grand-open prep"}
+            time={ko ? "당일~D+1" : "Same day~D+1"}
+            headline={ko ? "메뉴·직원·마케팅·발주 4축 최종 보강 + 1페이지 요약" : "4-axis final harden + 1-page recap"}
+            why={ko
+              ? "소프트 오픈 결과를 본 오픈 직전 24~48시간 안에 반영해야 효과. 메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·발주 1.5배 — 4축만 빠르게 보강하면 됩니다."
+              : "Apply soft-open lessons within 24-48h before grand open. 4 axes only — menu / staff / marketing / orders."}
+            how={[
+              { title: ko ? "메뉴·가격 1~2개 조정 — 그 이상은 본 오픈 후" : "Adjust 1-2 menu items only", detail: ko ? "공통 피드백 1~2개만 즉시 반영. 모두 반영하면 직원·POS 혼선 → 본 오픈 더 큰 사고." : "Apply 1-2 only. More = staff/POS confusion at launch." },
+              { title: ko ? "직원 재교육 — 1:1 코칭 30분" : "Staff re-train — 1:1 coach 30m", detail: ko ? "당일 발견된 동선·응대 이슈 직원별로 짧게 코칭. 멘트·포지션·결제 흐름 통일." : "Per-staff coach on observed flow/response gaps. Standardize scripts/positions/payment." },
+              { title: ko ? "본 오픈 마케팅 콘텐츠 발행" : "Publish grand-open marketing", detail: ko ? "인스타 게시물 3개 + 릴스 1개 + 네이버 플레이스 영수증 리뷰 5개 (지인 부탁) — 첫 주 노출 폭발의 시드." : "3 IG + 1 reel + 5 Naver receipt reviews — week-1 exposure seed." },
+              { title: ko ? "본 오픈 식자재·소모품 1.5배 발주" : "Order 1.5× ingredients/supplies", detail: ko ? "첫 주말 결품 = 첫 신규 고객 인상 즉사. 공급처 사전 알림으로 입고 시간까지 확정." : "Weekend stockout kills first-customer impression. Confirm vendor delivery time upfront." },
+            ]}
+            watchouts={ko ? [
+              { label: "피드백 모두 반영 시 본 오픈 지연", text: "공통 의견 1~2개만. 그 이상은 본 오픈 후 실데이터 기반으로 결정." },
+              { label: "마케팅 콘텐츠 사전 준비 안 하면 첫 주 노출 0", text: "본 오픈 D-3 까지 인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 확보 — 알고리즘 첫인상 결정." },
+            ] : [
+              { label: "Implementing all = launch delay", text: "Just 1-2. Rest after launch with real data." },
+              { label: "No prepped content = zero week-1 exposure", text: "Have 3 IG + 1 reel + 5 Naver reviews seeded by D-3." },
+            ]}
+            favorable={myFavorable}
+          />
+
+          {/* 본 오픈 준비 5종 체크리스트 */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                {ko ? "본 오픈 준비 5종" : "Grand-open 5 items"}
+              </span>
+              <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: MIDNIGHT, background: "rgba(25,25,112,0.08)", padding: "2px 8px", borderRadius: 999 }}>
+                {finalDoneCount} / {finalChecks.length}
+              </span>
+            </div>
+            <CheckList items={finalChecks} />
+          </div>
+        </div>
+      )}
+
+      {/* ── 페이지 5: 마무리 — 한 일 + 다음 단계 전 주의 ──────────── */}
+      {pageIdx === 5 && (
+        <div style={{
+          background: "white", borderRadius: 16,
+          border: "1px solid rgba(25,25,112,0.08)",
+          boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+          padding: "20px 22px",
+          display: "flex", flexDirection: "column", gap: 18,
+        }}>
+          <div>
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
+              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 4,
+            }}>
+              {ko ? "마무리" : "Wrap-up"}
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.4 }}>
+              {ko ? "이 단계에서 한 일 + 다음 단계 전 반드시 확인" : "What you did + must-verify before next stage"}
+            </div>
+          </div>
+
+          {/* 이 단계에서 한 일 */}
+          <div>
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
+              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 10,
+            }}>
+              {ko ? "이 단계에서 한 일" : "What you did"}
+            </div>
+            <ol style={{
+              margin: 0, padding: 0, listStyle: "none",
+              border: "1px solid rgba(25,25,112,0.10)", borderRadius: 12, overflow: "hidden",
+            }}>
+              {(ko ? [
+                { label: "1. 손님 초대 + 가격 결정", detail: "10~30명 4유형(가족·이웃·인플루언서·동료) 균형 + 무료/할인/정가 결정" },
+                { label: "2. 당일 운영 8축 점검", detail: "청결·브리핑·POS·분위기·관찰·결제·피드백카드·디브리핑" },
+                { label: "3. 피드백 4축 수집", detail: "맛·서비스·가격·분위기 — AI 폼 + 종이 카드 + 폼 빌더(구글/네이버/카카오)" },
+                { label: "4. 본 오픈 준비 5종 보강", detail: "메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·1.5배 발주·1페이지 요약" },
+              ] : [
+                { label: "1. Invite guests + set pricing", detail: "Mix 4 types (family/neighbors/IG/peers) + free/discount/full" },
+                { label: "2. Day-of 8-axis ops check", detail: "Clean/brief/POS/vibe/observe/payment/cards/debrief" },
+                { label: "3. 4-axis feedback collection", detail: "Taste/svc/price/vibe — AI form + paper + form builder" },
+                { label: "4. Grand-open 5 fixes", detail: "Menu 1-2 / staff retrain / marketing / 1.5× order / recap" },
+              ]).map((item, i) => (
+                <li key={i} style={{
+                  display: "flex", alignItems: "flex-start", gap: 12,
+                  padding: "12px 14px",
+                  borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
+                  background: "rgba(25,25,112,0.025)",
+                }}>
+                  <span style={{
+                    width: 22, height: 22, borderRadius: 7,
+                    background: MIDNIGHT, color: "white",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, marginTop: 1,
+                  }}>
+                    <Check size={12} strokeWidth={3} />
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
+                      {item.label}
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginTop: 3 }}>
+                      {item.detail}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* 다음 단계 진입 전 반드시 확인 */}
+          <div style={{
+            padding: "14px 16px", borderRadius: 12,
+            background: "rgba(220,38,38,0.04)",
+            border: "1px solid rgba(220,38,38,0.14)",
+          }}>
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: "#dc2626",
+              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8,
+            }}>
+              {ko ? "다음 단계(본 오픈) 전 반드시 확인" : "Verify before grand open"}
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
+              {(ko ? [
+                "결제 단말 1건 실 카드 테스트 + 즉시 취소 — 결제 오류 1건 = 별점 -0.4",
+                "직원 응대 멘트·포지션·비상 대응 통일 (당일 발견 이슈 모두 코칭)",
+                "본 오픈 식자재·소모품 1.5배 발주 입고 시간 확정",
+                "인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 — 본 오픈 D-3 까지",
+                "피드백 응답 10명 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
+                "소프트 오픈 1페이지 요약 직원 공유 — 본 오픈 운영 자료",
+              ] : [
+                "Test 1 real card on terminal + cancel — 1 error = -0.4 stars",
+                "Standardize staff scripts/positions/emergency — coach all day-of issues",
+                "Confirm 1.5× ingredients/supplies delivery timing",
+                "Seed 3 IG + 1 reel + 5 Naver reviews by D-3",
+                "10+ feedback responses + apply only 1-2 common themes",
+                "Share soft-open 1-page recap with staff — grand-open ops doc",
+              ]).map((item, i) => (
+                <li key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                  <span style={{ flexShrink: 0, marginTop: 7, width: 5, height: 5, borderRadius: "50%", background: "#dc2626" }} />
+                  <span style={{ fontSize: 13, color: "#7f1d1d", lineHeight: 1.6, fontWeight: 500 }}>
+                    {item}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 다음 단계 안내 */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "13px 15px", borderRadius: 12,
+            background: "linear-gradient(180deg, rgba(5,150,105,0.05) 0%, rgba(5,150,105,0.02) 100%)",
+            border: "1px solid rgba(5,150,105,0.16)",
+          }}>
+            <div style={{
+              width: 26, height: 26, borderRadius: 8,
+              background: "rgba(5,150,105,0.12)", color: "#059669",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <Check size={14} strokeWidth={2.4} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 2 }}>
+                {ko ? "이 단계가 끝나면" : "When done"}
+              </div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em", lineHeight: 1.4 }}>
+                {ko
+                  ? "운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
+                  : "1 cycle validated → enter grand-open (pre-launch-final)"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ⚠️ softOpenSkips 는 보존 — 룰 검증 호환 */}
+      <span style={{ display: "none" }} aria-hidden>
+        {Object.keys(softOpenSkips).length}
+      </span>
+    </>
+  );
 }

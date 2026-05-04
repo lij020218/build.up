@@ -12,27 +12,15 @@ export function RoadmapSurface() {
   const d = useDashboardCtx();
   const router = useRouter();
   const {
-    language, roadmap, currentStage, industryCategoryId, startupType,
-    isDigitalCategory, completedCount, pathTotalStages, correctedProgressPercent,
+    language, roadmap, currentStage, industryCategoryId,
+    completedCount, pathTotalStages, correctedProgressPercent,
+    pathStageIds, // ⚠️ useComputedDashboard의 path filter 사용 — 자체 Set은 go-live·cluster 누락
   } = d;
-  const isStartupCategory = industryCategoryId === "startup-tech";
   const copy = getUiCopy(language);
 
-  const onlineOnlyIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
-  const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-gtm", "growth-engine", "company-setup", "fundraising-readiness", "venture-certification"]);
-  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "insurance-tax-setup", "hiring-setup", "operations-setup", "pre-launch"]);
-  const franchiseOnlyIds = new Set(["franchise-application"]);
-  const isFranchise = startupType === "franchise";
-  const hideIds = isStartupCategory
-    ? new Set([...offlineOnlyIds, ...onlineOnlyIds])
-    : isDigitalCategory
-      ? new Set([...offlineOnlyIds, ...startupOnlyIds])
-      : new Set([...onlineOnlyIds, ...startupOnlyIds]);
-  const visibleStages = roadmap.stages.filter(s => {
-    if (hideIds.has(s.stageId)) return false;
-    if (franchiseOnlyIds.has(s.stageId) && !isFranchise) return false;
-    return true;
-  });
+  // pathStageIds는 useComputedDashboard에서 isPathStage로 정확히 계산된 사용자 path
+  // (offline/online/startup × franchise × cluster B/C/D 모두 반영)
+  const visibleStages = roadmap.stages.filter((s) => pathStageIds.has(s.stageId));
 
   const ko = language === "ko";
 

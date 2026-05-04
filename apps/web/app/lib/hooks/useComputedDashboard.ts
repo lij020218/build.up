@@ -110,7 +110,29 @@ export function useComputedDashboard(
   const hasLoanGuide = loanGuides.length > 0;
 
   // ── Industry category ──
-  const preferredRegion = profile?.preferredRegions?.[0];
+  // ⚠ profile.preferredRegions 만 보면 빈 문자열·미하이드레이트·legacy [""] 케이스에서 undefined.
+  //   → contractor 검색·맵 등이 silent fail. locationDecision 의 모든 가용 소스를 fallback chain.
+  const _locationDec = decisions["location-candidates"];
+  const _profileRegion = profile?.preferredRegions?.[0]?.trim();
+  const _inputRegion =
+    typeof _locationDec?.inputs?.preferredRegion === "string"
+      ? _locationDec.inputs.preferredRegion.trim()
+      : "";
+  const _customRegion =
+    typeof _locationDec?.inputs?.customMarketName === "string"
+      ? _locationDec.inputs.customMarketName.trim()
+      : "";
+  const _finalTitleRegion =
+    typeof _locationDec?.inputs?.finalMarketTitle === "string"
+      ? _locationDec.inputs.finalMarketTitle.trim()
+      : "";
+  const preferredRegion: string | undefined =
+    (_profileRegion && _profileRegion.length > 0 ? _profileRegion : null)
+    ?? (_inputRegion.length > 0 ? _inputRegion : null)
+    ?? (_customRegion.length > 0 ? _customRegion : null)
+    ?? (_finalTitleRegion.length > 0 ? _finalTitleRegion : null)
+    ?? _locationDec?.selectedPrimaryOptionId
+    ?? undefined;
 
   const industryCategoryId =
     getIndustryCategoryIdByOptionId(
@@ -143,6 +165,7 @@ export function useComputedDashboard(
     "customer-discovery",
     "mvp-build",
     "launch-gtm",
+    "go-live",
     "growth-engine",
     "company-setup",
     "fundraising-readiness",
@@ -217,10 +240,12 @@ export function useComputedDashboard(
     return true;
   };
 
-  const pathStageIds = new Set(
-    roadmap.stages.filter((s) => isPathStage(s.stageId)).map((s) => s.stageId),
-  );
-  const pathTotalStages = pathStageIds.size;
+  // ── Path 정렬: 단계 정의 순서대로 사용자 경로의 visible stages 만 추림 ──
+  // stepNumber/totalSteps 는 정의 시점의 hardcoded 값이라 path마다 의미가 다름.
+  // pathStepNumber/pathTotalStages 는 사용자 path에서의 실제 위치를 동적 계산.
+  const pathStageList = roadmap.stages.filter((s) => isPathStage(s.stageId));
+  const pathStageIds = new Set(pathStageList.map((s) => s.stageId));
+  const pathTotalStages = pathStageList.length;
 
   const rawCompletedCount = roadmap.completedStageIds.filter((id) =>
     pathStageIds.has(id),
@@ -432,14 +457,9 @@ export function useComputedDashboard(
                                       : currentStage.code ===
                                           "pre_launch_final"
                                         ? language === "ko"
-                                          ? "초도 재고 입고, 직원 교육, SNS 예고를 마치세요."
-                                          : "Receive inventory, brief staff, and post a teaser."
-                                        : currentStage.code ===
-                                            "first_month_check"
-                                          ? language === "ko"
-                                            ? "현금흐름 기록 방법을 정하고 개업을 시작하세요."
-                                            : "Set up cash flow tracking and launch your business."
-                                          : copy.home.nextStepDone;
+                                          ? "5개 핵심 액션을 끝내고 운영 대시보드로 이동하세요."
+                                          : "Finish 5 core actions and move to the operations dashboard."
+                                        : copy.home.nextStepDone;
 
   // ── Location labels (category-aware) ──
   const locationRegionLabel = isStartupCategory
@@ -659,6 +679,10 @@ export function useComputedDashboard(
     isPathStage,
     pathStageIds,
     pathTotalStages,
+    // ── 사용자 path에서의 현재 단계 위치 (1-based). Hardcoded stepNumber 보다 정확. ──
+    pathStepNumber: currentStage
+      ? pathStageList.findIndex((s) => s.stageId === currentStage.stageId) + 1
+      : 0,
 
     // progress
     completedCount,

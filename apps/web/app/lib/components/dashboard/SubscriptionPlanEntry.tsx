@@ -202,7 +202,7 @@ export function SubscriptionPlanEntry({
               <button key={m} type="button" onClick={() => setMode(m)} style={{
                 flex: 1, padding: "8px 0", borderRadius: "10px", border: "none", cursor: "pointer",
                 fontSize: "13px", fontWeight: 650, fontFamily: FONT_STACK,
-                background: mode === m ? (m === "signup" ? "rgba(124,58,237,0.08)" : "rgba(220,38,38,0.06)") : "rgba(15,23,42,0.03)",
+                background: mode === m ? (m === "signup" ? "rgba(124,58,237,0.08)" : "rgba(220,38,38,0.06)") : "rgba(25,25,112,0.035)",
                 color: mode === m ? (m === "signup" ? "#7c3aed" : "#dc2626") : "rgba(15,23,42,0.4)",
                 transition: "all 0.15s ease",
               }}>
@@ -279,7 +279,7 @@ export function SubscriptionPlanEntry({
           <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
             padding: "12px 14px", borderRadius: "12px", marginTop: "10px",
-            background: (totalSignups > 0 || totalChurns > 0) ? "rgba(124,58,237,0.04)" : "rgba(15,23,42,0.02)",
+            background: (totalSignups > 0 || totalChurns > 0) ? "rgba(124,58,237,0.04)" : "rgba(25,25,112,0.025)",
             border: (totalSignups > 0 || totalChurns > 0) ? "1px solid rgba(124,58,237,0.1)" : "1px solid transparent",
           }}>
             <div>
@@ -312,7 +312,7 @@ export function SubscriptionPlanEntry({
                 cursor: (totalSignups > 0 || totalChurns > 0) ? "pointer" : "default",
                 background: (totalSignups > 0 || totalChurns > 0)
                   ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)"
-                  : "rgba(15,23,42,0.06)",
+                  : "rgba(25,25,112,0.05)",
                 color: (totalSignups > 0 || totalChurns > 0) ? "#fff" : "rgba(15,23,42,0.3)",
                 transition: "all 0.15s ease",
                 fontFamily: FONT_STACK,

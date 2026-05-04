@@ -16,6 +16,7 @@ import { useLanguage } from "../language-provider";
 import type { DashboardSurface } from "./types";
 import { GUIDE_STAGE_CODES, SURFACE_HREFS } from "./constants";
 import { inferFinanceDefaults } from "./helpers";
+import { getBusinessDay } from "./utils/business-day";
 
 // ── Sub-hooks ──
 import { useComputedDashboard } from "./hooks/useComputedDashboard";
@@ -73,6 +74,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     isResetting, resetProgress,
     authLabel, userName, persistenceLabel, persistenceReady,
     authResolved, requiresAuth,
+    persistStatus, persistError, persistLastSavedAt,
     showProfileDetails, setShowProfileDetails,
     showMonthlyCostPrompt, setShowMonthlyCostPrompt,
     lastUnlocked,
@@ -96,8 +98,11 @@ export function useDashboard(surface: DashboardSurface = "home") {
     startupType, setStartupType,
     selectedFranchiseBrandId, setSelectedFranchiseBrandId,
     storeName, setStoreName,
+    businessOpenTime, setBusinessOpenTime,
+    businessCloseTime, setBusinessCloseTime,
     cpaDecision, setCpaDecision,
     usesSubscriptions, setUsesSubscriptions,
+    selectedRevenueModelId, setSelectedRevenueModelId,
     selectedInteriorConcept, setSelectedInteriorConcept,
     profile,
     saveStatus, setSaveStatus,
@@ -111,6 +116,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     roadmap, setRoadmap,
     taskMap, setTaskMap,
     viewingStageId, setViewingStageId,
+    editSaveStatus,
     recommendedMarkets, setRecommendedMarkets,
     customMarketName, setCustomMarketName,
     customMarketReason, setCustomMarketReason,
@@ -130,6 +136,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     taxChecks, setTaxChecks,
     loanChecks, setLoanChecks,
     contractSubChecks, setContractSubChecks,
+    preLaunchVisibleIds, setPreLaunchVisibleIds,
     stageGuideContent,
     guideStepIndex, setGuideStepIndex,
     guideSelections, setGuideSelections,
@@ -282,7 +289,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
 
   // ── 6. Sub-hook: persistence ──
   const persistence = usePersistence(deps, surface);
-  const { collectStoreData, flushStoreData, cancelAllAutosaves, setResetting } = persistence;
+  const { collectStoreData, flushStoreData, flushStoreDataImmediate, cancelAllAutosaves, setResetting } = persistence;
 
   // ── 7. fetchAiActions (defined here — used by onboarding & data loading) ──
   const aiActionsLoadedRef = useRef(false);
@@ -346,7 +353,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
       const lastMonday = new Date(thisMonday); lastMonday.setDate(lastMonday.getDate() - 7);
       const lastSunday = new Date(thisMonday); lastSunday.setDate(lastSunday.getDate() - 1);
       const toIso = (d: Date) => d.toISOString().slice(0, 10);
-      const todayIso = now.toISOString().slice(0, 10);
+      // 일자 컷오프: 사장의 closeTime + 30분 (utils/business-day) — KST 정확
+      const todayIso = getBusinessDay(now, { categoryId: selectedIndustryCategoryId, closeTime: businessCloseTime });
       const thisWeekSales = entries.filter(e => e.date >= toIso(thisMonday) && e.date <= todayIso).reduce((s, e) => s + e.sales, 0);
       const lastWeekSales = entries.filter(e => e.date >= toIso(lastMonday) && e.date <= toIso(lastSunday)).reduce((s, e) => s + e.sales, 0);
       const weeklyChange = lastWeekSales > 0 ? Math.round((thisWeekSales - lastWeekSales) / lastWeekSales * 100) : 0;
@@ -527,6 +535,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
   const operations = useOperationsHandlers({
     ...deps,
     flushStoreData,
+    flushStoreDataImmediate,
     scheduleAiRefresh: onboarding.scheduleAiRefresh,
   });
 
@@ -584,6 +593,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     isResetting, resetProgress,
     authLabel, userName, persistenceLabel, persistenceReady,
     authResolved, requiresAuth,
+    persistStatus, persistError, persistLastSavedAt,
     showProfileDetails, setShowProfileDetails,
     showMonthlyCostPrompt, setShowMonthlyCostPrompt,
     lastUnlocked, selectedStoreIndex, setSelectedStoreIndex,
@@ -606,16 +616,21 @@ export function useDashboard(surface: DashboardSurface = "home") {
     showFranchisePicker: profileStore.showFranchisePicker,
     setShowFranchisePicker: profileStore.setShowFranchisePicker,
     storeName, setStoreName,
+    businessOpenTime, setBusinessOpenTime,
+    businessCloseTime, setBusinessCloseTime,
     cpaDecision, setCpaDecision,
     usesSubscriptions, setUsesSubscriptions,
+    selectedRevenueModelId, setSelectedRevenueModelId,
     selectedInteriorConcept, setSelectedInteriorConcept,
     profile, saveStatus, setSaveStatus,
     businessLaunched, setBusinessLaunched,
+    businessLaunchedDate,
     startupOperatingMode, setStartupOperatingMode,
 
     // ── Bare store state/setters (roadmap) ──
     decisions, setDecisions, roadmap, setRoadmap, taskMap, setTaskMap,
     viewingStageId, setViewingStageId,
+    editSaveStatus,
     recommendedMarkets, setRecommendedMarkets,
     customMarketName, setCustomMarketName,
     customMarketReason, setCustomMarketReason,
@@ -633,6 +648,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
     softOpenSkips, setSoftOpenSkips,
     taxChecks, setTaxChecks, loanChecks, setLoanChecks,
     contractSubChecks, setContractSubChecks,
+    preLaunchVisibleIds, setPreLaunchVisibleIds,
     stageGuideContent, guideStepIndex, setGuideStepIndex,
     guideSelections, setGuideSelections,
 

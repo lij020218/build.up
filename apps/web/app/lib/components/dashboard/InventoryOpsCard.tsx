@@ -47,7 +47,7 @@ const opsCard: React.CSSProperties = {
   borderRadius: "14px",
   padding: "22px",
   background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.45) 100%)",
-  border: "1px solid rgba(5, 97, 252, 0.06)",
+  border: "1px solid rgba(25,25,112, 0.06)",
   boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
   display: "grid",
   gap: "14px",
@@ -86,16 +86,16 @@ const opsActionPrimary: React.CSSProperties = {
   border: "none",
   borderRadius: "8px",
   padding: "9px 12px",
-  background: "#0561fc",
+  background: "#191970",
   color: "#fff",
   fontSize: "12px",
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 4px 14px rgba(5, 97, 252, 0.25)",
+  boxShadow: "0 4px 14px rgba(25,25,112, 0.25)",
 };
 
 const opsActionSecondary: React.CSSProperties = {
-  border: "1px solid rgba(5, 97, 252, 0.12)",
+  border: "1px solid rgba(25,25,112, 0.12)",
   borderRadius: "8px",
   padding: "9px 12px",
   background: "rgba(255,255,255,0.9)",
@@ -115,7 +115,7 @@ const opsMetricCard: React.CSSProperties = {
   borderRadius: "10px",
   padding: "14px",
   background: "linear-gradient(180deg, rgba(240,244,255,0.55) 0%, rgba(248,250,255,0.35) 100%)",
-  border: "1px solid rgba(5,97,252,0.04)",
+  border: "1px solid rgba(25,25,112,0.04)",
 };
 
 const opsMetricLabel: React.CSSProperties = {
@@ -171,7 +171,7 @@ const listRow: React.CSSProperties = {
   padding: "12px 14px",
   borderRadius: "10px",
   background: "linear-gradient(180deg, rgba(240,244,255,0.5) 0%, rgba(248,250,255,0.3) 100%)",
-  border: "1px solid rgba(5,97,252,0.04)",
+  border: "1px solid rgba(25,25,112,0.04)",
 };
 
 const listTitle: React.CSSProperties = {
@@ -190,7 +190,7 @@ const emptyState: React.CSSProperties = {
   padding: "12px 14px",
   borderRadius: "10px",
   background: "linear-gradient(180deg, rgba(240,244,255,0.4) 0%, rgba(248,250,255,0.25) 100%)",
-  border: "1px solid rgba(5,97,252,0.04)",
+  border: "1px solid rgba(25,25,112,0.04)",
   fontSize: "13px",
   lineHeight: 1.55,
   color: "rgba(15, 23, 42, 0.58)",
@@ -206,7 +206,7 @@ const inlineEditor: React.CSSProperties = {
 const inlineEditorTitle: React.CSSProperties = {
   fontSize: "13px",
   fontWeight: 700,
-  color: "#2563eb",
+  color: "#191970",
   letterSpacing: "0.02em",
 };
 
@@ -453,8 +453,8 @@ export function InventoryOpsCard({
       {excelImportState.status !== "idle" && (
         <div style={{
           padding: "12px 16px", borderRadius: "12px", marginBottom: "8px",
-          background: excelImportState.status === "error" ? "rgba(220,38,38,0.04)" : excelImportState.status === "done" ? "rgba(5,150,105,0.04)" : "rgba(5,97,252,0.04)",
-          border: `1px solid ${excelImportState.status === "error" ? "rgba(220,38,38,0.1)" : excelImportState.status === "done" ? "rgba(5,150,105,0.1)" : "rgba(5,97,252,0.1)"}`,
+          background: excelImportState.status === "error" ? "rgba(220,38,38,0.04)" : excelImportState.status === "done" ? "rgba(5,150,105,0.04)" : "rgba(25,25,112,0.04)",
+          border: `1px solid ${excelImportState.status === "error" ? "rgba(220,38,38,0.1)" : excelImportState.status === "done" ? "rgba(5,150,105,0.1)" : "rgba(25,25,112,0.1)"}`,
         }} className="bento-fade-in">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: excelImportState.total > 0 ? "8px" : "0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -463,27 +463,27 @@ export function InventoryOpsCard({
               ) : excelImportState.status === "done" ? (
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
               ) : (
-                <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(5,97,252,0.3)", borderTopColor: "#0561fc", animation: "spin 0.8s linear infinite" }} />
+                <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(25,25,112,0.3)", borderTopColor: "#191970", animation: "spin 0.8s linear infinite" }} />
               )}
               <span style={{
                 fontSize: "13px", fontWeight: 600,
-                color: excelImportState.status === "error" ? "#dc2626" : excelImportState.status === "done" ? "#059669" : "#0561fc",
+                color: excelImportState.status === "error" ? "#dc2626" : excelImportState.status === "done" ? "#059669" : "#191970",
               }}>
                 {excelImportState.message}
               </span>
             </div>
             {excelImportState.total > 0 && excelImportState.status === "saving" && (
-              <span style={{ fontSize: "12px", fontWeight: 650, color: "#0561fc", fontVariantNumeric: "tabular-nums" as const }}>
+              <span style={{ fontSize: "12px", fontWeight: 650, color: "#191970", fontVariantNumeric: "tabular-nums" as const }}>
                 {excelImportState.current}/{excelImportState.total}
               </span>
             )}
           </div>
           {excelImportState.total > 0 && (
-            <div style={{ height: "4px", borderRadius: "2px", background: "rgba(5,97,252,0.08)", overflow: "hidden" }}>
+            <div style={{ height: "4px", borderRadius: "2px", background: "rgba(25,25,112,0.08)", overflow: "hidden" }}>
               <div style={{
                 height: "100%", borderRadius: "2px",
                 width: `${(excelImportState.current / excelImportState.total) * 100}%`,
-                background: excelImportState.status === "done" ? "#059669" : "#0561fc",
+                background: excelImportState.status === "done" ? "#059669" : "#191970",
                 transition: "width 0.15s ease",
               }} />
             </div>
@@ -515,7 +515,7 @@ export function InventoryOpsCard({
             <div>
               <div style={listTitle}>{item.name}</div>
               <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#2563eb" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(37,99,235,0.08)" : "rgba(15,23,42,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
+                <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#191970" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
                   {(item as { itemType?: string }).itemType === "product" ? (ko ? "상품" : "Product") : (ko ? "재료" : "Material")}
                 </span>
                 <div style={listMeta}>{item.category || (ko ? "일반" : "General")}</div>
@@ -561,7 +561,7 @@ export function InventoryOpsCard({
         {inventory.length > 4 && (
           <button type="button" onClick={() => { setInventorySnapshot([...inventory]); setShowAllInventory(true); }} style={{
             width: "100%", padding: "10px", marginTop: "6px", borderRadius: "10px",
-            border: "none", background: "rgba(15,23,42,0.03)", cursor: "pointer",
+            border: "none", background: "rgba(25,25,112,0.035)", cursor: "pointer",
             fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.45)",
           }}>
             {ko ? `전체 ${inventory.length}개 보기` : `View all ${inventory.length} items`}
@@ -588,7 +588,7 @@ export function InventoryOpsCard({
               </div>
               <button type="button" onClick={() => setShowAllInventory(false)} style={{
                 width: "32px", height: "32px", borderRadius: "999px", border: "none",
-                background: "rgba(15,23,42,0.06)", cursor: "pointer", fontSize: "16px", color: "rgba(15,23,42,0.4)",
+                background: "rgba(25,25,112,0.05)", cursor: "pointer", fontSize: "16px", color: "rgba(15,23,42,0.4)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>✕</button>
             </div>
@@ -602,13 +602,13 @@ export function InventoryOpsCard({
                   <div key={item.id} style={{
                     display: "flex", alignItems: "center", gap: "12px",
                     padding: "10px 12px", borderRadius: "12px",
-                    background: urgency !== "ok" ? `${urgencyColor}06` : "rgba(15,23,42,0.02)",
+                    background: urgency !== "ok" ? `${urgencyColor}06` : "rgba(25,25,112,0.025)",
                     borderLeft: `3px solid ${urgencyColor}`,
                   }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>{item.name}</div>
                       <div style={{ display: "flex", gap: "4px", alignItems: "center", marginTop: "2px" }}>
-                        <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#2563eb" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(37,99,235,0.08)" : "rgba(15,23,42,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#191970" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
                           {(item as { itemType?: string }).itemType === "product" ? (ko ? "상품" : "Product") : (ko ? "재료" : "Material")}
                         </span>
                         <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.35)" }}>{item.category || (ko ? "일반" : "General")}</span>
@@ -650,7 +650,7 @@ export function InventoryOpsCard({
             {isEditing ? (ko ? "재고 수정" : "Edit inventory") : (ko ? "재고 추가" : "Add inventory")}
           </div>
           {/* 유형 선택: 원재료 / 판매 상품 */}
-          <div style={{ display: "flex", gap: "4px", padding: "3px", borderRadius: "10px", background: "rgba(15,23,42,0.04)", marginBottom: "10px" }}>
+          <div style={{ display: "flex", gap: "4px", padding: "3px", borderRadius: "10px", background: "rgba(25,25,112,0.04)", marginBottom: "10px" }}>
             {([
               { value: "material" as const, label: ko ? "원재료" : "Material" },
               { value: "product" as const, label: ko ? "판매 상품" : "Product" },
@@ -739,7 +739,7 @@ export function InventoryOpsCard({
                 />
               </div>
               {invForm.sellingPrice && Number(invForm.sellingPrice) > 0 && invForm.unitCost && Number(invForm.unitCost) > 0 && (
-                <div style={{ fontSize: "12px", color: "#2563eb", fontWeight: 600, padding: "4px 0" }}>
+                <div style={{ fontSize: "12px", color: "#191970", fontWeight: 600, padding: "4px 0" }}>
                   {ko ? "마진율" : "Margin"}: {Math.round(((Number(invForm.sellingPrice) - Number(invForm.unitCost)) / Number(invForm.sellingPrice)) * 100)}%
                 </div>
               )}

@@ -27,6 +27,8 @@ import {
   useRoadmapStore,
   useOnboardingStore,
 } from "../stores";
+import { useStoreInfoStore } from "../stores/store-info-store";
+import { isCircuitBroken, recordSaveFailure, recordSaveSuccess } from "../services/save-circuit-breaker";
 import type { AiRoadmapSnapshot } from "../stores/roadmap-store";
 import type { DailyEntry, MonthlyCosts, CostSnapshot } from "../stores/finance-store";
 import type {
@@ -117,6 +119,9 @@ export function applyStoreData(data: UserStoreData): void {
   const rm = useRoadmapStore.getState();
 
   if (data.storeName) prof.setStoreName(data.storeName);
+  // 영업 시간 — null 도 명시적 의미 (24h 영업) 이므로 키 존재 여부로 판단
+  if (data.businessOpenTime !== undefined) prof.setBusinessOpenTime(data.businessOpenTime);
+  if (data.businessCloseTime !== undefined) prof.setBusinessCloseTime(data.businessCloseTime);
   // businessLaunched / launchedDate: 양방향 sync. Supabase 가 명시적으로 false/null 이면 로컬도 그렇게.
   // 단, 키 자체가 row 에 없으면 (undefined) 손대지 않음 — 부분 update 시 안전.
   if (typeof data.businessLaunched === "boolean") prof.setBusinessLaunched(data.businessLaunched);
@@ -229,6 +234,54 @@ export function applyStoreData(data: UserStoreData): void {
       // setupCompletedAt 은 markSetupCompleted action 만 있어, 이미 완료된 상태면 그대로 둠
     }
   } catch { /* cashflow store not loaded yet */ }
+
+  // ── "내 가게" store 복원 ──
+  try {
+    const si = useStoreInfoStore.getState();
+    si.hydrate({
+      mission: (data.mission as string | null) ?? "",
+      shortDescription: (data.shortDescription as string | null) ?? "",
+      longDescription: (data.longDescription as string | null) ?? "",
+      addressRoad: (data.addressRoad as string | null) ?? "",
+      addressDetail: (data.addressDetail as string | null) ?? "",
+      regionCode: (data.regionCode as string | null) ?? "",
+      latitude: (data.latitude as number | null) ?? null,
+      longitude: (data.longitude as number | null) ?? null,
+      phone: (data.phone as string | null) ?? "",
+      ownerPhone: (data.ownerPhone as string | null) ?? "",
+      websiteUrl: (data.websiteUrl as string | null) ?? "",
+      instagramUrl: (data.instagramUrl as string | null) ?? "",
+      naverPlaceUrl: (data.naverPlaceUrl as string | null) ?? "",
+      kakaoPlaceUrl: (data.kakaoPlaceUrl as string | null) ?? "",
+      weeklyHolidays: Array.isArray(data.weeklyHolidays) ? (data.weeklyHolidays as string[]) : [],
+      breakTime: (data.breakTime as string | null) ?? "",
+      storePhotos: Array.isArray(data.storePhotos) ? (data.storePhotos as never) : [],
+      currentBalanceManualKrw: (data.currentBalanceManualKrw as number | null) ?? null,
+      currentBalanceUpdatedAt: (data.currentBalanceUpdatedAt as string | null) ?? null,
+      bizRegistrationNumber: (data.bizRegistrationNumber as string | null) ?? "",
+      bizRegistrationDate: (data.bizRegistrationDate as string | null) ?? "",
+      bizRegistrationType: (data.bizRegistrationType as string | null) ?? "",
+      industryCode: (data.industryCode as string | null) ?? "",
+      telecomSalesNumber: (data.telecomSalesNumber as string | null) ?? "",
+      fourInsuranceEstablished: (data.fourInsuranceEstablished as string | null) ?? "",
+      permits: Array.isArray(data.permits) ? (data.permits as never) : [],
+      bizBankName: (data.bizBankName as string | null) ?? "",
+      bizBankAccountMasked: (data.bizBankAccountMasked as string | null) ?? "",
+      bizCardIssued: (data.bizCardIssued as string | null) ?? "",
+      posTerminal: (data.posTerminal as string | null) ?? "",
+      taxHandling: (data.taxHandling as string | null) ?? "",
+      cpaName: (data.cpaName as string | null) ?? "",
+      cpaPhone: (data.cpaPhone as string | null) ?? "",
+      peopleDirectory: Array.isArray(data.peopleDirectory) ? (data.peopleDirectory as never) : [],
+      insurancePolicies: Array.isArray(data.insurancePolicies) ? (data.insurancePolicies as never) : [],
+      tenancy: (data.tenancy as Record<string, unknown> | null) ?? {},
+      digitalFootprint: Array.isArray(data.digitalFootprint) ? (data.digitalFootprint as never) : [],
+      vehicles: Array.isArray(data.vehicles) ? (data.vehicles as never) : [],
+      industrySpecifics: (data.industrySpecifics as Record<string, unknown> | null) ?? {},
+    });
+  } catch (err) {
+    console.error("[buildup persistence] store-info hydrate failed", err);
+  }
 }
 
 /** Collect store data for Supabase sync (reads from Zustand stores, not localStorage) */
@@ -239,6 +292,9 @@ export function collectStoreData(): Partial<UserStoreData> {
   const rm = useRoadmapStore.getState();
   const r: Partial<UserStoreData> = {};
   if (prof.storeName) r.storeName = prof.storeName;
+  // 영업 시간 — null 도 보낸다 (사장이 "24h 영업"으로 바꾼 경우 반영 위해 항상 포함)
+  r.businessOpenTime = prof.businessOpenTime ?? null;
+  r.businessCloseTime = prof.businessCloseTime ?? null;
   if (prof.businessLaunched) r.businessLaunched = true;
   if (prof.businessLaunchedDate) r.businessLaunchedDate = prof.businessLaunchedDate;
   if (prof.cpaDecision) r.cpaDecision = prof.cpaDecision;
@@ -322,6 +378,53 @@ export function collectStoreData(): Partial<UserStoreData> {
       };
     }
   } catch { /* cashflow store not loaded yet */ }
+
+  // ── 내 가게 store 수집 ──
+  try {
+    const si = useStoreInfoStore.getState();
+    // 모든 필드를 항상 포함 (빈 값도 의도 — 사장이 지웠을 수 있음)
+    r.mission = si.mission || null;
+    r.shortDescription = si.shortDescription || null;
+    r.longDescription = si.longDescription || null;
+    r.addressRoad = si.addressRoad || null;
+    r.addressDetail = si.addressDetail || null;
+    r.regionCode = si.regionCode || null;
+    r.latitude = si.latitude;
+    r.longitude = si.longitude;
+    r.phone = si.phone || null;
+    r.ownerPhone = si.ownerPhone || null;
+    r.websiteUrl = si.websiteUrl || null;
+    r.instagramUrl = si.instagramUrl || null;
+    r.naverPlaceUrl = si.naverPlaceUrl || null;
+    r.kakaoPlaceUrl = si.kakaoPlaceUrl || null;
+    r.weeklyHolidays = si.weeklyHolidays;
+    r.breakTime = si.breakTime || null;
+    r.storePhotos = si.storePhotos;
+    r.currentBalanceManualKrw = si.currentBalanceManualKrw;
+    r.currentBalanceUpdatedAt = si.currentBalanceUpdatedAt;
+    r.bizRegistrationNumber = si.bizRegistrationNumber || null;
+    r.bizRegistrationDate = si.bizRegistrationDate || null;
+    r.bizRegistrationType = si.bizRegistrationType || null;
+    r.industryCode = si.industryCode || null;
+    r.telecomSalesNumber = si.telecomSalesNumber || null;
+    r.fourInsuranceEstablished = si.fourInsuranceEstablished || null;
+    r.permits = si.permits;
+    r.bizBankName = si.bizBankName || null;
+    r.bizBankAccountMasked = si.bizBankAccountMasked || null;
+    r.bizCardIssued = si.bizCardIssued || null;
+    r.posTerminal = si.posTerminal || null;
+    r.taxHandling = si.taxHandling || null;
+    r.cpaName = si.cpaName || null;
+    r.cpaPhone = si.cpaPhone || null;
+    r.peopleDirectory = si.peopleDirectory;
+    r.insurancePolicies = si.insurancePolicies;
+    r.tenancy = si.tenancy;
+    r.digitalFootprint = si.digitalFootprint;
+    r.vehicles = si.vehicles;
+    r.industrySpecifics = si.industrySpecifics;
+  } catch (err) {
+    console.error("[buildup persistence] store-info collect failed", err);
+  }
   return r;
 }
 
@@ -412,16 +515,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         const profileRes = await supabase.from("business_profiles").select("*").eq("user_id", result.user.id).maybeSingle();
         const profileRole = (profileRes?.data as Record<string, unknown> | null)?.user_role as string | undefined;
 
-        let memberRole: string | undefined;
-        try {
-          const memberRes = await supabase.from("store_members" as never).select("role, owner_user_id").eq("member_user_id", result.user.id).maybeSingle();
-          memberRole = (memberRes?.data as Record<string, unknown> | null)?.role as string | undefined;
-        } catch { /* table may not exist yet */ }
-
+        // ⚠️ store_members 테이블은 멀티-테넌트(팀) 기능용. 1인 사장 시나리오에는 불필요하며,
+        //    테이블 미적용 환경에서 매 connect 마다 404 콘솔 노이즈를 일으켰음.
+        //    팀 초대 흐름은 starter-stage-demo.tsx 의 invite acceptance 에서만 query.
         if (profileRole === "staff" || profileRole === "manager" || profileRole === "owner") {
           resolvedRole = profileRole;
-        } else if (memberRole === "staff" || memberRole === "manager") {
-          resolvedRole = memberRole;
         } else {
           resolvedRole = "owner";
           void supabase.from("business_profiles").update({ user_role: "owner" } as never).eq("user_id", result.user.id).then(() => {});
@@ -431,9 +529,79 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       }
       setUserRole(resolvedRole);
 
-      setDecisions(result.state.decisions);
-      // Reconcile tasks: starterTaskMap is source of truth for task definitions.
       const loadedTasks = result.state.tasks;
+
+      // ── Backward heal: completedAt 백필 (강화 v2 — 2026-05-03 사용자 보고 반복) ──
+      //
+      // 문제 시나리오: 룰 강화 후 (예: permit-check 2→5) 사용자가 옛 룰로 task 토글만 하고
+      //   "다음 단계로" 안 눌렀을 때 → completedAt 없음 + 새로 추가된 task 는 status=todo →
+      //   evaluateRule 이 fail → stage 회귀. 이전 v1 heal 은 "furthestIdx 보다 앞" 만 backfill 해서
+      //   furthestIdx 자체가 회귀 stage 면 안 고쳐짐.
+      //
+      // 강화 v2: 두 단계 적용.
+      //   ① 모든 stage 중 "신호 있음 = completedAt OR 어떤 task 라도 status=completed" 면
+      //      그 stage 자체에 completedAt 백필 (사용자가 토글하기 시작했다는 건 진행 흔적).
+      //   ② 위에서 하나라도 backfill 된 가장 뒤 stage idx 까지의 모든 in-roadmap stage 에 backfill
+      //      (path 의 monotonic chain 보장 — 중간 단계가 비어 있을 수 없음).
+      //
+      // 결과: 사용자가 task 만 토글했어도, "다음 단계로" 한 번이라도 눌렀어도, 둘 다 done 으로 인정.
+      const stageOrder = new Map<string, number>();
+      result.state.roadmap.stages.forEach((s: { stageId: string }, idx: number) => stageOrder.set(s.stageId, idx));
+      const decisionsToHeal: WorkflowDecisionMap = { ...result.state.decisions };
+      const healedStageIds = new Set<string>();
+
+      // ① "신호 있음" stage 모두 직접 backfill.
+      let maxSignalIdx = -1;
+      const signalStages: Array<{ sid: string; idx: number; hasCompleted: boolean }> = [];
+      // decisions 에 등록된 stage 와 tasks 에 등록된 stage 둘 다 스캔 (decisions 만 보면 누락).
+      const allStageIds = new Set<string>([
+        ...Object.keys(decisionsToHeal),
+        ...Object.keys(loadedTasks),
+      ]);
+      for (const sid of allStageIds) {
+        const idx = stageOrder.get(sid) ?? -1;
+        if (idx < 0) continue;
+        const dec = decisionsToHeal[sid];
+        const hasCompleted = !!dec?.completedAt;
+        const hasAnyCompletedTask = (loadedTasks[sid] ?? []).some((t: { status: string }) => t.status === "completed");
+        if (hasCompleted || hasAnyCompletedTask) {
+          signalStages.push({ sid, idx, hasCompleted });
+          if (idx > maxSignalIdx) maxSignalIdx = idx;
+        }
+      }
+
+      const baseTime = Date.now();
+      // ① 신호 있는 stage 자체에 completedAt 없으면 채움 (사용자의 진행 흔적 = done 인정).
+      for (const { sid, idx, hasCompleted } of signalStages) {
+        if (!hasCompleted) {
+          const existing = decisionsToHeal[sid];
+          const ts = new Date(baseTime - (maxSignalIdx - idx) * 1000).toISOString();
+          decisionsToHeal[sid] = { ...(existing ?? { stageId: sid }), stageId: sid, completedAt: ts };
+          healedStageIds.add(sid);
+        }
+      }
+      // ② maxSignalIdx 까지의 모든 path stage 에 chain backfill (사용자가 거기까지 도달한 사실).
+      if (maxSignalIdx > 0) {
+        for (let i = 0; i < maxSignalIdx; i++) {
+          const sid = result.state.roadmap.stages[i].stageId;
+          const existing = decisionsToHeal[sid];
+          if (!existing?.completedAt) {
+            const ts = new Date(baseTime - (maxSignalIdx - i) * 1000).toISOString();
+            decisionsToHeal[sid] = { ...(existing ?? { stageId: sid }), stageId: sid, completedAt: ts };
+            healedStageIds.add(sid);
+          }
+        }
+      }
+      const healed = healedStageIds.size > 0;
+      if (healed) {
+        console.log(
+          `[buildup persistence] heal v2: backfilled ${healedStageIds.size} stages (maxSignalIdx=${maxSignalIdx})`,
+          Array.from(healedStageIds),
+        );
+      }
+      setDecisions(decisionsToHeal);
+
+      // Reconcile tasks: starterTaskMap is source of truth for task definitions.
       const roadmapStageIds = new Set(result.state.roadmap.stages.map((s: { stageId: string }) => s.stageId));
       const reconciled: WorkflowTaskMap = {};
       for (const [stageKey, starterTasks] of Object.entries(starterTaskMap)) {
@@ -448,7 +616,26 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         });
       }
       setTaskMap(reconciled);
-      setRoadmap(result.state.roadmap);
+      // healed 된 decisions 로 roadmap 재빌드 — 그렇지 않으면 result.state.roadmap 이
+      // 백필 전 평가 결과라 곧바로 다시 "available" 로 표시될 수 있음.
+      const healedRoadmap = healed
+        ? buildRoadmapState(
+            { ...baseRoadmap, roadmapId: result.state.roadmap.roadmapId },
+            decisionsToHeal,
+            reconciled,
+          )
+        : result.state.roadmap;
+      setRoadmap(healedRoadmap);
+      // 백필이 일어났다면 즉시 Supabase 저장 (다음 새로고침에도 유지).
+      if (healed) {
+        void saveRoadmapState(supabase, {
+          roadmap: healedRoadmap,
+          decisions: decisionsToHeal,
+          tasks: reconciled,
+        }).catch((err) => {
+          console.warn("[buildup persistence] heal save failed:", err);
+        });
+      }
       /* IMPORTANT: setPersistenceReady MUST come AFTER state restoration. */
       setPersistenceReady(true);
 
@@ -534,6 +721,33 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         ).catch(() => { /* silent — UI 는 이미 일관 */ });
       }
 
+      // ── ⚠️ Reverse stale: 모든 path stage 완료됐는데 businessLaunched=false ──
+      // 시나리오: 사용자가 "내 가게 대시보드로 이동" 버튼을 눌렀지만 이전 버그 시점엔 인라인 구현이
+      //  Supabase 저장을 빠뜨려서 새로고침 후 businessLaunched=false로 복구되는 일이 있었음.
+      // 결과: home/완료 화면은 "18단계 모두 완료"인데 current stage 페이지는 여전히 pre-launch-final
+      //  단계 콘텐츠를 보여주는 모순 발생. 사용자 직접 다시 버튼을 눌러야만 정상화.
+      // 자가복구: pathStage 전부 완료됐고 (path 기준 — first-month-check 같은 deprecated stage 제외)
+      //  businessLaunched=false면 → 사용자가 명시적으로 완료 끝낸 것으로 보고 launched=true 자가복구.
+      if (!profileLaunched && completedFromRoadmap > 0) {
+        // path 기준으로 완료 판정 — pathStageIds 가 hook 외부에서 계산되므로 여기선 simple heuristic
+        // 사용자의 currentStageId 가 pre-launch-final 이고 그 stage 가 completed에 포함됐다면 launched 로 자가복구
+        const completedSet = new Set(result.state.roadmap.completedStageIds);
+        const reachedFinal = completedSet.has("pre-launch-final");
+        if (reachedFinal) {
+          const launchDate = new Date().toISOString().slice(0, 10);
+          useProfileStore.getState().setBusinessLaunched(true);
+          if (!useProfileStore.getState().businessLaunchedDate) {
+            useProfileStore.getState().setBusinessLaunchedDate(launchDate);
+          }
+          // Server 에 즉시 반영
+          void saveStoreData(
+            supabase,
+            { businessLaunched: true, businessLaunchedDate: useProfileStore.getState().businessLaunchedDate ?? launchDate },
+            result.user,
+          ).catch(() => { /* silent — UI 는 이미 일관 */ });
+        }
+      }
+
       // Show onboarding choice when no industry has been selected yet
       const hasIndustry = loadedIndustryId || loadedProfile?.subIndustryId;
       const isLaunched = useProfileStore.getState().businessLaunched || businessLaunched;
@@ -551,13 +765,49 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       if (isLaunched) {
         const currentDecisions = result.state.decisions;
         const currentStages = result.state.roadmap.stages;
-        const missing = currentStages.filter(
+
+        // ⚠️ Path-aware: 사용자 path 외 stage는 healing 대상에서 제외.
+        // 예전엔 모든 stage(46개)에 completedAt 보강해서 startup-tech 유저가 offline 단계까지 false-positive로 완료된 듯이 표시되는 버그.
+        const indDec = currentDecisions["industry-selection"] as { inputs?: { categoryId?: string }; selectedPrimaryOptionId?: string } | undefined;
+        const stDec = currentDecisions["startup-type"] as { selectedPrimaryOptionId?: string; inputs?: { startupType?: string } } | undefined;
+        const cat = indDec?.inputs?.categoryId;
+        const subId = indDec?.selectedPrimaryOptionId ?? "";
+        const sType = stDec?.selectedPrimaryOptionId ?? stDec?.inputs?.startupType;
+        const onlineOnly = new Set(["platform-setup","online-registration","sourcing-setup","store-setup","online-marketing"]);
+        const startupOnly = new Set(["startup-foundation","customer-discovery","mvp-build","launch-gtm","go-live","growth-engine","company-setup","fundraising-readiness","venture-certification","hardware-prototype","bom-supply-chain","certification-kc-ce","manufacturing-partner","lab-setup","prototype-iteration","field-or-clinical-test","regulatory-submission","eda-tooling-setup","mpw-or-pilot-tape-out","packaging-and-test","partner-foundation-or-pilot-line"]);
+        const offlineOnly = new Set(["permit-check","location-candidates","contract-review","construction-setup","vendor-setup","registration-setup","insurance-tax-setup","hiring-setup","operations-setup","pre-launch"]);
+        const clusterB = new Set(["hardware-prototype","bom-supply-chain","certification-kc-ce","manufacturing-partner"]);
+        const clusterC = new Set(["lab-setup","prototype-iteration","field-or-clinical-test","regulatory-submission"]);
+        const clusterD = new Set(["eda-tooling-setup","mpw-or-pilot-tape-out","packaging-and-test","partner-foundation-or-pilot-line"]);
+        const isClusterB = subId === "hardware-iot";
+        const isClusterC = subId === "robotics-physical-ai" || subId === "biotech-medtech";
+        const isClusterD = subId === "semiconductor" || subId === "climate-energy";
+        const isInPath = (stageId: string): boolean => {
+          if (cat === "startup-tech") {
+            if (onlineOnly.has(stageId) || offlineOnly.has(stageId) || stageId === "franchise-application") return false;
+            if (clusterB.has(stageId)) return isClusterB;
+            if (clusterC.has(stageId)) return isClusterC;
+            if (clusterD.has(stageId)) return isClusterD;
+            return true;
+          }
+          if (cat === "online-digital") {
+            if (offlineOnly.has(stageId) || startupOnly.has(stageId) || stageId === "franchise-application") return false;
+            return true;
+          }
+          // offline (default)
+          if (onlineOnly.has(stageId) || startupOnly.has(stageId)) return false;
+          if (stageId === "franchise-application" && sType !== "franchise") return false;
+          return true;
+        };
+
+        const pathStageList = currentStages.filter((s: { stageId: string }) => isInPath(s.stageId));
+        const missing = pathStageList.filter(
           (s: { stageId: string }) => !currentDecisions[s.stageId]?.completedAt,
         );
-        // 안전장치: 결정값이 0개거나 거의 모든 stage 가 비어있으면 "초기화 직후" 상태이므로
-        // auto-heal 금지 (그렇지 않으면 reset 후 isLaunched 가 잠깐 true 일 때 20단계 자동 완료됨).
+        // 안전장치: 결정값이 0개거나 path stage 거의 전부가 비어있으면 "초기화 직후" 상태이므로
+        // auto-heal 금지 (그렇지 않으면 reset 후 isLaunched 가 잠깐 true 일 때 자동 완료됨).
         const decisionCount = Object.keys(currentDecisions).length;
-        const looksLikeFreshReset = decisionCount === 0 || missing.length === currentStages.length;
+        const looksLikeFreshReset = decisionCount === 0 || missing.length === pathStageList.length;
         if (missing.length > 0 && !looksLikeFreshReset) {
           const nowIso = new Date().toISOString();
           let healedDecisions: WorkflowDecisionMap = currentDecisions;
@@ -637,13 +887,66 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     }
   };
 
-  /** Zustand 스토어에서 읽어서 1초 debounce로 Supabase에 flush */
+  /** Zustand 스토어에서 읽어서 1초 debounce로 Supabase에 flush — 일반 변경 (재고·직원·세팅 등) */
   const flushStoreData = () => {
-    if (!useOnboardingStore.getState().persistenceReady) return;
+    const onb = useOnboardingStore.getState();
+    if (!onb.persistenceReady) {
+      console.warn("[buildup persistence] flushStoreData skipped — persistence not ready (signed out?)");
+      return;
+    }
     if (storeDataTimerRef.current) clearTimeout(storeDataTimerRef.current);
-    storeDataTimerRef.current = setTimeout(() => {
-      void saveStoreData(supabase, collectStoreData()).catch(() => {});
+    storeDataTimerRef.current = setTimeout(async () => {
+      onb.setPersistStatus("saving");
+      try {
+        await saveStoreData(supabase, collectStoreData());
+        onb.setPersistStatus("saved");
+        onb.setPersistError(null);
+        onb.setPersistLastSavedAt(Date.now());
+        // 2초 뒤 idle로 복귀
+        setTimeout(() => {
+          if (useOnboardingStore.getState().persistStatus === "saved") {
+            useOnboardingStore.getState().setPersistStatus("idle");
+          }
+        }, 2000);
+      } catch (err) {
+        console.error("[buildup persistence] saveStoreData failed:", err);
+        onb.setPersistStatus("error");
+        onb.setPersistError(err instanceof Error ? err.message : String(err));
+      }
     }, 1000);
+  };
+
+  /** 즉시 저장 (debounce 없이) — 매출·비용 입력 같은 critical 데이터용. throw on failure. */
+  const flushStoreDataImmediate = async (): Promise<void> => {
+    const onb = useOnboardingStore.getState();
+    if (!onb.persistenceReady) {
+      onb.setPersistStatus("error");
+      onb.setPersistError("로그인이 필요합니다 — 데이터가 서버에 저장되지 않습니다.");
+      throw new Error("AUTH_REQUIRED");
+    }
+    // 회로 차단 — 영구 실패 감지된 후엔 시도조차 안 함
+    if (isCircuitBroken()) {
+      throw new Error("CIRCUIT_BROKEN");
+    }
+    if (storeDataTimerRef.current) clearTimeout(storeDataTimerRef.current);
+    onb.setPersistStatus("saving");
+    try {
+      await saveStoreData(supabase, collectStoreData());
+      recordSaveSuccess();
+      onb.setPersistStatus("saved");
+      onb.setPersistError(null);
+      onb.setPersistLastSavedAt(Date.now());
+      setTimeout(() => {
+        if (useOnboardingStore.getState().persistStatus === "saved") {
+          useOnboardingStore.getState().setPersistStatus("idle");
+        }
+      }, 2000);
+    } catch (err) {
+      const { message } = recordSaveFailure(err);
+      onb.setPersistStatus("error");
+      onb.setPersistError(message);
+      throw err;
+    }
   };
 
   // ── Effects ──
@@ -697,37 +1000,45 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     }
 
     autosaveTimerRef.current = setTimeout(() => {
-      // 동기 가드: reset 도중이면 콜백 즉시 종료 (saveRoadmapState 가 ensureBusinessProfile +
-      // roadmaps UPSERT 를 무조건 수행하기 때문에 — 즉, 자동저장이 reset 직후 row 를 재생성하는
-      // race 를 차단해야 함).
       if (isResettingRef.current) {
         console.log("[autosave] blocked — reset in progress");
         return;
       }
+      // 회로 차단 — 영구 실패 감지된 후엔 시도조차 안 함 (콘솔/네트워크 스팸 방지)
+      if (isCircuitBroken()) return;
       const snap = roadmapSnapshotRef.current;
-      void Promise.all([
-        saveRoadmapState(supabase, {
-          roadmap: snap.roadmap,
-          decisions: snap.decisions,
-          tasks: snap.taskMap,
-        }),
-        saveStoreData(supabase, collectStoreData()).catch(() => {}),
-      ])
-        .then(() => {
-          setPersistenceLabel(copy.home.autosaved);
-          void loadBusinessProfile(supabase)
-            .then((p) => {
-              if (p) setProfile(p);
-            })
-            .catch(() => {});
-        })
-        .catch((error) => {
+      // ⚠️ 두 save 를 독립적으로 처리 — 하나가 실패해도 다른 하나는 진행, 각자 회로 차단기 알림.
+      //   이전엔 Promise.all 로 묶고 saveRoadmapState 실패는 recordSaveFailure 호출 안 했음.
+      //   결과: roadmap save 가 영구 실패 (마이그레이션 미적용 등) 해도 회로 차단 안 되고
+      //         매 800ms 마다 시도 → 콘솔 스팸 + 사용자가 "저장 잘 되나?" 의심하게 됨.
+      const roadmapPromise = saveRoadmapState(supabase, {
+        roadmap: snap.roadmap,
+        decisions: snap.decisions,
+        tasks: snap.taskMap,
+      }).then(
+        () => { recordSaveSuccess(); },
+        (err) => { recordSaveFailure(err); throw err; },
+      );
+      const storePromise = saveStoreData(supabase, collectStoreData()).then(
+        () => { recordSaveSuccess(); },
+        (err) => { recordSaveFailure(err); throw err; },
+      );
+      void Promise.allSettled([roadmapPromise, storePromise]).then((results) => {
+        const anyRejected = results.some((r) => r.status === "rejected");
+        if (anyRejected) {
+          const firstErr = results.find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
           setPersistenceLabel(
-            error instanceof Error
-              ? `${copy.home.autosaveFailed}: ${error.message}`
+            firstErr?.reason instanceof Error
+              ? `${copy.home.autosaveFailed}: ${firstErr.reason.message}`
               : copy.home.autosaveFailed,
           );
-        });
+        } else {
+          setPersistenceLabel(copy.home.autosaved);
+          void loadBusinessProfile(supabase)
+            .then((p) => { if (p) setProfile(p); })
+            .catch(() => {});
+        }
+      });
     }, 800);
 
     return () => {
@@ -747,9 +1058,19 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     if (!persistenceReady) return;
 
     const interval = setInterval(() => {
-      // reset 도중 차단
       if (isResettingRef.current) return;
-      void saveStoreData(supabase, storeDataSnapshotRef.current).catch(() => {});
+      if (!useOnboardingStore.getState().persistenceReady) return;
+      // 전역 circuit breaker — 영구 실패 후엔 시도조차 안 함
+      if (isCircuitBroken()) return;
+      saveStoreData(supabase, storeDataSnapshotRef.current).then(
+        () => { recordSaveSuccess(); },
+        (err) => {
+          const { message } = recordSaveFailure(err);
+          const onb = useOnboardingStore.getState();
+          onb.setPersistStatus("error");
+          onb.setPersistError(message);
+        },
+      );
     }, 5000);
 
     const handleBeforeUnload = () => {
@@ -801,6 +1122,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     connectAndLoad,
     persistCurrentState,
     flushStoreData,
+    flushStoreDataImmediate,
     clearLocalUserData,
     resetLocalState,
     applyStoreData,

@@ -63,7 +63,7 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
       label: { ko: "매출 내역", en: "Sales records" },
       desc: { ko: "일별 매출 + 고객수 + 객단가", en: "Daily sales + customers + avg ticket" },
       Icon: BarChart3,
-      iconColor: "#2563eb",
+      iconColor: "#191970",
       type: "csv",
       action: () => exportSalesCsv(entries, month),
     },
@@ -175,13 +175,13 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
               }}
               onMouseEnter={(e) => {
                 if (!isBusy) {
-                  e.currentTarget.style.background = "rgba(37,99,235,0.04)";
-                  e.currentTarget.style.borderColor = "rgba(37,99,235,0.15)";
+                  e.currentTarget.style.background = "rgba(25,25,112,0.04)";
+                  e.currentTarget.style.borderColor = "rgba(25,25,112,0.15)";
                 }
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "rgba(255,255,255,0.7)";
-                e.currentTarget.style.borderColor = "rgba(15,23,42,0.06)";
+                e.currentTarget.style.borderColor = "rgba(25,25,112,0.05)";
               }}
             >
               <div style={{
@@ -217,7 +217,7 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
                   {item.desc[ko ? "ko" : "en"]}
                 </div>
                 {isBusy && (
-                  <div style={{ fontSize: "10px", color: "#2563eb", marginTop: "4px", fontWeight: 650 }}>
+                  <div style={{ fontSize: "10px", color: "#191970", marginTop: "4px", fontWeight: 650 }}>
                     {ko ? "생성 중..." : "Generating..."}
                   </div>
                 )}

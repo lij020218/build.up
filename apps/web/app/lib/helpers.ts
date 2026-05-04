@@ -1,12 +1,15 @@
 import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
 import {
+  buildRoadmapState,
   formatGuideSectionTitle,
   localizeStage,
   starterRoadmap,
   starterStageFlow,
   starterTaskMap,
+  upsertStageDecision,
   type GuideQaAnswer,
   type RecommendationItem,
+  type RoadmapState,
   type WorkflowDecisionMap,
   type WorkflowTaskMap,
 } from "@build-up/shared";
@@ -342,6 +345,60 @@ export const baseRoadmap = {
   templateId: starterRoadmap.templateId,
   stages: starterStageFlow
 };
+
+/**
+ * 단계 완료 + chain backfill + roadmap 재빌드. (사용자 보고 2026-05-03 회귀 사고 후 도입)
+ *
+ *   완료시키려는 stage 의 completedAt 를 set 하면서, 그 앞의 모든 path stage 도 chain 으로 함께
+ *   backfill (사용자가 거기까지 도달했다는 사실 자체가 진실). buildRoadmapState 를 직접 호출해서
+ *   currentStageId 를 처음부터 재계산 → 룰 강화로 회귀된 stage 가 가운데 끼어 있어도 무시하고
+ *   가장 앞 미완료 (= viewedStage 의 다음) 로 자연스럽게 advance.
+ *
+ *   기존 completeCurrentStage 는 `roadmap.currentStageId` 기준이라 회귀 시 거기에 갇혔음.
+ *
+ *   추가 patch (extraDecisionFields) 가 있으면 해당 stageId 결정에 함께 머지.
+ */
+export function advanceStageWithChainBackfill(
+  stageId: string,
+  decisions: WorkflowDecisionMap,
+  roadmap: RoadmapState,
+  taskMap: WorkflowTaskMap,
+  extraDecisionFields?: Partial<{
+    selectedPrimaryOptionId: string;
+    selectedOptionIds: string[];
+    inputs: Record<string, string | number | boolean | string[]>;
+    notes: string;
+  }>,
+): { decisions: WorkflowDecisionMap; roadmap: RoadmapState; newlyUnlockedStageIds: string[] } {
+  const now = new Date().toISOString();
+  let nextDecisions = upsertStageDecision(decisions, stageId, {
+    stageId,
+    completedAt: now,
+    ...(extraDecisionFields ?? {}),
+  });
+
+  const stageIdx = baseRoadmap.stages.findIndex((s) => s.stageId === stageId);
+  if (stageIdx > 0) {
+    for (let i = 0; i < stageIdx; i++) {
+      const prevSid = baseRoadmap.stages[i].stageId;
+      if (!nextDecisions[prevSid]?.completedAt) {
+        const ts = new Date(Date.parse(now) - (stageIdx - i) * 1000).toISOString();
+        nextDecisions = upsertStageDecision(nextDecisions, prevSid, {
+          stageId: prevSid,
+          completedAt: ts,
+        });
+      }
+    }
+  }
+
+  const previousUnlocked = new Set(roadmap.unlockedStageIds);
+  const nextRoadmap = buildRoadmapState(baseRoadmap, nextDecisions, taskMap);
+  const newlyUnlockedStageIds = nextRoadmap.unlockedStageIds.filter(
+    (id) => !previousUnlocked.has(id),
+  );
+
+  return { decisions: nextDecisions, roadmap: nextRoadmap, newlyUnlockedStageIds };
+}
 
 export type ContractTaskDetail = {
   title: string;

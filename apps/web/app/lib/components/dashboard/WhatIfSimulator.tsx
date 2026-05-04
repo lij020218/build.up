@@ -298,8 +298,8 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
         borderRadius: "14px",
         background: hasChanges
           ? (scenario.net > currentNet ? "rgba(5,150,105,0.06)" : "rgba(220,38,38,0.04)")
-          : "rgba(15,23,42,0.03)",
-        border: `1px solid ${hasChanges ? (scenario.net > currentNet ? "rgba(5,150,105,0.12)" : "rgba(220,38,38,0.1)") : "rgba(15,23,42,0.04)"}`,
+          : "rgba(25,25,112,0.035)",
+        border: `1px solid ${hasChanges ? (scenario.net > currentNet ? "rgba(5,150,105,0.12)" : "rgba(220,38,38,0.1)") : "rgba(25,25,112,0.04)"}`,
         marginBottom: "16px",
       }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
@@ -457,13 +457,13 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
           marginTop: "10px",
           padding: "10px 12px",
           borderRadius: "10px",
-          background: "rgba(37,99,235,0.04)",
-          border: "1px solid rgba(37,99,235,0.08)",
+          background: "rgba(25,25,112,0.04)",
+          border: "1px solid rgba(25,25,112,0.08)",
           fontSize: "12px",
           color: "rgba(15,23,42,0.7)",
           lineHeight: 1.5,
         }}>
-          <span style={{ fontWeight: 660, color: "#2563eb", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ fontWeight: 660, color: "#191970", display: "inline-flex", alignItems: "center", gap: "4px" }}>
             <Lightbulb size={12} strokeWidth={1.5} color="#f59e0b" />
             {ko ? "인사이트:" : "Insight:"}
           </span>{" "}
@@ -490,7 +490,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
               padding: "10px 14px",
               borderRadius: "10px",
               border: "1px solid rgba(15,23,42,0.08)",
-              background: "rgba(15,23,42,0.02)",
+              background: "rgba(25,25,112,0.025)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -499,10 +499,10 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
               transition: "all 0.15s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(15,23,42,0.04)";
+              e.currentTarget.style.background = "rgba(25,25,112,0.04)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(15,23,42,0.02)";
+              e.currentTarget.style.background = "rgba(25,25,112,0.025)";
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -571,7 +571,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
                 fontSize: "11px",
                 color: "rgba(15,23,42,0.5)",
                 lineHeight: 1.5,
-                background: "rgba(15,23,42,0.02)",
+                background: "rgba(25,25,112,0.025)",
                 borderRadius: "8px",
                 fontWeight: 500,
               }}>

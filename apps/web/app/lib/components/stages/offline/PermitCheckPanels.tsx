@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, User, ShieldCheck, AlertTriangle, ArrowRight } from "lucide-react";
+import { Building2, User, ShieldCheck } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { supabase } from "../../../../../lib/supabase";
 import { getPermitsForCategory, getTotalPermitCost } from "@build-up/shared";
+import {
+  KeyActionHero,
+  StageTabNav,
+  StageOverview,
+  WorkStep,
+} from "../shared/StageActionHero";
 
 export function PermitCheckPanels() {
   const d = useDashboardCtx();
@@ -16,8 +22,14 @@ export function PermitCheckPanels() {
   } = d;
 
   const [expandedPermitId, setExpandedPermitId] = useState<string | null>(null);
+  // ⚠️ 페이지네이션 — 한 화면 = 한 흐름. 사용자 피드백으로 스크롤 분량 줄임.
+  const [pageIdx, setPageIdx] = useState(0);
 
   const ko = language === "ko";
+  // ★ 페이지 0 = 개요. 그 후 작업 흐름.
+  const pageLabels = ko
+    ? ["개요", "1. 건물", "2. 사람", "3. 시설", "4. 협상", "체크리스트"]
+    : ["Overview", "1. Building", "2. Person", "3. Facility", "4. Negotiate", "Checklist"];
 
   // ── Panel 1: Live competition/survival data ──
 
@@ -137,169 +149,179 @@ export function PermitCheckPanels() {
   } as const;
   const hairline = `1px solid rgba(${ACCENT_RGB},0.10)`;
 
+  // ─── 카테고리별 「임대인 협상 페이지」 사장님 상황 맞춤 권장 (페이지 3 inline) ───
+  const negotiateFavorable: Record<string, { context: string; recommendation: string; rationale: string }> = {
+    food: { context: "음식점 / F&B", recommendation: "정화조 BOD 부족 매물은 협상 X — 무조건 패스",
+      rationale: "정화조 증축은 건물주 동의 + 1,000~3,000만원 + 1~2개월 공사. 부족하면 다른 매물로." },
+    "cafe-dessert": { context: "카페 / 디저트", recommendation: "「전기 30A↑ + 급배수 가능」 임대 전 확답 받기",
+      rationale: "머신·제빙기 동시 가동 시 20A 차단기 빈번. 임대인 확답 없으면 매물 변경." },
+    beauty: { context: "1인 미용실 / 본인 면허 없을 때", recommendation: "면허자 의존 X — 본인 면허 취득 또는 2명+ 채용",
+      rationale: "채용 면허자 퇴사 시 즉시 무자격 영업이라 문 닫음. 리스크 분산 필수." },
+    retail: { context: "리테일 / 일반 소매", recommendation: "건축물 「판매시설」·「근린생활시설」 만 확인하면 끝",
+      rationale: "건강식·주류·의약품·전자담배 외엔 인허가 거의 없음. 사업자등록만으로 시작." },
+    fitness: { context: "필라테스·요가·PT", recommendation: "층고 2.5m 이하는 패스 — PT/필라 3m+, 요가 2.7m+",
+      rationale: "층고 부족은 보강 불가. 월세 싸도 회원 만족도·재계약률 직격." },
+    education: { context: "학원", recommendation: "건축물 용도 「교육연구시설」·「근린생활시설(학원)」 + 100㎡↑ 소방완비",
+      rationale: "용도 미일치 시 학원 등록 거부. 어린이 학원은 안전 기준 엄격." },
+    pet: { context: "펫 미용·호텔·훈련", recommendation: "주거 인접 매물 X — 상가 단독 입지 우선",
+      rationale: "짖음·털 알레르기 민원으로 시간 제한·계약 해지 사례 다수." },
+    "living-service": { context: "세탁·청소·수리", recommendation: "특수 업종 신고/등록 의무 사전 확인",
+      rationale: "세탁업·인쇄업은 시·구청 별도 신고 절차. 일반 청소는 면제." },
+    space: { context: "공간 임대 (스튜디오·파티룸·연습실)", recommendation: "「숙박 가능 여부 + 소음 허용」 명문화",
+      rationale: "소음 분쟁 1순위. 영업시간·데시벨 제한 특약 안 적으면 후일 분쟁." },
+  };
+  const myNegotiateTip = negotiateFavorable[industryCategoryId] ?? negotiateFavorable.food;
+
   return (
     <>
-      {/* ── Hero: 단계 의미 (typography-first) ── */}
-      <section style={surfaceCard}>
-        <div style={eyebrow}>{ko ? "사전 확인" : "Pre-check"}</div>
-        <h2 style={{
-          fontSize: "26px",
-          fontWeight: 680,
-          letterSpacing: "-0.035em",
-          lineHeight: 1.18,
-          color: "#0f172a",
-          margin: "0 0 14px",
-        }}>
-          {ko
-            ? "내 업종이 이 건물에서 가능한지 — 계약 전에 확인하세요."
-            : "Confirm your category fits the building — before you sign."}
-        </h2>
-        <p style={{
-          fontSize: "16px",
-          lineHeight: 1.6,
-          color: "rgba(0,0,0,0.62)",
-          margin: 0,
-        }}>
-          {ko
-            ? "임대 계약 후에야 「이 건물에선 영업 못 한다」가 드러나면 보증금 1,000~5,000만원이 즉시 묶입니다. 지금은 발급이 아닌 \"무엇이 필요한지\" 만 파악하는 30분짜리 단계입니다."
-            : "If post-lease you discover the building can't host your business, your KRW 10–50M deposit is locked. This is a 30-minute pre-check to map what's required — not to apply yet."}
-        </p>
-      </section>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko ? "내 업종이 이 건물에서 가능한지 — 계약 전 30분 안에 확인" : "Confirm category fits the building — in 30 min before signing",
+          detail: ko
+            ? "임대 계약 후 「영업 불가」 발견 시 보증금 1,000~5,000만원 즉시 묶임. 지금은 발급이 아닌 “무엇이 필요한지” 만 파악하는 사전 매핑 단계입니다."
+            : "Post-lease discovery of incompatibility locks ₩10-50M deposit. This is a pre-mapping step — not application yet.",
+        }}
+        pillars={[
+          { icon: <Building2 size={12} strokeWidth={1.5} />, label: ko ? "건물" : "Building", meta: ko ? "용도 · 정화조" : "Class · Septic" },
+          { icon: <User size={12} strokeWidth={1.5} />, label: ko ? "사람" : "Person", meta: ko ? "면허 · 보건증" : "License · Health" },
+          { icon: <ShieldCheck size={12} strokeWidth={1.5} />, label: ko ? "시설" : "Facility", meta: ko ? "소방 · 환기" : "Fire · Vent" },
+        ]}
+      />
 
-      {/* ── 3축 점검 (icon · label · body, 가벼운 3-column) ── */}
-      <section style={surfaceCard}>
-        <div style={eyebrow}>{ko ? "확인 항목 — 건물·사람·시설" : "Three Axes"}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0", borderTop: hairline, borderBottom: hairline }}>
-          {([
-            { Icon: Building2, title: ko ? "건물" : "Building", desc: hint.building },
-            { Icon: User, title: ko ? "사람" : "Person", desc: hint.person },
-            { Icon: ShieldCheck, title: ko ? "시설" : "Facility", desc: hint.facility },
-          ]).map((axis, i, arr) => (
-            <div
-              key={axis.title}
-              style={{
-                padding: "20px 18px",
-                borderRight: i < arr.length - 1 ? hairline : "none",
-              }}
-            >
-              {/* 미드나이트 블루 라운드 chip 안에 라인 아이콘 — 포인트 컬러를 명확히 */}
-              <div style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "10px",
-                background: `linear-gradient(180deg, rgba(${MIDNIGHT_RGB},0.10) 0%, rgba(${MIDNIGHT_RGB},0.06) 100%)`,
-                border: `1px solid rgba(${MIDNIGHT_RGB},0.16)`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
-                <axis.Icon size={18} strokeWidth={1.8} color={MIDNIGHT} />
-              </div>
-              <div style={{
-                fontSize: "13px",
-                fontWeight: 600,
-                color: "#0f172a",
-                marginTop: "10px",
-                marginBottom: "6px",
-                letterSpacing: "-0.01em",
-              }}>
-                {axis.title}
-              </div>
-              <div style={{
-                fontSize: "13px",
-                lineHeight: 1.55,
-                color: "rgba(0,0,0,0.58)",
-              }}>
-                {axis.desc}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <StageTabNav
+        ko={ko}
+        pageIndex={pageIdx}
+        pageLabels={pageLabels}
+        onPrev={() => setPageIdx(p => Math.max(0, p - 1))}
+        onNext={() => setPageIdx(p => Math.min(pageLabels.length - 1, p + 1))}
+        onJump={setPageIdx}
+      />
 
-      {/* ── 4단계 작업 흐름 (midnight step circles + hairline divider) ── */}
-      <section style={surfaceCard}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "10px" }}>
-          <div style={eyebrow}>{ko ? "작업 흐름" : "Workflow"}</div>
-          <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)", fontVariantNumeric: "tabular-nums" }}>
-            {ko ? "약 30분" : "~30 min"}
-          </div>
-        </div>
-        <ol style={{ margin: 0, padding: 0, listStyle: "none" }}>
-          {[
-            { time: "10분", text: ko ? "아래 패널의 인허가 카드를 모두 펼쳐 읽기 — 절차·비용·기관" : "Expand each permit card below — steps, cost, agency" },
-            { time: "10분", text: ko ? "정부24 (gov24.go.kr) 에서 후보 건물 「건축물대장」 발급 — 용도·면적·정화조" : "Get building registry from gov24.go.kr — use code, area, septic" },
-            { time: "10분", text: ko ? "체크리스트 5개 검토 — 모르는 항목은 관할 구청·세무서로 전화" : "Review the 5-item checklist — phone the agency on any unclear item" },
-            { time: ko ? "다음" : "Next", text: ko ? "5개 확인 후 다음 단계 (상권·입지 비교) 로" : "After all 5 are confirmed, proceed to location comparison", isFinal: true },
-          ].map((step, i, arr) => (
-            <li
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "16px",
-                padding: "16px 0",
-                borderBottom: i < arr.length - 1 ? hairline : "none",
-              }}
-            >
-              <div style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "50%",
-                // 진행 단계 = midnight hairline + midnight 텍스트, 마지막 단계 = filled midnight + glow.
-                background: step.isFinal ? MIDNIGHT : "transparent",
-                border: step.isFinal ? "none" : `1.5px solid rgba(${MIDNIGHT_RGB},0.32)`,
-                color: step.isFinal ? "#fff" : MIDNIGHT,
-                boxShadow: step.isFinal ? `0 4px 14px rgba(${MIDNIGHT_RGB},0.32)` : "none",
-                fontSize: "12px",
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                marginTop: "-1px",
-              }}>
-                {step.isFinal ? <ArrowRight size={13} strokeWidth={2.2} /> : i + 1}
-              </div>
-              <div style={{ flex: 1, fontSize: "15px", lineHeight: 1.55, color: "#0f172a", letterSpacing: "-0.01em" }}>
-                {step.text}
-              </div>
-              <div style={{
-                fontSize: "12px",
-                fontWeight: 500,
-                color: "rgba(0,0,0,0.45)",
-                flexShrink: 0,
-                paddingTop: "3px",
-                fontVariantNumeric: "tabular-nums",
-                minWidth: "36px",
-                textAlign: "right" as const,
-              }}>
-                {step.time}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {/* ── 페이지 0: 단계 개요 ── */}
+      {pageIdx === 0 && (
+        <StageOverview
+          ko={ko}
+          headline={ko
+            ? "임대 계약 전 30분 — 영업 가능 여부를 확정해 보증금을 지킵니다"
+            : "30 min before lease — confirm operability and protect your deposit"}
+          why={ko
+            ? "건축물 용도, 정화조, 환기, 소방, 면허 — 이 중 하나라도 안 맞으면 영업신고 자체가 거절됩니다. 임대 계약 후 발견하면 보증금 1,000~5,000만원이 즉시 묶임. 지금은 발급이 아닌 “무엇이 필요한지” 만 파악하는 사전 매핑 단계."
+            : "Use code, septic, vent, fire, license — any one mismatch denies registration. Post-lease discovery locks ₩10-50M. This is mapping, not application yet."}
+          stat={{
+            value: ko ? "70%" : "70%",
+            label: ko ? "사전 점검 미실시 사장님 비율" : "skip pre-check rate",
+          }}
+          workOutline={[
+            { stepLabel: ko ? "1. 건물" : "1. Building", title: ko ? "건축물대장 → 용도·정화조·위반 표시 확인" : "Use class · septic · violation flag", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "2. 사람" : "2. Person", title: ko ? "본인 면허·위생교육·보건증 일정 확정" : "License · hygiene · health cert", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "3. 시설" : "3. Facility", title: ko ? "소방완비·환기·전기·가스 검사 가능 여부" : "Fire · vent · electrical · gas", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "4. 협상" : "4. Negotiate", title: ko ? "빠진 항목 = 임대인 협상 카드 정리" : "Gaps = negotiation cards" },
+            { stepLabel: ko ? "체크리스트" : "Checklist", title: ko ? "라이브 영업 데이터 + 인허가 카드 확인" : "Live operating data + permit cards" },
+          ]}
+          outcome={ko
+            ? "내 업종이 이 건물에서 영업 가능한지 확정. 부족한 항목은 임대인 협상 카드로 사용해 임대료 인하 또는 보강 비용 부담을 받아냅니다. 다음 단계 (상권 후보 비교) 는 영업 가능한 매물만 비교."
+            : "Confirms whether your category fits the building. Gaps become negotiation leverage for rent reduction or landlord-paid upgrades. Next stage compares only viable properties."}
+          nextStage={ko ? "상권 후보 비교 (location-candidates)" : "Location candidates"}
+        />
+      )}
 
-      {/* ── Pitfall — minimal alert (hairline + muted red text only) ── */}
-      <section style={{
-        marginBottom: "16px",
-        padding: "16px 20px",
-        borderRadius: "16px",
-        background: "rgba(255,255,255,0.96)",
-        border: "1px solid rgba(220,38,38,0.18)",
-      }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-          <AlertTriangle size={18} strokeWidth={1.8} color="#dc2626" style={{ flexShrink: 0, marginTop: "1px" }} />
-          <div>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626", letterSpacing: "0.02em", marginBottom: "4px" }}>
-              {ko ? "이 카테고리의 흔한 실패" : "Common failure for this category"}
-            </div>
-            <div style={{ fontSize: "14px", lineHeight: 1.55, color: "rgba(0,0,0,0.78)" }}>{hint.pitfall}</div>
-          </div>
-        </div>
-      </section>
+      {/* ── 페이지 1: 건물 적합성 (정부24 건축물대장 + 정화조 + 위반 표시) ── */}
+      {pageIdx === 1 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "1. 건물 적합성" : "1. Building"}
+          time={ko ? "10분" : "10m"}
+          headline={ko ? "건축물대장으로 「용도 + 정화조 + 위반 표시」 3가지 확인" : "Verify use class + septic + violation status via building register"}
+          why={ko
+            ? `${hint.building}. 임대인의 말 「용도 OK」 는 절대 신뢰 X — 정부24 건축물대장으로만 검증.`
+            : `${hint.building}. Don't trust landlord's verbal 'OK' — verify only via gov24 register.`}
+          how={[
+            { title: ko ? "정부24 (gov.kr) → 건축물대장 등본 발급" : "gov.kr → building register", detail: ko ? "무료, 5분. 「용도」 + 「위반건축물」 표시 + 「정화조 BOD 용량」 확인." : "Free, 5m. Check use class, violation flag, septic BOD." },
+            { title: ko ? "근린생활시설 1·2종 여부 확인" : "Class 1/2 neighborhood-living check", detail: ko ? "음식점·카페·미용실은 「근린생활시설」 필수. 「업무시설」·「창고」·「주거시설」은 운영 불가." : "F&B/cafe/salon need Class 1/2. Office/storage/residential = not allowed." },
+            { title: ko ? "정화조 용량 = 일 평균 폐수량 ÷ BOD 기준" : "Septic = avg daily wastewater / BOD", detail: ko ? "30평 식당 = 보통 7~10인용 정화조 필요. 5인용은 부족. 증축은 건물주 동의 + 1,000만원+." : "100sqm restaurant needs 7-10 person septic. 5-person = insufficient. Upgrade ₩10M+." },
+          ]}
+          watchouts={ko ? [
+            { label: "위반건축물 표시 = 영업신고 영구 불가", text: "건축물대장에 「위반건축물」 표기 시 무조건 매물 변경. 임대료 30% 싸도 입주 절대 불가." },
+            { label: "정화조 용량 부족 = 증축 1,000만원+ 또는 매물 변경", text: "건물주 동의 + 시·군청 신고 + 1~2개월 공사. 안 되면 다른 매물." },
+          ] : [
+            { label: "Violation flag = permanent denial", text: "Walk away. No amount of cheaper rent justifies this." },
+            { label: "Insufficient septic = ₩10M+ upgrade", text: "Landlord consent + city + 1-2 months. If unavailable, different property." },
+          ]}
+        />
+      )}
 
+      {/* ── 페이지 1: 사람 적합성 (면허·보건증·위생교육) ── */}
+      {pageIdx === 2 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "2. 사람 적합성" : "2. Person"}
+          time={ko ? "10분" : "10m"}
+          headline={ko ? "면허·보건증·위생교육 — 영업 시작 전 의무" : "License · health cert · hygiene training before launch"}
+          why={ko
+            ? `${hint.person}. 영업 시작 후 발견하면 즉시 영업 정지 + 과태료. 사전에 일정 잡아두면 영업 시작 지연 0.`
+            : `${hint.person}. Discovery after launch = immediate suspension. Schedule ahead = zero launch delay.`}
+          how={[
+            { title: ko ? "본인 면허 보유 여부 확인" : "Verify owner's license status", detail: ko ? "미용·이용 = 미용사 면허 / 식품접객업 = 위생교육 6시간 + 보건증 / 학원 = 강사 자격." : "Salon = beautician license / F&B = 6h hygiene + health cert / academy = instructor cert." },
+            { title: ko ? "위생교육 6시간 사전 신청 (식품접객업)" : "Pre-register 6h hygiene course", detail: ko ? "한국외식업중앙회 또는 식품위생교육원. 영업 시작 전 의무. 미이수 시 영업신고 거절." : "KFIA or hygiene institute. Mandatory pre-launch. No cert = registration denied." },
+            { title: ko ? "보건증 (건강진단결과서) — 본인 + 종업원 전원" : "Health cert — owner + all staff", detail: ko ? "보건소 or 지정 의료기관 1만원. 1년 유효. 갱신 D-day 이후 영업 불가." : "Public health center / designated clinic ~₩10K. Valid 1 year. Renew before expiry." },
+          ]}
+          watchouts={ko ? [
+            { label: "면허자 채용에만 의존 = 퇴사 시 즉시 무자격 영업", text: "본인이 면허 없을 때 채용 면허자가 퇴사하면 그날부터 무자격 영업. 본인 면허 취득 또는 2명+ 채용으로 분산." },
+          ] : [
+            { label: "Relying on hired licensee = immediate shutdown on quit", text: "If you don't hold the license and your hire quits, you operate illegally that day. Get your own license or hire 2+." },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 2: 시설 적합성 (소방·환기·안전) ── */}
+      {pageIdx === 3 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "3. 시설 적합성" : "3. Facility"}
+          time={ko ? "10분" : "10m"}
+          headline={ko ? "소방완비증명서 + 환기·후드 + 가스·전기 안전 확인" : "Fire cert + ventilation + gas/electrical safety"}
+          why={ko
+            ? `${hint.facility}. 시설 미달 시 영업신고 거절 또는 영업 중 단속·과태료. 임대 전에 보강 가능 여부 확인.`
+            : `${hint.facility}. Insufficient facility = denied registration or mid-operation suspension. Verify upgradeability before lease.`}
+          how={[
+            { title: ko ? "소방완비증명서 — 2층 이상 OR 100㎡↑" : "Fire cert — 2F+ or 100sqm+", detail: ko ? "관할 소방서 신청. 100~300만원 + 2~3주. 다중이용업소는 의무." : "Local fire dept. ₩1-3M + 2-3 weeks. Mandatory for multi-use." },
+            { title: ko ? "환기·후드 (음식점) — 외부 덕트 가능 여부" : "Vent hood (F&B) — exterior duct viability", detail: ko ? "치킨·중식·고깃집은 대형 후드 + 외부 배기 필수. 외부 덕트 불가 매물은 운영 불가." : "Chicken/Chinese/BBQ requires hood + exterior duct. No exterior = unworkable." },
+            { title: ko ? "전기 용량 (카페 30A↑) + 가스 시설 검사" : "Electrical 30A+ (cafe) + gas inspection", detail: ko ? "에스프레소+오븐+제빙 동시 가동 시 30A 필수. 가스 시설은 한국가스안전공사 검사 필수." : "Cafe with simultaneous machines needs 30A. Gas requires KGS inspection." },
+          ]}
+          watchouts={ko ? [
+            { label: "외부 환기 덕트 불가 매물 = 음식점 운영 불가능", text: "공동주택·창문 없음·옥상 미사용 매물에서는 후드 설치 불가. 임대 전 환기 동선 직접 확인." },
+            { label: "가스시설 검사 미통과 = 영업신고 거절", text: "한국가스안전공사 검사 필수. 임대인이 「검사 통과 매물」이라 해도 직접 증명서 확인." },
+          ] : [
+            { label: "No exterior vent = F&B impossible", text: "Apartments / no-window / no-roof access prevent hood install. Verify ventilation route before lease." },
+            { label: "Failed gas inspection = denied registration", text: "KGS inspection mandatory. Get certificate copy from landlord, don't trust verbal claim." },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 3: 임대인 협상 카드 + 사장님 상황 권장 ── */}
+      {pageIdx === 4 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "4. 임대인 협상" : "4. Landlord negotiation"}
+          time={ko ? "다음" : "Next"}
+          headline={ko ? "빠진 항목 = 임대인 협상 카드 — 사인 전 특약으로 명시" : "Gaps = negotiation cards — write into special clauses BEFORE signing"}
+          why={ko
+            ? "정화조·환기·전기 부족 = 임대료 5% 인하 또는 보강 비용 임대인 부담. 사인 전 특약 명시 못 받으면 매물 변경."
+            : "Septic/vent/electrical gaps = 5% rent reduction or landlord-paid upgrades. No clause = walk away."}
+          how={[
+            { title: ko ? "후보 매물 3곳에 같은 질문" : "Same questions to 3 candidates", detail: ko ? `「${hint.building} 가능?」 + 「${hint.facility} 보강 가능?」 + 「검사 증명서 보유?」 — 답변 거부 임대인은 패스.` : `Confirm ${hint.building} + ${hint.facility} upgrade + inspection cert. Non-responsive = pass.` },
+            { title: ko ? "보강 가능 항목 = 비용 분담 특약" : "Upgradeable = cost-share clause", detail: ko ? "「임대인이 1/2 부담 + 임차 종료 시 원상복구 면제」 사인 전 특약. 평균 500만원 절약." : "'Landlord 50% + restoration exempt' clause. Average ₩5M saved." },
+            { title: ko ? "다음 단계 (상권 후보 비교) 로 진행" : "Proceed to market comparison", detail: ko ? "건물·사람·시설 3축 모두 통과한 매물만 다음 단계로. 협상 거부 매물은 후보에서 제외." : "Only candidates passing all 3 axes proceed. Decline non-negotiating landlords." },
+          ]}
+          favorable={{ context: myNegotiateTip.context, recommendation: myNegotiateTip.recommendation, rationale: myNegotiateTip.rationale }}
+        />
+      )}
+
+      {/* ── 페이지 4 (체크리스트) 만 — 라이브 인사이트 + 인허가 체크리스트 ──
+          사용자 피드백: 3축 점검·작업 흐름·Pitfall 카드는 페이지 0~2 의 새 흐름 블록과 중복이라 제거. */}
+      {pageIdx === 5 && (
+        <>
       {/* ── Panel 1: 영업 현황 데이터 ── */}
       {(() => {
         if (!livePermitInsights || livePermitInsights.loading) {
@@ -428,6 +450,8 @@ export function PermitCheckPanels() {
             })}
           </div>
         </div>
+      )}
+        </>
       )}
     </>
   );

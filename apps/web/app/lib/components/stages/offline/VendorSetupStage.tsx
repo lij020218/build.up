@@ -18,7 +18,7 @@
  * 각 섹션: Apple grouped list 스타일 (rounded card · subtle border · primary/recommended/optional 배지)
  */
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   Truck,
   Wrench,
@@ -28,10 +28,12 @@ import {
   ShieldCheck,
   Lightbulb,
   ArrowRight,
+  Check,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { getVendorData, type VendorItem } from "./vendor-setup-data";
+import { StageWrapup } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
@@ -60,40 +62,67 @@ const PRIORITY_BADGE: Record<Priority, { label: string; bg: string; fg: string; 
   },
 };
 
-function VendorRow({ item }: { item: VendorItem }) {
+function VendorRow({
+  item,
+  selected,
+  onToggle,
+}: {
+  item: VendorItem;
+  selected: boolean;
+  onToggle: () => void;
+}) {
   const priority = item.priority ?? "recommended";
   const badge = PRIORITY_BADGE[priority];
   const hasUrl = !!item.url;
 
-  const rowContent = (
+  return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.preventDefault();
+        onToggle();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
       style={{
         display: "flex",
         gap: "12px",
         padding: "14px 16px",
         alignItems: "flex-start",
-        background: "white",
-        cursor: hasUrl ? "pointer" : "default",
+        background: selected ? "rgba(25,25,112,0.04)" : "white",
+        cursor: "pointer",
         transition: "background 0.15s ease",
       }}
       onMouseEnter={(e) => {
-        if (hasUrl) (e.currentTarget as HTMLElement).style.background = "rgba(25,25,112,0.025)";
+        if (!selected) (e.currentTarget as HTMLElement).style.background = "rgba(25,25,112,0.025)";
       }}
       onMouseLeave={(e) => {
-        if (hasUrl) (e.currentTarget as HTMLElement).style.background = "white";
+        (e.currentTarget as HTMLElement).style.background = selected ? "rgba(25,25,112,0.04)" : "white";
       }}
     >
-      {/* Priority dot */}
+      {/* Selection checkbox (Apple-style) */}
       <div
         style={{
-          width: "8px",
-          height: "8px",
+          width: "20px",
+          height: "20px",
           borderRadius: "100px",
-          background: badge.fg,
-          marginTop: "7px",
+          border: `1.5px solid ${selected ? MIDNIGHT : "rgba(15,23,42,0.18)"}`,
+          background: selected ? MIDNIGHT : "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: "1px",
           flexShrink: 0,
+          transition: "all 0.15s ease",
         }}
-      />
+      >
+        {selected && <Check size={13} strokeWidth={2.5} color="white" />}
+      </div>
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -116,7 +145,16 @@ function VendorRow({ item }: { item: VendorItem }) {
             {badge.label}
           </span>
           {hasUrl && (
-            <ExternalLink size={13} strokeWidth={2.2} color="rgba(25,25,112,0.55)" />
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              style={{ display: "inline-flex", alignItems: "center", color: "rgba(25,25,112,0.55)" }}
+              aria-label="외부 링크 열기"
+            >
+              <ExternalLink size={13} strokeWidth={2.2} />
+            </a>
           )}
         </div>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>
@@ -143,20 +181,6 @@ function VendorRow({ item }: { item: VendorItem }) {
       </div>
     </div>
   );
-
-  if (hasUrl) {
-    return (
-      <a
-        href={item.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ textDecoration: "none", color: "inherit", display: "block" }}
-      >
-        {rowContent}
-      </a>
-    );
-  }
-  return rowContent;
 }
 
 function VendorSection({
@@ -164,13 +188,25 @@ function VendorSection({
   title,
   subtitle,
   items,
+  step,
+  selections,
+  onToggle,
 }: {
   icon: LucideIcon;
   title: string;
   subtitle: string;
   items: VendorItem[];
+  step: 1 | 2 | 3;
+  selections: Record<string, string>;
+  onToggle: (step: 1 | 2 | 3, itemName: string) => void;
 }) {
   if (!items || items.length === 0) return null;
+  // 같은 step 안에서 이미 선택된 vendor name 셋 — VendorRow 의 토글 표시용.
+  const selectedNames = new Set<string>();
+  for (const [k, v] of Object.entries(selections)) {
+    if (k.startsWith(`vendor-setup_s${step}_`) && v) selectedNames.add(v);
+  }
+  const selectedCount = selectedNames.size;
   return (
     <div style={{ marginBottom: "20px" }}>
       {/* Section header */}
@@ -188,7 +224,7 @@ function VendorSection({
         >
           <Icon size={16} strokeWidth={2.2} color={MIDNIGHT} />
         </div>
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
             {title}
           </div>
@@ -196,6 +232,21 @@ function VendorSection({
             {subtitle}
           </div>
         </div>
+        {selectedCount > 0 && (
+          <span
+            style={{
+              padding: "3px 9px",
+              borderRadius: "100px",
+              fontSize: "11px",
+              fontWeight: 700,
+              background: MIDNIGHT,
+              color: "white",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {selectedCount} 선택됨
+          </span>
+        )}
       </div>
 
       {/* Apple grouped list */}
@@ -210,7 +261,11 @@ function VendorSection({
       >
         {items.map((item, idx) => (
           <div key={`${item.name}-${idx}`}>
-            <VendorRow item={item} />
+            <VendorRow
+              item={item}
+              selected={selectedNames.has(item.name)}
+              onToggle={() => onToggle(step, item.name)}
+            />
             {idx < items.length - 1 && (
               <div style={{ height: "1px", background: "rgba(0,0,0,0.05)", marginLeft: "36px" }} />
             )}
@@ -223,11 +278,39 @@ function VendorSection({
 
 export function VendorSetupStage() {
   const d = useDashboardCtx();
-  const { selectedIndustryId, industryCategoryId, selectedSpecialtyId } = d;
+  const { selectedIndustryId, industryCategoryId, selectedSpecialtyId, vendorSelections, setVendorSelections, language } = d;
 
   const data = useMemo(
     () => getVendorData(selectedIndustryId ?? undefined, industryCategoryId ?? undefined, selectedSpecialtyId ?? undefined),
     [selectedIndustryId, industryCategoryId, selectedSpecialtyId],
+  );
+
+  // ── 토글 핸들러 ──────────────────────────────────────────────────
+  //   키 스키마: `vendor-setup_s${step}_c${cursor}` (기존 useTaskAutoCompletion / onboarding 와 호환)
+  //     · s1 = 공급처 (suppliers)
+  //     · s2 = 장비 (equipment)
+  //     · s3 = POS · 결제 (pos)
+  //   다중 선택: 같은 step 안에서 여러 cursor 슬롯 사용. 토글 OFF 시 해당 슬롯 키를 제거.
+  //   useTaskAutoCompletion 가 step 별로 "1개 이상 선택" 검사 → supplier-identified / equipment-planned / pos-selected
+  //   task 자동 완료. 자동 저장 (Zustand persist + Supabase user_store_data.vendor_selections).
+  const handleToggle = useCallback(
+    (step: 1 | 2 | 3, itemName: string) => {
+      const prefix = `vendor-setup_s${step}_`;
+      const next = { ...vendorSelections };
+      // 이미 선택돼 있으면 해제 — 해당 키 제거.
+      const existingKey = Object.entries(next).find(([k, v]) => k.startsWith(prefix) && v === itemName)?.[0];
+      if (existingKey) {
+        delete next[existingKey];
+        setVendorSelections(next);
+        return;
+      }
+      // 새로 선택 — 비어있는 cursor 찾아 채우기.
+      let cursor = 0;
+      while (next[`${prefix}c${cursor}`] !== undefined) cursor += 1;
+      next[`${prefix}c${cursor}`] = itemName;
+      setVendorSelections(next);
+    },
+    [vendorSelections, setVendorSelections],
   );
 
   // sub-industry 라벨 — 폴백 시 카테고리 라벨
@@ -320,8 +403,11 @@ export function VendorSetupStage() {
       <VendorSection
         icon={Truck}
         title="공급처 · 식자재 · 원자재"
-        subtitle={`${data.suppliers.length}개 검증된 한국 도매·정기납품 채널`}
+        subtitle={`${data.suppliers.length}개 — 사용할 곳을 탭해 선택 (다중 선택 가능)`}
         items={data.suppliers}
+        step={1}
+        selections={vendorSelections}
+        onToggle={handleToggle}
       />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -330,8 +416,11 @@ export function VendorSetupStage() {
       <VendorSection
         icon={Wrench}
         title="핵심 장비 · 기기"
-        subtitle={`${data.equipment.length}개 (신품·중고·렌탈 옵션 포함 가격대 기재)`}
+        subtitle={`${data.equipment.length}개 — 도입 예정 장비를 탭해 선택`}
         items={data.equipment}
+        step={2}
+        selections={vendorSelections}
+        onToggle={handleToggle}
       />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -340,8 +429,11 @@ export function VendorSetupStage() {
       <VendorSection
         icon={CreditCard}
         title="POS · 결제 시스템"
-        subtitle="가맹점 점유율과 수수료를 비교해 1주일 전 세팅"
+        subtitle="사용할 POS 를 탭해 선택 — 1주일 전 세팅"
         items={data.pos}
+        step={3}
+        selections={vendorSelections}
+        onToggle={handleToggle}
       />
 
       {/* ═══════════════════════════════════════════════════════════
@@ -409,6 +501,26 @@ export function VendorSetupStage() {
           <li>식자재 정기 배송은 푸드팡·CJ프레시웨이 견적 비교, 첫 주는 소량 테스트</li>
         </ul>
       </div>
+
+      <StageWrapup
+        ko={language === "ko"}
+        nextStageLabelKo="사업자등록·인허가"
+        doneItemsKo={[
+          { label: "1. 공급처 결정", detail: "식자재·장비·POS 등 카테고리별 1순위 업체 선정 + 견적서 보관" },
+          { label: "2. 장비 발주 계획", detail: "신품·중고 비교 — 황학동온라인·번개장터 활용 50~70%대 가성비 확보" },
+          { label: "3. POS·결제 셋업", detail: "토스플레이스·KIS·페이히어 비교 + 무료 단말 신청" },
+          { label: "4. 첫 주 발주 일정", detail: "오픈 D-7 기준 식자재 소량 테스트 + 장비 시운전 일정 확정" },
+        ]}
+        verifyItemsKo={[
+          "사업자등록 전 — 거래 가능 여부 확인 (공급처 다수가 사업자번호 없으면 거래 불가, 견적도 비공식)",
+          "POS·결제 — 가맹 수수료(평균 1.5~2.5%) + 단말기 임대료 + 부가세 신고 자동화 여부 확인",
+          "식자재 — 위생 인증(HACCP) + 검역증 수령 가능한 업체 선택, 무허가 도매상은 식약처 단속 대상",
+          "장비 — 1년 이상 무상 A/S + 설치비·운반비 별도 견적 (계약 시 포함시키기)",
+          "중고 장비 — 시운전 영상·구매 영수증·연식 5년 이내 3가지 모두 확보, 분쟁 시 증빙",
+          "재고 회전율 — 식자재는 3일 이내 회전 가능한 양만 첫 주 발주, 폐기율 5% 초과 시 재검토",
+        ]}
+        nextSummaryKo="공급처·장비·POS 확정 → 사업자등록·인허가 단계로 진입"
+      />
     </div>
   );
 }

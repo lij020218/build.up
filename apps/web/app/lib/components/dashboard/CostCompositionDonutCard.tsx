@@ -71,7 +71,7 @@ const CATEGORY_LABELS: Record<CategoryKey, { ko: string; en: string }> = {
 // 미드나이트 → 사이안 → 골드 → 코랄 그라데이션 (각 슬라이스마다 [from, to] 페어)
 const SLICE_GRADIENTS: Array<[string, string]> = [
   ["#0a1929", "#2c4a7a"], // 1: deep midnight → midnight
-  ["#1d3557", "#3b5c8c"], // 2: midnight → steel blue
+  ["#191970", "#3b5c8c"], // 2: midnight → steel blue
   ["#3b5c8c", "#5f8bb8"], // 3: steel → light steel
   ["#5f8bb8", "#8db5d3"], // 4: light steel → sky
   ["#0d9488", "#22d3a3"], // 5: teal → mint
@@ -254,7 +254,7 @@ export function CostCompositionDonutCard({ ko, totalSales, monthlyCosts, industr
             <circle
               cx={cx} cy={cy} r={radius}
               fill="none"
-              stroke="rgba(15,23,42,0.04)"
+              stroke="rgba(25,25,112,0.04)"
               strokeWidth={stroke}
             />
 
@@ -453,14 +453,13 @@ const KEYFRAMES = `
 
 .ccd-card {
   position: relative;
-  border-radius: 24px;
+  border-radius: 20px;
   padding: 18px 20px 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fafc 100%);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%);
+  border: 1px solid rgba(25,25,112,0.10);
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.6) inset,
-    0 1px 2px rgba(10,25,41,0.04),
-    0 4px 16px rgba(10,25,41,0.06);
+    0 1px 3px rgba(25,25,112,0.04),
+    0 12px 24px -12px rgba(25,25,112,0.10);
   display: flex; flex-direction: column; gap: 12px;
   font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
   letter-spacing: -0.01em;
@@ -472,7 +471,7 @@ const KEYFRAMES = `
   position: absolute;
   top: 0; right: 0;
   width: 180px; height: 180px;
-  background: radial-gradient(circle at top right, rgba(29, 53, 87, 0.06) 0%, transparent 60%);
+  background: radial-gradient(circle at top right, rgba(25,25,112, 0.06) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -482,7 +481,7 @@ const KEYFRAMES = `
   position: relative; z-index: 1;
 }
 .ccd-eyebrow {
-  font-size: 10px; font-weight: 700; color: #1d3557;
+  font-size: 10px; font-weight: 700; color: #191970;
   letter-spacing: 0.1em; text-transform: uppercase;
   margin-bottom: 3px;
   opacity: 0.85;
@@ -495,9 +494,9 @@ const KEYFRAMES = `
   flex-shrink: 0;
   font-size: 11px; font-weight: 700;
   padding: 5px 11px; border-radius: 999px;
-  background: linear-gradient(135deg, rgba(29, 53, 87, 0.1) 0%, rgba(44, 74, 122, 0.06) 100%);
-  color: #1d3557;
-  border: 0.5px solid rgba(29, 53, 87, 0.2);
+  background: linear-gradient(135deg, rgba(25,25,112, 0.1) 0%, rgba(44, 74, 122, 0.06) 100%);
+  color: #191970;
+  border: 0.5px solid rgba(25,25,112, 0.2);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   letter-spacing: -0.01em;
@@ -522,7 +521,7 @@ const KEYFRAMES = `
 .ccd-ambient-glow {
   position: absolute; inset: -10%;
   background:
-    radial-gradient(circle at 30% 30%, rgba(29, 53, 87, 0.14) 0%, transparent 55%),
+    radial-gradient(circle at 30% 30%, rgba(25,25,112, 0.14) 0%, transparent 55%),
     radial-gradient(circle at 70% 70%, rgba(13, 148, 136, 0.08) 0%, transparent 55%);
   filter: blur(20px);
   animation: ccdAmbientPulse 6s ease-in-out infinite;
@@ -531,7 +530,7 @@ const KEYFRAMES = `
 }
 .ccd-donut {
   display: block; position: relative; z-index: 1;
-  filter: drop-shadow(0 4px 14px rgba(29, 53, 87, 0.18));
+  filter: drop-shadow(0 4px 14px rgba(25,25,112, 0.18));
 }
 
 .ccd-center {
@@ -550,7 +549,7 @@ const KEYFRAMES = `
   font-size: 28px; font-weight: 800; color: #0f172a;
   letter-spacing: -0.04em; line-height: 1; margin-top: 3px;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(180deg, #0f172a 0%, #1d3557 100%);
+  background: linear-gradient(180deg, #0f172a 0%, #191970 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -563,7 +562,7 @@ const KEYFRAMES = `
 }
 /* 매출 부족 시 중앙 — 마진율 대신 총 비용 표시 (작은 글자) */
 .ccd-center-value-sm {
-  font-size: 19px; font-weight: 800; color: #1d3557;
+  font-size: 19px; font-weight: 800; color: #191970;
   letter-spacing: -0.03em; line-height: 1; margin-top: 3px;
   font-variant-numeric: tabular-nums;
 }
@@ -635,9 +634,9 @@ const KEYFRAMES = `
   color: #b91c1c;
 }
 .ccd-footer-info {
-  background: linear-gradient(135deg, rgba(29,53,87,0.05) 0%, rgba(29,53,87,0.02) 100%);
-  border: 0.5px solid rgba(29,53,87,0.16);
-  color: #1d3557;
+  background: linear-gradient(135deg, rgba(25,25,112,0.05) 0%, rgba(25,25,112,0.02) 100%);
+  border: 0.5px solid rgba(25,25,112,0.16);
+  color: #191970;
 }
 .ccd-footer-icon { flex-shrink: 0; font-size: 13px; }
 .ccd-footer-text { flex: 1; }

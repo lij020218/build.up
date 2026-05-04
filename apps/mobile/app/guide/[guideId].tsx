@@ -16,8 +16,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AuroraBackground, colors, radii, shadows } from "../../lib/design";
 import { supabase } from "../../lib/supabase";
-import { useLanguage } from "../language-provider";
+import { useLanguage } from "../../lib/language-provider";
 
 type GuideRecord = KnowledgeItemRecord & {
   sources: KnowledgeItemSourceRecord[];
@@ -207,6 +208,7 @@ export default function GuideDetailScreen() {
   };
 
   return (
+    <AuroraBackground>
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.topBar}>
@@ -350,13 +352,14 @@ export default function GuideDetailScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F5F7FA"
+    backgroundColor: "transparent"
   },
   content: {
     padding: 20,
@@ -375,13 +378,13 @@ const styles = StyleSheet.create({
     gap: 8,
     flexWrap: "wrap",
     padding: 6,
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.72)",
     backgroundColor: "rgba(255,255,255,0.5)"
   },
   button: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.82)",
     backgroundColor: "rgba(255,255,255,0.74)",
@@ -389,7 +392,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12
   },
   navButton: {
-    borderRadius: 8,
+    borderRadius: radii.pill,
     paddingHorizontal: 14,
     paddingVertical: 10
   },
@@ -409,7 +412,7 @@ const styles = StyleSheet.create({
     fontWeight: "500"
   },
   navButtonTextActive: {
-    color: "#075E66",
+    color: colors.primary,
     fontSize: 13,
     fontWeight: "600"
   },
@@ -420,19 +423,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.86)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.76)",
-    borderRadius: 8,
+    borderRadius: radii.card,
     padding: 22,
     gap: 16,
-    shadowColor: "#101820",
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 }
+    ...shadows.glassCard
   },
   meta: {
     fontSize: 12,
     letterSpacing: 2,
     textTransform: "uppercase",
-    color: "#075E66"
+    color: colors.primary
   },
   title: {
     fontSize: 30,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     color: "#637083"
   },
   input: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.92)",
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   answerCard: {
     gap: 12,
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap"
   },
   confidenceBadge: {
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -518,6 +518,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     fontWeight: "600",
-    color: "#075E66"
+    color: colors.primary
   }
 });

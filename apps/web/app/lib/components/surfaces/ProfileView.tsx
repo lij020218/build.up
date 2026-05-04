@@ -9,6 +9,8 @@ import { PortOneConnectCard } from "../profile/PortOneConnectCard";
 import { TossPlaceConnectCard } from "../profile/TossPlaceConnectCard";
 import { CsvUploadCard } from "../profile/CsvUploadCard";
 import { CodefConnectCard } from "../profile/CodefConnectCard";
+import { StoreNameInput } from "../stages/shared/StoreNameInput";
+import { BusinessHoursInput } from "../stages/shared/BusinessHoursInput";
 
 // ── Local styles ──
 const card: React.CSSProperties = {
@@ -224,6 +226,18 @@ export function ProfileView() {
               : (ko ? " · 창업 준비 중" : " · In progress")}
           </div>
         </div>
+      </article>
+
+      {/* ── 카드 2.5: 매장 정보 (상호 + 영업 시간) ── */}
+      {/* 운영 중에도 변경 가능 — 영업 시간이 바뀌면 일자 컷오프도 자동 반영 */}
+      <article style={{ ...card, marginTop: "12px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ ...sectionLabel, padding: 0, borderBottom: "none" }}>
+          {ko ? "매장 정보" : "Store info"}
+        </div>
+        <StoreNameInput />
+        {d.industryCategoryId !== "online-digital" && d.industryCategoryId !== "startup-tech" && (
+          <BusinessHoursInput />
+        )}
       </article>
 
       {/* ── 카드 3: 앱 설정 ── */}

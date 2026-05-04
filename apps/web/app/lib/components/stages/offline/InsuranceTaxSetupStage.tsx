@@ -46,6 +46,7 @@ import {
   StartupKeyActionHero,
   StartupPageNav,
 } from "../startup/StartupStageShell";
+import { StageWrapup } from "../shared/StageWrapup";
 
 /* ───────────────────────────────────────────────────────────────────
  * 산재보험 요율 — 카테고리별 (2026 기준)
@@ -235,7 +236,7 @@ function PathCard({
 
 export function InsuranceTaxSetupStage() {
   const d = useDashboardCtx();
-  const { industryCategoryId } = d;
+  const { industryCategoryId, language } = d;
 
   const [page, setPage] = useState(0);
   const totalPages = 4;
@@ -252,18 +253,20 @@ export function InsuranceTaxSetupStage() {
           ═════════════════════════════════════════════════════════ */}
       <StartupKeyActionHero
         eyebrow="KEY ACTION"
-        title="첫 직원 채용 14일 이내, 4대보험 + 원천세 + 급여 시스템 완성"
+        title="첫 직원 채용 시 4가지 의무 — 근로계약서 즉시 + 4대보험 14일 + 원천세 매월"
         subtitle={
           <>
-            직원 한 명만 채용해도 <strong style={{ fontWeight: 700 }}>14일 이내 4대보험 신고 의무</strong>.
-            매월 급여일에는 <strong style={{ fontWeight: 700 }}>원천세 징수</strong>, 다음 달 10일까지 신고.
-            5인 미만이라고 예외 없습니다.
+            직원 1명만 채용해도 4가지 의무 자동 발생: <strong style={{ fontWeight: 700 }}>① 근로계약서 (미체결 500만 과태료)</strong> +
+            <strong style={{ fontWeight: 700 }}> ② 4대보험 14일 이내</strong> +
+            <strong style={{ fontWeight: 700 }}> ③ 원천세 매월 10일</strong> +
+            <strong style={{ fontWeight: 700 }}> ④ 급여 시스템</strong>. 5인 미만 예외 X.
+            <strong style={{ fontWeight: 700 }}> 두루누리 80% 지원 (270만 미만·10인 미만, 36개월)</strong> 신고 시점에만 신청 가능.
           </>
         }
         miniCards={[
-          { icon: ShieldCheck, label: "1️⃣ 4대보험", detail: "사업주 약 10% 부담" },
-          { icon: Receipt, label: "2️⃣ 원천세", detail: "매월 또는 반기납부" },
-          { icon: Wallet, label: "3️⃣ 급여 시스템", detail: "수기·세무사·SaaS 중 선택" },
+          { icon: FileText, label: "근로계약서", detail: "당일 즉시" },
+          { icon: ShieldCheck, label: "4대보험", detail: "14일 이내" },
+          { icon: Receipt, label: "원천세 + 급여", detail: "매월 10일" },
         ]}
       />
 
@@ -278,33 +281,39 @@ export function InsuranceTaxSetupStage() {
           PAGE 0 — WHY: 왜 이 단계가 필요한가
           ═════════════════════════════════════════════════════════ */}
       {page === 0 && (
-        <Section icon={Lightbulb} title="왜 이 단계가 중요한가" subtitle="직원이 있는 순간 자동으로 발생하는 3가지 의무">
+        <Section icon={Lightbulb} title="왜 이 단계가 중요한가" subtitle="직원 1명 채용 = 자동 발생 의무 5가지 (2026 변화 포함)">
           <div style={{ padding: "14px 18px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {[
                 {
-                  accent: MIDNIGHT,
-                  title: "법적 의무 — 5인 미만도 예외 없음",
+                  accent: "#dc2626",
+                  title: "근로계약서 미체결 = 500만원 과태료 (1차)",
                   body:
-                    "근로자 1명만 채용해도 4대사회보험 신고 의무. 14일 지나면 가산세 + 소급 납부. 신고 없이 급여만 지급하면 세무조사 1순위 대상이며 국세청은 카드 매출 분석(PCI) 으로 추적합니다.",
+                    "채용 당일 또는 출근 전 반드시 작성·교부. 임금·근로시간·휴일·휴가 등 핵심 조건 명시 의무. 표준근로계약서는 고용노동부에서 무료 다운로드 — 근로기준법 17조 위반 시 1차 500만원, 2차 1,000만원.",
+                },
+                {
+                  accent: MIDNIGHT,
+                  title: "4대보험 14일 이내 신고 — 5인 미만 예외 X",
+                  body:
+                    "근로자 1명만 채용해도 4대사회보험 (국민연금·건강보험·고용·산재) 가입 의무. 건강보험 14일 / 국민연금·고용·산재 다음달 15일까지. 미신고 시 가산세 + 소급납부. 국세청은 카드 매출 분석(PCI) 으로 무신고 추적.",
                 },
                 {
                   accent: "#0561fc",
                   title: "사업주 부담 = 급여의 약 10% 추가",
                   body:
-                    "근로자 월급 250만원이면 사업주가 추가로 부담하는 4대보험료만 약 25만원. 인건비를 계산할 때 '급여 + 사업주 부담분' 으로 봐야 정확한 손익이 나옵니다.",
-                },
-                {
-                  accent: "#dc2626",
-                  title: "매월 반복되는 일 — 시스템 없으면 매출보다 페이퍼워크에 더 시간 씀",
-                  body:
-                    "매월 급여 계산 + 원천세 신고 + 4대보험 변경(입사·퇴사·급여 인상) 신고. 직원 3명만 돼도 수기로는 한 달에 4-6시간 소요. 처음부터 시스템 결정이 1년 시간을 좌우합니다.",
+                    "근로자 월급 250만원이면 사업주가 추가 부담하는 4대보험료만 약 25만원. 인건비를 계산할 때 '급여 + 사업주 부담분' 으로 봐야 정확한 손익. 2026 요율: 국민연금 4.75%·건강 3.595%·고용 0.9%+α·산재 0.7-0.8% (업종별).",
                 },
                 {
                   accent: "#059669",
-                  title: "절감 기회 — 두루누리로 보험료 80% 국가 지원",
+                  title: "두루누리 80% 국가 지원 — 신고 시점에만 신청 가능",
                   body:
-                    "월 보수 270만원 미만 신규 가입자 + 10인 미만 사업장이면 고용·국민연금 보험료의 80% 를 정부가 최대 36개월 지원. 청년 사장님에게는 결정적인 자금 여유.",
+                    "월 보수 270만원 미만 신규 가입자 + 10인 미만 사업장 = 고용·국민연금 보험료 80%를 정부가 최대 36개월 지원. 4대보험 취득신고 시 '두루누리 지원' 체크박스 — 한 번 놓치면 재신청 불가. 청년·신규 사업주에게 결정적인 자금 여유.",
+                },
+                {
+                  accent: "#7c3aed",
+                  title: "2026 신규: 건강보험 연말정산 자동화",
+                  body:
+                    "2026년부터 사업주가 국세청에 근로소득 간이지급명세서 제출하면 건강보험 연말정산 자동 연계. 기존 국세청 + 건강보험공단 각각 신고 → 1회 신고로 통합. 페이퍼워크 절감.",
                 },
               ].map((item, idx, arr) => (
                 <div key={idx}>
@@ -774,6 +783,26 @@ export function InsuranceTaxSetupStage() {
           </div>
         </>
       )}
+
+      <StageWrapup
+        ko={language === "ko"}
+        nextStageLabelKo="채용·운영 세팅"
+        doneItemsKo={[
+          { label: "1. 4대보험 의무 이해", detail: "1인 고용부터 4대보험 의무 — 국민·건강·고용·산재 4축 이해" },
+          { label: "2. 원천세 신고 일정", detail: "매월 10일 홈택스 원천세 신고·납부 + 자동이체 셋업" },
+          { label: "3. 산재 요율 확인", detail: "업종별 0.7~5.6% 사업주 100% 부담 별도 계산" },
+          { label: "4. 급여·유리한 길 점검", detail: "주휴수당·퇴직금 등 누락 시 차액·가산금 발생 인식" },
+        ]}
+        verifyItemsKo={[
+          "1인 사장님 — 본인 국민연금·건강보험 「지역가입자」로 자동 전환, 사업자 신고 시 분리 가입",
+          "직원 채용 14일 이내 4insure.or.kr 통합 신고 — 누락 시 과태료 + 소급 보험료 부담",
+          "원천세 — 매월 10일 자동이체 셋업, 누락 시 가산세 10% + 일별 이자 (홈택스 자동납부 권장)",
+          "산재보험 — 사업주 100% 부담 별도 계산, 업종별 요율 적용 (외식 0.8%, 미용 0.7% 수준)",
+          "퇴직금 — 1년 근속 + 주 15시간 이상 의무, 매월 12분의 1 적립 권장 (분쟁 1순위)",
+          "5인 이상 사업장 — 연차 의무 + 연장수당 1.5배 + 야간수당 1.5배 모두 추가 비용 (월 30~50만원/인)",
+        ]}
+        nextSummaryKo="4대보험·원천세·급여 시스템 셋업 완료 → 채용·운영 세팅 단계로 진입"
+      />
     </div>
   );
 }

@@ -229,10 +229,14 @@ function buildProfilePatchFromState(
   const startupTypeValue =
     startupTypeDecision?.selectedPrimaryOptionId ?? startupTypeDecision?.inputs?.startupType;
 
+  // ⚠️ writers (useSelectionHandlers·useOnboardingHandlers)는 `inputs.categoryId`로 저장.
+  // 과거 코드는 `industryCategoryId`로 잘못 읽어 항상 NULL이 저장됨 (백워드 호환 위해 둘 다 시도).
   const industryCategoryId =
-    typeof industryDecision?.inputs?.industryCategoryId === "string"
-      ? industryDecision.inputs.industryCategoryId
-      : null;
+    typeof industryDecision?.inputs?.categoryId === "string"
+      ? industryDecision.inputs.categoryId
+      : typeof industryDecision?.inputs?.industryCategoryId === "string"
+        ? industryDecision.inputs.industryCategoryId
+        : null;
 
   return {
     user_id: userId,
@@ -251,12 +255,30 @@ function buildProfilePatchFromState(
     business_model_id: businessModelDecision?.selectedPrimaryOptionId ?? null,
     capital: typeof capitalValue === "number" ? capitalValue : null,
     target_open_date: typeof targetOpenDateValue === "string" ? targetOpenDateValue : null,
-    preferred_regions:
-      typeof locationDecision?.inputs?.preferredRegion === "string"
-        ? [locationDecision.inputs.preferredRegion]
-        : locationDecision?.selectedPrimaryOptionId
-          ? [locationDecision.selectedPrimaryOptionId]
-          : null,
+    // ⚠ 빈 문자열 가드: typeof "" === "string" 이라 trim 없이는 [""] 가 저장돼
+    //   useDataLoading 의 contractor 검색 useEffect (`if (!preferredRegion) return`) 가
+    //   조용히 early-return → 인테리어 업체가 검색되지 않는 버그가 발생함.
+    preferred_regions: (() => {
+      const inputRegion =
+        typeof locationDecision?.inputs?.preferredRegion === "string"
+          ? locationDecision.inputs.preferredRegion.trim()
+          : "";
+      if (inputRegion.length > 0) return [inputRegion];
+      const customName =
+        typeof locationDecision?.inputs?.customMarketName === "string"
+          ? locationDecision.inputs.customMarketName.trim()
+          : "";
+      if (customName.length > 0) return [customName];
+      const finalTitle =
+        typeof locationDecision?.inputs?.finalMarketTitle === "string"
+          ? locationDecision.inputs.finalMarketTitle.trim()
+          : "";
+      if (finalTitle.length > 0) return [finalTitle];
+      if (locationDecision?.selectedPrimaryOptionId) {
+        return [locationDecision.selectedPrimaryOptionId];
+      }
+      return null;
+    })(),
     target_customer_types: extractStringList(locationDecision?.inputs, "targetCustomerTypes") ?? null,
     location_priorities: extractStringList(locationDecision?.inputs, "locationPriorities") ?? null
   };
@@ -418,7 +440,21 @@ export async function saveRoadmapState(
     }
   }
 
-  await syncBusinessProfileFromState(client, user, state);
+  // ⚠️ business_profiles 동기화 실패는 ROADMAP 저장을 망가뜨리면 안 됨.
+  //   사용자 보고 (2026-05-03): business_profiles 400 (= 마이그레이션 미적용 컬럼 등) 에서
+  //   throw 하면, stage_decisions/stage_tasks 는 이미 위에서 INSERT 완료된 상태인데
+  //   호출자(autosave Promise.all) 가 saveRoadmapState 실패로 인지 → 다음 새로고침 시
+  //   "저장 안 된 줄" 알고 사용자가 회귀로 인식. 실제론 progress 는 저장됐음.
+  //   → profile sync 실패는 콘솔 1회만 경고하고 silently 통과.
+  try {
+    await syncBusinessProfileFromState(client, user, state);
+  } catch (profileErr) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[saveRoadmapState] business_profiles sync failed (non-fatal — roadmap data already persisted):",
+      profileErr instanceof Error ? profileErr.message : profileErr,
+    );
+  }
 
   return {
     ...state,

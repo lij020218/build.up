@@ -257,7 +257,7 @@ export function CashflowSetupSheet({ ko, onClose }: Props) {
                                 onClick={(e) => { e.preventDefault(); setHoveredChannel(hoveredChannel === id ? null : id); }}
                                 aria-label={ko ? "수수료 상세" : "Fee details"}
                               >
-                                <Info size={11} strokeWidth={2} />
+                                <Info size={11} strokeWidth={1.5} />
                               </button>
                             )}
                           </div>
@@ -531,7 +531,7 @@ function SectionHeader({
     <>
       <div className="cfs-section-header">
         <span className="cfs-section-num">{num}</span>
-        <Icon size={14} strokeWidth={2} color="#1d3557" style={{ flexShrink: 0 }} />
+        <Icon size={14} strokeWidth={1.5} color="#191970" style={{ flexShrink: 0 }} />
         <span className="cfs-section-title">{title}</span>
         {rightSlot && <div className="cfs-section-right">{rightSlot}</div>}
       </div>
@@ -639,12 +639,12 @@ const KEYFRAMES = `
 .cfs-header-left { display: flex; align-items: center; gap: 12px; }
 .cfs-header-icon-wrap {
   width: 36px; height: 36px; border-radius: 11px;
-  background: linear-gradient(135deg, #0a1929 0%, #1d3557 55%, #3b5c8c 100%);
+  background: linear-gradient(135deg, #0a1929 0%, #191970 55%, #3b5c8c 100%);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 2px 8px rgba(10,25,41,0.35), inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .cfs-header-eyebrow {
-  font-size: 10.5px; font-weight: 700; color: #1d3557;
+  font-size: 10.5px; font-weight: 700; color: #191970;
   letter-spacing: 0.08em; text-transform: uppercase;
   margin-bottom: 1px;
 }
@@ -686,11 +686,11 @@ const KEYFRAMES = `
 }
 .cfs-section-num {
   width: 22px; height: 22px; border-radius: 7px;
-  background: linear-gradient(135deg, #1d3557 0%, #2c4a7a 100%);
+  background: linear-gradient(135deg, #191970 0%, #2c4a7a 100%);
   color: #fff;
   font-size: 11px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center;
-  box-shadow: 0 1px 3px rgba(29,53,87,0.3);
+  box-shadow: 0 1px 3px rgba(25,25,112,0.3);
   flex-shrink: 0;
 }
 .cfs-section-title {
@@ -735,8 +735,8 @@ const KEYFRAMES = `
   transition: border-color .15s, box-shadow .15s;
 }
 .cfs-balance-input:focus {
-  border-color: rgba(29, 53, 87, 0.45);
-  box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.08);
+  border-color: rgba(25,25,112, 0.45);
+  box-shadow: 0 0 0 3px rgba(25,25,112, 0.08);
 }
 .cfs-balance-unit {
   font-size: 13px; color: rgba(15,23,42,0.5); font-weight: 650;
@@ -760,7 +760,7 @@ const KEYFRAMES = `
 }
 .cfs-channel-active {
   background: #eef3fa;
-  border-color: rgba(29, 53, 87, 0.18);
+  border-color: rgba(25,25,112, 0.18);
 }
 .cfs-channel-checkbox-wrap {
   display: flex; align-items: center; gap: 10px;
@@ -788,13 +788,13 @@ const KEYFRAMES = `
 }
 .cfs-info-btn {
   width: 16px; height: 16px; border-radius: 50%;
-  border: none; background: rgba(29,53,87,0.08);
+  border: none; background: rgba(25,25,112,0.08);
   cursor: pointer; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  color: #1d3557;
+  color: #191970;
   transition: background .15s;
 }
-.cfs-info-btn:hover { background: rgba(29,53,87,0.18); }
+.cfs-info-btn:hover { background: rgba(25,25,112,0.18); }
 .cfs-channel-ratio-wrap {
   display: flex; align-items: center; gap: 4px; margin-left: 12px;
 }
@@ -809,7 +809,7 @@ const KEYFRAMES = `
   outline: none;
   transition: border-color .15s;
 }
-.cfs-ratio-input:focus { border-color: rgba(29,53,87,0.4); }
+.cfs-ratio-input:focus { border-color: rgba(25,25,112,0.4); }
 .cfs-ratio-pct {
   font-size: 12px; color: rgba(15,23,42,0.5); font-weight: 700;
 }
@@ -818,7 +818,7 @@ const KEYFRAMES = `
 }
 .cfs-checkbox {
   width: 16px; height: 16px;
-  cursor: pointer; accent-color: #1d3557;
+  cursor: pointer; accent-color: #191970;
   flex-shrink: 0;
 }
 
@@ -847,9 +847,9 @@ const KEYFRAMES = `
 .cfs-total-pill {
   font-size: 11px; font-weight: 700;
   padding: 4px 10px; border-radius: 999px;
-  background: rgba(29, 53, 87, 0.08);
-  color: #1d3557;
-  border: 0.5px solid rgba(29, 53, 87, 0.18);
+  background: rgba(25,25,112, 0.08);
+  color: #191970;
+  border: 0.5px solid rgba(25,25,112, 0.18);
   font-variant-numeric: tabular-nums;
 }
 
@@ -891,11 +891,11 @@ const KEYFRAMES = `
   margin-top: 14px;
   padding: 14px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(29, 53, 87, 0.04), rgba(44, 74, 122, 0.02));
-  border: 1px dashed rgba(29, 53, 87, 0.22);
+  background: linear-gradient(135deg, rgba(25,25,112, 0.04), rgba(44, 74, 122, 0.02));
+  border: 1px dashed rgba(25,25,112, 0.22);
 }
 .cfs-add-expense-title {
-  font-size: 12px; font-weight: 700; color: #1d3557;
+  font-size: 12px; font-weight: 700; color: #191970;
   letter-spacing: -0.01em;
   margin-bottom: 10px;
 }
@@ -912,7 +912,7 @@ const KEYFRAMES = `
   min-width: 0;
   transition: border-color .15s;
 }
-.cfs-mini-input:focus { border-color: rgba(29,53,87,0.4); }
+.cfs-mini-input:focus { border-color: rgba(25,25,112,0.4); }
 .cfs-add-btn {
   width: 100%; padding: 9px; border-radius: 10px;
   border: none;
@@ -926,12 +926,12 @@ const KEYFRAMES = `
   transition: all .18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .cfs-add-btn-active {
-  background: linear-gradient(135deg, #1d3557 0%, #2c4a7a 100%) !important;
+  background: linear-gradient(135deg, #191970 0%, #2c4a7a 100%) !important;
   color: #fff !important;
   cursor: pointer !important;
-  box-shadow: 0 2px 8px rgba(29,53,87,0.3), inset 0 0.5px 0 rgba(255,255,255,0.18);
+  box-shadow: 0 2px 8px rgba(25,25,112,0.3), inset 0 0.5px 0 rgba(255,255,255,0.18);
 }
-.cfs-add-btn-active:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(29,53,87,0.4); }
+.cfs-add-btn-active:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(25,25,112,0.4); }
 
 /* ===== Permission status banners ===== */
 .cfs-perm-warn,
@@ -990,11 +990,11 @@ const KEYFRAMES = `
   letter-spacing: -0.01em;
 }
 .cfs-slider-value {
-  font-size: 14px; font-weight: 700; color: #1d3557;
+  font-size: 14px; font-weight: 700; color: #191970;
   font-variant-numeric: tabular-nums;
 }
 .cfs-slider {
-  width: 100%; accent-color: #1d3557;
+  width: 100%; accent-color: #191970;
   cursor: pointer;
 }
 .cfs-slider-desc {
@@ -1043,7 +1043,7 @@ const KEYFRAMES = `
   transition: all .18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .cfs-save-btn-active {
-  background: linear-gradient(135deg, #0a1929 0%, #1d3557 55%, #3b5c8c 100%) !important;
+  background: linear-gradient(135deg, #0a1929 0%, #191970 55%, #3b5c8c 100%) !important;
   color: #fff !important;
   cursor: pointer !important;
   box-shadow: 0 4px 14px rgba(10,25,41,0.35), inset 0 0.5px 0 rgba(255,255,255,0.22);

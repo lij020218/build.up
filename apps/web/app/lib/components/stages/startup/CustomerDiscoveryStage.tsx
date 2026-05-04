@@ -4,7 +4,15 @@ import { MessageCircle, AlertTriangle, Search } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { supabase } from "../../../../../lib/supabase";
 import { ModePathCard } from "./ModePathCard";
-import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
+import {
+  MIDNIGHT,
+  MIDNIGHT_SOFT,
+  MIDNIGHT_BORDER,
+  StartupKeyActionHero,
+  StartupPageNav,
+  StartupReferenceLabel,
+} from "./StartupStageShell";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function CustomerDiscoveryStage() {
   const d = useDashboardCtx();
@@ -21,10 +29,7 @@ export function CustomerDiscoveryStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-      {/* ── 모드별 경로 카드 (최상단) ── */}
-      <ModePathCard stageId="customer-discovery" />
-
-      {/* KEY ACTION 미드나이트 hero */}
+      {/* KEY ACTION 미드나이트 hero (최상단) */}
       <StartupKeyActionHero
         eyebrow="KEY ACTION"
         title={ko ? "코드 한 줄 전에, 10명과 대화하세요" : "Talk to 10 people before writing code"}
@@ -55,11 +60,12 @@ export function CustomerDiscoveryStage() {
 
       {pg === 0 && (
       <>
+      <ModePathCard stageId="customer-discovery" />
       {/* WHY — 왜 이 단계가 중요한가 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", padding: "20px 22px", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#dc2626" }} />
-          <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이게 첫 번째인가" : "Why this comes first"}</span>
+          <AlertTriangle size={14} strokeWidth={2.2} color={MIDNIGHT} />
+          <span style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이게 첫 번째인가" : "Why this comes first"}</span>
         </div>
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
           {ko ? "스타트업의 42%는 \"시장이 필요로 하지 않는 제품\"을 만들어 실패합니다." : "42% of startups fail by building a product nobody needs."}
@@ -73,18 +79,40 @@ export function CustomerDiscoveryStage() {
         <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(0,0,0,0.3)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 적용되는 경영 기법" : "Frameworks applied"}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {(ko ? [
-            { name: "Mom Test", desc: "의견이 아닌 과거 행동을 물어라. \"좋아요\"는 데이터가 아니다. 커밋먼트(시간·돈·소개)를 요청하라.", color: "#2563eb" },
-            { name: "JTBD", desc: "고객이 제품을 '고용'하는 이유를 찾아라. 기능이 아니라 해결하려는 '일(Job)'에 집중.", color: "#7c3aed" },
-            { name: "Lean Startup", desc: "가설 → 최소 실험 → 측정 → 학습. 2주 이내 사이클. 감이 아닌 데이터로 결정.", color: "#059669" },
+            { name: "Mom Test", desc: "의견이 아닌 과거 행동을 물어라. \"좋아요\"는 데이터가 아니다. 커밋먼트(시간·돈·소개)를 요청하라.", color: MIDNIGHT, url: "https://www.momtestbook.com/" },
+            { name: "JTBD", desc: "고객이 제품을 '고용'하는 이유를 찾아라. 기능이 아니라 해결하려는 '일(Job)'에 집중.", color: MIDNIGHT, url: "https://jtbd.info/" },
+            { name: "Lean Startup", desc: "가설 → 최소 실험 → 측정 → 학습. 2주 이내 사이클. 감이 아닌 데이터로 결정.", color: MIDNIGHT, url: "https://theleanstartup.com/" },
           ] : [
-            { name: "Mom Test", desc: "Ask about past behavior, not opinions. Request commitments (time/money/intro).", color: "#2563eb" },
-            { name: "JTBD", desc: "Find the 'job' customers hire your product for. Focus on the job, not features.", color: "#7c3aed" },
-            { name: "Lean Startup", desc: "Hypothesis → smallest experiment → measure → learn. 2-week cycles.", color: "#059669" },
+            { name: "Mom Test", desc: "Ask about past behavior, not opinions. Request commitments (time/money/intro).", color: MIDNIGHT, url: "https://www.momtestbook.com/" },
+            { name: "JTBD", desc: "Find the 'job' customers hire your product for. Focus on the job, not features.", color: MIDNIGHT, url: "https://jtbd.info/" },
+            { name: "Lean Startup", desc: "Hypothesis → smallest experiment → measure → learn. 2-week cycles.", color: MIDNIGHT, url: "https://theleanstartup.com/" },
           ]).map(f => (
-            <div key={f.name} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+            <a
+              key={f.name}
+              href={f.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                gap: "8px",
+                alignItems: "flex-start",
+                textDecoration: "none",
+                color: "inherit",
+                padding: "4px 6px",
+                borderRadius: "6px",
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,25,112,0.04)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
               <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: `${f.color}10`, color: f.color, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "1px" }}>{f.name}</span>
-              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>{f.desc}</span>
-            </div>
+              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.45, flex: 1 }}>{f.desc}</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={MIDNIGHT} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4, flexShrink: 0, marginTop: "3px" }}>
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
           ))}
         </div>
       </div>
@@ -94,10 +122,10 @@ export function CustomerDiscoveryStage() {
       {pg === 1 && (
       <>
       {/* STEP 1 — AI로 인터뷰 스크립트 준비 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "AI로 인터뷰 스크립트 만들기" : "Create interview script with AI"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
@@ -106,15 +134,15 @@ export function CustomerDiscoveryStage() {
         </div>
         <div style={{ padding: "0 22px 14px", display: "grid", gap: "6px" }}>
           {(ko ? [
-            { q: "이 문제를 지금 어떻게 해결하고 있나요?", why: "현재 대안 파악 → 10배 나은지 판단 가능", color: "#059669" },
-            { q: "가장 최근에 이 문제를 겪은 게 언제예요?", why: "빈도와 심각도 확인. 기억도 못 하면 중요한 문제가 아님", color: "#2563eb" },
-            { q: "이 문제 때문에 돈이나 시간을 얼마나 쓰나요?", why: "지불 의사 간접 확인. 0원이면 무료 도구도 안 쓸 것", color: "#7c3aed" },
-            { q: "이상적으로 어떻게 되면 좋겠어요?", why: "고객 언어로 가치 정의 → 마케팅 카피에 직접 활용", color: "#d97706" },
+            { q: "이 문제를 지금 어떻게 해결하고 있나요?", why: "현재 대안 파악 → 10배 나은지 판단 가능", color: MIDNIGHT },
+            { q: "가장 최근에 이 문제를 겪은 게 언제예요?", why: "빈도와 심각도 확인. 기억도 못 하면 중요한 문제가 아님", color: MIDNIGHT },
+            { q: "이 문제 때문에 돈이나 시간을 얼마나 쓰나요?", why: "지불 의사 간접 확인. 0원이면 무료 도구도 안 쓸 것", color: MIDNIGHT },
+            { q: "이상적으로 어떻게 되면 좋겠어요?", why: "고객 언어로 가치 정의 → 마케팅 카피에 직접 활용", color: MIDNIGHT },
           ] : [
-            { q: "How do you currently solve this problem?", why: "Understand current alternatives → judge if 10x better", color: "#059669" },
-            { q: "When was the last time you faced this?", why: "Measure frequency. Can't remember = not important", color: "#2563eb" },
-            { q: "How much time/money do you spend on this?", why: "Indirect WTP check. Zero = won't use even if free", color: "#7c3aed" },
-            { q: "What would ideal look like?", why: "Define value in customer's words → use in marketing", color: "#d97706" },
+            { q: "How do you currently solve this problem?", why: "Understand current alternatives → judge if 10x better", color: MIDNIGHT },
+            { q: "When was the last time you faced this?", why: "Measure frequency. Can't remember = not important", color: MIDNIGHT },
+            { q: "How much time/money do you spend on this?", why: "Indirect WTP check. Zero = won't use even if free", color: MIDNIGHT },
+            { q: "What would ideal look like?", why: "Define value in customer's words → use in marketing", color: MIDNIGHT },
           ]).map(item => (
             <div key={item.q} style={{ padding: "12px 14px", borderRadius: "12px", border: `1px solid ${item.color}12`, background: `${item.color}03` }}>
               <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "3px" }}>"{item.q}"</div>
@@ -123,8 +151,8 @@ export function CustomerDiscoveryStage() {
           ))}
         </div>
         {/* ── AI 인터뷰지 생성기 ── */}
-        <div style={{ margin: "0 22px 16px", padding: "16px 18px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(37,99,235,0.04) 0%, rgba(124,58,237,0.03) 100%)", border: "1px solid rgba(37,99,235,0.1)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>
+        <div style={{ margin: "0 22px 16px", padding: "16px 18px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.1)" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>
             {ko ? "AI 인터뷰지 생성기" : "AI INTERVIEW GENERATOR"}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
@@ -134,11 +162,11 @@ export function CustomerDiscoveryStage() {
               value={(guideSelections["interview-problem"] ?? (decisions["startup-foundation"]?.inputs?.problemStatement as string) ?? "")}
               onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-problem": e.target.value }))}
               style={{
-                padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(37,99,235,0.12)",
+                padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.12)",
                 background: "rgba(255,255,255,0.9)", fontSize: "13px", outline: "none",
               }}
-              onFocus={e => { e.currentTarget.style.borderColor = "#2563eb"; }}
-              onBlur={e => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.12)"; }}
+              onFocus={e => { e.currentTarget.style.borderColor = MIDNIGHT; }}
+              onBlur={e => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.12)"; }}
             />
             <input
               type="text"
@@ -146,11 +174,11 @@ export function CustomerDiscoveryStage() {
               value={guideSelections["interview-target"] ?? ""}
               onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-target": e.target.value }))}
               style={{
-                padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(37,99,235,0.12)",
+                padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.12)",
                 background: "rgba(255,255,255,0.9)", fontSize: "13px", outline: "none",
               }}
-              onFocus={e => { e.currentTarget.style.borderColor = "#2563eb"; }}
-              onBlur={e => { e.currentTarget.style.borderColor = "rgba(37,99,235,0.12)"; }}
+              onFocus={e => { e.currentTarget.style.borderColor = MIDNIGHT; }}
+              onBlur={e => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.12)"; }}
             />
           </div>
           <button
@@ -180,10 +208,10 @@ export function CustomerDiscoveryStage() {
             }}
             style={{
               width: "100%", padding: "10px", borderRadius: "10px", border: "none",
-              background: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim() && guideSelections["interview-loading"] !== "true") ? "#2563eb" : "rgba(37,99,235,0.1)",
-              color: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "#fff" : "rgba(37,99,235,0.3)",
+              background: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim() && guideSelections["interview-loading"] !== "true") ? MIDNIGHT : "rgba(25,25,112,0.1)",
+              color: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "#fff" : "rgba(25,25,112,0.3)",
               fontSize: "13px", fontWeight: 700, cursor: "pointer",
-              boxShadow: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "0 2px 8px rgba(37,99,235,0.2)" : "none",
+              boxShadow: (guideSelections["interview-problem"]?.trim() && guideSelections["interview-target"]?.trim()) ? "0 2px 8px rgba(25,25,112,0.2)" : "none",
             }}
           >
             {guideSelections["interview-loading"] === "true"
@@ -191,7 +219,7 @@ export function CustomerDiscoveryStage() {
               : (ko ? "Mom Test 인터뷰지 생성" : "Generate Mom Test Script")}
           </button>
           {guideSelections["interview-error"] && (
-            <div style={{ fontSize: "12px", color: "#dc2626", marginTop: "6px" }}>{guideSelections["interview-error"]}</div>
+            <div style={{ fontSize: "12px", color: MIDNIGHT, marginTop: "6px" }}>{guideSelections["interview-error"]}</div>
           )}
         </div>
 
@@ -203,11 +231,11 @@ export function CustomerDiscoveryStage() {
             const printContent = `
               <html><head><meta charset="utf-8"><title>${script.title}</title>
               <style>body{font-family:-apple-system,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#111}
-              h1{font-size:22px;margin-bottom:4px}h2{font-size:16px;color:#2563eb;margin-top:24px}
-              .q{margin:12px 0;padding:12px 16px;background:#f8fafc;border-radius:8px;border-left:3px solid #2563eb}
+              h1{font-size:22px;margin-bottom:4px}h2{font-size:16px;color:#191970;margin-top:24px}
+              .q{margin:12px 0;padding:12px 16px;background:#f8fafc;border-radius:8px;border-left:3px solid #191970}
               .q-text{font-size:14px;font-weight:600}.q-purpose{font-size:12px;color:#666;margin-top:4px}
-              .pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#2563eb;background:#eff6ff;margin-bottom:4px}
-              .donot{color:#dc2626;font-size:13px;margin:4px 0}
+              .pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#191970;background:#eff6ff;margin-bottom:4px}
+              .donot{color:#191970;font-size:13px;margin:4px 0}
               </style></head><body>
               <h1>${script.title}</h1>
               <p style="color:#666">${script.duration} · Mom Test 기반</p>
@@ -231,8 +259,8 @@ export function CustomerDiscoveryStage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                 <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{script.title}</span>
                 <button type="button" onClick={downloadPdf} style={{
-                  padding: "6px 14px", borderRadius: "8px", border: "1px solid rgba(37,99,235,0.15)",
-                  background: "white", color: "#2563eb", fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                  padding: "6px 14px", borderRadius: "8px", border: "1px solid rgba(25,25,112,0.15)",
+                  background: "white", color: MIDNIGHT, fontSize: "12px", fontWeight: 600, cursor: "pointer",
                 }}>
                   {ko ? "PDF 저장" : "Save PDF"}
                 </button>
@@ -240,8 +268,8 @@ export function CustomerDiscoveryStage() {
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "10px" }}>{script.duration}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {(guideSelections["interview-expanded"] === "true" ? script.questions : script.questions?.slice(0, 5))?.map((q: {phase:string;question:string;purpose:string;followUp?:string}, i: number) => (
-                  <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(37,99,235,0.03)", borderLeft: "3px solid rgba(37,99,235,0.15)" }}>
-                    <div style={{ fontSize: "9px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "3px" }}>{q.phase}</div>
+                  <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(25,25,112,0.03)", borderLeft: "3px solid rgba(25,25,112,0.15)" }}>
+                    <div style={{ fontSize: "9px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "3px" }}>{q.phase}</div>
                     <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", lineHeight: 1.4 }}>{i + 1}. {q.question}</div>
                     <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "3px" }}>{q.purpose}</div>
                     {q.followUp && <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "2px" }}>{q.followUp}</div>}
@@ -249,7 +277,7 @@ export function CustomerDiscoveryStage() {
                 ))}
                 {(script.questions?.length ?? 0) > 5 && (
                   <button type="button" onClick={() => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "interview-expanded": prev["interview-expanded"] === "true" ? "false" : "true" }))} style={{
-                    fontSize: "13px", fontWeight: 600, color: "#2563eb", background: "none", border: "1px solid rgba(37,99,235,0.12)",
+                    fontSize: "13px", fontWeight: 600, color: MIDNIGHT, background: "none", border: "1px solid rgba(25,25,112,0.12)",
                     borderRadius: "10px", padding: "8px", cursor: "pointer", textAlign: "center" as const, width: "100%",
                   }}>
                     {guideSelections["interview-expanded"] === "true"
@@ -269,31 +297,71 @@ export function CustomerDiscoveryStage() {
       {pg === 2 && (
       <>
       {/* STEP 2 — 인터뷰 대상 찾기 + 실행 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#059669", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "10명 이상 인터뷰를 실행하세요" : "Run 10+ interviews"}</span>
           </div>
         </div>
         <div style={{ padding: "0 22px 14px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginBottom: "10px" }}>
-            {(ko ? [
-              { ch: "링크드인 DM", tip: "타깃 직군에 직접 메시지. 20통 중 4~5통 응답", url: "https://linkedin.com" },
+            {((ko ? [
+              { ch: "링크드인 DM", tip: "타깃 직군에 직접 메시지. 20통 중 4~5통 응답", url: "https://www.linkedin.com" },
               { ch: "디스콰이엇", tip: "한국 스타트업 커뮤니티. 초기 유저 모집에 최적", url: "https://disquiet.io" },
               { ch: "블라인드", tip: "직장인 익명 커뮤니티. B2B 타깃에 효과적", url: "https://www.teamblind.com" },
               { ch: "지인 2차 소개", tip: "\"이 분야 아는 사람 소개해줄 수 있어?\"가 가장 효과적" },
             ] : [
-              { ch: "LinkedIn DM", tip: "Direct message targets. ~20% response rate", url: "https://linkedin.com" },
+              { ch: "LinkedIn DM", tip: "Direct message targets. ~20% response rate", url: "https://www.linkedin.com" },
               { ch: "Disquiet", tip: "Korean startup community. Best for early users", url: "https://disquiet.io" },
               { ch: "Blind", tip: "Anonymous work community. Effective for B2B", url: "https://www.teamblind.com" },
               { ch: "2nd-degree referrals", tip: "\"Know anyone in this space?\" — most effective" },
-            ]).map(c => (
-              <div key={c.ch} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(5,150,105,0.03)" }}>
-                <div style={{ fontSize: "12px", fontWeight: 640, color: "#0f172a" }}>{c.ch}</div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{c.tip}</div>
-              </div>
-            ))}
+            ]) as Array<{ ch: string; tip: string; url?: string }>).map(c => {
+              const inner = (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 640, color: "#0f172a" }}>{c.ch}</span>
+                    {c.url && (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={MIDNIGHT} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.55 }}>
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{c.tip}</div>
+                </>
+              );
+              if (c.url) {
+                return (
+                  <a
+                    key={c.ch}
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      background: "rgba(25,25,112,0.03)",
+                      textDecoration: "none",
+                      color: "inherit",
+                      display: "block",
+                      transition: "background 0.15s ease",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,25,112,0.06)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,25,112,0.03)"; }}
+                  >
+                    {inner}
+                  </a>
+                );
+              }
+              return (
+                <div key={c.ch} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(25,25,112,0.03)" }}>
+                  {inner}
+                </div>
+              );
+            })}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
             {(ko ? [
@@ -306,7 +374,7 @@ export function CustomerDiscoveryStage() {
               { num: "24h", label: "Note deadline", detail: "Memory distorts fast" },
             ]).map(s => (
               <div key={s.num} style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
-                <div style={{ fontSize: "18px", fontWeight: 780, color: "#059669" }}>{s.num}</div>
+                <div style={{ fontSize: "18px", fontWeight: 780, color: MIDNIGHT }}>{s.num}</div>
                 <div style={{ fontSize: "11px", fontWeight: 640, color: "#0f172a" }}>{s.label}</div>
                 <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{s.detail}</div>
               </div>
@@ -321,10 +389,10 @@ export function CustomerDiscoveryStage() {
       {pg === 3 && (
       <>
       {/* STEP 3 — AI로 인사이트 정리 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "AI로 인터뷰 결과를 분석하세요" : "Analyze results with AI"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
@@ -333,8 +401,8 @@ export function CustomerDiscoveryStage() {
         </div>
         <div style={{ padding: "0 22px 16px" }}>
           {/* ── AI 인터뷰 분석기 ── */}
-          <div style={{ padding: "16px 18px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(124,58,237,0.04) 0%, rgba(37,99,235,0.03) 100%)", border: "1px solid rgba(124,58,237,0.1)", marginBottom: "10px" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>
+          <div style={{ padding: "16px 18px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.1)", marginBottom: "10px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "10px" }}>
               {ko ? "AI 인터뷰 결과 분석기" : "AI INTERVIEW ANALYZER"}
             </div>
             <textarea
@@ -345,12 +413,12 @@ export function CustomerDiscoveryStage() {
               onChange={e => d.setGuideSelections((prev: Record<string, string>) => ({ ...prev, "analysis-notes": e.target.value }))}
               style={{
                 width: "100%", minHeight: "120px", padding: "12px 14px", borderRadius: "12px",
-                border: "1px solid rgba(124,58,237,0.12)", background: "rgba(255,255,255,0.9)",
+                border: "1px solid rgba(25,25,112,0.12)", background: "rgba(255,255,255,0.9)",
                 fontSize: "13px", lineHeight: 1.6, resize: "vertical", outline: "none",
                 fontFamily: "inherit",
               }}
-              onFocus={e => { e.currentTarget.style.borderColor = "#7c3aed"; }}
-              onBlur={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.12)"; }}
+              onFocus={e => { e.currentTarget.style.borderColor = MIDNIGHT; }}
+              onBlur={e => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.12)"; }}
             />
             <button
               type="button"
@@ -378,15 +446,15 @@ export function CustomerDiscoveryStage() {
               }}
               style={{
                 width: "100%", padding: "10px", borderRadius: "10px", border: "none", marginTop: "10px",
-                background: (guideSelections["analysis-notes"]?.trim() && guideSelections["analysis-loading"] !== "true") ? "#7c3aed" : "rgba(124,58,237,0.1)",
-                color: guideSelections["analysis-notes"]?.trim() ? "#fff" : "rgba(124,58,237,0.3)",
+                background: (guideSelections["analysis-notes"]?.trim() && guideSelections["analysis-loading"] !== "true") ? MIDNIGHT : "rgba(25,25,112,0.1)",
+                color: guideSelections["analysis-notes"]?.trim() ? "#fff" : "rgba(25,25,112,0.3)",
                 fontSize: "13px", fontWeight: 700, cursor: "pointer",
               }}
             >
               {guideSelections["analysis-loading"] === "true" ? (ko ? "분석 중..." : "Analyzing...") : (ko ? "인터뷰 결과 분석하기" : "Analyze Interview Results")}
             </button>
             {guideSelections["analysis-error"] && (
-              <div style={{ fontSize: "12px", color: "#dc2626", marginTop: "6px" }}>{guideSelections["analysis-error"]}</div>
+              <div style={{ fontSize: "12px", color: MIDNIGHT, marginTop: "6px" }}>{guideSelections["analysis-error"]}</div>
             )}
           </div>
 
@@ -396,16 +464,16 @@ export function CustomerDiscoveryStage() {
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "10px" }}>
                 {/* 핵심 문제 */}
-                <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.12)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
+                <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(25,25,112,0.06)", border: "1.5px solid rgba(25,25,112,0.12)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
                     {ko ? "우리가 해결할 문제" : "THE ONE PROBLEM"}
                   </div>
                   <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>{r.oneProblemStatement}</div>
                 </div>
 
                 {/* 타겟 세그먼트 */}
-                <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "초기 타겟" : "TARGET"}</div>
+                <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "초기 타겟" : "TARGET"}</div>
                   <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{r.targetSegment}</div>
                 </div>
 
@@ -414,7 +482,7 @@ export function CustomerDiscoveryStage() {
                   <div key={i} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(248,250,252,0.8)", border: "1px solid rgba(15,23,42,0.05)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
                       <span style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{p.pattern}</span>
-                      <span style={{ fontSize: "10px", fontWeight: 600, color: "#7c3aed", background: "rgba(124,58,237,0.06)", padding: "2px 8px", borderRadius: "4px" }}>{p.frequency}</span>
+                      <span style={{ fontSize: "10px", fontWeight: 600, color: MIDNIGHT, background: "rgba(25,25,112,0.06)", padding: "2px 8px", borderRadius: "4px" }}>{p.frequency}</span>
                     </div>
                     {p.quotes?.map((q: string, qi: number) => (
                       <div key={qi} style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", fontStyle: "italic", lineHeight: 1.4, marginTop: "3px" }}>"{q}"</div>
@@ -423,11 +491,11 @@ export function CustomerDiscoveryStage() {
                 ))}
 
                 {/* 다음 단계 */}
-                <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.08)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", marginBottom: "6px" }}>{ko ? "다음 행동" : "NEXT STEPS"}</div>
+                <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", marginBottom: "6px" }}>{ko ? "다음 행동" : "NEXT STEPS"}</div>
                   {r.nextSteps?.map((s: string, i: number) => (
                     <div key={i} style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5, display: "flex", gap: "6px", marginBottom: "3px" }}>
-                      <span style={{ color: "#059669", fontWeight: 700 }}>{i + 1}.</span> {s}
+                      <span style={{ color: MIDNIGHT, fontWeight: 700 }}>{i + 1}.</span> {s}
                     </div>
                   ))}
                 </div>
@@ -448,7 +516,7 @@ export function CustomerDiscoveryStage() {
               "\"The one problem we solve\" statement",
             ]).map(item => (
               <div key={item} style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "3px" }}><circle cx="7" cy="7" r="6" stroke="#7c3aed" strokeWidth="1.4"/><path d="M4.5 7l1.8 1.8 3.2-3.6" stroke="#7c3aed" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "3px" }}><circle cx="7" cy="7" r="6" stroke={MIDNIGHT} strokeWidth="1.4"/><path d="M4.5 7l1.8 1.8 3.2-3.6" stroke={MIDNIGHT} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 <span>{item}</span>
               </div>
             ))}
@@ -457,6 +525,26 @@ export function CustomerDiscoveryStage() {
       </div>
       </>
       )}
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="법인 설립"
+        doneItemsKo={[
+          { label: "1. 타깃 고객 ICP 정의", detail: "산업·역할·예산·구매 권한 4축으로 ICP 명문화" },
+          { label: "2. Mom Test 인터뷰", detail: "20~30명 직접 인터뷰 + 「과거 행동」 질문 위주, 가설 검증 X 행동 검증" },
+          { label: "3. 문제 가설 검증", detail: "Top 3 문제 + 빈도 + 강도 + 현재 대안 정량화" },
+          { label: "4. 솔루션 가설 도출", detail: "랜딩 페이지·LOI·사전 결제 등 강한 시그널 1개 이상 확보" },
+        ]}
+        verifyItemsKo={[
+          "Mom Test — 「당신은 이걸 살 거예요?」 같은 가설 질문은 모두 거짓말, 「과거 어떻게 해결했어요?」 행동 질문만",
+          "샘플 편향 — 친구·지인 인터뷰 시 데이터 무효, 외부 콜드 아웃리치 80% 이상",
+          "결제 의지 — 「관심 있다」 ≠ 「살 의지」, LOI·사전 결제 등 진짜 의지 시그널 확보",
+          "TAM·SAM·SOM — 추정 시장 규모 객관 데이터로 산출, 「수십조 시장」 모호한 추정은 투자 거절",
+          "경쟁 — 「경쟁자 없음」은 위험 신호, 시장이 없거나 모르거나 둘 중 하나",
+          "법적 — 인터뷰 녹음·녹화 시 사전 동의 (개인정보보호법), 미동의 시 데이터 무효 + 위반",
+        ]}
+        nextSummaryKo="ICP·문제·솔루션 가설 검증 완료 → 법인 설립 단계로 진입"
+      />
     </div>
   );
 }

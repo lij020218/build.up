@@ -1,5 +1,6 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function OnlineMarketingStage() {
   const d = useDashboardCtx();
@@ -90,6 +91,26 @@ export function OnlineMarketingStage() {
           ))}
         </div>
       </div>
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="첫 달 점검"
+        doneItemsKo={[
+          { label: "1. 채널 우선순위", detail: "네이버 검색·인스타·카카오·블로그 4축 중 업종 적합 2~3개 선택" },
+          { label: "2. 광고 예산 배분", detail: "유료 광고 vs 콘텐츠 마케팅 비중 결정 + ROAS 목표 설정" },
+          { label: "3. 콘텐츠 일정", detail: "주간 SNS 포스팅 + 리뷰 유도 + 인플루언서 협업 일정 셋업" },
+          { label: "4. 측정 지표 설정", detail: "방문자·전환율·CTR·CAC·LTV 5개 지표 대시보드 셋업" },
+        ]}
+        verifyItemsKo={[
+          "광고 표현 — 「최저가」 「최고」 「유일」 등 비교 광고 객관 근거 필수, 위반 시 표시광고법 과징금",
+          "인플루언서 협업 — 「유료 광고」 표시 의무 (#광고 #협찬), 미표시 시 공정위 과징금 + 인플루언서도 책임",
+          "네이버 검색광고 — 키워드 입찰 단가 인상 추세, ROAS 200% 미만이면 즉시 중단·재구성",
+          "쿠팡 광고 — 노출 위치별 효율 차이 큼, 카테고리 검색·상세 페이지 광고 분리 측정",
+          "리뷰 — 자작·가족·지인 리뷰 적발 시 플랫폼 영구정지 + 표시광고법 위반 (10만원 이하 과태료/건)",
+          "개인정보 — 마케팅 활용 동의 별도 수집 의무, 위반 시 개인정보보호법 과징금 (매출 3% 이내)",
+        ]}
+        nextSummaryKo="채널·예산·콘텐츠·측정 4축 셋업 완료 → 첫 달 점검 단계로 진입"
+      />
     </div>
   );
 }

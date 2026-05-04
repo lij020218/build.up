@@ -35,16 +35,26 @@ type Props = {
   values: Record<string, KpiValue | undefined>;
 };
 
-/** 임계값 비교 → 색상 결정 */
-function evaluateColor(value: number | null | undefined, t: KpiThresholds | undefined): {
-  bg: string; fg: string; border: string;
-} {
-  // 데이터 없거나 임계값 없으면 neutral
+type KpiTone = {
+  bg: string;
+  fg: string;
+  border: string;
+  labelColor: string;
+  shadow: string;
+  state: "neutral" | "good" | "warning" | "bad";
+};
+
+/** 임계값 비교 → 색상 결정. 미드나이트 톤 + Apple iOS semantic 컬러 통합. */
+function evaluateColor(value: number | null | undefined, t: KpiThresholds | undefined): KpiTone {
+  // 데이터 없거나 임계값 없으면 neutral — 미드나이트 light tint (회색 X)
   if (value == null || !t) {
     return {
-      bg: "rgba(15,23,42,0.03)",
-      fg: "rgba(15,23,42,0.55)",
-      border: "rgba(15,23,42,0.08)",
+      bg: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+      fg: "#0f0f4a",
+      border: "rgba(25,25,112,0.10)",
+      labelColor: "rgba(25,25,112,0.65)",
+      shadow: "0 1px 2px rgba(25,25,112,0.03)",
+      state: "neutral",
     };
   }
   const isHigherBetter = t.direction === "higher-is-better";
@@ -52,22 +62,33 @@ function evaluateColor(value: number | null | undefined, t: KpiThresholds | unde
   const isWarning = isHigherBetter
     ? value >= t.warning
     : value <= t.warning;
-  // bad 명시되면 그 너머는 빨강, 안 되면 warning 못 미치면 빨강
   const isBad = t.bad != null
     ? (isHigherBetter ? value < t.bad : value > t.bad)
     : !isWarning;
 
   if (isGood) return {
-    bg: "linear-gradient(135deg, rgba(5,150,105,0.08) 0%, rgba(5,150,105,0.03) 100%)",
-    fg: "#047857", border: "rgba(5,150,105,0.22)",
+    bg: "linear-gradient(180deg, rgba(52,199,89,0.06) 0%, rgba(52,199,89,0.02) 100%)",
+    fg: "#0e7c3a",
+    border: "rgba(52,199,89,0.22)",
+    labelColor: "#0e7c3a",
+    shadow: "0 1px 3px rgba(52,199,89,0.06), 0 8px 16px -8px rgba(52,199,89,0.10)",
+    state: "good",
   };
   if (isWarning && !isBad) return {
-    bg: "linear-gradient(135deg, rgba(217,119,6,0.08) 0%, rgba(217,119,6,0.03) 100%)",
-    fg: "#b45309", border: "rgba(217,119,6,0.22)",
+    bg: "linear-gradient(180deg, rgba(255,159,10,0.06) 0%, rgba(255,159,10,0.02) 100%)",
+    fg: "#a35509",
+    border: "rgba(255,159,10,0.24)",
+    labelColor: "#a35509",
+    shadow: "0 1px 3px rgba(255,159,10,0.06), 0 8px 16px -8px rgba(255,159,10,0.10)",
+    state: "warning",
   };
   return {
-    bg: "linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(220,38,38,0.03) 100%)",
-    fg: "#b91c1c", border: "rgba(220,38,38,0.25)",
+    bg: "linear-gradient(180deg, rgba(255,59,48,0.06) 0%, rgba(255,59,48,0.02) 100%)",
+    fg: "#b32419",
+    border: "rgba(255,59,48,0.26)",
+    labelColor: "#b32419",
+    shadow: "0 1px 3px rgba(255,59,48,0.06), 0 8px 16px -8px rgba(255,59,48,0.12)",
+    state: "bad",
   };
 }
 
@@ -113,45 +134,51 @@ export function DailyKpiStrip({ ko, industryCategoryId, values }: Props) {
       {cells.map((cell) => {
         const v = values[cell.id];
         const numericValue = v?.value;
-        const colors = evaluateColor(numericValue, cell.thresholds);
+        const tone = evaluateColor(numericValue, cell.thresholds);
         const trend = v?.trendPct;
         const TrendIcon = trend == null
           ? null
           : trend > 0.5 ? TrendingUp
           : trend < -0.5 ? TrendingDown
           : Minus;
+        const hasData = numericValue != null && Number.isFinite(numericValue);
+        const isPending = !hasData && !v?.displayOverride;
 
         return (
           <div
             key={cell.id}
             title={ko ? cell.hintKo : cell.hintEn}
             style={{
-              display: "flex", flexDirection: "column", gap: "4px",
-              padding: "12px 14px",
-              borderRadius: "14px",
-              background: colors.bg,
-              border: `1px solid ${colors.border}`,
+              display: "flex", flexDirection: "column", gap: "8px",
+              padding: "16px 18px",
+              borderRadius: "16px",
+              background: tone.bg,
+              border: `1px solid ${tone.border}`,
+              boxShadow: tone.shadow,
               minWidth: 0,
               cursor: cell.hintKo || cell.hintEn ? "help" : "default",
-              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              transition: "transform 0.18s cubic-bezier(0.22,1,0.36,1), box-shadow 0.18s ease",
+              position: "relative" as const,
             }}
             onMouseEnter={(e) => {
               if (!cell.hintKo && !cell.hintEn) return;
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = `0 4px 12px ${colors.border}`;
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = tone.state === "neutral"
+                ? "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.16)"
+                : `0 1px 3px ${tone.border}, 0 12px 24px -8px ${tone.border}`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.boxShadow = tone.shadow;
             }}
           >
             {/* 라벨 + 트렌드 */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              gap: "4px",
-              fontSize: "10.5px", fontWeight: 700,
-              color: "rgba(15,23,42,0.5)",
-              letterSpacing: "0.02em",
+              gap: "6px",
+              fontSize: "11px", fontWeight: 700,
+              color: tone.labelColor,
+              letterSpacing: "0.04em",
               textTransform: "uppercase" as const,
               minHeight: "14px",
             }}>
@@ -160,31 +187,73 @@ export function DailyKpiStrip({ ko, industryCategoryId, values }: Props) {
               </span>
               {TrendIcon && trend != null && (
                 <span style={{
-                  display: "inline-flex", alignItems: "center", gap: "2px",
-                  fontSize: "10px", fontWeight: 700,
-                  color: trend > 0.5 ? "#059669" : trend < -0.5 ? "#dc2626" : "rgba(15,23,42,0.4)",
+                  display: "inline-flex", alignItems: "center", gap: "3px",
+                  fontSize: "10.5px", fontWeight: 700,
+                  padding: "2px 6px",
+                  borderRadius: "999px",
+                  background: trend > 0.5
+                    ? "rgba(52,199,89,0.10)"
+                    : trend < -0.5
+                      ? "rgba(255,59,48,0.10)"
+                      : "rgba(25,25,112,0.06)",
+                  color: trend > 0.5 ? "#0e7c3a" : trend < -0.5 ? "#b32419" : "rgba(25,25,112,0.55)",
                   flexShrink: 0,
+                  fontVariantNumeric: "tabular-nums" as const,
+                  letterSpacing: "0",
+                  textTransform: "none" as const,
                 }}>
-                  <TrendIcon size={10} strokeWidth={2.4} />
+                  <TrendIcon size={10} strokeWidth={2.6} />
                   <span>{Math.abs(trend).toFixed(0)}%</span>
                 </span>
               )}
             </div>
 
-            {/* 큰 숫자 */}
+            {/* 큰 숫자 — 가시성 강화 */}
             <div style={{
-              fontSize: "20px", fontWeight: 700,
-              color: colors.fg,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
+              display: "flex",
+              alignItems: "baseline",
+              gap: "4px",
+              fontSize: isPending ? "16px" : "26px",
+              fontWeight: 700,
+              color: tone.fg,
+              letterSpacing: "-0.035em",
+              lineHeight: 1,
+              fontVariantNumeric: "tabular-nums" as const,
               fontFamily: '"SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif',
             }}>
-              {v?.displayOverride ?? formatKpi(numericValue, cell.type)}
-              {/* 단위 (옵션) */}
-              {!v?.displayOverride && numericValue != null && cell.type === "months" && (
-                <span style={{ fontSize: "11px", fontWeight: 600, color: colors.fg, opacity: 0.7, marginLeft: "3px" }}>
-                  {ko ? "개월" : "mo"}
+              {isPending ? (
+                <span style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "rgba(25,25,112,0.45)",
+                  letterSpacing: "-0.01em",
+                }}>
+                  <span style={{
+                    display: "inline-block",
+                    width: 6, height: 6,
+                    borderRadius: "50%",
+                    background: "rgba(25,25,112,0.30)",
+                  }} />
+                  {ko ? "준비 중" : "Pending"}
                 </span>
+              ) : (
+                <>
+                  <span>{v?.displayOverride ?? formatKpi(numericValue, cell.type)}</span>
+                  {/* 단위 (옵션) */}
+                  {!v?.displayOverride && numericValue != null && cell.type === "months" && (
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: tone.fg, opacity: 0.65 }}>
+                      {ko ? "개월" : "mo"}
+                    </span>
+                  )}
+                  {!v?.displayOverride && numericValue != null && cell.type === "currency" && (
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: tone.fg, opacity: 0.65 }}>
+                      {ko ? "원" : ""}
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -1,9 +1,17 @@
 "use client";
 
-import { Star, TrendingUp, RotateCcw } from "lucide-react";
+import { Star, TrendingUp, RotateCcw, AlertTriangle } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { ModePathCard } from "./ModePathCard";
-import { StartupKeyActionHero, StartupPageNav, StartupReferenceLabel } from "./StartupStageShell";
+import {
+  MIDNIGHT,
+  MIDNIGHT_SOFT,
+  MIDNIGHT_BORDER,
+  StartupKeyActionHero,
+  StartupPageNav,
+  StartupReferenceLabel,
+} from "./StartupStageShell";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function GrowthEngineStage() {
   const d = useDashboardCtx();
@@ -54,10 +62,7 @@ export function GrowthEngineStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
-      {/* ── 모드별 경로 카드 (최상단) ── */}
-      <ModePathCard stageId="growth-engine" />
-
-      {/* KEY ACTION 미드나이트 hero */}
+      {/* KEY ACTION 미드나이트 hero (최상단) */}
       <StartupKeyActionHero
         eyebrow="KEY ACTION"
         title={ko ? "리텐션 없는 성장은 밑 빠진 독" : "Growth without retention is a leaky bucket"}
@@ -86,13 +91,14 @@ export function GrowthEngineStage() {
         ko={ko}
       />
 
-      {/* PAGE 0 — WHY */}
+      {/* PAGE 0 — WHY + 모드별 경로 카드 */}
       {pg === 0 && (
       <>
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(220,38,38,0.08)", background: "linear-gradient(180deg, rgba(220,38,38,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+      <ModePathCard stageId="growth-engine" />
+      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", padding: "20px 22px", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#dc2626" }} />
-          <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이 단계가 중요한가" : "Why this matters"}</span>
+          <AlertTriangle size={14} strokeWidth={2.2} color={MIDNIGHT} />
+          <span style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{ko ? "왜 이 단계가 중요한가" : "Why this matters"}</span>
         </div>
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
           {ko ? "리텐션 없는 성장은 밑 빠진 독에 물 붓기입니다." : "Growth without retention is filling a leaky bucket."}
@@ -103,16 +109,16 @@ export function GrowthEngineStage() {
       </div>
       <div style={{ display: "grid", gap: "6px" }}>
         {(ko ? [
-          { num: 1, title: "북극성 지표 선택", desc: "회사 전체가 추적하는 하나의 핵심 숫자 확정", color: "#059669" },
-          { num: 2, title: "주간 성장 리뷰", desc: "매주 월요일 30분, 지표 확인 + 실험 1개 선택", color: "#2563eb" },
-          { num: 3, title: "리텐션 체크", desc: "사용자가 돌아오는지 먼저 확인 → 그 다음 성장", color: "#7c3aed" },
+          { num: 1, title: "북극성 지표 선택", desc: "회사 전체가 추적하는 하나의 핵심 숫자 확정" },
+          { num: 2, title: "주간 성장 리뷰", desc: "매주 월요일 30분, 지표 확인 + 실험 1개 선택" },
+          { num: 3, title: "리텐션 체크", desc: "사용자가 돌아오는지 먼저 확인 → 그 다음 성장" },
         ] : [
-          { num: 1, title: "Choose North Star Metric", desc: "The single number the whole company tracks", color: "#059669" },
-          { num: 2, title: "Weekly Growth Review", desc: "30 min every Monday: metrics + 1 experiment", color: "#2563eb" },
-          { num: 3, title: "Retention Check", desc: "Prove users come back before pushing growth", color: "#7c3aed" },
+          { num: 1, title: "Choose North Star Metric", desc: "The single number the whole company tracks" },
+          { num: 2, title: "Weekly Growth Review", desc: "30 min every Monday: metrics + 1 experiment" },
+          { num: 3, title: "Retention Check", desc: "Prove users come back before pushing growth" },
         ]).map(s => (
-          <div key={s.num} onClick={() => d.setGuideStepIndex(s.num)} style={{ display: "flex", gap: "10px", alignItems: "center", padding: "12px 14px", borderRadius: "12px", background: `${s.color}04`, border: `1px solid ${s.color}10`, cursor: "pointer" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: s.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.num}</div>
+          <div key={s.num} onClick={() => d.setGuideStepIndex(s.num)} style={{ display: "flex", gap: "10px", alignItems: "center", padding: "12px 14px", borderRadius: "12px", background: "white", border: `1px solid ${MIDNIGHT_BORDER}`, cursor: "pointer" }}>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.num}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.desc}</div>
@@ -126,18 +132,18 @@ export function GrowthEngineStage() {
         <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(0,0,0,0.3)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>{ko ? "이 단계에서 적용되는 경영 기법" : "Frameworks applied"}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {(ko ? [
-            { name: "PMF 테스트", desc: "\"이 제품을 못 쓰면?\" — 40%+가 '매우 실망'이면 PMF 달성. 미달이면 최고 만족 세그먼트에 집중.", color: "#dc2626" },
-            { name: "AARRR", desc: "Acquisition→Activation→Retention→Revenue→Referral. 가장 나쁜 단계를 먼저 고쳐라.", color: "#2563eb" },
-            { name: "Unit Economics", desc: "CAC(획득비) vs LTV(생애가치). 비율 3:1 이상, 회수 12개월 이하가 건강한 사업.", color: "#059669" },
-            { name: "OKR", desc: "분기 목표 3개 + 측정 가능한 핵심 결과. 숫자 없는 목표는 목표가 아님.", color: "#7c3aed" },
+            { name: "PMF 테스트", desc: "\"이 제품을 못 쓰면?\" — 40%+가 '매우 실망'이면 PMF 달성. 미달이면 최고 만족 세그먼트에 집중." },
+            { name: "AARRR", desc: "Acquisition→Activation→Retention→Revenue→Referral. 가장 나쁜 단계를 먼저 고쳐라." },
+            { name: "Unit Economics", desc: "CAC(획득비) vs LTV(생애가치). 비율 3:1 이상, 회수 12개월 이하가 건강한 사업." },
+            { name: "OKR", desc: "분기 목표 3개 + 측정 가능한 핵심 결과. 숫자 없는 목표는 목표가 아님." },
           ] : [
-            { name: "PMF Test", desc: "\"How'd you feel if you couldn't use this?\" — 40%+ 'very disappointed' = PMF.", color: "#dc2626" },
-            { name: "AARRR", desc: "Acquisition→Activation→Retention→Revenue→Referral. Fix the worst stage first.", color: "#2563eb" },
-            { name: "Unit Economics", desc: "CAC vs LTV. Ratio 3:1+, payback under 12 months = healthy business.", color: "#059669" },
-            { name: "OKR", desc: "3 quarterly objectives + measurable key results. No numbers = no goal.", color: "#7c3aed" },
+            { name: "PMF Test", desc: "\"How'd you feel if you couldn't use this?\" — 40%+ 'very disappointed' = PMF." },
+            { name: "AARRR", desc: "Acquisition→Activation→Retention→Revenue→Referral. Fix the worst stage first." },
+            { name: "Unit Economics", desc: "CAC vs LTV. Ratio 3:1+, payback under 12 months = healthy business." },
+            { name: "OKR", desc: "3 quarterly objectives + measurable key results. No numbers = no goal." },
           ]).map(f => (
             <div key={f.name} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
-              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: `${f.color}10`, color: f.color, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "1px" }}>{f.name}</span>
+              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: MIDNIGHT_SOFT, color: MIDNIGHT, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "1px" }}>{f.name}</span>
               <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>{f.desc}</span>
             </div>
           ))}
@@ -148,10 +154,10 @@ export function GrowthEngineStage() {
 
       {/* PAGE 1 — 북극성 지표 선택 */}
       {pg === 1 && (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#059669", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "북극성 지표를 하나 선택하세요" : "Choose one North Star Metric"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
@@ -164,24 +170,24 @@ export function GrowthEngineStage() {
             return (
             <button key={s.id} type="button" onClick={() => chooseNs(s.id)} style={{
               display: "flex", gap: "12px", alignItems: "flex-start", padding: "12px 14px", borderRadius: "12px",
-              background: sel ? "rgba(5,150,105,0.08)" : "rgba(5,150,105,0.02)",
-              border: sel ? "2px solid #059669" : "1px solid rgba(5,150,105,0.06)",
-              boxShadow: sel ? "0 0 0 3px rgba(5,150,105,0.08)" : "none",
+              background: sel ? MIDNIGHT_SOFT : "white",
+              border: sel ? `2px solid ${MIDNIGHT}` : `1px solid ${MIDNIGHT_BORDER}`,
+              boxShadow: sel ? "0 0 0 3px rgba(25,25,112,0.08)" : "none",
               cursor: "pointer", textAlign: "left" as const, transition: "all 0.2s ease", width: "100%",
             }}>
-              <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: sel ? "rgba(5,150,105,0.15)" : "rgba(5,150,105,0.08)", color: "#059669", whiteSpace: "nowrap" as const, flexShrink: 0 }}>{s.type}</span>
+              <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: MIDNIGHT_SOFT, color: MIDNIGHT, whiteSpace: "nowrap" as const, flexShrink: 0 }}>{s.type}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.metric}</div>
                 <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.ex}</div>
               </div>
-              {sel && <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: "#059669", padding: "2px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "2px" }}>✓</span>}
+              {sel && <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: MIDNIGHT, padding: "2px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "2px" }}>✓</span>}
             </button>
             );
           })}
         </div>
         <div style={{ padding: "0 22px 18px" }}>
-          <div style={{ padding: "16px 18px", borderRadius: "14px", background: "rgba(255,255,255,0.95)", border: "1.5px solid rgba(5,150,105,0.12)" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+          <div style={{ padding: "16px 18px", borderRadius: "14px", background: "rgba(248,250,252,0.6)", border: `1.5px solid ${MIDNIGHT_BORDER}` }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
               {ko ? "나의 북극성 지표" : "MY NORTH STAR METRIC"}
             </div>
             <input
@@ -193,12 +199,12 @@ export function GrowthEngineStage() {
               onChange={(e) => setNsName(e.target.value)}
               style={{
                 width: "100%", padding: "10px 14px", borderRadius: "10px",
-                border: "1px solid rgba(5,150,105,0.12)", background: "rgba(248,250,252,0.8)",
+                border: `1px solid ${MIDNIGHT_BORDER}`, background: "white",
                 fontSize: "14px", outline: "none", color: "#0f172a",
                 fontFamily: "inherit",
               }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "#059669"; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(5,150,105,0.12)"; }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = MIDNIGHT; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = MIDNIGHT_BORDER; }}
             />
             <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "6px" }}>
               {ko ? "자동 저장됩니다. 이 지표가 운영 대시보드에 표시됩니다." : "Auto-saved. This metric will appear on your dashboard."}
@@ -210,10 +216,10 @@ export function GrowthEngineStage() {
 
       {/* PAGE 2 — 주간 성장 리뷰 */}
       {pg === 2 && (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "매주 월요일, 30분 성장 리뷰를 하세요" : "Run a 30-min growth review every Monday"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "4px" }}>
@@ -233,7 +239,7 @@ export function GrowthEngineStage() {
             { step: "4", title: "Record experiment results", detail: "Hypothesis → Action → Result → Learning" },
           ]).map(s => (
             <div key={s.step} style={{ display: "flex", gap: "10px", padding: "8px 0", borderBottom: s.step !== "4" ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
-              <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
               <div>
                 <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
                 <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
@@ -241,9 +247,9 @@ export function GrowthEngineStage() {
             </div>
           ))}
         </div>
-        <div style={{ margin: "0 22px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 주간 리뷰 분석" : "AI — Weekly review analysis"}</div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "rgba(37,99,235,0.03)", fontStyle: "italic" }}>
+        <div style={{ margin: "0 22px 16px", padding: "14px 16px", borderRadius: "14px", background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT_BORDER}` }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.04em", marginBottom: "6px" }}>{ko ? "AI 활용법 — 주간 리뷰 분석" : "AI — Weekly review analysis"}</div>
+          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, padding: "8px 12px", borderRadius: "8px", background: "white", fontStyle: "italic" }}>
             {ko ? "\"이번 주 지표: WAU 1,200(+3%), 신규가입 180(+8%), D7 리텐션 18%, 이탈률 12%. 지난 4주 데이터: [붙여넣기]. 1) 가장 우려되는 지표와 원인 가설 3개, 2) 이번 주 집중할 실험 우선순위 3개를 추천해줘.\"" : "\"This week: WAU 1,200(+3%), signups 180(+8%), D7 retention 18%, churn 12%. Last 4 weeks: [paste]. 1) Most concerning metric + 3 hypotheses, 2) Top 3 experiment priorities for this week.\""}
           </div>
         </div>
@@ -252,10 +258,10 @@ export function GrowthEngineStage() {
 
       {/* PAGE 3 — 리텐션 벤치마크 */}
       {pg === 3 && (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "리텐션이 먼저입니다" : "Retention comes first"}</span>
           </div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "4px" }}>
@@ -272,9 +278,9 @@ export function GrowthEngineStage() {
             { period: "D7", good: "20%+", desc: "Week 1" },
             { period: "D30", good: "10%+", desc: "Month 1" },
           ]).map(r => (
-            <div key={r.period} style={{ padding: "12px", borderRadius: "12px", background: "rgba(124,58,237,0.03)", textAlign: "center" as const }}>
+            <div key={r.period} style={{ padding: "12px", borderRadius: "12px", background: MIDNIGHT_SOFT, textAlign: "center" as const }}>
               <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const }}>{r.period}</div>
-              <div style={{ fontSize: "18px", fontWeight: 740, color: "#7c3aed" }}>{r.good}</div>
+              <div style={{ fontSize: "18px", fontWeight: 740, color: MIDNIGHT }}>{r.good}</div>
               <div style={{ fontSize: "10px", color: "rgba(0,0,0,0.35)" }}>{r.desc}</div>
             </div>
           ))}
@@ -284,6 +290,26 @@ export function GrowthEngineStage() {
         </div>
       </div>
       )}
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="펀드레이징 준비"
+        doneItemsKo={[
+          { label: "1. 북극성 지표 정의", detail: "사업 본질 반영 1개 지표 + 측정 방법·임계 정의" },
+          { label: "2. 주간 리뷰 시스템", detail: "매주 핵심 지표 변화 + 가설·실험 + 학습 로그 공유" },
+          { label: "3. 리텐션 측정", detail: "D7·D30·D90 코호트 + B2B SaaS D30 40%+·B2C D30 15%+ 기준" },
+          { label: "4. 성장 가설·실험", detail: "Acquisition·Activation·Revenue·Retention·Referral 5축 실험 우선순위" },
+        ]}
+        verifyItemsKo={[
+          "리텐션 미달 — 성장보다 제품 개선 우선, 「깨진 양동이에 물 붓기」 패턴 회피",
+          "허영 지표 — DAU·페이지뷰 등 수익·만족 무관 지표 추적 시 잘못된 결정 1순위",
+          "유료 광고 — ROAS 200% 미만 시 즉시 중단, 「쓸수록 손해」 패턴 인식",
+          "CAC vs LTV — LTV/CAC 3배 미만이면 성장 자제, 단위경제 흑자 보장 후 가속",
+          "추적 도구 — Mixpanel·Amplitude 등 셋업, raw 데이터·코호트·funnel 추적 시스템",
+          "개인정보 — 트래킹 동의 별도 수집, 위반 시 개인정보보호법 과징금 (매출 3% 이내)",
+        ]}
+        nextSummaryKo="북극성·주간 리뷰·리텐션·성장 가설 셋업 완료 → 펀드레이징 준비 단계로 진입"
+      />
     </div>
   );
 }

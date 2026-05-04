@@ -64,8 +64,8 @@ export function TimeLogCheckIn({ ko }: Props) {
           margin: "12px 22px 0",
           padding: "12px 14px",
           borderRadius: "12px",
-          background: "linear-gradient(180deg, rgba(37,99,235,0.03) 0%, rgba(255,255,255,0.5) 100%)",
-          border: "1px solid rgba(37,99,235,0.1)",
+          background: "linear-gradient(180deg, rgba(25,25,112,0.03) 0%, rgba(255,255,255,0.5) 100%)",
+          border: "1px solid rgba(25,25,112,0.1)",
           display: "flex",
           alignItems: "center",
           gap: "10px",
@@ -76,14 +76,14 @@ export function TimeLogCheckIn({ ko }: Props) {
             width: "30px",
             height: "30px",
             borderRadius: "8px",
-            background: "rgba(37,99,235,0.08)",
+            background: "rgba(25,25,112,0.08)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <Clock size={15} strokeWidth={1.5} color="#2563eb" />
+          <Clock size={15} strokeWidth={1.5} color="#191970" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: "12.5px", fontWeight: 650, color: "#0f172a", letterSpacing: "-0.01em" }}>
@@ -99,11 +99,11 @@ export function TimeLogCheckIn({ ko }: Props) {
           style={{
             padding: "6px 12px",
             borderRadius: "8px",
-            border: "1px solid rgba(37,99,235,0.2)",
-            background: "rgba(37,99,235,0.05)",
+            border: "1px solid rgba(25,25,112,0.2)",
+            background: "rgba(25,25,112,0.05)",
             fontSize: "11.5px",
             fontWeight: 650,
-            color: "#2563eb",
+            color: "#191970",
             cursor: "pointer",
             display: "inline-flex",
             alignItems: "center",
@@ -112,7 +112,7 @@ export function TimeLogCheckIn({ ko }: Props) {
           }}
         >
           {ko ? "체크인" : "Check in"}
-          <ChevronRight size={12} strokeWidth={2} />
+          <ChevronRight size={12} strokeWidth={1.5} />
         </button>
         <button
           type="button"
@@ -166,13 +166,13 @@ export function TimeLogCheckIn({ ko }: Props) {
         margin: "12px 22px 0",
         padding: "16px 18px",
         borderRadius: "14px",
-        background: "linear-gradient(180deg, rgba(37,99,235,0.03) 0%, rgba(255,255,255,0.85) 100%)",
-        border: "1px solid rgba(37,99,235,0.12)",
+        background: "linear-gradient(180deg, rgba(25,25,112,0.03) 0%, rgba(255,255,255,0.85) 100%)",
+        border: "1px solid rgba(25,25,112,0.12)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Clock size={15} strokeWidth={1.5} color="#2563eb" />
+          <Clock size={15} strokeWidth={1.5} color="#191970" />
           <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
             {ko ? "오늘 시간 체크인" : "Today's time check-in"}
           </div>
@@ -201,7 +201,7 @@ export function TimeLogCheckIn({ ko }: Props) {
       <div style={{ display: "grid", gap: "12px" }}>
         <SliderRow
           Icon={Users}
-          color="#2563eb"
+          color="#191970"
           labelKo="고객 응대"
           labelEn="Customer"
           value={customer}
@@ -225,7 +225,7 @@ export function TimeLogCheckIn({ ko }: Props) {
         />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px", padding: "8px 10px", borderRadius: "8px", background: "rgba(15,23,42,0.03)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px", padding: "8px 10px", borderRadius: "8px", background: "rgba(25,25,112,0.035)" }}>
         <span style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>
           {ko ? "기타 (자동)" : "Other (auto)"}
         </span>
@@ -261,7 +261,7 @@ export function TimeLogCheckIn({ ko }: Props) {
           padding: "10px",
           borderRadius: "10px",
           border: "none",
-          background: "#2563eb",
+          background: "#191970",
           color: "#fff",
           fontSize: "13px",
           fontWeight: 660,

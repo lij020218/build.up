@@ -60,6 +60,24 @@ const defaultContent: ClusterStageContent = {
     { name: "Hardware 개발 펀더멘털 — Peko Precision", href: "https://www.pekoprecision.com/blog/new-product-development-hardware-fundamentals-for-startups/" },
     { name: "RNDSquare — 스타트업 하드웨어 가속화", href: "https://rndsquare.com/insights/startup-hardware-product-development" },
   ],
+  wrapup: {
+    nextStageLabelKo: "법인 설립·운영",
+    doneItemsKo: [
+      { label: "1. EMS 후보 3~5개 비교", detail: "능력·캐파·QC·인증·레퍼런스 비교 + 직접/화상 감사" },
+      { label: "2. 1차 양산 계약 체결", detail: "MOQ·결제조건·불량률 임계·IPI 검사·금형 소유권 명문화" },
+      { label: "3. 인증 통합 관리", detail: "ISO 9001·13485·IATF 16949 보유 EMS 검증 후 계약" },
+      { label: "4. 양산 일정·품질 추적", detail: "불량률·납기·재공품 모니터링 + 월간 QBR(Quarterly Business Review)" },
+    ],
+    verifyItemsKo: [
+      "금형 소유권 — 발주사 보유 명문화, EMS 보유 시 다른 EMS 이관 불가 + 가격 협상력 상실",
+      "NDA·IP — 회로도·펌웨어·노하우 NDA 체결, 위반 시 손해배상 + 형사책임 조항",
+      "MOQ — 첫 양산 MOQ 너무 크면 재고 부담, 가능한 한 단계적 발주 협상",
+      "불량률 임계 — 2~5% 초과 시 EMS 보상·재제조 의무 명문화, 발주사 부담 룰 X",
+      "결제 — T/T 30% 발주·40% 출고 전·30% 검수 후 분할이 표준, 100% 선결제 거절",
+      "복수 EMS — 핵심 제품은 2차 EMS 백업 사전 확보, 단일 EMS 의존 시 부도·파업 리스크",
+    ],
+    nextSummaryKo: "EMS 선정·계약·인증 통합 관리 완료 → 법인 설립·운영 단계로 진입",
+  },
 };
 
 export function ManufacturingPartnerStage() {

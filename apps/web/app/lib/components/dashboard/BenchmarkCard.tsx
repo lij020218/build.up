@@ -95,7 +95,7 @@ export function BenchmarkCard() {
     return (
       <div style={card}>
         <div style={headerRow}>
-          <Lightbulb size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} />
+          <Lightbulb size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} />
           <span style={cardTitle}>{ko ? "벤치마킹" : "Benchmarking"}</span>
         </div>
         <div style={emptyState}>
@@ -112,7 +112,7 @@ export function BenchmarkCard() {
   return (
     <div style={card}>
       <div style={headerRow}>
-        <Lightbulb size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} />
+        <Lightbulb size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} />
         <span style={cardTitle}>{ko ? "벤치마킹" : "Benchmarking"}</span>
         <span style={situationBadge}>{ko ? result.label.ko : result.label.en}</span>
       </div>
@@ -137,14 +137,14 @@ export function BenchmarkCard() {
             </div>
 
             <div style={{
-              fontSize: "12px", fontWeight: 600, color: "#1d3557",
+              fontSize: "12px", fontWeight: 600, color: "#191970",
               padding: "6px 10px", borderRadius: "8px",
-              background: "rgba(29,53,87,0.04)",
-              border: "1px solid rgba(29,53,87,0.06)",
+              background: "rgba(25,25,112,0.04)",
+              border: "1px solid rgba(25,25,112,0.06)",
               lineHeight: 1.4,
               display: "flex", alignItems: "flex-start", gap: "6px",
             }}>
-              <Lightbulb size={12} strokeWidth={2} style={{ flexShrink: 0, marginTop: "1px" }} />
+              <Lightbulb size={12} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: "1px" }} />
               <span>{c.lesson}</span>
             </div>
           </div>
@@ -159,11 +159,9 @@ export function BenchmarkCard() {
 const card: React.CSSProperties = {
   borderRadius: "20px",
   padding: "20px",
-  background: "rgba(255,255,255,0.82)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(0,0,0,0.05)",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.025)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
 };
 
 const headerRow: React.CSSProperties = {
@@ -174,35 +172,39 @@ const headerRow: React.CSSProperties = {
 };
 
 const cardTitle: React.CSSProperties = {
-  fontSize: "10px",
+  fontSize: "10.5px",
   fontWeight: 700,
-  letterSpacing: "0.08em",
+  letterSpacing: "0.1em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "#191970",
+  opacity: 0.7,
   flex: 1,
 };
 
 const situationBadge: React.CSSProperties = {
-  fontSize: "10px",
-  fontWeight: 600,
-  padding: "3px 8px",
-  borderRadius: "6px",
-  background: "rgba(29,53,87,0.06)",
-  color: "#1d3557",
-  letterSpacing: "0.01em",
+  fontSize: "10.5px",
+  fontWeight: 700,
+  padding: "3px 9px",
+  borderRadius: "999px",
+  background: "#191970",
+  color: "#ffffff",
+  letterSpacing: "0.02em",
+  boxShadow: "0 2px 6px rgba(25,25,112,0.22)",
 };
 
 const emptyState: React.CSSProperties = {
   fontSize: "13px",
-  color: "rgba(15,23,42,0.35)",
+  color: "rgba(25,25,112,0.55)",
   textAlign: "center",
   padding: "24px 16px",
-  lineHeight: 1.5,
+  lineHeight: 1.55,
+  fontWeight: 500,
 };
 
 const caseCard: React.CSSProperties = {
-  padding: "14px",
+  padding: "14px 16px",
   borderRadius: "14px",
-  background: "rgba(248,250,252,0.6)",
-  border: "1px solid rgba(15,23,42,0.04)",
+  background: "#ffffff",
+  border: "1px solid rgba(25,25,112,0.08)",
+  boxShadow: "0 1px 2px rgba(25,25,112,0.03)",
 };

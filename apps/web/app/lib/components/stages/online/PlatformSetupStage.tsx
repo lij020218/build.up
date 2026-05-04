@@ -1,5 +1,6 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function PlatformSetupStage() {
   const d = useDashboardCtx();
@@ -112,6 +113,26 @@ export function PlatformSetupStage() {
           </div>
         ))}
       </div>
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="온라인 사업자등록"
+        doneItemsKo={[
+          { label: "1. 판매 플랫폼 비교", detail: "스마트스토어·쿠팡·카카오·11번가 4축 수수료·MAU 비교" },
+          { label: "2. 1차 플랫폼 결정", detail: "스마트스토어 우선 + 매출 안정 후 쿠팡 추가 순서 권장" },
+          { label: "3. 멀티 채널 전략", detail: "2개 이상 운영 시 샵링커·올라 등 통합 솔루션 미리 검토" },
+          { label: "4. 수수료·정산 시뮬", detail: "결제 수수료 + 카테고리 판매수수료 + 광고비 합산 마진 시뮬" },
+        ]}
+        verifyItemsKo={[
+          "사업자등록 + 통신판매업 신고 사전 확인 — 스마트스토어 외 모든 플랫폼은 통신판매업 신고증 필수",
+          "스마트스토어 — 일반과세자/간이과세자별 수수료 차이 + 매월 정산일·세금계산서 발급 일정",
+          "쿠팡 — 월 정액비 55,000원 + 로켓그로스 입점 시 별도 수수료, 첫 매출 전 부담 인식",
+          "오픈마켓 약관 — 분쟁 시 「플랫폼 책임 면책」 조항 다수, 사진·증빙 자체 보관 필수",
+          "PG사 별도 — 일부 플랫폼은 자체 PG 강제, 통합 PG(이니시스·KG이니시스 등) 비교",
+          "광고비 — 네이버 검색광고·쿠팡 광고 모두 ROAS 200% 이상 못 맞추면 적자, 단가 시뮬 필수",
+        ]}
+        nextSummaryKo="플랫폼 선택·개설 순서 확정 → 온라인 사업자등록·통신판매 신고 단계로 진입"
+      />
     </div>
   );
 }

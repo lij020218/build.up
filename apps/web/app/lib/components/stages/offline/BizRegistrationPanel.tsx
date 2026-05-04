@@ -5,6 +5,7 @@ import {
   ShieldCheck, CheckCircle2, Building2, ChevronRight, ExternalLink,
   AlertTriangle,
 } from "lucide-react";
+import { StoreNameInput } from "../shared/StoreNameInput";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러
 
@@ -30,7 +31,7 @@ const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러
 export function BizRegistrationPanel() {
   const d = useDashboardCtx();
   const {
-    language, storeName, setStoreName,
+    language,
     cpaDecision,
     industryCategoryId,
     taxChecks,
@@ -161,48 +162,15 @@ export function BizRegistrationPanel() {
         </div>
       </div>
 
-      {/* ── 1. 상호명 (가게 이름) — 고유 입력 ── */}
+      {/* ── 1. 상호명 (가게 이름) — 최종 확정 ── */}
       {!isStartup && (
         <div>
           <div style={sectionLabel}>{ko ? "상호명 (가게 이름) 최종 확정" : "Finalize store name"}</div>
-          <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", padding: "16px" }}>
-            <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.55)", lineHeight: 1.55, marginBottom: "10px" }}>
-              {ko
-                ? "사업자등록증·간판·메뉴판·SNS 모두 동일하게 사용할 이름이에요. 변경하려면 사업자등록증 재발급 필요."
-                : "Same name will appear on registration, signage, menu, and social media. Changing requires re-issuing the certificate."}
-            </div>
-            <input
-              type="text"
-              value={storeName}
-              onChange={(e) => {
-                setStoreName(e.target.value);
-                if (typeof window !== "undefined") localStorage.setItem("storeName", e.target.value);
-              }}
-              placeholder={ko ? "예: 홍길동 떡볶이, 카페 온도" : "e.g. Happy Café, Sunrise Bakery"}
-              style={{
-                border: storeName ? `1.5px solid ${MIDNIGHT}` : "1px solid rgba(0,0,0,0.12)",
-                borderRadius: "10px",
-                padding: "12px 14px",
-                fontSize: "15px",
-                outline: "none",
-                background: "white",
-                width: "100%",
-                boxSizing: "border-box" as const,
-                fontWeight: 600,
-                color: "var(--text)",
-              }}
-            />
-            {storeName && (
-              <div style={{
-                fontSize: "12.5px", fontWeight: 600, color: MIDNIGHT,
-                marginTop: "8px",
-                display: "flex", alignItems: "center", gap: "5px",
-              }}>
-                <CheckCircle2 size={13} strokeWidth={2.4} />
-                {ko ? `저장됨: "${storeName}"` : `Saved: "${storeName}"`}
-              </div>
-            )}
-          </div>
+          <StoreNameInput
+            helperText={ko
+              ? "사업자등록증·간판·메뉴판·SNS·세금계산서까지 모두 동일한 이름. 등록 후 변경하면 등록증 재발급이 필요하므로 신중히 확정하세요."
+              : "Same name across registration, signage, menu, social, and invoices. Changing requires re-issuing the certificate."}
+          />
         </div>
       )}
 

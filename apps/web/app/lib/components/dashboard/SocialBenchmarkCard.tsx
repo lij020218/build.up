@@ -162,8 +162,8 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
     };
   })();
 
-  const toneColor = tone === "positive" ? "#059669" : tone === "warning" ? "#b45309" : "#2563eb";
-  const toneBg = tone === "positive" ? "rgba(5,150,105,0.04)" : tone === "warning" ? "rgba(217,119,6,0.04)" : "rgba(37,99,235,0.04)";
+  const toneColor = tone === "positive" ? "#0e7c3a" : tone === "warning" ? "#b45309" : "#191970";
+  const toneBg = tone === "positive" ? "rgba(52,199,89,0.04)" : tone === "warning" ? "rgba(217,119,6,0.04)" : "rgba(25,25,112,0.04)";
 
   // 막대 차트 3 구간 — 0 ~ top10Monthly
   const barMax = Math.max(top10Monthly, projectedMonthly * 1.1);
@@ -176,9 +176,9 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
       style={{
         borderRadius: "20px",
         padding: "20px 22px",
-        background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,250,253,0.9) 100%)",
-        border: "1px solid rgba(15,23,42,0.05)",
-        boxShadow: "0 1px 0 rgba(255,255,255,0.84) inset",
+        background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+        border: "1px solid rgba(25,25,112,0.10)",
+        boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
       }}
       className="bento-card"
     >
@@ -187,17 +187,18 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
         <div>
           <div
             style={{
-              fontSize: "10px",
-              fontWeight: 650,
-              letterSpacing: "0.08em",
+              fontSize: "10.5px",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
               textTransform: "uppercase" as const,
-              color: "rgba(15,23,42,0.4)",
+              color: "#191970",
+              opacity: 0.7,
               marginBottom: "2px",
             }}
           >
             {ko ? "업종 비교" : "Industry Benchmark"}
           </div>
-          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
+          <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f0f4a", letterSpacing: "-0.02em" }}>
             {ko ? "같은 업종에서 내 위치" : "Your position in industry"}
           </div>
         </div>
@@ -240,15 +241,15 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
               {fmt(projectedMonthly)}
             </span>
           </div>
-          <div style={{ height: "6px", background: "rgba(15,23,42,0.04)", borderRadius: "3px", position: "relative" as const, overflow: "hidden" as const }}>
+          <div style={{ height: "6px", background: "rgba(25,25,112,0.04)", borderRadius: "3px", position: "relative" as const, overflow: "hidden" as const }}>
             <div style={{ height: "100%", width: `${userPct}%`, background: toneColor, borderRadius: "3px", opacity: 0.85, transition: "width 0.4s ease" }} />
             <div style={{ position: "absolute" as const, left: `${avgPct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(15,23,42,0.4)" }} />
-            <div style={{ position: "absolute" as const, left: `${top10Pct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(5,150,105,0.6)" }} />
+            <div style={{ position: "absolute" as const, left: `${top10Pct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(52,199,89,0.6)" }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "4px", fontWeight: 600 }}>
             <span>{ko ? "0" : "0"}</span>
             <span>{ko ? `평균 ${fmt(avgMonthly)}` : `Avg ${fmt(avgMonthly)}`}</span>
-            <span style={{ color: "rgba(5,150,105,0.7)" }}>{ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}</span>
+            <span style={{ color: "rgba(52,199,89,0.7)" }}>{ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}</span>
           </div>
         </div>
       )}
@@ -336,7 +337,7 @@ function WeeklyBenchmarkChart({
           {ko ? "주간 매출 (월 환산, 최근 4주)" : "Weekly revenue (monthly est., last 4w)"}
         </span>
         {momDelta !== null && (
-          <span style={{ fontSize: "12px", fontWeight: 650, color: momDelta >= 0 ? "#059669" : "#dc2626", fontVariantNumeric: "tabular-nums" as const }}>
+          <span style={{ fontSize: "12px", fontWeight: 650, color: momDelta >= 0 ? "#0e7c3a" : "#dc2626", fontVariantNumeric: "tabular-nums" as const }}>
             {momDelta >= 0 ? "↑" : "↓"} {Math.abs(momDelta).toFixed(1)}%
           </span>
         )}
@@ -362,9 +363,9 @@ function WeeklyBenchmarkChart({
         {/* 상위 10% dashed 수평선 (mint) */}
         <line
           x1={pad.left} x2={w - pad.right} y1={topY} y2={topY}
-          stroke="rgba(5,150,105,0.5)" strokeWidth={1.2} strokeDasharray="4 4"
+          stroke="rgba(52,199,89,0.5)" strokeWidth={1.2} strokeDasharray="4 4"
         />
-        <text x={w - pad.right - 4} y={topY - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="rgba(5,150,105,0.8)">
+        <text x={w - pad.right - 4} y={topY - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="rgba(52,199,89,0.8)">
           {ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}
         </text>
 
@@ -372,7 +373,7 @@ function WeeklyBenchmarkChart({
         <path d={fillPath} fill={`url(#${gradId})`} />
 
         {/* 내 가게 solid 라인 */}
-        <path d={myPath} fill="none" stroke={toneColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={myPath} fill="none" stroke={toneColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
 
         {/* 끝점 dot */}
         <circle cx={endPoint.x} cy={endPoint.y} r={4} fill={toneColor} />
@@ -396,8 +397,8 @@ function WeeklyBenchmarkChart({
           <span style={{ width: "12px", height: "1.5px", background: "rgba(15,23,42,0.32)", borderRadius: "1px" }} />
           {ko ? "평균" : "Avg"}
         </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(5,150,105,0.75)" }}>
-          <span style={{ width: "12px", height: "1.5px", background: "rgba(5,150,105,0.5)", borderRadius: "1px" }} />
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(52,199,89,0.75)" }}>
+          <span style={{ width: "12px", height: "1.5px", background: "rgba(52,199,89,0.5)", borderRadius: "1px" }} />
           {ko ? "상위 10%" : "Top 10%"}
         </span>
       </div>

@@ -4,6 +4,16 @@ import type React from "react";
  * ───────────────────────────────────────────────────────────────
  * 디자인 토큰 — 운영 대시보드 및 전체 surface 공통 기준.
  *
+ * 색상 팔레트 (2026 CEO-grade 운영 대시보드 톤):
+ *   MIDNIGHT      = #191970  — 메인 액센트 (로드맵과 통일)
+ *   MIDNIGHT_DEEP = #0f0f4a  — 헤드라인 + 핵심 숫자
+ *   MIDNIGHT_INK  = #1d3557  — 호환용 primary (--primary)
+ *   SUCCESS       = #34c759  — Apple iOS 그린 (수익·성장)
+ *   WARN          = #ff9f0a  — Apple iOS 오렌지 (주의·트렌드 변화)
+ *   DANGER        = #ff3b30  — Apple iOS 레드 (런웨이 위험)
+ *   INK           = #0f172a  — 본문 텍스트
+ *   MUTED         = rgba(15,23,42,0.55)
+ *
  * Radius 계층 (Apple HIG + Mercury/Stripe 참조):
  *   OUTER_CARD  = 20px  — 화면 최상위 카드 (MorningBriefing, Activity, Survival 등)
  *   INNER_BLOCK = 14px  — 카드 안에 들어가는 서브 블록 (KPI 미니카드, 알림 박스)
@@ -17,6 +27,71 @@ import type React from "react";
  * 기존 inline radius는 점진 교체.
  * ───────────────────────────────────────────────────────────────
  */
+export const PALETTE = {
+  MIDNIGHT: "#191970",
+  MIDNIGHT_DEEP: "#0f0f4a",
+  MIDNIGHT_INK: "#1d3557",
+  MIDNIGHT_8: "rgba(25,25,112,0.08)",
+  MIDNIGHT_12: "rgba(25,25,112,0.12)",
+  MIDNIGHT_18: "rgba(25,25,112,0.18)",
+  SUCCESS: "#34c759",
+  SUCCESS_8: "rgba(52,199,89,0.08)",
+  WARN: "#ff9f0a",
+  WARN_8: "rgba(255,159,10,0.08)",
+  DANGER: "#ff3b30",
+  DANGER_8: "rgba(255,59,48,0.08)",
+  INK: "#0f172a",
+  MUTED: "rgba(15,23,42,0.55)",
+  MUTED_45: "rgba(15,23,42,0.45)",
+  MUTED_30: "rgba(15,23,42,0.30)",
+  HAIRLINE: "rgba(0,0,0,0.06)",
+  SURFACE: "#ffffff",
+  SURFACE_TINT: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(243,244,253,0.45) 100%)",
+} as const;
+
+/** Motion 곡선 — 거장 리서치 기반 (Linear / Stripe / Apple HIG 2026) */
+export const MOTION = {
+  // Apple stock easing — Linear/Stripe 2025+ 표준
+  EASE_SMOOTH: [0.32, 0.72, 0, 1] as const,
+  // Material standard — UI swift transitions
+  EASE_SWIFT: [0.4, 0, 0.2, 1] as const,
+  // iOS spring 근사 — 입장 emphasized
+  EASE_IOS: [0.16, 1, 0.3, 1] as const,
+  // 일반 fade·scale
+  EASE_OUT: [0.22, 1, 0.36, 1] as const,
+  EASE_IN: [0.4, 0, 1, 1] as const,
+  DURATION: {
+    instant: 0.12,
+    fast: 0.18,        // hover, micro
+    base: 0.28,        // 카드 entrance, fade
+    deliberate: 0.42,  // 중요 변화
+    cinematic: 0.65,   // hero 입장
+  },
+  STAGGER: {
+    tight: 0.04,
+    normal: 0.06,      // 거장 권장 — Apple HIG, max 20 children
+    wide: 0.12,
+  },
+} as const;
+
+/** 차트 컬러 스케일 — 카테고리별 일관 적용 */
+export const CHART_COLORS = {
+  primary: PALETTE.MIDNIGHT,
+  primarySoft: "rgba(25,25,112,0.6)",
+  primaryGhost: "rgba(25,25,112,0.18)",
+  success: PALETTE.SUCCESS,
+  warn: PALETTE.WARN,
+  danger: PALETTE.DANGER,
+  // 다중 카테고리 막대/도넛용 — 명도 단계
+  series: ["#191970", "#3636A8", "#5B5BC4", "#8585D8", "#B5B5E8", "#D8D8F0"],
+  // 그라디언트 (그래프 fill용)
+  gradients: {
+    primary: { from: "rgba(25,25,112,0.32)", to: "rgba(25,25,112,0)" },
+    success: { from: "rgba(52,199,89,0.28)", to: "rgba(52,199,89,0)" },
+    danger: { from: "rgba(255,59,48,0.24)", to: "rgba(255,59,48,0)" },
+  },
+} as const;
+
 export const RADIUS = {
   OUTER_CARD: 20,
   INNER_BLOCK: 14,
@@ -35,11 +110,11 @@ export const shell: React.CSSProperties = {
 };
 
 export const heroPanel: React.CSSProperties = {
-  borderRadius: "16px",
+  borderRadius: "20px",
   padding: "24px",
-  background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(232,240,255,0.4) 100%)",
-  border: "1px solid rgba(5, 97, 252, 0.06)",
-  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   display: "grid",
   gap: "20px",
   transition: "box-shadow 0.3s ease, transform 0.3s ease",
@@ -86,26 +161,30 @@ export const heroActions: React.CSSProperties = {
 
 export const primaryAction: React.CSSProperties = {
   border: "none",
-  borderRadius: "8px",
+  borderRadius: "12px",
   padding: "12px 18px",
-  background: "#0561fc",
+  background: "#191970",
   color: "#fff",
   fontSize: "14px",
-  fontWeight: 600,
+  fontWeight: 700,
   cursor: "pointer",
-  boxShadow: "0 4px 14px rgba(5, 97, 252, 0.25)",
+  boxShadow: "0 4px 12px rgba(25,25,112,0.22)",
+  letterSpacing: "-0.01em",
+  transition: "transform 0.15s ease, box-shadow 0.15s ease",
 };
 
 export const secondaryAction: React.CSSProperties = {
-  border: "1px solid rgba(5, 97, 252, 0.12)",
-  borderRadius: "8px",
+  border: "1px solid rgba(25,25,112,0.14)",
+  borderRadius: "12px",
   padding: "12px 18px",
-  background: "rgba(255,255,255,0.9)",
-  color: "#0f172a",
+  background: "#ffffff",
+  color: "#191970",
   fontSize: "14px",
-  fontWeight: 600,
+  fontWeight: 650,
   cursor: "pointer",
-  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
+  boxShadow: "0 1px 2px rgba(25,25,112,0.03)",
+  letterSpacing: "-0.005em",
+  transition: "background 0.15s ease, border-color 0.15s ease",
 };
 
 export const headlineGrid: React.CSSProperties = {
@@ -115,11 +194,11 @@ export const headlineGrid: React.CSSProperties = {
 };
 
 export const headlineCard: React.CSSProperties = {
-  borderRadius: "12px",
+  borderRadius: "16px",
   padding: "20px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(240,244,255,0.5) 100%)",
-  border: "1px solid rgba(5, 97, 252, 0.06)",
-  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   transition: "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease",
   cursor: "default",
 };
@@ -160,11 +239,11 @@ export const survivalGrid: React.CSSProperties = {
 };
 
 export const opsCard: React.CSSProperties = {
-  borderRadius: "14px",
+  borderRadius: "20px",
   padding: "22px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.45) 100%)",
-  border: "1px solid rgba(5, 97, 252, 0.06)",
-  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   display: "grid",
   gap: "14px",
 };
@@ -177,21 +256,24 @@ export const opsHeader: React.CSSProperties = {
 };
 
 export const sectionEyebrow: React.CSSProperties = {
-  fontSize: "11px",
-  letterSpacing: "0.09em",
+  fontSize: "10.5px",
+  fontWeight: 700,
+  letterSpacing: "0.1em",
   textTransform: "uppercase",
-  color: "rgba(15, 23, 42, 0.46)",
+  color: "#191970",
+  opacity: 0.7,
   marginBottom: "6px",
 };
 
 export const emptyState: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: "10px",
-  background: "linear-gradient(180deg, rgba(240,244,255,0.4) 0%, rgba(248,250,255,0.25) 100%)",
-  border: "1px solid rgba(5,97,252,0.04)",
+  padding: "16px 18px",
+  borderRadius: "12px",
+  background: "rgba(25,25,112,0.03)",
+  border: "1px dashed rgba(25,25,112,0.16)",
   fontSize: "13px",
   lineHeight: 1.55,
-  color: "rgba(15, 23, 42, 0.58)",
+  color: "rgba(25,25,112,0.55)",
+  fontWeight: 500,
 };
 
 export const detailSection: React.CSSProperties = {
@@ -217,11 +299,11 @@ export const detailSectionTitle: React.CSSProperties = {
 /* ── ActivitySnapshotCard styles ── */
 
 export const activityCard: React.CSSProperties = {
-  borderRadius: "14px",
+  borderRadius: "20px",
   padding: "22px",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,244,255,0.45) 100%)",
-  border: "1px solid rgba(5, 97, 252, 0.06)",
-  boxShadow: "0 21px 94px rgba(0, 0, 0, 0.03)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   display: "grid",
   gap: "18px",
 };
@@ -249,10 +331,10 @@ export const activityStatRail: React.CSSProperties = {
 
 export const activityMiniStat: React.CSSProperties = {
   minWidth: "124px",
-  borderRadius: "10px",
+  borderRadius: "12px",
   padding: "12px 14px",
-  background: "linear-gradient(180deg, rgba(240,244,255,0.6) 0%, rgba(248,250,255,0.4) 100%)",
-  border: "1px solid rgba(5,97,252,0.06)",
+  background: "rgba(25,25,112,0.03)",
+  border: "1px solid rgba(25,25,112,0.06)",
 };
 
 export const activityMiniLabel: React.CSSProperties = {

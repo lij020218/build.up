@@ -72,75 +72,120 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
     return f ? (ko ? f.label.ko : f.label.en) : key;
   };
 
-  // iOS 시스템 팔레트 (8색) — 앱 전역과 일관
-  const items = [
-    { label: getLabel("ingredients"), value: mc.ingredients, color: "#ff9500" },   // iOS orange
-    { label: getLabel("labor"),       value: mc.labor,       color: "#007aff" },   // iOS blue (primary)
-    { label: getLabel("rent"),        value: mc.rent,        color: "#5856d6" },   // iOS indigo
-    { label: getLabel("utilities"),   value: mc.utilities,   color: "#34c759" },   // iOS green
-    { label: getLabel("sga"),         value: mc.sga ?? 0,    color: "#ff9f0a" },   // iOS amber
-    { label: getLabel("marketing"),   value: mc.marketing ?? 0, color: "#af52de" },// iOS purple
-    { label: getLabel("other"),       value: mc.other,       color: "#86868b" },   // iOS gray
-    { label: getLabel("interest"),    value: (mc as Record<string, number>).interest ?? 0, color: "#ff3b30" }, // iOS red
+  // ⚡ 미드나이트 단일 톤 (Stripe / Linear 스타일) — Apple Health 횡렬 막대.
+  // 무지개 색은 의미 없는 색 가중을 만들어 데이터 정확도를 떨어뜨림 (Stephen Few 룰).
+  // 단일 미드나이트 + 톤 변화로 강도 표현. 가장 큰 항목이 가장 진한 미드나이트.
+  const itemsRaw = [
+    { label: getLabel("ingredients"), value: mc.ingredients },
+    { label: getLabel("labor"),       value: mc.labor },
+    { label: getLabel("rent"),        value: mc.rent },
+    { label: getLabel("utilities"),   value: mc.utilities },
+    { label: getLabel("sga"),         value: mc.sga ?? 0 },
+    { label: getLabel("marketing"),   value: mc.marketing ?? 0 },
+    { label: getLabel("other"),       value: mc.other },
+    { label: getLabel("interest"),    value: (mc as Record<string, number>).interest ?? 0 },
   ];
+  // 0 제외 후 큰 순 정렬 → 가장 큰 항목이 톱
+  const items = itemsRaw.filter(it => it.value > 0).sort((a, b) => b.value - a.value);
+  const maxValue = items.length > 0 ? items[0].value : 1;
 
   const inputStyle: React.CSSProperties = {
-    border: "1px solid var(--border)", borderRadius: "10px",
+    border: "1px solid rgba(25,25,112,0.10)", borderRadius: "10px",
     padding: "9px 12px", fontSize: "13.5px", outline: "none",
-    background: "var(--surface-strong)", width: "100%", boxSizing: "border-box",
+    background: "#ffffff", width: "100%", boxSizing: "border-box",
     fontVariantNumeric: "tabular-nums",
-    transition: "border-color 0.15s ease",
+    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+    color: "#0f172a",
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-      {/* Left: visual breakdown */}
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+      {/* Left: 미드나이트 단일톤 horizontal bars (Apple Health 스타일) */}
       <div>
         <div style={panelLabel}>{ko ? "월간 비용 구조" : "Monthly Cost Structure"}</div>
 
-        {/* donut-style horizontal bars */}
         {total > 0 ? (
           <>
-            {/* stacked bar */}
-            <div style={{ display: "flex", height: "12px", borderRadius: "6px", overflow: "hidden", marginTop: "12px" }}>
-              {items.filter(it => it.value > 0).map((it) => (
-                <div key={it.label} style={{
-                  width: `${(it.value / total) * 100}%`,
-                  background: it.color,
-                  transition: "width 0.4s ease",
-                }} />
-              ))}
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px", marginTop: "14px" }}>
+              {items.map((it, idx) => {
+                const pctOfTotal = (it.value / total) * 100;
+                const widthOfMax = (it.value / maxValue) * 100;
+                // 가장 큰 항목 = 진한 미드나이트, 작아질수록 투명도 증가
+                const intensity = 1 - (idx / Math.max(items.length, 1)) * 0.55;
+                const barColor = `rgba(25,25,112,${0.45 + intensity * 0.50})`;
+                const trackColor = "rgba(25,25,112,0.06)";
+                return (
+                  <div key={it.label} style={{ display: "flex", flexDirection: "column" as const, gap: "5px" }}>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
+                      <span style={{ fontSize: "12.5px", fontWeight: 600, color: "rgba(15,23,42,0.7)", letterSpacing: "-0.005em" }}>
+                        {it.label}
+                      </span>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexShrink: 0 }}>
+                        <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f0f4a", fontVariantNumeric: "tabular-nums" as const, letterSpacing: "-0.01em" }}>
+                          {fmt(it.value)}
+                        </span>
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: "rgba(25,25,112,0.55)", fontVariantNumeric: "tabular-nums" as const, minWidth: "32px", textAlign: "right" as const }}>
+                          {pctOfTotal.toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{
+                      height: "6px",
+                      borderRadius: "999px",
+                      background: trackColor,
+                      overflow: "hidden",
+                      position: "relative",
+                    }}>
+                      <div style={{
+                        height: "100%",
+                        width: `${widthOfMax}%`,
+                        background: barColor,
+                        borderRadius: "999px",
+                        transition: "width 0.6s cubic-bezier(0.22,1,0.36,1)",
+                      }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* legend */}
-            <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginTop: "16px" }}>
-              {items.filter(it => it.value > 0).map((it) => (
-                <div key={it.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: it.color }} />
-                    <span style={{ fontSize: "13px", color: "#86868b" }}>{it.label}</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                    <span style={{ fontSize: "14px", fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>{fmt(it.value)}</span>
-                    <span style={{ fontSize: "11px", color: "#86868b" }}>{total > 0 ? `${((it.value / total) * 100).toFixed(0)}%` : ""}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: "16px", padding: "12px 14px", background: "rgba(0,0,0,0.03)", borderRadius: "12px", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "13px", fontWeight: 600 }}>{ko ? "총 비용" : "Total"}</span>
-              <span style={{ fontSize: "15px", fontWeight: 720, fontVariantNumeric: "tabular-nums" }}>{fmt(total)}</span>
+            {/* 총 비용 — 미드나이트 강조 */}
+            <div style={{
+              marginTop: "18px",
+              padding: "14px 16px",
+              background: "linear-gradient(135deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.03) 100%)",
+              borderRadius: "12px",
+              border: "1px solid rgba(25,25,112,0.10)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}>
+              <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#191970", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+                {ko ? "총 비용" : "Total"}
+              </span>
+              <span style={{ fontSize: "18px", fontWeight: 700, color: "#0f0f4a", letterSpacing: "-0.025em", fontVariantNumeric: "tabular-nums" as const }}>
+                {fmt(total)}
+              </span>
             </div>
           </>
         ) : (
-          <div style={{ padding: "24px 0", textAlign: "center" as const, color: "#86868b", fontSize: "13px" }}>
-            {ko ? "비용 데이터를 입력해주세요" : "Enter cost data"}
+          <div style={{
+            marginTop: "12px",
+            padding: "32px 20px",
+            borderRadius: "12px",
+            background: "rgba(25,25,112,0.03)",
+            border: "1px dashed rgba(25,25,112,0.16)",
+            textAlign: "center" as const,
+            color: "rgba(25,25,112,0.55)",
+            fontSize: "13px",
+            fontWeight: 500,
+          }}>
+            {ko ? "비용 데이터를 입력하면 분포 차트가 표시됩니다" : "Enter cost data to see breakdown"}
           </div>
         )}
       </div>
 
-      {/* Right: input form */}
+      {/* Right: input form — 미드나이트 톤 통일 */}
       <div>
         <div style={panelLabel}>{ko ? "비용 수정" : "Edit Costs"}</div>
         <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginTop: "12px" }}>
@@ -154,28 +199,40 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
             { label: getLabel("other"), state: d.costOtherText, setter: d.setCostOtherText },
             { label: getLabel("interest"), state: d.costInterestText ?? "", setter: d.setCostInterestText },
           ].map((field) => (
-            <div key={field.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "13px", color: "#86868b", width: "56px", flexShrink: 0 }}>{field.label}</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={field.state}
-                onChange={(e) => field.setter(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder={ko ? "만원" : "만원"}
-                style={inputStyle}
-              />
+            <div key={field.label} style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" as const }}>
+              <span style={{ fontSize: "12.5px", fontWeight: 600, color: "rgba(15,23,42,0.65)", width: "84px", flexShrink: 0, letterSpacing: "-0.005em" }}>
+                {field.label}
+              </span>
+              <div style={{ flex: 1, position: "relative" as const }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={field.state}
+                  onChange={(e) => field.setter(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="0"
+                  style={{ ...inputStyle, paddingRight: "40px" }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.35)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(25,25,112,0.08)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.10)"; e.currentTarget.style.boxShadow = "none"; }}
+                />
+                <span style={{ position: "absolute" as const, right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "11.5px", fontWeight: 600, color: "rgba(25,25,112,0.5)", pointerEvents: "none" as const }}>
+                  {ko ? "만원" : "10K"}
+                </span>
+              </div>
             </div>
           ))}
           <button
             type="button"
             onClick={d.handleSaveMonthlyCosts}
             style={{
-              marginTop: "10px", borderRadius: "10px", border: "none",
-              background: "#007aff", color: "#fff",
-              padding: "11px", fontSize: "13.5px", fontWeight: 650,
-              letterSpacing: "-0.005em", cursor: "pointer",
-              transition: "background 0.15s ease",
+              marginTop: "12px", borderRadius: "12px", border: "none",
+              background: "#191970", color: "#fff",
+              padding: "12px", fontSize: "13.5px", fontWeight: 700,
+              letterSpacing: "-0.01em", cursor: "pointer",
+              transition: "background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease",
+              boxShadow: "0 4px 12px rgba(25,25,112,0.22)",
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(25,25,112,0.28)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(25,25,112,0.22)"; }}
           >
             {ko ? "저장" : "Save"}
           </button>
@@ -495,17 +552,17 @@ const rowCard: React.CSSProperties = {
   border: "1px solid var(--border)",
 };
 
-/* ─── Styles ─── */
+/* ─── Styles — 미드나이트 블루 + Apple 톤 통일 ─── */
 
 const container: React.CSSProperties = {
   borderRadius: "20px",
-  background: "var(--surface-strong)",
-  border: "1px solid var(--border)",
-  boxShadow: "0 1px 2px rgba(17,17,17,0.02), 0 8px 24px rgba(17,17,17,0.03)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   overflow: "hidden",
 };
 
-// Pill-style tab bar — Apple/Linear 현대 톤
+// Pill-style tab bar — 미드나이트 액센트
 const tabBar: React.CSSProperties = {
   display: "flex",
   gap: "4px",
@@ -517,37 +574,40 @@ const tabBar: React.CSSProperties = {
 const tabButton: React.CSSProperties = {
   flexShrink: 0,
   fontSize: "13px",
-  fontWeight: 600,
+  fontWeight: 650,
   letterSpacing: "-0.005em",
   border: "none",
   borderRadius: "999px",
-  padding: "8px 16px",
+  padding: "8px 18px",
   cursor: "pointer",
-  transition: "background 0.18s ease, color 0.18s ease",
+  transition: "background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease",
 };
 
 const tabActive: React.CSSProperties = {
-  background: "#007aff",
+  background: "#191970",
   color: "#fff",
+  boxShadow: "0 2px 6px rgba(25,25,112,0.22)",
 };
 
 const tabInactive: React.CSSProperties = {
   background: "transparent",
-  color: "var(--muted)",
+  color: "rgba(15,23,42,0.55)",
 };
 
 const tabContent: React.CSSProperties = {
   padding: "20px 20px 24px",
-  borderTop: "1px solid var(--border)",
+  borderTop: "1px solid rgba(25,25,112,0.06)",
   marginTop: "14px",
 };
 
 const panelLabel: React.CSSProperties = {
   fontSize: "10.5px",
-  fontWeight: 650,
-  letterSpacing: "0.08em",
+  fontWeight: 700,
+  letterSpacing: "0.1em",
   textTransform: "uppercase",
-  color: "var(--muted)",
+  color: "#191970",
+  opacity: 0.7,
+  marginBottom: "2px",
 };
 
 const miniCard: React.CSSProperties = {

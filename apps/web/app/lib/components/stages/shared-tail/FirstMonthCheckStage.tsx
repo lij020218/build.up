@@ -7,6 +7,7 @@ import {
   Lightbulb, Calendar, MapPin, Building2,
 } from "lucide-react";
 import { COST_RATIOS, HEALTH_THRESHOLDS } from "@build-up/shared";
+import { StageWrapup } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970";
 
@@ -800,6 +801,26 @@ export function FirstMonthCheckStage() {
           <TrapsCard />
         </>
       )}
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="대출·정부지원금 검토"
+        doneItemsKo={[
+          { label: "1. 매출·비용 4축 점검", detail: "재료비·인건비·임대료·기타 4축 vs 업종 평균 비교" },
+          { label: "2. 손익분기·런웨이 산출", detail: "월별 BEP 도달 시점 + 보유 자본 잔여 개월 자동 계산" },
+          { label: "3. 첫 달 KPI 리뷰", detail: "객단가·회전수·재방문률·CSAT 4지표 vs 사업계획 비교" },
+          { label: "4. 다음 달 액션 도출", detail: "원가율 초과·고정비 부담·매출 미달 — 카테고리별 대응책 1개씩" },
+        ]}
+        verifyItemsKo={[
+          "재료비 30% 초과 — 메뉴 리뉴얼·공급처 재계약 즉시 검토 (지속 시 흑자부도 위험)",
+          "인건비 25% 초과 — 근무시간·시급·근태 관리 시스템 점검, 5인 이상은 연장수당 정확 계산",
+          "임대료 15% 초과 — 1년차에 매출 회복 안 되면 재계약 시 재협상 또는 이전 검토",
+          "재방문률 30% 미만 — 메뉴·서비스·매장 청결 등 만족도 직접 인터뷰 (신호 무시 시 폐업 1순위)",
+          "현금흐름 — 매출 vs 결제 정산일 차이로 흑자 보이지만 실현금 부족, 14일 예측 셋업 필수",
+          "세금 미수령 매출 — 현금 매출은 「현금영수증 의무발급」 위반 시 거래액 20% 과태료, 월 누락 0원 룰",
+        ]}
+        nextSummaryKo="첫 달 손익·KPI 점검 완료 → 대출·정부지원금 검토 단계로 진입 (필요 시)"
+      />
     </div>
   );
 }

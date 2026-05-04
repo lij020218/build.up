@@ -136,7 +136,16 @@ const initialState: FinanceState = {
   financeResult: null,
   financeInterpretation: null,
   dailyEntries: [],
-  dailyDateInput: new Date().toISOString().slice(0, 10),
+  // KST 기준 캘린더 일자 (영업일 컷오프와 별개 — 매출 입력은 기본 오늘 캘린더 일자로 시작)
+  // 정확한 영업일 컷오프는 입력 시점에 OperationalDashboard 가 todayStr 로 덮어씀.
+  dailyDateInput: (() => {
+    try {
+      const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" });
+      return fmt.format(new Date());
+    } catch {
+      return new Date().toISOString().slice(0, 10);
+    }
+  })(),
   dailySalesInput: "",
   dailyCustomersInput: "",
   monthlyCosts: EMPTY_COSTS,

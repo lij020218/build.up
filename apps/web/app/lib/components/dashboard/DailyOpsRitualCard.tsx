@@ -359,7 +359,7 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           color: allDone ? "rgb(34,167,73)" : MIDNIGHT,
         }}>
-          <ClipboardCheck size={20} strokeWidth={2} />
+          <ClipboardCheck size={20} strokeWidth={1.5} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const }}>
@@ -382,14 +382,14 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
             onClick={(e) => { e.stopPropagation(); resetToday(); }}
             style={{
               fontSize: "11.5px", fontWeight: 600, color: "rgba(0,0,0,0.5)",
-              background: "rgba(0,0,0,0.04)", border: "none", borderRadius: "8px",
+              background: "rgba(25,25,112,0.04)", border: "none", borderRadius: "8px",
               padding: "5px 9px", cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: "4px",
               flexShrink: 0,
             }}
             aria-label={ko ? "오늘 점검 초기화" : "Reset today"}
           >
-            <RotateCcw size={11} strokeWidth={2} />
+            <RotateCcw size={11} strokeWidth={1.5} />
             {ko ? "리셋" : "Reset"}
           </button>
         )}
@@ -455,7 +455,7 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     color: MIDNIGHT,
                   }}>
-                    <Icon size={14} strokeWidth={2} />
+                    <Icon size={14} strokeWidth={1.5} />
                   </div>
                   {/* 텍스트 */}
                   <div style={{ flex: 1, minWidth: 0 }}>

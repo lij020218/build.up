@@ -321,7 +321,7 @@ export function FloatingAIPartner({ ko, context }: Props) {
             {messages.length === 0 && !loading && (
               <div className="fap-intro">
                 <div className="fap-intro-icon">
-                  <MessageSquare size={20} color="#1d3557" strokeWidth={1.8} />
+                  <MessageSquare size={20} color="#191970" strokeWidth={1.8} />
                 </div>
                 <div className="fap-intro-title">
                   {ko ? "무엇이든 편하게 물어보세요" : "Ask me anything"}
@@ -380,7 +380,7 @@ export function FloatingAIPartner({ ko, context }: Props) {
               <div className="fap-error">
                 <span>⚠ {error}</span>
                 <button type="button" onClick={() => setError(null)}>
-                  <X size={11} strokeWidth={2} />
+                  <X size={11} strokeWidth={1.5} />
                 </button>
               </div>
             )}
@@ -455,7 +455,7 @@ export function FloatingAIPartner({ ko, context }: Props) {
 //   Color palette: Midnight Blue luxury gradient
 //   - #0a1929 (deep midnight)
 //   - #102a43 (Tailwind slate-blue)
-//   - #1d3557 (brand primary midnight)
+//   - #191970 (brand primary midnight)
 //   - #2c4a7a (lighter midnight)
 //   - #3b5c8c (steel blue accent)
 const KEYFRAMES = `
@@ -526,7 +526,7 @@ const KEYFRAMES = `
 .fap-fab-pulse {
   position: absolute; inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at center, rgba(29,53,87,0.65) 0%, rgba(29,53,87,0) 70%);
+  background: radial-gradient(circle at center, rgba(25,25,112,0.65) 0%, rgba(25,25,112,0) 70%);
   animation: fapPulse 2.6s ease-out infinite;
   pointer-events: none;
 }
@@ -534,10 +534,10 @@ const KEYFRAMES = `
   position: relative;
   width: 56px; height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0a1929 0%, #1d3557 55%, #3b5c8c 100%);
+  background: linear-gradient(135deg, #0a1929 0%, #191970 55%, #3b5c8c 100%);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 14px rgba(10,25,41,0.45),
-              0 12px 32px rgba(29,53,87,0.3),
+              0 12px 32px rgba(25,25,112,0.3),
               inset 0 1px 0 rgba(255,255,255,0.18),
               inset 0 -1px 0 rgba(0,0,0,0.15);
   transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s ease;
@@ -545,7 +545,7 @@ const KEYFRAMES = `
 .fap-fab:hover .fap-fab-inner {
   transform: scale(1.08);
   box-shadow: 0 6px 20px rgba(10,25,41,0.55),
-              0 16px 40px rgba(29,53,87,0.38),
+              0 16px 40px rgba(25,25,112,0.38),
               inset 0 1px 0 rgba(255,255,255,0.24),
               inset 0 -1px 0 rgba(0,0,0,0.18);
 }
@@ -613,7 +613,7 @@ const KEYFRAMES = `
 }
 .fap-header-icon {
   width: 30px; height: 30px; border-radius: 10px;
-  background: linear-gradient(135deg, #0a1929 0%, #1d3557 100%);
+  background: linear-gradient(135deg, #0a1929 0%, #191970 100%);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 2px 6px rgba(10,25,41,0.35),
               inset 0 0.5px 0 rgba(255,255,255,0.22),
@@ -675,8 +675,8 @@ const KEYFRAMES = `
 }
 .fap-intro-icon {
   width: 48px; height: 48px; border-radius: 14px;
-  background: linear-gradient(135deg, rgba(29,53,87,0.1), rgba(44,74,122,0.06));
-  border: 0.5px solid rgba(29,53,87,0.18);
+  background: linear-gradient(135deg, rgba(25,25,112,0.1), rgba(44,74,122,0.06));
+  border: 0.5px solid rgba(25,25,112,0.18);
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 4px;
 }
@@ -707,10 +707,10 @@ const KEYFRAMES = `
   word-wrap: break-word;
 }
 .fap-bubble-user {
-  background: linear-gradient(135deg, #1d3557 0%, #2c4a7a 100%);
+  background: linear-gradient(135deg, #191970 0%, #2c4a7a 100%);
   color: #fff;
   border-bottom-right-radius: 6px;
-  box-shadow: 0 2px 8px rgba(29,53,87,0.3),
+  box-shadow: 0 2px 8px rgba(25,25,112,0.3),
               inset 0 0.5px 0 rgba(255,255,255,0.12);
   font-weight: 500;
 }
@@ -728,12 +728,12 @@ const KEYFRAMES = `
 .fap-next-action {
   margin-top: 8px; padding: 8px 10px; border-radius: 10px;
   background: rgba(255,255,255,0.6);
-  border: 0.5px solid rgba(29,53,87,0.15);
+  border: 0.5px solid rgba(25,25,112,0.15);
   display: flex; align-items: center; gap: 8px;
   font-size: 11.5px;
 }
 .fap-next-action-label {
-  font-size: 9.5px; font-weight: 700; color: #1d3557;
+  font-size: 9.5px; font-weight: 700; color: #191970;
   letter-spacing: 0.06em; text-transform: uppercase;
   flex-shrink: 0;
 }
@@ -753,9 +753,9 @@ const KEYFRAMES = `
 .fap-case-badge {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 4px 10px; border-radius: 999px;
-  background: rgba(29,53,87,0.07);
-  border: 0.5px solid rgba(29,53,87,0.18);
-  font-size: 10.5px; font-weight: 650; color: #1d3557;
+  background: rgba(25,25,112,0.07);
+  border: 0.5px solid rgba(25,25,112,0.18);
+  font-size: 10.5px; font-weight: 650; color: #191970;
   letter-spacing: -0.01em;
 }
 .fap-case-badge-label {
@@ -795,7 +795,7 @@ const KEYFRAMES = `
 }
 .fap-typing span {
   width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(29,53,87,0.55);
+  background: rgba(25,25,112,0.55);
   animation: fapTypingDot 1.2s ease-in-out infinite;
 }
 .fap-typing span:nth-child(2) { animation-delay: 0.15s; }
@@ -823,16 +823,16 @@ const KEYFRAMES = `
 .fap-suggestion-chip {
   font-size: 11.5px; font-weight: 600;
   padding: 6px 11px; border-radius: 999px;
-  background: rgba(29,53,87,0.06);
-  color: #1d3557;
-  border: 0.5px solid rgba(29,53,87,0.15);
+  background: rgba(25,25,112,0.06);
+  color: #191970;
+  border: 0.5px solid rgba(25,25,112,0.15);
   cursor: pointer; white-space: nowrap;
   transition: background .15s ease, transform .12s ease;
   letter-spacing: -0.01em;
   font-family: inherit;
 }
 .fap-suggestion-chip:hover {
-  background: rgba(29,53,87,0.12);
+  background: rgba(25,25,112,0.12);
   transform: translateY(-1px);
 }
 .fap-suggestion-chip:active {
@@ -855,8 +855,8 @@ const KEYFRAMES = `
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 .fap-input-wrap:focus-within {
-  border-color: rgba(29,53,87,0.45);
-  box-shadow: 0 0 0 3px rgba(29,53,87,0.08);
+  border-color: rgba(25,25,112,0.45);
+  box-shadow: 0 0 0 3px rgba(25,25,112,0.08);
 }
 .fap-input {
   flex: 1;
@@ -884,15 +884,15 @@ const KEYFRAMES = `
   transition: all .18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .fap-send-active {
-  background: linear-gradient(135deg, #1d3557 0%, #2c4a7a 100%) !important;
+  background: linear-gradient(135deg, #191970 0%, #2c4a7a 100%) !important;
   color: #fff !important;
   cursor: pointer !important;
-  box-shadow: 0 2px 8px rgba(29,53,87,0.4),
+  box-shadow: 0 2px 8px rgba(25,25,112,0.4),
               inset 0 0.5px 0 rgba(255,255,255,0.18);
 }
 .fap-send-active:hover {
   transform: scale(1.06);
-  box-shadow: 0 4px 12px rgba(29,53,87,0.5),
+  box-shadow: 0 4px 12px rgba(25,25,112,0.5),
               inset 0 0.5px 0 rgba(255,255,255,0.22);
 }
 .fap-send-active:active {

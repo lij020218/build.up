@@ -197,7 +197,7 @@ export function NotificationCenter({ d, ko }: Props) {
   };
 
   const urgencyColor = (u: Notification["urgency"]) =>
-    u === "critical" ? "#b42318" : u === "warning" ? "#e85d04" : "#2563eb";
+    u === "critical" ? "#b42318" : u === "warning" ? "#e85d04" : "#191970";
 
   return (
     <div style={{ position: "relative" }}>
@@ -261,7 +261,7 @@ export function NotificationCenter({ d, ko }: Props) {
                       onClick={() => markRead(n.id)}
                       style={{
                         ...notifItem,
-                        background: isRead ? "transparent" : "rgba(37,99,235,0.025)",
+                        background: isRead ? "transparent" : "rgba(25,25,112,0.025)",
                         opacity: isRead ? 0.55 : 1,
                       }}
                     >
@@ -360,7 +360,7 @@ const dropdownHeader: React.CSSProperties = {
 const markAllBtn: React.CSSProperties = {
   fontSize: "12px",
   fontWeight: 600,
-  color: "#2563eb",
+  color: "#191970",
   background: "none",
   border: "none",
   cursor: "pointer",
@@ -387,7 +387,7 @@ const iconWrap: React.CSSProperties = {
   width: "34px",
   height: "34px",
   borderRadius: "999px",
-  background: "rgba(15,23,42,0.04)",
+  background: "rgba(25,25,112,0.04)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

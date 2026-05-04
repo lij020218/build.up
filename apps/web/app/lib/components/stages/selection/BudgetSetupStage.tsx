@@ -12,6 +12,7 @@ import {
   starterOpenDatePresets,
 } from "@build-up/shared";
 import { supabase } from "../../../../../lib/supabase";
+import { StageWrapup } from "../shared/StageWrapup";
 
 export function BudgetSetupStage() {
   const d = useDashboardCtx();
@@ -667,6 +668,26 @@ export function BudgetSetupStage() {
           ))}
         </div>
       </div>
+
+      <StageWrapup
+        ko={language === "ko"}
+        nextStageLabelKo="입지 후보 분석"
+        doneItemsKo={[
+          { label: "1. 자본 규모 설정", detail: "보유 자본 + 대출 가용액 + 운영자본 6개월 분리 — 3구간 프리셋 비교" },
+          { label: "2. 오픈 일정 설정", detail: "오픈 희망일 시점에서 역산해 핵심 마일스톤 자동 배치" },
+          { label: "3. 인테리어·집기 비중 결정", detail: "총 자본 중 시설투자 vs 운영자본 60:40 권장 — 업종 맞춤 조정" },
+          { label: "4. 자본 vs 매출 시뮬레이션", detail: "월 운영비 추정 + 손익분기 도달 시점 시뮬" },
+        ]}
+        verifyItemsKo={[
+          "운영자본 6개월치 별도 확보 — 매출 0원 가정해도 월세·인건비·재료비 견딜 수 있어야 (흑자부도 1순위 원인)",
+          "정부지원금·소상공인 대출 가능 여부 — 신청 시점부터 입금까지 평균 4~8주, 일정에 반영",
+          "예비비 10~15% 별도 — 인테리어 추가공사·집기 누락·임대 보증금 추가 요구 빈번",
+          "오픈 일정 — 임대 계약일부터 영업신고·인테리어·집기 입고·시운전까지 최소 60일 필요",
+          "프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생",
+          "업종별 손익분기점 매출 추정 — 통상 매출 대비 인건비 25%, 재료비 30%, 임대료 10% 한계선",
+        ]}
+        nextSummaryKo="자본·일정·예비비 확정 → 입지 후보 분석 단계로 진입"
+      />
 
       <div style={styles.stageFooter}>
         {prevTraversedStage ? (

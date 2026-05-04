@@ -1,7 +1,97 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Sparkles, ArrowLeft, Building2, ShieldCheck, Tv, MapPin, Wallet, Truck,
+  Home, Clock, Users, Umbrella, Stamp, Landmark, Lightbulb, Target,
+} from "lucide-react";
 import type { RoadmapGenerationResult } from "@build-up/ai";
+import { FloatingInspiration } from "./FloatingInspiration";
+
+// ── 미드나이트 톤 일관 — 로드맵 단계 카드 디자인과 통일 ──
+const STAGE_CARD = {
+  background: "white",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 28px -16px rgba(25,25,112,0.12)",
+  borderRadius: 18,
+  padding: "20px 22px",
+} as const;
+const STAGE_ICON_BOX: React.CSSProperties = {
+  width: 38, height: 38, borderRadius: 11,
+  background: "rgba(25,25,112,0.08)",
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  flexShrink: 0,
+};
+const STAGE_LABEL: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: "rgba(15,23,42,0.50)",
+  letterSpacing: "0.07em",
+  textTransform: "uppercase",
+};
+const STAGE_VALUE: React.CSSProperties = {
+  fontSize: 16,
+  fontWeight: 700,
+  color: "#0f172a",
+  letterSpacing: "-0.015em",
+  marginTop: 3,
+};
+const STAGE_SUB: React.CSSProperties = {
+  fontSize: 12.5,
+  color: "rgba(15,23,42,0.55)",
+  marginTop: 2,
+  fontWeight: 500,
+  lineHeight: 1.5,
+};
+
+// ─── 리뷰 카드 빌딩 블록 (main 컴포넌트보다 먼저 정의 — Fast Refresh 안전) ───
+type StageCardProps = {
+  icon: typeof Building2;
+  label: string;
+  hint?: string;
+  compact?: boolean;
+  children: React.ReactNode;
+};
+
+function StageCard({ icon: Icon, label, hint, compact, children }: StageCardProps) {
+  return (
+    <div style={{
+      ...STAGE_CARD,
+      padding: compact ? "18px 20px" : STAGE_CARD.padding,
+    }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+        <div style={STAGE_ICON_BOX}>
+          <Icon size={18} strokeWidth={1.5} color="#191970" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={STAGE_LABEL}>{label}</div>
+          {hint && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)", marginTop: 3, fontWeight: 500, lineHeight: 1.45 }}>{hint}</div>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function KeyValue({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div style={STAGE_LABEL}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginTop: 3, letterSpacing: "-0.01em", lineHeight: 1.4 }}>{value}</div>
+    </div>
+  );
+}
+
+function InfraTile({ label, value, reason }: { label: string; value: string; reason: string }) {
+  return (
+    <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.10)" }}>
+      <div style={STAGE_LABEL}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 800, color: "#191970", marginTop: 3, letterSpacing: "-0.01em" }}>{value}</div>
+      {reason && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginTop: 4, lineHeight: 1.45 }}>{reason}</div>}
+    </div>
+  );
+}
 
 type Step = "idea" | "budget" | "region" | "storeName" | "generating" | "review" | "complete";
 
@@ -37,17 +127,75 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   const isLikelyTech = /앱|app|saas|ai |플랫폼|platform|소프트웨어|software|api|웹서비스|스타트업|startup|개발/.test(ideaLower);
   const isLikelyOnline = /온라인|쇼핑몰|스마트스토어|쿠팡|이커머스|e-commerce|online|store|마켓|커머스/.test(ideaLower);
 
+  // ⚠️ 각 step 은 실제 AI 가 RoadmapGenerationResult 에 채우는 필드와 1:1 매칭.
+  //    오프라인/온라인/스타트업 별로 흐름이 달라서 step 라벨도 다르게.
+  //    순서: ① 컨셉·업종 매칭 → ② 시장/상권 → ③ 예산·월비용 → ④ 정체성·팀 → ⑤ 법무·세무·보험
+  //    → ⑥ 공급업체·인테리어 (DB 풀 매칭) → ⑦ 운영 채널·자금 인프라 → ⑧ 정부지원 → ⑨ 타임라인·리스크
   const genSteps = ko
     ? (isLikelyTech
-      ? ["사업 아이디어 분석", "시장 규모 조사", "예산 배분 계산", "기술 스택 설계", "법인 설립 요건 확인", "경쟁사 분석", "GTM 전략 설정", "리스크 분석"]
+      ? [
+          "사업 컨셉 정리 + 업종 매칭",
+          "시장 규모 + 경쟁 환경 분석",
+          "예산 배분 + 인건비 추정",
+          "법인 설립 요건 + 4대보험",
+          "개발 인프라·툴 선정 (AWS·GitHub 등)",
+          "정부지원·VC 적합도 (TIPS·예창패)",
+          "GTM 전략 + 채용 계획",
+          "타임라인 + 리스크 분석",
+        ]
       : isLikelyOnline
-      ? ["업종 분석", "시장 트렌드 조사", "예산 배분 계산", "플랫폼 선정", "사업자등록 요건 확인", "소싱처 추천", "마케팅 채널 설정", "리스크 분석"]
-      : ["업종 분석", "상권 데이터 조회", "예산 배분 계산", "인테리어 설계", "필수 인허가 확인", "공급업체 추천", "운영 채널 설정", "리스크 분석"])
+      ? [
+          "사업 컨셉 정리 + 업종 매칭",
+          "시장 트렌드 + 카테고리 분석",
+          "예산 배분 + 월 운영비 추정",
+          "사업자등록·통신판매업 절차",
+          "상품 소싱·물류 파트너 추천",
+          "판매 플랫폼 + 결제 PG 선정",
+          "권장 보험 + 자금 인프라",
+          "정부지원사업 + 타임라인 + 리스크",
+        ]
+      : [
+          "사업 컨셉 정리 + 업종 매칭",
+          "상권 데이터 분석 (점수·등급)",
+          "예산 배분 + 월비용 추정",
+          "법무·세무 + 인허가 확인",
+          "공급업체 추천 (서비스 풀에서)",
+          "인테리어 시공·자재·컨셉 선정",
+          "운영 채널 + 자금 인프라",
+          "정부지원사업 + 타임라인 + 리스크",
+        ])
     : (isLikelyTech
-      ? ["Idea analysis", "Market sizing", "Budget allocation", "Tech stack", "Legal requirements", "Competitor analysis", "GTM strategy", "Risk analysis"]
+      ? [
+          "Concept + industry match",
+          "Market sizing + competition",
+          "Budget + payroll estimate",
+          "Incorporation + 4-insurance",
+          "Dev infra + tools (AWS · GitHub)",
+          "Funding fit (TIPS · pre-startup)",
+          "GTM strategy + hiring plan",
+          "Timeline + risks",
+        ]
       : isLikelyOnline
-      ? ["Industry analysis", "Market trends", "Budget allocation", "Platform selection", "Registration check", "Sourcing match", "Marketing channels", "Risk analysis"]
-      : ["Industry analysis", "Market data", "Budget allocation", "Interior planning", "Permits check", "Supplier matching", "Channel setup", "Risk analysis"]);
+      ? [
+          "Concept + industry match",
+          "Market trends + category",
+          "Budget + monthly costs",
+          "Registration + e-commerce permits",
+          "Sourcing + logistics partners",
+          "Sales platform + payment PG",
+          "Insurance + money infra",
+          "Funding + timeline + risks",
+        ]
+      : [
+          "Concept + industry match",
+          "Market analysis (score · grade)",
+          "Budget + monthly costs",
+          "Legal · tax + permits",
+          "Suppliers (from verified pool)",
+          "Interior contractors · materials · concept",
+          "Channels + money infra",
+          "Funding + timeline + risks",
+        ]);
 
   // ── API 호출 ──
   const handleGenerate = async () => {
@@ -56,8 +204,9 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
     setError(null);
 
     // 실제 API 시간에 맞춘 점진적 진행 표시
-    // 초반 단계는 빠르게, 뒤로 갈수록 느리게 (AI 분석이 깊어지는 느낌)
-    const stepDelays = [1200, 1500, 2000, 2500, 3000, 3500, 4000]; // 총 ~18초, 마지막은 API 대기
+    // Pass 1 (~30s) + Pass 2 (~20s) → 총 30~70s.
+    // 초반 step 은 1.5~2.5s, 후반은 5~7s 로 점차 느리게 — 마지막 step("리스크 분석…") 은 API 응답까지 holding.
+    const stepDelays = [1500, 2000, 2500, 3500, 5000, 6000, 7000]; // 총 ~27.5s, 마지막 step 은 API 대기
     let stepIdx = 0;
     let cancelled = false;
     const advanceStep = () => {
@@ -116,13 +265,22 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   if (step === "idea") {
     return (
       <main style={shell}>
-        <div style={card}>
+        <FloatingInspiration />
+        <motion.div
+          style={card}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        >
           <button type="button" onClick={onBack} style={backBtn}>
-            ← {ko ? "뒤로" : "Back"}
+            <ArrowLeft size={13} strokeWidth={1.5} /> {ko ? "뒤로" : "Back"}
           </button>
 
           <div style={header}>
-            <div style={eyebrow}>build.up AI</div>
+            <div style={eyebrow}>
+              <Sparkles size={11} strokeWidth={1.5} />
+              build.up AI
+            </div>
             <h1 style={title}>{ko ? "어떤 사업을 시작하고 싶으세요?" : "What business do you want to start?"}</h1>
             <p style={subtitle}>
               {ko ? "자유롭게 설명해주세요. 한 줄이든 긴 설명이든 괜찮습니다. AI가 분석해서 맞춤 로드맵을 만들어드립니다." : "Describe your idea freely. AI will analyze it and build a custom roadmap."}
@@ -181,7 +339,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           >
             {ko ? "다음" : "Continue"}
           </button>
-        </div>
+        </motion.div>
       </main>
     );
   }
@@ -190,13 +348,17 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   if (step === "budget") {
     return (
       <main style={shell}>
-        <div style={card}>
+        <FloatingInspiration />
+        <motion.div style={card}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
           <button type="button" onClick={() => setStep("idea")} style={backBtn}>
-            ← {ko ? "뒤로" : "Back"}
+            <ArrowLeft size={13} strokeWidth={1.5} /> {ko ? "뒤로" : "Back"}
           </button>
           <div style={header}>
             <div style={eyebrow}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v12M8 9.5c0-1.1 1.8-2 4-2s4 .9 4 2-1.8 2-4 2-4 .9-4 2 1.8 2 4 2 4-.9 4-2" /></svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v12M8 9.5c0-1.1 1.8-2 4-2s4 .9 4 2-1.8 2-4 2-4 .9-4 2 1.8 2 4 2 4-.9 4-2" /></svg>
               {ko ? "2단계: 예산" : "Step 2: Budget"}
             </div>
             <h1 style={title}>{ko ? "예상 창업 자금은 얼마인가요?" : "What's your estimated budget?"}</h1>
@@ -211,7 +373,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               { label: ko ? "1억 이상" : "Over 100M", value: 150000000 },
             ].map((opt) => (
               <button key={opt.value} type="button" onClick={() => { setBudget(opt.value); setBudgetText(String(Math.round(opt.value / 10000))); }}
-                style={{ ...optionBtn, borderColor: budget === opt.value ? "#7c3aed" : "rgba(99,61,225,0.1)", background: budget === opt.value ? "rgba(124,58,237,0.06)" : "rgba(255,255,255,0.8)" }}>
+                style={{ ...optionBtn, borderColor: budget === opt.value ? "#191970" : "rgba(25,25,112,0.10)", background: budget === opt.value ? "rgba(25,25,112,0.04)" : "rgba(255,255,255,0.8)" }}>
                 {opt.label}
               </button>
             ))}
@@ -228,7 +390,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             style={{ ...primaryBtn, marginTop: "24px" }}>
             {ko ? "다음" : "Continue"}
           </button>
-        </div>
+        </motion.div>
       </main>
     );
   }
@@ -237,13 +399,17 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   if (step === "region") {
     return (
       <main style={shell}>
-        <div style={card}>
+        <FloatingInspiration />
+        <motion.div style={card}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
           <button type="button" onClick={() => setStep("budget")} style={backBtn}>
-            ← {ko ? "뒤로" : "Back"}
+            <ArrowLeft size={13} strokeWidth={1.5} /> {ko ? "뒤로" : "Back"}
           </button>
           <div style={header}>
             <div style={eyebrow}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
               {ko ? "3단계: 상권" : "Step 3: Location"}
             </div>
             <h1 style={title}>{ko ? "희망 지역이 있으신가요?" : "Do you have a preferred location?"}</h1>
@@ -264,7 +430,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               {ko ? "건너뛰기" : "Skip"}
             </button>
           </div>
-        </div>
+        </motion.div>
       </main>
     );
   }
@@ -273,13 +439,17 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   if (step === "storeName") {
     return (
       <main style={shell}>
-        <div style={card}>
+        <FloatingInspiration />
+        <motion.div style={card}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
           <button type="button" onClick={() => setStep("region")} style={backBtn}>
-            ← {ko ? "뒤로" : "Back"}
+            <ArrowLeft size={13} strokeWidth={1.5} /> {ko ? "뒤로" : "Back"}
           </button>
           <div style={header}>
             <div style={eyebrow}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
               </svg>
               {ko ? "4단계: 상호명" : "Step 4: Store Name"}
@@ -306,7 +476,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               {ko ? "건너뛰기" : "Skip"}
             </button>
           </div>
-        </div>
+        </motion.div>
       </main>
     );
   }
@@ -315,32 +485,45 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
   if (step === "generating") {
     return (
       <main style={shell}>
-        <div style={{ ...card, textAlign: "center" as const }}>
-          <div style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "24px" }}>
+        <FloatingInspiration />
+        <motion.div style={{ ...card, textAlign: "center" as const }}
+          initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 11px", borderRadius: 999, background: "rgba(25,25,112,0.10)", color: "#191970", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, marginBottom: 18 }}>
+            <Sparkles size={11} strokeWidth={1.5} />
+            {ko ? "AI 생성 중" : "AI generating"}
+          </div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#1e1a3e", marginBottom: "24px", letterSpacing: "-0.025em" }}>
             {ko ? "로드맵을 구성하고 있습니다" : "Building your roadmap"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "12px", textAlign: "left" as const }}>
             {genSteps.map((s, i) => (
               <div key={s} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{
-                  width: "24px", height: "24px", borderRadius: "50%",
+                  width: "22px", height: "22px", borderRadius: "50%",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  background: i < genProgress ? "#177245" : i === genProgress ? "#2563eb" : "rgba(15,23,42,0.06)",
+                  background: i < genProgress
+                    ? "linear-gradient(135deg, #191970, #191970)"
+                    : i === genProgress
+                      ? "linear-gradient(135deg, #5b6bff, #191970)"
+                      : "rgba(25,25,112,0.08)",
+                  boxShadow: i === genProgress ? "0 0 0 4px rgba(25,25,112,0.16)" : "none",
                   transition: "all 0.3s ease",
                 }}>
                   {i < genProgress ? (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   ) : i === genProgress ? (
                     <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#fff" }} />
                   ) : null}
                 </div>
-                <span style={{ fontSize: "14px", fontWeight: i <= genProgress ? 600 : 400, color: i <= genProgress ? "#0f172a" : "rgba(15,23,42,0.3)" }}>
+                <span style={{ fontSize: "14px", fontWeight: i <= genProgress ? 600 : 500, color: i <= genProgress ? "#1e1a3e" : "rgba(30,26,62,0.32)", letterSpacing: "-0.005em" }}>
                   {s}{i === genProgress ? "..." : i < genProgress ? (ko ? " 완료" : " Done") : ""}
                 </span>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </main>
     );
   }
@@ -364,7 +547,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           {/* 헤더 */}
           <div style={{ textAlign: "center" as const, marginBottom: "20px" }}>
             <div style={{ ...eyebrow, justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.8 5.6 21.2 8 14 2 9.2h7.6z" /></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#191970" strokeWidth="2"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.8 5.6 21.2 8 14 2 9.2h7.6z" /></svg>
               build.up AI
             </div>
             <h1 style={{ ...title, fontSize: "clamp(26px, 4vw, 34px)", textAlign: "center" as const }}>{ko ? "로드맵 초안이 완성되었습니다" : "Your roadmap is ready"}</h1>
@@ -377,18 +560,18 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               marginBottom: "20px",
               padding: "22px 26px",
               borderRadius: "20px",
-              background: "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(59,125,221,0.04) 100%)",
-              border: "1px solid rgba(124,58,237,0.10)",
+              background: "linear-gradient(135deg, rgba(25,25,112,0.04) 0%, rgba(59,125,221,0.04) 100%)",
+              border: "1px solid rgba(25,25,112,0.08)",
               display: "flex", flexDirection: "column" as const, gap: "10px",
             }}>
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: "6px",
                 fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.08em",
-                textTransform: "uppercase" as const, color: "#7c3aed",
+                textTransform: "uppercase" as const, color: "#191970",
               }}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="5" stroke="#7c3aed" strokeWidth="1.4" fill="rgba(124,58,237,0.1)" />
-                  <circle cx="6" cy="6" r="2" fill="#7c3aed" />
+                  <circle cx="6" cy="6" r="5" stroke="#191970" strokeWidth="1.4" fill="rgba(25,25,112,0.10)" />
+                  <circle cx="6" cy="6" r="2" fill="#191970" />
                 </svg>
                 {ko ? "이 사업은" : "Concept"}
               </div>
@@ -405,7 +588,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               </p>
               {/* 핵심 태그 — 업종/타입/상권 */}
               <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px", marginTop: "4px" }}>
-                <span style={conceptTagStyle("#7c3aed")}>{result.parsed.industryLabel}</span>
+                <span style={conceptTagStyle("#191970")}>{result.parsed.industryLabel}</span>
                 <span style={conceptTagStyle("#3b7ddd")}>
                   {result.parsed.startupType === "franchise" ? (ko ? "프랜차이즈" : "Franchise") : (ko ? "독립 창업" : "Independent")}
                 </span>
@@ -417,221 +600,516 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             </div>
           )}
 
-          {/* 카드 레이아웃 */}
+          {/* ⭐ 업종 매칭 검증 카드 — AI 가 어떤 업종으로 매칭했는지 + 신뢰도 + 차선책 */}
+          {(() => {
+            const conf = (result.parsed as { matchingConfidence?: number }).matchingConfidence ?? 50;
+            const reason = (result.parsed as { matchingReason?: string }).matchingReason ?? "";
+            const alts = (result.parsed as { alternativeSubIndustries?: Array<{ id: string; reason: string }> }).alternativeSubIndustries ?? [];
+            const isLowConf = conf < 60;
+            const tone = isLowConf ? { bg: "rgba(255,159,10,0.06)", border: "rgba(255,159,10,0.20)", accent: "#b45309" }
+                                    : { bg: "rgba(25,25,112,0.04)", border: "rgba(25,25,112,0.10)", accent: "#191970" };
+            return (
+              <div style={{
+                marginBottom: "18px",
+                padding: "18px 22px",
+                borderRadius: "16px",
+                background: tone.bg,
+                border: `1px solid ${tone.border}`,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: tone.accent }}>
+                    {isLowConf ? (ko ? "업종 매칭 — 확인 필요" : "Industry Match — Please Confirm") : (ko ? "업종 매칭" : "Industry Match")}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: tone.accent, fontVariantNumeric: "tabular-nums" as const, padding: "3px 9px", borderRadius: 999, background: "white", border: `1px solid ${tone.border}` }}>
+                    {ko ? `신뢰도 ${conf}/100` : `Confidence ${conf}/100`}
+                  </span>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", marginBottom: 6, letterSpacing: "-0.01em" }}>
+                  {result.parsed.industryLabel} <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(15,23,42,0.55)" }}>({result.parsed.subIndustryId})</span>
+                </div>
+                {reason && (
+                  <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", lineHeight: 1.6, fontWeight: 500, marginBottom: alts.length > 0 ? 12 : 0 }}>
+                    {reason}
+                  </div>
+                )}
+                {alts.length > 0 && (
+                  <div style={{ borderTop: `1px solid ${tone.border}`, paddingTop: 10, marginTop: 10 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(15,23,42,0.5)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+                      {ko ? "차선책 (이게 더 맞으면 알려주세요)" : "Alternatives"}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+                      {alts.map((a) => (
+                        <div key={a.id} style={{ fontSize: 12, color: "rgba(15,23,42,0.65)", lineHeight: 1.5 }}>
+                          <strong style={{ color: "#0f172a", fontWeight: 600 }}>{a.id}</strong> · {a.reason}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* ─── 카드 레이아웃 — 미드나이트 단일 톤 (서비스 톤 일관) ─── */}
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "14px" }}>
 
-            {/* Row 1: 업종 + 인허가 + 운영 채널 — 3열 */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
-              {/* 업종 */}
-              <div style={rvCard}>
-                <div style={rvIconWrap("#e0edff", "#3b7ddd")}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b7ddd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 21V8l9-5 9 5v13" /><path d="M9 21v-6h6v6" />
-                  </svg>
+            {/* 매장 정체성 — identity */}
+            {(result.identity?.suggestedStoreName || result.identity?.mission || result.identity?.targetCustomer) && (
+              <StageCard icon={Target} label={ko ? "매장 정체성" : "Identity"}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  {result.identity.suggestedStoreName && (
+                    <KeyValue label={ko ? "추천 상호" : "Store name"} value={result.identity.suggestedStoreName} />
+                  )}
+                  {result.identity.targetCustomer && (
+                    <KeyValue label={ko ? "타겟 고객" : "Target"} value={result.identity.targetCustomer} />
+                  )}
                 </div>
-                <div style={rvLabel}>{ko ? "업종" : "Industry"}</div>
-                <div style={{ ...rvValue, fontSize: "16px" }}>{result.parsed.industryLabel}</div>
-                <div style={rvSub}>{result.parsed.startupType === "franchise" ? (ko ? "프랜차이즈" : "Franchise") : (ko ? "독립 창업" : "Independent")}</div>
-              </div>
-              {/* 인허가 */}
-              <div style={rvCard}>
-                <div style={rvIconWrap("#dbeafe", "#2563eb")}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round">
-                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" /><rect x="9" y="3" width="6" height="4" rx="1" /><path d="M9 14l2 2 4-4" />
-                  </svg>
+                {result.identity.mission && (
+                  <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 12, background: "rgba(25,25,112,0.04)", borderLeft: "3px solid #191970" }}>
+                    <div style={{ ...STAGE_LABEL, marginBottom: 4 }}>{ko ? "미션" : "Mission"}</div>
+                    <div style={{ fontSize: 13.5, color: "#0f172a", lineHeight: 1.55, fontWeight: 500 }}>"{result.identity.mission}"</div>
+                  </div>
+                )}
+                {(result.identity.businessOpenTime || result.identity.businessCloseTime) && (
+                  <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "rgba(15,23,42,0.6)", fontWeight: 600 }}>
+                    <Clock size={13} strokeWidth={1.5} color="#191970" />
+                    <span>{ko ? "영업시간" : "Hours"}: {result.identity.businessOpenTime || "—"} ~ {result.identity.businessCloseTime || "—"}</span>
+                  </div>
+                )}
+              </StageCard>
+            )}
+
+            {/* 업종 + 인허가 + 운영 채널 — 3열 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+              <StageCard icon={Building2} label={ko ? "업종" : "Industry"} compact>
+                <div style={STAGE_VALUE}>{result.parsed.industryLabel}</div>
+                <div style={STAGE_SUB}>
+                  {result.parsed.startupType === "franchise" ? (ko ? "프랜차이즈" : "Franchise") : (ko ? "독립 창업" : "Independent")}
                 </div>
-                <div style={rvLabel}>{ko ? "필수 인허가" : "Permits"}</div>
-                <div style={{ display: "flex", flexDirection: "column" as const, gap: "4px", marginTop: "6px" }}>
-                  {result.recommendations.permits.map((p, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#2563eb" strokeWidth="1" fill="rgba(37,99,235,0.08)" /><path d="M3.5 6l2 2 3-3.5" stroke="#2563eb" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      <span style={{ fontSize: "12px", color: "#0f172a" }}>{p}</span>
+              </StageCard>
+
+              <StageCard icon={Stamp} label={ko ? "필수 인허가" : "Permits"} compact>
+                {result.legal?.permitsDetailed && result.legal.permitsDetailed.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 6, marginTop: 4 }}>
+                    {result.legal.permitsDetailed.slice(0, 4).map((p, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: "rgba(25,25,112,0.08)", color: "#191970" }}>{p.kind}</span>
+                        <span style={{ fontSize: 12.5, color: "#0f172a", fontWeight: 500 }}>{p.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 4, marginTop: 4 }}>
+                    {result.recommendations.permits.map((p, i) => (
+                      <div key={i} style={{ fontSize: 12.5, color: "#0f172a", fontWeight: 500 }}>· {p}</div>
+                    ))}
+                  </div>
+                )}
+              </StageCard>
+
+              <StageCard icon={Tv} label={ko ? "운영 채널 미리보기" : "Channels preview"} compact>
+                <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 4 }}>
+                  {(() => {
+                    const tags = result.recommendations.operationalChannels && result.recommendations.operationalChannels.length > 0
+                      ? result.recommendations.operationalChannels.map(ch => ch.nameKo)
+                      : [...result.recommendations.deliveryPlatforms, ...result.recommendations.snsChannels];
+                    return tags.slice(0, 6).map((ch, i) => (
+                      <span key={i} style={{ fontSize: 10.5, fontWeight: 600, padding: "3px 9px", borderRadius: 999, background: "rgba(25,25,112,0.06)", color: "#191970", letterSpacing: "-0.005em" }}>{ch}</span>
+                    ));
+                  })()}
+                </div>
+                {result.recommendations.operationalChannels && result.recommendations.operationalChannels.length > 6 && (
+                  <div style={{ fontSize: 11, color: "rgba(15,23,42,0.45)", marginTop: 4 }}>+{result.recommendations.operationalChannels.length - 6} {ko ? "더" : "more"}</div>
+                )}
+              </StageCard>
+            </div>
+
+            {/* 직원 추천 — team */}
+            {result.team && result.team.roles?.length > 0 && (
+              <StageCard icon={Users} label={ko ? `직원 구성 — 초기 ${result.team.initialSize}명` : `Team — ${result.team.initialSize} people`}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {result.team.roles.map((r, i) => (
+                    <div key={i} style={{ padding: "10px 12px", borderRadius: 12, background: r.timing === "now" ? "rgba(25,25,112,0.05)" : "rgba(15,23,42,0.03)", border: `1px solid ${r.timing === "now" ? "rgba(25,25,112,0.10)" : "rgba(15,23,42,0.06)"}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{r.role}</span>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: r.timing === "now" ? "#191970" : "rgba(15,23,42,0.10)", color: r.timing === "now" ? "white" : "rgba(15,23,42,0.6)" }}>
+                          {r.timing === "now" ? (ko ? "즉시" : "Now") : (ko ? "확장 시" : "Later")}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>{r.reason}</div>
                     </div>
                   ))}
                 </div>
-              </div>
-              {/* 운영 채널 */}
-              <div style={rvCard}>
-                <div style={rvIconWrap("#fce7f3", "#db2777")}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#db2777" strokeWidth="1.8" strokeLinecap="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
-                  </svg>
-                </div>
-                <div style={rvLabel}>{ko ? "운영 채널" : "Channels"}</div>
-                <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" as const, marginTop: "6px" }}>
-                  {[...result.recommendations.deliveryPlatforms, ...result.recommendations.snsChannels].map((ch, i) => (
-                    <span key={i} style={{ fontSize: "10px", fontWeight: 600, padding: "3px 8px", borderRadius: "999px", background: "rgba(219,39,119,0.06)", color: "#db2777" }}>{ch}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
+                {result.legal?.fourInsuranceRequired && (
+                  <div style={{ marginTop: 10, fontSize: 11.5, color: "#191970", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <ShieldCheck size={12} strokeWidth={1.5} />
+                    {ko ? "직원 1명+ 채용 시 4대보험 사업장 성립 의무" : "Mandatory 4-insurance establishment when hiring"}
+                  </div>
+                )}
+              </StageCard>
+            )}
 
-            {/* Row 2: 상권 분석 — 전체 너비 */}
-            <div style={rvCard}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={rvIconWrap("#fef3c7", "#d97706")}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={rvLabel}>{ko ? "상권 분석" : "Market Analysis"}</div>
-                    <div style={{ ...rvValue, fontSize: "16px" }}>{result.parsed.preferredRegion || "—"}</div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {/* 상권 분석 — marketAnalysis */}
+            <StageCard icon={MapPin} label={ko ? "상권 분석" : "Market Analysis"}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div style={STAGE_VALUE}>{result.parsed.preferredRegion || "—"}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{
-                    fontSize: "14px", fontWeight: 800, lineHeight: 1,
-                    padding: "5px 12px", borderRadius: "10px",
-                    background: result.marketAnalysis.grade === "S" ? "#fef3c7" : result.marketAnalysis.grade === "A" ? "#d1fae5" : result.marketAnalysis.grade === "B" ? "#dbeafe" : result.marketAnalysis.grade === "C" ? "#fef3c7" : "#fee2e2",
-                    color: result.marketAnalysis.grade === "S" ? "#92400e" : result.marketAnalysis.grade === "A" ? "#065f46" : result.marketAnalysis.grade === "B" ? "#1e40af" : result.marketAnalysis.grade === "C" ? "#92400e" : "#991b1b",
+                    fontSize: 13, fontWeight: 800, lineHeight: 1, padding: "5px 12px", borderRadius: 10,
+                    background: "rgba(25,25,112,0.08)", color: "#191970",
                   }}>{result.marketAnalysis.grade}</div>
-                  <span style={{ fontSize: "18px", fontWeight: 750, color: result.marketAnalysis.score >= 75 ? "#059669" : result.marketAnalysis.score >= 50 ? "#d97706" : "#dc2626" }}>{result.marketAnalysis.score}<span style={{ fontSize: "12px", fontWeight: 500, color: "rgba(15,23,42,0.35)" }}>/100</span></span>
+                  <span style={{ fontSize: 18, fontWeight: 750, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>
+                    {result.marketAnalysis.score}<span style={{ fontSize: 11, fontWeight: 500, color: "rgba(15,23,42,0.4)" }}>/100</span>
+                  </span>
                 </div>
               </div>
-              {/* 점수 바 */}
-              <div style={{ height: "5px", borderRadius: "3px", background: "rgba(15,23,42,0.06)", overflow: "hidden", marginTop: "14px" }}>
-                <div style={{ height: "100%", borderRadius: "3px", width: `${result.marketAnalysis.score}%`, background: result.marketAnalysis.score >= 75 ? "#059669" : result.marketAnalysis.score >= 50 ? "#d97706" : "#dc2626", transition: "width 0.4s ease" }} />
+              <div style={{ height: 5, borderRadius: 3, background: "rgba(25,25,112,0.06)", overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 3, width: `${result.marketAnalysis.score}%`, background: "linear-gradient(90deg, #191970 0%, #5b6bff 100%)", transition: "width 0.4s ease" }} />
               </div>
-              {/* 세부 지표 — 4열 */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
                 {[
-                  { label: ko ? "유동인구" : "Foot traffic", value: result.marketAnalysis.footTraffic },
+                  { label: ko ? "유동인구" : "Traffic", value: result.marketAnalysis.footTraffic },
                   { label: ko ? "경쟁 밀도" : "Competition", value: result.marketAnalysis.competition },
-                  { label: ko ? "임대료" : "Rent level", value: result.marketAnalysis.rentLevel },
+                  { label: ko ? "임대료" : "Rent", value: result.marketAnalysis.rentLevel },
                   { label: ko ? "타겟 적합도" : "Target fit", value: result.marketAnalysis.targetFit },
                 ].filter(m => m.value).map((m, i) => (
-                  <div key={i} style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(217,119,6,0.04)" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "4px", textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{m.label}</div>
-                    <div style={{ fontSize: "12px", color: "#0f172a", lineHeight: 1.4 }}>{m.value}</div>
+                  <div key={i} style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(25,25,112,0.04)" }}>
+                    <div style={{ ...STAGE_LABEL, marginBottom: 4 }}>{m.label}</div>
+                    <div style={{ fontSize: 12, color: "#0f172a", lineHeight: 1.4, fontWeight: 500 }}>{m.value}</div>
                   </div>
                 ))}
               </div>
               {result.marketAnalysis.summary && (
-                <div style={{ marginTop: "10px", fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5, padding: "10px 12px", borderRadius: "12px", background: "rgba(217,119,6,0.03)", borderLeft: "3px solid rgba(217,119,6,0.25)" }}>
+                <div style={{ marginTop: 10, fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, padding: "10px 12px", borderRadius: 12, background: "rgba(25,25,112,0.03)", borderLeft: "3px solid rgba(25,25,112,0.25)" }}>
                   {result.marketAnalysis.summary}
                 </div>
               )}
-            </div>
+            </StageCard>
 
-            {/* Row 3: 예산 배분 — 전체 너비 */}
-            <div style={rvCard}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                <div style={rvIconWrap("#ede9fe", "#7c3aed")}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.8" strokeLinecap="round">
-                    <circle cx="12" cy="12" r="10" /><path d="M12 6v12M8 9.5c0-1.1 1.8-2 4-2s4 .9 4 2-1.8 2-4 2-4 .9-4 2 1.8 2 4 2 4-.9 4-2" />
-                  </svg>
-                </div>
-                <div>
-                  <div style={rvLabel}>{ko ? "예산 배분" : "Budget"}</div>
-                  <div style={{ fontSize: "16px", fontWeight: 720, color: "#0f172a" }}>{fmt(totalBudget)}</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
-                {budgetItems.map(b => (
-                  <div key={b.label} style={{ width: `${totalBudget > 0 ? (b.value / totalBudget) * 100 : 0}%`, background: b.color, transition: "width 0.4s ease" }} />
-                ))}
-              </div>
-              <div style={{ display: "flex", gap: "16px", marginTop: "10px", flexWrap: "wrap" as const }}>
-                {budgetItems.map(b => (
-                  <div key={b.label} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: b.color }} />
-                    <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)" }}>{b.label}</span>
-                    <span style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{fmt(b.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Row 4: 공급업체 — 전체 너비 */}
-            <div style={rvCard}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                <div style={rvIconWrap("#d1fae5", "#059669")}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="1.8" strokeLinecap="round">
-                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" /><path d="M3.3 7L12 12l8.7-5M12 22V12" />
-                  </svg>
-                </div>
-                <div style={rvLabel}>{ko ? "추천 공급업체" : "Suppliers"} · {result.recommendations.suppliers.length}{ko ? "곳" : ""}</div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                {result.recommendations.suppliers.map((s, i) => (
-                  <div key={i} style={{ padding: "10px 14px", borderRadius: "14px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.08)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{s.name}</div>
-                      {s.category && <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "rgba(5,150,105,0.08)", color: "#059669", whiteSpace: "nowrap" as const }}>{s.category}</span>}
-                    </div>
-                    {s.reason && <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "4px", lineHeight: 1.4 }}>{s.reason}</div>}
-                    {s.priceRange && <div style={{ fontSize: "11px", fontWeight: 600, color: "#059669", marginTop: "3px" }}>{s.priceRange}</div>}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Row 5: 인테리어 — 전체 너비 */}
-            {result.recommendations.interior.length > 0 && (
-              <div style={rvCard}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                  <div style={rvIconWrap("#fef9c3", "#a16207")}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a16207" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><path d="M9 22V12h6v10" />
-                    </svg>
-                  </div>
-                  <div style={rvLabel}>{ko ? "인테리어 · 집기 · 장비" : "Interior · Fixtures · Equipment"}</div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                  {result.recommendations.interior.map((it, i) => (
-                    <div key={i} style={{ padding: "10px 14px", borderRadius: "14px", background: "rgba(161,98,7,0.04)", border: "1px solid rgba(161,98,7,0.08)" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{it.item}</div>
-                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>{it.vendor}</div>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "#a16207", marginTop: "2px" }}>{it.estimatedCost}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Row 6: 타임라인 — 전체 너비 */}
-            <div style={rvCard}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                <div style={rvIconWrap("#e0e7ff", "#4f46e5")}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="1.8" strokeLinecap="round">
-                    <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-                  </svg>
-                </div>
-                <div style={rvLabel}>{ko ? "타임라인" : "Timeline"} · {result.timeline.totalWeeks}{ko ? "주" : " weeks"}</div>
-              </div>
-              {/* 타임라인 바 */}
-              <div style={{ display: "flex", gap: "2px", marginTop: "12px" }}>
-                {result.timeline.phases.map((p, i) => {
-                  const pct = result.timeline.totalWeeks > 0 ? (p.weeks / result.timeline.totalWeeks) * 100 : 0;
-                  const colors = ["#4f46e5", "#7c3aed", "#2563eb", "#0891b2", "#059669", "#d97706"];
+            {/* 예산 배분 — budgetAllocation */}
+            <StageCard icon={Wallet} label={ko ? "예산 배분" : "Budget allocation"}>
+              <div style={{ ...STAGE_VALUE, marginBottom: 12, fontVariantNumeric: "tabular-nums" as const }}>{fmt(totalBudget)}</div>
+              <div style={{ display: "flex", height: 10, borderRadius: 5, overflow: "hidden", background: "rgba(25,25,112,0.04)" }}>
+                {budgetItems.map((b, i) => {
+                  // midnight 톤 단일 — 명도 단계만 다르게
+                  const shades = ["#191970", "#3a3aa0", "#5b6bff", "#8b94ff"];
                   return (
-                    <div key={i} style={{ width: `${pct}%`, display: "flex", flexDirection: "column" as const, alignItems: "center", minWidth: "40px" }}>
-                      <div style={{ width: "100%", height: "8px", borderRadius: i === 0 ? "4px 0 0 4px" : i === result.timeline.phases.length - 1 ? "0 4px 4px 0" : "0", background: colors[i % colors.length] }} />
-                      <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.5)", marginTop: "6px", textAlign: "center" as const, lineHeight: 1.2 }}>
-                        {p.name}
-                      </div>
-                      <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.35)" }}>{p.weeks}{ko ? "주" : "w"}</div>
+                    <div key={b.label} style={{ width: `${totalBudget > 0 ? (b.value / totalBudget) * 100 : 0}%`, background: shades[i % shades.length], transition: "width 0.4s ease" }} />
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 14, marginTop: 12, flexWrap: "wrap" as const }}>
+                {budgetItems.map((b, i) => {
+                  const shades = ["#191970", "#3a3aa0", "#5b6bff", "#8b94ff"];
+                  return (
+                    <div key={b.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: shades[i % shades.length] }} />
+                      <span style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", fontWeight: 500 }}>{b.label}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>{fmt(b.value)}</span>
                     </div>
                   );
                 })}
               </div>
-            </div>
+            </StageCard>
+
+            {/* 자금 인프라 — moneyInfra */}
+            {result.moneyInfra && (
+              <StageCard icon={Landmark} label={ko ? "자금 인프라" : "Money infra"}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  <InfraTile label={ko ? "사업용 통장" : "Bank"} value={result.moneyInfra.recommendedBank.toUpperCase()} reason={result.moneyInfra.recommendedBankReason} />
+                  <InfraTile label={ko ? "POS·결제" : "POS"} value={result.moneyInfra.recommendedPos.toUpperCase()} reason={result.moneyInfra.recommendedPosReason} />
+                  <InfraTile
+                    label={ko ? "세무 처리" : "Tax"}
+                    value={result.moneyInfra.cpaDecision === "self" ? (ko ? "셀프 신고" : "Self") : result.moneyInfra.cpaDecision === "cpa" ? (ko ? "세무사 위임" : "CPA") : (ko ? "혼합 (월 셀프 + 연 컨설팅)" : "Hybrid")}
+                    reason={result.moneyInfra.cpaReason}
+                  />
+                </div>
+                {result.legal?.taxType && (
+                  <div style={{ marginTop: 10, fontSize: 12, color: "rgba(15,23,42,0.6)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ ...STAGE_LABEL }}>{ko ? "과세 유형" : "Tax type"}</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: "#191970" }}>
+                      {result.legal.taxType === "simplified" ? (ko ? "간이과세" : "Simplified") : result.legal.taxType === "standard" ? (ko ? "일반과세" : "Standard") : (ko ? "법인" : "Corporation")}
+                    </span>
+                    {result.legal.industryCode && <span style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)" }}>· {ko ? "업종코드" : "Code"} {result.legal.industryCode}</span>}
+                  </div>
+                )}
+              </StageCard>
+            )}
+
+            {/* ⭐ 운영 채널 — operationalChannels (Pass 2 AI 가 풀에서 선택) */}
+            {result.recommendations.operationalChannels && result.recommendations.operationalChannels.length > 0 && (
+              <StageCard
+                icon={Tv}
+                label={ko ? `운영 채널 — 주력 ${result.recommendations.operationalChannels.filter(c => c.priority === 1).length} · 보조 ${result.recommendations.operationalChannels.filter(c => c.priority === 2).length}` : `Channels`}
+                hint={ko ? "build.up 등록 채널에서 사장님의 업종·예산에 맞춰 AI 가 선택" : "AI selected from registered channels"}
+              >
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                  {result.recommendations.operationalChannels.map((ch) => (
+                    <div key={ch.id} style={{ padding: "12px 14px", borderRadius: 14, background: ch.priority === 1 ? "rgba(25,25,112,0.05)" : "rgba(15,23,42,0.03)", border: `1px solid ${ch.priority === 1 ? "rgba(25,25,112,0.10)" : "rgba(15,23,42,0.06)"}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: ch.priority === 1 ? "#191970" : "rgba(25,25,112,0.10)", color: ch.priority === 1 ? "white" : "#191970" }}>
+                            {ch.priority === 1 ? (ko ? "주력" : "Primary") : (ko ? "보조" : "Secondary")}
+                          </span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{ch.nameKo}</span>
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>· {ch.typeLabelKo}</span>
+                        </div>
+                        {ch.commissionRate > 0 && (
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#191970", fontVariantNumeric: "tabular-nums" as const }}>
+                            {ko ? "수수료 " : "Fee "}{ch.commissionRate}%
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>{ch.reason}</div>
+                    </div>
+                  ))}
+                </div>
+              </StageCard>
+            )}
+
+            {/* ⭐ 추천 공급업체 — 항상 표시 (Pass 2 AI 또는 DB 풀 또는 universalFallback) */}
+            <StageCard
+              icon={Truck}
+              label={ko ? `추천 공급업체 · ${result.recommendations.suppliers.length}곳` : `Suppliers · ${result.recommendations.suppliers.length}`}
+              hint={
+                result.recommendations.suppliers.length === 0
+                  ? (ko ? "⚠️ 추천 데이터 매칭 실패. 다시 생성을 눌러주세요." : "No matches. Regenerate.")
+                  : result.recommendations.suppliers.some(s => s.id)
+                    ? (ko ? "build.up 등록 검증 업체에서 사장님 상황에 맞춰 AI 가 선택. 풀에 없는 가상 업체 0%." : "AI selected from verified DB pool.")
+                    : (ko ? "AI 일반 추천 (DB 풀 매칭 데이터 부족)" : "AI general recommendation")
+              }
+            >
+              {result.recommendations.suppliers.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                  {result.recommendations.suppliers.map((s, i) => (
+                    <div key={s.id ?? i} style={{ padding: "12px 14px", borderRadius: 14, background: "white", border: "1px solid rgba(25,25,112,0.10)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        {s.category && <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(25,25,112,0.08)", color: "#191970", letterSpacing: "0.04em" }}>{s.category}</span>}
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", flex: 1 }}>{s.name}</span>
+                        {s.id && <span title={ko ? "DB 풀 검증" : "DB-verified"} style={{ display: "inline-flex", alignItems: "center" }}><ShieldCheck size={12} strokeWidth={1.8} color="#191970" /></span>}
+                      </div>
+                      {s.reason && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.5 }}>{s.reason}</div>}
+                      {s.priceRange && <div style={{ fontSize: 11, fontWeight: 700, color: "#191970", marginTop: 3 }}>{s.priceRange}</div>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(255,159,10,0.06)", border: "1px solid rgba(255,159,10,0.20)", color: "#b45309", fontSize: 13, fontWeight: 600, lineHeight: 1.55 }}>
+                  {ko
+                    ? "공급업체 매칭에 실패했습니다. 아래 \"다시 생성\" 버튼으로 재시도해 주세요."
+                    : "Supplier matching failed. Please regenerate."}
+                </div>
+              )}
+            </StageCard>
+
+            {/* ⭐ 디자인 컨셉 — selectedConcept (Pass 2 AI 가 interior_design_guides 풀에서 1개 선택) */}
+            {result.recommendations.selectedConcept && (
+              <StageCard
+                icon={Lightbulb}
+                label={ko ? "디자인 컨셉 — 선택됨" : "Design concept — selected"}
+                hint={ko ? "build.up 등록 컨셉 풀에서 AI 가 사장님 상황에 맞춰 선택" : "AI selected from concept pool"}
+              >
+                <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.10)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.015em" }}>{result.recommendations.selectedConcept.nameKo}</div>
+                    {result.recommendations.selectedConcept.costRangeKo && (
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#191970" }}>{result.recommendations.selectedConcept.costRangeKo}</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.65)", lineHeight: 1.55, marginBottom: 10 }}>{result.recommendations.selectedConcept.descriptionKo}</div>
+                  <div style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(25,25,112,0.04)", borderLeft: "3px solid #191970", fontSize: 12, color: "#0f172a", lineHeight: 1.55, fontWeight: 500, marginBottom: (result.recommendations.selectedConcept.pros.length > 0 || result.recommendations.selectedConcept.cons.length > 0) ? 10 : 0 }}>
+                    <span style={{ fontWeight: 700, marginRight: 4 }}>{ko ? "왜 이 컨셉?" : "Why?"}</span>
+                    {result.recommendations.selectedConcept.reason}
+                  </div>
+                  {(result.recommendations.selectedConcept.pros.length > 0 || result.recommendations.selectedConcept.cons.length > 0) && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      {result.recommendations.selectedConcept.pros.length > 0 && (
+                        <div>
+                          <div style={{ ...STAGE_LABEL, marginBottom: 4, color: "#191970" }}>{ko ? "장점" : "Pros"}</div>
+                          {result.recommendations.selectedConcept.pros.slice(0, 3).map((p, i) => (
+                            <div key={i} style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.45, marginBottom: 2 }}>· {p}</div>
+                          ))}
+                        </div>
+                      )}
+                      {result.recommendations.selectedConcept.cons.length > 0 && (
+                        <div>
+                          <div style={{ ...STAGE_LABEL, marginBottom: 4 }}>{ko ? "주의" : "Cons"}</div>
+                          {result.recommendations.selectedConcept.cons.slice(0, 3).map((c, i) => (
+                            <div key={i} style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.45, marginBottom: 2 }}>· {c}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </StageCard>
+            )}
+
+            {/* ⭐ 인테리어 시공 업체 — vendor_recommendations.vendor_type='interior' 에서 선택 */}
+            {result.recommendations.interiorVendors && result.recommendations.interiorVendors.length > 0 && (
+              <StageCard
+                icon={Home}
+                label={ko ? `인테리어 시공 업체 · ${result.recommendations.interiorVendors.length}곳` : `Interior contractors · ${result.recommendations.interiorVendors.length}`}
+                hint={ko ? "build.up 등록 시공 업체 풀에서 사장님 컨셉·예산에 맞춰 선정" : "From verified contractor pool"}
+              >
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                  {result.recommendations.interiorVendors.map((v) => (
+                    <div key={v.id} style={{ padding: "12px 14px", borderRadius: 14, background: "white", border: "1px solid rgba(25,25,112,0.10)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(25,25,112,0.08)", color: "#191970", letterSpacing: "0.04em" }}>
+                          {ko ? "인테리어 시공" : "Contractor"}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", flex: 1 }}>{v.title}</span>
+                        <span title={ko ? "DB 풀 검증" : "DB-verified"} style={{ display: "inline-flex", alignItems: "center" }}>
+                          <ShieldCheck size={12} strokeWidth={1.8} color="#191970" />
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.5, marginBottom: v.checkItems.length > 0 ? 6 : 0 }}>{v.description}</div>
+                      {v.checkItems.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 5, marginBottom: 6 }}>
+                          {v.checkItems.slice(0, 4).map((c, i) => (
+                            <span key={i} style={{ fontSize: 10.5, color: "rgba(15,23,42,0.55)", padding: "2px 8px", borderRadius: 999, background: "rgba(15,23,42,0.04)" }}>· {c}</span>
+                          ))}
+                        </div>
+                      )}
+                      {v.reason && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.45, paddingTop: 6, borderTop: "1px dashed rgba(25,25,112,0.10)" }}>· {v.reason}</div>}
+                    </div>
+                  ))}
+                </div>
+              </StageCard>
+            )}
+
+            {/* ⭐ 인테리어 자재 — Pass 2 AI 가 interior_design_guides DB 풀에서 선택 */}
+            {result.recommendations.interior.length > 0 && (
+              <StageCard
+                icon={Home}
+                label={ko ? `인테리어 자재 · ${result.recommendations.interior.length}건` : `Interior materials · ${result.recommendations.interior.length}`}
+                hint={
+                  result.recommendations.interior.some(i => i.id)
+                    ? (ko ? "build.up 등록 자재에서 컨셉·예산에 맞춰 AI 가 선택" : "AI picked from material pool")
+                    : (ko ? "AI 일반 추천 (DB 풀 매칭 데이터 부족)" : "AI general recommendation")
+                }
+              >
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {result.recommendations.interior.map((it, i) => (
+                    <div key={it.id ?? i} style={{ padding: "11px 13px", borderRadius: 14, background: "white", border: "1px solid rgba(25,25,112,0.10)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", flex: 1 }}>{it.item}</span>
+                        {it.id && <span title={ko ? "DB 풀 검증" : "DB-verified"} style={{ display: "inline-flex", alignItems: "center" }}><ShieldCheck size={11} strokeWidth={1.8} color="#191970" /></span>}
+                      </div>
+                      {it.vendor && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 1, lineHeight: 1.5 }}>{it.vendor}</div>}
+                      {it.estimatedCost && <div style={{ fontSize: 11.5, fontWeight: 700, color: "#191970", marginTop: 4 }}>{it.estimatedCost}</div>}
+                      {it.reason && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginTop: 6, lineHeight: 1.45, paddingTop: 6, borderTop: "1px dashed rgba(25,25,112,0.10)" }}>· {it.reason}</div>}
+                    </div>
+                  ))}
+                </div>
+              </StageCard>
+            )}
+
+            {/* 권장 보험 — insurance */}
+            {result.insurance && result.insurance.length > 0 && (
+              <StageCard icon={Umbrella} label={ko ? "권장 보험" : "Insurance"}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {result.insurance.map((ins, i) => (
+                    <div key={i} style={{ padding: "10px 14px", borderRadius: 14, background: ins.required ? "rgba(25,25,112,0.05)" : "rgba(15,23,42,0.03)", border: `1px solid ${ins.required ? "rgba(25,25,112,0.10)" : "rgba(15,23,42,0.06)"}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{ins.name}</div>
+                        {ins.required && <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "#191970", color: "white" }}>{ko ? "의무" : "Required"}</span>}
+                      </div>
+                      {ins.reason && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 4, lineHeight: 1.45 }}>{ins.reason}</div>}
+                      {ins.annualPremiumEstimate > 0 && <div style={{ fontSize: 11.5, fontWeight: 700, color: "#191970", marginTop: 3 }}>{ko ? "연 약 " : "~"}{fmt(ins.annualPremiumEstimate)}</div>}
+                    </div>
+                  ))}
+                </div>
+              </StageCard>
+            )}
+
+            {/* 정부지원사업 — fundingPrograms */}
+            {result.fundingPrograms && result.fundingPrograms.length > 0 && (
+              <StageCard icon={Lightbulb} label={ko ? "정부지원·창업 프로그램 (적합도순)" : "Funding programs (by fit)"}>
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                  {[...result.fundingPrograms].sort((a, b) => b.fitScore - a.fitScore).map((fp, i) => (
+                    <div key={i} style={{ padding: "12px 14px", borderRadius: 14, background: "white", border: "1px solid rgba(25,25,112,0.10)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>{fp.name}</div>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#191970" }}>· {fp.amount}</span>
+                        </div>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 9px", borderRadius: 999, background: fp.fitScore >= 80 ? "#191970" : "rgba(25,25,112,0.10)", color: fp.fitScore >= 80 ? "white" : "#191970", fontVariantNumeric: "tabular-nums" as const }}>
+                          {ko ? "적합도 " : "Fit "}{fp.fitScore}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.45 }}>{fp.eligibility}</div>
+                      {fp.deadline && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.5)", marginTop: 4 }}>· {fp.deadline}</div>}
+                    </div>
+                  ))}
+                </div>
+              </StageCard>
+            )}
+
+            {/* 업종 특화 — industrySpecific */}
+            {result.industrySpecific && (() => {
+              const is = result.industrySpecific!;
+              const items: Array<{ label: string; rows: Array<{ name: string; meta: string }> }> = [];
+              if (is.menu && is.menu.length > 0) items.push({ label: ko ? "시그니처 메뉴" : "Menu", rows: is.menu.map(m => ({ name: m.name, meta: `${fmt(m.price)} · ${m.reason}` })) });
+              if (is.services && is.services.length > 0) items.push({ label: ko ? "시술 메뉴" : "Services", rows: is.services.map(s => ({ name: s.name, meta: `${s.durationMin}분 · ${fmt(s.price)}` })) });
+              if (is.memberships && is.memberships.length > 0) items.push({ label: ko ? "회원권" : "Memberships", rows: is.memberships.map(m => ({ name: m.name, meta: `${m.durationMonths}개월 · ${fmt(m.price)}` })) });
+              if (is.products && is.products.length > 0) items.push({ label: ko ? "주력 상품" : "Products", rows: is.products.map(p => ({ name: p.name, meta: `${ko ? "마진 " : "Margin "}${p.targetMargin}% · ${p.reason}` })) });
+              if (is.coreAssets && is.coreAssets.length > 0) items.push({ label: ko ? "핵심 자산·장비" : "Core assets", rows: is.coreAssets.map(a => ({ name: a.name, meta: `${fmt(a.estimatedCost)} · ${a.priority === "must" ? (ko ? "필수" : "Must") : (ko ? "선택" : "Nice")}` })) });
+              if (items.length === 0) return null;
+              return (
+                <StageCard icon={Lightbulb} label={ko ? "업종 특화 — 메뉴·시술·상품·핵심자산" : "Industry-specific"}>
+                  {items.map((blk, i) => (
+                    <div key={i} style={{ marginBottom: i < items.length - 1 ? 12 : 0 }}>
+                      <div style={{ ...STAGE_LABEL, marginBottom: 6 }}>{blk.label}</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        {blk.rows.map((r, j) => (
+                          <div key={j} style={{ padding: "9px 12px", borderRadius: 12, background: "rgba(25,25,112,0.04)" }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#0f172a" }}>{r.name}</div>
+                            <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginTop: 2, lineHeight: 1.45 }}>{r.meta}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </StageCard>
+              );
+            })()}
+
+            {/* 타임라인 — timeline */}
+            <StageCard icon={Clock} label={ko ? `타임라인 — 총 ${result.timeline.totalWeeks}주` : `Timeline — ${result.timeline.totalWeeks} weeks`}>
+              <div style={{ display: "flex", gap: 2, marginTop: 4 }}>
+                {result.timeline.phases.map((p, i) => {
+                  const pct = result.timeline.totalWeeks > 0 ? (p.weeks / result.timeline.totalWeeks) * 100 : 0;
+                  // midnight 명도 단계 — 시작은 짙고 끝으로 갈수록 밝게
+                  const shades = ["#191970", "#2a2a8b", "#3b3ba6", "#5b6bff", "#8b94ff", "#b5bcff"];
+                  return (
+                    <div key={i} style={{ width: `${pct}%`, display: "flex", flexDirection: "column" as const, alignItems: "center", minWidth: 40 }}>
+                      <div style={{ width: "100%", height: 8, borderRadius: i === 0 ? "4px 0 0 4px" : i === result.timeline.phases.length - 1 ? "0 4px 4px 0" : "0", background: shades[i % shades.length] }} />
+                      <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(15,23,42,0.55)", marginTop: 6, textAlign: "center" as const, lineHeight: 1.2 }}>{p.name}</div>
+                      <div style={{ fontSize: 10, color: "rgba(15,23,42,0.4)" }}>{p.weeks}{ko ? "주" : "w"}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </StageCard>
           </div>
 
-          {/* 리스크 */}
+          {/* 리스크 — midnight tone */}
           {result.risks.length > 0 && (
-            <div style={{ marginTop: "16px", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+            <div style={{ marginTop: 14, display: "flex", flexDirection: "column" as const, gap: 8 }}>
               {result.risks.map((r, i) => (
-                <div key={i} style={{ padding: "16px 18px", borderRadius: "20px", background: r.level === "high" ? "rgba(220,38,38,0.04)" : "rgba(245,158,11,0.04)", border: `1px solid ${r.level === "high" ? "rgba(220,38,38,0.08)" : "rgba(245,158,11,0.08)"}` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={r.level === "high" ? "#dc2626" : "#f59e0b"} strokeWidth="2" strokeLinecap="round">
-                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><path d="M12 9v4M12 17h.01" />
-                    </svg>
-                    <span style={{ fontSize: "14px", fontWeight: 650, color: r.level === "high" ? "#dc2626" : "#b45309" }}>{r.description}</span>
+                <div key={i} style={{ padding: "14px 16px", borderRadius: 16, background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.10)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 6, background: r.level === "high" ? "#191970" : "rgba(25,25,112,0.12)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                      <ShieldCheck size={12} strokeWidth={1.8} color={r.level === "high" ? "white" : "#191970"} />
+                    </div>
+                    <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>{r.description}</span>
+                    <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: r.level === "high" ? "#191970" : "rgba(25,25,112,0.10)", color: r.level === "high" ? "white" : "#191970", letterSpacing: "0.04em" }}>
+                      {r.level === "high" ? (ko ? "높음" : "HIGH") : r.level === "medium" ? (ko ? "중간" : "MED") : (ko ? "낮음" : "LOW")}
+                    </span>
                   </div>
-                  <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", paddingLeft: "24px", lineHeight: 1.5 }}>{ko ? "대응: " : "Action: "}{r.mitigation}</div>
+                  <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", paddingLeft: 30, lineHeight: 1.5 }}>{ko ? "대응: " : "Action: "}{r.mitigation}</div>
                 </div>
               ))}
             </div>
@@ -664,92 +1142,157 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
 }
 
 /* ─── Styles ─── */
+/**
+ * Midnight Blue palette — 서비스 전체 톤과 일관 (#191970 시그니처).
+ * Apple SF tone + 미드나이트 단색 강조. (이전 라벤더·오키드 페탈은 FloatingInspiration 의 ambient 영역에서만 유지)
+ */
+const MIDNIGHT = "#191970";          // 메인 미드나이트 (CTA 배경·강조)
+const MIDNIGHT_DEEP = "#0f0f4a";      // 더 깊은 미드나이트 (그라디언트·텍스트)
+const MIDNIGHT_GLOW = "rgba(25,25,112,0.20)";
+const MIDNIGHT_BG = "#fafbff";        // 카드 베이스 (살짝 푸른빛이 도는 흰색)
+const MIDNIGHT_TINT = "rgba(25,25,112,0.08)"; // 호버 / 액센트
+const MIDNIGHT_BORDER = "rgba(25,25,112,0.12)";
+const HAIRLINE = "rgba(25,25,112,0.08)";
+const INK = "#0f172a";                // 차분한 다크 잉크
+const MUTED = "rgba(15,23,42,0.55)";
+const HINT = "rgba(15,23,42,0.40)";
 
 const shell: React.CSSProperties = {
   minHeight: "100vh",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "24px",
+  padding: "32px 24px",
   background: "transparent",
+  position: "relative" as const, // FloatingInspiration absolute 위치 기준
+  overflow: "hidden" as const,    // 떠다니는 항목이 화면 밖으로 흘러도 스크롤바 안 생기게
 };
 
 const card: React.CSSProperties = {
   width: "100%",
-  maxWidth: "580px",
-  padding: "44px 40px",
-  borderRadius: "32px",
-  background: "linear-gradient(160deg, rgba(247,244,255,0.9) 0%, rgba(255,255,255,0.98) 50%, rgba(255,255,255,1) 100%)",
-  border: "1px solid rgba(99,61,225,0.06)",
-  boxShadow: "0 12px 48px rgba(99,61,225,0.06), 0 1px 0 rgba(255,255,255,0.8) inset",
-  backdropFilter: "blur(16px)",
+  maxWidth: "600px",
+  padding: "40px 36px",
+  borderRadius: "28px",
+  background: `linear-gradient(180deg, ${MIDNIGHT_BG} 0%, #ffffff 100%)`,
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  boxShadow: `0 1px 3px ${MIDNIGHT_GLOW}, 0 24px 60px -16px ${MIDNIGHT_GLOW}, 0 1px 0 rgba(255,255,255,0.9) inset`,
+  backdropFilter: "blur(20px)",
+  position: "relative",
+  zIndex: 1,
 };
 
-const header: React.CSSProperties = { marginBottom: "28px" };
+const header: React.CSSProperties = { marginBottom: "26px" };
 
 const eyebrow: React.CSSProperties = {
-  fontSize: "13px", fontWeight: 700, letterSpacing: "0.12em",
-  textTransform: "uppercase", color: "#7c3aed", marginBottom: "14px",
-  display: "flex", alignItems: "center", gap: "8px",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  padding: "5px 11px",
+  borderRadius: "999px",
+  background: MIDNIGHT_TINT,
+  fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em",
+  textTransform: "uppercase", color: MIDNIGHT_DEEP,
+  marginBottom: "16px",
 };
 
 const title: React.CSSProperties = {
-  fontSize: "clamp(24px, 4vw, 30px)", fontWeight: 750, letterSpacing: "-0.04em",
-  color: "#0f172a", margin: "0 0 10px", lineHeight: 1.1,
+  fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, letterSpacing: "-0.035em",
+  color: INK, margin: "0 0 10px", lineHeight: 1.2,
 };
 
 const subtitle: React.CSSProperties = {
-  fontSize: "15px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, margin: 0,
+  fontSize: "14.5px", color: MUTED, lineHeight: 1.6, margin: 0, fontWeight: 500,
 };
 
 const backBtn: React.CSSProperties = {
-  fontSize: "14px", fontWeight: 600, color: "#7c3aed",
-  background: "none", border: "none", cursor: "pointer",
-  padding: "0 0 20px", display: "flex", alignItems: "center", gap: "4px",
+  display: "inline-flex", alignItems: "center", gap: "5px",
+  fontSize: "13px", fontWeight: 600, color: MIDNIGHT_DEEP,
+  background: "transparent", border: "none", cursor: "pointer",
+  padding: "0 0 18px",
+  transition: "opacity 0.15s ease",
 };
 
 const textareaStyle: React.CSSProperties = {
-  width: "100%", padding: "18px 20px", borderRadius: "20px",
-  border: "1.5px solid rgba(99,61,225,0.12)", fontSize: "16px",
-  lineHeight: 1.65, resize: "none", outline: "none",
-  background: "rgba(255,255,255,0.8)", boxSizing: "border-box",
+  width: "100%",
+  padding: "16px 18px",
+  borderRadius: "18px",
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  fontSize: "15px",
+  lineHeight: 1.65,
+  resize: "none",
+  outline: "none",
+  background: "#ffffff",
+  boxSizing: "border-box",
   minHeight: "140px",
-  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+  color: INK,
+  fontWeight: 500,
+  transition: "border-color 0.18s ease, box-shadow 0.18s ease",
+  fontFamily: "inherit",
 };
 
 const chipBtn: React.CSSProperties = {
-  fontSize: "13px", fontWeight: 550, padding: "8px 16px",
-  borderRadius: "999px", border: "1px solid rgba(99,61,225,0.1)",
-  background: "rgba(255,255,255,0.9)", cursor: "pointer", color: "#7c3aed",
-  transition: "background 0.15s ease, border-color 0.15s ease",
+  fontSize: "12.5px",
+  fontWeight: 600,
+  padding: "7px 14px",
+  borderRadius: "999px",
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  background: "white",
+  cursor: "pointer",
+  color: MIDNIGHT_DEEP,
+  transition: "background 0.15s ease, border-color 0.15s ease, transform 0.15s ease",
+  fontFamily: "inherit",
 };
 
 const primaryBtn: React.CSSProperties = {
-  width: "100%", padding: "17px", borderRadius: "16px",
+  width: "100%",
+  padding: "15px 20px",
+  borderRadius: "14px",
   border: "none",
-  background: "linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%)",
-  color: "#fff", fontSize: "16px", fontWeight: 660, cursor: "pointer",
-  transition: "opacity 0.15s ease, transform 0.15s ease",
-  boxShadow: "0 4px 16px rgba(99,61,225,0.2)",
+  background: `linear-gradient(135deg, ${MIDNIGHT} 0%, ${MIDNIGHT_DEEP} 100%)`,
+  color: "white",
+  fontSize: "15px",
+  fontWeight: 700,
+  letterSpacing: "-0.01em",
+  cursor: "pointer",
+  transition: "opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease",
+  boxShadow: `0 6px 20px ${MIDNIGHT_GLOW}, 0 1px 0 rgba(255,255,255,0.20) inset`,
+  fontFamily: "inherit",
 };
 
 const secondaryBtn: React.CSSProperties = {
-  padding: "16px 24px", borderRadius: "14px",
-  border: "1px solid rgba(15,23,42,0.08)", background: "#fff",
-  color: "#0f172a", fontSize: "16px", fontWeight: 650, cursor: "pointer",
+  padding: "14px 20px", borderRadius: "14px",
+  border: `1px solid ${MIDNIGHT_BORDER}`, background: "white",
+  color: MIDNIGHT_DEEP, fontSize: "14px", fontWeight: 700, cursor: "pointer",
+  fontFamily: "inherit",
+  transition: "background 0.15s ease",
 };
 
 const optionBtn: React.CSSProperties = {
-  padding: "16px", borderRadius: "14px",
-  border: "2px solid", background: "#fff",
-  cursor: "pointer", fontSize: "14px", fontWeight: 600,
-  textAlign: "center", transition: "all 0.15s ease",
+  padding: "16px",
+  borderRadius: "14px",
+  border: `1.5px solid ${HAIRLINE}`,
+  background: "white",
+  cursor: "pointer",
+  fontSize: "14px",
+  fontWeight: 600,
+  color: INK,
+  textAlign: "center",
+  transition: "all 0.15s ease",
+  fontFamily: "inherit",
 };
 
 const inputStyle: React.CSSProperties = {
-  flex: 1, padding: "12px 16px", borderRadius: "12px",
-  border: "1.5px solid rgba(15,23,42,0.1)", fontSize: "15px",
-  outline: "none", background: "#fff", boxSizing: "border-box",
+  flex: 1,
+  padding: "13px 16px",
+  borderRadius: "12px",
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  fontSize: "14.5px",
+  outline: "none",
+  background: "white",
+  boxSizing: "border-box",
+  color: INK,
+  fontFamily: "inherit",
+  transition: "border-color 0.18s ease, box-shadow 0.18s ease",
 };
 
 const rvCard: React.CSSProperties = {

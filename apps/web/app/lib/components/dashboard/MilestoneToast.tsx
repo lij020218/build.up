@@ -80,7 +80,7 @@ export function checkMilestones(opts: {
       title: ko ? "첫 매출 기록!" : "First Sales Entry!",
       subtitle: ko ? "매일 기록하면 경영의 흐름이 보입니다" : "Daily logging reveals your business rhythm",
       Icon: Target,
-      iconColor: "#2563eb",
+      iconColor: "#191970",
     },
     {
       id: "streak-7",
@@ -140,7 +140,7 @@ export function checkMilestones(opts: {
       title: ko ? "로드맵 완주!" : "Roadmap Complete!",
       subtitle: ko ? "모든 준비를 마쳤습니다. 이제 운영에 집중하세요" : "All preparation done. Focus on operations now",
       Icon: Flag,
-      iconColor: "#1d3557",
+      iconColor: "#191970",
     },
   ];
 
@@ -181,7 +181,7 @@ const iconCircle: React.CSSProperties = {
   width: "44px",
   height: "44px",
   borderRadius: "14px",
-  background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(52,199,89,0.08))",
+  background: "linear-gradient(135deg, rgba(25,25,112,0.08), rgba(52,199,89,0.08))",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

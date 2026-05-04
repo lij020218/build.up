@@ -21,6 +21,10 @@ type OnboardingState = {
   lastUnlocked: string[];
   selectedStoreIndex: number | null;
   transitionNotice: { title: string; body: string } | null;
+  /** Supabase 저장 상태: idle / saving / saved / error */
+  persistStatus: "idle" | "saving" | "saved" | "error";
+  persistError: string | null;
+  persistLastSavedAt: number | null;
 };
 
 type OnboardingActions = {
@@ -42,6 +46,9 @@ type OnboardingActions = {
   setLastUnlocked: (v: string[]) => void;
   setSelectedStoreIndex: (v: number | null) => void;
   setTransitionNotice: (v: { title: string; body: string } | null) => void;
+  setPersistStatus: (v: "idle" | "saving" | "saved" | "error") => void;
+  setPersistError: (v: string | null) => void;
+  setPersistLastSavedAt: (v: number | null) => void;
   resetAll: () => void;
 };
 
@@ -64,6 +71,9 @@ const initialState: OnboardingState = {
   lastUnlocked: [],
   selectedStoreIndex: null,
   transitionNotice: null,
+  persistStatus: "idle",
+  persistError: null,
+  persistLastSavedAt: null,
 };
 
 export const useOnboardingStore = create<OnboardingState & OnboardingActions>()((set) => ({
@@ -86,5 +96,8 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>()(
   setLastUnlocked: (v) => set({ lastUnlocked: v }),
   setSelectedStoreIndex: (v) => set({ selectedStoreIndex: v }),
   setTransitionNotice: (v) => set({ transitionNotice: v }),
+  setPersistStatus: (v) => set({ persistStatus: v }),
+  setPersistError: (v) => set({ persistError: v }),
+  setPersistLastSavedAt: (v) => set({ persistLastSavedAt: v }),
   resetAll: () => set(initialState),
 }));

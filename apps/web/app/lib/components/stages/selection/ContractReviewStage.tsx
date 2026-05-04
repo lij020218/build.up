@@ -1,13 +1,19 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Building2, FileSignature, ShieldCheck, AlertTriangle, ArrowRight } from "lucide-react";
+import { Building2, FileSignature, ShieldCheck } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
   getContractAnalysisHints,
   getContractTaskDetail,
 } from "../../../helpers";
+import {
+  KeyActionHero,
+  StageTabNav,
+  StageOverview,
+  WorkStep,
+} from "../shared/StageActionHero";
 
 // ── Apple-style 토큰 — permit-check 와 결 통일 ──────────────────
 const ACCENT_RGB = "29,53,87";
@@ -53,14 +59,36 @@ export function ContractReviewStage() {
     setViewingStageId,
     handleContractTaskToggle,
     handleContractContinue,
+    handleStageEdit,
+    decisions,
+    editSaveStatus,
     resetDemo,
   } = d;
+  const isStageCompleted = !!decisions["contract-review"]?.completedAt;
+  const _editStatus = editSaveStatus?.stageId === "contract-review" ? editSaveStatus.status : null;
+  const _editLabel = _editStatus === "saving"
+    ? (language === "ko" ? "저장 중..." : "Saving...")
+    : _editStatus === "saved"
+      ? (language === "ko" ? "✓ 수정 완료" : "✓ Saved")
+      : _editStatus === "error"
+        ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
+        : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
+  const _editBg = _editStatus === "saved" ? "#16a34a" : _editStatus === "error" ? "#dc2626" : "#34c759";
 
   const contractRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
 
+  // ⚠️ 페이지네이션 — 한 화면 = 한 흐름. 사용자 피드백으로 스크롤 분량 줄임.
+  //    탭: 왜 중요 → 뭘 해야 → 뭘 주의 → 유리한 길 → 체크리스트
+  const [pageIdx, setPageIdx] = useState(0);
+
   const canCompleteContractStep = contractTasks.every((task) => task.status === "completed");
   const ko = language === "ko";
+
+  // ★ 페이지 0 = 개요 (이 단계 왜·무엇을·기대 결과). 그 후 작업 흐름.
+  const pageLabels = ko
+    ? ["개요", "1. 서류", "2. 현장", "3. 특약", "4. 사인", "마무리"]
+    : ["Overview", "1. Docs", "2. Site", "3. Clauses", "4. Sign", "Wrap-up"];
 
   // ── 카테고리별 함정 (intro pitfall card) ───────────────────────
   const categoryPitfalls: Record<string, string> = {
@@ -94,144 +122,315 @@ export function ContractReviewStage() {
   };
   const pitfall = categoryPitfalls[industryCategoryId] ?? categoryPitfalls.food;
 
+  // ─── 카테고리별 「특약 협상 페이지」 의 사장님 상황 맞춤 권장 (페이지 3 inline) ───
+  const clauseFavorable: Record<string, { context: string; recommendation: string; rationale: string }> = {
+    food: { context: "음식점 / F&B", recommendation: "「환기·정화조·전기 보강 비용 임대인 부담」 특약 무조건 받기",
+      rationale: "후드·덕트·정화조 증축은 임대 후 발견 시 500~3,000만원. 임대인 부담 명시 또는 임대료 5% 인하로 보상. 거부 임대인 = 매물 변경." },
+    "cafe-dessert": { context: "카페 / 베이커리", recommendation: "「전기 30A↑ 증설 가능 + 비용 분담」 명시",
+      rationale: "머신·오븐·제빙기 동시 가동 시 20A 차단기 빈번. 한전 신청 30~80만원. 임대인 부담 또는 임대료 인하로 보상." },
+    retail: { context: "리테일 / 소매", recommendation: "「온라인 판매 병행 가능」 + 「업종변경 자유」 명시",
+      rationale: "오프라인만 묶이면 매출 다각화 어려움. 스마트스토어 병행이 매출 안전망. 미명시 시 분쟁 발생 시 임대인 우위." },
+    beauty: { context: "미용·뷰티", recommendation: "「소음·향기 민원 시 임대인 1차 중재 책임」 명시",
+      rationale: "옆 가게 민원으로 영업시간 제한 사례 다수. 임대인이 중재 안 하면 임차인이 직접 분쟁 — 책임 분담 명시 필수." },
+    fitness: { context: "필라테스·요가·PT", recommendation: "「방음 보강 비용 임대인 부담」 + 「영업시간 06-23시 보장」",
+      rationale: "운동 소음 민원이 폐점 1순위. 방음 보강 1,000~3,000만원을 임대인이 분담 안 하면 매물 변경." },
+    education: { context: "학원", recommendation: "「학원 등록 가능 용도」 + 「소방완비증명서 책임 분담」 명시",
+      rationale: "건축물 용도 「교육연구시설」 또는 학원 가능 「근린생활시설」 확약 안 받으면 등록 거부. 100㎡↑ 소방완비 필수." },
+    pet: { context: "펫", recommendation: "「소음·냄새 민원 1차 중재 임대인 책임」 + 「업종 폐쇄 명령 시 환불」",
+      rationale: "펫 업종 민원 영업정지 빈번. 환불 조항 없으면 보증금 묶인 채 폐업. 임대인 중재 + 환불 보장이 안전망." },
+    "online-digital": { context: "온라인·디지털 (사무실·창고)", recommendation: "「사업자등록 가능」 명시",
+      rationale: "주거용 임대차 계약서는 「사업자 등록 금지」 가 default. 사업자등록 못 하면 매출 신고·세금계산서 불가." },
+    "living-service": { context: "세탁·청소·수리", recommendation: "「폐수·소음 기준 적합 매물 + 위반 시 임대인 책임」",
+      rationale: "폐수·소음 위반은 영업정지 사유. 임대인이 사전 적합성 확약 없이 단속 시 임차인 부담." },
+    space: { context: "공간 임대", recommendation: "「숙박 가능 여부 + 데시벨·시간 제한 명시」",
+      rationale: "건축물 용도 미일치 시 영업허가 거부. 소음·시간 분쟁 1순위 — 특약에 명시." },
+  };
+  const myClauseTip = clauseFavorable[industryCategoryId] ?? clauseFavorable.food;
+
   return (
     <>
-      {/* ── Hero: 단계 의미 ───────────────────────────────────── */}
-      <section style={surfaceCard}>
-        <div style={eyebrow}>{ko ? "계약 전 검토" : "Pre-Contract Review"}</div>
-        <h2 style={{
-          fontSize: "26px", fontWeight: 680, letterSpacing: "-0.035em",
-          lineHeight: 1.18, color: "#0f172a", margin: "0 0 14px",
-        }}>
-          {ko
-            ? "계약서 한 번 사인하면 보증금이 묶입니다. 그 전 30분이 가장 비싼 30분입니다."
-            : "Once you sign, your deposit is locked. The 30 minutes before are the most expensive 30 minutes."}
-        </h2>
-        <p style={{ fontSize: "16px", lineHeight: 1.6, color: "rgba(0,0,0,0.62)", margin: 0 }}>
-          {ko
-            ? "이 단계는 임대차 계약 직전에 「건물·계약·보증금 보호」 3축을 점검하는 곳입니다. 인허가 단계에서 확인한 요건이 실제로 이 건물에서 충족되는지, 계약서 특약에 보호 장치가 들어가는지 확인합니다."
-            : "Right before signing the lease, audit 3 axes: building, contract clauses, deposit protection. Confirm permit requirements actually match this building and that protections are written into special clauses."}
-        </p>
-      </section>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko ? "계약서 사인 전 75분 — 보증금 1,000~5,000만원을 지키는 시간" : "75 min before signing — protect your ₩10-50M deposit",
+          detail: ko
+            ? "건물·계약·보호 3축을 점검하고 5종 특약을 협상해야 합니다. 사인 후 발견하는 문제는 거의 100% 임차인 부담."
+            : "Audit 3 axes + negotiate 5 clauses. Post-sign issues are almost always tenant's burden.",
+        }}
+        pillars={[
+          { icon: <Building2 size={12} strokeWidth={1.5} />, label: ko ? "건물" : "Building", meta: ko ? "용도 · 정화조 · 전기" : "Class · Septic · Power" },
+          { icon: <FileSignature size={12} strokeWidth={1.5} />, label: ko ? "계약" : "Contract", meta: ko ? "5% 상한 · 10년 갱신" : "5% cap · 10y renewal" },
+          { icon: <ShieldCheck size={12} strokeWidth={1.5} />, label: ko ? "보호" : "Protection", meta: ko ? "확정일자 · 근저당" : "Cert · Mortgages" },
+        ]}
+      />
 
-      {/* ── 3축 점검 ──────────────────────────────────────────── */}
-      <section style={surfaceCard}>
-        <div style={eyebrow}>{ko ? "점검할 3축 — 건물·계약·보호" : "Three axes — Building, Contract, Protection"}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0", borderTop: hairline, borderBottom: hairline }}>
-          {([
-            {
-              Icon: Building2,
-              title: ko ? "건물" : "Building",
-              desc: ko
-                ? "건축물대장 용도 일치, 정화조·전기·급배수 용량, 시설 상태 — 영업 가능 여부의 물리적 조건"
-                : "Use code match, septic/electrical/water capacity, facility state — physical fitness for operation",
-            },
-            {
-              Icon: FileSignature,
-              title: ko ? "계약" : "Contract",
-              desc: ko
-                ? "임대료 인상 상한 (5%), 계약갱신요구권 (10년), 권리금·원상복구 범위, 업종변경 조항"
-                : "Rent cap (5%), renewal right (10y), key money/restoration scope, business-type clauses",
-            },
-            {
-              Icon: ShieldCheck,
-              title: ko ? "보호 장치" : "Protection",
-              desc: ko
-                ? "확정일자 (당일), 등기부등본 근저당 확인, 환산보증금 한도, 영상 기록"
-                : "Same-day certified date, deed register check, converted-deposit cap, video record",
-            },
-          ]).map((axis, i, arr) => (
-            <div
-              key={axis.title}
-              style={{ padding: "20px 18px", borderRight: i < arr.length - 1 ? hairline : "none" }}
-            >
-              <div style={{
-                width: "36px", height: "36px", borderRadius: "10px",
-                background: `linear-gradient(180deg, rgba(${MIDNIGHT_RGB},0.10) 0%, rgba(${MIDNIGHT_RGB},0.06) 100%)`,
-                border: `1px solid rgba(${MIDNIGHT_RGB},0.16)`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <axis.Icon size={18} strokeWidth={1.8} color={MIDNIGHT} />
-              </div>
-              <div style={{
-                fontSize: "13px", fontWeight: 600, color: "#0f172a",
-                marginTop: "10px", marginBottom: "6px", letterSpacing: "-0.01em",
-              }}>
-                {axis.title}
-              </div>
-              <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(0,0,0,0.58)" }}>
-                {axis.desc}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <StageTabNav
+        ko={ko}
+        pageIndex={pageIdx}
+        pageLabels={pageLabels}
+        onPrev={() => setPageIdx(p => Math.max(0, p - 1))}
+        onNext={() => setPageIdx(p => Math.min(pageLabels.length - 1, p + 1))}
+        onJump={setPageIdx}
+      />
 
-      {/* ── 4단계 작업 흐름 ───────────────────────────────────── */}
-      <section style={surfaceCard}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "10px" }}>
-          <div style={eyebrow}>{ko ? "작업 흐름" : "Workflow"}</div>
-          <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)", fontVariantNumeric: "tabular-nums" }}>
-            {ko ? "약 90분" : "~90 min"}
-          </div>
-        </div>
-        <ol style={{ margin: 0, padding: 0, listStyle: "none" }}>
-          {[
-            { time: "20분", text: ko ? "건축물대장·등기부등본 발급 — 정부24 / 인터넷등기소. 용도·근저당·정화조 확인" : "Get building registry + deed register from gov.kr — verify use code, mortgages, septic" },
-            { time: "30분", text: ko ? "현장 방문 — 시설·설비·소음·동선·환기를 직접 점검 + 영상으로 전체 기록" : "Site visit — inspect facilities/noise/flow/ventilation in person + film entire space" },
-            { time: "25분", text: ko ? "계약서 특약 협상 — 임대료 인상 상한, 원상복구 범위, 권리금, 업종변경 명시" : "Negotiate special clauses — rent cap, restoration scope, key money, business-type" },
-            { time: ko ? "다음" : "Next", text: ko ? "확정일자 받고 → 다음 단계 (인테리어 발주) 로" : "Get certified date → proceed to interior setup", isFinal: true },
-          ].map((step, i, arr) => (
-            <li
-              key={i}
-              style={{
-                display: "flex", alignItems: "flex-start", gap: "16px",
-                padding: "16px 0",
-                borderBottom: i < arr.length - 1 ? hairline : "none",
-              }}
-            >
-              <div style={{
-                width: "28px", height: "28px", borderRadius: "50%",
-                background: step.isFinal ? MIDNIGHT : "transparent",
-                border: step.isFinal ? "none" : `1.5px solid rgba(${MIDNIGHT_RGB},0.32)`,
-                color: step.isFinal ? "#fff" : MIDNIGHT,
-                boxShadow: step.isFinal ? `0 4px 14px rgba(${MIDNIGHT_RGB},0.32)` : "none",
-                fontSize: "12px", fontWeight: 700,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, marginTop: "-1px",
-              }}>
-                {step.isFinal ? <ArrowRight size={13} strokeWidth={2.2} /> : i + 1}
-              </div>
-              <div style={{ flex: 1, fontSize: "15px", lineHeight: 1.55, color: "#0f172a", letterSpacing: "-0.01em" }}>
-                {step.text}
-              </div>
-              <div style={{
-                fontSize: "12px", fontWeight: 500, color: "rgba(0,0,0,0.45)",
-                flexShrink: 0, paddingTop: "3px", fontVariantNumeric: "tabular-nums",
-                minWidth: "36px", textAlign: "right" as const,
-              }}>
-                {step.time}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {/* ── 페이지 0: 단계 개요 (왜 + 작업 목차 + 기대 결과) ── */}
+      {pageIdx === 0 && (
+        <StageOverview
+          ko={ko}
+          headline={ko
+            ? "계약서 사인 전 75분이 보증금 1,000~5,000만원을 결정합니다"
+            : "75 min before signing decides your ₩10-50M deposit"}
+          why={ko
+            ? "임대차 계약은 사인 후 정정 가능성이 거의 0%. 건물(용도·정화조·전기)·계약(특약)·보호(확정일자·근저당)를 사전에 점검해야 분쟁·손실을 막습니다. 인근 점주 인터뷰 + 정부 서류 + 표준 특약 5종만으로 80% 리스크 차단."
+            : "Lease amendments post-sign are ~0%. Pre-inspect building / clauses / protection to prevent disputes. Neighbor interview + gov docs + 5 standard clauses block 80% of risk."}
+          stat={{
+            value: ko ? "₩2,800만" : "₩28M",
+            label: ko ? "분쟁 시 평균 손실액" : "avg dispute loss",
+          }}
+          workOutline={[
+            { stepLabel: ko ? "1. 서류" : "1. Docs", title: ko ? "건축물대장 + 등기부등본 발급" : "Building register + deed", time: ko ? "20분" : "20m" },
+            { stepLabel: ko ? "2. 현장" : "2. Site", title: ko ? "현장 방문 + 영상 + 인접 점주 인터뷰" : "Site visit + video + neighbor interview", time: ko ? "30분" : "30m" },
+            { stepLabel: ko ? "3. 특약" : "3. Clauses", title: ko ? "특약 5종 협상 — 임대료·갱신·원상복구·업종·시설" : "Negotiate 5 clauses", time: ko ? "25분" : "25m" },
+            { stepLabel: ko ? "4. 사인" : "4. Sign", title: ko ? "사인 즉시 확정일자 (동주민센터)" : "Sign + same-day certified date", time: ko ? "당일" : "Same day" },
+            { stepLabel: ko ? "체크리스트" : "Checklist", title: ko ? "AI 계약 분석 + 필수 확인 항목 마킹" : "AI clause review + checklist" },
+          ]}
+          outcome={ko
+            ? "보증금 보호 (확정일자 + 5% 상한 + 갱신 10년 + 원상복구 「임차 시 상태」 기준) 가 모두 계약서에 명문화됩니다. 다음 단계 (인테리어 발주) 부터는 보증금 묶임 리스크가 사라진 상태에서 진행."
+            : "Deposit protection (certified date + 5% cap + 10y renewal + 'as-leased' restoration) is locked into the lease. Next stage (interior) proceeds risk-free."}
+          nextStage={ko ? "인테리어·집기 발주 (construction-setup)" : "Interior setup"}
+        />
+      )}
 
-      {/* ── Pitfall ──────────────────────────────────────────── */}
-      <section style={{
-        marginBottom: "16px", padding: "16px 20px", borderRadius: "16px",
-        background: "rgba(255,255,255,0.96)", border: "1px solid rgba(220,38,38,0.18)",
+      {/* ── 페이지 1: 서류 발급 (gov24 + 인터넷등기소) ── */}
+      {pageIdx === 1 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "1. 서류 발급" : "1. Documents"}
+          time={ko ? "20분" : "20m"}
+          headline={ko ? "건축물대장 + 등기부등본을 사인 전에 직접 확인" : "Pull building register + deed before signing"}
+          why={ko
+            ? "임대인 말로 「용도 OK·근저당 적음」 = 절대 신뢰 X. 정부 서류로만 검증. 근저당 50%↑ 매물은 임대인 부도 시 보증금 회수 위험."
+            : "Don't trust landlord's verbal claims — verify with government docs. Mortgages over 50% = deposit recovery risk if landlord defaults."}
+          how={[
+            { title: ko ? "건축물대장 발급 (정부24·무료·5분)" : "Building register (gov24 · free · 5m)", detail: ko ? "정부24 → 「건축물대장 등본」 검색 → PDF 다운. 「용도」 + 「위반건축물」 표시 + 「정화조 BOD 용량」 확인." : "gov.kr → search 'building register' → PDF. Check use class, violation flag, septic BOD." },
+            { title: ko ? "등기부등본 발급 (인터넷등기소·700원·5분)" : "Deed register (iros.go.kr · ₩700 · 5m)", detail: ko ? "iros.go.kr → 「등기사항전부증명서」 → 부동산 주소 검색. 「갑구」 = 소유권, 「을구」 = 근저당·압류. 근저당 합계 ÷ 매물 시세 = 부도 위험률." : "iros.go.kr → property address. 갑구 = ownership, 을구 = mortgages. Total mortgages / market value = default risk." },
+          ]}
+          watchouts={ko ? [
+            { label: "위반건축물 표시 = 영업신고 영구 불가", text: "건축물대장에 「위반건축물」 표기 시 무조건 매물 변경. 무허가 증축·용도 변경은 시정 명령 + 보증금 묶임." },
+            { label: "근저당 50%↑ = 임대인 부도 시 보증금 후순위", text: "근저당 권자 (은행 등) 가 우선. 보증금이 후순위면 임대인 부도 시 잃을 가능성 큼." },
+          ] : [
+            { label: "Violation flag = permanent denial", text: "If building register shows '위반건축물', walk away. Unauthorized changes = remedial order + deposit lock." },
+            { label: "Mortgages > 50% = deposit risk", text: "Mortgage holders rank above tenant. Default = deposit at risk." },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 1: 현장 방문 (영상 + 인접 점주 인터뷰) ── */}
+      {pageIdx === 2 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "2. 현장 방문" : "2. Site visit"}
+          time={ko ? "30분" : "30m"}
+          headline={ko ? "휴대폰 영상 + 옆 가게 점주 인터뷰 = 80% 리스크 차단" : "Phone video + neighbor interview = block 80% risk"}
+          why={ko
+            ? "사진은 못 잡는 「소음·냄새·동선·환기」를 직접 점검. 옆 가게 점주에게 30초만 물어봐도 임대인 평판이 보임."
+            : "Photos miss noise/smell/flow/ventilation — verify in person. 30-second neighbor interview reveals landlord reputation."}
+          how={[
+            { title: ko ? "영상 기록 — 매장 전체 + 외부 + 시설" : "Video — interior + exterior + utilities", detail: ko ? "휴대폰으로 한 번에 쭉 촬영. 누수·곰팡이·전기 패널·환기 후드·정화조 위치까지. 분쟁 시 증거." : "Single-take phone video. Cover leaks, mold, electrical panel, vent hood, septic. Evidence for disputes." },
+            { title: ko ? "옆 가게 점주에게 3개 질문" : "3 questions to neighbor", detail: ko ? "「이 건물주 어때요?」 + 「임대료 어떻게 인상하세요?」 + 「민원 자주 있나요?」 — 임대인 평판 80% 노출." : "How's the landlord? How are rent increases handled? Many complaints? — 80% reveal." },
+            { title: ko ? "전기 용량·정화조 용량 직접 확인" : "Electrical · septic capacity check", detail: ko ? "전기 패널 30A 표기 확인 + 건물 외부 정화조 위치·크기 확인. 임대인 답변과 다르면 협상 카드." : "Verify 30A panel + septic location/size. Discrepancy with landlord = negotiation lever." },
+          ]}
+          watchouts={ko ? [
+            { label: "낮 시간대만 가지 말 것 — 야간 소음 못 봄", text: "주거 인접 매물은 저녁 7시·아침 7시 다시 방문해 소음 점검. 영업 후 민원으로 시간 제한 가능성 사전 차단." },
+          ] : [
+            { label: "Daytime visit only misses night noise", text: "Re-visit at 7pm/7am for residential-adjacent properties. Pre-emptive noise check." },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 2: 특약 5종 협상 ── */}
+      {pageIdx === 3 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "3. 특약 협상" : "3. Special clauses"}
+          time={ko ? "25분" : "25m"}
+          headline={ko ? "표준 임대차계약서 + 5종 특약 — 거부 임대인 = 매물 변경" : "Standard lease + 5 clauses — refusal = walk away"}
+          why={ko
+            ? "사인 후 정정 거의 불가. 5종 특약을 협상 못 하는 임대인은 분쟁 시 일방적. 협상 거부 자체가 위험 신호."
+            : "Post-sign amendment ~0%. A landlord who refuses standard clauses is a red flag for future disputes."}
+          how={[
+            { title: ko ? "표준 임대차계약서 사용 (법무부 양식)" : "Use MOJ standard lease form", detail: ko ? "법무부 「상가건물 임대차 표준계약서」 다운. 임대인이 본인 양식 고집하면 추가 위험 조항 의심." : "MOJ standard form. Landlord's own form may hide risky clauses." },
+            { title: ko ? "특약 5종 명시 — 임대료 5%·갱신 10년·원상복구·업종변경·시설보강" : "5 clauses — 5% cap·10y renewal·restoration·business-type·upgrades", detail: ko ? "「특약사항」 란에 5종 모두 명시. ① 임대료 인상 연 5% 이내 ② 10년 갱신권 ③ 원상복구 = 「임차 시 상태」 기준 ④ 업종변경 자유 ⑤ 시설보강 비용 임대인 부담." : "Specify all 5 in addendum. ① 5% rent cap ② 10y renewal ③ restoration to as-leased state ④ business-type freedom ⑤ landlord-paid upgrades." },
+            { title: ko ? "거부 시 매물 변경 — 협상 못 하는 임대인은 위험" : "Walk away on refusal", detail: ko ? "5종 모두 거부하면 분쟁 가능성 매우 높은 임대인. 보증금 1,000~5,000만원 묶을 가치 없음." : "Refusal of all 5 = high-dispute landlord. Not worth ₩10-50M deposit risk." },
+          ]}
+          watchouts={ko ? [
+            { label: "「임대료 5% 상한」 미명시 = 무제한 인상 가능", text: "서울 환산보증금 9억 초과 매물은 상가임대차보호법 자동 적용 X. 특약에 「갱신 시 5% 이내」 안 적으면 매년 임대인 마음대로." },
+            { label: "원상복구 「최초 인도 시 상태」 = 인테리어 철거 1,000~3,000만원", text: "본인이 한 시공을 모두 철거 + 원래대로 복구해야 함. 「임차 시 상태」 로 명시해야 본인 시공만 책임." },
+          ] : [
+            { label: "No 5% cap clause = unlimited yearly increase", text: "Above deposit limit, statutory cap doesn't apply. Explicit clause is only protection." },
+            { label: "'Original' restoration = ₩10-30M demolition", text: "Strip everything to first-delivery state. Use 'as-leased' to limit scope." },
+          ]}
+          favorable={{ context: myClauseTip.context, recommendation: myClauseTip.recommendation, rationale: myClauseTip.rationale }}
+        />
+      )}
+
+      {/* ── 페이지 3: 사인 + 확정일자 ── */}
+      {pageIdx === 4 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "4. 사인 + 확정일자" : "4. Sign + certified date"}
+          time={ko ? "당일 30분" : "Same day · 30m"}
+          headline={ko ? "사인 당일 무조건 확정일자 — 1일 늦으면 보증금 후순위" : "Get certified date the SAME DAY — 1 day late = subordinated"}
+          why={ko
+            ? "확정일자가 보증금 우선변제권 결정. 다른 채권자가 그 사이 등기하면 사장님 보증금이 후순위로 밀려 임대인 부도 시 잃음."
+            : "Certified date sets your deposit priority. If another creditor records first, your deposit is subordinated."}
+          how={[
+            { title: ko ? "관할 동주민센터 또는 세무서 방문" : "Local center / tax office visit", detail: ko ? "임차물건 주소 관할. 1,000원 수수료. 30분 안에 끝남. 토요일 일부 가능 — 평일에 사인하는 게 안전." : "Property's jurisdiction. ₩1K fee. 30 minutes. Some Sat hours — weekday safer." },
+            { title: ko ? "필요 서류 — 임대차계약서 + 신분증" : "Required — lease + ID", detail: ko ? "원본 계약서 + 본인 신분증. 임대인 동행 X (임차인 단독 신청)." : "Original lease + your ID. No landlord needed." },
+            { title: ko ? "확정일자 도장 받은 계약서는 절대 분실 X" : "Never lose the stamped lease", detail: ko ? "스캔본 클라우드 + 원본 금고 보관. 분쟁 시 핵심 증거." : "Scan to cloud + safe storage. Key dispute evidence." },
+            { title: ko ? "다음 단계 — 인테리어·집기 발주" : "Next stage — interior setup", detail: ko ? "확정일자 받으면 보증금 보호 완료. 다음 단계로 진행." : "Once certified, protected. Move to interior setup." },
+          ]}
+          watchouts={ko ? [
+            { label: "확정일자 1일 늦어도 우선변제권 후순위", text: "사인 후 다른 채권자가 그날 등기하면 사장님 보증금이 후순위. 사인 직후 바로 동주민센터로." },
+          ] : [
+            { label: "1 day late = subordinated", text: "If another creditor files same day, you're junior. Go to local center IMMEDIATELY after signing." },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 5 — 마무리 (한 일 + 다음 단계 전 주의) + 필수 확인 항목 ── */}
+      {pageIdx === 5 && (
+        <>
+      {/* 마무리 카드 — 한 일 + 다음 단계 전 주의 */}
+      <div style={{
+        background: "white", borderRadius: 16,
+        border: "1px solid rgba(25,25,112,0.08)",
+        boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+        padding: "20px 22px",
+        display: "flex", flexDirection: "column", gap: 18,
+        marginBottom: 16,
       }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-          <AlertTriangle size={18} strokeWidth={1.8} color="#dc2626" style={{ flexShrink: 0, marginTop: "1px" }} />
-          <div>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626", letterSpacing: "0.02em", marginBottom: "4px" }}>
-              {ko ? "이 카테고리의 흔한 실패" : "Common failure for this category"}
-            </div>
-            <div style={{ fontSize: "14px", lineHeight: 1.55, color: "rgba(0,0,0,0.78)" }}>{pitfall}</div>
+        <div>
+          <div style={{
+            fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
+            letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 4,
+          }}>
+            {ko ? "마무리" : "Wrap-up"}
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.4 }}>
+            {ko ? "이 단계에서 한 일 + 다음 단계 전 반드시 확인" : "What you did + must-verify before next stage"}
           </div>
         </div>
-      </section>
+
+        {/* 이 단계에서 한 일 */}
+        <div>
+          <div style={{
+            fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
+            letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 10,
+          }}>
+            {ko ? "이 단계에서 한 일" : "What you did"}
+          </div>
+          <ol style={{
+            margin: 0, padding: 0, listStyle: "none",
+            border: "1px solid rgba(25,25,112,0.10)", borderRadius: 12, overflow: "hidden",
+          }}>
+            {(ko ? [
+              { label: "1. 서류 발급", detail: "건축물대장 + 등기부등본 — 위반건축물 표시 + 근저당 ÷ 시세 = 부도 위험률" },
+              { label: "2. 현장 방문 + 인접 점주 인터뷰", detail: "휴대폰 영상 + 30초 인터뷰 + 전기 30A·정화조 직접 검증" },
+              { label: "3. 특약 5종 협상", detail: "임대료 5% 상한 + 10년 갱신 + 원상복구 「임차 시 상태」 + 업종변경 자유 + 시설보강 임대인 부담" },
+              { label: "4. 사인 + 당일 확정일자", detail: "동주민센터 30분 — 1,000원 — 보증금 우선변제권 확보" },
+            ] : [
+              { label: "1. Pulled docs", detail: "Building register + deed — violations + mortgage / value ratio" },
+              { label: "2. Site visit + neighbor interview", detail: "Phone video + 30s chat + 30A/septic verified" },
+              { label: "3. Negotiated 5 clauses", detail: "5% cap + 10y renewal + as-leased + business freedom + landlord pays upgrades" },
+              { label: "4. Signed + same-day cert", detail: "Local center · 30m · ₩1K — deposit priority secured" },
+            ]).map((item, i) => (
+              <li key={i} style={{
+                display: "flex", alignItems: "flex-start", gap: 12,
+                padding: "12px 14px",
+                borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
+                background: "rgba(25,25,112,0.025)",
+              }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: 7,
+                  background: MIDNIGHT, color: "white",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, marginTop: 1, fontSize: 12, fontWeight: 800,
+                }}>✓</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
+                    {item.label}
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginTop: 3 }}>
+                    {item.detail}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* 다음 단계 전 반드시 확인 */}
+        <div style={{
+          padding: "14px 16px", borderRadius: 12,
+          background: "rgba(220,38,38,0.04)",
+          border: "1px solid rgba(220,38,38,0.14)",
+        }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, color: "#dc2626",
+            letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8,
+          }}>
+            {ko ? "다음 단계(인테리어) 전 반드시 확인" : "Verify before interior setup"}
+          </div>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
+            {(ko ? [
+              "확정일자 도장 받은 계약서 원본 보관 + 스캔본 클라우드 (분쟁 시 핵심 증거)",
+              "특약 5종 모두 계약서 「특약사항」 란에 명문화 — 구두 약속은 분쟁 시 100% 임차인 불리",
+              "근저당 합계 ÷ 시세 50% 이상이면 보증금 후순위 — 보증보험 가입 검토",
+              "전기 용량·정화조 용량을 임대인 답변과 다르면 시설보강 임대인 부담 추가 협상",
+              "원상복구 범위가 「임차 시 상태」 로 명시됐는지 다시 확인 — 「최초 인도 시」 = 인테리어 철거 1,000~3,000만원 부담",
+            ] : [
+              "Keep stamped lease original + cloud scan — key dispute evidence",
+              "All 5 clauses in addendum — verbal promises lose 100% in dispute",
+              "Mortgages > 50% of value = deposit risk — consider deposit insurance",
+              "If electric/septic differs from landlord's words, demand cost-share clause",
+              "Restoration scope = 'as-leased' (not 'original') — saves ₩10-30M demolition",
+            ]).map((item, i) => (
+              <li key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                <span style={{ flexShrink: 0, marginTop: 7, width: 5, height: 5, borderRadius: "50%", background: "#dc2626" }} />
+                <span style={{ fontSize: 13, color: "#7f1d1d", lineHeight: 1.6, fontWeight: 500 }}>
+                  {item}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* 다음 단계 안내 */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "13px 15px", borderRadius: 12,
+          background: "linear-gradient(180deg, rgba(5,150,105,0.05) 0%, rgba(5,150,105,0.02) 100%)",
+          border: "1px solid rgba(5,150,105,0.16)",
+        }}>
+          <div style={{
+            width: 26, height: 26, borderRadius: 8,
+            background: "rgba(5,150,105,0.12)", color: "#059669",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0, fontSize: 13, fontWeight: 800,
+          }}>✓</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 2 }}>
+              {ko ? "이 단계가 끝나면" : "When done"}
+            </div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em", lineHeight: 1.4 }}>
+              {ko
+                ? "보증금 보호 명문화 완료 → 인테리어·집기 발주 (construction-setup) 진입"
+                : "Deposit protection locked → enter interior setup"}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div style={styles.helper}>
         {isDigitalCategory
@@ -267,6 +466,12 @@ export function ContractReviewStage() {
             industryCategoryId,
             language,
           );
+          // ⚠️ 체크리스트 100% 완료 강제 — 부분 체크로 자동 진행 방지
+          const checklistTotal = detail.checklist.length;
+          const checklistDone = detail.checklist.filter((_, i) => contractSubChecks[`${task.taskId}:${i}`]).length;
+          const checklistAllDone = checklistTotal === 0 || checklistDone === checklistTotal;
+          // task 가 todo → completed 로 바뀌려면 체크리스트 100% 필요. 이미 completed 면 해제는 항상 가능.
+          const canMarkComplete = completed || checklistAllDone;
           return (
             <div
               key={task.taskId}
@@ -297,39 +502,59 @@ export function ContractReviewStage() {
                 alignItems: "center",
                 gap: "12px",
               }}>
-                {/* ① Status circle — 클릭 시 task 완료 토글 */}
+                {/* ① Status circle — 클릭 시 task 완료 토글 (⚠️ 체크리스트 100% 미완료 시 차단) */}
                 <button
                   type="button"
-                  aria-label={completed
-                    ? (ko ? "확인 완료 해제" : "Mark not done")
-                    : (ko ? "확인 완료" : "Mark done")}
+                  aria-label={
+                    completed
+                      ? (ko ? "확인 완료 해제" : "Mark not done")
+                      : !canMarkComplete
+                        ? (ko ? `체크리스트 ${checklistDone}/${checklistTotal} 완료 필요` : `Complete ${checklistDone}/${checklistTotal} checklist first`)
+                        : (ko ? "확인 완료" : "Mark done")
+                  }
+                  disabled={!canMarkComplete}
+                  title={
+                    !canMarkComplete
+                      ? (ko ? `이 task 의 체크리스트 (${checklistDone}/${checklistTotal}) 를 모두 완료해야 합니다.` : `Complete all ${checklistTotal} checklist items first.`)
+                      : undefined
+                  }
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (!canMarkComplete) {
+                      // 사용자에게 명확한 피드백 — 펼쳐서 체크리스트 보이게
+                      setSelectedContractTaskId(task.taskId);
+                      return;
+                    }
                     handleContractTaskToggle(task.taskId);
                   }}
                   style={{
                     width: "26px",
                     height: "26px",
                     borderRadius: "50%",
-                    border: completed ? "none" : "1.5px solid rgba(0,0,0,0.22)",
+                    border: completed
+                      ? "none"
+                      : !canMarkComplete
+                        ? "1.5px dashed rgba(0,0,0,0.18)"
+                        : "1.5px solid rgba(0,0,0,0.22)",
                     background: completed ? "#34c759" : "transparent",
                     boxShadow: completed ? "0 2px 6px rgba(52,199,89,0.28)" : "none",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
-                    cursor: "pointer",
+                    cursor: canMarkComplete ? "pointer" : "not-allowed",
+                    opacity: !canMarkComplete ? 0.45 : 1,
                     padding: 0,
                     transition: "all 0.15s ease",
                   }}
                   onMouseEnter={(e) => {
-                    if (!completed) {
+                    if (!completed && canMarkComplete) {
                       e.currentTarget.style.borderColor = "#34c759";
                       e.currentTarget.style.background = "rgba(52,199,89,0.06)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!completed) {
+                    if (!completed && canMarkComplete) {
                       e.currentTarget.style.borderColor = "rgba(0,0,0,0.22)";
                       e.currentTarget.style.background = "transparent";
                     }
@@ -339,6 +564,10 @@ export function ContractReviewStage() {
                     <svg width="13" height="10" viewBox="0 0 11 8" fill="none">
                       <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
+                  ) : !canMarkComplete && checklistTotal > 0 ? (
+                    <span style={{ fontSize: "9px", fontWeight: 700, color: "rgba(0,0,0,0.42)", fontVariantNumeric: "tabular-nums" }}>
+                      {checklistDone}/{checklistTotal}
+                    </span>
                   ) : null}
                 </button>
 
@@ -767,18 +996,45 @@ export function ContractReviewStage() {
           </div>
         ) : null}
       </div>
+        </>
+      )}
 
       <div style={styles.stageFooter}>
-        {prevTraversedStage ? (
-          <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
-            {language === "ko" ? "← 이전 단계" : "← Back"}
+        {/* ⚠️ 항상 노출 — prevTraversedStage 가 null 이어도 (사용자가 미완료 단계를 viewing 중) 로드맵으로 돌아가는 fallback */}
+        <button
+          type="button"
+          style={styles.button}
+          onClick={() => {
+            if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+            else setViewingStageId(null); // 로드맵 surface 로 복귀
+          }}
+        >
+          {language === "ko" ? "← 이전 단계" : "← Back"}
+        </button>
+        {/* "수정 저장" — editSaveStatus 따라 라벨/색 변경. */}
+        {isStageCompleted && (
+          <button
+            type="button"
+            style={{
+              ...styles.primaryButton,
+              opacity: canCompleteContractStep && _editStatus !== "saving" ? 1 : 0.5,
+              background: _editBg,
+              cursor: _editStatus === "saving" ? "wait" : "pointer",
+            }}
+            disabled={_editStatus === "saving"}
+            onClick={() => {
+              if (!canCompleteContractStep) return;
+              void handleStageEdit("contract-review");
+            }}
+          >
+            {_editLabel}
           </button>
-        ) : null}
+        )}
         <button
           type="button"
           style={{
             ...styles.primaryButton,
-            opacity: canCompleteContractStep ? 1 : 0.45
+            opacity: canCompleteContractStep ? 1 : 0.45,
           }}
           onClick={() => {
             if (!canCompleteContractStep) {
@@ -790,9 +1046,9 @@ export function ContractReviewStage() {
             handleContractContinue();
           }}
         >
-          {canCompleteContractStep
-            ? copy.home.completeContractReview
-            : (language === "ko" ? "↑ 항목을 모두 확인하세요" : "↑ Complete all checklist items")}
+          {!canCompleteContractStep
+            ? (language === "ko" ? "↑ 항목을 모두 확인하세요" : "↑ Complete all checklist items")
+            : copy.home.completeContractReview}
         </button>
         <button type="button" style={styles.button} onClick={resetDemo}>
           {copy.common.resetDemo}

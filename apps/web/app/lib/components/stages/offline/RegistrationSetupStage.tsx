@@ -40,6 +40,8 @@ import {
   StartupKeyActionHero,
   StartupPageNav,
 } from "../startup/StartupStageShell";
+import { StoreNameInput } from "../shared/StoreNameInput";
+import { StageWrapup } from "../shared/StageWrapup";
 
 /* ───────────────────────────────────────────────────────────────────
  * 카테고리별 인허가 데이터 (2026 검증)
@@ -456,7 +458,7 @@ function PathCard({
 
 export function RegistrationSetupStage() {
   const d = useDashboardCtx();
-  const { industryCategoryId } = d;
+  const { industryCategoryId, language } = d;
 
   // 페이지네이션 — 4페이지 (왜 / 1단계 사업자등록 / 2단계 인허가 / 유리한 길)
   const [page, setPage] = useState(0);
@@ -572,6 +574,13 @@ export function RegistrationSetupStage() {
           PAGE 1 — HOW Step 1: 사업자등록
           ═════════════════════════════════════════════════════════ */}
       {page === 1 && (
+      <>
+      {/* 상호명 — 사업자등록 직전 결정 (등록증·간판·통장·SNS 모두 동일 사용) */}
+      <div style={{ marginBottom: "14px" }}>
+        <StoreNameInput
+          helperText="홈택스 사업자등록 신청 화면에 입력할 상호입니다. 등록 후 변경하려면 등록증 재발급이 필요하므로 신중히 결정하세요. KIPRIS에서 동일 상표 등록 여부 확인 권장."
+        />
+      </div>
       <Section
         icon={FileText}
         title="1단계 · 사업자등록 (홈택스)"
@@ -644,6 +653,7 @@ export function RegistrationSetupStage() {
           ))}
         </div>
       </Section>
+      </>
       )}
 
       {/* ═══════════════════════════════════════════════════════════
@@ -903,6 +913,26 @@ export function RegistrationSetupStage() {
       </div>
       </>
       )}
+
+      <StageWrapup
+        ko={language === "ko"}
+        nextStageLabelKo="세무 가이드"
+        doneItemsKo={[
+          { label: "1. 상호·업태·종목 결정", detail: "상호 중복 검색 + 업태(소매·서비스 등) + 종목(세부 업종) 정확 매칭" },
+          { label: "2. 사업자등록 신청", detail: "홈택스 온라인 또는 세무서 방문 — 임대차계약서·신분증 지참, 발급 평균 1~3일" },
+          { label: "3. 영업신고·허가 신청", detail: "업종별 관할 보건소·구청·시청 — 식품접객업·미용업·체육시설업 등 카테고리별 분리" },
+          { label: "4. 통장·카드단말기·홈택스 연동", detail: "사업자 통장 개설 + 카드단말기 신청 + 홈택스 공동인증서 등록" },
+        ]}
+        verifyItemsKo={[
+          "사업자등록 — 개업일 기준 20일 이내 신청 (지연 시 가산세 + 부가세 매입세액 공제 불가)",
+          "영업신고증 — 시설기준·위생교육·건강진단서 3개 모두 갖춰야 발급 (1개라도 누락 시 보완 통보)",
+          "임대차계약서 — 사업자등록 시 제출용은 「확정일자」 받은 원본, 보증금 우선변제권 확보",
+          "간이과세 vs 일반과세 — 연매출 8천만원 미만이면 간이 유리, 초기엔 일반 선택 후 매입세액 환급도 고려",
+          "건강진단서·위생교육 — 식품접객업은 영업신고 전 필수 (보건소 또는 식품진흥원, 비용 1~3만원)",
+          "다중이용시설 — 소방시설완비증명서·전기안전점검확인서 사전 발급 (영업신고 시 첨부)",
+        ]}
+        nextSummaryKo="사업자등록·영업신고증 발급 완료 → 세무 가이드(부가세·종소세·간이과세) 단계로 진입"
+      />
     </div>
   );
 }

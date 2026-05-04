@@ -4,6 +4,7 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import {
   ShieldCheck, AlertTriangle, ExternalLink, type LucideIcon,
 } from "lucide-react";
+import { StageWrapup, type WrapupItem } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970";
 
@@ -28,6 +29,13 @@ export type ClusterStageContent = {
   traps?: Array<{ label: string; text: string }>;
   /** 외부 링크 (정부 지원·표준·인증기관 등) */
   links?: Array<{ name: string; href: string; desc?: string }>;
+  /** 마무리 — 다음 단계 전 반드시 확인 */
+  wrapup?: {
+    nextStageLabelKo: string;
+    doneItemsKo: WrapupItem[];
+    verifyItemsKo: string[];
+    nextSummaryKo: string;
+  };
 };
 
 export type ClusterStageTemplateProps = {
@@ -271,6 +279,16 @@ export function ClusterStageTemplate({
             ))}
           </div>
         </div>
+      )}
+
+      {content.wrapup && (
+        <StageWrapup
+          ko={ko}
+          nextStageLabelKo={content.wrapup.nextStageLabelKo}
+          doneItemsKo={content.wrapup.doneItemsKo}
+          verifyItemsKo={content.wrapup.verifyItemsKo}
+          nextSummaryKo={content.wrapup.nextSummaryKo}
+        />
       )}
     </div>
   );

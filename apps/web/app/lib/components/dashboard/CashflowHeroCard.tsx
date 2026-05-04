@@ -65,44 +65,131 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
   const crisis = useMemo(() => detectCrisis(projections, crisisThresholdDays), [projections, crisisThresholdDays]);
   const upcoming = useMemo(() => findUpcomingEvents(projections, 5), [projections]);
 
-  // ── 미설정 상태 ──
+  // ── 미설정 상태 — 미드나이트 + 정보가 풍부한 onboarding 카드 ──
   if (!setupCompletedAt) {
     return (
       <>
-        <section style={cardBase} className="bento-card">
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+        <section
+          style={{
+            borderRadius: "20px",
+            padding: "22px",
+            background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+            border: "1px solid rgba(25,25,112,0.10)",
+            boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+          className="bento-card"
+        >
+          {/* 헤더 */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
             <div style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "14px",
-              background: "rgba(37,99,235,0.08)",
+              width: "40px",
+              height: "40px",
+              borderRadius: "12px",
+              background: "rgba(25,25,112,0.08)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}>
-              <Wallet size={24} color="#2563eb" strokeWidth={1.6} />
+              <Wallet size={20} color="#191970" strokeWidth={1.8} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={eyebrow}>{ko ? "현금흐름 레이더" : "Cash-flow Radar"}</div>
-              <div style={title}>
-                {ko ? "오늘 통장에 얼마, 내일 얼마 들어와요?" : "Do you know how much you'll have tomorrow?"}
+              <div style={{ ...eyebrow, color: "#191970", opacity: 0.7 }}>
+                {ko ? "현금흐름 레이더" : "Cash-flow Radar"}
               </div>
-              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", marginTop: "6px", lineHeight: 1.55 }}>
-                {ko
-                  ? "배민·쿠팡이츠·카드 정산 주기는 제각각. 장부는 흑자여도 통장은 바닥일 수 있어요. 2분만 설정하면 14일 앞을 미리 봅니다."
-                  : "Delivery apps, card PGs all settle on different schedules. Your P&L may be green while your bank is red. 2-minute setup shows 14 days ahead."}
+              <div style={{ ...title, fontSize: "18px", color: "#0f0f4a", marginTop: "2px" }}>
+                {ko ? "오늘 통장에 얼마, 내일 얼마?" : "Today's & tomorrow's cash?"}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowSetup(true)}
-                style={primaryCTA}
-              >
-                {ko ? "2분 설정 시작" : "Start 2-min setup"}
-                <ChevronRight size={16} strokeWidth={2} />
-              </button>
             </div>
           </div>
+
+          {/* 핵심 가치 — 3 bullets (P&L 카드의 정보량과 균형 맞춤) */}
+          <div style={{
+            display: "grid",
+            gap: "10px",
+            padding: "14px 16px",
+            borderRadius: "14px",
+            background: "rgba(25,25,112,0.03)",
+            border: "1px solid rgba(25,25,112,0.06)",
+          }}>
+            {[
+              { ko: "배민·쿠팡이츠·카드 PG 정산 주기 자동 추적", en: "Auto-track Baemin·Coupang·card settlement cycles" },
+              { ko: "이번 주 입금 예정·14일 앞 잔고 미리 보기", en: "This week's deposits + 14-day balance forecast" },
+              { ko: "잔고 위험 시 7가지 원버튼 해결책 제안", en: "7 one-tap solutions when balance dips" },
+            ].map((item) => (
+              <div key={item.ko} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 16,
+                  height: 16,
+                  borderRadius: "999px",
+                  background: "#191970",
+                  flexShrink: 0,
+                  marginTop: 2,
+                }}>
+                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                    <path d="M2 4.5L4 6.5L7 3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.75)", lineHeight: 1.5, fontWeight: 500 }}>
+                  {ko ? item.ko : item.en}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* 인사이트 한 줄 — 왜 지금 설정해야 하는지 */}
+          <div style={{
+            fontSize: "12.5px",
+            color: "rgba(15,23,42,0.55)",
+            lineHeight: 1.55,
+            padding: "0 2px",
+          }}>
+            {ko
+              ? <>장부는 <strong style={{ color: "#191970" }}>흑자</strong>여도 통장은 <strong style={{ color: "#191970" }}>바닥</strong>일 수 있어요. 2분 설정으로 흑자 부도를 미리 막으세요.</>
+              : <>Your P&L may show <strong style={{ color: "#191970" }}>profit</strong>, but bank could be <strong style={{ color: "#191970" }}>empty</strong>. 2-min setup prevents profitable bankruptcy.</>}
+          </div>
+
+          {/* CTA */}
+          <button
+            type="button"
+            onClick={() => setShowSetup(true)}
+            style={{
+              alignSelf: "stretch",
+              padding: "12px 18px",
+              borderRadius: "12px",
+              background: "#191970",
+              color: "#fff",
+              border: "none",
+              fontSize: "13.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              fontFamily: "inherit",
+              boxShadow: "0 4px 12px rgba(25,25,112,0.22)",
+              letterSpacing: "-0.01em",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 6px 16px rgba(25,25,112,0.28)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(25,25,112,0.22)";
+            }}
+          >
+            {ko ? "2분 설정 시작" : "Start 2-min setup"}
+            <ChevronRight size={15} strokeWidth={2.4} />
+          </button>
         </section>
         {showSetup && <CashflowSetupSheet ko={ko} onClose={() => setShowSetup(false)} />}
       </>
@@ -328,7 +415,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
         <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
           <button type="button" onClick={() => setShowDetail(true)} style={secondaryCTA}>
             {ko ? "14일 상세 보기" : "14-day details"}
-            <ChevronRight size={14} strokeWidth={2} />
+            <ChevronRight size={14} strokeWidth={1.5} />
           </button>
         </div>
       </section>
@@ -471,7 +558,7 @@ const primaryCTA: React.CSSProperties = {
   marginTop: "14px",
   padding: "10px 16px",
   borderRadius: "10px",
-  background: "#2563eb",
+  background: "#191970",
   color: "#fff",
   border: "none",
   fontSize: "13px",

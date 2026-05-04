@@ -73,28 +73,10 @@ import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { supabase } from "../lib/supabase";
-import { useLanguage } from "./language-provider";
-
-export type DashboardSurface =
-  | "home"
-  | "current"
-  | "roadmap"
-  | "guides"
-  | "profile"
-  | "analytics"
-  | "franchise"
-  | "marketing";
-
-const SURFACE_HREFS = {
-  home: "/(tabs)/home",
-  current: "/(tabs)/current",
-  roadmap: "/(tabs)/roadmap",
-  guides: "/(tabs)/guides",
-  profile: "/(tabs)/profile",
-  analytics: "/analytics",
-  franchise: "/franchise",
-  marketing: "/marketing"
-} as const satisfies Record<DashboardSurface, string>;
+import { AuroraBackground, colors, radii, shadows } from "../lib/design";
+import { useLanguage } from "../lib/language-provider";
+import { SURFACE_HREFS, type DashboardSurface } from "../lib/navigation/surfaces";
+import { AppHeader, HeroIntro, SurfaceSwitcher, type SurfaceTabItem } from "../lib/components/AppChrome";
 
 type MarketingChannelKey =
   | "naver-place"
@@ -1075,12 +1057,12 @@ export default function DashboardScreen({
     employees,
     aiRoadmapResult
   });
-  const surfaceTabs = [
-    { id: "home" as const, label: language === "ko" ? "홈" : "Home" },
-    { id: "current" as const, label: language === "ko" ? "현재 단계" : "Current" },
-    { id: "roadmap" as const, label: language === "ko" ? "로드맵" : "Roadmap" },
-    { id: "guides" as const, label: language === "ko" ? "가이드" : "Guides" },
-    { id: "profile" as const, label: language === "ko" ? "내 정보" : "Profile" }
+  const surfaceTabs: SurfaceTabItem[] = [
+    { id: "home", label: language === "ko" ? "홈" : "Home" },
+    { id: "current", label: language === "ko" ? "현재 단계" : "Current" },
+    { id: "roadmap", label: language === "ko" ? "로드맵" : "Roadmap" },
+    { id: "guides", label: language === "ko" ? "가이드" : "Guides" },
+    { id: "profile", label: language === "ko" ? "내 정보" : "Profile" }
   ];
   const navigateToSurface = (nextSurface: DashboardSurface) => {
     router.push(SURFACE_HREFS[nextSurface]);
@@ -2449,39 +2431,19 @@ export default function DashboardScreen({
   }, [industryCategoryId, requiresAuth, language]);
 
   return (
+    <AuroraBackground>
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.appBar}>
-          <View style={styles.brandLockup}>
-            <View style={styles.brandMark}>
-              <Text style={styles.brandMarkText}>b</Text>
-            </View>
-            <View>
-              <Text style={styles.brandText}>Build.UP</Text>
-              <Text style={styles.brandSubText}>
-                {language === "ko" ? "창업 로드맵 OS" : "Startup roadmap OS"}
-              </Text>
-            </View>
-          </View>
-          {!requiresAuth ? (
-            <View style={styles.progressPill}>
-              <Text style={styles.progressPillValue}>{visibleProgressPercent}%</Text>
-              <Text style={styles.progressPillLabel}>{language === "ko" ? "진행" : "done"}</Text>
-            </View>
-          ) : null}
-        </View>
+        <AppHeader
+          language={language}
+          showProgress={!requiresAuth}
+          progressPercent={visibleProgressPercent}
+        />
 
-        <View style={styles.hero}>
-          <Text style={styles.eyebrow}>build.up</Text>
-          <Text style={styles.title}>
-            {isFreshAccount ? copy.home.heroFresh : copy.home.heroActive}
-          </Text>
-          <Text style={styles.subtitle}>
-            {isFreshAccount
-              ? copy.home.heroFreshBody
-              : copy.home.heroActiveBody}
-          </Text>
-        </View>
+        <HeroIntro
+          title={isFreshAccount ? copy.home.heroFresh : copy.home.heroActive}
+          subtitle={isFreshAccount ? copy.home.heroFreshBody : copy.home.heroActiveBody}
+        />
 
         {authResolved && requiresAuth ? (
           <View style={styles.currentStageCard}>
@@ -2499,29 +2461,11 @@ export default function DashboardScreen({
         {requiresAuth ? null : (
           <>
         {showSurfaceNav ? (
-        <View style={styles.section}>
-          <View style={styles.surfaceNav}>
-            {surfaceTabs.map((tab) => (
-              <Pressable
-                key={tab.id}
-                onPress={() => navigateToSurface(tab.id)}
-                style={[
-                  styles.surfaceNavButton,
-                  activeSurface === tab.id && styles.surfaceNavButtonSelected
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.surfaceNavButtonText,
-                    activeSurface === tab.id && styles.surfaceNavButtonTextSelected
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        <SurfaceSwitcher
+          tabs={surfaceTabs}
+          activeSurface={activeSurface}
+          onSelect={navigateToSurface}
+        />
         ) : null}
 
         {activeSurface === "home" && onboardingMode === "existing" ? (
@@ -5153,6 +5097,7 @@ export default function DashboardScreen({
         )}
       </ScrollView>
     </SafeAreaView>
+    </AuroraBackground>
   );
 }
 
@@ -5168,7 +5113,7 @@ function ProfileItem(props: { label: string; value: string }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F5F7FA"
+    backgroundColor: "transparent"
   },
   content: {
     paddingHorizontal: 20,
@@ -5176,79 +5121,11 @@ const styles = StyleSheet.create({
     paddingBottom: 112,
     gap: 16
   },
-  appBar: {
-    minHeight: 54,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 14,
-    paddingRight: 92
-  },
-  brandLockup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    minWidth: 0
-  },
-  brandMark: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#075E66"
-  },
-  brandMarkText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "800",
-    letterSpacing: -0.2
-  },
-  brandText: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#101820",
-    letterSpacing: -0.2
-  },
-  brandSubText: {
-    marginTop: 1,
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#637083"
-  },
-  progressPill: {
-    minWidth: 58,
-    minHeight: 40,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(7,94,102,0.12)",
-    backgroundColor: "rgba(7,94,102,0.07)"
-  },
-  progressPillValue: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#075E66",
-    lineHeight: 18
-  },
-  progressPillLabel: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#637083",
-    letterSpacing: 0.3,
-    textTransform: "uppercase"
-  },
-  hero: {
-    gap: 10,
-    paddingTop: 8,
-    paddingBottom: 4
-  },
   eyebrow: {
     fontSize: 13,
     letterSpacing: 2.8,
     textTransform: "uppercase",
-    color: "#075E66"
+    color: colors.primary
   },
   title: {
     fontSize: 32,
@@ -5265,43 +5142,14 @@ const styles = StyleSheet.create({
   section: {
     gap: 12
   },
-  surfaceNav: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-    padding: 7,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.72)",
-    backgroundColor: "rgba(255,255,255,0.46)"
-  },
-  surfaceNavButton: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "transparent",
-    backgroundColor: "transparent",
-    paddingHorizontal: 14,
-    paddingVertical: 10
-  },
-  surfaceNavButtonSelected: {
-    borderColor: "rgba(255,255,255,0.82)",
-    backgroundColor: "rgba(255,255,255,0.72)"
-  },
-  surfaceNavButtonText: {
-    fontSize: 14,
-    color: "#637083"
-  },
-  surfaceNavButtonTextSelected: {
-    color: "#075E66",
-    fontWeight: "600"
-  },
   card: {
     backgroundColor: "rgba(255,255,255,0.85)",
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
-    borderRadius: 8,
+    borderRadius: radii.card,
     padding: 20,
-    gap: 10
+    gap: 10,
+    ...shadows.glassCard
   },
   cardTitle: {
     fontSize: 20,
@@ -5322,20 +5170,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.84)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.76)",
-    borderRadius: 8,
+    borderRadius: radii.card,
     padding: 20,
     gap: 9,
-    shadowColor: "#101820",
-    shadowOpacity: 0.045,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 3
+    ...shadows.glassCard
   },
   currentMeta: {
     fontSize: 12,
     letterSpacing: 2,
     textTransform: "uppercase",
-    color: "#075E66"
+    color: colors.primary
   },
   currentTitle: {
     fontSize: 24,
@@ -5359,18 +5203,14 @@ const styles = StyleSheet.create({
   },
   onboardingChoiceCard: {
     minHeight: 148,
-    borderRadius: 8,
+    borderRadius: radii.card,
     borderWidth: 1,
     borderColor: "rgba(15,23,42,0.07)",
     backgroundColor: "rgba(255,255,255,0.86)",
     paddingHorizontal: 18,
     paddingVertical: 17,
     gap: 8,
-    shadowColor: "#101820",
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 2
+    ...shadows.glassCard
   },
   onboardingChoiceTitle: {
     fontSize: 19,
@@ -5382,11 +5222,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 14,
     fontWeight: "800",
-    color: "#075E66"
+    color: colors.primary
   },
   mobileFeatureCard: {
     minHeight: 100,
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(15,23,42,0.07)",
     backgroundColor: "rgba(255,255,255,0.78)",
@@ -5396,7 +5236,7 @@ const styles = StyleSheet.create({
   },
   stageBriefCard: {
     minHeight: 92,
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(15,23,42,0.07)",
     backgroundColor: "rgba(255,255,255,0.74)",
@@ -5407,7 +5247,7 @@ const styles = StyleSheet.create({
   stageBriefLabel: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#075E66",
+    color: colors.primary,
     letterSpacing: 1.1,
     textTransform: "uppercase"
   },
@@ -5423,10 +5263,10 @@ const styles = StyleSheet.create({
     color: "#637083"
   },
   transitionNotice: {
-    borderRadius: 8,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "rgba(7,94,102,0.12)",
-    backgroundColor: "rgba(7,94,102,0.06)",
+    borderColor: "rgba(29,53,87,0.12)",
+    backgroundColor: "rgba(29,53,87,0.06)",
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 4
@@ -5435,13 +5275,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "#075E66",
+    color: colors.primary,
     fontWeight: "700"
   },
   transitionNoticeText: {
     fontSize: 14,
     lineHeight: 21,
-    color: "#075E66"
+    color: colors.primary
   },
   helper: {
     fontSize: 14,
@@ -5453,7 +5293,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.72)",
-    borderRadius: 8,
+    borderRadius: radii.lg,
     overflow: "hidden",
     backgroundColor: "rgba(255,255,255,0.52)"
   },
@@ -5472,17 +5312,17 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 7,
-    borderRadius: 8,
+    borderRadius: radii.pill,
     overflow: "hidden",
     backgroundColor: "rgba(15,23,42,0.07)"
   },
   progressFill: {
     height: "100%",
-    borderRadius: 8,
-    backgroundColor: "#12A8A0"
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary
   },
   inlineSummaryRow: {
-    borderRadius: 8,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.66)",
@@ -5519,7 +5359,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   currentUtilityButton: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
     backgroundColor: "rgba(255,255,255,0.62)",
@@ -5532,7 +5372,7 @@ const styles = StyleSheet.create({
     color: "#637083"
   },
   currentStateChip: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
     backgroundColor: "rgba(255,255,255,0.46)",
@@ -5551,14 +5391,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.82)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
-    borderRadius: 8,
+    borderRadius: radii.xl,
     padding: 16,
     gap: 6,
-    shadowColor: "#101820",
-    shadowOpacity: 0.04,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 2
+    ...shadows.glassCard
   },
   quickActionTitle: {
     fontSize: 16,
@@ -5571,7 +5407,7 @@ const styles = StyleSheet.create({
     color: "#637083"
   },
   pill: {
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "rgba(255,255,255,0.82)",
@@ -5589,18 +5425,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.86)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.78)",
-    borderRadius: 8,
+    borderRadius: radii.xl,
     padding: 16,
     gap: 8,
-    shadowColor: "#101820",
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 2
+    ...shadows.glassCard
   },
   optionCardSelected: {
-    borderColor: "rgba(7,94,102,0.28)",
-    backgroundColor: "rgba(7,94,102,0.04)"
+    borderColor: "rgba(29,53,87,0.28)",
+    backgroundColor: "rgba(29,53,87,0.04)"
   },
   optionCardDisabled: {
     opacity: 0.56
@@ -5622,18 +5454,18 @@ const styles = StyleSheet.create({
     gap: 8
   },
   scoreBadge: {
-    borderRadius: 8,
-    backgroundColor: "rgba(7,94,102,0.08)",
+    borderRadius: radii.pill,
+    backgroundColor: "rgba(29,53,87,0.08)",
     paddingHorizontal: 10,
     paddingVertical: 6
   },
   scoreBadgeDone: {
-    backgroundColor: "#075E66"
+    backgroundColor: colors.primary
   },
   scoreBadgeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#075E66"
+    color: colors.primary
   },
   scoreBadgeDoneText: {
     color: "#FFFFFF"
@@ -5644,7 +5476,7 @@ const styles = StyleSheet.create({
     gap: 8
   },
   metricChip: {
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     paddingHorizontal: 10,
@@ -5683,7 +5515,7 @@ const styles = StyleSheet.create({
   },
   presetChip: {
     minHeight: 36,
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(15,23,42,0.08)",
     backgroundColor: "rgba(255,255,255,0.78)",
@@ -5692,8 +5524,8 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   presetChipSelected: {
-    borderColor: "rgba(7,94,102,0.28)",
-    backgroundColor: "rgba(7,94,102,0.07)"
+    borderColor: "rgba(29,53,87,0.28)",
+    backgroundColor: "rgba(29,53,87,0.07)"
   },
   presetChipText: {
     fontSize: 12,
@@ -5701,13 +5533,13 @@ const styles = StyleSheet.create({
     color: "#637083"
   },
   presetChipTextSelected: {
-    color: "#075E66"
+    color: colors.primary
   },
   budgetPanel: {
     backgroundColor: "rgba(255,255,255,0.9)",
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
-    borderRadius: 8,
+    borderRadius: radii.xl,
     padding: 18,
     gap: 10
   },
@@ -5729,11 +5561,11 @@ const styles = StyleSheet.create({
   },
   confidenceBadge: {
     fontSize: 11,
-    color: "#075E66",
-    backgroundColor: "rgba(7,94,102,0.08)",
+    color: colors.primary,
+    backgroundColor: "rgba(29,53,87,0.08)",
     borderWidth: 1,
-    borderColor: "rgba(7,94,102,0.1)",
-    borderRadius: 8,
+    borderColor: "rgba(29,53,87,0.1)",
+    borderRadius: radii.pill,
     paddingHorizontal: 10,
     paddingVertical: 5,
     overflow: "hidden"
@@ -5745,7 +5577,7 @@ const styles = StyleSheet.create({
     color: "#101820"
   },
   budgetInput: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -5771,7 +5603,7 @@ const styles = StyleSheet.create({
   choiceCard: {
     width: "48%",
     minHeight: 74,
-    borderRadius: 8,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -5781,8 +5613,8 @@ const styles = StyleSheet.create({
     gap: 4
   },
   choiceCardSelected: {
-    borderColor: "rgba(7,94,102,0.28)",
-    backgroundColor: "rgba(7,94,102,0.06)"
+    borderColor: "rgba(29,53,87,0.28)",
+    backgroundColor: "rgba(29,53,87,0.06)"
   },
   choiceTitle: {
     fontSize: 15,
@@ -5791,7 +5623,7 @@ const styles = StyleSheet.create({
     color: "#101820"
   },
   choiceTitleSelected: {
-    color: "#075E66"
+    color: colors.primary
   },
   choiceCaption: {
     fontSize: 13,
@@ -5799,7 +5631,7 @@ const styles = StyleSheet.create({
     color: "#637083"
   },
   toggleChip: {
-    borderRadius: 8,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     paddingHorizontal: 14,
@@ -5807,15 +5639,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF"
   },
   toggleChipSelected: {
-    borderColor: "rgba(7,94,102,0.28)",
-    backgroundColor: "rgba(7,94,102,0.06)"
+    borderColor: "rgba(29,53,87,0.28)",
+    backgroundColor: "rgba(29,53,87,0.06)"
   },
   toggleChipText: {
     fontSize: 14,
     color: "#637083"
   },
   toggleChipTextSelected: {
-    color: "#075E66",
+    color: colors.primary,
     fontWeight: "600"
   },
   actionRow: {
@@ -5829,7 +5661,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     alignItems: "center",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.72)",
     backgroundColor: "rgba(245,247,250,0.74)"
@@ -5841,10 +5673,11 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   primaryButton: {
-    borderRadius: 8,
-    backgroundColor: "#075E66",
+    borderRadius: radii.md,
+    backgroundColor: colors.primaryBottom,
     paddingHorizontal: 16,
-    paddingVertical: 13
+    paddingVertical: 13,
+    ...shadows.primaryButton
   },
   primaryButtonDisabled: {
     opacity: 0.45
@@ -5855,7 +5688,7 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   secondaryButton: {
-    borderRadius: 8,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",
@@ -5880,14 +5713,14 @@ const styles = StyleSheet.create({
   },
   roadmapRow: {
     backgroundColor: "rgba(255,255,255,0.82)",
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     padding: 14,
     gap: 8
   },
   roadmapRowCurrent: {
-    borderColor: "rgba(7,94,102,0.22)",
+    borderColor: "rgba(29,53,87,0.22)",
     backgroundColor: "#FFFFFF"
   },
   roadmapRowCompleted: {
@@ -5903,7 +5736,7 @@ const styles = StyleSheet.create({
   roadmapIndex: {
     fontSize: 12,
     letterSpacing: 1.4,
-    color: "#075E66"
+    color: colors.primary
   },
   roadmapTitle: {
     fontSize: 16,
@@ -5922,7 +5755,7 @@ const styles = StyleSheet.create({
   },
   step: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     padding: 18,
@@ -5932,7 +5765,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 2,
     textTransform: "uppercase",
-    color: "#075E66"
+    color: colors.primary
   },
   stepTitle: {
     fontSize: 18,
@@ -5954,7 +5787,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   profileItem: {
-    borderRadius: 8,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: "rgba(17,17,17,0.08)",
     backgroundColor: "#FFFFFF",

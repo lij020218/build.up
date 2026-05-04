@@ -137,7 +137,11 @@ export function DailySalesInputCard() {
                 )}
               </div>
             </div>
-            <button type="button" onClick={() => { setDailyDateInput(todayStr); setDailySalesInput(String(Math.round(todayEntry.sales / 10000))); setDailyCustomersInput(String(todayEntry.customers)); }}
+            <button type="button" onClick={() => {
+              setDailyDateInput(todayStr);
+              setDailySalesInput(String(Math.round(todayEntry.sales / 10000)));
+              setDailyCustomersInput(String(todayEntry.customers));
+            }}
               aria-label={ko ? "\uc624\ub298 \ub9e4\ucd9c \uc218\uc815" : "Edit today's sales"}
               style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>
               {ko ? "\uc218\uc815" : "Edit"}

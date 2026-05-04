@@ -33,6 +33,7 @@ import {
   franchiseBrands,
 } from "@build-up/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { StageWrapup } from "../shared/StageWrapup";
 
 type FieldKey = keyof MonthlyCostFields;
 type CategoryKey = "fixed" | "variable" | "other";
@@ -73,15 +74,17 @@ const MIDNIGHT = "#191970";
 // ─── Sub-industry 월 운영비 벤치마크 (매출액 대비 %, 2026 기준) ──────────────
 // 출처: 한국외식산업연구원·한국농어민신문·CMN·DailyVet·블랙워터이슈·ESG경제 등 (2024~2026)
 type CostBenchmark = {
-  ingredients: [number, number];  // 원재료/식자재
+  ingredients: [number, number];  // 원재료/식자재 (또는 인프라/SaaS·재고)
   labor: [number, number];        // 인건비
-  rent: [number, number];         // 임대료
-  utilities: [number, number];    // 공과금
-  sga: [number, number];          // 운영 수수료 (배달·POS·카드)
+  rent: [number, number];         // 임대료 (또는 코워킹)
+  utilities: [number, number];    // 공과금 (또는 통신·기기)
+  sga: [number, number];          // 운영 수수료 (배달·POS·카드, 또는 결제·회계·법무)
   marketing: [number, number];    // 마케팅
   other: [number, number];        // 기타
-  margin: [number, number];       // 영업이익률
-  notes?: string;                 // 핵심 특징
+  margin: [number, number];       // 영업이익률 (burn 기준일 때는 목표 gross margin)
+  notes?: string;                 // 핵심 특징 (1줄)
+  basis?: "revenue" | "burn";     // 백분율 기준: 매출액 대비 (default) / 월 번레이트 대비
+  typicalMonthlyKrw?: [number, number]; // 초기 단계 월 운영비 절대 KRW 범위
 };
 
 const SUB_INDUSTRY_BENCHMARKS: Record<string, CostBenchmark> = {
@@ -155,6 +158,28 @@ const SUB_INDUSTRY_BENCHMARKS: Record<string, CostBenchmark> = {
   "party-room":        { ingredients: [5, 10],  labor: [15, 22], rent: [25, 35], utilities: [5, 8], sga: [4, 7],   marketing: [5, 8], other: [10, 15], margin: [15, 25], notes: "주말·야간 집중 매출 — 청소·민원 대응 비용" },
   "shared-office":     { ingredients: [3, 6],   labor: [10, 18], rent: [35, 45], utilities: [5, 8], sga: [4, 7],   marketing: [5, 8], other: [8, 12], margin: [15, 25], notes: "임대료 비중 최대 — 멤버십 정기 매출 안정성 핵심" },
   "practice-room":     { ingredients: [3, 6],   labor: [5, 12],  rent: [30, 40], utilities: [8, 12], sga: [3, 5],  marketing: [5, 8], other: [10, 15], margin: [15, 25], notes: "방음·악기 유지보수 비용 + 시간당 단가" },
+  "guesthouse":        { ingredients: [8, 15],  labor: [15, 30], rent: [25, 40], utilities: [8, 15], sga: [5, 10], marketing: [15, 22], other: [3, 7], margin: [10, 25], typicalMonthlyKrw: [5_000_000, 25_000_000], notes: "OTA 14~16% + 청소·세탁·임대료가 고정비 핵심" },
+
+  // ── 온라인·디지털 ── (basis="revenue", 매출 발생 후)
+  "smart-store":       { ingredients: [40, 55], labor: [10, 20], rent: [3, 8],   utilities: [2, 5], sga: [8, 12],  marketing: [15, 25], other: [2, 5], margin: [15, 30], typicalMonthlyKrw: [3_000_000, 50_000_000], notes: "결제 3.74% + 매출연동 2% + CPC 광고 누적 부담" },
+  "digital-products":  { ingredients: [3, 8],   labor: [30, 50], rent: [0, 5],   utilities: [3, 7], sga: [10, 15], marketing: [20, 35], other: [2, 5], margin: [70, 90], typicalMonthlyKrw: [1_000_000, 15_000_000], notes: "크몽·인프런 15~20%·노션 마켓 5%, 광고 ROI 핵심" },
+  "creator-service":   { ingredients: [10, 20], labor: [25, 45], rent: [3, 10],  utilities: [5, 10], sga: [5, 10], marketing: [10, 20], other: [3, 8], margin: [40, 65], typicalMonthlyKrw: [2_000_000, 20_000_000], notes: "편집 외주·장비 감가·썸네일이 가변비 핵심" },
+  "consignment-commerce": { ingredients: [55, 70], labor: [10, 20], rent: [2, 6], utilities: [2, 5], sga: [8, 12], marketing: [10, 18], other: [2, 5], margin: [10, 20], typicalMonthlyKrw: [2_000_000, 30_000_000], notes: "마진 얇음 — 반품·CS·환율 리스크가 손익 좌우" },
+  "newsletter-membership": { ingredients: [5, 12], labor: [30, 50], rent: [0, 5], utilities: [3, 8], sga: [12, 18], marketing: [15, 25], other: [3, 7], margin: [55, 80], typicalMonthlyKrw: [1_000_000, 15_000_000], notes: "Stibee·Patreon 10% + Stripe 3.4% + 콘텐츠 외주" },
+  "global-buying":     { ingredients: [50, 65], labor: [10, 18], rent: [2, 6],   utilities: [3, 7], sga: [10, 15], marketing: [10, 18], other: [3, 7], margin: [10, 22], typicalMonthlyKrw: [3_000_000, 40_000_000], notes: "환율·해외배송·관세가 마진 잠식, 박리다매 구조" },
+
+  // ── 스타트업·기술 ── (basis="burn", 매출 전 단계)
+  "ai-application":    { ingredients: [15, 30], labor: [40, 55], rent: [5, 12], utilities: [2, 5], sga: [5, 10],  marketing: [3, 10], other: [2, 5], margin: [70, 85], basis: "burn", typicalMonthlyKrw: [12_000_000, 35_000_000], notes: "Claude·Cursor·OpenAI API가 매월 가장 빠르게 늘어남" },
+  "developer-tools":   { ingredients: [8, 15],  labor: [50, 65], rent: [5, 12], utilities: [2, 5], sga: [5, 10],  marketing: [5, 12], other: [2, 5], margin: [75, 90], basis: "burn", typicalMonthlyKrw: [8_000_000, 25_000_000], notes: "GitHub·CI/CD 비용 + 오픈소스 GTM 광고가 핵심" },
+  "b2b-saas":          { ingredients: [10, 18], labor: [45, 60], rent: [5, 12], utilities: [2, 5], sga: [8, 12],  marketing: [10, 18], other: [2, 5], margin: [75, 85], basis: "burn", typicalMonthlyKrw: [15_000_000, 40_000_000], notes: "엔터프라이즈 영업·SOC2·보안인증 비용 큼" },
+  "fintech-startup":   { ingredients: [12, 20], labor: [40, 55], rent: [5, 10], utilities: [2, 5], sga: [12, 20], marketing: [5, 12], other: [5, 10], margin: [60, 75], basis: "burn", typicalMonthlyKrw: [25_000_000, 80_000_000], notes: "KYC·AML·금융위 컴플라이언스·법무가 압도적" },
+  "healthtech-startup": { ingredients: [10, 18], labor: [40, 55], rent: [5, 12], utilities: [3, 8], sga: [10, 15], marketing: [3, 8], other: [5, 15], margin: [50, 70], basis: "burn", typicalMonthlyKrw: [30_000_000, 100_000_000], notes: "임상·식약처 인증·의료기기 GMP 비용 변동성 큼" },
+  "security-startup":  { ingredients: [12, 20], labor: [50, 65], rent: [5, 10], utilities: [2, 5], sga: [8, 12],  marketing: [5, 10], other: [3, 7], margin: [70, 85], basis: "burn", typicalMonthlyKrw: [15_000_000, 45_000_000], notes: "테스트랩·CC인증·보안 컴플라이언스 비용 발생" },
+  "hardware-iot":      { ingredients: [25, 40], labor: [35, 50], rent: [5, 10], utilities: [3, 7], sga: [5, 10],  marketing: [3, 8], other: [3, 8], margin: [40, 60], basis: "burn", typicalMonthlyKrw: [20_000_000, 60_000_000], notes: "BOM·금형·시제품 30%+ — 양산 전환이 분수령" },
+  "robotics-physical-ai": { ingredients: [25, 40], labor: [40, 55], rent: [5, 10], utilities: [3, 8], sga: [5, 10], marketing: [2, 6], other: [3, 8], margin: [35, 55], basis: "burn", typicalMonthlyKrw: [40_000_000, 120_000_000], notes: "센서·액추에이터 부품과 시뮬레이션 GPU 비용" },
+  "semiconductor":     { ingredients: [40, 60], labor: [25, 40], rent: [3, 8],  utilities: [3, 7], sga: [5, 10],  marketing: [1, 4], other: [3, 8], margin: [40, 60], basis: "burn", typicalMonthlyKrw: [50_000_000, 200_000_000], notes: "MPW 1회당 수억 — 모두의 챌린지 등 정부 매칭 의존" },
+  "biotech-medtech":   { ingredients: [20, 35], labor: [35, 50], rent: [5, 12], utilities: [3, 7], sga: [10, 15], marketing: [2, 6], other: [5, 12], margin: [40, 65], basis: "burn", typicalMonthlyKrw: [40_000_000, 150_000_000], notes: "전임상·임상 단계별 자금 필요, IP·라이선스 큼" },
+  "climate-energy":    { ingredients: [20, 35], labor: [35, 50], rent: [5, 12], utilities: [3, 7], sga: [8, 12],  marketing: [3, 8], other: [5, 10], margin: [45, 65], basis: "burn", typicalMonthlyKrw: [25_000_000, 80_000_000], notes: "측정 장비·인증·실증사업 비용, 정부 R&D 매칭" },
 };
 
 // 카테고리 폴백
@@ -168,6 +193,226 @@ const CATEGORY_FALLBACK_BENCHMARKS: Record<string, CostBenchmark> = {
   retail:         { ingredients: [45, 60], labor: [15, 22], rent: [10, 18], utilities: [2, 4], sga: [3, 5],  marketing: [4, 7], other: [3, 5], margin: [8, 15] },
   "living-service": { ingredients: [15, 30], labor: [25, 45], rent: [10, 20], utilities: [5, 12], sga: [3, 5], marketing: [4, 7], other: [5, 10], margin: [10, 20] },
   space:          { ingredients: [3, 6],   labor: [10, 18], rent: [28, 40], utilities: [5, 10], sga: [4, 7], marketing: [5, 8], other: [10, 15], margin: [15, 25] },
+  "online-digital": { ingredients: [25, 50], labor: [15, 35], rent: [0, 8],  utilities: [3, 8], sga: [8, 15], marketing: [12, 25], other: [3, 8], margin: [20, 50], typicalMonthlyKrw: [2_000_000, 25_000_000] },
+  "startup-tech":  { ingredients: [15, 30], labor: [40, 55], rent: [5, 12], utilities: [2, 7], sga: [8, 15], marketing: [3, 12], other: [3, 10], margin: [60, 80], basis: "burn", typicalMonthlyKrw: [15_000_000, 60_000_000] },
+};
+
+// ─── Sub-industry 본문 비용 항목 라벨/기본값 (8 필드 재해석) ───────────────
+// 스타트업·온라인·기타 비전통 업종은 "식자재 원가" 같은 일반 라벨이 안 맞으므로
+// sub-industry별로 의미를 재정의. 매출 기반 추정도 어색하므로 typicalMonthlyKrw
+// 분포에서 도출한 절대 KRW 기본값을 함께 제공 (사용자가 입력 안 했을 때 표시).
+type SubFieldOverride = {
+  ko: string;
+  en: string;
+  hint: { ko: string; en: string };
+};
+type SubIndustryFieldsConfig = {
+  labels?: Partial<Record<FieldKey, SubFieldOverride>>;
+  defaults?: Partial<MonthlyCostFields>; // 사용자 미입력 시 보일 KRW 절대값 (초기 단계 평균)
+};
+
+const SUB_INDUSTRY_FIELDS: Record<string, SubIndustryFieldsConfig> = {
+  // ─── 스타트업·테크 (basis=burn) ───
+  "ai-application": {
+    labels: {
+      ingredients: { ko: "AI API 사용량",     en: "AI API usage",     hint: { ko: "Claude·OpenAI·Gemini 토큰 사용량",   en: "Claude/OpenAI/Gemini tokens" } },
+      sga:         { ko: "결제·플랫폼 수수료", en: "Payment fees",     hint: { ko: "Toss·Stripe 2.9% + 앱스토어 15~30%", en: "Toss/Stripe + app store cut" } },
+      utilities:   { ko: "SaaS·인프라 구독",  en: "SaaS / Infra",     hint: { ko: "Vercel·Supabase·Cursor·Linear·GitHub", en: "Vercel/Supabase/Cursor/Linear" } },
+      rent:        { ko: "사무실·코워킹",     en: "Office / Cowork",  hint: { ko: "FastFive·Sparkplus·재택은 0",         en: "FastFive/Sparkplus/0 if remote" } },
+      other:       { ko: "법무·회계·IP",      en: "Legal / Accounting", hint: { ko: "변호사·세무사·특허 출원·인증",       en: "Lawyer/CPA/IP filings" } },
+      marketing:   { ko: "광고·마케팅",       en: "Marketing",        hint: { ko: "PH·Twitter·검색·콘텐츠 광고",        en: "PH/Twitter/search/content" } },
+    },
+    defaults: { ingredients: 3_000_000, rent: 500_000, utilities: 1_500_000, sga: 300_000, marketing: 2_000_000, other: 800_000 },
+  },
+  "developer-tools": {
+    labels: {
+      ingredients: { ko: "인프라·CI/CD",       en: "Infra / CI/CD",     hint: { ko: "GitHub Actions·CDN·빌드 사용량",     en: "GitHub Actions/CDN/build" } },
+      sga:         { ko: "결제·배포 수수료",   en: "Payment fees",      hint: { ko: "Stripe 2.9% + 마켓플레이스 수수료",  en: "Stripe + marketplace fees" } },
+      utilities:   { ko: "SaaS·도구 구독",     en: "SaaS / Dev tools",  hint: { ko: "JetBrains·Linear·Notion·Sentry",     en: "JetBrains/Linear/Sentry" } },
+      rent:        { ko: "사무실·코워킹",      en: "Office / Cowork",   hint: { ko: "FastFive·재택은 0",                   en: "FastFive/0 if remote" } },
+      other:       { ko: "법무·회계·IP",       en: "Legal / Accounting", hint: { ko: "변호사·세무사·오픈소스 라이선스",   en: "Lawyer/CPA/OSS license" } },
+      marketing:   { ko: "GTM·콘텐츠",         en: "GTM / Content",     hint: { ko: "오픈소스 GTM·DevRel·블로그",          en: "OSS GTM/DevRel/blog" } },
+    },
+    defaults: { ingredients: 800_000, rent: 500_000, utilities: 1_000_000, sga: 200_000, marketing: 1_500_000, other: 600_000 },
+  },
+  "b2b-saas": {
+    labels: {
+      ingredients: { ko: "인프라·SOC2",        en: "Infra / SOC2",      hint: { ko: "AWS·Vanta·SOC2 모니터링",            en: "AWS/Vanta/SOC2" } },
+      sga:         { ko: "영업·CRM 수수료",    en: "Sales / CRM",       hint: { ko: "HubSpot·Salesforce·Stripe 2.9%",     en: "HubSpot/Salesforce/Stripe" } },
+      utilities:   { ko: "SaaS·도구 구독",     en: "SaaS / Tools",      hint: { ko: "Linear·Notion·Slack·Figma·Sentry",   en: "Linear/Notion/Slack/Figma" } },
+      rent:        { ko: "사무실·코워킹",      en: "Office / Cowork",   hint: { ko: "엔터프라이즈 신뢰 위해 사무실 권장",  en: "Office recommended" } },
+      other:       { ko: "보안인증·법무",      en: "Cert / Legal",      hint: { ko: "ISO27001·SOC2 인증·변호사·세무",     en: "ISO27001/SOC2/legal" } },
+      marketing:   { ko: "B2B 마케팅",         en: "B2B Marketing",     hint: { ko: "검색·LinkedIn·웹세미나·전시회",       en: "Search/LinkedIn/events" } },
+    },
+    defaults: { ingredients: 2_000_000, rent: 1_500_000, utilities: 2_000_000, sga: 1_500_000, marketing: 4_000_000, other: 1_500_000 },
+  },
+  "fintech-startup": {
+    labels: {
+      ingredients: { ko: "금융 API·KYC",       en: "Fin API / KYC",     hint: { ko: "Plaid·KYC/AML 솔루션·신원확인",      en: "Plaid/KYC/AML" } },
+      sga:         { ko: "컴플라이언스·법무",  en: "Compliance / Legal",hint: { ko: "금융위 신고비·변호사·자문 retainer",  en: "FSC/lawyer retainer" } },
+      utilities:   { ko: "SaaS·인프라 구독",   en: "SaaS / Infra",      hint: { ko: "AWS·Datadog·관측·인증 도구",          en: "AWS/Datadog/monitoring" } },
+      rent:        { ko: "사무실·코워킹",      en: "Office / Cowork",   hint: { ko: "금융위 등록 시 실물 사무실 필수",     en: "Office required if FSC-registered" } },
+      other:       { ko: "보안인증·감사",      en: "Cert / Audit",      hint: { ko: "ISMS-P·정보보호인증·외부 감사",       en: "ISMS-P/security audit" } },
+      marketing:   { ko: "마케팅·신뢰 콘텐츠",  en: "Marketing / Trust", hint: { ko: "검색·신뢰 콘텐츠·언론 PR",            en: "Search/trust/PR" } },
+    },
+    defaults: { ingredients: 4_000_000, rent: 2_000_000, utilities: 2_500_000, sga: 5_000_000, marketing: 3_000_000, other: 3_000_000 },
+  },
+  "healthtech-startup": {
+    labels: {
+      ingredients: { ko: "임상·연구 비용",     en: "Clinical / R&D",    hint: { ko: "CRO·임상시험·연구 외주",              en: "CRO/clinical/R&D outsource" } },
+      sga:         { ko: "식약처 인증·법무",   en: "MFDS / Legal",      hint: { ko: "의료기기 GMP·식약처 신고·법무",       en: "MFDS/GMP/legal" } },
+      utilities:   { ko: "SaaS·연구 장비",     en: "SaaS / Lab",        hint: { ko: "AWS·연구 데이터·실험 장비 유지",       en: "AWS/lab equipment" } },
+      rent:        { ko: "연구실·사무실",      en: "Lab / Office",      hint: { ko: "GMP 시설 또는 코워킹",                 en: "GMP facility or cowork" } },
+      other:       { ko: "특허·라이선스",      en: "IP / License",      hint: { ko: "특허 출원·라이선스 in/out·자문",      en: "Patents/license" } },
+      marketing:   { ko: "학회·임상 PR",       en: "Conference / PR",   hint: { ko: "학회 발표·임상 결과 발표·PR",          en: "Conference/clinical PR" } },
+    },
+    defaults: { ingredients: 8_000_000, rent: 3_000_000, utilities: 3_000_000, sga: 6_000_000, marketing: 2_000_000, other: 5_000_000 },
+  },
+  "security-startup": {
+    labels: {
+      ingredients: { ko: "인프라·테스트랩",    en: "Infra / Test lab",  hint: { ko: "AWS·테스트 환경·취약점 스캐너",        en: "AWS/test lab/scanner" } },
+      sga:         { ko: "CC인증·컴플라이언스",en: "CC / Compliance",   hint: { ko: "CC인증·ISMS·KISA 신고",               en: "CC/ISMS/KISA cert" } },
+      utilities:   { ko: "SaaS·도구 구독",     en: "SaaS / Tools",      hint: { ko: "Linear·Notion·Datadog·Sentry",        en: "Linear/Notion/Datadog" } },
+      rent:        { ko: "사무실·코워킹",      en: "Office / Cowork",   hint: { ko: "보안 등급 사무실 권장",               en: "Secure office recommended" } },
+      other:       { ko: "법무·인증·기타",     en: "Legal / Cert",      hint: { ko: "변호사·세무사·정부 인증",             en: "Lawyer/CPA/govt cert" } },
+      marketing:   { ko: "B2B 마케팅·전시",    en: "B2B / Events",      hint: { ko: "보안 컨퍼런스·LinkedIn·검색",          en: "Security events/LinkedIn" } },
+    },
+    defaults: { ingredients: 2_500_000, rent: 1_500_000, utilities: 1_500_000, sga: 2_500_000, marketing: 2_000_000, other: 1_500_000 },
+  },
+  "hardware-iot": {
+    labels: {
+      ingredients: { ko: "BOM·부품 매입",      en: "BOM / Parts",       hint: { ko: "PCB·센서·금형·시제품 부품",            en: "PCB/sensor/mold/parts" } },
+      sga:         { ko: "EMS·시제품 외주",    en: "EMS / Prototype",   hint: { ko: "EMS 위탁·시제품 제작 외주",            en: "EMS/prototyping" } },
+      utilities:   { ko: "SaaS·CAD 도구",      en: "SaaS / CAD",        hint: { ko: "AutoCAD·SolidWorks·Altium",           en: "AutoCAD/SolidWorks/Altium" } },
+      rent:        { ko: "사무실·랩 공간",     en: "Office / Lab",      hint: { ko: "조립 공간·시험 공간 필요",             en: "Assembly/test space" } },
+      other:       { ko: "인증·법무·기타",     en: "Cert / Legal",      hint: { ko: "KC·CE·FCC·전파인증·특허",              en: "KC/CE/FCC/patents" } },
+      marketing:   { ko: "마케팅·전시",        en: "Marketing / Expo",  hint: { ko: "CES·MWC·전시회·B2B 영업",              en: "CES/MWC/B2B sales" } },
+    },
+    defaults: { ingredients: 12_000_000, rent: 2_000_000, utilities: 1_500_000, sga: 4_000_000, marketing: 2_000_000, other: 2_500_000 },
+  },
+  "robotics-physical-ai": {
+    labels: {
+      ingredients: { ko: "부품·센서·액추에이터",en: "Parts / Sensors",   hint: { ko: "라이다·모터·로봇 팔·컴퓨터",           en: "LiDAR/motors/arm/PC" } },
+      sga:         { ko: "GPU·시뮬레이션",     en: "GPU / Simulation",  hint: { ko: "Isaac·Unity·GPU 클러스터 사용량",      en: "Isaac/Unity/GPU cluster" } },
+      utilities:   { ko: "SaaS·연구 장비",     en: "SaaS / Equipment",  hint: { ko: "ROS·SolidWorks·MoCap·실험 장비",       en: "ROS/SolidWorks/MoCap" } },
+      rent:        { ko: "랩·시험 공간",       en: "Lab / Test space",  hint: { ko: "로봇 시험 공간·천정 높이 필요",         en: "Lab with ceiling height" } },
+      other:       { ko: "안전 인증·법무",     en: "Safety / Legal",    hint: { ko: "기능 안전·KC·특허·변호사",             en: "Functional safety/KC/IP" } },
+      marketing:   { ko: "데모·전시",          en: "Demo / Expo",       hint: { ko: "AI Expo·로보월드·데모 영상",            en: "AI Expo/RoboWorld" } },
+    },
+    defaults: { ingredients: 25_000_000, rent: 3_500_000, utilities: 4_000_000, sga: 6_000_000, marketing: 2_000_000, other: 4_000_000 },
+  },
+  "semiconductor": {
+    labels: {
+      ingredients: { ko: "MPW·테이프아웃",     en: "MPW / Tape-out",    hint: { ko: "팹 MPW 1회당 수억 — 정부 매칭 권장",    en: "MPW per run + govt match" } },
+      sga:         { ko: "EDA 라이센스",       en: "EDA License",       hint: { ko: "Cadence·Synopsys·Mentor 연간 라이센스", en: "Cadence/Synopsys/Mentor" } },
+      utilities:   { ko: "SaaS·시뮬 장비",     en: "SaaS / Sim Tools",  hint: { ko: "EDA 시뮬·검증 도구·서버",              en: "Sim/verification servers" } },
+      rent:        { ko: "사무실·검증 공간",   en: "Office / Verify",   hint: { ko: "검증 보드·계측기 공간 필요",            en: "Verification space" } },
+      other:       { ko: "특허·법무·인증",     en: "IP / Legal",        hint: { ko: "특허 출원 연간 수십~수억 필수",         en: "Annual patent filings" } },
+      marketing:   { ko: "고객사 영업",        en: "Customer Sales",    hint: { ko: "Tier1 OEM 영업·전시·논문",              en: "Tier1 OEM sales" } },
+    },
+    defaults: { ingredients: 50_000_000, rent: 4_000_000, utilities: 6_000_000, sga: 8_000_000, marketing: 2_000_000, other: 5_000_000 },
+  },
+  "biotech-medtech": {
+    labels: {
+      ingredients: { ko: "임상·전임상 비용",   en: "Clinical / Pre-clin",hint: { ko: "CRO·동물시험·전임상 외주",            en: "CRO/preclinical/animal" } },
+      sga:         { ko: "IP·라이선스",        en: "IP / License",      hint: { ko: "특허 출원·in/out 라이선스·기술이전",    en: "Patents/license/transfer" } },
+      utilities:   { ko: "연구 장비·시약",     en: "Lab / Reagent",     hint: { ko: "분석기·세포·시약·소모품 매월",          en: "Analyzers/cells/reagents" } },
+      rent:        { ko: "GMP 연구실·사무실",  en: "GMP Lab / Office",  hint: { ko: "BSL·GMP 등급 시설 임대료",             en: "BSL/GMP-grade rent" } },
+      other:       { ko: "식약처·인증·기타",   en: "MFDS / Cert",       hint: { ko: "식약처 신고·KGCP·외부 감사",            en: "MFDS/KGCP/audit" } },
+      marketing:   { ko: "학회·임상 PR",       en: "Conference / PR",   hint: { ko: "학회 발표·논문·임상 결과 PR",           en: "Conference/papers" } },
+    },
+    defaults: { ingredients: 15_000_000, rent: 5_000_000, utilities: 8_000_000, sga: 8_000_000, marketing: 2_000_000, other: 6_000_000 },
+  },
+  "climate-energy": {
+    labels: {
+      ingredients: { ko: "측정 장비·시제품",   en: "Sensors / Prototype",hint: { ko: "탄소 측정·배터리·실증 장비",           en: "Carbon meters/batteries" } },
+      sga:         { ko: "인증·실증사업",      en: "Cert / Pilot",      hint: { ko: "환경 인증·실증사업 매칭 자금",          en: "Env cert/pilot matching" } },
+      utilities:   { ko: "SaaS·인프라",        en: "SaaS / Infra",      hint: { ko: "AWS·데이터 분석·SaaS 도구",            en: "AWS/data/SaaS" } },
+      rent:        { ko: "사무실·랩",          en: "Office / Lab",      hint: { ko: "실증 공간·창고 임대",                  en: "Pilot space/warehouse" } },
+      other:       { ko: "법무·R&D 매칭",      en: "Legal / R&D Match", hint: { ko: "정부 R&D 매칭 자기부담·법무",          en: "R&D self-match/legal" } },
+      marketing:   { ko: "B2B 영업·정부 PR",   en: "B2B / Govt PR",     hint: { ko: "산업통상부·환경부 사업 PR",            en: "MOTIE/MoE PR" } },
+    },
+    defaults: { ingredients: 8_000_000, rent: 2_500_000, utilities: 2_500_000, sga: 5_000_000, marketing: 2_000_000, other: 4_000_000 },
+  },
+
+  // ─── 온라인·디지털 (basis=revenue) ───
+  "smart-store": {
+    labels: {
+      ingredients: { ko: "매입 원가",          en: "Cost of goods",     hint: { ko: "상품 사입·도매 매입가",                en: "Wholesale buy-in" } },
+      sga:         { ko: "결제·플랫폼 수수료", en: "Payment / Platform",hint: { ko: "네이버 3.74%+매출연동 2%·쿠팡 4~10.9%", en: "Naver 5.74%/Coupang 4-10.9%" } },
+      utilities:   { ko: "포장·배송 자재",     en: "Packaging / Ship",  hint: { ko: "박스·완충재·송장·택배비",              en: "Box/cushion/shipping" } },
+      rent:        { ko: "창고·풀필먼트",      en: "Warehouse / FBA",   hint: { ko: "재택 운영 시 0 — 풀필먼트는 입출고비",  en: "0 if home/FBA per pick" } },
+      other:       { ko: "반품·CS·기타",       en: "Returns / CS",      hint: { ko: "반품 회수·CS 인건·소모품",             en: "Returns/CS/supplies" } },
+      marketing:   { ko: "광고 (CPC·CPM)",     en: "Ads (CPC/CPM)",     hint: { ko: "네이버 검색광고·쿠팡 광고",            en: "Naver SA / Coupang ads" } },
+    },
+    defaults: { ingredients: 6_000_000, rent: 0, utilities: 800_000, sga: 1_200_000, marketing: 3_000_000, other: 600_000 },
+  },
+  "digital-products": {
+    labels: {
+      ingredients: { ko: "콘텐츠 제작비",      en: "Content production",hint: { ko: "외주 디자인·편집·전문가 검수",         en: "Design/edit/review" } },
+      sga:         { ko: "플랫폼 수수료",      en: "Platform fees",     hint: { ko: "크몽 15~20%·인프런·노션 마켓 5%",       en: "Kmong/Inflearn/Notion mkt" } },
+      utilities:   { ko: "호스팅·SaaS",        en: "Hosting / SaaS",    hint: { ko: "Webflow·Notion·Gumroad·Stripe",       en: "Webflow/Notion/Gumroad" } },
+      rent:        { ko: "사무실·코워킹",      en: "Office / Cowork",   hint: { ko: "재택·카페 운영 시 0",                  en: "0 if home" } },
+      other:       { ko: "결제 수수료·기타",   en: "Payment / Other",   hint: { ko: "Toss·Stripe 2.9% + 세무",              en: "Toss/Stripe + CPA" } },
+      marketing:   { ko: "광고·인플루언서",    en: "Ads / Influencer",  hint: { ko: "Meta·검색·인플루언서 협업",            en: "Meta/search/influencer" } },
+    },
+    defaults: { ingredients: 500_000, rent: 0, utilities: 250_000, sga: 800_000, marketing: 1_500_000, other: 200_000 },
+  },
+  "creator-service": {
+    labels: {
+      ingredients: { ko: "장비 감가·소품",     en: "Equipment / Props", hint: { ko: "카메라·조명·마이크·소품 감가",          en: "Camera/lighting/props" } },
+      sga:         { ko: "편집 외주·플랫폼",   en: "Editing / Platform",hint: { ko: "편집자 외주 + YouTube/Patreon 수수료", en: "Editor + YT/Patreon fee" } },
+      utilities:   { ko: "호스팅·SaaS",        en: "Hosting / SaaS",    hint: { ko: "Adobe·Final Cut·Notion·OBS",          en: "Adobe/FCP/Notion" } },
+      rent:        { ko: "스튜디오·공간",      en: "Studio / Space",    hint: { ko: "스튜디오 임대 또는 자택",              en: "Studio rent or home" } },
+      other:       { ko: "저작권·기타",        en: "Rights / Other",    hint: { ko: "음원·폰트·이미지 라이선스",            en: "Music/font/image license" } },
+      marketing:   { ko: "광고·콜라보",        en: "Ads / Collab",      hint: { ko: "썸네일 광고·크리에이터 콜라보",         en: "Thumb ads/collabs" } },
+    },
+    defaults: { ingredients: 700_000, rent: 0, utilities: 400_000, sga: 1_000_000, marketing: 1_000_000, other: 300_000 },
+  },
+  "consignment-commerce": {
+    labels: {
+      ingredients: { ko: "위탁 매입가",        en: "Consigned cost",    hint: { ko: "위탁 사입가·드롭쉽 단가",              en: "Wholesale/drop-ship cost" } },
+      sga:         { ko: "결제·반품·CS",       en: "Payment / Returns", hint: { ko: "반품 회수비·CS·결제 수수료",            en: "Returns/CS/payment" } },
+      utilities:   { ko: "포장·배송 자재",     en: "Packaging / Ship",  hint: { ko: "택배·국제배송·송장",                   en: "Shipping/intl/labels" } },
+      rent:        { ko: "창고·물류",          en: "Warehouse",         hint: { ko: "재택은 0 — 자체 창고 시 입력",          en: "0 if home/own if storage" } },
+      other:       { ko: "환율·관세·기타",     en: "FX / Tariff",       hint: { ko: "환차손·관세·통관·보관료",              en: "FX loss/tariff/storage" } },
+      marketing:   { ko: "광고·플랫폼 수수료", en: "Ads / Platform",    hint: { ko: "검색광고·플랫폼 입점 수수료",           en: "SA/platform commission" } },
+    },
+    defaults: { ingredients: 8_000_000, rent: 200_000, utilities: 600_000, sga: 1_500_000, marketing: 2_000_000, other: 800_000 },
+  },
+  "newsletter-membership": {
+    labels: {
+      ingredients: { ko: "콘텐츠 제작비",      en: "Content production",hint: { ko: "리서치·기고·인터뷰·제작 외주",         en: "Research/contributor" } },
+      sga:         { ko: "플랫폼·결제 수수료", en: "Platform / Payment",hint: { ko: "Stibee·Patreon 10% + Stripe 2.9%",     en: "Stibee/Patreon + Stripe" } },
+      utilities:   { ko: "SaaS·호스팅",        en: "SaaS / Hosting",    hint: { ko: "Notion·Webflow·Beehiiv 정기",          en: "Notion/Webflow/Beehiiv" } },
+      rent:        { ko: "사무실·코워킹",      en: "Office / Cowork",   hint: { ko: "재택·카페 운영 시 0",                  en: "0 if home" } },
+      other:       { ko: "법무·기타",          en: "Legal / Other",     hint: { ko: "저작권·세무·기타",                     en: "Copyright/CPA" } },
+      marketing:   { ko: "구독자 획득 광고",   en: "Subscriber Ads",    hint: { ko: "Meta·X·검색·뉴스레터 추천",            en: "Meta/X/search/refer" } },
+    },
+    defaults: { ingredients: 800_000, rent: 0, utilities: 300_000, sga: 700_000, marketing: 1_500_000, other: 200_000 },
+  },
+  "global-buying": {
+    labels: {
+      ingredients: { ko: "해외 매입가",        en: "Overseas buy-in",   hint: { ko: "해외 도매가 + 환율 변동",              en: "Overseas wholesale + FX" } },
+      sga:         { ko: "해외 배송·관세",     en: "Intl Ship / Tariff",hint: { ko: "특송·관세·통관·환전 수수료",            en: "Express/tariff/FX fee" } },
+      utilities:   { ko: "포장·통신",          en: "Packaging / Comm",  hint: { ko: "박스·송장·인터넷·전화",                en: "Box/labels/internet" } },
+      rent:        { ko: "창고·물류",          en: "Warehouse",         hint: { ko: "재택·소형 창고",                       en: "Home/small storage" } },
+      other:       { ko: "보험·기타",          en: "Insurance / Other", hint: { ko: "운송 보험·통관 사고·기타",              en: "Shipping insurance" } },
+      marketing:   { ko: "광고·플랫폼 수수료", en: "Ads / Platform",    hint: { ko: "검색광고·플랫폼 등록 수수료",           en: "SA/platform fees" } },
+    },
+    defaults: { ingredients: 7_000_000, rent: 200_000, utilities: 600_000, sga: 2_500_000, marketing: 1_500_000, other: 600_000 },
+  },
+
+  // ─── 공간 (basis=revenue) ───
+  "guesthouse": {
+    labels: {
+      ingredients: { ko: "어메니티·소모품",    en: "Amenity / Supplies",hint: { ko: "수건·세제·생수·티슈·일회용품",          en: "Towels/detergent/water" } },
+      sga:         { ko: "OTA·청소 외주",      en: "OTA / Cleaning",    hint: { ko: "부킹닷컴 15%·에어비앤비 14% + 청소 외주",en: "Booking 15%/Airbnb 14%" } },
+      utilities:   { ko: "전기·가스·수도·인터넷",en: "Utilities",         hint: { ko: "객실 전기·온수 가스·물·Wi-Fi",         en: "Elec/gas/water/Wi-Fi" } },
+      other:       { ko: "보험·교체·기타",     en: "Insurance / Repair",hint: { ko: "화재 보험·침구·가전 교체",              en: "Fire ins/linen/appliance" } },
+      marketing:   { ko: "광고·SNS",           en: "Ads / SNS",         hint: { ko: "OTA 노출 광고·인스타·블로그",           en: "OTA ads/Insta/blog" } },
+    },
+  },
 };
 
 export function FinancialReviewStage() {
@@ -224,6 +469,39 @@ export function FinancialReviewStage() {
   // ── 3. 추정 실행 ──────────
   const estimate = useMemo(() => estimateMonthlyCosts(stageInputs, overrides), [stageInputs, overrides]);
 
+  // ── 3b. Sub-industry 본문 라벨/기본값 (스타트업·온라인·기타 비전통 업종) ──
+  const subId = d.selectedIndustryId;
+  const subFieldsConfig = subId ? SUB_INDUSTRY_FIELDS[subId] : null;
+  const fieldLabels = useMemo<typeof FIELD_LABELS>(() => {
+    if (!subFieldsConfig?.labels) return FIELD_LABELS;
+    return { ...FIELD_LABELS, ...subFieldsConfig.labels } as typeof FIELD_LABELS;
+  }, [subFieldsConfig]);
+
+  // Sub-industry default 적용: 사용자 미입력이고 stage-derived가 의미 없는 필드는
+  // sub-industry 기본값으로 대체 (예: AI 앱의 "ingredients"는 AI API 사용량으로 재해석)
+  const adjustedFields: MonthlyCostFields = useMemo(() => {
+    if (!subFieldsConfig?.defaults) return estimate.fields;
+    const out: MonthlyCostFields = { ...estimate.fields };
+    for (const [k, v] of Object.entries(subFieldsConfig.defaults) as [FieldKey, number][]) {
+      // 사용자가 직접 입력한 필드는 절대 건드리지 않음
+      if (overrides[k] != null) continue;
+      // labor는 staffPlan 기반이 더 정확하므로 sub default 미적용
+      if (k === "labor") continue;
+      out[k] = v;
+    }
+    return out;
+  }, [estimate.fields, subFieldsConfig, overrides]);
+  const adjustedSources: Record<FieldKey, CostSource> = useMemo(() => {
+    if (!subFieldsConfig?.defaults) return estimate.sources;
+    const out = { ...estimate.sources };
+    for (const k of Object.keys(subFieldsConfig.defaults) as FieldKey[]) {
+      if (overrides[k] != null) continue;
+      if (k === "labor") continue;
+      out[k] = "industry-average";
+    }
+    return out;
+  }, [estimate.sources, subFieldsConfig, overrides]);
+
   // ── 4. 기존 결정값 복원 (재진입 시) ──────────
   useEffect(() => {
     const saved = (d.decisions as Record<string, { inputs?: { overrides?: UserOverrides; confirmed?: Record<FieldKey, boolean> } }>)?.["financial-review"];
@@ -234,9 +512,9 @@ export function FinancialReviewStage() {
 
   // ── 5. 재무 시뮬 실행 (모든 필드 확인 후) ──────────
   const allConfirmed = Object.values(confirmed).every(Boolean);
-  const totalFixed = estimate.fields.rent + estimate.fields.labor + estimate.fields.utilities;
-  const totalVariable = estimate.fields.ingredients + estimate.fields.sga;
-  const totalOther = estimate.fields.marketing + estimate.fields.interest + estimate.fields.other;
+  const totalFixed = adjustedFields.rent + adjustedFields.labor + adjustedFields.utilities;
+  const totalVariable = adjustedFields.ingredients + adjustedFields.sga;
+  const totalOther = adjustedFields.marketing + adjustedFields.interest + adjustedFields.other;
   const totalMonthly = totalFixed + totalVariable + totalOther;
 
   // Capital from previous stage
@@ -251,28 +529,28 @@ export function FinancialReviewStage() {
           categoryId: stageInputs.categoryId,
           marketStyle: "balanced",
           rentBand: estimate.details.rent?.rentBand ?? "mid",
-          monthlyRent: estimate.fields.rent,
-          monthlyLaborCost: estimate.fields.labor,
-          monthlyOtherFixed: estimate.fields.utilities + estimate.fields.marketing + estimate.fields.interest + estimate.fields.other,
+          monthlyRent: adjustedFields.rent,
+          monthlyLaborCost: adjustedFields.labor,
+          monthlyOtherFixed: adjustedFields.utilities + adjustedFields.marketing + adjustedFields.interest + adjustedFields.other,
           expectedMonthlyRevenue: stageInputs.expectedMonthlyRevenueKrw ?? 20_000_000,
         },
         null,
       );
     } catch { return null; }
-  }, [allConfirmed, capitalKrw, estimate, stageInputs]);
+  }, [allConfirmed, capitalKrw, estimate, stageInputs, adjustedFields]);
 
   // ── 6. 저장 + 다음 단계 ──────────
   const handleConfirm = () => {
     // financeStore monthlyCosts 동기화
     d.setMonthlyCosts?.({
-      ingredients: estimate.fields.ingredients,
-      labor: estimate.fields.labor,
-      rent: estimate.fields.rent,
-      utilities: estimate.fields.utilities,
-      sga: estimate.fields.sga,
-      marketing: estimate.fields.marketing,
-      other: estimate.fields.other,
-      interest: estimate.fields.interest,
+      ingredients: adjustedFields.ingredients,
+      labor: adjustedFields.labor,
+      rent: adjustedFields.rent,
+      utilities: adjustedFields.utilities,
+      sga: adjustedFields.sga,
+      marketing: adjustedFields.marketing,
+      other: adjustedFields.other,
+      interest: adjustedFields.interest,
     });
     d.handleVerificationContinue?.("financial-review", { overrides, confirmed });
   };
@@ -400,10 +678,10 @@ export function FinancialReviewStage() {
       {/* Field Cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         {CATEGORY_FIELDS[activeCategory].map((fieldKey) => {
-          const value = estimate.fields[fieldKey];
-          const source = estimate.sources[fieldKey];
+          const value = adjustedFields[fieldKey];
+          const source = adjustedSources[fieldKey];
           const isConfirmed = confirmed[fieldKey];
-          const fieldLabel = FIELD_LABELS[fieldKey];
+          const fieldLabel = fieldLabels[fieldKey];
           const sourceMeta = SOURCE_LABEL[source];
 
           return (
@@ -449,32 +727,52 @@ export function FinancialReviewStage() {
                 </button>
               </div>
 
-              {/* Amount input row */}
+              {/* Amount input row — 단위: 만원 (300000원 → 사용자는 "30" 입력) */}
               <div style={{ display: "flex", alignItems: "baseline", gap: "16px", marginTop: "14px" }}>
                 <span style={{ fontSize: "clamp(32px, 4.5vw, 40px)", fontWeight: 600, letterSpacing: "-0.04em", color: "var(--text)", fontVariantNumeric: "tabular-nums", lineHeight: 1.05 }}>
                   {fmtWon(value)}
                 </span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  placeholder={ko ? "수정 (원)" : "Edit (KRW)"}
-                  value={overrides[fieldKey] ?? ""}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9]/g, "");
-                    setOverrides((p) => ({ ...p, [fieldKey]: raw ? Number(raw) : undefined }));
-                    setConfirmed((p) => ({ ...p, [fieldKey]: false }));
-                  }}
-                  style={{
-                    flex: 1, maxWidth: "200px",
-                    padding: "9px 14px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border)",
-                    background: "var(--surface)",
-                    fontSize: "14px", fontWeight: 500, fontVariantNumeric: "tabular-nums",
-                    color: "var(--text)",
-                    outline: "none",
-                  }}
-                />
+                <div style={{ position: "relative", flex: 1, maxWidth: "200px" }}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder={ko ? "예: 30 → 30만원" : "e.g., 30 → ₩300K"}
+                    value={overrides[fieldKey] != null ? (overrides[fieldKey]! / 10_000).toString() : ""}
+                    onChange={(e) => {
+                      // 만원 단위 입력 — 소수점 허용 (예: 1.5 → 15,000원)
+                      const raw = e.target.value.replace(/[^0-9.]/g, "");
+                      const manwon = raw ? Number(raw) : NaN;
+                      setOverrides((p) => ({
+                        ...p,
+                        [fieldKey]: isNaN(manwon) ? undefined : Math.round(manwon * 10_000),
+                      }));
+                      setConfirmed((p) => ({ ...p, [fieldKey]: false }));
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "9px 44px 9px 14px",
+                      borderRadius: "12px",
+                      border: "1px solid var(--border)",
+                      background: "var(--surface)",
+                      fontSize: "14px", fontWeight: 500, fontVariantNumeric: "tabular-nums",
+                      color: "var(--text)",
+                      outline: "none",
+                    }}
+                  />
+                  <span style={{
+                    position: "absolute",
+                    right: "14px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: "12.5px",
+                    fontWeight: 600,
+                    color: "var(--muted)",
+                    pointerEvents: "none",
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {ko ? "만원" : "K KRW"}
+                  </span>
+                </div>
               </div>
             </article>
           );
@@ -531,22 +829,41 @@ export function FinancialReviewStage() {
       {(() => {
         const subId = d.selectedIndustryId;
         const catId = d.industryCategoryId || "food";
-        const benchmark = (subId && SUB_INDUSTRY_BENCHMARKS[subId]) || CATEGORY_FALLBACK_BENCHMARKS[catId] || CATEGORY_FALLBACK_BENCHMARKS["food"];
+        const benchmark: CostBenchmark = (subId && SUB_INDUSTRY_BENCHMARKS[subId]) || CATEGORY_FALLBACK_BENCHMARKS[catId] || CATEGORY_FALLBACK_BENCHMARKS["food"];
         const isSubLevel = !!(subId && SUB_INDUSTRY_BENCHMARKS[subId]);
+        const isBurnBasis = benchmark.basis === "burn";
         const expectedRevenue = stageInputs.expectedMonthlyRevenueKrw ?? 20_000_000;
+        // burn 모드: typicalMonthlyKrw 중간값을 기준점으로 사용 (매출 대신 월 번레이트)
+        const typicalKrwMid = benchmark.typicalMonthlyKrw
+          ? (benchmark.typicalMonthlyKrw[0] + benchmark.typicalMonthlyKrw[1]) / 2
+          : 0;
+        const referenceAmt = isBurnBasis && typicalKrwMid > 0 ? typicalKrwMid : expectedRevenue;
         const isFranchise = d.startupType === "franchise";
         const franchiseId = d.selectedFranchiseBrandId as string | undefined;
         const franchise = franchiseId ? franchiseBrands.find((b) => b.id === franchiseId) : null;
 
-        type BenchKey = keyof Omit<CostBenchmark, "notes" | "margin">;
-        const rows: { key: BenchKey; label: { ko: string; en: string }; range: [number, number] }[] = [
-          { key: "ingredients", label: { ko: "원재료·식자재", en: "Materials" }, range: benchmark.ingredients },
-          { key: "labor",       label: { ko: "인건비",        en: "Labor" },     range: benchmark.labor },
-          { key: "rent",        label: { ko: "임대료",        en: "Rent" },      range: benchmark.rent },
-          { key: "utilities",   label: { ko: "공과금",        en: "Utilities" }, range: benchmark.utilities },
-          { key: "sga",         label: { ko: "운영 수수료",   en: "Ops fees" },  range: benchmark.sga },
-          { key: "marketing",   label: { ko: "마케팅",        en: "Marketing" }, range: benchmark.marketing },
-          { key: "other",       label: { ko: "기타",          en: "Other" },     range: benchmark.other },
+        // 업종에 맞는 라벨 가져오기 (영문)
+        const subOption = subId ? starterIndustryOptions.find((o) => o.id === subId) : null;
+        const subTitleEn = subOption?.title || subId || "";
+
+        type BenchKey = keyof Omit<CostBenchmark, "notes" | "margin" | "basis" | "typicalMonthlyKrw">;
+        // 카테고리 라벨: 일반 업종(매출 기준) vs 스타트업·테크(번레이트 기준)
+        const rows: { key: BenchKey; label: { ko: string; en: string }; range: [number, number] }[] = isBurnBasis ? [
+          { key: "ingredients", label: { ko: "인프라·SaaS·API",  en: "Infra/SaaS" }, range: benchmark.ingredients },
+          { key: "labor",       label: { ko: "인건비",            en: "Labor" },      range: benchmark.labor },
+          { key: "rent",        label: { ko: "사무실·코워킹",     en: "Office/Cowork"}, range: benchmark.rent },
+          { key: "utilities",   label: { ko: "통신·기기",         en: "Telecom/Devices" }, range: benchmark.utilities },
+          { key: "sga",         label: { ko: "결제·회계·법무",    en: "Payments/Legal" }, range: benchmark.sga },
+          { key: "marketing",   label: { ko: "마케팅·광고",        en: "Marketing" },  range: benchmark.marketing },
+          { key: "other",       label: { ko: "기타 (IP·인증)",     en: "Other (IP/cert)" }, range: benchmark.other },
+        ] : [
+          { key: "ingredients", label: { ko: "원재료·식자재",   en: "Materials" }, range: benchmark.ingredients },
+          { key: "labor",       label: { ko: "인건비",          en: "Labor" },     range: benchmark.labor },
+          { key: "rent",        label: { ko: "임대료",          en: "Rent" },      range: benchmark.rent },
+          { key: "utilities",   label: { ko: "공과금",          en: "Utilities" }, range: benchmark.utilities },
+          { key: "sga",         label: { ko: "운영 수수료",     en: "Ops fees" },  range: benchmark.sga },
+          { key: "marketing",   label: { ko: "마케팅",          en: "Marketing" }, range: benchmark.marketing },
+          { key: "other",       label: { ko: "기타",            en: "Other" },     range: benchmark.other },
         ];
         const totalLow  = rows.reduce((a, r) => a + r.range[0], 0);
         const totalHigh = rows.reduce((a, r) => a + r.range[1], 0);
@@ -573,12 +890,21 @@ export function FinancialReviewStage() {
                 </div>
                 <div style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", marginTop: "2px" }}>
                   {isSubLevel
-                    ? (ko ? `${subId} 평균 (sub-industry 정밀)` : `${subId} avg (sub-industry)`)
+                    ? (ko ? `${subTitleEn} 평균` : `${subTitleEn} avg`)
                     : (ko ? `${catId} 카테고리 평균` : `${catId} category avg`)}
                 </div>
+                {benchmark.typicalMonthlyKrw && (
+                  <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.5)", marginTop: "3px", letterSpacing: "-0.01em" }}>
+                    {ko
+                      ? `초기 단계 월 ${isBurnBasis ? "번레이트" : "운영비"} 약 ${fmtWon(benchmark.typicalMonthlyKrw[0])} ~ ${fmtWon(benchmark.typicalMonthlyKrw[1])}`
+                      : `Typical ${isBurnBasis ? "burn" : "opex"} ${fmtWon(benchmark.typicalMonthlyKrw[0])} – ${fmtWon(benchmark.typicalMonthlyKrw[1])}/mo`}
+                  </div>
+                )}
               </div>
               <span style={{ fontSize: "11px", fontWeight: 700, color: "#fff", background: MIDNIGHT, padding: "3px 10px", borderRadius: "999px", boxShadow: "0 1px 3px rgba(25,25,112,0.25)" }}>
-                {ko ? `매출액 대비 ${totalLow}~${totalHigh}%` : `${totalLow}-${totalHigh}% of revenue`}
+                {ko
+                  ? `${isBurnBasis ? "월 번레이트" : "매출액"} 대비 ${totalLow}~${totalHigh}%`
+                  : `${totalLow}-${totalHigh}% of ${isBurnBasis ? "burn" : "revenue"}`}
               </span>
             </div>
 
@@ -591,9 +917,9 @@ export function FinancialReviewStage() {
             {/* 벤치마크 테이블 */}
             <div style={{ borderRadius: "12px", border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden", background: "white" }}>
               {rows.map((row, i) => {
-                const expectedAmt = (expectedRevenue * (row.range[0] + row.range[1]) / 2) / 100;
-                const userAmt = estimate.fields[row.key];
-                const userPct = expectedRevenue > 0 ? (userAmt / expectedRevenue) * 100 : 0;
+                const expectedAmt = (referenceAmt * (row.range[0] + row.range[1]) / 2) / 100;
+                const userAmt = adjustedFields[row.key];
+                const userPct = referenceAmt > 0 ? (userAmt / referenceAmt) * 100 : 0;
                 const inRange = userPct >= row.range[0] && userPct <= row.range[1];
                 const above = userPct > row.range[1];
                 const below = userPct < row.range[0];
@@ -636,10 +962,14 @@ export function FinancialReviewStage() {
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "-0.01em" }}>
-                    {ko ? "영업이익률 (참고)" : "Operating margin (ref)"}
+                    {ko
+                      ? (isBurnBasis ? "목표 Gross margin (PMF 후)" : "영업이익률 (참고)")
+                      : (isBurnBasis ? "Target gross margin (post-PMF)" : "Operating margin (ref)")}
                   </div>
                   <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.5)", marginTop: "1px" }}>
-                    {benchmark.margin[0]}~{benchmark.margin[1]}% · {ko ? "이 범위 안 들면 비용 구조 재점검" : "outside = review structure"}
+                    {benchmark.margin[0]}~{benchmark.margin[1]}% · {ko
+                      ? (isBurnBasis ? "매출 발생 후 도달 목표 — 그 전까진 런웨이로 평가" : "이 범위 안 들면 비용 구조 재점검")
+                      : (isBurnBasis ? "post-revenue target — judge by runway until then" : "outside = review structure")}
                   </div>
                 </div>
               </div>
@@ -785,6 +1115,26 @@ export function FinancialReviewStage() {
             : (ko ? `${totalFields - confirmedCount}개 항목을 더 확인하세요` : `Confirm ${totalFields - confirmedCount} more items`)}
         </button>
       </article>
+
+      <StageWrapup
+        ko={ko}
+        nextStageLabelKo="개업·론칭"
+        doneItemsKo={[
+          { label: "1. 고정비 점검", detail: "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교" },
+          { label: "2. 변동비 점검", detail: "재료비·일반관리비 2축 — 매출 30% 이내 유지 룰 점검" },
+          { label: "3. 기타비 점검", detail: "마케팅·이자·기타 3축 — 광고 ROAS·대출 이자 한계점 검토" },
+          { label: "4. 손익분기·런웨이", detail: "월별 BEP 시뮬 + 보유 자본 잔여 개월 자동 계산" },
+        ]}
+        verifyItemsKo={[
+          "고정비 합계 — 매출 70% 미만 유지, 초과 시 변동비 압박으로 흑자 도달 어려움",
+          "재료비 — 매출 30% 한계, 35% 초과 시 메뉴·공급처 즉시 재검토 (1순위 적자 원인)",
+          "인건비 — 25% 한계, 5인 이상 사업장은 연장수당·연차수당 별도 누적, 누락 시 차액·가산금",
+          "운영자본 6개월 — 매출 0원 가정해도 견딜 자본 별도 유지 (흑자부도 1순위 원인)",
+          "이자 부담 — 정책자금·일반대출 이자 합산 매출 5% 이내, 초과 시 신규 대출 자제",
+          "마케팅 ROAS — 200% 미만이면 즉시 중단·재구성, 「쓸수록 손해」 패턴 인식",
+        ]}
+        nextSummaryKo="고정·변동·기타 비용 시뮬 + BEP 확인 → 개업·론칭 단계로 진입"
+      />
     </section>
   );
 }

@@ -175,9 +175,9 @@ export function CostStructureCard() {
 
   if (!hasCosts || rows.length === 0) {
     return (
-      <div style={card}>
+      <div style={card} data-cost-structure>
         <div style={headerRow}>
-          <PieChart size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
+          <PieChart size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
         </div>
         <div style={emptyState}>
           {ko
@@ -189,10 +189,10 @@ export function CostStructureCard() {
   }
 
   return (
-    <div style={card}>
+    <div style={card} data-cost-structure>
       {/* Header */}
       <div style={headerRow}>
-        <PieChart size={14} strokeWidth={2} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
+        <PieChart size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
       </div>
 
       {/* Cost Rows */}
@@ -273,11 +273,9 @@ export function CostStructureCard() {
 const card: React.CSSProperties = {
   borderRadius: "20px",
   padding: "22px",
-  background: "rgba(255,255,255,0.82)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(0,0,0,0.05)",
-  boxShadow: "0 4px 24px rgba(15,23,42,0.03), 0 1px 2px rgba(15,23,42,0.02)",
+  background: "linear-gradient(180deg, #ffffff 0%, #f7f8fe 100%)",
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)",
   fontFamily: "inherit",
   display: "flex",
   flexDirection: "column",
@@ -331,7 +329,7 @@ const barTrack: React.CSSProperties = {
   width: "100%",
   height: "6px",
   borderRadius: "3px",
-  background: "rgba(15,23,42,0.06)",
+  background: "rgba(25,25,112,0.05)",
   overflow: "hidden",
 };
 
@@ -343,7 +341,7 @@ const dotCol: React.CSSProperties = {
 
 const primeSeparator: React.CSSProperties = {
   height: "1px",
-  background: "rgba(15,23,42,0.08)",
+  background: "rgba(25,25,112,0.07)",
   margin: "4px 0 6px 0",
 };
 

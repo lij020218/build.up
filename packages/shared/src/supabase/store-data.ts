@@ -9,6 +9,10 @@ type Client = SupabaseClient;
  */
 export type UserStoreData = {
   storeName: string;
+  /** 영업 시작 시각 HH:MM 24h KST. 오프라인 전용. */
+  businessOpenTime: string | null;
+  /** 영업 종료 시각 HH:MM 24h KST. 일자 분기 cutoff 계산에 사용. */
+  businessCloseTime: string | null;
   businessLaunched: boolean;
   businessLaunchedDate: string | null;
   cpaDecision: string | null;
@@ -62,11 +66,53 @@ export type UserStoreData = {
   //   { currentBalance, currentBalanceUpdatedAt, salesChannels[], crisisThresholdDays,
   //     notifyOnCrisis, dailyMorningBriefing, vatReserveEnabled, setupCompletedAt }
   cashflowSettings: Record<string, unknown> | null;
+  // ── "내 가게" 페이지 — 회계·정적 정보 (AI 호출 0, 모두 사용자 입력) ──
+  mission: string | null;
+  shortDescription: string | null;
+  longDescription: string | null;
+  addressRoad: string | null;
+  addressDetail: string | null;
+  regionCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  phone: string | null;
+  ownerPhone: string | null;
+  websiteUrl: string | null;
+  instagramUrl: string | null;
+  naverPlaceUrl: string | null;
+  kakaoPlaceUrl: string | null;
+  weeklyHolidays: string[];
+  breakTime: string | null;
+  storePhotos: Array<{ url: string; caption?: string }>;
+  currentBalanceManualKrw: number | null;
+  currentBalanceUpdatedAt: string | null;
+  bizRegistrationNumber: string | null;
+  bizRegistrationDate: string | null;
+  bizRegistrationType: string | null;
+  industryCode: string | null;
+  telecomSalesNumber: string | null;
+  fourInsuranceEstablished: string | null;
+  permits: unknown[];
+  bizBankName: string | null;
+  bizBankAccountMasked: string | null;
+  bizCardIssued: string | null;
+  posTerminal: string | null;
+  taxHandling: string | null;
+  cpaName: string | null;
+  cpaPhone: string | null;
+  peopleDirectory: unknown[];
+  insurancePolicies: unknown[];
+  tenancy: Record<string, unknown>;
+  digitalFootprint: unknown[];
+  vehicles: unknown[];
+  industrySpecifics: Record<string, unknown>;
 };
 
 // camelCase → snake_case mapping for DB columns
 const FIELD_TO_COLUMN: Record<keyof UserStoreData, string> = {
   storeName: "store_name",
+  businessOpenTime: "business_open_time",
+  businessCloseTime: "business_close_time",
   businessLaunched: "business_launched",
   businessLaunchedDate: "business_launched_date",
   cpaDecision: "cpa_decision",
@@ -112,6 +158,46 @@ const FIELD_TO_COLUMN: Record<keyof UserStoreData, string> = {
   timeLogEntries: "time_log_entries",
   timeLogEnabled: "time_log_enabled",
   cashflowSettings: "cashflow_settings",
+  // 내 가게 ─────────────
+  mission: "mission",
+  shortDescription: "short_description",
+  longDescription: "long_description",
+  addressRoad: "address_road",
+  addressDetail: "address_detail",
+  regionCode: "region_code",
+  latitude: "latitude",
+  longitude: "longitude",
+  phone: "phone",
+  ownerPhone: "owner_phone",
+  websiteUrl: "website_url",
+  instagramUrl: "instagram_url",
+  naverPlaceUrl: "naver_place_url",
+  kakaoPlaceUrl: "kakao_place_url",
+  weeklyHolidays: "weekly_holidays",
+  breakTime: "break_time",
+  storePhotos: "store_photos",
+  currentBalanceManualKrw: "current_balance_manual_krw",
+  currentBalanceUpdatedAt: "current_balance_updated_at",
+  bizRegistrationNumber: "biz_registration_number",
+  bizRegistrationDate: "biz_registration_date",
+  bizRegistrationType: "biz_registration_type",
+  industryCode: "industry_code",
+  telecomSalesNumber: "telecom_sales_number",
+  fourInsuranceEstablished: "four_insurance_established",
+  permits: "permits",
+  bizBankName: "biz_bank_name",
+  bizBankAccountMasked: "biz_bank_account_masked",
+  bizCardIssued: "biz_card_issued",
+  posTerminal: "pos_terminal",
+  taxHandling: "tax_handling",
+  cpaName: "cpa_name",
+  cpaPhone: "cpa_phone",
+  peopleDirectory: "people_directory",
+  insurancePolicies: "insurance_policies",
+  tenancy: "tenancy",
+  digitalFootprint: "digital_footprint",
+  vehicles: "vehicles",
+  industrySpecifics: "industry_specifics",
 };
 
 // snake_case → camelCase reverse mapping

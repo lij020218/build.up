@@ -40,6 +40,24 @@ const robotics: ClusterStageContent = {
     { label: "보험 없이 필드 테스트 — 사고 시 회사 파산", text: "로봇 사고는 인적·재산 피해 큼. 제품책임보험 + 영업배상책임보험 가입 후 시작. 한국 보험사 다수 취급." },
     { label: "데이터 수집 시스템 없이 시작", text: "사고 발생 시 원인 분석 불가 → 인허가 단계에서 데이터 부족으로 거부. 자동 로깅 + 백업 필수." },
   ],
+  wrapup: {
+    nextStageLabelKo: "규제 제출",
+    doneItemsKo: [
+      { label: "1. 필드 사이트 1~3곳 확보", detail: "실제 고객·파일럿 파트너 + 사용 동의서 + 책임 한정 계약" },
+      { label: "2. 보험 가입", detail: "제품책임보험 + 영업배상책임보험 사전 체결, 사고 시 회사 보호" },
+      { label: "3. 데이터 수집 시스템", detail: "동작 로그 1초 단위 + 환경 데이터 + 영상·고장 모드 자동 로깅" },
+      { label: "4. 시험 기간·합격 기준", detail: "최소 4주 + 가동률·고장률·정확도 임계 정의" },
+    ],
+    verifyItemsKo: [
+      "보험 — 가입 없이 시작 시 사고 발생 시 무한 책임, 한국 보험사(현대·삼성·DB) 사전 견적",
+      "사고 보고 — 인적 피해 발생 시 24시간 내 산업안전보건공단 신고 의무, 미신고 시 형사처벌",
+      "데이터 보안 — 고객 환경 영상·로그는 개인정보 포함 가능, 익명화·암호화 의무",
+      "리스크 평가 — FMEA(고장모드영향분석) 사전 수행, 누락 시 인증 단계 데이터 부족 거절",
+      "사용 동의서 — 「영업비밀」「데이터 활용권」 명시, 모호한 합의는 분쟁 1순위",
+      "회수 시나리오 — 결함 발견 시 즉시 회수·교체 절차 매뉴얼화, PL 위반 시 형사책임",
+    ],
+    nextSummaryKo: "필드 사이트·보험·데이터 시스템 + 시험 기간 통과 → 규제 제출 단계로 진입",
+  },
 };
 
 const biotech: ClusterStageContent = {
@@ -83,6 +101,24 @@ const biotech: ClusterStageContent = {
     { name: "IND Application Process (Precision for Medicine)", href: "https://www.precisionformedicine.com/blog/how-to-launch-a-clinical-trial-in-south-korea-investigational-new-drug-application-process" },
     { name: "MFDS 의료기기 인허가", href: "https://www.mfds.go.kr/eng/wpge/m_39/denofile.do" },
   ],
+  wrapup: {
+    nextStageLabelKo: "규제 제출",
+    doneItemsKo: [
+      { label: "1. Pre-IND consultation", detail: "사전 협의로 우려사항 식별 + 7일 단축 옵션" },
+      { label: "2. IND dossier 완비", detail: "프로토콜·IB·동물시험·CMC·피험자 보험 5종 동시 작성" },
+      { label: "3. CRO·임상기관 선정", detail: "해당 적응증 IND 5건+ 통과 경험 + KGCP 인증 보유" },
+      { label: "4. IRB 윤리 심사 병행", detail: "MFDS IND + IRB 동시 진행, 총 6~8주에 임상 시작" },
+    ],
+    verifyItemsKo: [
+      "피험자 보상 보험 — IND 제출 시 한국어 증서 필수, 미제출 시 즉시 거절",
+      "CRO 경험 — 적응증별 IND 통과 경험 없으면 1상 fail 위험, 레퍼런스 5건+ 확인",
+      "IRB 승인 — 미승인 시 임상 진행 불가, 사전 신청·심사 일정 역산",
+      "동물시험 — IACUC 승인 + GLP 시설 데이터만 인정, 비-GLP 데이터는 IND 거절",
+      "임상 비용 — 1상 평균 5~10억, 진입 전 자본 또는 추가 펀딩 사전 확보",
+      "데이터 무결성 — eCRF·EDC 시스템 + 21 CFR Part 11 준수, 위반 시 데이터 무효",
+    ],
+    nextSummaryKo: "IND·IRB 승인 + 임상 1상 시작 → 규제 제출 단계로 진입",
+  },
 };
 
 export function FieldOrClinicalTestStage() {

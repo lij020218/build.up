@@ -39,6 +39,24 @@ const robotics: ClusterStageContent = {
     { label: "안전 매뉴얼 없이 시작 — 첫 사고가 회사 끝", text: "산업안전보건법 위반 시 영업정지 + 형사처벌. 시작 전 안전 컨설팅 + LOTO 절차 + 매주 안전 점검 필수." },
     { label: "EMC 차폐 부재 → 인근 장비 간섭으로 측정값 오염", text: "데이터 신뢰 못 함 → 모든 실험 재시도. Faraday cage 또는 차폐룸 설치." },
   ],
+  wrapup: {
+    nextStageLabelKo: "프로토타입 반복",
+    doneItemsKo: [
+      { label: "1. 시설·작업 영역 분리", detail: "로봇 펜스·컨트롤룸·부품 보관·작업대 — 안전 동선 확보" },
+      { label: "2. 안전 시스템 셋업", detail: "안전 펜스·라이트 커튼·비상정지·LOTO 절차 매뉴얼화" },
+      { label: "3. 핵심 장비 도입", detail: "모션캡처·F/T 센서·오실로스코프·진동 측정기 등 검증" },
+      { label: "4. EMC 차폐", detail: "Faraday cage·차폐룸 설치, 측정 데이터 신뢰성 확보" },
+    ],
+    verifyItemsKo: [
+      "산업안전보건법 — 사고 시 영업정지 + 형사처벌, LOTO 절차 미준수 시 1년 이하 징역",
+      "보험 — 시설배상·근로자재해보상·생산물배상 3종 별도, 사고 시 자기부담 한계 점검",
+      "PL(제조물책임) — 시제품 단계라도 외부 노출 시 PL 보험 가입 권장",
+      "전기 용량·소방 — 고전력 장비는 한전 사전 증설 + 소방 별도 신고 필수",
+      "환경부 — 화학·생물 폐기물 처리 위탁 계약, 자가 폐기 시 환경법 위반 + 형사처벌",
+      "데이터 무결성 — 모든 측정 SOP·교정증명서 보관, 미보관 시 인허가 데이터 무효",
+    ],
+    nextSummaryKo: "시설·안전·EMC·장비 셋업 완료 → 프로토타입 반복 단계로 진입",
+  },
 };
 
 const biotech: ClusterStageContent = {
@@ -69,6 +87,24 @@ const biotech: ClusterStageContent = {
     { label: "비-GLP 시설에서 데이터 생성 → IND 거절", text: "MFDS 는 GLP 시설 데이터만 인정. 자가 시설로 시작했다가 IND 단계에서 모두 재시험해야 함. 처음부터 GLP 시설 또는 인증 CRO 위탁이 정답." },
     { label: "SOP 없이 실험 — 재현성 0", text: "SOP 없는 데이터는 인허가 검토에서 무효. 첫 실험 시작 전 SOP 작성·QA 서명·교육 이수." },
   ],
+  wrapup: {
+    nextStageLabelKo: "프로토타입 반복",
+    doneItemsKo: [
+      { label: "1. GLP 또는 BSL-1/2 시설 확보", detail: "자가 시설 또는 인증 CRO 위탁으로 데이터 무결성 확보" },
+      { label: "2. SOP·QA 시스템", detail: "표준작업절차서 + QA 검증 + 시험기록부 시스템 구축" },
+      { label: "3. 장비 교정·인증", detail: "모든 측정 장비 교정증명서 + 정기 검증 일정 셋업" },
+      { label: "4. 폐기물·안전 절차", detail: "고온멸균 + 전용 폐기물 업체 위탁 + 사고 대응 매뉴얼" },
+    ],
+    verifyItemsKo: [
+      "MFDS GLP — 비-GLP 시설 데이터는 IND 거절, 처음부터 GLP 시설 또는 인증 CRO 위탁 필수",
+      "BSL 등급 — 연구 대상에 맞지 않으면 보건복지부 영업정지 + 형사처벌",
+      "환경부 — 생물학적 폐기물 자가 처리 시 환경법 위반, 위탁 계약서 보관 필수",
+      "동물실험 — IACUC(동물실험윤리위원회) 승인 의무, 미승인 시 데이터 무효 + 처분",
+      "임상 데이터 — IRB(임상시험심사위원회) 승인 사전 확보, 무승인 시험은 IND 거절",
+      "특허 — 시험 전 특허 출원 또는 발명신고서 작성, 외부 발표 후 특허성 상실 위험",
+    ],
+    nextSummaryKo: "GLP 시설·SOP·교정·폐기물 절차 완료 → 프로토타입 반복 단계로 진입",
+  },
 };
 
 export function LabSetupStage() {

@@ -7,6 +7,7 @@ import { VentureCertificationStage } from "../stages/startup/VentureCertificatio
 import { CompanySetupStage } from "../stages/startup/CompanySetupStage";
 import { GrowthEngineStage } from "../stages/startup/GrowthEngineStage";
 import { LaunchGtmStage } from "../stages/startup/LaunchGtmStage";
+import { GoLiveStage } from "../stages/startup/GoLiveStage";
 import { StartupFoundationStage } from "../stages/startup/StartupFoundationStage";
 import { CustomerDiscoveryStage } from "../stages/startup/CustomerDiscoveryStage";
 import { MvpBuildStage } from "../stages/startup/MvpBuildStage";
@@ -42,7 +43,6 @@ import { PreLaunchStage } from "../stages/offline/PreLaunchStage";
 import { ConstructionSetupStage } from "../stages/offline/ConstructionSetupStage";
 import { FRANCHISE_INTERIOR_DATA } from "../stages/offline/franchise-interior-data";
 import { PreLaunchFinalStage } from "../stages/shared-tail/PreLaunchFinalStage";
-import { FirstMonthCheckStage } from "../stages/shared-tail/FirstMonthCheckStage";
 import { TaxGuideStage } from "../stages/shared-tail/TaxGuideStage";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { FinancialReviewStage } from "../stages/shared-tail/FinancialReviewStage";
@@ -64,8 +64,8 @@ import {
   localizeTaskTitle,
 } from "@build-up/shared";
 import { Star, Store } from "lucide-react";
-import { HiringCostCalculator } from "../knowledge/HiringCostCalculator";
-import { SecurityChecklist } from "../knowledge/SecurityChecklist";
+// SecurityChecklist 는 LaunchGtmStage 내부에서 collapsible 로 직접 import.
+// import { SecurityChecklist } from "../knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "../knowledge/InvestmentGlossary";
 
 export function CurrentStageView() {
@@ -93,7 +93,7 @@ export function CurrentStageView() {
     handleAddDailyEntry,
     // Viewing / traversal
     viewingStageId, setViewingStageId,
-    allStagesDone, pathTotalStages,
+    allStagesDone, pathTotalStages, pathStepNumber,
     currentStage, localizedCurrentStage,
     transitionNotice, isFreshAccount,
     persistenceLabel, isViewingPastStage,
@@ -180,6 +180,7 @@ export function CurrentStageView() {
     softOpenPricing, setSoftOpenPricing,
     softOpenStep, setSoftOpenStep,
     softOpenSkips, setSoftOpenSkips,
+    preLaunchVisibleIds,
     // Tax / loan checks
     taxChecks, setTaxChecks, loanChecks, setLoanChecks,
     // Decisions / tasks / roadmap
@@ -200,7 +201,7 @@ export function CurrentStageView() {
     savedFinanceSnapshot, savedContractSnapshot, savedGuideQaSnapshot,
     effectiveContractAnalysis, effectiveGuideAnswer, financeDefaults,
     // Handlers
-    handleTaskToggle, handleStageContinue, handleLaunchBusiness,
+    handleTaskToggle, handleStageContinue, handleStageEdit, handleLaunchBusiness,
     handleVerificationContinue,
     openFinanceFromSummary,
     // Save
@@ -400,18 +401,9 @@ export function CurrentStageView() {
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" as const, justifyContent: "center" }}>
                   <button
                     type="button"
-                    onClick={() => {
-                      setBusinessLaunched(true);
-                      localStorage.setItem("businessLaunched", "true");
-                      if (!localStorage.getItem("businessLaunchedDate")) {
-                        localStorage.setItem("businessLaunchedDate", new Date().toISOString().slice(0, 10));
-                      }
-                      if (!storeName && selectedFranchiseBrandId) {
-                        const fb = getFranchiseBrandById(selectedFranchiseBrandId);
-                        if (fb) { setStoreName(fb.name[language]); localStorage.setItem("storeName", fb.name[language]); }
-                      }
-                      navigateToSurface("analytics");
-                    }}
+                    // ⚠️ handleLaunchBusiness를 사용해야 함 — Supabase 저장 + localStorage + Zustand 동기화 보장.
+                    // 이전엔 인라인 구현이라 Supabase 저장이 빠져 새로고침 시 businessLaunched=false 로 복구되는 버그가 있었음.
+                    onClick={handleLaunchBusiness}
                     style={{
                       padding: "13px 28px", borderRadius: "999px",
                       background: "#007aff", color: "#fff",
@@ -460,13 +452,13 @@ export function CurrentStageView() {
               {Array.from({ length: pathTotalStages }).map((_, i) => (
                 <div key={i} style={{
                   flex: 1, height: "4px", borderRadius: "2px",
-                  background: i < (currentStage.stepNumber ?? 0) ? "var(--primary, #1d3557)" : i === (currentStage.stepNumber ?? 0) ? "rgba(29,53,87,0.35)" : "rgba(0,0,0,0.06)",
+                  background: i < pathStepNumber - 1 ? "var(--primary, #1d3557)" : i === pathStepNumber - 1 ? "rgba(29,53,87,0.35)" : "rgba(0,0,0,0.06)",
                   transition: "background 0.3s ease",
                 }} />
               ))}
             </div>
             <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.4)", whiteSpace: "nowrap" as const, fontVariantNumeric: "tabular-nums" }}>
-              {currentStage.stepNumber}/{pathTotalStages} · {formatStageType(currentStage.type, language)}
+              {pathStepNumber}/{pathTotalStages} · {formatStageType(currentStage.type, language)}
             </span>
           </div>
           <div style={styles.currentTitle}>{localizedCurrentStage.title}</div>
@@ -536,13 +528,13 @@ export function CurrentStageView() {
             currentStage.code === "customer_discovery" ||
             currentStage.code === "mvp_build" ||
             currentStage.code === "launch_gtm" ||
+            currentStage.code === "go_live" ||
             currentStage.code === "growth_engine" ||
             currentStage.code === "company_setup" ||
             currentStage.code === "fundraising_readiness" ||
             currentStage.code === "venture_certification" ||
             currentStage.code === "biz_registration" ||
             currentStage.code === "pre_launch_final" ||
-            currentStage.code === "first_month_check" ||
             currentStage.code === "financial_review" ||
             // ── Cluster B: Hardware/IoT NPI 4 ──
             currentStage.code === "hardware_prototype" ||
@@ -580,13 +572,13 @@ export function CurrentStageView() {
               customer_discovery: "customer-discovery",
               mvp_build: "mvp-build",
               launch_gtm: "launch-gtm",
+              go_live: "go-live",
               growth_engine: "growth-engine",
               company_setup: "company-setup",
               fundraising_readiness: "fundraising-readiness",
               venture_certification: "venture-certification",
               biz_registration: "biz-registration",
               pre_launch_final: "pre-launch-final",
-              first_month_check: "first-month-check",
               // Cluster B
               hardware_prototype: "hardware-prototype",
               bom_supply_chain: "bom-supply-chain",
@@ -607,17 +599,33 @@ export function CurrentStageView() {
             const stageTasks = taskMap[stageId] ?? [];
             const isPreLaunch = stageId === "pre-launch";
             const preLaunchDoneMap: Record<string, boolean> = isPreLaunch ? (() => {
+              // ⚠️ 100% 룰 — 사용자가 "실제로 본" 모든 체크 항목이 체크돼야 task 완료.
+              //    PreLaunchStage 가 useEffect 로 visible IDs 를 store 에 push 함.
+              //    visible IDs 가 null 이면 사용자가 아직 페이지를 안 봤다는 뜻 — task 미완료.
               const guestSel = ["guest-family","guest-neighbor","guest-influencer","guest-peer"].some(k => softOpenChecks[k]);
               const prepDone = ["prep-feedback-form","prep-invite-sent","prep-sns-plan"].every(k => softOpenChecks[k]);
-              const dayKeys = ["day-cleanliness","day-staff-briefing","day-pos","day-ambiance","day-observation","day-payment","day-feedback-card","day-debrief","day-settlement","day-sns","day-inventory","day-order-timing","day-delivery","day-booking-system","day-no-show","day-service-time","day-display","day-checkout-test","day-equipment","day-crm","day-class","day-checkout-online","day-cs","day-fulfillment"];
-              const fbKeys = ["feedback-service","feedback-price","feedback-ambiance","feedback-taste","feedback-quality","feedback-product","feedback-facility","feedback-ux","feedback-booking","feedback-menu","feedback-display","feedback-instructor"];
-              const finalKeys = ["final-naver","final-instagram","final-kakao","final-event"];
-              const finalAllResolved = finalKeys.every(k => softOpenChecks[k] || softOpenSkips[k]);
-              const finalAtLeastOne  = finalKeys.some(k => softOpenChecks[k]);
+
+              const visible = preLaunchVisibleIds;
+              // visible 이 null 이면 아직 PreLaunchStage 미렌더 → 모든 task 미완료
+              if (!visible) {
+                return {
+                  "soft-open-done":     guestSel && softOpenPricing !== "" && prepDone,
+                  "feedback-collected": false,
+                  "final-checklist":    false,
+                };
+              }
+              // ── feedback-collected: 사용자가 본 모든 day-* 항목 100% 체크 ──
+              const allDayChecked = visible.dayIds.length > 0 && visible.dayIds.every(id => softOpenChecks[id]);
+
+              // ── final-checklist: 사용자가 본 모든 feedback-* 100% 체크 + 모든 final-* resolved (체크 또는 skip) + 적어도 1개 final 체크 ──
+              const allFeedbackChecked = visible.feedbackIds.length > 0 && visible.feedbackIds.every(id => softOpenChecks[id]);
+              const allFinalResolved = visible.finalIds.length > 0 && visible.finalIds.every(id => softOpenChecks[id] || softOpenSkips[id]);
+              const finalAtLeastOne  = visible.finalIds.some(id => softOpenChecks[id]);
+
               return {
                 "soft-open-done":     guestSel && softOpenPricing !== "" && prepDone,
-                "feedback-collected": dayKeys.filter(k => softOpenChecks[k]).length >= 6,
-                "final-checklist":    fbKeys.filter(k => softOpenChecks[k]).length >= 4 && finalAllResolved && finalAtLeastOne,
+                "feedback-collected": allDayChecked,
+                "final-checklist":    allFeedbackChecked && allFinalResolved && finalAtLeastOne,
               };
             })() : {};
             const completedCount = stageTasks.filter((t) => isPreLaunch ? (preLaunchDoneMap[t.taskId] ?? false) : t.status === "completed").length;
@@ -666,6 +674,9 @@ export function CurrentStageView() {
 
                 {/* ── 출시 스택·GTM (분리됨) ── */}
                 {currentStage.code === "launch_gtm" && <LaunchGtmStage />}
+
+                {/* ── 실제 출시 (Go Live) — 별도 stage ── */}
+                {currentStage.code === "go_live" && <GoLiveStage />}
 
                 {/* 기술 스택 패널은 launch_stack 가이드 내부로 통합됨 */}
 
@@ -727,27 +738,10 @@ export function CurrentStageView() {
                 {/* ── 상품 소싱 가이드 (sourcing_setup) ── */}
                 {currentStage.code === "sourcing_setup" && <SourcingSetupStage />}
 
-                {/* ── 채용 비용 계산기 ── */}
-                {currentStage.code === "hiring_setup" && (
-                  <div style={{ marginBottom: "16px" }}>
-                    <HiringCostCalculator ko={language === "ko"} industryCategoryId={industryCategoryId} />
-                  </div>
-                )}
+                {/* ── 채용 비용 계산기 — HiringSetupStage 의 페이지 2 (계약서) 안으로 통합됨 ── */}
 
-                {/* ── 보안 체크리스트 — 출시 전 점검 ── */}
-                {currentStage.code === "launch_gtm" && (
-                  <div style={{ marginBottom: "16px" }}>
-                    <SecurityChecklist
-                      ko={language === "ko"}
-                      checks={softOpenChecks as Record<string, boolean>}
-                      onToggle={(id) => {
-                        const prev = softOpenChecks as Record<string, boolean>;
-                        const next = { ...prev, [id]: !prev[id] };
-                        d.setSoftOpenChecks(next as never);
-                      }}
-                    />
-                  </div>
-                )}
+                {/* 보안 체크리스트 — launch_gtm 자동 렌더 제거.
+                   LaunchGtmStage 의 Page 1 (출시 스택) 안에서 collapsible 버튼으로 접근. */}
 
                 {/* ── 투자 용어 사전 ── */}
                 {currentStage.code === "fundraising_readiness" && (
@@ -768,8 +762,6 @@ export function CurrentStageView() {
 
                 {currentStage.code === "pre_launch_final" && <PreLaunchFinalStage />}
 
-                {currentStage.code === "first_month_check" && <FirstMonthCheckStage />}
-
                 {(() => {
                   const visibleTasks = stageTasks.filter((t) => t.taskId !== "cpa-decision-made");
                   const visibleDone = visibleTasks.filter((t) => isPreLaunch ? (preLaunchDoneMap[t.taskId] ?? false) : t.status === "completed").length;
@@ -788,6 +780,29 @@ export function CurrentStageView() {
                     const done = isPreLaunch
                       ? (preLaunchDoneMap[task.taskId] ?? false)
                       : task.status === "completed";
+
+                    // ── 입력 기반 task 게이팅 ──────────────────────────────────────
+                    //  특정 task 는 사용자가 본문에서 입력값을 채워야만 체크 가능.
+                    //  예: "problem-defined" 는 decisions.startup-foundation.inputs.problemStatement 가
+                    //  비어있지 않아야 함. 비어있으면 클릭해도 체크 안 되고 hint 표시.
+                    type GateResult = { blocked: true; hint: { ko: string; en: string } } | { blocked: false };
+                    const checkTaskGate = (): GateResult => {
+                      if (task.taskId === "problem-defined") {
+                        const stmt = (decisions["startup-foundation"]?.inputs?.problemStatement as string | undefined)?.trim();
+                        if (!stmt || stmt.length < 10) {
+                          return {
+                            blocked: true,
+                            hint: {
+                              ko: "↑ 1단계 페이지에서 핵심 문제를 한 문장(10자 이상)으로 입력해야 체크할 수 있어요. 작성한 내용은 자동 저장됩니다.",
+                              en: "↑ Fill in your problem statement (10+ chars) on Step 1 page first. Your input auto-saves.",
+                            },
+                          };
+                        }
+                      }
+                      return { blocked: false };
+                    };
+                    const gate = checkTaskGate();
+
                     return (
                       <button
                         key={task.taskId}
@@ -795,9 +810,25 @@ export function CurrentStageView() {
                         style={{
                           ...styles.taskCheckItem,
                           ...(done ? styles.taskCheckItemDone : {}),
-                          ...(isPreLaunch ? { cursor: "default" } : {})
+                          ...(isPreLaunch ? { cursor: "default" } : {}),
+                          ...(gate.blocked && !done ? { opacity: 0.6, cursor: "not-allowed" } : {}),
                         }}
-                        onClick={() => !isPreLaunch && handleTaskToggle(stageId, task.taskId)}
+                        onClick={() => {
+                          if (isPreLaunch) return;
+                          // 게이트가 막혔으면 본문 입력 영역으로 스크롤·점프
+                          if (gate.blocked && !done) {
+                            // 같은 stage 안 input 자동 포커스 시도
+                            const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+                              `[data-task-input="${task.taskId}"]`,
+                            );
+                            if (el) {
+                              el.scrollIntoView({ behavior: "smooth", block: "center" });
+                              setTimeout(() => el.focus(), 400);
+                            }
+                            return;
+                          }
+                          handleTaskToggle(stageId, task.taskId);
+                        }}
                       >
                         <div style={{
                           ...styles.taskCheckCircle,
@@ -821,6 +852,10 @@ export function CurrentStageView() {
                                 : undefined;
                               if (franchiseData?.flexibility === "strict") {
                                 const franchiseLabels: Record<string, { ko: string; en: string }> = {
+                                  "interior-concept-selected": {
+                                    ko: "본사 표준 BI 컨셉 확인 (위 카드에서 본사 방향 선택)",
+                                    en: "Confirm HQ standard BI concept (pick closest direction above)",
+                                  },
                                   "contractor-selected": {
                                     ko: "본사 가맹 담당자에게 시공 일정·비용 분담 협의 완료",
                                     en: "Confirm timing and cost-sharing with HQ franchise manager",
@@ -844,6 +879,19 @@ export function CurrentStageView() {
                               return localizeTaskTitle(task.taskId, language, industryCategoryId || d.industryCategoryId) ?? task.title;
                             })()}
                           </div>
+                          {!done && gate.blocked && (
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#dc2626",
+                                lineHeight: 1.5,
+                                marginTop: "4px",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {language === "ko" ? gate.hint.ko : gate.hint.en}
+                            </div>
+                          )}
                           {!done && currentStage.code === "construction_setup" && (() => {
                             const franchiseData = startupType === "franchise" && selectedFranchiseBrandId
                               ? FRANCHISE_INTERIOR_DATA[selectedFranchiseBrandId]
@@ -851,6 +899,9 @@ export function CurrentStageView() {
                             const isStrictFranchise = franchiseData?.flexibility === "strict";
 
                             const hints: Record<string, string> = isStrictFranchise ? {
+                              "interior-concept-selected": language === "ko"
+                                ? "본사 표준 BI 컨셉이 정해져 있어 자유 선택은 불가하지만, 위 컨셉 카드에서 본사 가이드와 가까운 방향을 골라두면 협의·점주 의견 정리에 도움 돼요."
+                                : "The HQ BI concept is fixed, but pick the closest direction in the cards above to align discussions with HQ.",
                               "contractor-selected": language === "ko"
                                 ? "외부 업체 견적·시공이 불가능합니다. 본사 가맹 담당자가 표준 시공 일정과 비용 분담(본사 부담 vs 점주 부담)을 안내해 줍니다."
                                 : "External contractors not allowed. The HQ franchise manager defines timing and cost-sharing.",
@@ -864,6 +915,9 @@ export function CurrentStageView() {
                                 ? "본사가 소방·위생 매뉴얼을 제공하지만, 신청자(영업자)는 점주 본인입니다. 보건증은 인테리어와 무관하므로 미리 받아 두세요."
                                 : "HQ provides the fire/health manual, but the applicant is the owner. Get the health card early — it's independent of construction.",
                             } : {
+                              "interior-concept-selected": language === "ko"
+                                ? "위 컨셉 카드에서 하나를 클릭하면 자동으로 체크돼요. 업체 미팅에서 기준점이 됩니다."
+                                : "Click one of the concept cards above — it auto-checks and becomes the reference for contractor meetings.",
                               "contractor-selected": language === "ko"
                                 ? "위 자재 목록과 선택한 컨셉을 업체에 전달하면 더 정확한 견적을 받을 수 있어요."
                                 : "Share the material list and chosen concept above for more accurate quotes.",
@@ -888,11 +942,13 @@ export function CurrentStageView() {
                   })}
                 </div>
                 <div style={styles.stageFooter}>
-                  {prevTraversedStage ? (
-                    <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
-                      {language === "ko" ? "← 이전 단계" : "← Back"}
-                    </button>
-                  ) : null}
+                  {/* ⚠️ 항상 노출 — null 이면 로드맵으로 복귀 */}
+                  <button type="button" style={styles.button} onClick={() => {
+                    if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+                    else setViewingStageId(null);
+                  }}>
+                    {language === "ko" ? "← 이전 단계" : "← Back"}
+                  </button>
                   {correctedProgressPercent >= 100 ? (
                     <button
                       type="button"
@@ -923,24 +979,68 @@ export function CurrentStageView() {
                         ? (language === "ko" ? "저장 실패 — 다시 시도" : "Save failed — retry")
                         : (language === "ko" ? "수정 내용 저장" : "Save changes")}
                     </button>
-                  ) : stageId === "first-month-check" ? (
+                  ) : stageId === "pre-launch-final" ? (
                     <button
                       type="button"
                       style={{ ...styles.primaryButton, opacity: allDone ? 1 : 0.45, background: allDone ? "linear-gradient(135deg, #34c759, #30a84e)" : undefined }}
                       onClick={() => { handleStageContinue(stageId); handleLaunchBusiness(); }}
                       disabled={!allDone}
                     >
-                      {language === "ko" ? "개업 시작하기" : "Launch my business"}
+                      {language === "ko"
+                        ? (industryCategoryId === "startup-tech" ? "🚀 런칭하기" : "🚀 개업하기")
+                        : (industryCategoryId === "startup-tech" ? "🚀 Launch" : "🚀 Open store")}
                     </button>
                   ) : (
-                    <button
-                      type="button"
-                      style={{ ...styles.primaryButton, opacity: allDone ? 1 : 0.45 }}
-                      onClick={() => handleStageContinue(stageId)}
-                      disabled={!allDone}
-                    >
-                      {language === "ko" ? "다음 단계로" : "Continue"}
-                    </button>
+                    (() => {
+                      // ⚠️ 두 버튼 동시 표시 (사용자 요청 2026-05-03):
+                      //   - "✓ 수정 저장": handleStageEdit — 다른 단계 영향 X, 같은 화면 유지. completedAt 있을 때만.
+                      //   - "다음 단계로": handleStageContinue — 다음 stage 로 advance.
+                      // editSaveStatus 동기화: saving → "저장 중...", saved → "✓ 수정 완료" (2초 후 복귀).
+                      const isStageCompleted = !!decisions[stageId]?.completedAt;
+                      const editStatus = d.editSaveStatus?.stageId === stageId ? d.editSaveStatus.status : null;
+                      const editLabel = editStatus === "saving"
+                        ? (language === "ko" ? "저장 중..." : "Saving...")
+                        : editStatus === "saved"
+                          ? (language === "ko" ? "✓ 수정 완료" : "✓ Saved")
+                          : editStatus === "error"
+                            ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
+                            : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
+                      const editBg = editStatus === "saved"
+                        ? "#16a34a"
+                        : editStatus === "error"
+                          ? "#dc2626"
+                          : "#34c759";
+                      return (
+                        <>
+                          {isStageCompleted && (
+                            <button
+                              type="button"
+                              style={{
+                                ...styles.primaryButton,
+                                opacity: allDone && editStatus !== "saving" ? 1 : 0.5,
+                                background: editBg,
+                                cursor: editStatus === "saving" ? "wait" : "pointer",
+                              }}
+                              onClick={() => { void handleStageEdit(stageId); }}
+                              disabled={!allDone || editStatus === "saving"}
+                            >
+                              {editLabel}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.primaryButton,
+                              opacity: allDone ? 1 : 0.45,
+                            }}
+                            onClick={() => handleStageContinue(stageId)}
+                            disabled={!allDone}
+                          >
+                            {language === "ko" ? "다음 단계로" : "Continue"}
+                          </button>
+                        </>
+                      );
+                    })()
                   )}
                   <button type="button" style={styles.button} onClick={resetDemo}>
                     {copy.common.resetDemo}
@@ -955,11 +1055,12 @@ export function CurrentStageView() {
               <>
                 <LoanGuideStage />
                 <div style={styles.stageFooter}>
-                  {prevTraversedStage && (
-                    <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
-                      {language === "ko" ? "← 이전 단계" : "← Back"}
-                    </button>
-                  )}
+                  <button type="button" style={styles.button} onClick={() => {
+                    if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+                    else setViewingStageId(null);
+                  }}>
+                    {language === "ko" ? "← 이전 단계" : "← Back"}
+                  </button>
                   <button type="button" style={{ ...styles.primaryButton }} onClick={() => handleVerificationContinue("loan-guide")}>
                     {copy.home.markLoanReviewed}
                   </button>
@@ -1214,11 +1315,12 @@ export function CurrentStageView() {
                     </div>
                   </article>
                   <div style={styles.stageFooter}>
-                    {prevTraversedStage && (
-                      <button type="button" style={styles.button} onClick={() => setViewingStageId(prevTraversedStage.stageId)}>
-                        {language === "ko" ? "← 이전 단계" : "← Back"}
-                      </button>
-                    )}
+                    <button type="button" style={styles.button} onClick={() => {
+                      if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+                      else setViewingStageId(null);
+                    }}>
+                      {language === "ko" ? "← 이전 단계" : "← Back"}
+                    </button>
                     <button type="button" style={{ ...styles.primaryButton }} onClick={() => handleVerificationContinue("loan-guide")}>
                       {copy.home.markLoanReviewed}
                     </button>
@@ -1229,7 +1331,7 @@ export function CurrentStageView() {
           )
           ) : (
             <>
-              {!businessLaunched && roadmap.completedStageIds.includes("first-month-check") ? (
+              {!businessLaunched && roadmap.completedStageIds.includes("pre-launch-final") ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px", padding: "6px 0" }}>
                   <div style={{ fontSize: "20px", fontWeight: 700, letterSpacing: "-0.3px" }}>
                     {language === "ko" ? "모든 준비가 완료됐습니다." : "You're ready to open."}
