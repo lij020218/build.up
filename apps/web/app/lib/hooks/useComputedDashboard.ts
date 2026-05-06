@@ -646,6 +646,10 @@ export function useComputedDashboard(
       label: language === "ko" ? "마케팅" : "Marketing",
     },
     {
+      id: "reports" as const,
+      label: language === "ko" ? "보고서" : "Reports",
+    },
+    {
       id: "analytics" as const,
       label: language === "ko" ? "내 가게" : "My store",
     },

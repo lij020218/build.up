@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@build-up/ai": "workspace:*",
+    "@build-up/integrations": "workspace:*",
     "@build-up/shared": "workspace:*",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/supabase-js": "^2.49.4",
@@ -22,6 +23,7 @@
     "jspdf": "^4.2.1",
     "lucide-react": "^0.577.0",
     "next": "^15.2.2",
+    "popbill": "^1.64.0",
     "postcss": "^8.5.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

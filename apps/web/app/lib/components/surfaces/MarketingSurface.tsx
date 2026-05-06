@@ -269,10 +269,34 @@ export function MarketingSurface() {
   };
 
   return (
-    <section style={{
-      maxWidth: "1080px", margin: "32px auto 0", padding: "0 24px 40px",
-      display: "flex", flexDirection: "column", gap: "20px",
+    <main style={{
+      width: "min(1080px, calc(100vw - 32px))",
+      margin: "0 auto", padding: "24px 0 80px",
+      display: "flex", flexDirection: "column", gap: 18,
     }}>
+      {/* Header — 4 surface 공통 패턴 */}
+      <header style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 4 }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, color: "#191970", opacity: 0.65,
+          letterSpacing: "0.12em",
+        }}>
+          {ko ? "MARKETING" : "MARKETING"}
+        </div>
+        <h1 style={{
+          fontSize: 26, fontWeight: 750, letterSpacing: "-0.025em",
+          color: "#0f172a", margin: 0,
+        }}>
+          {ko ? "내 가게 마케팅" : "Marketing"}
+        </h1>
+        <p style={{
+          fontSize: 14, color: "rgba(15,23,42,0.55)",
+          lineHeight: 1.55, margin: 0, maxWidth: 580,
+        }}>
+          {ko
+            ? "지출·ROAS·활성 채널을 한눈에. 업종 트렌드와 가게 맞춤 액션을 매일 새로 정리해 드려요."
+            : "Spend, ROAS, and active channels at a glance — with daily-refreshed trends and store-tailored actions."}
+        </p>
+      </header>
 
       {/* ━━━ 섹션 1: Overview KPI ━━━ */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "10px" }}>
@@ -935,7 +959,7 @@ export function MarketingSurface() {
           </div>
         )}
       </article>
-    </section>
+    </main>
   );
 }
 

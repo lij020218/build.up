@@ -9,6 +9,8 @@ import { PortOneConnectCard } from "../profile/PortOneConnectCard";
 import { TossPlaceConnectCard } from "../profile/TossPlaceConnectCard";
 import { CsvUploadCard } from "../profile/CsvUploadCard";
 import { CodefConnectCard } from "../profile/CodefConnectCard";
+import { PopbillConnectCard } from "../profile/PopbillConnectCard";
+import { SaasMetricsConnectCard } from "../profile/SaasMetricsConnectCard";
 import { StoreNameInput } from "../stages/shared/StoreNameInput";
 import { BusinessHoursInput } from "../stages/shared/BusinessHoursInput";
 
@@ -267,11 +269,14 @@ export function ProfileView() {
         </div>
       </article>
 
-      {/* ── 카드 3.5: 외부 데이터 연결 (4가지 trail) ── */}
+      {/* ── 카드 3.5: 외부 데이터 연결 ── */}
       <PortOneConnectCard ko={ko} />
       <TossPlaceConnectCard ko={ko} />
+      <PopbillConnectCard ko={ko} />
       <CodefConnectCard ko={ko} />
       <CsvUploadCard ko={ko} />
+      {/* 스타트업 업종 사장님 자기 제품 사용자 수 자동 수집 (내부에서 industry 가드) */}
+      <SaasMetricsConnectCard ko={ko} industryCategoryId={d.industryCategoryId} />
 
       {/* ── 카드 4: 계정 관리 ── */}
       <article style={{ ...card, marginTop: "12px" }}>

@@ -120,7 +120,11 @@ export type StageDecisionState = {
   stageId: string;
   selectedOptionIds?: string[];
   selectedPrimaryOptionId?: string;
-  inputs?: Record<string, string | number | boolean | string[]>;
+  /**
+   * 자유 형식 입력값 — 단계마다 의미가 다름.
+   * 일반 가드(typeof === "string" 등)로 좁혀 사용. nested 객체(예: hiring-setup.staffPlan) 도 허용.
+   */
+  inputs?: Record<string, unknown>;
   notes?: string;
   completedAt?: string;
 };
@@ -146,6 +150,7 @@ export type UserBusinessProfile = {
   userId: string;
   industryCategoryId?: string;
   subIndustryId?: string;
+  selectedSpecialtyId?: string;
   startupType?: "franchise" | "independent" | "undecided";
   businessModelId?: string;
   capital?: number;

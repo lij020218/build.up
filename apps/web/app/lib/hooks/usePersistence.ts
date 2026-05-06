@@ -450,6 +450,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
 
   const {
     setSelectedIndustryId, setSelectedIndustryCategoryId,
+    setSelectedSpecialtyId,
     setSelectedBusinessModelId,
     setSelectedBudget, setBudgetInputText,
     setSelectedOpenDate,
@@ -645,6 +646,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       if (loadedIndustryId) {
         setSelectedIndustryId(loadedIndustryId);
         setSelectedIndustryCategoryId(getIndustryCategoryIdByOptionId(loadedIndustryId) ?? "food");
+      }
+      // specialty(세부업종) — industry-selection.inputs.specialtyId 에 저장됨.
+      const loadedSpecialtyId = dec["industry-selection"]?.inputs?.specialtyId;
+      if (typeof loadedSpecialtyId === "string" && loadedSpecialtyId) {
+        setSelectedSpecialtyId(loadedSpecialtyId);
       }
       const loadedStartupType = dec["startup-type"]?.selectedPrimaryOptionId;
       if (loadedStartupType === "franchise" || loadedStartupType === "independent" || loadedStartupType === "undecided") {

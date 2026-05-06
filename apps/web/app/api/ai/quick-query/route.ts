@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit, peekRateLimit } from "../../_lib/rate-limit";
-import { getAnthropicApiKey } from "../../_lib/env";
-import { askQuickQuery } from "@build-up/ai";
+import { getAnthropicApiKey, getOpenAiApiKey } from "../../_lib/env";
+import {
+  askQuickQuery,
+  formatInsightContext,
+  retrieveInsightChunks,
+} from "@build-up/ai";
 import type { QuickQueryContext } from "@build-up/ai";
 import { matchKHitCases } from "@build-up/shared";
+import { supabase as supabaseAnon } from "../../../../lib/supabase";
 
 const DAILY_LIMIT = 10;
 const DAILY_KEY = (userId: string) => `daily:quick-query:${userId}`;
@@ -85,6 +90,26 @@ export async function POST(request: Request) {
       lesson: c.lesson.ko,
     })),
   };
+
+  // ── RAG: 외부 인사이트 자료 검색 (실패해도 메인 답변은 진행) ──
+  const openAiKey = getOpenAiApiKey();
+  if (openAiKey && !enrichedBody.insightContext) {
+    try {
+      const chunks = await retrieveInsightChunks(
+        body.question,
+        {
+          supabase: supabaseAnon as unknown as Parameters<typeof retrieveInsightChunks>[1]["supabase"],
+          embed: { apiKey: openAiKey },
+        },
+        { matchCount: 4, minSimilarity: 0.4 },
+      );
+      const insightContext = formatInsightContext(chunks);
+      if (insightContext) enrichedBody.insightContext = insightContext;
+    } catch (err) {
+      // RAG 실패는 답변 차단 사유가 아님 — 로그만 남기고 계속.
+      console.warn("[quick-query] insight retrieval skipped:", err instanceof Error ? err.message : err);
+    }
+  }
 
   try {
     const result = await askQuickQuery(enrichedBody, { apiKey });

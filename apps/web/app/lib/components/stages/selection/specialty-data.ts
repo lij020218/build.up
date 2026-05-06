@@ -153,11 +153,6 @@ export const SPECIALTY_BY_INDUSTRY: Record<string, SpecialtyOption[]> = {
     { id: "edu-japanese-chinese", label: "일본어·중국어", desc: "JLPT·HSK 시험 대비 + 회화", labelEn: "JP/CN academy" },
     { id: "edu-kids-language", label: "어린이·청소년 영어", desc: "초등·중학 영어 — 학부모 시장", labelEn: "Kids English" },
   ],
-  "test-prep-academy": [
-    { id: "edu-csat", label: "수능·내신 학원", desc: "고등 입시 — 시험 시즌 강세", labelEn: "CSAT prep" },
-    { id: "edu-civil-service", label: "공무원·자격증", desc: "9급·7급·자격증 — 성인 시장", labelEn: "Civil service / cert" },
-    { id: "edu-art-music", label: "예체능·실기", desc: "미술·음악·체대 입시", labelEn: "Arts test prep" },
-  ],
   "coding-class": [
     { id: "edu-coding-kids", label: "어린이 코딩 클래스", desc: "스크래치·파이썬 — SW 의무 교육 트렌드", labelEn: "Kids coding" },
     { id: "edu-coding-adult", label: "성인 코딩·부트캠프", desc: "프론트·백엔드·AI — 취업 연계", labelEn: "Adult coding bootcamp" },
@@ -265,63 +260,27 @@ export const SPECIALTY_BY_INDUSTRY: Record<string, SpecialtyOption[]> = {
   ],
 
   // ── 온라인·디지털 ────────────────────────────────────────
-  "online-fashion": [
-    { id: "ec-fashion-women", label: "여성 의류·액세서리", desc: "스마트스토어·자체몰 — 가장 큰 시장", labelEn: "Women's fashion" },
-    { id: "ec-fashion-men", label: "남성 의류·잡화", desc: "캐주얼·스트릿 — 객단가 안정", labelEn: "Men's fashion" },
-    { id: "ec-fashion-kids", label: "아동 의류", desc: "엄마 시장 — 인스타 마케팅", labelEn: "Kids fashion" },
-  ],
-  "online-beauty": [
-    { id: "ec-beauty-cosmetics", label: "화장품·스킨케어", desc: "K-뷰티 — 해외 직배 가능", labelEn: "Beauty / skincare" },
-    { id: "ec-beauty-hair", label: "헤어·바디케어", desc: "샴푸·바디 — 정기구독 모델", labelEn: "Hair / body" },
-  ],
-  "online-food": [
-    { id: "ec-food-snack", label: "간식·디저트 온라인", desc: "수제 디저트·과자 — 마켓컬리", labelEn: "Snack / dessert online" },
-    { id: "ec-food-meal-kit", label: "밀키트·반찬 정기", desc: "정기 구독 + 새벽배송", labelEn: "Meal kit" },
-    { id: "ec-food-health", label: "건강식품·영양제 온라인", desc: "프로바이오틱스·콜라겐", labelEn: "Health food online" },
-  ],
-  "online-lifestyle": [
-    { id: "ec-lifestyle-home", label: "홈데코·생활용품", desc: "오늘의집·자체몰 — 객단가 ↑", labelEn: "Home / lifestyle" },
-    { id: "ec-lifestyle-pet", label: "반려동물 용품", desc: "사료·간식·장난감 — 정기 구독", labelEn: "Pet supplies online" },
-  ],
-  "online-content": [
-    { id: "ec-content-ebook", label: "전자책·디지털 콘텐츠", desc: "노하우·강의 — 마진 90%+", labelEn: "Ebook / digital" },
-    { id: "ec-content-template", label: "템플릿·디자인 에셋", desc: "노션·피그마·PPT — Etsy 모델", labelEn: "Template / asset" },
-    { id: "ec-content-course", label: "온라인 강의·VOD", desc: "인프런·클래스101 — 패시브 인컴", labelEn: "Online course" },
-  ],
-  "online-service": [
-    { id: "ec-service-saas", label: "SaaS·디지털 서비스", desc: "월 구독 모델 — B2C/B2B", labelEn: "SaaS / digital service" },
-    { id: "ec-service-marketplace", label: "전문가·프리랜서 매칭", desc: "크몽·숨고 — 수수료 모델", labelEn: "Pro marketplace" },
-  ],
+  // (smart-store / digital-products / creator-service / consignment-commerce /
+  //  newsletter-membership / global-buying — 카테고리별 분기는 BusinessModel 단계에서.)
 
   // ── 스타트업 ─────────────────────────────────────────────
-  "ai-saas": [
+  // 키 이름은 starter-data.ts 의 industry option id 와 1:1 일치해야 함 (2026-05-04 audit).
+  "ai-application": [
     { id: "su-ai-chatbot", label: "AI 챗봇·상담 자동화", desc: "GPT 기반 챗봇 — B2B 매출", labelEn: "AI chatbot" },
     { id: "su-ai-content", label: "AI 콘텐츠·카피 SaaS", desc: "마케팅 카피·이미지 생성", labelEn: "AI content" },
     { id: "su-ai-vertical", label: "버티컬 AI (특정 산업)", desc: "법률·의료·교육 등 산업 특화", labelEn: "Vertical AI" },
   ],
-  "fintech": [
+  "fintech-startup": [
     { id: "su-fintech-payment", label: "결제·송금 핀테크", desc: "PG·간편송금 — 라이선스 필요", labelEn: "Payment fintech" },
     { id: "su-fintech-investment", label: "투자·자산관리", desc: "로보어드바이저·증권 API", labelEn: "Investment fintech" },
   ],
-  "healthtech": [
+  "healthtech-startup": [
     { id: "su-health-app", label: "건강·운동 앱", desc: "B2C 구독 모델", labelEn: "Health/fitness app" },
     { id: "su-medtech-device", label: "의료기기·하드웨어", desc: "MFDS 인증 — Class II/III", labelEn: "Medical device" },
   ],
-  "edutech": [
-    { id: "su-edu-platform", label: "교육 플랫폼·LMS", desc: "B2C 또는 학교 B2B", labelEn: "Education platform" },
-    { id: "su-edu-ai-tutor", label: "AI 튜터·개인화 학습", desc: "AI 기반 학습 추천", labelEn: "AI tutor" },
-  ],
-  "logistics": [
-    { id: "su-logi-lastmile", label: "라스트마일·배송", desc: "당일배송·지역배송", labelEn: "Last-mile" },
-    { id: "su-logi-platform", label: "물류 플랫폼·B2B", desc: "화물·풀필먼트 매칭", labelEn: "Logistics platform" },
-  ],
-  "social-media-creator": [
+  "creator-service": [
     { id: "su-creator-tools", label: "크리에이터 툴·에디터", desc: "영상·썸네일 자동화", labelEn: "Creator tools" },
     { id: "su-creator-marketplace", label: "크리에이터 매칭·MCN", desc: "광고주-크리에이터 매칭", labelEn: "Creator marketplace" },
-  ],
-  "deeptech": [
-    { id: "su-dt-ai-research", label: "AI·머신러닝 연구", desc: "기초 모델·논문 + 라이선스", labelEn: "AI research" },
-    { id: "su-dt-quantum", label: "양자컴퓨팅·암호", desc: "양자 알고리즘·암호 — 정부 지원", labelEn: "Quantum / crypto" },
   ],
   "semiconductor": [
     { id: "su-semi-fabless", label: "팹리스 (설계 전문)", desc: "TSMC·삼성 파운드리 활용", labelEn: "Fabless" },
@@ -334,6 +293,111 @@ export const SPECIALTY_BY_INDUSTRY: Record<string, SpecialtyOption[]> = {
   "climate-energy": [
     { id: "su-climate-renewable", label: "재생에너지·태양광", desc: "B2B·B2G 사업", labelEn: "Renewable energy" },
     { id: "su-climate-battery", label: "배터리·ESS", desc: "EV·ESS 셀·BMS", labelEn: "Battery / ESS" },
+  ],
+  "developer-tools": [
+    { id: "su-dev-devops", label: "DevOps·CI/CD", desc: "배포 자동화·인프라 — B2B 매출", labelEn: "DevOps / CI-CD" },
+    { id: "su-dev-monitoring", label: "모니터링·옵저버빌리티", desc: "APM·로그·트레이싱", labelEn: "Monitoring / observability" },
+    { id: "su-dev-database", label: "데이터베이스·데이터 도구", desc: "DB·ETL·데이터 플랫폼", labelEn: "Database / data tools" },
+    { id: "su-dev-testing", label: "테스트·QA 자동화", desc: "E2E·단위 테스트·QA", labelEn: "Test / QA automation" },
+  ],
+  "b2b-saas": [
+    { id: "su-saas-hr", label: "HR·인사 SaaS", desc: "근태·급여·평가 — 한국 노동법 핵심", labelEn: "HR SaaS" },
+    { id: "su-saas-crm", label: "CRM·세일즈 SaaS", desc: "영업·고객관리·마케팅 자동화", labelEn: "CRM SaaS" },
+    { id: "su-saas-erp", label: "ERP·재무·회계", desc: "회계·재무·세무 자동화", labelEn: "ERP / Finance SaaS" },
+    { id: "su-saas-vertical", label: "버티컬 SaaS (산업 특화)", desc: "병원·식당·미용·법률 등 도메인", labelEn: "Vertical SaaS" },
+  ],
+  "security-startup": [
+    { id: "su-sec-network", label: "네트워크·엔드포인트 보안", desc: "방화벽·EDR·제로트러스트", labelEn: "Network / endpoint security" },
+    { id: "su-sec-app", label: "애플리케이션·API 보안", desc: "WAF·SAST·DAST·API 보안", labelEn: "App / API security" },
+    { id: "su-sec-data", label: "데이터·개인정보 보안", desc: "DLP·암호화·개인정보 컴플라이언스", labelEn: "Data / privacy" },
+    { id: "su-sec-blockchain", label: "블록체인·암호자산 보안", desc: "스마트컨트랙트 감사·지갑 보안", labelEn: "Blockchain security" },
+  ],
+  "hardware-iot": [
+    { id: "su-hw-smarthome", label: "스마트홈·가전 IoT", desc: "스마트 플러그·조명·센서 — B2C", labelEn: "Smart home IoT" },
+    { id: "su-hw-wearable", label: "웨어러블·헬스 디바이스", desc: "스마트워치·헬스 센서", labelEn: "Wearable" },
+    { id: "su-hw-industrial", label: "산업용 IoT·센서", desc: "공장·물류 IoT — B2B 매출", labelEn: "Industrial IoT" },
+  ],
+  "robotics-physical-ai": [
+    { id: "su-robot-collab", label: "협업 로봇 (코봇)", desc: "공장·제조 협업 로봇", labelEn: "Collaborative robot" },
+    { id: "su-robot-service", label: "서비스 로봇 (배달·청소)", desc: "F&B·청소·접객 로봇", labelEn: "Service robot" },
+    { id: "su-robot-medical", label: "의료·재활 로봇", desc: "수술·재활·MFDS 인증", labelEn: "Medical robot" },
+    { id: "su-robot-autonomous", label: "자율주행·드론", desc: "AV·드론·라이다", labelEn: "Autonomous / drone" },
+  ],
+
+  // ── 온라인·디지털 ────────────────────────────────────────
+  "smart-store": [
+    { id: "ec-smart-fashion", label: "패션·의류", desc: "여성·남성·아동 — 가장 큰 시장", labelEn: "Fashion" },
+    { id: "ec-smart-beauty", label: "화장품·뷰티", desc: "K-뷰티 — 해외 직배 가능", labelEn: "Beauty / cosmetics" },
+    { id: "ec-smart-food", label: "식품·가공식품", desc: "마켓컬리·새벽배송 모델", labelEn: "Food / packaged" },
+    { id: "ec-smart-home", label: "홈·생활용품", desc: "오늘의집·자체몰 — 객단가 ↑", labelEn: "Home / lifestyle" },
+    { id: "ec-smart-pet", label: "반려동물 용품", desc: "사료·간식·용품 — 정기 구독", labelEn: "Pet supplies" },
+    { id: "ec-smart-health", label: "건강식품·영양제", desc: "프로바이오틱스·콜라겐", labelEn: "Health supplements" },
+  ],
+  "digital-products": [
+    { id: "dp-ebook", label: "전자책·디지털 콘텐츠", desc: "노하우·강의 — 마진 90%+", labelEn: "Ebook / digital" },
+    { id: "dp-template", label: "템플릿·디자인 에셋", desc: "노션·피그마·PPT — Etsy 모델", labelEn: "Template / asset" },
+    { id: "dp-course", label: "온라인 강의·VOD", desc: "인프런·클래스101 — 패시브 인컴", labelEn: "Online course" },
+    { id: "dp-saas-light", label: "라이트 SaaS·툴", desc: "1인 SaaS·생산성 도구", labelEn: "Lite SaaS / tool" },
+  ],
+  "consignment-commerce": [
+    { id: "cc-dropship-fashion", label: "패션·잡화 위탁", desc: "도매처 사진 + 자체 마진", labelEn: "Fashion dropshipping" },
+    { id: "cc-dropship-home", label: "홈·생활용품 위탁", desc: "오피스·홈 카테고리", labelEn: "Home dropshipping" },
+    { id: "cc-dropship-food", label: "식품·간식 위탁", desc: "산지 직송·가공식품", labelEn: "Food dropshipping" },
+  ],
+  "newsletter-membership": [
+    { id: "nm-knowledge", label: "지식·인사이트 뉴스레터", desc: "테크·경제·트렌드 큐레이션", labelEn: "Knowledge newsletter" },
+    { id: "nm-hobby", label: "취미·라이프스타일", desc: "와인·커피·여행 등 큐레이션", labelEn: "Hobby / lifestyle" },
+    { id: "nm-b2b-industry", label: "산업·업계 뉴스 (B2B)", desc: "특정 산업 인사이더 — 기업 구독", labelEn: "B2B industry news" },
+  ],
+  "global-buying": [
+    { id: "gb-fashion", label: "해외 패션·잡화 구매대행", desc: "유럽·미국 명품·의류", labelEn: "Fashion buying" },
+    { id: "gb-electronics", label: "해외 가전·전자제품", desc: "미·일·중 가전 — 환율·관세 핵심", labelEn: "Electronics buying" },
+    { id: "gb-cosmetics", label: "해외 화장품·뷰티", desc: "유럽·일본 화장품 직구", labelEn: "Cosmetics buying" },
+    { id: "gb-supplements", label: "해외 영양제·건강식품", desc: "iHerb·아마존 영양제 대행", labelEn: "Supplements buying" },
+  ],
+
+  // ── 교육 ──────────────────────────────────────────────────
+  "kids-academy": [
+    { id: "ka-music", label: "음악 학원 (피아노·바이올린)", desc: "악기 1:1 + 그룹 레슨", labelEn: "Music academy" },
+    { id: "ka-art", label: "미술 학원", desc: "유아·아동 미술 + 입시미술 분리", labelEn: "Art academy" },
+    { id: "ka-physical", label: "체육 학원 (태권도·축구)", desc: "태권도·축구·발레 — 가장 일반적", labelEn: "Sports academy" },
+    { id: "ka-play", label: "놀이·창의 학원", desc: "유아 놀이 + STEAM 융합", labelEn: "Play / STEAM" },
+  ],
+  "adult-class": [
+    { id: "ac-cooking", label: "요리·홈베이킹 클래스", desc: "원데이·정기 — 객단가 5~15만", labelEn: "Cooking class" },
+    { id: "ac-craft", label: "공예·플라워·도예", desc: "플라워·도예·수공예 — 인스타 강세", labelEn: "Craft / flower" },
+    { id: "ac-art-paint", label: "그림·드로잉 클래스", desc: "유화·수채화·드로잉 — 성인 시장", labelEn: "Drawing / paint" },
+    { id: "ac-finance", label: "재테크·투자 클래스", desc: "주식·부동산·세무 — 직장인 시장", labelEn: "Finance class" },
+  ],
+
+  // ── 펫 ────────────────────────────────────────────────────
+  "pet-cafe": [
+    { id: "pc-dog", label: "강아지 카페", desc: "강아지 동반 + 음료 — 주말 강세", labelEn: "Dog cafe" },
+    { id: "pc-cat", label: "고양이 카페", desc: "고양이 입양 가능 카페", labelEn: "Cat cafe" },
+    { id: "pc-mixed", label: "복합 펫카페 (강아지·고양이)", desc: "강아지·고양이 + 분리 공간", labelEn: "Mixed pet cafe" },
+  ],
+  "pet-supplies": [
+    { id: "ps-food", label: "사료·간식 전문", desc: "프리미엄 사료·수제 간식", labelEn: "Pet food / treats" },
+    { id: "ps-fashion", label: "펫 의류·액세서리", desc: "옷·하네스·캐리어 — 인스타 강세", labelEn: "Pet fashion" },
+    { id: "ps-toys", label: "펫 장난감·용품 종합", desc: "장난감·간식·생활용품 종합", labelEn: "Pet toys / supplies" },
+  ],
+
+  // ── 공간/숙박 ────────────────────────────────────────────
+  "guesthouse": [
+    { id: "gh-urban", label: "도심형 게스트하우스", desc: "외국인 관광객·홍대·이태원·강남", labelEn: "Urban guesthouse" },
+    { id: "gh-hanok", label: "한옥·전통 게스트하우스", desc: "전주·북촌·경주 — 외국인 시장", labelEn: "Hanok guesthouse" },
+    { id: "gh-rural", label: "시골·자연 펜션형", desc: "강원·제주 자연 — 가족·커플", labelEn: "Rural pension" },
+  ],
+
+  // ── 피트니스 ──────────────────────────────────────────────
+  "golf-studio": [
+    { id: "gs-screen", label: "스크린 골프", desc: "골프존·카카오 — 가장 보편", labelEn: "Screen golf" },
+    { id: "gs-lesson-indoor", label: "실내 골프 레슨", desc: "1:1 레슨 + 스윙 분석", labelEn: "Indoor golf lesson" },
+    { id: "gs-academy", label: "주니어·입시 골프 아카데미", desc: "체대·골프 입시 전문", labelEn: "Junior golf academy" },
+  ],
+  "unmanned-fitness": [
+    { id: "uf-24h-gym", label: "무인 24시 헬스장", desc: "키카드 출입 + CCTV — 인건비 ↓", labelEn: "Unmanned 24h gym" },
+    { id: "uf-kiosk-pt", label: "키오스크 셀프 PT", desc: "AI 코칭 + 셀프 운동", labelEn: "Kiosk self-PT" },
   ],
 };
 

@@ -37,3 +37,33 @@ export type { InterviewAnalysisInput, InterviewAnalysisResult } from "./intervie
 export { askQuickQuery } from "./quick-query/ask";
 export type { QuickQueryContext, QuickQueryResult } from "./quick-query/prompt";
 export { QUICK_QUERY_SYSTEM_PROMPT, buildQuickQueryUserPrompt } from "./quick-query/prompt";
+export { generateReportInsight } from "./report/actions";
+export type { ReportInsightInput } from "./report/prompt";
+
+// ── Insight RAG (vector knowledge base) ───────────────────────────────────
+export {
+  chunkInsightBody,
+  estimateTokens,
+  embedTexts,
+  embedQuery,
+  EMBEDDING_MODEL,
+  EMBEDDING_DIM,
+  retrieveInsightChunks,
+  formatInsightContext,
+  ingestInsightDocument,
+} from "./rag";
+export type {
+  ChunkOptions,
+  EmbedOptions,
+  RetrieveDeps,
+  AugmentOptions,
+  IngestDeps,
+  IngestResult,
+  IngestOptions,
+  InsightCategory,
+  InsightDocumentInput,
+  InsightChunk,
+  EmbeddedChunk,
+  RetrievedChunk,
+  RetrieveOptions,
+} from "./rag";

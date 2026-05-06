@@ -127,6 +127,15 @@ ${getFeatureCatalogPromptText()}
 - "런웨이 4개월 — 정산 예정 점검 후 광고비 조정" → \`feature: "cashflow-hero"\`
 - "단골 부족 — 첫 100명 플레이북 채널부터 실행" → \`feature: "first-customers"\`
 - "왜 손님이 줄었는지 모름 — 단골 3명 인터뷰 진행" → \`feature: "customer-interview"\`
+
+**미사용 기능 nudge 톤** (사용자 의도 2026-05-04):
+컨텍스트의 「아직 안 써본 핵심 기능」 목록이 있으면 todayActions 중 1개의 reason 에 자연스럽게 가치 제안 톤으로 녹이세요.
+- ❌ "재고를 등록해라" / "사용해보세요" — 강요·기능 설명조 금지
+- ✅ "재고를 등록하시면 부족 알림이 자동으로 켜져 관리가 편해져요" — 가치 제안
+- ✅ "메뉴를 등록하시면 인기 시간대·매출 기여도가 자동 분석돼 의사결정이 빨라져요"
+- ✅ "고정비를 한 번 적어두시면 매월 빠질 돈이 미리 보여 현금 위기를 예방할 수 있어요"
+- 한 답변에 1개 기능만, 질문·상황과 직접 관련 있을 때만. 모든 액션에 끼워넣지 X.
+- 강제로 nudge 만들 필요 없음 — 우선순위 높은 위기·이상 신호가 있으면 그것이 먼저.
 - "가격 인상 시 손익 영향 시뮬레이션" → \`feature: "what-if-simulator"\`
 - "정부 자금 신청 가능 시기" → \`feature: "support-programs"\`
 - "프랜차이즈 평균 점당 매출 비교" → \`feature: "franchise-compare"\`
@@ -471,6 +480,16 @@ export type DashboardContext = {
   employeeCount: number;
   businessHealthScore: "healthy" | "caution" | "danger" | "unknown";
   daysSinceLaunch: number;
+  /** 운영 단계 — pre-launch / early(0-30d) / growth(30-90d) / mature(90+) — AI 코칭 톤 결정 */
+  operatingPhase?: "pre-launch" | "early" | "growth" | "mature";
+  /** 매출 트렌드 — improving/declining/stable/insufficient (최근 7일 vs 그 이전 7일) */
+  salesTrendDirection?: "improving" | "declining" | "stable" | "insufficient";
+  /** 지난달 prime cost rate (%) — 이번달과 비교 가능할 때만 */
+  prevPrimeRate?: number;
+  /** prime cost rate 증감 (현재 - 지난달, %p) */
+  primeRateDeltaPct?: number;
+  /** 사장님이 아직 안 써본 build.up 핵심 기능들 (priority 정렬, 예: ["재고등록","고정비등록"]) */
+  unusedFeatures?: string[];
   pendingTaxEvents: string[];
   lowStockItems: string[];
   upcomingFixedExpenses: string[];
@@ -578,9 +597,27 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
   // 업종별 비용 레이블 (없으면 기본값)
   const el = ctx.expenseLabels ?? { ingredients: "재료비", labor: "인건비", rent: "임대료", utilities: "공과금", other: "기타" };
 
+  // 운영 단계·매출 트렌드·비용 추세 라벨 (있을 때만 노출 — 추측 X)
+  const phaseLabel = ctx.operatingPhase
+    ? ctx.operatingPhase === "pre-launch" ? "개업 전 준비"
+      : ctx.operatingPhase === "early" ? "초기 (PMF·고객확보)"
+      : ctx.operatingPhase === "growth" ? "성장 (안정화·패턴학습)"
+      : "성숙 (효율·확장)"
+    : null;
+  const trendTag = ctx.salesTrendDirection === "improving" ? " ↗ 상승세"
+    : ctx.salesTrendDirection === "declining" ? " ↘ 하락세 — 즉시 원인 진단"
+    : ctx.salesTrendDirection === "stable" ? " → 안정"
+    : ctx.salesTrendDirection === "insufficient" ? " · 데이터 부족(14일 미만)" : "";
+  const costRatioLine = ctx.prevPrimeRate !== undefined && ctx.primeRateDeltaPct !== undefined
+    ? `\n- 비용 구조 추세: 프라임코스트 지난달 ${ctx.prevPrimeRate.toFixed(1)}% → 이번달 ${ctx.primeRate.toFixed(1)}% (${ctx.primeRateDeltaPct >= 0 ? "+" : ""}${ctx.primeRateDeltaPct}%p)${ctx.primeRateDeltaPct > 2 ? " ⚠ 비용 구조 악화" : ctx.primeRateDeltaPct < -2 ? " ✓ 비용 구조 개선" : ""}`
+    : "";
+  const unusedLine = ctx.unusedFeatures && ctx.unusedFeatures.length > 0
+    ? `\n- 아직 안 써본 핵심 기능: ${ctx.unusedFeatures.join(", ")}`
+    : "";
+
   return `## ${ctx.storeName} 경영 현황
 
-업종: ${ctx.industryLabel} | 개업 ${ctx.daysSinceLaunch}일차 | 성장 단계: ${stage}
+업종: ${ctx.industryLabel} | 개업 ${ctx.daysSinceLaunch + 1}일차${phaseLabel ? ` | 단계: ${phaseLabel}` : ` | ${stage}`}${trendTag}${unusedLine}${costRatioLine}
 
 ### 재무 현황
 - 월 매출: ${fmtW(ctx.monthlySales)}

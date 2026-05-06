@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { styles } from "../../styles";
 import {
   franchiseBrands,
   computeOverallScore,
@@ -11,6 +10,14 @@ import {
   getScoreLabel,
 } from "@build-up/shared";
 import { FranchiseDetailModal } from "./FranchiseDetailModal";
+
+const MIDNIGHT = "#191970";
+const MIDNIGHT_BORDER = "rgba(25,25,112,0.16)";
+const MIDNIGHT_BORDER_LIGHT = "rgba(25,25,112,0.08)";
+const MIDNIGHT_TINT = "rgba(25,25,112,0.04)";
+const TEXT_PRIMARY = "#0f172a";
+const TEXT_MUTED = "rgba(15,23,42,0.55)";
+const TEXT_SUBTLE = "rgba(15,23,42,0.45)";
 
 export function FranchiseView() {
   const { language } = useDashboardCtx();
@@ -35,21 +42,22 @@ export function FranchiseView() {
   const selectedBrand = selectedBrandId ? allBrands.find(b => b.id === selectedBrandId) ?? null : null;
 
   return (
-    <section style={styles.section}>
-      {/* Header */}
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: "8px" }}>
+    <main style={pageStyle}>
+      {/* Header — 4 surface 공통 패턴 */}
+      <header style={headerStyle}>
+        <div style={eyebrowStyle}>{ko ? "FRANCHISE" : "FRANCHISE"}</div>
+        <h1 style={titleStyle}>
           {ko ? "프랜차이즈 브랜드" : "Franchise Brands"}
-        </div>
-        <div style={{ fontSize: "16px", lineHeight: 1.6, color: "var(--muted)", maxWidth: "640px" }}>
+        </h1>
+        <p style={subtitleStyle}>
           {ko
             ? `${allBrands.length}개 브랜드의 수익성·안정성·창업비용을 비교하세요. 카드를 클릭하면 점수·장단점·출처가 담긴 상세 페이지가 열립니다.`
             : `Compare profitability, stability, and startup costs across ${allBrands.length} brands. Click any card for detailed scores, pros/cons, and sources.`}
-        </div>
-      </div>
+        </p>
+      </header>
 
-      {/* Category filter chips */}
-      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
+      {/* Category filter chips — midnight 톤 통일 */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
         {categories.map(cat => {
           const active = filterCat === cat.id;
           const count = cat.id === "all" ? allBrands.length : allBrands.filter(b => b.categoryId === cat.id).length;
@@ -60,23 +68,25 @@ export function FranchiseView() {
               onClick={() => setFilterCat(cat.id)}
               style={{
                 padding: "8px 16px",
-                borderRadius: "999px",
-                border: active ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                background: active ? "rgba(29,53,87,0.06)" : "rgba(255,255,255,0.7)",
-                color: active ? "var(--primary)" : "var(--muted)",
-                fontSize: "13px",
-                fontWeight: active ? 600 : 500,
-                cursor: "pointer"
+                borderRadius: 9999,
+                border: `1px solid ${active ? MIDNIGHT : "rgba(15,23,42,0.10)"}`,
+                background: active ? MIDNIGHT : "white",
+                color: active ? "white" : TEXT_PRIMARY,
+                fontSize: 12,
+                fontWeight: active ? 700 : 600,
+                cursor: "pointer",
+                transition: "all 0.18s ease",
+                fontFamily: "inherit",
               }}
             >
-              {cat.label} <span style={{ fontSize: "11px", opacity: 0.6 }}>{count}</span>
+              {cat.label} <span style={{ fontSize: 11, opacity: active ? 0.8 : 0.5, marginLeft: 2 }}>{count}</span>
             </button>
           );
         })}
       </div>
 
       {/* Brand cards grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "14px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
         {sorted.map(fb => {
           const overall = computeOverallScore(fb.scores);
           const hasDetailedData = !!(fb.sources?.length || fb.pros || fb.cons);
@@ -86,27 +96,18 @@ export function FranchiseView() {
               key={fb.id}
               type="button"
               onClick={() => setSelectedBrandId(fb.id)}
+              className="bento-card"
               style={{
                 display: "grid",
-                gap: "10px",
-                padding: "20px",
-                borderRadius: "24px",
-                border: "1px solid var(--border)",
-                background: "rgba(255,255,255,0.82)",
-                boxShadow: "0 2px 8px rgba(17,17,17,0.03)",
+                gap: 10,
+                padding: "20px 20px 18px",
+                borderRadius: 18,
+                border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
+                background: "white",
                 cursor: "pointer",
                 textAlign: "left" as const,
-                transition: "transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,17,17,0.08)";
-                e.currentTarget.style.borderColor = "rgba(29,53,87,0.25)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 8px rgba(17,17,17,0.03)";
-                e.currentTarget.style.borderColor = "var(--border)";
+                transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+                fontFamily: "inherit",
               }}
             >
               {/* Row 1: Name + score */}
@@ -169,12 +170,12 @@ export function FranchiseView() {
               </div>
 
               {/* Row 4: Click hint */}
-              <div style={{ marginTop: "2px", fontSize: "11px", color: "var(--muted)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ marginTop: 2, fontSize: 11, color: TEXT_MUTED, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>
                   {ko ? `가맹비 ${formatFranchiseCost(fb.franchiseFee)}` : `Fee ${formatFranchiseCost(fb.franchiseFee)}`}
                   {fb.monthlyRoyalty > 0 && (ko ? ` · 로열티 ${fb.monthlyRoyalty}만/월` : ` · ${fb.monthlyRoyalty}K/mo`)}
                 </span>
-                <span style={{ color: "var(--primary)", fontWeight: 600 }}>
+                <span style={{ color: MIDNIGHT, fontWeight: 700 }}>
                   {ko ? "상세보기 →" : "View detail →"}
                 </span>
               </div>
@@ -184,8 +185,10 @@ export function FranchiseView() {
       </div>
 
       {sorted.length === 0 && (
-        <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--muted)" }}>
-          {ko ? "이 카테고리에 등록된 프랜차이즈가 없습니다." : "No franchises in this category."}
+        <div style={emptyBoxStyle}>
+          <div style={{ fontSize: 13, color: TEXT_MUTED }}>
+            {ko ? "이 카테고리에 등록된 프랜차이즈가 없습니다." : "No franchises in this category."}
+          </div>
         </div>
       )}
 
@@ -197,6 +200,55 @@ export function FranchiseView() {
           onClose={() => setSelectedBrandId(null)}
         />
       )}
-    </section>
+    </main>
   );
 }
+
+// ── 4 surface 공통 page/header 패턴 ──
+const pageStyle: React.CSSProperties = {
+  width: "min(960px, calc(100vw - 32px))",
+  margin: "0 auto",
+  padding: "24px 0 80px",
+  display: "flex",
+  flexDirection: "column",
+  gap: 18,
+};
+
+const headerStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+  marginBottom: 4,
+};
+
+const eyebrowStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: MIDNIGHT,
+  opacity: 0.65,
+  letterSpacing: "0.12em",
+};
+
+const titleStyle: React.CSSProperties = {
+  fontSize: 26,
+  fontWeight: 750,
+  letterSpacing: "-0.025em",
+  color: TEXT_PRIMARY,
+  margin: 0,
+};
+
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 14,
+  color: TEXT_MUTED,
+  lineHeight: 1.55,
+  margin: 0,
+  maxWidth: 640,
+};
+
+const emptyBoxStyle: React.CSSProperties = {
+  padding: "48px 20px",
+  textAlign: "center",
+  borderRadius: 16,
+  background: MIDNIGHT_TINT,
+  border: `1px dashed ${MIDNIGHT_BORDER}`,
+};

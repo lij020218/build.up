@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Users, FileSignature, ShieldCheck, ExternalLink, ChevronRight, Calculator, Check } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { HiringCostCalculator } from "../../knowledge/HiringCostCalculator";
+import { MyHiringPlanCard } from "./MyHiringPlanCard";
 import {
   KeyActionHero,
   StageTabNav,
@@ -241,6 +242,9 @@ export function HiringSetupStage() {
           { icon: <ShieldCheck size={12} strokeWidth={1.5} />, label: ko ? "보험·세금" : "Insurance/Tax", meta: ko ? "14일 + 월 10일" : "D+14, then 10th" },
         ]}
       />
+
+      {/* ── 내 채용 계획 입력 — 재무 검토 단계의 인건비 산식이 여기서 가져감 ── */}
+      <MyHiringPlanCard ko={ko} />
 
       <StageTabNav
         ko={ko}

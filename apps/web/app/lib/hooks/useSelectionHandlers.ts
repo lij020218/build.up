@@ -65,6 +65,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
   // ── Profile store ──────────────────────────────────────────────────────────
   const {
     selectedIndustryId,
+    selectedSpecialtyId,
     selectedFranchiseBrandId,
     startupType, setStartupType,
     showFranchisePicker, setShowFranchisePicker,
@@ -75,6 +76,8 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     preferredRegionInput,
     setSelectedIndustryId,
     setSelectedIndustryCategoryId,
+    setSelectedSpecialtyId,
+    setSelectedFranchiseBrandId,
     setSelectedBusinessModelId,
     setSelectedBudget,
     setBudgetInputText,
@@ -144,6 +147,9 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       inputs: {
         subIndustryId: selectedIndustryId,
         categoryId: getIndustryCategoryIdByOptionId(selectedIndustryId) ?? "",
+        // specialty(세부업종): SPECIALTY_BY_INDUSTRY 분기가 있는 industry 만 값이 채워짐.
+        //   stage_decisions.inputs 와 business_profiles.selected_specialty_id 양쪽 모두에 영구화.
+        ...(selectedSpecialtyId ? { specialtyId: selectedSpecialtyId } : {}),
       },
     });
     setDecisions(result.decisions);
@@ -472,6 +478,10 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     setSoftOpenStep(0);
     setSelectedIndustryId(undefined);
     setSelectedIndustryCategoryId("food");
+    setSelectedSpecialtyId(undefined);
+    setSelectedFranchiseBrandId(null);
+    setStartupType(undefined);
+    setShowFranchisePicker(false);
     setSelectedBusinessModelId(undefined);
     setSelectedBudget(undefined);
     setBudgetInputText("");

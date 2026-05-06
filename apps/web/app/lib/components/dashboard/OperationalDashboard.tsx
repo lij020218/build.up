@@ -18,7 +18,9 @@ import { WeeklyTimeReport } from "./WeeklyTimeReport";
 import { SocialBenchmarkCard } from "./SocialBenchmarkCard";
 import { ProgressMilestonesCard } from "./ProgressMilestonesCard";
 import { DailyImprovementCard } from "./DailyImprovementCard";
+import { StartupHealthSection } from "./StartupHealthSection";
 import { DailyOpsRitualCard } from "./DailyOpsRitualCard";
+import { useUnifiedSaasMetrics } from "../../hooks/useUnifiedSaasMetrics";
 import { CustomerInterviewCard } from "./CustomerInterviewCard";
 import { RitualBanner } from "./RitualBanner";
 import { calculateHealthMetrics, buildTaxCalendar } from "@build-up/shared";
@@ -27,6 +29,7 @@ import { AlertStripBanner } from "./AlertStripBanner";
 import { DeepDiveSection } from "./DeepDiveSection";
 import { MorningBriefing } from "./MorningBriefing";
 import { CEOMorningHero } from "./CEOMorningHero";
+import { FeatureNudgeSection } from "./FeatureNudgeCard";
 import OperationalBootIntro from "./OperationalBootIntro";
 import { DailyKpiStrip, type KpiValue } from "./DailyKpiStrip";
 // HealthBadge 는 MorningBriefing 헤더로 통합됨
@@ -851,6 +854,11 @@ export default function OperationalDashboard({ d }: Props) {
   const isStartupCompany = d.businessCtx.categoryId === "startup-tech";
   const isOnlineCategory = d.businessCtx.categoryId === "online-digital";
   const usesSubscriptions = !!(d.usesSubscriptions);
+  // SaaS 사용자 지표 통합 (스타트업 업종에만 활성, 그 외는 빈 결과)
+  const saasMetrics = useUnifiedSaasMetrics({
+    industryCategoryId: d.businessCtx.categoryId,
+    fromDays: 30,
+  });
   const [viewportWidth, setViewportWidth] = useState(1440);
   const [showCalendar, setShowCalendar] = useState(false);
   // CSS-only stagger: 각 자식 카드에 animationDelay = idx * 70ms 부여
@@ -1207,6 +1215,13 @@ export default function OperationalDashboard({ d }: Props) {
         </div>
       )}
 
+      {/* ━━━ 미사용 기능 안내 (사장님이 안 써본 핵심 기능 1~3개) ━━━ */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <FeatureNudgeSection d={d} />
+        </div>
+      )}
+
       {/* ━━━ 긴급 Alert Strip (있을 때만 렌더) ━━━ */}
       {!isStaff && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
@@ -1319,9 +1334,17 @@ export default function OperationalDashboard({ d }: Props) {
         const rentRatio = totalSales > 0 && monthlyCosts.rent
           ? (monthlyCosts.rent / totalSales) * 100
           : null;
-        // SaaS / 구독 metric
+        // SaaS / 구독 metric — GA4/Webhook 자동수집(우선) → fallback: 사장님이 입력한 subscribers.active
         const subs = (d as { subscribers?: { active?: number } }).subscribers;
-        const activeUsers = subs?.active ?? null;
+        const manualActive = subs?.active ?? null;
+        const autoActiveUsers = saasMetrics.latest?.active_users ?? null;
+        const autoCumulativeUsers = saasMetrics.latest?.cumulative_users ?? null;
+        const autoWau = saasMetrics.latest?.weekly_active_users ?? null;
+        const autoNewUsers = saasMetrics.latest?.new_users ?? null;
+        // GA4/Webhook 값이 있으면 그것을, 없으면 수동 fallback
+        const activeUsers = autoActiveUsers ?? manualActive;
+        const cumulativeUsers = autoCumulativeUsers ?? manualActive;
+        const wauValue = autoWau;
         // 업종별 cell.id → KpiValue 매핑 (모든 업종 cell 들 한 번에 정의, 카탈로그가 알아서 5개만 사용)
         const values: Record<string, KpiValue | undefined> = {
           "yesterday-sales":      { value: yesterdaySales, trendPct: ySalesTrend },
@@ -1339,11 +1362,15 @@ export default function OperationalDashboard({ d }: Props) {
           "repeat-rate":          { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
           "active-members":       { value: activeUsers ?? undefined },
           "active-users":         { value: activeUsers ?? undefined },
-          "cumulative-users":     { value: activeUsers ?? undefined },
-          "wau":                  { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "cumulative-users":     { value: cumulativeUsers ?? undefined },
+          "wau":                  wauValue != null
+            ? { value: wauValue }
+            : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
           "pmf-score":            { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
           "mrr":                  { value: yesterdaySales ?? undefined },
-          "net-new":              { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
+          "net-new":              autoNewUsers != null
+            ? { value: autoNewUsers }
+            : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
           "nrr":                  { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
           "arpu":                 { value: avgTicket ?? undefined },
         };
@@ -1374,6 +1401,14 @@ export default function OperationalDashboard({ d }: Props) {
       {!isStaff && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <DailyImprovementCard ko={ko} industryCategoryId={d.industryCategoryId} />
+        </div>
+      )}
+
+      {/* ━━━ 1.5단계 (c): 스타트업 전용 핵심 지표 — startup/tech/saas 업종에만 자동 표시 ━━━ */}
+      {/* (외식·서비스·소상공인 업종은 컴포넌트가 내부에서 null 반환 → 자리 차지 X) */}
+      {!isStaff && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <StartupHealthSection ko={ko} />
         </div>
       )}
 

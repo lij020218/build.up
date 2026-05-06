@@ -48,6 +48,7 @@ type BusinessProfileRow = {
   user_id: string;
   industry_category_id?: string | null;
   sub_industry_id?: string | null;
+  selected_specialty_id?: string | null;
   startup_type?: "franchise" | "independent" | "undecided" | null;
   business_model_id?: string | null;
   capital?: number | null;
@@ -238,6 +239,14 @@ function buildProfilePatchFromState(
         ? industryDecision.inputs.industryCategoryId
         : null;
 
+  // specialty(세부업종): industry-selection 의 inputs.specialtyId 에 저장됨.
+  //   useSelectionHandlers.handleIndustryContinue 에서 selectedSpecialtyId 를 inputs 에 포함.
+  //   specialty 분기가 없는 industry 는 null.
+  const selectedSpecialtyId =
+    typeof industryDecision?.inputs?.specialtyId === "string" && industryDecision.inputs.specialtyId.length > 0
+      ? industryDecision.inputs.specialtyId
+      : null;
+
   return {
     user_id: userId,
     industry_category_id: industryCategoryId,
@@ -246,6 +255,7 @@ function buildProfilePatchFromState(
       (typeof industryDecision?.inputs?.subIndustryId === "string"
         ? industryDecision.inputs.subIndustryId
         : null),
+    selected_specialty_id: selectedSpecialtyId,
     startup_type:
       startupTypeValue === "franchise" ||
       startupTypeValue === "independent" ||
@@ -309,6 +319,7 @@ function hydrateBusinessProfile(row: BusinessProfileRow | null): PersistedBusine
     userId: row.user_id,
     industryCategoryId: row.industry_category_id ?? undefined,
     subIndustryId: row.sub_industry_id ?? undefined,
+    selectedSpecialtyId: row.selected_specialty_id ?? undefined,
     startupType: row.startup_type ?? undefined,
     businessModelId: row.business_model_id ?? undefined,
     capital: row.capital ?? undefined,
@@ -546,6 +557,63 @@ export async function bootstrapWorkspace(client: Client): Promise<BootstrappedWo
     isNew: true
   };
 }
+
+// ─── AI 보고서 인사이트 캐시 ──────────────────────────────────────────────────
+
+function makeSnapshotHash(revenue: number, costs: number, primeCostPct: number | null): string {
+  return `${Math.round(revenue)}_${Math.round(costs)}_${primeCostPct ?? "null"}`;
+}
+
+export async function getReportInsightCache(
+  client: Client,
+  userId: string,
+  period: string,
+  periodKey: string,
+  snapshotHash: string
+): Promise<string | null> {
+  const { data, error } = await client
+    .from("ai_report_insights")
+    .select("insight, snapshot_hash, expires_at")
+    .eq("user_id", userId)
+    .eq("period", period)
+    .eq("period_key", periodKey)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const isExpired = new Date(data.expires_at) < new Date();
+  if (isExpired) return null;
+
+  if (data.snapshot_hash !== snapshotHash) return null;
+
+  return data.insight as string;
+}
+
+export async function setReportInsightCache(
+  client: Client,
+  userId: string,
+  period: string,
+  periodKey: string,
+  snapshotHash: string,
+  insight: string
+): Promise<void> {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  await client.from("ai_report_insights").upsert(
+    {
+      user_id: userId,
+      period,
+      period_key: periodKey,
+      snapshot_hash: snapshotHash,
+      insight,
+      expires_at: expiresAt.toISOString(),
+    },
+    { onConflict: "user_id,period,period_key" }
+  );
+}
+
+export { makeSnapshotHash };
 
 export async function bootstrapAccountWorkspace(client: Client): Promise<BootstrappedWorkspace> {
   const user = await ensureAccountUser(client);

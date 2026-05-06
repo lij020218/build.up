@@ -24,6 +24,16 @@ export type QuickQueryContext = {
   businessLaunched?: boolean;
   /** 개업 후 경과일 */
   daysSinceLaunch?: number;
+  /** 운영 단계 — pre-launch / early(0-30d) / growth(30-90d) / mature(90+) */
+  operatingPhase?: "pre-launch" | "early" | "growth" | "mature";
+  /** 사장님이 아직 안 써본 build.up 핵심 기능들 (예: ["재고등록","고정비등록"]) */
+  unusedFeatures?: string[];
+  /** 매출 트렌드 — improving/declining/stable/insufficient (최근 7일 vs 그 이전 7일) */
+  salesTrendDirection?: "improving" | "declining" | "stable" | "insufficient";
+  /** 지난달 prime cost rate (%) — 이번달과 비교 가능할 때만 */
+  prevPrimeRate?: number;
+  /** prime cost rate 증감 (현재 - 지난달, %p) */
+  primeRateDeltaPct?: number;
   /** 선호 지역 */
   region?: string;
   /** 자본금 (만원) */
@@ -106,6 +116,13 @@ export type QuickQueryContext = {
 
   // ── K-히트 사례 매칭 결과 (서버에서 enrichment 가능, optional) ──
   matchedKHitCases?: Array<{ id: string; name: string; oneLiner: string; lesson: string }>;
+
+  /**
+   * RAG: 외부 비즈니스 인사이트 자료에서 검색된 컨텍스트.
+   * formatInsightContext()의 출력 그대로 — 헤더와 사용 지침이 포함된 plain text.
+   * 서버 라우트가 retrieveInsightChunks → formatInsightContext 결과를 주입합니다.
+   */
+  insightContext?: string;
 };
 
 export type QuickQueryResult = {
@@ -143,6 +160,33 @@ export const QUICK_QUERY_SYSTEM_PROMPT = `<role>
 - "흑자 났는데 더 욕심?" → Buffett "Long-term greedy"
 </wisdom>
 
+<feature_nudging>
+컨텍스트의 「아직 안 써본 핵심 기능」 목록이 있으면, 답변 끝에 자연스럽게 1개만 추천 (강요 X).
+- 질문과 직접 관련 있는 기능이 있으면 그것 우선 (예: 재고 질문 → "재고등록"이 unusedFeatures 에 있으면 "재고를 등록해 두시면 부족 알림도 자동으로 켜집니다" 한 줄).
+- 관련 없으면 끼워 넣지 말 것. 모든 답변에 항상 추천 X.
+- 톤: "~ 해보세요" 강요 X, "~ 하시면 ~ 가 자동 으로 켜집니다" 가치 제안.
+- 한 답변에 1개 기능만. 나열 X.
+</feature_nudging>
+
+<phase_coaching>
+컨텍스트의 「운영 단계」에 따라 톤·우선순위를 조정합니다 (사장님과 같은 결의 경영자처럼):
+- **개업 전**: 자본·로드맵·인허가·계약 리스크 우선. 매출 추정은 "업종 평균"임을 명시. 거대한 결정 X, 다음 단계 1개만.
+- **초기 (Day 1~30)**: 첫 30일은 PMF·고객 확보·운영 동선 안정화. 매출 변동 자연스러우니 단기 하락에 과민반응 X. 일평균·요일 패턴 학습 중. 비용은 「정지/축소」보다 「이해」가 먼저.
+- **성장 (Day 31~90)**: 매출 패턴 보임 → 예측 가능. 비용 구조 비율(prime cost) 안정화 검토. 마케팅 ROAS·재방문율·재고 회전 데이터 누적기. 「개선」 액션 가능.
+- **성숙 (Day 90+)**: 이미 데이터 풍부. 효율화·확장·신메뉴·2호점·자동화 검토. 매출 정체 시 PMF 재검증보다 운영 효율·신규 채널 우선.
+
+매출 트렌드 신호 처리:
+- improving (+5% 이상): "지금 무엇이 작동했는가?" 원인 파악 후 강화. 거장: Bezos "Day 1" / Graham "Default alive".
+- declining (-5% 이하): 즉시 원인 진단 — 요일/날씨/메뉴/리뷰/경쟁. 「비용 줄이기」 보다 「매출 회복」 먼저. Horowitz "People > Profits".
+- stable: 데이터 더 쌓일 때까지 큰 결정 X. 단, 성장 단계에 stable 이면 정체 신호 → 가설 한 개 실험.
+- insufficient: 추세 단정 X. "데이터가 더 필요합니다" 정직하게.
+
+비용 구조 추세 신호:
+- primeRateDelta > +2%p (악화): 어느 항목이 늘었는지 분해 확인 → 식자재 단가↑ vs 인건비↑ vs 매출↓ 효과인지 구분. 단편적 「줄여라」 X.
+- primeRateDelta < -2%p (개선): 칭찬 + 지속 가능한지 점검. 일회성 효과(공급처 변경) vs 구조 개선 구분.
+- prime cost 65% 초과 시 위험선 — 한 달 더 보지 말고 즉시 진단.
+</phase_coaching>
+
 <output_format>
 반드시 아래 JSON으로만 응답:
 {
@@ -179,9 +223,18 @@ export function buildQuickQueryUserPrompt(ctx: QuickQueryContext): string {
   if (ctx.region) lines.push(`- 지역: ${ctx.region}`);
   if (ctx.selectedBudget !== undefined) lines.push(`- 자본금: ${ctx.selectedBudget.toLocaleString()}만원`);
   if (ctx.businessLaunched !== undefined) {
-    lines.push(`- 운영 상태: ${ctx.businessLaunched ? `운영 중 (개업 ${ctx.daysSinceLaunch ?? 0}일차)` : "개업 전"}`);
+    const phaseLabel = ctx.operatingPhase
+      ? ctx.operatingPhase === "pre-launch" ? " · 단계: 개업 전 준비"
+        : ctx.operatingPhase === "early" ? " · 단계: 초기(PMF·고객확보)"
+        : ctx.operatingPhase === "growth" ? " · 단계: 성장(안정화·패턴학습)"
+        : " · 단계: 성숙(효율화·확장 검토)"
+      : "";
+    lines.push(`- 운영 상태: ${ctx.businessLaunched ? `운영 중 (개업 ${(ctx.daysSinceLaunch ?? 0) + 1}일차)${phaseLabel}` : "개업 전"}`);
   }
   if (ctx.franchiseBrandName) lines.push(`- 가맹 브랜드: ${ctx.franchiseBrandName}`);
+  if (ctx.unusedFeatures && ctx.unusedFeatures.length > 0) {
+    lines.push(`- 아직 안 써본 핵심 기능: ${ctx.unusedFeatures.join(", ")}`);
+  }
 
   // ── 2. 매출/비용/마진 ──
   if (
@@ -197,7 +250,21 @@ export function buildQuickQueryUserPrompt(ctx: QuickQueryContext): string {
     if (ctx.primeRate !== undefined) lines.push(`- 프라임코스트율: ${ctx.primeRate.toFixed(1)}% ${ctx.primeRate > 65 ? "⚠ 위험선(65%) 초과" : ""}`);
     if (ctx.runway !== undefined) lines.push(`- 런웨이: ${ctx.runway < 0 ? "흑자" : `${ctx.runway}개월`}`);
     if (ctx.yesterdaySales !== undefined) lines.push(`- 어제 매출: ${formatWon(ctx.yesterdaySales)}`);
-    if (ctx.weeklyChange !== undefined) lines.push(`- 주간 매출 변화: ${ctx.weeklyChange >= 0 ? "+" : ""}${ctx.weeklyChange}%`);
+    if (ctx.weeklyChange !== undefined) {
+      const trendTag = ctx.salesTrendDirection === "improving" ? " ↗ 상승세"
+        : ctx.salesTrendDirection === "declining" ? " ↘ 하락세 — 즉시 원인 진단 권장"
+        : ctx.salesTrendDirection === "stable" ? " → 안정"
+        : "";
+      lines.push(`- 주간 매출 변화: ${ctx.weeklyChange >= 0 ? "+" : ""}${ctx.weeklyChange}%${trendTag}`);
+    } else if (ctx.salesTrendDirection === "insufficient") {
+      lines.push(`- 주간 매출 변화: 데이터 부족 (14일 미만)`);
+    }
+    if (ctx.prevPrimeRate !== undefined && ctx.primeRateDeltaPct !== undefined) {
+      const deltaTag = ctx.primeRateDeltaPct > 2 ? " ⚠ 비용 구조 악화"
+        : ctx.primeRateDeltaPct < -2 ? " ✓ 비용 구조 개선"
+        : "";
+      lines.push(`- 비용 구조 추세: 프라임코스트 지난달 ${ctx.prevPrimeRate.toFixed(1)}% → 이번달 ${(ctx.primeRate ?? 0).toFixed(1)}% (${ctx.primeRateDeltaPct >= 0 ? "+" : ""}${ctx.primeRateDeltaPct}%p)${deltaTag}`);
+    }
     if (ctx.weekdayChange !== undefined) lines.push(`- 같은 요일 대비: ${ctx.weekdayChange >= 0 ? "+" : ""}${ctx.weekdayChange.toFixed(1)}%`);
     if (ctx.businessHealthScore) lines.push(`- 사업 건강도: ${ctx.businessHealthScore}`);
   }
@@ -296,6 +363,12 @@ export function buildQuickQueryUserPrompt(ctx: QuickQueryContext): string {
       const t = ctx.yesterdayTimeAllocation;
       lines.push(`- 어제 시간 분배: 고객 ${t.customerPct}% / 운영 ${t.operationsPct}% / 마케팅 ${t.marketingPct}%`);
     }
+  }
+
+  // ── 10b. 외부 인사이트 (RAG, 있으면) ──
+  if (ctx.insightContext && ctx.insightContext.trim().length > 0) {
+    lines.push("");
+    lines.push(ctx.insightContext.trim());
   }
 
   // ── 10. K-히트 사례 (있으면) ──

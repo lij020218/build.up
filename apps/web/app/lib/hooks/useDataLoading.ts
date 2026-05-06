@@ -15,7 +15,8 @@ import {
 } from "@build-up/shared";
 import { supabase } from "../../../lib/supabase";
 import { useRoadmapStore, useAiStore, useProfileStore, useFinanceStore, useOperationsStore, useOnboardingStore } from "../stores";
-import { useNotifications } from "../../notification-context";
+import { useCashflowStore } from "../stores/cashflow-store";
+import { useNotifications, type NotifNavigate } from "../../notification-context";
 import type { InventoryItem, FixedExpense } from "../stores/operations-store";
 
 export interface DataLoadingResult {
@@ -101,7 +102,13 @@ export function useDataLoading(
 
   const {
     costHistory,
+    dailyEntries,
+    monthlyCosts,
   } = useFinanceStore();
+
+  // Cashflow 셋업 / 고정비 등록 상태 — 알림용
+  const cashflowSetupCompletedAt = useCashflowStore((s) => s.setupCompletedAt);
+  const cashflowFixedExpenses = useCashflowStore((s) => s.fixedExpenses);
 
   // Derived values needed for effects
   // ⚠ profile?.preferredRegions 만으로는 부족하다:
@@ -404,7 +411,7 @@ export function useDataLoading(
 
   // ── 6. Notification computation ──
   useEffect(() => {
-    type Notif = { id: string; severity: "urgent" | "warning"; title: string; detail: string };
+    type Notif = { id: string; severity: "urgent" | "warning"; title: string; detail: string; navigate?: NotifNavigate };
     const ko = language === "ko";
     const nowN = new Date();
     const todayMsN = new Date(nowN.getFullYear(), nowN.getMonth(), nowN.getDate()).getTime();
@@ -507,13 +514,84 @@ export function useDataLoading(
       const latestTotal = latest.ingredients + latest.labor + latest.rent + latest.utilities + latest.other;
       const prevTotal = prev.ingredients + prev.labor + prev.rent + prev.utilities + prev.other;
       if (prevTotal > 0 && latestTotal > prevTotal && (latestTotal - prevTotal) / prevTotal > 0.1) {
-        items.push({ id: "cost-trend", severity: "warning", title: ko ? "비용 급증 경고" : "Cost surge alert", detail: ko ? `전월 대비 ${Math.round((latestTotal - prevTotal) / prevTotal * 100)}% 증가` : `${Math.round((latestTotal - prevTotal) / prevTotal * 100)}% increase vs last month` });
+        items.push({
+          id: "cost-trend",
+          severity: "warning",
+          title: ko ? "비용 급증 경고" : "Cost surge alert",
+          detail: ko ? `전월 대비 ${Math.round((latestTotal - prevTotal) / prevTotal * 100)}% 증가` : `${Math.round((latestTotal - prevTotal) / prevTotal * 100)}% increase vs last month`,
+          navigate: { surface: "analytics", selector: "[data-cost-management]" },
+        });
       }
+    }
+
+    // 8. 매출 2일 연속 미입력 (운영 중에만)
+    if (businessLaunched) {
+      const sortedDates = (dailyEntries as Array<{ date: string; sales: number }>).map((e) => e.date).sort();
+      const latestEntry = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
+      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const dayBeforeStr = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+      const missingYesterday = !sortedDates.includes(yesterdayStr);
+      const missingDayBefore = !sortedDates.includes(dayBeforeStr);
+      if (missingYesterday && missingDayBefore) {
+        // 운영 시작 직후 2일 미만 운영한 사장님은 false-positive 방지
+        const daysSinceLatest = latestEntry
+          ? Math.round((Date.now() - new Date(`${latestEntry}T00:00:00`).getTime()) / 86400000)
+          : 999;
+        const detailText = latestEntry
+          ? (ko ? `마지막 입력 ${daysSinceLatest}일 전 — 트렌드·이상 감지가 멈춥니다` : `Last entry ${daysSinceLatest}d ago — trend detection paused`)
+          : (ko ? "아직 입력 기록이 없어요" : "No sales logged yet");
+        items.push({
+          id: "sales-2day-gap",
+          severity: "urgent",
+          title: ko ? "매출 2일 연속 미입력" : "Sales unlogged 2 days in a row",
+          detail: detailText,
+          navigate: { surface: "home", selector: "[data-sales-input]", focusInput: true },
+        });
+      }
+    }
+
+    // 9. 현금흐름 셋업 미완료
+    if (!cashflowSetupCompletedAt) {
+      items.push({
+        id: "cashflow-setup-missing",
+        severity: "warning",
+        title: ko ? "현금흐름 추적이 꺼져 있어요" : "Cash-flow tracking is off",
+        detail: ko ? "3분 셋업으로 14일 잔고 예측·위기 알림이 켜집니다" : "3-min setup unlocks 14-day forecast & crisis alerts",
+        navigate: { surface: "home", selector: "[data-cashflow-hero]", openCashflowSetup: {} },
+      });
+    }
+
+    // 10. 비용 구조 미등록 — monthlyCosts 모두 0 (운영 중일 때만)
+    if (businessLaunched && monthlyCosts) {
+      const mc = monthlyCosts as Record<string, number>;
+      const totalMonthly =
+        (mc.ingredients ?? 0) + (mc.labor ?? 0) + (mc.rent ?? 0) + (mc.utilities ?? 0) +
+        (mc.sga ?? 0) + (mc.marketing ?? 0) + (mc.other ?? 0) + (mc.interest ?? 0);
+      if (totalMonthly === 0) {
+        items.push({
+          id: "monthly-costs-empty",
+          severity: "warning",
+          title: ko ? "월 비용 구조 미등록" : "Monthly cost structure missing",
+          detail: ko ? "재료비·인건비·임대료를 등록하면 손익 분석이 시작됩니다" : "Add materials/labor/rent to enable P&L diagnosis",
+          navigate: { surface: "analytics", selector: "[data-cost-management]" },
+        });
+      }
+    }
+
+    // 11. 고정 지출 D-day 미등록 (cashflow setup 완료된 사장님 한정 — 셋업 자체가 안 된 사장님은 항목 9 가 우선)
+    if (cashflowSetupCompletedAt && cashflowFixedExpenses.length === 0) {
+      items.push({
+        id: "fixed-expenses-missing",
+        severity: "warning",
+        title: ko ? "고정 지출 D-day 미등록" : "Fixed schedule missing",
+        detail: ko ? "월세·급여·이자 등록 시 14일 잔고 예측이 정확해집니다" : "Add rent/payroll/loan to sharpen 14-day forecast",
+        navigate: { surface: "analytics", selector: "[data-cost-management]" },
+      });
     }
 
     setNotifications(items);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, inventory, employees, fixedExpenses, members, taxSettings, businessLaunched, businessCtx.hasPhysicalInventory, businessCtx.isRecurringRevenue, completedCount, pathTotalStages, costHistory]);
+  }, [language, inventory, employees, fixedExpenses, members, taxSettings, businessLaunched, businessCtx.hasPhysicalInventory, businessCtx.isRecurringRevenue, completedCount, pathTotalStages, costHistory, dailyEntries, monthlyCosts, cashflowSetupCompletedAt, cashflowFixedExpenses]);
 
   return {
     contractors,

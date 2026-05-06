@@ -59,6 +59,24 @@ export type MorningBriefingBrain = {
   totalEntries: number;
   /** 사업 시작 여부 */
   businessLaunched: boolean;
+  /** 운영 단계 — AI 코칭 톤 결정용 */
+  phase: "pre-launch" | "early" | "growth" | "mature";
+  /** 매출 트렌드 — 최근 7일 vs 그 이전 7일 */
+  salesTrend: {
+    direction: "improving" | "declining" | "stable" | "insufficient";
+    /** 증감률 % (insufficient 면 null) */
+    changePct: number | null;
+    avgRecent7: number;
+    avgPrior7: number;
+  };
+  /** 주간 매출 변화율 % (quick-query.weeklyChange 매핑용) — insufficient 면 null */
+  weeklyChangePct: number | null;
+  /** 비용 구조 추세 — 이번 달 prime cost % vs 지난 달 (insufficient 면 null) */
+  costRatioTrend: {
+    currentPrimeRate: number | null;
+    prevPrimeRate: number | null;
+    deltaPct: number | null;  // 이번달 - 지난달
+  };
 };
 
 export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain {
@@ -177,6 +195,68 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     );
   }, [costs]);
 
+  // ── 운영 단계 분류 ──
+  //   pre-launch: 아직 개업 X
+  //   early: 개업 후 30일 이내 (PMF 검증·고객 확보 단계)
+  //   growth: 30~90일 (운영 안정화·매출 패턴 학습)
+  //   mature: 90일 초과 (효율화·확장 검토)
+  const phase: MorningBriefingBrain["phase"] = useMemo(() => {
+    if (!d.businessLaunched) return "pre-launch";
+    if (daysSinceLaunch == null) return "early";
+    if (daysSinceLaunch <= 30) return "early";
+    if (daysSinceLaunch <= 90) return "growth";
+    return "mature";
+  }, [d.businessLaunched, daysSinceLaunch]);
+
+  // ── 매출 트렌드 (최근 7일 vs 그 이전 7일) ──
+  const salesTrend = useMemo<MorningBriefingBrain["salesTrend"]>(() => {
+    const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+    const last14 = sorted.slice(-14);
+    if (last14.length < 14) {
+      return { direction: "insufficient", changePct: null, avgRecent7: avgDailySales7, avgPrior7: 0 };
+    }
+    const recent7 = last14.slice(-7);
+    const prior7 = last14.slice(0, 7);
+    const avgRecent = recent7.reduce((s, e) => s + e.sales, 0) / 7;
+    const avgPrior = prior7.reduce((s, e) => s + e.sales, 0) / 7;
+    if (avgPrior <= 0) {
+      return { direction: "insufficient", changePct: null, avgRecent7: avgRecent, avgPrior7: avgPrior };
+    }
+    const changePct = ((avgRecent - avgPrior) / avgPrior) * 100;
+    let direction: "improving" | "declining" | "stable";
+    if (changePct >= 5) direction = "improving";
+    else if (changePct <= -5) direction = "declining";
+    else direction = "stable";
+    return { direction, changePct: Math.round(changePct * 10) / 10, avgRecent7: avgRecent, avgPrior7: avgPrior };
+  }, [entries, avgDailySales7]);
+
+  // ── 비용 구조 추세 (이번 달 vs 지난 달 prime cost rate) ──
+  const costRatioTrend = useMemo<MorningBriefingBrain["costRatioTrend"]>(() => {
+    const curMonth = new Date().toISOString().slice(0, 7);
+    const prevMonthDate = new Date();
+    prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+    const prevMonthKey = prevMonthDate.toISOString().slice(0, 7);
+
+    const thisMonthEntries = entries.filter((e) => e.date.startsWith(curMonth));
+    const prevMonthEntries = entries.filter((e) => e.date.startsWith(prevMonthKey));
+    const thisRev = thisMonthEntries.reduce((s, e) => s + e.sales, 0);
+    const prevRev = prevMonthEntries.reduce((s, e) => s + e.sales, 0);
+
+    const costHistory = (d.costHistory ?? []) as Array<{ month: string; ingredients: number; labor: number }>;
+    const prevSnap = costHistory.find((h) => h.month === prevMonthKey);
+
+    const currentPrimeCost = costs.ingredients + costs.labor;
+    const currentPrimeRate = thisRev > 0 ? (currentPrimeCost / thisRev) * 100 : null;
+    const prevPrimeCost = prevSnap ? prevSnap.ingredients + prevSnap.labor : null;
+    const prevPrimeRate = prevSnap && prevRev > 0 && prevPrimeCost != null ? (prevPrimeCost / prevRev) * 100 : null;
+    const deltaPct = currentPrimeRate != null && prevPrimeRate != null ? Math.round((currentPrimeRate - prevPrimeRate) * 10) / 10 : null;
+    return {
+      currentPrimeRate: currentPrimeRate != null ? Math.round(currentPrimeRate * 10) / 10 : null,
+      prevPrimeRate: prevPrimeRate != null ? Math.round(prevPrimeRate * 10) / 10 : null,
+      deltaPct,
+    };
+  }, [entries, costs, d.costHistory]);
+
   return {
     hasNoData: entries.length === 0,
     cashflowCrisis,
@@ -191,5 +271,9 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     avgDailySales7,
     totalEntries: entries.length,
     businessLaunched: !!d.businessLaunched,
+    phase,
+    salesTrend,
+    weeklyChangePct: salesTrend.changePct,
+    costRatioTrend,
   };
 }

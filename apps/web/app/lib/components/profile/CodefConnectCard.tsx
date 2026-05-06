@@ -67,9 +67,9 @@ type Status = {
 };
 
 /**
- * ⚠ COMING SOON 가드 — 실제 CODEF 연동 (서버 환경변수 + 사장님 측 워크플로) 미완성.
- *   사장님께 "추후 공개 예정"을 명확히 노출하기 위해 placeholder 만 export.
- *   추후 활성화 시: 이 export 만 _CodefConnectCardLive 로 바꾸면 라이브 모드 복귀.
+ * ⚠ COMING SOON 가드 — CODEF 운영 비용 부담 (월 최소 5만~10만원 + 건당 과금) 고려해
+ *   현재는 "추후 공개 예정" placeholder. 사용자 100명+ & 가치 입증 후 활성화.
+ *   활성화 시: 이 export 본체를 `return <_CodefConnectCardLive ko={ko} />;` 로 교체.
  */
 export function CodefConnectCard({ ko }: { ko: boolean }) {
   return (
@@ -172,8 +172,8 @@ export function CodefConnectCard({ ko }: { ko: boolean }) {
   );
 }
 
-// ⚠ 아래는 추후 활성화 시 사용할 라이브 컴포넌트 (현재 dead code, 빌드에서 tree-shaken).
-//   향후 활성화 시 위 export 함수 본체를 `return <_CodefConnectCardLive ko={ko} />;` 한 줄로 교체.
+// ⚠ 라이브 컴포넌트 — 추후 활성화 시 사용 (현재 dead code, 빌드에서 tree-shaken).
+//   CODEF_NOT_CONFIGURED 503 시 wizard 가 친절 메시지 응답.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _CodefConnectCardLive({ ko }: { ko: boolean }) {
   const [status, setStatus] = useState<Status | null>(null);
@@ -315,7 +315,11 @@ function CodefWizard({ ko, onClose, onSuccess }: { ko: boolean; onClose: () => v
       });
       const d = await res.json();
       if (d.ok) await onSuccess();
-      else setErr(d.error);
+      else if (d.code === "CODEF_NOT_CONFIGURED" || res.status === 503) {
+        setErr(ko
+          ? "이 기능은 곧 활성화됩니다. 잠시 후 다시 시도해 주세요."
+          : "This feature is being activated. Please try again soon.");
+      } else setErr(d.error);
     } catch (e) { setErr((e as Error).message); }
     finally { setSubmitting(false); }
   };

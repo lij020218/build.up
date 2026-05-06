@@ -98,6 +98,7 @@ import { ResetAnimationOverlay } from "./lib/components/reset/ResetAnimationOver
 import { OnboardingChoiceScreen } from "./lib/components/onboarding/OnboardingChoiceScreen";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
+import { ReportsSurface } from "./lib/components/surfaces/ReportsSurface";
 import { MarketingSurface } from "./lib/components/surfaces/MarketingSurface";
 import { FranchiseView } from "./lib/components/surfaces/FranchiseView";
 import { ProfileView } from "./lib/components/surfaces/ProfileView";
@@ -148,6 +149,7 @@ import {
 import { LocationMapPanel } from "./lib/components/LocationMapPanel";
 import { SurfaceIcon } from "./lib/components/SurfaceIcon";
 import { ExistingBusinessOnboarding } from "./lib/components/ExistingBusinessOnboarding";
+import { StaffDashboard } from "./lib/components/surfaces/StaffDashboard";
 import TaxCalendarCard from "./lib/components/TaxCalendarCard";
 import HealthDiagnosisCard from "./lib/components/HealthDiagnosisCard";
 import LifecycleCard from "./lib/components/LifecycleCard";
@@ -240,16 +242,31 @@ export default function StarterStageDemo({
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as
-        | { surface?: import("./lib/types").DashboardSurface; scrollTargetId?: string }
+        | { surface?: import("./lib/types").DashboardSurface; scrollTargetId?: string; selector?: string; focusInput?: boolean }
         | undefined;
       if (!detail?.surface) return;
       d.navigateToSurface(detail.surface);
-      if (!detail.scrollTargetId) return;
+
+      const targetId = detail.scrollTargetId;
+      const targetSelector = detail.selector;
+      if (!targetId && !targetSelector) return;
+
       // surface 전환 애니메이션(dash-surface-enter ~0.45s) 끝 무렵에 scroll
       window.setTimeout(() => {
-        const el = document.getElementById(detail.scrollTargetId!);
+        const el: HTMLElement | null = targetId
+          ? document.getElementById(targetId)
+          : targetSelector
+            ? document.querySelector<HTMLElement>(targetSelector)
+            : null;
         if (!el) return;
         el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // 입력 필드 focus 옵션 — 매출 입력 같은 경우 즉시 타이핑 가능하도록
+        if (detail.focusInput) {
+          const input = el.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
+          input?.focus();
+        }
+
         // 시각적 강조 — 청록 halo 1.4s
         const prevBoxShadow = el.style.boxShadow;
         const prevTransition = el.style.transition;
@@ -259,7 +276,7 @@ export default function StarterStageDemo({
           el.style.boxShadow = prevBoxShadow;
           window.setTimeout(() => { el.style.transition = prevTransition; }, 400);
         }, 1400);
-      }, 320);
+      }, 360);
     };
     window.addEventListener("bup:navigate-feature", handler);
     return () => window.removeEventListener("bup:navigate-feature", handler);
@@ -665,7 +682,15 @@ export default function StarterStageDemo({
     );
   }
 
-  const showOperationalHero = !(activeSurface === "home" && mounted && businessLaunched);
+  const showOperationalHero = !(
+    (activeSurface === "home" && mounted && businessLaunched) ||
+    // 4개 surface(보고서·마케팅·프랜차이즈·펀딩)는 모두 자체 hero header 를 가져
+    // 외부 hero 중복 노출을 방지. 미드나이트 단색 + eyebrow + title + subtitle 패턴 통일.
+    activeSurface === "reports" ||
+    activeSurface === "marketing" ||
+    activeSurface === "franchise" ||
+    activeSurface === "guides"
+  );
   // 운영 중 (창업 완료 후) → 모든 페이지에서 좌측 사이드바, 상단 nav 숨김
   // (이전엔 홈에서만 사이드바였으나 사용자 결정으로 통일)
   const isHomeOperational = mounted && businessLaunched;
@@ -770,6 +795,10 @@ export default function StarterStageDemo({
   }
   if (roleSelectionNode) {
     return roleSelectionNode;
+  }
+  // ── 직원(또는 매니저) 계정 → 직원 대시보드만 노출. 사장 전용 화면(로드맵·재무·AI) 진입 차단.
+  if (userRole === "staff" || userRole === "manager") {
+    return <StaffDashboard language={language} />;
   }
   if (shouldShowExistingOnboarding) {
     return (
@@ -1153,6 +1182,12 @@ export default function StarterStageDemo({
           </CardErrorBoundary>
         ) : null}
 
+        {activeSurface === "reports" ? (
+          <CardErrorBoundary cardLabel="보고서">
+            <ReportsSurface />
+          </CardErrorBoundary>
+        ) : null}
+
         {activeSurface === "roadmap" && !isFreshAccount ? (
           <RoadmapSurface />
         ) : null}
@@ -1234,6 +1269,48 @@ export default function StarterStageDemo({
               },
               yesterdaySales,
               primeRate,
+              // 운영 단계 분류 (pre-launch / early / growth / mature) — AI 코칭 톤 결정용
+              operatingPhase: !d.businessLaunched
+                ? "pre-launch"
+                : daysSinceLaunch != null && daysSinceLaunch > 90
+                  ? "mature"
+                  : daysSinceLaunch != null && daysSinceLaunch > 30
+                    ? "growth"
+                    : "early",
+              // 매출 트렌드 (이번 주 7일 vs 그 이전 7일) — 14일 미만이면 insufficient
+              ...(() => {
+                const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+                const last14 = sorted.slice(-14);
+                if (last14.length < 14) {
+                  return { salesTrendDirection: "insufficient" as const };
+                }
+                const recent7Avg = last14.slice(-7).reduce((s, e) => s + e.sales, 0) / 7;
+                const prior7Avg = last14.slice(0, 7).reduce((s, e) => s + e.sales, 0) / 7;
+                if (prior7Avg <= 0) return { salesTrendDirection: "insufficient" as const };
+                const changePct = ((recent7Avg - prior7Avg) / prior7Avg) * 100;
+                const direction: "improving" | "declining" | "stable" =
+                  changePct >= 5 ? "improving" : changePct <= -5 ? "declining" : "stable";
+                return {
+                  salesTrendDirection: direction,
+                  weeklyChange: Math.round(changePct * 10) / 10,
+                };
+              })(),
+              // 비용 구조 추세 (이번달 prime cost % vs 지난달)
+              ...(() => {
+                const curMonth = new Date().toISOString().slice(0, 7);
+                const prevDate = new Date(); prevDate.setMonth(prevDate.getMonth() - 1);
+                const prevMonth = prevDate.toISOString().slice(0, 7);
+                const thisRev = entries.filter((e) => e.date.startsWith(curMonth)).reduce((s, e) => s + e.sales, 0);
+                const prevRev = entries.filter((e) => e.date.startsWith(prevMonth)).reduce((s, e) => s + e.sales, 0);
+                const costHistory = (d.costHistory as Array<{ month: string; ingredients: number; labor: number }> | undefined) ?? [];
+                const prevSnap = costHistory.find((h) => h.month === prevMonth);
+                if (!prevSnap || prevRev <= 0 || thisRev <= 0 || primeRate == null) return {};
+                const prevPrime = ((prevSnap.ingredients + prevSnap.labor) / prevRev) * 100;
+                return {
+                  prevPrimeRate: Math.round(prevPrime * 10) / 10,
+                  primeRateDeltaPct: Math.round((primeRate - prevPrime) * 10) / 10,
+                };
+              })(),
               businessHealthScore: d.businessHealthScore as "healthy" | "caution" | "danger" | "unknown" | undefined,
 
               // 운영
@@ -1243,6 +1320,20 @@ export default function StarterStageDemo({
 
               // 마케팅 비용 (이번 달 분해에 marketing 카테고리로 이미 포함됨)
               totalMarketingSpend: costs.marketing,
+
+              // ── 사장님이 아직 안 써본 핵심 기능 — AI 가 답변 시 자연스럽게 안내 가능 ──
+              unusedFeatures: (() => {
+                const list: string[] = [];
+                if (entries.length === 0) list.push("매출입력");
+                if (employees.length === 0) list.push("직원등록");
+                if (inventory.length === 0 && ["food", "cafe-dessert", "retail", "beauty", "pet"].includes(d.industryCategoryId ?? "")) list.push("재고등록");
+                if ((d.products as Array<unknown> | undefined ?? []).length === 0 && ["food", "cafe-dessert", "retail", "online-digital"].includes(d.industryCategoryId ?? "")) {
+                  list.push(d.industryCategoryId === "online-digital" ? "상품등록" : "메뉴등록");
+                }
+                if ((d.fixedExpenses as Array<unknown> | undefined ?? []).length === 0) list.push("고정비등록");
+                // 고객인터뷰는 별도 zustand store — IIFE 안에선 hook 호출 불가, 생략
+                return list.length > 0 ? list : undefined;
+              })(),
 
               // 프랜차이즈
               franchiseBrandId: d.selectedFranchiseBrandId ?? undefined,

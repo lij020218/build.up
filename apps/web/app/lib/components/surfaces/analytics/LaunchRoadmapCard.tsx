@@ -92,7 +92,8 @@ export function LaunchRoadmapCard() {
 
   // 재무 시뮬레이션
   const finSnap = hydrateSavedFinanceSnapshot(decisions["financial-simulation"]);
-  const contractRisk = decisions["contract-analysis"]?.inputs?.riskLevel;
+  const contractRiskRaw = decisions["contract-analysis"]?.inputs?.riskLevel;
+  const contractRisk = typeof contractRiskRaw === "string" ? contractRiskRaw : undefined;
 
   // 운영 채널
   const deliveryPlatforms = [

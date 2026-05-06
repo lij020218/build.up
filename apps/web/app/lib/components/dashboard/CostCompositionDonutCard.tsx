@@ -351,6 +351,20 @@ export function CostCompositionDonutCard({ ko, totalSales, monthlyCosts, industr
         </footer>
       )}
 
+      {/* 비용 항목 수정 → 내 가게로 이동 */}
+      <button
+        type="button"
+        className="ccd-edit-link"
+        onClick={() => {
+          if (typeof window === "undefined") return;
+          window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
+            detail: { surface: "analytics", selector: "[data-cost-management]" },
+          }));
+        }}
+      >
+        {ko ? "비용 항목 수정 →" : "Edit cost items →"}
+      </button>
+
       {/* ─── Legend — 푸터 메시지 아래 (카드 하단 빈 공간 활용) ─── */}
       <ul className="ccd-legend">
         {arcs.map((a) => (
@@ -647,4 +661,22 @@ const KEYFRAMES = `
   background: rgba(15,23,42,0.025);
   border-radius: 12px;
 }
+
+/* 비용 항목 수정 링크 — 카드 하단, 작은 텍스트 버튼 */
+.ccd-edit-link {
+  align-self: flex-end;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #191970;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+  position: relative; z-index: 1;
+}
+.ccd-edit-link:hover { opacity: 1; }
 `;

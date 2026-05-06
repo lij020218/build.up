@@ -128,6 +128,57 @@ export function getKstDate(now: Date = new Date()): string {
 }
 
 /**
+ * 사장님의 오늘 영업이 종료됐는지 판정 (일일 보고서 활성화 기준).
+ *
+ * 규칙:
+ *   - 스타트업·온라인은 21:00 KST 고정 (대부분 정시 퇴근 패턴)
+ *   - 오프라인은 closeTime + 30분 버퍼 (getBusinessDay 와 동일 컷오프)
+ *   - closeTime 미입력 → 22:30 KST default
+ *   - 새벽 마감(예: 01:00) 케이스는 단순화 — 그 시점은 거의 항상 closed=true 로 평가됨
+ */
+export function isBusinessDayClosed(
+  now: Date = new Date(),
+  ctx: BusinessDayCtx = {}
+): boolean {
+  const k = toKstParts(now);
+  const nowMin = k.hour * 60 + k.minute;
+
+  if (ctx.categoryId === "online-digital" || ctx.categoryId === "startup-tech") {
+    return nowMin >= 21 * 60; // 21:00 KST
+  }
+
+  const closeMin = parseHmm(ctx.closeTime);
+  if (closeMin === null) {
+    return nowMin >= 22 * 60 + 30; // 22:30 default
+  }
+  // 새벽 마감 (closeMin < 12:00) — 자정 ~ cutoff 사이는 still closed (실제론 영업 중이지만 영업일 종료 후 보고서)
+  if (closeMin < 12 * 60) {
+    const cutoffMin = (closeMin + BUFFER_MINUTES) % (24 * 60);
+    // 새벽 cutoff 시점 이후 ~ 다음날 cutoff 직전까지 = closed
+    return nowMin >= cutoffMin;
+  }
+  // 일반 저녁 마감
+  const cutoffMin = closeMin + BUFFER_MINUTES;
+  return nowMin >= cutoffMin;
+}
+
+/**
+ * 일일 보고서가 활성화되는 시각 라벨 (CEOMorningHero 비활성 안내용).
+ * 예: "21:00", "22:30"
+ */
+export function dailyReportActiveTimeLabel(ctx: BusinessDayCtx = {}): string {
+  if (ctx.categoryId === "online-digital" || ctx.categoryId === "startup-tech") {
+    return "21:00";
+  }
+  const closeMin = parseHmm(ctx.closeTime);
+  if (closeMin === null) return "22:30";
+  const cutoffMin = (closeMin + BUFFER_MINUTES) % (24 * 60);
+  const h = Math.floor(cutoffMin / 60);
+  const m = cutoffMin % 60;
+  return `${pad2(h)}:${pad2(m)}`;
+}
+
+/**
  * 분 단위 차이 (양수: 미래) — 디버그·테스트용.
  */
 export function _kstDebug(now: Date = new Date()) {

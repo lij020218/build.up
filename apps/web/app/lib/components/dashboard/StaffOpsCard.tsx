@@ -243,27 +243,43 @@ export function StaffOpsCard({
           ) : (
             <>
               <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginBottom: "12px", lineHeight: 1.5 }}>
-                {ko ? "아래 초대 코드를 직원에게 전달하세요." : "Share this invite code with your employee."}
+                {ko ? "아래 초대 링크를 직원에게 카톡·문자로 보내세요." : "Send this invite link to your employee via KakaoTalk/SMS."}
               </div>
               <div style={{
-                padding: "20px", borderRadius: "14px", background: "rgba(25,25,112,0.04)",
-                border: "1px solid rgba(25,25,112,0.1)", textAlign: "center" as const, marginBottom: "12px",
+                padding: "16px", borderRadius: "14px", background: "rgba(25,25,112,0.04)",
+                border: "1px solid rgba(25,25,112,0.12)", marginBottom: "12px",
               }}>
-                <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
-                  {ko ? "초대 코드" : "Invite Code"}
+                <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+                  {ko ? "초대 링크" : "Invite Link"}
                 </div>
-                <div style={{ fontSize: "28px", fontWeight: 800, letterSpacing: "0.15em", color: "#0f172a", fontFamily: "monospace" }}>
-                  {generatedCode}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  padding: "10px 12px", borderRadius: "10px",
+                  background: "white", border: "1px solid rgba(25,25,112,0.16)",
+                }}>
+                  <span style={{
+                    flex: 1, fontSize: "12.5px", color: "#0f172a",
+                    fontFamily: "ui-monospace, monospace",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
+                  }}>
+                    {typeof window !== "undefined" ? `${window.location.origin}/invite/${generatedCode}` : `/invite/${generatedCode}`}
+                  </span>
+                  <button type="button" onClick={() => {
+                    const url = typeof window !== "undefined" ? `${window.location.origin}/invite/${generatedCode}` : "";
+                    void navigator.clipboard.writeText(url);
+                  }}
+                    style={{ fontSize: "12px", fontWeight: 700, color: "#191970", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
+                    {ko ? "복사" : "Copy"}
+                  </button>
                 </div>
-                <button type="button" onClick={() => { void navigator.clipboard.writeText(generatedCode ?? ""); }}
-                  style={{ fontSize: "12px", fontWeight: 600, color: "#191970", background: "none", border: "none", cursor: "pointer", marginTop: "8px" }}>
-                  {ko ? "코드 복사" : "Copy code"}
-                </button>
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "8px", fontFamily: "ui-monospace, monospace", letterSpacing: "0.05em" }}>
+                  {ko ? "코드만 필요할 때:" : "Code only:"} <strong style={{ color: "#0f172a" }}>{generatedCode}</strong>
+                </div>
               </div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", lineHeight: 1.5, marginBottom: "12px" }}>
+              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginBottom: "12px" }}>
                 {ko
-                  ? "직원이 build.up 가입 후 '직원' 역할을 선택하고 이 코드를 입력하면 가게에 연결됩니다. 코드는 7일간 유효합니다."
-                  : "The employee signs up, selects 'Staff' role, and enters this code to connect. Valid for 7 days."}
+                  ? "직원이 링크를 클릭하면 「가게가 맞으신가요?」 확인 화면을 거쳐 자동으로 연결됩니다. 가입은 그 자리에서 가능합니다. 7일간 유효, 1회 사용."
+                  : "The employee taps the link, confirms the store, and is connected automatically. Signup happens inline. Valid 7 days, one-time use."}
               </div>
               <button type="button" onClick={() => { setAddMode(null); setGeneratedCode(null); setInviteEmail(""); setInviteStatus("idle"); }} style={{ ...opsActionPrimary, width: "100%" }}>
                 {ko ? "완료" : "Done"}

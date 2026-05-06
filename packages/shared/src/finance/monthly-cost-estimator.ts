@@ -39,6 +39,16 @@ export type StageInputs = {
   customPyeong?: number;
   /** 예상 월 매출 (원) — COGS·SGA 계산의 기준 */
   expectedMonthlyRevenueKrw?: number;
+  /**
+   * 사장이 vendor-setup 단계에서 직접 입력한 월 식자재(또는 매입원가) 합계 (원).
+   * 있으면 매출 × cogsRate 추정을 덮어씀. source = "stage-derived".
+   */
+  ingredientsMonthlyKrw?: number;
+  /**
+   * 사장이 vendor-setup 단계에서 직접 입력한 매출 대비 원가율 (0~1).
+   * ingredientsMonthlyKrw 가 없을 때만 사용. 있으면 매출 × 이 비율 = 원가.
+   */
+  ingredientsCogsRate?: number;
   /** 인력 계획 (hiring-setup 단계) */
   staffPlan?: StaffPlan;
   /** 운영 설정 (operations-setup 단계) */
@@ -149,14 +159,28 @@ export function estimateMonthlyCosts(
   const rentFromStage = rentDetail ? rentDetail.monthlyRentKrw + rentDetail.managementFeeKrw : 0;
 
   // ── labor ──
-  const staffPlan = stages.staffPlan ?? getDefaultStaffPlan(categoryId);
+  // staffPlan 출처 구분:
+  //   · stages.staffPlan 이 채워져 있으면 = HiringSetupStage 에서 사장이 직접 입력 → "stage-derived"
+  //   · undefined 면 = 카테고리 평균치 폴백 → "industry-average" 라벨 (절대 "이전 단계 기반" 으로 위장 X)
+  const userStaffPlan = stages.staffPlan;
+  const staffPlan = userStaffPlan ?? getDefaultStaffPlan(categoryId);
   const laborDetail = calculateMonthlyTeamLaborCost(staffPlan);
   const laborFromStage = laborDetail.total;
 
   // ── ingredients (COGS) ──
-  // business-context의 expenseMode로 원가율 결정 (food/cafe=food-cogs, retail=purchase, etc.)
-  const cogsRate = getCogsRate(ctx.expenseMode, categoryId);
-  const ingredientsFromStage = Math.round(expectedRevenue * cogsRate);
+  // 우선순위 (사용자 메시지 2026-05-04: "990만원은 누구 머리에서 나온거야?" — 카테고리 평균 ×
+  //   default 매출을 "이전 단계 기반" 으로 위장하던 문제 수정):
+  //   1) 사장이 vendor-setup 에서 입력한 월 원가 합계(ingredientsMonthlyKrw) → stage-derived
+  //   2) 사장이 입력한 매출 대비 원가율(ingredientsCogsRate) × expectedRevenue → stage-derived
+  //   3) 둘 다 없으면 업종 평균 × default 매출 → industry-average (정직한 라벨)
+  const userIngredientsMonthly = stages.ingredientsMonthlyKrw;
+  const userCogsRate = stages.ingredientsCogsRate;
+  const cogsRate = userCogsRate ?? getCogsRate(ctx.expenseMode, categoryId);
+  const ingredientsFromStage =
+    userIngredientsMonthly != null
+      ? Math.round(userIngredientsMonthly)
+      : Math.round(expectedRevenue * cogsRate);
+  const ingredientsUserProvided = userIngredientsMonthly != null || userCogsRate != null;
 
   // ── sga (운영 수수료) ──
   const sgaDetail = stages.operations
@@ -197,8 +221,8 @@ export function estimateMonthlyCosts(
   };
 
   const sources: Record<keyof MonthlyCostFields, CostSource> = {
-    ingredients: overrides.ingredients != null ? "user-input" : "stage-derived",
-    labor:       overrides.labor       != null ? "user-input" : "stage-derived",
+    ingredients: overrides.ingredients != null ? "user-input" : (ingredientsUserProvided ? "stage-derived" : "industry-average"),
+    labor:       overrides.labor       != null ? "user-input" : (userStaffPlan ? "stage-derived" : "industry-average"),
     rent:        overrides.rent        != null ? "user-input" : (rentFromStage > 0 ? "stage-derived" : "insufficient-data"),
     utilities:   overrides.utilities   != null ? "user-input" : "industry-average",
     sga:         overrides.sga         != null ? "user-input" : (sgaFromStage > 0 ? "stage-derived" : "insufficient-data"),

@@ -34,6 +34,7 @@ import type { LucideIcon } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { getVendorData, type VendorItem } from "./vendor-setup-data";
 import { StageWrapup } from "../shared/StageWrapup";
+import { MyIngredientsPlanCard } from "./MyIngredientsPlanCard";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
@@ -502,6 +503,9 @@ export function VendorSetupStage() {
         </ul>
       </div>
 
+      {/* ── 내 식자재·매입 원가 계획 — 재무 검토 단계의 ingredients 칸이 여기서 가져감 ── */}
+      <MyIngredientsPlanCard ko={language === "ko"} />
+
       <StageWrapup
         ko={language === "ko"}
         nextStageLabelKo="사업자등록·인허가"
@@ -510,6 +514,7 @@ export function VendorSetupStage() {
           { label: "2. 장비 발주 계획", detail: "신품·중고 비교 — 황학동온라인·번개장터 활용 50~70%대 가성비 확보" },
           { label: "3. POS·결제 셋업", detail: "토스플레이스·KIS·페이히어 비교 + 무료 단말 신청" },
           { label: "4. 첫 주 발주 일정", detail: "오픈 D-7 기준 식자재 소량 테스트 + 장비 시운전 일정 확정" },
+          { label: "5. 월 원가 계획", detail: "공급처 견적 합산 → 월 식자재·매입 원가 추정. 「재무 검토」의 인건비 칸과 동일하게 사장이 직접 입력하는 값." },
         ]}
         verifyItemsKo={[
           "사업자등록 전 — 거래 가능 여부 확인 (공급처 다수가 사업자번호 없으면 거래 불가, 견적도 비공식)",

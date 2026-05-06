@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Settings, ArrowDownRight, ArrowUpRight, Wallet, ChevronRight } from "lucide-react";
 import { useCashflowStore } from "../../stores/cashflow-store";
 import {
@@ -48,6 +48,19 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
 
   const [showSetup, setShowSetup] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  // FeatureNudgeCard 등에서 setup sheet 열기 + 특정 섹션 (예: 고정비) 으로 자동 스크롤
+  const [setupTargetSection, setSetupTargetSection] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { section?: string } | undefined;
+      setSetupTargetSection(detail?.section);
+      setShowSetup(true);
+    };
+    window.addEventListener("bup:open-cashflow-setup", handler);
+    return () => window.removeEventListener("bup:open-cashflow-setup", handler);
+  }, []);
 
   const projections: DayProjection[] = useMemo(
     () =>
@@ -81,6 +94,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
             gap: "16px",
           }}
           className="bento-card"
+          data-cashflow-hero
         >
           {/* 헤더 */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
@@ -191,7 +205,13 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
             <ChevronRight size={15} strokeWidth={2.4} />
           </button>
         </section>
-        {showSetup && <CashflowSetupSheet ko={ko} onClose={() => setShowSetup(false)} />}
+        {showSetup && (
+          <CashflowSetupSheet
+            ko={ko}
+            targetSection={setupTargetSection}
+            onClose={() => { setShowSetup(false); setSetupTargetSection(undefined); }}
+          />
+        )}
       </>
     );
   }
@@ -420,7 +440,13 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
         </div>
       </section>
 
-      {showSetup && <CashflowSetupSheet ko={ko} onClose={() => setShowSetup(false)} />}
+      {showSetup && (
+          <CashflowSetupSheet
+            ko={ko}
+            targetSection={setupTargetSection}
+            onClose={() => { setShowSetup(false); setSetupTargetSection(undefined); }}
+          />
+        )}
       {showDetail && <CashflowDetailSheet ko={ko} projections={projections} onClose={() => setShowDetail(false)} />}
     </>
   );

@@ -35,6 +35,8 @@ export type AIPartnerContext = {
   startupType?: string;
   businessLaunched?: boolean;
   daysSinceLaunch?: number;
+  /** 운영 단계 — pre-launch/early(0-30d)/growth(30-90d)/mature(90d+) — AI 코칭 톤 결정 */
+  operatingPhase?: "pre-launch" | "early" | "growth" | "mature";
   region?: string;
   selectedBudget?: number;
   // 매출/비용
@@ -45,6 +47,12 @@ export type AIPartnerContext = {
   yesterdaySales?: number;
   weeklyChange?: number;
   weekdayChange?: number;
+  /** 매출 트렌드 방향 — improving/declining/stable/insufficient */
+  salesTrendDirection?: "improving" | "declining" | "stable" | "insufficient";
+  /** 비용 구조 추세 — 이번달 prime cost rate vs 지난달 (% 차) */
+  primeRateDeltaPct?: number;
+  /** 지난달 prime cost rate (현재월 비교 기준) */
+  prevPrimeRate?: number;
   primeRate?: number;
   runway?: number;
   businessHealthScore?: "healthy" | "caution" | "danger" | "unknown";
@@ -53,6 +61,8 @@ export type AIPartnerContext = {
   lowStockItems?: string[];
   upcomingFixedExpenses?: string[];
   pendingTaxEvents?: string[];
+  /** 사장님이 아직 안 써본 build.up 기능들 (priority 정렬) — AI 가 자연스럽게 안내 가능 */
+  unusedFeatures?: string[];
   // 마케팅
   totalMarketingSpend?: number;
   activeChannels?: string[];

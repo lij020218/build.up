@@ -16,7 +16,9 @@
       "@build-up/shared": ["packages/shared/src/index.ts"],
       "@build-up/shared/*": ["packages/shared/src/*"],
       "@build-up/ai": ["packages/ai/src/index.ts"],
-      "@build-up/ai/*": ["packages/ai/src/*"]
+      "@build-up/ai/*": ["packages/ai/src/*"],
+      "@build-up/integrations": ["packages/integrations/src/index.ts"],
+      "@build-up/integrations/*": ["packages/integrations/src/*"]
     }
   }
 }

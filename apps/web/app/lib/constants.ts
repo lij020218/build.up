@@ -10,7 +10,8 @@ export const SURFACE_HREFS: Record<DashboardSurface, string> = {
   franchise: "/franchise",
   profile: "/profile",
   analytics: "/analytics",
-  marketing: "/marketing"
+  marketing: "/marketing",
+  reports: "/reports"
 };
 export const VENDOR_URL_MAP: Record<string, string> = {
   "홈택스(Hometax)": "https://www.hometax.go.kr",

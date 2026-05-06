@@ -72,6 +72,19 @@ export function SurfaceIcon(props: { surface: DashboardSurface }) {
     );
   }
 
+  if (props.surface === "reports") {
+    // 문서 + 우상단 접힘 + 안에 mini bar chart — 보고서·요약 시각화
+    return (
+      <svg {...common}>
+        <path d="M3.8 2.5h6.4l2.4 2.4V12.5a1 1 0 0 1-1 1H3.8a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" />
+        <path d="M10 2.5v2.4h2.6" />
+        <rect x="5.2" y="9.4" width="1.2" height="2.2" rx="0.3" fill="currentColor" stroke="none" />
+        <rect x="7.4" y="7.8" width="1.2" height="3.8" rx="0.3" fill="currentColor" stroke="none" />
+        <rect x="9.6" y="6.6" width="1.2" height="5" rx="0.3" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+
   return (
     <svg {...common}>
       <circle cx="8" cy="5.3" r="2.2" />

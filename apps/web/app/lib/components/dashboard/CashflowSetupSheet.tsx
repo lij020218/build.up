@@ -20,6 +20,8 @@ import { sumActiveChannelRatios } from "../../services/cashflow-projection";
 type Props = {
   ko: boolean;
   onClose: () => void;
+  /** 시트 마운트 시 자동 스크롤할 섹션 id (예: "fixed-expenses", "channels", "balance") */
+  targetSection?: string;
 };
 
 /**
@@ -32,7 +34,7 @@ type Props = {
  * 입력 데이터는 Supabase 의 cashflow_settings JSONB 컬럼에 자동 저장됨
  * (usePersistence collectStoreData 가 매 변경마다 동기화).
  */
-export function CashflowSetupSheet({ ko, onClose }: Props) {
+export function CashflowSetupSheet({ ko, onClose, targetSection }: Props) {
   const {
     currentBalance,
     setCurrentBalance,
@@ -87,6 +89,25 @@ export function CashflowSetupSheet({ ko, onClose }: Props) {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, []);
+
+  // targetSection 이 주어지면 시트 마운트 직후 해당 섹션으로 자동 스크롤 + halo
+  useEffect(() => {
+    if (!mounted || !targetSection) return;
+    const el = document.querySelector<HTMLElement>(`[data-cfs-section="${targetSection}"]`);
+    if (!el) return;
+    const t = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      const prevShadow = el.style.boxShadow;
+      const prevTransition = el.style.transition;
+      el.style.transition = "box-shadow 0.4s cubic-bezier(0.22,1,0.36,1)";
+      el.style.boxShadow = "0 0 0 4px rgba(45,212,191,0.45), 0 12px 32px rgba(45,212,191,0.2)";
+      window.setTimeout(() => {
+        el.style.boxShadow = prevShadow;
+        window.setTimeout(() => { el.style.transition = prevTransition; }, 400);
+      }, 1400);
+    }, 240);
+    return () => window.clearTimeout(t);
+  }, [mounted, targetSection]);
 
   const [newExpense, setNewExpense] = useState<{
     label: string;
@@ -306,7 +327,7 @@ export function CashflowSetupSheet({ ko, onClose }: Props) {
             </section>
 
             {/* ─── 3. 월 고정비 ─── */}
-            <section className="cfs-section">
+            <section className="cfs-section" id="cfs-section-fixed-expenses" data-cfs-section="fixed-expenses">
               <SectionHeader
                 num={3}
                 Icon={Calendar}

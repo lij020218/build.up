@@ -42,7 +42,13 @@ function getDecisionValue(
     return decision.selectedOptionIds;
   }
 
-  return decision.inputs?.[key];
+  // inputs 는 unknown 으로 완화됐지만, completion rule 은 primitive/배열만 평가.
+  // nested 객체 값(예: hiring-setup.staffPlan)은 rule 매칭 대상에서 제외.
+  const raw = decision.inputs?.[key];
+  if (raw == null) return undefined;
+  if (typeof raw === "string" || typeof raw === "number" || typeof raw === "boolean") return raw;
+  if (Array.isArray(raw) && raw.every((it) => typeof it === "string")) return raw as string[];
+  return undefined;
 }
 
 function evaluateRule(

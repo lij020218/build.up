@@ -38,6 +38,27 @@ export function LanguageProvider(props: { children: ReactNode }) {
   const badgeCount = notifications.length;
   const urgentCount = notifications.filter((n: NotifItem) => n.severity === "urgent").length;
 
+  // 알림 클릭 → 해당 surface 로 이동 + (옵션) 셋업 시트 자동 오픈.
+  // 처리 자체는 starter-stage-demo 의 'bup:navigate-feature' / CashflowHeroCard 의
+  // 'bup:open-cashflow-setup' listener 가 수행 — 여기서는 dispatch 만.
+  const handleNotifClick = (n: NotifItem) => {
+    if (!n.navigate?.surface) return;
+    setNotifOpen(false);
+    if (typeof window === "undefined") return;
+    const detail: Record<string, unknown> = { surface: n.navigate.surface };
+    if (n.navigate.scrollTargetId) detail.scrollTargetId = n.navigate.scrollTargetId;
+    if (n.navigate.selector) detail.selector = n.navigate.selector;
+    if (n.navigate.focusInput) detail.focusInput = true;
+    window.dispatchEvent(new CustomEvent("bup:navigate-feature", { detail }));
+    if (n.navigate.openCashflowSetup) {
+      // surface 전환 + 카드 스크롤 (~700ms) 후 셋업 시트 오픈
+      const openDetail = n.navigate.openCashflowSetup;
+      window.setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("bup:open-cashflow-setup", { detail: openDetail }));
+      }, 700);
+    }
+  };
+
   return (
     <LanguageContext.Provider value={value}>
       {props.children}
@@ -150,38 +171,76 @@ export function LanguageProvider(props: { children: ReactNode }) {
                 </div>
               )}
 
-              {/* 알림 목록 */}
+              {/* 알림 목록 — navigate 가 있으면 클릭 가능 button, 없으면 정적 div */}
               {notifications.length > 0 && (
                 <div>
-                  {notifications.map((n: NotifItem, idx: number) => (
-                    <div key={n.id} style={{
+                  {notifications.map((n: NotifItem, idx: number) => {
+                    const clickable = !!n.navigate?.surface;
+                    const rowStyle: React.CSSProperties = {
                       display: "flex", alignItems: "flex-start", gap: "12px",
+                      width: "100%",
                       padding: "13px 18px",
                       borderBottom: idx < notifications.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none",
-                    }}>
-                      <div style={{
-                        width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, marginTop: "4px",
-                        background: n.severity === "urgent" ? "#ff3b30" : "#ff9f0a",
-                        boxShadow: n.severity === "urgent" ? "0 0 0 3px rgba(255,59,48,0.14)" : "0 0 0 3px rgba(255,159,10,0.14)",
-                      }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "-0.1px", lineHeight: 1.35, color: "#111" }}>
-                          {n.title}
+                      background: "transparent",
+                      border: 0,
+                      borderBottomWidth: idx < notifications.length - 1 ? "0.5px" : 0,
+                      borderBottomStyle: "solid" as const,
+                      borderBottomColor: "rgba(0,0,0,0.06)",
+                      textAlign: "left" as const,
+                      cursor: clickable ? "pointer" : "default",
+                      fontFamily: "inherit",
+                      transition: "background 0.15s ease",
+                    };
+                    const inner = (
+                      <>
+                        <div style={{
+                          width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, marginTop: "4px",
+                          background: n.severity === "urgent" ? "#ff3b30" : "#ff9f0a",
+                          boxShadow: n.severity === "urgent" ? "0 0 0 3px rgba(255,59,48,0.14)" : "0 0 0 3px rgba(255,159,10,0.14)",
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "-0.1px", lineHeight: 1.35, color: "#111" }}>
+                            {n.title}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.45)", marginTop: "2px", lineHeight: 1.4 }}>
+                            {n.detail}
+                          </div>
+                          {clickable && (
+                            <div style={{
+                              fontSize: "10.5px", fontWeight: 700, color: "#191970",
+                              marginTop: "5px", letterSpacing: "-0.005em",
+                            }}>
+                              {ko ? "지금 처리하기 →" : "Resolve now →"}
+                            </div>
+                          )}
                         </div>
-                        <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.45)", marginTop: "2px", lineHeight: 1.4 }}>
-                          {n.detail}
-                        </div>
+                        <span style={{
+                          fontSize: "10px", fontWeight: 700, flexShrink: 0, marginTop: "2px",
+                          color: n.severity === "urgent" ? "#ff3b30" : "#ff9f0a",
+                          background: n.severity === "urgent" ? "rgba(255,59,48,0.08)" : "rgba(255,159,10,0.08)",
+                          padding: "2px 7px", borderRadius: "999px",
+                        }}>
+                          {n.severity === "urgent" ? (ko ? "긴급" : "Urgent") : (ko ? "주의" : "Warning")}
+                        </span>
+                      </>
+                    );
+                    return clickable ? (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => handleNotifClick(n)}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(25,25,112,0.04)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                        style={rowStyle}
+                      >
+                        {inner}
+                      </button>
+                    ) : (
+                      <div key={n.id} style={{ ...rowStyle, cursor: "default" }}>
+                        {inner}
                       </div>
-                      <span style={{
-                        fontSize: "10px", fontWeight: 700, flexShrink: 0, marginTop: "2px",
-                        color: n.severity === "urgent" ? "#ff3b30" : "#ff9f0a",
-                        background: n.severity === "urgent" ? "rgba(255,59,48,0.08)" : "rgba(255,159,10,0.08)",
-                        padding: "2px 7px", borderRadius: "999px",
-                      }}>
-                        {n.severity === "urgent" ? (ko ? "긴급" : "Urgent") : (ko ? "주의" : "Warning")}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 

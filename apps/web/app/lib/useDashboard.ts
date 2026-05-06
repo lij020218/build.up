@@ -420,6 +420,50 @@ export function useDashboard(surface: DashboardSurface = "home") {
           employeeCount: (employees as { id: string }[]).length,
           businessHealthScore,
           daysSinceLaunch: daysSinceLaunchCalc,
+          // 운영 단계 분류 (pre-launch / early / growth / mature)
+          operatingPhase: (!businessLaunched
+            ? "pre-launch"
+            : daysSinceLaunchCalc > 90
+              ? "mature"
+              : daysSinceLaunchCalc > 30
+                ? "growth"
+                : "early") as "pre-launch" | "early" | "growth" | "mature",
+          // 매출 트렌드 (최근 7일 vs 그 이전 7일) — 14일 미만이면 insufficient
+          salesTrendDirection: ((): "improving" | "declining" | "stable" | "insufficient" => {
+            const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+            const last14 = sorted.slice(-14);
+            if (last14.length < 14) return "insufficient";
+            const r7 = last14.slice(-7).reduce((s, e) => s + e.sales, 0) / 7;
+            const p7 = last14.slice(0, 7).reduce((s, e) => s + e.sales, 0) / 7;
+            if (p7 <= 0) return "insufficient";
+            const ch = ((r7 - p7) / p7) * 100;
+            return ch >= 5 ? "improving" : ch <= -5 ? "declining" : "stable";
+          })(),
+          // 비용 구조 추세 (이번달 prime cost vs 지난달)
+          ...(() => {
+            const curMonth = new Date().toISOString().slice(0, 7);
+            const prevDate = new Date(); prevDate.setMonth(prevDate.getMonth() - 1);
+            const prevMonth = prevDate.toISOString().slice(0, 7);
+            const thisRev = entries.filter((e) => e.date.startsWith(curMonth)).reduce((s, e) => s + e.sales, 0);
+            const prevRev = entries.filter((e) => e.date.startsWith(prevMonth)).reduce((s, e) => s + e.sales, 0);
+            const costSnaps = (costHistory as Array<{ month: string; ingredients: number; labor: number }> | undefined) ?? [];
+            const prevSnap = costSnaps.find((h) => h.month === prevMonth);
+            if (!prevSnap || prevRev <= 0 || thisRev <= 0) return {};
+            const prevPrime = ((prevSnap.ingredients + prevSnap.labor) / prevRev) * 100;
+            return {
+              prevPrimeRate: Math.round(prevPrime * 10) / 10,
+              primeRateDeltaPct: Math.round((primeRate - prevPrime) * 10) / 10,
+            };
+          })(),
+          // 사장님이 아직 안 써본 핵심 기능 — AI 코칭이 자연스럽게 nudge 가능
+          unusedFeatures: ((): string[] | undefined => {
+            const list: string[] = [];
+            if (entries.length === 0) list.push("매출입력");
+            if ((employees as Array<unknown>).length === 0) list.push("직원등록");
+            if ((inventory as Array<unknown>).length === 0 && ["food", "cafe-dessert", "retail", "beauty", "pet"].includes(industryCategoryId)) list.push("재고등록");
+            if ((fixedExpenses as Array<unknown>).length === 0) list.push("고정비등록");
+            return list.length > 0 ? list : undefined;
+          })(),
           pendingTaxEvents: [],
           lowStockItems: (inventory as InventoryItemLocal[]).filter(i => i.quantity <= i.minThreshold && i.minThreshold > 0).map(i => i.name).slice(0, 3),
           upcomingFixedExpenses: (() => {

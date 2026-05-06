@@ -26,7 +26,7 @@ import {
   type CostSource,
   type StageInputs,
   type UserOverrides,
-  getDefaultStaffPlan,
+  type StaffPlan,
   seoulMarketDistricts,
   starterIndustryOptions,
   localizeRecommendationItem,
@@ -438,15 +438,43 @@ export function FinancialReviewStage() {
     // operations → delivery / POS
     const opsDecision = (d.decisions as Record<string, { inputs?: { deliveryPlatformIds?: string[]; posProviderId?: string } }>)?.["operations-setup"];
 
-    // hiring plan (업종별 기본값, 추후 hiring-setup 단계에서 override 가능)
-    const staffPlan = getDefaultStaffPlan(categoryId);
+    // hiring plan — 사장이 HiringSetupStage 에서 직접 입력한 staffPlan 만 사용.
+    //   미입력 시 undefined 전달 → monthly-cost-estimator 가 카테고리 평균치 + "industry-average" 라벨로 표시.
+    //   (이전엔 항상 getDefaultStaffPlan 으로 채워서 "이전 단계 기반" 으로 잘못 표기되던 문제 수정)
+    const hiringDecision = (d.decisions as Record<string, { inputs?: { staffPlan?: StaffPlan; hiringStatus?: string } }>)?.["hiring-setup"];
+    const userStaffPlan: StaffPlan | undefined = (() => {
+      const sp = hiringDecision?.inputs?.staffPlan;
+      if (!sp) return undefined;
+      // 채용 안 함 / 채용 계획 미수립 — 0명도 명시적 입력으로 인정
+      const ft = Math.max(0, sp.fullTimeCount ?? 0);
+      const pt = Math.max(0, sp.partTimeCount ?? 0);
+      if (ft === 0 && pt === 0) {
+        return { fullTimeCount: 0, partTimeCount: 0 };
+      }
+      return sp;
+    })();
+
+    // ingredients (식자재·매입 원가) — 사장이 vendor-setup 에서 직접 입력한 값.
+    //   미입력 시 estimator 가 자동으로 "업종 평균" 라벨로 폴백 (이전엔 카테고리 default 매출 ×
+    //   평균 원가율을 "이전 단계 기반" 으로 위장 — 2026-05-04 사용자 피드백 반영).
+    const vendorDecision = (d.decisions as Record<
+      string,
+      { inputs?: { ingredientsMonthlyKrw?: number; ingredientsCogsRate?: number; ingredientsExpectedRevenueKrw?: number; ingredientsMode?: string } }
+    >)?.["vendor-setup"];
+    const ingMode = vendorDecision?.inputs?.ingredientsMode;
+    const ingMonthly = ingMode === "monthly" ? vendorDecision?.inputs?.ingredientsMonthlyKrw : undefined;
+    const ingCogsRate = ingMode === "rate" ? vendorDecision?.inputs?.ingredientsCogsRate : undefined;
+    const ingExpectedRev = ingMode === "rate" ? vendorDecision?.inputs?.ingredientsExpectedRevenueKrw : undefined;
 
     return {
       categoryId,
       selectedDistrictId,
       customPyeong,
-      expectedMonthlyRevenueKrw: undefined, // 사용자가 직접 입력 or 업종 평균
-      staffPlan,
+      // rate 모드는 사장 입력 매출 × 입력 원가율 → expectedMonthlyRevenueKrw 도 함께 전달
+      expectedMonthlyRevenueKrw: ingExpectedRev != null && ingExpectedRev > 0 ? ingExpectedRev : undefined,
+      ingredientsMonthlyKrw: ingMonthly != null && ingMonthly > 0 ? ingMonthly : undefined,
+      ingredientsCogsRate: ingCogsRate != null && ingCogsRate > 0 ? ingCogsRate : undefined,
+      staffPlan: userStaffPlan,
       operations: opsDecision?.inputs
         ? { deliveryPlatformIds: opsDecision.inputs.deliveryPlatformIds, posProviderId: opsDecision.inputs.posProviderId }
         : undefined,

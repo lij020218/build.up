@@ -2,13 +2,14 @@
 
 import { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3 } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText, Lock } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { CountUp } from "./animations";
 import { PALETTE, MOTION, CHART_COLORS } from "./operationalStyles";
 import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
 import { resolveHero, type Hero } from "./MorningBriefing";
-import { getBusinessDay } from "../../utils/business-day";
+import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
+import { useProfileStore } from "../../stores/profile-store";
 
 type Props = { d: DashboardHook };
 type DailyEntry = { date: string; sales: number; customers: number };
@@ -332,8 +333,48 @@ export function CEOMorningHero({ d }: Props) {
           <PeriodIcon size={18} strokeWidth={1.5} color={PALETTE.MIDNIGHT} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: PALETTE.MIDNIGHT, opacity: 0.65, marginBottom: "3px" }}>
-            {now.toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short", month: "short", day: "numeric" })} · {ko ? (isStartup ? "스타트업 모드" : isOnline ? "온라인 모드" : "운영 모드") : "Operations"}
+          <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: PALETTE.MIDNIGHT, opacity: 0.65, marginBottom: "3px", display: "flex", flexWrap: "wrap" as const, alignItems: "center", gap: "8px" }}>
+            <span>{now.toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short", month: "short", day: "numeric" })} · {ko ? (isStartup ? "스타트업 모드" : isOnline ? "온라인 모드" : "운영 모드") : "Operations"}</span>
+            {brain.businessLaunched && brain.daysSinceLaunch != null && (
+              <span style={{
+                padding: "2px 8px", borderRadius: "999px",
+                background: PALETTE.MIDNIGHT, color: "white",
+                fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
+              }}>
+                {ko ? `운영 ${brain.daysSinceLaunch + 1}일째` : `Day ${brain.daysSinceLaunch + 1}`}
+              </span>
+            )}
+            {brain.phase !== "pre-launch" && (
+              <span style={{
+                padding: "2px 8px", borderRadius: "999px",
+                background: "rgba(25,25,112,0.08)", color: PALETTE.MIDNIGHT,
+                fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em",
+              }}>
+                {ko
+                  ? brain.phase === "early" ? "초기 (PMF·고객확보)"
+                    : brain.phase === "growth" ? "성장 (안정화)"
+                    : "성숙 (효율·확장)"
+                  : brain.phase === "early" ? "Early"
+                    : brain.phase === "growth" ? "Growth"
+                    : "Mature"}
+              </span>
+            )}
+            {brain.salesTrend.direction !== "insufficient" && brain.salesTrend.changePct != null && (
+              <span style={{
+                padding: "2px 8px", borderRadius: "999px",
+                background: brain.salesTrend.direction === "improving" ? "rgba(5,150,105,0.10)"
+                  : brain.salesTrend.direction === "declining" ? "rgba(220,38,38,0.10)"
+                  : "rgba(15,23,42,0.06)",
+                color: brain.salesTrend.direction === "improving" ? "#059669"
+                  : brain.salesTrend.direction === "declining" ? "#dc2626"
+                  : "rgba(15,23,42,0.6)",
+                fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em",
+              }}>
+                {brain.salesTrend.direction === "improving" ? "↗" : brain.salesTrend.direction === "declining" ? "↘" : "→"}
+                {" "}{brain.salesTrend.changePct >= 0 ? "+" : ""}{brain.salesTrend.changePct}%
+                {ko ? " 주간매출" : " WoW"}
+              </span>
+            )}
           </div>
           <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.35, color: PALETTE.MIDNIGHT_DEEP }}>
             {greeting.line1}
@@ -370,6 +411,9 @@ export function CEOMorningHero({ d }: Props) {
               (ko ? "저장 실패 — 새로고침" : "Save failed")}
           </div>
         )}
+
+        {/* 오늘의 보고서 진입 버튼 — 영업 종료 후만 활성화 */}
+        <DailyReportButton ko={ko} d={d} />
       </motion.div>
 
       {/* Row 2 — 메인 메트릭 + sparkline */}
@@ -666,4 +710,54 @@ function fmtKrw(n: number, ko: boolean): string {
   if (n >= 100_000_000) return ko ? `${(n / 100_000_000).toFixed(1)}억원` : `₩${(n / 100_000_000).toFixed(1)}B`;
   if (n >= 10_000) return ko ? `${Math.round(n / 10_000).toLocaleString()}만원` : `₩${Math.round(n / 10_000).toLocaleString()}M`;
   return ko ? `${Math.round(n).toLocaleString()}원` : `₩${Math.round(n).toLocaleString()}`;
+}
+
+/**
+ * 오늘의 보고서 진입 버튼 — 영업 종료 후만 활성.
+ *
+ * 사용자 결정 (2026-05-04):
+ *   - 일일 보고서는 영업 종료 시점부터 의미 있음 (그 전엔 데이터 미완)
+ *   - 스타트업·온라인은 21:00 KST, 그 외는 closeTime + 30분
+ *   - 영업 중엔 비활성 + "21:00 활성화" 안내, 영업 종료 후엔 활성 + reports surface 진입
+ */
+function DailyReportButton({ ko, d }: { ko: boolean; d: DashboardHook }) {
+  const businessCloseTime = useProfileStore((s) => s.businessCloseTime);
+  const ctx = { categoryId: d.industryCategoryId, closeTime: businessCloseTime };
+  const closed = isBusinessDayClosed(new Date(), ctx);
+  const activeAt = dailyReportActiveTimeLabel(ctx);
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (!closed) return;
+        d.navigateToSurface("reports");
+      }}
+      disabled={!closed}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "8px 12px",
+        borderRadius: 10,
+        border: closed ? `1px solid ${PALETTE.MIDNIGHT}` : "1px solid rgba(15,23,42,0.08)",
+        background: closed ? PALETTE.MIDNIGHT : "rgba(15,23,42,0.03)",
+        color: closed ? "white" : "rgba(15,23,42,0.45)",
+        fontSize: 11.5,
+        fontWeight: 700,
+        cursor: closed ? "pointer" : "default",
+        whiteSpace: "nowrap" as const,
+        flexShrink: 0,
+        transition: "all 0.15s ease",
+      }}
+      title={closed
+        ? (ko ? "오늘의 보고서로 이동" : "Open today's report")
+        : (ko ? `${activeAt} 이후 활성화됩니다` : `Active after ${activeAt}`)}
+    >
+      {closed ? <FileText size={12} strokeWidth={1.8} /> : <Lock size={12} strokeWidth={1.8} />}
+      {closed
+        ? (ko ? "오늘의 보고서" : "Today's report")
+        : (ko ? `${activeAt} 활성화` : `Active ${activeAt}`)}
+    </button>
+  );
 }

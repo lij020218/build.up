@@ -5,8 +5,6 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
   getStarterBusinessModelOptions,
-  getSpecialties,
-  hasSpecialties,
   localizeRecommendationItem,
 } from "@build-up/shared";
 import { BusinessHoursInput } from "../shared/BusinessHoursInput";
@@ -73,7 +71,6 @@ export function BusinessModelSelectionStage() {
     industryCategoryId,
     selectedIndustryId,
     selectedIndustryLabel,
-    selectedSpecialtyId, setSelectedSpecialtyId,
     selectedBusinessModelId, setSelectedBusinessModelId,
     selectedRevenueModelId, setSelectedRevenueModelId,
     canCompleteBusinessModelStep,
@@ -84,9 +81,6 @@ export function BusinessModelSelectionStage() {
 
   const businessModelRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
-
-  const specialties = getSpecialties(selectedIndustryId);
-  const showSpecialty = hasSpecialties(selectedIndustryId);
   const ko = language === "ko";
 
   // 수익 모델 옵션 필터 — 카테고리에 맞는 것만 표시
@@ -108,134 +102,8 @@ export function BusinessModelSelectionStage() {
           : `Choose the operating model for ${selectedIndustryLabel}.`}
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════
-          SPECIALTY SECTION — sub-industry 안에서 한 번 더 분기
-          (예: korean-casual → 국밥집 / 김밥집 / 백반집 / 분식점 ...)
-          미드나이트 블루 통일 UI
-          ═════════════════════════════════════════════════════════ */}
-      {showSpecialty && (
-        <div style={{ marginBottom: "20px", padding: "16px 18px", borderRadius: "16px", background: "rgba(25,25,112,0.03)", border: `1px solid ${MIDNIGHT_BORDER}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-            <div style={{ padding: "3px 9px", borderRadius: "6px", background: MIDNIGHT, color: "#fff", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em" }}>
-              STEP 1 / 2
-            </div>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
-              {ko ? "어떤 컨셉으로 하실 건가요?" : "Which specialty?"}
-            </div>
-          </div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", marginBottom: "12px", lineHeight: 1.5 }}>
-            {ko
-              ? `${selectedIndustryLabel} 안에서도 컨셉별로 식자재·장비·마케팅이 크게 다릅니다. 우리 매장의 색깔을 알려주세요.`
-              : "Suppliers, equipment, and marketing differ significantly by specialty. Tell us your concept."}
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(auto-fill, minmax(200px, 1fr))`,
-              gap: "8px",
-            }}
-          >
-            {specialties.map((sp) => {
-              const sel = selectedSpecialtyId === sp.id;
-              return (
-                <button
-                  key={sp.id}
-                  type="button"
-                  onClick={() => setSelectedSpecialtyId(sp.id)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column" as const,
-                    alignItems: "flex-start",
-                    textAlign: "left" as const,
-                    gap: "4px",
-                    padding: "12px 14px",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    width: "100%",
-                    border: sel ? `1.5px solid ${MIDNIGHT}` : `1.5px solid rgba(0,0,0,0.06)`,
-                    background: sel
-                      ? `linear-gradient(160deg, ${MIDNIGHT_SOFT} 0%, rgba(25,25,112,0.03) 100%)`
-                      : "white",
-                    boxShadow: sel
-                      ? `0 0 0 3px rgba(25,25,112,0.06), 0 4px 12px rgba(25,25,112,0.08)`
-                      : "0 1px 2px rgba(0,0,0,0.03)",
-                    transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>
-                    <div
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "100px",
-                        background: sel ? MIDNIGHT : "rgba(0,0,0,0.15)",
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div style={{ fontSize: "13.5px", fontWeight: 700, color: sel ? MIDNIGHT : "#0f172a", letterSpacing: "-0.01em" }}>
-                      {ko ? sp.ko : sp.en}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.6)", lineHeight: 1.45, paddingLeft: "14px" }}>
-                    {ko ? sp.desc.ko : sp.desc.en}
-                  </div>
-                </button>
-              );
-            })}
-            {/* 기타·미정 옵션 — 사용자가 명시적으로 스킵할 수 있게 */}
-            <button
-              type="button"
-              onClick={() => setSelectedSpecialtyId(undefined)}
-              style={{
-                display: "flex",
-                flexDirection: "column" as const,
-                alignItems: "flex-start",
-                textAlign: "left" as const,
-                gap: "4px",
-                padding: "12px 14px",
-                borderRadius: "12px",
-                cursor: "pointer",
-                width: "100%",
-                border: !selectedSpecialtyId ? `1.5px solid ${MIDNIGHT}` : `1.5px dashed rgba(0,0,0,0.12)`,
-                background: !selectedSpecialtyId
-                  ? `linear-gradient(160deg, ${MIDNIGHT_SOFT} 0%, rgba(25,25,112,0.03) 100%)`
-                  : "rgba(0,0,0,0.015)",
-                transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <div
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "100px",
-                    background: !selectedSpecialtyId ? MIDNIGHT : "rgba(0,0,0,0.15)",
-                    flexShrink: 0,
-                  }}
-                />
-                <div style={{ fontSize: "13.5px", fontWeight: 700, color: !selectedSpecialtyId ? MIDNIGHT : "rgba(15,23,42,0.7)" }}>
-                  {ko ? "아직 정하지 않음" : "Not decided yet"}
-                </div>
-              </div>
-              <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", lineHeight: 1.45, paddingLeft: "14px" }}>
-                {ko ? "나중에 변경 가능합니다" : "You can change this later"}
-              </div>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 2 / 2 — Operating model */}
-      {showSpecialty && (
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", marginBottom: "10px" }}>
-          <div style={{ padding: "3px 9px", borderRadius: "6px", background: MIDNIGHT, color: "#fff", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em" }}>
-            STEP 2 / 2
-          </div>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
-            {ko ? "운영 방식을 선택하세요" : "Choose operating model"}
-          </div>
-        </div>
-      )}
+      {/* specialty(세부업종) 는 IndustrySelectionStage(Step 2) 에서 이미 선택됨.
+          여기서 다시 노출하면 ID 체계 충돌 + 중복 선택 UX 발생 (2026-05-04 audit). */}
       {(() => {
         const color = "#1d3557"; // 미드나이트 블루
         const modelIcons: Record<string, string> = {

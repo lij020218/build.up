@@ -21,6 +21,7 @@ import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { useStoreInfoStore } from "../../stores/store-info-store";
 import { HeroAtAGlance } from "../my-store/HeroAtAGlance";
 import { FinancialSnapshotSection } from "../my-store/FinancialSnapshotSection";
+import { CostManagementCard } from "../my-store/CostManagementCard";
 import { SectionRenderer } from "../my-store/SectionRenderer";
 import type { DDayItem } from "../my-store/DDayWidget";
 import { StickyTOC } from "../my-store/StickyTOC";
@@ -320,6 +321,12 @@ export function MyStoreView() {
             si.setField("currentBalanceManualKrw", krw);
             si.setField("currentBalanceUpdatedAt", new Date().toISOString());
           }}
+        />
+
+        {/* 비용 관리 — 월 평균 비용 + 고정 지출 D-day (대시보드 도넛 카드의 데이터 출처) */}
+        <CostManagementCard
+          ko={ko}
+          expenseFields={d.businessCtx?.expenseFields?.map((f) => ({ fieldKey: f.fieldKey, label: f.label }))}
         />
 
         {/* 모든 섹션 동적 렌더 */}

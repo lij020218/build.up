@@ -59,6 +59,20 @@ export type CodefCardSale = {
   raw?: Record<string, unknown>;
 };
 
+/** CODEF 기업 수시입출 거래내역 단건 raw (resTrHistoryList 원본). */
+export type CodefBankTxRaw = {
+  resAccountTrDate?: string;       // YYYYMMDD
+  resAccountTrTime?: string;       // HHMMSS
+  resAccountIn?: string;           // 입금액 (string)
+  resAccountOut?: string;          // 출금액 (string)
+  resAfterTranBalance?: string;    // 잔액
+  resAccountDesc1?: string;
+  resAccountDesc2?: string;
+  resAccountDesc3?: string;
+  resAccountDesc4?: string;
+  [k: string]: unknown;
+};
+
 // ─── 클라이언트 ────────────────────────────────────────────────────────
 
 export class CodefClient {
@@ -188,6 +202,63 @@ export class CodefClient {
         endDate: input.endDate,
       }
     );
+  }
+
+  /**
+   * 기업 은행 보유계좌 조회 (사장님 사업자 계좌 목록).
+   * developer.codef.io/products/bank/common/b/account
+   */
+  async getBusinessBankAccountList(input: {
+    connectedId: string;
+    organization: string;          // 은행 코드 (예: 0004=KB)
+  }): Promise<{
+    resAccountList: Array<{
+      resAccount?: string;
+      resAccountName?: string;
+      resAccountDisplay?: string;
+      resAccountStartDate?: string;
+      resAccountBalance?: string;
+      [k: string]: unknown;
+    }>;
+  }> {
+    return this.post("/v1/kr/bank/b/account/account-list", {
+      connectedId: input.connectedId,
+      organization: input.organization,
+    });
+  }
+
+  /**
+   * 기업 수시입출 거래내역 조회.
+   * developer.codef.io/products/bank/common/b/transaction
+   *
+   * orderBy: "0"(최신순) | "1"(과거순)
+   * inquiryType: "1"(전체) | "2"(입금) | "3"(출금)
+   */
+  async getBusinessBankTransactions(input: {
+    connectedId: string;
+    organization: string;
+    account: string;              // hyphen 제거
+    startDate: string;            // YYYYMMDD
+    endDate: string;
+    orderBy?: "0" | "1";
+    inquiryType?: "1" | "2" | "3";
+    accountPassword?: string;     // 일부 은행 필수 — RSA 암호화 전제
+  }): Promise<{
+    resTrHistoryList?: CodefBankTxRaw[];
+    resAccountBalance?: string;
+    resLastTranDate?: string;
+    [k: string]: unknown;
+  }> {
+    return this.post("/v1/kr/bank/b/account/transaction-list", {
+      connectedId: input.connectedId,
+      organization: input.organization,
+      account: input.account,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      orderBy: input.orderBy ?? "1",
+      inquiryType: input.inquiryType ?? "1",
+      accountPassword: input.accountPassword ?? "",
+    });
   }
 }
 
