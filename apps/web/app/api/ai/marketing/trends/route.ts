@@ -10,6 +10,7 @@ import {
   getAnthropicApiKey,
   getNaverApiCreds,
   getTavilyApiKey,
+  getYoutubeApiKey,
 } from "../../../_lib/env";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 import { generateTrends } from "../../../_lib/trend-generator";
@@ -149,6 +150,7 @@ export async function POST(request: Request) {
       anthropicApiKey: apiKey,
       naverCreds: getNaverApiCreds(),
       tavilyKey: getTavilyApiKey(),
+      youtubeKey: getYoutubeApiKey(),
       bizLabel,
       categoryId: resolvedCategoryId,
       language: lang,

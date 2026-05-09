@@ -1,4 +1,5 @@
 export * from "./types/ai";
+export { ANTI_HALLUCINATION_DIRECTIVE, GROUNDED_DATA_HEADER } from "./utils/anti-hallucination";
 export * from "./finance/interpret";
 export * from "./guide/interpret";
 export * from "./contract/analyze";

@@ -33,6 +33,7 @@
 
 import type { DailyEntry, MonthlyCosts } from "./dashboard";
 import { calculateMonthlyPnL, normalizeCosts } from "./dashboard";
+import { calculateBreakEven, calculateCostRatios } from "./cost-ratios";
 
 // ════════════════════════════════════════════════════════════════════════
 // 1. 등급·색상 (모든 시스템 단일화)
@@ -644,22 +645,30 @@ export function calculateUnifiedHealthScore(input: UnifiedHealthInput): UnifiedH
 
   const operatingMargin = hasRevenue && hasCosts ? pnl.operatingMargin : null;
   const grossMargin = hasRevenue && costs.ingredients > 0 ? pnl.grossMargin : null;
+  // 비용 비율 — cost-ratios.ts SSOT, 월 환산 매출 기준 (기간 정합 보장)
+  const ratios = calculateCostRatios({
+    costs,
+    totalRevenue: pnl.totalRevenue,
+    days,
+  });
   const primeCostRatio = hasRevenue && (costs.ingredients > 0 || costs.labor > 0)
-    ? ((costs.ingredients + costs.labor) / pnl.totalRevenue) * 100
+    ? ratios.primeCostRatio
     : null;
-  const costToRevenueRatio = hasRevenue && hasCosts
-    ? (totalCosts / pnl.totalRevenue) * 100
-    : null;
+  const costToRevenueRatio = hasRevenue && hasCosts ? ratios.costToRevenueRatio : null;
 
-  // 손익분기 달성률
+  // 손익분기 달성률 — cost-ratios.ts SSOT (dashboard.ts 와 동일 공식 보장)
   let breakEvenRatio: number | null = null;
   if (hasRevenue && hasCosts && hasEnoughDays) {
-    const cogsRate = costs.ingredients / pnl.totalRevenue;
-    if (cogsRate < 1) {
-      const dailyFixedCosts =
-        (costs.rent + costs.labor + costs.utilities + costs.sga + costs.marketing + costs.other) / 26;
-      const breakEvenDailySales = dailyFixedCosts / (1 - cogsRate);
-      const daysAbove = input.dailyEntries.filter((e) => e.sales >= breakEvenDailySales).length;
+    const bep = calculateBreakEven({
+      monthlyIngredients: costs.ingredients,
+      monthlyFixedCosts:
+        costs.rent + costs.labor + costs.utilities + costs.sga + costs.marketing + costs.other,
+      totalRevenue: pnl.totalRevenue,
+      days,
+      fallbackCogsRate: 0.33,
+    });
+    if (bep.computable) {
+      const daysAbove = input.dailyEntries.filter((e) => e.sales >= bep.breakEvenDaily).length;
       breakEvenRatio = (daysAbove / days) * 100;
     }
   }

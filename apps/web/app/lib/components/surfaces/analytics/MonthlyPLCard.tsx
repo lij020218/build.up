@@ -2,6 +2,7 @@
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
+import { calculateCostRatios } from "@build-up/shared";
 
 /** Format number as Korean currency */
 const fmt = (n: number) =>
@@ -31,14 +32,25 @@ export function MonthlyPLCard() {
   const monthEntries = (dailyEntries as DE[]).filter((e) => e.date.startsWith(currentMonth));
   const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
   const workingDays = monthEntries.length;
-  const { ingredients, labor, rent, utilities, other } = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-  const totalCosts = ingredients + labor + rent + utilities + other;
-  const ingredientRatio = totalSales > 0 ? (ingredients / totalSales) * 100 : 0;
-  const laborRatio = totalSales > 0 ? (labor / totalSales) * 100 : 0;
-  const primeCost = ingredientRatio + laborRatio;
-  const rentRatio = totalSales > 0 ? (rent / totalSales) * 100 : 0;
+  const { ingredients, labor, rent, utilities, other } = monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number; sga?: number; marketing?: number };
+  const sga = (monthlyCosts as { sga?: number }).sga ?? 0;
+  const marketing = (monthlyCosts as { marketing?: number }).marketing ?? 0;
+  const totalCosts = ingredients + labor + rent + utilities + other + sga + marketing;
+  // 비율 — cost-ratios.ts SSOT (월간 비용 ÷ 월 환산 매출, 부분월 보정)
+  const ratios = calculateCostRatios({
+    costs: { ingredients, labor, rent, utilities, sga, marketing, other },
+    totalRevenue: totalSales,
+    days: workingDays,
+  });
+  const ingredientRatio = ratios.ingredientRatio;
+  const laborRatio = ratios.laborRatio;
+  const primeCost = ratios.primeCostRatio;
+  const rentRatio = ratios.rentRatio;
   const netProfit = totalSales - totalCosts;
-  const bepProgress = totalCosts > 0 ? Math.min(100, (totalSales / totalCosts) * 100) : 0;
+  // BEP 진행률 — 월 환산 매출 / 월 비용 (이전엔 N일치 매출 / 월 비용 → 항상 낮게 표시되어 적자처럼 보임)
+  const bepProgress = totalCosts > 0 && ratios.monthlyRevenueEquivalent > 0
+    ? Math.min(100, (ratios.monthlyRevenueEquivalent / totalCosts) * 100)
+    : 0;
 
   const ingHealth = health(ingredientRatio, 35, 40);
   const labHealth = health(laborRatio, 30, 35);

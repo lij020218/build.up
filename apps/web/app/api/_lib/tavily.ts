@@ -82,24 +82,50 @@ export async function tavilySearch(
   }
 }
 
+/** 메메 신호가 큰 *원본 콘텐츠* URL 패턴 — 블로그 요약보다 우선순위 ↑ */
+const ORIGINAL_CONTENT_PATTERNS = [
+  /instagram\.com\/(p|reel|reels)\//i,
+  /youtube\.com\/(shorts|watch)/i,
+  /youtu\.be\//i,
+  /tiktok\.com\/@[^/]+\/video\//i,
+];
+
+function isOriginalContentUrl(url: string): boolean {
+  return ORIGINAL_CONTENT_PATTERNS.some((re) => re.test(url));
+}
+
+export type TavilyTrendStats = {
+  raw: number;          // 전체 결과 수
+  undated: number;      // publishedDate 누락으로 제외된 수
+  kept: number;         // 최종 채택 수
+  originals: number;    // 원본 콘텐츠 URL (IG/YT/TikTok) 수
+};
+
 /**
- * 마케팅 트렌드 전용 검색 — 여러 쿼리 병렬 수행.
+ * 마케팅 트렌드 전용 검색 — 여러 쿼리 병렬 수행 + 게시일 필터링 강화.
+ *
+ *  ── 필터링 정책 ───────────────────────────────────
+ *  1. `publishedDate` 누락 결과는 **제외** (Tavily days 필터가 작동 안 한 결과)
+ *      → 단, 원본 콘텐츠 URL (IG reel·YT shorts·TikTok video) 인 경우 예외 통과.
+ *      이런 URL 은 플랫폼 자체 인덱스에서 노출되며 콘텐츠 신선도가 일반적으로 보장됨.
+ *  2. 원본 콘텐츠 URL 우선 정렬 → 블로그 요약은 후순위.
+ *  ────────────────────────────────────────
  */
 export async function fetchTrendingSocialContent(
   apiKey: string,
   industryLabel: string,
   language: "ko" | "en" = "ko"
-): Promise<TavilyResult[]> {
+): Promise<{ results: TavilyResult[]; stats: TavilyTrendStats }> {
   const queries = language === "ko"
     ? [
-        `${industryLabel} 인스타그램 릴스 트렌드 최근`,
-        `${industryLabel} 틱톡 숏츠 유행 요즘`,
+        `${industryLabel} 인스타그램 릴스 site:instagram.com`,
+        `${industryLabel} 유튜브 쇼츠 site:youtube.com`,
         `${industryLabel} 밈 해시태그 2026`,
       ]
     : [
-        `${industryLabel} Instagram Reels trending recent`,
-        `${industryLabel} TikTok viral hashtags`,
-        `${industryLabel} memes 2026`,
+        `${industryLabel} Instagram Reels site:instagram.com`,
+        `${industryLabel} YouTube Shorts site:youtube.com`,
+        `${industryLabel} memes hashtags 2026`,
       ];
 
   const results = await Promise.all(
@@ -108,21 +134,50 @@ export async function fetchTrendingSocialContent(
         maxResults: 5,
         searchDepth: "basic",
         includeAnswer: false,
-        days: 14, // 최근 2주 강조
+        days: 14,
       })
     )
   );
 
-  // 모든 결과 통합 + 스코어 정렬 + 중복 URL 제거
   const seen = new Set<string>();
-  const merged: TavilyResult[] = [];
+  const all: TavilyResult[] = [];
   for (const r of results) {
     if (!r) continue;
     for (const item of r.results) {
       if (seen.has(item.url)) continue;
       seen.add(item.url);
-      merged.push(item);
+      all.push(item);
     }
   }
-  return merged.sort((a, b) => b.score - a.score).slice(0, 8);
+
+  // 게시일 필터 — 누락 결과는 원본 콘텐츠 URL 만 통과
+  let undated = 0;
+  const fresh: TavilyResult[] = [];
+  for (const item of all) {
+    const isOriginal = isOriginalContentUrl(item.url);
+    if (!item.publishedDate && !isOriginal) {
+      undated++;
+      continue;
+    }
+    fresh.push(item);
+  }
+
+  // 정렬 — 원본 URL 우선, 그 안에서 score 내림차순
+  fresh.sort((a, b) => {
+    const ao = isOriginalContentUrl(a.url) ? 1 : 0;
+    const bo = isOriginalContentUrl(b.url) ? 1 : 0;
+    if (ao !== bo) return bo - ao;
+    return b.score - a.score;
+  });
+
+  const kept = fresh.slice(0, 8);
+  return {
+    results: kept,
+    stats: {
+      raw: all.length,
+      undated,
+      kept: kept.length,
+      originals: kept.filter((r) => isOriginalContentUrl(r.url)).length,
+    },
+  };
 }

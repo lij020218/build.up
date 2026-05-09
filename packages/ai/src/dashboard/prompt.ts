@@ -5,6 +5,7 @@
 // 의 COMMON_THRESHOLDS / COST_RATIO_THRESHOLDS 에서 가져와 한 곳에서 관리됩니다.
 
 import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, getFeatureCatalogPromptText } from "@build-up/shared";
+import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 // 위기 자동 감지에 사용하는 컷오프 — 모든 시스템과 동일한 값
 const CRISIS_THR = {
@@ -295,6 +296,8 @@ todayActions는 반드시 Input 지표(행동 가능한 것)에 기반하세요.
 - 소매: 진열 변경, 재고 회전일 점검, 시즌 상품 교체, 온라인 동시 판매
 - 뷰티: 예약 충전율 확인, 리뷰 요청, 시술 메뉴 가격 조정, 소모품 발주
 - 온라인: 상품 사진 업데이트, 키워드 광고 조정, 반품률 분석, 고객 문의 응대 시간
+
+${ANTI_HALLUCINATION_DIRECTIVE}
 
 ─── 손실 프레이밍 규칙 (행동경제학) ───
 

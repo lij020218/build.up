@@ -1,0 +1,153 @@
+"use client";
+
+/**
+ * Tier 1.5 — 오늘의 코칭 (작업이 1줄로 직결되는 구체적 카드들).
+ *
+ * 카드 목록 (위→아래):
+ *   (a)   DailyOpsRitualCard       — 오늘의 운영 리추얼 (모든 업종)
+ *   (a-1) InventoryOpsCard + TeamCard — 재고·직원 (좌·우 2-up, 사장님 요청 2026-05-07)
+ *   (a-2) FoodSafetyComplianceCard — 식약처 위생점검 (food/cafe-dessert 만)
+ *   (b)   DailyImprovementCard     — Bezos Day-1 nudge (모든 업종)
+ *   (b-2) AvgTicketUpsellCard      — 객단가 업셀 (food/cafe/beauty/retail/fitness/education)
+ *   (c-1) PolicyFundMatchCard      — 정책자금 매칭 (런웨이 <6개월 위기 시 elevation)
+ *   (c)   StartupHealthSection     — 스타트업 핵심 지표 (startup-tech 만)
+ *
+ * 자세한 분기 표 → `DASHBOARD_MAP.md`
+ */
+
+import type { DashboardHook } from "../../../useDashboard";
+import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
+import { DailyOpsRitualCard } from "../DailyOpsRitualCard";
+import { FoodSafetyComplianceCard } from "../FoodSafetyComplianceCard";
+import { DailyImprovementCard } from "../DailyImprovementCard";
+import { AvgTicketUpsellCard } from "../AvgTicketUpsellCard";
+import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
+import { StartupHealthSection } from "../StartupHealthSection";
+import { InventoryOpsCard } from "../InventoryOpsCard";
+import { TeamCard } from "../TeamCard";
+
+type Props = {
+  d: DashboardHook;
+  c: DashboardComputed;
+  ko: boolean;
+  fmt: (n: number) => string;
+  nextStaggerStyle: () => React.CSSProperties;
+};
+
+export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
+  // 재고·직원 카드 동적 행 — 표시 대상 카드 갯수에 따라 1-up 또는 2-up.
+  // (구독 사용 시엔 재고가 SubscriptionPlanManager 로 대체되므로 Tier 3 에서 처리, 여기엔 Team 만 노출 가능)
+  const showInventory = !c.usesSubscriptions && d.businessCtx.showInventoryCard;
+  const opsCards: React.ReactNode[] = [];
+  if (showInventory) {
+    opsCards.push(
+      <InventoryOpsCard key="inv" ko={ko} inventory={c.inventory} lowStockItems={c.lowStockItems} d={d} />,
+    );
+  }
+  opsCards.push(<TeamCard key="team" d={d} c={c} ko={ko} fmt={fmt} />);
+  // wide 화면에서 2개일 때만 2-up. 그 외엔 단일 컬럼 (Tier 1.5 의 기본 리듬 유지).
+  const opsCols = c.isWide && opsCards.length === 2 ? 2 : 1;
+
+  return (
+    <>
+      {/* 1.5 (a) — 오늘의 운영 리추얼 (시기·신호 기반 조건부 항목 포함) */}
+      <div className="dash-stagger-item" style={nextStaggerStyle()}>
+        <DailyOpsRitualCard
+          ko={ko}
+          industryCategoryId={d.industryCategoryId}
+          selectedIndustryId={d.selectedIndustryId}
+          startupType={d.startupType}
+          condition={{
+            daysSinceLaunch: c.daysSinceLaunch,
+            weeklySalesChangePct: c.weeklySalesChange,
+            isStartup: d.industryCategoryId === "startup-tech",
+          }}
+        />
+      </div>
+
+      {/* 1.5 (a-1) — 재고 + 직원 운영 카드 (사장님 요청으로 상단 이동) */}
+      <div
+        className="dash-stagger-item"
+        style={{
+          ...nextStaggerStyle(),
+          display: "grid",
+          gridTemplateColumns: `repeat(${opsCols}, minmax(0, 1fr))`,
+          gap: "14px",
+          alignItems: "stretch",
+        }}
+      >
+        {opsCards}
+      </div>
+
+      {/* 1.5 (a-2) — 식약처 위생점검 (외식·카페만 내부 가드) */}
+      <div className="dash-stagger-item" style={nextStaggerStyle()}>
+        <FoodSafetyComplianceCard ko={ko} industryCategoryId={d.industryCategoryId} />
+      </div>
+
+      {/* 1.5 (b) — 오늘의 작은 개선 */}
+      <div className="dash-stagger-item" style={nextStaggerStyle()}>
+        <DailyImprovementCard ko={ko} industryCategoryId={d.industryCategoryId} />
+      </div>
+
+      {/* 1.5 (b-2) — 객단가 업셀 제안 */}
+      <div className="dash-stagger-item" style={nextStaggerStyle()}>
+        <AvgTicketUpsellCard
+          ko={ko}
+          industryCategoryId={d.industryCategoryId}
+          currentAvgTicket={c.totalCustomers > 0 ? c.totalSales / c.totalCustomers : null}
+          menuItems={normalizeMenuItems(d)}
+        />
+      </div>
+
+      {/* 1.5 (c-1) — 정책자금 매칭 (위기 시 elevation, 평상시는 Tier 4 안) */}
+      {c.cashflowCriticalElevation && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <PolicyFundMatchCard
+            ko={ko}
+            isCrisis
+            input={{
+              businessYears: c.daysSinceLaunch / 365.25,
+              monthlySalesWon: c.totalSales,
+              employeeCount: c.employees.length,
+              salesDeclinePct: c.weeklySalesChange < 0 ? Math.abs(c.weeklySalesChange) : 0,
+              industryCategoryId: d.industryCategoryId,
+            }}
+          />
+        </div>
+      )}
+
+      {/* 1.5 (c) — 스타트업 전용 핵심 지표 (startup-tech 만 내부 가드) */}
+      <div className="dash-stagger-item" style={nextStaggerStyle()}>
+        <StartupHealthSection ko={ko} />
+      </div>
+    </>
+  );
+}
+
+// ─── helpers ───────────────────────────────────────────────────────
+
+type LooseItem = {
+  id: string;
+  name: string;
+  price?: number;
+  cost?: number;
+  monthlySold?: number;
+  category?: string;
+};
+
+function normalizeMenuItems(d: DashboardHook) {
+  const products = (d.products as LooseItem[] | undefined) ?? [];
+  const unified = (d.unifiedProducts as LooseItem[] | undefined) ?? [];
+  const services =
+    (d as { serviceMenuItems?: LooseItem[] }).serviceMenuItems ?? [];
+  return ([...products, ...unified, ...services] as LooseItem[])
+    .filter((m): m is LooseItem & { price: number } => !!m && m.price != null && m.price > 0)
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      price: m.price,
+      cost: m.cost,
+      monthlySold: m.monthlySold,
+      category: m.category,
+    }));
+}

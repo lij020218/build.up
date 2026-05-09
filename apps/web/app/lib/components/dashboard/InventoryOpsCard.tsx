@@ -409,7 +409,12 @@ export function InventoryOpsCard({
   };
 
   return (
-    <section style={opsCard} className="bento-card">
+    <section
+      style={opsCard}
+      className="bento-card"
+      data-inventory-card
+      id="inventory-card"
+    >
       <div style={opsHeader}>
         <div>
           <div style={sectionEyebrow}>

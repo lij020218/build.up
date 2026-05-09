@@ -56,7 +56,41 @@ export function GuidesView() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  // ── 유저 프로필 → 매칭 기준 ──
+  // ── 사장님 상황 신호 — 위기 시 운영자금 우선, 성장 시 투자 우선 ──
+  const employees = (d.employees as { id: string }[] | undefined) ?? [];
+  const dailyEntries = (d.dailyEntries as { date: string; sales: number }[] | undefined) ?? [];
+  const monthlyCosts = (d.monthlyCosts as Record<string, number> | undefined);
+  const initialOperatingCapital = (d as { initialOperatingCapital?: number }).initialOperatingCapital;
+
+  // 런웨이 추정 (간단 — 자본금 / 월 burn)
+  const runwayMonths: number | undefined = useMemo(() => {
+    const cash = initialOperatingCapital;
+    if (!cash || cash <= 0 || !monthlyCosts) return undefined;
+    const totalCost = Object.values(monthlyCosts).reduce((s, v) => s + (typeof v === "number" ? v : 0), 0);
+    if (totalCost <= 0) return undefined;
+    // 최근 7일 매출 평균 → 월 환산
+    const sorted = [...dailyEntries].sort((a, b) => a.date.localeCompare(b.date));
+    const last7 = sorted.slice(-7);
+    if (last7.length === 0) return cash / totalCost; // 매출 없으면 burn = cost
+    const avg = last7.reduce((s, e) => s + e.sales, 0) / last7.length;
+    const monthlyRev = avg * 26;
+    const burn = Math.max(1, totalCost - monthlyRev);
+    return Math.round((cash / burn) * 10) / 10;
+  }, [initialOperatingCapital, monthlyCosts, dailyEntries]);
+
+  // 주간 매출 변화율
+  const weeklySalesChangePct: number | undefined = useMemo(() => {
+    if (dailyEntries.length < 14) return undefined;
+    const sorted = [...dailyEntries].sort((a, b) => a.date.localeCompare(b.date));
+    const last7 = sorted.slice(-7);
+    const prev7 = sorted.slice(-14, -7);
+    const avg7 = last7.reduce((s, e) => s + e.sales, 0) / Math.max(1, last7.length);
+    const avgPrev = prev7.reduce((s, e) => s + e.sales, 0) / Math.max(1, prev7.length);
+    if (avgPrev <= 0) return undefined;
+    return Math.round(((avg7 - avgPrev) / avgPrev) * 1000) / 10;
+  }, [dailyEntries]);
+
+  // ── 유저 프로필 + 상황 → 매칭 기준 ──
   const criteria: MatchCriteria = useMemo(() => {
     const businessYears = businessLaunchedDate
       ? Math.max(0, Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / (365 * 86400000)))
@@ -68,8 +102,11 @@ export function GuidesView() {
       region: preferredRegionInput || undefined,
       capital: selectedBudget ?? undefined,
       businessStage: businessLaunched ? (businessYears >= 3 ? "growth" : "early") : "pre-startup",
+      runwayMonths,
+      weeklySalesChangePct,
+      employeesCount: employees.length,
     };
-  }, [startupType, industryCategoryId, businessLaunchedDate, businessLaunched, preferredRegionInput, selectedBudget]);
+  }, [startupType, industryCategoryId, businessLaunchedDate, businessLaunched, preferredRegionInput, selectedBudget, runwayMonths, weeklySalesChangePct, employees.length]);
 
   const matchedAll = useMemo(() => getMatchedProgramsV2(criteria), [criteria]);
 
@@ -265,7 +302,7 @@ function ProgramCard({
   program,
   ko,
 }: {
-  program: StartupProgram & { matchScore: number; eligible: boolean };
+  program: StartupProgram & { matchScore: number; eligible: boolean; daysUntilDeadline?: number };
   ko: boolean;
 }) {
   const lang = ko ? "ko" : "en";
@@ -305,6 +342,25 @@ function ProgramCard({
             <span style={{ ...badgeStyle, color: AMBER, background: "rgba(180,83,9,0.08)", display: "inline-flex", alignItems: "center", gap: 3 }}>
               <Sparkles size={10} strokeWidth={1.5} />
               {ko ? "추천" : "Featured"}
+            </span>
+          )}
+          {/* D-N 마감 임박 배지 — 7일 이내일 때만 강조 */}
+          {program.daysUntilDeadline != null && program.daysUntilDeadline >= 0 && program.daysUntilDeadline <= 14 && (
+            <span style={{
+              ...badgeStyle,
+              color: program.daysUntilDeadline <= 3 ? RED : program.daysUntilDeadline <= 7 ? AMBER : MIDNIGHT,
+              background: program.daysUntilDeadline <= 3 ? "rgba(220,38,38,0.08)"
+                : program.daysUntilDeadline <= 7 ? "rgba(180,83,9,0.08)"
+                : MIDNIGHT_TINT,
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 3,
+            }}>
+              <AlertCircle size={10} strokeWidth={1.8} />
+              {program.daysUntilDeadline === 0
+                ? (ko ? "오늘 마감" : "Due today")
+                : `D-${program.daysUntilDeadline}`}
             </span>
           )}
         </div>

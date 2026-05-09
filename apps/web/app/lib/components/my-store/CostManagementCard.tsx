@@ -13,11 +13,19 @@
  * data-cost-management 셀렉터로 scroll anchor 제공.
  */
 
-import { useState } from "react";
-import { Plus, Trash2, Wallet, Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Trash2, Wallet, Calendar, Pencil, Check, X } from "lucide-react";
 import { useFinanceStore, type MonthlyCosts } from "../../stores/finance-store";
 import { useCashflowStore, type FixedExpenseCategory } from "../../stores/cashflow-store";
-import { PALETTE } from "./styles";
+import { useDashboardCtx } from "../../contexts/DashboardContext";
+import {
+  PALETTE,
+  editBtnStyle,
+  saveBtnStyle,
+  cancelBtnStyle,
+  readonlyValueStyle,
+  readonlySuffixStyle,
+} from "./styles";
 
 const CATEGORY_LABELS: Record<FixedExpenseCategory, { ko: string; en: string }> = {
   rent: { ko: "월세", en: "Rent" },
@@ -59,6 +67,22 @@ export function CostManagementCard({ ko, expenseFields }: Props) {
   const updateFixedExpense = useCashflowStore((s) => s.updateFixedExpense);
   const removeFixedExpense = useCashflowStore((s) => s.removeFixedExpense);
 
+  // 서버 저장: useDashboardCtx 의 flushStoreDataImmediate 사용 (1초 debounce 없는 즉시 저장)
+  const d = useDashboardCtx();
+  const flushStoreDataImmediate = d.flushStoreDataImmediate;
+
+  // ── 월 평균 비용: 수정/저장 모드 ──
+  // 기본 = 읽기 전용 (값만 표시). 수정 클릭 → draft 로 편집 → 저장 시 store + 서버 반영.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<MonthlyCosts>(monthlyCosts);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // 외부에서 monthlyCosts 가 바뀌면 (다른 화면에서 수정·서버 reload) draft 동기화
+  useEffect(() => {
+    if (!editing) setDraft(monthlyCosts);
+  }, [monthlyCosts, editing]);
+
   const [newName, setNewName] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newDay, setNewDay] = useState("1");
@@ -69,13 +93,44 @@ export function CostManagementCard({ ko, expenseFields }: Props) {
     return dyn ?? DEFAULT_LABELS[key];
   };
 
-  const updateCost = (key: keyof MonthlyCosts, raw: string) => {
+  const updateDraftCost = (key: keyof MonthlyCosts, raw: string) => {
     const num = Number(raw.replace(/[^0-9]/g, "")) || 0;
     // 만원 단위 입력 → 원 단위 저장
-    setMonthlyCosts({ ...monthlyCosts, [key]: num * 10000 });
+    setDraft((prev) => ({ ...prev, [key]: num * 10000 }));
   };
 
-  const totalMonthly = MONTHLY_COST_KEYS.reduce((s, k) => s + (monthlyCosts[k] ?? 0), 0);
+  const handleEdit = () => {
+    setDraft(monthlyCosts);
+    setSaveStatus("idle");
+    setSaveError(null);
+    setEditing(true);
+  };
+
+  const handleCancel = () => {
+    setDraft(monthlyCosts);
+    setEditing(false);
+    setSaveStatus("idle");
+    setSaveError(null);
+  };
+
+  const handleSave = async () => {
+    setSaveStatus("saving");
+    setSaveError(null);
+    try {
+      // 1. 로컬 store 반영 (즉시 UI 업데이트)
+      setMonthlyCosts(draft);
+      // 2. 서버 즉시 저장 (debounce 없음). 실패 시 throw.
+      await flushStoreDataImmediate();
+      setSaveStatus("saved");
+      setEditing(false);
+      setTimeout(() => setSaveStatus((s) => (s === "saved" ? "idle" : s)), 2000);
+    } catch (err) {
+      setSaveStatus("error");
+      setSaveError(err instanceof Error ? err.message : (ko ? "저장에 실패했습니다." : "Save failed."));
+    }
+  };
+
+  const totalMonthly = MONTHLY_COST_KEYS.reduce((s, k) => s + ((editing ? draft : monthlyCosts)[k] ?? 0), 0);
   const totalFixed = fixedExpenses
     .filter((e) => e.isActive)
     .reduce((s, e) => s + e.amount, 0);
@@ -142,12 +197,63 @@ export function CostManagementCard({ ko, expenseFields }: Props) {
         </div>
       </div>
 
-      {/* Section 1: 월 평균 비용 (8 categories) */}
+      {/* Section 1: 월 평균 비용 (8 categories) — 수정/저장 모드 */}
       <div style={{ padding: "18px 24px 14px" }}>
         <div style={subSectionHeader}>
-          <div style={subSectionLabel}>{ko ? "월 평균 비용" : "Monthly average"}</div>
-          <div style={subSectionTotal}>
-            {ko ? "합계" : "Total"} {Math.round(totalMonthly / 10000).toLocaleString()}{ko ? "만원" : "K"}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={subSectionLabel}>{ko ? "월 평균 비용" : "Monthly average"}</div>
+            <div style={subSectionTotal}>
+              {ko ? "합계" : "Total"} {Math.round(totalMonthly / 10000).toLocaleString()}
+              {ko ? "만원" : "K"}
+            </div>
+          </div>
+          {/* 수정 / 저장·취소 버튼 */}
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {saveStatus === "saved" && (
+              <span style={{ fontSize: 11.5, color: "#15803d", fontWeight: 600 }}>
+                {ko ? "✓ 저장됨" : "✓ Saved"}
+              </span>
+            )}
+            {saveStatus === "error" && saveError && (
+              <span style={{ fontSize: 11, color: "#b42334", fontWeight: 600 }}>
+                ⚠ {saveError}
+              </span>
+            )}
+            {!editing ? (
+              <button type="button" onClick={handleEdit} style={editBtnStyle}>
+                <Pencil size={12} strokeWidth={2} />
+                <span>{ko ? "수정" : "Edit"}</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={saveStatus === "saving"}
+                  style={cancelBtnStyle}
+                >
+                  <X size={12} strokeWidth={2} />
+                  <span>{ko ? "취소" : "Cancel"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saveStatus === "saving"}
+                  style={{
+                    ...saveBtnStyle,
+                    opacity: saveStatus === "saving" ? 0.6 : 1,
+                    cursor: saveStatus === "saving" ? "wait" : "pointer",
+                  }}
+                >
+                  <Check size={12} strokeWidth={2} />
+                  <span>
+                    {saveStatus === "saving"
+                      ? ko ? "저장 중…" : "Saving…"
+                      : ko ? "저장" : "Save"}
+                  </span>
+                </button>
+              </>
+            )}
           </div>
         </div>
         <div style={{
@@ -158,22 +264,33 @@ export function CostManagementCard({ ko, expenseFields }: Props) {
         }}>
           {MONTHLY_COST_KEYS.map((key) => {
             const label = labelFor(key);
-            const value = monthlyCosts[key] ?? 0;
+            const source = editing ? draft : monthlyCosts;
+            const value = source[key] ?? 0;
             const display = value > 0 ? String(Math.round(value / 10000)) : "";
             return (
               <label key={key} style={fieldRow}>
                 <span style={fieldLabel}>{ko ? label.ko : label.en}</span>
-                <div style={inputWrap}>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={display}
-                    onChange={(e) => updateCost(key, e.target.value)}
-                    placeholder="0"
-                    style={inputStyle}
-                  />
-                  <span style={inputSuffix}>{ko ? "만원" : "K"}</span>
-                </div>
+                {editing ? (
+                  <div style={inputWrap}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={display}
+                      onChange={(e) => updateDraftCost(key, e.target.value)}
+                      placeholder="0"
+                      style={inputStyle}
+                      autoFocus={key === MONTHLY_COST_KEYS[0]}
+                    />
+                    <span style={inputSuffix}>{ko ? "만원" : "K"}</span>
+                  </div>
+                ) : (
+                  <div style={readonlyValueStyle}>
+                    <span style={{ color: value > 0 ? PALETTE.MIDNIGHT_DEEP : PALETTE.HINT }}>
+                      {value > 0 ? Math.round(value / 10000).toLocaleString() : "—"}
+                    </span>
+                    <span style={readonlySuffixStyle}>{ko ? "만원" : "K"}</span>
+                  </div>
+                )}
               </label>
             );
           })}
@@ -445,3 +562,4 @@ const addBtn: React.CSSProperties = {
   letterSpacing: "-0.005em",
   whiteSpace: "nowrap",
 };
+

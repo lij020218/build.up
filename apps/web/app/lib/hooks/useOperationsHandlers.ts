@@ -32,8 +32,8 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     invWasteQty, invWasteReason,
     setInvWasteTarget, setInvWasteQty, setInvWasteReason,
     employees, setEmployees,
-    empEditId, empName, empWage, empHours, empInsured,
-    setEmpFormOpen, setEmpEditId, setEmpName, setEmpWage, setEmpHours, setEmpInsured,
+    empEditId, empName, empWage, empHours, empInsured, empHireDate,
+    setEmpFormOpen, setEmpEditId, setEmpName, setEmpWage, setEmpHours, setEmpInsured, setEmpHireDate,
     fixedExpenses, setFixedExpenses,
     fexpEditId, fexpName, fexpAmount, fexpDueDay, fexpCategory,
     setFexpFormOpen, setFexpEditId, setFexpName, setFexpAmount, setFexpDueDay, setFexpCategory,
@@ -239,13 +239,14 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       hourlyWage: wage,
       weeklyHours: hours,
       isInsured: empInsured || autoInsured,
+      hireDate: empHireDate.trim() || undefined,
     };
     const next = empEditId
       ? employees.map(e => e.id === empEditId ? entry : e)
       : [...employees, entry];
     saveEmployees(next);
     setEmpFormOpen(false); setEmpEditId(null);
-    setEmpName(""); setEmpWage(""); setEmpHours(""); setEmpInsured(false);
+    setEmpName(""); setEmpWage(""); setEmpHours(""); setEmpInsured(false); setEmpHireDate("");
   };
 
   const handleEmpDelete = (id: string) => saveEmployees(employees.filter(e => e.id !== id));
@@ -253,7 +254,9 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   const openEmpEdit = (emp: Employee) => {
     setEmpEditId(emp.id); setEmpName(emp.name);
     setEmpWage(String(emp.hourlyWage)); setEmpHours(String(emp.weeklyHours));
-    setEmpInsured(emp.isInsured); setEmpFormOpen(true);
+    setEmpInsured(emp.isInsured);
+    setEmpHireDate(emp.hireDate ?? "");
+    setEmpFormOpen(true);
   };
 
   // ─────────────────────────────────────────────

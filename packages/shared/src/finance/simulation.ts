@@ -7,10 +7,10 @@ import type {
   MonthlyProjection,
   FinancialRiskLevel
 } from "../types/finance";
+import { OPERATING_DAYS_PER_MONTH } from "./cost-ratios";
 
 // ─── 상수 ────────────────────────────────────────────────────────────────────
 
-const OPERATING_DAYS_PER_MONTH = 26; // 월 평균 영업일
 const DEFAULT_SIMULATION_MONTHS = 6;
 
 // ─── 내부 유틸 ───────────────────────────────────────────────────────────────
@@ -803,15 +803,20 @@ export function compareRiskLevels(
   return 0;
 }
 
-// 금액 포맷 (만 원 단위, 소수점 없음)
+/**
+ * 금액 포맷 — LLM prompt + UI 표시 공용 SSOT.
+ *
+ *  ⚠️ 반드시 만원·억원 단위 명시. raw 원 + 콤마 (예: "200,000원") 를 LLM 이
+ *      "200만원" 으로 오독하는 버그 방지 (사용자 보고 2026-05-07: 20만원 → 200만원 폭주).
+ *  ⚠️ 음수 부호 보존 (이전 fmt 버그: "−5,000원" → "5,000원" 으로 부호 누락).
+ */
 export function formatKRW(amount: number): string {
-  if (amount >= 100000000) {
-    return `${(amount / 100000000).toFixed(1)}억원`;
-  }
-  if (amount >= 10000) {
-    return `${Math.round(amount / 10000)}만원`;
-  }
-  return `${amount.toLocaleString()}원`;
+  if (!Number.isFinite(amount)) return "0원";
+  const abs = Math.abs(Math.round(amount));
+  const sign = amount < 0 ? "−" : "";
+  if (abs >= 100_000_000) return `${sign}${(abs / 100_000_000).toFixed(1)}억원`;
+  if (abs >= 10_000) return `${sign}${Math.round(abs / 10_000).toLocaleString()}만원`;
+  return `${sign}${abs.toLocaleString()}원`;
 }
 
 // 리스크 레벨 → 한국어 라벨

@@ -1,11 +1,14 @@
 import type { FinancialSimulationResult } from "@build-up/shared";
 import { formatKRW } from "@build-up/shared";
+import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 // ─── 재무 해석 AI 프롬프트 v2 ──────────────────────────────────────────────
 // 경영학 프레임워크 + 한국 창업 자금/규제 + 시나리오 기반 해석
 
 export const FINANCE_SYSTEM_PROMPT = `당신은 수백 건의 한국 소자본 창업 재무를 분석한 전문 컨설턴트입니다.
 재무 시뮬레이션 수치를 받아, 창업자가 바로 이해하고 행동할 수 있도록 해석합니다.
+
+${ANTI_HALLUCINATION_DIRECTIVE}
 
 ─── 재무 해석 지식 베이스 ───
 

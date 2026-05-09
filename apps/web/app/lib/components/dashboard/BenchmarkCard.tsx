@@ -5,6 +5,7 @@ import { useDashboardCtx } from "../../contexts/DashboardContext";
 import {
   detectBusinessSituation,
   matchCaseStudies,
+  calculateCostRatios,
   type BusinessSituation,
   type CaseStudy,
 } from "@build-up/shared";
@@ -55,8 +56,18 @@ export function BenchmarkCard() {
     const p7 = prev7.reduce((s, e) => s + e.sales, 0);
     const weeklyChange = p7 > 0 ? ((r7 - p7) / p7) * 100 : 0;
 
-    const primePct = totalSales > 0 ? ((costs.ingredients + costs.labor) / totalSales) * 100 : 0;
-    const rentPct = totalSales > 0 ? (costs.rent / totalSales) * 100 : undefined;
+    // 비용 비율 — cost-ratios.ts SSOT (월간 비용 ÷ 월 환산 매출, 부분월 입력 보정)
+    const ratios = calculateCostRatios({
+      costs: {
+        ingredients: costs.ingredients ?? 0, labor: costs.labor ?? 0, rent: costs.rent ?? 0,
+        utilities: costs.utilities ?? 0, sga: costs.sga ?? 0, marketing: costs.marketing ?? 0,
+        other: costs.other ?? 0,
+      },
+      totalRevenue: totalSales,
+      days: monthEntries.length,
+    });
+    const primePct = ratios.primeCostRatio;
+    const rentPct = totalSales > 0 ? ratios.rentRatio : undefined;
 
     const launchDate = (d as Record<string, unknown>).businessLaunchedDate as string | null ?? null;
     const daysSinceLaunch = launchDate

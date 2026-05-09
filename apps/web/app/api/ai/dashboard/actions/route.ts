@@ -41,9 +41,24 @@ export async function POST(request: Request) {
     const result = await generateDashboardActions(enrichedCtx, { apiKey });
     return NextResponse.json(result);
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate actions." },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : "Failed to generate actions.";
+    // ⚡ Graceful fallback — Claude가 가끔 잘린 JSON / 빈 응답 / 비-JSON 텍스트 반환.
+    //   500 throw 하면 대시보드 hero가 깨짐. 빈 actions 로 정상 응답 → AI 진단 카드 자체 안 보임.
+    //   원인 분석은 server log 로 (사장님 화면 보호 우선).
+    const isJsonParseFailure =
+      message.includes("유효한 JSON") ||
+      message.includes("JSON") ||
+      message.includes("객체 형태");
+    if (isJsonParseFailure) {
+      console.warn("[ai/dashboard/actions] LLM response parse failed, returning empty fallback:", message);
+      return NextResponse.json({
+        todayActions: [],
+        crisisActions: [],
+        insight: "",
+        _fallback: true,
+        _reason: "llm_parse_failed",
+      });
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -25,6 +25,8 @@ export type InvForm = {
 
 export type Employee = {
   id: string; name: string; hourlyWage: number; weeklyHours: number; isInsured: boolean;
+  /** 입사일 (ISO YYYY-MM-DD) — 연차 1년 도래 추적용. null = 미입력 → 연차 알림 비활성. */
+  hireDate?: string;
 };
 
 export type DeliveryPlatform = {
@@ -102,6 +104,8 @@ type OperationsState = {
   empWage: string;
   empHours: string;
   empInsured: boolean;
+  /** 입사일 (ISO YYYY-MM-DD) — 연차 1년 도래 추적용. 빈 문자열 = 미입력. */
+  empHireDate: string;
   // 고정비
   fixedExpenses: FixedExpense[];
   fexpFormOpen: boolean;
@@ -175,6 +179,7 @@ type OperationsActions = {
   setEmpWage: (v: string) => void;
   setEmpHours: (v: string) => void;
   setEmpInsured: (v: boolean) => void;
+  setEmpHireDate: (v: string) => void;
   // 고정비
   setFixedExpenses: (items: FixedExpense[]) => void;
   setFexpFormOpen: (v: boolean) => void;
@@ -247,6 +252,7 @@ const initialState: OperationsState = {
   empWage: "",
   empHours: "",
   empInsured: false,
+  empHireDate: "",
   fixedExpenses: [],
   fexpFormOpen: false,
   fexpEditId: null,
@@ -319,6 +325,7 @@ export const useOperationsStore = create<OperationsState & OperationsActions>()(
       setEmpWage: (v) => set({ empWage: v }),
       setEmpHours: (v) => set({ empHours: v }),
       setEmpInsured: (v) => set({ empInsured: v }),
+      setEmpHireDate: (v) => set({ empHireDate: v }),
 
       // 고정비
       setFixedExpenses: (items) => set({ fixedExpenses: items }),

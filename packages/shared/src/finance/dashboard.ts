@@ -7,6 +7,7 @@
 // 본 모듈의 calculateHealthMetrics 는 호환 layer — 같은 결과를 기존 시그니처로 노출.
 
 import { calculateUnifiedHealthScore } from "./unified-health";
+import { calculateBreakEven, calculateCostRatios } from "./cost-ratios";
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
@@ -185,34 +186,32 @@ export function calculateHealthMetrics(
     else if (salesTrendPercent < -5) salesTrend = "declining";
   }
 
-  // 비용 지표 (normalized)
+  // 비용 지표 — 모두 *월 환산* 매출 기준 (cost-ratios.ts SSOT)
   const nc = normalizeCosts(monthlyCosts);
-  const costToRevenueRatio = pnl.totalRevenue > 0
-    ? (pnl.totalCosts / pnl.totalRevenue) * 100
-    : 100;
-  const laborCostRatio = pnl.totalRevenue > 0
-    ? (nc.labor / pnl.totalRevenue) * 100
-    : 0;
-  const rentCostRatio = pnl.totalRevenue > 0
-    ? (nc.rent / pnl.totalRevenue) * 100
-    : 0;
-  const primeCostRatio = pnl.totalRevenue > 0
-    ? ((nc.ingredients + nc.labor) / pnl.totalRevenue) * 100
-    : 0;
+  const ratios = calculateCostRatios({
+    costs: nc,
+    totalRevenue: pnl.totalRevenue,
+    days: totalDaysRecorded,
+  });
+  const costToRevenueRatio = ratios.costToRevenueRatio;
+  const laborCostRatio = ratios.laborRatio;
+  const rentCostRatio = ratios.rentRatio;
+  const primeCostRatio = ratios.primeCostRatio;
 
-  // 손익분기 일매출
-  const dailyFixedCosts = (nc.rent + nc.labor + nc.utilities + nc.sga + nc.marketing + nc.other) / 26;
-  const cogsRate = pnl.totalRevenue > 0
-    ? nc.ingredients / pnl.totalRevenue
-    : 0.33;
-  const breakEvenDailySales = cogsRate < 1
-    ? Math.round(dailyFixedCosts / (1 - cogsRate))
-    : 0;
+  // ─── 손익분기 일매출 (cost-ratios.ts SSOT) ───
+  const bep = calculateBreakEven({
+    monthlyIngredients: nc.ingredients,
+    monthlyFixedCosts: nc.rent + nc.labor + nc.utilities + nc.sga + nc.marketing + nc.other,
+    totalRevenue: pnl.totalRevenue,
+    days: totalDaysRecorded,
+    fallbackCogsRate: 0.33,
+  });
+  const breakEvenDailySales = bep.breakEvenDaily;
 
-  // 손익분기 초과일 계산
-  const daysAboveBreakEven = dailyEntries.filter(
-    (e) => e.sales >= breakEvenDailySales
-  ).length;
+  // 손익분기 초과일 계산 — 동일 일 단위 기준
+  const daysAboveBreakEven = breakEvenDailySales > 0
+    ? dailyEntries.filter((e) => e.sales >= breakEvenDailySales).length
+    : 0;
 
   // 현금 런웨이 (currentCash 미입력 시 -1로 표시하여 경고 방지)
   const monthlyBurn = pnl.totalCosts - pnl.totalRevenue;

@@ -171,7 +171,7 @@ export function StaffOpsCard({
                 {ko ? "이메일로 초대합니다" : "Invite by email"}
               </div>
             </button>
-            <button type="button" onClick={() => { setAddMode("manual"); d.setEmpFormOpen(true); d.setEmpEditId(null); d.setEmpName(""); d.setEmpWage(""); d.setEmpHours(""); d.setEmpInsured(false); }} style={{
+            <button type="button" onClick={() => { setAddMode("manual"); d.setEmpFormOpen(true); d.setEmpEditId(null); d.setEmpName(""); d.setEmpWage(""); d.setEmpHours(""); d.setEmpInsured(false); d.setEmpHireDate(""); }} style={{
               padding: "16px 12px", borderRadius: "14px", border: "1.5px solid rgba(15,23,42,0.08)",
               background: "#fff", cursor: "pointer", textAlign: "center" as const, transition: "all 0.15s ease",
             }}>
@@ -335,6 +335,25 @@ export function StaffOpsCard({
               <span>{ko ? "4대보험 적용" : "Insured"}</span>
             </label>
           </div>
+          {/* 입사일 — 연차 1년 도래 자동 알림용 (선택 입력) */}
+          <div style={formGridTwo}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.55)" }}>
+                {ko ? "입사일 (선택)" : "Hire date (optional)"}
+              </label>
+              <input
+                type="date"
+                value={d.empHireDate}
+                onChange={(event) => d.setEmpHireDate(event.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", lineHeight: 1.5, alignSelf: "center" }}>
+              {ko
+                ? "입력하면 1년 도래 시 연차(15일) 자동 알림"
+                : "Auto-alerts when 1-year mark approaches (annual leave)"}
+            </div>
+          </div>
           <div style={editorActions}>
             <button type="button" onClick={() => { d.handleEmpSave(); setAddMode(null); }} style={opsActionPrimary}>
               {isEditing ? (ko ? "수정 저장" : "Save") : (ko ? "직원 추가" : "Add")}
@@ -344,7 +363,7 @@ export function StaffOpsCard({
               onClick={() => {
                 d.setEmpFormOpen(false);
                 d.setEmpEditId(null);
-                d.setEmpName(""); d.setEmpWage(""); d.setEmpHours(""); d.setEmpInsured(false);
+                d.setEmpName(""); d.setEmpWage(""); d.setEmpHours(""); d.setEmpInsured(false); d.setEmpHireDate("");
                 setAddMode(null);
               }}
               style={opsActionSecondary}

@@ -5,6 +5,8 @@
 //   사장님 가게의 매출/비용/직원/재고/고정비/마케팅/이상신호/로드맵/창업단계
 //   까지 한 번에 받아서 데이터 기반 정밀 답변.
 
+import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
+
 export type QuickQueryContext = {
   /** 사장님 질문 (한국어 자유 텍스트) */
   question: string;
@@ -140,6 +142,8 @@ export const QUICK_QUERY_SYSTEM_PROMPT = `<role>
 당신은 사장님 가게의 **모든 데이터**를 보고 있습니다 (매출·비용·직원·재고·고정비·마케팅·이상신호·로드맵 등).
 사장님이 질문하지 않아도 데이터에서 모순되는 신호가 보이면 짧게 짚어줘도 됩니다.
 </role>
+
+${ANTI_HALLUCINATION_DIRECTIVE}
 
 <style>
 - 답변은 **2-4 문장**, 길어도 120자 내외. 사장님은 바쁩니다.

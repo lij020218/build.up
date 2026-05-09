@@ -25,7 +25,7 @@ import { updateAnomalyHistory, getAnomalyContext } from "../../services/anomaly-
 import { useIndustryInsight, type IndustryInsight } from "../../hooks/useIndustryInsight";
 import { useTimeLogStore, shouldPromptToday } from "../../stores/time-log-store";
 import { TimeLogCheckIn } from "./TimeLogCheckIn";
-import { calculateUnifiedHealthScore, HEALTH_COLORS } from "@build-up/shared";
+import { calculateUnifiedHealthScore, HEALTH_COLORS, calculateCostRatios } from "@build-up/shared";
 import { HealthDot, type HealthGrade } from "./HealthSignal";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -162,9 +162,60 @@ export type HeroTone = "crisis" | "warning" | "neutral";
  * - "users": 사용자 변화 (UserActivityCard, [data-user-activity]) — DAU/WAU/리텐션·고객수 인사이트
  * - "cashflow": 현금흐름 레이더 (CashflowHeroCard, [data-cashflow-hero])
  * - "costs": 비용 구조 (CostStructureCard, [data-cost-structure])
- * - "marketing": 마케팅·이벤트 트리거 (외부 라우트)
+ * - "marketing": 마케팅·이벤트 surface (별도 페이지) — 'bup:navigate-feature' 로 surface 전환
+ * - "operations": 오늘의 운영 리추얼 / 측정·병목·서비스 시간 (DailyOpsRitualCard, [data-ops-rituals])
  */
-export type HeroCtaTarget = "sales" | "users" | "cashflow" | "costs" | "marketing";
+export type HeroCtaTarget = "sales" | "users" | "cashflow" | "costs" | "marketing" | "operations";
+
+/**
+ * 인사이트 카테고리 + 본문/액션 키워드 → CTA 라우팅 타깃.
+ *
+ * SSOT — CEOMorningHero·MorningBriefing 모두 이 함수 한 군데를 통해 라우팅 일관 유지.
+ * 변경 의도:
+ *   "전부 매출 기록 버튼" 으로 끝나던 종래 라우팅을 코칭 *내용* 에 맞춰 분기.
+ *   - operations + 측정·시간·병목·서비스 동선 → 오늘의 운영 리추얼 (DailyOpsRitualCard)
+ *   - growth → 사용자 변화 카드 (단골/리텐션)
+ *   - marketing → 별도 마케팅 surface
+ *   - revenue 라도 측정·속도 키워드면 ops 로 (매출 기록만 종착점이 아님)
+ */
+export function resolveInsightCtaTarget(
+  category: string,
+  body: string,
+  action: string,
+  isDigital: boolean,
+): HeroCtaTarget {
+  const text = `${action} ${body}`.toLowerCase();
+  const mentionsDigitalUsers = isDigital && /dau|wau|mau|retention|리텐션|onboarding|온보딩/i.test(text);
+  if (mentionsDigitalUsers) return "users";
+  if (isDigital) {
+    if (category === "cost") return "costs";
+    if (category === "revenue") return "sales";
+    if (category === "operations") return "operations";
+    return "users"; // marketing/growth → 사용자 카드 (디지털은 분리된 마케팅 페이지가 약함)
+  }
+  // ─── 오프라인 ───
+  if (category === "cost") return "costs";
+  if (category === "marketing") return "marketing";
+  if (category === "growth") return "users"; // 단골/재방문 → 고객 카드
+  if (category === "operations") return "operations";
+  // revenue 라도 측정·속도·회전·병목 키워드면 ops 로 (예: "주문 응대 시간 측정")
+  if (category === "revenue" && /측정|시간|속도|회전|병목|응대|제공|준비|발주|폐기|동선|조리/.test(text)) {
+    return "operations";
+  }
+  return "sales";
+}
+
+/** ctaTarget → 한국어/영어 CTA 라벨 (LLM action 이 비어있을 때 fallback) */
+export function defaultCtaLabel(target: HeroCtaTarget): { ko: string; en: string } {
+  switch (target) {
+    case "users":      return { ko: "사용자 추적 시작", en: "Start tracking users" };
+    case "costs":      return { ko: "비용 점검하기", en: "Review costs" };
+    case "cashflow":   return { ko: "현금흐름 보기", en: "View cashflow" };
+    case "marketing":  return { ko: "마케팅으로 가기", en: "Go to marketing" };
+    case "operations": return { ko: "운영 리추얼 열기", en: "Open ops ritual" };
+    default:           return { ko: "매출 기록하기", en: "Log sales" };
+  }
+}
 
 export type Hero = {
   source: HeroSource;
@@ -181,6 +232,15 @@ export type Hero = {
   agentProposalId?: string;           // hero가 agent 출처일 때 id
   /** AI 가 K-히트 사례를 인용했을 때 — UI 에 [사례:성심당] 배지로 노출 */
   referencedCase?: { id: string; name: string };
+  /** 인사이트 출처 — Perplexity·Glean 패턴 (small badge) */
+  sourceLabel?: string;
+  /** 우선순위 (industry 인사이트만 채움) — 1순위 / 2순위 / 3순위 배지 */
+  priority?: "high" | "medium" | "low";
+  /**
+   * 카드 스택 — primary 아래에 펼쳐 보여줄 추가 인사이트 (industry 출처만).
+   * 사장님 펼치기 클릭 시 priority 배지 함께 렌더링.
+   */
+  relatedSpecs?: Omit<Hero, "relatedSpecs">[];
 };
 
 type OtherItem = {
@@ -230,15 +290,19 @@ export function resolveHero(input: {
 }): Hero {
   const { ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, aiTopAction, industryInsight, businessLaunched, daysSinceLastSalesEntry, totalEntries, monthlyBurn, categoryId } = input;
 
-  // 0. 매출 미기록 2일 이상 (AI 코칭 정확도 보호 — 오래된 데이터로 코칭 생성 차단)
+  // 0. 매출 미기록 3일 이상 (AI 코칭 정확도 보호 — 오래된 데이터로 코칭 생성 차단)
   //    - 운영 중(businessLaunched)이고
   //    - 과거 매출 기록이 하나라도 있어야 함 (첫 기록 전에는 Drucker fallback이 담당)
-  //    - 마지막 기록이 2일 이상 지남
+  //    - 마지막 기록이 3일 이상 지남 (이전 2일 → 3일: 어제·하루 빠진 정도는 정상으로 간주)
+  //
+  // ⚠ 사용자 보고 (2026-05-06): 오늘 매출 입력했는데도 "공백" 메시지 노출되는 케이스 있음.
+  //    daysSinceLastSalesEntry 가 0 이거나 stale 상태에서도 안전하게 동작하도록 ≥3 으로 상향
+  //    + days === 0 명시적 가드 (혹시 modulo / 음수 edge case).
   if (
     businessLaunched &&
     totalEntries > 0 &&
     daysSinceLastSalesEntry !== null &&
-    daysSinceLastSalesEntry >= 2
+    daysSinceLastSalesEntry >= 3
   ) {
     const days = daysSinceLastSalesEntry;
     // ⚡ 능동 진단 — 비용 데이터 있으면 누적 손실 추정 (사용자 피드백: AI가 빈 상태에서도 일하는 느낌이어야)
@@ -251,11 +315,11 @@ export function resolveHero(input: {
       tagKo: "AI 진단 — 데이터는 부족하지만 가능한 추정",
       tagEn: "AI Diagnosis — best estimate from available data",
       analysisKo: hasBurn
-        ? `최근 ${days}일간 매출 기록 공백입니다. 월 비용 ${fmtWon(monthlyBurn, true)}이 계속 나가고 있어 누적 손실은 약 ${accumLossManwon.toLocaleString()}만원으로 추정합니다. 오늘 매출 한 번만 입력하면 진단 정확도가 70% 이상으로 올라갑니다.`
-        : `최근 ${days}일간 매출 기록 공백입니다. 비용 데이터가 없어 손실 추정도 불가합니다. 오늘 매출 + 월 비용 입력하면 정확한 손익 진단이 가능합니다.`,
+        ? `최근 ${days}일간 새 매출 기록이 없네요. 월 비용 ${fmtWon(monthlyBurn, true)}이 계속 나가고 있어 누적 손실은 약 ${accumLossManwon.toLocaleString()}만원으로 추정합니다. 오늘 매출 한 번만 입력하시면 진단 정확도가 70%+ 로 올라갑니다.`
+        : `최근 ${days}일간 새 매출 기록이 없네요. 비용 데이터가 없어 손실 추정도 어렵습니다. 오늘 매출 + 월 비용 입력하시면 정확한 손익 진단이 가능합니다.`,
       analysisEn: hasBurn
-        ? `${days} days without sales data. Monthly burn of ${fmtWon(monthlyBurn, false)} continues — estimated accumulated loss ~${fmtWon(accumLossWon, false)}. Just one sales entry will boost diagnostic accuracy to 70%+.`
-        : `${days} days without sales data. No cost data either — can't estimate loss. Add today's sales + monthly costs for accurate P&L diagnosis.`,
+        ? `${days} days without new sales entries. Monthly burn of ${fmtWon(monthlyBurn, false)} continues — estimated accumulated loss ~${fmtWon(accumLossWon, false)}. Just one sales entry will boost diagnostic accuracy to 70%+.`
+        : `${days} days without new sales entries. No cost data either — can't estimate loss. Add today's sales + monthly costs for accurate P&L diagnosis.`,
       actionKo: "5초면 됩니다. 아래 '매출 흐름' 카드 상단 입력 바에서 어제·오늘 매출만 기록해 주세요.",
       actionEn: "Takes 5 seconds. Just log yesterday's and today's sales in the 'Revenue flow' input bar.",
       ctaKo: "매출 기록하러 가기",
@@ -392,47 +456,37 @@ export function resolveHero(input: {
     };
   }
 
-  // 5. Industry Insight
-  if (industryInsight) {
-    // ── CTA 타깃 라우팅 (3단계 우선순위) ──
-    // (A) 업종 컨텍스트 우선 — startup-tech / online-digital은 사용자 트래킹이 본질
-    //     LLM이 카테고리를 "operations"로 잘못 분류해도 "사용자 카드"로 안내해야 의미 있음.
-    // (B) 그 외 업종은 LLM이 분류한 category 사용
-    // (C) action 텍스트에 사용자/고객 키워드가 있으면 강제 users (안전망)
-    const isStartupOrOnline = categoryId === "startup-tech" || categoryId === "online-digital";
-    const actionMentionsUsers = /사용자|고객|user|customer|DAU|WAU|MAU|retention|리텐션/i.test(
-      `${industryInsight.action} ${industryInsight.body}`
-    );
-    const target: HeroCtaTarget =
-      isStartupOrOnline ? "users"
-      : industryInsight.category === "revenue" ? "sales"
-      : industryInsight.category === "cost" ? "costs"
-      : industryInsight.category === "marketing" ? "users"
-      : industryInsight.category === "growth" ? "users"
-      : actionMentionsUsers ? "users"
-      : "sales";
-    // CTA 라벨도 타깃에 맞게 — "오늘 체크인"은 무엇을 체크인하는지 모호 → 명확화
-    // industry 카테고리는 sales / users / costs 만 도출 (cashflow는 cashflowCrisis 분기에서만 발생)
-    const ctaKo =
-      target === "users" ? "사용자 추적 시작"
-      : target === "costs" ? "비용 점검하기"
-      : "매출 기록하기";
-    const ctaEn =
-      target === "users" ? "Start tracking users"
-      : target === "costs" ? "Review costs"
-      : "Log sales";
+  // 5. Industry Insight (3개 인사이트 묶음 — 카드 스택 UI 로 노출)
+  if (industryInsight && Array.isArray(industryInsight.insights) && industryInsight.insights.length > 0) {
+    const isDigital = categoryId === "startup-tech" || categoryId === "online-digital";
+
+    // resolveInsightCtaTarget(SSOT) 를 통해 카테고리 + 키워드 매핑
+    const buildSpec = (it: typeof industryInsight.insights[number]): Hero => {
+      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital);
+      const label = defaultCtaLabel(target);
+      return {
+        source: "industry",
+        tone: "neutral",
+        tagKo: "오늘의 인사이트",
+        tagEn: "Today's insight",
+        analysisKo: it.headline ? `${it.headline}. ${it.body}` : it.body,
+        analysisEn: it.headline ? `${it.headline}. ${it.body}` : it.body,
+        actionKo: it.action,
+        actionEn: it.action,
+        ctaKo: label.ko,
+        ctaEn: label.en,
+        ctaTarget: target,
+        sourceLabel: it.sourceLabel,
+        priority: it.priority,
+      };
+    };
+
+    const allSpecs = industryInsight.insights.map(buildSpec);
+    const primary = allSpecs[0];
     return {
-      source: "industry",
-      tone: "neutral",
-      tagKo: "오늘의 인사이트",
-      tagEn: "Today's insight",
-      analysisKo: industryInsight.headline ? `${industryInsight.headline}. ${industryInsight.body}` : industryInsight.body,
-      analysisEn: industryInsight.headline ? `${industryInsight.headline}. ${industryInsight.body}` : industryInsight.body,
-      actionKo: industryInsight.action,
-      actionEn: industryInsight.action,
-      ctaKo,
-      ctaEn,
-      ctaTarget: target,
+      ...primary,
+      // 보조 인사이트 (priority medium / low) — 사장님이 카드 펼치면 노출
+      relatedSpecs: allSpecs.slice(1),
     };
   }
 
@@ -616,10 +670,18 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
   const pnl = calculateMonthlyPnL(entries, costs);
   const operatingMargin = pnl.operatingMargin;
   const totalSales = pnl.totalRevenue;
-  const primeCostPct =
-    totalSales > 0
-      ? ((costs.ingredients + costs.labor) / totalSales) * 100
-      : 0;
+  // primeCost — cost-ratios.ts SSOT (월간 비용 ÷ 월 환산 매출, 부분월 보정)
+  const primeCostPct = calculateCostRatios({
+    costs: {
+      ingredients: costs.ingredients ?? 0, labor: costs.labor ?? 0, rent: costs.rent ?? 0,
+      utilities: costs.utilities ?? 0,
+      sga: (costs as { sga?: number }).sga ?? 0,
+      marketing: (costs as { marketing?: number }).marketing ?? 0,
+      other: costs.other ?? 0,
+    },
+    totalRevenue: totalSales,
+    days: entries.length,
+  }).primeCostRatio;
 
   // ── Estimated deposit (card settlement, ~D+2)
   const estDeposit = Math.round(yesterdaySales * CARD_RATIO);
@@ -694,14 +756,102 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
 
   const topProposal: AgentProposal | null = activeProposals[0] ?? null;
 
-  // Industry Insight
-  const avgDailySales7 = useMemo(() => {
-    if (entries.length === 0) return 0;
+  // ─── Industry Insight 컨텍스트 — AI 가 *고유* 패턴 찾도록 신호 풍부히 주입 ───
+  const insightCtx = useMemo(() => {
+    if (entries.length === 0) {
+      return {
+        avgDailySales: 0,
+        weeklySalesChangePct: 0,
+        avgTicketSize: 0,
+        weakestDayPct: 100,
+      };
+    }
     const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
     const last7 = sorted.slice(-7);
-    if (last7.length === 0) return 0;
-    return last7.reduce((s, e) => s + e.sales, 0) / last7.length;
+    const prev7 = sorted.slice(-14, -7);
+    // ⚠️ 분모는 *캘린더 일수* (1~7) — entry 수로 나누면 1일 입력이 7일 평균으로 잘못 표시.
+    const todayMs = Date.now();
+    const dayDiff = (date: string) => Math.max(1, Math.floor((todayMs - new Date(date).getTime()) / 86400000) + 1);
+    const last7Days = last7.length > 0 ? Math.min(7, dayDiff(last7[0].date)) : 0;
+    const prev7Days = prev7.length > 0 ? Math.min(7, dayDiff(prev7[0].date) - 7) : 0;
+    const avgDaily = last7Days > 0
+      ? last7.reduce((s, e) => s + e.sales, 0) / last7Days
+      : 0;
+    const prevAvg = prev7Days > 0
+      ? prev7.reduce((s, e) => s + e.sales, 0) / prev7Days
+      : 0;
+    const weeklyChange = prevAvg > 0
+      ? Math.round(((avgDaily - prevAvg) / prevAvg) * 1000) / 10
+      : 0;
+    // 객단가 — last 14d 합계 기준 (안정성)
+    const last14 = sorted.slice(-14);
+    const totalRev14 = last14.reduce((s, e) => s + e.sales, 0);
+    const totalCust14 = last14.reduce((s, e) => s + (e.customers ?? 0), 0);
+    const ticket = totalCust14 > 0 ? totalRev14 / totalCust14 : 0;
+    // 요일 패턴 — 가장 약한 요일 매출 / 일평균
+    const byDow: number[][] = [[], [], [], [], [], [], []];
+    last14.forEach((e) => {
+      const dow = new Date(e.date).getDay();
+      byDow[dow].push(e.sales);
+    });
+    const dowAvgs = byDow
+      .map((arr) => (arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0))
+      .filter((v) => v > 0);
+    const overallAvg = dowAvgs.length > 0 ? dowAvgs.reduce((a, b) => a + b, 0) / dowAvgs.length : 0;
+    const weakest = dowAvgs.length > 0 ? Math.min(...dowAvgs) : 0;
+    const weakestPct = overallAvg > 0 ? (weakest / overallAvg) * 100 : 100;
+    return {
+      avgDailySales: avgDaily,
+      weeklySalesChangePct: weeklyChange,
+      avgTicketSize: ticket,
+      weakestDayPct: Math.round(weakestPct),
+    };
   }, [entries]);
+
+  // 비용 비율 (월 환산 매출 기준) — 이미 SSOT 헬퍼 사용
+  const costRatiosForInsight = useMemo(() => {
+    const ratios = calculateCostRatios({
+      costs: {
+        ingredients: costs.ingredients ?? 0, labor: costs.labor ?? 0, rent: costs.rent ?? 0,
+        utilities: costs.utilities ?? 0,
+        sga: (costs as { sga?: number }).sga ?? 0,
+        marketing: (costs as { marketing?: number }).marketing ?? 0,
+        other: costs.other ?? 0,
+      },
+      totalRevenue: pnl.totalRevenue,
+      days: entries.length,
+    });
+    return {
+      ingredient: ratios.ingredientRatio,
+      labor: ratios.laborRatio,
+      rent: ratios.rentRatio,
+      prime: ratios.primeCostRatio,
+    };
+  }, [costs, pnl.totalRevenue, entries.length]);
+
+  // 부족 재고 수
+  const lowStockCount = useMemo(() => {
+    const inv = (d.inventory as Array<{ quantity: number; minThreshold?: number }> | undefined) ?? [];
+    return inv.filter((i) => i.quantity <= (i.minThreshold ?? 0)).length;
+  }, [d.inventory]);
+
+  // 직원 수
+  const employeesCount = ((d.employees as unknown[] | undefined) ?? []).length;
+
+  // 런웨이 (cash / monthlyBurn) — 가능할 때만
+  const runwayMonthsForInsight = useMemo<number | undefined>(() => {
+    const cash = (d as { totalCapital?: number; remainingCash?: number }).remainingCash
+      ?? (d as { totalCapital?: number }).totalCapital;
+    if (typeof cash !== "number" || cash <= 0) return undefined;
+    const totalC = (costs.ingredients ?? 0) + (costs.labor ?? 0) + (costs.rent ?? 0) +
+      (costs.utilities ?? 0) + (costs.other ?? 0) +
+      ((costs as { sga?: number }).sga ?? 0) +
+      ((costs as { marketing?: number }).marketing ?? 0) +
+      ((costs as { interest?: number }).interest ?? 0);
+    const burn = totalC - pnl.totalRevenue;
+    if (burn <= 0) return 99; // 흑자
+    return Math.round((cash / burn) * 10) / 10;
+  }, [d, costs, pnl.totalRevenue]);
 
   const businessLaunchedDate = useProfileStore((s) => s.businessLaunchedDate);
   const daysSinceLaunch = useMemo(() => {
@@ -712,17 +862,55 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
   const { insight: industryInsight } = useIndustryInsight({
     categoryId: d.industryCategoryId,
     hasUserSales: entries.length > 0,
-    avgDailySales: avgDailySales7 > 0 ? avgDailySales7 : undefined,
+    avgDailySales: insightCtx.avgDailySales > 0 ? insightCtx.avgDailySales : undefined,
     daysSinceLaunch,
+    weeklySalesChangePct: insightCtx.weeklySalesChangePct !== 0 ? insightCtx.weeklySalesChangePct : undefined,
+    avgTicketSize: insightCtx.avgTicketSize > 0 ? insightCtx.avgTicketSize : undefined,
+    costRatios: pnl.totalRevenue > 0 ? costRatiosForInsight : undefined,
+    weakestDayPct: insightCtx.weakestDayPct < 100 ? insightCtx.weakestDayPct : undefined,
+    lowStockCount: lowStockCount > 0 ? lowStockCount : undefined,
+    employeesCount: employeesCount > 0 ? employeesCount : undefined,
+    runwayMonths: runwayMonthsForInsight,
     enabled: hasData || !!d.industryCategoryId,
   });
 
+  // ─── Industry insights → Hero spec 변환 (모든 hero source 에서 stack 노출용) ───
+  const allInsightSpecs = useMemo<Omit<Hero, "relatedSpecs">[]>(() => {
+    if (!industryInsight || !Array.isArray(industryInsight.insights) || industryInsight.insights.length === 0) return [];
+    const cat = d.industryCategoryId;
+    const isDigital = cat === "startup-tech" || cat === "online-digital";
+    return industryInsight.insights.map((it) => {
+      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital);
+      const { ko: ctaKo, en: ctaEn } = defaultCtaLabel(target);
+      return {
+        source: "industry" as const,
+        tone: "neutral" as const,
+        tagKo: "오늘의 인사이트",
+        tagEn: "Today's insight",
+        analysisKo: it.headline ? `${it.headline}. ${it.body}` : it.body,
+        analysisEn: it.headline ? `${it.headline}. ${it.body}` : it.body,
+        actionKo: it.action,
+        actionEn: it.action,
+        ctaKo,
+        ctaEn,
+        ctaTarget: target,
+        sourceLabel: it.sourceLabel,
+        priority: it.priority,
+      };
+    });
+  }, [industryInsight, d.industryCategoryId]);
+
   // 매출 미기록 일수 계산 (기록이 있을 때만 의미 — 없으면 null)
+  // ⚠ 정확한 컷오프 위해서는 useMorningBriefingBrain 의 todayBusinessDay 기준 사용 권장.
+  //   여기는 폴백 로직으로 단순화. 사용자 보고 케이스 방지를 위해 today/future 안전망 추가.
   const daysSinceLastSalesEntry = useMemo<number | null>(() => {
     if (entries.length === 0) return null;
     const latest = entries.reduce((acc, e) => (e.date > acc ? e.date : acc), entries[0].date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    // 안전망: latest 가 오늘 이후면 0 (timezone / DST 회피)
+    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    if (latest >= todayIso) return 0;
     const last = new Date(latest);
     last.setHours(0, 0, 0, 0);
     return Math.max(0, Math.round((today.getTime() - last.getTime()) / 86400000));
@@ -1467,16 +1655,34 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                 background: "rgba(255,255,255,0.5)",
                 border: `1px solid ${toneStyles.cardBorder}`,
               }}>
-                {/* Tag — 미니멀 캡션 */}
-                <div style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase" as const,
-                  color: toneStyles.tagColor,
-                  marginBottom: "10px",
-                }}>
-                  {tag}
+                {/* Tag — 미니멀 캡션 + (industry 출처) 우선순위 배지 */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                  <div style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase" as const,
+                    color: toneStyles.tagColor,
+                  }}>
+                    {tag}
+                  </div>
+                  {hero.priority && (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        padding: "2px 8px",
+                        borderRadius: "999px",
+                        background: PRIORITY_META[hero.priority].bg,
+                        color: PRIORITY_META[hero.priority].color,
+                        fontSize: "10.5px",
+                        fontWeight: 700,
+                        letterSpacing: "-0.005em",
+                      }}
+                    >
+                      {PRIORITY_META[hero.priority].label}
+                    </span>
+                  )}
                 </div>
 
                 {/* Analysis (왜) — 큰 텍스트 */}
@@ -1527,6 +1733,20 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                     fontFamily: FONT_STACK,
                   }}>
                     {action}
+                  </div>
+                )}
+
+                {/* Source 배지 — Perplexity·Glean 패턴, 인사이트 출처 투명성 */}
+                {hero.sourceLabel && (
+                  <div style={{
+                    fontSize: "10.5px",
+                    fontWeight: 500,
+                    color: "rgba(15,23,42,0.4)",
+                    marginBottom: "12px",
+                    letterSpacing: "-0.005em",
+                    fontFamily: FONT_STACK,
+                  }}>
+                    근거 · {hero.sourceLabel}
                   </div>
                 )}
 
@@ -1582,6 +1802,17 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                   </button>
                 )}
               </div>
+
+              {/* ═══════════════ 카드 스택 — 모든 hero source 에서 항상 노출 ═══════════════
+                  - hero.source === "industry": primary 가 이미 industry 라 첫 항목 제외 (2개)
+                  - 그 외 (stale-sales/crisis/anomaly/...): industry 인사이트 3개 모두 노출 */}
+              {(() => {
+                const stackList = hero.source === "industry"
+                  ? allInsightSpecs.slice(1) // primary 가 hero 라 1번 인덱스부터
+                  : allInsightSpecs;          // hero 가 다른 source → 3개 모두
+                if (stackList.length === 0) return null;
+                return <InsightStack related={stackList} ko={ko} />;
+              })()}
 
               {/* 오늘 시간 체크인 (저녁 17시+ & 오늘 미입력 시만) */}
               {showTimeLogPrompt && <TimeLogCheckIn ko={ko} />}
@@ -2348,3 +2579,204 @@ const kpiValueStyle: React.CSSProperties = {
   fontFamily: FONT_STACK,
   color: PRIMARY,
 };
+
+// ═══════════════════════════════════════════════════════════════════════
+//   InsightStack — 우선순위 배지 + 카드 스택 펼치기 (사장님 요청 2026-05-07)
+//
+//  • 기본: 접힘 — primary 카드 아래 두 줄 peek 으로 "더 있다" 힌트
+//  • 클릭: 세로로 펼쳐지며 priority 배지 (1순위/2순위/3순위) 노출
+//  • 디자인 보호: 작은 회색 텍스트 + 얇은 카드만 사용. 메인 인사이트 강조 훼손 X
+// ═══════════════════════════════════════════════════════════════════════
+
+export const PRIORITY_META: Record<"high" | "medium" | "low", { label: string; rank: string; color: string; bg: string }> = {
+  high:   { label: "1순위", rank: "1", color: "#dc2626", bg: "rgba(220,38,38,0.08)" },
+  medium: { label: "2순위", rank: "2", color: "#d97706", bg: "rgba(217,119,6,0.08)" },
+  low:    { label: "3순위", rank: "3", color: "#059669", bg: "rgba(5,150,105,0.08)" },
+};
+
+export function InsightStack({ related, ko }: { related: Omit<Hero, "relatedSpecs">[]; ko: boolean }) {
+  const [open, setOpen] = useState(false);
+  if (related.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: "10px" }}>
+      {/* Toggle — 펼치기 / 접기 */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%",
+          padding: "8px 12px",
+          borderRadius: "10px",
+          border: "1px solid rgba(15,23,42,0.06)",
+          background: open ? "rgba(15,23,42,0.02)" : "rgba(15,23,42,0.01)",
+          color: "rgba(15,23,42,0.55)",
+          fontSize: "12px",
+          fontWeight: 600,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "6px",
+          fontFamily: FONT_STACK,
+          transition: "background 0.15s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(15,23,42,0.04)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = open ? "rgba(15,23,42,0.02)" : "rgba(15,23,42,0.01)")}
+      >
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          {/* 우선순위 미니 dot 들 */}
+          {related.map((r, idx) => (
+            <span
+              key={idx}
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: PRIORITY_META[r.priority ?? "medium"].color,
+                opacity: 0.85,
+              }}
+            />
+          ))}
+          <span style={{ marginLeft: "4px" }}>
+            {open
+              ? (ko ? `추천 ${related.length}개 접기` : `Collapse ${related.length} more`)
+              : (ko ? `다른 추천 ${related.length}개 더 보기` : `${related.length} more recommendations`)}
+          </span>
+        </span>
+        <span style={{ fontSize: "10px", opacity: 0.6 }}>{open ? "▲" : "▼"}</span>
+      </button>
+
+      {/* 펼친 카드 스택 — 우선순위 배지 + 미니 카드 */}
+      {open && (
+        <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+          {related.map((spec, idx) => {
+            const meta = PRIORITY_META[spec.priority ?? "medium"];
+            const analysis = ko ? spec.analysisKo : spec.analysisEn;
+            const action = ko ? spec.actionKo : spec.actionEn;
+            const ctaLabel = ko ? spec.ctaKo : spec.ctaEn;
+            return (
+              <article
+                key={idx}
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "14px",
+                  background: "rgba(255,255,255,0.6)",
+                  border: "1px solid rgba(15,23,42,0.06)",
+                }}
+              >
+                {/* 우선순위 배지 */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "2px 8px",
+                      borderRadius: "999px",
+                      background: meta.bg,
+                      color: meta.color,
+                      fontSize: "10.5px",
+                      fontWeight: 700,
+                      letterSpacing: "-0.005em",
+                      fontFamily: FONT_STACK,
+                    }}
+                  >
+                    {meta.label}
+                  </span>
+                  {spec.sourceLabel && (
+                    <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", fontFamily: FONT_STACK }}>
+                      · {spec.sourceLabel}
+                    </span>
+                  )}
+                </div>
+
+                {/* 분석 */}
+                <div
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 650,
+                    color: "#0f172a",
+                    letterSpacing: "-0.015em",
+                    lineHeight: 1.45,
+                    marginBottom: "4px",
+                    fontFamily: FONT_STACK,
+                  }}
+                >
+                  {analysis}
+                </div>
+
+                {/* 행동 */}
+                {action && (
+                  <div
+                    style={{
+                      fontSize: "12.5px",
+                      fontWeight: 500,
+                      color: "rgba(15,23,42,0.55)",
+                      lineHeight: 1.5,
+                      marginBottom: "10px",
+                      fontFamily: FONT_STACK,
+                    }}
+                  >
+                    {action}
+                  </div>
+                )}
+
+                {/* 미니 CTA */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // marketing → 별도 마케팅 페이지로 surface 전환
+                    if (spec.ctaTarget === "marketing") {
+                      window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
+                        detail: { surface: "marketing" },
+                      }));
+                      return;
+                    }
+                    // 그 외 — 코칭 카테고리에 맞는 카드로 부드럽게 스크롤
+                    //   ⚠️ "전부 매출 기록" 종착 방지 — 코칭 내용에 맞는 영역으로 이동.
+                    const sel =
+                      spec.ctaTarget === "sales" ? "[data-sales-input]"
+                      : spec.ctaTarget === "cashflow" ? "[data-cashflow-hero]"
+                      : spec.ctaTarget === "costs" ? "[data-cost-structure]"
+                      : spec.ctaTarget === "users" ? "[data-user-activity]"
+                      : spec.ctaTarget === "operations" ? "[data-ops-rituals]"
+                      : null;
+                    if (sel) {
+                      const el = document.querySelector<HTMLElement>(sel);
+                      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                  }}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(15,23,42,0.1)",
+                    background: "white",
+                    color: "#0f172a",
+                    fontSize: "11.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    fontFamily: FONT_STACK,
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(15,23,42,0.04)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "white";
+                  }}
+                >
+                  {ctaLabel}
+                  <ArrowRight size={11} strokeWidth={1.5} />
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -72,7 +72,14 @@ export function MarketingSurface() {
 
   // ── Trends
   type TrendSource = { name: string; url: string; publishedDate?: string };
-  type TrendMeta = { usedDataLab?: boolean; usedNaverBlog?: boolean; usedTavily?: boolean; webSearches?: number };
+  type TrendMeta = {
+    usedDataLab?: boolean;
+    usedNaverBlog?: boolean;
+    usedTavily?: boolean;
+    usedYoutube?: boolean;
+    youtubeVideos?: number;
+    webSearches?: number;
+  };
   const [trends, setTrends] = useState<TrendItem[]>(mkt.trendCache?.trends ?? []);
   const [trendSources, setTrendSources] = useState<TrendSource[]>([]);
   const [trendMeta, setTrendMeta] = useState<TrendMeta | null>(null);
@@ -144,7 +151,7 @@ export function MarketingSurface() {
         setTrends(typed.trends);
         setFocusedTrendIdx(0);
         setTrendSources(Array.isArray(typed.sources) ? typed.sources as Array<{ name: string; url: string; publishedDate?: string }> : []);
-        setTrendMeta((typed.meta ?? null) as { usedDataLab?: boolean; usedNaverBlog?: boolean; usedTavily?: boolean; webSearches?: number } | null);
+        setTrendMeta((typed.meta ?? null) as TrendMeta | null);
       })
       .catch((err) => {
         if (!cancelled) console.warn("[MarketingSurface] trend fetch failed:", err);
@@ -505,8 +512,9 @@ export function MarketingSurface() {
           )}
         </div>
 
-        {/* 근거 소스 배지 — 어떤 데이터가 실제로 반영되었는지 투명하게 */}
-        {trends.length > 0 && trendMeta && (trendMeta.usedDataLab || trendMeta.usedNaverBlog || trendMeta.usedTavily || (trendMeta.webSearches ?? 0) > 0) && (
+        {/* 근거 소스 배지 — 어떤 데이터가 실제로 반영되었는지 투명하게.
+            "실시간 트렌딩" 강한 표현은 YouTube Data API (KR mostPopular) 가 실제로 동작했을 때만. */}
+        {trends.length > 0 && trendMeta && (trendMeta.usedYoutube || trendMeta.usedDataLab || trendMeta.usedNaverBlog || trendMeta.usedTavily || (trendMeta.webSearches ?? 0) > 0) && (
           <div style={{
             display: "flex", flexWrap: "wrap", gap: "6px",
             marginBottom: "14px", padding: "10px 12px",
@@ -514,8 +522,15 @@ export function MarketingSurface() {
             border: "1px solid rgba(52,199,89,0.1)",
           }}>
             <span style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.04em", color: "rgba(52,199,89,0.8)", textTransform: "uppercase" as const, marginRight: "4px" }}>
-              {ko ? "실시간 데이터 반영" : "Live data"}
+              {trendMeta.usedYoutube
+                ? (ko ? "실시간 트렌딩" : "Live trending")
+                : (ko ? "최근 검색·요약 기반" : "Recent search/summary")}
             </span>
+            {trendMeta.usedYoutube && (
+              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(255,0,0,0.08)", color: "#cc0000" }}>
+                {ko ? `YouTube ${trendMeta.youtubeVideos ?? 0}건` : `YouTube ${trendMeta.youtubeVideos ?? 0}`}
+              </span>
+            )}
             {trendMeta.usedDataLab && (
               <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#34c759" }}>
                 {ko ? "네이버 DataLab" : "Naver DataLab"}
@@ -528,7 +543,7 @@ export function MarketingSurface() {
             )}
             {trendMeta.usedTavily && (
               <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#34c759" }}>
-                {ko ? "웹 트렌드" : "Web trends"}
+                {ko ? "웹 검색 요약" : "Web summary"}
               </span>
             )}
             {(trendMeta.webSearches ?? 0) > 0 && (

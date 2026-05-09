@@ -64,6 +64,22 @@ export function getTavilyApiKey(): string | undefined {
   return key && key.length >= 10 ? key : undefined;
 }
 
+/**
+ * YouTube Data API v3 — 한국 트렌딩 + 키워드 검색 (1 unit/요청·10k/일 무료).
+ * `YOUTUBE_API_KEY` 우선, 없으면 범용 `GOOGLE_API_KEY` 폴백 — 동일 Google Cloud 프로젝트에서
+ * Restricted key 로 YouTube Data API v3 만 허용했다면 이름을 무엇으로 두어도 동작.
+ */
+export function getYoutubeApiKey(): string | undefined {
+  const key = getEnvVar("YOUTUBE_API_KEY") ?? getEnvVar("GOOGLE_API_KEY");
+  return key && key.length >= 10 ? key : undefined;
+}
+
+/** OpenAI API — RAG embeddings + Anthropic 백업용 LLM. */
+export function getOpenAIApiKey(): string | undefined {
+  const key = getEnvVar("OPENAI_API_KEY");
+  return key && key.length >= 10 ? key : undefined;
+}
+
 /** Supabase service_role 키 — RLS 우회 (cron·서버 쓰기 전용) */
 export function getSupabaseServiceRoleKey(): string | undefined {
   const key = getEnvVar("SUPABASE_SERVICE_ROLE_KEY");

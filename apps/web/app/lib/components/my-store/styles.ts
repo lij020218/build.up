@@ -209,3 +209,78 @@ export const optionalBadge: React.CSSProperties = {
   fontWeight: 500,
   color: PALETTE.GHOST,
 };
+
+// ─── 수정·저장·취소 버튼 (object-mode 카드 공용) ──────────────────
+//   CostManagementCard / SectionRenderer 가 import 해서 사용.
+//   이 파일에 두는 이유: React Fast Refresh 가 module-level const 새 추가 시
+//   stale 참조 버그 발생 — 외부 import 는 안정적.
+export const editBtnStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "6px 12px",
+  borderRadius: 8,
+  background: "white",
+  color: PALETTE.MIDNIGHT,
+  border: `1px solid ${PALETTE.MIDNIGHT_BORDER}`,
+  fontSize: 12,
+  fontWeight: 650,
+  fontFamily: "inherit",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+export const saveBtnStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "6px 14px",
+  borderRadius: 8,
+  background: PALETTE.MIDNIGHT,
+  color: "white",
+  border: "none",
+  fontSize: 12,
+  fontWeight: 700,
+  fontFamily: "inherit",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
+};
+
+export const cancelBtnStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "6px 12px",
+  borderRadius: 8,
+  background: "transparent",
+  color: PALETTE.MUTED,
+  border: `1px solid ${PALETTE.HAIRLINE}`,
+  fontSize: 12,
+  fontWeight: 600,
+  fontFamily: "inherit",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+export const readonlyValueStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: 6,
+  fontSize: 13.5,
+  fontWeight: 700,
+  fontVariantNumeric: "tabular-nums",
+  padding: "8px 12px",
+  borderRadius: 8,
+  background: PALETTE.SUBTLE,
+  border: `1px solid ${PALETTE.HAIRLINE}`,
+  minHeight: 36,
+  boxSizing: "border-box" as const,
+};
+
+export const readonlySuffixStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: PALETTE.HINT,
+  fontWeight: 600,
+};

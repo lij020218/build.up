@@ -72,6 +72,47 @@ export type DashboardActionsResponse = {
   insightReferencedCase?: ReferencedCase;
 };
 
+/**
+ * 잘린 JSON 복구 — Claude max_tokens 도달로 응답이 끊긴 경우 닫히지 않은 {[" 추적해 보충.
+ * 100% 안전한 복구는 아니지만 todayActions 같은 부분 데이터는 살릴 수 있음.
+ */
+function repairTruncatedJson(s: string): string | null {
+  // 마지막 valid 위치까지 최대한 자르고 닫힘 보충
+  let depth = 0;
+  let inString = false;
+  let escapeNext = false;
+  let lastValidEnd = -1;
+  const stack: Array<"object" | "array"> = [];
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escapeNext) { escapeNext = false; continue; }
+    if (ch === "\\") { escapeNext = true; continue; }
+    if (ch === '"' && !escapeNext) inString = !inString;
+    if (inString) continue;
+    if (ch === "{") { stack.push("object"); depth++; }
+    else if (ch === "[") { stack.push("array"); depth++; }
+    else if (ch === "}" || ch === "]") { stack.pop(); depth--; if (depth === 0) lastValidEnd = i; }
+  }
+
+  // 이미 균형 잡혀있으면 원본 반환 (이론상 caller 가 이미 시도했을 것)
+  if (depth === 0) return s;
+
+  // 잘린 케이스: 마지막 valid array/object 까지 잘라낸 뒤 stack 닫기
+  let truncated = lastValidEnd >= 0 ? s.slice(0, lastValidEnd + 1) : s;
+
+  // 만약 valid end가 없다면 string 안일 수도 있음 → 마지막 따옴표 위치 찾기
+  if (lastValidEnd < 0) {
+    // string 닫기 + 모든 stack 닫기
+    if (inString) truncated += '"';
+    while (stack.length > 0) {
+      truncated += stack.pop() === "object" ? "}" : "]";
+    }
+    return truncated;
+  }
+  return truncated;
+}
+
 function parseResponse(raw: string): DashboardActionsResponse {
   const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
 
@@ -79,12 +120,24 @@ function parseResponse(raw: string): DashboardActionsResponse {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
+    // 1단계 fallback: greedy 매칭으로 첫 {부터 마지막 } 까지 추출
     const match = cleaned.match(/\{[\s\S]*\}/);
     if (match) {
       try {
         parsed = JSON.parse(match[0]);
       } catch {
-        throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
+        // 2단계 fallback: 잘린 JSON 복구 시도
+        //   max_tokens 도달로 끊긴 응답 → 닫히지 않은 { [ " 보충하면 일부라도 살릴 수 있음
+        const repaired = repairTruncatedJson(match[0]);
+        if (repaired) {
+          try {
+            parsed = JSON.parse(repaired);
+          } catch {
+            throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
+          }
+        } else {
+          throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);
+        }
       }
     } else {
       throw new AiParseError("AI 응답이 유효한 JSON이 아닙니다.", raw);

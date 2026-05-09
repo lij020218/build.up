@@ -10,6 +10,7 @@ import {
   resolveBusinessContext,
   starterOpenDatePresets,
   starterStepCards,
+  calculateCostRatios,
 } from "@build-up/shared";
 import {
   useProfileStore,
@@ -301,9 +302,22 @@ export function useComputedDashboard(
 
       if (totalRev === 0) return "danger";
 
-      const monthlyNet = totalRev - totalCost;
-      const primeRate = (mc.ingredients + mc.labor) / totalRev;
-      const rentRate = mc.rent / totalRev;
+      // 비율 — cost-ratios.ts SSOT (월간 비용 ÷ 월 환산 매출, 30일 미만 입력 보정)
+      const _ratios = calculateCostRatios({
+        costs: {
+          ingredients: mc.ingredients ?? 0, labor: mc.labor ?? 0, rent: mc.rent ?? 0,
+          utilities: mc.utilities ?? 0,
+          sga: (mc as { sga?: number }).sga ?? 0,
+          marketing: (mc as { marketing?: number }).marketing ?? 0,
+          other: mc.other ?? 0,
+        },
+        totalRevenue: totalRev,
+        days: recent30.length,
+      });
+      // monthlyNet — 월 환산 매출 vs 월 비용 (이전엔 N일치 매출 - 월 비용 → 항상 적자처럼)
+      const monthlyNet = _ratios.monthlyRevenueEquivalent - totalCost;
+      const primeRate = _ratios.primeCostRatio / 100;
+      const rentRate = _ratios.rentRatio / 100;
 
       const costTrend =
         (costHistory as CostSnapshot[]).length >= 3

@@ -50,9 +50,19 @@ export function formatConfidenceBadge(
 /**
  * 한국식 금액 표현을 원(won) 단위로 변환.
  * "1억", "5천만", "1억 5000만원", "3000" (만원 단위) 모두 지원.
+ *
+ *  ── 단위 추론 규칙 ─────────────────────────────────
+ *  • 억/천만/만 단위 명시 → 그대로 변환
+ *  • "원" 접미사가 있으면서 단위 없음 → won 단위로 간주 ("1000원" = 1,000)
+ *  • 단위 + 접미사 모두 없음 → 만원 단위로 간주 ("3000" = 30,000,000)
+ *  ───────────────────────────────────────────────
  */
 export function parseKoreanCurrency(value: string): number | undefined {
-  const cleaned = value.replace(/\s/g, "").replace(/원$/, "");
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  // "X원" / "X 원" — 사용자가 명시적으로 won 단위 입력
+  const hadWonSuffix = /원\s*$/.test(trimmed);
+  const cleaned = trimmed.replace(/\s/g, "").replace(/원$/, "");
   if (!cleaned) return undefined;
 
   let total = 0;
@@ -72,13 +82,13 @@ export function parseKoreanCurrency(value: string): number | undefined {
     }
   }
 
-  // 단위 없이 숫자만 있으면 만원 단위로 간주
+  // 단위 없이 숫자만 있을 때 — "원" 접미사 유무로 단위 결정
   if (total === 0) {
     const digits = cleaned.replace(/[^\d]/g, "");
     if (!digits) return undefined;
     const amount = Number.parseInt(digits, 10);
     if (!Number.isFinite(amount) || amount <= 0) return undefined;
-    return amount * 10_000;
+    return hadWonSuffix ? amount : amount * 10_000;
   }
 
   return total > 0 ? total : undefined;

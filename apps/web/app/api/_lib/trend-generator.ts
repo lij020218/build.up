@@ -14,7 +14,12 @@ import {
   type DataLabResult,
   type NaverSearchItem,
 } from "./naver-trends";
-import { fetchTrendingSocialContent, type TavilyResult } from "./tavily";
+import { fetchTrendingSocialContent, type TavilyResult, type TavilyTrendStats } from "./tavily";
+import {
+  fetchYoutubeForIndustry,
+  YOUTUBE_CATEGORY_BY_INDUSTRY,
+  type YoutubeTrendingItem,
+} from "./youtube-trends";
 
 export type TrendToolRecommendation = {
   name: string;
@@ -42,13 +47,21 @@ export type TrendMeta = {
   usedDataLab: boolean;
   usedNaverBlog: boolean;
   usedTavily: boolean;
+  /** YouTube Data API v3 결과 사용 여부 (chart=mostPopular + 키워드 search) */
+  usedYoutube: boolean;
+  /** YouTube 에서 가져온 영상 수 — UI 정직성 신호 */
+  youtubeVideos: number;
   webSearches: number;
+  /** Tavily 필터링 결과 — 게시일 누락으로 제외된 수, 원본 콘텐츠 URL 수 */
+  tavilyStats?: TavilyTrendStats;
 };
 
 export type GenerateTrendsInput = {
   anthropicApiKey: string;
   naverCreds?: { clientId: string; clientSecret: string };
   tavilyKey?: string;
+  /** YouTube Data API v3 키 (없으면 YouTube 그라운딩 비활성) */
+  youtubeKey?: string;
   /** 프롬프트 주입용 업종 라벨 (예: "치킨·버거·배달음식") */
   bizLabel: string;
   /** Naver 키워드 그룹·블로그 쿼리 조회용 — 11 대분류 중 하나 (food, cafe-dessert, ...) */
@@ -63,7 +76,7 @@ export type GenerateTrendsOutput = {
 };
 
 export async function generateTrends(input: GenerateTrendsInput): Promise<GenerateTrendsOutput> {
-  const { anthropicApiKey, naverCreds, tavilyKey, bizLabel, categoryId, language } = input;
+  const { anthropicApiKey, naverCreds, tavilyKey, youtubeKey, bizLabel, categoryId, language } = input;
   const ko = language === "ko";
   const today = new Date().toLocaleDateString("ko-KR", {
     year: "numeric", month: "long", day: "numeric", weekday: "long",
@@ -74,19 +87,45 @@ export async function generateTrends(input: GenerateTrendsInput): Promise<Genera
     dataLab: DataLabResult | null;
     blogPosts: NaverSearchItem[];
     socialContent: TavilyResult[];
+    youtubeVideos: YoutubeTrendingItem[];
+    tavilyStats: TavilyTrendStats | undefined;
     sources: TrendSource[];
   };
-  const grounding: Grounding = { dataLab: null, blogPosts: [], socialContent: [], sources: [] };
+  const grounding: Grounding = {
+    dataLab: null,
+    blogPosts: [],
+    socialContent: [],
+    youtubeVideos: [],
+    tavilyStats: undefined,
+    sources: [],
+  };
 
   const tasks: Array<Promise<void>> = [];
 
-  // Tavily (최우선)
+  // ★ YouTube Data API — 가장 신뢰도 높은 실제 트렌딩 신호 (KR mostPopular + 키워드 검색)
+  if (youtubeKey) {
+    tasks.push((async () => {
+      const videoCategoryId = YOUTUBE_CATEGORY_BY_INDUSTRY[categoryId];
+      const videos = await fetchYoutubeForIndustry(youtubeKey, bizLabel, { videoCategoryId });
+      grounding.youtubeVideos = videos;
+      grounding.sources.push(
+        ...videos.slice(0, 4).map((v) => ({
+          name: `YT · ${v.title.slice(0, 40)}`,
+          url: v.url,
+          publishedDate: v.publishedAt,
+        }))
+      );
+    })());
+  }
+
+  // Tavily — 보조 (블로그 요약·플랫폼 검색 페이지)
   if (tavilyKey) {
     tasks.push((async () => {
-      const results = await fetchTrendingSocialContent(tavilyKey, bizLabel, language);
+      const { results, stats } = await fetchTrendingSocialContent(tavilyKey, bizLabel, language);
       grounding.socialContent = results;
+      grounding.tavilyStats = stats;
       grounding.sources.push(
-        ...results.slice(0, 6).map((r) => ({
+        ...results.slice(0, 4).map((r) => ({
           name: r.title.slice(0, 40),
           url: r.url,
           publishedDate: r.publishedDate,
@@ -125,10 +164,20 @@ export async function generateTrends(input: GenerateTrendsInput): Promise<Genera
   // 2. 프롬프트 구성
   let groundingBlock = "";
 
+  // ★★ 1순위 — YouTube 실제 트렌딩 데이터 (조회수 정렬, 게시일 100% 보장)
+  if (grounding.youtubeVideos.length > 0) {
+    groundingBlock += `\n[★★ 최우선 근거 · YouTube KR 실시간 트렌딩 + 키워드 쇼츠]\n`;
+    for (const v of grounding.youtubeVideos.slice(0, 8)) {
+      const date = v.publishedAt.slice(0, 10);
+      const views = v.viewCount.toLocaleString();
+      groundingBlock += `- "${v.title}" (${date}, ${views}회) [${v.url}]: ${v.description.slice(0, 120)}\n`;
+    }
+  }
+
   if (grounding.socialContent.length > 0) {
-    groundingBlock += `\n[★ 1순위 근거 · 실시간 웹 소셜 검색 — 릴스·숏츠·밈 최근 2주]\n`;
-    for (const item of grounding.socialContent.slice(0, 8)) {
-      groundingBlock += `- "${item.title}"${item.publishedDate ? ` (${item.publishedDate})` : ""}: ${item.content.slice(0, 150)}\n`;
+    groundingBlock += `\n[★ 보조 근거 · Tavily 웹 검색 (인스타·유튜브·블로그 요약, 게시일 검증됨)]\n`;
+    for (const item of grounding.socialContent.slice(0, 6)) {
+      groundingBlock += `- "${item.title}"${item.publishedDate ? ` (${item.publishedDate})` : " (원본 콘텐츠)"} [${item.url}]: ${item.content.slice(0, 120)}\n`;
     }
   }
   if (grounding.dataLab && grounding.dataLab.keywords.length > 0) {
@@ -278,7 +327,10 @@ ${groundingBlock}
       usedDataLab: !!grounding.dataLab,
       usedNaverBlog: grounding.blogPosts.length > 0,
       usedTavily: grounding.socialContent.length > 0,
+      usedYoutube: grounding.youtubeVideos.length > 0,
+      youtubeVideos: grounding.youtubeVideos.length,
       webSearches: citationSources.length,
+      tavilyStats: grounding.tavilyStats,
     },
   };
 }

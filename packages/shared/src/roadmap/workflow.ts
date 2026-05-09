@@ -262,13 +262,23 @@ export function buildRoadmapState(
   const progressPercent =
     reachableTotal === 0 ? 0 : Math.round((reachableCompleted / reachableTotal) * 100);
 
+  // ⚠️ path-aware totalSteps: 각 stage 의 totalSteps 를 reachable 카운트로 덮어씀.
+  // 이전엔 totalSteps:14 가 하드코딩되어 사장님 화면에 항상 "14단계 중 X" 표시되었으나,
+  // 실제 path 길이는 cluster 별로 다름 (offline=15, online=12, startup-tech=14, semiconductor=22 등).
+  // path-aware 카운트로 사장님이 본인 path 의 정확한 단계 수를 봄.
+  const stagesWithCorrectTotal = stages.map((stage) =>
+    reachableIds.has(stage.stageId)
+      ? { ...stage, totalSteps: reachableTotal }
+      : stage,
+  );
+
   return {
     ...baseRoadmap,
     currentStageId: getFirstAvailableStageId(stages, reachableIds),
     progressPercent,
     completedStageIds: Array.from(completedStageIds),
     unlockedStageIds: Array.from(unlockedStageIds),
-    stages
+    stages: stagesWithCorrectTotal,
   };
 }
 

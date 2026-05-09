@@ -25,9 +25,11 @@ type Props = {
 };
 
 const fmt = (n: number) => {
-  const abs = Math.abs(Math.round(n));
-  if (abs >= 10000) return `${Math.round(n / 10000).toLocaleString()}만원`;
-  return `${abs.toLocaleString()}원`;
+  const rounded = Math.round(n);
+  const abs = Math.abs(rounded);
+  const sign = rounded < 0 ? "−" : ""; // 음수 부호 보존 — 모든 표시 분기에서 일관
+  if (abs >= 10000) return `${sign}${Math.round(abs / 10000).toLocaleString()}만원`;
+  return `${sign}${abs.toLocaleString()}원`;
 };
 
 export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, breakEvenDailySales, industryCategoryId, initialOperatingCapital }: Props) {
@@ -250,7 +252,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
               {ko ? "월 순이익 예상" : "Monthly net"}
             </div>
             <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em", color: monthlyNet >= 0 ? "#059669" : "#dc2626" }}>
-              {monthlyNet >= 0 ? "+" : ""}{fmt(monthlyNet)}
+              {monthlyNet > 0 ? "+" : ""}{fmt(monthlyNet)}
             </div>
           </div>
           <div>
@@ -258,7 +260,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
               {ko ? "3개월 후 예상 현금" : "Cash in 3 months"}
             </div>
             <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em", color: months3Cash >= 0 ? "#059669" : "#dc2626" }}>
-              {months3Cash >= 0 ? "" : ""}{fmt(months3Cash)}
+              {months3Cash > 0 ? "+" : ""}{fmt(months3Cash)}
             </div>
           </div>
         </div>

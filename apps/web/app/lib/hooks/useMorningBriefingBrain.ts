@@ -119,12 +119,17 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
   const topProposal: AgentProposal | null = activeProposals[0] ?? null;
 
   // ── 7일 일평균 ──
+  //
+  //  ⚠️ 분모는 *캘린더 일수* (1~7) — entry 수로 나누면 1일 입력이 7일 평균으로 잘못 표시되는 버그.
+  //     사용자 보고 (2026-05-08): 1일 200K 입력 → 14일 평균 200K 로 표시.
   const avgDailySales7 = useMemo(() => {
     if (entries.length === 0) return 0;
     const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
     const last7 = sorted.slice(-7);
     if (last7.length === 0) return 0;
-    return last7.reduce((s, e) => s + e.sales, 0) / last7.length;
+    const earliestMs = new Date(last7[0].date).getTime();
+    const calendarDays = Math.min(7, Math.max(1, Math.floor((Date.now() - earliestMs) / 86400000) + 1));
+    return last7.reduce((s, e) => s + e.sales, 0) / calendarDays;
   }, [entries]);
 
   // ── 사업 시작 후 일수 ──
@@ -152,6 +157,10 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
   const daysSinceLastSalesEntry = useMemo<number | null>(() => {
     if (entries.length === 0) return null;
     const latest = entries.reduce((acc, e) => (e.date > acc ? e.date : acc), entries[0].date);
+    // ⚡ 안전망: latest 가 오늘 영업일 이상 (오늘·미래 — 미래는 사장님 잘못 입력) 이면 0
+    //   timezone / DST / new Date(YYYY-MM-DD) UTC parsing edge case 회피.
+    //   사용자 보고 (2026-05-06): 오늘 입력했는데 "공백" 메시지 트리거 케이스 방지.
+    if (latest >= todayBusinessDay) return 0;
     const today = new Date(`${todayBusinessDay}T00:00:00`);
     const last = new Date(`${latest}T00:00:00`);
     return Math.max(0, Math.round((today.getTime() - last.getTime()) / 86400000));

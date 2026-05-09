@@ -1,6 +1,9 @@
 // ─── 경영 건강 진단 AI 프롬프트 v2 ────────────────────────────────────────────
 // 경영학적 프레임워크 + 한국 규제 지식 + 위기 플레이북 기반 전문 진단
 
+import { formatKRW } from "@build-up/shared";
+import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
+
 export type HealthDiagnosisContext = {
   businessType: string;
   monthsInBusiness: number;
@@ -39,6 +42,8 @@ export type HealthDiagnosisResult = {
 
 export const HEALTH_DIAGNOSIS_SYSTEM_PROMPT = `당신은 수백 개의 한국 소규모 사업체를 진단한 경영 컨설턴트입니다.
 사업자의 실제 데이터를 기반으로 정확한 진단과 실행 가능한 처방을 제공합니다.
+
+${ANTI_HALLUCINATION_DIRECTIVE}
 
 ─── 진단 프레임워크 ───
 
@@ -122,9 +127,10 @@ export function buildHealthDiagnosisUserPrompt(ctx: HealthDiagnosisContext): str
     `업종: ${ctx.businessType} | 영업 ${ctx.monthsInBusiness}개월 | 단계: ${stage}`,
     ``,
     `### 매출 지표`,
-    `- 일 평균 매출: ${ctx.avgDailySales.toLocaleString("ko-KR")}원`,
+    // ⚠️ formatKRW 사용 — raw 원 + 콤마는 LLM 이 만 단위로 오독 (10× 폭주 위험)
+    `- 일 평균 매출: ${formatKRW(ctx.avgDailySales)}`,
     `- 일 평균 고객: ${ctx.avgDailyCustomers}명`,
-    `- 객단가: ${avgTicket.toLocaleString("ko-KR")}원`,
+    `- 객단가: ${formatKRW(avgTicket)}`,
     `- 매출 추세: ${ctx.salesTrend} (${ctx.salesTrendPercent > 0 ? "+" : ""}${ctx.salesTrendPercent}%)`,
     ``,
     `### 비용 지표`,

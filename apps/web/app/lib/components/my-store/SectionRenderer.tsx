@@ -13,6 +13,7 @@
 import { useState } from "react";
 import {
   Plus, Trash2, ChevronDown, ChevronRight as ChevRight,
+  Pencil, Check, X,
   Building2, ShieldCheck, Wallet, Users, Umbrella, Building, Globe, Car,
   Utensils, ChefHat, Bike, Coffee, Tag, Truck, Scissors, Sparkles, Calendar,
   Award, Ticket, Dumbbell, GraduationCap, FileText, Heart, PackageOpen, Wrench,
@@ -24,7 +25,9 @@ import { FieldRenderer } from "./FieldRenderer";
 import {
   card, sectionHeader, sectionTitle, sectionSubtitle, sectionBody,
   ghostButton, subtleButton, ddayPill, PALETTE,
+  editBtnStyle, saveBtnStyle, cancelBtnStyle,
 } from "./styles";
+import { useDashboardCtx } from "../../contexts/DashboardContext";
 import type { SectionSpec, FieldSpec } from "../../data/store-info-schema";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -66,6 +69,55 @@ export function SectionRenderer({
   const Icon = ICON_MAP[section.icon] ?? Building2;
   const filledCount = countFilled(section, objectValue, arrayValue);
 
+  // ── Object 모드 수정/저장 ── (Array 모드는 add/remove 가 이미 명시적이라 그대로)
+  const isObjectMode = !!(section.fields && objectValue && onObjectFieldChange);
+  const d = useDashboardCtx();
+  const flushStoreDataImmediate = d.flushStoreDataImmediate;
+  const [editing, setEditing] = useState(false);
+  const [snapshot, setSnapshot] = useState<Record<string, unknown> | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleEdit = () => {
+    setSnapshot(objectValue ? { ...objectValue } : {});
+    setSaveStatus("idle");
+    setSaveError(null);
+    setEditing(true);
+  };
+
+  const handleCancel = () => {
+    // snapshot 의 각 field 값으로 store 복원
+    if (snapshot && onObjectFieldChange && section.fields) {
+      for (const f of section.fields) {
+        const original = snapshot[f.key];
+        const current = objectValue?.[f.key];
+        if (!Object.is(original, current)) {
+          onObjectFieldChange(f.key, original);
+        }
+      }
+    }
+    setEditing(false);
+    setSnapshot(null);
+    setSaveStatus("idle");
+    setSaveError(null);
+  };
+
+  const handleSave = async () => {
+    setSaveStatus("saving");
+    setSaveError(null);
+    try {
+      // 변경사항은 이미 onObjectFieldChange 로 store 에 반영됨. flush 만 호출.
+      await flushStoreDataImmediate();
+      setSaveStatus("saved");
+      setEditing(false);
+      setSnapshot(null);
+      setTimeout(() => setSaveStatus((s) => (s === "saved" ? "idle" : s)), 2000);
+    } catch (err) {
+      setSaveStatus("error");
+      setSaveError(err instanceof Error ? err.message : (ko ? "저장에 실패했습니다." : "Save failed."));
+    }
+  };
+
   return (
     <section id={section.id} style={card}>
       {/* Header */}
@@ -97,11 +149,59 @@ export function SectionRenderer({
             {filledCount.filled}/{filledCount.total}
           </div>
         )}
+        {/* 수정/저장/취소 버튼 — Object 모드만 */}
+        {isObjectMode && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+            {saveStatus === "saved" && (
+              <span style={{ fontSize: 11, color: PALETTE.SUCCESS, fontWeight: 600 }}>
+                {ko ? "✓ 저장됨" : "✓ Saved"}
+              </span>
+            )}
+            {saveStatus === "error" && saveError && (
+              <span style={{ fontSize: 11, color: "#b42334", fontWeight: 600, maxWidth: 180, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+                ⚠ {saveError}
+              </span>
+            )}
+            {!editing ? (
+              <button type="button" onClick={handleEdit} style={editBtnStyle}>
+                <Pencil size={11} strokeWidth={2} />
+                <span>{ko ? "수정" : "Edit"}</span>
+              </button>
+            ) : (
+              <>
+                <button type="button" onClick={handleCancel} disabled={saveStatus === "saving"} style={cancelBtnStyle}>
+                  <X size={11} strokeWidth={2} />
+                  <span>{ko ? "취소" : "Cancel"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saveStatus === "saving"}
+                  style={{
+                    ...saveBtnStyle,
+                    opacity: saveStatus === "saving" ? 0.6 : 1,
+                    cursor: saveStatus === "saving" ? "wait" : "pointer",
+                  }}
+                >
+                  <Check size={11} strokeWidth={2} />
+                  <span>{saveStatus === "saving" ? (ko ? "저장 중…" : "Saving…") : (ko ? "저장" : "Save")}</span>
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </header>
 
-      {/* Object 모드: settings-list (label/value rows) */}
+      {/* Object 모드: settings-list — editing=false 일 때 input 잠금 */}
       {section.fields && objectValue && onObjectFieldChange && (
-        <div style={sectionBody}>
+        <div
+          style={{
+            ...sectionBody,
+            ...(editing ? null : { pointerEvents: "none" as const, opacity: 0.78 }),
+            transition: "opacity 0.15s ease",
+          }}
+          aria-readonly={!editing}
+        >
           {section.fields.map((f, i) => (
             <FieldRenderer
               key={f.key}
@@ -357,3 +457,4 @@ function ArrayEditor({ spec, value, onAdd, onUpdate, onRemove, recommendedPrefil
     </>
   );
 }
+

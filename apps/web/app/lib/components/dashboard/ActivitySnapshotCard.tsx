@@ -9,6 +9,7 @@ import { TodaySalesSummary } from "./TodaySalesSummary";
 import { activityCard } from "./operationalStyles";
 import { AnimatedBar, CountUp } from "./animations";
 import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
+import { calculateBreakEven } from "@build-up/shared";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -70,12 +71,17 @@ export function ActivitySnapshotCard({
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     const yEntry = allE.find(e => e.date === yesterday.toISOString().slice(0, 10));
 
-    // BEP 비교
-    const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number };
-    const fixedDaily = (mc.labor + mc.rent + mc.utilities + mc.other) / 26;
+    // BEP 비교 — cost-ratios.ts SSOT (dashboard.ts:calculateHealthMetrics 와 동일 결과 보장)
+    const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number; sga?: number; marketing?: number };
     const totalRev = allE.reduce((s, e) => s + e.sales, 0);
-    const cogsRate = totalRev > 0 ? mc.ingredients / totalRev : 0.33;
-    const bepDaily = cogsRate < 1 ? Math.round(fixedDaily / (1 - cogsRate)) : 0;
+    const bep = calculateBreakEven({
+      monthlyIngredients: mc.ingredients,
+      monthlyFixedCosts: mc.labor + mc.rent + mc.utilities + mc.other + (mc.sga ?? 0) + (mc.marketing ?? 0),
+      totalRevenue: totalRev,
+      days: allE.length,
+      fallbackCogsRate: 0.33,
+    });
+    const bepDaily = bep.breakEvenDaily;
 
     // 어제 대비
     if (yEntry && yEntry.sales > 0) {
@@ -135,17 +141,21 @@ export function ActivitySnapshotCard({
     };
   });
   // ── 일 손익분기 (BEP daily) — 매출 흐름에 흑/적자 가이드 라인 표시용 ──
-  // 흑자/적자 갭 시각화 (Profit Gap) — 사용자 피드백 P1: "매출 + 비용 통합 차트 = 적자 갭"
+  // cost-ratios.ts SSOT 사용 — dashboard 의 다른 BEP 표시값과 일치 보장.
   const bepDailyForChart = (() => {
     const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number; sga?: number; marketing?: number; interest?: number };
-    const fixedMonthly = mc.labor + mc.rent + mc.utilities + mc.other + (mc.sga ?? 0) + (mc.marketing ?? 0) + (mc.interest ?? 0);
-    const fixedDaily = fixedMonthly / 26; // 월 26 영업일 가정 (외식·소매 평균)
     const allE = d.dailyEntries as DailyEntry[];
     const totalRev = allE.reduce((s, e) => s + e.sales, 0);
-    const cogsRate = totalRev > 0 ? Math.min(0.95, mc.ingredients / totalRev) : 0.33;
-    if (cogsRate >= 1) return 0;
-    const bep = Math.round(fixedDaily / (1 - cogsRate));
-    return bep > 0 ? bep : 0;
+    const bep = calculateBreakEven({
+      monthlyIngredients: mc.ingredients,
+      monthlyFixedCosts:
+        mc.labor + mc.rent + mc.utilities + mc.other +
+        (mc.sga ?? 0) + (mc.marketing ?? 0) + (mc.interest ?? 0),
+      totalRevenue: totalRev,
+      days: allE.length,
+      fallbackCogsRate: 0.33,
+    });
+    return bep.breakEvenDaily;
   })();
   const showBepLine = bepDailyForChart > 0;
   // BEP 라인을 maxSales 보다 살짝 위로 빼서 잘리지 않도록 trackMax 보정 (BEP 가 차트 max 보다 클 때)

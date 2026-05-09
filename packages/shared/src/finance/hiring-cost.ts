@@ -1,16 +1,20 @@
 // ─── 채용 비용 계산기 (2026 한국) ────────────────────────────────────────
 // 연봉/시급 → 실제 사업주 부담 비용 (4대보험 + 퇴직금 + 원천세)
 
-// ── 2026 4대보험 요율 ──
+// ── 2026 4대보험 요율 ── (출처: 국민연금공단·국민건강보험공단·근로복지공단)
+//   ⚠ 매년 1월 갱신. 2026 인상사항:
+//      국민연금 9% → 9.5% (1998년 이후 첫 인상, 2033년까지 매년 0.5%p 인상 예정)
+//      건강보험 7.09% → 7.19%
+//      장기요양 0.9182% → 0.9448%
 export const INSURANCE_RATES_2026 = {
-  nationalPension: { employer: 0.045, employee: 0.045 },       // 국민연금 9% (50:50)
-  healthInsurance: { employer: 0.03545, employee: 0.03545 },   // 건강보험 7.09% (50:50)
-  longTermCare: { rateOfHealth: 0.1281 },                      // 장기요양 = 건강보험의 12.81%
-  employmentInsurance: { employer: 0.009, employee: 0.009 },   // 고용보험 1.8% (50:50 기본)
-  industrialAccident: { employer: 0.007 },                     // 산재보험 ~0.7% (업종별 상이)
+  nationalPension: { employer: 0.0475, employee: 0.0475 },     // 국민연금 9.5% (50:50, 2026 인상)
+  healthInsurance: { employer: 0.03595, employee: 0.03595 },   // 건강보험 7.19% (50:50, 2026 인상)
+  longTermCare: { rateOfHealth: 0.1314 },                      // 장기요양 = 건강보험의 13.14% (0.9448 / 7.19)
+  employmentInsurance: { employer: 0.009, employee: 0.009 },   // 고용보험 1.8% (50:50 기본, 사업주는 규모별 추가 부담)
+  industrialAccident: { employer: 0.007 },                     // 산재보험 ~0.7% (업종별 상이, 일반 서비스업 가정)
 } as const;
 
-export const MINIMUM_WAGE_2026 = 10_030; // 시급 (원)
+export const MINIMUM_WAGE_2026 = 10_320; // 시급 (원) — 2026 확정 (2025 10,030 → +290원, +2.9%)
 export const MONTHLY_WORK_HOURS = 209;    // 주 40시간 기준 월 소정근로시간
 export const SEVERANCE_RESERVE_RATE = 1 / 12; // 월별 퇴직금 적립 비율
 
@@ -145,6 +149,147 @@ export function checkMinimumWage(monthlySalary: number, weeklyHours = 40): {
     compliant: monthlySalary >= minimumMonthly,
     minimumMonthly,
     shortfall: Math.max(0, minimumMonthly - monthlySalary),
+  };
+}
+
+// ─── 두루누리 사회보험 + 단시간 분기 (시뮬레이터 강화) ──────────────────
+//
+// 출처: 두루누리(insurancesupport.or.kr) — 270만원 미만 + 10인 미만 사업장의
+//       신규 가입자 36개월간 국민연금·고용보험 80% 지원.
+//
+// 단시간(주 15h 미만): 국민연금·건강보험 면제, 고용·산재만 가입.
+
+export const DURUNURI_2026 = {
+  /** 월급 상한 (원) */
+  monthlySalaryThreshold: 2_700_000,
+  /** 사업장 직원 수 상한 */
+  maxEmployees: 10,
+  /** 지원 비율 (사업주·근로자 부담분 모두) */
+  subsidyPct: 80,
+  /** 지원 항목 */
+  appliesTo: ["pension", "employment"] as const,
+  /** 지원 기간 */
+  durationMonths: 36,
+} as const;
+
+/** 사업주 4대보험 총 부담률(%) — 산재 0.7% (일반 서비스업 기준) */
+export const TOTAL_EMPLOYER_RATE_PCT = 4.5 + 3.545 + 0.4351 + 0.9 + 0.7;
+/** 근로자 4대보험 총 공제율(%) */
+export const TOTAL_EMPLOYEE_RATE_PCT = 4.5 + 3.545 + 0.4351 + 0.9;
+
+export type InsuranceSimInput = {
+  /** 월 급여 (원) — 세전 */
+  monthlySalary: number;
+  /** 주 근무시간 */
+  weeklyHours?: number;
+  /** 사업장 총 직원 수 (시뮬 직원 포함) — 두루누리 자격 판단용 */
+  totalEmployeeCount?: number;
+  /** 두루누리 신청 의향 + 가입 36개월 이내 신규 여부 */
+  isDuruduriEligible?: boolean;
+};
+
+export type InsuranceSimResult = {
+  employer: {
+    pension: number;
+    health: number;
+    longTermCare: number;
+    employment: number;
+    workers: number;
+    total: number;
+    /** 두루누리 적용 후 */
+    afterDuruduri: number;
+  };
+  employee: {
+    pension: number;
+    health: number;
+    longTermCare: number;
+    employment: number;
+    total: number;
+    afterDuruduri: number;
+  };
+  /** 사장님 실 월부담 = 급여 + 사업주 보험료 (두루누리 적용 후) */
+  totalMonthlyCostToEmployer: number;
+  duruduriEligible: boolean;
+  duruduriMonthlySaving: number;
+  warnings: string[];
+};
+
+/**
+ * 4대보험 시뮬레이션 (두루누리 + 단시간 분기 포함).
+ *
+ * 기존 calculateHiringCost 와 달리 더 가벼운 결과 + 두루누리 80% 지원 자동 분기.
+ * 채용 결정 시 즉답 UI 용.
+ */
+export function simulateInsurance(input: InsuranceSimInput): InsuranceSimResult {
+  const salary = Math.max(0, Math.round(input.monthlySalary));
+  const weeklyHours = input.weeklyHours ?? 40;
+  const totalEmployeeCount = input.totalEmployeeCount ?? 1;
+  const r = INSURANCE_RATES_2026;
+  const warnings: string[] = [];
+
+  const isShortTime = weeklyHours < 15;
+  if (isShortTime) {
+    warnings.push("주 15시간 미만 근로자 — 국민연금·건강보험 면제, 고용·산재만 가입");
+  }
+
+  // 사업주 부담
+  const empPension = isShortTime ? 0 : Math.round(salary * r.nationalPension.employer);
+  const empHealth = isShortTime ? 0 : Math.round(salary * r.healthInsurance.employer);
+  const empLtc = isShortTime ? 0 : Math.round(empHealth * r.longTermCare.rateOfHealth);
+  const empEmployment = Math.round(salary * r.employmentInsurance.employer);
+  const empWorkers = Math.round(salary * r.industrialAccident.employer);
+  const empTotal = empPension + empHealth + empLtc + empEmployment + empWorkers;
+
+  // 근로자 부담
+  const eePension = isShortTime ? 0 : Math.round(salary * r.nationalPension.employee);
+  const eeHealth = isShortTime ? 0 : Math.round(salary * r.healthInsurance.employee);
+  const eeLtc = isShortTime ? 0 : Math.round(eeHealth * r.longTermCare.rateOfHealth);
+  const eeEmployment = Math.round(salary * r.employmentInsurance.employee);
+  const eeTotal = eePension + eeHealth + eeLtc + eeEmployment;
+
+  const duruduriEligible =
+    salary < DURUNURI_2026.monthlySalaryThreshold &&
+    totalEmployeeCount < DURUNURI_2026.maxEmployees &&
+    !!input.isDuruduriEligible;
+
+  const employerSaving = duruduriEligible
+    ? Math.round((empPension + empEmployment) * (DURUNURI_2026.subsidyPct / 100))
+    : 0;
+  const employeeSaving = duruduriEligible
+    ? Math.round((eePension + eeEmployment) * (DURUNURI_2026.subsidyPct / 100))
+    : 0;
+
+  if (duruduriEligible) {
+    warnings.push("두루누리 80% 지원 자격 — 가입 36개월간 국민연금·고용보험 부담 대폭 감소");
+  } else if (
+    salary < DURUNURI_2026.monthlySalaryThreshold &&
+    totalEmployeeCount < DURUNURI_2026.maxEmployees
+  ) {
+    warnings.push("두루누리 자격 가능 — 신규 가입자(가입 36개월 이내)면 80% 지원 신청 가능");
+  }
+
+  return {
+    employer: {
+      pension: empPension,
+      health: empHealth,
+      longTermCare: empLtc,
+      employment: empEmployment,
+      workers: empWorkers,
+      total: empTotal,
+      afterDuruduri: empTotal - employerSaving,
+    },
+    employee: {
+      pension: eePension,
+      health: eeHealth,
+      longTermCare: eeLtc,
+      employment: eeEmployment,
+      total: eeTotal,
+      afterDuruduri: eeTotal - employeeSaving,
+    },
+    totalMonthlyCostToEmployer: salary + empTotal - employerSaving,
+    duruduriEligible,
+    duruduriMonthlySaving: employerSaving + employeeSaving,
+    warnings,
   };
 }
 

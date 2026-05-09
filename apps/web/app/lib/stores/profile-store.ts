@@ -36,6 +36,11 @@ type ProfileState = {
   businessLaunchedDate: string | null;
   /** 스타트업 운영 모드 — 같은 sub-industry 라도 인디/부트스트랩/시드/시리즈A 비용·자금원 다름 */
   startupOperatingMode: "indie" | "bootstrap" | "seed" | "seriesA";
+  /**
+   * 매월 직원 월급 지급일 (1~31). null = 미설정 → 알림 비활성.
+   *  사용자 요청 (2026-05-09): 임금체불 방지 — D-7 / D-2 / D-day 사장님께 알림.
+   */
+  payDay: number | null;
 };
 
 type ProfileActions = {
@@ -58,6 +63,7 @@ type ProfileActions = {
   setBusinessOpenTime: (v: string | null) => void;
   setBusinessCloseTime: (v: string | null) => void;
   setCpaDecision: (v: "cpa" | "self" | null) => void;
+  setPayDay: (v: number | null) => void;
   setUsesSubscriptions: (v: boolean) => void;
   setSelectedRevenueModelId: (v: string | null) => void;
   setSelectedInteriorConcept: (v: string | null) => void;
@@ -89,6 +95,7 @@ const initialState: ProfileState = {
   businessOpenTime: null,
   businessCloseTime: null,
   cpaDecision: null,
+  payDay: null,
   usesSubscriptions: false,
   selectedRevenueModelId: null,
   selectedInteriorConcept: null,
@@ -122,6 +129,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       setBusinessOpenTime: (v) => set({ businessOpenTime: v }),
       setBusinessCloseTime: (v) => set({ businessCloseTime: v }),
       setCpaDecision: (v) => set({ cpaDecision: v }),
+      setPayDay: (v) => set({ payDay: v }),
       setUsesSubscriptions: (v) => set({ usesSubscriptions: v }),
       setSelectedRevenueModelId: (v) => set({ selectedRevenueModelId: v, usesSubscriptions: v === "subscription" || v === "freemium" || v === "hybrid" }),
       setSelectedInteriorConcept: (v) => set({ selectedInteriorConcept: v }),
@@ -151,6 +159,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
         businessOpenTime: state.businessOpenTime,
         businessCloseTime: state.businessCloseTime,
         cpaDecision: state.cpaDecision,
+        payDay: state.payDay,
         usesSubscriptions: state.usesSubscriptions,
         selectedRevenueModelId: state.selectedRevenueModelId,
         businessLaunched: state.businessLaunched,

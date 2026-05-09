@@ -2,12 +2,12 @@
 
 import { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText, Lock } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { CountUp } from "./animations";
 import { PALETTE, MOTION, CHART_COLORS } from "./operationalStyles";
 import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
-import { resolveHero, type Hero } from "./MorningBriefing";
+import { resolveHero, InsightStack, PRIORITY_META, resolveInsightCtaTarget, type Hero } from "./MorningBriefing";
 import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
 
@@ -91,7 +91,10 @@ export function CEOMorningHero({ d }: Props) {
   const last14Total = last14.reduce((s, e) => s + e.sales, 0);
   const prev14 = dailyEntries.slice(-28, -14);
   const prev14Total = prev14.reduce((s, e) => s + e.sales, 0);
-  const wowDelta = prev14Total > 0 ? ((last14Total - prev14Total) / prev14Total) * 100 : 0;
+  // wow delta — 양쪽 모두 *기록된 entry* 가 충분할 때만 (≥7) 계산. 그 외엔 0% 표시 (오해 방지).
+  const wowDelta = (prev14Total > 0 && prev14.length >= 7 && last14.length >= 7)
+    ? ((last14Total - prev14Total) / prev14Total) * 100
+    : 0;
 
   // 런웨이 계산 (간단 버전)
   const monthlyCosts = (d.monthlyCosts ?? {}) as Record<string, number>;
@@ -113,11 +116,26 @@ export function CEOMorningHero({ d }: Props) {
         tone,
       };
     }
-    // 자영업: 오늘 매출 (없으면 14일 평균)
+    // 자영업: 오늘 매출 (없으면 캘린더 일수 기준 평균)
+    //
+    //  ⚠️ 사용자 보고 (2026-05-08): 1일 입력 200K → 14일 평균 200K 로 잘못 표시되던 버그.
+    //     원인: `last14Total / last14.length` — entry 수 (1) 로만 나눔.
+    //     수정: 분모를 *경과 캘린더 일수* 로 — 입력 안 한 날은 0매출로 자연 반영.
     const todaySales = todayEntry?.sales ?? 0;
-    const avg14 = last14.length > 0 ? last14Total / last14.length : 0;
+    // 첫 entry 부터 오늘까지의 *캘린더 일수* (1~14 클램프)
+    const earliestDate = last14.length > 0 ? new Date(last14[0].date) : null;
+    const todayDate = new Date();
+    const calendarDaysCovered = earliestDate
+      ? Math.min(14, Math.max(1, Math.floor((todayDate.getTime() - earliestDate.getTime()) / 86400000) + 1))
+      : 0;
+    const avg14 = calendarDaysCovered > 0 ? last14Total / calendarDaysCovered : 0;
     const value = todaySales > 0 ? todaySales : avg14;
-    const valueLabel = todaySales > 0 ? (ko ? "오늘 매출" : "Today's sales") : (ko ? "일 평균 (14일)" : "Daily avg (14d)");
+    const dayLabel = calendarDaysCovered > 0 && calendarDaysCovered < 14
+      ? `${calendarDaysCovered}일`
+      : "14일";
+    const valueLabel = todaySales > 0
+      ? (ko ? "오늘 매출" : "Today's sales")
+      : (ko ? `일 평균 (${dayLabel})` : `Daily avg (${dayLabel})`);
     const tone: "good" | "warn" | "bad" = wowDelta >= 5 ? "good" : wowDelta >= -5 ? "warn" : "bad";
     return {
       label: valueLabel,
@@ -176,6 +194,40 @@ export function CEOMorningHero({ d }: Props) {
     categoryId: d.industryCategoryId,
   }), [ko, brain, d.industryCategoryId]);
 
+  // ─── Industry insights → Hero spec 변환 (모든 hero source 에서 stack 노출용) ───
+  // 사용자 요청 (2026-05-08): 운영 대시보드 최상단 AI 카드에 *3개 추천* 펼치기 기능 노출.
+  // 사용자 요청 (2026-05-08-2): 각 카드 버튼은 인사이트 *고유 액션* 으로 — "매출 기록하기" 일괄 X.
+  const allInsightSpecs = useMemo<Omit<Hero, "relatedSpecs">[]>(() => {
+    const ii = brain.industryInsight;
+    if (!ii || !Array.isArray(ii.insights) || ii.insights.length === 0) return [];
+    const cat = d.industryCategoryId;
+    const isDigital = cat === "startup-tech" || cat === "online-digital";
+    return ii.insights.map((it) => {
+      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital);
+      // ⚠️ 버튼 라벨은 LLM 이 만든 *고유 액션* 사용 ("재방문잡기" / "구조점검" 등) — 일괄 라벨 X
+      const ctaLabel = it.action || "확인하기";
+      return {
+        source: "industry" as const,
+        tone: "neutral" as const,
+        tagKo: "오늘의 인사이트",
+        tagEn: "Today's insight",
+        analysisKo: it.headline ? `${it.headline}. ${it.body}` : it.body,
+        analysisEn: it.headline ? `${it.headline}. ${it.body}` : it.body,
+        // action 은 InsightStack 의 캡션 — 버튼과 중복 방지 위해 빈 값 (캡션 미노출)
+        actionKo: "",
+        actionEn: "",
+        ctaKo: ctaLabel,
+        ctaEn: ctaLabel,
+        ctaTarget: target,
+        sourceLabel: it.sourceLabel,
+        priority: it.priority,
+      };
+    });
+  }, [brain.industryInsight, d.industryCategoryId]);
+
+  // 스택 표시 리스트 — briefing 이 industry source 면 첫 인사이트는 hero 라 1번부터, 그 외는 모두
+  const stackList = briefing.source === "industry" ? allInsightSpecs.slice(1) : allInsightSpecs;
+
   // CTA 클릭 핸들러 — briefing.ctaTarget(인사이트가 가리키는 실제 카드)에 따라 디스패치.
   // 매출 입력이 목적이면 input에 자동 포커스, 그 외엔 카드를 1.1초간 ring 하이라이트로 강조.
   // 모든 분기에서 fallback 보장 — 클릭이 무반응으로 끝나지 않게 (거짓 기능 금지).
@@ -216,9 +268,18 @@ export function CEOMorningHero({ d }: Props) {
       case "costs":
         handled = focusBySelector("[data-cost-structure]");
         break;
+      case "operations":
+        // 오늘의 운영 리추얼 카드 — 측정·병목·서비스 시간 코칭의 종착점
+        handled = focusBySelector("[data-ops-rituals]");
+        break;
       case "marketing":
-        // 마케팅 라우트가 아직 별도 페이지면 사용자 변화 카드(효과 검증) 또는 매출 카드로 안내
-        handled = focusBySelector("[data-user-activity]") || focusBySelector("[data-sales-input]");
+        // 마케팅은 별도 surface (페이지) — surface 전환 이벤트 dispatch
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
+            detail: { surface: "marketing" },
+          }));
+          handled = true;
+        }
         break;
     }
     // 어떤 이유로든 타깃 카드를 못 찾으면 fallback — 매출 입력 카드로
@@ -655,8 +716,21 @@ export function CEOMorningHero({ d }: Props) {
                   : <Compass size={17} strokeWidth={1.5} color={PALETTE.MIDNIGHT} />}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: briefing.tone === "crisis" ? PALETTE.DANGER : briefing.tone === "warning" ? PALETTE.WARN : PALETTE.MIDNIGHT, opacity: 0.78, marginBottom: "3px" }}>
-                {ko ? briefing.tagKo : briefing.tagEn}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px", flexWrap: "wrap" as const }}>
+                <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: briefing.tone === "crisis" ? PALETTE.DANGER : briefing.tone === "warning" ? PALETTE.WARN : PALETTE.MIDNIGHT, opacity: 0.78 }}>
+                  {ko ? briefing.tagKo : briefing.tagEn}
+                </span>
+                {briefing.priority && (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center",
+                    padding: "2px 8px", borderRadius: "999px",
+                    background: PRIORITY_META[briefing.priority].bg,
+                    color: PRIORITY_META[briefing.priority].color,
+                    fontSize: "10px", fontWeight: 700,
+                  }}>
+                    {PRIORITY_META[briefing.priority].label}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: "13.5px", fontWeight: 600, letterSpacing: "-0.005em", lineHeight: 1.5, color: PALETTE.INK, marginBottom: "4px" }}>
                 {ko ? briefing.analysisKo : briefing.analysisEn}
@@ -684,6 +758,15 @@ export function CEOMorningHero({ d }: Props) {
               <ChevronRight size={12} strokeWidth={2.4} />
             </div>
           </button>
+        )}
+
+        {/* ═══════════════ AI 추천 카드 스택 (industry insights) ═══════════════
+            briefing 카드 아래에 우선순위 배지 단 미니 카드 2-3개 펼치기 노출.
+            briefing 이 industry source 면 첫 인사이트는 hero 라 1번부터, 그 외는 모두. */}
+        {stackList.length > 0 && (
+          <div style={{ marginTop: "12px" }}>
+            <InsightStack related={stackList} ko={ko} />
+          </div>
         )}
       </motion.div>
     </motion.section>
@@ -726,38 +809,34 @@ function DailyReportButton({ ko, d }: { ko: boolean; d: DashboardHook }) {
   const closed = isBusinessDayClosed(new Date(), ctx);
   const activeAt = dailyReportActiveTimeLabel(ctx);
 
+  // 사용자 요청 (2026-05-08): 보고서 페이지는 *항상* 진입 가능. 자물쇠/비활성 X.
+  // 영업 종료 전에는 부제로 "{activeAt} 자동 도착 예정" 만 안내.
   return (
     <button
       type="button"
-      onClick={() => {
-        if (!closed) return;
-        d.navigateToSurface("reports");
-      }}
-      disabled={!closed}
+      onClick={() => d.navigateToSurface("reports")}
       style={{
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
         padding: "8px 12px",
         borderRadius: 10,
-        border: closed ? `1px solid ${PALETTE.MIDNIGHT}` : "1px solid rgba(15,23,42,0.08)",
-        background: closed ? PALETTE.MIDNIGHT : "rgba(15,23,42,0.03)",
-        color: closed ? "white" : "rgba(15,23,42,0.45)",
+        border: `1px solid ${PALETTE.MIDNIGHT}`,
+        background: PALETTE.MIDNIGHT,
+        color: "white",
         fontSize: 11.5,
         fontWeight: 700,
-        cursor: closed ? "pointer" : "default",
+        cursor: "pointer",
         whiteSpace: "nowrap" as const,
         flexShrink: 0,
         transition: "all 0.15s ease",
       }}
       title={closed
         ? (ko ? "오늘의 보고서로 이동" : "Open today's report")
-        : (ko ? `${activeAt} 이후 활성화됩니다` : `Active after ${activeAt}`)}
+        : (ko ? `${activeAt} 자동 도착 예정 (지금도 미리보기 가능)` : `Auto-delivers at ${activeAt}`)}
     >
-      {closed ? <FileText size={12} strokeWidth={1.8} /> : <Lock size={12} strokeWidth={1.8} />}
-      {closed
-        ? (ko ? "오늘의 보고서" : "Today's report")
-        : (ko ? `${activeAt} 활성화` : `Active ${activeAt}`)}
+      <FileText size={12} strokeWidth={1.8} />
+      {ko ? "오늘의 보고서" : "Today's report"}
     </button>
   );
 }

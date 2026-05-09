@@ -16,36 +16,37 @@ function parseManwonInput(value: string) {
   return amount * 10000;
 }
 
-// Phase 4-1에서 구현할 새 함수
+// 프로덕션과 동일 구현 (apps/web/app/lib/helpers.ts:parseKoreanCurrency)
 function parseKoreanCurrency(value: string): number | undefined {
-  const cleaned = value.replace(/\s/g, "").replace(/원$/, "");
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const hadWonSuffix = /원\s*$/.test(trimmed);
+  const cleaned = trimmed.replace(/\s/g, "").replace(/원$/, "");
+  if (!cleaned) return undefined;
+
   let total = 0;
 
-  // "억" 단위 처리
   const eokMatch = cleaned.match(/([\d.]+)\s*억/);
   if (eokMatch) {
     total += parseFloat(eokMatch[1]) * 100_000_000;
   }
 
-  // "천만" 단위 처리
   const cheonmanMatch = cleaned.match(/([\d.]+)\s*천만/);
   if (cheonmanMatch) {
     total += parseFloat(cheonmanMatch[1]) * 10_000_000;
   } else {
-    // "만" 단위 처리 (천만이 아닌 경우만)
     const manMatch = cleaned.match(/([\d.]+)\s*만/);
     if (manMatch) {
       total += parseFloat(manMatch[1]) * 10_000;
     }
   }
 
-  // 단위 없이 숫자만 있는 경우 → 만원 단위로 간주
   if (total === 0) {
     const digits = cleaned.replace(/[^\d]/g, "");
     if (!digits) return undefined;
     const amount = Number.parseInt(digits, 10);
     if (!Number.isFinite(amount) || amount <= 0) return undefined;
-    return amount * 10_000;
+    return hadWonSuffix ? amount : amount * 10_000;
   }
 
   return total > 0 ? total : undefined;
@@ -89,5 +90,24 @@ describe("parseKoreanCurrency (새 구현)", () => {
   it("빈 입력에 undefined를 반환한다", () => {
     expect(parseKoreanCurrency("")).toBeUndefined();
     expect(parseKoreanCurrency("원")).toBeUndefined();
+  });
+
+  // 회귀 — '원' 접미사가 있으면 won 단위로 해석 (이전 버그: 10,000배 폭주)
+  describe("'원' 접미사 — won 단위 명시", () => {
+    it("'1000원'은 1000 won (이전엔 10,000,000으로 폭주)", () => {
+      expect(parseKoreanCurrency("1000원")).toBe(1_000);
+    });
+    it("'5000원'은 5000 won", () => {
+      expect(parseKoreanCurrency("5000원")).toBe(5_000);
+    });
+    it("'100 원'(공백 포함)도 100 won", () => {
+      expect(parseKoreanCurrency("100 원")).toBe(100);
+    });
+    it("단위 명시는 그대로 — '5천만원' = 5천만", () => {
+      expect(parseKoreanCurrency("5천만원")).toBe(50_000_000);
+    });
+    it("단위 없이 숫자만 — 만원 단위 (기존 동작 유지)", () => {
+      expect(parseKoreanCurrency("3000")).toBe(30_000_000);
+    });
   });
 });

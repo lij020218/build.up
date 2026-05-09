@@ -18,6 +18,8 @@ export const REPORT_INSIGHT_SYSTEM_PROMPT = `당신은 한국 소상공인 전�
 - 프라임코스트 = 재료비 + 인건비. 65% 초과 시 수익 구조 위험 신호.
 - 런웨이 6개월 미만 = 자금 위기 경보.
 
+${ANTI_HALLUCINATION_DIRECTIVE}
+
 [인사이트 작성 원칙]
 1. 데이터에 있는 숫자만 인용 — 없는 수치는 절대 만들지 않음
 2. 2~3문장, 총 200~350자 (한국어 기준)
@@ -44,11 +46,14 @@ export type ReportInsightInput = {
   phase: "pre-launch" | "early" | "growth" | "mature";
 };
 
+import { formatKRW } from "@build-up/shared";
+import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
+
 export function buildReportInsightPrompt(input: ReportInsightInput): string {
   const lines: string[] = [
     `기간: ${input.periodLabel} (${input.period})`,
     `업종: ${input.industry} / 단계: ${input.phase}`,
-    `매출: ${input.revenue.toLocaleString()}원 (이전: ${input.revenuePrev.toLocaleString()}원${input.revenueChangePct != null ? `, 변화: ${input.revenueChangePct >= 0 ? "+" : ""}${input.revenueChangePct}%` : ""})`,
+    `매출: ${formatKRW(input.revenue)} (이전: ${formatKRW(input.revenuePrev)}${input.revenueChangePct != null ? `, 변화: ${input.revenueChangePct >= 0 ? "+" : ""}${input.revenueChangePct}%` : ""})`,
   ];
 
   if (input.marginPct != null) lines.push(`마진율: ${input.marginPct}%`);

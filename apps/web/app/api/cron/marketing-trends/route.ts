@@ -9,6 +9,7 @@ import {
   getCronSecret,
   getNaverApiCreds,
   getTavilyApiKey,
+  getYoutubeApiKey,
 } from "../../_lib/env";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { generateTrends } from "../../_lib/trend-generator";
@@ -60,6 +61,7 @@ export async function GET(request: Request) {
 
   const naverCreds = getNaverApiCreds();
   const tavilyKey = getTavilyApiKey();
+  const youtubeKey = getYoutubeApiKey();
 
   // 요청이 부분 실행 모드인지 확인 — ?group=food-delivery
   const url = new URL(request.url);
@@ -96,6 +98,7 @@ export async function GET(request: Request) {
           anthropicApiKey: anthropicKey,
           naverCreds,
           tavilyKey,
+          youtubeKey,
           bizLabel: lang === "ko" ? groupMeta.ko : groupMeta.en,
           categoryId: groupMeta.categoryId,
           language: lang,

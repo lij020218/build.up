@@ -12,9 +12,15 @@ import {
   loadMarketSignalRecommendations,
   buildRecommendedMarkets,
   localizeRecommendationItem,
+  getMatchedProgramsV2,
+  checkWeeklyHoursThreshold,
+  checkAnnualLeaveAccrual,
+  checkFivePersonThreshold,
+  checkSimplifiedTaxTransition,
 } from "@build-up/shared";
 import { supabase } from "../../../lib/supabase";
 import { useRoadmapStore, useAiStore, useProfileStore, useFinanceStore, useOperationsStore, useOnboardingStore } from "../stores";
+import { isBusinessDayClosed } from "../utils/business-day";
 import { useCashflowStore } from "../stores/cashflow-store";
 import { useNotifications, type NotifNavigate } from "../../notification-context";
 import type { InventoryItem, FixedExpense } from "../stores/operations-store";
@@ -73,6 +79,10 @@ export function useDataLoading(
     locationMode,
     preferredRegionInput,
     businessLaunched,
+    businessLaunchedDate,
+    businessCloseTime,
+    payDay,
+    initialOperatingCapital,
   } = useProfileStore();
 
   const {
@@ -465,17 +475,41 @@ export function useDataLoading(
       });
     }
 
-    // 3. 직원 월급 D-7
-    if ((employees as { id: string }[]).length > 0 && businessLaunched) {
-      const payDay = 25;
-      const payDate = domN <= payDay ? new Date(yN, mN, payDay) : new Date(yN, mN + 1, payDay);
+    // 3. 직원 월급 알림 — D-7 / D-2 / D-day (사장님 설정 payDay 사용, 미설정 시 비활성)
+    //    사용자 요청 (2026-05-09): 임금체불 방지 — 월급날 미지급 시 형사처벌 가능 (3년 시효).
+    if ((employees as { id: string }[]).length > 0 && businessLaunched && payDay) {
+      // 이번 달 또는 다음 달 지급일 — 이번 달이 31일 미만이면 마지막 날로 클램프
+      const lastDayThisMonth = new Date(yN, mN + 1, 0).getDate();
+      const lastDayNextMonth = new Date(yN, mN + 2, 0).getDate();
+      const adjustedThis = Math.min(payDay, lastDayThisMonth);
+      const adjustedNext = Math.min(payDay, lastDayNextMonth);
+      const payDate = domN <= adjustedThis
+        ? new Date(yN, mN, adjustedThis)
+        : new Date(yN, mN + 1, adjustedNext);
       const pd = diffD(payDate);
       if (pd >= 0 && pd <= 7) {
         const totalPay = (employees as { hourlyWage: number; weeklyHours: number }[]).reduce((s, e) => {
           const weekly = e.weeklyHours >= 15 ? (e.weeklyHours / 5) * e.hourlyWage : 0;
           return s + Math.round((e.hourlyWage * e.weeklyHours + weekly) * 4.345);
         }, 0);
-        items.push({ id: "payroll", severity: pd <= 2 ? "urgent" : "warning", title: ko ? `직원 월급 지급일 D-${pd}` : `Payroll in ${pd} days`, detail: ko ? `${(employees as { id: string }[]).length}명 · 예상 ${Math.round(totalPay / 10000)}만원` : `${(employees as { id: string }[]).length} staff · est. ₩${Math.round(totalPay / 10000)}K` });
+        const staffCount = (employees as { id: string }[]).length;
+        const titleKo = pd === 0
+          ? "오늘이 직원 월급날입니다 ⚠️"
+          : `직원 월급 지급일 D-${pd}`;
+        const titleEn = pd === 0 ? "Today is payday ⚠️" : `Payroll in ${pd} days`;
+        const detailKo = pd === 0
+          ? `${staffCount}명 · 약 ${Math.round(totalPay / 10000)}만원 — 미지급 시 임금체불(형사처벌, 3년 시효).`
+          : `${staffCount}명 · 예상 ${Math.round(totalPay / 10000)}만원`;
+        const detailEn = pd === 0
+          ? `${staffCount} staff · ~₩${Math.round(totalPay / 10000)}K — non-payment = wage theft (criminal liability).`
+          : `${staffCount} staff · est. ₩${Math.round(totalPay / 10000)}K`;
+        items.push({
+          id: "payroll",
+          severity: pd <= 2 ? "urgent" : "warning",
+          title: ko ? titleKo : titleEn,
+          detail: ko ? detailKo : detailEn,
+          navigate: { surface: "analytics", selector: "[data-team-card]" },
+        });
       }
     }
 
@@ -589,9 +623,203 @@ export function useDataLoading(
       });
     }
 
+    // 13. 지원금 마감 임박 (사용자 매칭 + 자격 충족 + D-7 이내) — 최대 3건
+    //  ⚠️ 사용자 상황 *전부* 주입 — 이전 버그: businessYears=0 hardcoded → 운영 중 사장님께
+    //     예비창업 프로그램 (businessYearRange [0,0]) 이 잘못 매칭되던 문제 (2026-05-09 fix).
+    if (businessLaunched) {
+      // 정확한 businessYears 계산
+      const bizYears = businessLaunchedDate
+        ? Math.max(0, Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / (365 * 86_400_000)))
+        : 0;
+
+      // 위기 신호 — 런웨이 + 매출 추세 (정확하지 않아도 위기 부스트 트리거 OK)
+      const dailyEntriesArr = (dailyEntries as { date: string; sales: number }[] | undefined) ?? [];
+      const sortedEntries = [...dailyEntriesArr].sort((a, b) => a.date.localeCompare(b.date));
+      const last7 = sortedEntries.slice(-7);
+      const prev7 = sortedEntries.slice(-14, -7);
+      const avg7 = last7.length > 0 ? last7.reduce((s, e) => s + e.sales, 0) / last7.length : 0;
+      const avgPrev = prev7.length > 0 ? prev7.reduce((s, e) => s + e.sales, 0) / prev7.length : 0;
+      const weeklyChangePct = avgPrev > 0 ? Math.round(((avg7 - avgPrev) / avgPrev) * 1000) / 10 : undefined;
+
+      const totalCost = monthlyCosts ? Object.values(monthlyCosts as Record<string, unknown>).reduce(
+        (s: number, v) => s + (typeof v === "number" ? v : 0), 0,
+      ) : 0;
+      const cash = initialOperatingCapital ?? 0;
+      const monthlyRev = avg7 * 26;
+      const burn = Math.max(0, totalCost - monthlyRev);
+      const runwayMonths = (cash > 0 && burn > 0) ? Math.round((cash / burn) * 10) / 10 : undefined;
+
+      const matchedPrograms = getMatchedProgramsV2({
+        startupType,
+        industryCategoryId,
+        businessYears: bizYears,
+        region: preferredRegionInput || undefined,
+        capital: selectedBudget ?? undefined,
+        businessStage: bizYears >= 3 ? "growth" : "early",
+        runwayMonths,
+        weeklySalesChangePct: weeklyChangePct,
+        employeesCount: (employees as { id: string }[]).length,
+      });
+      const urgent = matchedPrograms
+        .filter((p) => p.eligible && p.daysUntilDeadline != null && p.daysUntilDeadline >= 0 && p.daysUntilDeadline <= 7)
+        .slice(0, 3);
+      urgent.forEach((p) => {
+        const days = p.daysUntilDeadline!;
+        items.push({
+          id: `funding-deadline-${p.id}`,
+          severity: days <= 2 ? "urgent" : "warning",
+          title: ko
+            ? (days === 0 ? `${p.name.ko} 오늘 마감` : `${p.name.ko} D-${days}`)
+            : (days === 0 ? `${p.name.en} due today` : `${p.name.en} in ${days}d`),
+          detail: ko
+            ? `${p.organizer.ko} · ${p.amount ?? p.benefit.ko.slice(0, 30)}`
+            : `${p.organizer.en} · ${p.amount ?? p.benefit.en.slice(0, 30)}`,
+          navigate: { surface: "guides" },
+        });
+      });
+    }
+
+    // ── 노동법·세법 무지 보호 알림 (사용자 명령 2026-05-09) ────────────────────────
+    //
+    //   ⚠️ 모든 메시지는 *참고용 운영 보조* — 법률 자문 아님.
+    //      복잡 분쟁 / 정확한 계산은 노무사·세무사 상담 권장.
+
+    // 14. 주 15h 임계 — 주휴수당 발생 임박 직원 알림
+    //  근로기준법 55조: 주 15h+ 근로 + 1주 개근 → 주휴수당 의무.
+    //  무지로 14h~15h 사이 미지급 시 임금체불 (3년 시효, 형사처벌).
+    if ((employees as { id: string }[]).length > 0) {
+      const checks = checkWeeklyHoursThreshold(
+        employees as { id: string; name: string; weeklyHours: number }[],
+      );
+      const approaching = checks.filter((c) => c.level === "approaching");
+      const exceeded = checks.filter((c) => c.level === "exceeded");
+      // approaching 만 알림 (exceeded 는 이미 발생 — TeamCard 의 표시로 처리)
+      approaching.slice(0, 2).forEach((c) => {
+        items.push({
+          id: `weekly-hours-${c.employeeId}`,
+          severity: "warning",
+          title: ko ? `${c.employeeName}님 주휴수당 임박` : `${c.employeeName} approaching weekly bonus`,
+          detail: ko ? c.suggestion : `${c.weeklyHours}h/week — ${c.hoursToThreshold}h to threshold`,
+          navigate: { surface: "home", selector: "[data-team-card]" },
+        });
+      });
+      // exceeded 직원이 있으면 합산 알림 1건 (개별 X)
+      if (exceeded.length > 0) {
+        items.push({
+          id: "weekly-hours-exceeded",
+          severity: "urgent",
+          title: ko
+            ? `주휴수당 대상 직원 ${exceeded.length}명`
+            : `${exceeded.length} eligible for weekly bonus`,
+          detail: ko
+            ? "주 15h 이상 근로 + 1주 개근 시 주휴수당 의무. 미지급 = 임금체불 (3년 시효, 형사처벌)."
+            : "Weekly bonus required. Non-payment = wage theft.",
+          navigate: { surface: "home", selector: "[data-team-card]" },
+        });
+      }
+    }
+
+    // 15. 연차 1년 도래 — 입사일 기반 자동 추적
+    //  근로기준법 60조: 1년 이상 근속 → 15일 연차. 미부여 시 수당 환산.
+    if ((employees as { id: string }[]).length > 0) {
+      const checks = checkAnnualLeaveAccrual(
+        employees as { id: string; name: string; hireDate?: string }[],
+      );
+      checks
+        .filter((c) => c.level === "approaching" || c.level === "due")
+        .slice(0, 2)
+        .forEach((c) => {
+          items.push({
+            id: `annual-leave-${c.employeeId}`,
+            severity: c.level === "due" ? "urgent" : "warning",
+            title: c.level === "due"
+              ? (ko ? `${c.employeeName}님 입사 1년 — 연차 발생` : `${c.employeeName} 1yr anniversary`)
+              : (ko ? `${c.employeeName}님 1년 D-${c.daysUntilYearMark}` : `${c.employeeName} D-${c.daysUntilYearMark}`),
+            detail: ko ? c.suggestion : `${c.daysSinceHire}d since hire`,
+            navigate: { surface: "home", selector: "[data-team-card]" },
+          });
+        });
+    }
+
+    // 16. 5인 미만 → 5인 이상 임계 시뮬레이션 (4명 직원일 때 1회 안내)
+    //  추가 의무: 연차·가산수당·부당해고 제한·괴롭힘 금지법·휴업수당
+    if ((employees as { id: string }[]).length === 4) {
+      items.push({
+        id: "five-person-threshold",
+        severity: "warning",
+        title: ko ? "5인 이상 사업장 임계 직전 (4명)" : "Approaching 5-person threshold",
+        detail: ko
+          ? "1명 추가 시 연차 의무·가산수당 50%·부당해고 제한·괴롭힘 금지법·휴업수당 모두 적용. 인건비 계산 사전 점검 필요."
+          : "Adding 1 more triggers full Labor Standards Act — annual leave, overtime 50%, unfair dismissal, etc.",
+        navigate: { surface: "home", selector: "[data-team-card]" },
+      });
+    }
+
+    // 17. 간이과세 → 일반과세 전환 임박 (직전 연도 매출 1억 400만원)
+    //  부가가치세법 시행령 109조: 매출 1억 400만 초과 → 다음 해 7월부터 일반과세 전환.
+    if (businessLaunched && taxSettings.vatType === "simplified") {
+      // 올해 누적 매출 (월~오늘)
+      const currentYear = new Date().getFullYear();
+      const yearStartMs = new Date(currentYear, 0, 1).getTime();
+      const yearlySales = (dailyEntries as { date: string; sales: number }[]).reduce(
+        (s, e) => new Date(e.date).getTime() >= yearStartMs ? s + e.sales : s, 0,
+      );
+      const check = checkSimplifiedTaxTransition(yearlySales);
+      // approaching 이상일 때만 알림 (60% 이상)
+      if (check.level === "approaching" || check.level === "near" || check.level === "exceeded") {
+        items.push({
+          id: "simplified-tax-transition",
+          severity: check.level === "exceeded" ? "urgent" : check.level === "near" ? "warning" : "warning",
+          title: ko
+            ? `간이과세 한도 ${check.progressPct}% 진입`
+            : `Simplified tax: ${check.progressPct}%`,
+          detail: ko ? check.suggestion : `${check.progressPct}% of 104M threshold`,
+          navigate: { surface: "analytics", selector: "[data-cost-management]" },
+        });
+      }
+    }
+
+    // 18. 현금영수증 의무발행 업종 안내 — 1회성 (이미 알면 dismiss)
+    //  소득세법 시행령 210조의2: 음식점·카페·학원·미용·헬스 등 의무. 미발행 시 거래대금 20% 부과금.
+    //  (해당 업종 + businessLaunched + employees 1명+ 인 경우만 — 운영 본격화)
+    if (businessLaunched && (employees as { id: string }[]).length > 0
+        && ["food", "cafe-dessert", "education", "beauty", "fitness", "pet"].includes(industryCategoryId ?? "")) {
+      items.push({
+        id: "cash-receipt-mandatory",
+        severity: "warning",
+        title: ko ? "현금영수증 의무발행 업종" : "Cash receipt required",
+        detail: ko
+          ? "10만원 이상 현금 거래 시 현금영수증 의무 발행 (요구 없어도). 미발행 = 거래대금 20% 부과금."
+          : "≥100K KRW cash transactions require receipt. Non-issue = 20% penalty.",
+        navigate: { surface: "analytics", selector: "[data-cost-management]" },
+      });
+    }
+
+    // 12. 오늘의 일일 보고서 도착 — 영업 종료 시각 + 30분 (또는 21:00 KST 디지털) 이후 자동 알림
+    //  사용자 요청 (2026-05-08): "보고서가 오는 시간에 알림 드랍다운에 알림으로 보내라"
+    //  중복 방지 — 같은 KST 날짜에 사장님이 한번 dismiss 하면 (UI 쪽 처리) 또는 자정 지나면 자동 갱신.
+    if (businessLaunched) {
+      const closed = isBusinessDayClosed(new Date(), {
+        categoryId: industryCategoryId,
+        closeTime: businessCloseTime,
+      });
+      if (closed) {
+        const todayKst = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+        items.push({
+          id: `daily-report-${todayKst}`, // 날짜 포함 → 자정 지나면 새 ID = 새 알림
+          severity: "warning",
+          title: ko ? "오늘의 보고서가 도착했어요" : "Today's report is ready",
+          detail: ko
+            ? "오늘 매출·비용·인사이트가 정리됐어요. 1분이면 핵심을 훑어볼 수 있어요."
+            : "Today's sales, costs, and insights are ready. 1-minute summary.",
+          navigate: { surface: "reports" },
+        });
+      }
+    }
+
     setNotifications(items);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, inventory, employees, fixedExpenses, members, taxSettings, businessLaunched, businessCtx.hasPhysicalInventory, businessCtx.isRecurringRevenue, completedCount, pathTotalStages, costHistory, dailyEntries, monthlyCosts, cashflowSetupCompletedAt, cashflowFixedExpenses]);
+  }, [language, inventory, employees, fixedExpenses, members, taxSettings, businessLaunched, businessLaunchedDate, businessCtx.hasPhysicalInventory, businessCtx.isRecurringRevenue, completedCount, pathTotalStages, costHistory, dailyEntries, monthlyCosts, cashflowSetupCompletedAt, cashflowFixedExpenses, businessCloseTime, industryCategoryId, payDay, startupType, preferredRegionInput, selectedBudget, initialOperatingCapital]);
 
   return {
     contractors,

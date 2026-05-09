@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { COST_RATIOS } from "@build-up/shared";
+import { COST_RATIOS, calculateCostRatios } from "@build-up/shared";
 import { PieChart } from "lucide-react";
 
 /* ─── Types ─── */
@@ -140,10 +140,20 @@ export function CostStructureCard() {
 
     const t = resolveThresholds(industryCategoryId);
 
-    const ingredientRatio = (mc.ingredients / sales) * 100;
-    const laborRatio = (mc.labor / sales) * 100;
-    const rentRatio = (mc.rent / sales) * 100;
-    const primeRatio = ((mc.ingredients + mc.labor) / sales) * 100;
+    // 비용 비율 — cost-ratios.ts SSOT (월간 비용 ÷ 월 환산 매출)
+    const ratios = calculateCostRatios({
+      costs: {
+        ingredients: mc.ingredients ?? 0, labor: mc.labor ?? 0, rent: mc.rent ?? 0,
+        utilities: mc.utilities ?? 0, sga: mc.sga ?? 0, marketing: mc.marketing ?? 0,
+        other: mc.other ?? 0,
+      },
+      totalRevenue: sales,
+      days: monthEntries.length,
+    });
+    const ingredientRatio = ratios.ingredientRatio;
+    const laborRatio = ratios.laborRatio;
+    const rentRatio = ratios.rentRatio;
+    const primeRatio = ratios.primeCostRatio;
 
     const costRows: CostRow[] = [
       {

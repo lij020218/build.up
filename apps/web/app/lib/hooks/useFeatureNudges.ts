@@ -152,7 +152,8 @@ export function useFeatureNudges(d: DashboardHook, phase: Phase): FeatureNudge[]
         ctaKo: "재고 등록",
         ctaEn: "Add inventory",
         priority: 72,
-        navigate: { surface: "analytics" },
+        // Tier 1.5 의 InventoryOpsCard 로 부드럽게 스크롤 (2026-05-07 이동 후)
+        navigate: { surface: "home", selector: "[data-inventory-card]" },
       });
     }
 
@@ -185,7 +186,8 @@ export function useFeatureNudges(d: DashboardHook, phase: Phase): FeatureNudge[]
         ctaKo: "직원 등록",
         ctaEn: "Add staff",
         priority: 60,
-        navigate: { surface: "analytics" },
+        // Tier 1.5 의 TeamCard 로 부드럽게 스크롤 (2026-05-07 이동 후)
+        navigate: { surface: "home", selector: "[data-team-card]" },
       });
     }
 

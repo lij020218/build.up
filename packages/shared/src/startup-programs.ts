@@ -37,6 +37,20 @@ export type StartupProgram = {
   applicationStatus?: ApplicationStatus;
   /** 필요 서류 */
   requiredDocs?: { ko: string; en: string }[];
+  /**
+   * 신청 마감일 (ISO YYYY-MM-DD). 알려진 마감일이 있을 때만 채움.
+   * 채워진 경우 D-N 알림 + 우선순위 배지에 사용.
+   */
+  applicationDeadline?: string;
+  /**
+   * 자금 성격 — 매칭 시 사장님 *현금 위기* 상황과 연결.
+   *  - "cash"   : 운영자금/정책자금 (위기 시 최우선)
+   *  - "equity" : 투자 (성장기 우선)
+   *  - "grant"  : 보조금 (반환 X)
+   *  - "credit" : 보증/대출
+   *  - "other"  : 기타
+   */
+  fundingType?: "cash" | "equity" | "grant" | "credit" | "other";
 };
 
 export type MatchCriteria = {
@@ -47,6 +61,17 @@ export type MatchCriteria = {
   region?: string;
   capital?: number;
   businessStage?: "idea" | "pre-startup" | "early" | "growth" | "established";
+  /**
+   * 사장님 *현재 상황* — 매칭 점수에 직접 반영.
+   *  - 런웨이 < 6개월 / 매출 -15% 이상 하락 → 위기형 → 운영자금·정책자금 부스트
+   *  - 런웨이 < 3개월 → 긴급 위기 → 응급 자금 최상위
+   */
+  runwayMonths?: number;
+  weeklySalesChangePct?: number;
+  /**
+   * 직원 수 — 일부 프로그램은 인력 규모 조건 (예: 5인 이상 사업자만).
+   */
+  employeesCount?: number;
 };
 
 export type ProgramMatchResult = {
@@ -76,6 +101,8 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     businessYearRange: [0, 0],
     applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-03-26",
     requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "신분증", en: "ID" }],
   },
   {
@@ -94,6 +121,8 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     businessYearRange: [0, 3],
     applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-02-13",
     requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }],
   },
   {
@@ -113,6 +142,7 @@ export const startupPrograms: StartupProgram[] = [
     maxAge: 39,
     businessYearRange: [0, 3],
     applicationStatus: "open",
+    fundingType: "cash",
     requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }, { ko: "신분증", en: "ID" }],
   },
   {
@@ -131,6 +161,8 @@ export const startupPrograms: StartupProgram[] = [
     maxAge: 39,
     businessYearRange: [0, 3],
     applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-02-13",
   },
   {
     id: "sme-policy-fund",
@@ -146,6 +178,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: true,
     dataYear: "2026",
     applicationStatus: "open",
+    fundingType: "cash",
     requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }, { ko: "소상공인확인서", en: "SME certificate" }],
   },
   {
@@ -161,6 +194,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     applicationStatus: "closed",
+    fundingType: "grant",
   },
   {
     id: "startup-leap-package",
@@ -176,6 +210,7 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     businessYearRange: [3, 7],
     applicationStatus: "closed",
+    fundingType: "grant",
   },
 
   // ── Private (Foundation / Accelerator) ──
@@ -209,7 +244,9 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://asan-nanum.org/program/startup/",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    fundingType: "grant",
+    applicationDeadline: "2026-05-30",
   },
   {
     id: "sparklabs-batch",
@@ -222,7 +259,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://sparklabs.co.kr/kr/program",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    fundingType: "equity",
   },
   {
     id: "bluepoint-demo",
@@ -235,7 +273,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.bluepoint.ac",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    fundingType: "equity",
   },
   {
     id: "samsung-clab",
@@ -277,7 +316,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://d2startup.com/ko",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    fundingType: "equity",
   },
   {
     id: "hyundai-cmk",
@@ -316,7 +356,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.primer.kr",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    fundingType: "equity",
   },
 
   // ── Local Government (Seoul / Regional) ──
@@ -656,6 +697,7 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     industries: ["startup-tech"],
     applicationStatus: "open",
+    fundingType: "equity",
   },
   {
     id: "bon-angels",
@@ -672,6 +714,7 @@ export const startupPrograms: StartupProgram[] = [
     highlight: true,
     dataYear: "2026",
     applicationStatus: "open",
+    fundingType: "equity",
   },
   {
     id: "kakao-ventures",
@@ -687,6 +730,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     applicationStatus: "open",
+    fundingType: "equity",
   },
   {
     id: "mashup-angels",
@@ -702,6 +746,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     applicationStatus: "open",
+    fundingType: "equity",
   },
   {
     id: "softbank-ventures-asia",
@@ -717,6 +762,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     applicationStatus: "open",
+    fundingType: "equity",
   },
   {
     id: "futureplay",
@@ -732,6 +778,7 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     industries: ["startup-tech"],
     applicationStatus: "open",
+    fundingType: "equity",
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -768,6 +815,8 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     industries: ["startup-tech"],
     applicationStatus: "open",
+    fundingType: "equity",
+    applicationDeadline: "2026-09-30",
   },
   {
     id: "antler-korea",
@@ -821,6 +870,7 @@ export const startupPrograms: StartupProgram[] = [
     businessYearRange: [0, 7],
     industries: ["startup-tech"],
     applicationStatus: "open",
+    fundingType: "equity",
   },
   {
     id: "global-acceleration-gmep",
@@ -866,6 +916,8 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     regions: ["서울"],
     applicationStatus: "upcoming",
+    fundingType: "grant",
+    applicationDeadline: "2026-07-15",
   },
 ];
 
@@ -910,63 +962,98 @@ export function getMatchedHighlights(startupType?: string): StartupProgram[] {
   return [...all, ...franchiseRelevant.slice(0, 2)].slice(0, 6);
 }
 
-/** Enhanced program matching with scoring */
-export function getMatchedProgramsV2(criteria: MatchCriteria): (StartupProgram & { matchScore: number; eligible: boolean })[] {
+/**
+ * Enhanced program matching with situation-aware scoring.
+ *
+ *  ── 점수 가중치 (요지) ──────────────────────────────
+ *  • 자격 미달 (eligible = false) → 정렬 맨 뒤
+ *  • 위기 상황 (런웨이 < 6개월 / 매출 -15% 이상 하락) → 운영자금·cash 프로그램 +30~50
+ *  • 마감 임박 (D-7 이내) → +25, D-3 이내 → +50
+ *  • 업종·지역·연차 매칭 → 기본 +10~15
+ *  • highlight / 모집 중 → 일반 부스트
+ *  ─────────────────────────────────────────
+ */
+export function getMatchedProgramsV2(criteria: MatchCriteria): (StartupProgram & { matchScore: number; eligible: boolean; daysUntilDeadline?: number })[] {
   const isFranchise = criteria.startupType === "franchise";
+  // 위기 신호 — 런웨이 부족 + 매출 하락. 둘 중 하나만 강해도 위기로 분류.
+  const isCashCrisis = (criteria.runwayMonths != null && criteria.runwayMonths < 6) ||
+                       (criteria.weeklySalesChangePct != null && criteria.weeklySalesChangePct <= -15);
+  const isUrgentCrisis = (criteria.runwayMonths != null && criteria.runwayMonths < 3);
+
+  const today = new Date();
 
   return startupPrograms.map(p => {
     let score = 0;
     let eligible = true;
 
-    // Age check
+    // ── 기본 자격 체크 ──
     if (p.maxAge && criteria.age && criteria.age > p.maxAge) eligible = false;
     else if (p.maxAge && criteria.age && criteria.age <= p.maxAge) score += 15;
 
-    // Business year check
     if (p.businessYearRange && criteria.businessYears !== undefined) {
       const [min, max] = p.businessYearRange;
       if (criteria.businessYears < min || criteria.businessYears > max) eligible = false;
       else score += 15;
     }
 
-    // Franchise match
+    // ── 매칭 ──
     if (isFranchise && p.forFranchise) score += 10;
     if (isFranchise && !p.forFranchise && !p.forSmallBiz) score -= 5;
-
-    // SmallBiz match
     if (p.forSmallBiz) score += 10;
 
-    // Region match
     if (p.regions && criteria.region) {
       if (p.regions.some(r => criteria.region!.includes(r))) score += 10;
       else score -= 3;
     }
-
-    // Industry match
     if (p.industries && criteria.industryCategoryId) {
       if (p.industries.includes(criteria.industryCategoryId)) score += 10;
     }
 
-    // Application status bonus
+    // ── 모집 상태 ──
     if (p.applicationStatus === "open") score += 20;
     else if (p.applicationStatus === "upcoming") score += 5;
     else if (p.applicationStatus === "closed") score -= 10;
 
-    // Highlight bonus
     if (p.highlight) score += 5;
 
-    return { ...p, matchScore: score, eligible };
+    // ── 위기 상황 부스트 — 사장님 현금 위기 시 cash 자금 최상위로 ──
+    if (isCashCrisis && p.fundingType === "cash") score += 30;
+    if (isUrgentCrisis && p.fundingType === "cash") score += 20; // 누적 +50
+    // 위기 시 보증·대출 (단기 현금 확보 가능) 도 약하게 부스트
+    if (isCashCrisis && p.fundingType === "credit") score += 15;
+    // 위기 아닐 땐 투자(equity) 부스트 — 성장 모드
+    if (!isCashCrisis && p.fundingType === "equity" && (criteria.businessStage === "growth" || criteria.businessStage === "early")) {
+      score += 15;
+    }
+
+    // ── 마감 임박 부스트 — D-7 이내면 화면 상단 노출 ──
+    let daysUntilDeadline: number | undefined;
+    if (p.applicationDeadline) {
+      const deadlineMs = new Date(p.applicationDeadline).getTime();
+      daysUntilDeadline = Math.ceil((deadlineMs - today.getTime()) / 86_400_000);
+      if (daysUntilDeadline >= 0 && daysUntilDeadline <= 3) score += 50;
+      else if (daysUntilDeadline > 3 && daysUntilDeadline <= 7) score += 25;
+      else if (daysUntilDeadline > 7 && daysUntilDeadline <= 14) score += 10;
+      else if (daysUntilDeadline < 0) score -= 30; // 마감 지남
+    }
+
+    return { ...p, matchScore: score, eligible, daysUntilDeadline };
   })
   .sort((a, b) => {
-    // Eligible first
+    // 자격 보유 우선
     if (a.eligible && !b.eligible) return -1;
     if (!a.eligible && b.eligible) return 1;
-    // Then by status (open > upcoming > closed)
+    // 마감 임박 (양수, D-7 이내) 최우선
+    const aDeadlineUrgent = a.daysUntilDeadline != null && a.daysUntilDeadline >= 0 && a.daysUntilDeadline <= 7;
+    const bDeadlineUrgent = b.daysUntilDeadline != null && b.daysUntilDeadline >= 0 && b.daysUntilDeadline <= 7;
+    if (aDeadlineUrgent && !bDeadlineUrgent) return -1;
+    if (!aDeadlineUrgent && bDeadlineUrgent) return 1;
+    // 모집 상태
     const statusOrder = { open: 0, upcoming: 1, closed: 2 };
     const aStatus = statusOrder[a.applicationStatus ?? "upcoming"] ?? 1;
     const bStatus = statusOrder[b.applicationStatus ?? "upcoming"] ?? 1;
     if (aStatus !== bStatus) return aStatus - bStatus;
-    // Then by score
+    // 점수
     return b.matchScore - a.matchScore;
   });
 }
