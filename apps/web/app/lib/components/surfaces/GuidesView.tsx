@@ -62,15 +62,16 @@ export function GuidesView() {
   const taxSettings = (d as { taxSettings?: { vatType?: string; hasEmployees?: boolean } }).taxSettings;
 
   // 가게 정보 — 미션·주소·잔고·인증
-  const storeInfo = useStoreInfoStore((s) => ({
-    mission: s.mission,
-    shortDescription: s.shortDescription,
-    addressRoad: s.addressRoad,
-    currentBalanceManualKrw: s.currentBalanceManualKrw,
-    bizRegistrationNumber: s.bizRegistrationNumber,
-    fourInsuranceEstablished: s.fourInsuranceEstablished,
-    insurancePolicies: s.insurancePolicies,
-  }));
+  //
+  //  ⚠️ Zustand 안티패턴 회피: 객체 셀렉터는 매 렌더마다 새 객체 생성 → equality 실패 →
+  //     무한 re-render (React #185 Maximum update depth exceeded). 개별 셀렉터로 분리.
+  const storeMission = useStoreInfoStore((s) => s.mission);
+  const storeShortDescription = useStoreInfoStore((s) => s.shortDescription);
+  const storeAddressRoad = useStoreInfoStore((s) => s.addressRoad);
+  const storeCurrentBalanceKrw = useStoreInfoStore((s) => s.currentBalanceManualKrw);
+  const storeBizRegistrationNumber = useStoreInfoStore((s) => s.bizRegistrationNumber);
+  const storeFourInsurance = useStoreInfoStore((s) => s.fourInsuranceEstablished);
+  const storeInsurancePolicies = useStoreInfoStore((s) => s.insurancePolicies);
   // 고객 인터뷰 (PSST 핵심 신호)
   const customerInterviewCount = useInterviewStore((s) => s.customerInterviews.length);
   const ko = language === "ko";
@@ -194,8 +195,8 @@ export function GuidesView() {
               ?? (d as { userAge?: number }).userAge;
 
             // ─── 노란우산 가입 여부 (insurancePolicies 에 '노란우산' 포함 시) ───
-            const hasNorangusan = Array.isArray(storeInfo.insurancePolicies)
-              && storeInfo.insurancePolicies.some((p: { policyType?: string; type?: string; productName?: string; name?: string }) =>
+            const hasNorangusan = Array.isArray(storeInsurancePolicies)
+              && storeInsurancePolicies.some((p: { policyType?: string; type?: string; productName?: string; name?: string }) =>
                   /노란우산|소상공인공제/.test(`${p.policyType ?? ""}${p.type ?? ""}${p.productName ?? ""}${p.name ?? ""}`));
 
             // ─── 과세 유형 매핑 ───
@@ -208,15 +209,15 @@ export function GuidesView() {
             return {
               // identity
               storeName: storeName || undefined,
-              mission: storeInfo.mission || undefined,
-              shortDescription: storeInfo.shortDescription || undefined,
+              mission: storeMission || undefined,
+              shortDescription: storeShortDescription || undefined,
               industryCategoryId,
               subIndustryId: selectedIndustryId,
               selectedSpecialtyId,
               startupType,
               // location
               region: preferredRegionInput || undefined,
-              addressRoad: storeInfo.addressRoad || undefined,
+              addressRoad: storeAddressRoad || undefined,
               // demographics
               age: typeof ageRaw === "number" ? ageRaw : undefined,
               // stage
@@ -224,11 +225,11 @@ export function GuidesView() {
               daysSinceLaunch: businessLaunchedDate
                 ? Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / 86400000)
                 : undefined,
-              hasBizRegistration: !!storeInfo.bizRegistrationNumber || businessLaunched,
+              hasBizRegistration: !!storeBizRegistrationNumber || businessLaunched,
               bizRegistrationDate: businessLaunchedDate ?? undefined,
               // financial
               capital: selectedBudget ?? undefined,
-              currentBalanceKrw: storeInfo.currentBalanceManualKrw,
+              currentBalanceKrw: storeCurrentBalanceKrw,
               runwayMonths: criteria.runwayMonths,
               // sales
               avgDailySales: avgDailySales > 0 ? avgDailySales : undefined,
@@ -246,8 +247,8 @@ export function GuidesView() {
               primeRatePct,
               // employees
               employeesCount: criteria.employeesCount,
-              fourInsuranceEstablished: storeInfo.fourInsuranceEstablished
-                ? storeInfo.fourInsuranceEstablished !== "" && storeInfo.fourInsuranceEstablished !== "no"
+              fourInsuranceEstablished: storeFourInsurance
+                ? storeFourInsurance !== "" && storeFourInsurance !== "no"
                 : undefined,
               // validation evidence
               customerInterviewCount,
