@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { useProfileStore } from "../../stores/profile-store";
+import { useStoreInfoStore } from "../../stores/store-info-store";
+import { useInterviewStore } from "../../stores/interview-store";
 import {
   getMatchedProgramsV2,
   getApplicationStatusLabel,
@@ -53,6 +55,24 @@ export function GuidesView() {
     industryCategoryId,
   } = d;
   const businessLaunchedDate = useProfileStore((s) => s.businessLaunchedDate);
+  const storeName = (d as { storeName?: string }).storeName ?? "";
+  const selectedSpecialtyId = (d as { selectedSpecialtyId?: string }).selectedSpecialtyId;
+  const selectedIndustryId = (d as { selectedIndustryId?: string }).selectedIndustryId;
+  const products = ((d as { products?: unknown[] }).products as unknown[] | undefined) ?? [];
+  const taxSettings = (d as { taxSettings?: { vatType?: string; hasEmployees?: boolean } }).taxSettings;
+
+  // 가게 정보 — 미션·주소·잔고·인증
+  const storeInfo = useStoreInfoStore((s) => ({
+    mission: s.mission,
+    shortDescription: s.shortDescription,
+    addressRoad: s.addressRoad,
+    currentBalanceManualKrw: s.currentBalanceManualKrw,
+    bizRegistrationNumber: s.bizRegistrationNumber,
+    fourInsuranceEstablished: s.fourInsuranceEstablished,
+    insurancePolicies: s.insurancePolicies,
+  }));
+  // 고객 인터뷰 (PSST 핵심 신호)
+  const customerInterviewCount = useInterviewStore((s) => s.customerInterviews.length);
   const ko = language === "ko";
 
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -151,24 +171,96 @@ export function GuidesView() {
             requiredDocs: program.requiredDocs?.map((d) => d[lang]),
             eligibility: undefined,
           },
-          user: {
-            startupType,
-            industryCategoryId,
-            businessYears: criteria.businessYears,
-            region: preferredRegionInput || undefined,
-            capital: selectedBudget ?? undefined,
-            runwayMonths: criteria.runwayMonths,
-            weeklySalesChangePct: criteria.weeklySalesChangePct,
-            employeesCount: criteria.employeesCount,
-            avgDailySales: dailyEntries.length > 0
-              ? Math.round(dailyEntries.slice(-7).reduce((s, e) => s + e.sales, 0) / Math.max(1, dailyEntries.slice(-7).length))
-              : undefined,
-            daysSinceLaunch: businessLaunchedDate
-              ? Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / 86400000)
-              : undefined,
-            matchScore: program.matchScore,
-            eligible: program.eligible,
-          },
+          user: (() => {
+            // ─── 매출 집계 (최근 7일 평균 + 26영업일 환산) ───
+            const recent7 = dailyEntries.slice(-7);
+            const avgDailySales = recent7.length > 0
+              ? Math.round(recent7.reduce((s, e) => s + e.sales, 0) / recent7.length)
+              : 0;
+            const monthlyAvgRevenue = avgDailySales > 0 ? avgDailySales * 26 : 0;
+            const hasUserSales = dailyEntries.some((e) => e.sales > 0);
+
+            // ─── P&L (월 환산) ───
+            const mc = monthlyCosts ?? {};
+            const totalMonthlyCost = Object.values(mc).reduce((s, v) => s + (typeof v === "number" ? v : 0), 0);
+            const monthlyProfit = monthlyAvgRevenue - totalMonthlyCost;
+            // 프라임코스트 = 식재료 + 인건비 (월 환산 매출 대비 %)
+            const primeRatePct = monthlyAvgRevenue > 0
+              ? Math.round(((Number(mc.ingredients ?? 0) + Number(mc.labor ?? 0)) / monthlyAvgRevenue) * 1000) / 10
+              : undefined;
+
+            // ─── 사장님 나이 (생년월일 등록 시 — 현재 store 에 없으면 undefined) ───
+            const ageRaw = (d as { sajangAge?: number; userAge?: number }).sajangAge
+              ?? (d as { userAge?: number }).userAge;
+
+            // ─── 노란우산 가입 여부 (insurancePolicies 에 '노란우산' 포함 시) ───
+            const hasNorangusan = Array.isArray(storeInfo.insurancePolicies)
+              && storeInfo.insurancePolicies.some((p: { policyType?: string; type?: string; productName?: string; name?: string }) =>
+                  /노란우산|소상공인공제/.test(`${p.policyType ?? ""}${p.type ?? ""}${p.productName ?? ""}${p.name ?? ""}`));
+
+            // ─── 과세 유형 매핑 ───
+            const taxType: "general" | "simplified" | "exempt" | undefined =
+              taxSettings?.vatType === "general" ? "general"
+              : taxSettings?.vatType === "simplified" ? "simplified"
+              : taxSettings?.vatType === "exempt" ? "exempt"
+              : undefined;
+
+            return {
+              // identity
+              storeName: storeName || undefined,
+              mission: storeInfo.mission || undefined,
+              shortDescription: storeInfo.shortDescription || undefined,
+              industryCategoryId,
+              subIndustryId: selectedIndustryId,
+              selectedSpecialtyId,
+              startupType,
+              // location
+              region: preferredRegionInput || undefined,
+              addressRoad: storeInfo.addressRoad || undefined,
+              // demographics
+              age: typeof ageRaw === "number" ? ageRaw : undefined,
+              // stage
+              businessYears: criteria.businessYears,
+              daysSinceLaunch: businessLaunchedDate
+                ? Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / 86400000)
+                : undefined,
+              hasBizRegistration: !!storeInfo.bizRegistrationNumber || businessLaunched,
+              bizRegistrationDate: businessLaunchedDate ?? undefined,
+              // financial
+              capital: selectedBudget ?? undefined,
+              currentBalanceKrw: storeInfo.currentBalanceManualKrw,
+              runwayMonths: criteria.runwayMonths,
+              // sales
+              avgDailySales: avgDailySales > 0 ? avgDailySales : undefined,
+              weeklySalesChangePct: criteria.weeklySalesChangePct,
+              monthlyAvgRevenue: monthlyAvgRevenue > 0 ? monthlyAvgRevenue : undefined,
+              hasUserSales,
+              // P&L
+              monthlyCosts: mc as {
+                ingredients?: number; labor?: number; rent?: number;
+                utilities?: number; sga?: number; marketing?: number;
+                other?: number; interest?: number;
+              },
+              totalMonthlyCost: totalMonthlyCost > 0 ? totalMonthlyCost : undefined,
+              monthlyProfit: hasUserSales ? monthlyProfit : undefined,
+              primeRatePct,
+              // employees
+              employeesCount: criteria.employeesCount,
+              fourInsuranceEstablished: storeInfo.fourInsuranceEstablished
+                ? storeInfo.fourInsuranceEstablished !== "" && storeInfo.fourInsuranceEstablished !== "no"
+                : undefined,
+              // validation evidence
+              customerInterviewCount,
+              productsCount: products.length,
+              hasMVP: products.length > 0 || hasUserSales,
+              // tax / regulatory
+              taxType,
+              hasNorangusan,
+              // system pre-match
+              matchScore: program.matchScore,
+              eligible: program.eligible,
+            };
+          })(),
         }),
       });
 
