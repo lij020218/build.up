@@ -628,11 +628,15 @@ export function useComputedDashboard(
     .slice(0, 3)
     .map((card) => localizeStarterStepCard(card, language));
 
-  // "현재 단계" 탭은 로드맵 진행 중에만 가치가 있음.
-  // 오픈(businessLaunched=true) 이후엔:
-  //   - 타임라인·진행률은 "로드맵" 탭이 이미 제공
-  //   - 매출 입력은 "운영 대시보드"(홈)에서 더 잘 처리됨
-  //   → nav에서 숨김. 경로(/current?editStage=...)는 로드맵 카드 클릭으로 여전히 접근 가능.
+  // ─── Nav 가시성 분기 (사장님 요청 2026-05-09) ───
+  //   pre-launch (로드맵 진행 중): 홈 / 현재 단계 / 로드맵 / 프랜차이즈 / 내 정보 (5개)
+  //   post-launch (오픈 후):       전체 9개 (펀딩·마케팅·보고서·내 가게 추가 노출)
+  //
+  //   배경: 로드맵 단계일 때 9개 탭 모두 노출하면 인지 부하 ↑ + 미완 단계에서 운영 surface
+  //         (마케팅·보고서) 진입해도 빈 화면 — 사장님이 "지금 어디에 집중해야 하는지" 길 잃음.
+  //         '오픈 전엔 로드맵 따라만, 오픈 후엔 운영 도구 풀세트' 라는 명확한 페이즈 분리.
+  //
+  //   "현재 단계" 는 이미 종래대로 pre-launch 만 — 로드맵 탭이 post-launch 에서 그 역할 흡수.
   const showCurrentTab = !businessLaunched;
 
   const surfaceTabs = [
@@ -647,26 +651,23 @@ export function useComputedDashboard(
       id: "roadmap" as const,
       label: language === "ko" ? "로드맵" : "Roadmap",
     },
-    {
-      id: "guides" as const,
-      label: language === "ko" ? "펀딩" : "Funding",
-    },
+    // 펀딩 — 로드맵에 정책자금 단계 들어있고, post-launch 후엔 별도 surface 로 깊이 탐색
+    ...(businessLaunched
+      ? [{ id: "guides" as const, label: language === "ko" ? "펀딩" : "Funding" }]
+      : []),
     {
       id: "franchise" as const,
       label: language === "ko" ? "프랜차이즈" : "Franchise",
     },
-    {
-      id: "marketing" as const,
-      label: language === "ko" ? "마케팅" : "Marketing",
-    },
-    {
-      id: "reports" as const,
-      label: language === "ko" ? "보고서" : "Reports",
-    },
-    {
-      id: "analytics" as const,
-      label: language === "ko" ? "내 가게" : "My store",
-    },
+    // 마케팅·보고서·내 가게 — 운영 데이터 (매출·고객·비용) 가 있어야 의미 있는 surface.
+    //   pre-launch 엔 데이터 0 → 빈 화면만 보이므로 숨김.
+    ...(businessLaunched
+      ? [
+          { id: "marketing" as const, label: language === "ko" ? "마케팅" : "Marketing" },
+          { id: "reports" as const,   label: language === "ko" ? "보고서" : "Reports" },
+          { id: "analytics" as const, label: language === "ko" ? "내 가게" : "My store" },
+        ]
+      : []),
     {
       id: "profile" as const,
       label: language === "ko" ? "내 정보" : "Profile",
