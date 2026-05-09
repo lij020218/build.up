@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import {
   bootstrapAccountWorkspace,
   buildRoadmapState,
-  getCurrentUser,
   getIndustryCategoryIdByOptionId,
   getFranchiseBrandById,
   getUiCopy,
@@ -977,17 +976,25 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   }, [surface, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 3. Auth state change listener
+  //
+  //  ⚠️ 이전 (race condition 버그): 마운트 시 getCurrentUser() 로 *네트워크 호출* 해서 user 가
+  //     null 이면 setRequiresAuth(true) 설정. Vercel 환경 cold start / 라우팅 전환 직후 일시적
+  //     null 반환 시 → Effect 1 의 connectAndLoad 가 false 로 설정한 직후 true 로 덮어써
+  //     /auth 로 즉시 redirect → "한번 더 로그인해야 들어가는" 증상 (사장님 보고 2026-05-10).
+  //
+  //  Fix: 초기 체크는 connectAndLoad (Effect 1) 가 *유일한 소스 오브 트루스*. 여기선 단지
+  //       onAuthStateChange 리스너만 등록 — SIGN_IN/TOKEN_REFRESHED 이벤트로 connectAndLoad
+  //       재실행. SIGNED_OUT 이벤트만 명시적으로 requiresAuth=true 처리.
   useEffect(() => {
-    void getCurrentUser(supabase).then((user) => {
-      if (!user || user.is_anonymous) {
-        setRequiresAuth(true);
-        setAuthResolved(true);
-      }
-    });
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setRequiresAuth(true);
+        setAuthResolved(true);
+        return;
+      }
+      // SIGN_IN / INITIAL_SESSION / TOKEN_REFRESHED — 데이터 재로드
       void connectAndLoad();
     });
 
