@@ -9,21 +9,21 @@ import {
   // retail
   Store, ShoppingBag, SprayCan, Shirt, Apple, ShoppingCart,
   // beauty
-  Scissors, Sparkles, Droplets, Eye, Palette, Hand,
-  // fitness
-  Activity, Dumbbell, PersonStanding, Flame, Target, Timer,
+  Scissors, Sparkles, Droplets, Eye, Palette, Hand, ShowerHead,
+  // fitness — 사장님 audit 2026-05-09: 골프=Flag(핀), 요가=Sun(선예배), 필라테스=PersonStanding
+  Dumbbell, PersonStanding, Flame, Timer, Sun, Flag,
   // education
-  BookOpen, School, GraduationCap, Languages, Code, Library,
-  // pet
-  Bone, Bed, MapPin,
+  BookOpen, School, GraduationCap, Languages, Code, Library, Armchair,
+  // pet — Coffee/Scissors/GraduationCap 중복 해소: PawPrint·ShowerHead·Award
+  Bone, Bed, MapPin, PawPrint, Award,
   // living
   WashingMachine, Brush, Wrench, Printer, Smartphone, Coins,
   // space
   Home, Camera, PartyPopper, Building2, Music,
-  // online
-  Monitor, Download, Video, Mail, Globe,
-  // startup
-  Cpu, Code2, LayoutDashboard, DollarSign, HeartPulse, Shield,
+  // online — ShoppingCart 중복 해소: Truck (위탁배송)
+  Monitor, Download, Video, Mail, Globe, Truck,
+  // startup — Cpu 중복 해소: AI=Brain(두뇌 메타포), 반도체=Cpu 유지
+  Brain, Cpu, Code2, LayoutDashboard, DollarSign, HeartPulse, Shield,
   // startup — hardware / deeptech
   CircuitBoard, Bot, Microscope, Leaf,
   type LucideIcon,
@@ -74,12 +74,12 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
   "waxing-studio": Sparkles,               // 왁싱 (매끈한 표현)
   "eyelash-brow": Eye,                     // 속눈썹/눈썹 = 눈
   "makeup-bridal": Palette,                // 메이크업 팔레트
-  // ── 피트니스 ──
-  "pilates-studio": Activity,              // 필라테스 활동
+  // ── 피트니스 ── (2026-05-09 audit: 골프·요가·필라테스 매칭 정확화)
+  "pilates-studio": PersonStanding,        // 필라테스 = 자세 운동 (사람 서있는 자세)
   "pt-gym": Dumbbell,                      // PT 덤벨
-  "yoga-studio": PersonStanding,           // 요가 자세
+  "yoga-studio": Sun,                      // 요가 = sun salutation·정신 — 가장 인지도 높은 메타포
   "crossfit-box": Flame,                   // 크로스핏 강도
-  "golf-studio": Target,                   // 골프 타겟
+  "golf-studio": Flag,                     // 골프 = 홀의 핀 (Target 보다 직관)
   "unmanned-fitness": Timer,               // 24시간 무인
   // ── 교육 ──
   "study-room": BookOpen,                  // 독서실
@@ -88,12 +88,12 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
   "language-academy": Languages,           // 어학
   "coding-class": Code,                    // 코딩
   "small-study-room": Library,             // 작은 독서실/스터디
-  // ── 반려동물 ──
-  "pet-grooming": Scissors,                // 펫 트리밍 (Scissors 재사용 — 컬러로 구분)
+  // ── 반려동물 ── (2026-05-09 audit: 중복 해소 — Scissors·Coffee·GraduationCap 분리)
+  "pet-grooming": ShowerHead,              // 펫 미용·관리 (목욕·관리 메타포)
   "pet-supplies": Bone,                    // 펫 용품
   "pet-hotel": Bed,                        // 펫 호텔
-  "pet-cafe": Coffee,                      // 펫 카페
-  "pet-training-school": GraduationCap,    // 훈련소
+  "pet-cafe": PawPrint,                    // 펫 카페 (발자국 — Coffee 중복 해소)
+  "pet-training-school": Award,            // 훈련소 (성취 메타포)
   "pet-walking-visit": MapPin,             // 산책/방문
   // ── 생활 서비스 ──
   "laundry-service": WashingMachine,       // 세탁
@@ -106,18 +106,18 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
   "guesthouse": Home,                      // 게스트하우스
   "rental-studio": Camera,                 // 렌탈 스튜디오
   "party-room": PartyPopper,               // 파티룸
-  "study-cafe-space": BookOpen,            // 스터디카페 공간
+  "study-cafe-space": Armchair,            // 스터디카페 공간 (편안한 의자 — BookOpen 중복 해소)
   "shared-office": Building2,              // 공유 오피스
   "practice-room": Music,                  // 연습실
   // ── 온라인/디지털 ──
   "smart-store": Monitor,                  // 스마트스토어
   "digital-products": Download,            // 디지털 상품
   "creator-service": Video,                // 크리에이터
-  "consignment-commerce": ShoppingCart,    // 위탁 (ShoppingCart 재사용 — 컬러 구분)
+  "consignment-commerce": Truck,           // 위탁배송 (ShoppingCart 중복 해소 — 배송 메타포)
   "newsletter-membership": Mail,           // 뉴스레터
   "global-buying": Globe,                  // 글로벌 구매대행
-  // ── 기술 스타트업 ──
-  "ai-application": Cpu,                   // AI 칩
+  // ── 기술 스타트업 ── (2026-05-09 audit: AI=Brain, 반도체=Cpu — Cpu 중복 해소)
+  "ai-application": Brain,                 // AI = 두뇌 (Cpu 보다 AI 직관)
   "developer-tools": Code2,                // 개발자 도구
   "b2b-saas": LayoutDashboard,             // SaaS 대시보드
   "fintech-startup": DollarSign,           // 핀테크
@@ -126,7 +126,7 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
   // ── 기술 스타트업 — 하드웨어·딥테크 ──
   "hardware-iot": CircuitBoard,            // 하드웨어·IoT
   "robotics-physical-ai": Bot,             // 로보틱스·피지컬 AI
-  "semiconductor": Cpu,                    // 반도체 (Cpu 재사용)
+  "semiconductor": Cpu,                    // 반도체 (Cpu — AI 와 분리됨)
   "biotech-medtech": Microscope,           // 바이오·의료기기
   "climate-energy": Leaf,                  // 클린테크·에너지
 };
