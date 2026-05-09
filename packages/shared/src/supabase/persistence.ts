@@ -68,22 +68,9 @@ export async function getCurrentUser(client: Client): Promise<User | null> {
   return user;
 }
 
-export async function ensureSignedIn(client: Client): Promise<User> {
-  const user = await getCurrentUser(client);
-
-  if (user) {
-    return user;
-  }
-
-  const { data, error } = await client.auth.signInAnonymously();
-
-  if (error || !data.user) {
-    throw error ?? new Error("Anonymous sign-in failed.");
-  }
-
-  return data.user;
-}
-
+// ⚠️ 익명 인증(`signInAnonymously`) 은 *기기별 user_id* 가 발급돼 모바일·웹·다른 도메인에서
+//    같은 데이터에 접근 불가능. 의도적으로 제거됨 (2026-05-09). 모든 진입은 ensureAccountUser
+//    (이메일·비밀번호 영구 계정) 만 사용. 같은 이메일로 어디서 로그인하든 동일 user_id.
 export async function ensureAccountUser(client: Client): Promise<User> {
   const user = await getCurrentUser(client);
 

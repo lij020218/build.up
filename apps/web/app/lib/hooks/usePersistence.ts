@@ -696,10 +696,16 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         if (storeData) {
           applyStoreData(storeData);
         } else {
-          // First time: migrate localStorage → Supabase
+          // 신규 계정 첫 진입: 이전 로컬 임시 캐시(있다면)를 1회만 Supabase 로 백업.
+          //
+          // ⚠️ 데이터 *진실의 원천(SSOT) 은 Supabase* 입니다. 이 분기는 신규 가입자 첫 1회만 실행되며,
+          //    "데이터가 로컬에 저장된다" 는 의미가 *절대 아닙니다*. 이후 모든 입력은 즉시
+          //    flushStoreDataImmediate → Supabase 로 영속화됩니다 (다른 기기·도메인 동일 이메일로
+          //    로그인하면 그대로 보임).
           const localData = collectStoreData();
-          console.log("[connectAndLoad] no server storeData; migrating localData", { keys: Object.keys(localData) });
-          if (Object.keys(localData).length > 0) {
+          const hasMeaningfulLocal = Object.keys(localData).length > 0;
+          if (hasMeaningfulLocal) {
+            console.log("[connectAndLoad] new account first entry — uploading any local snapshot to Supabase (one-time)");
             await saveStoreData(supabase, localData, result.user).catch(() => {});
           }
         }
