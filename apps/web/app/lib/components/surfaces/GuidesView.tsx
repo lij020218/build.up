@@ -12,7 +12,9 @@ import {
   type ApplicationStatus,
   type MatchCriteria,
 } from "@build-up/shared";
-import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle } from "lucide-react";
+import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2 } from "lucide-react";
+import { supabase } from "../../../../lib/supabase";
+import { FundingScoreModal, type FundingScore } from "./FundingScoreModal";
 
 /**
  * GuidesView — 펀딩 페이지 (Midnight Blue 디자인 철학)
@@ -109,6 +111,85 @@ export function GuidesView() {
   }, [startupType, industryCategoryId, businessLaunchedDate, businessLaunched, preferredRegionInput, selectedBudget, runwayMonths, weeklySalesChangePct, employees.length]);
 
   const matchedAll = useMemo(() => getMatchedProgramsV2(criteria), [criteria]);
+
+  // ─── AI 점수 보기 모달 상태 ───
+  const [scoreModalOpen, setScoreModalOpen] = useState(false);
+  const [scoreLoading, setScoreLoading] = useState(false);
+  const [scoreError, setScoreError] = useState<string | null>(null);
+  const [scoreResult, setScoreResult] = useState<FundingScore | null>(null);
+  const [scoreProgramName, setScoreProgramName] = useState("");
+
+  const handleScoreClick = async (program: StartupProgram & { matchScore: number; eligible: boolean }) => {
+    const lang: "ko" | "en" = ko ? "ko" : "en";
+    setScoreModalOpen(true);
+    setScoreLoading(true);
+    setScoreError(null);
+    setScoreResult(null);
+    setScoreProgramName(program.name[lang]);
+
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) {
+        setScoreError(ko ? "로그인 세션이 만료됐어요. 새로고침 후 다시 시도해주세요." : "Session expired. Refresh and retry.");
+        setScoreLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/ai/funding/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          program: {
+            name: program.name[lang],
+            organizer: program.organizer[lang],
+            category: program.category,
+            target: program.target[lang],
+            benefit: program.benefit[lang],
+            amount: program.amount,
+            season: program.season[lang],
+            requiredDocs: program.requiredDocs?.map((d) => d[lang]),
+            eligibility: undefined,
+          },
+          user: {
+            startupType,
+            industryCategoryId,
+            businessYears: criteria.businessYears,
+            region: preferredRegionInput || undefined,
+            capital: selectedBudget ?? undefined,
+            runwayMonths: criteria.runwayMonths,
+            weeklySalesChangePct: criteria.weeklySalesChangePct,
+            employeesCount: criteria.employeesCount,
+            avgDailySales: dailyEntries.length > 0
+              ? Math.round(dailyEntries.slice(-7).reduce((s, e) => s + e.sales, 0) / Math.max(1, dailyEntries.slice(-7).length))
+              : undefined,
+            daysSinceLaunch: businessLaunchedDate
+              ? Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / 86400000)
+              : undefined,
+            matchScore: program.matchScore,
+            eligible: program.eligible,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({ error: "AI 평가 실패" }));
+        const msg = res.status === 429
+          ? (errBody.error || (ko ? "오늘의 평가 횟수를 모두 사용했어요. 내일 다시 시도해주세요." : "Daily limit reached"))
+          : (errBody.error || (ko ? "AI 평가 실패" : "Evaluation failed"));
+        setScoreError(msg);
+        setScoreLoading(false);
+        return;
+      }
+
+      const data = (await res.json()) as { ok: boolean; result: FundingScore };
+      setScoreResult(data.result);
+    } catch (e) {
+      setScoreError(e instanceof Error ? e.message : (ko ? "네트워크 오류" : "Network error"));
+    } finally {
+      setScoreLoading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     return matchedAll.filter((p) => {
@@ -214,7 +295,12 @@ export function GuidesView() {
         ) : (
           <div style={listGridStyle}>
             {filtered.map((program) => (
-              <ProgramCard key={program.id} program={program} ko={ko} />
+              <ProgramCard
+                key={program.id}
+                program={program}
+                ko={ko}
+                onScoreClick={() => handleScoreClick(program)}
+              />
             ))}
           </div>
         )}
@@ -226,6 +312,17 @@ export function GuidesView() {
             : "Data as of 2026. Always verify dates and eligibility at each program's official page."}
         </div>
       </div>
+
+      {/* AI 점수 보기 모달 */}
+      <FundingScoreModal
+        open={scoreModalOpen}
+        onClose={() => setScoreModalOpen(false)}
+        programName={scoreProgramName}
+        loading={scoreLoading}
+        error={scoreError}
+        result={scoreResult}
+        ko={ko}
+      />
     </main>
   );
 }
@@ -301,9 +398,11 @@ function FilterGroup<T extends string>({
 function ProgramCard({
   program,
   ko,
+  onScoreClick,
 }: {
   program: StartupProgram & { matchScore: number; eligible: boolean; daysUntilDeadline?: number };
   ko: boolean;
+  onScoreClick: () => void;
 }) {
   const lang = ko ? "ko" : "en";
   const statusInfo = getApplicationStatusLabel(program.applicationStatus, lang);
@@ -414,20 +513,35 @@ function ProgramCard({
         </div>
       )}
 
-      {/* CTA */}
-      <button
-        type="button"
-        onClick={handleOpen}
-        disabled={!program.url}
-        style={{
-          ...ctaButtonStyle,
-          opacity: program.url ? 1 : 0.5,
-          cursor: program.url ? "pointer" : "not-allowed",
-        }}
-      >
-        {ko ? "공식 사이트에서 신청하기" : "Apply at official site"}
-        <ExternalLink size={13} strokeWidth={1.5} />
-      </button>
+      {/* CTA — AI 점수 보기 + 공식 사이트 */}
+      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+        <button
+          type="button"
+          onClick={onScoreClick}
+          style={{
+            ...ctaSecondaryStyle,
+            flexShrink: 0,
+          }}
+          aria-label={ko ? "AI 점수 보기" : "View AI score"}
+        >
+          <Wand2 size={13} strokeWidth={1.6} />
+          {ko ? "AI 점수 보기" : "AI score"}
+        </button>
+        <button
+          type="button"
+          onClick={handleOpen}
+          disabled={!program.url}
+          style={{
+            ...ctaButtonStyle,
+            flex: 1,
+            opacity: program.url ? 1 : 0.5,
+            cursor: program.url ? "pointer" : "not-allowed",
+          }}
+        >
+          {ko ? "공식 사이트에서 신청하기" : "Apply at official site"}
+          <ExternalLink size={13} strokeWidth={1.5} />
+        </button>
+      </div>
     </article>
   );
 }
@@ -683,6 +797,27 @@ const ctaButtonStyle: React.CSSProperties = {
   transition: "all 0.18s ease",
   fontFamily: "inherit",
   cursor: "pointer",
+};
+
+// AI 점수 보기 — 강조 톤 (미드나이트 fill + sparkle 아이콘)
+const ctaSecondaryStyle: React.CSSProperties = {
+  marginTop: 8,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 5,
+  fontSize: 12.5,
+  fontWeight: 700,
+  padding: "10px 13px",
+  borderRadius: 10,
+  border: "none",
+  background: MIDNIGHT,
+  color: "white",
+  transition: "all 0.18s ease",
+  fontFamily: "inherit",
+  cursor: "pointer",
+  letterSpacing: "-0.005em",
+  boxShadow: "0 2px 8px rgba(25,25,112,0.18)",
 };
 
 const emptyBoxStyle: React.CSSProperties = {

@@ -63,6 +63,7 @@ export * from "./knowledge/investment-terms";
 export * from "./knowledge/franchise-benchmarks";
 export * from "./knowledge/success-case-studies";
 export * from "./knowledge/k-hit-cases";
+export * from "./knowledge/funding-evaluation-criteria";
 export * from "./knowledge/app-store-guide";
 export * from "./knowledge/interview-templates";
 export * from "./sales-collection";
