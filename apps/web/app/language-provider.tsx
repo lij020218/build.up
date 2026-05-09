@@ -14,7 +14,9 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 const STORAGE_KEY = "build-up-language";
 
 export function LanguageProvider(props: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
+  // 기본 언어 한국어 — build.up 은 한국 SMB 우선 (사장님 요청 2026-05-09).
+  // localStorage 에 이전 선택 (en/ko) 있으면 그걸로 덮어씀 (아래 useEffect).
+  const [language, setLanguage] = useState<Language>("ko");
   const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
