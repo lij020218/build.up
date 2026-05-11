@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { DashboardHook } from "../../useDashboard";
 import { supabase } from "../../../../lib/supabase";
+import { detectOverstockItems, type OverstockAlert } from "@build-up/shared";
 
 type InventoryEntry = {
   id: string;
@@ -40,6 +41,172 @@ const fmt = (n: number) => {
   }
   return `${sign}${abs.toLocaleString()}원`;
 };
+
+// ── Overstock Section ────────────────────────────────────────────────────────
+//
+//  2026-05-11 신규 기능 (사장님 신고):
+//   "한 달에 한 번 주문하는 재고인데 발주 임계를 한참 위로 유지하는 경우
+//    (예: 100개씩 주문 + 임계 20개 → 한 달 후 50-60개 남음) 발주 시기 재검토 필요."
+//
+//   → SSOT `detectOverstockItems` 가 검출한 과주문 품목을 카드 상단에 안내.
+//     dailyUsage 있으면 *남은 일수* 까지 표시 (14일+ = alert).
+
+function OverstockSection({
+  ko,
+  inventory,
+}: {
+  ko: boolean;
+  inventory: InventoryEntry[];
+}) {
+  const alerts = useMemo<OverstockAlert[]>(
+    () => detectOverstockItems(inventory as never),
+    [inventory],
+  );
+  const [open, setOpen] = useState(false);
+
+  if (alerts.length === 0) return null;
+
+  const totalExcessCost = alerts.reduce((s, a) => s + (a.excessCostKrw ?? 0), 0);
+  const hasAlertSeverity = alerts.some((a) => a.severity === "alert");
+  const accentColor = hasAlertSeverity ? "#b45309" : "#1F46A8";
+  const accentBg = hasAlertSeverity ? "rgba(180,83,9,0.06)" : "rgba(25,25,112,0.05)";
+  const accentBorder = hasAlertSeverity ? "rgba(180,83,9,0.18)" : "rgba(25,25,112,0.12)";
+
+  return (
+    <div style={{
+      marginTop: "10px",
+      padding: "12px 14px",
+      borderRadius: "12px",
+      background: accentBg,
+      border: `1px solid ${accentBorder}`,
+    }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%",
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          textAlign: "left" as const,
+          fontFamily: "inherit",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+        }}
+      >
+        <span style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "22px",
+          height: "22px",
+          borderRadius: "50%",
+          background: hasAlertSeverity ? "rgba(180,83,9,0.14)" : "rgba(25,25,112,0.10)",
+          color: accentColor,
+          flexShrink: 0,
+        }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M6 2v4M6 9h.01" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2" />
+          </svg>
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: "12.5px",
+            fontWeight: 700,
+            color: accentColor,
+            letterSpacing: "-0.005em",
+            lineHeight: 1.3,
+          }}>
+            {ko
+              ? `발주 주기 재검토 필요 ${alerts.length}건${hasAlertSeverity ? " · 과주문 의심" : ""}`
+              : `Reorder cycle review · ${alerts.length} item${alerts.length > 1 ? "s" : ""}`}
+          </div>
+          <div style={{
+            fontSize: "11px",
+            color: "rgba(15,23,42,0.55)",
+            marginTop: "2px",
+            lineHeight: 1.4,
+          }}>
+            {ko
+              ? totalExcessCost > 0
+                ? `한 달+ 지났는데 재고가 임계의 2배 이상 남음. 잉여 추정 ${fmt(totalExcessCost)} 자금 묶임.`
+                : "한 달+ 지났는데 재고가 임계의 2배 이상 남음 — 발주량 또는 주기 조정 권장."
+              : "Stock 2×+ threshold after 30+ days. Consider reducing order qty or extending cycle."}
+          </div>
+        </div>
+        <svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none"
+          style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", color: accentColor }}
+        >
+          <path d="M3.5 5L7 8.5L10.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <ul style={{
+          listStyle: "none",
+          margin: "10px 0 0",
+          padding: 0,
+          display: "flex",
+          flexDirection: "column" as const,
+          gap: "6px",
+        }}>
+          {alerts.map((a) => {
+            const itemColor = a.severity === "alert" ? "#b45309" : "rgba(15,23,42,0.62)";
+            const recommendKo =
+              a.recommendation === "reduce-quantity" ? "발주량 줄이기 권장"
+              : a.recommendation === "extend-cycle" ? "발주 주기 연장 권장"
+              : "재검토 필요";
+            const recommendEn =
+              a.recommendation === "reduce-quantity" ? "Reduce order qty"
+              : a.recommendation === "extend-cycle" ? "Extend cycle"
+              : "Review";
+            return (
+              <li
+                key={a.itemId}
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: "8px",
+                  background: "rgba(255,255,255,0.7)",
+                  border: "1px solid rgba(15,23,42,0.05)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "6px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
+                    {a.itemName}
+                  </span>
+                  <span style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: itemColor,
+                    background: a.severity === "alert" ? "rgba(180,83,9,0.10)" : "rgba(15,23,42,0.05)",
+                    padding: "1px 6px",
+                    borderRadius: "999px",
+                    flexShrink: 0,
+                    letterSpacing: "0.01em",
+                  }}>
+                    {ko ? recommendKo : recommendEn}
+                  </span>
+                </div>
+                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "3px", lineHeight: 1.4 }}>
+                  {ko ? a.reasonKo : a.reasonEn}
+                </div>
+                {a.excessCostKrw != null && a.excessCostKrw > 0 && (
+                  <div style={{ fontSize: "10.5px", color: itemColor, marginTop: "3px", fontWeight: 600 }}>
+                    {ko ? `잉여 자금 ${fmt(a.excessCostKrw)} (${a.excessUnits}${a.unit ?? "개"})` : `Tied-up ${fmt(a.excessCostKrw)}`}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 // ── Style constants ──────────────────────────────────────────────────────────
 
@@ -522,6 +689,8 @@ export function InventoryOpsCard({
           <div style={opsMetricValue}>{Math.max(inventory.length - lowStockItems.length, 0)}{ko ? "개" : ""}</div>
         </div>
       </div>
+
+      <OverstockSection ko={ko} inventory={inventory} />
 
       <div style={listStack}>
         {/* 발주 필요(critical → warning) 품목을 상단으로 정렬 후 top 4 노출. 2026-05-11 */}
