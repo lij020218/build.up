@@ -123,6 +123,10 @@ export function useFeatureNudges(d: DashboardHook, phase: Phase): FeatureNudge[]
     }
 
     // ── 5. 고정비 미등록 ──
+    // ⚠️ 2026-05-11 사장님 신고: "고정비 등록 누르면 현금흐름 팝업이 켜져 — 비용 관리
+    //    카드로 가야 함." 종전엔 selector=[data-cashflow-hero] + cashflow-setup popup
+    //    자동 오픈. 사장님이 비용 관리(임대료·공과금·인건비 입력) 화면을 기대했는데
+    //    *현금흐름 셋업 모달* 이 뜨는 동작. 라우팅 수정.
     if (fixedExpenses.length === 0) {
       list.push({
         key: "fixed-expenses-empty",
@@ -134,7 +138,8 @@ export function useFeatureNudges(d: DashboardHook, phase: Phase): FeatureNudge[]
         ctaKo: "고정비 등록",
         ctaEn: "Add expenses",
         priority: 75,
-        navigate: { surface: "home", selector: "[data-cashflow-hero]" },
+        // analytics surface (내 가게) 의 비용 관리 카드로 이동.
+        navigate: { surface: "analytics", selector: "[data-cost-management]" },
       });
     }
 

@@ -36,15 +36,15 @@ function dispatchNavigate(nudge: FeatureNudge) {
   if (nudge.navigate.selector === "[data-sales-input]") detail.focusInput = true;
   window.dispatchEvent(new CustomEvent("bup:navigate-feature", { detail }));
 
-  // 현금흐름 셋업 / 고정비 등록 nudge → setup sheet 자동 오픈
-  // surface 전환 + 스크롤 애니메이션이 끝난 뒤 (~700ms) 시트 열기 → 사용자가 흐름을 따라가기 쉬움
-  const openSetupAt: { section?: string } | null =
-    nudge.key === "cashflow-setup" ? {} :
-    nudge.key === "fixed-expenses-empty" ? { section: "fixed-expenses" } :
-    null;
-  if (openSetupAt) {
+  // 현금흐름 셋업 nudge → setup sheet 자동 오픈
+  //   surface 전환 + 스크롤 애니메이션이 끝난 뒤 (~700ms) 시트 열기 → 사용자가 흐름을 따라가기 쉬움
+  //
+  //   ⚠️ 2026-05-11 사장님 신고: "고정비 등록 → 현금흐름 팝업 켜짐 = 잘못된 동작."
+  //      종전엔 fixed-expenses-empty 도 여기서 popup 열었음. 이제 nudge 의 navigate 만
+  //      따라가도록 변경 (비용 관리 카드 selector 로 이동). cashflow-setup 키만 popup 유지.
+  if (nudge.key === "cashflow-setup") {
     window.setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("bup:open-cashflow-setup", { detail: openSetupAt }));
+      window.dispatchEvent(new CustomEvent("bup:open-cashflow-setup", { detail: {} }));
     }, 700);
   }
 }
