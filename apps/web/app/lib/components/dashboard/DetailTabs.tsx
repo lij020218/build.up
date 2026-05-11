@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
+import {
+  groupCostsByClassification,
+  COST_CLASSIFICATION_LABELS,
+  COST_CLASSIFICATION_COLORS,
+  classifyCost,
+  type CostItem,
+  type CostClassification,
+} from "@build-up/shared";
 
 type Props = {
   d: DashboardHook;
@@ -72,22 +80,19 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
     return f ? (ko ? f.label.ko : f.label.en) : key;
   };
 
-  // ⚡ 미드나이트 단일 톤 (Stripe / Linear 스타일) — Apple Health 횡렬 막대.
-  // 무지개 색은 의미 없는 색 가중을 만들어 데이터 정확도를 떨어뜨림 (Stephen Few 룰).
-  // 단일 미드나이트 + 톤 변화로 강도 표현. 가장 큰 항목이 가장 진한 미드나이트.
-  const itemsRaw = [
-    { label: getLabel("ingredients"), value: mc.ingredients },
-    { label: getLabel("labor"),       value: mc.labor },
-    { label: getLabel("rent"),        value: mc.rent },
-    { label: getLabel("utilities"),   value: mc.utilities },
-    { label: getLabel("sga"),         value: mc.sga ?? 0 },
-    { label: getLabel("marketing"),   value: mc.marketing ?? 0 },
-    { label: getLabel("other"),       value: mc.other },
-    { label: getLabel("interest"),    value: (mc as Record<string, number>).interest ?? 0 },
+  // 분류별 그룹화 SSOT — packages/shared/finance/cost-classification.ts.
+  //   고정비 (rent·labor·utilities·interest) · 변동비 (ingredients·sga·marketing) · 기타 (other).
+  const itemsRaw: CostItem[] = [
+    { fieldKey: "ingredients", label: getLabel("ingredients"), value: mc.ingredients },
+    { fieldKey: "labor",       label: getLabel("labor"),       value: mc.labor },
+    { fieldKey: "rent",        label: getLabel("rent"),        value: mc.rent },
+    { fieldKey: "utilities",   label: getLabel("utilities"),   value: mc.utilities },
+    { fieldKey: "sga",         label: getLabel("sga"),         value: mc.sga ?? 0 },
+    { fieldKey: "marketing",   label: getLabel("marketing"),   value: mc.marketing ?? 0 },
+    { fieldKey: "other",       label: getLabel("other"),       value: mc.other },
+    { fieldKey: "interest",    label: getLabel("interest"),    value: (mc as Record<string, number>).interest ?? 0 },
   ];
-  // 0 제외 후 큰 순 정렬 → 가장 큰 항목이 톱
-  const items = itemsRaw.filter(it => it.value > 0).sort((a, b) => b.value - a.value);
-  const maxValue = items.length > 0 ? items[0].value : 1;
+  const grouped = groupCostsByClassification(itemsRaw);
 
   const inputStyle: React.CSSProperties = {
     border: "1px solid rgba(25,25,112,0.10)", borderRadius: "10px",
@@ -100,49 +105,132 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-      {/* Left: 미드나이트 단일톤 horizontal bars (Apple Health 스타일) */}
+      {/* Left: 분류별(고정·변동·기타) 그룹 카드 (Apple Health 톤) */}
       <div>
         <div style={panelLabel}>{ko ? "월간 비용 구조" : "Monthly Cost Structure"}</div>
 
         {total > 0 ? (
           <>
-            <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px", marginTop: "14px" }}>
-              {items.map((it, idx) => {
-                const pctOfTotal = (it.value / total) * 100;
-                const widthOfMax = (it.value / maxValue) * 100;
-                // 가장 큰 항목 = 진한 미드나이트, 작아질수록 투명도 증가
-                const intensity = 1 - (idx / Math.max(items.length, 1)) * 0.55;
-                const barColor = `rgba(25,25,112,${0.45 + intensity * 0.50})`;
-                const trackColor = "rgba(25,25,112,0.06)";
+            {/* 분류 요약 칩 — 고정/변동/기타 비율 한 줄 */}
+            <div style={{
+              marginTop: "12px",
+              display: "flex",
+              gap: "6px",
+              flexWrap: "wrap" as const,
+            }}>
+              {(["fixed", "variable", "other"] as const).map((cls) => {
+                if (grouped[cls].total <= 0) return null;
+                const c = COST_CLASSIFICATION_COLORS[cls];
+                const pct = (grouped[cls].total / total) * 100;
                 return (
-                  <div key={it.label} style={{ display: "flex", flexDirection: "column" as const, gap: "5px" }}>
-                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
-                      <span style={{ fontSize: "12.5px", fontWeight: 600, color: "rgba(15,23,42,0.7)", letterSpacing: "-0.005em" }}>
-                        {it.label}
-                      </span>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexShrink: 0 }}>
-                        <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f0f4a", fontVariantNumeric: "tabular-nums" as const, letterSpacing: "-0.01em" }}>
-                          {fmt(it.value)}
+                  <span key={cls} style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    padding: "5px 10px",
+                    borderRadius: "999px",
+                    background: c.bg,
+                    border: `0.5px solid ${c.border}`,
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: c.text,
+                    letterSpacing: "-0.005em",
+                    fontVariantNumeric: "tabular-nums" as const,
+                  }}>
+                    <span style={{
+                      width: "6px", height: "6px", borderRadius: "50%",
+                      background: c.bar, flexShrink: 0,
+                    }} />
+                    {ko ? COST_CLASSIFICATION_LABELS[cls].ko : COST_CLASSIFICATION_LABELS[cls].en}
+                    <span style={{ opacity: 0.55 }}>·</span>
+                    <span>{fmt(grouped[cls].total)}</span>
+                    <span style={{ opacity: 0.55 }}>({pct.toFixed(0)}%)</span>
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* 분류별 그룹 카드 — 헤더 + 항목별 막대 */}
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: "14px", marginTop: "16px" }}>
+              {(["fixed", "variable", "other"] as const).map((cls) => {
+                const group = grouped[cls];
+                const nonZeroItems = group.items.filter((it) => it.value > 0);
+                if (nonZeroItems.length === 0) return null;
+                const c = COST_CLASSIFICATION_COLORS[cls];
+                const groupPct = (group.total / total) * 100;
+                const maxInGroup = Math.max(...nonZeroItems.map((it) => it.value), 1);
+                return (
+                  <div key={cls} style={{
+                    padding: "12px 14px",
+                    borderRadius: "12px",
+                    background: c.bg,
+                    border: `1px solid ${c.border}`,
+                  }}>
+                    {/* Group header */}
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px", marginBottom: "10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                        <span style={{
+                          width: "8px", height: "8px", borderRadius: "50%",
+                          background: c.bar, flexShrink: 0,
+                          boxShadow: `0 0 0 3px ${c.border}`,
+                        }} />
+                        <span style={{
+                          fontSize: "11.5px", fontWeight: 700, color: c.text,
+                          letterSpacing: "0.04em", textTransform: "uppercase" as const,
+                        }}>
+                          {ko ? COST_CLASSIFICATION_LABELS[cls].ko : COST_CLASSIFICATION_LABELS[cls].en}
                         </span>
-                        <span style={{ fontSize: "11px", fontWeight: 600, color: "rgba(25,25,112,0.55)", fontVariantNumeric: "tabular-nums" as const, minWidth: "32px", textAlign: "right" as const }}>
-                          {pctOfTotal.toFixed(0)}%
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
+                        <span style={{
+                          fontSize: "14px", fontWeight: 700, color: c.text,
+                          fontVariantNumeric: "tabular-nums" as const, letterSpacing: "-0.01em",
+                        }}>
+                          {fmt(group.total)}
+                        </span>
+                        <span style={{ fontSize: "10.5px", fontWeight: 600, color: c.text, opacity: 0.6, fontVariantNumeric: "tabular-nums" as const }}>
+                          {groupPct.toFixed(0)}%
                         </span>
                       </div>
                     </div>
-                    <div style={{
-                      height: "6px",
-                      borderRadius: "999px",
-                      background: trackColor,
-                      overflow: "hidden",
-                      position: "relative",
-                    }}>
-                      <div style={{
-                        height: "100%",
-                        width: `${widthOfMax}%`,
-                        background: barColor,
-                        borderRadius: "999px",
-                        transition: "width 0.6s cubic-bezier(0.22,1,0.36,1)",
-                      }} />
+
+                    {/* Items in group */}
+                    <div style={{ display: "flex", flexDirection: "column" as const, gap: "9px" }}>
+                      {nonZeroItems.map((it) => {
+                        const pctOfTotal = (it.value / total) * 100;
+                        const widthOfGroup = (it.value / maxInGroup) * 100;
+                        return (
+                          <div key={it.fieldKey} style={{ display: "flex", flexDirection: "column" as const, gap: "4px" }}>
+                            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
+                              <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.72)", letterSpacing: "-0.005em" }}>
+                                {it.label}
+                              </span>
+                              <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexShrink: 0 }}>
+                                <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, letterSpacing: "-0.01em" }}>
+                                  {fmt(it.value)}
+                                </span>
+                                <span style={{ fontSize: "10.5px", fontWeight: 600, color: c.text, opacity: 0.7, fontVariantNumeric: "tabular-nums" as const, minWidth: "30px", textAlign: "right" as const }}>
+                                  {pctOfTotal.toFixed(0)}%
+                                </span>
+                              </div>
+                            </div>
+                            <div style={{
+                              height: "5px",
+                              borderRadius: "999px",
+                              background: "rgba(255,255,255,0.55)",
+                              overflow: "hidden",
+                            }}>
+                              <div style={{
+                                height: "100%",
+                                width: `${widthOfGroup}%`,
+                                background: c.bar,
+                                borderRadius: "999px",
+                                transition: "width 0.6s cubic-bezier(0.22,1,0.36,1)",
+                              }} />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -151,7 +239,7 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
 
             {/* 총 비용 — 미드나이트 강조 */}
             <div style={{
-              marginTop: "18px",
+              marginTop: "14px",
               padding: "14px 16px",
               background: "linear-gradient(135deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.03) 100%)",
               borderRadius: "12px",
@@ -185,58 +273,95 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
         )}
       </div>
 
-      {/* Right: input form — 미드나이트 톤 통일 */}
+      {/* Right: input form — 분류별 그룹 (고정·변동·기타) */}
       <div>
         <div style={panelLabel}>{ko ? "비용 수정" : "Edit Costs"}</div>
-        <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginTop: "12px" }}>
-          {[
-            { label: getLabel("ingredients"), state: d.costCogsText ?? d.costIngredientsText ?? "", setter: d.setCostCogsText ?? d.setCostIngredientsText },
-            { label: getLabel("labor"), state: d.costLaborText, setter: d.setCostLaborText },
-            { label: getLabel("rent"), state: d.costRentText, setter: d.setCostRentText },
-            { label: getLabel("utilities"), state: d.costUtilitiesText, setter: d.setCostUtilitiesText },
-            { label: getLabel("sga"), state: d.costSgaText ?? "", setter: d.setCostSgaText },
-            { label: getLabel("marketing"), state: d.costMarketingText ?? "", setter: d.setCostMarketingText },
-            { label: getLabel("other"), state: d.costOtherText, setter: d.setCostOtherText },
-            { label: getLabel("interest"), state: d.costInterestText ?? "", setter: d.setCostInterestText },
-          ].map((field) => (
-            <div key={field.label} style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" as const }}>
-              <span style={{ fontSize: "12.5px", fontWeight: 600, color: "rgba(15,23,42,0.65)", width: "84px", flexShrink: 0, letterSpacing: "-0.005em" }}>
-                {field.label}
-              </span>
-              <div style={{ flex: 1, position: "relative" as const }}>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={field.state}
-                  onChange={(e) => field.setter(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="0"
-                  style={{ ...inputStyle, paddingRight: "40px" }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.35)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(25,25,112,0.08)"; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.10)"; e.currentTarget.style.boxShadow = "none"; }}
-                />
-                <span style={{ position: "absolute" as const, right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "11.5px", fontWeight: 600, color: "rgba(25,25,112,0.5)", pointerEvents: "none" as const }}>
-                  {ko ? "만원" : "10K"}
-                </span>
+        {(() => {
+          const allFields: Array<{ fieldKey: string; label: string; state: string; setter: (v: string) => void }> = [
+            { fieldKey: "ingredients", label: getLabel("ingredients"), state: d.costCogsText ?? d.costIngredientsText ?? "", setter: d.setCostCogsText ?? d.setCostIngredientsText },
+            { fieldKey: "labor",       label: getLabel("labor"),       state: d.costLaborText, setter: d.setCostLaborText },
+            { fieldKey: "rent",        label: getLabel("rent"),        state: d.costRentText, setter: d.setCostRentText },
+            { fieldKey: "utilities",   label: getLabel("utilities"),   state: d.costUtilitiesText, setter: d.setCostUtilitiesText },
+            { fieldKey: "sga",         label: getLabel("sga"),         state: d.costSgaText ?? "", setter: d.setCostSgaText },
+            { fieldKey: "marketing",   label: getLabel("marketing"),   state: d.costMarketingText ?? "", setter: d.setCostMarketingText },
+            { fieldKey: "other",       label: getLabel("other"),       state: d.costOtherText, setter: d.setCostOtherText },
+            { fieldKey: "interest",    label: getLabel("interest"),    state: d.costInterestText ?? "", setter: d.setCostInterestText },
+          ];
+          // 분류별 그룹화 (SSOT)
+          const byClass: Record<CostClassification, typeof allFields> = { fixed: [], variable: [], other: [] };
+          for (const f of allFields) byClass[classifyCost(f.fieldKey)].push(f);
+
+          const renderGroup = (cls: CostClassification) => {
+            const fields = byClass[cls];
+            if (fields.length === 0) return null;
+            const c = COST_CLASSIFICATION_COLORS[cls];
+            return (
+              <div key={cls} style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  marginTop: "4px",
+                }}>
+                  <span style={{
+                    width: "6px", height: "6px", borderRadius: "50%",
+                    background: c.bar, flexShrink: 0,
+                  }} />
+                  <span style={{
+                    fontSize: "10.5px", fontWeight: 700, color: c.text,
+                    letterSpacing: "0.06em", textTransform: "uppercase" as const,
+                  }}>
+                    {ko ? COST_CLASSIFICATION_LABELS[cls].ko : COST_CLASSIFICATION_LABELS[cls].en}
+                  </span>
+                </div>
+                {fields.map((field) => (
+                  <div key={field.fieldKey} style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" as const }}>
+                    <span style={{ fontSize: "12.5px", fontWeight: 600, color: "rgba(15,23,42,0.65)", width: "84px", flexShrink: 0, letterSpacing: "-0.005em" }}>
+                      {field.label}
+                    </span>
+                    <div style={{ flex: 1, position: "relative" as const }}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={field.state}
+                        onChange={(e) => field.setter(e.target.value.replace(/[^0-9]/g, ""))}
+                        placeholder="0"
+                        style={{ ...inputStyle, paddingRight: "40px" }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.35)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(25,25,112,0.08)"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(25,25,112,0.10)"; e.currentTarget.style.boxShadow = "none"; }}
+                      />
+                      <span style={{ position: "absolute" as const, right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "11.5px", fontWeight: 600, color: "rgba(25,25,112,0.5)", pointerEvents: "none" as const }}>
+                        {ko ? "만원" : "10K"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
+            );
+          };
+
+          return (
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: "12px", marginTop: "12px" }}>
+              {renderGroup("fixed")}
+              {renderGroup("variable")}
+              {renderGroup("other")}
+              <button
+                type="button"
+                onClick={d.handleSaveMonthlyCosts}
+                style={{
+                  marginTop: "10px", borderRadius: "12px", border: "none",
+                  background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)", color: "#fff",
+                  padding: "12px", fontSize: "13.5px", fontWeight: 700,
+                  letterSpacing: "-0.01em", cursor: "pointer",
+                  transition: "background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease",
+                  boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(30,42,85,0.28)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(30,42,85,0.18)"; }}
+              >
+                {ko ? "저장" : "Save"}
+              </button>
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={d.handleSaveMonthlyCosts}
-            style={{
-              marginTop: "12px", borderRadius: "12px", border: "none",
-              background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)", color: "#fff",
-              padding: "12px", fontSize: "13.5px", fontWeight: 700,
-              letterSpacing: "-0.01em", cursor: "pointer",
-              transition: "background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease",
-              boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(30,42,85,0.28)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(30,42,85,0.18)"; }}
-          >
-            {ko ? "저장" : "Save"}
-          </button>
-        </div>
+          );
+        })()}
       </div>
     </div>
   );
