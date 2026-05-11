@@ -1,0 +1,41 @@
+import { describe, it, expect } from "vitest";
+import { franchiseBrands } from "../franchise-data";
+
+describe("franchiseBrands — 120 브랜드 확장 (Round 2, 2026-05-12)", () => {
+  it("총 브랜드 개수는 120개", () => {
+    expect(franchiseBrands.length).toBe(120);
+  });
+  it("브랜드 ID 중복 없음", () => {
+    const ids = franchiseBrands.map((b) => b.id);
+    const seen = new Set<string>();
+    const dupes: string[] = [];
+    for (const id of ids) {
+      if (seen.has(id)) dupes.push(id);
+      seen.add(id);
+    }
+    expect(dupes).toEqual([]);
+  });
+  it("Round-2 추가 브랜드 핵심 ID 존재 확인", () => {
+    const idSet = new Set(franchiseBrands.map((b) => b.id));
+    // chicken-burger 확장
+    expect(idSet.has("perikana")).toBe(true);
+    expect(idSet.has("mexicana")).toBe(true);
+    expect(idSet.has("nobrand-burger")).toBe(true);
+    expect(idSet.has("kfc-korea")).toBe(true);
+    // korean-casual 확장
+    expect(idSet.has("myungryun-galbi")).toBe(true);
+    expect(idSet.has("hancheon-seolleongtang")).toBe(true);
+    expect(idSet.has("kimgane")).toBe(true);
+    // cafe-dessert 확장
+    expect(idSet.has("mammoth-coffee")).toBe(true);
+    expect(idSet.has("dunkin")).toBe(true);
+    expect(idSet.has("dessert39")).toBe(true);
+    // retail 확장
+    expect(idSet.has("daiso")).toBe(true);
+    expect(idSet.has("olive-young")).toBe(true);
+    expect(idSet.has("nobrand")).toBe(true);
+    // delivery-meals / 분식
+    expect(idSet.has("myungrang-hotdog")).toBe(true);
+    expect(idSet.has("tanghuo-kungfu")).toBe(true);
+  });
+});
