@@ -1107,6 +1107,11 @@ export function CEOMorningHero({ d }: Props) {
                     {PRIORITY_META[briefing.priority].label}
                   </span>
                 )}
+                {/* 경영 건강 점수 — Tier 0 카드 → Hero 헤더 통합 (2026-05-11 AI 의회 결정).
+                    사장님이 모닝 브리핑 첫 시선에 *종합 건강도* 한눈 인지. dot 색·grade·점수 한 줄. */}
+                {d.businessLaunched && d.businessHealthScore && d.businessHealthScore !== "unknown" && (
+                  <HealthScoreBadge grade={d.businessHealthScore} ko={ko} />
+                )}
               </div>
               <div style={{ fontSize: "13.5px", fontWeight: 600, letterSpacing: "-0.005em", lineHeight: 1.5, color: PALETTE.INK, marginBottom: "4px" }}>
                 {ko ? briefing.analysisKo : briefing.analysisEn}
@@ -1178,6 +1183,80 @@ function fmtKrw(n: number, ko: boolean): string {
   if (n >= 100_000_000) return ko ? `${(n / 100_000_000).toFixed(1)}억원` : `₩${(n / 100_000_000).toFixed(1)}B`;
   if (n >= 10_000) return ko ? `${Math.round(n / 10_000).toLocaleString()}만원` : `₩${Math.round(n / 10_000).toLocaleString()}M`;
   return ko ? `${Math.round(n).toLocaleString()}원` : `₩${Math.round(n).toLocaleString()}`;
+}
+
+/**
+ * HealthScoreBadge — 모닝 브리핑 헤더 inline 건강 점수 pill.
+ *
+ *  ── 2026-05-11 (AI 의회 결정) ──────────────────────────────────────
+ *  종전: BusinessHealthScoreCard 별도 카드 (Tier 0, 180px 높이 차지)
+ *        → 매출/고객 그래프가 fold 아래로 밀려나는 부작용.
+ *  통합: 모닝 브리핑 헤더에 작은 pill 로 임베드. 사장님은 첫 시선에 *건강 grade*
+ *        를 보고, AI 코칭이 *왜 그 grade 인지* 분석/액션으로 연결.
+ *  ──────────────────────────────────────────────────────────────────
+ *
+ *  디자인:
+ *   · 8px dot + glow (Apple Health 톤)
+ *   · grade 라벨 (건강/주의/위험) + 점수 숫자
+ *   · 색조: GREEN/AMBER/ROSE × 0.08 tint background — 시각 부담 최소
+ *   · grade 별 텍스트 색은 진한 톤 (가독성)
+ */
+function HealthScoreBadge({
+  grade,
+  ko,
+}: {
+  grade: "healthy" | "caution" | "danger";
+  ko: boolean;
+}) {
+  // 점수·라벨·색 — BusinessHealthScoreCard SSOT 와 동일 매핑
+  const score = grade === "healthy" ? 85 : grade === "caution" ? 55 : 30;
+  const label = grade === "healthy" ? (ko ? "건강" : "Healthy")
+    : grade === "caution" ? (ko ? "주의" : "Caution")
+    : (ko ? "위험" : "Danger");
+  const dotColor = grade === "healthy" ? "#059669"
+    : grade === "caution" ? "#d97706"
+    : "#dc2626";
+  const bgColor = grade === "healthy" ? "rgba(5,150,105,0.08)"
+    : grade === "caution" ? "rgba(217,119,6,0.08)"
+    : "rgba(220,38,38,0.08)";
+  const textColor = grade === "healthy" ? "#047857"
+    : grade === "caution" ? "#a16207"
+    : "#b91c1c";
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "5px",
+        padding: "3px 9px 3px 7px",
+        borderRadius: "999px",
+        background: bgColor,
+        border: `0.5px solid ${dotColor}1f`,
+        fontSize: "10.5px",
+        fontWeight: 700,
+        color: textColor,
+        letterSpacing: "-0.005em",
+        lineHeight: 1.1,
+        fontVariantNumeric: "tabular-nums" as const,
+      }}
+      title={ko
+        ? `경영 건강 점수 ${score}/100 — ${label}`
+        : `Business Health ${score}/100 — ${label}`}
+    >
+      <span style={{
+        width: "7px",
+        height: "7px",
+        borderRadius: "50%",
+        background: dotColor,
+        boxShadow: `0 0 0 2.5px ${dotColor}22`,
+        flexShrink: 0,
+      }} />
+      <span>{ko ? "건강도" : "Health"}</span>
+      <span style={{ opacity: 0.55, fontWeight: 600 }}>·</span>
+      <span>{label} {score}</span>
+    </span>
+  );
 }
 
 /**

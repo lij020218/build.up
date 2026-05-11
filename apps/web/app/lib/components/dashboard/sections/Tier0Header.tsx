@@ -12,7 +12,6 @@
 
 import type { DashboardHook } from "../../../useDashboard";
 import { RitualBanner } from "../RitualBanner";
-import { BusinessHealthScoreCard } from "../BusinessHealthScoreCard";
 import { useProfileStore } from "../../../stores/profile-store";
 
 type Props = {
@@ -20,15 +19,14 @@ type Props = {
   ko: boolean;
   isStaff: boolean;
   nextStaggerStyle: () => React.CSSProperties;
-  /** 사업 건강 점수 — useDashboardComputed SSOT. 미런칭/직원 화면에선 미노출. */
-  businessHealthScore?: "healthy" | "caution" | "danger" | "unknown";
 };
 
-export function Tier0Header({ d, ko, isStaff, nextStaggerStyle, businessHealthScore }: Props) {
+// ⚠️ 2026-05-11 AI 의회 결정: 별도 BusinessHealthScoreCard 제거. 헬스 점수는
+//    CEOMorningHero 헤더 안 inline pill (HealthScoreBadge) 로 통합 —
+//    매출/고객 그래프가 fold above 로 올라옴, CEO 모닝은 최상단 유지.
+export function Tier0Header({ d, ko, isStaff, nextStaggerStyle }: Props) {
   const hiddenCards = useProfileStore((s) => s.hiddenCards);
   const showRitualBanner = !hiddenCards.includes("ritual-banner");
-  const showHealthScore =
-    !isStaff && !!businessHealthScore && d.businessLaunched && !hiddenCards.includes("business-health-score");
   return (
     <>
       {/* 상호명 — Apple 페이지 타이틀 톤 */}
@@ -83,14 +81,6 @@ export function Tier0Header({ d, ko, isStaff, nextStaggerStyle, businessHealthSc
           </span>
         )}
       </div>
-
-      {/* 경영 건강 점수 — 사용자 지침 2026-05-11: ProfileView 에서 운영 대시보드로 이동.
-          런칭 후·사장님 화면에서만 노출. unknown 이면 자동 가림. */}
-      {showHealthScore && businessHealthScore && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <BusinessHealthScoreCard ko={ko} businessHealthScore={businessHealthScore} />
-        </div>
-      )}
 
       {/* 0단계 — 경영 리추얼 배너 */}
       {!isStaff && showRitualBanner && (

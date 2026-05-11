@@ -151,13 +151,7 @@ export default function OperationalDashboard({ d }: Props) {
       {introDone ? (
         <>
       {/* ━━━ Tier 0 — 상호명 + 리추얼 배너 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
-      <Tier0Header
-        d={d}
-        ko={ko}
-        isStaff={isStaff}
-        nextStaggerStyle={nextStaggerStyle}
-        businessHealthScore={d.businessHealthScore}
-      />
+      <Tier0Header d={d} ko={ko} isStaff={isStaff} nextStaggerStyle={nextStaggerStyle} />
 
       {/* ━━━ Tier 1 Hero — CEOMorningHero + FeatureNudge + AlertStrip (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
       {!isStaff && <Tier1Hero d={d} nextStaggerStyle={nextStaggerStyle} />}

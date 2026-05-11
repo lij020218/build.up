@@ -43,14 +43,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     hintEn: "Weekly review on Mondays / monthly on early-month — auto",
     category: "hero",
   },
-  {
-    id: "business-health-score",
-    labelKo: "경영 건강 점수",
-    labelEn: "Business Health Score",
-    hintKo: "비용·매출·런웨이 기반 종합 점수 (건강/주의/위험) — 원형 게이지로 한눈",
-    hintEn: "Composite score (healthy/caution/danger) — circular gauge at a glance",
-    category: "hero",
-  },
+  // ⚠️ business-health-score 카드는 CEOMorningHero 헤더로 통합 흡수됨 (2026-05-11
+  //    AI 의회 결정). 별도 토글 X — 모닝 브리핑이 켜져있으면 함께 노출.
 
   // ─── Daily Hub (매일 의미 있는 상태 카드) ────────────────────
   {
