@@ -60,11 +60,35 @@ type BusinessProfileRow = {
 
 export type PersistedBusinessProfile = UserBusinessProfile;
 
+/**
+ * 현재 로그인 사용자 조회.
+ *
+ *  ⚠️ CRITICAL (2026-05-11, 사장님 신고: "로그인을 2번 해야 운영 대시보드가 보임"):
+ *
+ *   종전 구현: `auth.getUser()` 만 호출. 이건 supabase auth 서버로 *네트워크 호출* 해서
+ *     JWT 검증. Vercel cold start / 라우팅 직후 네트워크 호출이 일시적으로 null 반환 →
+ *     사장님이 로그인 직후 /auth 로 다시 튕김 → 한번 더 로그인해야 메인 진입.
+ *
+ *   수정: 1단계로 `auth.getSession()` (로컬 localStorage 동기 읽기, 네트워크 X) 호출.
+ *         session 있고 JWT 만료 안 됐으면 그 안의 user 반환 — 네트워크 의존 0.
+ *         session 없거나 만료된 경우만 `getUser()` 로 폴백.
+ *
+ *   결과: 로그인 직후 cookie 가 localStorage 에 set 되면 즉시 user 인식. race condition 차단.
+ */
 export async function getCurrentUser(client: Client): Promise<User | null> {
-  const {
-    data: { user }
-  } = await client.auth.getUser();
+  // 1단계 — 로컬 세션 (네트워크 X). 로그인 직후엔 항상 이걸로 잡힘.
+  const { data: { session } } = await client.auth.getSession();
+  if (session?.user) {
+    // JWT 만료 검사 — 만료됐으면 다음 단계로 (refresh 시도).
+    const expiresAt = session.expires_at; // unix seconds
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!expiresAt || expiresAt > nowSec) {
+      return session.user;
+    }
+  }
 
+  // 2단계 — 세션 없거나 만료. auth 서버 호출 (refresh + verify).
+  const { data: { user } } = await client.auth.getUser();
   return user;
 }
 
