@@ -1757,7 +1757,21 @@ export function getMatchedProgramsV2(criteria: MatchCriteria): ProgramMatch[] {
     // weight 내림차순 + 최대 4개로 제한 (UI 노이즈 방지)
     const matchReasons = reasons.sort((a, b) => b.weight - a.weight).slice(0, 4);
 
-    return { ...p, matchScore: score, personalFitScore, eligible, daysUntilDeadline, matchReasons };
+    // ⚠️ 점수 0-100 클램프 (2026-05-11 사장님 신고: "102점 같은 점수는 있어서는 안돼").
+    //   매칭 가산점들이 누적되면 100 을 초과하거나 음수로 떨어질 수 있음.
+    //   UI 에 "60점/100점" 일관성 보장 + 사용자 신뢰도 유지.
+    //   정렬 순서는 보존됨 (클램핑은 monotonic transformation 의 *상한* 만 자름).
+    const clampedScore = Math.max(0, Math.min(100, Math.round(score)));
+    const clampedPersonalFit = Math.max(0, Math.min(100, Math.round(personalFitScore)));
+
+    return {
+      ...p,
+      matchScore: clampedScore,
+      personalFitScore: clampedPersonalFit,
+      eligible,
+      daysUntilDeadline,
+      matchReasons,
+    };
   })
   .sort((a, b) => {
     // 자격 보유 우선
