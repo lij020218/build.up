@@ -10,6 +10,7 @@ import {
   type CostItem,
   type CostClassification,
 } from "@build-up/shared";
+import TaxCalendarCard from "../TaxCalendarCard";
 
 type Props = {
   d: DashboardHook;
@@ -576,30 +577,32 @@ function MembersPanel({ d, ko }: { d: DashboardHook; ko: boolean }) {
 
 function TaxPanel({ d, ko }: { d: DashboardHook; ko: boolean }) {
   const ts = d.taxSettings as { vatType?: string; hasEmployees?: boolean } | null;
+  const isSimplified = ts?.vatType === "simplified";
+  const hasEmployees = !!ts?.hasEmployees;
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       <SummaryRow items={[
         {
           label: ko ? "과세 유형" : "VAT type",
-          value: ts?.vatType === "simplified" ? (ko ? "간이" : "Simplified") : (ko ? "일반" : "General"),
+          value: isSimplified ? (ko ? "간이" : "Simplified") : (ko ? "일반" : "General"),
         },
         {
           label: ko ? "직원 유무" : "Employees",
-          value: ts?.hasEmployees ? (ko ? "있음" : "Yes") : (ko ? "없음" : "No"),
+          value: hasEmployees ? (ko ? "있음" : "Yes") : (ko ? "없음" : "No"),
         },
         {
           label: ko ? "세무 처리" : "Tax filing",
           value: d.cpaDecision === "cpa" ? (ko ? "세무사" : "CPA") : d.cpaDecision === "self" ? (ko ? "직접" : "Self") : "—",
         },
       ]} />
-      <div style={{
-        padding: "18px 20px", borderRadius: "12px",
-        background: "var(--surface)", border: "1px solid var(--border)",
-        textAlign: "center" as const, color: "var(--muted)",
-        fontSize: "13px", lineHeight: 1.5,
-      }}>
-        {ko ? "세금 캘린더는 하단에서 확인하세요" : "See tax calendar below"}
-      </div>
+      {/* 2026-05-12: 종전엔 "세금 캘린더는 하단에서 확인하세요" 만 노출했는데 하단에 실제로
+          렌더되는 캘린더가 없어서 사장님이 길을 잃었음. TaxCalendarCard 를 패널 안에 직접
+          임베드 — 과세 유형·직원 유무 기반 개인화 일정이 같은 화면에서 즉시 보임. */}
+      <TaxCalendarCard
+        isSimplified={isSimplified}
+        hasEmployees={hasEmployees}
+        language={ko ? "ko" : "en"}
+      />
     </div>
   );
 }
