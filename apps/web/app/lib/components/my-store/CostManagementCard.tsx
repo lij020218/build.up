@@ -19,6 +19,12 @@ import { useFinanceStore, type MonthlyCosts } from "../../stores/finance-store";
 import { useCashflowStore, type FixedExpenseCategory } from "../../stores/cashflow-store";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import {
+  classifyCost,
+  COST_CLASSIFICATION_LABELS,
+  COST_CLASSIFICATION_COLORS,
+  type CostClassification,
+} from "@build-up/shared";
+import {
   PALETTE,
   editBtnStyle,
   saveBtnStyle,
@@ -256,45 +262,119 @@ export function CostManagementCard({ ko, expenseFields }: Props) {
             )}
           </div>
         </div>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 10,
-          marginTop: 12,
-        }}>
-          {MONTHLY_COST_KEYS.map((key) => {
-            const label = labelFor(key);
-            const source = editing ? draft : monthlyCosts;
-            const value = source[key] ?? 0;
-            const display = value > 0 ? String(Math.round(value / 10000)) : "";
+        {/* 분류별 그룹 — 고정비 / 변동비 / 기타 (SSOT: cost-classification.ts).
+            사장님이 입력하면서 *어떤 비용이 어떤 성격인지* 학습 효과. UI 도 깔끔. */}
+        {(() => {
+          const source = editing ? draft : monthlyCosts;
+          // 분류별 키 묶기
+          const byClass: Record<CostClassification, Array<keyof MonthlyCosts>> = {
+            fixed: [], variable: [], other: [],
+          };
+          for (const k of MONTHLY_COST_KEYS) byClass[classifyCost(k)].push(k);
+          // 분류별 소계 (원 → 만원)
+          const groupTotalMan = (cls: CostClassification) =>
+            Math.round(byClass[cls].reduce((s, k) => s + (source[k] ?? 0), 0) / 10000);
+
+          const renderGroup = (cls: CostClassification) => {
+            const keys = byClass[cls];
+            if (keys.length === 0) return null;
+            const c = COST_CLASSIFICATION_COLORS[cls];
+            const groupTotal = groupTotalMan(cls);
             return (
-              <label key={key} style={fieldRow}>
-                <span style={fieldLabel}>{ko ? label.ko : label.en}</span>
-                {editing ? (
-                  <div style={inputWrap}>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={display}
-                      onChange={(e) => updateDraftCost(key, e.target.value)}
-                      placeholder="0"
-                      style={inputStyle}
-                      autoFocus={key === MONTHLY_COST_KEYS[0]}
-                    />
-                    <span style={inputSuffix}>{ko ? "만원" : "K"}</span>
-                  </div>
-                ) : (
-                  <div style={readonlyValueStyle}>
-                    <span style={{ color: value > 0 ? PALETTE.MIDNIGHT_DEEP : PALETTE.HINT }}>
-                      {value > 0 ? Math.round(value / 10000).toLocaleString() : "—"}
+              <div
+                key={cls}
+                style={{
+                  marginTop: 14,
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: c.bg,
+                  border: `1px solid ${c.border}`,
+                }}
+              >
+                {/* 그룹 헤더 */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <span style={{
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: c.bar,
+                      boxShadow: `0 0 0 3px ${c.border}`,
+                      flexShrink: 0,
+                    }} />
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: c.text,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                    }}>
+                      {ko ? COST_CLASSIFICATION_LABELS[cls].ko : COST_CLASSIFICATION_LABELS[cls].en}
                     </span>
-                    <span style={readonlySuffixStyle}>{ko ? "만원" : "K"}</span>
                   </div>
-                )}
-              </label>
+                  <span style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: c.text,
+                    fontVariantNumeric: "tabular-nums" as const,
+                    letterSpacing: "-0.005em",
+                  }}>
+                    {groupTotal.toLocaleString()}{ko ? "만원" : "K"}
+                  </span>
+                </div>
+
+                {/* 그룹 내 필드 grid */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 8,
+                }}>
+                  {keys.map((key) => {
+                    const label = labelFor(key);
+                    const value = source[key] ?? 0;
+                    const display = value > 0 ? String(Math.round(value / 10000)) : "";
+                    return (
+                      <label key={key} style={fieldRow}>
+                        <span style={fieldLabel}>{ko ? label.ko : label.en}</span>
+                        {editing ? (
+                          <div style={inputWrap}>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={display}
+                              onChange={(e) => updateDraftCost(key, e.target.value)}
+                              placeholder="0"
+                              style={inputStyle}
+                              autoFocus={key === MONTHLY_COST_KEYS[0]}
+                            />
+                            <span style={inputSuffix}>{ko ? "만원" : "K"}</span>
+                          </div>
+                        ) : (
+                          <div style={readonlyValueStyle}>
+                            <span style={{ color: value > 0 ? PALETTE.MIDNIGHT_DEEP : PALETTE.HINT }}>
+                              {value > 0 ? Math.round(value / 10000).toLocaleString() : "—"}
+                            </span>
+                            <span style={readonlySuffixStyle}>{ko ? "만원" : "K"}</span>
+                          </div>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
             );
-          })}
-        </div>
+          };
+          return (
+            <>
+              {renderGroup("fixed")}
+              {renderGroup("variable")}
+              {renderGroup("other")}
+            </>
+          );
+        })()}
         <div style={hintLine}>
           {ko
             ? "평균값은 손익 카드·비용 구조 도넛·AI 코칭의 진단 기준입니다."
