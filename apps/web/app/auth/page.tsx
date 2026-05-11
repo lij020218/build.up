@@ -387,10 +387,12 @@ export default function AuthPage() {
                   padding: "13px 0",
                   borderRadius: 10,
                   border: "none",
-                  background: "#0071e3",
+                  background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
                   color: "#fff",
                   fontSize: 15,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  letterSpacing: "-0.005em",
+                  boxShadow: "0 2px 10px rgba(30,42,85,0.32)",
                   cursor: loading ? "wait" : "pointer",
                   opacity: loading ? 0.6 : 1,
                   transition: "opacity 0.2s"
@@ -537,11 +539,22 @@ export default function AuthPage() {
               padding: "14px 28px",
               borderRadius: 980,
               border: "none",
-              background: "#0071e3",
+              background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
               color: "#fff",
               fontSize: 15,
-              fontWeight: 500,
-              cursor: "pointer"
+              fontWeight: 600,
+              letterSpacing: "-0.005em",
+              cursor: "pointer",
+              boxShadow: "0 2px 10px rgba(30,42,85,0.32)",
+              transition: "transform 0.15s ease, box-shadow 0.18s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 4px 16px rgba(30,42,85,0.45)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 2px 10px rgba(30,42,85,0.32)";
             }}
           >
             {t.heroCta}
@@ -765,11 +778,22 @@ export default function AuthPage() {
               padding: "14px 32px",
               borderRadius: 980,
               border: "none",
-              background: "#0071e3",
+              background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
               color: "#fff",
               fontSize: 15,
-              fontWeight: 500,
-              cursor: "pointer"
+              fontWeight: 600,
+              letterSpacing: "-0.005em",
+              cursor: "pointer",
+              boxShadow: "0 2px 10px rgba(30,42,85,0.32)",
+              transition: "transform 0.15s ease, box-shadow 0.18s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 4px 16px rgba(30,42,85,0.45)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 2px 10px rgba(30,42,85,0.32)";
             }}
           >
             {t.heroCta}
