@@ -1,16 +1,20 @@
 /**
+ * @deprecated 2026-05-11 — 정책자금 데이터는 `packages/shared/src/startup-programs.ts`
+ *  로 통합 이관됨 (사용자 지침: "펀딩 페이지에서 추천되는 프로그램이 정책자금 카드에도
+ *  똑같이 추천되게 하자"). 본 파일의 9개 항목은 startupPrograms 에 `category:"government"`
+ *  + `policyFundSubCategory:...` 로 흡수. PolicyFundMatchCard 는 이제 `getRecommendedPrograms`
+ *  를 통해 펀딩 페이지와 *동일 SSOT* 사용.
+ *
+ *  이 파일은 backward-compat 만 유지 — 외부 import 없음 (확인: 2026-05-11).
+ *  안전한 시점에 삭제 가능.
+ *
+ * ─── 원본 설명 (참고) ───────────────────────────────────────────
  * 2026년 소상공인 정책자금 카탈로그.
  *
  * 출처:
  *   - 소상공인시장진흥공단 (semas.or.kr) 2026년 융자사업 공고
  *   - 중소벤처기업부 2026년 정책자금 운영안
  *   - 희망리턴패키지 (sbiz.or.kr/nhrp)
- *
- * 정책 변경 시 갱신 — `lastVerified` 필드로 추적.
- *
- * 사용처: PolicyFundMatchCard 가 사장님 프로필 → 매칭 점수 계산해 상위 3개 노출.
- *
- * 비용: 0원 (정적 데이터). 매년 1월 갱신 권장.
  */
 
 export type PolicyFundCategory =

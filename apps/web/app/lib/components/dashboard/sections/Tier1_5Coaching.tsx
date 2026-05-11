@@ -145,12 +145,25 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
             ko={ko}
             isCrisis={c.cashflowCriticalElevation}
             currentMonthlyInterest={c.monthlyCosts.interest}
+            // MatchCriteria SSOT 사용 — 펀딩 페이지(GuidesView) 와 *동일* 입력 shape.
+            // 같은 사용자에게 두 카드가 동일 매칭 결과 보장.
             input={{
-              businessYears: c.daysSinceLaunch / 365.25,
-              monthlySalesWon: c.totalSales,
-              employeeCount: c.employees.length,
-              salesDeclinePct: c.weeklySalesChange < 0 ? Math.abs(c.weeklySalesChange) : 0,
               industryCategoryId: d.industryCategoryId,
+              businessYears: Math.floor(c.daysSinceLaunch / 365.25),
+              startupType: (d as { startupType?: string }).startupType,
+              monthlyAvgRevenue: c.totalSales > 0 ? Math.round(c.totalSales) : undefined,
+              hasUserSales: c.allEntries.length > 0,
+              employeesCount: c.employees.length,
+              salesDeclinePct: c.weeklySalesChange < 0 ? Math.abs(c.weeklySalesChange) : 0,
+              runwayMonths: c.runwayMonths,
+              weeklySalesChangePct: c.weeklySalesChange,
+              businessStage: c.daysSinceLaunch < 30
+                ? "early"
+                : c.daysSinceLaunch < 365
+                  ? "early"
+                  : c.daysSinceLaunch < 365 * 3
+                    ? "growth"
+                    : "established",
             }}
           />
         </div>

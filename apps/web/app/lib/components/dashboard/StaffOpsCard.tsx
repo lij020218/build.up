@@ -499,12 +499,12 @@ const opsActionPrimary: React.CSSProperties = {
   border: "none",
   borderRadius: "8px",
   padding: "9px 12px",
-  background: "#191970",
+  background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
   color: "#fff",
   fontSize: "12px",
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 4px 14px rgba(25,25,112, 0.25)",
+  boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
 };
 
 const opsActionSecondary: React.CSSProperties = {

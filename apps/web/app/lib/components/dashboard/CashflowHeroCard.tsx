@@ -175,7 +175,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
               : <>Your P&L may show <strong style={{ color: "#191970" }}>profit</strong>, but bank could be <strong style={{ color: "#191970" }}>empty</strong>. 2-min setup prevents profitable bankruptcy.</>}
           </div>
 
-          {/* CTA */}
+          {/* CTA — SSOT 그라데이션 (PRIMARY_BUTTON_GRADIENT) */}
           <button
             type="button"
             onClick={() => setShowSetup(true)}
@@ -183,7 +183,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
               alignSelf: "stretch",
               padding: "12px 18px",
               borderRadius: "12px",
-              background: "#191970",
+              background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
               color: "#fff",
               border: "none",
               fontSize: "13.5px",
@@ -194,13 +194,13 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
               justifyContent: "center",
               gap: "6px",
               fontFamily: "inherit",
-              boxShadow: "0 4px 12px rgba(25,25,112,0.22)",
+              boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
               letterSpacing: "-0.01em",
               transition: "transform 0.15s ease, box-shadow 0.15s ease",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 6px 16px rgba(25,25,112,0.28)";
+              e.currentTarget.style.boxShadow = "0 4px 14px rgba(30,42,85,0.28)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
@@ -590,7 +590,7 @@ const primaryCTA: React.CSSProperties = {
   marginTop: "14px",
   padding: "10px 16px",
   borderRadius: "10px",
-  background: "#191970",
+  background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
   color: "#fff",
   border: "none",
   fontSize: "13px",
@@ -600,6 +600,7 @@ const primaryCTA: React.CSSProperties = {
   alignItems: "center",
   gap: "6px",
   fontFamily: "inherit",
+  boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
 };
 
 const secondaryCTA: React.CSSProperties = {

@@ -225,14 +225,14 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
             onClick={d.handleSaveMonthlyCosts}
             style={{
               marginTop: "12px", borderRadius: "12px", border: "none",
-              background: "#191970", color: "#fff",
+              background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)", color: "#fff",
               padding: "12px", fontSize: "13.5px", fontWeight: 700,
               letterSpacing: "-0.01em", cursor: "pointer",
               transition: "background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease",
-              boxShadow: "0 4px 12px rgba(25,25,112,0.22)",
+              boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(25,25,112,0.28)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(25,25,112,0.22)"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(30,42,85,0.28)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(30,42,85,0.18)"; }}
           >
             {ko ? "저장" : "Save"}
           </button>

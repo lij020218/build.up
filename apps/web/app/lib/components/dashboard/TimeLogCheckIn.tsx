@@ -261,12 +261,13 @@ export function TimeLogCheckIn({ ko }: Props) {
           padding: "10px",
           borderRadius: "10px",
           border: "none",
-          background: "#191970",
+          background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
           color: "#fff",
           fontSize: "13px",
           fontWeight: 660,
           cursor: "pointer",
           fontFamily: "inherit",
+          boxShadow: "0 2px 8px rgba(30,42,85,0.18)",
         }}
       >
         {ko ? "저장" : "Save"}

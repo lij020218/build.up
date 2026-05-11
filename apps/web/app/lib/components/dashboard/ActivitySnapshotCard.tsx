@@ -680,15 +680,18 @@ export function ActivitySnapshotCard({
                             padding: "10px 18px",
                             borderRadius: "999px",
                             border: "none",
-                            background: d.dailySalesInput ? "#191970" : "rgba(118,118,128,0.12)",
+                            background: d.dailySalesInput
+                              ? "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)"
+                              : "rgba(118,118,128,0.12)",
                             color: d.dailySalesInput ? "#fff" : "rgba(60,60,67,0.32)",
                             fontSize: "14px",
                             fontWeight: 600,
                             cursor: d.dailySalesInput ? "pointer" : "default",
                             whiteSpace: "nowrap" as const,
                             letterSpacing: "-0.01em",
-                            transition: "background 0.15s ease, transform 0.1s ease",
+                            transition: "background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease",
                             height: "44px",
+                            boxShadow: d.dailySalesInput ? "0 2px 8px rgba(30,42,85,0.18)" : "none",
                           }}
                           onMouseDown={(event) => { if (d.dailySalesInput) event.currentTarget.style.transform = "scale(0.97)"; }}
                           onMouseUp={(event) => { event.currentTarget.style.transform = "scale(1)"; }}
@@ -729,10 +732,13 @@ export function ActivitySnapshotCard({
                       }} disabled={!d.dailySalesInput}
                         style={{
                           flex: "0 0 auto", padding: "10px 16px", borderRadius: "10px", border: "none",
-                          background: d.dailySalesInput ? "#191970" : "rgba(25,25,112,0.06)",
+                          background: d.dailySalesInput
+                            ? "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)"
+                            : "rgba(25,25,112,0.06)",
                           color: d.dailySalesInput ? "#fff" : "rgba(15,23,42,0.25)",
                           fontSize: "13px", fontWeight: 650, cursor: d.dailySalesInput ? "pointer" : "default",
                           transition: "all 0.2s ease", whiteSpace: "nowrap" as const,
+                          boxShadow: d.dailySalesInput ? "0 2px 8px rgba(30,42,85,0.18)" : "none",
                         }} className="bento-btn">
                         {ko ? "수정" : "Update"}
                       </button>

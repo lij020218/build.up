@@ -51,6 +51,40 @@ export type StartupProgram = {
    *  - "other"  : 기타
    */
   fundingType?: "cash" | "equity" | "grant" | "credit" | "other";
+  /**
+   * 정책자금/대출 상세 (한도·금리·상환) — SEMAS·소상공인진흥공단 류 프로그램.
+   *  PolicyFundMatchCard 가 "한도 7천만 / 금리 3-4.5% / 상환 5년" 식으로 표시.
+   *  미설정 = 단순 보조금·투자·콘테스트 (한도·금리 개념 없음).
+   */
+  loanDetails?: {
+    /** 한도 (원) — 예: 70_000_000 */
+    limitWon?: number;
+    /** 금리 최저 (연 %) */
+    interestRatePctMin?: number;
+    /** 금리 최고 (연 %) */
+    interestRatePctMax?: number;
+    /** 상환 기간 (개월) */
+    termMonths?: number;
+  };
+  /**
+   * 정책자금 세부 카테고리 — UI 가 "신용취약·대환·청년·재도전·폐업·장애인·성장기반·운영" 등 노출용.
+   *  SEMAS 카탈로그 매칭에 사용.
+   */
+  policyFundSubCategory?:
+    | "operation"      // 운영자금
+    | "low-credit"     // 신용취약
+    | "refinance"      // 대환
+    | "youth"          // 청년
+    | "redemption"     // 재도전
+    | "closure"        // 폐업·재창업
+    | "disabled"       // 장애인
+    | "growth";        // 성장기반
+  /** 특수 자격 — 폐업 검토 중 사장님만 (희망리턴패키지 등) */
+  requiresClosure?: boolean;
+  /** 특수 자격 — 장애인 사장님 우대 자금 */
+  forDisabledOwner?: boolean;
+  /** NCB 신용점수 상한 (예: 839 = 신용취약 자금) */
+  maxNcbScore?: number;
 };
 
 export type MatchCriteria = {
@@ -81,6 +115,18 @@ export type MatchCriteria = {
    * 매출 데이터 입력 여부 — 매출 기반 프로그램(예: 매출액 증가 지원) 매칭 가드.
    */
   hasUserSales?: boolean;
+  /**
+   * 정책자금 매칭용 추가 입력 (PolicyFundMatchCard 가 사용자에게 수동 입력받음).
+   *  ── 모두 optional — 입력 없으면 무가산. 입력되면 해당 정책자금에 가산점.
+   */
+  /** NCB 신용점수 (1000 만점) — 신용취약 자금·대환자금 매칭 */
+  ncbScore?: number;
+  /** 폐업 검토 중 — 희망리턴패키지·재도전특별자금 매칭 */
+  consideringClosure?: boolean;
+  /** 매출 감소율 (%, 최근 3개월) — 운영자금 매칭 부스트 */
+  salesDeclinePct?: number;
+  /** 장애인 사장님 — 장애인기업지원자금 매칭 */
+  isDisabledOwner?: boolean;
 };
 
 export type ProgramMatchResult = {
@@ -437,6 +483,184 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: true,
     dataYear: "2026",
     applicationStatus: "open",
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 정책자금 (SEMAS · 소상공인진흥공단 · 희망리턴패키지) — 2026
+  // ⚠️ PolicyFundMatchCard 와 GuidesView(펀딩 페이지) 모두 동일 SSOT 사용 — 추천 일관성.
+  //    2026-05-11 통합: 종전 packages/shared/policy-funds/catalog-2026.ts 의
+  //    POLICY_FUNDS_2026 를 startupPrograms 로 흡수. matchPolicyFunds 는
+  //    backward-compat thin wrapper 로 유지.
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "semas-general-operation-2026",
+    category: "government",
+    name: { ko: "일반경영안정자금", en: "General Operation Stabilization Fund" },
+    organizer: { ko: "소상공인시장진흥공단 (SEMAS)", en: "SEMAS" },
+    target: { ko: "업력·신용 무관 — 사업자만 있으면 신청 가능", en: "Any business, regardless of credit/years" },
+    benefit: { ko: "임대료·인건비·재료비 등 운전자금 부족 시 신청. 가장 보편적인 정책자금.", en: "Operating capital — rent/labor/materials. Most common policy fund." },
+    amount: "최대 7,000만원 (금리 3-4.5%)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://ols.semas.or.kr",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "cash",
+    applicationStatus: "open",
+    loanDetails: { limitWon: 70_000_000, interestRatePctMin: 3.0, interestRatePctMax: 4.5, termMonths: 60 },
+    policyFundSubCategory: "operation",
+  },
+  {
+    id: "semas-low-credit-2026",
+    category: "government",
+    name: { ko: "신용취약 소상공인 자금", en: "Low-Credit SMB Fund" },
+    organizer: { ko: "소상공인시장진흥공단 (SEMAS)", en: "SEMAS" },
+    target: { ko: "NCB 839점 이하 — 일반 자금 거절자도 신청 가능 (특례보증)", en: "NCB ≤839 — open to those rejected by general loans" },
+    benefit: { ko: "신용취약자 대상 특례보증. 한도 3천만, 금리 4.5-5.5%.", en: "Special guarantee for low-credit owners." },
+    amount: "최대 3,000만원 (금리 4.5-5.5%)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://ols.semas.or.kr",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "credit",
+    applicationStatus: "open",
+    loanDetails: { limitWon: 30_000_000, interestRatePctMin: 4.5, interestRatePctMax: 5.5, termMonths: 60 },
+    policyFundSubCategory: "low-credit",
+    maxNcbScore: 839,
+  },
+  {
+    id: "semas-refinance-2026",
+    category: "government",
+    name: { ko: "대환대출 (고금리 → 저금리)", en: "Refinance Fund" },
+    organizer: { ko: "소상공인시장진흥공단 (SEMAS)", en: "SEMAS" },
+    target: { ko: "기존 고금리 대출 보유 — 중·저신용 (NCB 919 이하)", en: "High-rate loan holders with NCB ≤919" },
+    benefit: { ko: "기존 고금리 대출을 저금리 정책자금으로 전환. 이자 부담 즉시 감소. 2026 한도 확대.", en: "Refinance high-rate loans into policy fund. 2026 expansion." },
+    amount: "최대 5,000만원 (금리 3.5-4.5%, 7년)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://ols.semas.or.kr",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "credit",
+    applicationStatus: "open",
+    loanDetails: { limitWon: 50_000_000, interestRatePctMin: 3.5, interestRatePctMax: 4.5, termMonths: 84 },
+    policyFundSubCategory: "refinance",
+    maxNcbScore: 919,
+  },
+  {
+    id: "semas-youth-employment-2026",
+    category: "government",
+    name: { ko: "청년고용연계자금", en: "Youth Employment Fund" },
+    organizer: { ko: "소상공인시장진흥공단 (SEMAS)", en: "SEMAS" },
+    target: { ko: "만 39세 이하 청년 사장님 또는 청년 고용 매장", en: "Owners ≤39 or those employing youth" },
+    benefit: { ko: "청년 우대 — 정책자금 기준금리만 부담. 한도 1억원.", en: "Youth-favored rate. 100M KRW limit." },
+    amount: "최대 1억원 (금리 2.5-3.5%)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://ols.semas.or.kr",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "cash",
+    applicationStatus: "open",
+    maxAge: 39,
+    loanDetails: { limitWon: 100_000_000, interestRatePctMin: 2.5, interestRatePctMax: 3.5, termMonths: 60 },
+    policyFundSubCategory: "youth",
+  },
+  {
+    id: "semas-redemption-2026",
+    category: "government",
+    name: { ko: "재도전특별자금", en: "Redemption Fund" },
+    organizer: { ko: "소상공인시장진흥공단 (SEMAS)", en: "SEMAS" },
+    target: { ko: "이전 폐업 후 재창업 사장님 — 신용 회복 단계", en: "Re-entrepreneurs after closure" },
+    benefit: { ko: "폐업 경험자 우대 + 재출발 자금. 한도 1억원.", en: "Re-entry support for owners after closure." },
+    amount: "최대 1억원 (금리 2.5-3.5%)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://ols.semas.or.kr",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "cash",
+    applicationStatus: "open",
+    loanDetails: { limitWon: 100_000_000, interestRatePctMin: 2.5, interestRatePctMax: 3.5, termMonths: 60 },
+    policyFundSubCategory: "redemption",
+    requiresClosure: true,
+  },
+  {
+    id: "hope-return-closure-2026",
+    category: "government",
+    name: { ko: "희망리턴패키지 — 점포철거비", en: "Hope Return — Store Removal Fund" },
+    organizer: { ko: "소상공인진흥공단 (sbiz)", en: "sbiz" },
+    target: { ko: "폐업 검토·진행 중 소상공인", en: "Owners considering or in closure" },
+    benefit: { ko: "폐업 시 인테리어 철거·폐기물 처리비 최대 600만원. 보조금 (상환 X).", en: "Up to 6M KRW for store removal/disposal. Grant (no repayment)." },
+    amount: "최대 600만원 (보조금)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://www.sbiz.or.kr/nhrp",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "grant",
+    applicationStatus: "open",
+    loanDetails: { limitWon: 6_000_000, interestRatePctMin: 0, termMonths: 0 },
+    policyFundSubCategory: "closure",
+    requiresClosure: true,
+  },
+  {
+    id: "hope-return-restart-2026",
+    category: "government",
+    name: { ko: "희망리턴패키지 — 재창업자금", en: "Hope Return — Restart Fund" },
+    organizer: { ko: "소상공인진흥공단 (sbiz)", en: "sbiz" },
+    target: { ko: "폐업 후 재창업 사장님", en: "Owners restarting after closure" },
+    benefit: { ko: "폐업 후 재창업 시 최대 2,000만원. 교육·컨설팅 패키지 포함.", en: "Up to 20M KRW restart fund + training/consulting." },
+    amount: "최대 2,000만원 (보조금)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://www.sbiz.or.kr/nhrp",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "grant",
+    applicationStatus: "open",
+    loanDetails: { limitWon: 20_000_000, interestRatePctMin: 0, termMonths: 0 },
+    policyFundSubCategory: "closure",
+    requiresClosure: true,
+  },
+  {
+    id: "semas-growth-base-2026",
+    category: "government",
+    name: { ko: "성장기반자금", en: "Growth Base Fund" },
+    organizer: { ko: "소상공인시장진흥공단 (SEMAS)", en: "SEMAS" },
+    target: { ko: "업력 3년 이상 + 월매출 500만+ 안정 운영", en: "3yr+ in biz, monthly revenue 5M+" },
+    benefit: { ko: "시설·매장 확장·디지털 전환 자금. 한도 2억원 (장기 분할상환).", en: "Facility expansion/digital transformation. 200M KRW limit." },
+    amount: "최대 2억원 (금리 3-4%, 7년)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://ols.semas.or.kr",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "cash",
+    applicationStatus: "open",
+    businessYearRange: [3, 99],
+    loanDetails: { limitWon: 200_000_000, interestRatePctMin: 3.0, interestRatePctMax: 4.0, termMonths: 84 },
+    policyFundSubCategory: "growth",
+  },
+  {
+    id: "semas-disabled-business-2026",
+    category: "government",
+    name: { ko: "장애인기업지원자금", en: "Disabled Business Fund" },
+    organizer: { ko: "소상공인시장진흥공단 (SEMAS)", en: "SEMAS" },
+    target: { ko: "장애인 등록증 보유 사장님", en: "Owners with disability registration" },
+    benefit: { ko: "장애인 우대 금리 + 한도 확대. 한도 1억원, 금리 2-2.5%.", en: "Preferred rate (2-2.5%) + extended limit." },
+    amount: "최대 1억원 (금리 2-2.5%)",
+    season: { ko: "연중 상시", en: "Year-round" },
+    url: "https://ols.semas.or.kr",
+    forSmallBiz: true,
+    forFranchise: true,
+    dataYear: "2026",
+    fundingType: "cash",
+    applicationStatus: "open",
+    loanDetails: { limitWon: 100_000_000, interestRatePctMin: 2.0, interestRatePctMax: 2.5, termMonths: 60 },
+    policyFundSubCategory: "disabled",
+    forDisabledOwner: true,
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -1408,6 +1632,17 @@ export function getMatchedProgramsV2(criteria: MatchCriteria): ProgramMatch[] {
     if (isFranchise && p.forFranchise === false && p.forSmallBiz === false) eligible = false;
     if (!isFranchise && p.forFranchise === true && p.forSmallBiz === false) eligible = false;
 
+    // ── 정책자금 가드 ──
+    //  폐업 검토 중 사장님 전용 자금 (희망리턴·재도전) — 비폐업자에겐 부적합 표시.
+    if (p.requiresClosure && !criteria.consideringClosure) eligible = false;
+    //  NCB 신용점수 상한 — 점수 알고 있고 초과면 부적합 (예: 신용취약 자금 ≤839)
+    if (p.maxNcbScore != null && criteria.ncbScore != null && criteria.ncbScore > p.maxNcbScore) {
+      eligible = false;
+    }
+    //  장애인 전용 자금 — isDisabledOwner=true 일 때만 매칭 (false 명시 시 가림)
+    //  isDisabledOwner=undefined 면 일단 보임 (사용자가 토글 입력)
+    if (p.forDisabledOwner && criteria.isDisabledOwner === false) eligible = false;
+
     // ── 매칭 ──
     if (isFranchise && p.forFranchise) {
       score += 10; personalFitScore += 10;
@@ -1472,6 +1707,40 @@ export function getMatchedProgramsV2(criteria: MatchCriteria): ProgramMatch[] {
     if (!isCashCrisis && p.fundingType === "equity" && (criteria.businessStage === "growth" || criteria.businessStage === "early")) {
       score += 15; personalFitScore += 15;
       addReason({ kind: "stage", ko: `${criteria.businessStage === "growth" ? "성장" : "초기"} 단계 — 투자 적합`, en: `${criteria.businessStage}-stage equity`, weight: 15 });
+    }
+
+    // ── 정책자금 세부 카테고리 부스트 (사장님 상황 기반) ──
+    //   같은 사용자에게 PolicyFundMatchCard 와 펀딩 페이지가 동일 추천 결과 보장.
+    if (p.policyFundSubCategory === "low-credit" && criteria.ncbScore != null && criteria.ncbScore <= 839) {
+      score += 30; personalFitScore += 30;
+      addReason({ kind: "personal", ko: "신용점수 NCB 839 이하 — 일반 자금 거절자도 신청 가능", en: "NCB ≤839 — fits low-credit fund", weight: 30 });
+    }
+    if (p.policyFundSubCategory === "refinance" && criteria.ncbScore != null && criteria.ncbScore <= 919) {
+      score += 25; personalFitScore += 25;
+      addReason({ kind: "crisis", ko: "기존 대출 이자 부담 시 즉시 절감 가능", en: "Refinance high-rate loans now", weight: 25 });
+    }
+    if (p.policyFundSubCategory === "youth" && (criteria.age ?? 999) <= 39) {
+      score += 20; personalFitScore += 20;
+      addReason({ kind: "personal", ko: "만 39세 이하 청년 사장님 우대 — 기준금리만 부담", en: "Youth-preferred rate", weight: 20 });
+    }
+    if (p.policyFundSubCategory === "closure" && criteria.consideringClosure) {
+      score += 35; personalFitScore += 35;
+      addReason({ kind: "crisis", ko: "폐업 검토 중이라면 정리 부담 줄이고 재출발 가능", en: "Eases closure burden", weight: 35 });
+    }
+    if (p.policyFundSubCategory === "redemption" && criteria.consideringClosure) {
+      score += 25; personalFitScore += 25;
+    }
+    if (p.policyFundSubCategory === "operation" && (criteria.salesDeclinePct ?? 0) > 10) {
+      score += 20; personalFitScore += 20;
+      addReason({ kind: "crisis", ko: `최근 매출 감소 ${criteria.salesDeclinePct?.toFixed(0)}% — 운영자금 보충 권장`, en: `Sales down ${criteria.salesDeclinePct?.toFixed(0)}% — operating fund recommended`, weight: 20 });
+    }
+    if (p.policyFundSubCategory === "growth" && (criteria.businessYears ?? 0) >= 3 && (criteria.monthlyAvgRevenue ?? 0) >= 5_000_000) {
+      score += 15; personalFitScore += 15;
+      addReason({ kind: "stage", ko: "업력 3년+ 안정 운영 → 시설·디지털 전환 투자 적기", en: "3yr+ stable → growth fund fit", weight: 15 });
+    }
+    if (p.forDisabledOwner && criteria.isDisabledOwner) {
+      score += 30; personalFitScore += 30;
+      addReason({ kind: "personal", ko: "장애인 사장님 우대 금리 적용", en: "Disabled-owner preferred rate", weight: 30 });
     }
 
     // ── 마감 임박 부스트 (정렬용 — personalFit 에는 미반영) ──

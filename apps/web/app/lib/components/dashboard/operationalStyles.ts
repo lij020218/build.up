@@ -159,18 +159,51 @@ export const heroActions: React.CSSProperties = {
   flexWrap: "wrap",
 };
 
+/**
+ * 운영 대시보드 메인 CTA 그라데이션 — 사용자 선호 톤 (2026-05-11).
+ *  사장님: "정책자금 카드의 '신청 페이지 열기' 버튼 색이 마음에 든다. 다른 곳에도 더 써달라."
+ *  → 깊은 미드나이트 → 슬레이트 네이비. 단색 #191970 보다 입체감·고급감.
+ */
+export const PRIMARY_BUTTON_GRADIENT = "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)";
+export const PRIMARY_BUTTON_SHADOW = "0 2px 8px rgba(30,42,85,0.18)";
+export const PRIMARY_BUTTON_SHADOW_HOVER = "0 4px 14px rgba(30,42,85,0.28)";
+
 export const primaryAction: React.CSSProperties = {
   border: "none",
   borderRadius: "12px",
   padding: "12px 18px",
-  background: "#191970",
+  background: PRIMARY_BUTTON_GRADIENT,
   color: "#fff",
   fontSize: "14px",
   fontWeight: 700,
   cursor: "pointer",
-  boxShadow: "0 4px 12px rgba(25,25,112,0.22)",
+  boxShadow: PRIMARY_BUTTON_SHADOW,
   letterSpacing: "-0.01em",
   transition: "transform 0.15s ease, box-shadow 0.15s ease",
+};
+
+/**
+ * 작은 사이즈 primary CTA — 카드 안 인라인 버튼.
+ *  예: "신청 페이지 열기" · "기록" · "더 보기" · "재계산" 등.
+ *  같은 그라데이션, 더 컴팩트 padding + 작은 폰트.
+ */
+export const primaryActionSmall: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px",
+  border: "none",
+  borderRadius: "10px",
+  padding: "8px 14px",
+  background: PRIMARY_BUTTON_GRADIENT,
+  color: "#fff",
+  fontSize: "12.5px",
+  fontWeight: 650,
+  cursor: "pointer",
+  boxShadow: PRIMARY_BUTTON_SHADOW,
+  letterSpacing: "-0.01em",
+  textDecoration: "none",
+  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+  fontFamily: "inherit",
 };
 
 export const secondaryAction: React.CSSProperties = {

@@ -350,11 +350,14 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                   padding: "8px 16px",
                   borderRadius: "8px",
                   border: "none",
-                  background: newCode.code.trim() ? "#191970" : "rgba(15,23,42,0.1)",
+                  background: newCode.code.trim()
+                    ? "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)"
+                    : "rgba(15,23,42,0.1)",
                   color: "#fff",
                   fontSize: "12px",
                   fontWeight: 650,
                   cursor: newCode.code.trim() ? "pointer" : "not-allowed",
+                  boxShadow: newCode.code.trim() ? "0 2px 8px rgba(30,42,85,0.18)" : "none",
                 }}
               >
                 {ko ? "발급" : "Issue"}
