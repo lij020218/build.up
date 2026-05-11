@@ -50,7 +50,7 @@ export function ProfileView() {
   const router = useRouter();
   const {
     language, copy, persistenceReady, authLabel, userName,
-    businessLaunched, businessHealthScore,
+    businessLaunched,
     completedCount, pathTotalStages, correctedProgressPercent,
     setLanguage, resetDemo, persistenceLabel,
   } = d;
@@ -77,65 +77,7 @@ export function ProfileView() {
   return (
     <section style={styles.section}>
 
-      {/* ── 헬스 점수 요약 카드 ── */}
-      {businessLaunched && (() => {
-        const score = businessHealthScore === "healthy" ? 85 : businessHealthScore === "caution" ? 55 : businessHealthScore === "danger" ? 30 : 0;
-        const grade = businessHealthScore === "healthy" ? (ko ? "건강" : "Healthy") : businessHealthScore === "caution" ? (ko ? "주의" : "Caution") : businessHealthScore === "danger" ? (ko ? "위험" : "Danger") : "—";
-        const gradeColor = businessHealthScore === "healthy" ? "#059669" : businessHealthScore === "caution" ? "#d97706" : "#dc2626";
-        const circumference = 2 * Math.PI * 42;
-        const strokeDash = (score / 100) * circumference;
-
-        return (
-          <div style={{
-            marginBottom: "20px", padding: "24px", borderRadius: "24px",
-            background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.92))",
-            border: "1px solid rgba(15,23,42,0.05)",
-            boxShadow: "0 2px 12px rgba(15,23,42,0.03)",
-            display: "flex", alignItems: "center", gap: "24px",
-          }}>
-            {/* SVG 원형 게이지 */}
-            <div style={{ position: "relative" as const, width: "100px", height: "100px", flexShrink: 0 }}>
-              <svg width="100" height="100" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(15,23,42,0.05)" strokeWidth="6" />
-                <circle cx="50" cy="50" r="42" fill="none"
-                  stroke={gradeColor}
-                  strokeWidth="6" strokeLinecap="round"
-                  strokeDasharray={`${strokeDash} ${circumference}`}
-                  transform="rotate(-90 50 50)"
-                  style={{ transition: "stroke-dasharray 1s cubic-bezier(0.22, 1, 0.36, 1)" }}
-                />
-              </svg>
-              <div style={{
-                position: "absolute" as const, inset: 0,
-                display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center",
-              }}>
-                <span className="bento-number" style={{ fontSize: "28px", fontWeight: 780, letterSpacing: "-0.04em", color: gradeColor, lineHeight: 1 }}>
-                  {score}
-                </span>
-                <span style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.35)", marginTop: "2px" }}>
-                  /100
-                </span>
-              </div>
-            </div>
-            {/* 텍스트 */}
-            <div>
-              <div style={{ fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.4)", marginBottom: "4px" }}>
-                {ko ? "경영 건강 점수" : "Business Health Score"}
-              </div>
-              <div style={{ fontSize: "22px", fontWeight: 740, letterSpacing: "-0.03em", color: gradeColor, marginBottom: "4px" }}>
-                {grade}
-              </div>
-              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
-                {score >= 80
-                  ? (ko ? "안정적인 경영 구조입니다. 이 상태를 유지하세요." : "Stable business structure. Maintain this level.")
-                  : score >= 50
-                    ? (ko ? "몇 가지 개선이 필요합니다. AI 액션을 확인하세요." : "Some improvements needed. Check AI actions.")
-                    : (ko ? "긴급한 조치가 필요합니다. 비용 구조를 점검하세요." : "Urgent action needed. Review your cost structure.")}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      {/* 경영 건강 점수 — 사용자 지침 2026-05-11: 내 정보 페이지에서 *운영 대시보드* 로 이동. */}
 
       {/* ── 아바타 + 계정 헤더 ── */}
       <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>

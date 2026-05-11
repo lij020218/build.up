@@ -43,6 +43,14 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     hintEn: "Weekly review on Mondays / monthly on early-month — auto",
     category: "hero",
   },
+  {
+    id: "business-health-score",
+    labelKo: "경영 건강 점수",
+    labelEn: "Business Health Score",
+    hintKo: "비용·매출·런웨이 기반 종합 점수 (건강/주의/위험) — 원형 게이지로 한눈",
+    hintEn: "Composite score (healthy/caution/danger) — circular gauge at a glance",
+    category: "hero",
+  },
 
   // ─── Daily Hub (매일 의미 있는 상태 카드) ────────────────────
   {
