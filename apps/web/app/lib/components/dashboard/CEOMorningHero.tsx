@@ -11,6 +11,8 @@ import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
 import { resolveHero, InsightStack, PRIORITY_META, resolveInsightCtaTarget, type Hero } from "./MorningBriefing";
 import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
+import { useCashflowStore } from "../../stores/cashflow-store";
+import { calculateHealthScore, type HealthScoreResult, type HealthScoreGrade } from "@build-up/shared";
 
 // ─── North Star Metric 옵션 (사장님이 직접 고르는 단 1개 숫자) ────
 //  YC: "팀 전원이 외울 만큼 단 하나". 자동 (auto) 은 현재 로직 유지 (스타트업→런웨이, 외식→매출).
@@ -163,6 +165,40 @@ export function CEOMorningHero({ d }: Props) {
   const totalMonthlyBurn = Object.values(monthlyCosts).reduce((s, v) => s + (typeof v === "number" ? v : 0), 0);
   const capitalKrw = ((d.selectedBudget as number | undefined) ?? 0) + ((d.initialOperatingCapital as number | undefined) ?? 0);
   const runwayMonths = totalMonthlyBurn > 0 ? capitalKrw / totalMonthlyBurn : 99;
+
+  // ── 경영 건강 점수 (SSOT 5-dim, 업종별 가중치 분기) — 헤더 inline pill 용 ──
+  //   웹 조사 (2026-05-11): FinHealth Network · NetSuite · Altman Z' · Toast · StockTitan
+  const bankBalance = useCashflowStore((s) => s.currentBalance);
+  const weeklySalesChangePctForHealth = (() => {
+    if (prev14Total <= 0 || prev14.length < 7 || last14.length < 7) return undefined;
+    const last7Sum = dailyEntries.slice(-7).reduce((s, e) => s + e.sales, 0);
+    const prev7Sum = dailyEntries.slice(-14, -7).reduce((s, e) => s + e.sales, 0);
+    if (prev7Sum <= 0) return undefined;
+    return ((last7Sum - prev7Sum) / prev7Sum) * 100;
+  })();
+  const totalRevenueForHealth = dailyEntries
+    .filter((e) => e.date.slice(0, 7) === new Date().toISOString().slice(0, 7))
+    .reduce((s, e) => s + e.sales, 0);
+  const workingDaysForHealth = dailyEntries
+    .filter((e) => e.date.slice(0, 7) === new Date().toISOString().slice(0, 7))
+    .length;
+  const launchDateStr = (d as { businessLaunchedDate?: string | null }).businessLaunchedDate;
+  const daysSinceLaunchForHealth = launchDateStr
+    ? Math.floor((Date.now() - new Date(launchDateStr).getTime()) / 86_400_000)
+    : undefined;
+  const healthSummary: HealthScoreResult | null = d.businessLaunched
+    ? calculateHealthScore({
+        industryCategoryId: d.industryCategoryId,
+        totalRevenue: totalRevenueForHealth,
+        workingDays: workingDaysForHealth,
+        monthlyCosts: monthlyCosts as Parameters<typeof calculateHealthScore>[0]["monthlyCosts"],
+        hasEmployees: ((d.employees as unknown[]) ?? []).length > 0,
+        currentBalance: bankBalance > 0 ? bankBalance : undefined,
+        weeklySalesChangePct: weeklySalesChangePctForHealth,
+        daysSinceLaunch: daysSinceLaunchForHealth,
+        initialCapital: capitalKrw > 0 ? capitalKrw : undefined,
+      })
+    : null;
 
   // ── 사장님이 직접 고른 NSM (있으면) 우선 적용 ──────────────────────
   //   ⚠️ CRITICAL (2026-05-11): 모든 계산은 *날짜 기반 윈도우* 사용.
@@ -1107,10 +1143,16 @@ export function CEOMorningHero({ d }: Props) {
                     {PRIORITY_META[briefing.priority].label}
                   </span>
                 )}
-                {/* 경영 건강 점수 — Tier 0 카드 → Hero 헤더 통합 (2026-05-11 AI 의회 결정).
-                    사장님이 모닝 브리핑 첫 시선에 *종합 건강도* 한눈 인지. dot 색·grade·점수 한 줄. */}
-                {d.businessLaunched && d.businessHealthScore && d.businessHealthScore !== "unknown" && (
-                  <HealthScoreBadge grade={d.businessHealthScore} ko={ko} />
+                {/* 경영 건강 점수 — SSOT (calculateHealthScore 5-dim 합성) → Hero 헤더 inline pill.
+                    웹 조사 기반: FinHealth Network · Toast POS · Altman Z' (SMB 변형). 업종별 가중치 분기.
+                    null 시 (데이터 부족) 미노출. */}
+                {d.businessLaunched && healthSummary && healthSummary.score != null && (
+                  <HealthScoreBadge
+                    score={healthSummary.score}
+                    grade={healthSummary.grade}
+                    confidence={healthSummary.confidence}
+                    ko={ko}
+                  />
                 )}
               </div>
               <div style={{ fontSize: "13.5px", fontWeight: 600, letterSpacing: "-0.005em", lineHeight: 1.5, color: PALETTE.INK, marginBottom: "4px" }}>
@@ -1188,40 +1230,49 @@ function fmtKrw(n: number, ko: boolean): string {
 /**
  * HealthScoreBadge — 모닝 브리핑 헤더 inline 건강 점수 pill.
  *
- *  ── 2026-05-11 (AI 의회 결정) ──────────────────────────────────────
- *  종전: BusinessHealthScoreCard 별도 카드 (Tier 0, 180px 높이 차지)
- *        → 매출/고객 그래프가 fold 아래로 밀려나는 부작용.
- *  통합: 모닝 브리핑 헤더에 작은 pill 로 임베드. 사장님은 첫 시선에 *건강 grade*
- *        를 보고, AI 코칭이 *왜 그 grade 인지* 분석/액션으로 연결.
- *  ──────────────────────────────────────────────────────────────────
+ *  ── 2026-05-11 ──────────────────────────────────────────────────────
+ *  AI 의회 결정 + 사장님 동의로 별도 카드 제거 → Hero 헤더에 inline pill 통합.
+ *  점수는 SSOT (packages/shared/finance/health-score.ts) 의 5-dim 합성 결과.
+ *  업종별 가중치 분기·null 차원 자동 재분배·confidence 별도 표시.
+ *  웹 조사 출처: FinHealth Network / NetSuite / Altman Z' / Toast / StockTitan.
+ *  ─────────────────────────────────────────────────────────────────────
  *
  *  디자인:
- *   · 8px dot + glow (Apple Health 톤)
- *   · grade 라벨 (건강/주의/위험) + 점수 숫자
+ *   · 7px dot + glow (Apple Health 톤)
+ *   · "건강도 · 건강 78" 형식 (label · grade + score)
  *   · 색조: GREEN/AMBER/ROSE × 0.08 tint background — 시각 부담 최소
- *   · grade 별 텍스트 색은 진한 톤 (가독성)
+ *   · grade 별 텍스트 색은 진한 톤 (#047857 / #a16207 / #b91c1c) 가독성
+ *   · confidence < 50 일 때 점수 옆 ⚠ 표시 (모델 자체 신뢰도 낮음 신호)
+ *   · title 속성으로 hover tooltip — 차원별 진단 풀 설명 (UI 노이즈 X)
  */
 function HealthScoreBadge({
+  score,
   grade,
+  confidence,
   ko,
 }: {
-  grade: "healthy" | "caution" | "danger";
+  score: number;
+  grade: HealthScoreGrade;
+  confidence: number;
   ko: boolean;
 }) {
-  // 점수·라벨·색 — BusinessHealthScoreCard SSOT 와 동일 매핑
-  const score = grade === "healthy" ? 85 : grade === "caution" ? 55 : 30;
   const label = grade === "healthy" ? (ko ? "건강" : "Healthy")
     : grade === "caution" ? (ko ? "주의" : "Caution")
-    : (ko ? "위험" : "Danger");
+    : grade === "danger" ? (ko ? "위험" : "Danger")
+    : (ko ? "—" : "—");
   const dotColor = grade === "healthy" ? "#059669"
     : grade === "caution" ? "#d97706"
-    : "#dc2626";
+    : grade === "danger" ? "#dc2626"
+    : "rgba(15,23,42,0.4)";
   const bgColor = grade === "healthy" ? "rgba(5,150,105,0.08)"
     : grade === "caution" ? "rgba(217,119,6,0.08)"
-    : "rgba(220,38,38,0.08)";
+    : grade === "danger" ? "rgba(220,38,38,0.08)"
+    : "rgba(15,23,42,0.04)";
   const textColor = grade === "healthy" ? "#047857"
     : grade === "caution" ? "#a16207"
-    : "#b91c1c";
+    : grade === "danger" ? "#b91c1c"
+    : "rgba(15,23,42,0.5)";
+  const isLowConfidence = confidence < 50;
 
   return (
     <span
@@ -1241,8 +1292,8 @@ function HealthScoreBadge({
         fontVariantNumeric: "tabular-nums" as const,
       }}
       title={ko
-        ? `경영 건강 점수 ${score}/100 — ${label}`
-        : `Business Health ${score}/100 — ${label}`}
+        ? `경영 건강 점수 ${score}/100 — ${label}${isLowConfidence ? "\n⚠ 데이터 부족 (신뢰도 " + confidence + "%) — 매출·잔고·비용 더 입력해주세요" : ""}`
+        : `Business Health ${score}/100 — ${label}${isLowConfidence ? "\n⚠ Low confidence (" + confidence + "%) — add more data" : ""}`}
     >
       <span style={{
         width: "7px",
@@ -1255,6 +1306,14 @@ function HealthScoreBadge({
       <span>{ko ? "건강도" : "Health"}</span>
       <span style={{ opacity: 0.55, fontWeight: 600 }}>·</span>
       <span>{label} {score}</span>
+      {isLowConfidence && (
+        <span
+          style={{ fontSize: "9px", opacity: 0.7, marginLeft: "1px" }}
+          aria-label={ko ? "신뢰도 낮음" : "Low confidence"}
+        >
+          ⚠
+        </span>
+      )}
     </span>
   );
 }

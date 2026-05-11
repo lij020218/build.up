@@ -14,11 +14,12 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { DashboardHook } from "../useDashboard";
-import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios } from "@build-up/shared";
-import type { MonthlyCosts } from "@build-up/shared";
+import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore } from "@build-up/shared";
+import type { MonthlyCosts, HealthScoreResult } from "@build-up/shared";
 import { getBusinessDay } from "../utils/business-day";
 import { useUnifiedSaasMetrics } from "./useUnifiedSaasMetrics";
 import { checkMilestones } from "../components/dashboard/MilestoneToast";
+import { useCashflowStore } from "../stores/cashflow-store";
 
 export type DailyEntry = {
   date: string;
@@ -349,15 +350,25 @@ export function useDashboardComputed(d: DashboardHook) {
     return count;
   })();
 
-  // milestone
-  const healthScore =
-    typeof d.businessHealthScore === "string"
-      ? d.businessHealthScore === "healthy"
-        ? 85
-        : d.businessHealthScore === "caution"
-          ? 55
-          : 30
-      : 0;
+  // ── 경영 건강 점수 — SSOT (packages/shared/finance/health-score.ts) ──────
+  //   5-dimension 합성 (Cash Safety / Profitability / Cost Efficiency / Sales Trend /
+  //   Data Confidence). 업종별 가중치 분기 + null 차원 자동 재분배.
+  //   웹 조사 출처 (2026-05-11): FinHealth Network · NetSuite · Altman Z' · Toast · StockTitan
+  const currentBalance = useCashflowStore((s) => s.currentBalance);
+  const healthScoreResult: HealthScoreResult = calculateHealthScore({
+    industryCategoryId: d.industryCategoryId,
+    totalRevenue: totalSales,
+    workingDays,
+    monthlyCosts: monthlyCosts as Parameters<typeof calculateHealthScore>[0]["monthlyCosts"],
+    hasEmployees: employees.length > 0,
+    currentBalance: currentBalance > 0 ? currentBalance : undefined,
+    weeklySalesChangePct: weeklySalesChange,
+    daysSinceLaunch,
+    initialCapital: totalCapital > 0 ? totalCapital : undefined,
+  });
+
+  // milestone — 종합 점수 (null 시 0 으로 fallback, milestone 자체는 다른 트리거가 많아 OK)
+  const healthScore = healthScoreResult.score ?? 0;
   const [dismissedMilestones, setDismissedMilestones] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem("dismissedMilestones");
@@ -449,6 +460,8 @@ export function useDashboardComputed(d: DashboardHook) {
     focusMessage,
     streak,
     healthScore,
+    /** SSOT 5-dim 결과 — UI 가 점수·grade·차원별 분해·신뢰도 모두 사용 */
+    healthScoreResult,
     currentMilestone,
     handleDismissMilestone,
   };
