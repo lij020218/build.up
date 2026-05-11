@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Plus, Trash2, Check, AlertCircle, Info, TrendingUp, Calendar, Wallet, Bell } from "lucide-react";
+import { X, Plus, Trash2, Check, AlertCircle, Info, TrendingUp, Calendar, Wallet, Bell, Building2, RefreshCw, Sparkles } from "lucide-react";
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -15,7 +15,10 @@ import {
   type FixedExpenseCategory,
   type FixedExpenseSchedule,
 } from "../../stores/cashflow-store";
+import { useProfileStore } from "../../stores/profile-store";
+import { useOperationsStore } from "../../stores/operations-store";
 import { sumActiveChannelRatios } from "../../services/cashflow-projection";
+import { useBankBalance } from "../../hooks/useBankBalance";
 
 type Props = {
   ko: boolean;
@@ -55,7 +58,21 @@ export function CashflowSetupSheet({ ko, onClose, targetSection }: Props) {
     setVatReserveEnabled,
     markSetupCompleted,
     setupCompletedAt,
+    applyIndustryDefaults,
   } = useCashflowStore();
+
+  // 업종 컨텍스트 — 채널 믹스 초기값 추천 및 업종별 디폴트 적용용
+  const industryCategoryId = useProfileStore((s) => s.selectedIndustryCategoryId);
+
+  // 세무 설정 — VAT 적립률을 일반/간이 과세 따라 다르게 안내
+  const vatType = useOperationsStore((s) => s.taxSettings.vatType);
+  // 간이과세 평균 부가율 ≈ 3% (외식·소매 평균. 정확치는 업종별 차등이지만 단순화)
+  const vatReserveRate = vatType === "simplified" ? 3 : 10;
+
+  // 통장 자동 불러오기 — CODEF 사업자 통장 연동 잔고
+  const bank = useBankBalance();
+
+  const [auditOpen, setAuditOpen] = useState(false);
 
   const [balanceInput, setBalanceInput] = useState(
     currentBalance > 0 ? String(Math.round(currentBalance / 10000)) : ""
@@ -205,9 +222,100 @@ export function CashflowSetupSheet({ ko, onClose, targetSection }: Props) {
                 Icon={Wallet}
                 title={ko ? "현재 통장 잔고" : "Current bank balance"}
                 desc={ko
-                  ? "사업 계좌에 있는 실제 가용 현금을 입력하세요. 매주 한 번 업데이트를 권장해요."
-                  : "Cash available in your business account. Update weekly."}
+                  ? "사업 계좌에 있는 실제 가용 현금이에요. 연동된 통장이 있으면 자동으로 불러올 수 있고, 직접 입력도 가능합니다."
+                  : "Cash available in your business account. Auto-loaded from connected bank or enter manually."}
               />
+
+              {/* 통장 자동 불러오기 배너 — 연동된 사업자 통장이 있을 때만 노출 */}
+              {bank.connected && bank.accounts.length > 0 && (
+                <div className="cfs-bank-banner">
+                  <div className="cfs-bank-banner-head">
+                    <div className="cfs-bank-banner-icon">
+                      <Building2 size={14} strokeWidth={2.2} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="cfs-bank-banner-title">
+                        {ko ? "연동된 사업자 통장 잔고" : "Linked business account balance"}
+                        {bank.isStale && (
+                          <span className="cfs-bank-stale-pill">
+                            {ko ? "24h+ 경과" : "Stale"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="cfs-bank-banner-amount">
+                        {Math.round(bank.totalBalance / 10000).toLocaleString()}{ko ? "만원" : "× 10K"}
+                        <span className="cfs-bank-banner-raw">
+                          ({bank.totalBalance.toLocaleString()}{ko ? "원" : " KRW"})
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="cfs-bank-refresh"
+                      onClick={() => void bank.syncAndRefresh()}
+                      disabled={bank.loading}
+                      aria-label={ko ? "통장 동기화" : "Sync bank"}
+                      title={ko ? "통장에서 다시 불러오기" : "Re-fetch from bank"}
+                    >
+                      <RefreshCw size={12} strokeWidth={2.2} className={bank.loading ? "cfs-spin" : ""} />
+                    </button>
+                  </div>
+
+                  {/* 계좌별 분해 (2개 이상일 때만) */}
+                  {bank.accounts.length > 1 && (
+                    <ul className="cfs-bank-accounts">
+                      {bank.accounts.map((a) => (
+                        <li key={a.accountId}>
+                          <span className="cfs-bank-acc-label">
+                            {a.bankName ?? "—"} {a.accountNumberMask ?? ""}
+                            {a.isPrimary && <span className="cfs-bank-primary-pill">{ko ? "주" : "Primary"}</span>}
+                          </span>
+                          <span className="cfs-bank-acc-amount">
+                            {Math.round(a.balance / 10000).toLocaleString()}{ko ? "만원" : ""}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* 잔고 스냅샷 시점 안내 */}
+                  {bank.asOf && (
+                    <div className="cfs-bank-asof">
+                      {ko ? "기준 시각" : "As of"}: {formatAsOf(bank.asOf, ko)}
+                    </div>
+                  )}
+
+                  <div className="cfs-bank-actions">
+                    <button
+                      type="button"
+                      className="cfs-bank-apply-btn"
+                      onClick={() => setBalanceInput(String(Math.round(bank.totalBalance / 10000)))}
+                      disabled={bank.totalBalance <= 0}
+                    >
+                      <Check size={12} strokeWidth={2.4} />
+                      {ko ? "이 금액 사용하기" : "Use this amount"}
+                    </button>
+                    <span className="cfs-bank-hint">
+                      {ko
+                        ? "직접 다른 금액을 입력해도 됩니다 (예: 미연동 계좌 합산)"
+                        : "You can override with a different amount"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* 미연동 상태 안내 — 통장 연결 유도 */}
+              {!bank.connected && !bank.loading && (
+                <div className="cfs-bank-empty">
+                  <Info size={12} strokeWidth={2.2} />
+                  <span>
+                    {ko
+                      ? "사업자 통장을 연동하면 잔고가 자동으로 불러와집니다. 지금은 직접 입력해 주세요."
+                      : "Link your business account to auto-load balance. For now, enter manually."}
+                  </span>
+                </div>
+              )}
+
               <div className="cfs-balance-input-wrap">
                 <input
                   type="text"
@@ -245,6 +353,21 @@ export function CashflowSetupSheet({ ko, onClose, targetSection }: Props) {
                   </span>
                 }
               />
+
+              {/* 업종 추천 적용 — industryCategoryId 가 있을 때만 노출 */}
+              {industryCategoryId && (
+                <button
+                  type="button"
+                  className="cfs-industry-suggest-btn"
+                  onClick={() => applyIndustryDefaults(industryCategoryId)}
+                  title={ko ? "업종 평균 채널 믹스로 갈아끼우기" : "Apply industry-average channel mix"}
+                >
+                  <Sparkles size={11} strokeWidth={2.2} />
+                  {ko
+                    ? `${industryLabel(industryCategoryId, true)} 업종 평균값 적용`
+                    : `Apply ${industryLabel(industryCategoryId, false)} avg`}
+                </button>
+              )}
 
               <div className="cfs-channel-list">
                 {allChannelIds.map((id) => {
@@ -475,8 +598,12 @@ export function CashflowSetupSheet({ ko, onClose, targetSection }: Props) {
                   onChange={(v) => handleNotificationToggle(setDailyMorningBriefing, v)}
                 />
                 <ToggleRow
-                  label={ko ? "부가세 10% 적립" : "VAT 10% reserve"}
-                  desc={ko ? "입금액의 10%를 세금 적립으로 미리 빼고 예측" : "Exclude 10% of inflow as VAT reserve in projections"}
+                  label={ko
+                    ? `부가세 ${vatReserveRate}% 적립 (${vatType === "simplified" ? "간이과세 평균" : "일반과세"})`
+                    : `VAT ${vatReserveRate}% reserve (${vatType === "simplified" ? "simplified avg" : "general"})`}
+                  desc={ko
+                    ? `입금액의 ${vatReserveRate}%를 세금 적립으로 미리 빼고 예측해요. 과세 유형은 '내 가게 → 세무 설정' 에서 변경 가능합니다.`
+                    : `Exclude ${vatReserveRate}% of inflow as VAT reserve. Change type in 'My Store → Tax settings'.`}
                   value={vatReserveEnabled}
                   onChange={setVatReserveEnabled}
                 />
@@ -504,6 +631,81 @@ export function CashflowSetupSheet({ ko, onClose, targetSection }: Props) {
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* ─── 현금흐름 모델 점검 (audit) — 무엇이 반영되었고 무엇이 아직 빠졌는지 투명 공개 ─── */}
+            <section className="cfs-section cfs-audit-section">
+              <button
+                type="button"
+                className="cfs-audit-toggle"
+                onClick={() => setAuditOpen(!auditOpen)}
+                aria-expanded={auditOpen}
+              >
+                <span>{ko ? "📐 이 현금흐름 모델은 무엇을 반영하나요?" : "📐 What this cash-flow model covers"}</span>
+                <span>{auditOpen ? "▴" : "▾"}</span>
+              </button>
+              {auditOpen && (
+                <div className="cfs-audit-body">
+                  <div className="cfs-audit-block">
+                    <div className="cfs-audit-h">{ko ? "✓ 현재 반영되는 것" : "✓ Currently modeled"}</div>
+                    <ul>
+                      <li>{ko ? "통장 잔고 (CODEF 연동 또는 수동 입력)" : "Bank balance (CODEF or manual)"}</li>
+                      <li>{ko ? "채널별 정산주기 (D+0~D+15) 와 수수료" : "Per-channel settlement timing (D+0~D+15) & fees"}</li>
+                      <li>{ko ? "월 고정비 캘린더 (월세·급여·대출·공과금 등)" : "Monthly fixed-expense calendar"}</li>
+                      <li>{ko ? `부가세 ${vatReserveRate}% 적립 (${vatType === "simplified" ? "간이" : "일반"} 과세 반영)` : `VAT ${vatReserveRate}% reserve (${vatType})`}</li>
+                      <li>{ko ? "위기 감지 (잔고 < 0 도달 일수)" : "Crisis detection (days to negative)"}</li>
+                    </ul>
+                  </div>
+                  <div className="cfs-audit-block cfs-audit-gaps">
+                    <div className="cfs-audit-h">{ko ? "⚠ 아직 반영되지 않은 실무 개념" : "⚠ Real-world concepts not yet modeled"}</div>
+                    <ul>
+                      <li>
+                        <b>{ko ? "외상 매입 (AP) 결제일" : "Accounts payable (AP)"}</b>
+                        {" — "}
+                        {ko ? "식자재·원자재 공급처 결제일 (보통 D+15~30). 지금은 *고정비 캘린더* 의 한 항목으로 직접 추가하시면 됩니다." : "Supplier payment terms. For now, add as a fixed expense."}
+                      </li>
+                      {industryCategoryId === "online-digital" || industryCategoryId === "ecommerce" ? (
+                        <>
+                          <li>
+                            <b>{ko ? "PG 정산 보류" : "PG settlement reserve"}</b>
+                            {" — "}
+                            {ko ? "PG사가 분쟁/취소 대비 매출의 3~5% 보류. 13주 예측에 미반영 (보수적으로 -5% 마진 가정 권장)." : "PG firms hold 3-5% for disputes."}
+                          </li>
+                          <li>
+                            <b>{ko ? "환불·반품률" : "Refund / return rate"}</b>
+                            {" — "}
+                            {ko ? "이커머스 평균 5~15%. 매출의 그만큼이 사실상 차감됩니다." : "5-15% avg for e-commerce."}
+                          </li>
+                        </>
+                      ) : null}
+                      {industryCategoryId === "startup-tech" || industryCategoryId === "saas" ? (
+                        <li>
+                          <b>{ko ? "Deferred revenue / 선수금" : "Deferred revenue"}</b>
+                          {" — "}
+                          {ko ? "연납 SaaS 는 입금 ≠ 인식 매출. 현금흐름 관점에선 잔고만 보면 충분하지만, 매출 인식 관점에선 분리 필요." : "Annual SaaS prepayments inflate cash, not recognized revenue."}
+                        </li>
+                      ) : null}
+                      {industryCategoryId === "food" || industryCategoryId === "cafe-dessert" ? (
+                        <li>
+                          <b>{ko ? "재고 회전일 (DIO)" : "Inventory days (DIO)"}</b>
+                          {" — "}
+                          {ko ? "식자재가 매출로 전환되기까지 평균 3~7일. 현재 *재고 카드* 에서 따로 관리합니다." : "3-7 days food → revenue. Tracked in Inventory card."}
+                        </li>
+                      ) : null}
+                      <li>
+                        <b>{ko ? "비상금 (Emergency reserve)" : "Emergency reserve"}</b>
+                        {" — "}
+                        {ko ? "월 운영비의 1~3개월치 권장. 위기 감지 기간 슬라이더로 부분적으로 대체 중." : "1-3 months of opex recommended."}
+                      </li>
+                      <li>
+                        <b>{ko ? "세금 (부가세 외)" : "Other taxes"}</b>
+                        {" — "}
+                        {ko ? "종합소득세(5월), 법인세(3월), 원천세(매월 10일). 큰 항목은 *고정비 캘린더* 에 미리 등록하세요." : "Income/corporate tax — add to fixed-expense calendar."}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* 하단 미니 안내 */}
@@ -583,6 +785,35 @@ function ToggleRow({
       </div>
     </label>
   );
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────
+
+/** 업종 카테고리 ID → 사용자 표시명 (한국어/영어). 시트의 "○○ 업종 평균값 적용" 버튼용. */
+function industryLabel(categoryId: string, ko: boolean): string {
+  switch (categoryId) {
+    case "food":            return ko ? "외식"          : "Restaurant";
+    case "cafe-dessert":    return ko ? "카페·디저트"   : "Cafe/Dessert";
+    case "retail":          return ko ? "소매"          : "Retail";
+    case "beauty":          return ko ? "뷰티"          : "Beauty";
+    case "pet":             return ko ? "펫"            : "Pet";
+    case "health":          return ko ? "건강"          : "Health";
+    case "online-digital":  return ko ? "온라인"        : "Online";
+    case "ecommerce":       return ko ? "이커머스"      : "E-commerce";
+    case "startup-tech":    return ko ? "스타트업"      : "Startup";
+    case "saas":            return ko ? "SaaS"          : "SaaS";
+    default:                return ko ? "일반"          : "General";
+  }
+}
+
+/** ISO 시각 → 사람이 읽기 좋은 짧은 라벨. 예: "5월 11일 14:32" / "May 11, 14:32". */
+function formatAsOf(iso: string, ko: boolean): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  if (ko) {
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+  return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 const CATEGORY_LABEL: Record<FixedExpenseCategory, { ko: string; en: string }> = {
@@ -1071,4 +1302,148 @@ const KEYFRAMES = `
 }
 .cfs-save-btn-active:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(10,25,41,0.45); }
 .cfs-save-btn-active:active { transform: translateY(0); }
+
+/* ─── 통장 자동 불러오기 배너 ─────────────────────────────────────── */
+.cfs-bank-banner {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 14px 16px;
+  margin: 12px 0 14px;
+  background: linear-gradient(135deg, rgba(25,25,112,0.04) 0%, rgba(99,102,241,0.05) 100%);
+  border: 1px solid rgba(25,25,112,0.10);
+  border-radius: 12px;
+}
+.cfs-bank-banner-head { display: flex; align-items: center; gap: 10px; }
+.cfs-bank-banner-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(25,25,112,0.10); color: #191970;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.cfs-bank-banner-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(25,25,112,0.72);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.cfs-bank-banner-amount {
+  font-size: 18px; font-weight: 750; color: #0f172a; letter-spacing: -0.015em;
+  display: inline-flex; align-items: baseline; gap: 8px;
+  margin-top: 2px;
+}
+.cfs-bank-banner-raw {
+  font-size: 11.5px; font-weight: 500; color: rgba(15,23,42,0.45);
+  letter-spacing: -0.005em;
+}
+.cfs-bank-stale-pill {
+  padding: 1px 7px; border-radius: 999px;
+  background: rgba(255,159,10,0.14); color: #b45309;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.02em;
+}
+.cfs-bank-refresh {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: 1px solid rgba(25,25,112,0.15);
+  background: #ffffff; color: #191970;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .15s, transform .12s;
+}
+.cfs-bank-refresh:hover:not(:disabled) { background: rgba(25,25,112,0.06); transform: rotate(60deg); }
+.cfs-bank-refresh:disabled { opacity: 0.5; cursor: wait; }
+.cfs-spin { animation: cfsSpin 1s linear infinite; }
+@keyframes cfsSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.cfs-bank-accounts {
+  list-style: none; margin: 0; padding: 6px 8px;
+  background: rgba(255,255,255,0.55);
+  border-radius: 8px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.cfs-bank-accounts li {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11.5px; color: rgba(15,23,42,0.62);
+}
+.cfs-bank-acc-label { display: inline-flex; align-items: center; gap: 6px; }
+.cfs-bank-primary-pill {
+  padding: 0 6px; border-radius: 999px;
+  background: rgba(25,25,112,0.10); color: #191970;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
+}
+.cfs-bank-acc-amount { font-weight: 650; color: #0f172a; }
+.cfs-bank-asof {
+  font-size: 10.5px; color: rgba(15,23,42,0.4); letter-spacing: -0.005em;
+}
+.cfs-bank-actions {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.cfs-bank-apply-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 12px; border-radius: 8px; border: none;
+  background: #191970; color: #fff;
+  font-size: 11.5px; font-weight: 650; letter-spacing: -0.005em;
+  cursor: pointer; font-family: inherit;
+  transition: background .15s, transform .12s;
+}
+.cfs-bank-apply-btn:hover:not(:disabled) { background: #14145a; transform: translateY(-1px); }
+.cfs-bank-apply-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.cfs-bank-hint { font-size: 10.5px; color: rgba(15,23,42,0.45); }
+
+/* 미연동 안내 (small inline) */
+.cfs-bank-empty {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 12px; margin: 8px 0 10px;
+  background: rgba(15,23,42,0.03);
+  border: 1px dashed rgba(15,23,42,0.10);
+  border-radius: 8px;
+  font-size: 11.5px; color: rgba(15,23,42,0.55);
+  letter-spacing: -0.005em;
+}
+
+/* ─── 업종 추천 적용 버튼 ──────────────────────────────────────── */
+.cfs-industry-suggest-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; margin: 4px 0 12px;
+  border-radius: 999px; border: 1px solid rgba(99,102,241,0.18);
+  background: rgba(99,102,241,0.06); color: #4f46e5;
+  font-size: 11.5px; font-weight: 650; letter-spacing: -0.005em;
+  cursor: pointer; font-family: inherit;
+  transition: background .15s, transform .12s;
+}
+.cfs-industry-suggest-btn:hover { background: rgba(99,102,241,0.12); transform: translateY(-1px); }
+
+/* ─── 현금흐름 모델 점검 (audit) 패널 ──────────────────────────── */
+.cfs-audit-section { margin-top: 8px; }
+.cfs-audit-toggle {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: 10px; border: 1px solid rgba(15,23,42,0.08);
+  background: rgba(15,23,42,0.02);
+  font-size: 12.5px; font-weight: 650; color: rgba(15,23,42,0.72);
+  letter-spacing: -0.005em; font-family: inherit;
+  cursor: pointer;
+  transition: background .15s;
+}
+.cfs-audit-toggle:hover { background: rgba(15,23,42,0.04); }
+.cfs-audit-body {
+  margin-top: 10px;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(15,23,42,0.06);
+}
+.cfs-audit-block .cfs-audit-h {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(15,23,42,0.55);
+  margin-bottom: 6px;
+}
+.cfs-audit-block ul {
+  margin: 0; padding-left: 16px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.cfs-audit-block li {
+  font-size: 12px; line-height: 1.55; color: rgba(15,23,42,0.72);
+  letter-spacing: -0.005em;
+}
+.cfs-audit-block li b { color: #0f172a; font-weight: 650; }
+.cfs-audit-gaps li { color: rgba(15,23,42,0.62); }
 `;

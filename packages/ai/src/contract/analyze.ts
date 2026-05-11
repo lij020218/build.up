@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
@@ -96,7 +96,7 @@ export async function analyzeContract(
   contractType: ContractType = "commercial_lease"
 ): Promise<ContractAnalysisResult> {
   const truncated = contractText.slice(0, MAX_CONTRACT_LENGTH);
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
+  const client = createAiClient(options.apiKey);
 
   const userMessage = buildContractUserPrompt(truncated, contractType);
   const systemPrompt = getSystemPromptForType(contractType);

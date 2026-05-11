@@ -110,7 +110,7 @@ export function AiCoachCard() {
             {ko ? "\uc624\ub298 \ud560 \uc77c" : "Today's Actions"}
           </div>
         </div>
-        <button type="button" onClick={fetchAiActions} disabled={aiActionsLoading}
+        <button type="button" onClick={() => { void fetchAiActions(true); }} disabled={aiActionsLoading}
           style={{ fontSize: "11px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", opacity: aiActionsLoading ? 0.4 : 1 }}>
           {aiActionsLoading ? (ko ? "\ubd84\uc11d \uc911..." : "Loading...") : (ko ? "\uc0c8\ub85c\uace0\uce68" : "Refresh")}
         </button>
@@ -130,7 +130,7 @@ export function AiCoachCard() {
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginBottom: "12px" }}>
               {ko ? "네트워크 연결을 확인하고 다시 시도해주세요" : "Check your connection and try again"}
             </div>
-            <button type="button" onClick={fetchAiActions} style={{
+            <button type="button" onClick={() => { void fetchAiActions(true); }} style={{
               padding: "8px 16px", borderRadius: "8px",
               border: "1px solid rgba(15,23,42,0.1)", background: "#fff",
               fontSize: "13px", fontWeight: 620, cursor: "pointer",

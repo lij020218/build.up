@@ -11,6 +11,7 @@ import { CsvUploadCard } from "../profile/CsvUploadCard";
 import { CodefConnectCard } from "../profile/CodefConnectCard";
 import { PopbillConnectCard } from "../profile/PopbillConnectCard";
 import { SaasMetricsConnectCard } from "../profile/SaasMetricsConnectCard";
+import { DashboardLayoutCard } from "../profile/DashboardLayoutCard";
 import { StoreNameInput } from "../stages/shared/StoreNameInput";
 import { BusinessHoursInput } from "../stages/shared/BusinessHoursInput";
 
@@ -268,6 +269,9 @@ export function ProfileView() {
           </div>
         </div>
       </article>
+
+      {/* ── 카드 3.1: 대시보드 카드 표시 설정 (2026-05-11) ── */}
+      <DashboardLayoutCard ko={ko} />
 
       {/* ── 카드 3.5: 외부 데이터 연결 ── */}
       <PortOneConnectCard ko={ko} />

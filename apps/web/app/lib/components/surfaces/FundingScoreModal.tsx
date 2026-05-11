@@ -17,8 +17,9 @@
  * 접근성: ESC + 배경 클릭 닫힘. body scroll lock.
  */
 
-import { useEffect } from "react";
-import { X, CheckCircle2, AlertTriangle, ArrowUpRight, Loader2, Sparkles, Shield, Award } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { X, CheckCircle2, AlertTriangle, AlertCircle, ArrowUpRight, Loader2, Sparkles, Shield, Award, Target, type LucideIcon } from "lucide-react";
 
 const MIDNIGHT = "#191970";
 const TEXT_PRIMARY = "#0f172a";
@@ -56,19 +57,19 @@ const LEVEL_META: Record<FundingScore["level"], {
   bg: string;
   ring: string;
   ringBg: string;
-  emoji: string;
+  Icon: LucideIcon;
 }> = {
   high: {
     label: "높음", color: "#059669", bg: "rgba(5,150,105,0.10)",
-    ring: "#059669", ringBg: "rgba(5,150,105,0.12)", emoji: "🎯",
+    ring: "#059669", ringBg: "rgba(5,150,105,0.12)", Icon: Target,
   },
   medium: {
     label: "보통", color: "#b45309", bg: "rgba(180,83,9,0.10)",
-    ring: "#b45309", ringBg: "rgba(180,83,9,0.12)", emoji: "⚖️",
+    ring: "#b45309", ringBg: "rgba(180,83,9,0.12)", Icon: AlertCircle,
   },
   low: {
     label: "낮음", color: "#dc2626", bg: "rgba(220,38,38,0.10)",
-    ring: "#dc2626", ringBg: "rgba(220,38,38,0.12)", emoji: "🚧",
+    ring: "#dc2626", ringBg: "rgba(220,38,38,0.12)", Icon: AlertTriangle,
   },
 };
 
@@ -83,6 +84,9 @@ type Props = {
 };
 
 export function FundingScoreModal({ open, onClose, programName, loading, error, result, ko }: Props) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -94,12 +98,12 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const meta = result ? LEVEL_META[result.level] : null;
   const frameworkLabel = result && (FRAMEWORK_LABEL[result.framework] ?? result.framework);
 
-  return (
+  return createPortal(
     <div
       role="dialog" aria-modal="true" aria-label={ko ? "AI 점수 보기" : "AI score"}
       onClick={onClose}
@@ -230,7 +234,7 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
                   background: "white", padding: "3px 9px", borderRadius: 999,
                   marginBottom: 6,
                 }}>
-                  <span>{meta.emoji}</span>
+                  <meta.Icon size={11} strokeWidth={1.8} color={meta.color} />
                   <span>{ko ? `합격 가능성 ${meta.label}` : `Match: ${meta.label}`}</span>
                   <span style={{ opacity: 0.6, marginLeft: 4 }}>
                     {ko ? `합격선 ${result.passingScore}+` : `passing ${result.passingScore}+`}
@@ -412,7 +416,8 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
         }
         @keyframes buSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 }
 

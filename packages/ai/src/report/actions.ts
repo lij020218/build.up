@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
@@ -45,7 +45,7 @@ export async function generateReportInsight(
   input: ReportInsightInput,
   options: AiCallOptions
 ): Promise<string> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 20_000 });
+  const client = createAiClient(options.apiKey);
 
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,

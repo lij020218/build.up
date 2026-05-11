@@ -125,6 +125,32 @@ export function calculateBreakEven(input: BreakEvenInput): BreakEvenResult {
   }
 
   const monthlyBep = input.monthlyFixedCosts / (1 - cogsRate);
+
+  // ⚠️ CRITICAL SAFETY NET (2026-05-11) ──────────────────────────────
+  //  cogsRate 가 비현실적으로 높게 계산되면 (월 식재료/환산매출 > 0.9)
+  //  monthlyBep 가 폭주한다.
+  //
+  //  실제 사용자 신고:
+  //   · 월 비용 895만원 (식재료 300 + 고정 595)
+  //   · 매출 7일치만 입력 (~90만원) → 월 환산 334만원
+  //   · cogsRate = 300/334 = 0.898 → monthlyBep = 595/0.102 = 5,830만원
+  //   · dailyBep = 5830/26 = 224만원 (비용 895보다 큰 BEP 표시되는 버그)
+  //
+  //  안전망: monthlyBep 가 총 비용의 3 배를 넘으면 cogsRate 신뢰 불가 →
+  //  *단순 모델* (총 비용 / 영업일 26) 로 폴백.
+  //  외식 표준 cogsRate 25-35% 기준, 총비용 × 3 는 cogsRate ≈ 0.67 영역 — 정상 범위 보존.
+  // ─────────────────────────────────────────────────────────────────
+  const totalAllCosts = input.monthlyFixedCosts + Math.max(0, input.monthlyIngredients);
+  if (monthlyBep > totalAllCosts * 3) {
+    const dailyBepSimple = totalAllCosts / OPERATING_DAYS_PER_MONTH;
+    return {
+      breakEvenDaily: Math.round(dailyBepSimple),
+      breakEvenMonthly: Math.round(totalAllCosts),
+      cogsRate, // 원래 계산된 cogsRate 보존 (디버그 추적용) — 0 으로 덮지 않음
+      computable: true,
+    };
+  }
+
   // 영업일 26 일 기준 (업계 표준 — 위 OPERATING_DAYS_PER_MONTH 출처 참조)
   const dailyBep = monthlyBep / OPERATING_DAYS_PER_MONTH;
   return {
@@ -165,6 +191,12 @@ export type CostRatios = {
   costToRevenueRatio: number;
   /** 월 환산 매출 — 호출 측에서 다른 비교 시에도 재사용 */
   monthlyRevenueEquivalent: number;
+  /**
+   * 비율이 신뢰 가능한지 — false 면 UI·AI 인사이트에서 *사용 금지*.
+   *   사유: days < 7 (표본 부족) / monthlyRev 너무 작음 → ratio 폭주.
+   *   사용자 신고 케이스: "재료비 1375%" 같은 비현실 수치 차단.
+   */
+  ready: boolean;
 };
 
 /**
@@ -178,11 +210,16 @@ export function calculateCostRatios(input: CostRatiosInput): CostRatios {
     input.costs.ingredients + input.costs.labor + input.costs.rent +
     input.costs.utilities + input.costs.sga + input.costs.marketing + input.costs.other;
 
-  if (monthlyRev <= 0) {
+  // ⚠️ CRITICAL (2026-05-11): 비율 신뢰도 가드.
+  //  · days < 7: 표본 부족 → ratio 폭주 위험 (예: 식재료 500만 / 7일 36만 환산 = 1375%)
+  //  · monthlyRev 가 totalCosts 의 1/5 미만: 매출 입력이 사실상 비어있음 → ratio 무의미
+  //  → ready=false, 모든 ratio 0. UI·AI 인사이트는 "준비 안 됨" 표시하고 사용 금지.
+  if (monthlyRev <= 0 || input.days < 7 || (totalCosts > 0 && monthlyRev < totalCosts / 5)) {
     return {
       ingredientRatio: 0, laborRatio: 0, rentRatio: 0,
       primeCostRatio: 0, costToRevenueRatio: 0,
-      monthlyRevenueEquivalent: 0,
+      monthlyRevenueEquivalent: monthlyRev,
+      ready: false,
     };
   }
 
@@ -193,5 +230,6 @@ export function calculateCostRatios(input: CostRatiosInput): CostRatios {
     primeCostRatio: ((input.costs.ingredients + input.costs.labor) / monthlyRev) * 100,
     costToRevenueRatio: (totalCosts / monthlyRev) * 100,
     monthlyRevenueEquivalent: monthlyRev,
+    ready: true,
   };
 }

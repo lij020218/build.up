@@ -113,6 +113,83 @@ export function checkAnnualLeaveAccrual(
 }
 
 // ═══════════════════════════════════════════════════════════════
+//   2-b. 퇴직금 의무 — 1년 이상 근속 + 주 15시간 이상
+// ═══════════════════════════════════════════════════════════════
+//
+//  근로자퇴직급여 보장법 제4조:
+//   - 계속근로기간 1년 이상
+//   - 4주 평균 1주 소정근로시간 15시간 이상
+//  → 퇴직 시 1일 평균임금 × 30일 × (재직일수 / 365) 지급 의무.
+//  미지급 시 임금체불 (근로기준법 제43조, 3년 시효, 형사처벌 가능).
+//
+//  계산 단순화: 시급·주근무시간만 알면 월급 환산하여 근사값 제공.
+//    월급 ≈ hourlyWage × weeklyHours × 4.345
+//    퇴직금 ≈ 월급 × (재직일수 / 365)
+//  ※ 정확한 계산은 직전 3개월 평균임금 기반 — 노무사 영역.
+
+export type SeveranceCheck = {
+  employeeId: string;
+  employeeName: string;
+  hireDate: string;
+  weeklyHours: number;
+  daysSinceHire: number;
+  /** 의무 발생 단계
+   *   - eligible: 이미 지급 의무 발생 (≥1년 + ≥15h)
+   *   - approaching: 1년 도래 D-60 이내 (적립 시작 권장)
+   *   - not-eligible: 아직 1년 미만
+   *   - below-15h: 주 15시간 미만 (퇴직금 비대상)
+   */
+  level: "not-eligible" | "approaching" | "eligible" | "below-15h";
+  /** 퇴직 시 대략 지급액 (원). 근사값 — 정확 계산은 노무사 */
+  estimatedSeveranceWon: number;
+  suggestion: string;
+};
+
+export function checkSeveranceObligation(
+  employees: Array<{ id: string; name: string; hireDate?: string; weeklyHours: number; hourlyWage: number }>,
+): SeveranceCheck[] {
+  const today = new Date();
+  return employees
+    .filter((e) => !!e.hireDate)
+    .map((e) => {
+      const hireDate = new Date(e.hireDate!);
+      const daysSinceHire = Math.floor((today.getTime() - hireDate.getTime()) / 86_400_000);
+      const monthlyWage = Math.round((e.hourlyWage || 0) * (e.weeklyHours || 0) * 4.345);
+      const estimatedSeveranceWon = e.weeklyHours >= 15 && daysSinceHire > 0
+        ? Math.round(monthlyWage * (daysSinceHire / 365))
+        : 0;
+
+      const level: SeveranceCheck["level"] =
+        e.weeklyHours < 15 ? "below-15h"
+        : daysSinceHire >= 365 ? "eligible"
+        : daysSinceHire >= 305 ? "approaching"
+        : "not-eligible";
+
+      const daysToYearMark = Math.max(0, 365 - daysSinceHire);
+      const manWon = Math.round(estimatedSeveranceWon / 10000);
+      const suggestion =
+        level === "eligible"
+          ? `${e.name}님 근속 ${Math.floor(daysSinceHire / 30)}개월 — 퇴직 시 퇴직금 약 ${manWon.toLocaleString()}만원 지급 의무. 정확한 금액은 노무사 상담.`
+          : level === "approaching"
+            ? `${e.name}님 1년 도래 D-${daysToYearMark} — 퇴직금 의무 임박. 매월 1/12 적립 권장.`
+            : level === "below-15h"
+              ? `${e.name}님 주 ${e.weeklyHours}시간 — 퇴직금 비대상 (주 15시간 미만).`
+              : `${e.name}님 근속 ${Math.floor(daysSinceHire / 30)}개월 — 퇴직금 발생까지 ${daysToYearMark}일.`;
+
+      return {
+        employeeId: e.id,
+        employeeName: e.name,
+        hireDate: e.hireDate!,
+        weeklyHours: e.weeklyHours,
+        daysSinceHire,
+        level,
+        estimatedSeveranceWon,
+        suggestion,
+      };
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
 //   3. 5인 미만 → 5인 이상 임계 시뮬레이션
 // ═══════════════════════════════════════════════════════════════
 //

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import {
   buildGuideContextBlock,
   type GuideContextBlock,
@@ -64,7 +64,7 @@ export async function interpretGuideQuestion(
   language: Language,
   options: AiCallOptions
 ): Promise<{ answer: GuideAiStructuredResponse; context: GuideContextBlock }> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
+  const client = createAiClient(options.apiKey);
   const context = buildGuideContextBlock(guide, language);
   const userPrompt = buildGuideQaUserPrompt(question, context, language);
 

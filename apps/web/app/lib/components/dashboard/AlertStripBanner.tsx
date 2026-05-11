@@ -16,6 +16,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, MessageSquareWarning, PackageX, Wallet } from "lucide-react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
+import { entriesInLastDays, honestDailyAverage } from "../../utils/daily-windows";
 
 type AlertKind = "cash" | "review" | "inventory" | "unpaid";
 
@@ -68,12 +69,12 @@ export function AlertStripBanner() {
       (costs.other ?? 0) + (costs.interest ?? 0);
 
     // ── 1. Cash 14-day warning (현금 소진 위험) ──
+    //  ⚠️ 2026-05-11 fix: entry-count slice → 날짜 기반 윈도우 + 경과일 분모
+    //  sparse 입력 시 일평균 과대 추정 → netDailyLoss 음수 → 위기 누락 가능했음
     if (d.businessLaunched && totalMonthlyCosts > 0) {
-      const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-      const last14 = sorted.slice(-14);
-      const avgDaily14 = last14.length > 0
-        ? last14.reduce((s, e) => s + (e.sales ?? 0), 0) / last14.length
-        : 0;
+      const last14 = entriesInLastDays(entries, 14);
+      const avgInfo = honestDailyAverage(last14, (e) => e.sales);
+      const avgDaily14 = avgInfo.avg;
       const dailyBurn = totalMonthlyCosts / 30;
       const netDailyLoss = dailyBurn - avgDaily14;
       if (netDailyLoss > 0) {
@@ -95,23 +96,28 @@ export function AlertStripBanner() {
       }
     }
 
-    // ── 2. 재고 바닥 (최근 매출 데이터 < 1주, 재고 없음 시) ──
-    // Note: 실제 inventory store 미연동 — 추후 inventory-store 연결 시 강화
-    // 지금은 운영 중인데 7일 이상 매출 0 → 무활동 경고
-    if (d.businessLaunched) {
-      const recent7 = [...entries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
-      const noSalesDays = recent7.filter((e) => (e.sales ?? 0) === 0).length;
-      if (recent7.length >= 5 && noSalesDays >= 5) {
-        list.push({
-          kind: "inventory",
-          severity: "warning",
-          title: ko ? "최근 7일 중 5일 이상 매출 없음" : "5+ days without sales this week",
-          detail: ko
-            ? "재고·예약·마케팅 상태를 확인해주세요."
-            : "Check inventory, bookings, and marketing.",
-          cta: { label: ko ? "대시보드 확인" : "Check dashboard", surface: "analytics" },
-        });
-      }
+    // ── 2. 재고 발주 필요 (low-stock alert, 2026-05-11 실제 inventory 연동) ──
+    //  threshold > 0 이면서 quantity ≤ threshold 인 품목 = 발주 필요.
+    //  quantity ≤ 0 이면 즉시 (critical), 그 외엔 경고 (warning).
+    const inventory = (d.inventory ?? []) as Array<{ id: string; name: string; quantity: number; minThreshold?: number }>;
+    const lowStockItems = inventory.filter(
+      (i) => (i.minThreshold ?? 0) > 0 && i.quantity <= (i.minThreshold ?? 0),
+    );
+    if (lowStockItems.length > 0) {
+      const criticalItems = lowStockItems.filter((i) => i.quantity <= 0);
+      const isCritical = criticalItems.length > 0;
+      const sample = lowStockItems.slice(0, 3).map((i) => i.name).join(", ");
+      const moreCount = lowStockItems.length - 3;
+      list.push({
+        kind: "inventory",
+        severity: isCritical ? "critical" : "warning",
+        title: ko
+          ? `${lowStockItems.length}개 품목 발주 필요${isCritical ? ` (${criticalItems.length}개 즉시)` : ""}`
+          : `${lowStockItems.length} items need reorder${isCritical ? ` (${criticalItems.length} urgent)` : ""}`,
+        detail: ko
+          ? `${sample}${moreCount > 0 ? ` 외 ${moreCount}개` : ""}`
+          : `${sample}${moreCount > 0 ? ` +${moreCount} more` : ""}`,
+      });
     }
 
     // ── 3. 마케팅 ROAS 경고 ──
@@ -123,7 +129,7 @@ export function AlertStripBanner() {
       if (a.severity !== b.severity) return a.severity === "critical" ? -1 : 1;
       return priority.indexOf(a.kind) - priority.indexOf(b.kind);
     });
-  }, [d.dailyEntries, d.monthlyCosts, d.businessLaunched, d.selectedBudget, d.initialOperatingCapital, ko]);
+  }, [d.dailyEntries, d.monthlyCosts, d.businessLaunched, d.selectedBudget, d.initialOperatingCapital, d.inventory, ko]);
 
   const top = alerts.find((a) => !dismissed[a.kind]);
   if (!top) return null;

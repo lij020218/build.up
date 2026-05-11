@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { useProfileStore } from "../../stores/profile-store";
 import {
   getMatchedProgramsV2,
+  getRecommendedPrograms,
   getApplicationStatusLabel,
   getProgramCategoryLabel,
   type StartupProgram,
@@ -52,7 +52,7 @@ export function GuidesView() {
     businessLaunched,
     industryCategoryId,
   } = d;
-  const businessLaunchedDate = useProfileStore((s) => s.businessLaunchedDate);
+  const businessLaunchedDate = (d as { businessLaunchedDate?: string | null }).businessLaunchedDate ?? null;
   const storeName = (d as { storeName?: string }).storeName ?? "";
   const selectedSpecialtyId = (d as { selectedSpecialtyId?: string }).selectedSpecialtyId;
   const selectedIndustryId = (d as { selectedIndustryId?: string }).selectedIndustryId;
@@ -67,6 +67,13 @@ export function GuidesView() {
 
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  /**
+   * 추천 모드 — 사용자 지침 (2026-05-11):
+   *  "사용자의 업종, 현 상황, 매출, 사업 규모 크기 등을 고려해서 사용자에게 적합한 지원 프로그램을
+   *   추천하는 버튼을 만들라. AI 필요없이 코딩으로만." → 토글 형태. ON 시 matchScore 상위 N개만 노출.
+   */
+  const [recommendMode, setRecommendMode] = useState(false);
+  const RECOMMEND_TOP_N = 6;
 
   // ── 사장님 상황 신호 — 위기 시 운영자금 우선, 성장 시 투자 우선 ──
   const employees = (d.employees as { id: string }[] | undefined) ?? [];
@@ -107,6 +114,14 @@ export function GuidesView() {
     const businessYears = businessLaunchedDate
       ? Math.max(0, Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / (365 * 86400000)))
       : 0;
+    // 매출 (월 환산) — 사업 규모 매칭에 사용
+    const sortedEntries = [...dailyEntries].sort((a, b) => a.date.localeCompare(b.date));
+    const last7 = sortedEntries.slice(-7);
+    const avgDaily = last7.length > 0
+      ? last7.reduce((s, e) => s + e.sales, 0) / last7.length
+      : 0;
+    const monthlyAvgRevenue = avgDaily > 0 ? Math.round(avgDaily * 26) : 0;
+    const hasUserSales = dailyEntries.some((e) => e.sales > 0);
     return {
       startupType,
       industryCategoryId,
@@ -117,10 +132,19 @@ export function GuidesView() {
       runwayMonths,
       weeklySalesChangePct,
       employeesCount: employees.length,
+      monthlyAvgRevenue: monthlyAvgRevenue > 0 ? monthlyAvgRevenue : undefined,
+      hasUserSales,
     };
-  }, [startupType, industryCategoryId, businessLaunchedDate, businessLaunched, preferredRegionInput, selectedBudget, runwayMonths, weeklySalesChangePct, employees.length]);
+  }, [startupType, industryCategoryId, businessLaunchedDate, businessLaunched, preferredRegionInput, selectedBudget, runwayMonths, weeklySalesChangePct, employees.length, dailyEntries]);
 
-  const matchedAll = useMemo(() => getMatchedProgramsV2(criteria), [criteria]);
+  // ⚠️ 마감된 프로그램은 펀딩 페이지에서 숨김 (2026-05-11).
+  //  데이터(startup-programs.ts)는 보존 — 대부분 매년 동일 시기 재공고이므로
+  //  내년에는 applicationDeadline·applicationStatus만 갱신하면 자동 노출.
+  //  사용자 요청 시 hard delete 옵션도 있음.
+  const matchedAll = useMemo(
+    () => getMatchedProgramsV2(criteria).filter((p) => p.applicationStatus !== "closed"),
+    [criteria],
+  );
 
   // ─── AI 점수 보기 모달 상태 ───
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
@@ -259,18 +283,34 @@ export function GuidesView() {
     }
   };
 
+  // 추천 전용 (개인화 점수만으로 상위 N개 — 마감 부스트·status 부스트 제외)
+  const recommended = useMemo(
+    () => recommendMode ? getRecommendedPrograms(criteria, RECOMMEND_TOP_N) : [],
+    [recommendMode, criteria],
+  );
+
   const filtered = useMemo(() => {
+    if (recommendMode) {
+      // 카테고리/상태 필터는 추천 결과 위에 보조로 작동 (예: 추천 + "정부" 만)
+      return recommended.filter((p) => {
+        if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+        if (statusFilter !== "all" && p.applicationStatus !== statusFilter) return false;
+        return true;
+      });
+    }
     return matchedAll.filter((p) => {
       if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
       if (statusFilter !== "all" && p.applicationStatus !== statusFilter) return false;
       return true;
     });
-  }, [matchedAll, categoryFilter, statusFilter]);
+  }, [matchedAll, recommended, categoryFilter, statusFilter, recommendMode]);
 
   const stats = useMemo(() => {
-    const open = matchedAll.filter((p) => p.applicationStatus === "open").length;
+    // matchedAll 단계에서 이미 마감 제외됨. open + upcoming 합이 total 과 일치하도록
+    // applicationStatus undefined 인 프로그램은 "open" 으로 디폴트 (상시·매월 류).
+    const open = matchedAll.filter((p) => (p.applicationStatus ?? "open") === "open").length;
     const upcoming = matchedAll.filter((p) => p.applicationStatus === "upcoming").length;
-    const eligible = matchedAll.filter((p) => p.eligible && p.applicationStatus !== "closed").length;
+    const eligible = matchedAll.filter((p) => p.eligible).length;
     return { total: matchedAll.length, open, upcoming, eligible };
   }, [matchedAll]);
 
@@ -287,7 +327,7 @@ export function GuidesView() {
     { id: "all", label: ko ? "전체" : "All" },
     { id: "open", label: ko ? "신청 가능" : "Open" },
     { id: "upcoming", label: ko ? "공고 예정" : "Upcoming" },
-    { id: "closed", label: ko ? "마감" : "Closed" },
+    // "마감" 옵션은 제거 (2026-05-11) — 마감 프로그램은 matchedAll 단계에서 이미 필터됨
   ];
 
   return (
@@ -334,7 +374,38 @@ export function GuidesView() {
           />
         </div>
 
-        {/* ── 3. Filters ── */}
+        {/* ── 3. 추천 버튼 — 사장님 업종·상황·매출·규모 기반 상위 N개 자동 선별 ── */}
+        <div style={recommendBarStyle}>
+          <button
+            type="button"
+            onClick={() => setRecommendMode((v) => !v)}
+            aria-pressed={recommendMode}
+            style={{
+              ...recommendBtnStyle,
+              background: recommendMode ? "#191970" : "#fff",
+              color: recommendMode ? "#fff" : "#191970",
+              boxShadow: recommendMode
+                ? "0 4px 12px rgba(25,25,112,0.28)"
+                : "0 1px 3px rgba(15,23,42,0.06)",
+            }}
+          >
+            <Sparkles size={14} strokeWidth={1.8} />
+            <span>
+              {recommendMode
+                ? (ko ? `✓ 추천 모드 (TOP ${RECOMMEND_TOP_N})` : `✓ Recommend mode (TOP ${RECOMMEND_TOP_N})`)
+                : (ko ? "내게 가장 잘 맞는 프로그램 추천" : "Recommend best-fit programs")}
+            </span>
+          </button>
+          {recommendMode && (
+            <div style={recommendNoteStyle}>
+              {ko
+                ? `업종(${industryCategoryId || "—"}) · 단계(${criteria.businessStage}) · 매출/규모 · 런웨이 종합 점수 기준 상위 ${RECOMMEND_TOP_N}개`
+                : `Top ${RECOMMEND_TOP_N} by industry · stage · revenue / size · runway match score`}
+            </div>
+          )}
+        </div>
+
+        {/* ── 4. Filters ── */}
         <div style={filterCardStyle} className="bento-card">
           <FilterGroup
             label={ko ? "분류" : "Category"}
@@ -362,12 +433,14 @@ export function GuidesView() {
           </div>
         ) : (
           <div style={listGridStyle}>
-            {filtered.map((program) => (
+            {filtered.map((program, idx) => (
               <ProgramCard
                 key={program.id}
                 program={program}
                 ko={ko}
                 onScoreClick={() => handleScoreClick(program)}
+                rank={recommendMode ? idx + 1 : undefined}
+                showReasons={recommendMode}
               />
             ))}
           </div>
@@ -467,10 +540,22 @@ function ProgramCard({
   program,
   ko,
   onScoreClick,
+  rank,
+  showReasons,
 }: {
-  program: StartupProgram & { matchScore: number; eligible: boolean; daysUntilDeadline?: number };
+  program: StartupProgram & {
+    matchScore: number;
+    personalFitScore?: number;
+    eligible: boolean;
+    daysUntilDeadline?: number;
+    matchReasons?: { kind: string; ko: string; en: string; weight: number }[];
+  };
   ko: boolean;
   onScoreClick: () => void;
+  /** 추천 모드일 때 1-based 순위 — 카드 좌상단에 "N순위" 배지 표시 */
+  rank?: number;
+  /** 추천 모드일 때 "왜 추천?" 사유 칩 노출 */
+  showReasons?: boolean;
 }) {
   const lang = ko ? "ko" : "en";
   const statusInfo = getApplicationStatusLabel(program.applicationStatus, lang);
@@ -493,12 +578,24 @@ function ProgramCard({
       style={{
         ...programCardStyle,
         opacity: program.eligible ? 1 : 0.7,
+        ...(rank === 1 ? { borderColor: MIDNIGHT, boxShadow: "0 4px 16px rgba(25,25,112,0.18)" } : {}),
       }}
       className="bento-card"
     >
       {/* Top: status + category + highlight */}
       <div style={cardTopRowStyle}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          {rank !== undefined && (
+            <span style={{
+              ...badgeStyle,
+              color: "#fff",
+              background: rank === 1 ? MIDNIGHT : rank === 2 ? "#4a4a8a" : rank === 3 ? "#7878b0" : "rgba(15,23,42,0.55)",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+            }}>
+              {ko ? `${rank}순위` : `#${rank}`}
+            </span>
+          )}
           <span style={{ ...badgeStyle, color: statusColor, background: `${statusColor}10`, fontWeight: 700 }}>
             {statusInfo.label}
           </span>
@@ -540,6 +637,18 @@ function ProgramCard({
 
       {/* Name */}
       <h3 style={progNameStyle}>{program.name[lang]}</h3>
+
+      {/* "왜 추천?" — 추천 모드에서만, 매칭 사유 칩 */}
+      {showReasons && program.matchReasons && program.matchReasons.length > 0 && (
+        <div style={reasonChipsWrapStyle}>
+          <span style={reasonChipsLabelStyle}>{ko ? "왜 추천?" : "Why?"}</span>
+          {program.matchReasons.map((r, i) => (
+            <span key={i} style={reasonChipStyle}>
+              {ko ? r.ko : r.en}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Organizer */}
       <div style={progMetaRowStyle}>
@@ -738,6 +847,66 @@ const listGridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
   gap: 12,
+};
+
+// ─── 추천 버튼 ─────────────────────────────────────────────────
+const recommendBarStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const recommendBtnStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "11px 18px",
+  borderRadius: 999,
+  border: "1px solid rgba(25,25,112,0.18)",
+  fontSize: 13.5,
+  fontWeight: 650,
+  letterSpacing: "-0.005em",
+  cursor: "pointer",
+  fontFamily: "inherit",
+  transition: "background .15s, color .15s, transform .12s, box-shadow .2s",
+};
+
+const recommendNoteStyle: React.CSSProperties = {
+  fontSize: 11.5,
+  color: "rgba(15,23,42,0.55)",
+  letterSpacing: "-0.005em",
+  fontWeight: 500,
+};
+
+// ─── "왜 추천?" 매칭 사유 칩 ──────────────────────────────────
+const reasonChipsWrapStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  gap: 5,
+  margin: "2px 0 4px",
+};
+
+const reasonChipsLabelStyle: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  color: "rgba(25,25,112,0.55)",
+  marginRight: 2,
+};
+
+const reasonChipStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "3px 8px",
+  borderRadius: 999,
+  background: "rgba(25,25,112,0.06)",
+  color: "#191970",
+  fontSize: 10.5,
+  fontWeight: 600,
+  letterSpacing: "-0.005em",
 };
 
 const programCardStyle: React.CSSProperties = {

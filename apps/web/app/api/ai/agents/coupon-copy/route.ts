@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "@build-up/ai/utils/client";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const client = new Anthropic({ apiKey, timeout: 30_000 });
+    const client = createAiClient(apiKey);
     const res = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 500,

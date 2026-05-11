@@ -1,7 +1,7 @@
 // ─── AI 인터뷰 스크립트 생성기 ───────────────────────────────────────────────
 // Mom Test 원칙 기반 고객 인터뷰 질문지를 자동 생성합니다.
 
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { systemWithCache } from "../utils/client";
 
 export type InterviewInput = {
@@ -63,7 +63,7 @@ export async function generateInterviewScript(
   input: InterviewInput,
   opts: { apiKey: string },
 ): Promise<InterviewScript> {
-  const client = new Anthropic({ apiKey: opts.apiKey });
+  const client = createAiClient(opts.apiKey);
 
   const userPrompt = input.language === "ko"
     ? `업종: ${input.industryCategoryId}

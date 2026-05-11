@@ -59,10 +59,12 @@ hooks/
 | 1.5 (a) | 오늘의 운영 리추얼 (DailyOpsRitual) | `Tier1_5Coaching.tsx` | 모두 |
 | 1.5 (a-1) | **재고 운영 + 팀 현황** (InventoryOps + Team) | `Tier1_5Coaching.tsx` | wide=2-up · narrow=stacked. 재고는 showInventoryCard·!subs |
 | 1.5 (a-2) | **식약처 위생점검 대비** (FoodSafety) | `Tier1_5Coaching.tsx` | food / cafe-dessert 만 |
+| 1.5 (a-3) | **Prime Cost (식자재+인건비)** | `Tier1_5Coaching.tsx` | food / cafe-dessert 만. 외식 글로벌 1순위 KPI (Sage·NetSuite·Toast). 2026-05-11 추가 |
 | 1.5 (b) | 오늘의 작은 개선 (DailyImprovement) | `Tier1_5Coaching.tsx` | 모두 |
 | 1.5 (b-2) | **객단가 업셀 제안** (AvgTicketUpsell) | `Tier1_5Coaching.tsx` | food/cafe/beauty/retail/fitness/education |
-| 1.5 (c-1) | **정책자금 자동 매칭 (위기 elevation)** | `Tier1_5Coaching.tsx` | 런웨이 <6개월일 때만 |
+| 1.5 (c-1) | **정책자금 자동 매칭 (평상시·위기 통합)** | `Tier1_5Coaching.tsx` | 항상 노출. 위기 시 isCrisis=true 톤 변경. monthlyCosts.interest 있으면 대환 절감 미리보기 |
 | 1.5 (c) | 스타트업 전용 핵심 지표 (StartupHealth) | `Tier1_5Coaching.tsx` | startup-tech 만 |
+| 1.5 (c-3) | **SaaS 핵심 지표 / 구독제 활성화 안내** (SaaSKeyMetricsCard / SubscriptionEnableNudge) | `Tier1_5Coaching.tsx` | startup-tech 한정. 2026-05-11 Tier 3 접힘에서 승격 (CBInsights PMF 43% 갭) |
 
 ## Tier 2 — 이번 주 점검 (DeepDive)
 
@@ -81,8 +83,8 @@ hooks/
 
 | 위치 | 카드 | 파일 | 분기 |
 |---|---|---|---|
-| 3 | 구독제 활성화 안내 | `Tier3Operations.tsx` | startup + 구독 미사용 |
-| 3 | SaaS 핵심 지표 (MRR/신규/전환/이탈) | `Tier3Operations.tsx` | usesSubscriptions |
+| ~~3~~ | ~~구독제 활성화 안내~~ → **Tier 1.5 (c-3)** 로 승격 (2026-05-11, startup-tech 한정) |  |  |
+| 3 | SaaS 핵심 지표 (MRR/신규/전환/이탈) | `Tier3Operations.tsx` | **비-startup** 구독 사용자 (뷰티 멤버십 등) 만. startup-tech 는 Tier 1.5 (c-3) |
 | 3 | 구독 플랜 매니저 + Webhook | `Tier3Operations.tsx` | usesSubscriptions |
 | 3 | 고객 요약 (CustomerSummary) | `Tier3Operations.tsx` | businessCtx.showCustomerCard |
 | 3 | 인기 상품 / 최근 활동 | `Tier3Operations.tsx` | inventoryMode != minimal |
@@ -98,7 +100,7 @@ hooks/
 | 4 | 마일스톤 진행 (ProgressMilestones) | `Tier4GrowthTools.tsx` | 모두 |
 | 4 | 고객 인터뷰 (CustomerInterview) | `Tier4GrowthTools.tsx` | 모두 |
 | 4 | **4대보험 시뮬레이터 (Insurance)** | `Tier4GrowthTools.tsx` | 직원 ≥1 또는 인건비 입력 |
-| 4 | **정책자금 매칭 (평상시)** | `Tier4GrowthTools.tsx` | 런웨이 ≥6개월일 때만 |
+| ~~4~~ | ~~정책자금 매칭 (평상시)~~ → **Tier 1.5 (c-1)** 로 승격 (2026-05-11, Tier 4 접힘으로 발견율 낮음) |  |  |
 | 4 | 주간 리포트 (Weekly) | `Tier4GrowthTools.tsx` | streak ≥7 |
 
 ## Tier 5 — 예측·플레이북·내보내기 (DeepDive)
@@ -118,6 +120,15 @@ hooks/
 | 모달 | Calendar Modal | `OperationalDashboard.tsx` (orchestrator) |
 
 ---
+
+## 사장님 카드 표시 설정 (2026-05-11 추가)
+
+- SSOT: `app/lib/dashboard-cards-meta.ts` — 카드 ID·라벨·카테고리·essential 플래그
+- 저장: `profile-store.hiddenCards: string[]` (persist + supabase)
+- 토글 UI: `components/profile/DashboardLayoutCard.tsx` — 마이페이지 > 설정 아래
+- 가드: Tier 0/1/1.5 sections에서 `useProfileStore((s) => s.hiddenCards)` → `hide(id)` 패턴
+- essential 카드(NSM hero, cashflow, activity-snapshot)는 hidableCards 카탈로그에서 제외 → 사장님이 실수로 못 끔
+- 2-col 레이아웃: 한쪽이 숨겨지면 자동으로 1-col로 우아하게 폴백 (gridTemplateColumns 분기)
 
 ## 새 카드 추가 절차
 

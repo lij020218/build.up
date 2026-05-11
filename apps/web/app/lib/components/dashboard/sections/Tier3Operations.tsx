@@ -48,13 +48,11 @@ export function Tier3Operations({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       defaultOpen={false}
       ko={ko}
     >
-      {/* 스타트업: 구독제 활성화 안내 */}
-      {c.isStartupCompany && !c.usesSubscriptions && (
-        <SubscriptionEnableNudge ko={ko} onEnable={() => d.setUsesSubscriptions(true)} nextStaggerStyle={nextStaggerStyle} />
-      )}
+      {/* 스타트업: 구독제 활성화 안내 — 2026-05 Tier 1.5 로 이동 (startup-tech 사용자)
+          Tier 3 는 비-스타트업 구독 사용자(예: 뷰티 멤버십)에게만 의미 */}
 
-      {/* SaaS 핵심 지표 */}
-      {c.usesSubscriptions && <SaaSKeyMetricsCard d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />}
+      {/* SaaS 핵심 지표 — 2026-05 startup-tech 는 Tier 1.5 에서, 그 외만 여기 */}
+      {c.usesSubscriptions && !c.isStartupCompany && <SaaSKeyMetricsCard d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />}
 
       {/* 동적 카드 그리드 (구독·재고·고객·팀) */}
       <DynamicOpsCardGrid d={d} c={c} ko={ko} fmt={fmt} nextStaggerStyle={nextStaggerStyle} />
@@ -70,7 +68,7 @@ export function Tier3Operations({ d, c, ko, fmt, nextStaggerStyle }: Props) {
 
 // ─── 1. 구독제 활성화 안내 ────────────────────────────────────────
 
-function SubscriptionEnableNudge({
+export function SubscriptionEnableNudge({
   ko,
   onEnable,
   nextStaggerStyle,
@@ -137,7 +135,7 @@ type PlanEntry = {
   planChurns?: Record<string, number>;
 };
 
-function SaaSKeyMetricsCard({
+export function SaaSKeyMetricsCard({
   d,
   c,
   ko,

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
@@ -64,7 +64,7 @@ export async function generateStageBrief(
   params: StageBriefParams,
   options: AiCallOptions
 ): Promise<StageBriefResult> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
+  const client = createAiClient(options.apiKey);
   const userPrompt = buildStageBriefUserPrompt(params);
 
   const message = await client.messages.create({

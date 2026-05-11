@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { LineChart } from "lucide-react";
 import { EmptyStateCard } from "./EmptyStateCard";
+import { entriesInLastDays, honestDailyAverage } from "../../utils/daily-windows";
 
 /**
  * 매출 예측 + "이대로 가면" 시나리오 카드.
@@ -60,12 +61,17 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
     );
   }
 
-  // 예측: 가중 이동평균
-  const last7 = sorted.slice(-7);
-  const avg7 = last7.reduce((s, e) => s + e.sales, 0) / Math.max(last7.length, 1);
-  const last14 = sorted.slice(-14);
-  const avg14 = last14.reduce((s, e) => s + e.sales, 0) / Math.max(last14.length, 1);
-  const trend = last7.length >= 7 && avg14 > 0 ? (avg7 - avg14) / avg14 : 0;
+  // ⚠️ 예측 — *날짜 기반* 윈도우 + 경과일수 분모 (2026-05-11 fix).
+  //  이전: sorted.slice(-7) 7개 entry / .length 분모 → sparse 입력이면 평균 과대 →
+  //  forecast 폭주. honestDailyAverage 가 MAX(entry, 경과일) 분모 보장.
+  const last7Date = entriesInLastDays(sorted, 7);
+  const last14Date = entriesInLastDays(sorted, 14);
+  const avg7Info = honestDailyAverage(last7Date, (e) => e.sales);
+  const avg14Info = honestDailyAverage(last14Date, (e) => e.sales);
+  const avg7 = avg7Info.avg;
+  const avg14 = avg14Info.avg;
+  const trend = avg14 > 0 ? (avg7 - avg14) / avg14 : 0;
+  const last7 = last7Date; // 신뢰구간·차트 actual 표시용
 
   // 7일 예측 데이터 포인트
   const forecastDays = 7;

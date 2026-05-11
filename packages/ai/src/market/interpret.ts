@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import type { RecommendationItem } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
@@ -13,7 +13,7 @@ export async function interpretMarketScore(
   params: { categoryId?: string; startupType?: string },
   options: AiCallOptions
 ): Promise<string> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
+  const client = createAiClient(options.apiKey);
   const userPrompt = buildMarketNarrativeUserPrompt(item, params);
 
   const message = await client.messages.create({

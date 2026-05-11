@@ -10,6 +10,7 @@ import {
   type CaseStudy,
 } from "@build-up/shared";
 import { Lightbulb } from "lucide-react";
+import { entriesInLastDays, entriesInWindow } from "../../utils/daily-windows";
 
 // ─── 상황 라벨 매핑 ─────────────────────────────────────────────────────────
 
@@ -48,10 +49,10 @@ export function BenchmarkCard() {
     const costs = mc ?? { ingredients: 0, labor: 0, rent: 0, utilities: 0, sga: 0, marketing: 0, other: 0, interest: 0 };
     const totalCosts = (costs.ingredients ?? 0) + (costs.labor ?? 0) + (costs.rent ?? 0) + (costs.utilities ?? 0) + (costs.sga ?? 0) + (costs.marketing ?? 0) + (costs.other ?? 0) + (costs.interest ?? 0);
 
-    // 전주 대비 매출 변화
+    // 전주 대비 매출 변화 — *날짜 기반* 윈도우 (2026-05-11 fix, entry-count slice 버그 회피)
     const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-    const recent7 = sorted.slice(-7);
-    const prev7 = sorted.slice(-14, -7);
+    const recent7 = entriesInLastDays(sorted, 7);
+    const prev7 = entriesInWindow(sorted, 14, 7);
     const r7 = recent7.reduce((s, e) => s + e.sales, 0);
     const p7 = prev7.reduce((s, e) => s + e.sales, 0);
     const weeklyChange = p7 > 0 ? ((r7 - p7) / p7) * 100 : 0;

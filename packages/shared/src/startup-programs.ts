@@ -72,6 +72,15 @@ export type MatchCriteria = {
    * 직원 수 — 일부 프로그램은 인력 규모 조건 (예: 5인 이상 사업자만).
    */
   employeesCount?: number;
+  /**
+   * 월 환산 매출 (원) — 사업 규모 매칭. 영세(<1천만) / 소규모(1-5천만) /
+   *  중소(5천만-3억) / 중견(3억+) 구간별 적합 프로그램이 다름.
+   */
+  monthlyAvgRevenue?: number;
+  /**
+   * 매출 데이터 입력 여부 — 매출 기반 프로그램(예: 매출액 증가 지원) 매칭 가드.
+   */
+  hasUserSales?: boolean;
 };
 
 export type ProgramMatchResult = {
@@ -247,6 +256,7 @@ export const startupPrograms: StartupProgram[] = [
     dataYear: "2026",
     fundingType: "grant",
     applicationDeadline: "2026-05-30",
+    applicationStatus: "open",
   },
   {
     id: "sparklabs-batch",
@@ -261,6 +271,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     fundingType: "equity",
+    applicationStatus: "open",
   },
   {
     id: "bluepoint-demo",
@@ -275,6 +286,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     fundingType: "equity",
+    applicationStatus: "upcoming",
   },
   {
     id: "samsung-clab",
@@ -288,7 +300,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://samsungfnstartup.com",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "upcoming",
   },
   {
     id: "dcamp-dday",
@@ -302,7 +315,8 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: false,
     forFranchise: false,
     highlight: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "open",
   },
   {
     id: "naver-d2sf",
@@ -318,6 +332,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     fundingType: "equity",
+    applicationStatus: "open",
   },
   {
     id: "hyundai-cmk",
@@ -330,7 +345,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.h-ondream.kr",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "upcoming",
   },
   {
     id: "sk-lookie",
@@ -343,7 +359,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.sklookie.com",
     forSmallBiz: false,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "upcoming",
   },
   {
     id: "primer-batch",
@@ -358,6 +375,7 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     fundingType: "equity",
+    applicationStatus: "open",
   },
 
   // ── Local Government (Seoul / Regional) ──
@@ -388,7 +406,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://youth.seoul.go.kr",
     forSmallBiz: true,
     forFranchise: false,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "upcoming",
   },
   {
     id: "seoul-youth-cook",
@@ -402,7 +421,8 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: true,
     forFranchise: false,
     highlight: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "open",
   },
   {
     id: "k-startup-portal",
@@ -415,7 +435,8 @@ export const startupPrograms: StartupProgram[] = [
     url: "https://www.k-startup.go.kr",
     forSmallBiz: true,
     forFranchise: true,
-    dataYear: "2026"
+    dataYear: "2026",
+    applicationStatus: "open",
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -919,6 +940,354 @@ export const startupPrograms: StartupProgram[] = [
     fundingType: "grant",
     applicationDeadline: "2026-07-15",
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 2026-05 추가 — 정부 단계별 (재도전·도약·농식품·청년농·중장년)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "redo-success-package",
+    category: "government",
+    name: { ko: "재도전성공패키지", en: "Redo Success Package" },
+    organizer: { ko: "창업진흥원 (중소벤처기업부)", en: "KISED (MSS)" },
+    target: { ko: "폐업 이력 보유 예비재창업자 또는 7년 이내 재창업기업", en: "Pre-redo founders with closure history or redo companies within 7 years" },
+    benefit: { ko: "사업화 자금 + 심리치유·실패원인분석 + 맞춤 멘토링 + 투자 연계", en: "Biz funds + psychological care, failure analysis + mentoring + investor matching" },
+    amount: "최대 1억원 (평균 6,700만원)",
+    season: { ko: "매년 2월 공고, 2026 접수: 2/11~3/4 마감", en: "Annual Feb notice, 2026 deadline: Mar 4" },
+    url: "https://www.kised.or.kr/menu.es?mid=a10205050000",
+    forSmallBiz: true,
+    forFranchise: false,
+    highlight: true,
+    dataYear: "2026",
+    businessYearRange: [0, 7],
+    applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-03-04",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "폐업증명서 또는 사업자등록증", en: "Closure cert or biz registration" }, { ko: "재창업 추진계획", en: "Redo plan" }],
+  },
+  {
+    id: "startup-leap-package-v2",
+    category: "government",
+    name: { ko: "창업도약패키지", en: "Startup Leap Package" },
+    organizer: { ko: "창업진흥원 (중소벤처기업부)", en: "KISED (MSS)" },
+    target: { ko: "창업 3년 초과 ~ 7년 이내 도약기 창업기업 (신산업은 10년)", en: "Companies 3-7 years post-founding (10 yrs for new-industry)" },
+    benefit: { ko: "사업화 자금 + 후속투자 IR·글로벌·IPO 주관사 네트워킹", en: "Biz funds + investment IR, global, IPO networking" },
+    amount: "최대 2억원 (평균 1.2억)",
+    season: { ko: "매년 초 공고, 2026 일반형: 1/23~2/13 마감", en: "Annual early-year, 2026 deadline: Feb 13" },
+    url: "https://www.kised.or.kr/menu.es?mid=a10205030000",
+    forSmallBiz: true,
+    forFranchise: false,
+    highlight: true,
+    dataYear: "2026",
+    businessYearRange: [3, 7],
+    applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-02-13",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }, { ko: "재무제표", en: "Financial statements" }],
+  },
+  {
+    id: "agri-food-venture",
+    category: "government",
+    name: { ko: "농식품 벤처육성 지원사업", en: "Agri-Food Venture Support" },
+    organizer: { ko: "한국농업기술진흥원 (농림축산식품부)", en: "KOAT (MAFRA)" },
+    target: { ko: "농식품·농산업 기술 분야 창업 5년 이내 (첨단기술은 7년)", en: "Agri-food tech founders within 5 yrs (7 for deeptech)" },
+    benefit: { ko: "사업화 자금 + 기술사업화·공정개선·전문가 연계", en: "Biz funds + tech commercialization + expert matching" },
+    season: { ko: "매년 1~2월, 2026: 1/21~2/23 마감", en: "Annual Jan-Feb, 2026 deadline: Feb 23" },
+    url: "https://www.bizinfo.go.kr/sii/siia/selectSIIA200Detail.do?pblancId=PBLN_000000000117742",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    industries: ["food"],
+    businessYearRange: [0, 7],
+    applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-02-23",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }],
+  },
+  {
+    id: "young-farmer-settlement",
+    category: "government",
+    name: { ko: "청년농업인 영농정착지원사업", en: "Young Farmer Settlement Support" },
+    organizer: { ko: "농림축산식품부", en: "MAFRA" },
+    target: { ko: "만 40세 미만, 영농경력 3년 이하 청년 농업인", en: "Under 40, less than 3 yrs farming experience" },
+    benefit: { ko: "월 정착지원금 + 농지·자금·교육·컨설팅 (농지은행 임차 우선)", en: "Monthly stipend + land/funds/training (land bank priority)" },
+    amount: "월 90~110만원 (1년차 110, 2년차 100, 3년차 90)",
+    season: { ko: "매년 초 공고, 시군 추가 모집 별도", en: "Annual early-year notice" },
+    url: "https://youngfarmer.greendaero.go.kr/",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    maxAge: 39,
+    industries: ["food"],
+    businessYearRange: [0, 3],
+    applicationStatus: "upcoming",
+    fundingType: "cash",
+    requiredDocs: [{ ko: "영농계획서", en: "Farming plan" }, { ko: "주민등록등본", en: "Residence cert" }, { ko: "농업경영체 등록", en: "Farm management registration" }],
+  },
+  {
+    id: "midlife-tech-startup-center",
+    category: "government",
+    name: { ko: "중장년 기술창업센터", en: "Midlife Tech Startup Center" },
+    organizer: { ko: "창업진흥원 (중소벤처기업부)", en: "KISED (MSS)" },
+    target: { ko: "만 40세 이상 (예비)창업자 — 풍부한 경력 기반 기술창업", en: "40+ pre/early founders leveraging career experience" },
+    benefit: { ko: "보육공간 + 창업교육 + 멘토링 + 사업화 연계 (정책자금·R&D 연결)", en: "Incubation space + training + mentoring + biz linkage" },
+    season: { ko: "전국 27개 센터 상시 모집", en: "27 centers nationwide, year-round" },
+    url: "https://www.kised.or.kr/menu.es?mid=a10203060000",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    businessYearRange: [0, 3],
+    applicationStatus: "open",
+    fundingType: "other",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "이력서·경력증명", en: "Resume / career cert" }],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 2026-05 추가 — 공모전·콘텐츠·게임
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "rural-startup-contest-2026",
+    category: "government",
+    name: { ko: "농촌창업 경진대회", en: "Rural Startup Contest" },
+    organizer: { ko: "농촌진흥청·농어촌공사", en: "RDA, KRC" },
+    target: { ko: "농촌 자원 활용 (예비)창업자·기존 농업경영체", en: "Pre/active founders using rural resources" },
+    benefit: { ko: "상금 + 농진청 사업화 연계 + 농어촌공사 농지 우선 매칭", en: "Prize + RDA biz linkage + KRC land priority" },
+    season: { ko: "매년 봄~여름", en: "Annual spring-summer" },
+    url: "https://xn--289a74g35ad77bgsep7dntbbx5b.com/",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    industries: ["food"],
+    applicationStatus: "upcoming",
+    fundingType: "grant",
+  },
+  {
+    id: "kocca-indie-game-devcamp",
+    category: "government",
+    name: { ko: "코리아 인디게임 데브캠프", en: "Korea Indie Game Dev Camp" },
+    organizer: { ko: "한국콘텐츠진흥원 (문체부)", en: "KOCCA (MCST)" },
+    target: { ko: "인디게임 개발 (예비)창업자 — 프로토타입 보유 권장", en: "Indie game devs (prototype encouraged)" },
+    benefit: { ko: "집중 개발 멘토링 + Neowiz·Krafton·Pearl Abyss 등 기술 컨설팅·내부 투자 검토", en: "Intensive mentoring + Neowiz/Krafton/Pearl Abyss tech consult & investment review" },
+    season: { ko: "매년 봄 공고 — 총 60팀 내외", en: "Annual spring, ~60 teams" },
+    url: "https://www.kocca.kr/kocca/main.do",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    applicationStatus: "upcoming",
+    fundingType: "grant",
+  },
+  {
+    id: "kocca-content-startup-2026",
+    category: "government",
+    name: { ko: "콘텐츠 스타트업 지원사업", en: "Content Startup Support Program" },
+    organizer: { ko: "한국콘텐츠진흥원 (문체부)", en: "KOCCA (MCST)" },
+    target: { ko: "콘텐츠 분야 7년 이내 창업기업 (인큐 18사) / 4억+ 투자유치 기업 (그로스 12사)", en: "Content startups <7yrs (Incubation 18) / 400M+ raised (Growth 12)" },
+    benefit: { ko: "사업화 자금 + 액셀러레이터 매칭 + 멘토링·투자 연계", en: "Biz funds + accelerator matching + mentoring + investment linkage" },
+    amount: "인큐베이션 최대 9천만, 그로스 최대 1.8억",
+    season: { ko: "2026 액셀러레이터 연계지원: 3/20~4/8 마감", en: "2026 accelerator-link: deadline Apr 8" },
+    url: "https://www.kocca.kr/kocca/pims/list.do?menuNo=204104",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    businessYearRange: [0, 7],
+    applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-04-08",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "사업자등록증", en: "Business registration" }],
+  },
+  {
+    id: "k-startup-grand-challenge-2026",
+    category: "government",
+    name: { ko: "K-Startup Grand Challenge 2026", en: "K-Startup Grand Challenge 2026" },
+    organizer: { ko: "정보통신산업진흥원 NIPA·창업진흥원 KISED (중기부)", en: "NIPA, KISED (MSS)" },
+    target: { ko: "외국인 창업팀 (해외 본사) + 2026 신설 외국인 유학생 트랙 (총 100팀)", en: "Foreign founders + new int'l student track (100 teams total)" },
+    benefit: { ko: "팀당 최대 $55,000 + 판교 입주 + 액셀러레이팅 + 데모데이", en: "Up to $55K/team + Pangyo office + acceleration + demo day" },
+    amount: "최대 $55,000 (약 7,500만원) 15팀",
+    season: { ko: "2026 접수: 5/6~6/17", en: "2026 application: May 6 - Jun 17" },
+    url: "https://www.k-startupgc.org/",
+    forSmallBiz: false,
+    forFranchise: false,
+    highlight: true,
+    dataYear: "2026",
+    applicationStatus: "open",
+    fundingType: "grant",
+    applicationDeadline: "2026-06-17",
+    requiredDocs: [{ ko: "Business plan (영문)", en: "Business plan (English)" }, { ko: "Pitch deck", en: "Pitch deck" }],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 2026-05 추가 — 대기업·금융권 액셀러레이터
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "lotte-ventures-lcamp-14",
+    category: "corporate",
+    name: { ko: "롯데벤처스 L-Camp 14기 / 미래식단 6기", en: "Lotte Ventures L-Camp 14 / Future Diet 6" },
+    organizer: { ko: "롯데벤처스", en: "Lotte Ventures" },
+    target: { ko: "AI·로보틱스·시니어·푸드테크 등 그룹사 시너지 분야 스타트업", en: "AI/robotics/senior/foodtech startups for group synergy" },
+    benefit: { ko: "롯데 계열사 PoC + 직접투자 검토 + 오피스아워·법률·회계·클라우드 크레딧 + 세븐일레븐 광고 할인", en: "Lotte affiliates PoC + direct investment + credits + 7-Eleven ad discount" },
+    season: { ko: "2026 모집: 3/31 마감", en: "2026 deadline: Mar 31" },
+    url: "https://lotteventures.com/",
+    forSmallBiz: false,
+    forFranchise: false,
+    highlight: true,
+    dataYear: "2026",
+    applicationStatus: "closed",
+    fundingType: "equity",
+    applicationDeadline: "2026-03-31",
+    requiredDocs: [{ ko: "사업계획서·IR", en: "Business plan / IR" }],
+  },
+  {
+    id: "cjenm-open-2026",
+    category: "corporate",
+    name: { ko: "CJ ENM 오펜(O'PEN) 10주년 공모전", en: "CJ ENM O'PEN 10th Anniversary" },
+    organizer: { ko: "CJ ENM", en: "CJ ENM" },
+    target: { ko: "방송사·제작사 집필 계약 없는 신예 창작자 (드라마·영화·음악)", en: "New writers/musicians w/o existing contracts" },
+    benefit: { ko: "스토리텔러 10기 + 뮤직 8기 선발, 작품화 + 데뷔 패스트트랙", en: "Storyteller 10 / Music 8 + production + debut fast-track" },
+    season: { ko: "드라마 1/2~15, 영화 2/2~11, 뮤직 3월", en: "Drama Jan 2-15, Film Feb 2-11, Music March" },
+    url: "https://open.cjenm.com/ko/",
+    forSmallBiz: false,
+    forFranchise: false,
+    dataYear: "2026",
+    applicationStatus: "closed",
+    fundingType: "other",
+  },
+  {
+    id: "posco-imp",
+    category: "corporate",
+    name: { ko: "POSCO 아이디어 마켓 플레이스 (IMP)", en: "POSCO Idea Market Place" },
+    organizer: { ko: "포스코·서울대기술지주 공동", en: "POSCO, SNU Holdings" },
+    target: { ko: "Part A 시드 초기 / Part B Pre-A 이후 (제조·소재·딥테크 우선)", en: "Part A seed / Part B Pre-A+ (manufacturing/material/deeptech)" },
+    benefit: { ko: "투자 (Part A 평균 3억, Part B 평균 5억) + 포스코 그룹 PoC + 멘토링", en: "Investment (Part A 300M avg, Part B 500M avg) + POSCO PoC + mentoring" },
+    season: { ko: "반기 2회 공고 (상·하반기) — 28~30기 연속 진행", en: "Bi-annual cycles (cohorts 28-30+)" },
+    url: "https://poscoimp.com/",
+    forSmallBiz: false,
+    forFranchise: false,
+    highlight: true,
+    dataYear: "2026",
+    applicationStatus: "upcoming",
+    fundingType: "equity",
+    requiredDocs: [{ ko: "IR 자료", en: "IR deck" }, { ko: "사업계획서", en: "Business plan" }],
+  },
+  {
+    id: "woori-dinolab-2026",
+    category: "corporate",
+    name: { ko: "우리금융 디노랩 (DinoLab) 서울 8기", en: "Woori Financial DinoLab Seoul 8" },
+    organizer: { ko: "우리금융그룹", en: "Woori Financial Group" },
+    target: { ko: "AI·핀테크·인슈어테크·모빌리티·리걸테크 분야 스타트업", en: "AI / fintech / insurtech / mobility / legaltech startups" },
+    benefit: { ko: "우리은행·카드·증권 등 그룹사 PoC + 우리벤처파트너스 투자 검토 + 멘토링", en: "Woori Group affiliate PoC + Woori Venture investment + mentoring" },
+    season: { ko: "매년 상반기 공고", en: "Annual H1 notice" },
+    url: "https://www.woorifg.com/",
+    forSmallBiz: false,
+    forFranchise: false,
+    dataYear: "2026",
+    applicationStatus: "upcoming",
+    fundingType: "equity",
+    requiredDocs: [{ ko: "IR 자료", en: "IR deck" }],
+  },
+  {
+    id: "nh-digital-challenge-plus",
+    category: "corporate",
+    name: { ko: "NH 디지털 Challenge+", en: "NH Digital Challenge+" },
+    organizer: { ko: "NH농협은행 (스파크플러스 운영)", en: "NH Nonghyup Bank (operated w/ SparkPlus)" },
+    target: { ko: "금융·부동산·농업 등 디지털 혁신 분야 스타트업", en: "Finance / real estate / agriculture digital innovation startups" },
+    benefit: { ko: "NH디지털혁신캠퍼스(양재) 입주 + 범농협 계열사 협업 + 투자 + 1년 액셀러레이팅", en: "NH Digital Innovation Campus (Yangjae) + NH affiliate partnership + investment + 1yr accel" },
+    season: { ko: "매년 상반기 공고 — 8기 진행", en: "Annual H1 (now cohort 8)" },
+    url: "http://nhd-challengeplus.com/",
+    forSmallBiz: false,
+    forFranchise: false,
+    dataYear: "2026",
+    industries: ["food"],
+    applicationStatus: "upcoming",
+    fundingType: "equity",
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 2026-05 추가 — 글로벌·지자체·특수
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "microsoft-for-startups-kr",
+    category: "private",
+    name: { ko: "Microsoft for Startups Founders Hub", en: "Microsoft for Startups Founders Hub" },
+    organizer: { ko: "마이크로소프트 한국", en: "Microsoft Korea" },
+    target: { ko: "Pre-Seed ~ Series C 소프트웨어 기반 스타트업 (생성형 AI 우대)", en: "Pre-Seed to Series C software startups (genAI priority)" },
+    benefit: { ko: "Azure 크레딧 (Level 1 $1K → Level 4 $150K) + GitHub·OpenAI·교육·법률·PR 크레딧 + 한투AC 공동 글로벌 매칭", en: "Azure credits ($1K→$150K) + GitHub/OpenAI/edu/legal/PR + KIA global matching" },
+    amount: "Azure 크레딧 최대 $150,000",
+    season: { ko: "상시 신청 (자가 등록)", en: "Year-round (self-enroll)" },
+    url: "https://www.microsoft.com/ko-kr/startups",
+    forSmallBiz: false,
+    forFranchise: false,
+    dataYear: "2026",
+    applicationStatus: "open",
+    fundingType: "other",
+    requiredDocs: [{ ko: "회사 URL·LinkedIn·간단 설명", en: "Company URL / LinkedIn / brief" }],
+  },
+  {
+    id: "gyeonggi-startup-platform",
+    category: "local",
+    name: { ko: "경기 스타트업 플랫폼 (브릿지·부스터)", en: "Gyeonggi Startup Platform (Bridge/Booster)" },
+    organizer: { ko: "경기도경제과학진흥원 (GBSA)", en: "GBSA" },
+    target: { ko: "경기도 내 예비 또는 창업 3년 미만 기업", en: "Gyeonggi pre/early <3yr founders" },
+    benefit: { ko: "사업화 자금 + 입주공간 (브릿지) + 민간 운영사 액셀러레이팅 (부스터) + 판로·마케팅", en: "Biz funds + office (Bridge) + private accel (Booster) + sales/marketing" },
+    season: { ko: "매년 상반기 공고", en: "Annual H1" },
+    url: "https://gsp.or.kr/",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    regions: ["경기"],
+    businessYearRange: [0, 3],
+    applicationStatus: "upcoming",
+    fundingType: "grant",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "주민등록등본 (경기도민 증빙)", en: "Residence proof" }],
+  },
+  {
+    id: "disabled-biz-commercialization-2026",
+    category: "government",
+    name: { ko: "장애인 창업사업화 지원사업", en: "Disabled Founder Commercialization Support" },
+    organizer: { ko: "장애인기업종합지원센터 (DEBC)", en: "DEBC" },
+    target: { ko: "장애인 (예비)창업자 — 등록 장애인 본인", en: "Registered disabled (pre)founders" },
+    benefit: { ko: "시제품·마케팅·판로 사업화 자금 + 전시회 참가 + 인증·판로지원", en: "Prototyping/marketing/sales biz funds + exhibition + cert support" },
+    season: { ko: "2026 1차: 3/17~4/3 마감", en: "2026 round 1: deadline Apr 3" },
+    url: "https://www.debc.or.kr/",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    applicationStatus: "closed",
+    fundingType: "grant",
+    applicationDeadline: "2026-04-03",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "장애인증명서", en: "Disability cert" }, { ko: "사업자등록증 (있을 경우)", en: "Business registration (if any)" }],
+  },
+  {
+    id: "social-enterprise-startup-2026",
+    category: "government",
+    name: { ko: "사회적기업 창업지원 (소셜벤처·돌봄·사회서비스)", en: "Social Enterprise Startup Support" },
+    organizer: { ko: "한국사회적기업진흥원 (고용노동부)", en: "KOSEA (MOEL)" },
+    target: { ko: "사회적 가치 추구 (예비)창업팀 — 돌봄·환경·지역재생·문화", en: "Social-value founders — care, env, regen, culture" },
+    benefit: { ko: "사업화 자금 + 단계별 멘토링 + 사회적기업가 육성사업 연계", en: "Biz funds + tiered mentoring + Social Entrepreneur Academy linkage" },
+    season: { ko: "매년 봄 사업설명회 + 모집", en: "Annual spring briefing + intake" },
+    url: "https://www.socialenterprise.or.kr/",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    applicationStatus: "upcoming",
+    fundingType: "grant",
+  },
+  {
+    id: "cooperative-lifecycle-2026",
+    category: "government",
+    name: { ko: "협동조합 생애주기별 지원사업", en: "Cooperative Lifecycle Support" },
+    organizer: { ko: "한국사회적기업진흥원 (기재부)", en: "KOSEA (MOEF)" },
+    target: { ko: "협동조합 — 도약형(설립 5년 미만 30개) / 고도화형(5년 이상)", en: "Co-ops — Leap (<5yr, 30) / Advanced (5yr+)" },
+    benefit: { ko: "도약 1천만원 경영지원 / 고도화 최대 5천만원 사업화", en: "Leap 10M biz support / Advanced up to 50M commercialization" },
+    amount: "도약 1천만 / 고도화 최대 5천만원",
+    season: { ko: "2026 접수: 5/15 마감", en: "2026 deadline: May 15" },
+    url: "https://www.seis.or.kr/",
+    forSmallBiz: true,
+    forFranchise: false,
+    dataYear: "2026",
+    applicationStatus: "open",
+    fundingType: "grant",
+    applicationDeadline: "2026-05-15",
+    requiredDocs: [{ ko: "사업계획서", en: "Business plan" }, { ko: "협동조합 설립 등기증명", en: "Co-op registration cert" }],
+  },
 ];
 
 /** Get programs filtered by category */
@@ -973,7 +1342,27 @@ export function getMatchedHighlights(startupType?: string): StartupProgram[] {
  *  • highlight / 모집 중 → 일반 부스트
  *  ─────────────────────────────────────────
  */
-export function getMatchedProgramsV2(criteria: MatchCriteria): (StartupProgram & { matchScore: number; eligible: boolean; daysUntilDeadline?: number })[] {
+/**
+ * 매칭 사유 — 사용자에게 *왜 이 프로그램이 추천되었는지* 투명하게 보여주는 1줄 라벨.
+ *  kind 는 표시 카테고리, weight 는 점수 기여도 (UI 정렬·강조용).
+ */
+export type MatchReason = {
+  kind: "personal" | "industry" | "region" | "stage" | "size" | "crisis" | "status";
+  ko: string;
+  en: string;
+  weight: number;
+};
+
+export type ProgramMatch = StartupProgram & {
+  matchScore: number;
+  /** *개인화* 점수 — 마감/상태 부스트 제외, "이 사장님께 얼마나 잘 맞는가" 만 반영. */
+  personalFitScore: number;
+  eligible: boolean;
+  daysUntilDeadline?: number;
+  matchReasons: MatchReason[];
+};
+
+export function getMatchedProgramsV2(criteria: MatchCriteria): ProgramMatch[] {
   const isFranchise = criteria.startupType === "franchise";
   // 위기 신호 — 런웨이 부족 + 매출 하락. 둘 중 하나만 강해도 위기로 분류.
   const isCashCrisis = (criteria.runwayMonths != null && criteria.runwayMonths < 6) ||
@@ -982,51 +1371,110 @@ export function getMatchedProgramsV2(criteria: MatchCriteria): (StartupProgram &
 
   const today = new Date();
 
-  return startupPrograms.map(p => {
+  // 사업 규모 구간 — 월 환산 매출 기반. 영세→소→중소→중견.
+  //   영세: <1천만 / 소규모: 1-5천만 / 중소: 5천만-3억 / 중견: 3억+
+  const monthlyRev = criteria.monthlyAvgRevenue ?? 0;
+  const sizeTier: "micro" | "small" | "medium" | "large" =
+    monthlyRev <= 0 ? "micro"
+    : monthlyRev < 10_000_000 ? "micro"
+    : monthlyRev < 50_000_000 ? "small"
+    : monthlyRev < 300_000_000 ? "medium"
+    : "large";
+
+  return startupPrograms.map((p): ProgramMatch => {
     let score = 0;
+    let personalFitScore = 0; // 개인화 점수 — 마감·status 부스트 제외
     let eligible = true;
+    const reasons: MatchReason[] = [];
+    const addReason = (r: MatchReason) => reasons.push(r);
 
     // ── 기본 자격 체크 ──
     if (p.maxAge && criteria.age && criteria.age > p.maxAge) eligible = false;
-    else if (p.maxAge && criteria.age && criteria.age <= p.maxAge) score += 15;
+    else if (p.maxAge && criteria.age && criteria.age <= p.maxAge) {
+      score += 15; personalFitScore += 15;
+      addReason({ kind: "personal", ko: `만 ${p.maxAge}세 이하 자격`, en: `Age ≤${p.maxAge} qualified`, weight: 15 });
+    }
 
     if (p.businessYearRange && criteria.businessYears !== undefined) {
       const [min, max] = p.businessYearRange;
       if (criteria.businessYears < min || criteria.businessYears > max) eligible = false;
-      else score += 15;
+      else {
+        score += 15; personalFitScore += 15;
+        addReason({ kind: "stage", ko: `창업 ${criteria.businessYears}년차 조건 부합`, en: `${criteria.businessYears}yr-in-biz match`, weight: 15 });
+      }
     }
+
+    // ── 사업 유형 가드 ──
+    if (isFranchise && p.forFranchise === false && p.forSmallBiz === false) eligible = false;
+    if (!isFranchise && p.forFranchise === true && p.forSmallBiz === false) eligible = false;
 
     // ── 매칭 ──
-    if (isFranchise && p.forFranchise) score += 10;
+    if (isFranchise && p.forFranchise) {
+      score += 10; personalFitScore += 10;
+      addReason({ kind: "stage", ko: "프랜차이즈 가맹점 대상", en: "Franchise-eligible", weight: 10 });
+    }
     if (isFranchise && !p.forFranchise && !p.forSmallBiz) score -= 5;
-    if (p.forSmallBiz) score += 10;
+    if (p.forSmallBiz) {
+      score += 10; personalFitScore += 10;
+      addReason({ kind: "size", ko: "소상공인 지원 대상", en: "Small-biz program", weight: 10 });
+    }
 
     if (p.regions && criteria.region) {
-      if (p.regions.some(r => criteria.region!.includes(r))) score += 10;
-      else score -= 3;
+      if (p.regions.some(r => criteria.region!.includes(r))) {
+        score += 10; personalFitScore += 10;
+        addReason({ kind: "region", ko: `${criteria.region} 지역 매칭`, en: `${criteria.region} region`, weight: 10 });
+      } else {
+        score -= 3;
+      }
     }
     if (p.industries && criteria.industryCategoryId) {
-      if (p.industries.includes(criteria.industryCategoryId)) score += 10;
+      if (p.industries.includes(criteria.industryCategoryId)) {
+        score += 15; personalFitScore += 15;
+        addReason({ kind: "industry", ko: `업종(${criteria.industryCategoryId}) 직접 매칭`, en: `Direct industry match`, weight: 15 });
+      }
     }
 
-    // ── 모집 상태 ──
+    // ── 사업 규모 매칭 ──
+    if ((sizeTier === "micro" || sizeTier === "small") && p.forSmallBiz) {
+      score += 12; personalFitScore += 12;
+      addReason({ kind: "size", ko: sizeTier === "micro" ? "영세 사업자 적합" : "소규모 사업자 적합", en: "Fits micro/small biz", weight: 12 });
+    }
+    if ((sizeTier === "medium" || sizeTier === "large") && p.fundingType === "equity") {
+      score += 10; personalFitScore += 10;
+      addReason({ kind: "size", ko: "성장 단계 — 투자 유치 적합", en: "Growth-stage equity match", weight: 10 });
+    }
+    if (sizeTier === "medium" && (p.category === "private" || p.category === "corporate")) {
+      score += 6; personalFitScore += 6;
+    }
+    if (sizeTier === "large" && p.fundingType === "grant" && p.category === "government") {
+      score += 6; personalFitScore += 6;
+    }
+
+    // ── 모집 상태 (정렬용 — personalFit 에는 미반영) ──
     if (p.applicationStatus === "open") score += 20;
     else if (p.applicationStatus === "upcoming") score += 5;
     else if (p.applicationStatus === "closed") score -= 10;
 
     if (p.highlight) score += 5;
 
-    // ── 위기 상황 부스트 — 사장님 현금 위기 시 cash 자금 최상위로 ──
-    if (isCashCrisis && p.fundingType === "cash") score += 30;
-    if (isUrgentCrisis && p.fundingType === "cash") score += 20; // 누적 +50
-    // 위기 시 보증·대출 (단기 현금 확보 가능) 도 약하게 부스트
-    if (isCashCrisis && p.fundingType === "credit") score += 15;
-    // 위기 아닐 땐 투자(equity) 부스트 — 성장 모드
+    // ── 위기 상황 부스트 — personalFit 에도 반영 (사장님 현재 상황은 personal) ──
+    if (isCashCrisis && p.fundingType === "cash") {
+      score += 30; personalFitScore += 30;
+      addReason({ kind: "crisis", ko: "긴급 현금 — 현재 위기 상황에 직접 도움", en: "Crisis cash — direct help", weight: 30 });
+    }
+    if (isUrgentCrisis && p.fundingType === "cash") {
+      score += 20; personalFitScore += 20;
+    }
+    if (isCashCrisis && p.fundingType === "credit") {
+      score += 15; personalFitScore += 15;
+      addReason({ kind: "crisis", ko: "보증·대출 — 단기 현금 확보 가능", en: "Loan/credit — short-term cash", weight: 15 });
+    }
     if (!isCashCrisis && p.fundingType === "equity" && (criteria.businessStage === "growth" || criteria.businessStage === "early")) {
-      score += 15;
+      score += 15; personalFitScore += 15;
+      addReason({ kind: "stage", ko: `${criteria.businessStage === "growth" ? "성장" : "초기"} 단계 — 투자 적합`, en: `${criteria.businessStage}-stage equity`, weight: 15 });
     }
 
-    // ── 마감 임박 부스트 — D-7 이내면 화면 상단 노출 ──
+    // ── 마감 임박 부스트 (정렬용 — personalFit 에는 미반영) ──
     let daysUntilDeadline: number | undefined;
     if (p.applicationDeadline) {
       const deadlineMs = new Date(p.applicationDeadline).getTime();
@@ -1034,10 +1482,13 @@ export function getMatchedProgramsV2(criteria: MatchCriteria): (StartupProgram &
       if (daysUntilDeadline >= 0 && daysUntilDeadline <= 3) score += 50;
       else if (daysUntilDeadline > 3 && daysUntilDeadline <= 7) score += 25;
       else if (daysUntilDeadline > 7 && daysUntilDeadline <= 14) score += 10;
-      else if (daysUntilDeadline < 0) score -= 30; // 마감 지남
+      else if (daysUntilDeadline < 0) score -= 30;
     }
 
-    return { ...p, matchScore: score, eligible, daysUntilDeadline };
+    // weight 내림차순 + 최대 4개로 제한 (UI 노이즈 방지)
+    const matchReasons = reasons.sort((a, b) => b.weight - a.weight).slice(0, 4);
+
+    return { ...p, matchScore: score, personalFitScore, eligible, daysUntilDeadline, matchReasons };
   })
   .sort((a, b) => {
     // 자격 보유 우선
@@ -1063,6 +1514,55 @@ export function getApplicationStatusLabel(status: ApplicationStatus | undefined,
   if (status === "open") return { label: lang === "ko" ? "신청 가능" : "Open", color: "#34c759" };
   if (status === "closed") return { label: lang === "ko" ? "마감" : "Closed", color: "#8e8e93" };
   return { label: lang === "ko" ? "공고 예정" : "Upcoming", color: "#ff9f0a" };
+}
+
+/**
+ * 추천 프로그램 — *개인화 점수* 만으로 정렬해 상위 N개 반환.
+ *
+ *  ⚠️ getMatchedProgramsV2 와의 차이:
+ *   · getMatchedProgramsV2 는 *디폴트 목록* 정렬: 마감 임박 > 상태(open) > 점수.
+ *     → "지금 당장 신경 쓸 것" 순서 (운영 중심).
+ *   · getRecommendedPrograms 는 *추천 모드* 정렬: 오로지 personalFitScore 내림차순.
+ *     → "당신께 얼마나 잘 맞는가" 순서 (개인화 중심).
+ *
+ *  필터링:
+ *   1. 마감 지난 프로그램 제외 (applicationStatus === "closed")
+ *   2. eligible === false 제외 (자격 미충족)
+ *   3. personalFitScore >= 25 (의미 없는 매칭 컷오프)
+ *
+ *  결과: 최대 limit 개 (디폴트 6) — 사장님이 "정말 우리 가게에 맞는" 것만 보임.
+ *
+ *  ── 사용자 지침 (2026-05-11) ────────────────────────────
+ *   "그냥 상단 6개를 추천 지원 프로그램으로 뽑는 거 아니야? 뭔가 이상한데."
+ *   → 디폴트 정렬 (마감·상태 부스트 포함) 의 상위 N개를 그대로 추천으로 쓰면
+ *     "마감 임박한 것" 이 추천 1위가 됨 (개인화 X). 이 함수가 그 문제를 해결.
+ *  ──────────────────────────────────────────────────────────
+ */
+export function getRecommendedPrograms(
+  criteria: MatchCriteria,
+  limit: number = 6,
+  minFitScore: number = 25,
+): ProgramMatch[] {
+  const all = getMatchedProgramsV2(criteria);
+  return all
+    .filter((p) => p.applicationStatus !== "closed")
+    .filter((p) => p.eligible)
+    .filter((p) => p.personalFitScore >= minFitScore)
+    .sort((a, b) => {
+      // 1. 개인화 점수 내림차순 (마감·상태 무관)
+      if (b.personalFitScore !== a.personalFitScore) {
+        return b.personalFitScore - a.personalFitScore;
+      }
+      // 2. 동점 — 신청 가능 우선 (실용성)
+      const aOpen = a.applicationStatus === "open" ? 0 : 1;
+      const bOpen = b.applicationStatus === "open" ? 0 : 1;
+      if (aOpen !== bOpen) return aOpen - bOpen;
+      // 3. 그래도 동점 — highlight 우선
+      if (a.highlight && !b.highlight) return -1;
+      if (!a.highlight && b.highlight) return 1;
+      return 0;
+    })
+    .slice(0, limit);
 }
 
 /** Category label */

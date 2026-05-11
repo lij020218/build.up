@@ -247,6 +247,20 @@ export function InventoryOpsCard({
   const [showAllInventory, setShowAllInventory] = useState(false);
   const [inventorySnapshot, setInventorySnapshot] = useState<InventoryEntry[]>([]);
 
+  // VendorSetupStage(공급처·장비 단계)에서 사장님이 선택한 공급처를
+  //  재고 추가 폼의 supplierName 입력 시 datalist 로 자동 제안.
+  //  ── 키 스키마: `vendor-setup_s1_c{cursor}` (s1 = 공급처)
+  //     · 값(string)이 공급처 이름이므로 별도 ID-label 매핑 불필요.
+  //  ── 데이터 흐름: VendorSetupStage → roadmap-store.vendorSelections → 여기.
+  const supplierSuggestions = (() => {
+    const sel = (d.vendorSelections ?? {}) as Record<string, string>;
+    const names = Object.entries(sel)
+      .filter(([k]) => k.startsWith("vendor-setup_s1_"))
+      .map(([, v]) => (typeof v === "string" ? v.trim() : ""))
+      .filter((v) => v.length > 0);
+    return Array.from(new Set(names));
+  })();
+
   // 팝업 열릴 때 body 스크롤 잠금 + ESC 키 닫기
   useEffect(() => {
     if (showAllInventory) {
@@ -510,7 +524,18 @@ export function InventoryOpsCard({
       </div>
 
       <div style={listStack}>
-        {(lowStockItems.length > 0 ? lowStockItems : inventory).slice(0, 4).map((item) => {
+        {/* 발주 필요(critical → warning) 품목을 상단으로 정렬 후 top 4 노출. 2026-05-11 */}
+        {[...inventory]
+          .map((item) => {
+            const threshold = item.minThreshold ?? 0;
+            const isLow = lowStockItems.some((c) => c.id === item.id);
+            // urgency: 0 = critical (quantity ≤ 0), 1 = warning (low stock), 2 = normal
+            const urgencyRank = threshold > 0 && item.quantity <= 0 ? 0 : isLow ? 1 : 2;
+            return { item, urgencyRank };
+          })
+          .sort((a, b) => a.urgencyRank - b.urgencyRank)
+          .slice(0, 4)
+          .map(({ item }) => {
           const isLow = lowStockItems.some((c) => c.id === item.id);
           const threshold = item.minThreshold ?? 0;
           const urgency = threshold > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
@@ -597,10 +622,20 @@ export function InventoryOpsCard({
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>✕</button>
             </div>
-            {/* list */}
+            {/* list — 발주 필요(critical → warning) 품목 상단 정렬 */}
             <div style={{ overflowY: "auto", padding: "12px 24px 24px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-              {inventorySnapshot.map((item) => {
-                const isLow = item.quantity <= (item.minThreshold ?? 0);
+              {[...inventorySnapshot]
+                .sort((a, b) => {
+                  const rank = (it: InventoryEntry) => {
+                    const th = it.minThreshold ?? 0;
+                    if (th > 0 && it.quantity <= 0) return 0;       // critical
+                    if (th > 0 && it.quantity <= th) return 1;      // warning (low)
+                    return 2;                                        // normal
+                  };
+                  return rank(a) - rank(b);
+                })
+                .map((item) => {
+                const isLow = (item.minThreshold ?? 0) > 0 && item.quantity <= (item.minThreshold ?? 0);
                 const urgency = (item.minThreshold ?? 0) > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
                 const urgencyColor = urgency === "critical" ? "#b42318" : urgency === "warning" ? "#e85d04" : "#177245";
                 return (
@@ -811,9 +846,22 @@ export function InventoryOpsCard({
               type="text"
               value={invForm.supplierName}
               onChange={(event) => d.setInvForm((prev) => ({ ...prev, supplierName: event.target.value }))}
-              placeholder={ko ? "공급업체명" : "Supplier"}
+              placeholder={
+                supplierSuggestions.length > 0
+                  ? (ko ? `공급업체명 (선택한 ${supplierSuggestions.length}곳 자동 제안)` : `Supplier (${supplierSuggestions.length} suggested)`)
+                  : (ko ? "공급업체명" : "Supplier")
+              }
+              list={supplierSuggestions.length > 0 ? "buildup-supplier-suggestions" : undefined}
               style={inputStyle}
+              autoComplete="off"
             />
+            {supplierSuggestions.length > 0 && (
+              <datalist id="buildup-supplier-suggestions">
+                {supplierSuggestions.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+            )}
             <input
               type="text"
               value={invForm.url}

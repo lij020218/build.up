@@ -5,7 +5,7 @@
  * 동일 그라운딩 파이프라인 (Tavily + Naver + Claude web_search).
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "@build-up/ai/utils/client";
 import {
   fetchNaverDataLab,
   fetchNaverBlogSearch,
@@ -200,71 +200,67 @@ export async function generateTrends(input: GenerateTrendsInput): Promise<Genera
     groundingBlock = "\n[외부 데이터 소스 미구성 — web_search 툴로 직접 수집하세요]\n";
   }
 
-  const prompt = `오늘은 ${today}입니다.
-당신은 한국 ${bizLabel} 업종의 소셜 미디어 마케팅 전문가입니다.
+  // ⚠️ 2026-05-11 사용자 요청 강화:
+  //   "실제로 유튜브나 인스타그램에서 지금 조회수 잘 나오는 트렌디한 마케팅·밈·유행 영상"
+  //   → 추상적 카테고리("쇼츠 트렌드") 가 아닌 *실제 영상 5개 직접 추천*.
+  //   referenceUrl 필수 (null 금지), 조회수·게시일을 reason 에 직접 인용.
+  const hasYoutubeData = grounding.youtubeVideos.length >= 3;
+  const prompt = `오늘 ${today} · 한국 ${bizLabel} 업종 소셜 미디어 *실제 트렌딩 영상* 5개.
 
 ${groundingBlock}
 
-🚨 **절대 준수 — 할루시네이션 금지**:
-- 모든 사실·수치·브랜드 사례는 **반드시 위의 Tavily 결과 또는 web_search 결과에 명시된 정보**만 사용.
-- 웹에서 검증되지 않은 **모든 구체 수치(+34% 등)·브랜드 이름·캠페인명 언급 절대 금지**.
-- web_search에서 못 찾은 브랜드 사례는 **아예 언급 안 함** — 추측·일반 지식·상상 금지.
-- 검증 불가능한 영역은 **방향성 문구**("효과적이다", "주목받고 있다")로만 서술. 수치 없이.
-- strategyExample·effectiveness 필드에 등장하는 **모든 브랜드·수치는 web_search 결과의 실제 URL 인용** 필수. 없으면 필드를 null로 남기기.
+🎯 **목표**: 사장님이 5초 안에 "오 이 영상 봐, 우리도 비슷하게 찍자" 느끼는 *실제 영상 5개*.
+   추상적 트렌드 카테고리 금지. "쇼츠 트렌드 활용" 같은 일반론 X. **구체 영상 1개를 사례로 직접 인용**.
 
-**생성 절차**:
-1. web_search 툴로 "한국 [업종] 인스타그램 릴스 트렌드 최근 2주" 등 검색 실행
-2. Tavily 결과 + web_search 결과에 있는 **구체적으로 인용 가능한** 내용만 추려냄
-3. 그 중 위 ${bizLabel} 업종에 적용 가능한 실제 포맷·밈 5개 선정
-4. 각 트렌드에 대해 아래 필드 작성 — **근거 없으면 해당 필드는 null**
+📌 **선정 기준** (반드시 위 grounding 데이터 또는 web_search 결과 기반):
+${hasYoutubeData
+    ? `1. 위 [YouTube KR 실시간 트렌딩] 목록에서 ${bizLabel} 업종과 *조금이라도 연결 가능한* 영상 5개 우선 선정.
+2. 게시일 최근 14일 + 조회수 명시된 것만.
+3. 그 영상에서 본 *포맷·밈·연출 패턴*을 사장님 가게에 어떻게 적용할지 1문장.`
+    : `1. web_search 로 "${bizLabel} 쇼츠 조회수 100만" 등 검색해 최근 14일 실제 트렌딩 영상 5개 찾기.
+2. 영상 URL·제목·게시일·조회수 명시 가능한 것만.`}
+4. **각 영상 1개 = 트렌드 1개**. 일반화 X.
 
-**각 트렌드 필드**:
-- **title** — 15자 이내. 검색 결과에서 나온 실제 포맷/밈 이름
-- **reason** — 왜 지금 유행인가 1문장. Tavily/web_search 결과의 구체 인용·URL 기반
-- **contentIdea** — 이 업종이 따라할 구체 적용법 1~2문장
-- **format** — reel / story / short / post / blog 중 하나
-- **hashtags** — 3~5개. 검색 결과에 실제로 등장한 태그 우선
-- **referenceUrl** — Tavily/web_search 결과의 실제 URL. 없으면 null
-- **howToExecute** — 3~5단계 실행. 검증 불가능한 구체 수치 없이 절차적 행동만 기술
-- **strategyExample** — **web_search/Tavily에서 확인 가능한 브랜드 사례**가 있을 때만 기술. 없으면 null. 구체 수치 포함 시 그 수치가 인용된 URL을 referenceUrl에 명시
-- **effectiveness** — 검색 결과에서 인용된 기대 효과만. 출처 없으면 null 또는 방향성 문구만
-- **tools** — 2~4개 도구. **해당 포맷에 실제로 필요한 도구만** (CapCut/Midjourney/Gemini/Meta Business Suite/Canva/YouTube Audio Library 등 널리 알려진 도구)
+**필드** (각 트렌드):
+- **title** — 영상에서 본 *포맷/밈 이름* 15자 이내 (예: "음식 ASMR 원테이크", "주문~플레이팅 컷")
+- **reason** — 그 영상의 *조회수 + 게시일* 직접 인용 (예: "5일 전 게시, 850만회 조회 · 댓글 폭주"). grounding 데이터에 있는 숫자 그대로.
+- **contentIdea** — 이 업종이 어떻게 따라할지 1문장 (예: "주문 받자마자 김밥 마는 모습을 30초 안에 원테이크로")
+- **format** — reel / story / short / post / blog
+- **hashtags** — 2~3개. 영상 제목에서 도출
+- **referenceUrl** — **그 영상의 실제 URL (필수, null 금지)**. grounding 데이터의 URL 그대로.
+- **strategyExample** — 그 영상의 *채널명/브랜드명* 1줄 또는 null (예: "백종원 유튜브 채널의 '5분 김밥' 영상")
+- **tools** — 따라할 때 쓸 1~2개 도구 (CapCut/캡컷/InShot/Canva 등)
 
-⚠️ 출력 형식 엄수:
-- **코드블록(${"```"}) 금지**
-- **JSON 값 안에 <cite>, </cite> 같은 XML/HTML 태그 절대 넣지 말 것** — citation은 referenceUrl 필드로만
-- **쌍따옴표는 반드시 이스케이프** (\\")
-- **검증 안 된 필드는 null** — 빈 문자열·추측 금지
+⚠️ 엄수:
+- 5개 모두 *referenceUrl* 채울 것. 못 채우면 그 영상은 빼고 4개만 출력.
+- 일반론("리뷰가 중요", "단골 만들기") 절대 금지. *영상 자체*가 중심.
+- 코드블록·<cite> 태그 금지. 쌍따옴표 이스케이프.
 
-반드시 아래 JSON 배열로만 응답:
+JSON 배열만 응답:
 [
   {
-    "title": "트렌드 제목 (15자 이내)",
-    "reason": "웹에서 확인된 유행 이유 1문장 (출처 URL은 referenceUrl에)",
-    "contentIdea": "구체 적용법 1~2문장",
-    "format": "reel" | "story" | "short" | "post" | "blog",
-    "hashtags": ["#태그1", "#태그2", "#태그3"],
-    "referenceUrl": "https://... (실제 검색 결과 URL) 또는 null",
-    "howToExecute": ["① ...", "② ...", "③ ..."],
-    "strategyExample": "검색 결과에서 확인된 브랜드 사례 또는 null",
-    "effectiveness": "검색 결과에서 인용된 효과 또는 null",
-    "tools": [
-      {"name": "CapCut", "purpose": "용도", "tier": "freemium", "url": "https://www.capcut.com"}
-    ]
+    "title": "포맷 이름 15자",
+    "reason": "X일 전 게시, Y회 조회 — 핵심 매력 1문장",
+    "contentIdea": "이 가게가 어떻게 따라할지 1문장",
+    "format": "short",
+    "hashtags": ["#태그1", "#태그2"],
+    "referenceUrl": "https://www.youtube.com/watch?v=... (필수)",
+    "strategyExample": "채널명 또는 브랜드명 1줄",
+    "tools": [{"name": "CapCut", "purpose": "편집", "tier": "freemium", "url": "https://www.capcut.com"}]
   }
 ]`;
 
-  // 3. Claude 호출 (Sonnet 4.6 · web_search 활성화 · 할루시네이션 방지)
-  const client = new Anthropic({ apiKey: anthropicApiKey });
+  // 3. Claude 호출 (Sonnet 4.6 · web_search 활성화 · 빠른 응답)
+  const client = createAiClient(anthropicApiKey);
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 8192,
+    max_tokens: 3072,                         // 8192 → 3072 (짧은 응답)
     tools: [
       {
         type: "web_search_20260209",
         name: "web_search",
-        max_uses: 8,
-      } as unknown as Anthropic.Messages.Tool,
+        max_uses: 3,                          // 8 → 3 (속도·안정성)
+      } as unknown,
     ],
     messages: [{ role: "user", content: prompt }],
   });

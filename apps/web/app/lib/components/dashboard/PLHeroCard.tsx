@@ -24,10 +24,20 @@ type Props = {
   prevMonthSales?: number;
   prevMonthCosts?: number;
   breakEvenDailySales?: number;
+  /** 월간 손익분기 매출 목표 (원) — 손익분기 카드의 *분모* 명시 */
+  breakEvenMonthlySales?: number;
   todaySales?: number;
   todayBepProgress?: number;
   daysAboveBreakEven?: number;
   totalDaysRecorded?: number;
+  /**
+   * SSOT(cost-ratios.ts) 의 신뢰도 플래그.
+   *  false 면 days<7 또는 매출 표본부족 → 모든 비율 0. UI 는 "—" 와 데이터 보강 안내 표시.
+   *  종전엔 "재료비 0.0%" / "임대료 0.0%" 가 *실제 0%* 처럼 노출되어 사용자 혼란.
+   */
+  ratiosReady?: boolean;
+  /** 월 환산 매출 — 비율 계산의 *실제 분모* (근거 라인 표시용) */
+  monthlyRevenueEquivalent?: number;
   /** 업종별 COGS 레이블 (기본: 재료비/Food) */
   cogsLabel?: { ko: string; en: string };
   /**
@@ -54,8 +64,11 @@ export function PLHeroCard({
   ingredientRatio, laborRatio, rentRatio, primeCost,
   projectedProfit, workingDays, ko, fmt,
   prevMonthSales, prevMonthCosts,
-  breakEvenDailySales, todaySales, todayBepProgress,
+  breakEvenDailySales, breakEvenMonthlySales,
+  todaySales, todayBepProgress,
   daysAboveBreakEven, totalDaysRecorded,
+  ratiosReady,
+  monthlyRevenueEquivalent,
   cogsLabel,
   expenseFields,
 }: Props) {
@@ -136,7 +149,7 @@ export function PLHeroCard({
   }
 
   return (
-    <div style={card}>
+    <div style={card} data-pl-hero>
       {/* header — eyebrow + (옵션) 위험 점 표시 */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -179,11 +192,13 @@ export function PLHeroCard({
             ))}
           </div>
 
-          {/* BEP progress */}
+          {/* 월간 BEP progress — 월 환산 매출 / 월 비용 */}
           {hasCosts && (
             <div style={{ marginTop: "14px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <span style={{ fontSize: "11.5px", color: "#191970", opacity: 0.7, fontWeight: 600 }}>{ko ? "손익분기 달성" : "Break-even"}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", alignItems: "baseline" }}>
+                <span style={{ fontSize: "11.5px", color: "#191970", opacity: 0.7, fontWeight: 600 }}>
+                  {ko ? "월간 손익분기 달성" : "Monthly break-even"}
+                </span>
                 <span style={{ fontSize: "12px", fontWeight: 700, color: bepProgress >= 100 ? "#34c759" : "#191970", fontVariantNumeric: "tabular-nums" as const }}>
                   <CountUp to={bepProgress} duration={1.0} format={(n) => `${Math.round(n)}%`} />
                 </span>
@@ -197,6 +212,24 @@ export function PLHeroCard({
                 delay={0.4}
                 duration={1.1}
               />
+              {/* 분자·분모 명시 — 사용자가 *왜 N%인지* 즉시 이해 */}
+              {monthlyRevenueEquivalent != null && (
+                <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.5)", marginTop: "5px", letterSpacing: "-0.005em" }}>
+                  {ko
+                    ? `월 환산 매출 ${fmt(monthlyRevenueEquivalent)}`
+                    : `Monthly equiv. revenue ${fmt(monthlyRevenueEquivalent)}`}
+                  {" · "}
+                  {ko ? `월 비용 ${fmt(totalCosts)}` : `Monthly cost ${fmt(totalCosts)}`}
+                  {breakEvenMonthlySales != null && breakEvenMonthlySales > 0 && (
+                    <>
+                      {" · "}
+                      {ko
+                        ? `목표 ${fmt(breakEvenMonthlySales)}`
+                        : `Target ${fmt(breakEvenMonthlySales)}`}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -209,9 +242,9 @@ export function PLHeroCard({
               background: todayBepProgress != null && todayBepProgress >= 100 ? "rgba(52,199,89,0.05)" : "rgba(25,25,112,0.03)",
               border: todayBepProgress != null && todayBepProgress >= 100 ? "1px solid rgba(52,199,89,0.16)" : "1px solid rgba(25,25,112,0.06)",
             }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
                 <span style={{ fontSize: "11.5px", fontWeight: 600, color: "#191970", opacity: 0.7 }}>
-                  {ko ? "오늘 손익분기" : "Today's BEP"}
+                  {ko ? "오늘 일일 손익분기" : "Today's daily BEP"}
                 </span>
                 <span style={{ fontSize: "12px", fontWeight: 700, color: todayBepProgress != null && todayBepProgress >= 100 ? "#34c759" : "#0f0f4a", fontVariantNumeric: "tabular-nums" as const }}>
                   {(() => {
@@ -220,6 +253,12 @@ export function PLHeroCard({
                     return ko ? `BEP까지 ${fmt(Math.abs(gap))} 남음` : `${fmt(Math.abs(gap))} to BEP`;
                   })()}
                 </span>
+              </div>
+              {/* 일일 BEP 분자·분모 명시 */}
+              <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.5)", marginBottom: "7px", letterSpacing: "-0.005em" }}>
+                {ko
+                  ? `오늘 매출 ${fmt(todaySales ?? 0)} / 일일 BEP 목표 ${fmt(breakEvenDailySales)}`
+                  : `Today ${fmt(todaySales ?? 0)} / Daily BEP target ${fmt(breakEvenDailySales)}`}
               </div>
               <AnimatedProgressBar
                 pct={todayBepProgress ?? 0}
@@ -240,27 +279,62 @@ export function PLHeroCard({
             </div>
           )}
 
-          {/* ratio bars */}
-          {hasCosts && (
+          {/* ratio bars — ratiosReady=false 면 "—" + 데이터 보강 안내로 대체.
+              종전엔 SSOT 가 ready=false 일 때 0 반환 → UI 가 "재료비 0.0%" 로 *실제 0%* 처럼 노출 (사용자 혼란). */}
+          {hasCosts && ratiosReady === false && (
+            <div style={{
+              marginTop: "12px",
+              padding: "12px 14px",
+              borderRadius: "10px",
+              background: "rgba(25,25,112,0.04)",
+              border: "1px dashed rgba(25,25,112,0.18)",
+              display: "flex", alignItems: "flex-start", gap: "8px",
+            }}>
+              <span style={{ fontSize: "12px", lineHeight: 1.4, color: "#191970", opacity: 0.7, flexShrink: 0 }}>ⓘ</span>
+              <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55 }}>
+                {ko ? (
+                  <>
+                    <b style={{ color: "#0f172a" }}>비용 비율은 아직 계산되지 않았습니다.</b>
+                    <br />
+                    {workingDays < 7
+                      ? `매출 ${workingDays}일치만 입력됨 — 7일+ 입력 후 정확한 ${ingredientsLabel.ko}·${laborLabel.ko}·${rentLabel.ko} 비율이 표시됩니다.`
+                      : "월 환산 매출이 비용 대비 너무 작아 비율 신뢰 불가. 매출을 더 입력하거나 월말까지 데이터를 모아주세요."}
+                  </>
+                ) : (
+                  <>
+                    <b style={{ color: "#0f172a" }}>Cost ratios not yet computed.</b>
+                    <br />
+                    {workingDays < 7
+                      ? `Only ${workingDays} day(s) of sales — need 7+ for reliable ${ingredientsLabel.en}/${laborLabel.en}/${rentLabel.en} ratios.`
+                      : "Sample too small vs. costs — add more sales entries."}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {hasCosts && ratiosReady !== false && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "12px" }}>
               {ratios.map((r) => {
                 const isOutlier = r.value > 200 || r.value < 0;
+                const isZero = r.value <= 0;
                 return (
                 <div key={r.label} style={{ padding: "10px 12px", background: "rgba(25,25,112,0.025)", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.05)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.6)", fontWeight: 600 }}>{r.label}</span>
                     <span style={{
                       fontSize: "12px", fontWeight: 700,
-                      color: isOutlier ? "rgba(15,23,42,0.4)" : hColor(r.h),
+                      color: isOutlier ? "rgba(15,23,42,0.4)" : isZero ? "rgba(15,23,42,0.4)" : hColor(r.h),
                       fontVariantNumeric: "tabular-nums" as const,
                       letterSpacing: "-0.005em",
                     }}>
-                      {isOutlier ? (ko ? "확인 필요" : "Check data") : `${r.value.toFixed(1)}%`}
+                      {isOutlier ? (ko ? "확인 필요" : "Check data")
+                        : isZero ? (ko ? "미입력" : "Not entered")
+                        : `${r.value.toFixed(1)}%`}
                     </span>
                   </div>
                   <div style={{ position: "relative", marginTop: "6px" }}>
                     <AnimatedProgressBar
-                      pct={isOutlier ? 0 : Math.min(r.value, 100)}
+                      pct={isOutlier || isZero ? 0 : Math.min(r.value, 100)}
                       color={hColor(r.h)}
                       trackColor={`${hColor(r.h)}14`}
                       height={3}

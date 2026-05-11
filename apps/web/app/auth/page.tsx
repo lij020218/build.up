@@ -271,9 +271,22 @@ export default function AuthPage() {
                   height: 40,
                   borderRadius: 10,
                   background: "linear-gradient(135deg, #5B8CFF 0%, #1D3557 100%)",
-                  margin: "0 auto 12px"
+                  margin: "0 auto 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  fontSize: 22,
+                  fontWeight: 700,
+                  fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.18)",
                 }}
-              />
+                aria-hidden="true"
+              >
+                b
+              </div>
               <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>build.up</div>
             </div>
 
@@ -309,36 +322,6 @@ export default function AuthPage() {
                   {modeLabel(m, language)}
                 </button>
               ))}
-            </div>
-
-            {/* 기기 간 동기화 안내 — 같은 이메일 = 같은 user_id = 같은 데이터 (한 번만 강조) */}
-            <div
-              style={{
-                background: "rgba(0,113,227,0.08)",
-                border: "1px solid rgba(0,113,227,0.18)",
-                borderRadius: 10,
-                padding: "11px 14px",
-                marginBottom: 14,
-                fontSize: 12.5,
-                lineHeight: 1.55,
-                color: "rgba(255,255,255,0.78)",
-              }}
-            >
-              {language === "ko" ? (
-                <>
-                  <span style={{ color: "rgba(255,255,255,0.92)", fontWeight: 600 }}>📱💻 어디서나 같은 데이터</span>
-                  <br />
-                  데스크탑·노트북·모바일·다른 도메인 어디서든 <strong>같은 이메일로 로그인</strong>하시면
-                  매출·손익·가게 정보가 그대로 보입니다. 데이터는 100% 클라우드(Supabase)에 저장되며 기기별로 분리되지 않습니다.
-                </>
-              ) : (
-                <>
-                  <span style={{ color: "rgba(255,255,255,0.92)", fontWeight: 600 }}>📱💻 Same data, any device</span>
-                  <br />
-                  Desktop, laptop, mobile, or any domain — <strong>sign in with the same email</strong> and
-                  your sales, P&L, and store info appear instantly. Data lives in the cloud (Supabase), not on individual devices.
-                </>
-              )}
             </div>
 
             {/* form */}

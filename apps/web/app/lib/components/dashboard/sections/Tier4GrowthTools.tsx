@@ -9,8 +9,8 @@
  *   - ProgressMilestonesCard    — 마일스톤 진행
  *   - CustomerInterviewCard     — 고객 인터뷰
  *   - InsuranceSimulatorCard    — 4대보험 시뮬레이터 (직원 ≥1 또는 인건비 입력)
- *   - PolicyFundMatchCard       — 정책자금 매칭 (런웨이 ≥6개월일 때만, 평상시)
  *   - WeeklyReport              — 주간 리포트 (streak ≥7)
+ *   ※ PolicyFundMatchCard 는 2026-05 Tier 1.5 로 승격 (발견율 개선)
  *
  * 자세한 분기 표 → `DASHBOARD_MAP.md`
  */
@@ -23,7 +23,6 @@ import { WeeklyTimeReport } from "../WeeklyTimeReport";
 import { ProgressMilestonesCard } from "../ProgressMilestonesCard";
 import { CustomerInterviewCard } from "../CustomerInterviewCard";
 import { InsuranceSimulatorCard } from "../InsuranceSimulatorCard";
-import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { WeeklyReport } from "../WeeklyReport";
 
 type Props = {
@@ -87,19 +86,7 @@ export function Tier4GrowthTools({ d, c, ko, fmt }: Props) {
         <InsuranceSimulatorCard ko={ko} currentEmployeeCount={c.employees.length} />
       )}
 
-      {/* 정책자금 매칭 — 평상시 (위기 시 Tier 1.5 로 elevation) */}
-      {!c.cashflowCriticalElevation && (
-        <PolicyFundMatchCard
-          ko={ko}
-          input={{
-            businessYears: c.daysSinceLaunch / 365.25,
-            monthlySalesWon: c.totalSales,
-            employeeCount: c.employees.length,
-            salesDeclinePct: c.weeklySalesChange < 0 ? Math.abs(c.weeklySalesChange) : 0,
-            industryCategoryId: d.industryCategoryId,
-          }}
-        />
-      )}
+      {/* 정책자금 매칭 — 2026-05 Tier 1.5 (c-1) 로 이동 (Tier 4 접힘으로 발견율 낮음) */}
 
       {/* 주간 리포트 — streak ≥7 일 때만 */}
       {c.streak >= 7 && <WeeklyReport d={d} ko={ko} fmt={fmt} />}

@@ -41,6 +41,19 @@ type ProfileState = {
    *  사용자 요청 (2026-05-09): 임금체불 방지 — D-7 / D-2 / D-day 사장님께 알림.
    */
   payDay: number | null;
+  /**
+   * North Star Metric — 사장님이 직접 고른 "내 사업의 단 1개 숫자".
+   *  CEOMorningHero 의 거대 hero number 가 이걸 따라감.
+   *  null = 자동 (스타트업→런웨이, 외식→일매출). 베스트 프랙티스: YC, Facebook MAU, Uber weekly trips.
+   *  옵션: "auto" | "todaySales" | "avgDailySales14d" | "customers" | "aov" | "weeklySales7d" | "monthlyProfit" | "runway" | "mrr"
+   */
+  northStarMetric: string | null;
+  /**
+   * 사장님이 숨긴 대시보드 카드 ID 리스트.
+   *  카드 id 카탈로그 → `app/lib/dashboard-cards-meta.ts` (SSOT).
+   *  essential 카드는 메타에서 차단되어 여기 들어와도 무시됨 (안전망).
+   */
+  hiddenCards: string[];
 };
 
 type ProfileActions = {
@@ -72,6 +85,9 @@ type ProfileActions = {
   setBusinessLaunched: (v: boolean) => void;
   setBusinessLaunchedDate: (v: string | null) => void;
   setStartupOperatingMode: (v: "indie" | "bootstrap" | "seed" | "seriesA") => void;
+  setNorthStarMetric: (v: string | null) => void;
+  setHiddenCards: (v: string[]) => void;
+  toggleHiddenCard: (id: string) => void;
   resetAll: () => void;
 };
 
@@ -104,6 +120,8 @@ const initialState: ProfileState = {
   businessLaunched: false,
   businessLaunchedDate: null,
   startupOperatingMode: "bootstrap",
+  northStarMetric: null,
+  hiddenCards: [],
 };
 
 export const useProfileStore = create<ProfileState & ProfileActions>()(
@@ -138,6 +156,13 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       setBusinessLaunched: (v) => set({ businessLaunched: v }),
       setBusinessLaunchedDate: (v) => set({ businessLaunchedDate: v }),
       setStartupOperatingMode: (v) => set({ startupOperatingMode: v }),
+      setNorthStarMetric: (v) => set({ northStarMetric: v }),
+      setHiddenCards: (v) => set({ hiddenCards: Array.from(new Set(v)) }),
+      toggleHiddenCard: (id) => set((s) => ({
+        hiddenCards: s.hiddenCards.includes(id)
+          ? s.hiddenCards.filter((x) => x !== id)
+          : [...s.hiddenCards, id],
+      })),
       resetAll: () => set(initialState),
     }),
     {
@@ -165,6 +190,8 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
         businessLaunched: state.businessLaunched,
         businessLaunchedDate: state.businessLaunchedDate,
         startupOperatingMode: state.startupOperatingMode,
+        northStarMetric: state.northStarMetric,
+        hiddenCards: state.hiddenCards,
         selectedInteriorConcept: state.selectedInteriorConcept,
       }),
     },

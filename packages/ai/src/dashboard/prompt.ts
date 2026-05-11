@@ -4,7 +4,7 @@
 // 임계값(프라임코스트 65%, 런웨이 3개월 등) 은 모두 SSOT(`@build-up/shared`/unified-health.ts)
 // 의 COMMON_THRESHOLDS / COST_RATIO_THRESHOLDS 에서 가져와 한 곳에서 관리됩니다.
 
-import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, getFeatureCatalogPromptText } from "@build-up/shared";
+import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, getFeatureCatalogPromptText, calculateCostRatios } from "@build-up/shared";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 // 위기 자동 감지에 사용하는 컷오프 — 모든 시스템과 동일한 값
@@ -547,6 +547,12 @@ export type DashboardContext = {
   totalMarketingSpend?: number;
   activeChannels?: string[];
   marketingRoas?: number;
+  /**
+   * 등록된 제품·메뉴 수 — 재료비 비율 신뢰도 판정용.
+   *  제품이 0개면 원자재 비용은 있어도 *매출 원가* 라고 단정할 수 없음 (사장님이 아직 메뉴 등록 안 한 단계).
+   *  → ratiosReady 가드의 한 축. 사용자 신고: 원자재만 등록되고 제품 미등록인데 "재료비 1375%" 거짓 인사이트 나옴.
+   */
+  productCount?: number;
   // 룰 기반 선제 진단 (web app 의 profit-anomaly-detector 가 사전 계산해서 전달)
   // AI 가 단순 데이터 분석을 넘어 "재료비가 8% 올랐는데 이렇게 하세요" 같은
   // 구체적·맥락 기반 코칭을 생성할 수 있도록 컨텍스트 보강
@@ -570,9 +576,27 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
 
   // 업종별 벤치마크 자동 삽입
   const benchmarks = getBenchmarks(ctx.industryCategoryId);
-  const ingRatio = ctx.monthlySales > 0 ? (ctx.monthlyCosts.ingredients / ctx.monthlySales * 100).toFixed(1) : "0";
-  const labRatio = ctx.monthlySales > 0 ? (ctx.monthlyCosts.labor / ctx.monthlySales * 100).toFixed(1) : "0";
-  const rentRatio = ctx.monthlySales > 0 ? (ctx.monthlyCosts.rent / ctx.monthlySales * 100).toFixed(1) : "0";
+
+  // ⚠️ CRITICAL (2026-05-11): 비율 신뢰도 가드 — 거짓 비율 생성 차단.
+  //  사용자 신고: 식재료만 138만 등록 + 며칠치 매출 10만 → "재료비 1375%" 거짓 인사이트.
+  //
+  //  사장님 지침: "비율을 쓰지 말라는게 아니라 *거짓으로 만들어내지 말라*는거야.
+  //   재료비는 원자재 비용 + 제품 등록 + 매출 정보가 충분히 완료된다면 계산해도 되겠지만
+  //   그렇지 않은데도 1375% 거짓 비율 만들어낸게 문제."
+  //
+  //  비율 신뢰 조건 (모두 충족):
+  //   1. monthlySales > 0 (매출 입력됨)
+  //   2. monthlySales >= totalCost / 5 (표본이 비용 대비 충분 — cost-ratios.ts SSOT 와 동일)
+  //   3. productCount 가 정의되었을 경우, > 0 (제품·메뉴 등록 완료 → 재료비를 매출원가로 매핑 가능)
+  //      ※ undefined 면 검사 생략 (구버전 클라이언트 호환).
+  const productsRegistered = ctx.productCount === undefined || ctx.productCount > 0;
+  const ratiosReady =
+    ctx.monthlySales > 0 &&
+    (totalCost === 0 || ctx.monthlySales >= totalCost / 5) &&
+    productsRegistered;
+  const ingRatio = ratiosReady ? (ctx.monthlyCosts.ingredients / ctx.monthlySales * 100).toFixed(1) : null;
+  const labRatio = ratiosReady ? (ctx.monthlyCosts.labor / ctx.monthlySales * 100).toFixed(1) : null;
+  const rentRatio = ratiosReady ? (ctx.monthlyCosts.rent / ctx.monthlySales * 100).toFixed(1) : null;
 
   // 성장 단계 판별
   const stage = ctx.daysSinceLaunch < 90 ? "생존기 (0-90일)" :
@@ -585,11 +609,12 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
     crisisSignals.push(`현금 런웨이 ${ctx.runway}개월 — 즉시 현금 방어 필요`);
   if (ctx.weeklyChange < CRISIS_THR.weeklyDeclineCrit)
     crisisSignals.push(`주간 매출 ${ctx.weeklyChange}% 하락 — 원인 진단 필요`);
-  if (ctx.primeRate > CRISIS_THR.primeCostCritical)
+  // 비율 기반 위기 진단 — ratiosReady 일 때만. 미준비 시 거짓 폭주 알림 차단.
+  if (ratiosReady && ctx.primeRate > CRISIS_THR.primeCostCritical)
     crisisSignals.push(`프라임코스트 ${ctx.primeRate}% — ${CRISIS_THR.primeCostCritical}% 위험선 초과`);
-  if (ctx.monthlySales > 0 && (ctx.monthlyCosts.labor / ctx.monthlySales * 100) > CRISIS_THR.laborCritical)
+  if (ratiosReady && (ctx.monthlyCosts.labor / ctx.monthlySales * 100) > CRISIS_THR.laborCritical)
     crisisSignals.push(`인건비 비율 ${labRatio}% — ${CRISIS_THR.laborCritical}% 초과`);
-  if (ctx.monthlySales > 0 && (ctx.monthlyCosts.rent / ctx.monthlySales * 100) > CRISIS_THR.rentCritical)
+  if (ratiosReady && (ctx.monthlyCosts.rent / ctx.monthlySales * 100) > CRISIS_THR.rentCritical)
     crisisSignals.push(`임대료 비율 ${rentRatio}% — ${CRISIS_THR.rentCritical}% 초과`);
 
   // 업종별 필수 운영 갭 감지
@@ -619,15 +644,26 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
     : "";
 
   return `## ${ctx.storeName} 경영 현황
-
+${!ratiosReady ? `
+⚠️ **비율 데이터 미준비 안내** — 다음 조건 중 하나가 미충족이라 비율(%) 계산이 *신뢰 불가*:
+${ctx.monthlySales <= 0 ? "   · 매출 정보 없음" : ""}
+${ctx.monthlySales > 0 && totalCost > 0 && ctx.monthlySales < totalCost / 5 ? "   · 매출 표본이 비용 대비 너무 적음 (월 환산이 부정확)" : ""}
+${ctx.productCount !== undefined && ctx.productCount === 0 ? "   · 제품·메뉴 미등록 (원자재만으론 매출원가 매핑 불가)" : ""}
+   → **위 화면에 표시된 절대 금액 (만원) 만 사용해서 코칭하세요.**
+   → "재료비 X%" / "프라임코스트 X%" 같은 *비율 수치를 직접 만들어내지 마세요*. 이건 거짓 정보가 됩니다.
+   → 대신 사장님께 "매출 N일치 더 입력" 또는 "제품/메뉴 등록" 같은 *데이터 완성 액션* 을 1순위로 제안하세요.
+` : `
+✓ **비율 신뢰 가능** — 매출·비용·제품 데이터 충분. 아래 표시된 비율(%) 그대로 인용 OK.
+   단, 화면에 *없는* 비율은 새로 만들어내지 마세요 (있는 숫자만 사용).
+`}
 업종: ${ctx.industryLabel} | 개업 ${ctx.daysSinceLaunch + 1}일차${phaseLabel ? ` | 단계: ${phaseLabel}` : ` | ${stage}`}${trendTag}${unusedLine}${costRatioLine}
 
 ### 재무 현황
 - 월 매출: ${fmtW(ctx.monthlySales)}
 - 월 비용: ${fmtW(totalCost)}
-  - ${el.ingredients}: ${fmtW(ctx.monthlyCosts.ingredients)} (매출 대비 ${ingRatio}%, 업계 적정: ${benchmarks.ingredientTarget})
-  - ${el.labor}: ${fmtW(ctx.monthlyCosts.labor)} (매출 대비 ${labRatio}%, 업계 적정: ${benchmarks.laborTarget})
-  - ${el.rent}: ${fmtW(ctx.monthlyCosts.rent)} (매출 대비 ${rentRatio}%, 업계 적정: ${benchmarks.rentTarget})
+  - ${el.ingredients}: ${fmtW(ctx.monthlyCosts.ingredients)}${ingRatio ? ` (매출 대비 ${ingRatio}%, 업계 적정: ${benchmarks.ingredientTarget})` : " (매출 데이터 부족 — 비율 미확정)"}
+  - ${el.labor}: ${fmtW(ctx.monthlyCosts.labor)}${labRatio ? ` (매출 대비 ${labRatio}%, 업계 적정: ${benchmarks.laborTarget})` : " (매출 데이터 부족 — 비율 미확정)"}
+  - ${el.rent}: ${fmtW(ctx.monthlyCosts.rent)}${rentRatio ? ` (매출 대비 ${rentRatio}%, 업계 적정: ${benchmarks.rentTarget})` : " (매출 데이터 부족 — 비율 미확정)"}
   - ${el.utilities}: ${fmtW(ctx.monthlyCosts.utilities)}
   - 판관비(SGA): ${fmtW((ctx.monthlyCosts as Record<string, number>).sga ?? 0)}
   - 마케팅비: ${fmtW((ctx.monthlyCosts as Record<string, number>).marketing ?? 0)}

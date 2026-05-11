@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Compass, Sunrise, Sun, Moon, AlertTriangle, ChevronRight, Sparkles, BarChart3, FileText, Settings2, Check } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { CountUp } from "./animations";
 import { PALETTE, MOTION, CHART_COLORS } from "./operationalStyles";
@@ -10,6 +11,31 @@ import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
 import { resolveHero, InsightStack, PRIORITY_META, resolveInsightCtaTarget, type Hero } from "./MorningBriefing";
 import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
+
+// ─── North Star Metric 옵션 (사장님이 직접 고르는 단 1개 숫자) ────
+//  YC: "팀 전원이 외울 만큼 단 하나". 자동 (auto) 은 현재 로직 유지 (스타트업→런웨이, 외식→매출).
+type NorthStarKey =
+  | "auto"
+  | "todaySales"
+  | "avgDailySales14d"
+  | "weeklySales7d"
+  | "customers"
+  | "aov"
+  | "monthlyProfit"
+  | "runway"
+  | "mrr";
+
+const NSM_OPTIONS_KO: Array<{ key: NorthStarKey; label: string; hint: string; showFor?: "subs" }> = [
+  { key: "auto",              label: "자동 (추천)",        hint: "업종에 맞게 자동 선택 — 스타트업: 런웨이, 외식·서비스: 일 매출" },
+  { key: "todaySales",        label: "오늘 매출",          hint: "오늘 등록된 매출 합계 (입력 전엔 14일 평균)" },
+  { key: "avgDailySales14d",  label: "일 평균 매출 (14일)", hint: "최근 14일 매출의 일평균. 일별 변동성 큰 경우 추천" },
+  { key: "weeklySales7d",     label: "이번 주 매출",        hint: "최근 7일 매출 합계. 주 단위 사이클이 명확한 경우" },
+  { key: "customers",         label: "오늘 손님 수",        hint: "오늘 등록된 손님 수. 객수 중심 사업 (카페·서비스)" },
+  { key: "aov",               label: "객단가",             hint: "1인당 평균 매출. 객단가 끌어올리기 중심 사장님" },
+  { key: "monthlyProfit",     label: "이번 달 순익",        hint: "이번 달 매출 - 비용. 흑자 전환이 NSM인 경우" },
+  { key: "runway",            label: "런웨이 (개월)",       hint: "현금 / 월 burn — Paul Graham Default Alive. 스타트업·자본 위기 시" },
+  { key: "mrr",               label: "MRR (월간 반복 매출)", hint: "구독제 운영 시. 신규 - 이탈 + 확장 = 순 MRR", showFor: "subs" },
+];
 
 type Props = { d: DashboardHook };
 type DailyEntry = { date: string; sales: number; customers: number };
@@ -43,6 +69,42 @@ export function CEOMorningHero({ d }: Props) {
   const ko = d.language === "ko";
   const isStartup = d.industryCategoryId === "startup-tech";
   const isOnline = d.industryCategoryId === "online-digital";
+  const northStarMetric = useProfileStore((s) => s.northStarMetric) as NorthStarKey | null;
+  const setNorthStarMetric = useProfileStore((s) => s.setNorthStarMetric);
+  const usesSubscriptions = (d.usesSubscriptions as boolean | undefined) ?? false;
+  const [nsmPickerOpen, setNsmPickerOpen] = useState(false);
+  const [nsmAnchor, setNsmAnchor] = useState<{ top: number; left: number } | null>(null);
+  const nsmButtonRef = useRef<HTMLButtonElement | null>(null);
+  const nsmPopoverRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  // 외부 클릭 시 NSM picker 닫기 + ESC 키 + 스크롤·리사이즈 시 위치 재계산
+  useEffect(() => {
+    if (!nsmPickerOpen) return;
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (nsmButtonRef.current?.contains(target)) return;
+      if (nsmPopoverRef.current?.contains(target)) return;
+      setNsmPickerOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setNsmPickerOpen(false); };
+    const reposition = () => {
+      const rect = nsmButtonRef.current?.getBoundingClientRect();
+      if (rect) setNsmAnchor({ top: rect.bottom + window.scrollY + 8, left: rect.left + window.scrollX });
+    };
+    window.addEventListener("mousedown", onClick);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    reposition();
+    return () => {
+      window.removeEventListener("mousedown", onClick);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [nsmPickerOpen]);
 
   // ─── 시간대 인식 ───
   const [now, setNow] = useState(() => new Date());
@@ -102,7 +164,162 @@ export function CEOMorningHero({ d }: Props) {
   const capitalKrw = ((d.selectedBudget as number | undefined) ?? 0) + ((d.initialOperatingCapital as number | undefined) ?? 0);
   const runwayMonths = totalMonthlyBurn > 0 ? capitalKrw / totalMonthlyBurn : 99;
 
-  const heroMetric: { label: string; value: number; format: (n: number) => string; delta: number; deltaLabel: string; tone: "good" | "warn" | "bad" } = useMemo(() => {
+  // ── 사장님이 직접 고른 NSM (있으면) 우선 적용 ──────────────────────
+  //   ⚠️ CRITICAL (2026-05-11): 모든 계산은 *날짜 기반 윈도우* 사용.
+  //   `dailyEntries.slice(-7)` 같은 entry-count 슬라이스는 사장님이 입력 안 한 날을
+  //   무시해서 잘못된 합계·평균이 나옴 (이전 사용자 신고: "이번 주 매출 40만원" 거짓 수치).
+  //   "auto" 또는 null → 아래 기존 로직 fallback.
+  // ─────────────────────────────────────────────────────────────────
+  type HeroMetric = { label: string; value: number; format: (n: number) => string; delta: number; deltaLabel: string; tone: "good" | "warn" | "bad" };
+  const nsmOverride = useMemo<HeroMetric | null>(() => {
+    if (!northStarMetric || northStarMetric === "auto") return null;
+
+    const tonePos = (delta: number): "good" | "warn" | "bad" =>
+      delta >= 5 ? "good" : delta >= -5 ? "warn" : "bad";
+
+    // 날짜 기반 윈도우 헬퍼 — entry-count slice 가 아니라 *오늘로부터 N일 이내*.
+    const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
+    const dayMs = 86_400_000;
+    const entriesInDays = (daysAgo: number) => {
+      const fromMs = todayMidnight.getTime() - daysAgo * dayMs;
+      return dailyEntries.filter((e) => new Date(e.date).getTime() >= fromMs);
+    };
+    const entriesBetween = (fromAgo: number, toAgo: number) => {
+      const fromMs = todayMidnight.getTime() - fromAgo * dayMs;
+      const toMs = todayMidnight.getTime() - toAgo * dayMs;
+      return dailyEntries.filter((e) => {
+        const t = new Date(e.date).getTime();
+        return t >= fromMs && t < toMs;
+      });
+    };
+
+    switch (northStarMetric) {
+      case "todaySales": {
+        const todaySales = todayEntry?.sales ?? 0;
+        return {
+          label: ko ? "오늘 매출" : "Today's Sales",
+          value: todaySales,
+          format: (n) => fmtKrw(n, ko),
+          delta: wowDelta,
+          deltaLabel: ko ? "지난 2주 평균 대비" : "vs prev 2 weeks",
+          tone: tonePos(wowDelta),
+        };
+      }
+      case "avgDailySales14d": {
+        // 분모는 *경과일수* (14일) — entry 개수 아님. 입력 안 한 날은 0 으로 자연 반영.
+        const win = entriesInDays(14);
+        const winWithSales = win.filter((e) => e.sales > 0);
+        const sum = win.reduce((s, e) => s + e.sales, 0);
+        const avg = sum / 14;
+        const sparseSuffix = winWithSales.length < 7
+          ? (ko ? ` · ${winWithSales.length}일 입력` : ` · ${winWithSales.length}d only`)
+          : "";
+        return {
+          label: (ko ? "일 평균 매출 (14일)" : "Daily Avg (14d)") + sparseSuffix,
+          value: avg,
+          format: (n) => fmtKrw(n, ko),
+          delta: wowDelta,
+          deltaLabel: ko ? "지난 2주 대비" : "vs prev 2 weeks",
+          tone: tonePos(wowDelta),
+        };
+      }
+      case "weeklySales7d": {
+        // 최근 7일 — *날짜 기준* (입력 안 한 날 = 0). 이전 7일 (8~14일 전) 과 비교.
+        const last7 = entriesInDays(7);
+        const last7WithSales = last7.filter((e) => e.sales > 0);
+        const last7Total = last7.reduce((s, e) => s + e.sales, 0);
+        const prev7 = entriesBetween(14, 7);
+        const prev7Total = prev7.reduce((s, e) => s + e.sales, 0);
+        const delta = prev7Total > 0 ? ((last7Total - prev7Total) / prev7Total) * 100 : 0;
+        // 입력 일수 < 4 면 "추정 신뢰도 낮음" 표기 (사장님이 "거짓 숫자" 로 인지하는 케이스 방지)
+        const sparseSuffix = last7WithSales.length < 4
+          ? (ko ? ` · ${last7WithSales.length}일 입력` : ` · ${last7WithSales.length}d only`)
+          : "";
+        return {
+          label: (ko ? "최근 7일 매출 합계" : "Last 7d Sales") + sparseSuffix,
+          value: last7Total,
+          format: (n) => fmtKrw(n, ko),
+          delta,
+          deltaLabel: ko ? "직전 7일 대비" : "vs prev 7d",
+          tone: tonePos(delta),
+        };
+      }
+      case "customers": {
+        const todayCust = todayEntry?.customers ?? 0;
+        const last14Cust = entriesInDays(14).reduce((s, e) => s + (e.customers ?? 0), 0);
+        const prev14Cust = entriesBetween(28, 14).reduce((s, e) => s + (e.customers ?? 0), 0);
+        const delta = prev14Cust > 0 ? ((last14Cust - prev14Cust) / prev14Cust) * 100 : 0;
+        return {
+          label: ko ? "오늘 손님 수" : "Today's Customers",
+          value: todayCust,
+          format: (n) => `${Math.round(n).toLocaleString()}${ko ? "명" : ""}`,
+          delta,
+          deltaLabel: ko ? "지난 2주 손님 대비" : "vs prev 2 weeks",
+          tone: tonePos(delta),
+        };
+      }
+      case "aov": {
+        const last14Sales = entriesInDays(14).reduce((s, e) => s + e.sales, 0);
+        const last14Cust = entriesInDays(14).reduce((s, e) => s + (e.customers ?? 0), 0);
+        const aov = last14Cust > 0 ? last14Sales / last14Cust : 0;
+        const prev14Sales = entriesBetween(28, 14).reduce((s, e) => s + e.sales, 0);
+        const prev14Cust = entriesBetween(28, 14).reduce((s, e) => s + (e.customers ?? 0), 0);
+        const prevAov = prev14Cust > 0 ? prev14Sales / prev14Cust : 0;
+        const delta = prevAov > 0 ? ((aov - prevAov) / prevAov) * 100 : 0;
+        return {
+          label: ko ? "객단가 (14일 평균)" : "Avg Ticket (14d)",
+          value: aov,
+          format: (n) => fmtKrw(n, ko),
+          delta,
+          deltaLabel: ko ? "지난 2주 대비" : "vs prev 2 weeks",
+          tone: tonePos(delta),
+        };
+      }
+      case "monthlyProfit": {
+        // 진행 중인 달 — 14일 매출의 *날짜 분모* 평균 × 30 - 월 비용 (보수적 근사)
+        const last14Sales = entriesInDays(14).reduce((s, e) => s + e.sales, 0);
+        const avg14 = last14Sales / 14;
+        const projMonthlySales = avg14 * 30;
+        const profit = projMonthlySales - totalMonthlyBurn;
+        return {
+          label: ko ? "이번 달 예상 순익" : "Est. Monthly Profit",
+          value: profit,
+          format: (n) => fmtKrw(n, ko),
+          delta: 0,
+          deltaLabel: ko ? "14일 평균 × 30 추정" : "14d avg × 30 est.",
+          tone: profit >= 0 ? "good" : profit >= -totalMonthlyBurn * 0.2 ? "warn" : "bad",
+        };
+      }
+      case "runway": {
+        return {
+          label: ko ? "런웨이 (남은 개월)" : "Runway (months)",
+          value: runwayMonths,
+          format: (n) => n >= 99 ? (ko ? "충분" : "Healthy") : `${n.toFixed(1)}${ko ? "개월" : " mo"}`,
+          delta: 0,
+          deltaLabel: ko ? "현금 ÷ 월 burn" : "cash ÷ monthly burn",
+          tone: runwayMonths < 6 ? "bad" : runwayMonths < 12 ? "warn" : "good",
+        };
+      }
+      case "mrr": {
+        // MRR — 14일 매출 합계 × 30/14 환산 (간단 추정. 정확한 산정은 SaaSKeyMetricsCard 참조)
+        const last14Sales = entriesInDays(14).reduce((s, e) => s + e.sales, 0);
+        const mrr = last14Sales * (30 / 14);
+        return {
+          label: ko ? "MRR (월간 반복 매출)" : "MRR",
+          value: mrr,
+          format: (n) => fmtKrw(n, ko),
+          delta: wowDelta,
+          deltaLabel: ko ? "지난 2주 매출 대비" : "vs prev 2 weeks",
+          tone: tonePos(wowDelta),
+        };
+      }
+      default:
+        return null;
+    }
+  }, [northStarMetric, todayEntry, dailyEntries, runwayMonths, totalMonthlyBurn, wowDelta, ko]);
+
+  const heroMetric: HeroMetric = useMemo(() => {
+    if (nsmOverride) return nsmOverride;
     if (isStartup) {
       // 스타트업: 런웨이 (개월) 우선
       const tone: "good" | "warn" | "bad" =
@@ -145,20 +362,29 @@ export function CEOMorningHero({ d }: Props) {
       deltaLabel: ko ? "지난 2주 평균 대비" : "vs prev 2 weeks",
       tone,
     };
-  }, [isStartup, runwayMonths, wowDelta, todayEntry, last14Total, last14.length, ko]);
+  }, [nsmOverride, isStartup, runwayMonths, wowDelta, todayEntry, last14Total, last14.length, ko]);
 
-  // ─── Sparkline 데이터 (last 14 days normalized) ───
+  // ─── Sparkline 데이터 (입력된 매출 entry 만) ───
+  //  ⚠️ FIX (2026-05-11): 이전엔 last14 의 0 값 entry 도 그렸음 → 12일 0 + 2일 값
+  //     → 거의 flat 그래프로 보여 사장님이 "버그" 로 인지.
+  //  Fix: sales > 0 entry 만 사용. 데이터 < 3 일 면 sparkline 대신 empty state.
+  //       y 축 정규화 시 min/max padding 으로 flat 보임 방지 (값이 거의 같아도 약간 변동).
   const sparkline = useMemo(() => {
-    if (last14.length < 2) return null;
-    const values = last14.map((e) => e.sales);
-    const max = Math.max(...values, 1);
-    const min = Math.min(...values, 0);
+    const realEntries = last14.filter((e) => e.sales > 0);
+    if (realEntries.length < 3) return null;  // 3개 미만이면 추세 의미 없음
+    const values = realEntries.map((e) => e.sales);
+    const rawMax = Math.max(...values);
+    const rawMin = Math.min(...values);
+    // 값이 거의 같아도 시각적 변동을 위해 ±5% padding
+    const valuePad = Math.max(rawMax * 0.05, 1);
+    const max = rawMax + valuePad;
+    const min = Math.max(0, rawMin - valuePad);
     const range = Math.max(max - min, 1);
     const W = 320;
     const H = 64;
-    const pad = 4;
+    const pad = 6;
     const points = values.map((v, i) => {
-      const x = pad + (i / (values.length - 1)) * (W - pad * 2);
+      const x = pad + (i / Math.max(1, values.length - 1)) * (W - pad * 2);
       const y = pad + (1 - (v - min) / range) * (H - pad * 2);
       return { x, y, v };
     });
@@ -172,7 +398,7 @@ export function CEOMorningHero({ d }: Props) {
       path += ` C ${cx1} ${prev.y}, ${cx2} ${cur.y}, ${cur.x} ${cur.y}`;
     }
     const fillPath = `${path} L ${points[points.length - 1].x} ${H - pad} L ${points[0].x} ${H - pad} Z`;
-    return { path, fillPath, points, W, H };
+    return { path, fillPath, points, W, H, entryCount: realEntries.length };
   }, [last14]);
 
   // ─── AI 모닝 브리핑 두뇌 (MorningBriefing 과 SAME 데이터·로직 공유) ───
@@ -203,7 +429,8 @@ export function CEOMorningHero({ d }: Props) {
     const cat = d.industryCategoryId;
     const isDigital = cat === "startup-tech" || cat === "online-digital";
     return ii.insights.map((it) => {
-      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital);
+      // AI 가 직접 지정한 targetCard 가 있으면 그게 최우선 — 키워드 라우팅보다 신뢰도 높음.
+      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital, it.targetCard);
       // ⚠️ 버튼 라벨은 LLM 이 만든 *고유 액션* 사용 ("재방문잡기" / "구조점검" 등) — 일괄 라벨 X
       const ctaLabel = it.action || "확인하기";
       return {
@@ -246,7 +473,7 @@ export function CEOMorningHero({ d }: Props) {
   };
 
   const handleBriefingCta = () => {
-    // 디버그 로그 — "왜 거기로 갔지?" 추적용 (auto-clear 가능)
+    // 디버그 로그 — "왜 거기로 갔지?" 추적용
     console.info("[buildup] handleBriefingCta", {
       source: briefing.source,
       ctaTarget: briefing.ctaTarget,
@@ -258,22 +485,47 @@ export function CEOMorningHero({ d }: Props) {
         handled = focusBySelector("[data-sales-input]", { focusInput: true });
         break;
       case "users":
-        handled = focusBySelector("[data-user-activity]");
-        // 사용자 카드를 못 찾으면 매출 카드로 폴백 (객단가·고객수가 매출 카드 안에 함께 표시됨)
-        if (!handled) handled = focusBySelector("[data-sales-input]");
+        handled = focusBySelector("[data-user-activity]")
+          || focusBySelector("[data-first-customers-card]");
         break;
       case "cashflow":
         handled = focusBySelector("[data-cashflow-hero]");
         break;
       case "costs":
-        handled = focusBySelector("[data-cost-structure]");
+        // 현재 surface 에 비용 관련 카드(P&L·구조 시각화)가 보이면 그쪽 우선.
+        // 못 찾으면 analytics(내 가게) surface 로 전환 + 비용 *관리* 카드로 정확 스크롤.
+        handled = focusBySelector("[data-cost-structure]")
+          || focusBySelector("[data-pl-hero]");
+        if (!handled && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
+            detail: { surface: "analytics", selector: "[data-cost-management]" },
+          }));
+          handled = true;
+        }
+        break;
+      case "inventory":
+        // 재료·메뉴·재고·재주문 → 재고 관리 카드 (사용자 지침: "메뉴 관련이면 재고 관리 카드")
+        handled = focusBySelector("[data-inventory-card]");
+        break;
+      case "team":
+        // 직원·노무·4대보험·퇴직금 → 팀 관리 카드
+        handled = focusBySelector("[data-team-card]");
+        break;
+      case "primeCost":
+        // 프라임코스트 합계 점검 → Prime Cost 카드 (외식·카페).
+        // 없으면 analytics surface 의 비용 관리 카드로 폴백.
+        handled = focusBySelector("[data-prime-cost-card]");
+        if (!handled && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
+            detail: { surface: "analytics", selector: "[data-cost-management]" },
+          }));
+          handled = true;
+        }
         break;
       case "operations":
-        // 오늘의 운영 리추얼 카드 — 측정·병목·서비스 시간 코칭의 종착점
         handled = focusBySelector("[data-ops-rituals]");
         break;
       case "marketing":
-        // 마케팅은 별도 surface (페이지) — surface 전환 이벤트 dispatch
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("bup:navigate-feature", {
             detail: { surface: "marketing" },
@@ -282,13 +534,15 @@ export function CEOMorningHero({ d }: Props) {
         }
         break;
     }
-    // 어떤 이유로든 타깃 카드를 못 찾으면 fallback — 매출 입력 카드로
+    // 타깃 카드를 못 찾았다고 무조건 매출로 보내지 않는다. ctaTarget 별 정직 fallback.
     if (!handled) {
-      handled = focusBySelector("[data-sales-input]", { focusInput: true });
-    }
-    // 그것도 실패하면 최후 수단으로 페이지 스크롤
-    if (!handled) {
-      window.scrollBy({ top: 320, behavior: "smooth" });
+      if (briefing.ctaTarget === "sales") {
+        handled = focusBySelector("[data-sales-input]", { focusInput: true });
+      } else {
+        // 마지막 안전망 — 페이지 상단으로 스크롤. 매출로 떨어뜨리지 않음.
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        handled = true;
+      }
     }
   };
 
@@ -494,9 +748,111 @@ export function CEOMorningHero({ d }: Props) {
       }}>
         {/* Metric */}
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: PALETTE.MIDNIGHT, opacity: 0.7, marginBottom: "6px" }}>
-            {heroMetric.label}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: PALETTE.MIDNIGHT, opacity: 0.7 }}>
+              {heroMetric.label}
+            </div>
+            <button
+              type="button"
+              ref={nsmButtonRef}
+              onClick={() => setNsmPickerOpen((v) => !v)}
+              aria-label={ko ? "북극성 지표 변경" : "Change North Star metric"}
+              title={ko ? "내 사업의 단 1개 숫자 — 클릭해서 변경" : "Your single number — click to change"}
+              style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: "22px", height: "22px", borderRadius: "999px",
+                border: "1px solid rgba(25,25,112,0.12)",
+                background: nsmPickerOpen ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.03)",
+                color: PALETTE.MIDNIGHT, opacity: 0.7,
+                cursor: "pointer", padding: 0,
+                transition: "background 0.15s ease, opacity 0.15s ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = nsmPickerOpen ? "1" : "0.7"; }}
+            >
+              <Settings2 size={11} strokeWidth={2} />
+            </button>
           </div>
+
+          {/* NSM Picker Popover — Portal 로 document.body 에 렌더 (stacking context 격리, 2026-05-11 fix)
+              이전: position absolute → 부모 hero 의 stacking context 안에 갇혀 z-index 50 이 효과 없었음 */}
+          {nsmPickerOpen && mounted && nsmAnchor && createPortal(
+            <div
+              ref={nsmPopoverRef}
+              role="dialog"
+              aria-label={ko ? "북극성 지표 선택" : "Select North Star"}
+              style={{
+                position: "absolute",
+                top: nsmAnchor.top,
+                left: nsmAnchor.left,
+                zIndex: 9999,
+                width: "min(360px, calc(100vw - 48px))",
+                background: "#fff",
+                border: "1px solid rgba(25,25,112,0.10)",
+                borderRadius: "14px",
+                boxShadow: "0 1px 3px rgba(25,25,112,0.06), 0 16px 40px rgba(25,25,112,0.18)",
+                padding: "10px",
+                display: "grid", gap: "2px",
+                maxHeight: "min(440px, calc(100vh - 120px))",
+                overflowY: "auto" as const,
+                fontFamily: "Pretendard Variable, Pretendard, -apple-system, sans-serif",
+              }}
+            >
+              <div style={{
+                padding: "6px 10px 8px", fontSize: "10.5px", fontWeight: 700,
+                letterSpacing: "0.08em", textTransform: "uppercase" as const,
+                color: PALETTE.MIDNIGHT, opacity: 0.6,
+              }}>
+                {ko ? "내 사업의 단 1개 숫자" : "Your single number"}
+              </div>
+              {NSM_OPTIONS_KO
+                .filter((opt) => !opt.showFor || (opt.showFor === "subs" && usesSubscriptions))
+                .map((opt) => {
+                  const isActive = (northStarMetric ?? "auto") === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        setNorthStarMetric(opt.key === "auto" ? null : opt.key);
+                        setNsmPickerOpen(false);
+                      }}
+                      style={{
+                        display: "grid", gridTemplateColumns: "16px 1fr", columnGap: "10px",
+                        alignItems: "start", textAlign: "left" as const,
+                        padding: "10px 12px", borderRadius: "10px",
+                        border: "none",
+                        background: isActive ? "rgba(25,25,112,0.06)" : "transparent",
+                        cursor: "pointer",
+                        transition: "background 0.12s ease",
+                      }}
+                      onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "rgba(25,25,112,0.03)"; }}
+                      onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <div style={{
+                        width: "16px", height: "16px", marginTop: "2px",
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {isActive && <Check size={14} strokeWidth={2.4} color={PALETTE.MIDNIGHT_DEEP} />}
+                      </div>
+                      <div style={{ display: "grid", gap: "2px" }}>
+                        <div style={{
+                          fontSize: "13px", fontWeight: 650,
+                          color: isActive ? PALETTE.MIDNIGHT_DEEP : "#0f172a",
+                          letterSpacing: "-0.01em",
+                        }}>
+                          {opt.label}
+                        </div>
+                        <div style={{ fontSize: "11.5px", color: PALETTE.MUTED, lineHeight: 1.5 }}>
+                          {opt.hint}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>,
+            document.body
+          )}
           <div style={{ fontSize: "clamp(34px, 5vw, 44px)", fontWeight: 700, letterSpacing: "-0.045em", color: PALETTE.MIDNIGHT_DEEP, lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }}>
             <CountUp to={heroMetric.value} duration={1.0} format={heroMetric.format} />
           </div>
@@ -516,13 +872,13 @@ export function CEOMorningHero({ d }: Props) {
           )}
         </div>
 
-        {/* Sparkline */}
+        {/* Sparkline — 입력된 매출일만 (0인 날 제외, 2026-05-11 fix) */}
         {sparkline ? (
           <div style={{ flex: 1, minWidth: 240, position: "relative" }}>
             <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: PALETTE.MUTED_45, marginBottom: "6px" }}>
-              {ko ? "최근 14일 매출" : "Last 14 days"}
+              {ko ? `입력한 매출 (${sparkline.entryCount}일)` : `Logged sales (${sparkline.entryCount}d)`}
             </div>
-            <svg width="100%" viewBox={`0 0 ${sparkline.W} ${sparkline.H}`} preserveAspectRatio="none" style={{ display: "block", height: "64px" }}>
+            <svg width="100%" viewBox={`0 0 ${sparkline.W} ${sparkline.H}`} preserveAspectRatio="none" style={{ display: "block", height: "64px", overflow: "visible" }}>
               <defs>
                 <linearGradient id="ceoSpark" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={CHART_COLORS.gradients.primary.from} />
@@ -540,32 +896,54 @@ export function CEOMorningHero({ d }: Props) {
                 d={sparkline.path}
                 fill="none"
                 stroke={PALETTE.MIDNIGHT}
-                strokeWidth={1.8}
+                strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
                 transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
               />
-              {/* End dot */}
-              <motion.circle
-                cx={sparkline.points[sparkline.points.length - 1].x}
-                cy={sparkline.points[sparkline.points.length - 1].y}
-                r={3.5}
-                fill={PALETTE.MIDNIGHT}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.4, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
-              />
+              {/* 각 입력 지점 dot — 변동을 시각적으로 명확히 표시 */}
+              {sparkline.points.map((p, i) => {
+                const isLast = i === sparkline.points.length - 1;
+                return (
+                  <motion.circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r={isLast ? 3.8 : 2.4}
+                    fill={isLast ? PALETTE.MIDNIGHT : "#fff"}
+                    stroke={PALETTE.MIDNIGHT}
+                    strokeWidth={isLast ? 0 : 1.5}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.8 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                );
+              })}
             </svg>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px", fontSize: "10.5px", fontWeight: 600, color: PALETTE.MUTED_45 }}>
-              <span>{last14[0]?.date.slice(5).replace("-", "/") ?? ""}</span>
-              <span>{last14[last14.length - 1]?.date.slice(5).replace("-", "/") ?? ""}</span>
+              <span>{last14.filter((e) => e.sales > 0)[0]?.date.slice(5).replace("-", "/") ?? ""}</span>
+              <span>{last14.filter((e) => e.sales > 0).slice(-1)[0]?.date.slice(5).replace("-", "/") ?? ""}</span>
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1, minWidth: 240, display: "flex", alignItems: "center", justifyContent: "center", color: PALETTE.MUTED_45, fontSize: "12.5px", fontWeight: 600 }}>
-            {ko ? "매출을 7일 이상 입력하면 트렌드 차트가 보입니다" : "Log 7+ days to see trend"}
+          <div style={{
+            flex: 1, minWidth: 240,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            color: PALETTE.MUTED_45, fontSize: "12.5px", fontWeight: 600,
+            padding: "12px 8px",
+            background: "rgba(25,25,112,0.025)",
+            borderRadius: "12px",
+            border: "1px dashed rgba(25,25,112,0.10)",
+          }}>
+            <BarChart3 size={18} strokeWidth={1.6} style={{ marginBottom: "6px", opacity: 0.5 }} />
+            <div style={{ fontSize: "12.5px", fontWeight: 650, color: "rgba(15,23,42,0.5)" }}>
+              {ko ? "매출 3일 이상 입력하면 추세가 보입니다" : "Log 3+ days to see trend"}
+            </div>
+            <div style={{ fontSize: "11px", fontWeight: 500, color: PALETTE.MUTED_45, marginTop: "3px" }}>
+              {ko ? `현재 ${last14.filter((e) => e.sales > 0).length}일 입력됨` : `${last14.filter((e) => e.sales > 0).length} day(s) logged`}
+            </div>
           </div>
         )}
       </motion.div>
@@ -669,9 +1047,11 @@ export function CEOMorningHero({ d }: Props) {
           </div>
         ) : (
           // ── 데이터 있음: AI 경영 브리핑 narrative + CTA ──
-          <button
-            type="button"
-            onClick={handleBriefingCta}
+          //
+          // ⚠️ CRITICAL (2026-05-11): 사용자 신고 — "배너 어디를 눌러도 이동됨. 확인하기 버튼을 눌러야만 이동해야 함."
+          //   종래엔 outer <button> 이 모든 영역(분석·행동·태그·뱃지)을 감싸 click hit-area 폭주.
+          //   해결: 외곽은 *비클릭* <div> 로 변경. 우측 pill 만 진짜 <button> 으로 격리.
+          <div
             style={{
               width: "100%",
               background: briefing.tone === "crisis"
@@ -690,13 +1070,9 @@ export function CEOMorningHero({ d }: Props) {
               alignItems: "flex-start",
               gap: "12px",
               color: PALETTE.INK,
-              cursor: "pointer",
               textAlign: "left" as const,
-              transition: "background 0.2s ease, border-color 0.2s ease, transform 0.15s ease",
               boxShadow: "0 1px 2px rgba(25,25,112,0.03)",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <div style={{
               width: 34, height: 34, borderRadius: 10,
@@ -744,20 +1120,29 @@ export function CEOMorningHero({ d }: Props) {
                 </div>
               )}
             </div>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: "4px",
-              fontSize: "12px", fontWeight: 700,
-              padding: "6px 11px", borderRadius: "999px",
-              background: briefing.tone === "crisis" ? PALETTE.DANGER : briefing.tone === "warning" ? PALETTE.WARN : PALETTE.MIDNIGHT,
-              color: "#fff",
-              flexShrink: 0,
-              alignSelf: "center",
-              boxShadow: briefing.tone === "crisis" ? "0 2px 6px rgba(255,59,48,0.25)" : briefing.tone === "warning" ? "0 2px 6px rgba(255,159,10,0.25)" : "0 2px 6px rgba(25,25,112,0.22)",
-            }}>
+            <button
+              type="button"
+              onClick={handleBriefingCta}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "4px",
+                fontSize: "12px", fontWeight: 700,
+                padding: "6px 11px", borderRadius: "999px",
+                border: "none",
+                background: briefing.tone === "crisis" ? PALETTE.DANGER : briefing.tone === "warning" ? PALETTE.WARN : PALETTE.MIDNIGHT,
+                color: "#fff",
+                cursor: "pointer",
+                flexShrink: 0,
+                alignSelf: "center",
+                boxShadow: briefing.tone === "crisis" ? "0 2px 6px rgba(255,59,48,0.25)" : briefing.tone === "warning" ? "0 2px 6px rgba(255,159,10,0.25)" : "0 2px 6px rgba(25,25,112,0.22)",
+                transition: "transform 0.15s ease, box-shadow 0.2s ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+            >
               {ko ? briefing.ctaKo : briefing.ctaEn}
               <ChevronRight size={12} strokeWidth={2.4} />
-            </div>
-          </button>
+            </button>
+          </div>
         )}
 
         {/* ═══════════════ AI 추천 카드 스택 (industry insights) ═══════════════

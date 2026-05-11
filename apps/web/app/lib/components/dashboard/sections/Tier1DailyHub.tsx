@@ -22,6 +22,7 @@ import { UserActivityCard } from "../UserActivityCard";
 import { CashflowHeroCard } from "../CashflowHeroCard";
 import { PLHeroCard } from "../PLHeroCard";
 import { DailyKpiStrip, type KpiValue } from "../DailyKpiStrip";
+import { useProfileStore } from "../../../stores/profile-store";
 
 type Props = {
   d: DashboardHook;
@@ -33,15 +34,24 @@ type Props = {
 };
 
 export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar }: Props) {
+  // 사장님이 숨긴 카드 목록 — 마이페이지 > 대시보드 카드 표시에서 토글.
+  // essential 카드(activity-snapshot, cashflow-hero)는 메타에서 숨김 불가 처리.
+  const hiddenCards = useProfileStore((s) => s.hiddenCards);
+  const showUserActivity = !hiddenCards.includes("user-activity");
+  const showPLHero = !hiddenCards.includes("pl-hero");
+  const showDailyKpi = !hiddenCards.includes("daily-kpi-strip");
+
   return (
     <>
-      {/* Tier 1.1 — 매출 흐름 + 사용자 변화 (2-col) */}
+      {/* Tier 1.1 — 매출 흐름 + 사용자 변화 (2-col → 사용자 변화 숨김 시 1-col) */}
       <div className="dash-stagger-item" style={nextStaggerStyle()}>
         <div
           style={{
             display: "grid",
             gridTemplateColumns:
-              c.viewportWidth >= 1100 ? "minmax(0, 1.35fr) minmax(0, 1fr)" : "1fr",
+              showUserActivity && c.viewportWidth >= 1100
+                ? "minmax(0, 1.35fr) minmax(0, 1fr)"
+                : "1fr",
             gap: "14px",
             alignItems: "stretch",
           }}
@@ -58,25 +68,27 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
             fmt={fmt}
             onOpenCalendar={onOpenCalendar}
           />
-          <UserActivityCard
-            d={d}
-            ko={ko}
-            todayStr={c.todayStr}
-            recent7Entries={c.recent7Entries}
-            todayEntry={c.todayEntry}
-            fmt={fmt}
-          />
+          {showUserActivity && (
+            <UserActivityCard
+              d={d}
+              ko={ko}
+              todayStr={c.todayStr}
+              recent7Entries={c.recent7Entries}
+              todayEntry={c.todayEntry}
+              fmt={fmt}
+            />
+          )}
         </div>
       </div>
 
-      {/* Tier 1.2 — 현금흐름 + 손익 (2-col) */}
+      {/* Tier 1.2 — 현금흐름 + 손익 (2-col → 손익 숨김 시 1-col) */}
       <div
         className="dash-stagger-item"
         style={{
           ...nextStaggerStyle(),
           display: "grid",
           gap: "14px",
-          gridTemplateColumns: c.isWide ? "minmax(0, 1fr) minmax(0, 1fr)" : "1fr",
+          gridTemplateColumns: showPLHero && c.isWide ? "minmax(0, 1fr) minmax(0, 1fr)" : "1fr",
           alignItems: "stretch",
         }}
       >
@@ -85,7 +97,7 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
           dailyEntries={c.allEntries}
           fallbackMonthlyCostsTotal={c.totalCosts}
         />
-        <PLHeroCard
+        {showPLHero && <PLHeroCard
           totalSales={c.totalSales}
           totalCosts={c.totalCosts}
           netProfit={c.netProfit}
@@ -101,26 +113,31 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
           prevMonthSales={c.prevMonthSales}
           prevMonthCosts={c.prevMonthCosts}
           breakEvenDailySales={c.breakEvenDailySales}
+          breakEvenMonthlySales={c.healthMetrics.breakEvenMonthlySales}
           todaySales={c.todaySales}
           todayBepProgress={c.todayBepProgress}
           daysAboveBreakEven={c.daysAboveBreakEven}
           totalDaysRecorded={c.healthMetrics.totalDaysRecorded}
+          ratiosReady={c.ratiosReady}
+          monthlyRevenueEquivalent={c.monthlyRevenueEquivalent}
           cogsLabel={d.businessCtx.expenseFields?.[0]?.label}
           expenseFields={d.businessCtx.expenseFields?.map((f) => ({
             fieldKey: f.fieldKey,
             label: f.label,
           }))}
-        />
+        />}
       </div>
 
       {/* Tier 1.2 — 업종별 5칸 KPI Strip */}
-      <div className="dash-stagger-item" style={nextStaggerStyle()}>
-        <DailyKpiStrip
-          ko={ko}
-          industryCategoryId={d.businessCtx.categoryId ?? undefined}
-          values={buildKpiValues(d, c, ko)}
-        />
-      </div>
+      {showDailyKpi && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <DailyKpiStrip
+            ko={ko}
+            industryCategoryId={d.businessCtx.categoryId ?? undefined}
+            values={buildKpiValues(d, c, ko)}
+          />
+        </div>
+      )}
     </>
   );
 }

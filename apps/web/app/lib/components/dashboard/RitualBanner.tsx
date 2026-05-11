@@ -5,8 +5,6 @@ import { Calendar, CalendarCheck, X } from "lucide-react";
 
 type Props = {
   ko: boolean;
-  onOpenWeekly: () => void;
-  onOpenMonthly: () => void;
 };
 
 /**
@@ -25,7 +23,7 @@ const LS_MONTHLY_DISMISS = "buildup-ritual-monthly-dismissed";
 
 type RitualKind = "weekly" | "monthly" | null;
 
-export function RitualBanner({ ko, onOpenWeekly, onOpenMonthly }: Props) {
+export function RitualBanner({ ko }: Props) {
   const [ritual, setRitual] = useState<RitualKind>(null);
 
   useEffect(() => {
@@ -74,35 +72,26 @@ export function RitualBanner({ ko, onOpenWeekly, onOpenMonthly }: Props) {
     setRitual(null);
   };
 
-  const handleOpen = () => {
-    if (ritual === "weekly") onOpenWeekly();
-    else onOpenMonthly();
-  };
-
   const config = ritual === "weekly"
     ? {
         Icon: Calendar,
         color: "#191970",
         bg: "rgba(25,25,112,0.04)",
         border: "rgba(25,25,112,0.12)",
-        titleKo: "이번 주 계획 세우기 (15분)",
-        titleEn: "Plan this week (15 min)",
+        titleKo: "이번 주 목표를 세워보세요",
+        titleEn: "Set your goal for this week",
         descKo: "지난주 하이라이트를 돌아보고 이번 주 한 가지 집중 목표를 정해보세요.",
         descEn: "Review last week's highlights and set this week's one focus.",
-        ctaKo: "주간 리뷰 열기",
-        ctaEn: "Open weekly review",
       }
     : {
         Icon: CalendarCheck,
         color: "#7c3aed",
         bg: "rgba(124,58,237,0.04)",
         border: "rgba(124,58,237,0.12)",
-        titleKo: "지난달 리포트 준비됐어요 (30분)",
-        titleEn: "Last month's report is ready (30 min)",
+        titleKo: "지난달 리포트를 확인해보세요",
+        titleEn: "Review last month's report",
         descKo: "손익·현금흐름·마일스톤을 함께 훑어보고 다음 달 예산을 조정하세요.",
         descEn: "Review P&L, cash flow, milestones — adjust next month's budget.",
-        ctaKo: "월간 리포트 열기",
-        ctaEn: "Open monthly report",
       };
 
   return (
@@ -139,24 +128,6 @@ export function RitualBanner({ ko, onOpenWeekly, onOpenMonthly }: Props) {
           {ko ? config.descKo : config.descEn}
         </div>
       </div>
-      <button
-        type="button"
-        onClick={handleOpen}
-        style={{
-          padding: "7px 12px",
-          borderRadius: "8px",
-          border: "none",
-          background: config.color,
-          color: "#fff",
-          fontSize: "12px",
-          fontWeight: 650,
-          cursor: "pointer",
-          fontFamily: "inherit",
-          flexShrink: 0,
-        }}
-      >
-        {ko ? config.ctaKo : config.ctaEn}
-      </button>
       <button
         type="button"
         onClick={handleDismiss}

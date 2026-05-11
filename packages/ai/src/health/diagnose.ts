@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
@@ -57,7 +57,7 @@ export async function diagnoseBusinessHealth(
   context: HealthDiagnosisContext,
   options: AiCallOptions
 ): Promise<HealthDiagnosisResult> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
+  const client = createAiClient(options.apiKey);
   const userMessage = buildHealthDiagnosisUserPrompt(context);
 
   const rawMessage = await client.messages.create({
@@ -69,7 +69,7 @@ export async function diagnoseBusinessHealth(
     thinking: { type: "enabled", budget_tokens: 2048 },
     messages: [{ role: "user", content: userMessage }],
   } as Parameters<typeof client.messages.create>[0]);
-  const message = rawMessage as Anthropic.Messages.Message;
+  const message = rawMessage as { content: Array<{ type: "text"; text: string }>; stop_reason: string | null; usage: { input_tokens: number; output_tokens: number } };
 
   const textBlock = message.content.find((block) => block.type === "text");
   if (!textBlock || textBlock.type !== "text") {

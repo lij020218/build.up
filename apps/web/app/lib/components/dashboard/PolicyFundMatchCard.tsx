@@ -43,9 +43,11 @@ type Props = {
   input: PolicyFundMatchInput;
   /** 위기 시그널 (런웨이 6개월 미만 / 매출 감소 10%↑) — 카드 톤 변경 */
   isCrisis?: boolean;
+  /** 현재 월 이자 부담 (원) — refinance 절감 미리보기 표시용 */
+  currentMonthlyInterest?: number;
 };
 
-export function PolicyFundMatchCard({ ko, input, isCrisis = false }: Props) {
+export function PolicyFundMatchCard({ ko, input, isCrisis = false, currentMonthlyInterest }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [extraInput, setExtraInput] = useState<{ ncbScore?: number; consideringClosure?: boolean }>({});
@@ -86,6 +88,29 @@ export function PolicyFundMatchCard({ ko, input, isCrisis = false }: Props) {
                 ? "2026 소상공인시장진흥공단 + 희망리턴패키지 매칭 — 1357 (소진공)·1533-0100 (소상공인)"
                 : "Matched against 2026 SEMAS + Hope Return policies"}
             </div>
+            {currentMonthlyInterest != null && currentMonthlyInterest > 0 && (() => {
+              // FKI 한경협 2025 조사: 자영업자 평균 대출금리 8.4% → 정책자금(소진공 4.5%) 대환 시 약 46% 절감
+              // 보수적 추정 — 실제 절감은 신용·기존 정책자금 수령 여부 등에 따라 다름
+              const estimatedSavings = Math.round(currentMonthlyInterest * 0.464);
+              if (estimatedSavings < 10000) return null;
+              return (
+                <div style={{
+                  fontSize: "12px",
+                  color: showCrisisTone ? ROSE_TEXT : SKY,
+                  fontWeight: 600,
+                  lineHeight: 1.55,
+                  marginTop: "6px",
+                  padding: "8px 10px",
+                  borderRadius: "8px",
+                  background: showCrisisTone ? ROSE_BG : SKY_BG,
+                  border: `1px solid ${HAIRLINE}`,
+                }}>
+                  {ko
+                    ? `현재 월 이자 ${formatWonShort(currentMonthlyInterest)} → 정책자금 4.5% 대환 시 월 약 ${formatWonShort(estimatedSavings)} 절감 추정 (8.4% 평균금리 기준, 자격·신용 확인 필요)`
+                    : `Current monthly interest ${formatWonShort(currentMonthlyInterest)} → est. ${formatWonShort(estimatedSavings)}/mo savings at 4.5% policy rate (assumes 8.4% avg, eligibility varies)`}
+                </div>
+              );
+            })()}
           </div>
           <div
             style={{

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "@build-up/ai/utils/client";
 import { supabase } from "../../../../lib/supabase";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const client = new Anthropic({ apiKey });
+    const client = createAiClient(apiKey);
     const userPrompt = buildUserPrompt(question, finalChunks, industryCategoryId);
 
     const encoder = new TextEncoder();

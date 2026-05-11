@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
@@ -18,7 +18,7 @@ const DEFAULT_MAX_TOKENS = 16384;
  * Tool Use 스키마 — 99.8% schema 준수율 (vs JSON parsing의 95% 수준).
  * 응답을 이 tool 호출로 강제하여 환각·필드 누락·잘못된 enum 거의 0.
  */
-const ROADMAP_TOOL: Anthropic.Tool = {
+const ROADMAP_TOOL: { name: string; description?: string; input_schema?: unknown } = {
   name: "submit_roadmap",
   description: "사용자 사업 아이디어를 분석한 결과를 구조화된 로드맵으로 제출합니다.",
   input_schema: {
@@ -631,7 +631,7 @@ export async function generateRoadmap(
   input: RoadmapGenerationInput,
   options: AiCallOptions
 ): Promise<RoadmapGenerationResult> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 120_000 }); // 120초 — 프롬프트 축소 후에도 여유 확보
+  const client = createAiClient(options.apiKey); // 120초 — 프롬프트 축소 후에도 여유 확보
 
   // SDK 0.39 가 thinking 파라미터를 타입에 명시하지 않아 input cast 필요.
   // 응답은 단일 Message 타입으로 cast 하여 후속 .content/.usage 사용.
@@ -650,7 +650,11 @@ export async function generateRoadmap(
       { role: "user", content: buildRoadmapGenerationPrompt(input) },
     ],
   } as Parameters<typeof client.messages.create>[0]);
-  const response = rawResponse as Anthropic.Messages.Message;
+  const response = rawResponse as {
+    content: Array<{ type: string; text?: string; input?: Record<string, unknown>; [k: string]: unknown }>;
+    stop_reason: string | null;
+    usage: { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
+  };
 
   const usage = response.usage;
   console.log(
@@ -686,6 +690,7 @@ export async function generateRoadmap(
       JSON.stringify(response.content),
     );
   }
-  console.log("[roadmap/generate] Fallback to text block, length:", textBlock.text.length);
-  return parseResponse(textBlock.text);
+  const tx = textBlock.text ?? "";
+  console.log("[roadmap/generate] Fallback to text block, length:", tx.length);
+  return parseResponse(tx);
 }

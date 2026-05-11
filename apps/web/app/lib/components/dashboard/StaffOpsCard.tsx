@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
 import { supabase } from "../../../../lib/supabase";
+import { checkSeveranceObligation, type SeveranceCheck } from "@build-up/shared";
 
 type EmployeeEntry = {
   id: string;
@@ -10,6 +11,7 @@ type EmployeeEntry = {
   hourlyWage?: number;
   weeklyHours?: number;
   isInsured?: boolean;
+  hireDate?: string;
 };
 
 interface StaffOpsCardProps {
@@ -48,6 +50,42 @@ export function StaffOpsCard({
   totalSales,
   d,
 }: StaffOpsCardProps) {
+  // 퇴직금 의무 가드 (근로자퇴직급여보장법 제4조) — hireDate 있는 직원만 평가.
+  //  표시: eligible(빨강) / approaching(앰버) / below-15h·not-eligible(미표시).
+  //  삭제 시: eligible 이면 confirm 모달로 지급 의무 + 추정 금액 공지.
+  const severanceChecks: SeveranceCheck[] = checkSeveranceObligation(
+    employees.map((e) => ({
+      id: e.id,
+      name: e.name,
+      hireDate: e.hireDate,
+      weeklyHours: e.weeklyHours ?? 0,
+      hourlyWage: e.hourlyWage ?? 0,
+    })),
+  );
+  const sevByEmpId = new Map(severanceChecks.map((s) => [s.employeeId, s]));
+
+  const handleDeleteWithSeveranceConfirm = (employee: EmployeeEntry) => {
+    const sev = sevByEmpId.get(employee.id);
+    if (sev && sev.level === "eligible" && sev.estimatedSeveranceWon > 0) {
+      const manWon = Math.round(sev.estimatedSeveranceWon / 10000).toLocaleString();
+      const message = ko
+        ? `⚠️ ${employee.name}님은 퇴직금 지급 대상입니다\n\n` +
+          `근속 ${Math.floor(sev.daysSinceHire / 30)}개월 (주 ${sev.weeklyHours}시간)\n` +
+          `추정 퇴직금: 약 ${manWon}만원\n\n` +
+          `※ 참고용 추정 — 정확한 금액은 직전 3개월 평균임금 기준 (노무사 상담 권장).\n` +
+          `미지급 시 임금체불(근로기준법 §43)에 해당하며 3년 시효 / 형사처벌 가능합니다.\n\n` +
+          `삭제하시겠습니까?`
+        : `⚠️ ${employee.name} is owed severance pay\n\n` +
+          `Tenure: ${Math.floor(sev.daysSinceHire / 30)} months (${sev.weeklyHours}h/week)\n` +
+          `Estimated: ~${manWon}만원\n\n` +
+          `※ Approximation. Exact figure requires last-3-month avg wage (consult labor attorney).\n` +
+          `Non-payment is wage default (Labor Standards Act §43): 3-yr statute, criminal liability.\n\n` +
+          `Continue?`;
+      if (!window.confirm(message)) return;
+    }
+    d.handleEmpDelete(employee.id);
+  };
+
   const totalWeeklyHours = employees.reduce((s, e) => s + (e.weeklyHours ?? 0), 0);
   const monthlyHours = totalWeeklyHours * 4.34;
   const revenuePerHour = monthlyHours > 0 && totalSales > 0 ? Math.round(totalSales / monthlyHours) : 0;
@@ -114,34 +152,62 @@ export function StaffOpsCard({
       </div>
 
       <div style={listStack}>
-        {employees.slice(0, 4).map((employee) => (
-          <div key={employee.id} style={listRow}>
-            <div>
-              <div style={listTitle}>{employee.name}</div>
-              <div style={listMeta}>
-                {employee.weeklyHours != null
-                  ? `${employee.weeklyHours}${ko ? "시간/주" : " hrs/week"}`
-                  : ko
-                    ? "근무시간 미입력"
-                    : "Hours missing"}
+        {employees.slice(0, 4).map((employee) => {
+          const sev = sevByEmpId.get(employee.id);
+          const sevBadge = sev && (sev.level === "eligible" || sev.level === "approaching")
+            ? {
+                label: sev.level === "eligible"
+                  ? (ko ? "퇴직금 의무" : "Severance owed")
+                  : (ko ? `퇴직금 D-${Math.max(0, 365 - sev.daysSinceHire)}` : `Severance D-${Math.max(0, 365 - sev.daysSinceHire)}`),
+                color: sev.level === "eligible" ? "#b42318" : "#e85d04",
+              }
+            : null;
+          return (
+            <div key={employee.id} style={listRow}>
+              <div>
+                <div style={listTitle}>{employee.name}</div>
+                <div style={{ display: "flex", gap: "4px", alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={listMeta}>
+                    {employee.weeklyHours != null
+                      ? `${employee.weeklyHours}${ko ? "시간/주" : " hrs/week"}`
+                      : ko
+                        ? "근무시간 미입력"
+                        : "Hours missing"}
+                  </div>
+                  {sevBadge && (
+                    <span
+                      title={sev?.suggestion}
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        color: sevBadge.color,
+                        background: `${sevBadge.color}10`,
+                        borderRadius: "4px",
+                        padding: "1px 6px",
+                      }}
+                    >
+                      {sevBadge.label}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={listTitle}>{employee.hourlyWage ? fmt(employee.hourlyWage) : "—"}</div>
+                <div style={listMeta}>
+                  {employee.isInsured ? (ko ? "보험 적용" : "Insured") : (ko ? "보험 미적용" : "Uninsured")}
+                </div>
+              </div>
+              <div style={rowActions}>
+                <button type="button" onClick={() => d.openEmpEdit(employee as never)} style={tinyAction}>
+                  {ko ? "수정" : "Edit"}
+                </button>
+                <button type="button" onClick={() => handleDeleteWithSeveranceConfirm(employee)} style={tinyDangerAction}>
+                  {ko ? "삭제" : "Delete"}
+                </button>
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={listTitle}>{employee.hourlyWage ? fmt(employee.hourlyWage) : "—"}</div>
-              <div style={listMeta}>
-                {employee.isInsured ? (ko ? "보험 적용" : "Insured") : (ko ? "보험 미적용" : "Uninsured")}
-              </div>
-            </div>
-            <div style={rowActions}>
-              <button type="button" onClick={() => d.openEmpEdit(employee as never)} style={tinyAction}>
-                {ko ? "수정" : "Edit"}
-              </button>
-              <button type="button" onClick={() => d.handleEmpDelete(employee.id)} style={tinyDangerAction}>
-                {ko ? "삭제" : "Delete"}
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {employees.length === 0 ? (
           <div style={emptyState}>
             {ko ? "직원이나 파트타이머가 있다면 먼저 등록해 두세요." : "Add staff members here if you work with employees or part-timers."}

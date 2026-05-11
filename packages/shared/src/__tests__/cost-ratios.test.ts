@@ -116,6 +116,61 @@ describe("calculateBreakEven — 사용자 실제 보고 케이스 (2026-05-07)"
   });
 });
 
+describe("calculateBreakEven — 사용자 신고 케이스 #2 (2026-05-11)", () => {
+  // 사용자 보고: 월 비용 8,950,000원 → 일일 손익분기 2,850,000원 표시 (잘못)
+  //  · 매출 입력이 매우 적은데 식재료비는 큰 경우 cogsRate 폭주 → BEP 무한대 근처.
+  //  · 검증: BEP 는 총 비용의 1.5 배 이내, 일 매출 단위로 합리적이어야.
+  const monthlyTotalUser = 8_950_000;
+
+  it("월비용 895만 + 식재료 300만 + 7일 매출 88만 → BEP 폭주 방지 (3× cap 안전망)", () => {
+    const result = calculateBreakEven({
+      monthlyIngredients: 3_000_000,
+      monthlyFixedCosts: 5_950_000,
+      totalRevenue: 880_000,    // 7일치 일평균 ~12.5만
+      days: 7,
+    });
+    expect(result.computable).toBe(true);
+    // 안전망 발동 — 단순 BEP = 총 비용 / 26 = 8,950,000 / 26 = 344,231
+    expect(result.breakEvenDaily).toBeGreaterThanOrEqual(330_000);
+    expect(result.breakEvenDaily).toBeLessThanOrEqual(360_000);
+    // 핵심: BEP 일매출이 285만원 같은 비현실적 값이면 안 됨
+    expect(result.breakEvenDaily).toBeLessThan(monthlyTotalUser / 5);
+  });
+
+  it("일반화 회귀 가드 — BEP 가 항상 총 비용의 3 배 이내 (월 환산)", () => {
+    // 다양한 비현실적 입력 — 모두 안전망이 잡아야
+    const cases = [
+      { ingredients: 5_000_000, fixed: 3_000_000, rev: 500_000, days: 3 },
+      { ingredients: 4_000_000, fixed: 4_000_000, rev: 1_000_000, days: 10 },
+      { ingredients: 2_000_000, fixed: 1_000_000, rev: 200_000, days: 5 },
+    ];
+    for (const c of cases) {
+      const result = calculateBreakEven({
+        monthlyIngredients: c.ingredients,
+        monthlyFixedCosts: c.fixed,
+        totalRevenue: c.rev,
+        days: c.days,
+      });
+      const totalCosts = c.ingredients + c.fixed;
+      expect(result.breakEvenMonthly).toBeLessThanOrEqual(totalCosts * 3);
+      // 일 BEP × 26영업일 = 월 BEP 와 일치 (또는 안전망 단순 모델)
+      expect(result.breakEvenDaily * 26).toBeLessThanOrEqual(totalCosts * 3.1); // 반올림 여유
+    }
+  });
+
+  it("안전망 발동 시 단순 BEP = 총비용 / 26 (사장님 직관과 일치)", () => {
+    const result = calculateBreakEven({
+      monthlyIngredients: 3_000_000,
+      monthlyFixedCosts: 5_950_000,
+      totalRevenue: 100_000,   // 극단적으로 적은 매출
+      days: 3,
+    });
+    // 8,950,000 / 26 = 344,230.77
+    expect(result.breakEvenDaily).toBe(344_231);
+    expect(result.breakEvenMonthly).toBe(8_950_000);
+  });
+});
+
 describe("calculateBreakEven — 일반 케이스", () => {
   it("ingredients = 0 (서비스업) → BEP = 고정비/26", () => {
     const result = calculateBreakEven({

@@ -92,7 +92,31 @@ export function useDashboardComputed(d: DashboardHook) {
   const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
   const totalCustomers = monthEntries.reduce((s, e) => s + e.customers, 0);
   const workingDays = monthEntries.length;
-  const avgDailySales = workingDays > 0 ? totalSales / workingDays : 0;
+
+  // ⚠️ CRITICAL FIX (2026-05-11) ─────────────────────────────────────
+  //  일 평균은 *경과 영업일수* 로 나눠야 한다. entry 개수로 나누면 입력 안 한 날을
+  //  무시해서 평균이 과대 계상된다.
+  //
+  //  실제 사용자 신고: 누적 손님 26명, 7일+ 운영했는데 2일치만 입력
+  //   · 버그: 26 / 2 = 13명 → 월 예상 390명 (잘못)
+  //   · 수정: 26 / 7 = 3.7명 → 월 예상 약 112명 (현실)
+  //
+  //  분모: MAX(entry 개수, 이 달 경과 영업일수). 둘 다 봐서 큰 쪽 사용 — 보수적.
+  //  같은 패턴 fix: CEOMorningHero (2026-05-08), UserActivityCard (2026-05-11), 여기 (2026-05-11)
+  // ─────────────────────────────────────────────────────────────────
+  const businessLaunchedDate = (d as { businessLaunchedDate?: string | null }).businessLaunchedDate ?? null;
+  const calendarElapsedInMonth = (() => {
+    const monthStartDate = new Date(`${currentMonth}-01T00:00:00`);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    // 개업일이 이 달 안에 있으면 그게 시작점. 그 외엔 월초.
+    const businessStart = businessLaunchedDate ? new Date(businessLaunchedDate) : null;
+    const effectiveStart = businessStart && businessStart > monthStartDate ? businessStart : monthStartDate;
+    const days = Math.floor((todayDate.getTime() - effectiveStart.getTime()) / 86_400_000) + 1;
+    return Math.max(1, Math.min(31, days));
+  })();
+  const avgDailyDenominator = Math.max(workingDays, calendarElapsedInMonth);
+  const avgDailySales = avgDailyDenominator > 0 ? totalSales / avgDailyDenominator : 0;
   const recent7Sales = recent7Entries.reduce((s, e) => s + e.sales, 0);
   const previous7Sales = previous7Entries.reduce((s, e) => s + e.sales, 0);
   const weeklySalesChange =
@@ -153,6 +177,10 @@ export function useDashboardComputed(d: DashboardHook) {
   const laborRatio = _ratios.laborRatio;
   const rentRatio = _ratios.rentRatio;
   const primeCost = _ratios.primeCostRatio;
+  // SSOT 의 신뢰도 플래그 — UI 가 "비율 표시 vs '데이터 보강 필요' empty state" 분기에 사용.
+  // 사용 예: PrimeCostCard 가 직접 division 하면 부분월 입력 시 비율 폭주. 이 플래그로 차단.
+  const ratiosReady = _ratios.ready;
+  const monthlyRevenueEquivalent = _ratios.monthlyRevenueEquivalent;
   // BEP 진행률 — 월 환산 매출 / 월 비용
   const bepProgress = totalCosts > 0 && _ratios.monthlyRevenueEquivalent > 0
     ? Math.min(100, (_ratios.monthlyRevenueEquivalent / totalCosts) * 100)
@@ -392,6 +420,8 @@ export function useDashboardComputed(d: DashboardHook) {
     laborRatio,
     rentRatio,
     primeCost,
+    ratiosReady,
+    monthlyRevenueEquivalent,
     bepProgress,
     healthMetrics,
     breakEvenDailySales,

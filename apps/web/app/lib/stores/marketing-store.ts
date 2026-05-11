@@ -67,7 +67,14 @@ export type CoachAction = {
 };
 
 export type CoachCache = {
-  date: string;          // YYYY-MM-DD (KST)
+  /**
+   * ISO 주차 키 (예: "2026-W19") — 사용자 요청: 코칭은 *주 1회* 재생성.
+   *  과거 일 단위 캐시 (`date: YYYY-MM-DD`) 에서 2026-05-11 전환.
+   *  하위호환: 옛 필드 `date` 가 있어도 무시 (다음 주차 시작 시 재생성).
+   */
+  weekKey: string;
+  /** 하위호환 — 옛 캐시 마이그레이션 용도. 새 캐시엔 비워둠. */
+  date?: string;
   contextKey: string;    // storeName|subIndustryId|language — 이 조합이 바뀌면 재생성
   actions: CoachAction[];
 };

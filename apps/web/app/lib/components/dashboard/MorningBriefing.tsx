@@ -25,6 +25,7 @@ import { updateAnomalyHistory, getAnomalyContext } from "../../services/anomaly-
 import { useIndustryInsight, type IndustryInsight } from "../../hooks/useIndustryInsight";
 import { useTimeLogStore, shouldPromptToday } from "../../stores/time-log-store";
 import { TimeLogCheckIn } from "./TimeLogCheckIn";
+import { honestDailyAverage } from "../../utils/daily-windows";
 import { calculateUnifiedHealthScore, HEALTH_COLORS, calculateCostRatios } from "@build-up/shared";
 import { HealthDot, type HealthGrade } from "./HealthSignal";
 
@@ -158,14 +159,31 @@ export type HeroSource = "stale-sales" | "crisis" | "anomaly" | "reorder-urgent"
 export type HeroTone = "crisis" | "warning" | "neutral";
 /**
  * CTA 클릭 시 어디로 안내할지 명시.
- * - "sales": 매출 입력 (ActivitySnapshotCard, [data-sales-input])
- * - "users": 사용자 변화 (UserActivityCard, [data-user-activity]) — DAU/WAU/리텐션·고객수 인사이트
- * - "cashflow": 현금흐름 레이더 (CashflowHeroCard, [data-cashflow-hero])
- * - "costs": 비용 구조 (CostStructureCard, [data-cost-structure])
- * - "marketing": 마케팅·이벤트 surface (별도 페이지) — 'bup:navigate-feature' 로 surface 전환
- * - "operations": 오늘의 운영 리추얼 / 측정·병목·서비스 시간 (DailyOpsRitualCard, [data-ops-rituals])
+ *
+ *  ⚠️ 라우팅 SSOT — 인사이트 *내용* 과 실제 카드를 1:1 매칭. "전부 매출 카드" 패턴 차단.
+ *  사용자 지침 (2026-05-11): "메뉴 관련이면 재고 관리 카드, 비용 관련이면 비용 관리 카드 —
+ *   이런 식으로 작동해야지." → 내용 ↔ 카드 직접 매칭.
+ *
+ * - "sales":      매출 입력 (ActivitySnapshotCard, [data-sales-input])
+ * - "users":      고객 변화 (UserActivityCard, [data-user-activity]) — 단골/재방문/객단가/리텐션
+ * - "cashflow":   현금흐름 레이더 ([data-cashflow-hero])
+ * - "costs":      비용 관리 카드 ([data-cost-management]) — 임대료·인건비·공과금·판관비 *입력·점검*
+ * - "inventory":  재고 관리 카드 ([data-inventory-card]) — 메뉴·재료·원자재·재주문·품절
+ * - "team":       팀/인력 카드 ([data-team-card]) — 직원·노무·4대보험·퇴직금
+ * - "primeCost":  프라임코스트 카드 ([data-prime-cost-card]) — 식재료+인건비 합계 점검
+ * - "marketing":  마케팅 surface (별도 페이지) — 'bup:navigate-feature'
+ * - "operations": 운영 리추얼 ([data-ops-rituals]) — 측정·병목·서비스 시간
  */
-export type HeroCtaTarget = "sales" | "users" | "cashflow" | "costs" | "marketing" | "operations";
+export type HeroCtaTarget =
+  | "sales"
+  | "users"
+  | "cashflow"
+  | "costs"
+  | "inventory"
+  | "team"
+  | "primeCost"
+  | "marketing"
+  | "operations";
 
 /**
  * 인사이트 카테고리 + 본문/액션 키워드 → CTA 라우팅 타깃.
@@ -183,10 +201,31 @@ export function resolveInsightCtaTarget(
   body: string,
   action: string,
   isDigital: boolean,
+  /**
+   * AI 가 직접 지정한 도착 카드 (2026-05-11 추가).
+   *  ── 라우팅 우선순위 ───────────────────────────────────────
+   *   1. targetCard (AI 가 카드 카탈로그 보고 직접 선택) — **최우선**
+   *   2. 키워드 매칭 (inferActionCtaTarget) — 백워드 컴팻
+   *   3. category 폴백
+   *  ──────────────────────────────────────────────────────
+   *  종전 문제: 키워드 매칭이 fragile. 예: "주문-조리-서빙 병목 측정" 의 "조리" 가
+   *   inventory 로 잘못 잡힘. AI 프롬프트에 카드 카탈로그를 명시해 직접 선택 받음.
+   */
+  targetCard?: HeroCtaTarget,
 ): HeroCtaTarget {
+  const VALID_TARGETS: ReadonlyArray<HeroCtaTarget> = [
+    "sales", "users", "cashflow", "costs", "inventory", "team", "primeCost", "marketing", "operations",
+  ];
+  // 0단계 — AI 가 명시한 targetCard 가 유효하면 그대로 사용 (가장 신뢰).
+  if (targetCard && VALID_TARGETS.includes(targetCard)) return targetCard;
+
+  // 1단계 — 텍스트(action + body) 키워드로 *구체적* 카드 매칭 (재고/팀/프라임 등).
+  //   카테고리 단순 매칭보다 우선 — "재료 단가 협상" 인사이트가 category="cost" 라도 *재고 카드* 가 맞음.
+  const fromKeywords = inferActionCtaTarget(action, body);
+  if (fromKeywords !== "sales") return fromKeywords;
+
+  // 2단계 — 키워드로 안 잡힌 경우 category 로 폴백.
   const text = `${action} ${body}`.toLowerCase();
-  const mentionsDigitalUsers = isDigital && /dau|wau|mau|retention|리텐션|onboarding|온보딩/i.test(text);
-  if (mentionsDigitalUsers) return "users";
   if (isDigital) {
     if (category === "cost") return "costs";
     if (category === "revenue") return "sales";
@@ -196,20 +235,72 @@ export function resolveInsightCtaTarget(
   // ─── 오프라인 ───
   if (category === "cost") return "costs";
   if (category === "marketing") return "marketing";
-  if (category === "growth") return "users"; // 단골/재방문 → 고객 카드
+  if (category === "growth") return "users";
   if (category === "operations") return "operations";
-  // revenue 라도 측정·속도·회전·병목 키워드면 ops 로 (예: "주문 응대 시간 측정")
   if (category === "revenue" && /측정|시간|속도|회전|병목|응대|제공|준비|발주|폐기|동선|조리/.test(text)) {
     return "operations";
   }
   return "sales";
 }
 
+/**
+ * AI top action 문자열 → ctaTarget 추론.
+ *
+ *  ⚠️ CRITICAL (2026-05-11): "오늘의 집중 → 항상 매출 카드" 버그의 SSOT 교체.
+ *  사용자 지침: "메뉴 관련이면 재고 관리 카드, 비용 관련이면 비용 관리 카드 — 이런 식으로 작동해야지."
+ *
+ *  분류 우선순위 — *구체적 → 일반적* 순서 (정확한 매칭이 broad fallback 보다 먼저 hit):
+ *   1. inventory:  메뉴·재료·원자재·재고·재주문·품절   (broad "costs" 보다 먼저)
+ *   2. team:       직원·노무·4대보험·퇴직금·시급
+ *   3. primeCost:  프라임코스트·식재료비+인건비 합계 점검 전용
+ *   4. cashflow:   현금·런웨이·잔고·수금·지급·긴급자금
+ *   5. marketing:  광고·마케팅·콘텐츠·캠페인·SNS·리뷰 요청
+ *   6. users:      고객·단골·재방문·리텐션·객단가
+ *   7. operations: 측정·시간·속도·회전·병목·동선·조리
+ *   8. costs:      나머지 비용 (임대료·공과금·판관비·이익률·마진 등)
+ *   9. fallback:   sales
+ */
+export function inferActionCtaTarget(title: string, reason: string): HeroCtaTarget {
+  const text = `${title} ${reason}`.toLowerCase();
+
+  // 1. inventory — 메뉴/재료/원자재/식자재/재고/품절/재주문/발주/공급처/단가
+  //    ⚠ "비용" 검사보다 먼저! "재료비 점검" 같은 문구가 "비용" 키워드에 먼저 잡혀서
+  //       비용 카드로 가는 문제 차단. 재료·식재료 단가는 *재고 관리* 카드의 책임.
+  if (/메뉴|레시피|재료|식재료|식자재|원자재|재고|품절|재주문|발주|공급처|단가|sku|inventory|stockout|reorder/i.test(text)) return "inventory";
+
+  // 2. team — 직원/노무/4대보험/퇴직금/시급/근로계약
+  if (/직원|노무|4대보험|퇴직금|시급|최저임금|근로계약|payroll|staffing|hire|employee/i.test(text)) return "team";
+
+  // 3. primeCost — *합계* 단어와 함께 등장하는 경우만 (단독 식재료/인건비는 위 inventory/team 으로)
+  if (/프라임코스트|prime.?cost/i.test(text)) return "primeCost";
+
+  // 4. cashflow — 현금/런웨이/잔고/수금/지급/긴급자금/대출/상환
+  if (/현금|런웨이|runway|잔고|수금|지급|긴급자금|대출|상환|매입.?지급|cash.?flow|burn/i.test(text)) return "cashflow";
+
+  // 5. marketing — 광고/마케팅/캠페인/인스타/페이스북/네이버 플레이스/SNS/유튜브/숏폼/콘텐츠/리뷰 요청
+  if (/광고|마케팅|캠페인|인스타|페이스북|네이버.?플레이스|유튜브|틱톡|숏폼|sns|콘텐츠|리뷰.?요청|배너|쿠폰.?발송|메시지.?캠페인|campaign|ads?\b/i.test(text)) return "marketing";
+
+  // 6. users — 고객/단골/재방문/리텐션/객단가/구매자/회원
+  if (/고객|단골|재방문|리텐션|retention|이탈|구매자|회원|membership|customer|dau|wau|mau|onboarding|온보딩|새로운.?고객|first.?customer/i.test(text)) return "users";
+
+  // 7. operations — 측정/시간/속도/회전/병목/동선/조리/응대
+  if (/측정|시간|속도|회전|병목|동선|조리|폐기|준비|응대|throughput|cycle.?time|workflow|ops/i.test(text)) return "operations";
+
+  // 8. costs — 일반 비용 (임대료/공과금/판관비/이익률/마진) — broad fallback
+  if (/임대료|공과금|관리비|판관비|이익률|마진|cogs|gross.?margin|fixed.?cost|overhead|비용.?구조/i.test(text)) return "costs";
+
+  // 9. fallback — 매출/판매 or 분류 불가
+  return "sales";
+}
+
 /** ctaTarget → 한국어/영어 CTA 라벨 (LLM action 이 비어있을 때 fallback) */
 export function defaultCtaLabel(target: HeroCtaTarget): { ko: string; en: string } {
   switch (target) {
-    case "users":      return { ko: "사용자 추적 시작", en: "Start tracking users" };
-    case "costs":      return { ko: "비용 점검하기", en: "Review costs" };
+    case "users":      return { ko: "고객 변화 보기", en: "See customer activity" };
+    case "costs":      return { ko: "비용 관리 열기", en: "Open cost management" };
+    case "inventory":  return { ko: "재고 관리 열기", en: "Open inventory" };
+    case "team":       return { ko: "팀 관리 열기", en: "Open team" };
+    case "primeCost":  return { ko: "프라임코스트 보기", en: "View prime cost" };
     case "cashflow":   return { ko: "현금흐름 보기", en: "View cashflow" };
     case "marketing":  return { ko: "마케팅으로 가기", en: "Go to marketing" };
     case "operations": return { ko: "운영 리추얼 열기", en: "Open ops ritual" };
@@ -413,8 +504,9 @@ export function resolveHero(input: {
       ctaKo: "확인하기",
       ctaEn: "Take action",
       referencedCase: aiTopAction.referencedCase,
-      // AI Top Action은 행동 텍스트 기반 — 일단 sales (가장 자주 매출 입력 후 검증)
-      ctaTarget: "sales",
+      // 행동 텍스트(title + reason) 기반으로 ctaTarget 추론 — "오늘의 집중 → 항상 매출 카드" 버그 차단.
+      // 예: title="재료비 비율 점검", reason="..."  → ctaTarget: "costs"
+      ctaTarget: inferActionCtaTarget(aiTopAction.title, aiTopAction.reason),
     };
   }
 
@@ -460,9 +552,9 @@ export function resolveHero(input: {
   if (industryInsight && Array.isArray(industryInsight.insights) && industryInsight.insights.length > 0) {
     const isDigital = categoryId === "startup-tech" || categoryId === "online-digital";
 
-    // resolveInsightCtaTarget(SSOT) 를 통해 카테고리 + 키워드 매핑
+    // resolveInsightCtaTarget(SSOT) — AI 가 targetCard 명시했으면 최우선, 아니면 키워드/카테고리 폴백.
     const buildSpec = (it: typeof industryInsight.insights[number]): Hero => {
-      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital);
+      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital, it.targetCard);
       const label = defaultCtaLabel(target);
       return {
         source: "industry",
@@ -593,11 +685,16 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
       costs.ingredients + costs.labor + costs.rent + costs.utilities +
       costs.sga + costs.marketing + costs.other + (costs.interest ?? 0);
     const totalRev = entries.reduce((s, e) => s + e.sales, 0);
-    const days = entries.length;
+
+    // ⚠️ 일 평균 — entry 개수 아닌 *경과 캘린더 일수* 분모 (2026-05-11 fix).
+    //  entries.length 로 나누면 입력 안 한 날 무시되어 월 추정이 폭주.
+    //  honestDailyAverage 가 sparse 자동 탐지 + MAX(entry, 경과일) 분모 보장.
+    const honestAvg = honestDailyAverage(entries, (e) => e.sales);
+    const days = honestAvg.denominator;
 
     // ① 데이터 부족이라도 명백한 신호: 매출 vs 비용 극단 gap
-    if (!healthSignalReady && days > 0 && totalCostsAll > 0) {
-      const avgDaily = totalRev / days;
+    if (!healthSignalReady && days > 0 && totalCostsAll > 0 && totalRev > 0) {
+      const avgDaily = honestAvg.avg;
       const monthEst = avgDaily * 26; // 월 26영업일 가정
       const ratio = monthEst / totalCostsAll;
       if (ratio < 0.3 && totalCostsAll > 100000) {
@@ -880,7 +977,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
     const cat = d.industryCategoryId;
     const isDigital = cat === "startup-tech" || cat === "online-digital";
     return industryInsight.insights.map((it) => {
-      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital);
+      const target = resolveInsightCtaTarget(it.category, it.body, it.action, isDigital, it.targetCard);
       const { ko: ctaKo, en: ctaEn } = defaultCtaLabel(target);
       return {
         source: "industry" as const,
@@ -1573,7 +1670,7 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
                     ? (ko ? `AI 코칭 불러오기 실패 — ${errMsg}` : `AI coaching failed — ${errMsg}`)
                     : (ko ? "AI 코칭을 불러오지 못했습니다" : "AI coaching unavailable")}
                 </span>
-                <button type="button" onClick={d.fetchAiActions} style={{
+                <button type="button" onClick={() => { void d.fetchAiActions(true); }} style={{
                   fontSize: "11px", fontWeight: 620, color: "#191970",
                   background: "none", border: "none", cursor: "pointer",
                   flexShrink: 0,
@@ -2733,18 +2830,24 @@ export function InsightStack({ related, ko }: { related: Omit<Hero, "relatedSpec
                       }));
                       return;
                     }
-                    // 그 외 — 코칭 카테고리에 맞는 카드로 부드럽게 스크롤
-                    //   ⚠️ "전부 매출 기록" 종착 방지 — 코칭 내용에 맞는 영역으로 이동.
-                    const sel =
-                      spec.ctaTarget === "sales" ? "[data-sales-input]"
-                      : spec.ctaTarget === "cashflow" ? "[data-cashflow-hero]"
-                      : spec.ctaTarget === "costs" ? "[data-cost-structure]"
-                      : spec.ctaTarget === "users" ? "[data-user-activity]"
-                      : spec.ctaTarget === "operations" ? "[data-ops-rituals]"
-                      : null;
-                    if (sel) {
+                    // 코칭 내용 ↔ 실제 카드 매칭 (CEOMorningHero.handleBriefingCta 와 동일 매핑).
+                    //   ⚠ "전부 매출 기록" 종착 금지. 메뉴/재고는 재고 카드, 비용은 비용 관리 카드 등.
+                    const selectors: string[] =
+                      spec.ctaTarget === "sales" ? ["[data-sales-input]"]
+                      : spec.ctaTarget === "cashflow" ? ["[data-cashflow-hero]"]
+                      : spec.ctaTarget === "costs" ? ["[data-cost-management]", "[data-cost-structure]", "[data-pl-hero]"]
+                      : spec.ctaTarget === "inventory" ? ["[data-inventory-card]"]
+                      : spec.ctaTarget === "team" ? ["[data-team-card]"]
+                      : spec.ctaTarget === "primeCost" ? ["[data-prime-cost-card]", "[data-cost-management]"]
+                      : spec.ctaTarget === "users" ? ["[data-user-activity]", "[data-first-customers-card]"]
+                      : spec.ctaTarget === "operations" ? ["[data-ops-rituals]"]
+                      : [];
+                    for (const sel of selectors) {
                       const el = document.querySelector<HTMLElement>(sel);
-                      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth", block: "center" });
+                        return;
+                      }
                     }
                   }}
                   style={{

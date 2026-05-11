@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import type { FinancialSimulationResult } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiStructuredResponse, AiCallOptions } from "../types/ai";
@@ -66,7 +66,7 @@ export async function interpretFinancialSimulation(
   result: FinancialSimulationResult,
   options: AiCallOptions & { categoryLabel?: string }
 ): Promise<AiStructuredResponse> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
+  const client = createAiClient(options.apiKey);
 
   const userMessage = buildFinanceUserPrompt(result, options.categoryLabel);
 

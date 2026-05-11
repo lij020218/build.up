@@ -24,6 +24,13 @@ export type SingleInsight = {
   /** CTA 라벨 — "매출 기록하기" 같은 짧은 동사구 */
   action: string;
   category: "revenue" | "cost" | "marketing" | "operations" | "growth";
+  /**
+   * AI 가 직접 지정한 도착 카드 (2026-05-11).
+   *  종전엔 category + 키워드 기반 라우팅 (fragile — "조리" 같은 단어가 inventory 로
+   *  잘못 매칭되는 사용자 보고 케이스). 이제 LLM 프롬프트에 카드 카탈로그를 명시
+   *  제공하고 직접 선택받음. HeroCtaTarget (MorningBriefing.tsx) 와 SSOT 일치.
+   */
+  targetCard?: "sales" | "users" | "cashflow" | "costs" | "inventory" | "team" | "primeCost" | "marketing" | "operations";
   priority: InsightPriority;
   /** 인사이트 출처 라벨 (Perplexity·Glean 패턴, UI 작은 배지) */
   sourceLabel?: string;

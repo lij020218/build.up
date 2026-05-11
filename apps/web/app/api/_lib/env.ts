@@ -40,9 +40,19 @@ export function getEnvVar(name: string): string | undefined {
   return fromFile && fromFile.length > 0 ? fromFile : undefined;
 }
 
+/**
+ * @deprecated 함수명은 호환을 위해 유지. 실제로는 OpenAI 키 반환 (2026-05-11 마이그레이션).
+ *   Anthropic 결제 잔액 부족으로 GPT-5.4-mini 로 전면 전환. 호출처 변경 최소화 위해
+ *   본 함수가 OpenAI 키를 반환하도록 redirect. 새 코드는 `getOpenAIApiKey()` 사용 권장.
+ *   Anthropic 결제 복구 후 hybrid 라우팅 원하면 본 함수만 수정.
+ */
 export function getAnthropicApiKey(): string | undefined {
-  const key = getEnvVar("ANTHROPIC_API_KEY");
-  return key && key.length >= 10 ? key : undefined;
+  // 1순위: OPENAI_API_KEY (현재 메인 LLM)
+  const openaiKey = getEnvVar("OPENAI_API_KEY");
+  if (openaiKey && openaiKey.length >= 10) return openaiKey;
+  // 2순위(fallback): ANTHROPIC_API_KEY — 결제 복구 시 자동 사용
+  const anthropicKey = getEnvVar("ANTHROPIC_API_KEY");
+  return anthropicKey && anthropicKey.length >= 10 ? anthropicKey : undefined;
 }
 
 export function getOpenAiApiKey(): string | undefined {

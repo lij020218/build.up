@@ -48,7 +48,9 @@ export type ProjectionInput = {
   recentDailyEntries: DailyEntry[];
   salesChannels: SalesChannel[];
   fixedExpenses: FixedExpenseSchedule[];
-  vatReserveEnabled: boolean;       // 매출의 10% 부가세 적립
+  vatReserveEnabled: boolean;       // 매출의 N% 부가세 적립 (vatRate 로 비율 지정)
+  /** 부가세율 — 일반 0.10 / 간이 0.03 평균. 미지정 시 0.10. */
+  vatRate?: number;
   projectionDays?: number;          // 기본 14
   today?: Date;                      // 테스트용 주입
   /**
@@ -103,7 +105,8 @@ function computeDayInflow(
   predictDate: Date,
   averageDailySales: number,
   channels: SalesChannel[],
-  vatReserveEnabled: boolean
+  vatReserveEnabled: boolean,
+  vatRate: number = 0.10  // 일반과세 10%. simplified 면 호출 측에서 0.03 전달.
 ): CashflowEvent[] {
   const events: CashflowEvent[] = [];
 
@@ -119,9 +122,9 @@ function computeDayInflow(
     const feeRate = (channel.commissionRate + channel.paymentFeeRate) / 100;
     let netAmount = grossAmount * (1 - feeRate);
 
-    // 부가세 적립 (10% 유보)
+    // 부가세 적립 — 일반과세 10% / 간이과세 ~3% (호출 측에서 vatRate 결정)
     if (vatReserveEnabled) {
-      netAmount = netAmount * 0.9;
+      netAmount = netAmount * (1 - vatRate);
     }
 
     // 정산일 조정 (주말 회피) — predictDate 자체가 영업일이어야 함
@@ -180,6 +183,7 @@ function computeDayOutflow(
  */
 export function projectCashflow(input: ProjectionInput): DayProjection[] {
   const { currentBalance, recentDailyEntries, salesChannels, fixedExpenses, vatReserveEnabled, fallbackMonthlyCostsTotal } = input;
+  const vatRate = input.vatRate ?? 0.10;
   const projectionDays = input.projectionDays ?? 14;
   const today = input.today ? new Date(input.today) : new Date();
   today.setHours(0, 0, 0, 0);
@@ -204,7 +208,7 @@ export function projectCashflow(input: ProjectionInput): DayProjection[] {
     // Inflow는 영업일에만 (주말엔 정산 이월)
     const inflowEvents = isWeekend
       ? []
-      : computeDayInflow(date, avgDailySales, salesChannels, vatReserveEnabled);
+      : computeDayInflow(date, avgDailySales, salesChannels, vatReserveEnabled, vatRate);
     // Outflow는 모든 날 (고정비는 주말도 발생 가능 — 예: 월세 25일이 토요일이어도 이체)
     const outflowEvents = computeDayOutflow(date, fixedExpenses);
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "@build-up/ai/utils/client";
 import { resolveTrendGroup, TREND_GROUP_LABELS } from "@build-up/shared";
 import { getAnthropicApiKey } from "../../../_lib/env";
 
@@ -172,7 +172,7 @@ Respond with ONLY the JSON array:
 ]`;
 
   try {
-    const client = new Anthropic({ apiKey });
+    const client = createAiClient(apiKey);
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
@@ -181,15 +181,9 @@ Respond with ONLY the JSON array:
           type: "web_search_20260209",
           name: "web_search",
           max_uses: 5,
-        } as unknown as Anthropic.Messages.Tool,
+        } as unknown,
       ],
-      system: [
-        {
-          type: "text",
-          text: systemText,
-          cache_control: { type: "ephemeral" },
-        } as unknown as Anthropic.Messages.TextBlockParam,
-      ],
+      system: systemText,
       messages: [{ role: "user", content: userText }],
     });
 

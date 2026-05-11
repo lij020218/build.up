@@ -82,6 +82,8 @@ export type BusinessHealthMetrics = {
   // 수익성 지표
   operatingMargin: number;
   breakEvenDailySales: number; // 일일 손익분기 매출
+  /** 월간 손익분기 매출 — cost-ratios SSOT 의 breakEvenMonthly */
+  breakEvenMonthlySales: number;
   daysAboveBreakEven: number;  // 이번 달 손익분기 초과일 수
   totalDaysRecorded: number;
 
@@ -207,6 +209,7 @@ export function calculateHealthMetrics(
     fallbackCogsRate: 0.33,
   });
   const breakEvenDailySales = bep.breakEvenDaily;
+  const breakEvenMonthlySales = bep.breakEvenMonthly;
 
   // 손익분기 초과일 계산 — 동일 일 단위 기준
   const daysAboveBreakEven = breakEvenDailySales > 0
@@ -263,6 +266,7 @@ export function calculateHealthMetrics(
     primeCostRatio: Math.round(primeCostRatio * 10) / 10,
     operatingMargin: pnl.operatingMargin,
     breakEvenDailySales,
+    breakEvenMonthlySales,
     daysAboveBreakEven,
     totalDaysRecorded,
     cashRunwayMonths,

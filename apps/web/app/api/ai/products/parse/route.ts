@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "@build-up/ai/utils/client";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   // 사용자 입력을 로그에 노출하지 않음 (보안)
 
   try {
-    const client = new Anthropic({ apiKey });
+    const client = createAiClient(apiKey);
     const response = await client.messages.create({
       model: "claude-sonnet-4-5-20250929",
       max_tokens: 8192,

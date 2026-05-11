@@ -411,7 +411,7 @@ export function CurrentStageView() {
                       cursor: "pointer", letterSpacing: "-0.2px",
                     }}
                   >
-                    {ko ? "내 가게 대시보드로 이동" : "Go to My Store"}
+                    {ko ? "운영 대시보드로 이동" : "Go to Operational Dashboard"}
                   </button>
                   <button
                     type="button"

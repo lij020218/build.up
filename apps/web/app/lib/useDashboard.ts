@@ -298,7 +298,41 @@ export function useDashboard(surface: DashboardSurface = "home") {
   type MonthlyCostsLocal = { ingredients: number; labor: number; rent: number; utilities: number; other: number };
   type InventoryItemLocal = { id: string; name: string; quantity: number; minThreshold: number; [key: string]: unknown };
 
-  const fetchAiActions = async () => {
+  // ── AI actions 일 1회 캐시 (사용자 신고 2026-05-11) ──────────────────────
+  //  "오늘의 집중" hero 가 새로고침마다 LLM 비결정성으로 매번 다른 액션을 보였음.
+  //  하루 같은 메시지가 보이는 게 자연스럽고, API 호출 비용도 절감.
+  //  키: 사용자 ID + KST 날짜. 자정(KST) 지나면 자동 무효 (옛 키는 cleanup).
+  //
+  //  ※ industryInsight 는 useIndustryInsight.ts 가 이미 동일 패턴으로 캐싱.
+  const AI_ACTIONS_CACHE_PREFIX = "buildup-ai-actions-v1:";
+  const todayKst = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+  const buildAiActionsCacheKey = (userId: string) => `${AI_ACTIONS_CACHE_PREFIX}${userId}:${todayKst()}`;
+  const loadCachedAiActions = (userId: string): unknown | null => {
+    if (typeof localStorage === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(buildAiActionsCacheKey(userId));
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  };
+  const saveCachedAiActions = (userId: string, data: unknown): void => {
+    if (typeof localStorage === "undefined") return;
+    try {
+      const currentKey = buildAiActionsCacheKey(userId);
+      localStorage.setItem(currentKey, JSON.stringify(data));
+      // 오래된 키 정리 (오늘 KST 아닌 것)
+      const today = todayKst();
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith(AI_ACTIONS_CACHE_PREFIX)) continue;
+        if (!k.endsWith(`:${today}`)) localStorage.removeItem(k);
+      }
+    } catch { /* quota / private mode — 무시 */ }
+  };
+
+  /**
+   * @param force true 면 캐시 무시하고 LLM 재호출 (Retry 버튼·수동 재생성).
+   */
+  const fetchAiActions = async (force?: boolean) => {
     if (aiActionsLoading) return;
 
     // ── 가드 A: 미런칭
@@ -330,6 +364,17 @@ export function useDashboard(surface: DashboardSurface = "home") {
       if (!session?.access_token) {
         setAiActionsSkipReason("no-session");
         return;
+      }
+
+      // 일 1회 캐시 hit — 오늘 KST 안에 이미 생성한 액션이 있으면 그대로 사용.
+      //   "오늘의 집중" 이 새로고침마다 바뀌던 문제 차단. force=true 면 우회.
+      if (!force) {
+        const cached = loadCachedAiActions(session.user.id);
+        if (cached) {
+          setAiActions(cached as Parameters<typeof setAiActions>[0]);
+          setAiActionsLoading(false);
+          return;
+        }
       }
       const recent30 = entries.filter(e => {
         const d = new Date(e.date);
@@ -466,6 +511,11 @@ export function useDashboard(surface: DashboardSurface = "home") {
             return list.length > 0 ? list : undefined;
           })(),
           pendingTaxEvents: [],
+          // 제품·메뉴 등록 수 — AI 가 재료비 비율 신뢰도 판정 시 사용 (cost-ratios SSOT 와 정합).
+          //  unifiedProducts 가 비어있어도 legacy products / serviceMenuItems 에 데이터 있으면 등록된 것으로 간주.
+          productCount: ((unifiedProducts as Array<unknown> | undefined)?.length ?? 0)
+            + ((products as Array<unknown> | undefined)?.length ?? 0)
+            + ((serviceMenuItems as Array<unknown> | undefined)?.length ?? 0),
           lowStockItems: (inventory as InventoryItemLocal[]).filter(i => i.quantity <= i.minThreshold && i.minThreshold > 0).map(i => i.name).slice(0, 3),
           upcomingFixedExpenses: (() => {
             const today = new Date().getDate();
@@ -510,25 +560,57 @@ export function useDashboard(surface: DashboardSurface = "home") {
       if (res.ok) {
         const data = await res.json();
         setAiActions(data);
+        // 오늘(KST) 캐시에 저장 — 같은 사용자가 새로고침해도 동일한 hero 가 유지됨.
+        saveCachedAiActions(session.user.id, data);
       } else {
         // API 에러 — 상태 + 메시지 저장 (사용자에게 "다시 시도" 버튼 제공 가능)
-        let msg = `HTTP ${res.status}`;
+        let rawMsg = `HTTP ${res.status}`;
         try {
           const errBody = await res.json();
-          if (errBody?.error) msg = String(errBody.error);
+          if (errBody?.error) rawMsg = String(errBody.error);
         } catch { /* body 없음 */ }
-        console.error("[fetchAiActions] API error:", res.status, msg);
+        // 콘솔엔 진짜 원인 (admin 디버깅용), UI 엔 friendly 메시지.
+        console.error("[fetchAiActions] API error:", res.status, rawMsg);
         setAiActionsSkipReason("error");
-        setAiActionsError(msg);
+        setAiActionsError(humanizeAiError(rawMsg, res.status, language === "ko"));
       }
     } catch (err) {
       // 네트워크/기타 예외 — 로그 남기고 사용자에게 표면화
       console.error("[fetchAiActions] Exception:", err);
       setAiActionsSkipReason("error");
-      setAiActionsError(err instanceof Error ? err.message : "Unknown error");
+      const raw = err instanceof Error ? err.message : "Unknown error";
+      setAiActionsError(humanizeAiError(raw, 0, language === "ko"));
     }
     finally { setAiActionsLoading(false); }
   };
+
+  // AI 에러 → 사용자 친화적 메시지. raw 메시지엔 API 키·청구 정보·내부 토큰 등이
+  //  포함될 수 있어 그대로 노출하면 안 됨. 사장님 시각에선 다 똑같이 "잠시 후 재시도".
+  function humanizeAiError(raw: string, status: number, ko: boolean): string {
+    const lower = raw.toLowerCase();
+    // Anthropic 결제 잔액 / 카드 만료 / 요금제 문제 — admin 영역
+    if (lower.includes("credit balance") || lower.includes("billing") || lower.includes("payment_required") || status === 402) {
+      return ko
+        ? "AI 코칭 일시 중단 — 관리자에게 문의해주세요 (서비스 점검 중)."
+        : "AI coaching temporarily unavailable — contact admin.";
+    }
+    // Rate limit
+    if (lower.includes("rate") && (lower.includes("limit") || lower.includes("exceeded"))) {
+      return ko ? "AI 호출이 잠시 몰렸어요. 1분 뒤 다시 시도해주세요." : "AI is busy. Try again in a minute.";
+    }
+    // Overloaded
+    if (lower.includes("overloaded") || status === 529) {
+      return ko ? "AI 서버가 일시 과부하 상태입니다. 잠시 후 다시 시도해주세요." : "AI is overloaded. Try again shortly.";
+    }
+    // 인증 / 키 문제
+    if (lower.includes("invalid api") || lower.includes("authentication") || status === 401) {
+      return ko ? "AI 인증 오류 — 관리자에게 문의해주세요." : "AI authentication error — contact admin.";
+    }
+    // 그 외 — 일반화
+    return ko
+      ? "AI 코칭을 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+      : "Could not load AI coaching. Try again later.";
+  }
 
   // Auto-load AI actions on first mount when business is launched
   useEffect(() => {

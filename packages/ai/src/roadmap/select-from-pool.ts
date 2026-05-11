@@ -5,7 +5,7 @@
 // Pass 2 는 그 풀을 AI 에 통째로 보여주고 사용자 상황(예산·지역·팀 규모·아이디어)에 맞게
 // **풀 안에서만** 골라달라고 요청한다. → 가상 회사명 환각 0%, 한국 한정 검증된 추천.
 
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
 
@@ -83,7 +83,7 @@ export type SelectFromPoolResult = {
   pickedChannels: Array<{ id: string; priority: 1 | 2; reason: string }>;
 };
 
-const SELECT_TOOL: Anthropic.Tool = {
+const SELECT_TOOL: { name: string; description?: string; input_schema?: unknown } = {
   name: "submit_selections",
   description: "제공된 풀(vendors/materials/concepts/channels) 안에서 사용자 상황에 맞게 골라 제출합니다. 풀에 없는 ID는 절대 사용 금지.",
   input_schema: {
@@ -275,7 +275,7 @@ export async function selectFromPool(
     return { pickedVendors: [], pickedMaterials: [], pickedChannels: [] };
   }
 
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 60_000 });
+  const client = createAiClient(options.apiKey);
 
   const rawResponse = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
@@ -286,7 +286,11 @@ export async function selectFromPool(
     messages: [{ role: "user", content: buildUserPrompt(input) }],
   } as Parameters<typeof client.messages.create>[0]);
 
-  const response = rawResponse as Anthropic.Messages.Message;
+  const response = rawResponse as {
+    content: Array<{ type: string; text?: string; input?: Record<string, unknown>; [k: string]: unknown }>;
+    stop_reason: string | null;
+    usage: { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number };
+  };
   const toolUse = response.content.find((c) => c.type === "tool_use");
   if (!toolUse || toolUse.type !== "tool_use") {
     console.error("[selectFromPool] no tool_use in response");

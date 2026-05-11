@@ -12,6 +12,7 @@
 
 import type { DashboardHook } from "../../../useDashboard";
 import { RitualBanner } from "../RitualBanner";
+import { useProfileStore } from "../../../stores/profile-store";
 
 type Props = {
   d: DashboardHook;
@@ -21,6 +22,8 @@ type Props = {
 };
 
 export function Tier0Header({ d, ko, isStaff, nextStaggerStyle }: Props) {
+  const hiddenCards = useProfileStore((s) => s.hiddenCards);
+  const showRitualBanner = !hiddenCards.includes("ritual-banner");
   return (
     <>
       {/* 상호명 — Apple 페이지 타이틀 톤 */}
@@ -77,16 +80,9 @@ export function Tier0Header({ d, ko, isStaff, nextStaggerStyle }: Props) {
       </div>
 
       {/* 0단계 — 경영 리추얼 배너 */}
-      {!isStaff && (
+      {!isStaff && showRitualBanner && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <RitualBanner
-            ko={ko}
-            onOpenWeekly={() => {
-              const el = document.querySelector("[data-weekly-report]");
-              if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-            }}
-            onOpenMonthly={() => d.navigateToSurface("analytics")}
-          />
+          <RitualBanner ko={ko} />
         </div>
       )}
     </>

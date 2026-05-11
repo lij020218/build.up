@@ -140,9 +140,15 @@ export function useTaskHandlers(
     //    그 결과 사용자가 모든 task 끝낸 뒤 새로고침 → completedAt 없음 → 이후 룰 변경 시
     //    저장된 task 가 새 requiredTaskIds 를 만족 못 하면 단계가 다시 "available" 로 회귀하는 버그.
     //    (사용자 보고 2026-05-03 "계속 서버를 새로고침하면 이미 완료한 단계로 돌아옴")
+    //
+    // ⚠️ 예외 — 마지막 단계 `pre-launch-final` (사용자 지침 2026-05-11):
+    //    "체크리스트 마지막 거 클릭하면 자동 완료되는데 그러지 말고 하단 내비게이션바 버튼 눌러야 완료되게."
+    //    이 단계는 "🚀 개업하기" 버튼 (CurrentStageView.tsx) 만이 stage 완료 + 런칭을 트리거.
+    //    체크 단계만 보존하고 completedAt 은 *버튼* 핸들러 (handleStageContinue + handleLaunchBusiness) 에 위임.
     const stageDef = baseRoadmap.stages.find(s => s.stageId === stageId);
     let nextDecisions = decisions;
-    if (stageDef) {
+    const isFinalLaunchStage = stageId === "pre-launch-final";
+    if (stageDef && !isFinalLaunchStage) {
       const completion = (() => {
         const stageWithStatus = { ...stageDef, status: "in_progress" as const };
         // buildRoadmapState 가 사용하는 evaluateStageCompletion 와 동일 로직.
@@ -274,7 +280,10 @@ export function useTaskHandlers(
     }
   };
 
-  // ── Mark business as launched and navigate to analytics ──
+  // ── Mark business as launched and navigate to *operational* dashboard ──
+  //  ⚠️ 사용자 지침 (2026-05-11): "대시보드로 가기 → 운영 대시보드로 가야 하는데 내 가게로 가고 있다."
+  //  종전엔 `analytics`(=내 가게/MyStore) 로 보내서 운영 대시보드 진입이 한 단계 더 필요했음.
+  //  이제 바로 `current`(=OperationalDashboard) 로 진입 — Day 1 매출 입력 흐름과 정합.
   const handleLaunchBusiness = () => {
     const launchDate = new Date().toISOString().slice(0, 10);
     setBusinessLaunched(true);
@@ -296,7 +305,7 @@ export function useTaskHandlers(
       if (finalStoreName) storeDataToSave.storeName = finalStoreName;
       void saveStoreData(supabase, storeDataToSave).catch(() => {});
     }, 0);
-    router.push(SURFACE_HREFS["analytics"]);
+    router.push(SURFACE_HREFS["current"]);
   };
 
   return {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import { starterIndustryOptions, localizeRecommendationItem } from "@build-up/shared";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import {
@@ -25,6 +25,39 @@ const fmt = (n: number) => {
 // 같은 키의 fetch가 이미 돌고 있으면 그 Promise를 공유해 결과만 재사용.
 const TREND_INFLIGHT = new Map<string, Promise<unknown>>();
 const COACH_INFLIGHT = new Map<string, Promise<unknown>>();
+
+// AI 에러 → 사용자 친화 메시지. raw 에 API 키·청구 정보 포함 가능 → 노출 금지.
+function humanizeAiError(raw: string, status: number, ko: boolean): string {
+  const lower = raw.toLowerCase();
+  if (lower.includes("credit balance") || lower.includes("billing") || lower.includes("payment_required") || status === 402) {
+    return ko
+      ? "AI 일시 중단 — 관리자에게 문의해주세요 (서비스 점검 중)."
+      : "AI temporarily unavailable — contact admin.";
+  }
+  if (lower.includes("rate") && (lower.includes("limit") || lower.includes("exceeded"))) {
+    return ko ? "AI 호출이 잠시 몰렸어요. 1분 뒤 다시 시도해주세요." : "AI is busy. Try again in a minute.";
+  }
+  if (lower.includes("overloaded") || status === 529) {
+    return ko ? "AI 서버 일시 과부하. 잠시 후 다시 시도해주세요." : "AI overloaded. Try again shortly.";
+  }
+  if (lower.includes("invalid api") || lower.includes("authentication") || status === 401) {
+    return ko ? "AI 인증 오류 — 관리자에게 문의해주세요." : "AI auth error — contact admin.";
+  }
+  return ko ? "AI 응답을 받지 못했어요. 잠시 후 다시 시도해주세요." : "Could not load AI response. Try again later.";
+}
+
+/** ISO 8601 주차 키 — "2026-W19" 형태. KST 기준 단순화 (한국 사장님 사용 가정). */
+function getIsoWeekKey(): string {
+  const now = new Date();
+  // KST → UTC 보정 후 ISO week 계산
+  const kst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  const d = new Date(Date.UTC(kst.getFullYear(), kst.getMonth(), kst.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil(((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+}
 
 export function MarketingSurface() {
   const d = useDashboardCtx();
@@ -84,7 +117,10 @@ export function MarketingSurface() {
   const [trendSources, setTrendSources] = useState<TrendSource[]>([]);
   const [trendMeta, setTrendMeta] = useState<TrendMeta | null>(null);
   const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState<string | null>(null);
   const [focusedTrendIdx, setFocusedTrendIdx] = useState(0);
+  // 수동 재생성 nonce — bump 시 useEffect 가 캐시 무시하고 새로 fetch
+  const [trendNonce, setTrendNonce] = useState(0);
 
   // ── 가게 맞춤 마케팅 코칭 (트렌드와 독립, 하루 1회 생성 · zustand persist 캐싱)
   type CoachTool = { name: string; purpose: string; tier: "free" | "paid" | "freemium"; url?: string };
@@ -98,14 +134,18 @@ export function MarketingSurface() {
   };
   const [coachActions, setCoachActions] = useState<CoachAction[]>(mkt.coachCache?.actions ?? []);
   const [coachLoading, setCoachLoading] = useState(false);
+  const [coachError, setCoachError] = useState<string | null>(null);
+  // 수동 재생성 nonce — bump 시 useEffect 가 캐시 무시하고 새로 fetch
+  const [coachNonce, setCoachNonce] = useState(0);
 
   useEffect(() => {
     // KST 기준 날짜 — coach와 동일. UTC 쓰면 자정 9시간 앞당겨져 오전에 캐시가 부정확.
     const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
     // 캐시 키 — sub-industry가 있으면 그걸로, 없으면 카테고리 fallback
     const cacheKey = subIndustryId || categoryId;
-    // 캐시 히트 조건: 날짜·키 일치 + 실제 데이터가 들어있어야 함 (빈 배열 캐시로 재시도 막히지 않도록)
-    const cacheHit = mkt.trendCache
+    // 캐시 히트 조건: 날짜·키 일치 + 실제 데이터 + 수동 재생성 트리거 안 됨
+    const cacheHit = trendNonce === 0
+      && mkt.trendCache
       && mkt.trendCache.date === today
       && mkt.trendCache.businessType === cacheKey
       && Array.isArray(mkt.trendCache.trends)
@@ -130,7 +170,14 @@ export function MarketingSurface() {
           language: d.language,
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // raw 에러 본문 추출 — humanize 로 변환해 사용자에게 노출
+        let raw = `HTTP ${res.status}`;
+        try { const body = await res.json(); if (body?.error) raw = String(body.error); } catch { /* ignore */ }
+        const e = new Error(raw) as Error & { status?: number };
+        e.status = res.status;
+        throw e;
+      }
       const data = await res.json();
       const items: TrendItem[] = Array.isArray(data.trends) ? data.trends : [];
       // 빈 응답은 캐시하지 않음 — 다음 mount 때 재시도 보장
@@ -144,6 +191,7 @@ export function MarketingSurface() {
       promise.finally(() => TREND_INFLIGHT.delete(inflightKey));
     }
 
+    setTrendError(null);
     promise
       .then((result) => {
         if (cancelled || !result) return;
@@ -152,9 +200,18 @@ export function MarketingSurface() {
         setFocusedTrendIdx(0);
         setTrendSources(Array.isArray(typed.sources) ? typed.sources as Array<{ name: string; url: string; publishedDate?: string }> : []);
         setTrendMeta((typed.meta ?? null) as TrendMeta | null);
+        // 응답이 빈 배열인 경우 — API 가 silent fail 했을 수 있음. 사용자에게 신호 전달.
+        if (typed.trends.length === 0) {
+          setTrendError(ko ? "트렌드를 받아오지 못했어요. 잠시 후 다시 시도해주세요." : "Could not load trends. Try again later.");
+        }
       })
       .catch((err) => {
-        if (!cancelled) console.warn("[MarketingSurface] trend fetch failed:", err);
+        if (!cancelled) {
+          console.warn("[MarketingSurface] trend fetch failed:", err);
+          const status = (err as { status?: number })?.status ?? 0;
+          const raw = err instanceof Error ? err.message : String(err);
+          setTrendError(humanizeAiError(raw, status, ko));
+        }
       })
       .finally(() => {
         if (!cancelled) setTrendLoading(false);
@@ -162,25 +219,26 @@ export function MarketingSurface() {
 
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryId, subIndustryId, d.language]);
+  }, [categoryId, subIndustryId, d.language, trendNonce]);
 
-  // ── 가게 맞춤 코칭 fetch — 하루 1회 생성, 하루 동안 동일 결과 유지
+  // ── 가게 맞춤 코칭 fetch — *주 1회* 재생성 (2026-05-11 사용자 요청, 이전 daily → weekly)
   //
   // 캐시 무효화 조건:
-  // 1. KST 날짜가 바뀜 (매일 자정) → 새로 생성
+  // 1. ISO 주차가 바뀜 (매주 월요일 시작) → 새로 생성
   // 2. contextKey 바뀜 (가게 전환·세부업종 변경·언어 변경) → 새로 생성
-  // 매장 매출·ROAS·채널 변경은 당일 재생성 트리거하지 않음 (사용자 요청)
+  // 매장 매출·ROAS·채널 변경은 같은 주차 안엔 재생성 트리거하지 않음 (코칭 깊이 유지)
   useEffect(() => {
     if (!d.storeName) return; // 가게명 없으면 스킵
 
-    const todayKst = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+    const weekKey = getIsoWeekKey();
     const contextKey = [d.storeName, subIndustryId ?? categoryId, d.language].join("|");
 
-    // 캐시 히트 — 오늘 날짜, 동일 context, 실제 데이터 존재 → fetch 스킵
+    // 캐시 히트 — 같은 주차, 동일 context, 실제 데이터 존재, 수동 재생성 트리거 안 됨 → fetch 스킵
     const cache = mkt.coachCache;
     if (
-      cache
-      && cache.date === todayKst
+      coachNonce === 0
+      && cache
+      && cache.weekKey === weekKey
       && cache.contextKey === contextKey
       && Array.isArray(cache.actions)
       && cache.actions.length > 0
@@ -190,7 +248,7 @@ export function MarketingSurface() {
     }
 
     // In-flight dedup — 이중 마운트 · 빠른 탭 전환 시 하나의 fetch만 실행
-    const inflightKey = `${todayKst}|${contextKey}`;
+    const inflightKey = `${weekKey}|${contextKey}`;
     let cancelled = false;
     setCoachLoading(true);
 
@@ -213,11 +271,17 @@ export function MarketingSurface() {
           language: d.language,
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let raw = `HTTP ${res.status}`;
+        try { const body = await res.json(); if (body?.error) raw = String(body.error); } catch { /* ignore */ }
+        const e = new Error(raw) as Error & { status?: number };
+        e.status = res.status;
+        throw e;
+      }
       const data = await res.json();
       const actions: CoachAction[] = Array.isArray(data.actions) ? data.actions : [];
       if (actions.length > 0) {
-        mkt.setCoachCache({ date: todayKst, contextKey, actions });
+        mkt.setCoachCache({ weekKey, contextKey, actions });
       }
       return actions;
     })();
@@ -226,24 +290,59 @@ export function MarketingSurface() {
       promise.finally(() => COACH_INFLIGHT.delete(inflightKey));
     }
 
+    setCoachError(null);
     promise
       .then((result) => {
         if (cancelled) return;
-        setCoachActions(result as CoachAction[]);
+        const actions = result as CoachAction[];
+        setCoachActions(actions);
+        if (actions.length === 0) {
+          setCoachError(ko ? "맞춤 코칭을 받아오지 못했어요. 잠시 후 다시 시도해주세요." : "Could not load coaching. Try again later.");
+        }
       })
       .catch((err) => {
-        if (!cancelled) console.warn("[MarketingSurface] coach fetch failed:", err);
+        if (!cancelled) {
+          console.warn("[MarketingSurface] coach fetch failed:", err);
+          const status = (err as { status?: number })?.status ?? 0;
+          const raw = err instanceof Error ? err.message : String(err);
+          setCoachError(humanizeAiError(raw, status, ko));
+        }
       })
       .finally(() => {
         if (!cancelled) setCoachLoading(false);
       });
 
     return () => { cancelled = true; };
-  // 재호출 트리거는 가게명·세부업종·언어만 — 매출/ROAS/채널 변경은 당일엔 무시
+  // 재호출 트리거: 가게명·세부업종·언어 변경 또는 수동 재생성 nonce bump
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [d.storeName, subIndustryId, categoryId, d.language]);
+  }, [d.storeName, subIndustryId, categoryId, d.language, coachNonce]);
 
   // ── Add campaign handler
+  // 수동 재생성 — 캐시 무효화 + nonce bump → useEffect 가 새로 fetch.
+  //
+  //  ⚠️ 사용자 지침 (2026-05-11): "이미 콘텐츠가 정상적으로 나왔다면 재생성 작동 X.
+  //   비용이 나갈 수 있어. 진짜 문제가 있을 때만 동작" → canRegenerate* 로 게이팅.
+  //
+  //  허용 조건 (둘 중 하나만 만족하면 OK):
+  //   1. 콘텐츠가 비어있다 (length === 0) — 사장님이 아무것도 못 본 상황
+  //   2. 명시적 에러가 있다 (trendError / coachError) — 사장님이 실패를 직접 봤음
+  //  정상 표시 중이면 버튼 disabled — 비용 낭비·중복 LLM 호출 차단.
+  const canRegenerateTrend = trendError !== null || trends.length === 0;
+  const canRegenerateCoach = coachError !== null || coachActions.length === 0;
+
+  const handleRegenerateTrend = () => {
+    if (!canRegenerateTrend || trendLoading) return;
+    setTrendError(null);
+    mkt.setTrendCache(null);
+    setTrendNonce((n) => n + 1);
+  };
+  const handleRegenerateCoach = () => {
+    if (!canRegenerateCoach || coachLoading || !d.storeName) return;
+    setCoachError(null);
+    mkt.setCoachCache(null);
+    setCoachNonce((n) => n + 1);
+  };
+
   const handleAddCampaign = () => {
     const spend = parseInt(mkt.campSpend.replace(/[^0-9]/g, ""), 10);
     if (!spend || isNaN(spend)) return;
@@ -281,6 +380,8 @@ export function MarketingSurface() {
       margin: "0 auto", padding: "24px 0 80px",
       display: "flex", flexDirection: "column", gap: 18,
     }}>
+      {/* spin keyframe — 재생성 버튼 아이콘 회전용 */}
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       {/* Header — 4 surface 공통 패턴 */}
       <header style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 4 }}>
         <div style={{
@@ -346,27 +447,57 @@ export function MarketingSurface() {
 
       {/* ━━━ 섹션 1-B: 내 가게 맞춤 마케팅 코칭 ━━━ */}
       <article style={solidCard}>
-        <div style={{ marginBottom: coachActions.length > 0 ? "14px" : "6px" }}>
-          <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#34c759", marginBottom: "2px" }}>
-            {ko ? "내 가게 맞춤 코칭" : "Your Store Coaching"}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
-              {ko
-                ? (d.storeName ? `${d.storeName}에 지금 필요한 액션` : "가게 맞춤 마케팅")
-                : "Actions for your store right now"}
+        <div style={{ marginBottom: coachActions.length > 0 ? "14px" : "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#34c759", marginBottom: "2px" }}>
+              {ko ? "내 가게 맞춤 코칭" : "Your Store Coaching"}
             </div>
-            {coachLoading && (
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "#34c759", padding: "3px 9px", borderRadius: "8px", background: "rgba(52,199,89,0.08)" }}>
-                {ko ? "분석 중" : "Analyzing"}
-              </span>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
+                {ko
+                  ? (d.storeName ? `${d.storeName}에 지금 필요한 액션` : "가게 맞춤 마케팅")
+                  : "Actions for your store right now"}
+              </div>
+              {coachLoading && (
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#34c759", padding: "3px 9px", borderRadius: "8px", background: "rgba(52,199,89,0.08)" }}>
+                  {ko ? "분석 중" : "Analyzing"}
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.5 }}>
+              {ko
+                ? "업종 · 채널 · ROAS · 단계를 반영해 우선순위 3개를 제안합니다. 매주 새로 생성."
+                : "Three prioritized actions based on your industry, channels, ROAS, and stage. Refreshed weekly."}
+            </div>
           </div>
-          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.5 }}>
-            {ko
-              ? "업종 · 채널 · ROAS · 단계를 반영해 우선순위 3개를 제안합니다. 매일 아침 새로 업데이트."
-              : "Three prioritized actions based on your industry, channels, ROAS, and stage. Refreshed daily."}
-          </div>
+          {/* 수동 재생성 버튼 — 콘텐츠 비어있거나 에러일 때만 활성. 정상이면 disabled (비용 보호). */}
+          <button
+            type="button"
+            onClick={handleRegenerateCoach}
+            disabled={coachLoading || !d.storeName || !canRegenerateCoach}
+            aria-label={ko ? "코칭 재생성" : "Regenerate coaching"}
+            title={
+              !canRegenerateCoach
+                ? (ko ? "코칭이 정상 표시 중이라 재생성 비활성. 매주 자동 갱신됩니다." : "Coaching is healthy — regenerate disabled. Auto-refreshes weekly.")
+                : (ko ? "코칭을 지금 다시 생성합니다 (캐시 무시)" : "Regenerate coaching now (bypass cache)")
+            }
+            style={{
+              flexShrink: 0,
+              display: "inline-flex", alignItems: "center", gap: "5px",
+              padding: "6px 10px", borderRadius: "8px",
+              border: "1px solid rgba(52,199,89,0.20)",
+              background: coachLoading ? "rgba(52,199,89,0.04)" : "rgba(52,199,89,0.08)",
+              color: "#1F7A4C",
+              fontSize: "11.5px", fontWeight: 650,
+              cursor: coachLoading || !d.storeName || !canRegenerateCoach ? "not-allowed" : "pointer",
+              opacity: coachLoading || !d.storeName || !canRegenerateCoach ? 0.45 : 1,
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap" as const,
+            }}
+          >
+            <RefreshCw size={12} strokeWidth={2} style={{ animation: coachLoading ? "spin 1s linear infinite" : undefined }} />
+            {ko ? "재생성" : "Regenerate"}
+          </button>
         </div>
 
         {coachActions.length > 0 ? (
@@ -480,13 +611,16 @@ export function MarketingSurface() {
         ) : (
           <div style={{
             padding: "20px", borderRadius: "14px",
-            background: "rgba(17,17,17,0.02)", border: "1px solid rgba(17,17,17,0.04)",
-            textAlign: "center" as const, color: "var(--muted)",
+            background: coachError ? "rgba(255,59,48,0.04)" : "rgba(17,17,17,0.02)",
+            border: coachError ? "1px solid rgba(255,59,48,0.16)" : "1px solid rgba(17,17,17,0.04)",
+            textAlign: "center" as const, color: coachError ? "#9F1A2D" : "var(--muted)",
             fontSize: "12.5px", lineHeight: 1.5,
           }}>
-            {d.storeName
-              ? (ko ? "코칭을 생성하지 못했어요. 새로고침 후 다시 시도해주세요." : "Unable to generate coaching. Please refresh.")
-              : (ko ? "가게 정보를 먼저 입력해주세요 — 프로필에서 상호와 업종을 설정하면 맞춤 코칭이 나타납니다." : "Set up your store profile first — add your store name and industry to see personalized coaching.")}
+            {!d.storeName
+              ? (ko ? "가게 정보를 먼저 입력해주세요 — 프로필에서 상호와 업종을 설정하면 맞춤 코칭이 나타납니다." : "Set up your store profile first — add your store name and industry to see personalized coaching.")
+              : coachError
+                ? coachError
+                : (ko ? "코칭을 생성하지 못했어요. 새로고침 후 다시 시도해주세요." : "Unable to generate coaching. Please refresh.")}
           </div>
         )}
       </article>
@@ -505,11 +639,40 @@ export function MarketingSurface() {
               {ko ? "업종별 맞춤 콘텐츠 아이디어 5개" : "5 content ideas curated for your industry"}
             </div>
           </div>
-          {trendLoading && (
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "#007aff", padding: "4px 10px", borderRadius: "8px", background: "rgba(0,122,255,0.08)" }}>
-              {ko ? "분석 중" : "Loading"}
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            {trendLoading && (
+              <div style={{ fontSize: "11px", fontWeight: 600, color: "#007aff", padding: "4px 10px", borderRadius: "8px", background: "rgba(0,122,255,0.08)" }}>
+                {ko ? "분석 중" : "Loading"}
+              </div>
+            )}
+            {/* 수동 재생성 버튼 — 트렌드가 비어있거나 에러일 때만 활성. 정상이면 disabled (비용 보호). */}
+            <button
+              type="button"
+              onClick={handleRegenerateTrend}
+              disabled={trendLoading || !canRegenerateTrend}
+              aria-label={ko ? "트렌드 재생성" : "Regenerate trends"}
+              title={
+                !canRegenerateTrend
+                  ? (ko ? "트렌드가 정상 표시 중이라 재생성 비활성. 매일 자동 갱신됩니다." : "Trends are healthy — regenerate disabled. Auto-refreshes daily.")
+                  : (ko ? "트렌드를 지금 다시 생성합니다 (캐시 무시)" : "Regenerate trends now (bypass cache)")
+              }
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "5px",
+                padding: "6px 10px", borderRadius: "8px",
+                border: "1px solid rgba(0,122,255,0.20)",
+                background: trendLoading ? "rgba(0,122,255,0.04)" : "rgba(0,122,255,0.08)",
+                color: "#1F46A8",
+                fontSize: "11.5px", fontWeight: 650,
+                cursor: trendLoading || !canRegenerateTrend ? "not-allowed" : "pointer",
+                opacity: trendLoading || !canRegenerateTrend ? 0.45 : 1,
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap" as const,
+              }}
+            >
+              <RefreshCw size={12} strokeWidth={2} style={{ animation: trendLoading ? "spin 1s linear infinite" : undefined }} />
+              {ko ? "재생성" : "Regenerate"}
+            </button>
+          </div>
         </div>
 
         {/* 근거 소스 배지 — 어떤 데이터가 실제로 반영되었는지 투명하게.
@@ -622,19 +785,36 @@ export function MarketingSurface() {
                         {tag}
                       </span>
                     ))}
-                    {trend.referenceUrl && (
-                      <a
-                        href={trend.referenceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          fontSize: "10.5px", fontWeight: 600, color: "#007aff", textDecoration: "none",
-                          marginLeft: "auto",
-                        }}>
-                        {ko ? "레퍼런스 →" : "Reference →"}
-                      </a>
-                    )}
+                    {trend.referenceUrl && (() => {
+                      const url = trend.referenceUrl;
+                      const isYoutube = /youtube\.com|youtu\.be/.test(url);
+                      const isInsta = /instagram\.com/.test(url);
+                      const label = isYoutube
+                        ? (ko ? "▶ 유튜브 영상" : "▶ YouTube")
+                        : isInsta
+                          ? (ko ? "▶ 인스타 영상" : "▶ Instagram")
+                          : (ko ? "▶ 영상 보기" : "▶ Watch");
+                      return (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            color: isYoutube ? "#cc0000" : "#007aff",
+                            textDecoration: "none",
+                            marginLeft: "auto",
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            background: isYoutube ? "rgba(255,0,0,0.06)" : "rgba(0,122,255,0.06)",
+                          }}
+                        >
+                          {label}
+                        </a>
+                      );
+                    })()}
                   </div>
                 </button>
               );
@@ -660,16 +840,18 @@ export function MarketingSurface() {
           <div style={{
             padding: "20px",
             borderRadius: "14px",
-            background: "rgba(15,23,42,0.02)",
-            border: "1px solid rgba(15,23,42,0.04)",
+            background: trendError ? "rgba(255,59,48,0.04)" : "rgba(15,23,42,0.02)",
+            border: trendError ? "1px solid rgba(255,59,48,0.16)" : "1px solid rgba(15,23,42,0.04)",
             textAlign: "center" as const,
-            color: "rgba(15,23,42,0.5)",
+            color: trendError ? "#9F1A2D" : "rgba(15,23,42,0.5)",
             fontSize: "12.5px",
             lineHeight: 1.5,
           }}>
-            {ko
-              ? "트렌드 생성이 잠시 지연되고 있어요. 새로고침 후 다시 시도해주세요."
-              : "Trend generation is delayed. Please refresh and try again."}
+            {trendError
+              ? trendError
+              : (ko
+                ? "트렌드 생성이 잠시 지연되고 있어요. 새로고침 후 다시 시도해주세요."
+                : "Trend generation is delayed. Please refresh and try again.")}
           </div>
         )}
 

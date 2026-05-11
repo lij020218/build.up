@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { isValidFeatureId } from "@build-up/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
@@ -231,7 +231,7 @@ export async function generateDashboardActions(
   ctx: DashboardContext,
   options: AiCallOptions
 ): Promise<DashboardActionsResponse> {
-  const client = new Anthropic({ apiKey: options.apiKey, timeout: 30_000 });
+  const client = createAiClient(options.apiKey);
 
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,

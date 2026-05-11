@@ -123,6 +123,33 @@ const SYSTEM_PROMPT = `당신은 한국 자영업·창업 경영 컨설턴트입
 
 ✋ 각 인사이트는 *서로 카테고리·신호가 달라야* — 같은 주제 3개 금지.
 
+═══════════════════════════════════════════════════════════════
+  🎯 CTA 도착 카드 (targetCard) — 사장님이 액션 버튼 누르면 가야 할 카드
+═══════════════════════════════════════════════════════════════
+각 인사이트마다 **targetCard 필드를 반드시 1개** 선택. 사장님이 그 카드에서 *실제로 액션을 수행* 가능한 곳으로 보내야 함.
+
+build.up 운영 대시보드의 실제 카드 카탈로그:
+
+| targetCard      | 어떤 인사이트일 때 사용?                                                        | 카드 위치 (참고)                          |
+|-----------------|--------------------------------------------------------------------------------|------------------------------------------|
+| "sales"         | 매출 *기록·입력* 권유 (오늘 매출 5초 기록 등)                                  | 매출 입력 카드 (Tier1 상단)               |
+| "users"         | 고객·단골·재방문·객단가·리텐션·온보딩 인사이트                                  | 고객 변화 카드 (Tier2)                    |
+| "cashflow"      | 현금흐름·런웨이·잔고·수금·지급 — 흑자부도 위험                                  | 현금흐름 레이더 (Tier1 최상단)             |
+| "costs"         | *일반 비용* — 임대료·공과금·판관비·이익률·마진 *구조 점검*                      | 비용 관리 카드 (내 가게 페이지)            |
+| "inventory"     | **메뉴·레시피·재료·식자재·재고·재주문·발주·공급처·단가** 관련만 — 그 외 X       | 재고 관리 카드 (Tier1.5)                  |
+| "team"          | 직원·노무·4대보험·퇴직금·시급·근로계약                                         | 팀/인력 관리 카드 (Tier1.5)               |
+| "primeCost"     | 프라임코스트 (식자재+인건비 *합산* 점검)                                       | 프라임코스트 카드 (외식·카페 Tier1.5)     |
+| "marketing"     | 광고·마케팅·캠페인·인스타·콘텐츠·리뷰·SNS                                       | 마케팅 surface (별도 페이지)               |
+| "operations"    | **운영 속도·시간·병목·동선·조리 시간·서비스 응대·회전율·공정 측정·리추얼**       | 오늘의 운영 리추얼 카드 (Tier1.5)         |
+
+⚠️ **자주 헷갈리는 케이스 — 반드시 지킬 것**:
+- "주문→조리→서빙 병목 측정" → **operations** (재료가 아니라 *시간·공정* 인사이트)
+- "재료 단가 협상" → **inventory** (식자재 매입 단가 관리)
+- "재료비 비율 점검" → **primeCost** (식자재+인건비 합산) 또는 **costs**
+- "단골 만들기" → **users** (고객 카드)
+- "임대료 줄이기" → **costs** (비용 관리)
+- "공정·동선·서비스 시간 측정" → **operations** (재고·메뉴 아님)
+
 ${ANTI_HALLUCINATION_DIRECTIVE}
 
 응답 형식 (JSON만, insights 는 정확히 3개):
@@ -133,11 +160,12 @@ ${ANTI_HALLUCINATION_DIRECTIVE}
       "body": "발견 2-3문장. 사장님 고유 수치 또는 단계 특정 인사이트.",
       "action": "CTA 짧게 (10자 이내, 동사로 시작)",
       "category": "revenue" | "cost" | "marketing" | "operations" | "growth",
+      "targetCard": "sales" | "users" | "cashflow" | "costs" | "inventory" | "team" | "primeCost" | "marketing" | "operations",
       "priority": "high",
       "sourceLabel": "근거 출처 한 줄"
     },
-    { "priority": "medium", "category": <high 와 다른 카테고리>, ... },
-    { "priority": "low",    "category": <앞 둘과 다른 카테고리>, ... }
+    { "priority": "medium", "category": <high 와 다른 카테고리>, "targetCard": <적합한 카드>, ... },
+    { "priority": "low",    "category": <앞 둘과 다른 카테고리>, "targetCard": <적합한 카드>, ... }
   ],
   "confidence": 0.0~1.0 — 데이터 풍부도 + 발견 명확도 기반
 }`;
@@ -415,6 +443,8 @@ ${userContext}${caseStudyBlock}${ragBlock}
       body?: unknown;
       action?: unknown;
       category?: unknown;
+      /** AI 가 직접 지정한 도착 카드 (2026-05-11 추가 — 키워드 라우팅의 fragile 매칭 대체). */
+      targetCard?: unknown;
       priority?: unknown;
       sourceLabel?: unknown;
     };
@@ -436,25 +466,47 @@ ${userContext}${caseStudyBlock}${ragBlock}
     const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
     const VALID_CATEGORIES = new Set(["revenue", "cost", "marketing", "operations", "growth"]);
     const VALID_PRIORITIES = new Set(["high", "medium", "low"]);
+    // ⚠️ HeroCtaTarget 과 SSOT 일치 — MorningBriefing.tsx 의 HeroCtaTarget 타입과 동일.
+    //   AI 가 잘못 입력하면 fallback 으로 category 기반 매핑.
+    const VALID_TARGET_CARDS = new Set([
+      "sales", "users", "cashflow", "costs", "inventory", "team", "primeCost", "marketing", "operations",
+    ]);
+    // category → targetCard 폴백 매핑 (AI 가 targetCard 누락 시)
+    const CATEGORY_TO_CARD: Record<string, string> = {
+      revenue: "sales",
+      cost: "costs",
+      marketing: "marketing",
+      operations: "operations",
+      growth: "users",
+    };
 
     const rawArr = Array.isArray(parsed.insights) ? (parsed.insights as RawInsight[]) : [];
     const normalized = rawArr
       .filter((it) => typeof it?.headline === "string" && typeof it?.body === "string")
       .slice(0, 3)
-      .map((it) => ({
-        headline: String(it.headline).trim(),
-        body: String(it.body).trim(),
-        action: typeof it.action === "string" ? it.action.trim() : "",
-        category: typeof it.category === "string" && VALID_CATEGORIES.has(it.category)
+      .map((it) => {
+        const category = typeof it.category === "string" && VALID_CATEGORIES.has(it.category)
           ? it.category
-          : "operations",
-        priority: typeof it.priority === "string" && VALID_PRIORITIES.has(it.priority)
-          ? it.priority
-          : "medium",
-        sourceLabel: typeof it.sourceLabel === "string"
-          ? it.sourceLabel.trim()
-          : "사장님 데이터 + 업종 벤치마크",
-      }))
+          : "operations";
+        // AI 가 targetCard 명시했으면 그대로 사용. 누락·잘못 입력이면 category 기반 폴백.
+        const targetCard =
+          typeof it.targetCard === "string" && VALID_TARGET_CARDS.has(it.targetCard)
+            ? it.targetCard
+            : CATEGORY_TO_CARD[category] ?? "operations";
+        return {
+          headline: String(it.headline).trim(),
+          body: String(it.body).trim(),
+          action: typeof it.action === "string" ? it.action.trim() : "",
+          category,
+          targetCard,
+          priority: typeof it.priority === "string" && VALID_PRIORITIES.has(it.priority)
+            ? it.priority
+            : "medium",
+          sourceLabel: typeof it.sourceLabel === "string"
+            ? it.sourceLabel.trim()
+            : "사장님 데이터 + 업종 벤치마크",
+        };
+      })
       .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
 
     // ⚠️ length === 0 도 곧장 return 하지 않고 *패딩* 으로 위임 (사용자 보고 2026-05-08).
@@ -476,6 +528,7 @@ ${userContext}${caseStudyBlock}${ragBlock}
           body: `${stageLabel}에는 매출 절대값보다 *기록 일관성* 이 중요합니다. 매일 5초 입력만으로 패턴 분석이 시작되고, 1주일 안에 요일별 흐름·피크 시간대가 보입니다.`,
           action: "오늘 매출 5초 기록",
           category: "operations" as const,
+          targetCard: "sales",
           priority: "medium" as const,
           sourceLabel: `${stageLabel} 운영 기본 + 사장님 단계`,
         },
@@ -484,6 +537,7 @@ ${userContext}${caseStudyBlock}${ragBlock}
           body: "초기 사업의 가장 강력한 자산은 단골입니다. 첫 5명의 단골이 입소문·재방문·리뷰의 시드가 되며, 30일 안에 이 5명을 만들면 매출 성장 곡선이 가팔라집니다.",
           action: "단골 후보 5명 명단",
           category: "marketing" as const,
+          targetCard: "users",
           priority: "low" as const,
           sourceLabel: "Y Combinator 'First 100 customers' + 한국 SMB 단골 데이터",
         },
@@ -492,6 +546,7 @@ ${userContext}${caseStudyBlock}${ragBlock}
           body: "임대료·인건비·기타 고정비를 한 번 정확히 입력하면, AI 가 손익분기 일매출을 자동 계산합니다. 지금은 단계 추정이라 ±15% 오차가 있을 수 있습니다.",
           action: "고정비 입력하기",
           category: "cost" as const,
+          targetCard: "costs",
           priority: "low" as const,
           sourceLabel: "정확한 BEP 산출 = 고정비 입력 필요",
         },

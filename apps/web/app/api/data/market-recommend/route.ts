@@ -13,7 +13,7 @@
  */
 
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "@build-up/ai/utils/client";
 import type { RecommendationItem } from "@build-up/shared";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../_lib/rate-limit";
@@ -466,7 +466,7 @@ async function scoreWithClaude(
   candidates: SubAreaCandidate[],
   ctx: { region: string; categoryId: string; subIndustryId?: string; capital?: number; language: "ko" | "en" },
   apiKey: string,
-): Promise<{ items: ScoredItem[]; usage: Anthropic.Messages.Usage | null }> {
+): Promise<{ items: ScoredItem[]; usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } | null }> {
   const ko = ctx.language === "ko";
   const candidateLines = candidates.map((c, i) => {
     return `${i + 1}. ${c.districtName} (lat=${c.lat.toFixed(4)}, lng=${c.lng.toFixed(4)})
@@ -488,7 +488,7 @@ ${candidateLines}
 
 위 평가 프레임워크에 따라 ${Math.min(candidates.length, 5)}개를 점수화하세요. JSON 배열만 출력.`;
 
-  const client = new Anthropic({ apiKey });
+  const client = createAiClient(apiKey);
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 2048,

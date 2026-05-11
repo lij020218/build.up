@@ -6,6 +6,7 @@ export * from "./funding/programs";
 export * from "./market/scoring";
 export * from "./finance/simulation";
 export * from "./finance/cost-ratios";
+export * from "./finance/prime-cost";
 export * from "./finance/labor-law-checks";
 export * from "./guide/qa";
 export * from "./i18n";

@@ -101,14 +101,85 @@ type CashflowActions = {
   setDailyMorningBriefing: (v: boolean) => void;
   setVatReserveEnabled: (v: boolean) => void;
   markSetupCompleted: () => void;
+  /** 업종별 *기본* 채널 믹스로 한 번에 갈아끼우기 — 시트 초기 진입 시 추천 적용. */
+  applyIndustryDefaults: (categoryId: string) => void;
   resetAll: () => void;
 };
 
-function defaultChannelsForIndustry(): SalesChannel[] {
-  // 디폴트는 "현금 10% + 카드 90%" (일반 오프라인 가정)
+/**
+ * 업종별 *기본* 판매 채널 믹스 — 사장님이 설정 시트 처음 열 때 자동 적용.
+ *
+ *  출처 (2026-05-11 한국시장 평균):
+ *   - 외식·카페: 배민·쿠팡이츠 도합 35~50%, 카드 30~50%, 현금 5~15% (소상공인연합·요기요 파트너 리포트)
+ *   - 소매·뷰티·펫: 카드 75~85%, 네이버페이/카카오페이 5~10%, 현금 5~10%
+ *   - 온라인·이커머스: 스마트스토어·쿠팡 마켓이 매출의 50~70%, 카드 PG 15~25%
+ *   - 스타트업·SaaS: 카드 PG (정기결제) 70~85%, 네이버페이·카카오페이 10~15%, 계좌이체 5~10%
+ *
+ *  ⚠️ 사장님은 언제든 시트에서 비율·채널을 *오버라이드* 가능. 이건 "초기값" 일 뿐.
+ */
+export function defaultChannelsForIndustry(categoryId?: string): SalesChannel[] {
+  const cat = (categoryId ?? "").toLowerCase();
+
+  // 외식 (식당·치킨·배달 전문)
+  if (cat === "food") {
+    return [
+      { ...CHANNEL_PRESETS.cash,        salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.card,        salesRatio: 45, isActive: true },
+      { ...CHANNEL_PRESETS.baemin,      salesRatio: 25, isActive: true },
+      { ...CHANNEL_PRESETS.coupangeats, salesRatio: 15, isActive: true },
+      { ...CHANNEL_PRESETS.naverpay,    salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.kakaopay,    salesRatio: 5,  isActive: true },
+    ];
+  }
+
+  // 카페·디저트 — 매장 카드 결제 비중 매우 높음. 배달은 보조.
+  if (cat === "cafe-dessert") {
+    return [
+      { ...CHANNEL_PRESETS.cash,        salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.card,        salesRatio: 70, isActive: true },
+      { ...CHANNEL_PRESETS.baemin,      salesRatio: 10, isActive: true },
+      { ...CHANNEL_PRESETS.coupangeats, salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.naverpay,    salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.kakaopay,    salesRatio: 5,  isActive: true },
+    ];
+  }
+
+  // 소매·뷰티·펫·건강 — 매장 + 일부 네이버 예약/스마트스토어
+  if (cat === "retail" || cat === "beauty" || cat === "pet" || cat === "health") {
+    return [
+      { ...CHANNEL_PRESETS.cash,         salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.card,         salesRatio: 80, isActive: true },
+      { ...CHANNEL_PRESETS.naverpay,     salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.kakaopay,     salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.naverbooking, salesRatio: 5,  isActive: true },
+    ];
+  }
+
+  // 온라인·이커머스 — 스마트스토어 + 쿠팡 + 자사몰 PG 위주
+  if (cat === "online-digital" || cat === "ecommerce") {
+    return [
+      { ...CHANNEL_PRESETS.smartstore,  salesRatio: 45, isActive: true },
+      { ...CHANNEL_PRESETS.coupangwing, salesRatio: 30, isActive: true },
+      { ...CHANNEL_PRESETS.card,        salesRatio: 15, isActive: true },
+      { ...CHANNEL_PRESETS.naverpay,    salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.kakaopay,    salesRatio: 5,  isActive: true },
+    ];
+  }
+
+  // 스타트업·SaaS — 정기결제(카드 PG) 위주, 일부 계좌이체(B2B 인보이스)
+  if (cat === "startup-tech" || cat === "saas") {
+    return [
+      { ...CHANNEL_PRESETS.card,     salesRatio: 75, isActive: true },
+      { ...CHANNEL_PRESETS.kakaopay, salesRatio: 10, isActive: true },
+      { ...CHANNEL_PRESETS.naverpay, salesRatio: 5,  isActive: true },
+      { ...CHANNEL_PRESETS.cash,     salesRatio: 10, isActive: true },  // 계좌이체 (B2B 인보이스)
+    ];
+  }
+
+  // fallback — 일반 오프라인 (현금 10 + 카드 90)
   return [
-    { ...CHANNEL_PRESETS.cash,  salesRatio: 10, isActive: true },
-    { ...CHANNEL_PRESETS.card,  salesRatio: 90, isActive: true },
+    { ...CHANNEL_PRESETS.cash, salesRatio: 10, isActive: true },
+    { ...CHANNEL_PRESETS.card, salesRatio: 90, isActive: true },
   ];
 }
 
@@ -165,6 +236,8 @@ export const useCashflowStore = create<CashflowState & CashflowActions>()(
       setDailyMorningBriefing: (v) => set({ dailyMorningBriefing: v }),
       setVatReserveEnabled: (v) => set({ vatReserveEnabled: v }),
       markSetupCompleted: () => set({ setupCompletedAt: new Date().toISOString() }),
+      applyIndustryDefaults: (categoryId) =>
+        set({ salesChannels: defaultChannelsForIndustry(categoryId) }),
       resetAll: () => set(initialState),
     }),
     {

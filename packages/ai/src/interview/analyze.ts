@@ -1,7 +1,7 @@
 // ─── AI 인터뷰 결과 분석기 ───────────────────────────────────────────────────
 // 인터뷰 노트를 입력하면 패턴, 핵심 고통, 초기 타겟 세그먼트를 추출합니다.
 
-import Anthropic from "@anthropic-ai/sdk";
+import { createAiClient } from "../utils/client";
 import { systemWithCache } from "../utils/client";
 
 export type InterviewAnalysisInput = {
@@ -46,7 +46,7 @@ export async function analyzeInterviews(
   input: InterviewAnalysisInput,
   opts: { apiKey: string },
 ): Promise<InterviewAnalysisResult> {
-  const client = new Anthropic({ apiKey: opts.apiKey });
+  const client = createAiClient(opts.apiKey);
 
   const userPrompt = input.language === "ko"
     ? `업종: ${input.industryCategoryId}

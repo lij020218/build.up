@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Settings, ArrowDownRight, ArrowUpRight, Wallet, ChevronRight } from "lucide-react";
 import { useCashflowStore } from "../../stores/cashflow-store";
+import { useOperationsStore } from "../../stores/operations-store";
 import {
   projectCashflow,
   detectCrisis,
@@ -62,6 +63,10 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
     return () => window.removeEventListener("bup:open-cashflow-setup", handler);
   }, []);
 
+  // 과세 유형 → VAT 적립률 결정 (일반 10% / 간이 3% 평균)
+  const vatType = useOperationsStore((s) => s.taxSettings.vatType);
+  const vatRate = vatType === "simplified" ? 0.03 : 0.10;
+
   const projections: DayProjection[] = useMemo(
     () =>
       projectCashflow({
@@ -70,9 +75,10 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
         salesChannels,
         fixedExpenses,
         vatReserveEnabled,
+        vatRate,
         fallbackMonthlyCostsTotal,
       }),
-    [currentBalance, dailyEntries, salesChannels, fixedExpenses, vatReserveEnabled, fallbackMonthlyCostsTotal]
+    [currentBalance, dailyEntries, salesChannels, fixedExpenses, vatReserveEnabled, vatRate, fallbackMonthlyCostsTotal]
   );
 
   const crisis = useMemo(() => detectCrisis(projections, crisisThresholdDays), [projections, crisisThresholdDays]);

@@ -114,8 +114,28 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
   const daysWithData = bars.filter((b) => b.customers > 0).length;
   const daysRecorded = allEntries.filter((e) => (e.customers ?? 0) > 0).length;
 
-  // ── 평균·예상 ──
-  const dailyAvg = daysRecorded > 0 ? Math.round(cumulativeTotal / daysRecorded) : 0;
+  // ── 평균·예상 ─────────────────────────────────────────────────
+  // ⚠️ CRITICAL FIX (2026-05-11): entry 개수가 아니라 *경과 영업일수* 로 나눠야 함.
+  //   사용자 보고: 누적 26명, 7일+ 운영했는데 2일치만 입력 → daysRecorded=2 → dailyAvg=13 → 월 390 (잘못)
+  //   같은 버그가 CEOMorningHero 매출 쪽에서 2026-05-08 fix 됐는데, 이쪽 (고객) 은 누락.
+  //
+  //   분모 우선순위:
+  //    (1) businessLaunchedDate 기준 경과일 — 가장 정확 (사장님이 등록한 개업일)
+  //    (2) 첫 entry 날짜 기준 경과일 — fallback (개업일 미입력 시)
+  //    상한: 14일 — 그 이상 운영했어도 직전 2주 추세로 보는 게 더 의미 있음
+  //   입력 안 한 날은 *0명* 으로 자연 반영 (보수적 — 과대 추정 방지).
+  const businessLaunchedDate = (d as { businessLaunchedDate?: string | null }).businessLaunchedDate ?? null;
+  const sortedEntries = [...allEntries].sort((a, b) => a.date.localeCompare(b.date));
+  const earliestEntryDate = sortedEntries[0]?.date;
+  const todayMs = new Date().getTime();
+  const referenceDate = businessLaunchedDate ?? earliestEntryDate ?? null;
+  const elapsedDays = referenceDate
+    ? Math.min(14, Math.max(1, Math.floor((todayMs - new Date(referenceDate).getTime()) / 86_400_000) + 1))
+    : Math.max(1, daysRecorded);
+  const dailyAvg = elapsedDays > 0 ? Math.round(cumulativeTotal / elapsedDays) : 0;
+  // 데이터 신뢰도 — 경과일 대비 입력 일수 비율. 50% 미만이면 추정치 표시 (신뢰도 낮음).
+  const dataConfidence = elapsedDays > 0 ? Math.min(1, daysRecorded / elapsedDays) : 0;
+  const isLowConfidence = dataConfidence < 0.5 && daysRecorded > 0;
   const monthlyProjected = dailyAvg * 30;
 
   // ── 마일스톤 ──
@@ -285,22 +305,34 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
         position: "relative" as const,
         zIndex: 1,
       }}>
-        {/* 일 평균 */}
-        <div style={miniStat}>
+        {/* 일 평균 — 누적 / 경과 영업일수 (entry 개수 아님) */}
+        <div
+          style={miniStat}
+          title={ko
+            ? `누적 ${cumulativeTotal.toLocaleString()}${userUnitSuffix} ÷ 경과 ${elapsedDays}일 = 일 평균${isLowConfidence ? ` · 입력 ${daysRecorded}일치 (신뢰도 낮음)` : ""}`
+            : `${cumulativeTotal.toLocaleString()} cumulative ÷ ${elapsedDays} elapsed days${isLowConfidence ? ` · only ${daysRecorded} entered` : ""}`}
+        >
           <div style={miniStatLabel}>
             <Calendar size={11} strokeWidth={1.5} />
             {ko ? "일 평균" : "Daily avg"}
+            {isLowConfidence && <span style={{ fontSize: "9px", color: "rgba(15,23,42,0.4)", fontWeight: 600, marginLeft: "2px" }}>~</span>}
           </div>
           <div style={miniStatValue}>
             {dailyAvg > 0 ? dailyAvg.toLocaleString() : "—"}
             {dailyAvg > 0 && userUnitSuffix && <span style={miniStatUnit}>{userUnitSuffix}</span>}
           </div>
         </div>
-        {/* 월 예상 */}
-        <div style={miniStat}>
+        {/* 월 예상 — 일평균 × 30 */}
+        <div
+          style={miniStat}
+          title={ko
+            ? `일 평균 ${dailyAvg.toLocaleString()} × 30일 = 월 예상${isLowConfidence ? ` · ${daysRecorded}일치 입력 기준 (참고)` : ""}`
+            : `Daily avg ${dailyAvg.toLocaleString()} × 30 days${isLowConfidence ? ` · based on ${daysRecorded} days only` : ""}`}
+        >
           <div style={miniStatLabel}>
             <Target size={11} strokeWidth={1.5} />
             {ko ? "월 예상" : "Monthly est"}
+            {isLowConfidence && <span style={{ fontSize: "9px", color: "rgba(15,23,42,0.4)", fontWeight: 600, marginLeft: "2px" }}>~</span>}
           </div>
           <div style={miniStatValue}>
             {monthlyProjected > 0 ? monthlyProjected.toLocaleString() : "—"}
