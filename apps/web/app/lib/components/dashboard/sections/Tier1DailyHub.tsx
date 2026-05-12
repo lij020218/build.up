@@ -31,9 +31,7 @@
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { ActivitySnapshotCard } from "../ActivitySnapshotCard";
-// 2026-05-12 Phase 1b: UserActivityCard 는 Tier 2 (Weekly Pulse) 로 이동.
-//   일간 hero level 에서 사장님이 매일 봐야 하는 카드가 아닌 *주간 단위* trend 카드.
-//   import { UserActivityCard } from "../UserActivityCard";
+import { UserActivityCard } from "../UserActivityCard";
 import { CashflowHeroCard } from "../CashflowHeroCard";
 import { PLHeroCard } from "../PLHeroCard";
 import { DailyKpiStrip, type KpiValue } from "../DailyKpiStrip";
@@ -52,27 +50,49 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
   // 사장님이 숨긴 카드 목록 — 마이페이지 > 대시보드 카드 표시에서 토글.
   // essential 카드(activity-snapshot, cashflow-hero)는 메타에서 숨김 불가 처리.
   const hiddenCards = useProfileStore((s) => s.hiddenCards);
+  const showUserActivity = !hiddenCards.includes("user-activity");
   const showPLHero = !hiddenCards.includes("pl-hero");
   const showDailyKpi = !hiddenCards.includes("daily-kpi-strip");
 
   return (
     <>
-      {/* Tier 1.1 — 매출 흐름 (단독 full-width).
-          2026-05-12 Phase 1b: UserActivityCard 가 Tier 2 로 이동 → ActivitySnapshot 가 단독.
-          이유: 매출 raw 차트가 hero 의 visual 강조를 받음 (CEOMorningHero 와 함께 2 hero 패턴). */}
+      {/* Tier 1.1 — 매출 흐름 + 사용자 변화 (2-col).
+          2026-05-12 사장님 결정: UserActivity 는 *매일 보는 사용자 수 변화* 로 유지. */}
       <div className="dash-stagger-item" style={nextStaggerStyle()}>
-        <ActivitySnapshotCard
-          d={d}
-          ko={ko}
-          todayStr={c.todayStr}
-          recent7Entries={c.recent7Entries}
-          recent7Sales={c.recent7Sales}
-          weeklySalesChange={c.weeklySalesChange}
-          todayEntry={c.todayEntry}
-          avgDailySales={c.avgDailySales}
-          fmt={fmt}
-          onOpenCalendar={onOpenCalendar}
-        />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              showUserActivity && c.viewportWidth >= 1100
+                ? "minmax(0, 1.35fr) minmax(0, 1fr)"
+                : "1fr",
+            gap: "14px",
+            alignItems: "stretch",
+          }}
+        >
+          <ActivitySnapshotCard
+            d={d}
+            ko={ko}
+            todayStr={c.todayStr}
+            recent7Entries={c.recent7Entries}
+            recent7Sales={c.recent7Sales}
+            weeklySalesChange={c.weeklySalesChange}
+            todayEntry={c.todayEntry}
+            avgDailySales={c.avgDailySales}
+            fmt={fmt}
+            onOpenCalendar={onOpenCalendar}
+          />
+          {showUserActivity && (
+            <UserActivityCard
+              d={d}
+              ko={ko}
+              todayStr={c.todayStr}
+              recent7Entries={c.recent7Entries}
+              todayEntry={c.todayEntry}
+              fmt={fmt}
+            />
+          )}
+        </div>
       </div>
 
       {/* Tier 1.2 — 현금흐름 + 손익 (2-col → 손익 숨김 시 1-col) */}

@@ -156,24 +156,35 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
-      {/* 1.5 (b) — 오늘의 작은 개선 */}
-      {!hide("daily-improvement") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <DailyImprovementCard ko={ko} industryCategoryId={d.industryCategoryId} />
-        </div>
-      )}
-
-      {/* 1.5 (b-2) — 객단가 업셀 제안 */}
-      {!hide("avg-ticket-upsell") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <AvgTicketUpsellCard
-            ko={ko}
-            industryCategoryId={d.industryCategoryId}
-            currentAvgTicket={c.totalCustomers > 0 ? c.totalSales / c.totalCustomers : null}
-            menuItems={normalizeMenuItems(d)}
-          />
-        </div>
-      )}
+      {/* 1.5 (b/b-2) — 매출 추세 기반 분기 (2026-05-12 사장님 결정).
+          동시 노출 X — 한 시점에 1 행동 카드만:
+            · 매출 정체 (WoW -5% ~ +5%) → AvgTicketUpsell (객단가 끌어올리기)
+            · 평상시 / 성장 (WoW > +5%) 또는 위기 외 → DailyImprovement (Bezos Day-1)
+          위기 (WoW < -15%) 는 CEOMorningHero 의 hero 가 흡수 (resolveHero 의 industry-rule 우선순위 1.6). */}
+      {(() => {
+        const isStagnant = c.weeklySalesChange >= -5 && c.weeklySalesChange <= 5;
+        // AvgTicketUpsell 은 외식·카페·뷰티·소매·피트니스·교육 만 의미 있음 (자체 가드 있음)
+        if (isStagnant && !hide("avg-ticket-upsell")) {
+          return (
+            <div className="dash-stagger-item" style={nextStaggerStyle()}>
+              <AvgTicketUpsellCard
+                ko={ko}
+                industryCategoryId={d.industryCategoryId}
+                currentAvgTicket={c.totalCustomers > 0 ? c.totalSales / c.totalCustomers : null}
+                menuItems={normalizeMenuItems(d)}
+              />
+            </div>
+          );
+        }
+        if (!hide("daily-improvement")) {
+          return (
+            <div className="dash-stagger-item" style={nextStaggerStyle()}>
+              <DailyImprovementCard ko={ko} industryCategoryId={d.industryCategoryId} />
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* 1.5 (c-1) — 정책자금 매칭 (평상시·위기 통합 노출. 2026-05 Tier 4 → 1.5 승격) */}
       {!hide("policy-fund-match") && (
