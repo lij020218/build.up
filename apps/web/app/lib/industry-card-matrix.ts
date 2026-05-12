@@ -455,7 +455,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "fitness-retention": {
-    id: "fitness-retention", status: "planned", industries: ["fitness"],
+    id: "fitness-retention", status: "existing", industries: ["fitness"],
     sources: [
       "Mindbody Analytics 2.0 Visit Trends",
       "FIA Retention Report: 50%가 90일 내 이탈",

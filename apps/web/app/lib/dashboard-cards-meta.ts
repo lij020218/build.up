@@ -172,6 +172,16 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   //   PortOne·CODEF·TossPlace·Popbill·CSV·SaasMetrics·SubscriptionWebhook 개별
   //   OAuth 카드 모두 존재. 대시보드 hero 영역 셋업 카드 차지 X. meta entry 제거.
   //   (IntegrationHubCard.tsx 파일 자체는 별도 PR 삭제)
+  {
+    // 2026-05-13 Phase 2b: 피트니스 신규 카드 — 105 자료 검증 (Mindbody·MarianaTek·FIA)
+    id: "fitness-retention",
+    labelKo: "회원 Retention · 피트니스 ⭐",
+    labelEn: "Member Retention · Fitness ⭐",
+    hintKo: "D-7 만료 임박 + 30/60/90일 cohort 잔존율 (FIA 90d=50% 기준) + 행동 1개",
+    hintEn: "D-7 expiring + cohort retention (FIA 50% benchmark) + top action",
+    category: "coaching",
+    industryHint: "all",
+  },
   // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.
