@@ -431,7 +431,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "beauty-booking-noshow": {
-    id: "beauty-booking-noshow", status: "planned", industries: ["beauty"],
+    id: "beauty-booking-noshow", status: "existing", industries: ["beauty"],
     sources: [
       "카카오헤어샵: 노쇼 20% → 0.09% 사례",
       "Zenoti Service Provider Utilization Rate",

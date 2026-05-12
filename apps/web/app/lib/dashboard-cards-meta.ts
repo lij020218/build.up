@@ -202,6 +202,16 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
     industryHint: "all",
   },
+  {
+    // 2026-05-13 Phase 2e: 뷰티 신규 카드 — 11 자료 (Zenoti·Meevo·카카오헤어샵)
+    id: "beauty-booking-noshow",
+    labelKo: "예약·노쇼·디자이너 · 뷰티 ⭐",
+    labelEn: "Booking · Beauty ⭐",
+    hintKo: "오늘/내일 예약 + 어제 노쇼 + 30일 노쇼율 + 디자이너별 매출 (카카오헤어샵 0.09% 표준)",
+    hintEn: "Today bookings + 30d no-show rate + provider revenue (KakaoHair 0.09%)",
+    category: "coaching",
+    industryHint: "all",
+  },
   // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.
