@@ -9,6 +9,7 @@ import { CountUp } from "./animations";
 import { PALETTE, MOTION, CHART_COLORS } from "./operationalStyles";
 import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
 import { resolveHero, InsightStack, PRIORITY_META, resolveInsightCtaTarget, type Hero } from "./MorningBriefing";
+import { recordSignal } from "../../coaching-history";
 import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
 import { useCashflowStore } from "../../stores/cashflow-store";
@@ -445,6 +446,7 @@ export function CEOMorningHero({ d }: Props) {
     ko,
     cashflowCrisis: brain.cashflowCrisis,
     topAnomaly: brain.topAnomaly,
+    industryRule: brain.industryRule,
     anomalyContext: brain.anomalyContext,
     topProposal: brain.topProposal,
     aiTopAction: brain.aiTopAction,
@@ -455,6 +457,25 @@ export function CEOMorningHero({ d }: Props) {
     monthlyBurn: brain.monthlyBurn,
     categoryId: d.industryCategoryId,
   }), [ko, brain, d.industryCategoryId]);
+
+  // ─── 2026-05-12: 코칭 히스토리 자동 기록 (OfflineFounderBrief 흡수 후 마이그레이션) ───
+  //   종전: OfflineFounderBrief 의 useEffect 가 매일 hero signal 을 localStorage + Supabase 에 기록.
+  //   현재: CEOMorningHero 의 통합 briefing 결과를 동일 방식으로 기록 → lock-in moat 유지.
+  //   brief 종류 분기: 스타트업 = "startup", 외 = "offline" (코칭 히스토리 분류)
+  const isStartupForHistory = d.industryCategoryId === "startup-tech";
+  useEffect(() => {
+    if (!briefing) return;
+    // tone → coaching kind 매핑 (HeroTone = "crisis" | "warning" | "neutral")
+    const kind: "critical" | "important" | "notable" | "good" =
+      briefing.tone === "crisis" ? "critical"
+        : briefing.tone === "warning" ? "important"
+          : "notable";
+    recordSignal(isStartupForHistory ? "startup" : "offline", {
+      kind,
+      headline: ko ? briefing.analysisKo.slice(0, 200) : briefing.analysisEn.slice(0, 200),
+      action: ko ? briefing.actionKo.slice(0, 300) : briefing.actionEn.slice(0, 300),
+    });
+  }, [briefing, isStartupForHistory, ko]);
 
   // ─── Industry insights → Hero spec 변환 (모든 hero source 에서 stack 노출용) ───
   // 사용자 요청 (2026-05-08): 운영 대시보드 최상단 AI 카드에 *3개 추천* 펼치기 기능 노출.

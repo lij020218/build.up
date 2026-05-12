@@ -155,7 +155,7 @@ function generateFallbackInsight(
 
 // ─── Hero resolver (분석 + 행동 1개) ────────────────────────────────────────
 
-export type HeroSource = "stale-sales" | "crisis" | "anomaly" | "reorder-urgent" | "ai-action" | "agent" | "industry" | "drucker";
+export type HeroSource = "stale-sales" | "crisis" | "anomaly" | "industry-rule" | "reorder-urgent" | "ai-action" | "agent" | "industry" | "drucker";
 export type HeroTone = "crisis" | "warning" | "neutral";
 /**
  * CTA 클릭 시 어디로 안내할지 명시.
@@ -366,6 +366,10 @@ export function resolveHero(input: {
   cashflowCrisis: CrisisDetection | null;
   /** 룰 기반 이상 감지 (이익률 하락·매출 하락·비용 급증·프라임코스트 돌파) — critical/warning 우선 활용 */
   topAnomaly: ProactiveInsight | null;
+  /** 2026-05-12 추가 — 11 업종 임계값 기반 룰 신호 (재료비·인건비·임대료·BEP·객단가).
+   *  종전 OfflineFounderBrief 가 별도 hero 카드로 노출했던 신호 — Tier 1 hero 로 흡수.
+   *  anomaly 보다 후순위 (1.6) — anomaly 가 trend·LLM 기반 더 미묘한 신호 잡으므로 우선. */
+  industryRule: { hero: { kind: "critical" | "important" | "notable" | "good"; headline: string; why: string; action: string } | null; industryLabel: string } | null;
   /** anomaly history 컨텍스트 — "오늘 새로 발생", "어제부터 2일째", "5일째 지속" 등 */
   anomalyContext: { isNew: boolean; consecutiveDays: number; label: string } | null;
   topProposal: AgentProposal | null;
@@ -379,7 +383,7 @@ export function resolveHero(input: {
   /** 업종 카테고리 — industry insight CTA 타깃 라우팅 보정용 (LLM 분류 신뢰도 낮음) */
   categoryId?: string;
 }): Hero {
-  const { ko, cashflowCrisis, topAnomaly, anomalyContext, topProposal, aiTopAction, industryInsight, businessLaunched, daysSinceLastSalesEntry, totalEntries, monthlyBurn, categoryId } = input;
+  const { ko, cashflowCrisis, topAnomaly, industryRule, anomalyContext, topProposal, aiTopAction, industryInsight, businessLaunched, daysSinceLastSalesEntry, totalEntries, monthlyBurn, categoryId } = input;
 
   // 0. 매출 미기록 3일 이상 (AI 코칭 정확도 보호 — 오래된 데이터로 코칭 생성 차단)
   //    - 운영 중(businessLaunched)이고
@@ -468,6 +472,41 @@ export function resolveHero(input: {
           : topAnomaly.kind === "customer-decline" || topAnomaly.kind === "new-customer-low"
             ? "users"
             : "sales",
+    };
+  }
+
+  // 1.6. Industry-rule (2026-05-12 추가) — 11 업종 임계값 기반 룰 신호.
+  //   종전 OfflineFounderBrief 별도 hero 카드 → Tier 1 hero 로 통합 흡수.
+  //   Toast IQ "For you feed" · Amplitude Dashboard Agent · Mercury Insights 등
+  //   2026 산업 표준 (AI 통합 hero) 정합.
+  //   critical/important 만 hero 로. notable/good 은 후순위 hero (Drucker 보다 위) 에서 처리.
+  if (industryRule?.hero && (industryRule.hero.kind === "critical" || industryRule.hero.kind === "important")) {
+    const ir = industryRule.hero;
+    const tone: HeroTone = ir.kind === "critical" ? "crisis" : "warning";
+    const tagKo = ir.kind === "critical"
+      ? `${industryRule.industryLabel} · 위험 신호`
+      : `${industryRule.industryLabel} · 점검 신호`;
+    const tagEn = ir.kind === "critical" ? "Industry Critical" : "Industry Watch";
+    // industry-rule 의 headline 에 따라 타깃 분기
+    const head = ir.headline.toLowerCase();
+    const ctaTarget: "sales" | "users" | "costs" | "cashflow" =
+      head.includes("재료") || head.includes("매입") || head.includes("인건") || head.includes("임대") || head.includes("프라임")
+        ? "costs"
+        : head.includes("객단가") || head.includes("매출")
+          ? "sales"
+          : "sales";
+    return {
+      source: "industry-rule",
+      tone,
+      tagKo,
+      tagEn,
+      analysisKo: `${ir.headline}. ${ir.why}`,
+      analysisEn: `${ir.headline}. ${ir.why}`,
+      actionKo: ir.action,
+      actionEn: ir.action,
+      ctaKo: "상세 보기",
+      ctaEn: "See details",
+      ctaTarget,
     };
   }
 
@@ -1058,10 +1097,13 @@ export function MorningBriefing({ hideKpis = false }: MorningBriefingProps = {})
   const monthlyBurnForHero = costs.ingredients + costs.labor + costs.rent + costs.utilities + (costs.sga ?? 0) + (costs.marketing ?? 0) + costs.other + (costs.interest ?? 0);
 
   // Hero 선택: 우선순위별 "오늘의 1가지" 결정
+  //   2026-05-12: industryRule = null 전달 (MorningBriefing 본체는 brain hook 미사용 — 별도 path).
+  //   industry-rule 우선순위는 CEOMorningHero 의 brain 경로에서만 활성화.
   const hero = useMemo(() => resolveHero({
     ko,
     cashflowCrisis,
     topAnomaly,
+    industryRule: null,
     anomalyContext,
     topProposal,
     aiTopAction: d.aiActions?.todayActions?.[0],

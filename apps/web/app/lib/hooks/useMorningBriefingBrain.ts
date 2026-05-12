@@ -9,8 +9,10 @@ import { projectCashflow, detectCrisis, type CrisisDetection } from "../services
 import { detectProactiveInsights, type ProactiveInsight } from "../services/profit-anomaly-detector";
 import { updateAnomalyHistory, getAnomalyContext } from "../services/anomaly-history";
 import { useIndustryInsight, type IndustryInsight } from "./useIndustryInsight";
+import { computeIndustryRule, type IndustryRuleResult } from "./useIndustryRuleSignal";
 import type { DailyEntry, MonthlyCosts } from "../useDashboard";
 import { getBusinessDay } from "../utils/business-day";
+import { calculateCostRatios } from "@build-up/shared";
 
 /**
  * ────────────────────────────────────────────────────────────────────────
@@ -77,6 +79,10 @@ export type MorningBriefingBrain = {
     prevPrimeRate: number | null;
     deltaPct: number | null;  // 이번달 - 지난달
   };
+  /** 2026-05-12 추가 — 11 업종 임계값 룰 신호 (재료비·인건비·임대료·BEP·객단가).
+   *  종전 OfflineFounderBrief 별도 hero 카드 → Tier 1 hero 흡수 (Toast IQ·Amplitude 통합 패턴).
+   *  resolveHero 가 anomaly 다음 (priority 1.6) 으로 사용. */
+  industryRule: IndustryRuleResult;
 };
 
 export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain {
@@ -266,6 +272,51 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     };
   }, [entries, costs, d.costHistory]);
 
+  // ── 2026-05-12: 11 업종 임계값 룰 신호 (industry-rule) ──
+  //   OfflineFounderBrief 안에 고립되어 있던 룰엔진을 brain 으로 끌어올림.
+  //   resolveHero 의 우선순위 1.6 (anomaly 다음) 에서 사용.
+  const ko = d.language === "ko";
+  const industryRule = useMemo<IndustryRuleResult>(() => {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthEntries = entries.filter((e) => e.date.startsWith(currentMonth));
+    const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
+    const totalCustomers = monthEntries.reduce((s, e) => s + (e.customers ?? 0), 0);
+
+    const ratios = calculateCostRatios({
+      costs: {
+        ingredients: costs.ingredients ?? 0,
+        labor: costs.labor ?? 0,
+        rent: costs.rent ?? 0,
+        utilities: costs.utilities ?? 0,
+        sga: costs.sga ?? 0,
+        marketing: costs.marketing ?? 0,
+        other: costs.other ?? 0,
+      },
+      totalRevenue: totalSales,
+      days: monthEntries.length,
+    });
+
+    // BEP 진행률 — 월 매출 환산 vs 월 비용
+    const bepProgress = monthlyBurn > 0 && ratios.monthlyRevenueEquivalent > 0
+      ? (ratios.monthlyRevenueEquivalent / monthlyBurn) * 100
+      : 0;
+
+    return computeIndustryRule({
+      industryCategoryId: d.industryCategoryId ?? "",
+      ingredientRatio: ratios.ingredientRatio,
+      laborRatio: ratios.laborRatio,
+      rentRatio: ratios.rentRatio,
+      primeCost: ratios.primeCostRatio,
+      ratiosReady: ratios.ready,
+      bepProgress,
+      weeklySalesChange: salesTrend.changePct ?? 0,
+      totalCustomers,
+      totalSales,
+      dailyEntriesCount: entries.length,
+      ko,
+    });
+  }, [entries, costs, monthlyBurn, salesTrend.changePct, d.industryCategoryId, ko]);
+
   return {
     hasNoData: entries.length === 0,
     cashflowCrisis,
@@ -284,5 +335,6 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     salesTrend,
     weeklyChangePct: salesTrend.changePct,
     costRatioTrend,
+    industryRule,
   };
 }

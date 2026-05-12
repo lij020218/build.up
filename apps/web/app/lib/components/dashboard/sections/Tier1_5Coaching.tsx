@@ -25,7 +25,11 @@ import { AvgTicketUpsellCard } from "../AvgTicketUpsellCard";
 import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { StartupHealthSection } from "../StartupHealthSection";
 import { StartupFounderBrief } from "../StartupFounderBrief";
-import { OfflineFounderBrief } from "../OfflineFounderBrief";
+// 2026-05-12: OfflineFounderBrief 통합 — Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수.
+//   Toast IQ "For you feed" / Amplitude Dashboard Agent / Mercury Insights 등
+//   2026 산업 표준 (AI 통합 hero) 정합. 22 자료 검증 완료.
+//   파일 자체는 다음 PR 에서 deprecate (코칭 히스토리 자동 기록은 CEOMorningHero 가 흡수).
+// import { OfflineFounderBrief } from "../OfflineFounderBrief";
 import { IntegrationHubCard } from "../IntegrationHubCard";
 import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
@@ -66,17 +70,12 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
 
   return (
     <>
-      {/* 2026-05-12 킬러 기능 — AI 운영 코치 데일리 브리프 (offline 사장님 전용)
-          startup-tech 가 아닌 외식·카페·뷰티·소매·피트니스·교육·펫·생활서비스 사장님
-          (전체 사용자 90%+) 께 *해석된 인사이트* 제공. 재료비·인건비·임대료·primecost·BEP
-          진행률 자동 분석 → 가장 중요한 1개 + 오늘 행동.
-          StartupFounderBrief 의 offline 동등 보강 — Tier 1.5 최상단에 위치해
-          사장님이 "오늘 무엇을 봐야 하는지" 먼저 봄. */}
-      {!c.isStartupCompany && !hide("offline-founder-brief") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <OfflineFounderBrief ko={ko} />
-        </div>
-      )}
+      {/* 2026-05-12 후속 정리 — OfflineFounderBrief 통합 마이그레이션 완료.
+          11 업종 임계값 룰엔진은 useIndustryRuleSignal 로 추출 → useMorningBriefingBrain
+          이 흡수 → resolveHero 의 우선순위 1.6 (anomaly 다음) 으로 사용.
+          이제 *단일 hero* (CEOMorningHero) 에서 generic anomaly + industry-specific 룰
+          + AI top action 모두 처리. Toast IQ·Amplitude·Mercury 2026 산업 표준 정합.
+          22 자료 검증 (NN/G·Carbon·M3·Toast·Amplitude·Square·Mercury 등) 통과. */}
 
       {/* 2026-05-12 데이터 입력 마찰 0 — 자동 연동 허브
           사장님 수기 입력 의존도가 가장 큰 약점 (캐시노트 카드사 자동연동 우위).
