@@ -710,6 +710,61 @@ export function CompanySetupStage() {
         ]}
         nextSummaryKo="법인·특허·상표·약관 사전 셋업 완료 → MVP 빌드 단계로 진입"
       />
+
+      {/* ── 2026-05-12: 규제 업종 사장님 별도 등록 안내 (fintech / healthtech / security) ── */}
+      <div style={{ marginTop: 18, padding: "18px 20px", borderRadius: 16, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.12)" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#191970", opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+          ⚠ 규제 업종 — 별도 등록·허가 필요
+        </div>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 10 }}>
+          {ko ? "fintech · healthtech · security 사장님은 일반 사업자등록 외 추가 라이센스 필요" : "Fintech / healthtech / security need additional licenses"}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+          {/* Fintech */}
+          <div style={{ padding: "12px 14px", background: "white", borderRadius: 12, border: "1px solid rgba(25,25,112,0.10)" }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#191970", marginBottom: 4 }}>
+              💳 {ko ? "Fintech (전자금융업 / 마이데이터 / VASP)" : "Fintech (E-finance / MyData / VASP)"}
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>
+              <li>{ko ? "전자금융업 (전자금융거래법 §28): 자본금 5억~30억, 금융위 등록 2~4개월" : "E-finance registration: 0.5–3B KRW capital, FSC 2-4mo"}</li>
+              <li>{ko ? "마이데이터 (본인신용정보관리업): 자본금 5억, 금융위 허가" : "MyData (credit info mgmt): 0.5B capital, FSC license"}</li>
+              <li>{ko ? "가상자산이용자보호법 (2024.7 시행): 예치금 분리 + 해킹 보험 의무" : "VASP law (eff. Jul 2024): segregated deposits + hack insurance"}</li>
+              <li><a href="https://www.fsc.go.kr" target="_blank" rel="noreferrer" style={{ color: "#191970", textDecoration: "underline" }}>{ko ? "금융위원회 신청 안내" : "FSC application guide"}</a></li>
+            </ul>
+          </div>
+          {/* Healthtech */}
+          <div style={{ padding: "12px 14px", background: "white", borderRadius: 12, border: "1px solid rgba(25,25,112,0.10)" }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#191970", marginBottom: 4 }}>
+              🏥 {ko ? "Healthtech (MFDS SaMD / IRB)" : "Healthtech (MFDS SaMD / IRB)"}
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>
+              <li>{ko ? "SaMD 등급 (1~4): 1등급 신고 100~500만 / 2등급 인증 1~3천만 / 3·4등급 허가 5천만~5억+" : "SaMD class 1-4: filings vs full approval"}</li>
+              <li>{ko ? "혁신의료기기 Fast Track: 80~140일 (199 카테고리)" : "Innovation Fast Track: 80-140 days"}</li>
+              <li>{ko ? "IRB 심사: 일반 2~4주 / 디지털 치료기기 8~12주" : "IRB: 2-4wk standard / 8-12wk digital therapy"}</li>
+              <li>{ko ? "PIPA 의료정보 + 비대면진료 시범사업" : "PIPA medical data + remote care pilot"}</li>
+              <li><a href="https://www.mfds.go.kr" target="_blank" rel="noreferrer" style={{ color: "#191970", textDecoration: "underline" }}>{ko ? "식약처" : "MFDS"}</a></li>
+            </ul>
+          </div>
+          {/* Security */}
+          <div style={{ padding: "12px 14px", background: "white", borderRadius: 12, border: "1px solid rgba(25,25,112,0.10)" }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#191970", marginBottom: 4 }}>
+              🔒 {ko ? "Security (ISMS-P / CSAP / CC)" : "Security (ISMS-P / CSAP / CC)"}
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>
+              <li>{ko ? "ISMS-P (KISA): 매출 100억 또는 회원 100만+ 의무. 인증 3~6개월" : "ISMS-P (KISA): mandatory if rev 10B+ or 1M users. 3-6mo"}</li>
+              <li>{ko ? "CSAP (클라우드 보안 인증): 공공기관 납품 필수" : "CSAP: required for public-sector sales"}</li>
+              <li>{ko ? "CC 인증 (정보보호 제품): 보안성 평가" : "CC certification for security products"}</li>
+              <li>{ko ? "K-Shield / K-Shield Jr 정부 무료 교육·지원" : "K-Shield / K-Shield Jr free training"}</li>
+              <li><a href="https://isms.kisa.or.kr" target="_blank" rel="noreferrer" style={{ color: "#191970", textDecoration: "underline" }}>{ko ? "KISA ISMS-P" : "KISA ISMS-P"}</a></li>
+            </ul>
+          </div>
+        </div>
+        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 10, lineHeight: 1.55 }}>
+          {ko
+            ? "📌 위 라이센스는 자본금·기간 부담이 커서 시드 단계에선 부수업무 형태로 우회 가능 (예: PG 재판매, 의료기기 미인증 SaaS 등). 본 사업 전환 시 별도 PR/단계로 진행."
+            : "📌 These can be deferred via reseller/non-certified SaaS at seed stage; transition during scale."}
+        </div>
+      </div>
     </div>
   );
 }

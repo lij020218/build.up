@@ -222,7 +222,87 @@ export function MvpBuildStage() {
             </div>
           ))}
         </div>
-        {toolSection(null, 3, [{ name: "Supabase", desc: "PostgreSQL + 인증 + 스토리지 + 실시간. 무료 50K MAU", url: "https://supabase.com", free: true, tag: "DB 추천" }, { name: "Vercel", desc: "Next.js 배포 제로 설정. Edge Function 지원. 무료 시작", url: "https://vercel.com", free: true, tag: "배포 추천" }, { name: "Railway", desc: "사용량 기반 과금. 유휴 시 0원. 인디 해커 선호", url: "https://railway.app", free: false, tag: "$5/mo" }], MIDNIGHT)}
+        {toolSection(null, 3, [{ name: "Supabase", desc: "PostgreSQL + 인증 + 스토리지 + 실시간 + pgvector. 무료 50K MAU + 500MB DB. 서울 리전 (ap-northeast-2)", url: "https://supabase.com", free: true, tag: "DB 추천" }, { name: "Vercel", desc: "Next.js 배포 제로 설정. Edge Function 지원. 무료 시작 (Hobby plan)", url: "https://vercel.com", free: true, tag: "배포 추천" }, { name: "Railway", desc: "사용량 기반 과금. 유휴 시 0원. 인디 해커 선호. Hobby $5/mo", url: "https://railway.app", free: false, tag: "$5/mo" }], MIDNIGHT)}
+
+        {/* ── 2026-05-12: AI Agent / RAG 레이어 (ai-application 업종 핵심) ── */}
+        <div style={{ marginTop: "20px", padding: "16px 18px", borderRadius: "16px", background: `${MIDNIGHT}06`, border: `1.5px solid ${MIDNIGHT}30` }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+            🤖 AI Agent / RAG 레이어 (ai-application 업종)
+          </div>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", lineHeight: 1.5, marginBottom: "6px" }}>
+            AI 에이전트를 만든다면 Day-1 스택은 이미 정해져 있습니다.
+          </div>
+          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.65)", lineHeight: 1.65, marginBottom: "14px" }}>
+            <strong>TS 스택:</strong> Mastra (1.0 출시, 주 30만 다운로드) + Vercel AI SDK (UI) + Inngest (워크플로) + Supabase pgvector + Langfuse.<br />
+            <strong>Python 스택:</strong> Claude Agent SDK (Anthropic 공식) 또는 OpenAI Agents SDK + Pydantic AI v1.93 (스키마) + LangGraph (복잡 워크플로) + 같은 인프라.<br />
+            ★ <strong>국내 시드 권장</strong>: TS / Mastra + Supabase pgvector + Langfuse + Inngest — 풀스택 무료 또는 $20/mo 시작 가능.
+          </div>
+
+          {/* AI 프레임워크 */}
+          <div style={{ fontSize: "11.5px", fontWeight: 700, color: MIDNIGHT, opacity: 0.8, marginBottom: "6px", marginTop: "10px" }}>
+            ① 에이전트 프레임워크 (모델 + 도구 호출 + 상태 관리)
+          </div>
+          {toolSection(null, 5, [
+            { name: "Mastra (TS)", desc: "TS-native, Vercel AI SDK 정렬. 주 30만 다운로드. $13M 시드 ('25.10). Next.js 풀스택 1순위.", url: "https://mastra.ai", free: true, tag: "TS 1순위" },
+            { name: "Claude Agent SDK (Python)", desc: "Anthropic 공식. 가장 깊은 OS 접근 (파일·셸·MCP). Opus 4.7 1M context 지원.", url: "https://docs.anthropic.com/en/api/agent-sdk", free: false, tag: "Python 1순위" },
+            { name: "OpenAI Agents SDK", desc: "OpenAI 공식. 깔끔한 handoff 모델 + 빌트인 트레이싱. Assistants API 후속.", url: "https://platform.openai.com/docs/guides/agents", free: false, tag: "OAI 표준" },
+            { name: "LangGraph", desc: "복잡 멀티 에이전트 + 체크포인트 + approval gate. Klarna·Uber·LinkedIn 프로덕션.", url: "https://langchain-ai.github.io/langgraph/", free: true, tag: "복잡 워크플로" },
+            { name: "Pydantic AI / BAML", desc: "구조화 출력 (JSON 스키마) 필수일 때. BAML은 함수형 프롬프트.", url: "https://ai.pydantic.dev/", free: true, tag: "Schema" },
+          ], MIDNIGHT)}
+
+          {/* Vector DB */}
+          <div style={{ fontSize: "11.5px", fontWeight: 700, color: MIDNIGHT, opacity: 0.8, marginBottom: "6px", marginTop: "14px" }}>
+            ② Vector DB (RAG / 임베딩 저장) — 10M 벡터 기준 가격
+          </div>
+          {toolSection(null, 4, [
+            { name: "Supabase pgvector", desc: "$45/mo (10M). 50M까지 가장 저렴. Korean 시드 1순위. 데이터 한 곳 (DB·인증·스토리지·벡터) 운영.", url: "https://supabase.com/vector", free: true, tag: "추천" },
+            { name: "Qdrant", desc: "$65/mo (10M). OSS, self-host 가능. 필터 쿼리 강함. 정확도 우수.", url: "https://qdrant.tech", free: true, tag: "OSS" },
+            { name: "Pinecone Serverless", desc: "$70/mo (10M). 단 100M+ 시 $700/mo+ — 비용 폭증 주의.", url: "https://pinecone.io", free: false, tag: "주의" },
+            { name: "Turbopuffer", desc: "S3 기반 cheap+fast. 1억+ 벡터 시 비용 최저. Cohere·Notion 사용.", url: "https://turbopuffer.com", free: false, tag: "대규모" },
+          ], MIDNIGHT)}
+
+          {/* LLM 관측 + 평가 */}
+          <div style={{ fontSize: "11.5px", fontWeight: 700, color: MIDNIGHT, opacity: 0.8, marginBottom: "6px", marginTop: "14px" }}>
+            ③ LLM Observability + Eval (반드시 day-1 부터 — 비용 추적·디버깅)
+          </div>
+          {toolSection(null, 4, [
+            { name: "Langfuse", desc: "OSS, self-host. Clickhouse 인수 ('26.1). 비용 절감 압도적. Tracing + eval + prompt 버전 관리.", url: "https://langfuse.com", free: true, tag: "1순위" },
+            { name: "Braintrust", desc: "Eval-first, CI/CD 회귀 차단. 폐쇄 소스. 평가 정밀도 1위.", url: "https://braintrust.dev", free: false, tag: "Eval" },
+            { name: "Helicone", desc: "프록시 1줄로 추가. OpenAI 전용 시 가장 간단. 무료 100K 요청/월.", url: "https://helicone.ai", free: true, tag: "Proxy" },
+            { name: "LangSmith", desc: "LangChain/LangGraph 사용 시만 권장. LangChain 종속.", url: "https://smith.langchain.com", free: true, tag: "LC 전용" },
+          ], MIDNIGHT)}
+
+          {/* AI Gateway + Inference */}
+          <div style={{ fontSize: "11.5px", fontWeight: 700, color: MIDNIGHT, opacity: 0.8, marginBottom: "6px", marginTop: "14px" }}>
+            ④ AI Gateway + Inference Host (모델 라우팅·최적화)
+          </div>
+          {toolSection(null, 4, [
+            { name: "OpenRouter", desc: "300+ 모델 단일 API. 가격 비교·fallback. 모델 자유 비교 시 1순위.", url: "https://openrouter.ai", free: true, tag: "라우팅" },
+            { name: "Together.ai", desc: "오픈소스 모델 (Llama·DeepSeek·Qwen) 가장 저렴한 추론.", url: "https://together.ai", free: false, tag: "OSS 추론" },
+            { name: "Groq", desc: "추론 속도 1위 (LPU). 챗봇·실시간에 필수.", url: "https://groq.com", free: true, tag: "속도" },
+            { name: "Modal", desc: "Python 함수 → GPU 배포. 커스텀 모델·fine-tuning 자체 호스팅.", url: "https://modal.com", free: true, tag: "GPU" },
+          ], MIDNIGHT)}
+
+          {/* 워크플로 / 백그라운드 잡 */}
+          <div style={{ fontSize: "11.5px", fontWeight: 700, color: MIDNIGHT, opacity: 0.8, marginBottom: "6px", marginTop: "14px" }}>
+            ⑤ Durable Workflows (장기 실행 에이전트 — Vercel 5분 timeout 우회)
+          </div>
+          {toolSection(null, 3, [
+            { name: "Inngest", desc: "이벤트 기반 + 재시도·fan-out 자동. AI 워크플로 표준. 무료 50K steps/월.", url: "https://inngest.com", free: true, tag: "1순위" },
+            { name: "Trigger.dev", desc: "OSS, self-host 가능. cron + 이벤트 둘 다 강함. $10 시작.", url: "https://trigger.dev", free: true, tag: "OSS" },
+            { name: "Mastra Workflows", desc: "Mastra 내장 (durable). 같은 framework 안에서 처리 가능.", url: "https://mastra.ai/docs/workflows", free: true, tag: "통합" },
+          ], MIDNIGHT)}
+
+          <div style={{ marginTop: "12px", padding: "10px 12px", borderRadius: "10px", background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)" }}>
+            <div style={{ fontSize: "11.5px", fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.04em", marginBottom: "4px" }}>⚠ 흔한 함정</div>
+            <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "rgba(15,23,42,0.65)", lineHeight: 1.6 }}>
+              <li><strong>Pinecone Standard</strong> 100M 벡터에서 $700-3K/mo로 폭증 — 시작은 pgvector.</li>
+              <li><strong>LangChain bloat</strong> — LangGraph 사용 안 하면 LangChain 자체 의존성 제거.</li>
+              <li><strong>Vercel function timeout (5분)</strong> 긴 LLM 호출 깨짐 → Inngest/Trigger 로 오프로드.</li>
+              <li><strong>Langfuse self-host</strong> 는 K8s + Clickhouse + Redis 필요 — 시드는 cloud free tier로 시작.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     )},
     // PAGE 5 — AI 코딩 (2026-04 최신 검증 데이터)
@@ -268,9 +348,9 @@ export function MvpBuildStage() {
         </div>
         {toolSection(null, 6, [
           { name: "Cursor", desc: "월간 활성 사용자 800K+. VS Code 포크, 시각적 편집 + 채팅, 인라인 편집 최강", url: "https://cursor.com", free: false, tag: "Pro $20/mo" },
-          { name: "Claude Code (Anthropic)", desc: "터미널 우선 에이전트. 복잡한 멀티파일 리팩토링·테스트 자동화 1위. Opus 4.5 권장", url: "https://claude.com/claude-code", free: false, tag: "Pro $20/mo" },
+          { name: "Claude Code (Anthropic)", desc: "터미널 우선 에이전트. 복잡한 멀티파일 리팩토링·테스트 자동화 1위. Opus 4.7 권장 (1M context).", url: "https://claude.com/claude-code", free: false, tag: "Pro $20/mo" },
           { name: "Codex (OpenAI)", desc: "OpenAI의 에이전트. 백그라운드에서 멀티파일 편집·셸 명령·테스트 자동 실행. Claude Code 대안", url: "https://openai.com/codex", free: false, tag: "$20/mo+" },
-          { name: "Antigravity (Google)", desc: "프리뷰 무료. Claude Opus 4.5 / Gemini 3 Flash / GPT-OSS 모델 자유 선택", url: "https://antigravity.google", free: true, tag: "프리뷰 무료" },
+          { name: "Antigravity (Google)", desc: "프리뷰 무료. Claude Opus 4.7 / Gemini 3 / GPT-OSS 모델 자유 선택", url: "https://antigravity.google", free: true, tag: "프리뷰 무료" },
           { name: "Windsurf (Codeium)", desc: "AI-네이티브 IDE. Anthropic Claude 기반. Cursor 대안", url: "https://codeium.com/windsurf", free: false, tag: "$15/mo" },
           { name: "GitHub Copilot", desc: "인라인 자동완성 표준. 2,000만+ 유저. 무료 플랜 (월 50회 채팅)", url: "https://github.com/features/copilot", free: true, tag: "$10/mo" },
         ], MIDNIGHT)}
