@@ -558,13 +558,13 @@ export function LaunchGtmStage() {
             <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: "10px" }}>
               {(ko ? [
                 { num: 1, Icon: Cloud, title: "웹 출시 (도메인·SSL·SEO)", time: "1-3시간", cost: "도메인 1-2만/년", desc: "Vercel·Cloudflare 1-클릭 배포 + SEO 메타 + Search Console. 모든 SaaS 의 시작." },
-                { num: 2, Icon: Sparkles, title: "Apple App Store (iOS)", time: "3-7일", cost: "$99/년", desc: "Xcode 16 + iOS 26 SDK 의무 (4.28부터). TestFlight + App Store Connect. 평균 24h 리뷰지만 최근 7-30일 지연." },
+                { num: 2, Icon: Sparkles, title: "Apple App Store (iOS)", time: "3-7일", cost: "$99/년", desc: "Xcode 26 + iOS 26 SDK 의무 (2026.4.28부터, Apple Developer 공식). TestFlight + App Store Connect. 평균 24h 리뷰지만 최근 7-30일 지연." },
                 { num: 3, Icon: Sparkles, title: "Google Play (Android)", time: "2-3주", cost: "$25 일회성", desc: "12명 테스터 14일 폐쇄 테스트 의무 (개인 계정). User Engagement Time 측정 — 가짜 테스터 X." },
                 { num: 4, Icon: Megaphone, title: "Product Hunt 론칭", time: "준비 2주 + 24h", cost: "무료", desc: "화·수 0시 PT 론칭. 헌터 사전 섭외 필수. Top 5 = 5K-10K 방문, Top 1 = 50K+ 가능." },
                 { num: 5, Icon: Megaphone, title: "Hacker News \"Show HN\"", time: "준비 1일 + 8h 모니터링", cost: "무료", desc: "솔직한 한 문장 + 직접 제작 스토리. Top 30 = 100K+ 방문. 1주 후에도 SEO 효과." },
               ] : [
                 { num: 1, Icon: Cloud, title: "Web Launch", time: "1-3hr", cost: "$10-20/yr", desc: "Vercel/CF deploy + SEO + Search Console." },
-                { num: 2, Icon: Sparkles, title: "Apple App Store", time: "3-7d", cost: "$99/yr", desc: "Xcode 16 + iOS 26 SDK mandatory. 7-30 day delays in 2026.3." },
+                { num: 2, Icon: Sparkles, title: "Apple App Store", time: "3-7d", cost: "$99/yr", desc: "Xcode 26 + iOS 26 SDK mandatory (eff. 2026-04-28). 7-30 day delays in 2026.3." },
                 { num: 3, Icon: Sparkles, title: "Google Play", time: "2-3wk", cost: "$25 one-time", desc: "12 testers x 14-day closed testing required." },
                 { num: 4, Icon: Megaphone, title: "Product Hunt", time: "2wk + 24h", cost: "Free", desc: "Tue/Wed 12am PT. Top 5 = 5-10K visits/wk." },
                 { num: 5, Icon: Megaphone, title: "HN Show HN", time: "1d + 8h", cost: "Free", desc: "Top 30 = 100K+ visits." },

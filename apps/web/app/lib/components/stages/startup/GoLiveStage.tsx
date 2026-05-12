@@ -242,8 +242,8 @@ export function GoLiveStage() {
                 </div>
                 <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.75)", lineHeight: 1.6 }}>
                   {ko
-                    ? "2026.4.28 이후 모든 신규/업데이트 앱은 iOS 26 SDK + Xcode 16+ 필수. 2026.3 부터 리뷰 7-30일 지연 빈발 (평소 24h)."
-                    : "From 4.28.2026, iOS 26 SDK + Xcode 16+ mandatory. Review delays 7-30 days reported in March 2026."}
+                    ? "2026.4.28 이후 모든 신규/업데이트 앱은 iOS 26 SDK + Xcode 26 필수 (Apple Developer 공식). Xcode 16은 iOS 26 SDK 미지원이라 제출 시 거절. 2026.3 부터 리뷰 7-30일 지연 빈발 (평소 24h)."
+                    : "From 4.28.2026, iOS 26 SDK + Xcode 26 mandatory (per Apple Developer). Xcode 16 cannot build iOS 26 SDK → rejected on submission. Review delays 7-30 days reported in March 2026."}
                 </div>
               </div>
 
@@ -263,10 +263,10 @@ export function GoLiveStage() {
                   ],
                 },
                 {
-                  step: 2, title: "Xcode 16+ 설치 + iOS 26 SDK 빌드", time: "1-2일 (Mac 필수)",
-                  detail: "Xcode 16+ 다운로드 (macOS 최신 필요). 본인 앱 프로젝트 열어 iOS 26 SDK 로 빌드. Hardware: M-series Mac 권장.",
+                  step: 2, title: "Xcode 26 설치 + iOS 26 SDK 빌드", time: "1-2일 (Mac 필수)",
+                  detail: "Xcode 26 다운로드 (macOS Tahoe 26 이상 필요). 본인 앱 프로젝트 열어 iOS 26 SDK 로 빌드. Hardware: M-series Mac 권장.",
                   todo: [
-                    "Mac App Store 또는 developer.apple.com 에서 Xcode 16+ 설치 (15GB+)",
+                    "Mac App Store 또는 developer.apple.com 에서 Xcode 26 설치 (15GB+)",
                     "Xcode → Project Settings → Deployment Target = iOS 16+ (호환성 + iOS 26 SDK)",
                     "Bundle Identifier 신중히 설정 (예: com.yourbiz.app) — 이후 변경 불가",
                     "Signing & Capabilities → Team = 본인 Developer 계정 선택",

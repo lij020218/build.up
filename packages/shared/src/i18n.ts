@@ -741,7 +741,7 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   // go-live (Stage 10) — 실제 출시
   "web-go-live": { ko: "웹 출시 — 도메인 + SSL + SEO 메타 + Google Search Console (1-3시간)" },
   "launch-channel-active": { ko: "최소 1개 채널 론칭 — Product Hunt / Hacker News Show HN / 디스콰이엇 빌드 로그" },
-  "apple-app-store-submitted": { ko: "Apple App Store 제출 (iOS만) — Xcode 16 + iOS 26 SDK + TestFlight (4.28부터 SDK 의무)" },
+  "apple-app-store-submitted": { ko: "Apple App Store 제출 (iOS만) — Xcode 26 + iOS 26 SDK + TestFlight (2026.4.28부터 의무)" },
   "google-play-submitted": { ko: "Google Play 제출 (Android만) — 12명 테스터 × 14일 폐쇄 테스트 의무 (개인 계정)" },
   "launch-day-monitored": { ko: "론칭 데이 24시간 모니터링 — 모든 댓글 답변 + Twitter·HN·PH 동시 공유" },
   "terms-privacy-published": { ko: "이용약관 · 개인정보처리방침 게시 — 유저 가입 전 법적 필수. 개인정보보호 포털에서 자동 생성 가능" },

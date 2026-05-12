@@ -150,7 +150,7 @@ export function StaffLaborCard() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               <div>
                 <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "5px" }}>{ko ? "\uc2dc\uae09 (\uc6d0)" : "Hourly wage (\u20a9)"}</div>
-                <input type="text" inputMode="numeric" placeholder="10,030" value={empWage} onChange={e => setEmpWage(e.target.value.replace(/[^0-9]/g, ""))}
+                <input type="text" inputMode="numeric" placeholder="10,320" value={empWage} onChange={e => setEmpWage(e.target.value.replace(/[^0-9]/g, ""))}
                   aria-label={ko ? "\uc2dc\uae09 (\uc6d0)" : "Hourly wage (KRW)"}
                   style={{ width: "100%", boxSizing: "border-box" as const, border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none" }} />
               </div>

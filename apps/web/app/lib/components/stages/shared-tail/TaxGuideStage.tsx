@@ -6,9 +6,21 @@ import {
   ShieldCheck, AlertTriangle, Calendar, FileText, Banknote,
   Sparkles, ClipboardList, ExternalLink, ChevronRight, type LucideIcon,
 } from "lucide-react";
+import { LEGAL } from "@build-up/shared";
 import { StageWrapup } from "../shared/StageWrapup";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러 (다른 단계와 통일)
+
+// 2026-05-12 P0 fix (사장님 신고): 간이과세 기준 SSOT 통일.
+//   종전: TaxGuideStage 4곳에 "1억 4천만원 (140M)" 잘못 표기
+//   실제: 1억 400만원 (104M) — 36M 차이. 8,500만~1억 400만 사이 사장님 잘못 판단 위험.
+//   출처: 부가가치세법 시행령 §109 (2024.1.1 이후 시행), 기재부 2023.12.08 발표.
+//   정책브리핑 newsId=148930428 / 국세청 안내.
+//   참고: LEGAL.SIMPLIFIED_TAX_THRESHOLD = 104_000_000 (이미 packages/shared SSOT 존재).
+const SIMPLIFIED_THRESHOLD_KO = "1억 400만원"; // 사용자에게 보이는 한국식 표기
+const SIMPLIFIED_THRESHOLD_EN = "104M KRW";
+// 사용 안 함 변수 lint 회피용으로 LEGAL 참조 (값 검증)
+void LEGAL.SIMPLIFIED_TAX_THRESHOLD;
 
 /**
  * 세무 가이드 단계 — 2026년 기준 검증된 데이터.
@@ -70,7 +82,7 @@ export function TaxGuideStage() {
           ? { title: "홈택스 법인 가입 + 법인카드 의무 — 개인카드 = 비용 불인정", detail: "공동인증서 → 세금계산서 발행·법인세 신고 활성화. 모든 경비 법인카드 결제. 영수증 5년 보관 (앱 백업 권장). R&D 인건비는 별도 분류 — 25% 세액공제 받기 위해." }
           : { title: "Hometax corp signup + corp card mandatory", detail: "Cert → invoice/tax filing enabled. All expenses on corp card. 5-year retention." },
         2: ko
-          ? { title: "벤처인증 후 절세 — 법인세 5년 50% 감면 + 스톡옵션 5억 비과세 + R&D 25%", detail: "청년창업 (만 39세 이하) 인증 시 5년 동안 법인세 50% 감면. 스톡옵션 행사이익 연 2억·누적 5억 비과세 (2027.12.31 부여분까지). R&D 인건비 세액공제 중소기업 25% (벤처 가산). 누락 시 수천만원 손실." }
+          ? { title: "절세 핵심: 청년창업 세액감면 + 벤처인증 + R&D — 누락 시 수천만원 손실", detail: "① 청년창업 (만 15~34세, 병역 6년까지 차감) — 5년간 법인세/소득세 100% (수도권외+인구감소) / 75% (수도권) / 50% (수도권과밀). ② 벤처기업 인증 — 별도 5년 50% 감면 + 스톡옵션 행사이익 연 2억·누적 5억 비과세 (~2027.12.31 부여분). ③ R&D 인건비 세액공제 25% (벤처기업)." }
           : { title: "Post-cert savings — 50% tax cut 5yr + ₩500M stock option + 25% R&D", detail: "Youth (≤39) startup: 50% corp tax cut for 5 years. Stock option ₩200M/yr·₩500M cumulative tax-free. R&D credit 25% (SME)." },
         3: ko
           ? { title: "본인 모드에 맞는 세무 처리 결정 — 1인 인디는 DIY OK, 시드+ 는 세무사 필수", detail: "인디·솔로 1인 = 자비스·삼쩜삼 SaaS + 분기당 1회 세무사 검토 (10-30만). 부트스트랩 3-5명 = 월 기장 10만+ 세무조정 30만. 시드 이상 = 월 위임 30-50만 (R&D·스톡옵션 처리)." }
@@ -87,8 +99,8 @@ export function TaxGuideStage() {
           ? { title: "매입세금계산서 받기 — VAT 환급의 시작점", detail: "거래처에 사업자등록증 전달 → 세금계산서 발급 요청. 카드영수증·간이영수증 5년 보관(앱 백업 권장)." }
           : { title: "Always request tax invoices from suppliers", detail: "Send your biz registration → request invoice. Keep receipts 5 years (app backup recommended)." },
         3: ko
-          ? { title: "직원 채용·매출 1억 4천만원+ 시 세무사 선임 결정", detail: "월 10~30만원 수임료 < 가산세·놓친 공제. 직접 신고는 1인 매장+SaaS(캐시노트·삼쩜삼) 조합만 권장." }
-          : { title: "Hire CPA when adding employee or revenue >140M KRW", detail: "Monthly 100-300K fee < penalties + missed deductions. Self-file only viable for 1-person shop with SaaS." },
+          ? { title: `직원 채용·매출 ${SIMPLIFIED_THRESHOLD_KO}+ 시 세무사 선임 결정`, detail: "월 10~30만원 수임료 < 가산세·놓친 공제. 직접 신고는 1인 매장+SaaS(캐시노트·삼쩜삼) 조합만 권장." }
+          : { title: `Hire CPA when adding employee or revenue >${SIMPLIFIED_THRESHOLD_EN}`, detail: "Monthly 100-300K fee < penalties + missed deductions. Self-file only viable for 1-person shop with SaaS." },
       };
 
   // ─── 트랩 (페이지별 빨강 경고) ───
@@ -136,8 +148,8 @@ export function TaxGuideStage() {
     { tax: ko ? "원천세" : "Withholding", timing: ko ? "매월 10일" : "Monthly 10th", cycle: ko ? "월납" : "Monthly", note: ko ? "직원 급여 지급 시" : "When paying salary" },
     { tax: ko ? "4대보험" : "4 Insurance", timing: ko ? "매월 10일" : "Monthly 10th", cycle: ko ? "월납" : "Monthly", note: ko ? "직원 채용 시" : "When hiring" },
   ] : [
-    { tax: ko ? "부가가치세 (일반)" : "VAT (Standard)", timing: ko ? "1·7월 25일" : "Jan/Jul 25", cycle: ko ? "반기" : "Semi-annual", note: ko ? "1억 4천만원+ 매출 시" : "Revenue >140M KRW" },
-    { tax: ko ? "부가가치세 (간이)" : "VAT (Simplified)", timing: ko ? "1월 25일" : "Jan 25", cycle: ko ? "연 1회" : "Annual", note: ko ? "★ 2026년부터 1억→1억 4천만원 상향" : "★ 2026: limit raised to 140M" },
+    { tax: ko ? "부가가치세 (일반)" : "VAT (Standard)", timing: ko ? "1·7월 25일" : "Jan/Jul 25", cycle: ko ? "반기" : "Semi-annual", note: ko ? `${SIMPLIFIED_THRESHOLD_KO}+ 매출 시` : `Revenue >${SIMPLIFIED_THRESHOLD_EN}` },
+    { tax: ko ? "부가가치세 (간이)" : "VAT (Simplified)", timing: ko ? "1월 25일" : "Jan 25", cycle: ko ? "연 1회" : "Annual", note: ko ? `★ 8천만→${SIMPLIFIED_THRESHOLD_KO} 상향 (2024)` : `★ Raised to ${SIMPLIFIED_THRESHOLD_EN} (2024)` },
     { tax: ko ? "종합소득세" : "Income Tax", timing: ko ? "5월 1~31일" : "May 1-31", cycle: ko ? "연 1회" : "Annual", note: ko ? "★ 2026년: 5/31 일요일 → 6/1까지 / 성실신고는 6/30" : "★ 2026: extends to Jun 1" },
     { tax: ko ? "원천세·4대보험" : "Withholding & Insurance", timing: ko ? "매월 10일" : "Monthly 10th", cycle: ko ? "월납" : "Monthly", note: ko ? "직원 고용 시만" : "Only with employees" },
   ];
@@ -175,7 +187,7 @@ export function TaxGuideStage() {
       { icon: Sparkles, label: "상품 촬영·디자인 외주비", detail: "상품 사진·상세페이지 외주 제작비 전액 비용처리" },
     ],
     "startup-tech": [
-      { icon: Sparkles, label: "청년창업 5년 50% 법인세 감면 (만 39세 이하)", detail: "벤처인증 + 만 39세 이하 대표 + 수도권과밀억제권역 외 = 5년간 법인세 50% 감면. 일부 사업은 3년 75% 감면. 신청은 세무서 통해" },
+      { icon: Sparkles, label: "청년창업중소기업 세액감면 — 만 15~34세 / 5년", detail: "조특법 §6. 만 15~34세 (병역 최대 6년 차감)에 창업한 중소기업 — 수도권외+인구감소지역=100%, 수도권(과밀X·인구감소X)=75%, 수도권과밀억제권역=50%. 5년간. 인증 신청은 세무서 통해 (자동 X)." },
       { icon: Banknote, label: "스톡옵션 비과세 연 2억 / 누적 5억", detail: "벤처기업 인증 후 부여 + 2027.12.31 이전 행사 시 비과세. 임직원에게 부여한 스톡옵션 행사이익 연 2억·누적 5억까지 비과세 — ZUZU·Carta 로 캡테이블 관리" },
       { icon: Sparkles, label: "R&D 인건비 세액공제 (중소기업 25%)", detail: "연구전담요원·보조원 인건비 25% 세액공제. 벤처기업·코스닥 추가 가산. 연구노트·과제계획서·실적보고서 5년 보관 필수. 미증빙 시 추징" },
       { icon: FileText, label: "연구원 비과세 (월 20만원)", detail: "기업부설연구소 연구활동 직접 종사자 — 연구보조비 또는 활동비 월 20만원 비과세. 인건비 절감 효과" },
@@ -193,20 +205,20 @@ export function TaxGuideStage() {
     { id: "tc-receipt", label: ko ? "비용 증빙 5년 보관 체계 수립" : "5-year expense documentation", detail: ko ? "클라우드·SaaS 구독료, 외주비, 출장비 전량 법인카드 결제 + 5년 보관 의무" : "5-year retention required" },
     { id: "tc-r&d", label: ko ? "R&D 비용 분류 체계 설정" : "R&D expense classification", detail: ko ? "연구인력개발비 세액공제(최대 25%) 받으려면 별도 분류 + 증빙 필수" : "Required for up to 25% R&D tax credit" },
     { id: "tc-payroll", label: ko ? "급여·4대보험 신고 체계" : "Payroll & insurance filing", detail: ko ? "직원 채용 시 매월 10일 원천세 + 4대보험 신고. 세무사 위임 권장" : "Monthly by 10th. Tax accountant recommended" },
-    { id: "tc-venture", label: ko ? "벤처인증 후 세제 혜택 확인" : "Venture cert tax benefits", detail: ko ? "★ 2026: 인증 첫 2년 100% + 이후 3년 50% 법인세 감면. 스톡옵션 연 2억·누적 5억 비과세" : "★ 2026: 2yr 100% + 3yr 50% tax cut. Stock options 200M/yr·500M cumulative tax-free" },
+    { id: "tc-venture", label: ko ? "청년창업 + 벤처인증 세제 혜택 확인" : "Young-founder + venture cert benefits", detail: ko ? "① 청년창업중소기업 (만 15~34세, 조특법 §6) — 5년 100%/75%/50% (수도권외+인구감소/수도권/과밀). ② 벤처기업 (조특법 §62의2) — 별도 5년 50%. ③ 스톡옵션 연 2억·누적 5억 비과세 (~2027.12.31)" : "① Young-founder (age 15~34, Tax Spec Act §6) — 5yr 100%/75%/50% (non-metro/metro/dense-metro). ② Venture cert (§62의2) — separate 5yr 50%. ③ Stock options 200M/yr·500M cumulative tax-free (~2027.12.31)" },
   ] : [
     { id: "tc-hometax", label: ko ? "홈택스 사업자 회원가입" : "HomeTax registration", detail: ko ? "hometax.go.kr → 사업자 공인인증서 가입. 세금계산서 발행·조회 필수" : "Required for tax invoices" },
     { id: "tc-bizcard", label: ko ? "사업용 카드 별도 개설" : "Dedicated business card", detail: ko ? "개인 카드 혼용 시 비용처리 불인정 위험. 전용 카드 1개+ 필수" : "Personal card mixing risks rejected deductions" },
     { id: "tc-pos", label: ko ? "카드단말기 국세청 신고" : "POS terminal tax report", detail: ko ? "홈택스 → 사업장 현황신고 → 결제단말기 신고. 미신고 시 가산세" : "Required. Penalty for non-report" },
     { id: "tc-cash", label: ko ? "현금영수증 가맹점 등록" : "Cash receipt registration", detail: ko ? "10만원+ 거래는 의무 발급. 미발급 건당 5% 과태료" : "Mandatory >100K KRW. 5% penalty per missed receipt" },
     { id: "tc-receipt", label: ko ? "매입 영수증 5년 보관 체계" : "5-year expense receipt system", detail: ko ? "앱(삼쩜삼·자비스·캐시노트) 또는 월별 폴더로 분류. 5년 보관 의무" : "5-year retention. Use 3o3 / Jobis / CashNote" },
-    { id: "tc-vat-type", label: ko ? "과세유형 확인 (일반 / 간이)" : "Tax type confirmation", detail: ko ? "★ 2026부터 간이과세 기준 1억 → 1억 4천만원 상향. 직전연도 매출 1억 4천만원 미만이면 간이 가능" : "★ 2026: simplified threshold raised to 140M KRW" },
+    { id: "tc-vat-type", label: ko ? "과세유형 확인 (일반 / 간이)" : "Tax type confirmation", detail: ko ? `★ 간이과세 기준 8천만 → ${SIMPLIFIED_THRESHOLD_KO} 상향 (부가가치세법 시행령 §109, 2024.1.1 시행). 직전연도 매출 ${SIMPLIFIED_THRESHOLD_KO} 미만이면 간이 가능` : `★ Simplified threshold raised 80M → ${SIMPLIFIED_THRESHOLD_EN} (VAT enforcement decree §109, eff. Jan 2024)` },
   ];
   const tcChecked = taxCheckItems.filter(t => taxChecks[t.id]).length;
 
   // ─── 세무사 필요 시점 ───
   const cpaNeeded = isStartup ? (ko ? [
-    { condition: "1인 인디 — 매출 < 1.4억", reason: "DIY 가능. 자비스·삼쩜삼 SaaS (월 0~3만) + 분기당 세무사 검토 1회 (10-30만). 종소세 1년 1회만 신경 쓰면 됨" },
+    { condition: `1인 인디 — 매출 < ${SIMPLIFIED_THRESHOLD_KO}`, reason: "DIY 가능. 자비스·삼쩜삼 SaaS (월 0~3만) + 분기당 세무사 검토 1회 (10-30만). 종소세 1년 1회만 신경 쓰면 됨" },
     { condition: "부트스트랩 3-5명 / 시드 전", reason: "월 기장 10-15만 + 종소세 조정 30만. 자비스 ASSIST + 비대면 세무사 추천. R&D 25% 공제 받으려면 필수" },
     { condition: "시드 라운드 받음 (1억+)", reason: "투자금 회계·전환사채 처리 복잡도 ↑. 월 위임 20-30만 필수. 벤처인증 후 5년 50% 감면 신청 누락 = 수천만 손실" },
     { condition: "시리즈A 이상 / 직원 5명+", reason: "월 30-50만 또는 인하우스 회계담당자. 스톡옵션·R&D 25%·해외 자회사·옵션풀 50% 모두 위임 필수" },
@@ -217,12 +229,12 @@ export function TaxGuideStage() {
     { condition: "Stock option grant", reason: "Tax/non-tax determination" },
   ]) : (ko ? [
     { condition: "직원 고용", reason: "4대보험·원천세 신고 오류 가능성 ↑. 월 수임료 < 가산세" },
-    { condition: "연 매출 1억 4천만원+ 예상", reason: "★ 2026: 일반과세 전환·VAT·종소세 복잡도 급증" },
+    { condition: `연 매출 ${SIMPLIFIED_THRESHOLD_KO}+ 예상`, reason: "★ 일반과세 전환·VAT·종소세 복잡도 급증" },
     { condition: "인테리어 비용 3,000만원+", reason: "감가상각 스케줄 오류 시 수년간 비용 누락" },
     { condition: "복수 사업장 운영", reason: "사업장별 세금 분리 신고 필요" },
   ] : [
     { condition: "Hire employees", reason: "Insurance/tax filing error risk high" },
-    { condition: "Revenue >140M KRW", reason: "★ 2026: tax type transition + complexity" },
+    { condition: `Revenue >${SIMPLIFIED_THRESHOLD_EN}`, reason: "★ Tax type transition + complexity" },
     { condition: "Interior costs >30M KRW", reason: "Depreciation schedule errors = years of missed deductions" },
     { condition: "Multiple locations", reason: "Separate filings per location" },
   ]);
@@ -351,8 +363,8 @@ export function TaxGuideStage() {
             </div>
             <div style={{ fontSize: "13.5px", color: "rgba(0,0,0,0.6)", lineHeight: 1.65 }}>
               {isStartup
-                ? (ko ? "★ 2026년 벤처인증 혜택: 첫 2년 법인세 100% 감면 + 이후 3년 50% 감면. 스톡옵션 연 2억·누적 5억 비과세 (~2027.12.31). R&D 세액공제 최대 25%. 사전 세팅 없으면 소급 적용 안 됨." : "★ 2026: 2-yr 100% + 3-yr 50% corp tax cut. Stock option tax-free 200M/yr, 500M cumul. R&D up to 25%. No retroactive.")
-                : (ko ? "★ 2026 변경: 간이과세 기준 1억 → 1억 4천만원 상향. 사업자등록 직후부터 세금 의무 시작. 부가세 미신고 = 가산세 20%, 현금영수증 미발급 = 건당 5%. 홈택스 가입·사업용 카드·증빙 보관을 지금 잡아야 합니다." : "★ 2026: simplified threshold raised 100M → 140M KRW. Tax obligations begin immediately after registration. VAT non-filing = 20%, no cash receipt = 5% per transaction.")}
+                ? (ko ? "★ 2026 세제 혜택: 청년창업 (만 15~34세) 5년 법인세 100%/75%/50% (지역별, 조특법 §6) + 벤처인증 시 별도 5년 50% 감면. 스톡옵션 연 2억·누적 5억 비과세 (~2027.12.31). R&D 세액공제 최대 25%. 사전 세팅 없으면 소급 적용 안 됨." : "★ 2026 benefits: Young-founder (age 15~34) 5-yr corp tax 100%/75%/50% by region (Tax Spec Act §6) + venture cert separate 5-yr 50%. Stock option tax-free 200M/yr·500M cumul (~2027.12.31). R&D up to 25%. No retroactive.")
+                : (ko ? `★ 간이과세 기준 8천만 → ${SIMPLIFIED_THRESHOLD_KO} 상향 (부가가치세법 시행령 §109, 2024.1.1 시행, 2026 유지). 사업자등록 직후부터 세금 의무 시작. 부가세 미신고 = 가산세 20%, 현금영수증 미발급 = 건당 5%. 홈택스 가입·사업용 카드·증빙 보관을 지금 잡아야 합니다.` : `★ Simplified threshold raised 80M → ${SIMPLIFIED_THRESHOLD_EN} (VAT enforcement decree §109, eff. Jan 2024, in force 2026). Tax obligations begin immediately after registration. VAT non-filing = 20%, no cash receipt = 5% per transaction.`)}
             </div>
           </div>
 

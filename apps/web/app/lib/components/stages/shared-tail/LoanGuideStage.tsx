@@ -62,7 +62,17 @@ export function LoanGuideStage() {
     bpSummary, setBpSummary,
     bpError, setBpError,
     bpExpandedIdx, setBpExpandedIdx,
+    loanChecks, setLoanChecks,
   } = d;
+
+  // 2026-05-12 P0 fix (사장님 신고): loan-guide "다음 단계로" 버튼이 게이트 없이 즉시
+  // advance + reviewed:true 저장하던 버그 해결. 사장님이 *내용을 읽었다* 는 명시적
+  // confirmation 없이는 진행 불가하도록 변경.
+  //   - 키 이름: "loan-final-review" (다른 elig-*/doc-* 와 충돌 방지)
+  //   - CurrentStageView 의 "다음 단계로" 버튼이 이 값을 읽어 disabled 게이트.
+  //   - TaxGuideStage 의 `tcChecked === taxCheckItems.length` 동일 패턴.
+  const LOAN_REVIEW_KEY = "loan-final-review";
+  const loanReviewed = !!loanChecks[LOAN_REVIEW_KEY];
 
   const ko = language === "ko";
   const isStartup = industryCategoryId === "startup-tech";
@@ -727,6 +737,53 @@ export function LoanGuideStage() {
           <TrapsCard />
         </>
       )}
+
+      {/* ── 2026-05-12 P0: 검토 완료 명시적 confirmation. 다음 단계로 advance 게이트. ── */}
+      <button
+        type="button"
+        onClick={() => setLoanChecks((prev) => ({ ...prev, [LOAN_REVIEW_KEY]: !prev[LOAN_REVIEW_KEY] }))}
+        style={{
+          marginTop: 16,
+          width: "100%",
+          textAlign: "left" as const,
+          padding: "14px 16px",
+          borderRadius: 12,
+          background: loanReviewed
+            ? "linear-gradient(180deg, rgba(5,150,105,0.06) 0%, rgba(5,150,105,0.02) 100%)"
+            : "rgba(25,25,112,0.04)",
+          border: loanReviewed ? "1px solid rgba(5,150,105,0.28)" : "1px solid rgba(25,25,112,0.14)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 12,
+          transition: "all 0.18s ease",
+        }}
+      >
+        <span style={{
+          flexShrink: 0,
+          width: 22, height: 22, borderRadius: 6,
+          background: loanReviewed ? "#059669" : "white",
+          border: loanReviewed ? "1px solid #059669" : "1.5px solid rgba(25,25,112,0.25)",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          fontSize: 13, fontWeight: 800,
+          marginTop: 1,
+        }}>
+          {loanReviewed ? "✓" : ""}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: loanReviewed ? "#059669" : MIDNIGHT, letterSpacing: "-0.005em" }}>
+            {ko ? "정책자금·대출 내용을 모두 검토했습니다" : "I have reviewed all the funding & loan content above"}
+          </div>
+          <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginTop: 3 }}>
+            {ko
+              ? "이 체크박스를 눌러야 다음 단계로 진행할 수 있습니다. 위 내용을 충분히 읽고 본인 상황에 맞는 자금원을 식별했는지 확인하세요."
+              : "Tick this checkbox to advance. Confirm you've read all content and identified funding sources fitting your case."}
+          </div>
+        </div>
+      </button>
 
       <StageWrapup
         ko={ko}

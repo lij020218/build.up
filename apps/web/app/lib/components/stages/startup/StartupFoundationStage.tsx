@@ -499,8 +499,8 @@ export function StartupFoundationStage() {
             recommend: "sole",
             headline: ko ? "1인 인디 → 개인사업자 우선" : "Solo Indie → Sole proprietor first",
             reason: ko
-              ? "매출 1억 4천만 미만이면 간이과세로 부가세 1.5%만 부담. 법인 설립 비용 50-100만원 + 법인 통장·세무·노무 부담은 솔로한테 ROI 안 맞음. 매출 7억+, 외부 투자, 직원 채용 시 법인 전환."
-              : "Under 140M KRW revenue = 1.5% simplified VAT. Corp setup ($500-1K) + tax/payroll overhead = bad ROI for solo. Convert to corp at 700M+ revenue, first investment, or first hire.",
+              ? "매출 1억 400만 미만이면 간이과세로 부가세 1.5%만 부담. 법인 설립 비용 50-100만원 + 법인 통장·세무·노무 부담은 솔로한테 ROI 안 맞음. 매출 7억+, 외부 투자, 직원 채용 시 법인 전환."
+              : "Under 104M KRW revenue = 1.5% simplified VAT. Corp setup ($500-1K) + tax/payroll overhead = bad ROI for solo. Convert to corp at 700M+ revenue, first investment, or first hire.",
           },
           bootstrap: {
             recommend: "corp",
@@ -676,16 +676,16 @@ export function StartupFoundationStage() {
           indie: {
             headline: ko ? "1인 인디 — 개인사업자 우선, 법인은 나중" : "Solo Indie — start with sole proprietor",
             why: ko ? [
-              "1인 솔로는 매출 1억 4천만원 미만이면 간이과세로 부가세 1.5%만 부담 (일반 10% 대비 압도적). 법인은 매출 무관 일반과세.",
+              "1인 솔로는 매출 1억 400만원 미만이면 간이과세로 부가세 1.5%만 부담 (일반 10% 대비 압도적). 법인은 매출 무관 일반과세.",
               "개인사업자는 종합소득세 6-45% 누진세 — 매출 5천만 이하 단계는 법인 9% 보다 실효세율 낮을 수 있음.",
               "법인 설립 비용 50-100만원 + 법인 통장·세무·노무 부담 — 인디한테 ROI 안 맞음.",
             ] : [
-              "Solo with revenue under 140M KRW = simplified VAT (1.5% vs 10% standard).",
+              "Solo with revenue under 104M KRW = simplified VAT (1.5% vs 10% standard).",
               "Personal income tax 6-45% — at low revenue, effective rate beats corp's flat 9%.",
               "Incorporation costs ~$500-1000 + bank/tax/payroll overhead — bad ROI for solo.",
             ],
             actions: ko ? [
-              { label: "1단계: 홈택스 개인사업자 등록 (5분, 무료)", detail: "사업자등록번호 즉시 발급. 간이과세 자격 자동 확인 (직전 연도 매출 1억 4천만 미만)." },
+              { label: "1단계: 홈택스 개인사업자 등록 (5분, 무료)", detail: "사업자등록번호 즉시 발급. 간이과세 자격 자동 확인 (직전 연도 매출 1억 400만 미만 — 부가가치세법 시행령 §109)." },
               { label: "2단계: 사업용 통장 + 카드 분리", detail: "토스뱅크·카카오뱅크 사업자 통장 무료 개설. 모든 매출·경비 분리 — 종합소득세 신고 시 비용 인정." },
               { label: "3단계: KIPRIS 상표 직접 출원 (4-6만원)", detail: "변리사 30-50만 위임 vs 직접 출원 4-6만원 (수수료만). 1인 인디는 직접 권장 — 절차 단순." },
               { label: "법인 전환 트리거", detail: "(a) 순이익 연 2억+ → 건강보험 부담 폭발 / (b) 첫 외부 투자 / (c) 첫 직원 고용 / (d) 매출 7억+ → 성실신고확인대상 전환 전" },

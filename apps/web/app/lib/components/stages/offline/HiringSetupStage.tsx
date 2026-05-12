@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Users, FileSignature, ShieldCheck, ExternalLink, ChevronRight, Calculator, Check } from "lucide-react";
+import { LEGAL } from "@build-up/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { HiringCostCalculator } from "../../knowledge/HiringCostCalculator";
 import { MyHiringPlanCard } from "./MyHiringPlanCard";
@@ -11,6 +12,21 @@ import {
   StageOverview,
   WorkStep,
 } from "../shared/StageActionHero";
+
+// 2026-05-12 P0 fix (사장님 신고): 2026 최저시급 표기 SSOT 통일.
+//   종전: HiringSetupStage 7곳에 "10,030원" 하드코딩 (작년 값 잘못 표기)
+//   변경: LEGAL.MINIMUM_WAGE_HOURLY (= 10_320) 참조 + 자동 포맷팅
+//   사장님이 이 화면 보고 시급 정하면 290원/h 미달 임금체불 신고 위험이라 P0.
+//   출처: 고용노동부 2025-08 고시 (2026.1.1 시행) — moel.go.kr news/enews 18144.
+const WAGE_2026 = LEGAL.MINIMUM_WAGE_HOURLY; // 10,320원/h
+const WAGE_2026_DISPLAY = WAGE_2026.toLocaleString("en-US"); // "10,320"
+const MONTH_HOURS = 209; // 주 40h × 4.345주 (주휴수당 별도)
+const MONTH_WAGE_2026 = WAGE_2026 * MONTH_HOURS; // 2,156,880원
+const MONTH_WAGE_2026_DISPLAY = MONTH_WAGE_2026.toLocaleString("en-US"); // "2,156,880"
+// 주휴수당 포함 예시: 시급 × 주시간 + 시급 × 8h
+//   30시간/주: 30 × 10,320 + 10,320 × 8 = 392,160원/주
+const WEEKLY_30H_WITH_HOLIDAY = 30 * WAGE_2026 + WAGE_2026 * 8;
+const WEEKLY_30H_DISPLAY = WEEKLY_30H_WITH_HOLIDAY.toLocaleString("en-US");
 
 const MIDNIGHT = "#191970";
 
@@ -174,11 +190,11 @@ export function HiringSetupStage() {
   // 페이지 2 — 계약서·임금 사이트 3종
   const contractLinks: LinkCard[] = ko ? [
     { label: "고용노동부 표준 근로계약서", desc: "공식 근로계약서 무료 다운로드 (정규·기간제·단시간)", href: "https://www.moel.go.kr/policy/policydata/list.do", brand: "고용" },
-    { label: "최저임금위원회", desc: "2026년 최저임금 10,030원 · 모의 계산기", href: "https://www.minimumwage.go.kr", brand: "최임" },
+    { label: "최저임금위원회", desc: `2026년 최저임금 ${WAGE_2026_DISPLAY}원 · 모의 계산기`, href: "https://www.minimumwage.go.kr", brand: "최임" },
     { label: "노동OK", desc: "노동부 공식 무료 노무 상담 포털", href: "https://www.nodongok.com", brand: "노동" },
   ] : [
     { label: "MOEL Standard Contract", desc: "Official employment contract template (PT/FT/contract)", href: "https://www.moel.go.kr/policy/policydata/list.do", brand: "MOEL" },
-    { label: "Minimum Wage Commission", desc: "2026 KRW 10,030/h · simulator", href: "https://www.minimumwage.go.kr", brand: "MW" },
+    { label: "Minimum Wage Commission", desc: `2026 KRW ${WAGE_2026_DISPLAY}/h · simulator`, href: "https://www.minimumwage.go.kr", brand: "MW" },
     { label: "NodongOK", desc: "Free official labor consulting portal", href: "https://www.nodongok.com", brand: "NK" },
   ];
 
@@ -203,7 +219,7 @@ export function HiringSetupStage() {
     { cat: "공고", label: "사람인", desc: "정직원·경력직 채용 · 이력서 기반", href: "https://www.saramin.co.kr" },
     { cat: "공고", label: "잡코리아", desc: "정직원 채용 + 경력 매칭", href: "https://www.jobkorea.co.kr" },
     { cat: "계약서", label: "고용노동부 표준계약서", desc: "공식 근로계약서 무료 다운로드", href: "https://www.moel.go.kr/policy/policydata/list.do" },
-    { cat: "계약서", label: "최저임금위원회", desc: "2026년 최저임금 10,030원 · 모의 계산기", href: "https://www.minimumwage.go.kr" },
+    { cat: "계약서", label: "최저임금위원회", desc: `2026년 최저임금 ${WAGE_2026_DISPLAY}원 · 모의 계산기`, href: "https://www.minimumwage.go.kr" },
     { cat: "계약서", label: "노동OK", desc: "노동부 공식 무료 노무 상담 포털", href: "https://www.nodongok.com" },
     { cat: "보험·세금", label: "4대보험 정보연계센터", desc: "국민연금·건강·고용·산재 통합 신고", href: "https://www.4insure.or.kr" },
     { cat: "보험·세금", label: "홈택스", desc: "원천세 신고·납부, 사업자 등록 확인", href: "https://www.hometax.go.kr" },
@@ -216,7 +232,7 @@ export function HiringSetupStage() {
     { cat: "Posting", label: "Saramin", desc: "FT hires · resume-based", href: "https://www.saramin.co.kr" },
     { cat: "Posting", label: "JobKorea", desc: "FT hires + experienced talent", href: "https://www.jobkorea.co.kr" },
     { cat: "Contract", label: "MOEL Standard Contract", desc: "Official template free", href: "https://www.moel.go.kr/policy/policydata/list.do" },
-    { cat: "Contract", label: "Minimum Wage Commission", desc: "2026 KRW 10,030/h · simulator", href: "https://www.minimumwage.go.kr" },
+    { cat: "Contract", label: "Minimum Wage Commission", desc: `2026 KRW ${WAGE_2026_DISPLAY}/h · simulator`, href: "https://www.minimumwage.go.kr" },
     { cat: "Contract", label: "NodongOK", desc: "Free labor consulting", href: "https://www.nodongok.com" },
     { cat: "Insurance/Tax", label: "Social Insurance Portal", desc: "All 4 insurances at once", href: "https://www.4insure.or.kr" },
     { cat: "Insurance/Tax", label: "Hometax", desc: "Withholding tax filing", href: "https://www.hometax.go.kr" },
@@ -303,11 +319,11 @@ export function HiringSetupStage() {
             watchouts={ko ? [
               { label: "공고에 「최저시급」 만 쓰면 지원자 없음", text: "시급·근무 시간·요일·식사 제공 여부를 구체적으로 써야 지원률 3배 ↑. 「쉬운 일」 같은 모호한 표현 금지." },
               { label: "오픈 직전 채용은 위험", text: "교육·적응 기간 없이 오픈 당일 투입 = 실수 폭발. 최소 1~2주 전 채용 필수." },
-              { label: "면접에서 「최저시급보다 적게」 협상 시 위법", text: "2026 최저시급 10,030원. 어떤 형태로도 미달 시 임금 체불 신고 대상." },
+              { label: "면접에서 「최저시급보다 적게」 협상 시 위법", text: `2026 최저시급 ${WAGE_2026_DISPLAY}원. 어떤 형태로도 미달 시 임금 체불 신고 대상.` },
             ] : [
               { label: "Vague listings = no applicants", text: "Specify rate/hours/days/meals — response triples." },
               { label: "Last-minute hire is risky", text: "No training time = day-1 mistakes. Hire 1-2 weeks early." },
-              { label: "Below-minimum-wage is illegal", text: "2026 KRW 10,030/h. Below = wage-theft claim." },
+              { label: "Below-minimum-wage is illegal", text: `2026 KRW ${WAGE_2026_DISPLAY}/h. Below = wage-theft claim.` },
             ]}
             favorable={myFavorable}
           />
@@ -329,7 +345,7 @@ export function HiringSetupStage() {
             how={[
               { title: ko ? "고용노동부 표준 근로계약서 다운 (무료)" : "Download MOEL standard contract (free)", detail: ko ? "moel.go.kr → 「근로계약서」 검색 → 표준 양식 PDF. 임시·기간제·정규직 양식 분리." : "moel.go.kr → search 'employment contract' → standard PDF. Separate for PT/FT." },
               { title: ko ? "필수 4항목 명시 — 임금·시간·휴게·계약기간" : "4 mandatory fields — wage/hours/break/term", detail: ko ? "① 임금 (시급/월급, 지급일, 지급방법) ② 근무 시간·요일 + 휴게 (4h↑ 30분 / 8h↑ 1시간) ③ 업무·근무지 ④ 계약기간 (기간제 vs 무기)." : "① Wage rate, payday, method ② Hours/days + breaks (30m at 4h+, 1h at 8h+) ③ Job/place ④ Term." },
-              { title: ko ? "2026 최저시급 10,030원 기준 수치 검증" : "Verify against 2026 min wage 10,030 KRW/h", detail: ko ? "월 209시간(주 40h × 4.35주) × 10,030원 = 2,096,270원. 주휴수당 별도. minimumwage.go.kr 모의 계산기로 확인." : "209h × KRW 10,030 = 2,096,270/mo. Holiday pay separate. Use simulator at minimumwage.go.kr." },
+              { title: ko ? `2026 최저시급 ${WAGE_2026_DISPLAY}원 기준 수치 검증` : `Verify against 2026 min wage ${WAGE_2026_DISPLAY} KRW/h`, detail: ko ? `월 ${MONTH_HOURS}시간(주 40h × 4.345주) × ${WAGE_2026_DISPLAY}원 = ${MONTH_WAGE_2026_DISPLAY}원. 주휴수당 별도. minimumwage.go.kr 모의 계산기로 확인.` : `${MONTH_HOURS}h × KRW ${WAGE_2026_DISPLAY} = ${MONTH_WAGE_2026_DISPLAY}/mo. Holiday pay separate. Use simulator at minimumwage.go.kr.` },
               { title: ko ? "2부 인쇄 → 양측 서명 → 1부 직원 교부" : "Print 2, sign both, give 1 to employee", detail: ko ? "교부 영수증 받아두면 분쟁 시 증거. 메일로 PDF 전송도 합법 (수신 확인 보존)." : "Get receipt — evidence in dispute. PDF email also legal (keep receipt)." },
             ]}
             watchouts={ko ? [
@@ -419,7 +435,7 @@ export function HiringSetupStage() {
             ? "급여명세서 미교부는 2021년부터 과태료 대상 (500만원 이하). 주휴수당·연장수당 계산 실수가 가장 흔한 임금 체불 신고 사유. 세무사·급여 SaaS 사용 시 자동."
             : "Payslip non-issuance is fineable (up to KRW 5M, since 2021). Holiday/OT miscalc is the #1 wage-theft claim. CPA or payroll SaaS automates."}
           how={[
-            { title: ko ? "주휴수당 — 주 15h↑ 개근 시 시급 × 8h 추가" : "Weekly holiday — rate × 8h for 15h+/wk perfect attendance", detail: ko ? "예: 시급 10,030원, 주 30시간 근무 → 30 × 10,030 + (10,030 × 8) = 380,140원. 결근 1일이라도 주휴수당 X." : "e.g., 30h/wk × 10,030 + 8h × 10,030 = 380,140 KRW/wk. Any absence = no holiday pay that week." },
+            { title: ko ? "주휴수당 — 주 15h↑ 개근 시 시급 × 8h 추가" : "Weekly holiday — rate × 8h for 15h+/wk perfect attendance", detail: ko ? `예: 시급 ${WAGE_2026_DISPLAY}원, 주 30시간 근무 → 30 × ${WAGE_2026_DISPLAY} + (${WAGE_2026_DISPLAY} × 8) = ${WEEKLY_30H_DISPLAY}원. 결근 1일이라도 주휴수당 X.` : `e.g., 30h/wk × ${WAGE_2026_DISPLAY} + 8h × ${WAGE_2026_DISPLAY} = ${WEEKLY_30H_DISPLAY} KRW/wk. Any absence = no holiday pay that week.` },
             { title: ko ? "연장수당 — 주 40h 또는 1일 8h 초과 시 1.5배" : "OT — 1.5× over 40h/wk or 8h/day", detail: ko ? "5인 이상 사업장만 의무. 5인 미만은 일반 임금. 야간(22~06시)·휴일 연장은 추가 가산 검토." : "Mandatory at 5+ employees. Under 5 = regular rate. Night (22-06) / holiday OT additional." },
             { title: ko ? "급여명세서 의무 교부 — PDF 또는 종이" : "Payslip — PDF or paper (mandatory)", detail: ko ? "임금·근무시간·공제 내역·실수령액 명시. 카카오톡 전송도 합법 (수신 확인). 미교부 500만원 이하 과태료." : "Wage / hours / deductions / net. KakaoTalk delivery legal (with read receipt). Up to KRW 5M fine if missing." },
             { title: ko ? "급여 자동화 — 세무사 또는 급여 SaaS" : "Automate — CPA or payroll SaaS", detail: ko ? "세무사: 월 5~15만원 (4대보험·원천세·연말정산 포함). SaaS: 자비스·페이워크·로보스 (월 1~5만원). 직원 3명↑면 자동화 권장." : "CPA: 50-150K/mo (incl. all filings). SaaS: Jarvis / Paywork / Robos (10-50K/mo). 3+ employees → automate." },

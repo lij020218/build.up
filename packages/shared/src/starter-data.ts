@@ -2253,7 +2253,7 @@ export const starterTaskMap: WorkflowTaskMap = {
   "go-live": [
     { taskId: "web-go-live", title: "Web go-live — domain + SSL + SEO meta + Google Search Console", status: "todo", required: true, estimatedMinutes: 180 },
     { taskId: "launch-channel-active", title: "Launch on at least 1 channel — Product Hunt, Hacker News, or Disquiet (build log)", status: "todo", required: true, estimatedMinutes: 480 },
-    { taskId: "apple-app-store-submitted", title: "Submit to Apple App Store (iOS only) — Xcode 16 + iOS 26 SDK + TestFlight", status: "todo", required: false, estimatedMinutes: 480, waitDays: 7, followupQuestion: "App Store 심사 결과 받으셨나요?" },
+    { taskId: "apple-app-store-submitted", title: "Submit to Apple App Store (iOS only) — Xcode 26 + iOS 26 SDK + TestFlight (mandatory from 2026-04-28)", status: "todo", required: false, estimatedMinutes: 480, waitDays: 7, followupQuestion: "App Store 심사 결과 받으셨나요?" },
     { taskId: "google-play-submitted", title: "Submit to Google Play (Android only) — 12 testers × 14 days closed testing", status: "todo", required: false, estimatedMinutes: 600, waitDays: 14, followupQuestion: "Google Play 폐쇄 테스트 완료되셨나요?" },
     { taskId: "launch-day-monitored", title: "Launch day — 24h monitoring + reply to every comment + share on Twitter/HN/PH", status: "todo", required: false, estimatedMinutes: 480 },
   ],

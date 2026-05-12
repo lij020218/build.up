@@ -1054,17 +1054,41 @@ export function CurrentStageView() {
             ) : currentStage.code === "loan_guide" ? (
               <>
                 <LoanGuideStage />
-                <div style={styles.stageFooter}>
-                  <button type="button" style={styles.button} onClick={() => {
-                    if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
-                    else setViewingStageId(null);
-                  }}>
-                    {language === "ko" ? "← 이전 단계" : "← Back"}
-                  </button>
-                  <button type="button" style={{ ...styles.primaryButton }} onClick={() => handleVerificationContinue("loan-guide")}>
-                    {copy.home.markLoanReviewed}
-                  </button>
-                </div>
+                {/* 2026-05-12 P0 fix (사장님 신고): 종전엔 버튼 게이트 없어 페이지 열자마자 클릭 시
+                    즉시 advance + reviewed:true 저장 (정부 지원사업 0초 검토 가능).
+                    LoanGuideStage 가 loanChecks["loan-final-review"] 명시적 confirmation 박스를
+                    렌더하고, 여기서 그 값을 읽어 disabled 게이트. (TaxGuideStage 패턴과 동일.) */}
+                {(() => {
+                  const loanReviewed = !!loanChecks["loan-final-review"];
+                  return (
+                    <div style={styles.stageFooter}>
+                      <button type="button" style={styles.button} onClick={() => {
+                        if (prevTraversedStage) setViewingStageId(prevTraversedStage.stageId);
+                        else setViewingStageId(null);
+                      }}>
+                        {language === "ko" ? "← 이전 단계" : "← Back"}
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          ...styles.primaryButton,
+                          opacity: loanReviewed ? 1 : 0.45,
+                          cursor: loanReviewed ? "pointer" : "not-allowed",
+                        }}
+                        title={loanReviewed ? undefined : (language === "ko" ? "위 「검토했습니다」 박스 체크 후 진행 가능" : "Tick the 'I have reviewed' box above first")}
+                        onClick={() => {
+                          if (!loanReviewed) return; // 게이트
+                          handleVerificationContinue("loan-guide");
+                        }}
+                        disabled={!loanReviewed}
+                      >
+                        {loanReviewed
+                          ? copy.home.markLoanReviewed
+                          : (language === "ko" ? "↑ 검토 완료 박스 먼저 체크" : "↑ Tick the review box first")}
+                      </button>
+                    </div>
+                  );
+                })()}
               </>
             ) : (
             (() => {
@@ -1321,9 +1345,30 @@ export function CurrentStageView() {
                     }}>
                       {language === "ko" ? "← 이전 단계" : "← Back"}
                     </button>
-                    <button type="button" style={{ ...styles.primaryButton }} onClick={() => handleVerificationContinue("loan-guide")}>
-                      {copy.home.markLoanReviewed}
-                    </button>
+                    {/* 2026-05-12 P0 fix: 레거시 fallback 도 게이트 (자격 + 서류 100% 체크 필요) */}
+                    {(() => {
+                      const legacyReady = eligDone === eligChecks.length && docDone === docChecks.length;
+                      return (
+                        <button
+                          type="button"
+                          style={{
+                            ...styles.primaryButton,
+                            opacity: legacyReady ? 1 : 0.45,
+                            cursor: legacyReady ? "pointer" : "not-allowed",
+                          }}
+                          title={legacyReady ? undefined : (language === "ko" ? `자격 ${eligDone}/${eligChecks.length} + 서류 ${docDone}/${docChecks.length} 모두 체크 필요` : `Complete ${eligDone}/${eligChecks.length} eligibility + ${docDone}/${docChecks.length} docs`)}
+                          onClick={() => {
+                            if (!legacyReady) return;
+                            handleVerificationContinue("loan-guide");
+                          }}
+                          disabled={!legacyReady}
+                        >
+                          {legacyReady
+                            ? copy.home.markLoanReviewed
+                            : (language === "ko" ? `↑ 체크 ${eligDone + docDone}/${eligChecks.length + docChecks.length}` : `↑ Check ${eligDone + docDone}/${eligChecks.length + docChecks.length}`)}
+                        </button>
+                      );
+                    })()}
                   </div>
                 </>
               );
