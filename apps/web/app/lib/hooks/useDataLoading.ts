@@ -38,14 +38,29 @@ export interface DataLoadingResult {
   setLocationMapReady: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+/**
+ * 2026-05-13 — copy / businessCtx 타입 명시 (any → 구조화).
+ *  copy: i18n 메시지 catalog (common.liveKnowledgeLayer 등)
+ *  businessCtx: 업종별 boolean 플래그 모음 (hasPhysicalInventory·isRecurringRevenue 등)
+ */
+type CopyCatalog = {
+  common: {
+    liveKnowledgeLayer: string;
+    starterFallback: string;
+  } & Record<string, string>;
+} & Record<string, unknown>;
+
+type BusinessCtx = {
+  hasPhysicalInventory?: boolean;
+  isRecurringRevenue?: boolean;
+} & Record<string, unknown>;
+
 export function useDataLoading(
   language: "ko" | "en",
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  copy: any,
+  copy: CopyCatalog,
   industryCategoryId: string | undefined,
   currentStageCode: string | undefined,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  businessCtx: any,
+  businessCtx: BusinessCtx,
 ): DataLoadingResult {
   // ── Local state ──
   const [nearbyFranchiseStores, setNearbyFranchiseStores] = useState<{
@@ -314,9 +329,8 @@ export function useDataLoading(
     let cancelled = false;
     setContractorsLoading(true);
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const w = window as any;
-    const kakao = w.kakao;
+    // 2026-05-13: kakao-maps.d.ts 글로벌 타입 적용 — any 캐스트 제거
+    const kakao = typeof window !== "undefined" ? window.kakao : undefined;
 
     // ── Primary: Server REST API (auth Bearer token 필요) ──
     // 키워드를 두 번 시도: ① 업종별 정밀 키워드 → ② "인테리어" 만으로 광범위 검색.
@@ -361,19 +375,21 @@ export function useDataLoading(
 
     // ── Fallback: Client-side Kakao JS SDK (domain whitelist 필요) ──
     const searchViaKakaoSDK = () => {
-      if (!kakao?.maps?.services) return false;
+      const maps = kakao?.maps;
+      if (!maps?.services) return false;
       const runSearch = () => {
-        const ps = new kakao.maps.services.Places();
-        ps.keywordSearch(query, (data: any[], status: string) => {
+        const ps = new maps.services.Places();
+        ps.keywordSearch(query, (data, status) => {
           if (cancelled) return;
-          if (status === kakao.maps.services.Status.OK && data.length > 0) {
-            setContractors(data.slice(0, 5).map((d: any, i: number) => ({
+          if (status === "OK" && data.length > 0) {
+            setContractors(data.slice(0, 5).map((d, i) => ({
               id: `kakao-${i}`,
               name: String(d.place_name ?? ""),
               address: String(d.road_address_name || d.address_name || ""),
               phone: d.phone ? String(d.phone) : null,
               description: String(d.category_name ?? ""),
-              mapUrl: d.place_url ? String(d.place_url) : null,
+              // place_url 은 Kakao SDK 응답에 포함되지만 부분 타입 정의 외 — 안전 cast
+              mapUrl: (d as { place_url?: string }).place_url ?? null,
             })));
           } else {
             setContractors([]);
@@ -381,10 +397,9 @@ export function useDataLoading(
           setContractorsLoading(false);
         }, { size: 5 });
       };
-      if (kakao.maps.load) { kakao.maps.load(runSearch); } else { runSearch(); }
+      if (maps.load) { maps.load(runSearch); } else { runSearch(); }
       return true;
     };
-    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     (async () => {
       const ok = await searchViaServer();

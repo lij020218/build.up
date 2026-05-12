@@ -506,22 +506,24 @@ export function LocationCandidatesStage() {
 
         const searchCompetitors = () => {
           if (!preferredRegionInput.trim()) return;
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          const w = window as any;
-          const kakao = w.kakao;
-          if (!kakao?.maps?.services) return;
+          // 2026-05-13: kakao-maps.d.ts 글로벌 타입 — any 캐스트 제거
+          const kakao = typeof window !== "undefined" ? window.kakao : undefined;
+          const maps = kakao?.maps;
+          if (!maps?.services) return;
           setCompetitorLoading(true);
           setCompetitorResults(null);
           const run = () => {
-            const ps = new kakao.maps.services.Places();
+            const ps = new maps.services.Places();
             const query = `${keyword} ${preferredRegionInput.trim()}`;
-            ps.keywordSearch(query, (data: any[], status: string, pagination: any) => {
-              if (status === kakao.maps.services.Status.OK) {
+            ps.keywordSearch(query, (data, status, pagination) => {
+              if (status === "OK") {
                 setCompetitorResults({
-                  totalCount: pagination.totalCount,
-                  places: data.map((d: any) => ({
-                    name: d.place_name, address: d.road_address_name || d.address_name,
-                    phone: d.phone || "", url: d.place_url || ""
+                  totalCount: pagination?.totalCount ?? 0,
+                  places: data.map((d) => ({
+                    name: d.place_name,
+                    address: d.road_address_name || d.address_name,
+                    phone: d.phone || "",
+                    url: (d as { place_url?: string }).place_url ?? "",
                   }))
                 });
               } else {
@@ -530,8 +532,7 @@ export function LocationCandidatesStage() {
               setCompetitorLoading(false);
             }, { size: 10 });
           };
-          if (kakao.maps.load) { kakao.maps.load(run); } else { run(); }
-          /* eslint-enable @typescript-eslint/no-explicit-any */
+          if (maps.load) { maps.load(run); } else { run(); }
         };
 
         return (

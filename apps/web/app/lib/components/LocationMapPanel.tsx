@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+// 2026-05-13: kakao-maps.d.ts 글로벌 타입 — any 캐스트 제거
+import type {
+  KakaoLatLng, KakaoMap, KakaoMarker, KakaoCustomOverlay,
+  KakaoGeocoderResult, KakaoPlacesResult,
+} from "../types/kakao-maps";
 
 export function LocationMapPanel(props: {
   candidates: Array<{ id: string; title: string; score?: number | null; meta?: Record<string, unknown> }>;
@@ -10,12 +15,10 @@ export function LocationMapPanel(props: {
   region: string;
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const overlaysRef = useRef<unknown[]>([]);
+  const overlaysRef = useRef<Array<KakaoMarker | KakaoCustomOverlay>>([]);
   // 후보별 좌표 캐시 — 카드 클릭 시 panTo 가능하도록
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const pinPosRef = useRef<Map<string, any>>(new Map());
-  const mapInstanceRef = useRef<any>(null);
-  /* eslint-enable @typescript-eslint/no-explicit-any */
+  const pinPosRef = useRef<Map<string, KakaoLatLng>>(new Map());
+  const mapInstanceRef = useRef<KakaoMap | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const ko = props.language === "ko";
@@ -23,10 +26,9 @@ export function LocationMapPanel(props: {
   useEffect(() => {
     if (!mapRef.current) return;
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const w = window as any;
-    const kakao = w.kakao;
-    if (!kakao?.maps) {
+    const kakao = typeof window !== "undefined" ? window.kakao : undefined;
+    const maps = kakao?.maps;
+    if (!maps) {
       setMapError(ko ? "카카오맵 SDK가 로드되지 않았습니다." : "Kakao Maps SDK not loaded.");
       return;
     }
@@ -35,12 +37,11 @@ export function LocationMapPanel(props: {
       try {
         // 이전 오버레이 정리
         for (const o of overlaysRef.current) {
-          (o as any).setMap(null);
+          o.setMap(null);
         }
         overlaysRef.current = [];
-
-        const maps = kakao.maps;
         const center = new maps.LatLng(37.5665, 126.978);
+        if (!mapRef.current) return;
         const map = new maps.Map(mapRef.current, { center, level: 7 });
         mapInstanceRef.current = map;
         pinPosRef.current = new Map();
@@ -50,7 +51,7 @@ export function LocationMapPanel(props: {
         const ps = new maps.services.Places();
         const geo = new maps.services.Geocoder();
         const bounds = new maps.LatLngBounds();
-        const overlays: any[] = [];
+        const overlays: Array<KakaoMarker | KakaoCustomOverlay> = [];
         // 동일 좌표 충돌 방지 — 동일 lat/lng 에 핀이 이미 있으면 미세하게 offset.
         //  built-in 데이터가 같은 districtName 만 가지고 있을 때 (예: "도봉구") 여러 후보가
         //  같은 구청 좌표로 매칭되는 경우 시각적으로 구분되지 않음 → 작은 분산.
@@ -116,13 +117,16 @@ export function LocationMapPanel(props: {
         };
         // 카테고리 우선순위 — 지하철역이면 SW8 가 가장 정확한 좌표
         const PREFERRED_CATEGORIES = ["SW8", "AT4", "AG2", "FD6", "CE7"];
-        const pickBestResult = (results: any[]): any | null => {
+        // KakaoPlacesResult 에 category_group_code 는 부분 타입 외 — 안전 cast
+        type KakaoPlaceWithCategory = KakaoPlacesResult & { category_group_code?: string };
+        const pickBestResult = (results: KakaoPlacesResult[]): KakaoPlaceWithCategory | null => {
           if (!results || results.length === 0) return null;
+          const typed = results as KakaoPlaceWithCategory[];
           for (const code of PREFERRED_CATEGORIES) {
-            const hit = results.find((r) => r.category_group_code === code);
+            const hit = typed.find((r) => r.category_group_code === code);
             if (hit) return hit;
           }
-          return results[0];
+          return typed[0];
         };
 
         const searchNext = (idx: number) => {
@@ -157,7 +161,7 @@ export function LocationMapPanel(props: {
             const variants = [`서울 ${core}`, `서울특별시 ${core}`];
             const tryOne = (i: number) => {
               if (i >= variants.length) return next();
-              geo.addressSearch(variants[i], (result: any[], s: string) => {
+              geo.addressSearch(variants[i], (result: KakaoGeocoderResult[], s) => {
                 if (s === maps.services.Status.OK && result.length > 0) {
                   addPin(c, parseFloat(result[0].y), parseFloat(result[0].x));
                   next();
@@ -171,7 +175,7 @@ export function LocationMapPanel(props: {
 
           const tryKeywordDistrict = () => {
             if (!district) return tryAddrWithCity();
-            ps.keywordSearch(district, (d: any[], s: string) => {
+            ps.keywordSearch(district, (d: KakaoPlacesResult[], s) => {
               if (s === maps.services.Status.OK && d.length > 0) {
                 const pick = pickBestResult(d);
                 if (pick) {
@@ -185,7 +189,7 @@ export function LocationMapPanel(props: {
 
           const tryAddrDistrict = () => {
             if (!districtIsPrecise) return tryKeywordDistrict();
-            geo.addressSearch(district, (result: any[], s: string) => {
+            geo.addressSearch(district, (result: KakaoGeocoderResult[], s) => {
               if (s === maps.services.Status.OK && result.length > 0) {
                 addPin(c, parseFloat(result[0].y), parseFloat(result[0].x));
                 next();
@@ -199,7 +203,7 @@ export function LocationMapPanel(props: {
           //   "창동역 상권" → core="창동역" → SW8 우선 → 정확히 창동역
           //   "홍대 거리" → core="홍대" → SW8 우선 → 홍대입구역 (없으면 첫 결과)
           //   "도봉역 상권" → core="도봉역" → SW8 우선 → 도봉역 (도봉산 X)
-          ps.keywordSearch(core, (d: any[], s: string) => {
+          ps.keywordSearch(core, (d: KakaoPlacesResult[], s) => {
             if (s === maps.services.Status.OK && d && d.length > 0) {
               const pick = pickBestResult(d);
               if (pick) {
@@ -211,14 +215,14 @@ export function LocationMapPanel(props: {
           }, { size: 15 });
         };
         searchNext(0);
-      } catch (err: any) {
-        setMapError(err?.message ?? "Map init failed");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Map init failed";
+        setMapError(msg);
       }
     };
-    /* eslint-enable @typescript-eslint/no-explicit-any */
 
-    if (kakao.maps.load) {
-      kakao.maps.load(init);
+    if (maps.load) {
+      maps.load(init);
     } else {
       init();
     }
