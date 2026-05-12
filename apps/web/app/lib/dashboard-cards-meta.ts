@@ -161,8 +161,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     // 2026-05-12 사장님 lock-in moat — 14일 코칭 누적 일지. FounderBrief 가
     //   매일 노출될 때 hero signal 자동 기록. 전환비용 만드는 핵심 기능.
     id: "coaching-history",
-    labelKo: "코칭 누적 일지 (14일) ⭐",
-    labelEn: "Coaching History (14d) ⭐",
+    labelKo: "코칭 누적 일지 (14일)",
+    labelEn: "Coaching History (14d)",
     hintKo: "매일 받은 신호 + 사장님 대응을 14일 누적 — 패턴 인식 + 자기 효능감",
     hintEn: "14-day cumulative signals + your responses — pattern recognition",
     category: "coaching",
@@ -175,8 +175,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2b: 피트니스 신규 카드 — 105 자료 검증 (Mindbody·MarianaTek·FIA)
     id: "fitness-retention",
-    labelKo: "회원 Retention · 피트니스 ⭐",
-    labelEn: "Member Retention · Fitness ⭐",
+    labelKo: "회원 Retention · 피트니스",
+    labelEn: "Member Retention · Fitness",
     hintKo: "D-7 만료 임박 + 30/60/90일 cohort 잔존율 (FIA 90d=50% 기준) + 행동 1개",
     hintEn: "D-7 expiring + cohort retention (FIA 50% benchmark) + top action",
     category: "coaching",
@@ -185,8 +185,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2c: 교육 신규 카드 — 17 자료 (학원조아·공선학관·Spider Strategies)
     id: "education-enrollment",
-    labelKo: "재등록 + 학생 잔존 · 교육 ⭐",
-    labelEn: "Re-enrollment · Education ⭐",
+    labelKo: "재등록 + 학생 잔존 · 교육",
+    labelEn: "Re-enrollment · Education",
     hintKo: "D-14 재등록 임박 + 30/60/90일/1년 cohort 잔존율 (한국 학원 표준) + 행동 1개",
     hintEn: "D-14 re-enrollment + cohort retention (KR academy standards) + top action",
     category: "coaching",
@@ -195,8 +195,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2d: 소매 신규 카드 — 12 자료 (Lightspeed·Shopify·Square·i-boss)
     id: "retail-sell-through",
-    labelKo: "Sell-Through · 소매 ⭐",
-    labelEn: "Sell-Through · Retail ⭐",
+    labelKo: "Sell-Through · 소매",
+    labelEn: "Sell-Through · Retail",
     hintKo: "월 sell-through rate + Best Seller Top 5 + Dead Stock + 품절 임박 (Lightspeed 표준)",
     hintEn: "Monthly sell-through + top 5 + dead stock + low stock (Lightspeed standard)",
     category: "coaching",
@@ -205,8 +205,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2e: 뷰티 신규 카드 — 11 자료 (Zenoti·Meevo·카카오헤어샵)
     id: "beauty-booking-noshow",
-    labelKo: "예약·노쇼·디자이너 · 뷰티 ⭐",
-    labelEn: "Booking · Beauty ⭐",
+    labelKo: "예약·노쇼·디자이너 · 뷰티",
+    labelEn: "Booking · Beauty",
     hintKo: "오늘/내일 예약 + 어제 노쇼 + 30일 노쇼율 + 디자이너별 매출 (카카오헤어샵 0.09% 표준)",
     hintEn: "Today bookings + 30d no-show rate + provider revenue (KakaoHair 0.09%)",
     category: "coaching",
@@ -215,8 +215,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2f: 이커머스 신규 카드 — 11 자료 (Polar·Shopify·OSC 쿠팡)
     id: "ecommerce-conversion",
-    labelKo: "전환·ROAS·반품 · 이커머스 ⭐",
-    labelEn: "CVR · Ecommerce ⭐",
+    labelKo: "전환·ROAS·반품 · 이커머스",
+    labelEn: "CVR · Ecommerce",
     hintKo: "7일 CVR/ROAS + 채널별 비교 (네이버·쿠팡·메타) + 반품률 분석 (Shopify 1.4% / ROAS 300%)",
     hintEn: "7d CVR/ROAS + channel comparison + return rate",
     category: "coaching",
@@ -225,8 +225,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2g: 펫 신규 카드 — 14 자료 (Gingr·VetPort·DaySmart·펫프렌즈)
     id: "pet-booking",
-    labelKo: "예약·서비스 mix · 펫 ⭐",
-    labelEn: "Booking · Pet ⭐",
+    labelKo: "예약·서비스 mix · 펫",
+    labelEn: "Booking · Pet",
     hintKo: "오늘 예약 + 어제 노쇼 + 90일 서비스 mix (미용·호텔·진료·판매) + 재방문률 60일 cycle",
     hintEn: "Bookings + 90d service mix + 60d repeat",
     category: "coaching",
@@ -235,8 +235,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2h: 공간임대 신규 카드 — 15 자료 (OfficeRnD·스페이스클라우드·쏘플·무인연구소)
     id: "space-occupancy",
-    labelKo: "POR·시간대 · 공간임대 ⭐",
-    labelEn: "POR · Space Rental ⭐",
+    labelKo: "POR·시간대 · 공간임대",
+    labelEn: "POR · Space Rental",
     hintKo: "오늘 POR + 7일 평균 + 룸별 점유율 + 시간대 분포 (BEP 60-70% / 무인 스터디카페)",
     hintEn: "Today POR + 7d avg + room utilization + time distribution",
     category: "coaching",
@@ -245,8 +245,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-13 Phase 2i: 생활서비스 신규 카드 — 13 자료 (ServiceTitan·Housecall·IBM FTFR·청소연구소)
     id: "living-service-dispatch",
-    labelKo: "의뢰·기사·FTFR · 생활서비스 ⭐",
-    labelEn: "Dispatch · Service ⭐",
+    labelKo: "의뢰·기사·FTFR · 생활서비스",
+    labelEn: "Dispatch · Service",
     hintKo: "오늘 의뢰 + 미배정 + 기사별 가동률 + 30일 재의뢰률 (청소연구소 88% 표준)",
     hintEn: "Today dispatch + driver utilization + 30d repeat",
     category: "coaching",
@@ -259,8 +259,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     // 2026-05-12 Phase 2 startup-tech 보강 — 30+ 실리콘밸리 자료 검증.
     //   "런웨이 월수" → "2027-08-15 절대 날짜" + 채용 시뮬레이터 (2026 SV daily KPI #1)
     id: "cash-zero-date",
-    labelKo: "Cash Zero Date (실리콘밸리 2026) ⭐",
-    labelEn: "Cash Zero Date (SV 2026) ⭐",
+    labelKo: "Cash Zero Date (실리콘밸리 2026)",
+    labelEn: "Cash Zero Date (SV 2026)",
     hintKo: "런웨이 월수 → 절대 날짜 (예: 2027-08-15) + 채용 시뮬레이터 — Mercury·Puzzle·Bessemer 표준",
     hintEn: "Runway months → absolute date + hire simulator — Mercury/Puzzle/Bessemer 2026 standard",
     category: "coaching",
@@ -269,8 +269,8 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   {
     // 2026-05-12 킬러 기능: AI 공동창업자 데일리 브리프 — *해석* 레이어
     id: "startup-founder-brief",
-    labelKo: "AI 공동창업자 데일리 브리프 ⭐",
-    labelEn: "AI Co-Founder Daily Brief ⭐",
+    labelKo: "AI 공동창업자 데일리 브리프",
+    labelEn: "AI Co-Founder Daily Brief",
     hintKo: "런웨이·burn·CMGR·Rule of 40 자동 분석 → 가장 중요한 1개 + 오늘 행동",
     hintEn: "Auto runway/burn/CMGR/RoF40 → top signal + today's action",
     category: "coaching",
