@@ -31,6 +31,9 @@ import { EducationEnrollmentCard } from "../EducationEnrollmentCard";
 import { RetailSellThroughCard } from "../RetailSellThroughCard";
 import { BeautyBookingNoshowCard } from "../BeautyBookingNoshowCard";
 import { EcommerceConversionCard } from "../EcommerceConversionCard";
+import { PetBookingCard } from "../PetBookingCard";
+import { SpaceOccupancyCard } from "../SpaceOccupancyCard";
+import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
 // 2026-05-12 Phase 1a/1c 완료: OfflineFounderBrief 통합 + 파일 삭제.
 //   Toast IQ "For you feed" / Amplitude Dashboard Agent / Mercury Insights 등 2026 산업
 //   표준 (AI 통합 hero) 정합. 11 업종 임계값 룰엔진은 useIndustryRuleSignal hook 으로 추출 →
@@ -187,12 +190,34 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
-      {/* 2026-05-13 Phase 2f — EcommerceConversionCard (이커머스 전용).
-          11 자료 (Polar·Shopify·OSC 쿠팡·Sellerking·Daymark·BigCommerce) 검증.
-          7일 CVR/ROAS + 채널별 비교 + 반품률 분석. */}
+      {/* 2026-05-13 Phase 2f — EcommerceConversionCard (이커머스 전용). */}
       {showByMatrix("ecommerce-conversion") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <EcommerceConversionCard ko={ko} industryCategoryId={d.industryCategoryId} />
+        </div>
+      )}
+
+      {/* 2026-05-13 Phase 2g — PetBookingCard (펫 전용, booking-store 재사용).
+          14 자료 (Gingr·VetPort·DaySmart·Petfolk·플러스벳·펫프렌즈·KPMG) 검증. */}
+      {showByMatrix("pet-booking") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <PetBookingCard ko={ko} industryCategoryId={d.industryCategoryId} />
+        </div>
+      )}
+
+      {/* 2026-05-13 Phase 2h — SpaceOccupancyCard (공간임대 전용, booking-store 재사용).
+          15 자료 (OfficeRnD·스페이스클라우드·쏘플·무인연구소·작심·세컨드샐러리) 검증. */}
+      {showByMatrix("space-occupancy") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <SpaceOccupancyCard ko={ko} industryCategoryId={d.industryCategoryId} />
+        </div>
+      )}
+
+      {/* 2026-05-13 Phase 2i — LivingServiceDispatchCard (생활서비스 전용, booking-store 재사용).
+          13 자료 (ServiceTitan·Housecall Pro·IBM FTFR·청소연구소·세탁특공대·런드리고) 검증. */}
+      {showByMatrix("living-service-dispatch") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <LivingServiceDispatchCard ko={ko} industryCategoryId={d.industryCategoryId} />
         </div>
       )}
 

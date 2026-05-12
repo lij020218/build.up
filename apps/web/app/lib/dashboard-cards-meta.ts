@@ -222,6 +222,36 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
     industryHint: "all",
   },
+  {
+    // 2026-05-13 Phase 2g: 펫 신규 카드 — 14 자료 (Gingr·VetPort·DaySmart·펫프렌즈)
+    id: "pet-booking",
+    labelKo: "예약·서비스 mix · 펫 ⭐",
+    labelEn: "Booking · Pet ⭐",
+    hintKo: "오늘 예약 + 어제 노쇼 + 90일 서비스 mix (미용·호텔·진료·판매) + 재방문률 60일 cycle",
+    hintEn: "Bookings + 90d service mix + 60d repeat",
+    category: "coaching",
+    industryHint: "all",
+  },
+  {
+    // 2026-05-13 Phase 2h: 공간임대 신규 카드 — 15 자료 (OfficeRnD·스페이스클라우드·쏘플·무인연구소)
+    id: "space-occupancy",
+    labelKo: "POR·시간대 · 공간임대 ⭐",
+    labelEn: "POR · Space Rental ⭐",
+    hintKo: "오늘 POR + 7일 평균 + 룸별 점유율 + 시간대 분포 (BEP 60-70% / 무인 스터디카페)",
+    hintEn: "Today POR + 7d avg + room utilization + time distribution",
+    category: "coaching",
+    industryHint: "all",
+  },
+  {
+    // 2026-05-13 Phase 2i: 생활서비스 신규 카드 — 13 자료 (ServiceTitan·Housecall·IBM FTFR·청소연구소)
+    id: "living-service-dispatch",
+    labelKo: "의뢰·기사·FTFR · 생활서비스 ⭐",
+    labelEn: "Dispatch · Service ⭐",
+    hintKo: "오늘 의뢰 + 미배정 + 기사별 가동률 + 30일 재의뢰률 (청소연구소 88% 표준)",
+    hintEn: "Today dispatch + driver utilization + 30d repeat",
+    category: "coaching",
+    industryHint: "all",
+  },
   // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.

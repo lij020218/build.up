@@ -471,7 +471,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "pet-booking": {
-    id: "pet-booking", status: "planned", industries: ["pet"],
+    id: "pet-booking", status: "existing", industries: ["pet"],
     sources: [
       "Gingr boarding+grooming+daycare 대시보드",
       "VetPort KPI / Petfolk / DaySmart Vet",
@@ -479,7 +479,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "living-service-dispatch": {
-    id: "living-service-dispatch", status: "planned", industries: ["living-service"],
+    id: "living-service-dispatch", status: "existing", industries: ["living-service"],
     sources: [
       "ServiceTitan dispatch board",
       "IBM First-Time Fix Rate (industry 80%, top 85%+)",
@@ -487,7 +487,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "space-occupancy": {
-    id: "space-occupancy", status: "planned", industries: ["space"],
+    id: "space-occupancy", status: "existing", industries: ["space"],
     sources: [
       "OfficeRnD Space Occupancy (POR)",
       "무인스터디카페 BEP 60-70% POR",
