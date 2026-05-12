@@ -16,7 +16,8 @@ type Props = {
   ingredientRatio: number;
   laborRatio: number;
   rentRatio: number;
-  primeCost: number;
+  /** @deprecated 2026-05-13 — 원가율 SSOT 는 CostStructureCard. 이 prop 은 받지만 사용 안 함 (caller 호환 유지). */
+  primeCost?: number;
   projectedProfit: number;
   workingDays: number;
   ko: boolean;
@@ -55,13 +56,13 @@ const T = {
   ingredient: FOOD_THR.ingredients!,  // healthy 35 / caution 40 / warning 45
   labor:      FOOD_THR.labor!,        // healthy 25 / caution 33 / warning 40
   rent:       FOOD_THR.rent!,         // healthy 8  / caution 12 / warning 15
-  primeCost:  FOOD_THR.primeCost!,    // healthy 65 / caution 70 / warning 75
+  // primeCost 임계값 제거됨 (2026-05-13) — CostStructureCard 가 SSOT.
 };
 const hColor = (g: HealthGrade) => HEALTH_COLORS[g].dot;
 
 export function PLHeroCard({
   totalSales, totalCosts, netProfit, bepProgress,
-  ingredientRatio, laborRatio, rentRatio, primeCost,
+  ingredientRatio, laborRatio, rentRatio,
   projectedProfit, workingDays, ko, fmt,
   prevMonthSales, prevMonthCosts,
   breakEvenDailySales, breakEvenMonthlySales,
@@ -89,18 +90,23 @@ export function PLHeroCard({
   const safeIngredientRatio = isFinite(ingredientRatio) ? ingredientRatio : 0;
   const safeLaborRatio = isFinite(laborRatio) ? laborRatio : 0;
   const safeRentRatio = isFinite(rentRatio) ? rentRatio : 0;
-  const safePrimeCost = isFinite(primeCost) ? primeCost : 0;
+  // 2026-05-13: primeCost 위험 판단 제거 — CostStructureCard (SSOT) 가 게이지로 일임.
+  //   PLHeroCard 는 자기 직접 영역 (재료비/인건비/임대료/순익) 위험만 판단.
+  // suppress unused warning for backward-compat prop (caller 가 여전히 전달)
+  // (primeCost prop 은 더 이상 사용 안 하지만 호환성을 위해 type 에 남김)
   // "danger" 상응 = warning 또는 critical (4단계로 정밀화)
   const isDanger = (g: HealthGrade) => g === "warning" || g === "critical";
   const hasDanger = hasData && hasCosts && (
     isDanger(gradeKpi(safeIngredientRatio, T.ingredient)) ||
     isDanger(gradeKpi(safeLaborRatio, T.labor)) ||
-    isDanger(gradeKpi(safePrimeCost, T.primeCost)) ||
+    isDanger(gradeKpi(safeRentRatio, T.rent)) ||
     netProfit < 0
   );
 
   const currentMonth = new Date().toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long" });
 
+  // 2026-05-13: "원가율 (Prime)" 항목 제거됨 — CostStructureCard (Tier 2) 에 게이지로 SSOT 통합.
+  //   재료비 + 인건비 가 여기에 이미 있으므로 그 합 (원가율) 은 시각적 중복. 사장님 인지 부하 ↓.
   const ratios = [
     { label: ingredientsLabel[ko ? "ko" : "en"],
       value: safeIngredientRatio, target: `${T.ingredient.healthy}-${T.ingredient.caution}%`,
@@ -114,10 +120,6 @@ export function PLHeroCard({
       value: safeRentRatio, target: `~${T.rent.healthy}-${T.rent.caution}%`,
       benchmark: T.rent.healthy,
       h: hasCosts ? gradeKpi(safeRentRatio, T.rent) : ("healthy" as HealthGrade) },
-    { label: ko ? "원가율" : "Prime",
-      value: safePrimeCost, target: `~${T.primeCost.healthy}%`,
-      benchmark: T.primeCost.healthy - 2,
-      h: hasCosts ? gradeKpi(safePrimeCost, T.primeCost) : ("healthy" as HealthGrade) },
   ];
 
   /* diagnostics with specific actions */
@@ -128,12 +130,8 @@ export function PLHeroCard({
       ? `월 비용(${ingredientsLabel.ko}·${laborLabel.ko}·${rentLabel.ko})을 입력하면 손익 분석과 비용 구조 진단이 시작됩니다`
       : `Enter monthly costs (${ingredientsLabel.en}, ${laborLabel.en}, ${rentLabel.en}) to unlock P&L analysis`, ok: true });
   } else if (hasData && hasCosts) {
-    if (isDanger(gradeKpi(safePrimeCost, T.primeCost))) {
-      const gap = safePrimeCost - T.primeCost.healthy;
-      diag.push({ text: ko
-        ? `원가율 ${safePrimeCost.toFixed(1)}% (목표 ${T.primeCost.healthy}%). 상위 3개 메뉴 원가를 ${Math.ceil(gap)}%p 낮추면 달성`
-        : `Prime cost ${safePrimeCost.toFixed(1)}% (target ${T.primeCost.healthy}%). Cut top 3 menu costs by ${Math.ceil(gap)}%p`, ok: false });
-    }
+    // 2026-05-13: 원가율(Prime) 진단 제거 — CostStructureCard 가 SSOT.
+    //   식자재 진단 (아래) 이 원가율 분해의 핵심이므로 정보 손실 없음.
     if (isDanger(gradeKpi(safeIngredientRatio, T.ingredient)))
       diag.push({ text: ko
         ? `${ingredientsLabel.ko} ${safeIngredientRatio.toFixed(1)}%. 공급가 재협상·대체 공급처 검토 또는 단가 조정 필요`

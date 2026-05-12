@@ -6,10 +6,13 @@ import { EmptyStateCard } from "./EmptyStateCard";
 import { entriesInLastDays, honestDailyAverage } from "../../utils/daily-windows";
 
 /**
- * 매출 예측 + "이대로 가면" 시나리오 카드.
+ * 매출 예측 카드 — 다음 주 매출 추세만 책임 (2026-05-13 단순화).
  * - 7일 실적 + 7일 예측선 SVG 차트 (그라데이션 + 신뢰구간)
- * - 3개월 현금 예측 (손실 프레이밍)
  * - 업종별 핵심 Input 지표
+ *
+ * ⚠️ 이전엔 "3개월 현금 시나리오" 도 표시했으나, Cashflow13WeekForecastCard
+ * (Tier 2 / 정산채널·고정비·VAT 정밀 반영) 와 중복 + 단순 추정으로 부정확.
+ * 현금 예측 SSOT 는 Cashflow13Week. 본 카드는 매출 트렌드만.
  */
 
 type DailyEntry = { date: string; sales: number; customers: number };
@@ -48,8 +51,8 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
         eyebrow={ko ? "매출 예측" : "Sales Forecast"}
         title={ko ? "3일치 데이터가 모이면 예측이 시작돼요" : "Forecast unlocks with 3 days of data"}
         description={ko
-          ? "지난 2주 매출을 기반으로 다음 주 일매출과 3개월 현금 시나리오를 그립니다."
-          : "We'll chart next week's daily sales and a 3-month cash scenario from your recent 14 days."}
+          ? "지난 2주 매출을 기반으로 다음 주 일매출 추세를 그립니다."
+          : "We'll chart next week's daily sales trend from your recent 14 days."}
         Icon={LineChart}
         progress={{
           current: recent14.length,
@@ -95,14 +98,10 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
   ];
   const maxSales = Math.max(...allPoints.map(p => p.sales + confidenceBand), breakEvenDailySales * 1.2, 1);
 
-  // 3개월 현금 예측
-  const totalMonthlyCosts = (monthlyCosts.ingredients ?? 0) + (monthlyCosts.labor ?? 0) + (monthlyCosts.rent ?? 0) + (monthlyCosts.utilities ?? 0) + (monthlyCosts.sga ?? 0) + (monthlyCosts.marketing ?? 0) + (monthlyCosts.other ?? 0) + (monthlyCosts.interest ?? 0);
-  const projectedMonthlySales = avg7 * 26;
-  const monthlyNet = projectedMonthlySales - totalMonthlyCosts;
-  const months3Cash = capitalLeft + monthlyNet * 3;
-  const cashRunoutMonth = monthlyNet < 0 && capitalLeft > 0
-    ? Math.max(0, Math.floor(capitalLeft / Math.abs(monthlyNet)))
-    : -1; // -1 = 흑자
+  // 2026-05-13: 3개월 현금 예측 로직 제거 — Cashflow13WeekForecastCard 가 SSOT.
+  //   본 카드는 다음 주 매출 트렌드 책임만.
+  // suppress unused warnings for backward-compat props (caller 가 여전히 전달)
+  void monthlyCosts; void capitalLeft; void initialOperatingCapital;
 
   // SVG 차트 치수
   const chartW = 400;
@@ -233,57 +232,8 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
         </div>
       </div>
 
-      {/* "이대로 가면" 3개월 시나리오 — 손실 프레이밍 */}
-      <div style={{
-        marginTop: "14px", padding: "16px", borderRadius: "16px",
-        background: months3Cash < 0 ? "rgba(220,38,38,0.04)" : monthlyNet < 0 ? "rgba(217,119,6,0.04)" : "rgba(5,150,105,0.04)",
-        border: `1px solid ${months3Cash < 0 ? "rgba(220,38,38,0.08)" : monthlyNet < 0 ? "rgba(217,119,6,0.08)" : "rgba(5,150,105,0.08)"}`,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 1l6.93 12H1.07L8 1z" fill={months3Cash < 0 ? "#dc2626" : monthlyNet < 0 ? "#d97706" : "#059669"} opacity="0.15" />
-            <path d="M8 6v3M8 11h.01" stroke={months3Cash < 0 ? "#dc2626" : monthlyNet < 0 ? "#d97706" : "#059669"} strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-          <span style={{ fontSize: "13px", fontWeight: 660, color: months3Cash < 0 ? "#dc2626" : monthlyNet < 0 ? "#b45309" : "#059669" }}>
-            {months3Cash < 0
-              ? (ko ? "3개월 후 현금 부족 예상" : "Cash shortage expected in 3 months")
-              : monthlyNet < 0
-                ? (ko ? `현금 소진까지 약 ${cashRunoutMonth}개월` : `~${cashRunoutMonth} months until cash runs out`)
-                : (ko ? "현재 추세로 안정적입니다" : "Current trend is sustainable")}
-          </span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-          <div>
-            <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-              {ko ? "월 순이익 예상" : "Monthly net"}
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em", color: monthlyNet >= 0 ? "#059669" : "#dc2626" }}>
-              {monthlyNet > 0 ? "+" : ""}{fmt(monthlyNet)}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
-              {ko ? "3개월 후 예상 현금" : "Cash in 3 months"}
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em", color: months3Cash >= 0 ? "#059669" : "#dc2626" }}>
-              {months3Cash > 0 ? "+" : ""}{fmt(months3Cash)}
-            </div>
-          </div>
-        </div>
-
-        {/* 운영자본 내역 표시 — 사용자가 자본 구성을 이해할 수 있게 */}
-        {(initialOperatingCapital ?? 0) > 0 && (
-          <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid rgba(15,23,42,0.05)", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
-            <span>{ko ? "운영자본금 포함" : "Incl. operating capital"}</span>
-            <span style={{ color: "#059669", fontWeight: 600 }}>
-              +{fmt(initialOperatingCapital ?? 0)}
-            </span>
-            <span style={{ color: "rgba(15,23,42,0.3)" }}>
-              · {ko ? "첫 몇 달 버티는 현금" : "Runway buffer"}
-            </span>
-          </div>
-        )}
-      </div>
+      {/* 2026-05-13: 3개월 현금 시나리오 박스 제거 — Cashflow13WeekForecastCard (Tier 2, SSOT) 가 책임.
+          본 카드는 "다음 주 매출 트렌드" 단일 목적으로 단순화. */}
     </section>
   );
 }
