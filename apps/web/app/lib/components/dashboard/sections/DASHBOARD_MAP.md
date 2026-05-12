@@ -67,11 +67,20 @@ hooks/
 | 1.5 (a-3) | **Prime Cost (식자재+인건비)** | `Tier1_5Coaching.tsx` | food / cafe-dessert 만 (showByMatrix). 외식 글로벌 1순위 KPI (Sage·NetSuite·Toast) |
 | 1.5 (b/b-2) | **DailyImprovement vs AvgTicketUpsell** (매출 추세 분기) | `Tier1_5Coaching.tsx` | 동시 노출 X. WoW -5%~+5% (정체) → AvgTicketUpsell. 그 외 → DailyImprovement. (2026-05-12 추가) |
 | 1.5 (c-1) | **정책자금 자동 매칭** | `Tier1_5Coaching.tsx` | universal. 위기 시 isCrisis=true 톤 변경 |
-| 1.5 (s-1) | **Cash Zero Date + 채용 시뮬레이터 ⭐** | `Tier1_5Coaching.tsx` | startup-tech 만. 실리콘밸리 2026 daily KPI #1 (Mercury·Puzzle·Bessemer) |
-| 1.5 (c) | **AI 공동창업자 데일리 브리프 ⭐** (StartupFounderBrief) | `Tier1_5Coaching.tsx` | startup-tech 만. 런웨이·burn·CMGR·Rule of 40 5-신호 룰엔진 |
-| 1.5 (c-2) | 스타트업 전용 핵심 지표 (StartupHealth + ARR/FTE 셀) | `Tier1_5Coaching.tsx` | startup-tech 만. 2026-05-12 ARR/FTE (SaaStr "$500K=새 $200K") 6번째 셀 흡수 |
+| 1.5 (s-1) | **Cash Zero Date + 채용 시뮬레이터** | `Tier1_5Coaching.tsx` | startup-tech 만. 실리콘밸리 2026 daily KPI #1 (Mercury·Puzzle·Bessemer) |
+| 1.5 (c) | **AI 공동창업자 데일리 브리프** (StartupFounderBrief) | `Tier1_5Coaching.tsx` | startup-tech 만. 런웨이·burn·CMGR·Rule of 40 5-신호 룰엔진 |
+| 1.5 (c-2) | 스타트업 전용 핵심 지표 (StartupHealth + ARR/FTE 셀 + AI-native note) | `Tier1_5Coaching.tsx` | startup-tech 만. 2026-05-12 ARR/FTE (SaaStr "$500K=새 $200K") + Rule of 60·Burn Multiple AI 0.4x·Cost per Token note |
 | 1.5 (c-3) | **SaaS 핵심 지표 / 구독제 활성화** | `Tier1_5Coaching.tsx` | startup-tech 한정. CBInsights PMF 43% 갭 |
+| 1.5 (f-1) | **회원 Retention · 피트니스** (FitnessRetention, Phase 2b) | `Tier1_5Coaching.tsx` | fitness 만. D-7 만료 + 30/60/90일 cohort (Mindbody·MarianaTek·FIA 19 자료) |
+| 1.5 (e-1) | **재등록 + 학생 잔존 · 교육** (EducationEnrollment, Phase 2c) | `Tier1_5Coaching.tsx` | education 만. D-14 재등록 + 30/60/90/1년 cohort (학원조아·공선학관 17 자료) |
+| 1.5 (r-1) | **Sell-Through · 소매** (RetailSellThrough, Phase 2d) | `Tier1_5Coaching.tsx` | retail 만. Top 5 Best Seller + Dead Stock + 품절 임박 (Lightspeed·Shopify 12 자료) |
+| 1.5 (b-1) | **예약·노쇼·디자이너 · 뷰티** (BeautyBookingNoshow, Phase 2e) | `Tier1_5Coaching.tsx` | beauty 만. booking-store (신규) + 카카오헤어샵 0.09% (Zenoti·Meevo 11 자료) |
+| 1.5 (ec-1) | **전환·ROAS·반품 · 이커머스** (EcommerceConversion, Phase 2f) | `Tier1_5Coaching.tsx` | ecommerce 만. ecommerce-store (신규) + 채널별 ROAS·CVR·반품 (Polar·OSC 쿠팡 11 자료) |
+| 1.5 (p-1) | **예약·서비스 mix · 펫** (PetBooking, Phase 2g) | `Tier1_5Coaching.tsx` | pet 만. booking-store 재사용 + 90일 서비스 mix + 재방문 (Gingr·VetPort·펫프렌즈 14 자료) |
+| 1.5 (sp-1) | **POR·시간대 · 공간임대** (SpaceOccupancy, Phase 2h) | `Tier1_5Coaching.tsx` | space 만. booking-store 재사용 + 룸별 점유 + BEP 60-70% (OfficeRnD·쏘플 15 자료) |
+| 1.5 (l-1) | **의뢰·기사·FTFR · 생활서비스** (LivingServiceDispatch, Phase 2i) | `Tier1_5Coaching.tsx` | living-service 만. booking-store 재사용 + 기사 가동률 + 청소연구소 88% (ServiceTitan·IBM 13 자료) |
 | ~~1.5~~ | ~~OfflineFounderBrief~~ → **CEOMorningHero 통합** (2026-05-12 Phase 1a, Toast IQ·Amplitude·Mercury 통합 패턴) |  |  |
+| ~~1.5~~ | ~~IntegrationHub~~ → **profile/ 폴더 이동** (2026-05-13 Phase 2, PortOne·CODEF·TossPlace 개별 OAuth 카드로 이미 존재) |  |  |
 
 ## Tier 2 — 이번 주 점검 (DeepDive)
 
@@ -127,6 +136,19 @@ hooks/
 | 모달 | Calendar Modal | `OperationalDashboard.tsx` (orchestrator) |
 
 ---
+
+## 로드맵 → 운영 대시보드 자연 전환 (2026-05-13 추가)
+
+**파일**: `components/stages/shared/RoadmapToDashboardTransition.tsx`
+
+위치: 로드맵 path 마지막 단계 `FirstMonthCheckStage` 끝에 mount. 사장님이 46 단계
+풀 사이클 로드맵 끝낸 후 → *운영 대시보드 매일 사용* 으로 자연 유도하는 funnel
+마지막 카드. `d.navigateToSurface("home")` 호출 → OperationalDashboard 표시.
+
+UX:
+- 축하 (사장님이 완주 인지)
+- 가치 4가지 명시 (매일 5분·AI 코치·업종 KPI·30일 학습)
+- 큰 CTA → 운영 대시보드 진입
 
 ## 운영 대시보드 목적 (2026-05-12 사장님 명문화)
 
