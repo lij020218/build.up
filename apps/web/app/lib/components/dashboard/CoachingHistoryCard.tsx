@@ -20,16 +20,27 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { History, CheckCircle2, Circle, Flame, Target } from "lucide-react";
-import { getHistory, getStats, markActionTaken, pruneOld, type CoachingEntry } from "../../coaching-history";
+import { History, CheckCircle2, Circle, Flame, Target, Brain, Cloud, CloudOff } from "lucide-react";
+import { getHistory, getStats, hydrateFromSupabase, markActionTaken, pruneOld, type CoachingEntry } from "../../coaching-history";
 
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean };
 
+type Meta30d = {
+  days_30: number;
+  critical_taken_rate: number | null;
+  weekend_days: number;
+  weekend_actions: number;
+  most_common_kind: string | null;
+  recent_critical_7d: number;
+};
+
 export function CoachingHistoryCard({ ko }: Props) {
   const [entries, setEntries] = useState<CoachingEntry[]>([]);
   const [stats, setStats] = useState({ totalDays: 0, actionsTaken: 0, criticalSignals: 0, takenRate: 0 });
+  const [meta30d, setMeta30d] = useState<Meta30d | null>(null);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "offline">("idle");
   const [tick, setTick] = useState(0);
 
   // 매 mount + tick 시 localStorage 다시 읽음
@@ -38,6 +49,26 @@ export function CoachingHistoryCard({ ko }: Props) {
     setEntries(getHistory(14));
     setStats(getStats(14));
   }, [tick]);
+
+  // mount 시 1번 Supabase 에서 다른 디바이스 데이터 hydrate + meta30d 가져오기
+  useEffect(() => {
+    let cancelled = false;
+    setSyncStatus("syncing");
+    hydrateFromSupabase()
+      .then((res) => {
+        if (cancelled) return;
+        setMeta30d(res.meta30d);
+        // localStorage 가 hydrate 안에서 업데이트됨 → 다시 읽기
+        setEntries(getHistory(14));
+        setStats(getStats(14));
+        setSyncStatus(res.stats14d != null || res.meta30d != null ? "synced" : "offline");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSyncStatus("offline");
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleToggle = useCallback((entry: CoachingEntry) => {
     const currentTaken = entry.response?.taken === true;
@@ -130,20 +161,140 @@ export function CoachingHistoryCard({ ko }: Props) {
         )}
       </div>
 
+      {/* 30일+ 누적 시 메타 인사이트 노출 (Supabase v_coaching_meta_30d view) */}
+      {meta30d && meta30d.days_30 >= 14 && (
+        <MetaInsightsBlock meta={meta30d} ko={ko} />
+      )}
+
       <div style={{
-        display: "flex", alignItems: "flex-start", gap: 8,
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
         padding: "10px 12px", borderRadius: 10,
         background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.10)",
         fontSize: 11, color: "rgba(15,23,42,0.6)", lineHeight: 1.5,
       }}>
-        <span style={{ flexShrink: 0, color: MIDNIGHT, opacity: 0.6, marginTop: 1, fontSize: 14, lineHeight: 1 }}>💡</span>
         <span style={{ flex: 1 }}>
-          {ko
-            ? "사장님의 의사결정 패턴이 30일 누적되면 다음 분기 AI 가 \"평소보다 critical 신호 대응 느림\" 같은 메타 인사이트 제공 예정."
-            : "Once 30 days accumulate, AI will surface meta-insights like \"slower on critical signals than usual.\""}
+          {meta30d && meta30d.days_30 >= 14
+            ? (ko
+                ? `30일 누적 — AI 메타 인사이트 활성화 (서버 영구 보관)`
+                : `30 days accumulated — AI meta-insights active (server-backed)`)
+            : (ko
+                ? "30일 누적 시 AI 메타 인사이트 자동 활성화 — 사장님 의사결정 패턴 분석"
+                : "AI meta-insights auto-activate at 30 days of data")}
         </span>
+        <SyncBadge status={syncStatus} ko={ko} />
       </div>
     </article>
+  );
+}
+
+function MetaInsightsBlock({ meta, ko }: { meta: Meta30d; ko: boolean }) {
+  // v1 rule-based 메타 인사이트 — 30일 누적 데이터 분석
+  const insights: { icon: React.ReactNode; text: string; tone: "critical" | "important" | "good" }[] = [];
+
+  // critical 신호 대응률 분석
+  if (meta.critical_taken_rate != null) {
+    const rate = meta.critical_taken_rate;
+    if (rate < 40) {
+      insights.push({
+        icon: <Flame size={14} strokeWidth={2.2} />,
+        text: ko
+          ? `Critical 신호 대응률 ${rate}% — 60% 이상 권장. 폐업 위험 신호 무시 패턴.`
+          : `Critical response ${rate}% — recommend 60%+. Risk-ignoring pattern.`,
+        tone: "critical",
+      });
+    } else if (rate >= 70) {
+      insights.push({
+        icon: <CheckCircle2 size={14} strokeWidth={2.2} />,
+        text: ko
+          ? `Critical 신호 대응률 ${rate}% — 한국 SMB 상위 20% 수준.`
+          : `Critical response ${rate}% — top 20% KR SMB.`,
+        tone: "good",
+      });
+    }
+  }
+
+  // 주말 대응 패턴
+  if (meta.weekend_days > 0) {
+    const weekendRate = Math.round((meta.weekend_actions / meta.weekend_days) * 100);
+    if (weekendRate < 30 && meta.weekend_days >= 4) {
+      insights.push({
+        icon: <Target size={14} strokeWidth={2.2} />,
+        text: ko
+          ? `주말 대응 ${weekendRate}% — 주중보다 크게 낮음. 주말 자동화 검토.`
+          : `Weekend action ${weekendRate}% — much lower than weekdays.`,
+        tone: "important",
+      });
+    }
+  }
+
+  // 최근 7일 critical 연속
+  if (meta.recent_critical_7d >= 4) {
+    insights.push({
+      icon: <Flame size={14} strokeWidth={2.2} />,
+      text: ko
+        ? `최근 7일 critical ${meta.recent_critical_7d}회 — 사업 상태 악화 추세. 펀딩·재도전특별자금 검토.`
+        : `${meta.recent_critical_7d} critical in last 7d — deteriorating. Consider funding.`,
+      tone: "critical",
+    });
+  }
+
+  if (insights.length === 0) {
+    insights.push({
+      icon: <Brain size={14} strokeWidth={2.2} />,
+      text: ko
+        ? `${meta.days_30}일 누적 — 의사결정 패턴 정상 범위. 다음 분기 더 정밀한 AI 분석 활성화.`
+        : `${meta.days_30}d accumulated — normal pattern. Deeper AI analysis next quarter.`,
+      tone: "good",
+    });
+  }
+
+  return (
+    <div>
+      <div style={{
+        fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.85,
+        letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8,
+        display: "flex", alignItems: "center", gap: 6,
+      }}>
+        <Brain size={12} strokeWidth={2.2} />
+        {ko ? `AI 메타 인사이트 · ${meta.days_30}일 누적` : `AI Meta-Insights · ${meta.days_30}d`}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+        {insights.map((i, idx) => {
+          const c = { critical: "#b91c1c", important: "#b45309", good: "#059669" }[i.tone];
+          return (
+            <div key={idx} style={{
+              display: "flex", alignItems: "flex-start", gap: 9,
+              padding: "9px 12px", borderRadius: 9,
+              background: `${c}08`, border: `1px solid ${c}25`,
+              fontSize: 12, color: "#0f172a", lineHeight: 1.5,
+            }}>
+              <span style={{ flexShrink: 0, color: c, marginTop: 1 }}>{i.icon}</span>
+              <span style={{ flex: 1 }}>{i.text}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SyncBadge({ status, ko }: { status: "idle" | "syncing" | "synced" | "offline"; ko: boolean }) {
+  if (status === "idle") return null;
+  const cfg = {
+    syncing: { icon: <Cloud size={11} />, text: ko ? "동기화 중" : "Syncing", color: "rgba(15,23,42,0.55)" },
+    synced: { icon: <Cloud size={11} />, text: ko ? "서버 저장됨" : "Server-backed", color: "#059669" },
+    offline: { icon: <CloudOff size={11} />, text: ko ? "로컬만 (로그인 필요)" : "Local only", color: "#b45309" },
+  }[status];
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      fontSize: 10.5, color: cfg.color, fontWeight: 600,
+      padding: "2px 8px", borderRadius: 6,
+      background: `${cfg.color}10`,
+    }}>
+      {cfg.icon}
+      {cfg.text}
+    </span>
   );
 }
 
