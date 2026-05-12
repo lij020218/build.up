@@ -18,6 +18,7 @@ import {
   type DashboardCardMeta,
   type DashboardCardCategory,
 } from "../../dashboard-cards-meta";
+import { shouldShowCardByIndustry, type CardId, type IndustryId } from "../../industry-card-matrix";
 
 const CATEGORY_LABEL_KO: Record<DashboardCardCategory, string> = {
   hero: "Hero · 최상단",
@@ -37,8 +38,19 @@ export function DashboardLayoutCard({ ko }: { ko: boolean }) {
   const hiddenCards = useProfileStore((s) => s.hiddenCards);
   const toggleHiddenCard = useProfileStore((s) => s.toggleHiddenCard);
   const setHiddenCards = useProfileStore((s) => s.setHiddenCards);
+  const industryCategoryId = useProfileStore((s) => s.selectedIndustryCategoryId);
 
-  const hidableCards = getHidableCards();
+  // 2026-05-13 사장님 지적 반영 — *본인 업종에 해당하는 카드만* 토글 노출.
+  //   종전: 11 업종 모든 카드 토글 (9-10개 무관 카드 noise)
+  //   현재: industry-card-matrix.shouldShowCardByIndustry 로 필터링 — universal +
+  //         본인 업종 카드만. "AI 공동창업자 데일리 브리프" 처럼 다른 업종 전용
+  //         카드는 토글 목록에서 자동 제외.
+  const allHidableCards = getHidableCards();
+  const hidableCards = allHidableCards.filter((c) => {
+    // CardId 가 matrix 에 등록된 경우만 분기. 등록 안 됐으면 전체 노출 (안전 fallback).
+    return shouldShowCardByIndustry(c.id as CardId, industryCategoryId as IndustryId | undefined);
+  });
+
   const grouped = hidableCards.reduce<Record<DashboardCardCategory, DashboardCardMeta[]>>(
     (acc, c) => {
       (acc[c.category] ||= []).push(c);
