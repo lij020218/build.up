@@ -35,6 +35,12 @@
 import { useMemo } from "react";
 import { GraduationCap, AlertTriangle, Calendar, TrendingDown, Sparkles } from "lucide-react";
 import { useOperationsStore } from "../../stores";
+// 2026-05-13 — SSOT (cohort-retention.ts, 15 unit tests 검증)
+import {
+  memberCohortRetention,
+  expiringMembers,
+  newMemberCount,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
@@ -59,42 +65,31 @@ export function EducationEnrollmentCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const todayMs = today.getTime();
-
+    const now = new Date();
+    // 2026-05-13 — SSOT 사용 (cohort-retention.ts).
+    //   학원 cohort 윈도우 = ±14일 (학부모 결정 시간 표준).
+    //   1년 cohort 는 long retention 강조 — Spider Strategies·Brightwheel.
+    const todayStr = now.toISOString().slice(0, 10);
     const active = members.filter((m) => m.endDate && m.endDate >= todayStr);
 
-    // D-14 재등록 임박 (한국 학원 월 단위 갱신, 학부모 결정 시간 14일 표준)
-    const fourteenDaysLater = new Date(todayMs + 14 * 86400000).toISOString().slice(0, 10);
-    const reEnrollD14 = active.filter((m) => m.endDate >= todayStr && m.endDate <= fourteenDaysLater);
-
-    // D-30 (재등록 *준비* 대상)
-    const thirtyDaysLater = new Date(todayMs + 30 * 86400000).toISOString().slice(0, 10);
-    const reEnrollD30 = active.filter(
-      (m) => m.endDate > fourteenDaysLater && m.endDate <= thirtyDaysLater,
+    // D-14 재등록 임박 (한국 학원 월 단위 cycle)
+    const d14 = expiringMembers(members, 14, now);
+    const expiringIds = new Set(d14.members.map((m) => m.id ?? `${m.startDate}|${m.endDate}`));
+    // D-30 재등록 *준비* (D-14 제외)
+    const d30all = expiringMembers(members, 30, now);
+    const reEnrollD30 = d30all.members.filter(
+      (m) => !expiringIds.has(m.id ?? `${m.startDate}|${m.endDate}`),
     );
+    const reEnrollD14 = d14.members;
 
-    // cohort 잔존율 — 30/60/90/365일
-    function cohortRetention(daysAgo: number): { total: number; stillActive: number; rate: number } {
-      const cutoffStart = new Date(todayMs - (daysAgo + 14) * 86400000).toISOString().slice(0, 10);
-      const cutoffEnd = new Date(todayMs - (daysAgo - 14) * 86400000).toISOString().slice(0, 10);
-      const cohort = members.filter((m) => m.startDate >= cutoffStart && m.startDate <= cutoffEnd);
-      const stillActive = cohort.filter((m) => m.endDate >= todayStr).length;
-      const rate = cohort.length > 0 ? Math.round((stillActive / cohort.length) * 100) : 0;
-      return { total: cohort.length, stillActive, rate };
-    }
+    // cohort 잔존율 — 한국 학원 표준 (학부모 결정 시간 14일 윈도우)
+    const retention30 = memberCohortRetention(members, 30, 14, now);
+    const retention60 = memberCohortRetention(members, 60, 14, now);
+    const retention90 = memberCohortRetention(members, 90, 14, now);
+    const retention365 = memberCohortRetention(members, 365, 14, now);
 
-    const retention30 = cohortRetention(30);
-    const retention60 = cohortRetention(60);
-    const retention90 = cohortRetention(90);
-    const retention365 = cohortRetention(365);
-
-    // 신규 등록 (지난 30일)
-    const last30Start = new Date(todayMs - 30 * 86400000).toISOString().slice(0, 10);
-    const newLast30 = members.filter((m) => m.startDate >= last30Start).length;
-
-    // 월 예상 수강료 매출 (활성 학생 fee 합산)
+    // 신규 등록 + 월 수강료 합산
+    const newLast30 = newMemberCount(members, 30, now);
     const monthlyFeesKrw = active.reduce((sum, m) => sum + (m.fee ?? 0), 0);
 
     // top action — 한국 학원 임계값

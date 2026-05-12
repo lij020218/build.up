@@ -22,27 +22,25 @@ import { useMemo } from "react";
 import { PawPrint, Calendar, UserX, Sparkles, RotateCw } from "lucide-react";
 import { useBookingStore } from "../../stores";
 
+// 2026-05-13 — SSOT (booking-analytics + cohort-retention)
+//   petServiceMix · bookingRepeatRate — Gingr·VetPort·펫프렌즈 (재구매 85%) 표준.
+import {
+  petServiceMix,
+  bookingRepeatRate,
+  type PetServiceCategory,
+} from "@build-up/shared";
+
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 
-// 펫 서비스 분류 (자유 입력 service 필드를 keyword 매칭)
-function classifyService(service: string): "grooming" | "boarding" | "medical" | "retail" | "other" {
-  const s = service.toLowerCase();
-  if (s.includes("미용") || s.includes("그루밍") || s.includes("목욕")) return "grooming";
-  if (s.includes("호텔") || s.includes("위탁") || s.includes("보호")) return "boarding";
-  if (s.includes("진료") || s.includes("수술") || s.includes("백신") || s.includes("검사")) return "medical";
-  if (s.includes("사료") || s.includes("용품") || s.includes("간식")) return "retail";
-  return "other";
-}
-
-const SERVICE_LABEL = {
+const SERVICE_LABEL: Record<PetServiceCategory, string> = {
   grooming: "미용",
   boarding: "호텔",
   medical: "진료",
   retail: "판매",
   other: "기타",
-} as const;
+};
 
 export function PetBookingCard({ ko, industryCategoryId }: Props) {
   const bookings = useBookingStore((s) => s.bookings);
@@ -70,47 +68,27 @@ export function PetBookingCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const tomorrowStr = new Date(today.getTime() + 86400000).toISOString().slice(0, 10);
-    const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
-    const last90Start = new Date(today.getTime() - 90 * 86400000).toISOString().slice(0, 10);
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
     const tomorrowBookings = bookings.filter((b) => b.date === tomorrowStr);
     const yesterdayBookings = bookings.filter((b) => b.date === yesterdayStr);
     const yesterdayNoshow = yesterdayBookings.filter((b) => b.status === "noshow").length;
 
-    // 90일 서비스 mix
-    const last90Completed = bookings.filter(
-      (b) => b.date >= last90Start && b.date <= todayStr && b.status === "completed",
-    );
+    // 2026-05-13 — SSOT 사용 (booking-analytics.ts + cohort-retention.ts).
+    //   petServiceMix · bookingRepeatRate · classifyPetService — unit tests 검증.
+    const mixArr = petServiceMix(bookings, 90, now).map((m) => ({
+      ...m,
+      label: SERVICE_LABEL[m.key],
+    }));
+    const totalRev = mixArr.reduce((s, m) => s + m.value, 0);
 
-    type MixKey = "grooming" | "boarding" | "medical" | "retail" | "other";
-    const mix: Record<MixKey, number> = { grooming: 0, boarding: 0, medical: 0, retail: 0, other: 0 };
-    for (const b of last90Completed) {
-      mix[classifyService(b.service)] += b.price ?? 0;
-    }
-    const totalRev = Object.values(mix).reduce((s, v) => s + v, 0);
-    const mixArr = (Object.entries(mix) as Array<[MixKey, number]>)
-      .map(([key, value]) => ({
-        key,
-        label: SERVICE_LABEL[key],
-        value,
-        pct: totalRev > 0 ? Math.round((value / totalRev) * 100) : 0,
-      }))
-      .filter((m) => m.value > 0)
-      .sort((a, b) => b.value - a.value);
-
-    // 재방문률 — 같은 customerName 또는 customerId 가 90일 안에 2회+
-    const customerVisits = new Map<string, number>();
-    for (const b of last90Completed) {
-      const key = b.customerId || b.customerName;
-      customerVisits.set(key, (customerVisits.get(key) ?? 0) + 1);
-    }
-    const uniqueCustomers = customerVisits.size;
-    const repeatCustomers = Array.from(customerVisits.values()).filter((v) => v >= 2).length;
-    const repeatRate = uniqueCustomers > 0 ? Math.round((repeatCustomers / uniqueCustomers) * 100) : 0;
+    // 재방문률 — SSOT (90일 windowed)
+    const repeat = bookingRepeatRate(bookings, 90, now);
+    const { uniqueCustomers, repeatCustomers, rate: repeatRate } = repeat;
 
     // top action
     let topAction: { kind: "critical" | "warning" | "good"; headline: string; action: string } | null = null;

@@ -22,6 +22,13 @@
 import { useMemo } from "react";
 import { LayoutGrid, Calendar, AlertTriangle, Sparkles, Clock } from "lucide-react";
 import { useBookingStore } from "../../stores";
+// 2026-05-13 — SSOT (booking-analytics.ts)
+//   calculatePOR · timeDistribution · peakBucket — OfficeRnD POR + 무인 스터디 BEP 60-70%.
+import {
+  calculatePOR,
+  timeDistribution,
+  peakBucket as ssotPeakBucket,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
@@ -54,56 +61,45 @@ export function SpaceOccupancyCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const tomorrowStr = new Date(today.getTime() + 86400000).toISOString().slice(0, 10);
-    const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
-    const last7Start = new Date(today.getTime() - 7 * 86400000).toISOString().slice(0, 10);
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const last7Start = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
     const tomorrowBookings = bookings.filter((b) => b.date === tomorrowStr);
     const yesterdayBookings = bookings.filter((b) => b.date === yesterdayStr && b.status === "completed");
     const yesterdayRevenue = yesterdayBookings.reduce((s, b) => s + (b.price ?? 0), 0);
 
-    // 활성 룸 수
+    // 활성 룸 + 운영 시간 (10-22시 가정)
     const activeRooms = providers.filter((p) => p.isActive);
-
-    // 오늘 POR — 룸별 점유 슬롯 / 가능 슬롯 (단순화: 활성 룸 × 12시간 슬롯 / 실제 예약 수)
-    // 슬롯 = 1시간 기준. 운영 시간 12시간 (10-22시) 가정.
     const OPERATING_HOURS = 12;
     const totalSlotsToday = activeRooms.length * OPERATING_HOURS;
-    const todayPor = totalSlotsToday > 0
-      ? Math.round((todayBookings.length / totalSlotsToday) * 100)
-      : 0;
+
+    // 2026-05-13 — SSOT (calculatePOR, OfficeRnD POR 표준).
+    //   POR = 점유 슬롯 / 가능 슬롯. 무인 스터디카페 BEP 60-70%.
+    const todayPor = calculatePOR(todayBookings.length, totalSlotsToday);
 
     // 7일 평균 POR
     const last7 = bookings.filter((b) => b.date >= last7Start && b.date <= todayStr);
-    const avgPor7 = (totalSlotsToday * 7) > 0
-      ? Math.round((last7.length / (totalSlotsToday * 7)) * 100)
-      : 0;
+    const avgPor7 = calculatePOR(last7.length, totalSlotsToday * 7);
 
-    // 룸별 점유율 (7일)
+    // 룸별 7일 점유율 — calculatePOR 재사용 (룸 1개 × 7일 × 12시간 = 84 슬롯)
     const roomStats = activeRooms.map((p) => {
       const myBookings = last7.filter((b) => b.providerId === p.id && b.status !== "cancelled");
-      const rate = OPERATING_HOURS * 7 > 0
-        ? Math.round((myBookings.length / (OPERATING_HOURS * 7)) * 100)
-        : 0;
+      const rate = calculatePOR(myBookings.length, OPERATING_HOURS * 7);
       return { id: p.id, name: p.name, count: myBookings.length, rate };
     }).sort((a, b) => b.rate - a.rate);
 
-    // 시간대 분포 (7일)
-    const timeBuckets = { morning: 0, afternoon: 0, evening: 0, night: 0 };
-    for (const b of last7) {
-      if (b.status === "cancelled") continue;
-      const hour = parseInt(b.time.slice(0, 2), 10);
-      if (hour < 12) timeBuckets.morning++;
-      else if (hour < 17) timeBuckets.afternoon++;
-      else if (hour < 22) timeBuckets.evening++;
-      else timeBuckets.night++;
-    }
+    // 시간대 분포 — SSOT (timeDistribution + peakBucket)
+    //   bucketTime: <12 morning · <17 afternoon · <22 evening · 22+ night
+    const timeBuckets = timeDistribution(bookings, 7, now);
     const totalBucket = Object.values(timeBuckets).reduce((s, v) => s + v, 0);
-    const peakBucket = (Object.entries(timeBuckets) as Array<[keyof typeof timeBuckets, number]>)
-      .sort((a, b) => b[1] - a[1])[0];
+    const peakResult = ssotPeakBucket(timeBuckets);
+    // 기존 호환 위해 [bucket, count] 튜플 형식 유지
+    const peakBucket: [keyof typeof timeBuckets, number] | null =
+      peakResult ? [peakResult.bucket, peakResult.count] : null;
 
     // top action
     let topAction: { kind: "critical" | "warning" | "good"; headline: string; action: string } | null = null;

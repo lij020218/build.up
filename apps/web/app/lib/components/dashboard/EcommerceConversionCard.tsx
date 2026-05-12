@@ -22,6 +22,14 @@
 import { useMemo } from "react";
 import { ShoppingCart, TrendingUp, AlertTriangle, BarChart3, Sparkles } from "lucide-react";
 import { useEcommerceStore } from "../../stores";
+// 2026-05-13 — SSOT (ecommerce-analytics.ts) — Polar·Shopify·OSC 쿠팡 표준.
+import {
+  filterByWindow,
+  aggregateAds,
+  aggregateByChannel,
+  returnRate as ssotReturnRate,
+  topReturnReasons,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
@@ -58,45 +66,29 @@ export function EcommerceConversionCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    const today = new Date();
-    const last7Start = new Date(today.getTime() - 7 * 86400000).toISOString().slice(0, 10);
-    const last7Ads = adSpends.filter((a) => a.date >= last7Start);
-    const last7Returns = returns.filter((r) => r.date >= last7Start);
+    const now = new Date();
+    // 2026-05-13 — SSOT (ecommerce-analytics.ts) 사용.
+    //   filterByWindow · aggregateAds · aggregateByChannel · returnRate · topReturnReasons
+    //   각 함수 unit test 검증 (Polar·Shopify·OSC 쿠팡 표준).
+    const last7Ads = filterByWindow(adSpends, 7, now);
+    const last7Returns = filterByWindow(returns, 7, now);
 
-    // 전체 7일
-    const totalSpend = last7Ads.reduce((s, a) => s + a.spend, 0);
-    const totalClicks = last7Ads.reduce((s, a) => s + (a.clicks ?? 0), 0);
-    const totalConversions = last7Ads.reduce((s, a) => s + a.conversions, 0);
-    const totalConvValue = last7Ads.reduce((s, a) => s + a.conversionValue, 0);
+    // 전체 7일 집계 (CVR·ROAS)
+    const overall = aggregateAds(last7Ads);
+    const avgCvr = overall.cvr;
+    const avgRoas = overall.roas;
+    const totalConvValue = overall.convValue;
 
-    const avgCvr = totalClicks > 0 ? Math.round((totalConversions / totalClicks) * 1000) / 10 : 0;
-    const avgRoas = totalSpend > 0 ? Math.round((totalConvValue / totalSpend) * 100) : 0;
+    // 반품률 (SSOT — 반품 금액 / 전환매출, Polar 평균 20-30%)
+    const returnInfo = ssotReturnRate(last7Returns, totalConvValue);
+    const returnRate = returnInfo.rate;
+    const returnCount = returnInfo.count;
 
-    // 반품률 (반품금액 / 전환매출)
-    const returnAmount = last7Returns.reduce((s, r) => s + r.orderAmount, 0);
-    const returnRate = totalConvValue > 0
-      ? Math.round((returnAmount / totalConvValue) * 100 * 10) / 10
-      : 0;
-    const returnCount = last7Returns.length;
-
-    // 채널별 ROAS
-    const channelStats = new Map<string, { spend: number; convValue: number; conversions: number; clicks: number }>();
-    for (const a of last7Ads) {
-      const s = channelStats.get(a.channel) ?? { spend: 0, convValue: 0, conversions: 0, clicks: 0 };
-      s.spend += a.spend;
-      s.convValue += a.conversionValue;
-      s.conversions += a.conversions;
-      s.clicks += a.clicks ?? 0;
-      channelStats.set(a.channel, s);
-    }
-    const channels = Array.from(channelStats.entries()).map(([ch, s]) => ({
-      channel: ch,
-      label: CHANNEL_LABEL[ch] ?? ch,
-      spend: s.spend,
-      convValue: s.convValue,
-      roas: s.spend > 0 ? Math.round((s.convValue / s.spend) * 100) : 0,
-      cvr: s.clicks > 0 ? Math.round((s.conversions / s.clicks) * 1000) / 10 : 0,
-    })).sort((a, b) => b.spend - a.spend);
+    // 채널별 — SSOT (aggregateByChannel: desc spend 정렬 자동)
+    const channels = aggregateByChannel(last7Ads).map((c) => ({
+      ...c,
+      label: CHANNEL_LABEL[c.channel] ?? c.channel,
+    }));
 
     // top action
     let topAction: { kind: "critical" | "warning" | "good"; headline: string; action: string } | null = null;
@@ -123,7 +115,7 @@ export function EcommerceConversionCard({ ko, industryCategoryId }: Props) {
           ? "이번 주: ① 반품 사유 top 3 분석 ② 상세페이지 명확화 (사이즈·소재 사진 추가) ③ 쿠팡 노출점수 영향 점검"
           : "This week: ① top 3 return reasons ② detail page clarification ③ Coupang exposure score",
       };
-    } else if (avgCvr < 1.0 && totalClicks > 100) {
+    } else if (avgCvr < 1.0 && overall.clicks > 100) {
       topAction = {
         kind: "warning",
         headline: ko
@@ -142,24 +134,20 @@ export function EcommerceConversionCard({ ko, industryCategoryId }: Props) {
         action: ko ? "이번 분기: 광고 예산 30% 확장 + 잘 되는 채널 우선 spend" : "This Q: scale ad budget +30%",
       };
     } else if (returnRate > 0 && returnCount > 0) {
-      // 평균 반품률 — 사유 분석 권고
-      const reasons = new Map<string, number>();
-      for (const r of last7Returns) {
-        reasons.set(r.reason, (reasons.get(r.reason) ?? 0) + 1);
-      }
-      const topReason = Array.from(reasons.entries()).sort((a, b) => b[1] - a[1])[0];
-      if (topReason) {
+      // 반품 사유 top 1 — SSOT (topReturnReasons)
+      const top = topReturnReasons(last7Returns, 1)[0];
+      if (top) {
         topAction = {
           kind: "warning",
           headline: ko
-            ? `반품 사유 #1: "${topReason[0]}" ${topReason[1]}건`
-            : `Top return reason: ${topReason[0]} (${topReason[1]})`,
+            ? `반품 사유 #1: "${top.reason}" ${top.count}건`
+            : `Top return reason: ${top.reason} (${top.count})`,
           action: ko ? "이번 주: 해당 사유 직접 원인 (상품·배송·소재) 분석" : "This week: address top return reason",
         };
       }
     }
 
-    return { totalSpend, totalConvValue, avgCvr, avgRoas, returnRate, returnCount, channels, topAction };
+    return { totalSpend: overall.spend, totalConvValue, avgCvr, avgRoas, returnRate, returnCount, channels, topAction };
   }, [adSpends, returns, ko]);
 
   return (

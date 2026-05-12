@@ -29,6 +29,12 @@
 import { useMemo } from "react";
 import { Calendar, AlertTriangle, UserX, Users, Sparkles } from "lucide-react";
 import { useBookingStore } from "../../stores";
+// 2026-05-13 — SSOT (booking-analytics + cohort-retention)
+//   noshowRate, providerStats — 카카오헤어샵 0.09% / Zenoti·Meevo 표준.
+import {
+  noshowRate as ssotNoshowRate,
+  providerStats as ssotProviderStats,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
@@ -72,11 +78,10 @@ export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const tomorrowStr = new Date(today.getTime() + 86400000).toISOString().slice(0, 10);
-    const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
-    const last30Start = new Date(today.getTime() - 30 * 86400000).toISOString().slice(0, 10);
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
     const tomorrowBookings = bookings.filter((b) => b.date === tomorrowStr);
@@ -84,35 +89,12 @@ export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
     const yesterdayNoshow = yesterdayBookings.filter((b) => b.status === "noshow").length;
     const yesterdayCancelled = yesterdayBookings.filter((b) => b.status === "cancelled").length;
 
-    // 지난 30일 노쇼율
-    const last30 = bookings.filter((b) => b.date >= last30Start && b.date <= todayStr);
-    const last30Eligible = last30.filter((b) => b.status === "noshow" || b.status === "completed");
-    const last30NoshowCount = last30.filter((b) => b.status === "noshow").length;
-    const last30NoshowRate = last30Eligible.length > 0
-      ? Math.round((last30NoshowCount / last30Eligible.length) * 100 * 10) / 10
-      : 0;
-
-    // 디자이너별 점유율 + 매출
-    const providerStats = providers.filter((p) => p.isActive).map((p) => {
-      const myBookings = last30.filter((b) => b.providerId === p.id);
-      const completed = myBookings.filter((b) => b.status === "completed");
-      const noshows = myBookings.filter((b) => b.status === "noshow");
-      const revenue = completed.reduce((s, b) => s + (b.price ?? 0), 0);
-      const totalSlots = myBookings.length;
-      const fillRate = totalSlots > 0 ? Math.round((completed.length / totalSlots) * 100) : 0;
-      const noshowRate = (completed.length + noshows.length) > 0
-        ? Math.round((noshows.length / (completed.length + noshows.length)) * 100 * 10) / 10
-        : 0;
-      return {
-        id: p.id,
-        name: p.name,
-        totalBookings: totalSlots,
-        completedCount: completed.length,
-        revenue,
-        fillRate,
-        noshowRate,
-      };
-    }).sort((a, b) => b.revenue - a.revenue);
+    // 2026-05-13 — SSOT 사용 (booking-analytics.ts)
+    //   noshowRate: completed+noshow 분모, 취소·confirmed 제외 (카카오헤어샵 0.09% 표준)
+    //   providerStats: 디자이너별 매출·노쇼·가동률 (Zenoti·Meevo)
+    const noshow30d = ssotNoshowRate(bookings, 30, now);
+    const last30NoshowRate = noshow30d.rate;
+    const providerStats = ssotProviderStats(bookings, providers, 30, 4, now);
 
     // top action
     let topAction: { kind: "critical" | "warning" | "good"; headline: string; action: string } | null = null;
@@ -161,7 +143,7 @@ export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
     return {
       todayBookings, tomorrowBookings,
       yesterdayNoshow, yesterdayCancelled,
-      last30NoshowRate, last30Total: last30Eligible.length,
+      last30NoshowRate, last30Total: noshow30d.total,
       providerStats, topAction,
     };
   }, [bookings, providers, ko]);

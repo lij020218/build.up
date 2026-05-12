@@ -36,20 +36,25 @@
 import { useMemo } from "react";
 import { ShoppingBag, AlertTriangle, Package, TrendingUp, Sparkles } from "lucide-react";
 import { useOperationsStore } from "../../stores";
+// 2026-05-13 — SSOT (sell-through.ts, 14 unit tests 검증)
+//   Lightspeed·Shopify·Square Retail·TruRating 표준 — 단일 검증된 공식.
+import {
+  sellThroughRate,
+  averageSellThrough,
+  topSellers as ssotTopSellers,
+  deadStock as ssotDeadStock,
+  lowStock as ssotLowStock,
+  topNRevenueShare,
+  deadStockCapital,
+  type SellThroughProduct,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 
-type ProductLite = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  cost: number;
-  stock: number;
-  monthlySold: number;
-};
+// 카드 내부에서 *category 표시용* 필드 유지 — SSOT 타입은 category optional.
+type ProductLite = SellThroughProduct & { category: string };
 
 export function RetailSellThroughCard({ ko, industryCategoryId }: Props) {
   const products = useOperationsStore((s) => s.products);
@@ -90,42 +95,24 @@ export function RetailSellThroughCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    // sell-through rate 계산 (월 단위)
-    function sellThrough(p: ProductLite): number {
-      const denominator = p.stock + p.monthlySold;
-      if (denominator <= 0) return 0;
-      return Math.round((p.monthlySold / denominator) * 100);
-    }
+    // 2026-05-13 — SSOT (sell-through.ts) 적용. 카드는 *컴포지션* + UX 결정.
+    //   sellThroughRate · topSellers · deadStock · lowStock · topNRevenueShare ·
+    //   averageSellThrough · deadStockCapital — 모두 14 unit tests 검증.
 
-    // 각 상품 분류
-    const withRate = all.map((p) => ({ ...p, rate: sellThrough(p) }));
-
-    // Top 5 best seller (월 판매 수량 desc)
-    const topSellers = [...withRate].sort((a, b) => b.monthlySold - a.monthlySold).slice(0, 5);
-
-    // Dead stock: rate < 20% 또는 monthlySold == 0 (재고 있는 것만)
-    const deadStock = withRate.filter((p) => p.stock > 0 && (p.rate < 20 || p.monthlySold === 0));
-
-    // 품절 임박 (top seller 중 stock/monthlySold < 0.3 — 한 달 안에 떨어질)
-    const lowStock = withRate.filter(
-      (p) => p.monthlySold > 0 && p.stock > 0 && p.stock / p.monthlySold < 0.3,
-    );
-
-    // 전체 평균 sell-through
-    const avgRate = withRate.length > 0
-      ? Math.round(withRate.reduce((s, p) => s + p.rate, 0) / withRate.length)
-      : 0;
-
-    // 매출 비중 (top 5 sellers 매출 / 전체 매출)
-    const totalRev = withRate.reduce((s, p) => s + p.monthlySold * p.price, 0);
-    const top5Rev = topSellers.reduce((s, p) => s + p.monthlySold * p.price, 0);
-    const top5RevShare = totalRev > 0 ? Math.round((top5Rev / totalRev) * 100) : 0;
+    // 각 상품에 rate 부여 (UI 표시·정렬용 — render 측 즉시 사용)
+    const withRate = all.map((p) => ({ ...p, rate: sellThroughRate(p) }));
+    const topSellers = ssotTopSellers(all, 5);
+    const deadStock = ssotDeadStock(all);
+    const lowStock = ssotLowStock(all, 0.3);
+    const avgRate = averageSellThrough(all);
+    const { sharePct: top5RevShare } = topNRevenueShare(all, 5);
 
     // top action
     let topAction: { kind: "critical" | "warning" | "good"; headline: string; action: string } | null = null;
 
     if (deadStock.length >= 5) {
-      const deadValue = Math.round(deadStock.reduce((s, p) => s + p.stock * p.cost, 0) / 10000);
+      // 자본 묶임 = deadStockCapital SSOT (Lightspeed: dead stock = capital locked).
+      const deadValue = Math.round(deadStockCapital(all) / 10000);
       topAction = {
         kind: "critical",
         headline: ko
@@ -175,7 +162,7 @@ export function RetailSellThroughCard({ ko, industryCategoryId }: Props) {
       };
     }
 
-    return { withRate, topSellers, deadStock, lowStock, avgRate, totalRev, top5RevShare, topAction };
+    return { withRate, topSellers, deadStock, lowStock, avgRate, top5RevShare, topAction };
   }, [all, ko]);
 
   return (

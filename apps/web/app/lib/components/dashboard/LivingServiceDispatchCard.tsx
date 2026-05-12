@@ -20,6 +20,13 @@
 import { useMemo } from "react";
 import { Truck, Calendar, AlertTriangle, Sparkles, RotateCw } from "lucide-react";
 import { useBookingStore } from "../../stores";
+// 2026-05-13 — SSOT (booking-analytics + cohort-retention)
+//   providerStats · bookingRepeatRate · unassignedCount — ServiceTitan·청소연구소 표준.
+import {
+  providerStats as ssotProviderStats,
+  bookingRepeatRate,
+  unassignedCount as ssotUnassignedCount,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
@@ -52,41 +59,31 @@ export function LivingServiceDispatchCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
-    const last30Start = new Date(today.getTime() - 30 * 86400000).toISOString().slice(0, 10);
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
-    const todayUnassigned = todayBookings.filter((b) => !b.providerId).length;
     const yesterdayBookings = bookings.filter((b) => b.date === yesterdayStr);
     const yesterdayCompleted = yesterdayBookings.filter((b) => b.status === "completed").length;
     const yesterdayCancelled = yesterdayBookings.filter((b) => b.status === "cancelled").length;
 
-    // 활성 기사
+    // 활성 기사 수 (UI 헤더 표시용)
     const activeDrivers = providers.filter((p) => p.isActive);
 
-    // 기사별 30일 가동률
-    const last30 = bookings.filter((b) => b.date >= last30Start && b.date <= todayStr);
-    const driverStats = activeDrivers.map((p) => {
-      const myBookings = last30.filter((b) => b.providerId === p.id);
-      const completed = myBookings.filter((b) => b.status === "completed");
-      // 가정: 한 기사 일평균 4건 가능 → 30일 = 120건 풀가동
-      const utilization = Math.min(100, Math.round((completed.length / 120) * 100));
-      const revenue = completed.reduce((s, b) => s + (b.price ?? 0), 0);
-      return { id: p.id, name: p.name, count: completed.length, utilization, revenue };
-    }).sort((a, b) => b.utilization - a.utilization);
+    // 2026-05-13 — SSOT 사용:
+    //   · unassignedCount: 미배정 의뢰 (ServiceTitan dispatch)
+    //   · providerStats: 기사별 가동률·매출·노쇼 (capacity 4건/일 × 30일 = 120 풀가동)
+    //   · bookingRepeatRate: 30일 재의뢰률 (청소연구소 88% 표준)
+    const todayUnassigned = ssotUnassignedCount(bookings, todayStr);
+    const allDriverStats = ssotProviderStats(bookings, providers, 30, 4, now);
+    // 화면용 형태로 가공 (utilization 정렬, count = completed)
+    const driverStats = allDriverStats
+      .map((s) => ({ id: s.id, name: s.name, count: s.completedCount, utilization: s.utilization ?? 0, revenue: s.revenue }))
+      .sort((a, b) => b.utilization - a.utilization);
 
-    // 재의뢰률 — 30일 안에 같은 customerName 가 2회+ 의뢰
-    const customerCounts = new Map<string, number>();
-    for (const b of last30) {
-      if (b.status === "cancelled") continue;
-      const key = b.customerId || b.customerName;
-      customerCounts.set(key, (customerCounts.get(key) ?? 0) + 1);
-    }
-    const uniqueCustomers = customerCounts.size;
-    const repeatCustomers = Array.from(customerCounts.values()).filter((v) => v >= 2).length;
-    const repeatRate = uniqueCustomers > 0 ? Math.round((repeatCustomers / uniqueCustomers) * 100) : 0;
+    const repeat = bookingRepeatRate(bookings, 30, now);
+    const { uniqueCustomers, repeatCustomers, rate: repeatRate } = repeat;
 
     // top action
     let topAction: { kind: "critical" | "warning" | "good"; headline: string; action: string } | null = null;

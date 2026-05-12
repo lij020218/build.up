@@ -28,31 +28,26 @@
 
 import { useMemo, useState } from "react";
 import { Calendar, AlertTriangle, UserPlus, Sliders } from "lucide-react";
-import { useStartupMetrics } from "../../hooks/useStartupMetrics";
 import { useFinanceStore } from "../../stores/finance-store";
 import { useProfileStore } from "../../stores/profile-store";
+// 2026-05-13 — SSOT (cash-zero-date.ts, 7 unit tests 검증)
+//   computeCashZeroDate — Mercury·Puzzle·Bessemer 표준 (절대 날짜 + 채용 시뮬).
+import { computeCashZeroDate, DEFAULT_HIRE_COST_KRW } from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean };
 
-/** 한국 스타트업 평균 인건비 (4대보험·퇴직금 포함) — 시리즈A 기준.
- *  사장님이 조정 가능. 기본값 = 월 600만원 (연봉 ~7,200만 + 사용자부담 ~20%) */
-const DEFAULT_HIRE_COST_KRW = 6_000_000;
-
 export function CashZeroDateCard({ ko }: Props) {
-  const { metrics } = useStartupMetrics();
   const { monthlyCosts } = useFinanceStore();
   const { selectedBudget, initialOperatingCapital } = useProfileStore();
   const [hireCount, setHireCount] = useState(0);
 
+  // 2026-05-13 — SSOT (computeCashZeroDate) 사용. 카드는 *입력 수집* + *UI 결정* 만.
+  //   7 unit tests 검증 (자본 미입력·월 비용 미입력·자본 2억 20m·자본 6천 6m·
+  //   채용 1명 7.5m 당겨짐·절대 날짜 365일 후 등).
   const result = useMemo(() => {
-    // 자본 잔액: 초기 자본 + 운영 자본 (있다면)
     const totalCapital = (selectedBudget ?? 0) + (initialOperatingCapital ?? 0);
-    if (totalCapital <= 0) {
-      return { ready: false, reason: ko ? "초기 자본을 입력하세요" : "Enter initial capital" } as const;
-    }
-
     const monthlyBurn =
       (monthlyCosts?.ingredients ?? 0) +
       (monthlyCosts?.labor ?? 0) +
@@ -63,52 +58,34 @@ export function CashZeroDateCard({ ko }: Props) {
       (monthlyCosts?.other ?? 0) +
       (monthlyCosts?.interest ?? 0);
 
-    if (monthlyBurn <= 0) {
-      return { ready: false, reason: ko ? "월 비용을 입력하면 cash zero 계산 시작" : "Enter monthly costs" } as const;
+    const ssotResult = computeCashZeroDate({
+      totalCapital,
+      currentMonthlyBurn: monthlyBurn,
+      hireCount,
+    });
+
+    // not ready 케이스 — 한국어 사유 메시지로 변환
+    if (!ssotResult.ready) {
+      const reason = ssotResult.reason === "초기 자본 미입력"
+        ? (ko ? "초기 자본을 입력하세요" : "Enter initial capital")
+        : (ko ? "월 비용을 입력하면 cash zero 계산 시작" : "Enter monthly costs");
+      return { ready: false as const, reason };
     }
-
-    // 현재 (no hire) runway
-    const currentRunway = metrics.runwayMonths;
-    if (currentRunway == null || !isFinite(currentRunway)) {
-      return { ready: false, reason: ko ? "런웨이 계산 불가 — 매출 또는 비용 데이터 부족" : "Runway not available" } as const;
-    }
-
-    // 채용 시뮬 — 추가 인건비
-    const simulatedBurn = monthlyBurn + hireCount * DEFAULT_HIRE_COST_KRW;
-    // remaining capital = totalCapital - (이미 burn 된 금액). 보수적으로 = totalCapital * (currentRunway / (totalCapital / monthlyBurn))
-    // 간단: remainingCapital = monthlyBurn * currentRunway
-    const remainingCapital = monthlyBurn * currentRunway;
-    const simulatedRunway = simulatedBurn > 0 ? remainingCapital / simulatedBurn : currentRunway;
-
-    const today = new Date();
-    const cashZeroDate = new Date(today);
-    cashZeroDate.setDate(today.getDate() + Math.round(simulatedRunway * 30.4375));
-
-    const cashZeroStr = cashZeroDate.toISOString().slice(0, 10);
-    const daysAhead = Math.round((cashZeroDate.getTime() - today.getTime()) / 86400000);
-
-    // 18m 임계 (실리콘밸리 2026 표준 — 한국 23m 펀딩 사이클 고려 시 더 관대해도 됨)
-    const tone: "critical" | "warning" | "good" =
-      simulatedRunway < 6 ? "critical"
-        : simulatedRunway < 18 ? "warning"
-          : "good";
-
-    const monthsShifted = currentRunway - simulatedRunway;
 
     return {
       ready: true as const,
-      currentRunway,
-      simulatedRunway,
-      cashZeroStr,
-      cashZeroDate,
-      daysAhead,
-      monthsShifted,
-      tone,
+      currentRunway: ssotResult.currentRunwayMonths,
+      simulatedRunway: ssotResult.simulatedRunwayMonths,
+      cashZeroStr: ssotResult.cashZeroDateStr,
+      cashZeroDate: ssotResult.cashZeroDate,
+      daysAhead: ssotResult.daysAhead,
+      monthsShifted: ssotResult.monthsShifted,
+      tone: ssotResult.tone,
       monthlyBurn,
-      simulatedBurn,
+      simulatedBurn: ssotResult.simulatedBurn,
       hireCount,
     };
-  }, [metrics.runwayMonths, monthlyCosts, selectedBudget, initialOperatingCapital, hireCount, ko]);
+  }, [monthlyCosts, selectedBudget, initialOperatingCapital, hireCount, ko]);
 
   if (!result.ready) {
     return (

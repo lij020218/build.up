@@ -30,6 +30,13 @@
 import { useMemo } from "react";
 import { Users, AlertTriangle, Calendar, TrendingDown, Sparkles } from "lucide-react";
 import { useOperationsStore } from "../../stores";
+// 2026-05-13 — SSOT (cohort-retention.ts) 적용. 카드 inline 로직 → 단일 검증된 함수.
+import {
+  memberCohortRetention,
+  expiringMembers,
+  activeMemberCount,
+  newMemberCount,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 
@@ -55,42 +62,30 @@ export function FitnessRetentionCard({ ko, industryCategoryId }: Props) {
   }
 
   const analysis = useMemo(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const todayMs = today.getTime();
+    const now = new Date();
+    // 2026-05-13 — SSOT (cohort-retention.ts, 15 unit tests 검증)
+    //   memberCohortRetention · expiringMembers · activeMemberCount · newMemberCount
+    //   카드는 SSOT 컴포지션 + UX 결정 (행동 분기) 만 담당.
+    const activeCount = activeMemberCount(members, now);
 
-    // 활성 회원: endDate >= today
-    const active = members.filter((m) => m.endDate && m.endDate >= todayStr);
-
-    // D-7 만료 임박: 오늘 ~ +7일
-    const sevenDaysLater = new Date(todayMs + 7 * 86400000).toISOString().slice(0, 10);
-    const expiringD7 = active.filter((m) => m.endDate >= todayStr && m.endDate <= sevenDaysLater);
-
-    // D-30 만료 (D-7 제외): 8일 ~ 30일
-    const thirtyDaysLater = new Date(todayMs + 30 * 86400000).toISOString().slice(0, 10);
-    const expiringD30 = active.filter(
-      (m) => m.endDate > sevenDaysLater && m.endDate <= thirtyDaysLater,
+    // D-7 만료 임박 (회원권 단기 cycle)
+    const d7 = expiringMembers(members, 7, now);
+    const expiringD7Ids = new Set(d7.members.map((m) => m.id ?? `${m.startDate}|${m.endDate}`));
+    // D-30 만료 임박 (D-7 제외) — D-7 안에 들지 않은 만료 임박
+    const d30all = expiringMembers(members, 30, now);
+    const expiringD30 = d30all.members.filter(
+      (m) => !expiringD7Ids.has(m.id ?? `${m.startDate}|${m.endDate}`),
     );
 
-    // 30/60/90일 cohort 잔존율 — 지난 N일 *전에* 가입한 회원 중 현재까지 active 비율.
-    // 한국 헬스장 1년 회원권 흔함 — startDate 기준 cohort 정의.
-    function cohortRetention(daysAgo: number): { total: number; stillActive: number; rate: number } {
-      const cutoffStart = new Date(todayMs - (daysAgo + 7) * 86400000).toISOString().slice(0, 10);
-      const cutoffEnd = new Date(todayMs - (daysAgo - 7) * 86400000).toISOString().slice(0, 10);
-      // 7일 윈도우 — daysAgo ± 7일 사이 가입자
-      const cohort = members.filter((m) => m.startDate >= cutoffStart && m.startDate <= cutoffEnd);
-      const stillActive = cohort.filter((m) => m.endDate >= todayStr).length;
-      const rate = cohort.length > 0 ? Math.round((stillActive / cohort.length) * 100) : 0;
-      return { total: cohort.length, stillActive, rate };
-    }
-
-    const retention30 = cohortRetention(30);
-    const retention60 = cohortRetention(60);
-    const retention90 = cohortRetention(90);
+    // 30/60/90일 cohort 잔존율 — FIA 90d=50% 기준 (Mindbody·MarianaTek 19 자료)
+    const retention30 = memberCohortRetention(members, 30, 7, now);
+    const retention60 = memberCohortRetention(members, 60, 7, now);
+    const retention90 = memberCohortRetention(members, 90, 7, now);
 
     // 신규 등록 (지난 30일)
-    const last30Start = new Date(todayMs - 30 * 86400000).toISOString().slice(0, 10);
-    const newLast30 = members.filter((m) => m.startDate >= last30Start).length;
+    const newLast30 = newMemberCount(members, 30, now);
+
+    const expiringD7 = d7.members;
 
     // 가장 critical 신호 결정 (사장님 원칙: 행동 1개)
     let topAction: { kind: "critical" | "warning" | "good"; headline: string; action: string } | null = null;
@@ -132,7 +127,7 @@ export function FitnessRetentionCard({ ko, industryCategoryId }: Props) {
     }
 
     return {
-      active,
+      activeCount,
       expiringD7,
       expiringD30,
       retention30,
@@ -151,7 +146,7 @@ export function FitnessRetentionCard({ ko, industryCategoryId }: Props) {
           {ko ? "회원 Retention · 피트니스" : "Member Retention · Fitness"}
         </div>
         <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.6 }}>
-          {ko ? `활성 ${analysis.active.length}명` : `${analysis.active.length} active`}
+          {ko ? `활성 ${analysis.activeCount}명` : `${analysis.activeCount} active`}
         </span>
       </header>
 
