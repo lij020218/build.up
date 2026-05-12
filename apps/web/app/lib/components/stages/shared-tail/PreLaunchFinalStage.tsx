@@ -1345,6 +1345,94 @@ export function PreLaunchFinalStage() {
         </>
       )}
 
+      {/* ── 2026-05-12: 오프라인 사장님 — 오픈 후 첫 30일 운영 플레이북 ──
+          startup-tech 와 동일 깊이로 보강. offline 사장님 (음식·카페·뷰티·소매 등)
+          그랜드 오픈 후 무엇 할지 막막함 해소. */}
+      {!isStartup && !isOnline && (
+        <div style={{ marginTop: 18, padding: "20px 22px", borderRadius: 18, background: "linear-gradient(180deg, rgba(25,25,112,0.06) 0%, rgba(255,255,255,0.96) 100%)", border: "1px solid rgba(25,25,112,0.22)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#191970", opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+            ⚡ 오픈 후 첫 30일 — 가장 중요한 30일
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: 6 }}>
+            그랜드 오픈은 끝이 아니라 시작 — 첫 30일이 단골 비율을 결정
+          </div>
+          <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.6, marginBottom: 14 }}>
+            한국 외식업 폐업률 15.8% (2026) — 절반 이상이 첫 6개월 내. 첫 30일 단골화 실패가 핵심 원인. 매일 1개 액션으로 단골 비율 30%+ 만들기.
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+            {[
+              {
+                week: "Week 1",
+                focus: "단골 만들기 + 운영 안정화",
+                actions: [
+                  "신규 손님 100% 1:1 인사 (테이블·계산대 마다 본인 손으로)",
+                  "재방문 트리거 1개 — 첫 방문 시 「다음 방문 5천원 할인 쿠폰」 OR 단골 카드",
+                  "메뉴 매출 추적 시작 (POS) — 상위 5/하위 5 메뉴 식별",
+                  "직원 일일 미팅 (5분) — 어제 문제 + 오늘 우선순위",
+                  "POS·VAN·배달앱 결제 100% 정상 확인 (매일)",
+                  "리뷰 3개 목표 (네이버 플레이스·인스타·카카오맵)",
+                ],
+              },
+              {
+                week: "Week 2",
+                focus: "메뉴·서비스 검증 + 평일 가동률",
+                actions: [
+                  "고객 인터뷰 5명 (3분, 「오늘 만족도 + 다시 올지」 질문)",
+                  "평일·주말 매출 비율 분석 — 평일 < 주말 50% 면 평일 한정 메뉴 도입",
+                  "낭비 메뉴 (저마진+저인기) 식별 + 단종 결정",
+                  "원가율 첫 점검 — 식재료비 영수증 전체 합산 ÷ 매출",
+                  "직원 1-on-1 (15분 × 인원수) — 이슈·개선안 청취",
+                  "SNS 콘텐츠 2-3개/주 — 시그니처 메뉴·일상 비하인드 (인스타·네이버)",
+                ],
+              },
+              {
+                week: "Week 3",
+                focus: "재방문률 측정 + 마케팅 채널 시작",
+                actions: [
+                  "재방문률 첫 측정 (POS 충성고객 추적 또는 단골카드) — 목표 30%+",
+                  "재방문률 미달 → 메뉴·서비스 점검 (성장 마케팅 X)",
+                  "네이버 플레이스 광고 ON (재방문률 30%+ 이상일 때만) — 일 1만원부터",
+                  "배달앱 광고 ON (음식점만) — 노출 위주 + ROAS 추적",
+                  "인플루언서 1명 협업 시도 (지역 micro 1만 팔로워급, 메뉴 시식)",
+                  "고정비 한 달 결산 — 임대료 / 인건비 / 공과금 매출 대비 %",
+                ],
+              },
+              {
+                week: "Week 4",
+                focus: "정량 분석 + 다음 30일 결정",
+                actions: [
+                  "30일 종합: 매출 / 원가율 / 재방문률 / 영업이익률",
+                  "벤치마크 비교 (위 「2026 한국 SMB 운영 벤치마크」 표 참조)",
+                  "위험 신호 (재료비 40%+ OR 재방문 < 30%) 발견 시 → 「매출 부진 회복 플레이북」",
+                  "건강 신호 잡혔으면 → 단골 캠페인 강화 (재방문 60%+ 목표)",
+                  "Month 2 OKR 1개 + 측정 가능 지표 (예: 「재방문 35%」 OR 「영업이익 +5%p」)",
+                  "지원사업 신청 검토 — 매출 부진 시 재도전특별자금 (소진공)",
+                ],
+              },
+            ].map((w) => (
+              <div key={w.week} style={{ padding: "12px 14px", borderRadius: 12, background: "white", border: "1px solid rgba(25,25,112,0.10)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: "#191970", color: "#fff" }}>
+                    {w.week}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{w.focus}</span>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "rgba(15,23,42,0.7)", lineHeight: 1.65 }}>
+                  {w.actions.map((a, j) => (
+                    <li key={j}>{a}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", marginTop: 14, lineHeight: 1.55, padding: "10px 12px", borderRadius: 10, background: "rgba(5,150,105,0.05)", border: "1px solid rgba(5,150,105,0.18)" }}>
+            💡 <strong>30일 분기점</strong>: 재방문률 30%+ 잡혔으면 → 본격 마케팅 / 미달이면 → 메뉴·서비스·입지 재점검 (3-6개월 안에 결정). 한국 음식업 데이터: 단골 비율 40%+ 매장이 5년 생존율 80%+, 단골 비율 20% 미만은 첫 1년 폐업 위험.
+          </div>
+        </div>
+      )}
+
       <StageWrapup
         ko={ko}
         nextStageLabelKo="첫 달 점검"
