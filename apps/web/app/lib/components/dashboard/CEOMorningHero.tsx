@@ -8,12 +8,12 @@ import type { DashboardHook } from "../../useDashboard";
 import { CountUp } from "./animations";
 import { PALETTE, MOTION, CHART_COLORS } from "./operationalStyles";
 import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
-import { resolveHero, InsightStack, PRIORITY_META, resolveInsightCtaTarget, type Hero } from "./MorningBriefing";
+import { resolveHero, InsightStack, PRIORITY_META, resolveInsightCtaTarget, type Hero } from "./heroInsight";
 import { recordSignal } from "../../coaching-history";
 import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
 import { useCashflowStore } from "../../stores/cashflow-store";
-import { calculateHealthScore, type HealthScoreResult, type HealthScoreGrade } from "@build-up/shared";
+import { calculateHealthScore, type HealthScoreResult, type HealthScoreGrade, HEALTH_COLORS } from "@build-up/shared";
 
 // ─── North Star Metric 옵션 (사장님이 직접 고르는 단 1개 숫자) ────
 //  YC: "팀 전원이 외울 만큼 단 하나". 자동 (auto) 은 현재 로직 유지 (스타트업→런웨이, 외식→매출).
@@ -787,6 +787,80 @@ export function CEOMorningHero({ d }: Props) {
         {/* 오늘의 보고서 진입 버튼 — 영업 종료 후만 활성화 */}
         <DailyReportButton ko={ko} d={d} />
       </motion.div>
+
+      {/* ━━━ Row 1.5 — 다중 위험신호 박스 (2026-05-13 신규 / 구 MorningBriefing 이식) ━━━
+          HealthScore pill "78점" 옆에 "왜 그런지" 구체 도메인 신호 (cash/profit/efficiency/growth)
+          최대 3개. 데이터 충분 시: critical/warning 도메인의 worst component. 데이터 부족 시:
+          매출 vs 비용 극단 gap 단 1개만. brain.riskSignals 가 SSOT — 빈 배열이면 영역 자체 미렌더. */}
+      {brain.riskSignals.length > 0 && (
+        <motion.div variants={itemVariants} style={{
+          display: "grid",
+          gap: "8px",
+        }}>
+          {brain.riskSignals.map((s, i) => {
+            const c = HEALTH_COLORS[s.grade];
+            const gradeLabelKo: Record<typeof s.grade, string> = {
+              healthy: "건강", caution: "주의", warning: "위험", critical: "긴급", unknown: "확인 필요",
+            };
+            const gradeLabelEn: Record<typeof s.grade, string> = {
+              healthy: "Healthy", caution: "Caution", warning: "Warning", critical: "Critical", unknown: "Check",
+            };
+            return (
+              <div key={i} style={{
+                position: "relative",
+                borderRadius: "14px",
+                padding: "13px 15px 13px 16px",
+                background: c.bg,
+                border: `0.5px solid ${c.border}`,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "11px",
+              }}>
+                {/* 좌측 dot — glow 펄스 */}
+                <span style={{
+                  width: "9px", height: "9px", borderRadius: "50%",
+                  background: c.dot,
+                  boxShadow: `0 0 8px ${c.glow}, inset 0 0.5px 0 rgba(255,255,255,0.4)`,
+                  flexShrink: 0,
+                  marginTop: "5px",
+                }} aria-hidden="true" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    display: "flex", alignItems: "baseline", gap: "8px",
+                    marginBottom: "3px",
+                    flexWrap: "wrap" as const,
+                  }}>
+                    <span style={{
+                      fontSize: "13px", fontWeight: 700,
+                      color: c.text,
+                      letterSpacing: "-0.012em",
+                    }}>
+                      {s.title}
+                    </span>
+                    <span style={{
+                      fontSize: "10px", fontWeight: 700,
+                      color: c.text,
+                      opacity: 0.7,
+                      letterSpacing: "0.02em",
+                      textTransform: "uppercase" as const,
+                    }}>
+                      {ko ? gradeLabelKo[s.grade] : gradeLabelEn[s.grade]}
+                    </span>
+                  </div>
+                  <div style={{
+                    fontSize: "12.5px", fontWeight: 500,
+                    color: "rgba(15,23,42,0.7)",
+                    lineHeight: 1.5,
+                    letterSpacing: "-0.005em",
+                  }}>
+                    {s.message}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </motion.div>
+      )}
 
       {/* Row 2 — 메인 메트릭 + sparkline */}
       <motion.div variants={itemVariants} style={{

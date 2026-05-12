@@ -12,7 +12,8 @@ import { useIndustryInsight, type IndustryInsight } from "./useIndustryInsight";
 import { computeIndustryRule, type IndustryRuleResult } from "./useIndustryRuleSignal";
 import type { DailyEntry, MonthlyCosts } from "../useDashboard";
 import { getBusinessDay } from "../utils/business-day";
-import { calculateCostRatios } from "@build-up/shared";
+import { calculateCostRatios, calculateUnifiedHealthScore, type HealthGrade } from "@build-up/shared";
+import { honestDailyAverage } from "../utils/daily-windows";
 
 /**
  * ────────────────────────────────────────────────────────────────────────
@@ -83,6 +84,11 @@ export type MorningBriefingBrain = {
    *  종전 OfflineFounderBrief 별도 hero 카드 → Tier 1 hero 흡수 (Toast IQ·Amplitude 통합 패턴).
    *  resolveHero 가 anomaly 다음 (priority 1.6) 으로 사용. */
   industryRule: IndustryRuleResult;
+  /** 2026-05-13 추가 — 다중 위험신호 박스 (구 MorningBriefing 717-789 이식).
+   *  Hero 의 HealthScore pill (숫자 1개) 보완 — "왜 점수가 낮은지" 구체적 도메인 신호 최대 3개.
+   *  데이터 충분: unified.domains 중 critical/warning 영역 worst component
+   *  데이터 부족: 매출 vs 비용 극단 gap 등 명백한 사실 신호 */
+  riskSignals: Array<{ grade: HealthGrade; title: string; message: string }>;
 };
 
 export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain {
@@ -317,6 +323,105 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     });
   }, [entries, costs, monthlyBurn, salesTrend.changePct, d.industryCategoryId, ko]);
 
+  // ── 2026-05-13: 다중 위험신호 (구 MorningBriefing 717-789 이식) ──
+  //   Hero 의 HealthScore "78점" 같은 단일 숫자만 보고는 "무엇이 위험한지" 모름.
+  //   unified.domains (cash/profit/efficiency/growth) 중 critical/warning 도메인의
+  //   worst component 를 최대 3개 신호로 추출. 데이터 부족 시는 매출 vs 비용 극단 gap 만 표시.
+  const riskSignals = useMemo<Array<{ grade: HealthGrade; title: string; message: string }>>(() => {
+    const unified = calculateUnifiedHealthScore({
+      dailyEntries: entries,
+      monthlyCosts: costs,
+      industry: "general",
+      stage: "growth",
+    });
+    const signals: Array<{ grade: HealthGrade; title: string; message: string }> = [];
+    const totalCostsAll =
+      (costs.ingredients ?? 0) + (costs.labor ?? 0) + (costs.rent ?? 0) + (costs.utilities ?? 0) +
+      ((costs as { sga?: number }).sga ?? 0) +
+      ((costs as { marketing?: number }).marketing ?? 0) +
+      (costs.other ?? 0) +
+      ((costs as { interest?: number }).interest ?? 0);
+    const totalRev = entries.reduce((s, e) => s + e.sales, 0);
+
+    // 일 평균 — 경과 캘린더 일수 분모 (sparse 자동 보정)
+    const honestAvg = honestDailyAverage(entries, (e) => e.sales);
+    const days = honestAvg.denominator;
+
+    // ① 데이터 부족이라도 명백한 신호: 매출 vs 비용 극단 gap
+    if (!unified.ready && days > 0 && totalCostsAll > 0 && totalRev > 0) {
+      const monthEst = honestAvg.avg * 26; // 월 26영업일 가정
+      const ratio = monthEst / totalCostsAll;
+      const fmtWon = (v: number): string => {
+        if (ko) {
+          if (Math.abs(v) >= 100_000_000) return `${(v / 100_000_000).toFixed(1)}억`;
+          if (Math.abs(v) >= 10_000) return `${Math.round(v / 10_000)}만`;
+          return `${v.toLocaleString("ko-KR")}원`;
+        }
+        if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+        if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+        return v.toLocaleString("en-US");
+      };
+      if (ratio < 0.3 && totalCostsAll > 100000) {
+        signals.push({
+          grade: "critical",
+          title: ko ? "매출이 비용 대비 너무 적어요" : "Revenue much lower than costs",
+          message: ko
+            ? `이 페이스라면 월 매출 추정 ${fmtWon(Math.round(monthEst))}, 월 비용 ${fmtWon(totalCostsAll)} — 비용의 ${Math.round(ratio * 100)}% 수준. 매출 확보가 가장 시급합니다.`
+            : `Projected monthly revenue ${fmtWon(Math.round(monthEst))} vs costs ${fmtWon(totalCostsAll)} — only ${Math.round(ratio * 100)}% of costs.`,
+        });
+      } else if (ratio >= 0.3 && ratio < 0.7) {
+        signals.push({
+          grade: "warning",
+          title: ko ? "매출이 비용을 못 따라가요" : "Revenue lagging costs",
+          message: ko
+            ? `현재 페이스로 월 비용의 ${Math.round(ratio * 100)}%만 매출. 이 추세가 한 달 이어지면 적자가 ${fmtWon(Math.round(totalCostsAll - monthEst))} 쌓여요.`
+            : `On pace for ${Math.round(ratio * 100)}% of costs. A month at this pace = ${fmtWon(Math.round(totalCostsAll - monthEst))} loss.`,
+        });
+      }
+    }
+
+    // ② 데이터 충분: unified.domains 의 critical/warning 영역 worst component
+    if (unified.ready) {
+      const order: Array<"cash" | "profit" | "efficiency" | "growth"> = ["cash", "profit", "efficiency", "growth"];
+      const titleByDomain: Record<string, { ko: string; en: string }> = {
+        cash:       { ko: "현금 흐름 위험",   en: "Cash flow risk" },
+        profit:     { ko: "수익성 위험",       en: "Profitability risk" },
+        efficiency: { ko: "비용 효율 위험",   en: "Cost efficiency risk" },
+        growth:     { ko: "성장 둔화",         en: "Growth slowdown" },
+      };
+      const formatValue = (name: string, value: number): string => {
+        if (!Number.isFinite(value)) return "—";
+        if (name.includes("런웨이") || name.toLowerCase().includes("runway"))
+          return ko ? `${value.toFixed(1)}개월` : `${value.toFixed(1)}mo`;
+        if (name.includes("이자보상") || name.includes("배율"))
+          return `×${value.toFixed(1)}`;
+        if (name.includes("성장률") || name.includes("growth"))
+          return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+        return `${value.toFixed(1)}%`;
+      };
+      for (const key of order) {
+        const dm = unified.domains[key];
+        if (dm.grade !== "critical" && dm.grade !== "warning") continue;
+        const worst = dm.components
+          .filter((c) => Number.isFinite(c.score))
+          .sort((a, b) => a.score - b.score)[0];
+        if (!worst) continue;
+        const headline = titleByDomain[key][ko ? "ko" : "en"];
+        const valueText = formatValue(worst.name, worst.value);
+        signals.push({
+          grade: dm.grade,
+          title: headline,
+          message: ko
+            ? `${worst.name} ${valueText} — 영역 점수 ${Math.round(dm.score)}점`
+            : `${worst.name} ${valueText} — domain score ${Math.round(dm.score)}`,
+        });
+        if (signals.length >= 3) break;
+      }
+    }
+
+    return signals.slice(0, 3);
+  }, [entries, costs, ko]);
+
   return {
     hasNoData: entries.length === 0,
     cashflowCrisis,
@@ -336,5 +441,6 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     weeklyChangePct: salesTrend.changePct,
     costRatioTrend,
     industryRule,
+    riskSignals,
   };
 }
