@@ -561,6 +561,97 @@ export function GoLiveStage() {
       {/* 빌드 방법 가이드 모달 */}
       <BuildMethodDialog taskId={methodDialogTaskId} onClose={() => setMethodDialogTaskId(null)} />
 
+      {/* ── 2026-05-12: 출시 후 첫 30일 플레이북 (런칭 = 시작, 끝 X) ── */}
+      <div style={{ marginTop: 18, padding: "20px 22px", borderRadius: 18, background: `linear-gradient(180deg, ${MIDNIGHT}06 0%, rgba(255,255,255,0.96) 100%)`, border: `1px solid ${MIDNIGHT}22` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+          ⚡ 출시 후 첫 30일 플레이북 — 가장 중요한 30일
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: 6 }}>
+          {ko ? "런칭은 끝이 아니라 시작 — 첫 30일이 PMF 신호를 결정합니다" : "Launch is the start, not the end — first 30 days decide PMF signal"}
+        </div>
+        <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.6, marginBottom: 14 }}>
+          {ko
+            ? '벤치마크 (2026): **활성화 24h 내 61% 표준** · 자가서비스 TTV 12분 · 영업주도 TTV 2일. 첫 30-60일 "high-touch" 가 전환율을 결정 — 작은 팀의 장점은 모든 prospect 에게 직접 응대 가능한 것.'
+            : 'Benchmarks 2026: 61% activate within 24h · self-serve TTV 12 min · sales-led 2 days. First 30-60 days "high-touch" determines conversion — small team advantage is personal attention to every prospect.'}
+        </div>
+
+        {/* 주차별 액션 */}
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+          {[
+            {
+              week: "Week 1",
+              focus: "Activation 추적 + 1:1 응대",
+              tone: MIDNIGHT,
+              actions: [
+                "신규 가입자 100% 환영 메일 (24h 내, 본인 손으로 — 자동화 X)",
+                "탑 50 supporter 와 founder call 일정 (15분 zoom)",
+                "Activation 이벤트 정의 (예: 첫 핵심 워크플로 완료) + PostHog 추적",
+                "활성화율 < 50% 면 onboarding 흐름 즉시 수정",
+                "PH·HN·트위터 댓글 100% 답변 (48h 내)",
+                "에러 대시보드 (Sentry) 매일 아침 + 저녁 확인",
+              ],
+            },
+            {
+              week: "Week 2",
+              focus: "전환·결제 + 케이스 스터디 시작",
+              tone: MIDNIGHT,
+              actions: [
+                "Free → Paid 트리거 모니터 (Stripe 대시보드 매일)",
+                "활성 사용자 5명에 case-study 인터뷰 요청 (블로그·트위터 콘텐츠화)",
+                "이탈 사용자 직접 메일 (\"왜 안 쓰셨어요?\" 30%+ 응답률)",
+                "Cohort retention 차트 첫 측정 — D1·D7 데이터 첫 신호",
+                "프라이싱 페이지 A/B 실험 시작 (Stripe Pricing Tables)",
+                "트위터·LinkedIn 출시 후 인사이트 1포스트/일",
+              ],
+            },
+            {
+              week: "Week 3",
+              focus: "PMF 첫 신호 + 분배 확장",
+              tone: MIDNIGHT,
+              actions: [
+                "Sean Ellis 40% 테스트 — 활성 사용자 30+명에게 survey (pmfsurvey.com)",
+                "PMF 임계 미달이면 ICP 좁히기·문제 재정의 (성장보다 제품 개선)",
+                "G2·Capterra·AlternativeTo·SaaSHub 등재 (5-10 디렉토리)",
+                "Pillar SEO 콘텐츠 1편 출판 (3,000자+, 핵심 키워드 1개)",
+                "/llms.txt + Schema.org JSON-LD 셋업 (AI Discovery 최적화)",
+                "두 번째 채널 launch (Reddit·관련 sub 또는 디스콰이엇 빌드로그)",
+              ],
+            },
+            {
+              week: "Week 4",
+              focus: "정량 분석 + 다음 30일 결정",
+              tone: MIDNIGHT,
+              actions: [
+                "30일 메트릭 종합: ARR·MRR·activation%·D30 retention·CAC·churn",
+                "벤치마크 비교 (D30 B2B 40%+ / B2C 15%+)",
+                "Support ticket·churn 사유 분석 — 반복 패턴 = 다음 PR 우선순위",
+                "Pivot 결정 게이트: PMF 신호 약하면 ICP·문제 다시. 강하면 분배 가속.",
+                "투자 라운드 시그널 준비 — runway 18+개월이면 grow / 미만이면 raise",
+                "Month 2 OKR 1개 + 측정 가능 메트릭 (다음 30일 결정)",
+              ],
+            },
+          ].map((w, i) => (
+            <div key={w.week} style={{ padding: "12px 14px", borderRadius: 12, background: "white", border: `1px solid ${MIDNIGHT}1A` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: w.tone, color: "#fff" }}>
+                  {w.week}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{w.focus}</span>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "rgba(15,23,42,0.7)", lineHeight: 1.65 }}>
+                {w.actions.map((a, j) => (
+                  <li key={j}>{a}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", marginTop: 14, lineHeight: 1.55, padding: "10px 12px", borderRadius: 10, background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.18)" }}>
+          💡 <strong>30일 후 분기점</strong>: PMF 신호 (Sean Ellis 40%+ 또는 retention curve 평평) 잡혔으면 → <strong>성장 엔진 단계</strong>로 진입. 신호 없으면 → ICP 재정의 + 문제 재검증 (피벗 결정 3-6개월 안에).
+        </div>
+      </div>
+
       <StageWrapup
         ko={ko}
         nextStageLabelKo="성장 엔진"

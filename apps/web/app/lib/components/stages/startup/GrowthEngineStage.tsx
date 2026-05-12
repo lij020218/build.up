@@ -291,6 +291,176 @@ export function GrowthEngineStage() {
       </div>
       )}
 
+      {/* ── 2026-05-12: PMF 측정 프레임워크 (Sean Ellis 40% 테스트 + 리텐션 커브) ── */}
+      <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "white", border: "1px solid rgba(25,25,112,0.10)", boxShadow: "0 1px 3px rgba(15,23,42,0.04)" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+          🎯 PMF 측정 — 진짜 PMF 됐는지 확인하는 2가지 방법
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 10 }}>
+          {ko ? '"우리 제품이 PMF 됐을까?" — 감이 아니라 *데이터*로 답하세요' : "Is your product PMF — answer with data, not feel"}
+        </div>
+
+        {/* Sean Ellis 40% 테스트 */}
+        <div style={{ marginBottom: 14, padding: "12px 14px", borderRadius: 12, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.10)" }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: MIDNIGHT, marginBottom: 6 }}>
+            ① Sean Ellis 40% 테스트 (정성 — survey 1개 질문)
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.7)", lineHeight: 1.6, marginBottom: 8 }}>
+            {ko
+              ? '활성 사용자 30+명에게 *단 1개* 질문: **"이 제품을 더 이상 쓸 수 없다면 어떻게 느끼실까요?"** ① 매우 실망 / ② 다소 실망 / ③ 실망 안 함. **40%+ 가 ①번 = PMF 달성**. 수백 스타트업 데이터로 검증된 임계값.'
+              : 'Ask 30+ active users *one* question: "How would you feel if you could no longer use [product]?" ① Very disappointed / ② Somewhat / ③ Not. **40%+ ① = PMF achieved**. Validated across hundreds of startups.'}
+          </div>
+          <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.55 }}>
+            <strong>2026 적용</strong>: ① 분기마다 재측정 (시장 변함) ② 세그먼트 분리 (전체 평균은 거짓말) ③ ICP만 골라 측정 (전체 사용자가 아닌 핵심 ICP의 40%)
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <a href="https://pmfsurvey.com/" target="_blank" rel="noreferrer" style={{ fontSize: 11.5, fontWeight: 600, color: MIDNIGHT, textDecoration: "underline" }}>
+              pmfsurvey.com — Sean Ellis 공식 무료 도구
+            </a>
+          </div>
+        </div>
+
+        {/* 리텐션 커브 */}
+        <div style={{ marginBottom: 14, padding: "12px 14px", borderRadius: 12, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.10)" }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: MIDNIGHT, marginBottom: 6 }}>
+            ② 리텐션 커브 (정량 — cohort 차트가 평평해지는가?)
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>
+            {ko
+              ? "월별 cohort 의 활성 사용자 비율 차트를 그렸을 때 — **시간이 지나도 20-50% 선에서 평평해지는지** 확인. 0으로 떨어지면 PMF X. PostHog/Mixpanel/Amplitude 모두 cohort retention 표준 차트 제공."
+              : "Plot active users by cohort over time. **Flat-line at 20-50% = PMF**. Drops to 0 = no PMF. PostHog/Mixpanel/Amplitude all have standard cohort retention charts."}
+          </div>
+        </div>
+
+        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", padding: "10px 12px", borderRadius: 10, background: "rgba(217,119,6,0.06)", border: "1px solid rgba(217,119,6,0.18)", lineHeight: 1.55 }}>
+          ⚠ <strong>임계 미만이면 절대 성장 마케팅 X</strong> — 깨진 양동이에 물 붓는 격. 제품 개선·새 ICP 탐색에 집중. Marc Andreessen: "The only thing that matters is getting to product/market fit. Before, nothing else matters. After, almost nothing else matters."
+        </div>
+      </div>
+
+      {/* ── 2026-05-12: 2026 B2B SaaS 벤치마크 (사장님 자기 진단용 — Recurly·OpenView·Bessemer 검증) ── */}
+      <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "white", border: "1px solid rgba(25,25,112,0.10)", boxShadow: "0 1px 3px rgba(15,23,42,0.04)" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+          📊 2026 B2B SaaS 벤치마크 — 내가 잘 가고 있는지
+        </div>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 12 }}>
+          {ko ? "본인 지표를 이 표와 비교 — 시드 단계 기준" : "Compare your metrics — seed-stage benchmarks"}
+        </div>
+        <div style={{ overflow: "auto" as const }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: "rgba(25,25,112,0.06)" }}>
+                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>지표</th>
+                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>중앙값</th>
+                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "#059669", fontSize: 11.5 }}>Top quartile</th>
+                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "rgba(15,23,42,0.55)", fontSize: 11.5 }}>주의</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { metric: "LTV:CAC 비율", median: "3:1", top: "4-6:1", note: "2:1 미만 = 적자 구조" },
+                { metric: "NRR (순수 매출 유지)", median: "106%", top: "130%+", note: "100% 미만 = 매출 새는 중" },
+                { metric: "CAC 회수기간", median: "8.6개월", top: "<6개월", note: "12개월+ = 재정 부담" },
+                { metric: "월 churn (B2B)", median: "3.5%", top: "<2%", note: "voluntary 2.6% + involuntary 0.8%" },
+                { metric: "D30 리텐션 (B2B)", median: "40%+", top: "60%+", note: "10% 미만 = PMF 미달" },
+                { metric: "Burn multiple", median: "<2x", top: "<1x", note: "Net new ARR 대비 burn" },
+                { metric: "Early ARR (<$2M) LTV:CAC", median: "2.5:1", top: "3:1", note: "120일 payback" },
+                { metric: "Growth ($2-10M) LTV:CAC", median: "3-4:1", top: "5:1", note: "90일 payback" },
+              ].map((b, i) => (
+                <tr key={b.metric} style={{ borderTop: i === 0 ? "none" : "1px solid rgba(25,25,112,0.06)" }}>
+                  <td style={{ padding: "8px 10px", color: "#0f172a", fontWeight: 600 }}>{b.metric}</td>
+                  <td style={{ padding: "8px 10px", color: MIDNIGHT, fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{b.median}</td>
+                  <td style={{ padding: "8px 10px", color: "#059669", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{b.top}</td>
+                  <td style={{ padding: "8px 10px", color: "rgba(15,23,42,0.55)", fontSize: 11 }}>{b.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(15,23,42,0.5)", marginTop: 10, lineHeight: 1.5 }}>
+          출처: Recurly 2025·OpenView 2026·Bessemer State of the Cloud 2026·Pepper Effect 2026
+        </div>
+      </div>
+
+      {/* ── 2026-05-12: 실패 회복 플레이북 — "막혔어, 어떻게?" 4 시나리오 ── */}
+      <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "white", border: "1px solid rgba(220,38,38,0.18)", boxShadow: "0 1px 3px rgba(220,38,38,0.04)" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+          🆘 막혔을 때 — 실패 회복 플레이북
+        </div>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 4 }}>
+          {ko ? "스타트업이 죽는 이유 톱 3 — CB Insights 2026" : "Top 3 reasons startups die — CB Insights 2026"}
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", marginBottom: 12, lineHeight: 1.55 }}>
+          {ko
+            ? "431개 폐업 분석: ① PMF 못 찾음 (43%) ② 타이밍 (29%) ③ 단위 경제 (19%) ④ 자본 소진 (70%, 단 대부분 위 셋의 결과). 중앙값 22개월 만에 사망. 80%+ 가 \"실패 후 다시 창업\"."
+            : "431 deaths analyzed: ① No PMF (43%) ② Bad timing (29%) ③ Unit economics (19%) ④ Out of capital (70%, usually downstream). Median 22 mo to death. 80%+ try again."}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+          {[
+            {
+              icon: "👻",
+              scenario: "MVP 만들었는데 아무도 안 써",
+              cause: "ICP 잘못·문제 잘못·시간 잘못",
+              actions: [
+                "ICP 다시 — 너무 broad? 1개 페르소나로 좁히기",
+                "고객 인터뷰 10명 (구매 의향 + 현재 어떻게 해결하는지)",
+                "Sean Ellis 40% 테스트 — 임계 미달이면 제품 피벗",
+                "Pivot 또는 Kill — 3-6개월 안에 결정",
+              ],
+            },
+            {
+              icon: "💸",
+              scenario: "투자 거절 — 시드 못 받음",
+              cause: "유사 회사 이미 있음·traction 부족·deck 약함",
+              actions: [
+                "왜 거절했는지 직접 물어보기 (3명 이상 같은 이유 = 진짜 문제)",
+                "비지분 자금 우선: 예비창업 1억·청년창업사관학교·TIPS",
+                "친구·가족·엔젤 라운드 (1-3명 × 5천만~1억)",
+                "$10K MRR 도달 후 재시도 (그때는 거절이 거의 없음)",
+              ],
+            },
+            {
+              icon: "👥",
+              scenario: "공동창업자랑 갈등",
+              cause: "역할 불명·지분 불공평·비전 불일치",
+              actions: [
+                "1-on-1 정직 대화 (3rd party mediator 권장)",
+                "역할·책임·캐스팅보트 서면화 (Notion/Google Doc)",
+                "지분 재분배 + vesting 가속 가능성 검토",
+                "최악: clean break — vested 지분 회수 + 빠른 이탈",
+              ],
+            },
+            {
+              icon: "📉",
+              scenario: "Product Hunt 실패·런칭 후 데드 사일런스",
+              cause: "분배 빌드 부족·메시지 약함·타이밍 나쁨",
+              actions: [
+                "1주 후 ConvertKit / Substack 으로 베타 유저 50명 직접 메일",
+                "콘텐츠 분배 6주 캘린더 다시 — 트위터·LinkedIn 1일 1포스트",
+                "디스콰이엇·Show HN·Reddit (관련 sub) 단계 launch",
+                "직접 영업 50건 — 1-on-1 demo 콜드",
+              ],
+            },
+          ].map((s) => (
+            <div key={s.scenario} style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(220,38,38,0.03)", border: "1px solid rgba(220,38,38,0.12)" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#b91c1c", marginBottom: 2 }}>
+                {s.icon} {s.scenario}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginBottom: 6, fontStyle: "italic" as const }}>
+                원인: {s.cause}
+              </div>
+              <ol style={{ margin: 0, paddingLeft: 18, fontSize: 11.5, color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>
+                {s.actions.map((a, i) => (
+                  <li key={i}>{a}</li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 12, lineHeight: 1.55, padding: "8px 10px", borderRadius: 8, background: "rgba(15,23,42,0.03)" }}>
+          💡 <strong>핵심 진실</strong>: 죽음의 평균 시점은 마지막 펀딩 후 22개월 — 자금 소진 직전 3-6개월에 위 4가지 중 하나가 일어남. 통계상 80%+ 의 사장님이 실패 후에도 다시 창업. 막혔다고 끝이 아닙니다.
+        </div>
+      </div>
+
       <StageWrapup
         ko={ko}
         nextStageLabelKo="펀드레이징 준비"
