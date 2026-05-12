@@ -54,17 +54,24 @@ hooks/
 
 ## Tier 1.5 — 코칭 (오늘 무엇을 하나)
 
+> **분기 표준 (Phase 2a 추가)**: `industry-card-matrix.ts` SSOT — `showByMatrix(cardId)`
+> 가 hide() + shouldShowCardByIndustry() 합쳐 결정. 200+ 자료 검증.
+
 | 위치 | 카드 | 파일 | 분기 |
 |---|---|---|---|
-| 1.5 (a) | 오늘의 운영 리추얼 (DailyOpsRitual) | `Tier1_5Coaching.tsx` | 모두 |
-| 1.5 (a-1) | **재고 운영 + 팀 현황** (InventoryOps + Team) | `Tier1_5Coaching.tsx` | wide=2-up · narrow=stacked. 재고는 showInventoryCard·!subs |
-| 1.5 (a-2) | **식약처 위생점검 대비** (FoodSafety) | `Tier1_5Coaching.tsx` | food / cafe-dessert 만 |
-| 1.5 (a-3) | **Prime Cost (식자재+인건비)** | `Tier1_5Coaching.tsx` | food / cafe-dessert 만. 외식 글로벌 1순위 KPI (Sage·NetSuite·Toast). 2026-05-11 추가 |
-| 1.5 (b) | 오늘의 작은 개선 (DailyImprovement) | `Tier1_5Coaching.tsx` | 모두 |
-| 1.5 (b-2) | **객단가 업셀 제안** (AvgTicketUpsell) | `Tier1_5Coaching.tsx` | food/cafe/beauty/retail/fitness/education |
-| 1.5 (c-1) | **정책자금 자동 매칭 (평상시·위기 통합)** | `Tier1_5Coaching.tsx` | 항상 노출. 위기 시 isCrisis=true 톤 변경. monthlyCosts.interest 있으면 대환 절감 미리보기 |
-| 1.5 (c) | 스타트업 전용 핵심 지표 (StartupHealth) | `Tier1_5Coaching.tsx` | startup-tech 만 |
-| 1.5 (c-3) | **SaaS 핵심 지표 / 구독제 활성화 안내** (SaaSKeyMetricsCard / SubscriptionEnableNudge) | `Tier1_5Coaching.tsx` | startup-tech 한정. 2026-05-11 Tier 3 접힘에서 승격 (CBInsights PMF 43% 갭) |
+| 1.5 (top) | **자동 데이터 연동 허브** (IntegrationHub) | `Tier1_5Coaching.tsx` | universal — 사장님 hide 가능 (2026-05-12 추가). 향후 마이페이지로 이동 검토 |
+| 1.5 (top) | **코칭 누적 일지 14일** (CoachingHistory) | `Tier1_5Coaching.tsx` | universal — Supabase mirror + 30일 메타 인사이트 (Phase 1a) |
+| 1.5 (a) | 오늘의 운영 리추얼 (DailyOpsRitual) | `Tier1_5Coaching.tsx` | universal |
+| 1.5 (a-1) | **재고 운영 + 팀 현황** (InventoryOps + Team) | `Tier1_5Coaching.tsx` | 업종 matrix: 재고=식당·카페·소매·이커머스·펫·공간 / 팀=대부분 업종. wide=2-up · narrow=stacked |
+| 1.5 (a-2) | **식약처 위생점검 대비** (FoodSafety) | `Tier1_5Coaching.tsx` | food / cafe-dessert 만 (showByMatrix) |
+| 1.5 (a-3) | **Prime Cost (식자재+인건비)** | `Tier1_5Coaching.tsx` | food / cafe-dessert 만 (showByMatrix). 외식 글로벌 1순위 KPI (Sage·NetSuite·Toast) |
+| 1.5 (b/b-2) | **DailyImprovement vs AvgTicketUpsell** (매출 추세 분기) | `Tier1_5Coaching.tsx` | 동시 노출 X. WoW -5%~+5% (정체) → AvgTicketUpsell. 그 외 → DailyImprovement. (2026-05-12 추가) |
+| 1.5 (c-1) | **정책자금 자동 매칭** | `Tier1_5Coaching.tsx` | universal. 위기 시 isCrisis=true 톤 변경 |
+| 1.5 (s-1) | **Cash Zero Date + 채용 시뮬레이터 ⭐** | `Tier1_5Coaching.tsx` | startup-tech 만. 실리콘밸리 2026 daily KPI #1 (Mercury·Puzzle·Bessemer) |
+| 1.5 (c) | **AI 공동창업자 데일리 브리프 ⭐** (StartupFounderBrief) | `Tier1_5Coaching.tsx` | startup-tech 만. 런웨이·burn·CMGR·Rule of 40 5-신호 룰엔진 |
+| 1.5 (c-2) | 스타트업 전용 핵심 지표 (StartupHealth + ARR/FTE 셀) | `Tier1_5Coaching.tsx` | startup-tech 만. 2026-05-12 ARR/FTE (SaaStr "$500K=새 $200K") 6번째 셀 흡수 |
+| 1.5 (c-3) | **SaaS 핵심 지표 / 구독제 활성화** | `Tier1_5Coaching.tsx` | startup-tech 한정. CBInsights PMF 43% 갭 |
+| ~~1.5~~ | ~~OfflineFounderBrief~~ → **CEOMorningHero 통합** (2026-05-12 Phase 1a, Toast IQ·Amplitude·Mercury 통합 패턴) |  |  |
 
 ## Tier 2 — 이번 주 점검 (DeepDive)
 
@@ -120,6 +127,36 @@ hooks/
 | 모달 | Calendar Modal | `OperationalDashboard.tsx` (orchestrator) |
 
 ---
+
+## 운영 대시보드 목적 (2026-05-12 사장님 명문화)
+
+> **단순 보여주기 X — 사장님이 *현 상황 파악 → 대비 → 다음 행동 개시* 가능**
+
+3-step 매핑:
+- **상황 파악**: CEOMorningHero (AI 해석 hero) + ActivitySnapshot (매출 raw) — 2 hero 패턴
+- **대비**: CashflowHero (런웨이) + PLHero (손익) — supporting + Cashflow13Week (Tier 2)
+- **행동**: CEOMorningHero 내부 단일 우선순위 + DailyOpsRitual + DailyImprovement/AvgTicketUpsell (분기)
+
+## 업종 라우터 (Phase 2a, 200+ 자료 검증)
+
+SSOT: `industry-card-matrix.ts` — 11 업종 × 30 카드 매핑.
+
+| 업종 | 매일 노출 카드 수 (universal 8 + 업종 추가) |
+|---|---|
+| food (외식) | 12 (food-safety·prime-cost·inventory·team·daily-improvement·policy-fund) |
+| cafe-dessert | 12 (food-safety·prime-cost·cafe-hourly*·team·upsell·policy-fund) |
+| beauty | 11 (beauty-booking*·team·upsell·saas·improvement·policy-fund) |
+| retail | 11 (retail-sell-through*·inventory·upsell·team·improvement·policy-fund) |
+| ecommerce | 10 (ecommerce-conversion*·inventory·upsell·improvement·policy-fund) |
+| fitness | 11 (fitness-retention*·team·saas·upsell·improvement·policy-fund) |
+| education | 10 (education-enrollment*·team·saas·improvement·policy-fund) |
+| pet | 12 (pet-booking*·inventory·team·upsell·improvement·policy-fund) |
+| living-service | 9 (living-dispatch*·team·improvement·policy-fund) |
+| space | 9 (space-occupancy*·inventory·improvement·policy-fund) |
+| online-digital | 9 (online-metrics*·saas·improvement·policy-fund) |
+| startup-tech | 13 (cash-zero-date·startup-founder-brief·startup-health·saas·policy-fund) |
+
+*: 신규 카드 status="planned" — Phase 2b-l 작성 예정 (matrix 슬롯만 예약).
 
 ## 사장님 카드 표시 설정 (2026-05-11 추가)
 

@@ -168,17 +168,10 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
     industryHint: "history",
   },
-  {
-    // 2026-05-12 데이터 입력 마찰 0 — 업종별 자동 연동 채널 (네이버 커머스/예약·GA4·
-    //   Stripe·카드사·POS) 카탈로그 + 1-click 연결 (v1 placeholder).
-    id: "integration-hub",
-    labelKo: "자동 데이터 연동 허브 ⭐",
-    labelEn: "Data Auto-Sync Hub ⭐",
-    hintKo: "수기 입력 그만 — 업종별 자동 연동 채널 (네이버 커머스/예약·GA4·Stripe·카드사·POS) 1-click 연결",
-    hintEn: "Stop manual entry — 1-click auto-sync (Naver Commerce/Booking, GA4, Stripe, card, POS)",
-    category: "coaching",
-    industryHint: "data",
-  },
+  // 2026-05-13 Phase 2: integration-hub 마이페이지 이동 — profile/ 폴더에 이미
+  //   PortOne·CODEF·TossPlace·Popbill·CSV·SaasMetrics·SubscriptionWebhook 개별
+  //   OAuth 카드 모두 존재. 대시보드 hero 영역 셋업 카드 차지 X. meta entry 제거.
+  //   (IntegrationHubCard.tsx 파일 자체는 별도 PR 삭제)
   // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.
