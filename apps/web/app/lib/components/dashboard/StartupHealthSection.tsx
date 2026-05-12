@@ -249,6 +249,42 @@ export function StartupHealthSection({ ko = true }: { ko?: boolean }) {
           </div>
         </div>
       )}
+
+      {/* 2026-05-13 Phase 2 — AI-native 벤치마크 note (실리콘밸리 2026 보강).
+          30+ 자료 (ICONIQ·a16z·SaaStr·Bessemer·SaaSMag·Datadrivenvc) 합의:
+          AI economics ≠ SaaS economics. 기존 메트릭의 *임계값* 이 달라짐.
+          사장님 *자가 판단* 가능하도록 caption note (별도 카드 X — 인지 부하 고려). */}
+      <div style={aiNativeNote}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+            AI-native 사장님 (gross margin &gt;80%) 벤치마크
+          </span>
+          <span style={{
+            fontSize: 9.5, fontWeight: 700, padding: "1px 7px", borderRadius: 999,
+            background: `${MIDNIGHT}15`, color: MIDNIGHT, letterSpacing: "0.04em",
+          }}>2026 SV</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          <div style={aiNoteCell}>
+            <div style={aiNoteLabel}>Rule of 60</div>
+            <div style={aiNoteValue}>growth% + FCF margin%</div>
+            <div style={aiNoteHint}>15x EV/Rev 멀티플 trigger (Rule of 40 후속)</div>
+          </div>
+          <div style={aiNoteCell}>
+            <div style={aiNoteLabel}>Burn Multiple</div>
+            <div style={aiNoteValue}>AI 0.4x · non-AI 1.8x</div>
+            <div style={aiNoteHint}>ICONIQ Jan 2026 (vs Sacks 기존 &lt;2x)</div>
+          </div>
+          <div style={aiNoteCell}>
+            <div style={aiNoteLabel}>Cost per Token</div>
+            <div style={aiNoteValue}>inference % of rev</div>
+            <div style={aiNoteHint}>NVIDIA 2026 daily KPI · scaling 평균 23%</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 10.5, color: TEXT_MUTED, marginTop: 8, lineHeight: 1.5 }}>
+          AI-native (gross margin &gt;80%) 사장님은 위 임계값으로 재해석. 출처: ICONIQ State of GTM 2026 · Datadrivenvc · a16z · NVIDIA · SaaStr "$500K=새 $200K"
+        </div>
+      </div>
     </section>
   );
 }
@@ -402,6 +438,43 @@ const dot: React.CSSProperties = {
   borderRadius: "50%",
   flexShrink: 0,
   display: "inline-block",
+};
+
+const aiNativeNote: React.CSSProperties = {
+  padding: "12px 14px",
+  borderRadius: `${RADIUS.INNER_BLOCK}px`,
+  background: `linear-gradient(135deg, ${MIDNIGHT}05 0%, ${MIDNIGHT}10 100%)`,
+  border: `1px solid ${MIDNIGHT}15`,
+};
+
+const aiNoteCell: React.CSSProperties = {
+  padding: "8px 10px",
+  borderRadius: 8,
+  background: SURFACE_CARD,
+  border: `1px solid ${HAIRLINE}`,
+};
+
+const aiNoteLabel: React.CSSProperties = {
+  fontSize: 9.5,
+  fontWeight: 700,
+  color: MIDNIGHT,
+  letterSpacing: "0.05em",
+  textTransform: "uppercase",
+  marginBottom: 3,
+};
+
+const aiNoteValue: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: MIDNIGHT_DEEP,
+  letterSpacing: "-0.01em",
+  marginBottom: 2,
+};
+
+const aiNoteHint: React.CSSProperties = {
+  fontSize: 10,
+  color: TEXT_MUTED,
+  lineHeight: 1.4,
 };
 
 const topAlert: React.CSSProperties = {
