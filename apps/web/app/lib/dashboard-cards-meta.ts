@@ -21,7 +21,7 @@ export type DashboardCardMeta = {
   /** true = 사용자가 숨길 수 없는 핵심 카드 */
   essential?: boolean;
   /** 어느 업종에 의미 있는지 — 사장님이 본인과 무관한 카드 안 보게 자동 분기. UI 표시용 힌트도 겸함. */
-  industryHint?: "food" | "cafe-dessert" | "startup-tech" | "all" | "subscription" | "offline";
+  industryHint?: "food" | "cafe-dessert" | "startup-tech" | "all" | "subscription" | "offline" | "data";
 };
 
 export const DASHBOARD_CARDS: DashboardCardMeta[] = [
@@ -156,6 +156,17 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     hintKo: "사장님 프로필에 맞는 2026 정책자금 + 부채 있으면 대환 시뮬",
     hintEn: "Policy fund auto-match + refinance sim if debt",
     category: "coaching",
+  },
+  {
+    // 2026-05-12 데이터 입력 마찰 0 — 업종별 자동 연동 채널 (네이버 커머스/예약·GA4·
+    //   Stripe·카드사·POS) 카탈로그 + 1-click 연결 (v1 placeholder).
+    id: "integration-hub",
+    labelKo: "자동 데이터 연동 허브 ⭐",
+    labelEn: "Data Auto-Sync Hub ⭐",
+    hintKo: "수기 입력 그만 — 업종별 자동 연동 채널 (네이버 커머스/예약·GA4·Stripe·카드사·POS) 1-click 연결",
+    hintEn: "Stop manual entry — 1-click auto-sync (Naver Commerce/Booking, GA4, Stripe, card, POS)",
+    category: "coaching",
+    industryHint: "data",
   },
   {
     // 2026-05-12 킬러 기능: AI 운영 코치 데일리 브리프 — *해석* 레이어 (offline 90%+ 사용자)

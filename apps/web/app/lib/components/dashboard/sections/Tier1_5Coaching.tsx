@@ -26,6 +26,7 @@ import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { StartupHealthSection } from "../StartupHealthSection";
 import { StartupFounderBrief } from "../StartupFounderBrief";
 import { OfflineFounderBrief } from "../OfflineFounderBrief";
+import { IntegrationHubCard } from "../IntegrationHubCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
 import { TeamCard } from "../TeamCard";
 import { PrimeCostCard } from "../PrimeCostCard";
@@ -73,6 +74,17 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       {!c.isStartupCompany && !hide("offline-founder-brief") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <OfflineFounderBrief ko={ko} />
+        </div>
+      )}
+
+      {/* 2026-05-12 데이터 입력 마찰 0 — 자동 연동 허브
+          사장님 수기 입력 의존도가 가장 큰 약점 (캐시노트 카드사 자동연동 우위).
+          업종별 (네이버 커머스/예약, GA4, Stripe, 카드사, POS) 채널 카탈로그 노출 →
+          1-click 연동 (v1 placeholder, v2 OAuth). FounderBrief 의 "data not ready"
+          신호가 켜졌을 때 바로 다음 카드에서 *해결 경로* 를 보여줌. */}
+      {!hide("integration-hub") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <IntegrationHubCard ko={ko} />
         </div>
       )}
 
