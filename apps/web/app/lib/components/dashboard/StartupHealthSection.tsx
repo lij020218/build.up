@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { RADIUS } from "./operationalStyles";
 import { useStartupMetrics } from "../../hooks/useStartupMetrics";
+import { useFinanceStore, useOperationsStore } from "../../stores";
 import type { MetricCard, StartupMetricHealth } from "@build-up/shared";
 
 /**
@@ -79,6 +80,52 @@ export function StartupHealthSection({ ko = true }: { ko?: boolean }) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [hoverKey, setHoverKey] = useState<string | null>(null);
 
+  // 2026-05-12 ARR per Employee — 실리콘밸리 2026 새 표준 (SaaStr "$500K = 새 $200K").
+  //   30+ 자료 (High Alpha·ICONIQ State of GTM 2026·SaaStr·Lean AI Leaderboard) 합의:
+  //   린팀 = 시리즈 A/B fundraise signal. Cursor $3.3M/FTE, Lovable $2M/FTE 표준화.
+  //   별도 카드 추가 X (인지 부하 고려) — 기존 5칸 grid 에 6번째 셀 흡수.
+  const dailyEntries = useFinanceStore((s) => s.dailyEntries);
+  const employees = useOperationsStore((s) => s.employees);
+  const arrPerEmployeeCell = useMemo(() => {
+    if (industry !== "saas") return null;
+    // ARR proxy: 최근 30일 매출 × 12. 정확한 ARR (구독 MRR) 가 있으면 더 정확하나
+    // build.up 은 매출 단일 trackER — 보수적 proxy 가 합리적.
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - 30 * 86400000);
+    const last30Sales = (dailyEntries ?? [])
+      .filter((e) => new Date(e.date) >= cutoff)
+      .reduce((s, e) => s + (e.sales ?? 0), 0);
+    const arrKrw = last30Sales * 12;
+    const fteCount = (employees?.length ?? 0) + 1; // 사장님 포함
+    if (arrKrw <= 0 || fteCount <= 0) return null;
+    const arrPerFte = arrKrw / fteCount;
+    // 환산: ₩ → 만원 표시. 한국 시리즈 A baseline ~3억/FTE, elite 10억+ (Cursor·Lovable급).
+    const arrPerFteManwon = Math.round(arrPerFte / 10000);
+    // Health 임계 (한국 시리즈 A·B 환산):
+    //   < 1억 (10,000만) → critical
+    //   1-3억 → warning
+    //   3억+ → healthy
+    const health: StartupMetricHealth =
+      arrPerFteManwon < 10_000 ? "critical"
+        : arrPerFteManwon < 30_000 ? "warning"
+          : "healthy";
+    const formatted =
+      arrPerFteManwon >= 10_000
+        ? `${(arrPerFteManwon / 10_000).toFixed(1)}억/명`
+        : `${arrPerFteManwon.toLocaleString()}만/명`;
+    return {
+      key: "arrPerEmployee",
+      name: ko ? "1인당 ARR (린팀 효율)" : "ARR per FTE",
+      formatted,
+      health,
+      benchmark: ko
+        ? `SaaStr "$500K=새 $200K" · Cursor $3.3M·Lovable $2M (FTE 포함 사장님)`
+        : `SaaStr 2026: $500K is new $200K`,
+      trend: "stable" as const,
+      fteCount,
+    };
+  }, [industry, dailyEntries, employees, ko]);
+
   // ── 렌더 분기: 스타트업/SaaS/tech 계열만 ───────────────────────────────
   // industry === "saas" 는 industryCategoryId 가 "startup"|"tech"|"saas"
   // 부분문자열을 포함할 때만 매핑됨 (useStartupMetrics::inferMetricIndustry).
@@ -103,6 +150,34 @@ export function StartupHealthSection({ ko = true }: { ko?: boolean }) {
       )}
 
       <div style={grid}>
+        {/* 2026-05-12: ARR per Employee 셀 (실리콘밸리 SaaStr "$500K=새 $200K") —
+            기존 5칸 + 추가 1칸 = 6칸. 별도 카드 X (인지 부하 고려). */}
+        {arrPerEmployeeCell && (() => {
+          const c = arrPerEmployeeCell;
+          const tone = TONE[c.health];
+          return (
+            <div
+              key={c.key}
+              style={{
+                ...metricCard,
+                borderColor: HAIRLINE,
+                cursor: "default",
+              }}
+            >
+              <div style={cardHead}>
+                <span style={cardLabel}>{c.name}</span>
+              </div>
+              <div style={cardValue}>{c.formatted}</div>
+              <div style={cardFooter}>
+                <span style={{ ...statusPill, background: tone.pillBg, color: tone.pillText }}>
+                  <span style={{ ...dot, background: tone.dot }} />
+                  {tone.label}
+                </span>
+                <span style={cardBenchmark}>{c.benchmark}</span>
+              </div>
+            </div>
+          );
+        })()}
         {cards.slice(0, 5).map((card) => {
           const tone = TONE[card.health];
           const isOpen = expandedKey === card.key;
