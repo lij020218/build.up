@@ -37,6 +37,7 @@ import { TeamCard } from "../TeamCard";
 import { PrimeCostCard } from "../PrimeCostCard";
 import { SaaSKeyMetricsCard, SubscriptionEnableNudge } from "./Tier3Operations";
 import { useProfileStore } from "../../../stores/profile-store";
+import { shouldShowCardByIndustry } from "../../../industry-card-matrix";
 
 type Props = {
   d: DashboardHook;
@@ -52,10 +53,20 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
   const hiddenCards = useProfileStore((s) => s.hiddenCards);
   const hide = (id: string) => hiddenCards.includes(id);
 
+  // 2026-05-12 Phase 2a — 업종 라우터 (industry-card-matrix.ts SSOT).
+  //   200+ 자료 (Agent A 37 + B 60 + C 105) 교차 검증 결과를 기반으로 11 업종 ×
+  //   카드 매트릭스 적용. 사장님 본업과 무관한 카드는 default 숨김 → 인지 부하 5-9 임계 내.
+  //   사장님이 hide() 토글로 명시적으로 *추가* 보고 싶으면 hiddenCards 에 없으면 노출.
+  //   → "default 숨김" + "explicit 토글 추가" 합쳐서 결정 (hide 와 industry 양쪽 통과).
+  const showByMatrix = (cardId: import("../../../industry-card-matrix").CardId): boolean => {
+    if (hide(cardId)) return false;
+    return shouldShowCardByIndustry(cardId, d.industryCategoryId as import("../../../industry-card-matrix").IndustryId | undefined);
+  };
+
   // 재고·직원 카드 동적 행 — 표시 대상 카드 갯수에 따라 1-up 또는 2-up.
   // (구독 사용 시엔 재고가 SubscriptionPlanManager 로 대체되므로 Tier 3 에서 처리, 여기엔 Team 만 노출 가능)
-  const showInventory = !c.usesSubscriptions && d.businessCtx.showInventoryCard && !hide("inventory-ops");
-  const showTeam = !hide("team-card");
+  const showInventory = !c.usesSubscriptions && d.businessCtx.showInventoryCard && showByMatrix("inventory-ops");
+  const showTeam = showByMatrix("team-card");
   const opsCards: React.ReactNode[] = [];
   if (showInventory) {
     opsCards.push(
@@ -133,7 +144,7 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       )}
 
       {/* 1.5 (a-2) — 식약처 위생점검 (외식·카페만 내부 가드) */}
-      {!hide("food-safety") && (
+      {showByMatrix("food-safety") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <FoodSafetyComplianceCard ko={ko} industryCategoryId={d.industryCategoryId} />
         </div>
@@ -141,7 +152,7 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
 
       {/* 1.5 (a-3) — Prime Cost (외식·카페만 내부 가드, 2026-05-11 추가)
           글로벌 베스트 프랙티스(Sage·NetSuite·Toast·ChowNow) — 외식 1순위 KPI */}
-      {!hide("prime-cost") && (
+      {showByMatrix("prime-cost") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <PrimeCostCard
             ko={ko}
@@ -164,7 +175,7 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       {(() => {
         const isStagnant = c.weeklySalesChange >= -5 && c.weeklySalesChange <= 5;
         // AvgTicketUpsell 은 외식·카페·뷰티·소매·피트니스·교육 만 의미 있음 (자체 가드 있음)
-        if (isStagnant && !hide("avg-ticket-upsell")) {
+        if (isStagnant && showByMatrix("avg-ticket-upsell")) {
           return (
             <div className="dash-stagger-item" style={nextStaggerStyle()}>
               <AvgTicketUpsellCard
