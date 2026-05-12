@@ -232,15 +232,17 @@ export function StartupFoundationStage() {
           resources: { name: string; desc: string; url?: string }[];
         }> = {
           indie: {
-            headline: ko ? "1인 인디 — 본인 1명 + 멘토 + 외주" : "Solo Indie — you + mentor + contractors",
+            headline: ko ? "1인 인디 — 본인 1명 + 멘토 + 외주 (★ 2026 Agentic Leverage 시대)" : "Solo Indie — you + mentor + contractors (★ Agentic Leverage era)",
             why: ko ? [
-              "솔로 파운더 비중 2026년 36.3% (2019년 23.7%에서 급증). 성공 엑싯의 52%가 솔로 창업.",
-              "AI 도구 (Cursor·Claude·Lovable) 덕분에 1인이 5인 팀 일을 처리. 공동창업자 = 지분 50% 희석 + 갈등 리스크.",
-              "단점은 고립 + 번아웃. '공동창업자' 대신 '멘토 + 커뮤니티 + 외주' 조합으로 충분.",
+              "★ 솔로 파운더 36.3% (2019: 23.7%) — 신생 스타트업 1/3+. Sequoia Capital 이 'Agentic Leverage' 라는 새 underwriting 모델 도입 (작은 팀이 AI agent 로 큰 산출).",
+              "★ Anthropic Dario Amodei: \"2026년 안에 첫 1인 십억달러 회사 등장 — 70-80% 확신\". 실리콘밸리 30개 솔로 스타트업이 *직원 1인당 $10M 매출*. Medvi 사례: 2명이 첫해 $401M (인큐먼트 3배 마진).",
+              "AI 도구 (Cursor·Claude Code·Lovable·v0) 덕분에 1인이 5인 팀 일 처리. 공동창업자 = 지분 50% 희석 + 갈등 리스크.",
+              "단점은 고립 + 번아웃. '공동창업자' 대신 '멘토 + 커뮤니티 + AI agent + 외주' 4종 조합으로 충분.",
             ] : [
-              "Solo founders 36.3% of new ventures in 2026 (vs 23.7% in 2019). 52% of exits are solo.",
-              "AI tools (Cursor·Claude·Lovable) let 1 person do 5-person team work. Co-founder = 50% dilution + conflict risk.",
-              "Downside: isolation + burnout. Replace 'co-founder' with 'mentor + community + outsourcing'.",
+              "★ Solo founders 36.3% in 2026 (vs 23.7% 2019). Sequoia introduced 'Agentic Leverage' underwriting model — tiny teams w/ AI agents = outsized output.",
+              "★ Anthropic Dario Amodei: \"First 1-person $1B company by 2026 — 70-80% confidence\". 30 solo SV startups doing $10M/employee. Medvi: 2 people → $401M in year 1.",
+              "AI tools (Cursor·Claude Code·Lovable·v0) let 1 person do 5-person team work. Co-founder = 50% dilution + conflict risk.",
+              "Downside: isolation + burnout. Replace co-founder with 'mentor + community + AI agent + outsourcing'.",
             ],
             actions: ko ? [
               { label: "1단계: 멘토 1명 확보 (월 1-2회 1시간)", detail: "같은 산업의 시니어 또는 시드 단계 수료한 founder. K-Startup 멘토링 포털 무료 매칭. Antler Korea·Founder Institute 액셀러레이터 멘토 풀 활용." },

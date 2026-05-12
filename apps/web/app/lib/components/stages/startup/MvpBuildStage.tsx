@@ -82,8 +82,64 @@ export function MvpBuildStage() {
     // PAGE 0 — 개요
     { title: "MVP 구축 로드맵", color: MIDNIGHT, content: (
       <div>
+        {/* 2026-05-12: 실리콘밸리 2026 vertical AI 유니콘 쇼케이스 — 동기부여 앵커.
+            사장님이 본인 vertical의 *목표 모델* 식별 → 좁은 workflow + 결과 기반 과금 = 강한 lock-in. */}
+        <div style={{ padding: "14px 16px", borderRadius: "14px", background: `linear-gradient(135deg, ${MIDNIGHT} 0%, rgba(25,25,112,0.92) 100%)`, color: "#fff", marginBottom: "14px", boxShadow: "0 6px 18px rgba(25,25,112,0.28)" }}>
+          <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, opacity: 0.7, marginBottom: "6px" }}>
+            🌉 실리콘밸리 2026.5 — vertical AI agent 유니콘
+          </div>
+          <div style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.45, marginBottom: "8px" }}>
+            좁은 workflow 1개 + 결과 기반 과금 = $15B 회사
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px", marginBottom: "8px" }}>
+            {[
+              { name: "Sierra", val: "$15.8B", arr: "ARR $150M", role: "고객지원 AI 에이전트" },
+              { name: "Decagon", val: "$4.5B", arr: "Series D $250M", role: "고객지원 AI" },
+              { name: "Cresta", val: "$1.6B+", arr: "ARR $100M", role: "콜센터 AI 에이전트" },
+            ].map(c => (
+              <div key={c.name} style={{ padding: "8px 10px", borderRadius: "10px", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, opacity: 0.85, marginBottom: "1px" }}>{c.name}</div>
+                <div style={{ fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em" }}>{c.val}</div>
+                <div style={{ fontSize: "10px", opacity: 0.8, marginTop: "2px" }}>{c.arr}</div>
+                <div style={{ fontSize: "10px", opacity: 0.7, lineHeight: 1.4, marginTop: "3px" }}>{c.role}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: "11.5px", lineHeight: 1.55, opacity: 0.85 }}>
+            <strong>패턴</strong>: 좁은 vertical 1개 (고객지원·법무·헬스케어·세일즈) → workflow 전체 ownership → 고객은 결과에 과금 → 강한 lock-in. YC W26 batch 의 88% 가 AI-first, 28% 가 "AI-native 서비스" (인간 supervisor만 있음).
+          </div>
+        </div>
+
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "10px" }}>가장 좁은 핵심 워크플로 하나를 해결하는 제품을 출시하세요.</div>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "14px" }}>Reid Hoffman: "첫 버전이 창피하지 않다면 너무 늦게 출시한 것이다." Stripe는 7줄의 코드로 시작했습니다. LinkedIn은 런칭 직전 팀이 "Contact Finder를 먼저 만들자"고 했지만 Hoffman은 거절했고 — 7년이 지나도 그 기능은 필요 없었습니다.</div>
+
+        {/* "Claude Code for X" 패턴 — YC W26 batch 의 가장 명확한 trope */}
+        <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.12)", marginBottom: "14px" }}>
+          <div style={{ fontSize: "10.5px", fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "6px" }}>
+            💡 "Claude Code for X" 패턴 — YC W26 batch trope
+          </div>
+          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, marginBottom: "8px" }}>
+            <strong>YC W26 batch 3개사가 자기를 "Claude Code for X" 라고 자칭</strong>. 가장 명확한 설명이라서. 패턴 추상화:
+            <strong> 특정 vertical 의 모든 workflow를 AI agent 가 직접 수행하고, 사용자는 supervise·승인만</strong>.
+          </div>
+          <div style={{ display: "grid", gap: "4px" }}>
+            {[
+              { tag: "Healthcare", ex: "Patientdesk.ai — 치과 백오피스 AI / Beacon Health — 1차 진료 AI 직원 / Overdrive — 의료 청구 자동화" },
+              { tag: "Legal", ex: "Wayco — 의료법 AI 운영자 / Legalos — 이민 로펌 / Vector Legal — 스타트업 전용 풀서비스 AI 로펌" },
+              { tag: "Vertical agent", ex: "Fed10 — 정책 컨설턴트 대체 / ClaimGlide — 자동 prior-auth / Beacon — primary care employee" },
+            ].map(p => (
+              <div key={p.tag} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "6px 0", borderTop: "1px solid rgba(25,25,112,0.06)" }}>
+                <span style={{ flexShrink: 0, fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "5px", background: MIDNIGHT, color: "#fff", marginTop: "1px", whiteSpace: "nowrap" as const }}>
+                  {p.tag}
+                </span>
+                <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>{p.ex}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", marginTop: "8px", lineHeight: 1.5, fontStyle: "italic" as const }}>
+            → 사장님이 본인 업종에서 "AI Agent for [업종 핵심 직무]" 1개를 정의하면 됩니다. 너무 넓으면 vertical 이 아니라 horizontal — 좁힐수록 lock-in 강함.
+          </div>
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "14px" }}>
           {[{ num: "2~6주", label: "목표 기간" }, { num: "1개", label: "핵심 워크플로" }, { num: "10명", label: "첫 사용자" }, { num: "~16만원", label: "월 도구비" }].map(s => (
             <div key={s.label} style={{ padding: "10px", borderRadius: "10px", background: MIDNIGHT_SOFT, textAlign: "center" as const }}>
@@ -223,6 +279,61 @@ export function MvpBuildStage() {
           ))}
         </div>
         {toolSection(null, 3, [{ name: "Supabase", desc: "PostgreSQL + 인증 + 스토리지 + 실시간 + pgvector. 무료 50K MAU + 500MB DB. 서울 리전 (ap-northeast-2)", url: "https://supabase.com", free: true, tag: "DB 추천" }, { name: "Vercel", desc: "Next.js 배포 제로 설정. Edge Function 지원. 무료 시작 (Hobby plan)", url: "https://vercel.com", free: true, tag: "배포 추천" }, { name: "Railway", desc: "사용량 기반 과금. 유휴 시 0원. 인디 해커 선호. Hobby $5/mo", url: "https://railway.app", free: false, tag: "$5/mo" }], MIDNIGHT)}
+
+        {/* 2026-05-12: Day-1 Quick Start — 정확한 shell 명령 + 보일러플레이트. 사장님이 *바로* 시작 */}
+        <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "14px", background: "#0f172a", color: "#fff", border: "1px solid rgba(0,0,0,0.06)" }}>
+          <div style={{ fontSize: "10.5px", fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+            ⚡ DAY-1 QUICK START — 마찰 없이 5분 안에
+          </div>
+          <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>
+            아래 3 명령어로 Vercel-Native Stack (실리콘밸리 2026 표준) 즉시 시작.
+          </div>
+          <pre style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            padding: "10px 12px",
+            borderRadius: "8px",
+            fontSize: "12px",
+            lineHeight: 1.6,
+            margin: 0,
+            color: "rgba(255,255,255,0.92)",
+            fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
+            overflowX: "auto" as const,
+            whiteSpace: "pre" as const,
+          }}>
+{`# 1. shadcn/ui starter (Next.js 15 + Tailwind + shadcn + Supabase + Stripe)
+git clone https://github.com/KolbySisk/next-supabase-stripe-starter
+cd next-supabase-stripe-starter && pnpm install
+
+# 2. Supabase 프로젝트 생성 (서울 리전 권장)
+#    https://supabase.com/dashboard → New project (region: ap-northeast-2)
+#    .env.local 에 NEXT_PUBLIC_SUPABASE_URL + ANON_KEY + SERVICE_ROLE 입력
+
+# 3. shadcn/ui 컴포넌트 추가 (필요한 것만)
+pnpm dlx shadcn@latest add button input card dialog
+
+# 4. Vercel 배포 (GitHub repo 연결 → 자동 배포 1-click)
+pnpm dlx vercel
+`}
+          </pre>
+          <div style={{ fontSize: "11.5px", color: "rgba(255,255,255,0.75)", marginTop: "10px", lineHeight: 1.55 }}>
+            ↑ 5분 안에 production URL (https://your-app.vercel.app) 가 살아납니다. 도메인 연결은 Vercel → Settings → Domains 에서 1-click.
+          </div>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, marginTop: "10px" }}>
+            <a href="https://github.com/KolbySisk/next-supabase-stripe-starter" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "5px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.10)", color: "#fff", fontSize: "11.5px", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(255,255,255,0.16)" }}>
+              ⭐ shadcn boilerplate
+            </a>
+            <a href="https://vercel.com/templates/next.js/supabase" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "5px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.10)", color: "#fff", fontSize: "11.5px", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(255,255,255,0.16)" }}>
+              ⭐ Vercel 공식 템플릿
+            </a>
+            <a href="https://github.com/michaeltroya/supa-next-starter" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "5px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.10)", color: "#fff", fontSize: "11.5px", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(255,255,255,0.16)" }}>
+              ⭐ Supa-Next-Starter
+            </a>
+            <a href="https://makerkit.dev/next-supabase" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "5px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.10)", color: "#fff", fontSize: "11.5px", fontWeight: 600, textDecoration: "none", border: "1px solid rgba(255,255,255,0.16)" }}>
+              ⭐ MakerKit (유료, 풀스택)
+            </a>
+          </div>
+        </div>
 
         {/* ── 2026-05-12: AI Agent / RAG 레이어 (ai-application 업종 핵심) ── */}
         <div style={{ marginTop: "20px", padding: "16px 18px", borderRadius: "16px", background: `${MIDNIGHT}06`, border: `1.5px solid ${MIDNIGHT}30` }}>

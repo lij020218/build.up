@@ -430,10 +430,189 @@ export function LaunchGtmStage() {
             <div style={{ padding: "14px 18px", fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.7 }}>
               <ul style={{ margin: 0, paddingLeft: "18px" }}>
                 <li><strong>Airbnb 2008</strong> — NYC 에 매주 비행기 타고 호스트 1:1 만남. 시리얼 상자 팔아 $30K 만들어 YC 들어감.</li>
-                <li><strong>Stripe 2010</strong> — \"노트북 줘봐\" 라며 첫 고객 매장 가서 직접 설치. 7줄 코드의 시작.</li>
+                <li><strong>Stripe 2010</strong> — &quot;노트북 줘봐&quot; 라며 첫 고객 매장 가서 직접 설치. 7줄 코드의 시작.</li>
                 <li><strong>Marc Lou 2022~</strong> — 트위터에 매주 빌드 인 퍼블릭, $0 마케팅으로 $70K MRR. 매출 70%+ 가 트위터·블로그.</li>
                 <li><strong>Pieter Levels 2014~</strong> — Photo AI $1M ARR 솔로. Product Hunt + 트위터 + 빌드 로그가 채널 전부.</li>
               </ul>
+            </div>
+          </Section>
+
+          {/* 2026-05-12: 복사·붙여넣기 outreach 템플릿 — 사장님이 *바로* 사용 가능. 마찰 0. */}
+          <Section icon={MessageSquare} title={ko ? "복사·붙여넣기 outreach 템플릿 — 첫 10명용" : "Copy-paste outreach templates — first 10"}>
+            <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: "10px" }}>
+              {[
+                {
+                  label: ko ? "① Cold DM (LinkedIn / 트위터)" : "① Cold DM (LinkedIn/Twitter)",
+                  hint: ko ? "응답률 20-30%. 짧고, 그분 컨텍스트 인용, 한 번에 한 가지만 요청." : "20-30% response. Short, reference their context, one ask.",
+                  body: ko
+                    ? `[이름]님 안녕하세요,
+[그분 글/회사/기능 1개 구체 인용]을 보고 연락드립니다.
+
+저는 [업종] 분야 [핵심 문제]를 해결하는 [제품 한 줄] 만들고 있어요.
+
+지금 사장님 같은 분들 5분 통화로 어떻게 [핵심 문제] 다루고 계신지 듣고 있는데, 다음 주 15분 가능하세요?
+
+— [이름] / [제품 URL]`
+                    : `Hi [Name],
+Saw [specific reference to their work/post/feature].
+
+I'm building [one-line product] — [core problem in your space].
+
+I'm doing 5-min calls with folks like you to learn how you currently handle [core problem]. Got 15 min next week?
+
+— [Name] / [URL]`,
+                },
+                {
+                  label: ko ? "② 기존 네트워크 부탁 (카톡/메일)" : "② Existing network ask (DM/email)",
+                  hint: ko ? "직접적 부탁이 표준. 모호하게 \"관심있으면 봐주세요\" X." : "Direct ask. Not \"check it out if interested\".",
+                  body: ko
+                    ? `[이름]아,
+[제품 한 줄] 만들고 있어. 너 [업종]에 있어서 진짜 한번 의견 듣고 싶어.
+
+3분만 써서 https://[url] 보고 솔직히
+1) 이게 너의 [문제] 해결해줄 것 같아?
+2) 1만원/월 내고 쓸 의향 있어?
+
+대답 안 좋아도 진짜 솔직히! 그게 제일 도움돼.`
+                    : `Hey [Name],
+Building [one-line]. You're in [industry], wanted your honest take.
+
+Could you spend 3 min on https://[url] and tell me:
+1) Would this solve [problem] for you?
+2) Would you pay $X/mo for it?
+
+Honest reactions only — bad ones help me most.`,
+                },
+                {
+                  label: ko ? "③ Twitter / X 빌드인퍼블릭 첫 포스트" : "③ Twitter build-in-public first post",
+                  hint: ko ? "출시 3-4주 전부터 매일 진행상황 1개 트윗. 100-200 팔로워 출시 전 확보 목표." : "Start 3-4 wks before launch. 1 update/day. Goal: 100-200 followers pre-launch.",
+                  body: ko
+                    ? `Day 1 of building [제품 이름]:
+
+The problem: [업종 사장님] 매일 [문제] 때문에 [시간/비용] 낭비.
+
+The plan: AI 가 [핵심 워크플로] 끝까지 처리. 사장님은 결과만 승인.
+
+오늘 한 일: ✅ Next.js + Supabase 셋업. ✅ 첫 화면 5개 와이어프레임.
+
+다음: 핵심 워크플로 prototype. Anyone else building in [vertical]? 👇`
+                    : `Day 1 of building [Product]:
+
+The problem: [Industry] folks waste [time/$] daily on [problem].
+
+The plan: AI handles [core workflow] end-to-end. User just approves.
+
+Today: ✅ Next.js + Supabase setup. ✅ 5 wireframes done.
+
+Next: prototype the core workflow. Anyone else building in [vertical]? 👇`,
+                },
+                {
+                  label: ko ? "④ Product Hunt 런칭 헤드라인 + tagline" : "④ Product Hunt launch headline + tagline",
+                  hint: ko ? "Tagline 이 가장 중요한 카피. \"무엇\" + \"누구를 위한\" + \"왜 다른\"." : "Tagline is the most important copy. What + for whom + why different.",
+                  body: ko
+                    ? `Name: [제품명]
+Tagline: AI [핵심 워크플로] for [vertical] — [차별점 1개]
+
+예: "Beacon Health — AI employees for primary care that handle scheduling, billing, and follow-ups end-to-end"
+
+본문 첫 줄: "I'm [이름], built this because [본인 origin story 한 문장]."
+본문 2-3 줄: "It does [구체 1] · [구체 2] · [구체 3]. Free trial: [URL]"
+본문 마무리: "Ask me anything ↓"`
+                    : `Name: [Product]
+Tagline: AI [workflow] for [vertical] — [differentiator]
+
+Body line 1: "I'm [Name], built this because [origin story]."
+Lines 2-3: "It does [thing1] · [thing2] · [thing3]. Free trial: [URL]"
+End: "Ask me anything ↓"`,
+                },
+              ].map((t) => (
+                <details key={t.label} style={{ background: "white", borderRadius: "12px", border: `1px solid ${MIDNIGHT_BORDER}`, padding: "10px 14px" }}>
+                  <summary style={{ cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{t.label}</span>
+                    <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", flex: 1 }}>{t.hint}</span>
+                    <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", fontWeight: 600 }}>{ko ? "펼치기 ▾" : "expand ▾"}</span>
+                  </summary>
+                  <pre style={{
+                    marginTop: "10px",
+                    padding: "12px 14px",
+                    background: "rgba(15,23,42,0.03)",
+                    border: "1px solid rgba(15,23,42,0.06)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    color: "rgba(15,23,42,0.78)",
+                    lineHeight: 1.65,
+                    fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
+                    whiteSpace: "pre-wrap" as const,
+                    wordBreak: "break-word" as const,
+                  }}>{t.body}</pre>
+                </details>
+              ))}
+            </div>
+          </Section>
+
+          {/* 2026-05-12: Pre-launch distribution buildup — 출시 *전에* 분배 만들기 */}
+          <Section icon={Megaphone} title={ko ? "출시 3-4주 전 분배 buildup (PH 는 분배를 만들지 않고 드러낼 뿐)" : "Pre-launch distribution buildup (3-4 wks before)"}>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65, marginBottom: "12px" }}>
+                {ko
+                  ? "90% 인디 해커가 *제품* 이 아니라 *분배* 에서 실패. Product Hunt 는 \"이미 가진 분배의 양을 드러낼 뿐 새로 만들지 않음\". 출시 *전* 에 작은 청중을 만들어야 출시 시 즉시 구매 전환 가능."
+                  : "90% indie hackers fail at distribution, not product. PH reveals existing distribution, doesn't create it. Build audience pre-launch."}
+              </div>
+              <div style={{ display: "grid", gap: "6px" }}>
+                {(ko ? [
+                  { week: "T-4주", action: "트위터/X 프로필 셋업 + 첫 빌드 포스트 + 관련 분야 100명 팔로우" },
+                  { week: "T-3주", action: "매일 1개 트윗 (진행상황·문제·인사이트) + 관련 글 5개 reply" },
+                  { week: "T-2주", action: "LinkedIn 첫 founder 글 + 베타 신청 폼 공개 + 친구 50명에 부탁" },
+                  { week: "T-1주", action: "PH 헌터 섭외 + Show HN 초안 + 30-50 디렉토리 backlink (BetaList·alternativeto.net·saashub·indielogs)" },
+                  { week: "T-0", action: "PH 화/수 12:01 AM PT 런칭 + Show HN 동시 + 트위터·LinkedIn 알림 + 6시간 모니터링" },
+                  { week: "T+1주", action: "PH·HN 댓글 100% 답변 + 디스콰이엇·OKKY 빌드로그 + AlternativeTo·SaaSHub 등재" },
+                ] : [
+                  { week: "T-4 wks", action: "Setup X profile + first build post + follow 100 in space" },
+                  { week: "T-3 wks", action: "1 tweet/day + 5 replies to relevant posts" },
+                  { week: "T-2 wks", action: "First LinkedIn founder post + beta signup form + ask 50 friends" },
+                  { week: "T-1 wk", action: "PH hunter + Show HN draft + 30-50 directories (BetaList·AlternativeTo·SaaSHub)" },
+                  { week: "T-0", action: "PH launch Tue/Wed 12:01 AM PT + Show HN + X+LinkedIn alert + 6h monitor" },
+                  { week: "T+1 wk", action: "100% comment reply + Disquiet/OKKY build log + AlternativeTo+SaaSHub list" },
+                ]).map((w) => (
+                  <div key={w.week} style={{ display: "flex", gap: "10px", padding: "9px 12px", borderRadius: "10px", background: "white", border: `1px solid ${MIDNIGHT_BORDER}` }}>
+                    <span style={{ flexShrink: 0, fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "5px", background: MIDNIGHT, color: "#fff", alignSelf: "flex-start" as const, whiteSpace: "nowrap" as const }}>
+                      {w.week}
+                    </span>
+                    <span style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.55 }}>{w.action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Section>
+
+          {/* 2026-05-12: AI Discovery 최적화 — ChatGPT·Perplexity 에서 검색되도록 */}
+          <Section icon={Sparkles} title={ko ? "AI Discovery 최적화 — ChatGPT·Perplexity에서 본인 제품 검색되게" : "AI Discovery optimization"}>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65, marginBottom: "12px" }}>
+                {ko
+                  ? "2026 발견 채널은 *2가지*: ① 전통 Google 검색 (SEO) + ② AI 발견 (ChatGPT·Perplexity·Google AI Overviews). AI 가 본인 제품을 추천하게 하려면 구조화된 메타데이터가 필요."
+                  : "Discovery in 2026 = traditional search + AI search. To make AI recommend you, you need structured metadata."}
+              </div>
+              <div style={{ display: "grid", gap: "8px" }}>
+                {(ko ? [
+                  { label: "/llms.txt", detail: "도메인 루트에 /llms.txt 파일. LLM이 본인 제품 핵심 정보를 빠르게 학습. Anthropic·Cursor·Mintlify 가 이미 배포. 형식: https://llmstxt.org" },
+                  { label: "Schema.org JSON-LD", detail: "Next.js head 에 <script type=\"application/ld+json\"> + SoftwareApplication·Organization·FAQPage 스키마. Google AI Overviews·Perplexity 가 이걸 인용." },
+                  { label: "OG image + Twitter Card", detail: "GPT Image 2 로 1200×630 OG 이미지 자동 생성. 모든 검색·SNS 공유 시 첫 이미지 — A/B 5종 테스트 권장." },
+                  { label: "Long-form pillar content", detail: "1개 핵심 키워드 (예: \"AI 의료 청구 자동화\") 에 3,000자+ 깊은 글. AI 가 인용·요약. SEO + AI 발견 동시." },
+                  { label: "G2 + Capterra + Product Hunt + AlternativeTo 등재", detail: "AI 가 \"X 대안\" 검색 시 이 디렉토리 답변 인용. 등재 30-50개 = 출시 1주 차 표준." },
+                ] : [
+                  { label: "/llms.txt", detail: "Root /llms.txt for LLM crawlers. See llmstxt.org spec." },
+                  { label: "Schema.org JSON-LD", detail: "SoftwareApplication + Organization + FAQPage. Cited by Google AI Overviews + Perplexity." },
+                  { label: "OG image + Twitter Card", detail: "1200×630, A/B 5 versions." },
+                  { label: "Pillar long-form content", detail: "3000+ chars on one core keyword. AI cites & summarizes." },
+                  { label: "Directory listings", detail: "G2·Capterra·PH·AlternativeTo. AI cites for \"X alternatives\" queries." },
+                ]).map(d => (
+                  <div key={d.label} style={{ padding: "9px 12px", borderRadius: "10px", background: "white", border: `1px solid ${MIDNIGHT_BORDER}` }}>
+                    <div style={{ fontSize: "12px", fontWeight: 700, color: MIDNIGHT, marginBottom: "3px" }}>{d.label}</div>
+                    <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55 }}>{d.detail}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </Section>
         </>
