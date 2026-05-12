@@ -14,15 +14,15 @@ export function StoreSetupStage() {
     <div style={{ display: "grid", gap: "14px", marginBottom: "16px" }}>
       {/* 선택된 플랫폼 안내 */}
       {selectedPlatforms.length > 0 && (
-        <div style={{ padding: "12px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", border: "1px solid rgba(37,99,235,0.08)", display: "flex", gap: "8px", alignItems: "center" }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#2563eb" strokeWidth="1.4"/><path d="M4.5 7l2 2 3-3" stroke="#2563eb" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: "#2563eb" }}>
+        <div style={{ padding: "12px 16px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)", display: "flex", gap: "8px", alignItems: "center" }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#191970" strokeWidth="1.4"/><path d="M4.5 7l2 2 3-3" stroke="#191970" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#191970" }}>
             {ko ? `이전 단계에서 선택한 플랫폼: ${selectedPlatforms.length}개 — 아래에서 각 플랫폼의 세부 설정을 완료하세요` : `${selectedPlatforms.length} platforms selected — complete setup for each below`}
           </span>
         </div>
       )}
       {/* 플랫폼별 스토어 세팅 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "플랫폼별 스토어 세팅" : "Platform Store Setup"}</div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "각 플랫폼의 필수 설정 항목을 빠짐없이 완료하세요" : "Complete all required settings for each platform"}</div>

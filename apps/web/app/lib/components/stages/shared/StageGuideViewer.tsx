@@ -1528,8 +1528,8 @@ export function StageGuideViewer() {
         {step.traps.length > 0 && (
           <div style={{ display: "grid", gap: "6px" }}>
             {step.traps.map((trap) => (
-              <div key={trap.label} style={{ display: "grid", gap: "3px", padding: "11px 13px", borderRadius: "13px", background: "rgba(220,60,30,0.05)", border: "1px solid rgba(200,60,30,0.13)" }}>
-                <div style={{ fontSize: "12px", fontWeight: 640, color: "#b83020" }}>\u26a0 {trap.label}</div>
+              <div key={trap.label} style={{ display: "grid", gap: "3px", padding: "11px 13px", borderRadius: "13px", background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.13)" }}>
+                <div style={{ fontSize: "12px", fontWeight: 640, color: "#dc2626" }}>\u26a0 {trap.label}</div>
                 <div style={{ fontSize: "12px", lineHeight: 1.6, color: "var(--muted)" }}>{trap.text}</div>
               </div>
             ))}

@@ -807,7 +807,7 @@ export function ContractReviewStage() {
                             background: "rgba(220,38,38,0.04)",
                             border: "1px solid rgba(220,38,38,0.14)",
                           }}>
-                            <div style={{ fontSize: "13px", fontWeight: 620, color: "#b83020", marginBottom: "4px" }}>
+                            <div style={{ fontSize: "13px", fontWeight: 620, color: "#dc2626", marginBottom: "4px" }}>
                               ⚠ {trap.label}
                             </div>
                             <div style={{ fontSize: "13px", lineHeight: 1.6, color: "rgba(0,0,0,0.65)" }}>{trap.desc}</div>

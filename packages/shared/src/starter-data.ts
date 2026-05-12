@@ -1339,9 +1339,13 @@ export const starterStageFlow: RoadmapStageState[] = [
     totalSteps: 19,
     goal: "Choose between sole proprietor and corporation, complete business registration, protect your IP before public disclosure, and set up basic tax and security foundations.",
     whyNow: "Now that you've validated the problem, register your business to unlock contracts, invoicing, and government programs. File IP before any public disclosure.",
+    // 2026-05-12 P3: trademark-filed 를 required:true 로 격상 (사장님 신고 audit).
+    //   사장님이 가게 이름 결정 후 인테리어·간판 발주를 진행하는데 상표 출원이 옵션이면
+    //   다른 가게가 같은 이름 출원 시 사용 금지 가처분 + 침해소송 위험. 출원료 6만원·심사
+    //   6-12개월 — 적은 비용으로 가게 정체성 자산 보호. 한국 외식·뷰티 업종에서 빈번한 이슈.
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "terms-privacy-published"]
+      requiredTaskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "terms-privacy-published"]
     },
     taskIds: ["business-structure-decided", "startup-biz-registered", "ip-protection-planned", "trademark-filed", "tax-setup-basics", "security-basics", "terms-privacy-published", "pg-payment-ready"],
     riskIds: [],
@@ -2266,7 +2270,7 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "business-structure-decided", title: "Choose legal structure: sole proprietor (개인사업자) or corporation (법인) — most startups begin as sole proprietor", status: "todo", required: true, estimatedMinutes: 30 },
     { taskId: "startup-biz-registered", title: "Complete business registration via HomeTax (홈택스) or tax office — takes 3 business days", status: "todo", required: true, estimatedMinutes: 60, waitDays: 3, followupQuestion: "사업자등록증을 발급받으셨나요?" },
     { taskId: "ip-protection-planned", title: "File patent application at KIPRIS/특허로 BEFORE any public disclosure (demo, beta, press)", status: "todo", required: true, estimatedMinutes: 90 },
-    { taskId: "trademark-filed", title: "File trademark application for your brand name and logo at 특허로 (patent.go.kr)", status: "todo", required: false, estimatedMinutes: 60 },
+    { taskId: "trademark-filed", title: "File trademark application for your brand name and logo at 특허로 (patent.go.kr) — protects brand before competitor registers same name", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "tax-setup-basics", title: "Choose tax type (간이과세 vs 일반과세) and set up basic bookkeeping", status: "todo", required: false, estimatedMinutes: 45 },
     { taskId: "security-basics", title: "Set up customer data protection plan + security baseline (TLS, RLS, env vars)", status: "todo", required: false, estimatedMinutes: 45 },
     // ── launch-gtm 에서 이관 — 사업자등록 후 즉시 처리 ──

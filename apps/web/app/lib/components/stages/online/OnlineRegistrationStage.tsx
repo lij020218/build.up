@@ -12,15 +12,15 @@ export function OnlineRegistrationStage() {
   const pages = [
     // ── 페이지 0: 사업자등록 ──
     () => (
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.1)", background: "linear-gradient(180deg, rgba(37,99,235,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.1)", background: "linear-gradient(180deg, rgba(25,25,112,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         {/* 헤더 */}
         <div style={{ padding: "24px 24px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "rgba(25,25,112,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#191970" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
             </div>
             <div>
-              <div style={{ fontSize: "11px", fontWeight: 650, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Step 1 / 2</div>
+              <div style={{ fontSize: "11px", fontWeight: 650, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Step 1 / 2</div>
               <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{ko ? "사업자등록" : "Business Registration"}</div>
             </div>
           </div>
@@ -41,12 +41,12 @@ export function OnlineRegistrationStage() {
         </div>
 
         {/* 어디서 + 바로가기 */}
-        <div style={{ margin: "0 24px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(37,99,235,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ margin: "0 24px 16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "2px" }}>{ko ? "신청 장소" : "Where"}</div>
             <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>{ko ? "관할 세무서 또는 홈택스" : "Tax office or Hometax"}</div>
           </div>
-          <a href="https://www.hometax.go.kr" target="_blank" rel="noreferrer" style={{ padding: "8px 16px", borderRadius: "10px", background: "#2563eb", color: "#fff", fontSize: "13px", fontWeight: 650, textDecoration: "none", display: "flex", alignItems: "center", gap: "4px" }}>
+          <a href="https://www.hometax.go.kr" target="_blank" rel="noreferrer" style={{ padding: "8px 16px", borderRadius: "10px", background: "#191970", color: "#fff", fontSize: "13px", fontWeight: 650, textDecoration: "none", display: "flex", alignItems: "center", gap: "4px" }}>
             {ko ? "홈택스 바로가기" : "Go to Hometax"} <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
         </div>
@@ -66,8 +66,8 @@ export function OnlineRegistrationStage() {
               { item: "Business plan (simple 1 page)", required: false },
               { item: "Bank account copy (for refund)", required: true },
             ]).map((item, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 10px", borderRadius: "10px", background: "rgba(37,99,235,0.03)" }}>
-                <div style={{ width: "16px", height: "16px", borderRadius: "4px", background: item.required ? "#2563eb" : "rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 10px", borderRadius: "10px", background: "rgba(25,25,112,0.03)" }}>
+                <div style={{ width: "16px", height: "16px", borderRadius: "4px", background: item.required ? "#191970" : "rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {item.required && <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                 </div>
                 <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.4 }}>{item.item}</span>
@@ -93,7 +93,7 @@ export function OnlineRegistrationStage() {
             { step: "Submit — issued in 0~3 business days", detail: "SMS notification when ready" },
           ]).map((s, i) => (
             <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(0,0,0,0.04)" : "none" }}>
-              <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+              <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#191970", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a", marginBottom: "2px" }}>{s.step}</div>
                 <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
@@ -113,20 +113,20 @@ export function OnlineRegistrationStage() {
               </div>
               <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#059669", padding: "3px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.08)", display: "inline-block" }}>{ko ? "초기 창업자 추천" : "Recommended for starters"}</div>
             </div>
-            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(37,99,235,0.03)", border: "1px solid rgba(37,99,235,0.08)" }}>
-              <div style={{ fontSize: "14px", fontWeight: 680, color: "#2563eb", marginBottom: "6px" }}>{ko ? "일반과세자" : "Standard"}</div>
+            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.08)" }}>
+              <div style={{ fontSize: "14px", fontWeight: 680, color: "#191970", marginBottom: "6px" }}>{ko ? "일반과세자" : "Standard"}</div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
                 {ko ? "연매출 8,000만원 초과 또는 B2B 거래 시. 부가세 10% 납부. 세금계산서 발행 가능. 매입세액 공제 가능." : "Over 80M annual or B2B. 10% VAT. Can issue tax invoices. Input tax deductible."}
               </div>
-              <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#2563eb", padding: "3px 8px", borderRadius: "6px", background: "rgba(37,99,235,0.06)", display: "inline-block" }}>{ko ? "B2B · 고매출 시" : "For B2B / high revenue"}</div>
+              <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#191970", padding: "3px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.06)", display: "inline-block" }}>{ko ? "B2B · 고매출 시" : "For B2B / high revenue"}</div>
             </div>
           </div>
         </div>
 
         {/* 팁 */}
-        <div style={{ margin: "0 24px 20px", padding: "12px 16px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#2563eb" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#2563eb" strokeWidth="1.4" strokeLinecap="round"/></svg>
-          <span style={{ fontSize: "12px", color: "rgba(37,99,235,0.8)", lineHeight: 1.55 }}>
+        <div style={{ margin: "0 24px 20px", padding: "12px 16px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#191970" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#191970" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          <span style={{ fontSize: "12px", color: "rgba(25,25,112,0.8)", lineHeight: 1.55 }}>
             {ko ? "자택 사업자도 가능합니다. 임대차계약서 없이 전입세대열람원(주민센터 발급)으로 대체할 수 있습니다. 처리기간은 보통 당일~1일입니다." : "Home-based business is possible. Resident registration document from community center substitutes lease. Usually processed same day."}
           </span>
         </div>
@@ -256,9 +256,9 @@ export function OnlineRegistrationStage() {
             <div style={{ fontSize: "18px", fontWeight: 740, color: "#d97706" }}>~40,500{ko ? "원" : "₩"}</div>
             <div style={{ fontSize: "10px", color: "rgba(0,0,0,0.35)" }}>{ko ? "구청별 상이" : "Varies"}</div>
           </div>
-          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(37,99,235,0.04)", textAlign: "center" as const }}>
+          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", textAlign: "center" as const }}>
             <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "처리기간" : "Processing"}</div>
-            <div style={{ fontSize: "18px", fontWeight: 740, color: "#2563eb" }}>1~5{ko ? "일" : "d"}</div>
+            <div style={{ fontSize: "18px", fontWeight: 740, color: "#191970" }}>1~5{ko ? "일" : "d"}</div>
           </div>
         </div>
 

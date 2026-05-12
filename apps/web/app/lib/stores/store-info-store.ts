@@ -134,6 +134,38 @@ type State = {
 
   // Industry-specific (sectionId -> 배열 또는 객체)
   industrySpecifics: Record<string, unknown>;
+
+  // 2026-05-12 P1 #13: 사업 서류 PDF 라이브러리.
+  // 사장님 발급받은 사업자등록증·영업신고증·통신판매신고·상표등록증 등 한 곳에서 보관.
+  // 실제 PDF 는 Supabase Storage 버킷, 여기엔 메타데이터 + URL 만.
+  businessDocuments: BusinessDocument[];
+};
+
+export type BusinessDocumentKind =
+  | "biz-registration"     // 사업자등록증
+  | "biz-report-food"      // 영업신고증 — 일반/휴게음식점
+  | "biz-report-pet"       // 동물미용업 등록증
+  | "biz-report-beauty"    // 미용업 영업신고증
+  | "telecom-sales"        // 통신판매업 신고증
+  | "hygiene-cert"         // 위생교육 수료증
+  | "health-cert"          // 보건증
+  | "fire-safety"          // 소방완비증명서
+  | "trademark"            // 상표등록증
+  | "patent"               // 특허증
+  | "venture-cert"         // 벤처기업 확인서
+  | "other";
+
+export type BusinessDocument = {
+  id: string;
+  kind: BusinessDocumentKind;
+  filename: string;
+  url: string;
+  sizeBytes?: number;
+  uploadedAt: string;
+  expiresAt?: string;            // 위생교육·보건증 만료 추적
+  issuedAt?: string;             // 발급일자
+  registrationNumber?: string;   // 사업자등록번호·상표등록번호 등
+  notes?: string;
 };
 
 type Actions = {
@@ -205,6 +237,7 @@ const initialState: State = {
   digitalFootprint: [],
   vehicles: [],
   industrySpecifics: {},
+  businessDocuments: [],
 };
 
 function newId(): string {
@@ -305,6 +338,7 @@ export const useStoreInfoStore = create<State & Actions>()(
         digitalFootprint: s.digitalFootprint,
         vehicles: s.vehicles,
         industrySpecifics: s.industrySpecifics,
+        businessDocuments: s.businessDocuments,
       }),
     },
   ),

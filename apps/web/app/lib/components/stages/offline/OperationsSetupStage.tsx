@@ -1015,12 +1015,12 @@ export function OperationsSetupStage() {
           <div key={trap.label} style={{
             display: "flex", gap: "10px", alignItems: "flex-start",
             padding: "13px 15px", borderRadius: "14px",
-            background: "rgba(220,60,30,0.06)", border: "1px solid rgba(200,60,30,0.16)",
+            background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
           }}>
-            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#b83020", flexShrink: 0, marginTop: "1px" }} />
+            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#b83020", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
-              <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(184,48,32,0.85)" }}>{trap.text}</div>
+              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#dc2626", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
+              <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(180,28,28,0.85)" }}>{trap.text}</div>
             </div>
           </div>
         ))}
@@ -1071,7 +1071,7 @@ export function OperationsSetupStage() {
               ))}
               {item.cons.map((con, ci) => (
                 <div key={ci} style={{ display: "flex", alignItems: "flex-start", gap: "7px", marginBottom: "5px" }}>
-                  <span style={{ flexShrink: 0, fontSize: "12px", fontWeight: 800, color: "rgba(184,48,32,0.7)", marginTop: "1px" }}>−</span>
+                  <span style={{ flexShrink: 0, fontSize: "12px", fontWeight: 800, color: "rgba(180,28,28,0.7)", marginTop: "1px" }}>−</span>
                   <span style={{ fontSize: "13px", color: "rgba(0,0,0,0.45)", lineHeight: 1.5 }}>{con}</span>
                 </div>
               ))}
@@ -1289,12 +1289,12 @@ export function OperationsSetupStage() {
               <div key={trap.label} style={{
                 display: "flex", gap: "9px", alignItems: "flex-start",
                 padding: "10px 12px", borderRadius: "10px",
-                background: "rgba(220,60,30,0.05)", border: "0.5px solid rgba(200,60,30,0.14)",
+                background: "rgba(220,38,38,0.05)", border: "0.5px solid rgba(220,38,38,0.14)",
               }}>
-                <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#b83020", flexShrink: 0, marginTop: "1px" }} />
+                <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b83020", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
-                  <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(184,48,32,0.8)" }}>{trap.text}</div>
+                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#dc2626", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
+                  <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(180,28,28,0.8)" }}>{trap.text}</div>
                 </div>
               </div>
             ))}
@@ -1493,12 +1493,12 @@ export function OperationsSetupStage() {
             <div key={trap.label} style={{
               display: "flex", gap: "9px", alignItems: "flex-start",
               padding: "10px 12px", borderRadius: "10px",
-              background: "rgba(220,60,30,0.05)", border: "0.5px solid rgba(200,60,30,0.14)",
+              background: "rgba(220,38,38,0.05)", border: "0.5px solid rgba(220,38,38,0.14)",
             }}>
-              <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#b83020", flexShrink: 0, marginTop: "1px" }} />
+              <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b83020", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
-                <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(184,48,32,0.8)" }}>{trap.text}</div>
+                <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#dc2626", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
+                <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(180,28,28,0.8)" }}>{trap.text}</div>
               </div>
             </div>
           ))}

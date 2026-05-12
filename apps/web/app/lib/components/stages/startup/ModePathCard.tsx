@@ -265,20 +265,20 @@ export function ModePathCard({
         <div style={{
           padding: "12px 14px",
           borderRadius: "12px",
-          background: "rgba(220,60,30,0.06)",
-          border: "1px solid rgba(200,60,30,0.16)",
+          background: "rgba(220,38,38,0.04)",
+          border: "1px solid rgba(220,38,38,0.14)",
           marginBottom: content.evidence ? "10px" : 0,
           display: "flex", gap: "10px", alignItems: "flex-start",
         }}>
-          <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#b83020", flexShrink: 0, marginTop: "2px" }} />
+          <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "2px" }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontSize: "11px", fontWeight: 700, color: "#b83020",
+              fontSize: "11px", fontWeight: 700, color: "#dc2626",
               letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "3px",
             }}>
               {ko ? "이 모드의 흔한 함정" : "Common pitfall"}
             </div>
-            <div style={{ fontSize: "12.5px", color: "rgba(184,48,32,0.9)", lineHeight: 1.55 }}>
+            <div style={{ fontSize: "12.5px", color: "rgba(180,28,28,0.9)", lineHeight: 1.55 }}>
               {content.pitfall}
             </div>
           </div>

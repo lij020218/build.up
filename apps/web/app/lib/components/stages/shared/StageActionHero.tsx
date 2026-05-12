@@ -196,16 +196,16 @@ export function TrapsCard({ traps }: { traps: Trap[] }) {
           style={{
             display: "flex", gap: 10, alignItems: "flex-start",
             padding: "13px 15px", borderRadius: 14,
-            background: "rgba(220,60,30,0.06)",
-            border: "1px solid rgba(200,60,30,0.16)",
+            background: "rgba(220,38,38,0.04)",
+            border: "1px solid rgba(220,38,38,0.14)",
           }}
         >
-          <AlertTriangle size={18} strokeWidth={1.8} style={{ color: "#b83020", flexShrink: 0, marginTop: 1 }} />
+          <AlertTriangle size={18} strokeWidth={1.8} style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#b83020", marginBottom: 3, letterSpacing: "-0.01em" }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#dc2626", marginBottom: 3, letterSpacing: "-0.01em" }}>
               {trap.label}
             </div>
-            <div style={{ fontSize: 13, lineHeight: 1.55, color: "rgba(184,48,32,0.85)" }}>
+            <div style={{ fontSize: 13, lineHeight: 1.55, color: "rgba(180,28,28,0.85)" }}>
               {trap.text}
             </div>
           </div>

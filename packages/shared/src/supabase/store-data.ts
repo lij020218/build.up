@@ -106,6 +106,32 @@ export type UserStoreData = {
   digitalFootprint: unknown[];
   vehicles: unknown[];
   industrySpecifics: Record<string, unknown>;
+  // ── 2026-05-12 P1 #13: 사업 서류 PDF + 등록번호 SSOT ───────────────────
+  //  사장님이 「내가 발급받은 사업자등록증·영업신고증·통신판매신고증·상표등록증 등」
+  //  을 한 곳에서 보관·재발급 시간 절약. Supabase Storage 의 file URL 만 저장 (PDF 실체는 bucket).
+  //  종전엔 bizRegistrationNumber 문자열만 있어 사장님이 파일 분실 시 재발급 필요.
+  //
+  //  kind 예시:
+  //    "biz-registration"     사업자등록증 (세무서)
+  //    "biz-report-food"      영업신고증 — 일반음식점·휴게음식점
+  //    "biz-report-pet"       동물미용업 등록증
+  //    "telecom-sales"        통신판매업 신고증
+  //    "hygiene-cert"         위생교육 수료증 (6시간)
+  //    "health-cert"          보건증 (식약처)
+  //    "trademark"            상표등록증 (특허로)
+  //    "other"                기타
+  businessDocuments: Array<{
+    id: string;             // uuid
+    kind: string;           // 위 enum
+    filename: string;
+    url: string;            // Supabase Storage public/signed URL
+    sizeBytes?: number;
+    uploadedAt: string;     // ISO
+    expiresAt?: string;     // 위생교육·보건증 만료 추적용 (선택)
+    issuedAt?: string;      // 발급일자 (선택)
+    registrationNumber?: string; // 사업자등록번호·상표등록번호 등
+    notes?: string;
+  }>;
 };
 
 // camelCase → snake_case mapping for DB columns
@@ -198,6 +224,7 @@ const FIELD_TO_COLUMN: Record<keyof UserStoreData, string> = {
   digitalFootprint: "digital_footprint",
   vehicles: "vehicles",
   industrySpecifics: "industry_specifics",
+  businessDocuments: "business_documents",
 };
 
 // snake_case → camelCase reverse mapping

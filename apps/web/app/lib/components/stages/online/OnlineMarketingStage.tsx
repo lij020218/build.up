@@ -40,7 +40,7 @@ export function OnlineMarketingStage() {
       </div>
 
       {/* 첫 광고 캠페인 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(37,99,235,0.08)", background: "linear-gradient(180deg, rgba(37,99,235,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "첫 광고 캠페인 세팅" : "First Ad Campaign Setup"}</div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>{ko ? "초기 2주는 데이터 수집 기간. 일 5,000~10,000원부터 시작하세요." : "First 2 weeks are data collection. Start at ₩5-10K/day."}</div>

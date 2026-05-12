@@ -239,8 +239,8 @@ export function AIFeedbackFormGenerator({
             display: "flex", alignItems: "flex-start", gap: "8px",
             padding: "10px 12px", marginTop: "12px",
             borderRadius: "10px",
-            background: "rgba(220,60,30,0.06)", border: "1px solid rgba(200,60,30,0.16)",
-            fontSize: "12.5px", color: "#b83020", lineHeight: 1.5,
+            background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
+            fontSize: "12.5px", color: "#dc2626", lineHeight: 1.5,
           }}>
             <AlertCircle size={14} strokeWidth={2} style={{ flexShrink: 0, marginTop: "1px" }} />
             <span>{error}</span>
