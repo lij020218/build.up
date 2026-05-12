@@ -21,7 +21,7 @@ export type DashboardCardMeta = {
   /** true = 사용자가 숨길 수 없는 핵심 카드 */
   essential?: boolean;
   /** 어느 업종에 의미 있는지 — 사장님이 본인과 무관한 카드 안 보게 자동 분기. UI 표시용 힌트도 겸함. */
-  industryHint?: "food" | "cafe-dessert" | "startup-tech" | "all" | "subscription";
+  industryHint?: "food" | "cafe-dessert" | "startup-tech" | "all" | "subscription" | "offline";
 };
 
 export const DASHBOARD_CARDS: DashboardCardMeta[] = [
@@ -156,6 +156,16 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     hintKo: "사장님 프로필에 맞는 2026 정책자금 + 부채 있으면 대환 시뮬",
     hintEn: "Policy fund auto-match + refinance sim if debt",
     category: "coaching",
+  },
+  {
+    // 2026-05-12 킬러 기능: AI 운영 코치 데일리 브리프 — *해석* 레이어 (offline 90%+ 사용자)
+    id: "offline-founder-brief",
+    labelKo: "AI 운영 코치 데일리 브리프 ⭐",
+    labelEn: "AI Ops Coach Daily Brief ⭐",
+    hintKo: "재료비·인건비·임대료·primecost·BEP 자동 분석 → 가장 중요한 1개 + 오늘 행동 (외식·카페·뷰티·소매 등)",
+    hintEn: "Auto cost-ratio/BEP/prime-cost analysis → top signal + today's action (food/cafe/beauty/retail)",
+    category: "coaching",
+    industryHint: "offline",
   },
   {
     // 2026-05-12 킬러 기능: AI 공동창업자 데일리 브리프 — *해석* 레이어
