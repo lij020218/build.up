@@ -24,6 +24,7 @@ import { DailyImprovementCard } from "../DailyImprovementCard";
 import { AvgTicketUpsellCard } from "../AvgTicketUpsellCard";
 import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { StartupHealthSection } from "../StartupHealthSection";
+import { StartupFounderBrief } from "../StartupFounderBrief";
 import { InventoryOpsCard } from "../InventoryOpsCard";
 import { TeamCard } from "../TeamCard";
 import { PrimeCostCard } from "../PrimeCostCard";
@@ -166,6 +167,16 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
                     : "established",
             }}
           />
+        </div>
+      )}
+
+      {/* 2026-05-12 킬러 기능 — AI 공동창업자 데일리 브리프 (startup-tech 만)
+          사장님 비판적 질문 "매출+사용자 수만으로 우리 제품 쓸까?" → 해석 레이어 신설.
+          런웨이·burn·CMGR·Rule of 40 자동 분석 → 5 신호 룰엔진 → 가장 중요한 1개 + 행동.
+          StartupHealthSection 의 raw 숫자 *위에* 위치 — 사장님이 먼저 *무엇이 중요한지* 봄. */}
+      {c.isStartupCompany && !hide("startup-founder-brief") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <StartupFounderBrief ko={ko} />
         </div>
       )}
 
