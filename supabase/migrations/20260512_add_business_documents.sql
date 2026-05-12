@@ -1,4 +1,4 @@
--- 2026-05-12 P1 #13: business_documents JSONB column
+-- 2026-05-12 P1 #13: business_documents JSONB column + Storage bucket + RLS
 --
 -- 사장님이 발급받은 사업 서류 (사업자등록증·영업신고증·통신판매신고증·상표등록증 등)
 -- 를 한 곳에서 보관해 재발급 시간 절약. PDF 실체는 Supabase Storage 의
@@ -7,7 +7,7 @@
 -- 종전: bizRegistrationNumber 문자열만 user_store_data 에 있어 파일 분실 시 사장님이
 -- 직접 재발급(세무서·구청 방문) 필요. 시간 손실 + 영업 신고 갱신 시 누락 위험.
 --
--- 새 schema (각 item):
+-- 새 schema (businessDocuments 배열 각 item):
 --   {
 --     "id": "uuid-v4",
 --     "kind": "biz-registration" | "biz-report-food" | "trademark" | ...,
@@ -24,24 +24,67 @@
 -- TypeScript SSOT: packages/shared/src/supabase/store-data.ts UserStoreData.businessDocuments
 --                  + apps/web/app/lib/stores/store-info-store.ts BusinessDocument type
 
+-- ─── 1) JSONB 컬럼 추가 ────────────────────────────────────────
 ALTER TABLE user_store_data
   ADD COLUMN IF NOT EXISTS business_documents jsonb DEFAULT '[]'::jsonb;
 
 COMMENT ON COLUMN user_store_data.business_documents IS
   '2026-05-12 추가. 사업 서류 PDF 메타데이터 + Storage URL 배열. 실제 파일은 business-documents 버킷.';
 
--- ── Storage bucket 생성 (별도 RPC / Supabase UI 에서 실행 권장) ──
+-- ─── 2) Storage 버킷 생성 (private + 10MB + PDF/JPG/PNG/WebP) ────
+--
+-- ⚠ Supabase Studio (대시보드) 에서 실행 권장.
+--    storage.buckets 직접 INSERT 시 service-role 권한 필요.
+--    아래 SQL 은 reference 용. 실제 적용 시 Studio → Storage → New bucket.
+--
 -- INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 -- VALUES (
 --   'business-documents',
 --   'business-documents',
---   false,  -- private — signed URL 로만 접근
+--   false,  -- private — signed URL 만 접근
 --   10485760,  -- 10MB 상한
---   ARRAY['application/pdf', 'image/jpeg', 'image/png']::text[]
+--   ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/webp']::text[]
 -- ) ON CONFLICT (id) DO NOTHING;
+
+-- ─── 3) RLS 정책 (본인 폴더만 read/write/delete) ────────────────
 --
--- ── RLS Policy (사장님 본인 서류만 read/write) ──
--- CREATE POLICY "business_documents_own_user"
---   ON storage.objects FOR ALL
---   USING (bucket_id = 'business-documents' AND (auth.uid())::text = (storage.foldername(name))[1])
---   WITH CHECK (bucket_id = 'business-documents' AND (auth.uid())::text = (storage.foldername(name))[1]);
+-- 경로 구조: `{user_id}/{kind}/{uuid}.{ext}`
+-- 첫 segment 가 user_id 와 일치하면 통과 — 본인 폴더만 접근 가능.
+--
+-- ⚠ 아래 정책도 Supabase Studio Authentication → Policies 에서 적용 권장.
+--    또는 service_role 키로 다음 SQL 실행:
+--
+-- CREATE POLICY "business_documents_select_own"
+--   ON storage.objects FOR SELECT
+--   USING (
+--     bucket_id = 'business-documents'
+--     AND (auth.uid())::text = (storage.foldername(name))[1]
+--   );
+--
+-- CREATE POLICY "business_documents_insert_own"
+--   ON storage.objects FOR INSERT
+--   WITH CHECK (
+--     bucket_id = 'business-documents'
+--     AND (auth.uid())::text = (storage.foldername(name))[1]
+--   );
+--
+-- CREATE POLICY "business_documents_delete_own"
+--   ON storage.objects FOR DELETE
+--   USING (
+--     bucket_id = 'business-documents'
+--     AND (auth.uid())::text = (storage.foldername(name))[1]
+--   );
+--
+-- CREATE POLICY "business_documents_update_own"
+--   ON storage.objects FOR UPDATE
+--   USING (
+--     bucket_id = 'business-documents'
+--     AND (auth.uid())::text = (storage.foldername(name))[1]
+--   );
+
+-- ─── 4) Migration apply 체크 ────────────────────────────────────
+-- 적용 확인 SQL:
+-- SELECT column_name, data_type, column_default
+--   FROM information_schema.columns
+--   WHERE table_name = 'user_store_data'
+--     AND column_name = 'business_documents';

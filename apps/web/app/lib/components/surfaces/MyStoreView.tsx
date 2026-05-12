@@ -22,6 +22,7 @@ import { useStoreInfoStore } from "../../stores/store-info-store";
 import { HeroAtAGlance } from "../my-store/HeroAtAGlance";
 import { FinancialSnapshotSection } from "../my-store/FinancialSnapshotSection";
 import { CostManagementCard } from "../my-store/CostManagementCard";
+import { BusinessDocumentsLibraryCard } from "../my-store/BusinessDocumentsLibraryCard";
 import { SectionRenderer } from "../my-store/SectionRenderer";
 import type { DDayItem } from "../my-store/DDayWidget";
 import { StickyTOC } from "../my-store/StickyTOC";
@@ -328,6 +329,11 @@ export function MyStoreView() {
           ko={ko}
           expenseFields={d.businessCtx?.expenseFields?.map((f) => ({ fieldKey: f.fieldKey, label: f.label }))}
         />
+
+        {/* 2026-05-12 P1 #13: 사업 서류 라이브러리 — 중앙 보관소.
+            단계별 inline 업로드와 같은 SSOT 공유 (store-info-store.businessDocuments).
+            사장님이 한 곳에서 사업자등록증·영업신고증·위생교육·상표등록증 등 모두 관리. */}
+        <BusinessDocumentsLibraryCard ko={ko} />
 
         {/* 모든 섹션 동적 렌더 */}
         {allSections.map((section) => {

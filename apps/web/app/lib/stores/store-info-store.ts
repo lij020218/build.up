@@ -191,6 +191,10 @@ type Actions = {
   addIndustryArrayItem: (sectionId: string, item: Record<string, unknown>) => void;
   updateIndustryArrayItem: (sectionId: string, id: string, patch: Record<string, unknown>) => void;
   removeIndustryArrayItem: (sectionId: string, id: string) => void;
+  // 2026-05-12 P1 #13: 사업 서류 라이브러리 액션. functional update 로 race 차단.
+  addBusinessDocument: (doc: BusinessDocument) => void;
+  updateBusinessDocument: (id: string, patch: Partial<BusinessDocument>) => void;
+  removeBusinessDocument: (id: string) => void;
   /** Supabase 로딩 시 일괄 적용 */
   hydrate: (data: Partial<State>) => void;
   /** 리셋 */
@@ -293,6 +297,15 @@ export const useStoreInfoStore = create<State & Actions>()(
             },
           };
         }),
+      // 2026-05-12 P1 #13: 사업 서류 라이브러리 액션.
+      addBusinessDocument: (doc) =>
+        set((s) => ({ businessDocuments: [...s.businessDocuments, doc] })),
+      updateBusinessDocument: (id, patch) =>
+        set((s) => ({
+          businessDocuments: s.businessDocuments.map((d) => (d.id === id ? { ...d, ...patch } : d)),
+        })),
+      removeBusinessDocument: (id) =>
+        set((s) => ({ businessDocuments: s.businessDocuments.filter((d) => d.id !== id) })),
       hydrate: (data) => set((s) => ({ ...s, ...data })),
       resetAll: () => set(initialState),
     }),

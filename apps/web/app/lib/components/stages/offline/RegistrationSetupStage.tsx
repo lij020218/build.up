@@ -42,6 +42,7 @@ import {
 } from "../startup/StartupStageShell";
 import { StoreNameInput } from "../shared/StoreNameInput";
 import { StageWrapup } from "../shared/StageWrapup";
+import { BusinessDocumentUpload } from "../../my-store/BusinessDocumentUpload";
 
 /* ───────────────────────────────────────────────────────────────────
  * 카테고리별 인허가 데이터 (2026 검증)
@@ -917,6 +918,47 @@ export function RegistrationSetupStage() {
       </div>
       </>
       )}
+
+      {/* 2026-05-12 P1 #13: 인라인 서류 업로드 — 사업자등록증 발급받은 직후 자연스러운 시점.
+          BusinessDocumentsLibraryCard (내 가게 페이지) 와 같은 SSOT 공유. */}
+      <div style={{ marginTop: 14 }}>
+        <div style={{
+          fontSize: 12, fontWeight: 700, color: MIDNIGHT, opacity: 0.75,
+          letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 10,
+        }}>
+          {language === "ko" ? "이 단계 서류 보관" : "Documents from this stage"}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+          <BusinessDocumentUpload
+            ko={language === "ko"}
+            kind="biz-registration"
+            label={language === "ko" ? "사업자등록증" : "Business Registration Certificate"}
+            hint={language === "ko" ? "홈택스 또는 세무서 발급 PDF/사진. 사업개시일 20일 이내 등록 필수." : "HomeTax/tax office. Required within 20 days of opening."}
+          />
+          {(industryCategoryId === "food" || industryCategoryId === "cafe-dessert") && (
+            <BusinessDocumentUpload
+              ko={language === "ko"}
+              kind="hygiene-cert"
+              label={language === "ko" ? "위생교육 수료증" : "Hygiene Education Cert"}
+              hint={language === "ko" ? "한국외식업중앙회 6시간 (신규 영업자). 영업신고 첨부 서류." : "KFIA 6h (new operators)"}
+            />
+          )}
+          {(industryCategoryId === "food" || industryCategoryId === "cafe-dessert" || industryCategoryId === "beauty") && (
+            <BusinessDocumentUpload
+              ko={language === "ko"}
+              kind="health-cert"
+              label={language === "ko" ? "보건증 (건강진단결과서)" : "Health Cert"}
+              hint={language === "ko" ? "보건소 발급 (장티푸스·결핵 검사). 1년 만료 — 만료 시 재발급 필요." : "Health center, expires after 1yr"}
+              multiple
+            />
+          )}
+        </div>
+        <div style={{ marginTop: 8, fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.55 }}>
+          {language === "ko"
+            ? "📌 업로드한 서류는 「내 가게 > 사업 서류 라이브러리」 에서 한꺼번에 관리할 수 있습니다."
+            : "📌 Uploaded documents are also accessible from My Store > Business Documents Library."}
+        </div>
+      </div>
 
       <StageWrapup
         ko={language === "ko"}
