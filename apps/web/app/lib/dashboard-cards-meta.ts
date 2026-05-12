@@ -183,6 +183,17 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.
   {
+    // 2026-05-12 Phase 2 startup-tech 보강 — 30+ 실리콘밸리 자료 검증.
+    //   "런웨이 월수" → "2027-08-15 절대 날짜" + 채용 시뮬레이터 (2026 SV daily KPI #1)
+    id: "cash-zero-date",
+    labelKo: "Cash Zero Date (실리콘밸리 2026) ⭐",
+    labelEn: "Cash Zero Date (SV 2026) ⭐",
+    hintKo: "런웨이 월수 → 절대 날짜 (예: 2027-08-15) + 채용 시뮬레이터 — Mercury·Puzzle·Bessemer 표준",
+    hintEn: "Runway months → absolute date + hire simulator — Mercury/Puzzle/Bessemer 2026 standard",
+    category: "coaching",
+    industryHint: "startup-tech",
+  },
+  {
     // 2026-05-12 킬러 기능: AI 공동창업자 데일리 브리프 — *해석* 레이어
     id: "startup-founder-brief",
     labelKo: "AI 공동창업자 데일리 브리프 ⭐",

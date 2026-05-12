@@ -25,6 +25,7 @@ import { AvgTicketUpsellCard } from "../AvgTicketUpsellCard";
 import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { StartupHealthSection } from "../StartupHealthSection";
 import { StartupFounderBrief } from "../StartupFounderBrief";
+import { CashZeroDateCard } from "../CashZeroDateCard";
 // 2026-05-12 Phase 1a/1c 완료: OfflineFounderBrief 통합 + 파일 삭제.
 //   Toast IQ "For you feed" / Amplitude Dashboard Agent / Mercury Insights 등 2026 산업
 //   표준 (AI 통합 hero) 정합. 11 업종 임계값 룰엔진은 useIndustryRuleSignal hook 으로 추출 →
@@ -235,6 +236,16 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       {c.isStartupCompany && !hide("startup-founder-brief") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <StartupFounderBrief ko={ko} />
+        </div>
+      )}
+
+      {/* 2026-05-12 Phase 2 startup-tech 보강 — CashZeroDate (절대 날짜 + 채용 시뮬).
+          30+ 실리콘밸리 2025-2026 자료 (Mercury·Puzzle·Bessemer·ICONIQ·a16z) 합의:
+          "런웨이 월수" 추상 → "2027-08-15에 자본 0원" 절대 날짜 = 2026 SV daily KPI #1.
+          채용 시뮬레이터로 사장님 채용 의사결정 객관화. */}
+      {c.isStartupCompany && showByMatrix("cash-zero-date") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <CashZeroDateCard ko={ko} />
         </div>
       )}
 

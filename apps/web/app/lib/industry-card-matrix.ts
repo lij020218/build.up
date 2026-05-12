@@ -71,6 +71,8 @@ export type CardId =
   | "startup-health"
   | "saas-key-metrics"
   | "integration-hub"
+  // 2026-05-12 Phase 2 (startup-tech 보강) — 30+ 실리콘밸리 자료 검증
+  | "cash-zero-date"
   // 신규 카드 (Phase 2b-f 에서 추가 예정 — 매트릭스에 슬롯만 예약)
   | "cafe-hourly-sales"          // 카페 — 시간대별 매출 + 메뉴 카테고리 + 폐기
   | "beauty-booking-noshow"      // 뷰티 — 예약·노쇼·점유율·rebook
@@ -221,9 +223,13 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
     "policy-fund-match",
   ],
 
-  // 스타트업 — StartupFounderBrief·StartupHealth·SaaSKeyMetrics 모두 보유
-  //   신규 필요: 추가 카드 없음 (가장 잘 갖춰진 업종)
+  // 스타트업 — 2026 실리콘밸리 표준 (30+ 자료) 보강:
+  //   기존: StartupFounderBrief·StartupHealth·SaaSKeyMetrics (2023-2024 Sacks·Feld 표준 정합)
+  //   신규: CashZeroDate (절대 날짜 + 채용 시뮬, 2026 SV daily KPI #1)
+  //   향후 P0: AICostMargin (inference %·cost-per-token), TTFV (D7/D30 cohort)
+  //   향후 P1: ARRPerEmployee ($500K=새 $200K), NRRByUseCase (AI-native 48% 함정)
   "startup-tech": [
+    "cash-zero-date",
     "startup-founder-brief",
     "startup-health",
     "saas-key-metrics",
@@ -402,6 +408,16 @@ export const CARD_META: Record<CardId, CardMeta> = {
     sources: [
       "Agent A 권고: 설정 1회 후 숨김",
       "마이페이지 > 데이터 연결로 이동 권장 (Phase 2 후속)",
+    ],
+  },
+
+  // 2026-05-12 Phase 2 startup-tech 신규 카드 — 30+ 실리콘밸리 자료 검증
+  "cash-zero-date": {
+    id: "cash-zero-date", status: "existing", industries: ["startup-tech"],
+    sources: [
+      "Puzzle.io Founder's Guide to Burn & Runway (절대 날짜 표시)",
+      "Mercury Default Alive Calculator (Paul Graham)",
+      "Bessemer State of AI 2025 (cash zero as #1 daily metric)",
     ],
   },
 

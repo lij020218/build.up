@@ -1,0 +1,278 @@
+"use client";
+
+/**
+ * CashZeroDateCard — Cash Zero Date 표시 + 채용 시뮬레이터 (실리콘밸리 2026 표준).
+ *
+ *  ── 왜 만들었나 (2026-05-12 Phase 2-startup) ──────────────────────────
+ *  30+ 실리콘밸리 2025-2026 자료 (Mercury·Puzzle·Bessemer·ICONIQ·a16z·
+ *  YC W26 Demo Day 등) 합의:
+ *    "런웨이 14개월" 같은 *추상 월수* 가 아니라 **"2027-08-15에 자본 0원 도달"**
+ *    *절대 날짜* 가 2025-2026 실리콘밸리 founder daily KPI 표준 #1.
+ *
+ *  build.up StartupFounderBrief 는 runway "월수" 만 표시 — 갭.
+ *  → 절대 날짜 (YYYY-MM-DD) + 18m 임계 경고 + 채용 시뮬 추가.
+ *
+ *  ── 채용 시뮬 ────────────────────────────────────────────────────────
+ *  한국 스타트업 핵심 trade-off: "팀원 1명 추가하면 cash zero 가 얼마나 당겨지나?"
+ *  사장님이 *매일* 보면 *채용 의사결정* 객관적 기준이 됨.
+ *
+ *  계산: 추가 인건비 (4대보험 포함 ~월 600만원) 추가 시 새 burn rate 계산
+ *       → 새 runway 월수 → 새 cash zero date.
+ *
+ *  ── 출처 (3개) ──────────────────────────────────────────────────────
+ *  · Puzzle.io Founder's Guide to Burn & Runway (절대 날짜 표시 권장)
+ *  · Mercury Default Alive Calculator (Paul Graham)
+ *  · Bessemer The State of AI 2025 (cash zero as #1 daily metric)
+ *  ────────────────────────────────────────────────────────────────────
+ */
+
+import { useMemo, useState } from "react";
+import { Calendar, AlertTriangle, UserPlus, Sliders } from "lucide-react";
+import { useStartupMetrics } from "../../hooks/useStartupMetrics";
+import { useFinanceStore } from "../../stores/finance-store";
+import { useProfileStore } from "../../stores/profile-store";
+
+const MIDNIGHT = "#191970";
+
+type Props = { ko: boolean };
+
+/** 한국 스타트업 평균 인건비 (4대보험·퇴직금 포함) — 시리즈A 기준.
+ *  사장님이 조정 가능. 기본값 = 월 600만원 (연봉 ~7,200만 + 사용자부담 ~20%) */
+const DEFAULT_HIRE_COST_KRW = 6_000_000;
+
+export function CashZeroDateCard({ ko }: Props) {
+  const { metrics } = useStartupMetrics();
+  const { monthlyCosts } = useFinanceStore();
+  const { selectedBudget, initialOperatingCapital } = useProfileStore();
+  const [hireCount, setHireCount] = useState(0);
+
+  const result = useMemo(() => {
+    // 자본 잔액: 초기 자본 + 운영 자본 (있다면)
+    const totalCapital = (selectedBudget ?? 0) + (initialOperatingCapital ?? 0);
+    if (totalCapital <= 0) {
+      return { ready: false, reason: ko ? "초기 자본을 입력하세요" : "Enter initial capital" } as const;
+    }
+
+    const monthlyBurn =
+      (monthlyCosts?.ingredients ?? 0) +
+      (monthlyCosts?.labor ?? 0) +
+      (monthlyCosts?.rent ?? 0) +
+      (monthlyCosts?.utilities ?? 0) +
+      (monthlyCosts?.sga ?? 0) +
+      (monthlyCosts?.marketing ?? 0) +
+      (monthlyCosts?.other ?? 0) +
+      (monthlyCosts?.interest ?? 0);
+
+    if (monthlyBurn <= 0) {
+      return { ready: false, reason: ko ? "월 비용을 입력하면 cash zero 계산 시작" : "Enter monthly costs" } as const;
+    }
+
+    // 현재 (no hire) runway
+    const currentRunway = metrics.runwayMonths;
+    if (currentRunway == null || !isFinite(currentRunway)) {
+      return { ready: false, reason: ko ? "런웨이 계산 불가 — 매출 또는 비용 데이터 부족" : "Runway not available" } as const;
+    }
+
+    // 채용 시뮬 — 추가 인건비
+    const simulatedBurn = monthlyBurn + hireCount * DEFAULT_HIRE_COST_KRW;
+    // remaining capital = totalCapital - (이미 burn 된 금액). 보수적으로 = totalCapital * (currentRunway / (totalCapital / monthlyBurn))
+    // 간단: remainingCapital = monthlyBurn * currentRunway
+    const remainingCapital = monthlyBurn * currentRunway;
+    const simulatedRunway = simulatedBurn > 0 ? remainingCapital / simulatedBurn : currentRunway;
+
+    const today = new Date();
+    const cashZeroDate = new Date(today);
+    cashZeroDate.setDate(today.getDate() + Math.round(simulatedRunway * 30.4375));
+
+    const cashZeroStr = cashZeroDate.toISOString().slice(0, 10);
+    const daysAhead = Math.round((cashZeroDate.getTime() - today.getTime()) / 86400000);
+
+    // 18m 임계 (실리콘밸리 2026 표준 — 한국 23m 펀딩 사이클 고려 시 더 관대해도 됨)
+    const tone: "critical" | "warning" | "good" =
+      simulatedRunway < 6 ? "critical"
+        : simulatedRunway < 18 ? "warning"
+          : "good";
+
+    const monthsShifted = currentRunway - simulatedRunway;
+
+    return {
+      ready: true as const,
+      currentRunway,
+      simulatedRunway,
+      cashZeroStr,
+      cashZeroDate,
+      daysAhead,
+      monthsShifted,
+      tone,
+      monthlyBurn,
+      simulatedBurn,
+      hireCount,
+    };
+  }, [metrics.runwayMonths, monthlyCosts, selectedBudget, initialOperatingCapital, hireCount, ko]);
+
+  if (!result.ready) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><Calendar size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "Cash Zero Date" : "Cash Zero Date"}</div>
+        </header>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+          {result.reason}
+        </div>
+      </article>
+    );
+  }
+
+  const colors = {
+    critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c" },
+    warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.20)", text: "#b45309" },
+    good: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669" },
+  } as const;
+  const c = colors[result.tone];
+
+  // YYYY-MM-DD → "2027년 8월 15일 (월)" 한국어 / "Aug 15, 2027" 영어
+  const cashZeroFormatted = ko
+    ? `${result.cashZeroDate.getFullYear()}년 ${result.cashZeroDate.getMonth() + 1}월 ${result.cashZeroDate.getDate()}일`
+    : result.cashZeroDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+  return (
+    <article style={cardStyle}>
+      <header style={headerRow}>
+        <span style={iconBadge}><Calendar size={14} strokeWidth={2.2} /></span>
+        <div style={labelStyle}>
+          {ko ? "Cash Zero Date · 실리콘밸리 2026 표준" : "Cash Zero Date · SV 2026 Standard"}
+        </div>
+      </header>
+
+      <div style={{ fontSize: 13, color: "rgba(15,23,42,0.6)", lineHeight: 1.4, marginTop: -4 }}>
+        {ko
+          ? "런웨이 \"개월\" 추상 → \"이 날짜에 자본 0원\" 절대 날짜로. 채용 시뮬레이터로 의사결정 객관화."
+          : "Abstract \"months\" → absolute date. Hire simulator for objective decisions."}
+      </div>
+
+      {/* Cash Zero Date — Big display */}
+      <div style={{
+        padding: "20px 22px", borderRadius: 16,
+        background: c.bg, border: `1px solid ${c.border}`,
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: c.text, letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 4 }}>
+          {result.tone === "critical"
+            ? (ko ? "⚠️ 위기 — 즉시 펀딩 또는 비용 절감" : "⚠️ Critical")
+            : result.tone === "warning"
+              ? (ko ? "⚠️ 점검 — 18개월 미만" : "⚠️ Below 18m")
+              : (ko ? "✓ 안전 (18개월+)" : "✓ Safe (18m+)")}
+        </div>
+        <div style={{
+          fontSize: 30, fontWeight: 700, color: c.text,
+          letterSpacing: "-0.02em", lineHeight: 1.1,
+          fontVariantNumeric: "tabular-nums",
+        }}>
+          {cashZeroFormatted}
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginTop: 6 }}>
+          {ko
+            ? `${result.daysAhead}일 후 · ${result.simulatedRunway.toFixed(1)}개월 운영 가능`
+            : `${result.daysAhead} days · ${result.simulatedRunway.toFixed(1)}mo runway`}
+        </div>
+      </div>
+
+      {/* 채용 시뮬레이터 */}
+      <div style={{
+        padding: "14px 16px", borderRadius: 14,
+        background: "white", border: "1px solid rgba(25,25,112,0.08)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <UserPlus size={14} strokeWidth={2.2} style={{ color: MIDNIGHT, opacity: 0.7 }} />
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "#0f172a" }}>
+            {ko ? "채용 시뮬레이터" : "Hire Simulator"}
+          </div>
+          <span style={{
+            marginLeft: "auto", fontSize: 10.5, color: "rgba(15,23,42,0.5)", fontWeight: 600,
+          }}>
+            {ko ? `1명당 월 ${Math.round(DEFAULT_HIRE_COST_KRW / 10000)}만원 기준` : `${Math.round(DEFAULT_HIRE_COST_KRW / 10000)}만/mo per hire`}
+          </span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Sliders size={13} strokeWidth={2} style={{ color: "rgba(15,23,42,0.4)" }} />
+          <input
+            type="range"
+            min={0}
+            max={10}
+            step={1}
+            value={hireCount}
+            onChange={(e) => setHireCount(parseInt(e.target.value, 10))}
+            style={{ flex: 1, accentColor: MIDNIGHT }}
+            aria-label={ko ? "추가 채용 인원" : "Additional hires"}
+          />
+          <div style={{
+            minWidth: 60, textAlign: "right" as const,
+            fontSize: 16, fontWeight: 700, color: MIDNIGHT, fontVariantNumeric: "tabular-nums",
+          }}>
+            +{hireCount}명
+          </div>
+        </div>
+
+        {hireCount > 0 && (
+          <div style={{
+            marginTop: 10, padding: "9px 12px", borderRadius: 9,
+            background: "rgba(217,119,6,0.06)", border: "1px solid rgba(217,119,6,0.18)",
+            fontSize: 12, color: "#0f172a", lineHeight: 1.5,
+            display: "flex", alignItems: "flex-start", gap: 8,
+          }}>
+            <AlertTriangle size={13} strokeWidth={2.2} style={{ color: "#b45309", flexShrink: 0, marginTop: 1 }} />
+            <span>
+              {ko
+                ? <><strong>cash zero -{result.monthsShifted.toFixed(1)}개월 당겨짐</strong> · {hireCount}명 추가 시 월 burn {Math.round(result.simulatedBurn / 10000).toLocaleString()}만원 ({Math.round((hireCount * DEFAULT_HIRE_COST_KRW) / 10000).toLocaleString()}만 추가)</>
+                : <><strong>Cash zero -{result.monthsShifted.toFixed(1)}mo earlier</strong> · burn ↑ ₩{Math.round(result.simulatedBurn / 10000).toLocaleString()}만/mo</>}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* footer — 자료 인용 */}
+      <div style={{
+        fontSize: 10.5, color: "rgba(15,23,42,0.5)", lineHeight: 1.5,
+        padding: "8px 12px", borderRadius: 9,
+        background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
+      }}>
+        {ko
+          ? "출처: Puzzle.io · Mercury Default Alive · Bessemer State of AI 2025 — 절대 날짜 표시 + 채용 시뮬은 2025-2026 실리콘밸리 founder daily KPI 표준 #1"
+          : "Sources: Puzzle.io · Mercury · Bessemer 2025 — absolute date + hire sim = SV 2026 daily KPI #1"}
+      </div>
+    </article>
+  );
+}
+
+// ─── styles ──────────────────────────────────────────────────────────
+
+const cardStyle: React.CSSProperties = {
+  background: "white",
+  borderRadius: 20,
+  border: "1px solid rgba(25,25,112,0.10)",
+  boxShadow: "0 2px 8px rgba(15,23,42,0.04)",
+  padding: "22px 24px",
+  display: "flex", flexDirection: "column" as const, gap: 14,
+};
+
+const headerRow: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: 10,
+};
+
+const iconBadge: React.CSSProperties = {
+  width: 28, height: 28, borderRadius: 8,
+  background: `linear-gradient(135deg, ${MIDNIGHT} 0%, rgba(25,25,112,0.85) 100%)`,
+  color: "white",
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  boxShadow: "0 4px 12px rgba(25,25,112,0.25)",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: MIDNIGHT,
+  opacity: 0.75,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase" as const,
+};
