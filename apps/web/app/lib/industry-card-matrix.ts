@@ -463,7 +463,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "education-enrollment": {
-    id: "education-enrollment", status: "planned", industries: ["education"],
+    id: "education-enrollment", status: "existing", industries: ["education"],
     sources: [
       "학원조아·공선학관·클래스업·에듀OK",
       "Spider Strategies Education KPI",

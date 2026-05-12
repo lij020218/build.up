@@ -27,6 +27,7 @@ import { StartupHealthSection } from "../StartupHealthSection";
 import { StartupFounderBrief } from "../StartupFounderBrief";
 import { CashZeroDateCard } from "../CashZeroDateCard";
 import { FitnessRetentionCard } from "../FitnessRetentionCard";
+import { EducationEnrollmentCard } from "../EducationEnrollmentCard";
 // 2026-05-12 Phase 1a/1c 완료: OfflineFounderBrief 통합 + 파일 삭제.
 //   Toast IQ "For you feed" / Amplitude Dashboard Agent / Mercury Insights 등 2026 산업
 //   표준 (AI 통합 hero) 정합. 11 업종 임계값 룰엔진은 useIndustryRuleSignal hook 으로 추출 →
@@ -153,11 +154,19 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
 
       {/* 2026-05-13 Phase 2b — FitnessRetentionCard (피트니스 전용).
           105 자료 (Mindbody·MarianaTek·Glofox·WellnessLiving·FIA Retention) 검증.
-          D-7 만료 임박 + 30/60/90일 cohort 잔존율 + 오늘의 행동 1개.
-          FIA 90일 50% 이탈 기준 — 한국 "바디프로필 열풍" 후 1회성 가입 증가 대응. */}
+          D-7 만료 임박 + 30/60/90일 cohort 잔존율 + 오늘의 행동 1개. */}
       {showByMatrix("fitness-retention") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <FitnessRetentionCard ko={ko} industryCategoryId={d.industryCategoryId} />
+        </div>
+      )}
+
+      {/* 2026-05-13 Phase 2c — EducationEnrollmentCard (교육 전용).
+          17 자료 (학원조아·공선학관·Spider Strategies·Brightwheel) 검증.
+          D-14 재등록 임박 + 30/60/90/1년 cohort 잔존율 + 한국 학원 임계값. */}
+      {showByMatrix("education-enrollment") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <EducationEnrollmentCard ko={ko} industryCategoryId={d.industryCategoryId} />
         </div>
       )}
 

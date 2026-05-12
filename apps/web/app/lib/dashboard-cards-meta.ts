@@ -182,6 +182,16 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
     industryHint: "all",
   },
+  {
+    // 2026-05-13 Phase 2c: 교육 신규 카드 — 17 자료 (학원조아·공선학관·Spider Strategies)
+    id: "education-enrollment",
+    labelKo: "재등록 + 학생 잔존 · 교육 ⭐",
+    labelEn: "Re-enrollment · Education ⭐",
+    hintKo: "D-14 재등록 임박 + 30/60/90일/1년 cohort 잔존율 (한국 학원 표준) + 행동 1개",
+    hintEn: "D-14 re-enrollment + cohort retention (KR academy standards) + top action",
+    category: "coaching",
+    industryHint: "all",
+  },
   // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.
