@@ -180,7 +180,13 @@ export function CostStructureCard() {
       },
     ];
 
-    return { totalSales: sales, rows: costRows, hasCosts: mc.ingredients + mc.labor + mc.rent > 0 };
+    // hasCosts: 비용 *합계* 가 의미 있어야 함. 기존 ingredients+labor+rent 만 체크는
+    //          사장님이 utilities/sga 만 입력한 경우 false 처리되는 버그.
+    //          개정: 7개 비용 항목 합 + 월 매출의 5%+ 인지 (의미 있는 입력)
+    const totalCostsRaw = (mc.ingredients ?? 0) + (mc.labor ?? 0) + (mc.rent ?? 0)
+      + (mc.utilities ?? 0) + (mc.sga ?? 0) + (mc.marketing ?? 0) + (mc.other ?? 0);
+    const hasCosts = totalCostsRaw > 0 && totalCostsRaw / sales > 0.005; // 0.5%+ 이상 입력 시 신뢰
+    return { totalSales: sales, rows: costRows, hasCosts };
   }, [mc, entries, industryCategoryId, ingredientsLabel, laborLabel, rentLabel]);
 
   if (!hasCosts || rows.length === 0) {
@@ -191,8 +197,8 @@ export function CostStructureCard() {
         </div>
         <div style={emptyState}>
           {ko
-            ? `내 가게 탭 → 비용 관리에서 ${ingredientsLabel}·${laborLabel}·${rentLabel}을 입력하세요`
-            : `Go to My Store → Cost Management to enter ${ingredientsLabel}, ${laborLabel}, ${rentLabel}`}
+            ? `내 가게 탭 → 비용 관리에서 ${ingredientsLabel}·${laborLabel}·${rentLabel}을 입력해야 정확한 비율 분석이 가능합니다`
+            : `Go to My Store → Cost Management to enter ${ingredientsLabel}, ${laborLabel}, ${rentLabel} for accurate ratio analysis`}
         </div>
       </div>
     );
@@ -237,7 +243,12 @@ export function CostStructureCard() {
                     fontVariantNumeric: "tabular-nums",
                     letterSpacing: "-0.02em",
                   }}>
-                    {row.ratio.toFixed(row.ratio % 1 === 0 ? 0 : 1)}%
+                    {/* 0% 라운딩 false positive 방지 — 0 < ratio < 0.5 면 "<1%" 표시 */}
+                    {row.ratio === 0
+                      ? "0%"
+                      : row.ratio < 1
+                        ? "<1%"
+                        : `${row.ratio.toFixed(row.ratio % 1 === 0 ? 0 : 1)}%`}
                   </span>
                 </div>
 

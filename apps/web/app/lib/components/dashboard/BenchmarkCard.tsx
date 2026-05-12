@@ -104,6 +104,15 @@ export function BenchmarkCard() {
   // ─── Empty ────────────────────────────────────────────────────────────────
 
   if (!result || result.cases.length === 0) {
+    // 정직한 empty state — 정확히 무엇이 부족한지 표시
+    //  · 매출 7일+ : 주간 변화 계산 가능
+    //  · 비용 입력 : prime ratio 계산
+    //  · 14일+ : 전주 대비 비교
+    const sales7d = entries.length;
+    const hasCosts = mc && ((mc.ingredients ?? 0) + (mc.labor ?? 0) + (mc.rent ?? 0)) > 0;
+    const missing: string[] = [];
+    if (sales7d < 7) missing.push(`매출 ${7 - sales7d}일 더`);
+    if (!hasCosts) missing.push("월 비용 입력");
     return (
       <div style={card}>
         <div style={headerRow}>
@@ -112,8 +121,12 @@ export function BenchmarkCard() {
         </div>
         <div style={emptyState}>
           {ko
-            ? "매출 데이터가 쌓이면 비슷한 상황에서 성공한 기업의 전략을 추천합니다"
-            : "As data accumulates, we'll recommend strategies from companies that succeeded in similar situations"}
+            ? missing.length > 0
+              ? `벤치마크 분석 활성화 조건: ${missing.join(" · ")} 필요. 입력 후 한국 사장님 15개 상황별 성공 전략이 자동 추천됩니다.`
+              : "현재 상황이 안정적 — 임계 신호 없음. 매출·비용 추세에 변화 발생 시 자동으로 활성화됩니다."
+            : missing.length > 0
+              ? `Needs: ${missing.join(", ")}. 15 KR situation patterns then recommended.`
+              : "Stable — no critical signal. Auto-activates on revenue/cost shift."}
         </div>
       </div>
     );

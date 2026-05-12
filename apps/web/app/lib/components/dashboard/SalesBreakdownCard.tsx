@@ -7,11 +7,12 @@ import { Users } from "lucide-react";
 
 /* ─── Formatting ─── */
 
+// 한국 원화 — 항상 "원" 단위 (혼동 방지).
 const fmtWon = (n: number): string => {
   const abs = Math.abs(n);
-  if (abs >= 10_000_000) return `${(n / 10_000).toLocaleString("ko-KR", { maximumFractionDigits: 0 })}만`;
-  if (abs >= 10_000) return `${Math.round(n / 10_000)}만`;
-  return `${n.toLocaleString("ko-KR")}`;
+  if (abs >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억원`;
+  if (abs >= 10_000) return `${Math.round(n / 10_000).toLocaleString("ko-KR")}만원`;
+  return `${n.toLocaleString("ko-KR")}원`;
 };
 
 const fmtPct = (n: number): string =>
@@ -87,13 +88,13 @@ export function SalesBreakdownCard() {
         </div>
         <div style={multiplySign}>&times;</div>
         <div style={formulaSegment}>
-          <div style={mainValue}>&yen;{avgTicket.toLocaleString("ko-KR")}</div>
+          <div style={mainValue}>{avgTicket.toLocaleString("ko-KR")}원</div>
           <div style={label}>객단가</div>
         </div>
         <div style={equalsSign}>=</div>
         <div style={formulaSegment}>
           <div style={{ ...mainValue, color: "#191970", fontSize: "26px" }}>
-            &yen;{fmtWon(totalSales)}
+            {fmtWon(totalSales)}
           </div>
           <div style={label}>총매출</div>
         </div>
