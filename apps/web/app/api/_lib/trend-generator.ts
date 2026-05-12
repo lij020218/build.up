@@ -32,13 +32,25 @@ export type TrendItem = {
   title: string;
   reason: string;
   contentIdea: string;
-  format: "reel" | "story" | "short" | "post" | "blog";
+  format: "reel" | "story" | "short" | "post" | "blog" | "campaign" | "ad";
   hashtags: string[];
   referenceUrl: string | null;
   howToExecute?: string[];
   strategyExample?: string;
   effectiveness?: string;
   tools?: TrendToolRecommendation[];
+  // ── 2026-05-12 추가: 마케팅 캠페인 사례 모드 (쇼츠 밈 베끼기 → 캠페인 학습) ──
+  /** 캠페인·광고 이름 (예: "Gemini Hey Mom", "Manus AI 데모") */
+  campaignName?: string;
+  /** 캠페인 운영 브랜드 (예: "Google", "Manus", "삼성전자") */
+  brandName?: string;
+  /** 검증된 조회수·도달 지표 (예: 1_200_000) — UI 가 표시 여부 결정 */
+  viewCount?: number;
+  /**
+   * 이 캠페인에서 사장님이 *배워올 점* 1~2문장.
+   * "어떻게 따라할지" 가 아니라 "왜 이 사례가 너의 업종에 의미 있는지" 강조.
+   */
+  lesson?: string;
 };
 
 export type TrendSource = { name: string; url: string; publishedDate?: string };
@@ -103,10 +115,14 @@ export async function generateTrends(input: GenerateTrendsInput): Promise<Genera
   const tasks: Array<Promise<void>> = [];
 
   // ★ YouTube Data API — 가장 신뢰도 높은 실제 트렌딩 신호 (KR mostPopular + 키워드 검색)
+  // 2026-05-12: categoryId 전달로 업종별 MIN_VIEW_COUNT 필터 적용 (조회수 500회 영상 차단)
   if (youtubeKey) {
     tasks.push((async () => {
       const videoCategoryId = YOUTUBE_CATEGORY_BY_INDUSTRY[categoryId];
-      const videos = await fetchYoutubeForIndustry(youtubeKey, bizLabel, { videoCategoryId });
+      const videos = await fetchYoutubeForIndustry(youtubeKey, bizLabel, {
+        videoCategoryId,
+        categoryId,
+      });
       grounding.youtubeVideos = videos;
       grounding.sources.push(
         ...videos.slice(0, 4).map((v) => ({
@@ -200,66 +216,101 @@ export async function generateTrends(input: GenerateTrendsInput): Promise<Genera
     groundingBlock = "\n[외부 데이터 소스 미구성 — web_search 툴로 직접 수집하세요]\n";
   }
 
-  // ⚠️ 2026-05-11 사용자 요청 강화:
-  //   "실제로 유튜브나 인스타그램에서 지금 조회수 잘 나오는 트렌디한 마케팅·밈·유행 영상"
-  //   → 추상적 카테고리("쇼츠 트렌드") 가 아닌 *실제 영상 5개 직접 추천*.
-  //   referenceUrl 필수 (null 금지), 조회수·게시일을 reason 에 직접 인용.
+  // ⚠️ 2026-05-12 *대대적* 재설계 — 사장님 신고:
+  //   "유튜브 영상 다 가져오는게 아니라 *마누스* 같은 AI 에이전트 데모,
+  //    *제미나이 Hey Mom* 어버이날 광고처럼 실제 마케팅 캠페인 매일 찾아서 알려달라.
+  //    지금 500회짜리 영상을 트렌드라고 알려주는데 이러면 안돼."
+  //   →
+  //   기존: 쇼츠 밈 베끼기 모드 ("주문~플레이팅 컷 따라하자")
+  //   변경: 마케팅 *캠페인 학습* 모드 ("이 캠페인 사례가 너의 업종에 의미 있다, 배워라")
+  //
+  //   주요 변화:
+  //   • title → 영상 포맷 이름이 아니라 *캠페인·광고 이름* (예: "Gemini Hey Mom")
+  //   • brandName + campaignName 분리 — 어떤 브랜드의 어떤 캠페인인지 명시
+  //   • lesson — "왜 이 사례가 너의 업종에 의미 있는가" (단순 베끼기 X)
+  //   • viewCount — 조회수 명시 (UI 에 신뢰성 신호로 표시)
+  //   • 화제성 기준선: 업종에 따라 1만~10만 이상만 트렌드로 라벨링
   const hasYoutubeData = grounding.youtubeVideos.length >= 3;
-  const prompt = `오늘 ${today} · 한국 ${bizLabel} 업종 소셜 미디어 *실제 트렌딩 영상* 5개.
+  const prompt = `오늘 ${today} · 한국 ${bizLabel} 업종 사장님이 *배워야 할* 마케팅 캠페인/광고 사례 5개.
 
 ${groundingBlock}
 
-🎯 **목표**: 사장님이 5초 안에 "오 이 영상 봐, 우리도 비슷하게 찍자" 느끼는 *실제 영상 5개*.
-   추상적 트렌드 카테고리 금지. "쇼츠 트렌드 활용" 같은 일반론 X. **구체 영상 1개를 사례로 직접 인용**.
+🎯 **목표**: 사장님이 "오 이런 광고가 화제구나, 우리 업종에도 의미 있겠다" 라고 *학습* 할 캠페인 5개.
+   ⚠ **추상적 트렌드 카테고리·쇼츠 밈 베끼기 절대 금지**.
+   ⚠ **조회수 적은 영상 (3만 미만, 테크는 1만 미만) 추천 절대 금지** — "트렌드" 라벨링 부적합.
+   ✓ **실제로 화제된 광고·캠페인·바이럴 마케팅 사례** — 그 캠페인이 뭐였는지, 누가 했는지, 왜 화제였는지.
 
-📌 **선정 기준** (반드시 위 grounding 데이터 또는 web_search 결과 기반):
+📌 **선정 기준**:
 ${hasYoutubeData
-    ? `1. 위 [YouTube KR 실시간 트렌딩] 목록에서 ${bizLabel} 업종과 *조금이라도 연결 가능한* 영상 5개 우선 선정.
-2. 게시일 최근 14일 + 조회수 명시된 것만.
-3. 그 영상에서 본 *포맷·밈·연출 패턴*을 사장님 가게에 어떻게 적용할지 1문장.`
-    : `1. web_search 로 "${bizLabel} 쇼츠 조회수 100만" 등 검색해 최근 14일 실제 트렌딩 영상 5개 찾기.
-2. 영상 URL·제목·게시일·조회수 명시 가능한 것만.`}
-4. **각 영상 1개 = 트렌드 1개**. 일반화 X.
+    ? `1. 위 [YouTube KR 실시간 트렌딩] 목록에서 ${bizLabel} 업종과 의미 있게 연결되는 *광고·캠페인·브랜드 콘텐츠* 우선.
+2. 일반 사용자 콘텐츠(개인 vlog 등) 보다 *브랜드 마케팅* 우선.
+3. 조회수 명시된 것만, 게시일 최근 30일 이내.`
+    : `1. web_search 로 검색: "${bizLabel} 광고 캠페인 2026", "${bizLabel} 바이럴 마케팅 사례", "${bizLabel} brand viral ad May 2026"
+2. 마케팅 전문 매체 (adage.com, adweek.com, adsofbrands.net, mediapost.com, 브랜드뉴스, 캠페인코리아 등) 우선 인용.
+3. 게시일·조회수·평가 가능한 캠페인만 선정.`}
+4. ${bizLabel} 업종에 직접 의미 있는 사례 우선 — 다른 업종이라도 보편적 마케팅 교훈이 있으면 OK.
+5. **각 캠페인 1개 = 트렌드 1개**. 일반론 X.
+
+📚 **참고 사례 톤** (이런 *수준*의 캠페인 찾으세요):
+   • "Gemini Hey Mom" — Google 어버이날 캠페인, 감성 스토리텔링 + AI 제품 시연 결합
+   • "Manus AI 데모 영상" — 2025년 출시 데모가 20시간 만에 100만뷰 (제품 자체가 광고)
+   • 유명 패션·F&B 브랜드의 SNS 바이럴 (도브 #StopTheBeautyTest 등)
+   ⚠ 이건 *참고 톤*일 뿐 — 매일 실제 검색해 *오늘 화제된* 캠페인을 찾으세요.
 
 **필드** (각 트렌드):
-- **title** — 영상에서 본 *포맷/밈 이름* 15자 이내 (예: "음식 ASMR 원테이크", "주문~플레이팅 컷")
-- **reason** — 그 영상의 *조회수 + 게시일* 직접 인용 (예: "5일 전 게시, 850만회 조회 · 댓글 폭주"). grounding 데이터에 있는 숫자 그대로.
-- **contentIdea** — 이 업종이 어떻게 따라할지 1문장 (예: "주문 받자마자 김밥 마는 모습을 30초 안에 원테이크로")
-- **format** — reel / story / short / post / blog
-- **hashtags** — 2~3개. 영상 제목에서 도출
-- **referenceUrl** — **그 영상의 실제 URL (필수, null 금지)**. grounding 데이터의 URL 그대로.
-- **strategyExample** — 그 영상의 *채널명/브랜드명* 1줄 또는 null (예: "백종원 유튜브 채널의 '5분 김밥' 영상")
-- **tools** — 따라할 때 쓸 1~2개 도구 (CapCut/캡컷/InShot/Canva 등)
+- **title** — 캠페인·광고 별칭 25자 이내 (예: "Gemini Hey Mom 어버이날", "Manus AI 데모 영상")
+- **brandName** — 캠페인 운영 브랜드 (예: "Google", "Manus", "삼성전자", "도브")
+- **campaignName** — 캠페인 공식·통용 이름 (예: "Hey Mom", "Manus Launch Demo")
+- **reason** — 왜 화제인지 1~2문장. *조회수·게시일·반응* 등 *구체 수치* 인용.
+   (예: "2026-05-08 게시, 1,200,000회 조회, 댓글 8천 — 감성 스토리텔링이 AI 제품 시연과 결합되며 'AI도 따뜻할 수 있다' 메시지로 호평")
+- **lesson** — ${bizLabel} 업종 사장님이 *배워올 점* 1~2문장.
+   "어떻게 따라 만들지" 가 아니라 "*왜 이 사례가 의미 있는지·전략적 시사점*" 강조.
+   (예: "감정 트리거(엄마) 를 제품 데모와 묶으면 광고가 광고처럼 느껴지지 않는다 — 같은 원리를 가게 스토리텔링에 적용 가능")
+- **contentIdea** — 사장님 가게에 적용 가능한 *전술* 1문장. lesson 보다 구체적·실행 가능.
+   (예: "어버이날 단골 손님 어머니께 보내는 손편지 영상 — 가게 정체성 + 가족 감성")
+- **viewCount** — 정수로 조회수 (모르면 null). grounding 데이터의 숫자 그대로.
+- **format** — "campaign" (광고 캠페인) / "ad" (광고 영상) / "reel" / "short" / "post" / "blog" 중 하나
+- **hashtags** — 2~3개. 캠페인 관련 실제 해시태그
+- **referenceUrl** — **실제 URL (필수, null 금지)**. grounding 또는 web_search 결과의 URL.
+- **strategyExample** — 캠페인의 *핵심 전략 한 줄* (예: "감성 + AI 제품 시연의 결합")
+- **tools** — 사장님이 비슷한 캠페인 만들 때 쓸 도구 1~2개 (CapCut, Canva, ChatGPT 등)
 
 ⚠️ 엄수:
-- 5개 모두 *referenceUrl* 채울 것. 못 채우면 그 영상은 빼고 4개만 출력.
-- 일반론("리뷰가 중요", "단골 만들기") 절대 금지. *영상 자체*가 중심.
+- *referenceUrl* 비우면 그 트렌드는 빼고 4개만 출력. 5개 출력 무리하지 마세요.
+- 일반론("리뷰가 중요") 금지. *구체 캠페인 사례 1개* 가 중심.
+- 조회수 임계 미만 (외식 10만 / 테크 1만 / 기타 3만) 영상은 캠페인 사례여도 추천 금지.
 - 코드블록·<cite> 태그 금지. 쌍따옴표 이스케이프.
 
 JSON 배열만 응답:
 [
   {
-    "title": "포맷 이름 15자",
-    "reason": "X일 전 게시, Y회 조회 — 핵심 매력 1문장",
-    "contentIdea": "이 가게가 어떻게 따라할지 1문장",
-    "format": "short",
+    "title": "캠페인 이름 25자",
+    "brandName": "브랜드명",
+    "campaignName": "캠페인 공식명",
+    "reason": "구체 수치·반응 인용 1~2문장",
+    "lesson": "이 업종이 배워올 전략적 시사점 1~2문장",
+    "contentIdea": "실제 가게에 적용 가능한 전술 1문장",
+    "viewCount": 1200000,
+    "format": "campaign",
     "hashtags": ["#태그1", "#태그2"],
-    "referenceUrl": "https://www.youtube.com/watch?v=... (필수)",
-    "strategyExample": "채널명 또는 브랜드명 1줄",
+    "referenceUrl": "https://... (필수)",
+    "strategyExample": "핵심 전략 한 줄",
     "tools": [{"name": "CapCut", "purpose": "편집", "tier": "freemium", "url": "https://www.capcut.com"}]
   }
 ]`;
 
-  // 3. Claude 호출 (Sonnet 4.6 · web_search 활성화 · 빠른 응답)
+  // 3. Claude 호출 (Sonnet 4.6 · web_search 활성화)
+  // 2026-05-12: 캠페인 사례 모드 — web_search 횟수 3→5 로 증가 (마케팅 매체 도달 보장),
+  // max_tokens 3072→4096 (lesson + brandName + campaignName 추가 필드 수용).
   const client = createAiClient(anthropicApiKey);
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 3072,                         // 8192 → 3072 (짧은 응답)
+    max_tokens: 4096,
     tools: [
       {
         type: "web_search_20260209",
         name: "web_search",
-        max_uses: 3,                          // 8 → 3 (속도·안정성)
+        max_uses: 5,
       } as unknown,
     ],
     messages: [{ role: "user", content: prompt }],

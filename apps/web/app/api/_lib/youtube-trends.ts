@@ -171,28 +171,93 @@ export async function fetchYoutubeKeywordSearch(
 }
 
 /**
+ * 업종별 *최소 조회수* 임계값 — "트렌드" 라벨을 붙일 수 있는 최저 신뢰선.
+ *
+ *  ── 왜 임계값이 필요한가 ─────────────────────────────────────────
+ *  2026-05-12 사장님 신고: 조회수 500회짜리 영상을 "트렌드" 로 추천하던 문제.
+ *  YouTube 검색 결과는 default 로 게시일·관련도순이라 조회수 낮은 영상도 섞임.
+ *  "트렌드" 라는 단어 의미상 *실제 화제* 가 된 것만 추천해야 점주께 의미가 있음.
+ *
+ *  ── 업종별 기준선 (경험적) ───────────────────────────────────────
+ *  • 외식·뷰티·라이프스타일: 100,000+ (mass-market — 화제성 기준 높음)
+ *  • 펫·교육·피트니스:        50,000+ (mid-market — 니치 화제성)
+ *  • 스타트업·테크·B2B:       10,000+ (specialist — 적은 청중이라도 의미)
+ *  • 미지정:                  30,000+ (안전한 중간선)
+ *  ────────────────────────────────────────────────────────────
+ */
+export const MIN_VIEW_COUNT_BY_CATEGORY: Record<string, number> = {
+  food: 100_000,
+  "cafe-dessert": 100_000,
+  retail: 100_000,
+  beauty: 100_000,
+  pet: 50_000,
+  fitness: 50_000,
+  education: 50_000,
+  "online-digital": 50_000,
+  space: 30_000,
+  "living-service": 30_000,
+  "startup-tech": 10_000,
+};
+
+export function getMinViewCount(categoryId: string | undefined): number {
+  if (!categoryId) return 30_000;
+  return MIN_VIEW_COUNT_BY_CATEGORY[categoryId] ?? 30_000;
+}
+
+/**
  * 마케팅 트렌드 그라운딩용 통합 페치.
- * 두 채널을 병렬로 조회 후 합본 — KR 전체 트렌딩 + 업종 키워드 트렌딩.
+ *
+ *  ── 2026-05-12 정책 변경 ────────────────────────────────────────────
+ *  사장님 의도: "유튜브 영상 다 가져오는게 아니라 *실제 마케팅 캠페인·광고 사례*
+ *    (예: 제미나이 Hey Mom, Manus AI 데모) 매일 찾아서 알려달라"
+ *  → 키워드를 "쇼츠" 에서 "광고 / 캠페인 / 브랜드" 로 전환.
+ *  → 업종별 MIN_VIEW_COUNT 필터로 화제성 보장. 500회짜리 영상 추천 차단.
+ *  ────────────────────────────────────────────────────────────────────
  */
 export async function fetchYoutubeForIndustry(
   apiKey: string,
   industryLabel: string,
-  options: { videoCategoryId?: string } = {}
+  options: { videoCategoryId?: string; categoryId?: string } = {}
 ): Promise<YoutubeTrendingItem[]> {
-  const [trending, keyword] = await Promise.all([
+  // 키워드 전략 — "쇼츠" 가 아닌 *마케팅 캠페인·광고 사례* 중심.
+  // 같은 점수대에서 가장 화제성 높은 마케팅 콘텐츠를 잡기 위한 4-way 검색.
+  const queries = [
+    `${industryLabel} 광고 캠페인`,
+    `${industryLabel} 브랜드 마케팅`,
+    `${industryLabel} 바이럴 영상`,
+    `${industryLabel} 광고`,           // 단순 fallback
+  ];
+
+  const [trending, ...keywordSearches] = await Promise.all([
     fetchYoutubeTrendingKR(apiKey, { videoCategoryId: options.videoCategoryId, maxResults: 6 }),
-    fetchYoutubeKeywordSearch(apiKey, `${industryLabel} 쇼츠`, { days: 14, maxResults: 6 }),
+    ...queries.map((q) => fetchYoutubeKeywordSearch(apiKey, q, { days: 30, maxResults: 6 })),
   ]);
 
+  // 모든 키워드 결과 통합 후 조회수 내림차순 정렬
+  const allKeywordResults = keywordSearches.flat();
+
+  const minViews = getMinViewCount(options.categoryId);
+
+  // ── 1) 화제성 임계값 필터 ──
+  // viewCount < minViews 인 영상은 "트렌드" 라벨링 부적합 — 사장님에게 의미 없음.
+  // 예외: mostPopular 차트에 올라온 영상은 KR 전체 트렌딩이라 통과시킴 (해당 업종 관련성은 LLM 이 판단).
+  const trendingIds = new Set(trending.map((v) => v.videoId));
+  const filtered = allKeywordResults.filter(
+    (v) => v.viewCount >= minViews || trendingIds.has(v.videoId)
+  );
+
+  // ── 2) 중복 제거 + 조회수 내림차순 ──
   const seen = new Set<string>();
   const merged: YoutubeTrendingItem[] = [];
-  for (const list of [keyword, trending]) {
+  // mostPopular 가 가장 신뢰도 높음 — 우선 채택
+  for (const list of [trending, filtered]) {
     for (const item of list) {
       if (seen.has(item.videoId)) continue;
       seen.add(item.videoId);
       merged.push(item);
     }
   }
+  merged.sort((a, b) => b.viewCount - a.viewCount);
   return merged.slice(0, 8);
 }
 

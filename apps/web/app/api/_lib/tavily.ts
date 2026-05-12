@@ -102,30 +102,62 @@ export type TavilyTrendStats = {
 };
 
 /**
- * 마케팅 트렌드 전용 검색 — 여러 쿼리 병렬 수행 + 게시일 필터링 강화.
+ * 마케팅 캠페인·광고 사례 검색 — 2026-05-12 사장님 요청에 따라 재설계.
  *
- *  ── 필터링 정책 ───────────────────────────────────
- *  1. `publishedDate` 누락 결과는 **제외** (Tavily days 필터가 작동 안 한 결과)
- *      → 단, 원본 콘텐츠 URL (IG reel·YT shorts·TikTok video) 인 경우 예외 통과.
- *      이런 URL 은 플랫폼 자체 인덱스에서 노출되며 콘텐츠 신선도가 일반적으로 보장됨.
- *  2. 원본 콘텐츠 URL 우선 정렬 → 블로그 요약은 후순위.
- *  ────────────────────────────────────────
+ *  ── 변경 의도 ─────────────────────────────────────────────────────
+ *  종전: "쇼츠·릴스·밈" 키워드 → 일반 사용자 콘텐츠가 다수 → 트렌드성 약함.
+ *  변경: "광고 캠페인·브랜드 마케팅·바이럴 사례" 키워드 + 마케팅 전문 매체 우선.
+ *  목표: 사장님이 *유명 마케팅 캠페인* (예: Gemini Hey Mom, Manus AI 데모)
+ *        에서 배워올 만한 *사례*를 surfacing 하는 것.
+ *  ─────────────────────────────────────────────────────────────────
+ *
+ *  ── 필터링 정책 (유지) ─────────────────────────────
+ *  1. `publishedDate` 누락 결과는 **제외**.
+ *     단, 원본 콘텐츠 URL (IG/YT/TikTok video) 인 경우 예외 통과.
+ *  2. 마케팅 전문 매체 도메인 우선 정렬 → 일반 블로그는 후순위.
+ *  ──────────────────────────────────────────────────
  */
+
+/** 마케팅 캠페인 사례 큐레이션에 신뢰도 높은 매체 도메인 — 우선 정렬에 사용. */
+const MARKETING_PUBLICATION_DOMAINS = [
+  "adage.com",
+  "adweek.com",
+  "campaignlive.com",
+  "campaignasia.com",
+  "campaignbrief.com",
+  "adsoftheworld.com",
+  "adsofbrands.net",
+  "mediapost.com",
+  "marketingdive.com",
+  "brand-news.kr",       // 브랜드뉴스 (Korean)
+  "the-pr.co.kr",        // PR전문 (Korean)
+  "campaignkorea.com",   // 캠페인코리아
+  "kobaco.co.kr",        // 한국방송광고진흥공사
+];
+
+function isMarketingPublication(url: string): boolean {
+  return MARKETING_PUBLICATION_DOMAINS.some((d) => url.includes(d));
+}
+
 export async function fetchTrendingSocialContent(
   apiKey: string,
   industryLabel: string,
   language: "ko" | "en" = "ko"
 ): Promise<{ results: TavilyResult[]; stats: TavilyTrendStats }> {
+  // ── 마케팅 캠페인 사례 중심 쿼리 ──
+  // "쇼츠/릴스" 키워드 제거. 대신 *광고·캠페인·사례* 키워드로 마케팅 전문 매체 도달.
   const queries = language === "ko"
     ? [
-        `${industryLabel} 인스타그램 릴스 site:instagram.com`,
-        `${industryLabel} 유튜브 쇼츠 site:youtube.com`,
-        `${industryLabel} 밈 해시태그 2026`,
+        `${industryLabel} 광고 캠페인 사례 2026`,
+        `${industryLabel} 브랜드 마케팅 화제 2026`,
+        `${industryLabel} 바이럴 광고 분석`,
+        `${industryLabel} 마케팅 캠페인 사례 분석`,
       ]
     : [
-        `${industryLabel} Instagram Reels site:instagram.com`,
-        `${industryLabel} YouTube Shorts site:youtube.com`,
-        `${industryLabel} memes hashtags 2026`,
+        `${industryLabel} viral marketing campaign 2026 case study`,
+        `${industryLabel} brand ad campaign analysis 2026`,
+        `${industryLabel} best advertising campaigns May 2026`,
+        `${industryLabel} marketing campaign breakdown 2026`,
       ];
 
   const results = await Promise.all(
@@ -162,11 +194,12 @@ export async function fetchTrendingSocialContent(
     fresh.push(item);
   }
 
-  // 정렬 — 원본 URL 우선, 그 안에서 score 내림차순
+  // 정렬 — 마케팅 전문 매체 1순위, 원본 콘텐츠 URL 2순위, score 3순위
+  // 2026-05-12: 사장님이 학습 가능한 *분석 기사·캠페인 해설*을 우선 surfacing.
   fresh.sort((a, b) => {
-    const ao = isOriginalContentUrl(a.url) ? 1 : 0;
-    const bo = isOriginalContentUrl(b.url) ? 1 : 0;
-    if (ao !== bo) return bo - ao;
+    const ap = isMarketingPublication(a.url) ? 2 : isOriginalContentUrl(a.url) ? 1 : 0;
+    const bp = isMarketingPublication(b.url) ? 2 : isOriginalContentUrl(b.url) ? 1 : 0;
+    if (ap !== bp) return bp - ap;
     return b.score - a.score;
   });
 

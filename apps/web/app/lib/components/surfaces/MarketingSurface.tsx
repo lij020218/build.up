@@ -372,6 +372,17 @@ export function MarketingSurface() {
     short: { ko: "숏츠", en: "Short", color: "#ff1744" },
     post: { ko: "포스트", en: "Post", color: "#2979ff" },
     blog: { ko: "블로그", en: "Blog", color: "#00c853" },
+    // 2026-05-12: 마케팅 캠페인 사례 모드 추가
+    campaign: { ko: "캠페인", en: "Campaign", color: "#7c3aed" }, // 보라색 — "학습용 사례" 신호
+    ad: { ko: "광고 사례", en: "Ad case", color: "#0891b2" },     // 청록색 — "분석 가능한 광고"
+  };
+
+  /** 조회수 포맷 — 1.2M / 850K / 12K 식으로 압축 표시. */
+  const fmtViews = (n: number | undefined): string => {
+    if (!n || n <= 0) return "";
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}K`;
+    return String(n);
   };
 
   return (
@@ -770,9 +781,42 @@ export function MarketingSurface() {
                       }}
                     />
                   </div>
+                  {/* 2026-05-12: 캠페인 사례 모드 — 브랜드명/캠페인명/조회수를 카드 상단 메타 라인으로 노출.
+                      "이게 어떤 브랜드의 어떤 캠페인이고 얼마나 화제인지" 를 사장님이 5초 안에 파악. */}
+                  {(trend.brandName || trend.campaignName || trend.viewCount) && (
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px", marginBottom: "6px", fontSize: "11px" }}>
+                      {trend.brandName && (
+                        <span style={{ fontWeight: 700, color: "#7c3aed", padding: "2px 7px", borderRadius: "5px", background: "rgba(124,58,237,0.08)" }}>
+                          {trend.brandName}
+                        </span>
+                      )}
+                      {trend.campaignName && trend.campaignName !== trend.title && (
+                        <span style={{ fontWeight: 600, color: "rgba(15,23,42,0.65)" }}>
+                          {ko ? `캠페인: ${trend.campaignName}` : `Campaign: ${trend.campaignName}`}
+                        </span>
+                      )}
+                      {trend.viewCount && trend.viewCount > 0 && (
+                        <span style={{ fontWeight: 700, color: "#cc0000", padding: "2px 7px", borderRadius: "5px", background: "rgba(255,0,0,0.06)" }}>
+                          ▶ {fmtViews(trend.viewCount)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.55)", marginBottom: "4px", lineHeight: 1.5 }}>
                     {trend.reason}
                   </div>
+                  {/* 2026-05-12: lesson 우선 — "이 업종에 왜 의미 있는지" 가 핵심.
+                      contentIdea 는 실행 전술 (하위 보조). lesson 없으면 contentIdea 만 표시. */}
+                  {trend.lesson && (
+                    <div style={{
+                      fontSize: "12.5px", fontWeight: 600, color: "#7c3aed",
+                      lineHeight: 1.5, marginBottom: "4px",
+                      padding: "6px 10px", borderRadius: "8px",
+                      background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.12)",
+                    }}>
+                      💡 {trend.lesson}
+                    </div>
+                  )}
                   <div style={{ fontSize: "12.5px", fontWeight: 540, color: "var(--text)", lineHeight: 1.5, marginBottom: "6px" }}>
                     {trend.contentIdea}
                   </div>

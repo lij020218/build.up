@@ -29,7 +29,7 @@ export type TrendItem = {
   title: string;
   reason: string;
   contentIdea: string;
-  format: "reel" | "story" | "short" | "post" | "blog";
+  format: "reel" | "story" | "short" | "post" | "blog" | "campaign" | "ad";
   hashtags: string[];
   referenceUrl?: string | null;
   /** 실행 플레이북 — 3~5 스텝 구체 액션 (오늘 당장 따라할 수 있게) */
@@ -40,6 +40,18 @@ export type TrendItem = {
   effectiveness?: string;
   /** 추천 도구 — CapCut, Midjourney, Gemini 등 */
   tools?: TrendToolRecommendation[];
+  // ── 2026-05-12 캠페인 사례 모드 추가 (쇼츠 밈 베끼기 → 마케팅 캠페인 학습) ──
+  /** 캠페인·광고 운영 브랜드 (예: "Google", "Manus", "도브") */
+  brandName?: string;
+  /** 캠페인 공식·통용 이름 (예: "Hey Mom", "Manus Launch Demo") */
+  campaignName?: string;
+  /** 검증된 조회수 — UI 가 신뢰성 신호로 표시 */
+  viewCount?: number;
+  /**
+   * 이 캠페인에서 사장님이 *배워올 점*.
+   * "어떻게 따라할지" 가 아니라 "왜 이 사례가 이 업종에 의미 있는지" 강조.
+   */
+  lesson?: string;
 };
 
 export type TrendCache = {
