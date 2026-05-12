@@ -3,10 +3,23 @@
 /**
  * Tier 1.1–1.2 — 데일리 허브 (매일 30초 사용성).
  *
+ * ── 운영 대시보드 목적 (2026-05-12 명문화) ──────────────────────────────
+ * 단순 보여주기 X. 사장님이 *사업의 현 상황을 파악·대비·다음 행동 개시* 가능.
+ *
+ *   ① 상황 파악: CEOMorningHero (AI 해석 hero) + ActivitySnapshot (매출 raw 차트)
+ *      → 22 자료 검증: "최대 2 hero, 3개부터 cancel out" (UI patterns / Hero Anti-Pattern)
+ *   ② 대비:     CashflowHero (런웨이) + PLHero (손익 추세)
+ *   ③ 행동:     CEOMorningHero 내부 단일 우선순위 액션 (이미 통합 — Phase 1a)
+ *
+ * Phase 1b (2026-05-12): Tier 1 5분할 → 1+3 layout 재배치
+ *   · UserActivityCard 를 Tier 2 (Weekly Pulse) 로 이동 — 일간 hero level 부적합
+ *   · ActivitySnapshot 단독 full-width (매출 raw 차트가 작아지면 의미 손실)
+ *   · Cashflow + PL 만 2-col supporting
+ *
  * 카드 목록 (위→아래):
- *   - Tier 1.1: ActivitySnapshotCard + UserActivityCard (2-col, 1100px↑)
- *   - Tier 1.2: CashflowHeroCard + PLHeroCard (2-col, 980px↑)
- *   - Tier 1.2 (KPI): DailyKpiStrip — 업종별 5칸 KPI (cell.id 자동 분기)
+ *   - Tier 1.1: ActivitySnapshotCard (단독 full-width — 매출 raw 차트 hero #2)
+ *   - Tier 1.2: CashflowHeroCard + PLHeroCard (2-col, 980px↑) — "대비"
+ *   - Tier 1.2 (KPI): DailyKpiStrip — 업종별 5칸 KPI 보조
  *
  * KPI Strip 셀 매핑:
  *   - 매출/고객 (외식·소매·뷰티 등): yesterday-sales, yesterday-customers, prime-cost, cash-runway, avg-ticket
@@ -18,7 +31,9 @@
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { ActivitySnapshotCard } from "../ActivitySnapshotCard";
-import { UserActivityCard } from "../UserActivityCard";
+// 2026-05-12 Phase 1b: UserActivityCard 는 Tier 2 (Weekly Pulse) 로 이동.
+//   일간 hero level 에서 사장님이 매일 봐야 하는 카드가 아닌 *주간 단위* trend 카드.
+//   import { UserActivityCard } from "../UserActivityCard";
 import { CashflowHeroCard } from "../CashflowHeroCard";
 import { PLHeroCard } from "../PLHeroCard";
 import { DailyKpiStrip, type KpiValue } from "../DailyKpiStrip";
@@ -37,48 +52,27 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
   // 사장님이 숨긴 카드 목록 — 마이페이지 > 대시보드 카드 표시에서 토글.
   // essential 카드(activity-snapshot, cashflow-hero)는 메타에서 숨김 불가 처리.
   const hiddenCards = useProfileStore((s) => s.hiddenCards);
-  const showUserActivity = !hiddenCards.includes("user-activity");
   const showPLHero = !hiddenCards.includes("pl-hero");
   const showDailyKpi = !hiddenCards.includes("daily-kpi-strip");
 
   return (
     <>
-      {/* Tier 1.1 — 매출 흐름 + 사용자 변화 (2-col → 사용자 변화 숨김 시 1-col) */}
+      {/* Tier 1.1 — 매출 흐름 (단독 full-width).
+          2026-05-12 Phase 1b: UserActivityCard 가 Tier 2 로 이동 → ActivitySnapshot 가 단독.
+          이유: 매출 raw 차트가 hero 의 visual 강조를 받음 (CEOMorningHero 와 함께 2 hero 패턴). */}
       <div className="dash-stagger-item" style={nextStaggerStyle()}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              showUserActivity && c.viewportWidth >= 1100
-                ? "minmax(0, 1.35fr) minmax(0, 1fr)"
-                : "1fr",
-            gap: "14px",
-            alignItems: "stretch",
-          }}
-        >
-          <ActivitySnapshotCard
-            d={d}
-            ko={ko}
-            todayStr={c.todayStr}
-            recent7Entries={c.recent7Entries}
-            recent7Sales={c.recent7Sales}
-            weeklySalesChange={c.weeklySalesChange}
-            todayEntry={c.todayEntry}
-            avgDailySales={c.avgDailySales}
-            fmt={fmt}
-            onOpenCalendar={onOpenCalendar}
-          />
-          {showUserActivity && (
-            <UserActivityCard
-              d={d}
-              ko={ko}
-              todayStr={c.todayStr}
-              recent7Entries={c.recent7Entries}
-              todayEntry={c.todayEntry}
-              fmt={fmt}
-            />
-          )}
-        </div>
+        <ActivitySnapshotCard
+          d={d}
+          ko={ko}
+          todayStr={c.todayStr}
+          recent7Entries={c.recent7Entries}
+          recent7Sales={c.recent7Sales}
+          weeklySalesChange={c.weeklySalesChange}
+          todayEntry={c.todayEntry}
+          avgDailySales={c.avgDailySales}
+          fmt={fmt}
+          onOpenCalendar={onOpenCalendar}
+        />
       </div>
 
       {/* Tier 1.2 — 현금흐름 + 손익 (2-col → 손익 숨김 시 1-col) */}

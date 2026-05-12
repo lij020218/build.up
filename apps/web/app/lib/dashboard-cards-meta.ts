@@ -179,16 +179,9 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
     industryHint: "data",
   },
-  {
-    // 2026-05-12 킬러 기능: AI 운영 코치 데일리 브리프 — *해석* 레이어 (offline 90%+ 사용자)
-    id: "offline-founder-brief",
-    labelKo: "AI 운영 코치 데일리 브리프 ⭐",
-    labelEn: "AI Ops Coach Daily Brief ⭐",
-    hintKo: "재료비·인건비·임대료·primecost·BEP 자동 분석 → 가장 중요한 1개 + 오늘 행동 (외식·카페·뷰티·소매 등)",
-    hintEn: "Auto cost-ratio/BEP/prime-cost analysis → top signal + today's action (food/cafe/beauty/retail)",
-    category: "coaching",
-    industryHint: "offline",
-  },
+  // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
+  //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
+  //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.
   {
     // 2026-05-12 킬러 기능: AI 공동창업자 데일리 브리프 — *해석* 레이어
     id: "startup-founder-brief",

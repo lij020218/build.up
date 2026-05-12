@@ -25,6 +25,10 @@ import { SalesBreakdownCard } from "../SalesBreakdownCard";
 import { MonthlyProgressCard } from "../MonthlyProgressCard";
 import { CostStructureCard } from "../CostStructureCard";
 import { BenchmarkCard } from "../BenchmarkCard";
+// 2026-05-12 Phase 1b: Tier 1 에서 이동. UserActivityCard 는 *주간 단위* trend 카드 →
+//   매일 hero level 부적합. Tier 2 Weekly Pulse 에서 *주 1회 점검* 카드로 적합.
+import { UserActivityCard } from "../UserActivityCard";
+import { useProfileStore } from "../../../stores/profile-store";
 
 type Props = {
   d: DashboardHook;
@@ -34,6 +38,9 @@ type Props = {
 };
 
 export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
+  const hiddenCards = useProfileStore((s) => s.hiddenCards);
+  const showUserActivity = !hiddenCards.includes("user-activity");
+
   return (
     <DeepDiveSection
       id="weekly-pulse"
@@ -96,6 +103,19 @@ export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
         industryCategoryId={d.industryCategoryId}
         dailyEntries={c.allEntries as Array<{ date: string; sales: number; customers: number }>}
       />
+
+      {/* 사용자 변화 (UserActivityCard) — 2026-05-12 Phase 1b: Tier 1 에서 이동.
+          주간 단위 trend (신규/재방문 손님 추이) — 매일 hero level 부적합. 주 1회 점검 적합. */}
+      {showUserActivity && (
+        <UserActivityCard
+          d={d}
+          ko={ko}
+          todayStr={c.todayStr}
+          recent7Entries={c.recent7Entries}
+          todayEntry={c.todayEntry}
+          fmt={fmt}
+        />
+      )}
 
       {/* 매출 분해 + 월간 진행 (entries ≥ 2) */}
       {c.allEntries.length >= 2 && (

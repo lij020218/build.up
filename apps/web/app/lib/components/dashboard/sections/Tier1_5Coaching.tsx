@@ -25,11 +25,11 @@ import { AvgTicketUpsellCard } from "../AvgTicketUpsellCard";
 import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { StartupHealthSection } from "../StartupHealthSection";
 import { StartupFounderBrief } from "../StartupFounderBrief";
-// 2026-05-12: OfflineFounderBrief 통합 — Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수.
-//   Toast IQ "For you feed" / Amplitude Dashboard Agent / Mercury Insights 등
-//   2026 산업 표준 (AI 통합 hero) 정합. 22 자료 검증 완료.
-//   파일 자체는 다음 PR 에서 deprecate (코칭 히스토리 자동 기록은 CEOMorningHero 가 흡수).
-// import { OfflineFounderBrief } from "../OfflineFounderBrief";
+// 2026-05-12 Phase 1a/1c 완료: OfflineFounderBrief 통합 + 파일 삭제.
+//   Toast IQ "For you feed" / Amplitude Dashboard Agent / Mercury Insights 등 2026 산업
+//   표준 (AI 통합 hero) 정합. 11 업종 임계값 룰엔진은 useIndustryRuleSignal hook 으로 추출 →
+//   useMorningBriefingBrain 이 흡수 → resolveHero 우선순위 1.6 으로 CEOMorningHero 에서 자동 노출.
+//   22 자료 검증 통과 (NN/G·Carbon·M3·Toast·Amplitude·Square·Mercury·Reforge 등).
 import { IntegrationHubCard } from "../IntegrationHubCard";
 import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
