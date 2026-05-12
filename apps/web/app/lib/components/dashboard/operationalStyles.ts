@@ -449,17 +449,7 @@ export const bentoHoverCSS = `
   }
 }
 
-/* 탭 surface 전환 — 페이지 fade + 살짝 위로 */
-@keyframes dashSurfaceEnter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* dashSurfaceEnter 제거됨 (2026-05-13) — surface 전환 즉시 표시 */
 
 @keyframes dashBarGrow {
   from { transform: scaleY(0); opacity: 0; }
@@ -482,11 +472,8 @@ export const bentoHoverCSS = `
 /* 자식 컴포넌트가 null 반환하여 비어있는 wrapper는 grid gap 차지 안 하도록 숨김 */
 .dash-stagger-item:empty { display: none !important; }
 
-/* Surface 전환 — 탭 변경 시 페이지 전체 등장 (key 기반 remount 트리거) */
-.dash-surface-enter {
-  animation: dashSurfaceEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: transform, opacity;
-}
+/* .dash-surface-enter 제거됨 (2026-05-13) — surface 전환 즉시 표시 */
+
 .dash-bar-grow {
   transform-origin: bottom center;
   will-change: transform;

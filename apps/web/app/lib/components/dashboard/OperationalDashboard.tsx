@@ -18,7 +18,6 @@ import { Tier5ForecastTools } from "./sections/Tier5ForecastTools";
 import { MilestoneToast } from "./MilestoneToast";
 import { RevenueCalendar } from "./RevenueCalendar";
 import { DetailTabs } from "./DetailTabs";
-import OperationalBootIntro from "./OperationalBootIntro";
 import { shell, bentoHoverCSS } from "./operationalStyles";
 
 type Props = { d: DashboardHook };
@@ -107,9 +106,8 @@ export default function OperationalDashboard({ d }: Props) {
   } = c;
   const isStaff = d.userRole === "staff";
 
-  // 부팅 인트로 + 캘린더 모달 (orchestrator 만의 로컬 UI 상태)
+  // 캘린더 모달 (orchestrator 만의 로컬 UI 상태)
   const [showCalendar, setShowCalendar] = useState(false);
-  const [introDone, setIntroDone] = useState(false);
 
   // CSS-only stagger
   const STAGGER_STEP_MS = 70;
@@ -144,12 +142,6 @@ export default function OperationalDashboard({ d }: Props) {
     <section style={shell}>
       <style>{bentoHoverCSS}</style>
 
-      {/* ━━━ 운영 대시보드 진입 부팅 인트로 (마운트 마다 / 자비스 톤 / 2.2초) ━━━ */}
-      <OperationalBootIntro trigger onComplete={() => setIntroDone(true)} />
-
-      {/* ━━━ 인트로 종료 후에만 콘텐츠 reveal — dashStaggerIn 자연 발화 ━━━ */}
-      {introDone ? (
-        <>
       {/* ━━━ Tier 0 — 상호명 + 리추얼 배너 (분기 표 → sections/DASHBOARD_MAP.md) ━━━ */}
       <Tier0Header d={d} ko={ko} isStaff={isStaff} nextStaggerStyle={nextStaggerStyle} />
 
@@ -295,8 +287,6 @@ export default function OperationalDashboard({ d }: Props) {
           </div>
         </div>
       )}
-        </>
-      ) : null}
     </section>
   );
 }

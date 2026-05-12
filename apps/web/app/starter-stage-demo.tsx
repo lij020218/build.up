@@ -251,7 +251,7 @@ export default function StarterStageDemo({
       const targetSelector = detail.selector;
       if (!targetId && !targetSelector) return;
 
-      // surface 전환 애니메이션(dash-surface-enter ~0.45s) 끝 무렵에 scroll
+      // surface remount 후 DOM 커밋 대기 (애니메이션 제거됨 — 50ms 면 충분)
       window.setTimeout(() => {
         const el: HTMLElement | null = targetId
           ? document.getElementById(targetId)
@@ -276,7 +276,7 @@ export default function StarterStageDemo({
           el.style.boxShadow = prevBoxShadow;
           window.setTimeout(() => { el.style.transition = prevTransition; }, 400);
         }, 1400);
-      }, 360);
+      }, 50);
     };
     window.addEventListener("bup:navigate-feature", handler);
     return () => window.removeEventListener("bup:navigate-feature", handler);
@@ -835,17 +835,8 @@ export default function StarterStageDemo({
 
   return (
     <DashboardProvider value={_ctxValue}>
-    {/* 전역 surface 전환 애니메이션 — 탭 변경 시 페이지 전체 fade+slide-up */}
+    {/* surface 전환 애니메이션 제거됨 (사장님 요청 2026-05-13) — 페이지 전환 시 즉시 표시 */}
     <style>{`
-      @keyframes dashSurfaceEnter {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .dash-surface-enter {
-        animation: dashSurfaceEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-        will-change: transform, opacity;
-      }
-
       /* ━━━ 홈 사이드바 ━━━ */
       @keyframes bupSidebarIn {
         from { opacity: 0; transform: translateX(-12px); }
@@ -1142,8 +1133,8 @@ export default function StarterStageDemo({
       </section>
       ) : null}
 
-      {/* surface 전환 애니메이션 — key={activeSurface} 변경 시 React 가 div 를 remount → CSS animation 자동 재시작 */}
-      <div key={activeSurface} className="dash-surface-enter">
+      {/* surface 전환 — 애니메이션 제거, 즉시 표시 (key 는 React remount 유지를 위해 보존) */}
+      <div key={activeSurface}>
         {activeSurface === "home" ? (
         mounted && businessLaunched ? (
           <CardErrorBoundary cardLabel="대시보드">
