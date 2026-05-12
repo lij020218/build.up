@@ -377,7 +377,7 @@ export function InsuranceTaxSetupStage() {
               {[
                 { name: "국민연금", emp: "4.75%", ee: "4.75%", note: "2026년 9.5%로 인상 (기존 9%)" },
                 { name: "건강보험", emp: "3.595%", ee: "3.595%", note: "2026년 7.19%로 인상 (기존 7.09%)" },
-                { name: "장기요양보험", emp: "별도", ee: "별도", note: "건강보험료의 0.9448% (2026 인상)" },
+                { name: "장기요양보험", emp: "별도", ee: "별도", note: "임금의 0.9448% (= 건보료 × 13.14%, 2026 인상)" },
                 { name: "고용보험", emp: "0.9% + α", ee: "0.9%", note: "α = 고용안정·직업능력개발 (사업주 0.25~0.85% 추가)" },
                 { name: "산재보험", emp: accidentInfo.rate, ee: "0%", note: `${accidentInfo.label} — 사업주 100% 부담` },
               ].map((row, i, arr) => (

@@ -82,8 +82,18 @@ export function ContractReviewStage() {
   //    탭: 왜 중요 → 뭘 해야 → 뭘 주의 → 유리한 길 → 체크리스트
   const [pageIdx, setPageIdx] = useState(0);
 
-  const canCompleteContractStep = contractTasks.every((task) => task.status === "completed");
   const ko = language === "ko";
+
+  // 2026-05-12 P1 fix (사장님 신고): septic-tank-checked 는 음식·카페만 의무지만
+  //  UI 가 unconditionally 표시 → 비음식 업종도 정화조 항목 체크해야 진행 가능.
+  //  contractTasks 자체를 카테고리 필터링 후 모든 곳에서 사용.
+  //  음식·카페: 정화조 포함 (5개) / 그 외: 제외 (4개).
+  const FOOD_LIKE_CATS = new Set(["food", "cafe-dessert"]);
+  const visibleContractTasks = contractTasks.filter((task) => {
+    if (task.taskId !== "septic-tank-checked") return true;
+    return industryCategoryId ? FOOD_LIKE_CATS.has(industryCategoryId) : true;
+  });
+  const canCompleteContractStep = visibleContractTasks.every((task) => task.status === "completed");
 
   // ★ 페이지 0 = 개요 (이 단계 왜·무엇을·기대 결과). 그 후 작업 흐름.
   const pageLabels = ko
@@ -264,7 +274,7 @@ export function ContractReviewStage() {
             { title: ko ? "거부 시 매물 변경 — 협상 못 하는 임대인은 위험" : "Walk away on refusal", detail: ko ? "5종 모두 거부하면 분쟁 가능성 매우 높은 임대인. 보증금 1,000~5,000만원 묶을 가치 없음." : "Refusal of all 5 = high-dispute landlord. Not worth ₩10-50M deposit risk." },
           ]}
           watchouts={ko ? [
-            { label: "「임대료 5% 상한」 미명시 = 무제한 인상 가능", text: "서울 환산보증금 9억 초과 매물은 상가임대차보호법 자동 적용 X. 특약에 「갱신 시 5% 이내」 안 적으면 매년 임대인 마음대로." },
+            { label: "「임대료 5% 상한」 미명시 = 무제한 인상 가능", text: "⚠ 환산보증금 상한 — 서울 9억, 광역시 6.9억, 그 외 5.4억 (상가건물 임대차보호법 시행령 §2). 환산보증금 = 보증금 + (월세 × 100). 상한 초과면 법정 보호(5% 상한·우선변제권) 적용 X — 특약에 「갱신 시 5% 이내」 명시해야 안전. ✓ 대항력·계약갱신요구권(10년)·권리금 회수기회는 환산보증금 상관없이 모든 임차인에게 적용." },
             { label: "원상복구 「최초 인도 시 상태」 = 인테리어 철거 1,000~3,000만원", text: "본인이 한 시공을 모두 철거 + 원래대로 복구해야 함. 「임차 시 상태」 로 명시해야 본인 시공만 책임." },
           ] : [
             { label: "No 5% cap clause = unlimited yearly increase", text: "Above deposit limit, statutory cap doesn't apply. Explicit clause is only protection." },
@@ -292,8 +302,10 @@ export function ContractReviewStage() {
           ]}
           watchouts={ko ? [
             { label: "확정일자 1일 늦어도 우선변제권 후순위", text: "사인 후 다른 채권자가 그날 등기하면 사장님 보증금이 후순위. 사인 직후 바로 동주민센터로." },
+            { label: "권리금 회수기회 보호 — 임대차 종료 6개월 전~종료 시점", text: "상가건물 임대차보호법 §10조의4 — 임대인이 정당한 사유 없이 신규 임차인 거절 시 권리금 손해배상 청구 가능. 환산보증금 무관 모든 임차인에게 적용. 임대인 거절 사유는 서면 요구·증거 확보 필수." },
           ] : [
             { label: "1 day late = subordinated", text: "If another creditor files same day, you're junior. Go to local center IMMEDIATELY after signing." },
+            { label: "Key-money recovery — 6mo before lease end to end date", text: "Commercial Lease Protection Act §10-4. Landlord must not unjustly reject your replacement tenant. Compensation available. Applies to all tenants regardless of deposit ceiling. Demand written reason for rejection." },
           ]}
         />
       )}
@@ -440,7 +452,7 @@ export function ContractReviewStage() {
           : copy.home.contractHelp}
       </div>
       <div style={styles.budgetLabel}>
-        {ko ? `필수 확인 항목 ${contractTasks.length}개` : `${contractTasks.length} required items`}
+        {ko ? `필수 확인 항목 ${visibleContractTasks.length}개` : `${visibleContractTasks.length} required items`}
       </div>
 
       {/* ── Accordion 체크리스트 — PermitCheckPanels 와 동일 결 ──
@@ -456,7 +468,7 @@ export function ContractReviewStage() {
           ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}),
         }}
       >
-        {contractTasks.map((task) => {
+        {visibleContractTasks.map((task) => {
           const completed = task.status === "completed";
           const expanded = activeContractTask?.taskId === task.taskId;
           const detail = getContractTaskDetail(task.taskId, language, industryCategoryId);

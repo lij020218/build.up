@@ -596,7 +596,28 @@ export function CurrentStageView() {
               partner_foundation_or_pilot_line: "partner-foundation-or-pilot-line",
             };
             const stageId = stageIdMap[currentStage.code] ?? currentStage.code.replace(/_/g, "-");
-            const stageTasks = taskMap[stageId] ?? [];
+            const rawStageTasks = taskMap[stageId] ?? [];
+            // 2026-05-12 P1 fix: contract-review 의 septic-tank-checked 는 음식·카페 한정.
+            //  비음식 업종 사장님이 정화조 항목 의무 체크하도록 강제하지 않도록 필터.
+            const FOOD_LIKE = new Set(["food", "cafe-dessert"]);
+            const stageTasks = rawStageTasks.filter((t) => {
+              if (stageId === "contract-review" && t.taskId === "septic-tank-checked") {
+                return industryCategoryId ? FOOD_LIKE.has(industryCategoryId) : true;
+              }
+              return true;
+            });
+            // 2026-05-12 P1 fix: go-live 의 apple/google App Store + launch-day-monitored 는
+            //  required:false 옵션 태스크. 종전 UI 100% 룰 때문에 웹 전용 startup 사장님이
+            //  Apple/Google 체크 안 하면 advance 못 했음. 옵션 태스크는 UI 에는 표시하되
+            //  게이트에서는 제외 — backend rule(2개 required)과 일치.
+            const GATE_OPTIONAL_TASKS = new Set([
+              "apple-app-store-submitted",
+              "google-play-submitted",
+              "launch-day-monitored",
+            ]);
+            const gateTasks = stageId === "go-live"
+              ? stageTasks.filter((t) => !GATE_OPTIONAL_TASKS.has(t.taskId))
+              : stageTasks;
             const isPreLaunch = stageId === "pre-launch";
             const preLaunchDoneMap: Record<string, boolean> = isPreLaunch ? (() => {
               // ⚠️ 100% 룰 — 사용자가 "실제로 본" 모든 체크 항목이 체크돼야 task 완료.
@@ -628,8 +649,9 @@ export function CurrentStageView() {
                 "final-checklist":    allFeedbackChecked && allFinalResolved && finalAtLeastOne,
               };
             })() : {};
-            const completedCount = stageTasks.filter((t) => isPreLaunch ? (preLaunchDoneMap[t.taskId] ?? false) : t.status === "completed").length;
-            const allDone = stageTasks.length > 0 && completedCount === stageTasks.length;
+            // gate 계산은 gateTasks (옵션 태스크 제외), UI 표시·체크리스트는 stageTasks
+            const completedCount = gateTasks.filter((t) => isPreLaunch ? (preLaunchDoneMap[t.taskId] ?? false) : t.status === "completed").length;
+            const allDone = gateTasks.length > 0 && completedCount === gateTasks.length;
             return (
               <>
                 <div style={styles.helper}>{localizedCurrentStage.goal}</div>
