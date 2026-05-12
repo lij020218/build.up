@@ -23,6 +23,7 @@ import {
 } from "@build-up/shared";
 
 import { useFinanceStore, useProfileStore } from "../stores";
+import { useUnifiedRevenue } from "./useUnifiedRevenue";
 
 // ════════════════════════════════════════════════════════════════════════════════
 // useStartupMetrics
@@ -151,11 +152,33 @@ export type UseStartupMetricsResult = {
 export function useStartupMetrics(): UseStartupMetricsResult {
   const { dailyEntries, monthlyCosts } = useFinanceStore();
   const { selectedIndustryCategoryId, selectedBudget, initialOperatingCapital } = useProfileStore();
+  // 2026-05-13 Step 5: 자동 수집 매출 (PortOne·TossPlace·CODEF·Popbill·CSV) 통합.
+  //   ARCHITECTURE.md 부채 #1 해소 — 분석 카드 모두 자동 매출 반영.
+  //   useDashboardComputed 와 동일 머지 정책 (자동 우선, customers max).
+  const unifiedRev = useUnifiedRevenue(180); // CMGR 3-6개월 계산 위해 6개월
 
   return useMemo(() => {
     const industry = inferMetricIndustry(selectedIndustryCategoryId);
-    const entries = (dailyEntries ?? []) as DailyEntryLite[];
-    const sortedAsc = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+    // manual + unified 머지
+    const manualEntries = (dailyEntries ?? []) as DailyEntryLite[];
+    const byDate = new Map<string, DailyEntryLite>();
+    for (const e of manualEntries) {
+      byDate.set(e.date, { date: e.date, sales: e.sales, customers: e.customers });
+    }
+    for (const u of unifiedRev.entries) {
+      const existing = byDate.get(u.date);
+      if (!existing) {
+        byDate.set(u.date, { date: u.date, sales: u.sales, customers: u.customers });
+      } else {
+        byDate.set(u.date, {
+          date: u.date,
+          sales: u.sales > 0 ? u.sales : existing.sales,
+          customers: Math.max(u.customers ?? 0, existing.customers ?? 0),
+        });
+      }
+    }
+    const entries = Array.from(byDate.values());
+    const sortedAsc = entries.sort((a, b) => a.date.localeCompare(b.date));
 
     // ── 월별 매출 집계 ──
     const byMonth = sumByMonth(sortedAsc);
@@ -291,7 +314,7 @@ export function useStartupMetrics(): UseStartupMetricsResult {
 
     return { metrics, cards, actions, notReadyReason, industry };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailyEntries, monthlyCosts, selectedIndustryCategoryId, selectedBudget, initialOperatingCapital]);
+  }, [dailyEntries, monthlyCosts, selectedIndustryCategoryId, selectedBudget, initialOperatingCapital, unifiedRev.entries]);
 }
 
 /** 외부 노출 (디버그·재사용용) */

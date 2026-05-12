@@ -18,6 +18,7 @@ import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculat
 import type { MonthlyCosts, HealthScoreResult } from "@build-up/shared";
 import { getBusinessDay } from "../utils/business-day";
 import { useUnifiedSaasMetrics } from "./useUnifiedSaasMetrics";
+import { useUnifiedRevenue } from "./useUnifiedRevenue";
 import { checkMilestones } from "../components/dashboard/MilestoneToast";
 import { useCashflowStore } from "../stores/cashflow-store";
 
@@ -77,9 +78,35 @@ export function useDashboardComputed(d: DashboardHook) {
 
   // 매출 entries (ASC 정렬)
   const allEntriesRaw = d.dailyEntries as DailyEntry[];
-  const allEntries = useMemo(
-    () => [...allEntriesRaw].sort((a, b) => a.date.localeCompare(b.date)),
-    [allEntriesRaw],
+  // 2026-05-13 Step 5: useEffectiveRevenue 통합 — 수동 매출 + 자동 수집 (PortOne·
+  //   TossPlace·CODEF·Popbill·CSV) 머지. 같은 날짜 충돌 시 *자동 수집 우선*
+  //   (manual = 사장님 입력 추정 / unified = 실시간 결제·정산 데이터).
+  //   ARCHITECTURE.md 미해결 부채 #1 해소 — 분석 카드 모두 자동 매출 반영.
+  //   ActivitySnapshotCard 는 자체 useUnifiedRevenue 호출 유지 (source 표시 등).
+  const unifiedRev = useUnifiedRevenue(30);
+  const allEntries = useMemo(() => {
+    const byDate = new Map<string, DailyEntry>();
+    // manual 먼저 채움
+    for (const e of allEntriesRaw) {
+      byDate.set(e.date, { date: e.date, sales: e.sales, customers: e.customers });
+    }
+    // unified (자동 수집) 가 같은 날짜 있으면 *덮어쓰기* — 정책: 자동이 사장님 입력보다 정확
+    // 사장님이 명시적으로 unified 보다 더 큰 manual 입력 했다면 sales max 사용해 정보 손실 방지
+    for (const u of unifiedRev.entries) {
+      const existing = byDate.get(u.date);
+      if (!existing) {
+        byDate.set(u.date, { date: u.date, sales: u.sales, customers: u.customers });
+      } else {
+        // 둘 다 있으면: sales 는 unified 우선 (자동 수집 = 실 결제), customers 는 max 사용
+        byDate.set(u.date, {
+          date: u.date,
+          sales: u.sales > 0 ? u.sales : existing.sales,
+          customers: Math.max(u.customers ?? 0, existing.customers ?? 0),
+        });
+      }
+    }
+    return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [allEntriesRaw, unifiedRev.entries],
   );
   const monthEntries = useMemo(
     () => allEntries.filter((e) => e.date.startsWith(currentMonth)),

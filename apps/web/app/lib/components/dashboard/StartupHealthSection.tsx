@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { RADIUS } from "./operationalStyles";
 import { useStartupMetrics } from "../../hooks/useStartupMetrics";
 import { useFinanceStore, useOperationsStore } from "../../stores";
+import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
 import type { MetricCard, StartupMetricHealth } from "@build-up/shared";
 
 /**
@@ -86,15 +87,26 @@ export function StartupHealthSection({ ko = true }: { ko?: boolean }) {
   //   별도 카드 추가 X (인지 부하 고려) — 기존 5칸 grid 에 6번째 셀 흡수.
   const dailyEntries = useFinanceStore((s) => s.dailyEntries);
   const employees = useOperationsStore((s) => s.employees);
+  // 2026-05-13 Step 5: 자동 매출 통합 — useUnifiedRevenue + manual 머지로
+  //   ARR 정확도 보강. 사장님이 PortOne 등 자동 연동 시 ARR/FTE 정확.
+  const unifiedRev = useUnifiedRevenue(30);
   const arrPerEmployeeCell = useMemo(() => {
     if (industry !== "saas") return null;
-    // ARR proxy: 최근 30일 매출 × 12. 정확한 ARR (구독 MRR) 가 있으면 더 정확하나
-    // build.up 은 매출 단일 trackER — 보수적 proxy 가 합리적.
+    // ARR proxy: 최근 30일 매출 × 12. manual + unified 머지 (자동 우선).
     const now = new Date();
     const cutoff = new Date(now.getTime() - 30 * 86400000);
-    const last30Sales = (dailyEntries ?? [])
-      .filter((e) => new Date(e.date) >= cutoff)
-      .reduce((s, e) => s + (e.sales ?? 0), 0);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    const byDate = new Map<string, number>();
+    for (const e of dailyEntries ?? []) {
+      if (e.date >= cutoffStr) byDate.set(e.date, e.sales ?? 0);
+    }
+    for (const u of unifiedRev.entries) {
+      if (u.date >= cutoffStr) {
+        const existing = byDate.get(u.date) ?? 0;
+        byDate.set(u.date, u.sales > 0 ? u.sales : existing); // 자동 우선
+      }
+    }
+    const last30Sales = Array.from(byDate.values()).reduce((s, v) => s + v, 0);
     const arrKrw = last30Sales * 12;
     const fteCount = (employees?.length ?? 0) + 1; // 사장님 포함
     if (arrKrw <= 0 || fteCount <= 0) return null;
@@ -124,7 +136,7 @@ export function StartupHealthSection({ ko = true }: { ko?: boolean }) {
       trend: "stable" as const,
       fteCount,
     };
-  }, [industry, dailyEntries, employees, ko]);
+  }, [industry, dailyEntries, employees, unifiedRev.entries, ko]);
 
   // ── 렌더 분기: 스타트업/SaaS/tech 계열만 ───────────────────────────────
   // industry === "saas" 는 industryCategoryId 가 "startup"|"tech"|"saas"
