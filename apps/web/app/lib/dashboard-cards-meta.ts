@@ -192,6 +192,16 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
     industryHint: "all",
   },
+  {
+    // 2026-05-13 Phase 2d: 소매 신규 카드 — 12 자료 (Lightspeed·Shopify·Square·i-boss)
+    id: "retail-sell-through",
+    labelKo: "Sell-Through · 소매 ⭐",
+    labelEn: "Sell-Through · Retail ⭐",
+    hintKo: "월 sell-through rate + Best Seller Top 5 + Dead Stock + 품절 임박 (Lightspeed 표준)",
+    hintEn: "Monthly sell-through + top 5 + dead stock + low stock (Lightspeed standard)",
+    category: "coaching",
+    industryHint: "all",
+  },
   // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.

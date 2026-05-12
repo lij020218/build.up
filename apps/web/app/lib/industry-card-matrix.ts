@@ -439,7 +439,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "retail-sell-through": {
-    id: "retail-sell-through", status: "planned", industries: ["retail"],
+    id: "retail-sell-through", status: "existing", industries: ["retail"],
     sources: [
       "Lightspeed sell-through 5 KPI",
       "Shopify retail metrics + sell-through rate",
