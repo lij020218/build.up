@@ -194,6 +194,57 @@ function resolveNextStageIds(
   return stage.nextStageIds;
 }
 
+/**
+ * 2026-05-12 P3: 사용자 path 의 *실제 순서* 를 graph traversal 로 계산.
+ *
+ *  ── 왜 필요한가 ────────────────────────────────────────────────
+ *  종전 useComputedDashboard 의 pathStageList 는 `roadmap.stages.filter(isPath)`
+ *  로 계산됐는데, 이건 *배열 순서* 를 반환할 뿐 *navigation 순서* 가 아니었음.
+ *  같은 stage 가 cluster 별로 다른 위치에서 방문될 수 있는데(예: biz-registration
+ *  은 offline 에선 #9, online 에선 #7, startup 에선 #16) 배열 순서는 한 가지만
+ *  반영하므로 다른 path 의 사장님께 *틀린 pathStepNumber* 표시되던 문제.
+ *
+ *  ── 동작 ────────────────────────────────────────────────────────
+ *  1. 첫 stage (industry-selection) 에서 시작
+ *  2. nextStageConditions 우선 → nextStageIds[0] fallback 으로 다음 stage 선택
+ *  3. isPathStage(stageId) 가 true 인 것만 결과에 push (사용자 path 에 보이는 것)
+ *  4. 사이클·반복 방문 차단 (visited Set)
+ *  ────────────────────────────────────────────────────────────────
+ */
+export function traverseUserPath(
+  stages: RoadmapStageState[],
+  decisions: WorkflowDecisionMap,
+  isPathStage: (stageId: string) => boolean,
+): RoadmapStageState[] {
+  if (stages.length === 0) return [];
+  const stageById = new Map(stages.map((s) => [s.stageId, s]));
+  const visited = new Set<string>();
+  const result: RoadmapStageState[] = [];
+
+  let current: RoadmapStageState | undefined = stages[0];
+  while (current && !visited.has(current.stageId)) {
+    visited.add(current.stageId);
+    if (isPathStage(current.stageId)) {
+      result.push(current);
+    }
+    // 다음 stage 결정 — 조건부 우선, 없으면 default nextStageIds[0]
+    const nextIds = resolveNextStageIds(current, decisions);
+    if (nextIds.length === 0) break;
+
+    // 첫 번째 *path 에 속하는* 다음 stage 를 선택 (hidden stage skip).
+    // 예: tax-guide.nextStageConditions 가 offline → hiring-setup 인데
+    // user 가 online 이면 default → loan-guide. 어느 쪽이든 isPathStage 통과한 첫 stage.
+    let next: RoadmapStageState | undefined;
+    for (const id of nextIds) {
+      const candidate = stageById.get(id);
+      if (candidate) { next = candidate; break; }
+    }
+    current = next;
+  }
+
+  return result;
+}
+
 export function buildRoadmapState(
   baseRoadmap: Omit<RoadmapState, "progressPercent" | "currentStageId" | "completedStageIds" | "unlockedStageIds">,
   decisions: WorkflowDecisionMap,

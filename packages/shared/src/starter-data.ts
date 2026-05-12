@@ -1839,7 +1839,11 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["use-check", "facility-check", "restriction-check", "septic-tank-checked", "certified-date-obtained"],
     riskIds: [],
-    nextStageIds: ["construction-setup"]
+    // 2026-05-12 P3: contract-review → registration-setup (was construction-setup).
+    //   실제 사업 흐름은 임대차계약 직후 사업자등록 (홈택스 5분, 무료) → 통장 → 인테리어.
+    //   인테리어 발주 전 사업자등록증 있어야 세금계산서 받고 부가세 환급 가능.
+    //   세법: 사업개시일로부터 20일 이내 + 인테리어 부가세 환급은 같은 과세기간 내 등록 필수.
+    nextStageIds: ["registration-setup"]
   },
   {
     stageId: "construction-setup",
@@ -1847,10 +1851,12 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Interior, fixtures and equipment",
     type: "execution",
     status: "locked",
-    stepNumber: 8,
-    totalSteps: 14,
+    // 2026-05-12 P3 reorder: construction-setup 위치 #8 → #12 (사업자등록·통장·세무·자금 결정 후).
+    //   인테리어 발주 시 세금계산서를 사업자등록번호로 받아야 부가세 환급 가능.
+    stepNumber: 12,
+    totalSteps: 19,
     goal: "Select interior contractors, approve the layout design, and manage the construction timeline. Also plan furniture, fixtures, and equipment (FF&E) including IT devices if applicable.",
-    whyNow: "Interior and FF&E are usually the largest single cost — locking in contractors, furniture, and equipment early prevents overrun.",
+    whyNow: "Interior and FF&E are usually the largest single cost — locking in contractors, furniture, and equipment early prevents overrun. With biz reg + tax type already set, every interior invoice can be input-tax-credit eligible.",
     // ⚠️ 5개 모두 필수 — 인테리어 단계는 가장 변수 많은 phase 라 partial-check advance 가
     //    개업 직전 치명적인 누락으로 이어진다 (사용자 보고: 2026-05-03 "체크리스트 3개만 했는데 다음 단계로").
     //    legally required: 소방필증·보건증 신청 (open 전 필수). business-essential: 컨셉 결정.
@@ -1880,17 +1886,19 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Suppliers and equipment",
     type: "execution",
     status: "locked",
-    stepNumber: 9,
-    totalSteps: 14,
+    // 2026-05-12 P3 reorder: #9 → #13. 사업자등록번호로 공급업체 계약·세금계산서 가능한 상태에서 진행.
+    stepNumber: 13,
+    totalSteps: 19,
     goal: "Confirm suppliers, finalize equipment purchases or rentals, and set up POS.",
-    whyNow: "Supply chain and equipment decisions directly affect day-one cash flow. Tip: Start vendor research now, but finalize contracts after business registration — most Korean suppliers require a 사업자등록번호 for invoicing.",
+    whyNow: "Supply chain and equipment decisions directly affect day-one cash flow. Now that you have a 사업자등록번호, all supplier invoices are properly issued and VAT-creditable.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["supplier-identified", "equipment-planned", "pos-selected"]
     },
     taskIds: ["supplier-identified", "equipment-planned", "pos-selected"],
     riskIds: [],
-    nextStageIds: ["registration-setup"]
+    // 2026-05-12 P3: vendor-setup → hiring-setup (was registration-setup which now precedes).
+    nextStageIds: ["hiring-setup"]
   },
   {
     stageId: "registration-setup",
@@ -1898,19 +1906,23 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Business registration and permits",
     type: "execution",
     status: "locked",
-    stepNumber: 10,
-    totalSteps: 15,
-    goal: "Complete the business registration at the tax office and file the operating permit with your district office.",
-    whyNow: "Registration and permits must be in place before you can legally begin operating.",
+    // 2026-05-12 P3 reorder (사장님 신고: "이 단계가 더 늦게 왔어야 되는 거 아닌가?").
+    //   임대차계약 직후 사업자등록 = 황금타이밍 — 인테리어·집기 세금계산서 모두
+    //   사업자등록번호로 발행받아야 부가세 환급 가능. 사업개시일 20일 이내 등록.
+    //   원래 위치 #10 → 새 위치 #8 (contract-review 직후).
+    stepNumber: 8,
+    totalSteps: 19,
+    goal: "Complete the business registration at the tax office (HomeTax 5min, free). 영업신고증 (operating permit) is filed later after interior is built — task description notes when.",
+    whyNow: "사업자등록은 임대차계약 직후가 황금타이밍. 인테리어·집기·공급업체 세금계산서를 모두 사업자등록번호로 받아야 부가세 환급 가능. 사업개시일 20일 이내 의무.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["tax-type-decided", "business-registered", "permit-filed"]
     },
     taskIds: ["tax-type-decided", "business-registered", "permit-filed"],
     riskIds: [],
-    // 사업자등록 직후 세무 가이드(홈택스·과세유형·법인카드)가 황금 타이밍.
-    // 이전: insurance-tax-setup 직행 → 변경: tax-guide → insurance-tax-setup
-    nextStageIds: ["tax-guide"]
+    // 2026-05-12 P3: registration-setup → biz-registration (was tax-guide).
+    //   사업자등록증 받자마자 사업용 통장·카드 개설이 day-1 인프라.
+    nextStageIds: ["biz-registration"]
   },
   // ⚠️ tax-guide 는 registration-setup 직후 위치 — pathStepNumber 가 array index 기반이라
   //    array 순서 = 플로우 순서 일치 시키려고 여기에 둠. (이전엔 array 끝쪽에 있어
@@ -1921,28 +1933,21 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Review tax guide",
     type: "verification",
     status: "locked",
-    // ★ 순서 조정 (이전 14 → 11): 사업자등록 직후가 세무 세팅 황금 타이밍
-    //   - Offline: registration-setup → tax-guide → insurance-tax-setup
-    //   - Online/Startup: tax-guide 도달 시 insurance-tax-setup 이 hidden 이라 다음 visible 인 loan-guide 로 진행
-    stepNumber: 11,
+    // 2026-05-12 P3 reorder: 사업자등록·통장 직후 과세유형 검증·신고 일정 확정.
+    //   원래 위치 #11 유지 (offline new) — biz-registration 다음 = 자연스러운 흐름.
+    //   online/startup 에서도 동일 위치 (online #8, startup ~#14).
+    stepNumber: 10,
     totalSteps: 19,
     goal: "Check the first tax setup and filing guidance before operations begin.",
     whyNow: "Tax structure, receipts, and proof handling are easier to set correctly before opening.",
     completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
     taskIds: [],
     riskIds: [],
-    // ⚠️ category-aware 분기: offline → insurance-tax-setup, online·startup → loan-guide
-    // 이전엔 multi-edge ["insurance-tax-setup", "loan-guide"] 만 두어 online·startup 사용자에게도
-    // hidden insurance-tax-setup이 currentStageId로 잡히는 버그가 있었음.
-    nextStageIds: ["loan-guide"], // default: online·startup·non-food
-    nextStageConditions: [
-      {
-        decisionStageId: "industry-selection",
-        decisionKey: "categoryId",
-        matchValueIn: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space"],
-        stageIds: ["hiring-setup"]  // ★ 2026-05-03: 채용·근로계약 먼저 → 그 후 4대보험·원천세 (14일 내)
-      }
-    ]
+    // 2026-05-12 P3: tax-guide → loan-guide (모든 path 통일).
+    //   종전엔 offline → hiring-setup (insurance-tax-setup 우회) 분기였는데,
+    //   reorder 후엔 offline 도 loan-guide → construction-setup → vendor-setup → hiring-setup 순서.
+    //   분기 조건 제거.
+    nextStageIds: ["loan-guide"]
   },
   // ★ 2026-05-03 순서 수정: 한국 노동법 실무 흐름 반영.
   //   채용 결정 → 근로계약서 작성·교부 (근기법 17조, 미체결 1차 500만원 과태료) → 근로 개시
@@ -1955,8 +1960,9 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Staff hiring and employment contract",
     type: "execution",
     status: "locked",
-    stepNumber: 12, // ← was 13
-    totalSteps: 15,
+    // 2026-05-12 P3 reorder: vendor-setup 직후 (인테리어 거의 끝나갈 때 채용 시작).
+    stepNumber: 14,
+    totalSteps: 19,
     goal: "Decide staffing needs, run hiring, and sign + deliver employment contracts BEFORE the first work day.",
     whyNow: "Labor Standards Act §17: contract must be written and delivered before work starts (penalty up to ₩5M if missing). Once signed, you have 14 days to register 4-insurance — that's the next stage.",
     completionRule: {
@@ -1973,8 +1979,9 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Post-hire obligations — 4 insurance, withholding tax, payroll",
     type: "execution",
     status: "locked",
-    stepNumber: 13, // ← was 12
-    totalSteps: 15,
+    // 2026-05-12 P3 reorder: hiring-setup 다음 (14일 의무).
+    stepNumber: 15,
+    totalSteps: 19,
     goal: "After signing the employment contract: register 4-insurance (within 14 days of work start), set up withholding tax (monthly 10th filing), and pick a payroll method (manual / CPA / SaaS).",
     whyNow: "These 3 obligations trigger automatically once your first employee starts work. 4-insurance late = penalty + back-payment retroactively to start date. Withholding tax misfiling = monthly penalty.",
     // ⚠️ 3개 모두 필수 (사용자 보고 2026-05-04 "2개만 체크해도 다음 단계로 자동 진행"):
@@ -1994,8 +2001,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Operations and marketing",
     type: "execution",
     status: "locked",
-    stepNumber: 14,
-    totalSteps: 15,
+    stepNumber: 16,
+    totalSteps: 19,
     goal: "Register on delivery platforms, go live with POS, and prepare SNS and local marketing.",
     whyNow: "Customers need to be able to find you from day one — late marketing setup means lost early revenue.",
     // ⚠️ 6개 task 모두 필수 (사용자 보고 2026-05-04 "6개 중 3개만 체크해도 다음 단계 자동 진행"):
@@ -2016,8 +2023,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Soft open",
     type: "execution",
     status: "locked",
-    stepNumber: 15,
-    totalSteps: 15,
+    stepNumber: 17,
+    totalSteps: 19,
     goal: "Run a soft open with a limited audience, collect feedback, and complete the final pre-opening checklist.",
     whyNow: "A soft open surfaces operational problems before they reach paying customers at scale.",
     // ⚠️ 3개 모두 필수 — feedback-collected 가 빠지면 「피드백 수집 안 해도 본오픈」 가능. 사용자 정신 어긋남.
@@ -2028,8 +2035,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["soft-open-done", "feedback-collected", "final-checklist"],
     riskIds: [],
-    // ★ 순서 조정: tax-guide 가 사업자등록 직후로 이동했으므로, pre-launch 다음은 loan-guide 로 직행
-    nextStageIds: ["loan-guide"]
+    // 2026-05-12 P3 reorder: pre-launch → financial-review (loan-guide 가 이미 #11로 이동).
+    nextStageIds: ["financial-review"]
   },
 
   // ── Online / Digital path: stages 5-9 ─────────────────────────────────────
@@ -2067,7 +2074,10 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["business-registered-online", "telecom-sale-filed"],
     riskIds: [],
-    nextStageIds: ["sourcing-setup"]
+    // 2026-05-12 P3: online-registration → biz-registration (was sourcing-setup).
+    //   사업자등록 + 통신판매 직후 통장·세무사 결정 → tax → loan → 재고 발주 순서.
+    //   온라인 셀러도 사업용 통장 없이 재고 사면 종소세 신고 시 비용 인정 어려움.
+    nextStageIds: ["biz-registration"]
   },
   {
     stageId: "sourcing-setup",
@@ -2075,7 +2085,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Product sourcing",
     type: "execution",
     status: "locked",
-    stepNumber: 7,
+    // 2026-05-12 P3 reorder: biz/tax/loan 사이에 들어가 #10 (online 새 순서).
+    stepNumber: 10,
     totalSteps: 14,
     goal: "Contract with suppliers, photograph products, and create detail pages ready for listing.",
     whyNow: "High-quality photos and detail pages are the primary conversion driver in online selling.",
@@ -2093,7 +2104,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Store and delivery setup",
     type: "execution",
     status: "locked",
-    stepNumber: 8,
+    stepNumber: 11,
     totalSteps: 14,
     goal: "Configure the storefront, connect shipping carriers, and set up payment.",
     whyNow: "Getting shipping and payment right before launch prevents failed orders and refund requests on opening day.",
@@ -2111,7 +2122,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Marketing and launch",
     type: "execution",
     status: "locked",
-    stepNumber: 9,
+    stepNumber: 12,
     totalSteps: 14,
     goal: "Optimize for search, set up initial ads, and plan a review-building strategy before launch.",
     whyNow: "New stores have no reviews and low search ranking — early marketing investment directly affects first-month revenue.",
@@ -2121,45 +2132,83 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["store-seo-done", "first-ad-set", "review-strategy-set"],
     riskIds: [],
-    nextStageIds: ["tax-guide"]
+    // 2026-05-12 P3: online-marketing → financial-review (tax/loan/biz는 이미 일찍 방문 완료).
+    nextStageIds: ["financial-review"]
   },
 
-  // ── Shared tail: loan guide (tax-guide 는 registration-setup 직후로 이동됨) ──
+  // ── Shared tail (재정렬됨) ──
+  // 2026-05-12 P3 reorder: 자금·통장 의사결정이 인테리어 발주 *전* 으로 이동.
+  //   리드타임 (정책자금 신청부터 입금까지 4-12주) 고려하면 영업 전 신청 필수.
+  //   loan-guide 의 다음 stage 는 path 별로 분기.
   {
     stageId: "loan-guide",
     code: "loan_guide",
     title: "Funding and support programs",
     type: "verification",
     status: "locked",
-    // ★ 순서 조정: 소프트오픈 직후 운영 자금 확보 단계로 이동 (16번)
-    stepNumber: 16,
+    // offline path #11, online #9, startup ~#15 — path-aware 표시는 traverseUserPath 이 처리.
+    stepNumber: 11,
     totalSteps: 19,
     goal: "Explore government funding, startup support programs, low-interest loans, and grants. Match your profile to available programs before committing personal capital.",
-    whyNow: "Government programs have application deadlines. Missing them means paying full cost out of pocket. Check eligibility early.",
+    whyNow: "Government programs have application deadlines. Application → disbursement takes 4–12 weeks for 소상공인 정책자금 — apply BEFORE construction/inventory commit so funds arrive when needed.",
     completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
     taskIds: [],
     riskIds: [],
-    nextStageIds: ["biz-registration"]
+    // 2026-05-12 P3: path 별 분기.
+    //   offline (음식·카페·소매·뷰티 등) → construction-setup (인테리어 발주)
+    //   online-digital → sourcing-setup (재고 발주)
+    //   startup-tech → biz-registration (default — startup 은 후반에 통장·세무사 결정)
+    nextStageIds: ["biz-registration"],
+    nextStageConditions: [
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "categoryId",
+        matchValueIn: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space"],
+        stageIds: ["construction-setup"]
+      },
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "categoryId",
+        matchValue: "online-digital",
+        stageIds: ["sourcing-setup"]
+      }
+    ]
   },
 
-  // ── Post-launch preparation: stages 16-18 (shared) ────────────────────────
+  // 2026-05-12 P3: biz-registration 의 위치가 path 별로 다름.
+  //   - offline: #9 (registration-setup 직후, 인테리어 전)
+  //   - online:  #7 (online-registration 직후, 재고 발주 전)
+  //   - startup: ~#16 (tax/loan 다음, 후반 finalization)
+  //   array 위치는 후반에 두되 nextStageConditions 로 분기.
   {
     stageId: "biz-registration",
     code: "biz_registration",
-    title: "Business registration finalization",
+    title: "Business account + CPA decision",
     type: "execution",
     status: "locked",
-    stepNumber: 17,
+    // path 별 표시는 traverseUserPath 가 자동 계산 (이 stepNumber 는 사용 안 함)
+    stepNumber: 9,
     totalSteps: 19,
-    goal: "Confirm the tax office registration, open a dedicated business account, and decide on a tax accountant.",
-    whyNow: "Getting the financial structure right before opening prevents tax filing and expense tracking problems from day one.",
+    goal: "Confirm the business registration, open a dedicated business account (사업용 통장·카드), and decide whether to engage a tax accountant.",
+    whyNow: "사업용 통장 = day-1 인프라. 매출 입금처·경비 결제·세금계산서 발행 모두 사업용 통장 기반. 사업자등록증 발급 후 즉시 개설 (~30분, 무료). 세무사 결정은 매출 규모·복잡도에 따라.",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["biz-reg-confirmed", "biz-account-opened"]
     },
     taskIds: ["biz-reg-confirmed", "biz-account-opened", "cpa-decision-made"],
     riskIds: [],
-    nextStageIds: ["financial-review"]
+    // 2026-05-12 P3: path 별 분기.
+    //   offline + online → tax-guide (통장 개설 후 과세유형·신고 일정 검증)
+    //   startup → financial-review (default — startup 은 후반에 도달)
+    nextStageIds: ["financial-review"],
+    nextStageConditions: [
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "categoryId",
+        matchValueIn: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space", "online-digital"],
+        stageIds: ["tax-guide"]
+      }
+    ]
   },
   {
     stageId: "financial-review",

@@ -11,6 +11,7 @@ import {
   starterOpenDatePresets,
   starterStepCards,
   calculateCostRatios,
+  traverseUserPath,
 } from "@build-up/shared";
 import {
   useProfileStore,
@@ -241,10 +242,12 @@ export function useComputedDashboard(
     return true;
   };
 
-  // ── Path 정렬: 단계 정의 순서대로 사용자 경로의 visible stages 만 추림 ──
-  // stepNumber/totalSteps 는 정의 시점의 hardcoded 값이라 path마다 의미가 다름.
-  // pathStepNumber/pathTotalStages 는 사용자 path에서의 실제 위치를 동적 계산.
-  const pathStageList = roadmap.stages.filter((s) => isPathStage(s.stageId));
+  // ── Path 정렬: 사용자 *실제 navigation 순서* 로 stage 추림 ──
+  // 2026-05-12 P3 fix: 종전엔 `roadmap.stages.filter(isPath)` 로 *배열 순서* 만 반영,
+  // 같은 stage 가 cluster 별로 다른 위치에서 방문되는데 (예: biz-registration: offline #9,
+  // online #7, startup #16) 한 가지만 표시 → 다른 path 사장님 pathStepNumber 틀림.
+  // traverseUserPath 는 nextStageIds + nextStageConditions 따라가 *실제 navigation* 반환.
+  const pathStageList = traverseUserPath(roadmap.stages, decisions, isPathStage);
   const pathStageIds = new Set(pathStageList.map((s) => s.stageId));
   const pathTotalStages = pathStageList.length;
 
