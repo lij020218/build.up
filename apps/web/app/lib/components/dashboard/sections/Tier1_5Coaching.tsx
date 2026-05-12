@@ -27,6 +27,7 @@ import { StartupHealthSection } from "../StartupHealthSection";
 import { StartupFounderBrief } from "../StartupFounderBrief";
 import { OfflineFounderBrief } from "../OfflineFounderBrief";
 import { IntegrationHubCard } from "../IntegrationHubCard";
+import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
 import { TeamCard } from "../TeamCard";
 import { PrimeCostCard } from "../PrimeCostCard";
@@ -85,6 +86,17 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
       {!hide("integration-hub") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
           <IntegrationHubCard ko={ko} />
+        </div>
+      )}
+
+      {/* 2026-05-12 사장님 lock-in moat — 코칭 누적 일지 (14일).
+          매일 FounderBrief 가 노출될 때 hero signal 이 자동 기록됨 (useEffect →
+          recordSignal). 사장님이 떠나면 1년치 코칭 일지 잃음 → 전환비용 발생.
+          캐시노트가 같은 기능 출시해도 누적된 history 는 못 따라옴.
+          v1: localStorage / v2: Supabase `coaching_history` 테이블 + RLS. */}
+      {!hide("coaching-history") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <CoachingHistoryCard ko={ko} />
         </div>
       )}
 

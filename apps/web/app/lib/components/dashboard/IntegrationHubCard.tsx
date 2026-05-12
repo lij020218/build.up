@@ -23,7 +23,7 @@
  */
 
 import { useMemo, useState } from "react";
-import { Plug, CheckCircle2, Clock, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Plug, CheckCircle2, Clock, Lock, ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { getChannelsForIndustry, type IntegrationChannel } from "../../integrations-catalog";
 
@@ -35,6 +35,8 @@ export function IntegrationHubCard({ ko }: Props) {
   const d = useDashboardCtx();
   const industryCategoryId = d.industryCategoryId ?? "";
   const [notifiedIds, setNotifiedIds] = useState<Set<string>>(new Set());
+  const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   const channels = useMemo(() => {
     const all = getChannelsForIndustry(industryCategoryId);
@@ -46,6 +48,34 @@ export function IntegrationHubCard({ ko }: Props) {
     const paidGated = all.filter((c) => c.status === "paid-gated").slice(0, 2);
     return { available, comingSoon, paidGated, total: all.length };
   }, [industryCategoryId]);
+
+  // GA4 OAuth 시작 — 기존 saas_metrics_connections 인프라 활용 (이미 production-ready).
+  // 다른 채널 (네이버 커머스·Stripe·Slack) 은 v2 PR 에서 동일 패턴으로 추가 예정.
+  const handleConnect = async (channelId: string) => {
+    setConnectingId(channelId);
+    setConnectError(null);
+    try {
+      if (channelId === "ga4") {
+        const res = await fetch("/api/integrations/saas-metrics/ga4/start", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data?.error ?? "GA4 OAuth 시작 실패");
+        }
+        // Google consent 페이지로 이동
+        window.location.href = data.url as string;
+        return; // 사장님 redirect 됨
+      }
+      // 다른 채널은 아직 미구현 — v2 PR
+      setConnectError("다른 채널은 v2 PR 에서 구현 예정. 알림 신청은 가능합니다.");
+    } catch (e) {
+      setConnectError(e instanceof Error ? e.message : "연결 실패");
+    } finally {
+      setConnectingId(null);
+    }
+  };
 
   const handleNotify = (id: string) => {
     setNotifiedIds((prev) => {
@@ -99,9 +129,25 @@ export function IntegrationHubCard({ ko }: Props) {
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
             {channels.available.map((c) => (
-              <ChannelRow key={c.id} channel={c} ko={ko} status="available" />
+              <ChannelRow
+                key={c.id}
+                channel={c}
+                ko={ko}
+                status="available"
+                onConnect={c.id === "ga4" ? () => handleConnect(c.id) : undefined}
+                connecting={connectingId === c.id}
+              />
             ))}
           </div>
+          {connectError && (
+            <div style={{
+              marginTop: 8, padding: "8px 12px", borderRadius: 8,
+              background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.20)",
+              color: "#b91c1c", fontSize: 12, lineHeight: 1.5,
+            }}>
+              {connectError}
+            </div>
+          )}
         </section>
       )}
 
@@ -166,12 +212,16 @@ function ChannelRow({
   status,
   notified,
   onNotify,
+  onConnect,
+  connecting,
 }: {
   channel: IntegrationChannel;
   ko: boolean;
   status: "available" | "coming-soon" | "paid-gated";
   notified?: boolean;
   onNotify?: () => void;
+  onConnect?: () => void;
+  connecting?: boolean;
 }) {
   const palette = {
     available: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669", iconBg: "rgba(5,150,105,0.10)" },
@@ -211,22 +261,36 @@ function ChannelRow({
       {status === "available" && (
         <button
           type="button"
-          disabled
-          aria-label={ko ? "연결 (v2 출시 예정)" : "Connect (v2)"}
+          onClick={onConnect}
+          disabled={!onConnect || connecting}
+          aria-label={ko ? (onConnect ? "연결" : "v2 출시 예정") : (onConnect ? "Connect" : "Coming v2")}
+          title={!onConnect && status === "available"
+            ? (ko ? "다음 PR 에서 활성화 — GA4 만 우선 출시" : "Activates in next PR — GA4 first")
+            : undefined}
           style={{
             flexShrink: 0,
             padding: "7px 12px",
             borderRadius: 8,
             border: `1px solid ${c.border}`,
-            background: "white",
+            background: onConnect && !connecting ? c.iconBg : "white",
             color: c.text,
             fontSize: 12, fontWeight: 700,
             display: "inline-flex", alignItems: "center", gap: 5,
-            cursor: "not-allowed",
-            opacity: 0.85,
+            cursor: onConnect && !connecting ? "pointer" : "not-allowed",
+            opacity: onConnect ? 1 : 0.6,
+            transition: "all 0.15s",
           }}
         >
-          {ko ? "연결" : "Connect"} <ArrowRight size={12} strokeWidth={2.2} />
+          {connecting ? (
+            <>
+              <Loader2 size={12} strokeWidth={2.2} style={{ animation: "spin 1s linear infinite" }} />
+              {ko ? "연결 중..." : "Connecting..."}
+            </>
+          ) : (
+            <>
+              {ko ? "연결" : "Connect"} <ArrowRight size={12} strokeWidth={2.2} />
+            </>
+          )}
         </button>
       )}
 

@@ -21,7 +21,7 @@ export type DashboardCardMeta = {
   /** true = 사용자가 숨길 수 없는 핵심 카드 */
   essential?: boolean;
   /** 어느 업종에 의미 있는지 — 사장님이 본인과 무관한 카드 안 보게 자동 분기. UI 표시용 힌트도 겸함. */
-  industryHint?: "food" | "cafe-dessert" | "startup-tech" | "all" | "subscription" | "offline" | "data";
+  industryHint?: "food" | "cafe-dessert" | "startup-tech" | "all" | "subscription" | "offline" | "data" | "history";
 };
 
 export const DASHBOARD_CARDS: DashboardCardMeta[] = [
@@ -156,6 +156,17 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     hintKo: "사장님 프로필에 맞는 2026 정책자금 + 부채 있으면 대환 시뮬",
     hintEn: "Policy fund auto-match + refinance sim if debt",
     category: "coaching",
+  },
+  {
+    // 2026-05-12 사장님 lock-in moat — 14일 코칭 누적 일지. FounderBrief 가
+    //   매일 노출될 때 hero signal 자동 기록. 전환비용 만드는 핵심 기능.
+    id: "coaching-history",
+    labelKo: "코칭 누적 일지 (14일) ⭐",
+    labelEn: "Coaching History (14d) ⭐",
+    hintKo: "매일 받은 신호 + 사장님 대응을 14일 누적 — 패턴 인식 + 자기 효능감",
+    hintEn: "14-day cumulative signals + your responses — pattern recognition",
+    category: "coaching",
+    industryHint: "history",
   },
   {
     // 2026-05-12 데이터 입력 마찰 0 — 업종별 자동 연동 채널 (네이버 커머스/예약·GA4·

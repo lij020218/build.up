@@ -30,9 +30,10 @@
  *  ────────────────────────────────────────────────────────────────
  */
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { AlertTriangle, TrendingDown, Sparkles, Trophy, Target, ArrowRight, Lightbulb } from "lucide-react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
+import { recordSignal } from "../../coaching-history";
 
 const MIDNIGHT = "#191970";
 
@@ -66,6 +67,9 @@ type IndustryThresholds = {
   materialKind?: string; // "재료비" / "매입원가" / "재료·자재비"
   unitWord?: string;     // "메뉴" / "상품" / "서비스" / "수업"
   primeCostHealthy?: number;
+  /** 업종별 객단가(원) 평균 — 2026 한국 기준. null = 객단가 의미 적은 업종 (구독·도매 등) */
+  avgTicketTypical?: number;
+  avgTicketLabel?: string; // "객단가" / "회원권 단가" / "월 수강료" / "예약 단가"
   closureStat: string;
 };
 
@@ -78,6 +82,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       materialWarn: 35, materialCritical: 40, materialAvg: "36% (한국 평균)", materialKind: "재료비",
       unitWord: "메뉴",
       primeCostHealthy: 60,
+      avgTicketTypical: 14310, avgTicketLabel: "객단가",
       closureStat: "한국 외식업 폐업률 15.8% (2025)",
     },
     "cafe-dessert": {
@@ -87,6 +92,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       materialWarn: 35, materialCritical: 40, materialAvg: "30-38%", materialKind: "재료비",
       unitWord: "메뉴",
       primeCostHealthy: 60,
+      avgTicketTypical: 7500, avgTicketLabel: "객단가",
       closureStat: "한국 카페 폐업률 약 11-12%",
     },
     beauty: {
@@ -95,6 +101,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       rentWarn: 18, rentCritical: 25, rentAvg: "12-20%",
       materialWarn: 15, materialCritical: 22, materialAvg: "10-18%", materialKind: "재료·자재비",
       unitWord: "시술",
+      avgTicketTypical: 50000, avgTicketLabel: "시술 객단가",
       closureStat: "이미용업 폐업률 11.2%",
     },
     retail: {
@@ -103,6 +110,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       rentWarn: 12, rentCritical: 18, rentAvg: "8-15%",
       materialWarn: 70, materialCritical: 78, materialAvg: "65-72% (매입원가)", materialKind: "매입원가",
       unitWord: "상품",
+      avgTicketTypical: 18000, avgTicketLabel: "객단가",
       closureStat: "소매업 폐업률 16.7%",
     },
     ecommerce: {
@@ -111,6 +119,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       rentWarn: 6, rentCritical: 12, rentAvg: "0-8% (창고)",
       materialWarn: 70, materialCritical: 78, materialAvg: "65-75% (매입원가)", materialKind: "매입원가",
       unitWord: "상품",
+      avgTicketTypical: 25000, avgTicketLabel: "주문 객단가",
       closureStat: "온라인 셀러 폐업률 약 14%",
     },
     fitness: {
@@ -118,6 +127,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       laborWarn: 40, laborCritical: 50, laborAvg: "30-45% (강사·트레이너 비중)",
       rentWarn: 25, rentCritical: 35, rentAvg: "15-25% (넓은 공간)",
       unitWord: "수업",
+      avgTicketTypical: 90000, avgTicketLabel: "월 회원권 단가",
       closureStat: "체육시설업 폐업률 9.3%",
     },
     education: {
@@ -125,6 +135,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       laborWarn: 55, laborCritical: 65, laborAvg: "50-65% (강사 인건비)",
       rentWarn: 16, rentCritical: 22, rentAvg: "10-20%",
       unitWord: "수업",
+      avgTicketTypical: 250000, avgTicketLabel: "월 수강료",
       closureStat: "학원 폐업률 8.4%",
     },
     pet: {
@@ -133,6 +144,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       rentWarn: 15, rentCritical: 22, rentAvg: "10-18%",
       materialWarn: 22, materialCritical: 30, materialAvg: "15-25%", materialKind: "재료·사료비",
       unitWord: "서비스",
+      avgTicketTypical: 35000, avgTicketLabel: "서비스 객단가",
       closureStat: "펫업종 폐업률 약 10%",
     },
     "living-service": {
@@ -140,6 +152,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       laborWarn: 35, laborCritical: 45, laborAvg: "30-40%",
       rentWarn: 10, rentCritical: 18, rentAvg: "5-12%",
       unitWord: "서비스",
+      avgTicketTypical: 25000, avgTicketLabel: "서비스 객단가",
       closureStat: "생활서비스업 폐업률 약 11%",
     },
     space: {
@@ -148,6 +161,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       // 공간임대는 임대료가 사업의 본질 — 30-50% 정상.
       rentWarn: 40, rentCritical: 55, rentAvg: "30-50% (사업 본질 — 정상 범위)",
       unitWord: "예약",
+      avgTicketTypical: 15000, avgTicketLabel: "예약 단가 (시간당)",
       closureStat: "공간임대업 폐업률 약 12%",
     },
     "online-digital": {
@@ -155,6 +169,7 @@ function getIndustryThresholds(industryCategoryId: string): IndustryThresholds {
       laborWarn: 40, laborCritical: 55, laborAvg: "30-50%",
       rentWarn: 6, rentCritical: 12, rentAvg: "0-8%",
       unitWord: "상품",
+      avgTicketTypical: 30000, avgTicketLabel: "주문 객단가",
       closureStat: "온라인 사업 폐업률 약 14%",
     },
   };
@@ -178,6 +193,8 @@ export function OfflineFounderBrief({ ko }: Props) {
   const bepProgress = (d as unknown as { bepProgress: number }).bepProgress ?? 0;
   const weeklySalesChange = (d as unknown as { weeklySalesChange: number }).weeklySalesChange ?? 0;
   const last14Total = (d as unknown as { last14Total: number }).last14Total ?? 0;
+  const totalCustomers = (d as unknown as { totalCustomers: number }).totalCustomers ?? 0;
+  const totalSales = (d as unknown as { totalSales: number }).totalSales ?? 0;
   const dailyEntries = (d.dailyEntries as Array<{ date: string; sales: number }>) ?? [];
   const industryCategoryId = d.industryCategoryId ?? "";
 
@@ -329,6 +346,53 @@ export function OfflineFounderBrief({ ko }: Props) {
       });
     }
 
+    // 객단가 (avg ticket) — 모든 업종 (typical 있을 때만)
+    // 객수 데이터 있으면 actual 객단가 계산 → 업종 평균 대비 비교.
+    const avgTicketActual = totalCustomers > 0 ? totalSales / totalCustomers : 0;
+    if (t.avgTicketTypical && t.avgTicketTypical > 0 && avgTicketActual > 0) {
+      const ratio = avgTicketActual / t.avgTicketTypical;
+      const actualWon = Math.round(avgTicketActual).toLocaleString();
+      const typicalWon = Math.round(t.avgTicketTypical).toLocaleString();
+      const ticketLabel = t.avgTicketLabel ?? "객단가";
+
+      if (ratio < 0.7) {
+        signals.push({
+          kind: "critical",
+          headline: ko
+            ? `${ticketLabel} ${actualWon}원 — ${t.label} 평균 ${typicalWon}원의 ${Math.round(ratio * 100)}%`
+            : `${ticketLabel} ${actualWon} — ${Math.round(ratio * 100)}% of ${t.labelEn} avg ${typicalWon}`,
+          why: ko
+            ? `${t.label} 평균 ${typicalWon}원 대비 30%+ 낮음. 저가 ${unitWord} 비중 과다 또는 가격 책정 부족. 매출 회복 가장 큰 레버.`
+            : `30%+ below ${t.labelEn} avg. Low-price mix overweight OR underpriced. Largest revenue lever.`,
+          action: ko
+            ? `이번 주: ① 매출 상위 5 ${unitWord} 객단가 vs 평균 비교 ② 업셀 옵션 (사이드·세트·옵션) 1개 추가 ③ 가격 인상 5-10% 시뮬`
+            : `This week: ① top 5 unit price audit ② add 1 upsell option ③ simulate +5-10% pricing`,
+        });
+      } else if (ratio < 0.85) {
+        signals.push({
+          kind: "important",
+          headline: ko
+            ? `${ticketLabel} ${actualWon}원 — ${t.label} 평균보다 낮음`
+            : `${ticketLabel} ${actualWon} — below ${t.labelEn} avg`,
+          why: ko
+            ? `${t.label} 평균 ${typicalWon}원. 15-30% 낮음 — 업셀·세트 구성으로 보완 여지.`
+            : `${t.labelEn} avg ${typicalWon}. 15-30% lower — upsell opportunity.`,
+          action: ko ? `이번 주: ${unitWord} 1개 업셀 옵션 추가 (사이드/세트/멤버십)` : `This week: add one upsell option`,
+        });
+      } else if (ratio > 1.15) {
+        signals.push({
+          kind: "good",
+          headline: ko
+            ? `${ticketLabel} ${actualWon}원 — ${t.label} 평균 +${Math.round((ratio - 1) * 100)}%`
+            : `${ticketLabel} ${actualWon} — +${Math.round((ratio - 1) * 100)}% vs ${t.labelEn} avg`,
+          why: ko
+            ? `${t.label} 평균 ${typicalWon}원 초과. 프리미엄 포지셔닝 성공 — 객수 증가 마케팅이 다음 레버.`
+            : `Premium positioning success — customer acquisition is next lever.`,
+          action: ko ? "이번 분기: 단골 추천 캠페인·SNS 콘텐츠로 객수 확장" : "This Q: regular-referral + SNS for customer growth",
+        });
+      }
+    }
+
     if (isFoodLike && ratiosReady && primeCost > 0 && primeCost < (t.primeCostHealthy ?? 60)) {
       signals.push({
         kind: "good",
@@ -382,7 +446,18 @@ export function OfflineFounderBrief({ ko }: Props) {
     const secondary = signals.slice(1, 3);
 
     return { hero, secondary, industryLabel: t.label };
-  }, [ingredientRatio, laborRatio, rentRatio, primeCost, ratiosReady, bepProgress, weeklySalesChange, dailyEntries.length, industryCategoryId, ko]);
+  }, [ingredientRatio, laborRatio, rentRatio, primeCost, ratiosReady, bepProgress, weeklySalesChange, dailyEntries.length, industryCategoryId, totalCustomers, totalSales, ko]);
+
+  // 코칭 히스토리 자동 기록 — 사장님 lock-in moat.
+  // 하루 한 번만 기록 (recordSignal 내부에서 동일 날짜·brief 덮어쓰기 처리).
+  useEffect(() => {
+    if (!brief.hero) return;
+    recordSignal("offline", {
+      kind: brief.hero.kind,
+      headline: brief.hero.headline,
+      action: brief.hero.action,
+    });
+  }, [brief.hero?.headline, brief.hero?.kind, brief.hero?.action, brief.hero]);
 
   void last14Total;
 

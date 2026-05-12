@@ -28,10 +28,11 @@
  *  ────────────────────────────────────────────────────────────────
  */
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { TrendingUp, TrendingDown, AlertTriangle, Target, Sparkles, ArrowRight, Lightbulb, Trophy } from "lucide-react";
 import { useStartupMetrics } from "../../hooks/useStartupMetrics";
 import { useFinanceStore } from "../../stores/finance-store";
+import { recordSignal } from "../../coaching-history";
 
 const MIDNIGHT = "#191970";
 
@@ -196,7 +197,17 @@ export function StartupFounderBrief({ ko }: Props) {
     const secondary = signals.slice(1, 3);
 
     return { hero, secondary, industry };
-  }, [metrics, dailyEntries, ko]);
+  }, [metrics, dailyEntries, industry, ko]);
+
+  // 코칭 히스토리 자동 기록 — lock-in moat. 동일 날짜 덮어쓰기 (한 날 한 entry).
+  useEffect(() => {
+    if (!brief.hero) return;
+    recordSignal("startup", {
+      kind: brief.hero.kind,
+      headline: brief.hero.headline,
+      action: brief.hero.action,
+    });
+  }, [brief.hero?.headline, brief.hero?.kind, brief.hero?.action, brief.hero]);
 
   const colors = {
     critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c", iconBg: "rgba(220,38,38,0.10)" },

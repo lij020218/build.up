@@ -96,8 +96,11 @@ export const INTEGRATION_CHANNELS: IntegrationChannel[] = [
     dataKo: "주문 · 매출 · 재고 · 정산 · 환불 — 풀스택 자동 수집",
     industries: ["ecommerce", "retail", "online-digital"],
     cost: "free",
-    status: "available",
-    authType: "oauth",
+    // OAuth2 Client Credentials + bcrypt 서명. 2025.05 부터 호출 IP 화이트리스트 필수
+    //   (Vercel dynamic IP 와 충돌 → 고정 IP 프록시 필요)
+    costNote: "사장님이 commerce.naver.com 에서 client 키 발급 → build.up 에 입력. IP 화이트리스트 필요",
+    status: "coming-soon",
+    authType: "api-key",
     dataDepth: "full",
     marketReach: "very-high",
     priority: 1,
@@ -143,16 +146,22 @@ export const INTEGRATION_CHANNELS: IntegrationChannel[] = [
     priority: 2,
   },
 
-  // ─── P0-2: 네이버 예약 (뷰티·피트니스·펫·생활서비스 통합) ─────────────────
+  // ─── 네이버 예약 (뷰티·피트니스·펫·생활서비스 통합) ─────────────────
+  //   2026-05 OAuth 조사 결과 — *공개 OAuth API 없음*. 캐치테이블/공비서 같은
+  //   제휴 사업자도 "사장님 네이버 ID + 서비스 코드 수동 입력" 후 권한 위임으로 동작.
+  //   v1: CSV 다운로드 → 업로드 (사장님이 스마트플레이스에서 받은 통계 파일)
+  //   v2: 사장님 위임 로그인 자동 수집 (싱크맨·공비서 패턴) — 약관·법적 검토 필요
+  //   v3: 네이버가 공식 OAuth 출시할 때까지 대기
   {
     id: "naver-booking",
     labelKo: "네이버 예약 (스마트플레이스)",
     labelEn: "Naver Booking (Smart Place)",
-    dataKo: "예약 · 고객 · 결제 · 노쇼율 — 4개 업종 통합 채널",
+    dataKo: "예약 · 고객 · 결제 · 노쇼율 — 4개 업종 통합 (수동 CSV → v2 위임 자동화)",
     industries: ["beauty", "fitness", "pet", "living-service", "food"],
     cost: "free",
-    status: "available",
-    authType: "oauth",
+    costNote: "공식 OAuth 미제공 — v1 CSV 업로드 / v2 위임 자동화 (약관 검토 필요)",
+    status: "coming-soon",
+    authType: "csv-upload",
     dataDepth: "revenue+customer",
     marketReach: "very-high",
     priority: 1,
