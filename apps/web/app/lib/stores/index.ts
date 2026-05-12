@@ -14,6 +14,8 @@ export { useUsageStore } from "./usage-store";
 export type { UsageEvent } from "./usage-store";
 export { useBookingStore } from "./booking-store";
 export type { Booking, BookingStatus, BookingSource, Provider } from "./booking-store";
+export { useEcommerceStore } from "./ecommerce-store";
+export type { AdChannel, AdSpend, ReturnEntry } from "./ecommerce-store";
 
 // Type re-exports for backwards compatibility
 export type {

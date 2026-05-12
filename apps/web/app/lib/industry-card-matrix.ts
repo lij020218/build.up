@@ -447,7 +447,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     ],
   },
   "ecommerce-conversion": {
-    id: "ecommerce-conversion", status: "planned", industries: ["ecommerce"],
+    id: "ecommerce-conversion", status: "existing", industries: ["ecommerce"],
     sources: [
       "Shopify 평균 CVR 1.4%, 가이드 2.5-3%",
       "OSC 쿠팡 광고 ROAS / Sellerking",

@@ -212,6 +212,16 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
     industryHint: "all",
   },
+  {
+    // 2026-05-13 Phase 2f: 이커머스 신규 카드 — 11 자료 (Polar·Shopify·OSC 쿠팡)
+    id: "ecommerce-conversion",
+    labelKo: "전환·ROAS·반품 · 이커머스 ⭐",
+    labelEn: "CVR · Ecommerce ⭐",
+    hintKo: "7일 CVR/ROAS + 채널별 비교 (네이버·쿠팡·메타) + 반품률 분석 (Shopify 1.4% / ROAS 300%)",
+    hintEn: "7d CVR/ROAS + channel comparison + return rate",
+    category: "coaching",
+    industryHint: "all",
+  },
   // 2026-05-12 Phase 1a: AI 운영 코치 데일리 브리프 (offline-founder-brief) 통합 →
   //   Tier 1 CEOMorningHero 가 11 업종 룰엔진 흡수 (Toast IQ·Amplitude·Mercury 통합 패턴).
   //   별도 카드 + meta entry 제거. 동일 신호는 CEOMorningHero 의 resolveHero 우선순위 1.6 에서.
