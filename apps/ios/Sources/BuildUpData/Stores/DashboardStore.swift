@@ -144,14 +144,47 @@ public final class DashboardStore {
 
     // MARK: - Profile setters
 
-    public func setProfile(storeName: String, userName: String, daysSinceLaunch: Int, category: IndustryCategory, currentCash: Double?) {
+    public func applyRemoteData(
+        profile: DashboardProfile,
+        entries remoteEntries: [DailyEntry],
+        costs remoteCosts: MonthlyCosts?
+    ) {
+        self.storeName = profile.storeName
+        self.userName = profile.userName
+        self.daysSinceLaunch = profile.daysSinceLaunch
+        self.category = profile.category
+        self.stage = profile.stage
+        self.currentCash = profile.currentCash
+        if !remoteEntries.isEmpty {
+            self.entries = remoteEntries.sorted { $0.date < $1.date }
+        }
+        if let remoteCosts {
+            self.costs = remoteCosts
+        }
+        self.businessLaunched = profile.businessLaunched || !entries.isEmpty || costs.total > 0
+        self.lastError = nil
+        recomputeHealth()
+    }
+
+    public func setProfile(
+        storeName: String,
+        userName: String,
+        daysSinceLaunch: Int,
+        category: IndustryCategory,
+        currentCash: Double?,
+        businessLaunched: Bool = true
+    ) {
         self.storeName = storeName
         self.userName = userName
         self.daysSinceLaunch = daysSinceLaunch
         self.category = category
         self.currentCash = currentCash
-        self.businessLaunched = true
+        self.businessLaunched = businessLaunched
         recomputeHealth()
+    }
+
+    public func recordError(_ message: String) {
+        self.lastError = message
     }
 
     // MARK: - Sync flush (수동 또는 BackgroundTask 에서 호출)
@@ -194,6 +227,34 @@ public final class DashboardStore {
         df.dateFormat = "yyyy-MM-dd"
         df.timeZone = TimeZone(identifier: "Asia/Seoul")
         return df.date(from: str)
+    }
+}
+
+public struct DashboardProfile: Sendable, Hashable {
+    public let storeName: String
+    public let userName: String
+    public let daysSinceLaunch: Int
+    public let businessLaunched: Bool
+    public let category: IndustryCategory
+    public let stage: HealthScore.BusinessMaturity
+    public let currentCash: Double?
+
+    public init(
+        storeName: String,
+        userName: String,
+        daysSinceLaunch: Int,
+        businessLaunched: Bool,
+        category: IndustryCategory,
+        stage: HealthScore.BusinessMaturity,
+        currentCash: Double?
+    ) {
+        self.storeName = storeName
+        self.userName = userName
+        self.daysSinceLaunch = daysSinceLaunch
+        self.businessLaunched = businessLaunched
+        self.category = category
+        self.stage = stage
+        self.currentCash = currentCash
     }
 }
 

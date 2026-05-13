@@ -92,14 +92,41 @@ public final class AuthCoordinator {
         state = .authenticating
         do {
             let session = try await supabase.auth.signIn(email: email, password: password)
+            try await bootstrapAccountWorkspace(for: session.user.id)
             state = .authenticated(AuthSession(
                 userId: session.user.id,
                 email: session.user.email,
-                displayName: session.user.userMetadata["display_name"]?.stringValue,
+                displayName: Self.displayName(from: session.user),
                 provider: .email
             ))
         } catch {
-            state = .failed(String(describing: error))
+            state = .failed(Self.authErrorMessage(error))
+        }
+    }
+
+    public func signUpWithEmail(name: String, email: String, password: String) async {
+        state = .authenticating
+        do {
+            let response = try await supabase.auth.signUp(
+                email: email,
+                password: password,
+                data: ["name": .string(name)]
+            )
+
+            guard let session = response.session else {
+                state = .failed("Supabase Email confirmation 이 켜져 있습니다. 웹과 동일하게 즉시 로그인을 쓰려면 Authentication > Providers > Email 에서 Confirm email 을 꺼주세요.")
+                return
+            }
+
+            try await bootstrapAccountWorkspace(for: session.user.id)
+            state = .authenticated(AuthSession(
+                userId: session.user.id,
+                email: session.user.email,
+                displayName: Self.displayName(from: session.user),
+                provider: .email
+            ))
+        } catch {
+            state = .failed(Self.authErrorMessage(error))
         }
     }
 
@@ -131,4 +158,38 @@ public final class AuthCoordinator {
             state = .failed("계정 삭제 실패: \(error.localizedDescription)")
         }
     }
+
+    private func bootstrapAccountWorkspace(for userId: UUID) async throws {
+        try await supabase
+            .from("business_profiles")
+            .upsert(BusinessProfileBootstrapDTO(user_id: userId), onConflict: "user_id")
+            .execute()
+    }
+
+    private static func displayName(from user: User) -> String? {
+        user.userMetadata["name"]?.stringValue
+        ?? user.userMetadata["display_name"]?.stringValue
+        ?? user.userMetadata["full_name"]?.stringValue
+    }
+
+    private static func authErrorMessage(_ error: any Error) -> String {
+        let raw = String(describing: error)
+        if raw.contains("Email not confirmed") {
+            return "Supabase Email confirmation 이 켜져 있습니다. 웹과 동일하게 쓰려면 Confirm email 을 꺼주세요."
+        }
+        if raw.lowercased().contains("invalid login credentials") {
+            return "이메일 또는 비밀번호가 올바르지 않습니다."
+        }
+        if raw.lowercased().contains("already registered") || raw.lowercased().contains("already exists") {
+            return "이미 가입된 이메일입니다. 로그인으로 전환해 주세요."
+        }
+        if raw.lowercased().contains("network") || raw.lowercased().contains("fetch") {
+            return "네트워크 연결을 확인해 주세요."
+        }
+        return raw
+    }
+}
+
+private struct BusinessProfileBootstrapDTO: Encodable, Sendable {
+    let user_id: UUID
 }

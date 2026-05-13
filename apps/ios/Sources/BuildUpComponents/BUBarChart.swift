@@ -27,6 +27,7 @@ public struct BUBarChart: View {
             case positive   // 매출 (녹색 → 연녹색)
             case negative   // 적자 (빨강 → 연한 빨강)
             case neutral    // 회색
+            case midnight   // 홈 매출 그래프 (미드나이트블루)
         }
 
         public init(value: Double, label: String? = nil, tone: Tone = .positive, highlighted: Bool = false) {
@@ -132,6 +133,12 @@ private struct BarColumn: View {
         case .neutral:
             return LinearGradient(
                 colors: [BUColor.inkMuted.opacity(0.7), BUColor.inkMuted.opacity(0.4)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        case .midnight:
+            return LinearGradient(
+                colors: [BUColor.midnight.opacity(0.96), BUColor.midnight.opacity(0.46)],
                 startPoint: .top,
                 endPoint: .bottom
             )

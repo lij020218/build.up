@@ -32,18 +32,20 @@ public struct AppRoot: View {
     @State private var dashboardStore: DashboardStore?
     @State private var notificationFlow = NotificationPermissionFlow()
     @State private var showNotificationSheet = false
-    @State private var selectedTab: Tab = .today
+    @State private var selectedTab: Tab = .home
     /// DEBUG 빌드에서 SignInView 우회 — 시뮬레이터 시각 검증용.
     @State private var demoMode: MockScenario? = nil
 
     public enum Tab: Hashable, Sendable {
-        case today
-        case daily
-        case weekly
-        case ops
-        case growth
+        case home
+        case current
         case roadmap
-        case settings
+        case guides
+        case franchise
+        case marketing
+        case reports
+        case analytics
+        case profile
     }
 
     public init() {
@@ -61,12 +63,15 @@ public struct AppRoot: View {
         // BU_DEMO_TAB
         if let tab = ProcessInfo.processInfo.environment["BU_DEMO_TAB"] {
             switch tab.lowercased() {
-            case "roadmap": self._selectedTab = State(initialValue: .roadmap)
-            case "today":   self._selectedTab = State(initialValue: .today)
-            case "daily":   self._selectedTab = State(initialValue: .daily)
-            case "weekly":  self._selectedTab = State(initialValue: .weekly)
-            case "ops":     self._selectedTab = State(initialValue: .ops)
-            case "growth":  self._selectedTab = State(initialValue: .growth)
+            case "home", "today": self._selectedTab = State(initialValue: .home)
+            case "current":       self._selectedTab = State(initialValue: .current)
+            case "roadmap":       self._selectedTab = State(initialValue: .roadmap)
+            case "guides", "funding": self._selectedTab = State(initialValue: .guides)
+            case "franchise":     self._selectedTab = State(initialValue: .franchise)
+            case "marketing":     self._selectedTab = State(initialValue: .marketing)
+            case "reports":       self._selectedTab = State(initialValue: .reports)
+            case "analytics", "store": self._selectedTab = State(initialValue: .analytics)
+            case "profile", "settings": self._selectedTab = State(initialValue: .profile)
             default: break
             }
         }
@@ -80,23 +85,30 @@ public struct AppRoot: View {
                 DemoTabs(scenario: scenario, selectedTab: $selectedTab) {
                     demoMode = nil
                 }
-            } else if coordinator.isAuthenticated, let store = dashboardStore {
-                MainTabs(
-                    store: store,
-                    coordinator: coordinator,
-                    selectedTab: $selectedTab
-                )
-                .task {
-                    await loadDashboardIfNeeded(coordinator: coordinator)
-                    await notificationFlow.refresh()
-                    if notificationFlow.status != .granted {
-                        showNotificationSheet = true
+            } else if coordinator.isAuthenticated {
+                if let store = dashboardStore {
+                    MainTabs(
+                        store: store,
+                        coordinator: coordinator,
+                        selectedTab: $selectedTab
+                    )
+                    .task {
+                        await loadDashboardIfNeeded(coordinator: coordinator)
+                        await notificationFlow.refresh()
+                        if notificationFlow.status != .granted {
+                            showNotificationSheet = true
+                        }
                     }
-                }
-                .sheet(isPresented: $showNotificationSheet) {
-                    NotificationOptInView(flow: notificationFlow) {
-                        showNotificationSheet = false
+                    .sheet(isPresented: $showNotificationSheet) {
+                        NotificationOptInView(flow: notificationFlow) {
+                            showNotificationSheet = false
+                        }
                     }
+                } else {
+                    AuthenticatedLoadingView()
+                        .task {
+                            await loadDashboardIfNeeded(coordinator: coordinator)
+                        }
                 }
             } else {
                 SignInView(coordinator: coordinator)
@@ -139,14 +151,53 @@ public struct AppRoot: View {
         )
         let store = DashboardStore(dailyRepo: dailyRepo, costsRepo: costsRepo)
         await store.loadAll()
-        store.setProfile(
-            storeName: "내 가게",
-            userName: session.displayName ?? "사장님",
-            daysSinceLaunch: 0,
-            category: .general,
-            currentCash: nil
-        )
+
+        do {
+            let dashboardRepo = UserDashboardRepository(
+                supabase: supabase,
+                userId: userId,
+                fallbackUserName: session.displayName ?? session.email ?? "사장님"
+            )
+            let snapshot = try await dashboardRepo.fetchSnapshot()
+            store.applyRemoteData(
+                profile: snapshot.profile,
+                entries: snapshot.entries,
+                costs: snapshot.costs
+            )
+        } catch {
+            store.recordError("Supabase 데이터 로딩 실패: \(Self.readableError(error))")
+            store.setProfile(
+                storeName: "내 가게",
+                userName: session.displayName ?? session.email ?? "사장님",
+                daysSinceLaunch: 0,
+                category: .general,
+                currentCash: nil,
+                businessLaunched: false
+            )
+        }
         self.dashboardStore = store
+    }
+
+    private static func readableError(_ error: any Error) -> String {
+        if let localized = (error as? any LocalizedError)?.errorDescription {
+            return localized
+        }
+        return String(describing: error)
+    }
+}
+
+private struct AuthenticatedLoadingView: View {
+    var body: some View {
+        ZStack {
+            BUBackgroundSurface()
+            VStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.regular)
+                Text("워크스페이스를 불러오는 중")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
+        }
     }
 }
 
@@ -178,22 +229,51 @@ private struct MainTabs: View {
     }
 
     var body: some View {
-        BuildUpMobileShell(selectedTab: $selectedTab, tabs: operationalTabs) {
+        BuildUpMobileShell(selectedTab: $selectedTab, tabs: webSurfaceTabs(businessLaunched: store.businessLaunched)) {
             switch selectedTab {
-            case .today:
+            case .home:
                 TodayView(mock: mockData)
-            case .daily:
-                DailyHubView(mock: mockData)
-            case .weekly:
-                WeeklyPulseView(mock: mockData)
-            case .ops:
-                OperationsView(mock: mockData)
-            case .growth:
-                GrowthForecastView(mock: mockData)
+            case .current:
+                RoadmapView()
             case .roadmap:
                 RoadmapView()
-            case .settings:
+            case .guides:
+                NativeSurfacePlaceholder(
+                    title: "펀딩",
+                    subtitle: "웹의 정책자금·가이드 surface와 연결될 자리입니다.",
+                    systemImage: "doc.text.magnifyingglass"
+                )
+            case .franchise:
+                NativeSurfacePlaceholder(
+                    title: "프랜차이즈",
+                    subtitle: "웹 프랜차이즈 분석 surface와 같은 정보 구조로 준비 중입니다.",
+                    systemImage: "storefront"
+                )
+            case .marketing:
+                GrowthForecastView(mock: mockData)
+            case .reports:
+                WeeklyPulseView(mock: mockData)
+            case .analytics:
+                DailyHubView(mock: mockData)
+            case .profile:
                 SettingsView(coordinator: coordinator)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let message = store.lastError {
+                Text(message)
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundStyle(BUColor.danger)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(BUColor.danger.opacity(0.22), lineWidth: 1)
+                    )
+                    .padding(.horizontal, BUSpacing.md)
+                    .padding(.bottom, 12)
             }
         }
     }
@@ -237,18 +317,23 @@ private struct BuildUpSurfaceTab: Identifiable, Sendable {
     let systemImage: String
 }
 
-private let operationalTabs: [BuildUpSurfaceTab] = [
-    .init(id: .today, label: "홈", systemImage: "house"),
-    .init(id: .daily, label: "일간", systemImage: "chart.bar"),
-    .init(id: .weekly, label: "주간", systemImage: "calendar.badge.clock"),
-    .init(id: .ops, label: "운영", systemImage: "shippingbox"),
-    .init(id: .growth, label: "성장", systemImage: "sparkles"),
-    .init(id: .roadmap, label: "로드맵", systemImage: "map"),
-    .init(id: .settings, label: "내 정보", systemImage: "person.crop.circle"),
-]
+private func webSurfaceTabs(businessLaunched: Bool) -> [BuildUpSurfaceTab] {
+    [
+        .init(id: .home, label: "홈", systemImage: "house"),
+        businessLaunched ? nil : .init(id: .current, label: "현재 단계", systemImage: "doc.text"),
+        .init(id: .roadmap, label: "로드맵", systemImage: "list.bullet"),
+        businessLaunched ? .init(id: .guides, label: "펀딩", systemImage: "doc.text.magnifyingglass") : nil,
+        .init(id: .franchise, label: "프랜차이즈", systemImage: "storefront"),
+        businessLaunched ? .init(id: .marketing, label: "마케팅", systemImage: "megaphone") : nil,
+        businessLaunched ? .init(id: .reports, label: "보고서", systemImage: "doc.richtext") : nil,
+        businessLaunched ? .init(id: .analytics, label: "내 가게", systemImage: "chart.bar") : nil,
+        .init(id: .profile, label: "내 정보", systemImage: "person.crop.circle"),
+    ].compactMap { $0 }
+}
 
 private struct BuildUpMobileShell<Content: View, Accessory: View>: View {
     @Binding var selectedTab: AppRoot.Tab
+    @State private var sidebarOpen = false
     let tabs: [BuildUpSurfaceTab]
     let accessory: Accessory
     let content: Content
@@ -269,21 +354,47 @@ private struct BuildUpMobileShell<Content: View, Accessory: View>: View {
         ZStack {
             BUBackgroundSurface()
             VStack(spacing: 8) {
-                BuildUpBrandBar(accessory: accessory)
+                BuildUpBrandBar(
+                    accessory: accessory,
+                    onOpenSidebar: { sidebarOpen = true }
+                )
                     .padding(.horizontal, BUSpacing.md)
                     .padding(.top, 6)
-
-                BuildUpSurfaceNav(
-                    tabs: tabs,
-                    selectedTab: $selectedTab
-                )
-                .padding(.bottom, 2)
 
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+            .accessibilityHidden(sidebarOpen)
+
+            if sidebarOpen {
+                Color.black.opacity(0.18)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                    .onTapGesture {
+                        withAnimation(.snappy(duration: 0.24)) {
+                            sidebarOpen = false
+                        }
+                    }
+
+                HStack(spacing: 0) {
+                    BuildUpLiquidSidebar(
+                        tabs: tabs,
+                        selectedTab: $selectedTab,
+                        onClose: {
+                            withAnimation(.snappy(duration: 0.24)) {
+                                sidebarOpen = false
+                            }
+                        }
+                    )
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+
+                    Spacer(minLength: 0)
+                }
+                .ignoresSafeArea(edges: .vertical)
+            }
         }
         .tint(BUColor.midnightInk)
+        .animation(.snappy(duration: 0.24), value: sidebarOpen)
     }
 }
 
@@ -304,9 +415,25 @@ private extension BuildUpMobileShell where Accessory == EmptyView {
 
 private struct BuildUpBrandBar<Accessory: View>: View {
     let accessory: Accessory
+    let onOpenSidebar: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
+            Button(action: onOpenSidebar) {
+                Image(systemName: "sidebar.leading")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(BUColor.midnightInk)
+                    .frame(width: 34, height: 34)
+                    .background(Color.white.opacity(0.76), in: Circle())
+                    .overlay(
+                        Circle()
+                            .strokeBorder(Color.white.opacity(0.82), lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("메뉴")
+
             ZStack {
                 LinearGradient(
                     colors: [BUColor.auroraNavy, BUColor.auroraBlue, BUColor.auroraTeal],
@@ -339,65 +466,129 @@ private struct BuildUpBrandBar<Accessory: View>: View {
             accessory
         }
         .frame(minHeight: 32)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.42), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.05), radius: 18, x: 0, y: 8)
+        )
     }
 }
 
-private struct BuildUpSurfaceNav: View {
+private struct BuildUpLiquidSidebar: View {
     let tabs: [BuildUpSurfaceTab]
     @Binding var selectedTab: AppRoot.Tab
+    let onClose: () -> Void
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 10) {
+                ZStack {
+                    LinearGradient(
+                        colors: [BUColor.auroraNavy, BUColor.auroraBlue, BUColor.auroraTeal],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    Text("b")
+                        .font(.system(size: 17, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white)
+                        .tracking(-0.3)
+                }
+                .frame(width: 34, height: 34)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Build.UP")
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                        .tracking(-0.45)
+                    Text("Surface")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .tracking(0.4)
+                        .textCase(.uppercase)
+                }
+
+                Spacer(minLength: 0)
+
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .frame(width: 32, height: 32)
+                        .background(Color.white.opacity(0.56), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("사이드바 닫기")
+            }
+            .padding(.top, 54)
+
+            VStack(alignment: .leading, spacing: 6) {
                 ForEach(tabs) { tab in
-                    let selected = selectedTab == tab.id
-                    BuildUpSurfaceNavButton(tab: tab, selected: selected) {
-                        withAnimation(.snappy(duration: 0.22)) {
-                            selectedTab = tab.id
-                        }
+                    BuildUpSidebarRow(
+                        tab: tab,
+                        selected: selectedTab == tab.id
+                    ) {
+                        selectedTab = tab.id
+                        onClose()
                     }
                 }
             }
-            .padding(5)
-            .background(
-                RoundedRectangle(cornerRadius: BURadius.pill, style: .continuous)
-                    .fill(Color.white.opacity(0.88))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: BURadius.pill, style: .continuous)
-                            .strokeBorder(BUColor.borderSubtle, lineWidth: 1)
-                    )
-                    .shadow(color: Color.black.opacity(0.06), radius: 22, x: 0, y: 8)
-            )
-            .padding(.horizontal, BUSpacing.md)
+
+            Spacer(minLength: 0)
+
+            Text("웹 surface와 동일한 순서")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted)
+                .padding(.bottom, 24)
         }
-        .scrollClipDisabled()
+        .padding(.horizontal, 18)
+        .frame(width: 292)
+        .frame(maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.58), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.12), radius: 34, x: 0, y: 18)
+        )
+        .padding(.leading, 10)
+        .padding(.vertical, 10)
     }
 }
 
-private struct BuildUpSurfaceNavButton: View {
+private struct BuildUpSidebarRow: View {
     let tab: BuildUpSurfaceTab
     let selected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 7) {
+            HStack(spacing: 12) {
                 Image(systemName: tab.systemImage)
-                    .font(.system(size: 12, weight: .semibold))
-                    .frame(width: 14, height: 14)
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 22, height: 22)
                 Text(tab.label)
-                    .font(.system(size: 12.5, weight: selected ? .semibold : .regular))
+                    .font(.system(size: 15, weight: selected ? .bold : .semibold))
                     .lineLimit(1)
+                Spacer(minLength: 0)
             }
             .foregroundStyle(selected ? BUColor.midnightInk : BUColor.inkMuted)
-            .padding(.horizontal, 11)
-            .frame(minHeight: 36)
+            .padding(.horizontal, 13)
+            .frame(minHeight: 46)
             .background {
                 tabBackground
-                    .clipShape(Capsule())
+                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
             }
             .overlay(
-                Capsule()
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
                     .strokeBorder(
                         selected ? Color.white.opacity(0.82) : Color.clear,
                         lineWidth: 1
@@ -405,9 +596,9 @@ private struct BuildUpSurfaceNavButton: View {
             )
             .shadow(
                 color: selected ? Color.black.opacity(0.05) : .clear,
-                radius: 20,
+                radius: 16,
                 x: 0,
-                y: 8
+                y: 6
             )
         }
         .buttonStyle(.plain)
@@ -420,13 +611,55 @@ private struct BuildUpSurfaceNavButton: View {
             LinearGradient(
                 colors: [
                     Color.white.opacity(0.82),
-                    Color.white.opacity(0.62),
+                    Color.white.opacity(0.56),
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
         } else {
             Color.clear
+        }
+    }
+}
+
+// MARK: - Surface Placeholder
+
+private struct NativeSurfacePlaceholder: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+
+    var body: some View {
+        ZStack {
+            BUBackgroundSurface()
+            ScrollView {
+                VStack(alignment: .leading, spacing: BUSpacing.shellGap) {
+                    BUCard(.outer) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(BUColor.midnight08)
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: systemImage)
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(BUColor.midnightInk)
+                            }
+
+                            Text(title)
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundStyle(BUColor.ink)
+                                .tracking(-0.72)
+
+                            Text(subtitle)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .lineSpacing(4)
+                        }
+                    }
+                }
+                .padding(.horizontal, BUSpacing.md)
+                .padding(.top, BUSpacing.md)
+            }
         }
     }
 }
@@ -540,26 +773,42 @@ struct DemoTabs: View {
     var body: some View {
         BuildUpMobileShell(
             selectedTab: $selectedTab,
-            tabs: operationalTabs.filter { $0.id != .settings },
+            tabs: webSurfaceTabs(businessLaunched: mockData.resolverInput.businessLaunched),
             accessory: {
                 ExitButton(action: onExit)
             }
         ) {
             switch selectedTab {
-            case .today:
+            case .home:
                 TodayView(mock: mockData)
-            case .daily:
-                DailyHubView(mock: mockData)
-            case .weekly:
-                WeeklyPulseView(mock: mockData)
-            case .ops:
-                OperationsView(mock: mockData)
-            case .growth:
-                GrowthForecastView(mock: mockData)
+            case .current:
+                RoadmapView()
             case .roadmap:
                 RoadmapView()
-            case .settings:
-                TodayView(mock: mockData)
+            case .guides:
+                NativeSurfacePlaceholder(
+                    title: "펀딩",
+                    subtitle: "정책자금, 지원사업, 필수 가이드를 웹과 같은 surface로 연결합니다.",
+                    systemImage: "doc.text.magnifyingglass"
+                )
+            case .franchise:
+                NativeSurfacePlaceholder(
+                    title: "프랜차이즈",
+                    subtitle: "브랜드 비교와 창업 비용 분석 surface를 준비 중입니다.",
+                    systemImage: "storefront"
+                )
+            case .marketing:
+                GrowthForecastView(mock: mockData)
+            case .reports:
+                WeeklyPulseView(mock: mockData)
+            case .analytics:
+                DailyHubView(mock: mockData)
+            case .profile:
+                NativeSurfacePlaceholder(
+                    title: "내 정보",
+                    subtitle: "계정, 언어, 매장 정보를 관리하는 profile surface입니다.",
+                    systemImage: "person.crop.circle"
+                )
             }
         }
     }

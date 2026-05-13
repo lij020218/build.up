@@ -23,6 +23,7 @@ import UIKit
 public struct SignInView: View {
 
     @Bindable public var coordinator: AuthCoordinator
+    @State private var showEmailAuth = false
 
     public init(coordinator: AuthCoordinator) {
         self.coordinator = coordinator
@@ -52,7 +53,7 @@ public struct SignInView: View {
                         Task { await coordinator.signInWithApple() }
                     }
                     EmailButton {
-                        // TODO: email sheet
+                        showEmailAuth = true
                     }
                 }
                 .padding(.horizontal, BUSpacing.md)
@@ -65,6 +66,11 @@ public struct SignInView: View {
                     .padding(.bottom, BUSpacing.lg)
                     .padding(.horizontal, BUSpacing.lg)
             }
+        }
+        .sheet(isPresented: $showEmailAuth) {
+            EmailAuthSheet(coordinator: coordinator)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -89,6 +95,192 @@ public struct SignInView: View {
         default:
             EmptyView()
         }
+    }
+}
+
+private enum EmailAuthMode: String, CaseIterable, Identifiable {
+    case login = "로그인"
+    case signup = "가입"
+
+    var id: String { rawValue }
+}
+
+private struct EmailAuthSheet: View {
+    @Bindable var coordinator: AuthCoordinator
+    @Environment(\.dismiss) private var dismiss
+    @State private var mode: EmailAuthMode = .login
+    @State private var name = ""
+    @State private var email = ""
+    @State private var password = ""
+    @FocusState private var focusedField: Field?
+
+    private enum Field: Hashable {
+        case name
+        case email
+        case password
+    }
+
+    private var canSubmit: Bool {
+        let hasCredentials = email.trimmingCharacters(in: .whitespacesAndNewlines).contains("@")
+            && password.count >= 6
+        if mode == .signup {
+            return hasCredentials && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return hasCredentials
+    }
+
+    private var isAuthenticating: Bool {
+        if case .authenticating = coordinator.state { return true }
+        return false
+    }
+
+    var body: some View {
+        ZStack {
+            BUBackgroundSurface()
+
+            VStack(alignment: .leading, spacing: 18) {
+                HStack {
+                    Text(mode == .signup ? "이메일로 가입" : "이메일 로그인")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(BUColor.ink)
+                    Spacer(minLength: 0)
+                    Button("닫기") {
+                        dismiss()
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(BUColor.inkSecondary)
+                }
+
+                Picker("이메일 인증 모드", selection: $mode) {
+                    ForEach(EmailAuthMode.allCases) { item in
+                        Text(item.rawValue).tag(item)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    if mode == .signup {
+                        AuthTextField(
+                            title: "이름",
+                            text: $name,
+                            submitLabel: .next
+                        )
+                        .focused($focusedField, equals: .name)
+                        .onSubmit { focusedField = .email }
+                    }
+
+                    AuthTextField(
+                        title: "이메일",
+                        text: $email,
+                        submitLabel: .next
+                    )
+                    .focused($focusedField, equals: .email)
+                    .onSubmit { focusedField = .password }
+
+                    AuthSecureField(title: "비밀번호", text: $password)
+                        .focused($focusedField, equals: .password)
+                        .onSubmit { submit() }
+                }
+
+                if case .failed(let message) = coordinator.state {
+                    Text(message)
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(BUColor.danger)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(mode == .signup ? "웹과 같은 Supabase 계정으로 새 워크스페이스를 만듭니다." : "웹에서 쓰는 이메일 계정 그대로 로그인합니다.")
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                }
+
+                Button(action: submit) {
+                    HStack(spacing: 8) {
+                        if isAuthenticating {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.white)
+                        }
+                        Text(mode == .signup ? "계정 만들기" : "로그인")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .background(
+                        LinearGradient(
+                            colors: [BUColor.auroraNavy, BUColor.auroraBlue],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        in: RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    )
+                    .opacity(canSubmit && !isAuthenticating ? 1 : 0.48)
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(!canSubmit || isAuthenticating)
+
+                Spacer(minLength: 0)
+            }
+            .padding(BUSpacing.lg)
+        }
+        .onChange(of: coordinator.isAuthenticated) { _, isAuthenticated in
+            if isAuthenticated {
+                dismiss()
+            }
+        }
+    }
+
+    private func submit() {
+        guard canSubmit, !isAuthenticating else { return }
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task {
+            switch mode {
+            case .login:
+                await coordinator.signInWithEmail(email: trimmedEmail, password: password)
+            case .signup:
+                await coordinator.signUpWithEmail(name: trimmedName, email: trimmedEmail, password: password)
+            }
+        }
+    }
+}
+
+private struct AuthTextField: View {
+    let title: String
+    @Binding var text: String
+    var submitLabel: SubmitLabel = .done
+
+    var body: some View {
+        TextField(title, text: $text)
+            .submitLabel(submitLabel)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(BUColor.ink)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 50)
+            .background(Color.white.opacity(0.84), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(BUColor.borderSubtle, lineWidth: 1)
+            )
+    }
+}
+
+private struct AuthSecureField: View {
+    let title: String
+    @Binding var text: String
+
+    var body: some View {
+        SecureField(title, text: $text)
+            .textContentType(.password)
+            .submitLabel(.go)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(BUColor.ink)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 50)
+            .background(Color.white.opacity(0.84), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(BUColor.borderSubtle, lineWidth: 1)
+            )
     }
 }
 

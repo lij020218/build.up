@@ -54,14 +54,53 @@ public struct TodayView: View {
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: BUSpacing.shellGap) {
+                // Header (사장님 추가 — 카드 아님)
                 StoreStatusHeader(mock: mock)
                 HomeRitualBanner()
+
+                // ─ 7 카드 (사장님 결정 2026-05-14) ─
+
+                // 1. CEOMorningHero — 인사 + 위험신호 + NSM + AI 코칭
                 HeroOuterCard(
                     mock: mock,
                     healthResult: healthResult,
                     hero: hero
                 )
+
+                // 2. DailyKpiStrip — 5칸 핵심 KPI
+                DailyKpiStrip(cells: dailyKpiCells)
+
+                // 3. ActivitySnapshotCard — 7일 매출 흐름
+                ActivitySnapshotCard(
+                    entries: mock.entries,
+                    bepDailySales: bepDailySales
+                )
+
+                // 4. UserActivityCard — 고객 변화 ★ 사장님 명시
+                UserActivityCard(
+                    totalCustomers: totalCustomers,
+                    newThisMonth: 32,
+                    repeatRate: 42,
+                    avgTicket: avgTicket
+                )
+
+                // 5. CashflowHeroCard — 14일 잔고 ★ 사장님 명시
+                CashflowHeroCard(
+                    currentBalance: mock.currentCash ?? 0,
+                    projectedBalances: projected14,
+                    isCrisis: (projected14.last ?? 0) < 0,
+                    crisisDaysUntil: crisisDaysUntil()
+                )
+
+                // 6. DailyOpsRitualCard — 오늘 운영 의식
+                DailyOpsRitualCard(category: mock.category)
+
+                // 7. 업종 특화 (외식 → PrimeCost / 스타트업 → CashZero / 미용 → 예약 …)
+                IndustryFocusCard(mock: mock)
+
+                // 빠른 매출 입력
                 QuickInputButton(action: { showInputSheet = true })
+
                 // 하단 탭바 회피
                 Color.clear.frame(height: 110)
             }
@@ -73,6 +112,70 @@ public struct TodayView: View {
         .sheet(isPresented: $showInputSheet) {
             QuickInputSheet()
         }
+    }
+
+    // MARK: - Derived for cards
+
+    private var ratios: CostRatiosResult {
+        CostRatios.calculate(
+            costs: mock.costs,
+            totalRevenue: mock.entries.reduce(0) { $0 + $1.sales },
+            days: mock.entries.count
+        )
+    }
+
+    private var bepDailySales: Double {
+        mock.costs.total > 0 ? mock.costs.total / 26 : 0
+    }
+
+    private var totalCustomers: Int {
+        max(1, mock.entries.reduce(0) { $0 + $1.customers })
+    }
+
+    private var avgTicket: Double {
+        let totalRev = mock.entries.reduce(0.0) { $0 + $1.sales }
+        let totalCust = totalCustomers
+        return totalCust > 0 ? totalRev / Double(totalCust) : 0
+    }
+
+    private var projected14: [Double] {
+        guard let cash = mock.currentCash else { return [] }
+        let avgDaily = ratios.monthlyRevenueEquivalent / 26
+        let dailyBurn = mock.costs.total / 26
+        let dailyNet = avgDaily - dailyBurn
+        return (0..<14).map { day in
+            cash + dailyNet * Double(day)
+        }
+    }
+
+    private func crisisDaysUntil() -> Int? {
+        for (idx, b) in projected14.enumerated() where b < 0 {
+            return idx
+        }
+        return nil
+    }
+
+    private var dailyKpiCells: [KpiCellData] {
+        let yesterdayEntry = mock.entries.sorted { $0.date < $1.date }.last
+        let yesterdaySales = yesterdayEntry?.sales ?? 0
+        let yesterdayCust = yesterdayEntry?.customers ?? 0
+        let avgT = yesterdayCust > 0 ? yesterdaySales / Double(yesterdayCust) : 0
+        let runwayMonths: Double = {
+            guard let cash = mock.currentCash, mock.costs.total > 0 else { return .nan }
+            let monthlyBurn = mock.costs.total - ratios.monthlyRevenueEquivalent
+            return monthlyBurn > 0 ? cash / monthlyBurn : 99
+        }()
+        return [
+            .init(label: "어제매출", value: yesterdaySales, grade: yesterdaySales > 0 ? .healthy : .unknown, unit: "원"),
+            .init(label: "어제고객", value: Double(yesterdayCust), grade: yesterdayCust > 0 ? .healthy : .unknown, unit: "명"),
+            .init(label: "원가율", value: ratios.primeCostRatio,
+                  grade: IndustryThresholds.thresholds(for: mock.category).primeCost?.grade(ratios.primeCostRatio) ?? .unknown,
+                  unit: "%"),
+            .init(label: "런웨이", value: runwayMonths.isFinite ? runwayMonths : nil,
+                  displayOverride: runwayMonths.isFinite ? nil : "—",
+                  grade: HealthGrade.from(score: runwayMonths * 10), unit: "개월"),
+            .init(label: "객단가", value: avgT, grade: avgT > 0 ? .healthy : .unknown, unit: "원"),
+        ]
     }
 }
 
@@ -402,6 +505,31 @@ private struct Row2NSMNested: View {
         return last7.reduce(0) { $0 + $1.sales } / Double(last7.count)
     }
 
+    private var recentRevenueBars: [BUBarChart.Bar] {
+        let byDate = Dictionary(uniqueKeysWithValues: mock.entries.map { ($0.date, $0.sales) })
+        return lastSevenDates.enumerated().map { index, date in
+            BUBarChart.Bar(
+                value: byDate[date] ?? 0,
+                label: shortWeekday(date),
+                tone: .midnight,
+                highlighted: index == lastSevenDates.count - 1
+            )
+        }
+    }
+
+    private var lastSevenDates: [String] {
+        let calendar = Calendar(identifier: .gregorian)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        let today = Date()
+
+        return (0..<7).reversed().compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return formatter.string(from: date)
+        }
+    }
+
     var body: some View {
         BUCard(.nested) {
             VStack(alignment: .leading, spacing: 12) {
@@ -424,17 +552,29 @@ private struct Row2NSMNested: View {
                         .buNsmDescriptionStyle()
                 }
 
-                // Sparkline
+                // iOS-style mobile bar chart
                 if mock.entries.count >= 3 {
-                    BUSparkline(
-                        entries: mock.entries,
-                        tint: HealthColors.palette(for: healthResult.grade).dot,
-                        height: 36
+                    BUBarChart(
+                        bars: recentRevenueBars,
+                        height: 68,
+                        showLabels: true
                     )
-                    .padding(.top, 4)
+                    .padding(.top, 6)
                 }
             }
         }
+    }
+
+    private func shortWeekday(_ isoDate: String) -> String {
+        let input = DateFormatter()
+        input.dateFormat = "yyyy-MM-dd"
+        input.timeZone = TimeZone(identifier: "Asia/Seoul")
+        guard let date = input.date(from: isoDate) else { return "" }
+
+        let output = DateFormatter()
+        output.locale = Locale(identifier: "ko_KR")
+        output.dateFormat = "E"
+        return output.string(from: date)
     }
 }
 
