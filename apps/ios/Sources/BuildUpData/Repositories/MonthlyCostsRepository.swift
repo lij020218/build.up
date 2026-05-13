@@ -1,63 +1,13 @@
 //
 //  MonthlyCostsRepository.swift — 월 비용 구조 CRUD
 //
-//  Supabase 의 `monthly_costs` 테이블. 사용자당 1행 (singleton per user).
-//
-//  ⚠️ Supabase schema:
-//   table monthly_costs (
-//     user_id uuid primary key references auth.users(id),
-//     ingredients numeric default 0,
-//     labor numeric default 0,
-//     rent numeric default 0,
-//     utilities numeric default 0,
-//     sga numeric default 0,
-//     marketing numeric default 0,
-//     other numeric default 0,
-//     interest numeric default 0,
-//     updated_at timestamptz default now()
-//   );
+//  ⚠️ 웹 SSOT: user_store_data 테이블의 `monthly_costs` JSON 컬럼.
+//   웹 packages/shared/src/supabase/store-data.ts 와 호환.
 //
 
 import Foundation
 import Supabase
 import BuildUpCore
-
-struct MonthlyCostsDTO: Codable, Sendable {
-    let user_id: UUID
-    let ingredients: Double
-    let labor: Double
-    let rent: Double
-    let utilities: Double
-    let sga: Double
-    let marketing: Double
-    let other: Double
-    let interest: Double
-
-    init(from costs: MonthlyCosts, userId: UUID) {
-        self.user_id = userId
-        self.ingredients = costs.ingredients
-        self.labor = costs.labor
-        self.rent = costs.rent
-        self.utilities = costs.utilities
-        self.sga = costs.sga
-        self.marketing = costs.marketing
-        self.other = costs.other
-        self.interest = costs.interest
-    }
-
-    var domain: MonthlyCosts {
-        MonthlyCosts(
-            ingredients: ingredients,
-            labor: labor,
-            rent: rent,
-            utilities: utilities,
-            sga: sga,
-            marketing: marketing,
-            other: other,
-            interest: interest
-        )
-    }
-}
 
 public protocol MonthlyCostsRepositoryProtocol: Sendable {
     func fetch() async throws -> MonthlyCosts
@@ -82,25 +32,77 @@ public actor MonthlyCostsRepository: MonthlyCostsRepositoryProtocol {
     public func fetch() async throws -> MonthlyCosts {
         let userId = try await getUserId()
 
-        let rows: [MonthlyCostsDTO] = try await supabase
-            .from("monthly_costs")
-            .select()
+        let rows: [StoreDataReadDTO] = try await supabase
+            .from("user_store_data")
+            .select("monthly_costs")
             .eq("user_id", value: userId)
             .limit(1)
             .execute()
             .value
 
-        return rows.first?.domain ?? MonthlyCosts()
+        return rows.first?.monthly_costs?.toDomain() ?? MonthlyCosts()
     }
 
     public func upsert(_ costs: MonthlyCosts) async throws {
         let userId = try await getUserId()
-        let dto = MonthlyCostsDTO(from: costs, userId: userId)
-
         try await supabase
-            .from("monthly_costs")
-            .upsert(dto)
+            .from("user_store_data")
+            .upsert(
+                StoreDataWriteDTO(
+                    user_id: userId,
+                    monthly_costs: MonthlyCostsJSON(from: costs),
+                    updated_at: ISO8601DateFormatter().string(from: Date())
+                ),
+                onConflict: "user_id"
+            )
             .execute()
+    }
+}
+
+// MARK: - DTOs
+
+private struct StoreDataReadDTO: Decodable {
+    let monthly_costs: MonthlyCostsJSON?
+}
+
+private struct StoreDataWriteDTO: Encodable {
+    let user_id: UUID
+    let monthly_costs: MonthlyCostsJSON
+    let updated_at: String
+}
+
+private struct MonthlyCostsJSON: Codable {
+    let ingredients: Double?
+    let labor: Double?
+    let rent: Double?
+    let utilities: Double?
+    let sga: Double?
+    let marketing: Double?
+    let other: Double?
+    let interest: Double?
+
+    init(from costs: MonthlyCosts) {
+        self.ingredients = costs.ingredients
+        self.labor = costs.labor
+        self.rent = costs.rent
+        self.utilities = costs.utilities
+        self.sga = costs.sga
+        self.marketing = costs.marketing
+        self.other = costs.other
+        self.interest = costs.interest
+    }
+
+    func toDomain() -> MonthlyCosts {
+        MonthlyCosts(
+            ingredients: ingredients ?? 0,
+            labor: labor ?? 0,
+            rent: rent ?? 0,
+            utilities: utilities ?? 0,
+            sga: sga ?? 0,
+            marketing: marketing ?? 0,
+            other: other ?? 0,
+            interest: interest ?? 0
+        )
     }
 }
 
