@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Xcode 표준 항목 -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundleDisplayName</key>
+    <string>build.up</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+
+    <!-- 환경 변수 (xcconfig 에서 주입) -->
+    <key>SUPABASE_URL</key>
+    <string>$(SUPABASE_URL)</string>
+    <key>SUPABASE_ANON_KEY</key>
+    <string>$(SUPABASE_ANON_KEY)</string>
+    <key>BU_ENVIRONMENT</key>
+    <string>$(BU_ENVIRONMENT)</string>
+    <key>KAKAO_NATIVE_APP_KEY</key>
+    <string>$(KAKAO_NATIVE_APP_KEY)</string>
+
+    <!-- 권한 사유 -->
+    <key>NSCameraUsageDescription</key>
+    <string>영수증을 촬영해 비용을 자동으로 기록하기 위해 카메라 권한이 필요합니다.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>이미 찍은 영수증을 가져오기 위해 사진 권한이 필요합니다.</string>
+
+    <!-- Live Activity -->
+    <key>NSSupportsLiveActivities</key>
+    <true/>
+
+    <!-- 한국어 우선 -->
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>ko</string>
+        <string>en</string>
+    </array>
+
+    <!-- 화면 방향: 세로 -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+
+    <!-- UI 진입점 (SwiftUI App lifecycle) -->
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+    </dict>
+
+    <!-- 한국어 우선 -->
+    <key>CFBundleAllowMixedLocalizations</key>
+    <true/>
+</dict>
+</plist>

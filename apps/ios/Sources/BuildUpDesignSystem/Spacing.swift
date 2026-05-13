@@ -1,109 +1,149 @@
 //
-//  Spacing.swift — 8pt 그리드 시스템
+//  Spacing.swift — 8pt 그리드 + 웹 RADIUS / padding 1:1 미러
 //
-//  Apple HIG 권장 8pt grid + build.up 카드 내부 22px padding 호환.
-//  모바일 최적화: 좌우 margin 16pt (Apple 표준) — 카드는 full-width 1-col.
+//  웹 SSOT (operationalStyles.ts):
+//   RADIUS = { OUTER_CARD: 20, INNER_BLOCK: 14, INPUT: 10, PILL: 9999,
+//              BADGE: 8, TINY: 3, MODAL: 24 }
+//   shell gap: 18px
+//   heroPanel: padding 24px
+//   opsCard: padding 22px, gap 14px
+//   headlineCard: padding 20px
+//   activityCard: padding 22px, gap 18px
+//
+//  CEOMorningHero outer (special): radius 24 / padding 28-28-24
 //
 
 import SwiftUI
 import CoreGraphics
 
 public enum BUSpacing {
-    // MARK: - Base 8pt grid
+    // MARK: - 8pt base
     public static let xxs: CGFloat = 4
     public static let xs:  CGFloat = 8
     public static let sm:  CGFloat = 12
-    public static let md:  CGFloat = 16    // ← 화면 좌우 margin 기본
-    public static let lg:  CGFloat = 20    // ← 카드 내부 padding 기본
+    public static let md:  CGFloat = 16
+    public static let lg:  CGFloat = 20
     public static let xl:  CGFloat = 24
     public static let xxl: CGFloat = 32
     public static let xxxl: CGFloat = 48
 
-    // MARK: - Card-specific (웹 22px 와 호환)
-    /// 카드 내부 padding 표준 (웹 22px ≈ iOS 20pt — 시각적 동등)
-    public static let cardPadding: CGFloat = lg
+    // MARK: - Card padding (웹 1:1, 모바일 최적화)
+    /// CEOMorningHero outer card padding
+    /// 웹: 28-28-24 (데스크탑). 모바일 viewport 폭 고려 22-22-20 로 축소.
+    /// 모바일 (-768px) media 에선 웹도 비슷한 축소 적용.
+    public static let heroOuterPadding: CGFloat = 22
+    public static let heroOuterPaddingBottom: CGFloat = 20
+    /// heroPanel padding (24px)
+    public static let heroPanelPadding: CGFloat = 24
+    /// opsCard / activityCard padding (22px)
+    public static let cardPadding: CGFloat = 22
+    /// headlineCard padding (20px)
+    public static let headlinePadding: CGFloat = 20
+    /// 작은 inner card (Row 2 NSM nested) padding 20px 22px
+    public static let nestedCardPaddingV: CGFloat = 20
+    public static let nestedCardPaddingH: CGFloat = 22
 
-    /// 카드 간 vertical gap (Tier 2 / Tier 3 카드 스택)
-    public static let cardGap: CGFloat = sm
+    // MARK: - Gap (웹 1:1)
+    /// Shell gap — Tier 간 (18px)
+    public static let shellGap: CGFloat = 18
+    /// Hero panel 내부 gap (20px)
+    public static let heroGap: CGFloat = 20
+    /// opsCard 내부 gap (14px)
+    public static let opsGap: CGFloat = 14
+    /// activityCard 내부 gap (18px)
+    public static let activityGap: CGFloat = 18
+    /// 일반 카드 간 gap
+    public static let cardGap: CGFloat = 14
+    /// Row 내부 gap (Row1 → Row1.5)
+    public static let rowGap: CGFloat = 14
 
-    /// Tier 간 vertical gap (Hero → Daily Hub → Coaching)
-    public static let tierGap: CGFloat = xl
+    // MARK: - 화면 좌우 margin (모바일)
+    /// 모바일 컨텐츠 좌우 margin
+    public static let screenMargin: CGFloat = md  // 16pt
 
-    // MARK: - Tap target
-    /// Apple HIG 최소 44×44pt 터치 영역.
+    // MARK: - Touch target
     public static let minTapTarget: CGFloat = 44
-
-    /// 큰 숫자 키패드 버튼 — 손가락이 잡기 편한 크기
     public static let numberPadButton: CGFloat = 64
 }
 
-// MARK: - Corner radius (Apple iOS 26 Continuous corners)
+// MARK: - Radius (웹 RADIUS 1:1)
 
 public enum BURadius {
-    /// 작은 chip / pill — capsule 권장 시엔 .capsule
+    /// CEOMorningHero outer — 24px (모달과 동일)
+    public static let heroOuter: CGFloat = 24
+    /// OUTER_CARD — 20px (heroPanel, opsCard, activityCard, survivalCard)
+    public static let outerCard: CGFloat = 20
+    /// Row 2 nested white card — 18px (NSM 메트릭 카드)
+    public static let nestedCard: CGFloat = 18
+    /// headlineCard / KPI 미니카드 — 16px
+    public static let headlineCard: CGFloat = 16
+    /// INNER_BLOCK — 14px (위험신호 박스, mini stat, sub block)
+    public static let innerBlock: CGFloat = 14
+    /// INPUT — 10px (input, primaryActionSmall)
+    public static let input: CGFloat = 10
+    /// primaryAction button — 12px
+    public static let button: CGFloat = 12
+    /// BADGE — 8px (작은 라벨 칩)
+    public static let badge: CGFloat = 8
+    /// PILL — 999 (capsule)
+    public static let pill: CGFloat = 9999
+    /// TINY — 3px (진행바, hairline)
+    public static let tiny: CGFloat = 3
+    /// MODAL — 24px
+    public static let modal: CGFloat = 24
+
+    // MARK: - 후방 호환 (옛 이름)
     public static let xs: CGFloat = 8
-
-    /// 칩 / 작은 버튼
     public static let sm: CGFloat = 10
-
-    /// 보조 카드
     public static let md: CGFloat = 14
-
-    /// 메인 카드 (웹 16-18px ≈ iOS 16pt)
     public static let lg: CGFloat = 16
-
-    /// Hero 카드 / 큰 카드 (웹 20-28px)
     public static let xl: CGFloat = 22
-
-    /// Sheet / Modal 상단 (iOS 표준)
     public static let sheet: CGFloat = 38
-
-    /// Capsule (작은 chip / pill — height 따라 자동)
     public static let capsule: CGFloat = .infinity
 }
 
-// MARK: - Shadow (iOS 표준 + 웹 box-shadow 매핑)
+// MARK: - Shadow (웹 1:1 dual layer)
 
 public struct BUShadow: Sendable {
-    public let color: Color
-    public let radius: CGFloat
-    public let x: CGFloat
-    public let y: CGFloat
+    public let layers: [Layer]
 
-    /// 카드 elevation (웹 0 18px 42px rgba(15,23,42,0.038) ≈)
-    public static let card = BUShadow(
-        color: Color.black.opacity(0.04),
-        radius: 14,
-        x: 0,
-        y: 6
-    )
-
-    /// Hero 카드 (조금 더 깊은 그림자)
-    public static let hero = BUShadow(
-        color: Color.black.opacity(0.06),
-        radius: 24,
-        x: 0,
-        y: 12
-    )
-
-    /// 위험 신호 — colored shadow
-    public static func tinted(_ tint: Color, intensity: Double = 0.12) -> BUShadow {
-        BUShadow(
-            color: tint.opacity(intensity),
-            radius: 12,
-            x: 0,
-            y: 6
-        )
+    public struct Layer: Sendable {
+        public let color: Color
+        public let radius: CGFloat
+        public let x: CGFloat
+        public let y: CGFloat
     }
+
+    /// heroPanel/opsCard/activityCard 표준 (웹 dual layer):
+    ///   0 1px 3px rgba(25,25,112,0.04), 0 12px 24px -12px rgba(25,25,112,0.10)
+    public static let card = BUShadow(layers: [
+        Layer(color: BUColor.midnight.opacity(0.04), radius: 3, x: 0, y: 1),
+        Layer(color: BUColor.midnight.opacity(0.10), radius: 24, x: 0, y: 12),
+    ])
+
+    /// CEOMorningHero outer (inset + outer):
+    ///   inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 32px rgba(25,25,112,0.06)
+    /// inset 은 SwiftUI 에선 overlay highlight 로 처리 (BUCard 안에서).
+    public static let hero = BUShadow(layers: [
+        Layer(color: BUColor.midnight.opacity(0.06), radius: 32, x: 0, y: 8),
+    ])
+
+    public static let none = BUShadow(layers: [])
 }
 
 public extension View {
+    /// dual-layer shadow 적용 (웹 box-shadow 정확 미러)
     func buShadow(_ shadow: BUShadow) -> some View {
-        self.shadow(
-            color: shadow.color,
-            radius: shadow.radius,
-            x: shadow.x,
-            y: shadow.y
-        )
+        self.modifier(BUShadowModifier(shadow: shadow))
+    }
+}
+
+private struct BUShadowModifier: ViewModifier {
+    let shadow: BUShadow
+
+    func body(content: Content) -> some View {
+        shadow.layers.reduce(AnyView(content)) { acc, layer in
+            AnyView(acc.shadow(color: layer.color, radius: layer.radius, x: layer.x, y: layer.y))
+        }
     }
 }

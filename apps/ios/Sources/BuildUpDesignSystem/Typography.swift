@@ -1,109 +1,220 @@
 //
-//  Typography.swift — build.up 타이포그래피
+//  Typography.swift — build.up 타이포그래피 (웹 SSOT 1:1 미러)
 //
-//  Apple SF Pro Display / SF Pro Text 위에 build.up 위계 정의.
+//  웹 SSOT (operationalStyles.ts + CEOMorningHero inline):
+//   heroTitle:        clamp(28-40px) / weight 600 / -0.025em / color #1d1d1f
+//   heroBody:         15px / lineHeight 1.65 / color rgba(15,23,42,0.62)
+//   heroEyebrow:      12px / 0.14em / uppercase / color rgba(15,23,42,0.48)
+//   headlineValue:    26px / weight 780 / -0.045em / tabular-nums
+//   headlineLabel:    11px / 0.08em / uppercase / color rgba(15,23,42,0.48)
+//   headlineNote:     12px / lineHeight 1.5 / color rgba(15,23,42,0.52)
+//   sectionEyebrow:   10.5px / weight 700 / 0.1em / uppercase / color #191970 / opacity 0.7
+//   activityTitle:    24px / weight 700 / -0.04em / color #0f172a
+//   detailSectionTitle: 20px / weight 720 / -0.03em / color #0f172a
 //
-//  웹 (globals.css) 과의 매핑:
-//   • 큰 숫자 hero  — 26-34px → .buHeroNumber
-//   • 카드 title    — 18-20px → .buCardTitle
-//   • 카드 body     — 13-14.5px → .buCardBody
-//   • Eyebrow / Tag — 10-11px UPPERCASE → .buEyebrow
+//  CEOMorningHero inline:
+//   Row 1 eyebrow:    10.5px / 700 / 0.14em / uppercase / MIDNIGHT opacity 0.65
+//   Row 1 chip:       10px / 700 / 0.06-0.08em / pill
+//   Row 1 greeting:   18px / 700 / -0.02em / lineHeight 1.35 / MIDNIGHT_DEEP
+//   Row 1 subgreeting:13.5px / MUTED / lineHeight 1.5
+//   Row 2 NSM value:  clamp(34-44px) / 700 / -0.045em / tabular / MIDNIGHT_DEEP
+//   Row 2 NSM eyebrow:11px / 700 / 0.1em / uppercase / MIDNIGHT opacity 0.7
+//   Row 2 delta:      12.5px / 700 / tabular
+//   Row 2 deltaLabel: 11.5px / 600 / opacity 0.75
+//   Row 2 desc:       12.5px / 500 / MUTED / lineHeight 1.5
 //
-//  Dynamic Type 지원 (한국 사장님 큰 글씨 필요) — relativeTo 기준 폰트 사용.
+//  ⚠️ 폰트는 SF Pro Display + Apple SD Gothic Neo (iOS auto fallback for ko).
 //
 
 import SwiftUI
 
 public enum BUFont {
 
-    // MARK: - Hero — 큰 숫자 (NSM 메인 메트릭, 매출 hero 등)
-    /// 34pt / 700 / -0.035em / SF Pro Display
-    /// Dynamic Type: .largeTitle 기준 ±20%
-    public static let heroNumber = Font.system(
-        size: 34,
-        weight: .bold,
-        design: .default
-    ).leading(.tight)
+    // MARK: - Hero outer (CEOMorningHero)
+    /// Hero greeting (18px / 700 / -0.02em)
+    public static let heroGreeting = Font.system(size: 18, weight: .bold, design: .default)
+    /// Hero sub-greeting (13.5px)
+    public static let heroSubgreeting = Font.system(size: 13.5, weight: .regular)
 
-    /// 26pt — 단순 큰 숫자 (NSM 보조, KPI 셀)
-    public static let bigNumber = Font.system(
-        size: 26,
-        weight: .bold,
-        design: .default
-    ).leading(.tight)
+    /// Hero eyebrow (10.5px / 700 / 0.14em / uppercase)
+    public static let heroEyebrow = Font.system(size: 10.5, weight: .bold)
 
-    // MARK: - Title — 카드 헤더
-    /// 20pt / 700 / -0.03em
-    public static let cardTitle = Font.system(.title3, design: .default).weight(.bold)
+    /// Hero chip (10px / 700)
+    public static let heroChip = Font.system(size: 10, weight: .bold)
 
-    /// 18pt — 보조 헤더 (서브 카드)
-    public static let cardTitleSmall = Font.system(.headline, design: .default).weight(.bold)
+    // MARK: - NSM Main metric (Row 2 - 큰 숫자)
+    /// NSM 메인 숫자 — clamp(34-44px) → 모바일 34pt / 700 / -0.045em
+    public static let nsmValue = Font.system(size: 34, weight: .bold, design: .default).monospacedDigit()
 
-    // MARK: - Body — 본문 / 분석문 / 액션문
-    /// 17pt — 본문 기본 (Apple HIG)
-    public static let body = Font.system(.body, design: .default).weight(.regular)
+    /// NSM eyebrow (11px / 700 / 0.1em / uppercase / MIDNIGHT opacity 0.7)
+    public static let nsmEyebrow = Font.system(size: 11, weight: .bold)
 
-    /// 14.5pt — 보조 본문 (분석문 / 액션문)
-    public static let bodySmall = Font.system(.subheadline, design: .default).weight(.regular)
+    /// NSM delta pill 숫자 (12.5px / 700 / tabular)
+    public static let nsmDelta = Font.system(size: 12.5, weight: .bold).monospacedDigit()
+    public static let nsmDeltaLabel = Font.system(size: 11.5, weight: .semibold)
 
-    /// 13pt / 500 — 카드 내 description
-    public static let bodyCaption = Font.system(.footnote, design: .default).weight(.medium)
+    /// NSM description (12.5px / 500)
+    public static let nsmDescription = Font.system(size: 12.5, weight: .medium)
 
-    // MARK: - Label — 라벨 / 강조 텍스트
-    /// 13px / 700 — 위험신호 박스 제목 등
-    public static let label = Font.system(.subheadline, design: .default).weight(.bold)
+    // MARK: - Headline KPI (Tier 1.2 미니카드)
+    /// headlineValue (26px / 780(.heavy) / -0.045em / tabular)
+    public static let headlineValue = Font.system(size: 26, weight: .heavy, design: .default).monospacedDigit()
 
-    /// 12.5px / 500 — 보조 라벨
-    public static let labelSmall = Font.system(.footnote, design: .default).weight(.medium)
+    /// headlineLabel (11px / 0.08em / uppercase / rgba(15,23,42,0.48))
+    public static let headlineLabel = Font.system(size: 11, weight: .semibold)
 
-    // MARK: - Eyebrow — 10-11px UPPERCASE (Tier 라벨, 카테고리 태그)
-    /// 10.5pt / 700 / 0.14em letter-spacing / UPPERCASE
-    /// 사용 시 `.tracking(1.5)` modifier 추가 권장.
-    public static let eyebrow = Font.system(.caption2, design: .default).weight(.bold)
+    /// headlineNote (12px / 1.5 lineHeight / rgba(15,23,42,0.52))
+    public static let headlineNote = Font.system(size: 12, weight: .regular)
 
-    public static let eyebrowLarge = Font.system(.caption, design: .default).weight(.bold)
+    // MARK: - Section / Activity card
+    /// activityTitle (24px / 700 / -0.04em / #0f172a)
+    public static let activityTitle = Font.system(size: 24, weight: .bold, design: .default)
+    /// activityMiniValue (22px / 700 / -0.05em)
+    public static let activityMiniValue = Font.system(size: 22, weight: .bold).monospacedDigit()
+    /// activityMiniLabel (11px / rgba(15,23,42,0.48))
+    public static let activityMiniLabel = Font.system(size: 11, weight: .regular)
 
-    // MARK: - Tabular Numbers (숫자 정렬용)
-    /// 숫자 표시에는 `.monospacedDigit()` 적용 권장 — 자릿수 흔들림 방지.
-    /// 예: `.font(BUFont.bigNumber.monospacedDigit())`
+    /// sectionEyebrow (10.5px / 700 / 0.1em / uppercase / MIDNIGHT opacity 0.7)
+    public static let sectionEyebrow = Font.system(size: 10.5, weight: .bold)
+
+    /// detailSectionTitle (20px / 720(.bold+) / -0.03em / #0f172a)
+    public static let detailSectionTitle = Font.system(size: 20, weight: .bold, design: .default)
+
+    // MARK: - 기존 alias (점진적 교체)
+    public static let heroNumber = nsmValue
+    public static let bigNumber = activityMiniValue
+    public static let cardTitle = activityTitle
+    public static let cardTitleSmall = detailSectionTitle
+    public static let body = Font.system(.body, design: .default)
+    public static let bodySmall = Font.system(size: 13.5, weight: .regular)
+    public static let bodyCaption = Font.system(size: 12, weight: .regular)
+    public static let label = Font.system(size: 13, weight: .bold)
+    public static let labelSmall = Font.system(size: 12.5, weight: .medium)
+    public static let eyebrow = sectionEyebrow
+    public static let eyebrowLarge = heroEyebrow
 }
 
-// MARK: - View modifier helpers — 한 줄에 폰트 + tracking + lineHeight 설정
+// MARK: - View modifier helpers (정확한 tracking + lineHeight + color)
 
 public extension View {
-    /// 큰 숫자용 (tabular digits + 타이트 line height)
-    func buHeroNumberStyle(color: Color = BUColor.midnightDeep) -> some View {
-        self
-            .font(BUFont.heroNumber.monospacedDigit())
-            .foregroundStyle(color)
-            .tracking(-0.5)
-            .lineSpacing(0)
-    }
 
-    /// 카드 타이틀
-    func buCardTitleStyle(color: Color = BUColor.ink) -> some View {
-        self
-            .font(BUFont.cardTitle)
-            .foregroundStyle(color)
-            .tracking(-0.3)
-    }
+    // ── Hero outer Row 1 ──
 
-    /// Eyebrow (UPPERCASE 태그 — Tier·카테고리 라벨)
-    /// 호출 측에서 `.text("TODAY".uppercased())` 식으로 대문자화 권장.
-    func buEyebrowStyle(color: Color = BUColor.inkMuted) -> some View {
-        self
-            .font(BUFont.eyebrow)
-            .foregroundStyle(color)
-            .tracking(1.5)
+    /// Hero eyebrow — MIDNIGHT opacity 0.65 / 0.14em / uppercase
+    func buHeroEyebrowStyle() -> some View {
+        self.font(BUFont.heroEyebrow)
+            .foregroundStyle(BUColor.midnight.opacity(0.65))
+            .tracking(1.5)               // ≈ 0.14em * 10.5px
             .textCase(.uppercase)
     }
 
-    /// 분석문 (Hero 안의 본문 — multiline 자연스럽게)
+    /// Hero greeting — MIDNIGHT_DEEP / 700 / -0.02em / lineHeight 1.35
+    func buHeroGreetingStyle() -> some View {
+        self.font(BUFont.heroGreeting)
+            .foregroundStyle(BUColor.midnightDeep)
+            .tracking(-0.36)             // -0.02em * 18px
+            .lineSpacing(2.5)
+    }
+
+    /// Hero sub greeting — MUTED / 13.5px / lineHeight 1.5
+    func buHeroSubgreetingStyle() -> some View {
+        self.font(BUFont.heroSubgreeting)
+            .foregroundStyle(BUColor.inkSecondary)
+            .lineSpacing(3.5)
+    }
+
+    // ── Row 2 NSM ──
+
+    /// NSM eyebrow — MIDNIGHT opacity 0.7 / 0.1em / uppercase
+    func buNsmEyebrowStyle() -> some View {
+        self.font(BUFont.nsmEyebrow)
+            .foregroundStyle(BUColor.midnight.opacity(0.7))
+            .tracking(1.1)
+            .textCase(.uppercase)
+    }
+
+    /// NSM 메인 숫자 — MIDNIGHT_DEEP / 700 / -0.045em / lineHeight 1
+    func buNsmValueStyle() -> some View {
+        self.font(BUFont.nsmValue)
+            .foregroundStyle(BUColor.midnightDeep)
+            .tracking(-1.5)              // -0.045em * 34px
+            .lineSpacing(0)
+            .minimumScaleFactor(0.6)
+            .lineLimit(1)
+    }
+
+    /// NSM description — MUTED / 500 / lineHeight 1.5
+    func buNsmDescriptionStyle() -> some View {
+        self.font(BUFont.nsmDescription)
+            .foregroundStyle(BUColor.inkMuted)
+            .lineSpacing(3.5)
+    }
+
+    // ── Headline KPI ──
+
+    /// Headline label — 0.08em / uppercase / rgba(15,23,42,0.48)
+    func buHeadlineLabelStyle() -> some View {
+        self.font(BUFont.headlineLabel)
+            .foregroundStyle(BUColor.ink.opacity(0.48))
+            .tracking(0.88)              // 0.08em * 11px
+            .textCase(.uppercase)
+    }
+
+    /// Headline value — 26px / .heavy / -0.045em / tabular
+    func buHeadlineValueStyle(color: Color? = nil) -> some View {
+        self.font(BUFont.headlineValue)
+            .foregroundStyle(color ?? BUColor.ink)
+            .tracking(-1.17)             // -0.045em * 26px
+            .lineSpacing(0)
+            .minimumScaleFactor(0.7)
+            .lineLimit(1)
+    }
+
+    /// Headline note — 12px / rgba(15,23,42,0.52)
+    func buHeadlineNoteStyle() -> some View {
+        self.font(BUFont.headlineNote)
+            .foregroundStyle(BUColor.ink.opacity(0.52))
+            .lineSpacing(3)
+    }
+
+    // ── Section / Activity ──
+
+    /// activityTitle — 24px / 700 / -0.04em / #0f172a
+    func buActivityTitleStyle() -> some View {
+        self.font(BUFont.activityTitle)
+            .foregroundStyle(BUColor.ink)
+            .tracking(-0.96)             // -0.04em * 24px
+    }
+
+    /// section eyebrow — MIDNIGHT opacity 0.7 / 0.1em / uppercase
+    func buSectionEyebrowStyle() -> some View {
+        self.font(BUFont.sectionEyebrow)
+            .foregroundStyle(BUColor.midnight.opacity(0.7))
+            .tracking(1.05)
+            .textCase(.uppercase)
+    }
+
+    /// detailSectionTitle — 20px / .bold / -0.03em
+    func buDetailTitleStyle() -> some View {
+        self.font(BUFont.detailSectionTitle)
+            .foregroundStyle(BUColor.ink)
+            .tracking(-0.6)
+    }
+
+    // ── 기존 alias (점진적 교체) ──
+    func buHeroNumberStyle(color: Color = BUColor.midnightDeep) -> some View {
+        self.font(BUFont.nsmValue).foregroundStyle(color).tracking(-1.5).lineLimit(1)
+    }
+    func buCardTitleStyle(color: Color = BUColor.ink) -> some View {
+        self.font(BUFont.activityTitle).foregroundStyle(color).tracking(-0.96)
+    }
+    func buEyebrowStyle(color: Color? = nil) -> some View {
+        self.font(BUFont.sectionEyebrow)
+            .foregroundStyle(color ?? BUColor.midnight.opacity(0.7))
+            .tracking(1.05)
+            .textCase(.uppercase)
+    }
     func buAnalysisStyle(color: Color = BUColor.inkSecondary) -> some View {
-        self
-            .font(BUFont.bodySmall)
-            .foregroundStyle(color)
-            .lineSpacing(4)
-            .tracking(-0.1)
+        self.font(BUFont.bodySmall).foregroundStyle(color).lineSpacing(4)
     }
 }

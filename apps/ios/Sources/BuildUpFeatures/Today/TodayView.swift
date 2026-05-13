@@ -1,18 +1,28 @@
 //
-//  TodayView.swift — Today 화면 (CEOMorningHero 모바일 버전)
+//  TodayView.swift — Today 화면 (웹 CEOMorningHero 1:1 미러)
 //
-//  웹 CEOMorningHero.tsx 의 핵심 5섹션을 모바일 1-col 세로 스택으로 재배치:
+//  웹 SSOT: apps/web/app/lib/components/dashboard/CEOMorningHero.tsx
 //
-//   Row 1   — 시간대 인사 + 운영 N일째 + WoW chip
-//   Row 1.5 — 다중 위험신호 박스 (HEALTH_COLORS) ← 신규 (2026-05-13)
-//   Row 2   — 메인 메트릭 (NSM) + 14일 sparkline
-//   Row 3   — AI 경영 코칭 카드 (HeroResolver 결과)
-//   Row 4   — 빠른 매출 입력 진입 버튼
+//  구조 (3-Row hero outer card + nested cards):
 //
-//  모바일 최적화:
-//   • 카드 full-width, 좌우 margin 16pt
-//   • 텍스트 자동 wrap, Dynamic Type 지원
-//   • Hero 그라디언트 대체 → Liquid Glass material
+//   ┌─ heroOuter (radius 24, 3-stop diagonal gradient, 2 radial glows) ─┐
+//   │                                                                   │
+//   │  Row 1 — 인사 영역                                                  │
+//   │    [36×36 icon box] eyebrow(날짜·모드)                              │
+//   │                     [pill 운영N일째] [pill 단계] [pill WoW%]          │
+//   │                     "좋은 아침, 사장님"                              │
+//   │                     "상호명 · 운영 N일째"                            │
+//   │                                                                   │
+//   │  Row 1.5 — 위험신호 박스 (HEALTH_COLORS, radius 14)                 │
+//   │    [● dot] 제목   등급                                              │
+//   │            메시지                                                  │
+//   │                                                                   │
+//   │  Row 2 — nested white card (radius 18) — NSM 메인 메트릭              │
+//   │    NSM EYEBROW                                                    │
+//   │    [큰 숫자 34pt]    [delta pill +18% WoW]                          │
+//   │    "어제보다 +18% 성장 (description)"                                │
+//   │                                                                   │
+//   └───────────────────────────────────────────────────────────────────┘
 //
 
 import SwiftUI
@@ -42,20 +52,29 @@ public struct TodayView: View {
     }
 
     public var body: some View {
-        ZStack {
-            BUBackgroundSurface()
+        GeometryReader { proxy in
+            ZStack {
+                BUBackgroundSurface()
 
-            ScrollView {
-                VStack(spacing: BUSpacing.cardGap) {
-                    GreetingSection(mock: mock, healthResult: healthResult)
-                    RiskSignalsSection(healthResult: healthResult, mock: mock)
-                    MetricHeroSection(mock: mock, healthResult: healthResult)
-                    CoachingCardSection(hero: hero)
-                    QuickInputButton(action: { showInputSheet = true })
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: BUSpacing.shellGap) {
+                        HeroOuterCard(
+                            mock: mock,
+                            healthResult: healthResult,
+                            hero: hero
+                        )
+                        QuickInputButton(action: { showInputSheet = true })
+                        // 하단 탭바 회피
+                        Spacer(minLength: 110)
+                    }
+                    .padding(.horizontal, BUSpacing.screenMargin)
+                    .padding(.top, BUSpacing.xl + proxy.safeAreaInsets.top)
+                    .padding(.bottom, BUSpacing.md)
+                    .frame(width: proxy.size.width)
                 }
-                .padding(.horizontal, BUSpacing.md)
-                .padding(.vertical, BUSpacing.md)
+                .frame(width: proxy.size.width)
             }
+            .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .sheet(isPresented: $showInputSheet) {
             QuickInputSheet()
@@ -63,13 +82,32 @@ public struct TodayView: View {
     }
 }
 
-// MARK: - Row 1 — 인사 (시간대 + 운영 N일째 + WoW)
+// MARK: - Hero Outer Card (3-Row 통합)
 
-private struct GreetingSection: View {
+private struct HeroOuterCard: View {
+    let mock: MockData
+    let healthResult: UnifiedHealthResult
+    let hero: Hero
+
+    var body: some View {
+        BUCard(.heroOuter) {
+            VStack(alignment: .leading, spacing: BUSpacing.heroGap) {
+                Row1Greeting(mock: mock, healthResult: healthResult)
+                Row1_5RiskSignals(healthResult: healthResult)
+                Row2NSMNested(mock: mock, hero: hero, healthResult: healthResult)
+                Row3CoachingNested(hero: hero)
+            }
+        }
+    }
+}
+
+// MARK: - Row 1 — 인사 + chips + greeting (웹 정확 미러)
+
+private struct Row1Greeting: View {
     let mock: MockData
     let healthResult: UnifiedHealthResult
 
-    private var greeting: (line1: String, line2: String) {
+    private var greetingLine1: String {
         let hour = Calendar.current.component(.hour, from: Date())
         let timeOfDay: String
         switch hour {
@@ -78,17 +116,32 @@ private struct GreetingSection: View {
         case 17..<22: timeOfDay = "저녁이에요"
         default:      timeOfDay = "밤이에요"
         }
-        return (
-            line1: "\(timeOfDay), \(mock.userName)",
-            line2: "\(mock.storeName) · 운영 \(mock.daysSinceLaunch)일째"
-        )
+        return "\(timeOfDay), \(mock.userName)"
+    }
+
+    private var periodIcon: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<11:  return "sun.max"
+        case 11..<17: return "sun.haze"
+        case 17..<22: return "moon.haze"
+        default:      return "moon.stars"
+        }
     }
 
     private var dateString: String {
         let df = DateFormatter()
         df.locale = Locale(identifier: "ko_KR")
-        df.dateFormat = "M월 d일 EEEE"
+        df.dateFormat = "M월 d일 EEE"
         return df.string(from: Date())
+    }
+
+    private var modeLabel: String {
+        switch mock.category {
+        case .startupTech: return "스타트업 모드"
+        case .ecommerce:   return "온라인 모드"
+        default:           return "운영 모드"
+        }
     }
 
     private var weeklyChangePct: Double? {
@@ -101,74 +154,88 @@ private struct GreetingSection: View {
     }
 
     var body: some View {
-        BUCard(.card) {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                // Eyebrow + chips row
-                HStack(spacing: BUSpacing.xs) {
-                    BUEyebrow(dateString.uppercased())
-                    Spacer(minLength: BUSpacing.xs)
-                    BUTagBadge("운영 \(mock.daysSinceLaunch)일째", style: .solid)
-                    if let wow = weeklyChangePct {
-                        BUTrendChip(changePct: wow, label: "WoW")
-                    }
-                }
-                // 인사
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(greeting.line1)
-                        .buCardTitleStyle()
-                    Text(greeting.line2)
-                        .font(BUFont.bodyCaption)
-                        .foregroundStyle(BUColor.inkSecondary)
-                }
-                // 건강도 pill (있을 때만)
-                if healthResult.ready {
-                    HStack(spacing: BUSpacing.xs) {
-                        BUHealthDot(grade: healthResult.grade, size: 8)
-                        Text("건강도 \(Int(healthResult.score))점 · \(healthResult.grade.labelKo)")
-                            .font(BUFont.labelSmall)
-                            .foregroundStyle(HealthColors.palette(for: healthResult.grade).text)
-                    }
-                    .padding(.top, 2)
-                }
+        HStack(alignment: .top, spacing: 12) {
+            // 36×36 icon box (웹과 동일)
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(BUColor.midnight08)
+                    .frame(width: 36, height: 36)
+                Image(systemName: periodIcon)
+                    .font(.system(size: 18, weight: .regular))
+                    .foregroundStyle(BUColor.midnight)
             }
+
+            VStack(alignment: .leading, spacing: 3) {
+                // Eyebrow row (single line)
+                Text("\(dateString) · \(modeLabel)")
+                    .buHeroEyebrowStyle()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                // chips — 짧게 + 한 줄 보장
+                HStack(spacing: 5) {
+                    if mock.resolverInput.businessLaunched {
+                        ChipFilled(text: "\(mock.daysSinceLaunch + 1)일째")
+                    }
+                    ChipSoft(text: shortStageLabel)
+                    if let wow = weeklyChangePct {
+                        ChipTrend(pct: wow)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, 2)
+
+                Text(greetingLine1)
+                    .buHeroGreetingStyle()
+                    .padding(.top, 6)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("\(mock.storeName) · 운영 \(mock.daysSinceLaunch + 1)일째")
+                    .buHeroSubgreetingStyle()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    /// 모바일 viewport 에 맞는 짧은 단계 라벨
+    private var shortStageLabel: String {
+        switch mock.stage {
+        case .early:  return "초기"
+        case .growth: return "성장"
+        case .mature: return "성숙"
         }
     }
 }
 
 // MARK: - Row 1.5 — 다중 위험신호 박스
 
-private struct RiskSignalsSection: View {
+private struct Row1_5RiskSignals: View {
     let healthResult: UnifiedHealthResult
-    let mock: MockData
 
-    private var riskSignals: [RiskSignal] {
-        // 데이터 불충분 시 빈 배열
+    private var signals: [RiskSignal] {
         guard healthResult.ready else { return [] }
-
-        // 도메인 우선순위 (cash → profit → efficiency → growth)
         let order: [DomainKey] = [.cash, .profit, .efficiency, .growth]
-        var signals: [RiskSignal] = []
-
+        var out: [RiskSignal] = []
         for key in order {
-            guard let domain = healthResult.domains[key],
-                  domain.grade == .critical || domain.grade == .warning,
-                  let worst = domain.components
+            guard let dom = healthResult.domains[key],
+                  dom.grade == .critical || dom.grade == .warning,
+                  let worst = dom.components
                     .filter({ $0.score.isFinite })
                     .min(by: { $0.score < $1.score })
             else { continue }
-
-            let valueText = formatComponentValue(name: worst.name, value: worst.value)
-            signals.append(RiskSignal(
-                grade: domain.grade,
-                title: titleByDomain(key),
-                message: "\(worst.name) \(valueText) — 영역 점수 \(Int(domain.score))점"
+            out.append(RiskSignal(
+                grade: dom.grade,
+                title: title(for: key),
+                message: "\(worst.name) \(formatValue(name: worst.name, value: worst.value)) — 영역 점수 \(Int(dom.score))점"
             ))
-            if signals.count >= 3 { break }
+            if out.count >= 3 { break }
         }
-        return signals
+        return out
     }
 
-    private func titleByDomain(_ key: DomainKey) -> String {
+    private func title(for key: DomainKey) -> String {
         switch key {
         case .cash:       return "현금 흐름 위험"
         case .profit:     return "수익성 위험"
@@ -176,39 +243,45 @@ private struct RiskSignalsSection: View {
         case .growth:     return "성장 둔화"
         }
     }
-
-    private func formatComponentValue(name: String, value: Double) -> String {
+    private func formatValue(name: String, value: Double) -> String {
         guard value.isFinite else { return "—" }
         if name.contains("런웨이") { return String(format: "%.1f개월", value) }
-        if name.contains("성장")  { return "\(value > 0 ? "+" : "")\(String(format: "%.1f", value))%" }
+        if name.contains("성장") { return "\(value > 0 ? "+" : "")\(String(format: "%.1f", value))%" }
         return "\(String(format: "%.1f", value))%"
     }
 
     var body: some View {
-        if !riskSignals.isEmpty {
+        if !signals.isEmpty {
             VStack(spacing: BUSpacing.xs) {
-                ForEach(riskSignals) { signal in
-                    BUCard(.subtle, tint: HealthColors.palette(for: signal.grade).dot) {
+                ForEach(signals) { s in
+                    let palette = HealthColors.palette(for: s.grade)
+                    BUCard(.inner, tint: palette.dot) {
                         HStack(alignment: .top, spacing: 11) {
-                            BUHealthDot(grade: signal.grade, animated: signal.grade == .critical)
+                            Circle()
+                                .fill(palette.dot)
+                                .frame(width: 9, height: 9)
                                 .padding(.top, 5)
+                                .shadow(color: palette.glow, radius: 4)
                             VStack(alignment: .leading, spacing: 3) {
                                 HStack(spacing: 8) {
-                                    Text(signal.title)
-                                        .font(BUFont.label)
-                                        .foregroundStyle(HealthColors.palette(for: signal.grade).text)
-                                    Text(signal.grade.labelKo)
-                                        .font(BUFont.eyebrow)
-                                        .foregroundStyle(HealthColors.palette(for: signal.grade).text.opacity(0.7))
+                                    Text(s.title)
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(palette.text)
+                                        .lineLimit(1)
+                                    Text(s.grade.labelKo)
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(palette.text.opacity(0.7))
                                         .textCase(.uppercase)
                                         .tracking(0.5)
+                                    Spacer(minLength: 0)
                                 }
-                                Text(signal.message)
-                                    .font(BUFont.labelSmall)
-                                    .foregroundStyle(BUColor.inkSecondary)
+                                Text(s.message)
+                                    .font(.system(size: 12.5, weight: .medium))
+                                    .foregroundStyle(BUColor.ink.opacity(0.7))
                                     .lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            Spacer(minLength: 0)
                         }
                     }
                 }
@@ -217,21 +290,37 @@ private struct RiskSignalsSection: View {
     }
 }
 
-// MARK: - Row 2 — 메인 메트릭 + sparkline
+// MARK: - Row 2 — NSM nested white card
 
-private struct MetricHeroSection: View {
+private struct Row2NSMNested: View {
     let mock: MockData
+    let hero: Hero
     let healthResult: UnifiedHealthResult
 
-    private var todayLabel: String {
-        if mock.entries.isEmpty { return "최근 입력 없음" }
-        return "어제 매출"
+    private var nsmValue: String {
+        let last = mock.entries.sorted(by: { $0.date < $1.date }).last
+        let v = Int(last?.sales ?? 0)
+        if v == 0 { return "—" }
+        return v.formatted(.number.grouping(.automatic))
     }
 
-    private var todayValue: String {
-        let last = mock.entries.sorted(by: { $0.date < $1.date }).last
-        guard let v = last?.sales, v > 0 else { return "—" }
-        return formatKRW(Int(v))
+    private var nsmLabel: String { "어제 매출" }
+
+    private var weeklyChangePct: Double? {
+        guard mock.entries.count >= 14 else { return nil }
+        let sorted = mock.entries.sorted { $0.date < $1.date }
+        let r7 = sorted.suffix(7).reduce(0.0) { $0 + $1.sales }
+        let p7 = sorted.suffix(14).prefix(7).reduce(0.0) { $0 + $1.sales }
+        guard p7 > 0 else { return nil }
+        return ((r7 - p7) / p7) * 100
+    }
+
+    private var deltaTone: (color: Color, bg: Color) {
+        guard let pct = weeklyChangePct else {
+            return (BUColor.inkMuted, BUColor.midnight08)
+        }
+        if pct >= 0 { return (BUColor.success, BUColor.success08) }
+        return (BUColor.danger, BUColor.danger08)
     }
 
     private var avgDaily7: Double {
@@ -241,184 +330,219 @@ private struct MetricHeroSection: View {
         return last7.reduce(0) { $0 + $1.sales } / Double(last7.count)
     }
 
-    private func formatKRW(_ value: Int) -> String {
-        if value >= 100_000_000 {
-            return "\(String(format: "%.1f", Double(value) / 100_000_000))억"
-        }
-        if value >= 10_000 {
-            return "\(value / 10_000)만"
-        }
-        return value.formatted()
-    }
-
     var body: some View {
-        BUCard(.hero) {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                // 라벨
-                BUEyebrow(todayLabel)
+        BUCard(.nested) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Eyebrow
+                Text(nsmLabel).buNsmEyebrowStyle()
 
-                // 큰 숫자
-                HStack(alignment: .bottom, spacing: 6) {
-                    Text(todayValue)
-                        .buHeroNumberStyle()
-                    if todayValue != "—" {
-                        Text("원")
-                            .font(BUFont.cardTitleSmall)
-                            .foregroundStyle(BUColor.inkMuted)
-                            .padding(.bottom, 6)
+                // Value + delta pill
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(nsmValue)
+                        .buNsmValueStyle()
+
+                    if let pct = weeklyChangePct {
+                        DeltaPill(pct: pct, label: "WoW", tone: deltaTone)
                     }
                 }
 
-                // 보조 정보
+                // Description
                 if avgDaily7 > 0 {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chart.bar.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(BUColor.midnight.opacity(0.5))
-                        Text("최근 7일 일평균 \(formatKRW(Int(avgDaily7)))원")
-                            .font(BUFont.bodyCaption)
-                            .foregroundStyle(BUColor.inkSecondary)
-                    }
+                    Text("최근 7일 일평균 \(Int(avgDaily7).formatted())원")
+                        .buNsmDescriptionStyle()
                 }
 
-                // Sparkline (14일)
+                // Sparkline
                 if mock.entries.count >= 3 {
                     BUSparkline(
                         entries: mock.entries,
                         tint: HealthColors.palette(for: healthResult.grade).dot,
-                        height: 44
+                        height: 36
                     )
-                    .padding(.top, BUSpacing.xs)
+                    .padding(.top, 4)
                 }
             }
         }
     }
 }
 
-// MARK: - Row 3 — AI 코칭 카드
+private struct DeltaPill: View {
+    let pct: Double
+    let label: String
+    let tone: (color: Color, bg: Color)
 
-private struct CoachingCardSection: View {
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: pct >= 0 ? "arrow.up.right" : "arrow.down.right")
+                .font(.system(size: 10, weight: .heavy))
+            Text("\(pct >= 0 ? "+" : "")\(String(format: "%.1f", pct))%")
+                .font(.system(size: 12.5, weight: .bold))
+                .monospacedDigit()
+        }
+        .foregroundStyle(tone.color)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(tone.bg, in: Capsule())
+        .fixedSize()
+    }
+}
+
+// MARK: - Row 3 — AI 코칭 nested card (CEOMorningHero 의 hero CTA)
+
+private struct Row3CoachingNested: View {
     let hero: Hero
 
     private var toneColor: Color {
         switch hero.tone {
-        case .crisis:  return BUColor.toneCrisis
-        case .warning: return BUColor.toneWarning
-        case .neutral: return BUColor.toneNeutral
+        case .crisis:  return BUColor.danger
+        case .warning: return BUColor.warn
+        case .neutral: return BUColor.midnight
         }
     }
 
-    var body: some View {
-        BUCard(.card, tint: hero.tone == .neutral ? nil : toneColor) {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                // Tag
-                HStack(spacing: 6) {
-                    Image(systemName: tagIcon)
-                        .font(.system(size: 11, weight: .bold))
-                    Text(hero.tagKo)
-                        .font(BUFont.eyebrow)
-                        .tracking(0.5)
-                }
-                .foregroundStyle(toneColor)
-
-                // 분석문
-                Text(hero.analysisKo)
-                    .font(BUFont.body)
-                    .foregroundStyle(BUColor.ink)
-                    .lineSpacing(3)
-                    .multilineTextAlignment(.leading)
-
-                // 액션문
-                if !hero.actionKo.isEmpty {
-                    Text(hero.actionKo)
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-
-                // 사례 배지
-                if let ref = hero.referencedCase {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bookmark.fill")
-                            .font(.system(size: 9))
-                        Text("사례: \(ref.name)")
-                            .font(BUFont.eyebrow)
-                    }
-                    .foregroundStyle(BUColor.midnight)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(BUColor.midnight.opacity(0.08), in: Capsule())
-                }
-
-                // CTA 버튼
-                CTAButton(label: hero.ctaKo, tone: hero.tone)
-                    .padding(.top, BUSpacing.xxs)
-            }
-        }
-    }
-
-    private var tagIcon: String {
+    private var toneIcon: String {
         switch hero.tone {
         case .crisis:  return "exclamationmark.octagon.fill"
         case .warning: return "exclamationmark.triangle.fill"
         case .neutral: return "sparkles"
         }
     }
-}
 
-// MARK: - CTAButton
+    var body: some View {
+        BUCard(.nested) {
+            VStack(alignment: .leading, spacing: 10) {
+                // Tag
+                HStack(spacing: 6) {
+                    Image(systemName: toneIcon)
+                        .font(.system(size: 11, weight: .bold))
+                    Text(hero.tagKo)
+                        .font(.system(size: 10.5, weight: .bold))
+                        .tracking(1.1)
+                        .textCase(.uppercase)
+                }
+                .foregroundStyle(toneColor)
+
+                // 분석문
+                Text(hero.analysisKo)
+                    .font(.system(size: 14.5, weight: .medium))
+                    .foregroundStyle(BUColor.ink)
+                    .lineSpacing(4)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                // 액션문
+                if !hero.actionKo.isEmpty {
+                    Text(hero.actionKo)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // Reference badge
+                if let ref = hero.referencedCase {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bookmark.fill")
+                            .font(.system(size: 9))
+                        Text("사례: \(ref.name)")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .tracking(0.4)
+                    }
+                    .foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(BUColor.midnight08, in: Capsule())
+                }
+
+                // CTA (gradient)
+                CTAButton(label: hero.ctaKo, tone: hero.tone)
+                    .padding(.top, 4)
+            }
+        }
+    }
+}
 
 private struct CTAButton: View {
     let label: String
     let tone: HeroTone
 
-    private var bg: Color {
+    private var bgGradient: LinearGradient {
         switch tone {
-        case .crisis:  return BUColor.toneCrisis
-        case .warning: return BUColor.toneWarning
-        case .neutral: return BUColor.midnight
+        case .crisis:
+            return LinearGradient(
+                colors: [BUColor.danger, BUColor.danger.opacity(0.85)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .warning:
+            return LinearGradient(
+                colors: [BUColor.warn, BUColor.warn.opacity(0.85)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .neutral:
+            return LinearGradient(
+                colors: [BUColor.primaryButtonStart, BUColor.primaryButtonEnd],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+    private var shadowColor: Color {
+        switch tone {
+        case .crisis:  return BUColor.danger.opacity(0.18)
+        case .warning: return BUColor.warn.opacity(0.18)
+        case .neutral: return BUColor.primaryButtonStart.opacity(0.18)
         }
     }
 
     var body: some View {
         Button {
-            // CTA action — 추후 ctaTarget 라우팅 연결
             #if canImport(UIKit)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
         } label: {
             HStack(spacing: 6) {
                 Text(label)
-                    .font(BUFont.label)
+                    .font(.system(size: 13, weight: .bold))
+                    .tracking(-0.1)
                 Image(systemName: "arrow.right")
                     .font(.system(size: 11, weight: .bold))
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(bg, in: Capsule())
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(bgGradient, in: Capsule())
+            .shadow(color: shadowColor, radius: 8, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Row 4 — 빠른 입력 진입 버튼
+// MARK: - 빠른 입력 버튼 (Hero 아래)
 
 private struct QuickInputButton: View {
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: BUSpacing.sm) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(BUColor.midnight)
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(BUColor.midnight08)
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(BUColor.midnight)
+                }
                 VStack(alignment: .leading, spacing: 1) {
                     Text("오늘 매출 기록")
-                        .font(BUFont.label)
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(BUColor.ink)
                     Text("5초면 됩니다 — AI 코칭이 더 정확해져요")
-                        .font(BUFont.bodyCaption)
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(BUColor.inkMuted)
                 }
                 Spacer()
@@ -426,18 +550,26 @@ private struct QuickInputButton: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(BUColor.inkSubtle)
             }
-            .padding(BUSpacing.md)
-            .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.lg, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: BURadius.lg, style: .continuous)
-                    .strokeBorder(BUColor.border, lineWidth: 0.5)
+            .padding(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))
+            .background(
+                LinearGradient(
+                    colors: [BUColor.cardGradientTop, BUColor.cardGradientBottom],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ),
+                in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
+                    .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+            )
+            .buShadow(.card)
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - QuickInputSheet (BUNumberPad)
+// MARK: - Quick Input Sheet
 
 private struct QuickInputSheet: View {
     @State private var sales: Int = 0
@@ -446,29 +578,73 @@ private struct QuickInputSheet: View {
     var body: some View {
         NavigationStack {
             BUNumberPad(amount: $sales) {
-                // TODO: Supabase 동기화 호출
                 dismiss()
             }
             .navigationTitle("매출 입력")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
             .toolbar {
-                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button("취소") { dismiss() }
                         .foregroundStyle(BUColor.inkSecondary)
                 }
-                #else
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
-                        .foregroundStyle(BUColor.inkSecondary)
-                }
-                #endif
             }
+            #endif
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+}
+
+// MARK: - Chip helpers (Row 1)
+
+private struct ChipFilled: View {
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white)
+            .tracking(0.6)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(BUColor.midnight, in: Capsule())
+    }
+}
+
+private struct ChipSoft: View {
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(BUColor.midnight)
+            .tracking(0.5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(BUColor.midnight08, in: Capsule())
+    }
+}
+
+private struct ChipTrend: View {
+    let pct: Double
+
+    var body: some View {
+        let positive = pct >= 0
+        HStack(spacing: 2) {
+            Image(systemName: positive ? "arrow.up.right" : "arrow.down.right")
+                .font(.system(size: 9, weight: .heavy))
+            Text("\(positive ? "+" : "")\(String(format: "%.0f", pct))%")
+                .font(.system(size: 10, weight: .bold))
+                .monospacedDigit()
+        }
+        .foregroundStyle(positive ? BUColor.success : BUColor.danger)
+        .tracking(0.4)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
+        .background(
+            (positive ? BUColor.success : BUColor.danger).opacity(0.10),
+            in: Capsule()
+        )
+        .fixedSize()
     }
 }
 
@@ -479,24 +655,15 @@ private struct QuickInputSheet: View {
     TodayView(mock: .healthyRestaurant)
 }
 
-#Preview("Today — 주의 신호 (카페)") {
-    TodayView(mock: .warningCafe)
-}
-
-#Preview("Today — 긴급 위기 (SaaS)") {
+#Preview("Today — 긴급 위기") {
     TodayView(mock: .criticalSaaS)
 }
 
-#Preview("Today — 매출 미기록 5일") {
-    TodayView(mock: .staleSalesRestaurant)
-}
-
-#Preview("Today — 첫 진입 (empty)") {
-    TodayView(mock: .empty)
-}
-
-#Preview("Today — Dark Mode") {
+#Preview("Today — 주의 신호") {
     TodayView(mock: .warningCafe)
-        .preferredColorScheme(.dark)
+}
+
+#Preview("Today — 첫 진입") {
+    TodayView(mock: .empty)
 }
 #endif

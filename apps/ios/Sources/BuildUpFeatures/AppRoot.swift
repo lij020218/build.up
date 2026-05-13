@@ -33,9 +33,12 @@ public struct AppRoot: View {
     @State private var notificationFlow = NotificationPermissionFlow()
     @State private var showNotificationSheet = false
     @State private var selectedTab: Tab = .today
+    /// DEBUG 빌드에서 SignInView 우회 — 시뮬레이터 시각 검증용.
+    @State private var demoMode: MockScenario? = nil
 
     public enum Tab: Hashable, Sendable {
         case today
+        case daily
         case roadmap
         case settings
     }
@@ -44,11 +47,34 @@ public struct AppRoot: View {
         // 실제 Supabase 인스턴스 사용 (Info.plist 에서 환경 로드)
         let supabase = BUSupabase.shared.client
         self._coordinator = State(initialValue: AuthCoordinator(supabase: supabase))
+
+        #if DEBUG
+        // BU_DEMO_SCENARIO 환경변수 → 즉시 데모 진입 (시뮬레이터 시각 검증)
+        //   SIMCTL_CHILD_BU_DEMO_SCENARIO=warning xcrun simctl launch <UUID> <bundle-id>
+        if let raw = ProcessInfo.processInfo.environment["BU_DEMO_SCENARIO"],
+           let scenario = MockScenario(envValue: raw) {
+            self._demoMode = State(initialValue: scenario)
+        }
+        // BU_DEMO_TAB=roadmap / today / daily
+        if let tab = ProcessInfo.processInfo.environment["BU_DEMO_TAB"] {
+            switch tab.lowercased() {
+            case "roadmap": self._selectedTab = State(initialValue: .roadmap)
+            case "today":   self._selectedTab = State(initialValue: .today)
+            case "daily":   self._selectedTab = State(initialValue: .daily)
+            default: break
+            }
+        }
+        #endif
     }
 
     public var body: some View {
         Group {
-            if coordinator.isAuthenticated, let store = dashboardStore {
+            if let scenario = demoMode {
+                // ── DEBUG 데모 모드 ──
+                DemoTabs(scenario: scenario, selectedTab: $selectedTab) {
+                    demoMode = nil
+                }
+            } else if coordinator.isAuthenticated, let store = dashboardStore {
                 MainTabs(
                     store: store,
                     coordinator: coordinator,
@@ -68,6 +94,15 @@ public struct AppRoot: View {
                 }
             } else {
                 SignInView(coordinator: coordinator)
+                    .overlay(alignment: .topTrailing) {
+                        #if DEBUG
+                        DemoModeMenu { scenario in
+                            demoMode = scenario
+                        }
+                        .padding(.top, 8)
+                        .padding(.trailing, BUSpacing.md)
+                        #endif
+                    }
                     .task {
                         // 로그인 성공 후 store 생성
                         for await change in BUSupabase.shared.authStateChanges {
@@ -238,3 +273,92 @@ private struct SettingsView: View {
         }
     }
 }
+
+// MARK: - DEBUG Demo Mode (시뮬레이터 시각 검증)
+
+#if DEBUG
+
+/// SignInView 우상단에 노출되는 작은 메뉴 — 사장님이 5 시나리오 즉시 진입 가능.
+struct DemoModeMenu: View {
+    let onSelect: (MockScenario) -> Void
+
+    var body: some View {
+        Menu {
+            Button("안정 운영 (외식)") { onSelect(.healthy) }
+            Button("주의 신호 (카페)") { onSelect(.warning) }
+            Button("긴급 위기 (SaaS)") { onSelect(.critical) }
+            Button("매출 미기록 5일") { onSelect(.staleSales) }
+            Button("첫 진입 (empty)") { onSelect(.empty) }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "eye.fill")
+                    .font(.system(size: 10))
+                Text("DEMO")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(0.5)
+            }
+            .foregroundStyle(BUColor.inkMuted)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(BUColor.surfaceElevated.opacity(0.85), in: Capsule())
+            .overlay(
+                Capsule()
+                    .strokeBorder(BUColor.borderSubtle, lineWidth: 0.5)
+            )
+        }
+    }
+}
+
+/// DEBUG 데모 탭 — Today (시나리오) + Roadmap + 종료 버튼.
+struct DemoTabs: View {
+    let scenario: MockScenario
+    @Binding var selectedTab: AppRoot.Tab
+    let onExit: () -> Void
+
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            TodayView(mock: MockData.scenario(scenario))
+                .overlay(alignment: .topTrailing) {
+                    ExitButton(action: onExit)
+                        .padding(.top, BUSpacing.lg)
+                        .padding(.trailing, BUSpacing.md)
+                }
+                .tabItem { Label("Today", systemImage: "sun.max.fill") }
+                .tag(AppRoot.Tab.today)
+
+            DailyHubView(mock: MockData.scenario(scenario))
+                .overlay(alignment: .topTrailing) {
+                    ExitButton(action: onExit)
+                        .padding(.top, BUSpacing.lg)
+                        .padding(.trailing, BUSpacing.md)
+                }
+                .tabItem { Label("Daily", systemImage: "chart.bar.fill") }
+                .tag(AppRoot.Tab.daily)
+
+            RoadmapView()
+                .overlay(alignment: .topTrailing) {
+                    ExitButton(action: onExit)
+                        .padding(.top, BUSpacing.lg)
+                        .padding(.trailing, BUSpacing.md)
+                }
+                .tabItem { Label("로드맵", systemImage: "map.fill") }
+                .tag(AppRoot.Tab.roadmap)
+        }
+        .tint(BUColor.midnight)
+    }
+}
+
+private struct ExitButton: View {
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(BUColor.inkMuted)
+                .background(Circle().fill(BUColor.surfaceElevated.opacity(0.9)))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+#endif  // DEBUG

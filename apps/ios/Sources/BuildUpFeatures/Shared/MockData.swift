@@ -16,6 +16,18 @@ public enum MockScenario: String, CaseIterable, Sendable {
     case critical  = "긴급 위기"
     case staleSales = "매출 미기록"
     case empty     = "첫 진입"
+
+    /// 환경변수에서 진입 — BU_DEMO_SCENARIO=warning / critical / stale / empty / healthy
+    public init?(envValue: String) {
+        switch envValue.lowercased() {
+        case "healthy":  self = .healthy
+        case "warning":  self = .warning
+        case "critical": self = .critical
+        case "stale", "stale-sales", "stalesales": self = .staleSales
+        case "empty":    self = .empty
+        default: return nil
+        }
+    }
 }
 
 public struct MockData: Sendable {
