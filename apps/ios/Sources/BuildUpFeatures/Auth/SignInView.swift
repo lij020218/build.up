@@ -1,15 +1,13 @@
 //
-//  SignInView.swift — 로그인 화면 (웹 /auth/page.tsx 정확 미러)
+//  SignInView.swift — 모바일 전용 로그인 화면
 //
-//  웹 SSOT: apps/web/app/auth/page.tsx 의 hero section (1699줄 landing + auth)
+//  사장님 지침 (2026-05-14): "모바일 전용 로그인 페이지를 만들자"
 //
-//   • 다크 톤 배경 (#0a0a14 베이스)
-//   • 푸른 톤 hero eyebrow (#5B8CFF)
-//   • 거대 hero title (clamp 44-80px → 모바일 40pt)
-//   • 부제목 (rgba(255,255,255,0.7))
-//   • CTA gradient (#1E2A55 → #2C4F80, radius 980, shadow)
-//   • radial-gradient overlay (rgba(91,140,255,0.15))
-//   • minHeight: 100vh — viewport 꽉 채움
+//   • 웹의 다크 hero / mockup preview 패턴 안 따라감 — 모바일에 안 맞음
+//   • 라이트 모드 + Aurora 배경 (앱 전체 톤 통일)
+//   • Apple iOS 표준 onboarding 패턴 — Brand mark + 가치 제안 + 3 버튼 + 정책
+//   • Dynamic Type 자동 지원 / 모든 Text fixedSize wrap
+//   • viewport 꽉 채움 (status bar~home indicator)
 //
 
 import SwiftUI
@@ -32,45 +30,42 @@ public struct SignInView: View {
 
     public var body: some View {
         ZStack {
-            // 다크 베이스
-            AuthDarkBackground()
+            BUBackgroundSurface()  // Aurora — 앱 전체와 동일 톤
 
-            ScrollView {
-                VStack(spacing: BUSpacing.xl) {
-                    Spacer(minLength: BUSpacing.xxxl)
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
 
-                    // ── Hero ──
-                    HeroBlock()
+                BrandMark()
+                    .padding(.bottom, BUSpacing.xl)
 
-                    // ── CTA 버튼 그룹 ──
-                    VStack(spacing: BUSpacing.sm) {
-                        KakaoButton {
-                            Task { await coordinator.signInWithKakao() }
-                        }
-                        AppleButton {
-                            Task { await coordinator.signInWithApple() }
-                        }
-                        EmailButton {
-                            // TODO: email sheet
-                        }
-                    }
+                ValuePropositions()
                     .padding(.horizontal, BUSpacing.lg)
+                    .padding(.bottom, BUSpacing.xl)
 
-                    // ── 상태 + footer ──
-                    statusView
-                        .padding(.top, BUSpacing.sm)
+                Spacer(minLength: 0)
 
-                    Spacer(minLength: BUSpacing.xxl)
-
-                    LegalFooter()
-                        .padding(.horizontal, BUSpacing.lg)
-                        .padding(.bottom, BUSpacing.lg)
+                VStack(spacing: 10) {
+                    KakaoButton {
+                        Task { await coordinator.signInWithKakao() }
+                    }
+                    AppleButton {
+                        Task { await coordinator.signInWithApple() }
+                    }
+                    EmailButton {
+                        // TODO: email sheet
+                    }
                 }
-                .frame(maxWidth: .infinity, minHeight: 700)
+                .padding(.horizontal, BUSpacing.md)
+
+                statusView
+                    .padding(.top, BUSpacing.sm)
+
+                LegalFooter()
+                    .padding(.top, BUSpacing.md)
+                    .padding(.bottom, BUSpacing.lg)
+                    .padding(.horizontal, BUSpacing.lg)
             }
         }
-        .preferredColorScheme(.dark)
-        .ignoresSafeArea(.container, edges: .all)
     }
 
     @ViewBuilder
@@ -80,117 +75,118 @@ public struct SignInView: View {
             HStack(spacing: 6) {
                 ProgressView()
                     .controlSize(.small)
-                    .tint(.white)
                 Text("로그인 중")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .font(.system(size: 12.5, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
             }
         case .failed(let msg):
             Text(msg)
-                .font(.system(size: 13))
-                .foregroundStyle(Color(red: 1.0, green: 0.42, blue: 0.42))
+                .font(.system(size: 12.5, weight: .medium))
+                .foregroundStyle(BUColor.danger)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, BUSpacing.lg)
+                .fixedSize(horizontal: false, vertical: true)
         default:
             EmptyView()
         }
     }
 }
 
-// MARK: - Dark background (웹 auth bg)
+// MARK: - Brand Mark
 
-private struct AuthDarkBackground: View {
-    var body: some View {
-        ZStack {
-            // 베이스 — 깊은 미드나잇 다크
-            Color(red: 0x0A/255, green: 0x0A/255, blue: 0x18/255)
-                .ignoresSafeArea()
-
-            // Radial glow 1 — 가운데 푸른 톤 (radial-gradient(ellipse 80% 60% at 50% 40%, rgba(91,140,255,0.15)))
-            Ellipse()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color(red: 0x5B/255, green: 0x8C/255, blue: 0xFF/255).opacity(0.22),
-                            Color(red: 0x5B/255, green: 0x8C/255, blue: 0xFF/255).opacity(0.0),
-                        ],
-                        center: .center,
-                        startRadius: 30,
-                        endRadius: 400
-                    )
-                )
-                .frame(width: 700, height: 500)
-                .offset(x: 0, y: -150)
-                .blur(radius: 20)
-                .allowsHitTesting(false)
-
-            // Radial glow 2 — 하단 보조
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color(red: 0x1E/255, green: 0x2A/255, blue: 0x55/255).opacity(0.4),
-                            .clear,
-                        ],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 300
-                    )
-                )
-                .frame(width: 500, height: 500)
-                .offset(x: -100, y: 350)
-                .allowsHitTesting(false)
-        }
-    }
-}
-
-// MARK: - Hero (eyebrow + title + sub)
-
-private struct HeroBlock: View {
+private struct BrandMark: View {
     var body: some View {
         VStack(spacing: BUSpacing.md) {
-            // eyebrow — 푸른 톤 #5B8CFF
-            Text("매일 5초로 시작하는")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color(red: 0x5B/255, green: 0x8C/255, blue: 0xFF/255))
-                .tracking(0.3)
-
-            // Title — clamp(44-80px) → 모바일 40
-            VStack(spacing: 4) {
-                Text("사장님 옆에 함께,")
-                    .font(.system(size: 36, weight: .bold, design: .default))
+            // Logo mark — 둥근 사각 + Aurora 그라디언트 (BrandBar 와 동일 톤)
+            ZStack {
+                LinearGradient(
+                    colors: [BUColor.auroraNavy, BUColor.auroraBlue, BUColor.auroraTeal],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Text("b")
+                    .font(.system(size: 36, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white)
-                    .tracking(-1.4)
-                Text("build.up")
-                    .font(.system(size: 44, weight: .bold, design: .default))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [
-                                .white,
-                                Color(red: 0x5B/255, green: 0x8C/255, blue: 0xFF/255),
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .tracking(-1.8)
+                    .tracking(-0.5)
             }
+            .frame(width: 72, height: 72)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .shadow(color: BUColor.midnightInk.opacity(0.18), radius: 16, x: 0, y: 8)
 
-            // Sub — rgba(255,255,255,0.7)
-            Text("매출 한 줄, 매일 30초.\nAI 가 위기 신호와 코칭을 같이 봐드려요.")
-                .font(.system(size: 15, weight: .regular))
-                .foregroundStyle(.white.opacity(0.65))
+            // Wordmark
+            HStack(spacing: 0) {
+                Text("Build")
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                Text(".")
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(BUColor.midnightInk)
+                Text("UP")
+                    .font(.system(size: 30, weight: .heavy))
+                    .foregroundStyle(BUColor.ink)
+            }
+            .tracking(-1.1)
+
+            // 부제목
+            Text("매일 5초, 사장님 옆에 함께")
+                .font(.system(size: 14.5, weight: .regular))
+                .foregroundStyle(BUColor.inkSecondary)
                 .multilineTextAlignment(.center)
-                .lineSpacing(4)
                 .tracking(-0.2)
-                .padding(.top, 4)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, BUSpacing.lg)
-        .padding(.top, BUSpacing.xl)
     }
 }
 
-// MARK: - Kakao Button (다크 위 노란 — 카카오 표준)
+// MARK: - Value Propositions
+
+private struct ValuePropositions: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            valueRow(
+                icon: "chart.line.uptrend.xyaxis",
+                title: "매일 30초 코칭",
+                detail: "어제 매출 + 오늘 행동 1개"
+            )
+            valueRow(
+                icon: "exclamationmark.shield.fill",
+                title: "현금 위기 7일 전 알림",
+                detail: "통장 부족 예상 즉시 푸시"
+            )
+            valueRow(
+                icon: "map.fill",
+                title: "46단계 로드맵",
+                detail: "사장님 단계 맞춤 카드"
+            )
+        }
+    }
+
+    private func valueRow(icon: String, title: String, detail: String) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(BUColor.midnight08)
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 13.5, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(detail)
+                    .font(.system(size: 11.5, weight: .regular))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+// MARK: - Buttons
 
 private struct KakaoButton: View {
     let action: () -> Void
@@ -208,14 +204,12 @@ private struct KakaoButton: View {
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(
                 Color(red: 0.99, green: 0.85, blue: 0.0),
-                in: Capsule()
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
             )
         }
         .buttonStyle(PressableButtonStyle())
     }
 }
-
-// MARK: - Apple Button (gradient — 웹과 동일 #1E2A55 → #2C4F80)
 
 private struct AppleButton: View {
     let action: () -> Void
@@ -240,11 +234,11 @@ private struct AppleButton: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
-                in: Capsule()
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
             )
             .shadow(
-                color: Color(red: 0x1E/255, green: 0x2A/255, blue: 0x55/255).opacity(0.32),
-                radius: 10,
+                color: Color(red: 0x1E/255, green: 0x2A/255, blue: 0x55/255).opacity(0.20),
+                radius: 8,
                 x: 0,
                 y: 2
             )
@@ -253,49 +247,37 @@ private struct AppleButton: View {
     }
 }
 
-// MARK: - Email — outline button (다크 위 흰 outline)
-
 private struct EmailButton: View {
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Text("이메일로 계속하기")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white.opacity(0.85))
-                .frame(maxWidth: .infinity, minHeight: 50)
-                .background(
-                    .clear,
-                    in: Capsule()
-                )
-                .overlay(
-                    Capsule()
-                        .strokeBorder(.white.opacity(0.2), lineWidth: 1)
-                )
+                .font(.system(size: 13.5, weight: .medium))
+                .foregroundStyle(BUColor.inkSecondary)
+                .frame(maxWidth: .infinity, minHeight: 44)
         }
-        .buttonStyle(PressableButtonStyle())
+        .buttonStyle(.plain)
     }
 }
-
-// MARK: - Footer
 
 private struct LegalFooter: View {
     var body: some View {
         VStack(spacing: 6) {
             Text("로그인 시 약관에 동의합니다")
-                .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.4))
+                .font(.system(size: 11, weight: .regular))
+                .foregroundStyle(BUColor.inkMuted.opacity(0.7))
 
             HStack(spacing: BUSpacing.sm) {
                 Button("이용약관") {}
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(BUColor.inkSecondary)
                 Text("·")
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.3))
+                    .foregroundStyle(BUColor.inkSubtle)
                 Button("개인정보처리방침") {}
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(BUColor.inkSecondary)
             }
         }
     }
@@ -321,7 +303,7 @@ private func makePreviewCoordinator() -> AuthCoordinator {
     return AuthCoordinator(supabase: supabase)
 }
 
-#Preview("SignInView") {
+#Preview("SignInView — Mobile Native") {
     SignInView(coordinator: makePreviewCoordinator())
 }
 #endif

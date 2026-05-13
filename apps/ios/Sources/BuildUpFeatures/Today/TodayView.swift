@@ -54,6 +54,8 @@ public struct TodayView: View {
     public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: BUSpacing.shellGap) {
+                StoreStatusHeader(mock: mock)
+                HomeRitualBanner()
                 HeroOuterCard(
                     mock: mock,
                     healthResult: healthResult,
@@ -71,6 +73,84 @@ public struct TodayView: View {
         .sheet(isPresented: $showInputSheet) {
             QuickInputSheet()
         }
+    }
+}
+
+// MARK: - Tier 0 — store title + ritual, 웹 OperationalDashboard 상단 미러
+
+private struct StoreStatusHeader: View {
+    let mock: MockData
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Text(mock.storeName.isEmpty ? "내 가게" : mock.storeName)
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(BUColor.ink)
+                .tracking(-0.66)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+
+            if mock.resolverInput.businessLaunched {
+                LivePill()
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 4)
+    }
+}
+
+private struct LivePill: View {
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255))
+                .frame(width: 6, height: 6)
+                .shadow(color: Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255).opacity(0.25), radius: 3)
+            Text("운영 중")
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255))
+                .tracking(0.1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255).opacity(0.08), in: Capsule())
+        .fixedSize()
+    }
+}
+
+private struct HomeRitualBanner: View {
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(BUColor.midnight.opacity(0.08))
+                    .frame(width: 32, height: 32)
+                Image(systemName: "calendar")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("이번 주 목표를 세워보세요")
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundStyle(BUColor.ink)
+                    .tracking(-0.13)
+                Text("지난주 하이라이트를 돌아보고 한 가지 집중 목표를 정합니다.")
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1)
+        )
     }
 }
 

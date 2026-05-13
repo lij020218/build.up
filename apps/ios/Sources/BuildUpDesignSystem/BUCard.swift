@@ -53,20 +53,20 @@ public enum BUCardStyle: Sendable {
     }
     public var paddingV: CGFloat {
         switch self {
-        case .heroOuter: return BUSpacing.heroOuterPadding     // 28
-        case .outer:     return BUSpacing.cardPadding          // 22
-        case .nested:    return BUSpacing.nestedCardPaddingV   // 20
-        case .headline:  return BUSpacing.headlinePadding      // 20
-        case .inner:     return 13
+        case .heroOuter: return BUSpacing.heroOuterPadding     // 18 (모바일)
+        case .outer:     return BUSpacing.cardPadding          // 18
+        case .nested:    return BUSpacing.nestedCardPaddingV   // 16
+        case .headline:  return BUSpacing.headlinePadding      // 16
+        case .inner:     return 11
         }
     }
     public var paddingH: CGFloat {
         switch self {
-        case .heroOuter: return BUSpacing.heroOuterPadding     // 28
-        case .outer:     return BUSpacing.cardPadding          // 22
-        case .nested:    return BUSpacing.nestedCardPaddingH   // 22
-        case .headline:  return BUSpacing.headlinePadding      // 20
-        case .inner:     return 15
+        case .heroOuter: return BUSpacing.heroOuterPadding     // 18
+        case .outer:     return BUSpacing.cardPadding          // 18
+        case .nested:    return BUSpacing.nestedCardPaddingH   // 18
+        case .headline:  return BUSpacing.headlinePadding      // 16
+        case .inner:     return 13
         }
     }
     public var paddingBottom: CGFloat {

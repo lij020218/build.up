@@ -157,35 +157,45 @@ private struct MainTabs: View {
     let coordinator: AuthCoordinator
     @Binding var selectedTab: AppRoot.Tab
 
+    private var mockData: MockData {
+        MockData(
+            entries: store.entries,
+            costs: store.costs,
+            category: store.category,
+            stage: store.stage,
+            currentCash: store.currentCash,
+            storeName: store.storeName,
+            daysSinceLaunch: store.daysSinceLaunch,
+            userName: store.userName,
+            resolverInput: HeroResolverInput(
+                ko: true,
+                businessLaunched: store.businessLaunched,
+                totalEntries: store.entries.count,
+                daysSinceLastSalesEntry: store.daysSinceLastEntry,
+                monthlyBurn: store.costs.total
+            )
+        )
+    }
+
     var body: some View {
-        TabView(selection: $selectedTab) {
-            NavigationStack {
-                TodayDashboardView(store: store)
-                    .navigationTitle("Today")
-            }
-            .tabItem {
-                Label("Today", systemImage: "sun.max.fill")
-            }
-            .tag(AppRoot.Tab.today)
-
-            NavigationStack {
+        BuildUpMobileShell(selectedTab: $selectedTab, tabs: operationalTabs) {
+            switch selectedTab {
+            case .today:
+                TodayView(mock: mockData)
+            case .daily:
+                DailyHubView(mock: mockData)
+            case .weekly:
+                WeeklyPulseView(mock: mockData)
+            case .ops:
+                OperationsView(mock: mockData)
+            case .growth:
+                GrowthForecastView(mock: mockData)
+            case .roadmap:
                 RoadmapView()
-            }
-            .tabItem {
-                Label("로드맵", systemImage: "map.fill")
-            }
-            .tag(AppRoot.Tab.roadmap)
-
-            NavigationStack {
+            case .settings:
                 SettingsView(coordinator: coordinator)
-                    .navigationTitle("설정")
             }
-            .tabItem {
-                Label("설정", systemImage: "gearshape.fill")
-            }
-            .tag(AppRoot.Tab.settings)
         }
-        .tint(BUColor.midnight)
     }
 }
 
@@ -216,6 +226,208 @@ private struct TodayDashboardView: View {
         )
 
         TodayView(mock: mockData)
+    }
+}
+
+// MARK: - Web-parity Mobile Shell
+
+private struct BuildUpSurfaceTab: Identifiable, Sendable {
+    let id: AppRoot.Tab
+    let label: String
+    let systemImage: String
+}
+
+private let operationalTabs: [BuildUpSurfaceTab] = [
+    .init(id: .today, label: "홈", systemImage: "house"),
+    .init(id: .daily, label: "일간", systemImage: "chart.bar"),
+    .init(id: .weekly, label: "주간", systemImage: "calendar.badge.clock"),
+    .init(id: .ops, label: "운영", systemImage: "shippingbox"),
+    .init(id: .growth, label: "성장", systemImage: "sparkles"),
+    .init(id: .roadmap, label: "로드맵", systemImage: "map"),
+    .init(id: .settings, label: "내 정보", systemImage: "person.crop.circle"),
+]
+
+private struct BuildUpMobileShell<Content: View, Accessory: View>: View {
+    @Binding var selectedTab: AppRoot.Tab
+    let tabs: [BuildUpSurfaceTab]
+    let accessory: Accessory
+    let content: Content
+
+    init(
+        selectedTab: Binding<AppRoot.Tab>,
+        tabs: [BuildUpSurfaceTab],
+        @ViewBuilder accessory: () -> Accessory,
+        @ViewBuilder content: () -> Content
+    ) {
+        self._selectedTab = selectedTab
+        self.tabs = tabs
+        self.accessory = accessory()
+        self.content = content()
+    }
+
+    var body: some View {
+        ZStack {
+            BUBackgroundSurface()
+            VStack(spacing: 8) {
+                BuildUpBrandBar(accessory: accessory)
+                    .padding(.horizontal, BUSpacing.md)
+                    .padding(.top, 6)
+
+                BuildUpSurfaceNav(
+                    tabs: tabs,
+                    selectedTab: $selectedTab
+                )
+                .padding(.bottom, 2)
+
+                content
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .tint(BUColor.midnightInk)
+    }
+}
+
+private extension BuildUpMobileShell where Accessory == EmptyView {
+    init(
+        selectedTab: Binding<AppRoot.Tab>,
+        tabs: [BuildUpSurfaceTab],
+        @ViewBuilder content: () -> Content
+    ) {
+        self.init(
+            selectedTab: selectedTab,
+            tabs: tabs,
+            accessory: { EmptyView() },
+            content: content
+        )
+    }
+}
+
+private struct BuildUpBrandBar<Accessory: View>: View {
+    let accessory: Accessory
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                LinearGradient(
+                    colors: [BUColor.auroraNavy, BUColor.auroraBlue, BUColor.auroraTeal],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Text("b")
+                    .font(.system(size: 17, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+                    .tracking(-0.3)
+            }
+            .frame(width: 32, height: 32)
+            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .shadow(color: BUColor.midnightInk.opacity(0.15), radius: 8, x: 0, y: 2)
+
+            Text("Build")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(BUColor.ink)
+                .tracking(-0.48)
+            + Text(".")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(BUColor.midnightInk)
+                .tracking(-0.48)
+            + Text("UP")
+                .font(.system(size: 15, weight: .heavy))
+                .foregroundStyle(BUColor.ink)
+                .tracking(-0.48)
+
+            Spacer(minLength: 0)
+            accessory
+        }
+        .frame(minHeight: 32)
+    }
+}
+
+private struct BuildUpSurfaceNav: View {
+    let tabs: [BuildUpSurfaceTab]
+    @Binding var selectedTab: AppRoot.Tab
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(tabs) { tab in
+                    let selected = selectedTab == tab.id
+                    BuildUpSurfaceNavButton(tab: tab, selected: selected) {
+                        withAnimation(.snappy(duration: 0.22)) {
+                            selectedTab = tab.id
+                        }
+                    }
+                }
+            }
+            .padding(5)
+            .background(
+                RoundedRectangle(cornerRadius: BURadius.pill, style: .continuous)
+                    .fill(Color.white.opacity(0.88))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: BURadius.pill, style: .continuous)
+                            .strokeBorder(BUColor.borderSubtle, lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(0.06), radius: 22, x: 0, y: 8)
+            )
+            .padding(.horizontal, BUSpacing.md)
+        }
+        .scrollClipDisabled()
+    }
+}
+
+private struct BuildUpSurfaceNavButton: View {
+    let tab: BuildUpSurfaceTab
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 7) {
+                Image(systemName: tab.systemImage)
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 14, height: 14)
+                Text(tab.label)
+                    .font(.system(size: 12.5, weight: selected ? .semibold : .regular))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(selected ? BUColor.midnightInk : BUColor.inkMuted)
+            .padding(.horizontal, 11)
+            .frame(minHeight: 36)
+            .background {
+                tabBackground
+                    .clipShape(Capsule())
+            }
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        selected ? Color.white.opacity(0.82) : Color.clear,
+                        lineWidth: 1
+                    )
+            )
+            .shadow(
+                color: selected ? Color.black.opacity(0.05) : .clear,
+                radius: 20,
+                x: 0,
+                y: 8
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(tab.label)
+    }
+
+    @ViewBuilder
+    private var tabBackground: some View {
+        if selected {
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.82),
+                    Color.white.opacity(0.62),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        } else {
+            Color.clear
+        }
     }
 }
 
@@ -321,63 +533,35 @@ struct DemoTabs: View {
     @Binding var selectedTab: AppRoot.Tab
     let onExit: () -> Void
 
+    private var mockData: MockData {
+        MockData.scenario(scenario)
+    }
+
     var body: some View {
-        TabView(selection: $selectedTab) {
-            TodayView(mock: MockData.scenario(scenario))
-                .overlay(alignment: .topTrailing) {
-                    ExitButton(action: onExit)
-                        .padding(.top, BUSpacing.lg)
-                        .padding(.trailing, BUSpacing.md)
-                }
-                .tabItem { Label("Today", systemImage: "sun.max.fill") }
-                .tag(AppRoot.Tab.today)
-
-            DailyHubView(mock: MockData.scenario(scenario))
-                .overlay(alignment: .topTrailing) {
-                    ExitButton(action: onExit)
-                        .padding(.top, BUSpacing.lg)
-                        .padding(.trailing, BUSpacing.md)
-                }
-                .tabItem { Label("Daily", systemImage: "chart.bar.fill") }
-                .tag(AppRoot.Tab.daily)
-
-            WeeklyPulseView(mock: MockData.scenario(scenario))
-                .overlay(alignment: .topTrailing) {
-                    ExitButton(action: onExit)
-                        .padding(.top, BUSpacing.lg)
-                        .padding(.trailing, BUSpacing.md)
-                }
-                .tabItem { Label("Weekly", systemImage: "calendar.badge.clock") }
-                .tag(AppRoot.Tab.weekly)
-
-            OperationsView(mock: MockData.scenario(scenario))
-                .overlay(alignment: .topTrailing) {
-                    ExitButton(action: onExit)
-                        .padding(.top, BUSpacing.lg)
-                        .padding(.trailing, BUSpacing.md)
-                }
-                .tabItem { Label("운영", systemImage: "gearshape.2.fill") }
-                .tag(AppRoot.Tab.ops)
-
-            GrowthForecastView(mock: MockData.scenario(scenario))
-                .overlay(alignment: .topTrailing) {
-                    ExitButton(action: onExit)
-                        .padding(.top, BUSpacing.lg)
-                        .padding(.trailing, BUSpacing.md)
-                }
-                .tabItem { Label("성장", systemImage: "sparkles") }
-                .tag(AppRoot.Tab.growth)
-
-            RoadmapView()
-                .overlay(alignment: .topTrailing) {
-                    ExitButton(action: onExit)
-                        .padding(.top, BUSpacing.lg)
-                        .padding(.trailing, BUSpacing.md)
-                }
-                .tabItem { Label("로드맵", systemImage: "map.fill") }
-                .tag(AppRoot.Tab.roadmap)
+        BuildUpMobileShell(
+            selectedTab: $selectedTab,
+            tabs: operationalTabs.filter { $0.id != .settings },
+            accessory: {
+                ExitButton(action: onExit)
+            }
+        ) {
+            switch selectedTab {
+            case .today:
+                TodayView(mock: mockData)
+            case .daily:
+                DailyHubView(mock: mockData)
+            case .weekly:
+                WeeklyPulseView(mock: mockData)
+            case .ops:
+                OperationsView(mock: mockData)
+            case .growth:
+                GrowthForecastView(mock: mockData)
+            case .roadmap:
+                RoadmapView()
+            case .settings:
+                TodayView(mock: mockData)
+            }
         }
-        .tint(BUColor.midnight)
     }
 }
 

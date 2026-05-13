@@ -55,6 +55,10 @@
         <string>UIInterfaceOrientationPortrait</string>
     </array>
 
+    <!-- 전체 화면 렌더링: Launch Screen 선언이 없으면 최신 iPhone 시뮬레이터에서 letterbox 로 보일 수 있음 -->
+    <key>UILaunchScreen</key>
+    <dict/>
+
     <!-- UI 진입점 (SwiftUI App lifecycle) -->
     <key>UIApplicationSceneManifest</key>
     <dict>
