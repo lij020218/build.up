@@ -51,48 +51,40 @@ public struct WeeklyPulseView: View {
     }
 
     public var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                BUBackgroundSurface()
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: BUSpacing.shellGap) {
+                sectionEyebrow
 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: BUSpacing.shellGap) {
-                        sectionEyebrow
+                SurvivalBoardCard(
+                    mock: mock,
+                    healthResult: healthResult
+                )
 
-                        SurvivalBoardCard(
-                            mock: mock,
-                            healthResult: healthResult
-                        )
-
-                        if !weeklyBalances.isEmpty {
-                            Cashflow13WeekCard(
-                                currentBalance: mock.currentCash ?? 0,
-                                weeklyBalances: weeklyBalances,
-                                isCrisis: isCrisis
-                            )
-                        }
-
-                        if ratios.ready && mock.category != .startupTech {
-                            CostStructureCard(
-                                ingredientRatio: ratios.ingredientRatio,
-                                laborRatio: ratios.laborRatio,
-                                rentRatio: ratios.rentRatio,
-                                primeCostRatio: ratios.primeCostRatio,
-                                thresholds: IndustryThresholds.thresholds(for: mock.category)
-                            )
-                        }
-
-                        Spacer(minLength: 110)
-                    }
-                    .padding(.horizontal, BUSpacing.md)
-                    .padding(.top, BUSpacing.xl + proxy.safeAreaInsets.top)
-                    .padding(.bottom, BUSpacing.md)
-                    .frame(width: proxy.size.width)
+                if !weeklyBalances.isEmpty {
+                    Cashflow13WeekCard(
+                        currentBalance: mock.currentCash ?? 0,
+                        weeklyBalances: weeklyBalances,
+                        isCrisis: isCrisis
+                    )
                 }
-                .frame(width: proxy.size.width)
+
+                if ratios.ready && mock.category != .startupTech {
+                    CostStructureCard(
+                        ingredientRatio: ratios.ingredientRatio,
+                        laborRatio: ratios.laborRatio,
+                        rentRatio: ratios.rentRatio,
+                        primeCostRatio: ratios.primeCostRatio,
+                        thresholds: IndustryThresholds.thresholds(for: mock.category)
+                    )
+                }
+
+                Color.clear.frame(height: 110)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .padding(.horizontal, BUSpacing.md)
+            .padding(.top, BUSpacing.md)
+            .padding(.bottom, BUSpacing.md)
         }
+        .background(BUBackgroundSurface())
     }
 
     private var sectionEyebrow: some View {

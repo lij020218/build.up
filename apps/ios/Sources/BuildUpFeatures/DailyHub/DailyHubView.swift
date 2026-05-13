@@ -77,50 +77,42 @@ public struct DailyHubView: View {
     }
 
     public var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                BUBackgroundSurface()
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: BUSpacing.shellGap) {
+                sectionEyebrow
 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: BUSpacing.shellGap) {
-                        sectionEyebrow
+                DailyKpiStrip(cells: kpiCells)
 
-                        DailyKpiStrip(cells: kpiCells)
+                ActivitySnapshotCard(
+                    entries: mock.entries,
+                    bepDailySales: bepDailySales
+                )
 
-                        ActivitySnapshotCard(
-                            entries: mock.entries,
-                            bepDailySales: bepDailySales
-                        )
+                CashflowHeroCard(
+                    currentBalance: mock.currentCash ?? 0,
+                    projectedBalances: projected14,
+                    isCrisis: projected14.last ?? 0 < 0,
+                    crisisDaysUntil: crisisDaysUntil()
+                )
 
-                        CashflowHeroCard(
-                            currentBalance: mock.currentCash ?? 0,
-                            projectedBalances: projected14,
-                            isCrisis: projected14.last ?? 0 < 0,
-                            crisisDaysUntil: crisisDaysUntil()
-                        )
-
-                        if mock.category != .startupTech {
-                            PLHeroCard(
-                                totalSales: ratios.monthlyRevenueEquivalent,
-                                totalCosts: mock.costs.total,
-                                ingredientRatio: ratios.ingredientRatio,
-                                laborRatio: ratios.laborRatio,
-                                rentRatio: ratios.rentRatio,
-                                thresholds: IndustryThresholds.thresholds(for: mock.category)
-                            )
-                        }
-
-                        Spacer(minLength: 110)
-                    }
-                    .padding(.horizontal, BUSpacing.md)
-                    .padding(.top, BUSpacing.xl + proxy.safeAreaInsets.top)
-                    .padding(.bottom, BUSpacing.md)
-                    .frame(width: proxy.size.width)
+                if mock.category != .startupTech {
+                    PLHeroCard(
+                        totalSales: ratios.monthlyRevenueEquivalent,
+                        totalCosts: mock.costs.total,
+                        ingredientRatio: ratios.ingredientRatio,
+                        laborRatio: ratios.laborRatio,
+                        rentRatio: ratios.rentRatio,
+                        thresholds: IndustryThresholds.thresholds(for: mock.category)
+                    )
                 }
-                .frame(width: proxy.size.width)
+
+                Color.clear.frame(height: 110)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .padding(.horizontal, BUSpacing.md)
+            .padding(.top, BUSpacing.md)
+            .padding(.bottom, BUSpacing.md)
         }
+        .background(BUBackgroundSurface())
     }
 
     private var sectionEyebrow: some View {

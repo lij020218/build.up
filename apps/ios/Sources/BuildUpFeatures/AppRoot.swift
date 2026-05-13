@@ -40,6 +40,8 @@ public struct AppRoot: View {
         case today
         case daily
         case weekly
+        case ops
+        case growth
         case roadmap
         case settings
     }
@@ -56,13 +58,15 @@ public struct AppRoot: View {
            let scenario = MockScenario(envValue: raw) {
             self._demoMode = State(initialValue: scenario)
         }
-        // BU_DEMO_TAB=roadmap / today / daily / weekly
+        // BU_DEMO_TAB
         if let tab = ProcessInfo.processInfo.environment["BU_DEMO_TAB"] {
             switch tab.lowercased() {
             case "roadmap": self._selectedTab = State(initialValue: .roadmap)
             case "today":   self._selectedTab = State(initialValue: .today)
             case "daily":   self._selectedTab = State(initialValue: .daily)
             case "weekly":  self._selectedTab = State(initialValue: .weekly)
+            case "ops":     self._selectedTab = State(initialValue: .ops)
+            case "growth":  self._selectedTab = State(initialValue: .growth)
             default: break
             }
         }
@@ -345,6 +349,24 @@ struct DemoTabs: View {
                 }
                 .tabItem { Label("Weekly", systemImage: "calendar.badge.clock") }
                 .tag(AppRoot.Tab.weekly)
+
+            OperationsView(mock: MockData.scenario(scenario))
+                .overlay(alignment: .topTrailing) {
+                    ExitButton(action: onExit)
+                        .padding(.top, BUSpacing.lg)
+                        .padding(.trailing, BUSpacing.md)
+                }
+                .tabItem { Label("운영", systemImage: "gearshape.2.fill") }
+                .tag(AppRoot.Tab.ops)
+
+            GrowthForecastView(mock: MockData.scenario(scenario))
+                .overlay(alignment: .topTrailing) {
+                    ExitButton(action: onExit)
+                        .padding(.top, BUSpacing.lg)
+                        .padding(.trailing, BUSpacing.md)
+                }
+                .tabItem { Label("성장", systemImage: "sparkles") }
+                .tag(AppRoot.Tab.growth)
 
             RoadmapView()
                 .overlay(alignment: .topTrailing) {

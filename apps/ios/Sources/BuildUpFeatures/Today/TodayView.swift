@@ -52,30 +52,22 @@ public struct TodayView: View {
     }
 
     public var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                BUBackgroundSurface()
-
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: BUSpacing.shellGap) {
-                        HeroOuterCard(
-                            mock: mock,
-                            healthResult: healthResult,
-                            hero: hero
-                        )
-                        QuickInputButton(action: { showInputSheet = true })
-                        // 하단 탭바 회피
-                        Spacer(minLength: 110)
-                    }
-                    .padding(.horizontal, BUSpacing.screenMargin)
-                    .padding(.top, BUSpacing.xl + proxy.safeAreaInsets.top)
-                    .padding(.bottom, BUSpacing.md)
-                    .frame(width: proxy.size.width)
-                }
-                .frame(width: proxy.size.width)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: BUSpacing.shellGap) {
+                HeroOuterCard(
+                    mock: mock,
+                    healthResult: healthResult,
+                    hero: hero
+                )
+                QuickInputButton(action: { showInputSheet = true })
+                // 하단 탭바 회피
+                Color.clear.frame(height: 110)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .padding(.horizontal, BUSpacing.screenMargin)
+            .padding(.top, BUSpacing.md)
+            .padding(.bottom, BUSpacing.md)
         }
+        .background(BUBackgroundSurface())
         .sheet(isPresented: $showInputSheet) {
             QuickInputSheet()
         }
