@@ -18,63 +18,8 @@ public struct BUBackgroundSurface: View {
     public init() {}
 
     public var body: some View {
-        ZStack {
-            // 베이스: 베이지 (#f7f6f3) — viewport 전체 채움
-            BUColor.appBackground
-                .ignoresSafeArea()
-
-            // Aurora overlay layer 1 (우상단 푸른 톤)
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            BUColor.auroraBlue.opacity(0.08),
-                            BUColor.auroraBlue.opacity(0.0),
-                        ],
-                        center: .center,
-                        startRadius: 40,
-                        endRadius: 320
-                    )
-                )
-                .frame(width: 600, height: 600)
-                .offset(x: 220, y: -300)
-                .allowsHitTesting(false)
-
-            // Aurora overlay layer 2 (좌하단 청량)
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            BUColor.auroraTeal.opacity(0.10),
-                            BUColor.auroraTeal.opacity(0.0),
-                        ],
-                        center: .center,
-                        startRadius: 30,
-                        endRadius: 280
-                    )
-                )
-                .frame(width: 500, height: 500)
-                .offset(x: -180, y: 280)
-                .allowsHitTesting(false)
-
-            // Aurora overlay layer 3 (가운데 옅은 sky)
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            BUColor.auroraSky.opacity(0.16),
-                            BUColor.auroraSky.opacity(0.0),
-                        ],
-                        center: .center,
-                        startRadius: 50,
-                        endRadius: 400
-                    )
-                )
-                .frame(width: 700, height: 700)
-                .offset(x: 0, y: -40)
-                .allowsHitTesting(false)
-        }
-        .ignoresSafeArea()
+        // 진짜 Aurora — globals.css 1:1 (TimelineView + 다중 ellipse + blur)
+        AuroraBackground()
     }
 }
 

@@ -94,25 +94,30 @@ public enum BUColor {
     public static let borderSubtle = midnight.opacity(0.06)
     public static let border = cardBorder  // alias
 
-    // MARK: - Apple iOS semantic (operationalStyles PALETTE)
-    /// SUCCESS — #34c759 (Apple iOS green)
+    // MARK: - Semantic (globals.css value-positive / negative 톤 = less saturated)
+    /// SUCCESS — #177245 (globals.css value-positive) — 차분한 진녹색
+    /// (operationalStyles PALETTE.SUCCESS #34c759 보다 사용자 보기 편함)
     public static let success = Color(
-        light: Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255),
-        dark:  Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255)
+        light: Color(red: 0x17/255, green: 0x72/255, blue: 0x45/255),
+        dark:  Color(red: 0x4A/255, green: 0xBE/255, blue: 0x7F/255)
     )
     public static let success08 = success.opacity(0.08)
-    /// WARN — #ff9f0a (Apple iOS orange)
+    public static let successGlow = success.opacity(0.08)
+
+    /// WARN — #c58b2a (차분한 ocher, --warning)
     public static let warn = Color(
-        light: Color(red: 0xFF/255, green: 0x9F/255, blue: 0x0A/255),
-        dark:  Color(red: 0xFF/255, green: 0x9F/255, blue: 0x0A/255)
+        light: Color(red: 0xC5/255, green: 0x8B/255, blue: 0x2A/255),
+        dark:  Color(red: 0xE3/255, green: 0xAE/255, blue: 0x5B/255)
     )
     public static let warn08 = warn.opacity(0.08)
-    /// DANGER — #ff3b30 (Apple iOS red)
+
+    /// DANGER — #b42318 (globals.css value-negative) — 차분한 빨강
     public static let danger = Color(
-        light: Color(red: 0xFF/255, green: 0x3B/255, blue: 0x30/255),
-        dark:  Color(red: 0xFF/255, green: 0x3B/255, blue: 0x30/255)
+        light: Color(red: 0xB4/255, green: 0x23/255, blue: 0x18/255),
+        dark:  Color(red: 0xE5/255, green: 0x6B/255, blue: 0x5C/255)
     )
     public static let danger08 = danger.opacity(0.08)
+    public static let dangerGlow = danger.opacity(0.08)
 
     // MARK: - Hero tones (HeroResolver tone)
     public static let toneCrisis  = danger
