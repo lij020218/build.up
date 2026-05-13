@@ -1,13 +1,20 @@
 # Swift build artifacts
 .build/
 .swiftpm/
-*.xcodeproj/
 DerivedData/
 xcuserdata/
 *.xcuserstate
 
-# Package.resolved (commit if you want reproducible builds)
+# Xcode project — App target 만든 후엔 commit 권장 (시크릿 없는 경우)
+# *.xcodeproj/
+
+# Package.resolved — commit 하면 재현 가능 빌드
 # Package.resolved
+
+# 환경 변수 (실제 Supabase / Kakao 키 포함)
+Config/Build.xcconfig
+Config/*.xcconfig
+!Config/Build.xcconfig.template
 
 # IDE
 .idea/

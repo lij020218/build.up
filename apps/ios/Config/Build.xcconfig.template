@@ -1,0 +1,30 @@
+// ─────────────────────────────────────────────────────────────────
+// Build.xcconfig.template — git-tracked 템플릿.
+//
+// 실제 Build.xcconfig 는 generate-xcconfig.sh 가 .env.local 에서 자동 생성.
+// 본 파일은 키 구조만 보여줌 (실제 값 X).
+// ─────────────────────────────────────────────────────────────────
+
+// Supabase
+// ⚠️ Xcode .xcconfig 는 // 가 주석 시작 → URL slash 는 $()/ 로 분리.
+SUPABASE_URL = https:/$()/your-project.supabase.co
+SUPABASE_ANON_KEY = eyJhbGc-replace-with-anon-key
+
+// Kakao
+KAKAO_NATIVE_APP_KEY = replace-with-native-app-key
+KAKAO_REST_API_KEY = replace-with-rest-key
+KAKAO_JS_KEY = replace-with-js-key
+
+KAKAO_URL_SCHEME = kakao$(KAKAO_NATIVE_APP_KEY)
+
+// Environment
+BU_ENVIRONMENT = production
+
+// Build settings
+PRODUCT_BUNDLE_IDENTIFIER = com.buildup.mobile
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+DEVELOPMENT_TEAM =
+IPHONEOS_DEPLOYMENT_TARGET = 18.0
+
+APP_GROUP_IDENTIFIER = group.com.buildup.shared

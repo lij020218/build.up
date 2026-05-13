@@ -1,0 +1,43 @@
+//
+//  BuildUpApp.swift — App 진입점 템플릿.
+//
+//  Xcode 가 자동 생성하는 BuildUpApp.swift 를 이 코드로 교체.
+//  카카오 SDK 활성 시 #if 분기 자동 사용.
+//
+
+import SwiftUI
+import BuildUpFeatures
+
+// 카카오 SDK 가 패키지 의존성에 추가되면 아래 #if 자동 활성화.
+#if canImport(KakaoSDKCommon)
+import KakaoSDKCommon
+import KakaoSDKAuth
+#endif
+
+@main
+struct BuildUpApp: App {
+
+    init() {
+        #if canImport(KakaoSDKCommon)
+        // 카카오 SDK 초기화 — Bundle 에서 Native App Key 로드.
+        if let key = Bundle.main.infoDictionary?["KAKAO_NATIVE_APP_KEY"] as? String,
+           !key.isEmpty,
+           !key.contains("REPLACE_WITH") {
+            KakaoSDK.initSDK(appKey: key)
+        }
+        #endif
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            AppRoot()
+                #if canImport(KakaoSDKAuth)
+                .onOpenURL { url in
+                    if AuthApi.isKakaoTalkLoginUrl(url) {
+                        _ = AuthController.handleOpenUrl(url: url)
+                    }
+                }
+                #endif
+        }
+    }
+}
