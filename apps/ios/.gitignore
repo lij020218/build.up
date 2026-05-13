@@ -1,0 +1,15 @@
+# Swift build artifacts
+.build/
+.swiftpm/
+*.xcodeproj/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Package.resolved (commit if you want reproducible builds)
+# Package.resolved
+
+# IDE
+.idea/
+*.swp
+.DS_Store
