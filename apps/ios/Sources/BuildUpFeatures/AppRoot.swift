@@ -39,6 +39,7 @@ public struct AppRoot: View {
     public enum Tab: Hashable, Sendable {
         case today
         case daily
+        case weekly
         case roadmap
         case settings
     }
@@ -55,12 +56,13 @@ public struct AppRoot: View {
            let scenario = MockScenario(envValue: raw) {
             self._demoMode = State(initialValue: scenario)
         }
-        // BU_DEMO_TAB=roadmap / today / daily
+        // BU_DEMO_TAB=roadmap / today / daily / weekly
         if let tab = ProcessInfo.processInfo.environment["BU_DEMO_TAB"] {
             switch tab.lowercased() {
             case "roadmap": self._selectedTab = State(initialValue: .roadmap)
             case "today":   self._selectedTab = State(initialValue: .today)
             case "daily":   self._selectedTab = State(initialValue: .daily)
+            case "weekly":  self._selectedTab = State(initialValue: .weekly)
             default: break
             }
         }
@@ -334,6 +336,15 @@ struct DemoTabs: View {
                 }
                 .tabItem { Label("Daily", systemImage: "chart.bar.fill") }
                 .tag(AppRoot.Tab.daily)
+
+            WeeklyPulseView(mock: MockData.scenario(scenario))
+                .overlay(alignment: .topTrailing) {
+                    ExitButton(action: onExit)
+                        .padding(.top, BUSpacing.lg)
+                        .padding(.trailing, BUSpacing.md)
+                }
+                .tabItem { Label("Weekly", systemImage: "calendar.badge.clock") }
+                .tag(AppRoot.Tab.weekly)
 
             RoadmapView()
                 .overlay(alignment: .topTrailing) {
