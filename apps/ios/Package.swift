@@ -25,9 +25,20 @@ let package = Package(
         .library(name: "BuildUpComponents", targets: ["BuildUpComponents"]),
         // 4단계: 화면 (Features)
         .library(name: "BuildUpFeatures", targets: ["BuildUpFeatures"]),
+        // 6단계: 네트워크/Auth/Persistence
+        .library(name: "BuildUpData", targets: ["BuildUpData"]),
+        // 7단계: Auth providers (카카오/Apple)
+        .library(name: "BuildUpAuth", targets: ["BuildUpAuth"]),
+        // 8단계: 푸시 알림
+        .library(name: "BuildUpNotifications", targets: ["BuildUpNotifications"]),
+        // 9단계: Widget + Live Activity (App Extension target 에서 import)
+        .library(name: "BuildUpWidgets", targets: ["BuildUpWidgets"]),
     ],
     dependencies: [
-        // Supabase/Kakao 등은 Auth/Network 모듈에서 추가 예정
+        // Supabase Swift SDK — Auth / PostgREST / Realtime / Storage
+        .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0"),
+        // 카카오 로그인 SDK 는 사장님이 native app key 받은 후 추가:
+        // .package(url: "https://github.com/kakao/kakao-ios-sdk", from: "2.23.0"),
     ],
     targets: [
         // ──────────── 1단계: Design System ────────────
@@ -78,8 +89,69 @@ let package = Package(
         // ──────────── 4단계: Features (화면) ────────────
         .target(
             name: "BuildUpFeatures",
-            dependencies: ["BuildUpDesignSystem", "BuildUpCore", "BuildUpComponents"],
+            dependencies: ["BuildUpDesignSystem", "BuildUpCore", "BuildUpComponents", "BuildUpData", "BuildUpAuth", "BuildUpNotifications"],
             path: "Sources/BuildUpFeatures",
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ExistentialAny"),
+            ]
+        ),
+
+        // ──────────── 6단계: Data (Supabase + Repository) ────────────
+        .target(
+            name: "BuildUpData",
+            dependencies: [
+                "BuildUpCore",
+                .product(name: "Supabase", package: "supabase-swift"),
+            ],
+            path: "Sources/BuildUpData",
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ExistentialAny"),
+            ]
+        ),
+        .testTarget(
+            name: "BuildUpDataTests",
+            dependencies: ["BuildUpData"],
+            path: "Tests/BuildUpDataTests"
+        ),
+
+        // ──────────── 7단계: Auth ────────────
+        .target(
+            name: "BuildUpAuth",
+            dependencies: [
+                "BuildUpCore",
+                "BuildUpData",
+            ],
+            path: "Sources/BuildUpAuth",
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ExistentialAny"),
+            ]
+        ),
+
+        // ──────────── 8단계: Notifications ────────────
+        .target(
+            name: "BuildUpNotifications",
+            dependencies: [
+                "BuildUpCore",
+            ],
+            path: "Sources/BuildUpNotifications",
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ExistentialAny"),
+            ]
+        ),
+
+        // ──────────── 9단계: Widgets + Live Activity ────────────
+        // App Extension target 에서 import (Xcode 에서 Widget Extension 추가 시).
+        .target(
+            name: "BuildUpWidgets",
+            dependencies: [
+                "BuildUpCore",
+                "BuildUpDesignSystem",
+            ],
+            path: "Sources/BuildUpWidgets",
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
                 .enableUpcomingFeature("ExistentialAny"),

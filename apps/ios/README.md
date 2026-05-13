@@ -84,11 +84,15 @@ Xcode 에서는 패키지를 직접 열어 preview 확인 가능.
 - [x] **Phase 3 — BuildUpComponents** (BUSparkline / BUHealthDot / BUEyebrow / BUTagBadge / BUTrendChip / BUNumberPad)
 - [x] **Phase 4 — TodayView** (CEOMorningHero 모바일 — 5 섹션 + 5 시나리오 Preview)
 - [x] **Phase 5 — RoadmapView** (46단계 수직 timeline + 3 상태 + sticky phase header + StageDetailSheet)
-- [ ] **Phase 6** — Supabase 연동 (auth + dailyEntries / monthlyCosts CRUD)
-- [ ] **Phase 7** — 카카오 로그인 (KakaoSDK) + Apple Sign In
-- [ ] **Phase 8** — 푸시 알림 (모닝 브리핑 09:00 + 위기 즉시)
-- [ ] **Phase 9** — Live Activity + Interactive Widget (App Intents)
-- [ ] **Phase 10** — App Store 출시
+- [x] **Phase 6 — BuildUpData** (BUSupabase + Repository 패턴 + PendingSyncQueue + DashboardStore @Observable)
+- [x] **Phase 7 — BuildUpAuth** (AuthProvider 추상화 + AppleAuthProvider 실작동 + Kakao stub + AuthCoordinator + SignInView)
+- [x] **Phase 8 — BuildUpNotifications** (NotificationScheduler 모닝/위기/stale + 권한 OptIn 화면)
+- [x] **Phase 9 — BuildUpWidgets** (홈 위젯 Small/Medium/Circular + App Intents Siri + CashCrisis Live Activity)
+- [x] **Phase 10 — AppRoot + Info.plist 템플릿 + Privacy Manifest + LAUNCH_CHECKLIST.md**
+
+## 사장님이 직접 해야 할 작업
+
+`LAUNCH_CHECKLIST.md` 참조 — Apple/Supabase/Kakao 계정 + Xcode App target 생성 + 키 발급 등.
 
 ## 검증
 

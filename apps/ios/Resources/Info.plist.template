@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Info.plist 템플릿 — Xcode App target 의 Info.plist 에 복사.
+
+  사장님 채울 항목 (xxxxx 로 표시):
+   • SUPABASE_URL          = https://xxxxx.supabase.co
+   • SUPABASE_ANON_KEY     = eyJhbGc... (anon public key)
+   • KAKAO_NATIVE_APP_KEY  = (Kakao Developers 에서 발급)
+   • CFBundleURLSchemes    = kakao{NATIVE_APP_KEY} 로 변경
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+  <!-- ───────────── Supabase 환경 변수 ───────────── -->
+  <key>SUPABASE_URL</key>
+  <string>https://xxxxx.supabase.co</string>
+
+  <key>SUPABASE_ANON_KEY</key>
+  <string>eyJhbGc-replace-with-your-anon-key</string>
+
+  <key>BU_ENVIRONMENT</key>
+  <string>production</string>
+
+  <!-- ───────────── 카카오 로그인 ───────────── -->
+  <key>KAKAO_NATIVE_APP_KEY</key>
+  <string>your-kakao-native-app-key</string>
+
+  <key>LSApplicationQueriesSchemes</key>
+  <array>
+    <string>kakaokompassauth</string>
+    <string>kakaolink</string>
+    <string>kakaoplus</string>
+  </array>
+
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleURLName</key>
+      <string>com.buildup.kakao</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>kakao{REPLACE_WITH_NATIVE_APP_KEY}</string>
+      </array>
+    </dict>
+  </array>
+
+  <!-- ───────────── 알림 권한 + Background 모드 ───────────── -->
+  <key>UIBackgroundModes</key>
+  <array>
+    <string>remote-notification</string>
+    <string>fetch</string>
+    <string>processing</string>
+  </array>
+
+  <key>BGTaskSchedulerPermittedIdentifiers</key>
+  <array>
+    <string>com.buildup.sync</string>
+  </array>
+
+  <!-- ───────────── App Group (Widget + Live Activity 공유) ───────────── -->
+  <!-- App target Capabilities 에서 App Groups: group.com.buildup.shared 추가 -->
+
+  <!-- ───────────── Live Activity 지원 ───────────── -->
+  <key>NSSupportsLiveActivities</key>
+  <true/>
+
+  <key>NSSupportsLiveActivitiesFrequentUpdates</key>
+  <true/>
+
+  <!-- ───────────── 카메라 권한 (영수증 OCR — Phase 11+) ───────────── -->
+  <key>NSCameraUsageDescription</key>
+  <string>영수증을 촬영해 비용을 자동으로 기록하기 위해 카메라 권한이 필요합니다.</string>
+
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>이미 찍은 영수증을 가져오기 위해 사진 권한이 필요합니다.</string>
+
+  <!-- ───────────── 한국어 우선 ───────────── -->
+  <key>CFBundleDevelopmentRegion</key>
+  <string>ko</string>
+
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>ko</string>
+    <string>en</string>
+  </array>
+
+  <!-- ───────────── 화면 방향 (세로만 — 모바일 비즈니스 앱 표준) ───────────── -->
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+  </array>
+
+  <!-- ───────────── 출시 정보 ───────────── -->
+  <key>CFBundleDisplayName</key>
+  <string>build.up</string>
+
+  <key>UILaunchScreen</key>
+  <dict>
+    <key>UIColorName</key>
+    <string>LaunchBackground</string>
+  </dict>
+
+</dict>
+</plist>
