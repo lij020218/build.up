@@ -202,6 +202,16 @@ private struct StageCard: View {
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showDetail) {
+            stageSheet
+        }
+    }
+
+    @ViewBuilder
+    private var stageSheet: some View {
+        switch stage.id {
+        case "target-customer-definition":
+            TargetCustomerStageView()
+        default:
             StageDetailSheet(stage: stage)
         }
     }
