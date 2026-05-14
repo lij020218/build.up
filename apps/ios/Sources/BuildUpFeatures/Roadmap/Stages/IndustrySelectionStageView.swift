@@ -84,7 +84,7 @@ public struct IndustrySelectionStageView: View {
                                     Image(systemName: "info.circle.fill")
                                         .font(.system(size: 16))
                                         .foregroundStyle(BUColor.midnight.opacity(0.6))
-                                    Text("선택 후 로드맵 화면을 닫고 다시 열면 업종에 맞는 단계로 업데이트됩니다.")
+                                    Text("선택하면 로드맵이 즉시 해당 업종 단계로 전환됩니다. 화면을 닫으면 새 단계가 보입니다.")
                                         .font(BUFont.bodyCaption)
                                         .foregroundStyle(BUColor.inkSecondary)
                                         .lineSpacing(2)
