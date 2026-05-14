@@ -35,24 +35,54 @@ public struct ActivitySnapshotCard: View {
         self.ko = ko
     }
 
-    private var last7: [DailyEntry] {
-        Array(entries.sorted { $0.date < $1.date }.suffix(7))
+    /// 오늘 기준 최근 7일 슬롯 (-6, -5, …, 0=오늘).
+    /// 데이터가 없는 날도 슬롯은 유지 → 차트가 항상 7칸 출력.
+    /// 사장님 피드백 (2026-05-14): "매출 흐름 카드를 7일(7칸으로)" — 캘린더처럼.
+    private var weekSlots: [WeekSlot] {
+        let cal = Calendar(identifier: .gregorian)
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        df.timeZone = TimeZone(identifier: "Asia/Seoul")
+        let today = Date()
+        let byDate = Dictionary(uniqueKeysWithValues: entries.map { ($0.date, $0) })
+
+        return (0..<7).reversed().compactMap { offset in
+            guard let date = cal.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            let dateStr = df.string(from: date)
+            return WeekSlot(
+                date: date,
+                dateStr: dateStr,
+                entry: byDate[dateStr],
+                isToday: offset == 0
+            )
+        }
     }
 
     private var todaySales: Double {
-        last7.last?.sales ?? 0
+        weekSlots.last?.entry?.sales ?? 0
     }
 
     private var weeklySales: Double {
-        last7.reduce(0) { $0 + $1.sales }
+        weekSlots.reduce(0) { $0 + ($1.entry?.sales ?? 0) }
     }
 
+    /// 월 추정 — 데이터 있는 슬롯의 평균 × 26영업일.
+    /// 빈 슬롯을 0 으로 평균에 포함시키면 추정이 비현실적으로 낮아짐.
     private var monthlyEstimate: Double {
-        guard !last7.isEmpty else { return 0 }
-        let avg = weeklySales / Double(last7.count)
-        return avg * 26  // 월 26영업일
+        let recorded = weekSlots.compactMap { $0.entry?.sales }
+        guard !recorded.isEmpty else { return 0 }
+        let avg = recorded.reduce(0, +) / Double(recorded.count)
+        return avg * 26
     }
 
+    /// 일평균 — 데이터 있는 슬롯만 평균 (동일 이유).
+    private var dailyAverage: Double {
+        let recorded = weekSlots.compactMap { $0.entry?.sales }
+        guard !recorded.isEmpty else { return 0 }
+        return recorded.reduce(0, +) / Double(recorded.count)
+    }
+
+    /// WoW — 이전 7일(8~14일 전) 대비. 14건 이상 있어야 비교 가능.
     private var weeklyChangePct: Double? {
         let sorted = entries.sorted { $0.date < $1.date }
         guard sorted.count >= 14 else { return nil }
@@ -128,7 +158,7 @@ public struct ActivitySnapshotCard: View {
             )
             MiniStat(
                 label: ko ? "일평균" : "Avg",
-                value: formatKRWCompact(weeklySales / max(1, Double(last7.count))),
+                value: formatKRWCompact(dailyAverage),
                 unit: ""
             )
         }
@@ -160,32 +190,40 @@ public struct ActivitySnapshotCard: View {
         }
     }
 
+    /// 7 슬롯 → 7 막대. 데이터 없는 슬롯은 value 0 (빈 막대 자리표시).
     private func makeBars() -> [BUBarChart.Bar] {
         let df = DateFormatter()
         df.locale = Locale(identifier: ko ? "ko_KR" : "en_US")
         df.dateFormat = "E"
-        let parser = DateFormatter()
-        parser.dateFormat = "yyyy-MM-dd"
-        parser.timeZone = TimeZone(identifier: "Asia/Seoul")
 
-        return last7.enumerated().map { idx, entry in
-            let date = parser.date(from: entry.date)
-            let label = date.map { df.string(from: $0) } ?? ""
-            let isToday = idx == last7.count - 1
+        return weekSlots.map { slot in
+            let label = df.string(from: slot.date)
+            let sales = slot.entry?.sales ?? 0
 
+            // tone: 데이터 없으면 .neutral (회색), BEP 미달이면 .negative, 그 외 .positive
             let tone: BUBarChart.Bar.Tone = {
-                if let bep = bepDailySales, entry.sales < bep { return .negative }
+                guard slot.entry != nil else { return .neutral }
+                if let bep = bepDailySales, sales < bep { return .negative }
                 return .positive
             }()
 
             return BUBarChart.Bar(
-                value: entry.sales,
+                value: sales,
                 label: label,
                 tone: tone,
-                highlighted: isToday
+                highlighted: slot.isToday
             )
         }
     }
+}
+
+// MARK: - WeekSlot
+
+private struct WeekSlot {
+    let date: Date
+    let dateStr: String
+    let entry: DailyEntry?
+    let isToday: Bool
 }
 
 // MARK: - MiniStat (activityMiniStat 미러)
