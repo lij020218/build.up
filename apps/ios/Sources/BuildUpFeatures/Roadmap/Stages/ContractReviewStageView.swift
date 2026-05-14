@@ -1,0 +1,274 @@
+//
+//  ContractReviewStageView.swift — 임대 계약 검토 (iOS 네이티브)
+//
+//  stageId: "contract-review"
+//
+//  3-page (세그먼트):
+//    pg 0 — 핵심 조항 (9대 필수 항목)
+//    pg 1 — 레드플래그 & 협상 포인트
+//    pg 2 — 계약 체크리스트
+//
+
+import SwiftUI
+import BuildUpDesignSystem
+import BuildUpComponents
+
+public struct ContractReviewStageView: View {
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var page = 0
+
+    // 계약 체크
+    @AppStorage("contract.check.term")       private var checkTerm       = false
+    @AppStorage("contract.check.deposit")    private var checkDeposit    = false
+    @AppStorage("contract.check.rent")       private var checkRent       = false
+    @AppStorage("contract.check.area")       private var checkArea       = false
+    @AppStorage("contract.check.renewal")    private var checkRenewal    = false
+    @AppStorage("contract.check.restore")    private var checkRestore    = false
+    @AppStorage("contract.check.sublease")   private var checkSublease   = false
+    @AppStorage("contract.check.facility")   private var checkFacility   = false
+    @AppStorage("contract.check.done")       private var contractDone    = false
+
+    private var allChecked: Bool {
+        checkTerm && checkDeposit && checkRent && checkArea &&
+        checkRenewal && checkRestore && checkSublease && checkFacility
+    }
+
+    private let pages = ["핵심 조항", "레드플래그", "체크리스트"]
+
+    public init() {}
+
+    public var body: some View {
+        NavigationStack {
+            ZStack {
+                BUBackgroundSurface()
+                VStack(spacing: 0) {
+                    Picker("페이지", selection: $page) {
+                        ForEach(pages.indices, id: \.self) { i in
+                            Text(pages[i]).tag(i)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(BUSpacing.md)
+
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
+                            Group {
+                                switch page {
+                                case 0: clausePage
+                                case 1: redFlagPage
+                                default: checklistPage
+                                }
+                            }
+                            .padding(.horizontal, BUSpacing.md)
+                            Spacer(minLength: BUSpacing.xxxl)
+                        }
+                        .padding(.top, BUSpacing.sm)
+                    }
+                }
+            }
+            .navigationTitle("임대 계약 검토")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                #if os(iOS)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
+                }
+                #else
+                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
+                #endif
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    // MARK: - pg 0 핵심 조항
+
+    private var clausePage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.hero) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("단계 8 · 임대 계약 검토")
+                    Text("사인 전 30분 —\n보증금 수천만원을 지킵니다")
+                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
+                    Text("임대 계약서는 '표준 양식'이 없습니다. 임대인이 유리하게 작성합니다. 사장님이 직접 확인하거나 법무사 검토(5~10만원)를 권장합니다.")
+                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("9대 핵심 확인 조항")
+                    let clauses: [(String, String, String)] = [
+                        ("계약 기간", "2년 이상 권장 (상가임대차보호법 최초 10년 갱신 청구권)", "clock"),
+                        ("보증금·월세", "금액·지급일·인상률 상한 명시 (5% 이내 권장)", "wonsign"),
+                        ("임대 면적", "건축물대장 실면적 vs 계약서 면적 일치 여부 확인", "ruler"),
+                        ("권리금", "권리금 있을 경우 별도 계약서 작성 (미작성 시 분쟁 발생)", "doc.text"),
+                        ("계약 갱신", "갱신 청구권 10년 보장 (2018년 10월 이후 체결 계약)", "arrow.clockwise"),
+                        ("원상복구", "인테리어 원상복구 범위 구체적으로 명시 (무제한 금지)", "arrow.uturn.backward"),
+                        ("전대차 금지", "영업 중 사정으로 재임대 필요 시 허용 여부 확인", "person.2"),
+                        ("시설 설치", "환기 덕트·후드·간판 설치 허용 특약 삽입 여부", "wrench.and.screwdriver"),
+                        ("주요 시설 보수", "냉난방·전기·수도 주요 시설 하자 수리 주체 명확히", "hammer"),
+                    ]
+                    ForEach(clauses, id: \.0) { title, detail, icon in
+                        HStack(alignment: .top, spacing: BUSpacing.sm) {
+                            ZStack {
+                                Circle().fill(BUColor.midnight.opacity(0.1)).frame(width: 28, height: 28)
+                                Image(systemName: icon).font(.system(size: 11)).foregroundStyle(BUColor.midnight)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - pg 1 레드플래그 & 협상
+
+    private var redFlagPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            warningCard(title: "절대 사인하면 안 되는 조항", items: [
+                "\"임대인 요구 시 즉시 명도\" — 사실상 퇴거 요청 때마다 이사 각오",
+                "\"원상복구 무제한\" — 임대인이 전체 리모델링 비용 청구 가능",
+                "\"월세 인상률 제한 없음\" — 매년 급격한 인상으로 수익 증발",
+                "임차인 권리금 보호 조항 누락 — 권리금 회수 불가능",
+            ], color: .red)
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("협상 성공 특약 예시")
+                    let specials: [(String, String)] = [
+                        ("인테리어 기간 무상 임대", "\"착공일로부터 OO일간 임대료 면제\" — 수백만원 절감"),
+                        ("인테리어 비용 일부 임대인 부담", "\"후드·덕트 설치비 50% 임대인 부담\" — 공사비 절감"),
+                        ("간판 설치 허용 명시", "\"건물 외벽 간판 설치 동의\" — 추후 분쟁 방지"),
+                        ("영업 양도 시 권리금 보호", "\"임차인 권리금 회수 기회 보장\" — 상가임대차보호법 준용"),
+                        ("월세 인상 상한 5%", "\"연간 임대료 인상은 5% 초과 불가\" — 5년 수익 예측 가능"),
+                    ]
+                    ForEach(specials, id: \.0) { title, detail in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("✓").font(.system(size: 12, weight: .bold)).foregroundStyle(BUColor.success)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            }
+                        }
+                    }
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("전문가 활용 (5~10만원)")
+                    let pros: [(String, String)] = [
+                        ("법무사 계약서 검토", "계약서 리스크 조항 식별 + 특약 추가 대행"),
+                        ("상가임대차 전문 변호사", "분쟁 이력 있는 건물 또는 고가 권리금 매물"),
+                        ("공인중개사 동행 협상", "임대인과 조율 경험 있는 중개사에게 중간 협상 위임"),
+                    ]
+                    ForEach(pros, id: \.0) { name, desc in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("→").font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.midnight).padding(.top, 1)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(name).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - pg 2 체크리스트
+
+    private var checklistPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("사인 전 최종 체크리스트")
+                    contractCheckRow("계약 기간 2년 이상 + 갱신 청구권 10년 확인", isChecked: $checkTerm)
+                    contractCheckRow("보증금·월세 금액·지급일 정확히 기재", isChecked: $checkDeposit)
+                    contractCheckRow("임대 면적 건축물대장과 일치 여부 확인", isChecked: $checkArea)
+                    contractCheckRow("월세 인상률 상한 조항 삽입", isChecked: $checkRent)
+                    contractCheckRow("갱신 청구권 조항 확인 (강행규정)", isChecked: $checkRenewal)
+                    contractCheckRow("원상복구 범위 구체적으로 명시", isChecked: $checkRestore)
+                    contractCheckRow("후드·간판·덕트 설치 허용 특약 확인", isChecked: $checkFacility)
+                    contractCheckRow("전대차 관련 조항 확인", isChecked: $checkSublease)
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("진행 상황")
+                    wrapRow(label: "9대 핵심 조항 확인", done: allChecked)
+                    if allChecked {
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.seal.fill").foregroundStyle(BUColor.success)
+                            Text("모든 항목 확인 완료! 계약 체결 가능합니다.")
+                                .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.success)
+                        }.padding(.top, 4)
+                    }
+                    Toggle(isOn: $contractDone) {
+                        Text("임대 계약서 서명 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    }.tint(BUColor.midnight)
+                }
+            }
+
+            warningCard(title: "계약 후 즉시 할 일", items: [
+                "계약서 사진·사본 즉시 안전한 곳에 백업 (분실 시 분쟁 증거 불가)",
+                "확정일자 받기 — 동사무소 방문 or 인터넷등기소 (600원). 임대인 파산 시 보증금 보호",
+                "전입신고 (사업장 주소) — 확정일자와 함께 대항력 확보",
+            ], color: .orange)
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func contractCheckRow(_ label: String, isChecked: Binding<Bool>) -> some View {
+        Button { isChecked.wrappedValue.toggle() } label: {
+            HStack(alignment: .top, spacing: BUSpacing.sm) {
+                Image(systemName: isChecked.wrappedValue ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 18)).foregroundStyle(isChecked.wrappedValue ? BUColor.success : BUColor.inkSubtle).padding(.top, 1)
+                Text(label).font(BUFont.bodySmall).foregroundStyle(isChecked.wrappedValue ? BUColor.ink : BUColor.inkMuted).multilineTextAlignment(.leading)
+                Spacer()
+            }
+            .padding(.vertical, 8).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func wrapRow(label: String, done: Bool) -> some View {
+        HStack(spacing: BUSpacing.sm) {
+            Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 16)).foregroundStyle(done ? BUColor.success : BUColor.inkSubtle)
+            Text(label).font(BUFont.bodySmall).foregroundStyle(done ? BUColor.ink : BUColor.inkMuted)
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private func warningCard(title: String, items: [String], color: Color) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.xs) {
+                Text(title).font(BUFont.eyebrow.weight(.bold)).foregroundStyle(color)
+                ForEach(items, id: \.self) { item in
+                    HStack(alignment: .top, spacing: 6) {
+                        Circle().fill(color).frame(width: 4, height: 4).padding(.top, 5)
+                        Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    }
+                }
+            }
+        }
+    }
+}
+
+#if DEBUG
+#Preview("ContractReview") { ContractReviewStageView() }
+#endif

@@ -221,6 +221,26 @@ private struct StageCard: View {
             MenuDesignStageView()
         case "vendor-setup":
             VendorSetupStageView()
+        case "permit-check":
+            PermitCheckStageView()
+        case "location-candidates":
+            LocationCandidatesStageView()
+        case "contract-review":
+            ContractReviewStageView()
+        case "registration-setup":
+            RegistrationSetupStageView()
+        case "biz-registration":
+            BizRegistrationStageView()
+        case "construction-setup":
+            ConstructionSetupStageView()
+        case "hiring-setup":
+            HiringSetupStageView()
+        case "insurance-tax-setup":
+            InsuranceTaxSetupStageView()
+        case "operations-setup":
+            OperationsSetupStageView()
+        case "pre-launch":
+            PreLaunchStageView()
         default:
             StageDetailSheet(stage: stage)
         }
