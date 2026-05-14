@@ -1,7 +1,17 @@
 //
-//  RoadmapStage.swift — 로드맵 단계 데이터 모델
+//  RoadmapStage.swift — 로드맵 단계 데이터 모델 (웹 SSOT 미러)
 //
-//  웹의 46단계 로드맵을 모바일에 이식. 단순화된 데이터 구조.
+//  ⚠️ 웹 SSOT: packages/shared/src/starter-data.ts
+//   웹은 stageId(string) 기반 path-aware roadmap.
+//   46 stage 는 모든 cluster(외식·카페·SaaS·하드웨어 등) 의 합집합.
+//   사장님이 실제로 보는 단계 수는 cluster 별로 다름 (workflow.ts:318):
+//     • offline (외식·카페·미용 등): 15 단계
+//     • online (스마트스토어 등):    12 단계
+//     • startup-tech (SaaS 등):      14 단계
+//     • semiconductor:               22 단계
+//
+//  iOS 현재 구현: 사장님(사랑의 도시락 — 외식) 기준 15-stage path 를 기본 데이터로.
+//  추후 cluster 자동 매핑 + Supabase roadmap 테이블 연동 예정.
 //
 
 import Foundation
@@ -12,29 +22,35 @@ public enum StageStatus: String, Sendable, Codable {
     case upcoming    // 예정
 }
 
+/// 외식 path 단계 그룹 (4 phase — 웹 cluster 시퀀스에 맞춤).
 public enum StagePhase: String, Sendable, CaseIterable, Codable {
-    case preparation  = "준비 (시장조사·아이템 검증)"
-    case launch       = "오픈 (개업·인테리어·세팅)"
-    case firstMonth   = "첫 달 (운영 안착)"
-    case scaling      = "성장 (안정·매출 확보)"
-    case mature       = "성숙 (효율·확장)"
+    case preparation  = "준비 (업종·예산 결정)"
+    case registration = "사업 등록 (인허가·계약)"
+    case setup        = "오픈 준비 (인테리어·인력)"
+    case launch       = "오픈 (운영 시작)"
 
     public var labelKo: String {
         switch self {
-        case .preparation: return "준비"
-        case .launch:      return "오픈"
-        case .firstMonth:  return "첫 달"
-        case .scaling:     return "성장"
-        case .mature:      return "성숙"
+        case .preparation:  return "준비"
+        case .registration: return "사업 등록"
+        case .setup:        return "오픈 준비"
+        case .launch:       return "오픈"
         }
     }
 
-    public var subtitleKo: String { rawValue.replacingOccurrences(of: "[^(]+ \\(", with: "", options: .regularExpression).replacingOccurrences(of: ")", with: "") }
+    public var subtitleKo: String {
+        // rawValue 의 괄호 안 부분만 뽑기
+        rawValue
+            .replacingOccurrences(of: "[^(]+ \\(", with: "", options: .regularExpression)
+            .replacingOccurrences(of: ")", with: "")
+    }
 }
 
 public struct RoadmapStage: Identifiable, Sendable, Hashable {
-    public let id = UUID()
-    public let stageNumber: Int   // 1~46
+    /// 웹 stageId — Supabase roadmap.stages[].stageId 와 1:1 매칭.
+    public let id: String
+    /// path 내 순서 (1~15) — UI 표시용. 웹의 totalSteps 와 일치.
+    public let stepNumber: Int
     public let phase: StagePhase
     public let titleKo: String
     public let descriptionKo: String
@@ -42,94 +58,115 @@ public struct RoadmapStage: Identifiable, Sendable, Hashable {
     public let status: StageStatus
 
     public init(
-        stageNumber: Int,
+        stageId: String,
+        stepNumber: Int,
         phase: StagePhase,
         titleKo: String,
         descriptionKo: String,
         estimatedDays: Int? = nil,
         status: StageStatus = .upcoming
     ) {
-        self.stageNumber = stageNumber
+        self.id = stageId
+        self.stepNumber = stepNumber
         self.phase = phase
         self.titleKo = titleKo
         self.descriptionKo = descriptionKo
         self.estimatedDays = estimatedDays
         self.status = status
     }
+
+    /// 웹과의 호환 — stageId 별칭.
+    public var stageId: String { id }
 }
 
-// MARK: - Sample 46-stage roadmap (preview / 데모용)
+// MARK: - 외식 path 15-stage roadmap (웹 SSOT 미러)
 
 public enum RoadmapSampleData {
 
+    /// 외식 path — 웹 `starter-data.ts` 의 offline-food 클러스터 reachable stage 시퀀스.
+    /// 한국어 콘텐츠는 웹 `localizeStage()` 의 ko 번역을 모바일 viewport 에 맞게 압축.
     public static let stages: [RoadmapStage] = {
-        let raw: [(Int, StagePhase, String, String, Int?)] = [
-            // 준비 단계 (1-10)
-            (1,  .preparation, "사업 아이디어 정리",        "왜 이 사업인지 한 문장으로 적어보세요.", 1),
-            (2,  .preparation, "타깃 고객 정의",            "주 고객층의 나이·라이프스타일·예산 정의.", 2),
-            (3,  .preparation, "경쟁점 5곳 답사",           "반경 500m 내 경쟁점 직접 방문 + 메뉴/가격 비교.", 5),
-            (4,  .preparation, "예상 매출·비용 시뮬",       "월 손익 분석으로 BEP 일매출 계산.", 3),
-            (5,  .preparation, "상권 분석",                 "유동인구·임차료·경쟁밀도 종합 점검.", 7),
-            (6,  .preparation, "사업자등록·통신판매업",     "국세청 홈택스에서 사업자등록 + 카드사 가맹점 신청.", 2),
-            (7,  .preparation, "통장·세무사 선정",          "사업용 통장 개설, 세무사 미팅 1-2곳.", 3),
-            (8,  .preparation, "정책자금 신청",             "소상공인진흥공단 / 신용보증재단 매칭 신청.", 14),
-            (9,  .preparation, "인테리어 견적 3곳",         "VAT 별도 견적 비교, 사례 사진 요청.", 7),
-            (10, .preparation, "공급처 협상",               "주요 식자재 2-3 공급처 견적 + 단가표 확보.", 10),
+        let raw: [(String, StagePhase, String, String, Int?)] = [
+            // ── Phase 1: 준비 (1-4) ── shared 1-4 ──
+            ("industry-selection", .preparation,
+             "업종 선택",
+             "사업 분야를 결정합니다. (외식·카페·미용·온라인 등)",
+             1),
+            ("startup-type", .preparation,
+             "창업 유형 선택",
+             "개인사업자 / 법인 / 프랜차이즈 / 무점포 등 형태를 정합니다.",
+             2),
+            ("business-model", .preparation,
+             "운영 방식 선택",
+             "홀 위주 / 배달 위주 / 하이브리드 — 비용 구조에 큰 영향.",
+             2),
+            ("budget-setup", .preparation,
+             "예산·시점 설정",
+             "총 창업 자본, 운영자금, 오픈 시점을 정합니다.",
+             3),
 
-            // 오픈 단계 (11-20)
-            (11, .launch, "POS·키오스크 셋업",              "정산주기·수수료·환불 절차 사전 점검.", 2),
-            (12, .launch, "메뉴 최종 결정",                 "Prime cost 65% 이하로 메뉴 단가 설정.", 3),
-            (13, .launch, "사진·간판 제작",                 "구글 비즈·네이버 플레이스용 고품질 사진.", 5),
-            (14, .launch, "직원 채용·교육",                 "근로계약 + 4대보험 가입 + 매뉴얼 작성.", 14),
-            (15, .launch, "프리오픈 (시범 영업)",           "지인 50명 초청, 피드백 수집.", 3),
-            (16, .launch, "그랜드 오픈",                    "오픈 이벤트 + SNS 라이브.", 1),
-            (17, .launch, "네이버 플레이스 등록",           "정확한 영업시간·메뉴·사진 등록.", 1),
-            (18, .launch, "카카오톡 채널 개설",             "단골 알림 채널 + 첫 쿠폰 발행.", 1),
-            (19, .launch, "리뷰 요청 시스템",               "테이블 QR 코드 + 직원 안내 멘트.", 2),
-            (20, .launch, "오픈 첫 주 회고",                "예상 vs 실제 매출 비교, 메뉴 인기도 점검.", 7),
+            // ── Phase 2: 사업 등록 (5-9) ── offline-food 5-9 ──
+            ("permit-check", .registration,
+             "인허가 사전 점검",
+             "식품접객업 신고·소방·정화조 등 영업 전 필요 인허가 점검.",
+             7),
+            ("location-candidates", .registration,
+             "입지 후보 비교",
+             "유동인구·경쟁점·임차료를 비교해 2-3 곳 후보 추립니다.",
+             10),
+            ("contract-review", .registration,
+             "임대 계약 전 점검",
+             "권리금·임대 기간·원상복구 조건을 계약 전 확인합니다.",
+             7),
+            ("registration-setup", .registration,
+             "사업자 등록",
+             "국세청 홈택스 + 영업신고 + 카드 가맹 신청.",
+             3),
+            ("biz-registration", .registration,
+             "사업용 통장·세무사",
+             "전용 통장 개설, 세무사 상담 1-2곳 미팅.",
+             3),
 
-            // 첫 달 (21-26)
-            (21, .firstMonth, "일 매출 매일 기록",          "build.up 앱에 매일 5초 입력.", 1),
-            (22, .firstMonth, "월 비용 입력",               "재료비·인건비·임대료·공과금 완료.", 1),
-            (23, .firstMonth, "BEP 일매출 도달",            "손익분기점 매출 달성.", 14),
-            (24, .firstMonth, "고객 단골화 시작",           "재방문 고객 5명+ 확보.", 14),
-            (25, .firstMonth, "첫 광고비 집행",             "네이버 플레이스 광고 또는 인스타.", 7),
-            (26, .firstMonth, "첫 달 결산",                 "매출·비용·순익 종합 점검.", 30),
+            // ── Phase 3: 오픈 준비 (10-13) ── offline-food 12-15 ──
+            ("construction-setup", .setup,
+             "인테리어·집기 셋업",
+             "견적 3곳 비교, 주방 동선·간판·내장재 결정.",
+             21),
+            ("vendor-setup", .setup,
+             "공급처·식자재 확보",
+             "주요 식자재 2-3 공급처 단가표 확보, 첫 발주 계획.",
+             10),
+            ("hiring-setup", .setup,
+             "직원 채용·근로계약",
+             "필요 인력 산정, 근로계약서 작성, 매뉴얼 초안.",
+             14),
+            ("insurance-tax-setup", .setup,
+             "4대보험·원천세",
+             "직원 4대보험 가입, 원천세 신고 셋업.",
+             3),
 
-            // 성장 (27-36)
-            (27, .scaling, "메뉴 인기도 분석",              "상위 3개·하위 3개 식별, 단가 조정.", 7),
-            (28, .scaling, "단골 마케팅 자동화",            "카카오 채널 정기 메시지 + 쿠폰 캠페인.", 14),
-            (29, .scaling, "원가 협상",                     "공급처 단가 재협상 또는 대체 공급처.", 14),
-            (30, .scaling, "리뷰 100개 달성",               "네이버 + 카카오맵 합산.", 60),
-            (31, .scaling, "직원 보너스 정책",              "매출 연동 인센티브 설계.", 7),
-            (32, .scaling, "두 번째 직원 채용",             "필요 시점 진단 + 4대보험 부담 계산.", 14),
-            (33, .scaling, "운영 표준 매뉴얼",              "조리·서빙·청소 SOP 작성.", 14),
-            (34, .scaling, "프라임코스트 65% 달성",         "재료비 + 인건비 비율 안정화.", 30),
-            (35, .scaling, "런웨이 6개월 확보",             "현금 잔고 = 6개월 burn 이상.", 90),
-            (36, .scaling, "월 순익 흑자 3개월 연속",       "안정성 확보.", 90),
-
-            // 성숙 (37-46)
-            (37, .mature, "두 번째 매장 검토",              "위치·자금·인력 시뮬레이션.", 30),
-            (38, .mature, "재무제표 정리",                  "세무사와 함께 손익계산서 검토.", 14),
-            (39, .mature, "정책자금 만기 갱신",             "조건 비교 + 추가 자금 검토.", 14),
-            (40, .mature, "직원 복지 제도",                 "퇴직연금·식대·휴가 정비.", 14),
-            (41, .mature, "온라인 채널 확장",               "배달 플랫폼 + 자체 주문 시스템.", 30),
-            (42, .mature, "메뉴 시즌 리뉴얼",               "분기마다 신메뉴 1-2개.", 90),
-            (43, .mature, "고객 데이터 분석",               "CRM 도구 도입 + 연간 단골 분석.", 30),
-            (44, .mature, "브랜드 정체성 정립",             "로고·톤·매장 인테리어 일관성.", 60),
-            (45, .mature, "프랜차이즈 가능성 검토",         "법무·자금·운영 시스템 점검.", 90),
-            (46, .mature, "은퇴/매도 계획",                 "장기 출구 전략.", 365),
+            // ── Phase 4: 오픈 (14-15) ── offline-food 16-17 ──
+            ("operations-setup", .launch,
+             "POS·마케팅 셋업",
+             "POS·키오스크 셋업, 네이버 플레이스·카카오 채널 개설.",
+             5),
+            ("pre-launch", .launch,
+             "프리오픈·그랜드 오픈",
+             "지인 50명 시범 영업 → 피드백 반영 → 정식 오픈.",
+             7),
         ]
 
-        // 현재 단계: 23 (BEP 도달) 를 current 로, 1-22 완료, 24-46 upcoming 처리
-        let currentStage = 23
-        return raw.map { entry in
+        // 데모: 사장님(사랑의 도시락 운영 6일째) — 모두 완료 + 마지막 stage 가 current
+        // 추후 Supabase roadmap.currentStageId 와 동기화.
+        let currentIndex = raw.count - 1
+        return raw.enumerated().map { idx, entry in
             let status: StageStatus
-            if entry.0 < currentStage { status = .completed }
-            else if entry.0 == currentStage { status = .current }
-            else { status = .upcoming }
+            if idx < currentIndex      { status = .completed }
+            else if idx == currentIndex { status = .current }
+            else                        { status = .upcoming }
             return RoadmapStage(
-                stageNumber: entry.0,
+                stageId: entry.0,
+                stepNumber: idx + 1,
                 phase: entry.1,
                 titleKo: entry.2,
                 descriptionKo: entry.3,

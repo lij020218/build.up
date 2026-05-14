@@ -1,13 +1,16 @@
 //
-//  RoadmapView.swift — 46단계 로드맵 모바일 화면
+//  RoadmapView.swift — path-aware 로드맵 모바일 화면 (웹 SSOT 미러)
 //
-//  웹의 46단계 stage 로드맵을 모바일 1-col 수직 스크롤로 재배치.
+//  ⚠️ 웹 SSOT: packages/shared/src/roadmap/workflow.ts
+//   웹은 46개 stage 풀에서 사장님 cluster 의 reachable stage 만 노출.
+//   path 길이 — offline=15, online=12, startup-tech=14, semiconductor=22.
+//   현재 모바일은 외식 path 15 단계 기본 — RoadmapSampleData 참조.
 //
 //  모바일 디자인 결정:
 //   • 수직 timeline (좌측 진행 line + 단계 dot)
 //   • 단계별 카드 — 완료 (faded) / 진행 중 (강조 + Liquid Glass hero) / 예정 (dim)
-//   • 단계 그룹 (5 phase) 별 sticky header
-//   • 진행도 상단 banner — "23 / 46 완료 (50%)"
+//   • 단계 그룹 (Phase) 별 sticky header
+//   • 진행도 상단 banner — "14 / 15 완료 (93%)"
 //
 //  웹과 차이:
 //   • 가로 phase 탭 → 모바일 vertical 스크롤
@@ -236,7 +239,7 @@ private struct StageCard: View {
                 .fill(BUColor.midnight)
                 .frame(width: 10, height: 10)
         case .upcoming:
-            Text("\(stage.stageNumber)")
+            Text("\(stage.stepNumber)")
                 .font(BUFont.eyebrow)
                 .foregroundStyle(BUColor.inkMuted)
                 .monospacedDigit()
@@ -248,7 +251,7 @@ private struct StageCard: View {
             VStack(alignment: .leading, spacing: 6) {
                 // 단계 번호 + 상태
                 HStack(spacing: BUSpacing.xs) {
-                    Text("단계 \(stage.stageNumber)")
+                    Text("단계 \(stage.stepNumber)")
                         .font(BUFont.eyebrow)
                         .foregroundStyle(BUColor.inkMuted)
                         .tracking(0.5)
@@ -311,7 +314,7 @@ private struct StageDetailSheet: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: BUSpacing.lg) {
                         VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                            BUEyebrow("\(stage.phase.labelKo) · 단계 \(stage.stageNumber)")
+                            BUEyebrow("\(stage.phase.labelKo) · 단계 \(stage.stepNumber)")
                             Text(stage.titleKo)
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundStyle(BUColor.midnightDeep)
@@ -374,7 +377,7 @@ private struct StageDetailSheet: View {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("Roadmap — 46단계") {
+#Preview("Roadmap — 외식 15단계") {
     NavigationStack {
         RoadmapView()
     }
