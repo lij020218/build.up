@@ -366,8 +366,6 @@ private struct StageCard: View {
             FinancialReviewStageView()
         case "pre-launch-final":
             PreLaunchFinalStageView()
-        case "first-month-check":
-            FirstMonthCheckStageView()
 
         default:
             StageDetailSheet(stage: stage)
