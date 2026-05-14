@@ -35,6 +35,7 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { getVendorData, type VendorItem } from "./vendor-setup-data";
 import { StageWrapup } from "../shared/StageWrapup";
 import { MyIngredientsPlanCard } from "./MyIngredientsPlanCard";
+import { InitialOrderPlanCard } from "./InitialOrderPlanCard";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
@@ -502,6 +503,11 @@ export function VendorSetupStage() {
           <li>식자재 정기 배송은 푸드팡·CJ프레시웨이 견적 비교, 첫 주는 소량 테스트</li>
         </ul>
       </div>
+
+      {/* ── 초기 발주 계획 — 사장님이 선택한 공급처별 원자재·수량 입력
+              → operations-store.inventory 에 itemType="material" 로 자동 등록
+              → InventoryOpsCard 즉시 표시. day-1 등록 수고 0. (2026-05-14 신규) ── */}
+      <InitialOrderPlanCard ko={language === "ko"} />
 
       {/* ── 내 식자재·매입 원가 계획 — 재무 검토 단계의 ingredients 칸이 여기서 가져감 ── */}
       <MyIngredientsPlanCard ko={language === "ko"} />
