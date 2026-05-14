@@ -54,9 +54,12 @@ public struct AppRoot: View {
         self._coordinator = State(initialValue: AuthCoordinator(supabase: supabase))
 
         #if DEBUG
-        // BU_DEMO_SCENARIO 환경변수 → 즉시 데모 진입 (시뮬레이터 시각 검증)
-        //   SIMCTL_CHILD_BU_DEMO_SCENARIO=warning xcrun simctl launch <UUID> <bundle-id>
+        // BU_DEMO_SCENARIO 환경변수 → 데모 진입 (디자인 미리보기 전용)
+        //   ⚠️ 기본 동작은 항상 실제 Supabase 인증 경로. 사장님이 실제 데이터를
+        //      입력했는데 데모로 보이는 사고를 막기 위해 이중 가드:
+        //      BU_DEMO_SCENARIO + BU_DEMO_ALLOW=1 두 변수 모두 있어야 진입.
         if let raw = ProcessInfo.processInfo.environment["BU_DEMO_SCENARIO"],
+           ProcessInfo.processInfo.environment["BU_DEMO_ALLOW"] == "1",
            let scenario = MockScenario(envValue: raw) {
             self._demoMode = State(initialValue: scenario)
         }
@@ -112,13 +115,16 @@ public struct AppRoot: View {
                 }
             } else {
                 SignInView(coordinator: coordinator)
-                    .overlay(alignment: .topTrailing) {
+                    .overlay(alignment: .bottomTrailing) {
                         #if DEBUG
+                        // 디자인 미리보기 전용 — 실제 데이터 아님. 작은 회색
+                        // 텍스트로 눈에 띄지 않게 둠. 사장님이 실수로 누르면
+                        // 진입 시 큰 "데모 데이터" 배너로 즉시 인지 가능.
                         DemoModeMenu { scenario in
                             demoMode = scenario
                         }
-                        .padding(.top, 8)
-                        .padding(.trailing, BUSpacing.md)
+                        .padding(.bottom, 6)
+                        .padding(.trailing, BUSpacing.sm)
                         #endif
                     }
                     .task {
@@ -729,38 +735,33 @@ private struct SettingsView: View {
 
 #if DEBUG
 
-/// SignInView 우상단에 노출되는 작은 메뉴 — 사장님이 5 시나리오 즉시 진입 가능.
+/// 디자인 미리보기 전용 메뉴 — 실제 사장님이 보는 영역에 절대 노출되지 않음.
+/// SignInView 우하단의 흐릿한 회색 텍스트로 자리잡아 평소엔 안 보이는 수준.
 struct DemoModeMenu: View {
     let onSelect: (MockScenario) -> Void
 
     var body: some View {
         Menu {
-            Button("안정 운영 (외식)") { onSelect(.healthy) }
-            Button("주의 신호 (카페)") { onSelect(.warning) }
-            Button("긴급 위기 (SaaS)") { onSelect(.critical) }
-            Button("매출 미기록 5일") { onSelect(.staleSales) }
-            Button("첫 진입 (empty)") { onSelect(.empty) }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "eye.fill")
-                    .font(.system(size: 10))
-                Text("DEMO")
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(0.5)
+            Section("⚠️ 디자인 미리보기 — 가짜 데이터") {
+                Button("안정 운영 (외식)") { onSelect(.healthy) }
+                Button("주의 신호 (카페)") { onSelect(.warning) }
+                Button("긴급 위기 (SaaS)") { onSelect(.critical) }
+                Button("매출 미기록 5일") { onSelect(.staleSales) }
+                Button("첫 진입 (empty)") { onSelect(.empty) }
             }
-            .foregroundStyle(BUColor.inkMuted)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(BUColor.surfaceElevated.opacity(0.85), in: Capsule())
-            .overlay(
-                Capsule()
-                    .strokeBorder(BUColor.borderSubtle, lineWidth: 0.5)
-            )
+        } label: {
+            Text("디자인 미리보기")
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted.opacity(0.55))
+                .tracking(0.2)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
         }
     }
 }
 
 /// DEBUG 데모 탭 — Today (시나리오) + Roadmap + 종료 버튼.
+/// ⚠️ 상단에 큰 "데모 데이터" 배너 강제 표시 → 실제 가게 데이터로 착각 방지.
 struct DemoTabs: View {
     let scenario: MockScenario
     @Binding var selectedTab: AppRoot.Tab
@@ -771,14 +772,25 @@ struct DemoTabs: View {
     }
 
     var body: some View {
-        BuildUpMobileShell(
-            selectedTab: $selectedTab,
-            tabs: webSurfaceTabs(businessLaunched: mockData.resolverInput.businessLaunched),
-            accessory: {
-                ExitButton(action: onExit)
+        ZStack(alignment: .top) {
+            BuildUpMobileShell(
+                selectedTab: $selectedTab,
+                tabs: webSurfaceTabs(businessLaunched: mockData.resolverInput.businessLaunched),
+                accessory: {
+                    ExitButton(action: onExit)
+                }
+            ) {
+                content
+                    .padding(.top, 36)  // 배너 자리
             }
-        ) {
-            switch selectedTab {
+
+            DemoModeBanner(scenario: scenario, onExit: onExit)
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch selectedTab {
             case .home:
                 TodayView(mock: mockData)
             case .current:
@@ -809,8 +821,51 @@ struct DemoTabs: View {
                     subtitle: "계정, 언어, 매장 정보를 관리하는 profile surface입니다.",
                     systemImage: "person.crop.circle"
                 )
-            }
         }
+    }
+}
+
+private struct DemoModeBanner: View {
+    let scenario: MockScenario
+    let onExit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "eye.trianglebadge.exclamationmark.fill")
+                .font(.system(size: 12, weight: .semibold))
+            Text("디자인 미리보기 — 실제 가게 데이터 아님 · \(scenario.rawValue)")
+                .font(.system(size: 11.5, weight: .bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: 6)
+            Button(action: onExit) {
+                Text("로그인으로")
+                    .font(.system(size: 11, weight: .heavy))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Color.white.opacity(0.22), in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .frame(maxWidth: .infinity)
+        .background(
+            LinearGradient(
+                colors: [Color(red: 0.71, green: 0.21, blue: 0.18), Color(red: 0.55, green: 0.14, blue: 0.12)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.black.opacity(0.18))
+                .frame(height: 0.6)
+        }
+        .shadow(color: Color.black.opacity(0.18), radius: 8, x: 0, y: 4)
+        .padding(.horizontal, 6)
+        .padding(.top, 4)
     }
 }
 
