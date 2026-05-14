@@ -209,8 +209,14 @@ private struct StageCard: View {
     @ViewBuilder
     private var stageSheet: some View {
         switch stage.id {
+        case "startup-type":
+            StartupTypeStageView()
+        case "business-model":
+            BusinessModelStageView()
         case "target-customer-definition":
             TargetCustomerStageView()
+        case "budget-setup":
+            BudgetSetupStageView()
         case "menu-design":
             MenuDesignStageView()
         case "vendor-setup":
