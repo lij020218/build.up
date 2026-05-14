@@ -14,6 +14,7 @@ export * from "./finance/labor-law-checks";
 export * from "./guide/qa";
 export * from "./i18n";
 export * from "./starter-data";
+export * from "./cluster-budget-benchmarks";
 export * from "./supabase/auth";
 export * from "./supabase/client";
 export * from "./supabase/finance";

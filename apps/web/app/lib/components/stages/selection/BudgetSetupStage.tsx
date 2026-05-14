@@ -11,8 +11,8 @@ import {
   starterBudgetPresets,
   starterOpenDatePresets,
 } from "@build-up/shared";
-import { supabase } from "../../../../../lib/supabase";
 import { StageWrapup } from "../shared/StageWrapup";
+import { BudgetInsightCard } from "./BudgetInsightCard";
 
 export function BudgetSetupStage() {
   const d = useDashboardCtx();
@@ -35,7 +35,6 @@ export function BudgetSetupStage() {
     canCompleteBudgetStep, handleBudgetContinue,
     prevTraversedStage, setViewingStageId,
     resetDemo,
-    liveBudgetBenchmark, setLiveBudgetBenchmark,
   } = d;
 
   const budgetRef = useRef<HTMLDivElement>(null);
@@ -52,67 +51,8 @@ export function BudgetSetupStage() {
         {copy.home.budgetHelp}
       </div>
 
-      {/* ── 라이브 업종별 창업비용 벤치마크 ── */}
-      {(() => {
-        const ko = language === "ko";
-
-        const loadBenchmark = async () => {
-          if (liveBudgetBenchmark && !liveBudgetBenchmark.loading) return;
-          setLiveBudgetBenchmark({ loading: true });
-          try {
-            const session = await supabase.auth.getSession();
-            const tk = session.data.session?.access_token;
-            const indsCode = ({ "food": "Q", "cafe-dessert": "Q", "retail": "D", "beauty": "F", "fitness": "R", "education": "P" } as Record<string, string>)[industryCategoryId] ?? "Q";
-            const res = await fetch(`/api/data/franchise/industry-costs?industryCode=${indsCode}`, { headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(r => r.json()).catch(() => null);
-            if (res?.data?.length) {
-              const latest = res.data[0] as { avgTotalStartupCost: number; avgFranchiseFee: number; avgDeposit: number; avgEducationFee: number; avgOtherCost: number; industryName: string };
-              setLiveBudgetBenchmark({ loading: false, data: latest });
-            } else {
-              setLiveBudgetBenchmark({ loading: false });
-            }
-          } catch { setLiveBudgetBenchmark({ loading: false }); }
-        };
-
-        if (!liveBudgetBenchmark) void loadBenchmark();
-
-        if (!liveBudgetBenchmark || liveBudgetBenchmark.loading || !liveBudgetBenchmark.data) return null;
-        const b = liveBudgetBenchmark.data;
-        const userBudget = selectedBudget ?? 0;
-        const diff = userBudget > 0 ? Math.round(((userBudget - b.avgTotalStartupCost * 10000) / (b.avgTotalStartupCost * 10000)) * 100) : 0;
-        const diffLabel = diff > 10 ? (ko ? "업종 평균보다 여유" : "Above average") : diff < -10 ? (ko ? "업종 평균보다 부족" : "Below average") : (ko ? "업종 평균 수준" : "Near average");
-        const diffColor = diff > 10 ? "#059669" : diff < -10 ? "#dc2626" : "#d97706";
-
-        return (
-          <div style={{ marginBottom: "18px", borderRadius: "20px", border: `1px solid ${diffColor}15`, background: `linear-gradient(180deg, ${diffColor}06 0%, rgba(255,255,255,0.92) 100%)`, overflow: "hidden" }} className="bento-fade-in">
-            <div style={{ padding: "18px 20px 14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: diffColor }} />
-                <span style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{ko ? "업종 창업비용 벤치마크" : "Industry Startup Cost Benchmark"}</span>
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "공정거래위원회 가맹사업 통계 기반" : "Based on KFTC Franchise Statistics"}</div>
-            </div>
-            <div style={{ padding: "0 20px 18px" }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "12px" }}>
-                <span style={{ fontSize: "24px", fontWeight: 760, letterSpacing: "-0.04em", color: "#0f172a" }}>{b.avgTotalStartupCost.toLocaleString()}<span style={{ fontSize: "14px", fontWeight: 500 }}>{ko ? "만원" : "만KRW"}</span></span>
-                <span style={{ fontSize: "13px", fontWeight: 600, color: diffColor }}>{diffLabel} ({diff > 0 ? "+" : ""}{diff}%)</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                {[
-                  { label: ko ? "가맹비" : "Franchise", value: b.avgFranchiseFee },
-                  { label: ko ? "교육비" : "Education", value: b.avgEducationFee },
-                  { label: ko ? "보증금" : "Deposit", value: b.avgDeposit },
-                  { label: ko ? "기타" : "Other", value: b.avgOtherCost },
-                ].filter(x => x.value > 0).map(x => (
-                  <div key={x.label} style={{ padding: "10px", borderRadius: "12px", background: `${diffColor}06` }}>
-                    <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(0,0,0,0.4)", marginBottom: "2px" }}>{x.label}</div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{x.value.toLocaleString()}<span style={{ fontSize: "10px", color: "var(--muted)" }}>{ko ? "만" : "M"}</span></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      {/* ── 예산 인사이트 + 매칭 지원 프로그램 ── */}
+      <BudgetInsightCard />
 
       {/* ── Franchise cost guide panel ── */}
       {startupType === "franchise" && selectedFranchiseBrandId && (() => {

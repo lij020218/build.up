@@ -93,6 +93,9 @@ public struct BudgetSetupStageView: View {
                         startupCapitalSection
                             .padding(.horizontal, BUSpacing.md)
 
+                        BudgetInsightCard(userBudgetWon: startupWon)
+                            .padding(.horizontal, BUSpacing.md)
+
                         operatingCapitalSection
                             .padding(.horizontal, BUSpacing.md)
 
