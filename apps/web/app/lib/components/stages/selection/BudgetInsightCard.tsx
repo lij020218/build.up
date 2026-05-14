@@ -14,7 +14,7 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import {
   computeBudgetInsight,
@@ -35,10 +35,24 @@ export function BudgetInsightCard() {
     [selectedIndustryId, industryCategoryId],
   );
 
+  // 사용자가 "확인" 을 눌러야 분석이 보임 — deliberate moment 로 만들기
+  const [confirmed, setConfirmed] = useState(false);
+
   if (!cluster || !CLUSTER_BUDGET_BENCHMARKS[cluster]) return null;
 
   const ko = language === "ko";
   const userBudgetWon = selectedBudget ?? 0;
+  const hasBudget = userBudgetWon > 0;
+
+  if (!confirmed) {
+    return (
+      <ConfirmGate
+        hasBudget={hasBudget}
+        ko={ko}
+        onConfirm={() => setConfirmed(true)}
+      />
+    );
+  }
 
   // 월 운영비는 benchmark.monthlyOpsEstimateWan 가 자동으로 사용됨
   const insight = computeBudgetInsight(cluster, userBudgetWon);
@@ -442,5 +456,132 @@ function ProgramRow({
         {target}
       </div>
     </a>
+  );
+}
+
+// MARK: - Confirm Gate (확인 누르기 전)
+
+function ConfirmGate({
+  hasBudget,
+  ko,
+  onConfirm,
+}: {
+  hasBudget: boolean;
+  ko: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <div
+      style={{
+        marginBottom: "18px",
+        borderRadius: "24px",
+        border: "1px dashed rgba(29,53,87,0.18)",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(245,245,250,0.55) 100%)",
+        padding: "22px 24px",
+        textAlign: "center",
+      }}
+    >
+      {/* 아이콘 */}
+      <div
+        style={{
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          background: "rgba(29,53,87,0.07)",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: "12px",
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path
+            d="M10 2v3M10 15v3M2 10h3M15 10h3M4.5 4.5l2 2M13.5 13.5l2 2M4.5 15.5l2-2M13.5 6.5l2-2"
+            stroke="rgba(29,53,87,0.6)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+
+      <div
+        style={{
+          fontSize: "15px",
+          fontWeight: 650,
+          letterSpacing: "-0.02em",
+          color: "#0f172a",
+          marginBottom: "6px",
+        }}
+      >
+        {ko ? "예산 분석을 받아보세요" : "Get Your Budget Analysis"}
+      </div>
+      <div
+        style={{
+          fontSize: "12.5px",
+          color: "rgba(29,53,87,0.62)",
+          lineHeight: 1.55,
+          marginBottom: "16px",
+          maxWidth: "320px",
+          margin: "0 auto 16px",
+        }}
+      >
+        {ko
+          ? "입력한 자본금이 같은 업종 평균과 어떻게 비교되는지, 부족하면 어떤 지원 프로그램을 받을 수 있는지 분석해드려요."
+          : "See how your budget compares to industry averages, and which support programs you may qualify for if there's a shortfall."}
+      </div>
+
+      <button
+        type="button"
+        onClick={onConfirm}
+        disabled={!hasBudget}
+        style={{
+          padding: "11px 22px",
+          borderRadius: "999px",
+          border: "none",
+          background: hasBudget
+            ? "var(--primary, #1d3557)"
+            : "rgba(29,53,87,0.12)",
+          color: hasBudget ? "#fff" : "rgba(29,53,87,0.45)",
+          fontSize: "13.5px",
+          fontWeight: 600,
+          letterSpacing: "-0.01em",
+          cursor: hasBudget ? "pointer" : "not-allowed",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          transition: "transform 120ms, background 160ms",
+        }}
+        onMouseEnter={(e) => {
+          if (hasBudget) e.currentTarget.style.transform = "translateY(-1px)";
+        }}
+        onMouseLeave={(e) => {
+          if (hasBudget) e.currentTarget.style.transform = "translateY(0)";
+        }}
+      >
+        {ko ? "예산 확인하기" : "Analyze My Budget"}
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path
+            d="M5 3l4 3.5L5 10"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {!hasBudget && (
+        <div
+          style={{
+            marginTop: "8px",
+            fontSize: "11px",
+            color: "rgba(29,53,87,0.45)",
+          }}
+        >
+          {ko ? "먼저 시작 자본금을 입력해주세요" : "Enter your starting capital first"}
+        </div>
+      )}
+    </div>
   );
 }

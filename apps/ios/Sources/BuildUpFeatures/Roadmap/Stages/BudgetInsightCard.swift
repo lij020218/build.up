@@ -270,6 +270,8 @@ public struct BudgetInsightCard: View {
     public let userBudgetWon: Int
 
     @AppStorage("roadmap.cluster") private var clusterRaw = "offline-food"
+    // 사용자가 "확인" 을 눌러야 분석이 보임. 같은 sheet 안에서만 유효 (sheet 닫으면 리셋).
+    @State private var confirmed = false
 
     public init(userBudgetWon: Int) {
         self.userBudgetWon = userBudgetWon
@@ -277,22 +279,105 @@ public struct BudgetInsightCard: View {
 
     public var body: some View {
         if let insight = computeInsight(clusterKey: clusterRaw, userBudgetWon: userBudgetWon) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.md) {
-                    headerSection(insight)
-                    comparisonBar(insight)
-                    if !matchPrograms(for: clusterRaw).isEmpty {
-                        programsSection(insight)
+            if confirmed {
+                BUCard(.card) {
+                    VStack(alignment: .leading, spacing: BUSpacing.md) {
+                        headerSection(insight)
+                        comparisonBar(insight)
+                        if !matchPrograms(for: clusterRaw).isEmpty {
+                            programsSection(insight)
+                        }
+                        if !insight.benchmark.noteKo.isEmpty {
+                            contextNote(insight)
+                        }
+                        footerSection(insight)
                     }
-                    if !insight.benchmark.noteKo.isEmpty {
-                        contextNote(insight)
-                    }
-                    footerSection(insight)
                 }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            } else {
+                confirmGate
             }
         } else {
             EmptyView()
         }
+    }
+
+    // MARK: 확인 게이트 (분석 전)
+
+    private var confirmGate: some View {
+        let hasBudget = userBudgetWon > 0
+        return VStack(spacing: BUSpacing.sm) {
+            // 아이콘
+            ZStack {
+                Circle()
+                    .fill(BUColor.midnight.opacity(0.07))
+                    .frame(width: 44, height: 44)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 18))
+                    .foregroundStyle(BUColor.midnight.opacity(0.7))
+            }
+
+            Text("예산 분석을 받아보세요")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(BUColor.midnightDeep)
+                .tracking(-0.2)
+
+            Text("입력한 자본금이 같은 업종 평균과 어떻게 비교되는지, 부족하면 어떤 지원 프로그램을 받을 수 있는지 분석해드려요.")
+                .font(.system(size: 12))
+                .foregroundStyle(BUColor.inkSecondary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+                .frame(maxWidth: 320)
+                .padding(.bottom, 4)
+
+            Button {
+                withAnimation(.easeOut(duration: 0.32)) {
+                    confirmed = true
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text("예산 확인하기")
+                        .font(.system(size: 13, weight: .semibold))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundStyle(hasBudget ? .white : BUColor.inkMuted)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 11)
+                .background(
+                    hasBudget ? BUColor.midnight : BUColor.midnight.opacity(0.12),
+                    in: Capsule()
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(!hasBudget)
+
+            if !hasBudget {
+                Text("먼저 시작 자본금을 입력해주세요")
+                    .font(.system(size: 11))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
+        }
+        .padding(.vertical, 22)
+        .frame(maxWidth: .infinity)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.7),
+                    BUColor.midnight.opacity(0.02),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            ),
+            in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
+                .strokeBorder(
+                    BUColor.midnight.opacity(0.18),
+                    style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+                )
+        )
     }
 
     // MARK: 헤더
