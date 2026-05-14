@@ -30,8 +30,8 @@ public enum BUSpacing {
     // MARK: - Card padding (모바일 최적화 — 사장님 지적: "카드들이 모바일에서 잘림")
     /// CEOMorningHero outer card padding (모바일 viewport 폭 고려 18-18-16 로 축소)
     /// 웹: 28-28-24 (데스크탑) → 모바일에선 더 컴팩트하게.
-    public static let heroOuterPadding: CGFloat = 18
-    public static let heroOuterPaddingBottom: CGFloat = 16
+    public static let heroOuterPadding: CGFloat = 14
+    public static let heroOuterPaddingBottom: CGFloat = 12
     /// heroPanel padding (모바일 20)
     public static let heroPanelPadding: CGFloat = 20
     /// opsCard / activityCard padding (모바일 18)
@@ -45,8 +45,8 @@ public enum BUSpacing {
     // MARK: - Gap (웹 1:1)
     /// Shell gap — Tier 간 (18px)
     public static let shellGap: CGFloat = 18
-    /// Hero panel 내부 gap (20px)
-    public static let heroGap: CGFloat = 20
+    /// Hero panel 내부 gap — 모바일 12pt (사장님 피드백 2026-05-14: Hero 영역 축소)
+    public static let heroGap: CGFloat = 12
     /// opsCard 내부 gap (14px)
     public static let opsGap: CGFloat = 14
     /// activityCard 내부 gap (18px)

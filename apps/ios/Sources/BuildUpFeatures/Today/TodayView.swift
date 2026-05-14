@@ -282,16 +282,25 @@ private struct Row1Greeting: View {
     let mock: MockData
     let healthResult: UnifiedHealthResult
 
+    /// 인사말 — userName이 이메일 형식이면 "사장님" 으로 대체.
+    /// 이메일을 그대로 노출하면 호칭이 어색하고 줄이 길어져 Hero가 비대해짐.
     private var greetingLine1: String {
         let hour = Calendar.current.component(.hour, from: Date())
         let timeOfDay: String
         switch hour {
         case 5..<11:  timeOfDay = "좋은 아침"
-        case 11..<17: timeOfDay = "오늘도 수고하세요"
+        case 11..<17: timeOfDay = "수고하세요"
         case 17..<22: timeOfDay = "저녁이에요"
         default:      timeOfDay = "밤이에요"
         }
-        return "\(timeOfDay), \(mock.userName)"
+        return "\(timeOfDay), \(displayUserName)"
+    }
+
+    /// 호칭용 사용자명 — 이메일이면 사장님으로, 빈 값이면 사장님으로.
+    private var displayUserName: String {
+        let raw = mock.userName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if raw.isEmpty || raw.contains("@") { return "사장님" }
+        return raw
     }
 
     private var periodIcon: String {
@@ -329,26 +338,28 @@ private struct Row1Greeting: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // 36×36 icon box (웹과 동일)
+        // 모바일 압축 레이아웃 — 사장님 피드백(2026-05-14):
+        //   Hero가 화면 절반 차지 → 다른 카드 집중도 ↓.
+        // 변경:
+        //   • 아이콘 30×30 (-6pt)
+        //   • Sub-greeting "상호명 · 운영 N일째" 제거 (StoreStatusHeader 중복)
+        //   • 인사말 1줄 lineLimit + minimumScaleFactor
+        HStack(alignment: .center, spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(BUColor.midnight08)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 30, height: 30)
                 Image(systemName: periodIcon)
-                    .font(.system(size: 18, weight: .regular))
+                    .font(.system(size: 15, weight: .regular))
                     .foregroundStyle(BUColor.midnight)
             }
 
-            VStack(alignment: .leading, spacing: 3) {
-                // Eyebrow row (single line)
-                Text("\(dateString) · \(modeLabel)")
-                    .buHeroEyebrowStyle()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-
-                // chips — 짧게 + 한 줄 보장
+            VStack(alignment: .leading, spacing: 4) {
+                // Eyebrow + chips 통합 (날짜는 너무 자명한 정보라 한 라인 압축)
                 HStack(spacing: 5) {
+                    Text(dateString)
+                        .buHeroEyebrowStyle()
+                        .lineLimit(1)
                     if mock.resolverInput.businessLaunched {
                         ChipFilled(text: "\(mock.daysSinceLaunch + 1)일째")
                     }
@@ -358,17 +369,11 @@ private struct Row1Greeting: View {
                     }
                     Spacer(minLength: 0)
                 }
-                .padding(.top, 2)
 
                 Text(greetingLine1)
                     .buHeroGreetingStyle()
-                    .padding(.top, 6)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("\(mock.storeName) · 운영 \(mock.daysSinceLaunch + 1)일째")
-                    .buHeroSubgreetingStyle()
                     .lineLimit(1)
-                    .minimumScaleFactor(0.85)
+                    .minimumScaleFactor(0.7)
             }
             Spacer(minLength: 0)
         }
@@ -505,77 +510,31 @@ private struct Row2NSMNested: View {
         return last7.reduce(0) { $0 + $1.sales } / Double(last7.count)
     }
 
-    private var recentRevenueBars: [BUBarChart.Bar] {
-        let byDate = Dictionary(uniqueKeysWithValues: mock.entries.map { ($0.date, $0.sales) })
-        return lastSevenDates.enumerated().map { index, date in
-            BUBarChart.Bar(
-                value: byDate[date] ?? 0,
-                label: shortWeekday(date),
-                tone: .midnight,
-                highlighted: index == lastSevenDates.count - 1
-            )
-        }
-    }
-
-    private var lastSevenDates: [String] {
-        let calendar = Calendar(identifier: .gregorian)
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
-        let today = Date()
-
-        return (0..<7).reversed().compactMap { offset in
-            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
-            return formatter.string(from: date)
-        }
-    }
-
     var body: some View {
+        // 모바일 압축 (2026-05-14):
+        //   7일 막대 차트는 ActivitySnapshotCard 와 동일 → Hero 에서 제거.
+        //   Hero 는 "어제 매출 한 숫자 + WoW" 핵심만, 차트는 아래 카드로.
         BUCard(.nested) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Eyebrow
-                Text(nsmLabel).buNsmEyebrowStyle()
-
-                // Value + delta pill
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(nsmValue)
-                        .buNsmValueStyle()
-
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(nsmLabel).buNsmEyebrowStyle()
+                    Spacer(minLength: 0)
                     if let pct = weeklyChangePct {
                         DeltaPill(pct: pct, label: "WoW", tone: deltaTone)
                     }
                 }
 
-                // Description
-                if avgDaily7 > 0 {
-                    Text("최근 7일 일평균 \(Int(avgDaily7).formatted())원")
-                        .buNsmDescriptionStyle()
-                }
+                Text(nsmValue)
+                    .buNsmValueStyle()
 
-                // iOS-style mobile bar chart
-                if mock.entries.count >= 3 {
-                    BUBarChart(
-                        bars: recentRevenueBars,
-                        height: 68,
-                        showLabels: true
-                    )
-                    .padding(.top, 6)
+                if avgDaily7 > 0 {
+                    Text("7일 일평균 \(Int(avgDaily7).formatted())원")
+                        .buNsmDescriptionStyle()
                 }
             }
         }
     }
 
-    private func shortWeekday(_ isoDate: String) -> String {
-        let input = DateFormatter()
-        input.dateFormat = "yyyy-MM-dd"
-        input.timeZone = TimeZone(identifier: "Asia/Seoul")
-        guard let date = input.date(from: isoDate) else { return "" }
-
-        let output = DateFormatter()
-        output.locale = Locale(identifier: "ko_KR")
-        output.dateFormat = "E"
-        return output.string(from: date)
-    }
 }
 
 private struct DeltaPill: View {
@@ -621,115 +580,59 @@ private struct Row3CoachingNested: View {
     }
 
     var body: some View {
+        // 모바일 압축 (2026-05-14):
+        //   • 분석문 3줄 cap (이전엔 5-6줄까지 늘어남)
+        //   • 액션문 2줄 cap
+        //   • CTA 버튼 제거 — 아래 QuickInputButton 과 기능 중복
+        //   • Reference badge 는 inline 작게
         BUCard(.nested) {
-            VStack(alignment: .leading, spacing: 10) {
-                // Tag
+            VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     Image(systemName: toneIcon)
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: 10, weight: .bold))
                     Text(hero.tagKo)
-                        .font(.system(size: 10.5, weight: .bold))
-                        .tracking(1.1)
+                        .font(.system(size: 9.5, weight: .bold))
+                        .tracking(0.9)
                         .textCase(.uppercase)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    if let ref = hero.referencedCase {
+                        HStack(spacing: 3) {
+                            Image(systemName: "bookmark.fill")
+                                .font(.system(size: 8))
+                            Text(ref.name)
+                                .font(.system(size: 9.5, weight: .bold))
+                                .tracking(0.2)
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(BUColor.midnight08, in: Capsule())
+                    }
                 }
                 .foregroundStyle(toneColor)
 
-                // 분석문
                 Text(hero.analysisKo)
-                    .font(.system(size: 14.5, weight: .medium))
+                    .font(.system(size: 13.5, weight: .medium))
                     .foregroundStyle(BUColor.ink)
-                    .lineSpacing(4)
+                    .lineSpacing(2)
                     .multilineTextAlignment(.leading)
+                    .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                // 액션문
                 if !hero.actionKo.isEmpty {
                     Text(hero.actionKo)
-                        .font(.system(size: 13, weight: .regular))
+                        .font(.system(size: 12.5, weight: .regular))
                         .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
+                        .lineSpacing(1.5)
+                        .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
-                // Reference badge
-                if let ref = hero.referencedCase {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bookmark.fill")
-                            .font(.system(size: 9))
-                        Text("사례: \(ref.name)")
-                            .font(.system(size: 10.5, weight: .bold))
-                            .tracking(0.4)
-                    }
-                    .foregroundStyle(BUColor.midnight)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(BUColor.midnight08, in: Capsule())
-                }
-
-                // CTA (gradient)
-                CTAButton(label: hero.ctaKo, tone: hero.tone)
-                    .padding(.top, 4)
             }
         }
-    }
-}
-
-private struct CTAButton: View {
-    let label: String
-    let tone: HeroTone
-
-    private var bgGradient: LinearGradient {
-        switch tone {
-        case .crisis:
-            return LinearGradient(
-                colors: [BUColor.danger, BUColor.danger.opacity(0.85)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        case .warning:
-            return LinearGradient(
-                colors: [BUColor.warn, BUColor.warn.opacity(0.85)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        case .neutral:
-            return LinearGradient(
-                colors: [BUColor.primaryButtonStart, BUColor.primaryButtonEnd],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-    }
-    private var shadowColor: Color {
-        switch tone {
-        case .crisis:  return BUColor.danger.opacity(0.18)
-        case .warning: return BUColor.warn.opacity(0.18)
-        case .neutral: return BUColor.primaryButtonStart.opacity(0.18)
-        }
-    }
-
-    var body: some View {
-        Button {
-            #if canImport(UIKit)
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            #endif
-        } label: {
-            HStack(spacing: 6) {
-                Text(label)
-                    .font(.system(size: 13, weight: .bold))
-                    .tracking(-0.1)
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 11, weight: .bold))
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
-            .background(bgGradient, in: Capsule())
-            .shadow(color: shadowColor, radius: 8, x: 0, y: 2)
-        }
-        .buttonStyle(.plain)
     }
 }
 
