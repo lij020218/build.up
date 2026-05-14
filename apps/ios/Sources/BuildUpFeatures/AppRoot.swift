@@ -424,18 +424,22 @@ private struct BuildUpBrandBar<Accessory: View>: View {
     let onOpenSidebar: () -> Void
 
     var body: some View {
+        // 사장님 피드백 (2026-05-14): 상단 BrandBar 와 본문 배경이 따로 논다.
+        //   기존: ultraThinMaterial 캡슐 + 흰 border + shadow → 별도 글래스 띠로 분리.
+        //   변경: 배경 캡슐 제거. 로고/햄버거/타이틀이 Aurora lavender mist 위에
+        //     자연스럽게 떠있는 floating 요소로. 햄버거 버튼 Circle 도
+        //     강한 white fill → 옅은 midnight tint 로 톤 일치.
         HStack(spacing: 10) {
             Button(action: onOpenSidebar) {
                 Image(systemName: "sidebar.leading")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(BUColor.midnightInk)
                     .frame(width: 34, height: 34)
-                    .background(Color.white.opacity(0.76), in: Circle())
+                    .background(BUColor.midnight.opacity(0.06), in: Circle())
                     .overlay(
                         Circle()
-                            .strokeBorder(Color.white.opacity(0.82), lineWidth: 1)
+                            .strokeBorder(BUColor.midnight.opacity(0.10), lineWidth: 0.6)
                     )
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("메뉴")
@@ -451,9 +455,9 @@ private struct BuildUpBrandBar<Accessory: View>: View {
                     .foregroundStyle(.white)
                     .tracking(-0.3)
             }
-            .frame(width: 32, height: 32)
+            .frame(width: 30, height: 30)
             .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-            .shadow(color: BUColor.midnightInk.opacity(0.15), radius: 8, x: 0, y: 2)
+            .shadow(color: BUColor.midnightInk.opacity(0.12), radius: 6, x: 0, y: 2)
 
             Text("Build")
                 .font(.system(size: 15, weight: .bold))
@@ -471,18 +475,10 @@ private struct BuildUpBrandBar<Accessory: View>: View {
             Spacer(minLength: 0)
             accessory
         }
-        .frame(minHeight: 32)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.42), lineWidth: 1)
-                )
-                .shadow(color: Color.black.opacity(0.05), radius: 18, x: 0, y: 8)
-        )
+        .frame(minHeight: 34)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
+        // 배경 캡슐 제거 — Aurora lavender mist 가 그대로 보이게.
     }
 }
 
