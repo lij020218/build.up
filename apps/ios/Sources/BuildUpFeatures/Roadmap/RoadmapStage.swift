@@ -157,7 +157,7 @@ public enum RoadmapSampleData {
              "직원 4대보험 가입, 원천세 신고 셋업.",
              3),
 
-            // ── Phase 4: 오픈 (14-15) ── offline-food 16-17 ──
+            // ── Phase 4: 오픈 (14-22) ── offline-food 16-17 + shared-tail ──
             ("operations-setup", .launch,
              "POS·마케팅 셋업",
              "POS·키오스크 셋업, 네이버 플레이스·카카오 채널 개설.",
@@ -166,6 +166,26 @@ public enum RoadmapSampleData {
              "프리오픈·그랜드 오픈",
              "지인 50명 시범 영업 → 피드백 반영 → 정식 오픈.",
              7),
+            ("tax-guide", .launch,
+             "세금 신고 가이드",
+             "홈택스 부가세·종합소득세 신고 캘린더 + 절세 포인트.",
+             3),
+            ("loan-guide", .launch,
+             "대출 가이드",
+             "소진공 정책자금 경로·기관·주의사항 — 2.96% 저금리 활용법.",
+             2),
+            ("financial-review", .launch,
+             "월 운영비 검토",
+             "고정비·변동비·기타 비용 입력 및 Prime Cost 시뮬레이션.",
+             3),
+            ("pre-launch-final", .launch,
+             "오픈 최종 점검",
+             "오픈 전 72시간 체크리스트 + 당일 운영 스크립트 + 홍보 타임라인.",
+             3),
+            ("first-month-check", .launch,
+             "첫 달 점검",
+             "비상금 런웨이 계산 + 주간 KPI 트래커 + 주간 루틴.",
+             30),
         ]
 
         // 데모: 사장님(사랑의 도시락 운영 6일째) — 모두 완료 + 마지막 stage 가 current

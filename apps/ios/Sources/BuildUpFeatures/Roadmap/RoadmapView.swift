@@ -4,7 +4,7 @@
 //  ⚠️ 웹 SSOT: packages/shared/src/roadmap/workflow.ts
 //   웹은 46개 stage 풀에서 사장님 cluster 의 reachable stage 만 노출.
 //   path 길이 — offline=15, online=12, startup-tech=14, semiconductor=22.
-//   현재 모바일은 외식 path 17 단계 기본 (target-customer + menu-design 신규 포함).
+//   현재 모바일은 외식 path 22 단계 기본 (target-customer + menu-design + shared-tail 5개 포함).
 //   RoadmapSampleData 참조.
 //
 //  모바일 디자인 결정:
@@ -241,6 +241,16 @@ private struct StageCard: View {
             OperationsSetupStageView()
         case "pre-launch":
             PreLaunchStageView()
+        case "tax-guide":
+            TaxGuideStageView()
+        case "loan-guide":
+            LoanGuideStageView()
+        case "financial-review":
+            FinancialReviewStageView()
+        case "pre-launch-final":
+            PreLaunchFinalStageView()
+        case "first-month-check":
+            FirstMonthCheckStageView()
         default:
             StageDetailSheet(stage: stage)
         }
