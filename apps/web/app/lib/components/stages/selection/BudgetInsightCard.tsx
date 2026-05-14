@@ -26,24 +26,6 @@ import {
   type StartupProgram,
 } from "@build-up/shared";
 
-// 월 운영비 추정치 (만원, cluster 별) — runway 환산에 사용.
-const MONTHLY_OPS_ESTIMATE_WAN: Partial<Record<ClusterId, number>> = {
-  "offline-food":         800,
-  "offline-cafe":         600,
-  "offline-retail":       500,
-  "offline-beauty":       450,
-  "offline-fitness":      700,
-  "offline-education":    400,
-  "offline-pet":          400,
-  "offline-living":       350,
-  "offline-space":        900,
-  "online-digital":       250,
-  "tech-software":        800,
-  "tech-hardware":       2000,
-  "tech-deeptech-lab":   5000,
-  "tech-extreme-deeptech": 15000,
-};
-
 export function BudgetInsightCard() {
   const d = useDashboardCtx();
   const { language, selectedBudget, selectedIndustryId, industryCategoryId } = d;
@@ -57,9 +39,9 @@ export function BudgetInsightCard() {
 
   const ko = language === "ko";
   const userBudgetWon = selectedBudget ?? 0;
-  const monthlyEst = MONTHLY_OPS_ESTIMATE_WAN[cluster];
 
-  const insight = computeBudgetInsight(cluster, userBudgetWon, monthlyEst);
+  // 월 운영비는 benchmark.monthlyOpsEstimateWan 가 자동으로 사용됨
+  const insight = computeBudgetInsight(cluster, userBudgetWon);
 
   // 매칭 프로그램 — cluster 의 capital 단계 기준으로 추천.
   // delta 가 음수이면 그 부족분을 메울 수 있는 프로그램 우선.
@@ -175,6 +157,23 @@ export function BudgetInsightCard() {
               />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── 부연 컨텍스트 (자료의 한계·범위 안내) ── */}
+      {insight.benchmark.noteKo && (
+        <div
+          style={{
+            margin: "12px 24px 0",
+            padding: "12px 14px",
+            borderRadius: "12px",
+            background: NAVY_FAINT,
+            fontSize: "11.5px",
+            lineHeight: 1.55,
+            color: "rgba(15,23,42,0.72)",
+          }}
+        >
+          {insight.benchmark.noteKo}
         </div>
       )}
 

@@ -6,15 +6,10 @@
 //   "부족" 같은 verdict 가 아니라 "평균과의 차이"라는 descriptive frame.
 //   부족분이 있으면 매칭되는 지원 프로그램을 항상 함께 표시 (action pair).
 //
-//  데이터 출처:
-//   • 오프라인 (food/cafe/retail 등): 소상공인시장진흥공단 점포창업가이드 + 공정거래위원회 가맹사업 통계
-//   • 온라인 디지털: 중기부 온라인 창업 실태조사
-//   • 기술 스타트업: 중기부 창업기업 실태조사 + KOSME 청년창업사관학교 지원 자금 분포
-//   • 딥테크·반도체: TIPS 지원 평균 + 산업부 R&D 평균 (변동성 큼, 추정치로 명시)
+//  데이터는 실제 공개 자료에 기반 (각 cluster source 필드 참조).
+//  추정치인 경우 isEstimate: true 로 명시 — UI 에 "추정" 라벨 표시.
 //
-//  주의:
-//   숫자는 2024-2025 시장 추정치. 정확한 출처는 source 필드에 명시.
-//   딥테크/반도체는 케이스 편차가 매우 크므로 mid-range 사용.
+//  자료 검증 완료: 2026-05 (한식진흥원·공정위 정보공개서·중기부·TheVC·바이오타임즈 등)
 //
 
 import type { ClusterId } from "./roadmap/clusters";
@@ -28,98 +23,125 @@ export interface ClusterBudgetBenchmark {
   p25Wan: number;
   /** 75분위 — 평균 이상 안정권 (만원) */
   p75Wan: number;
-  /** 데이터 출처 표기 */
+  /** 데이터 출처 표기 (실제 자료 인용) */
   source: string;
   /** 데이터 기준 연도 */
   yearReported: number;
   /** 추정치 여부 (true 면 UI 에 "추정" 라벨 표시) */
   isEstimate?: boolean;
+  /** 추가 컨텍스트 (예: "시드 라운드 받은 경우 평균 17억, 부트스트랩 평균 표시 중") */
+  noteKo?: string;
+  /** 월 운영비 추정치 (만원) — 자본금-평균 차이를 개월수로 환산할 때 사용 */
+  monthlyOpsEstimateWan: number;
 }
 
 export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark> = {
-  // ── 오프라인 (소진공·가맹통계 기반) ──
+  // ── 오프라인 ──
   "offline-food": {
-    avgWan: 7200,
-    medianWan: 6000,
-    p25Wan: 4500,
-    p75Wan: 9500,
-    source: "소상공인시장진흥공단 점포창업가이드 + 공정위 가맹사업 통계",
-    yearReported: 2024,
+    avgWan: 10436,
+    medianWan: 9000,
+    p25Wan: 5000,
+    p75Wan: 15000,
+    source: "농식품부·한식진흥원 한식산업 실태조사 (1,500점 표본)",
+    yearReported: 2022,
+    monthlyOpsEstimateWan: 1500,
+    noteKo: "임대료·인건비·식자재 등 매월 1,200~1,700만원 소요. 가맹점은 평균보다 30~50% 상회 가능.",
   },
   "offline-cafe": {
-    avgWan: 8500,
-    medianWan: 7200,
-    p25Wan: 5500,
-    p75Wan: 11000,
-    source: "한국 커피전문점 창업비용 조사 + 공정위 가맹사업 통계",
-    yearReported: 2024,
+    avgWan: 12394,
+    medianWan: 12000,
+    p25Wan: 7000,
+    p75Wan: 20000,
+    source: "이투데이·퍼펙트커피뉴스 카페창업 평균 (16평 기준)",
+    yearReported: 2023,
+    monthlyOpsEstimateWan: 1000,
+    noteKo: "10평 소형 7,000~10,000만원 / 30평 중형 20,000~30,000만원. 디저트·베이커리는 +30~50%.",
   },
   "offline-retail": {
-    avgWan: 5500,
-    medianWan: 4500,
-    p25Wan: 3000,
-    p75Wan: 7500,
-    source: "소상공인시장진흥공단 도소매업 통계",
-    yearReported: 2024,
-  },
-  "offline-beauty": {
-    avgWan: 6500,
-    medianWan: 5500,
-    p25Wan: 4000,
-    p75Wan: 9000,
-    source: "미용업 창업비용 가이드",
-    yearReported: 2024,
-  },
-  "offline-fitness": {
-    avgWan: 12000,
-    medianWan: 9000,
-    p25Wan: 6000,
-    p75Wan: 16000,
-    source: "휘트니스·스포츠 시설 창업비용 조사",
-    yearReported: 2024,
-  },
-  "offline-education": {
-    avgWan: 4500,
-    medianWan: 3500,
-    p25Wan: 2500,
-    p75Wan: 6000,
-    source: "교육서비스업 창업가이드",
-    yearReported: 2024,
-  },
-  "offline-pet": {
-    avgWan: 5500,
-    medianWan: 4500,
-    p25Wan: 3000,
-    p75Wan: 7500,
-    source: "반려동물 사업 창업비용",
-    yearReported: 2024,
-  },
-  "offline-living": {
-    avgWan: 4500,
-    medianWan: 3500,
-    p25Wan: 2500,
-    p75Wan: 6500,
-    source: "생활서비스업 통계",
-    yearReported: 2024,
-  },
-  "offline-space": {
-    avgWan: 15000,
-    medianWan: 10000,
-    p25Wan: 6000,
-    p75Wan: 22000,
-    source: "공간대여업 창업비용 추정",
+    avgWan: 17000,
+    medianWan: 15000,
+    p25Wan: 8000,
+    p75Wan: 25000,
+    source: "공정위 편의점 정보공개서 (CU·GS25·세븐일레븐) + 의류매장 추정",
     yearReported: 2024,
     isEstimate: true,
+    monthlyOpsEstimateWan: 800,
+    noteKo: "편의점 17,000만원 / 무인점포 3,000만원 / 의류 1,000~4,000만원. 카테고리 편차 매우 큼.",
+  },
+  "offline-beauty": {
+    avgWan: 5000,
+    medianWan: 4000,
+    p25Wan: 1200,
+    p75Wan: 10000,
+    source: "큐플레이스 미용실 가이드 + 에스테틱 1인샵 실제 사례",
+    yearReported: 2024,
+    monthlyOpsEstimateWan: 600,
+    noteKo: "1인 에스테틱·네일·왁싱 1,200만원대부터 / 미용실 10평 5,000~7,000만원 / 대형 30,000만원+",
+  },
+  "offline-fitness": {
+    avgWan: 20000,
+    medianWan: 15000,
+    p25Wan: 5000,
+    p75Wan: 50000,
+    source: "ssjum·butterflyinvest 헬스장·필라테스 창업가이드",
+    yearReported: 2024,
+    monthlyOpsEstimateWan: 1500,
+    noteKo: "PT 스튜디오 3,000~7,000만원 / 헬스장 5,000~20,000만원 / 100평+ 50,000만원+. 폐업률 매우 높음.",
+  },
+  "offline-education": {
+    avgWan: 17000,
+    medianWan: 15000,
+    p25Wan: 10000,
+    p75Wan: 25000,
+    source: "마이스터디카페·imbeyonder 스터디카페 창업비용 (50평 기준)",
+    yearReported: 2024,
+    monthlyOpsEstimateWan: 800,
+    noteKo: "공부방 1,000만원 미만 / 스터디카페 15,000~20,000만원 / 학원 5,000~30,000만원 편차 큼.",
+  },
+  "offline-pet": {
+    avgWan: 12000,
+    medianWan: 10000,
+    p25Wan: 3000,
+    p75Wan: 20000,
+    source: "부자비즈 펫샵 표준비용 (폴리파크·야옹아멍멍해봐 프랜차이즈)",
+    yearReported: 2024,
+    isEstimate: true,
+    monthlyOpsEstimateWan: 700,
+    noteKo: "무인 애견샵 3,000만원 / 멀티펫샵 30평 9,500~20,000만원. 동물병원은 별도 (30,000만원+).",
+  },
+  "offline-living": {
+    avgWan: 9000,
+    medianWan: 9000,
+    p25Wan: 6000,
+    p75Wan: 13000,
+    source: "모두코리아·imbeyonder 무인세탁(빨래방) 비교",
+    yearReported: 2024,
+    monthlyOpsEstimateWan: 300,
+    noteKo: "무인세탁 6,000~13,000만원 / 일반 세탁소 3,000~7,000만원 / 청소·수리는 1,000~3,000만원.",
+  },
+  "offline-space": {
+    avgWan: 5000,
+    medianWan: 3000,
+    p25Wan: 2000,
+    p75Wan: 8000,
+    source: "마이프차 파티룸 + 드림캐쳐스 공유오피스 정보공개서",
+    yearReported: 2024,
+    isEstimate: true,
+    monthlyOpsEstimateWan: 300,
+    noteKo: "파티룸 2,000~3,000만원 (가장 저렴) / 공유오피스 프랜차이즈 16,000만원 / 사진 스튜디오 3,000~10,000만원.",
   },
 
   // ── 온라인 ──
   "online-digital": {
-    avgWan: 1000,
-    medianWan: 700,
+    avgWan: 1500,
+    medianWan: 1000,
     p25Wan: 300,
-    p75Wan: 1800,
-    source: "중기부 온라인 창업 실태조사 + 소호몰 진입 비용",
+    p75Wan: 3000,
+    source: "카페24·토스페이먼츠·아이보스 셀러 가이드 종합",
     yearReported: 2024,
+    isEstimate: true,
+    monthlyOpsEstimateWan: 250,
+    noteKo: "위탁판매 모델 500만원 미만 가능 / 자체 사입+자체몰 3,000만원+. 플랫폼 수수료 3.74~10.8%.",
   },
 
   // ── 기술 스타트업 ──
@@ -128,35 +150,43 @@ export const CLUSTER_BUDGET_BENCHMARKS: Record<ClusterId, ClusterBudgetBenchmark
     medianWan: 3000,
     p25Wan: 1500,
     p75Wan: 8000,
-    source: "중기부 창업기업 실태조사 (소프트웨어 시드 단계)",
+    source: "중기부 창업기업 실태조사 (소프트웨어 부트스트랩 단계)",
     yearReported: 2024,
+    monthlyOpsEstimateWan: 2000,
+    noteKo: "부트스트랩 평균 표시 중. 시드 라운드 받은 경우 평균 17.3억 (TheVC 2025, 전년比 2배). 3인 팀 월 burn 2,000~2,800만원.",
   },
   "tech-hardware": {
     avgWan: 15000,
     medianWan: 10000,
-    p25Wan: 6000,
-    p75Wan: 25000,
-    source: "하드웨어 스타트업 EVT-DVT 평균 (TIPS 지원 데이터)",
+    p25Wan: 5000,
+    p75Wan: 30000,
+    source: "와디즈 펀딩 사례 + 중기부 TIPS 하드웨어 지원 평균",
     yearReported: 2024,
     isEstimate: true,
+    monthlyOpsEstimateWan: 2000,
+    noteKo: "EVT 500~3,000만원 / DVT 3,000~10,000만원 / PVT 10,000~30,000만원 / 금형 3,000~10,000만원 / KC인증 200~800만원.",
   },
   "tech-deeptech-lab": {
-    avgWan: 50000,
-    medianWan: 30000,
-    p25Wan: 15000,
-    p75Wan: 80000,
-    source: "딥테크 (로봇·바이오) 시드 평균 — TIPS·산업부 R&D",
-    yearReported: 2024,
-    isEstimate: true,
-  },
-  "tech-extreme-deeptech": {
     avgWan: 100000,
-    medianWan: 60000,
+    medianWan: 80000,
     p25Wan: 30000,
     p75Wan: 200000,
-    source: "반도체·클린테크 초기 단계 (MPW·파일럿 라인 기준)",
+    source: "바이오타임즈 K-의료기기 2024 평균 라운드 + TIPS 딥테크 매칭 18~30억",
     yearReported: 2024,
     isEstimate: true,
+    monthlyOpsEstimateWan: 6000,
+    noteKo: "의료기기 임상 1건 평균 1.1억 (식약처) / 5인 R&D 팀 월 burn 5,000~9,000만원 / TIPS 딥테크 트랙 최대 15억 + 후속 30억.",
+  },
+  "tech-extreme-deeptech": {
+    avgWan: 500000,
+    medianWan: 300000,
+    p25Wan: 100000,
+    p75Wan: 1000000,
+    source: "스타트업레시피·와우테일 팹리스 시드~시리즈A 실제 라운드 (2024~2025)",
+    yearReported: 2025,
+    isEstimate: true,
+    monthlyOpsEstimateWan: 15000,
+    noteKo: "팹리스 시드 10~50억 / 시리즈A 100억~900억 (보스반도체 870억·디노티시아 900억). MPW 28nm 7,000만~3.5억 / EDA 라이선스 연 수억~수십억.",
   },
 };
 
@@ -172,13 +202,13 @@ export interface BudgetInsight {
   avgWan: number;
   /** delta = userWan - avgWan (음수면 부족) */
   deltaWan: number;
-  /** delta 의 절대값을 (월 운영비 기준) 개월수로 환산. monthlyEstimateWan 인자로 받음. */
+  /** delta 의 절대값을 (월 운영비 기준) 개월수로 환산 */
   deltaMonths: number;
   /** 사람이 읽는 한 줄 요약 (verdict 가 아니라 descriptive) */
   headlineKo: string;
-  /** 부연 설명 (선택적, 운영자금·범위 등 추가 맥락) */
+  /** 부연 설명 */
   subtitleKo: string;
-  /** 매칭 프로그램 추천 사유 (사용자에게 보여줌) */
+  /** 매칭 프로그램 추천 사유 */
   programIntroKo: string;
   /** 원본 벤치마크 */
   benchmark: ClusterBudgetBenchmark;
@@ -188,7 +218,7 @@ export interface BudgetInsight {
  * 사용자 입력 자본금과 cluster 평균을 비교해 인사이트를 생성한다.
  * @param cluster — 사용자의 cluster
  * @param userBudgetWon — 사용자가 입력한 시작 자본금 (원 단위, 0 이면 미입력)
- * @param monthlyEstimateWan — cluster 월 운영비 추정치 (만원). 없으면 환산 생략.
+ * @param monthlyEstimateWan — 선택적 override. 미지정 시 benchmark.monthlyOpsEstimateWan 사용.
  */
 export function computeBudgetInsight(
   cluster: ClusterId,
@@ -198,9 +228,8 @@ export function computeBudgetInsight(
   const benchmark = CLUSTER_BUDGET_BENCHMARKS[cluster];
   const userWan = Math.round(userBudgetWon / 10_000);
   const deltaWan = userWan - benchmark.avgWan;
-  const deltaMonths = monthlyEstimateWan && monthlyEstimateWan > 0
-    ? Math.abs(deltaWan) / monthlyEstimateWan
-    : 0;
+  const monthlyEst = monthlyEstimateWan ?? benchmark.monthlyOpsEstimateWan;
+  const deltaMonths = monthlyEst > 0 ? Math.abs(deltaWan) / monthlyEst : 0;
 
   if (userWan <= 0) {
     return {
@@ -233,7 +262,6 @@ export function computeBudgetInsight(
   }
 
   if (ratio < 0.85) {
-    // 부족
     return {
       tone: "shortage",
       userWan,
@@ -249,7 +277,6 @@ export function computeBudgetInsight(
     };
   }
 
-  // 여유 (ratio > 1.15)
   return {
     tone: "surplus",
     userWan,

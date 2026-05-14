@@ -32,6 +32,7 @@ public struct ClusterBudgetBenchmark: Sendable {
     public let yearReported: Int
     public let isEstimate: Bool
     public let monthlyOpsEstimateWan: Int   // 운영자금 환산용
+    public let noteKo: String               // 자료 한계·범위 안내
 }
 
 public struct SupportProgram: Identifiable, Sendable {
@@ -49,46 +50,56 @@ public struct SupportProgram: Identifiable, Sendable {
 
 // MARK: - 벤치마크 데이터 (cluster.rawValue 키)
 
+// 실제 자료 기반 — packages/shared/src/cluster-budget-benchmarks.ts 와 동일.
+// iOS 의 BusinessCluster 8개에 맞춰 web 의 14 cluster 중 매칭하는 값 사용.
 private let clusterBenchmarks: [String: ClusterBudgetBenchmark] = [
     "offline-food": ClusterBudgetBenchmark(
-        avgWan: 7200, medianWan: 6000, p25Wan: 4500, p75Wan: 9500,
-        source: "소상공인진흥공단 점포창업가이드 + 공정위 가맹사업 통계",
-        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 800
+        avgWan: 10436, medianWan: 9000, p25Wan: 5000, p75Wan: 15000,
+        source: "농식품부·한식진흥원 한식산업 실태조사 (1,500점 표본)",
+        yearReported: 2022, isEstimate: false, monthlyOpsEstimateWan: 1500,
+        noteKo: "임대료·인건비·식자재 등 매월 1,200~1,700만원 소요. 가맹점은 평균보다 30~50% 상회 가능."
     ),
     "online-digital": ClusterBudgetBenchmark(
-        avgWan: 1000, medianWan: 700, p25Wan: 300, p75Wan: 1800,
-        source: "중기부 온라인 창업 실태조사",
-        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 250
+        avgWan: 1500, medianWan: 1000, p25Wan: 300, p75Wan: 3000,
+        source: "카페24·토스페이먼츠·아이보스 셀러 가이드 종합",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 250,
+        noteKo: "위탁판매 500만원 미만 가능 / 자체 사입+자체몰 3,000만원+. 플랫폼 수수료 3.74~10.8%."
     ),
     "startup-tech": ClusterBudgetBenchmark(
         avgWan: 5000, medianWan: 3000, p25Wan: 1500, p75Wan: 8000,
-        source: "중기부 창업기업 실태조사 (소프트웨어 시드 단계)",
-        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 800
+        source: "중기부 창업기업 실태조사 (소프트웨어 부트스트랩 단계)",
+        yearReported: 2024, isEstimate: false, monthlyOpsEstimateWan: 2000,
+        noteKo: "부트스트랩 평균. 시드 라운드 받은 경우 평균 17.3억 (TheVC 2025). 3인 팀 월 burn 2,000~2,800만원."
     ),
     "hardware-iot": ClusterBudgetBenchmark(
-        avgWan: 15000, medianWan: 10000, p25Wan: 6000, p75Wan: 25000,
-        source: "하드웨어 스타트업 EVT-DVT 평균 (TIPS 지원 데이터)",
-        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 2000
+        avgWan: 15000, medianWan: 10000, p25Wan: 5000, p75Wan: 30000,
+        source: "와디즈 펀딩 사례 + 중기부 TIPS 하드웨어 지원 평균",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 2000,
+        noteKo: "EVT 500~3,000만 / DVT 3,000~10,000만 / PVT 10,000~30,000만 / 금형 3,000~10,000만 / KC인증 200~800만."
     ),
     "robotics-physical-ai": ClusterBudgetBenchmark(
-        avgWan: 50000, medianWan: 30000, p25Wan: 15000, p75Wan: 80000,
-        source: "딥테크 시드 평균 — TIPS·산업부 R&D",
-        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 5000
+        avgWan: 100000, medianWan: 80000, p25Wan: 30000, p75Wan: 200000,
+        source: "바이오타임즈 K-의료기기 2024 평균 라운드 + TIPS 딥테크 매칭 18~30억",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 6000,
+        noteKo: "5인 R&D 팀 월 burn 5,000~9,000만 / TIPS 딥테크 트랙 최대 15억 + 후속 30억."
     ),
     "biotech-medtech": ClusterBudgetBenchmark(
-        avgWan: 50000, medianWan: 30000, p25Wan: 15000, p75Wan: 80000,
-        source: "바이오·의료기기 시드 평균 — TIPS·산업부 R&D",
-        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 5000
+        avgWan: 100000, medianWan: 80000, p25Wan: 30000, p75Wan: 200000,
+        source: "바이오타임즈 K-의료기기 2024 평균 라운드 + 식약처 임상 데이터",
+        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 6000,
+        noteKo: "의료기기 임상 1건 평균 1.1억 (식약처) / 신약 임상2상 평균 119억 / TIPS 딥테크 최대 15억."
     ),
     "semiconductor": ClusterBudgetBenchmark(
-        avgWan: 100000, medianWan: 60000, p25Wan: 30000, p75Wan: 200000,
-        source: "반도체 초기 단계 (MPW·파일럿 기준)",
-        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 15000
+        avgWan: 500000, medianWan: 300000, p25Wan: 100000, p75Wan: 1000000,
+        source: "스타트업레시피·와우테일 팹리스 시드~시리즈A 실제 라운드 (2024-2025)",
+        yearReported: 2025, isEstimate: true, monthlyOpsEstimateWan: 15000,
+        noteKo: "팹리스 시드 10~50억 / 시리즈A 100~900억 (보스반도체 870억 등) / MPW 28nm 0.7~3.5억 / EDA 연 수억~수십억."
     ),
     "climate-energy": ClusterBudgetBenchmark(
-        avgWan: 100000, medianWan: 60000, p25Wan: 30000, p75Wan: 200000,
-        source: "클린테크 초기 단계 (파일럿 라인 기준)",
-        yearReported: 2024, isEstimate: true, monthlyOpsEstimateWan: 15000
+        avgWan: 500000, medianWan: 300000, p25Wan: 100000, p75Wan: 1000000,
+        source: "스타트업레시피 클린테크·에너지 실제 라운드 + 산업부 R&D",
+        yearReported: 2025, isEstimate: true, monthlyOpsEstimateWan: 15000,
+        noteKo: "파일럿 플랜트 수십억~수백억 / 배터리·수소 분야 대형 라운드 多 / 정부·전략적 투자자 매칭 필수."
     ),
 ]
 
@@ -273,6 +284,9 @@ public struct BudgetInsightCard: View {
                     if !matchPrograms(for: clusterRaw).isEmpty {
                         programsSection(insight)
                     }
+                    if !insight.benchmark.noteKo.isEmpty {
+                        contextNote(insight)
+                    }
                     footerSection(insight)
                 }
             }
@@ -429,6 +443,18 @@ public struct BudgetInsightCard: View {
             )
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: 부연 컨텍스트 (자료 한계·범위 안내)
+
+    private func contextNote(_ insight: BudgetInsight) -> some View {
+        Text(insight.benchmark.noteKo)
+            .font(.system(size: 11))
+            .foregroundStyle(BUColor.inkSecondary)
+            .lineSpacing(2)
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: 푸터
