@@ -10,8 +10,12 @@
 //     • startup-tech (SaaS 등):      14 단계
 //     • semiconductor:               22 단계
 //
-//  iOS 현재 구현: 사장님(사랑의 도시락 — 외식) 기준 15-stage path 를 기본 데이터로.
+//  iOS 현재 구현: 사장님(사랑의 도시락 — 외식) 기준 17-stage path 를 기본 데이터로.
 //  추후 cluster 자동 매핑 + Supabase roadmap 테이블 연동 예정.
+//
+//  2026-05-14 신규 stage 2개 (사장님 신고 "타깃 고객·메뉴 결정 누락"):
+//    · target-customer-definition (Phase 1, shared) — 타깃 페르소나 명시
+//    · menu-design (Phase 3, offline) — 메뉴 라인업 + 재고 카드 자동 연동
 //
 
 import Foundation
@@ -87,7 +91,7 @@ public enum RoadmapSampleData {
     /// 한국어 콘텐츠는 웹 `localizeStage()` 의 ko 번역을 모바일 viewport 에 맞게 압축.
     public static let stages: [RoadmapStage] = {
         let raw: [(String, StagePhase, String, String, Int?)] = [
-            // ── Phase 1: 준비 (1-4) ── shared 1-4 ──
+            // ── Phase 1: 준비 (1-5) ── shared 1-5 ──
             ("industry-selection", .preparation,
              "업종 선택",
              "사업 분야를 결정합니다. (외식·카페·미용·온라인 등)",
@@ -100,6 +104,10 @@ public enum RoadmapSampleData {
              "운영 방식 선택",
              "홀 위주 / 배달 위주 / 하이브리드 — 비용 구조에 큰 영향.",
              2),
+            ("target-customer-definition", .preparation,
+             "타깃 고객 정의",
+             "주 연령대·라이프스타일·가격 민감도로 페르소나 한 명을 명시. 모든 후속 결정의 기준선.",
+             1),
             ("budget-setup", .preparation,
              "예산·시점 설정",
              "총 창업 자본, 운영자금, 오픈 시점을 정합니다.",
@@ -127,11 +135,15 @@ public enum RoadmapSampleData {
              "전용 통장 개설, 세무사 상담 1-2곳 미팅.",
              3),
 
-            // ── Phase 3: 오픈 준비 (10-13) ── offline-food 12-15 ──
+            // ── Phase 3: 오픈 준비 (11-15) ── offline-food 12-16 ──
             ("construction-setup", .setup,
              "인테리어·집기 셋업",
              "견적 3곳 비교, 주방 동선·간판·내장재 결정.",
              21),
+            ("menu-design", .setup,
+             "메뉴 라인업 확정",
+             "시그니처 3-5개 + 사이드 2-3개. 원가율 33% 이하 + 재고 카드 자동 연동.",
+             5),
             ("vendor-setup", .setup,
              "공급처·식자재 확보",
              "주요 식자재 2-3 공급처 단가표 확보, 첫 발주 계획.",

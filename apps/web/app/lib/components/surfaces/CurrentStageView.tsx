@@ -47,6 +47,8 @@ import { TaxGuideStage } from "../stages/shared-tail/TaxGuideStage";
 import { LoanGuideStage } from "../stages/shared-tail/LoanGuideStage";
 import { FinancialReviewStage } from "../stages/shared-tail/FinancialReviewStage";
 import { StageGuideViewer } from "../stages/shared/StageGuideViewer";
+import { TargetCustomerStage } from "../stages/shared/TargetCustomerStage";
+import { MenuDesignStage } from "../stages/shared/MenuDesignStage";
 import { FranchiseApplicationStage } from "../stages/franchise/FranchiseApplicationStage";
 import { AuroraBackground } from "../../../../components/ui/aurora-background";
 import { FranchiseSupplyPanel } from "../stages/franchise/FranchiseSupplyPanel";
@@ -749,7 +751,7 @@ export function CurrentStageView() {
                   <VendorSetupStage />
                 )}
 
-                {stageGuideContent && currentStage.code !== "pre_launch" && currentStage.code !== "operations_setup" && currentStage.code !== "hiring_setup" && currentStage.code !== "platform_setup" && currentStage.code !== "online_registration" && (currentStage.code as string) !== "franchise_application" && currentStage.code !== "fundraising_readiness" && currentStage.code !== "registration_setup" && currentStage.code !== "insurance_tax_setup" && currentStage.code !== "loan_guide" && (currentStage.code as string) !== "financial_review" && currentStage.code !== "vendor_setup" && (
+                {stageGuideContent && currentStage.code !== "pre_launch" && currentStage.code !== "operations_setup" && currentStage.code !== "hiring_setup" && currentStage.code !== "platform_setup" && currentStage.code !== "online_registration" && (currentStage.code as string) !== "franchise_application" && currentStage.code !== "fundraising_readiness" && currentStage.code !== "registration_setup" && currentStage.code !== "insurance_tax_setup" && currentStage.code !== "loan_guide" && (currentStage.code as string) !== "financial_review" && currentStage.code !== "vendor_setup" && (currentStage.code as string) !== "target_customer_definition" && (currentStage.code as string) !== "menu_design" && (
                   <StageGuideViewer />
                 )}
 
@@ -783,6 +785,12 @@ export function CurrentStageView() {
                 {currentStage.code === "biz_registration" && <BizRegistrationPanel />}
 
                 {currentStage.code === "pre_launch_final" && <PreLaunchFinalStage />}
+
+                {/* ── 타깃 고객 정의 (target_customer_definition) — shared, 2026-05-14 신규 ── */}
+                {currentStage.code === "target_customer_definition" && <TargetCustomerStage />}
+
+                {/* ── 메뉴/서비스 라인업 (menu_design) — offline, cluster-aware, 2026-05-14 신규 ── */}
+                {currentStage.code === "menu_design" && <MenuDesignStage />}
 
                 {(() => {
                   const visibleTasks = stageTasks.filter((t) => t.taskId !== "cpa-decision-made");

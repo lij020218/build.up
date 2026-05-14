@@ -4,13 +4,14 @@
 //  ⚠️ 웹 SSOT: packages/shared/src/roadmap/workflow.ts
 //   웹은 46개 stage 풀에서 사장님 cluster 의 reachable stage 만 노출.
 //   path 길이 — offline=15, online=12, startup-tech=14, semiconductor=22.
-//   현재 모바일은 외식 path 15 단계 기본 — RoadmapSampleData 참조.
+//   현재 모바일은 외식 path 17 단계 기본 (target-customer + menu-design 신규 포함).
+//   RoadmapSampleData 참조.
 //
 //  모바일 디자인 결정:
 //   • 수직 timeline (좌측 진행 line + 단계 dot)
 //   • 단계별 카드 — 완료 (faded) / 진행 중 (강조 + Liquid Glass hero) / 예정 (dim)
 //   • 단계 그룹 (Phase) 별 sticky header
-//   • 진행도 상단 banner — "14 / 15 완료 (93%)"
+//   • 진행도 상단 banner — "X / 17 완료 (%)"
 //
 //  웹과 차이:
 //   • 가로 phase 탭 → 모바일 vertical 스크롤
@@ -377,7 +378,7 @@ private struct StageDetailSheet: View {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("Roadmap — 외식 15단계") {
+#Preview("Roadmap — 외식 17단계") {
     NavigationStack {
         RoadmapView()
     }

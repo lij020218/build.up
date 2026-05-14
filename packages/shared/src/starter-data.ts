@@ -1248,6 +1248,36 @@ export const starterStageFlow: RoadmapStageState[] = [
     completionRule: { kind: "select_one", minimumSelectedCount: 1 },
     taskIds: [],
     riskIds: [],
+    // 2026-05-14 사장님 신고: "타깃 고객 정의 단계가 어디에도 없다."
+    //   business-model 다음으로 target-customer-definition 삽입 — 모든 cluster 통과.
+    //   타깃 페르소나 없이 budget·location·menu 결정하면 매번 평균값으로 회귀 → 차별화 실패.
+    nextStageIds: ["target-customer-definition"]
+  },
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Stage 4 (NEW 2026-05-14) — 타깃 고객 정의
+  //  사장님 신고: "이 과정이 새로 들어가면 좋겠어. 현재 로드맵 어느 단계에도 없어."
+  //  배치: 모든 cluster 공통 (shared path). business-model 다음, budget-setup 전.
+  //    이유: 타깃 페르소나 (연령·라이프스타일·가격 민감도) 가 정해져야 예산 분배,
+  //          입지 선정, 메뉴 가격대, 마케팅 채널 — 모든 후속 결정의 기준선이 됨.
+  //    Tech 클러스터 (offline → startup-foundation 분기) 도 통과 — 가벼운 페르소나 sketch.
+  //          더 깊은 customer-discovery (10명 인터뷰) 는 stepNumber 6 에서 별도 진행.
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    stageId: "target-customer-definition",
+    code: "target_customer_definition",
+    title: "Define your target customer",
+    type: "verification",
+    status: "locked",
+    stepNumber: 4,
+    totalSteps: 14,
+    goal: "Capture the primary customer persona — age range, lifestyle, and price sensitivity — so location, menu, and marketing decisions stay focused on a real person, not a generic average.",
+    whyNow: "Every downstream decision — where to lease, what to charge, which channel to advertise on — depends on who the customer is. Skipping this means each subsequent stage drifts toward generic averages and underperforms. 5-10 min input now saves months of pivoting.",
+    completionRule: {
+      kind: "required_inputs",
+      requiredKeys: ["primaryAgeRange", "lifestyleHint", "priceSensitivity"]
+    },
+    taskIds: [],
+    riskIds: [],
     nextStageIds: ["budget-setup"]
   },
   {
@@ -1878,6 +1908,48 @@ export const starterStageFlow: RoadmapStageState[] = [
       "fire-health-parallel"
     ],
     riskIds: [],
+    // 2026-05-14 사장님 신고: "메뉴를 결정하는 과정이 새로 들어가면 좋겠어.
+    //   미리 메뉴를 결정하면 재고 관리 카드에 들어가게 해서 수고를 덜을 수 있어."
+    //   construction-setup (인테리어 거의 끝) → menu-design (메뉴/서비스 라인업 확정)
+    //   → vendor-setup (메뉴 알아야 식자재·공급처·장비 결정 가능).
+    nextStageIds: ["menu-design"]
+  },
+  // ──────────────────────────────────────────────────────────────────────────
+  //  Stage (NEW 2026-05-14) — 메뉴/서비스 라인업 확정
+  //  사장님 신고: "메뉴 결정 과정 + 재고 관리 카드 연동" 두 가지를 한 번에.
+  //
+  //  배치: offline path 만 (construction-setup 직후). startup/online 은 이 경로
+  //    안 거침. offline-food/cafe = 음식·음료 메뉴, offline-beauty/fitness/pet =
+  //    서비스 메뉴, offline-retail = 상품 카탈로그 — 모두 "초기 라인업 확정 +
+  //    재고 추적 시작점" 의미는 동일.
+  //
+  //  데이터 흐름:
+  //    menu-design.decisions.inputs.menuItemsJson (serialized array)
+  //      → roadmap-store.menuItems (parsed)
+  //      → InventoryOpsCard "메뉴에서 가져오기" 버튼 → 재고 카드 자동 prefill.
+  //
+  //  Why this position:
+  //    • construction-setup 직후: 주방 동선·집기 결정 후 메뉴 확정 가능.
+  //    • vendor-setup 전: 식자재 공급처 협상에 메뉴 정보 필수.
+  //    • hiring-setup 전: 메뉴 복잡도가 필요 인력·교육 시간 결정.
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    stageId: "menu-design",
+    code: "menu_design",
+    title: "Lock your menu / service lineup",
+    type: "execution",
+    status: "locked",
+    stepNumber: 13,
+    totalSteps: 19,
+    goal: "Define the initial menu or service lineup with item name, price, and category. Items captured here pre-load the inventory tracking card so day-1 prep doesn't slip.",
+    whyNow: "Menu decisions determine ingredient sourcing, equipment needs, pricing strategy, and the inventory tracking baseline. Locking before vendor setup prevents rework and week-1 stockouts. For cafes — drink lineup; for beauty/fitness — service menu; for retail — product catalog.",
+    completionRule: {
+      kind: "required_inputs",
+      requiredKeys: ["menuItemsJson"]
+    },
+    taskIds: [],
+    riskIds: [],
+    // menu-design → vendor-setup (was direct from construction-setup).
     nextStageIds: ["vendor-setup"]
   },
   {
