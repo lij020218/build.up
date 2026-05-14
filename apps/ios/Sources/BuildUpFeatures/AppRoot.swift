@@ -90,21 +90,29 @@ public struct AppRoot: View {
                 }
             } else if coordinator.isAuthenticated {
                 if let store = dashboardStore {
-                    MainTabs(
-                        store: store,
-                        coordinator: coordinator,
-                        selectedTab: $selectedTab
-                    )
-                    .task {
-                        await loadDashboardIfNeeded(coordinator: coordinator)
-                        await notificationFlow.refresh()
-                        if notificationFlow.status != .granted {
-                            showNotificationSheet = true
+                    // 신규 사장님 — 아무것도 안 한 상태 → OnboardingChoiceView
+                    // (웹과 동일: category 미정 + 영업 미시작 + 매출/비용 데이터 0)
+                    if needsOnboarding(store: store) {
+                        OnboardingFlow(
+                            store: store,
+                            selectedTab: $selectedTab
+                        )
+                    } else {
+                        MainTabs(
+                            store: store,
+                            coordinator: coordinator,
+                            selectedTab: $selectedTab
+                        )
+                        .task {
+                            await notificationFlow.refresh()
+                            if notificationFlow.status != .granted {
+                                showNotificationSheet = true
+                            }
                         }
-                    }
-                    .sheet(isPresented: $showNotificationSheet) {
-                        NotificationOptInView(flow: notificationFlow) {
-                            showNotificationSheet = false
+                        .sheet(isPresented: $showNotificationSheet) {
+                            NotificationOptInView(flow: notificationFlow) {
+                                showNotificationSheet = false
+                            }
                         }
                     }
                 } else {
@@ -189,6 +197,123 @@ public struct AppRoot: View {
             return localized
         }
         return String(describing: error)
+    }
+
+    /// 신규 사장님 판정 — 아직 아무것도 안 한 상태:
+    ///   · category == .general (업종 미선택)
+    ///   · businessLaunched == false (영업 미시작)
+    ///   · entries / costs 모두 비어있음 (운영 데이터 0)
+    /// 웹의 OnboardingChoiceScreen 진입 조건과 동일.
+    @MainActor
+    private func needsOnboarding(store: DashboardStore) -> Bool {
+        #if DEBUG
+        // 디자인 검증용 — BU_DEMO_ONBOARDING=1 → 데이터 있어도 OnboardingFlow 강제.
+        //   SIMCTL_CHILD_BU_DEMO_ONBOARDING=1 xcrun simctl launch ...
+        if ProcessInfo.processInfo.environment["BU_DEMO_ONBOARDING"] == "1" {
+            return true
+        }
+        #endif
+        return store.category == .general
+            && !store.businessLaunched
+            && store.entries.isEmpty
+            && store.costs.total == 0
+    }
+}
+
+// MARK: - OnboardingFlow — 3 선택 → 업종 선택 / 기존 가게 / AI 로드맵
+
+private struct OnboardingFlow: View {
+    let store: DashboardStore
+    @Binding var selectedTab: AppRoot.Tab
+
+    @State private var path: OnboardingPath? = nil
+
+    var body: some View {
+        Group {
+            switch path {
+            case .none:
+                OnboardingChoiceView { choice in
+                    path = choice
+                }
+            case .manual:
+                IndustrySelectionView(
+                    onSelect: { category in
+                        // 카테고리 선택 → store.setProfile 로 반영 → needsOnboarding=false →
+                        // 자동으로 MainTabs 진입. 로드맵 탭부터 노출.
+                        store.setProfile(
+                            storeName: store.storeName.isEmpty ? "내 가게" : store.storeName,
+                            userName: store.userName,
+                            daysSinceLaunch: 0,
+                            category: category,
+                            currentCash: nil,
+                            businessLaunched: false
+                        )
+                        selectedTab = .roadmap
+                    },
+                    onBack: { path = nil }
+                )
+            case .existing:
+                ExistingStoreRegistrationView(
+                    onComplete: { reg in
+                        store.setProfile(
+                            storeName: reg.storeName,
+                            userName: store.userName,
+                            daysSinceLaunch: reg.daysSinceLaunch,
+                            category: reg.category,
+                            currentCash: nil,
+                            businessLaunched: true
+                        )
+                        selectedTab = .home  // 운영 대시보드로
+                    },
+                    onBack: { path = nil }
+                )
+            case .ai:
+                AIRoadmapPlaceholderView(onBack: { path = nil })
+            }
+        }
+    }
+}
+
+/// AI 로드맵 — 추후 작업. 현재는 안내 + 뒤로가기.
+private struct AIRoadmapPlaceholderView: View {
+    let onBack: () -> Void
+
+    var body: some View {
+        ZStack {
+            BUBackgroundSurface()
+            VStack(spacing: 18) {
+                Spacer()
+                ZStack {
+                    Circle()
+                        .fill(BUColor.midnight.opacity(0.08))
+                        .frame(width: 80, height: 80)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 32, weight: .regular))
+                        .foregroundStyle(BUColor.midnight)
+                }
+                Text("AI 로드맵")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(BUColor.midnightDeep)
+                    .tracking(-0.6)
+                Text("아이디어 한 줄로 예산·상권·공급처·일정까지 자동 설계.\n곧 출시합니다.")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .padding(.horizontal, BUSpacing.lg)
+                Spacer()
+                Button(action: onBack) {
+                    Text("뒤로")
+                        .font(.system(size: 14, weight: .heavy))
+                        .foregroundStyle(BUColor.midnightInk)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 11)
+                        .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 32)
+            }
+        }
     }
 }
 
