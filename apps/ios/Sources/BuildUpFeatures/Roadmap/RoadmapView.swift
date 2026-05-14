@@ -3,20 +3,17 @@
 //
 //  ⚠️ 웹 SSOT: packages/shared/src/roadmap/workflow.ts
 //   웹은 46개 stage 풀에서 사장님 cluster 의 reachable stage 만 노출.
-//   path 길이 — offline=15, online=12, startup-tech=14, semiconductor=22.
-//   현재 모바일은 외식 path 22 단계 기본 (target-customer + menu-design + shared-tail 5개 포함).
-//   RoadmapSampleData 참조.
+//   cluster 별 총 단계 수:
+//     offline-food: 22 / online-digital: 15 / startup-tech: 19
+//     hardware-iot: 22 / robotics-physical-ai: 22 / biotech-medtech: 22
+//     semiconductor: 22 / climate-energy: 22
 //
 //  모바일 디자인 결정:
+//   • 업종(cluster) 선택 → @AppStorage("roadmap.cluster") 저장
 //   • 수직 timeline (좌측 진행 line + 단계 dot)
-//   • 단계별 카드 — 완료 (faded) / 진행 중 (강조 + Liquid Glass hero) / 예정 (dim)
-//   • 단계 그룹 (Phase) 별 sticky header
-//   • 진행도 상단 banner — "X / 17 완료 (%)"
-//
-//  웹과 차이:
-//   • 가로 phase 탭 → 모바일 vertical 스크롤
-//   • 클릭 시 단계 상세 sheet
-//   • 한 화면에 보이는 단계 ~3-4개 (모바일 viewport 고려)
+//   • 단계별 카드 — 완료 (faded) / 진행 중 (강조 + hero) / 예정 (dim)
+//   • Phase 별 sticky header
+//   • 상단 banner — "X / N 완료 (%)"
 //
 
 import SwiftUI
@@ -27,11 +24,18 @@ import BuildUpComponents
 
 public struct RoadmapView: View {
 
-    let stages: [RoadmapStage]
+    @AppStorage("roadmap.cluster") private var clusterRaw = BusinessCluster.offlineFood.rawValue
+    @State private var showClusterPicker = false
 
-    public init(stages: [RoadmapStage] = RoadmapSampleData.stages) {
-        self.stages = stages
+    private var cluster: BusinessCluster {
+        BusinessCluster(rawValue: clusterRaw) ?? .offlineFood
     }
+
+    private var stages: [RoadmapStage] {
+        RoadmapSampleData.stages(for: cluster)
+    }
+
+    public init() {}
 
     private var progress: (completed: Int, total: Int) {
         (
@@ -41,8 +45,9 @@ public struct RoadmapView: View {
     }
 
     private var groupedByPhase: [(StagePhase, [RoadmapStage])] {
-        StagePhase.allCases.map { phase in
-            (phase, stages.filter { $0.phase == phase })
+        StagePhase.allCases.compactMap { phase in
+            let filtered = stages.filter { $0.phase == phase }
+            return filtered.isEmpty ? nil : (phase, filtered)
         }
     }
 
@@ -53,25 +58,29 @@ public struct RoadmapView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: BUSpacing.cardGap, pinnedViews: [.sectionHeaders]) {
 
-                    // ── 상단 진행도 banner ──
+                    // 업종 선택 배너
+                    ClusterBadge(cluster: cluster) {
+                        showClusterPicker = true
+                    }
+                    .padding(.horizontal, BUSpacing.md)
+                    .padding(.top, BUSpacing.md)
+
+                    // 진행도 배너
                     ProgressBanner(
                         completed: progress.completed,
                         total: progress.total
                     )
                     .padding(.horizontal, BUSpacing.md)
-                    .padding(.top, BUSpacing.md)
 
-                    // ── Phase 별 섹션 ──
+                    // Phase 별 섹션
                     ForEach(groupedByPhase, id: \.0) { (phase, phaseStages) in
-                        if !phaseStages.isEmpty {
-                            Section {
-                                ForEach(phaseStages) { stage in
-                                    StageCard(stage: stage)
-                                        .padding(.horizontal, BUSpacing.md)
-                                }
-                            } header: {
-                                PhaseHeader(phase: phase, stages: phaseStages)
+                        Section {
+                            ForEach(phaseStages) { stage in
+                                StageCard(stage: stage)
+                                    .padding(.horizontal, BUSpacing.md)
                             }
+                        } header: {
+                            PhaseHeader(phase: phase, stages: phaseStages)
                         }
                     }
 
@@ -83,6 +92,47 @@ public struct RoadmapView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
+        .toolbar {
+            #if os(iOS)
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showClusterPicker = true
+                } label: {
+                    Image(systemName: "square.grid.2x2")
+                        .foregroundStyle(BUColor.midnight)
+                }
+            }
+            #endif
+        }
+        .sheet(isPresented: $showClusterPicker) {
+            IndustrySelectionStageView()
+        }
+    }
+}
+
+// MARK: - Cluster badge
+
+private struct ClusterBadge: View {
+    let cluster: BusinessCluster
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: BUSpacing.sm) {
+                Image(systemName: cluster.icon)
+                    .font(.system(size: 14)).foregroundStyle(BUColor.midnight)
+                Text(cluster.displayName)
+                    .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                Spacer()
+                Text("업종 변경")
+                    .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold)).foregroundStyle(BUColor.inkSubtle)
+            }
+            .padding(BUSpacing.sm)
+            .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -108,7 +158,6 @@ private struct ProgressBanner: View {
                         .foregroundStyle(BUColor.inkMuted)
                 }
 
-                // 진행 바
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule()
@@ -193,10 +242,7 @@ private struct StageCard: View {
             showDetail = true
         } label: {
             HStack(alignment: .top, spacing: BUSpacing.sm) {
-                // 좌측 timeline dot + line
                 timelineColumn
-
-                // 우측 콘텐츠 카드
                 contentCard
             }
         }
@@ -206,9 +252,14 @@ private struct StageCard: View {
         }
     }
 
+    // MARK: - stageSheet dispatch (웹 stageId → native view)
+
     @ViewBuilder
     private var stageSheet: some View {
         switch stage.id {
+        // ── 공통 준비 (Shared) ──
+        case "industry-selection":
+            IndustrySelectionStageView()
         case "startup-type":
             StartupTypeStageView()
         case "business-model":
@@ -217,10 +268,8 @@ private struct StageCard: View {
             TargetCustomerStageView()
         case "budget-setup":
             BudgetSetupStageView()
-        case "menu-design":
-            MenuDesignStageView()
-        case "vendor-setup":
-            VendorSetupStageView()
+
+        // ── Offline (외식·카페·소매) ──
         case "permit-check":
             PermitCheckStageView()
         case "location-candidates":
@@ -233,6 +282,10 @@ private struct StageCard: View {
             BizRegistrationStageView()
         case "construction-setup":
             ConstructionSetupStageView()
+        case "menu-design":
+            MenuDesignStageView()
+        case "vendor-setup":
+            VendorSetupStageView()
         case "hiring-setup":
             HiringSetupStageView()
         case "insurance-tax-setup":
@@ -241,6 +294,70 @@ private struct StageCard: View {
             OperationsSetupStageView()
         case "pre-launch":
             PreLaunchStageView()
+
+        // ── Online Digital ──
+        case "platform-setup":
+            PlatformSetupStageView()
+        case "online-registration":
+            OnlineRegistrationStageView()
+        case "sourcing-setup":
+            SourcingSetupStageView()
+        case "store-setup":
+            StoreSetupStageView()
+        case "online-marketing":
+            OnlineMarketingStageView()
+
+        // ── Startup-Tech (SaaS) ──
+        case "startup-foundation":
+            StartupFoundationStageView()
+        case "customer-discovery":
+            CustomerDiscoveryStageView()
+        case "company-setup":
+            CompanySetupStageView()
+        case "mvp-build":
+            MvpBuildStageView()
+        case "launch-gtm":
+            LaunchGtmStageView()
+        case "go-live":
+            GoLiveStageView()
+        case "growth-engine":
+            GrowthEngineStageView()
+        case "fundraising-readiness":
+            FundraisingReadinessStageView()
+        case "venture-certification":
+            VentureCertificationStageView()
+
+        // ── Hardware-IoT ──
+        case "hardware-prototype":
+            HardwarePrototypeStageView()
+        case "bom-supply-chain":
+            BomSupplyChainStageView()
+        case "certification-kc-ce":
+            CertificationKcCeStageView()
+        case "manufacturing-partner":
+            ManufacturingPartnerStageView()
+
+        // ── Lab (Robotics / Biotech) ──
+        case "lab-setup":
+            LabSetupStageView()
+        case "prototype-iteration":
+            PrototypeIterationStageView()
+        case "field-or-clinical-test":
+            FieldOrClinicalTestStageView()
+        case "regulatory-submission":
+            RegulatorySubmissionStageView()
+
+        // ── Semiconductor / Climate-Energy ──
+        case "eda-tooling-setup":
+            EdaToolingSetupStageView()
+        case "mpw-or-pilot-tape-out":
+            MpwOrPilotTapeOutStageView()
+        case "packaging-and-test":
+            PackagingAndTestStageView()
+        case "partner-foundation-or-pilot-line":
+            PartnerFoundationOrPilotLineStageView()
+
+        // ── Shared Tail (모든 cluster) ──
         case "tax-guide":
             TaxGuideStageView()
         case "loan-guide":
@@ -251,15 +368,16 @@ private struct StageCard: View {
             PreLaunchFinalStageView()
         case "first-month-check":
             FirstMonthCheckStageView()
+
         default:
             StageDetailSheet(stage: stage)
         }
     }
 
-    // 좌측 dot + 세로 line
+    // MARK: - Timeline column
+
     private var timelineColumn: some View {
         VStack(spacing: 0) {
-            // dot
             ZStack {
                 Circle()
                     .fill(BUColor.surfaceElevated)
@@ -269,7 +387,6 @@ private struct StageCard: View {
                     )
                 statusIcon
             }
-            // line (마지막 단계 제외)
             Rectangle()
                 .fill(statusTint.opacity(0.15))
                 .frame(width: 2)
@@ -300,7 +417,6 @@ private struct StageCard: View {
     private var contentCard: some View {
         BUCard(stage.status == .current ? .hero : .card, tint: stage.status == .current ? statusTint : nil) {
             VStack(alignment: .leading, spacing: 6) {
-                // 단계 번호 + 상태
                 HStack(spacing: BUSpacing.xs) {
                     Text("단계 \(stage.stepNumber)")
                         .font(BUFont.eyebrow)
@@ -315,13 +431,11 @@ private struct StageCard: View {
                     }
                 }
 
-                // 제목
                 Text(stage.titleKo)
                     .font(BUFont.cardTitleSmall)
                     .foregroundStyle(stage.status == .upcoming ? BUColor.inkMuted : BUColor.ink)
                     .strikethrough(stage.status == .completed, color: BUColor.inkSubtle)
 
-                // 설명 (current 만 노출)
                 if stage.status == .current {
                     Text(stage.descriptionKo)
                         .font(BUFont.bodySmall)
@@ -330,7 +444,6 @@ private struct StageCard: View {
                         .padding(.top, 2)
                 }
 
-                // 예상 일수 + chevron
                 if let days = stage.estimatedDays {
                     HStack(spacing: BUSpacing.xs) {
                         Image(systemName: "clock")
@@ -351,7 +464,7 @@ private struct StageCard: View {
     }
 }
 
-// MARK: - Stage detail sheet
+// MARK: - Stage detail sheet (fallback)
 
 private struct StageDetailSheet: View {
     let stage: RoadmapStage
@@ -386,8 +499,7 @@ private struct StageDetailSheet: View {
                                     .font(.system(size: 24))
                                     .foregroundStyle(BUColor.midnight)
                                 VStack(alignment: .leading) {
-                                    Text("예상 기간")
-                                        .buEyebrowStyle()
+                                    Text("예상 기간").buEyebrowStyle()
                                     Text("\(days)일")
                                         .font(BUFont.cardTitleSmall)
                                         .foregroundStyle(BUColor.ink)
@@ -428,16 +540,17 @@ private struct StageDetailSheet: View {
 // MARK: - Preview
 
 #if DEBUG
-#Preview("Roadmap — 외식 17단계") {
-    NavigationStack {
-        RoadmapView()
-    }
+#Preview("Roadmap — 외식") {
+    NavigationStack { RoadmapView() }
 }
 
-#Preview("Roadmap — Dark") {
-    NavigationStack {
-        RoadmapView()
-    }
-    .preferredColorScheme(.dark)
+#Preview("Roadmap — 기술 스타트업") {
+    NavigationStack { RoadmapView() }
+        .onAppear { UserDefaults.standard.set("startup-tech", forKey: "roadmap.cluster") }
+}
+
+#Preview("Roadmap — 반도체") {
+    NavigationStack { RoadmapView() }
+        .onAppear { UserDefaults.standard.set("semiconductor", forKey: "roadmap.cluster") }
 }
 #endif

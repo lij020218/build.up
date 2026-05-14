@@ -1,0 +1,191 @@
+//
+//  EdaToolingSetupStageView.swift — EDA 환경 설정 (iOS 네이티브)
+//
+//  stageId: "eda-tooling-setup"
+//
+
+import SwiftUI
+import BuildUpDesignSystem
+import BuildUpComponents
+
+public struct EdaToolingSetupStageView: View {
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var page = 0
+
+    @AppStorage("eda.edaTool")      private var edaTool      = ""
+    @AppStorage("eda.licenseOK")    private var licenseOK    = false
+    @AppStorage("eda.ipLibraryOK")  private var ipLibraryOK  = false
+    @AppStorage("eda.done")         private var done         = false
+
+    private let pages = ["EDA 라이선스", "IP·라이브러리"]
+
+    public init() {}
+
+    public var body: some View {
+        NavigationStack {
+            ZStack {
+                BUBackgroundSurface()
+                VStack(spacing: 0) {
+                    Picker("탭", selection: $page) {
+                        ForEach(pages.indices, id: \.self) { i in
+                            Text(pages[i]).tag(i)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(BUSpacing.md)
+
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
+                            Group {
+                                switch page {
+                                case 0: licensePage
+                                default: ipPage
+                                }
+                            }
+                            .padding(.horizontal, BUSpacing.md)
+                            Spacer(minLength: BUSpacing.xxxl)
+                        }
+                        .padding(.top, BUSpacing.sm)
+                    }
+                }
+            }
+            .navigationTitle("EDA 환경 설정")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                #if os(iOS)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
+                }
+                #else
+                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
+                #endif
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    // MARK: - pg 0 EDA 라이선스
+
+    private var licensePage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.hero) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("EDA 환경 설정")
+                    Text("반도체 설계의 시작 = EDA 툴\n라이선스 비용이 연간 수억~수십억")
+                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
+                    Text("EDA(Electronic Design Automation): IC 설계 소프트웨어. 스타트업은 클라우드·교육용 라이선스 우선.")
+                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.md) {
+                    BUEyebrow("주요 EDA 툴 선택")
+                    let options: [(String, String, String)] = [
+                        ("synopsys", "Synopsys", "Design Compiler·ICC2·VCS. 업계 표준. 엔터프라이즈 라이선스 수억원/년."),
+                        ("cadence", "Cadence", "Innovus·Virtuoso·Spectre. 아날로그·혼성 설계에 강점."),
+                        ("siemens", "Siemens EDA (구 Mentor)", "Questa·Calibre. DRC/LVS 검증에 강점."),
+                        ("open", "오픈소스 (OpenROAD·Magic)", "무료. TSMC N7 이상 PDK 지원 제한. 학술·초기 검증에 적합."),
+                    ]
+                    ForEach(options, id: \.0) { id, title, desc in
+                        let isSelected = edaTool == id
+                        Button {
+                            edaTool = isSelected ? "" : id
+                        } label: {
+                            HStack(alignment: .top, spacing: BUSpacing.sm) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(title).font(BUFont.bodySmall.weight(.bold))
+                                        .foregroundStyle(isSelected ? BUColor.midnightDeep : BUColor.ink)
+                                    Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                Spacer()
+                                if isSelected {
+                                    Image(systemName: "checkmark.circle.fill").font(.system(size: 16)).foregroundStyle(BUColor.midnight)
+                                }
+                            }
+                            .padding(BUSpacing.md)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(isSelected ? BUColor.midnight.opacity(0.06) : BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous)
+                                    .strokeBorder(isSelected ? BUColor.midnight.opacity(0.4) : Color.clear, lineWidth: 1.5)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("스타트업 EDA 라이선스 절약 방법")
+                    let items = [
+                        "클라우드 EDA (Cadence Cloud / AWS 파트너): 사용량 기반 과금",
+                        "대학 공동 라이선스 활용 (KAIST·서울대·포항공대)",
+                        "파운드리 지원 PDK + EDA 번들 (TSMC-Synopsys 파트너십)",
+                    ]
+                    ForEach(items, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "lightbulb").font(.system(size: 13)).foregroundStyle(BUColor.midnight)
+                            Text(item).font(BUFont.bodySmall).foregroundStyle(BUColor.ink).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - pg 1 IP·라이브러리
+
+    private var ipPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("IP·PDK (Process Design Kit) 전략")
+                    let items = [
+                        "PDK = 특정 파운드리 공정의 설계 규칙 집합. 공정 변경 시 재설계 필요.",
+                        "표준 셀 라이브러리: TSMC·삼성·UMC 제공 또는 제3자 구매",
+                        "Hard IP: 외부 구매 (ARM 코어·USB·PCIe IP 블록). 수억원~수십억원.",
+                        "Soft IP: RTL 수준. 직접 개발 또는 오픈소스 (RISC-V 등).",
+                    ]
+                    ForEach(items, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "circle.fill").font(.system(size: 5)).foregroundStyle(BUColor.inkMuted).padding(.top, 5)
+                            Text(item).font(BUFont.bodySmall).foregroundStyle(BUColor.ink).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("완료 체크")
+                    Toggle(isOn: $licenseOK) {
+                        Text("EDA 툴 라이선스 확보 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    }.tint(BUColor.midnight)
+                    Toggle(isOn: $ipLibraryOK) {
+                        Text("PDK 및 IP 라이브러리 확보 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    }.tint(BUColor.midnight)
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("최종 완료")
+                    Toggle(isOn: $done) {
+                        Text("EDA 환경 설정 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    }.tint(BUColor.midnight)
+                }
+            }
+        }
+    }
+}
+
+#if DEBUG
+#Preview("EdaToolingSetup") { EdaToolingSetupStageView() }
+#endif
