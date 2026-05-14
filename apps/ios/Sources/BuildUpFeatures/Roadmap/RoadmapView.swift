@@ -211,6 +211,10 @@ private struct StageCard: View {
         switch stage.id {
         case "target-customer-definition":
             TargetCustomerStageView()
+        case "menu-design":
+            MenuDesignStageView()
+        case "vendor-setup":
+            VendorSetupStageView()
         default:
             StageDetailSheet(stage: stage)
         }
