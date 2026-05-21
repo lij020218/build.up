@@ -14,11 +14,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct PreLaunchFinalStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "pre-launch-final"
 
     // 오픈 전 점검
     @AppStorage("plf.permit")      private var permitOK      = false
@@ -64,67 +67,74 @@ public struct PreLaunchFinalStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    // 가로 스크롤 탭바 (4개 탭)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(pages.indices, id: \.self) { i in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) { page = i }
-                                } label: {
-                                    Text(pages[i])
-                                        .font(BUFont.bodySmall.weight(page == i ? .semibold : .regular))
-                                        .foregroundStyle(page == i ? BUColor.midnight : BUColor.inkMuted)
-                                        .padding(.horizontal, BUSpacing.md)
-                                        .padding(.vertical, BUSpacing.sm)
-                                        .background(
-                                            page == i ? BUColor.midnight.opacity(0.08) : Color.clear,
-                                            in: Capsule()
-                                        )
-                                }
-                            }
-                        }
-                        .padding(.horizontal, BUSpacing.sm)
-                    }
-                    .padding(.vertical, BUSpacing.xs)
+    private var allDone: Bool {
+        preCheckCount == preChecks.count && dayCheckCount == dayChecks.count
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: whyPage
-                                case 1: preCheckPage
-                                case 2: dayPage
-                                default: prPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if !allDone { return "체크리스트 \(preCheckCount + dayCheckCount)/\(preChecks.count + dayChecks.count) — 모두 완료 후 그랜드 오픈" }
+        return "모든 체크 완료 — 그랜드 오픈 가능!"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "개업 최종 준비",
+            stageEyebrow: "단계 22 · 오픈 최종 점검",
+            helperText: "음식점 폐업 1위 사유는 '준비 부족'. 오픈 직전 72시간 체크리스트를 통과한 가게는 첫 달 생존율이 확연히 높습니다.",
+            canAdvance: allDone,
+            advanceLabel: "그랜드 오픈 시작!",
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                launchDone = true
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: {
+                launchDone = false
+                roadmapStore.uncompleteStage(stageId)
+            },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 인허가·시설 최종 점검", detail: "영업신고증·소방완비증명·POS·CCTV·간판 모두 작동 확인"),
+                    .init(label: "2. 직원 교육·역할 분담", detail: "주문/조리/홀/캐셔 역할별 매뉴얼·동선 리허설 완료"),
+                    .init(label: "3. 그랜드 오픈 일정 확정", detail: "오픈 날짜·시간·할인 캠페인 + SNS 사전 공지 (1주 전 권장)"),
+                    .init(label: "4. 비상 대응 시뮬", detail: "결제 장애·과주문·민원 시 행동 매뉴얼 숙지 (현금 비상금 50만원+)"),
+                ],
+                verifyItems: [
+                    "사업자등록증·영업신고증·소방완비증명서·위생교육 수료증 — 모두 매장 비치 (현장 점검 대비)",
+                    "POS·카드 단말기·키오스크 24시간 무중단 결제 테스트 통과 (5천원·5만원·10만원 모두 결제 OK)",
+                    "직원 4대보험 가입·근로계약서·급여 자동이체 — 모두 완료 (오픈일 분쟁 0)",
+                    "재고·식자재 — 첫 1주 운영 가능량 + 1일 추가 발주 가능 공급선 확보",
+                    "SNS·네이버 플레이스·배달 앱(배민/쿠팡이츠) — 모두 등록 완료 + 첫 리뷰 5개 이상 확보 계획",
+                    "그랜드 오픈 첫 주 운영 자금 — 매출 0원 가정 1주 운영 가능한 현금 300만원+ 확보",
+                ],
+                nextStageLabel: "오픈 운영",
+                nextSummary: "그랜드 오픈 — 운영 대시보드에서 매일 매출·고객·재고 기록 시작"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                // 가로 스크롤 탭바 (4개 탭)
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: whyPage
+                    case 1: preCheckPage
+                    case 2: dayPage
+                    default: prPage
                     }
                 }
-            }
-            .navigationTitle("오픈 최종 점검")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 왜 중요한가
@@ -362,5 +372,9 @@ public struct PreLaunchFinalStageView: View {
 }
 
 #if DEBUG
-#Preview("PreLaunchFinal") { PreLaunchFinalStageView() }
+#Preview("PreLaunchFinal") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["pre-launch-final"] }
+    return PreLaunchFinalStageView().environment(store)
+}
 #endif

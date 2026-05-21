@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct EdaToolingSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "eda-tooling-setup"
+
     @State private var page = 0
 
     @AppStorage("eda.edaTool")      private var edaTool      = ""
@@ -22,66 +26,57 @@ public struct EdaToolingSetupStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: EDA 툴 선택 + 라이선스 확보 + 설계 환경(PDK/IP) 결정.
+    private var canCompleteStage: Bool {
+        !edaTool.isEmpty && licenseOK && ipLibraryOK
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: licensePage
-                                default: ipPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if edaTool.isEmpty { return "EDA 툴을 선택하세요" }
+        if !licenseOK { return "EDA 라이선스 확보를 체크하세요" }
+        if !ipLibraryOK { return "PDK·IP 라이브러리 확보를 체크하세요" }
+        return "EDA 환경 설정 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "EDA 도구·설계 환경 셋업",
+            stageEyebrow: "단계 10 · EDA 환경 설정",
+            helperText: "반도체 설계의 시작 = EDA 툴. 라이선스 비용은 연간 수억~수십억. 스타트업은 클라우드·교육용 라이선스 우선.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["edaTool": edaTool])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["edaTool": edaTool]) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: licensePage
+                    default: ipPage
                     }
                 }
-            }
-            .navigationTitle("EDA 환경 설정")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 EDA 라이선스
 
     private var licensePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("EDA 환경 설정")
-                    Text("반도체 설계의 시작 = EDA 툴\n라이선스 비용이 연간 수억~수십억")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("EDA(Electronic Design Automation): IC 설계 소프트웨어. 스타트업은 클라우드·교육용 라이선스 우선.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("주요 EDA 툴 선택")
@@ -187,5 +182,9 @@ public struct EdaToolingSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("EdaToolingSetup") { EdaToolingSetupStageView() }
+#Preview("EdaToolingSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["eda-tooling-setup"] }
+    return EdaToolingSetupStageView().environment(store)
+}
 #endif

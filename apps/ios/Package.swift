@@ -37,6 +37,9 @@ let package = Package(
     dependencies: [
         // Supabase Swift SDK — Auth / PostgREST / Realtime / Storage
         .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0"),
+        // Lucide Icons — 웹 lucide-react 와 동일한 1300+ 아이콘 (SPM)
+        // 사용: Image(uiImage: UIImage(lucideId: "utensils-crossed"))
+        .package(url: "https://github.com/JakubMazur/lucide-icons-swift.git", from: "1.16.0"),
         // 카카오 로그인 SDK 는 사장님이 native app key 받은 후 추가:
         // .package(url: "https://github.com/kakao/kakao-ios-sdk", from: "2.23.0"),
     ],
@@ -64,6 +67,9 @@ let package = Package(
             name: "BuildUpCore",
             dependencies: [],
             path: "Sources/BuildUpCore",
+            resources: [
+                .process("Resources")
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
                 .enableUpcomingFeature("ExistentialAny"),
@@ -89,7 +95,11 @@ let package = Package(
         // ──────────── 4단계: Features (화면) ────────────
         .target(
             name: "BuildUpFeatures",
-            dependencies: ["BuildUpDesignSystem", "BuildUpCore", "BuildUpComponents", "BuildUpData", "BuildUpAuth", "BuildUpNotifications"],
+            dependencies: [
+                "BuildUpDesignSystem", "BuildUpCore", "BuildUpComponents",
+                "BuildUpData", "BuildUpAuth", "BuildUpNotifications",
+                .product(name: "LucideIcons", package: "lucide-icons-swift"),
+            ],
             path: "Sources/BuildUpFeatures",
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),

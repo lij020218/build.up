@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct FieldOrClinicalTestStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "field-or-clinical-test"
 
     @AppStorage("fct.testType")     private var testType     = ""
     @AppStorage("fct.planDone")     private var planDone     = false
@@ -23,66 +26,60 @@ public struct FieldOrClinicalTestStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 시험 유형 선택 또는 계획 수립.
+    private var canCompleteStage: Bool {
+        !testType.isEmpty || planDone
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: planPage
-                                default: statusPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "현장·임상 시험 완료 — 다음 단계로" }
+        if testDone { return "시험 완료 — 다음 단계로" }
+        if planDone { return "시험 계획 수립 — 시험 진행" }
+        if testType == "field" { return "현장 테스트 — 파일럿 고객 확보" }
+        if testType == "clinical" { return "임상시험 — IND 제출 준비" }
+        return "시험 유형(현장/임상)을 선택하세요"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "필드 테스트 / 임상 시험",
+            stageEyebrow: "단계 12 · 현장·임상 시험",
+            helperText: "실제 환경에서의 검증. 연구실 결과와 현장은 다릅니다. 로봇은 현장 테스트, 바이오·의료기기는 식약처 IND 후 임상시험.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: planPage
+                    default: statusPage
                     }
                 }
-            }
-            .navigationTitle("현장·임상 시험")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 시험 계획
 
     private var planPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("현장·임상 시험")
-                    Text("실제 환경에서의 검증\n연구실 결과와 현장은 다릅니다")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("로봇: 현장 테스트 / 바이오·의료기기: 식약처 IND 후 임상시험")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("시험 유형 선택")
@@ -210,5 +207,9 @@ public struct FieldOrClinicalTestStageView: View {
 }
 
 #if DEBUG
-#Preview("FieldOrClinicalTest") { FieldOrClinicalTestStageView() }
+#Preview("FieldOrClinicalTest") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["field-or-clinical-test"] }
+    return FieldOrClinicalTestStageView().environment(store)
+}
 #endif

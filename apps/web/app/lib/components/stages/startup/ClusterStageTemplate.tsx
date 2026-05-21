@@ -2,9 +2,10 @@
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import {
-  ShieldCheck, AlertTriangle, ExternalLink, type LucideIcon,
+  AlertTriangle, ExternalLink, type LucideIcon,
 } from "lucide-react";
 import { StageWrapup, type WrapupItem } from "../shared/StageWrapup";
+import { StartupKeyActionHero } from "./StartupStageShell";
 
 const MIDNIGHT = "#191970";
 
@@ -97,41 +98,14 @@ export function ClusterStageTemplate({
         )}
       </div>
 
-      {/* KEY ACTION 히어로 */}
-      <div style={{
-        display: "flex", gap: "14px", alignItems: "flex-start",
-        padding: "16px 18px", borderRadius: "16px",
-        background: `linear-gradient(135deg, ${MIDNIGHT} 0%, rgba(25,25,112,0.92) 100%)`,
-        color: "#fff",
-        boxShadow: "0 6px 20px rgba(25,25,112,0.28)",
-      }}>
-        <div style={{
-          width: 38, height: 38, borderRadius: 12,
-          background: "rgba(255,255,255,0.18)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0,
-          backdropFilter: "blur(8px)",
-        }}>
-          <ShieldCheck size={20} strokeWidth={2.2} color="#fff" />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: "11.5px", fontWeight: 700, letterSpacing: "0.08em",
-            textTransform: "uppercase" as const, opacity: 0.7, marginBottom: "4px",
-          }}>
-            {ko ? "이 단계에서 꼭 할 일" : "Do this in this stage"}
-          </div>
-          <div style={{
-            fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em",
-            lineHeight: 1.4, marginBottom: "5px",
-          }}>
-            {content.keyAction.title}
-          </div>
-          <div style={{ fontSize: "13.5px", lineHeight: 1.55, opacity: 0.92 }}>
-            {content.keyAction.detail}
-          </div>
-        </div>
-      </div>
+      {/* ⚠️ 2026-05-18: inline KEY ACTION 카드를 StartupKeyActionHero 로 통합. 종전엔 cluster 12
+          stage 가 자체 inline 히어로를 그려 startup-tech 메인 path 와 시각 분기 발생했음.
+          이제 모든 startup-tech stage 가 같은 히어로 컴포넌트 사용 — 시각 일관성 확보. */}
+      <StartupKeyActionHero
+        eyebrow={ko ? "이 단계에서 꼭 할 일" : "Do this in this stage"}
+        title={content.keyAction.title}
+        subtitle={content.keyAction.detail}
+      />
 
       {/* 검증된 사실 카드 */}
       {content.facts && content.facts.length > 0 && (

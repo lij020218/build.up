@@ -5,6 +5,11 @@ import { RADIUS } from "./operationalStyles";
 import { CountUp } from "./animations";
 
 /**
+ * @deprecated 2026-05-19 — ConversionFunnelCard (mode="saas") 로 통합.
+ *   사장님 결정: SaaS 의 본질 지표는 "전환율 funnel". 월 burn / 팀 / 로드맵 지표는
+ *   각각 CashZeroDateCard · TeamCard · StartupHealthSection 으로 이미 분산되어 있음.
+ *   파일은 카드 합성 패턴 참고용으로 보존 (다음 정리 PR 에서 삭제 검토).
+ *
  * StartupMetricsCard — 스타트업 전용 지표만 표시.
  *
  * 중복 제거 원칙 (25.04.20):

@@ -16,11 +16,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct ConstructionSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "construction-setup"
     @AppStorage("construction.concept")  private var selectedConcept = ""
     @AppStorage("construction.done")     private var constructionDone = false
 
@@ -50,65 +53,70 @@ public struct ConstructionSetupStageView: View {
         ConceptItem(id: "farm",         name: "팜투테이블 내추럴", desc: "식물·내추럴 소재·따뜻한 조명. 건강·유기농 이미지 — 객단가 올리기에 유리한 포지셔닝.", tags: ["건강 이미지", "여성 선호", "객단가 상승"],        icon: "leaf"),
     ]
 
+    private var canCompleteStage: Bool { constructionDone && !selectedConcept.isEmpty }
+
+    private var advanceHint: String {
+        if selectedConcept.isEmpty { return "공간 디자인 컨셉을 선택하세요" }
+        if !constructionDone { return "인테리어 컨셉·업체 확정 완료를 체크하세요" }
+        return "컨셉·업체 확정 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "인테리어 및 공사",
+            stageEyebrow: "단계 13 · 인테리어 설정",
+            helperText: "건물에 부착·고정되는 자재(타일·배선)와 설비(후드·배관)만 이 단계에서 결정합니다. POS·주방기기는 다음 단계 「공급처 확정」에서 결정합니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["concept": selectedConcept])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["concept": selectedConcept]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 인테리어 컨셉 확정", detail: "업종·프랜차이즈 데이터 기반 자재·컨셉 후보 비교 후 1안 결정"),
+                .init(label: "2. 시공업체 견적 요청", detail: "지역·키워드 매칭 시공업체 2~3곳에 동시 견적 요청"),
+                .init(label: "3. 자재·등급 명시", detail: "견적서에 자재 브랜드·등급·규격·면적 4항목 모두 명시 확인"),
+                .init(label: "4. 일정·계약 확정", detail: "착공·중간점검·완공 3단계 일정 + 하자보증 1년 명문화"),
+                ],
+                verifyItems: [
+                "소방·전기·가스 사전 신고 확인 — 다중이용시설은 소방시설완비증명서·전기안전점검·가스공급 3종 미준수 시 영업불가",
+                "방염 처리 의무 — 휴게/일반음식점·노래방·미용실 등 다중이용시설은 벽지·천장재 방염필증 필수 (위반 시 영업정지)",
+                "공사대금 — 30% 계약·40% 중간·30% 잔금 분할 + 하자보증 1년 계약서 명문화 (사진·영상 보관)",
+                "공사 중 추가공사 단가 — 평당 단가 사전 합의 없이 진행 시 마감 시 분쟁 1순위 원인",
+                "임대인 원상복구 의무 — 인테리어 잔존물 처리 비용·기준 사전 합의 (계약서 또는 사진 기록)",
+                "전기 용량·하수 용량 — 식음료·미용·헬스 등 사용량이 큰 업종은 사전 증설 신청 필수 (한전 평균 2~4주)",
+                ],
+                nextStageLabel: "공급처·장비 발주",
+                nextSummary: "인테리어 컨셉·견적·자재 확정 → 공급처·장비 발주 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                if page == 0 { materialsPage } else { conceptPage }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
-                    }
+                Group {
+                    if page == 0 { materialsPage } else { conceptPage }
                 }
-            }
-            .navigationTitle("인테리어 설정")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 마감재·설비
 
     private var materialsPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("단계 13 · 인테리어 설정")
-                    Text("마감재·설비·가구 —\n인테리어 착공 전 결정할 것들")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("건물에 부착·고정되는 자재(타일·배선)와 설비(후드·배관)만 이 단계에서 결정합니다. POS·주방기기는 다음 단계 「공급처 확정」에서 결정합니다.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("음식점 필수 마감재 · 설비 6종")
@@ -275,5 +283,9 @@ public struct ConstructionSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("ConstructionSetup") { ConstructionSetupStageView() }
+#Preview("ConstructionSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["construction-setup"] }
+    return ConstructionSetupStageView().environment(store)
+}
 #endif

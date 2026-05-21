@@ -9,11 +9,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct OnlineMarketingStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "online-marketing"
 
     @AppStorage("om.seoKeywords")   private var seoKeywords   = ""
     @AppStorage("om.adBudgetText")  private var adBudgetText  = ""
@@ -36,73 +39,72 @@ public struct OnlineMarketingStageView: View {
 
     public init() {}
 
+    /// 게이트: 광고 채널 선택 (광고 없이 시작 'none' 포함 — 의사결정만 요구).
+    private var canCompleteStage: Bool { !adChannel.isEmpty }
+
+    private var advanceHint: String {
+        if adChannel.isEmpty { return "광고 채널을 선택하세요" }
+        return "마케팅 채널 결정됨 — 다음 단계로"
+    }
+
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "마케팅 및 론칭",
+            stageEyebrow: "단계 13 · 온라인 마케팅",
+            helperText: "온라인 커머스 매출의 60%는 검색에서 옵니다. 네이버 쇼핑 SEO = 상품명·카테고리·리뷰수·판매량의 함수.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["adChannel": adChannel])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["adChannel": adChannel]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 채널 우선순위", detail: "네이버 검색·인스타·카카오·블로그 4축 중 업종 적합 2~3개 선택"),
+                .init(label: "2. 광고 예산 배분", detail: "유료 광고 vs 콘텐츠 마케팅 비중 결정 + ROAS 목표 설정"),
+                .init(label: "3. 콘텐츠 일정", detail: "주간 SNS 포스팅 + 리뷰 유도 + 인플루언서 협업 일정 셋업"),
+                .init(label: "4. 측정 지표 설정", detail: "방문자·전환율·CTR·CAC·LTV 5개 지표 대시보드 셋업"),
+                ],
+                verifyItems: [
+                "광고 표현 — 「최저가」 「최고」 「유일」 등 비교 광고 객관 근거 필수, 위반 시 표시광고법 과징금",
+                "인플루언서 협업 — 「유료 광고」 표시 의무 (#광고 #협찬), 미표시 시 공정위 과징금 + 인플루언서도 책임",
+                "네이버 검색광고 — 키워드 입찰 단가 인상 추세, ROAS 200% 미만이면 즉시 중단·재구성",
+                "쿠팡 광고 — 노출 위치별 효율 차이 큼, 카테고리 검색·상세 페이지 광고 분리 측정",
+                "리뷰 — 자작·가족·지인 리뷰 적발 시 플랫폼 영구정지 + 표시광고법 위반 (10만원 이하 과태료/건)",
+                "개인정보 — 마케팅 활용 동의 별도 수집 의무, 위반 시 개인정보보호법 과징금 (매출 3% 이내)",
+                ],
+                nextStageLabel: "첫 달 점검",
+                nextSummary: "채널·예산·콘텐츠·측정 4축 셋업 완료 → 첫 달 점검 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: seoPage
-                                case 1: adPage
-                                default: reviewPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: seoPage
+                    case 1: adPage
+                    default: reviewPage
                     }
                 }
-            }
-            .navigationTitle("SEO·광고·리뷰 전략")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Page 0: SEO 최적화
 
     private var seoPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("SEO 최적화")
-                    Text("온라인 커머스 매출의 60%는 검색에서 온다")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("네이버 쇼핑 SEO = 상품명·카테고리·리뷰 수·판매량의 함수")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("네이버 쇼핑 SEO 핵심")
@@ -260,5 +262,9 @@ public struct OnlineMarketingStageView: View {
 }
 
 #if DEBUG
-#Preview("OnlineMarketing") { OnlineMarketingStageView() }
+#Preview("OnlineMarketing") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["online-marketing"] }
+    return OnlineMarketingStageView().environment(store)
+}
 #endif

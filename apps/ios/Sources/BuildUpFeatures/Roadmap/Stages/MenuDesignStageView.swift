@@ -17,6 +17,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 // MARK: - LineupItem
 
@@ -37,7 +38,9 @@ struct LineupItem: Identifiable, Codable {
 public struct MenuDesignStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "menu-design"
 
     // Form state
     @State private var fName = ""
@@ -59,95 +62,57 @@ public struct MenuDesignStageView: View {
 
     private let categories = ["메인", "사이드", "주류/음료", "디저트", "세트"]
 
+    private var canCompleteStage: Bool { items.count >= 1 }
+
+    private var advanceHint: String {
+        if items.isEmpty { return "메뉴 항목을 최소 1개 추가하세요" }
+        if items.count < 3 { return "메뉴 \(items.count)개 — 시그니처 3-5개 권장" }
+        if avgCostRatio > 33 { return String(format: "원가율 %.1f%% 초과 — 단가/원가 점검", avgCostRatio) }
+        return "메뉴 \(items.count)개 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: BUSpacing.cardGap) {
-                        heroSection
-                            .padding(.horizontal, BUSpacing.md)
-                        pageNav
-                            .padding(.horizontal, BUSpacing.md)
-                        pageContent
-                            .padding(.horizontal, BUSpacing.md)
-                            .animation(.easeInOut(duration: 0.22), value: page)
-                        Spacer(minLength: BUSpacing.xxxl)
-                    }
-                    .padding(.top, BUSpacing.md)
-                }
-            }
-            .navigationTitle("메뉴 라인업 확정")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }
-                        .foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
-                }
-                #endif
+        BUStageShell(
+            stageId: stageId,
+            title: "메뉴·서비스 라인업 확정",
+            stageEyebrow: "단계 14 · 메뉴 라인업 확정",
+            helperText: "Prime Cost 황금률: 식자재 30-35% + 인건비 28-32% ≤ 65%. 원가율 33% 초과 메뉴는 영업이익 마이너스 위험 — KFRI 2024.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["menuCount": "\(items.count)"])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["menuCount": "\(items.count)"]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 메뉴 라인업 확정", detail: "시그니처 3-5개 + 사이드 2-3개 입력 완료"),
+                    .init(label: "2. 원가율 점검", detail: "메뉴별 평균 원가율 33% 이하 (황금률)"),
+                    .init(label: "3. 재고 카드 자동 연동", detail: "메뉴 → 재고 product 로 자동 등록"),
+                    .init(label: "4. 공급처 협상 준비", detail: "월 사용량 추정 가능 → vendor-setup 에서 단가 협상"),
+                ],
+                verifyItems: [
+                    "메뉴 3개 이상 등록했는가 (시그니처 3-5개 + 사이드 2-3개 표준)",
+                    "각 메뉴 원가율 33% 이하인가 (초과 시 인건비 합산 시 영업적자)",
+                    "메뉴별 주재료 명시 — vendor-setup 에서 공급처별 단가 비교 가능한가",
+                    "객단가 타깃 페르소나 가격 민감도와 일치하는가 (target-customer-definition 결과 참조)",
+                    "주방 동선·집기 (construction-setup 완료) 으로 실제 조리 가능한 메뉴인가",
+                ],
+                nextStageLabel: "공급처·식자재 셋업",
+                nextSummary: "메뉴 라인업 확정 → 공급처·식자재 셋업 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: 3
+        ) {
+            VStack(alignment: .leading, spacing: BUSpacing.cardGap) {
+                pageNav
+                pageContent
+                    .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-    }
-}
-
-// MARK: - Hero
-
-private extension MenuDesignStageView {
-
-    var heroSection: some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: BURadius.heroOuter, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [BUColor.midnight, BUColor.midnightDeep],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: BURadius.heroOuter, style: .continuous)
-                        .strokeBorder(.white.opacity(0.10), lineWidth: 1)
-                )
-
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                Text("KEY ACTION")
-                    .font(BUFont.heroEyebrow)
-                    .foregroundStyle(.white.opacity(0.60))
-                    .tracking(1.5)
-                    .textCase(.uppercase)
-
-                Text("시그니처 3-5개 + 사이드로\n메뉴를 확정하세요")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.white)
-                    .tracking(-0.4)
-                    .lineSpacing(3)
-
-                Text("Prime Cost 황금률: 식자재 30-35% + 인건비 28-32% ≤ 65%. 원가율 33% 초과 메뉴는 영업이익 마이너스 — KFRI 2024.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.white.opacity(0.72))
-                    .lineSpacing(3)
-
-                HStack(spacing: 8) {
-                    HeroMiniCard(icon: "fork.knife",          label: "시그니처", detail: "3-5개로 시작")
-                    HeroMiniCard(icon: "percent",             label: "원가율",   detail: "33% 이하 목표")
-                    HeroMiniCard(icon: "arrow.trianglehead.2.clockwise", label: "재고 연동",  detail: "자동 등록 예정")
-                }
-                .padding(.top, 4)
-            }
-            .padding(BUSpacing.heroOuterPadding)
-        }
-        .buShadow(.hero)
     }
 }
 
@@ -156,13 +121,12 @@ private extension MenuDesignStageView {
 private extension MenuDesignStageView {
 
     var pageNav: some View {
-        Picker("", selection: $page) {
-            Text("왜 중요한가").tag(0)
-            Text("메뉴 추가").tag(1)
-            Text("원가 점검").tag(2)
-            Text("마무리").tag(3)
-        }
-        .pickerStyle(.segmented)
+        BUWizardPageNav(
+            page: page,
+            totalPages: 3,
+            labels: ["왜 중요한가", "메뉴 추가", "원가 점검"],
+            onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+        )
     }
 
     @ViewBuilder
@@ -171,10 +135,8 @@ private extension MenuDesignStageView {
             whyPage
         } else if page == 1 {
             addPage
-        } else if page == 2 {
-            costCheckPage
         } else {
-            wrapupSection
+            costCheckPage
         }
     }
 }
@@ -403,92 +365,7 @@ private extension MenuDesignStageView {
     }
 }
 
-// MARK: - Wrapup
-
-private extension MenuDesignStageView {
-
-    var wrapupSection: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.sm) {
-            Text("완료 체크리스트")
-                .buEyebrowStyle()
-            BUCard(.outer) {
-                VStack(alignment: .leading, spacing: 10) {
-                    wrapupRow(
-                        "1. 메뉴 라인업 확정",
-                        detail: "\(items.count)개 메뉴 입력 완료 (시그니처 3-5개 권장)",
-                        done: items.count >= 3
-                    )
-                    wrapupRow(
-                        "2. 원가율 점검",
-                        detail: String(format: "평균 %.1f%% (33%% 이하 황금률)", avgCostRatio),
-                        done: avgCostRatio > 0 && avgCostRatio <= 33
-                    )
-                    wrapupRow(
-                        "3. 재고 카드 자동 연동",
-                        detail: "메뉴 → inventory product 자동 등록 (DashboardStore 연동 예정)",
-                        done: items.count > 0
-                    )
-                    wrapupRow(
-                        "4. 공급처 협상 준비",
-                        detail: "월 사용량 추정 가능 → vendor-setup 에서 단가 협상",
-                        done: items.count >= 3
-                    )
-                }
-            }
-            Text("다음: 공급처·식자재 확보")
-                .font(BUFont.bodyCaption)
-                .foregroundStyle(BUColor.inkMuted)
-                .padding(.top, 4)
-        }
-    }
-
-    @ViewBuilder
-    func wrapupRow(_ label: String, detail: String, done: Bool) -> some View {
-        HStack(alignment: .top, spacing: BUSpacing.xs) {
-            Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 14))
-                .foregroundStyle(done ? BUColor.success : BUColor.inkMuted)
-                .frame(width: 18)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(BUFont.labelSmall)
-                    .foregroundStyle(BUColor.ink)
-                Text(detail)
-                    .font(BUFont.bodyCaption)
-                    .foregroundStyle(BUColor.inkMuted)
-            }
-        }
-    }
-}
-
 // MARK: - Sub-components
-
-private struct HeroMiniCard: View {
-    let icon: String
-    let label: String
-    let detail: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundStyle(.white.opacity(0.85))
-            Text(label)
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(.white)
-                .tracking(0.5)
-                .textCase(.uppercase)
-            Text(detail)
-                .font(.system(size: 10.5))
-                .foregroundStyle(.white.opacity(0.65))
-                .lineSpacing(1.5)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 10)
-        .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-}
 
 private struct BenchmarkStat: View {
     let value: String
@@ -631,6 +508,8 @@ private extension View {
 
 #if DEBUG
 #Preview("MenuDesignStageView") {
-    MenuDesignStageView()
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["menu-design"] }
+    return MenuDesignStageView().environment(store)
 }
 #endif

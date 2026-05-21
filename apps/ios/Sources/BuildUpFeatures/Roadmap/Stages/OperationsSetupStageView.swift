@@ -18,11 +18,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct OperationsSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "operations-setup"
 
     @AppStorage("ops.delivery.baemin")    private var deliveryBaemin   = false
     @AppStorage("ops.delivery.coupang")   private var deliveryCoupang  = false
@@ -41,69 +44,100 @@ public struct OperationsSetupStageView: View {
 
     private let pages = ["배달 플랫폼", "POS 선택", "SNS 세팅"]
 
+    private var posTestsDone: Int {
+        [posMenuDone, posPayDone, posReceiptDone, posSettleDone].filter { $0 }.count
+    }
+
+    private var posChecksBinding: Binding<Set<String>> {
+        Binding(
+            get: {
+                var s: Set<String> = []
+                if posMenuDone    { s.insert("menu") }
+                if posPayDone     { s.insert("pay") }
+                if posReceiptDone { s.insert("receipt") }
+                if posSettleDone  { s.insert("settle") }
+                return s
+            },
+            set: { new in
+                posMenuDone    = new.contains("menu")
+                posPayDone     = new.contains("pay")
+                posReceiptDone = new.contains("receipt")
+                posSettleDone  = new.contains("settle")
+            }
+        )
+    }
+
+    private var canCompleteStage: Bool {
+        !posSelected.isEmpty && snsNaver && posTestsDone == 4
+    }
+
+    private var advanceHint: String {
+        if posSelected.isEmpty { return "POS 시스템을 선택하세요" }
+        if posTestsDone < 4 { return "POS 설치 후 테스트 4단계 완료 (\(posTestsDone)/4)" }
+        if !snsNaver { return "네이버 플레이스 등록은 필수입니다" }
+        return "운영 시스템 셋업 완료 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "운영 및 마케팅 준비",
+            stageEyebrow: "단계 18 · 운영 시스템 세팅",
+            helperText: "네이버 플레이스 등록 후 검색 노출까지 최대 7일 — 오픈 1~2주 전 등록 필수. 배달앱 가입 후 메뉴 등록까지 2~3일 소요됩니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["pos": posSelected])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["pos": posSelected]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스/배민·쿠팡이츠 연동 + 키오스크·테이블 오더 셋업"),
+                .init(label: "2. 표준 운영 매뉴얼", detail: "오픈·중간·마감 체크리스트 + 위생·재고·민원 대응 SOP"),
+                .init(label: "3. 마케팅·브랜드 채널", detail: "네이버 플레이스·카카오 채널·인스타 3축 + 리뷰 응대 룰"),
+                .init(label: "4. 손익 모니터링 셋업", detail: "일별 매출·재료비·인건비 자동 기록 + 손익분기 추적"),
+                ],
+                verifyItems: [
+                "POS — 카드 수수료(평균 1.5~2.5%) + 정산일(평균 3영업일) 사전 인지, 현금 흐름 시뮬",
+                "배달 플랫폼 — 수수료(배민 6.8%·쿠팡이츠 9.8% + 결제 수수료) 매출 분리 회계 셋업",
+                "위생교육 매년 갱신 — 식품접객업 영업자·종업원 모두 대상, 미이수 시 행정처분 + 영업정지",
+                "민원 대응 — 식약처·소비자원 신고 24시간 내 대응 룰 + 사진·영상 증빙 자동 보관 시스템",
+                "원산지 표시 — 농수산물 원산지 표시법 위반 시 1억원 이하 과징금, 전 메뉴 표시 의무",
+                "리뷰·SNS — 광고성 리뷰(가족·지인) 식별 시 처분 가능, 진성 리뷰 유도 시스템 우선",
+                ],
+                nextStageLabel: "프리오픈·본 오픈 준비",
+                nextSummary: "POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: deliveryPage
-                                case 1: posPage
-                                default: snsPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: deliveryPage
+                    case 1: posPage
+                    default: snsPage
                     }
                 }
-            }
-            .navigationTitle("운영 시스템 세팅")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 배달 플랫폼
 
     private var deliveryPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("단계 18 · 운영 시스템 세팅")
-                    Text("배달 플랫폼 + POS + SNS —\n오픈 2주 전 완료 필수")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("네이버 플레이스 등록 후 검색 노출까지 최대 7일 — 오픈 1~2주 전 등록 필수. 배달앱 가입 후 메뉴 등록까지 2~3일 소요됩니다.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("배달 플랫폼 (2026 수수료 기준)")
@@ -179,35 +213,16 @@ public struct OperationsSetupStageView: View {
                 }
             }
 
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("POS 설치 후 필수 테스트 4단계")
-                    Toggle(isOn: $posMenuDone) {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("메뉴·가격 전체 등록 확인").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("옵션·추가금액·품절 여부까지 점검").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $posPayDone) {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("카드 실결제 1건 테스트 (즉시 취소)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("취소 안 하면 오픈 전 매출로 잡힘").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $posReceiptDone) {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("영수증 출력 — 사업자명·번호·부가세 확인").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("세금계산서 발행 시 이 정보가 기준").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $posSettleDone) {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("일 마감·정산 시뮬레이션").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("정산 금액 = 실 매출 합계인지 비교").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                }
-            }
+            BUInteractiveChecklist(
+                title: "POS 설치 후 필수 테스트 4단계",
+                items: [
+                    .init(id: "menu",    label: "메뉴·가격 전체 등록 확인",            detail: "옵션·추가금액·품절 여부까지 점검"),
+                    .init(id: "pay",     label: "카드 실결제 1건 테스트 (즉시 취소)",  detail: "취소 안 하면 오픈 전 매출로 잡힘"),
+                    .init(id: "receipt", label: "영수증 출력 — 사업자명·번호·부가세 확인", detail: "세금계산서 발행 시 이 정보가 기준"),
+                    .init(id: "settle",  label: "일 마감·정산 시뮬레이션",            detail: "정산 금액 = 실 매출 합계인지 비교"),
+                ],
+                checked: posChecksBinding
+            )
         }
     }
 
@@ -322,5 +337,9 @@ private extension Color {
 }
 
 #if DEBUG
-#Preview("OperationsSetup") { OperationsSetupStageView() }
+#Preview("OperationsSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["operations-setup"] }
+    return OperationsSetupStageView().environment(store)
+}
 #endif

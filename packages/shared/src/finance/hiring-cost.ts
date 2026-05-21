@@ -172,10 +172,10 @@ export const DURUNURI_2026 = {
   durationMonths: 36,
 } as const;
 
-/** 사업주 4대보험 총 부담률(%) — 산재 0.7% (일반 서비스업 기준) */
-export const TOTAL_EMPLOYER_RATE_PCT = 4.5 + 3.545 + 0.4351 + 0.9 + 0.7;
-/** 근로자 4대보험 총 공제율(%) */
-export const TOTAL_EMPLOYEE_RATE_PCT = 4.5 + 3.545 + 0.4351 + 0.9;
+/** 사업주 4대보험 총 부담률(%) — 2026 기준 (국민연금 4.75 + 건보 3.595 + 장기요양 0.4724 + 고용 0.9 + 산재 0.7 일반서비스업) */
+export const TOTAL_EMPLOYER_RATE_PCT = 4.75 + 3.595 + 0.4724 + 0.9 + 0.7;
+/** 근로자 4대보험 총 공제율(%) — 2026 기준 */
+export const TOTAL_EMPLOYEE_RATE_PCT = 4.75 + 3.595 + 0.4724 + 0.9;
 
 export type InsuranceSimInput = {
   /** 월 급여 (원) — 세전 */

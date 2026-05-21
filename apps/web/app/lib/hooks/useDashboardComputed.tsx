@@ -180,13 +180,15 @@ export function useDashboardComputed(d: DashboardHook) {
     totalCosts > 0 && _budgetForRunway > 0 ? _budgetForRunway / totalCosts : Infinity;
   const cashflowCriticalElevation = Number.isFinite(_runwayMonths) && _runwayMonths < 6;
 
-  // 예상 매출
+  // 예상 매출 — ⚠️ 영업일 컷오프 기반. 종전엔 calendar `new Date().getDate()` 사용해서 23:30
+  //   close-time 카페가 자정~01:00 사이에 보면 *영업일은 어제* 인데 calendar 가 오늘로 잡혀
+  //   남은 영업일 -1 → projected 불일치. todayStr (getBusinessDay 결과) 의 일 부분 사용.
   const projectedSales =
     workingDays > 0
       ? totalSales +
         avgDailySales *
           (new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() -
-            new Date().getDate())
+            parseInt(todayStr.slice(8, 10), 10))
       : 0;
   const projectedProfit = projectedSales - totalCosts;
   // 비용 비율 — cost-ratios.ts SSOT (월간 비용 ÷ 월 환산 매출, 부분월 입력 보정)
@@ -268,9 +270,10 @@ export function useDashboardComputed(d: DashboardHook) {
   const insuredEmployees = employees.filter((e) => e.isInsured).length;
   const monthlyBurn = Math.max(totalCosts - totalSales, 0);
 
-  // 개업 일자 / 런웨이
-  const launchDateText =
-    typeof window !== "undefined" ? window.localStorage.getItem("businessLaunchedDate") : null;
+  // 개업 일자 / 런웨이 — ⚠️ 단일 소스: d.businessLaunchedDate (store/Supabase). 종전엔 localStorage
+  //   직접 read 했는데 store 와 두 값이 다르면 daysSinceLaunch / phase / runway 디바이스 간 불일치
+  //   + SSR 환경에서 null 반환되어 hydration mismatch 잠재. d.businessLaunchedDate 만 신뢰.
+  const launchDateText = d.businessLaunchedDate ?? null;
   const launchDate =
     launchDateText && !Number.isNaN(new Date(launchDateText).getTime())
       ? new Date(launchDateText)
@@ -279,7 +282,11 @@ export function useDashboardComputed(d: DashboardHook) {
     ? Math.max(0, Math.round((Date.now() - launchDate.getTime()) / 86400000))
     : 0;
   const totalCapital = (d.selectedBudget ?? 0) + (d.initialOperatingCapital ?? 0);
-  const capitalLeft = Math.max(0, totalCapital - totalCosts * (daysSinceLaunch / 30));
+  // ⚠️ capitalLeft fix: 종전 공식 `totalCapital - totalCosts * (daysSinceLaunch / 30)` 는 totalCosts
+  //   가 "이번 달 누계" 인데 daysSinceLaunch 전체 영업기간을 곱해서 1년 영업 가게 자본 12배 차감 →
+  //   runway 음수 폭주. 이번 달 부분만 곱하도록 clamp.
+  const monthFactor = Math.min(daysSinceLaunch, 30) / 30;
+  const capitalLeft = Math.max(0, totalCapital - totalCosts * monthFactor);
   const runwayMonths =
     totalCosts > 0 && netProfit < 0
       ? Math.max(0, Math.round(capitalLeft / Math.abs(netProfit)))

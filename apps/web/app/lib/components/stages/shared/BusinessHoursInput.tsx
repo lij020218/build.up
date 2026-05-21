@@ -74,17 +74,37 @@ export function BusinessHoursInput({
     }, 600);
   };
 
-  const updateOpen = (v: string) => {
-    setOpen(v);
-    setBusinessOpenTime(v || null);
-    setIs24h(false);
-    flush();
+  // ⚠️ 2026-05-18: type="time" 은 Safari macOS 에서 native picker 만 띄우고 키보드 직접 입력
+  //   불가. 사장님이 "12:30 적힌 채 안 바뀜" 으로 인식. type="text" 로 바꾸고 자동 포맷:
+  //   "9" → "9", "93" → "93", "930" → "9:30", "0930" → "9:30", "0900" → "09:00".
+  //   백스페이스·삭제 자유, 콜론 자동 삽입. 4자리 입력 시 HH:MM 정규화.
+  const formatTimeInput = (raw: string): string => {
+    // 숫자만 추출, 4자리 제한
+    const digits = raw.replace(/[^\d]/g, "").slice(0, 4);
+    if (digits.length === 0) return "";
+    if (digits.length <= 2) return digits;
+    return `${digits.slice(0, digits.length - 2)}:${digits.slice(-2)}`;
   };
-  const updateClose = (v: string) => {
-    setClose(v);
-    setBusinessCloseTime(v || null);
+  const isValidTime = (v: string): boolean => {
+    const m = v.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return false;
+    const h = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    return h >= 0 && h <= 23 && mm >= 0 && mm <= 59;
+  };
+  const updateOpen = (raw: string) => {
+    const formatted = formatTimeInput(raw);
+    setOpen(formatted);
+    setBusinessOpenTime(isValidTime(formatted) ? formatted : null);
     setIs24h(false);
-    flush();
+    if (isValidTime(formatted)) flush();
+  };
+  const updateClose = (raw: string) => {
+    const formatted = formatTimeInput(raw);
+    setClose(formatted);
+    setBusinessCloseTime(isValidTime(formatted) ? formatted : null);
+    setIs24h(false);
+    if (isValidTime(formatted)) flush();
   };
 
   const set24h = () => {
@@ -163,10 +183,14 @@ export function BusinessHoursInput({
             {ko ? "영업 시작" : "Open"}
           </div>
           <input
-            type="time"
+            type="text"
+            inputMode="numeric"
+            placeholder="09:00"
             value={open}
             onChange={(e) => updateOpen(e.target.value)}
             disabled={is24h}
+            maxLength={5}
+            aria-label={ko ? "영업 시작 시각 (HH:MM)" : "Open time (HH:MM)"}
             style={{ ...timeInputStyle, opacity: is24h ? 0.4 : 1 }}
           />
         </div>
@@ -177,10 +201,14 @@ export function BusinessHoursInput({
             {ko ? "영업 종료" : "Close"}
           </div>
           <input
-            type="time"
+            type="text"
+            inputMode="numeric"
+            placeholder="22:00"
             value={close}
             onChange={(e) => updateClose(e.target.value)}
             disabled={is24h}
+            maxLength={5}
+            aria-label={ko ? "영업 종료 시각 (HH:MM)" : "Close time (HH:MM)"}
             style={{ ...timeInputStyle, opacity: is24h ? 0.4 : 1 }}
           />
         </div>

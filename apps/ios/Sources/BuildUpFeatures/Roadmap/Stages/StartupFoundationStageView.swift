@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct StartupFoundationStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "startup-foundation"
 
     @AppStorage("sf.problem")   private var problem   = ""
     @AppStorage("sf.targetUser") private var targetUser = ""
@@ -22,78 +25,85 @@ public struct StartupFoundationStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(pages.indices, id: \.self) { i in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) { page = i }
-                                } label: {
-                                    Text(pages[i])
-                                        .font(BUFont.bodySmall.weight(page == i ? .semibold : .regular))
-                                        .foregroundStyle(page == i ? BUColor.midnight : BUColor.inkMuted)
-                                        .padding(.horizontal, BUSpacing.md)
-                                        .padding(.vertical, BUSpacing.sm)
-                                        .background(page == i ? BUColor.midnight.opacity(0.08) : Color.clear, in: Capsule())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, BUSpacing.sm)
-                    }
-                    .padding(.vertical, BUSpacing.xs)
+    /// 게이트: 문제 정의 + 타깃 사용자 입력 완료.
+    private var canCompleteStage: Bool {
+        !problem.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !targetUser.trimmingCharacters(in: .whitespaces).isEmpty
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: whyPage
-                                case 1: problemPage
-                                default: teamPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        let hasProblem = !problem.trimmingCharacters(in: .whitespaces).isEmpty
+        let hasUser = !targetUser.trimmingCharacters(in: .whitespaces).isEmpty
+        if !hasProblem && !hasUser { return "핵심 문제·타깃 사용자를 입력하세요" }
+        if !hasProblem { return "핵심 문제를 입력하세요" }
+        if !hasUser { return "타깃 사용자를 입력하세요" }
+        return "문제 정의 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "창업팀·법인 기본 구조",
+            stageEyebrow: "단계 6 · 스타트업 기초",
+            helperText: "스타트업 실패의 42%는 시장이 없는 문제를 풀었기 때문. 팀·문제·시장 세 가지가 먼저입니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(
+                    currentStageId: stageId,
+                    inputs: ["problem": problem, "targetUser": targetUser, "corpType": corpType]
+                )
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: {
+                roadmapStore.saveStageEdit(currentStageId: stageId,
+                    inputs: ["problem": problem, "targetUser": targetUser, "corpType": corpType])
+            },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting(보통 4년 1년 cliff) 명문화"),
+                .init(label: "2. 시장·문제 정의", detail: "타깃 고객 ICP + 핵심 문제 3개 + 가설 1줄 정리"),
+                .init(label: "3. 비전·미션·OKR", detail: "북극성 지표 + 분기 OKR 3~5개 + 측정 시스템 셋업"),
+                .init(label: "4. 팀·자문·스폰서", detail: "초기 팀·자문·외부 스폰서 1명 이상 확보"),
+                ],
+                verifyItems: [
+                "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위, 1년 cliff + 4년 vesting 표준",
+                "지분 합의 — 시간·자본·아이디어 기여도 별도 명문화, 모호한 합의는 분쟁 후 해결 불가",
+                "근로계약 — 공동창업자도 근로계약·임원 등기 분리, 4대보험·세무 별도 처리",
+                "지분 매수권 — 퇴사 시 회사가 매수권 보유 명문화, 미명시 시 외부에 팔릴 위험",
+                "IP 양도 — 공동창업자·초기 직원 모두 IP 회사 양도 계약, 미체결 시 IP 분쟁",
+                "비밀유지 — NDA·경업금지 사전 체결, 핵심 정보 유출 방지 (5년 이내 한계)",
+                ],
+                nextStageLabel: "고객 발견",
+                nextSummary: "공동창업자·지분·비전·팀 셋업 완료 → 고객 발견 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: whyPage
+                    case 1: problemPage
+                    default: teamPage
                     }
                 }
-            }
-            .navigationTitle("스타트업 기초")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 왜 중요한가
 
     private var whyPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("스타트업 기초")
-                    Text("스타트업 실패의 42%는\n시장이 없는 문제를 풀었기 때문")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("팀·문제·시장 세 가지가 먼저")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("기초 구축 3요소")
@@ -242,5 +252,9 @@ public struct StartupFoundationStageView: View {
 }
 
 #if DEBUG
-#Preview("StartupFoundation") { StartupFoundationStageView() }
+#Preview("StartupFoundation") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["startup-foundation"] }
+    return StartupFoundationStageView().environment(store)
+}
 #endif

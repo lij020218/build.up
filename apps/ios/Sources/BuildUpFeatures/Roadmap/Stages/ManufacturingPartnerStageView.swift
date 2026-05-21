@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct ManufacturingPartnerStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "manufacturing-partner"
 
     @AppStorage("mfg.emsSelected")  private var emsSelected  = false
     @AppStorage("mfg.auditDone")    private var auditDone    = false
@@ -22,66 +25,59 @@ public struct ManufacturingPartnerStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: EMS 파트너 선정 또는 첫 양산 수량 결정.
+    private var canCompleteStage: Bool {
+        emsSelected || !firstRunQty.trimmingCharacters(in: .whitespaces).isEmpty
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: emsPage
-                                default: productionPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "양산 파트너·계획 확정 — 다음 단계로" }
+        if emsSelected && auditDone { return "EMS 선정·감사 완료 — 다음 단계로" }
+        if emsSelected { return "EMS 선정 — 공장 감사 진행" }
+        if !firstRunQty.isEmpty { return "양산 수량 결정 — EMS 비교 진행" }
+        return "EMS 견적 비교 또는 양산 수량 결정"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "제조 파트너 (EMS/CM) 선정",
+            stageEyebrow: "단계 13 · 양산 파트너 선정",
+            helperText: "EMS 파트너 = 하드웨어 스타트업의 공장. EMS(Electronics Manufacturing Services)는 설계 외 제조 전체를 위탁하는 파트너입니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: emsPage
+                    default: productionPage
                     }
                 }
-            }
-            .navigationTitle("양산 파트너 선정")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 EMS 선정
 
     private var emsPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("양산 파트너 선정")
-                    Text("EMS 파트너 = 하드웨어 스타트업의 공장\n관계가 제품 품질을 결정")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("EMS(Electronics Manufacturing Services): 설계 외 제조 전체를 위탁하는 파트너")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("EMS 선정 기준")
@@ -181,5 +177,9 @@ public struct ManufacturingPartnerStageView: View {
 }
 
 #if DEBUG
-#Preview("ManufacturingPartner") { ManufacturingPartnerStageView() }
+#Preview("ManufacturingPartner") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["manufacturing-partner"] }
+    return ManufacturingPartnerStageView().environment(store)
+}
 #endif

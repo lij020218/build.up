@@ -465,7 +465,7 @@ const recCopy: Record<
   "climate-energy": { ko: { title: "클린테크 / 에너지", summary: "배터리·에너지 효율·탄소포집 — 소프트웨어부터 인프라까지 스펙트럼 넓음.", reasons: ["탄소중립·ESG 투자 우선순위 지속", "에너지 안보 — 정부 R&D 지원 확대"], warnings: ["설비·필드테스트 자본 매우 큼 (수십~수백억)", "정책 사이클·인허가·사업화 리드타임 길음"], categoryLabel: "기술 스타트업" } },
   "storefront-cafe": { ko: { title: "매장형 카페", summary: "브랜드 노출, 좌석 운영, 지역 충성도까지 균형 있게 가져가는 모델입니다.", reasons: ["동네 반복 고객에 유리", "브랜드와 메뉴 스토리텔링 가능"], warnings: ["더 높은 임대료와 인건비 압박"], categoryLabel: "운영 방식" } },
   "takeout-focused": { ko: { title: "테이크아웃 중심", summary: "작은 공간과 빠른 세팅, 단순한 인력 구조에 유리합니다.", reasons: ["점포 면적 부담이 작음", "예산 통제가 중요할 때 적합"], warnings: ["회전율과 메뉴 포지셔닝이 더 중요"], categoryLabel: "운영 방식" } },
-  "delivery-hybrid": { ko: { title: "배달 하이브리드", summary: "배달 비중이 필요한 경우 유용하지만 운영은 더 복잡해집니다.", reasons: ["유입 채널을 넓힐 수 있음", "워크인 외 수요를 확보 가능"], warnings: ["포장, 배차, 수수료 관리가 복잡"], categoryLabel: "운영 방식" } },
+  "delivery-hybrid": { ko: { title: "하이브리드 (홀+배달)", summary: "한국 외식의 가장 흔한 운영 — 홀 식사·배달·픽업을 모두 같이 운영합니다.", reasons: ["홀 단골 + 배달 신규 수요 동시 확보", "한국 외식의 표준 — 매출 채널 다변화", "픽업 도입으로 수수료 일부 회피"], warnings: ["배민·쿠팡이츠 수수료 17~28% 원가에 반영 필수", "주방 동선 3흐름 (홀·픽업·배달) 분리 권장"], categoryLabel: "운영 방식" } },
   "dine-in-restaurant": { ko: { title: "매장 식사형", summary: "한식, 파스타, 브런치처럼 매장 내 식사 경험이 중요한 외식형 모델입니다.", reasons: ["좌석 운영과 체류 경험에 유리", "식사형 메뉴 구성과 잘 맞음"], warnings: ["홀 운영과 인건비 부담이 큼"], categoryLabel: "운영 방식" } },
   "self-serve-light": { ko: { title: "무인/셀프 운영형", summary: "인건비를 낮추되 기기 품질과 입지 적합도가 더 중요해지는 모델입니다.", reasons: ["인력 구조를 가볍게 가져갈 수 있음", "기능형 상권과 잘 맞을 수 있음"], warnings: ["차별화와 유지보수가 중요"], categoryLabel: "운영 방식" } },
   "small-storefront-retail": { ko: { title: "오프라인 소형 매장형", summary: "큐레이션과 동네 재방문 수요를 살리는 기본 소매 모델입니다.", reasons: ["라이프스타일/전문 소매에 적합", "오프라인 경험을 만들기 좋음"], warnings: ["재고 통제가 핵심"], categoryLabel: "운영 방식" } },
@@ -528,10 +528,11 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   industry_selection: { ko: { title: "업종 선택", goal: "이후 로드맵 분기를 위해 업종과 창업 형태를 먼저 정합니다.", whyNow: "모든 로드맵은 이 결정에서 시작됩니다." } },
   startup_type: { ko: { title: "창업 형태 선택", goal: "독립 창업인지 프랜차이즈인지 정해 이후 가이드 분기를 분명하게 만듭니다.", whyNow: "브랜드, 계약, 준비 순서가 창업 형태에 따라 달라집니다." } },
   business_model: { ko: { title: "운영 방식 선택", goal: "점포형, 테이크아웃형, 배달형 중 어떤 운영 모델인지 정합니다.", whyNow: "예산과 상권 추천은 운영 모델에 따라 달라집니다." } },
+  target_customer_definition: { ko: { title: "타깃 고객 정의", goal: "주 고객 페르소나 — 연령대·라이프스타일·가격 민감도 — 를 한 명으로 정해, 입지·메뉴·마케팅이 평균값이 아닌 실제 한 사람에게 집중되도록 합니다.", whyNow: "후속 결정 (임대 위치·가격대·광고 채널) 이 모두 '누가 고객인가' 에 달려 있습니다. 지금 5-10분 입력하면 몇 달의 시행착오를 줄입니다." } },
   budget_setup: { ko: { title: "예산 설정", goal: "현실적인 자본금과 오픈 시점을 먼저 고정합니다.", whyNow: "예산 범위가 정해져야 상권과 계약 검토가 정확해집니다." } },
   location_candidates: { ko: { title: "상권 후보 비교", goal: "출처가 확인된 상권 후보 중 하나를 선택합니다.", whyNow: "상권이 정해져야 계약 검토와 인허가 준비가 이어집니다." } },
   contract_review: { ko: { title: "계약 전 검토", goal: "임대차 계약 전에 놓치면 안 되는 항목을 모두 확인합니다.", whyNow: "이 단계는 실제 손해를 막는 핵심 보호 장치입니다." } },
-  permit_guide: { ko: { title: "인허가 가이드", goal: "내 업종에 맞는 등록 및 인허가 순서를 확인합니다.", whyNow: "등록 순서를 놓치면 오픈 일정이 흔들릴 수 있습니다." } },
+  // permit_guide → permit_check 로 통합 (2026-05-18 stale orphan 삭제)
   tax_guide: { ko: { title: "세무 가이드", goal: "오픈 전 기본 세무 세팅과 증빙 구조를 점검합니다.", whyNow: "초기 세무 구조가 흔들리면 이후 신고가 어려워집니다." } },
   loan_guide: { ko: { title: "대출 가이드", goal: "자금 조달과 정책자금 검토 포인트를 정리합니다.", whyNow: "무리한 차입을 피하고 현실적인 자금 구조를 잡아야 합니다." } },
   franchise_application: { ko: { title: "프랜차이즈 가맹 절차", goal: "선택한 브랜드의 가맹 상담, 정보공개서 검토, 계약 체결, 교육 이수를 완료하세요.", whyNow: "가맹 계약이 체결되어야 입지 선정, 인테리어, 공급업체 등 다음 단계가 의미 있습니다." } },
@@ -567,6 +568,7 @@ const stageCopy: Record<string, { ko: { title: string; goal: string; whyNow: str
   // ── Offline path ──────────────────────────────────────────────────────────
   permit_check: { ko: { title: "인허가 사전 확인", goal: "계약 전에 내 업종에 필요한 인허가·위생 교육·안전 요건을 — 발급은 나중, 지금은 '무엇이 필요한지' 확인만.", whyNow: "임대 계약 후에야 '이 건물에선 영업 못 한다' 가 드러나면 보증금이 묶입니다. 위 패널에서 업종별 절차·비용·기간을 먼저 파악하세요." } },
   construction_setup: { ko: { title: "인테리어 및 공사", goal: "인테리어 업체를 선정하고 설계를 확정한 뒤 공사를 완료합니다.", whyNow: "시공 업체 3곳 이상의 견적·일정·포트폴리오를 동시에 비교해야 비용 대비 품질을 극대화할 수 있습니다." } },
+  menu_design: { ko: { title: "메뉴·서비스 라인업 확정", goal: "초기 메뉴(또는 서비스 라인업)를 항목명·가격·카테고리로 정해 재고 관리 카드에 자동 등록되도록 합니다. 카페는 음료 라인업, 미용·피트니스는 서비스 메뉴, 소매는 상품 카탈로그.", whyNow: "메뉴가 정해져야 식자재 발주·장비 선택·가격 전략·재고 베이스라인이 흐트러지지 않습니다. 공급처 확정 전에 락인해야 첫 주 결품·재작업을 막을 수 있습니다." } },
   vendor_setup: { ko: { title: "공급처 및 장비 확정", goal: "주요 원자재·상품·소모품 공급처와 장비 구매·렌탈 계획을 확정합니다.", whyNow: "공급처별 원가·납기·최소주문량(MOQ)을 비교해야 초도 주문 규모와 이후 재고 회전 속도를 맞출 수 있습니다." } },
   registration_setup: { ko: { title: "사업자 등록 및 인허가 신고", goal: "세무서 사업자등록과 관할 관청 영업 신고·허가를 완료합니다.", whyNow: "등록 없이 영업하면 법적 위반이며, 매출 증빙도 불가합니다." } },
   insurance_tax_setup: { ko: { title: "직원 채용 의무 — 근로계약·4대보험·급여 세팅", goal: "첫 직원 채용 시 즉시 발생하는 4가지 의무: ① 근로계약서 작성 (미체결 시 500만원 과태료) ② 4대보험 가입 (14일 이내) ③ 원천세 매월 신고 ④ 급여 시스템 결정 (수기·세무사·SaaS).", whyNow: "직원 1명만 채용해도 14일 이내 4대보험 신고 의무. 미신고 = 가산세 + 소급납부. 두루누리 80% 지원 (270만 미만, 10인 미만, 36개월) 신고 시점에만 신청 가능 — 놓치면 비용 폭증." } },
@@ -701,6 +703,16 @@ const taskTitleCopy: Record<string, { ko: string }> = {
   "scale-up-budget-modeled": { ko: "Scale-up 예산 모델링 — Full mask 전환비 + OSAT 캐파·인상률 + 채널 비용" },
 
   // ── 기존 ──
+  // target-customer-definition (shared, 모든 cluster)
+  "tc-age-narrowed": { ko: "주 연령대(또는 산업·기업 규모) 한 명으로 좁힘 — 모호한 '20-50대' 정의 X" },
+  "tc-lifestyle-specified": { ko: "라이프스타일·일상 동선 구체화 — 언제·어디서·왜 쓰는지 명시" },
+  "tc-price-anchor": { ko: "객단가·예산 한도 명시 — 절대 안 살 가격대까지 포함" },
+  "tc-counter-example": { ko: "반례 검증 — 이 페르소나가 절대 안 할 행동 4개 명시" },
+  // menu-design (offline + online)
+  "md-signature-items": { ko: "시그니처 메뉴(또는 서비스) 3-5개 확정" },
+  "md-side-items": { ko: "사이드·보조 메뉴 2-3개 확정" },
+  "md-pricing-set": { ko: "각 항목 가격 책정 — 원가율 33% 이하 목표" },
+  "md-categories-organized": { ko: "카테고리·노출 순서 정리 — 재고 카드에 자동 등록되는 베이스" },
   // franchise-application
   "fc-inquiry": { ko: "본사 가맹 상담 신청 완료" },
   "fc-disclosure": { ko: "정보공개서 수령 및 검토 (14일 숙려기간)" },

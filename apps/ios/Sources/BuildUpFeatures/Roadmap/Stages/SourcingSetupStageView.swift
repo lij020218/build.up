@@ -9,11 +9,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct SourcingSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "sourcing-setup"
 
     @AppStorage("src.sourcingType")    private var sourcingType    = ""
     @AppStorage("src.supplierLocked")  private var supplierLocked  = false
@@ -35,72 +38,71 @@ public struct SourcingSetupStageView: View {
 
     public init() {}
 
+    /// 게이트: 소싱 유형 1개 이상 선택.
+    private var canCompleteStage: Bool { !sourcingType.isEmpty }
+
+    private var advanceHint: String {
+        if sourcingType.isEmpty { return "소싱 유형을 선택하세요" }
+        return "소싱 전략 결정됨 — 다음 단계로"
+    }
+
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "상품 소싱 및 상세 페이지",
+            stageEyebrow: "단계 11 · 소싱·상품 준비",
+            helperText: "소싱 = 온라인 커머스의 원가 구조 — 마진을 결정하는 가장 중요한 결정. 목표 원가율: 소비자가의 30-40% 이하.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["sourcingType": sourcingType])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["sourcingType": sourcingType]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 소싱 방식 결정", detail: "국내도매·중국직구·자체제작·OEM·드롭배송 등 5축 비교 후 결정"),
+                .init(label: "2. 1차 공급처 검증", detail: "샘플 주문 + 품질·납기·CS 응답 3축 직접 테스트 후 채택"),
+                .init(label: "3. 마진 계산", detail: "원가 + 부가세 + 배송비 + 플랫폼 수수료 + 광고비 → 마진 30% 이상 확보"),
+                .init(label: "4. 재고·물류 모델", detail: "직접 배송 vs 풀필먼트(쿠팡 로켓그로스·품고·셀러허브) 비교"),
+                ],
+                verifyItems: [
+                "중국 직구 — 200달러 초과 시 통관 부담, KC 인증 의무 카테고리(전자제품·유아용품 등) 사전 확인",
+                "위탁판매·드롭배송 — 공급처 결품 시 본인 책임, CS 분쟁 시 자체 환불 의무 발생",
+                "OEM 제작 — MOQ(최소주문량) 보통 500~3000개, 자본·재고 회전 부담 인식",
+                "원산지 표시 — 「Made in China」 누락 시 표시광고법 위반, 모든 상품 의무 표시",
+                "지식재산 — 캐릭터·로고·디자인 무단 도용 시 상표·디자인권 침해, 시작 전 검색 필수",
+                "수입 통관 — 식품·화장품·의료기기는 별도 수입신고 + KC·KFDA·식약처 승인 필수",
+                ],
+                nextStageLabel: "스토어 셋업",
+                nextSummary: "소싱·공급처 검증 완료 → 스토어 셋업(상품 등록·배송·CS) 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: sourcingPage
-                                default: productPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: sourcingPage
+                    default: productPage
                     }
                 }
-            }
-            .navigationTitle("소싱·상품 준비")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Page 0: 소싱 전략
 
     private var sourcingPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("소싱 전략")
-                    Text("소싱 = 온라인 커머스의 원가 구조 — 마진을 결정하는 가장 중요한 결정")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("목표 원가율: 소비자가의 30-40% 이하")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("소싱 유형 선택")
@@ -235,5 +237,9 @@ public struct SourcingSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("SourcingSetup") { SourcingSetupStageView() }
+#Preview("SourcingSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["sourcing-setup"] }
+    return SourcingSetupStageView().environment(store)
+}
 #endif

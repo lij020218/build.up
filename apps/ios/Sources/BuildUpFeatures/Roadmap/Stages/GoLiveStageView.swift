@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct GoLiveStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "go-live"
+
     @State private var page = 0
 
     @AppStorage("gl.webLive")      private var webLive      = false
@@ -24,71 +28,74 @@ public struct GoLiveStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 런치 날짜 결정 — 배포 완료(웹 or 앱) + 런치 채널 1개 이상.
+    private var canCompleteStage: Bool {
+        (webLive || appStore) && (productHunt || community || pressRelease)
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: deployPage
-                                default: launchChannelPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if !(webLive || appStore) { return "웹 또는 앱 배포 완료를 체크하세요" }
+        if !(productHunt || community || pressRelease) { return "런치 채널 1개 이상 선택" }
+        return "런치 날짜 결정 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "🚀 실제 출시 (Go Live)",
+            stageEyebrow: "단계 11 · Go-Live",
+            helperText: "Go-Live = 실제 사용자가 접근할 수 있는 상태. 스테이징이 아닌 프로덕션 배포 + 도메인·SSL·결제 실서비스.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 도메인·SSL·SEO", detail: "도메인 + SSL 인증서 + sitemap.xml + robots.txt 셋업"),
+                .init(label: "2. 앱 스토어 등록", detail: "App Store Connect + Google Play Console 14일 테스터 12명 정책"),
+                .init(label: "3. PH·HN 출시", detail: "PH 화·수 12am PT + HN Show HN 게시"),
+                .init(label: "4. 모니터링·롤백", detail: "Sentry 에러 + Statuspage + 즉시 롤백 절차 셋업"),
+                ],
+                verifyItems: [
+                "보안 — 출시 트래픽 폭증 시 DDoS·Rate limit 사전 대비, 다운 시 PR 손상",
+                "Apple/Google — 정책 위반(개인정보·결제·콘텐츠) 시 거절, 재심사 1~2주 추가",
+                "TestFlight 정책 — 외부 테스트는 Beta App Review 필수, 미준수 시 거절",
+                "Google Play — 14일 12명 클로즈드 테스트 의무, 미충족 시 출시 불가",
+                "GDPR·개인정보 — 글로벌 출시 시 EU·미국 사용자 데이터 처리 약관 사전 게시",
+                "롤백 — 출시 후 결함 발견 시 즉시 롤백 절차, 미준비 시 신뢰 회복 불가",
+                ],
+                nextStageLabel: "성장 엔진",
+                nextSummary: "실제 출시 + 도메인·앱·PH·모니터링 셋업 완료 → 성장 엔진 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: deployPage
+                    default: launchChannelPage
                     }
                 }
-            }
-            .navigationTitle("Go-Live")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 웹·앱 배포
 
     private var deployPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("Go-Live")
-                    Text("Go-Live = 실제 사용자가\n접근할 수 있는 상태")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("스테이징이 아닌 프로덕션 배포 + 도메인·SSL·결제 실서비스")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("배포 전 최종 체크리스트")
@@ -198,18 +205,14 @@ public struct GoLiveStageView: View {
                     }
                 }
             }
-
-            BUCard(.card) {
-                Toggle(isOn: $done) {
-                    Text("Go-Live 완료")
-                        .font(BUFont.bodySmall.weight(.semibold))
-                        .foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
-            }
         }
     }
 }
 
 #if DEBUG
-#Preview("GoLive") { GoLiveStageView() }
+#Preview("GoLive") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["go-live"] }
+    return GoLiveStageView().environment(store)
+}
 #endif

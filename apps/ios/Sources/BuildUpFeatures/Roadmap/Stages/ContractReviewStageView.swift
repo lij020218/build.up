@@ -12,11 +12,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct ContractReviewStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "contract-review"
 
     // 계약 체크
     @AppStorage("contract.check.term")       private var checkTerm       = false
@@ -36,69 +39,73 @@ public struct ContractReviewStageView: View {
 
     private let pages = ["핵심 조항", "레드플래그", "체크리스트"]
 
+    private var canCompleteStage: Bool { allChecked && contractDone }
+
+    private var advanceHint: String {
+        if !allChecked { return "9대 핵심 조항을 모두 체크하세요" }
+        if !contractDone { return "임대 계약서 서명 완료 토글을 켜세요" }
+        return "계약 검토 완료 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "계약 전 검토",
+            stageEyebrow: "단계 8 · 임대 계약 검토",
+            helperText: "임대 계약서는 '표준 양식'이 없습니다. 임대인이 유리하게 작성합니다. 사장님이 직접 확인하거나 법무사 검토(5~10만원)를 권장합니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 서류 발급", detail: "건축물대장 + 등기부등본 — 위반건축물 표시 + 근저당 ÷ 시세 = 부도 위험률"),
+                .init(label: "2. 현장 방문 + 인접 점주 인터뷰", detail: "휴대폰 영상 + 30초 인터뷰 + 전기 30A·정화조 직접 검증"),
+                .init(label: "3. 특약 5종 협상", detail: "임대료 5% 상한 + 10년 갱신 + 원상복구 「임차 시 상태」 + 업종변경 자유 + 시설보강 임대인 부담"),
+                .init(label: "4. 사인 + 당일 확정일자", detail: "동주민센터 30분 — 1,000원 — 보증금 우선변제권 확보"),
+                ],
+                verifyItems: [
+                "확정일자 도장 받은 계약서 원본 보관 + 스캔본 클라우드 (분쟁 시 핵심 증거)",
+                "특약 5종 모두 계약서 「특약사항」 란에 명문화 — 구두 약속은 분쟁 시 100% 임차인 불리",
+                "근저당 합계 ÷ 시세 50% 이상이면 보증금 후순위 — 보증보험 가입 검토",
+                "전기 용량·정화조 용량을 임대인 답변과 다르면 시설보강 임대인 부담 추가 협상",
+                "원상복구 범위가 「임차 시 상태」 로 명시됐는지 다시 확인 — 「최초 인도 시」 = 인테리어 철거 1,000~3,000만원 부담",
+                ],
+                nextStageLabel: "다음 단계(인테리어) 전 반드시 확인",
+                nextSummary: "보증금 보호 명문화 완료 → 인테리어·집기 발주 (construction-setup) 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: clausePage
-                                case 1: redFlagPage
-                                default: checklistPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: clausePage
+                    case 1: redFlagPage
+                    default: checklistPage
                     }
                 }
-            }
-            .navigationTitle("임대 계약 검토")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 핵심 조항
 
     private var clausePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("단계 8 · 임대 계약 검토")
-                    Text("사인 전 30분 —\n보증금 수천만원을 지킵니다")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("임대 계약서는 '표준 양식'이 없습니다. 임대인이 유리하게 작성합니다. 사장님이 직접 확인하거나 법무사 검토(5~10만원)를 권장합니다.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("9대 핵심 확인 조항")
@@ -270,5 +277,9 @@ public struct ContractReviewStageView: View {
 }
 
 #if DEBUG
-#Preview("ContractReview") { ContractReviewStageView() }
+#Preview("ContractReview") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["contract-review"] }
+    return ContractReviewStageView().environment(store)
+}
 #endif

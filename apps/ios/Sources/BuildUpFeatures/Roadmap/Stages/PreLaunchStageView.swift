@@ -17,11 +17,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct PreLaunchStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "pre-launch"
 
     // 가격 정책 선택
     @AppStorage("prelaunch.pricing")          private var pricingChoice    = "" // "free" / "discount" / "full"
@@ -48,70 +51,102 @@ public struct PreLaunchStageView: View {
         [dayCleaning, dayStaff, dayPOS, dayMenu, dayEmergency, dayPhoto].filter { $0 }.count
     }
 
+    /// BUInteractiveChecklist 용 Set<String> binding — 기존 @AppStorage 6개와 양방향 sync.
+    private var dayChecksBinding: Binding<Set<String>> {
+        Binding(
+            get: {
+                var s: Set<String> = []
+                if dayCleaning { s.insert("clean") }
+                if dayStaff    { s.insert("staff") }
+                if dayPOS      { s.insert("pos") }
+                if dayMenu     { s.insert("menu") }
+                if dayEmergency { s.insert("emergency") }
+                if dayPhoto    { s.insert("photo") }
+                return s
+            },
+            set: { new in
+                dayCleaning  = new.contains("clean")
+                dayStaff     = new.contains("staff")
+                dayPOS       = new.contains("pos")
+                dayMenu      = new.contains("menu")
+                dayEmergency = new.contains("emergency")
+                dayPhoto     = new.contains("photo")
+            }
+        )
+    }
+
+    /// 웹 gateTasks (required:true) 미러 — 모든 게이트 만족 시에만 다음 단계로.
+    private var canCompleteStage: Bool {
+        !pricingChoice.isEmpty
+            && dayCheckCount == 6
+            && feedbackDone
+            && grandOpenDone
+    }
+
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(pages.indices, id: \.self) { i in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) { page = i }
-                                } label: {
-                                    VStack(spacing: 4) {
-                                        Text(pages[i])
-                                            .font(page == i ? BUFont.bodySmall.weight(.bold) : BUFont.bodySmall)
-                                            .foregroundStyle(page == i ? BUColor.midnight : BUColor.inkMuted)
-                                            .padding(.horizontal, BUSpacing.md)
-                                            .padding(.vertical, BUSpacing.sm)
-                                        Rectangle()
-                                            .fill(page == i ? BUColor.midnight : Color.clear)
-                                            .frame(height: 2)
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .background(BUColor.surface.opacity(0.95))
-                    Divider()
+    private var advanceHint: String {
+        if pricingChoice.isEmpty { return "가격 정책을 선택하세요" }
+        if dayCheckCount < 6 { return "당일 체크 \(dayCheckCount)/6 — 모두 체크해야 진행" }
+        if !feedbackDone { return "피드백 수집·정리 완료 토글을 켜세요" }
+        if !grandOpenDone { return "본 오픈 준비 완료 토글을 켜세요" }
+        return "소프트 오픈 완료 — 본 오픈으로!"
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: invitePage
-                                case 1: dayPage
-                                case 2: feedbackPage
-                                default: grandOpenPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "소프트 오픈",
+            stageEyebrow: "단계 19 · 소프트 오픈",
+            helperText: "본 오픈 전 마지막 리허설. 가족·동네 주민 우선 초대 + 30~50% 할인으로 결제 흐름 검증.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["pricing": pricingChoice])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["pricing": pricingChoice]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 손님 초대 + 가격 결정", detail: "10~30명 4유형(가족·이웃·인플루언서·동료) 균형 + 무료/할인/정가 결정"),
+                .init(label: "2. 당일 운영 8축 점검", detail: "청결·브리핑·POS·분위기·관찰·결제·피드백카드·디브리핑"),
+                .init(label: "3. 피드백 4축 수집", detail: "맛·서비스·가격·분위기 — AI 폼 + 종이 카드 + 폼 빌더(구글/네이버/카카오)"),
+                .init(label: "4. 본 오픈 준비 5종 보강", detail: "메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·1.5배 발주·1페이지 요약"),
+                ],
+                verifyItems: [
+                "결제 단말 1건 실 카드 테스트 + 즉시 취소 — 결제 오류 1건 = 별점 -0.4",
+                "직원 응대 멘트·포지션·비상 대응 통일 (당일 발견 이슈 모두 코칭)",
+                "본 오픈 식자재·소모품 1.5배 발주 입고 시간 확정",
+                "인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 — 본 오픈 D-3 까지",
+                "피드백 응답 10명 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
+                "소프트 오픈 1페이지 요약 직원 공유 — 본 오픈 운영 자료",
+                ],
+                nextStageLabel: "다음 단계(본 오픈) 전 반드시 확인",
+                nextSummary: "운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                // 가로 스크롤 탭바
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: invitePage
+                    case 1: dayPage
+                    case 2: feedbackPage
+                    default: grandOpenPage
                     }
                 }
-            }
-            .navigationTitle("소프트 오픈")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 손님 초대
@@ -194,24 +229,18 @@ public struct PreLaunchStageView: View {
 
     private var dayPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    HStack {
-                        BUEyebrow("당일 운영 체크리스트")
-                        Spacer()
-                        Text("\(dayCheckCount)/6")
-                            .font(BUFont.eyebrow.weight(.bold))
-                            .foregroundStyle(dayCheckCount == 6 ? BUColor.success : BUColor.inkMuted)
-                            .monospacedDigit()
-                    }
-                    dayCheckRow("매장·시설 청결 & 위생 최종 점검", detail: "바닥·테이블·화장실·쓰레기통 모두 점검·소독", isOn: $dayCleaning)
-                    dayCheckRow("직원 역할 배분 & 브리핑", detail: "포지션·응대 멘트·비상 대응 방법 공유", isOn: $dayStaff)
-                    dayCheckRow("POS·주문 시스템 최종 확인", detail: "배달앱 연동 + 메뉴 가격 확인 + 테스트 주문", isOn: $dayPOS)
-                    dayCheckRow("메뉴 준비 & 재고 점검", detail: "식재료 입고량·유통기한·조리 준비 상태 확인", isOn: $dayMenu)
-                    dayCheckRow("비상 연락망 & 돌발 상황 대응", detail: "주방 사고·결제 오류·재료 부족 시 대응 방법", isOn: $dayEmergency)
-                    dayCheckRow("대표 메뉴 사진 촬영 (인스타·네이버)", detail: "소프트오픈 음식 사진 SNS 업로드용 준비", isOn: $dayPhoto)
-                }
-            }
+            BUInteractiveChecklist(
+                title: "당일 운영 체크리스트",
+                items: [
+                    .init(id: "clean",     label: "매장·시설 청결 & 위생 최종 점검", detail: "바닥·테이블·화장실·쓰레기통 모두 점검·소독"),
+                    .init(id: "staff",     label: "직원 역할 배분 & 브리핑",         detail: "포지션·응대 멘트·비상 대응 방법 공유"),
+                    .init(id: "pos",       label: "POS·주문 시스템 최종 확인",       detail: "배달앱 연동 + 메뉴 가격 확인 + 테스트 주문"),
+                    .init(id: "menu",      label: "메뉴 준비 & 재고 점검",          detail: "식재료 입고량·유통기한·조리 준비 상태 확인"),
+                    .init(id: "emergency", label: "비상 연락망 & 돌발 상황 대응",    detail: "주방 사고·결제 오류·재료 부족 시 대응 방법"),
+                    .init(id: "photo",     label: "대표 메뉴 사진 촬영",            detail: "소프트오픈 음식 사진 SNS 업로드용 준비"),
+                ],
+                checked: dayChecksBinding
+            )
 
             if dayCheckCount == 6 {
                 BUCard(.card) {
@@ -380,5 +409,9 @@ public struct PreLaunchStageView: View {
 }
 
 #if DEBUG
-#Preview("PreLaunch") { PreLaunchStageView() }
+#Preview("PreLaunch") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["pre-launch"] }
+    return PreLaunchStageView().environment(store)
+}
 #endif

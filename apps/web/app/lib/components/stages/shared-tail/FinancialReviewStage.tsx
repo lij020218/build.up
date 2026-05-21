@@ -596,71 +596,60 @@ export function FinancialReviewStage() {
 
   // ── RENDER ──
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "4px 0 40px" }}>
+    <section style={{ display: "flex", flexDirection: "column", gap: "14px", padding: "4px 0 28px" }}>
 
-      {/* ── KEY ACTION 히어로 카드 (다른 단계와 통일) ── */}
+      {/* ── KEY ACTION 히어로 — 2026-05-19 compact ── */}
       <div style={{
-        display: "flex", gap: "14px", alignItems: "flex-start",
-        padding: "16px 18px", borderRadius: "16px",
+        display: "flex", gap: "12px", alignItems: "flex-start",
+        padding: "12px 14px", borderRadius: "14px",
         background: `linear-gradient(135deg, ${MIDNIGHT} 0%, rgba(25,25,112,0.92) 100%)`,
         color: "#fff",
-        boxShadow: "0 6px 20px rgba(25,25,112,0.28)",
+        boxShadow: "0 4px 14px rgba(25,25,112,0.22)",
       }}>
         <div style={{
-          width: 38, height: 38, borderRadius: 12,
+          width: 32, height: 32, borderRadius: 10,
           background: "rgba(255,255,255,0.18)",
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
         }}>
-          <ShieldCheck size={20} strokeWidth={2.2} color="#fff" />
+          <ShieldCheck size={16} strokeWidth={2.2} color="#fff" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: "11.5px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, opacity: 0.7, marginBottom: "4px" }}>
-            {ko ? "이 단계에서 꼭 할 일" : "Do this in this stage"}
+          <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, opacity: 0.7, marginBottom: "2px" }}>
+            {ko ? "이 단계에서 할 일" : "Do this"}
           </div>
-          <div style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.4, marginBottom: "5px" }}>
-            {ko ? "8개 비용 항목 확인·조정 → 운영 대시보드 Day 1 부터 정확 가동" : "Confirm 8 cost fields → ops dashboard works from Day 1"}
+          <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.35, marginBottom: "3px" }}>
+            {ko ? "8개 비용 항목 확인 → Day 1부터 운영 대시보드 정확 가동" : "Confirm 8 cost fields → ops dashboard accurate from Day 1"}
           </div>
-          <div style={{ fontSize: "13.5px", lineHeight: 1.55, opacity: 0.92 }}>
+          <div style={{ fontSize: "12px", lineHeight: 1.45, opacity: 0.85 }}>
             {ko
-              ? "이전 단계의 임대료·인건비·수수료가 자동 집계됐어요. 업종 평균과 비교하면서 항목별로 검증하세요."
-              : "Rent, labor, fees auto-aggregated from earlier stages. Verify each against industry benchmarks."}
+              ? "이전 단계 임대료·인건비·수수료 자동 집계. 업종 평균과 비교해 검증."
+              : "Rent, labor, fees auto-aggregated. Verify against benchmarks."}
           </div>
         </div>
       </div>
 
-      {/* Hero Header */}
-      <header>
-        <div style={eyebrow}>
-          {ko ? "월 운영비" : "Monthly Operating Costs"}
+      {/* ⚠️ 2026-05-19 (사장님 신고: UI 가 큼직해서 스크롤 많음):
+          Hero Header (h1 + 긴 body) 는 위 KEY ACTION 카드와 메시지 중복 → 제거.
+          *Progress 만 inline 으로 컴팩트하게 유지*. */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        gap: "10px", padding: "10px 14px", borderRadius: "12px",
+        background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)",
+      }}>
+        <span style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--muted)" }}>
+          {ko ? "진행" : "Progress"}
+        </span>
+        <div style={{ flex: 1, height: "4px", borderRadius: "2px", background: "rgba(17,17,17,0.06)", overflow: "hidden", maxWidth: "200px" }}>
+          <div style={{
+            width: `${progressPct}%`, height: "100%",
+            background: "#191970", transition: "width 0.35s cubic-bezier(0.22,1,0.36,1)",
+          }} />
         </div>
-        <h1 style={heroTitle}>
-          {ko ? "이전 단계 입력을 바탕으로 자동 집계했어요" : "Auto-aggregated from your earlier inputs"}
-        </h1>
-        <p style={heroBody}>
-          {ko
-            ? "임대료 · 인건비 · 수수료 · 이자 등 8개 항목을 확인·수정하세요. 오픈 Day 1부터 운영 대시보드가 정확한 비용 구조로 작동합니다."
-            : "Review and adjust eight cost fields. Your operational dashboard will work with accurate numbers from Day 1."}
-        </p>
-
-        {/* Progress */}
-        <div style={{ marginTop: "24px" }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "10px" }}>
-            <span style={{ fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)" }}>
-              {ko ? "진행" : "Progress"}
-            </span>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
-              {confirmedCount}/{totalFields} <span style={{ color: "var(--muted)", fontWeight: 500 }}>· {progressPct}%</span>
-            </span>
-          </div>
-          <div style={{ height: "4px", borderRadius: "2px", background: "rgba(17,17,17,0.06)", overflow: "hidden" }}>
-            <div style={{
-              width: `${progressPct}%`, height: "100%",
-              background: "#191970", transition: "width 0.35s cubic-bezier(0.22,1,0.36,1)",
-            }} />
-          </div>
-        </div>
-      </header>
+        <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+          {confirmedCount}/{totalFields}
+        </span>
+      </div>
 
       {/* Category Pills */}
       <div role="tablist" style={{ display: "flex", gap: "8px", flexWrap: "wrap" as const }}>
@@ -677,14 +666,15 @@ export function FinancialReviewStage() {
               aria-selected={active}
               onClick={() => setActiveCategory(cat)}
               style={{
-                display: "inline-flex", alignItems: "center", gap: "8px",
-                padding: "10px 18px", borderRadius: "999px",
-                fontSize: "13px", fontWeight: 600, letterSpacing: "-0.005em",
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                padding: "7px 14px", borderRadius: "999px",
+                fontSize: "12.5px", fontWeight: 600, letterSpacing: "-0.005em",
                 border: active ? "1px solid rgba(25,25,112,0.3)" : "1px solid var(--border)",
                 background: active ? "rgba(25,25,112,0.05)" : "var(--surface)",
                 color: active ? "#191970" : "var(--muted)",
                 cursor: "pointer",
                 transition: "background 0.18s ease, border-color 0.18s ease, color 0.18s ease",
+                fontFamily: "inherit",
               }}
             >
               <span>{label}</span>
@@ -703,8 +693,9 @@ export function FinancialReviewStage() {
         })}
       </div>
 
-      {/* Field Cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* Field Cards — 2026-05-19 compact: padding/fontSize/gap 모두 축소.
+          한 줄 레이아웃 (라벨·금액·입력·확인) 으로 스크롤 감소. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {CATEGORY_FIELDS[activeCategory].map((fieldKey) => {
           const value = adjustedFields[fieldKey];
           const source = adjustedSources[fieldKey];
@@ -716,25 +707,26 @@ export function FinancialReviewStage() {
             <article
               key={fieldKey}
               style={{
-                padding: "22px 24px",
-                borderRadius: "20px",
+                padding: "12px 14px",
+                borderRadius: "14px",
                 background: "var(--surface-strong)",
                 border: isConfirmed ? `1px solid rgba(25,25,112,0.35)` : "1px solid var(--border)",
                 boxShadow: isConfirmed ? "0 1px 0 rgba(25,25,112,0.06) inset" : "0 1px 2px rgba(17,17,17,0.02)",
                 transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                display: "flex",
+                flexDirection: "column" as const,
+                gap: "8px",
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "16px", fontWeight: 650, color: "var(--text)", letterSpacing: "-0.015em" }}>
-                      {ko ? fieldLabel.ko : fieldLabel.en}
-                    </span>
-                    <span style={{ fontSize: "12px", color: "var(--muted)" }}>
-                      · {ko ? fieldLabel.hint.ko : fieldLabel.hint.en}
-                    </span>
-                  </div>
-                  <SourceBadge source={source} sourceMeta={sourceMeta} ko={ko} field={fieldKey} details={estimate.details} />
+              {/* Row 1: 라벨 + hint + 확인 버튼 */}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" as const }}>
+                  <span style={{ fontSize: "14px", fontWeight: 650, color: "var(--text)", letterSpacing: "-0.01em" }}>
+                    {ko ? fieldLabel.ko : fieldLabel.en}
+                  </span>
+                  <span style={{ fontSize: "11.5px", color: "var(--muted)" }}>
+                    {ko ? fieldLabel.hint.ko : fieldLabel.hint.en}
+                  </span>
                 </div>
                 <button
                   type="button"
@@ -742,7 +734,7 @@ export function FinancialReviewStage() {
                   aria-label={isConfirmed ? "unconfirm" : "confirm"}
                   style={{
                     flexShrink: 0,
-                    width: "36px", height: "36px",
+                    width: "26px", height: "26px",
                     borderRadius: "50%",
                     border: isConfirmed ? "none" : "1px solid var(--border)",
                     background: isConfirmed ? MIDNIGHT : "transparent",
@@ -751,23 +743,22 @@ export function FinancialReviewStage() {
                     transition: "background 0.18s ease, border-color 0.18s ease",
                   }}
                 >
-                  <Check size={18} strokeWidth={2.5} color={isConfirmed ? "#fff" : "rgba(17,17,17,0.25)"} />
+                  <Check size={14} strokeWidth={2.6} color={isConfirmed ? "#fff" : "rgba(17,17,17,0.25)"} />
                 </button>
               </div>
 
-              {/* Amount input row — 단위: 만원 (300000원 → 사용자는 "30" 입력) */}
-              <div style={{ display: "flex", alignItems: "baseline", gap: "16px", marginTop: "14px" }}>
-                <span style={{ fontSize: "clamp(32px, 4.5vw, 40px)", fontWeight: 600, letterSpacing: "-0.04em", color: "var(--text)", fontVariantNumeric: "tabular-nums", lineHeight: 1.05 }}>
+              {/* Row 2: 금액 + 입력 (한 줄) */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "22px", fontWeight: 600, letterSpacing: "-0.025em", color: "var(--text)", fontVariantNumeric: "tabular-nums", lineHeight: 1.05, minWidth: "110px" }}>
                   {fmtWon(value)}
                 </span>
-                <div style={{ position: "relative", flex: 1, maxWidth: "200px" }}>
+                <div style={{ position: "relative", flex: 1, maxWidth: "180px" }}>
                   <input
                     type="text"
                     inputMode="decimal"
-                    placeholder={ko ? "예: 30 → 30만원" : "e.g., 30 → ₩300K"}
+                    placeholder={ko ? "예: 30" : "e.g., 30"}
                     value={overrides[fieldKey] != null ? (overrides[fieldKey]! / 10_000).toString() : ""}
                     onChange={(e) => {
-                      // 만원 단위 입력 — 소수점 허용 (예: 1.5 → 15,000원)
                       const raw = e.target.value.replace(/[^0-9.]/g, "");
                       const manwon = raw ? Number(raw) : NaN;
                       setOverrides((p) => ({
@@ -778,30 +769,33 @@ export function FinancialReviewStage() {
                     }}
                     style={{
                       width: "100%",
-                      padding: "9px 44px 9px 14px",
-                      borderRadius: "12px",
+                      padding: "7px 40px 7px 12px",
+                      borderRadius: "10px",
                       border: "1px solid var(--border)",
                       background: "var(--surface)",
-                      fontSize: "14px", fontWeight: 500, fontVariantNumeric: "tabular-nums",
+                      fontSize: "13px", fontWeight: 500, fontVariantNumeric: "tabular-nums",
                       color: "var(--text)",
                       outline: "none",
+                      fontFamily: "inherit",
                     }}
                   />
                   <span style={{
                     position: "absolute",
-                    right: "14px",
+                    right: "12px",
                     top: "50%",
                     transform: "translateY(-50%)",
-                    fontSize: "12.5px",
+                    fontSize: "11.5px",
                     fontWeight: 600,
                     color: "var(--muted)",
                     pointerEvents: "none",
-                    fontVariantNumeric: "tabular-nums",
                   }}>
-                    {ko ? "만원" : "K KRW"}
+                    {ko ? "만원" : "K"}
                   </span>
                 </div>
               </div>
+
+              {/* Row 3: 출처 배지 (작게) */}
+              <SourceBadge source={source} sourceMeta={sourceMeta} ko={ko} field={fieldKey} details={estimate.details} />
             </article>
           );
         })}
@@ -818,12 +812,13 @@ export function FinancialReviewStage() {
           }}
           disabled={activeCategory === "fixed"}
           style={{
-            padding: "11px 20px", borderRadius: "12px",
+            padding: "8px 14px", borderRadius: "10px",
             border: "1px solid var(--border)", background: "var(--surface)",
-            fontSize: "13px", fontWeight: 600, color: "var(--muted)",
+            fontSize: "12.5px", fontWeight: 600, color: "var(--muted)",
             cursor: activeCategory === "fixed" ? "not-allowed" : "pointer",
             opacity: activeCategory === "fixed" ? 0.4 : 1,
             transition: "opacity 0.15s ease",
+            fontFamily: "inherit",
           }}
         >
           ← {ko ? "이전" : "Previous"}
@@ -837,13 +832,14 @@ export function FinancialReviewStage() {
           }}
           disabled={activeCategory === "other"}
           style={{
-            padding: "11px 20px", borderRadius: "12px",
+            padding: "8px 14px", borderRadius: "10px",
             border: "1px solid rgba(25,25,112,0.25)",
             background: activeCategory === "other" ? "var(--surface)" : "rgba(25,25,112,0.05)",
-            fontSize: "13px", fontWeight: 650,
+            fontSize: "12.5px", fontWeight: 650,
             color: activeCategory === "other" ? "var(--muted)" : "#191970",
             cursor: activeCategory === "other" ? "not-allowed" : "pointer",
             opacity: activeCategory === "other" ? 0.4 : 1,
+            fontFamily: "inherit",
           }}
         >
           {ko
@@ -1144,142 +1140,19 @@ export function FinancialReviewStage() {
         </button>
       </article>
 
-      {/* ── 2026-05-12: 한국 SMB 2026 운영 벤치마크 + 매출 부진 회복 플레이북 ── */}
+      {/* ⚠️ 2026-05-18 (사장님 신고: "월 운영비 단계에 왜 운영 진단 콘텐츠가 있냐"):
+          이 자리에 있던 *2026 한국 SMB 운영 벤치마크 표* + *매출 부진 회복 플레이북*
+          (4 시나리오 × 4 액션, 정부 지원 4종 안내) 은 *오픈 후 운영 중* 사장님 콘텐츠.
+          financial-review 는 *오픈 전 월 운영비 검토* 단계라 부적합 → 제거.
+          ㄴ 동일 콘텐츠는 FirstMonthCheckStage / OperationalDashboard / BenchmarkCard
+            가 이미 cover (오픈 후 적절한 시점). 중복 제거 효과도. */}
 
-      {/* 벤치마크 표 — 사장님 본인 지표와 즉시 비교 */}
-      <article style={{ background: "white", borderRadius: 18, padding: "20px 22px", marginBottom: 14, border: "1px solid rgba(25,25,112,0.10)", boxShadow: "0 1px 3px rgba(15,23,42,0.04)" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.75, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
-          📊 2026 한국 SMB 운영 벤치마크
-        </div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: 6 }}>
-          {ko ? "내가 잘 가고 있는지 — 업종별 핵심 지표 비교" : "Am I on track? — KPI benchmarks by industry"}
-        </div>
-        <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginBottom: 14 }}>
-          {ko
-            ? "2024-2026 통계청·소상공인진흥공단·식품외식정보·이미용협회 검증. 본인 지표와 비교해 어디서 새고 있는지 식별."
-            : "Verified from 통계청·SEMAS·KFIA·beauty association 2024-2026. Compare your metrics to identify leaks."}
-        </div>
-        <div style={{ overflow: "auto" as const }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: 12 }}>
-            <thead>
-              <tr style={{ background: "rgba(25,25,112,0.06)" }}>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>업종</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>객단가 (평균)</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>인건비%</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>임대료%</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>재료비%</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "#059669", fontSize: 11.5 }}>건강 신호</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "#dc2626", fontSize: 11.5 }}>위험 신호</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { ind: "한식·일반음식점", ticket: "14,310원", labor: "20-25%", rent: "8-15%", cogs: "36-40%", green: "프라임코스트 65% 이하", red: "재료비 40%+ 또는 폐기율 5%+" },
-                { ind: "카페·디저트", ticket: "8,000원", labor: "20-28%", rent: "10-18%", cogs: "25-35%", green: "재방문율 30%+", red: "고객 80%+가 신규 (단골 없음)" },
-                { ind: "치킨·배달", ticket: "22,000원", labor: "20-25%", rent: "5-10%", cogs: "35-40%", green: "배달 ROAS 3x+", red: "배달 수수료 30%+ (앱 + 라이더)" },
-                { ind: "미용실 (1인)", ticket: "20,000-50,000원", labor: "—", rent: "12-20%", cogs: "8-15%", green: "재방문 60%+", red: "신규 광고 의존 (재방문 < 40%)" },
-                { ind: "PT·필라테스", ticket: "5-8만원/회", labor: "20-30%", rent: "15-25%", cogs: "0-5%", green: "회원권 갱신 70%+", red: "신규 회원 의존 (이탈 30%+)" },
-                { ind: "학원·과외", ticket: "20-40만원/월", labor: "30-40%", rent: "12-18%", cogs: "10-18%", green: "재등록 80%+", red: "여름·겨울방학 후 이탈 50%+" },
-                { ind: "펫 미용·호텔", ticket: "5-10만원", labor: "25-35%", rent: "10-15%", cogs: "15-25%", green: "예약 충성률 60%+", red: "주중 가동률 < 40%" },
-                { ind: "소매·라이프스타일", ticket: "5만원", labor: "8-15%", rent: "8-15%", cogs: "50-65%", green: "재구매 30%+", red: "재고 회전 < 4회/년" },
-              ].map((b, i) => (
-                <tr key={b.ind} style={{ borderTop: i === 0 ? "none" : "1px solid rgba(25,25,112,0.06)" }}>
-                  <td style={{ padding: "8px 10px", color: "#0f172a", fontWeight: 700 }}>{b.ind}</td>
-                  <td style={{ padding: "8px 10px", color: "rgba(15,23,42,0.7)", fontVariantNumeric: "tabular-nums" as const }}>{b.ticket}</td>
-                  <td style={{ padding: "8px 10px", color: "rgba(15,23,42,0.7)" }}>{b.labor}</td>
-                  <td style={{ padding: "8px 10px", color: "rgba(15,23,42,0.7)" }}>{b.rent}</td>
-                  <td style={{ padding: "8px 10px", color: "rgba(15,23,42,0.7)" }}>{b.cogs}</td>
-                  <td style={{ padding: "8px 10px", color: "#059669", fontWeight: 600, fontSize: 11 }}>{b.green}</td>
-                  <td style={{ padding: "8px 10px", color: "#b91c1c", fontWeight: 600, fontSize: 11 }}>{b.red}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div style={{ fontSize: 11, color: "rgba(15,23,42,0.5)", marginTop: 10, lineHeight: 1.5 }}>
-          ⚠ 2026 외식업 폐업률 15.8% / 소매 16.7% / 평균 9%대 중후반. 5년간 식재료비 36.3% → 40.7% 급등 + 인건비 상승 동시 — 이익률 8.7% 이하면 1년 내 위험.
-        </div>
-      </article>
-
-      {/* 매출 부진 회복 플레이북 — CB Insights 외식업 적용 */}
-      <article style={{ background: "white", borderRadius: 18, padding: "20px 22px", marginBottom: 14, border: "1px solid rgba(220,38,38,0.18)", boxShadow: "0 1px 3px rgba(220,38,38,0.04)" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
-          🆘 매출 부진 회복 플레이북
-        </div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: 6 }}>
-          {ko ? "막혔을 때 — 4 시나리오 × 4 액션" : "Stuck? — 4 scenarios × 4 actions"}
-        </div>
-        <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", marginBottom: 14, lineHeight: 1.55 }}>
-          {ko
-            ? "2026 외식업 폐업률 15.8% — 자본 부족 영세 사업자에 집중. 단 80%+ 가 폐업 후 재창업 (CB Insights). 막혔다고 끝이 아닙니다. 정부 희망리턴패키지 + 재도전특별자금 등 활용."
-            : "2026 F&B closure 15.8% — concentrated in undercapitalized SMBs. But 80%+ try again. Hope Return Package + restart funds available."}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
-          {[
-            {
-              icon: "📉",
-              scenario: "매출 안 나옴 (오픈 3개월+)",
-              cause: "신규 고객 부족·재방문율 낮음·평일 가동률 낮음",
-              actions: [
-                "지표 진단: 객단가 / 재방문율 / 평일·주말 매출 비율 — 어디서 새는지 식별",
-                "재방문율 < 30% → 메뉴 품질·서비스 점검 (고객 인터뷰 10명)",
-                "신규 부족 → 네이버 플레이스 + 인스타 + 배달앱 노출 점검",
-                "평일 < 주말 50% → 평일 한정 메뉴 / 직장인 점심 세트 / 단체 예약",
-              ],
-            },
-            {
-              icon: "💸",
-              scenario: "원가율 폭증 (재료비 40%+ 또는 인건비 30%+)",
-              cause: "공급가 인상·메뉴 마진 분석 부재·인력 과배치",
-              actions: [
-                "메뉴 엔지니어링: 매출 상위 20% 메뉴의 원가율 재계산",
-                "공급처 3곳 견적 비교 (식자재마트·중도매·온라인 B2B)",
-                "낭비 메뉴 (저마진+저인기) 즉시 단종",
-                "인건비: 시간대별 가동률 분석 → 피크 외 인력 축소 / 파트타임 전환",
-              ],
-            },
-            {
-              icon: "🏚️",
-              scenario: "임대료·고정비 부담으로 적자",
-              cause: "환산보증금 초과 임대인 갱신 거부·고정비 매출 비율 50%+",
-              actions: [
-                "임대료 인하 협상 (이웃 점포 시세·공실 데이터 근거)",
-                "재도전특별자금 (소진공) 신청 — 매출 급감 시 우선 검토",
-                "희망리턴패키지 — 점포 철거비 600만+ 재창업 자금 2,000만",
-                "사업 모델 전환 검토 (배달 전문화·무인화 등으로 인건비 절감)",
-              ],
-            },
-            {
-              icon: "👥",
-              scenario: "직원 이탈·갈등으로 운영 불안정",
-              cause: "급여 늦음·근로계약 미작성·관리 부재",
-              actions: [
-                "근로계약서 점검 — 작성 안 됐으면 즉시 (과태료 500만)",
-                "4대보험·원천세 누락 확인 — 누락 시 소급 + 가산금",
-                "급여 자동화 (자비스·페이워크) + 자동이체로 지연 차단",
-                "직원 1-on-1 (월 1회) + 처우 개선 1개 제시",
-              ],
-            },
-          ].map((s) => (
-            <div key={s.scenario} style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(220,38,38,0.03)", border: "1px solid rgba(220,38,38,0.12)" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#b91c1c", marginBottom: 2 }}>
-                {s.icon} {s.scenario}
-              </div>
-              <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginBottom: 6, fontStyle: "italic" as const }}>
-                원인: {s.cause}
-              </div>
-              <ol style={{ margin: 0, paddingLeft: 18, fontSize: 11.5, color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>
-                {s.actions.map((a, i) => (
-                  <li key={i}>{a}</li>
-                ))}
-              </ol>
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", marginTop: 12, lineHeight: 1.55, padding: "10px 12px", borderRadius: 10, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.10)" }}>
-          💡 <strong>정부 지원 4종 활용</strong> — ①희망리턴패키지 (폐업·재기 통합, 재창업 시 최대 2천만) ②재도전특별자금 (매출 급감 우선) ③경영애로자금 (단기 운영자금) ④소상공인센터 무료 컨설팅. 신청: <a href="https://www.sbiz.or.kr" target="_blank" rel="noreferrer" style={{ color: MIDNIGHT, fontWeight: 600 }}>sbiz.or.kr</a> + <a href="https://www.bizinfo.go.kr" target="_blank" rel="noreferrer" style={{ color: MIDNIGHT, fontWeight: 600 }}>bizinfo.go.kr</a>
-        </div>
-      </article>
+      {/* 벤치마크 표 (제거됨) */}
+      {false && (
+        // 코드는 git history 보존용으로 false 가드. 향후 첫달 점검에서 재사용 가능.
+        <article style={{ display: "none" }} />
+      )}
+      {/* 매출 부진 회복 플레이북 (제거됨) — FirstMonthCheckStage / OperationalDashboard 참조 */}
 
       <StageWrapup
         ko={ko}
@@ -1402,3 +1275,5 @@ const summaryCard: React.CSSProperties = {
 
 // lucide 아이콘 미사용 타입 경고 해소 (TrendingUp/Down은 향후 delta 표기에 사용 예정)
 void TrendingUp; void TrendingDown;
+// 2026-05-19 compact 리디자인 후 unused 가 된 상수들 — 향후 hero 재사용 시 보존
+void eyebrow; void heroTitle; void heroBody;

@@ -166,12 +166,14 @@ function buildKpiValues(
   const prevWeekSameDay = c.allEntries[c.allEntries.length - 8];
   const yesterdaySales = lastEntry?.sales ?? null;
   const yesterdayCustomers = lastEntry?.customers ?? null;
+  // ⚠️ 2026-05-18: falsy 0 회피 — prevWeekSameDay.sales===0 (정당한 휴무일) vs undefined (미입력)
+  //   구분. `!= null && > 0` 명시.
   const ySalesTrend =
-    yesterdaySales != null && prevWeekSameDay?.sales
+    yesterdaySales != null && prevWeekSameDay?.sales != null && prevWeekSameDay.sales > 0
       ? ((yesterdaySales - prevWeekSameDay.sales) / prevWeekSameDay.sales) * 100
       : undefined;
   const yCustTrend =
-    yesterdayCustomers != null && prevWeekSameDay?.customers
+    yesterdayCustomers != null && prevWeekSameDay?.customers != null && prevWeekSameDay.customers > 0
       ? ((yesterdayCustomers - prevWeekSameDay.customers) / prevWeekSameDay.customers) * 100
       : undefined;
   const primeCost =
@@ -203,7 +205,20 @@ function buildKpiValues(
   const autoWau = c.saasMetrics.latest?.weekly_active_users ?? null;
   const autoNewUsers = c.saasMetrics.latest?.new_users ?? null;
   const activeUsers = autoActiveUsers ?? manualActive;
-  const cumulativeUsers = autoCumulativeUsers ?? manualActive;
+  // ⚠️ cumulative ≠ active. 자동 수집 데이터가 없으면 누적 수치 자체가 불명확하므로 manual active
+  //   로 대체하면 의미 왜곡. 데이터 없을 때 undefined 로 두어 "준비 중" 표시되도록 한다.
+  const cumulativeUsers = autoCumulativeUsers;
+
+  // ⚠️ MRR fix: 종전엔 어제 일 매출(yesterdaySales) 을 MRR 자리에 표시 → 의미 왜곡. 활성 구독자 × 평균
+  //   플랜 가격으로 계산. 플랜 정보 없으면 undefined → "준비 중" 표시.
+  const plans = (d as { subscriptionPlans?: Array<{ id: string; price: number; isActive: boolean }> }).subscriptionPlans ?? [];
+  const activePlans = plans.filter((p) => p.isActive && p.price > 0);
+  const avgPlanPrice = activePlans.length > 0
+    ? activePlans.reduce((s, p) => s + p.price, 0) / activePlans.length
+    : 0;
+  const computedMrr = activeUsers != null && avgPlanPrice > 0
+    ? Math.round(activeUsers * avgPlanPrice)
+    : null;
 
   return {
     "yesterday-sales": { value: yesterdaySales, trendPct: ySalesTrend },
@@ -221,13 +236,17 @@ function buildKpiValues(
     "repeat-rate": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
     "active-members": { value: activeUsers ?? undefined },
     "active-users": { value: activeUsers ?? undefined },
-    "cumulative-users": { value: cumulativeUsers ?? undefined },
+    "cumulative-users": cumulativeUsers != null
+      ? { value: cumulativeUsers }
+      : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
     wau:
       autoWau != null
         ? { value: autoWau }
         : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
     "pmf-score": { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
-    mrr: { value: yesterdaySales ?? undefined },
+    mrr: computedMrr != null
+      ? { value: computedMrr }
+      : { value: undefined, displayOverride: ko ? "준비 중" : "Soon" },
     "net-new":
       autoNewUsers != null
         ? { value: autoNewUsers }

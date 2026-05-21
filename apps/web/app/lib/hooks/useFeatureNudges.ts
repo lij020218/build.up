@@ -103,16 +103,26 @@ export function useFeatureNudges(d: DashboardHook, phase: Phase): FeatureNudge[]
     }
 
     // ── 4. 매출 7일 이상 미입력 ──
+    // ⚠️ 2026-05-18: latest >= todayBusinessDay 안전망 + "공백" 단정 어휘 회피.
+    //   영업일 컷오프 적용해 23시 영업 카페가 자정~01시 사이에 봐도 "오늘 입력 없음" 으로 잘못
+    //   분류되지 않게 한다. 메모 `feedback_morning_brief_stale_threshold` 와 통일.
     if (entries.length > 0 && businessLaunched) {
       const latest = entries.reduce((acc, e) => (e.date > acc ? e.date : acc), entries[0].date);
-      const daysSince = Math.round((Date.now() - new Date(`${latest}T00:00:00`).getTime()) / 86400000);
+      const now = new Date();
+      // 영업일 기준: 새벽 04:00 컷오프 (대부분 음식점·카페 마감 시각 이후)
+      const businessDayCutoff = new Date(now);
+      if (businessDayCutoff.getHours() < 4) businessDayCutoff.setDate(businessDayCutoff.getDate() - 1);
+      const todayBiz = businessDayCutoff.toISOString().slice(0, 10);
+      const daysSince = latest >= todayBiz
+        ? 0
+        : Math.round((Date.now() - new Date(`${latest}T00:00:00`).getTime()) / 86400000);
       if (daysSince >= 7) {
         list.push({
           key: "sales-stale",
           feature: "dailySalesStale",
-          titleKo: `매출 ${daysSince}일째 미입력`,
-          titleEn: `Sales unlogged for ${daysSince} days`,
-          subKo: "데이터 공백이 길어지면 트렌드·이상 감지가 멈춥니다. 1분이면 됩니다.",
+          titleKo: `최근 매출 입력이 ${daysSince}일째 없어요`,
+          titleEn: `No sales logged in ${daysSince} days`,
+          subKo: "트렌드·이상 감지가 잠시 멈춰 있어요. 1분이면 다시 시작할 수 있어요.",
           subEn: "Trend/anomaly detection pauses while data is missing.",
           ctaKo: "지금 입력",
           ctaEn: "Log now",

@@ -6,6 +6,7 @@ import { LEGAL } from "@build-up/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { HiringCostCalculator } from "../../knowledge/HiringCostCalculator";
 import { MyHiringPlanCard } from "./MyHiringPlanCard";
+import { StageWrapup } from "../shared/StageWrapup";
 import {
   KeyActionHero,
   StageTabNav,
@@ -453,145 +454,43 @@ export function HiringSetupStage() {
         />
       )}
 
-      {/* ── 페이지 5: 마무리 — 한 일 + 다음 단계 전 주의 ──────────── */}
+      {/* ── 페이지 5: 마무리 — StageWrapup 통합 (2026-05-18) ──────────── */}
       {pageIdx === 5 && (
-        <div style={{
-          background: "white",
-          borderRadius: 16,
-          border: "1px solid rgba(25,25,112,0.08)",
-          boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
-          padding: "20px 22px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 18,
-        }}>
-          <div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
-              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 4,
-            }}>
-              {ko ? "마무리" : "Wrap-up"}
-            </div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.4 }}>
-              {ko ? "이 단계에서 한 일 + 다음 단계 전 반드시 확인" : "What you did + must-verify before next stage"}
-            </div>
-          </div>
-
-          {/* 이 단계에서 한 일 */}
-          <div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
-              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 10,
-            }}>
-              {ko ? "이 단계에서 한 일" : "What you did"}
-            </div>
-            <ol style={{
-              margin: 0, padding: 0, listStyle: "none",
-              border: "1px solid rgba(25,25,112,0.10)", borderRadius: 12, overflow: "hidden",
-            }}>
-              {(ko ? [
-                { label: "1. 채용 공고 등록", detail: "알바몬·알바천국·당근·사람인 — 시급·시간·요일·식사 4항목 구체화" },
-                { label: "2. 근로계약서 작성·교부", detail: "표준 양식 2부 + 1부 직원 교부 + 4항목(임금·시간·휴게·기간) 명시 + 채용 비용 시뮬" },
-                { label: "3. 4대보험 + 원천세 셋업", detail: "4insure.or.kr 통합 신고(D+14) + 홈택스 매월 10일 원천세 + 자동이체" },
-                { label: "4. 첫 달 운영 표준 셋업", detail: "주휴수당·연장수당 정확 계산 + 급여명세서 자동 발송 + (선택) CPA·SaaS 자동화" },
-              ] : [
-                { label: "1. Posted jobs", detail: "Albamon/Albachunguk/Karrot/Saramin — wage/hours/days/meals" },
-                { label: "2. Contract signed & delivered", detail: "Standard form, 2 copies + 1 to employee, 4 fields, cost sim" },
-                { label: "3. 4-insurance + payroll tax", detail: "4insure.or.kr (D+14) + Hometax monthly 10th + auto-debit" },
-                { label: "4. Month-1 ops standard", detail: "Holiday/OT calc + auto payslip + optional CPA/SaaS" },
-              ]).map((item, i) => (
-                <li key={i} style={{
-                  display: "flex", alignItems: "flex-start", gap: 12,
-                  padding: "12px 14px",
-                  borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
-                  background: "rgba(25,25,112,0.025)",
-                }}>
-                  <span style={{
-                    width: 22, height: 22, borderRadius: 7,
-                    background: MIDNIGHT, color: "white",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0, marginTop: 1,
-                  }}>
-                    <Check size={12} strokeWidth={3} />
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
-                      {item.label}
-                    </div>
-                    <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginTop: 3 }}>
-                      {item.detail}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/* 다음 단계 진입 전 반드시 확인 */}
-          <div style={{
-            padding: "14px 16px", borderRadius: 12,
-            background: "rgba(220,38,38,0.04)",
-            border: "1px solid rgba(220,38,38,0.14)",
-          }}>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: "#dc2626",
-              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8,
-            }}>
-              {ko ? "다음 단계(운영·마케팅 준비) 전 반드시 확인" : "Verify before ops/marketing"}
-            </div>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
-              {(ko ? [
-                "근로계약서 1부 직원 교부 영수증·수신 확인 — 미교부 500만원 이하 과태료",
-                "주휴수당 「포함된 시급」 X — 시급·주휴수당 별도 표기 (위반 시 차액·가산금)",
-                "4대보험 채용 14일 이내 신고 완료 — 5인 미만도 의무, 1인 고용부터 적용",
-                "원천세 매월 10일까지 홈택스 자동 납부 셋업 — 누락 시 가산세 10%↑",
-                "급여명세서 카톡·메일 자동 발송 셋업 — 2021.11~ 미교부 500만원 이하 과태료",
-                "산재보험 사업주 100% 부담 별도 계산 — 업종별 요율 0.7~5.6%",
-              ] : [
-                "Confirm contract copy delivery receipt — fine up to KRW 5M if missing",
-                "Show wage and holiday pay separately — 'bundled' = back-pay + interest",
-                "4-insurance filed within 14 days — mandatory from 1 employee",
-                "Payroll tax auto-debit by 10th monthly — late = 10%+ penalty",
-                "Auto payslip via KakaoTalk/email — fineable since Nov 2021",
-                "Workers comp 100% employer separate — rate 0.7-5.6% by industry",
-              ]).map((item, i) => (
-                <li key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
-                  <span style={{ flexShrink: 0, marginTop: 7, width: 5, height: 5, borderRadius: "50%", background: "#dc2626" }} />
-                  <span style={{ fontSize: 13, color: "#7f1d1d", lineHeight: 1.6, fontWeight: 500 }}>
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 다음 단계 안내 */}
-          <div style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "13px 15px", borderRadius: 12,
-            background: "linear-gradient(180deg, rgba(5,150,105,0.05) 0%, rgba(5,150,105,0.02) 100%)",
-            border: "1px solid rgba(5,150,105,0.16)",
-          }}>
-            <div style={{
-              width: 26, height: 26, borderRadius: 8,
-              background: "rgba(5,150,105,0.12)", color: "#059669",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <Check size={14} strokeWidth={2.4} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 2 }}>
-                {ko ? "이 단계가 끝나면" : "When done"}
-              </div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em", lineHeight: 1.4 }}>
-                {ko
-                  ? "근로계약·4대보험·원천세 3축 셋업 완료 → 운영·마케팅 준비 진입"
-                  : "Contract / insurance / tax 3-axis locked → enter ops & marketing"}
-              </div>
-            </div>
-          </div>
-        </div>
+        <StageWrapup
+          ko={ko}
+          nextStageLabelKo="다음 단계(운영·마케팅 준비) 전 반드시 확인"
+          nextStageLabelEn="Verify before ops/marketing"
+          doneItemsKo={[
+            { label: "1. 채용 공고 등록", detail: "알바몬·알바천국·당근·사람인 — 시급·시간·요일·식사 4항목 구체화" },
+            { label: "2. 근로계약서 작성·교부", detail: "표준 양식 2부 + 1부 직원 교부 + 4항목(임금·시간·휴게·기간) 명시 + 채용 비용 시뮬" },
+            { label: "3. 4대보험 + 원천세 셋업", detail: "4insure.or.kr 통합 신고(D+14) + 홈택스 매월 10일 원천세 + 자동이체" },
+            { label: "4. 첫 달 운영 표준 셋업", detail: "주휴수당·연장수당 정확 계산 + 급여명세서 자동 발송 + (선택) CPA·SaaS 자동화" },
+          ]}
+          doneItemsEn={[
+            { label: "1. Posted jobs", detail: "Albamon/Albachunguk/Karrot/Saramin — wage/hours/days/meals" },
+            { label: "2. Contract signed & delivered", detail: "Standard form, 2 copies + 1 to employee, 4 fields, cost sim" },
+            { label: "3. 4-insurance + payroll tax", detail: "4insure.or.kr (D+14) + Hometax monthly 10th + auto-debit" },
+            { label: "4. Month-1 ops standard", detail: "Holiday/OT calc + auto payslip + optional CPA/SaaS" },
+          ]}
+          verifyItemsKo={[
+            "근로계약서 1부 직원 교부 영수증·수신 확인 — 미교부 500만원 이하 과태료",
+            "주휴수당 「포함된 시급」 X — 시급·주휴수당 별도 표기 (위반 시 차액·가산금)",
+            "4대보험 채용 14일 이내 신고 완료 — 5인 미만도 의무, 1인 고용부터 적용",
+            "원천세 매월 10일까지 홈택스 자동 납부 셋업 — 누락 시 가산세 10%↑",
+            "급여명세서 카톡·메일 자동 발송 셋업 — 2021.11~ 미교부 500만원 이하 과태료",
+            "산재보험 사업주 100% 부담 별도 계산 — 업종별 요율 0.7~5.6%",
+          ]}
+          verifyItemsEn={[
+            "Confirm contract copy delivery receipt — fine up to KRW 5M if missing",
+            "Show wage and holiday pay separately — 'bundled' = back-pay + interest",
+            "4-insurance filed within 14 days — mandatory from 1 employee",
+            "Payroll tax auto-debit by 10th monthly — late = 10%+ penalty",
+            "Auto payslip via KakaoTalk/email — fineable since Nov 2021",
+            "Workers comp 100% employer separate — rate 0.7-5.6% by industry",
+          ]}
+          nextSummaryKo="근로계약·4대보험·원천세 3축 셋업 완료 → 운영·마케팅 준비 진입"
+          nextSummaryEn="Contract / insurance / tax 3-axis locked → enter ops & marketing"
+        />
       )}
     </>
   );

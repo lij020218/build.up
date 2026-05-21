@@ -122,8 +122,13 @@ public struct HeroResolverInput: Sendable {
     public let monthlyBurn: Double                  // 월 비용 합
     public let cashflowCrisis: CashflowCrisis?
     public let topAnomaly: Anomaly?
-    public let aiTopAction: AiAction?
+    /// 우선순위 정렬된 AI 행동 추천 — 웹 SSOT: aiActions.todayActions
+    /// Hero 카드엔 첫 번째만, "오늘의 집중" popup 엔 전체 3개 (high → low priority).
+    public let aiTopActions: [AiAction]
     public let categoryId: String?
+
+    /// 단일 액션 fallback (예전 코드 호환) — aiTopActions.first.
+    public var aiTopAction: AiAction? { aiTopActions.first }
 
     public init(
         ko: Bool,
@@ -133,7 +138,7 @@ public struct HeroResolverInput: Sendable {
         monthlyBurn: Double,
         cashflowCrisis: CashflowCrisis? = nil,
         topAnomaly: Anomaly? = nil,
-        aiTopAction: AiAction? = nil,
+        aiTopActions: [AiAction] = [],
         categoryId: String? = nil
     ) {
         self.ko = ko
@@ -143,8 +148,32 @@ public struct HeroResolverInput: Sendable {
         self.monthlyBurn = monthlyBurn
         self.cashflowCrisis = cashflowCrisis
         self.topAnomaly = topAnomaly
-        self.aiTopAction = aiTopAction
+        self.aiTopActions = aiTopActions
         self.categoryId = categoryId
+    }
+
+    /// 이전 단일-액션 init — 호환 유지.
+    public init(
+        ko: Bool,
+        businessLaunched: Bool,
+        totalEntries: Int,
+        daysSinceLastSalesEntry: Int?,
+        monthlyBurn: Double,
+        cashflowCrisis: CashflowCrisis? = nil,
+        topAnomaly: Anomaly? = nil,
+        aiTopAction: AiAction?,
+        categoryId: String? = nil
+    ) {
+        self.init(
+            ko: ko, businessLaunched: businessLaunched,
+            totalEntries: totalEntries,
+            daysSinceLastSalesEntry: daysSinceLastSalesEntry,
+            monthlyBurn: monthlyBurn,
+            cashflowCrisis: cashflowCrisis,
+            topAnomaly: topAnomaly,
+            aiTopActions: aiTopAction.map { [$0] } ?? [],
+            categoryId: categoryId
+        )
     }
 }
 

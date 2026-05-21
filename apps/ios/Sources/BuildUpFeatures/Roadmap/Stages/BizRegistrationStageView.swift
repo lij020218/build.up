@@ -13,10 +13,13 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct BizRegistrationStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "biz-registration"
 
     @AppStorage("biz.storeName")         private var storeName        = ""
     @AppStorage("biz.bankDone")          private var bankDone         = false
@@ -29,49 +32,37 @@ public struct BizRegistrationStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                        heroBanner.padding(.horizontal, BUSpacing.md)
-                        previousDecisions.padding(.horizontal, BUSpacing.md)
-                        storeNameSection.padding(.horizontal, BUSpacing.md)
-                        bankSection.padding(.horizontal, BUSpacing.md)
-                        Spacer(minLength: BUSpacing.xxxl)
-                    }
-                    .padding(.top, BUSpacing.md)
-                }
-            }
-            .navigationTitle("사업자등록 최종 확인")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
-            }
-        }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+    /// 게이트: 상호명 최종 확정 + 사업용 통장 개설 완료 (2/2).
+    private var canCompleteStage: Bool {
+        storeNameFinal && bankDone && !storeName.isEmpty
     }
 
-    // MARK: - Hero
+    private var advanceHint: String {
+        if storeName.isEmpty { return "상호명을 입력하세요" }
+        if !storeNameFinal { return "상호명 확정 토글을 켜세요" }
+        if !bankDone { return "사업용 통장 개설 완료를 체크하세요" }
+        return "통장 + 상호명 확정 — 다음 단계로"
+    }
 
-    private var heroBanner: some View {
-        BUCard(.hero) {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                BUEyebrow("단계 10 · 사업자등록 최종 확인")
-                Text("이 단계에서 꼭 할 일 —\n사업용 통장 + 상호명 최종 확정")
-                    .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                Text("사업자등록·과세유형·세무사 결정은 이전 단계에서 완료. 이 단계는 마지막 두 가지 — 사업용 통장과 상호명 — 만 처리합니다.")
-                    .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "사업자등록 & 금융 세팅",
+            stageEyebrow: "단계 10 · 사업자등록 최종 확인",
+            helperText: "사업자등록·과세유형·세무사 결정은 이전 단계 완료. 이 단계는 마지막 두 가지 — 사업용 통장 + 상호명 — 만 처리합니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["storeName": storeName])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["storeName": storeName]) }
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                previousDecisions
+                storeNameSection
+                bankSection
             }
         }
     }
@@ -192,5 +183,9 @@ public struct BizRegistrationStageView: View {
 }
 
 #if DEBUG
-#Preview("BizRegistration") { BizRegistrationStageView() }
+#Preview("BizRegistration") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["biz-registration"] }
+    return BizRegistrationStageView().environment(store)
+}
 #endif

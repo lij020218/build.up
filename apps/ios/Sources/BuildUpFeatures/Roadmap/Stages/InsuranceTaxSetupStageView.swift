@@ -21,6 +21,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 private let WAGE_2026 = 10_320
 private let MONTH_HOURS = 209
@@ -28,8 +29,10 @@ private let MONTH_HOURS = 209
 public struct InsuranceTaxSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
     @State private var monthlyWageText = "\(WAGE_2026 * MONTH_HOURS)"
+    private let stageId = "insurance-tax-setup"
 
     // 세무 선택
     @AppStorage("insTax.cpaChoice")      private var cpaChoice        = "" // "cpa" or "self"
@@ -45,69 +48,76 @@ public struct InsuranceTaxSetupStageView: View {
 
     private let pages = ["4대보험", "세무 세팅", "체크리스트"]
 
+    private var canCompleteStage: Bool {
+        insRegDone && hometaxDone
+    }
+
+    private var advanceHint: String {
+        if !insRegDone { return "4대보험 신고 완료를 체크하세요" }
+        if !hometaxDone { return "홈택스 사업장 등록 완료를 체크하세요" }
+        return "보험·세무 셋업 완료 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "직원 채용 의무 — 근로계약·4대보험·급여 세팅",
+            stageEyebrow: "단계 17 · 보험·세무 세팅",
+            helperText: "1명 고용도 4대보험 의무 (5인 미만 예외 없음). 직원 입사일로부터 14일 이내 신고 — 미신고 시 과태료 100만원+.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 4대보험 의무 이해", detail: "1인 고용부터 4대보험 의무 — 국민·건강·고용·산재 4축 이해"),
+                .init(label: "2. 원천세 신고 일정", detail: "매월 10일 홈택스 원천세 신고·납부 + 자동이체 셋업"),
+                .init(label: "3. 산재 요율 확인", detail: "업종별 0.7~5.6% 사업주 100% 부담 별도 계산"),
+                .init(label: "4. 급여·유리한 길 점검", detail: "주휴수당·퇴직금 등 누락 시 차액·가산금 발생 인식"),
+                ],
+                verifyItems: [
+                "1인 사장님 — 본인 국민연금·건강보험 「지역가입자」로 자동 전환, 사업자 신고 시 분리 가입",
+                "직원 채용 14일 이내 4insure.or.kr 통합 신고 — 누락 시 과태료 + 소급 보험료 부담",
+                "원천세 — 매월 10일 자동이체 셋업, 누락 시 가산세 10% + 일별 이자 (홈택스 자동납부 권장)",
+                "산재보험 — 사업주 100% 부담 별도 계산, 업종별 요율 적용 (외식 0.8%, 미용 0.7% 수준)",
+                "퇴직금 — 1년 근속 + 주 15시간 이상 의무, 매월 12분의 1 적립 권장 (분쟁 1순위)",
+                "5인 이상 사업장 — 연차 의무 + 연장수당 1.5배 + 야간수당 1.5배 모두 추가 비용 (월 30~50만원/인)",
+                ],
+                nextStageLabel: "채용·운영 세팅",
+                nextSummary: "4대보험·원천세·급여 시스템 셋업 완료 → 채용·운영 세팅 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: insurancePage
-                                case 1: taxPage
-                                default: checklistPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: insurancePage
+                    case 1: taxPage
+                    default: checklistPage
                     }
                 }
-            }
-            .navigationTitle("보험·세무 세팅")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 4대보험
 
     private var insurancePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("단계 17 · 보험·세무 세팅")
-                    Text("4대보험 + 세무 세팅 —\n채용 D+14 이내 필수")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("1명 고용도 4대보험 의무 (5인 미만 예외 없음). 직원 입사일로부터 14일 이내 신고 — 미신고 시 과태료 100만원+.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("2026년 4대보험 요율")
@@ -353,5 +363,9 @@ public struct InsuranceTaxSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("InsuranceTaxSetup") { InsuranceTaxSetupStageView() }
+#Preview("InsuranceTaxSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["insurance-tax-setup"] }
+    return InsuranceTaxSetupStageView().environment(store)
+}
 #endif

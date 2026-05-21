@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct CompanySetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "company-setup"
+
     @State private var page = 0
 
     @AppStorage("cs.corpRegistered")  private var corpRegistered  = false
@@ -23,66 +27,74 @@ public struct CompanySetupStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 법인 설립 결정 (등록) + IP 출원 계획 (특허 or 상표 중 하나).
+    private var canCompleteStage: Bool {
+        corpRegistered && (patentFiled || trademarkFiled)
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: corpPage
-                                default: ipPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if !corpRegistered { return "법인 설립 완료를 체크하세요" }
+        if !(patentFiled || trademarkFiled) { return "IP 출원 (특허 또는 상표) 1개 이상 완료" }
+        return "법인 + IP 출원 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "사업자등록 · 지식재산 보호 · 세무 기초",
+            stageEyebrow: "단계 8 · 법인·IP",
+            helperText: "법인은 MVP 직전에 설립하고, IP 출원은 MVP 공개 전에. 순서가 틀리면 IP 귀속 문제가 발생합니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 사업 형태 결정", detail: "개인사업자 vs 법인 — 매출·세금·투자 유치 고려 후 확정"),
+                .init(label: "2. 사업자등록·법인 설립", detail: "홈택스 또는 등기소 — 자본금·이사·정관 작성"),
+                .init(label: "3. 특허·상표 출원", detail: "핵심 IP·브랜드 사전 출원, 외부 노출 전 출원 완료"),
+                .init(label: "4. 보안·약관·개인정보", detail: "이용약관·개인정보 처리방침·NDA·고용계약 사전 비치"),
+                ],
+                verifyItems: [
+                "법인 vs 개인 — 투자 유치 시 법인 필수, 개인사업자는 투자·세제·신용 모두 한계",
+                "정관 — 주식 종류·이사·감사·우선매수권 명문화, 모호하면 투자 유치 시 재작성",
+                "특허·상표 — 외부 발표·전시 후 1년 grace period 한국만 적용, 해외는 출원 즉시 공개 시 특허성 상실",
+                "투자자 친화 정관 — 우선주·전환사채·전환우선주 등 사전 정의, 미정의 시 투자 단계에서 재작성 비용",
+                "스톡옵션 — 임직원 스톡옵션 풀 사전 확보 (보통 10~20%), vesting·exercise 조건 명문화",
+                "개인정보 처리방침 — 개인정보보호법 의무 게시, 위반 시 매출 3% 이내 과징금",
+                ],
+                nextStageLabel: "MVP 빌드",
+                nextSummary: "법인·특허·상표·약관 사전 셋업 완료 → MVP 빌드 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: corpPage
+                    default: ipPage
                     }
                 }
-            }
-            .navigationTitle("법인 설립·IP 보호")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 법인 설립
 
     private var corpPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("법인 설립·IP 보호")
-                    Text("법인은 MVP 직전에 설립 —\nIP 출원은 MVP 전에")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("순서가 틀리면 IP 귀속 문제 발생")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("법인 설립 절차")
@@ -151,16 +163,6 @@ public struct CompanySetupStageView: View {
 
     private var ipPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("IP 보호")
-                    Text("IP는 MVP 전에 —\n공개 후 출원하면 신규성 상실")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("특허 출원 비용: 개인 약 60만원 / 법인 약 80만원")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("IP 우선순위")
@@ -224,16 +226,14 @@ public struct CompanySetupStageView: View {
                     }
                 }
             }
-
-            BUCard(.card) {
-                Toggle(isOn: $done) {
-                    Text("법인 설립·IP 보호 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
-            }
         }
     }
 }
 
 #if DEBUG
-#Preview("CompanySetup") { CompanySetupStageView() }
+#Preview("CompanySetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["company-setup"] }
+    return CompanySetupStageView().environment(store)
+}
 #endif

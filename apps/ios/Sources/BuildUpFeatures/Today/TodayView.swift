@@ -29,6 +29,7 @@ import SwiftUI
 import BuildUpDesignSystem
 import BuildUpCore
 import BuildUpComponents
+import BuildUpData
 
 // MARK: - TodayView
 
@@ -37,9 +38,18 @@ public struct TodayView: View {
     let mock: MockData
     let healthResult: UnifiedHealthResult
     let hero: Hero
+    /// MoreInsightsStrip 의 sheet 콘텐츠 데이터.
+    /// 사장님 결정 (2026-05-19): 웹에서 운영 대시보드 안에 보이는 콘텐츠라서
+    /// 모바일에서도 별도 탭 이동이 아니라 popup sheet 로 보여줘야 멘탈 모델이 일치.
+    let dashboardStore: DashboardStore?
+    let storeInfo: StoreInfoStore?
     @State private var showInputSheet = false
 
-    public init(mock: MockData) {
+    public init(
+        mock: MockData,
+        dashboardStore: DashboardStore? = nil,
+        storeInfo: StoreInfoStore? = nil
+    ) {
         self.mock = mock
         self.healthResult = HealthScore.calculate(
             entries: mock.entries,
@@ -49,6 +59,8 @@ public struct TodayView: View {
             currentCash: mock.currentCash
         )
         self.hero = HeroResolver.resolve(mock.resolverInput)
+        self.dashboardStore = dashboardStore
+        self.storeInfo = storeInfo
     }
 
     public var body: some View {
@@ -100,6 +112,13 @@ public struct TodayView: View {
 
                 // 빠른 매출 입력
                 QuickInputButton(action: { showInputSheet = true })
+
+                // ─ 더 알아보기 — 팝업으로 다른 도구 미리보기 ─
+                MoreInsightsStrip(
+                    mock: mock,
+                    dashboardStore: dashboardStore,
+                    storeInfo: storeInfo
+                )
 
                 // 하단 탭바 회피
                 Color.clear.frame(height: 110)
@@ -270,7 +289,7 @@ private struct HeroOuterCard: View {
                 Row1Greeting(mock: mock, healthResult: healthResult)
                 Row1_5RiskSignals(healthResult: healthResult)
                 Row2NSMNested(mock: mock, hero: hero, healthResult: healthResult)
-                Row3CoachingNested(hero: hero)
+                Row3CoachingNested(hero: hero, actions: mock.resolverInput.aiTopActions)
             }
         }
     }
@@ -562,6 +581,10 @@ private struct DeltaPill: View {
 
 private struct Row3CoachingNested: View {
     let hero: Hero
+    /// 우선순위 정렬된 행동 추천. Hero 카드엔 첫 번째만, 탭하면 전체 (최대 3개) popup.
+    let actions: [AiAction]
+
+    @State private var showActionsSheet = false
 
     private var toneColor: Color {
         switch hero.tone {
@@ -579,60 +602,227 @@ private struct Row3CoachingNested: View {
         }
     }
 
+    /// 2개 이상일 때만 "+N개 더" 표시 + 탭 가능.
+    private var hasMoreActions: Bool { actions.count >= 2 }
+
     var body: some View {
-        // 모바일 압축 (2026-05-14):
-        //   • 분석문 3줄 cap (이전엔 5-6줄까지 늘어남)
-        //   • 액션문 2줄 cap
-        //   • CTA 버튼 제거 — 아래 QuickInputButton 과 기능 중복
-        //   • Reference badge 는 inline 작게
-        BUCard(.nested) {
+        Button {
+            if hasMoreActions { showActionsSheet = true }
+        } label: {
+            BUCard(.nested) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: toneIcon)
+                            .font(.system(size: 10, weight: .bold))
+                        Text(hero.tagKo)
+                            .font(.system(size: 9.5, weight: .bold))
+                            .tracking(0.9)
+                            .textCase(.uppercase)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        if hasMoreActions {
+                            HStack(spacing: 3) {
+                                Text("+\(actions.count - 1)개 더")
+                                    .font(.system(size: 9.5, weight: .bold))
+                                    .tracking(0.2)
+                                Image(systemName: "arrow.up.right.square")
+                                    .font(.system(size: 9, weight: .bold))
+                            }
+                            .foregroundStyle(BUColor.midnight)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(BUColor.midnight08, in: Capsule())
+                        } else if let ref = hero.referencedCase {
+                            HStack(spacing: 3) {
+                                Image(systemName: "bookmark.fill")
+                                    .font(.system(size: 8))
+                                Text(ref.name)
+                                    .font(.system(size: 9.5, weight: .bold))
+                                    .tracking(0.2)
+                                    .lineLimit(1)
+                            }
+                            .foregroundStyle(BUColor.midnight)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(BUColor.midnight08, in: Capsule())
+                        }
+                    }
+                    .foregroundStyle(toneColor)
+
+                    Text(hero.analysisKo)
+                        .font(.system(size: 13.5, weight: .medium))
+                        .foregroundStyle(BUColor.ink)
+                        .lineSpacing(2)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if !hero.actionKo.isEmpty {
+                        Text(hero.actionKo)
+                            .font(.system(size: 12.5, weight: .regular))
+                            .foregroundStyle(BUColor.inkSecondary)
+                            .lineSpacing(1.5)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(!hasMoreActions)
+        .sheet(isPresented: $showActionsSheet) {
+            AIActionsSheet(actions: actions, hero: hero)
+        }
+    }
+}
+
+// MARK: - AI Actions Sheet — popup 으로 3개 우선순위 행동 추천 모두 보기 (웹 SSOT 미러)
+
+private struct AIActionsSheet: View {
+    let actions: [AiAction]
+    let hero: Hero
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                BUBackgroundSurface()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        // 안내 텍스트
+                        Text("오늘의 우선순위 행동")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                            .tracking(-0.4)
+                            .padding(.top, 4)
+
+                        Text("AI 가 사장님의 매출·비용·고객 데이터에서 도출한 \(actions.count)가지 행동을 우선순위 순서로 보여드립니다.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .lineSpacing(3)
+                            .padding(.bottom, 4)
+
+                        // 우선순위 행동 카드 (1, 2, 3)
+                        ForEach(Array(actions.enumerated()), id: \.offset) { idx, action in
+                            actionCard(rank: idx + 1, action: action)
+                        }
+
+                        // 안내 footer
+                        Text("이 추천은 매일 아침 자동 갱신됩니다. 행동을 완료하시면 매출 입력 후 다음 추천으로 업데이트돼요.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .lineSpacing(2)
+                            .padding(.top, 8)
+
+                        Spacer(minLength: 40)
+                    }
+                    .padding(.horizontal, BUSpacing.screenMargin)
+                    .padding(.top, BUSpacing.sm)
+                }
+            }
+            .navigationTitle("AI 경영 브리핑")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                #if os(iOS)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("닫기") { dismiss() }
+                        .foregroundStyle(BUColor.midnight)
+                }
+                #else
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("닫기") { dismiss() }
+                }
+                #endif
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private func actionCard(rank: Int, action: AiAction) -> some View {
+        let priorityColor: Color = {
+            switch action.priority {
+            case .high:   return BUColor.danger
+            case .medium: return BUColor.warn
+            case .low:    return BUColor.midnight
+            }
+        }()
+        let priorityLabel: String = {
+            switch action.priority {
+            case .high:   return "긴급"
+            case .medium: return "권장"
+            case .low:    return "참고"
+            }
+        }()
+
+        return HStack(alignment: .top, spacing: 12) {
+            // Rank circle
+            ZStack {
+                Circle()
+                    .fill(priorityColor.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                Text("\(rank)")
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(priorityColor)
+                    .monospacedDigit()
+            }
+
             VStack(alignment: .leading, spacing: 6) {
+                // Priority chip + reference
                 HStack(spacing: 6) {
-                    Image(systemName: toneIcon)
-                        .font(.system(size: 10, weight: .bold))
-                    Text(hero.tagKo)
-                        .font(.system(size: 9.5, weight: .bold))
-                        .tracking(0.9)
+                    Text(priorityLabel)
+                        .font(.system(size: 10, weight: .heavy))
+                        .tracking(0.6)
                         .textCase(.uppercase)
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                    if let ref = hero.referencedCase {
+                        .foregroundStyle(priorityColor)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(priorityColor.opacity(0.10), in: Capsule())
+                    if let ref = action.referencedCase {
                         HStack(spacing: 3) {
                             Image(systemName: "bookmark.fill")
-                                .font(.system(size: 8))
+                                .font(.system(size: 9))
                             Text(ref.name)
-                                .font(.system(size: 9.5, weight: .bold))
+                                .font(.system(size: 10, weight: .bold))
                                 .tracking(0.2)
                                 .lineLimit(1)
                         }
                         .foregroundStyle(BUColor.midnight)
-                        .padding(.horizontal, 6)
+                        .padding(.horizontal, 7)
                         .padding(.vertical, 2)
                         .background(BUColor.midnight08, in: Capsule())
                     }
+                    Spacer(minLength: 0)
                 }
-                .foregroundStyle(toneColor)
 
-                Text(hero.analysisKo)
-                    .font(.system(size: 13.5, weight: .medium))
+                Text(action.title)
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(BUColor.ink)
                     .lineSpacing(2)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                if !hero.actionKo.isEmpty {
-                    Text(hero.actionKo)
-                        .font(.system(size: 12.5, weight: .regular))
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(1.5)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                Text(action.reason)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(3)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.78))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(priorityColor.opacity(0.18), lineWidth: 1)
+        )
     }
 }
 
@@ -760,6 +950,176 @@ private struct ChipTrend: View {
             in: Capsule()
         )
         .fixedSize()
+    }
+}
+
+// MARK: - More Insights — 운영 대시보드 안의 깊이 (popup sheet)
+//
+// 사장님 UX 원칙 (2026-05-19):
+//   • 모바일 홈은 가장 중요한 카드만 유지
+//   • 웹에서는 운영 대시보드 안에 보이는 콘텐츠 (주간 점검·성장·재무) →
+//     모바일에서도 popup sheet 로 보여줘서 멘탈 모델 일치
+//   • 별도 탭 이동 시 사장님이 다른 surface 로 떠난 느낌 → 혼동 발생
+//
+private struct MoreInsightsStrip: View {
+
+    let mock: MockData
+    let dashboardStore: DashboardStore?
+    let storeInfo: StoreInfoStore?
+
+    enum SheetID: String, Identifiable {
+        case weeklyPulse, growth, myStore, roadmap
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .weeklyPulse: return "주간 점검"
+            case .growth:      return "성장 도구"
+            case .myStore:     return "내 가게"
+            case .roadmap:     return "로드맵"
+            }
+        }
+    }
+
+    @State private var openSheet: SheetID?
+
+    private struct Insight: Identifiable {
+        let id: SheetID
+        let icon: String
+        let label: String
+        let subtitle: String
+    }
+
+    private var insights: [Insight] {
+        var items: [Insight] = [
+            .init(id: .weeklyPulse, icon: "doc.richtext",   label: "주간 점검",  subtitle: "WoW · BEP"),
+            .init(id: .growth,      icon: "megaphone.fill", label: "성장 도구",  subtitle: "고객 · 마케팅"),
+        ]
+        if dashboardStore != nil && storeInfo != nil {
+            items.append(.init(id: .myStore, icon: "chart.bar.fill", label: "내 가게", subtitle: "재무 · 정보"))
+        }
+        items.append(.init(id: .roadmap, icon: "list.bullet", label: "로드맵", subtitle: "단계 진행"))
+        return items
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Text("더 알아보기")
+                    .font(.system(size: 11, weight: .heavy))
+                    .tracking(0.66)
+                    .textCase(.uppercase)
+                    .foregroundStyle(BUColor.midnight)
+                Text("· 탭하면 자세히 보기")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 4)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(insights) { item in
+                        Button { openSheet = item.id } label: {
+                            HStack(spacing: 10) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                        .fill(BUColor.midnight.opacity(0.08))
+                                        .frame(width: 36, height: 36)
+                                    Image(systemName: item.icon)
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(BUColor.midnight)
+                                }
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(item.label)
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(BUColor.ink)
+                                    Text(item.subtitle)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(BUColor.inkMuted)
+                                        .lineLimit(1)
+                                }
+                                Image(systemName: "arrow.up.right.square")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(BUColor.inkSubtle)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                Color.white.opacity(0.72),
+                                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                            )
+                            .fixedSize(horizontal: true, vertical: false)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .sheet(item: $openSheet) { id in
+            InsightSheet(title: id.title) {
+                sheetContent(for: id)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sheetContent(for id: SheetID) -> some View {
+        switch id {
+        case .weeklyPulse:
+            WeeklyPulseView(mock: mock)
+        case .growth:
+            GrowthForecastView(mock: mock)
+        case .myStore:
+            if let dashboardStore, let storeInfo {
+                MyStoreView(store: dashboardStore, storeInfo: storeInfo)
+            } else {
+                EmptyView()
+            }
+        case .roadmap:
+            RoadmapView()
+        }
+    }
+}
+
+// MARK: - InsightSheet — popup wrapper (close button + drag indicator)
+
+private struct InsightSheet<Content: View>: View {
+    let title: String
+    let content: Content
+    @Environment(\.dismiss) private var dismiss
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        NavigationStack {
+            content
+                .navigationTitle(title)
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    #if os(iOS)
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("닫기") { dismiss() }
+                            .foregroundStyle(BUColor.midnight)
+                    }
+                    #else
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("닫기") { dismiss() }
+                    }
+                    #endif
+                }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }
 

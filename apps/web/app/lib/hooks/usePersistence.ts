@@ -468,11 +468,32 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   const connectLoadingRef = useRef(false);
   const storeDataTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /**
+   * In-flight guard — 같은 user_store_data row 에 4채널이 동시 upsert 하면 stale 가 fresh 를
+   * 덮어쓸 위험. 모든 saveStoreData 호출은 이 guard 를 거쳐 직전 호출이 끝난 뒤 실행.
+   * (2026-05-18 audit fix)
+   */
+  const storeDataInflightRef = useRef<Promise<unknown> | null>(null);
+  /**
    * Reset 도중 autosave 콜백이 실행되는 것을 차단하는 동기 플래그.
    *  React state (`persistenceReady`) 는 비동기라 setTimeout 콜백이 fire 할 때
    *  이미 false 가 됐다고 보장 못 함. 이 ref 로 콜백 시작 시점에 즉시 차단.
    */
   const isResettingRef = useRef(false);
+
+  // ── In-flight serializer for store data upsert ──
+  // 4채널 (800ms autosave / 1s debounce / 5s interval / immediate) 이 동시 호출되면 stale 가
+  // fresh 를 덮을 수 있다. 모든 saveStoreData 호출은 이 함수를 거쳐 직전 in-flight 이 끝난
+  // 뒤 실행된다.
+  const safeSaveStoreData = async (payload: Partial<UserStoreData>) => {
+    if (storeDataInflightRef.current) {
+      try { await storeDataInflightRef.current; } catch { /* ignore prior failure */ }
+    }
+    const p = saveStoreData(supabase, payload).finally(() => {
+      if (storeDataInflightRef.current === p) storeDataInflightRef.current = null;
+    });
+    storeDataInflightRef.current = p;
+    return p;
+  };
 
   // ── connectAndLoad ──
   const connectAndLoad = async () => {
@@ -522,7 +543,19 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           resolvedRole = profileRole;
         } else {
           resolvedRole = "owner";
-          void supabase.from("business_profiles").update({ user_role: "owner" } as never).eq("user_id", result.user.id).then(() => {});
+          // ⚠️ 2026-05-18: 종전엔 void fire-and-forget → RLS 거부/row 없음 시 silent fail.
+          //   await + error 로깅으로 변경. 실패해도 resolvedRole 은 유지 (로컬 fallback).
+          try {
+            const { error: updErr } = await supabase
+              .from("business_profiles")
+              .update({ user_role: "owner" } as never)
+              .eq("user_id", result.user.id);
+            if (updErr) {
+              console.warn("[connectAndLoad] business_profiles.user_role update failed:", updErr.message);
+            }
+          } catch (e) {
+            console.warn("[connectAndLoad] business_profiles.user_role update threw:", e);
+          }
         }
       } catch {
         resolvedRole = "owner";
@@ -909,7 +942,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     storeDataTimerRef.current = setTimeout(async () => {
       onb.setPersistStatus("saving");
       try {
-        await saveStoreData(supabase, collectStoreData());
+        await safeSaveStoreData(collectStoreData());
         onb.setPersistStatus("saved");
         onb.setPersistError(null);
         onb.setPersistLastSavedAt(Date.now());
@@ -942,7 +975,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     if (storeDataTimerRef.current) clearTimeout(storeDataTimerRef.current);
     onb.setPersistStatus("saving");
     try {
-      await saveStoreData(supabase, collectStoreData());
+      await safeSaveStoreData(collectStoreData());
       recordSaveSuccess();
       onb.setPersistStatus("saved");
       onb.setPersistError(null);
@@ -1030,34 +1063,28 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       //   이전엔 Promise.all 로 묶고 saveRoadmapState 실패는 recordSaveFailure 호출 안 했음.
       //   결과: roadmap save 가 영구 실패 (마이그레이션 미적용 등) 해도 회로 차단 안 되고
       //         매 800ms 마다 시도 → 콘솔 스팸 + 사용자가 "저장 잘 되나?" 의심하게 됨.
-      const roadmapPromise = saveRoadmapState(supabase, {
+      // ⚠️ 2026-05-18: Effect 4 는 *roadmap 전용* 으로 단순화. 종전엔 같은 800ms 마다 storeData 도
+      //   같이 저장해서 1초 debounce flushStoreData 와 5초 interval 과 race → stale 가 fresh 덮을
+      //   위험. storeData 는 flushStoreData / flushStoreDataImmediate / 5초 interval 셋이 모두
+      //   safeSaveStoreData 를 거치므로 race 없이 직렬화됨. roadmap 만 여기서.
+      saveRoadmapState(supabase, {
         roadmap: snap.roadmap,
         decisions: snap.decisions,
         tasks: snap.taskMap,
       }).then(
-        () => { recordSaveSuccess(); },
-        (err) => { recordSaveFailure(err); throw err; },
-      );
-      const storePromise = saveStoreData(supabase, collectStoreData()).then(
-        () => { recordSaveSuccess(); },
-        (err) => { recordSaveFailure(err); throw err; },
-      );
-      void Promise.allSettled([roadmapPromise, storePromise]).then((results) => {
-        const anyRejected = results.some((r) => r.status === "rejected");
-        if (anyRejected) {
-          const firstErr = results.find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
+        () => {
+          recordSaveSuccess();
+          setPersistenceLabel(copy.home.autosaved);
+        },
+        (err) => {
+          recordSaveFailure(err);
           setPersistenceLabel(
-            firstErr?.reason instanceof Error
-              ? `${copy.home.autosaveFailed}: ${firstErr.reason.message}`
+            err instanceof Error
+              ? `${copy.home.autosaveFailed}: ${err.message}`
               : copy.home.autosaveFailed,
           );
-        } else {
-          setPersistenceLabel(copy.home.autosaved);
-          void loadBusinessProfile(supabase)
-            .then((p) => { if (p) setProfile(p); })
-            .catch(() => {});
-        }
-      });
+        },
+      );
     }, 800);
 
     return () => {
@@ -1081,7 +1108,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       if (!useOnboardingStore.getState().persistenceReady) return;
       // 전역 circuit breaker — 영구 실패 후엔 시도조차 안 함
       if (isCircuitBroken()) return;
-      saveStoreData(supabase, storeDataSnapshotRef.current).then(
+      safeSaveStoreData(storeDataSnapshotRef.current).then(
         () => { recordSaveSuccess(); },
         (err) => {
           const { message } = recordSaveFailure(err);

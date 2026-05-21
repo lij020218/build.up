@@ -30,6 +30,19 @@ public struct AppRoot: View {
 
     @State private var coordinator: AuthCoordinator
     @State private var dashboardStore: DashboardStore?
+    /// 내 가게 페이지 store — DashboardStore 와 분리. 로그인 후 Supabase load.
+    /// MyStoreView 에 prop 으로 주입 (ObservableObject — environment 가 아닌 직접 전달).
+    @State private var storeInfoStore: StoreInfoStore?
+    /// 전역 로드맵 store — TodayView / RoadmapView / Stage 시트 모두에서 공유.
+    /// AppRoot 에서 한 번 생성 → .environment 로 자식 트리에 주입. 로그인 시 Supabase 동기화.
+    @State private var roadmapStore: RoadmapStore = {
+        let s = RoadmapStore()
+        s.pathProvider = { raw in
+            let c = BusinessCluster(rawValue: raw) ?? .offlineFood
+            return RoadmapSampleData.stageIds(for: c)
+        }
+        return s
+    }()
     @State private var notificationFlow = NotificationPermissionFlow()
     @State private var showNotificationSheet = false
     @State private var selectedTab: Tab = .home
@@ -100,6 +113,7 @@ public struct AppRoot: View {
                     } else {
                         MainTabs(
                             store: store,
+                            storeInfo: storeInfoStore ?? Self.makeFallbackStoreInfo(),
                             coordinator: coordinator,
                             selectedTab: $selectedTab
                         )
@@ -146,6 +160,7 @@ public struct AppRoot: View {
                     }
             }
         }
+        .environment(roadmapStore)
     }
 
     @MainActor
@@ -190,6 +205,36 @@ public struct AppRoot: View {
             )
         }
         self.dashboardStore = store
+
+        // 내 가게 store — Supabase 연결 + 즉시 load.
+        // MyStoreView 의 .task { store.load() } 가 다시 호출돼도 isLoaded guard 로 no-op.
+        let storeInfoRepo = StoreInfoRepository(
+            supabase: supabase,
+            getUserId: { userId }
+        )
+        let storeInfo = StoreInfoStore(repository: storeInfoRepo)
+        await storeInfo.load()
+        self.storeInfoStore = storeInfo
+
+        // 로드맵 store 도 Supabase 연결 — 기존 로컬 decisions 보존 + 원격 hydrate.
+        let roadmapRepo = RoadmapDecisionsRepository(
+            supabase: supabase,
+            getUserId: { userId }
+        )
+        let connectedRoadmap = RoadmapStore(repo: roadmapRepo)
+        connectedRoadmap.pathProvider = { raw in
+            let c = BusinessCluster(rawValue: raw) ?? .offlineFood
+            return RoadmapSampleData.stageIds(for: c)
+        }
+        self.roadmapStore = connectedRoadmap
+        await connectedRoadmap.syncFromRemote()
+    }
+
+    /// 로딩 완료 전 임시 — 빈 state. load() 가 끝나면 즉시 storeInfoStore 가 set 되어
+    /// MainTabs 가 새 store 로 리렌더됨. (FallbackRepo 는 read 시 즉시 빈 state 반환.)
+    @MainActor
+    private static func makeFallbackStoreInfo() -> StoreInfoStore {
+        StoreInfoStore(repository: FallbackStoreInfoRepository())
     }
 
     private static func readableError(_ error: any Error) -> String {
@@ -220,13 +265,26 @@ public struct AppRoot: View {
     }
 }
 
+// MARK: - FallbackStoreInfoRepository
+//
+// MyStoreView 가 storeInfoStore 가 nil 일 때 즉시 빈 state 로 렌더되도록 하는
+// no-op 저장소. load() 는 빈 state 반환, save() 는 silent no-op (실제 동기화는
+// loadDashboardIfNeeded 가 끝나면 real StoreInfoStore 로 swap).
+private actor FallbackStoreInfoRepository: StoreInfoRepositoryProtocol {
+    func load() async throws -> StoreInfoState { StoreInfoState() }
+    func save(_ state: StoreInfoState) async throws {}
+}
+
 // MARK: - OnboardingFlow — 3 선택 → 업종 선택 / 기존 가게 / AI 로드맵
 
 private struct OnboardingFlow: View {
     let store: DashboardStore
     @Binding var selectedTab: AppRoot.Tab
+    @Environment(RoadmapStore.self) private var roadmapStore
 
     @State private var path: OnboardingPath? = nil
+    /// Wizard navigation path — stage view 끼리 자동 chain.
+    @State private var wizardPath: [String] = []
 
     var body: some View {
         Group {
@@ -236,22 +294,32 @@ private struct OnboardingFlow: View {
                     path = choice
                 }
             case .manual:
-                IndustrySelectionView(
-                    onSelect: { category in
-                        // 카테고리 선택 → store.setProfile 로 반영 → needsOnboarding=false →
-                        // 자동으로 MainTabs 진입. 로드맵 탭부터 노출.
-                        store.setProfile(
-                            storeName: store.storeName.isEmpty ? "내 가게" : store.storeName,
-                            userName: store.userName,
-                            daysSinceLaunch: 0,
-                            category: category,
-                            currentCash: nil,
-                            businessLaunched: false
-                        )
-                        selectedTab = .roadmap
-                    },
-                    onBack: { path = nil }
-                )
+                // ⚠️ 2026-05-20 단순화 (사장님 신고: 대분류·세부업종 두 화면 중복):
+                //   기존: IndustrySelectionView (대분류 12) → IndustrySelectionStageView (세부 + 대분류 탭) → wizard
+                //   현재: 곧바로 IndustrySelectionStageView 만 표시 — 11 카테고리 탭이 이미 대분류 역할.
+                //         사용자는 탭 + 카드 선택 한 화면에서 끝.
+                NavigationStack(path: $wizardPath) {
+                    IndustrySelectionStageView()
+                        .environment(\.wizardOnAdvance, advanceClosure())
+                        .navigationDestination(for: String.self) { stageId in
+                            wizardStageView(for: stageId)
+                                .environment(\.wizardOnAdvance, advanceClosure())
+                        }
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button {
+                                    if wizardPath.isEmpty {
+                                        path = nil                  // OnboardingChoice 로 복귀
+                                    } else {
+                                        wizardPath.removeLast()
+                                    }
+                                } label: {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 17, weight: .semibold))
+                                }
+                            }
+                        }
+                }
             case .existing:
                 ExistingStoreRegistrationView(
                     onComplete: { reg in
@@ -272,6 +340,73 @@ private struct OnboardingFlow: View {
             }
         }
     }
+
+    /// Wizard chain 의 핵심 클로저 — stage 완료 후 호출:
+    ///   1. 다음 stageId 가 있으면 wizardPath 에 push → 자동 navigation.
+    ///   2. 없으면 wizard 종료 → category 저장 + main tab (.roadmap) 진입.
+    ///
+    /// ⚠️ 2026-05-20 fix: store.setProfile (category 저장) 을 wizard *끝날 때* 호출.
+    ///   종전엔 industry-selection 직후 setProfile → needsOnboarding=false → OnboardingFlow
+    ///   가 unmount → wizardPath State 손실 → 다음 stage push 실패 → MainTabs 의 RoadmapView 노출.
+    private func advanceClosure() -> () -> Void {
+        return {
+            if let next = roadmapStore.currentStageId, !wizardPath.contains(next) {
+                wizardPath.append(next)
+            } else {
+                // wizard 끝 — category 저장 + 메인 탭 진입
+                let id = UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId") ?? ""
+                if let opt = StarterIndustryData.option(by: id),
+                   let cat = Self.iosCategory(for: opt.categoryId) {
+                    store.setProfile(
+                        storeName: store.storeName.isEmpty ? "내 가게" : store.storeName,
+                        userName: store.userName,
+                        daysSinceLaunch: 0,
+                        category: cat,
+                        currentCash: nil,
+                        businessLaunched: false
+                    )
+                }
+                selectedTab = .roadmap
+            }
+        }
+    }
+
+    /// StarterIndustryData.categoryId (kebab) → iOS IndustryCategory enum.
+    private static func iosCategory(for categoryId: String) -> IndustryCategory? {
+        switch categoryId {
+        case "food":           return .restaurant
+        case "cafe-dessert":   return .cafe
+        case "retail":         return .retail
+        case "beauty":         return .beauty
+        case "fitness":        return .fitness
+        case "education":      return .education
+        case "pet":            return .pet
+        case "living-service": return .livingService
+        case "space":          return .space
+        case "online-digital": return .ecommerce
+        case "startup-tech":   return .startupTech
+        default:               return nil
+        }
+    }
+
+    /// IndustryCategory(iOS enum) → StarterIndustryData.categoryId (kebab/string).
+    private static func starterCategoryId(for cat: IndustryCategory) -> String {
+        switch cat {
+        case .restaurant:    return "food"
+        case .cafe:          return "cafe-dessert"
+        case .beauty:        return "beauty"
+        case .retail:        return "retail"
+        case .ecommerce:     return "online-digital"
+        case .fitness:       return "fitness"
+        case .education:     return "education"
+        case .pet:           return "pet"
+        case .livingService: return "living-service"
+        case .space:         return "space"
+        case .startupTech:   return "startup-tech"
+        case .general:       return "food"
+        }
+    }
+
 }
 
 /// AI 로드맵 — 추후 작업. 현재는 안내 + 뒤로가기.
@@ -336,6 +471,7 @@ private struct AuthenticatedLoadingView: View {
 
 private struct MainTabs: View {
     let store: DashboardStore
+    @ObservedObject var storeInfo: StoreInfoStore
     let coordinator: AuthCoordinator
     @Binding var selectedTab: AppRoot.Tab
 
@@ -363,31 +499,30 @@ private struct MainTabs: View {
         BuildUpMobileShell(selectedTab: $selectedTab, tabs: webSurfaceTabs(businessLaunched: store.businessLaunched)) {
             switch selectedTab {
             case .home:
-                TodayView(mock: mockData)
+                if store.businessLaunched {
+                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo)
+                } else {
+                    PreLaunchHomeView(
+                        store: store,
+                        onOpenCurrentStage: { selectedTab = .roadmap }
+                    )
+                }
             case .current:
                 RoadmapView()
             case .roadmap:
                 RoadmapView()
             case .guides:
-                NativeSurfacePlaceholder(
-                    title: "펀딩",
-                    subtitle: "웹의 정책자금·가이드 surface와 연결될 자리입니다.",
-                    systemImage: "doc.text.magnifyingglass"
-                )
+                GuidesView(store: store)
             case .franchise:
-                NativeSurfacePlaceholder(
-                    title: "프랜차이즈",
-                    subtitle: "웹 프랜차이즈 분석 surface와 같은 정보 구조로 준비 중입니다.",
-                    systemImage: "storefront"
-                )
+                FranchiseView()
             case .marketing:
-                GrowthForecastView(mock: mockData)
+                MarketingView(store: store, mock: mockData)
             case .reports:
-                WeeklyPulseView(mock: mockData)
+                ReportsView(mock: mockData)
             case .analytics:
-                DailyHubView(mock: mockData)
+                MyStoreView(store: store, storeInfo: storeInfo)
             case .profile:
-                SettingsView(coordinator: coordinator)
+                ProfileView(store: store, coordinator: coordinator)
             }
         }
         .overlay(alignment: .bottom) {
@@ -909,39 +1044,58 @@ struct DemoTabs: View {
         }
     }
 
+    /// Demo 모드용 stub store — 빈 StoreInfoState (placeholder UI 그대로 표시).
+    /// 가짜 데이터로 섹션을 채울 수 있으나, 사장님 실제 데이터로 착각 방지 우선.
+    private var demoStoreInfo: StoreInfoStore {
+        StoreInfoStore(repository: MockStoreInfoRepository())
+    }
+
+    /// Demo 모드용 stub store — Mock 데이터로 채운 DashboardStore (Supabase 호출 X).
+    private var demoDashboardStore: DashboardStore {
+        let s = DashboardStore(
+            dailyRepo: InMemoryDailyEntryRepository(seed: mockData.entries),
+            costsRepo: InMemoryMonthlyCostsRepository(seed: mockData.costs)
+        )
+        s.setProfile(
+            storeName: mockData.storeName,
+            userName: mockData.userName,
+            daysSinceLaunch: mockData.daysSinceLaunch,
+            category: mockData.category,
+            currentCash: mockData.currentCash,
+            businessLaunched: mockData.resolverInput.businessLaunched
+        )
+        return s
+    }
+
     @ViewBuilder
     private var content: some View {
         switch selectedTab {
             case .home:
-                TodayView(mock: mockData)
+                if mockData.resolverInput.businessLaunched {
+                    TodayView(mock: mockData, dashboardStore: demoDashboardStore, storeInfo: demoStoreInfo)
+                } else {
+                    PreLaunchHomeView(
+                        store: demoDashboardStore,
+                        onOpenCurrentStage: { selectedTab = .roadmap }
+                    )
+                }
             case .current:
                 RoadmapView()
             case .roadmap:
                 RoadmapView()
             case .guides:
-                NativeSurfacePlaceholder(
-                    title: "펀딩",
-                    subtitle: "정책자금, 지원사업, 필수 가이드를 웹과 같은 surface로 연결합니다.",
-                    systemImage: "doc.text.magnifyingglass"
-                )
+                GuidesView(store: demoDashboardStore)
             case .franchise:
-                NativeSurfacePlaceholder(
-                    title: "프랜차이즈",
-                    subtitle: "브랜드 비교와 창업 비용 분석 surface를 준비 중입니다.",
-                    systemImage: "storefront"
-                )
+                FranchiseView()
             case .marketing:
-                GrowthForecastView(mock: mockData)
+                MarketingView(store: demoDashboardStore, mock: mockData)
             case .reports:
-                WeeklyPulseView(mock: mockData)
+                ReportsView(mock: mockData)
             case .analytics:
-                DailyHubView(mock: mockData)
+                MyStoreView(store: demoDashboardStore, storeInfo: demoStoreInfo)
             case .profile:
-                NativeSurfacePlaceholder(
-                    title: "내 정보",
-                    subtitle: "계정, 언어, 매장 정보를 관리하는 profile surface입니다.",
-                    systemImage: "person.crop.circle"
-                )
+                // Demo 모드: coordinator nil → dangerCard (로그아웃 / 계정 삭제) 숨김.
+                ProfileView(store: demoDashboardStore, coordinator: nil)
         }
     }
 }

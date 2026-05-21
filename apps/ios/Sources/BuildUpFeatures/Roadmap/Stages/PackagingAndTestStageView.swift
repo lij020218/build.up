@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct PackagingAndTestStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "packaging-and-test"
+
     @State private var page = 0
 
     @AppStorage("pkg.osatSelected")   private var osatSelected   = false
@@ -22,66 +26,56 @@ public struct PackagingAndTestStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: OSAT 파트너 선정 + 테스트 계획 수립.
+    private var canCompleteStage: Bool {
+        osatSelected && testPlanDone
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: osatPage
-                                default: testPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if !osatSelected { return "OSAT 파트너를 선정하세요" }
+        if !testPlanDone { return "테스트 계획을 완성하세요" }
+        return "OSAT + 테스트 계획 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "패키징 및 테스트 (OSAT)",
+            stageEyebrow: "단계 12 · 패키징·테스트",
+            helperText: "OSAT(Outsourced Semiconductor Assembly and Test) = 패키징·테스트 전문 위탁. 설계 이후 생산의 마지막 퍼즐입니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: osatPage
+                    default: testPage
                     }
                 }
-            }
-            .navigationTitle("패키징·테스트")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 OSAT 선정
 
     private var osatPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("패키징·테스트")
-                    Text("OSAT = 패키징·테스트 전문 위탁\n설계 이후 생산의 마지막 퍼즐")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("OSAT(Outsourced Semiconductor Assembly and Test): ASE·Amkor·JCET 등 글로벌 OSAT")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("패키지 유형 선택")
@@ -196,5 +190,9 @@ public struct PackagingAndTestStageView: View {
 }
 
 #if DEBUG
-#Preview("PackagingAndTest") { PackagingAndTestStageView() }
+#Preview("PackagingAndTest") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["packaging-and-test"] }
+    return PackagingAndTestStageView().environment(store)
+}
 #endif

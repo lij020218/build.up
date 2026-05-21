@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct LabSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "lab-setup"
 
     @AppStorage("lab.facilityDone")  private var facilityDone  = false
     @AppStorage("lab.safetyDone")    private var safetyDone    = false
@@ -22,66 +25,59 @@ public struct LabSetupStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 연구소 요건 또는 장비 목록 중 1개 이상 체크.
+    private var canCompleteStage: Bool {
+        facilityDone || safetyDone || equipmentDone
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: facilityPage
-                                default: equipmentPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "연구소 설립·설비 완료 — 다음 단계로" }
+        if facilityDone && equipmentDone { return "연구소·장비 확보 — 다음 단계로" }
+        if facilityDone { return "연구소 인정 신청 — 장비 확보 진행" }
+        if equipmentDone { return "장비 확보 — 연구소 인정 진행" }
+        return "연구소 요건 또는 장비 목록을 정리하세요"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "연구실·시제품 작업장 셋업",
+            stageEyebrow: "단계 10 · 연구소 설립·설비",
+            helperText: "연구소 = 딥테크의 공장. 설립 전 법적 요건 먼저. 기업부설연구소 인정(RNDIP): 연구개발인력 최소 1명 석사 이상 또는 2명 학사.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: facilityPage
+                    default: equipmentPage
                     }
                 }
-            }
-            .navigationTitle("연구소 설립·설비")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 연구소 설립
 
     private var facilityPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("연구소 설립·설비")
-                    Text("연구소 = 딥테크의 공장\n설립 전에 법적 요건 먼저")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("기업부설연구소 인정: RNDIP (연구개발인력 최소 1명 석사 이상 또는 2명 학사)")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("기업부설연구소 설립 절차")
@@ -196,5 +192,9 @@ public struct LabSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("LabSetup") { LabSetupStageView() }
+#Preview("LabSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["lab-setup"] }
+    return LabSetupStageView().environment(store)
+}
 #endif

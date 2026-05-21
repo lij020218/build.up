@@ -219,17 +219,73 @@ export interface BudgetInsight {
  * @param cluster — 사용자의 cluster
  * @param userBudgetWon — 사용자가 입력한 시작 자본금 (원 단위, 0 이면 미입력)
  * @param monthlyEstimateWan — 선택적 override. 미지정 시 benchmark.monthlyOpsEstimateWan 사용.
+ * @param franchiseRecommendedWon — 선택. 프랜차이즈 권장 창업 비용 (원 단위). 제공되면 *그 권장값* 과
+ *   비교한 결과가 1차 baseline 이 됨. 사용자가 시스템이 알려준 권장값 그대로 입력했으면 "이 브랜드에
+ *   적합한 자본금" 으로 표시 (업종 평균과의 모순 메시지 회피).
  */
 export function computeBudgetInsight(
   cluster: ClusterId,
   userBudgetWon: number,
   monthlyEstimateWan?: number,
+  franchiseRecommendedWon?: number,
 ): BudgetInsight {
   const benchmark = CLUSTER_BUDGET_BENCHMARKS[cluster];
   const userWan = Math.round(userBudgetWon / 10_000);
   const deltaWan = userWan - benchmark.avgWan;
   const monthlyEst = monthlyEstimateWan ?? benchmark.monthlyOpsEstimateWan;
   const deltaMonths = monthlyEst > 0 ? Math.abs(deltaWan) / monthlyEst : 0;
+
+  // ⚠️ 2026-05-18: 프랜차이즈 권장값 매칭 — 사장님이 시스템이 알려준 프랜차이즈 권장값으로 자본금
+  //   설정한 케이스. 업종 평균과의 모순 ("권장 7,000만원으로 설정" → "업종 평균보다 3,436만 부족")
+  //   을 차단하고 "이 브랜드에는 적합" + "업종 평균과의 차이는 부가 정보" 톤으로 변경.
+  if (franchiseRecommendedWon && franchiseRecommendedWon > 0 && userBudgetWon > 0) {
+    const franchiseWan = Math.round(franchiseRecommendedWon / 10_000);
+    const franchiseRatio = userBudgetWon / franchiseRecommendedWon;
+    const franchiseDelta = userWan - franchiseWan;
+    // ±10% 이내면 권장값에 적합한 것으로 판정
+    if (franchiseRatio >= 0.9 && franchiseRatio <= 1.1) {
+      return {
+        tone: "near-average",
+        userWan,
+        avgWan: benchmark.avgWan,
+        deltaWan,
+        deltaMonths,
+        headlineKo: "이 프랜차이즈에 적합한 자본금이에요",
+        subtitleKo:
+          `프랜차이즈 권장 ${franchiseWan.toLocaleString()}만원과 ${
+            franchiseDelta === 0 ? "동일" : `${franchiseDelta > 0 ? "+" : ""}${franchiseDelta.toLocaleString()}만원 차이`
+          } · 같은 업종 평균은 ${benchmark.avgWan.toLocaleString()}만원 (참고)`,
+        programIntroKo: "이 프랜차이즈와 함께 받을 수 있는 추가 지원이에요",
+        benchmark,
+      };
+    }
+    // 권장값보다 명백히 적으면 (90% 미만) — 그래도 *업종 평균* 단정 메시지는 피하고 *프랜차이즈 권장* 기준
+    if (franchiseRatio < 0.9) {
+      return {
+        tone: "shortage",
+        userWan,
+        avgWan: benchmark.avgWan,
+        deltaWan,
+        deltaMonths,
+        headlineKo: `이 프랜차이즈 권장 ${franchiseWan.toLocaleString()}만원보다 ${Math.abs(franchiseDelta).toLocaleString()}만원 적습니다`,
+        subtitleKo: `같은 업종 평균은 ${benchmark.avgWan.toLocaleString()}만원 (참고)`,
+        programIntroKo: "이 차이를 보완할 수 있는 지원 프로그램이에요",
+        benchmark,
+      };
+    }
+    // 권장값보다 명백히 많으면 (110% 초과)
+    return {
+      tone: "surplus",
+      userWan,
+      avgWan: benchmark.avgWan,
+      deltaWan,
+      deltaMonths,
+      headlineKo: `이 프랜차이즈 권장 ${franchiseWan.toLocaleString()}만원보다 ${franchiseDelta.toLocaleString()}만원 여유 있어요`,
+      subtitleKo: `초기 운영자금에 활용 가능 · 같은 업종 평균 ${benchmark.avgWan.toLocaleString()}만원 (참고)`,
+      programIntroKo: "이 단계에서 활용해보면 좋은 보너스 프로그램이에요",
+      benchmark,
+    };
+  }
 
   if (userWan <= 0) {
     return {

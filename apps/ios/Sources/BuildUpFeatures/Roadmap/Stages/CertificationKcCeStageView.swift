@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct CertificationKcCeStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "certification-kc-ce"
 
     @AppStorage("cert.kcRequired")  private var kcRequired  = false
     @AppStorage("cert.ceRequired")  private var ceRequired  = false
@@ -24,66 +27,58 @@ public struct CertificationKcCeStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 필요 인증 1개 이상 선택.
+    private var canCompleteStage: Bool {
+        kcRequired || ceRequired || fccRequired
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: certTypePage
-                                default: procedurePage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "인증 프로세스 시작 — 다음 단계로" }
+        if kcApplied || ceApplied { return "신청 진행 중 — 다음 단계로" }
+        if canCompleteStage { return "필요 인증 선택 — 신청 절차 확인" }
+        return "필요한 인증을 최소 1개 선택하세요"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "인증 (KC·CE·FCC)",
+            stageEyebrow: "단계 12 · KC·CE·FCC 인증",
+            helperText: "인증 없이는 판매 불가. KC는 국내, CE는 유럽, FCC는 미국. 무선 통신 포함 제품은 8–16주 소요.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: certTypePage
+                    default: procedurePage
                     }
                 }
-            }
-            .navigationTitle("KC·CE·FCC 인증")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 인증 종류
 
     private var certTypePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("KC·CE·FCC 인증")
-                    Text("인증 없이는 판매 불가\nKC는 국내, CE는 유럽, FCC는 미국")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("무선 통신 포함 제품: 8–16주 / 비무선 제품: 4–8주")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("인증별 적용 범위")
@@ -194,5 +189,9 @@ public struct CertificationKcCeStageView: View {
 }
 
 #if DEBUG
-#Preview("CertificationKcCe") { CertificationKcCeStageView() }
+#Preview("CertificationKcCe") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["certification-kc-ce"] }
+    return CertificationKcCeStageView().environment(store)
+}
 #endif

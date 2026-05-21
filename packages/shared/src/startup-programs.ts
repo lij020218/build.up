@@ -1220,7 +1220,10 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
-    industries: ["food"],
+    // ⚠️ 2026-05-19: 종전 "food" (= 음식점업) 로 잘못 태그되어 외식 사장님에게도 매칭됨.
+    //   이건 농업 기술 사업 (생산자) 프로그램 — 음식점 운영자와 무관. 시스템에 농업 카테고리가
+    //   없으므로 *시스템 외 ID* "agriculture-only" 로 격리 → 일반 사장님 매칭 hard filter 통과.
+    industries: ["agriculture-only"],
     businessYearRange: [0, 7],
     applicationStatus: "closed",
     fundingType: "grant",
@@ -1241,7 +1244,8 @@ export const startupPrograms: StartupProgram[] = [
     forFranchise: false,
     dataYear: "2026",
     maxAge: 39,
-    industries: ["food"],
+    // ⚠️ 2026-05-19: "food" → "agriculture-only" 정정. 영농(농업 생산자) 전용 — 음식점 무관.
+    industries: ["agriculture-only"],
     businessYearRange: [0, 3],
     applicationStatus: "upcoming",
     fundingType: "cash",
@@ -1280,7 +1284,8 @@ export const startupPrograms: StartupProgram[] = [
     forSmallBiz: true,
     forFranchise: false,
     dataYear: "2026",
-    industries: ["food"],
+    // ⚠️ 2026-05-19: "food" → "agriculture-only". 농촌 자원·농업경영체 전용 — 도시 음식점 무관.
+    industries: ["agriculture-only"],
     applicationStatus: "upcoming",
     fundingType: "grant",
   },
@@ -1629,8 +1634,21 @@ export function getMatchedProgramsV2(criteria: MatchCriteria): ProgramMatch[] {
     }
 
     // ── 사업 유형 가드 ──
-    if (isFranchise && p.forFranchise === false && p.forSmallBiz === false) eligible = false;
+    // ⚠️ 2026-05-19 (사장님 신고: 큰맘할매순대국 프랜차이즈에 청년농업인 영농정착 매칭됨):
+    //   종전엔 `p.forFranchise === false && p.forSmallBiz === false` 둘 다 충족해야 제외 →
+    //   forSmallBiz=true 이면 프랜차이즈도 통과 (= 농업 프로그램이 프랜차이즈에도 매칭). 너무 관대.
+    //   forFranchise=false 는 *프랜차이즈 부적합* 의도이므로 hard filter.
+    if (isFranchise && p.forFranchise === false) eligible = false;
     if (!isFranchise && p.forFranchise === true && p.forSmallBiz === false) eligible = false;
+
+    // ⚠️ industries hard filter (2026-05-19): 종전엔 industries 매칭 시 *+15 보너스* 만 주고
+    //   매칭 실패해도 통과 → agriculture-only 같은 업종 전용 프로그램이 음식·소매 사장님에게도
+    //   *낮은 점수로* 추천됨. 정의되어 있으면 사용자 industryCategoryId 가 그 안에 *없으면 제외*.
+    if (p.industries && p.industries.length > 0 && criteria.industryCategoryId) {
+      if (!p.industries.includes(criteria.industryCategoryId)) {
+        eligible = false;
+      }
+    }
 
     // ── 정책자금 가드 ──
     //  폐업 검토 중 사장님 전용 자금 (희망리턴·재도전) — 비폐업자에겐 부적합 표시.

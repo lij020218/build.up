@@ -243,7 +243,9 @@ export function LocationMapPanel(props: {
       ) : (
         <div
           ref={mapRef}
-          style={{ width: "100%", height: "300px" }}
+          // ⚠️ 2026-05-19 모바일: 고정 300px → 모바일에서 50% 차지 + 핀 겹침. viewport-aware 로
+          //   화면 비율 따라 360-480px (모바일 일수록 큼).
+          style={{ width: "100%", height: "clamp(300px, 60vw, 480px)" }}
         />
       )}
       <div style={{

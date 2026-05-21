@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct CustomerDiscoveryStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "customer-discovery"
 
     @AppStorage("cd.interviewCount") private var interviewCount = 0
     @AppStorage("cd.painPattern")    private var painPattern    = ""
@@ -22,78 +25,84 @@ public struct CustomerDiscoveryStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(pages.indices, id: \.self) { i in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) { page = i }
-                                } label: {
-                                    Text(pages[i])
-                                        .font(BUFont.bodySmall.weight(page == i ? .semibold : .regular))
-                                        .foregroundStyle(page == i ? BUColor.midnight : BUColor.inkMuted)
-                                        .padding(.horizontal, BUSpacing.md)
-                                        .padding(.vertical, BUSpacing.sm)
-                                        .background(page == i ? BUColor.midnight.opacity(0.08) : Color.clear, in: Capsule())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, BUSpacing.sm)
-                    }
-                    .padding(.vertical, BUSpacing.xs)
+    /// 게이트: 인터뷰 5건 이상 + Wedge Problem 한 문장 정의.
+    private var canCompleteStage: Bool {
+        interviewCount >= 5 &&
+        !wedgeProblem.trimmingCharacters(in: .whitespaces).isEmpty
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: guidePage
-                                case 1: recordPage
-                                default: insightPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        let hasWedge = !wedgeProblem.trimmingCharacters(in: .whitespaces).isEmpty
+        if interviewCount < 5 && !hasWedge { return "인터뷰 5건+ & 핵심 문제 정의 필요" }
+        if interviewCount < 5 { return "인터뷰 \(interviewCount)/5 — 5건 이상 필요" }
+        if !hasWedge { return "핵심 문제(Wedge)를 한 문장으로 정의하세요" }
+        return "고객 발굴 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "고객 발굴·문제 검증",
+            stageEyebrow: "단계 7 · 고객 발굴",
+            helperText: "10번의 인터뷰가 6개월의 개발을 구합니다. 만들기 전에 먼저 대화하세요.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(
+                    currentStageId: stageId,
+                    inputs: ["interviewCount": "\(interviewCount)", "wedgeProblem": wedgeProblem]
+                )
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: {
+                roadmapStore.saveStageEdit(currentStageId: stageId,
+                    inputs: ["interviewCount": "\(interviewCount)", "wedgeProblem": wedgeProblem])
+            },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 타깃 고객 ICP 정의", detail: "산업·역할·예산·구매 권한 4축으로 ICP 명문화"),
+                .init(label: "2. Mom Test 인터뷰", detail: "20~30명 직접 인터뷰 + 「과거 행동」 질문 위주, 가설 검증 X 행동 검증"),
+                .init(label: "3. 문제 가설 검증", detail: "Top 3 문제 + 빈도 + 강도 + 현재 대안 정량화"),
+                .init(label: "4. 솔루션 가설 도출", detail: "랜딩 페이지·LOI·사전 결제 등 강한 시그널 1개 이상 확보"),
+                ],
+                verifyItems: [
+                "Mom Test — 「당신은 이걸 살 거예요?」 같은 가설 질문은 모두 거짓말, 「과거 어떻게 해결했어요?」 행동 질문만",
+                "샘플 편향 — 친구·지인 인터뷰 시 데이터 무효, 외부 콜드 아웃리치 80% 이상",
+                "결제 의지 — 「관심 있다」 ≠ 「살 의지」, LOI·사전 결제 등 진짜 의지 시그널 확보",
+                "TAM·SAM·SOM — 추정 시장 규모 객관 데이터로 산출, 「수십조 시장」 모호한 추정은 투자 거절",
+                "경쟁 — 「경쟁자 없음」은 위험 신호, 시장이 없거나 모르거나 둘 중 하나",
+                "법적 — 인터뷰 녹음·녹화 시 사전 동의 (개인정보보호법), 미동의 시 데이터 무효 + 위반",
+                ],
+                nextStageLabel: "법인 설립",
+                nextSummary: "ICP·문제·솔루션 가설 검증 완료 → 법인 설립 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: guidePage
+                    case 1: recordPage
+                    default: insightPage
                     }
                 }
-            }
-            .navigationTitle("고객 발굴")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 인터뷰 가이드
 
     private var guidePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("고객 발굴")
-                    Text("10번의 인터뷰가\n6개월의 개발을 구한다")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("만들기 전에 먼저 대화하세요")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("인터뷰 황금 5문항")
@@ -246,5 +255,9 @@ public struct CustomerDiscoveryStageView: View {
 }
 
 #if DEBUG
-#Preview("CustomerDiscovery") { CustomerDiscoveryStageView() }
+#Preview("CustomerDiscovery") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["customer-discovery"] }
+    return CustomerDiscoveryStageView().environment(store)
+}
 #endif

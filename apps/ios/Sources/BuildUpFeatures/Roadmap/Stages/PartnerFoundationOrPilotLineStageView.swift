@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct PartnerFoundationOrPilotLineStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "partner-foundation-or-pilot-line"
+
     @State private var page = 0
 
     @AppStorage("pf.foundryPartner") private var foundryPartner = ""
@@ -22,66 +26,57 @@ public struct PartnerFoundationOrPilotLineStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 파운드리 파트너 선정 + NDA·양산 계약 + 스케일업 계획.
+    private var canCompleteStage: Bool {
+        !foundryPartner.isEmpty && nda && volumePlan
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: foundryPage
-                                default: productionPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if foundryPartner.isEmpty { return "파운드리 파트너를 선정하세요" }
+        if !nda { return "파운드리 NDA·양산 계약을 체크하세요" }
+        if !volumePlan { return "양산 스케일업 계획을 확정하세요" }
+        return "파운드리 파트너십 확정 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "파운드리 파트너십 / 파일럿 라인",
+            stageEyebrow: "단계 13 · 파운드리 파트너십",
+            helperText: "파운드리 파트너십 = 반도체의 양산 계약. TSMC 2/3nm는 2027–2028까지 예약 완료. 선단 공정은 빠른 예약이 경쟁력입니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["foundryPartner": foundryPartner])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["foundryPartner": foundryPartner]) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: foundryPage
+                    default: productionPage
                     }
                 }
-            }
-            .navigationTitle("파운드리 파트너십·양산")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 파운드리 파트너십
 
     private var foundryPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("파운드리 파트너십·양산")
-                    Text("파운드리 파트너십 = 반도체의 양산 계약\nTSMC 2/3nm는 2027–2028까지 예약 완료")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("선단 공정은 빠른 예약이 경쟁력. 성숙 공정(28nm+)은 진입 장벽 낮음.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("주요 파운드리 비교")
@@ -188,5 +183,9 @@ public struct PartnerFoundationOrPilotLineStageView: View {
 }
 
 #if DEBUG
-#Preview("PartnerFoundationOrPilotLine") { PartnerFoundationOrPilotLineStageView() }
+#Preview("PartnerFoundationOrPilotLine") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["partner-foundation-or-pilot-line"] }
+    return PartnerFoundationOrPilotLineStageView().environment(store)
+}
 #endif

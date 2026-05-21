@@ -20,6 +20,7 @@ import {
   computeBudgetInsight,
   CLUSTER_BUDGET_BENCHMARKS,
   getClusterForSubIndustry,
+  getFranchiseBrandById,
   getMatchedProgramsV2,
   type ClusterId,
   type ProgramMatch,
@@ -28,7 +29,7 @@ import {
 
 export function BudgetInsightCard() {
   const d = useDashboardCtx();
-  const { language, selectedBudget, selectedIndustryId, industryCategoryId } = d;
+  const { language, selectedBudget, selectedIndustryId, industryCategoryId, selectedFranchiseBrandId, startupType } = d;
 
   const cluster: ClusterId | null = useMemo(
     () => getClusterForSubIndustry(selectedIndustryId ?? undefined, industryCategoryId),
@@ -38,11 +39,24 @@ export function BudgetInsightCard() {
   // 사용자가 "확인" 을 눌러야 분석이 보임 — deliberate moment 로 만들기
   const [confirmed, setConfirmed] = useState(false);
 
-  if (!cluster || !CLUSTER_BUDGET_BENCHMARKS[cluster]) return null;
-
   const ko = language === "ko";
   const userBudgetWon = selectedBudget ?? 0;
   const hasBudget = userBudgetWon > 0;
+
+  // ⚠️ Hooks 는 early return *이전* 에 모두 호출되어야 함 (React rules of hooks).
+  // confirmed=false → true 토글 시 hooks 개수가 달라지면 컴포넌트 crash → 사용자에게
+  // "페이지 이동" 처럼 보이는 ErrorBoundary fallback 이 노출됨.
+  const matches: ProgramMatch[] = useMemo(() => {
+    if (!cluster) return [];
+    return getMatchedProgramsV2({
+      industryCategoryId,
+      capital: userBudgetWon || undefined,
+      businessStage: "pre-startup",
+    }).slice(0, 4);
+  }, [industryCategoryId, userBudgetWon, cluster]);
+
+  // 이제 conditional return — 모든 hooks 호출 후
+  if (!cluster || !CLUSTER_BUDGET_BENCHMARKS[cluster]) return null;
 
   if (!confirmed) {
     return (
@@ -54,18 +68,14 @@ export function BudgetInsightCard() {
     );
   }
 
-  // 월 운영비는 benchmark.monthlyOpsEstimateWan 가 자동으로 사용됨
-  const insight = computeBudgetInsight(cluster, userBudgetWon);
-
-  // 매칭 프로그램 — cluster 의 capital 단계 기준으로 추천.
-  // delta 가 음수이면 그 부족분을 메울 수 있는 프로그램 우선.
-  const matches: ProgramMatch[] = useMemo(() => {
-    return getMatchedProgramsV2({
-      industryCategoryId,
-      capital: userBudgetWon || undefined,
-      businessStage: "pre-startup",
-    }).slice(0, 4);
-  }, [industryCategoryId, userBudgetWon]);
+  // ⚠️ 2026-05-18: 프랜차이즈 선택한 사장님에겐 *그 브랜드 권장값* 을 1차 baseline 으로 사용.
+  //   업종 평균과 비교한 모순 메시지 ("권장 7,000만으로 설정" → "업종 평균보다 부족") 회피.
+  const franchiseRecommendedWon = (() => {
+    if (startupType !== "franchise" || !selectedFranchiseBrandId) return undefined;
+    const brand = getFranchiseBrandById(selectedFranchiseBrandId);
+    return brand?.startupCostWon;
+  })();
+  const insight = computeBudgetInsight(cluster, userBudgetWon, undefined, franchiseRecommendedWon);
 
   // 신호등 컬러 금지 — 미드나잇 네이비 한 톤
   const NAVY = "var(--primary, #1d3557)";

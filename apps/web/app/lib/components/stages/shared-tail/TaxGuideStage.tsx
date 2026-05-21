@@ -6,8 +6,9 @@ import {
   ShieldCheck, AlertTriangle, Calendar, FileText, Banknote,
   Sparkles, ClipboardList, ExternalLink, ChevronRight, type LucideIcon,
 } from "lucide-react";
-import { LEGAL } from "@build-up/shared";
+import { LEGAL, TAX_FAQ_ENTRIES, matchTaxFaq, type TaxFaqEntry } from "@build-up/shared";
 import { StageWrapup } from "../shared/StageWrapup";
+import { useMemo, useState } from "react";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러 (다른 단계와 통일)
 
@@ -52,8 +53,10 @@ export function TaxGuideStage() {
     handleStageEdit,
     decisions,
     editSaveStatus,
+    isViewingPastStage,
   } = d;
-  const isStageCompleted = !!decisions["tax-guide"]?.completedAt;
+  // ⚠️ 2026-05-18: && isViewingPastStage 추가 — 첫 진입 화면에 노출 안 되도록.
+  const isStageCompleted = !!decisions["tax-guide"]?.completedAt && isViewingPastStage;
   const _editStatus = editSaveStatus?.stageId === "tax-guide" ? editSaveStatus.status : null;
   const _editLabel = _editStatus === "saving"
     ? (language === "ko" ? "저장 중..." : "Saving...")
@@ -148,7 +151,7 @@ export function TaxGuideStage() {
     { tax: ko ? "원천세" : "Withholding", timing: ko ? "매월 10일" : "Monthly 10th", cycle: ko ? "월납" : "Monthly", note: ko ? "직원 급여 지급 시" : "When paying salary" },
     { tax: ko ? "4대보험" : "4 Insurance", timing: ko ? "매월 10일" : "Monthly 10th", cycle: ko ? "월납" : "Monthly", note: ko ? "직원 채용 시" : "When hiring" },
   ] : [
-    { tax: ko ? "부가가치세 (일반)" : "VAT (Standard)", timing: ko ? "1·7월 25일" : "Jan/Jul 25", cycle: ko ? "반기" : "Semi-annual", note: ko ? `${SIMPLIFIED_THRESHOLD_KO}+ 매출 시` : `Revenue >${SIMPLIFIED_THRESHOLD_EN}` },
+    { tax: ko ? "부가가치세 (일반)" : "VAT (Standard)", timing: ko ? "1·7월 25일 확정 + 4·10월 예정고지/신고" : "Jan/Jul 25 (final) + Apr/Oct (preliminary)", cycle: ko ? "반기 확정 + 분기 예정" : "Semi-annual + quarterly preliminary", note: ko ? `${SIMPLIFIED_THRESHOLD_KO}+ 매출 / 직전기 1.5억+ 면 예정신고 의무` : `Revenue >${SIMPLIFIED_THRESHOLD_EN} / preliminary filing if >₩150M prior period` },
     { tax: ko ? "부가가치세 (간이)" : "VAT (Simplified)", timing: ko ? "1월 25일" : "Jan 25", cycle: ko ? "연 1회" : "Annual", note: ko ? `★ 8천만→${SIMPLIFIED_THRESHOLD_KO} 상향 (2024)` : `★ Raised to ${SIMPLIFIED_THRESHOLD_EN} (2024)` },
     { tax: ko ? "종합소득세" : "Income Tax", timing: ko ? "5월 1~31일" : "May 1-31", cycle: ko ? "연 1회" : "Annual", note: ko ? "★ 2026년: 5/31 일요일 → 6/1까지 / 성실신고는 6/30" : "★ 2026: extends to Jun 1" },
     { tax: ko ? "원천세·4대보험" : "Withholding & Insurance", timing: ko ? "매월 10일" : "Monthly 10th", cycle: ko ? "월납" : "Monthly", note: ko ? "직원 고용 시만" : "Only with employees" },
@@ -594,29 +597,15 @@ export function TaxGuideStage() {
             )}
           </div>
 
-          {/* 세무 Q&A */}
-          <div style={{ marginTop: "18px" }}>
-            <div style={sectionLabel}>{ko ? "세무 질문하기" : "Ask a Tax Question"}</div>
-            <div style={{ background: "white", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", padding: "14px 16px" }}>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <input
-                  type="text"
-                  value={knowledgeQaText}
-                  onChange={(e) => setKnowledgeQaText(e.target.value)}
-                  placeholder={ko ? "예: 간이과세자가 세금계산서를 발급할 수 있나요?" : "e.g., Can a simplified taxpayer issue tax invoices?"}
-                  style={{ flex: 1, padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", fontSize: "13.5px", outline: "none" }}
-                  onKeyDown={(e) => { if (e.key === "Enter" && knowledgeQaText.trim()) handleKnowledgeQuestion("tax"); }}
-                />
-                <button type="button" onClick={() => handleKnowledgeQuestion("tax")} disabled={!knowledgeQaText.trim() || knowledgeQaStatus === "loading"} style={{
-                  padding: "10px 18px", borderRadius: "10px", border: "none", background: MIDNIGHT, color: "#fff",
-                  fontSize: "13px", fontWeight: 700, cursor: knowledgeQaText.trim() ? "pointer" : "default",
-                  opacity: knowledgeQaText.trim() ? 1 : 0.4,
-                  boxShadow: "0 2px 6px rgba(25,25,112,0.22)",
-                }}>{knowledgeQaStatus === "loading" ? "..." : (ko ? "질문" : "Ask")}</button>
-              </div>
-              {knowledgeQaError && <div style={{ marginTop: "8px", fontSize: "12px", color: "#dc2626" }}>{knowledgeQaError}</div>}
-            </div>
-          </div>
+          {/* 세무 Q&A — 2026-05-18 redesign: FAQ 우선 + AI fallback */}
+          <TaxFaqCard
+            ko={ko}
+            qaText={knowledgeQaText}
+            setQaText={setKnowledgeQaText}
+            qaStatus={knowledgeQaStatus}
+            qaError={knowledgeQaError}
+            askAi={() => handleKnowledgeQuestion("tax")}
+          />
 
           <TrapsCard />
         </>
@@ -694,6 +683,255 @@ export function TaxGuideStage() {
             ? (ko ? `↑ 필수 세팅 ${tcChecked}/${taxCheckItems.length}` : `↑ Setup ${tcChecked}/${taxCheckItems.length}`)
             : copy.home.markTaxReviewed}
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  TaxFaqCard — 세무 질문 카드 (FAQ 우선 + AI fallback)
+//
+//  사장님 신고 (2026-05-18): "세무 질문하기가 AI 자유 질문인데, 99% 사장님이 같은
+//  기본 질문 반복. FAQ 방식으로 가장 기본·중요한 것 미리 정리해서 보여주면 어떨까".
+//
+//  구조:
+//    1. 검증된 FAQ 칩 12개 (전체 검색 + 카테고리 필터)
+//    2. FAQ 클릭 → 즉시 답변 펼침 (지연 0, 비용 0, 정확성 100%)
+//    3. 검색창 입력 → matchTaxFaq 로 키워드 매칭 (최대 3개 추천)
+//    4. 매칭 0건 시만 "AI 답변 받기" 버튼 노출 → 기존 SSE 스트림 호출
+//
+//  검증: 모든 답변 2026-05 기준 국세청·법령정보·정책브리핑 출처. 변동 정보 (세율·기준액)
+//        에 *2026 기준* 명시.
+// ─────────────────────────────────────────────────────────────────────────
+
+function TaxFaqCard({
+  ko,
+  qaText,
+  setQaText,
+  qaStatus,
+  qaError,
+  askAi,
+}: {
+  ko: boolean;
+  qaText: string;
+  setQaText: (v: string) => void;
+  qaStatus: "idle" | "loading" | "error";
+  qaError: string;
+  askAi: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  // 사용자가 입력한 텍스트로 FAQ 매칭. 0건이면 AI fallback 노출.
+  const matches: TaxFaqEntry[] = useMemo(() => {
+    const q = search.trim();
+    if (q.length < 2) return [];
+    return matchTaxFaq(q);
+  }, [search]);
+
+  const displayedFaqs: TaxFaqEntry[] = matches.length > 0 ? matches : TAX_FAQ_ENTRIES;
+  const noMatch = search.trim().length >= 2 && matches.length === 0;
+
+  const cardStyle: React.CSSProperties = {
+    background: "white",
+    borderRadius: "16px",
+    border: "1px solid rgba(0,0,0,0.06)",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+    padding: "16px 18px",
+  };
+  const sectionLabel: React.CSSProperties = {
+    fontSize: "11.5px",
+    fontWeight: 700,
+    color: "rgba(0,0,0,0.5)",
+    letterSpacing: "0.06em",
+    textTransform: "uppercase" as const,
+    marginBottom: "10px",
+  };
+
+  return (
+    <div style={{ marginTop: "18px" }}>
+      <div style={sectionLabel}>{ko ? "자주 묻는 세무 질문" : "Frequently Asked Tax Questions"}</div>
+      <div style={cardStyle}>
+        {/* 검색창 */}
+        <div style={{ marginBottom: "12px" }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setQaText(e.target.value); }}
+            placeholder={ko ? "예: 간이과세, 부가세 신고, 사업용 카드, 세무사 비용..." : "e.g., simplified VAT, filing, business card..."}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              border: "1px solid rgba(0,0,0,0.1)",
+              fontSize: "13.5px",
+              outline: "none",
+              boxSizing: "border-box",
+              fontFamily: "inherit",
+            }}
+          />
+        </div>
+
+        {/* 검색 결과 / 전체 FAQ */}
+        {noMatch ? (
+          <div style={{
+            padding: "16px",
+            borderRadius: "12px",
+            background: "rgba(220,38,38,0.04)",
+            border: "1px dashed rgba(220,38,38,0.2)",
+            marginBottom: "12px",
+          }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "6px" }}>
+              {ko ? "준비된 FAQ에서 매칭되는 답변이 없어요" : "No matching FAQ found"}
+            </div>
+            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55, marginBottom: "12px" }}>
+              {ko
+                ? "AI 답변은 일반 가이드이며 법령 변경 시 정확하지 않을 수 있어요. 중요한 결정은 세무사·국세청 확인 권장."
+                : "AI answers are general guidance. Verify important decisions with a CPA or NTS."}
+            </div>
+            <button
+              type="button"
+              onClick={askAi}
+              disabled={qaStatus === "loading"}
+              style={{
+                padding: "9px 16px",
+                borderRadius: "10px",
+                border: "none",
+                background: MIDNIGHT,
+                color: "#fff",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: qaStatus === "loading" ? "wait" : "pointer",
+                opacity: qaStatus === "loading" ? 0.5 : 1,
+                fontFamily: "inherit",
+              }}
+            >
+              {qaStatus === "loading"
+                ? (ko ? "AI 답변 생성 중..." : "Generating...")
+                : (ko ? "AI 에게 묻기 (참고용)" : "Ask AI (reference)")}
+            </button>
+            {qaError && <div style={{ marginTop: "8px", fontSize: "12px", color: "#dc2626" }}>{qaError}</div>}
+            {qaText && qaStatus !== "loading" && (
+              <div style={{
+                marginTop: "12px",
+                padding: "12px 14px",
+                borderRadius: "10px",
+                background: "rgba(0,0,0,0.02)",
+                fontSize: "13px",
+                color: "rgba(15,23,42,0.8)",
+                lineHeight: 1.65,
+                whiteSpace: "pre-wrap" as const,
+              }}>
+                {qaText}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+            {displayedFaqs.map((faq) => {
+              const open = openId === faq.id;
+              return (
+                <div
+                  key={faq.id}
+                  style={{
+                    borderRadius: "12px",
+                    border: open ? `1.5px solid ${MIDNIGHT}` : "1px solid rgba(0,0,0,0.08)",
+                    background: open ? "rgba(25,25,112,0.03)" : "white",
+                    transition: "border-color 160ms, background 160ms",
+                    overflow: "hidden",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(open ? null : faq.id)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      background: "transparent",
+                      border: "none",
+                      textAlign: "left" as const,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    <span style={{
+                      fontSize: "13px",
+                      fontWeight: 650,
+                      color: open ? MIDNIGHT : "#0f172a",
+                      letterSpacing: "-0.005em",
+                      flex: 1,
+                      lineHeight: 1.45,
+                    }}>
+                      {faq.question}
+                    </span>
+                    <ChevronRight
+                      size={14}
+                      strokeWidth={2}
+                      style={{
+                        color: open ? MIDNIGHT : "rgba(0,0,0,0.35)",
+                        transform: open ? "rotate(90deg)" : "rotate(0deg)",
+                        transition: "transform 160ms",
+                        flexShrink: 0,
+                      }}
+                    />
+                  </button>
+                  {open && (
+                    <div style={{
+                      padding: "0 14px 14px",
+                      borderTop: "1px solid rgba(0,0,0,0.06)",
+                      paddingTop: "12px",
+                    }}>
+                      <div style={{
+                        fontSize: "13px",
+                        color: "rgba(15,23,42,0.82)",
+                        lineHeight: 1.7,
+                        whiteSpace: "pre-wrap" as const,
+                        marginBottom: "10px",
+                      }}>
+                        {faq.answer}
+                      </div>
+                      {faq.sources.length > 0 && (
+                        <div style={{
+                          fontSize: "11px",
+                          color: "rgba(15,23,42,0.5)",
+                          paddingTop: "8px",
+                          borderTop: "1px dashed rgba(0,0,0,0.08)",
+                          marginTop: "4px",
+                        }}>
+                          <span style={{ fontWeight: 600 }}>{ko ? "출처" : "Sources"}</span>
+                          {" "}
+                          <span style={{ marginLeft: "4px" }}>·</span>
+                          {" "}
+                          <span style={{ color: "rgba(15,23,42,0.4)" }}>{ko ? "검증" : "verified"} {faq.lastVerified}</span>
+                          <div style={{ marginTop: "4px", display: "flex", flexDirection: "column" as const, gap: "2px" }}>
+                            {faq.sources.map((src, i) => (
+                              <a
+                                key={i}
+                                href={src.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: MIDNIGHT,
+                                  textDecoration: "none",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                · {src.label}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

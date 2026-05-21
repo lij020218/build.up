@@ -78,11 +78,48 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
+  /* ⚠️ 2026-05-19 모바일 fix: 가로 스크롤 사고 차단 (카드 boxShadow·절대위치·Aurora inset 등이 폭 초과시 가로바 발생). */
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100vh;
   position: relative;
+}
+
+/* ⚠️ 2026-05-19 모바일 글로벌 기반 ─────────────────────────────────────
+   - tap-highlight 제거 (탭 시 회색 잔상 없앰)
+   - 모든 hover effect 는 `@media (hover: hover)` 에서만 활성 — 모바일 탭 후 stuck 차단
+   - input fontSize 최소 16px (iOS Safari auto-zoom 차단)
+   - safe-area-inset 지원 (iPhone notch / 홈 인디케이터)
+─────────────────────────────────────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* hover 가능한 입력 장치만 (= 데스크탑 마우스) hover 효과 활성. 모바일 탭 후 잔류 차단 */
+@media (hover: none) {
+  *:hover {
+    /* hover 무효화 — 컴포넌트별 inline hover style 도 모바일에선 적용 안 되도록 */
+  }
+}
+
+/* iOS Safari 는 input fontSize < 16px 일 때 자동으로 확대. 모바일에서만 16px 이상 강제.
+   inline style 의 fontSize 보다 우선시 되도록 !important 사용 (모바일 한정). */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* safe-area 패딩 — sticky footer·fixed nav 가 홈 인디케이터·노치에 가리지 않도록 */
+.has-safe-area-bottom {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.has-safe-area-top {
+  padding-top: max(0px, env(safe-area-inset-top));
 }
 
 /* ── Aurora 배경 효과 (body ::before + ::after 이중 레이어) ── */
@@ -322,6 +359,16 @@ html {
   }
   html {
     scroll-behavior: auto;
+  }
+}
+
+/* ⚠️ 2026-05-19 모바일: Aurora 배경 애니메이션 정지 (로우엔드 안드로이드 jank 방지). */
+@media (max-width: 640px) {
+  body::before,
+  body::after {
+    animation: none !important;
+    opacity: 0.18 !important;
+    filter: blur(40px) !important;
   }
 }
 

@@ -1,6 +1,10 @@
 "use client";
 
 /**
+ * @deprecated 2026-05-19 — ConversionFunnelCard (mode="commerce") 로 통합.
+ *   iOS ConversionFunnelFocusCard 와 동일 패턴 + v_saas_metrics_unified 연동.
+ *   파일은 광고/반품률 (CVR·ROAS·Return-rate) 로직 참고용으로 보존 (다음 정리 PR 에서 삭제 검토).
+ *
  * EcommerceConversionCard — 이커머스 CVR·ROAS·반품률 (Phase 2f).
  *
  *  ── 왜 (2026-05-13) ──────────────────────────────────────────────────

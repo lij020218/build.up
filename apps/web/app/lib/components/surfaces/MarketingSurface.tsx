@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
 import { starterIndustryOptions, localizeRecommendationItem } from "@build-up/shared";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
+import { supabase } from "../../../../lib/supabase";
 import {
   useMarketingStore,
   CHANNEL_LIST,
@@ -254,9 +255,18 @@ export function MarketingSurface() {
 
     const existing = COACH_INFLIGHT.get(inflightKey);
     const promise = existing ?? (async () => {
+      // ── 인증 헤더 — Supabase Bearer (서버가 user_id 별로 캐시) ──
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        throw new Error(ko ? "로그인 세션이 만료됐어요." : "Session expired.") as Error;
+      }
       const res = await fetch("/api/ai/marketing/coach", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           storeName: d.storeName,
           industryCategoryId: categoryId,
@@ -269,6 +279,8 @@ export function MarketingSurface() {
           currentStageLabel: d.businessLaunched ? (ko ? "운영 중" : "Operating") : (ko ? "오픈 준비" : "Pre-launch"),
           launchDate: d.selectedOpenDate ?? null,
           language: d.language,
+          // coachNonce > 0 → 사용자가 재생성 버튼 눌렀음 → 서버 캐시 무시
+          force: coachNonce > 0,
         }),
       });
       if (!res.ok) {

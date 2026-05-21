@@ -13,6 +13,7 @@ import {
   calculateCostRatios,
   traverseUserPath,
 } from "@build-up/shared";
+import type { RoadmapStageState } from "@build-up/shared";
 import {
   useProfileStore,
   useRoadmapStore,
@@ -36,7 +37,7 @@ export function useComputedDashboard(
   deps: DashboardDeps,
   surface: DashboardSurface,
 ) {
-  const { language, copy, router } = deps;
+  const { language, copy, router, searchParams } = deps;
 
   // ── Zustand stores ──
   const {
@@ -76,28 +77,44 @@ export function useComputedDashboard(
   // ── Stage navigation ──
   const displayedStageId = viewingStageId ?? roadmap.currentStageId;
 
+  // ⚠️ NPE guard: roadmap.stages 가 빈 배열 (초기 hydration race · Supabase 응답 지연 · reset 직후)
+  //   일 때 roadmap.stages[0] = undefined 이고 이후 currentStage.code 접근 시 throw → surface 통째
+  //   white screen + "업종 선택 단계로 돌아가고 먹통" 증상의 직접 원인. 빈 stage placeholder 를
+  //   만들어 hook 호출 순서를 깨지 않으면서 안전하게 fallback.
+  const FALLBACK_STAGE = {
+    stageId: "industry-selection",
+    code: "industry-selection",
+    titleKo: "준비 중",
+    titleEn: "Loading",
+    descriptionKo: "",
+    descriptionEn: "",
+    status: "available" as const,
+    totalSteps: 0,
+    requiredKeys: [] as string[],
+    requiredTaskIds: [] as string[],
+    nextStageIds: [] as string[],
+  } as unknown as RoadmapStageState;
+
   const currentStage =
     roadmap.stages.find((stage) => stage.stageId === displayedStageId) ??
-    roadmap.stages[0];
+    roadmap.stages[0] ??
+    FALLBACK_STAGE;
 
-  const traversedStages = roadmap.stages.filter(
-    (s) => s.status === "completed" || s.stageId === roadmap.currentStageId,
-  );
+  // NOTE: prevTraversedStage / nextTraversedStage 는 pathStageList 정의(line 250+) 이후에 계산.
+  // 이전엔 roadmap.stages.filter(...) 의 *배열 순서* 로 prev/next 를 잡았는데, cluster·path 와
+  // 무관한 순서라 사용자가 8단계 viewing 중 "이전" 누르면 1단계, "다음" 누르면 15단계로 점프하는
+  // 심각한 버그가 있었다. 아래에서 pathStageList 의 *실제 navigation 순서* 로 다시 계산한다.
 
-  const traversedIndex = traversedStages.findIndex(
-    (s) => s.stageId === displayedStageId,
-  );
-
-  const prevTraversedStage =
-    traversedIndex > 0 ? traversedStages[traversedIndex - 1] : null;
-
-  const nextTraversedStage =
-    traversedIndex >= 0 && traversedIndex < traversedStages.length - 1
-      ? traversedStages[traversedIndex + 1]
-      : null;
-
+  // ⚠️ 2026-05-18: viewingStageId 가 자동 set 된 경우 (task 4/4 체크 → useTaskHandlers 가
+  //   line 171 에서 setViewingStageId(stageId) 호출) 도 isViewingPastStage true 가 되어
+  //   "처음 보는 단계인데 수정 저장 버튼" 노출 버그 발생. ?editStage= URL 파라미터가 *명시적
+  //   수정 진입* 의 유일한 신호 (RoadmapSurface·LaunchRoadmapCard 클릭 시 set). URL 에 명시된
+  //   stageId 와 viewingStageId 가 일치할 때만 진짜 "과거 stage 수정 진입" 으로 판정.
+  const explicitEditStageId = searchParams?.get?.("editStage") ?? null;
   const isViewingPastStage =
-    viewingStageId !== null && viewingStageId !== roadmap.currentStageId;
+    viewingStageId !== null &&
+    viewingStageId !== roadmap.currentStageId &&
+    explicitEditStageId === viewingStageId;
 
   // ── Step completion predicates ──
   const canCompleteIndustryStep = Boolean(selectedIndustryId);
@@ -251,6 +268,44 @@ export function useComputedDashboard(
   const pathStageIds = new Set(pathStageList.map((s) => s.stageId));
   const pathTotalStages = pathStageList.length;
 
+  // ── Path-aware prev/next 계산 ──
+  // pathStageList 는 traverseUserPath 가 nextStageIds + nextStageConditions 를 따라 만든 *실제
+  // 사용자 navigation 순서*. 여기서 prev/next 를 결정해야 cluster·path 점프 버그가 사라진다.
+  // 단, displayedStage 가 path 에 없으면 (예: hidden stage, 또는 decisions 누락 시 path 가 짧아진
+  // 경우) prev/next 를 null 로 두어 안전하게 한다.
+  const pathIndex = pathStageList.findIndex((s) => s.stageId === displayedStageId);
+  // ⚠️ 2026-05-18: pathIndex === -1 (displayed stage 가 path 외) 시 dead-end 발생 방지.
+  //   사용자가 franchise 안 골랐는데 franchise-application 직접 deep-link 한 경우,
+  //   또는 decisions 누락으로 path 가 짧아진 경우. prev 는 roadmap.currentStageId 로 복귀할
+  //   수 있도록 fallback. next 는 그대로 null (미완료 future 점프 방지).
+  const currentInPath = pathStageList.find((s) => s.stageId === roadmap.currentStageId) ?? null;
+  const prevTraversedStage =
+    pathIndex > 0
+      ? pathStageList[pathIndex - 1]
+      : pathIndex === -1
+        ? currentInPath
+        : null;
+  // next 는 *이미 traversed (completed 또는 current) 한 stage* 만 허용 — 미완료 future stage 로
+  // 점프시키지 않는다. roadmap.currentStageId 가 traversed boundary 역할.
+  const nextCandidate =
+    pathIndex >= 0 && pathIndex < pathStageList.length - 1
+      ? pathStageList[pathIndex + 1]
+      : null;
+  const nextTraversedStage =
+    nextCandidate &&
+    (nextCandidate.status === "completed" ||
+      nextCandidate.stageId === roadmap.currentStageId)
+      ? nextCandidate
+      : null;
+
+  // Legacy export: pathStageList 중 traversed 부분만 (이름 유지 — starter-stage-demo 등에서 참조).
+  const traversedStages = pathStageList.filter(
+    (s) => s.status === "completed" || s.stageId === roadmap.currentStageId,
+  );
+  const traversedIndex = traversedStages.findIndex(
+    (s) => s.stageId === displayedStageId,
+  );
+
   const rawCompletedCount = roadmap.completedStageIds.filter((id) =>
     pathStageIds.has(id),
   ).length;
@@ -266,7 +321,13 @@ export function useComputedDashboard(
   //    flag wipe 가 실패했거나 (RLS / 비인증 / 부분 실패), 다른 데이터와 동기화가 깨진 상태.
   //    이런 경우 override 를 적용하면 "현재 단계 = 첫 단계" + "21/21 완료" 모순 화면이 보임.
   //    플래그를 stale 로 간주하고 override 를 끈다 (실제 자가복구는 connectAndLoad 가 수행).
-  const launchedFlagLooksStale = businessLaunched && rawCompletedCount === 0;
+  // ⚠️ 2026-05-18: launched 판정을 강화. 종전엔 rawCompletedCount===0 만 stale 로 잡았는데
+  //   사장님이 일부 stage (1~5개) 만 완료한 채 business_launched=true 인 케이스는 stale 판정
+  //   안 되고 progress 10% 인데 launched 표시되는 모순 화면. pre-launch-final 의 completedAt
+  //   여부를 함께 검사 — final stage 완료 없이는 launched 신뢰하지 않음.
+  const hasPreLaunchFinal = Boolean(decisions["pre-launch-final"]?.completedAt);
+  const launchedFlagLooksStale =
+    businessLaunched && (rawCompletedCount === 0 || !hasPreLaunchFinal);
   const effectiveLaunched = businessLaunched && !launchedFlagLooksStale;
 
   const completedCount = effectiveLaunched
@@ -282,9 +343,16 @@ export function useComputedDashboard(
   //   pathTotalStages=0 (초기 렌더 race / hydration 미완 / 잘못된 카테고리 필터) 인 경우
   //   `0 >= 0 = true` 라 allStagesDone 가 true 로 잘못 평가되어 "20단계 완료" 화면이
   //   reset 직후 잠깐 노출되는 버그가 있었음.
+  //
+  // ⚠️ 2026-05-19 (사장님 신고: "pre-launch-final 체크리스트 다 체크하면 자동으로 다음 페이지 이동"):
+  //   pre-launch-final 의 task 5개를 모두 체크하면 evaluateRule(required_tasks) 가 isComplete=true
+  //   를 반환 → completedCount 가 pathTotalStages 도달 → allStagesDone=true → "로드맵 완료" 화면
+  //   자동 전환. 사용자는 *명시적 "다음 단계로" 또는 "운영 대시보드로 이동" 버튼* 클릭으로만 완료
+  //   처리되기 원함. pre-launch-final 만은 *명시 completedAt* (버튼 클릭 시 set) 도 함께 검사.
+  const finalCompletedExplicitly = !!decisions["pre-launch-final"]?.completedAt;
   const allStagesDone =
     effectiveLaunched ||
-    (pathTotalStages > 0 && completedCount >= pathTotalStages);
+    (pathTotalStages > 0 && completedCount >= pathTotalStages && finalCompletedExplicitly);
 
   // ── Business health score ──
   const businessHealthScore: "healthy" | "caution" | "danger" | "unknown" =

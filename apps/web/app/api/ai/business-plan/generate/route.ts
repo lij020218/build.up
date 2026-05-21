@@ -158,18 +158,21 @@ PSST 프레임워크 (창업진흥원 평가 기준):
   ].filter(Boolean).join("\n");
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    // ⚠️ 2026-05-18 마이그레이션: 종전엔 Anthropic URL 로 raw fetch 했는데 OPENAI_API_KEY 가
+    //   전달되어 401 → 사업계획서 기능 100% 실패. OpenAI Chat Completions URL + Bearer 인증으로
+    //   교체. timeout 90초 (사업계획서 대용량 응답 대비). 모델명은 client.ts MODEL_MAP 과 일치.
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
+      signal: AbortSignal.timeout(90_000),
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: "gpt-5.4-mini",
         max_tokens: 8192,
-        system: systemPrompt,
         messages: [
+          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: `아래 데이터를 기반으로 사업계획서를 작성해주세요. 반드시 JSON 형식으로만 응답하세요. 설명이나 머리말 없이 { 로 시작하고 } 로 끝나는 순수 JSON만 출력하세요.\n\n${userData}`,
@@ -180,12 +183,17 @@ PSST 프레임워크 (창업진흥원 평가 기준):
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("[business-plan] Anthropic API error:", res.status, err);
+      console.error("[business-plan] OpenAI API error:", res.status, err);
       return NextResponse.json({ error: "AI 응답 생성에 실패했습니다." }, { status: 502 });
     }
 
     const data = await res.json();
-    const text = data.content?.[0]?.text ?? "";
+    // OpenAI Chat Completions 응답 구조: { choices: [{ message: { content } }] }
+    const text =
+      (typeof data.choices?.[0]?.message?.content === "string" ? data.choices[0].message.content : "") ||
+      // 호환: Anthropic 형식 응답이 돌아오는 경우 (env hybrid 라우팅)
+      data.content?.[0]?.text ||
+      "";
 
     // Parse JSON from response — Claude sometimes wraps in markdown or adds preamble
     let cleaned = text.trim();

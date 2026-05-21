@@ -9,11 +9,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct StoreSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "store-setup"
 
     @AppStorage("sto.storeFront")     private var storeFront     = false
     @AppStorage("sto.productListed")  private var productListed  = false
@@ -25,72 +28,74 @@ public struct StoreSetupStageView: View {
 
     public init() {}
 
+    /// 게이트: 스토어 기본 + 상품 등록 + 배송정책 + 결제 4가지 모두 완료.
+    private var canCompleteStage: Bool {
+        storeFront && productListed && shippingPolicy && pgLive
+    }
+
+    private var advanceHint: String {
+        let completed = [storeFront, productListed, shippingPolicy, pgLive].filter { $0 }.count
+        if completed == 4 { return "스토어 셋업 완료 — 다음 단계로" }
+        return "셋업 체크리스트 \(completed)/4 완료"
+    }
+
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "스토어 및 배송 세팅",
+            stageEyebrow: "단계 12 · 스토어 셋업",
+            helperText: "스토어 첫 인상이 구매 전환율을 결정합니다. 스마트스토어 기준 평균 전환율 2-5% — 사진·설명·리뷰가 핵심.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 상품 페이지 작성", detail: "메인 이미지 + 상세 페이지 + 옵션·재고·가격 설정 — 검색 키워드 최적화"),
+                .init(label: "2. 배송·반품 정책", detail: "기본 배송비 + 무료배송 조건 + 반품·교환 정책 명시"),
+                .init(label: "3. CS·상담 채널", detail: "카톡 채널·이메일·전화 1개 이상 + 운영 시간·응답 기준 명시"),
+                .init(label: "4. 통합 관리 솔루션", detail: "샵링커·올라·셀러허브 등 멀티 채널 통합 도입 검토"),
+                ],
+                verifyItems: [
+                "상품 등록 — 상세페이지 효능·효과 표현 시 「의약품·의료기기 광고」 위반 위험, 표시광고법 사전 점검",
+                "배송비 — 「조건부 무료배송」 표시 시 조건 명문화 필수, 「실비 청구」도 표시광고법 대상",
+                "재고 동기화 — 멀티 플랫폼 운영 시 통합 솔루션 없으면 품절 분쟁 + 패널티 누적 위험",
+                "CS 응답 — 7일 이내 청약철회 의무 + 환불 3영업일 이내 의무, 위반 시 분쟁조정 신청 가능",
+                "리뷰 정책 — 자작·바이럴 리뷰 적발 시 표시광고법 + 플랫폼 영구정지, 진성 리뷰 유도 시스템",
+                "택배사 계약 — CJ대한통운·롯데·한진 직계약 vs 대행 비교, 월 100건 이상 시 직계약 유리",
+                ],
+                nextStageLabel: "온라인 마케팅",
+                nextSummary: "상품·배송·CS·통합관리 셋업 완료 → 온라인 마케팅 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: storeConfigPage
-                                default: shippingPaymentPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: storeConfigPage
+                    default: shippingPaymentPage
                     }
                 }
-            }
-            .navigationTitle("스토어 셋업")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Page 0: 스토어 설정
 
     private var storeConfigPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("스토어 설정")
-                    Text("스토어 첫 인상이 구매 전환율을 결정합니다")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("스마트스토어 기준: 평균 전환율 2-5%. 사진·설명·리뷰가 핵심.")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(spacing: 0) {
                     BUEyebrow("스마트스토어 셋업 순서")
@@ -218,5 +223,9 @@ public struct StoreSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("StoreSetup") { StoreSetupStageView() }
+#Preview("StoreSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["store-setup"] }
+    return StoreSetupStageView().environment(store)
+}
 #endif

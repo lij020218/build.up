@@ -112,31 +112,48 @@ export function StageTabNav({ ko, pageIndex, pageLabels, onPrev, onNext, onJump 
         disabled={pageIndex === 0}
         onClick={onPrev}
         style={{
-          padding: "8px 16px", borderRadius: 10,
+          padding: "10px 14px", borderRadius: 10,
           border: "1px solid rgba(25,25,112,0.10)",
           background: pageIndex === 0 ? "rgba(0,0,0,0.02)" : "white",
           color: pageIndex === 0 ? "rgba(0,0,0,0.2)" : "#0f172a",
           fontSize: 13, fontWeight: 600,
           cursor: pageIndex === 0 ? "default" : "pointer",
+          minHeight: 44, flexShrink: 0,
+          fontFamily: "inherit",
         }}
       >
         ← {ko ? "이전" : "Prev"}
       </button>
-      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" as const, justifyContent: "center" }}>
+      {/* ⚠️ 2026-05-19 모바일: 칩 가로 스크롤 (5+ 칩 wrap 시 3줄 차지) + 터치 타겟 32px+ */}
+      <div style={{
+        display: "flex",
+        gap: 4,
+        flexWrap: "nowrap" as const,
+        overflowX: "auto",
+        justifyContent: "center",
+        maxWidth: "100%",
+        scrollSnapType: "x mandatory" as const,
+        WebkitOverflowScrolling: "touch" as const,
+      }}>
         {pageLabels.map((l, i) => (
           <button
             key={i}
             type="button"
             onClick={() => onJump(i)}
             style={{
-              padding: "5px 12px", borderRadius: 999,
-              fontSize: 11.5, fontWeight: i === pageIndex ? 700 : 500,
+              padding: "7px 12px", borderRadius: 999,
+              fontSize: 12, fontWeight: i === pageIndex ? 700 : 500,
               background: i === pageIndex ? MIDNIGHT : "transparent",
               color: i === pageIndex ? "#fff" : "rgba(15,23,42,0.45)",
               border: i === pageIndex ? "none" : "1px solid rgba(25,25,112,0.10)",
               cursor: "pointer", letterSpacing: "-0.01em",
               boxShadow: i === pageIndex ? "0 2px 6px rgba(25,25,112,0.22)" : "none",
               transition: "all 0.15s",
+              whiteSpace: "nowrap" as const,
+              minHeight: 32,
+              flexShrink: 0,
+              scrollSnapAlign: "start" as const,
+              fontFamily: "inherit",
             }}
           >
             {l}
@@ -148,12 +165,14 @@ export function StageTabNav({ ko, pageIndex, pageLabels, onPrev, onNext, onJump 
         disabled={pageIndex === lastIdx}
         onClick={onNext}
         style={{
-          padding: "8px 16px", borderRadius: 10, border: "none",
+          padding: "10px 14px", borderRadius: 10, border: "none",
           background: pageIndex === lastIdx ? "rgba(0,0,0,0.02)" : MIDNIGHT,
           color: pageIndex === lastIdx ? "rgba(0,0,0,0.2)" : "#fff",
           fontSize: 13, fontWeight: 600,
           cursor: pageIndex === lastIdx ? "default" : "pointer",
           boxShadow: pageIndex === lastIdx ? "none" : "0 4px 14px rgba(25,25,112,0.25)",
+          minHeight: 44, flexShrink: 0,
+          fontFamily: "inherit",
         }}
       >
         {ko ? "다음" : "Next"} →

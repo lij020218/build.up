@@ -269,16 +269,16 @@ export function TargetCustomerStage() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "8px" }}>
                   {(clusterGroup === "tech"
                     ? [
-                        { v: "self-serve-low", l: ko ? "Self-serve ₩50k↓" : "Self ≤$50/mo" },
-                        { v: "team-mid", l: ko ? "팀 ₩50-300k" : "Team $50-300" },
-                        { v: "annual-contract", l: ko ? "연 ₩300k↑" : "Annual ≥$300" },
-                        { v: "enterprise", l: ko ? "Enterprise PO" : "Enterprise PO" },
+                        { v: "self-serve-low", l: ko ? "셀프서비스 월 5만원↓" : "Self ≤$50/mo" },
+                        { v: "team-mid", l: ko ? "팀 월 5~30만원" : "Team $50-300" },
+                        { v: "annual-contract", l: ko ? "연 30만원↑" : "Annual ≥$300" },
+                        { v: "enterprise", l: ko ? "기업 (PO)" : "Enterprise PO" },
                       ]
                     : [
-                        { v: "value-budget", l: ko ? "가성비 (₩5-10k)" : "Value ($5-10k)" },
-                        { v: "mid-quality", l: ko ? "중간 (₩10-20k)" : "Mid ($10-20k)" },
-                        { v: "premium", l: ko ? "프리미엄 (₩20-40k)" : "Premium ($20-40k)" },
-                        { v: "luxury", l: ko ? "럭셔리 (₩40k↑)" : "Luxury ($40k+)" },
+                        { v: "value-budget", l: ko ? "가성비 5천~1만원" : "Value ($5-10k)" },
+                        { v: "mid-quality", l: ko ? "중간 1만~2만원" : "Mid ($10-20k)" },
+                        { v: "premium", l: ko ? "프리미엄 2만~4만원" : "Premium ($20-40k)" },
+                        { v: "luxury", l: ko ? "럭셔리 4만원↑" : "Luxury ($40k+)" },
                       ]
                   ).map((opt) => {
                     const selected = inputs.priceSensitivity === opt.v;

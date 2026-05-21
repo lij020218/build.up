@@ -7,7 +7,8 @@ import { NotificationProvider } from "./notification-context";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // 2026-05-19: maximumScale 제거 — 시력 약한 사장님 핀치 줌 허용 (WCAG 1.4.4 접근성 준수).
+  // 카카오맵 등은 자체 줌 처리, 본문 텍스트·표 확대 가능해야 함.
   viewportFit: "cover",
 };
 

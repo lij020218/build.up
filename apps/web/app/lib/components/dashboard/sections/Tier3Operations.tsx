@@ -151,12 +151,61 @@ export function SaaSKeyMetricsCard({
   const typed = c.allEntries as PlanEntry[];
   const curKey = new Date().toISOString().slice(0, 7);
   const monthEntries = typed.filter((e) => e.date.startsWith(curKey));
-  const mrr = monthEntries.reduce((s, e) => s + e.sales, 0);
   const prevMonth = new Date();
   prevMonth.setMonth(prevMonth.getMonth() - 1);
   const prevKey = prevMonth.toISOString().slice(0, 7);
   const prevEntries = typed.filter((e) => e.date.startsWith(prevKey));
-  const prevMrr = prevEntries.reduce((s, e) => s + e.sales, 0);
+
+  const plans = (d.subscriptionPlans ?? []) as Array<{
+    id: string;
+    name: string;
+    price: number;
+    isActive: boolean;
+  }>;
+  const planPriceMap = new Map(plans.map((p) => [p.id, p.price]));
+
+  // ⚠️ MRR fix (2026-05-18 audit): 종전엔 monthEntries.reduce(sales) 로 MTD 매출 합계를 MRR 이라
+  //   잘못 표시. MRR 의 정의는 "월 단위 반복 매출 = 활성 구독자 수 × 플랜 가격" 이므로 누적
+  //   planSignups - planChurns 로 활성 구독자를 구하고 플랜별 가격을 곱한다. plan 데이터 없으면
+  //   카드 자체 빈 상태 (NaN 표시 방지).
+  const activeByPlan: Record<string, number> = {};
+  typed.forEach((e) => {
+    if (e.planSignups) {
+      for (const [pid, n] of Object.entries(e.planSignups)) {
+        activeByPlan[pid] = (activeByPlan[pid] ?? 0) + (n ?? 0);
+      }
+    }
+    if (e.planChurns) {
+      for (const [pid, n] of Object.entries(e.planChurns)) {
+        activeByPlan[pid] = (activeByPlan[pid] ?? 0) - (n ?? 0);
+      }
+    }
+  });
+  const mrr = Object.entries(activeByPlan).reduce(
+    (s, [pid, count]) => s + Math.max(0, count) * (planPriceMap.get(pid) ?? 0),
+    0,
+  );
+
+  // 전월 활성 (= 이번달 전까지 누적) — 동일 방식으로 prevMrr 산출
+  const prevActiveByPlan: Record<string, number> = {};
+  typed
+    .filter((e) => e.date < `${curKey}-01`)
+    .forEach((e) => {
+      if (e.planSignups) {
+        for (const [pid, n] of Object.entries(e.planSignups)) {
+          prevActiveByPlan[pid] = (prevActiveByPlan[pid] ?? 0) + (n ?? 0);
+        }
+      }
+      if (e.planChurns) {
+        for (const [pid, n] of Object.entries(e.planChurns)) {
+          prevActiveByPlan[pid] = (prevActiveByPlan[pid] ?? 0) - (n ?? 0);
+        }
+      }
+    });
+  const prevMrr = Object.entries(prevActiveByPlan).reduce(
+    (s, [pid, count]) => s + Math.max(0, count) * (planPriceMap.get(pid) ?? 0),
+    0,
+  );
   const mrrGrowth = prevMrr > 0 ? Math.round(((mrr - prevMrr) / prevMrr) * 100) : 0;
 
   const monthSignups = monthEntries.reduce((s, e) => {
@@ -167,20 +216,19 @@ export function SaaSKeyMetricsCard({
     if (!e.planChurns) return s;
     return s + Object.values(e.planChurns).reduce((a, b) => a + b, 0);
   }, 0);
-  const prevSignups = prevEntries.reduce((s, e) => {
-    if (!e.planSignups) return s + (e.customers ?? 0);
-    return s + Object.values(e.planSignups).reduce((a, b) => a + b, 0);
-  }, 0);
+  // ⚠️ churnRate fix: 분모는 *이번달 시작 시점의 활성 구독자수* (= prevActiveByPlan 합) 가 표준.
+  //   종전 prevSignups (전월 신규) 는 SaaS churn 정의와 무관.
+  const activeAtMonthStart = Object.values(prevActiveByPlan).reduce(
+    (s, n) => s + Math.max(0, n),
+    0,
+  );
+  const churnRate = activeAtMonthStart > 0
+    ? Math.max(0, Math.round((monthChurns / activeAtMonthStart) * 100))
+    : 0;
   const netNew = monthSignups - monthChurns;
-  const churnRate = prevSignups > 0 ? Math.max(0, Math.round((monthChurns / prevSignups) * 100)) : 0;
-  const convRate = monthSignups > 0 && mrr > 0 ? Math.min(100, Math.round((mrr / (monthSignups * 100)) * 100)) : 0;
-
-  const plans = (d.subscriptionPlans ?? []) as Array<{
-    id: string;
-    name: string;
-    price: number;
-    isActive: boolean;
-  }>;
+  // convRate 는 visitor → signup 퍼널 데이터가 없으면 정의 불가 — 종전 마법상수 *100 공식은 의미
+  //   없으므로 제거. 데이터가 들어오기 전엔 -1 (UI 가 hidden / "준비 중" 표시) 로 둔다.
+  const convRate = -1;
   const planBreakdown = plans
     .filter((p) => p.isActive)
     .map((p) => {
@@ -579,7 +627,16 @@ function PopularProductsAndActivity({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {i === 0 ? (ko ? "최근" : "Latest") : `${i + 1}${ko ? "일 전" : "d ago"}`}
+                    {(() => {
+                      // ⚠️ 2026-05-18: 종전엔 `i + 1` 이 5건 reverse 인덱스라 사장님이 월·수만
+                      //   입력하면 "3일 전" 같은 잘못된 라벨. 실제 날짜 차로 계산.
+                      const daysAgo = Math.max(0, Math.round(
+                        (Date.now() - new Date(`${entry.date}T00:00:00`).getTime()) / 86400000
+                      ));
+                      if (daysAgo === 0) return ko ? "오늘" : "Today";
+                      if (daysAgo === 1) return ko ? "어제" : "Yesterday";
+                      return `${daysAgo}${ko ? "일 전" : "d ago"}`;
+                    })()}
                   </div>
                 </div>
               ))

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAiClient } from "@build-up/ai/utils/client";
 import { resolveTrendGroup, TREND_GROUP_LABELS } from "@build-up/shared";
 import { getAnthropicApiKey } from "../../../_lib/env";
+import { requireApiUser } from "../../../_lib/auth";
+import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 
 /**
  * 가게 맞춤 마케팅 코칭 — 트렌드와 독립된 개인화 조언.
@@ -9,8 +11,25 @@ import { getAnthropicApiKey } from "../../../_lib/env";
  * 입력: 가게명 · 업종 · 세부업종 · 월 매출 · 활성 채널 · ROAS · 현재 단계
  * 출력: 3개 액션 — 우선순위, 기대 효과, 실행 단계, 추천 도구
  *
- * prompt caching 적용 (가게별 재호출 시 system 부분 hit).
+ * 캐시 (2026-05-20): Supabase `marketing_coach_cache` 테이블
+ *   • PK: (user_id, week_key, context_key)
+ *   • 같은 주차 + 같은 contextKey → 즉시 cache hit (LLM 호출 0)
+ *   • 웹/모바일 동일 결과 보장
+ *   • force=true → 캐시 무시하고 재생성 (사용자 "재생성" 버튼)
+ *
+ * 인증: Supabase Bearer 필수.
  */
+
+/** ISO 주차 키 (YYYY-Www) — 매주 월요일 시작. */
+function getIsoWeekKey(date: Date = new Date()): string {
+  // ISO 8601: week starts Monday, week 1 contains January 4.
+  const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNr = (target.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  target.setUTCDate(target.getUTCDate() - dayNr + 3); // nearest Thursday
+  const jan4 = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+  const week = 1 + Math.round(((target.getTime() - jan4.getTime()) / 86_400_000 - 3 + (jan4.getUTCDay() + 6) % 7) / 7);
+  return `${target.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -28,6 +47,8 @@ type RequestBody = {
   currentStageLabel?: string;         // 현재 로드맵 단계 (예: "오픈 준비")
   launchDate?: string | null;         // 오픈일 ISO (운영 중이면 값 있음)
   language?: "ko" | "en";
+  /** true → 서버 캐시 무시하고 재생성 (사용자 "재생성" 버튼) */
+  force?: boolean;
 };
 
 export type CoachTool = {
@@ -47,6 +68,13 @@ export type CoachAction = {
 };
 
 export async function POST(request: Request) {
+  // ─── 1. 인증 (Supabase Bearer) ───
+  const auth = await requireApiUser(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  const userId = auth.userId;
+
   const apiKey = getAnthropicApiKey();
   if (!apiKey) return NextResponse.json({ error: "AI not configured" }, { status: 500 });
 
@@ -59,6 +87,32 @@ export async function POST(request: Request) {
 
   const lang: "ko" | "en" = body.language === "en" ? "en" : "ko";
   const ko = lang === "ko";
+
+  // ─── 2. 캐시 키 ───
+  const weekKey = getIsoWeekKey();
+  const subIdentifier = body.subIndustryId ?? body.industryCategoryId ?? "general";
+  const contextKey = [body.storeName ?? "내가게", subIdentifier, lang].join("|");
+
+  // ─── 3. 캐시 조회 (force=false 일 때만) ───
+  const supa = getSupabaseAdmin();
+  if (!body.force && supa) {
+    const { data: cached } = await supa
+      .from("marketing_coach_cache")
+      .select("actions, generated_at")
+      .eq("user_id", userId)
+      .eq("week_key", weekKey)
+      .eq("context_key", contextKey)
+      .maybeSingle();
+
+    if (cached && Array.isArray(cached.actions) && (cached.actions as CoachAction[]).length > 0) {
+      return NextResponse.json({
+        actions: cached.actions as CoachAction[],
+        generatedAt: cached.generated_at,
+        cached: true,
+        weekKey,
+      });
+    }
+  }
 
   // 업종 라벨 해석 — fine-grained (클라이언트가 준) > 20-그룹 cluster 라벨 > 대분류 fallback
   const subGroup = resolveTrendGroup(body.subIndustryId ?? null);
@@ -216,9 +270,33 @@ Respond with ONLY the JSON array:
       return NextResponse.json({ actions: [] });
     }
 
+    const generatedAt = new Date().toISOString();
+
+    // ─── 4. 캐시 기록 (실패해도 응답엔 영향 X) ───
+    if (supa && actions.length > 0) {
+      const { error: cacheErr } = await supa
+        .from("marketing_coach_cache")
+        .upsert(
+          {
+            user_id: userId,
+            week_key: weekKey,
+            context_key: contextKey,
+            actions,
+            generated_at: generatedAt,
+            updated_at: generatedAt,
+          },
+          { onConflict: "user_id,week_key,context_key" }
+        );
+      if (cacheErr) {
+        console.warn("[coach] cache write failed:", cacheErr.message);
+      }
+    }
+
     return NextResponse.json({
       actions,
-      generatedAt: new Date().toISOString(),
+      generatedAt,
+      cached: false,
+      weekKey,
     });
   } catch (err) {
     console.error("[Marketing coach error]", err);

@@ -9,6 +9,7 @@ import {
   upsertStageDecision,
   getFranchiseBrandsForSubIndustry,
   getFranchiseBrandsForCategory,
+  saveStoreData,
   type RecommendationItem,
   type WorkflowDecisionMap,
 } from "@build-up/shared";
@@ -243,6 +244,18 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
   };
 
   const handleSignOut = async () => {
+    // ⚠️ 2026-05-18: signOut 전 (a) pending autosave 차단 → (b) 마지막 snapshot 즉시 flush →
+    //   (c) localStorage cleanup → (d) supabase signOut 순서로 race 방지.
+    //   종전엔 clearLocalUserData() 가 먼저 와서 stale data 만 남기고 사장님 입력 손실 위험.
+    cancelAllAutosaves();
+    try {
+      const snapshot = collectStoreData();
+      if (snapshot && Object.keys(snapshot).length > 0) {
+        await saveStoreData(supabase, snapshot);
+      }
+    } catch (err) {
+      console.warn("[signOut] final flush failed (non-fatal):", err);
+    }
     clearLocalUserData();
     resetLocalState();
     await supabase.auth.signOut();

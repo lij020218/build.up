@@ -21,6 +21,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 // 2026 간이과세 기준 — 부가가치세법 시행령 §109
 private let SIMPLIFIED_THRESHOLD = "1억 400만원"
@@ -28,7 +29,9 @@ private let SIMPLIFIED_THRESHOLD = "1억 400만원"
 public struct TaxGuideStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "tax-guide"
 
     @AppStorage("taxGuide.hometax")       private var hometaxDone      = false
     @AppStorage("taxGuide.bizCard")       private var bizCardDone      = false
@@ -36,56 +39,94 @@ public struct TaxGuideStageView: View {
     @AppStorage("taxGuide.cpaDecision")   private var cpaDecision      = "" // "cpa" or "self"
     @AppStorage("taxGuide.vatCalendar")   private var vatCalendar      = false
 
-    private let pages = ["신고 캘린더", "홈택스 세팅", "절세 포인트", "세무사 판단"]
+    // 웹 SSOT (TaxGuideStage.tsx) — FAQ 우선, AI 는 향후 추가.
+    private let pages = ["신고 캘린더", "홈택스 세팅", "절세 포인트", "세무사 판단", "FAQ"]
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
-
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: calendarPage
-                                case 1: setupPage
-                                case 2: savingsPage
-                                default: cpaPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
-                    }
-                }
+    private var taxChecksBinding: Binding<Set<String>> {
+        Binding(
+            get: {
+                var s: Set<String> = []
+                if hometaxDone     { s.insert("hometax") }
+                if bizCardDone     { s.insert("bizCard") }
+                if cashReceiptDone { s.insert("cashReceipt") }
+                return s
+            },
+            set: { new in
+                hometaxDone     = new.contains("hometax")
+                bizCardDone     = new.contains("bizCard")
+                cashReceiptDone = new.contains("cashReceipt")
             }
-            .navigationTitle("세무 가이드")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
+        )
+    }
+
+    /// 웹 gateTasks 미러 — required:true 인 4 개 task 모두 완료 시 다음 단계로.
+    private var canCompleteStage: Bool {
+        hometaxDone && bizCardDone && cashReceiptDone && !cpaDecision.isEmpty
+    }
+
+    private var advanceHint: String {
+        let count = [hometaxDone, bizCardDone, cashReceiptDone, !cpaDecision.isEmpty].filter { $0 }.count
+        if count < 4 { return "기본 셋업 \(count)/4 — 모두 완료해야 진행" }
+        return "세무 셋업 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "세무 가이드",
+            stageEyebrow: "단계 11 · 세무 가이드",
+            helperText: "부가세·종소세 신고 캘린더 — 1건 누락 = 가산세 20%. 미신고 시 납부지연 일 0.022% 추가.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["cpaDecision": cpaDecision])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["cpaDecision": cpaDecision]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 부가세 신고 일정", detail: "1·7월(개인 일반)·1·4·7·10월(법인) 분기별 신고일 + 자동이체 셋업"),
+                .init(label: "2. 종합소득세 시뮬", detail: "추정 매출·비용 기반 5월 종소세 신고 사전 시뮬, 누진세율 구간 점검"),
+                .init(label: "3. 비용처리 인식", detail: "사업자 카드·홈택스 현금영수증·전자세금계산서 모든 매입 자동 수집 셋업"),
+                .init(label: "4. 절세 포인트 점검", detail: "창업중소기업 세액감면(50~100%)·청년 추가 감면·연구개발비 세액공제 검토"),
+                ],
+                verifyItems: [
+                "부가세 — 매입세액 공제 위해 모든 매입 「세금계산서」 받기, 간이영수증은 공제 불가",
+                "종소세 — 5월 신고 누락 시 무신고 가산세 20% + 일별 지연이자, 폐업해도 신고 의무 잔존",
+                "창업 세액감면 — 청년창업·수도권 외 지역 창업 시 5년간 50~100% 감면 (신청 필수, 자동 X)",
+                "현금영수증 — 사업자 의무발급 업종(음식·미용·헬스 등)은 1만원 이상 거래 시 의무, 위반 시 거래액 20% 과태료",
+                "사업용 카드 — 홈택스 등록 시 매입세액 공제·경비 자동 분류, 미등록 시 매번 수동 입력 부담",
+                "전자세금계산서 — 일정 매출 이상 의무, 종이 세금계산서 발급 시 가산세 + 매입자 공제 거부 위험",
+                ],
+                nextStageLabel: "채용·운영 세팅",
+                nextSummary: "세무 신고 일정·비용처리·절세 포인트 셋업 완료 → 채용·운영 세팅 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                // 수평 캡슐 스크롤 — 5개 segment 에서 native Picker 의 hit area 가 너무 작음.
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: calendarPage
+                    case 1: setupPage
+                    case 2: savingsPage
+                    case 3: cpaPage
+                    default: BUTaxFAQCard()
+                    }
                 }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 신고 캘린더
@@ -157,29 +198,15 @@ public struct TaxGuideStageView: View {
                 }
             }
 
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("홈택스 세팅 체크리스트")
-                    Toggle(isOn: $hometaxDone) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("홈택스 회원가입 + 사업장 등록").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("공인인증서 or 금융인증서 → 세금계산서 발행 활성화").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $bizCardDone) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("사업용 카드 1개 분리 (이체·체크 카드 추가 가능)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("모든 사업 경비 사업용 카드만 사용 — 혼용 = 비용 불인정").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                    Toggle(isOn: $cashReceiptDone) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("현금영수증 가맹점 등록").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                            Text("연 매출 2,400만원+ 의무. 미등록 시 가산세 5%").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                        }
-                    }.tint(BUColor.midnight)
-                }
-            }
+            BUInteractiveChecklist(
+                title: "홈택스 세팅 체크리스트",
+                items: [
+                    .init(id: "hometax",     label: "홈택스 회원가입 + 사업장 등록", detail: "공인인증서 or 금융인증서 → 세금계산서 발행 활성화"),
+                    .init(id: "bizCard",     label: "사업용 카드 1개 분리",        detail: "모든 사업 경비 사업용 카드만 사용 — 혼용 = 비용 불인정"),
+                    .init(id: "cashReceipt", label: "현금영수증 가맹점 등록",      detail: "연 매출 2,400만원+ 의무. 미등록 시 가산세 5%"),
+                ],
+                checked: taxChecksBinding
+            )
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
@@ -355,5 +382,9 @@ public struct TaxGuideStageView: View {
 }
 
 #if DEBUG
-#Preview("TaxGuide") { TaxGuideStageView() }
+#Preview("TaxGuide") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["tax-guide"] }
+    return TaxGuideStageView().environment(store)
+}
 #endif

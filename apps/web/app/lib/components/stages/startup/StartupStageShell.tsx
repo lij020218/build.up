@@ -93,7 +93,9 @@ export function StartupKeyActionHero({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(${miniCards.length}, 1fr)`,
+            // ⚠️ 2026-05-19 모바일: 종전 `repeat(N, 1fr)` 은 4 mini cards 일 때 360px 화면에서
+            //   칸당 ~80px 로 한 글자씩 wrap. auto-fit minmax 으로 모바일은 2 col, 데스크탑은 N col.
+            gridTemplateColumns: `repeat(auto-fit, minmax(140px, 1fr))`,
             gap: "8px",
             marginTop: "16px",
             position: "relative",
@@ -306,7 +308,7 @@ export function StartupPageNav({
         disabled={page === 0}
         onClick={() => onChange(page - 1)}
         style={{
-          padding: "8px 16px",
+          padding: "10px 14px",
           borderRadius: "10px",
           border: `1px solid ${MIDNIGHT_BORDER}`,
           background: page === 0 ? "rgba(0,0,0,0.02)" : "white",
@@ -314,25 +316,46 @@ export function StartupPageNav({
           fontSize: "13px",
           fontWeight: 600,
           cursor: page === 0 ? "default" : "pointer",
+          minHeight: "44px", // Apple HIG 터치 타겟
+          flexShrink: 0,
+          fontFamily: "inherit",
         }}
       >
         {ko ? "← 이전" : "← Prev"}
       </button>
-      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "center" }}>
+      {/* ⚠️ 2026-05-19 모바일: 라벨 칩 가로 스크롤 (wrap 시 3줄 차지) + scroll-snap. */}
+      <div
+        className="startup-page-nav-chips"
+        style={{
+          display: "flex",
+          gap: "4px",
+          flexWrap: "nowrap" as const,
+          overflowX: "auto",
+          justifyContent: "center",
+          maxWidth: "100%",
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch" as const,
+        }}
+      >
         {labels.map((l, i) => (
           <button
             key={i}
             type="button"
             onClick={() => onChange(i)}
             style={{
-              padding: "4px 10px",
+              padding: "6px 10px",
               borderRadius: "8px",
-              fontSize: "11px",
+              fontSize: "11.5px",
               fontWeight: i === page ? 700 : 500,
               background: i === page ? MIDNIGHT : "transparent",
               color: i === page ? "#fff" : "rgba(15,23,42,0.4)",
               border: "none",
               cursor: "pointer",
+              whiteSpace: "nowrap" as const,
+              minHeight: "32px",
+              flexShrink: 0,
+              scrollSnapAlign: "start",
+              fontFamily: "inherit",
             }}
           >
             {l}
@@ -344,7 +367,7 @@ export function StartupPageNav({
         disabled={page === totalPages - 1}
         onClick={() => onChange(page + 1)}
         style={{
-          padding: "8px 16px",
+          padding: "10px 14px",
           borderRadius: "10px",
           border: page === totalPages - 1 ? `1px solid ${MIDNIGHT_BORDER}` : "none",
           background: page === totalPages - 1 ? "rgba(0,0,0,0.02)" : MIDNIGHT,
@@ -353,6 +376,9 @@ export function StartupPageNav({
           fontWeight: 600,
           cursor: page === totalPages - 1 ? "default" : "pointer",
           boxShadow: page === totalPages - 1 ? "none" : "0 4px 14px rgba(25,25,112,0.25)",
+          minHeight: "44px",
+          flexShrink: 0,
+          fontFamily: "inherit",
         }}
       >
         {ko ? "다음 →" : "Next →"}

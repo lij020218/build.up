@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct PrototypeIterationStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "prototype-iteration"
 
     @AppStorage("pi.iterPlanDone") private var iterPlanDone = false
     @AppStorage("pi.goNoGo")       private var goNoGo       = false
@@ -22,66 +25,59 @@ public struct PrototypeIterationStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 반복 계획 수립 또는 v1 프로토타입 진행.
+    private var canCompleteStage: Bool {
+        iterPlanDone || v1Done
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: iterPlanPage
-                                default: v1Page
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "프로토타입 반복 완료 — 다음 단계로" }
+        if v1Done && goNoGo { return "v1·게이트 통과 — 다음 단계로" }
+        if v1Done { return "v1 완료 — go/no-go 게이트 확인" }
+        if iterPlanDone { return "반복 계획 수립 — v1 진행" }
+        return "반복 계획 또는 v1 프로토타입을 시작하세요"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "프로토타입 반복 (Go/No-Go 게이트)",
+            stageEyebrow: "단계 11 · 프로토타입 반복",
+            helperText: "딥테크는 반복이 더 느립니다. go/no-go 게이트로 낭비를 막으세요. 소프트웨어는 하루 배포, 딥테크는 한 사이클 3–6개월.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: iterPlanPage
+                    default: v1Page
                     }
                 }
-            }
-            .navigationTitle("프로토타입 반복")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 반복 계획
 
     private var iterPlanPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("프로토타입 반복")
-                    Text("딥테크는 반복이 더 느리다\ngo/no-go 게이트로 낭비를 막는다")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("소프트웨어는 하루 배포, 딥테크는 한 사이클이 3–6개월. 설계가 더 중요.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("반복 계획 수립")
@@ -191,5 +187,9 @@ public struct PrototypeIterationStageView: View {
 }
 
 #if DEBUG
-#Preview("PrototypeIteration") { PrototypeIterationStageView() }
+#Preview("PrototypeIteration") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["prototype-iteration"] }
+    return PrototypeIterationStageView().environment(store)
+}
 #endif

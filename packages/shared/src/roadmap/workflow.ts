@@ -170,7 +170,7 @@ function resolveDecisionValue(
   return undefined;
 }
 
-function resolveNextStageIds(
+export function resolveNextStageIds(
   stage: RoadmapStageState,
   decisions: WorkflowDecisionMap
 ): string[] {
@@ -178,17 +178,39 @@ function resolveNextStageIds(
     return stage.nextStageIds;
   }
 
+  // 모든 condition 의 decisionKey 가 decisions 에 존재하는지 사전 확인.
+  // 하나라도 *값이 존재* 하지만 매칭 안 됐다면 default 사용 (정상 분기 실패).
+  // 모든 condition 의 *값이 모두 undefined* 라면 → decisions 누락 (zombie state).
+  // → 이 경우 default 로 fall through 시 cluster 무관 path 끝(예: financial-review)으로
+  //    잘못 점프하는 사고가 발생함 (2026-05-18 사장님 신고).
+  let anyValueFound = false;
   for (const condition of stage.nextStageConditions) {
     const value = resolveDecisionValue(decisions, condition);
-    if (value === undefined) continue;
-    // matchValueIn (배열) — 값이 배열에 포함되면 매치 (클러스터 단위 분기)
-    if (condition.matchValueIn && condition.matchValueIn.includes(value)) {
-      return condition.stageIds;
+    if (value !== undefined) {
+      anyValueFound = true;
+      if (condition.matchValueIn && condition.matchValueIn.includes(value)) {
+        return condition.stageIds;
+      }
+      if (condition.matchValue !== undefined && value === condition.matchValue) {
+        return condition.stageIds;
+      }
     }
-    // matchValue (단일) — 정확히 일치 시 매치
-    if (condition.matchValue !== undefined && value === condition.matchValue) {
-      return condition.stageIds;
+  }
+
+  if (!anyValueFound) {
+    // zombie decisions — 조건 평가에 필요한 어떤 decision 도 set 안 됨.
+    // default nextStageIds 로 fall through 하면 cluster 무관 잘못된 path 로 점프 가능.
+    // 콘솔 경고로 진단 가능 + 호출처가 *path 의 직계 다음 stage* 를 별도 추정해야 한다는 신호.
+    // 빈 배열 반환 시 traverseUserPath / buildRoadmapState 는 path 종료로 인식.
+    // 호출처는 useTaskHandlers.handleStageContinue 의 sanity-check fallback 으로 처리.
+    if (typeof console !== "undefined") {
+      console.warn(
+        `[resolveNextStageIds] stage "${stage.stageId}" 의 모든 nextStageConditions 매칭 실패 — decisions zombie 가능성. 호출처 fallback 필요.`,
+        { conditions: stage.nextStageConditions.map((c) => `${c.decisionStageId}.${c.decisionKey}`) },
+      );
     }
+    // default 유지 (path 진행은 일단 보장) — 호출처에서 *큰 점프 sanity check* 로 차단.
+    return stage.nextStageIds;
   }
 
   return stage.nextStageIds;
@@ -292,11 +314,35 @@ export function buildRoadmapState(
     };
   });
 
-  // ⚠️ path-aware: reachableIds 안에서 첫 available을 선택해야 hidden stage가 currentStage로 잡히지 않음
-  const nextCurrentStageId =
-    stageStatuses.find((stage) => stage.status === "available" && reachableIds.has(stage.stageId))?.stageId ??
-    stageStatuses.find((stage) => stage.status === "available")?.stageId ??
-    baseRoadmap.stages[baseRoadmap.stages.length - 1]?.stageId;
+  // ⚠️ path-aware currentStageId: stages[0] 에서 출발해 nextStageIds 따라가며 *첫 미완료* stage 선택.
+  // 종전엔 baseRoadmap.stages.find((s) => s.status === "available") 로 *배열 순서* 의 첫 available 을
+  // 잡았는데, 이건 cluster·path 와 무관한 순서라 사용자가 8단계 완료 후 "다음" 을 누르면 배열상
+  // 앞쪽의 다른 available (예: 15단계) 로 점프하던 버그. resolveNextStageIds 가 nextStageConditions
+  // + decisions 를 따라가므로 user 가 실제로 navigate 할 다음 stage 가 정확히 잡힌다.
+  const completedSet = completedStageIds;
+  const nextCurrentStageId = (() => {
+    if (baseRoadmap.stages.length === 0) return "";
+    const stageById = new Map(baseRoadmap.stages.map((s) => [s.stageId, s]));
+    const seen = new Set<string>();
+    let cursor: RoadmapStageState | undefined = baseRoadmap.stages[0];
+    while (cursor && !seen.has(cursor.stageId)) {
+      seen.add(cursor.stageId);
+      if (!completedSet.has(cursor.stageId)) return cursor.stageId;
+      const nextIds = resolveNextStageIds(cursor, decisions);
+      if (nextIds.length === 0) break;
+      let next: RoadmapStageState | undefined;
+      for (const id of nextIds) {
+        const candidate = stageById.get(id);
+        if (candidate) { next = candidate; break; }
+      }
+      cursor = next;
+    }
+    // 모든 path stage 가 완료된 경우 → 마지막 도달 stage 또는 path-aware fallback
+    return cursor?.stageId
+      ?? stageStatuses.find((s) => s.status === "available" && reachableIds.has(s.stageId))?.stageId
+      ?? baseRoadmap.stages[baseRoadmap.stages.length - 1]?.stageId
+      ?? "";
+  })();
 
   const stages = baseRoadmap.stages.map((stage) => {
     const completion = evaluateStageCompletion(stage, decisions, tasks);
@@ -325,7 +371,8 @@ export function buildRoadmapState(
 
   return {
     ...baseRoadmap,
-    currentStageId: getFirstAvailableStageId(stages, reachableIds),
+    // path-aware nextCurrentStageId 를 사용 — getFirstAvailableStageId 는 배열 순서를 따르므로 path 점프 버그 유발
+    currentStageId: nextCurrentStageId,
     progressPercent,
     completedStageIds: Array.from(completedStageIds),
     unlockedStageIds: Array.from(unlockedStageIds),

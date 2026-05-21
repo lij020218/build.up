@@ -109,14 +109,14 @@ export function OnlineRegistrationStage() {
             <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.1)" }}>
               <div style={{ fontSize: "14px", fontWeight: 680, color: "#059669", marginBottom: "6px" }}>{ko ? "간이과세자" : "Simplified"}</div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
-                {ko ? "연매출 8,000만원 이하 시 선택 가능. 부가세 면제 또는 감면. 세금계산서 발행 불가 (4,800만원 이하)." : "Available under 80M annual. VAT exempt/reduced. Cannot issue tax invoices under 48M."}
+                {ko ? "연매출 1억 400만원 이하 시 선택 가능. 부가세 면제(4,800만 미만) 또는 감면(1.5~4%). 세금계산서 발행 불가 (4,800만원 이하)." : "Available under ₩104M annual. VAT exempt (<₩48M) or reduced (1.5-4%). Cannot issue tax invoices under ₩48M."}
               </div>
               <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#059669", padding: "3px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.08)", display: "inline-block" }}>{ko ? "초기 창업자 추천" : "Recommended for starters"}</div>
             </div>
             <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.08)" }}>
               <div style={{ fontSize: "14px", fontWeight: 680, color: "#191970", marginBottom: "6px" }}>{ko ? "일반과세자" : "Standard"}</div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
-                {ko ? "연매출 8,000만원 초과 또는 B2B 거래 시. 부가세 10% 납부. 세금계산서 발행 가능. 매입세액 공제 가능." : "Over 80M annual or B2B. 10% VAT. Can issue tax invoices. Input tax deductible."}
+                {ko ? "연매출 1억 400만원 초과 또는 B2B 거래 시. 부가세 10% 납부. 세금계산서 발행 가능. 매입세액 공제 가능." : "Over ₩104M annual or B2B. 10% VAT. Can issue tax invoices. Input tax deductible."}
               </div>
               <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#191970", padding: "3px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.06)", display: "inline-block" }}>{ko ? "B2B · 고매출 시" : "For B2B / high revenue"}</div>
             </div>

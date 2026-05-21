@@ -12,11 +12,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct LocationCandidatesStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "location-candidates"
 
     // 상권 체크
     @AppStorage("loc.market.population")  private var marketPop      = false
@@ -41,69 +44,78 @@ public struct LocationCandidatesStageView: View {
 
     private let pages = ["상권 분석", "매물 체크", "최종 선택"]
 
+    private var canCompleteStage: Bool {
+        finalDone && !finalAddress.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    private var advanceHint: String {
+        if finalAddress.trimmingCharacters(in: .whitespaces).isEmpty { return "최종 선택 매물 주소를 입력하세요" }
+        if !finalDone { return "입지 최종 확정 토글을 켜세요" }
+        if !marketOk { return "상권 분석 4항목 점검 권장" }
+        if !propOk { return "매물 체크 5항목 점검 권장" }
+        return "입지 확정 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "상권 후보 비교",
+            stageEyebrow: "단계 7 · 입지 후보 분석",
+            helperText: "외식업 폐업 원인 1위 = 잘못된 입지 선택. 월세·보증금 협상 전에 상권 분석이 선행되어야 합니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["address": finalAddress])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["address": finalAddress]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 113개 상권 데이터 검토", detail: "유동인구·평균임대료·동종업종 밀도 비교 — 점수화된 상권 추천"),
+                .init(label: "2. 상위 후보 3곳 선정", detail: "AI 점수 + 본인 자본 + 업종 적합도로 1차 압축"),
+                .init(label: "3. 직접 상권 평가", detail: "지도에서 직접 입력한 위치도 분석 — 동일 점수 모델 적용"),
+                .init(label: "4. 최종 1곳 확정", detail: "현장 답사·임대료 견적·매물 확인 후 1곳 결정"),
+                ],
+                verifyItems: [
+                "임대 매물 상태 직접 확인 — 누수·결로·소방·주차·하수도·전기용량 5개 항목 사진 기록",
+                "상권 유동인구 — 평일·주말·야간 3시간대 직접 카운트 검증 (행정 데이터는 평균값에 불과)",
+                "동종업종 반경 200m 안 5개 이상이면 → 차별화 메뉴·시간·가격 1개 이상 확보 필수",
+                "임대인 신원·등기부등본 직접 열람 — 가압류·근저당 있으면 보증금 보호 못 받을 위험",
+                "용도지역(주거·상업·일반·전용) 확인 — 음식점은 일반·근린상업 가능, 주거지역은 면적 제한",
+                "건물주의 「다음 임차인」 정책 — 5년 이내 강제 갱신·인테리어 잔존가치 분쟁 사전 점검",
+                ],
+                nextStageLabel: "계약서 검토",
+                nextSummary: "입지 1곳 확정 → 임대 계약서 검토 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: marketPage
-                                case 1: propertyPage
-                                default: finalPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: marketPage
+                    case 1: propertyPage
+                    default: finalPage
                     }
                 }
-            }
-            .navigationTitle("입지 후보 분석")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 상권 분석
 
     private var marketPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("단계 7 · 입지 후보 분석")
-                    Text("상권 분석 30분 —\n보증금보다 위치가 더 중요합니다")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("외식업 폐업 원인 1위 = 잘못된 입지 선택. 월세·보증금 협상 전에 상권 분석이 선행되어야 합니다.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("4대 무료 상권 분석 도구")
@@ -291,5 +303,9 @@ public struct LocationCandidatesStageView: View {
 }
 
 #if DEBUG
-#Preview("LocationCandidates") { LocationCandidatesStageView() }
+#Preview("LocationCandidates") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["location-candidates"] }
+    return LocationCandidatesStageView().environment(store)
+}
 #endif

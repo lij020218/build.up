@@ -9,11 +9,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct PlatformSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "platform-setup"
 
     @AppStorage("ps.platform")     private var platform     = ""
     @AppStorage("ps.businessReg")  private var businessReg  = false
@@ -36,72 +39,88 @@ public struct PlatformSetupStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 플랫폼 선택 완료.
+    private var canCompleteStage: Bool { !platform.isEmpty }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: platformPage
-                                default: checklistPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
-                    }
-                }
+    private var psChecksBinding: Binding<Set<String>> {
+        Binding(
+            get: {
+                var s: Set<String> = []
+                if businessReg { s.insert("biz") }
+                if telecomSale { s.insert("telecom") }
+                if pgConnected { s.insert("pg") }
+                return s
+            },
+            set: { new in
+                businessReg = new.contains("biz")
+                telecomSale = new.contains("telecom")
+                pgConnected = new.contains("pg")
             }
-            .navigationTitle("판매 플랫폼 선택")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
+        )
+    }
+
+    private var advanceHint: String {
+        if platform.isEmpty { return "판매 플랫폼을 선택하세요" }
+        return "플랫폼 선택 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "판매 플랫폼 선택",
+            stageEyebrow: "단계 6 · 판매 플랫폼",
+            helperText: "플랫폼 선택이 수수료·물류·고객 구조를 결정합니다. 첫 채널 하나에 집중 — 분산은 고객 100명 이후.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["platform": platform])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["platform": platform]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 판매 플랫폼 비교", detail: "스마트스토어·쿠팡·카카오·11번가 4축 수수료·MAU 비교"),
+                .init(label: "2. 1차 플랫폼 결정", detail: "스마트스토어 우선 + 매출 안정 후 쿠팡 추가 순서 권장"),
+                .init(label: "3. 멀티 채널 전략", detail: "2개 이상 운영 시 샵링커·올라 등 통합 솔루션 미리 검토"),
+                .init(label: "4. 수수료·정산 시뮬", detail: "결제 수수료 + 카테고리 판매수수료 + 광고비 합산 마진 시뮬"),
+                ],
+                verifyItems: [
+                "사업자등록 + 통신판매업 신고 사전 확인 — 스마트스토어 외 모든 플랫폼은 통신판매업 신고증 필수",
+                "스마트스토어 — 일반과세자/간이과세자별 수수료 차이 + 매월 정산일·세금계산서 발급 일정",
+                "쿠팡 — 월 정액비 55,000원 + 로켓그로스 입점 시 별도 수수료, 첫 매출 전 부담 인식",
+                "오픈마켓 약관 — 분쟁 시 「플랫폼 책임 면책」 조항 다수, 사진·증빙 자체 보관 필수",
+                "PG사 별도 — 일부 플랫폼은 자체 PG 강제, 통합 PG(이니시스·KG이니시스 등) 비교",
+                "광고비 — 네이버 검색광고·쿠팡 광고 모두 ROAS 200% 이상 못 맞추면 적자, 단가 시뮬 필수",
+                ],
+                nextStageLabel: "온라인 사업자등록",
+                nextSummary: "플랫폼 선택·개설 순서 확정 → 온라인 사업자등록·통신판매 신고 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: platformPage
+                    default: checklistPage
+                    }
                 }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Page 0: 플랫폼 선택
 
     private var platformPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("플랫폼 선택")
-                    Text("플랫폼 선택이 수수료·물류·고객 구조를 결정합니다")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("첫 채널 하나에 집중 — 분산은 고객 100명 이후")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("주요 플랫폼 비교")
@@ -168,41 +187,15 @@ public struct PlatformSetupStageView: View {
 
     private var checklistPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("온라인 커머스 필수 셋업")
-                    Toggle(isOn: $businessReg) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("사업자등록 완료 (통신판매업 신고용)")
-                                .font(BUFont.bodySmall.weight(.semibold))
-                                .foregroundStyle(BUColor.ink)
-                        }
-                    }
-                    .tint(BUColor.midnight)
-
-                    Divider()
-
-                    Toggle(isOn: $telecomSale) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("통신판매업 신고 완료 (공정위, 법인 설립 후 14일 이내)")
-                                .font(BUFont.bodySmall.weight(.semibold))
-                                .foregroundStyle(BUColor.ink)
-                        }
-                    }
-                    .tint(BUColor.midnight)
-
-                    Divider()
-
-                    Toggle(isOn: $pgConnected) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("PG(결제 게이트웨이) 연동 완료 (토스페이먼츠·KG이니시스)")
-                                .font(BUFont.bodySmall.weight(.semibold))
-                                .foregroundStyle(BUColor.ink)
-                        }
-                    }
-                    .tint(BUColor.midnight)
-                }
-            }
+            BUInteractiveChecklist(
+                title: "온라인 커머스 필수 셋업",
+                items: [
+                    .init(id: "biz",     label: "사업자등록 완료",              detail: "통신판매업 신고용 — 홈택스에서 5분 무료 발급"),
+                    .init(id: "telecom", label: "통신판매업 신고 완료",        detail: "공정위 ftc.go.kr 신고 — 법인 설립 후 14일 이내"),
+                    .init(id: "pg",      label: "PG (결제 게이트웨이) 연동",   detail: "토스페이먼츠·KG이니시스·NHN KCP·나이스페이먼츠 중 선택"),
+                ],
+                checked: psChecksBinding
+            )
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
@@ -231,5 +224,9 @@ public struct PlatformSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("PlatformSetup") { PlatformSetupStageView() }
+#Preview("PlatformSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["platform-setup"] }
+    return PlatformSetupStageView().environment(store)
+}
 #endif

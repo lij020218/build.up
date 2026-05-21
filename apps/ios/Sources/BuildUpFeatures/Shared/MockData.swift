@@ -89,12 +89,26 @@ extension MockData {
                 totalEntries: 14,
                 daysSinceLastSalesEntry: 0,
                 monthlyBurn: 12_200_000,
-                aiTopAction: AiAction(
-                    title: "단골 재방문 캠페인",
-                    reason: "최근 2주 신규 고객은 늘었지만 재방문이 정체. 카카오 채널 메시지로 마지막 방문 30일+ 고객에게 쿠폰 발송 추천.",
-                    priority: .medium,
-                    referencedCase: Hero.ReferencedCase(id: "kakao-hairshop", name: "카카오헤어샵")
-                )
+                aiTopActions: [
+                    AiAction(
+                        title: "단골 재방문 캠페인",
+                        reason: "최근 2주 신규 고객은 늘었지만 재방문이 정체. 카카오 채널 메시지로 마지막 방문 30일+ 고객 24명에게 쿠폰 발송 → 평균 4-5명 복귀 기대.",
+                        priority: .medium,
+                        referencedCase: Hero.ReferencedCase(id: "kakao-hairshop", name: "카카오헤어샵")
+                    ),
+                    AiAction(
+                        title: "주말 인력 1명 추가 배치",
+                        reason: "주말 매출이 평일의 1.6배. 토·일 객수 증가로 대기 시간 지연 위험. 주말 한정 파트 1명 배치 시 첫 손님 대기 20분 → 8분 단축 기대.",
+                        priority: .high,
+                        referencedCase: nil
+                    ),
+                    AiAction(
+                        title: "재료비 단가 재협상",
+                        reason: "이번 주 식자재 단가가 올랐어요. 원가율 47% → 권장 33-35% 대비 +12%p. 주요 3품목(돼지·소·쌀) 공급처 견적 비교 또는 메뉴 가격 +5% 조정 검토.",
+                        priority: .low,
+                        referencedCase: nil
+                    ),
+                ]
             )
         )
     }()

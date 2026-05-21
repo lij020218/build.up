@@ -10,11 +10,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct OnlineRegistrationStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "online-registration"
 
     @AppStorage("or2.bizRegDone")  private var bizRegDone  = false
     @AppStorage("or2.taxType")     private var taxType     = ""
@@ -34,72 +37,72 @@ public struct OnlineRegistrationStageView: View {
 
     public init() {}
 
+    /// 게이트: 사업자등록 + 통신판매업 신고 완료.
+    private var canCompleteStage: Bool { bizRegDone && telecomDone }
+
+    private var advanceHint: String {
+        if !bizRegDone { return "사업자등록 완료를 체크하세요" }
+        if !telecomDone { return "통신판매업 신고 완료를 체크하세요" }
+        return "등록 체크리스트 완료 — 다음 단계로"
+    }
+
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "사업자·통신판매 등록",
+            stageEyebrow: "단계 7 · 온라인 사업자 등록",
+            helperText: "온라인 사업자등록 = 스마트스토어 개설의 전제 조건. 홈택스에서 10분 만에 완료 가능.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["taxType": taxType])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["taxType": taxType]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 사업자등록 신청", detail: "홈택스 온라인 신청 — 업태·종목 「전자상거래 소매업」 + 임대차 없는 경우 자택 주소 가능"),
+                .init(label: "2. 통신판매업 신고", detail: "관할 구청 또는 정부24 — 사업자등록증·구매안전서비스 이용 확인증 필요, 1~3일 발급"),
+                .init(label: "3. 결제 PG·구매안전 가입", detail: "이니시스·KG이니시스·NICE 등 PG + 에스크로 또는 안심거래 의무"),
+                .init(label: "4. 도메인·기본 셋업", detail: "스토어명 중복 검색 + 도메인 + 사업자 통장 + 카드 단말 셋업"),
+                ],
+                verifyItems: [
+                "사업자등록 — 주소지 자택 가능하지만 임대차계약서 없으면 「확정일자」 못 받음, 보증금 보호 X",
+                "통신판매업 신고 — 미신고 영업 시 1년 이하 징역 또는 1천만원 이하 벌금 (전자상거래법)",
+                "구매안전서비스 — 결제 5만원 이상 거래는 에스크로 또는 보증서 의무, 위반 시 시정 명령",
+                "표시·광고 — 「최저가」「1위」 등 비교 광고는 객관적 근거 필수, 위반 시 표시광고법 과징금",
+                "청약철회 — 7일 이내 무조건 청약철회 의무 (예외: 맞춤제작·식품·디지털콘텐츠), 약관 명시 필수",
+                "개인정보 처리방침 — 개인정보보호법 의무 게시 + 수집·이용·제공·파기 4항목 명문화",
+                ],
+                nextStageLabel: "공급처·소싱",
+                nextSummary: "사업자등록·통신판매 신고 완료 → 공급처·소싱 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: bizRegPage
-                                default: telecomPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: bizRegPage
+                    default: telecomPage
                     }
                 }
-            }
-            .navigationTitle("온라인 사업자 등록")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Page 0: 사업자등록
 
     private var bizRegPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("사업자등록")
-                    Text("온라인 사업자등록 = 스마트스토어 개설의 전제 조건")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("홈택스에서 10분 만에 완료 가능")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(spacing: 0) {
                     BUEyebrow("온라인 사업자등록 절차")
@@ -231,5 +234,9 @@ public struct OnlineRegistrationStageView: View {
 }
 
 #if DEBUG
-#Preview("OnlineRegistration") { OnlineRegistrationStageView() }
+#Preview("OnlineRegistration") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["online-registration"] }
+    return OnlineRegistrationStageView().environment(store)
+}
 #endif

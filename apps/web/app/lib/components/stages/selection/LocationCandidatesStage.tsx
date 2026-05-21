@@ -73,8 +73,11 @@ export function LocationCandidatesStage() {
     handleStageEdit,
     decisions,
     editSaveStatus,
+    isViewingPastStage,
   } = d;
-  const isStageCompleted = !!decisions["location-candidates"]?.completedAt;
+  // ⚠️ 2026-05-18: && isViewingPastStage 추가 — 첫 진입 화면에는 노출 안 되고 사용자가 명시적으로
+  //   완료된 stage 로 돌아왔을 때만 "수정 저장" 표시 (메모 feedback_edit_save_pattern 패턴).
+  const isStageCompleted = !!decisions["location-candidates"]?.completedAt && isViewingPastStage;
   // 수정 저장 진행 상태 → 버튼 라벨/색 동기화
   const _editStatus = editSaveStatus?.stageId === "location-candidates" ? editSaveStatus.status : null;
   const _editLabel = _editStatus === "saving"

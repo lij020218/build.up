@@ -51,9 +51,6 @@ export function BudgetSetupStage() {
         {copy.home.budgetHelp}
       </div>
 
-      {/* ── 예산 인사이트 + 매칭 지원 프로그램 ── */}
-      <BudgetInsightCard />
-
       {/* ── Franchise cost guide panel ── */}
       {startupType === "franchise" && selectedFranchiseBrandId && (() => {
         const fb = getFranchiseBrandById(selectedFranchiseBrandId);
@@ -193,6 +190,9 @@ export function BudgetSetupStage() {
           </div>
         );
       })()}
+
+      {/* ── 예산 인사이트 + 매칭 지원 프로그램 ── */}
+      <BudgetInsightCard />
 
       <div ref={budgetRef} style={{ ...styles.budgetPanel, ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
         <div style={styles.budgetHeader}>

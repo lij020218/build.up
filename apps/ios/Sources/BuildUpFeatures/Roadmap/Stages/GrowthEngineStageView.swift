@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct GrowthEngineStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "growth-engine"
+
     @State private var page = 0
 
     @AppStorage("ge.northStar")    private var northStar    = ""
@@ -24,71 +28,73 @@ public struct GrowthEngineStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 북극성 지표 정의 — NSM 입력 필수.
+    private var canCompleteStage: Bool {
+        !northStar.trimmingCharacters(in: .whitespaces).isEmpty
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: northStarPage
-                                default: weeklyReviewPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if northStar.trimmingCharacters(in: .whitespaces).isEmpty { return "북극성 지표(NSM)를 정의하세요" }
+        return "NSM 정의 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "성장·리텐션 루프",
+            stageEyebrow: "단계 12 · 성장 엔진",
+            helperText: "측정하지 않으면 성장하지 않습니다. 북극성 지표(NSM) = 제품이 고객에게 전달하는 핵심 가치를 반영하는 단일 지표.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["northStar": northStar])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["northStar": northStar]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 북극성 지표 정의", detail: "사업 본질 반영 1개 지표 + 측정 방법·임계 정의"),
+                .init(label: "2. 주간 리뷰 시스템", detail: "매주 핵심 지표 변화 + 가설·실험 + 학습 로그 공유"),
+                .init(label: "3. 리텐션 측정", detail: "D7·D30·D90 코호트 + B2B SaaS D30 40%+·B2C D30 15%+ 기준"),
+                .init(label: "4. 성장 가설·실험", detail: "Acquisition·Activation·Revenue·Retention·Referral 5축 실험 우선순위"),
+                ],
+                verifyItems: [
+                "리텐션 미달 — 성장보다 제품 개선 우선, 「깨진 양동이에 물 붓기」 패턴 회피",
+                "허영 지표 — DAU·페이지뷰 등 수익·만족 무관 지표 추적 시 잘못된 결정 1순위",
+                "유료 광고 — ROAS 200% 미만 시 즉시 중단, 「쓸수록 손해」 패턴 인식",
+                "CAC vs LTV — LTV/CAC 3배 미만이면 성장 자제, 단위경제 흑자 보장 후 가속",
+                "추적 도구 — Mixpanel·Amplitude 등 셋업, raw 데이터·코호트·funnel 추적 시스템",
+                "개인정보 — 트래킹 동의 별도 수집, 위반 시 개인정보보호법 과징금 (매출 3% 이내)",
+                ],
+                nextStageLabel: "펀드레이징 준비",
+                nextSummary: "북극성·주간 리뷰·리텐션·성장 가설 셋업 완료 → 펀드레이징 준비 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: northStarPage
+                    default: weeklyReviewPage
                     }
                 }
-            }
-            .navigationTitle("성장 엔진 구축")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 북극성 지표
 
     private var northStarPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("성장 엔진 구축")
-                    Text("측정하지 않으면 성장하지 않는다\n— 하나의 숫자에 집중하세요")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("북극성 지표 (NSM) = 제품이 고객에게 전달하는 핵심 가치를 반영하는 단일 지표")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("북극성 지표 예시 (업종별)")
@@ -214,18 +220,14 @@ public struct GrowthEngineStageView: View {
                     }
                 }
             }
-
-            BUCard(.card) {
-                Toggle(isOn: $done) {
-                    Text("성장 엔진 구축 완료")
-                        .font(BUFont.bodySmall.weight(.semibold))
-                        .foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
-            }
         }
     }
 }
 
 #if DEBUG
-#Preview("GrowthEngine") { GrowthEngineStageView() }
+#Preview("GrowthEngine") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["growth-engine"] }
+    return GrowthEngineStageView().environment(store)
+}
 #endif

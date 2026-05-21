@@ -289,9 +289,11 @@ export async function POST(request: Request) {
     ctxLines.push(`- 현금 런웨이: ${body.runwayMonths}개월${flag}`);
   }
 
+  // ⚠️ 2026-05-18: ctxLines 가 비어도 "매출 기록 시작 전" 단정 금지. 운영 중인데 오늘만 입력
+  //   안 한 사장님이 모욕감 느낄 수 있음. 비단정 톤 ("최근 입력이 비어 있어요") 으로 교체.
   const userContext = ctxLines.length > 0
     ? `[사장님 현황 — 검증된 서버 데이터, 이 블록 수치만 인용 가능]\n${ctxLines.join("\n")}`
-    : "[사장님은 매출 기록 시작 전 — 일반 가이드 1줄 OK, 단 반드시 'pre-launch' 맥락 명시]";
+    : "[사장님 현황 — 최근 입력 데이터가 비어 있음. 일반 가이드 1줄 OK. 단정 어휘 (\"매출 없음\", \"기록 시작 전\") 금지.]";
 
   // ─── 사례 매칭 — 사장님 상황과 비슷하게 위기 돌파한 기업 ───
   // 근거: knowledge/success-case-studies.ts (테슬라·에어비앤비·성심당·백종원 등 77개)

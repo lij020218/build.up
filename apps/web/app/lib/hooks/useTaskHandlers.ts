@@ -4,6 +4,7 @@ import {
   buildRoadmapState,
   evaluateStageCompletion,
   getFranchiseBrandById,
+  resolveNextStageIds,
   saveRoadmapState,
   saveStoreData,
   updateTaskStatus,
@@ -188,7 +189,53 @@ export function useTaskHandlers(
     setDecisions(result.decisions);
     setRoadmap(result.roadmap);
     setLastUnlocked(result.newlyUnlockedStageIds);
-    setViewingStageId(null);
+
+    // ⚠️ 2026-05-18 fix (사장님 신고: 8단계 → 다음 → 22단계 점프 / 항상 21단계 financial-review 점프):
+    //   buildRoadmapState 의 nextCurrentStageId 는 *path 의 첫 미완료* 를 찾는데,
+    //   사용자 데이터에 zombie completedAt / 자동 완료 처리된 후속 stage 가 있으면
+    //   path 끝까지 traversal 가서 마지막 stage 반환. 그래서 8 → 22 점프.
+    //   여기서는 *방금 완료한 stage 의 path 직계 다음 stage* 를 명시적으로 강제 표시.
+    //   resolveNextStageIds 는 nextStageConditions + decisions 따라 정확한 다음 stage 반환.
+    //
+    //   추가 (2026-05-18): biz-registration / pre-launch / online-marketing 의 default
+    //   nextStageIds = "financial-review" 인데, decisions zombie 시 condition 매칭 실패 →
+    //   default fall through → financial-review 로 점프. 이걸 array index 거리로 sanity check.
+    const completedStageDef = result.roadmap.stages.find((s) => s.stageId === stageId);
+    const explicitNextIds = completedStageDef
+      ? resolveNextStageIds(completedStageDef, result.decisions)
+      : [];
+    const stageById = new Map(result.roadmap.stages.map((s) => [s.stageId, s]));
+    const explicitNext = explicitNextIds
+      .map((id) => stageById.get(id))
+      .find(Boolean);
+
+    // ── Sanity check: array 순서로 stage index 차이가 ≥ 4 면 zombie 점프 의심 ──
+    //  starter-data 의 stages 배열은 *cluster path 순서* 와 완벽 일치하지는 않지만, 정상 진행
+    //  시 다음 stage 는 보통 인덱스 0~3 이내. 4+ 면 비정상 점프 가능성 매우 높음.
+    //  이 경우 *array 순서의 다음 unlocked stage* 를 추정해서 사용 (가장 가까운 path 추정).
+    const completedIdx = result.roadmap.stages.findIndex((s) => s.stageId === stageId);
+    const explicitIdx = explicitNext ? result.roadmap.stages.findIndex((s) => s.stageId === explicitNext.stageId) : -1;
+    const isSuspiciousJump =
+      completedIdx >= 0 &&
+      explicitIdx >= 0 &&
+      explicitIdx - completedIdx > 4;
+
+    let viewingTarget: string | null = null;
+    if (isSuspiciousJump) {
+      console.warn(
+        `[handleStageContinue] zombie 점프 감지: ${stageId} (idx ${completedIdx}) → ${explicitNext?.stageId} (idx ${explicitIdx}). decisions 의 industry-selection.inputs.categoryId / startup-type.inputs.startupType 누락 의심. array 순서의 직계 다음 unlocked stage 로 fallback.`,
+        { decisions: result.decisions },
+      );
+      // array 순서로 직계 다음 *locked 가 아닌* stage 찾기 (cluster path 위반은 인정, 큰 점프보다 안전)
+      const fallback = result.roadmap.stages
+        .slice(completedIdx + 1)
+        .find((s) => s.status !== "locked");
+      viewingTarget = fallback?.stageId ?? null;
+    } else if (explicitNext && explicitNext.stageId !== result.roadmap.currentStageId) {
+      // 정상 path: explicit next 로 viewing
+      viewingTarget = explicitNext.stageId;
+    }
+    setViewingStageId(viewingTarget);
     setTransitionNotice(buildTransitionNotice(result.roadmap, language));
     // ⚠️ URL cleanup: ?editStage= 쿼리가 남아있으면 제거.
     //   useTaskAutoCompletion.ts:72 의 useEffect([activeSurface, searchParams]) 가
@@ -305,7 +352,11 @@ export function useTaskHandlers(
       if (finalStoreName) storeDataToSave.storeName = finalStoreName;
       void saveStoreData(supabase, storeDataToSave).catch(() => {});
     }, 0);
-    router.push(SURFACE_HREFS["current"]);
+    // ⚠️ 2026-05-19 (사장님 신고: "운영 대시보드로 이동" 버튼 누르면 내 가게로 감):
+    //   종전 `SURFACE_HREFS["current"]` (= /current) 는 *로드맵 현재 단계 surface* 라
+    //   businessLaunched=true 이후 본진 운영 대시보드가 아님. 메인 홈(`home` = /)이 운영
+    //   대시보드 surface — 그곳으로 redirect.
+    router.push(SURFACE_HREFS["home"]);
   };
 
   return {

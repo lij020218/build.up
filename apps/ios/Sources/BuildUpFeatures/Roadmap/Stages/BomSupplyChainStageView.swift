@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct BomSupplyChainStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "bom-supply-chain"
 
     @AppStorage("bom.bomLocked")       private var bomLocked       = false
     @AppStorage("bom.supplierLocked")  private var supplierLocked  = false
@@ -22,66 +25,59 @@ public struct BomSupplyChainStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: BOM 작성 시작 (BOM lock 또는 공급사 lock 중 하나라도 체크).
+    private var canCompleteStage: Bool {
+        bomLocked || supplierLocked
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: bomPage
-                                default: supplierPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "BOM·공급망 확정 완료 — 다음 단계로" }
+        if bomLocked && supplierLocked { return "BOM·공급사 확정 — 다음 단계로" }
+        if bomLocked { return "BOM v1.0 확정 — 공급사 lock 진행" }
+        if supplierLocked { return "공급사 lock — BOM 확정 진행" }
+        return "BOM 또는 공급사 체크리스트를 시작하세요"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "BOM 및 공급망 락인",
+            stageEyebrow: "단계 11 · BOM·공급망 확정",
+            helperText: "BOM = 하드웨어의 설계도. 한 부품이 바뀌면 인증부터 다시. 자재명세서는 원가·공급망·인증의 기준이 됩니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: bomPage
+                    default: supplierPage
                     }
                 }
-            }
-            .navigationTitle("BOM·공급망 확정")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 BOM 확정
 
     private var bomPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("BOM·공급망 확정")
-                    Text("BOM = 하드웨어의 설계도\n한 부품이 바뀌면 인증부터 다시")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("자재명세서 (BOM)는 원가·공급망·인증의 기준이 됩니다.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("BOM 구성 요소")
@@ -183,5 +179,9 @@ public struct BomSupplyChainStageView: View {
 }
 
 #if DEBUG
-#Preview("BomSupplyChain") { BomSupplyChainStageView() }
+#Preview("BomSupplyChain") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["bom-supply-chain"] }
+    return BomSupplyChainStageView().environment(store)
+}
 #endif

@@ -19,6 +19,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 private let WAGE_2026 = 10_320
 private let MONTH_HOURS = 209
@@ -27,7 +28,10 @@ private let MONTHLY_MIN_WAGE = WAGE_2026 * MONTH_HOURS // 2,156,880
 public struct HiringSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "hiring-setup"
+    @AppStorage("hiring.noHireChoice")     private var noHireChoice    = false
 
     // 계산기 state
     @State private var wageText    = "\(WAGE_2026)"
@@ -48,67 +52,81 @@ public struct HiringSetupStageView: View {
 
     private let pages = ["공고", "계약서·임금", "보험·체크"]
 
+    private var canCompleteStage: Bool { contractDone || noHireChoice }
+
+    private var advanceHint: String {
+        if contractDone { return "근로계약서 작성 완료 — 다음 단계로" }
+        if noHireChoice { return "1인 운영 선택 — 다음 단계로" }
+        return "근로계약서 작성 완료 또는 1인 운영 선택"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "직원 채용 및 근로계약",
+            stageEyebrow: "단계 16 · 채용 설정",
+            helperText: "알바 1명도 정직원과 동일한 법적 절차 적용. 계약서 미교부 = 500만원 이하 과태료. 1인 운영을 선택할 수도 있습니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 채용 공고 등록", detail: "알바몬·알바천국·당근·사람인 — 시급·시간·요일·식사 4항목 구체화"),
+                .init(label: "2. 근로계약서 작성·교부", detail: "표준 양식 2부 + 1부 직원 교부 + 4항목(임금·시간·휴게·기간) 명시 + 채용 비용 시뮬"),
+                .init(label: "3. 4대보험 + 원천세 셋업", detail: "4insure.or.kr 통합 신고(D+14) + 홈택스 매월 10일 원천세 + 자동이체"),
+                .init(label: "4. 첫 달 운영 표준 셋업", detail: "주휴수당·연장수당 정확 계산 + 급여명세서 자동 발송 + (선택) CPA·SaaS 자동화"),
+                ],
+                verifyItems: [
+                "근로계약서 1부 직원 교부 영수증·수신 확인 — 미교부 500만원 이하 과태료",
+                "주휴수당 「포함된 시급」 X — 시급·주휴수당 별도 표기 (위반 시 차액·가산금)",
+                "4대보험 채용 14일 이내 신고 완료 — 5인 미만도 의무, 1인 고용부터 적용",
+                "원천세 매월 10일까지 홈택스 자동 납부 셋업 — 누락 시 가산세 10%↑",
+                "급여명세서 카톡·메일 자동 발송 셋업 — 2021.11~ 미교부 500만원 이하 과태료",
+                "산재보험 사업주 100% 부담 별도 계산 — 업종별 요율 0.7~5.6%",
+                ],
+                nextStageLabel: "다음 단계(운영·마케팅 준비) 전 반드시 확인",
+                nextSummary: "근로계약·4대보험·원천세 3축 셋업 완료 → 운영·마케팅 준비 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: postingPage
-                                case 1: contractPage
-                                default: insurancePage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: postingPage
+                    case 1: contractPage
+                    default: insurancePage
                     }
                 }
-            }
-            .navigationTitle("채용 설정")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 공고
 
     private var postingPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("단계 16 · 채용 설정")
-                    Text("첫 직원 채용 60분 —\n계약서 + 4대보험 + 원천세")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("알바 1명도 정직원과 동일한 법적 절차 적용. 계약서 미교부 = 500만원 이하 과태료.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
+            BUCard(.card) {
+                Toggle(isOn: $noHireChoice) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("1인 운영 — 직원 채용 없음").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                        Text("초기 1년 1인 운영을 선택하면 이 단계 통과 가능").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                    }
+                }.tint(BUColor.midnight)
             }
 
             BUCard(.card) {
@@ -328,5 +346,9 @@ private extension View {
 }
 
 #if DEBUG
-#Preview("HiringSetup") { HiringSetupStageView() }
+#Preview("HiringSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["hiring-setup"] }
+    return HiringSetupStageView().environment(store)
+}
 #endif

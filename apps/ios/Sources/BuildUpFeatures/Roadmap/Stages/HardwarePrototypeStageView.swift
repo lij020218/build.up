@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct HardwarePrototypeStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "hardware-prototype"
 
     @AppStorage("hp.evtDone") private var evtDone = false
     @AppStorage("hp.dvtDone") private var dvtDone = false
@@ -22,78 +25,60 @@ public struct HardwarePrototypeStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(pages.indices, id: \.self) { i in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) { page = i }
-                                } label: {
-                                    Text(pages[i])
-                                        .font(BUFont.bodySmall.weight(page == i ? .semibold : .regular))
-                                        .foregroundStyle(page == i ? BUColor.midnight : BUColor.inkMuted)
-                                        .padding(.horizontal, BUSpacing.md)
-                                        .padding(.vertical, BUSpacing.sm)
-                                        .background(page == i ? BUColor.midnight.opacity(0.08) : Color.clear, in: Capsule())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, BUSpacing.sm)
-                    }
-                    .padding(.vertical, BUSpacing.xs)
+    /// 게이트: 프로토타입 phase 하나라도 진입 (EVT/DVT/PVT 중 1개 이상 체크).
+    private var canCompleteStage: Bool {
+        evtDone || dvtDone || pvtDone
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: evtPage
-                                case 1: dvtPage
-                                default: pvtPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "3단계 완료 — 다음 단계로" }
+        if pvtDone { return "PVT 완료 — 양산 준비" }
+        if dvtDone { return "DVT 완료 — PVT 진행 가능" }
+        if evtDone { return "EVT 완료 — DVT 진행 가능" }
+        return "EVT/DVT/PVT 중 한 단계 이상 체크하세요"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "하드웨어 프로토타입 (EVT → DVT → PVT)",
+            stageEyebrow: "단계 10 · 하드웨어 프로토타입",
+            helperText: "EVT → DVT → PVT. 하드웨어는 3단계 검증이 필수. 소프트웨어와 달리 되돌리기 어렵습니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: evtPage
+                    case 1: dvtPage
+                    default: pvtPage
                     }
                 }
-            }
-            .navigationTitle("하드웨어 프로토타입")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 EVT
 
     private var evtPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("하드웨어 프로토타입")
-                    Text("EVT → DVT → PVT\n하드웨어는 3단계 검증이 필수")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("소프트웨어와 달리 하드웨어는 되돌리기 어렵습니다. 각 단계 체크리스트를 완료해야 다음으로.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("EVT 목표 — 설계 개념 검증")
@@ -233,5 +218,9 @@ public struct HardwarePrototypeStageView: View {
 }
 
 #if DEBUG
-#Preview("HardwarePrototype") { HardwarePrototypeStageView() }
+#Preview("HardwarePrototype") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["hardware-prototype"] }
+    return HardwarePrototypeStageView().environment(store)
+}
 #endif

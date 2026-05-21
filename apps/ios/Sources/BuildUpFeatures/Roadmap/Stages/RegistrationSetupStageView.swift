@@ -19,83 +19,92 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct RegistrationSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "registration-setup"
     @AppStorage("stage.regSetup.bizRegDone")    private var bizRegDone    = false
     @AppStorage("stage.regSetup.permitDone")    private var permitDone    = false
     @AppStorage("stage.regSetup.taxTypeChoice") private var taxTypeChoice = ""
 
     private let pages = ["왜 중요한가", "사업자등록", "인허가", "유리한 길"]
 
+    private var canCompleteStage: Bool {
+        bizRegDone && permitDone && !taxTypeChoice.isEmpty
+    }
+
+    private var advanceHint: String {
+        if !bizRegDone { return "사업자등록 완료 토글을 켜세요" }
+        if !permitDone { return "영업신고증 발급 완료를 체크하세요" }
+        if taxTypeChoice.isEmpty { return "과세유형을 선택하세요" }
+        return "등록·인허가 완료 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    // 세그먼트 탭
-                    Picker("페이지", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "사업자 등록 및 인허가 신고",
+            stageEyebrow: "단계 9 · 사업자등록·인허가",
+            helperText: "사업자등록 → 인허가 → 오픈. 순서를 지키지 않으면 매출이 0원으로 묶입니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["taxTypeChoice": taxTypeChoice])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["taxTypeChoice": taxTypeChoice]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 상호·업태·종목 결정", detail: "상호 중복 검색 + 업태(소매·서비스 등) + 종목(세부 업종) 정확 매칭"),
+                .init(label: "2. 사업자등록 신청", detail: "홈택스 온라인 또는 세무서 방문 — 임대차계약서·신분증 지참, 발급 평균 1~3일"),
+                .init(label: "3. 영업신고·허가 신청", detail: "업종별 관할 보건소·구청·시청 — 식품접객업·미용업·체육시설업 등 카테고리별 분리"),
+                .init(label: "4. 통장·카드단말기·홈택스 연동", detail: "사업자 통장 개설 + 카드단말기 신청 + 홈택스 공동인증서 등록"),
+                ],
+                verifyItems: [
+                "사업자등록 — 개업일 기준 20일 이내 신청 (지연 시 가산세 + 부가세 매입세액 공제 불가)",
+                "영업신고증 — 시설기준·위생교육·건강진단서 3개 모두 갖춰야 발급 (1개라도 누락 시 보완 통보)",
+                "임대차계약서 — 사업자등록 시 제출용은 「확정일자」 받은 원본, 보증금 우선변제권 확보",
+                "간이과세 vs 일반과세 — 연매출 1억 400만원 미만이면 간이 유리, 초기엔 일반 선택 후 매입세액 환급도 고려",
+                "건강진단서·위생교육 — 식품접객업은 영업신고 전 필수 (보건소 또는 식품진흥원, 비용 1~3만원)",
+                "다중이용시설 — 소방시설완비증명서·전기안전점검확인서 사전 발급 (영업신고 시 첨부)",
+                ],
+                nextStageLabel: "세무 가이드",
+                nextSummary: "사업자등록·영업신고증 발급 완료 → 세무 가이드(부가세·종소세·간이과세) 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: whyPage
-                                case 1: bizRegPage
-                                case 2: permitPage
-                                default: taxPathPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch page {
+                    case 0: whyPage
+                    case 1: bizRegPage
+                    case 2: permitPage
+                    default: taxPathPage
                     }
                 }
-            }
-            .navigationTitle("사업자등록·인허가")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 왜
 
     private var whyPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("단계 9 · 사업자등록·인허가")
-                    Text("영업 시작 전 반드시\n끝낼 두 가지")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("사업자등록 → 인허가 → 오픈. 순서를 지키지 않으면 매출이 0원으로 묶입니다.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             whyCard(accent: BUColor.midnight,
                 title: "법적 의무 — 미등록은 즉시 처벌",
                 body: "사업개시일로부터 20일 이내 사업자등록 의무. 일반음식점 미신고 영업은 식품위생법 §97(6) — 3년 이하 징역 또는 3천만원 이하 벌금 + 폐쇄 명령.")
@@ -339,5 +348,9 @@ public struct RegistrationSetupStageView: View {
 }
 
 #if DEBUG
-#Preview("RegistrationSetup") { RegistrationSetupStageView() }
+#Preview("RegistrationSetup") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["registration-setup"] }
+    return RegistrationSetupStageView().environment(store)
+}
 #endif

@@ -183,6 +183,27 @@ public final class DashboardStore {
         recomputeHealth()
     }
 
+    /// 가게 이름만 단독 갱신 — Profile 편집 시트에서 사용.
+    public func updateStoreName(_ newName: String) {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.storeName = trimmed.isEmpty ? "내 가게" : trimmed
+    }
+
+    /// 진행 초기화 — 메모리 캐시 비우기. 호출자가 서버 reset 도 별도로 수행.
+    public func resetAll() {
+        self.entries = []
+        self.costs = MonthlyCosts()
+        self.category = .general
+        self.stage = .growth
+        self.currentCash = nil
+        self.storeName = "내 가게"
+        self.daysSinceLaunch = 0
+        self.businessLaunched = false
+        self.pendingSyncCount = 0
+        self.lastError = nil
+        recomputeHealth()
+    }
+
     public func recordError(_ message: String) {
         self.lastError = message
     }

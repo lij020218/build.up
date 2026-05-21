@@ -19,10 +19,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct FinancialReviewStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "financial-review"
+
     @State private var tab = 0 // 0=고정비, 1=변동비, 2=기타
 
     // 고정비 (만원)
@@ -74,56 +78,83 @@ public struct FinancialReviewStageView: View {
 
     public init() {}
 
+    /// 게이트: 최소 고정비(임대료·인건비)는 입력되어야 다음 단계로.
+    private var canCompleteStage: Bool {
+        rent > 0 && labor > 0
+    }
+
+    private var advanceHint: String {
+        if rent <= 0 && labor <= 0 { return "임대료·인건비를 입력하세요" }
+        if rent <= 0 { return "임대료를 입력하세요" }
+        if labor <= 0 { return "인건비를 입력하세요" }
+        return "월 운영비 계산 완료 — 다음 단계로"
+    }
+
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    // 탭 선택
-                    Picker("탭", selection: $tab) {
-                        ForEach(tabs.indices, id: \.self) { i in
-                            Text(tabs[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+        BUStageShell(
+            stageId: stageId,
+            title: "월 운영비",
+            stageEyebrow: "단계 20 · 월 운영비 검토",
+            helperText: "매달 무조건 나가는 고정비 + 매출 연동 변동비 + 기타. 음식점 Prime Cost(재료+인건비) 목표 55~65%.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: [
+                    "totalFixed": "\(totalFixed)",
+                    "totalVariable": "\(totalVariable)",
+                    "totalCost": "\(totalCost)",
+                ])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: {
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: [
+                    "totalFixed": "\(totalFixed)",
+                    "totalVariable": "\(totalVariable)",
+                    "totalCost": "\(totalCost)",
+                ])
+            },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 고정비 점검", detail: "임대료·인건비·공과금 3축 — 매출 대비 비율로 업종 평균 비교"),
+                .init(label: "2. 변동비 점검", detail: "재료비·일반관리비 2축 — 매출 30% 이내 유지 룰 점검"),
+                .init(label: "3. 기타비 점검", detail: "마케팅·이자·기타 3축 — 광고 ROAS·대출 이자 한계점 검토"),
+                .init(label: "4. 손익분기·런웨이", detail: "월별 BEP 시뮬 + 보유 자본 잔여 개월 자동 계산"),
+                ],
+                verifyItems: [
+                "고정비 합계 — 매출 70% 미만 유지, 초과 시 변동비 압박으로 흑자 도달 어려움",
+                "재료비 — 매출 30% 한계, 35% 초과 시 메뉴·공급처 즉시 재검토 (1순위 적자 원인)",
+                "인건비 — 25% 한계, 5인 이상 사업장은 연장수당·연차수당 별도 누적, 누락 시 차액·가산금",
+                "운영자본 6개월 — 매출 0원 가정해도 견딜 자본 별도 유지 (흑자부도 1순위 원인)",
+                "이자 부담 — 정책자금·일반대출 이자 합산 매출 5% 이내, 초과 시 신규 대출 자제",
+                "마케팅 ROAS — 200% 미만이면 즉시 중단·재구성, 「쓸수록 손해」 패턴 인식",
+                ],
+                nextStageLabel: "개업·론칭",
+                nextSummary: "고정·변동·기타 비용 시뮬 + BEP 확인 → 개업·론칭 단계로 진입"
+            ),
+            currentPage: tab,
+            totalPages: tabs.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: tab,
+                    totalPages: tabs.count,
+                    labels: tabs,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { tab = newPage } }
+                )
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch tab {
-                                case 0: fixedTab
-                                case 1: variableTab
-                                default: otherTab
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-
-                            // 항상 표시되는 시뮬레이션 결과
-                            simulationCard.padding(.horizontal, BUSpacing.md)
-
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+                Group {
+                    switch tab {
+                    case 0: fixedTab
+                    case 1: variableTab
+                    default: otherTab
                     }
                 }
-            }
-            .navigationTitle("월 운영비 검토")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+
+                // 항상 표시되는 시뮬레이션 결과
+                simulationCard
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
         .onAppear {
             rentText = rent > 0 ? "\(rent)" : ""
             laborText = labor > 0 ? "\(labor)" : ""
@@ -140,16 +171,6 @@ public struct FinancialReviewStageView: View {
 
     private var fixedTab: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                    BUEyebrow("월 운영비 검토 · 고정비")
-                    Text("매달 무조건 나가는 비용 — 매출 0원이어도 지출")
-                        .font(BUFont.cardTitleSmall).foregroundStyle(BUColor.midnightDeep)
-                    Text("음식점 임대료 목표: 월 매출의 8~12% 이하. 이를 초과하면 수익성 구조 재검토 필요.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("고정비 입력 (만원/월)")
@@ -180,16 +201,6 @@ public struct FinancialReviewStageView: View {
 
     private var variableTab: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                    BUEyebrow("월 운영비 검토 · 변동비")
-                    Text("매출에 연동되는 비용 — 매출 많을수록 증가")
-                        .font(BUFont.cardTitleSmall).foregroundStyle(BUColor.midnightDeep)
-                    Text("식자재 원가율 목표: 월 매출의 30~35% 이하. 배달 수수료 포함 총 원가율 관리 핵심.")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("변동비 입력 (만원/월)")
@@ -293,7 +304,11 @@ public struct FinancialReviewStageView: View {
                 Text(hint).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
                 Spacer()
                 TextField("0", text: text)
-                    .font(BUFont.body).keyboardType(.numberPad).multilineTextAlignment(.trailing)
+                    .font(BUFont.body)
+                    #if os(iOS)
+                    .keyboardType(.numberPad)
+                    #endif
+                    .multilineTextAlignment(.trailing)
                     .frame(width: 80)
                     .padding(.horizontal, 8).padding(.vertical, 6)
                     .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
@@ -325,5 +340,9 @@ public struct FinancialReviewStageView: View {
 }
 
 #if DEBUG
-#Preview("FinancialReview") { FinancialReviewStageView() }
+#Preview("FinancialReview") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["financial-review"] }
+    return FinancialReviewStageView().environment(store)
+}
 #endif

@@ -349,7 +349,9 @@ export function useDashboard(surface: DashboardSurface = "home") {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const last = new Date(latestDate); last.setHours(0, 0, 0, 0);
       const daysSinceLast = Math.max(0, Math.round((today.getTime() - last.getTime()) / 86400000));
-      if (daysSinceLast >= 2) {
+      // ⚠️ 2026-05-18: 임계값 2 → 3 으로 완화. 주말 매출 입력 안 한 월요일 출근 사장님이 가장 중요한
+      //   순간에 AI 카드 사라지는 경험 방지. 메모 `feedback_morning_brief_stale_threshold` 와 통일.
+      if (daysSinceLast >= 3) {
         setAiActionsSkipReason("stale-data");
         return;
       }
@@ -803,11 +805,17 @@ export function useDashboard(surface: DashboardSurface = "home") {
     costInterestText, setCostInterestText,
 
     // ── Bare store state/setters (operations) ──
-    inventory, setInventory, invForm, setInvForm,
+    // ⚠️ 2026-05-18: 명시 narrow — 종전엔 useDashboard 의 inference 가 inventory/employees 등을
+    //   `unknown` 비슷한 wide type 으로 떨어뜨려 컴포넌트가 `as unknown as Foo[]` 패턴으로
+    //   강제 캐스트해야 했음. store 타입을 직접 명시해 호출처가 `as InventoryItem[]` 정도로
+    //   안전하게 narrow 할 수 있게 한다. (DetailTabs 의 local entity 타입 정합성 정정은 별도 turn.)
+    inventory: inventory as import("./stores/operations-store").InventoryItem[],
+    setInventory, invForm, setInvForm,
     invCategoryFilter, setInvCategoryFilter,
     invWasteTarget, setInvWasteTarget,
     invWasteQty, setInvWasteQty, invWasteReason, setInvWasteReason,
-    employees, setEmployees,
+    employees: employees as import("./stores/operations-store").Employee[],
+    setEmployees,
     empFormOpen, setEmpFormOpen, empEditId, setEmpEditId,
     empName, setEmpName, empWage, setEmpWage,
     empHours, setEmpHours, empInsured, setEmpInsured,
@@ -816,11 +824,13 @@ export function useDashboard(surface: DashboardSurface = "home") {
     fexpFormOpen, setFexpFormOpen, fexpEditId, setFexpEditId,
     fexpName, setFexpName, fexpAmount, setFexpAmount,
     fexpDueDay, setFexpDueDay, fexpCategory, setFexpCategory,
-    deliveryPlatforms, setDeliveryPlatforms,
+    deliveryPlatforms: deliveryPlatforms as import("./stores/operations-store").DeliveryPlatform[],
+    setDeliveryPlatforms,
     monthlyDeliverySales, setMonthlyDeliverySales,
     dlvFormOpen, setDlvFormOpen, dlvEditId, setDlvEditId,
     dlvName, setDlvName, dlvRate, setDlvRate, dlvAd, setDlvAd,
-    products, setProducts,
+    products: products as import("./stores/operations-store").Product[],
+    setProducts,
     prodFormOpen, setProdFormOpen, prodEditId, setProdEditId,
     prodName, setProdName, prodCategory, setProdCategory,
     prodPrice, setProdPrice, prodCost, setProdCost,
@@ -832,7 +842,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
     onlineSelectedPlatforms, setOnlineSelectedPlatforms,
     onlineSelectedCourier, setOnlineSelectedCourier,
     onlineMonthlyParcels, setOnlineMonthlyParcels,
-    members, setMembers,
+    members: members as import("./stores/operations-store").Member[],
+    setMembers,
     memFormOpen, setMemFormOpen,
     memName, setMemName, memPlan, setMemPlan,
     memFee, setMemFee, memEnd, setMemEnd,

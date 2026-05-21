@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct LaunchGtmStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "launch-gtm"
+
     @State private var page = 0
 
     @AppStorage("gtm.analytics")  private var analytics  = false
@@ -24,97 +28,107 @@ public struct LaunchGtmStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: GTM 채널 선정 — 필수 인프라 2개 이상 (애널리틱스/결제/모니터링/CS).
+    private var canCompleteStage: Bool {
+        let count = [analytics, billing, monitoring, cs].filter { $0 }.count
+        return count >= 2
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: infraPage
-                                default: users100Page
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var gtmChecksBinding: Binding<Set<String>> {
+        Binding(
+            get: {
+                var s: Set<String> = []
+                if analytics  { s.insert("analytics") }
+                if billing    { s.insert("billing") }
+                if monitoring { s.insert("monitoring") }
+                if cs         { s.insert("cs") }
+                return s
+            },
+            set: { new in
+                analytics  = new.contains("analytics")
+                billing    = new.contains("billing")
+                monitoring = new.contains("monitoring")
+                cs         = new.contains("cs")
+            }
+        )
+    }
+
+    private var advanceHint: String {
+        let count = [analytics, billing, monitoring, cs].filter { $0 }.count
+        switch count {
+        case 0: return "필수 인프라 항목을 체크하세요"
+        case 1: return "1/2 — 인프라 1개 더 체크"
+        default: return "GTM 채널 선정 완료 — 다음 단계로"
+        }
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "출시 스택 · GTM 전략",
+            stageEyebrow: "단계 10 · GTM 론칭",
+            helperText: "론칭 전에 측정 도구부터 — 보이지 않으면 개선할 수 없습니다. GTM = 제품을 시장에 내놓는 전략·인프라·첫 사용자.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 출시 스택 4종 셋업", detail: "분석(Mixpanel·Amplitude)·결제(Stripe)·에러(Sentry)·피드백(Canny)"),
+                .init(label: "2. 첫 100명 확보 전략", detail: "Airbnb·Stripe·Marc Lou 패턴 — Do things that don't scale"),
+                .init(label: "3. 런칭 채널 결정", detail: "웹·PH·HN·디스콰이엇·SEO 5축 비교 후 1~2개 집중"),
+                .init(label: "4. 콘텐츠·Build in Public", detail: "트위터·블로그·뉴스레터 — 매출 70%+ 콘텐츠 기여 패턴"),
+                ],
+                verifyItems: [
+                "보안 — Product Hunt·HN 출시 시 트래픽 폭증, OWASP Top 10·DDoS·Rate limit 사전 대비",
+                "법적 — GDPR·개인정보보호법 사전 준수, 글로벌 출시 시 EU·미국 사용자 데이터 처리",
+                "약관·환불 — 7일 이내 청약철회·환불 명시, SaaS 정기 결제도 cancel 룰 명확",
+                "지재권 — 도메인·상표 사전 확보, 출시 후 squat 위험",
+                "Product Hunt — 「런칭 1회」 룰, 두 번 시도 시 어카운트 정지 위험",
+                "데이터 백업 — 출시 직후 데이터 손실 시 신뢰 회복 불가, 다중 백업 + 복구 시뮬",
+                ],
+                nextStageLabel: "런타임 운영",
+                nextSummary: "출시 스택·첫 100명·콘텐츠 셋업 완료 → 런타임 운영 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: infraPage
+                    default: users100Page
                     }
                 }
-            }
-            .navigationTitle("GTM 론칭")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 인프라 셋업
 
     private var infraPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("GTM 론칭")
-                    Text("론칭 전에 측정 도구부터\n— 보이지 않으면 개선할 수 없다")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("GTM(Go-To-Market) = 제품을 시장에 내놓는 전략·인프라·첫 사용자 확보")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("필수 인프라 체크리스트")
-                    Toggle(isOn: $analytics) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("애널리틱스 셋업 (PostHog / Mixpanel / GA4)")
-                                .font(BUFont.bodySmall).foregroundStyle(BUColor.ink)
-                        }
-                    }.tint(BUColor.midnight)
-                    Divider()
-                    Toggle(isOn: $billing) {
-                        Text("결제 시스템 연동 (Toss Payments / Stripe)")
-                            .font(BUFont.bodySmall).foregroundStyle(BUColor.ink)
-                    }.tint(BUColor.midnight)
-                    Divider()
-                    Toggle(isOn: $monitoring) {
-                        Text("에러 모니터링 (Sentry + 알림 설정)")
-                            .font(BUFont.bodySmall).foregroundStyle(BUColor.ink)
-                    }.tint(BUColor.midnight)
-                    Divider()
-                    Toggle(isOn: $cs) {
-                        Text("CS 채널 셋업 (카카오톡 채널 / 이메일 자동응답)")
-                            .font(BUFont.bodySmall).foregroundStyle(BUColor.ink)
-                    }.tint(BUColor.midnight)
-                }
-            }
+            BUInteractiveChecklist(
+                title: "필수 인프라 체크리스트",
+                items: [
+                    .init(id: "analytics",  label: "애널리틱스 셋업",       detail: "PostHog / Mixpanel / GA4 — 어떤 이벤트가 작동하는지 측정"),
+                    .init(id: "billing",    label: "결제 시스템 연동",      detail: "Toss Payments / Stripe — 론칭 전 실 결제 테스트 필수"),
+                    .init(id: "monitoring", label: "에러 모니터링",         detail: "Sentry + Slack 알림 — 사용자 이탈 원인 자동 추적"),
+                    .init(id: "cs",         label: "CS 채널 셋업",          detail: "카카오톡 채널 / 이메일 자동응답 — 첫 사용자 응대 준비"),
+                ],
+                checked: gtmChecksBinding
+            )
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
@@ -204,18 +218,14 @@ public struct LaunchGtmStageView: View {
                         .foregroundStyle(BUColor.ink)
                 }.tint(BUColor.midnight)
             }
-
-            BUCard(.card) {
-                Toggle(isOn: $done) {
-                    Text("GTM 론칭 완료")
-                        .font(BUFont.bodySmall.weight(.semibold))
-                        .foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
-            }
         }
     }
 }
 
 #if DEBUG
-#Preview("LaunchGtm") { LaunchGtmStageView() }
+#Preview("LaunchGtm") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["launch-gtm"] }
+    return LaunchGtmStageView().environment(store)
+}
 #endif

@@ -348,7 +348,8 @@ export function PermitCheckPanels() {
               </div>
               <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "지방행정인허가 데이터 기반" : "Based on LOCALDATA Permit API"}</div>
             </div>
-            <div style={{ padding: "0 20px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px" }}>
+            {/* 2026-05-19 모바일: 4 column → auto-fit minmax 으로 모바일은 2 col, 데스크탑은 4 col */}
+            <div style={{ padding: "0 20px 18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "10px" }}>
               <div style={{ padding: "14px", borderRadius: "14px", background: `${rateColor}08` }}>
                 <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "전체 등록" : "Total"}</div>
                 <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{ins.total.toLocaleString()}</div>

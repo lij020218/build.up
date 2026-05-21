@@ -408,9 +408,12 @@ export function CurrentStageView() {
                     onClick={handleLaunchBusiness}
                     style={{
                       padding: "13px 28px", borderRadius: "999px",
-                      background: "#007aff", color: "#fff",
+                      // 2026-05-19: 운영 대시보드의 메인 액센트 (PALETTE.MIDNIGHT) 로 통일.
+                      // 종전 #007aff (애플 블루) 는 운영 대시보드 톤과 어울리지 않았음.
+                      background: "#191970", color: "#fff",
                       border: "none", fontSize: "15px", fontWeight: 700,
                       cursor: "pointer", letterSpacing: "-0.2px",
+                      boxShadow: "0 4px 14px rgba(25,25,112,0.25)",
                     }}
                   >
                     {ko ? "운영 대시보드로 이동" : "Go to Operational Dashboard"}
@@ -553,7 +556,9 @@ export function CurrentStageView() {
             currentStage.code === "mpw_or_pilot_tape_out" ||
             currentStage.code === "packaging_and_test" ||
             currentStage.code === "partner_foundation_or_pilot_line" ||
-            (currentStage.code as string) === "franchise_application"
+            (currentStage.code as string) === "franchise_application" ||
+            (currentStage.code as string) === "target_customer_definition" ||
+            (currentStage.code as string) === "menu_design"
           ) ? (() => {
             const stageIdMap: Record<string, string> = {
               franchise_application: "franchise-application",
@@ -617,9 +622,14 @@ export function CurrentStageView() {
               "google-play-submitted",
               "launch-day-monitored",
             ]);
+            // ⚠️ 2026-05-18 fix (사장님 신고: biz-registration 에서 task 2/2 완료해도 다음 비활성):
+            //   종전엔 go-live 만 명시적 GATE_OPTIONAL_TASKS 필터 적용. 다른 stage 의 required:false
+            //   task (예: biz-registration 의 cpa-decision-made) 가 gateTasks 에 포함되어 allDone
+            //   계산에 영향. UI counter 는 required:true 만 세는데 gate 는 모든 task 검사해서 불일치.
+            //   모든 stage 에서 *required:true 만* 게이트로 사용. starterTaskMap.required 플래그를 신뢰.
             const gateTasks = stageId === "go-live"
-              ? stageTasks.filter((t) => !GATE_OPTIONAL_TASKS.has(t.taskId))
-              : stageTasks;
+              ? stageTasks.filter((t) => !GATE_OPTIONAL_TASKS.has(t.taskId) && (t.required !== false))
+              : stageTasks.filter((t) => t.required !== false);
             const isPreLaunch = stageId === "pre-launch";
             const preLaunchDoneMap: Record<string, boolean> = isPreLaunch ? (() => {
               // ⚠️ 100% 룰 — 사용자가 "실제로 본" 모든 체크 항목이 체크돼야 task 완료.
@@ -652,7 +662,11 @@ export function CurrentStageView() {
               };
             })() : {};
             // gate 계산은 gateTasks (옵션 태스크 제외), UI 표시·체크리스트는 stageTasks
-            const completedCount = gateTasks.filter((t) => isPreLaunch ? (preLaunchDoneMap[t.taskId] ?? false) : t.status === "completed").length;
+            // PreLaunch 는 *자동완료 (visible IDs) OR 직접 토글* 둘 다 인정 (2026-05-19 fix).
+            const completedCount = gateTasks.filter((t) => isPreLaunch
+              ? ((preLaunchDoneMap[t.taskId] ?? false) || t.status === "completed")
+              : t.status === "completed",
+            ).length;
             const allDone = gateTasks.length > 0 && completedCount === gateTasks.length;
             return (
               <>
@@ -794,7 +808,10 @@ export function CurrentStageView() {
 
                 {(() => {
                   const visibleTasks = stageTasks.filter((t) => t.taskId !== "cpa-decision-made");
-                  const visibleDone = visibleTasks.filter((t) => isPreLaunch ? (preLaunchDoneMap[t.taskId] ?? false) : t.status === "completed").length;
+                  const visibleDone = visibleTasks.filter((t) => isPreLaunch
+                    ? ((preLaunchDoneMap[t.taskId] ?? false) || t.status === "completed")
+                    : t.status === "completed",
+                  ).length;
                   if (visibleTasks.length === 0) return null;
                   return (
                     <div style={styles.taskProgress}>
@@ -807,8 +824,11 @@ export function CurrentStageView() {
                     // Tasks handled by inline UI — hidden from generic checklist
                     task.taskId !== "cpa-decision-made"
                   ).map((task) => {
+                    // ⚠️ 2026-05-19 fix (사장님 신고: "페이지 체크리스트 다 했는데 자동 안 됨 — 토글이라도 되게"):
+                    //   PreLaunch task 도 task.status 직접 토글 가능 + 자동 완료 (visible IDs)
+                    //   path 도 그대로 인정. 둘 중 하나라도 true 면 done 표시.
                     const done = isPreLaunch
-                      ? (preLaunchDoneMap[task.taskId] ?? false)
+                      ? ((preLaunchDoneMap[task.taskId] ?? false) || task.status === "completed")
                       : task.status === "completed";
 
                     // ── 입력 기반 task 게이팅 ──────────────────────────────────────
@@ -833,21 +853,27 @@ export function CurrentStageView() {
                     };
                     const gate = checkTaskGate();
 
+                    // ⚠️ 2026-05-19 fix: PreLaunch task 도 다른 stage 처럼 *직접 토글 가능*.
+                    //   페이지 2/4 의 체크리스트 (자동 완료 path) 도 그대로 작동. 둘 중 하나로 완료 가능.
+                    const preLaunchHint = isPreLaunch && !done
+                      ? (language === "ko"
+                        ? "위 페이지의 체크리스트를 다 채우면 자동 완료, 또는 여기 직접 체크"
+                        : "Auto-completes from page checklist above — or check here directly")
+                      : null;
+
                     return (
                       <button
                         key={task.taskId}
                         type="button"
+                        title={preLaunchHint ?? undefined}
                         style={{
                           ...styles.taskCheckItem,
                           ...(done ? styles.taskCheckItemDone : {}),
-                          ...(isPreLaunch ? { cursor: "default" } : {}),
                           ...(gate.blocked && !done ? { opacity: 0.6, cursor: "not-allowed" } : {}),
                         }}
                         onClick={() => {
-                          if (isPreLaunch) return;
                           // 게이트가 막혔으면 본문 입력 영역으로 스크롤·점프
                           if (gate.blocked && !done) {
-                            // 같은 stage 안 input 자동 포커스 시도
                             const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
                               `[data-task-input="${task.taskId}"]`,
                             );
@@ -920,6 +946,19 @@ export function CurrentStageView() {
                               }}
                             >
                               {language === "ko" ? gate.hint.ko : gate.hint.en}
+                            </div>
+                          )}
+                          {!done && preLaunchHint && (
+                            <div
+                              style={{
+                                fontSize: "11.5px",
+                                color: "rgba(15,23,42,0.55)",
+                                lineHeight: 1.5,
+                                marginTop: "4px",
+                                fontWeight: 500,
+                              }}
+                            >
+                              ↑ {preLaunchHint}
                             </div>
                           )}
                           {!done && currentStage.code === "construction_setup" && (() => {
@@ -1023,10 +1062,16 @@ export function CurrentStageView() {
                   ) : (
                     (() => {
                       // ⚠️ 두 버튼 동시 표시 (사용자 요청 2026-05-03):
-                      //   - "✓ 수정 저장": handleStageEdit — 다른 단계 영향 X, 같은 화면 유지. completedAt 있을 때만.
+                      //   - "✓ 수정 저장": handleStageEdit — 다른 단계 영향 X, 같은 화면 유지.
                       //   - "다음 단계로": handleStageContinue — 다음 stage 로 advance.
                       // editSaveStatus 동기화: saving → "저장 중...", saved → "✓ 수정 완료" (2초 후 복귀).
-                      const isStageCompleted = !!decisions[stageId]?.completedAt;
+                      //
+                      // ⚠️ 수정 저장 표시 조건 (2026-05-17 사장님 신고):
+                      //   "처음 보는 단계에 수정 저장 버튼이 떠 있다 — 완료 후 수정 들어왔을 때만 떠야 함"
+                      //   completedAt 만으로 판단하면 chain backfill / 데모 시드로 자동 set 된 경우에도
+                      //   첫 진입 화면에 버튼이 보임. 그래서 isViewingPastStage 추가 — 사용자가 명시적으로
+                      //   "이미 지나간 다른 stage 를 보러 진입한 경우" 에만 표시 (currentStageId 화면 X).
+                      const isStageCompleted = !!decisions[stageId]?.completedAt && isViewingPastStage;
                       const editStatus = d.editSaveStatus?.stageId === stageId ? d.editSaveStatus.status : null;
                       const editLabel = editStatus === "saving"
                         ? (language === "ko" ? "저장 중..." : "Saving...")

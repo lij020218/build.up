@@ -7,11 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct RegulatorySubmissionStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    private let stageId = "regulatory-submission"
 
     @AppStorage("regsub.pathway")          private var pathway          = ""
     @AppStorage("regsub.mfdsConsult")      private var mfdsConsult      = false
@@ -22,66 +25,60 @@ public struct RegulatorySubmissionStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 허가 경로 선택 또는 사전상담 진행.
+    private var canCompleteStage: Bool {
+        !pathway.isEmpty || mfdsConsult
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: pathwayPage
-                                default: submissionPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if done { return "규제 허가 신청 완료 — 다음 단계로" }
+        if packageSubmitted { return "규제 패키지 제출 — 다음 단계로" }
+        if mfdsConsult { return "사전상담 완료 — 패키지 제출 준비" }
+        if pathway == "fasttrack" { return "패스트트랙 선택 — 사전상담 신청" }
+        if pathway == "standard" { return "일반 심사 선택 — 사전상담 신청" }
+        return "허가 경로(패스트트랙/일반)를 선택하세요"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "인허가 제출 및 승인",
+            stageEyebrow: "단계 13 · 규제 허가 신청",
+            helperText: "규제 허가 = 딥테크의 마지막 관문. 경로 선택이 3–5년을 결정. 식약처 의료기기 패스트트랙 80–140일 vs 일반 490일.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: pathwayPage
+                    default: submissionPage
                     }
                 }
-            }
-            .navigationTitle("규제 허가 신청")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
+                .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 규제 경로
 
     private var pathwayPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("규제 허가 신청")
-                    Text("규제 허가 = 딥테크의 마지막 관문\n경로 선택이 3–5년을 결정")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("식약처(MFDS) 의료기기: Fast-Track 80–140일 vs 일반 490일")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("규제 기관 별 관할")
@@ -225,5 +222,9 @@ public struct RegulatorySubmissionStageView: View {
 }
 
 #if DEBUG
-#Preview("RegulatorySubmission") { RegulatorySubmissionStageView() }
+#Preview("RegulatorySubmission") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["regulatory-submission"] }
+    return RegulatorySubmissionStageView().environment(store)
+}
 #endif

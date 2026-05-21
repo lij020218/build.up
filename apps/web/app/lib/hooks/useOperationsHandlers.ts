@@ -25,6 +25,19 @@ export type OperationsHandlersDeps = DashboardDeps & {
 export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   const { language, flushStoreData, flushStoreDataImmediate, scheduleAiRefresh } = deps;
 
+  // ⚠️ 명시적 저장 (save 버튼 클릭 류) 은 debounce 우회하고 즉시 Supabase 반영.
+  //   종전엔 flushStoreData() 로 1초 debounce 됐는데, 사장님이 저장 직후 새로고침·다른 기기 열면
+  //   stale 보이는 손실 위험. flushStoreDataImmediate 가 있으면 await 없이 발사 (UI 비차단).
+  const flushImmediate = () => {
+    if (flushStoreDataImmediate) {
+      flushStoreDataImmediate().catch((err) => {
+        console.warn("[ops] flushStoreDataImmediate failed:", err);
+      });
+    } else {
+      flushStoreData();
+    }
+  };
+
   // ── Operations store ──
   const {
     inventory, setInventory,
@@ -129,7 +142,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12);
     setCostHistory(updatedHistory);
-    flushStoreData();
+    flushImmediate();
     scheduleAiRefresh(); // 비용 변경 → AI 경영 우선순위 자동 갱신
   };
 
@@ -139,7 +152,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const saveInventory = (next: InventoryItem[]) => {
     setInventory(next);
-    flushStoreData();
+    flushImmediate();
     scheduleAiRefresh(); // 재고 변경 → AI 우선순위 갱신
   };
 
@@ -224,7 +237,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const saveEmployees = (list: Employee[]) => {
     setEmployees(list);
-    flushStoreData();
+    flushImmediate();
     scheduleAiRefresh(); // 직원 변경 → AI 우선순위 갱신
   };
 
@@ -265,7 +278,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const saveFixedExpenses = (list: FixedExpense[]) => {
     setFixedExpenses(list);
-    flushStoreData();
+    flushImmediate();
   };
 
   const handleFexpSave = () => {
@@ -302,12 +315,12 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const saveDeliveryPlatforms = (list: DeliveryPlatform[]) => {
     setDeliveryPlatforms(list);
-    flushStoreData();
+    flushImmediate();
   };
 
   const saveMonthlyDeliverySales = (map: Record<string, number>) => {
     setMonthlyDeliverySales(map);
-    flushStoreData();
+    flushImmediate();
   };
 
   const handleDlvSave = () => {
@@ -344,17 +357,17 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const saveProducts = (list: Product[]) => {
     setProducts(list);
-    flushStoreData();
+    flushImmediate();
   };
 
   const saveUnifiedProducts = (list: UnifiedProduct[]) => {
     setUnifiedProducts(list);
-    flushStoreData();
+    flushImmediate();
   };
 
   const saveServiceMenuItems = (list: ServiceMenuItem[]) => {
     setServiceMenuItems(list);
-    flushStoreData();
+    flushImmediate();
   };
 
   const handleProdSave = () => {
@@ -395,7 +408,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
 
   const saveTaxSettings = (s: TaxSettings) => {
     setTaxSettings(s);
-    flushStoreData();
+    flushImmediate();
   };
 
   return {

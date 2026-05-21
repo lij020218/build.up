@@ -472,12 +472,15 @@ export const styles = {
     flexWrap: "wrap" as const,
     alignItems: "center",
     position: "sticky" as const,
-    bottom: "16px",
+    // ⚠️ 2026-05-19 모바일: bottom 을 safe-area 만큼 띄움 (iPhone 홈 인디케이터 충돌 회피).
+    //   상수 16px 대신 max(16px, env(safe-area-inset-bottom)) — 노치 없는 기기는 그대로 16px.
+    bottom: "max(16px, env(safe-area-inset-bottom))",
     padding: "12px",
     borderRadius: "20px",
     border: "1px solid rgba(255,255,255,0.72)",
     background: "rgba(247,246,243,0.74)",
-    backdropFilter: "blur(18px)"
+    backdropFilter: "blur(18px)",
+    WebkitBackdropFilter: "blur(18px)",
   },
   stageNavRow: {
     display: "flex",

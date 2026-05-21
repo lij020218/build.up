@@ -26,6 +26,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 // MARK: - Data models
 
@@ -112,6 +113,8 @@ private func encodeMaterials(_ arr: [InitialMaterialItem]) -> String {
 public struct VendorSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "vendor-setup"
 
     @AppStorage("stage.vendor.suppliersJson")  private var suppliersJson  = "[]"
     @AppStorage("stage.vendor.equipmentJson")  private var equipmentJson  = "[]"
@@ -144,122 +147,83 @@ public struct VendorSetupStageView: View {
         !selectedSuppliers.isEmpty && !selectedEquipment.isEmpty && !selectedPos.isEmpty && !materials.isEmpty
     }
 
+    private var canCompleteStage: Bool {
+        !selectedSuppliers.isEmpty
+    }
+
+    private var advanceHint: String {
+        if selectedSuppliers.isEmpty { return "식재료 공급처를 최소 1곳 선택하세요" }
+        if selectedEquipment.isEmpty { return "주방 장비 선택 권장 — 그래도 진행 가능" }
+        if selectedPos.isEmpty { return "POS 선택 권장 — 그래도 진행 가능" }
+        return "공급처 \(selectedSuppliers.count)곳 선택됨 — 다음 단계로"
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
+        BUStageShell(
+            stageId: stageId,
+            title: "공급처 및 장비 확정",
+            stageEyebrow: "단계 15 · 공급처 설정",
+            helperText: "식재료·장비·POS를 확정해야 초기 발주와 재고 등록이 시작됩니다. 공급처 계약이 원가를 결정합니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["suppliers": "\(selectedSuppliers.count)"])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["suppliers": "\(selectedSuppliers.count)"]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 공급처 결정", detail: "식자재·장비·POS 등 카테고리별 1순위 업체 선정 + 견적서 보관"),
+                .init(label: "2. 장비 발주 계획", detail: "신품·중고 비교 — 황학동온라인·번개장터 활용 50~70%대 가성비 확보"),
+                .init(label: "3. POS·결제 셋업", detail: "토스플레이스·KIS·페이히어 비교 + 무료 단말 신청"),
+                .init(label: "4. 첫 주 발주 일정", detail: "오픈 D-7 기준 식자재 소량 테스트 + 장비 시운전 일정 확정"),
+                .init(label: "5. 월 원가 계획", detail: "공급처 견적 합산 → 월 식자재·매입 원가 추정. 「재무 검토」의 인건비 칸과 동일하게 사장이 직접 입력하는 값."),
+                ],
+                verifyItems: [
+                "사업자등록 전 — 거래 가능 여부 확인 (공급처 다수가 사업자번호 없으면 거래 불가, 견적도 비공식)",
+                "POS·결제 — 가맹 수수료(평균 1.5~2.5%) + 단말기 임대료 + 부가세 신고 자동화 여부 확인",
+                "식자재 — 위생 인증(HACCP) + 검역증 수령 가능한 업체 선택, 무허가 도매상은 식약처 단속 대상",
+                "장비 — 1년 이상 무상 A/S + 설치비·운반비 별도 견적 (계약 시 포함시키기)",
+                "중고 장비 — 시운전 영상·구매 영수증·연식 5년 이내 3가지 모두 확보, 분쟁 시 증빙",
+                "재고 회전율 — 식자재는 3일 이내 회전 가능한 양만 첫 주 발주, 폐기율 5% 초과 시 재검토",
+                ],
+                nextStageLabel: "사업자등록·인허가",
+                nextSummary: "공급처·장비·POS 확정 → 사업자등록·인허가 단계로 진입"
+            )
+        ) {
+            LazyVStack(alignment: .leading, spacing: BUSpacing.lg) {
+                vendorSection(
+                    title: "식재료 공급처",
+                    subtitle: "복수 선택 가능 — 단가 비교 후 발주 분산 권장",
+                    icon: "cart.fill",
+                    entries: supplierData,
+                    selectedJson: $suppliersJson
+                )
 
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: BUSpacing.lg) {
+                vendorSection(
+                    title: "주방 장비",
+                    subtitle: "신품 vs 중고 혼합 전략 — 황학동·번개장터 활용",
+                    icon: "fork.knife",
+                    entries: equipmentData,
+                    selectedJson: $equipmentJson
+                )
 
-                        heroBanner
-                            .padding(.horizontal, BUSpacing.md)
+                vendorSection(
+                    title: "POS / 예약 시스템",
+                    subtitle: "토스플레이스는 수수료 0% — 배달 앱 연동 확인",
+                    icon: "creditcard.fill",
+                    entries: posData,
+                    selectedJson: $posJson
+                )
 
-                        vendorSection(
-                            title: "식재료 공급처",
-                            subtitle: "복수 선택 가능 — 단가 비교 후 발주 분산 권장",
-                            icon: "cart.fill",
-                            entries: supplierData,
-                            selectedJson: $suppliersJson
-                        )
+                redirectionCard
 
-                        vendorSection(
-                            title: "주방 장비",
-                            subtitle: "신품 vs 중고 혼합 전략 — 황학동·번개장터 활용",
-                            icon: "fork.knife",
-                            entries: equipmentData,
-                            selectedJson: $equipmentJson
-                        )
-
-                        vendorSection(
-                            title: "POS / 예약 시스템",
-                            subtitle: "토스플레이스는 수수료 0% — 배달 앱 연동 확인",
-                            icon: "creditcard.fill",
-                            entries: posData,
-                            selectedJson: $posJson
-                        )
-
-                        redirectionCard
-                            .padding(.horizontal, BUSpacing.md)
-
-                        initialOrderSection
-                            .padding(.horizontal, BUSpacing.md)
-
-                        wrapupSection
-                            .padding(.horizontal, BUSpacing.md)
-
-                        Spacer(minLength: BUSpacing.xxxl)
-                    }
-                    .padding(.top, BUSpacing.md)
-                }
-            }
-            .navigationTitle("공급처 설정")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }
-                        .foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
-                }
-                #endif
+                initialOrderSection
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-    }
-
-    // MARK: - Hero banner
-
-    private var heroBanner: some View {
-        BUCard(.hero) {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                BUEyebrow("단계 15 · 공급처 설정")
-
-                Text("공급처 계약이\n원가를 결정합니다")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(BUColor.midnightDeep)
-                    .tracking(-0.3)
-                    .lineSpacing(4)
-
-                Text("식재료·장비·POS를 확정해야 초기 발주와 재고 등록이 시작됩니다.")
-                    .font(BUFont.bodySmall)
-                    .foregroundStyle(BUColor.inkSecondary)
-                    .lineSpacing(3)
-                    .padding(.top, 2)
-
-                HStack(spacing: BUSpacing.sm) {
-                    heroMini(icon: "truck.box.fill",    value: "공급처",  label: "식재료·포장재")
-                    heroMini(icon: "wrench.and.screwdriver.fill", value: "장비", label: "주방·포장기")
-                    heroMini(icon: "creditcard.fill",   value: "POS",    label: "결제·예약")
-                }
-                .padding(.top, 4)
-            }
-        }
-    }
-
-    private func heroMini(icon: String, value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundStyle(BUColor.midnight)
-            Text(value)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(BUColor.midnightDeep)
-            Text(label)
-                .font(BUFont.eyebrow)
-                .foregroundStyle(BUColor.inkMuted)
-        }
-        .padding(BUSpacing.sm)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: BURadius.nestedCard, style: .continuous))
     }
 
     // MARK: - Vendor section builder
@@ -280,12 +244,10 @@ public struct VendorSetupStageView: View {
                     .font(BUFont.cardTitleSmall)
                     .foregroundStyle(BUColor.midnightDeep)
             }
-            .padding(.horizontal, BUSpacing.md)
 
             Text(subtitle)
                 .font(BUFont.bodyCaption)
                 .foregroundStyle(BUColor.inkSecondary)
-                .padding(.horizontal, BUSpacing.md)
 
             VStack(spacing: 0) {
                 ForEach(entries) { entry in
@@ -300,7 +262,6 @@ public struct VendorSetupStageView: View {
                 }
             }
             .background(BUColor.surfaceElevated, in: RoundedRectangle(cornerRadius: BURadius.outerCard, style: .continuous))
-            .padding(.horizontal, BUSpacing.md)
         }
     }
 
@@ -436,32 +397,6 @@ public struct VendorSetupStageView: View {
                             }
                         }
                     }
-                }
-            }
-        }
-    }
-
-    // MARK: - Wrapup
-
-    private var wrapupSection: some View {
-        BUCard(.card) {
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                BUEyebrow("완료 체크리스트")
-
-                CheckRow(label: "식재료 공급처 선택 완료", done: !selectedSuppliers.isEmpty)
-                CheckRow(label: "주방 장비 선택 완료",    done: !selectedEquipment.isEmpty)
-                CheckRow(label: "POS 시스템 선택 완료",   done: !selectedPos.isEmpty)
-                CheckRow(label: "초기 발주 원자재 등록",  done: !materials.isEmpty)
-
-                if wrapupDone {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundStyle(BUColor.success)
-                        Text("공급처 설정 완료! 재고가 자동 등록됩니다.")
-                            .font(BUFont.bodySmall.weight(.semibold))
-                            .foregroundStyle(BUColor.success)
-                    }
-                    .padding(.top, 4)
                 }
             }
         }
@@ -675,11 +610,14 @@ private extension View {
 
 #if DEBUG
 #Preview("VendorSetup — 공급처 설정") {
-    VendorSetupStageView()
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["vendor-setup"] }
+    return VendorSetupStageView().environment(store)
 }
 
 #Preview("VendorSetup — Dark") {
-    VendorSetupStageView()
-        .preferredColorScheme(.dark)
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["vendor-setup"] }
+    return VendorSetupStageView().environment(store).preferredColorScheme(.dark)
 }
 #endif

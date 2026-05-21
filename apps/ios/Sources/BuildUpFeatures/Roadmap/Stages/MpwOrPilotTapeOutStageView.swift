@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct MpwOrPilotTapeOutStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "mpw-or-pilot-tape-out"
+
     @State private var page = 0
 
     @AppStorage("mpw.tapeOutType")   private var tapeOutType  = ""
@@ -22,66 +26,57 @@ public struct MpwOrPilotTapeOutStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 테이프아웃 유형 (MPW vs 풀마스크) 선택 + 설계 Freeze + 제출 완료.
+    private var canCompleteStage: Bool {
+        !tapeOutType.isEmpty && designFrozen && submitted
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: mpwPage
-                                default: tapeOutPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if tapeOutType.isEmpty { return "MPW vs 풀마스크 유형을 선택하세요" }
+        if !designFrozen { return "설계 Freeze 체크가 필요합니다" }
+        if !submitted { return "파운드리 테이프아웃 제출을 체크하세요" }
+        return "테이프아웃 제출 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "MPW 또는 파일럿 테이프아웃",
+            stageEyebrow: "단계 11 · MPW·테이프아웃",
+            helperText: "테이프아웃 = 설계 완료의 선언. 되돌리면 수십억이 날아갑니다. MPW는 비용을 90–95% 절감할 수 있습니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["tapeOutType": tapeOutType])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["tapeOutType": tapeOutType]) },
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: mpwPage
+                    default: tapeOutPage
                     }
                 }
-            }
-            .navigationTitle("MPW·테이프아웃")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 MPW vs 풀마스크
 
     private var mpwPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("MPW·테이프아웃")
-                    Text("테이프아웃 = 설계 완료의 선언\n되돌리면 수십억이 날아간다")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("MPW(Multi-Project Wafer): 여러 칩이 웨이퍼 하나를 나눠 사용 → 비용 90–95% 절감")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("MPW vs 풀마스크 선택")
@@ -204,5 +199,9 @@ public struct MpwOrPilotTapeOutStageView: View {
 }
 
 #if DEBUG
-#Preview("MpwOrPilotTapeOut") { MpwOrPilotTapeOutStageView() }
+#Preview("MpwOrPilotTapeOut") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["mpw-or-pilot-tape-out"] }
+    return MpwOrPilotTapeOutStageView().environment(store)
+}
 #endif

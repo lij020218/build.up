@@ -89,6 +89,7 @@ export function useDataLoading(
 
   const {
     profile,
+    selectedIndustryId,
     selectedBudget,
     startupType,
     locationMode,
@@ -165,15 +166,31 @@ export function useDataLoading(
     ?? locationDecision?.selectedPrimaryOptionId
     ?? undefined;
 
+  // ⚠️ 2026-05-18 fix (사장님 신고: 알림에 "로드맵 33/35 완료" 표시 — path 가 cluster 별 다른데
+  //   모든 cluster stage 를 합산하니 35로 inflate). useComputedDashboard.isPathStage 와 동일한
+  //   sub-industry 별 cluster 분기 로직을 복제. startup-tech 의 hardware-iot 사장님은 cluster B
+  //   stage 만, robotics·biotech 는 cluster C, 반도체·클린테크는 cluster D 만 path 에 포함.
   const isDigitalCategory = industryCategoryId === "online-digital" || industryCategoryId === "startup-tech";
   const isStartupCategory = industryCategoryId === "startup-tech";
+  const subInd = selectedIndustryId ?? "";
+  const isClusterB = subInd === "hardware-iot";
+  const isClusterC = subInd === "robotics-physical-ai" || subInd === "biotech-medtech";
+  const isClusterD = subInd === "semiconductor" || subInd === "climate-energy";
   const onlineOnlyIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
   const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-gtm", "growth-engine", "company-setup", "fundraising-readiness", "venture-certification"]);
   const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "insurance-tax-setup", "hiring-setup", "operations-setup", "pre-launch"]);
+  const clusterBStages = new Set(["hardware-prototype", "bom-supply-chain", "certification-kc-ce", "manufacturing-partner"]);
+  const clusterCStages = new Set(["lab-setup", "prototype-iteration", "field-or-clinical-test", "regulatory-submission"]);
+  const clusterDStages = new Set(["eda-tooling-setup", "mpw-or-pilot-tape-out", "packaging-and-test", "partner-foundation-or-pilot-line"]);
+  const allClusterStages = new Set([...clusterBStages, ...clusterCStages, ...clusterDStages]);
   const franchiseOnlyIds = new Set(["franchise-application"]);
   const isPathStage = (stageId: string): boolean => {
     if (isStartupCategory) {
       if (onlineOnlyIds.has(stageId) || offlineOnlyIds.has(stageId) || franchiseOnlyIds.has(stageId)) return false;
+      // 클러스터 단계는 sub-industry 매칭만 포함
+      if (clusterBStages.has(stageId)) return isClusterB;
+      if (clusterCStages.has(stageId)) return isClusterC;
+      if (clusterDStages.has(stageId)) return isClusterD;
       return true;
     }
     if (isDigitalCategory) {
@@ -181,7 +198,9 @@ export function useDataLoading(
       if (franchiseOnlyIds.has(stageId) && startupType !== "franchise") return false;
       return true;
     }
+    // offline (음식·카페·소매·미용 등) 사장님은 cluster·startup-only·online-only 모두 제외
     if (onlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId)) return false;
+    if (allClusterStages.has(stageId)) return false;
     if (franchiseOnlyIds.has(stageId) && startupType !== "franchise") return false;
     return true;
   };
@@ -232,36 +251,33 @@ export function useDataLoading(
       categoryId: industryCategoryId
     })
       .then((signalItems) => {
+        // ⚠️ 2026-05-18 fix (사장님 신고: "봉은사 검색했는데 창동·노원이 나옴"):
+        //   종전엔 signal 매칭이 부족하면 buildRecommendedMarkets 의 *정적 내장 추천*
+        //   (창동·가산·공릉 등 점수 높은 무관한 지역) 을 fallback 으로 병합 → 검색어와
+        //   완전 무관한 결과가 표시되는 거짓말 같은 UX. 신호 매칭 결과가 1개 이상이면
+        //   그것만 표시하고, 0개일 때만 "검색 결과 없음" 으로 명확히 안내.
+        if (signalItems.length > 0) {
+          setRecommendedMarkets(signalItems.map((item) => localizeRecommendationItem(item, language)));
+          setLocationSourceLabel(language === "ko" ? "상권 신호 데이터" : "Market signal data");
+          return;
+        }
+
+        // 신호 매칭 0건 → 카테고리·예산 기반 fallback (검색어 무시) 만 표시. 단 라벨에서
+        //   "입력한 지역과 매칭된 상권을 찾지 못함" 을 명시해야 함.
         const builtInMarkets = buildRecommendedMarkets({
           region: preferredRegionInput,
           categoryId: industryCategoryId,
           capital: selectedBudget,
           candidates: locationOptions
         });
-
-        if (signalItems.length >= 3) {
-          setRecommendedMarkets(signalItems.map((item) => localizeRecommendationItem(item, language)));
-          setLocationSourceLabel(language === "ko" ? "상권 신호 데이터" : "Market signal data");
-          return;
-        }
-
-        if (signalItems.length > 0 && builtInMarkets.length > 0) {
-          const signalIds = new Set(signalItems.map((s) => s.id));
-          const merged = [
-            ...signalItems.map((item) => localizeRecommendationItem(item, language)),
-            ...builtInMarkets
-              .filter((b) => !signalIds.has(b.id))
-              .map((item) => localizeRecommendationItem(item, language)),
-          ].slice(0, 5);
-          setRecommendedMarkets(merged);
-          setLocationSourceLabel(language === "ko" ? "상권 신호 + 내장 데이터" : "Signal + built-in data");
-          return;
-        }
-
         setRecommendedMarkets(
           builtInMarkets.map((item) => localizeRecommendationItem(item, language))
         );
-        setLocationSourceLabel(copy.common.liveKnowledgeLayer);
+        setLocationSourceLabel(
+          language === "ko"
+            ? `"${preferredRegionInput}" 매칭 0건 — 카테고리 기반 추천`
+            : `No match for "${preferredRegionInput}" — category-based fallback`,
+        );
       })
       .catch(() => {
         setRecommendedMarkets(
@@ -599,8 +615,10 @@ export function useDataLoading(
       }
     }
 
-    // 9. 현금흐름 셋업 미완료
-    if (!cashflowSetupCompletedAt) {
+    // 9. 현금흐름 셋업 미완료 (⚠️ 2026-05-18: businessLaunched 조건 추가)
+    //    종전엔 businessLaunched 검사 없어서 *오픈 전 로드맵 진행 중* 사장님에게도 알림.
+    //    현금흐름 추적은 *오픈 후* 운영 중 사장님에게 의미 있음. 오픈 전엔 노출 차단.
+    if (businessLaunched && !cashflowSetupCompletedAt) {
       items.push({
         id: "cashflow-setup-missing",
         severity: "warning",

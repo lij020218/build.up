@@ -1009,10 +1009,107 @@ export default function StarterStageDemo({
       /* 좁은 화면 — 사이드바 숨김 + main 좌측 padding 0으로 (HTML class 로 보정) */
       @media (max-width: 1080px) {
         .bup-sidebar { display: none; }
-        .bup-shell-sidebar { padding-left: 0 !important; }
+        .bup-shell-sidebar { padding-left: 16px !important; padding-top: 64px !important; }
+      }
+
+      /* ⚠️ 2026-05-19 모바일 horizontal nav — 사이드바 대체 */
+      .bup-mobile-topnav {
+        display: none;
+      }
+      @media (max-width: 1080px) {
+        .bup-mobile-topnav {
+          display: flex;
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 60;
+          height: 52px;
+          padding: 6px 12px;
+          padding-top: max(6px, env(safe-area-inset-top));
+          padding-left: max(12px, env(safe-area-inset-left));
+          padding-right: max(12px, env(safe-area-inset-right));
+          background: rgba(255,255,255,0.92);
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
+          border-bottom: 0.5px solid rgba(15,23,42,0.08);
+          box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+          align-items: center;
+          gap: 8px;
+          overflow-x: auto;
+          overflow-y: hidden;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+        .bup-mobile-topnav::-webkit-scrollbar { display: none; }
+        .bup-mobile-topnav { scrollbar-width: none; }
+      }
+      .bup-mobile-topnav-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 8px 0 4px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1d3557;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .bup-mobile-topnav-logo-mark {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
+        color: #fff; font-weight: 800; font-size: 13px;
+      }
+      .bup-mobile-topnav-btn {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 0.5px solid rgba(15,23,42,0.08);
+        background: rgba(255,255,255,0.6);
+        color: rgba(15,23,42,0.7);
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .12s, color .12s;
+        font-family: inherit;
+        scroll-snap-align: start;
+      }
+      .bup-mobile-topnav-btn-active {
+        background: linear-gradient(135deg, rgba(29,53,87,0.12) 0%, rgba(69,123,157,0.06) 100%);
+        color: #1d3557 !important;
+        font-weight: 700;
+        border-color: rgba(29,53,87,0.2);
       }
     `}</style>
-    {/* ━━━ 사이드바 — 운영 중일 때 모든 페이지 (좌측 고정 vertical nav) ━━━ */}
+    {/* ━━━ 모바일 horizontal nav — 2026-05-19 추가 (사이드바 대체) ━━━ */}
+    {isHomeOperational && showSurfaceNav && (
+      <nav className="bup-mobile-topnav" aria-label="Mobile navigation">
+        <div className="bup-mobile-topnav-logo">
+          <span className="bup-mobile-topnav-logo-mark">b</span>
+          <span>Build.UP</span>
+        </div>
+        {surfaceTabs.map((tab) => {
+          const active = activeSurface === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => navigateToSurface(tab.id)}
+              className={`bup-mobile-topnav-btn ${active ? "bup-mobile-topnav-btn-active" : ""}`}
+            >
+              <SurfaceIcon surface={tab.id} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    )}
+
+    {/* ━━━ 사이드바 — 운영 중일 때 모든 페이지 (좌측 고정 vertical nav, 데스크탑 전용) ━━━ */}
     {isHomeOperational && showSurfaceNav && (
       <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} aria-label="Navigation">
         <div className="bup-sidebar-logo">
@@ -1337,25 +1434,28 @@ export default function StarterStageDemo({
   );
 }
 
-/* Roadmap surface → RoadmapSurface.tsx */
+/* Roadmap surface → RoadmapSurface.tsx
+   ⚠️ 2026-05-19 모바일 fix: 종전 좌우 padding 0 → 모바일에서 콘텐츠가 화면 끝까지 닿음.
+   `width` 의 `100vw - 32px` 로 양쪽 16px 마진은 있지만 padding 자체는 0이라 inner 컴포넌트
+   (테이블·grid) 가 가장자리 0px 까지 늘어남. padding 16px 추가로 통일된 gutter 확보. */
 const operationalShell: React.CSSProperties = {
   width: "min(1440px, calc(100vw - 32px))",
   margin: "0 auto",
-  padding: "92px 0 80px",
+  padding: "92px 16px 80px",
 };
 
 /** 홈 + 운영 중 — 좌측 사이드바 폭만큼 좌측 패딩 추가 (좁은 화면에선 사이드바 숨김 → CSS) */
 const operationalShellSidebar: React.CSSProperties = {
   width: "min(1440px, calc(100vw - 32px))",
   margin: "0 auto",
-  padding: "32px 0 80px 220px",   // 좌측 사이드바 200px + 여백 20px
+  padding: "32px 16px 80px 220px",   // 좌측 사이드바 200px + 여백 20px / 우측 16px gutter
 };
 
 /** 사이드바 collapsed (60px) 일 때 — 좌측 padding 80px (60 + 20 여백) */
 const operationalShellSidebarCollapsed: React.CSSProperties = {
   width: "min(1440px, calc(100vw - 32px))",
   margin: "0 auto",
-  padding: "32px 0 80px 80px",
+  padding: "32px 16px 80px 80px",
 };
 
 const operationalNavSection: React.CSSProperties = {

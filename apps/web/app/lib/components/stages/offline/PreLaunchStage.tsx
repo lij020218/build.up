@@ -5,6 +5,7 @@ import { Users, ClipboardList, MessageSquare, Sparkles, ExternalLink, ChevronRig
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { useRoadmapStore } from "../../../stores";
 import { AIFeedbackFormGenerator } from "./AIFeedbackFormGenerator";
+import { StageWrapup } from "../shared/StageWrapup";
 import {
   getVisibleDayIds,
   getVisibleFeedbackIds,
@@ -44,7 +45,7 @@ export function PreLaunchStage() {
     softOpenSkips,
   } = d;
   // setSoftOpenSkips 는 보존 룰 호환 — 사용 안 해도 import 유지하지 않으니 destructure 생략.
-  void setSoftOpenChecks;
+  // (참고: 종전 `void setSoftOpenChecks` 는 잘못된 표기. setSoftOpenChecks 는 toggleCheck 에서 실제 사용 중)
   const ko = language === "ko";
 
   const [pageIdx, setPageIdx] = useState(0);
@@ -187,61 +188,10 @@ export function PreLaunchStage() {
     setSoftOpenChecks((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // 체크리스트 항목 컴포넌트 (재사용)
-  const CheckList = ({ items }: { items: { id: string; label: string; detail: string }[] }) => (
-    <ol style={{
-      margin: 0, padding: 0, listStyle: "none",
-      background: "white", borderRadius: 14,
-      border: "1px solid rgba(25,25,112,0.10)",
-      overflow: "hidden",
-    }}>
-      {items.map((it, i) => {
-        const checked = !!softOpenChecks[it.id];
-        return (
-          <li key={it.id}>
-            <button
-              type="button"
-              onClick={() => toggleCheck(it.id)}
-              style={{
-                width: "100%", display: "flex", alignItems: "flex-start", gap: 14,
-                padding: "16px 16px",
-                borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
-                background: checked ? "rgba(25,25,112,0.03)" : "white",
-                border: "none", textAlign: "left" as const,
-                cursor: "pointer", transition: "background 0.12s",
-              }}
-              onMouseEnter={(e) => { if (!checked) (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.02)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = checked ? "rgba(25,25,112,0.03)" : "white"; }}
-            >
-              <span style={{
-                width: 22, height: 22, borderRadius: 7,
-                background: checked ? MIDNIGHT : "white",
-                border: checked ? "none" : "1.5px solid rgba(25,25,112,0.25)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, marginTop: 2,
-                transition: "all 0.15s",
-              }}>
-                {checked && <Check size={13} strokeWidth={3} color="white" />}
-              </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 15, fontWeight: 700,
-                  color: checked ? "rgba(15,23,42,0.5)" : "#0f172a",
-                  letterSpacing: "-0.015em", lineHeight: 1.4,
-                  textDecoration: checked ? "line-through" : "none",
-                }}>
-                  {it.label}
-                </div>
-                <div style={{ fontSize: 13, color: "rgba(15,23,42,0.55)", lineHeight: 1.6, marginTop: 4 }}>
-                  {it.detail}
-                </div>
-              </div>
-            </button>
-          </li>
-        );
-      })}
-    </ol>
-  );
+  // ⚠️ 2026-05-19 (사장님 신고: 체크리스트 클릭 안 됨):
+  //   종전엔 CheckList 가 PreLaunchStage 함수 *안에* inline 컴포넌트로 정의됨 →
+  //   매 render 마다 새 함수 reference → React 가 unmount+remount → 클릭 시 button DOM
+  //   재생성으로 click 처리 누락·시각 피드백 사라짐. 외부 PreLaunchCheckList 로 추출.
 
   return (
     <>
@@ -300,6 +250,7 @@ export function PreLaunchStage() {
       )}
 
       {/* ── 페이지 1: 손님 초대 + 가격 결정 ─────────────────────────── */}
+      <div data-soft-open-page="1" />
       {pageIdx === 1 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <WorkStep
@@ -415,6 +366,7 @@ export function PreLaunchStage() {
       )}
 
       {/* ── 페이지 2: 당일 운영 체크리스트 ───────────────────────── */}
+      <div data-soft-open-page="2" />
       {pageIdx === 2 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <WorkStep
@@ -453,7 +405,7 @@ export function PreLaunchStage() {
                 {dayDoneCount} / {dayChecks.length}
               </span>
             </div>
-            <CheckList items={dayChecks} />
+            <PreLaunchCheckList items={dayChecks} softOpenChecks={softOpenChecks} toggleCheck={toggleCheck} />
           </div>
         </div>
       )}
@@ -539,15 +491,15 @@ export function PreLaunchStage() {
                 },
                 {
                   brand: "N", color: "#03C75A",
-                  label: ko ? "네이버 폼 (네이버 오피스)" : "Naver Form",
-                  desc: ko ? "한국어 UI 친숙 · 모바일 응답 최적화 · 무료" : "Korean-friendly · mobile-first · free",
-                  href: "https://form.office.naver.com",
+                  label: ko ? "네이버 폼" : "Naver Form",
+                  desc: ko ? "한국어 UI 친숙 · 모바일 응답 최적화 · 무료 · 템플릿 다수" : "Korean-friendly · mobile-first · free · many templates",
+                  href: "https://form.naver.com/templates",
                 },
                 {
                   brand: "K", color: "#FFCD00",
-                  label: ko ? "카카오톡 채널 (카드형 응답)" : "KakaoTalk Channel",
-                  desc: ko ? "단골에게 카톡으로 직접 발송 · 응답률 ↑ · 채널 무료" : "Send via KakaoTalk · higher response · free channel",
-                  href: "https://center-pf.kakao.com",
+                  label: ko ? "카카오 비즈니스 폼" : "Kakao Business Form",
+                  desc: ko ? "톡채널 친구에게 직접 발송 · 응답률 ↑ · 비즈채널 연결 무료" : "Send via Kakao channel · higher response · free",
+                  href: "https://business.kakao.com/info/talkbizform/",
                 },
               ] as const).map((link, idx, arr) => (
                 <a
@@ -603,6 +555,7 @@ export function PreLaunchStage() {
       )}
 
       {/* ── 페이지 4: 본 오픈 준비 ──────────────────────────────── */}
+      <div data-soft-open-page="4" />
       {pageIdx === 4 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <WorkStep
@@ -639,147 +592,48 @@ export function PreLaunchStage() {
                 {finalDoneCount} / {finalChecks.length}
               </span>
             </div>
-            <CheckList items={finalChecks} />
+            <PreLaunchCheckList items={finalChecks} softOpenChecks={softOpenChecks} toggleCheck={toggleCheck} />
           </div>
         </div>
       )}
 
-      {/* ── 페이지 5: 마무리 — 한 일 + 다음 단계 전 주의 ──────────── */}
+      {/* ── 페이지 5: 마무리 — StageWrapup 통합 (2026-05-18) ──────────── */}
       {pageIdx === 5 && (
-        <div style={{
-          background: "white", borderRadius: 16,
-          border: "1px solid rgba(25,25,112,0.08)",
-          boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
-          padding: "20px 22px",
-          display: "flex", flexDirection: "column", gap: 18,
-        }}>
-          <div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
-              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 4,
-            }}>
-              {ko ? "마무리" : "Wrap-up"}
-            </div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.4 }}>
-              {ko ? "이 단계에서 한 일 + 다음 단계 전 반드시 확인" : "What you did + must-verify before next stage"}
-            </div>
-          </div>
-
-          {/* 이 단계에서 한 일 */}
-          <div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.7,
-              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 10,
-            }}>
-              {ko ? "이 단계에서 한 일" : "What you did"}
-            </div>
-            <ol style={{
-              margin: 0, padding: 0, listStyle: "none",
-              border: "1px solid rgba(25,25,112,0.10)", borderRadius: 12, overflow: "hidden",
-            }}>
-              {(ko ? [
-                { label: "1. 손님 초대 + 가격 결정", detail: "10~30명 4유형(가족·이웃·인플루언서·동료) 균형 + 무료/할인/정가 결정" },
-                { label: "2. 당일 운영 8축 점검", detail: "청결·브리핑·POS·분위기·관찰·결제·피드백카드·디브리핑" },
-                { label: "3. 피드백 4축 수집", detail: "맛·서비스·가격·분위기 — AI 폼 + 종이 카드 + 폼 빌더(구글/네이버/카카오)" },
-                { label: "4. 본 오픈 준비 5종 보강", detail: "메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·1.5배 발주·1페이지 요약" },
-              ] : [
-                { label: "1. Invite guests + set pricing", detail: "Mix 4 types (family/neighbors/IG/peers) + free/discount/full" },
-                { label: "2. Day-of 8-axis ops check", detail: "Clean/brief/POS/vibe/observe/payment/cards/debrief" },
-                { label: "3. 4-axis feedback collection", detail: "Taste/svc/price/vibe — AI form + paper + form builder" },
-                { label: "4. Grand-open 5 fixes", detail: "Menu 1-2 / staff retrain / marketing / 1.5× order / recap" },
-              ]).map((item, i) => (
-                <li key={i} style={{
-                  display: "flex", alignItems: "flex-start", gap: 12,
-                  padding: "12px 14px",
-                  borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
-                  background: "rgba(25,25,112,0.025)",
-                }}>
-                  <span style={{
-                    width: 22, height: 22, borderRadius: 7,
-                    background: MIDNIGHT, color: "white",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0, marginTop: 1,
-                  }}>
-                    <Check size={12} strokeWidth={3} />
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
-                      {item.label}
-                    </div>
-                    <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginTop: 3 }}>
-                      {item.detail}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/* 다음 단계 진입 전 반드시 확인 */}
-          <div style={{
-            padding: "14px 16px", borderRadius: 12,
-            background: "rgba(220,38,38,0.04)",
-            border: "1px solid rgba(220,38,38,0.14)",
-          }}>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: "#dc2626",
-              letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8,
-            }}>
-              {ko ? "다음 단계(본 오픈) 전 반드시 확인" : "Verify before grand open"}
-            </div>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
-              {(ko ? [
-                "결제 단말 1건 실 카드 테스트 + 즉시 취소 — 결제 오류 1건 = 별점 -0.4",
-                "직원 응대 멘트·포지션·비상 대응 통일 (당일 발견 이슈 모두 코칭)",
-                "본 오픈 식자재·소모품 1.5배 발주 입고 시간 확정",
-                "인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 — 본 오픈 D-3 까지",
-                "피드백 응답 10명 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
-                "소프트 오픈 1페이지 요약 직원 공유 — 본 오픈 운영 자료",
-              ] : [
-                "Test 1 real card on terminal + cancel — 1 error = -0.4 stars",
-                "Standardize staff scripts/positions/emergency — coach all day-of issues",
-                "Confirm 1.5× ingredients/supplies delivery timing",
-                "Seed 3 IG + 1 reel + 5 Naver reviews by D-3",
-                "10+ feedback responses + apply only 1-2 common themes",
-                "Share soft-open 1-page recap with staff — grand-open ops doc",
-              ]).map((item, i) => (
-                <li key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
-                  <span style={{ flexShrink: 0, marginTop: 7, width: 5, height: 5, borderRadius: "50%", background: "#dc2626" }} />
-                  <span style={{ fontSize: 13, color: "#7f1d1d", lineHeight: 1.6, fontWeight: 500 }}>
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 다음 단계 안내 */}
-          <div style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "13px 15px", borderRadius: 12,
-            background: "linear-gradient(180deg, rgba(5,150,105,0.05) 0%, rgba(5,150,105,0.02) 100%)",
-            border: "1px solid rgba(5,150,105,0.16)",
-          }}>
-            <div style={{
-              width: 26, height: 26, borderRadius: 8,
-              background: "rgba(5,150,105,0.12)", color: "#059669",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <Check size={14} strokeWidth={2.4} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 2 }}>
-                {ko ? "이 단계가 끝나면" : "When done"}
-              </div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em", lineHeight: 1.4 }}>
-                {ko
-                  ? "운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
-                  : "1 cycle validated → enter grand-open (pre-launch-final)"}
-              </div>
-            </div>
-          </div>
-        </div>
+        <StageWrapup
+          ko={ko}
+          nextStageLabelKo="다음 단계(본 오픈) 전 반드시 확인"
+          nextStageLabelEn="Verify before grand open"
+          doneItemsKo={[
+            { label: "1. 손님 초대 + 가격 결정", detail: "10~30명 4유형(가족·이웃·인플루언서·동료) 균형 + 무료/할인/정가 결정" },
+            { label: "2. 당일 운영 8축 점검", detail: "청결·브리핑·POS·분위기·관찰·결제·피드백카드·디브리핑" },
+            { label: "3. 피드백 4축 수집", detail: "맛·서비스·가격·분위기 — AI 폼 + 종이 카드 + 폼 빌더(구글/네이버/카카오)" },
+            { label: "4. 본 오픈 준비 5종 보강", detail: "메뉴 1~2개 조정·직원 재교육·마케팅 콘텐츠·1.5배 발주·1페이지 요약" },
+          ]}
+          doneItemsEn={[
+            { label: "1. Invite guests + set pricing", detail: "Mix 4 types (family/neighbors/IG/peers) + free/discount/full" },
+            { label: "2. Day-of 8-axis ops check", detail: "Clean/brief/POS/vibe/observe/payment/cards/debrief" },
+            { label: "3. 4-axis feedback collection", detail: "Taste/svc/price/vibe — AI form + paper + form builder" },
+            { label: "4. Grand-open 5 fixes", detail: "Menu 1-2 / staff retrain / marketing / 1.5× order / recap" },
+          ]}
+          verifyItemsKo={[
+            "결제 단말 1건 실 카드 테스트 + 즉시 취소 — 결제 오류 1건 = 별점 -0.4",
+            "직원 응대 멘트·포지션·비상 대응 통일 (당일 발견 이슈 모두 코칭)",
+            "본 오픈 식자재·소모품 1.5배 발주 입고 시간 확정",
+            "인스타 3 + 릴스 1 + 네이버 영수증 5건 시드 — 본 오픈 D-3 까지",
+            "피드백 응답 10명 이상 + 공통 의견 1~2개만 본 오픈 직전 반영",
+            "소프트 오픈 1페이지 요약 직원 공유 — 본 오픈 운영 자료",
+          ]}
+          verifyItemsEn={[
+            "Test 1 real card on terminal + cancel — 1 error = -0.4 stars",
+            "Standardize staff scripts/positions/emergency — coach all day-of issues",
+            "Confirm 1.5× ingredients/supplies delivery timing",
+            "Seed 3 IG + 1 reel + 5 Naver reviews by D-3",
+            "10+ feedback responses + apply only 1-2 common themes",
+            "Share soft-open 1-page recap with staff — grand-open ops doc",
+          ]}
+          nextSummaryKo="운영 1회전 검증 완료 → 본 오픈 (pre-launch-final) 진입"
+          nextSummaryEn="1 cycle validated → enter grand-open (pre-launch-final)"
+        />
       )}
 
       {/* ⚠️ softOpenSkips 는 보존 — 룰 검증 호환 */}
@@ -787,5 +641,89 @@ export function PreLaunchStage() {
         {Object.keys(softOpenSkips).length}
       </span>
     </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  PreLaunchCheckList — 체크리스트 항목 외부 컴포넌트 (2026-05-19 추출)
+//
+//  종전엔 PreLaunchStage 함수 *안에* inline 으로 const CheckList = () => ... 정의.
+//  매 render 마다 새 함수 reference → React reconciler 가 *다른 컴포넌트 type* 으로 인식 →
+//  unmount + remount → 클릭 시 button DOM 재생성으로 click 누락·시각 피드백 사라짐
+//  ("체크리스트가 클릭 안 되고 동작 안 함" 신고). 외부로 추출해 stable reference 보장.
+// ─────────────────────────────────────────────────────────────────────────
+
+function PreLaunchCheckList({
+  items,
+  softOpenChecks,
+  toggleCheck,
+}: {
+  items: { id: string; label: string; detail: string }[];
+  softOpenChecks: Record<string, boolean>;
+  toggleCheck: (id: string) => void;
+}) {
+  return (
+    <ol style={{
+      margin: 0, padding: 0, listStyle: "none",
+      background: "white", borderRadius: 14,
+      border: "1px solid rgba(25,25,112,0.10)",
+      overflow: "hidden",
+    }}>
+      {items.map((it, i) => {
+        const checked = !!softOpenChecks[it.id];
+        return (
+          <li key={it.id}>
+            <button
+              type="button"
+              onClick={() => toggleCheck(it.id)}
+              // ⚠️ 2026-05-19 모바일: hover effect 가 모바일 탭 후 stuck 됨 → matchMedia 로
+              //   pointer:fine (마우스) 일 때만 hover 핸들러 적용. 모바일 (pointer:coarse) 무효.
+              onMouseEnter={(e) => {
+                if (typeof window !== "undefined" && !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+                if (!checked) (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.02)";
+              }}
+              onMouseLeave={(e) => {
+                if (typeof window !== "undefined" && !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+                (e.currentTarget as HTMLButtonElement).style.background = checked ? "rgba(25,25,112,0.03)" : "white";
+              }}
+              style={{
+                width: "100%", display: "flex", alignItems: "flex-start", gap: 14,
+                padding: "16px 16px",
+                borderTop: i === 0 ? "none" : "0.5px solid rgba(25,25,112,0.10)",
+                background: checked ? "rgba(25,25,112,0.03)" : "white",
+                border: "none", textAlign: "left" as const,
+                cursor: "pointer", transition: "background 0.12s",
+                fontFamily: "inherit",
+                minHeight: 56, // 모바일 터치 타겟 충분히
+              }}
+            >
+              <span style={{
+                width: 26, height: 26, borderRadius: 8,  // 22→26 모바일 터치 타겟
+                background: checked ? MIDNIGHT : "white",
+                border: checked ? "none" : "1.5px solid rgba(25,25,112,0.25)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, marginTop: 2,
+                transition: "all 0.15s",
+              }}>
+                {checked && <Check size={15} strokeWidth={3} color="white" />}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 15, fontWeight: 700,
+                  color: checked ? "rgba(15,23,42,0.5)" : "#0f172a",
+                  letterSpacing: "-0.015em", lineHeight: 1.4,
+                  textDecoration: checked ? "line-through" : "none",
+                }}>
+                  {it.label}
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(15,23,42,0.55)", lineHeight: 1.6, marginTop: 4 }}>
+                  {it.detail}
+                </div>
+              </div>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

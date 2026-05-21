@@ -16,13 +16,16 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 // MARK: - TargetCustomerStageView
 
 public struct TargetCustomerStageView: View {
 
+    @Environment(RoadmapStore.self) private var roadmapStore
     @Environment(\.dismiss) private var dismiss
     @State private var page = 0
+    private let stageId = "target-customer-definition"
 
     @AppStorage("stage.tc.primaryAgeRange")  private var primaryAgeRange  = ""
     @AppStorage("stage.tc.lifestyleHint")    private var lifestyleHint    = ""
@@ -35,102 +38,73 @@ public struct TargetCustomerStageView: View {
             .count
     }
 
+    /// 게이트: 페르소나 3 항목 모두 입력.
+    private var canContinue: Bool { filledCount == 3 }
+
+    private var advanceHint: String {
+        switch filledCount {
+        case 0: return "페르소나 3항목을 정의하세요"
+        case 1, 2: return "\(filledCount)/3 입력됨 — 모두 입력 후 진행"
+        default: return "페르소나 정의 완료 — 다음 단계로"
+        }
+    }
+
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: BUSpacing.cardGap) {
-                        heroSection
-                            .padding(.horizontal, BUSpacing.md)
-
-                        pageNav
-                            .padding(.horizontal, BUSpacing.md)
-
-                        pageContent
-                            .padding(.horizontal, BUSpacing.md)
-                            .animation(.easeInOut(duration: 0.22), value: page)
-
-                        wrapupSection
-                            .padding(.horizontal, BUSpacing.md)
-
-                        Spacer(minLength: BUSpacing.xxxl)
-                    }
-                    .padding(.top, BUSpacing.md)
-                }
-            }
-            .navigationTitle("타깃 고객 정의")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }
-                        .foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
-                }
-                #endif
+        BUStageShell(
+            stageId: stageId,
+            title: "타깃 고객 정의",
+            stageEyebrow: "단계 4 · 타깃 고객",
+            helperText: "외식 폐업 사유 1위 (28%) 는 '타깃 불명확'. 한 명의 구체적 페르소나가 모든 후속 결정의 기준선입니다.",
+            canAdvance: canContinue,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(
+                    currentStageId: stageId,
+                    inputs: [
+                        "ageRange": primaryAgeRange,
+                        "lifestyle": lifestyleHint,
+                        "priceSensitivity": priceSensitivity,
+                    ]
+                )
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: {
+                roadmapStore.saveStageEdit(currentStageId: stageId,
+                    inputs: [
+                        "ageRange": primaryAgeRange,
+                        "lifestyle": lifestyleHint,
+                        "priceSensitivity": priceSensitivity,
+                    ])
+            },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 주 연령대·산업 명시", detail: "한 명에게 팔린다는 의지로 좁혔는지 확인"),
+                    .init(label: "2. 라이프스타일·일상 동선", detail: "언제·어디서·왜 쓰는지 구체화"),
+                    .init(label: "3. 객단가·예산 한도", detail: "안 살 가격대까지 명확"),
+                    .init(label: "4. 반례 검증", detail: "이 페르소나가 절대 안 할 행동 4개"),
+                ],
+                verifyItems: [
+                    "'20-50대 여성' 같은 모호한 정의 X — 한 명의 구체 페르소나로 좁혔는가",
+                    "이 페르소나가 절대 안 갈 위치·안 살 가격대 명시했는가",
+                    "경쟁점 중 같은 페르소나 타깃 가게 1곳 이상 있는가 (없으면 시장 위험)",
+                    "후속 결정 (입지·메뉴·가격·광고) 의 기준선이 될 수 있을 만큼 구체적인가",
+                    "주변 지인 의견이 아닌 실제 잠재 고객 5명+ 대화로 검증했는가",
+                ],
+                nextStageLabel: "예산·시점 설정",
+                nextSummary: "타깃 페르소나 확정 → 예산·시점 설정 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: 3
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                pageNav
+                pageContent
+                    .animation(.easeInOut(duration: 0.22), value: page)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-    }
-}
-
-// MARK: - Hero
-
-private extension TargetCustomerStageView {
-
-    var heroSection: some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: BURadius.heroOuter, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [BUColor.midnight, BUColor.midnightDeep],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: BURadius.heroOuter, style: .continuous)
-                        .strokeBorder(.white.opacity(0.10), lineWidth: 1)
-                )
-
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                Text("KEY ACTION")
-                    .font(BUFont.heroEyebrow)
-                    .foregroundStyle(.white.opacity(0.60))
-                    .tracking(1.5)
-                    .textCase(.uppercase)
-
-                Text("타깃이 없는 가게는\n평균값으로 회귀합니다")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.white)
-                    .tracking(-0.4)
-                    .lineSpacing(3)
-
-                Text("외식업 폐업 사유 1위(28%)는 '타깃 불명확 + 차별화 실패'. 페르소나를 정의한 사장님의 폐업률은 미정의 사장님의 절반.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.white.opacity(0.72))
-                    .lineSpacing(3)
-
-                HStack(spacing: 8) {
-                    HeroMiniCard(icon: "person.fill",        label: "한 명",     detail: "구체적 페르소나")
-                    HeroMiniCard(icon: "mappin.circle.fill", label: "상황",      detail: "언제·어디서·왜")
-                    HeroMiniCard(icon: "scope",              label: "결정 기준", detail: "모든 선택의 시금석")
-                }
-                .padding(.top, 4)
-            }
-            .padding(BUSpacing.heroOuterPadding)
-        }
-        .buShadow(.hero)
     }
 }
 
@@ -139,12 +113,14 @@ private extension TargetCustomerStageView {
 private extension TargetCustomerStageView {
 
     var pageNav: some View {
-        Picker("", selection: $page) {
-            Text("왜 중요한가").tag(0)
-            Text("페르소나 정의").tag(1)
-            Text("검증").tag(2)
-        }
-        .pickerStyle(.segmented)
+        BUWizardPageNav(
+            page: page,
+            totalPages: 3,
+            labels: ["왜 중요한가", "페르소나 정의", "검증"],
+            onChange: { newPage in
+                withAnimation(.easeInOut(duration: 0.22)) { page = newPage }
+            }
+        )
     }
 
     @ViewBuilder
@@ -164,48 +140,60 @@ private extension TargetCustomerStageView {
 private extension TargetCustomerStageView {
 
     var whyPage: some View {
-        VStack(spacing: BUSpacing.cardGap) {
+        VStack(alignment: .leading, spacing: BUSpacing.cardGap) {
+            // 메인 메시지 카드
             BUCard(.outer) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    HStack(spacing: BUSpacing.xs) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 13))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(BUColor.midnight)
-                        Text("왜 이게 budget · location 전인가")
-                            .buEyebrowStyle()
+                        Text("왜 이게 BUDGET · LOCATION 전인가")
+                            .font(.system(size: 11, weight: .heavy))
+                            .tracking(0.6)
+                            .textCase(.uppercase)
+                            .foregroundStyle(BUColor.midnight)
                     }
 
                     Text("타깃 페르소나가 없으면 모든 후속 결정 — 입지·메뉴·가격대·광고 채널 — 이 평균값(=경쟁점과 동일)으로 회귀합니다.")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: 15, weight: .heavy))
                         .foregroundStyle(BUColor.ink)
-                        .lineSpacing(3)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 2)
 
                     Text("예: 20대 1인 직장인 타깃 → 도심·테이크아웃·1만원 객단가 → 평수 작아도 OK. 4인 가족이면 → 주차장·4인석·2-3만원 → 큰 평수 필수. 같은 외식업이라도 타깃이 모든 선택을 갈라놓습니다.")
-                        .font(BUFont.bodySmall)
+                        .font(.system(size: 13))
                         .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
-            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+            // 한국 SMB 데이터 박스
+            VStack(alignment: .leading, spacing: 10) {
                 Text("한국 SMB 데이터")
-                    .buEyebrowStyle()
+                    .font(.system(size: 10, weight: .heavy))
+                    .tracking(0.6)
+                    .textCase(.uppercase)
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.55))
 
-                VStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 9) {
                     DataPointRow(tag: "외식 폐업 사유", text: "1위 \"타깃 불명확 + 차별화 실패\" 28% — 한국외식산업연구원 2024")
                     DataPointRow(tag: "페르소나 효과", text: "정의한 사장님 폐업률 11% vs 미정의 22% — KOSME 2023")
                     DataPointRow(tag: "광고 ROAS",    text: "타깃 좁힌 캠페인 ROAS 3.2배 — 메타 광고 효율 보고서 2024")
                 }
             }
-            .padding(BUSpacing.md)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                BUColor.midnight.opacity(0.03),
-                in: RoundedRectangle(cornerRadius: BURadius.innerBlock, style: .continuous)
+                Color(red: 0.95, green: 0.96, blue: 0.98),
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: BURadius.innerBlock, style: .continuous)
-                    .strokeBorder(BUColor.midnight.opacity(0.07), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(BUColor.inkMuted.opacity(0.10), lineWidth: 1)
             )
         }
     }
@@ -444,21 +432,30 @@ private struct DataPointRow: View {
     let text: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            // ⚠️ 2026-05-20 alignment fix:
+            //   기존엔 HStack(alignment:.top) + tag.padding(.vertical, 2) 조합으로
+            //   tag 의 텍스트 baseline 이 body 텍스트 첫 줄보다 2pt 아래에 와서
+            //   "들쑥날쑥" 보임. 웹 SSOT 의 marginTop:1px 미러 + firstTextBaseline 으로 정렬.
             Text(tag)
-                .font(.system(size: 10, weight: .bold))
+                .font(.system(size: 10, weight: .heavy))
+                .tracking(0.2)
                 .foregroundStyle(BUColor.midnight)
                 .padding(.horizontal, 6)
-                .padding(.vertical, 2)
+                .padding(.vertical, 3)
                 .background(
                     BUColor.midnight.opacity(0.10),
                     in: RoundedRectangle(cornerRadius: 4, style: .continuous)
                 )
                 .fixedSize(horizontal: true, vertical: false)
+                .alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 } // 텍스트 baseline 보정
+
             Text(text)
                 .font(.system(size: 12))
                 .foregroundStyle(BUColor.inkSecondary)
-                .lineSpacing(2)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -547,6 +544,8 @@ private extension View {
 
 #if DEBUG
 #Preview("TargetCustomerStageView — Why") {
-    TargetCustomerStageView()
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["target-customer-definition"] }
+    return TargetCustomerStageView().environment(store)
 }
 #endif

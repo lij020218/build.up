@@ -62,13 +62,15 @@ export async function diagnoseBusinessHealth(
 
   const rawMessage = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
-    max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+    // ⚠️ 2026-05-18: `thinking` 파라미터는 OpenAI 마이그레이션 후 미지원 (silent drop).
+    //   종전엔 budget_tokens 2048 로 reasoning 토큰 확보를 의도했으나 실제 효과 0.
+    //   대신 max_tokens 를 1600 추가해 명시적 추론 분량 확보. 정확한 reasoning 강화는
+    //   향후 OpenAI o1-mini / o3-mini 분기 도입 시 재검토.
+    max_tokens: (options.maxTokens ?? DEFAULT_MAX_TOKENS) + 1600,
     // ✦ Prompt Caching — 같은 사용자가 시간차 진단 시 절감
     system: systemWithCache(HEALTH_DIAGNOSIS_SYSTEM_PROMPT),
-    // ✦ Adaptive Thinking — 다지표 종합 진단 (재무·운영·마케팅·리스크 교차 분석)
-    thinking: { type: "enabled", budget_tokens: 2048 },
     messages: [{ role: "user", content: userMessage }],
-  } as Parameters<typeof client.messages.create>[0]);
+  });
   const message = rawMessage as { content: Array<{ type: "text"; text: string }>; stop_reason: string | null; usage: { input_tokens: number; output_tokens: number } };
 
   const textBlock = message.content.find((block) => block.type === "text");

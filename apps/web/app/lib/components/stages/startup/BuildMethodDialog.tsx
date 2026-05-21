@@ -163,7 +163,7 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
                   cursor: "pointer",
                   flexShrink: 0,
                 }}
-                aria-label="Close"
+                aria-label="닫기"
               >
                 <X size={18} strokeWidth={2.2} />
               </button>

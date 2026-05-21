@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct MvpBuildStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "mvp-build"
+
     @State private var page = 0
 
     @AppStorage("mvp.coreFlow")  private var coreFlow  = ""
@@ -23,78 +27,75 @@ public struct MvpBuildStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(pages.indices, id: \.self) { i in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) { page = i }
-                                } label: {
-                                    Text(pages[i])
-                                        .font(BUFont.bodySmall.weight(page == i ? .semibold : .regular))
-                                        .foregroundStyle(page == i ? BUColor.midnight : BUColor.inkMuted)
-                                        .padding(.horizontal, BUSpacing.md)
-                                        .padding(.vertical, BUSpacing.sm)
-                                        .background(page == i ? BUColor.midnight.opacity(0.08) : Color.clear, in: Capsule())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, BUSpacing.sm)
-                    }
-                    .padding(.vertical, BUSpacing.xs)
+    /// 게이트: MVP 범위 정의 (코어 플로우 입력 + 기술 경로 선택).
+    private var canCompleteStage: Bool {
+        !coreFlow.trimmingCharacters(in: .whitespaces).isEmpty && !techPath.isEmpty
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: workflowPage
-                                case 1: buildPage
-                                default: techPathPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if coreFlow.trimmingCharacters(in: .whitespaces).isEmpty { return "핵심 워크플로우를 정의하세요" }
+        if techPath.isEmpty { return "기술 경로를 선택하세요" }
+        return "MVP 범위 정의 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "MVP 구축 · IP 보호",
+            stageEyebrow: "단계 9 · MVP 개발",
+            helperText: "MVP = 가장 작은 제품으로 가장 큰 가정을 검증. 6주 안에 실제 사용자에게 전달하는 것이 목표.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["techPath": techPath])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["techPath": techPath]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. MVP 범위 정의", detail: "「북극성 가설 1개 검증」에 필요한 최소 기능만 — Wide vs Deep 트레이드오프"),
+                .init(label: "2. 빌드 방법 결정", detail: "노코드(Bubble·Webflow)·로코드(Retool)·풀스택 비교 후 선택"),
+                .init(label: "3. 1차 MVP 출시", detail: "내부 알파 → 클로즈드 베타 → 오픈 베타 3단계 + 분석 셋업"),
+                .init(label: "4. 첫 사용자 10명", detail: "리드 고객 10명 onboard + 1:1 사용자 인터뷰 + 핵심 지표 측정"),
+                ],
+                verifyItems: [
+                "PMF 시그널 — 「제거하면 절망적」 답변 40%+ 가 PMF 신호 (Sean Ellis Test), 미달 시 GTM 전 재정의",
+                "보안 — 출시 전 OWASP Top 10 점검 + SQL injection·XSS·CSRF 사전 방어",
+                "개인정보 — 수집·이용·제공·파기 4항목 명문화, 위반 시 매출 3% 이내 과징금",
+                "이용약관·환불 — 7일 이내 청약철회·환불 조항 명시, 디지털콘텐츠 예외 조건 명문화",
+                "지재권 — 핵심 알고리즘·UI·로고 특허·상표·저작권 사전 출원, 외부 노출 후 출원 X",
+                "데이터 백업 — DB·파일 다중 백업·복구 시뮬, 출시 후 데이터 손실 시 신뢰 회복 불가",
+                ],
+                nextStageLabel: "런칭 GTM",
+                nextSummary: "MVP 출시·첫 사용자·PMF 신호 → 런칭 GTM 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: workflowPage
+                    case 1: buildPage
+                    default: techPathPage
                     }
                 }
-            }
-            .navigationTitle("MVP 개발")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 핵심 워크플로우
 
     private var workflowPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("MVP 개발")
-                    Text("MVP = 가장 작은 제품으로\n가장 큰 가정을 검증")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("6주 안에 실제 사용자에게 전달하는 것이 목표")
-                        .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("핵심 워크플로우 정의")
@@ -239,16 +240,14 @@ public struct MvpBuildStageView: View {
                 }
                 .buttonStyle(.plain)
             }
-
-            BUCard(.card) {
-                Toggle(isOn: $done) {
-                    Text("MVP 개발 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
-            }
         }
     }
 }
 
 #if DEBUG
-#Preview("MvpBuild") { MvpBuildStageView() }
+#Preview("MvpBuild") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["mvp-build"] }
+    return MvpBuildStageView().environment(store)
+}
 #endif

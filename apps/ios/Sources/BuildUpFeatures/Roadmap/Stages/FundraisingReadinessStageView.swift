@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct FundraisingReadinessStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "fundraising-readiness"
+
     @State private var page = 0
 
     @AppStorage("fr.monthlyBurnText") private var monthlyBurnText = ""
@@ -37,62 +41,68 @@ public struct FundraisingReadinessStageView: View {
         return cash / netBurn
     }
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(pages.indices, id: \.self) { i in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.2)) { page = i }
-                                } label: {
-                                    Text(pages[i])
-                                        .font(BUFont.bodySmall.weight(page == i ? .semibold : .regular))
-                                        .foregroundStyle(page == i ? BUColor.midnight : BUColor.inkMuted)
-                                        .padding(.horizontal, BUSpacing.md)
-                                        .padding(.vertical, BUSpacing.sm)
-                                        .background(page == i ? BUColor.midnight.opacity(0.08) : Color.clear, in: Capsule())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, BUSpacing.sm)
-                    }
-                    .padding(.vertical, BUSpacing.xs)
+    /// 게이트: IR 초안 — 피치덱 완성.
+    private var canCompleteStage: Bool {
+        pitchDeck
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: runwayPage
-                                case 1: irPage
-                                default: govSupportPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if !pitchDeck { return "IR 피치덱을 완성하세요" }
+        return "IR 초안 완성 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "런웨이·투자 준비",
+            stageEyebrow: "단계 13 · 투자 준비",
+            helperText: "런웨이를 측정하고 IR 피치덱과 재무 모델을 완성하세요. 정부 지원도 병행해 활주로를 늘립니다.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId)
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 캡테이블·런웨이 정리", detail: "지분 구조 + 옵션 풀 + 18개월 런웨이 + 마일스톤"),
+                .init(label: "2. 펀딩 라운드 결정", detail: "TIPS·시드·시리즈 A 비교 + 정부지원금 매칭"),
+                .init(label: "3. 데크·재무 모델", detail: "10~15페이지 데크 + 5년 재무 모델 + 시나리오 3종"),
+                .init(label: "4. 투자자 매칭·미팅", detail: "VC·엔젤 매칭 + 1차 미팅 + 듀딜 자료 사전 준비"),
+                ],
+                verifyItems: [
+                "캡테이블 — 공동창업자 vesting 미설정 시 투자 거절 1순위, 1년 cliff + 4년 vesting 표준",
+                "정부지원금 — TIPS·예비창업·초기창업 등 신청 후 입금까지 평균 4~12주, 일정 역산",
+                "런웨이 — 18개월 미만이면 fundraising에 집중, 12개월 미만이면 위기",
+                "데크 — 「Big Idea + Team + Traction」 3축 명확, 모호한 사업 모델은 즉시 거절",
+                "텀시트 — Liquidation Preference·Anti-dilution·Drag-along 등 핵심 조항 변호사 검토",
+                "정관 — 우선주·전환사채·전환우선주 사전 정의, 미정의 시 투자 단계에서 재작성 비용",
+                ],
+                nextStageLabel: "벤처 인증",
+                nextSummary: "캡테이블·런웨이·데크·투자자 매칭 완료 → 벤처 인증 단계로 진입"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: runwayPage
+                    case 1: irPage
+                    default: govSupportPage
                     }
                 }
-            }
-            .navigationTitle("투자 준비")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 런웨이 모델
@@ -288,18 +298,14 @@ public struct FundraisingReadinessStageView: View {
                     }.tint(BUColor.midnight)
                 }
             }
-
-            BUCard(.card) {
-                Toggle(isOn: $done) {
-                    Text("투자 준비 완료")
-                        .font(BUFont.bodySmall.weight(.semibold))
-                        .foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
-            }
         }
     }
 }
 
 #if DEBUG
-#Preview("FundraisingReadiness") { FundraisingReadinessStageView() }
+#Preview("FundraisingReadiness") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["fundraising-readiness"] }
+    return FundraisingReadinessStageView().environment(store)
+}
 #endif

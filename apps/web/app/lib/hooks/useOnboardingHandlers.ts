@@ -114,12 +114,23 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     nextDecisions = upsertStageDecision(nextDecisions, "industry-selection", {
       stageId: "industry-selection",
       selectedPrimaryOptionId: result.industryId,
+      // ⚠️ inputs.categoryId / subIndustryId 가 budget-setup·loan-guide·biz-registration 의
+      //    nextStageConditions 평가에 필수. 누락 시 online/startup-tech 셀러가 항상 offline path
+      //    로 traverse 되는 zombie 분기 버그(2026-05-18 audit) — 반드시 함께 set.
+      inputs: {
+        subIndustryId: result.industryId,
+        categoryId: result.industryCategoryId,
+      },
       completedAt: now,
     });
     nextDecisions = upsertStageDecision(nextDecisions, "startup-type", {
       stageId: "startup-type",
       selectedPrimaryOptionId: result.startupType,
-      inputs: result.franchiseBrandId ? { franchiseBrandId: result.franchiseBrandId } : undefined,
+      // startupType 도 decision key 로 분기에 쓰이므로 inputs 에 명시
+      inputs: {
+        startupType: result.startupType,
+        ...(result.franchiseBrandId ? { franchiseBrandId: result.franchiseBrandId } : {}),
+      },
       completedAt: now,
     });
     nextDecisions = upsertStageDecision(nextDecisions, "business-model", {

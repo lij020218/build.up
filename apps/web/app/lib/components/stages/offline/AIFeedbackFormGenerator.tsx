@@ -357,14 +357,14 @@ export function AIFeedbackFormGenerator({
               />
               <ExportButton
                 label={ko ? "네이버 폼용 복사" : "Copy for Naver Form"}
-                href="https://form.office.naver.com"
+                href="https://form.naver.com/templates"
                 copied={copiedKey === "naver"}
                 onCopy={() => doCopy("naver", toNaverFormText(form))}
                 ko={ko}
               />
               <ExportButton
-                label={ko ? "카카오톡 채널 발송용" : "For Kakao Channel"}
-                href="https://center-pf.kakao.com"
+                label={ko ? "카카오 비즈니스 폼용 복사" : "Copy for Kakao Business Form"}
+                href="https://business.kakao.com/info/talkbizform/"
                 copied={copiedKey === "kakao"}
                 onCopy={() => doCopy("kakao", toKakaoChannelText(form))}
                 ko={ko}

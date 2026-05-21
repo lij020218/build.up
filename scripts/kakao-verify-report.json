@@ -1,0 +1,4623 @@
+{
+  "ok": [
+    {
+      "region_key": "nowon-station-general",
+      "region_name": "노원역 상권",
+      "district_name": "노원구",
+      "search_keywords": [
+        "노원",
+        "노원구",
+        "노원역",
+        "상계동"
+      ],
+      "query": "노원",
+      "top": {
+        "place_name": "서울 태릉",
+        "address": "서울 노원구 화랑로 727",
+        "x": "127.09690435502482",
+        "y": "37.63466067158966"
+      }
+    },
+    {
+      "region_key": "junggye-dong-general",
+      "region_name": "중계동 은행사거리",
+      "district_name": "노원구",
+      "search_keywords": [
+        "노원구",
+        "중계동",
+        "중계역",
+        "은행사거리",
+        "학원가"
+      ],
+      "query": "노원구",
+      "top": {
+        "place_name": "서울둘레길 1코스 속세를 떠나지 않은 옛사람의 길",
+        "address": "서울 노원구 상계동 산 44-113",
+        "x": "127.06066041449286",
+        "y": "37.678914078918574"
+      }
+    },
+    {
+      "region_key": "hagye-station-general",
+      "region_name": "하계역 상권",
+      "district_name": "노원구",
+      "search_keywords": [
+        "노원구",
+        "하계동",
+        "하계역",
+        "하계"
+      ],
+      "query": "노원구",
+      "top": {
+        "place_name": "서울둘레길 1코스 속세를 떠나지 않은 옛사람의 길",
+        "address": "서울 노원구 상계동 산 44-113",
+        "x": "127.06066041449286",
+        "y": "37.678914078918574"
+      }
+    },
+    {
+      "region_key": "gongreung-general",
+      "region_name": "공릉동 먹자골목",
+      "district_name": "노원구",
+      "search_keywords": [
+        "노원구",
+        "공릉동",
+        "공릉",
+        "서울과기대",
+        "육사"
+      ],
+      "query": "노원구",
+      "top": {
+        "place_name": "서울둘레길 1코스 속세를 떠나지 않은 옛사람의 길",
+        "address": "서울 노원구 상계동 산 44-113",
+        "x": "127.06066041449286",
+        "y": "37.678914078918574"
+      }
+    },
+    {
+      "region_key": "sillim-station-general",
+      "region_name": "신림역 상권",
+      "district_name": "관악구",
+      "search_keywords": [
+        "관악구",
+        "신림",
+        "신림역",
+        "신림동"
+      ],
+      "query": "관악구",
+      "top": {
+        "place_name": "관악산",
+        "address": "서울 관악구 신림동 산 56-1",
+        "x": "126.96389684735281",
+        "y": "37.44446951034434"
+      }
+    },
+    {
+      "region_key": "snu-station-general",
+      "region_name": "서울대입구역 상권",
+      "district_name": "관악구",
+      "search_keywords": [
+        "관악구",
+        "서울대입구",
+        "서울대입구역",
+        "샤로수길",
+        "낙성대"
+      ],
+      "query": "관악구",
+      "top": {
+        "place_name": "관악산",
+        "address": "서울 관악구 신림동 산 56-1",
+        "x": "126.96389684735281",
+        "y": "37.44446951034434"
+      }
+    },
+    {
+      "region_key": "bongcheon-general",
+      "region_name": "봉천동 상권",
+      "district_name": "관악구",
+      "search_keywords": [
+        "관악구",
+        "봉천동",
+        "봉천",
+        "서울대벤처타운"
+      ],
+      "query": "관악구",
+      "top": {
+        "place_name": "관악산",
+        "address": "서울 관악구 신림동 산 56-1",
+        "x": "126.96389684735281",
+        "y": "37.44446951034434"
+      }
+    },
+    {
+      "region_key": "balsan-station-general",
+      "region_name": "발산역 상권",
+      "district_name": "강서구",
+      "search_keywords": [
+        "강서구",
+        "발산",
+        "발산역",
+        "마곡",
+        "마곡나루"
+      ],
+      "query": "강서구",
+      "top": {
+        "place_name": "서울식물원",
+        "address": "서울 강서구 마곡동로 161",
+        "x": "126.835037244018",
+        "y": "37.5693958477101"
+      }
+    },
+    {
+      "region_key": "hwagok-general",
+      "region_name": "화곡역 상권",
+      "district_name": "강서구",
+      "search_keywords": [
+        "강서구",
+        "화곡",
+        "화곡역",
+        "화곡동"
+      ],
+      "query": "강서구",
+      "top": {
+        "place_name": "서울식물원",
+        "address": "서울 강서구 마곡동로 161",
+        "x": "126.835037244018",
+        "y": "37.5693958477101"
+      }
+    },
+    {
+      "region_key": "gayang-general",
+      "region_name": "가양역 상권",
+      "district_name": "강서구",
+      "search_keywords": [
+        "강서구",
+        "가양",
+        "가양역",
+        "가양동"
+      ],
+      "query": "강서구",
+      "top": {
+        "place_name": "서울식물원",
+        "address": "서울 강서구 마곡동로 161",
+        "x": "126.835037244018",
+        "y": "37.5693958477101"
+      }
+    },
+    {
+      "region_key": "suyu-station-general",
+      "region_name": "수유역 상권",
+      "district_name": "강북구",
+      "search_keywords": [
+        "강북구",
+        "수유",
+        "수유역",
+        "수유동",
+        "강북"
+      ],
+      "query": "강북구",
+      "top": {
+        "place_name": "북한산둘레길 1구간소나무숲길",
+        "address": "서울 강북구 우이동 산 40-1",
+        "x": "127.00902108350806",
+        "y": "37.65888882945633"
+      }
+    },
+    {
+      "region_key": "changdong-general",
+      "region_name": "창동 상권",
+      "district_name": "도봉구",
+      "search_keywords": [
+        "도봉구",
+        "창동",
+        "창동역",
+        "쌍문",
+        "노원",
+        "창동 활성화"
+      ],
+      "query": "도봉구",
+      "top": {
+        "place_name": "도봉산",
+        "address": "서울 도봉구 도봉동 산 31",
+        "x": "127.01545859321786",
+        "y": "37.69884206393718"
+      }
+    },
+    {
+      "region_key": "gireum-general",
+      "region_name": "길음역 상권",
+      "district_name": "성북구",
+      "search_keywords": [
+        "성북구",
+        "길음",
+        "길음역",
+        "길음동",
+        "돈암"
+      ],
+      "query": "성북구",
+      "top": {
+        "place_name": "서울한양도성 낙산구간2코스",
+        "address": "서울 성북구 삼선동1가",
+        "x": "127.00863578989066",
+        "y": "37.58079664277135"
+      }
+    },
+    {
+      "region_key": "dongguk-univ-general",
+      "region_name": "성신여대입구 상권",
+      "district_name": "성북구",
+      "search_keywords": [
+        "성북구",
+        "성신여대",
+        "성신여대입구",
+        "돈암동",
+        "한성대"
+      ],
+      "query": "성북구",
+      "top": {
+        "place_name": "서울한양도성 낙산구간2코스",
+        "address": "서울 성북구 삼선동1가",
+        "x": "127.00863578989066",
+        "y": "37.58079664277135"
+      }
+    },
+    {
+      "region_key": "mokdong-general",
+      "region_name": "목동 오거리 상권",
+      "district_name": "양천구",
+      "search_keywords": [
+        "양천구",
+        "목동",
+        "목동오거리",
+        "목동역",
+        "오목교"
+      ],
+      "query": "양천구",
+      "top": {
+        "place_name": "목동로데오패션거리",
+        "address": "서울 양천구 신정동 1068",
+        "x": "126.8627825817472",
+        "y": "37.52788904096764"
+      }
+    },
+    {
+      "region_key": "guro-digital-general",
+      "region_name": "구로디지털단지 상권",
+      "district_name": "구로구",
+      "search_keywords": [
+        "구로구",
+        "구로디지털단지",
+        "구로디지털",
+        "G밸리",
+        "가산"
+      ],
+      "query": "구로구",
+      "top": {
+        "place_name": "푸른수목원",
+        "address": "서울 구로구 연동로 240",
+        "x": "126.82541340864",
+        "y": "37.4839833354275"
+      }
+    },
+    {
+      "region_key": "sadang-general",
+      "region_name": "사당역 상권",
+      "district_name": "동작구",
+      "search_keywords": [
+        "동작구",
+        "사당",
+        "사당역",
+        "방배",
+        "이수"
+      ],
+      "query": "동작구",
+      "top": {
+        "place_name": "노량진컵밥거리",
+        "address": "서울 동작구 노량진로 174",
+        "x": "126.94539042276",
+        "y": "37.5136058564068"
+      }
+    },
+    {
+      "region_key": "noryangjin-general",
+      "region_name": "노량진 상권",
+      "district_name": "동작구",
+      "search_keywords": [
+        "동작구",
+        "노량진",
+        "노량진역",
+        "노량진 고시촌"
+      ],
+      "query": "동작구",
+      "top": {
+        "place_name": "노량진컵밥거리",
+        "address": "서울 동작구 노량진로 174",
+        "x": "126.94539042276",
+        "y": "37.5136058564068"
+      }
+    },
+    {
+      "region_key": "yeonsinnae-general",
+      "region_name": "연신내역 상권",
+      "district_name": "은평구",
+      "search_keywords": [
+        "은평구",
+        "연신내",
+        "연신내역",
+        "불광",
+        "구파발"
+      ],
+      "query": "은평구",
+      "top": {
+        "place_name": "북한산둘레길 9구간마실길",
+        "address": "서울 은평구 진관동",
+        "x": "126.94056877482242",
+        "y": "37.64292139966376"
+      }
+    },
+    {
+      "region_key": "suwon-ingye-general",
+      "region_name": "수원 인계동 상권",
+      "district_name": "수원시 팔달구",
+      "search_keywords": [
+        "수원",
+        "수원시",
+        "인계동",
+        "인계",
+        "수원 중심"
+      ],
+      "query": "수원",
+      "top": {
+        "place_name": "수원화성",
+        "address": "경기 수원시 장안구 영화동 320-2",
+        "x": "127.011795743342",
+        "y": "37.2869569586225"
+      }
+    },
+    {
+      "region_key": "suwon-station-general",
+      "region_name": "수원역 상권",
+      "district_name": "수원시 권선구",
+      "search_keywords": [
+        "수원",
+        "수원시",
+        "수원역",
+        "매산동",
+        "매탄"
+      ],
+      "query": "수원",
+      "top": {
+        "place_name": "수원화성",
+        "address": "경기 수원시 장안구 영화동 320-2",
+        "x": "127.011795743342",
+        "y": "37.2869569586225"
+      }
+    },
+    {
+      "region_key": "bundang-jeongja-general",
+      "region_name": "정자역 상권",
+      "district_name": "성남시 분당구",
+      "search_keywords": [
+        "분당",
+        "분당구",
+        "정자",
+        "정자역",
+        "성남",
+        "판교"
+      ],
+      "query": "분당",
+      "top": {
+        "place_name": "분당정자동카페골목",
+        "address": "경기 성남시 분당구 정자동 97-3",
+        "x": "127.10613880132",
+        "y": "37.370150892237"
+      }
+    },
+    {
+      "region_key": "goyang-wangsimni-general",
+      "region_name": "일산 웨스턴돔 상권",
+      "district_name": "고양시 일산서구",
+      "search_keywords": [
+        "고양",
+        "일산",
+        "일산서구",
+        "주엽",
+        "웨스턴돔",
+        "라페스타"
+      ],
+      "query": "고양",
+      "top": {
+        "place_name": "북한산",
+        "address": "경기 고양시 덕양구 북한동 산 1-1",
+        "x": "126.97799134593596",
+        "y": "37.65865286599552"
+      }
+    },
+    {
+      "region_key": "seongsu-general",
+      "region_name": "성수동 카페거리",
+      "district_name": "성동구",
+      "search_keywords": [
+        "성수",
+        "성수동",
+        "뚝섬",
+        "서울숲",
+        "연무장길",
+        "성수역"
+      ],
+      "query": "성수",
+      "top": {
+        "place_name": "서울숲카페거리",
+        "address": "서울 성동구 성수동1가 668-11",
+        "x": "127.043028992489",
+        "y": "37.5464440372535"
+      }
+    },
+    {
+      "region_key": "wangsimni-general",
+      "region_name": "왕십리역 상권",
+      "district_name": "성동구",
+      "search_keywords": [
+        "왕십리",
+        "왕십리역",
+        "성동구",
+        "이마트왕십리",
+        "엔터식스"
+      ],
+      "query": "왕십리",
+      "top": {
+        "place_name": "다이소 상왕십리역점",
+        "address": "서울 성동구 왕십리로 373",
+        "x": "127.028663411408",
+        "y": "37.5642979721057"
+      }
+    },
+    {
+      "region_key": "apgujeong-rodeo-general",
+      "region_name": "압구정로데오 상권",
+      "district_name": "강남구",
+      "search_keywords": [
+        "압구정",
+        "압구정로데오",
+        "도산공원",
+        "압구정역",
+        "강남구"
+      ],
+      "query": "압구정",
+      "top": {
+        "place_name": "압구정지",
+        "address": "서울 강남구 압구정로29길 68",
+        "x": "127.029112581665",
+        "y": "37.5318259575355"
+      }
+    },
+    {
+      "region_key": "garosu-gil-general",
+      "region_name": "신사·가로수길",
+      "district_name": "강남구",
+      "search_keywords": [
+        "가로수길",
+        "신사",
+        "신사역",
+        "강남구",
+        "신사동"
+      ],
+      "query": "가로수길",
+      "top": {
+        "place_name": "Apple 가로수길",
+        "address": "서울 강남구 가로수길 43",
+        "x": "127.02272940977892",
+        "y": "37.520819816124934"
+      }
+    },
+    {
+      "region_key": "daechi-general",
+      "region_name": "대치동 학원가",
+      "district_name": "강남구",
+      "search_keywords": [
+        "대치동",
+        "대치",
+        "강남구",
+        "학원가",
+        "대치역",
+        "도곡"
+      ],
+      "query": "대치동",
+      "top": {
+        "place_name": "대치동학원가",
+        "address": "서울 강남구 대치동 1026",
+        "x": "127.058171762935",
+        "y": "37.4980203713024"
+      }
+    },
+    {
+      "region_key": "kondae-general",
+      "region_name": "건대입구역 상권",
+      "district_name": "광진구",
+      "search_keywords": [
+        "건대",
+        "건대입구",
+        "건대입구역",
+        "광진구",
+        "건국대"
+      ],
+      "query": "건대",
+      "top": {
+        "place_name": "건국대학교 서울캠퍼스",
+        "address": "서울 광진구 능동로 120",
+        "x": "127.07741635877292",
+        "y": "37.543536094587516"
+      }
+    },
+    {
+      "region_key": "myeongdong-general",
+      "region_name": "명동 상권",
+      "district_name": "중구",
+      "search_keywords": [
+        "명동",
+        "명동역",
+        "중구",
+        "남대문",
+        "을지로입구"
+      ],
+      "query": "명동",
+      "top": {
+        "place_name": "명동거리",
+        "address": "서울 중구 명동2가",
+        "x": "126.984901336292",
+        "y": "37.5620769169639"
+      }
+    },
+    {
+      "region_key": "euljiro-general",
+      "region_name": "을지로 힙지로",
+      "district_name": "중구",
+      "search_keywords": [
+        "을지로",
+        "힙지로",
+        "을지로3가",
+        "을지로4가",
+        "중구",
+        "청계천"
+      ],
+      "query": "을지로",
+      "top": {
+        "place_name": "롯데호텔 서울",
+        "address": "서울 중구 을지로 30",
+        "x": "126.98101264795298",
+        "y": "37.56538301228365"
+      }
+    },
+    {
+      "region_key": "insadong-bukchon-general",
+      "region_name": "인사동·북촌 상권",
+      "district_name": "종로구",
+      "search_keywords": [
+        "인사동",
+        "북촌",
+        "안국역",
+        "종로구",
+        "경복궁"
+      ],
+      "query": "인사동",
+      "top": {
+        "place_name": "인사동 문화의거리",
+        "address": "서울 종로구 인사동10길 11-4",
+        "x": "126.985591616819",
+        "y": "37.5745467832909"
+      }
+    },
+    {
+      "region_key": "gwanghwamun-general",
+      "region_name": "광화문·종각 상권",
+      "district_name": "종로구",
+      "search_keywords": [
+        "광화문",
+        "종각",
+        "시청",
+        "종로",
+        "종각역",
+        "광화문역"
+      ],
+      "query": "광화문",
+      "top": {
+        "place_name": "광화문",
+        "address": "서울 종로구 사직로 161",
+        "x": "126.97685309595215",
+        "y": "37.57596445980707"
+      }
+    },
+    {
+      "region_key": "mangwon-general",
+      "region_name": "망원동 상권",
+      "district_name": "마포구",
+      "search_keywords": [
+        "망원",
+        "망원동",
+        "망원역",
+        "마포구",
+        "망리단길"
+      ],
+      "query": "망원",
+      "top": {
+        "place_name": "망리단길",
+        "address": "서울 마포구 망원동",
+        "x": "126.905914457472",
+        "y": "37.5536575185624"
+      }
+    },
+    {
+      "region_key": "sinchon-general",
+      "region_name": "신촌역 상권",
+      "district_name": "서대문구",
+      "search_keywords": [
+        "신촌",
+        "신촌역",
+        "서대문구",
+        "이대",
+        "연세대"
+      ],
+      "query": "신촌",
+      "top": {
+        "place_name": "안산자락길",
+        "address": "서울 서대문구 봉원동",
+        "x": "126.94816634534915",
+        "y": "37.575422861783345"
+      }
+    },
+    {
+      "region_key": "yeongdeungpo-general",
+      "region_name": "영등포역 상권",
+      "district_name": "영등포구",
+      "search_keywords": [
+        "영등포",
+        "영등포역",
+        "영등포구",
+        "영등포시장",
+        "타임스퀘어"
+      ],
+      "query": "영등포",
+      "top": {
+        "place_name": "한강",
+        "address": "서울 영등포구 여의도동",
+        "x": "126.947545050571",
+        "y": "37.5250892160129"
+      }
+    },
+    {
+      "region_key": "banpo-seorae-general",
+      "region_name": "반포·서래마을 상권",
+      "district_name": "서초구",
+      "search_keywords": [
+        "반포",
+        "서래마을",
+        "고속터미널",
+        "서초구",
+        "반포역"
+      ],
+      "query": "반포",
+      "top": {
+        "place_name": "서래섬",
+        "address": "서울 서초구 반포동 137-41",
+        "x": "126.989929422809",
+        "y": "37.5080210111994"
+      }
+    },
+    {
+      "region_key": "gyodae-general",
+      "region_name": "교대·방배 카페거리",
+      "district_name": "서초구",
+      "search_keywords": [
+        "서초구",
+        "교대",
+        "교대역",
+        "방배",
+        "방배동",
+        "방배카페거리"
+      ],
+      "query": "서초구",
+      "top": {
+        "place_name": "서울 헌릉과 인릉",
+        "address": "서울 서초구 헌인릉길 36-10",
+        "x": "127.082087774919",
+        "y": "37.4653644311783"
+      }
+    },
+    {
+      "region_key": "jamsil-general",
+      "region_name": "잠실역 상권",
+      "district_name": "송파구",
+      "search_keywords": [
+        "잠실",
+        "잠실역",
+        "송파구",
+        "롯데월드",
+        "석촌호수"
+      ],
+      "query": "잠실",
+      "top": {
+        "place_name": "석촌호수 서호",
+        "address": "서울 송파구 잠실동 47",
+        "x": "127.099112837006",
+        "y": "37.5076807262772"
+      }
+    },
+    {
+      "region_key": "munjeong-general",
+      "region_name": "문정·가락 상권",
+      "district_name": "송파구",
+      "search_keywords": [
+        "문정",
+        "문정역",
+        "가락시장",
+        "송파구",
+        "가락몰"
+      ],
+      "query": "문정",
+      "top": {
+        "place_name": "워터킹덤",
+        "address": "서울 송파구 송파대로 111",
+        "x": "127.12478406415195",
+        "y": "37.480209937378454"
+      }
+    },
+    {
+      "region_key": "cheonho-general",
+      "region_name": "천호역 상권",
+      "district_name": "강동구",
+      "search_keywords": [
+        "천호",
+        "천호역",
+        "강동구",
+        "강동",
+        "현대백화점천호점"
+      ],
+      "query": "천호",
+      "top": {
+        "place_name": "광진교8번가",
+        "address": "서울 강동구 구천면로 77",
+        "x": "127.11418651384618",
+        "y": "37.54449916415587"
+      }
+    },
+    {
+      "region_key": "hoegi-general",
+      "region_name": "회기·경희대 상권",
+      "district_name": "동대문구",
+      "search_keywords": [
+        "회기",
+        "회기역",
+        "경희대",
+        "동대문구",
+        "한국외대"
+      ],
+      "query": "회기",
+      "top": {
+        "place_name": "경희대학교 교시탑",
+        "address": "서울 동대문구 경희대로 23",
+        "x": "127.052622072972",
+        "y": "37.5954642003182"
+      }
+    },
+    {
+      "region_key": "sangbong-general",
+      "region_name": "상봉·망우 상권",
+      "district_name": "중랑구",
+      "search_keywords": [
+        "중랑구",
+        "상봉",
+        "상봉역",
+        "망우",
+        "면목동"
+      ],
+      "query": "중랑구",
+      "top": {
+        "place_name": "중랑천",
+        "address": "서울 중랑구 면목동 1338-12",
+        "x": "127.070847357397",
+        "y": "37.5897928353235"
+      }
+    },
+    {
+      "region_key": "yongridangil-general",
+      "region_name": "용리단길 상권",
+      "district_name": "용산구",
+      "search_keywords": [
+        "용산",
+        "용리단길",
+        "삼각지",
+        "삼각지역",
+        "신용산역",
+        "용산역",
+        "용산구"
+      ],
+      "query": "용산",
+      "top": {
+        "place_name": "이태원거리",
+        "address": "서울 용산구 이태원동 119-23",
+        "x": "126.99580922812",
+        "y": "37.5345613066561"
+      }
+    },
+    {
+      "region_key": "ichon-general",
+      "region_name": "이촌동 상권",
+      "district_name": "용산구",
+      "search_keywords": [
+        "이촌",
+        "이촌역",
+        "이촌동",
+        "용산구",
+        "한강진역",
+        "용산가족공원"
+      ],
+      "query": "이촌",
+      "top": {
+        "place_name": "노들섬",
+        "address": "서울 용산구 양녕로 445",
+        "x": "126.95803386590158",
+        "y": "37.51766013568054"
+      }
+    },
+    {
+      "region_key": "beomgye-general",
+      "region_name": "안양 범계역 상권",
+      "district_name": "안양시 동안구",
+      "search_keywords": [
+        "안양",
+        "범계",
+        "범계역",
+        "평촌",
+        "평촌신도시",
+        "안양시"
+      ],
+      "query": "안양",
+      "top": {
+        "place_name": "서울대 안양수목원",
+        "address": "경기 안양시 만안구 예술공원로 280",
+        "x": "126.943554881414",
+        "y": "37.421579337578"
+      }
+    },
+    {
+      "region_key": "pyeongchon-central-general",
+      "region_name": "평촌 중앙 상권",
+      "district_name": "안양시 동안구",
+      "search_keywords": [
+        "안양",
+        "평촌",
+        "평촌역",
+        "호계동",
+        "비산동",
+        "안양시"
+      ],
+      "query": "안양",
+      "top": {
+        "place_name": "서울대 안양수목원",
+        "address": "경기 안양시 만안구 예술공원로 280",
+        "x": "126.943554881414",
+        "y": "37.421579337578"
+      }
+    },
+    {
+      "region_key": "jugwon-general",
+      "region_name": "용인 죽전역 상권",
+      "district_name": "용인시 수지구",
+      "search_keywords": [
+        "용인",
+        "죽전",
+        "죽전역",
+        "수지구",
+        "분당선",
+        "죽전동"
+      ],
+      "query": "용인",
+      "top": {
+        "place_name": "에버랜드",
+        "address": "경기 용인시 처인구 포곡읍 에버랜드로 199",
+        "x": "127.20219830178264",
+        "y": "37.293101115700345"
+      }
+    },
+    {
+      "region_key": "sujiguicheong-general",
+      "region_name": "수지구청역 상권",
+      "district_name": "용인시 수지구",
+      "search_keywords": [
+        "용인",
+        "수지",
+        "수지구청역",
+        "풍덕천동",
+        "신분당선",
+        "수지구"
+      ],
+      "query": "용인",
+      "top": {
+        "place_name": "에버랜드",
+        "address": "경기 용인시 처인구 포곡읍 에버랜드로 199",
+        "x": "127.20219830178264",
+        "y": "37.293101115700345"
+      }
+    },
+    {
+      "region_key": "seoulstation-general",
+      "region_name": "서울역 상권",
+      "district_name": "중구",
+      "search_keywords": [
+        "서울역",
+        "서울역 주변",
+        "중림동",
+        "만리동",
+        "서계동",
+        "청파동"
+      ],
+      "query": "서울역",
+      "top": {
+        "place_name": "서울역",
+        "address": "서울 중구 한강대로 405",
+        "x": "126.97070335253385",
+        "y": "37.55406888733184"
+      }
+    },
+    {
+      "region_key": "serosu-gil-general",
+      "region_name": "세로수길·도산공원",
+      "district_name": "강남구",
+      "search_keywords": [
+        "세로수길",
+        "도산공원",
+        "도산대로",
+        "압구정",
+        "강남구",
+        "신사동"
+      ],
+      "query": "세로수길",
+      "top": {
+        "place_name": "신사동가로수길",
+        "address": "서울 강남구 압구정로 120",
+        "x": "127.022836977184",
+        "y": "37.5211558694563"
+      }
+    },
+    {
+      "region_key": "cheongdam-general",
+      "region_name": "청담동 명품거리",
+      "district_name": "강남구",
+      "search_keywords": [
+        "청담",
+        "청담동",
+        "청담사거리",
+        "갤러리아",
+        "강남구",
+        "명품거리"
+      ],
+      "query": "청담",
+      "top": {
+        "place_name": "청담동명품거리",
+        "address": "서울 강남구 압구정로 448",
+        "x": "127.046048046817",
+        "y": "37.5261262382238"
+      }
+    },
+    {
+      "region_key": "sinsa-station-general",
+      "region_name": "신사역 가로수길 진입부",
+      "district_name": "강남구",
+      "search_keywords": [
+        "신사",
+        "신사역",
+        "가로수길",
+        "강남구",
+        "논현"
+      ],
+      "query": "신사",
+      "top": {
+        "place_name": "압구정로데오거리",
+        "address": "서울 강남구 신사동 668-33",
+        "x": "127.039152029523",
+        "y": "37.5267558230172"
+      }
+    },
+    {
+      "region_key": "yangjae-general",
+      "region_name": "양재역 상권",
+      "district_name": "서초구",
+      "search_keywords": [
+        "양재",
+        "양재역",
+        "서초구",
+        "양재시민의숲",
+        "AT센터"
+      ],
+      "query": "양재",
+      "top": {
+        "place_name": "양재역 신분당선",
+        "address": "서울 서초구 남부순환로 지하 2585",
+        "x": "127.035154074503",
+        "y": "37.4834655780476"
+      }
+    },
+    {
+      "region_key": "jamwon-banpo-general",
+      "region_name": "잠원·신반포 상권",
+      "district_name": "서초구",
+      "search_keywords": [
+        "잠원",
+        "잠원동",
+        "신반포",
+        "서초구",
+        "고속터미널"
+      ],
+      "query": "잠원",
+      "top": {
+        "place_name": "신사동간장게장골목",
+        "address": "서울 서초구 신반포로47길 107",
+        "x": "127.018346825073",
+        "y": "37.5150730777176"
+      }
+    },
+    {
+      "region_key": "helio-city-general",
+      "region_name": "헬리오시티 상권",
+      "district_name": "송파구",
+      "search_keywords": [
+        "헬리오시티",
+        "가락",
+        "송파헬리오",
+        "송파구",
+        "가락몰"
+      ],
+      "query": "헬리오시티",
+      "top": {
+        "place_name": "헬리오시티아파트 상가",
+        "address": "서울 송파구 송파대로 345",
+        "x": "127.111610941234",
+        "y": "37.4996100876749"
+      }
+    },
+    {
+      "region_key": "bangi-general",
+      "region_name": "방이동 먹자골목",
+      "district_name": "송파구",
+      "search_keywords": [
+        "방이",
+        "방이동",
+        "방이먹자골목",
+        "송파구",
+        "올림픽공원"
+      ],
+      "query": "방이",
+      "top": {
+        "place_name": "방이동먹자골목",
+        "address": "서울 송파구 방이동 95-4",
+        "x": "127.109220856293",
+        "y": "37.5147825360342"
+      }
+    },
+    {
+      "region_key": "jamsil-saenae-general",
+      "region_name": "잠실새내·잠실종합운동장",
+      "district_name": "송파구",
+      "search_keywords": [
+        "잠실새내",
+        "잠실종합운동장",
+        "종합운동장",
+        "송파구",
+        "잠실"
+      ],
+      "query": "잠실새내",
+      "top": {
+        "place_name": "잠실새내역 2호선",
+        "address": "서울 송파구 올림픽로 지하 140",
+        "x": "127.086314327913",
+        "y": "37.5116263587296"
+      }
+    },
+    {
+      "region_key": "dunchon-olympicpark-general",
+      "region_name": "둔촌·올림픽파크포레온",
+      "district_name": "강동구",
+      "search_keywords": [
+        "둔촌",
+        "둔촌동",
+        "올림픽파크포레온",
+        "강동구",
+        "올림픽공원"
+      ],
+      "query": "둔촌",
+      "top": {
+        "place_name": "일자산",
+        "address": "서울 강동구 둔촌동 산 11-7",
+        "x": "127.150260083291",
+        "y": "37.5294418097539"
+      }
+    },
+    {
+      "region_key": "gildong-general",
+      "region_name": "길동·강동역 상권",
+      "district_name": "강동구",
+      "search_keywords": [
+        "길동",
+        "강동역",
+        "강동구",
+        "천호",
+        "길동사거리"
+      ],
+      "query": "길동",
+      "top": {
+        "place_name": "두산저수지",
+        "address": "서울 강동구 길동 31-2",
+        "x": "127.15192952372405",
+        "y": "37.54206358258416"
+      }
+    },
+    {
+      "region_key": "gangil-misa-general",
+      "region_name": "강일·미사 경계 상권",
+      "district_name": "강동구",
+      "search_keywords": [
+        "강일",
+        "미사",
+        "강일역",
+        "강동구",
+        "하남미사"
+      ],
+      "query": "강일",
+      "top": {
+        "place_name": "망월천",
+        "address": "서울 강동구 강일동",
+        "x": "127.17500011261",
+        "y": "37.5700571414647"
+      }
+    },
+    {
+      "region_key": "cheongnyangni-general",
+      "region_name": "청량리·홍릉 상권",
+      "district_name": "동대문구",
+      "search_keywords": [
+        "청량리",
+        "청량리역",
+        "홍릉",
+        "동대문구",
+        "롯데캐슬",
+        "한국과학기술연구원"
+      ],
+      "query": "청량리",
+      "top": {
+        "place_name": "홍릉시험림",
+        "address": "서울 동대문구 회기로 57",
+        "x": "127.04485106092139",
+        "y": "37.59396455518687"
+      }
+    },
+    {
+      "region_key": "dapsimni-general",
+      "region_name": "답십리 헤리티지 상권",
+      "district_name": "동대문구",
+      "search_keywords": [
+        "답십리",
+        "답십리역",
+        "동대문구",
+        "장한평"
+      ],
+      "query": "답십리",
+      "top": {
+        "place_name": "촬영소고개",
+        "address": "서울 동대문구 답십리동 2-295",
+        "x": "127.063355568664",
+        "y": "37.5728151679395"
+      }
+    },
+    {
+      "region_key": "janghanpyeong-general",
+      "region_name": "장한평·동대문구청",
+      "district_name": "동대문구",
+      "search_keywords": [
+        "장한평",
+        "장한평역",
+        "동대문구청",
+        "동대문구",
+        "용두"
+      ],
+      "query": "장한평",
+      "top": {
+        "place_name": "장한평역 5호선",
+        "address": "서울 동대문구 천호대로 지하 405",
+        "x": "127.06370373106944",
+        "y": "37.5616038910656"
+      }
+    },
+    {
+      "region_key": "sangbong-thesharp-general",
+      "region_name": "상봉터미널 더샵",
+      "district_name": "중랑구",
+      "search_keywords": [
+        "상봉터미널",
+        "상봉더샵",
+        "망우",
+        "중랑구",
+        "상봉"
+      ],
+      "query": "상봉터미널",
+      "top": {
+        "place_name": "상봉임시정류장",
+        "address": "서울 중랑구 상봉동 160-27",
+        "x": "127.09285990838343",
+        "y": "37.59650797738818"
+      }
+    },
+    {
+      "region_key": "myeonmok-general",
+      "region_name": "면목동 상권",
+      "district_name": "중랑구",
+      "search_keywords": [
+        "면목",
+        "면목동",
+        "면목역",
+        "중랑구",
+        "사가정"
+      ],
+      "query": "면목",
+      "top": {
+        "place_name": "용마산스카이워크전망대",
+        "address": "서울 중랑구 면목동 산 1-3",
+        "x": "127.1031931306371",
+        "y": "37.58291784148622"
+      }
+    },
+    {
+      "region_key": "sungshin-univ-general",
+      "region_name": "성신여대·돈암",
+      "district_name": "성북구",
+      "search_keywords": [
+        "성신여대",
+        "성신여대입구",
+        "돈암",
+        "성북구",
+        "미아리"
+      ],
+      "query": "성신여대",
+      "top": {
+        "place_name": "성신여자대학교 돈암수정캠퍼스",
+        "address": "서울 성북구 보문로34다길 2",
+        "x": "127.022129316251",
+        "y": "37.5916680669509"
+      }
+    },
+    {
+      "region_key": "seongbuk-dong-general",
+      "region_name": "성북동 한옥거리",
+      "district_name": "성북구",
+      "search_keywords": [
+        "성북동",
+        "성북구",
+        "한성대입구",
+        "간송미술관",
+        "심우장"
+      ],
+      "query": "성북동",
+      "top": {
+        "place_name": "만해한용운심우장",
+        "address": "서울 성북구 성북로29길 24",
+        "x": "126.991670714039",
+        "y": "37.5936484258243"
+      }
+    },
+    {
+      "region_key": "bomun-general",
+      "region_name": "보문역 상권",
+      "district_name": "성북구",
+      "search_keywords": [
+        "보문",
+        "보문역",
+        "성북구",
+        "안암",
+        "신설동"
+      ],
+      "query": "보문",
+      "top": {
+        "place_name": "성북천",
+        "address": "서울 성북구 보문동7가",
+        "x": "127.024081930439",
+        "y": "37.5793493080769"
+      }
+    },
+    {
+      "region_key": "dongseon-dong-general",
+      "region_name": "동선동 롯데캐슬",
+      "district_name": "성북구",
+      "search_keywords": [
+        "동선동",
+        "한성대입구",
+        "성북구",
+        "동소문동",
+        "롯데캐슬"
+      ],
+      "query": "동선동",
+      "top": {
+        "place_name": "권진규아틀리에",
+        "address": "서울 성북구 동소문로26마길 2-15",
+        "x": "127.021650018073",
+        "y": "37.5943927552775"
+      }
+    },
+    {
+      "region_key": "mia-sageori-general",
+      "region_name": "미아사거리 상권",
+      "district_name": "강북구",
+      "search_keywords": [
+        "미아사거리",
+        "미아",
+        "강북구",
+        "미아사거리역",
+        "롯데백화점미아점"
+      ],
+      "query": "미아사거리",
+      "top": {
+        "place_name": "미아사거리",
+        "address": "서울 강북구 미아동 14-2",
+        "x": "127.030406594109",
+        "y": "37.609094989686"
+      }
+    },
+    {
+      "region_key": "suyu-uisinseol-general",
+      "region_name": "수유·우이신설선",
+      "district_name": "강북구",
+      "search_keywords": [
+        "수유",
+        "수유역",
+        "우이",
+        "강북구",
+        "우이신설선"
+      ],
+      "query": "수유",
+      "top": {
+        "place_name": "북한산둘레길 3구간흰구름길",
+        "address": "서울 강북구 수유동",
+        "x": "127.00845142236685",
+        "y": "37.632326065962104"
+      }
+    },
+    {
+      "region_key": "419-sageori-general",
+      "region_name": "4.19사거리·솔밭공원",
+      "district_name": "강북구",
+      "search_keywords": [
+        "4.19사거리",
+        "솔밭공원",
+        "강북구",
+        "쌍문",
+        "수유"
+      ],
+      "query": "4.19사거리",
+      "top": {
+        "place_name": "국립4.19묘지입구사거리",
+        "address": "서울 강북구 수유동",
+        "x": "127.014304764414",
+        "y": "37.6482585141112"
+      }
+    },
+    {
+      "region_key": "seoul-arena-general",
+      "region_name": "서울아레나 상권",
+      "district_name": "도봉구",
+      "search_keywords": [
+        "서울아레나",
+        "도봉구",
+        "창동",
+        "도봉산"
+      ],
+      "query": "서울아레나",
+      "top": {
+        "place_name": "서울아레나 (2027년 예정)",
+        "address": "서울 도봉구 창동 1-24",
+        "x": "127.05097225274424",
+        "y": "37.65684014058705"
+      }
+    },
+    {
+      "region_key": "dobongsan-general",
+      "region_name": "도봉산 입구·창포원",
+      "district_name": "도봉구",
+      "search_keywords": [
+        "도봉산",
+        "도봉산역",
+        "도봉구",
+        "창포원"
+      ],
+      "query": "도봉산",
+      "top": {
+        "place_name": "도봉산",
+        "address": "서울 도봉구 도봉동 산 31",
+        "x": "127.01545859321786",
+        "y": "37.69884206393718"
+      }
+    },
+    {
+      "region_key": "ssangmun-general",
+      "region_name": "쌍문동 상권",
+      "district_name": "도봉구",
+      "search_keywords": [
+        "쌍문",
+        "쌍문동",
+        "쌍문역",
+        "도봉구"
+      ],
+      "query": "쌍문",
+      "top": {
+        "place_name": "우이천",
+        "address": "서울 도봉구 쌍문동",
+        "x": "127.014678685991",
+        "y": "37.6596973427241"
+      }
+    },
+    {
+      "region_key": "gwangwoon-seoulwon-general",
+      "region_name": "광운대 서울원",
+      "district_name": "노원구",
+      "search_keywords": [
+        "광운대",
+        "서울원",
+        "월계",
+        "노원구",
+        "광운대역"
+      ],
+      "query": "광운대",
+      "top": {
+        "place_name": "광운대학교",
+        "address": "서울 노원구 광운로 20",
+        "x": "127.058270608867",
+        "y": "37.6192404638865"
+      }
+    },
+    {
+      "region_key": "taeneung-hwarang-general",
+      "region_name": "태릉입구·화랑로",
+      "district_name": "노원구",
+      "search_keywords": [
+        "태릉입구",
+        "화랑로",
+        "노원구",
+        "공릉",
+        "월계"
+      ],
+      "query": "태릉입구",
+      "top": {
+        "place_name": "태릉입구역 7호선",
+        "address": "서울 노원구 동일로 지하 992-1",
+        "x": "127.075405300578",
+        "y": "37.618459513199"
+      }
+    },
+    {
+      "region_key": "eunpyeong-newtown-general",
+      "region_name": "은평뉴타운·진관",
+      "district_name": "은평구",
+      "search_keywords": [
+        "은평뉴타운",
+        "진관동",
+        "은평구",
+        "구파발",
+        "진관"
+      ],
+      "query": "은평뉴타운",
+      "top": {
+        "place_name": "은평뉴타운",
+        "address": "서울 은평구 진관2로 57-7",
+        "x": "126.923427376235",
+        "y": "37.6345575894187"
+      }
+    },
+    {
+      "region_key": "eungam-galhyeon-general",
+      "region_name": "응암·갈현",
+      "district_name": "은평구",
+      "search_keywords": [
+        "응암",
+        "갈현",
+        "은평구",
+        "응암역",
+        "역촌"
+      ],
+      "query": "응암",
+      "top": {
+        "place_name": "응암동감자국거리",
+        "address": "서울 은평구 응암로4길 27-2",
+        "x": "126.917157976882",
+        "y": "37.5873667630032"
+      }
+    },
+    {
+      "region_key": "ewha-general",
+      "region_name": "이화여대 상권",
+      "district_name": "서대문구",
+      "search_keywords": [
+        "이대",
+        "이화여대",
+        "서대문구",
+        "이대역",
+        "신촌"
+      ],
+      "query": "이대",
+      "top": {
+        "place_name": "이화여자대학교",
+        "address": "서울 서대문구 이화여대길 52",
+        "x": "126.94765009467245",
+        "y": "37.562544705628845"
+      }
+    },
+    {
+      "region_key": "chungjeong-ro-general",
+      "region_name": "충정로·서대문",
+      "district_name": "서대문구",
+      "search_keywords": [
+        "충정로",
+        "서대문",
+        "서대문구",
+        "서대문역",
+        "아현"
+      ],
+      "query": "충정로",
+      "top": {
+        "place_name": "신라스테이 서대문",
+        "address": "서울 서대문구 충정로 76",
+        "x": "126.966804196914",
+        "y": "37.5651870590594"
+      }
+    },
+    {
+      "region_key": "hongje-general",
+      "region_name": "홍제·홍은",
+      "district_name": "서대문구",
+      "search_keywords": [
+        "홍제",
+        "홍은",
+        "홍제동",
+        "서대문구",
+        "홍제역"
+      ],
+      "query": "홍제",
+      "top": {
+        "place_name": "홍제천",
+        "address": "서울 서대문구 홍제동",
+        "x": "126.952622379496",
+        "y": "37.5963205618103"
+      }
+    },
+    {
+      "region_key": "gongdeok-general",
+      "region_name": "공덕역 상권",
+      "district_name": "마포구",
+      "search_keywords": [
+        "공덕",
+        "공덕역",
+        "마포구",
+        "효창공원",
+        "효창동"
+      ],
+      "query": "공덕",
+      "top": {
+        "place_name": "공덕시장족발골목",
+        "address": "서울 마포구 만리재로 19",
+        "x": "126.953474222473",
+        "y": "37.5448632598916"
+      }
+    },
+    {
+      "region_key": "sangam-dmc-general",
+      "region_name": "상암DMC 상권",
+      "district_name": "마포구",
+      "search_keywords": [
+        "상암",
+        "DMC",
+        "디지털미디어시티",
+        "마포구",
+        "상암동"
+      ],
+      "query": "상암",
+      "top": {
+        "place_name": "서울둘레길 15코스 복원된 자연길",
+        "address": "서울 마포구 상암동 482-49",
+        "x": "126.885873425403",
+        "y": "37.563816605896"
+      }
+    },
+    {
+      "region_key": "omokgyo-general",
+      "region_name": "오목교·목동상권",
+      "district_name": "양천구",
+      "search_keywords": [
+        "오목교",
+        "목동",
+        "양천구",
+        "현대백화점목동",
+        "오목교역"
+      ],
+      "query": "오목교",
+      "top": {
+        "place_name": "오목교",
+        "address": "서울 양천구 목동 409-402",
+        "x": "126.87797514394094",
+        "y": "37.52434585800688"
+      }
+    },
+    {
+      "region_key": "sinjeong-sinwol-general",
+      "region_name": "신정·신월",
+      "district_name": "양천구",
+      "search_keywords": [
+        "신정",
+        "신월",
+        "양천구",
+        "신정네거리",
+        "까치산"
+      ],
+      "query": "신정",
+      "top": {
+        "place_name": "신정산둘레길",
+        "address": "서울 양천구 신정동 621",
+        "x": "126.856007815938",
+        "y": "37.510460092967"
+      }
+    },
+    {
+      "region_key": "gimpo-airport-general",
+      "region_name": "김포공항 상권",
+      "district_name": "강서구",
+      "search_keywords": [
+        "김포공항",
+        "강서구",
+        "공항",
+        "발산",
+        "김포"
+      ],
+      "query": "김포공항",
+      "top": {
+        "place_name": "김포국제공항 국내선",
+        "address": "서울 강서구 하늘길 112",
+        "x": "126.80278135337612",
+        "y": "37.55867678737794"
+      }
+    },
+    {
+      "region_key": "kkachisan-general",
+      "region_name": "까치산·화곡",
+      "district_name": "강서구",
+      "search_keywords": [
+        "까치산",
+        "화곡",
+        "강서구",
+        "까치산역",
+        "화곡역"
+      ],
+      "query": "까치산",
+      "top": {
+        "place_name": "까치산",
+        "address": "서울 강서구 화곡동 산 162-17",
+        "x": "126.84384949492835",
+        "y": "37.536816963976655"
+      }
+    },
+    {
+      "region_key": "sindorim-techno-general",
+      "region_name": "신도림 테크노마트·디큐브",
+      "district_name": "구로구",
+      "search_keywords": [
+        "신도림",
+        "테크노마트",
+        "디큐브시티",
+        "구로구",
+        "신도림역"
+      ],
+      "query": "신도림",
+      "top": {
+        "place_name": "안양천",
+        "address": "서울 구로구 신도림동",
+        "x": "126.874219829815",
+        "y": "37.5092339002167"
+      }
+    },
+    {
+      "region_key": "oryu-gaebong-general",
+      "region_name": "오류·개봉 상권",
+      "district_name": "구로구",
+      "search_keywords": [
+        "오류",
+        "오류동",
+        "개봉",
+        "구로구",
+        "오류동역",
+        "개봉역"
+      ],
+      "query": "오류",
+      "top": {
+        "place_name": "항동철길",
+        "address": "서울 구로구 오리로 1189",
+        "x": "126.83517832671964",
+        "y": "37.48885919620487"
+      }
+    },
+    {
+      "region_key": "gasan-digital-general",
+      "region_name": "가산디지털단지",
+      "district_name": "금천구",
+      "search_keywords": [
+        "가산",
+        "가산디지털단지",
+        "금천구",
+        "가산디지털",
+        "디지털단지"
+      ],
+      "query": "가산",
+      "top": {
+        "place_name": "아쿠아밸리",
+        "address": "서울 금천구 디지털로 178",
+        "x": "126.887331423733",
+        "y": "37.4764396758109"
+      }
+    },
+    {
+      "region_key": "doksan-siheung-general",
+      "region_name": "독산·시흥",
+      "district_name": "금천구",
+      "search_keywords": [
+        "독산",
+        "시흥",
+        "금천구",
+        "독산역",
+        "시흥동"
+      ],
+      "query": "독산",
+      "top": {
+        "place_name": "서울둘레길 13코스 기찻길 따라 걷는 벚꽃길",
+        "address": "서울 금천구 독산동 668-47",
+        "x": "126.886969538839",
+        "y": "37.4645018463145"
+      }
+    },
+    {
+      "region_key": "mullae-general",
+      "region_name": "문래창작촌",
+      "district_name": "영등포구",
+      "search_keywords": [
+        "문래",
+        "문래동",
+        "문래창작촌",
+        "영등포구",
+        "문래역"
+      ],
+      "query": "문래",
+      "top": {
+        "place_name": "문래동창작촌",
+        "address": "서울 영등포구 문래동3가 54-28",
+        "x": "126.89777054767478",
+        "y": "37.51398329680753"
+      }
+    },
+    {
+      "region_key": "yeouido-general",
+      "region_name": "여의도 IFC·더현대",
+      "district_name": "영등포구",
+      "search_keywords": [
+        "여의도",
+        "IFC",
+        "더현대서울",
+        "영등포구",
+        "여의도역",
+        "국회의사당"
+      ],
+      "query": "여의도",
+      "top": {
+        "place_name": "한강",
+        "address": "서울 영등포구 여의도동",
+        "x": "126.947545050571",
+        "y": "37.5250892160129"
+      }
+    },
+    {
+      "region_key": "singil-yeongdeungpo-general",
+      "region_name": "신길·영등포시장",
+      "district_name": "영등포구",
+      "search_keywords": [
+        "신길",
+        "영등포시장",
+        "영등포구",
+        "신길역"
+      ],
+      "query": "신길",
+      "top": {
+        "place_name": "영등포신길동홍어거리",
+        "address": "서울 영등포구 신길동 215-2",
+        "x": "126.91169259300172",
+        "y": "37.51077794161146"
+      }
+    },
+    {
+      "region_key": "sadang-isu-general",
+      "region_name": "사당·이수",
+      "district_name": "동작구",
+      "search_keywords": [
+        "사당",
+        "이수",
+        "동작구",
+        "사당역",
+        "이수역"
+      ],
+      "query": "사당",
+      "top": {
+        "place_name": "사당1동먹자골목상점가",
+        "address": "서울 동작구 사당동 1101",
+        "x": "126.980712476692",
+        "y": "37.4783551062786"
+      }
+    },
+    {
+      "region_key": "sangdo-general",
+      "region_name": "상도·숭실대",
+      "district_name": "동작구",
+      "search_keywords": [
+        "상도",
+        "상도동",
+        "숭실대",
+        "동작구",
+        "상도역"
+      ],
+      "query": "상도",
+      "top": {
+        "place_name": "양녕대군이제묘역",
+        "address": "서울 동작구 양녕로 167",
+        "x": "126.942358557072",
+        "y": "37.4966222692933"
+      }
+    },
+    {
+      "region_key": "heukseok-general",
+      "region_name": "흑석·중앙대",
+      "district_name": "동작구",
+      "search_keywords": [
+        "흑석",
+        "중앙대",
+        "동작구",
+        "흑석동",
+        "흑석역"
+      ],
+      "query": "흑석",
+      "top": {
+        "place_name": "효사정",
+        "address": "서울 동작구 현충로 55",
+        "x": "126.962747565182",
+        "y": "37.5105419834425"
+      }
+    },
+    {
+      "region_key": "sharosu-gil-general",
+      "region_name": "샤로수길·서울대입구",
+      "district_name": "관악구",
+      "search_keywords": [
+        "샤로수길",
+        "서울대입구",
+        "관악구",
+        "서울대입구역",
+        "봉천"
+      ],
+      "query": "샤로수길",
+      "top": {
+        "place_name": "샤로수길",
+        "address": "서울 관악구 봉천동",
+        "x": "126.955677012972",
+        "y": "37.4785646095049"
+      }
+    },
+    {
+      "region_key": "hannam-itaewon-general",
+      "region_name": "한남·이태원 메인",
+      "district_name": "용산구",
+      "search_keywords": [
+        "한남",
+        "한남동",
+        "이태원",
+        "용산구",
+        "경리단길"
+      ],
+      "query": "한남",
+      "top": {
+        "place_name": "한남동 카페거리",
+        "address": "서울 용산구 한남동",
+        "x": "127.001588561792",
+        "y": "37.5369688440826"
+      }
+    },
+    {
+      "region_key": "seosunla-gil-general",
+      "region_name": "서순라길·익선동 인접",
+      "district_name": "종로구",
+      "search_keywords": [
+        "서순라길",
+        "익선동",
+        "종로구",
+        "운현궁",
+        "종로3가"
+      ],
+      "query": "서순라길",
+      "top": {
+        "place_name": "서울집시 서순라길점",
+        "address": "서울 종로구 서순라길 107",
+        "x": "126.99155505767519",
+        "y": "37.57502488769612"
+      }
+    },
+    {
+      "region_key": "gwangjang-market-general",
+      "region_name": "광장시장·종로5가",
+      "district_name": "종로구",
+      "search_keywords": [
+        "광장시장",
+        "종로5가",
+        "종로구",
+        "동대문",
+        "먹자골목"
+      ],
+      "query": "광장시장",
+      "top": {
+        "place_name": "광장시장",
+        "address": "서울 종로구 창경궁로 88",
+        "x": "126.99894728223626",
+        "y": "37.57005529646949"
+      }
+    },
+    {
+      "region_key": "sindang-general",
+      "region_name": "신당동 떡볶이타운",
+      "district_name": "중구",
+      "search_keywords": [
+        "신당",
+        "신당동",
+        "중구",
+        "약수",
+        "신당역",
+        "떡볶이타운"
+      ],
+      "query": "신당",
+      "top": {
+        "place_name": "신당동떡볶이타운",
+        "address": "서울 중구 다산로33길 10-18",
+        "x": "127.014609897994",
+        "y": "37.5630320348009"
+      }
+    },
+    {
+      "region_key": "gangnam-station-general",
+      "region_name": "강남역 상권",
+      "district_name": "강남구",
+      "search_keywords": [
+        "강남",
+        "강남역",
+        "강남대로",
+        "강남구",
+        "서초구",
+        "신논현",
+        "신논현역",
+        "논현",
+        "논현역",
+        "교보타워",
+        "CGV강남",
+        "강남파이낸스센터"
+      ],
+      "query": "강남",
+      "top": {
+        "place_name": "서울선릉과정릉",
+        "address": "서울 강남구 선릉로100길 1",
+        "x": "127.04892851392",
+        "y": "37.5091105328378"
+      }
+    },
+    {
+      "region_key": "yeoksam-general",
+      "region_name": "역삼·강남파이낸스",
+      "district_name": "강남구",
+      "search_keywords": [
+        "역삼",
+        "역삼동",
+        "역삼역",
+        "강남구",
+        "강남파이낸스센터",
+        "GFC",
+        "르네상스호텔",
+        "테헤란로",
+        "강남"
+      ],
+      "query": "역삼",
+      "top": {
+        "place_name": "스머프매직포레스트",
+        "address": "서울 강남구 강남대로106길 29",
+        "x": "127.027843960692",
+        "y": "37.5034906075971"
+      }
+    },
+    {
+      "region_key": "seolleung-general",
+      "region_name": "선릉·한티",
+      "district_name": "강남구",
+      "search_keywords": [
+        "선릉",
+        "선릉역",
+        "선릉동",
+        "한티",
+        "한티역",
+        "강남구",
+        "대치",
+        "도곡",
+        "르노삼성타워",
+        "테헤란로"
+      ],
+      "query": "선릉",
+      "top": {
+        "place_name": "서울선릉과정릉",
+        "address": "서울 강남구 선릉로100길 1",
+        "x": "127.04892851392",
+        "y": "37.5091105328378"
+      }
+    },
+    {
+      "region_key": "hongdae-general",
+      "region_name": "홍대입구 메인",
+      "district_name": "마포구",
+      "search_keywords": [
+        "홍대",
+        "홍대입구",
+        "홍대입구역",
+        "홍대거리",
+        "홍익대",
+        "홍익대학교",
+        "서교",
+        "서교동",
+        "동교",
+        "동교동",
+        "연남",
+        "연남동",
+        "연남역",
+        "상수",
+        "상수역",
+        "경의선숲길",
+        "마포구"
+      ],
+      "query": "홍대",
+      "top": {
+        "place_name": "홍익대학교 서울캠퍼스",
+        "address": "서울 마포구 와우산로 94",
+        "x": "126.925554591431",
+        "y": "37.550874837441"
+      }
+    },
+    {
+      "region_key": "hapjeong-general",
+      "region_name": "합정역 상권",
+      "district_name": "마포구",
+      "search_keywords": [
+        "합정",
+        "합정역",
+        "합정동",
+        "마포구",
+        "메세나폴리스",
+        "딜라이트스퀘어",
+        "망원",
+        "상수",
+        "홍대"
+      ],
+      "query": "합정",
+      "top": {
+        "place_name": "망원정 터",
+        "address": "서울 마포구 동교로8안길 23",
+        "x": "126.904516007896",
+        "y": "37.5498433728965"
+      }
+    },
+    {
+      "region_key": "jongno-3ga-general",
+      "region_name": "종로3가·낙원동",
+      "district_name": "종로구",
+      "search_keywords": [
+        "종로3가",
+        "종로3가역",
+        "낙원동",
+        "낙원상가",
+        "익선동",
+        "서순라길",
+        "종로구",
+        "종묘",
+        "돈화문",
+        "익선",
+        "운현궁"
+      ],
+      "query": "종로3가",
+      "top": {
+        "place_name": "종로3가역 1호선",
+        "address": "서울 종로구 종로 지하 129",
+        "x": "126.992153252476",
+        "y": "37.570420844523"
+      }
+    },
+    {
+      "region_key": "dongdaemun-jongno-general",
+      "region_name": "동대문 시장 동측",
+      "district_name": "종로구",
+      "search_keywords": [
+        "동대문",
+        "동대문역",
+        "종로6가",
+        "종로구",
+        "동묘앞",
+        "동묘앞역",
+        "동묘",
+        "창신동",
+        "창신",
+        "광희",
+        "동대문운동장"
+      ],
+      "query": "동대문",
+      "top": {
+        "place_name": "흥인지문",
+        "address": "서울 종로구 종로 288",
+        "x": "127.009571946966",
+        "y": "37.571141513487"
+      }
+    },
+    {
+      "region_key": "chungmuro-general",
+      "region_name": "충무로·필동",
+      "district_name": "중구",
+      "search_keywords": [
+        "충무로",
+        "충무로역",
+        "필동",
+        "필동로",
+        "중구",
+        "한국의집",
+        "명동",
+        "동국대",
+        "남산",
+        "예장동"
+      ],
+      "query": "충무로",
+      "top": {
+        "place_name": "KB국민은행 중부(점)",
+        "address": "서울 중구 충무로 29",
+        "x": "126.9924742593834",
+        "y": "37.563839090688724"
+      }
+    },
+    {
+      "region_key": "hangangjin-general",
+      "region_name": "한강진·꼼데가르송길",
+      "district_name": "용산구",
+      "search_keywords": [
+        "한강진",
+        "한강진역",
+        "용산구",
+        "한남",
+        "한남동",
+        "꼼데가르송길",
+        "독서당로",
+        "제일기획"
+      ],
+      "query": "한강진",
+      "top": {
+        "place_name": "한강진역 6호선",
+        "address": "서울 용산구 이태원로 지하 287",
+        "x": "127.001765135176",
+        "y": "37.5397907743775"
+      }
+    },
+    {
+      "region_key": "samgakji-sinyongsan-general",
+      "region_name": "삼각지·신용산 용리단길 보강",
+      "district_name": "용산구",
+      "search_keywords": [
+        "삼각지",
+        "삼각지역",
+        "신용산",
+        "신용산역",
+        "용산",
+        "용산구",
+        "한강로",
+        "용리단길",
+        "아모레퍼시픽",
+        "LG U+",
+        "효창"
+      ],
+      "query": "삼각지",
+      "top": {
+        "place_name": "삼각지역 4호선",
+        "address": "서울 용산구 한강대로 지하 180",
+        "x": "126.972922951307",
+        "y": "37.5344393447708"
+      }
+    },
+    {
+      "region_key": "oksu-geumho-general",
+      "region_name": "옥수·금호 한강뷰",
+      "district_name": "성동구",
+      "search_keywords": [
+        "옥수",
+        "옥수역",
+        "옥수동",
+        "금호",
+        "금호역",
+        "금호동",
+        "성동구",
+        "한강뷰",
+        "응봉",
+        "응봉동",
+        "응봉역"
+      ],
+      "query": "옥수",
+      "top": {
+        "place_name": "매봉산",
+        "address": "서울 성동구 옥수동 산 5-164",
+        "x": "127.00902538719544",
+        "y": "37.544501769977565"
+      }
+    },
+    {
+      "region_key": "nodeul-dongjak-general",
+      "region_name": "노들·동작",
+      "district_name": "동작구",
+      "search_keywords": [
+        "노들",
+        "노들역",
+        "동작",
+        "동작역",
+        "동작구",
+        "노량진",
+        "흑석",
+        "용양봉저정",
+        "한강대교"
+      ],
+      "query": "노들",
+      "top": {
+        "place_name": "노들나루공원",
+        "address": "서울 동작구 노량진로 247",
+        "x": "126.953615720558",
+        "y": "37.5137210973178"
+      }
+    },
+    {
+      "region_key": "deungchon-yeomchang-general",
+      "region_name": "등촌·염창",
+      "district_name": "강서구",
+      "search_keywords": [
+        "등촌",
+        "등촌역",
+        "등촌동",
+        "염창",
+        "염창역",
+        "염창동",
+        "강서구",
+        "가양",
+        "양천향교",
+        "양천향교역"
+      ],
+      "query": "등촌",
+      "top": {
+        "place_name": "등촌역 9호선",
+        "address": "서울 강서구 공항대로 지하 529",
+        "x": "126.86557100595411",
+        "y": "37.550728980328884"
+      }
+    },
+    {
+      "region_key": "yangcheon-guchong-general",
+      "region_name": "양천구청·신정사거리",
+      "district_name": "양천구",
+      "search_keywords": [
+        "양천구청",
+        "양천구청역",
+        "신정",
+        "신정동",
+        "신정역",
+        "양천구",
+        "오목교"
+      ],
+      "query": "양천구청",
+      "top": {
+        "place_name": "양천구청",
+        "address": "서울 양천구 목동동로 105",
+        "x": "126.86650140966",
+        "y": "37.5169884752677"
+      }
+    },
+    {
+      "region_key": "jayang-guui-general",
+      "region_name": "자양·구의·강변",
+      "district_name": "광진구",
+      "search_keywords": [
+        "자양",
+        "자양동",
+        "자양역",
+        "구의",
+        "구의동",
+        "구의역",
+        "강변",
+        "강변역",
+        "광진구",
+        "동서울터미널",
+        "테크노마트"
+      ],
+      "query": "자양",
+      "top": {
+        "place_name": "우리유황온천",
+        "address": "서울 광진구 자양로5길 33",
+        "x": "127.0839016807752",
+        "y": "37.53075638299484"
+      }
+    },
+    {
+      "region_key": "gunja-junggok-general",
+      "region_name": "군자·중곡",
+      "district_name": "광진구",
+      "search_keywords": [
+        "군자",
+        "군자역",
+        "군자동",
+        "중곡",
+        "중곡역",
+        "중곡동",
+        "광진구",
+        "능동",
+        "어린이대공원"
+      ],
+      "query": "군자",
+      "top": {
+        "place_name": "세종대학교 아사달연못",
+        "address": "서울 광진구 능동로 209",
+        "x": "127.074916573775",
+        "y": "37.5512673746189"
+      }
+    },
+    {
+      "region_key": "madeul-danggogae-general",
+      "region_name": "마들·당고개·상계",
+      "district_name": "노원구",
+      "search_keywords": [
+        "마들",
+        "마들역",
+        "당고개",
+        "당고개역",
+        "상계",
+        "상계역",
+        "상계동",
+        "노원구",
+        "의정부",
+        "석계"
+      ],
+      "query": "마들",
+      "top": {
+        "place_name": "마들스포츠타운",
+        "address": "서울 노원구 상계동 770-2",
+        "x": "127.057551142852",
+        "y": "37.6439530575352"
+      }
+    },
+    {
+      "region_key": "suseo-ilwon-general",
+      "region_name": "수서·일원·개포",
+      "district_name": "강남구",
+      "search_keywords": [
+        "수서",
+        "수서역",
+        "일원",
+        "일원역",
+        "개포",
+        "개포동",
+        "개포역",
+        "강남구",
+        "대모산",
+        "SRT"
+      ],
+      "query": "수서",
+      "top": {
+        "place_name": "수서역 만남의 광장",
+        "address": "서울 강남구 수서동 727",
+        "x": "127.101261924348",
+        "y": "37.4868656608786"
+      }
+    },
+    {
+      "region_key": "sinsa-station-line3-general",
+      "region_name": "신사역 3호선 라인",
+      "district_name": "강남구",
+      "search_keywords": [
+        "신사역",
+        "신사동",
+        "신사",
+        "강남구",
+        "논현",
+        "논현역",
+        "가로수길",
+        "세로수길",
+        "신구초사거리"
+      ],
+      "query": "신사역",
+      "top": {
+        "place_name": "신사역 3호선",
+        "address": "서울 강남구 도산대로 지하 102",
+        "x": "127.02030856272764",
+        "y": "37.51643597531432"
+      }
+    },
+    {
+      "region_key": "gangnam-gu-office-belt-general",
+      "region_name": "강남구청·도산공원 오피스 벨트",
+      "district_name": "강남구",
+      "search_keywords": [
+        "강남구청역",
+        "강남구청",
+        "도산공원",
+        "학동역",
+        "학동",
+        "논현동",
+        "강남구",
+        "신사동",
+        "청담사거리"
+      ],
+      "query": "강남구청역",
+      "top": {
+        "place_name": "강남구청역 7호선",
+        "address": "서울 강남구 학동로 지하 346",
+        "x": "127.0413109462156",
+        "y": "37.51721617197854"
+      }
+    },
+    {
+      "region_key": "gangnam-tehran-line-general",
+      "region_name": "테헤란로 빌딩숲",
+      "district_name": "강남구",
+      "search_keywords": [
+        "테헤란로",
+        "강남역",
+        "역삼역",
+        "선릉역",
+        "삼성역",
+        "강남구",
+        "강남대로",
+        "GFC"
+      ],
+      "query": "테헤란로",
+      "top": {
+        "place_name": "현대백화점 무역센터점",
+        "address": "서울 강남구 테헤란로 517",
+        "x": "127.05977475920854",
+        "y": "37.508651435836725"
+      }
+    },
+    {
+      "region_key": "naebang-bangbae-general",
+      "region_name": "내방·방배 카페거리",
+      "district_name": "서초구",
+      "search_keywords": [
+        "내방역",
+        "방배역",
+        "방배동",
+        "방배카페거리",
+        "서초구",
+        "이수역",
+        "동작구"
+      ],
+      "query": "내방역",
+      "top": {
+        "place_name": "내방역 7호선",
+        "address": "서울 서초구 서초대로 지하 103",
+        "x": "126.993600180589",
+        "y": "37.4876585212369"
+      }
+    },
+    {
+      "region_key": "hoehyeon-namdaemun-general",
+      "region_name": "회현·남대문시장",
+      "district_name": "중구",
+      "search_keywords": [
+        "회현역",
+        "회현",
+        "남대문시장",
+        "남대문",
+        "중구",
+        "명동역",
+        "신세계백화점본점"
+      ],
+      "query": "회현역",
+      "top": {
+        "place_name": "회현역 4호선",
+        "address": "서울 중구 퇴계로 지하 54",
+        "x": "126.9784372569283",
+        "y": "37.55876114587941"
+      }
+    },
+    {
+      "region_key": "samcheong-dong-general",
+      "region_name": "삼청동·국립현대미술관",
+      "district_name": "종로구",
+      "search_keywords": [
+        "삼청동",
+        "국립현대미술관",
+        "경복궁",
+        "안국역",
+        "북촌",
+        "종로구",
+        "소격동"
+      ],
+      "query": "삼청동",
+      "top": {
+        "place_name": "삼청동거리",
+        "address": "서울 종로구 팔판동 67-1",
+        "x": "126.981482777468",
+        "y": "37.5820641053666"
+      }
+    },
+    {
+      "region_key": "seochon-tongin-general",
+      "region_name": "서촌·통인시장",
+      "district_name": "종로구",
+      "search_keywords": [
+        "서촌",
+        "통인시장",
+        "경복궁역",
+        "경복궁",
+        "청운효자동",
+        "종로구",
+        "효자동"
+      ],
+      "query": "서촌",
+      "top": {
+        "place_name": "서촌한옥마을",
+        "address": "서울 종로구 통의동",
+        "x": "126.9731106965",
+        "y": "37.578728818102"
+      }
+    },
+    {
+      "region_key": "mullae-yeongdeungpo-belt-general",
+      "region_name": "문래·영등포 결합 벨트",
+      "district_name": "영등포구",
+      "search_keywords": [
+        "문래역",
+        "문래동",
+        "영등포구청역",
+        "문래창작촌",
+        "영등포구",
+        "도림",
+        "경방"
+      ],
+      "query": "문래역",
+      "top": {
+        "place_name": "문래역 2호선",
+        "address": "서울 영등포구 당산로 지하 28",
+        "x": "126.894778820701",
+        "y": "37.5179757181801"
+      }
+    },
+    {
+      "region_key": "sangdo-sungsil-line-general",
+      "region_name": "상도·숭실대 학원가",
+      "district_name": "동작구",
+      "search_keywords": [
+        "상도역",
+        "상도동",
+        "숭실대입구역",
+        "숭실대",
+        "동작구",
+        "장승배기역",
+        "신대방삼거리"
+      ],
+      "query": "상도역",
+      "top": {
+        "place_name": "상도역 7호선",
+        "address": "서울 동작구 상도로 지하 272",
+        "x": "126.947917975554",
+        "y": "37.5028706251049"
+      }
+    },
+    {
+      "region_key": "nakseongdae-bongcheon-belt-general",
+      "region_name": "낙성대·봉천",
+      "district_name": "관악구",
+      "search_keywords": [
+        "낙성대역",
+        "낙성대",
+        "봉천역",
+        "봉천",
+        "관악구",
+        "서울대입구역",
+        "청룡동",
+        "서원동"
+      ],
+      "query": "낙성대역",
+      "top": {
+        "place_name": "낙성대역 2호선",
+        "address": "서울 관악구 남부순환로 지하 1928",
+        "x": "126.963523905001",
+        "y": "37.4770932409965"
+      }
+    },
+    {
+      "region_key": "yeonnam-gyeongui-general",
+      "region_name": "연남·경의선숲길",
+      "district_name": "마포구",
+      "search_keywords": [
+        "연남동",
+        "연남역",
+        "경의선숲길",
+        "동교동",
+        "서교동",
+        "홍대입구역",
+        "마포구",
+        "서강대"
+      ],
+      "query": "연남동",
+      "top": {
+        "place_name": "서울명예도로 끼리끼리5길",
+        "address": "서울 마포구 연남동 250-10",
+        "x": "126.921818160092",
+        "y": "37.5635638685226"
+      }
+    },
+    {
+      "region_key": "daeheung-aehyun-general",
+      "region_name": "대흥·아현",
+      "district_name": "마포구",
+      "search_keywords": [
+        "대흥역",
+        "대흥동",
+        "아현역",
+        "아현동",
+        "마포구",
+        "공덕",
+        "서대문구"
+      ],
+      "query": "대흥역",
+      "top": {
+        "place_name": "대흥역 6호선",
+        "address": "서울 마포구 대흥로 지하 85",
+        "x": "126.942473188734",
+        "y": "37.5476479056751"
+      }
+    },
+    {
+      "region_key": "eorini-daegongwon-general",
+      "region_name": "어린이대공원·세종대",
+      "district_name": "광진구",
+      "search_keywords": [
+        "어린이대공원역",
+        "어린이대공원",
+        "세종대",
+        "능동",
+        "화양동",
+        "광진구",
+        "건대"
+      ],
+      "query": "어린이대공원역",
+      "top": {
+        "place_name": "어린이대공원역 7호선",
+        "address": "서울 광진구 능동로 지하 210",
+        "x": "127.07465525507352",
+        "y": "37.54796087622509"
+      }
+    },
+    {
+      "region_key": "sinchon-yonsei-back-general",
+      "region_name": "신촌 연세대 후문",
+      "district_name": "서대문구",
+      "search_keywords": [
+        "연세대",
+        "신촌역",
+        "명물거리",
+        "창천동",
+        "서대문구",
+        "봉원사",
+        "연희동"
+      ],
+      "query": "연세대",
+      "top": {
+        "place_name": "연세대학교 신촌캠퍼스",
+        "address": "서울 서대문구 연세로 50",
+        "x": "126.93893572124549",
+        "y": "37.56433710667622"
+      }
+    },
+    {
+      "region_key": "songpa-naru-jamsil-general",
+      "region_name": "송파나루·잠실 한강 벨트",
+      "district_name": "송파구",
+      "search_keywords": [
+        "송파나루역",
+        "한강공원잠실",
+        "잠실",
+        "신천역",
+        "신천",
+        "송파구",
+        "잠실종합운동장"
+      ],
+      "query": "송파나루역",
+      "top": {
+        "place_name": "송파나루역 9호선",
+        "address": "서울 송파구 백제고분로 지하 446",
+        "x": "127.11266171422027",
+        "y": "37.51101671275264"
+      }
+    },
+    {
+      "region_key": "godeok-sangil-general",
+      "region_name": "고덕·상일 신축 벨트",
+      "district_name": "강동구",
+      "search_keywords": [
+        "고덕역",
+        "고덕동",
+        "상일역",
+        "상일동",
+        "강동구",
+        "강일",
+        "고덕그라시움"
+      ],
+      "query": "고덕역",
+      "top": {
+        "place_name": "고덕역 5호선",
+        "address": "서울 강동구 고덕로 지하 253",
+        "x": "127.15416500963447",
+        "y": "37.55504766830918"
+      }
+    },
+    {
+      "region_key": "banghak-uijongbu-line-general",
+      "region_name": "방학·도봉산 라인",
+      "district_name": "도봉구",
+      "search_keywords": [
+        "방학역",
+        "방학동",
+        "도봉역",
+        "도봉동",
+        "도봉구",
+        "쌍문",
+        "창동"
+      ],
+      "query": "방학역",
+      "top": {
+        "place_name": "방학역 1호선",
+        "address": "서울 도봉구 도봉로150다길 3",
+        "x": "127.044321721307",
+        "y": "37.6674383662755"
+      }
+    },
+    {
+      "region_key": "nowon-rotary-general",
+      "region_name": "노원 로터리·중계 학원가 진입부",
+      "district_name": "노원구",
+      "search_keywords": [
+        "노원역",
+        "노원",
+        "롯데백화점노원",
+        "상계",
+        "중계",
+        "노원구",
+        "상계백병원"
+      ],
+      "query": "노원역",
+      "top": {
+        "place_name": "노원역 4호선",
+        "address": "서울 노원구 상계로 69-1",
+        "x": "127.063449137455",
+        "y": "37.6563403513278"
+      }
+    },
+    {
+      "region_key": "mia-station-general",
+      "region_name": "미아역·우이천 라인",
+      "district_name": "강북구",
+      "search_keywords": [
+        "미아역",
+        "미아동",
+        "강북구",
+        "미아사거리",
+        "솔밭공원",
+        "번동"
+      ],
+      "query": "미아역",
+      "top": {
+        "place_name": "미아역 4호선",
+        "address": "서울 강북구 도봉로 지하 198",
+        "x": "127.026041090189",
+        "y": "37.6266544891889"
+      }
+    },
+    {
+      "region_key": "eunpyeong-gupabal-general",
+      "region_name": "구파발·은평뉴타운",
+      "district_name": "은평구",
+      "search_keywords": [
+        "구파발역",
+        "구파발",
+        "진관동",
+        "은평뉴타운",
+        "은평구",
+        "북한산"
+      ],
+      "query": "구파발역",
+      "top": {
+        "place_name": "구파발역 3호선",
+        "address": "서울 은평구 진관2로 지하 15-25",
+        "x": "126.918852820009",
+        "y": "37.6364357889145"
+      }
+    },
+    {
+      "region_key": "mokdong-line5-belt-general",
+      "region_name": "목동·신정·신월 5호선 벨트",
+      "district_name": "양천구",
+      "search_keywords": [
+        "목동역",
+        "오목교역",
+        "신정역",
+        "신정네거리역",
+        "신월",
+        "양천구",
+        "오목교"
+      ],
+      "query": "목동역",
+      "top": {
+        "place_name": "목동역 5호선",
+        "address": "서울 양천구 오목로 지하 245",
+        "x": "126.86462527157516",
+        "y": "37.526135115923466"
+      }
+    },
+    {
+      "region_key": "magok-newtown-general",
+      "region_name": "마곡·서울식물원",
+      "district_name": "강서구",
+      "search_keywords": [
+        "마곡역",
+        "마곡",
+        "마곡나루역",
+        "서울식물원",
+        "강서구",
+        "마곡지구",
+        "LG사이언스파크"
+      ],
+      "query": "마곡역",
+      "top": {
+        "place_name": "마곡역 5호선",
+        "address": "서울 강서구 공항대로 지하 163",
+        "x": "126.82469691791624",
+        "y": "37.56022863776301"
+      }
+    },
+    {
+      "region_key": "guro-station-general",
+      "region_name": "구로역·신구로 라인",
+      "district_name": "구로구",
+      "search_keywords": [
+        "구로역",
+        "구로",
+        "신구로",
+        "구로구",
+        "구로디지털단지",
+        "대림역",
+        "신도림"
+      ],
+      "query": "구로역",
+      "top": {
+        "place_name": "구로역 1호선",
+        "address": "서울 구로구 구로중앙로 174",
+        "x": "126.88230806229326",
+        "y": "37.50334155631282"
+      }
+    },
+    {
+      "region_key": "geumcheon-doksan-line1-general",
+      "region_name": "독산·금천구청 라인",
+      "district_name": "금천구",
+      "search_keywords": [
+        "독산역",
+        "독산동",
+        "금천구청역",
+        "금천구",
+        "시흥",
+        "시흥대로"
+      ],
+      "query": "독산역",
+      "top": {
+        "place_name": "독산역 1호선",
+        "address": "서울 금천구 벚꽃로 115",
+        "x": "126.88947790336374",
+        "y": "37.46597376787178"
+      }
+    },
+    {
+      "region_key": "mukdong-junghwa-general",
+      "region_name": "묵동·중화 7호선 라인",
+      "district_name": "중랑구",
+      "search_keywords": [
+        "묵동",
+        "묵동역",
+        "중화역",
+        "중화동",
+        "중랑구",
+        "먹골역",
+        "먹골",
+        "봉화산"
+      ],
+      "query": "묵동",
+      "top": {
+        "place_name": "봉화산",
+        "address": "서울 중랑구 묵동 산 46-19",
+        "x": "127.08709217385757",
+        "y": "37.60857753365413"
+      }
+    },
+    {
+      "region_key": "jeongneung-arirang-general",
+      "region_name": "정릉·아리랑고개",
+      "district_name": "성북구",
+      "search_keywords": [
+        "정릉",
+        "정릉동",
+        "아리랑고개",
+        "국민대",
+        "성북구",
+        "성신여대"
+      ],
+      "query": "정릉",
+      "top": {
+        "place_name": "정릉",
+        "address": "서울 성북구 아리랑로19길 116",
+        "x": "127.005657675347",
+        "y": "37.6021719603678"
+      }
+    },
+    {
+      "region_key": "suwon-station-rotary-general",
+      "region_name": "수원역 로데오",
+      "district_name": "수원시 팔달구",
+      "search_keywords": [
+        "수원역",
+        "수원역로데오",
+        "수원로데오",
+        "팔달구",
+        "수원시",
+        "AK플라자",
+        "수원"
+      ],
+      "query": "수원역",
+      "top": {
+        "place_name": "수원역",
+        "address": "경기 수원시 팔달구 덕영대로 924",
+        "x": "127.000094700292",
+        "y": "37.2657903079673"
+      }
+    },
+    {
+      "region_key": "gwanggyo-jungang-general",
+      "region_name": "광교중앙·앨리웨이",
+      "district_name": "수원시 영통구",
+      "search_keywords": [
+        "광교중앙역",
+        "광교",
+        "광교앨리웨이",
+        "광교호수공원",
+        "영통구",
+        "수원시",
+        "광교신도시"
+      ],
+      "query": "광교중앙역",
+      "top": {
+        "place_name": "광교중앙역 신분당선",
+        "address": "경기 수원시 영통구 도청로 지하 45",
+        "x": "127.051726324729",
+        "y": "37.2883843017536"
+      }
+    },
+    {
+      "region_key": "yeongtong-station-general",
+      "region_name": "영통역·영통중심상가",
+      "district_name": "수원시 영통구",
+      "search_keywords": [
+        "영통역",
+        "영통",
+        "영통중심상가",
+        "영통구",
+        "수원시",
+        "망포역",
+        "망포"
+      ],
+      "query": "영통역",
+      "top": {
+        "place_name": "영통역 수인분당선",
+        "address": "경기 수원시 영통구 봉영로 지하 1560",
+        "x": "127.07133191773",
+        "y": "37.2515035095752"
+      }
+    },
+    {
+      "region_key": "suwon-haenggung-general",
+      "region_name": "수원행궁·통닭거리",
+      "district_name": "수원시 팔달구",
+      "search_keywords": [
+        "행궁동",
+        "수원행궁",
+        "통닭거리",
+        "팔달구",
+        "수원시",
+        "화성행궁",
+        "수원화성"
+      ],
+      "query": "행궁동",
+      "top": {
+        "place_name": "화성행궁",
+        "address": "경기 수원시 팔달구 정조로 825",
+        "x": "127.014041185109",
+        "y": "37.2819144990562"
+      }
+    },
+    {
+      "region_key": "yeongtong-mangpo-general",
+      "region_name": "망포·신영통",
+      "district_name": "수원시 영통구",
+      "search_keywords": [
+        "망포역",
+        "망포",
+        "신영통",
+        "영통구",
+        "수원시",
+        "망포지구"
+      ],
+      "query": "망포역",
+      "top": {
+        "place_name": "망포역 수인분당선",
+        "address": "경기 수원시 영통구 덕영대로 지하 1520",
+        "x": "127.0573246372016",
+        "y": "37.245654330704845"
+      }
+    },
+    {
+      "region_key": "hwaseo-station-general",
+      "region_name": "화서역·스타필드",
+      "district_name": "수원시 장안구",
+      "search_keywords": [
+        "화서역",
+        "화서",
+        "스타필드수원",
+        "장안구",
+        "수원시",
+        "신분당선"
+      ],
+      "query": "화서역",
+      "top": {
+        "place_name": "화서역 1호선",
+        "address": "경기 수원시 팔달구 덕영대로 692",
+        "x": "126.9896120326472",
+        "y": "37.2840016829776"
+      }
+    },
+    {
+      "region_key": "pangyo-techno-general",
+      "region_name": "판교 테크노밸리",
+      "district_name": "성남시 분당구",
+      "search_keywords": [
+        "판교역",
+        "판교",
+        "판교테크노밸리",
+        "카카오",
+        "네이버",
+        "성남시",
+        "분당구"
+      ],
+      "query": "판교역",
+      "top": {
+        "place_name": "판교역 신분당선",
+        "address": "경기 성남시 분당구 판교역로 지하 160",
+        "x": "127.11119782955879",
+        "y": "37.39477752734142"
+      }
+    },
+    {
+      "region_key": "jeongja-station-general",
+      "region_name": "정자역·정자카페거리",
+      "district_name": "성남시 분당구",
+      "search_keywords": [
+        "정자역",
+        "정자동",
+        "정자카페거리",
+        "분당구",
+        "성남시",
+        "미금역",
+        "미금"
+      ],
+      "query": "정자역",
+      "top": {
+        "place_name": "정자역 수인분당선",
+        "address": "경기 성남시 분당구 성남대로 지하 333",
+        "x": "127.108097457244",
+        "y": "37.3661737923199"
+      }
+    },
+    {
+      "region_key": "seohyeon-station-general",
+      "region_name": "서현역·AK플라자",
+      "district_name": "성남시 분당구",
+      "search_keywords": [
+        "서현역",
+        "서현동",
+        "AK플라자분당",
+        "AK플라자",
+        "분당구",
+        "성남시",
+        "분당"
+      ],
+      "query": "서현역",
+      "top": {
+        "place_name": "서현역 수인분당선",
+        "address": "경기 성남시 분당구 성남대로 지하 601",
+        "x": "127.123431479636",
+        "y": "37.3850154269126"
+      }
+    },
+    {
+      "region_key": "sunae-station-general",
+      "region_name": "수내역·내정",
+      "district_name": "성남시 분당구",
+      "search_keywords": [
+        "수내역",
+        "수내동",
+        "내정",
+        "분당구",
+        "성남시",
+        "분당",
+        "학원가"
+      ],
+      "query": "수내역",
+      "top": {
+        "place_name": "수내역 수인분당선",
+        "address": "경기 성남시 분당구 성남대로 지하 491",
+        "x": "127.114288846291",
+        "y": "37.3784687674046"
+      }
+    },
+    {
+      "region_key": "sungnam-jungwon-moran-general",
+      "region_name": "모란·중원구청",
+      "district_name": "성남시 중원구",
+      "search_keywords": [
+        "모란역",
+        "모란",
+        "중원구청",
+        "성남시 중원구",
+        "단대오거리역",
+        "단대오거리"
+      ],
+      "query": "모란역",
+      "top": {
+        "place_name": "모란역 8호선",
+        "address": "경기 성남시 수정구 산성대로 지하 100",
+        "x": "127.129970457799",
+        "y": "37.4340382896277"
+      }
+    },
+    {
+      "region_key": "lapesta-western-dome-general",
+      "region_name": "라페스타·웨스턴돔",
+      "district_name": "고양시 일산동구",
+      "search_keywords": [
+        "라페스타",
+        "웨스턴돔",
+        "정발산역",
+        "일산동구",
+        "고양시",
+        "일산",
+        "백석"
+      ],
+      "query": "라페스타",
+      "top": {
+        "place_name": "라페스타",
+        "address": "경기 고양시 일산동구 중앙로 1305-56",
+        "x": "126.7683080614203",
+        "y": "37.66102851101033"
+      }
+    },
+    {
+      "region_key": "ilsan-juyeop-general",
+      "region_name": "주엽역·일산호수공원",
+      "district_name": "고양시 일산서구",
+      "search_keywords": [
+        "주엽역",
+        "주엽동",
+        "일산호수공원",
+        "일산서구",
+        "고양시",
+        "대화역",
+        "대화",
+        "일산"
+      ],
+      "query": "주엽역",
+      "top": {
+        "place_name": "주엽역 3호선",
+        "address": "경기 고양시 일산서구 중앙로 지하 1432",
+        "x": "126.761263524195",
+        "y": "37.6701494878278"
+      }
+    },
+    {
+      "region_key": "goyang-baekseok-general",
+      "region_name": "백석·고양시청",
+      "district_name": "고양시 일산동구",
+      "search_keywords": [
+        "백석역",
+        "백석",
+        "고양시청",
+        "일산동구",
+        "고양시",
+        "대곡역",
+        "대곡"
+      ],
+      "query": "백석역",
+      "top": {
+        "place_name": "백석역 3호선",
+        "address": "경기 고양시 일산동구 중앙로 지하 1042",
+        "x": "126.788131509803",
+        "y": "37.6429623651607"
+      }
+    },
+    {
+      "region_key": "goyang-haengsin-general",
+      "region_name": "행신역·삼송지구",
+      "district_name": "고양시 덕양구",
+      "search_keywords": [
+        "행신역",
+        "행신동",
+        "덕양구",
+        "고양시",
+        "삼송역",
+        "삼송지구",
+        "원흥역",
+        "원흥"
+      ],
+      "query": "행신역",
+      "top": {
+        "place_name": "행신역",
+        "address": "경기 고양시 덕양구 소원로 102",
+        "x": "126.83413241404135",
+        "y": "37.61192587335611"
+      }
+    },
+    {
+      "region_key": "goyang-changneung-general",
+      "region_name": "창릉신도시",
+      "district_name": "고양시 덕양구",
+      "search_keywords": [
+        "창릉신도시",
+        "창릉지구",
+        "덕양구",
+        "고양시",
+        "화전역",
+        "화전"
+      ],
+      "query": "창릉신도시",
+      "top": {
+        "place_name": "원흥신도시 지앤비에스에코주유소",
+        "address": "경기 고양시 덕양구 서오릉로 619",
+        "x": "126.873545703839",
+        "y": "37.6344489005093"
+      }
+    },
+    {
+      "region_key": "goyang-wondang-general",
+      "region_name": "원당·고양어울림누리",
+      "district_name": "고양시 덕양구",
+      "search_keywords": [
+        "원당역",
+        "원당",
+        "고양어울림누리",
+        "덕양구",
+        "고양시",
+        "대장지구"
+      ],
+      "query": "원당역",
+      "top": {
+        "place_name": "원당역 3호선",
+        "address": "경기 고양시 덕양구 고양대로 1429",
+        "x": "126.842918441607",
+        "y": "37.6531102058516"
+      }
+    },
+    {
+      "region_key": "suji-station-general",
+      "region_name": "수지구청·풍덕천",
+      "district_name": "용인시 수지구",
+      "search_keywords": [
+        "수지구청역",
+        "수지구청",
+        "풍덕천",
+        "수지구",
+        "용인시",
+        "동천역",
+        "동천",
+        "죽전"
+      ],
+      "query": "수지구청역",
+      "top": {
+        "place_name": "수지구청역 신분당선",
+        "address": "경기 용인시 수지구 풍덕천로 지하 120",
+        "x": "127.094658560596",
+        "y": "37.322492584304"
+      }
+    },
+    {
+      "region_key": "jukjeon-station-general",
+      "region_name": "죽전역·신세계백화점경기점",
+      "district_name": "용인시 수지구",
+      "search_keywords": [
+        "죽전역",
+        "죽전",
+        "신세계백화점경기점",
+        "신세계백화점",
+        "수지구",
+        "용인시",
+        "오리역"
+      ],
+      "query": "죽전역",
+      "top": {
+        "place_name": "죽전역 수인분당선",
+        "address": "경기 용인시 수지구 포은대로 530",
+        "x": "127.107505020642",
+        "y": "37.3243773830569"
+      }
+    },
+    {
+      "region_key": "giheung-station-general",
+      "region_name": "기흥역·신갈오거리",
+      "district_name": "용인시 기흥구",
+      "search_keywords": [
+        "기흥역",
+        "기흥",
+        "신갈오거리",
+        "기흥구",
+        "용인시",
+        "강남대역",
+        "강남대"
+      ],
+      "query": "기흥역",
+      "top": {
+        "place_name": "기흥역 에버라인",
+        "address": "경기 용인시 기흥구 중부대로 468",
+        "x": "127.11704645705142",
+        "y": "37.27545287699772"
+      }
+    },
+    {
+      "region_key": "dongbaek-station-general",
+      "region_name": "동백·동백호수공원",
+      "district_name": "용인시 기흥구",
+      "search_keywords": [
+        "동백역",
+        "동백동",
+        "동백호수공원",
+        "기흥구",
+        "용인시",
+        "초당역",
+        "어정역"
+      ],
+      "query": "동백역",
+      "top": {
+        "place_name": "동백역 에버라인",
+        "address": "경기 용인시 기흥구 동백죽전대로 314",
+        "x": "127.15269056435368",
+        "y": "37.269101384338924"
+      }
+    },
+    {
+      "region_key": "cheoin-cheorcheon-general",
+      "region_name": "처인구청·중앙시장",
+      "district_name": "용인시 처인구",
+      "search_keywords": [
+        "용인중앙시장",
+        "처인구",
+        "용인시청",
+        "용인시",
+        "용인터미널",
+        "명지대"
+      ],
+      "query": "용인중앙시장",
+      "top": {
+        "place_name": "용인중앙시장",
+        "address": "경기 용인시 처인구 김량장동 133",
+        "x": "127.206433415471",
+        "y": "37.2362003059667"
+      }
+    },
+    {
+      "region_key": "bucheon-station-general",
+      "region_name": "부천역·로데오거리",
+      "district_name": "부천시",
+      "search_keywords": [
+        "부천역",
+        "부천로데오",
+        "로데오거리",
+        "부천시",
+        "심곡동",
+        "원미구",
+        "AK광장"
+      ],
+      "query": "부천역",
+      "top": {
+        "place_name": "부천역 1호선",
+        "address": "경기 부천시 소사구 부천로 1",
+        "x": "126.78308287157131",
+        "y": "37.483989787369545"
+      }
+    },
+    {
+      "region_key": "jungdong-station-general",
+      "region_name": "중동역·중동신도시",
+      "district_name": "부천시",
+      "search_keywords": [
+        "중동역",
+        "중동",
+        "중동신도시",
+        "부천시",
+        "현대백화점중동점",
+        "뉴코아아울렛"
+      ],
+      "query": "중동역",
+      "top": {
+        "place_name": "중동역 1호선",
+        "address": "경기 부천시 소사구 중동로 73",
+        "x": "126.76453398304898",
+        "y": "37.486681622773176"
+      }
+    },
+    {
+      "region_key": "songnae-station-general",
+      "region_name": "송내역·송내중앙공원",
+      "district_name": "부천시",
+      "search_keywords": [
+        "송내역",
+        "송내",
+        "송내중앙공원",
+        "부천시",
+        "상동",
+        "상동역"
+      ],
+      "query": "송내역",
+      "top": {
+        "place_name": "송내역 1호선",
+        "address": "경기 부천시 소사구 송내대로 43",
+        "x": "126.75315944764172",
+        "y": "37.48764140324914"
+      }
+    },
+    {
+      "region_key": "sangdong-station-general",
+      "region_name": "상동·소사",
+      "district_name": "부천시",
+      "search_keywords": [
+        "상동역",
+        "상동",
+        "소사역",
+        "소사",
+        "부천시",
+        "서울외곽순환"
+      ],
+      "query": "상동역",
+      "top": {
+        "place_name": "상동역 7호선",
+        "address": "경기 부천시 원미구 길주로 지하 104",
+        "x": "126.753192450274",
+        "y": "37.50578860265"
+      }
+    },
+    {
+      "region_key": "pyeongchon-rotary-general",
+      "region_name": "평촌·범계 로데오",
+      "district_name": "안양시 동안구",
+      "search_keywords": [
+        "평촌역",
+        "범계역",
+        "평촌중앙공원",
+        "동안구",
+        "안양시",
+        "평촌학원가",
+        "평촌"
+      ],
+      "query": "평촌역",
+      "top": {
+        "place_name": "평촌역 4호선",
+        "address": "경기 안양시 동안구 부림로 지하 123",
+        "x": "126.9638080221341",
+        "y": "37.39423950914369"
+      }
+    },
+    {
+      "region_key": "anyang-1bgan-general",
+      "region_name": "안양1번가",
+      "district_name": "안양시 만안구",
+      "search_keywords": [
+        "안양역",
+        "안양1번가",
+        "만안구",
+        "안양시",
+        "안양로데오",
+        "명학역"
+      ],
+      "query": "안양역",
+      "top": {
+        "place_name": "안양역",
+        "address": "경기 안양시 만안구 만안로 232",
+        "x": "126.922643794145",
+        "y": "37.4018568034268"
+      }
+    },
+    {
+      "region_key": "pyeongchon-hagwon-general",
+      "region_name": "평촌 학원가",
+      "district_name": "안양시 동안구",
+      "search_keywords": [
+        "평촌학원가",
+        "범계역",
+        "평촌역",
+        "동안구",
+        "안양시",
+        "귀인동"
+      ],
+      "query": "평촌학원가",
+      "top": {
+        "place_name": "학원가사거리",
+        "address": "경기 안양시 동안구 평촌동 936",
+        "x": "126.95919528622866",
+        "y": "37.38502684993659"
+      }
+    },
+    {
+      "region_key": "dongtan2-meta-general",
+      "region_name": "동탄2신도시 메타폴리스",
+      "district_name": "화성시",
+      "search_keywords": [
+        "동탄역",
+        "동탄",
+        "메타폴리스",
+        "동탄신도시",
+        "화성시",
+        "동탄2신도시"
+      ],
+      "query": "동탄역",
+      "top": {
+        "place_name": "동탄역",
+        "address": "경기 화성시 동탄구 동탄역로 지하 151",
+        "x": "127.0957376046916",
+        "y": "37.19994276094583"
+      }
+    },
+    {
+      "region_key": "hwaseong-bonggdam-general",
+      "region_name": "봉담·향남",
+      "district_name": "화성시",
+      "search_keywords": [
+        "봉담",
+        "향남",
+        "화성시",
+        "봉담읍",
+        "향남읍",
+        "향남신도시"
+      ],
+      "query": "봉담",
+      "top": {
+        "place_name": "기천저수지",
+        "address": "경기 화성시 효행구 봉담읍 상기리 733",
+        "x": "126.90624891502672",
+        "y": "37.19393613445696"
+      }
+    },
+    {
+      "region_key": "pyeongtaek-jije-general",
+      "region_name": "평택지제·SRT",
+      "district_name": "평택시",
+      "search_keywords": [
+        "평택지제역",
+        "지제역",
+        "평택",
+        "평택시",
+        "SRT평택",
+        "고덕신도시"
+      ],
+      "query": "평택지제역",
+      "top": {
+        "place_name": "평택지제역",
+        "address": "경기 평택시 경기대로 777",
+        "x": "127.069832738374",
+        "y": "37.0187818090483"
+      }
+    },
+    {
+      "region_key": "pyeongtaek-station-general",
+      "region_name": "평택역·평택로데오",
+      "district_name": "평택시",
+      "search_keywords": [
+        "평택역",
+        "평택로데오",
+        "평택",
+        "평택시",
+        "AK플라자평택"
+      ],
+      "query": "평택역",
+      "top": {
+        "place_name": "평택역",
+        "address": "경기 평택시 평택로 51",
+        "x": "127.08557042067781",
+        "y": "36.99064515021194"
+      }
+    },
+    {
+      "region_key": "ansan-station-general",
+      "region_name": "안산역·중앙역 로데오",
+      "district_name": "안산시 단원구",
+      "search_keywords": [
+        "안산역",
+        "중앙역",
+        "중앙로데오",
+        "단원구",
+        "안산시",
+        "한대앞역"
+      ],
+      "query": "안산역",
+      "top": {
+        "place_name": "안산역 4호선",
+        "address": "경기 안산시 단원구 중앙대로 462",
+        "x": "126.7892163493839",
+        "y": "37.32685867641246"
+      }
+    },
+    {
+      "region_key": "gojan-station-general",
+      "region_name": "고잔·초지 신도시",
+      "district_name": "안산시 단원구",
+      "search_keywords": [
+        "고잔역",
+        "고잔동",
+        "초지역",
+        "초지",
+        "단원구",
+        "안산시",
+        "안산문화광장"
+      ],
+      "query": "고잔역",
+      "top": {
+        "place_name": "고잔역 4호선",
+        "address": "경기 안산시 단원구 중앙대로 784",
+        "x": "126.82359875532677",
+        "y": "37.3167693077138"
+      }
+    },
+    {
+      "region_key": "siheung-jeongwang-general",
+      "region_name": "정왕·시흥시청",
+      "district_name": "시흥시",
+      "search_keywords": [
+        "정왕역",
+        "정왕",
+        "시흥시청역",
+        "시흥시청",
+        "시흥시",
+        "월곶역"
+      ],
+      "query": "정왕역",
+      "top": {
+        "place_name": "정왕역 4호선",
+        "address": "경기 시흥시 마유로418번길 15",
+        "x": "126.74335018635819",
+        "y": "37.351701334544885"
+      }
+    },
+    {
+      "region_key": "siheung-baegot-general",
+      "region_name": "배곧신도시",
+      "district_name": "시흥시",
+      "search_keywords": [
+        "배곧신도시",
+        "시흥배곧",
+        "배곧",
+        "시흥시",
+        "오이도",
+        "오이도역"
+      ],
+      "query": "배곧신도시",
+      "top": {
+        "place_name": "옆커폰 배곧신도시점",
+        "address": "경기 시흥시 서울대학로278번길 43-7",
+        "x": "126.729737167659",
+        "y": "37.3687535465012"
+      }
+    },
+    {
+      "region_key": "gwangmyeong-station-general",
+      "region_name": "광명역 KTX",
+      "district_name": "광명시",
+      "search_keywords": [
+        "광명역",
+        "광명",
+        "KTX광명",
+        "광명시",
+        "코스트코광명",
+        "이케아광명"
+      ],
+      "query": "광명역",
+      "top": {
+        "place_name": "광명역",
+        "address": "경기 광명시 광명역로 21",
+        "x": "126.88468123606266",
+        "y": "37.416196233927124"
+      }
+    },
+    {
+      "region_key": "gwangmyeong-cheolsan-general",
+      "region_name": "철산·광명사거리",
+      "district_name": "광명시",
+      "search_keywords": [
+        "철산역",
+        "철산",
+        "광명사거리역",
+        "광명사거리",
+        "광명시"
+      ],
+      "query": "철산역",
+      "top": {
+        "place_name": "철산역 7호선",
+        "address": "경기 광명시 철산로 지하 13",
+        "x": "126.868211027014",
+        "y": "37.4761928424537"
+      }
+    },
+    {
+      "region_key": "hanam-misa-general",
+      "region_name": "하남미사·스타필드하남",
+      "district_name": "하남시",
+      "search_keywords": [
+        "미사역",
+        "하남미사",
+        "미사강변",
+        "스타필드하남",
+        "하남시",
+        "미사신도시"
+      ],
+      "query": "미사역",
+      "top": {
+        "place_name": "미사역 5호선",
+        "address": "경기 하남시 미사강변동로 지하 90",
+        "x": "127.192490980441",
+        "y": "37.562991348199"
+      }
+    },
+    {
+      "region_key": "hanam-gyosan-general",
+      "region_name": "교산신도시",
+      "district_name": "하남시",
+      "search_keywords": [
+        "교산신도시",
+        "하남교산",
+        "교산지구",
+        "하남시",
+        "하남BRT"
+      ],
+      "query": "교산신도시",
+      "top": {
+        "place_name": "하남교산 공공주택지구",
+        "address": "경기 하남시 하사창동 288-2",
+        "x": "127.19833655754",
+        "y": "37.5162757043028"
+      }
+    },
+    {
+      "region_key": "gwacheon-jucheong-general",
+      "region_name": "과천 정부청사·과천중앙",
+      "district_name": "과천시",
+      "search_keywords": [
+        "과천역",
+        "정부과천청사",
+        "정부청사역",
+        "과천중앙",
+        "과천시",
+        "대공원역",
+        "서울대공원"
+      ],
+      "query": "과천역",
+      "top": {
+        "place_name": "과천역 4호선",
+        "address": "경기 과천시 별양로 지하 177",
+        "x": "126.99661712263098",
+        "y": "37.43287530237988"
+      }
+    },
+    {
+      "region_key": "gwacheon-jisigi-general",
+      "region_name": "과천지식정보타운",
+      "district_name": "과천시",
+      "search_keywords": [
+        "과천지식정보타운",
+        "지식정보타운역",
+        "과천시",
+        "인덕원역",
+        "인덕원"
+      ],
+      "query": "과천지식정보타운",
+      "top": {
+        "place_name": "과천그랑레브데시앙아파트",
+        "address": "경기 과천시 과천대로8길 68",
+        "x": "126.98735361614887",
+        "y": "37.410194246331606"
+      }
+    },
+    {
+      "region_key": "uiwang-station-general",
+      "region_name": "의왕역·내손",
+      "district_name": "의왕시",
+      "search_keywords": [
+        "의왕역",
+        "의왕",
+        "내손동",
+        "의왕시",
+        "인덕원",
+        "백운호수"
+      ],
+      "query": "의왕역",
+      "top": {
+        "place_name": "의왕역 1호선",
+        "address": "경기 의왕시 철도박물관로 66",
+        "x": "126.9479765012",
+        "y": "37.3203421132836"
+      }
+    },
+    {
+      "region_key": "gunpo-sanbon-general",
+      "region_name": "산본·산본중심상가",
+      "district_name": "군포시",
+      "search_keywords": [
+        "산본역",
+        "산본",
+        "산본중심상가",
+        "군포시",
+        "군포역",
+        "군포"
+      ],
+      "query": "산본역",
+      "top": {
+        "place_name": "산본역 4호선",
+        "address": "경기 군포시 번영로 504",
+        "x": "126.933046329836",
+        "y": "37.3580193085257"
+      }
+    },
+    {
+      "region_key": "namyangju-dasan-general",
+      "region_name": "다산신도시·진건",
+      "district_name": "남양주시",
+      "search_keywords": [
+        "다산역",
+        "다산신도시",
+        "진건",
+        "남양주시",
+        "도농역",
+        "도농"
+      ],
+      "query": "다산역",
+      "top": {
+        "place_name": "다산역 8호선",
+        "address": "경기 남양주시 다산동 6067-4",
+        "x": "127.14979716054",
+        "y": "37.6242782781657"
+      }
+    },
+    {
+      "region_key": "namyangju-byeollae-general",
+      "region_name": "별내·별내신도시",
+      "district_name": "남양주시",
+      "search_keywords": [
+        "별내역",
+        "별내",
+        "별내신도시",
+        "남양주시",
+        "8호선",
+        "별내선"
+      ],
+      "query": "별내역",
+      "top": {
+        "place_name": "별내역 경춘선",
+        "address": "경기 남양주시 경춘북로 375",
+        "x": "127.1269691476328",
+        "y": "37.642067071704496"
+      }
+    },
+    {
+      "region_key": "namyangju-wangsuk-general",
+      "region_name": "왕숙신도시",
+      "district_name": "남양주시",
+      "search_keywords": [
+        "왕숙신도시",
+        "남양주왕숙",
+        "왕숙지구",
+        "남양주시",
+        "진접",
+        "오남"
+      ],
+      "query": "왕숙신도시",
+      "top": {
+        "place_name": "남양주왕숙 공공주택지구",
+        "address": "경기 남양주시 진건읍 신월리 192-1",
+        "x": "127.164191573023",
+        "y": "37.6727707248459"
+      }
+    },
+    {
+      "region_key": "jinjeop-station-general",
+      "region_name": "진접·진접지구",
+      "district_name": "남양주시",
+      "search_keywords": [
+        "진접역",
+        "진접",
+        "진접지구",
+        "남양주시",
+        "오남",
+        "오남역"
+      ],
+      "query": "진접역",
+      "top": {
+        "place_name": "진접역 4호선",
+        "address": "경기 남양주시 진접읍 경복대로 지하 244",
+        "x": "127.203247263047",
+        "y": "37.7199083469452"
+      }
+    },
+    {
+      "region_key": "uijongbu-station-general",
+      "region_name": "의정부역·로데오거리",
+      "district_name": "의정부시",
+      "search_keywords": [
+        "의정부역",
+        "의정부로데오",
+        "로데오거리",
+        "의정부시",
+        "의정부중앙로",
+        "신세계백화점의정부점"
+      ],
+      "query": "의정부역",
+      "top": {
+        "place_name": "의정부역",
+        "address": "경기 의정부시 평화로 525",
+        "x": "127.046119896907",
+        "y": "37.7378795089645"
+      }
+    },
+    {
+      "region_key": "uijongbu-minrak-general",
+      "region_name": "민락·민락신도시",
+      "district_name": "의정부시",
+      "search_keywords": [
+        "민락신도시",
+        "민락지구",
+        "의정부시",
+        "의정부민락",
+        "신곡동"
+      ],
+      "query": "민락신도시",
+      "top": {
+        "place_name": "루마썬팅 의정부고산신도시점",
+        "address": "경기 의정부시 산내음길 10",
+        "x": "127.111540585697",
+        "y": "37.735259887389"
+      }
+    },
+    {
+      "region_key": "guri-station-general",
+      "region_name": "구리역·구리중앙시장",
+      "district_name": "구리시",
+      "search_keywords": [
+        "구리역",
+        "구리",
+        "구리중앙시장",
+        "구리시",
+        "롯데백화점구리점",
+        "돌다리"
+      ],
+      "query": "구리역",
+      "top": {
+        "place_name": "구리역 경의중앙선",
+        "address": "경기 구리시 건원대로34번길 32-29",
+        "x": "127.14335098072823",
+        "y": "37.603268938528196"
+      }
+    },
+    {
+      "region_key": "guri-galmae-general",
+      "region_name": "갈매·다산 경계",
+      "district_name": "구리시",
+      "search_keywords": [
+        "갈매역",
+        "갈매",
+        "갈매지구",
+        "구리시",
+        "다산신도시",
+        "별내"
+      ],
+      "query": "갈매역",
+      "top": {
+        "place_name": "갈매역 경춘선",
+        "address": "경기 구리시 경춘북로 229",
+        "x": "127.114760741021",
+        "y": "37.6340689252244"
+      }
+    },
+    {
+      "region_key": "paju-unjeong-general",
+      "region_name": "운정·운정신도시",
+      "district_name": "파주시",
+      "search_keywords": [
+        "운정역",
+        "운정",
+        "운정신도시",
+        "파주시",
+        "교하",
+        "야당역"
+      ],
+      "query": "운정역",
+      "top": {
+        "place_name": "운정역 경의중앙선",
+        "address": "경기 파주시 운정역길 368",
+        "x": "126.76716330229101",
+        "y": "37.72560181256856"
+      }
+    },
+    {
+      "region_key": "paju-geumchon-general",
+      "region_name": "금촌·파주중앙",
+      "district_name": "파주시",
+      "search_keywords": [
+        "금촌역",
+        "금촌",
+        "파주시청",
+        "파주시",
+        "문산"
+      ],
+      "query": "금촌역",
+      "top": {
+        "place_name": "금촌역 경의중앙선",
+        "address": "경기 파주시 새꽃로 193",
+        "x": "126.774633255205",
+        "y": "37.7662265030421"
+      }
+    },
+    {
+      "region_key": "paju-heyri-general",
+      "region_name": "헤이리·출판도시",
+      "district_name": "파주시",
+      "search_keywords": [
+        "헤이리예술마을",
+        "헤이리",
+        "파주출판도시",
+        "파주시",
+        "문화예술"
+      ],
+      "query": "헤이리예술마을",
+      "top": {
+        "place_name": "헤이리예술마을",
+        "address": "경기 파주시 탄현면 헤이리마을길 70-21",
+        "x": "126.69930440147027",
+        "y": "37.788040908736896"
+      }
+    },
+    {
+      "region_key": "gimpo-hangang-general",
+      "region_name": "김포한강신도시·구래",
+      "district_name": "김포시",
+      "search_keywords": [
+        "구래역",
+        "구래",
+        "김포한강신도시",
+        "김포시",
+        "마산역",
+        "운양역"
+      ],
+      "query": "구래역",
+      "top": {
+        "place_name": "구래역 김포골드라인",
+        "address": "경기 김포시 김포한강7로 87",
+        "x": "126.62857604330732",
+        "y": "37.64539340715656"
+      }
+    },
+    {
+      "region_key": "gimpo-pungmu-general",
+      "region_name": "풍무·사우",
+      "district_name": "김포시",
+      "search_keywords": [
+        "풍무역",
+        "풍무",
+        "사우역",
+        "사우",
+        "김포시",
+        "김포시청"
+      ],
+      "query": "풍무역",
+      "top": {
+        "place_name": "풍무역 김포골드라인",
+        "address": "경기 김포시 김포대로 지하 710",
+        "x": "126.7324492375288",
+        "y": "37.61242840262763"
+      }
+    },
+    {
+      "region_key": "yangju-okjeong-general",
+      "region_name": "옥정·양주신도시",
+      "district_name": "양주시",
+      "search_keywords": [
+        "옥정신도시",
+        "양주옥정",
+        "옥정지구",
+        "양주시",
+        "덕정역",
+        "덕정"
+      ],
+      "query": "옥정신도시",
+      "top": {
+        "place_name": "양주옥정신도시디에트르프레스티지아파트",
+        "address": "경기 양주시 옥정로7길 34",
+        "x": "127.08964544765061",
+        "y": "37.8292732998063"
+      }
+    },
+    {
+      "region_key": "dongducheon-station-general",
+      "region_name": "동두천 보산·종합운동장",
+      "district_name": "동두천시",
+      "search_keywords": [
+        "동두천역",
+        "동두천",
+        "보산역",
+        "보산",
+        "종합운동장역",
+        "동두천시"
+      ],
+      "query": "동두천역",
+      "top": {
+        "place_name": "동두천역 1호선",
+        "address": "경기 동두천시 평화로 2687",
+        "x": "127.05492800053",
+        "y": "37.9276132662293"
+      }
+    },
+    {
+      "region_key": "pocheon-songwoo-general",
+      "region_name": "소흘·송우",
+      "district_name": "포천시",
+      "search_keywords": [
+        "소흘읍",
+        "송우리",
+        "포천시",
+        "포천중앙",
+        "의정부"
+      ],
+      "query": "소흘읍",
+      "top": {
+        "place_name": "국립수목원",
+        "address": "경기 포천시 소흘읍 광릉수목원로 415",
+        "x": "127.166178411162",
+        "y": "37.75139222602178"
+      }
+    },
+    {
+      "region_key": "gapyeong-station-general",
+      "region_name": "가평·자라섬",
+      "district_name": "가평군",
+      "search_keywords": [
+        "가평역",
+        "가평",
+        "자라섬",
+        "가평군",
+        "청평",
+        "청평역"
+      ],
+      "query": "가평역",
+      "top": {
+        "place_name": "가평역 경춘선",
+        "address": "경기 가평군 가평읍 문화로 13-42",
+        "x": "127.51073942455",
+        "y": "37.8145200514507"
+      }
+    },
+    {
+      "region_key": "icheon-station-general",
+      "region_name": "이천역·이천중앙",
+      "district_name": "이천시",
+      "search_keywords": [
+        "이천역",
+        "이천",
+        "이천시",
+        "이천중앙",
+        "이천쌀밥",
+        "이천터미널"
+      ],
+      "query": "이천역",
+      "top": {
+        "place_name": "이천역 경강선",
+        "address": "경기 이천시 이섭대천로 1063",
+        "x": "127.44216788016918",
+        "y": "37.264225761758865"
+      }
+    },
+    {
+      "region_key": "osan-station-general",
+      "region_name": "오산역·세교지구",
+      "district_name": "오산시",
+      "search_keywords": [
+        "오산역",
+        "오산",
+        "세교지구",
+        "오산시",
+        "오산대"
+      ],
+      "query": "오산역",
+      "top": {
+        "place_name": "오산역",
+        "address": "경기 오산시 역광장로 59",
+        "x": "127.066815431787",
+        "y": "37.1455280131333"
+      }
+    },
+    {
+      "region_key": "anseong-station-general",
+      "region_name": "안성·공도",
+      "district_name": "안성시",
+      "search_keywords": [
+        "안성",
+        "안성시",
+        "공도읍",
+        "안성중앙",
+        "안성터미널"
+      ],
+      "query": "안성",
+      "top": {
+        "place_name": "천주교 미리내성지",
+        "address": "경기 안성시 양성면 미리내성지로 416",
+        "x": "127.25930753627605",
+        "y": "37.14175538287641"
+      }
+    },
+    {
+      "region_key": "yeoju-station-general",
+      "region_name": "여주·여주역",
+      "district_name": "여주시",
+      "search_keywords": [
+        "여주역",
+        "여주",
+        "여주시",
+        "여주프리미엄아울렛",
+        "신륵사"
+      ],
+      "query": "여주역",
+      "top": {
+        "place_name": "여주역 경강선",
+        "address": "경기 여주시 교동로 80",
+        "x": "127.628529053998",
+        "y": "37.2828596478666"
+      }
+    },
+    {
+      "region_key": "gwangju-station-general",
+      "region_name": "경기광주·역동",
+      "district_name": "광주시",
+      "search_keywords": [
+        "경기광주역",
+        "경기광주",
+        "광주시",
+        "역동",
+        "오포",
+        "곤지암"
+      ],
+      "query": "경기광주역",
+      "top": {
+        "place_name": "경기광주역 경강선",
+        "address": "경기 광주시 광주역로 10",
+        "x": "127.253282668137",
+        "y": "37.3989438131636"
+      }
+    }
+  ],
+  "noResult": [],
+  "fail": [
+    {
+      "region_key": "incheon-bupyeong-general",
+      "region_name": "부평역 상권",
+      "district_name": "인천시 부평구",
+      "search_keywords": [
+        "인천",
+        "부평",
+        "부평역",
+        "부평구",
+        "인천 부평"
+      ],
+      "query": "인천",
+      "top": {
+        "place_name": "인천대공원",
+        "address": "인천 남동구 무네미로 238",
+        "x": "126.76060470317374",
+        "y": "37.45659085797083"
+      }
+    },
+    {
+      "region_key": "samsung-coex-general",
+      "region_name": "삼성역·코엑스 상권",
+      "district_name": "강남구",
+      "search_keywords": [
+        "삼성",
+        "삼성역",
+        "코엑스",
+        "봉은사역",
+        "강남구"
+      ],
+      "query": "삼성",
+      "top": {
+        "place_name": "삼성전자서비스 관악센터",
+        "address": "서울 관악구 남부순환로 1719",
+        "x": "126.9414510605341",
+        "y": "37.48285082328949"
+      }
+    },
+    {
+      "region_key": "daehakro-general",
+      "region_name": "대학로 상권",
+      "district_name": "종로구",
+      "search_keywords": [
+        "대학로",
+        "혜화역",
+        "혜화",
+        "종로구",
+        "마로니에공원"
+      ],
+      "query": "대학로",
+      "top": {
+        "place_name": "국립금오공과대학교",
+        "address": "경북 구미시 대학로 61",
+        "x": "128.39355532869683",
+        "y": "36.145922316904034"
+      }
+    },
+    {
+      "region_key": "sindorim-general",
+      "region_name": "신도림역 상권",
+      "district_name": "영등포구",
+      "search_keywords": [
+        "신도림",
+        "신도림역",
+        "영등포구",
+        "디큐브시티",
+        "테크노마트"
+      ],
+      "query": "신도림",
+      "top": {
+        "place_name": "안양천",
+        "address": "서울 구로구 신도림동",
+        "x": "126.874219829815",
+        "y": "37.5092339002167"
+      }
+    },
+    {
+      "region_key": "dongdaemun-general",
+      "region_name": "동대문·DDP",
+      "district_name": "중구",
+      "search_keywords": [
+        "동대문",
+        "DDP",
+        "동대문디자인플라자",
+        "중구",
+        "동대문역사문화공원"
+      ],
+      "query": "동대문",
+      "top": {
+        "place_name": "흥인지문",
+        "address": "서울 종로구 종로 288",
+        "x": "127.009571946966",
+        "y": "37.571141513487"
+      }
+    },
+    {
+      "region_key": "haknon-general",
+      "region_name": "학동·논현",
+      "district_name": "강남구",
+      "search_keywords": [
+        "학동",
+        "학동역",
+        "논현",
+        "논현역",
+        "논현동",
+        "강남구",
+        "신논현",
+        "학동사거리",
+        "가구거리",
+        "도산대로"
+      ],
+      "query": "학동",
+      "top": {
+        "place_name": "다이소 여수여천점",
+        "address": "전남 여수시 시청로 34",
+        "x": "127.663112902267",
+        "y": "34.764723518285"
+      }
+    },
+    {
+      "region_key": "yaksu-sindang-general",
+      "region_name": "약수·신당역 동측",
+      "district_name": "중구",
+      "search_keywords": [
+        "약수",
+        "약수역",
+        "약수동",
+        "신당",
+        "신당역",
+        "동대입구",
+        "동대입구역",
+        "중구",
+        "신당동",
+        "동호로"
+      ],
+      "query": "약수",
+      "top": {
+        "place_name": "오색약수",
+        "address": "강원특별자치도 양양군 서면 약수길 45",
+        "x": "128.445724786556",
+        "y": "38.0776566720389"
+      }
+    },
+    {
+      "region_key": "gangnam-st-yangjae-belt-general",
+      "region_name": "강남역 남부 ~ 양재",
+      "district_name": "서초구",
+      "search_keywords": [
+        "강남역",
+        "양재역",
+        "시민의숲역",
+        "서초구",
+        "강남대로",
+        "뱅뱅사거리",
+        "서초"
+      ],
+      "query": "강남역",
+      "top": {
+        "place_name": "강남역 2호선",
+        "address": "서울 강남구 강남대로 지하 396",
+        "x": "127.02800140627488",
+        "y": "37.49808633653005"
+      }
+    },
+    {
+      "region_key": "jongno-3ga-myeongdong-link",
+      "region_name": "명동 ~ 종로3가 연결",
+      "district_name": "중구",
+      "search_keywords": [
+        "종로3가역",
+        "종로3가",
+        "청계천",
+        "청계3가",
+        "청계4가",
+        "을지로3가",
+        "중구",
+        "종로구"
+      ],
+      "query": "종로3가역",
+      "top": {
+        "place_name": "종로3가역 1호선",
+        "address": "서울 종로구 종로 지하 129",
+        "x": "126.992153252476",
+        "y": "37.570420844523"
+      }
+    },
+    {
+      "region_key": "daerim-general",
+      "region_name": "대림역·차이나타운",
+      "district_name": "영등포구",
+      "search_keywords": [
+        "대림역",
+        "대림동",
+        "영등포구",
+        "구로구",
+        "대림차이나타운",
+        "대림중앙시장"
+      ],
+      "query": "대림역",
+      "top": {
+        "place_name": "대림역 2호선",
+        "address": "서울 구로구 도림천로 351",
+        "x": "126.894931036051",
+        "y": "37.4933099444417"
+      }
+    },
+    {
+      "region_key": "dapsimni-jangan-belt-general",
+      "region_name": "답십리·장안동",
+      "district_name": "동대문구",
+      "search_keywords": [
+        "답십리역",
+        "답십리",
+        "장안동",
+        "장한평역",
+        "동대문구",
+        "신답",
+        "용두"
+      ],
+      "query": "답십리역",
+      "top": {
+        "place_name": "답십리역 5호선",
+        "address": "서울 성동구 천호대로 지하 300",
+        "x": "127.05256127651293",
+        "y": "37.56697480965114"
+      }
+    },
+    {
+      "region_key": "wirye-shinheung-general",
+      "region_name": "위례·신흥",
+      "district_name": "성남시 수정구",
+      "search_keywords": [
+        "위례신도시",
+        "위례",
+        "신흥역",
+        "신흥",
+        "성남시 수정구",
+        "수정구",
+        "복정역"
+      ],
+      "query": "위례신도시",
+      "top": {
+        "place_name": "위례 택지개발사업 예정지구",
+        "address": "경기 하남시 학암동 676",
+        "x": "127.14723455208713",
+        "y": "37.473984252354164"
+      }
+    },
+    {
+      "region_key": "yongin-suji-mojeon-belt-general",
+      "region_name": "미금·오리·죽전 분당선 라인",
+      "district_name": "용인시 수지구",
+      "search_keywords": [
+        "미금역",
+        "오리역",
+        "오리",
+        "미금",
+        "수지구",
+        "용인시",
+        "분당구"
+      ],
+      "query": "미금역",
+      "top": {
+        "place_name": "미금역 수인분당선",
+        "address": "경기 성남시 분당구 성남대로 지하 156",
+        "x": "127.10900662549734",
+        "y": "37.35007159880101"
+      }
+    },
+    {
+      "region_key": "dongtan1-bansong-general",
+      "region_name": "동탄1·반송",
+      "district_name": "화성시",
+      "search_keywords": [
+        "반송역",
+        "반송동",
+        "동탄1신도시",
+        "화성시",
+        "능동",
+        "능동역"
+      ],
+      "query": "반송역",
+      "top": {
+        "place_name": "서동탄역 1호선",
+        "address": "경기 오산시 외삼미로15번길 75-60",
+        "x": "127.051856779194",
+        "y": "37.1957351505295"
+      }
+    }
+  ],
+  "total": 229,
+  "timestamp": "2026-05-18T08:57:00.265Z"
+}

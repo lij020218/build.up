@@ -508,7 +508,7 @@ export function RegistrationSetupStage() {
         }
         miniCards={[
           { icon: FileText, label: "1️⃣ 사업자등록", detail: "무료 · 1~3일 · 홈택스" },
-          { icon: ShieldCheck, label: "2️⃣ 인허가", detail: `${permit.cost.split(" ")[0]} · ${permit.duration.split(" ")[0]}` },
+          { icon: ShieldCheck, label: "2️⃣ 인허가", detail: `${(permit.cost.split("(")[0] ?? permit.cost).trim()} · ${(permit.duration.split("(")[0] ?? permit.duration).trim()}` },
           { icon: Building2, label: "둘 다 필수", detail: "미신고 영업 = 과태료+폐쇄" },
         ]}
       />
@@ -750,10 +750,19 @@ export function RegistrationSetupStage() {
           </ul>
         </div>
 
-        {/* meta */}
+        {/* meta — ⚠️ 2026-05-18: split(" ")[0] 은 "약 6.6만원 (위생교육 ...)" 에서 "약" 만 잘라
+            value 가 "약" 으로 표시되는 버그. 괄호 앞 전체를 value 로, 괄호 안은 sublabel 로 분리. */}
         <div style={{ display: "flex", gap: "8px", padding: "14px 16px", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-          <MetaPair label="비용" value={permit.cost.split(" ")[0]} sublabel={permit.cost.includes("(") ? permit.cost.split("(")[1].replace(")", "") : undefined} />
-          <MetaPair label="소요" value={permit.duration.split(" ")[0]} sublabel={permit.duration.includes("(") ? permit.duration.split("(")[1].replace(")", "") : undefined} />
+          <MetaPair
+            label="비용"
+            value={(permit.cost.split("(")[0] ?? permit.cost).trim()}
+            sublabel={permit.cost.includes("(") ? permit.cost.split("(")[1].replace(")", "").trim() : undefined}
+          />
+          <MetaPair
+            label="소요"
+            value={(permit.duration.split("(")[0] ?? permit.duration).trim()}
+            sublabel={permit.duration.includes("(") ? permit.duration.split("(")[1].replace(")", "").trim() : undefined}
+          />
           <MetaPair label="유형" value={permit.kind} sublabel={permit.kind === "신고" ? "알림" : permit.kind === "허가" ? "금지 해제" : permit.kind === "등록" ? "기록 등재" : "자격 부여"} />
         </div>
       </Section>
@@ -973,7 +982,7 @@ export function RegistrationSetupStage() {
           "사업자등록 — 개업일 기준 20일 이내 신청 (지연 시 가산세 + 부가세 매입세액 공제 불가)",
           "영업신고증 — 시설기준·위생교육·건강진단서 3개 모두 갖춰야 발급 (1개라도 누락 시 보완 통보)",
           "임대차계약서 — 사업자등록 시 제출용은 「확정일자」 받은 원본, 보증금 우선변제권 확보",
-          "간이과세 vs 일반과세 — 연매출 8천만원 미만이면 간이 유리, 초기엔 일반 선택 후 매입세액 환급도 고려",
+          "간이과세 vs 일반과세 — 연매출 1억 400만원 미만이면 간이 유리, 초기엔 일반 선택 후 매입세액 환급도 고려",
           "건강진단서·위생교육 — 식품접객업은 영업신고 전 필수 (보건소 또는 식품진흥원, 비용 1~3만원)",
           "다중이용시설 — 소방시설완비증명서·전기안전점검확인서 사전 발급 (영업신고 시 첨부)",
         ]}

@@ -804,11 +804,12 @@ const starterBusinessModelOptionsByCategory: Record<string, RecommendationItem[]
     },
     {
       id: "delivery-hybrid",
-      title: "Delivery Hybrid",
-      score: 78,
-      summary: "Useful when you want walk-in demand and delivery demand together.",
-      reasons: ["Wider reach beyond walk-in traffic", "Strong fit for fast meals and repeat demand"],
-      warnings: ["Packaging, dispatch, and channel fees add complexity"]
+      title: "Hybrid (Dine-in + Delivery)",
+      // 한국 외식 표준 — 사장님 95% 가 이 모델. recommendation score 최상으로 상향.
+      score: 88,
+      summary: "The standard for Korean F&B — dine-in customers + delivery channels operating together.",
+      reasons: ["Captures both walk-in regulars and delivery demand", "Industry-standard in Korea — channel diversification", "Pickup option offsets some delivery fees"],
+      warnings: ["Baemin/Coupang Eats fees 17–28% must be priced in", "Separate the 3 kitchen flows (dine-in / pickup / rider) for smooth operations"]
     }
   ],
   "cafe-dessert": [
@@ -1212,7 +1213,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "selection",
     status: "in_progress",
     stepNumber: 1,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Set the business category before any downstream guidance begins.",
     whyNow: "Every other decision — location, permits, suppliers — depends on this choice.",
     completionRule: { kind: "select_and_save", requiredKeys: ["subIndustryId"] },
@@ -1227,7 +1228,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "selection",
     status: "locked",
     stepNumber: 2,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Choose whether you are opening independently, through a franchise, or still deciding.",
     whyNow: "Brand, contract, and setup guidance changes based on this choice.",
     completionRule: { kind: "select_one", minimumSelectedCount: 1 },
@@ -1242,7 +1243,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "selection",
     status: "locked",
     stepNumber: 3,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Define how the business will run so location and cost logic can stay realistic.",
     whyNow: "A dine-in cafe, delivery kitchen, and unmanned studio each need a different plan.",
     completionRule: { kind: "select_one", minimumSelectedCount: 1 },
@@ -1269,14 +1270,14 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "verification",
     status: "locked",
     stepNumber: 4,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Capture the primary customer persona — age range, lifestyle, and price sensitivity — so location, menu, and marketing decisions stay focused on a real person, not a generic average.",
     whyNow: "Every downstream decision — where to lease, what to charge, which channel to advertise on — depends on who the customer is. Skipping this means each subsequent stage drifts toward generic averages and underperforms. 5-10 min input now saves months of pivoting.",
     completionRule: {
-      kind: "required_inputs",
-      requiredKeys: ["primaryAgeRange", "lifestyleHint", "priceSensitivity"]
+      kind: "required_tasks",
+      requiredTaskIds: ["tc-age-narrowed", "tc-lifestyle-specified", "tc-price-anchor", "tc-counter-example"]
     },
-    taskIds: [],
+    taskIds: ["tc-age-narrowed", "tc-lifestyle-specified", "tc-price-anchor", "tc-counter-example"],
     riskIds: [],
     nextStageIds: ["budget-setup"]
   },
@@ -1287,7 +1288,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "verification",
     status: "locked",
     stepNumber: 4,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Capture capital, loan intent, and target opening date before recommending places or contracts.",
     whyNow: "Budget defines the safe range for every decision that follows.",
     completionRule: { kind: "required_inputs", requiredKeys: ["capital", "targetOpenDate"] },
@@ -1296,7 +1297,16 @@ export const starterStageFlow: RoadmapStageState[] = [
     // Default → offline path. Franchise → franchise-application first.
     // Condition → online-digital branches to platform-setup.
     nextStageIds: ["permit-check"],
+    // ⚠️ 2026-05-18: franchise 분기를 최상위로 이동. 종전엔 online-digital + franchise 사장님이
+    //   online 조건에 먼저 매치되어 platform-setup 으로 라우팅 → franchise-application 영원히
+    //   미실행. franchise 는 cluster 무관 1순위로 분기.
     nextStageConditions: [
+      {
+        decisionStageId: "startup-type",
+        decisionKey: "startupType",
+        matchValue: "franchise",
+        stageIds: ["franchise-application"]
+      },
       {
         decisionStageId: "industry-selection",
         decisionKey: "categoryId",
@@ -1308,12 +1318,6 @@ export const starterStageFlow: RoadmapStageState[] = [
         decisionKey: "categoryId",
         matchValue: "online-digital",
         stageIds: ["platform-setup"]
-      },
-      {
-        decisionStageId: "startup-type",
-        decisionKey: "startupType",
-        matchValue: "franchise",
-        stageIds: ["franchise-application"]
       }
     ]
   },
@@ -1805,7 +1809,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "verification",
     status: "locked",
     stepNumber: 5,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Identify which permits, licenses, and certifications your category requires before signing a lease.",
     whyNow: "Signing a lease without confirming permit eligibility can permanently block your opening.",
     // ⚠️ 5개 모두 필수 — 이전엔 ["building-registry-checked","permit-type-checked"] 만 required 라
@@ -1838,7 +1842,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "comparison",
     status: "locked",
     stepNumber: 6,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Shortlist candidate markets with scores, reasons, and freshness-checked signals.",
     whyNow: "Location should only be shortlisted after business model, budget, and permit requirements are clear.",
     completionRule: { kind: "select_one", minimumSelectedCount: 1 },
@@ -1858,7 +1862,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 7,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Check the lease and operating constraints before committing to a location.",
     whyNow: "Contract mistakes are expensive and hard to reverse.",
     // ⚠️ certified-date-obtained 는 required:true 인데 이전엔 requiredTaskIds 누락 — 사용자가 확정일자 안 받아도 진행 가능했음.
@@ -1944,10 +1948,10 @@ export const starterStageFlow: RoadmapStageState[] = [
     goal: "Define the initial menu or service lineup with item name, price, and category. Items captured here pre-load the inventory tracking card so day-1 prep doesn't slip.",
     whyNow: "Menu decisions determine ingredient sourcing, equipment needs, pricing strategy, and the inventory tracking baseline. Locking before vendor setup prevents rework and week-1 stockouts. For cafes — drink lineup; for beauty/fitness — service menu; for retail — product catalog.",
     completionRule: {
-      kind: "required_inputs",
-      requiredKeys: ["menuItemsJson"]
+      kind: "required_tasks",
+      requiredTaskIds: ["md-signature-items", "md-side-items", "md-pricing-set", "md-categories-organized"]
     },
-    taskIds: [],
+    taskIds: ["md-signature-items", "md-side-items", "md-pricing-set", "md-categories-organized"],
     riskIds: [],
     // menu-design → vendor-setup (was direct from construction-setup).
     nextStageIds: ["vendor-setup"]
@@ -2119,7 +2123,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "selection",
     status: "locked",
     stepNumber: 5,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Select the right sales platform — Smart Store, Coupang, or a custom store — and open a seller account.",
     whyNow: "Platform choice defines fees, customer reach, and fulfillment options from day one.",
     completionRule: {
@@ -2137,7 +2141,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 6,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Register the business and file the telecommunications sales notification required for all online sellers.",
     whyNow: "Selling online without a telecom sales filing is a legal violation — this must be done before going live.",
     completionRule: {
@@ -2159,7 +2163,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     status: "locked",
     // 2026-05-12 P3 reorder: biz/tax/loan 사이에 들어가 #10 (online 새 순서).
     stepNumber: 10,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Contract with suppliers, photograph products, and create detail pages ready for listing.",
     whyNow: "High-quality photos and detail pages are the primary conversion driver in online selling.",
     completionRule: {
@@ -2177,7 +2181,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 11,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Configure the storefront, connect shipping carriers, and set up payment.",
     whyNow: "Getting shipping and payment right before launch prevents failed orders and refund requests on opening day.",
     completionRule: {
@@ -2195,7 +2199,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     type: "execution",
     status: "locked",
     stepNumber: 12,
-    totalSteps: 14,
+    totalSteps: 0, // 동적 산출: useComputedDashboard.pathTotalStages 사용
     goal: "Optimize for search, set up initial ads, and plan a review-building strategy before launch.",
     whyNow: "New stores have no reviews and low search ranking — early marketing investment directly affects first-month revenue.",
     completionRule: {
@@ -2341,6 +2345,22 @@ export const starterTaskMap: WorkflowTaskMap = {
     { taskId: "fc-legal", title: "Get legal review of franchise contract", status: "todo", required: false, estimatedMinutes: 120 },
     { taskId: "fc-contract", title: "Sign franchise agreement and pay franchise fee", status: "todo", required: true, estimatedMinutes: 60 },
     { taskId: "fc-training", title: "Complete HQ training program", status: "todo", required: true, estimatedMinutes: 2400 }
+  ],
+  // ── Target customer definition tasks (shared, 모든 cluster) ────────────────
+  //   페르소나 한 명을 명시 → 후속 모든 결정 (입지·메뉴·가격·광고) 의 anchor.
+  "target-customer-definition": [
+    { taskId: "tc-age-narrowed", title: "Narrow primary age range / industry to one persona", status: "todo", required: true, estimatedMinutes: 5 },
+    { taskId: "tc-lifestyle-specified", title: "Specify lifestyle / daily workflow — when, where, why they use the product", status: "todo", required: true, estimatedMinutes: 8 },
+    { taskId: "tc-price-anchor", title: "Set ticket / budget anchor — including the price they would NEVER pay", status: "todo", required: true, estimatedMinutes: 5 },
+    { taskId: "tc-counter-example", title: "Verify with counter-examples — 4 behaviors this persona would never do", status: "todo", required: true, estimatedMinutes: 10 }
+  ],
+  // ── Menu / service lineup tasks (offline + online clusters) ────────────────
+  //   초기 메뉴(서비스) 라인업 락인 → 식자재·재고·가격 전략의 베이스라인.
+  "menu-design": [
+    { taskId: "md-signature-items", title: "Lock 3-5 signature menu (or service) items", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "md-side-items", title: "Lock 2-3 side / supporting items", status: "todo", required: true, estimatedMinutes: 15 },
+    { taskId: "md-pricing-set", title: "Set price per item — target cost ratio 33% or lower", status: "todo", required: true, estimatedMinutes: 30 },
+    { taskId: "md-categories-organized", title: "Organize categories + display order — auto-loads into inventory card", status: "todo", required: true, estimatedMinutes: 15 }
   ],
   // ── Tech startup path tasks ───────────────────────────────────────────────
   "startup-foundation": [

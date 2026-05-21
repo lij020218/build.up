@@ -28,10 +28,15 @@ public struct IndustryFocusCard: View {
         case .restaurant, .cafe:
             PrimeCostFocusCard(mock: mock)
         case .startupTech:
-            CashZeroDateFocusCard(mock: mock)
+            // 2026-05-19 사장님 결정: SaaS 핵심 KPI = funnel 전환율.
+            //   런웨이(Cash Zero Date)는 funnel 카드 우상단 mini chip 으로 유지.
+            ConversionFunnelFocusCard(mock: mock, mode: .saas)
+        case .ecommerce:
+            // 2026-05-19: 온라인은 구매 전환율이 최우선 KPI.
+            ConversionFunnelFocusCard(mock: mock, mode: .commerce)
         case .beauty, .pet, .fitness, .education, .livingService, .space:
             BookingFocusCard(mock: mock)
-        case .retail, .ecommerce, .general:
+        case .retail, .general:
             InspirationCard()
         }
     }

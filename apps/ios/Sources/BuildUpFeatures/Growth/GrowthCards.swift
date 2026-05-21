@@ -401,6 +401,9 @@ public struct GrowthForecastView: View {
 
                 ProgressMilestonesCard(milestones: milestones)
 
+                // 마케팅 블록은 MarketingView 로 이전됨 (LoyaltyDonut / CampaignIdeas).
+                // MarketingChannelROIBlock 는 실데이터 KPI + Campaigns List 로 대체.
+
                 Color.clear.frame(height: 110)
             }
             .padding(.horizontal, BUSpacing.md)
@@ -408,6 +411,375 @@ public struct GrowthForecastView: View {
             .padding(.bottom, BUSpacing.md)
         }
         .background(BUBackgroundSurface())
+    }
+}
+
+// MARK: - MarketingChannelROIBlock
+
+public struct MarketingChannelROIBlock: View {
+
+    struct Channel: Identifiable {
+        let id = UUID()
+        let name: String
+        let icon: String
+        let tint: Color
+        let cost: Int          // 이번 달 비용 (원)
+        let visitors: Int      // 유입 고객 (명)
+        let roas: Double       // %
+    }
+
+    private let channels: [Channel] = [
+        .init(name: "네이버 플레이스", icon: "mappin.circle.fill", tint: Color(red: 0.13, green: 0.71, blue: 0.39),
+              cost: 150_000, visitors: 84, roas: 312),
+        .init(name: "인스타그램", icon: "camera.fill", tint: Color(red: 0.91, green: 0.30, blue: 0.55),
+              cost: 220_000, visitors: 62, roas: 178),
+        .init(name: "카카오 채널", icon: "bubble.left.and.bubble.right.fill", tint: Color(red: 0.99, green: 0.81, blue: 0.10),
+              cost: 80_000, visitors: 45, roas: 245),
+        .init(name: "배민 광고", icon: "bicycle", tint: Color(red: 0.18, green: 0.74, blue: 0.78),
+              cost: 380_000, visitors: 128, roas: 142),
+        .init(name: "쿠팡이츠", icon: "cart.fill", tint: Color(red: 0.93, green: 0.31, blue: 0.20),
+              cost: 290_000, visitors: 91, roas: 165),
+    ]
+
+    private var totalCost: Int { channels.reduce(0) { $0 + $1.cost } }
+    private var totalVisitors: Int { channels.reduce(0) { $0 + $1.visitors } }
+
+    public init() {}
+
+    public var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle().fill(BUColor.midnight08).frame(width: 36, height: 36)
+                        Image(systemName: "megaphone.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(BUColor.midnight)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("MARKETING")
+                            .buSectionEyebrowStyle()
+                        Text("채널 ROI 요약")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    Spacer()
+                }
+
+                // 상단 KPI
+                HStack(spacing: 8) {
+                    miniKPI(label: "이번 달 지출", value: formatKRW(Double(totalCost)))
+                    miniKPI(label: "유입 고객", value: "\(totalVisitors)명")
+                }
+
+                VStack(spacing: 8) {
+                    ForEach(channels) { ch in
+                        channelRow(ch)
+                    }
+                }
+            }
+        }
+    }
+
+    private func miniKPI(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(BUColor.ink.opacity(0.48))
+                .tracking(0.4)
+                .textCase(.uppercase)
+            Text(value)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(BUColor.ink)
+                .monospacedDigit()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 10)
+        .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func channelRow(_ ch: Channel) -> some View {
+        let roasGood = ch.roas >= 200
+        let roasOk = ch.roas >= 150
+        let roasTint: Color = roasGood ? BUColor.success : (roasOk ? BUColor.midnight : BUColor.danger)
+        return HStack(spacing: 10) {
+            ZStack {
+                Circle().fill(ch.tint.opacity(0.12)).frame(width: 32, height: 32)
+                Image(systemName: ch.icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(ch.tint)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(ch.name)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(BUColor.ink)
+                Text("\(formatKRW(Double(ch.cost))) · \(ch.visitors)명")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .monospacedDigit()
+            }
+            Spacer()
+            Text("\(Int(ch.roas))%")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(roasTint)
+                .monospacedDigit()
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(roasTint.opacity(0.10), in: Capsule())
+        }
+        .frame(minHeight: 44)
+    }
+}
+
+// MARK: - LoyaltyDonutBlock
+
+public struct LoyaltyDonutBlock: View {
+
+    struct Segment {
+        let label: String
+        let value: Double
+        let color: Color
+    }
+
+    private let segments: [Segment] = [
+        .init(label: "단골", value: 38, color: BUColor.midnight),
+        .init(label: "신규", value: 24, color: BUColor.success),
+        .init(label: "일회성", value: 38, color: BUColor.inkSubtle),
+    ]
+
+    private var total: Double { segments.reduce(0) { $0 + $1.value } }
+
+    public init() {}
+
+    public var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle().fill(BUColor.success08).frame(width: 36, height: 36)
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(BUColor.success)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("LOYALTY")
+                            .buSectionEyebrowStyle()
+                        Text("단골 비율")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    Spacer()
+                }
+
+                HStack(spacing: 18) {
+                    LoyaltyDonut(segments: segments, total: total)
+                        .frame(width: 110, height: 110)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(segments.indices, id: \.self) { i in
+                            let s = segments[i]
+                            HStack(spacing: 8) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(s.color)
+                                    .frame(width: 10, height: 10)
+                                Text(s.label)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(BUColor.ink.opacity(0.75))
+                                Spacer()
+                                Text("\(Int(s.value))%")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(s.color)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                Text("재방문 고객이 전체의 38%. 일회성 비중을 단골로 전환하면 매출이 안정됩니다.")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineSpacing(2)
+                    .padding(.top, 4)
+            }
+        }
+    }
+}
+
+private struct LoyaltyDonut: View {
+    let segments: [LoyaltyDonutBlock.Segment]
+    let total: Double
+
+    var body: some View {
+        GeometryReader { geo in
+            let size = min(geo.size.width, geo.size.height)
+            let lw: CGFloat = size * 0.18
+            ZStack {
+                // ring background
+                Circle()
+                    .stroke(BUColor.midnight.opacity(0.05), lineWidth: lw)
+
+                // segments
+                let _: Double = 0
+                ZStack {
+                    ForEach(segments.indices, id: \.self) { i in
+                        let start = startFraction(at: i)
+                        let end = start + segments[i].value / total
+                        Circle()
+                            .trim(from: start, to: end)
+                            .stroke(segments[i].color, style: StrokeStyle(lineWidth: lw, lineCap: .butt))
+                            .rotationEffect(.degrees(-90))
+                    }
+                }
+
+                // center value
+                VStack(spacing: 0) {
+                    if let primary = segments.first {
+                        Text("\(Int(primary.value))%")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                            .monospacedDigit()
+                        Text(primary.label)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .tracking(0.4)
+                            .textCase(.uppercase)
+                    }
+                }
+            }
+            .frame(width: size, height: size)
+        }
+    }
+
+    private func startFraction(at index: Int) -> Double {
+        guard total > 0 else { return 0 }
+        return segments.prefix(index).reduce(0) { $0 + $1.value } / total
+    }
+}
+
+// MARK: - CampaignIdeasBlock
+
+public struct CampaignIdeasBlock: View {
+
+    struct Idea: Identifiable {
+        let id = UUID()
+        let title: String
+        let icon: String
+        let tint: Color
+        let summary: String
+        let details: String
+    }
+
+    private let ideas: [Idea] = [
+        .init(
+            title: "단골 win-back 메시지",
+            icon: "envelope.badge.fill",
+            tint: BUColor.midnight,
+            summary: "30일 이상 방문 없는 단골 24명",
+            details: "카카오 채널로 5,000원 할인 쿠폰 발송. 예상 회수율 18% (4-5명). 비용 약 25,000원."
+        ),
+        .init(
+            title: "리뷰 답글 자동화",
+            icon: "text.bubble.fill",
+            tint: BUColor.success,
+            summary: "이번 주 미답글 리뷰 6건",
+            details: "네이버 플레이스 신규 리뷰에 24시간 내 답글. 검색 노출 +12% 평균치."
+        ),
+        .init(
+            title: "점심 직장인 타임 광고",
+            icon: "clock.fill",
+            tint: Color(red: 0.18, green: 0.74, blue: 0.78),
+            summary: "11:30-13:30 배민 광고 강화",
+            details: "주변 오피스 1km 타겟. 일 1만원 × 5일 = 5만원. 예상 유입 +15-20명."
+        ),
+        .init(
+            title: "주말 SNS 콘텐츠",
+            icon: "camera.fill",
+            tint: Color(red: 0.91, green: 0.30, blue: 0.55),
+            summary: "신메뉴 릴스 1개",
+            details: "인스타 릴스 1개 + 스토리 3개. 평균 도달 1,500-3,000명. 비용 0원."
+        ),
+    ]
+
+    @State private var expanded: UUID?
+
+    public init() {}
+
+    public var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle().fill(BUColor.midnight08).frame(width: 36, height: 36)
+                        Image(systemName: "lightbulb.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(BUColor.midnight)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("CAMPAIGN")
+                            .buSectionEyebrowStyle()
+                        Text("다음 캠페인 아이디어")
+                            .font(.system(size: 15, weight: .bold))
+                    }
+                    Spacer()
+                }
+
+                VStack(spacing: 8) {
+                    ForEach(ideas) { idea in
+                        ideaRow(idea)
+                    }
+                }
+            }
+        }
+    }
+
+    private func ideaRow(_ idea: Idea) -> some View {
+        let isOpen = expanded == idea.id
+        return VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                    expanded = isOpen ? nil : idea.id
+                }
+            } label: {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle().fill(idea.tint.opacity(0.12)).frame(width: 32, height: 32)
+                        Image(systemName: idea.icon)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(idea.tint)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(idea.title)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                            .multilineTextAlignment(.leading)
+                        Text(idea.summary)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(BUColor.inkSubtle)
+                        .rotationEffect(.degrees(isOpen ? 180 : 0))
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isOpen {
+                Text(idea.details)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(BUColor.ink.opacity(0.7))
+                    .lineSpacing(3)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(idea.tint.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
     }
 }
 

@@ -3,6 +3,7 @@ import {
   buildRoadmapState,
   formatGuideSectionTitle,
   localizeStage,
+  resolveNextStageIds,
   starterRoadmap,
   starterStageFlow,
   starterTaskMap,
@@ -387,18 +388,39 @@ export function advanceStageWithChainBackfill(
     ...(extraDecisionFields ?? {}),
   });
 
-  const stageIdx = baseRoadmap.stages.findIndex((s) => s.stageId === stageId);
-  if (stageIdx > 0) {
-    for (let i = 0; i < stageIdx; i++) {
-      const prevSid = baseRoadmap.stages[i].stageId;
+  // ⚠️ path-aware chain-backfill: 종전엔 baseRoadmap.stages 배열 순서로 prior stage 를 모두 마킹
+  //   했는데, array 는 starter-data 정의 순(offline → tech → cluster → franchise → online → tail)
+  //   이라 online-digital 사용자가 biz-registration 완료 시 startup-only/offline-only stage 까지
+  //   silently completedAt 마킹 → reachableIds 가 다른 path 로 잘못 확장되고 progress 분모 오염.
+  //   nextStageIds 따라가며 *현재 사용자 path 의 prior stage* 만 backfill.
+  const stageById = new Map(baseRoadmap.stages.map((s) => [s.stageId, s]));
+  const pathPrior: string[] = [];
+  const seen = new Set<string>();
+  let cursor = baseRoadmap.stages[0];
+  while (cursor && cursor.stageId !== stageId && !seen.has(cursor.stageId)) {
+    seen.add(cursor.stageId);
+    pathPrior.push(cursor.stageId);
+    const nextIds = resolveNextStageIds(cursor, nextDecisions);
+    if (nextIds.length === 0) break;
+    let next: typeof cursor | undefined;
+    for (const id of nextIds) {
+      const candidate = stageById.get(id);
+      if (candidate) { next = candidate; break; }
+    }
+    if (!next) break;
+    cursor = next;
+  }
+  // 완료한 stage 까지 path 안에서 도달했으면 그 사이 stage 들을 backfill
+  if (cursor?.stageId === stageId && pathPrior.length > 0) {
+    pathPrior.forEach((prevSid, i) => {
       if (!nextDecisions[prevSid]?.completedAt) {
-        const ts = new Date(Date.parse(now) - (stageIdx - i) * 1000).toISOString();
+        const ts = new Date(Date.parse(now) - (pathPrior.length - i) * 1000).toISOString();
         nextDecisions = upsertStageDecision(nextDecisions, prevSid, {
           stageId: prevSid,
           completedAt: ts,
         });
       }
-    }
+    });
   }
 
   const previousUnlocked = new Set(roadmap.unlockedStageIds);

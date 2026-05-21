@@ -91,6 +91,17 @@ export async function POST(request: Request) {
     const failures: Array<{ table: string; error: string }> = [];
     const deleted: Record<string, number> = {};
 
+    /**
+     *  ⚠️ 2026-05-20 fix: 사용자가 한 번도 연결하지 않은 통합 테이블 (portone_*, stripe_*, toss_*
+     *  등) 은 Supabase 에 아예 존재하지 않을 수 있다. 종전엔 그런 테이블의 "relation does not
+     *  exist" 에러가 failures[] 에 쌓여서 iOS 가 "진행 초기화 실패" 로 표시했음.
+     *  → OWNER_TABLES 와 동일하게 "테이블 없음" 은 soft-fail 처리.
+     */
+    const isMissingTableError = (code?: string, message?: string) =>
+      code === "42P01" ||
+      message?.toLowerCase().includes("does not exist") === true ||
+      message?.toLowerCase().includes("relation") === true && message?.toLowerCase().includes("not exist") === true;
+
     for (const table of USER_TABLES) {
       try {
         // count exact 로 삭제 전 갯수 측정 + delete
@@ -100,6 +111,10 @@ export async function POST(request: Request) {
           .eq("user_id", auth.userId);
 
         if (countErr) {
+          if (isMissingTableError(countErr.code, countErr.message)) {
+            console.log(`[/api/account/reset] table ${table} does not exist (skipped)`);
+            continue;
+          }
           console.warn(`[/api/account/reset] count error on ${table}:`, countErr);
           failures.push({ table, error: `count: ${countErr.message}` });
           continue;
@@ -111,14 +126,22 @@ export async function POST(request: Request) {
           .eq("user_id", auth.userId);
 
         if (deleteErr) {
+          if (isMissingTableError(deleteErr.code, deleteErr.message)) {
+            console.log(`[/api/account/reset] table ${table} does not exist on delete (skipped)`);
+            continue;
+          }
           console.warn(`[/api/account/reset] delete error on ${table}:`, deleteErr);
           failures.push({ table, error: deleteErr.message });
         } else {
           deleted[table] = beforeCount ?? 0;
         }
       } catch (e) {
+        const msg = (e as Error).message;
+        if (isMissingTableError(undefined, msg)) {
+          continue;
+        }
         console.error(`[/api/account/reset] exception on ${table}:`, e);
-        failures.push({ table, error: (e as Error).message });
+        failures.push({ table, error: msg });
       }
     }
 
@@ -131,8 +154,7 @@ export async function POST(request: Request) {
           .eq("owner_user_id", auth.userId);
 
         if (countErr) {
-          // store_invites/store_members 테이블이 존재 안 할 수 있음 — soft fail
-          if (countErr.code === "42P01" || countErr.message?.includes("does not exist")) {
+          if (isMissingTableError(countErr.code, countErr.message)) {
             console.log(`[/api/account/reset] table ${table} does not exist (skipped)`);
             continue;
           }
@@ -146,7 +168,7 @@ export async function POST(request: Request) {
           .eq("owner_user_id", auth.userId);
 
         if (deleteErr) {
-          if (deleteErr.code === "42P01" || deleteErr.message?.includes("does not exist")) {
+          if (isMissingTableError(deleteErr.code, deleteErr.message)) {
             continue;
           }
           failures.push({ table, error: deleteErr.message });
@@ -155,8 +177,8 @@ export async function POST(request: Request) {
         }
       } catch (e) {
         const msg = (e as Error).message;
-        if (msg?.includes("does not exist") || msg?.includes("relation")) {
-          continue; // soft fail for missing tables
+        if (isMissingTableError(undefined, msg)) {
+          continue;
         }
         console.error(`[/api/account/reset] exception on ${table}:`, e);
         failures.push({ table, error: msg });

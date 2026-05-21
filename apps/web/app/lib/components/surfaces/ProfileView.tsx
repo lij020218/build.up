@@ -70,6 +70,16 @@ export function ProfileView() {
   const displayName = userName && userName.trim().length > 0 ? userName.trim() : null;
 
   const handleSignOut = async () => {
+    // ⚠️ 2026-05-18: signOut 직전 pending autosave 강제 flush.
+    //   종전엔 1초 debounce / 5초 interval / 800ms autosave 가 fire 직전이면
+    //   RLS 거부 (anonymous) 로 reject 되고 사장님이 방금 입력한 값이 영구 손실.
+    //   flushStoreDataImmediate 가 있으면 await 으로 완료 보장 후 signOut.
+    try {
+      const flush = (d as { flushStoreDataImmediate?: () => Promise<void> }).flushStoreDataImmediate;
+      if (flush) await flush();
+    } catch (err) {
+      console.warn("[signOut] flush failed (non-fatal):", err);
+    }
     await supabase.auth.signOut();
     router.push("/auth");
   };

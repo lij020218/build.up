@@ -7,10 +7,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpData
 
 public struct VentureCertificationStageView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(RoadmapStore.self) private var roadmapStore
+    private let stageId = "venture-certification"
+
     @State private var page = 0
 
     @AppStorage("vc.certType") private var certType = ""
@@ -21,71 +25,73 @@ public struct VentureCertificationStageView: View {
 
     public init() {}
 
-    public var body: some View {
-        NavigationStack {
-            ZStack {
-                BUBackgroundSurface()
-                VStack(spacing: 0) {
-                    Picker("탭", selection: $page) {
-                        ForEach(pages.indices, id: \.self) { i in
-                            Text(pages[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(BUSpacing.md)
+    /// 게이트: 인증 경로 선택 — 4가지 유형 중 하나.
+    private var canCompleteStage: Bool {
+        !certType.isEmpty
+    }
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: BUSpacing.lg) {
-                            Group {
-                                switch page {
-                                case 0: certTypePage
-                                default: applicationPage
-                                }
-                            }
-                            .padding(.horizontal, BUSpacing.md)
-                            Spacer(minLength: BUSpacing.xxxl)
-                        }
-                        .padding(.top, BUSpacing.sm)
+    private var advanceHint: String {
+        if certType.isEmpty { return "벤처 인증 유형을 선택하세요" }
+        return "인증 경로 선택 완료 — 다음 단계로"
+    }
+
+    public var body: some View {
+        BUStageShell(
+            stageId: stageId,
+            title: "벤처인증 · 정부 지원사업",
+            stageEyebrow: "단계 14 · 벤처 인증",
+            helperText: "세제 혜택·보조금·조달 우선권 — 법인 설립 후 가능한 빨리. 2026년 벤처 인증 기업 수 약 4만 2천 개.",
+            canAdvance: canCompleteStage,
+            advanceHint: advanceHint,
+            isCompleted: roadmapStore.isStageCompleted(stageId),
+            onAdvance: {
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["certType": certType])
+            },
+            onUncomplete: { roadmapStore.uncompleteStage(stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["certType": certType]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. 벤처 유형 결정", detail: "벤처투자유형·연구개발유형·혁신성장유형 비교 후 선택"),
+                .init(label: "2. 자격 요건 점검", detail: "투자 유치액·R&D 비율·매출·인력 등 유형별 요건 충족 확인"),
+                .init(label: "3. 신청 서류 준비", detail: "사업계획서·재무제표·R&D 증빙·연구원 명단 등 사전 준비"),
+                .init(label: "4. 인증 신청·발급", detail: "벤처기업종합관리시스템(SMTECH) 신청 + 평균 1~2개월 발급"),
+                ],
+                verifyItems: [
+                "벤처투자유형 — 「벤처투자조합 5천만원 이상」 투자 받아야 자격, 단순 엔젤 X",
+                "연구개발유형 — 매출 대비 R&D 비율 5% 이상 + 연구개발전담부서 보유 의무",
+                "혁신성장유형 — 평가 점수 70점 이상, 평가 항목 사전 확인 후 보완",
+                "법인전환 — 개인사업자는 인증 불가, 법인 전환 후 신청 (전환 후 6개월 매출 자료 필요)",
+                "갱신 — 벤처 인증은 3년, 갱신 시 자격 재충족 의무 (미충족 시 인증 취소)",
+                "혜택 활용 — 세제 감면·정부지원금 가산점·인재 채용 우대 등 자동 적용 X, 별도 신청 필요",
+                ],
+                nextStageLabel: "사업자등록",
+                nextSummary: "벤처 유형·요건·신청 완료 → 사업자등록 단계로 진입 (또는 다음 정부지원 신청)"
+            ),
+            currentPage: page,
+            totalPages: pages.count
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: certTypePage
+                    default: applicationPage
                     }
                 }
-            }
-            .navigationTitle("벤처 인증")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }.foregroundStyle(BUColor.midnight)
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
-                #endif
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 
     // MARK: - pg 0 인증 종류
 
     private var certTypePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.hero) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("벤처 인증")
-                    Text("세제 혜택·보조금·조달 우선권\n— 법인 설립 후 가능한 빨리")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BUColor.midnightDeep)
-                        .tracking(-0.3)
-                        .lineSpacing(4)
-                    Text("2026년 벤처 인증 기업 수: 약 4만 2천 개")
-                        .font(BUFont.bodySmall)
-                        .foregroundStyle(BUColor.inkSecondary)
-                        .lineSpacing(3)
-                }
-            }
-
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("벤처 인증 4가지 유형")
@@ -222,18 +228,14 @@ public struct VentureCertificationStageView: View {
                         .foregroundStyle(BUColor.ink)
                 }.tint(BUColor.midnight)
             }
-
-            BUCard(.card) {
-                Toggle(isOn: $done) {
-                    Text("벤처 인증 완료")
-                        .font(BUFont.bodySmall.weight(.semibold))
-                        .foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
-            }
         }
     }
 }
 
 #if DEBUG
-#Preview("VentureCertification") { VentureCertificationStageView() }
+#Preview("VentureCertification") {
+    let store = RoadmapStore()
+    store.pathProvider = { _ in ["venture-certification"] }
+    return VentureCertificationStageView().environment(store)
+}
 #endif

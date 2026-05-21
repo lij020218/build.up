@@ -30,7 +30,10 @@ import { FitnessRetentionCard } from "../FitnessRetentionCard";
 import { EducationEnrollmentCard } from "../EducationEnrollmentCard";
 import { RetailSellThroughCard } from "../RetailSellThroughCard";
 import { BeautyBookingNoshowCard } from "../BeautyBookingNoshowCard";
-import { EcommerceConversionCard } from "../EcommerceConversionCard";
+// 2026-05-19 — EcommerceConversionCard / StartupMetricsCard 통합 → ConversionFunnelCard.
+//   iOS ConversionFunnelFocusCard 와 동일 패턴 (mode prop 분기, "전환율" 헤더).
+//   두 구 카드는 파일 보존 (@deprecated) — 다음 정리 PR 에서 삭제.
+import { ConversionFunnelCard } from "../ConversionFunnelCard";
 import { PetBookingCard } from "../PetBookingCard";
 import { SpaceOccupancyCard } from "../SpaceOccupancyCard";
 import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
@@ -190,10 +193,21 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
-      {/* 2026-05-13 Phase 2f — EcommerceConversionCard (이커머스 전용). */}
+      {/* 2026-05-19 — 통합 전환율 카드 (이커머스).
+          iOS ConversionFunnelFocusCard 와 동일: 헤더 "전환율" + 4단계 funnel + WoW 대비 +
+          인라인 수동 입력 (saas_metrics_manual_weekly upsert) + v_saas_metrics_unified read. */}
       {showByMatrix("ecommerce-conversion") && (
         <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <EcommerceConversionCard ko={ko} industryCategoryId={d.industryCategoryId} />
+          <ConversionFunnelCard mode="commerce" ko={ko} industryCategoryId={d.industryCategoryId} />
+        </div>
+      )}
+
+      {/* 2026-05-19 — 통합 전환율 카드 (SaaS / startup-tech).
+          가입 → 활성화 → 유료 funnel. StartupHealthSection (raw 수치) 와 별도 — 이 카드는
+          전환률 본질 지표만 담당. */}
+      {c.isStartupCompany && !hide("saas-funnel-conversion") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <ConversionFunnelCard mode="saas" ko={ko} industryCategoryId={d.industryCategoryId} />
         </div>
       )}
 
@@ -284,15 +298,27 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
               monthlyAvgRevenue: c.totalSales > 0 ? Math.round(c.totalSales) : undefined,
               hasUserSales: c.allEntries.length > 0,
               employeesCount: c.employees.length,
-              salesDeclinePct: c.weeklySalesChange < 0 ? Math.abs(c.weeklySalesChange) : 0,
+              // ⚠️ 2026-05-18: salesDeclinePct 는 정책자금 매칭 기준으로 통상 *월간* 감소율.
+              //   종전엔 weeklySalesChange (주간) 를 전달해서 한 주만 -20% 이어도 정책자금 위기
+              //   분기 통과 → over-match. monthOnMonth (전월 대비) 로 교체.
+              salesDeclinePct: (() => {
+                const prev = c.prevMonthSales ?? 0;
+                return prev > 0 && c.totalSales < prev
+                  ? Math.round(((prev - c.totalSales) / prev) * 100)
+                  : 0;
+              })(),
               runwayMonths: c.runwayMonths,
               weeklySalesChangePct: c.weeklySalesChange,
-              businessStage: c.daysSinceLaunch < 30
+              // ⚠️ businessStage dead branch fix (2026-05-18): 종전엔 < 30 과 < 365 둘 다 "early"
+              //   를 반환해서 30~365일 구간이 통째로 early 로 swallow → growth 분기 도달 불가 →
+              //   정책자금 매칭 후보가 잘못 좁혀졌음. < 90 early / < 365 growth / < 365*3 established
+              //   로 정정.
+              businessStage: c.daysSinceLaunch < 90
                 ? "early"
                 : c.daysSinceLaunch < 365
-                  ? "early"
+                  ? "growth"
                   : c.daysSinceLaunch < 365 * 3
-                    ? "growth"
+                    ? "established"
                     : "established",
             }}
           />
