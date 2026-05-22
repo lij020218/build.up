@@ -13,6 +13,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct BizRegistrationStageView: View {
@@ -24,6 +25,31 @@ public struct BizRegistrationStageView: View {
     @AppStorage("biz.storeName")         private var storeName        = ""
     @AppStorage("biz.bankDone")          private var bankDone         = false
     @AppStorage("biz.storeNameFinal")    private var storeNameFinal   = false
+    @AppStorage("roadmap.selectedIndustryId") private var industryId  = ""
+
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+
+    /// 업종별 예시 상호 placeholder.
+    private var storeNamePlaceholder: String {
+        switch cluster.category {
+        case .food:           return "예) 연남동 삼겹집, 홍대 떡볶이"
+        case .cafeDessert:    return "예) 망원 라테 라운지, 성수 베이커리"
+        case .beauty:         return "예) 청담 헤어살롱, 강남 네일아뜰리에"
+        case .fitness:        return "예) 한남동 필라테스, 잠실 24시 헬스"
+        case .education:      return "예) 분당 수학학원, 신촌 코딩 부트캠프"
+        case .pet:            return "예) 마포 펫호텔, 강남 반려동물 미용"
+        case .livingService:  return "예) 동작 깔끔세탁, 마포 24시 청소"
+        case .space:          return "예) 성수 쉐어스튜디오, 홍대 파티룸"
+        case .retail:         return "예) 동대문 패션소품, 합정 라이프스타일샵"
+        case .onlineDigital:  return "예) 스마트스토어 브랜드명, 자체몰 도메인"
+        case .startupTech:    return "예) 법인명 (㈜영문 + 한글병기 권장)"
+        }
+    }
+
+    /// startup-tech 는 법인 통장 안내가 다름.
+    private var bankSectionTitle: String {
+        cluster.isStartupTech ? "법인 통장 개설 가이드" : "사업용 통장 개설 가이드"
+    }
 
     // 이전 단계 상태 (read-only 요약용)
     @AppStorage("reg.bizRegDone")        private var bizRegDone       = false
@@ -109,7 +135,7 @@ public struct BizRegistrationStageView: View {
         BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
                 BUEyebrow("상호명 (가게 이름) 최종 확정")
-                TextField("예) 연남동 삼겹집, 홍대 떡볶이", text: $storeName)
+                TextField(storeNamePlaceholder, text: $storeName)
                     .font(BUFont.body)
                     .padding(.horizontal, 10).padding(.vertical, 10)
                     .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))

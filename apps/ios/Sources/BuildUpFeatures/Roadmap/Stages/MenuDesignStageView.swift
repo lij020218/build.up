@@ -1,23 +1,212 @@
 //
-//  MenuDesignStageView.swift — 메뉴/서비스 라인업 확정 단계 (iOS 네이티브)
+//  MenuDesignStageView.swift — 메뉴/서비스 라인업 확정 단계 (iOS 네이티브, 웹 SSOT 미러)
 //
 //  웹 SSOT: apps/web/app/lib/components/stages/shared/MenuDesignStage.tsx
 //  stageId: "menu-design"
-//  cluster: food (외식 path 기본 — FoodMenuPanel)
 //
-//  4페이지 구조 (세그먼트 컨트롤):
-//    pg 0 — Why:        vendor 전에 메뉴 락이 필요한 이유 + KFRI 벤치마크
-//    pg 1 — Add:        메뉴 항목 추가 폼 + 등록 목록
-//    pg 2 — Cost Check: 평균 원가율 banner + 33% 초과 경보
-//    pg 3 — Wrapup:     완료 체크리스트
+//  Cluster 분기 (웹 classifyCluster 미러):
+//   • food         → 메뉴 (메인/사이드/주류·음료/디저트/세트)         · 원가율 33% 황금률
+//   • cafe         → 음료 (커피/논커피/디저트/원두/MD)               · 원가율 33%
+//   • service      → 서비스 (시그니처 시술/사이드 시술/패키지/멤버십) · 객단가 = 시간 × 시급 × 2
+//   • retail       → 상품 (시그니처 SKU/번들/한정/체험)              · 마진율 40% 목표
+//   • online       → 상품 (메인/번들/체험/리필)                       · 마진율 50% 목표
+//   • saas         → 구독 (Free/Starter/Pro/Enterprise 4티어)         · CAC < 12개월 LTV
 //
-//  데이터: @AppStorage "stage.menu.itemsJson" (추후 DashboardStore.inventory 연동)
+//  3페이지: Why → Add → Cost Check + 자동 wrap-up + 자동 task list
 //
 
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
+
+// MARK: - Cluster 분기 copy
+
+private enum MenuCluster: String {
+    case food, cafe, service, retail, online, saas
+
+    static func from(industryId: String) -> MenuCluster {
+        let cid = StarterIndustryData.option(by: industryId)?.categoryId ?? ""
+        switch cid {
+        case "food":                                            return .food
+        case "cafe-dessert":                                    return .cafe
+        case "beauty", "fitness", "pet", "education",
+             "living-service", "space":                         return .service
+        case "retail":                                          return .retail
+        case "online-digital":                                  return .online
+        case "startup-tech":                                    return .saas
+        default:                                                return .food
+        }
+    }
+
+    var noun: String {
+        switch self {
+        case .food:    return "메뉴"
+        case .cafe:    return "음료"
+        case .service: return "서비스"
+        case .retail, .online: return "상품"
+        case .saas:    return "구독 티어"
+        }
+    }
+
+    var categories: [String] {
+        switch self {
+        case .food:    return ["메인", "사이드", "주류/음료", "디저트", "세트"]
+        case .cafe:    return ["커피", "논커피", "디저트", "원두", "MD"]
+        case .service: return ["시그니처 시술", "사이드 시술", "패키지", "멤버십"]
+        case .retail:  return ["시그니처 SKU", "번들", "한정", "체험"]
+        case .online:  return ["메인", "번들", "체험", "리필"]
+        case .saas:    return ["Free", "Starter", "Pro", "Enterprise"]
+        }
+    }
+
+    var nameFieldPlaceholder: String {
+        switch self {
+        case .food:    return "메뉴 이름 (예: 김치찌개 정식)"
+        case .cafe:    return "음료 이름 (예: 아이스 아메리카노)"
+        case .service: return "서비스명 (예: 시그니처 페디큐어)"
+        case .retail:  return "상품명 (예: 아크릴 키링 12종)"
+        case .online:  return "상품명 (예: 시그니처 디톡스 키트)"
+        case .saas:    return "티어명 (예: Pro)"
+        }
+    }
+
+    var priceFieldPlaceholder: String { "판매가 (원)" }
+
+    var costFieldPlaceholder: String {
+        switch self {
+        case .food, .cafe:     return "1인분 원가 (원)"
+        case .service:         return "재료·세션 원가 (원)"
+        case .retail, .online: return "매입가 (원)"
+        case .saas:            return "월 인프라 비용 (원)"
+        }
+    }
+
+    var iconSF: String {
+        switch self {
+        case .food:    return "fork.knife.circle.fill"
+        case .cafe:    return "cup.and.saucer.fill"
+        case .service: return "sparkles"
+        case .retail:  return "bag.fill"
+        case .online:  return "shippingbox.fill"
+        case .saas:    return "rectangle.stack.badge.person.crop.fill"
+        }
+    }
+
+    /// 황금 원가율 (%, 초과 시 마진 경보).
+    var costRatioGoldenMax: Double {
+        switch self {
+        case .food, .cafe:     return 33    // 한국외식산업연구원 표준
+        case .service:         return 25    // 미용·피트니스 객단가 25%↓ 재료/세션비
+        case .retail, .online: return 60    // 매입 60%↓ → 마진 40%↑
+        case .saas:            return 30    // 인프라 매출의 30%↓ → 70% gross margin
+        }
+    }
+
+    var heroTitle: String {
+        switch self {
+        case .food:    return "시그니처 3-5개 + 사이드로 메뉴 락"
+        case .cafe:    return "음료 라인업 + 원가 황금률"
+        case .service: return "시그니처 시술 3-5개 + 패키지 락"
+        case .retail:  return "시그니처 SKU 5-10개 + 번들로 카탈로그 락"
+        case .online:  return "메인 3-5개 + 번들·체험으로 상품 락"
+        case .saas:    return "Free → Starter → Pro → Enterprise 4티어 락"
+        }
+    }
+
+    var heroSubtitle: String {
+        switch self {
+        case .food, .cafe:
+            return "Prime Cost 황금률: 식자재 30-35% + 인건비 28-32% = 65% 이하. 원가율 33% 초과 메뉴는 영업이익 마이너스 — 한국외식산업연구원 2024."
+        case .service:
+            return "서비스 객단가 = 시간 × 시급 × 2~3 (원가율 25% 목표). 패키지·멤버십이 재방문 LTV 의 80%."
+        case .retail:
+            return "매입가 대비 판매가 1.7배 (마진 40%+) 목표. 시그니처 SKU 5-10개로 시작, 번들로 객단가 올리기."
+        case .online:
+            return "온라인은 마진 50%+ 목표 (배송·플랫폼 수수료 15-20% 흡수). 메인·번들·체험·리필 4축으로 LTV 설계."
+        case .saas:
+            return "Free→Starter→Pro→Enterprise 4-티어 표준. CAC < 12개월 LTV / 월 인프라 매출의 30%↓ 유지."
+        }
+    }
+
+    var helperText: String { heroSubtitle }
+
+    var stageTitleKo: String { "\(noun)·서비스 라인업 확정" }
+
+    // Why-page copy (cluster-aware)
+    var whyEyebrow: String {
+        switch self {
+        case .food, .cafe:     return "왜 공급처 셋업 전인가"
+        case .service:         return "왜 가격 결정 전인가"
+        case .retail, .online: return "왜 소싱 전인가"
+        case .saas:            return "왜 가격 결정·GTM 전인가"
+        }
+    }
+    var whyHeadline: String {
+        switch self {
+        case .food, .cafe:     return "\(noun) 없이 공급처·식자재 협상 불가능합니다."
+        case .service:         return "서비스 항목·가격 락 없이는 채용·예약 시스템 결정 불가."
+        case .retail:          return "상품 카탈로그 락 없이는 매입·진열·재고 추정 불가."
+        case .online:          return "상품 락 없이는 사진·상세페이지·광고 카피 모두 작업 불가."
+        case .saas:            return "티어·가격 락 없이는 결제·랜딩페이지·GTM 모두 시작 불가."
+        }
+    }
+    var whyDetail: String {
+        switch self {
+        case .food, .cafe:
+            return "공급처는 '월 사용량 + 단가 + 결제 조건' 으로 계약합니다. \(noun) 미확정 = 사용량 추정 불가 = 단가 협상 불리. 락 후 공급처 미팅 = 협상 우위."
+        case .service:
+            return "서비스명·소요시간·가격 → 시급·재료비·예약 슬롯 모두 계산 가능. 시그니처 시술 락 = 가격 신뢰도 + 단골 LTV 기반."
+        case .retail:
+            return "시그니처 SKU 5-10개 락 → 매입가 협상 + 진열 동선 + 재고 회전 모두 추정. 번들·한정으로 객단가 30%+ 상승."
+        case .online:
+            return "상품 락 → 사진·상세페이지·SEO 키워드·광고 카피·CS 템플릿 일괄 작업. 메인·번들·체험·리필 4축으로 LTV 설계."
+        case .saas:
+            return "Free → Paid 전환 funnel 의 출발점. Free 한도·Starter 가격·Pro feature·Enterprise 영업 가격 4단 락 = 결제 페이지·랜딩·CAC 모델 모두 작성 가능."
+        }
+    }
+
+    var benchmarkEyebrow: String {
+        switch self {
+        case .food, .cafe:     return "한국 외식 표준 (KFRI 2024)"
+        case .service:         return "서비스업 표준 (소상공인진흥공단 2024)"
+        case .retail:          return "오프라인 리테일 표준 (중소기업청 2024)"
+        case .online:          return "온라인 커머스 표준 (네이버 쇼핑 2024)"
+        case .saas:            return "SaaS 표준 (OpenView 2024)"
+        }
+    }
+
+    struct BenchmarkSpec { let value: String; let label: String; let detail: String }
+    var benchmark1: BenchmarkSpec {
+        switch self {
+        case .food:    return .init(value: "5-8개", label: "총 메뉴 수", detail: "소형 매장")
+        case .cafe:    return .init(value: "8-12개", label: "음료 SKU", detail: "테이크아웃")
+        case .service: return .init(value: "3-5개", label: "시그니처", detail: "10평 매장")
+        case .retail:  return .init(value: "5-10개", label: "시그니처 SKU", detail: "10평 매장")
+        case .online:  return .init(value: "3-7개", label: "메인 상품", detail: "스마트스토어")
+        case .saas:    return .init(value: "3-4개", label: "가격 티어", detail: "Free→Ent")
+        }
+    }
+    var benchmark2: BenchmarkSpec {
+        switch self {
+        case .food, .cafe: return .init(value: "30-35%", label: "원가율", detail: "황금률 상한")
+        case .service:     return .init(value: "≤25%", label: "재료·세션 원가", detail: "객단가 대비")
+        case .retail:      return .init(value: "≥40%", label: "마진율", detail: "매입가 대비 ×1.7")
+        case .online:      return .init(value: "≥50%", label: "마진율", detail: "수수료·배송 흡수")
+        case .saas:        return .init(value: "≤30%", label: "인프라 비중", detail: "Gross 70%+")
+        }
+    }
+    var benchmark3: BenchmarkSpec {
+        switch self {
+        case .food, .cafe: return .init(value: "× 3", label: "단가 배수", detail: "원가→판매가")
+        case .service:     return .init(value: "× 2-3", label: "단가 배수", detail: "시급×시간×k")
+        case .retail:      return .init(value: "× 1.7+", label: "단가 배수", detail: "매입→판매")
+        case .online:      return .init(value: "× 2-3", label: "단가 배수", detail: "수수료 포함")
+        case .saas:        return .init(value: "< 12mo", label: "CAC 회수", detail: "LTV 표준")
+        }
+    }
+}
 
 // MARK: - LineupItem
 
@@ -39,6 +228,7 @@ public struct MenuDesignStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "menu-design"
 
@@ -51,6 +241,10 @@ public struct MenuDesignStageView: View {
 
     @AppStorage("stage.menu.itemsJson") private var itemsJson = "[]"
 
+    private var cluster: MenuCluster { MenuCluster.from(industryId: industryId) }
+    private var categories: [String] { cluster.categories }
+    private var goldenRatio: Double { cluster.costRatioGoldenMax }
+
     private var items: [LineupItem] { parseItems(itemsJson) }
 
     private var totalRevenue: Double { items.reduce(0) { $0 + Double($1.price) } }
@@ -60,15 +254,16 @@ public struct MenuDesignStageView: View {
         !fName.trimmingCharacters(in: .whitespaces).isEmpty && !fPriceText.isEmpty && !fCostText.isEmpty
     }
 
-    private let categories = ["메인", "사이드", "주류/음료", "디저트", "세트"]
-
     private var canCompleteStage: Bool { items.count >= 1 }
 
     private var advanceHint: String {
-        if items.isEmpty { return "메뉴 항목을 최소 1개 추가하세요" }
-        if items.count < 3 { return "메뉴 \(items.count)개 — 시그니처 3-5개 권장" }
-        if avgCostRatio > 33 { return String(format: "원가율 %.1f%% 초과 — 단가/원가 점검", avgCostRatio) }
-        return "메뉴 \(items.count)개 — 다음 단계로"
+        let noun = cluster.noun
+        if items.isEmpty { return "\(noun) 항목을 최소 1개 추가하세요" }
+        if items.count < 3 { return "\(noun) \(items.count)개 — 시그니처 3-5개 권장" }
+        if avgCostRatio > goldenRatio {
+            return String(format: "원가율 %.1f%% 초과 — 단가/원가 점검", avgCostRatio)
+        }
+        return "\(noun) \(items.count)개 — 다음 단계로"
     }
 
     public init() {}
@@ -77,8 +272,8 @@ public struct MenuDesignStageView: View {
         BUStageShell(
             stageId: stageId,
             title: "메뉴·서비스 라인업 확정",
-            stageEyebrow: "단계 14 · 메뉴 라인업 확정",
-            helperText: "Prime Cost 황금률: 식자재 30-35% + 인건비 28-32% ≤ 65%. 원가율 33% 초과 메뉴는 영업이익 마이너스 위험 — KFRI 2024.",
+            stageEyebrow: "단계 · \(cluster.noun) 라인업",
+            helperText: cluster.helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -153,29 +348,31 @@ private extension MenuDesignStageView {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 13))
                             .foregroundStyle(BUColor.midnight)
-                        Text("왜 vendor-setup 전인가")
+                        Text(cluster.whyEyebrow)
                             .buEyebrowStyle()
                     }
-                    Text("메뉴 없이 공급처와 식자재 협상 불가능합니다.")
+                    Text(cluster.whyHeadline)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(BUColor.ink)
                         .lineSpacing(3)
-                    Text("공급처는 '월 사용량 + 단가 + 결제 조건' 으로 계약합니다. 메뉴 미확정 = 사용량 추정 불가 = 단가 협상 불리. 메뉴 락 후 공급처 미팅 = 협상 우위.")
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(cluster.whyDetail)
                         .font(BUFont.bodySmall)
                         .foregroundStyle(BUColor.inkSecondary)
                         .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
             BUCard(.outer) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    Text("한국 외식 표준 (KFRI 2024)")
+                    Text(cluster.benchmarkEyebrow)
                         .buEyebrowStyle()
 
                     HStack(spacing: 8) {
-                        BenchmarkStat(value: "5-8개", label: "총 메뉴 수", detail: "소형 매장")
-                        BenchmarkStat(value: "30-35%", label: "식자재 원가율", detail: "황금률 상한")
-                        BenchmarkStat(value: "× 3", label: "단가 배수", detail: "원가 → 판매가")
+                        BenchmarkStat(value: cluster.benchmark1.value, label: cluster.benchmark1.label, detail: cluster.benchmark1.detail)
+                        BenchmarkStat(value: cluster.benchmark2.value, label: cluster.benchmark2.label, detail: cluster.benchmark2.detail)
+                        BenchmarkStat(value: cluster.benchmark3.value, label: cluster.benchmark3.label, detail: cluster.benchmark3.detail)
                     }
                 }
             }
@@ -191,24 +388,24 @@ private extension MenuDesignStageView {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
                 HStack(spacing: BUSpacing.xs) {
-                    Image(systemName: "fork.knife.circle.fill")
+                    Image(systemName: cluster.iconSF)
                         .font(.system(size: 16))
                         .foregroundStyle(BUColor.midnight)
-                    Text("메뉴 항목 추가")
+                    Text("\(cluster.noun) 항목 추가")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(BUColor.ink)
                 }
 
                 // 이름
-                TextField("메뉴 이름 (예: 김치찌개 정식)", text: $fName)
+                TextField(cluster.nameFieldPlaceholder, text: $fName)
                     .buTextFieldStyle()
 
                 // 판매가 / 원가
                 HStack(spacing: 8) {
-                    TextField("판매가 (원)", text: $fPriceText)
+                    TextField(cluster.priceFieldPlaceholder, text: $fPriceText)
                         .keyboardType(.numberPad)
                         .buTextFieldStyle()
-                    TextField("1인분 원가 (원)", text: $fCostText)
+                    TextField(cluster.costFieldPlaceholder, text: $fCostText)
                         .keyboardType(.numberPad)
                         .buTextFieldStyle()
                 }

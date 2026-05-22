@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct PartnerFoundationOrPilotLineStageView: View {
@@ -14,6 +15,15 @@ public struct PartnerFoundationOrPilotLineStageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     private let stageId = "partner-foundation-or-pilot-line"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "semiconductor": return "TSMC 2/3nm 2027-2028 매진. Samsung 대안 + SkyWater·X-FAB (구형). CoWoS 52-78주 leadtime."
+        case "climate-energy": return "파일럿 라인 또는 위탁 양산 — LG에너지솔루션·삼성SDI·SK온 같은 대기업 OEM 라인 확보."
+        default: return "파운드리 파트너십 = 반도체의 양산 계약. TSMC 2/3nm는 2027–2028까지 예약 완료. 선단 공정은 빠른 예약이 경쟁력입니다."
+        }
+    }
 
     @State private var page = 0
 
@@ -43,7 +53,7 @@ public struct PartnerFoundationOrPilotLineStageView: View {
             stageId: stageId,
             title: "파운드리 파트너십 / 파일럿 라인",
             stageEyebrow: "단계 13 · 파운드리 파트너십",
-            helperText: "파운드리 파트너십 = 반도체의 양산 계약. TSMC 2/3nm는 2027–2028까지 예약 완료. 선단 공정은 빠른 예약이 경쟁력입니다.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

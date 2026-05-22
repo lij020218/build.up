@@ -21,6 +21,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 private let WAGE_2026 = 10_320
@@ -30,6 +31,7 @@ public struct InsuranceTaxSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     @State private var monthlyWageText = "\(WAGE_2026 * MONTH_HOURS)"
     private let stageId = "insurance-tax-setup"
@@ -41,10 +43,16 @@ public struct InsuranceTaxSetupStageView: View {
     @AppStorage("insTax.insRegDone")     private var insRegDone       = false
     @AppStorage("insTax.vatDone")        private var vatDone          = false
 
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+    /// 업종별 산재요율 (%). 웹 SSOT: ACCIDENT_RATE_BY_CATEGORY.
+    private var accidentRate: Double { cluster.accidentInsuranceRatePct }
+    private var accidentRateDecimal: Double { accidentRate / 100.0 }
+
     private var monthlyWage: Int { Int(monthlyWageText) ?? (WAGE_2026 * MONTH_HOURS) }
     private var pensionEmployee: Int { Int(Double(monthlyWage) * 0.0475) }
     private var healthEmployee: Int  { Int(Double(monthlyWage) * 0.03595) }
-    private var employerExtra: Int   { Int(Double(monthlyWage) * (0.0475 + 0.03595 + 0.009 + 0.008 + 0.0025)) }
+    /// 사업주 부담 = 국민(4.75%) + 건강(3.595%) + 장기요양(0.9%) + 산재(업종별) + 고용(0.25%)
+    private var employerExtra: Int   { Int(Double(monthlyWage) * (0.0475 + 0.03595 + 0.009 + accidentRateDecimal + 0.0025)) }
 
     private let pages = ["4대보험", "세무 세팅", "체크리스트"]
 
@@ -126,7 +134,7 @@ public struct InsuranceTaxSetupStageView: View {
                         ("건강보험",   "7.19%","근로자 3.595% / 사업주 3.595%", "2026 인상"),
                         ("장기요양",   "건강보험료의 0.9448%", "근로자·사업주 각 절반", ""),
                         ("고용보험",   "1.8%", "근로자 0.9% / 사업주 0.9% + 추가 0.25%", "사업주 추가부담"),
-                        ("산재보험",   "0.8%", "사업주 100% (근로자 부담 없음)", "음식·도소매·숙박 업종"),
+                        ("산재보험",   String(format: "%.1f%%", accidentRate), "사업주 100% (근로자 부담 없음)", "\(cluster.categoryNounKo) 업종별 요율"),
                     ]
                     ForEach(rates, id: \.0) { name, rate, split, note in
                         HStack(alignment: .top, spacing: BUSpacing.sm) {

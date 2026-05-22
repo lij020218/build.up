@@ -7,14 +7,34 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct CustomerDiscoveryStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "customer-discovery"
+
+    /// Sub-industry 별 인터뷰 패턴 (startup-tech 내부 분기).
+    private var helperText: String {
+        switch industryId {
+        case "b2b-saas":             return "B2B 의사결정자 10명 인터뷰 (현재 도구·우회 방법·결제 권한). 무료 도입 X — 구매 신호 검증."
+        case "ai-application":       return "사용자 10명 + 현재 LLM·도구 사용 패턴 인터뷰. AI 신뢰성·환각 대응 의지 검증."
+        case "fintech-startup":      return "금융 사용자 + 컴플라이언스 담당 동시 인터뷰. 규제 게이트 사전 식별."
+        case "healthtech-startup":   return "환자·의료진·보험사 3축 인터뷰. 임상·보험 청구 워크플로 검증."
+        case "hardware-iot":         return "디바이스 사용자 + 유지보수·A/S 시나리오 인터뷰. 물리 회수·OTA 의지 검증."
+        case "robotics-physical-ai": return "필드 운영자 + 안전 책임자 인터뷰. 사고·비상정지 시나리오 사전 정의."
+        case "biotech-medtech":      return "환자·임상의·IRB 위원 인터뷰. 임상시험 진입 게이트 사전 식별."
+        case "semiconductor":        return "B2B 고객·FAE·구매 담당 인터뷰. PO 사이클·납기·BOM 사전 협의."
+        case "climate-energy":       return "산업·정부·NGO 3축 인터뷰. 규제·인센티브 사전 식별."
+        case "security-startup":     return "SOC·CISO 인터뷰. 감사·SOC2·ISO 인증 요구사항 사전 식별."
+        case "developer-tools":      return "개발자 10명 + Open Source 메인테이너 인터뷰. 깃허브·트위터·디스코드 직접 채널."
+        default:                     return "10번의 인터뷰가 6개월의 개발을 구합니다. 만들기 전에 먼저 대화하세요."
+        }
+    }
 
     @AppStorage("cd.interviewCount") private var interviewCount = 0
     @AppStorage("cd.painPattern")    private var painPattern    = ""
@@ -44,7 +64,7 @@ public struct CustomerDiscoveryStageView: View {
             stageId: stageId,
             title: "고객 발굴·문제 검증",
             stageEyebrow: "단계 7 · 고객 발굴",
-            helperText: "10번의 인터뷰가 6개월의 개발을 구합니다. 만들기 전에 먼저 대화하세요.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

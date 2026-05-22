@@ -244,11 +244,17 @@ public struct AppRoot: View {
         return String(describing: error)
     }
 
-    /// 신규 사장님 판정 — 아직 아무것도 안 한 상태:
+    /// 신규 사장님 판정 — 아직 아무 진입 액션도 안 한 상태:
     ///   · category == .general (업종 미선택)
     ///   · businessLaunched == false (영업 미시작)
     ///   · entries / costs 모두 비어있음 (운영 데이터 0)
-    /// 웹의 OnboardingChoiceScreen 진입 조건과 동일.
+    ///   · roadmap.selectedIndustryId 빈값 (manual wizard 시작 안 함)
+    ///
+    /// ⚠️ 2026-05-21 사장님 신고: "나갔다 들어오면 항상 온보딩 페이지가 나옴".
+    ///   원인: manual 모드는 wizard 끝까지 완주해야 DashboardStore.category 가 세팅됨.
+    ///   사용자가 industry-selection 후 앱 종료 → 다시 켜면 category == .general → 온보딩 노출.
+    ///   → roadmap.selectedIndustryId 영속값을 추가 신호로 확인하여 wizard 진행 중인 사용자는
+    ///     로드맵 홈으로 바로 복귀시킨다.
     @MainActor
     private func needsOnboarding(store: DashboardStore) -> Bool {
         #if DEBUG
@@ -258,6 +264,10 @@ public struct AppRoot: View {
             return true
         }
         #endif
+        // Manual wizard 진입 자국: 사용자가 업종 선택 1번이라도 했으면 온보딩 X.
+        let industryPicked = !(UserDefaults.standard.string(forKey: "roadmap.selectedIndustryId") ?? "").isEmpty
+        if industryPicked { return false }
+
         return store.category == .general
             && !store.businessLaunched
             && store.entries.isEmpty

@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct PackagingAndTestStageView: View {
@@ -14,6 +15,15 @@ public struct PackagingAndTestStageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     private let stageId = "packaging-and-test"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "semiconductor": return "OSAT (ASE·Amkor·JCET·Powertech). 2026년 가격 5-30% 인상 + 가동률 90% — 일찍 락인."
+        case "climate-energy": return "에너지·태양광·배터리 — 신뢰성 시험 (염수·UV·진동·열사이클) + KS/IEC/UL 인증."
+        default: return "OSAT(Outsourced Semiconductor Assembly and Test) = 패키징·테스트 전문 위탁. 설계 이후 생산의 마지막 퍼즐입니다."
+        }
+    }
 
     @State private var page = 0
 
@@ -42,7 +52,7 @@ public struct PackagingAndTestStageView: View {
             stageId: stageId,
             title: "패키징 및 테스트 (OSAT)",
             stageEyebrow: "단계 12 · 패키징·테스트",
-            helperText: "OSAT(Outsourced Semiconductor Assembly and Test) = 패키징·테스트 전문 위탁. 설계 이후 생산의 마지막 퍼즐입니다.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

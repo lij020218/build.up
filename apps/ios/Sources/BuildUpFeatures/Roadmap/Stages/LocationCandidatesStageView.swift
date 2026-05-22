@@ -12,14 +12,18 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct LocationCandidatesStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "location-candidates"
+
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
     // 상권 체크
     @AppStorage("loc.market.population")  private var marketPop      = false
@@ -63,7 +67,7 @@ public struct LocationCandidatesStageView: View {
             stageId: stageId,
             title: "상권 후보 비교",
             stageEyebrow: "단계 7 · 입지 후보 분석",
-            helperText: "외식업 폐업 원인 1위 = 잘못된 입지 선택. 월세·보증금 협상 전에 상권 분석이 선행되어야 합니다.",
+            helperText: "\(cluster.categoryNounKo) 입지 분석: \(cluster.locationAnalysisFocus). 권장 키워드 — \(cluster.locationKeywords.joined(separator: "·")).",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

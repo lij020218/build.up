@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct FieldOrClinicalTestStageView: View {
@@ -15,6 +16,15 @@ public struct FieldOrClinicalTestStageView: View {
     @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
     private let stageId = "field-or-clinical-test"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "robotics-physical-ai": return "필드 사이트 + 안전 모니터링 + 동작 로그·고장 통계. 사고 시 비상정지·전원 격리 의무."
+        case "biotech-medtech": return "MFDS IND 제출 (4-6주 = 30 working days) + IRB 윤리심사 병행. 피험자 보상보험 IND 필수."
+        default: return "실제 환경에서의 검증. 연구실 결과와 현장은 다릅니다. 로봇은 현장 테스트, 바이오·의료기기는 식약처 IND 후 임상시험."
+        }
+    }
 
     @AppStorage("fct.testType")     private var testType     = ""
     @AppStorage("fct.planDone")     private var planDone     = false
@@ -45,7 +55,7 @@ public struct FieldOrClinicalTestStageView: View {
             stageId: stageId,
             title: "필드 테스트 / 임상 시험",
             stageEyebrow: "단계 12 · 현장·임상 시험",
-            helperText: "실제 환경에서의 검증. 연구실 결과와 현장은 다릅니다. 로봇은 현장 테스트, 바이오·의료기기는 식약처 IND 후 임상시험.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

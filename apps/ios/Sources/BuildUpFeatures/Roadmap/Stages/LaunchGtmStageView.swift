@@ -7,13 +7,109 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
+
+// MARK: - Sub-industry 분기 (웹 SSOT: getRecommendedStack)
+//
+// startup-tech 클러스터 내부 sub-industry 별 권장 출시 스택.
+// b2b-saas·ai-application 등 SaaS 트랙과 hardware-iot·biotech 등 물리 트랙은 도구가 다름.
+
+private struct GtmStackRecommendation {
+    let analyticsTip: String
+    let billingTip: String
+    let monitoringTip: String
+    let csTip: String
+}
+
+private func gtmStack(for industryId: String) -> GtmStackRecommendation {
+    let cid = StarterIndustryData.option(by: industryId)?.categoryId ?? ""
+    // 기본 (B2C·B2B SaaS)
+    let base = GtmStackRecommendation(
+        analyticsTip: "PostHog (오픈소스 무료) / Mixpanel / GA4 — 5개 핵심 이벤트 + 퍼널 + 주간 대시보드",
+        billingTip:   "Toss Payments (국내) / Stripe (글로벌) — 무료→유료 전환 트리거 + 환불 정책",
+        monitoringTip: "Sentry (10분 셋업) + Slack 알림 — 사용자 이탈 원인 자동 추적",
+        csTip:        "카카오톡 채널 (국내) / Intercom (글로벌) — 24시간 환영 메일 + 인앱 버튼"
+    )
+    guard cid == "startup-tech" else { return base }
+
+    switch industryId {
+    case "b2b-saas":
+        return GtmStackRecommendation(
+            analyticsTip: "PostHog + HubSpot — 계정·시트별 funnel, MRR 대시보드",
+            billingTip:   "Stripe Billing — 시트 기반 + 사용량 기반 (usage-based) 하이브리드, ProRated",
+            monitoringTip: "Sentry + PagerDuty + Statuspage — Enterprise 고객은 99.9% uptime 약속 필수",
+            csTip:        "Intercom 또는 Zendesk — 계정 매니저 + 헬프센터 + 챗봇 자동응대"
+        )
+    case "ai-application":
+        return GtmStackRecommendation(
+            analyticsTip: "PostHog + Helicone (LLM 비용 추적) — 토큰·모델별 단가·전환율",
+            billingTip:   "Stripe + Token meter — 사용량(토큰) 기반 + 무료 한도 명시",
+            monitoringTip: "Sentry + LangSmith / Helicone — LLM 응답 품질·지연·실패율",
+            csTip:        "Intercom + Slack Connect — 파워 유저 직접 채널"
+        )
+    case "fintech-startup":
+        return GtmStackRecommendation(
+            analyticsTip: "Amplitude / PostHog — PII 마스킹 + 감사 로그 보관 (PIPA·금융감독)",
+            billingTip:   "Toss Payments + 한국 PG (KICC·이니시스) — 금융위 라이센스 동시 검토",
+            monitoringTip: "Datadog + PagerDuty — 거래 실패 즉시 알람, 99.95% SLO",
+            csTip:        "톡톡 + 1:1 콜센터 — 금융 분쟁 대비 통화 녹취·기록 의무"
+        )
+    case "healthtech-startup", "biotech-medtech":
+        return GtmStackRecommendation(
+            analyticsTip: "Mixpanel (HIPAA mode) / PostHog (BAA) — 환자 PII 분리",
+            billingTip:   "Stripe (HIPAA BAA 가능) + 보험 청구 분리",
+            monitoringTip: "Datadog + Sentry — MFDS 의료기기 등급별 로깅 의무",
+            csTip:        "전화 + 채널 (의료 분쟁 대비 통화 녹취 6년 보관)"
+        )
+    case "hardware-iot":
+        return GtmStackRecommendation(
+            analyticsTip: "Mixpanel + 디바이스 telemetry (AWS IoT·Particle) — 펌웨어별 분기",
+            billingTip:   "Stripe + WMS·물류 통합 — 펀딩→배송→A/S 트래킹",
+            monitoringTip: "Sentry + Datadog + 디바이스 로그 (CloudWatch) — OTA 업데이트 실패율",
+            csTip:        "톡톡 + RMA (반품·교환) 워크플로 — 하드웨어는 물리적 회수 절차 필수"
+        )
+    case "robotics-physical-ai":
+        return GtmStackRecommendation(
+            analyticsTip: "Mixpanel + ROS / Foxglove (로봇 텔레메트리)",
+            billingTip:   "Stripe + 리스·구독 모델 — 로봇 유닛 단가 높아 분할 결제 표준",
+            monitoringTip: "Datadog + 비상정지 알람 (PagerDuty) — 필드 사고 즉시 대응",
+            csTip:        "전화·온사이트 서비스 — 로봇 고장 시 24h 출동 SLA"
+        )
+    case "semiconductor", "climate-energy":
+        return GtmStackRecommendation(
+            analyticsTip: "B2B funnel 위주 — HubSpot + Salesforce, 분석 도구 비중 낮음",
+            billingTip:   "계약 기반 (PO/Invoice) — Stripe 보다 NetSuite·SAP 통합",
+            monitoringTip: "팹·파일럿 라인 텔레메트리 (자체 MES 시스템)",
+            csTip:        "고객 응대팀 (Field Application Engineer) — 영업·기술 통합"
+        )
+    case "security-startup":
+        return GtmStackRecommendation(
+            analyticsTip: "PostHog (self-hosted) + Datadog — Enterprise 보안 요건",
+            billingTip:   "Stripe Enterprise + 연간 계약 (SOC2 보고서 제공)",
+            monitoringTip: "Datadog + PagerDuty + Audit log (감사 추적 7년)",
+            csTip:        "Intercom + SOC + 24/7 응대 SLA"
+        )
+    case "developer-tools":
+        return GtmStackRecommendation(
+            analyticsTip: "PostHog + Open Telemetry — 개발자는 PII 민감, opt-in 위주",
+            billingTip:   "Stripe + 사용량 기반 (요청 수·빌드 분)",
+            monitoringTip: "Sentry + Statuspage — 개발자는 API uptime 에 매우 민감",
+            csTip:        "Discord / Slack Community — 개발자는 챗봇보다 직접 채널"
+        )
+    default:
+        return base
+    }
+}
 
 public struct LaunchGtmStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     private let stageId = "launch-gtm"
+
+    private var stack: GtmStackRecommendation { gtmStack(for: industryId) }
 
     @State private var page = 0
 
@@ -120,12 +216,12 @@ public struct LaunchGtmStageView: View {
     private var infraPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUInteractiveChecklist(
-                title: "필수 인프라 체크리스트",
+                title: "필수 인프라 체크리스트 (업종별 권장 스택)",
                 items: [
-                    .init(id: "analytics",  label: "애널리틱스 셋업",       detail: "PostHog / Mixpanel / GA4 — 어떤 이벤트가 작동하는지 측정"),
-                    .init(id: "billing",    label: "결제 시스템 연동",      detail: "Toss Payments / Stripe — 론칭 전 실 결제 테스트 필수"),
-                    .init(id: "monitoring", label: "에러 모니터링",         detail: "Sentry + Slack 알림 — 사용자 이탈 원인 자동 추적"),
-                    .init(id: "cs",         label: "CS 채널 셋업",          detail: "카카오톡 채널 / 이메일 자동응답 — 첫 사용자 응대 준비"),
+                    .init(id: "analytics",  label: "애널리틱스 셋업",       detail: stack.analyticsTip),
+                    .init(id: "billing",    label: "결제 시스템 연동",      detail: stack.billingTip),
+                    .init(id: "monitoring", label: "에러 모니터링",         detail: stack.monitoringTip),
+                    .init(id: "cs",         label: "CS 채널 셋업",          detail: stack.csTip),
                 ],
                 checked: gtmChecksBinding
             )

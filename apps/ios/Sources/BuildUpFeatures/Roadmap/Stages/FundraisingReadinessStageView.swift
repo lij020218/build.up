@@ -7,15 +7,35 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct FundraisingReadinessStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     private let stageId = "fundraising-readiness"
 
     @State private var page = 0
+
+    /// Sub-industry 별 투자 패턴 — startup-tech 9 sub-cluster.
+    private var helperText: String {
+        switch industryId {
+        case "b2b-saas":             return "MRR·NRR·CAC payback 12개월 중심. 시리즈A 평균 21개월 런웨이 + ARR $1M 마일스톤."
+        case "ai-application":       return "토큰 단가·LLM 마진 명시. 시리즈A 평균 ARR $2M (B2C) / $500K (B2B AI). 모델 무관성 강조."
+        case "fintech-startup":      return "라이센스·컴플라이언스 게이트 명시. TAM = 한국 금융 가구 × ARPA. 시리즈A 평균 50~100억."
+        case "healthtech-startup":   return "MFDS 허가·임상 단계 + 보험 청구 마일스톤. 시리즈A 평균 50~150억 (의료기기)."
+        case "hardware-iot":         return "BOM·NRE·양산 단가 + GP 마진. NPI 단계별 milestone (EVT→DVT→PVT). 시리즈A 평균 100~200억."
+        case "robotics-physical-ai": return "필드 데이터·유닛 경제·안전 인증. 시리즈A 평균 100~300억 (Lab→파일럿)."
+        case "biotech-medtech":      return "IND·임상 단계·IP·CRO 비용 명시. 시리즈A 평균 100~500억 (적응증·단계 의존)."
+        case "semiconductor":        return "테이프아웃 단계·BOM·OSAT 비용 + 첫 고객 PO. 시리즈A 평균 300~900억 (디노티시아·BOS)."
+        case "climate-energy":       return "정부·NGO·산업 인센티브 명시. 시리즈A 평균 50~300억 (소프트웨어 vs 인프라 양극)."
+        case "security-startup":     return "SOC2·ISO 인증·SOC 고객 명시. ARR 기반 시리즈A 평균 50~100억."
+        case "developer-tools":      return "OSS·유료 전환·기업 도입 funnel. 시리즈A 평균 ARR $500K~$2M."
+        default:                     return "런웨이를 측정하고 IR 피치덱과 재무 모델을 완성하세요. 정부 지원도 병행해 활주로를 늘립니다."
+        }
+    }
 
     @AppStorage("fr.monthlyBurnText") private var monthlyBurnText = ""
     @AppStorage("fr.cashText")        private var cashText        = ""
@@ -56,7 +76,7 @@ public struct FundraisingReadinessStageView: View {
             stageId: stageId,
             title: "런웨이·투자 준비",
             stageEyebrow: "단계 13 · 투자 준비",
-            helperText: "런웨이를 측정하고 IR 피치덱과 재무 모델을 완성하세요. 정부 지원도 병행해 활주로를 늘립니다.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

@@ -16,6 +16,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 // MARK: - TargetCustomerStageView
@@ -31,6 +32,22 @@ public struct TargetCustomerStageView: View {
     @AppStorage("stage.tc.lifestyleHint")    private var lifestyleHint    = ""
     @AppStorage("stage.tc.priceSensitivity") private var priceSensitivity = ""
     @AppStorage("stage.tc.whyTarget")        private var whyTarget        = ""
+    @AppStorage("roadmap.selectedIndustryId") private var industryId      = ""
+
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+
+    private var helperText: String {
+        switch cluster.category {
+        case .food, .cafeDessert:
+            return "외식 폐업 사유 1위 (28%) 는 '타깃 불명확'. 한 명의 구체적 페르소나가 모든 후속 결정의 기준선입니다."
+        case .onlineDigital:
+            return "온라인 폐업 사유 1위는 'CAC > LTV'. 정확한 페르소나가 광고 ROAS·전환·리텐션 모두를 결정합니다."
+        case .startupTech:
+            return "스타트업 실패 42% = '시장이 원하지 않는 제품'. ICP(Ideal Customer Profile) 한 명 명시가 PMF 의 출발점."
+        default:
+            return "타깃 한 명의 구체적 페르소나 — 입지·서비스·가격·마케팅 모든 후속 결정의 기준선."
+        }
+    }
 
     private var filledCount: Int {
         [primaryAgeRange, lifestyleHint, priceSensitivity]
@@ -56,7 +73,7 @@ public struct TargetCustomerStageView: View {
             stageId: stageId,
             title: "타깃 고객 정의",
             stageEyebrow: "단계 4 · 타깃 고객",
-            helperText: "외식 폐업 사유 1위 (28%) 는 '타깃 불명확'. 한 명의 구체적 페르소나가 모든 후속 결정의 기준선입니다.",
+            helperText: helperText,
             canAdvance: canContinue,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

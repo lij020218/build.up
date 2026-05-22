@@ -19,13 +19,18 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct FinancialReviewStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     private let stageId = "financial-review"
+
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+    private var benchmark: IndustryCluster.CostBenchmark { cluster.costBenchmark }
 
     @State private var tab = 0 // 0=고정비, 1=변동비, 2=기타
 
@@ -69,8 +74,9 @@ public struct FinancialReviewStageView: View {
         return Double(rent) / Double(totalCost) * 100
     }
     private var primeCostStatus: Color {
-        if primeCostPct > 65 { return .red }
-        if primeCostPct > 55 { return .orange }
+        let cap = Double(benchmark.primeMaxPct)
+        if primeCostPct > cap { return .red }
+        if primeCostPct > cap * 0.85 { return .orange }
         return BUColor.success
     }
 
@@ -95,7 +101,7 @@ public struct FinancialReviewStageView: View {
             stageId: stageId,
             title: "월 운영비",
             stageEyebrow: "단계 20 · 월 운영비 검토",
-            helperText: "매달 무조건 나가는 고정비 + 매출 연동 변동비 + 기타. 음식점 Prime Cost(재료+인건비) 목표 55~65%.",
+            helperText: "매달 무조건 나가는 고정비 + 매출 연동 변동비 + 기타. \(cluster.categoryNounKo) Prime Cost(재료+인건비) 상한 \(benchmark.primeMaxPct)%.",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -189,9 +195,17 @@ public struct FinancialReviewStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                    BUEyebrow("음식점 고정비 벤치마크")
-                    benchRow(label: "임대료", range: "월 매출의 8~12%", good: rentPct <= 12)
-                    benchRow(label: "인건비", range: "월 매출의 20~28%", good: true)
+                    BUEyebrow("\(cluster.categoryNounKo) 고정비 벤치마크")
+                    benchRow(
+                        label: "임대료",
+                        range: "월 매출의 \(benchmark.rentPctRange.lowerBound)~\(benchmark.rentPctRange.upperBound)%",
+                        good: rentPct <= Double(benchmark.rentPctRange.upperBound)
+                    )
+                    benchRow(
+                        label: "인건비",
+                        range: "월 매출의 \(benchmark.laborPctRange.lowerBound)~\(benchmark.laborPctRange.upperBound)%",
+                        good: true
+                    )
                 }
             }
         }
@@ -273,7 +287,7 @@ public struct FinancialReviewStageView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("목표").font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
                             Text("55~65%").font(BUFont.cardTitleSmall).foregroundStyle(BUColor.ink)
-                            Text("음식점 업종 평균").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                            Text("\(cluster.categoryNounKo) 업종 평균 (상한 \(benchmark.primeMaxPct)%)").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
                         }
                     }
 

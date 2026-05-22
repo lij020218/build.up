@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct MpwOrPilotTapeOutStageView: View {
@@ -14,6 +15,15 @@ public struct MpwOrPilotTapeOutStageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     private let stageId = "mpw-or-pilot-tape-out"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "semiconductor": return "MPW shuttle 90-95% 절감 (수만~수십만달러). TSMC 2/3nm 2027-2028 매진 — 일찍 락인."
+        case "climate-energy": return "파일럿 양산 — 첫 100~1000대 검증. NRE·금형비 + 신뢰성 시험 (1만 시간 가속수명)."
+        default: return "테이프아웃 = 설계 완료의 선언. 되돌리면 수십억이 날아갑니다. MPW는 비용을 90–95% 절감할 수 있습니다."
+        }
+    }
 
     @State private var page = 0
 
@@ -43,7 +53,7 @@ public struct MpwOrPilotTapeOutStageView: View {
             stageId: stageId,
             title: "MPW 또는 파일럿 테이프아웃",
             stageEyebrow: "단계 11 · MPW·테이프아웃",
-            helperText: "테이프아웃 = 설계 완료의 선언. 되돌리면 수십억이 날아갑니다. MPW는 비용을 90–95% 절감할 수 있습니다.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

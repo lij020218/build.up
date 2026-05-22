@@ -13,6 +13,7 @@
 
 import SwiftUI
 import BuildUpDesignSystem
+import BuildUpCore
 import BuildUpComponents
 import BuildUpData
 
@@ -32,40 +33,82 @@ public struct BusinessModelStageView: View {
     @AppStorage("stage.bizModel.selected")  private var selected  = ""
     @AppStorage("stage.bizModel.openHour")  private var openHour  = 9
     @AppStorage("stage.bizModel.closeHour") private var closeHour = 21
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     private let stageId = "business-model"
 
-    // 웹 SSOT (packages/shared/starter-data.ts food 카테고리) 와 1:1 일치:
-    //   dine-in-restaurant / takeout-focused / delivery-hybrid 세 개만.
-    //   ⚠️ 2026-05-20 사장님 신고: 한국 외식 현실은 "홀+배달" 하이브리드가 표준인데
-    //   기존엔 delivery-hybrid 를 "배달 중심" 으로 잘못 라벨 → 사장님이 본인 케이스 못 찾음.
-    //   웹의 summary "walk-in demand and delivery demand together" 의 정확한 의미로 라벨 재작성.
-    //   self-serve-light 는 food 가 아닌 cafe-dessert 카테고리 옵션이라 제거.
-    private let models: [BizModelOption] = [
-        BizModelOption(
-            id: "delivery-hybrid",
-            icon: "box.truck.fill",
-            color: Color(red: 0.918, green: 0.345, blue: 0.047),
-            titleKo: "하이브리드 (홀+배달)",
-            descKo: "홀 식사·배달·픽업 모두 운영",
-            tagKo: "추천"
-        ),
-        BizModelOption(
-            id: "dine-in-restaurant",
-            icon: "fork.knife",
-            color: Color(red: 0.149, green: 0.388, blue: 0.922),
-            titleKo: "홀 매장 중심",
-            descKo: "테이블 식사·홀 서비스 위주",
-            tagKo: nil
-        ),
-        BizModelOption(
-            id: "takeout-focused",
-            icon: "bag.fill",
-            color: Color(red: 0.020, green: 0.588, blue: 0.412),
-            titleKo: "테이크아웃 전문",
-            descKo: "픽업·포장 위주·좌석 최소",
-            tagKo: nil
-        ),
-    ]
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+
+    /// 웹 SSOT: packages/shared/starter-data.ts category 별 businessModelOptions.
+    /// food/cafe → 외식 운영 모델 / 서비스업 → 매장·예약·방문 / 리테일 → 오프·온·하이브리드 /
+    /// 온라인 → 채널 / 스타트업 → SaaS 수익 모델.
+    private var models: [BizModelOption] {
+        switch cluster.category {
+        case .food, .cafeDessert: return [
+            .init(id: "delivery-hybrid",    icon: "box.truck.fill", color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "하이브리드 (홀+배달)", descKo: "홀 식사·배달·픽업 모두 운영", tagKo: "추천"),
+            .init(id: "dine-in-restaurant", icon: "fork.knife",      color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "홀 매장 중심",     descKo: "테이블 식사·홀 서비스 위주",   tagKo: nil),
+            .init(id: "takeout-focused",    icon: "bag.fill",        color: Color(red: 0.020, green: 0.588, blue: 0.412),
+                  titleKo: "테이크아웃 전문",  descKo: "픽업·포장 위주·좌석 최소",     tagKo: nil),
+        ]
+        case .beauty, .fitness, .pet, .education: return [
+            .init(id: "in-shop",   icon: "building.2.fill",       color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "매장 운영",     descKo: "예약·방문 위주 — 단골·LTV 모델",       tagKo: "추천"),
+            .init(id: "mobile",    icon: "car.fill",              color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "출장·방문",     descKo: "고객 위치로 이동 (반려동물·청소·뷰티)", tagKo: nil),
+            .init(id: "hybrid",    icon: "arrow.triangle.swap",   color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "매장 + 출장 혼합", descKo: "매장 + 출장 양쪽 가능",               tagKo: nil),
+            .init(id: "membership", icon: "creditcard.fill",      color: Color(red: 0.020, green: 0.588, blue: 0.412),
+                  titleKo: "회원제·구독",    descKo: "월 정기·시즌권 — 리텐션 중심",          tagKo: nil),
+        ]
+        case .livingService: return [
+            .init(id: "mobile",  icon: "car.fill",         color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "출장·방문 위주",  descKo: "세탁·청소·수리 등 고객 위치 이동", tagKo: "추천"),
+            .init(id: "in-shop", icon: "building.2.fill",  color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "매장 운영",      descKo: "코인세탁·수리 매장 등 고정 매장",  tagKo: nil),
+            .init(id: "hybrid",  icon: "arrow.triangle.swap", color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "매장 + 출장",    descKo: "매장 운영 + 출장 병행",            tagKo: nil),
+        ]
+        case .space: return [
+            .init(id: "manned",   icon: "person.fill",     color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "유인 운영",       descKo: "체크인·청소·운영 직접",        tagKo: nil),
+            .init(id: "unmanned", icon: "key.fill",        color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "무인 (스마트락)",  descKo: "스마트락 + 예약 자동화",       tagKo: "추천"),
+            .init(id: "hybrid",   icon: "arrow.triangle.swap", color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "혼합 운영",       descKo: "주말 유인 + 평일 무인",         tagKo: nil),
+        ]
+        case .retail: return [
+            .init(id: "offline-shop", icon: "building.2.fill", color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "오프라인 매장",   descKo: "고정 매장 — 진열·직접 판매",      tagKo: nil),
+            .init(id: "online-shop",  icon: "globe",            color: Color(red: 0.020, green: 0.588, blue: 0.412),
+                  titleKo: "온라인 전용",     descKo: "스마트스토어·자체몰만 운영",     tagKo: nil),
+            .init(id: "omni-channel", icon: "arrow.triangle.swap", color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "옴니채널",        descKo: "오프라인 + 온라인 통합 운영",    tagKo: "추천"),
+            .init(id: "popup-only",   icon: "calendar.badge.clock", color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "팝업·기간한정",   descKo: "단기 임대 + 기간한정 마케팅",     tagKo: nil),
+        ]
+        case .onlineDigital: return [
+            .init(id: "marketplace",  icon: "cart.fill",  color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "마켓플레이스 입점", descKo: "스마트스토어·쿠팡·11번가 등",    tagKo: "추천"),
+            .init(id: "direct-store", icon: "globe",      color: Color(red: 0.020, green: 0.588, blue: 0.412),
+                  titleKo: "자체몰 직판매",     descKo: "카페24·Shopify 등 자체 도메인", tagKo: nil),
+            .init(id: "multi-channel", icon: "arrow.triangle.swap", color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "멀티 채널",         descKo: "마켓+자체몰+SNS 동시 운영",       tagKo: nil),
+            .init(id: "subscription",  icon: "creditcard.fill",  color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "구독 박스·리필",     descKo: "정기배송 + 멤버십 LTV 중심",       tagKo: nil),
+        ]
+        case .startupTech: return [
+            .init(id: "saas-subscription", icon: "creditcard.fill", color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "SaaS 구독",        descKo: "월·연 구독 — Free→Paid 전환 funnel", tagKo: "추천"),
+            .init(id: "usage-based",        icon: "chart.bar.fill", color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "사용량 기반",       descKo: "API 호출·토큰 등 사용량당 과금",       tagKo: nil),
+            .init(id: "enterprise",         icon: "building.2.fill", color: Color(red: 0.020, green: 0.588, blue: 0.412),
+                  titleKo: "엔터프라이즈 계약", descKo: "연 단위·맞춤 계약 — 영업 중심",         tagKo: nil),
+            .init(id: "one-time",           icon: "tag.fill",        color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "단발 결제 (인디)",  descKo: "Marc Lou·Pieter Levels 패턴",         tagKo: nil),
+        ]
+        }
+    }
 
     public init() {}
 

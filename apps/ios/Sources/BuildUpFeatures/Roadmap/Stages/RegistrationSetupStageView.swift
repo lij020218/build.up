@@ -19,17 +19,21 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct RegistrationSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "registration-setup"
     @AppStorage("stage.regSetup.bizRegDone")    private var bizRegDone    = false
     @AppStorage("stage.regSetup.permitDone")    private var permitDone    = false
     @AppStorage("stage.regSetup.taxTypeChoice") private var taxTypeChoice = ""
+
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
     private let pages = ["왜 중요한가", "사업자등록", "인허가", "유리한 길"]
 
@@ -168,75 +172,61 @@ public struct RegistrationSetupStageView: View {
         }
     }
 
-    // MARK: - pg 2 인허가
+    // MARK: - pg 2 인허가 (cluster 별 분기)
 
     private var permitPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.hero) {
                 VStack(alignment: .leading, spacing: 4) {
-                    BUEyebrow("2단계 · 일반음식점 영업신고 (식품위생법)")
-                    Text("관할 구청 위생과 또는 정부24 · 약 6.6만원 · 7~14일")
+                    BUEyebrow("2단계 · \(cluster.categoryNounKo) 인허가")
+                    Text("업종별 필수 인허가 \(cluster.requiredPermits.count)종 — 발급처·기간·핵심 요건")
                         .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary)
                 }
             }
 
-            // 필요 서류
+            // 인허가 리스트 — IndustryCluster.requiredPermits 자동 매핑
             BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("필요 서류 (6종)")
-                    let docs = [
-                        "사업자등록증",
-                        "임대차계약서",
-                        "위생교육 수료증 (한국외식업중앙회)",
-                        "건강진단결과서 (보건증)",
-                        "건축물대장 (근린생활시설 확인)",
-                        "평면도 (주방·홀 분리 표시)",
-                    ]
-                    ForEach(docs, id: \.self) { doc in
-                        HStack(spacing: 8) {
-                            Image(systemName: "doc.fill")
-                                .font(.system(size: 11)).foregroundStyle(BUColor.midnight)
-                            Text(doc).font(BUFont.bodySmall).foregroundStyle(BUColor.ink)
+                VStack(alignment: .leading, spacing: BUSpacing.md) {
+                    BUEyebrow("필수 인허가 — \(cluster.categoryNounKo)")
+                    ForEach(Array(cluster.requiredPermits.enumerated()), id: \.offset) { idx, permit in
+                        if idx > 0 { Divider() }
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text(permit.label)
+                                    .font(BUFont.bodySmall.weight(.heavy))
+                                    .foregroundStyle(BUColor.ink)
+                                Spacer()
+                                Text(permit.estimatedDays == 0 ? "즉시" : "\(permit.estimatedDays)일")
+                                    .font(.system(size: 10, weight: .heavy))
+                                    .foregroundStyle(BUColor.midnight)
+                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                                    .background(BUColor.midnight.opacity(0.10), in: Capsule())
+                            }
+                            Text(permit.agency)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(BUColor.midnight)
+                            Text(permit.detail)
+                                .font(BUFont.bodyCaption)
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
+                        .padding(.vertical, 4)
                     }
                 }
             }
 
-            // 핵심 요건
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("핵심 요건")
-                    let reqs = [
-                        "주방과 객석은 벽·칸막이로 명확히 구분",
-                        "조리장 바닥·벽은 내수성 자재",
-                        "건축물 용도 = 근린생활시설 (1·2종)",
-                        "환기·조명·급수·하수 시설 갖춤",
-                    ]
-                    ForEach(reqs, id: \.self) { req in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("•").font(BUFont.bodyCaption).foregroundStyle(BUColor.midnight).padding(.top, 2)
-                            Text(req).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                        }
-                    }
-                }
-            }
-
-            // 자주 거절되는 사유
+            // 핵심 주의 — 카테고리별
             BUCard(.card) {
                 HStack(alignment: .top, spacing: BUSpacing.sm) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Color.red).font(.system(size: 16))
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("자주 거절되는 사유").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(Color.red)
-                        let pitfalls = [
-                            "주방·객석 분리 안 됨",
-                            "건축물 용도가 근린생활시설이 아닌 경우",
-                            "환기·하수·급수 시설 미비",
-                            "지하층·반지하 영업 시 별도 요건 적용",
-                        ]
-                        ForEach(pitfalls, id: \.self) { p in
+                        Text("자주 거절·지연 사유").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(Color.red)
+                        ForEach(permitPitfalls, id: \.self) { p in
                             HStack(alignment: .top, spacing: 6) {
                                 Text("⚠").font(.system(size: 10)).padding(.top, 2)
                                 Text(p).font(BUFont.bodyCaption).foregroundStyle(Color(red: 0.5, green: 0.1, blue: 0.1)).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     }
@@ -245,10 +235,73 @@ public struct RegistrationSetupStageView: View {
 
             BUCard(.card) {
                 Toggle(isOn: $permitDone) {
-                    Text("영업신고증 발급 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    Text("\(cluster.categoryNounKo) 인허가 발급 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                 }
                 .tint(BUColor.midnight)
             }
+        }
+    }
+
+    /// 카테고리별 자주 거절·지연되는 사유.
+    private var permitPitfalls: [String] {
+        switch cluster.category {
+        case .food: return [
+            "주방·객석 분리 안 됨 (벽·칸막이 의무)",
+            "건축물 용도가 근린생활시설이 아닌 경우",
+            "환기·하수·급수 시설 미비",
+            "지하층·반지하 영업 시 별도 요건 적용",
+        ]
+        case .cafeDessert: return [
+            "휴게음식점 / 일반음식점 구분 누락 — 주류 판매 시 일반 의무",
+            "환기·식수 시설 미비",
+            "건축물 용도 = 근린생활시설 (1·2종) 아닌 경우",
+        ]
+        case .beauty: return [
+            "면허증 미보유 종사자 적발 (단속 1순위)",
+            "위생교육 수료증 누락",
+            "공중위생업 시설 기준 미충족 (세면대·소독기)",
+        ]
+        case .fitness: return [
+            "체육시설업 신고 누락 — 자유업이지만 안전 점검 의무",
+            "안전요원·강사 자격 미증명",
+            "다중이용시설 소방·환기 기준 미달",
+        ]
+        case .education: return [
+            "강사 자격 (정교사·보육교사 등) 미증명",
+            "학원 면적 / 학생 수 비율 미준수",
+            "비상구·소화기·CCTV 표준 미달",
+        ]
+        case .pet: return [
+            "동물보호법 등록 누락 (시도청 동물보호과)",
+            "동물 폐기물 처리 계약 미체결",
+            "방음·환기 미달 — 짖음·냄새 이웃 민원",
+        ]
+        case .livingService: return [
+            "공중위생업 신고 누락 (세탁업 등)",
+            "폐수 처리 시설 미달 — 환경 기준 위반",
+            "위생교육 수료증 누락",
+        ]
+        case .space: return [
+            "방음·소음 기준 미달 — 이웃 민원 즉시 단속",
+            "다중이용시설 소방안전 기준 미달",
+            "쉐어오피스·코워킹의 경우 통신판매업 별도 신고",
+        ]
+        case .retail: return [
+            "통신판매업 신고 누락 (옴니채널 동시 판매 시)",
+            "KC 인증 없는 상품 판매 — 즉시 게시중지·과태료",
+            "지하·2층 매장 소방 기준 미달",
+        ]
+        case .onlineDigital: return [
+            "통신판매업 신고 전 사업자등록 미완료",
+            "에스크로(구매안전서비스) 가입 누락",
+            "KC 인증 없는 상품 — 게시중지·과태료",
+            "개인정보처리방침 미게시 (PIPA 위반)",
+        ]
+        case .startupTech: return [
+            "이용약관·개인정보처리방침 미게시 (PIPA 위반)",
+            "결제 받는 SaaS 가 통신판매업 신고 누락",
+            "상표·특허 공개 후 출원 (선출원주의 위반)",
+        ]
         }
     }
 

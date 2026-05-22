@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct PrototypeIterationStageView: View {
@@ -15,6 +16,15 @@ public struct PrototypeIterationStageView: View {
     @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
     private let stageId = "prototype-iteration"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "robotics-physical-ai": return "로봇 v0~v3 주간 사이클 + go/no-go 게이트 (필드 안전·동작 정확도). 1 사이클 2-4주."
+        case "biotech-medtech": return "후보물질 50-200개 → in vitro → in vivo → 임상 진입 후보 — 단계별 명시적 cutoff (효능·안전성·약동학)."
+        default: return "딥테크는 반복이 더 느립니다. go/no-go 게이트로 낭비를 막으세요. 소프트웨어는 하루 배포, 딥테크는 한 사이클 3–6개월."
+        }
+    }
 
     @AppStorage("pi.iterPlanDone") private var iterPlanDone = false
     @AppStorage("pi.goNoGo")       private var goNoGo       = false
@@ -43,7 +53,7 @@ public struct PrototypeIterationStageView: View {
             stageId: stageId,
             title: "프로토타입 반복 (Go/No-Go 게이트)",
             stageEyebrow: "단계 11 · 프로토타입 반복",
-            helperText: "딥테크는 반복이 더 느립니다. go/no-go 게이트로 낭비를 막으세요. 소프트웨어는 하루 배포, 딥테크는 한 사이클 3–6개월.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

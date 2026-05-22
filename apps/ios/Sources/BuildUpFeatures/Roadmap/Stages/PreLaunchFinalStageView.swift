@@ -14,16 +14,75 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
+
+// MARK: - Cluster 분기 (웹 SSOT: PreLaunchFinalStage.tsx isStartup/isOnline/offline)
+
+private enum PreLaunchCluster {
+    case offline   // 외식·카페·미용·피트니스·교육·펫·생활서비스·공간·소매
+    case online    // 온라인 커머스
+    case startup   // 스타트업·테크
+
+    static func from(industryId: String) -> PreLaunchCluster {
+        let cid = StarterIndustryData.option(by: industryId)?.categoryId ?? ""
+        switch cid {
+        case "startup-tech":   return .startup
+        case "online-digital": return .online
+        default:               return .offline
+        }
+    }
+
+    var noun: String {
+        switch self {
+        case .offline: return "오픈"
+        case .online:  return "오픈"
+        case .startup: return "출시"
+        }
+    }
+
+    var helperText: String {
+        switch self {
+        case .offline: return "음식점·카페·소매 폐업 1위 사유는 '준비 부족'. 오픈 직전 72시간 체크리스트를 통과한 가게는 첫 달 생존율이 확연히 높습니다."
+        case .online:  return "온라인 첫 1주는 자기 주문 → 포장 → 송장 → 발송 1사이클 완주가 핵심. 알림받기 100명 + 박스·완충재·라벨 5묶음 백업 권장."
+        case .startup: return "출시 = 끝이 아니라 시작. D-Day 화·수 12:01 PT + 베타 사용자 10명 명단 + 프로덕션 배포 + 결제 1사이클 + D-28~D+14 13개 알림 봉인."
+        }
+    }
+
+    var advanceLabel: String {
+        switch self {
+        case .offline: return "그랜드 오픈 시작!"
+        case .online:  return "스토어 오픈!"
+        case .startup: return "런칭!"
+        }
+    }
+
+    var stageEyebrow: String {
+        switch self {
+        case .offline: return "단계 · 오픈 최종 점검"
+        case .online:  return "단계 · 스토어 최종 점검"
+        case .startup: return "단계 · 런칭 최종 점검"
+        }
+    }
+
+    var preCheckSectionTitle: String {
+        switch self {
+        case .offline: return "오픈 전 필수 8개 항목"
+        case .online:  return "오픈 전 필수 8개 항목"
+        case .startup: return "런칭 전 필수 8개 항목"
+        }
+    }
+}
 
 public struct PreLaunchFinalStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "pre-launch-final"
 
-    // 오픈 전 점검
+    // 오픈 전 점검 (8 슬롯, 라벨은 cluster 별로 매핑됨)
     @AppStorage("plf.permit")      private var permitOK      = false
     @AppStorage("plf.equipment")   private var equipmentOK   = false
     @AppStorage("plf.stock")       private var stockOK       = false
@@ -33,7 +92,7 @@ public struct PreLaunchFinalStageView: View {
     @AppStorage("plf.emergency")   private var emergencyOK   = false
     @AppStorage("plf.insurance")   private var insuranceOK   = false
 
-    // 당일 운영
+    // 당일 운영 (4 슬롯)
     @AppStorage("plf.dayOpen")     private var dayOpenOK     = false
     @AppStorage("plf.dayBriefing") private var dayBriefingOK = false
     @AppStorage("plf.dayPhoto")    private var dayPhotoOK    = false
@@ -42,25 +101,73 @@ public struct PreLaunchFinalStageView: View {
     // 완료 플래그
     @AppStorage("plf.done")        private var launchDone    = false
 
-    private let pages = ["왜 중요한가", "오픈 전 점검", "당일 운영", "홍보 타임라인"]
+    private var cluster: PreLaunchCluster { PreLaunchCluster.from(industryId: industryId) }
 
-    private var preChecks: [(String, Binding<Bool>)] {[
-        ("인허가·영업신고 원본 보관 및 게시", $permitOK),
-        ("주방 설비·기기 시운전 완료", $equipmentOK),
-        ("1주일치 식자재·소모품 선입고", $stockOK),
-        ("직원 최종 역할 배정·교육 완료", $staffOK),
-        ("POS·키오스크·카드 단말기 테스트", $posOK),
-        ("위생 점검 (냉장 온도·식기 소독)", $hygieneOK),
-        ("비상 연락망·응급 절차 공유", $emergencyOK),
-        ("영업배상·화재보험 가입 확인", $insuranceOK),
-    ]}
+    private var pages: [String] {
+        switch cluster {
+        case .offline: return ["왜 중요한가", "오픈 전 점검", "당일 운영", "홍보 타임라인"]
+        case .online:  return ["왜 중요한가", "스토어 점검", "발송 1사이클", "런칭 홍보"]
+        case .startup: return ["왜 중요한가", "런칭 전 점검", "D-Day 운영", "D-28~D+14"]
+        }
+    }
 
-    private var dayChecks: [(String, Binding<Bool>)] {[
-        ("오픈 1시간 전 조리·홀 세팅 완료", $dayOpenOK),
-        ("직원 조회 — 역할·동선·메뉴 최종 확인", $dayBriefingOK),
-        ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
-        ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
-    ]}
+    private var preChecks: [(String, Binding<Bool>)] {
+        switch cluster {
+        case .offline: return [
+            ("인허가·영업신고 원본 보관 및 게시", $permitOK),
+            ("주방 설비·기기 시운전 완료", $equipmentOK),
+            ("1주일치 식자재·소모품 선입고", $stockOK),
+            ("직원 최종 역할 배정·교육 완료", $staffOK),
+            ("POS·키오스크·카드 단말기 테스트", $posOK),
+            ("위생 점검 (냉장 온도·식기 소독)", $hygieneOK),
+            ("비상 연락망·응급 절차 공유", $emergencyOK),
+            ("영업배상·화재보험 가입 확인", $insuranceOK),
+        ]
+        case .online: return [
+            ("사업자등록증·통신판매업 신고증 게시", $permitOK),
+            ("스토어 카테고리·상세페이지·반품정책 최종 검수", $equipmentOK),
+            ("박스·완충재·테이프·송장 라벨지 5묶음 백업 입고", $stockOK),
+            ("CS 채널 (카톡 채널·톡톡) 응대 템플릿 5종 준비", $staffOK),
+            ("결제 (PG·네이버페이·카카오페이) 100원 실거래 테스트", $posOK),
+            ("자기 주문 → 포장 → 송장 → 발송 1사이클 완주", $hygieneOK),
+            ("환불·교환 정책 페이지 게시 (PIPA 2025 준수)", $emergencyOK),
+            ("배송 분쟁 대비 포장 사진 자동 저장 워크플로", $insuranceOK),
+        ]
+        case .startup: return [
+            ("프로덕션 배포 + 도메인·SSL 작동 확인", $permitOK),
+            ("Sentry/Slack 알람 — 실제 에러 트리거 검증", $equipmentOK),
+            ("결제 (Stripe/Toss) 100원 실거래 + 환불 1사이클", $stockOK),
+            ("베타 사용자 10명 명단 + 24시간 환영 메일", $staffOK),
+            ("분석 (PostHog·Mixpanel) 5개 핵심 이벤트 발화 확인", $posOK),
+            ("이용약관·개인정보처리방침·PIPA 2025 (이동권·동의 분리·국내대리인) 게시", $hygieneOK),
+            ("D-28~D+14 13개 캘린더 알림 + Product Hunt D-7 예약", $emergencyOK),
+            ("응급 대응 매뉴얼 5종 — 결제 장애·DB 다운·바이럴 트래픽", $insuranceOK),
+        ]
+        }
+    }
+
+    private var dayChecks: [(String, Binding<Bool>)] {
+        switch cluster {
+        case .offline: return [
+            ("오픈 1시간 전 조리·홀 세팅 완료", $dayOpenOK),
+            ("직원 조회 — 역할·동선·메뉴 최종 확인", $dayBriefingOK),
+            ("오픈 순간 사진·영상 기록 (SNS용)", $dayPhotoOK),
+            ("첫날 영업 후 팀 피드백 15분 미팅", $dayFeedbackOK),
+        ]
+        case .online: return [
+            ("주문 알림 30분 룰 — 첫 주문 즉시 발송 시작", $dayOpenOK),
+            ("톡톡·카톡 채널 12시간 SLA — 첫날 문의 100% 답변", $dayBriefingOK),
+            ("첫 발송 패키지 언박싱 사진 SNS 게시", $dayPhotoOK),
+            ("첫날 매출·전환율·이탈률 15분 회고", $dayFeedbackOK),
+        ]
+        case .startup: return [
+            ("D-Day 화·수 12:01 PT 발사 + 모든 채널 동시 공유", $dayOpenOK),
+            ("응답 SLA — 모든 댓글·메시지 24시간 내 회신", $dayBriefingOK),
+            ("핵심 funnel (가입→전환) 시간대별 모니터링", $dayPhotoOK),
+            ("D+1 회고 — 핵심 5개 지표 + 다음 주 액션", $dayFeedbackOK),
+        ]
+        }
+    }
 
     private var preCheckCount: Int { preChecks.filter { $0.1.wrappedValue }.count }
     private var dayCheckCount: Int  { dayChecks.filter  { $0.1.wrappedValue }.count }
@@ -80,10 +187,10 @@ public struct PreLaunchFinalStageView: View {
         BUStageShell(
             stageId: stageId,
             title: "개업 최종 준비",
-            stageEyebrow: "단계 22 · 오픈 최종 점검",
-            helperText: "음식점 폐업 1위 사유는 '준비 부족'. 오픈 직전 72시간 체크리스트를 통과한 가게는 첫 달 생존율이 확연히 높습니다.",
+            stageEyebrow: cluster.stageEyebrow,
+            helperText: cluster.helperText,
             canAdvance: allDone,
-            advanceLabel: "그랜드 오픈 시작!",
+            advanceLabel: cluster.advanceLabel,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
@@ -203,7 +310,7 @@ public struct PreLaunchFinalStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("오픈 전 필수 8개 항목")
+                    BUEyebrow(cluster.preCheckSectionTitle)
                     ForEach(preChecks, id: \.0) { label, binding in
                         Toggle(isOn: binding) {
                             Text(label)

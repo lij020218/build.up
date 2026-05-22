@@ -183,6 +183,7 @@ public enum RoadmapSampleData {
         "biz-registration":            .init(title: "사업자등록 & 금융 세팅",    desc: "전용 통장 개설, 세무사 상담.", days: 3),
         "tax-guide":                   .init(title: "세무 가이드",     desc: "홈택스 부가세·종합소득세 신고 캘린더 + 절세 포인트.", days: 3),
         "loan-guide":                  .init(title: "대출 가이드", desc: "소진공·중진공·TIPS 등 자금 경로·기관·주의사항.", days: 2),
+        "franchise-application":       .init(title: "프랜차이즈 가맹 절차", desc: "본사 상담 → 정보공개서 14일 숙려 → 점주 방문 → 법률 검토 → 계약 → 교육 6 단계.", days: 28),
         "financial-review":            .init(title: "월 운영비",       desc: "고정비·변동비·기타 비용 + Prime Cost·런웨이 시뮬레이션.", days: 3),
         "pre-launch-final":            .init(title: "개업 최종 준비",       desc: "오픈 전 72시간 체크리스트 + 당일 운영 + 홍보 타임라인.", days: 3),
 
@@ -374,14 +375,30 @@ public enum RoadmapSampleData {
     // MARK: - Public Factory
 
     private static func pathFor(_ cluster: BusinessCluster) -> [(String, StagePhase)] {
-        switch cluster {
-        case .offlineFood:                          return offlinePath
-        case .onlineDigital:                        return onlinePath
-        case .startupTech:                          return startupTechPath
-        case .hardwareIoT:                          return hardwarePath
-        case .roboticsPhysicalAI, .biotechMedtech:  return labPath
-        case .semiconductor, .climateEnergy:        return semiPath
-        }
+        let base: [(String, StagePhase)] = {
+            switch cluster {
+            case .offlineFood:                          return offlinePath
+            case .onlineDigital:                        return onlinePath
+            case .startupTech:                          return startupTechPath
+            case .hardwareIoT:                          return hardwarePath
+            case .roboticsPhysicalAI, .biotechMedtech:  return labPath
+            case .semiconductor, .climateEnergy:        return semiPath
+            }
+        }()
+
+        // ── 웹 SSOT 미러: nextStageConditions(matchValue: "franchise") ──
+        //   사장님이 startup-type 단계에서 franchise 선택 시, budget-setup 직후
+        //   franchise-application 단계 삽입. 오프라인·온라인 path 만 분기됨
+        //   (스타트업 기술 path 에서 franchise 선택은 의미 없음 — 웹도 startup-tech 카테고리에서는
+        //    franchise 옵션을 숨김 처리. iOS 도 동일.)
+        let startupType = UserDefaults.standard.string(forKey: "stage.startupType.selected") ?? ""
+        guard startupType == "franchise" else { return base }
+        guard cluster == .offlineFood || cluster == .onlineDigital else { return base }
+        guard let budgetIdx = base.firstIndex(where: { $0.0 == "budget-setup" }) else { return base }
+
+        var withFranchise = base
+        withFranchise.insert(("franchise-application", .registration), at: budgetIdx + 1)
+        return withFranchise
     }
 
     /// stageId 배열만 추출 — RoadmapStore.pathProvider 에 주입.

@@ -17,14 +17,33 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct PreLaunchStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "pre-launch"
+
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+
+    private var helperText: String {
+        switch cluster.category {
+        case .food, .cafeDessert: return "본 오픈 전 마지막 리허설. 가족·동네 주민 우선 초대 + 30~50% 할인으로 결제·조리 흐름 검증."
+        case .beauty:             return "베타 고객 시술 — 지인·체험단 우선 + 무료 또는 50% 할인. 시술·예약·결제 흐름 검증."
+        case .fitness:            return "프리오픈 멤버 — 1주 무료 체험 + 회원 가입 시 20~30% 할인. 시설·강사·결제 흐름 검증."
+        case .education:          return "오리엔테이션 + 시범 수업. 학부모·학생 우선 초대 + 1주 무료. 강의·시설·등록 흐름 검증."
+        case .pet:                return "베타 고객 — 지인 반려동물 우선 + 50% 할인. 미용·호텔·예약 흐름 검증."
+        case .livingService:      return "베타 출장 — 지인·동네 우선 + 50% 할인. 출장·작업·결제 흐름 검증."
+        case .space:              return "프리오픈 예약 — 지인·SNS 팔로워 우선 + 무료 또는 50% 할인. 예약·청소·결제 흐름 검증."
+        case .retail:             return "프리오픈 세일 — 지인·동네 우선 + 20~40% 할인. 진열·결제·CS 흐름 검증."
+        case .onlineDigital:      return "베타 판매 — 알림받기 100명 + 첫 주문 할인. 자기 주문 1사이클 (포장→송장→발송) 검증."
+        case .startupTech:        return "베타 사용자 10명 — 인터뷰·waitlist 추출 + 24h 환영 메일. 핵심 funnel 검증."
+        }
+    }
 
     // 가격 정책 선택
     @AppStorage("prelaunch.pricing")          private var pricingChoice    = "" // "free" / "discount" / "full"
@@ -98,7 +117,7 @@ public struct PreLaunchStageView: View {
             stageId: stageId,
             title: "소프트 오픈",
             stageEyebrow: "단계 19 · 소프트 오픈",
-            helperText: "본 오픈 전 마지막 리허설. 가족·동네 주민 우선 초대 + 30~50% 할인으로 결제 흐름 검증.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

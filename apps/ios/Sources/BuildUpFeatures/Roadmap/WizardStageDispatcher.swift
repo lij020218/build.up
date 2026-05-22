@@ -11,6 +11,7 @@ import SwiftUI
 @ViewBuilder
 public func wizardStageView(for stageId: String) -> some View {
     switch stageId {
+    case "franchise-application":    FranchiseApplicationStageView()
     case "industry-selection":       IndustrySelectionStageView()
     case "startup-type":             StartupTypeStageView()
     case "business-model":           BusinessModelStageView()

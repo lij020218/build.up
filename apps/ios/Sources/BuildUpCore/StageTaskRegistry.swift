@@ -283,6 +283,7 @@ public enum BUStageTaskRegistry {
         "biz-registration": [
             .init(id: "biz-reg-confirmed",  title: "세무서 사업자등록 완료 여부 확인", estimatedMinutes: 20),
             .init(id: "biz-account-opened", title: "사업 전용 통장 개설 (개인 계좌와 분리)", estimatedMinutes: 30),
+            .init(id: "cpa-decision-made",  title: "세무대리인(세무사) 선임 여부 결정", estimatedMinutes: 20, required: false),
         ],
         "pre-launch-final": [
             .init(id: "launch-date-locked",      title: "오픈 D-Day 확정 + 사전 알릴 단골·커뮤니티 10명 명단 (위생교육·단말기·식자재 입고 후 평일)", estimatedMinutes: 40),

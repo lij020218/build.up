@@ -246,7 +246,9 @@ public struct BUStageContinueBar: View {
             }
             .frame(height: 3)
 
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                // 좌측 텍스트 — 공간 부족 시 이쪽이 truncate 되도록 layoutPriority(0).
+                //   완료된 단계는 액션 버튼 3개가 붙어 좁아지므로 hint 는 숨김.
                 VStack(alignment: .leading, spacing: 2) {
                     Text(stageEyebrow)
                         .font(.system(size: 10, weight: .heavy))
@@ -254,13 +256,17 @@ public struct BUStageContinueBar: View {
                         .textCase(.uppercase)
                         .foregroundStyle(BUColor.midnight)
                         .lineLimit(1)
-                    Text(advanceHint)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(BUColor.inkMuted)
-                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    if !isCompleted {
+                        Text(advanceHint)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(BUColor.inkMuted)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
                 }
-
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(0)
 
                 if isCompleted, let onUncomplete {
                     Button(action: onUncomplete) {
@@ -272,6 +278,7 @@ public struct BUStageContinueBar: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("완료 취소")
+                    .layoutPriority(1)
                 }
 
                 // ── 수정 저장 (웹 SSOT handleStageEdit 미러) ──
@@ -283,6 +290,8 @@ public struct BUStageContinueBar: View {
                                 .font(.system(size: 11, weight: .heavy))
                             Text(editLabel)
                                 .font(.system(size: 13, weight: .heavy))
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
@@ -293,6 +302,7 @@ public struct BUStageContinueBar: View {
                     .buttonStyle(.plain)
                     .disabled(editState == .saving)
                     .animation(.easeInOut(duration: 0.18), value: editState)
+                    .layoutPriority(1)
                 }
 
                 Button {
@@ -302,13 +312,15 @@ public struct BUStageContinueBar: View {
                     if let wiz = wizardOnAdvance { wiz() } else { continueBarDismiss() }
                 } label: {
                     HStack(spacing: 6) {
-                        Text(isCompleted ? "다음으로" : advanceLabel)
+                        Text(isCompleted ? "다음" : advanceLabel)
                             .font(.system(size: 14, weight: .heavy))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .heavy))
                     }
                     .foregroundStyle(canAdvance ? Color.white : BUColor.inkMuted)
-                    .padding(.horizontal, 18)
+                    .padding(.horizontal, isCompleted ? 14 : 18)
                     .padding(.vertical, 12)
                     .background(
                         canAdvance
@@ -327,6 +339,7 @@ public struct BUStageContinueBar: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!canAdvance)
+                .layoutPriority(1)
             }
             .padding(.horizontal, BUSpacing.md)
             .padding(.vertical, 12)

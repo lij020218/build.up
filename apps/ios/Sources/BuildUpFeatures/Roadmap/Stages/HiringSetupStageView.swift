@@ -19,6 +19,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 private let WAGE_2026 = 10_320
@@ -29,9 +30,12 @@ public struct HiringSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId   = ""
     @State private var page = 0
     private let stageId = "hiring-setup"
     @AppStorage("hiring.noHireChoice")     private var noHireChoice    = false
+
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
     // 계산기 state
     @State private var wageText    = "\(WAGE_2026)"
@@ -131,7 +135,7 @@ public struct HiringSetupStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("채용 플랫폼 (외식업 권장)")
+                    BUEyebrow("채용 플랫폼 (\(cluster.categoryNounKo) 권장)")
                     let platforms: [(String, String, String)] = [
                         ("알바몬", "단기·파트타임 1순위 · 소상공인 무료 공고", "albamon.com"),
                         ("알바천국", "음식점·카페 표준 · 네이버 검색 연동", "alba.co.kr"),
@@ -267,7 +271,7 @@ public struct HiringSetupStageView: View {
                         ("4insure.or.kr 통합 신고 (채용 D+14 이내)",
                          "국민연금·건강·고용·산재 한 사이트에서. 사업자등록증·근로계약서·통장 사본 PDF 업로드. 30분."),
                         ("사업주 월 부담 약 19만원 (최저임금 기준)",
-                         "국민연금 50% + 건강 50% + 고용 50% + 산재 100% (음식점 약 1%). 자동이체 신청 권장."),
+                         "국민연금 50% + 건강 50% + 고용 50% + 산재 100% (\(cluster.categoryNounKo) 약 \(String(format: "%.1f", cluster.accidentInsuranceRatePct))%). 자동이체 신청 권장."),
                         ("홈택스 원천세 — 매월 10일까지 신고·납부",
                          "간이세액표 자동 계산 → 신고 → 자동이체. 누락 시 가산세 10%↑"),
                         ("급여명세서 의무 교부 (2021.11~)",
@@ -304,7 +308,7 @@ public struct HiringSetupStageView: View {
             warningCard(title: "반드시 확인", items: [
                 "1인 고용도 4대보험 의무 (5인 미만 예외 없음)",
                 "현금 급여 + 미신고 = 세무조사 (국세청 PCI 자동 추적)",
-                "산재보험은 사업주 100% 부담 (음식점 약 1% 요율)",
+                "산재보험은 사업주 100% 부담 (\(cluster.categoryNounKo) 약 \(String(format: "%.1f", cluster.accidentInsuranceRatePct))% 요율)",
             ], color: .red)
         }
     }

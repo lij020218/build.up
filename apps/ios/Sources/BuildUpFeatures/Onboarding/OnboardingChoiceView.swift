@@ -46,10 +46,12 @@ public struct OnboardingChoiceView: View {
 
                     // ── 3 카드 ──
                     VStack(spacing: 12) {
+                        // 웹 SSOT: apps/web/app/lib/components/onboarding/OnboardingChoiceScreen.tsx
+                        // 카피·단계 수·effort 라벨 모두 동일.
                         ChoiceCard(
                             icon: "safari",
                             title: "직접 로드맵",
-                            description: "업종 선택부터 개업까지 17단계를 차근차근.",
+                            description: "업종 선택부터 개업까지, 19단계를 직접 차근차근 진행합니다.",
                             effort: "약 30분",
                             effortIcon: "clock",
                             recommended: false,
@@ -59,7 +61,7 @@ public struct OnboardingChoiceView: View {
                         ChoiceCard(
                             icon: "sparkles",
                             title: "AI 맞춤 로드맵",
-                            description: "아이디어 한 줄만 적으면 AI가 예산·상권·공급처·일정까지 설계.",
+                            description: "아이디어 한 줄만 입력하면 AI가 예산·상권·공급업체·일정까지 전부 설계합니다.",
                             effort: "5분 + AI",
                             effortIcon: "bolt.fill",
                             recommended: true,
@@ -69,7 +71,7 @@ public struct OnboardingChoiceView: View {
                         ChoiceCard(
                             icon: "storefront",
                             title: "이미 운영 중",
-                            description: "상호·매출·비용만 입력하면 운영 대시보드 바로 사용.",
+                            description: "기존 가게 정보 (상호·매출·비용) 만 입력하면 운영 대시보드 즉시 사용.",
                             effort: "약 3분",
                             effortIcon: "clock",
                             recommended: false,

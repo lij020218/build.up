@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct EdaToolingSetupStageView: View {
@@ -14,6 +15,15 @@ public struct EdaToolingSetupStageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     private let stageId = "eda-tooling-setup"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "semiconductor": return "Synopsys/Cadence/Siemens EDA — multi-year 협상 시 10-25% 할인. 스타트업 티어 가능."
+        case "climate-energy": return "시뮬레이션 SW (ANSYS·COMSOL) — 에너지·열·유체 + 표준 인증 도구."
+        default: return "반도체 설계의 시작 = EDA 툴. 라이선스 비용은 연간 수억~수십억. 스타트업은 클라우드·교육용 라이선스 우선."
+        }
+    }
 
     @State private var page = 0
 
@@ -43,7 +53,7 @@ public struct EdaToolingSetupStageView: View {
             stageId: stageId,
             title: "EDA 도구·설계 환경 셋업",
             stageEyebrow: "단계 10 · EDA 환경 설정",
-            helperText: "반도체 설계의 시작 = EDA 툴. 라이선스 비용은 연간 수억~수십억. 스타트업은 클라우드·교육용 라이선스 우선.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

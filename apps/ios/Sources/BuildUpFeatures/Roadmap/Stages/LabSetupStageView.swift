@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct LabSetupStageView: View {
@@ -15,6 +16,15 @@ public struct LabSetupStageView: View {
     @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
     private let stageId = "lab-setup"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "robotics-physical-ai": return "로보틱스 랩 — 안전 펜스 + EMC 차폐 + 모션캡처 + 충돌 시뮬레이션 환경. 산업안전 등급 시설 필수."
+        case "biotech-medtech": return "바이오·의료기기 랩 — MFDS GLP 또는 BSL-1/2 인증 시설. 시설 표준 미달 = IND 데이터 무효."
+        default: return "연구소 = 딥테크의 공장. 설립 전 법적 요건 먼저. 기업부설연구소 인정(RNDIP): 연구개발인력 최소 1명 석사 이상 또는 2명 학사."
+        }
+    }
 
     @AppStorage("lab.facilityDone")  private var facilityDone  = false
     @AppStorage("lab.safetyDone")    private var safetyDone    = false
@@ -43,7 +53,7 @@ public struct LabSetupStageView: View {
             stageId: stageId,
             title: "연구실·시제품 작업장 셋업",
             stageEyebrow: "단계 10 · 연구소 설립·설비",
-            helperText: "연구소 = 딥테크의 공장. 설립 전 법적 요건 먼저. 기업부설연구소 인정(RNDIP): 연구개발인력 최소 1명 석사 이상 또는 2명 학사.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),

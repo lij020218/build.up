@@ -7,6 +7,7 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct RegulatorySubmissionStageView: View {
@@ -15,6 +16,15 @@ public struct RegulatorySubmissionStageView: View {
     @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
     private let stageId = "regulatory-submission"
+
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    private var helperText: String {
+        switch industryId {
+        case "robotics-physical-ai": return "KC + 산업안전 + ISO 13482 (서비스 로봇 안전). 일반 경로 6-12개월."
+        case "biotech-medtech": return "MFDS Fast-Track 199개 카테고리 (113개 AI 디지털 의료기기 포함). 80-140일 vs 일반 295일."
+        default: return "규제 허가 = 딥테크의 마지막 관문. 경로 선택이 3–5년을 결정. 식약처 의료기기 패스트트랙 80–140일 vs 일반 490일."
+        }
+    }
 
     @AppStorage("regsub.pathway")          private var pathway          = ""
     @AppStorage("regsub.mfdsConsult")      private var mfdsConsult      = false
@@ -44,7 +54,7 @@ public struct RegulatorySubmissionStageView: View {
             stageId: stageId,
             title: "인허가 제출 및 승인",
             stageEyebrow: "단계 13 · 규제 허가 신청",
-            helperText: "규제 허가 = 딥테크의 마지막 관문. 경로 선택이 3–5년을 결정. 식약처 의료기기 패스트트랙 80–140일 vs 일반 490일.",
+            helperText: helperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
