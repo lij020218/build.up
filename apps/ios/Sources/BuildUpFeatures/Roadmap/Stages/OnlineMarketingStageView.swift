@@ -153,7 +153,7 @@ public struct OnlineMarketingStageView: View {
                         Image(systemName: "lightbulb.fill")
                             .font(.system(size: 13))
                             .foregroundStyle(BUColor.midnight)
-                        Text("권장 초기 예산: 월 30-50만원. ROAS(광고비 대비 매출) 목표: 300% 이상.")
+                        Text("권장 초기 예산: 월 30-50만원. ROAS(광고비 대비 매출) 목표: 200% 이상 — 미만이면 즉시 중단·재구성.")
                             .font(BUFont.bodyCaption)
                             .foregroundStyle(BUColor.inkSecondary)
                             .lineSpacing(2)

@@ -171,7 +171,7 @@ public struct OnlineRegistrationStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("통신판매업 신고 — 왜 필요한가")
                     infoRow(text: "전자상거래 소비자 보호법에 따라 온라인으로 상품·서비스 판매 시 의무")
-                    infoRow(text: "미신고 시 과태료 최대 500만원")
+                    infoRow(text: "미신고 시 과태료 최대 1,000만원 (전자상거래법 §40)")
                     infoRow(text: "스마트스토어·쿠팡 등 플랫폼 입점 심사 시 신고증 요구")
                 }
             }
@@ -179,7 +179,7 @@ public struct OnlineRegistrationStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("신고 방법")
-                    infoRow(text: "공정위 전자공정거래시스템 (ftc.go.kr)")
+                    infoRow(text: "정부24 (gov.kr) 또는 관할 시·군·구청 온라인 접수")
                     infoRow(text: "필요 서류: 사업자등록증·통신판매 방법(인터넷·전화 등)")
                     infoRow(text: "처리 기간: 5-7 영업일 / 수수료 없음")
                 }

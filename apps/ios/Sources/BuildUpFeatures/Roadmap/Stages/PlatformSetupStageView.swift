@@ -30,11 +30,14 @@ public struct PlatformSetupStageView: View {
         let id: String; let name: String; let desc: String
     }
 
+    /// 2025 한국 주요 이커머스 플랫폼 — 네이버 2025 수수료 개편 반영 (주문 + 판매 분리).
     private let platforms: [PlatformOption] = [
-        PlatformOption(id: "smartstore", name: "네이버 스마트스토어", desc: "수수료 5.6%. 네이버 검색 연동 강점. 국내 1위 트래픽."),
-        PlatformOption(id: "coupang",    name: "쿠팡",               desc: "로켓배송 입점 시 판매 급증. 단, 입점 심사 필요. 수수료 10-15%."),
-        PlatformOption(id: "own",        name: "자체 쇼핑몰",         desc: "Shopify·카페24. 브랜드 구축에 유리. 트래픽은 직접 확보해야."),
-        PlatformOption(id: "multi",      name: "멀티채널",             desc: "스마트스토어+쿠팡 동시 운영. 관리 부담은 증가."),
+        PlatformOption(id: "smartstore", name: "네이버 스마트스토어", desc: "주문 1.98~3.74% + 판매 0.91~2.73% (등급별). 국내 1위 트래픽 · 네이버 검색 직접 연결."),
+        PlatformOption(id: "coupang",    name: "쿠팡 마켓플레이스",   desc: "카테고리별 4~10.8% + 월 정액 5.5만원. 와우 1,300만+ 노출 · 로켓배송 별도 심사."),
+        PlatformOption(id: "kakao",      name: "카카오톡 스토어",     desc: "수수료 약 6% + 결제 수수료. 카카오 메시지·선물하기 연계. 객단가 높은 카테고리 강세."),
+        PlatformOption(id: "elevenst",   name: "11번가 / G마켓 (이베이)", desc: "이베이코리아 통합 · 카테고리별 약 8~12%. 멤버십 매출 안정."),
+        PlatformOption(id: "own",        name: "자체 쇼핑몰",         desc: "카페24·아임웹·Shopify · 월 0~7만원 + PG 3%. 마진 최대 + CRM 자유. 트래픽 직접 확보."),
+        PlatformOption(id: "multi",      name: "멀티채널",             desc: "스마트스토어+쿠팡+자체몰 동시. 샵링커·올라 통합 운영. 1억+ 매출 후 권장."),
     ]
 
     public init() {}
@@ -135,9 +138,10 @@ public struct PlatformSetupStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("플랫폼별 수수료 비교")
-                    feeRow(platform: "스마트스토어", fee: "결제수수료 3.74% + 네이버페이 수수료 = 약 5.6%")
-                    feeRow(platform: "쿠팡 마켓플레이스", fee: "카테고리별 8-15%")
-                    feeRow(platform: "자체 쇼핑몰 (카페24)", fee: "월 사용료 0-7만원 + PG 수수료 3%")
+                    feeRow(platform: "네이버 스마트스토어", fee: "주문 1.98~3.74% + 판매 0.91~2.73% (등급별, 2025 개편)")
+                    feeRow(platform: "쿠팡 마켓플레이스", fee: "카테고리별 4~10.8% + 월 정액 55,000원")
+                    feeRow(platform: "카카오톡 스토어", fee: "수수료 약 6% + 결제 수수료 별도")
+                    feeRow(platform: "자체 쇼핑몰 (카페24·아임웹)", fee: "월 사용료 0~7만원 + PG 수수료 약 3%")
                 }
             }
         }
