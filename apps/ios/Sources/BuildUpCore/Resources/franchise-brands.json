@@ -13541,8 +13541,8 @@
   {
     "id": "polypark",
     "subIndustryIds": [
-      "pet-supply",
-      "pet-shop"
+      "pet-supplies",
+      "pet-cafe"
     ],
     "categoryId": "pet",
     "name": {
@@ -13701,8 +13701,7 @@
   {
     "id": "petmart",
     "subIndustryIds": [
-      "pet-supply",
-      "pet-shop"
+      "pet-supplies"
     ],
     "categoryId": "pet",
     "name": {
@@ -13962,8 +13961,7 @@
   {
     "id": "pet-friends",
     "subIndustryIds": [
-      "pet-supply",
-      "pet-shop"
+      "pet-supplies"
     ],
     "categoryId": "pet",
     "name": {
@@ -14106,8 +14104,7 @@
   {
     "id": "cleantopia",
     "subIndustryIds": [
-      "laundry-cleaning",
-      "unmanned-service"
+      "laundry-service"
     ],
     "categoryId": "living-service",
     "name": {
@@ -14290,8 +14287,7 @@
   {
     "id": "washnjoy",
     "subIndustryIds": [
-      "laundry-cleaning",
-      "unmanned-service"
+      "self-laundry"
     ],
     "categoryId": "living-service",
     "name": {
@@ -14417,7 +14413,7 @@
   {
     "id": "mr-wash",
     "subIndustryIds": [
-      "laundry-cleaning"
+      "laundry-service"
     ],
     "categoryId": "living-service",
     "name": {
@@ -14658,7 +14654,7 @@
   {
     "id": "zaksim-study",
     "subIndustryIds": [
-      "study-room"
+      "study-cafe-space"
     ],
     "categoryId": "space",
     "name": {
@@ -14789,7 +14785,7 @@
   {
     "id": "toz-study",
     "subIndustryIds": [
-      "study-room"
+      "study-cafe-space"
     ],
     "categoryId": "space",
     "name": {
@@ -14936,7 +14932,7 @@
   {
     "id": "seldog24-study",
     "subIndustryIds": [
-      "study-room"
+      "shared-office"
     ],
     "categoryId": "space",
     "name": {
@@ -14981,7 +14977,7 @@
   {
     "id": "seven-star-coin",
     "subIndustryIds": [
-      "study-room"
+      "practice-room"
     ],
     "categoryId": "space",
     "name": {
@@ -15103,5 +15099,3198 @@
     ],
     "confidence": "high",
     "dataYear": "2025"
+  },
+  {
+    "id": "preppers",
+    "subIndustryIds": [
+      "delivery-meals",
+      "salad-healthy"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "프레퍼스 다이어트 푸드",
+      "en": "Preppers Diet Food"
+    },
+    "tagline": {
+      "ko": "헬스인을 위한 고단백 합리적 식단",
+      "en": "High-protein meals for fitness lovers"
+    },
+    "startupCostWon": 9828,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 30000,
+    "storeCount": 32,
+    "closureRate": 5.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 68,
+      "accessibility": 70,
+      "brandPower": 72,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "피트니스 기업 서플라이스가 모기업, 헬스 시장 신뢰도 높음",
+        "고단백 도시락 단가 1만원대, 헬스장 인접 입지 유리",
+        "직영 강남점 등 핵심 상권 검증 완료",
+        "배달앱 + 정기구독 매출 병행 가능"
+      ],
+      "en": [
+        "Backed by Supplus, top fitness corporate",
+        "High-protein lunchbox priced ~10K won, near gyms",
+        "Flagship Gangnam store validates concept",
+        "Combine delivery + subscription revenue"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "공식사이트 2025",
+    "franchiseUrl": "http://prepperskorea.com/franchise",
+    "dataYear": "2025"
+  },
+  {
+    "id": "chunli-malatang",
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "춘리마라탕",
+      "en": "Chunli Malatang"
+    },
+    "tagline": {
+      "ko": "정통 사천식 마라탕·마라샹궈 프랜차이즈",
+      "en": "Authentic Sichuan-style malatang & malaxiangguo"
+    },
+    "startupCostWon": 9300,
+    "franchiseFee": 363,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 74500,
+    "storeCount": 300,
+    "closureRate": 8.5,
+    "scores": {
+      "profitability": 78,
+      "stability": 70,
+      "accessibility": 75,
+      "brandPower": 80,
+      "support": 72
+    },
+    "roadmapNotes": {
+      "ko": [
+        "20평 기준 가맹비 363만원·교육비 363만원·보증금 330만원",
+        "전국 300여 매장, 2030 여성 고객 강세",
+        "정보공개서 기준 가맹점 연매출 7.4억원대",
+        "주재료 본사 공급으로 원가율 안정"
+      ],
+      "en": [
+        "20-pyeong standard: 3.6M won franchise fee + 3.6M training + 3.3M deposit",
+        "~300 nationwide stores, popular with female 20s-30s",
+        "Avg annual revenue ~740M won per disclosure",
+        "Centralized supply keeps COGS stable"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2022 + 공식사이트 2024",
+    "franchiseUrl": "https://chunlimalatang.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "maragongbang",
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "마라공방",
+      "en": "Maragongbang"
+    },
+    "tagline": {
+      "ko": "한국식 마라탕·마라샹궈 전문점",
+      "en": "Korean-style malatang & malaxiangguo"
+    },
+    "startupCostWon": 9366,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 31000,
+    "storeCount": 93,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 65,
+      "accessibility": 70,
+      "brandPower": 65,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "20평 기준 창업비 9,366만원, 중·소형 상권 적합",
+        "마라탕 100여개 브랜드 경쟁 심화, 차별화 메뉴 필수",
+        "10~20대 여성 트래픽 확보가 핵심",
+        "배민 1인분 마라탕 매출 비중 큼"
+      ],
+      "en": [
+        "~94M won startup, fits mid/small commercial zones",
+        "100+ malatang brands competing, differentiation matters",
+        "Female teens/20s traffic is core",
+        "Significant share from solo-portion delivery"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "http://www.maragongbang.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "lahongbang",
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "라홍방마라탕",
+      "en": "Lahongbang Malatang"
+    },
+    "tagline": {
+      "ko": "한국형 1등 마라탕 프랜차이즈",
+      "en": "Korea's leading malatang franchise"
+    },
+    "startupCostWon": 8085,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 35000,
+    "storeCount": 123,
+    "closureRate": 7.5,
+    "scores": {
+      "profitability": 72,
+      "stability": 70,
+      "accessibility": 75,
+      "brandPower": 75,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "창업비 8,085만원, 가맹비·교육비·설치비 포함",
+        "2024년 기준 가맹점 123개, 안정적 성장세",
+        "한국인 입맛에 맞춘 마라 강도 조절이 강점",
+        "배달앱 사이드(꿔바로우) 객단가 상승 견인"
+      ],
+      "en": [
+        "~80M won startup including all opening fees",
+        "123 stores as of 2024, steady growth",
+        "Adjustable spice for Korean palate is a USP",
+        "Sides like guobaorou lift delivery ticket size"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024",
+    "franchiseUrl": "https://lahongbang.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "sorimmara",
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "소림마라",
+      "en": "Sorimmara"
+    },
+    "tagline": {
+      "ko": "미국 진출한 한국형 마라 프랜차이즈",
+      "en": "Korean malatang brand expanding to US"
+    },
+    "startupCostWon": 7890,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 32372,
+    "storeCount": 183,
+    "closureRate": 8.0,
+    "scores": {
+      "profitability": 73,
+      "stability": 70,
+      "accessibility": 75,
+      "brandPower": 73,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "초기부담금 7,890만원, 매장당 연 3.2억원 매출",
+        "2020년 사업 시작 후 3년 만에 158개 → 183개로 확장",
+        "미국 진출 사례 보유, 글로벌 브랜드 잠재력",
+        "사이드 메뉴 구성으로 회전율 강화"
+      ],
+      "en": [
+        "78.9M won initial cost; ~324M won annual revenue",
+        "Grew from 122 to 183 stores within 3 years",
+        "US expansion underway, global potential",
+        "Strong side menu mix boosts turnover"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2022",
+    "franchiseUrl": "https://sorimmara.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "youngdabang",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "청년다방",
+      "en": "Youngdabang"
+    },
+    "tagline": {
+      "ko": "푸짐한 토핑 떡볶이와 통큰 커피",
+      "en": "Generous-topping tteokbokki with bold coffee"
+    },
+    "startupCostWon": 11000,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 40000,
+    "storeCount": 400,
+    "closureRate": 5.5,
+    "scores": {
+      "profitability": 75,
+      "stability": 78,
+      "accessibility": 70,
+      "brandPower": 82,
+      "support": 78
+    },
+    "roadmapNotes": {
+      "ko": [
+        "11년 검증된 분식 + 카페 결합형 모델, 최소 15평",
+        "전국 400여개 매장, 2030 여성 강세",
+        "토핑 차별화로 객단가 1만원 이상",
+        "창업대출 최대 2억 본사 연계 지원"
+      ],
+      "en": [
+        "11-year-validated bunsik + cafe model, min 15 pyeong",
+        "~400 stores nationwide, strong with female 20s-30s",
+        "Topping differentiation lifts ticket past 10K won",
+        "HQ-linked startup loans up to 200M won"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "공식사이트 2024",
+    "franchiseUrl": "https://www.youngdabang.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "gamtan-tteokbokki",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "감탄떡볶이",
+      "en": "Gamtan Tteokbokki"
+    },
+    "tagline": {
+      "ko": "감탄이 절로 나오는 즉석떡볶이 전문점",
+      "en": "Instant tteokbokki you'll exclaim over"
+    },
+    "startupCostWon": 4881,
+    "franchiseFee": 700,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 22000,
+    "storeCount": 181,
+    "closureRate": 12.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 60,
+      "accessibility": 82,
+      "brandPower": 68,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "창업비 4,881만원·가맹비 700만원, 소자본 진입 가능",
+        "10~15평 소형 매장으로 임대료 부담 낮음",
+        "분식 폐점률 22% 시장에서 평균보다 안정적",
+        "배달·포장 비중 60% 이상"
+      ],
+      "en": [
+        "~49M won startup, 7M franchise fee — low entry barrier",
+        "10-15 pyeong small format, low rent risk",
+        "More stable than 22% market closure average",
+        "Delivery/takeout share over 60%"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "http://www.gamtan.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "samcheop-bunsik",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "삼첩분식",
+      "en": "Samcheop Bunsik"
+    },
+    "tagline": {
+      "ko": "감성 인테리어 + 매콤 떡볶이 트렌디 분식",
+      "en": "Aesthetic interior with spicy trendy bunsik"
+    },
+    "startupCostWon": 8000,
+    "franchiseFee": 800,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 23931,
+    "storeCount": 130,
+    "closureRate": 10.5,
+    "scores": {
+      "profitability": 68,
+      "stability": 62,
+      "accessibility": 70,
+      "brandPower": 72,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "감성 인테리어 분식 트렌드 선도, MZ세대 인기",
+        "가맹점 평균 매출 2.4억원대",
+        "20대 여성 SNS 노출 강점",
+        "메뉴 회전 빠름 — 신메뉴 마케팅 필수"
+      ],
+      "en": [
+        "Leads aesthetic bunsik trend, popular with MZ",
+        "Avg store revenue ~239M won",
+        "Strong female 20s SNS visibility",
+        "Fast menu churn — new-launch marketing required"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "https://samcheop.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "geoljak-tteokbokki",
+    "subIndustryIds": [
+      "delivery-meals",
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "걸작떡볶이치킨",
+      "en": "Geoljak Tteokbokki Chicken"
+    },
+    "tagline": {
+      "ko": "떡볶이와 치킨 동시 판매 듀얼 매장",
+      "en": "Dual-concept tteokbokki + chicken store"
+    },
+    "startupCostWon": 5788,
+    "franchiseFee": 800,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 28000,
+    "storeCount": 200,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 65,
+      "accessibility": 75,
+      "brandPower": 62,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "10년 이상 중견 프랜차이즈, 안정적 운영",
+        "분식+치킨 동시 판매로 객단가 상승",
+        "배달앱 양 카테고리 동시 노출 가능",
+        "소자본 5,788만원 시작 가능"
+      ],
+      "en": [
+        "10+ year mid-size franchise, stable operations",
+        "Dual sales (bunsik+chicken) lifts ticket size",
+        "Visible in both delivery app categories",
+        "Low capital startup at ~58M won"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": null,
+    "dataYear": "2024"
+  },
+  {
+    "id": "gopizza",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "고피자",
+      "en": "GOPIZZA"
+    },
+    "tagline": {
+      "ko": "1인 화덕피자 자동화 시스템",
+      "en": "Personal-size wood-fired pizza, automated"
+    },
+    "startupCostWon": 8604,
+    "franchiseFee": 330,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 25700,
+    "storeCount": 200,
+    "closureRate": 6.0,
+    "scores": {
+      "profitability": 72,
+      "stability": 70,
+      "accessibility": 80,
+      "brandPower": 75,
+      "support": 80
+    },
+    "roadmapNotes": {
+      "ko": [
+        "특허 자동화 오븐으로 1인 인력 운영 가능",
+        "1인 피자 트렌드 + 배민 단품 강세",
+        "해외 + 국내 200여 매장, GS25 협업 사례",
+        "초기 8,604만원 — 자동화로 인건비 절감"
+      ],
+      "en": [
+        "Patented oven enables one-person operation",
+        "Personal pizza trend + strong delivery single-item demand",
+        "~200 stores domestic + abroad, GS25 partnership",
+        "~86M won startup with labor-saving automation"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "https://gopizza.kr/franchise",
+    "dataYear": "2024"
+  },
+  {
+    "id": "bbaekboy-pizza",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "빽보이피자",
+      "en": "Bbaekboy Pizza"
+    },
+    "tagline": {
+      "ko": "더본코리아의 가성비 피자 프랜차이즈",
+      "en": "Theborn's value-pizza franchise"
+    },
+    "startupCostWon": 8500,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 40000,
+    "storeCount": 228,
+    "closureRate": 4.5,
+    "scores": {
+      "profitability": 75,
+      "stability": 78,
+      "accessibility": 78,
+      "brandPower": 82,
+      "support": 82
+    },
+    "roadmapNotes": {
+      "ko": [
+        "더본코리아 백종원 브랜드, 신뢰도 높음",
+        "2023년 203개 → 2024년 228개로 확장",
+        "1만원대 피자 가성비 포지셔닝",
+        "배달 의존도 높음 — 수수료 관리 중요"
+      ],
+      "en": [
+        "Theborn (Baek Jong-won) brand — strong trust",
+        "Grew 203 → 228 stores from 2023 to 2024",
+        "Value pizza at ~10K won price point",
+        "High delivery dependency — fee mgmt key"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024",
+    "franchiseUrl": "https://www.theborn.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "pizza-maru",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "피자마루",
+      "en": "Pizza Maru"
+    },
+    "tagline": {
+      "ko": "테이크아웃 가성비 피자 1세대",
+      "en": "First-gen takeout value pizza"
+    },
+    "startupCostWon": 5500,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 22000,
+    "storeCount": 628,
+    "closureRate": 8.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 70,
+      "accessibility": 88,
+      "brandPower": 72,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "테이크아웃 피자 매장수 1위급",
+        "소형 점포(10평) 운영 가능, 초기 5,500만원",
+        "5천원~1만원 저가 피자 시장 강자",
+        "배달앱 가성비 카테고리 노출 유리"
+      ],
+      "en": [
+        "Top-tier takeout pizza by store count",
+        "Operable in 10-pyeong, ~55M won startup",
+        "Strong in 5K-10K won pizza segment",
+        "Visibility in delivery-app value category"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2022",
+    "franchiseUrl": null,
+    "dataYear": "2024"
+  },
+  {
+    "id": "59-rice-pizza",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "59쌀피자",
+      "en": "59 Rice Pizza"
+    },
+    "tagline": {
+      "ko": "쌀도우 기반 저가 피자 프랜차이즈",
+      "en": "Low-cost pizza on rice dough"
+    },
+    "startupCostWon": 5500,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 20000,
+    "storeCount": 400,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 64,
+      "stability": 65,
+      "accessibility": 85,
+      "brandPower": 68,
+      "support": 60
+    },
+    "roadmapNotes": {
+      "ko": [
+        "쌀도우 차별화, 5,900원대 피자로 진입",
+        "2011년 500호점 돌파한 노포 브랜드",
+        "소상권/주거지 적합, 10~15평 운영",
+        "배달앱 가성비 라인 강세"
+      ],
+      "en": [
+        "Rice-dough USP, entry-priced pizza at ~5,900 won",
+        "Veteran brand, hit 500 stores in 2011",
+        "Suited for residential/local zones, 10-15 pyeong",
+        "Strong in delivery-app value tier"
+      ]
+    },
+    "costVerified": false,
+    "franchiseUrl": "http://www.m59pizza.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "isaac-toast",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "이삭토스트",
+      "en": "Isaac Toast"
+    },
+    "tagline": {
+      "ko": "출근길 간편식 1위 토스트 브랜드",
+      "en": "Korea's #1 grab-and-go toast brand"
+    },
+    "startupCostWon": 4700,
+    "franchiseFee": 300,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 20800,
+    "storeCount": 900,
+    "closureRate": 3.5,
+    "scores": {
+      "profitability": 75,
+      "stability": 82,
+      "accessibility": 90,
+      "brandPower": 85,
+      "support": 78
+    },
+    "roadmapNotes": {
+      "ko": [
+        "10평 4,700만원으로 소자본 진입 가능",
+        "900여 매장, 출근 시간 회전율 높음",
+        "원가율 37%, 순수익률 25% 본사 공시",
+        "배달앱 모닝 카테고리 확대 시 매출 견인"
+      ],
+      "en": [
+        "~47M won startup in 10 pyeong — low capital",
+        "~900 stores; high turnover at commute hours",
+        "37% COGS, ~25% net margin per HQ",
+        "Morning delivery category lifts revenue"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "https://www.isaac-toast.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "barda-kimsunsaeng",
+    "subIndustryIds": [
+      "korean-casual",
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "바르다김선생",
+      "en": "Barda Kimsunsaeng"
+    },
+    "tagline": {
+      "ko": "프리미엄 김밥의 원조 브랜드",
+      "en": "Premium kimbap pioneer"
+    },
+    "startupCostWon": 13009,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 36000,
+    "storeCount": 144,
+    "closureRate": 9.5,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 65,
+      "brandPower": 78,
+      "support": 60
+    },
+    "roadmapNotes": {
+      "ko": [
+        "프리미엄 김밥 카테고리 개척자",
+        "본사 매출 320억원, 가맹점 평균 안정적",
+        "창업비 1.3억원 — 중간 진입 장벽",
+        "본사 강매 이슈 후 신뢰 회복 중"
+      ],
+      "en": [
+        "Pioneer of premium kimbap category",
+        "HQ revenue ~32B won; franchisees stable",
+        "~130M won startup — mid-tier barrier",
+        "Rebuilding trust after past forced-purchase issues"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "https://www.teacherkim.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "gobongmin-kimbap",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "고봉민김밥인",
+      "en": "Gobongmin Kimbap"
+    },
+    "tagline": {
+      "ko": "부산 출신 프리미엄 김밥 브랜드",
+      "en": "Premium kimbap brand from Busan"
+    },
+    "startupCostWon": 9500,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 24684,
+    "storeCount": 250,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 72,
+      "accessibility": 72,
+      "brandPower": 72,
+      "support": 68
+    },
+    "roadmapNotes": {
+      "ko": [
+        "12평 소형 매장 가능, 부산 발 전국 확장",
+        "월 평균매출 2,057만원 (2023 정보공개서)",
+        "재료비 비중 31%, 임차료 11% 수준",
+        "배달 + 매장 비중 균형"
+      ],
+      "en": [
+        "12-pyeong feasible; Busan-origin national growth",
+        "Avg monthly revenue 20.5M won (2023 disclosure)",
+        "COGS 31%, rent ~11%",
+        "Balanced delivery + dine-in mix"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "https://kobongmin.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "burger-king-kr",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "버거킹",
+      "en": "Burger King Korea"
+    },
+    "tagline": {
+      "ko": "직화 와퍼 글로벌 버거 브랜드",
+      "en": "Flame-grilled Whopper global burger"
+    },
+    "startupCostWon": 35000,
+    "franchiseFee": 3400,
+    "monthlyRoyalty": 5,
+    "avgAnnualRevenueWon": 100000,
+    "storeCount": 472,
+    "closureRate": 2.0,
+    "scores": {
+      "profitability": 72,
+      "stability": 85,
+      "accessibility": 60,
+      "brandPower": 92,
+      "support": 88
+    },
+    "roadmapNotes": {
+      "ko": [
+        "맥도날드 매장수 추월, 한국 1위 버거 (533개)",
+        "직영 비중 73%, 가맹점은 BMI 검증 필수",
+        "가맹비 3,400만원 + 인테리어/설비 약 3억원",
+        "도심 + 로드사이드 대형 매장 중심"
+      ],
+      "en": [
+        "Overtook McDonald's in store count — Korea #1 (533)",
+        "73% direct-owned; franchising requires BMI vetting",
+        "~34M won franchise fee + ~300M won build-out",
+        "Urban + roadside large-format focus"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024",
+    "franchiseUrl": "https://www.burgerking.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "ziccoba-chicken",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "지코바양념치킨",
+      "en": "Ziccoba Seasoned Chicken"
+    },
+    "tagline": {
+      "ko": "양념구이 닭다리 전문 치킨 브랜드",
+      "en": "Spicy-glazed grilled chicken-leg specialist"
+    },
+    "startupCostWon": 5700,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 28000,
+    "storeCount": 709,
+    "closureRate": 5.5,
+    "scores": {
+      "profitability": 73,
+      "stability": 75,
+      "accessibility": 82,
+      "brandPower": 75,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "10평 5,700만원, 양념구이 차별화",
+        "전국 709개 매장 — 중상위권 규모",
+        "배달앱 다리살 단품 강세, 객단가 ~2만원",
+        "튀김 없이 운영 — 조리 인력 부담 낮음"
+      ],
+      "en": [
+        "10-pyeong at ~57M won; grilled-seasoned USP",
+        "709 stores nationwide — upper-mid scale",
+        "Strong delivery-app leg-meat orders, ~20K won ticket",
+        "No frying — lower kitchen labor needs"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": null,
+    "dataYear": "2024"
+  },
+  {
+    "id": "chicken-plus",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "치킨플러스",
+      "en": "Chicken Plus"
+    },
+    "tagline": {
+      "ko": "재인수 매장 특화 가성비 치킨",
+      "en": "Value chicken specializing in acquired stores"
+    },
+    "startupCostWon": 3504,
+    "franchiseFee": 300,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 22000,
+    "storeCount": 240,
+    "closureRate": 6.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 70,
+      "accessibility": 88,
+      "brandPower": 62,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "창업비 3,504만원 — 치킨 업종 최저 수준",
+        "장사 안되는 가게 인수 후 재오픈 전략",
+        "240여개 매장, 안정적 점진 성장",
+        "배달 위주, 5평~10평 소형 운영 가능"
+      ],
+      "en": [
+        "~35M won startup — lowest in chicken category",
+        "Strategy: acquire struggling stores and reopen",
+        "~240 stores, steady incremental growth",
+        "Delivery-led, 5-10 pyeong viable"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": null,
+    "dataYear": "2024"
+  },
+  {
+    "id": "duldul-chicken",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "둘둘치킨",
+      "en": "Duldul Chicken"
+    },
+    "tagline": {
+      "ko": "20년 장수 치킨 프랜차이즈",
+      "en": "20+ year veteran chicken franchise"
+    },
+    "startupCostWon": 5920,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 25000,
+    "storeCount": 67,
+    "closureRate": 4.5,
+    "scores": {
+      "profitability": 68,
+      "stability": 80,
+      "accessibility": 75,
+      "brandPower": 68,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "20년 운영 안정성 — 폐점률 낮음",
+        "108개 매장, 두마리 패키지 차별화",
+        "초기 5,920만원 진입 부담 적음",
+        "신상권보다 주거 상권 유리"
+      ],
+      "en": [
+        "20+ year stability — low closure rate",
+        "108 stores, two-bird package differentiation",
+        "~59M won startup — affordable entry",
+        "Better in residential than new commercial zones"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "https://22chicken.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "marahao",
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "마라하오",
+      "en": "Marahao"
+    },
+    "tagline": {
+      "ko": "면적당 매출 1위 마라탕 프랜차이즈",
+      "en": "#1 revenue-per-area malatang franchise"
+    },
+    "startupCostWon": 4370,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 31648,
+    "storeCount": 40,
+    "closureRate": 6.0,
+    "scores": {
+      "profitability": 78,
+      "stability": 72,
+      "accessibility": 80,
+      "brandPower": 65,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "초기부담금 4,370만원 — 마라탕 업종 최저",
+        "1평당 매출 2,723만원 — 효율 1위",
+        "안정 운영 위주, 매장 40개 유지",
+        "소형 매장 회전율 + 배달 강세"
+      ],
+      "en": [
+        "~44M won startup — lowest among malatang brands",
+        "27.2M won per pyeong revenue — top efficiency",
+        "Stable management, ~40 stores maintained",
+        "Small-format turnover + strong delivery"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2022",
+    "franchiseUrl": null,
+    "dataYear": "2024"
+  },
+  {
+    "id": "pizza-alvolo",
+    "subIndustryIds": [
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "피자알볼로",
+      "en": "Pizza Alvolo"
+    },
+    "tagline": {
+      "ko": "프리미엄 도우 한국형 피자 브랜드",
+      "en": "Korean premium-dough pizza brand"
+    },
+    "startupCostWon": 12000,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 35000,
+    "storeCount": 280,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 65,
+      "brandPower": 78,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "본사 매출 273억원 (2024), 영업손실 3.5억",
+        "원신·콜라보 이벤트로 매출 250% 급증 사례",
+        "프리미엄 도우 차별화, 1.5~2만원대 객단가",
+        "중대형 평수 필요 — 임대료 부담 큼"
+      ],
+      "en": [
+        "HQ revenue 27.3B won (2024), operating loss 350M",
+        "Genshin collab drove 250% revenue spike",
+        "Premium-dough USP, ticket ~15K-20K won",
+        "Mid/large footprint required — rent risk"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024",
+    "franchiseUrl": null,
+    "dataYear": "2024"
+  },
+  {
+    "id": "ebadom-gamjatang",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "이바돔감자탕",
+      "en": "Ebadom Gamjatang"
+    },
+    "tagline": {
+      "ko": "감자탕 프랜차이즈 1위 노포 브랜드",
+      "en": "Korea's #1 gamjatang veteran franchise"
+    },
+    "startupCostWon": 13000,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 55000,
+    "storeCount": 200,
+    "closureRate": 5.5,
+    "scores": {
+      "profitability": 72,
+      "stability": 80,
+      "accessibility": 62,
+      "brandPower": 78,
+      "support": 72
+    },
+    "roadmapNotes": {
+      "ko": [
+        "감자탕 카테고리 압도적 1위, 1992년 창업",
+        "중대형 매장(30~50평) 위주 운영",
+        "가족·회식 수요 안정적, 배달 비중 30%",
+        "초기 1.3억원 — 중상위 진입 장벽"
+      ],
+      "en": [
+        "Dominant #1 gamjatang brand, founded 1992",
+        "Mid/large stores (30-50 pyeong)",
+        "Stable family/group demand, ~30% delivery",
+        "~130M won startup — mid-high entry barrier"
+      ]
+    },
+    "costVerified": false,
+    "franchiseUrl": "https://www.ebadom.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "salad-box",
+    "subIndustryIds": [
+      "salad-healthy"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "샐러드박스",
+      "en": "Salad Box"
+    },
+    "tagline": {
+      "ko": "사무실 점심 샐러드 도시락 전문점",
+      "en": "Office-lunch salad bowl specialist"
+    },
+    "startupCostWon": 5100,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 22000,
+    "storeCount": 68,
+    "closureRate": 6.5,
+    "scores": {
+      "profitability": 68,
+      "stability": 70,
+      "accessibility": 78,
+      "brandPower": 65,
+      "support": 68
+    },
+    "roadmapNotes": {
+      "ko": [
+        "15평 5,100만원 진입 — 소형 입지 OK",
+        "2018년 가맹사업, 68개 매장 안정 성장",
+        "오피스가 점심 배달 의존도 높음",
+        "원가율 38~40%, 순이익률 20%대"
+      ],
+      "en": [
+        "15-pyeong at ~51M won — small-format friendly",
+        "Franchising since 2018, 68 stores steady",
+        "High office-lunch delivery share",
+        "38-40% COGS, ~20% net margin"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "http://www.saladbox.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "togo-salad",
+    "subIndustryIds": [
+      "salad-healthy"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "투고샐러드",
+      "en": "TOGO Salad"
+    },
+    "tagline": {
+      "ko": "포장 특화 1세대 샐러드 브랜드",
+      "en": "First-gen takeout-focused salad brand"
+    },
+    "startupCostWon": 8000,
+    "franchiseFee": 1200,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 21000,
+    "storeCount": 45,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 66,
+      "stability": 68,
+      "accessibility": 72,
+      "brandPower": 65,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "8천만원대 창업, 가맹비 1,200만원",
+        "2015년 시작 — 샐러드 1세대 브랜드",
+        "포장/배달 비중 70%+, 매장 회전율 낮아도 OK",
+        "오피스 + 헬스장 인근 입지 강세"
+      ],
+      "en": [
+        "~80M won startup, 12M won franchise fee",
+        "Founded 2015 — first-gen salad brand",
+        "70%+ takeout/delivery, low dine-in OK",
+        "Strong near offices + gyms"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2023",
+    "franchiseUrl": "https://www.togosalad.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "saboten",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "사보텐",
+      "en": "Saboten"
+    },
+    "tagline": {
+      "ko": "일본식 돈가스 프리미엄 프랜차이즈",
+      "en": "Premium Japanese-style tonkatsu franchise"
+    },
+    "startupCostWon": 15000,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 5,
+    "avgAnnualRevenueWon": 50000,
+    "storeCount": 31,
+    "closureRate": 4.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 75,
+      "accessibility": 55,
+      "brandPower": 80,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "일본 사보텐 한국 라이선스 — 프리미엄 포지셔닝",
+        "31개 매장, 백화점/주요 쇼핑몰 입점 중심",
+        "대형 평수 필요, 인테리어 부담 큼",
+        "객단가 1.5~2만원, 가족 외식 강세"
+      ],
+      "en": [
+        "Korean licensee of Japan's Saboten — premium positioning",
+        "31 stores, mostly in dept stores/major malls",
+        "Larger footprint needed, high interior cost",
+        "Ticket ~15K-20K won, strong family-dining demand"
+      ]
+    },
+    "costVerified": false,
+    "franchiseUrl": null,
+    "dataYear": "2024"
+  },
+  {
+    "id": "bongatofu",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "본가",
+      "en": "Bonga"
+    },
+    "tagline": {
+      "ko": "더본코리아의 한식 고기집 프랜차이즈",
+      "en": "Theborn Korea's Korean BBQ chain"
+    },
+    "startupCostWon": 14763,
+    "franchiseFee": 1100,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 61380,
+    "storeCount": 37,
+    "closureRate": 7.5,
+    "scores": {
+      "profitability": 72,
+      "stability": 75,
+      "accessibility": 55,
+      "brandPower": 82,
+      "support": 80
+    },
+    "roadmapNotes": {
+      "ko": [
+        "더본코리아 산하 한식 고기집, 1억4763만원 창업비용",
+        "월평균 매출 5,115만원, 안정적인 중대형 매장 모델",
+        "백종원 브랜드 파워 + 본사 메뉴 R&D 강점",
+        "기존 한식 고기집보다 가격대 다소 높음"
+      ],
+      "en": [
+        "Theborn Korea Korean BBQ, ~148M won startup",
+        "Monthly avg revenue ~51M won, mid-large stable model",
+        "Backed by Paik Jong-won brand power + R&D",
+        "Higher price point than typical Korean BBQ"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://www.theborn.co.kr/theborn_brand/bonga/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "hansinpocha",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "한신포차",
+      "en": "Hansin Pocha"
+    },
+    "tagline": {
+      "ko": "더본코리아의 대표 실내 포차 브랜드",
+      "en": "Theborn Korea's indoor pocha"
+    },
+    "startupCostWon": 9823,
+    "franchiseFee": 550,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 45000,
+    "storeCount": 110,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 70,
+      "accessibility": 70,
+      "brandPower": 80,
+      "support": 78
+    },
+    "roadmapNotes": {
+      "ko": [
+        "가맹비 550만+교육비 550만+보증금 200만, 총 9,823만원",
+        "포차/주점업으로 야간 매출 비중 70%+",
+        "백종원 브랜드 이펙트, 대중적 가격대",
+        "주류 매출 의존도 높아 음주 트렌드 영향"
+      ],
+      "en": [
+        "5.5M franchise + 5.5M training + 2M deposit, total ~98M won",
+        "Pocha/pub format, 70%+ revenue at night",
+        "Paik brand effect, mass-market pricing",
+        "Heavy alcohol revenue exposure to drinking trends"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "더본코리아 + 정보공개서",
+    "franchiseUrl": "https://www.theborn.co.kr/theborn_brand/hanshinpocha/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "insaengseolnongtang",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "인생설렁탕",
+      "en": "Insaeng Seolleongtang"
+    },
+    "tagline": {
+      "ko": "더본코리아의 소자본 설렁탕 전문점",
+      "en": "Theborn Korea's compact seolleongtang"
+    },
+    "startupCostWon": 9300,
+    "franchiseFee": 990,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 44557,
+    "storeCount": 22,
+    "closureRate": 10.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 70,
+      "accessibility": 75,
+      "brandPower": 75,
+      "support": 78
+    },
+    "roadmapNotes": {
+      "ko": [
+        "15평 기준 9,300만원대 소자본 창업 가능",
+        "가맹비 990만+교육비 660만+보증금 500만원",
+        "연평균 매출 4억 4,557만원, 안정적인 1인 식사 수요",
+        "더본코리아 식자재 공급망 활용"
+      ],
+      "en": [
+        "Small-cap startup at ~93M won for 15-pyeong",
+        "9.9M franchise + 6.6M training + 5M deposit",
+        "Annual avg revenue ~446M won, stable solo-dining demand",
+        "Leverages Theborn supply chain"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2021 + 더본코리아",
+    "franchiseUrl": "https://start.theborn.co.kr/prebrand_detail.php?bc=18",
+    "dataYear": "2024"
+  },
+  {
+    "id": "mijungguksu",
+    "subIndustryIds": [
+      "ramen-noodle"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "미정국수0410",
+      "en": "Mijung Guksu 0410"
+    },
+    "tagline": {
+      "ko": "더본코리아의 칼국수·우동 전문점",
+      "en": "Theborn Korea's noodle shop"
+    },
+    "startupCostWon": 8500,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 28000,
+    "storeCount": 18,
+    "closureRate": 15.0,
+    "scores": {
+      "profitability": 55,
+      "stability": 55,
+      "accessibility": 70,
+      "brandPower": 65,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "2021년 32곳 → 2024년 18곳으로 가맹점수 감소",
+        "더본코리아의 면 카테고리, 백종원 브랜드 노출",
+        "감소 추세로 신규 창업 신중 권장",
+        "1인 가구·합리적 가격대 포지셔닝"
+      ],
+      "en": [
+        "Stores shrunk from 32 (2021) to 18 (2024)",
+        "Theborn noodle category, Paik exposure",
+        "Declining; new openings need caution",
+        "Solo-diner / affordable positioning"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "EBN뉴스 2024",
+    "franchiseUrl": "https://www.theborn.co.kr/theborn_brand/mijungguksu/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "paikbakery",
+    "subIndustryIds": [
+      "bakery-studio"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "빽다방빵연구소",
+      "en": "Paik Bakery Lab"
+    },
+    "tagline": {
+      "ko": "빽다방+베이커리 결합 매장",
+      "en": "Paik Dabang + bakery combo"
+    },
+    "startupCostWon": 13000,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 40000,
+    "storeCount": 19,
+    "closureRate": 5.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 68,
+      "accessibility": 60,
+      "brandPower": 80,
+      "support": 80
+    },
+    "roadmapNotes": {
+      "ko": [
+        "2018년 1호점 → 2023년 19개로 점진적 확장",
+        "직영 3개, 가맹 16개로 신중한 출점 정책",
+        "빽다방 음료+자체 베이커리로 객단가 상승",
+        "더본코리아 R&D + 백종원 미디어 노출 강점"
+      ],
+      "en": [
+        "From 1 store (2018) to 19 (2023)",
+        "3 direct + 16 franchised; cautious expansion",
+        "Paik beverages + own bakery boosts ticket",
+        "Theborn R&D + Paik media exposure"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "더본코리아 공식 + 언론",
+    "franchiseUrl": "https://www.theborn.co.kr/theborn_brand/paikbreadlab/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "shinseonseolnongtang",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "신선설농탕",
+      "en": "Shinseon Seolnongtang"
+    },
+    "tagline": {
+      "ko": "44년 전통 설농탕·김치 전문점",
+      "en": "44-yr tradition seolnongtang"
+    },
+    "startupCostWon": 12500,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 60000,
+    "storeCount": 22,
+    "closureRate": 6.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 80,
+      "accessibility": 55,
+      "brandPower": 78,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "(주)쿠드 운영, 1981년 시작 44년 전통",
+        "설농탕 중심 메뉴 + 김치 가공품 사이드",
+        "직영 중심으로 가맹점 신중 출점",
+        "본사 가공 식자재 공급 안정성"
+      ],
+      "en": [
+        "Operated by Kud Co., est. 1981 (44 yrs)",
+        "Seolnongtang core + kimchi sides",
+        "Direct-store-heavy, cautious franchising",
+        "Stable HQ-supplied ingredients"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 정보공개서 추정",
+    "franchiseUrl": "https://www.shinsunseolnongtang.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "bongaseolnongtang",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "본가설렁탕",
+      "en": "Bonga Seolleongtang"
+    },
+    "tagline": {
+      "ko": "본가 브랜드의 설렁탕 단독 전문점",
+      "en": "Standalone seolleongtang under Bonga"
+    },
+    "startupCostWon": 18350,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 50000,
+    "storeCount": 30,
+    "closureRate": 8.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 70,
+      "accessibility": 50,
+      "brandPower": 70,
+      "support": 72
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 창업비 1억 8,350만원",
+        "본가에서 분리된 설렁탕 전문 라인업",
+        "중대형 매장 중심으로 상대적 고비용",
+        "한식 정찬·점심 매출 핵심"
+      ],
+      "en": [
+        "MyFranchise: ~184M won startup",
+        "Seolleongtang spin-off line from Bonga",
+        "Mid-large stores, relatively higher cost",
+        "Lunch + family-dining heavy"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://myfranchise.kr/20211662",
+    "dataYear": "2024"
+  },
+  {
+    "id": "yukmijedang",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "육미제당",
+      "en": "Yukmi Jedang"
+    },
+    "tagline": {
+      "ko": "프리미엄 무한리필 고기뷔페",
+      "en": "Premium AYCE Korean BBQ"
+    },
+    "startupCostWon": 20206,
+    "franchiseFee": 1650,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 90000,
+    "storeCount": 56,
+    "closureRate": 6.0,
+    "scores": {
+      "profitability": 72,
+      "stability": 75,
+      "accessibility": 45,
+      "brandPower": 80,
+      "support": 82
+    },
+    "roadmapNotes": {
+      "ko": [
+        "40평 기준 2억 200만원, 무한리필 고기뷔페",
+        "가맹비 1,650만+교육비 550만+보증금 2,000만",
+        "7개월만에 100호점 계약, 빠른 확장세",
+        "초기 120호점 한정 5억 창업대출 지원 정책"
+      ],
+      "en": [
+        "40-pyeong: ~202M won, AYCE meat buffet",
+        "16.5M franchise + 5.5M training + 20M deposit",
+        "100 contracts in 7 months — rapid growth",
+        "First-120-stores 500M won loan support"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "잡포스트 + 정보공개서 2024",
+    "franchiseUrl": "http://6me.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "uongteorisaengogi",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "엉터리생고기",
+      "en": "Ungteori Saenggogi"
+    },
+    "tagline": {
+      "ko": "무한대패 삼겹살 무한리필 프랜차이즈",
+      "en": "AYCE thin-sliced pork belly"
+    },
+    "startupCostWon": 11170,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 55000,
+    "storeCount": 20,
+    "closureRate": 8.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 65,
+      "accessibility": 60,
+      "brandPower": 70,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "최소 40평 창업, 가맹비/교육비 1,500만 한시 지원",
+        "업종변경 시 1,000만원대 창업도 가능",
+        "대패삼겹살 무한리필 컨셉, 점심·저녁 모두 강점",
+        "마이프차 기준 가맹점 20개"
+      ],
+      "en": [
+        "Min 40-pyeong, 15M franchise/training waiver promo",
+        "Conversion-from-existing-store: ~10M won possible",
+        "Thin-pork-belly AYCE, lunch+dinner appeal",
+        "20 stores per MyFranchise"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "더밸류뉴스 + 마이프차 2024",
+    "franchiseUrl": "http://www.eongteori.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "tongkeungalbi",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "통큰갈비",
+      "en": "Tongkeun Galbi"
+    },
+    "tagline": {
+      "ko": "돼지갈비 샤브샤브 무한리필",
+      "en": "AYCE pork ribs + shabu"
+    },
+    "startupCostWon": 9500,
+    "franchiseFee": 0,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 100000,
+    "storeCount": 70,
+    "closureRate": 8.0,
+    "scores": {
+      "profitability": 72,
+      "stability": 65,
+      "accessibility": 65,
+      "brandPower": 65,
+      "support": 68
+    },
+    "roadmapNotes": {
+      "ko": [
+        "가맹교육비 0원 소자본 창업 지원",
+        "월매출 1억 돌파 매장 다수 (브랜드 홍보 기준)",
+        "돼지갈비+샤브샤브 결합 메뉴 차별화",
+        "신규 브랜드로 점포수 데이터 변동성 있음"
+      ],
+      "en": [
+        "0-won training-fee promotion for small startup",
+        "Many stores reportedly cross 100M won/month",
+        "Pork ribs + shabu combo differentiates",
+        "Newer brand; store count fluid"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 점포라인",
+    "franchiseUrl": "https://xn--w39av95ayinegb.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "bonschicken",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "본스치킨",
+      "en": "Bons Chicken"
+    },
+    "tagline": {
+      "ko": "오븐구이 치킨 프랜차이즈",
+      "en": "Oven-roasted chicken franchise"
+    },
+    "startupCostWon": 7442,
+    "franchiseFee": 700,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 32000,
+    "storeCount": 86,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 75,
+      "brandPower": 62,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 창업비 7,442만원, 86개 매장",
+        "오븐구이 차별화, 굽네치킨 대비 후발주자",
+        "소자본 치킨 카테고리 진입 가능",
+        "치킨 시장 포화, 차별화 메뉴 필요"
+      ],
+      "en": [
+        "MyFranchise: 74M won startup, 86 stores",
+        "Oven-roasted differentiation; trails Goobne",
+        "Low-cap chicken entry possible",
+        "Saturated market needs menu differentiation"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://myfranchise.kr/20080100055",
+    "dataYear": "2024"
+  },
+  {
+    "id": "barunchicken",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "바른치킨",
+      "en": "Barun Chicken"
+    },
+    "tagline": {
+      "ko": "올리브유 후라이드 치킨 전문",
+      "en": "Olive-oil fried chicken"
+    },
+    "startupCostWon": 8800,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 28000,
+    "storeCount": 250,
+    "closureRate": 8.5,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 72,
+      "brandPower": 68,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "올리브유 후라이드 차별화, 가맹비 1천만 특별 혜택",
+        "필수 품목 공급가 평균 8.1~11.1% 인하 정책",
+        "본사 가맹점 지원 정책 적극적",
+        "중견 치킨 프랜차이즈, 안정적 운영"
+      ],
+      "en": [
+        "Olive-oil frying differentiator, 10M won fee promo",
+        "Required-supply price cuts 8.1–11.1%",
+        "Active HQ support for franchisees",
+        "Mid-tier chicken chain, stable ops"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 + 한국면세뉴스 2024",
+    "franchiseUrl": "https://franchise.barunchicken.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "boderam",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "보드람치킨",
+      "en": "Boderam Chicken"
+    },
+    "tagline": {
+      "ko": "1981년 시작 정통 옛날통닭 브랜드",
+      "en": "Heritage fried chicken since 1981"
+    },
+    "startupCostWon": 7590,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 30000,
+    "storeCount": 190,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 70,
+      "accessibility": 70,
+      "brandPower": 68,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 7,590만원 창업비, 190개 매장",
+        "옛날통닭 카테고리 장수 브랜드",
+        "치킨 시장에서 저가-옛날 컨셉으로 차별화",
+        "안정적 운영 가능하나 성장 정체"
+      ],
+      "en": [
+        "MyFranchise: 76M won startup, 190 stores",
+        "Long-running retro fried chicken brand",
+        "Differentiated via retro/low-price",
+        "Stable ops but growth plateauing"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://myfranchise.kr/20080200018",
+    "dataYear": "2024"
+  },
+  {
+    "id": "7thpizza",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "7번가피자",
+      "en": "7th Pizza"
+    },
+    "tagline": {
+      "ko": "20년 이상 장수 피자 프랜차이즈",
+      "en": "20+ year heritage pizza chain"
+    },
+    "startupCostWon": 8550,
+    "franchiseFee": 700,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 23580,
+    "storeCount": 200,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 70,
+      "accessibility": 72,
+      "brandPower": 70,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 8,550만원 창업비, 200개 매장",
+        "월평균 매출 1,965만원, 배달 중심 운영",
+        "저가형 피자 카테고리, 도미노 대비 가격 경쟁",
+        "20년+ 장수 브랜드의 안정성"
+      ],
+      "en": [
+        "MyFranchise: 86M won startup, 200 stores",
+        "Monthly avg ~20M won, delivery-heavy",
+        "Budget pizza, undercuts Domino on price",
+        "20+ year stability"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 + 창업플러스 2025",
+    "franchiseUrl": "https://www.7thpizza.com/franchise/process",
+    "dataYear": "2025"
+  },
+  {
+    "id": "coffeebay",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "커피베이",
+      "en": "Coffee Bay"
+    },
+    "tagline": {
+      "ko": "10년 이상 중견 카페 프랜차이즈",
+      "en": "Mid-tier cafe chain (10+ yrs)"
+    },
+    "startupCostWon": 9927,
+    "franchiseFee": 700,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 24000,
+    "storeCount": 421,
+    "closureRate": 8.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 70,
+      "accessibility": 72,
+      "brandPower": 70,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 9,927만원 창업비, 421개 매장",
+        "이디야·메가 대비 중간 가격대",
+        "중대형 카페 위주, 좌석 매출 비중 높음",
+        "10년 이상 안정적 운영"
+      ],
+      "en": [
+        "MyFranchise: ~99M won startup, 421 stores",
+        "Mid-price between Ediya and Mega",
+        "Mid-large cafes, seating-heavy revenue",
+        "10+ years stable operation"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://www.coffeebay.com/main",
+    "dataYear": "2024"
+  },
+  {
+    "id": "tomntoms",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "탐앤탐스커피",
+      "en": "Tom N Toms Coffee"
+    },
+    "tagline": {
+      "ko": "프리미엄 카페 + 베이커리 결합",
+      "en": "Premium cafe + bakery"
+    },
+    "startupCostWon": 20762,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 35000,
+    "storeCount": 279,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 60,
+      "stability": 68,
+      "accessibility": 45,
+      "brandPower": 75,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 2억 762만원 창업비, 279개 매장",
+        "프리미엄 카페 + 자체 빵 결합",
+        "초기 투자비 부담 큼, 중대형 입지 필수",
+        "스타벅스·투썸 대비 후발 정체"
+      ],
+      "en": [
+        "MyFranchise: 208M won startup, 279 stores",
+        "Premium cafe + in-house bread",
+        "Heavy startup capital; mid-large locations only",
+        "Trailing Starbucks/Twosome growth"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://www.tomntoms.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "cafetiamo",
+    "subIndustryIds": [
+      "dessert-cafe"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "카페띠아모",
+      "en": "Cafe Tiamo"
+    },
+    "tagline": {
+      "ko": "젤라또·아이스크림 전문 카페",
+      "en": "Gelato & ice cream cafe"
+    },
+    "startupCostWon": 17705,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 9060,
+    "storeCount": 99,
+    "closureRate": 10.0,
+    "scores": {
+      "profitability": 55,
+      "stability": 60,
+      "accessibility": 50,
+      "brandPower": 70,
+      "support": 68
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 1억 7,705만원 창업비, 월매출 755만원",
+        "젤라또·아이스크림 차별화, 카페 결합형",
+        "홈서비스·테이크아웃·카페 등 다양한 매장 모델",
+        "월매출 대비 창업비 큰 점 주의"
+      ],
+      "en": [
+        "MyFranchise: 177M won startup, 7.5M won/month",
+        "Gelato/ice-cream + cafe combo",
+        "Home/takeout/cafe multi-format",
+        "Caution: high startup vs. monthly sales"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "http://www.ti-amo.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "waffleuniv",
+    "subIndustryIds": [
+      "dessert-cafe"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "와플대학",
+      "en": "Waffle University"
+    },
+    "tagline": {
+      "ko": "와플 테이크아웃 전문 프랜차이즈",
+      "en": "Waffle takeout franchise"
+    },
+    "startupCostWon": 6700,
+    "franchiseFee": 550,
+    "monthlyRoyalty": 20,
+    "avgAnnualRevenueWon": 16000,
+    "storeCount": 377,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 62,
+      "stability": 60,
+      "accessibility": 80,
+      "brandPower": 65,
+      "support": 60
+    },
+    "roadmapNotes": {
+      "ko": [
+        "10평 기준 6,700만원 창업, 가맹비 550만+교육비 330만",
+        "월 로열티 20만원 (정액제)",
+        "전국 500개 매장, 디저트 테이크아웃 카테고리",
+        "와플 단일 메뉴 의존도 높음"
+      ],
+      "en": [
+        "10-pyeong: 67M won startup, 5.5M fee + 3.3M training",
+        "Monthly royalty: 200K won (flat)",
+        "500 stores, dessert takeout category",
+        "Heavy single-menu (waffle) dependency"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "와플대학 공식 + 부자비즈 2024",
+    "franchiseUrl": "https://www.waffleuniv.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "tangsbudaejjigae",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "땅스부대찌개",
+      "en": "Tang's Budae Jjigae"
+    },
+    "tagline": {
+      "ko": "밀키트 결합 부대찌개 프랜차이즈",
+      "en": "Budae jjigae + meal-kit chain"
+    },
+    "startupCostWon": 4260,
+    "franchiseFee": 500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 24000,
+    "storeCount": 555,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 72,
+      "stability": 72,
+      "accessibility": 88,
+      "brandPower": 78,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 4,260만원 창업비, 555개 매장",
+        "5백만원으로 시작 가능한 밀키트형 부대찌개",
+        "월매출 상위권 5천만원, 평균 2천만원",
+        "월 40개 신규 매장 오픈 - 빠른 확장"
+      ],
+      "en": [
+        "MyFranchise: 43M won startup, 555 stores",
+        "Start from 5M won — meal-kit budae jjigae",
+        "Top stores 50M won/month, avg 20M won",
+        "40 new stores/month — fast expansion"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 + 부자비즈 2024",
+    "franchiseUrl": "https://www.tangs.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "dosigotgan",
+    "subIndustryIds": [
+      "delivery-meals",
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "도시곳간",
+      "en": "Dosi Gotgan"
+    },
+    "tagline": {
+      "ko": "한식 도시락·델리 프랜차이즈",
+      "en": "Korean lunchbox & deli"
+    },
+    "startupCostWon": 13450,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 36000,
+    "storeCount": 58,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 55,
+      "brandPower": 65,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 1억 3,450만원 창업비, 58개 매장",
+        "신생 프랜차이즈 (5년 미만)",
+        "한식 도시락+델리 결합 컨셉",
+        "오피스 상권 적합"
+      ],
+      "en": [
+        "MyFranchise: 134M won startup, 58 stores",
+        "Newer brand (<5 yrs)",
+        "Korean lunchbox + deli concept",
+        "Fits office-district locations"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://myfranchise.kr/20210412",
+    "dataYear": "2024"
+  },
+  {
+    "id": "megastudyacademy",
+    "subIndustryIds": [
+      "adult-class"
+    ],
+    "categoryId": "education",
+    "name": {
+      "ko": "메가스터디교육",
+      "en": "Megastudy Education"
+    },
+    "tagline": {
+      "ko": "대형 입시·학원 가맹 브랜드",
+      "en": "Major test-prep academy franchise"
+    },
+    "startupCostWon": 3510,
+    "franchiseFee": 880,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 30000,
+    "storeCount": 419,
+    "closureRate": 5.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 78,
+      "accessibility": 80,
+      "brandPower": 88,
+      "support": 80
+    },
+    "roadmapNotes": {
+      "ko": [
+        "34평 기준 3,510만원 (가맹비 880만+교육비 220만+기타 760만+인테 1,650만)",
+        "전국 419개 가맹점, 대형 입시 브랜드",
+        "온라인 컨텐츠·강사진 인프라 강점",
+        "지역별 인구·학령기 수요 차이 큼"
+      ],
+      "en": [
+        "34-pyeong: 35M won (8.8M franchise + 2.2M training + 7.6M other + 16.5M interior)",
+        "419 stores, major test-prep brand",
+        "Online content + instructor infra",
+        "Regional demographics drive demand"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "마이프차 + 정보공개서 2024",
+    "franchiseUrl": "https://www.megastudy.net/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "spoany",
+    "subIndustryIds": [
+      "pt-gym"
+    ],
+    "categoryId": "fitness",
+    "name": {
+      "ko": "스포애니",
+      "en": "Spo Any"
+    },
+    "tagline": {
+      "ko": "전국 116호점의 헬스 가맹 브랜드",
+      "en": "116-store fitness franchise"
+    },
+    "startupCostWon": 21000,
+    "franchiseFee": 2000,
+    "monthlyRoyalty": 100,
+    "avgAnnualRevenueWon": 120000,
+    "storeCount": 92,
+    "closureRate": 6.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 75,
+      "accessibility": 40,
+      "brandPower": 80,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "60평 스마트 타입 2억 1천만원 (PRO 타입 대비 5.6억 저렴)",
+        "전국 116호 매장, 100호점 연 매출 1,200억원",
+        "QR 출입·구독제 자율운영짐 모델 도입",
+        "초기 자본 부담 매우 큼, 부동산 결합 필요"
+      ],
+      "en": [
+        "60-pyeong Smart: 210M won (560M cheaper vs PRO)",
+        "116 stores, 100-store annual revenue 120B won",
+        "QR-entry + subscription self-run gym model",
+        "Very heavy capital; real-estate-coupled"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "스포애니 공식 + 나무위키 2024",
+    "franchiseUrl": "https://www.spoany.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "leekajahair",
+    "subIndustryIds": [
+      "hair-salon"
+    ],
+    "categoryId": "beauty",
+    "name": {
+      "ko": "이가자헤어비스",
+      "en": "Leekaja Hairbis"
+    },
+    "tagline": {
+      "ko": "헤어 디자이너 전문 미용실 프랜차이즈",
+      "en": "Designer-led hair salon chain"
+    },
+    "startupCostWon": 15000,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 60000,
+    "storeCount": 200,
+    "closureRate": 5.5,
+    "scores": {
+      "profitability": 68,
+      "stability": 75,
+      "accessibility": 50,
+      "brandPower": 80,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "1세대 헤어 프랜차이즈, 디자이너 교육 시스템",
+        "준오·박승철 다음 가맹점수 상위권",
+        "중대형 미용실 모델, 디자이너 확보 핵심",
+        "프리미엄 가격대 포지셔닝"
+      ],
+      "en": [
+        "1st-gen hair franchise, designer training system",
+        "Top tier behind Juno/Park Seung-cheol",
+        "Mid-large salon model; recruiting designers is key",
+        "Premium price positioning"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 업계 자료",
+    "franchiseUrl": "https://leekaja.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "parkjunbeautylab",
+    "subIndustryIds": [
+      "hair-salon"
+    ],
+    "categoryId": "beauty",
+    "name": {
+      "ko": "박준뷰티랩",
+      "en": "Park Jun Beauty Lab"
+    },
+    "tagline": {
+      "ko": "국내 최초 미용 프랜차이즈 브랜드",
+      "en": "Korea's 1st hair franchise"
+    },
+    "startupCostWon": 18000,
+    "franchiseFee": 2000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 80000,
+    "storeCount": 67,
+    "closureRate": 5.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 78,
+      "accessibility": 45,
+      "brandPower": 85,
+      "support": 80
+    },
+    "roadmapNotes": {
+      "ko": [
+        "국내 최초 미용 프랜차이즈 브랜드",
+        "프리미엄·디자이너 중심 운영",
+        "강남·명동 등 핵심 상권 입지",
+        "교육·아카데미 시스템 강점"
+      ],
+      "en": [
+        "Korea's first hair franchise brand",
+        "Premium designer-led operation",
+        "Gangnam/Myeongdong prime locations",
+        "Strong academy/training system"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "박준뷰티랩 공식 + 업계",
+    "franchiseUrl": "https://www.parkjun.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "mammothexpress",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "매머드익스프레스",
+      "en": "Mammoth Express"
+    },
+    "tagline": {
+      "ko": "매머드커피 익스프레스(소형)형",
+      "en": "Mammoth Coffee Express (small)"
+    },
+    "startupCostWon": 6500,
+    "franchiseFee": 800,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 18000,
+    "storeCount": 300,
+    "closureRate": 7.5,
+    "scores": {
+      "profitability": 68,
+      "stability": 65,
+      "accessibility": 85,
+      "brandPower": 75,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "5평 내외 익스프레스형 매머드 카페",
+        "테이크아웃 중심, 좌석 거의 없음",
+        "메가·컴포즈 익스프레스와 경쟁",
+        "오피스·역세권 입지 최적"
+      ],
+      "en": [
+        "Express format ~5 pyeong",
+        "Takeout-only, minimal seating",
+        "Competes with Mega/Compose express",
+        "Office/subway locations optimal"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 마이프차",
+    "franchiseUrl": "https://mammothcoffee.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "topresso",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "토프레소",
+      "en": "Topresso"
+    },
+    "tagline": {
+      "ko": "중저가 에스프레소 전문 카페",
+      "en": "Mid-budget espresso cafe"
+    },
+    "startupCostWon": 7500,
+    "franchiseFee": 700,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 18000,
+    "storeCount": 159,
+    "closureRate": 8.5,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 75,
+      "brandPower": 65,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "중저가 에스프레소 컨셉, 소형 매장 위주",
+        "메가·이디야 대비 후발 카테고리",
+        "원두 직접 로스팅 차별화 시도",
+        "지역 상권 중심 확장"
+      ],
+      "en": [
+        "Mid-budget espresso, small-format focus",
+        "Trails Mega/Ediya in scale",
+        "Tries to differentiate via in-house roasting",
+        "Regional commercial-zone expansion"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 정보공개서",
+    "franchiseUrl": "https://www.topresso.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "paikboycoffee",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "빽보이커피",
+      "en": "Paik Boy Coffee"
+    },
+    "tagline": {
+      "ko": "빽다방 확장형 - 빽보이 커피 브랜드",
+      "en": "Paik Dabang spin-off coffee"
+    },
+    "startupCostWon": 9000,
+    "franchiseFee": 660,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 22000,
+    "storeCount": 50,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 70,
+      "brandPower": 80,
+      "support": 78
+    },
+    "roadmapNotes": {
+      "ko": [
+        "더본코리아의 빽다방 자매 브랜드",
+        "신규 브랜드로 출점 초기 단계",
+        "백종원 브랜드 파워 활용",
+        "데이터 확보가 어려운 신규 카테고리"
+      ],
+      "en": [
+        "Theborn Korea sibling of Paik Dabang",
+        "Newer brand, early-stage expansion",
+        "Leverages Paik brand power",
+        "Limited data — new category"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "더본코리아 공식 추정",
+    "franchiseUrl": "https://www.theborn.co.kr/theborn_brand/paikboy/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "saladdays",
+    "subIndustryIds": [
+      "salad-healthy"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "샐러데이즈",
+      "en": "Salad Days"
+    },
+    "tagline": {
+      "ko": "프리미엄 샐러드·웰빙 식단 브랜드",
+      "en": "Premium salad & wellness chain"
+    },
+    "startupCostWon": 8000,
+    "franchiseFee": 800,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 24000,
+    "storeCount": 40,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 65,
+      "accessibility": 70,
+      "brandPower": 65,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "프리미엄 샐러드 + 메인 식단 결합",
+        "오피스 상권 집중 출점",
+        "정기구독·기업 단체 수요 강점",
+        "샐러디·샐러드박스 대비 후발 정체"
+      ],
+      "en": [
+        "Premium salad + main-dish combo",
+        "Office-district focused expansion",
+        "Subscription + corporate bulk demand",
+        "Trails Salady/Salad Box in scale"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 정보공개서",
+    "franchiseUrl": "http://saladdays.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "slowcalorie",
+    "subIndustryIds": [
+      "salad-healthy"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "슬로우캘리",
+      "en": "Slow Calorie"
+    },
+    "tagline": {
+      "ko": "다이어트 도시락·샐러드 프랜차이즈",
+      "en": "Diet lunchbox & salad chain"
+    },
+    "startupCostWon": 7500,
+    "franchiseFee": 700,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 20000,
+    "storeCount": 130,
+    "closureRate": 7.5,
+    "scores": {
+      "profitability": 68,
+      "stability": 70,
+      "accessibility": 75,
+      "brandPower": 72,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "다이어트 도시락 카테고리 2위급",
+        "샐러디 대비 가성비 포지셔닝",
+        "정기 구독·헬스장 제휴 매출 큼",
+        "기업 단체식 수요 확보"
+      ],
+      "en": [
+        "#2 diet lunchbox category brand",
+        "Value-positioned vs Salady",
+        "Subscription + gym-partnership revenue",
+        "Corporate group-meal demand"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "정보공개서 + news2day 2023",
+    "franchiseUrl": "https://www.slowcalorie.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "jukstory",
+    "subIndustryIds": [
+      "korean-casual",
+      "delivery-meals"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "죽이야기",
+      "en": "Jukstory"
+    },
+    "tagline": {
+      "ko": "전국 400개+ 죽 전문 프랜차이즈",
+      "en": "400+ store porridge chain"
+    },
+    "startupCostWon": 8500,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 26000,
+    "storeCount": 400,
+    "closureRate": 6.5,
+    "scores": {
+      "profitability": 65,
+      "stability": 75,
+      "accessibility": 75,
+      "brandPower": 72,
+      "support": 72
+    },
+    "roadmapNotes": {
+      "ko": [
+        "전국 400여개 가맹점, 죽 카테고리 본죽 다음",
+        "붕푸드마켓 등 자매 브랜드 운영",
+        "병원 인근 입지 강점",
+        "본죽 대비 저가 포지셔닝"
+      ],
+      "en": [
+        "400+ stores, #2 porridge after Bonjuk",
+        "Operates sister brand Bungpoodmarket",
+        "Strong near hospitals",
+        "Lower-priced vs Bonjuk"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "죽이야기 공식 + 정보공개서",
+    "franchiseUrl": "https://jukstory.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "yumsem",
+    "subIndustryIds": [
+      "delivery-meals",
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "얌샘김밥",
+      "en": "Yumsem Kimbap"
+    },
+    "tagline": {
+      "ko": "프리미엄 김밥·분식 프랜차이즈",
+      "en": "Premium kimbap & bunsik chain"
+    },
+    "startupCostWon": 9500,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 35000,
+    "storeCount": 200,
+    "closureRate": 7.0,
+    "scores": {
+      "profitability": 68,
+      "stability": 70,
+      "accessibility": 75,
+      "brandPower": 72,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "프리미엄 김밥 카테고리, 김가네·바르다김선생 경쟁",
+        "20·30대 직장인 점심 수요 강점",
+        "메뉴 다양성 + 가성비 포지셔닝",
+        "오피스 상권 적합"
+      ],
+      "en": [
+        "Premium kimbap; competes with Kimganae / Barda Kim Seonsaeng",
+        "Strong office-worker lunch demand",
+        "Menu variety + value positioning",
+        "Fits office districts"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "얌샘 공식 + 정보공개서",
+    "franchiseUrl": "https://yumsem.com/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "matpizza",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "매드피자",
+      "en": "Mad Pizza"
+    },
+    "tagline": {
+      "ko": "신생 가성비 피자 브랜드",
+      "en": "Newer budget pizza brand"
+    },
+    "startupCostWon": 7800,
+    "franchiseFee": 700,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 22000,
+    "storeCount": 29,
+    "closureRate": 9.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 60,
+      "accessibility": 75,
+      "brandPower": 60,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "마이프차 기준 신생 가성비 피자",
+        "피자스쿨·7번가 대비 후발",
+        "소형 매장 위주, 배달 중심",
+        "차별화 부족 우려"
+      ],
+      "en": [
+        "MyFranchise newer budget pizza brand",
+        "Trails Pizza School / 7th Pizza",
+        "Small stores, delivery-focused",
+        "Concern: limited differentiation"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "마이프차 2024",
+    "franchiseUrl": "https://myfranchise.kr/20231509",
+    "dataYear": "2024"
+  },
+  {
+    "id": "sevenstarkaraoke",
+    "subIndustryIds": [
+      "practice-room"
+    ],
+    "categoryId": "space",
+    "name": {
+      "ko": "세븐스타 노래연습장",
+      "en": "Seven Star Karaoke"
+    },
+    "tagline": {
+      "ko": "무인 코인 노래방 프랜차이즈",
+      "en": "Unmanned coin karaoke chain"
+    },
+    "startupCostWon": 18000,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 50000,
+    "storeCount": 200,
+    "closureRate": 6.5,
+    "scores": {
+      "profitability": 72,
+      "stability": 70,
+      "accessibility": 50,
+      "brandPower": 72,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "무인 코인 노래방 카테고리 상위권",
+        "대형 매장 위주, 초기 자본 큼",
+        "야간·심야 매출 집중",
+        "전기료·임대료 비중 큼"
+      ],
+      "en": [
+        "Top-tier unmanned coin-karaoke chain",
+        "Large stores, heavy capex",
+        "Night-revenue heavy",
+        "Electricity + rent are major opex"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 정보공개서",
+    "franchiseUrl": "https://www.sevenstar.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "kcoinwash",
+    "subIndustryIds": [
+      "self-laundry"
+    ],
+    "categoryId": "living-service",
+    "name": {
+      "ko": "코인워시 24",
+      "en": "Coin Wash 24"
+    },
+    "tagline": {
+      "ko": "무인 코인 빨래방 프랜차이즈",
+      "en": "Unmanned coin laundry chain"
+    },
+    "startupCostWon": 12000,
+    "franchiseFee": 1000,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 28000,
+    "storeCount": 150,
+    "closureRate": 5.0,
+    "scores": {
+      "profitability": 72,
+      "stability": 80,
+      "accessibility": 65,
+      "brandPower": 65,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "무인 코인 빨래방 카테고리, 크린토피아 대안",
+        "초기 장비비 큼, 운영비 매우 낮음",
+        "원룸·1인가구 밀집 입지 적합",
+        "정기 매출 안정적, 폐점률 낮음"
+      ],
+      "en": [
+        "Unmanned coin laundry; alt to Cleantopia",
+        "High equipment capex, very low opex",
+        "Fits 1-room / single-household areas",
+        "Stable recurring revenue, low closure"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 정보공개서",
+    "franchiseUrl": "https://coinwash24.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "thelaundry",
+    "subIndustryIds": [
+      "laundry-service"
+    ],
+    "categoryId": "living-service",
+    "name": {
+      "ko": "더런더리",
+      "en": "The Laundry"
+    },
+    "tagline": {
+      "ko": "프리미엄 무인 세탁 프랜차이즈",
+      "en": "Premium unmanned laundry chain"
+    },
+    "startupCostWon": 15000,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 32000,
+    "storeCount": 80,
+    "closureRate": 6.0,
+    "scores": {
+      "profitability": 70,
+      "stability": 75,
+      "accessibility": 55,
+      "brandPower": 68,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "프리미엄 무인 세탁 카테고리",
+        "크린토피아 대비 디자인·가격 차별화",
+        "신규 출점 빠른 추세",
+        "초기 장비 투자 큼"
+      ],
+      "en": [
+        "Premium unmanned laundry category",
+        "Design/price differentiation vs Cleantopia",
+        "Rapid new-store expansion",
+        "Heavy equipment capex"
+      ]
+    },
+    "costVerified": false,
+    "costSource": "공식사이트 + 정보공개서",
+    "franchiseUrl": "https://thelaundry.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "tenpercent-coffee",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "텐퍼센트커피",
+      "en": "Ten Percent Coffee"
+    },
+    "tagline": {
+      "ko": "부산발 스페셜티 저가 커피, 폐점률 2.3%의 안정성",
+      "en": "Busan-born specialty low-cost coffee with 2.3% closure rate"
+    },
+    "startupCostWon": 10360,
+    "franchiseFee": 550,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 22523,
+    "storeCount": 814,
+    "closureRate": 2.3,
+    "scores": {
+      "profitability": 70,
+      "stability": 88,
+      "accessibility": 80,
+      "brandPower": 72,
+      "support": 70
+    },
+    "roadmapNotes": {
+      "ko": [
+        "2017년 부산 출범, 전국 800개+ 가맹점 운영",
+        "가맹비 550만원·교육비 330만원·보증금 200만원·기타 6,930만원 (10평 기준)",
+        "10평 인테리어 2,200~2,500만원 추정",
+        "폐점률 2.3%로 커피 업종 평균(8.8%)의 약 1/4 수준",
+        "월평균 매출 약 1,877만원 (연 2.25억원)"
+      ],
+      "en": [
+        "Launched in Busan 2017, now 800+ franchise stores nationwide",
+        "Franchise fee 5.5M + training 3.3M + deposit 2M + other 69.3M won (10-pyeong basis)",
+        "Interior cost ~22-25M won for 10-pyeong store",
+        "2.3% closure rate vs. coffee-segment average 8.8%",
+        "Monthly avg revenue ~18.8M won (annual 225M)"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://www.tenpercentcoffee.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "hansdeli",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "한스델리",
+      "en": "Hans Deli"
+    },
+    "tagline": {
+      "ko": "20년 장수 도시락·델리 브랜드",
+      "en": "20-year-veteran Korean lunchbox-deli brand"
+    },
+    "startupCostWon": 9300,
+    "franchiseFee": 770,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 17373,
+    "storeCount": 38,
+    "closureRate": 29.4,
+    "scores": {
+      "profitability": 50,
+      "stability": 45,
+      "accessibility": 65,
+      "brandPower": 55,
+      "support": 50
+    },
+    "roadmapNotes": {
+      "ko": [
+        "사업기간 20년 11개월의 장수 브랜드 (주식회사 한스앤컴퍼니)",
+        "가맹비 770만원·교육비 330만원·보증금 200만원·기타 8,000만원",
+        "가맹점 38개, 업종 내 상위 18%",
+        "폐점률 29.4%로 도시락 업종 평균(23.5%) 대비 높음 — 입지 신중 검토",
+        "인테리어비 미공시 — 별도 견적 필수"
+      ],
+      "en": [
+        "20-year veteran brand operated by Hans & Company",
+        "Franchise fee 7.7M + training 3.3M + deposit 2M + other 80M won",
+        "38 franchise stores (top 18% in lunchbox segment)",
+        "29.4% closure rate vs. segment avg 23.5% — careful site selection needed",
+        "Interior cost not disclosed — separate quote required"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://www.hansdeli.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "fave-bakery",
+    "subIndustryIds": [
+      "bakery-studio"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "페이브",
+      "en": "FAVE"
+    },
+    "tagline": {
+      "ko": "프리미엄 베이커리 카페, 월 1억 매출도 가능",
+      "en": "Premium bakery cafe capable of 100M won monthly sales"
+    },
+    "startupCostWon": 14180,
+    "franchiseFee": 1100,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 19771,
+    "storeCount": 11,
+    "closureRate": 41.2,
+    "scores": {
+      "profitability": 55,
+      "stability": 35,
+      "accessibility": 50,
+      "brandPower": 60,
+      "support": 55
+    },
+    "roadmapNotes": {
+      "ko": [
+        "프리미엄 베이커리 카페 포지셔닝 — 손으로도란도란 수란 운영",
+        "가맹비 1,100만원·교육비 330만원·보증금 300만원·기타 1억 2,450만원",
+        "가맹점 11개로 소규모. 인테리어비 비공시",
+        "최근 1년 폐점률 41.2% (업종 평균 18.2%의 2배 이상) — 큰 리스크",
+        "지난해 7개 매장 종료 — 신규 진입 신중 검토 권장"
+      ],
+      "en": [
+        "Premium bakery cafe positioning, operated by 손으로도란도란 수란",
+        "Franchise fee 11M + training 3.3M + deposit 3M + other 124.5M won",
+        "11 franchise stores (small scale). Interior cost not disclosed",
+        "41.2% closure rate vs. segment avg 18.2% — significant risk",
+        "7 stores closed last year — careful evaluation required"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://favecoffee.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "latteking",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "라떼킹",
+      "en": "Latteking"
+    },
+    "tagline": {
+      "ko": "프리미엄 라떼 전문 카페",
+      "en": "Premium latte specialty cafe"
+    },
+    "startupCostWon": 20350,
+    "franchiseFee": 550,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 19062,
+    "storeCount": 12,
+    "closureRate": 50.0,
+    "scores": {
+      "profitability": 40,
+      "stability": 25,
+      "accessibility": 35,
+      "brandPower": 55,
+      "support": 50
+    },
+    "roadmapNotes": {
+      "ko": [
+        "라떼 전문 프리미엄 카페 (직영 2 + 가맹 10)",
+        "가맹비 550만원·교육비 550만원·보증금 300만원·기타 1억 2,650만원 (25평 기준)",
+        "25평 인테리어 6,000~6,600만원, 총 창업비 약 2억 350만원",
+        "최근 1년 폐점률 50.0% — 업종 평균(8.8%) 대비 매우 위험 신호",
+        "투자 회수기간 7년 1개월(영업이익률 15% 가정) — 진입 신중"
+      ],
+      "en": [
+        "Premium latte specialty cafe (2 direct + 10 franchise)",
+        "Franchise fee 5.5M + training 5.5M + deposit 3M + other 126.5M won (25-pyeong)",
+        "25-pyeong interior 60-66M won; total startup ~203.5M won",
+        "50% closure rate vs. coffee-segment avg 8.8% — severe risk",
+        "Payback period ~7 yrs 1 mo at 15% margin — caution advised"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://myfranchise.kr/20110100073/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "samsong-bakery",
+    "subIndustryIds": [
+      "bakery-studio"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "삼송빵집",
+      "en": "Samsong Bakery"
+    },
+    "tagline": {
+      "ko": "대구 명물 통옥수수빵 베이커리",
+      "en": "Daegu-iconic corn bread bakery"
+    },
+    "startupCostWon": 6538,
+    "franchiseFee": 2200,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 90180,
+    "storeCount": 24,
+    "closureRate": 8.3,
+    "scores": {
+      "profitability": 85,
+      "stability": 70,
+      "accessibility": 75,
+      "brandPower": 75,
+      "support": 65
+    },
+    "roadmapNotes": {
+      "ko": [
+        "대구 통옥수수빵으로 유명한 (주)삼송비엔씨 운영 브랜드",
+        "가맹비 2,200만원·교육비 550만원·보증금 1,500만원·기타 2,288만원",
+        "2023년 15개 → 2024년 24개 → 2025년 31개로 확장세",
+        "월평균 매출 약 7,515만원 (연 7.69억원) — 베이커리 상위권",
+        "최근 1년 폐점률 8.3%, 평당 매출 2,379만원"
+      ],
+      "en": [
+        "Operated by Samsong BNC, famous for Daegu corn bread",
+        "Franchise fee 22M + training 5.5M + deposit 15M + other 22.88M won",
+        "Growing: 15 stores (2023) → 24 (2024) → 31 (2025)",
+        "Monthly avg revenue ~75.15M won (annual 769M) — top bakery tier",
+        "8.3% closure rate; per-pyeong revenue 23.79M won"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://www.samsongbread.co.kr/",
+    "dataYear": "2024"
+  },
+  {
+    "id": "daebaktong",
+    "subIndustryIds": [
+      "takeout-coffee"
+    ],
+    "categoryId": "cafe-dessert",
+    "name": {
+      "ko": "대박통",
+      "en": "Daebaktong"
+    },
+    "tagline": {
+      "ko": "한식 소규모 브랜드, 폐점률 10%의 안정성",
+      "en": "Small-scale Korean restaurant with stable 10% closure rate"
+    },
+    "startupCostWon": 8541,
+    "franchiseFee": 1650,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 29040,
+    "storeCount": 21,
+    "closureRate": 10.0,
+    "scores": {
+      "profitability": 65,
+      "stability": 75,
+      "accessibility": 65,
+      "brandPower": 45,
+      "support": 55
+    },
+    "roadmapNotes": {
+      "ko": [
+        "한식 업종 소규모 브랜드 (가맹 20 + 직영 1, 총 21개)",
+        "가맹비 1,650만원·교육비 110만원·보증금 500만원·기타 6,281만원",
+        "연평균 매출 2.9억원 — 한식 소규모 평균 상회",
+        "폐점률 10%로 한식 업종 평균(25%)의 절반 이하 — 안정적",
+        "인테리어비 미공시, 본부 미제공 — 별도 견적 확인 필수"
+      ],
+      "en": [
+        "Small-scale Korean restaurant brand (20 franchise + 1 direct = 21 stores)",
+        "Franchise fee 16.5M + training 1.1M + deposit 5M + other 62.81M won",
+        "Annual avg revenue 290M won — above small Korean-restaurant average",
+        "10% closure rate vs. Korean-food avg 25% — stable",
+        "Interior cost undisclosed and not HQ-provided — quote separately"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://jshj.net/brands/%EB%8C%80%EB%B0%95%ED%86%B5-BRD_20130100128",
+    "dataYear": "2024"
+  },
+  {
+    "id": "grazie",
+    "subIndustryIds": [
+      "western-pasta-brunch"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "그라찌에",
+      "en": "Grazie"
+    },
+    "tagline": {
+      "ko": "이탈리안 외식 브랜드 (세화에프앤씨)",
+      "en": "Italian restaurant brand by Sehwa F&C"
+    },
+    "startupCostWon": 6770,
+    "franchiseFee": 550,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 11604,
+    "storeCount": 29,
+    "closureRate": 26.3,
+    "scores": {
+      "profitability": 45,
+      "stability": 35,
+      "accessibility": 60,
+      "brandPower": 50,
+      "support": 40
+    },
+    "roadmapNotes": {
+      "ko": [
+        "(주)세화에프앤씨 운영, 2011년 12월 설립, 서울 동대문구 소재",
+        "가맹비 550만원·교육비 220만원·보증금 500만원·기타 5,500만원",
+        "가맹점 29개, 연평균 매출 1.16억원, 평당 매출 410만원",
+        "최근 1년 폐점률 26.3% — 업종 평균 대비 높음",
+        "본사 2년 연속 영업이익 적자 — 가맹점 지원 축소 리스크 주의"
+      ],
+      "en": [
+        "Operated by Sehwa F&C, founded Dec 2011, based in Seoul Dongdaemun",
+        "Franchise fee 5.5M + training 2.2M + deposit 5M + other 55M won",
+        "29 stores, annual avg revenue 116M won, per-pyeong 4.1M won",
+        "26.3% closure rate — higher than segment average",
+        "HQ posted operating loss 2 consecutive years — risk of reduced franchisee support"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://jshj.net/brands/%EA%B7%B8%EB%9D%BC%EC%B0%8C%EC%97%90-BRD_20150166",
+    "dataYear": "2024"
+  },
+  {
+    "id": "cheers-pub",
+    "subIndustryIds": [
+      "korean-casual"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "치어스",
+      "en": "Cheers"
+    },
+    "tagline": {
+      "ko": "23년 장수 호프·펍 프랜차이즈",
+      "en": "23-year-veteran beer pub franchise"
+    },
+    "startupCostWon": 11976,
+    "franchiseFee": 1320,
+    "monthlyRoyalty": 0,
+    "avgAnnualRevenueWon": 24983,
+    "storeCount": 54,
+    "closureRate": 18.8,
+    "scores": {
+      "profitability": 60,
+      "stability": 50,
+      "accessibility": 60,
+      "brandPower": 65,
+      "support": 55
+    },
+    "roadmapNotes": {
+      "ko": [
+        "사업기간 23년 4개월의 호프·펍 장수 프랜차이즈",
+        "가맹비 1,320만원·교육비 330만원·보증금 300만원·기타 1억 26만원",
+        "전국 54개 매장, 연평균 매출 2.5억원, 평당 매출 656만원",
+        "2023년 대비 2025년 19개 가맹점 감소 — 축소 추세",
+        "최근 1년 폐점률 18.8% (업종 평균 15.0% 초과). 손익분기점 약 3년 2개월"
+      ],
+      "en": [
+        "23-year-veteran beer pub franchise",
+        "Franchise fee 13.2M + training 3.3M + deposit 3M + other 100.26M won",
+        "54 nationwide stores, annual avg revenue 250M won, per-pyeong 6.56M",
+        "Lost 19 stores between 2023 and 2025 — contracting trend",
+        "18.8% closure rate (vs. segment avg 15%). Breakeven ~3 yrs 2 mo"
+      ]
+    },
+    "costVerified": true,
+    "costSource": "정보공개서 2024 (jshj.net 분석)",
+    "franchiseUrl": "https://jshj.net/brands/%EC%B9%98%EC%96%B4%EC%8A%A4-BRD_20080200008",
+    "dataYear": "2024"
   }
 ]

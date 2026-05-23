@@ -144,6 +144,11 @@ public struct BUStageShell<Content: View>: View {
                 }
                 .padding(.top, BUSpacing.md)
             }
+            #if os(iOS)
+            // 모바일 최적화 — 스크롤 시 키보드 자동 dismiss (iPhone SE 등 작은 화면에서 키보드가
+            // continue bar 가리는 문제 방지).
+            .scrollDismissesKeyboard(.interactively)
+            #endif
         }
         .navigationTitle(title)
         #if os(iOS)

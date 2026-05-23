@@ -363,14 +363,18 @@ public enum StartupProgramRegistry {
 
     private static func loadFromBundle() -> [StartupProgram] {
         guard let url = Bundle.module.url(forResource: "startup-programs", withExtension: "json") else {
-            assertionFailure("startup-programs.json 번들에 누락")
+            #if DEBUG
+            print("⚠️ startup-programs.json 번들에 누락")
+            #endif
             return []
         }
         do {
             let data = try Data(contentsOf: url)
             return try JSONDecoder().decode([StartupProgram].self, from: data)
         } catch {
-            assertionFailure("startup-programs.json 디코딩 실패: \(error)")
+            #if DEBUG
+            print("⚠️ startup-programs.json 디코딩 실패: \(error)")
+            #endif
             return []
         }
     }

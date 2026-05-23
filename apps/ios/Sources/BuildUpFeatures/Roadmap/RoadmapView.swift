@@ -127,6 +127,18 @@ public struct RoadmapView: View {
                 wizardStageView(for: stageId)
                     .environment(\.wizardOnAdvance, advanceClosure())
             }
+            #if DEBUG
+            // 디자인 검증용 — BU_DEMO_STAGE=startup-type 이면 해당 stage 로 자동 push.
+            //   SIMCTL_CHILD_BU_DEMO_STAGE=startup-type xcrun simctl launch ...
+            .onAppear {
+                if let demoStage = ProcessInfo.processInfo.environment["BU_DEMO_STAGE"],
+                   !demoStage.isEmpty, stagePath.isEmpty {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        stagePath = [demoStage]
+                    }
+                }
+            }
+            #endif
         }
     }
 

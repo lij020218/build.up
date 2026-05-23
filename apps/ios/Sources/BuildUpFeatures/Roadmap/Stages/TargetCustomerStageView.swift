@@ -49,6 +49,96 @@ public struct TargetCustomerStageView: View {
         }
     }
 
+    /// onAdvance/onEditSave 공유 입력 — whyTarget 도 포함 (이전엔 누락).
+    private var currentInputs: [String: String] {
+        [
+            "ageRange": primaryAgeRange,
+            "lifestyle": lifestyleHint,
+            "priceSensitivity": priceSensitivity,
+            "whyTarget": whyTarget,
+        ]
+    }
+
+    // MARK: - Cluster-aware Define labels/placeholders/chips
+    //   웹 SSOT (TargetCustomerStage.tsx:218-305) 와 동일하게 tech/online/offline 별로 분기.
+
+    private enum ClusterGroup { case offline, online, tech }
+    private var clusterGroup: ClusterGroup {
+        switch cluster.category {
+        case .startupTech:   return .tech
+        case .onlineDigital: return .online
+        default:             return .offline
+        }
+    }
+
+    private var ageRangeLabel: String {
+        switch clusterGroup {
+        case .tech:    return "1. 타깃 산업·기업 규모 *"
+        case .online:  return "1. 주 사용자 (연령 + 유입 채널) *"
+        case .offline: return "1. 주 연령대 *"
+        }
+    }
+    private var ageRangePlaceholder: String {
+        switch clusterGroup {
+        case .tech:    return "예: 50-200인 B2B SaaS / 핀테크 스타트업 (시리즈 A-B)"
+        case .online:  return "예: 25-35세 여성 + 인스타·유튜브 유입 + 모바일 80%"
+        case .offline: return "예: 28-38세 (월급쟁이 직장인 + 자녀 없는 부부)"
+        }
+    }
+
+    private var lifestyleLabel: String {
+        switch clusterGroup {
+        case .tech:    return "2. 핵심 사용자 역할 + 일상 워크플로 *"
+        case .online:  return "2. 구매 동선 + 사용 맥락 *"
+        case .offline: return "2. 라이프스타일 + 일상 동선 *"
+        }
+    }
+    private var lifestylePlaceholder: String {
+        switch clusterGroup {
+        case .tech:    return "예: 운영팀 PM — Slack/Notion 풀데이 사용, 매주 화요일 회고에서 우리 도구 데이터 확인"
+        case .online:  return "예: 인스타 광고 → 상세페이지 → 장바구니 7일 → 가족 추천 후 결제. 모바일 80%, 야간 21-23시 피크."
+        case .offline: return "예: 평일 출근 점심 12-13시 (8분 도보권 내) / 주말 브런치 (SNS 업로드)"
+        }
+    }
+
+    private var priceLabel: String {
+        switch clusterGroup {
+        case .tech:    return "3. 도입 결정 권한 + 예산 규모 *"
+        case .online:  return "3. 객단가 + 결제 의사 *"
+        case .offline: return "3. 객단가 기대치 + 가격 민감도 *"
+        }
+    }
+    private var priceChips: [(label: String, value: String)] {
+        switch clusterGroup {
+        case .tech: return [
+            ("Self-serve (≤$50/mo)", "self-serve-low"),
+            ("팀 도입 ($50-500)",    "team-mid"),
+            ("연 계약 ($5K-50K)",    "annual-contract"),
+            ("엔터프라이즈 (PO)",     "enterprise"),
+        ]
+        case .online: return [
+            ("저가 (₩5-15k)",     "value-budget"),
+            ("중가 (₩15-40k)",    "mid-quality"),
+            ("프리미엄 (₩40-100k)", "premium"),
+            ("럭셔리 (₩100k↑)",   "luxury"),
+        ]
+        case .offline: return [
+            ("가성비 (₩5-10k)",    "value-budget"),
+            ("중간 (₩10-20k)",     "mid-quality"),
+            ("프리미엄 (₩20-40k)", "premium"),
+            ("럭셔리 (₩40k↑)",    "luxury"),
+        ]
+        }
+    }
+
+    private var whyTargetPlaceholder: String {
+        switch clusterGroup {
+        case .tech:    return "예: 50-200인 SaaS 팀이 우리 ICP. PMF 인터뷰 12건 중 9건이 같은 페인."
+        case .online:  return "예: 인스타 광고 ROAS 280% 채널이 이 페르소나. 첫 100 주문 60%가 동일 세그먼트."
+        case .offline: return "예: 상권 분석에서 28-38세 직장인 비중 42% / 경쟁점은 모두 가족 타깃"
+        }
+    }
+
     private var filledCount: Int {
         [primaryAgeRange, lifestyleHint, priceSensitivity]
             .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -78,23 +168,11 @@ public struct TargetCustomerStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(
-                    currentStageId: stageId,
-                    inputs: [
-                        "ageRange": primaryAgeRange,
-                        "lifestyle": lifestyleHint,
-                        "priceSensitivity": priceSensitivity,
-                    ]
-                )
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(currentStageId: stageId,
-                    inputs: [
-                        "ageRange": primaryAgeRange,
-                        "lifestyle": lifestyleHint,
-                        "priceSensitivity": priceSensitivity,
-                    ])
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs)
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
@@ -238,28 +316,20 @@ private extension TargetCustomerStageView {
                         .tracking(-0.3)
                 }
 
-                inputField(label: "1. 주 연령대 *") {
-                    TextField(
-                        "예: 28-38세 (월급쟁이 직장인 + 자녀 없는 부부)",
-                        text: $primaryAgeRange,
-                        axis: .vertical
-                    )
-                    .lineLimit(1...3)
-                    .buTextFieldStyle()
+                inputField(label: ageRangeLabel) {
+                    TextField(ageRangePlaceholder, text: $primaryAgeRange, axis: .vertical)
+                        .lineLimit(1...3)
+                        .buTextFieldStyle()
                 }
 
-                inputField(label: "2. 라이프스타일 + 일상 동선 *") {
-                    TextField(
-                        "예: 평일 출근 점심 12-13시 (8분 도보권 내) / 주말 브런치 (SNS 업로드)",
-                        text: $lifestyleHint,
-                        axis: .vertical
-                    )
-                    .lineLimit(2...5)
-                    .buTextFieldStyle()
+                inputField(label: lifestyleLabel) {
+                    TextField(lifestylePlaceholder, text: $lifestyleHint, axis: .vertical)
+                        .lineLimit(2...5)
+                        .buTextFieldStyle()
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("3. 객단가 기대치 + 가격 민감도 *")
+                    Text(priceLabel)
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(BUColor.midnight)
                         .tracking(0.3)
@@ -268,21 +338,16 @@ private extension TargetCustomerStageView {
                         columns: [GridItem(.flexible()), GridItem(.flexible())],
                         spacing: 8
                     ) {
-                        PriceChip(label: "가성비 (₩5-10k)",    value: "value-budget", selected: $priceSensitivity)
-                        PriceChip(label: "중간 (₩10-20k)",     value: "mid-quality",  selected: $priceSensitivity)
-                        PriceChip(label: "프리미엄 (₩20-40k)", value: "premium",      selected: $priceSensitivity)
-                        PriceChip(label: "럭셔리 (₩40k↑)",    value: "luxury",       selected: $priceSensitivity)
+                        ForEach(priceChips, id: \.value) { chip in
+                            PriceChip(label: chip.label, value: chip.value, selected: $priceSensitivity)
+                        }
                     }
                 }
 
                 inputField(label: "4. 왜 이 타깃인가 (선택)", isOptional: true) {
-                    TextField(
-                        "예: 상권 분석에서 28-38세 직장인 비중 42% / 경쟁점은 모두 가족 타깃",
-                        text: $whyTarget,
-                        axis: .vertical
-                    )
-                    .lineLimit(2...4)
-                    .buTextFieldStyle()
+                    TextField(whyTargetPlaceholder, text: $whyTarget, axis: .vertical)
+                        .lineLimit(2...4)
+                        .buTextFieldStyle()
                 }
 
                 HStack(spacing: BUSpacing.xs) {

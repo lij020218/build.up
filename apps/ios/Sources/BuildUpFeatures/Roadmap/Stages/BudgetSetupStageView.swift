@@ -72,6 +72,8 @@ public struct BudgetSetupStageView: View {
         "climate-energy":       ["indie": 1_000_000, "bootstrap":  30_000_000, "seed": 100_000_000, "seriesA": 300_000_000],
     ]
 
+    /// 웹 SSOT (BudgetSetupStage.tsx:324) 와 1:1 일치.
+    /// pet / living-service / space 는 웹에 명시 없음 → fallback `5_000_000` 사용.
     private static let offlineMonthlyByCategory: [String: Int] = [
         "food":           8_000_000,
         "cafe-dessert":   6_000_000,
@@ -79,9 +81,6 @@ public struct BudgetSetupStageView: View {
         "beauty":         4_500_000,
         "fitness":        7_000_000,
         "education":      4_000_000,
-        "pet":            4_500_000,
-        "living-service": 4_000_000,
-        "space":          5_000_000,
         "online-digital": 2_500_000,
     ]
 
@@ -289,7 +288,9 @@ public struct BudgetSetupStageView: View {
                                     .font(.system(size: 11, weight: .medium))
                                     .foregroundStyle(BUColor.inkMuted)
                                 HStack(alignment: .firstTextBaseline, spacing: 1) {
-                                    Text("\(info.monthlyRoyalty)")
+                                    Text(info.monthlyRoyalty.truncatingRemainder(dividingBy: 1) == 0
+                                         ? "\(Int(info.monthlyRoyalty))"
+                                         : String(format: "%.1f", info.monthlyRoyalty))
                                         .font(.system(size: 15, weight: .bold))
                                         .foregroundStyle(BUColor.midnight)
                                         .monospacedDigit()

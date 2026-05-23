@@ -56,7 +56,7 @@ public struct FranchiseBrand: Decodable, Sendable, Identifiable, Hashable {
     public let tagline: FranchiseBrandLocalized
     public let startupCostWon: Int           // 만원 단위
     public let franchiseFee: Int             // 만원 단위
-    public let monthlyRoyalty: Int           // 만원/월
+    public let monthlyRoyalty: Double        // 만원/월 — 일부 브랜드는 소수 (예: 60계치킨 16.5만)
     public let avgAnnualRevenueWon: Int      // 만원 단위
     public let storeCount: Int
     public let closureRate: Double
@@ -82,8 +82,42 @@ public struct FranchiseBrand: Decodable, Sendable, Identifiable, Hashable {
 
 public enum FranchiseBrandRegistry {
 
-    /// 번들 로드 (lazy, thread-safe via static let).
-    public static let all: [FranchiseBrand] = loadFromBundle()
+    /// 번들 로드 (lazy, thread-safe via static let) — 중복 제거 후 노출.
+    /// 웹 데이터에 같은 브랜드 (같은 한국어 명 + 같은 franchiseUrl) 가 ID 만 다르게 2개 등록된 경우가 있어
+    /// (예: saladit + salady 둘 다 "샐러디"), costVerified=true 또는 더 풍부한 sources 를 가진 쪽만 유지.
+    public static let all: [FranchiseBrand] = dedupe(loadFromBundle())
+
+    private static func dedupe(_ brands: [FranchiseBrand]) -> [FranchiseBrand] {
+        // 그룹화 키: (한국어 명) + (있다면 franchiseUrl). url 없으면 한국어 명만으로.
+        func key(_ b: FranchiseBrand) -> String {
+            let name = b.name.ko.trimmingCharacters(in: .whitespaces)
+            let url = (b.franchiseUrl ?? "").lowercased().trimmingCharacters(in: .whitespaces)
+            return url.isEmpty ? name : "\(name)|\(url)"
+        }
+        // costVerified true 우선, 그 다음 sources 개수 많은 쪽, 그 다음 storeCount 큰 쪽.
+        func quality(_ b: FranchiseBrand) -> (Int, Int, Int) {
+            (b.costVerified ? 1 : 0, b.sources?.count ?? 0, b.storeCount)
+        }
+        var bestByKey: [String: FranchiseBrand] = [:]
+        for b in brands {
+            let k = key(b)
+            if let existing = bestByKey[k] {
+                if quality(b) > quality(existing) { bestByKey[k] = b }
+            } else {
+                bestByKey[k] = b
+            }
+        }
+        // 입력 순서 유지하면서 dedupe — 첫 번째로 키가 등장한 위치에 best 를 배치.
+        var seen: Set<String> = []
+        var out: [FranchiseBrand] = []
+        for b in brands {
+            let k = key(b)
+            if seen.contains(k) { continue }
+            seen.insert(k)
+            if let best = bestByKey[k] { out.append(best) }
+        }
+        return out
+    }
 
     /// id 로 빠른 조회 (O(1)).
     private static let byId: [String: FranchiseBrand] = {
@@ -112,15 +146,20 @@ public enum FranchiseBrandRegistry {
 
     private static func loadFromBundle() -> [FranchiseBrand] {
         guard let url = Bundle.module.url(forResource: "franchise-brands", withExtension: "json") else {
-            assertionFailure("franchise-brands.json 번들에 누락")
+            // 번들 누락은 dev/test 환경 문제 — production 에서는 빈 리스트로 graceful degrade.
+            #if DEBUG
+            print("⚠️ franchise-brands.json 번들에 누락")
+            #endif
             return []
         }
         do {
             let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            return try decoder.decode([FranchiseBrand].self, from: data)
+            return try JSONDecoder().decode([FranchiseBrand].self, from: data)
         } catch {
-            assertionFailure("franchise-brands.json 디코딩 실패: \(error)")
+            // 디코딩 실패 시 production 크래시 방지 — 빈 리스트로 graceful degrade + 디버그 로그.
+            #if DEBUG
+            print("⚠️ franchise-brands.json 디코딩 실패: \(error)")
+            #endif
             return []
         }
     }

@@ -119,6 +119,12 @@ public struct AppRoot: View {
                         )
                         .task {
                             await notificationFlow.refresh()
+                            #if DEBUG
+                            // 디자인 검증 모드 (BU_DEMO_TAB 또는 BU_DEMO_STAGE) 에서는 sheet skip.
+                            let demoMode = ProcessInfo.processInfo.environment["BU_DEMO_TAB"] != nil
+                                || ProcessInfo.processInfo.environment["BU_DEMO_STAGE"] != nil
+                            if demoMode { return }
+                            #endif
                             if notificationFlow.status != .granted {
                                 showNotificationSheet = true
                             }

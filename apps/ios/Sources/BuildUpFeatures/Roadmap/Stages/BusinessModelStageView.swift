@@ -30,13 +30,56 @@ public struct BusinessModelStageView: View {
 
     @Environment(RoadmapStore.self) private var roadmapStore
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("stage.bizModel.selected")  private var selected  = ""
-    @AppStorage("stage.bizModel.openHour")  private var openHour  = 9
-    @AppStorage("stage.bizModel.closeHour") private var closeHour = 21
-    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    @AppStorage("stage.bizModel.selected")       private var selected       = ""
+    @AppStorage("stage.bizModel.revenueModelId") private var revenueModelId = ""
+    @AppStorage("stage.bizModel.openHour")       private var openHour       = 9
+    @AppStorage("stage.bizModel.closeHour")      private var closeHour      = 21
+    @AppStorage("roadmap.selectedIndustryId")    private var industryId     = ""
     private let stageId = "business-model"
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+
+    /// 수익 모델 selector 표시 여부 — startup-tech / online-digital 만 (웹 SSOT showRevenueModel).
+    private var showRevenueModel: Bool {
+        (cluster.isStartupTech || cluster.isOnline) && !selected.isEmpty
+    }
+
+    /// 영업시간 selector 표시 여부 — 오프라인 매장형만. 온라인·스타트업은 24시간 운영이라 무의미.
+    private var showBusinessHours: Bool {
+        !cluster.isStartupTech && !cluster.isOnline
+    }
+
+    /// 수익 모델 옵션 (웹 REVENUE_OPTIONS, applicableTo 필터링).
+    private struct RevenueOption: Identifiable {
+        let id: String
+        let titleKo: String
+        let subKo: String
+        let exampleKo: String
+        let applicableTo: Set<String>
+    }
+    private var revenueOptions: [RevenueOption] {
+        let all: [RevenueOption] = [
+            .init(id: "subscription",
+                  titleKo: "정기 구독 (월·연)", subKo: "매월/매년 자동 결제", exampleKo: "예: 넷플릭스 · 노션 · 토스",
+                  applicableTo: ["startup-tech", "online-digital"]),
+            .init(id: "api-usage",
+                  titleKo: "API 사용량 (호출·토큰 단위)", subKo: "쓴 만큼 청구", exampleKo: "예: OpenAI · Stripe · Twilio",
+                  applicableTo: ["startup-tech"]),
+            .init(id: "one-time",
+                  titleKo: "일회 구매", subKo: "한 번 결제, 그 후 사용", exampleKo: "예: 음식점 · 옷가게 · 디지털 상품 단건",
+                  applicableTo: []),
+            .init(id: "freemium",
+                  titleKo: "무료 + 프리미엄", subKo: "무료 체험 후 유료 전환", exampleKo: "예: 디스코드 · 줌 · 노션 무료 플랜",
+                  applicableTo: ["startup-tech", "online-digital"]),
+            .init(id: "marketplace-fee",
+                  titleKo: "거래 수수료", subKo: "매출 발생 시 % 수수료", exampleKo: "예: 우버이츠 · 에어비앤비 · 크몽",
+                  applicableTo: ["startup-tech", "online-digital"]),
+            .init(id: "hybrid",
+                  titleKo: "복합 (둘 이상)", subKo: "구독 + API · 무료 + 광고 등", exampleKo: "예: AWS · Slack · Spotify",
+                  applicableTo: ["startup-tech", "online-digital"]),
+        ]
+        return all.filter { $0.applicableTo.isEmpty || $0.applicableTo.contains(cluster.category.rawValue) }
+    }
 
     /// 웹 SSOT: packages/shared/starter-data.ts category 별 businessModelOptions.
     /// food/cafe → 외식 운영 모델 / 서비스업 → 매장·예약·방문 / 리테일 → 오프·온·하이브리드 /
@@ -98,21 +141,27 @@ public struct BusinessModelStageView: View {
                   titleKo: "구독 박스·리필",     descKo: "정기배송 + 멤버십 LTV 중심",       tagKo: nil),
         ]
         case .startupTech: return [
-            .init(id: "saas-subscription", icon: "creditcard.fill", color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "SaaS 구독",        descKo: "월·연 구독 — Free→Paid 전환 funnel", tagKo: "추천"),
-            .init(id: "usage-based",        icon: "chart.bar.fill", color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "사용량 기반",       descKo: "API 호출·토큰 등 사용량당 과금",       tagKo: nil),
-            .init(id: "enterprise",         icon: "building.2.fill", color: Color(red: 0.020, green: 0.588, blue: 0.412),
-                  titleKo: "엔터프라이즈 계약", descKo: "연 단위·맞춤 계약 — 영업 중심",         tagKo: nil),
-            .init(id: "one-time",           icon: "tag.fill",        color: Color(red: 0.486, green: 0.227, blue: 0.929),
-                  titleKo: "단발 결제 (인디)",  descKo: "Marc Lou·Pieter Levels 패턴",         tagKo: nil),
+            // 웹 SSOT (getStarterBusinessModelOptions("startup-tech")) — biz model 은 제품 형태.
+            //   수익 모델 (어떻게 돈 받는가) 은 별도 selector 로 분리됨.
+            .init(id: "saas-product",   icon: "macbook.and.iphone", color: Color(red: 0.149, green: 0.388, blue: 0.922),
+                  titleKo: "SaaS 제품",   descKo: "웹·모바일 앱 형태로 사용자에게 직접 제공",       tagKo: "추천"),
+            .init(id: "platform-model", icon: "rectangle.connected.to.line.below", color: Color(red: 0.918, green: 0.345, blue: 0.047),
+                  titleKo: "플랫폼·마켓플레이스", descKo: "공급자·수요자 매칭 — 거래 수수료 기반",   tagKo: nil),
+            .init(id: "api-infra",      icon: "bolt.horizontal.fill", color: Color(red: 0.020, green: 0.588, blue: 0.412),
+                  titleKo: "API·인프라",   descKo: "개발자 대상 API·SDK — Stripe·Twilio 패턴",   tagKo: nil),
         ]
         }
     }
 
     public init() {}
 
-    private var canContinue: Bool { !selected.isEmpty && openHour != closeHour }
+    /// 게이트: model 선택 + (오프라인이면) 영업시간 + (tech/online 이면) 수익 모델.
+    private var canContinue: Bool {
+        guard !selected.isEmpty else { return false }
+        if showBusinessHours && openHour == closeHour { return false }
+        if showRevenueModel && revenueModelId.isEmpty { return false }
+        return true
+    }
 
     private var hoursPerDay: Int {
         closeHour > openHour ? closeHour - openHour : (24 - openHour + closeHour)
@@ -120,7 +169,21 @@ public struct BusinessModelStageView: View {
 
     private var advanceHint: String {
         if selected.isEmpty { return "운영 방식을 선택하세요" }
-        return "하루 \(hoursPerDay)시간 영업 — 다음 단계로 진행"
+        if showRevenueModel && revenueModelId.isEmpty { return "수익 모델을 선택하세요" }
+        if showBusinessHours { return "하루 \(hoursPerDay)시간 영업 — 다음 단계로 진행" }
+        return "선택 완료 — 다음 단계로 진행"
+    }
+
+    private var currentInputs: [String: String] {
+        var m: [String: String] = ["model": selected]
+        if showBusinessHours {
+            m["openHour"] = "\(openHour)"
+            m["closeHour"] = "\(closeHour)"
+        }
+        if showRevenueModel, !revenueModelId.isEmpty {
+            m["revenueModel"] = revenueModelId
+        }
+        return m
     }
 
     public var body: some View {
@@ -133,15 +196,11 @@ public struct BusinessModelStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(
-                    currentStageId: stageId,
-                    inputs: ["model": selected, "openHour": "\(openHour)", "closeHour": "\(closeHour)"]
-                )
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(currentStageId: stageId,
-                    inputs: ["model": selected, "openHour": "\(openHour)", "closeHour": "\(closeHour)"])
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs)
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
@@ -178,9 +237,89 @@ public struct BusinessModelStageView: View {
                     deliveryNote
                 }
 
-                businessHoursSection
+                if showRevenueModel {
+                    revenueModelSection
+                }
+
+                if showBusinessHours {
+                    businessHoursSection
+                }
             }
         }
+    }
+
+    // MARK: - 수익 모델 section (startup-tech / online-digital 만)
+
+    private var revenueModelSection: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Text("수익 모델")
+                        .font(.system(size: 10.5, weight: .heavy))
+                        .tracking(0.6)
+                        .textCase(.uppercase)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 3)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    Text("어떻게 돈을 받으실 건가요?")
+                        .font(.system(size: 15, weight: .heavy))
+                        .tracking(-0.2)
+                        .foregroundStyle(BUColor.ink)
+                }
+                Text("수익 모델은 운영 대시보드의 KPI (MRR · 재구매율 · ARPU) 와 가격 설계 단계의 추천을 결정합니다. 결합 모델이면 \"복합\"을 선택하세요.")
+                    .font(.system(size: 12.5, weight: .medium))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                    spacing: 10
+                ) {
+                    ForEach(revenueOptions) { opt in
+                        revenueOptionCard(opt)
+                    }
+                }
+            }
+        }
+    }
+
+    private func revenueOptionCard(_ opt: RevenueOption) -> some View {
+        let isSelected = revenueModelId == opt.id
+        return Button {
+            withAnimation(.snappy(duration: 0.18)) { revenueModelId = opt.id }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(opt.titleKo)
+                    .font(.system(size: 13.5, weight: .heavy))
+                    .tracking(-0.15)
+                    .foregroundStyle(isSelected ? BUColor.midnight : BUColor.ink)
+                Text(opt.subKo)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .lineSpacing(2)
+                Text(opt.exampleKo)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.85))
+                    .lineSpacing(2)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 11)
+            .frame(maxWidth: .infinity, minHeight: 78, alignment: .topLeading)
+            .background(
+                isSelected ? BUColor.midnight.opacity(0.06) : Color.white,
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(
+                        isSelected ? BUColor.midnight : BUColor.midnight.opacity(0.10),
+                        lineWidth: isSelected ? 1.5 : 1
+                    )
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var deliveryNote: some View {

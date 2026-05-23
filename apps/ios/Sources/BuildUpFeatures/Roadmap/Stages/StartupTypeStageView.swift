@@ -25,6 +25,11 @@ private struct StartupTypeOption: Identifiable {
     let subtitleKo: String
 }
 
+/// 5축 종합 점수 (수익성+안정성+접근성+브랜드+지원) / 5. 웹 computeOverallScore 패턴 미러.
+private func overallScore(_ s: FranchiseBrandScores) -> Int {
+    (s.profitability + s.stability + s.accessibility + s.brandPower + s.support) / 5
+}
+
 public struct StartupTypeStageView: View {
 
     @Environment(RoadmapStore.self) private var roadmapStore
@@ -49,20 +54,44 @@ public struct StartupTypeStageView: View {
         return inputs
     }
 
+    private var categoryId: String { StarterIndustryData.option(by: industryId)?.categoryId ?? "" }
+    private var isStartupTech: Bool { categoryId == "startup-tech" }
+
     /// 사용자 업종(category 또는 sub-industry) 에 맞는 프랜차이즈 후보.
     /// 1순위: 세부업종 매칭, 2순위: 대분류 매칭 (웹 SSOT — getFranchiseBrandsForSubIndustry → forCategory 폴백).
+    /// 정렬: 5축 종합 점수 내림차순 (웹의 computeOverallScore 패턴 미러).
     private var franchiseCandidates: [FranchiseBrand] {
+        let base: [FranchiseBrand]
         let sub = FranchiseBrandRegistry.brands(forSubIndustry: industryId)
-        if !sub.isEmpty { return sub }
-        let cid = StarterIndustryData.option(by: industryId)?.categoryId ?? ""
-        return FranchiseBrandRegistry.brands(forCategory: cid)
+        if !sub.isEmpty { base = sub }
+        else { base = FranchiseBrandRegistry.brands(forCategory: categoryId) }
+        return base.sorted { overallScore($0.scores) > overallScore($1.scores) }
     }
 
-    private let options: [StartupTypeOption] = [
-        StartupTypeOption(id: "independent", icon: "star.fill",                color: Color(red: 0.149, green: 0.388, blue: 0.922), titleKo: "독립창업",     subtitleKo: "본인이 직접 브랜드·메뉴를 구성"),
-        StartupTypeOption(id: "franchise",   icon: "building.2.fill",          color: Color(red: 0.486, green: 0.227, blue: 0.929), titleKo: "프랜차이즈",   subtitleKo: "검증된 브랜드로 빠르게 시작"),
-        StartupTypeOption(id: "undecided",   icon: "questionmark.circle.fill", color: Color(red: 0.420, green: 0.451, blue: 0.502), titleKo: "미정",         subtitleKo: "아직 결정하지 않음"),
-    ]
+    /// 옵션 — startup-tech 는 프랜차이즈 옵션 자체 숨김 (웹 SSOT 패턴).
+    /// 독립창업 아이콘은 startup-tech 일 때 ⚡(bolt) 로 전환.
+    private var options: [StartupTypeOption] {
+        let independentIcon = isStartupTech ? "bolt.fill" : "star.fill"
+        let independentSubtitle = isStartupTech
+            ? "직접 제품과 회사를 만드는 기술 스타트업입니다"
+            : "본인이 직접 브랜드·메뉴를 구성"
+        let independent = StartupTypeOption(
+            id: "independent", icon: independentIcon,
+            color: Color(red: 0.149, green: 0.388, blue: 0.922),
+            titleKo: "독립창업", subtitleKo: independentSubtitle
+        )
+        let franchise = StartupTypeOption(
+            id: "franchise", icon: "building.2.fill",
+            color: Color(red: 0.486, green: 0.227, blue: 0.929),
+            titleKo: "프랜차이즈", subtitleKo: "검증된 브랜드로 빠르게 시작"
+        )
+        let undecided = StartupTypeOption(
+            id: "undecided", icon: "questionmark.circle.fill",
+            color: Color(red: 0.420, green: 0.451, blue: 0.502),
+            titleKo: "미정", subtitleKo: "아직 결정하지 않음"
+        )
+        return isStartupTech ? [independent, undecided] : [independent, franchise, undecided]
+    }
 
     public init() {}
 
@@ -148,6 +177,14 @@ public struct StartupTypeStageView: View {
                     // 프랜차이즈 해제하면 페이지 0 으로 복귀 (page 1 사라짐)
                     if newValue != "franchise" && page > 0 { page = 0 }
                 }
+                .onAppear {
+                    // 이미 프랜차이즈 선택된 상태로 재진입한 경우 (편집 모드) — 브랜드 페이지로 자동 이동.
+                    if selected == "franchise" && !franchiseCandidates.isEmpty && page == 0 {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.easeInOut(duration: 0.22)) { page = 1 }
+                        }
+                    }
+                }
             }
         }
     }
@@ -164,6 +201,13 @@ public struct StartupTypeStageView: View {
                 ForEach(options) { opt in
                     TypeCard(option: opt, isSelected: selected == opt.id) {
                         withAnimation(.snappy(duration: 0.18)) { selected = opt.id }
+                        // 프랜차이즈 선택 시 브랜드 후보가 있으면 자동으로 페이지 1 진입
+                        // (웹 SSOT 의 "브랜드 선택하기 →" 자동 전환 패턴 미러).
+                        if opt.id == "franchise" && !franchiseCandidates.isEmpty {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                withAnimation(.easeInOut(duration: 0.22)) { page = 1 }
+                            }
+                        }
                     }
                 }
             }
@@ -424,6 +468,9 @@ private struct FranchiseBrandRow: View {
                     metric(label: "매장수", value: "\(info.storeCount.formatted())")
                 }
 
+                // 5축 점수 바 — 웹 SSOT FranchiseBrand.scores (profitability/stability/accessibility/brandPower/support).
+                scoreBars(info.scores, overallScore: overallScore(info.scores))
+
                 if isSelected {
                     Divider().padding(.vertical, 2)
                     if let breakdown = info.costBreakdown, !breakdown.isEmpty {
@@ -455,13 +502,32 @@ private struct FranchiseBrandRow: View {
                     }
 
                     if info.monthlyRoyalty > 0 {
-                        Text("월 로열티 \(info.monthlyRoyalty)만원 / 가맹비 \(info.franchiseFee.formatted())만원")
+                        let royaltyText = info.monthlyRoyalty.truncatingRemainder(dividingBy: 1) == 0
+                            ? "\(Int(info.monthlyRoyalty))"
+                            : String(format: "%.1f", info.monthlyRoyalty)
+                        Text("월 로열티 \(royaltyText)만원 / 가맹비 \(info.franchiseFee.formatted())만원")
                             .font(.system(size: 11.5, weight: .semibold))
                             .foregroundStyle(BUColor.midnight)
                     } else {
                         Text("로열티 없음 · 가맹비 \(info.franchiseFee.formatted())만원")
                             .font(.system(size: 11.5, weight: .semibold))
                             .foregroundStyle(BUColor.midnight)
+                    }
+
+                    // 웹 SSOT: 선택된 브랜드의 본사 가맹 안내 페이지 link CTA.
+                    if let urlString = info.franchiseUrl, let url = URL(string: urlString) {
+                        Link(destination: url) {
+                            HStack(spacing: 4) {
+                                Text("\(info.name.ko) 가맹 문의")
+                                    .font(.system(size: 12, weight: .heavy))
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 10, weight: .heavy))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(BUColor.midnight, in: Capsule())
+                        }
                     }
                 }
             }
@@ -493,6 +559,74 @@ private struct FranchiseBrandRow: View {
                 .monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - 5축 점수 바 (웹 FranchiseBrand.scores 미러)
+
+    private func scoreColor(_ v: Int) -> Color {
+        if v >= 80 { return Color(red: 0.020, green: 0.588, blue: 0.412) } // green
+        if v >= 60 { return Color(red: 0.149, green: 0.388, blue: 0.922) } // blue
+        if v >= 40 { return Color(red: 0.918, green: 0.612, blue: 0.047) } // amber
+        return Color(red: 0.863, green: 0.149, blue: 0.149)                // red
+    }
+
+    @ViewBuilder
+    private func scoreBars(_ scores: FranchiseBrandScores, overallScore: Int) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            // 종합 점수 원형 게이지
+            ZStack {
+                Circle()
+                    .stroke(scoreColor(overallScore).opacity(0.12), lineWidth: 4)
+                Circle()
+                    .trim(from: 0, to: CGFloat(overallScore) / 100.0)
+                    .stroke(scoreColor(overallScore), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 0) {
+                    Text("\(overallScore)")
+                        .font(.system(size: 14, weight: .heavy))
+                        .foregroundStyle(scoreColor(overallScore))
+                        .monospacedDigit()
+                    Text("종합")
+                        .font(.system(size: 8, weight: .heavy))
+                        .foregroundStyle(BUColor.inkMuted)
+                }
+            }
+            .frame(width: 44, height: 44)
+
+            // 5축 바
+            HStack(spacing: 6) {
+                scoreBar(label: "수익성", value: scores.profitability)
+                scoreBar(label: "안정성", value: scores.stability)
+                scoreBar(label: "접근성", value: scores.accessibility)
+                scoreBar(label: "브랜드", value: scores.brandPower)
+                scoreBar(label: "지원",  value: scores.support)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func scoreBar(label: String, value: Int) -> some View {
+        VStack(spacing: 3) {
+            // 막대
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(scoreColor(value).opacity(0.10))
+                    .frame(width: 14, height: 28)
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(scoreColor(value))
+                    .frame(width: 14, height: CGFloat(value) * 28.0 / 100.0)
+            }
+            Text("\(value)")
+                .font(.system(size: 9, weight: .heavy))
+                .foregroundStyle(scoreColor(value))
+                .monospacedDigit()
+            Text(label)
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(BUColor.inkMuted)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
