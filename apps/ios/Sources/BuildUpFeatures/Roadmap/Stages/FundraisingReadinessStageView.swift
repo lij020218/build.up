@@ -200,8 +200,9 @@ public struct FundraisingReadinessStageView: View {
     }
 
     private func runwayStatus(months: Double) -> (String, Color) {
-        if months >= 12 { return ("안전", BUColor.success) }
-        if months >= 6  { return ("주의", .orange) }
+        if months >= 18 { return ("Default Alive — 18개월+ 표준", BUColor.success) }
+        if months >= 12 { return ("Default Dead 경계 — 12개월은 짧음", .orange) }
+        if months >= 6  { return ("주의 — 6개월 이내 라운드", .orange) }
         return ("위험 — 즉시 투자 활동 시작", .red)
     }
 
@@ -284,9 +285,9 @@ public struct FundraisingReadinessStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("주요 스타트업 지원 프로그램 (2026)")
                     let programs: [(String, String)] = [
-                        ("TIPS (팁스)", "민간투자 연계. 최대 5억 R&D 지원. 연 500개 선정. 추천 기관 통해 신청."),
+                        ("TIPS (팁스)", "민간투자 연계 · R&D 최대 5억 (성공 시 환수 10%만) · 149개 운영사 추천 필수 · jointips.or.kr"),
                         ("중진공 청년창업사관학교", "만 39세 이하. 공간·자금·멘토링. 연 1000명 선정."),
-                        ("K-스타트업 창업패키지", "3년 미만 법인. 최대 1억. 창업진흥원 공고 확인."),
+                        ("K-스타트업 창업패키지", "3년 미만 법인. 최대 1억. k-startup.go.kr 공고 확인."),
                         ("산업부 R&D", "딥테크 스타트업. 최대 수억~수십억. 기술성 평가 필수."),
                     ]
                     ForEach(programs, id: \.0) { title, desc in

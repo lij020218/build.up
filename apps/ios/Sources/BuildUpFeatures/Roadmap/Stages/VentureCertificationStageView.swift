@@ -25,7 +25,7 @@ public struct VentureCertificationStageView: View {
 
     public init() {}
 
-    /// 게이트: 인증 경로 선택 — 4가지 유형 중 하나.
+    /// 게이트: 인증 경로 선택 — 3가지 유형 중 하나 (2021 개편 후 3-track 체제).
     private var canCompleteStage: Bool {
         !certType.isEmpty
     }
@@ -51,10 +51,10 @@ public struct VentureCertificationStageView: View {
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["certType": certType]) },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 벤처 유형 결정", detail: "벤처투자유형·연구개발유형·혁신성장유형 비교 후 선택"),
+                .init(label: "1. 벤처 유형 결정", detail: "벤처투자유형·연구개발유형·혁신성장유형 3가지 중 선택 (2021 개편 후 3-track)"),
                 .init(label: "2. 자격 요건 점검", detail: "투자 유치액·R&D 비율·매출·인력 등 유형별 요건 충족 확인"),
                 .init(label: "3. 신청 서류 준비", detail: "사업계획서·재무제표·R&D 증빙·연구원 명단 등 사전 준비"),
-                .init(label: "4. 인증 신청·발급", detail: "벤처기업종합관리시스템(SMTECH) 신청 + 평균 1~2개월 발급"),
+                .init(label: "4. 인증 신청·발급", detail: "venture.or.kr 신청 + 평균 1~2개월 발급 (심사기간 30일 기준)"),
                 ],
                 verifyItems: [
                 "벤처투자유형 — 「벤처투자조합 5천만원 이상」 투자 받아야 자격, 단순 엔젤 X",
@@ -62,10 +62,12 @@ public struct VentureCertificationStageView: View {
                 "혁신성장유형 — 평가 점수 70점 이상, 평가 항목 사전 확인 후 보완",
                 "법인전환 — 개인사업자는 인증 불가, 법인 전환 후 신청 (전환 후 6개월 매출 자료 필요)",
                 "갱신 — 벤처 인증은 3년, 갱신 시 자격 재충족 의무 (미충족 시 인증 취소)",
-                "혜택 활용 — 세제 감면·정부지원금 가산점·인재 채용 우대 등 자동 적용 X, 별도 신청 필요",
+                "스톡옵션 비과세 — 연 2억·누적 5억까지 비과세 (2027.12.31까지 한시), 50% 옵션풀 한도 (일반 10%)",
+                "병역특례 — 전문연구요원·산업기능요원 36개월 활용 가능 (인재 채용 핵심 혜택)",
+                "개인투자자 소득공제 — 3천만원 이하 100%·5천만원 70%·초과 30%, 투자자 모집 시 강력한 카드",
                 ],
-                nextStageLabel: "사업자등록",
-                nextSummary: "벤처 유형·요건·신청 완료 → 사업자등록 단계로 진입 (또는 다음 정부지원 신청)"
+                nextStageLabel: "성장 엔진 구축",
+                nextSummary: "벤처 유형·요건·신청 완료 → 인증 후 혜택 활성화 + 성장 엔진 단계로 진입"
             ),
             currentPage: page,
             totalPages: pages.count
@@ -94,12 +96,11 @@ public struct VentureCertificationStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("벤처 인증 4가지 유형")
+                    BUEyebrow("벤처 인증 3가지 유형 (2021 개편 후)")
                     let options: [(String, String, String)] = [
-                        ("research",    "연구개발기업",   "R&D 비용이 매출의 5% 이상 또는 연구인력 5% 이상. 딥테크 스타트업에 적합."),
-                        ("innovation",  "기술혁신형",     "기술보증기금(KIBO) 기술평가 통해 인증. 혁신기술 보유 기업."),
-                        ("vc",          "벤처투자기업",   "VC로부터 5000만원 이상 투자 유치. 가장 빠른 취득 경로."),
-                        ("government",  "정부지원기업",   "정부 R&D 과제 수행 기업. 중진공·IITP 과제 해당."),
+                        ("vc",         "벤처투자유형",    "벤처투자조합·VC로부터 5천만원 이상 + 자본금 10% 이상 투자 유치. 가장 빠른 취득 경로."),
+                        ("research",   "연구개발유형",    "매출 대비 R&D 비율 5% 이상 + 연구개발전담부서 보유. 딥테크·기술기반 스타트업."),
+                        ("innovation", "혁신성장유형",    "기술보증기금(KIBO)·벤처기업협회 평가 70점 이상. 매출·기술혁신성 평가형."),
                     ]
                     ForEach(options, id: \.0) { id, title, desc in
                         let isSelected = certType == id
@@ -142,13 +143,15 @@ public struct VentureCertificationStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("벤처 인증 혜택")
+                    BUEyebrow("벤처 인증 혜택 (2026 기준)")
                     let benefits = [
                         "법인세·소득세 50% 감면 (5년)",
-                        "4대보험 50% 감면 (3년)",
-                        "공공기관 조달 가점",
-                        "정책자금 금리 우대 (0.2-0.5%p)",
-                        "코스닥 상장 특례 (일부 유형)",
+                        "취득세 75% 감면 · 재산세 면제(3년) → 50% 감면(2년)",
+                        "스톡옵션 비과세 연 2억·누적 5억 (2027.12.31까지 한시)",
+                        "50% 옵션풀 한도 (일반 기업 10% 대비 5배)",
+                        "병역특례 — 전문연구요원·산업기능요원 36개월",
+                        "개인투자자 소득공제 100%/70%/30% (3천/5천/초과)",
+                        "정책자금 금리 우대 + 공공조달 가산점 + 코스닥 상장 특례",
                     ]
                     ForEach(benefits, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {
@@ -173,13 +176,13 @@ public struct VentureCertificationStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("신청 절차 (벤처확인기관 기준)")
+                    BUEyebrow("신청 절차 (벤처기업확인기관 기준)")
                     let steps = [
-                        "벤처확인종합관리시스템 (venturein.or.kr) 접속",
+                        "벤처기업확인종합관리시스템 (venture.or.kr) 접속",
                         "유형 선택 → 필요 서류 확인 (유형마다 다름)",
                         "온라인 신청 + 서류 업로드",
-                        "심사 (평균 2-4주) → 확인서 발급",
-                        "혜택 즉시 적용 시작",
+                        "심사 (심사기간 30일, 평균 1~2개월 발급) → 확인서 발급",
+                        "혜택 별도 신청 — 세제 감면·정책자금 등 자동 적용 X",
                     ]
                     ForEach(steps.indices, id: \.self) { i in
                         HStack(alignment: .top, spacing: BUSpacing.sm) {

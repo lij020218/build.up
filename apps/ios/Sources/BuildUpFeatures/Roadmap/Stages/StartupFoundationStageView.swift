@@ -44,7 +44,7 @@ public struct StartupFoundationStageView: View {
         BUStageShell(
             stageId: stageId,
             title: "창업팀·법인 기본 구조",
-            stageEyebrow: "단계 6 · 스타트업 기초",
+            stageEyebrow: "단계 1 · 스타트업 기초",
             helperText: "스타트업 실패의 42%는 시장이 없는 문제를 풀었기 때문. 팀·문제·시장 세 가지가 먼저입니다.",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
@@ -62,13 +62,13 @@ public struct StartupFoundationStageView: View {
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
-                .init(label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting(보통 4년 1년 cliff) 명문화"),
+                .init(label: "1. 공동창업자·지분 합의", detail: "역할·책임·지분·vesting 4년 + 2년 cliff(한국 상법 기본, 벤처 인증 후 1년 cliff 가능) 명문화"),
                 .init(label: "2. 시장·문제 정의", detail: "타깃 고객 ICP + 핵심 문제 3개 + 가설 1줄 정리"),
                 .init(label: "3. 비전·미션·OKR", detail: "북극성 지표 + 분기 OKR 3~5개 + 측정 시스템 셋업"),
                 .init(label: "4. 팀·자문·스폰서", detail: "초기 팀·자문·외부 스폰서 1명 이상 확보"),
                 ],
                 verifyItems: [
-                "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위, 1년 cliff + 4년 vesting 표준",
+                "공동창업자 지분 — vesting 없이 지분 분배 시 분쟁 1순위. 한국 상법 기본 2년 cliff + 4년 vesting, 1년 cliff는 벤처기업 인증 후에만 가능",
                 "지분 합의 — 시간·자본·아이디어 기여도 별도 명문화, 모호한 합의는 분쟁 후 해결 불가",
                 "근로계약 — 공동창업자도 근로계약·임원 등기 분리, 4대보험·세무 별도 처리",
                 "지분 매수권 — 퇴사 시 회사가 매수권 보유 명문화, 미명시 시 외부에 팔릴 위험",
@@ -230,7 +230,7 @@ public struct StartupFoundationStageView: View {
                     }
                     let warnings = [
                         "역할 분담 (CEO·CTO·COO) — 모호하면 1년 내 분쟁",
-                        "지분 비율 — Vesting 4년 + 1년 cliff 구조 권장",
+                        "지분 비율 — Vesting 4년 + 2년 cliff (한국 상법 기본, 벤처 인증 후 1년 cliff 가능)",
                         "풀타임 전환 시점 — 언제 회사에 전념할 것인가",
                     ]
                     ForEach(warnings, id: \.self) { item in

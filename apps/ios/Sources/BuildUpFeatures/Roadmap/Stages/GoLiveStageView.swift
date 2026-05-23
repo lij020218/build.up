@@ -144,8 +144,9 @@ public struct GoLiveStageView: View {
                             .foregroundStyle(BUColor.ink)
                     }
                     let storeItems = [
-                        "iOS App Store: 평균 24-48시간 (거절 시 1-2주 추가)",
-                        "Google Play: 평균 72시간",
+                        "iOS App Store: 평균 24시간~30일 (2026.3 이후 7-30일 지연 빈발, 거절 시 1-2주 추가)",
+                        "Google Play: 평균 72시간 (개인 계정은 14일 폐쇄 테스트 + 12명 의무)",
+                        "iOS 26 SDK + Xcode 26 필수 (2026.4.28부터 의무, 이전 빌드 거절)",
                         "심사 요건: 개인정보처리방침 필수 / 테스트 계정 제공",
                     ]
                     ForEach(storeItems, id: \.self) { item in
@@ -190,9 +191,9 @@ public struct GoLiveStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("Product Hunt 런치 팁")
                     let tips = [
-                        "화요일~목요일 자정(PST) 런치가 최적",
-                        "Maker로 등록 후 커뮤니티와 미리 소통",
-                        "첫 날 200+ 투표 = 'Product of the Day' 기준",
+                        "화요일~목요일 자정(PT, 12:01 AM) 런치가 최적",
+                        "Maker로 등록 후 커뮤니티와 미리 소통 (D-7 publish 예약)",
+                        "Product of the Day 진입 = 400-600+ 투표 (2026 기준)",
                     ]
                     ForEach(tips, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {

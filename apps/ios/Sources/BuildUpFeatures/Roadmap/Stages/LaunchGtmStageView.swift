@@ -290,7 +290,8 @@ public struct LaunchGtmStageView: View {
                     let metrics: [(String, String)] = [
                         ("활성 사용자 (WAU)", "30명 이상 (첫 4주)"),
                         ("NPS (순추천지수)", "30 이상"),
-                        ("리텐션 (2주)", "40% 이상"),
+                        ("D7 리텐션 (B2C)", "20% 이상"),
+                        ("Sean Ellis PMF 테스트", "「매우 실망」 40% 이상"),
                     ]
                     ForEach(metrics, id: \.0) { label, value in
                         HStack {

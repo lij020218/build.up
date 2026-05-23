@@ -45,16 +45,16 @@ public struct CustomerDiscoveryStageView: View {
 
     public init() {}
 
-    /// 게이트: 인터뷰 5건 이상 + Wedge Problem 한 문장 정의.
+    /// 게이트: 인터뷰 10건 이상 + Wedge Problem 한 문장 정의 (Mom Test 표준 20-30 권장).
     private var canCompleteStage: Bool {
-        interviewCount >= 5 &&
+        interviewCount >= 10 &&
         !wedgeProblem.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     private var advanceHint: String {
         let hasWedge = !wedgeProblem.trimmingCharacters(in: .whitespaces).isEmpty
-        if interviewCount < 5 && !hasWedge { return "인터뷰 5건+ & 핵심 문제 정의 필요" }
-        if interviewCount < 5 { return "인터뷰 \(interviewCount)/5 — 5건 이상 필요" }
+        if interviewCount < 10 && !hasWedge { return "인터뷰 10건+ & 핵심 문제 정의 필요 (Mom Test 20-30 권장)" }
+        if interviewCount < 10 { return "인터뷰 \(interviewCount)/10 — 10건 이상 필요" }
         if !hasWedge { return "핵심 문제(Wedge)를 한 문장으로 정의하세요" }
         return "고객 발굴 완료 — 다음 단계로"
     }
@@ -94,8 +94,8 @@ public struct CustomerDiscoveryStageView: View {
                 "경쟁 — 「경쟁자 없음」은 위험 신호, 시장이 없거나 모르거나 둘 중 하나",
                 "법적 — 인터뷰 녹음·녹화 시 사전 동의 (개인정보보호법), 미동의 시 데이터 무효 + 위반",
                 ],
-                nextStageLabel: "법인 설립",
-                nextSummary: "ICP·문제·솔루션 가설 검증 완료 → 법인 설립 단계로 진입"
+                nextStageLabel: "MVP 빌드",
+                nextSummary: "ICP·문제·솔루션 가설 검증 완료 → MVP 빌드 단계로 진입"
             ),
             currentPage: page,
             totalPages: pages.count

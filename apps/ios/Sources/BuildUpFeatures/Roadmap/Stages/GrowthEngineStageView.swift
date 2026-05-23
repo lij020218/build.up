@@ -201,8 +201,10 @@ public struct GrowthEngineStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("주요 성장 지표 목표 (초기 SaaS 기준)")
                     let metrics: [(String, String)] = [
+                        ("주간 성장률 (YC 표준)", "5-7%/week (Seed)"),
                         ("MoM 성장률", "20-30% (Seed 단계)"),
-                        ("D7 리텐션", "40% 이상"),
+                        ("D7 리텐션 (B2C)", "20% 이상"),
+                        ("D30 리텐션 (B2B SaaS)", "40% 이상"),
                         ("NPS", "40+ (추천 의향)"),
                         ("LTV:CAC", "3:1 이상"),
                     ]

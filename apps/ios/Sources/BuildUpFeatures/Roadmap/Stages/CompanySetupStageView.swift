@@ -137,7 +137,7 @@ public struct CompanySetupStageView: View {
                     BUEyebrow("법인 vs 개인사업자 비교")
                     let rows: [(String, String, String)] = [
                         ("투자 유치", "✓ 가능", "✗ 불가"),
-                        ("세율", "9~24%", "6~45%"),
+                        ("세율", "10·20·22·25%", "6~45%"),
                         ("설립 비용", "50-100만원", "무료"),
                         ("추천 시점", "팀 2명+ + 투자 계획", "1인 초기 검증"),
                     ]
@@ -167,8 +167,8 @@ public struct CompanySetupStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("IP 우선순위")
                     let items: [(String, String, String)] = [
-                        ("shield", "특허", "핵심 기술·알고리즘 — 심사 18-24개월. 출원 즉시 '출원 중' 표시 가능."),
-                        ("tag", "상표", "브랜드명·로고 — 10년 유효, 9만원. 경쟁사 모방 방지 핵심."),
+                        ("shield", "특허", "출원료 ₩56-62K/class + 등록 ₩210K(10년) + 우선심사 ₩160K. 일반 18-24개월·우선심사 5-7개월. 스타트업 70% 감면 (2026.2.28까지 한시)."),
+                        ("tag", "상표", "출원료 ₩62K/class·등록 ₩211K(10년). 일반 15개월·우선심사 5개월. 브랜드 모방 방지 핵심."),
                         ("doc.text", "저작권", "소스코드 자동 보호 (별도 등록 불필요). 저작권 등록은 분쟁 시 유리."),
                     ]
                     ForEach(items, id: \.1) { icon, title, detail in
@@ -204,9 +204,30 @@ public struct CompanySetupStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("과세 유형 (법인·개인 공통 핵심)")
+                    let taxRows: [(String, String)] = [
+                        ("간이과세자", "직전 연 매출 1억 400만원 미만 · VAT 1.5~4% · 4,800만원 미만 시 VAT 면제"),
+                        ("일반과세자", "그 외 전부 · VAT 10% · 세금계산서 발급 가능 (B2B 필수)"),
+                    ]
+                    ForEach(taxRows, id: \.0) { label, detail in
+                        HStack(alignment: .top, spacing: BUSpacing.sm) {
+                            Text(label)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(BUColor.midnight)
+                                .padding(.horizontal, 8).padding(.vertical, 3)
+                                .background(BUColor.midnight.opacity(0.08), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                .fixedSize(horizontal: true, vertical: true)
+                            Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        }
+                    }
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("IP 출원 기관")
                     let orgs: [(String, String, String)] = [
-                        ("shield.checkered", "특허청 (kipo.go.kr)", "온라인 출원, 중소기업 수수료 70% 감면"),
+                        ("shield.checkered", "특허청 (kipo.go.kr) · KIPRIS (kipris.or.kr) 선행조사", "공개(데모·베타·보도자료) 전 출원 필수 — 신규성 상실"),
                         ("person.badge.shield.checkmark", "한국특허전략개발원", "스타트업 IP 바우처 최대 1000만원 지원"),
                     ]
                     ForEach(orgs, id: \.1) { icon, name, detail in
