@@ -46,7 +46,9 @@ function hasWebSearchTool(tools: unknown[] | undefined): boolean {
 }
 
 // ── Anthropic SDK 호환 타입 (사용 부분만 최소) ────────────────────
-type AContentBlock = { type: "text"; text: string };
+type ATextBlock = { type: "text"; text: string };
+type AToolUseBlock = { type: "tool_use"; id: string; name: string; input: Record<string, unknown> };
+type AContentBlock = ATextBlock | AToolUseBlock;
 type AMessage = {
   role: "user" | "assistant";
   content: string | AContentBlock[];
@@ -56,6 +58,10 @@ type ASystemBlock = {
   text: string;
   cache_control?: unknown;
 };
+type AToolChoice =
+  | { type: "auto" }
+  | { type: "any" }
+  | { type: "tool"; name: string };
 type AMessagesCreateRequest = {
   model: string;
   max_tokens: number;
@@ -63,6 +69,7 @@ type AMessagesCreateRequest = {
   messages: AMessage[];
   // Anthropic web_search/tools — OpenAI Chat Completions 미지원이므로 조용히 무시.
   tools?: unknown[];
+  tool_choice?: AToolChoice;
   temperature?: number;
   top_p?: number;
   metadata?: unknown;
@@ -81,9 +88,52 @@ type AMessagesCreateResponse = {
   };
 };
 
+/**
+ * Anthropic tools/tool_choice → OpenAI Chat Completions function calling 변환.
+ *  Anthropic: `{name, description, input_schema}` + `tool_choice: {type:"tool", name}`
+ *  OpenAI:    `{type:"function", function:{name, description, parameters}}` + `tool_choice: {type:"function", function:{name}}`
+ *
+ * web_search 형 tool 은 별도 분기에서 처리하므로 여기서는 일반 function tool 만.
+ */
+function convertToolsToOpenAI(tools: unknown[] | undefined): unknown[] | undefined {
+  if (!Array.isArray(tools) || tools.length === 0) return undefined;
+  const out: unknown[] = [];
+  for (const t of tools) {
+    if (!t || typeof t !== "object") continue;
+    const obj = t as Record<string, unknown>;
+    const type = typeof obj.type === "string" ? obj.type.toLowerCase() : "";
+    if (type.includes("web_search")) continue;          // 별도 분기
+    if (type === "function" && obj.function) {           // 이미 OpenAI 형식
+      out.push(obj);
+      continue;
+    }
+    const name = typeof obj.name === "string" ? obj.name : "";
+    if (!name) continue;
+    out.push({
+      type: "function",
+      function: {
+        name,
+        description: typeof obj.description === "string" ? obj.description : undefined,
+        parameters: (obj.input_schema as Record<string, unknown> | undefined) ?? { type: "object", properties: {} },
+      },
+    });
+  }
+  return out.length ? out : undefined;
+}
+
+function convertToolChoiceToOpenAI(tc: AToolChoice | undefined): unknown {
+  if (!tc) return undefined;
+  if (tc.type === "auto") return "auto";
+  if (tc.type === "any")  return "required";
+  if (tc.type === "tool") return { type: "function", function: { name: tc.name } };
+  return undefined;
+}
+
 function flattenContent(content: string | AContentBlock[]): string {
   if (typeof content === "string") return content;
-  return content.map((c) => c.text).join("\n");
+  return content
+    .map((c) => (c.type === "text" ? c.text : `[tool_use:${c.name}]`))
+    .join("\n");
 }
 
 function flattenSystem(system?: string | ASystemBlock[]): string {
@@ -196,19 +246,47 @@ class LlmClient {
       };
       if (req.temperature !== undefined) baseParams.temperature = req.temperature;
       if (req.top_p !== undefined) baseParams.top_p = req.top_p;
-      const response = await this.openai.chat.completions.create(baseParams as never);
 
-      const text = response.choices[0]?.message?.content ?? "";
-      const finish = response.choices[0]?.finish_reason ?? null;
+      // Anthropic tools / tool_choice → OpenAI function calling 변환.
+      //  로드맵 생성처럼 schema-strict 출력을 강제하는 호출처는 이 경로를 거쳐
+      //  tool_use 블록을 반환받음. 호출처는 기존 Anthropic 패턴 그대로.
+      const oaiTools = convertToolsToOpenAI(req.tools);
+      const oaiToolChoice = convertToolChoiceToOpenAI(req.tool_choice);
+      if (oaiTools) baseParams.tools = oaiTools;
+      if (oaiToolChoice !== undefined) baseParams.tool_choice = oaiToolChoice;
+
+      const response = await this.openai.chat.completions.create(baseParams as never);
+      const choice = response.choices[0];
+      const finish = choice?.finish_reason ?? null;
+
+      // tool_calls 우선 처리 — schema-강제 호출 시 모델이 function arguments 를 반환
+      const toolCalls = (choice?.message as { tool_calls?: Array<{ id: string; type: string; function: { name: string; arguments: string } }> } | undefined)?.tool_calls;
+      const contentBlocks: AContentBlock[] = [];
+      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+        for (const tc of toolCalls) {
+          if (tc.type !== "function") continue;
+          let input: Record<string, unknown> = {};
+          try {
+            input = JSON.parse(tc.function.arguments);
+          } catch {
+            input = { __raw: tc.function.arguments };
+          }
+          contentBlocks.push({ type: "tool_use", id: tc.id, name: tc.function.name, input });
+        }
+      }
+      const text = choice?.message?.content ?? "";
+      if (text) contentBlocks.push({ type: "text", text });
+
       // OpenAI finish_reason → Anthropic stop_reason 근사 매핑
       const stop_reason =
-        finish === "stop" ? "end_turn"
+        contentBlocks.some((b) => b.type === "tool_use") ? "tool_use"
+        : finish === "stop" ? "end_turn"
         : finish === "length" ? "max_tokens"
         : finish === "content_filter" ? "stop_sequence"
         : finish;
 
       return {
-        content: [{ type: "text", text }],
+        content: contentBlocks.length ? contentBlocks : [{ type: "text", text: "" }],
         stop_reason,
         model: mappedModel,
         usage: {

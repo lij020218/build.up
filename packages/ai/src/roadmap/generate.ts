@@ -353,6 +353,24 @@ function parseResponse(raw: string): RoadmapGenerationResult {
 
   const obj = parsed as Record<string, unknown>;
 
+  // OpenAI 마이그레이션(2026-05-11) 후: 어댑터가 Anthropic tool_use 강제 출력을 변환하지 않아
+  //  모델이 top-level 평탄(flat) JSON 으로 응답함. industryCategoryId 가 top-level 에 있으면
+  //  obj 자체를 parsed 로 간주하여 호환 처리.
+  if ((!obj.parsed || typeof obj.parsed !== "object") && typeof obj.industryCategoryId === "string") {
+    obj.parsed = {
+      industryCategoryId: obj.industryCategoryId,
+      subIndustryId: obj.subIndustryId,
+      industryLabel: obj.industryLabel,
+      startupType: obj.startupType,
+      businessModelId: obj.businessModelId,
+      preferredRegion: obj.preferredRegion,
+      matchingReason: obj.matchingReason,
+      matchingConfidence: obj.matchingConfidence,
+      alternativeSubIndustries: obj.alternativeSubIndustries,
+    };
+    console.warn("[roadmap/parse] flat-shape detected — wrapped top-level fields into `parsed`.");
+  }
+
   // 필수 필드 검증
   if (!obj.parsed || typeof obj.parsed !== "object") {
     throw new AiParseError("parsed 필드가 없습니다.", raw);
@@ -438,20 +456,32 @@ function parseResponse(raw: string): RoadmapGenerationResult {
       targetFit: String(ma.targetFit ?? ""),
       summary: String(ma.summary ?? ""),
     },
-    budgetAllocation: {
-      deposit: Number((obj.budgetAllocation as Record<string, unknown>)?.deposit) || 0,
-      interior: Number((obj.budgetAllocation as Record<string, unknown>)?.interior) || 0,
-      equipment: Number((obj.budgetAllocation as Record<string, unknown>)?.equipment) || 0,
-      workingCapital: Number((obj.budgetAllocation as Record<string, unknown>)?.workingCapital) || 0,
-      total: Number((obj.budgetAllocation as Record<string, unknown>)?.total) || 0,
-    },
-    monthlyCosts: {
-      ingredients: Number((obj.monthlyCosts as Record<string, unknown>)?.ingredients) || 0,
-      labor: Number((obj.monthlyCosts as Record<string, unknown>)?.labor) || 0,
-      rent: Number((obj.monthlyCosts as Record<string, unknown>)?.rent) || 0,
-      utilities: Number((obj.monthlyCosts as Record<string, unknown>)?.utilities) || 0,
-      other: Number((obj.monthlyCosts as Record<string, unknown>)?.other) || 0,
-    },
+    budgetAllocation: (() => {
+      // 음수 가드 — 모델이 가끔 negative number 를 반환 (특히 운영자금에 -90000만 같은 케이스).
+      // 0 미만은 모두 0 으로 clamp.
+      const nn = (v: unknown) => Math.max(0, Number(v) || 0);
+      const ba = (obj.budgetAllocation as Record<string, unknown>) ?? {};
+      const deposit = nn(ba.deposit);
+      const interior = nn(ba.interior);
+      const equipment = nn(ba.equipment);
+      const workingCapital = nn(ba.workingCapital);
+      // total 이 명시되지 않았거나 명백히 잘못된 경우 합계로 자동 계산.
+      const rawTotal = nn(ba.total);
+      const sum = deposit + interior + equipment + workingCapital;
+      const total = rawTotal > 0 && Math.abs(rawTotal - sum) < sum * 0.1 ? rawTotal : sum;
+      return { deposit, interior, equipment, workingCapital, total };
+    })(),
+    monthlyCosts: (() => {
+      const nn = (v: unknown) => Math.max(0, Number(v) || 0);
+      const mc = (obj.monthlyCosts as Record<string, unknown>) ?? {};
+      return {
+        ingredients: nn(mc.ingredients),
+        labor: nn(mc.labor),
+        rent: nn(mc.rent),
+        utilities: nn(mc.utilities),
+        other: nn(mc.other),
+      };
+    })(),
     recommendations: {
       suppliers: Array.isArray((obj.recommendations as Record<string, unknown>)?.suppliers)
         ? ((obj.recommendations as Record<string, unknown>).suppliers as Array<Record<string, unknown>>).map(s => {
