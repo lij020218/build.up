@@ -45,6 +45,76 @@ public struct PreLaunchStageView: View {
         }
     }
 
+    /// 초대 페이지 hero 문구 — invitePage 상단.
+    private var invitePageAdvice: String {
+        switch cluster.category {
+        case .food, .cafeDessert:
+            return "외식업 권장: 가족·동네 주민 우선 초대 + 30~50% 할인으로 결제 흐름 검증. 음식 맛은 가족이 가장 솔직하고, 동네 주민은 잠재 단골입니다."
+        case .beauty:
+            return "뷰티 권장: 지인 + 인스타·블로그 체험단 우선. 무료 또는 50% 할인. 사진·후기 동의를 받고 SNS 리뷰로 활용하세요."
+        case .fitness:
+            return "피트니스 권장: 1주 무료 체험권 배포 + 회원 가입 시 20~30% 할인. PT·그룹 클래스·시설 만족도 별도 측정."
+        case .education:
+            return "교육 권장: 시범 수업·오리엔테이션 1회. 학부모 동반 + 1주 무료. 강의 만족도·재등록 의향 측정."
+        case .pet:
+            return "반려동물 권장: 지인 반려동물 베타 + 50% 할인. 미용 만족·호텔 안전·예약 흐름 사진/영상으로 확인."
+        case .livingService:
+            return "생활서비스 권장: 지인·동네 무료 또는 50% 출장 — 작업 시간·견적 정확도·결제 흐름 검증."
+        case .space:
+            return "공간 권장: SNS 팔로워·지인 우선 예약 + 무료 또는 50%. 청소·체크인·체크아웃 흐름 검증."
+        case .retail:
+            return "리테일 권장: 동네 우선 + 20~40% 할인. 진열·재고·결제 흐름 검증. SNS 후기로 자연 유입 확보."
+        case .onlineDigital:
+            return "온라인 권장: 알림받기 100명 사전 모집 + 첫 주문 할인. 자기 주문 1사이클 (장바구니→결제→포장→송장→발송) 무조건 완주."
+        case .startupTech:
+            return "스타트업 권장: 베타 사용자 10명 (인터뷰·waitlist 추출). 24h 환영 이메일 + 1:1 온보딩. PMF 시그널 추적."
+        }
+    }
+
+    /// dayPage 체크리스트 — 메뉴/재고 라벨 + detail 클러스터별 카피.
+    private var dayMenuLabel: String {
+        switch cluster.category {
+        case .food, .cafeDessert:  return "메뉴 준비 & 재고 점검"
+        case .beauty:              return "시술 재료 & 도구 점검"
+        case .fitness:             return "기구·매트·수건 점검"
+        case .education:           return "교재·강의자료·기자재 점검"
+        case .pet:                 return "미용 도구·사료·간식 점검"
+        case .livingService:       return "약품·공구·소모품 점검"
+        case .space:               return "린넨·청소·소모품 점검"
+        case .retail:              return "재고·진열·가격표 점검"
+        case .onlineDigital:       return "재고·포장재·송장 프린트 점검"
+        case .startupTech:         return "프로덕션 배포·모니터링·결제 점검"
+        }
+    }
+    private var dayMenuDetail: String {
+        switch cluster.category {
+        case .food, .cafeDessert:  return "식재료 입고량·유통기한·조리 준비 상태 확인"
+        case .beauty:              return "샴푸·트리트먼트·시술 도구 양·소독 상태 확인"
+        case .fitness:             return "운동 기구 정상 작동·매트 청결·수건 준비 확인"
+        case .education:           return "교재 인쇄·강의 슬라이드·실습 도구 준비 확인"
+        case .pet:                 return "미용 도구 소독·사료 재고·간식 유통기한 확인"
+        case .livingService:       return "세제·약품 재고·공구·차량 점검 확인"
+        case .space:               return "린넨·수건·휴지·세제 재고 + 청소 상태 확인"
+        case .retail:              return "재고 수량·진열 상태·가격표·라벨 부착 확인"
+        case .onlineDigital:       return "재고 수량·포장재 (박스/완충재/테이프)·송장 프린터 동작 확인"
+        case .startupTech:         return "도메인 SSL·Sentry/Slack 알람·Stripe 결제 100원 1사이클 검증"
+        }
+    }
+    private var dayEmergencyDetail: String {
+        switch cluster.category {
+        case .food, .cafeDessert:  return "주방 사고·결제 오류·재료 부족 시 대응 방법"
+        case .beauty:              return "시술 사고·민감 반응·기기 오작동 시 대응"
+        case .fitness:             return "부상·기구 고장·환불 요청 시 대응 (응급 연락처)"
+        case .education:           return "결석·민원·강의 사고 시 대응 (학부모 연락처)"
+        case .pet:              return "반려동물 부상·도주·민원 시 대응 (수의사 연락처)"
+        case .livingService:       return "작업 중 사고·고객 불만·재방문 시 대응"
+        case .space:               return "시설 손상·노쇼·도난 시 대응 (보안·CCTV)"
+        case .retail:              return "결제 오류·재고 부족·도난 시 대응 (CCTV·POS)"
+        case .onlineDigital:       return "주문 폭주·재고 부족·CS 클레임 시 대응 (배송·환불 템플릿)"
+        case .startupTech:         return "서버 다운·결제 실패·악성 트래픽 시 대응 (PagerDuty·롤백)"
+        }
+    }
+
     // 가격 정책 선택
     @AppStorage("prelaunch.pricing")          private var pricingChoice    = "" // "free" / "discount" / "full"
 
@@ -177,8 +247,9 @@ public struct PreLaunchStageView: View {
                     BUEyebrow("단계 19 · 소프트 오픈")
                     Text("소프트 오픈 —\n본 오픈 전 마지막 리허설")
                         .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("외식업 권장: 가족·동네 주민 우선 초대 + 30~50% 할인으로 결제 흐름 검증. 음식 맛은 가족이 가장 솔직하고, 동네 주민은 잠재 단골입니다.")
+                    Text(invitePageAdvice)
                         .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -254,8 +325,8 @@ public struct PreLaunchStageView: View {
                     .init(id: "clean",     label: "매장·시설 청결 & 위생 최종 점검", detail: "바닥·테이블·화장실·쓰레기통 모두 점검·소독"),
                     .init(id: "staff",     label: "직원 역할 배분 & 브리핑",         detail: "포지션·응대 멘트·비상 대응 방법 공유"),
                     .init(id: "pos",       label: "POS·주문 시스템 최종 확인",       detail: "배달앱 연동 + 메뉴 가격 확인 + 테스트 주문"),
-                    .init(id: "menu",      label: "메뉴 준비 & 재고 점검",          detail: "식재료 입고량·유통기한·조리 준비 상태 확인"),
-                    .init(id: "emergency", label: "비상 연락망 & 돌발 상황 대응",    detail: "주방 사고·결제 오류·재료 부족 시 대응 방법"),
+                    .init(id: "menu",      label: dayMenuLabel,    detail: dayMenuDetail),
+                    .init(id: "emergency", label: "비상 연락망 & 돌발 상황 대응",    detail: dayEmergencyDetail),
                     .init(id: "photo",     label: "대표 메뉴 사진 촬영",            detail: "소프트오픈 음식 사진 SNS 업로드용 준비"),
                 ],
                 checked: dayChecksBinding

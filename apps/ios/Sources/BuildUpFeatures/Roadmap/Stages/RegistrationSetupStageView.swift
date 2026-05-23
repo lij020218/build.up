@@ -35,6 +35,120 @@ public struct RegistrationSetupStageView: View {
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
+    /// 국세청 업종코드 힌트 (Step 2).
+    /// 정확한 코드는 홈택스 검색이 필요 — 여기는 진입용 대표 코드만.
+    private var industryCodeHint: String {
+        switch cluster.category {
+        case .food:           return "음식점 552111 (한식) · 552112 (중식) · 배달 552201"
+        case .cafeDessert:    return "음료점 552107 (커피·차) · 베이커리 552201"
+        case .retail:         return "소매 — 카테고리별 다양 (식품 522030 / 의류 522050 / 화장품 522080)"
+        case .beauty:         return "미용업 821201 (헤어) · 821202 (피부) · 821203 (네일)"
+        case .fitness:        return "체육시설업 823501 (헬스) · 823502 (필라테스)"
+        case .education:      return "학원 855001 (입시·보습) · 855002 (외국어) · 855003 (예체능)"
+        case .pet:            return "반려동물 730301 (미용) · 730302 (호텔·보호)"
+        case .livingService:  return "생활서비스 — 세탁 749903 / 청소 749905 / 수리 729900"
+        case .space:          return "공간 임대 681011 (스튜디오) · 681012 (회의실)"
+        case .onlineDigital:  return "전자상거래 525101 (소매) · 525102 (도매) · 525103 (해외직구)"
+        case .startupTech:    return "정보통신업 — SaaS 620901 · 시스템통합 620100 · 데이터 620200"
+        }
+    }
+
+    /// "이번 주 체크리스트" — 클러스터별 정확한 발급 순서.
+    private var weeklyChecklist: [String] {
+        switch cluster.category {
+        case .food, .cafeDessert: return [
+            "임대차계약서 + 건축물대장 (정부24 무료) 준비",
+            "홈택스 사업자등록 신청 (즉일~3일)",
+            "위생교육 온라인 수강 (외식업중앙회 / 2.6만원 / 6시간)",
+            "관할 보건소 방문 → 보건증 발급 (1.2만원 / 1주 내)",
+            "일반음식점 영업신고 접수 (구청 위생과 · 약 6.6만원)",
+            "현장점검 대응 → 영업신고증 수령",
+            "사업용 통장 + POS 가맹 신청",
+        ]
+        case .beauty: return [
+            "임대차계약서 + 건축물대장 준비",
+            "홈택스 사업자등록 신청 (즉일~3일)",
+            "미용업 면허증 사본 준비 (미용사·피부·네일 자격증)",
+            "위생교육 (한국미용업중앙회 / 6시간 / 약 4만원)",
+            "공중위생영업신고 (구청 위생과 / 약 3.5만원)",
+            "보건소 보건증 발급 (1.2만원 / 1주 내)",
+            "사업용 통장 + 예약 SaaS 가입",
+        ]
+        case .fitness: return [
+            "임대차계약서 + 건축물대장 준비",
+            "홈택스 사업자등록 신청",
+            "체육지도자 자격증 사본 준비 (생활스포츠지도사 등)",
+            "체육시설업 신고 (시·군·구청 / 약 3만원)",
+            "안전점검 — 소화기·AED·응급함 비치",
+            "보험 가입 — 시설배상책임보험 필수",
+            "사업용 통장 + 회원 관리 SaaS 가입",
+        ]
+        case .education: return [
+            "임대차계약서 + 건축물대장 준비",
+            "홈택스 사업자등록 신청",
+            "학원설립·운영자 자격 요건 확인 (강사 자격증)",
+            "관할 교육청 학원 등록 (2~4주 소요)",
+            "소방시설완비증명서 (인원 30명+ / 100㎡+)",
+            "강사 채용 + 근로계약서·인적사항 신고",
+            "사업용 통장 + 학원 관리 SaaS",
+        ]
+        case .pet: return [
+            "임대차계약서 + 건축물대장 준비",
+            "홈택스 사업자등록 신청",
+            "동물미용사 자격증 사본 준비",
+            "동물보호법 의무교육 (8시간)",
+            "동물 관련 영업 신고 (구청 / 약 2만원)",
+            "보험 가입 — 반려동물 사고 대비",
+            "사업용 통장 + 예약 시스템",
+        ]
+        case .livingService: return [
+            "임대차계약서 (출장만이면 사무실 등록)",
+            "홈택스 사업자등록 신청",
+            "관련 자격증 (세탁업 면허 / 위생관리사 등)",
+            "관할 구청 영업 신고 (약 2~3만원)",
+            "차량·장비 등록 (출장이면 차량 보험 점검)",
+            "사업자 명의 결제 (네이버페이·카카오페이)",
+            "사업용 통장 + 출장 SaaS·당근 비즈",
+        ]
+        case .space: return [
+            "임대차계약서 + 건축물대장 (다중이용 가능 확인)",
+            "홈택스 사업자등록 신청",
+            "용도변경 필요 시 사전 확인 (근린생활시설)",
+            "공간 임대업 등록 (필요 시)",
+            "소방·안전 점검 (다중 이용)",
+            "보험 가입 — 화재·시설 배상",
+            "예약 플랫폼 입점 (스페이스클라우드·펀잇 등)",
+        ]
+        case .retail: return [
+            "임대차계약서 + 건축물대장 준비",
+            "홈택스 사업자등록 신청",
+            "통신판매업 신고 (온라인 병행 시 / ftc.go.kr 무료)",
+            "사업용 통장 + 구매안전서비스 (에스크로)",
+            "POS·CCTV·진열대 설치",
+            "결제 — 카드 단말기 신청 (VAN사 1주)",
+            "오픈일 마케팅 (당근·SNS 사전 공지)",
+        ]
+        case .onlineDigital: return [
+            "홈택스 사업자등록 신청 (인터넷판매업)",
+            "사업용 통장 개설 + 구매안전서비스(에스크로) 가입",
+            "통신판매업 신고 (ftc.go.kr 무료 / 5~7영업일)",
+            "스마트스토어·쿠팡·자체몰 입점 신청 (2~4주)",
+            "PG 가입 — 자체몰이면 별도 (1~2주 심사)",
+            "포장재·송장 프린터 입고 → 본인 주문 1사이클 테스트",
+            "알림받기 100명 사전 모집 + 첫 주문 할인 준비",
+        ]
+        case .startupTech: return [
+            "법인 설립 절차 (사단법인 / 주식회사 / 1인 법인)",
+            "홈택스 법인 사업자등록 (1~3일)",
+            "법인 통장 개설 (대표자 신분증·법인 인감)",
+            "특허·상표 출원 (공개 전 필수, 1주~)",
+            "이용약관·개인정보처리방침 게시",
+            "PG 가입 (Stripe·Toss / 1~2주 심사)",
+            "벤처기업 인증 검토 (TIPS·예비창업 지원사업 매칭)",
+        ]
+        }
+    }
+
     private let pages = ["왜 중요한가", "사업자등록", "인허가", "유리한 길"]
 
     private var canCompleteStage: Bool {
@@ -151,8 +265,8 @@ public struct RegistrationSetupStageView: View {
                 VStack(spacing: 0) {
                     stepRow(num: 1, title: "홈택스 접속 → 사업자등록 신청",
                         detail: "공동인증서·간편인증 로그인. 인증서 없으면 관할 세무서 직접 방문 (당일 발급 가능).")
-                    stepRow(num: 2, title: "업종코드 입력 — 음식점 552111 (한식)",
-                        detail: "국세청 업종코드 조회로 정확히 확인. 배달 전문도 동일 코드 사용 가능.")
+                    stepRow(num: 2, title: "업종코드 입력 — \(industryCodeHint)",
+                        detail: "국세청 업종코드 조회 (hometax.go.kr) 에서 정확히 검색. 코드 잘못 입력 시 부가세 신고·환급에서 문제 발생.")
                     stepRow(num: 3, title: "사업장 주소 = 임대차계약서 주소",
                         detail: "계약서 사본 첨부 필수. 주소 불일치 시 인허가 신청 거절.")
                     stepRow(num: 4, title: "과세유형 선택 — 간이 / 일반",
@@ -328,19 +442,11 @@ public struct RegistrationSetupStageView: View {
                 pathCard(condition: condition, recommendation: recommendation, reason: reason)
             }
 
-            // 이번 주 체크리스트
+            // 이번 주 체크리스트 — 클러스터별 분기
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("이번 주 체크리스트 — 순서대로")
-                    let checklist = [
-                        "임대차계약서 + 건축물대장 (정부24 무료) 준비",
-                        "홈택스 사업자등록 신청 (즉일~3일)",
-                        "위생교육 온라인 수강 (외식업중앙회 / 2.6만원 / 6시간)",
-                        "관할 보건소 방문 → 보건증 발급 (1.2만원 / 1주 내)",
-                        "일반음식점 영업신고 접수 (구청 위생과)",
-                        "현장점검 대응 → 영업신고증 수령",
-                        "사업용 통장 + POS 가맹 신청",
-                    ]
+                    BUEyebrow("이번 주 체크리스트 — \(cluster.categoryNounKo) 순서")
+                    let checklist = weeklyChecklist
                     ForEach(checklist.indices, id: \.self) { i in
                         HStack(alignment: .top, spacing: 8) {
                             Text("\(i+1).")

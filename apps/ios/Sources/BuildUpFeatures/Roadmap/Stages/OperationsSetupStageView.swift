@@ -18,12 +18,14 @@
 import SwiftUI
 import BuildUpDesignSystem
 import BuildUpComponents
+import BuildUpCore
 import BuildUpData
 
 public struct OperationsSetupStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "operations-setup"
 
@@ -42,7 +44,92 @@ public struct OperationsSetupStageView: View {
     @AppStorage("ops.sns.instagram")      private var snsInstagram     = false
     @AppStorage("ops.sns.kakao")          private var snsKakao         = false
 
-    private let pages = ["배달 플랫폼", "POS 선택", "SNS 세팅"]
+    private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
+
+    /// 채널 페이지 라벨 — 클러스터별 (배달/예약/마켓플레이스).
+    private var channelPageLabel: String {
+        switch cluster.category {
+        case .food, .cafeDessert:                       return "배달 플랫폼"
+        case .beauty, .fitness, .pet, .education:       return "예약 플랫폼"
+        case .retail, .onlineDigital:                   return "마켓플레이스"
+        case .space, .livingService:                    return "예약·접수"
+        default:                                        return "유입 채널"
+        }
+    }
+
+    private var pages: [String] {
+        [channelPageLabel, "POS 선택", "SNS 세팅"]
+    }
+
+    // MARK: - Cluster-aware channels (페이지 0)
+
+    private struct ChannelOption {
+        let id: String       // baemin/coupang/yogiyo/naver/etc.
+        let name: String
+        let tagline: String
+        let desc: String
+        let color: String    // hex
+    }
+
+    private var clusterChannels: [ChannelOption] {
+        switch cluster.category {
+        case .food, .cafeDessert: return [
+            .init(id: "baemin",  name: "배달의민족", tagline: "차등 수수료 7.8/6.8/2.0% · 국내 점유율 약 60%",   desc: "배민 사장님앱 울트라콜·오픈리스트 광고로 노출 확대 가능. 배달·가게배달 정산 체계 별도 확인.", color: "#00C73C"),
+            .init(id: "coupang", name: "쿠팡이츠",    tagline: "차등 7.8/6.8/2.0% · 단건 배달 전문 · 와우 회원 노출", desc: "단건 배달로 배달 품질 최고. 쿠팡 브랜드 신뢰도 연계 신규 고객 유입.", color: "#E52222"),
+            .init(id: "yogiyo",  name: "요기요",       tagline: "차등 4.7~9.7% · GS리테일 운영 · 요기패스 구독 연동", desc: "요기패스 구독 고객 우선 노출. 점유율 10~15% 하락세.", color: "#FF5A00"),
+            .init(id: "naver",   name: "네이버 주문", tagline: "중개 수수료 0% (결제 수수료만) · 스마트플레이스 연동", desc: "네이버 지도 주문 버튼 자동 노출. 포장·테이블 주문 최적. 자체 배달망 없음.", color: "#03C75A"),
+        ]
+        case .beauty, .fitness, .pet, .education: return [
+            .init(id: "baemin", name: "네이버 예약",   tagline: "월 사용료 0원 · 네이버 검색 1순위 노출 자동",        desc: "예약·결제·문자 알림·노쇼 위약금까지 통합. 미용·필라테스·반려동물·교육 모두 표준.", color: "#03C75A"),
+            .init(id: "coupang", name: "캐치테이블",   tagline: "예약 수수료 1,000원/건 · 디저트·고급 식음료 강세 + 뷰티 확장", desc: "당일 예약·노쇼 보호금·예약 풀 알림. 캐치테이블 회원 풀 활용.", color: "#FF6B00"),
+            .init(id: "yogiyo", name: "와이즈비 / 마이샵", tagline: "월 정액 (3만~) · 회원·예약·자동 결제 통합",      desc: "단골 관리·자동 결제·회원권 매출 추적. 미용·필라테스 운영 SaaS.", color: "#5B6BFF"),
+            .init(id: "naver",  name: "카카오톡 채널", tagline: "무료 · 단골 단체 메시지 + 예약 신청 폼",            desc: "재방문 캠페인·재구매 알림용. 단골 LTV 핵심 채널.", color: "#FEE500"),
+        ]
+        case .retail, .onlineDigital: return [
+            .init(id: "baemin",  name: "네이버 스마트스토어", tagline: "수수료 약 5.6% · 국내 1위 쇼핑 검색 노출",     desc: "스마트스토어 + 네이버페이 + 톡톡 통합. 신규 셀러 1순위.", color: "#03C75A"),
+            .init(id: "coupang", name: "쿠팡 (Wing/마켓플레이스)", tagline: "수수료 카테고리별 8-15% · 로켓배송 입점 별도", desc: "와우 회원 1300만+ 노출. 단, 입점 심사·정산 주기 확인.", color: "#E52222"),
+            .init(id: "yogiyo",  name: "11번가·G마켓·옥션",  tagline: "전통 오픈마켓 · 카테고리별 수수료 다름",        desc: "이베이코리아 통합 — 11번가·G마켓·옥션 한 번에 입점.", color: "#FF5A00"),
+            .init(id: "naver",   name: "자체몰 (카페24·고도몰·아임웹)", tagline: "월 사용료 0~7만 + PG 수수료 3% · 브랜드 직판", desc: "마진 최대화 + CRM 자유. 트래픽은 직접 확보해야.", color: "#5B6BFF"),
+        ]
+        case .space, .livingService: return [
+            .init(id: "baemin",  name: "네이버 예약 (생활)", tagline: "월 사용료 0원 · 청소·세탁·수리 서비스 검색 노출", desc: "출장 시간대·지역 선택·자동 알림. 생활 서비스 표준.", color: "#03C75A"),
+            .init(id: "coupang", name: "스페이스클라우드 / 펀잇",   tagline: "공간 임대 플랫폼 · 시간제 예약 + 결제 통합",    desc: "스튜디오·파티룸·코워킹 시간제. 플랫폼 노출 확보.", color: "#FF6B00"),
+            .init(id: "yogiyo",  name: "당근마켓 비즈",       tagline: "지역 기반 무료 광고 · 매장 위치 자동 노출",      desc: "동네 단골 확보 · 수수료 X. 지역 비즈 표준.", color: "#FF7E36"),
+            .init(id: "naver",   name: "카카오톡 채널",        tagline: "무료 · 예약 신청 폼 + 단골 메시지",             desc: "재방문·연장 알림. 1:1 상담 채널.", color: "#FEE500"),
+        ]
+        case .startupTech: return [
+            .init(id: "baemin", name: "Product Hunt", tagline: "전 세계 SaaS 런칭 채널 · 무료",           desc: "런칭 1회 룰 · 1-2주 사전 준비 필수 · D-Day 마케팅 집중.", color: "#DA552F"),
+            .init(id: "coupang", name: "Hacker News (Show HN)", tagline: "개발자 풀 · 무료 · 24h 모니터링 필수",      desc: "기술 데모 위주 · 댓글 응답이 핵심 · 1주 후 fading.", color: "#FF6600"),
+            .init(id: "yogiyo",  name: "디스콰이엇 / 빌드 인 퍼블릭",   tagline: "한국 빌더 커뮤니티 · 무료 · 베타 모집 효과", desc: "Marc Lou·Pieter Levels 패턴 — 매주 빌드 로그 1개.", color: "#191970"),
+            .init(id: "naver",   name: "Twitter / X",   tagline: "Build in Public · DM 콜드 영업 핵심 채널",          desc: "Marc Lou 매출 70%+ 트위터 기여 — 매주 콘텐츠 1개+.", color: "#1DA1F2"),
+        ]
+        }
+    }
+
+    private func bindingFor(_ id: String) -> Binding<Bool> {
+        switch id {
+        case "baemin":  return $deliveryBaemin
+        case "coupang": return $deliveryCoupang
+        case "yogiyo":  return $deliveryYogiyo
+        case "naver":   return $deliveryNaver
+        default:        return .constant(false)
+        }
+    }
+
+    private var clusterHelperText: String {
+        switch cluster.category {
+        case .food, .cafeDessert:
+            return "네이버 플레이스 등록 후 검색 노출까지 최대 7일 — 오픈 1~2주 전 등록 필수. 배달앱 가입 후 메뉴 등록까지 2~3일 소요."
+        case .beauty, .fitness, .pet, .education:
+            return "네이버 예약·캐치테이블 등 예약 채널은 등록 즉시 검색 노출. POS 는 예약 통합 SaaS (와이즈비 등) 권장."
+        case .retail, .onlineDigital:
+            return "스마트스토어·쿠팡 마켓플레이스는 입점 심사 2-4주 — 첫 매출 전 신청 완료 필수. 자체몰은 PG 가입 1-2주 추가."
+        case .space, .livingService:
+            return "네이버 예약·당근 비즈 등 지역 기반 채널 등록 즉시 노출. 출장 시간대·지역 사전 설정."
+        case .startupTech:
+            return "Product Hunt·Hacker News 런칭은 1-2주 사전 준비 + D-Day 24h 모니터링 필수. 분석·결제·에러 스택 사전 설치."
+        }
+    }
 
     private var posTestsDone: Int {
         [posMenuDone, posPayDone, posReceiptDone, posSettleDone].filter { $0 }.count
@@ -85,7 +172,7 @@ public struct OperationsSetupStageView: View {
             stageId: stageId,
             title: "운영 및 마케팅 준비",
             stageEyebrow: "단계 18 · 운영 시스템 세팅",
-            helperText: "네이버 플레이스 등록 후 검색 노출까지 최대 7일 — 오픈 1~2주 전 등록 필수. 배달앱 가입 후 메뉴 등록까지 2~3일 소요됩니다.",
+            helperText: clusterHelperText,
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -140,15 +227,10 @@ public struct OperationsSetupStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("배달 플랫폼 (2026 수수료 기준)")
-                    let platforms: [(String, Binding<Bool>, String, String, String)] = [
-                        ("배달의민족", $deliveryBaemin,  "차등 수수료 7.8/6.8/2.0% · 국내 점유율 약 60%", "배민 사장님앱 울트라콜·오픈리스트 광고로 노출 확대 가능. 배달·가게배달 정산 체계 별도 확인.", "#00C73C"),
-                        ("쿠팡이츠",   $deliveryCoupang, "차등 7.8/6.8/2.0% · 단건 배달 전문 · 와우 회원 노출", "단건 배달로 배달 품질 최고. 쿠팡 브랜드 신뢰도 연계 신규 고객 유입.", "#E52222"),
-                        ("요기요",     $deliveryYogiyo,  "차등 4.7~9.7% · GS리테일 운영 · 요기패스 구독 연동", "요기패스 구독 고객 우선 노출. 점유율 10~15% 하락세.", "#FF5A00"),
-                        ("네이버 주문", $deliveryNaver,  "중개 수수료 0% (결제 수수료만) · 스마트플레이스 연동", "네이버 지도 주문 버튼 자동 노출. 포장·테이블 주문 최적. 자체 배달망 없음.", "#03C75A"),
-                    ]
-                    ForEach(platforms, id: \.0) { name, binding, tagline, desc, color in
-                        deliveryRow(name: name, tagline: tagline, desc: desc, color: color, isOn: binding)
+                    BUEyebrow("\(channelPageLabel) (2026 수수료 기준)")
+                    let platforms = clusterChannels
+                    ForEach(platforms, id: \.id) { p in
+                        deliveryRow(name: p.name, tagline: p.tagline, desc: p.desc, color: p.color, isOn: bindingFor(p.id))
                     }
                 }
             }
@@ -178,7 +260,7 @@ public struct OperationsSetupStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("POS 시스템 선택 (음식점)")
+                    BUEyebrow("POS 시스템 선택 (\(cluster.categoryNounKo))")
                     let systems: [(String, String, String)] = [
                         ("토스플레이스",  "단말기·프로그램 무료 · D+1 정산 · 신규 점주 1순위", "toss"),
                         ("KIS정보통신",   "국내 POS 1위 · 전국 방문 A/S · 배달앱 자동 연동", "kis"),
