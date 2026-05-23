@@ -91,8 +91,8 @@ public struct MpwOrPilotTapeOutStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("MPW vs 풀마스크 선택")
                     let options: [(String, String, String)] = [
-                        ("mpw", "MPW (공동 웨이퍼)", "비용 2,000만~5,000만원. 개수 50–200개. 초기 검증에 필수. TSMC·삼성 CMP(Customer Multi-Project) 통해 신청."),
-                        ("full", "풀 마스크셋", "28nm: 100억원+ / 7nm: 1,000억원+. 본격 양산 전 단계. MPW 검증 후에만."),
+                        ("mpw", "MPW (공동 웨이퍼)", "공유 웨이퍼 run · Full mask 대비 90~95% 절감 (수만~수십만 달러). TSMC Shared Block(Muse Semi)·삼성 CMP·SkyWater·GlobalFoundries·Tower·X-FAB·EUROPRACTICE."),
+                        ("full", "풀 마스크셋", "28nm $1M+ (약 14억원+) / 7nm $10M+ (약 140억원+). MPW 검증 후 양산 결정. 생산 시간은 MPW도 Full도 동일 6~9개월."),
                     ]
                     ForEach(options, id: \.0) { id, title, desc in
                         let isSelected = tapeOutType == id

@@ -109,11 +109,11 @@ public struct RegulatorySubmissionStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
-                    BUEyebrow("의료기기 등급별 심사")
+                    BUEyebrow("의료기기 등급별 심사 (2026.01.26 Fast-Track 시행 후)")
                     let grades: [(String, String, String)] = [
                         ("1등급", "자가인증", "심사 없음."),
                         ("2등급", "기술문서 심사", "60–90일."),
-                        ("3등급", "임상시험 + 심사", "180–490일."),
+                        ("3등급", "임상시험 + 심사", "일반 295일 (구 490일 단축) · Fast-Track 80~140일."),
                         ("4등급", "최고위험 (PMA 수준)", "1–3년."),
                     ]
                     ForEach(grades, id: \.0) { grade, type, period in
@@ -133,8 +133,8 @@ public struct RegulatorySubmissionStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     BUEyebrow("허가 경로 선택")
                     let options: [(String, String, String)] = [
-                        ("fasttrack", "패스트트랙 (혁신의료기기)", "혁신 기술로 지정 → 80–140일. 사전상담 3–6개월 소요."),
-                        ("standard", "일반 심사", "표준 경로. 2–3등급 기준 90–490일."),
+                        ("fasttrack", "Fast-Track (혁신의료기기, 2026.01.26 시행)", "199개 device 카테고리 (113개 AI 디지털 의료기기 포함) → 80~140일. Pre-consultation으로 자격 사전 확정 권장."),
+                        ("standard", "일반 심사", "표준 경로. 2등급 60–90일 / 3등급 295일 (구 490일 단축) / 4등급 1~3년."),
                     ]
                     ForEach(options, id: \.0) { id, title, desc in
                         let isSelected = pathway == id

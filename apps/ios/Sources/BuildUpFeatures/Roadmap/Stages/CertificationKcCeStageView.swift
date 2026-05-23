@@ -44,7 +44,7 @@ public struct CertificationKcCeStageView: View {
             stageId: stageId,
             title: "인증 (KC·CE·FCC)",
             stageEyebrow: "단계 12 · KC·CE·FCC 인증",
-            helperText: "인증 없이는 판매 불가. KC는 국내, CE는 유럽, FCC는 미국. 무선 통신 포함 제품은 8–16주 소요.",
+            helperText: "인증 없이는 판매 불가. KC는 국내, CE는 유럽, FCC는 미국. 비무선 4–8주 / 무선 8–16주 (KC-RRA+Safety+EMC 3종). 2026.4~11 5G NR 표준 강화.",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
@@ -53,6 +53,25 @@ public struct CertificationKcCeStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                .init(label: "1. Pre-compliance 자체 시험", detail: "정식 신청 전 EMC·Safety 사전 검증 — 'fail and re-submit' 방지, 수개월·수천만원 절감"),
+                .init(label: "2. 한국 대리인 지정", detail: "수입자·인증대행사 계약 — 외국 기업 KC 신청 필수, 미지정 시 즉시 거부"),
+                .init(label: "3. KC·CE·FCC 동시 진행", detail: "글로벌 3대 인증 일정·비용 통합 관리 (EMC FastPass 권장 패턴)"),
+                .init(label: "4. 무선 3종 인증", detail: "무선 제품은 KC-RRA + Safety + EMC 3개 인증 누락 없이 완료 — 하나 누락 시 불법"),
+                ],
+                verifyItems: [
+                "DVT 단계부터 인증 병행 — PVT 후 신청은 양산 일정 8~16주 지연 (1순위 출시 지연 원인)",
+                "무선 제품 — RRA·Safety·EMC 중 1개라도 누락 시 불법 판매, 즉시 회수·과태료 + 형사책임",
+                "2026.4~11 — KC 5G NR 표준 강화 시행 (RRA), 5G 모듈 사용 제품은 재시험 가능성",
+                "유럽 CE — Notified Body 지정·DoC 작성 의무, 위반 시 EU 시장 진입 차단",
+                "미국 FCC — Title 47 Part 15·18 별도 인증, Class B 가정용·Class A 산업용 구분",
+                "어린이 제품 — 안전인증 별도, 위반 시 5천만원 이하 과징금 + 영업정지 가능",
+                "인증 라벨 — KC·CE·FCC 마크 누락·위조 시 표시광고법 + 인증기관 행정처분",
+                ],
+                nextStageLabel: "양산 파트너 셋업",
+                nextSummary: "KC·CE·FCC 인증 + 한국 대리인 지정 완료 → 양산 파트너 셋업 단계로 진입"
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {
@@ -126,11 +145,11 @@ public struct CertificationKcCeStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("KC 인증 신청 절차")
                     let steps: [(String, String)] = [
-                        ("1", "시험기관 선정 (KTL·KOTITI·FITI 등)"),
-                        ("2", "시험 의뢰"),
-                        ("3", "심사·시험 (4–16주)"),
-                        ("4", "인증서 발급"),
-                        ("5", "제품에 KC 마크 표시"),
+                        ("1", "Pre-compliance 자체 시험 (DVT 단계부터, 정식 신청 전 EMC·Safety 사전 검증)"),
+                        ("2", "한국 시험기관 선정 (KTL·KOTITI·FITI·RRA 등) + 한국 대리인 지정 (외국 기업 필수)"),
+                        ("3", "시험 의뢰 + 한국어 문서·제품 샘플 제출"),
+                        ("4", "심사·시험 (비무선 4–8주 / 무선 8–16주, CB conversion 2–3주)"),
+                        ("5", "인증서 발급 → 제품에 KC 마크 표시"),
                     ]
                     ForEach(steps, id: \.0) { num, desc in
                         HStack(alignment: .top, spacing: BUSpacing.sm) {
