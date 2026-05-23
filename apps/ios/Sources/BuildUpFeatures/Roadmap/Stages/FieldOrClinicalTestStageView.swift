@@ -149,11 +149,13 @@ public struct FieldOrClinicalTestStageView: View {
             if testType == "clinical" {
                 BUCard(.card) {
                     VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                        BUEyebrow("임상시험 계획")
+                        BUEyebrow("임상시험 계획 (MFDS IND, 2026 기준)")
                         let items = [
-                            "임상시험계획서(IND) 작성 — CRO 활용 권장",
-                            "식약처 제출 (30영업일 심사)",
-                            "IRB(기관생명윤리위원회) 승인",
+                            "Pre-IND consultation — 사전 협의로 7일 단축 옵션, 우려사항 식별",
+                            "임상시험계획서(IND) 작성 — CRO 활용 (적응증별 IND 통과 경험 5건+, KGCP 인증)",
+                            "피험자 보상 보험 — IND 제출 시 한국어 증서 필수 (현대해상·삼성화재 등), 미제출 시 즉시 거절",
+                            "식약처 제출 (4-6주 / 30 working days) — 한국은 세계 최단 IND 중 하나",
+                            "IRB(기관생명윤리위원회) 윤리 심사 병행 → 총 6~8주에 임상 시작 가능",
                             "1상: 안전성 / 2상: 유효성 / 3상: 대규모 비교",
                         ]
                         ForEach(items, id: \.self) { item in
