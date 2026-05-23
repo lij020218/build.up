@@ -49,10 +49,24 @@ public struct IndustrySelectionStageView: View {
 
     @Environment(RoadmapStore.self) private var roadmapStore
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("roadmap.selectedIndustryId") private var selectedIndustryId: String = ""
-    @AppStorage("roadmap.cluster") private var selectedCluster: String = "offline-food"
+    @AppStorage("roadmap.selectedIndustryId")  private var selectedIndustryId: String  = ""
+    @AppStorage("roadmap.selectedSpecialtyId") private var selectedSpecialtyId: String = ""
+    @AppStorage("roadmap.cluster")             private var selectedCluster: String    = "offline-food"
     @State private var activeCategory: String = "food"
     private let stageId = "industry-selection"
+
+    // ── Step-2 specialty ───────────────────────────────────────────────
+    //   웹 SSOT: IndustrySelectionStage.tsx getSpecialtyOptions/requiresSpecialty 패턴.
+    //   사용자 피드백 (2026-05-04): "한식/캐주얼 골라도 국밥집인지 한정식인지 알아야 한다."
+
+    private var specialtyOptions: [SpecialtyOption] { SpecialtyRegistry.options(for: selectedIndustryId) }
+    private var requiresSpecialty: Bool { !specialtyOptions.isEmpty }
+
+    private var currentInputs: [String: String] {
+        var m = ["industryId": selectedIndustryId, "cluster": selectedCluster]
+        if !selectedSpecialtyId.isEmpty { m["specialtyId"] = selectedSpecialtyId }
+        return m
+    }
 
     // ── Onboarding 통합 옵션 (2026-05-20) ──
     /// 처음 열 때 보여줄 카테고리 — Onboarding 에서 카테고리 미리 선택한 경우 주입.
@@ -69,12 +83,22 @@ public struct IndustrySelectionStageView: View {
         StarterIndustryData.options(for: activeCategory)
     }
 
-    private var canContinue: Bool { !selectedIndustryId.isEmpty }
+    private var canContinue: Bool {
+        guard !selectedIndustryId.isEmpty else { return false }
+        if requiresSpecialty && selectedSpecialtyId.isEmpty { return false }
+        return true
+    }
 
     private var advanceHint: String {
         guard !selectedIndustryId.isEmpty,
               let opt = StarterIndustryData.option(by: selectedIndustryId) else {
             return "업종을 하나 선택하세요"
+        }
+        if requiresSpecialty && selectedSpecialtyId.isEmpty {
+            return "\(opt.titleKo) — 세부 분류를 선택하세요"
+        }
+        if let spec = specialtyOptions.first(where: { $0.id == selectedSpecialtyId }) {
+            return "\(opt.titleKo) · \(spec.label)"
         }
         return "선택: \(opt.titleKo)"
     }
@@ -89,22 +113,12 @@ public struct IndustrySelectionStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(
-                    currentStageId: stageId,
-                    inputs: [
-                        "industryId": selectedIndustryId,
-                        "cluster": selectedCluster
-                    ]
-                )
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
                 // dismiss / wizard push 는 BUStageShell 이 \.wizardOnAdvance 환경값 보고 자동 처리.
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(currentStageId: stageId,
-                    inputs: [
-                        "industryId": selectedIndustryId,
-                        "cluster": selectedCluster
-                    ])
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs)
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
@@ -128,7 +142,16 @@ public struct IndustrySelectionStageView: View {
             VStack(alignment: .leading, spacing: 14) {
                 categoryTabBar
                 optionGrid
+
+                // Step-2 specialty selector — 선택된 industry 에 specialty 옵션이 있을 때만 노출.
+                if requiresSpecialty {
+                    specialtySection
+                }
             }
+        }
+        .onChange(of: selectedIndustryId) { _, _ in
+            // industry 가 바뀌면 specialty 도 리셋 (새 industry 의 specialty 셋과 호환되지 않음).
+            selectedSpecialtyId = ""
         }
         .onAppear {
             // 우선순위: 호출자 주입 (Onboarding) > 기존 선택 복원 > food 기본값
@@ -249,6 +272,82 @@ public struct IndustrySelectionStageView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .strokeBorder(color.opacity(isSelected ? 0.10 : 0), lineWidth: 3)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Step 2: Specialty selector
+    //   웹 SSOT: IndustrySelectionStage.tsx 269-355 (requiresSpecialty 블록).
+
+    private var specialtySection: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Text("STEP 2")
+                        .font(.system(size: 10, weight: .heavy))
+                        .tracking(0.6)
+                        .textCase(.uppercase)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    Text("정확히 무엇을 하시나요?")
+                        .font(.system(size: 15, weight: .heavy))
+                        .tracking(-0.2)
+                        .foregroundStyle(BUColor.ink)
+                }
+                Text("세부 분류에 따라 인허가·공급처·매출 모델·고객 페르소나가 더 정밀하게 추천됩니다.")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(spacing: 8) {
+                    ForEach(specialtyOptions) { spec in
+                        specialtyRow(spec)
+                    }
+                }
+            }
+        }
+    }
+
+    private func specialtyRow(_ spec: SpecialtyOption) -> some View {
+        let isSelected = selectedSpecialtyId == spec.id
+        return Button {
+            withAnimation(.snappy(duration: 0.18)) { selectedSpecialtyId = spec.id }
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(isSelected ? BUColor.midnight : BUColor.midnight.opacity(0.20))
+                    .frame(width: 22)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(spec.label)
+                        .font(.system(size: 13.5, weight: .heavy))
+                        .tracking(-0.15)
+                        .foregroundStyle(isSelected ? BUColor.midnight : BUColor.ink)
+                    Text(spec.desc)
+                        .font(.system(size: 11.5, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 11)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                isSelected ? BUColor.midnight.opacity(0.06) : Color.white,
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(
+                        isSelected ? BUColor.midnight : BUColor.midnight.opacity(0.10),
+                        lineWidth: isSelected ? 1.5 : 1
+                    )
             )
         }
         .buttonStyle(.plain)
