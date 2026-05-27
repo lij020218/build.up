@@ -1,9 +1,10 @@
 "use client";
 
 import type { DashboardHook } from "../../useDashboard";
+import { getKstDate } from "../../utils/business-day";
 
 export function TodaySalesSummary({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: number) => string }) {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getKstDate(new Date());
   const todayEntry = (d.dailyEntries as Array<{ date: string; sales: number; customers: number }>)
     .find((e) => e.date === todayStr);
 

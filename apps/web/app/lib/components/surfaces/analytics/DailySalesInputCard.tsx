@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { getKstDate } from "../../../utils/business-day";
 
 /** Format number as Korean currency (e.g. 12만원) */
 const fmt = (n: number) =>
@@ -19,11 +20,11 @@ export function DailySalesInputCard() {
   } = d;
 
   const ko = language === "ko";
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getKstDate(new Date());
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().slice(0, 10);
+    return getKstDate(d);
   });
   const entryMap = Object.fromEntries(
     (dailyEntries as { date: string; sales: number; customers: number }[]).map(e => [e.date, { sales: e.sales, customers: e.customers }])

@@ -80,6 +80,14 @@ export async function POST(
   // TODO: portone_connections 에 webhook_secret_encrypted 컬럼 채우기
   const webhookSecretRaw = await loadWebhookSecret(supabase, uid);
   if (webhookSecretRaw && webhookId && webhookTs && webhookSig) {
+    // 2026-05-27 보안 (P1-3): timestamp 5분 만료 — replay attack 방어.
+    //   HMAC 검증만으로는 옛 메시지 그대로 재전송 가능. Standard Webhooks 명세도
+    //   클라이언트가 별도로 timestamp tolerance check 하도록 권장 (https://www.standardwebhooks.com).
+    const tsSec = Number(webhookTs);
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!Number.isFinite(tsSec) || Math.abs(nowSec - tsSec) > 300) {
+      return NextResponse.json({ error: "timestamp out of window" }, { status: 401 });
+    }
     const valid = verifyStandardWebhook({
       secret: webhookSecretRaw,
       id: webhookId,
@@ -206,15 +214,15 @@ export async function POST(
 // ─── 내부 ─────────────────────────────────────────────────────────────
 
 /**
- * 사장님별 webhook secret 조회 (현재는 placeholder — 컬럼 추가 후 활성).
- * Phase 2: portone_connections 에 webhook_secret_encrypted 추가 + 봉투 복호화.
+ * 사장님별 webhook secret 조회.
+ * Phase 1: 환경변수 PORTONE_WEBHOOK_SECRET (글로벌 fallback).
+ * Phase 2: portone_connections 에 webhook_secret_encrypted 컬럼 추가 + 봉투 복호화.
  */
 async function loadWebhookSecret(
   _supabase: ReturnType<typeof getSupabaseAdmin>,
   _userId: string
 ): Promise<string | null> {
-  // TODO: webhook_secret_encrypted 컬럼 추가 + 복호화
-  return null;
+  return process.env.PORTONE_WEBHOOK_SECRET ?? null;
 }
 
 /**

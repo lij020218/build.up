@@ -1,3 +1,4 @@
+import { getKstDate } from "../utils/business-day";
 /**
  * anomaly-history.ts
  *
@@ -66,8 +67,8 @@ function saveStore(store: HistoryStore): void {
 export function updateAnomalyHistory(currentKinds: string[]): Record<string, AnomalyHistoryEntry> {
   if (typeof window === "undefined") return {};
   const store = loadStore();
-  const today = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const today = getKstDate(new Date());
+  const yesterday = getKstDate(new Date(Date.now() - 86400000));
 
   // 같은 날 중복 갱신 방지 (성능)
   if (store.lastUpdate === today && currentKinds.every((k) => store.entries[k]?.lastSeenAt === today)) {
@@ -120,7 +121,7 @@ export function getAnomalyContext(kind: string): {
   const store = loadStore();
   const entry = store.entries[kind];
   if (!entry) return null;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getKstDate(new Date());
   if (entry.lastSeenAt !== today) return null;  // 오늘 감지된 것만
 
   const daysSinceFirst = Math.round(

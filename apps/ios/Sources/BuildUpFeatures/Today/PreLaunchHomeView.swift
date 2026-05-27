@@ -92,7 +92,7 @@ public struct PreLaunchHomeView: View {
             .padding(.horizontal, BUSpacing.screenMargin)
             .padding(.top, BUSpacing.md)
         }
-        .background(BUBackgroundSurface())
+        // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
     }
 
     // MARK: - Hero Panel

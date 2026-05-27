@@ -121,12 +121,13 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
     "policy-fund-match",
   ],
 
-  // 카페 — Prime Cost·Food Safety (외식 공유), Team
+  // 카페 — Prime Cost·Food Safety (외식 공유), Inventory (원두·유제품·시럽 발주), Team
   //   신규 필요: 시간대별 매출 + 메뉴 카테고리 + 원두 폐기 (Phase 2c)
   "cafe-dessert": [
     "prime-cost",
     "food-safety",
     "cafe-hourly-sales", // 신규
+    "inventory-ops",     // 원두·우유·시럽·컵 등 발주 필수 (2026-05-26 추가)
     "team-card",
     "avg-ticket-upsell",
     "policy-fund-match",

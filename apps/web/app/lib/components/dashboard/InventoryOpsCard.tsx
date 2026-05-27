@@ -480,18 +480,6 @@ export function InventoryOpsCard({
       if (ext === "csv" || ext === "tsv" || ext === "txt") {
         // 텍스트 파일: 직접 읽기
         text = await file.text();
-      } else if (ext === "xlsx" || ext === "xls") {
-        // 엑셀 바이너리: SheetJS로 클라이언트 파싱 → CSV 변환
-        try {
-          const XLSX = (await import("xlsx"));
-          const buffer = await file.arrayBuffer();
-          const workbook = XLSX.read(buffer, { type: "array" });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          text = XLSX.utils.sheet_to_csv(firstSheet);
-        } catch {
-          alert(ko ? "엑셀 파일을 읽을 수 없습니다." : "Cannot read Excel file.");
-          return;
-        }
       } else {
         // 기타 텍스트 시도
         const buffer = await file.arrayBuffer();
@@ -618,12 +606,12 @@ export function InventoryOpsCard({
             {ko ? (d.businessCtx.inventoryLabel?.ko === "내 제품" ? "제품 추가" : d.businessCtx.inventoryLabel?.ko === "소모품 관리" ? "소모품 추가" : d.businessCtx.inventoryLabel?.ko === "운영 자산" ? "자산 추가" : "재고 추가") : "Add item"}
           </button>
           <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
-            {ko ? "엑셀" : "Excel"}
+            CSV
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls,.csv,.tsv,.txt"
+            accept=".csv,.tsv,.txt"
             style={{ display: "none" }}
             onChange={async (event) => {
               const file = event.target.files?.[0];

@@ -50,6 +50,12 @@ public struct BudgetSetupStageView: View {
     @State private var startupText   = ""
     @State private var operatingText = ""
 
+    // ⚠️ 2026-05-25: 예산 부족 보완용 펀딩 매칭 — Guides 탭의 79개 프로그램 풀에서
+    //   선택 업종·자본금에 맞는 상위 4개 추천. 로컬 StartupProgramRegistry 사용 (네트워크 X).
+    @State private var matchedFundings: [FundingProgram] = []
+    @State private var fundingLoading: Bool = false
+    @State private var showAllFundingSheet: Bool = false
+
     // MARK: - Industry → 월 추정 운영비
 
     private var categoryId: String? {
@@ -221,6 +227,7 @@ public struct BudgetSetupStageView: View {
                 franchiseCostPanel
                 startupCapitalSection
                 BudgetInsightCard(userBudgetWon: startupWon)
+                fundingMatchSection
                 operatingCapitalSection
                 openDateSection
             }
@@ -234,6 +241,131 @@ public struct BudgetSetupStageView: View {
                 operatingSlider = Double(operatingWon)
                 operatingText = String(operatingWon / 10_000)
             }
+        }
+        .task(id: "\(industryId)-\(startupWon)-\(startupType)") {
+            await loadFundingMatches()
+        }
+        .sheet(isPresented: $showAllFundingSheet) {
+            FundingFullListSheet(programs: matchedFundings)
+        }
+    }
+
+    // MARK: - § Funding match (2026-05-25 신규)
+
+    /// 79개 펀딩 프로그램 풀에서 사용자 선택 (업종·자본금·창업 형태) 기준으로 매칭.
+    /// personalFitScore 상위 4개를 inline 표시 — 사용자가 자본 부족분을 어떻게 채울지 즉시 확인.
+    @MainActor
+    private func loadFundingMatches() async {
+        fundingLoading = true
+        defer { fundingLoading = false }
+
+        let categoryId = categoryId ?? "food"
+        // 단계 분류 — 자본금 규모로 추정
+        let stage: String = {
+            if startupWon < 30_000_000 { return "pre-startup" }
+            if startupWon < 100_000_000 { return "early" }
+            return "growth"
+        }()
+
+        let criteria = FundingMatchCriteria(
+            startupType: startupType.isEmpty ? nil : startupType,
+            industryCategoryId: categoryId,
+            capital: startupWon > 0 ? startupWon : nil,
+            businessStage: stage
+        )
+
+        let repo = FundingRepository(supabase: BUSupabase.shared.client)
+        do {
+            let result = try await repo.matchAll(criteria: criteria, language: "ko")
+            // personalFitScore 내림차순 + 자격 있는 것 우선
+            let sorted = result.programs.sorted { a, b in
+                if a.eligible != b.eligible { return a.eligible }
+                return a.personalFitScore > b.personalFitScore
+            }
+            matchedFundings = Array(sorted.prefix(20))  // 상위 20개 보관 (inline 4 + sheet 16)
+        } catch {
+            // 로컬 매칭은 throw 안 되지만 방어
+            matchedFundings = []
+        }
+    }
+
+    @ViewBuilder
+    private var fundingMatchSection: some View {
+        if !matchedFundings.isEmpty {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            BUEyebrow("예산이 부족하신가요? 정부 지원·정책자금 매칭")
+                            Text(fundingMatchSubtitle)
+                                .font(BUFont.bodyCaption)
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .lineSpacing(2)
+                        }
+                        Spacer(minLength: 8)
+                    }
+
+                    VStack(spacing: 8) {
+                        ForEach(matchedFundings.prefix(4)) { prog in
+                            FundingMiniCard(program: prog)
+                        }
+                    }
+
+                    if matchedFundings.count > 4 {
+                        Button {
+                            showAllFundingSheet = true
+                        } label: {
+                            HStack {
+                                Text("전체 \(matchedFundings.count)개 보기")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(BUColor.midnight)
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(BUColor.midnight)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(BUColor.midnight.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        } else if fundingLoading {
+            BUCard(.card) {
+                HStack(spacing: 10) {
+                    ProgressView().scaleEffect(0.8)
+                    Text("이 업종에 맞는 지원 프로그램 찾는 중…")
+                        .font(BUFont.bodyCaption)
+                        .foregroundStyle(BUColor.inkSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private var fundingMatchSubtitle: String {
+        let eligibleCount = matchedFundings.filter { $0.eligible }.count
+        if eligibleCount > 0 {
+            return "\(categoryNounKo) 업종 · 자본 \(formatWon(startupWon)) 기준 — 자격 충족 \(eligibleCount)건, 자본금 부족분을 정책자금으로 보완하세요."
+        }
+        return "\(categoryNounKo) 업종 기준 — 자본금·업력 정보를 더 입력하면 맞춤 매칭이 정확해집니다."
+    }
+
+    private var categoryNounKo: String {
+        switch categoryId {
+        case "food":           return "음식점"
+        case "cafe-dessert":   return "카페·디저트"
+        case "retail":         return "소매"
+        case "beauty":         return "미용"
+        case "fitness":        return "피트니스"
+        case "education":      return "교육"
+        case "pet":            return "반려동물"
+        case "living-service": return "생활서비스"
+        case "space":          return "공간 임대"
+        case "online-digital": return "온라인·디지털"
+        case "startup-tech":   return "스타트업 테크"
+        default:               return "이"
         }
     }
 
@@ -688,6 +820,166 @@ private struct DateChip: View {
                 .background(isSelected ? BUColor.midnight : BUColor.midnight.opacity(0.07), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Funding match cards (2026-05-25 신규)
+
+/// 예산 단계에서 표시되는 컴팩트 펀딩 카드 — 외부 URL 링크.
+private struct FundingMiniCard: View {
+    let program: FundingProgram
+
+    private var statusBadge: (text: String, color: Color)? {
+        switch program.applicationStatus {
+        case "open":
+            if let days = program.daysUntilDeadline, days <= 30 {
+                return ("D-\(days)", days <= 7 ? BUColor.danger : Color.orange)
+            }
+            return ("모집중", BUColor.success)
+        case "upcoming":
+            return ("예정", BUColor.midnight)
+        default:
+            return nil
+        }
+    }
+
+    private var categoryColor: Color {
+        switch program.category {
+        case "government":  return Color(red: 0.149, green: 0.388, blue: 0.922)
+        case "private":     return Color(red: 0.486, green: 0.227, blue: 0.929)
+        case "local":       return Color(red: 0.020, green: 0.588, blue: 0.412)
+        case "corporate":   return Color(red: 0.918, green: 0.345, blue: 0.047)
+        case "competition": return Color(red: 0.859, green: 0.157, blue: 0.467)
+        default:            return BUColor.midnight
+        }
+    }
+
+    private var categoryLabel: String {
+        switch program.category {
+        case "government":  return "정부"
+        case "private":     return "민간"
+        case "local":       return "지역"
+        case "corporate":   return "대기업"
+        case "competition": return "콘테스트"
+        default:            return ""
+        }
+    }
+
+    var body: some View {
+        Link(destination: URL(string: program.url) ?? URL(string: "https://k-startup.go.kr")!) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    Text(categoryLabel)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(categoryColor)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(categoryColor.opacity(0.12), in: Capsule())
+                    if program.eligible {
+                        Text("자격 충족")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(BUColor.success)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(BUColor.success.opacity(0.12), in: Capsule())
+                    }
+                    if let badge = statusBadge {
+                        Text(badge.text)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(badge.color)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(badge.color.opacity(0.12), in: Capsule())
+                    }
+                    Spacer()
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.system(size: 12))
+                        .foregroundStyle(BUColor.inkMuted)
+                }
+                Text(program.name)
+                    .font(.system(size: 14, weight: .heavy))
+                    .foregroundStyle(BUColor.ink)
+                    .tracking(-0.1)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                HStack(spacing: 6) {
+                    Text(program.organizer)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(BUColor.inkMuted)
+                    if let amount = program.amount, !amount.isEmpty {
+                        Text("·")
+                            .font(.system(size: 11))
+                            .foregroundStyle(BUColor.inkSubtle)
+                        Text(amount)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(BUColor.midnight)
+                    }
+                }
+                Text(program.benefit)
+                    .font(.system(size: 12))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(2)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                if let topReason = program.matchReasons.sorted(by: { $0.weight > $1.weight }).first {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 9))
+                            .foregroundStyle(BUColor.midnight.opacity(0.7))
+                        Text(topReason.text)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(BUColor.midnight.opacity(0.85))
+                            .lineLimit(1)
+                    }
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(BUColor.midnight.opacity(0.08), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// 전체 매칭 목록 sheet — 상위 20개 표시. "펀딩 탭에서 더 보기" 안내 포함.
+private struct FundingFullListSheet: View {
+    let programs: [FundingProgram]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("이 업종에 추천 — 전체 \(programs.count)개")
+                            .font(.system(size: 22, weight: .heavy))
+                            .foregroundStyle(BUColor.ink)
+                            .tracking(-0.3)
+                        Text("자격 충족 + 매칭 점수 순. 더 자세한 조건 입력은 「펀딩」 탭에서.")
+                            .font(BUFont.bodyCaption)
+                            .foregroundStyle(BUColor.inkSecondary)
+                            .lineSpacing(2)
+                    }
+                    .padding(.bottom, 4)
+
+                    ForEach(programs) { prog in
+                        FundingMiniCard(program: prog)
+                    }
+                }
+                .padding(BUSpacing.md)
+                .padding(.bottom, 40)
+            }
+            .navigationTitle("정부 지원·정책자금")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("닫기") { dismiss() }
+                }
+            }
+        }
     }
 }
 

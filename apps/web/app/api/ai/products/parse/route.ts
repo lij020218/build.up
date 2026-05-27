@@ -2,6 +2,7 @@ import { createAiClient } from "@build-up/ai/utils/client";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
+import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
 type ParsedProduct = {
   name: string;
@@ -12,10 +13,30 @@ type ParsedProduct = {
   unit: string;
 };
 
+export const runtime = "nodejs";
+export const maxDuration = 60; // Vercel function timeout
+
 export async function POST(request: Request) {
   const auth = await requireApiUser(request).catch(() => null);
-  if (!auth) {
+  if (!auth || !auth.ok) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+  const rl = await checkSimpleRateLimit({
+    key: `ai-products-parse:${auth.userId}`,
+    limit: 30,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
+
+  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+  const dailyLimit = await checkDailyRateLimit({
+    userId: auth.userId,
+    feature: "products-parse",
+    limit: 30,
+    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+  });
+  if (!dailyLimit.ok) {
+    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
   }
 
   const apiKey = getAnthropicApiKey();

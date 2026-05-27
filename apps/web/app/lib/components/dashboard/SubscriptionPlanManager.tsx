@@ -15,6 +15,7 @@
 import { useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
 import type { SubscriptionPlan, Subscriber } from "../../stores/operations-store";
+import { getKstDate } from "../../utils/business-day";
 
 // ─── 구독 고객 관리 (스타트업) ──────────────────────────────────────────────
 
@@ -63,7 +64,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
       id: `sub-${Date.now()}`, name,
       email: d.subCustomerEmail?.trim() || undefined,
       planId, status: "active",
-      joinedAt: new Date().toISOString().slice(0, 10),
+      joinedAt: getKstDate(new Date()),
     };
     d.setSubscribers([...subs, newSub]);
     d.setSubCustomerName(""); d.setSubCustomerEmail(""); d.setSubCustomerFormOpen(false);
@@ -71,7 +72,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
 
   const handleChurn = (id: string) => {
     d.setSubscribers(subs.map((s) =>
-      s.id === id ? { ...s, status: "churned" as const, churnedAt: new Date().toISOString().slice(0, 10) } : s,
+      s.id === id ? { ...s, status: "churned" as const, churnedAt: getKstDate(new Date()) } : s,
     ));
   };
 

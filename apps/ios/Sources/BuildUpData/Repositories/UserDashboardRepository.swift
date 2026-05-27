@@ -47,7 +47,10 @@ public actor UserDashboardRepository {
         let currentCash = loadedStore?.current_balance_manual_krw ?? loadedProfile?.capital
 
         let profile = DashboardProfile(
-            storeName: Self.nonEmpty(loadedStore?.store_name) ?? "내 가게",
+            // ⚠️ 2026-05-25: server 에 store_name 없으면 빈 문자열. ProfileView 가 isEmpty 체크
+            //   해서 "가게 이름을 입력해 주세요" 자리표시자 표시. 이전엔 "내 가게" 자리표시자가
+            //   하드코딩되어 reset 후에도 자연스럽게 빈 상태로 보이지 않음.
+            storeName: Self.nonEmpty(loadedStore?.store_name) ?? "",
             userName: fallbackUserName,
             daysSinceLaunch: daysSinceLaunch,
             businessLaunched: businessLaunched,

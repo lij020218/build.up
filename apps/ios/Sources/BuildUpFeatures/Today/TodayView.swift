@@ -45,6 +45,11 @@ public struct TodayView: View {
     let storeInfo: StoreInfoStore?
     @State private var showInputSheet = false
 
+    /// 2026-05-27 P0-A: AI dashboard/actions 응답 (Hero 코칭 카드에 주입).
+    /// nil = 미 fetch 또는 미인증 (mock fallback). 빈 배열 = AI 가 빈 응답 반환.
+    @State private var aiActions: [AiAction]?
+    @State private var aiFetchError: String?
+
     public init(
         mock: MockData,
         dashboardStore: DashboardStore? = nil,
@@ -73,10 +78,13 @@ public struct TodayView: View {
                 // ─ 7 카드 (사장님 결정 2026-05-14) ─
 
                 // 1. CEOMorningHero — 인사 + 위험신호 + NSM + AI 코칭
+                //   AI 액션은 .task 에서 비동기 fetch → aiActions @State 에 저장.
+                //   서버 응답 전 / 인증 없음 / 오류 시: mock.resolverInput.aiTopActions 자동 fallback.
                 HeroOuterCard(
                     mock: mock,
                     healthResult: healthResult,
-                    hero: hero
+                    hero: hero,
+                    aiActions: aiActions
                 )
 
                 // 2. DailyKpiStrip — 5칸 핵심 KPI
@@ -127,9 +135,79 @@ public struct TodayView: View {
             .padding(.top, BUSpacing.md)
             .padding(.bottom, BUSpacing.md)
         }
-        .background(BUBackgroundSurface())
+        // ⚠️ 2026-05-25: 중복 .background(BUBackgroundSurface()) 제거.
+        //   BuildUpMobileShell 이 이미 풀스크린 Aurora 를 깔고 있음. 콘텐츠 영역에 또 깔면
+        //   독립적인 TimelineView 가 다른 위상으로 애니메이션 → BrandBar 영역과 콘텐츠 영역의
+        //   배경이 미묘하게 달라 보이는 분리감 발생. 사장님 신고 — "배경 나눠진게 보기 안 좋아".
         .sheet(isPresented: $showInputSheet) {
             QuickInputSheet()
+        }
+        // 2026-05-27 P0-A: AI 모닝 브리핑 비동기 fetch.
+        //   - View 마운트 시 1회 호출 (server 측에 24h KST 캐시)
+        //   - 인증 안 됨·네트워크 실패 시 silent fail → mock fallback 자연스럽게
+        //   - aiActions 가 set 되면 HeroOuterCard 의 Row3CoachingNested 가 자동 갱신
+        .task(id: "ai-actions") {
+            await loadAIActions()
+        }
+    }
+
+    // MARK: - AI Morning Briefing (P0-A)
+
+    /// AI dashboard/actions 호출 → aiActions @State 업데이트.
+    /// MockData 의 매출·비용 데이터를 context 로 보내고, 서버가 enrichDashboardContext 로 나머지 채움.
+    private func loadAIActions() async {
+        // BUSupabase 의 currentSession 으로 인증 가능 확인. demo/anonymous 면 skip.
+        guard BUSupabase.shared.currentUser != nil else {
+            aiActions = nil  // mock fallback 유지
+            return
+        }
+
+        // 매출·비용 합산 — server enrichment 의 input
+        let monthlySalesWon = Int(mock.entries.reduce(0) { $0 + $1.sales })
+        let monthlyCosts = AIDashboardMonthlyCosts(
+            ingredients: Int(mock.costs.ingredients),
+            labor: Int(mock.costs.labor),
+            rent: Int(mock.costs.rent),
+            utilities: Int(mock.costs.utilities),
+            other: Int(mock.costs.other + mock.costs.sga + mock.costs.marketing + mock.costs.interest)
+        )
+
+        // health → enum 문자열 매핑
+        let healthString: String = {
+            switch healthResult.grade {
+            case .good: return "healthy"
+            case .warning: return "caution"
+            case .critical: return "danger"
+            }
+        }()
+
+        // iOS category enum 은 raw value 가 web 과 달라서 (restaurant vs food) 매핑 필수.
+        let webCategoryId = webCategoryId(from: mock.category)
+
+        let context = AIDashboardContext(
+            industryCategoryId: webCategoryId,
+            storeName: mock.storeName,
+            industryLabel: mock.category.labelKo,
+            monthlySales: monthlySalesWon,
+            monthlyCosts: monthlyCosts,
+            businessHealthScore: healthString,
+            daysSinceLaunch: mock.daysSinceLaunch
+        )
+
+        let repo = AIDashboardActionsRepository(supabase: BUSupabase.shared.client)
+        do {
+            let response = try await repo.fetchActions(context: context)
+            // server fallback (LLM 파싱 실패) 면 빈 배열. mock 으로 그대로 유지.
+            if response._fallback == true || response.todayActions.isEmpty {
+                aiActions = nil
+                return
+            }
+            aiActions = response.toAiActions()
+            aiFetchError = nil
+        } catch {
+            // 인증 만료·429·500 모두 silent fail (사장님 화면 보호 — mock fallback).
+            aiFetchError = error.localizedDescription
+            aiActions = nil
         }
     }
 
@@ -175,7 +253,9 @@ public struct TodayView: View {
     }
 
     private var dailyKpiCells: [KpiCellData] {
-        let yesterdayEntry = mock.entries.sorted { $0.date < $1.date }.last
+        // ⚠️ 2026-05-25 fix: 이전 `.sorted.last` 는 "가장 최근 entry" 라 어제 미입력 시
+        //    3일 전 데이터가 "어제 매출" 로 표시되는 거짓말 버그. 정확히 어제 날짜로 검색.
+        let yesterdayEntry = mock.entries.yesterdayEntry()
         let yesterdaySales = yesterdayEntry?.sales ?? 0
         let yesterdayCust = yesterdayEntry?.customers ?? 0
         let avgT = yesterdayCust > 0 ? yesterdaySales / Double(yesterdayCust) : 0
@@ -282,6 +362,16 @@ private struct HeroOuterCard: View {
     let mock: MockData
     let healthResult: UnifiedHealthResult
     let hero: Hero
+    /// 2026-05-27 P0-A: 서버에서 받은 AI 액션. nil 이면 mock 데이터로 fallback.
+    /// AI fetch 완료 시 onAppear / .task 에서 채워짐.
+    let aiActions: [AiAction]?
+
+    init(mock: MockData, healthResult: UnifiedHealthResult, hero: Hero, aiActions: [AiAction]? = nil) {
+        self.mock = mock
+        self.healthResult = healthResult
+        self.hero = hero
+        self.aiActions = aiActions
+    }
 
     var body: some View {
         BUCard(.heroOuter) {
@@ -289,7 +379,11 @@ private struct HeroOuterCard: View {
                 Row1Greeting(mock: mock, healthResult: healthResult)
                 Row1_5RiskSignals(healthResult: healthResult)
                 Row2NSMNested(mock: mock, hero: hero, healthResult: healthResult)
-                Row3CoachingNested(hero: hero, actions: mock.resolverInput.aiTopActions)
+                // AI 데이터 있으면 그것 사용, 없으면 정적 fallback (mock.resolverInput.aiTopActions)
+                Row3CoachingNested(
+                    hero: hero,
+                    actions: aiActions ?? mock.resolverInput.aiTopActions
+                )
             }
         }
     }
@@ -497,8 +591,9 @@ private struct Row2NSMNested: View {
     let healthResult: UnifiedHealthResult
 
     private var nsmValue: String {
-        let last = mock.entries.sorted(by: { $0.date < $1.date }).last
-        let v = Int(last?.sales ?? 0)
+        // ⚠️ 2026-05-25 fix: "어제 매출" 라벨이므로 어제 entry 만. 미입력 시 "—" 표시.
+        //    이전 `.sorted.last` 는 사장님 신고 — "3일 전 매출이 어제로 떴음" 버그 원인.
+        let v = Int(mock.entries.yesterdaySales())
         if v == 0 { return "—" }
         return v.formatted(.number.grouping(.automatic))
     }

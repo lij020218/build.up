@@ -22,19 +22,23 @@ public struct ContractReviewStageView: View {
     private let stageId = "contract-review"
 
     // 계약 체크
-    @AppStorage("contract.check.term")       private var checkTerm       = false
-    @AppStorage("contract.check.deposit")    private var checkDeposit    = false
-    @AppStorage("contract.check.rent")       private var checkRent       = false
-    @AppStorage("contract.check.area")       private var checkArea       = false
-    @AppStorage("contract.check.renewal")    private var checkRenewal    = false
-    @AppStorage("contract.check.restore")    private var checkRestore    = false
-    @AppStorage("contract.check.sublease")   private var checkSublease   = false
-    @AppStorage("contract.check.facility")   private var checkFacility   = false
-    @AppStorage("contract.check.done")       private var contractDone    = false
+    @AppStorage("contract.check.term")        private var checkTerm        = false
+    @AppStorage("contract.check.deposit")     private var checkDeposit     = false
+    @AppStorage("contract.check.rent")        private var checkRent        = false
+    @AppStorage("contract.check.area")        private var checkArea        = false
+    @AppStorage("contract.check.renewal")     private var checkRenewal     = false
+    @AppStorage("contract.check.restore")     private var checkRestore     = false
+    @AppStorage("contract.check.sublease")    private var checkSublease    = false
+    @AppStorage("contract.check.facility")    private var checkFacility    = false
+    // ⚠️ 2026-05-25 fix: clausePage 에 9번째 조항 "주요 시설 보수"가 표시되지만
+    //    checklistPage 에 대응 체크항목이 없어 allChecked 가 실제 8개만 평가하는 버그.
+    //    9번째 체크 추가.
+    @AppStorage("contract.check.maintenance") private var checkMaintenance = false
+    @AppStorage("contract.check.done")        private var contractDone     = false
 
     private var allChecked: Bool {
         checkTerm && checkDeposit && checkRent && checkArea &&
-        checkRenewal && checkRestore && checkSublease && checkFacility
+        checkRenewal && checkRestore && checkSublease && checkFacility && checkMaintenance
     }
 
     private let pages = ["핵심 조항", "레드플래그", "체크리스트"]
@@ -208,6 +212,7 @@ public struct ContractReviewStageView: View {
                     contractCheckRow("원상복구 범위 구체적으로 명시", isChecked: $checkRestore)
                     contractCheckRow("후드·간판·덕트 설치 허용 특약 확인", isChecked: $checkFacility)
                     contractCheckRow("전대차 관련 조항 확인", isChecked: $checkSublease)
+                    contractCheckRow("냉난방·전기·수도 주요 시설 하자 수리 주체 명확히", isChecked: $checkMaintenance)
                 }
             }
 

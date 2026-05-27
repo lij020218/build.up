@@ -35,7 +35,8 @@ export function getEnvVar(name: string): string | undefined {
   // 1. process.env (non-empty)
   const fromEnv = process.env[name]?.trim();
   if (fromEnv && fromEnv.length > 0) return fromEnv;
-  // 2. .env.local fallback
+  if (process.env.NODE_ENV === "production") return undefined;
+  // 2. Local development fallback only
   const fromFile = readEnvFile()[name]?.trim();
   return fromFile && fromFile.length > 0 ? fromFile : undefined;
 }

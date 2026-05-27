@@ -10,6 +10,7 @@ import { activityCard } from "./operationalStyles";
 import { AnimatedBar, CountUp } from "./animations";
 import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
 import { calculateBreakEven } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -69,7 +70,7 @@ export function ActivitySnapshotCard({
   const generatePostEntryReaction = (sales: number, customers: number) => {
     const allE = d.dailyEntries as DailyEntry[];
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-    const yEntry = allE.find(e => e.date === yesterday.toISOString().slice(0, 10));
+    const yEntry = allE.find(e => e.date === getKstDate(yesterday));
 
     // BEP 비교 — cost-ratios.ts SSOT (dashboard.ts:calculateHealthMetrics 와 동일 결과 보장)
     const mc = d.monthlyCosts as { ingredients: number; labor: number; rent: number; utilities: number; other: number; sga?: number; marketing?: number };
@@ -122,7 +123,7 @@ export function ActivitySnapshotCard({
   const last7 = Array.from({ length: 7 }, (_, index) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - index));
-    return date.toISOString().slice(0, 10);
+    return getKstDate(date);
   });
   const entryMap = Object.fromEntries(recent7Entries.map((entry) => [entry.date, entry]));
   const bars = last7.map((date) => {
@@ -506,7 +507,7 @@ export function ActivitySnapshotCard({
           const checkDate = new Date();
           if (!todayEntry) checkDate.setDate(checkDate.getDate() - 1);
           for (let i = 0; i < 365; i++) {
-            const ds = checkDate.toISOString().slice(0, 10);
+            const ds = getKstDate(checkDate);
             if (allE.some(e => e.date === ds)) { streak++; checkDate.setDate(checkDate.getDate() - 1); }
             else break;
           }
@@ -515,13 +516,13 @@ export function ActivitySnapshotCard({
           const missedDays: string[] = [];
           for (let i = 0; i < 3; i++) {
             const dt = new Date(); dt.setDate(dt.getDate() - i);
-            const ds = dt.toISOString().slice(0, 10);
+            const ds = getKstDate(dt);
             if (!allE.some(e => e.date === ds)) missedDays.push(ds);
           }
 
           // yesterday comparison
           const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-          const yEntry = allE.find(e => e.date === yesterday.toISOString().slice(0, 10));
+          const yEntry = allE.find(e => e.date === getKstDate(yesterday));
           const yesterdayDiff = todayEntry && yEntry && yEntry.sales > 0
             ? Math.round(((todayEntry.sales - yEntry.sales) / yEntry.sales) * 100)
             : null;

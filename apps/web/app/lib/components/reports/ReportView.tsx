@@ -22,7 +22,7 @@
  */
 
 import { useMemo } from "react";
-import { TrendingUp, TrendingDown, Minus, AlertTriangle, Quote, Sparkles, FileDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, AlertTriangle, Quote, Sparkles, FileDown, BookOpen } from "lucide-react";
 import { useReportSnapshot, type ReportPeriod } from "../../hooks/useReportSnapshot";
 import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
 import { useFeatureNudges } from "../../hooks/useFeatureNudges";
@@ -35,7 +35,13 @@ import { ReportChart } from "./ReportChart";
 import { ReportDonut } from "./ReportDonut";
 import { ReportEmptyState } from "./ReportEmptyState";
 import { pickReportWisdom } from "./report-wisdom";
-import { getKHitCasesForCategory } from "@build-up/shared";
+import {
+  getKHitCasesForCategory,
+  detectBusinessSituation,
+  matchCaseStudies,
+  type CaseStudy,
+  type BusinessSituation,
+} from "@build-up/shared";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_DEEP = "#0f0f4a";
@@ -145,6 +151,34 @@ export function ReportView({ period }: Props) {
   const wisdom = pickReportWisdom(period, ko);
   const topNudge = nudges[0];
   const isQuarter = period === "quarter";
+
+  // 현재 상황에 맞는 실제 기업 사례 매칭 (클라이언트 사이드, 추가 API 호출 없음)
+  const benchmarkCase = useMemo<{ study: CaseStudy; situation: BusinessSituation } | null>(() => {
+    if (!d.industryCategoryId) return null;
+    const weeklyChange = brain.weeklyChangePct ?? snap.revenueChangePct ?? 0;
+    const situation = detectBusinessSituation({
+      runway: snap.marginKrw >= 0 ? -1 : 1,
+      monthlySales: snap.revenueKrw,
+      weeklyChange,
+      primeRate: snap.primeRatePct ?? 0,
+      daysSinceLaunch: brain.daysSinceLaunch ?? 0,
+      categoryId: d.industryCategoryId,
+      // 이번 기간 변화율이 ±5% 이내면 4주 정체로 간주 → marketing-stagnant 감지
+      consecutiveFlatWeeks:
+        snap.revenueChangePct != null && Math.abs(snap.revenueChangePct) <= 5 ? 4 : undefined,
+    });
+    if (!situation) return null;
+    const cases = matchCaseStudies(situation, d.industryCategoryId);
+    if (cases.length === 0) return null;
+    // period 기반 안정적 픽 (같은 기간 = 같은 회사, 매 조회마다 바뀌지 않음)
+    const now = new Date();
+    const seed =
+      period === "day" ? now.getDate() :
+      period === "week" ? Math.floor(now.getDate() / 7) :
+      period === "month" ? now.getMonth() :
+      Math.floor(now.getMonth() / 3);
+    return { study: cases[seed % cases.length], situation };
+  }, [snap, brain, d.industryCategoryId, period]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -260,7 +294,16 @@ export function ReportView({ period }: Props) {
         </div>
       )}
 
-      {/* ── 7. 다음 액션 + 거장 인용 + nudge ── */}
+      {/* ── 7. 비슷한 상황의 기업 사례 ── */}
+      {benchmarkCase && (
+        <BenchmarkCaseCard
+          study={benchmarkCase.study}
+          situation={benchmarkCase.situation}
+          ko={ko}
+        />
+      )}
+
+      {/* ── 8. 다음 액션 + 거장 인용 + nudge ── */}
       <div style={actionCardStyle} className="bento-card">
         <div style={cardEyebrow}>{ko ? "다음 액션" : "Next action"}</div>
         <div style={{ fontSize: 14.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.6 }}>
@@ -289,10 +332,10 @@ export function ReportView({ period }: Props) {
         )}
       </div>
 
-      {/* ── 8. 분기 회고 카드 (단일) ── */}
+      {/* ── 9. 분기 회고 카드 (단일) ── */}
       {isQuarter && <QuarterlyReflection ko={ko} categoryId={d.industryCategoryId} wisdom={wisdom} />}
 
-      {/* ── 9. Export placeholder ── */}
+      {/* ── 10. Export placeholder ── */}
       <button type="button" disabled style={exportPlaceholder}>
         <FileDown size={13} strokeWidth={1.5} />
         {ko ? "보고서 PDF · CSV 내보내기 (준비 중)" : "Export PDF · CSV (coming soon)"}
@@ -323,6 +366,64 @@ function trendColor(change: number): string {
   if (change >= 5) return GREEN;
   if (change <= -5) return RED;
   return "rgba(15,23,42,0.6)";
+}
+
+const SITUATION_LABEL: Record<BusinessSituation, { ko: string; en: string }> = {
+  "funding-crisis":       { ko: "자금 위기",   en: "Funding crisis" },
+  "pmf-not-found":        { ko: "PMF 미검증",  en: "PMF not found" },
+  "revenue-decline":      { ko: "매출 하락",   en: "Revenue decline" },
+  "competitor-pressure":  { ko: "경쟁 심화",   en: "Competition" },
+  "cost-crisis":          { ko: "비용 위기",   en: "Cost crisis" },
+  "scaling-decision":     { ko: "확장 고민",   en: "Scaling" },
+  "small-biz-turnaround": { ko: "반전 필요",   en: "Turnaround" },
+  "talent-acquisition":   { ko: "인재 부족",   en: "Talent gap" },
+  "marketing-stagnant":   { ko: "성장 정체",   en: "Growth stall" },
+  "menu-fatigue":         { ko: "메뉴 피로",   en: "Menu fatigue" },
+  "delivery-dependency":  { ko: "배달 의존",   en: "Delivery dependency" },
+  "seasonal-slump":       { ko: "계절 비수기", en: "Seasonal slump" },
+  "expansion-ready":      { ko: "확장 준비",   en: "Expansion ready" },
+  "staff-crisis":         { ko: "인력 위기",   en: "Staff crisis" },
+  "rent-crisis":          { ko: "임대료 위기", en: "Rent crisis" },
+};
+
+function BenchmarkCaseCard({
+  study,
+  situation,
+  ko,
+}: {
+  study: CaseStudy;
+  situation: BusinessSituation;
+  ko: boolean;
+}) {
+  const sLabel = SITUATION_LABEL[situation];
+  return (
+    <div style={benchmarkCardStyle} className="bento-card">
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <BookOpen size={12} strokeWidth={1.5} style={{ color: MIDNIGHT }} />
+        <span style={cardEyebrow}>{ko ? "비슷한 상황의 기업들은?" : "How others handled this"}</span>
+        <span style={benchmarkBadge}>{ko ? sLabel.ko : sLabel.en}</span>
+      </div>
+
+      {/* Company name */}
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+        {study.company}
+      </div>
+
+      {/* Narrative */}
+      <div style={{ fontSize: 13.5, color: "rgba(15,23,42,0.78)", lineHeight: 1.65 }}>
+        {study.oneLiner}
+      </div>
+
+      {/* Lesson pill */}
+      <div style={benchmarkLesson}>
+        <span style={{ fontSize: 13 }}>💡</span>
+        <span style={{ fontSize: 12.5, color: MIDNIGHT, fontWeight: 600, lineHeight: 1.5 }}>
+          {study.lesson}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function QuarterlyReflection({ ko, categoryId, wisdom }: { ko: boolean; categoryId?: string; wisdom: string }) {
@@ -572,6 +673,38 @@ const yesterdayBadge: React.CSSProperties = {
   letterSpacing: "0.04em",
   marginRight: 8,
   verticalAlign: "1px",
+};
+
+const benchmarkCardStyle: React.CSSProperties = {
+  background: "white",
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  borderRadius: 16,
+  padding: "16px 18px",
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+};
+
+const benchmarkBadge: React.CSSProperties = {
+  marginLeft: "auto",
+  fontSize: 10,
+  fontWeight: 700,
+  padding: "2px 8px",
+  borderRadius: 9999,
+  background: "rgba(25,25,112,0.07)",
+  color: MIDNIGHT,
+  letterSpacing: "0.03em",
+};
+
+const benchmarkLesson: React.CSSProperties = {
+  display: "flex",
+  gap: 6,
+  alignItems: "flex-start",
+  padding: "8px 10px",
+  borderRadius: 10,
+  background: "rgba(25,25,112,0.04)",
+  border: "1px solid rgba(25,25,112,0.08)",
+  marginTop: 2,
 };
 
 const aiInsightCardStyle: React.CSSProperties = {

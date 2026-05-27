@@ -5,6 +5,7 @@ import { Users, TrendingUp, Award } from "lucide-react";
 import { getIndustryBenchmark } from "@build-up/shared";
 import type { DailyEntry } from "../../stores/finance-store";
 import { EmptyStateCard } from "./EmptyStateCard";
+import { getKstDate } from "../../utils/business-day";
 
 type Props = {
   ko: boolean;
@@ -33,7 +34,7 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
 
     // 이번 달 매출 (영업일로 환산)
     const now = new Date();
-    const thisMonth = now.toISOString().slice(0, 7);
+    const thisMonth = getKstDate(now).slice(0, 7);
     const monthEntries = dailyEntries.filter((e) => e.date.startsWith(thisMonth));
     if (monthEntries.length < 3) return { insufficientData: true as const, days: monthEntries.length };
 
@@ -117,8 +118,8 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
       weekStart.setDate(today.getDate() - (w * 7 + 6));
       const weekEnd = new Date(today);
       weekEnd.setDate(today.getDate() - w * 7);
-      const startStr = weekStart.toISOString().slice(0, 10);
-      const endStr = weekEnd.toISOString().slice(0, 10);
+      const startStr = getKstDate(weekStart);
+      const endStr = getKstDate(weekEnd);
       const weekEntries = dailyEntries.filter((e) => e.date >= startStr && e.date <= endStr);
       const weekSales = weekEntries.reduce((s, e) => s + e.sales, 0);
       const workedDays = weekEntries.length;

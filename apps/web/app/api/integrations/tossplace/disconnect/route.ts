@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
-  const rl = checkSimpleRateLimit({ key: `tossplace-disconnect:${auth.userId}`, limit: 10, windowMs: 60_000 });
+  const rl = await checkSimpleRateLimit({ key: `tossplace-disconnect:${auth.userId}`, limit: 10, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
 
   const supabase = getSupabaseAdmin();

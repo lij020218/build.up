@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     return json({ error: auth.error }, auth.status);
   }
 
-  const rl = checkSimpleRateLimit({
+  const rl = await checkSimpleRateLimit({
     key: `insights-search:${auth.userId}`,
     limit: 30,
     windowMs: 60_000,

@@ -27,41 +27,22 @@ import {
   bookingRepeatRate,
   unassignedCount as ssotUnassignedCount,
 } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 
 export function LivingServiceDispatchCard({ ko, industryCategoryId }: Props) {
+  // ⚠️ 2026-05-25 audit fix: Rules of Hooks 위반 수정 — hook을 early return 앞으로 이동.
   const bookings = useBookingStore((s) => s.bookings);
   const providers = useBookingStore((s) => s.providers);
   const seedDemo = useBookingStore((s) => s.seedDemo);
 
-  if (industryCategoryId !== "living-service") return null;
-
-  if (bookings.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><Truck size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "의뢰·기사·FTFR · 생활서비스" : "Dispatch · Service"}</div>
-        </header>
-        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
-          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
-            {ko ? "의뢰·기사 데이터 입력 시 FTFR·재의뢰·기사 가동률 분석" : "Enter dispatch data"}
-          </div>
-          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
-            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
-          </button>
-        </div>
-      </article>
-    );
-  }
-
   const analysis = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const todayStr = getKstDate(now);
+    const yesterdayStr = getKstDate(new Date(now.getTime() - 86400000));
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
     const yesterdayBookings = bookings.filter((b) => b.date === yesterdayStr);
@@ -134,6 +115,28 @@ export function LivingServiceDispatchCard({ ko, industryCategoryId }: Props) {
       topAction,
     };
   }, [bookings, providers, ko]);
+
+  // hook 호출 끝 — 조건부 렌더 안전.
+  if (industryCategoryId !== "living-service") return null;
+
+  if (bookings.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><Truck size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "의뢰·기사·FTFR · 생활서비스" : "Dispatch · Service"}</div>
+        </header>
+        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
+          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
+            {ko ? "의뢰·기사 데이터 입력 시 FTFR·재의뢰·기사 가동률 분석" : "Enter dispatch data"}
+          </div>
+          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
+            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
+          </button>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article style={cardStyle}>

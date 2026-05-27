@@ -16,6 +16,7 @@ import { supabase } from "../../../lib/supabase";
 import { baseRoadmap, buildTransitionNotice, getContractTaskDetail, advanceStageWithChainBackfill } from "../helpers";
 import type { DashboardDeps } from "../types";
 import { SURFACE_HREFS } from "../constants";
+import { getKstDate } from "../utils/business-day";
 
 export function useTaskHandlers(
   deps: DashboardDeps,
@@ -332,7 +333,7 @@ export function useTaskHandlers(
   //  종전엔 `analytics`(=내 가게/MyStore) 로 보내서 운영 대시보드 진입이 한 단계 더 필요했음.
   //  이제 바로 `current`(=OperationalDashboard) 로 진입 — Day 1 매출 입력 흐름과 정합.
   const handleLaunchBusiness = () => {
-    const launchDate = new Date().toISOString().slice(0, 10);
+    const launchDate = getKstDate(new Date());
     setBusinessLaunched(true);
     if (!businessLaunchedDate) setBusinessLaunchedDate(launchDate);
     let finalStoreName = storeName;

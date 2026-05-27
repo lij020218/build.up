@@ -540,14 +540,14 @@ export async function POST(request: Request) {
   if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
 
   // 분당 10회 — 프롬프트 비용·Kakao quota 보호
-  const rl = checkSimpleRateLimit({
+  const rl = await checkSimpleRateLimit({
     key: `market-recommend:${auth.userId}`,
     limit: 10, windowMs: 60_000,
     message: "잠시 후 다시 시도해 주세요. (분당 10회 한도)",
   });
   if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
   // 일 50회
-  const dl = checkDailyRateLimit({
+  const dl = await checkDailyRateLimit({
     userId: auth.userId, feature: "market-recommend", limit: 50,
     message: "오늘의 상권 추천 한도(50회)를 모두 사용했습니다.",
   });

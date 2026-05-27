@@ -4,6 +4,7 @@ import { resolveTrendGroup, TREND_GROUP_LABELS } from "@build-up/shared";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
+import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
 /**
  * 가게 맞춤 마케팅 코칭 — 트렌드와 독립된 개인화 조언.
@@ -112,6 +113,24 @@ export async function POST(request: Request) {
         weekKey,
       });
     }
+  }
+
+  const rl = await checkSimpleRateLimit({
+    key: `ai-marketing-coach:${userId}`,
+    limit: 10,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
+
+  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+  const dailyLimit = await checkDailyRateLimit({
+    userId,
+    feature: "marketing-coach",
+    limit: 30,
+    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+  });
+  if (!dailyLimit.ok) {
+    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
   }
 
   // 업종 라벨 해석 — fine-grained (클라이언트가 준) > 20-그룹 cluster 라벨 > 대분류 fallback

@@ -14,6 +14,7 @@ import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from 
 import { useProfileStore } from "../../stores/profile-store";
 import { useCashflowStore } from "../../stores/cashflow-store";
 import { calculateHealthScore, type HealthScoreResult, type HealthScoreGrade, HEALTH_COLORS } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 // ─── North Star Metric 옵션 (사장님이 직접 고르는 단 1개 숫자) ────
 //  YC: "팀 전원이 외울 만큼 단 하나". 자동 (auto) 은 현재 로직 유지 (스타트업→런웨이, 외식→매출).
@@ -178,10 +179,10 @@ export function CEOMorningHero({ d }: Props) {
     return ((last7Sum - prev7Sum) / prev7Sum) * 100;
   })();
   const totalRevenueForHealth = dailyEntries
-    .filter((e) => e.date.slice(0, 7) === new Date().toISOString().slice(0, 7))
+    .filter((e) => e.date.slice(0, 7) === getKstDate(new Date()).slice(0, 7))
     .reduce((s, e) => s + e.sales, 0);
   const workingDaysForHealth = dailyEntries
-    .filter((e) => e.date.slice(0, 7) === new Date().toISOString().slice(0, 7))
+    .filter((e) => e.date.slice(0, 7) === getKstDate(new Date()).slice(0, 7))
     .length;
   const launchDateStr = (d as { businessLaunchedDate?: string | null }).businessLaunchedDate;
   const daysSinceLaunchForHealth = launchDateStr
@@ -530,12 +531,14 @@ export function CEOMorningHero({ d }: Props) {
   };
 
   const handleBriefingCta = () => {
-    // 디버그 로그 — "왜 거기로 갔지?" 추적용
-    console.info("[buildup] handleBriefingCta", {
-      source: briefing.source,
-      ctaTarget: briefing.ctaTarget,
-      ctaLabel: ko ? briefing.ctaKo : briefing.ctaEn,
-    });
+    // 2026-05-27 보안 (P1-5): 프로덕션 console.info 제거. 디버그는 dev 만.
+    if (process.env.NODE_ENV !== "production") {
+      console.info("[buildup] handleBriefingCta", {
+        source: briefing.source,
+        ctaTarget: briefing.ctaTarget,
+        ctaLabel: ko ? briefing.ctaKo : briefing.ctaEn,
+      });
+    }
     let handled = false;
     switch (briefing.ctaTarget) {
       case "sales":
@@ -613,9 +616,11 @@ export function CEOMorningHero({ d }: Props) {
     if (isStartup) return null; // startup은 런웨이 메인 — narrative 별도 안 만듦
     const todaySales = todayEntry?.sales ?? 0;
     if (todaySales === 0) return null;
-    const yesterdayIso = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const yesterdayIso = getKstDate(new Date(now.getTime() - 86400000));
     const yesterday = dailyEntries.find((e) => e.date === yesterdayIso)?.sales ?? 0;
-    const avg = last14.length > 0 ? last14Total / last14.length : 0;
+    // ⚠️ 2026-05-25 audit fix: 이전 분모 `last14.length` (입력 entry 수) → 1일 입력 200K 시
+    //   "평균 200K" 거짓. 14일(달력 기준)로 고정. main heroMetric 의 fix와 동기화.
+    const avg = last14Total / 14;
     const yPct = yesterday > 0 ? ((todaySales - yesterday) / yesterday) * 100 : 0;
     const aPct = avg > 0 ? ((todaySales - avg) / avg) * 100 : 0;
     // 가장 큰 비교를 골라 narrative 작성
@@ -1119,12 +1124,15 @@ export function CEOMorningHero({ d }: Props) {
               onSubmit={(e) => {
                 e.preventDefault();
                 const raw = (d.dailySalesInput as string | undefined) ?? "";
-                console.info("[buildup hero] form submit", { sales: raw, customers: d.dailyCustomersInput, hasHandler: typeof d.handleAddDailyEntry });
+                // 2026-05-27 보안 (P1-5): 사장님 매출/고객수 데이터 console 노출 차단. dev 만 로깅.
+                if (process.env.NODE_ENV !== "production") {
+                  console.info("[buildup hero] form submit", { sales: raw, customers: d.dailyCustomersInput, hasHandler: typeof d.handleAddDailyEntry });
+                }
                 // 빈 input만 차단 — "0"은 정당한 입력 (휴무일·매출 없음).
                 if (raw === "") return;
                 if (typeof d.handleAddDailyEntry === "function") {
                   d.handleAddDailyEntry();
-                } else {
+                } else if (process.env.NODE_ENV !== "production") {
                   console.error("[buildup hero] handleAddDailyEntry is not a function!", d.handleAddDailyEntry);
                 }
               }}
@@ -1138,7 +1146,7 @@ export function CEOMorningHero({ d }: Props) {
                 onChange={(e) => {
                   if (typeof d.setDailySalesInput === "function") {
                     d.setDailySalesInput(e.target.value);
-                  } else {
+                  } else if (process.env.NODE_ENV !== "production") {
                     console.error("[buildup hero] setDailySalesInput is not a function!");
                   }
                 }}

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getKstDate } from "../utils/business-day";
 
 /**
  * Time Log Store — Drucker "시간이 어디로 가는지 알라" 적용.
@@ -59,7 +60,7 @@ export const useTimeLogStore = create<TimeLogState & TimeLogActions>()(
           // 같은 날짜 있으면 덮어쓰기
           const filtered = s.entries.filter((e) => e.date !== entry.date);
           // 90일 이전 데이터 제거
-          const cutoff = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+          const cutoff = getKstDate(new Date(Date.now() - 90 * 86400000));
           const kept = filtered.filter((e) => e.date >= cutoff);
           return { entries: [entry, ...kept] };
         }),
@@ -85,7 +86,7 @@ export const useTimeLogStore = create<TimeLogState & TimeLogActions>()(
 // ─── Utility selectors ───
 
 /** 오늘 이미 입력했는지 */
-export function hasTodayEntry(entries: TimeLogEntry[], today: string = new Date().toISOString().slice(0, 10)): boolean {
+export function hasTodayEntry(entries: TimeLogEntry[], today: string = getKstDate(new Date())): boolean {
   return entries.some((e) => e.date === today);
 }
 
@@ -99,7 +100,7 @@ export function shouldPromptToday(
   if (!enabled) return false;
   const hour = now.getHours();
   if (hour < 17) return false; // 저녁 5시부터
-  const today = now.toISOString().slice(0, 10);
+  const today = getKstDate(now);
   if (hasTodayEntry(entries, today)) return false;
   if (lastDismissedAt) {
     const dismissedDate = lastDismissedAt.slice(0, 10);
@@ -116,7 +117,7 @@ export function weeklyAverage(entries: TimeLogEntry[], now: Date = new Date()): 
   marketingAvg: number;
   otherAvg: number;
 } | null {
-  const cutoff = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
+  const cutoff = getKstDate(new Date(now.getTime() - 7 * 86400000));
   const recent = entries.filter((e) => e.date >= cutoff);
   if (recent.length === 0) return null;
   const sum = recent.reduce(
@@ -142,11 +143,11 @@ export function recordStreak(entries: TimeLogEntry[], now: Date = new Date()): n
   let streak = 0;
   const cursor = new Date(now);
   for (;;) {
-    const dateStr = cursor.toISOString().slice(0, 10);
+    const dateStr = getKstDate(cursor);
     if (dates.has(dateStr)) {
       streak++;
       cursor.setDate(cursor.getDate() - 1);
-    } else if (streak === 0 && dateStr === now.toISOString().slice(0, 10)) {
+    } else if (streak === 0 && dateStr === getKstDate(now)) {
       // 오늘 안 했어도 어제부터 세줌
       cursor.setDate(cursor.getDate() - 1);
     } else {

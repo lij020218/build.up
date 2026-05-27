@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Target, TrendingUp, ShieldCheck, CheckCircle2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DailyEntry } from "../../stores/finance-store";
+import { getKstDate } from "../../utils/business-day";
 
 type Props = {
   ko: boolean;
@@ -54,11 +55,11 @@ export function ProgressMilestonesCard({
     const cursor = new Date();
     let count = 0;
     // 오늘 안 기록했으면 어제부터
-    if (!dates.has(cursor.toISOString().slice(0, 10))) {
+    if (!dates.has(getKstDate(cursor))) {
       cursor.setDate(cursor.getDate() - 1);
     }
     for (;;) {
-      const dateStr = cursor.toISOString().slice(0, 10);
+      const dateStr = getKstDate(cursor);
       if (dates.has(dateStr)) {
         count++;
         cursor.setDate(cursor.getDate() - 1);

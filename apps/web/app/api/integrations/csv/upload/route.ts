@@ -20,11 +20,27 @@ export const maxDuration = 30;
 
 const MAX_ROWS = 10_000;
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+const PARSE_TIMEOUT_MS = 10_000;   // 2026-05-27 보안: pathological CSV → Lambda hang 방지
+
+// CSV cell formula prefix — 재출력 시 Excel/Sheets 가 수식으로 실행. RFC: OWASP CSV Injection.
+const FORMULA_PREFIX_PATTERN = /^[=+@\-\t\r]/;
+function sanitizeCsvCell(value: string): string {
+  // 수식 시작 문자가 있으면 작은따옴표로 escape (Excel 표준 수식 비활성화)
+  return FORMULA_PREFIX_PATTERN.test(value) ? `'${value}` : value;
+}
+
+/** Promise + setTimeout 으로 외부 작업 timeout 구현 (file.text() 는 AbortSignal 미지원). */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timeout (${ms}ms)`)), ms);
+    promise.then((v) => { clearTimeout(timer); resolve(v); }, (e) => { clearTimeout(timer); reject(e); });
+  });
+}
 
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
-  const rl = checkSimpleRateLimit({ key: `csv-upload:${auth.userId}`, limit: 10, windowMs: 60_000 });
+  const rl = await checkSimpleRateLimit({ key: `csv-upload:${auth.userId}`, limit: 10, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
 
   let formData: FormData;
@@ -43,8 +59,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "파일이 너무 큽니다 (최대 5MB)." }, { status: 400 });
   }
 
-  const text = await file.text();
-  const parsed = parseCsv(text);
+  // 2026-05-27 보안 (P0-3): file.text() + parseCsv 양쪽에 10초 timeout. 악성 CSV 로 Lambda hang 방지.
+  let text: string;
+  try {
+    text = await withTimeout(file.text(), PARSE_TIMEOUT_MS, "file.text()");
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: `파일 읽기 실패: ${(e as Error).message}` },
+      { status: 408 }
+    );
+  }
+
+  // 빠른 사전 가드 — 줄 수 한도 초과면 파싱 시도조차 안 함 (regex/split 폭주 방지)
+  const lineCountApprox = (text.match(/\n/g) ?? []).length;
+  if (lineCountApprox > MAX_ROWS + 100) { // +100 = 헤더/공백 줄 여유
+    return NextResponse.json(
+      { ok: false, error: `행 수 한도 초과 (대략 ${lineCountApprox}줄, 최대 ${MAX_ROWS})` },
+      { status: 400 }
+    );
+  }
+
+  let parsed: ReturnType<typeof parseCsv>;
+  try {
+    // parseCsv 자체는 동기지만 안전 망 — 매우 큰 파일 처리 중 V8 GC 폭주 등 케이스
+    parsed = await withTimeout(Promise.resolve().then(() => parseCsv(text)), PARSE_TIMEOUT_MS, "parseCsv()");
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: `CSV 분석 실패: ${(e as Error).message}` },
+      { status: 408 }
+    );
+  }
   if (parsed.entries.length === 0) {
     return NextResponse.json(
       {
@@ -143,12 +187,13 @@ function parseCsv(text: string): { entries: ParsedEntry[]; headers: string[]; er
     const date = normalizeDate(dateRaw);
     const amount = parseAmount(amountRaw);
     if (!date || !Number.isFinite(amount)) continue;
-    const raw = Object.fromEntries(headers.map((h, idx) => [h, cols[idx] ?? ""]));
+    // 2026-05-27 보안 (P2-1): raw 저장 시 수식 prefix 무력화 (재출력 시 Excel 자동실행 방지)
+    const raw = Object.fromEntries(headers.map((h, idx) => [h, sanitizeCsvCell(cols[idx] ?? "")]));
     entries.push({
       date,
       amount: Math.round(amount),
       customers: customersCol >= 0 ? parseInt(cols[customersCol] ?? "0", 10) || 0 : 0,
-      description: descCol >= 0 ? cols[descCol] : undefined,
+      description: descCol >= 0 ? sanitizeCsvCell(cols[descCol]) : undefined,
       raw,
     });
   }

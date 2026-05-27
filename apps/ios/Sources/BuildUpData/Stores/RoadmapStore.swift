@@ -225,6 +225,27 @@ public final class RoadmapStore {
         persist()
     }
 
+    /// "진행 초기화" 전용: 모든 스테이지 @AppStorage 키를 UserDefaults 에서 삭제 후
+    /// decisions 도 비운다.  일반 resetAll() 은 decisions 만 지우므로 대신 이 메서드를 호출.
+    public func clearAllAppStorage() {
+        let prefixes: [String] = [
+            "biz.", "bom.", "cd.", "cert.", "construction.", "contract.", "cs.",
+            "eda.", "fct.", "fin.", "fr.", "ge.", "gl.", "gtm.", "hiring.", "hp.",
+            "insTax.", "lab.", "loan.", "loc.", "mfg.", "mpw.", "mvp.", "om.",
+            "ops.", "or2.", "permit.", "pf.", "pi.", "pkg.", "plf.", "prelaunch.",
+            "ps.", "regsub.", "roadmap.", "sf.", "src.", "stage.", "sto.",
+            "taxGuide.", "vc.", "buildup.roadmap.",
+        ]
+        let defaults = UserDefaults.standard
+        for key in defaults.dictionaryRepresentation().keys {
+            if prefixes.contains(where: { key.hasPrefix($0) }) {
+                defaults.removeObject(forKey: key)
+            }
+        }
+        // decisions + persist()
+        resetAll()
+    }
+
     // MARK: - Supabase 동기화
 
     /// 원격에서 decisions 를 불러와 로컬과 머지.

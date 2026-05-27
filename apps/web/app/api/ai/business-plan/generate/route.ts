@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
-import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
+import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
 // 사업계획서 생성은 긴 AI 응답이 필요하므로 타임아웃 확장
 export const maxDuration = 120; // 120초 (Vercel Pro: 최대 300초)
@@ -55,13 +55,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const rateLimit = checkSimpleRateLimit({
+  const rateLimit = await checkSimpleRateLimit({
     key: `business-plan:${auth.userId}`,
     limit: 5,
     windowMs: 60_000,
   });
   if (!rateLimit.ok) {
     return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
+  }
+
+  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+  const dailyLimit = await checkDailyRateLimit({
+    userId: auth.userId,
+    feature: "business-plan-generate",
+    limit: 5,
+    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+  });
+  if (!dailyLimit.ok) {
+    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
   }
 
   const apiKey = getAnthropicApiKey();

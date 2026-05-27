@@ -19,6 +19,7 @@ public final class AuthCoordinator {
         case unauthenticated
         case authenticating
         case authenticated(AuthSession)
+        case needsEmailConfirmation(String)  // pending email address
         case failed(String)
     }
 
@@ -104,17 +105,34 @@ public final class AuthCoordinator {
         }
     }
 
-    public func signUpWithEmail(name: String, email: String, password: String) async {
+    public func signUpWithEmail(
+        firstName: String,
+        lastName: String,
+        birthYear: Int?,
+        email: String,
+        password: String
+    ) async {
         state = .authenticating
         do {
+            let displayName = "\(lastName)\(firstName)".trimmingCharacters(in: .whitespaces)
+            var metadata: [String: AnyJSON] = [
+                "first_name": .string(firstName),
+                "last_name": .string(lastName),
+                "name": .string(displayName),
+            ]
+            if let year = birthYear {
+                metadata["birth_year"] = .string(String(year))
+            }
+
             let response = try await supabase.auth.signUp(
                 email: email,
                 password: password,
-                data: ["name": .string(name)]
+                data: metadata
             )
 
             guard let session = response.session else {
-                state = .failed("Supabase Email confirmation 이 켜져 있습니다. 웹과 동일하게 즉시 로그인을 쓰려면 Authentication > Providers > Email 에서 Confirm email 을 꺼주세요.")
+                // Email confirmation required — normal expected flow
+                state = .needsEmailConfirmation(email)
                 return
             }
 
@@ -128,6 +146,18 @@ public final class AuthCoordinator {
         } catch {
             state = .failed(Self.authErrorMessage(error))
         }
+    }
+
+    public func resendEmailConfirmation(email: String) async {
+        do {
+            try await supabase.auth.resend(email: email, type: .signup)
+        } catch {
+            state = .failed(Self.authErrorMessage(error))
+        }
+    }
+
+    public func cancelSignup() {
+        state = .unauthenticated
     }
 
     public func signOut() async {
@@ -174,9 +204,6 @@ public final class AuthCoordinator {
 
     private static func authErrorMessage(_ error: any Error) -> String {
         let raw = String(describing: error)
-        if raw.contains("Email not confirmed") {
-            return "Supabase Email confirmation 이 켜져 있습니다. 웹과 동일하게 쓰려면 Confirm email 을 꺼주세요."
-        }
         if raw.lowercased().contains("invalid login credentials") {
             return "이메일 또는 비밀번호가 올바르지 않습니다."
         }

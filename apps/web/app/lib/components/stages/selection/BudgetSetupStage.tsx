@@ -13,6 +13,7 @@ import {
 } from "@build-up/shared";
 import { StageWrapup } from "../shared/StageWrapup";
 import { BudgetInsightCard } from "./BudgetInsightCard";
+import { BudgetFundingMatchCard } from "./BudgetFundingMatchCard";
 
 export function BudgetSetupStage() {
   const d = useDashboardCtx();
@@ -193,6 +194,11 @@ export function BudgetSetupStage() {
 
       {/* ── 예산 인사이트 + 매칭 지원 프로그램 ── */}
       <BudgetInsightCard />
+
+      {/* ── 정부 지원·정책자금 동적 매칭 (2026-05-25 신규, iOS SSOT 동기화) ──
+            BudgetInsightCard 는 핵심 7개 hardcoded 안내, 이 카드는 79개 풀에서
+            업종·자본금 기준 상위 4개 (자격 충족 우선) 동적 매칭. */}
+      <BudgetFundingMatchCard />
 
       <div ref={budgetRef} style={{ ...styles.budgetPanel, ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
         <div style={styles.budgetHeader}>

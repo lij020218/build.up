@@ -1,5 +1,33 @@
 "use client";
 
+/**
+ * ExistingBusinessOnboarding — 기존 운영 사업자 온보딩 (7단계)
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * 단계별 수집 정보
+ * ─────────────────────────────────────────────────────────────────
+ *  Step 1  업종 선택           (industryId, industryCategoryId)
+ *  Step 2  매장 기본 정보      (storeName, businessModelId, 영업시간, 정기휴무)
+ *  Step 3  세무·행정           (launchDate, taxType, bizRegNumber)
+ *  Step 4  월 고정비           (costRent, costLabor, ingredients, ...)
+ *  Step 5  판매 채널·POS       (deliveryPlatforms, posType)
+ *  Step 6  주소·인허가         (address, permitStatus)
+ *  Step 7  확인 및 완료        → onComplete(OnboardingResult) 호출
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * Props
+ * ─────────────────────────────────────────────────────────────────
+ * - language: "ko" | "en"
+ * - onComplete(result: OnboardingResult): 완료 콜백, 부모가 Zustand에 저장
+ * - onBack(): 이전 화면(OnboardingChoiceScreen)으로 돌아가기
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * 향후 리팩토링 메모 (post-launch)
+ * ─────────────────────────────────────────────────────────────────
+ * 각 Step을 독립 컴포넌트(Step1Industry, Step2StoreInfo, ...)로 분리하면
+ * 테스트 가능성과 재사용성이 높아집니다. 현재는 단일 컴포넌트로 유지.
+ */
+
 import { useState } from "react";
 import {
   starterIndustryCategories,
@@ -13,6 +41,7 @@ import {
   type StarterIndustryCategory,
 } from "@build-up/shared";
 import { styles } from "../styles";
+import { getKstDate } from "../utils/business-day";
 
 export type OnboardingResult = {
   industryId: string;
@@ -30,6 +59,13 @@ export type OnboardingResult = {
   capital: number;
   deliveryPlatforms: string[];
   snsChannels: string[];
+  businessOpenTime: string;
+  businessCloseTime: string;
+  weeklyHolidays: string[];
+  bizRegistrationNumber: string;
+  posId: string;
+  addressRoad: string;
+  obtainedPermits: Array<{ id: string; name: string }>;
 };
 
 type Props = {
@@ -38,7 +74,7 @@ type Props = {
   onBack: () => void;
 };
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Props) {
   const ko = language === "ko";
@@ -66,7 +102,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   const [vatType, setVatType] = useState<"general" | "simplified">("general");
   const [hasEmployees, setHasEmployees] = useState(false);
   const [cpaDecision, setCpaDecision] = useState<"cpa" | "self">("self");
-  const [launchDate, setLaunchDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [launchDate, setLaunchDate] = useState(() => getKstDate());
 
   // Step 4: Monthly costs
   const [costIngredients, setCostIngredients] = useState("");
@@ -76,10 +112,23 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
   const [costOther, setCostOther] = useState("");
   const [capitalText, setCapitalText] = useState("");
 
-  // Step 5: Channels
+  // Step 2 extra: operating hours + weekly holidays
+  const [businessOpenTime, setBusinessOpenTime] = useState("09:00");
+  const [businessCloseTime, setBusinessCloseTime] = useState("21:00");
+  const [weeklyHolidays, setWeeklyHolidays] = useState<string[]>([]);
+
+  // Step 3 extra: biz registration number
+  const [bizRegistrationNumber, setBizRegistrationNumber] = useState("");
+
+  // Step 5: Channels + POS
   const [deliveryPlatforms, setDeliveryPlatforms] = useState<string[]>([]);
   const [courierServices, setCourierServices] = useState<string[]>([]);
   const [snsChannels, setSnsChannels] = useState<string[]>([]);
+  const [posId, setPosId] = useState("");
+
+  // Step 6: Address + Permits
+  const [addressRoad, setAddressRoad] = useState("");
+  const [obtainedPermits, setObtainedPermits] = useState<Array<{ id: string; name: string }>>([]);
 
   const parseManwon = (v: string): number => {
     const cleaned = v.replace(/\s/g, "").replace(/원$/, "");
@@ -97,7 +146,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
     if (step === 2) return Boolean(storeName.trim()) && Boolean(businessModelId);
     if (step === 3) return Boolean(launchDate);
     if (step === 4) return Boolean(costRent);
-    return true;
+    return true; // steps 5, 6, 7 are always passable
   };
 
   const handleComplete = () => {
@@ -124,6 +173,13 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
       capital: parseManwon(capitalText),
       deliveryPlatforms,
       snsChannels,
+      businessOpenTime,
+      businessCloseTime,
+      weeklyHolidays,
+      bizRegistrationNumber: bizRegistrationNumber.trim(),
+      posId,
+      addressRoad: addressRoad.trim(),
+      obtainedPermits,
     });
   };
 
@@ -418,6 +474,49 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                           : "e.g. Seongsu, Seoul")}
                 />
               </div>
+              {!isOnlineBiz && !isStartupBiz && (
+                <>
+                  <div>
+                    <div style={labelStyle}>{ko ? "영업 시간" : "Operating hours"}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <input
+                        type="time"
+                        style={{ ...inputStyle, flex: 1 }}
+                        value={businessOpenTime}
+                        onChange={(e) => setBusinessOpenTime(e.target.value)}
+                      />
+                      <span style={{ color: "var(--muted)", fontWeight: 500 }}>~</span>
+                      <input
+                        type="time"
+                        style={{ ...inputStyle, flex: 1 }}
+                        value={businessCloseTime}
+                        onChange={(e) => setBusinessCloseTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={labelStyle}>{ko ? "정기 휴무일 (복수 선택 가능)" : "Regular closing days"}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {(ko
+                        ? ["월", "화", "수", "목", "금", "토", "일"]
+                        : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                      ).map((label, i) => {
+                        const id = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][i];
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            style={chipStyle(weeklyHolidays.includes(id))}
+                            onClick={() => setWeeklyHolidays((prev) => toggleList(prev, id))}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}
@@ -473,6 +572,18 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                   style={inputStyle}
                   value={launchDate}
                   onChange={(e) => setLaunchDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <div style={labelStyle}>
+                  {ko ? "사업자등록번호 (선택)" : "Business registration number (optional)"}
+                </div>
+                <input
+                  style={inputStyle}
+                  value={bizRegistrationNumber}
+                  onChange={(e) => setBizRegistrationNumber(e.target.value)}
+                  placeholder={ko ? "예: 123-45-67890" : "e.g. 123-45-67890"}
+                  inputMode="numeric"
                 />
               </div>
             </div>
@@ -675,12 +786,155 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                   (id) => setSnsChannels((prev) => toggleList(prev, id))
                 )}
               </div>
+              {!isOnlineBiz && !isStartupBiz && (
+                <div>
+                  <div style={labelStyle}>{ko ? "POS / 결제 시스템" : "POS / payment system"}</div>
+                  {toggleRow(
+                    [
+                      { id: "tossplace", label: ko ? "토스플레이스" : "Toss Place" },
+                      { id: "kis", label: ko ? "KIS정보통신" : "KIS" },
+                      { id: "smartro", label: ko ? "스마트로" : "Smartro" },
+                      { id: "posbank", label: ko ? "포스뱅크" : "POSBank" },
+                      { id: "other", label: ko ? "기타" : "Other" },
+                      { id: "none", label: ko ? "없음" : "None" },
+                    ],
+                    posId ? [posId] : [],
+                    (id) => setPosId((prev) => (prev === id ? "" : id))
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
 
-        {/* Step 6: Complete */}
+        {/* Step 6: Address + Permits */}
         {step === 6 && (() => {
+          const permitOptions: Array<{ id: string; name: string }> = (() => {
+            const base = [
+              { id: "biz-reg", name: ko ? "사업자등록증" : "Business registration certificate" },
+              { id: "operating-permit", name: ko ? "영업신고증 / 허가증" : "Operating permit" },
+            ];
+            if (categoryId === "food" || categoryId === "cafe-dessert") {
+              return [
+                ...base,
+                { id: "food-hygiene", name: ko ? "식품위생교육 이수증" : "Food hygiene training" },
+                { id: "health-cert", name: ko ? "보건증 (영업주)" : "Health certificate" },
+                { id: "fire-cert", name: ko ? "소방안전관리 선임" : "Fire safety manager" },
+                { id: "liquor-permit", name: ko ? "주류판매업 신고" : "Liquor sales permit" },
+              ];
+            }
+            if (categoryId === "online-digital") {
+              return [
+                ...base,
+                { id: "mail-order", name: ko ? "통신판매업 신고" : "Mail-order business registration" },
+                { id: "privacy-policy", name: ko ? "개인정보처리방침 게시" : "Privacy policy posted" },
+              ];
+            }
+            if (categoryId === "retail" || categoryId === "pet" || categoryId === "living-service") {
+              return [
+                ...base,
+                { id: "mail-order", name: ko ? "통신판매업 신고" : "Mail-order business registration" },
+                { id: "fire-cert", name: ko ? "소방안전관리 선임" : "Fire safety manager" },
+              ];
+            }
+            if (categoryId === "beauty-wellness") {
+              return [
+                ...base,
+                { id: "beauty-permit", name: ko ? "미용업 신고증" : "Beauty parlor registration" },
+                { id: "health-cert", name: ko ? "보건증 (영업주)" : "Health certificate" },
+                { id: "fire-cert", name: ko ? "소방안전관리 선임" : "Fire safety manager" },
+              ];
+            }
+            if (categoryId === "healthcare") {
+              return [
+                ...base,
+                { id: "medical-device", name: ko ? "의료기기 판매업 신고" : "Medical device sales registration" },
+                { id: "health-cert", name: ko ? "보건증 (영업주)" : "Health certificate" },
+              ];
+            }
+            return base;
+          })();
+
+          const togglePermit = (permit: { id: string; name: string }) => {
+            setObtainedPermits((prev) =>
+              prev.some((p) => p.id === permit.id)
+                ? prev.filter((p) => p.id !== permit.id)
+                : [...prev, permit]
+            );
+          };
+
+          return (
+            <>
+              <div style={eyebrowStyle}>{ko ? "6단계" : "Step 6"}</div>
+              <div style={titleStyle}>{ko ? "주소 및 인허가 현황" : "Address & permits"}</div>
+              <div style={subtitleStyle}>
+                {ko
+                  ? "모두 선택 사항입니다. 나중에 설정에서 수정할 수 있어요."
+                  : "All optional. You can update these in settings later."}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+                <div>
+                  <div style={labelStyle}>{ko ? "도로명 주소 (선택)" : "Road address (optional)"}</div>
+                  <input
+                    style={inputStyle}
+                    value={addressRoad}
+                    onChange={(e) => setAddressRoad(e.target.value)}
+                    placeholder={ko ? "예: 서울특별시 성동구 성수이로 78" : "e.g. 78 Seongsui-ro, Seongdong-gu, Seoul"}
+                  />
+                </div>
+                <div>
+                  <div style={labelStyle}>{ko ? "이미 취득한 인허가 (해당하는 것 모두 선택)" : "Permits already obtained"}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {permitOptions.map((permit) => {
+                      const selected = obtainedPermits.some((p) => p.id === permit.id);
+                      return (
+                        <button
+                          key={permit.id}
+                          type="button"
+                          onClick={() => togglePermit(permit)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "14px 18px",
+                            borderRadius: "16px",
+                            border: selected ? "1px solid rgba(29,53,87,0.2)" : "1px solid rgba(17,17,17,0.06)",
+                            background: selected ? "rgba(29,53,87,0.05)" : "rgba(255,255,255,0.7)",
+                            cursor: "pointer",
+                            textAlign: "left" as const,
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <div style={{
+                            width: "20px",
+                            height: "20px",
+                            borderRadius: "6px",
+                            border: selected ? "none" : "1.5px solid rgba(17,17,17,0.18)",
+                            background: selected ? "var(--primary)" : "transparent",
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                            fontSize: "12px",
+                          }}>
+                            {selected && "✓"}
+                          </div>
+                          <span style={{ fontSize: "15px", color: "var(--text)", fontWeight: selected ? 600 : 400 }}>
+                            {permit.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          );
+        })()}
+
+        {/* Step 7: Complete */}
+        {step === 7 && (() => {
           const cat = localizeStarterIndustryCategory(
             starterIndustryCategories.find((c) => c.id === categoryId) ?? starterIndustryCategories[0],
             language
@@ -704,6 +958,8 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                     { label: ko ? "부가세" : "VAT", value: vatType === "general" ? (ko ? "일반과세" : "General") : (ko ? "간이과세" : "Simplified") },
                     { label: ko ? "세무 처리" : "Tax filing", value: cpaDecision === "cpa" ? (ko ? "세무사 위임" : "CPA") : (ko ? "직접 처리" : "Self-file") },
                     { label: ko ? "월 고정비" : "Monthly costs", value: totalCost > 0 ? `${Math.round(totalCost / 10000).toLocaleString()}${ko ? "만원" : "만원"}` : "—" },
+                    { label: ko ? "영업 시간" : "Hours", value: businessOpenTime && businessCloseTime ? `${businessOpenTime} ~ ${businessCloseTime}` : "—" },
+                    { label: ko ? "POS" : "POS", value: posId && posId !== "none" ? posId : (posId === "none" ? (ko ? "없음" : "None") : "—") },
                   ].map((item) => (
                     <div key={item.label}>
                       <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "2px" }}>{item.label}</div>
@@ -711,7 +967,15 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: "20px", padding: "14px 16px", borderRadius: "14px", background: "rgba(29,53,87,0.04)", fontSize: "14px", lineHeight: 1.6, color: "var(--muted)" }}>
+                {obtainedPermits.length > 0 && (
+                  <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(29,53,87,0.04)" }}>
+                    <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "6px" }}>{ko ? "보유 인허가" : "Permits on file"}</div>
+                    <div style={{ fontSize: "14px", color: "var(--text)", lineHeight: 1.6 }}>
+                      {obtainedPermits.map((p) => p.name).join(" · ")}
+                    </div>
+                  </div>
+                )}
+                <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "14px", background: "rgba(29,53,87,0.04)", fontSize: "14px", lineHeight: 1.6, color: "var(--muted)" }}>
                   {ko
                     ? "✓ 세금 달력 · 알림 · P&L 분석 · 원가율 진단 · 생존 진단 · 지원사업 매칭이 활성화됩니다."
                     : "✓ Tax calendar, alerts, P&L, cost health, survival check, and program matching are now active."}

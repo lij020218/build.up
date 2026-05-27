@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
 
-  const rl = checkSimpleRateLimit({ key: `saas-metrics-sync:${auth.userId}`, limit: 4, windowMs: 60_000 });
+  const rl = await checkSimpleRateLimit({ key: `saas-metrics-sync:${auth.userId}`, limit: 4, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
 
   let body: { fromDays?: number } = {};

@@ -25,10 +25,14 @@ import BuildUpData
 public struct ProfileView: View {
     let store: DashboardStore
     let coordinator: AuthCoordinator?
+    /// 옵셔널 — 진행 초기화 시 in-memory state 도 함께 reset 하기 위해 필요.
+    /// nil 이면 reset 시 dashboardStore 만 처리 (이전 동작 호환).
+    let storeInfo: StoreInfoStore?
 
-    public init(store: DashboardStore, coordinator: AuthCoordinator?) {
+    public init(store: DashboardStore, coordinator: AuthCoordinator?, storeInfo: StoreInfoStore? = nil) {
         self.store = store
         self.coordinator = coordinator
+        self.storeInfo = storeInfo
     }
 
     // 알림 토글
@@ -41,6 +45,7 @@ public struct ProfileView: View {
     @AppStorage("buildup.language") private var language: String = "ko"
 
     @Environment(RoadmapStore.self) private var roadmap
+    @Environment(ResetCoordinator.self) private var resetCoordinator
 
     @State private var showDeleteConfirm: Bool = false
     @State private var showResetConfirm: Bool = false
@@ -68,7 +73,7 @@ public struct ProfileView: View {
             .padding(.horizontal, BUSpacing.screenMargin)
             .padding(.top, BUSpacing.md)
         }
-        .background(BUBackgroundSurface())
+        // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
         .sheet(isPresented: $showDataConnections, onDismiss: {
             Task { await refreshConnectionCount() }
         }) {
@@ -553,22 +558,68 @@ public struct ProfileView: View {
 
     @MainActor
     private func performReset() async {
+        // 웹 패턴 미러 (resetDemo @ useSelectionHandlers.ts):
+        //   1) 오버레이 표시 + 진행률 0 시작
+        //   2) 서버 + 로컬 정리 작업 진행 (진행률 점진 증가)
+        //   3) 진행률 1.0 도달 + "완료!" 잠시 유지
+        //   4) 마지막 순간 store.resetAll() + clearAllAppStorage() 호출
+        //      → AppRoot.needsOnboarding() = true → OnboardingFlow 마운트 (오버레이가 가려줌)
+        //   5) 오버레이 fade-out → OnboardingChoiceView 가 자연스럽게 나타남
+        //
+        //   ⚠️ 4번을 마지막에 두는 이유: store.resetAll() 호출 즉시 AppRoot 가 ProfileView 를
+        //      destroy 하므로 async 함수의 나머지 await 들이 끊어질 가능성. 모든 progress 애니메이션
+        //      을 먼저 끝낸 뒤 마지막에 navigation 트리거.
         resetting = true
+        resetCoordinator.start()
         defer { resetting = false }
 
+        // ── ⓿ 준비 (0 → 0.20)
+        await tick(to: 0.20, over: 0.25)
+
+        // ── ① 서버 reset (0.20 → 0.85) — 실패해도 로컬은 이어서 정리됨
         let repo = AccountResetRepository(supabase: BUSupabase.shared.client)
+        await tick(to: 0.30, over: 0.1)
         do {
             _ = try await repo.resetAccount()
-            // 로컬 store 도 비우기
-            store.resetAll()
-            roadmap.resetAll()
-            // 데이터 연결 카운트도 새로고침
-            await refreshConnectionCount()
-            await loadStoreHours()
+            await tick(to: 0.65, over: 0.25)
         } catch {
-            // 에러는 store.lastError 에 노출 (앱 하단 토스트)
             let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            store.recordError("진행 초기화 실패: \(msg)")
+            store.recordError("서버 초기화 실패 (로컬은 초기화 완료): \(msg)")
+            // 실패해도 로컬은 정리 — 진행률은 진행
+            await tick(to: 0.65, over: 0.15)
+        }
+
+        // ── ② 마무리 진행률 (0.65 → 1.0) — 시각적 완료감
+        await tick(to: 0.95, over: 0.3)
+        await tick(to: 1.0, over: 0.15)
+
+        // "완료!" 메시지 잠시 유지
+        try? await Task.sleep(nanoseconds: 600_000_000)
+
+        // ── ③ 실제 로컬 정리 + navigation 트리거 (마지막에)
+        //     이 시점에서 AppRoot 가 즉시 OnboardingFlow 로 전환되지만, 오버레이가 가려줌.
+        store.resetAll()                  // DashboardStore — storeName / entries / costs 비움
+        roadmap.clearAllAppStorage()      // 모든 stage @AppStorage 키 삭제
+        storeInfo?.reset()                // 2026-05-25: StoreInfoStore in-memory state 초기화 —
+                                          // 이걸 빠뜨리면 사장님 신고: "전부 초기화 후 상호명 잔존".
+
+        // 짧은 holding — OnboardingFlow 가 mount 완료될 시간
+        try? await Task.sleep(nanoseconds: 200_000_000)
+
+        // ── ④ 오버레이 fade-out → OnboardingChoiceView 가 자연스럽게 노출
+        resetCoordinator.stop()
+    }
+
+    /// progress 를 점진적으로 target 까지 증가 (over: 초). 60fps 가량.
+    @MainActor
+    private func tick(to target: Double, over seconds: Double) async {
+        let steps = max(1, Int(seconds * 30))
+        let start = resetCoordinator.progress
+        let delta = target - start
+        for i in 1...steps {
+            let t = Double(i) / Double(steps)
+            resetCoordinator.setProgress(start + delta * t)
+            try? await Task.sleep(nanoseconds: UInt64((seconds / Double(steps)) * 1_000_000_000))
         }
     }
 

@@ -3,6 +3,7 @@
 import React from "react";
 import type { DashboardHook } from "../../useDashboard";
 import { AnimatedPath, AnimatedProgressBar, CountUp } from "./animations";
+import { getKstDate } from "../../utils/business-day";
 
 /**
  * Inline sparkline — 24px tall, axisless, clean polyline (no smoothing artifacts).
@@ -129,6 +130,7 @@ export function SurvivalBoardCard({
   totalSales,
   netProfit,
   totalCosts,
+  healthScoreNumeric,
 }: {
   ko: boolean;
   isStartupCompany: boolean;
@@ -144,6 +146,7 @@ export function SurvivalBoardCard({
   topRiskLabel: string;
   focusMessage: string;
   d: DashboardHook;
+  healthScoreNumeric?: number;
 }) {
   const actions = d.aiActions?.todayActions ?? [];
   const hasActions = actions.length > 0;
@@ -163,7 +166,7 @@ export function SurvivalBoardCard({
     for (let i = 13; i >= 0; i--) {
       const dt = new Date();
       dt.setDate(dt.getDate() - i);
-      days.push(map.get(dt.toISOString().slice(0, 10)) ?? 0);
+      days.push(map.get(getKstDate(dt)) ?? 0);
     }
     return days;
   })();
@@ -179,14 +182,10 @@ export function SurvivalBoardCard({
           <div style={opsTitle}>{isStartupCompany ? (ko ? "핵심 생존 지표" : "Survival metrics") : ko ? "경영 건강 지표" : "Health metrics"}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {/* 헬스 점수 미니 게이지 */}
+          {/* 헬스 점수 미니 게이지 — healthScoreNumeric 은 calculateHealthScore() 의 실 0-100 값 */}
           {(() => {
-            // 실제 데이터 기반 점수 계산 (하드코딩 제거)
-            const score = d.businessHealthScore === "unknown" ? 0
-              : d.businessHealthScore === "healthy" ? 78
-              : d.businessHealthScore === "caution" ? 52
-              : 25; // danger
-            const displayScore = d.businessHealthScore === "unknown" ? "–" : String(score);
+            const score = d.businessHealthScore === "unknown" ? 0 : (healthScoreNumeric ?? 0);
+            const displayScore = d.businessHealthScore === "unknown" ? "–" : `${Math.round(score)}`;
             const gaugeColor = d.businessHealthScore === "unknown" ? "rgba(15,23,42,0.2)" : healthTone;
             return (
               <svg width="36" height="36" viewBox="0 0 36 36" style={{ flexShrink: 0 }}>

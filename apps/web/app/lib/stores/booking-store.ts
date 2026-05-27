@@ -26,6 +26,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getKstDate } from "../utils/business-day";
 
 export type BookingStatus = "confirmed" | "completed" | "noshow" | "cancelled";
 export type BookingSource = "kakao-hair" | "naver-booking" | "phone" | "walk-in" | "other";
@@ -111,10 +112,10 @@ export const useBookingStore = create<BookingState>()(
 
       seedDemo: () => {
         const today = new Date();
-        const todayStr = today.toISOString().slice(0, 10);
-        const yesterday = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
-        const twoDaysAgo = new Date(today.getTime() - 2 * 86400000).toISOString().slice(0, 10);
-        const tomorrow = new Date(today.getTime() + 86400000).toISOString().slice(0, 10);
+        const todayStr = getKstDate(today);
+        const yesterday = getKstDate(new Date(today.getTime() - 86400000));
+        const twoDaysAgo = getKstDate(new Date(today.getTime() - 2 * 86400000));
+        const tomorrow = getKstDate(new Date(today.getTime() + 86400000));
         set({
           providers: [
             { id: "p1", name: "김디자이너", role: "디자이너", commission: 40, isActive: true },

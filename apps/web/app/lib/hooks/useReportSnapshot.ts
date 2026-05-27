@@ -21,6 +21,7 @@
 
 import { useMemo } from "react";
 import type { DashboardHook, DailyEntry, MonthlyCosts } from "../useDashboard";
+import { getKstDate } from "../utils/business-day";
 
 export type ReportPeriod = "day" | "week" | "month" | "quarter";
 
@@ -101,7 +102,7 @@ function periodRange(period: ReportPeriod, now: Date): { start: Date; end: Date;
 }
 
 function isoStr(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return getKstDate(d);
 }
 
 function sumRevenue(entries: DailyEntry[], start: Date, end: Date): { sum: number; days: number } {

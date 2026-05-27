@@ -35,53 +35,25 @@ import {
   noshowRate as ssotNoshowRate,
   providerStats as ssotProviderStats,
 } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 
 export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
+  // ⚠️ 2026-05-25 audit fix: Rules of Hooks 위반 수정.
+  //   이전: industry/bookings 체크 early return 후 useMemo 호출 → 데이터 변경 시 hook 순서 변경 crash.
+  //   변경: 모든 hook을 컴포넌트 상단에 우선 호출, 조건부 렌더는 hook 호출 후 처리.
   const bookings = useBookingStore((s) => s.bookings);
   const providers = useBookingStore((s) => s.providers);
   const seedDemo = useBookingStore((s) => s.seedDemo);
 
-  if (industryCategoryId !== "beauty") return null;
-
-  if (bookings.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><Calendar size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "예약·노쇼·디자이너 · 뷰티" : "Booking · Beauty"}</div>
-        </header>
-        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
-          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
-            {ko
-              ? "예약 데이터를 입력하면 노쇼율·디자이너별 매출·rebook 분석이 시작됩니다"
-              : "Enter booking data to unlock no-show / provider analytics"}
-          </div>
-          <button
-            type="button"
-            onClick={() => seedDemo()}
-            style={{
-              padding: "8px 14px", borderRadius: 8,
-              background: `${MIDNIGHT}15`, color: MIDNIGHT,
-              border: `1px solid ${MIDNIGHT}30`,
-              fontSize: 12, fontWeight: 700, cursor: "pointer",
-            }}
-          >
-            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
-          </button>
-        </div>
-      </article>
-    );
-  }
-
   const analysis = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
-    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const todayStr = getKstDate(now);
+    const tomorrowStr = getKstDate(new Date(now.getTime() + 86400000));
+    const yesterdayStr = getKstDate(new Date(now.getTime() - 86400000));
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
     const tomorrowBookings = bookings.filter((b) => b.date === tomorrowStr);
@@ -147,6 +119,39 @@ export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
       providerStats, topAction,
     };
   }, [bookings, providers, ko]);
+
+  // hook 호출 끝 — 이제 조건부 렌더 가능 (Rules of Hooks 안전).
+  if (industryCategoryId !== "beauty") return null;
+
+  if (bookings.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><Calendar size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "예약·노쇼·디자이너 · 뷰티" : "Booking · Beauty"}</div>
+        </header>
+        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
+          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
+            {ko
+              ? "예약 데이터를 입력하면 노쇼율·디자이너별 매출·rebook 분석이 시작됩니다"
+              : "Enter booking data to unlock no-show / provider analytics"}
+          </div>
+          <button
+            type="button"
+            onClick={() => seedDemo()}
+            style={{
+              padding: "8px 14px", borderRadius: 8,
+              background: `${MIDNIGHT}15`, color: MIDNIGHT,
+              border: `1px solid ${MIDNIGHT}30`,
+              fontSize: 12, fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
+          </button>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article style={cardStyle}>

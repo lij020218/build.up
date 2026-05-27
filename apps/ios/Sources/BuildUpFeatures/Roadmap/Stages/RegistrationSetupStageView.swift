@@ -36,20 +36,22 @@ public struct RegistrationSetupStageView: View {
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
     /// 국세청 업종코드 힌트 (Step 2).
-    /// 정확한 코드는 홈택스 검색이 필요 — 여기는 진입용 대표 코드만.
+    /// ⚠️ 2026-05-25: 표시 코드는 「대표 예시」 — 사업자등록 시 본인 사업 형태에
+    /// 맞는 정확한 코드는 홈택스 「기준·단순경비율 (업종코드) 조회」에서 직접 검색해야 함.
+    /// 잘못된 코드 신청 시 경비율 적용 오류로 부가세·종소세 손해 가능.
     private var industryCodeHint: String {
         switch cluster.category {
-        case .food:           return "음식점 552111 (한식) · 552112 (중식) · 배달 552201"
-        case .cafeDessert:    return "음료점 552107 (커피·차) · 베이커리 552201"
-        case .retail:         return "소매 — 카테고리별 다양 (식품 522030 / 의류 522050 / 화장품 522080)"
-        case .beauty:         return "미용업 821201 (헤어) · 821202 (피부) · 821203 (네일)"
-        case .fitness:        return "체육시설업 823501 (헬스) · 823502 (필라테스)"
-        case .education:      return "학원 855001 (입시·보습) · 855002 (외국어) · 855003 (예체능)"
-        case .pet:            return "반려동물 730301 (미용) · 730302 (호텔·보호)"
-        case .livingService:  return "생활서비스 — 세탁 749903 / 청소 749905 / 수리 729900"
-        case .space:          return "공간 임대 681011 (스튜디오) · 681012 (회의실)"
-        case .onlineDigital:  return "전자상거래 525101 (소매) · 525102 (도매) · 525103 (해외직구)"
-        case .startupTech:    return "정보통신업 — SaaS 620901 · 시스템통합 620100 · 데이터 620200"
+        case .food:           return "예시) 한식 일반음식점 552101 / 중식 552108 / 분식 552119 — 홈택스 검색 필수"
+        case .cafeDessert:    return "예시) 커피전문점 552107 / 베이커리 552302 — 홈택스 검색 필수"
+        case .retail:         return "예시) 식료품 소매 522030 / 의류 522050 — 카테고리별 다양, 홈택스 검색 필수"
+        case .beauty:         return "예시) 미용업 821101 / 피부미용 821102 — 정확 코드는 홈택스에서 확인"
+        case .fitness:        return "예시) 체육시설업 823501 / 요가·필라테스 823502 — 홈택스에서 확인"
+        case .education:      return "예시) 일반교과학원 855001 / 외국어학원 855002 — 홈택스에서 확인"
+        case .pet:            return "예시) 반려동물 미용 749905 / 반려동물 호텔·보호 — 홈택스에서 확인"
+        case .livingService:  return "예시) 세탁업 749903 / 청소업 749905 — 홈택스에서 확인"
+        case .space:          return "예시) 공간 임대 — 홈택스에서 정확 코드 확인 필수"
+        case .onlineDigital:  return "예시) 전자상거래 소매 525101 / 도매 525102 — 홈택스 검색 필수"
+        case .startupTech:    return "예시) 소프트웨어 개발 722000 / 정보서비스 642000 — 홈택스 검색 필수"
         }
     }
 
@@ -60,7 +62,7 @@ public struct RegistrationSetupStageView: View {
             "임대차계약서 + 건축물대장 (정부24 무료) 준비",
             "홈택스 사업자등록 신청 (즉일~3일)",
             "위생교육 온라인 수강 (외식업중앙회 / 2.6만원 / 6시간)",
-            "관할 보건소 방문 → 보건증 발급 (1.2만원 / 1주 내)",
+            "관할 보건소 방문 → 보건증 발급 (3,000원 / 1주 내, 민간병원은 1.5~3만원)",
             "일반음식점 영업신고 접수 (구청 위생과 · 약 6.6만원)",
             "현장점검 대응 → 영업신고증 수령",
             "사업용 통장 + POS 가맹 신청",
@@ -71,7 +73,7 @@ public struct RegistrationSetupStageView: View {
             "미용업 면허증 사본 준비 (미용사·피부·네일 자격증)",
             "위생교육 (한국미용업중앙회 / 6시간 / 약 4만원)",
             "공중위생영업신고 (구청 위생과 / 약 3.5만원)",
-            "보건소 보건증 발급 (1.2만원 / 1주 내)",
+            "보건소 보건증 발급 (3,000원 / 1주 내, 민간병원은 1.5~3만원)",
             "사업용 통장 + 예약 SaaS 가입",
         ]
         case .fitness: return [

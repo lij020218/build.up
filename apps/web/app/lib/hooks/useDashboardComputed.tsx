@@ -21,6 +21,7 @@ import { useUnifiedSaasMetrics } from "./useUnifiedSaasMetrics";
 import { useUnifiedRevenue } from "./useUnifiedRevenue";
 import { checkMilestones } from "../components/dashboard/MilestoneToast";
 import { useCashflowStore } from "../stores/cashflow-store";
+import { getKstDate } from "../utils/business-day";
 
 export type DailyEntry = {
   date: string;
@@ -249,7 +250,7 @@ export function useDashboardComputed(d: DashboardHook) {
   const prevMonthKey = (() => {
     const dt = new Date();
     dt.setMonth(dt.getMonth() - 1);
-    return dt.toISOString().slice(0, 7);
+    return getKstDate(dt).slice(0, 7);
   })();
   const prevSnap = costHistory.find((h) => h.month === prevMonthKey);
   const prevMonthCosts = prevSnap
@@ -375,7 +376,7 @@ export function useDashboardComputed(d: DashboardHook) {
     const todayE = allEntries.find((e) => e.date === todayStr);
     if (!todayE) checkDate.setDate(checkDate.getDate() - 1);
     for (let i = 0; i < 365; i++) {
-      const ds = checkDate.toISOString().slice(0, 10);
+      const ds = getKstDate(checkDate);
       if (allEntries.some((e) => e.date === ds)) {
         count++;
         checkDate.setDate(checkDate.getDate() - 1);

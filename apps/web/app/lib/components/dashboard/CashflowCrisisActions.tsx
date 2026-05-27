@@ -352,8 +352,10 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
 }
 
 function formatWon(n: number): string {
+  // ⚠️ 2026-05-25 audit fix: 이전 `Math.round(n / 10000)` 는 n<0일 때 음수 결과 → sign과 이중 적용
+  //   ("−-15만원" 출력 버그). 항상 abs 기반으로 자릿수 계산, sign은 prefix로만 분리.
   const abs = Math.abs(Math.round(n));
   const sign = n < 0 ? "−" : "";
-  if (abs >= 10000) return `${sign}${Math.round(n / 10000).toLocaleString()}만원`;
+  if (abs >= 10000) return `${sign}${Math.round(abs / 10000).toLocaleString()}만원`;
   return `${sign}${abs.toLocaleString()}원`;
 }

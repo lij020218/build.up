@@ -16,6 +16,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 import { normalizeTossEvent, persistSubscriptionEvent } from "../../../_lib/subscription-events";
 
@@ -49,6 +50,26 @@ export async function POST(
   }
 
   const rawBody = await request.text();
+
+  // ── 0. HMAC 시그니처 검증 (TOSS_WEBHOOK_SECRET 설정 시) ──
+  const tossSecret = process.env.TOSS_WEBHOOK_SECRET;
+  const tossSig = request.headers.get("tosspayments-webhook-signature");
+  const tossTime = request.headers.get("tosspayments-webhook-transmission-time");
+  if (tossSecret && tossSig) {
+    if (!tossTime) {
+      return NextResponse.json({ error: "missing transmission time" }, { status: 400 });
+    }
+    // 2026-05-27 보안 (P1-3): transmission-time 5분 만료 검증 — replay attack 방어.
+    //   transmissionTime 은 ISO 8601 ("2026-05-27T10:30:00.000Z"). Date.parse 로 epoch ms 환산.
+    const tsMs = Date.parse(tossTime);
+    if (!Number.isFinite(tsMs) || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
+      return NextResponse.json({ error: "transmission time out of window" }, { status: 401 });
+    }
+    if (!verifyTossWebhook({ secret: tossSecret, signature: tossSig, transmissionTime: tossTime, body: rawBody })) {
+      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+    }
+  }
+
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return NextResponse.json({ error: "DB config" }, { status: 500 });
@@ -109,4 +130,39 @@ export async function POST(
     .eq("user_id", uid);
 
   return NextResponse.json({ ok: true, processed: normalized.eventType });
+}
+
+// ─── 내부 ─────────────────────────────────────────────────────────────
+
+/**
+ * Toss Payments 웹훅 서명 검증.
+ * signed: "{rawBody}:{tosspayments-webhook-transmission-time}"
+ * header: "v1:{base64(HMAC-SHA256)} v1:{...}"
+ */
+function verifyTossWebhook(args: {
+  secret: string;
+  signature: string;
+  transmissionTime: string;
+  body: string;
+}): boolean {
+  const sigs = args.signature.split(" ").filter((s) => s.startsWith("v1:"));
+  if (sigs.length === 0) return false;
+
+  const signed = `${args.body}:${args.transmissionTime}`;
+  const expected = createHmac("sha256", args.secret).update(signed).digest("base64");
+  const expectedBuf = Buffer.from(expected, "base64");
+
+  for (const sig of sigs) {
+    const provided = sig.slice(3); // "v1:" 이후
+    let providedBuf: Buffer;
+    try {
+      providedBuf = Buffer.from(provided, "base64");
+    } catch {
+      continue;
+    }
+    if (providedBuf.length === expectedBuf.length && timingSafeEqual(providedBuf, expectedBuf)) {
+      return true;
+    }
+  }
+  return false;
 }

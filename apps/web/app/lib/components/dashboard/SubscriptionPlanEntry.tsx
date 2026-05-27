@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
 import type { SubscriptionPlan } from "../../stores/operations-store";
+import { getKstDate } from "../../utils/business-day";
 
 const FONT_STACK =
   "inherit";
@@ -61,7 +62,7 @@ export function SubscriptionPlanEntry({
   const handleApply = () => {
     if (totalSignups <= 0 && totalChurns <= 0) return;
 
-    const entryDate = d.dailyDateInput || new Date().toISOString().slice(0, 10);
+    const entryDate = d.dailyDateInput || getKstDate(new Date());
     const allE = d.dailyEntries as Array<{
       date: string; sales: number; customers: number;
       productSales?: Record<string, number>;

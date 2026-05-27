@@ -23,6 +23,11 @@ public struct DataConnectionSheet: View {
     @State private var isLoading: Bool = true
     @State private var loadError: String?
     @State private var showCustomPullSetup: Bool = false
+    /// 2026-05-27 P0-B: CSV/Excel 업로드 시트 토글.
+    @State private var showCsvUpload: Bool = false
+    /// 2026-05-27 P0-C: PortOne 결제 연결 마법사 토글.
+    @State private var showPortOneConnect: Bool = false
+    @State private var portOneStatus: PortOneStatusResponse?
     @State private var pendingDeleteId: UUID?
     @State private var toastMessage: String?
     @State private var comingSoonName: String?
@@ -75,6 +80,19 @@ public struct DataConnectionSheet: View {
                 Task { await loadConnections() }
             })
         }
+        // 2026-05-27 P0-B: CSV 업로드 시트 (web 의 CsvUploadCard 와 1:1 패리티).
+        .sheet(isPresented: $showCsvUpload) {
+            CsvUploadSheet(onUploaded: {
+                showToast("업로드 완료 — 매출 흐름에 반영됐어요.")
+            })
+        }
+        // 2026-05-27 P0-C: PortOne V2 결제 연결 마법사.
+        .sheet(isPresented: $showPortOneConnect) {
+            PortOneConnectSheet(onConnected: {
+                showToast("포트원 연결 완료 — 결제 데이터가 자동으로 들어옵니다.")
+                Task { await loadPortOneStatus() }
+            })
+        }
         .alert(
             "연결을 해제할까요?",
             isPresented: deleteAlertBinding,
@@ -96,7 +114,11 @@ public struct DataConnectionSheet: View {
         } message: { name in
             Text("\(name) 연동은 준비 중입니다. 그 전까지는 '내 서버 URL' 로 연결해주세요.")
         }
-        .task { await loadConnections() }
+        .task {
+            await loadConnections()
+            // 2026-05-27 P0-C: PortOne 상태도 함께 로드 (동시 fetch 가능)
+            await loadPortOneStatus()
+        }
     }
 
     // MARK: - Intro
@@ -241,49 +263,138 @@ public struct DataConnectionSheet: View {
     private var availableSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             sectionEyebrow("사용 가능한 채널")
+
+            // 1) CSV/Excel 업로드 — PG/POS 없는 모든 사장님의 fallback (2026-05-27 P0-B 추가)
+            Button { showCsvUpload = true } label: {
+                connectionTile(
+                    iconSystemName: "doc.badge.arrow.up",
+                    iconBackground: BUColor.success,
+                    title: "엑셀/CSV 업로드",
+                    badgeText: "누구나",
+                    badgeColor: BUColor.midnight,
+                    subtitle: "엑셀·구글시트 export 그대로. 헤더 자동 인식."
+                )
+            }
+            .buttonStyle(.plain)
+
+            // 2) 포트원 V2 결제 자동 동기화 (2026-05-27 P0-C 추가)
+            Button { showPortOneConnect = true } label: {
+                connectionTile(
+                    iconSystemName: "wallet.pass.fill",
+                    iconBackground: BUColor.midnight,
+                    title: portOneTitle,
+                    badgeText: portOneBadge,
+                    badgeColor: portOneBadgeColor,
+                    subtitle: portOneSubtitle
+                )
+            }
+            .buttonStyle(.plain)
+
+            // 3) 내 서버 URL 직접 입력 (Pull API) — 개발팀 있는 사장님
             Button { showCustomPullSetup = true } label: {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(BUColor.midnight)
-                            .frame(width: 44, height: 44)
-                        Image(systemName: "server.rack")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 6) {
-                            Text("내 서버 URL 직접 입력")
-                                .font(.system(size: 14.5, weight: .heavy))
-                                .foregroundStyle(BUColor.ink)
-                            Text("추천")
-                                .font(.system(size: 9, weight: .heavy))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(BUColor.success, in: Capsule())
-                        }
-                        Text("사장님 endpoint 노출 후 등록 — 어떤 서비스든 가능")
-                            .font(.system(size: 11.5))
-                            .foregroundStyle(BUColor.inkSecondary)
-                            .lineSpacing(2)
-                            .multilineTextAlignment(.leading)
-                    }
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(BUColor.inkMuted)
-                }
-                .padding(BUSpacing.md)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1)
+                connectionTile(
+                    iconSystemName: "server.rack",
+                    iconBackground: BUColor.midnight,
+                    title: "내 서버 URL 직접 입력",
+                    badgeText: "개발자",
+                    badgeColor: BUColor.midnight,
+                    subtitle: "사장님 endpoint 노출 후 등록 — 어떤 서비스든 가능"
                 )
             }
             .buttonStyle(.plain)
         }
+    }
+
+    // MARK: - PortOne tile state (P0-C)
+
+    private var portOneConnected: Bool {
+        portOneStatus?.connected == true
+    }
+
+    private var portOneTitle: String {
+        portOneConnected ? "포트원 연결됨" : "포트원 V2 자동 동기화"
+    }
+
+    private var portOneBadge: String {
+        if portOneConnected {
+            return "활성"
+        }
+        return "PG 사용자"
+    }
+
+    private var portOneBadgeColor: Color {
+        portOneConnected ? BUColor.success : BUColor.midnight
+    }
+
+    private var portOneSubtitle: String {
+        if portOneConnected {
+            if let count = portOneStatus?.paymentCount30d {
+                return "최근 30일 \(count)건 동기화 · 매일 자동"
+            }
+            return "매일 자동 동기화 중"
+        }
+        return "Read-only Secret 연결 → 결제·환불 자동 매출 반영"
+    }
+
+    private func loadPortOneStatus() async {
+        guard BUSupabase.shared.currentUser != nil else { return }
+        let repo = PortOneRepository(supabase: BUSupabase.shared.client)
+        do {
+            portOneStatus = try await repo.fetchStatus()
+        } catch {
+            // silent — 상태 조회 실패해도 카드는 unconnected 모드로 표시
+            portOneStatus = nil
+        }
+    }
+
+    /// 사용 가능한 채널 행 — 카드 UI 통일 (2026-05-27 P0-B 에서 추출).
+    private func connectionTile(
+        iconSystemName: String,
+        iconBackground: Color,
+        title: String,
+        badgeText: String,
+        badgeColor: Color,
+        subtitle: String
+    ) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(iconBackground)
+                    .frame(width: 44, height: 44)
+                Image(systemName: iconSystemName)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 14.5, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                    Text(badgeText)
+                        .font(.system(size: 9, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(badgeColor, in: Capsule())
+                }
+                Text(subtitle)
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .lineSpacing(2)
+                    .multilineTextAlignment(.leading)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(BUColor.inkMuted)
+        }
+        .padding(BUSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1)
+        )
     }
 
     // MARK: - Coming soon

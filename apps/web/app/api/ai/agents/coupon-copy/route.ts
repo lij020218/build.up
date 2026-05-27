@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAiClient } from "@build-up/ai/utils/client";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
-import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
+import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
 /**
  * Coupon Agent — 쿠폰 카피 생성.
@@ -73,6 +73,9 @@ ${body.triggerReason ? `- 상황: ${body.triggerReason}` : ""}
 다른 설명 없이 JSON만 반환하세요.`;
 }
 
+export const runtime = "nodejs";
+export const maxDuration = 60; // Vercel function timeout
+
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) {
@@ -80,13 +83,24 @@ export async function POST(request: Request) {
   }
 
   // 일일 한도 (MVP: 전체 10건/일, Phase 2에서 플랜별 차등)
-  const rateLimit = checkSimpleRateLimit({
+  const rateLimit = await checkSimpleRateLimit({
     key: `agent-coupon:${auth.userId}`,
     limit: 10,
     windowMs: 86_400_000, // 24h
   });
   if (!rateLimit.ok) {
     return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
+  }
+
+  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+  const dailyLimit = await checkDailyRateLimit({
+    userId: auth.userId,
+    feature: "agents-coupon-copy",
+    limit: 20,
+    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+  });
+  if (!dailyLimit.ok) {
+    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
   }
 
   const apiKey = getAnthropicApiKey();

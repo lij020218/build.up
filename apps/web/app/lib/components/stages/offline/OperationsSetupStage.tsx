@@ -1559,6 +1559,88 @@ export function OperationsSetupStage() {
         )}
       </div>
 
+      {/* ── 법정 의무 신고 (2026-05-25 audit 추가) ──
+            현금영수증 가맹점 가입 (부가가치세법 32조의2) + 옥외 간판 신고 (옥외광고물법 5조).
+            이전 운영 단계에 누락 → 미가입/미신고 시 가산세·과태료. iOS SSOT 와 동시 출시. */}
+      <div style={{
+        marginTop: "20px",
+        padding: "18px 20px",
+        borderRadius: "16px",
+        background: "linear-gradient(180deg, rgba(220,38,38,0.04) 0%, rgba(220,38,38,0.02) 100%)",
+        border: "1px solid rgba(220,38,38,0.18)",
+      }}>
+        <div style={{
+          fontSize: 11,
+          fontWeight: 800,
+          color: "#dc2626",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase" as const,
+          marginBottom: 4,
+        }}>
+          {ko ? "법정 의무 신고 — 깜빡 누락 시 과태료·가산세" : "Mandatory Legal Filings"}
+        </div>
+        <div style={{
+          fontSize: 12.5,
+          color: "rgba(15,23,42,0.6)",
+          marginBottom: 14,
+          lineHeight: 1.55,
+        }}>
+          {ko
+            ? "음식점·소매업은 사업자등록과 별도로 아래 2건의 법정 신고 의무가 있습니다. 운영 단계에서 사장님이 자주 놓치는 항목 — 미신고/미가입 시 가산세 또는 과태료."
+            : "Two more legal filings beyond business registration. Often missed — penalties apply if skipped."}
+        </div>
+
+        <div style={{ display: "grid", gap: "10px" }}>
+          {/* 현금영수증 가맹점 가입 */}
+          <div style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "white",
+            border: "1px solid rgba(220,38,38,0.12)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 800, color: "#dc2626",
+                padding: "2px 7px", borderRadius: 999,
+                background: "rgba(220,38,38,0.12)",
+              }}>{ko ? "법적 의무" : "Mandatory"}</span>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+                {ko ? "현금영수증 의무발급 가맹점 가입" : "Cash Receipt Mandatory Issuance Registration"}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55 }}>
+              {ko
+                ? "부가가치세법 32조의2 — 음식점·소매업 등 의무발급 업종. 10만원 이상 현금 거래 시 의무 발급. 홈택스에서 신청 또는 사업자등록 시 동시 신청. 미가입 시 미발급 거래액의 20% 가산세."
+                : "VAT Act §32-2. ₩100K+ cash transactions require receipts. Apply via Hometax. 20% penalty if not registered."}
+            </div>
+          </div>
+
+          {/* 옥외 간판 신고 */}
+          <div style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "white",
+            border: "1px solid rgba(220,38,38,0.12)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 800, color: "#dc2626",
+                padding: "2px 7px", borderRadius: 999,
+                background: "rgba(220,38,38,0.12)",
+              }}>{ko ? "법적 의무" : "Mandatory"}</span>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
+                {ko ? "옥외 간판 신고 (구청 광고물 신고)" : "Outdoor Signage Filing (district office)"}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(15,23,42,0.6)", lineHeight: 1.55 }}>
+              {ko
+                ? "옥외광고물법 5조 — 벽면·돌출·입식 간판 모두 신고 대상. 관할 구청 디자인정책과 / 옥외광고물 담당. 미신고 시 자진철거 명령 + 과태료 (크기·위치별 최대 500만원)."
+                : "Outdoor Ad Act §5. All wall/projection/standing signs require filing at district office. Up to ₩5M fine for non-compliance."}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <StageWrapup
         ko={ko}
         nextStageLabelKo="프리오픈·본 오픈 준비"

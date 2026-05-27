@@ -123,7 +123,7 @@ export function FirstMonthCheckStage() {
                 : "운영 대시보드에서 월 비용을 입력하면 런웨이를 즉시 계산합니다",
               detail: runwayMonths !== null
                 ? `초기 자본 ${fmtKrw(selectedBudget ?? 0)} / 월 고정비 ${fmtKrw(fixedCosts)}. 시리즈A는 통상 21개월 런웨이 필요. 첫 달은 매출 < 비용이 정상이지만 매주 개선되어야 합니다.`
-                : "월 고정비 (서버·인건비·도구) 입력 후 비교. 한국 스타트업 폐업률 2024년 85.2% — 런웨이 추적이 생존의 1순위.",
+                : "월 고정비 (서버·인건비·도구) 입력 후 비교. 한국 자영업 2024년 폐업률 10.8% (사상 첫 폐업 100만명 돌파, 통계청) — 런웨이 추적이 생존의 1순위.",
             }
           : {
               title: runwayMonths !== null
@@ -172,15 +172,15 @@ export function FirstMonthCheckStage() {
                   : "개업했어요 — 매일 매출·비용 기록이 가장 중요"
                 : "개업 직후 첫 달이 가장 위험한 시기 — 데이터 기록부터 시작",
               detail: hasAnyCost
-                ? `현재 입력된 월 고정비 ${fmtKrw(fixedCosts)} 기준 — 한국 자영업자 2024 폐업률 85.2%. 첫달 적자는 정상이지만 '매주 숫자가 개선'되어야 정상 신호. 영업실적 악화(28.2%)·자금사정(18.1%)·임차료(11.9%)가 폐업 1-3순위.`
-                : "월 비용을 입력하면 비상금 목표·런웨이·업종 평균 비교를 즉시 보여드립니다. 한국 자영업자 폐업률 2024 85.2% — 데이터 없는 운영이 1번 위험.",
+                ? `현재 입력된 월 고정비 ${fmtKrw(fixedCosts)} 기준 — 한국 자영업 2024 폐업률 10.8% (음식업 19.4% · 소매 20.8%, 통계청). 첫달 적자는 정상이지만 '매주 숫자가 개선'되어야 정상 신호. 영업실적 악화(28.2%)·자금사정(18.1%)·임차료(11.9%)가 폐업 1-3순위.`
+                : "월 비용을 입력하면 비상금 목표·런웨이·업종 평균 비교를 즉시 보여드립니다. 한국 자영업 2024 폐업률 10.8% (음식·소매 20% 내외) — 데이터 없는 운영이 1번 위험.",
             }
           : {
               title: businessLaunched
                 ? `Launched ${daysSinceLaunch ?? "?"} days ago — daily logging is #1 priority`
                 : "Month 1 is the most fragile — start with daily records",
               detail: hasAnyCost
-                ? `Monthly fixed: ${fmtKrw(fixedCosts)}. Korean SMB closure rate hit 85.2% in 2024. Loss in month 1 is normal IF numbers improve weekly.`
+                ? `Monthly fixed: ${fmtKrw(fixedCosts)}. Korean SMB closure rate: 10.8% in 2024 (food 19.4%, retail 20.8%). Loss in month 1 is normal IF numbers improve weekly.`
                 : "Enter costs to see your reserve target, runway, and industry comparison.",
             },
         1: ko
@@ -511,8 +511,8 @@ export function FirstMonthCheckStage() {
             </div>
             <div style={{ fontSize: "13.5px", color: "rgba(0,0,0,0.6)", lineHeight: 1.65 }}>
               {isStartup
-                ? (ko ? "★ 한국 스타트업 폐업률 2024년 85.2%. 첫 달은 매출 < 비용이 정상이지만 (1) D7 retention ≥20% (2) 사용자 10명 인터뷰 (3) 매주 1실험이 안 되면 6개월 후 위험. PH·HN 트래픽이 빠지는 D+8~D+30이 진짜 시험." : "★ Korean SMB closure rate 2024: 85.2%. Month 1 = loss is normal IF (1) D7 ≥20% (2) 10 user interviews (3) weekly experiments. Real test: D+8 to D+30 after launch traffic.")
-                : (ko ? "★ 한국 자영업 2024 폐업률 85.2% — 폐업 사유: 영업실적 악화(28.2%) > 경기 불투명(18.1%) > 자금난(18.1%) > 임차료(11.9%). 통계청: 세부 계획 없는 창업은 첫해 폐업률 1.7배. 매일 5분 기록 + 주간 리뷰가 가장 강한 무기." : "★ Korea SMB 2024 closure 85.2%. Reasons: revenue decline 28.2% > outlook 18.1% > cash 18.1% > rent 11.9%. Daily 5-min log + weekly review = strongest defense.")}
+                ? (ko ? "★ 한국 스타트업 5년 누적 생존율 약 25% (창업 5곳 중 4곳 5년 이내 폐업, 통계청). 첫 달은 매출 < 비용이 정상이지만 (1) D7 retention ≥20% (2) 사용자 10명 인터뷰 (3) 매주 1실험이 안 되면 6개월 후 위험. PH·HN 트래픽이 빠지는 D+8~D+30이 진짜 시험." : "★ Korea startup 5-year survival ~25%. Month 1 = loss is normal IF (1) D7 ≥20% (2) 10 user interviews (3) weekly experiments. Real test: D+8 to D+30 after launch traffic.")
+                : (ko ? "★ 한국 자영업 2024 폐업률 10.8% (음식업 19.4% · 소매 20.8%, 통계청) — 폐업 사유: 영업실적 악화(28.2%) > 경기 불투명(18.1%) > 자금난(18.1%) > 임차료(11.9%). 통계청: 세부 계획 없는 창업은 첫해 폐업률 1.7배. 매일 5분 기록 + 주간 리뷰가 가장 강한 무기." : "★ Korea SMB 2024 closure 10.8% (food 19.4%, retail 20.8%). Reasons: revenue decline 28.2% > outlook 18.1% > cash 18.1% > rent 11.9%. Daily 5-min log + weekly review = strongest defense.")}
             </div>
           </div>
 

@@ -21,6 +21,7 @@ import type { DashboardHook } from "../useDashboard";
 import { useCashflowStore } from "../stores/cashflow-store";
 import { useProfileStore } from "../stores/profile-store";
 import { useInterviewStore } from "../stores/interview-store";
+import { getKstDate } from "../utils/business-day";
 
 export type FeatureNudge = {
   key: string;
@@ -112,7 +113,7 @@ export function useFeatureNudges(d: DashboardHook, phase: Phase): FeatureNudge[]
       // 영업일 기준: 새벽 04:00 컷오프 (대부분 음식점·카페 마감 시각 이후)
       const businessDayCutoff = new Date(now);
       if (businessDayCutoff.getHours() < 4) businessDayCutoff.setDate(businessDayCutoff.getDate() - 1);
-      const todayBiz = businessDayCutoff.toISOString().slice(0, 10);
+      const todayBiz = getKstDate(businessDayCutoff);
       const daysSince = latest >= todayBiz
         ? 0
         : Math.round((Date.now() - new Date(`${latest}T00:00:00`).getTime()) / 86400000);

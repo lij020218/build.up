@@ -79,8 +79,8 @@ export function TaxGuideStage() {
   const keyActions: Record<number, { title: string; detail: string }> = isStartup
     ? {
         0: ko
-          ? { title: "2026 법인세 1%p 인상 — 신고 캘린더 미등록 = 가산세 20% + 일 0.022%", detail: "2026년부터 법인세율 인상: 2억 이하 9%→10% / 2-200억 19%→20% / 200억+ 22%. 가공 세금계산서 가산세 3%→4%. 법인세 3월 31일 / 부가세 분기 25일 / 원천세·4대보험 매월 10일." }
-          : { title: "2026 corp tax up 1%p — calendar required", detail: "2026: under ₩200M 9→10%, 200M-20B 19→20%. Fake invoice penalty 3%→4%. Corp tax Mar 31 / VAT quarterly 25 / Withholding monthly 10." },
+          ? { title: "2026 법인세 1%p 인상 — 신고 캘린더 미등록 = 가산세 20% + 일 0.022%", detail: "2026년부터 법인세율 전 구간 1%p 인상: 2억 이하 9→10% / 2-200억 19→20% / 200-3000억 21→22% / 3000억+ 24→25%. 가공 세금계산서 가산세 3%→4%. 법인세 3월 31일 / 부가세 분기 25일 / 원천세·4대보험 매월 10일." }
+          : { title: "2026 corp tax up 1%p — calendar required", detail: "2026: under ₩200M 9→10%, 200M-20B 19→20%, 20B-300B 21→22%, 300B+ 24→25%. Fake invoice penalty 3%→4%. Corp tax Mar 31 / VAT quarterly 25 / Withholding monthly 10." },
         1: ko
           ? { title: "홈택스 법인 가입 + 법인카드 의무 — 개인카드 = 비용 불인정", detail: "공동인증서 → 세금계산서 발행·법인세 신고 활성화. 모든 경비 법인카드 결제. 영수증 5년 보관 (앱 백업 권장). R&D 인건비는 별도 분류 — 25% 세액공제 받기 위해." }
           : { title: "Hometax corp signup + corp card mandatory", detail: "Cert → invoice/tax filing enabled. All expenses on corp card. 5-year retention." },
@@ -122,7 +122,7 @@ export function TaxGuideStage() {
       { label: "Personal card expenses get rejected", text: "Corp expenses = corp card only. No exceptions. Mixing = millions in deduction loss yearly." },
       { label: "Unclassified R&D = no 25% credit", text: "Separate R&D from general payroll + evidence (research notes, commit logs)." },
     ]) : (ko ? [
-      { label: "현금영수증 미발급 = 건당 5% 과태료 + 누적", text: "고객이 요청하지 않아도 의무 발급 거래(10만원 이상). 자영업 적발 1순위 항목." },
+      { label: "현금영수증 미발급 = 거래액의 20% 가산세 (소득세법 §162의3)", text: "고객이 요청하지 않아도 의무 발급 거래(10만원 이상). 자영업 적발 1순위 항목." },
       { label: "사업장 신고 결제단말기 미신고 시 가산세", text: "홈택스 → 사업장 현황신고 → 결제단말기 신고. 단말기 변경 시 즉시 재신고." },
     ] : [
       { label: "No cash receipt = 5% penalty per transaction", text: "Mandatory above 100K KRW even without customer request. #1 audit issue for SMBs." },
@@ -213,7 +213,7 @@ export function TaxGuideStage() {
     { id: "tc-hometax", label: ko ? "홈택스 사업자 회원가입" : "HomeTax registration", detail: ko ? "hometax.go.kr → 사업자 공인인증서 가입. 세금계산서 발행·조회 필수" : "Required for tax invoices" },
     { id: "tc-bizcard", label: ko ? "사업용 카드 별도 개설" : "Dedicated business card", detail: ko ? "개인 카드 혼용 시 비용처리 불인정 위험. 전용 카드 1개+ 필수" : "Personal card mixing risks rejected deductions" },
     { id: "tc-pos", label: ko ? "카드단말기 국세청 신고" : "POS terminal tax report", detail: ko ? "홈택스 → 사업장 현황신고 → 결제단말기 신고. 미신고 시 가산세" : "Required. Penalty for non-report" },
-    { id: "tc-cash", label: ko ? "현금영수증 가맹점 등록" : "Cash receipt registration", detail: ko ? "10만원+ 거래는 의무 발급. 미발급 건당 5% 과태료" : "Mandatory >100K KRW. 5% penalty per missed receipt" },
+    { id: "tc-cash", label: ko ? "현금영수증 가맹점 등록" : "Cash receipt registration", detail: ko ? "10만원+ 거래는 의무 발급. 미발급 시 거래액의 20% 가산세 (소득세법 §162의3)" : "Mandatory >100K KRW. 20% penalty per missed receipt (Income Tax Act §162-3)" },
     { id: "tc-receipt", label: ko ? "매입 영수증 5년 보관 체계" : "5-year expense receipt system", detail: ko ? "앱(삼쩜삼·자비스·캐시노트) 또는 월별 폴더로 분류. 5년 보관 의무" : "5-year retention. Use 3o3 / Jobis / CashNote" },
     { id: "tc-vat-type", label: ko ? "과세유형 확인 (일반 / 간이)" : "Tax type confirmation", detail: ko ? `★ 간이과세 기준 8천만 → ${SIMPLIFIED_THRESHOLD_KO} 상향 (부가가치세법 시행령 §109, 2024.1.1 시행). 직전연도 매출 ${SIMPLIFIED_THRESHOLD_KO} 미만이면 간이 가능` : `★ Simplified threshold raised 80M → ${SIMPLIFIED_THRESHOLD_EN} (VAT enforcement decree §109, eff. Jan 2024)` },
   ];
@@ -367,7 +367,7 @@ export function TaxGuideStage() {
             <div style={{ fontSize: "13.5px", color: "rgba(0,0,0,0.6)", lineHeight: 1.65 }}>
               {isStartup
                 ? (ko ? "★ 2026 세제 혜택: 청년창업 (만 15~34세) 5년 법인세 100%/75%/50% (지역별, 조특법 §6) + 벤처인증 시 별도 5년 50% 감면. 스톡옵션 연 2억·누적 5억 비과세 (~2027.12.31). R&D 세액공제 최대 25%. 사전 세팅 없으면 소급 적용 안 됨." : "★ 2026 benefits: Young-founder (age 15~34) 5-yr corp tax 100%/75%/50% by region (Tax Spec Act §6) + venture cert separate 5-yr 50%. Stock option tax-free 200M/yr·500M cumul (~2027.12.31). R&D up to 25%. No retroactive.")
-                : (ko ? `★ 간이과세 기준 8천만 → ${SIMPLIFIED_THRESHOLD_KO} 상향 (부가가치세법 시행령 §109, 2024.1.1 시행, 2026 유지). 사업자등록 직후부터 세금 의무 시작. 부가세 미신고 = 가산세 20%, 현금영수증 미발급 = 건당 5%. 홈택스 가입·사업용 카드·증빙 보관을 지금 잡아야 합니다.` : `★ Simplified threshold raised 80M → ${SIMPLIFIED_THRESHOLD_EN} (VAT enforcement decree §109, eff. Jan 2024, in force 2026). Tax obligations begin immediately after registration. VAT non-filing = 20%, no cash receipt = 5% per transaction.`)}
+                : (ko ? `★ 간이과세 기준 8천만 → ${SIMPLIFIED_THRESHOLD_KO} 상향 (부가가치세법 시행령 §109, 2024.1.1 시행, 2026 유지). 사업자등록 직후부터 세금 의무 시작. 부가세 미신고 = 가산세 20%, 현금영수증 미발급 = 거래액의 20% (소득세법 §162의3). 홈택스 가입·사업용 카드·증빙 보관을 지금 잡아야 합니다.` : `★ Simplified threshold raised 80M → ${SIMPLIFIED_THRESHOLD_EN} (VAT enforcement decree §109, eff. Jan 2024, in force 2026). Tax obligations begin immediately after registration. VAT non-filing = 20%, no cash receipt = 20% of transaction (Income Tax Act §162-3).`)}
             </div>
           </div>
 

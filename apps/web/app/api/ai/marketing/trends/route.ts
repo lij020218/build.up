@@ -14,6 +14,8 @@ import {
 } from "../../../_lib/env";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 import { generateTrends } from "../../../_lib/trend-generator";
+import { requireApiUserAllowAnon } from "../../../_lib/auth";
+import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
 /**
  * 마케팅 트렌드 API — 캐시 우선, 필요시 on-demand 생성.
@@ -73,7 +75,38 @@ function resolveBizLabel(subIndustryId: string | undefined, categoryId: string, 
   return CATEGORY_LABELS[categoryId]?.[ko ? "ko" : "en"] ?? categoryId;
 }
 
+export const runtime = "nodejs";
+export const maxDuration = 90; // Vercel function timeout
+
 export async function POST(request: Request) {
+  // ⚠️ 2026-05-25 audit fix: 이전 무인증 → DoS·OpenAI/Anthropic 지갑 고갈 위험.
+  //   세션 사용자 (anon 포함) 만 호출 가능 + 분당 10회 rate limit.
+  //   캐시 hit 경로는 LLM 비용 없으므로 anon 허용. 미스 시 generateTrends 가 LLM 사용.
+  const auth = await requireApiUserAllowAnon(request);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  const rl = await checkSimpleRateLimit({
+    key: `ai-marketing-trends:${auth.userId}`,
+    limit: 10,
+    windowMs: 60_000,
+    message: "잠시 후 다시 시도해 주세요 (분당 10회 제한).",
+  });
+  if (!rl.ok) {
+    return NextResponse.json({ error: rl.error }, { status: rl.status });
+  }
+
+  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+  const dailyLimit = await checkDailyRateLimit({
+    userId: auth.userId,
+    feature: "marketing-trends",
+    limit: 30,
+    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+  });
+  if (!dailyLimit.ok) {
+    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
+  }
+
   const apiKey = getAnthropicApiKey();
   if (!apiKey) {
     return NextResponse.json({ error: "AI not configured" }, { status: 500 });

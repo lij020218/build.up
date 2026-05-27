@@ -21,6 +21,7 @@
 import { useMemo } from "react";
 import { PawPrint, Calendar, UserX, Sparkles, RotateCw } from "lucide-react";
 import { useBookingStore } from "../../stores";
+import { getKstDate } from "../../utils/business-day";
 
 // 2026-05-13 — SSOT (booking-analytics + cohort-retention)
 //   petServiceMix · bookingRepeatRate — Gingr·VetPort·펫프렌즈 (재구매 85%) 표준.
@@ -43,35 +44,15 @@ const SERVICE_LABEL: Record<PetServiceCategory, string> = {
 };
 
 export function PetBookingCard({ ko, industryCategoryId }: Props) {
+  // ⚠️ 2026-05-25 audit fix: Rules of Hooks 위반 수정 — hook을 early return 앞으로 이동.
   const bookings = useBookingStore((s) => s.bookings);
   const seedDemo = useBookingStore((s) => s.seedDemo);
 
-  if (industryCategoryId !== "pet") return null;
-
-  if (bookings.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><PawPrint size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "예약·서비스 mix · 펫" : "Booking · Pet"}</div>
-        </header>
-        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
-          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
-            {ko ? "예약 데이터를 입력하면 서비스 mix·재방문 cycle·노쇼 분석" : "Enter booking data"}
-          </div>
-          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
-            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
-          </button>
-        </div>
-      </article>
-    );
-  }
-
   const analysis = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
-    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+    const todayStr = getKstDate(now);
+    const tomorrowStr = getKstDate(new Date(now.getTime() + 86400000));
+    const yesterdayStr = getKstDate(new Date(now.getTime() - 86400000));
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
     const tomorrowBookings = bookings.filter((b) => b.date === tomorrowStr);
@@ -138,6 +119,28 @@ export function PetBookingCard({ ko, industryCategoryId }: Props) {
       topAction,
     };
   }, [bookings, ko]);
+
+  // hook 호출 끝 — 조건부 렌더 안전.
+  if (industryCategoryId !== "pet") return null;
+
+  if (bookings.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><PawPrint size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "예약·서비스 mix · 펫" : "Booking · Pet"}</div>
+        </header>
+        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
+          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
+            {ko ? "예약 데이터를 입력하면 서비스 mix·재방문 cycle·노쇼 분석" : "Enter booking data"}
+          </div>
+          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
+            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
+          </button>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article style={cardStyle}>

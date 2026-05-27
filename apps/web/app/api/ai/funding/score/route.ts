@@ -204,11 +204,14 @@ ${ANTI_HALLUCINATION_DIRECTIVE}
 }`;
 }
 
+export const runtime = "nodejs";
+export const maxDuration = 60; // Vercel function timeout
+
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const daily = checkDailyRateLimit({
+  const daily = await checkDailyRateLimit({
     userId: auth.userId,
     feature: "funding-score",
     limit: 20,
@@ -216,7 +219,7 @@ export async function POST(request: Request) {
   });
   if (!daily.ok) return NextResponse.json({ error: daily.error }, { status: 429 });
 
-  const burst = checkSimpleRateLimit({
+  const burst = await checkSimpleRateLimit({
     key: `funding-score-burst:${auth.userId}`,
     limit: 5,
     windowMs: 60_000,

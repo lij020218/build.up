@@ -44,6 +44,16 @@ public struct OperationsSetupStageView: View {
     @AppStorage("ops.sns.instagram")      private var snsInstagram     = false
     @AppStorage("ops.sns.kakao")          private var snsKakao         = false
 
+    // 웹 SSOT 누락 3개 (2026-05-24 추가)
+    @AppStorage("ops.brand.identityDone") private var brandIdentityDone  = false
+    @AppStorage("ops.brand.cardMerchant") private var cardMerchantDone   = false
+    @AppStorage("ops.brand.musicLicense") private var musicLicenseDone   = false
+    // 2026-05-25 사장님 audit — 한국 음식점 의무 사항 누락 보완:
+    //   • 현금영수증 의무발급 가맹점 가입 (부가가치세법 32조의2) — 10만원↑ 거래 시 의무
+    //   • 옥외 간판 신고 (옥외광고물법 5조) — 벽면·돌출·입식 간판 구청 신고
+    @AppStorage("ops.brand.cashReceiptDone")  private var cashReceiptDone   = false
+    @AppStorage("ops.brand.signageReportDone") private var signageReportDone = false
+
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
     /// 채널 페이지 라벨 — 클러스터별 (배달/예약/마켓플레이스).
@@ -58,7 +68,9 @@ public struct OperationsSetupStageView: View {
     }
 
     private var pages: [String] {
-        [channelPageLabel, "POS 선택", "SNS 세팅"]
+        cluster.category.isOffline
+            ? [channelPageLabel, "POS 선택", "SNS 세팅"]
+            : [channelPageLabel, "SNS 세팅"]
     }
 
     // MARK: - Cluster-aware channels (페이지 0)
@@ -155,13 +167,30 @@ public struct OperationsSetupStageView: View {
     }
 
     private var canCompleteStage: Bool {
-        !posSelected.isEmpty && snsNaver && posTestsDone == 4
+        if cluster.category.isOffline {
+            return !posSelected.isEmpty && posTestsDone == 4 && snsNaver
+                && brandIdentityDone && cardMerchantDone && musicLicenseDone
+                && cashReceiptDone && signageReportDone
+        } else {
+            // 온라인·스타트업: 최소 1개 유입 채널 선택으로 완료
+            return deliveryBaemin || deliveryCoupang || deliveryYogiyo || deliveryNaver
+        }
     }
 
     private var advanceHint: String {
-        if posSelected.isEmpty { return "POS 시스템을 선택하세요" }
-        if posTestsDone < 4 { return "POS 설치 후 테스트 4단계 완료 (\(posTestsDone)/4)" }
-        if !snsNaver { return "네이버 플레이스 등록은 필수입니다" }
+        if cluster.category.isOffline {
+            if posSelected.isEmpty { return "POS 시스템을 선택하세요" }
+            if posTestsDone < 4 { return "POS 설치 후 테스트 4단계 완료 (\(posTestsDone)/4)" }
+            if !snsNaver { return "네이버 플레이스 등록은 필수입니다" }
+            if !brandIdentityDone { return "간판·메뉴판·브랜드 자산 준비를 완료하세요" }
+            if !cardMerchantDone { return "카드 가맹점 등록 완료를 체크하세요 (VAN 1주)" }
+            if !musicLicenseDone { return "매장음악 저작권 등록을 확인하세요 (50㎡+)" }
+            if !cashReceiptDone { return "현금영수증 의무발급 가맹점 가입을 확인하세요" }
+            if !signageReportDone { return "옥외 간판 신고 (구청)를 완료하세요" }
+        } else {
+            let hasChannel = deliveryBaemin || deliveryCoupang || deliveryYogiyo || deliveryNaver
+            if !hasChannel { return "최소 1개 유입 채널을 선택하세요" }
+        }
         return "운영 시스템 셋업 완료 — 다음 단계로"
     }
 
@@ -213,7 +242,8 @@ public struct OperationsSetupStageView: View {
                 Group {
                     switch page {
                     case 0: deliveryPage
-                    case 1: posPage
+                    case 1 where cluster.category.isOffline: posPage
+                    case 1: snsPage
                     default: snsPage
                     }
                 }
@@ -372,6 +402,62 @@ public struct OperationsSetupStageView: View {
                 "인스타 팔로워 0에서 시작 — 광고 없이 성과까지 2~3개월 예상",
                 "리뷰 무시 = 별점 하락 → 방문율 즉각 영향 (응답률 100% 목표)",
             ], color: .orange)
+
+            if cluster.category.isOffline {
+                BUCard(.card) {
+                    VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                        BUEyebrow("오프라인 브랜드 필수 항목")
+                        Toggle(isOn: $brandIdentityDone) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("간판·메뉴판·브랜드 자산 준비").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text("간판 디자인·메뉴판 인쇄·가격표·실내 브랜드 요소 완료").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                            }
+                        }.tint(BUColor.midnight)
+                        Divider()
+                        Toggle(isOn: $cardMerchantDone) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("카드 가맹점 등록 완료 (VAN 약 1주)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text("NICE·KIS·스마트로 등 VAN사 신청 → 승인 후 결제 단말 활성화").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                            }
+                        }.tint(BUColor.midnight)
+                        Divider()
+                        Toggle(isOn: $musicLicenseDone) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text("매장음악 저작권 등록").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                    Text("50㎡+ 의무").font(.system(size: 10, weight: .bold)).foregroundStyle(Color.orange)
+                                        .padding(.horizontal, 6).padding(.vertical, 2).background(Color.orange.opacity(0.1), in: Capsule())
+                                }
+                                Text("한국음악저작권협회(KOMCA) 또는 매장음악 서비스 가입 — 영업장 50㎡ 이상 법적 의무").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                            }
+                        }.tint(BUColor.midnight)
+                        Divider()
+                        // 2026-05-25: 현금영수증 의무발급 가맹점 (부가가치세법 32조의2)
+                        Toggle(isOn: $cashReceiptDone) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text("현금영수증 의무발급 가맹점 가입").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                    Text("법적 의무").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.danger)
+                                        .padding(.horizontal, 6).padding(.vertical, 2).background(BUColor.danger.opacity(0.1), in: Capsule())
+                                }
+                                Text("음식점·소매업 등 의무발급 업종 — 10만원 이상 거래 시 현금영수증 의무 발급. 홈택스 신청 또는 사업자등록 시 동시 신청. 미가입 시 미발급 거래액의 20% 가산세.").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            }
+                        }.tint(BUColor.midnight)
+                        Divider()
+                        // 2026-05-25: 옥외 간판 신고 (옥외광고물법 5조)
+                        Toggle(isOn: $signageReportDone) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text("옥외 간판 신고 (구청 광고물 신고)").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                    Text("법적 의무").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.danger)
+                                        .padding(.horizontal, 6).padding(.vertical, 2).background(BUColor.danger.opacity(0.1), in: Capsule())
+                                }
+                                Text("벽면·돌출·입식 간판 모두 신고 대상 (옥외광고물법 5조). 관할 구청 디자인정책과 / 옥외광고물 담당. 미신고 시 자진철거 명령 + 과태료 (크기·위치별 최대 500만원).").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            }
+                        }.tint(BUColor.midnight)
+                    }
+                }
+            }
         }
     }
 

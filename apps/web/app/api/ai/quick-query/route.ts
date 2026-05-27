@@ -22,6 +22,9 @@ const DAILY_KEY = (userId: string) => `daily:quick-query:${userId}`;
  * 응답 헤더로 X-RateLimit-Remaining / X-RateLimit-Reset 동봉 → UI 가 실시간으로 남은 횟수 표시.
  */
 
+export const runtime = "nodejs";
+export const maxDuration = 30; // Vercel function timeout
+
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) {
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
   }
 
   // ── 1. 일일 한도 (가장 먼저 체크 — 매우 중요)
-  const daily = checkDailyRateLimit({
+  const daily = await checkDailyRateLimit({
     userId: auth.userId,
     feature: "quick-query",
     limit: DAILY_LIMIT,
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
   }
 
   // ── 2. 버스트 방지 (분당 5회)
-  const burst = checkSimpleRateLimit({
+  const burst = await checkSimpleRateLimit({
     key: `quick-query-burst:${auth.userId}`,
     limit: 5,
     windowMs: 60_000,
@@ -134,7 +137,7 @@ export async function GET(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
-  const status = peekRateLimit({
+  const status = await peekRateLimit({
     key: DAILY_KEY(auth.userId),
     limit: DAILY_LIMIT,
     windowMs: 24 * 60 * 60 * 1000,

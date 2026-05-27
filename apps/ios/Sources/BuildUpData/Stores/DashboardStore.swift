@@ -196,7 +196,11 @@ public final class DashboardStore {
         self.category = .general
         self.stage = .growth
         self.currentCash = nil
-        self.storeName = "내 가게"
+        // ⚠️ 2026-05-25 fix 사장님 신고: "전부 초기화 후에도 이전 상호명이 남아있음".
+        //   이전: "내 가게" default 자리표시자 — 사용자가 "어, 왜 옛 이름이 그대로?" 혼란.
+        //   변경: 명시적으로 "" 빈값 — ProfileView 가 .isEmpty 체크로 "가게 이름을
+        //   입력해 주세요" 안내 표시. 신규 가입과 동일한 깨끗한 상태.
+        self.storeName = ""
         self.daysSinceLaunch = 0
         self.businessLaunched = false
         self.pendingSyncCount = 0

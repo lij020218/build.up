@@ -14,6 +14,12 @@ if (process.env.NODE_ENV !== "production") {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@build-up/shared", "@build-up/ai"],
+  async redirects() {
+    return [
+      { source: "/privacy", destination: "/legal/privacy", permanent: true },
+      { source: "/terms", destination: "/legal/terms", permanent: true },
+    ];
+  },
   webpack: (config, { dev }) => {
     if (dev) {
       // dev에서 filesystem 캐시 완전 비활성화 — vendor-chunks ENOENT 방지

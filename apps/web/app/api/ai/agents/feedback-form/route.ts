@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAiClient } from "@build-up/ai/utils/client";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
-import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
+import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
 /**
  * Feedback Form Agent — 소프트오픈/운영 피드백 질문지 자동 생성.
@@ -124,6 +124,9 @@ Return JSON only. ${body.selectedIndustryId ? `Include 1-2 questions specific to
   return ctx + formatNote;
 }
 
+export const runtime = "nodejs";
+export const maxDuration = 60; // Vercel function timeout
+
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) {
@@ -131,13 +134,24 @@ export async function POST(request: Request) {
   }
 
   // 일일 한도: 사용자당 5건 / 24h (피드백 폼은 한 번 만들면 재사용)
-  const rateLimit = checkSimpleRateLimit({
+  const rateLimit = await checkSimpleRateLimit({
     key: `agent-feedback-form:${auth.userId}`,
     limit: 5,
     windowMs: 86_400_000,
   });
   if (!rateLimit.ok) {
     return NextResponse.json({ error: rateLimit.error }, { status: rateLimit.status });
+  }
+
+  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+  const dailyLimit = await checkDailyRateLimit({
+    userId: auth.userId,
+    feature: "agents-feedback-form",
+    limit: 20,
+    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+  });
+  if (!dailyLimit.ok) {
+    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
   }
 
   const apiKey = getAnthropicApiKey();

@@ -6,6 +6,7 @@ import { useStartupMetrics } from "../../hooks/useStartupMetrics";
 import { useFinanceStore, useOperationsStore } from "../../stores";
 import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
 import type { MetricCard, StartupMetricHealth } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 /**
  * StartupHealthSection — 스타트업 전용 핵심 지표 패널.
@@ -95,7 +96,7 @@ export function StartupHealthSection({ ko = true }: { ko?: boolean }) {
     // ARR proxy: 최근 30일 매출 × 12. manual + unified 머지 (자동 우선).
     const now = new Date();
     const cutoff = new Date(now.getTime() - 30 * 86400000);
-    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    const cutoffStr = getKstDate(cutoff);
     const byDate = new Map<string, number>();
     for (const e of dailyEntries ?? []) {
       if (e.date >= cutoffStr) byDate.set(e.date, e.sales ?? 0);

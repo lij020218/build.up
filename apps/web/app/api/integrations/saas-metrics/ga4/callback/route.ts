@@ -43,7 +43,13 @@ export async function GET(request: Request) {
   const parts = state.split("|");
   if (parts.length !== 3) return redirectWith("error", "bad_state");
   const [userId, nonce, hmac] = parts;
-  const stateSecret = getEnvVar("GA4_STATE_SECRET") ?? getEnvVar("PORTONE_KEK_BASE64") ?? "fallback";
+  // ⚠️ 2026-05-25 audit fix: 이전 `?? "fallback"` 은 환경 변수 누락 시 HMAC 위조 가능 (모든 공격자가
+  //   "fallback" 으로 같은 HMAC 생성 → state 검증 우회). 환경 변수 없으면 명시적 에러 반환.
+  const stateSecret = getEnvVar("GA4_STATE_SECRET") ?? getEnvVar("PORTONE_KEK_BASE64");
+  if (!stateSecret) {
+    console.error("[ga4/callback] GA4_STATE_SECRET / PORTONE_KEK_BASE64 모두 미설정 — state HMAC 검증 불가");
+    return redirectWith("error", "server_misconfigured");
+  }
   const expected = createHmac("sha256", stateSecret).update(`${userId}|${nonce}`).digest("hex").slice(0, 24);
   if (hmac !== expected) return redirectWith("error", "state_mismatch");
 

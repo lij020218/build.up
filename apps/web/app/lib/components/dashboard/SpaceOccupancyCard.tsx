@@ -29,43 +29,24 @@ import {
   timeDistribution,
   peakBucket as ssotPeakBucket,
 } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 
 export function SpaceOccupancyCard({ ko, industryCategoryId }: Props) {
+  // ⚠️ 2026-05-25 audit fix: Rules of Hooks 위반 수정 — hook을 early return 앞으로 이동.
   const bookings = useBookingStore((s) => s.bookings);
   const providers = useBookingStore((s) => s.providers); // 룸 = provider 모델 재사용
   const seedDemo = useBookingStore((s) => s.seedDemo);
 
-  if (industryCategoryId !== "space") return null;
-
-  if (bookings.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><LayoutGrid size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "POR·시간대 · 공간임대" : "POR · Space"}</div>
-        </header>
-        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
-          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
-            {ko ? "예약·룸 데이터 입력 시 POR (점유율) + 시간대 분석" : "Enter bookings + rooms for POR"}
-          </div>
-          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
-            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
-          </button>
-        </div>
-      </article>
-    );
-  }
-
   const analysis = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
-    const yesterdayStr = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
-    const last7Start = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
+    const todayStr = getKstDate(now);
+    const tomorrowStr = getKstDate(new Date(now.getTime() + 86400000));
+    const yesterdayStr = getKstDate(new Date(now.getTime() - 86400000));
+    const last7Start = getKstDate(new Date(now.getTime() - 7 * 86400000));
 
     const todayBookings = bookings.filter((b) => b.date === todayStr);
     const tomorrowBookings = bookings.filter((b) => b.date === tomorrowStr);
@@ -145,6 +126,28 @@ export function SpaceOccupancyCard({ ko, industryCategoryId }: Props) {
       topAction,
     };
   }, [bookings, providers, ko]);
+
+  // hook 호출 끝 — 조건부 렌더 안전.
+  if (industryCategoryId !== "space") return null;
+
+  if (bookings.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><LayoutGrid size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "POR·시간대 · 공간임대" : "POR · Space"}</div>
+        </header>
+        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
+          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
+            {ko ? "예약·룸 데이터 입력 시 POR (점유율) + 시간대 분석" : "Enter bookings + rooms for POR"}
+          </div>
+          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
+            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
+          </button>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article style={cardStyle}>

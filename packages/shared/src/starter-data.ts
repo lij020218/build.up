@@ -22,13 +22,13 @@ export type StarterIndustryCategory = {
 const officialFreshness: FreshnessMeta = {
   status: "fresh",
   label: "Official source reviewed",
-  lastCheckedAt: "2026-03-19T09:00:00+09:00",
-  nextReviewAt: "2026-03-26T09:00:00+09:00",
+  lastCheckedAt: "2026-05-25T09:00:00+09:00",
+  nextReviewAt: "2026-08-25T09:00:00+09:00",
   sources: [
     {
       sourceName: "Government and official provider source",
       sourceUrl: "https://example.com/official-source",
-      verifiedAt: "2026-03-19T09:00:00+09:00",
+      verifiedAt: "2026-05-25T09:00:00+09:00",
       confidence: "high"
     }
   ]
@@ -37,14 +37,14 @@ const officialFreshness: FreshnessMeta = {
 const reviewSoonFreshness: FreshnessMeta = {
   status: "review_soon",
   label: "Review due soon",
-  lastCheckedAt: "2026-03-15T09:00:00+09:00",
-  nextReviewAt: "2026-03-22T09:00:00+09:00",
+  lastCheckedAt: "2026-05-22T09:00:00+09:00",
+  nextReviewAt: "2026-08-22T09:00:00+09:00",
   notes: "Recheck district lease and competition changes before final contract.",
   sources: [
     {
       sourceName: "District commercial trend source",
       sourceUrl: "https://example.com/district-trends",
-      verifiedAt: "2026-03-15T09:00:00+09:00",
+      verifiedAt: "2026-05-22T09:00:00+09:00",
       confidence: "medium"
     }
   ]
@@ -1096,13 +1096,30 @@ export const starterBudgetPresets = [
   { id: "budget-200m", label: "200M KRW", value: 200000000 }
 ] as const;
 
-export const starterOpenDatePresets = [
-  { id: "open-next-month", label: "Next month", value: "2026-04-30" },
-  { id: "open-three-months", label: "In 3 months", value: "2026-06-30" },
-  { id: "open-six-months", label: "In 6 months", value: "2026-09-30" },
-  { id: "open-nine-months", label: "In 9 months", value: "2026-12-31" },
-  { id: "open-next-year", label: "Next year", value: "2027-03-31" }
-] as const;
+/** 오늘 기준으로 상대 날짜를 YYYY-MM-DD 로 계산. */
+function _addMonths(base: Date, months: number): string {
+  const d = new Date(base);
+  d.setMonth(d.getMonth() + months);
+  // 말일 보정: setMonth 가 31일→다음달로 넘어갈 수 있으므로 해당 월 말일로 고정.
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(d.getDate(), last));
+  return d.toISOString().slice(0, 10);
+}
+
+/** 오픈 목표일 프리셋 — 항상 오늘 기준으로 동적 산출 (하드코딩 금지). */
+export function getStarterOpenDatePresets() {
+  const now = new Date();
+  return [
+    { id: "open-next-month",   label: "Next month",   value: _addMonths(now, 1)  },
+    { id: "open-three-months", label: "In 3 months",  value: _addMonths(now, 3)  },
+    { id: "open-six-months",   label: "In 6 months",  value: _addMonths(now, 6)  },
+    { id: "open-nine-months",  label: "In 9 months",  value: _addMonths(now, 9)  },
+    { id: "open-next-year",    label: "Next year",     value: _addMonths(now, 12) },
+  ];
+}
+
+/** @deprecated getStarterOpenDatePresets() 를 사용할 것. 하위 호환용 alias. */
+export const starterOpenDatePresets = getStarterOpenDatePresets();
 
 export const starterLocationOptions: RecommendationItem[] = [
   {
@@ -2146,9 +2163,9 @@ export const starterStageFlow: RoadmapStageState[] = [
     whyNow: "Selling online without a telecom sales filing is a legal violation — this must be done before going live.",
     completionRule: {
       kind: "required_tasks",
-      requiredTaskIds: ["business-registered-online", "telecom-sale-filed"]
+      requiredTaskIds: ["business-registered-online", "escrow-registered", "telecom-sale-filed"]
     },
-    taskIds: ["business-registered-online", "telecom-sale-filed"],
+    taskIds: ["business-registered-online", "escrow-registered", "telecom-sale-filed"],
     riskIds: [],
     // 2026-05-12 P3: online-registration → biz-registration (was sourcing-setup).
     //   사업자등록 + 통신판매 직후 통장·세무사 결정 → tax → loan → 재고 발주 순서.

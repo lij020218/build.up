@@ -221,7 +221,7 @@ export function LaunchGtmStage() {
                   Icon: CreditCard,
                   title: "결제·전환 (Billing)",
                   why: "\"사람들이 돈을 낼 것인가?\" 가장 중요한 질문에 답. 결제 안 붙으면 PMF 측정 불가. ★ 한국 사업자: 국내 결제는 토스페이먼츠 1순위 (DX·5일 정산·카카오페이/네이버페이/애플페이 통합). 글로벌 USD 결제는 Stripe 또는 Paddle (MoR로 VAT 자동).",
-                  todo: ["가격 결정 (per-seat / 하이브리드 / 사용량 — 2026 표준은 base + usage 하이브리드 61%)", "한국 PG 가맹 심사 (1-2주) — 토스페이먼츠·KG이니시스·NICE페이먼츠 중 1개", "글로벌 (USD) 시 Stripe/Paddle 듀얼 셋업", "무료→유료 트리거 + 청약철회 14일 정책 (전자상거래법)"],
+                  todo: ["가격 결정 (per-seat / 하이브리드 / 사용량 — 2026 표준은 base + usage 하이브리드 61%)", "한국 PG 가맹 심사 (1-2주) — 토스페이먼츠·KG이니시스·NICE페이먼츠 중 1개", "글로벌 (USD) 시 Stripe/Paddle 듀얼 셋업", "무료→유료 트리거 + 청약철회 7일 정책 (전자상거래법 §17 — 7일 법적 의무, SaaS는 14일 자율 운영도 가능)"],
                   tools: [
                     { name: "토스페이먼츠", url: "https://www.tosspayments.com", price: "수수료 ~3.3% (등급별)" },
                     { name: "PortOne (구 아임포트)", url: "https://portone.io", price: "PG 5개 통합 게이트웨이" },

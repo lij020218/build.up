@@ -2,6 +2,7 @@
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
+import { getKstDate } from "../../../utils/business-day";
 
 export function WeeklySummaryCard() {
   const d = useDashboardCtx();
@@ -10,14 +11,14 @@ export function WeeklySummaryCard() {
   const ko = language === "ko";
   const entries = dailyEntries as { date: string; sales: number; customers: number }[];
   const now = new Date();
-  const todayIso = now.toISOString().slice(0, 10);
+  const todayIso = getKstDate(now);
   const dayOfWeek = now.getDay();
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const thisMonday = new Date(now); thisMonday.setDate(now.getDate() + mondayOffset); thisMonday.setHours(0, 0, 0, 0);
   const lastMonday = new Date(thisMonday); lastMonday.setDate(lastMonday.getDate() - 7);
   const lastSunday = new Date(thisMonday); lastSunday.setDate(lastSunday.getDate() - 1);
 
-  const toIso = (d: Date) => d.toISOString().slice(0, 10);
+  const toIso = (d: Date) => getKstDate(d);
   const thisWeek = entries.filter(e => e.date >= toIso(thisMonday) && e.date <= todayIso);
   const lastWeek = entries.filter(e => e.date >= toIso(lastMonday) && e.date <= toIso(lastSunday));
 

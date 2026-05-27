@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const rateLimit = checkSimpleRateLimit({
+  const rateLimit = await checkSimpleRateLimit({
     key: `contractors:${auth.userId}`,
     limit: 10,
     windowMs: 60_000,

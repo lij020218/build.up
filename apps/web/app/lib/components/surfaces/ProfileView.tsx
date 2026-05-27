@@ -11,7 +11,10 @@ import { CsvUploadCard } from "../profile/CsvUploadCard";
 import { CodefConnectCard } from "../profile/CodefConnectCard";
 import { PopbillConnectCard } from "../profile/PopbillConnectCard";
 import { SaasMetricsConnectCard } from "../profile/SaasMetricsConnectCard";
+import { SubscriptionWebhookConnectCard } from "../profile/SubscriptionWebhookConnectCard";
+import { SubscriptionPlanManager } from "../dashboard/SubscriptionPlanManager";
 import { DashboardLayoutCard } from "../profile/DashboardLayoutCard";
+import { formatKrw } from "../../utils/format-krw";
 import { StoreNameInput } from "../stages/shared/StoreNameInput";
 import { BusinessHoursInput } from "../stages/shared/BusinessHoursInput";
 
@@ -225,14 +228,37 @@ export function ProfileView() {
       {/* ── 카드 3.1: 대시보드 카드 표시 설정 (2026-05-11) ── */}
       <DashboardLayoutCard ko={ko} />
 
-      {/* ── 카드 3.5: 외부 데이터 연결 ── */}
+      {/* ── 카드 3.2: 구독 관리 (2026-05-27 추가) ─────────────────────────
+       *   대시보드 Tier 3 와 동일한 SubscriptionPlanManager + SubscriptionWebhookConnectCard 를
+       *   "내 설정" 에서도 노출. 사장님이 대시보드 또는 설정 어느 쪽에서든 플랜·구독자 관리 가능.
+       *
+       *   분기: usesSubscriptions === true 일 때만 (대시보드와 동일 SSOT).
+       *   참고: 대시보드 Tier3Operations.tsx 와 동일한 컴포넌트 → 같은 store 를 보므로
+       *        한쪽에서 추가/삭제하면 다른 쪽에 즉시 반영.
+       */}
+      {d.usesSubscriptions ? (
+        <>
+          <SubscriptionPlanManager d={d} ko={ko} fmt={formatKrw} />
+          <SubscriptionWebhookConnectCard ko={ko} />
+        </>
+      ) : null}
+
+      {/* ── 카드 3.5: 외부 데이터 연결 ──────────────────────────────────────
+       *   순서 원칙 (2026-05-27): 사용자가 바로 이해하는 방식부터.
+       *     1) CSV 업로드      — 가장 단순, 누구나 가능
+       *     2) GA4 / SaaS 지표 — startup-tech 만 (내부 가드). 1-click OAuth
+       *     3) 결제 연동       — PortOne·Toss·Popbill·Codef (영수증·매출 자동 동기화)
+       *
+       *   Webhook · Pull API 는 SaasMetricsConnectCard 내부 "고급 연결 (개발자용)"
+       *   토글 안에 숨김 — 비개발자 사장님이 압도되지 않도록.
+       */}
+      <CsvUploadCard ko={ko} />
+      {/* 스타트업 업종 사장님 자기 제품 사용자 수 자동 수집 (내부에서 industry 가드) */}
+      <SaasMetricsConnectCard ko={ko} industryCategoryId={d.industryCategoryId} />
       <PortOneConnectCard ko={ko} />
       <TossPlaceConnectCard ko={ko} />
       <PopbillConnectCard ko={ko} />
       <CodefConnectCard ko={ko} />
-      <CsvUploadCard ko={ko} />
-      {/* 스타트업 업종 사장님 자기 제품 사용자 수 자동 수집 (내부에서 industry 가드) */}
-      <SaasMetricsConnectCard ko={ko} industryCategoryId={d.industryCategoryId} />
 
       {/* ── 카드 4: 계정 관리 ── */}
       <article style={{ ...card, marginTop: "12px" }}>

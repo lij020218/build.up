@@ -14,6 +14,7 @@ import {
   type RitualIconKey,
   type RitualConditionContext,
 } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";
 
@@ -64,7 +65,7 @@ function resolve(item: DailyRitualItem, ko: boolean, triggerLabel?: string): Res
  *  • State: localStorage `daily-ops-{YYYY-MM-DD}-{itemId}`, 자정 자동 리셋
  */
 export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId, startupType, condition }: Props) {
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => getKstDate(new Date()), []);
   const [checks, setChecks] = useState<Record<string, boolean>>({});
   const [collapsed, setCollapsed] = useState(false);
 

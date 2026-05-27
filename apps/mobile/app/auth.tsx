@@ -46,7 +46,8 @@ export default function AuthScreen() {
   const handleSignup = () =>
     run(async () => {
       await signUpWithEmail(supabase, {
-        name,
+        firstName: name,
+        lastName: "",
         email,
         password
       });

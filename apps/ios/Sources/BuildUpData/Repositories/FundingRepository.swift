@@ -356,7 +356,8 @@ public actor FundingRepository {
 
     public init(
         supabase: SupabaseClient,
-        baseURL: URL = URL(string: "https://buildup.kr")!,
+        // ⚠️ 2026-05-25: buildup.kr DNS A 레코드 미설정 → Vercel 배포 URL 사용.
+        baseURL: URL = URL(string: "https://build-up-gamma.vercel.app")!,
         urlSession: URLSession = .shared
     ) {
         self.supabase = supabase

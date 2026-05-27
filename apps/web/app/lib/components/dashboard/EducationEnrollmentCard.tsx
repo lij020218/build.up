@@ -41,35 +41,22 @@ import {
   expiringMembers,
   newMemberCount,
 } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 
 export function EducationEnrollmentCard({ ko, industryCategoryId }: Props) {
+  // ⚠️ 2026-05-25 audit fix: Rules of Hooks 위반 수정 — hook을 early return 앞으로 이동.
   const members = useOperationsStore((s) => s.members);
-
-  if (industryCategoryId !== "education") return null;
-  if (!members || members.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><GraduationCap size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "재등록 + 학생 잔존 · 교육" : "Re-enrollment · Education"}</div>
-        </header>
-        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
-          {ko ? "학생 데이터를 입력하면 재등록 D-14 + cohort 잔존율 분석이 시작됩니다 (내 가게 > 회원 관리)" : "Enter student data to unlock re-enrollment analysis"}
-        </div>
-      </article>
-    );
-  }
 
   const analysis = useMemo(() => {
     const now = new Date();
     // 2026-05-13 — SSOT 사용 (cohort-retention.ts).
     //   학원 cohort 윈도우 = ±14일 (학부모 결정 시간 표준).
     //   1년 cohort 는 long retention 강조 — Spider Strategies·Brightwheel.
-    const todayStr = now.toISOString().slice(0, 10);
+    const todayStr = getKstDate(now);
     const active = members.filter((m) => m.endDate && m.endDate >= todayStr);
 
     // D-14 재등록 임박 (한국 학원 월 단위 cycle)
@@ -150,6 +137,22 @@ export function EducationEnrollmentCard({ ko, industryCategoryId }: Props) {
       topAction,
     };
   }, [members, ko]);
+
+  // hook 호출 끝 — 조건부 렌더 안전.
+  if (industryCategoryId !== "education") return null;
+  if (!members || members.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><GraduationCap size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "재등록 + 학생 잔존 · 교육" : "Re-enrollment · Education"}</div>
+        </header>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+          {ko ? "학생 데이터를 입력하면 재등록 D-14 + cohort 잔존율 분석이 시작됩니다 (내 가게 > 회원 관리)" : "Enter student data to unlock re-enrollment analysis"}
+        </div>
+      </article>
+    );
+  }
 
   const feesManwon = Math.round(analysis.monthlyFeesKrw / 10000);
 

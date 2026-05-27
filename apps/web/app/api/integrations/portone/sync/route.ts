@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
   }
-  const rl = checkSimpleRateLimit({
+  const rl = await checkSimpleRateLimit({
     key: `portone-sync:${auth.userId}`,
     limit: 6,
     windowMs: 60_000,

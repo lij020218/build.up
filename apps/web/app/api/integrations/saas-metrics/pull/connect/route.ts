@@ -20,6 +20,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../../_lib/auth";
 import { getSupabaseAdmin } from "../../../../_lib/supabase-admin";
 import { envelopeEncrypt, isKekAvailable, maskSecret } from "../../../../_lib/envelope-crypto";
+import { isValidHttpsUrl } from "../../../../_lib/url-guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -30,15 +31,6 @@ type ConnectBody = {
   funnel_mode?: unknown;
   label?: unknown;
 };
-
-function isValidHttpsUrl(raw: string): boolean {
-  try {
-    const u = new URL(raw);
-    return u.protocol === "https:" && !!u.hostname;
-  } catch {
-    return false;
-  }
-}
 
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);

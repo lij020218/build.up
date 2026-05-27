@@ -38,7 +38,9 @@ public struct DailyHubView: View {
 
     private var kpiCells: [KpiCellData] {
         let totalRev = mock.entries.reduce(0.0) { $0 + $1.sales }
-        let yesterdayEntry = mock.entries.sorted { $0.date < $1.date }.last
+        // ⚠️ 2026-05-25 fix: 이전 `.sorted.last` 는 "가장 최근 entry" 라 어제 미입력 시
+        //    3일 전 데이터가 "어제 매출" 로 표시되는 거짓말 버그. 정확히 어제 날짜로 검색.
+        let yesterdayEntry = mock.entries.yesterdayEntry()
         let yesterdaySales = yesterdayEntry?.sales ?? 0
         let yesterdayCust = yesterdayEntry?.customers ?? 0
         let avgTicket = yesterdayCust > 0 ? yesterdaySales / Double(yesterdayCust) : 0
@@ -112,7 +114,7 @@ public struct DailyHubView: View {
             .padding(.top, BUSpacing.md)
             .padding(.bottom, BUSpacing.md)
         }
-        .background(BUBackgroundSurface())
+        // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
     }
 
     private var sectionEyebrow: some View {

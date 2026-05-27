@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
+import { getKstDate } from "../../utils/business-day";
 
 export function ProductSalesEntry({
   d,
@@ -74,7 +75,7 @@ export function ProductSalesEntry({
     d.setDailyCustomersInput(String(totalQty));
 
     // 2. 바로 저장 실행
-    const entryDate = d.dailyDateInput || new Date().toISOString().slice(0, 10);
+    const entryDate = d.dailyDateInput || getKstDate();
     const allE = d.dailyEntries as Array<{ date: string; sales: number; customers: number; productSales?: Record<string, number> }>;
     const existing = allE.find((e) => e.date === entryDate);
 
@@ -155,7 +156,7 @@ export function ProductSalesEntry({
       {expanded && (() => {
         // 오늘 기록된 상품별 판매 내역 (이전에 저장된 것)
         const todayLog = (d.dailyEntries as Array<{ date: string; sales: number; customers: number; productSales?: Record<string, number> }>)
-          .find((e) => e.date === d.dailyDateInput || e.date === new Date().toISOString().slice(0, 10));
+          .find((e) => e.date === d.dailyDateInput || e.date === getKstDate());
         const savedProductSales = (todayLog as { productSales?: Record<string, number> } | undefined)?.productSales;
 
         return (

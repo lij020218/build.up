@@ -21,7 +21,10 @@ import {
 //   출처: 고용노동부 2025-08 고시 (2026.1.1 시행) — moel.go.kr news/enews 18144.
 const WAGE_2026 = LEGAL.MINIMUM_WAGE_HOURLY; // 10,320원/h
 const WAGE_2026_DISPLAY = WAGE_2026.toLocaleString("en-US"); // "10,320"
-const MONTH_HOURS = 209; // 주 40h × 4.345주 (주휴수당 별도)
+// ⚠️ 2026-05-25 audit fix: 이전 주석 "주휴수당 별도" 는 거짓.
+//   209h = (주 40h + 주휴 8h) × 4.345주 — 주휴수당이 이미 포함된 「유급휴일 포함 월 환산 시간」.
+//   고용노동부 표준. 시급 × 209 = 주휴 포함 월급. 별도 주휴를 다시 더하면 이중계산.
+const MONTH_HOURS = 209; // (40 + 주휴 8) × 4.345 — 주휴수당 「포함」 월 환산
 const MONTH_WAGE_2026 = WAGE_2026 * MONTH_HOURS; // 2,156,880원
 const MONTH_WAGE_2026_DISPLAY = MONTH_WAGE_2026.toLocaleString("en-US"); // "2,156,880"
 // 주휴수당 포함 예시: 시급 × 주시간 + 시급 × 8h

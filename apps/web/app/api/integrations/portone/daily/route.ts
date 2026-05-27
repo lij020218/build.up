@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
   }
-  const rl = checkSimpleRateLimit({
+  const rl = await checkSimpleRateLimit({
     key: `portone-daily:${auth.userId}`,
     limit: 60,
     windowMs: 60_000,

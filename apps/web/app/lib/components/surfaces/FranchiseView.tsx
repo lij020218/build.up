@@ -86,7 +86,7 @@ export function FranchiseView() {
       </div>
 
       {/* Brand cards grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
+      <div className="bento-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
         {sorted.map(fb => {
           const overall = computeOverallScore(fb.scores);
           const hasDetailedData = !!(fb.sources?.length || fb.pros || fb.cons);
@@ -121,7 +121,10 @@ export function FranchiseView() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.4 }}>{fb.tagline[language]}</div>
+                  <div style={{
+                    fontSize: "13px", color: "var(--muted)", lineHeight: 1.4,
+                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
+                  }}>{fb.tagline[language]}</div>
                 </div>
                 <div style={{
                   width: 48, height: 48, borderRadius: 24,
@@ -206,7 +209,8 @@ export function FranchiseView() {
 
 // ── 4 surface 공통 page/header 패턴 ──
 const pageStyle: React.CSSProperties = {
-  width: "min(960px, calc(100vw - 32px))",
+  maxWidth: "960px",   // width: "min(960px, calc(100vw-32px))" 는 부모 padding 을 무시해 ~992px 뷰포트에서 오버플로우 발생
+  width: "100%",
   margin: "0 auto",
   padding: "24px 0 80px",
   display: "flex",

@@ -46,8 +46,12 @@ public struct AppRoot: View {
     @State private var notificationFlow = NotificationPermissionFlow()
     @State private var showNotificationSheet = false
     @State private var selectedTab: Tab = .home
+    /// 전역 "진행 초기화" 코디네이터 — ProfileView 가 트리거, AppRoot 가 오버레이 표시.
+    @State private var resetCoordinator = ResetCoordinator()
     /// DEBUG 빌드에서 SignInView 우회 — 시뮬레이터 시각 검증용.
     @State private var demoMode: MockScenario? = nil
+    /// 기존 가게 등록 완료 후 loadDashboardIfNeeded 에서 StoreInfo / AppStorage 에 적용할 임시 저장.
+    @State private var pendingRegistration: StoreRegistration? = nil
 
     public enum Tab: Hashable, Sendable {
         case home
@@ -105,11 +109,16 @@ public struct AppRoot: View {
                 if let store = dashboardStore {
                     // 신규 사장님 — 아무것도 안 한 상태 → OnboardingChoiceView
                     // (웹과 동일: category 미정 + 영업 미시작 + 매출/비용 데이터 0)
+                    // ⚠️ 2026-05-25: .animation + .transition 추가 — "진행 초기화" 후
+                    //   clearAllAppStorage() → needsOnboarding() 재평가 시 fade 전환.
+                    Group {
                     if needsOnboarding(store: store) {
                         OnboardingFlow(
                             store: store,
-                            selectedTab: $selectedTab
+                            selectedTab: $selectedTab,
+                            pendingRegistration: $pendingRegistration
                         )
+                        .transition(.opacity)
                     } else {
                         MainTabs(
                             store: store,
@@ -117,6 +126,7 @@ public struct AppRoot: View {
                             coordinator: coordinator,
                             selectedTab: $selectedTab
                         )
+                        .transition(.opacity)
                         .task {
                             await notificationFlow.refresh()
                             #if DEBUG
@@ -135,6 +145,8 @@ public struct AppRoot: View {
                             }
                         }
                     }
+                    } // Group
+                    .animation(.easeInOut(duration: 0.45), value: needsOnboarding(store: store))
                 } else {
                     AuthenticatedLoadingView()
                         .task {
@@ -167,6 +179,19 @@ public struct AppRoot: View {
             }
         }
         .environment(roadmapStore)
+        .environment(resetCoordinator)
+        .overlay {
+            // "진행 초기화" 풀스크린 오버레이 — fade-in/out.
+            //   오버레이가 표시되는 동안 store.resetAll() + clearAllAppStorage() 가 호출되어
+            //   AppRoot.body 가 needsOnboarding() = true 로 재평가 → MainTabs → OnboardingFlow 전환.
+            //   오버레이가 가려주므로 사용자는 깔끔한 fade 만 봄.
+            if resetCoordinator.isResetting {
+                ResetAnimationOverlay(progress: resetCoordinator.progress)
+                    .transition(.opacity)
+                    .zIndex(999)
+            }
+        }
+        .animation(.easeInOut(duration: 0.35), value: resetCoordinator.isResetting)
     }
 
     @MainActor
@@ -220,6 +245,25 @@ public struct AppRoot: View {
         )
         let storeInfo = StoreInfoStore(repository: storeInfoRepo)
         await storeInfo.load()
+        // 기존 가게 등록 경로 — 등록 시 수집한 StoreInfo 필드 적용 (Supabase 아직 없는 경우)
+        if let reg = pendingRegistration {
+            storeInfo.commit { s in
+                if !reg.weeklyHolidays.isEmpty   { s.weeklyHolidays = reg.weeklyHolidays }
+                if !reg.addressRoad.isEmpty       { s.addressRoad = reg.addressRoad }
+                if !reg.bizRegistrationNumber.isEmpty { s.bizRegistrationNumber = reg.bizRegistrationNumber }
+                if !reg.obtainedPermits.isEmpty {
+                    s.permits = reg.obtainedPermits.map {
+                        Permit(id: $0.id, name: $0.name)
+                    }
+                }
+            }
+            await storeInfo.flushImmediate()
+            // 월 비용
+            if reg.monthlyCosts.total > 0 {
+                await store.upsertCosts(reg.monthlyCosts)
+            }
+            pendingRegistration = nil
+        }
         self.storeInfoStore = storeInfo
 
         // 로드맵 store 도 Supabase 연결 — 기존 로컬 decisions 보존 + 원격 hydrate.
@@ -296,6 +340,7 @@ private actor FallbackStoreInfoRepository: StoreInfoRepositoryProtocol {
 private struct OnboardingFlow: View {
     let store: DashboardStore
     @Binding var selectedTab: AppRoot.Tab
+    @Binding var pendingRegistration: StoreRegistration?
     @Environment(RoadmapStore.self) private var roadmapStore
 
     @State private var path: OnboardingPath? = nil
@@ -339,6 +384,7 @@ private struct OnboardingFlow: View {
             case .existing:
                 ExistingStoreRegistrationView(
                     onComplete: { reg in
+                        // DashboardStore — 즉시 적용 가능
                         store.setProfile(
                             storeName: reg.storeName,
                             userName: store.userName,
@@ -347,12 +393,92 @@ private struct OnboardingFlow: View {
                             currentCash: nil,
                             businessLaunched: true
                         )
+
+                        // AppStorage 키 — UserDefaults 직접 기록
+                        // (RoadmapStage 뷰들이 @AppStorage 로 이 값을 읽음)
+                        let ud = UserDefaults.standard
+                        // 로드맵 cluster
+                        ud.set(StarterIndustryData.cluster(
+                            for: StarterIndustryData.options.first { $0.id == reg.industryOptionId }
+                                ?? StarterIndustryData.options[0]
+                        ), forKey: "roadmap.cluster")
+                        ud.set(reg.industryOptionId, forKey: "roadmap.selectedIndustryId")
+                        ud.set(reg.startupType, forKey: "stage.startupType.selected")
+                        // 세무·보험
+                        ud.set(reg.vatType, forKey: "reg.taxTypeChoice")
+                        ud.set(reg.cpaDecision, forKey: "insTax.cpaChoice")
+                        // 영업 시간 (BusinessModelStage AppStorage 키)
+                        if let openHour = Int(reg.businessOpenTime.prefix(2)) {
+                            ud.set(openHour, forKey: "stage.bizModel.openHour")
+                        }
+                        if let closeHour = Int(reg.businessCloseTime.prefix(2)) {
+                            ud.set(closeHour, forKey: "stage.bizModel.closeHour")
+                        }
+                        // POS
+                        if !reg.posId.isEmpty && reg.posId != "none" {
+                            ud.set(reg.posId, forKey: "ops.pos.selected")
+                        }
+                        // 배달 플랫폼
+                        for pid in reg.deliveryPlatforms {
+                            ud.set(true, forKey: "ops.delivery.\(pid)")
+                        }
+                        // SNS
+                        for sid in reg.snsChannels {
+                            ud.set(true, forKey: "ops.sns.\(sid)")
+                        }
+
+                        // StoreInfo / 비용 — loadDashboardIfNeeded 이후에 적용
+                        pendingRegistration = reg
+
                         selectedTab = .home  // 운영 대시보드로
                     },
                     onBack: { path = nil }
                 )
             case .ai:
-                AIRoadmapPlaceholderView(onBack: { path = nil })
+                AIRoadmapWizardView(
+                    webAppURL: BUSupabase.shared.env.webAppURL,
+                    onComplete: { result, nameInput in
+                        // cluster: industryCategoryId → BusinessCluster rawValue
+                        let clusterRaw: String
+                        switch result.parsed.industryCategoryId {
+                        case "online-digital": clusterRaw = "online-digital"
+                        case "startup-tech":   clusterRaw = "startup-tech"
+                        default:               clusterRaw = "offline-food"
+                        }
+                        roadmapStore.setCluster(clusterRaw)
+
+                        // 상호명: 사용자 입력 → AI 추천 → 기본값
+                        let aiName = result.identity?.suggestedStoreName ?? ""
+                        let finalName = !nameInput.isEmpty ? nameInput : (!aiName.isEmpty ? aiName : "내 가게")
+
+                        // industryCategoryId → IndustryCategory
+                        let cat: IndustryCategory
+                        switch result.parsed.industryCategoryId {
+                        case "food":           cat = .restaurant
+                        case "cafe-dessert":   cat = .cafe
+                        case "retail":         cat = .retail
+                        case "beauty":         cat = .beauty
+                        case "fitness":        cat = .fitness
+                        case "education":      cat = .education
+                        case "pet":            cat = .pet
+                        case "living-service": cat = .livingService
+                        case "space":          cat = .space
+                        case "online-digital": cat = .ecommerce
+                        case "startup-tech":   cat = .startupTech
+                        default:               cat = .restaurant
+                        }
+                        store.setProfile(
+                            storeName: finalName,
+                            userName: store.userName,
+                            daysSinceLaunch: 0,
+                            category: cat,
+                            currentCash: nil,
+                            businessLaunched: false
+                        )
+                        selectedTab = .roadmap
+                    },
+                    onBack: { path = nil }
+                )
             }
         }
     }
@@ -425,49 +551,6 @@ private struct OnboardingFlow: View {
 
 }
 
-/// AI 로드맵 — 추후 작업. 현재는 안내 + 뒤로가기.
-private struct AIRoadmapPlaceholderView: View {
-    let onBack: () -> Void
-
-    var body: some View {
-        ZStack {
-            BUBackgroundSurface()
-            VStack(spacing: 18) {
-                Spacer()
-                ZStack {
-                    Circle()
-                        .fill(BUColor.midnight.opacity(0.08))
-                        .frame(width: 80, height: 80)
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 32, weight: .regular))
-                        .foregroundStyle(BUColor.midnight)
-                }
-                Text("AI 로드맵")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(BUColor.midnightDeep)
-                    .tracking(-0.6)
-                Text("아이디어 한 줄로 예산·상권·공급처·일정까지 자동 설계.\n곧 출시합니다.")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .padding(.horizontal, BUSpacing.lg)
-                Spacer()
-                Button(action: onBack) {
-                    Text("뒤로")
-                        .font(.system(size: 14, weight: .heavy))
-                        .foregroundStyle(BUColor.midnightInk)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 11)
-                        .background(BUColor.midnight.opacity(0.06), in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .padding(.bottom, 32)
-            }
-        }
-    }
-}
-
 private struct AuthenticatedLoadingView: View {
     var body: some View {
         ZStack {
@@ -538,7 +621,7 @@ private struct MainTabs: View {
             case .analytics:
                 MyStoreView(store: store, storeInfo: storeInfo)
             case .profile:
-                ProfileView(store: store, coordinator: coordinator)
+                ProfileView(store: store, coordinator: coordinator, storeInfo: storeInfo)
             }
         }
         .overlay(alignment: .bottom) {
@@ -797,9 +880,12 @@ private struct BuildUpLiquidSidebar: View {
                 Button(action: onClose) {
                     Image(systemName: "xmark")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(BUColor.inkMuted)
+                        .foregroundStyle(BUColor.ink)
                         .frame(width: 32, height: 32)
-                        .background(Color.white.opacity(0.56), in: Circle())
+                        .background(BUColor.midnight.opacity(0.08), in: Circle())
+                        .overlay(
+                            Circle().strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 0.6)
+                        )
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("사이드바 닫기")
@@ -820,25 +906,42 @@ private struct BuildUpLiquidSidebar: View {
 
             Spacer(minLength: 0)
 
-            Text("웹 surface와 동일한 순서")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(BUColor.inkMuted)
-                .padding(.bottom, 24)
+            // 2026-05-25 사장님 신고: "웹 surface와 동일한 순서" 개발자 문구 노출 — 제거.
         }
         .padding(.horizontal, 18)
         .frame(width: 292)
         .frame(maxHeight: .infinity)
+        // ⚠️ 2026-05-25 사장님 피드백 (Claude 앱 스타일):
+        //   "다이나믹 아일랜드나 아래 하단의 채움도 신경써서" — 사이드바가 전체 화면 높이로
+        //   safe area (상태바·홈 인디케이터) 까지 배경이 깔리도록. 둥근 모서리 제거.
+        //   이전: cornerRadius 30 + padding 10 → 떠있는 카드처럼 보임.
+        //   변경: 직사각형 풀-높이 + 좌측 0 padding. 우측 미세 그림자만 유지.
         .background(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(.ultraThinMaterial)
+            Rectangle()
+                .fill(Color.white)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 30, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.58), lineWidth: 1)
+                    // 상단 미세 틴트 — 브랜드감 + 깊이감 유지
+                    LinearGradient(
+                        colors: [
+                            Color.white,
+                            Color(red: 0.98, green: 0.98, blue: 0.99),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                 )
-                .shadow(color: Color.black.opacity(0.12), radius: 34, x: 0, y: 18)
+                .overlay(
+                    // 우측 경계선 — 본문과 구분
+                    HStack {
+                        Spacer()
+                        Rectangle()
+                            .fill(BUColor.midnight.opacity(0.08))
+                            .frame(width: 0.5)
+                    }
+                )
+                .shadow(color: Color.black.opacity(0.12), radius: 24, x: 4, y: 0)
+                .ignoresSafeArea()
         )
-        .padding(.leading, 10)
-        .padding(.vertical, 10)
     }
 }
 
@@ -858,7 +961,8 @@ private struct BuildUpSidebarRow: View {
                     .lineLimit(1)
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(selected ? BUColor.midnightInk : BUColor.inkMuted)
+            // 2026-05-25 사장님 신고: 미선택 탭이 거의 안 보이는 inkMuted → ink(진한 색)로.
+            .foregroundStyle(selected ? BUColor.midnightInk : BUColor.ink)
             .padding(.horizontal, 13)
             .frame(minHeight: 46)
             .background {
@@ -868,15 +972,15 @@ private struct BuildUpSidebarRow: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 15, style: .continuous)
                     .strokeBorder(
-                        selected ? Color.white.opacity(0.82) : Color.clear,
+                        selected ? BUColor.midnight.opacity(0.18) : Color.clear,
                         lineWidth: 1
                     )
             )
             .shadow(
-                color: selected ? Color.black.opacity(0.05) : .clear,
-                radius: 16,
+                color: selected ? Color.black.opacity(0.06) : .clear,
+                radius: 14,
                 x: 0,
-                y: 6
+                y: 4
             )
         }
         .buttonStyle(.plain)
@@ -886,14 +990,8 @@ private struct BuildUpSidebarRow: View {
     @ViewBuilder
     private var tabBackground: some View {
         if selected {
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.82),
-                    Color.white.opacity(0.56),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            // 선택 탭 — 흰색 단단 배경. 이전 0.82/0.56 그라디언트는 미세하게 투명해 가독성 저하.
+            Color.white
         } else {
             Color.clear
         }
@@ -1111,7 +1209,7 @@ struct DemoTabs: View {
                 MyStoreView(store: demoDashboardStore, storeInfo: demoStoreInfo)
             case .profile:
                 // Demo 모드: coordinator nil → dangerCard (로그아웃 / 계정 삭제) 숨김.
-                ProfileView(store: demoDashboardStore, coordinator: nil)
+                ProfileView(store: demoDashboardStore, coordinator: nil, storeInfo: demoStoreInfo)
         }
     }
 }

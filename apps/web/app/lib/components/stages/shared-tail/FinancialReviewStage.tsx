@@ -339,7 +339,7 @@ const SUB_INDUSTRY_FIELDS: Record<string, SubIndustryFieldsConfig> = {
   "smart-store": {
     labels: {
       ingredients: { ko: "매입 원가",          en: "Cost of goods",     hint: { ko: "상품 사입·도매 매입가",                en: "Wholesale buy-in" } },
-      sga:         { ko: "결제·플랫폼 수수료", en: "Payment / Platform",hint: { ko: "네이버 3.74%+매출연동 2%·쿠팡 4~10.9%", en: "Naver 5.74%/Coupang 4-10.9%" } },
+      sga:         { ko: "결제·플랫폼 수수료", en: "Payment / Platform",hint: { ko: "네이버 3.63%+매출연동 2%·쿠팡 4~10.8%", en: "Naver 3.63%/Coupang 4-10.8%" } },
       utilities:   { ko: "포장·배송 자재",     en: "Packaging / Ship",  hint: { ko: "박스·완충재·송장·택배비",              en: "Box/cushion/shipping" } },
       rent:        { ko: "창고·풀필먼트",      en: "Warehouse / FBA",   hint: { ko: "재택 운영 시 0 — 풀필먼트는 입출고비",  en: "0 if home/FBA per pick" } },
       other:       { ko: "반품·CS·기타",       en: "Returns / CS",      hint: { ko: "반품 회수·CS 인건·소모품",             en: "Returns/CS/supplies" } },

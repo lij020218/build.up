@@ -100,7 +100,10 @@ public struct FinancialReviewStageView: View {
         BUStageShell(
             stageId: stageId,
             title: "월 운영비",
-            stageEyebrow: "단계 20 · 월 운영비 검토",
+            // ⚠️ 2026-05-25 fix: "단계 20" 하드코딩 제거.
+            //    financial-review 는 온라인커머스 경로 14단계, 스타트업 18단계, 오프라인 20단계 등
+            //    클러스터별 위치가 다름. 단계 번호 없이 표시.
+            stageEyebrow: "월 운영비 검토",
             helperText: "매달 무조건 나가는 고정비 + 매출 연동 변동비 + 기타. \(cluster.categoryNounKo) Prime Cost(재료+인건비) 상한 \(benchmark.primeMaxPct)%.",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,

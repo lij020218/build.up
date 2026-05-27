@@ -271,12 +271,12 @@ export function FundraisingReadinessStage() {
               {(ko ? [
                 { mode: "indie", title: "1인 인디", line: "투자 X. 정부 보조금 (예비창업패키지 1억) + 매출이 답. 부트스트랩으로 $1M ARR 가능." },
                 { mode: "bootstrap", title: "부트스트랩", line: "정부지원 (TIPS·R&D) 우선 + 매출. 투자는 PMF 입증 후 시리즈A 만 검토." },
-                { mode: "seed", title: "시드 단계", line: "1-2억 시드 라운드 + TIPS 매칭으로 R&D 5억까지. 18-24개월 안에 시리즈A 마일스톤." },
+                { mode: "seed", title: "시드 단계", line: "1-2억 시드 라운드 + TIPS 총 8억 (R&D 5억 + 사업화 3억). 18-24개월 안에 시리즈A 마일스톤." },
                 { mode: "seriesA", title: "시리즈A 이상", line: "30-100억 시리즈A. ARR $1M+ + 18+개월 런웨이 + Net Burn < 2x ARR 표준." },
               ] : [
                 { mode: "indie", title: "Solo Indie", line: "No VC. Govt grant + revenue." },
                 { mode: "bootstrap", title: "Bootstrap", line: "Govt + revenue. VC only post-PMF." },
-                { mode: "seed", title: "Seed", line: "1-2억 + TIPS 5억. 18-24mo to Series A." },
+                { mode: "seed", title: "Seed", line: "1-2억 + TIPS total 8억 (R&D 5억 + biz 3억). 18-24mo to Series A." },
                 { mode: "seriesA", title: "Series A+", line: "30-100억. ARR $1M+ + 18mo runway." },
               ]).map((m) => {
                 const active = startupOperatingMode === m.mode;
@@ -522,7 +522,7 @@ export function FundraisingReadinessStage() {
                 {ko ? "콜드 이메일 답변율 < 2%. 아래 방법이 10배 효과적." : "Cold email <2% response. These work 10x better."}
               </div>
               {(ko ? [
-                { num: 1, title: "TIPS 운영사를 먼저 공략", detail: "TIPS 149개 운영사가 직접 투자. jointips.or.kr에서 우리 분야 운영사 찾고 포트폴리오 확인. 운영사 1억+ 선투자 → 정부 5억 매칭. 가장 현실적인 첫 투자.", url: "https://www.jointips.or.kr" },
+                { num: 1, title: "TIPS 운영사를 먼저 공략", detail: "TIPS 149개 운영사가 직접 투자. jointips.or.kr에서 우리 분야 운영사 찾고 포트폴리오 확인. 운영사 1억+ 선투자 → 정부 R&D 5억 + 사업화 3억 매칭 (총 8억). 가장 현실적인 첫 투자.", url: "https://www.jointips.or.kr" },
                 { num: 2, title: "액셀러레이터 데모데이 지원", detail: "SparkLabs·프라이머·블루포인트·매쉬업엔젤스. 3-6개월 프로그램 후 데모데이에서 VC 앞 피칭. 콜드 대비 10배. 선발율 3-5%, 여러 곳 동시 지원.", url: "https://www.k-startup.go.kr" },
                 { num: 3, title: "스타트업 행사에서 직접", detail: "넥스트라이즈·비론치·스타트업위크엔드·코리아핀테크위크. 30초 엘리베이터 피치 + 명함 대신 1페이지 요약 건네기.", url: "https://nextrise.kr" },
                 { num: 4, title: "따뜻한 소개 만들기", detail: "LinkedIn 에서 타겟 VC 의 포트폴리오 대표 찾고 공통 지인 통해 소개. \"OOO 대표 소개로 연락\" 이 콜드보다 10배. 액셀러레이터·멘토 활용.", url: "https://www.linkedin.com" },

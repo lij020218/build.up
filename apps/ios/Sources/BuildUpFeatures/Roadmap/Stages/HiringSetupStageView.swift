@@ -52,7 +52,18 @@ public struct HiringSetupStageView: View {
     private var weeklyHoliday: Int { Int(hours) >= 15 ? wage * 8 : 0 }
     private var weeklyTotal: Int { weeklyBase + weeklyHoliday }
     private var monthlyTotal: Int { Int(Double(weeklyTotal) * 4.345) }
-    private var employerInsurance: Int { Int(Double(monthlyTotal) * 0.088) } // 국민연금+건강+고용 약 8.8%
+
+    /// 사업주 4대보험 추가 부담 (2026년 정합화 — 음식점 기준 약 10.77%).
+    ///   국민연금 4.75% + 건강 3.595% + 장기요양 사업주분 0.4724%
+    ///   + 산재(업종별, 100%) + 고용 실업급여 사업주분 0.9% + 고용안정·직능 0.25%
+    /// 이전 0.088 (8.8%) 은 산재·장기요양 누락 → 음식점 월 약 4만원 과소 계상되어
+    /// 사장님이 채용 비용 잘못 추정하는 버그였음.
+    private var employerInsurance: Int {
+        let cluster = IndustryCluster.from(industryId: industryId)
+        let accidentDec = cluster.accidentInsuranceRatePct / 100.0
+        let totalRate = 0.0475 + 0.03595 + 0.004724 + accidentDec + 0.009 + 0.0025
+        return Int(Double(monthlyTotal) * totalRate)
+    }
 
     private let pages = ["공고", "계약서·임금", "보험·체크"]
 

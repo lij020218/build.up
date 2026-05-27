@@ -52,9 +52,11 @@ public struct BizRegistrationStageView: View {
     }
 
     // 이전 단계 상태 (read-only 요약용)
-    @AppStorage("reg.bizRegDone")        private var bizRegDone       = false
-    @AppStorage("reg.taxTypeChoice")     private var taxTypeChoice    = ""
-    @AppStorage("hiring.contractDone")   private var contractDone     = false
+    // ⚠️ 2026-05-25 fix: RegistrationSetupStageView 는 "stage.regSetup.*" 키를 사용.
+    //    "reg.*" 는 미작성 키라 항상 기본값(false/"")으로 읽혀 "미확인" 표시 고정되는 버그.
+    @AppStorage("stage.regSetup.bizRegDone")    private var bizRegDone    = false
+    @AppStorage("stage.regSetup.taxTypeChoice") private var taxTypeChoice = ""
+    @AppStorage("hiring.contractDone")          private var contractDone  = false
 
     public init() {}
 

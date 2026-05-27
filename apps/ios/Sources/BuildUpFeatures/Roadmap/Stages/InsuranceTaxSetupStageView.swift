@@ -4,12 +4,12 @@
 //  웹 SSOT: apps/web/app/lib/components/stages/offline/InsuranceTaxSetupStage.tsx
 //  stageId: "insurance-tax-setup"
 //
-//  2026 요율 (검증 완료):
-//    국민연금: 9.5% (각 4.75%) — 2026년 인상
-//    건강보험: 7.19% (각 3.595%) — 2026년 인상
-//    장기요양: 건강보험료의 0.9448%
-//    고용보험: 1.8% (각 0.9%) + 사업주 추가 0.25%
-//    산재보험: 0.8% (음식·도소매·숙박, 사업주 100%)
+//  2026 요율 (정부 고시 검증 — 2026-05-25 audit):
+//    국민연금: 9.5% (각 4.75%) — 2026.1 인상 (9% → 9.5%)
+//    건강보험: 7.19% (각 3.595%) — 2026.1 인상 (7.09% → 7.19%)
+//    장기요양: 임금의 0.9448% (= 건보료 × 13.14%) — 근로자·사업주 각 0.4724%
+//    고용보험: 1.8% (각 0.9%, 실업급여) + 사업주 추가 0.25%~ (고용안정·직업능력개발)
+//    산재보험: 0.8% (음식·도소매·숙박, 사업주 100% 부담)
 //    두루누리: 월보수 270만 미만 + 10인 미만 → 80% 국가 지원 (최대 36개월)
 //
 //  3-page (세그먼트):
@@ -49,20 +49,35 @@ public struct InsuranceTaxSetupStageView: View {
     private var accidentRateDecimal: Double { accidentRate / 100.0 }
 
     private var monthlyWage: Int { Int(monthlyWageText) ?? (WAGE_2026 * MONTH_HOURS) }
-    private var pensionEmployee: Int { Int(Double(monthlyWage) * 0.0475) }
-    private var healthEmployee: Int  { Int(Double(monthlyWage) * 0.03595) }
-    /// 사업주 부담 = 국민(4.75%) + 건강(3.595%) + 장기요양(0.9%) + 산재(업종별) + 고용(0.25%)
-    private var employerExtra: Int   { Int(Double(monthlyWage) * (0.0475 + 0.03595 + 0.009 + accidentRateDecimal + 0.0025)) }
+
+    // ⚠️ 2026-05-25 정합화 (사장님 audit):
+    //   장기요양 = 임금의 0.9448% (= 건보료 × 13.14%). 근로자·사업주 각 절반 0.4724%.
+    //   고용보험 실업급여 = 1.8% (각 0.9%). 사업주 추가 = 고용안정·직업능력개발 0.25%.
+    //   이전 계산식 누락 / 과대:
+    //     • 장기요양 사업주분 0.9% → 0.4724% 로 (절반만 사업주)
+    //     • 고용보험 사업주 실업급여 0.9% 완전 누락 — 추가
+    private var pensionEmployee: Int   { Int(Double(monthlyWage) * 0.0475) }
+    private var healthEmployee: Int    { Int(Double(monthlyWage) * 0.03595) }
+    private var ltcareEmployee: Int    { Int(Double(monthlyWage) * 0.004724) }  // 장기요양 근로자분
+    private var employmentEmployee: Int { Int(Double(monthlyWage) * 0.009) }    // 고용보험 근로자분 0.9%
+    private var employeeTotal: Int     { pensionEmployee + healthEmployee + ltcareEmployee + employmentEmployee }
+
+    /// 사업주 부담 = 국민(4.75%) + 건강(3.595%) + 장기요양 사업주분(0.4724%) + 산재(업종별, 100%)
+    ///              + 고용보험 실업급여 사업주분(0.9%) + 고용안정·직업능력개발(0.25%)
+    private var employerExtra: Int {
+        Int(Double(monthlyWage) * (0.0475 + 0.03595 + 0.004724 + accidentRateDecimal + 0.009 + 0.0025))
+    }
 
     private let pages = ["4대보험", "세무 세팅", "체크리스트"]
 
     private var canCompleteStage: Bool {
-        insRegDone && hometaxDone
+        insRegDone && hometaxDone && !cpaChoice.isEmpty
     }
 
     private var advanceHint: String {
         if !insRegDone { return "4대보험 신고 완료를 체크하세요" }
         if !hometaxDone { return "홈택스 사업장 등록 완료를 체크하세요" }
+        if cpaChoice.isEmpty { return "급여·세무 처리 방식을 선택하세요 (세무사 / 직접)" }
         return "보험·세무 셋업 완료 — 다음 단계로"
     }
 
@@ -128,12 +143,12 @@ public struct InsuranceTaxSetupStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("2026년 4대보험 요율")
+                    BUEyebrow("2026년 4대보험 요율 (정부 고시)")
                     let rates: [(String, String, String, String)] = [
-                        ("국민연금",   "9.5%", "근로자 4.75% / 사업주 4.75%", "2025년 9%에서 인상"),
-                        ("건강보험",   "7.19%","근로자 3.595% / 사업주 3.595%", "2026 인상"),
-                        ("장기요양",   "건강보험료의 0.9448%", "근로자·사업주 각 절반", ""),
-                        ("고용보험",   "1.8%", "근로자 0.9% / 사업주 0.9% + 추가 0.25%", "사업주 추가부담"),
+                        ("국민연금",   "9.5%", "근로자 4.75% / 사업주 4.75%", "2026.1 인상 (9% → 9.5%)"),
+                        ("건강보험",   "7.19%","근로자 3.595% / 사업주 3.595%", "2026.1 인상 (7.09% → 7.19%)"),
+                        ("장기요양",   "임금의 0.9448%", "근로자·사업주 각 0.4724% (= 건보료 × 13.14%)", "건강보험료 기준이 아닌 임금 기준"),
+                        ("고용보험",   "1.8%", "근로자 0.9% / 사업주 0.9% + 추가 0.25%↑", "추가 = 고용안정·직업능력개발 (사업주만)"),
                         ("산재보험",   String(format: "%.1f%%", accidentRate), "사업주 100% (근로자 부담 없음)", "\(cluster.categoryNounKo) 업종별 요율"),
                     ]
                     ForEach(rates, id: \.0) { name, rate, split, note in
@@ -166,10 +181,10 @@ public struct InsuranceTaxSetupStageView: View {
                 }
             }
 
-            // 부담 시뮬레이션
+            // 부담 시뮬레이션 (2026-05-25 정합화: 근로자 4축 모두 표시 + 합계)
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("사업주 부담 시뮬레이션")
+                    BUEyebrow("부담 시뮬레이션 (2026년 요율)")
                     HStack(spacing: BUSpacing.md) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("월 급여 (원)").font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
@@ -181,13 +196,28 @@ public struct InsuranceTaxSetupStageView: View {
                         }
                     }
                     Divider()
+                    Text("근로자 부담 (실수령액에서 차감)")
+                        .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
                     HStack {
                         simRow(label: "국민연금", value: pensionEmployee)
                         Spacer()
                         simRow(label: "건강보험", value: healthEmployee)
                         Spacer()
-                        simRow(label: "사업주 총부담", value: employerExtra, highlight: true)
+                        simRow(label: "장기요양", value: ltcareEmployee)
+                        Spacer()
+                        simRow(label: "고용보험", value: employmentEmployee)
                     }
+                    HStack {
+                        Spacer()
+                        simRow(label: "근로자 4축 합계", value: employeeTotal, highlight: true)
+                    }
+                    Divider()
+                    HStack {
+                        Spacer()
+                        simRow(label: "사업주 추가 부담", value: employerExtra, highlight: true)
+                    }
+                    Text("※ 사업주는 위 급여 외에 추가로 \(formatKRW(employerExtra))을 매월 부담합니다 (산재 포함).")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                 }
             }
 
@@ -317,6 +347,10 @@ public struct InsuranceTaxSetupStageView: View {
     }
 
     // MARK: - Helpers
+
+    private func formatKRW(_ value: Int) -> String {
+        "\(value.formatted())원"
+    }
 
     private func simRow(label: String, value: Int, highlight: Bool = false) -> some View {
         VStack(alignment: .center, spacing: 2) {

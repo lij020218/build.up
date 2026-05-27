@@ -1,13 +1,34 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
 import { getAnthropicApiKey } from "../../_lib/env";
+import { checkSimpleRateLimit, checkDailyRateLimit } from "../../_lib/rate-limit";
 import { generateInterviewScript } from "@build-up/ai";
 import type { InterviewInput } from "@build-up/ai";
+
+export const runtime = "nodejs";
+export const maxDuration = 60; // Vercel function timeout
 
 export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  const rl = await checkSimpleRateLimit({
+    key: `ai-interview:${auth.userId}`,
+    limit: 20,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: rl.status });
+
+  // 2026-05-27 보안: 일일 한도로 LLM 비용 폭탄 차단 (분당 한도만으로는 24h 지속 호출 가능)
+  const dailyLimit = await checkDailyRateLimit({
+    userId: auth.userId,
+    feature: "interview",
+    limit: 30,
+    message: "오늘 사용량을 초과했습니다. 내일 다시 시도해 주세요.",
+  });
+  if (!dailyLimit.ok) {
+    return NextResponse.json({ error: dailyLimit.error }, { status: dailyLimit.status });
   }
 
   const apiKey = getAnthropicApiKey();

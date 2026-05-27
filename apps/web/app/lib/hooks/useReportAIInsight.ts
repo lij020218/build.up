@@ -6,10 +6,11 @@ import { getReportInsightCache, setReportInsightCache, makeSnapshotHash } from "
 import type { ReportSnapshot, ReportPeriod } from "./useReportSnapshot";
 import type { MorningBriefingBrain } from "./useMorningBriefingBrain";
 import type { ReportInsightInput } from "@build-up/ai";
+import { getKstDate } from "../utils/business-day";
 
 function buildPeriodKey(period: ReportPeriod, now: Date): string {
   if (period === "day") {
-    return now.toISOString().slice(0, 10);
+    return getKstDate(now);
   }
   if (period === "week") {
     const dow = now.getDay();

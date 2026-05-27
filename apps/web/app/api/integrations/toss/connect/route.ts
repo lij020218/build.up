@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
 
-  const rl = checkSimpleRateLimit({
+  const rl = await checkSimpleRateLimit({
     key: `toss-connect:${auth.userId}`, limit: 5, windowMs: 60_000,
     message: "잠시 후 다시 시도해 주세요.",
   });

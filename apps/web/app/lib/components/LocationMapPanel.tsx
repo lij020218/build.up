@@ -80,7 +80,15 @@ export function LocationMapPanel(props: {
 
           const el = document.createElement("div");
           el.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;border-radius:20px;background:${isSelected ? "#1d3557" : "#fff"};border:1.5px solid ${isSelected ? "#1d3557" : "rgba(0,0,0,0.1)"};box-shadow:0 2px 10px rgba(0,0,0,0.15);cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,sans-serif;white-space:nowrap;`;
-          el.innerHTML = `<span style="min-width:24px;height:24px;border-radius:8px;background:${scoreColor}20;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${scoreColor}">${c.score ?? "-"}</span><span style="font-size:12px;font-weight:600;color:${isSelected ? "#fff" : "#1d1d1f"}">${c.title}</span>`;
+          // 2026-05-27 보안 (P0-5): innerHTML 직접 주입 제거. c.title 이 외부 API (Kakao) 데이터라
+          //   원격 변조 시 XSS 가 가능했음. createElement + textContent 로 텍스트만 안전하게 삽입.
+          const scoreEl = document.createElement("span");
+          scoreEl.style.cssText = `min-width:24px;height:24px;border-radius:8px;background:${scoreColor}20;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${scoreColor}`;
+          scoreEl.textContent = String(c.score ?? "-");
+          const titleEl = document.createElement("span");
+          titleEl.style.cssText = `font-size:12px;font-weight:600;color:${isSelected ? "#fff" : "#1d1d1f"}`;
+          titleEl.textContent = c.title;
+          el.append(scoreEl, titleEl);
           el.onclick = () => props.onSelect(c.id);
 
           const overlay = new maps.CustomOverlay({ position: pos, content: el, yAnchor: 1.4 });

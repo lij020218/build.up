@@ -84,8 +84,8 @@ export function ProductPerformanceCard() {
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M8 2v12M2 8h12" />
               </svg>
-              {ko ? "엑셀 업로드" : "Upload Excel"}
-              <input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" aria-label={ko ? "제품 엑셀 파일 업로드" : "Upload product Excel file"} style={{ display: "none" }} onChange={async (e) => {
+              {ko ? "CSV 업로드" : "Upload CSV"}
+              <input type="file" accept=".csv,.tsv,.txt" aria-label={ko ? "제품 CSV 파일 업로드" : "Upload product CSV file"} style={{ display: "none" }} onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 e.target.value = "";
@@ -94,11 +94,6 @@ export function ProductPerformanceCard() {
                   const fileExt = file.name.split(".").pop()?.toLowerCase();
                   if (fileExt === "csv" || fileExt === "tsv" || fileExt === "txt") {
                     text = await file.text();
-                  } else if (fileExt === "xlsx" || fileExt === "xls") {
-                    const XLSX = await import("xlsx");
-                    const buf = await file.arrayBuffer();
-                    const wb = XLSX.read(buf, { type: "array" });
-                    text = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
                   } else {
                     const buf = await file.arrayBuffer();
                     const bytes = new Uint8Array(buf);

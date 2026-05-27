@@ -5,6 +5,7 @@ import { Users, Sparkles, MessageCircle, Plus, X, Loader2, Lightbulb, Copy, Chec
 import { useInterviewStore, type CustomerInterview, type CustomerInterviewType } from "../../stores/interview-store";
 import { supabase } from "../../../../lib/supabase";
 import { INTERVIEW_TEMPLATES, type InterviewTemplate } from "@build-up/shared";
+import { getKstDate } from "../../utils/business-day";
 
 /**
  * CustomerInterviewCard — 운영 중인 매장용 단골/잠재고객 인터뷰 도구.
@@ -246,7 +247,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
           const d = new Date(tsRaw);
           return Number.isNaN(d.getTime()) ? new Date() : d;
         })();
-        const dateStr = tsDate.toISOString().slice(0, 10);
+        const dateStr = getKstDate(tsDate);
 
         for (let c = 1; c < header.length; c++) {
           const q = header[c]?.trim();

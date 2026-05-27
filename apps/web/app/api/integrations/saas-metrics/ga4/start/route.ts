@@ -28,7 +28,17 @@ export async function GET(request: Request) {
 
   // state = userId|nonce|hmac — callback 에서 사용자 확인 + CSRF 방지
   const nonce = randomBytes(16).toString("hex");
-  const stateSecret = getEnvVar("GA4_STATE_SECRET") ?? getEnvVar("PORTONE_KEK_BASE64") ?? "fallback";
+  const stateSecret = getEnvVar("GA4_STATE_SECRET") ?? getEnvVar("PORTONE_KEK_BASE64");
+  if (!stateSecret) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "GA4 OAuth state secret이 설정되지 않았습니다.",
+        code: "GA4_STATE_SECRET_MISSING",
+      },
+      { status: 503 },
+    );
+  }
   const payload = `${auth.userId}|${nonce}`;
   const hmac = createHmac("sha256", stateSecret).update(payload).digest("hex").slice(0, 24);
   const state = `${payload}|${hmac}`;

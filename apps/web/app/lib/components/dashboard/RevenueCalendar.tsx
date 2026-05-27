@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getKstDate } from "../../utils/business-day";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -23,7 +24,7 @@ export function RevenueCalendar({ dailyEntries, ko, fmt, onDateClick }: Props) {
 
   const firstDow = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = getKstDate(now);
 
   const entryMap: Record<string, DailyEntry> = {};
   for (const e of dailyEntries) {

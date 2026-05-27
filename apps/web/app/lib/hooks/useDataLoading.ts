@@ -24,6 +24,7 @@ import { isBusinessDayClosed } from "../utils/business-day";
 import { useCashflowStore } from "../stores/cashflow-store";
 import { useNotifications, type NotifNavigate } from "../../notification-context";
 import type { InventoryItem, FixedExpense } from "../stores/operations-store";
+import { getKstDate } from "../utils/business-day";
 
 export interface DataLoadingResult {
   contractors: { id: string; name: string; address: string; phone: string | null; description: string; mapUrl: string | null }[];
@@ -460,8 +461,8 @@ export function useDataLoading(
     const yN = nowN.getFullYear();
     const mN = nowN.getMonth();
     const domN = nowN.getDate();
-    const todayStrN = nowN.toISOString().slice(0, 10);
-    const in7daysN = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+    const todayStrN = getKstDate(nowN);
+    const in7daysN = getKstDate(new Date(Date.now() + 7 * 86400000));
     const daysInMonthN = new Date(yN, mN + 1, 0).getDate();
     const items: Notif[] = [];
 
@@ -593,8 +594,8 @@ export function useDataLoading(
     if (businessLaunched) {
       const sortedDates = (dailyEntries as Array<{ date: string; sales: number }>).map((e) => e.date).sort();
       const latestEntry = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
-      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-      const dayBeforeStr = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+      const yesterdayStr = getKstDate(new Date(Date.now() - 86400000));
+      const dayBeforeStr = getKstDate(new Date(Date.now() - 2 * 86400000));
       const missingYesterday = !sortedDates.includes(yesterdayStr);
       const missingDayBefore = !sortedDates.includes(dayBeforeStr);
       if (missingYesterday && missingDayBefore) {

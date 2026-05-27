@@ -159,7 +159,33 @@ import AIRoadmapWizard from "./lib/components/AIRoadmapWizard";
 import { calculateHealthMetrics, forecastSales } from "@build-up/shared";
 import type { BusinessHealthMetrics, SalesForecast } from "@build-up/shared";
 import { useDashboard, type InventoryItem, type InvForm, type Employee, type DeliveryPlatform, type Product, type TaxSettings, type FixedExpense, type Member, type DailyEntry, type MonthlyCosts, type UnifiedProduct, type ServiceMenuItem } from "./lib/useDashboard";
+import { getKstDate } from "./lib/utils/business-day";
+import {
+  operationalShell,
+  operationalShellSidebar,
+  operationalShellSidebarCollapsed,
+  operationalNavSection,
+  operationalSurfaceNav,
+} from "./app-shell-styles";
 
+/**
+ * StarterStageDemo — build.up 앱 메인 셸
+ *
+ * ─────────────────────────────────────────────────────
+ * FILE MAP (1300+ 줄 단일 컴포넌트 — 향후 분리 예정)
+ * ─────────────────────────────────────────────────────
+ *  L164–550   : 상태·훅 선언 (useDashboard, useHandlers, computed values)
+ *  L550–660   : 상황 감지 파생값 (showOperationalHero, isHomeOperational, ...)
+ *  L660–705   : 조기 반환 (로딩 중 / 인증 미완료)
+ *  L705–955   : 온보딩 경로 분기 (WelcomeOnboarding / AIRoadmapWizard / ExistingBusinessOnboarding / OnboardingChoiceScreen)
+ *  L955–1050  : 모바일 수평 nav (isHomeOperational && showSurfaceNav)
+ *  L1050–1155 : 데스크탑 좌측 사이드바 (isHomeOperational)
+ *  L1155–1295 : 상단 nav 바 + surface 탭 (showSurfaceNav && !isHomeOperational)
+ *  L1295–1305 : surface 콘텐츠 렌더러 (activeSurface switch)
+ *
+ * 스타일 상수 → ./app-shell-styles.ts
+ * ─────────────────────────────────────────────────────
+ */
 export default function StarterStageDemo({
   surface = "home",
   showSurfaceNav = true
@@ -545,142 +571,9 @@ export default function StarterStageDemo({
   // NOTE: No early returns here — useEffect below must always execute.
   // All conditional returns are placed AFTER the useEffect.
 
-  if (false as boolean) { // DEAD CODE: onboarding choice moved after useEffect
-    const ko = language === "ko";
-    void ko;
-    return (
-      <main style={{
-        minHeight: "100vh",
-        background: "radial-gradient(circle at top, rgba(29,53,87,0.08), transparent 32%), #f7f6f3",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-      }}>
-        <div style={{ maxWidth: "860px", width: "100%", textAlign: "center" }}>
-          <div style={{
-            fontSize: "13px", fontWeight: 600, letterSpacing: "0.14em",
-            textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "16px",
-            animation: "fadeUp 0.7s cubic-bezier(0.25,0.46,0.45,0.94) 0.1s both",
-          }}>build.up</div>
-          <div style={{
-            fontSize: "clamp(30px, 5vw, 44px)", fontWeight: 700,
-            letterSpacing: "-0.035em", lineHeight: 1.08, color: "var(--text)", marginBottom: "14px",
-            animation: "fadeUp 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.25s both",
-          }}>
-            {ko ? "어떤 상황에 계신가요?" : "Where are you in your journey?"}
-          </div>
-          <div style={{
-            fontSize: "17px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "48px",
-            animation: "fadeUp 0.7s cubic-bezier(0.25,0.46,0.45,0.94) 0.4s both",
-          }}>
-            {ko ? "맞춤형 경험을 제공하기 위해 알려주세요." : "Help us personalize your experience."}
-          </div>
+  // ⚠️ 2026-05-25 audit fix: dead code block (line 549-684, 'if (false as boolean)') 제거.
+  //   온보딩 choice 는 아래 useEffect 이후 렌더됨. 이전 ~140줄 unreachable code.
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-            {/* Card 1: 신규 창업 */}
-            <button type="button" onClick={() => setShowOnboardingChoice(false)} style={{
-              borderRadius: "28px",
-              border: "1px solid rgba(29,53,87,0.06)",
-              background: "linear-gradient(160deg, rgba(232,243,255,0.8) 0%, rgba(245,249,255,0.95) 50%, rgba(255,255,255,0.98) 100%)",
-              boxShadow: "0 8px 30px rgba(29,53,87,0.06)",
-              backdropFilter: "blur(16px)",
-              padding: "36px 32px 32px",
-              cursor: "pointer",
-              textAlign: "left" as const,
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              animation: "fadeUp 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.55s both",
-              display: "flex",
-              flexDirection: "column" as const,
-              gap: "0",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(29,53,87,0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(29,53,87,0.06)"; }}
-            >
-              <div style={{
-                width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px",
-                background: "linear-gradient(135deg, #e0edff 0%, #c9ddfb 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b7ddd" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5Z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <div style={{ fontSize: "22px", fontWeight: 680, color: "var(--text)", marginBottom: "8px", letterSpacing: "-0.02em" }}>
-                {ko ? "창업을 준비하고 있어요" : "I'm preparing to start"}
-              </div>
-              <div style={{ fontSize: "15px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "16px" }}>
-                {ko
-                  ? "업종 선택부터 개업까지, 단계별 로드맵으로 안내합니다. 재무 시뮬레이션, AI 계약서 분석, 상권 추천까지 모두 포함되어 있어요."
-                  : "Guided from industry selection to grand opening. Includes financial simulation, AI contract analysis, and market recommendations."}
-              </div>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                fontSize: "14px", fontWeight: 600, color: "#3b7ddd",
-              }}>
-                {ko ? "로드맵 시작하기" : "Start roadmap"}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </div>
-            </button>
-
-            {/* Card 2: 기존 사업자 */}
-            <button type="button" onClick={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }} style={{
-              borderRadius: "28px",
-              border: "1px solid rgba(45,106,79,0.06)",
-              background: "linear-gradient(160deg, rgba(232,250,241,0.8) 0%, rgba(243,252,247,0.95) 50%, rgba(255,255,255,0.98) 100%)",
-              boxShadow: "0 8px 30px rgba(45,106,79,0.06)",
-              backdropFilter: "blur(16px)",
-              padding: "36px 32px 32px",
-              cursor: "pointer",
-              textAlign: "left" as const,
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              animation: "fadeUp 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.7s both",
-              display: "flex",
-              flexDirection: "column" as const,
-              gap: "0",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(45,106,79,0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(45,106,79,0.06)"; }}
-            >
-              <div style={{
-                width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px",
-                background: "linear-gradient(135deg, #ddf5e9 0%, #c4ebd6 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2d8659" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 21V8l9-5 9 5v13" />
-                  <path d="M9 21v-6h6v6" />
-                  <path d="M3 8h18" />
-                </svg>
-              </div>
-              <div style={{ fontSize: "22px", fontWeight: 680, color: "var(--text)", marginBottom: "8px", letterSpacing: "-0.02em" }}>
-                {ko ? "이미 가게를 운영하고 있어요" : "I already run a business"}
-              </div>
-              <div style={{ fontSize: "15px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "16px" }}>
-                {ko
-                  ? "간단한 설정만 하면 매출 분석, 비용 관리, 세금 달력, 재고 알림을 바로 사용할 수 있어요."
-                  : "Quick setup to unlock sales analytics, cost tracking, tax calendar, and inventory alerts."}
-              </div>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                fontSize: "14px", fontWeight: 600, color: "#2d8659",
-              }}>
-                {ko ? "가게 등록하기" : "Register my store"}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </div>
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   const showOperationalHero = !(
     (activeSurface === "home" && mounted && businessLaunched) ||
@@ -1209,7 +1102,7 @@ export default function StarterStageDemo({
       {/* 상단 nav — 사이드바 모드에선 숨김 (사이드바에 동일 nav 노출) */}
       {showSurfaceNav && !isHomeOperational ? (
       <section style={showOperationalHero ? styles.section : operationalNavSection}>
-        <div style={{ ...styles.surfaceNav, ...(showOperationalHero ? {} : operationalSurfaceNav) }}>
+        <div style={styles.surfaceNav}>
           {surfaceTabs.map((tab) => (
             <button
               key={tab.id}
@@ -1291,7 +1184,7 @@ export default function StarterStageDemo({
         const curMonth = new Date().toISOString().slice(0, 7);
         const thisMonth = entries.filter((e) => e.date.startsWith(curMonth));
         const monthlySalesSum = thisMonth.reduce((s, e) => s + e.sales, 0);
-        const yesterdayIso = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+        const yesterdayIso = getKstDate(new Date(Date.now() - 86_400_000));
         const yesterdaySales = entries.find((e) => e.date === yesterdayIso)?.sales;
 
         // 2) 비용 분해
@@ -1434,35 +1327,4 @@ export default function StarterStageDemo({
   );
 }
 
-/* Roadmap surface → RoadmapSurface.tsx
-   ⚠️ 2026-05-19 모바일 fix: 종전 좌우 padding 0 → 모바일에서 콘텐츠가 화면 끝까지 닿음.
-   `width` 의 `100vw - 32px` 로 양쪽 16px 마진은 있지만 padding 자체는 0이라 inner 컴포넌트
-   (테이블·grid) 가 가장자리 0px 까지 늘어남. padding 16px 추가로 통일된 gutter 확보. */
-const operationalShell: React.CSSProperties = {
-  width: "min(1440px, calc(100vw - 32px))",
-  margin: "0 auto",
-  padding: "92px 16px 80px",
-};
-
-/** 홈 + 운영 중 — 좌측 사이드바 폭만큼 좌측 패딩 추가 (좁은 화면에선 사이드바 숨김 → CSS) */
-const operationalShellSidebar: React.CSSProperties = {
-  width: "min(1440px, calc(100vw - 32px))",
-  margin: "0 auto",
-  padding: "32px 16px 80px 220px",   // 좌측 사이드바 200px + 여백 20px / 우측 16px gutter
-};
-
-/** 사이드바 collapsed (60px) 일 때 — 좌측 padding 80px (60 + 20 여백) */
-const operationalShellSidebarCollapsed: React.CSSProperties = {
-  width: "min(1440px, calc(100vw - 32px))",
-  margin: "0 auto",
-  padding: "32px 16px 80px 80px",
-};
-
-const operationalNavSection: React.CSSProperties = {
-  marginTop: "0",
-  marginBottom: "32px",  // 18 → 32: nav 바와 surface 첫 카드 사이 간격 확대 (사용자 피드백)
-};
-
-const operationalSurfaceNav: React.CSSProperties = {
-  maxWidth: "calc(100% - 220px)",
-};
+// 스타일 상수 → ./app-shell-styles.ts 로 분리됨

@@ -19,6 +19,7 @@ import { MilestoneToast } from "./MilestoneToast";
 import { RevenueCalendar } from "./RevenueCalendar";
 import { DetailTabs } from "./DetailTabs";
 import { shell, bentoHoverCSS } from "./operationalStyles";
+import { getKstDate } from "../../utils/business-day";
 
 type Props = { d: DashboardHook };
 
@@ -129,7 +130,7 @@ export default function OperationalDashboard({ d }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `buildup-sales-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `buildup-sales-${getKstDate(new Date())}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

@@ -16,6 +16,7 @@
  */
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../../_lib/auth";
+import { isValidHttpsUrl } from "../../../../_lib/url-guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -26,15 +27,6 @@ type TestBody = {
   endpoint_url?: unknown;
   secret_token?: unknown;
 };
-
-function isValidHttpsUrl(raw: string): boolean {
-  try {
-    const u = new URL(raw);
-    return u.protocol === "https:" && !!u.hostname;
-  } catch {
-    return false;
-  }
-}
 
 function parseFunnelPayload(raw: unknown): {
   as_of: string | null;

@@ -14,6 +14,7 @@ import type {
 } from "../stores/operations-store";
 import type { DailyEntry, CostSnapshot } from "../stores/finance-store";
 import type { DashboardDeps } from "../types";
+import { getKstDate } from "../utils/business-day";
 
 /** useOperationsHandlers 전용 추가 deps */
 export type OperationsHandlersDeps = DashboardDeps & {
@@ -79,15 +80,17 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   // ─────────────────────────────────────────────
 
   const handleAddDailyEntry = async () => {
-    console.info("[buildup] handleAddDailyEntry called", { dailySalesInput, dailyCustomersInput, dailyDateInput });
+    // 2026-05-27 보안 (P1-5): 사장님 매출/고객수 데이터 로깅 차단. dev 환경에서만.
+    const __dev = process.env.NODE_ENV !== "production";
+    if (__dev) console.info("[buildup] handleAddDailyEntry called", { dailySalesInput, dailyCustomersInput, dailyDateInput });
     // ⚠️ 빈 input은 저장 X (사용자 입력 의지 없음 = 누름 실수).
     // 단, "0"은 정당한 입력 (휴무일·매출 없는 날) → 그대로 저장.
     if (dailySalesInput === undefined || dailySalesInput === null || dailySalesInput === "") {
-      console.warn("[buildup] handleAddDailyEntry: empty dailySalesInput, skipping");
+      if (__dev) console.warn("[buildup] handleAddDailyEntry: empty dailySalesInput, skipping");
       return;
     }
     const parsedSales = Number(dailySalesInput.replace(/[^0-9]/g, "")) || 0;
-    console.info("[buildup] handleAddDailyEntry: saving", { parsedSales, dailyDateInput });
+    if (__dev) console.info("[buildup] handleAddDailyEntry: saving", { parsedSales, dailyDateInput });
     // 기존 기록의 productSales 등 추가 필드를 보존
     const existing = (dailyEntries as Array<Record<string, unknown>>).find((e) => e.date === dailyDateInput);
     const entry = {
@@ -102,7 +105,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
       entry as DailyEntry
     ].sort((a, b) => b.date.localeCompare(a.date));
     setDailyEntries(next);
-    console.info("[buildup] handleAddDailyEntry: setDailyEntries called", { totalEntries: next.length, newEntry: entry });
+    if (__dev) console.info("[buildup] handleAddDailyEntry: setDailyEntries called", { totalEntries: next.length, newEntry: entry });
     setDailySalesInput("");
     setDailyCustomersInput("");
     // ⚠️ 매출은 critical data → 즉시 Supabase 저장 (debounce 건너뛰기).
@@ -110,14 +113,15 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     if (flushStoreDataImmediate) {
       try {
         await flushStoreDataImmediate();
-        console.info("[buildup] handleAddDailyEntry: Supabase save SUCCESS");
+        if (__dev) console.info("[buildup] handleAddDailyEntry: Supabase save SUCCESS");
       } catch (err) {
         // 에러는 이미 onboarding store에 기록됨 — 사용자가 헤더 indicator로 확인
         // localStorage 백업은 Zustand persist가 처리하므로 여기서 추가 작업 불필요
+        // Sentry 가 console.error 자동 캡처 — 사용자 가시성에 영향 없음
         console.error("[buildup] handleAddDailyEntry: Supabase save FAILED", err);
       }
     } else {
-      console.warn("[buildup] handleAddDailyEntry: flushStoreDataImmediate not available, falling back to debounced flush");
+      if (__dev) console.warn("[buildup] handleAddDailyEntry: flushStoreDataImmediate not available, falling back to debounced flush");
       flushStoreData();
     }
     scheduleAiRefresh(); // 매출 입력 → AI 경영 우선순위 자동 갱신
@@ -136,7 +140,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     };
     setMonthlyCosts(costs);
     // Archive to costHistory (월별 스냅샷, 최대 12개월)
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = getKstDate(new Date()).slice(0, 7);
     const snap: CostSnapshot = { ...costs, month: currentMonth };
     const updatedHistory = [...costHistory.filter(h => h.month !== currentMonth), snap]
       .sort((a, b) => a.month.localeCompare(b.month))
@@ -215,7 +219,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   const handleInvWaste = (itemId: string) => {
     const qty = parseFloat(invWasteQty) || 0;
     if (qty <= 0) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getKstDate(new Date());
     saveInventory(inventory.map(i => i.id !== itemId ? i : {
       ...i,
       quantity: Math.max(0, parseFloat((i.quantity - qty).toFixed(2))),
@@ -227,7 +231,7 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
   };
 
   const handleMarkOrdered = (itemId: string) => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getKstDate(new Date());
     saveInventory(inventory.map(i => i.id === itemId ? { ...i, lastOrderedAt: today } : i));
   };
 

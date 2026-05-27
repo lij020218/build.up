@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     // 분당 3회 — 실수 방지
-    const rl = checkSimpleRateLimit({
+    const rl = await checkSimpleRateLimit({
       key: `account-reset:${auth.userId}`, limit: 3, windowMs: 60_000,
       message: "잠시 후 다시 시도해 주세요.",
     });

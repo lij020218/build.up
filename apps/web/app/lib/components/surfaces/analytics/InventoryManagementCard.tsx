@@ -11,6 +11,7 @@ import {
   getFranchiseSupplyInfo,
   getSupplyTypeColor,
 } from "@build-up/shared";
+import { getKstDate } from "../../../utils/business-day";
 
 export function InventoryManagementCard() {
   const d = useDashboardCtx();
@@ -37,7 +38,7 @@ export function InventoryManagementCard() {
   if (!businessCtx.showInventoryCard) return null;
 
   const ko = language === "ko";
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getKstDate(new Date());
   const currentMonth = todayStr.slice(0, 7);
   const UNITS = ["개", "kg", "g", "L", "ml", "봉지", "박스", "병", "캔"];
   const invStep = (unit: string) => ["kg", "L", "l"].includes(unit) ? 0.5 : 1;
@@ -138,8 +139,8 @@ export function InventoryManagementCard() {
           </button>
           <label style={{ fontSize: "12px", fontWeight: 600, color: "#34c759", cursor: "pointer", padding: "6px 13px", background: "rgba(52,199,89,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2v12M2 8h12" /></svg>
-            {ko ? "엑셀" : "Excel"}
-            <input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" aria-label={ko ? "재고 엑셀 파일 업로드" : "Upload inventory Excel file"} style={{ display: "none" }} onChange={async (e) => {
+            {ko ? "CSV" : "CSV"}
+            <input type="file" accept=".csv,.tsv,.txt" aria-label={ko ? "재고 CSV 파일 업로드" : "Upload inventory CSV file"} style={{ display: "none" }} onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
               e.target.value = "";
@@ -148,12 +149,6 @@ export function InventoryManagementCard() {
                 const ext = file.name.split(".").pop()?.toLowerCase();
                 if (ext === "csv" || ext === "tsv" || ext === "txt") {
                   text = await file.text();
-                } else if (ext === "xlsx" || ext === "xls") {
-                  const XLSX = await import("xlsx");
-                  const buffer = await file.arrayBuffer();
-                  const workbook = XLSX.read(buffer, { type: "array" });
-                  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                  text = XLSX.utils.sheet_to_csv(firstSheet);
                 } else {
                   const buf = await file.arrayBuffer();
                   const bytes = new Uint8Array(buf);

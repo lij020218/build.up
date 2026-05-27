@@ -30,40 +30,38 @@ public struct MyStoreView: View {
     }
 
     public var body: some View {
-        ZStack {
-            BUBackgroundSurface()
+        // ⚠️ 2026-05-25: ZStack + BUBackgroundSurface 제거 — MobileShell 이 풀스크린으로 깖.
+        //   중복 Aurora 두 인스턴스가 독립 애니메이션 → 배경 분리감 발생.
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HeroAtAGlance(store: storeInfo)
+                    .padding(.horizontal, 16)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    HeroAtAGlance(store: storeInfo)
+                FinancialSnapshotCard(store: store)
+                    .padding(.horizontal, 16)
+
+                CostManagementCard(store: store)
+                    .padding(.horizontal, 16)
+
+                ddayCard
+                    .padding(.horizontal, 16)
+
+                BusinessDocumentsCard(storeInfo: storeInfo)
+                    .padding(.horizontal, 16)
+
+                ForEach(allSections, id: \.id) { spec in
+                    SectionCard(spec: spec, store: storeInfo)
                         .padding(.horizontal, 16)
-
-                    FinancialSnapshotCard(store: store)
-                        .padding(.horizontal, 16)
-
-                    CostManagementCard(store: store)
-                        .padding(.horizontal, 16)
-
-                    ddayCard
-                        .padding(.horizontal, 16)
-
-                    BusinessDocumentsCard(storeInfo: storeInfo)
-                        .padding(.horizontal, 16)
-
-                    ForEach(allSections, id: \.id) { spec in
-                        SectionCard(spec: spec, store: storeInfo)
-                            .padding(.horizontal, 16)
-                    }
-
-                    footer
-                        .padding(.horizontal, 16)
-
-                    Color.clear.frame(height: 80)
                 }
-                .padding(.top, 12)
+
+                footer
+                    .padding(.horizontal, 16)
+
+                Color.clear.frame(height: 80)
             }
-            .scrollIndicators(.hidden)
+            .padding(.top, 12)
         }
+        .scrollIndicators(.hidden)
         .navigationTitle("내 가게")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)

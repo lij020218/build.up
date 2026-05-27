@@ -69,6 +69,7 @@ import { Star, Store } from "lucide-react";
 // SecurityChecklist 는 LaunchGtmStage 내부에서 collapsible 로 직접 import.
 // import { SecurityChecklist } from "../knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "../knowledge/InvestmentGlossary";
+import { getKstDate } from "../../utils/business-day";
 
 export function CurrentStageView() {
   /* ------------------------------------------------------------------ *
@@ -242,7 +243,7 @@ export function CurrentStageView() {
     <>
       {businessLaunched && !viewingStageId ? (() => {
           const ko = language === "ko";
-          const currentMonth = new Date().toISOString().slice(0, 7);
+          const currentMonth = getKstDate(new Date()).slice(0, 7);
           type DE2 = { date: string; sales: number; customers: number };
           const me2 = (dailyEntries as DE2[]).filter(e => e.date.startsWith(currentMonth));
           const ts2 = me2.reduce((s, e) => s + e.sales, 0);
@@ -254,7 +255,7 @@ export function CurrentStageView() {
           const totalCosts2 = mc2.ingredients + mc2.labor + mc2.rent + mc2.utilities + mc2.other;
           const netProfit2 = ts2 - totalCosts2;
           const fmt2 = (n: number) => n >= 10000 ? `${Math.round(n / 10000).toLocaleString()}만원` : `${Math.round(n).toLocaleString()}원`;
-          const today2 = new Date().toISOString().slice(0, 10);
+          const today2 = getKstDate(new Date());
           const todayEntry2 = (dailyEntries as DE2[]).find(e => e.date === today2);
           const inputStyle2 = { border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 14px", fontSize: "15px", outline: "none", background: "rgba(255,255,255,0.8)", width: "100%", boxSizing: "border-box" as const };
           return (

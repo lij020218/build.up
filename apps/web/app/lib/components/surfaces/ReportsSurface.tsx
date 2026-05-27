@@ -18,6 +18,7 @@ import { ReportView } from "../reports/ReportView";
 import type { ReportPeriod } from "../../hooks/useReportSnapshot";
 import { isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
+import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
@@ -48,7 +49,7 @@ export function ReportsSurface() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!closed) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getKstDate(new Date());
     const last = window.localStorage.getItem(ARRIVED_KEY);
     if (last === today) return;
     window.localStorage.setItem(ARRIVED_KEY, today);

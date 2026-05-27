@@ -24,6 +24,7 @@ import {
 import type { DashboardHook } from "../../useDashboard";
 import { CountUp } from "./animations";
 import { activityCard } from "./operationalStyles";
+import { getKstDate } from "../../utils/business-day";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -75,7 +76,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
   const last7 = Array.from({ length: 7 }, (_, index) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - index));
-    return date.toISOString().slice(0, 10);
+    return getKstDate(date);
   });
   const entryMap = Object.fromEntries(recent7Entries.map((e) => [e.date, e]));
   const bars = last7.map((date) => {
@@ -99,7 +100,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
     ? Math.round(((recent7Customers - prev7Customers) / prev7Customers) * 100)
     : null;
 
-  const yesterdayIso = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  const yesterdayIso = getKstDate(new Date(Date.now() - 86_400_000));
   const yesterdayEntry = entryMap[yesterdayIso];
   const dodDelta = todayEntry && yesterdayEntry && yesterdayEntry.customers > 0
     ? Math.round(((todayEntry.customers - yesterdayEntry.customers) / yesterdayEntry.customers) * 100)

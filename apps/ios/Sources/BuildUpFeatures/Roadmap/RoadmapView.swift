@@ -74,11 +74,9 @@ public struct RoadmapView: View {
         //   RoadmapView 가 NavigationStack 을 제공 → StageRow 는 NavigationLink 로 push.
         //   로드맵 과정 중에 stage 가 중심이라 popup 보다는 화면 전환이 자연스러움.
         NavigationStack(path: $stagePath) {
+            // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
+            //   .onAppear / .onChange 는 ZStack 자체로 옮김.
             ZStack {
-                BUBackgroundSurface()
-                    .onAppear { store.setCluster(clusterRaw) }
-                    .onChange(of: clusterRaw) { _, new in store.setCluster(new) }
-
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         // ── 헤더: eyebrow + 타이틀 + 우측 큰 % ──
@@ -100,6 +98,8 @@ public struct RoadmapView: View {
                     }
                 }
             }
+            .onAppear { store.setCluster(clusterRaw) }
+            .onChange(of: clusterRaw) { _, new in store.setCluster(new) }
             .navigationTitle("로드맵")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

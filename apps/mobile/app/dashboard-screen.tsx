@@ -78,91 +78,40 @@ import { useLanguage } from "../lib/language-provider";
 import { SURFACE_HREFS, type DashboardSurface } from "../lib/navigation/surfaces";
 import { AppHeader, HeroIntro, SurfaceSwitcher, type SurfaceTabItem } from "../lib/components/AppChrome";
 
-type MarketingChannelKey =
-  | "naver-place"
-  | "instagram"
-  | "delivery-ads"
-  | "naver-keyword"
-  | "daangn"
-  | "blog-review"
-  | "kakao"
-  | "google-ads"
-  | "meta-ads"
-  | "offline";
+// MarketingChannelKey → dashboard-screen-marketing.ts (re-export 됨).
 
-type MobileDailyEntry = {
-  date: string;
-  sales: number;
-  customers: number;
-};
+// 2026-05-27 Phase 2: 타입·변환·상수·포매터 → 별도 파일로 분리.
+//   closure 의존성 없는 pure functions / data 만 추출 (안전).
+import {
+  emptyMobileMonthlyCosts,
+  isRecord,
+  KNOWN_STORE_FIELDS,
+  toMobileDailyEntries,
+  toMobileEmployees,
+  toMobileInventoryItems,
+  toMobileProducts,
+  toMobileSubscribers,
+  toMobileSubscriptionPlans,
+  type MobileDailyEntry,
+  type MobileEmployee,
+  type MobileInventoryItem,
+  type MobileMonthlyCosts,
+  type MobileProduct,
+  type MobileSubscriber,
+  type MobileSubscriptionPlan,
+} from "./dashboard-screen-data";
+import {
+  parseManwonInput,
+  formatWonCompact,
+  formatBreakEvenMonth,
+} from "./dashboard-screen-formatters";
+import {
+  mobileMarketingChannels,
+  mobileRecommendedMarketingChannels,
+  type MarketingChannelKey,
+} from "./dashboard-screen-marketing";
 
-type MobileMonthlyCosts = UserStoreData["monthlyCosts"];
-
-type MobileProduct = {
-  id: string;
-  name: string;
-  price: number;
-  cost: number;
-  stock: number;
-};
-
-type MobileInventoryItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  minThreshold: number;
-};
-
-type MobileEmployee = {
-  id: string;
-  name: string;
-  hourlyWage: number;
-  weeklyHours: number;
-  isInsured: boolean;
-};
-
-const emptyMobileMonthlyCosts: MobileMonthlyCosts = {
-  ingredients: 0,
-  labor: 0,
-  rent: 0,
-  utilities: 0,
-  sga: 0,
-  marketing: 0,
-  other: 0,
-  interest: 0
-};
-
-const mobileMarketingChannels: Array<{
-  key: MarketingChannelKey;
-  label: { ko: string; en: string };
-  body: { ko: string; en: string };
-}> = [
-  { key: "naver-place", label: { ko: "네이버 플레이스", en: "Naver Place" }, body: { ko: "지도 검색, 리뷰, 방문 전환을 관리합니다.", en: "Manage map search, reviews, and visit conversion." } },
-  { key: "instagram", label: { ko: "인스타그램", en: "Instagram" }, body: { ko: "비주얼 콘텐츠와 첫 고객 반응을 만듭니다.", en: "Build visual demand and early customer response." } },
-  { key: "delivery-ads", label: { ko: "배달앱 광고", en: "Delivery Ads" }, body: { ko: "배달·포장 매출의 노출과 수수료를 같이 봅니다.", en: "Track exposure and fees for delivery and pickup sales." } },
-  { key: "naver-keyword", label: { ko: "네이버 키워드", en: "Naver Keyword" }, body: { ko: "검색 의도가 높은 고객을 잡습니다.", en: "Capture customers with active search intent." } },
-  { key: "daangn", label: { ko: "당근", en: "Daangn" }, body: { ko: "반경 기반 동네 고객을 빠르게 만납니다.", en: "Reach neighborhood customers by radius." } },
-  { key: "blog-review", label: { ko: "블로그·체험단", en: "Blog Review" }, body: { ko: "검색 신뢰와 방문 전 확신을 쌓습니다.", en: "Build search trust before the first visit." } },
-  { key: "kakao", label: { ko: "카카오 채널", en: "Kakao Channel" }, body: { ko: "재방문, 예약, 공지 흐름을 만듭니다.", en: "Create repeat visit, booking, and notice loops." } },
-  { key: "google-ads", label: { ko: "구글 애즈", en: "Google Ads" }, body: { ko: "온라인·테크 사업의 검색 수요를 검증합니다.", en: "Validate search demand for online and tech businesses." } },
-  { key: "meta-ads", label: { ko: "Meta 광고", en: "Meta Ads" }, body: { ko: "타깃 테스트와 초기 전환 실험에 씁니다.", en: "Run targeting and early conversion tests." } },
-  { key: "offline", label: { ko: "오프라인", en: "Offline" }, body: { ko: "전단, 제휴, 현장 프로모션을 기록합니다.", en: "Track flyers, partnerships, and local promotions." } }
-];
-
-const mobileRecommendedMarketingChannels: Record<string, MarketingChannelKey[]> = {
-  food: ["naver-place", "delivery-ads", "instagram", "daangn", "blog-review"],
-  "cafe-dessert": ["instagram", "blog-review", "naver-place", "daangn"],
-  retail: ["daangn", "naver-keyword", "instagram"],
-  beauty: ["naver-place", "blog-review", "kakao", "instagram"],
-  pet: ["naver-place", "blog-review", "kakao", "instagram"],
-  fitness: ["daangn", "instagram", "naver-place", "kakao"],
-  education: ["daangn", "instagram", "naver-place", "kakao"],
-  space: ["naver-place", "instagram", "daangn"],
-  "online-digital": ["naver-keyword", "meta-ads", "instagram", "google-ads"],
-  "startup-tech": ["meta-ads", "google-ads", "instagram", "blog-review"],
-  "living-service": ["daangn", "naver-place", "kakao"]
-};
+// 마케팅 채널 상수 → dashboard-screen-marketing.ts 로 분리.
 
 function getMobileStageAssistCopy(stageId: string, language: "ko" | "en") {
   const ko = language === "ko";
@@ -367,89 +316,8 @@ type SavedFinanceInterpretationSnapshot = {
   nextActions: string[];
 };
 
-function parseManwonInput(raw: string) {
-  const digits = raw.replace(/[^0-9]/g, "");
-  if (!digits) {
-    return undefined;
-  }
-
-  const parsed = Number(digits);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return undefined;
-  }
-
-  return parsed * 10000;
-}
-
-function formatWonCompact(value: number, language: "ko" | "en") {
-  if (!Number.isFinite(value) || value <= 0) {
-    return language === "ko" ? "0원" : "KRW 0";
-  }
-
-  if (value >= 10000) {
-    return language === "ko"
-      ? `${Math.round(value / 10000).toLocaleString()}만원`
-      : `KRW ${Math.round(value).toLocaleString()}`;
-  }
-
-  return language === "ko"
-    ? `${Math.round(value).toLocaleString()}원`
-    : `KRW ${Math.round(value).toLocaleString()}`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function toMobileDailyEntries(value: unknown[] | undefined): MobileDailyEntry[] {
-  return (value ?? [])
-    .filter(isRecord)
-    .map((entry) => ({
-      date: typeof entry.date === "string" ? entry.date : new Date().toISOString().slice(0, 10),
-      sales: typeof entry.sales === "number" ? entry.sales : 0,
-      customers: typeof entry.customers === "number" ? entry.customers : 0
-    }))
-    .sort((a, b) => b.date.localeCompare(a.date));
-}
-
-function toMobileProducts(value: unknown[] | undefined): MobileProduct[] {
-  return (value ?? [])
-    .filter(isRecord)
-    .map((item) => ({
-      id: typeof item.id === "string" ? item.id : `prod-${Date.now()}`,
-      name: typeof item.name === "string" ? item.name : "",
-      price: typeof item.price === "number" ? item.price : 0,
-      cost: typeof item.cost === "number" ? item.cost : 0,
-      stock: typeof item.stock === "number" ? item.stock : 0
-    }))
-    .filter((item) => item.name);
-}
-
-function toMobileInventoryItems(value: unknown[] | undefined): MobileInventoryItem[] {
-  return (value ?? [])
-    .filter(isRecord)
-    .map((item) => ({
-      id: typeof item.id === "string" ? item.id : `inv-${Date.now()}`,
-      name: typeof item.name === "string" ? item.name : "",
-      quantity: typeof item.quantity === "number" ? item.quantity : 0,
-      unit: typeof item.unit === "string" ? item.unit : "개",
-      minThreshold: typeof item.minThreshold === "number" ? item.minThreshold : 0
-    }))
-    .filter((item) => item.name);
-}
-
-function toMobileEmployees(value: unknown[] | undefined): MobileEmployee[] {
-  return (value ?? [])
-    .filter(isRecord)
-    .map((item) => ({
-      id: typeof item.id === "string" ? item.id : `emp-${Date.now()}`,
-      name: typeof item.name === "string" ? item.name : "",
-      hourlyWage: typeof item.hourlyWage === "number" ? item.hourlyWage : 0,
-      weeklyHours: typeof item.weeklyHours === "number" ? item.weeklyHours : 0,
-      isInsured: typeof item.isInsured === "boolean" ? item.isInsured : false
-    }))
-    .filter((item) => item.name);
-}
+// parseManwonInput / formatWonCompact / formatBreakEvenMonth → dashboard-screen-formatters.ts.
+// 변환 함수들 (isRecord, toMobileXxx) + KNOWN_STORE_FIELDS → dashboard-screen-data.ts.
 
 const GUIDE_STAGE_CODES = ["permit_guide", "tax_guide", "loan_guide"] as const;
 
@@ -465,14 +333,6 @@ function getGuideSections(guide: GuideRecord | null, language: import("@build-up
       title: formatGuideSectionTitle(key, language),
       items: (value as unknown[]).map((item) => String(item))
     }));
-}
-
-function formatBreakEvenMonth(month: number | null | undefined, language: "ko" | "en") {
-  if (month == null) {
-    return language === "ko" ? "손익분기 미도달" : "Break-even not reached";
-  }
-
-  return language === "ko" ? `${month}개월` : `${month} months`;
 }
 
 function hydrateSavedFinanceSnapshot(
@@ -767,6 +627,23 @@ export default function DashboardScreen({
   const [employeeNameInput, setEmployeeNameInput] = useState("");
   const [employeeWageInput, setEmployeeWageInput] = useState("");
   const [employeeHoursInput, setEmployeeHoursInput] = useState("");
+  // ── 구독/회원 관리 (웹과 양방향 동기화) ──
+  const [subscriptionPlans, setSubscriptionPlans] = useState<MobileSubscriptionPlan[]>([]);
+  const [subscribers, setSubscribers] = useState<MobileSubscriber[]>([]);
+  const [usesSubscriptions, setUsesSubscriptions] = useState(false);
+  // ── 데이터 완전 동기화 (2026-05-27 P1 패리티) ─────────────────────────────
+  //   UserStoreData 의 모든 필드를 mobile 에서도 보존. UI 가 아직 없는 필드도
+  //   웹에서 입력한 값을 잃지 않도록 passthrough 로 보관.
+  //   향후 phase 에서 UI 추가 시 explicit state 로 분리하면서 KNOWN_FIELDS 에 추가.
+  const [extraStoreData, setExtraStoreData] = useState<Partial<UserStoreData>>({});
+  // 플랜 등록 폼
+  const [planNameInput, setPlanNameInput] = useState("");
+  const [planPriceInput, setPlanPriceInput] = useState("");
+  const [planCycleInput, setPlanCycleInput] = useState<"monthly" | "annual">("monthly");
+  // 구독자 등록 폼
+  const [subscriberNameInput, setSubscriberNameInput] = useState("");
+  const [subscriberPlanIdInput, setSubscriberPlanIdInput] = useState("");
+  const [showSubscriberForm, setShowSubscriberForm] = useState(false);
   const [storeSaveStatus, setStoreSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [storeSaveError, setStoreSaveError] = useState("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -792,6 +669,43 @@ export default function DashboardScreen({
         decisions["industry-selection"]?.selectedPrimaryOptionId
     ) ?? "food";
   const isDigitalCategory = industryCategoryId === "online-digital";
+
+  // ── 업종별 관리 카드 표시 조건 (web industry-card-matrix.ts SSOT 기준) ──────────
+  // 재고 카드: 실물 발주가 필요한 업종 (카페도 원두·유제품 발주 있음)
+  const showInventoryCard = (
+    ["food", "cafe-dessert", "retail", "ecommerce", "pet", "space", "beauty"] as string[]
+  ).includes(industryCategoryId);
+  // 구독/회원 관리 카드 표시 조건:
+  //   1) 반복 결제가 *본업* 인 업종 (fitness·education·online-digital·startup-tech) — 항상 노출
+  //   2) 사장님이 "구독 모델 사용" 토글을 켰을 때 (usesSubscriptions === true) — 뷰티 멤버십, 외식 정기구독 등
+  //   3) 이미 플랜·구독자를 등록한 상태 — 데이터가 있으면 무조건 보여서 손실 방지
+  const isInherentSubscriptionIndustry = (
+    ["fitness", "education", "online-digital", "startup-tech"] as string[]
+  ).includes(industryCategoryId);
+  const showSubscriptionCard =
+    isInherentSubscriptionIndustry ||
+    usesSubscriptions ||
+    subscriptionPlans.length > 0 ||
+    subscribers.length > 0;
+  // 직원 카드: 직원 고용이 일반적인 오프라인 업종
+  const showStaffCard = (
+    ["food", "cafe-dessert", "beauty", "retail", "fitness", "education", "pet", "living-service"] as string[]
+  ).includes(industryCategoryId);
+  // 업종별 구독 카드 라벨
+  const subscriptionCardLabel =
+    industryCategoryId === "fitness"
+      ? (language === "ko" ? "회원권 관리" : "Memberships")
+      : industryCategoryId === "education"
+        ? (language === "ko" ? "수강권 관리" : "Enrollments")
+        : industryCategoryId === "startup-tech"
+          ? (language === "ko" ? "구독 플랜 관리" : "Subscription Plans")
+          : (language === "ko" ? "구독 관리" : "Subscriptions");
+  const subscriptionCardDesc =
+    industryCategoryId === "fitness"
+      ? (language === "ko" ? "회원권 갱신·만료·신규 등록을 웹에서 관리합니다." : "Manage membership renewals and new signups on web.")
+      : industryCategoryId === "education"
+        ? (language === "ko" ? "수강권 등록·미수금·재등록 현황을 웹에서 관리합니다." : "Track enrollments, overdue fees, and renewals on web.")
+        : (language === "ko" ? "구독 플랜·결제 주기·이탈률을 웹에서 관리합니다." : "Manage subscription plans and churn on web.");
   const localizedCurrentStage = localizeStage(currentStage, language, industryCategoryId);
   const isGuideStage = GUIDE_STAGE_CODES.includes(
     currentStage.code as (typeof GUIDE_STAGE_CODES)[number]
@@ -1047,6 +961,10 @@ export default function DashboardScreen({
     { key: "other", label: language === "ko" ? "기타" : "Other", value: monthlyCosts.other + monthlyCosts.sga + monthlyCosts.interest }
   ];
   const storeDataPayload = (): Partial<UserStoreData> => ({
+    // ── 1) passthrough 필드 (UI 가 아직 없어도 다른 기기에서 입력한 값 보존) ──
+    //   spread 가 먼저 와야 explicit state 가 override 함 (사용자가 mobile 에서 수정 가능)
+    ...extraStoreData,
+    // ── 2) explicit state 필드 (mobile UI 에서 직접 관리) ──
     storeName,
     businessLaunched,
     businessLaunchedDate,
@@ -1055,6 +973,9 @@ export default function DashboardScreen({
     products,
     inventoryItems,
     employees,
+    usesSubscriptions,
+    subscriptionPlans,
+    subscribers,
     aiRoadmapResult
   });
   const surfaceTabs: SurfaceTabItem[] = [
@@ -1404,9 +1325,23 @@ export default function DashboardScreen({
     setProducts(toMobileProducts(data.products));
     setInventoryItems(toMobileInventoryItems(data.inventoryItems));
     setEmployees(toMobileEmployees(data.employees));
+    setSubscriptionPlans(toMobileSubscriptionPlans(data.subscriptionPlans));
+    setSubscribers(toMobileSubscribers(data.subscribers));
+    setUsesSubscriptions(Boolean(data.usesSubscriptions));
     if (isRecord(data.aiRoadmapResult)) {
       setAiRoadmapResult(data.aiRoadmapResult as unknown as RoadmapGenerationResult);
     }
+
+    // 2026-05-27 패리티 (Phase 1): KNOWN 필드 외 모든 필드를 extraStoreData 에 보관.
+    //   웹에서 입력한 "내 가게" 정보·마케팅·인터뷰·시간로그·현금흐름 설정 등이 mobile 에서
+    //   사라지지 않도록 passthrough. mobile UI 가 아직 없어도 데이터는 그대로 echo.
+    const extras: Partial<UserStoreData> = {};
+    for (const [key, value] of Object.entries(data) as Array<[keyof UserStoreData, unknown]>) {
+      if (!KNOWN_STORE_FIELDS.has(key)) {
+        (extras as Record<string, unknown>)[key] = value;
+      }
+    }
+    setExtraStoreData(extras);
 
     if (data.monthlyCosts) {
       setCostIngredientsText(data.monthlyCosts.ingredients ? String(Math.round(data.monthlyCosts.ingredients / 10000)) : "");
@@ -1549,6 +1484,84 @@ export default function DashboardScreen({
     setEmployeeWageInput("");
     setEmployeeHoursInput("");
     void persistMobileStoreData({ employees: nextEmployees });
+  };
+
+  // ── 구독 플랜 CRUD ─────────────────────────────────────────────────────────
+  // 플랜은 만원 단위가 아닌 *원* 단위로 입력받음 (4,900원/월 등 소액 결제 흔함)
+  const handleAddPlan = () => {
+    const name = planNameInput.trim();
+    const price = Number(planPriceInput.replace(/[^0-9]/g, "")) || 0;
+    if (!name || !price) {
+      return;
+    }
+    const nextPlans: MobileSubscriptionPlan[] = [
+      ...subscriptionPlans,
+      {
+        id: `plan-${Date.now()}`,
+        name,
+        price,
+        billingCycle: planCycleInput,
+        isActive: true,
+      },
+    ];
+    setSubscriptionPlans(nextPlans);
+    setPlanNameInput("");
+    setPlanPriceInput("");
+    setPlanCycleInput("monthly");
+    // 첫 플랜 등록 시 usesSubscriptions 도 자동 true — 다른 기기·웹과 동기화
+    const nextUsesSubscriptions = true;
+    setUsesSubscriptions(nextUsesSubscriptions);
+    void persistMobileStoreData({
+      subscriptionPlans: nextPlans,
+      usesSubscriptions: nextUsesSubscriptions,
+    });
+  };
+
+  const handleDeletePlan = (planId: string) => {
+    const nextPlans = subscriptionPlans.filter((p) => p.id !== planId);
+    // 해당 플랜의 구독자도 같이 정리 (orphan 방지)
+    const nextSubscribers = subscribers.filter((s) => s.planId !== planId);
+    setSubscriptionPlans(nextPlans);
+    setSubscribers(nextSubscribers);
+    void persistMobileStoreData({
+      subscriptionPlans: nextPlans,
+      subscribers: nextSubscribers,
+    });
+  };
+
+  const handleAddSubscriber = () => {
+    const name = subscriberNameInput.trim();
+    const planId = subscriberPlanIdInput || subscriptionPlans.find((p) => p.isActive)?.id;
+    if (!name || !planId) {
+      return;
+    }
+    const nextSubscribers: MobileSubscriber[] = [
+      ...subscribers,
+      {
+        id: `sub-${Date.now()}`,
+        name,
+        planId,
+        status: "active",
+        joinedAt: new Date().toISOString().slice(0, 10),
+      },
+    ];
+    setSubscribers(nextSubscribers);
+    setSubscriberNameInput("");
+    setSubscriberPlanIdInput("");
+    setShowSubscriberForm(false);
+    void persistMobileStoreData({ subscribers: nextSubscribers });
+  };
+
+  const handleDeleteSubscriber = (subscriberId: string) => {
+    const nextSubscribers = subscribers.filter((s) => s.id !== subscriberId);
+    setSubscribers(nextSubscribers);
+    void persistMobileStoreData({ subscribers: nextSubscribers });
+  };
+
+  const handleToggleSubscriptionMode = () => {
+    const nextUses = !usesSubscriptions;
+    setUsesSubscriptions(nextUses);
+    void persistMobileStoreData({ usesSubscriptions: nextUses });
   };
 
   const handleIndustryContinue = () => {
@@ -2429,6 +2442,233 @@ export default function DashboardScreen({
         setLoanGuides([]);
       });
   }, [industryCategoryId, requiresAuth, language]);
+
+  // ── 구독 관리 카드 (analytics + profile surface 양쪽에서 재사용) ──────────
+  //   사장님이 대시보드(analytics) 또는 내 설정(profile) 어느 쪽에서든 플랜·구독자 CRUD 가능.
+  //   계산된 JSX 를 한 번만 만들고 두 곳에서 렌더 — state 는 컴포넌트 최상위에 있으므로 공유됨.
+  //   activeSurface 가 mutually exclusive 라서 동시에 두 인스턴스 보이지 않음.
+  const subscriptionCardElement: React.ReactNode = showSubscriptionCard ? (() => {
+    const activeSubs = subscribers.filter((s) => s.status === "active" || s.status === "trial");
+    const planMap = Object.fromEntries(subscriptionPlans.map((p) => [p.id, p]));
+    const mrr = activeSubs.reduce((sum, s) => {
+      const plan = planMap[s.planId];
+      if (!plan) return sum;
+      return sum + (plan.billingCycle === "annual" ? Math.round(plan.price / 12) : plan.price);
+    }, 0);
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const newThisMonth = subscribers.filter(
+      (s) => s.joinedAt.startsWith(thisMonth) && s.status !== "churned"
+    ).length;
+    const activePlans = subscriptionPlans.filter((p) => p.isActive);
+    const canAddSubscriber = activePlans.length > 0;
+    return (
+      <View style={styles.budgetPanel}>
+        <Text style={styles.budgetLabel}>{subscriptionCardLabel}</Text>
+
+        {/* ── 상단 메트릭 ── */}
+        <View style={styles.metricGrid}>
+          <ProfileItem
+            label={language === "ko" ? "활성 구독자" : "Active subs"}
+            value={`${activeSubs.length}${language === "ko" ? "명" : ""}`}
+          />
+          <ProfileItem
+            label={language === "ko" ? "월 반복 매출(MRR)" : "MRR"}
+            value={formatWonCompact(mrr, language)}
+          />
+          <ProfileItem
+            label={language === "ko" ? "이번 달 신규" : "New this month"}
+            value={`${newThisMonth}${language === "ko" ? "명" : ""}`}
+          />
+          <ProfileItem
+            label={language === "ko" ? "활성 플랜 수" : "Active plans"}
+            value={`${activePlans.length}`}
+          />
+        </View>
+
+        {/* ── 플랜 리스트 + 삭제 ── */}
+        {activePlans.length > 0 ? (
+          activePlans.slice(0, 5).map((plan) => {
+            const planSubs = activeSubs.filter((s) => s.planId === plan.id).length;
+            return (
+              <View key={plan.id} style={styles.inlineSummaryRow}>
+                <Text style={styles.inlineSummaryLabel}>{plan.name}</Text>
+                <Text style={styles.inlineSummaryValue}>
+                  {formatWonCompact(plan.price, language)}/{language === "ko" ? (plan.billingCycle === "annual" ? "년" : "월") : (plan.billingCycle === "annual" ? "yr" : "mo")}
+                  {" · "}{planSubs}{language === "ko" ? "명" : ""}
+                </Text>
+                <Pressable onPress={() => handleDeletePlan(plan.id)}>
+                  <Text style={[styles.helper, { color: "#C0392B" }]}>
+                    {language === "ko" ? "삭제" : "Delete"}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          })
+        ) : (
+          <Text style={styles.helper}>{subscriptionCardDesc}</Text>
+        )}
+
+        {/* ── 플랜 등록 폼 ── */}
+        <Text style={[styles.helper, { marginTop: 12, fontWeight: "600" }]}>
+          {language === "ko" ? "+ 새 플랜 등록" : "+ Add new plan"}
+        </Text>
+        <TextInput
+          value={planNameInput}
+          onChangeText={setPlanNameInput}
+          placeholder={language === "ko" ? "플랜 이름 (예: Standard, 월회원)" : "Plan name (e.g. Standard)"}
+          placeholderTextColor="#8A909C"
+          style={styles.budgetInput}
+        />
+        <TextInput
+          value={planPriceInput}
+          onChangeText={(value) => setPlanPriceInput(value.replace(/[^0-9]/g, ""))}
+          keyboardType="number-pad"
+          placeholder={language === "ko" ? "가격, 원 단위 (예: 29000)" : "Price in KRW (e.g. 29000)"}
+          placeholderTextColor="#8A909C"
+          style={styles.budgetInput}
+        />
+        <View style={styles.summaryBar}>
+          <Pressable
+            onPress={() => setPlanCycleInput("monthly")}
+            style={[styles.summarySegment, planCycleInput === "monthly" && { backgroundColor: "#191970" }]}
+          >
+            <Text style={[styles.summarySegmentText, planCycleInput === "monthly" && { color: "#FFF" }]}>
+              {language === "ko" ? "월 결제" : "Monthly"}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setPlanCycleInput("annual")}
+            style={[styles.summarySegment, styles.summarySegmentLast, planCycleInput === "annual" && { backgroundColor: "#191970" }]}
+          >
+            <Text style={[styles.summarySegmentText, planCycleInput === "annual" && { color: "#FFF" }]}>
+              {language === "ko" ? "연 결제" : "Annual"}
+            </Text>
+          </Pressable>
+        </View>
+        <Pressable
+          onPress={handleAddPlan}
+          disabled={!planNameInput.trim() || !planPriceInput.trim()}
+          style={[
+            styles.secondaryButton,
+            (!planNameInput.trim() || !planPriceInput.trim()) && styles.primaryButtonDisabled,
+          ]}
+        >
+          <Text style={styles.secondaryButtonText}>
+            {language === "ko" ? "플랜 추가" : "Add plan"}
+          </Text>
+        </Pressable>
+
+        {/* ── 구독자 등록 (플랜이 있어야 가능) ── */}
+        {canAddSubscriber ? (
+          showSubscriberForm ? (
+            <>
+              <Text style={[styles.helper, { marginTop: 12, fontWeight: "600" }]}>
+                {language === "ko" ? "+ 구독자 추가" : "+ Add subscriber"}
+              </Text>
+              <TextInput
+                value={subscriberNameInput}
+                onChangeText={setSubscriberNameInput}
+                placeholder={language === "ko" ? "구독자 이름" : "Subscriber name"}
+                placeholderTextColor="#8A909C"
+                style={styles.budgetInput}
+              />
+              <View style={styles.summaryBar}>
+                {activePlans.slice(0, 3).map((plan, idx) => {
+                  const isLast = idx === Math.min(activePlans.length, 3) - 1;
+                  const selectedId = subscriberPlanIdInput || activePlans[0].id;
+                  const isSelected = selectedId === plan.id;
+                  return (
+                    <Pressable
+                      key={plan.id}
+                      onPress={() => setSubscriberPlanIdInput(plan.id)}
+                      style={[
+                        styles.summarySegment,
+                        isLast && styles.summarySegmentLast,
+                        isSelected && { backgroundColor: "#191970" },
+                      ]}
+                    >
+                      <Text style={[styles.summarySegmentText, isSelected && { color: "#FFF" }]}>
+                        {plan.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Pressable
+                onPress={handleAddSubscriber}
+                disabled={!subscriberNameInput.trim()}
+                style={[styles.secondaryButton, !subscriberNameInput.trim() && styles.primaryButtonDisabled]}
+              >
+                <Text style={styles.secondaryButtonText}>
+                  {language === "ko" ? "구독자 추가" : "Add subscriber"}
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <Pressable onPress={() => setShowSubscriberForm(true)}>
+              <Text style={[styles.helper, { marginTop: 12, color: "#191970", fontWeight: "600" }]}>
+                {language === "ko" ? "+ 구독자 추가" : "+ Add subscriber"}
+              </Text>
+            </Pressable>
+          )
+        ) : null}
+
+        {/* ── 활성 구독자 리스트 (최근 가입 순) ── */}
+        {activeSubs.length > 0 ? (
+          <>
+            <Text style={[styles.helper, { marginTop: 12, fontWeight: "600" }]}>
+              {language === "ko" ? `최근 구독자 (${activeSubs.length}명)` : `Recent subscribers (${activeSubs.length})`}
+            </Text>
+            {[...activeSubs]
+              .sort((a, b) => b.joinedAt.localeCompare(a.joinedAt))
+              .slice(0, 3)
+              .map((sub) => {
+                const plan = planMap[sub.planId];
+                return (
+                  <View key={sub.id} style={styles.inlineSummaryRow}>
+                    <Text style={styles.inlineSummaryLabel}>{sub.name}</Text>
+                    <Text style={styles.inlineSummaryValue}>
+                      {plan ? plan.name : (language === "ko" ? "(플랜 삭제됨)" : "(plan deleted)")}
+                      {sub.joinedAt ? ` · ${sub.joinedAt}` : ""}
+                    </Text>
+                    <Pressable onPress={() => handleDeleteSubscriber(sub.id)}>
+                      <Text style={[styles.helper, { color: "#C0392B" }]}>
+                        {language === "ko" ? "삭제" : "Delete"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                );
+              })}
+          </>
+        ) : null}
+
+        {/* ── 비-본업 업종에서 토글 OFF 옵션 (잘못 켰을 때) ── */}
+        {!isInherentSubscriptionIndustry && subscriptionPlans.length === 0 && subscribers.length === 0 ? (
+          <Pressable onPress={handleToggleSubscriptionMode} style={{ marginTop: 8 }}>
+            <Text style={[styles.helper, { textAlign: "center" }]}>
+              {language === "ko" ? "구독 모델 사용 안 함 →" : "Disable subscription tracking →"}
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
+    );
+  })() : (
+    !isInherentSubscriptionIndustry ? (
+      <Pressable onPress={handleToggleSubscriptionMode} style={styles.budgetPanel}>
+        <Text style={styles.budgetLabel}>
+          {language === "ko" ? "구독·멤버십 사용 중이신가요?" : "Run a subscription or membership?"}
+        </Text>
+        <Text style={styles.helper}>
+          {language === "ko"
+            ? "활성화하면 플랜·구독자·MRR 을 모바일에서 바로 관리할 수 있습니다."
+            : "Enable to track plans, subscribers, and MRR right from mobile."}
+        </Text>
+        <Text style={[styles.secondaryButtonText, { marginTop: 8, color: "#191970", fontWeight: "600" }]}>
+          {language === "ko" ? "구독 모델 활성화 →" : "Enable subscriptions →"}
+        </Text>
+      </Pressable>
+    ) : null
+  );
 
   return (
     <AuroraBackground>
@@ -4362,6 +4602,9 @@ export default function DashboardScreen({
                   </Text>
                 </Pressable>
               </View>
+
+            {/* 구독/회원 관리 — analytics 와 동일 카드. 어느 쪽에서든 CRUD 가능. */}
+            {subscriptionCardElement}
           </View>
         ) : null}
 
@@ -4917,36 +5160,70 @@ export default function DashboardScreen({
                 </View>
               ))}
             </View>
-            <View style={styles.budgetPanel}>
-              <Text style={styles.budgetLabel}>{language === "ko" ? "재고" : "Inventory"}</Text>
-              <TextInput value={inventoryNameInput} onChangeText={setInventoryNameInput} placeholder={language === "ko" ? "재고명" : "Inventory item"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
-              <TextInput value={inventoryQtyInput} onChangeText={(value) => setInventoryQtyInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "현재 수량" : "Quantity"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
-              <TextInput value={inventoryThresholdInput} onChangeText={(value) => setInventoryThresholdInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "최소 수량" : "Minimum threshold"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
-              <Pressable onPress={handleAddInventoryItem} disabled={!inventoryNameInput.trim()} style={[styles.secondaryButton, !inventoryNameInput.trim() && styles.primaryButtonDisabled]}>
-                <Text style={styles.secondaryButtonText}>{language === "ko" ? "재고 추가" : "Add inventory"}</Text>
-              </Pressable>
-              {inventoryItems.slice(0, 3).map((item) => (
-                <View key={item.id} style={styles.inlineSummaryRow}>
-                  <Text style={styles.inlineSummaryLabel}>{item.name}</Text>
-                  <Text style={styles.inlineSummaryValue}>{item.quantity}{item.unit} · {language === "ko" ? "최소" : "Min"} {item.minThreshold}</Text>
-                </View>
-              ))}
-            </View>
-            <View style={styles.budgetPanel}>
-              <Text style={styles.budgetLabel}>{language === "ko" ? "직원" : "Staff"}</Text>
-              <TextInput value={employeeNameInput} onChangeText={setEmployeeNameInput} placeholder={language === "ko" ? "직원 이름" : "Employee name"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
-              <TextInput value={employeeWageInput} onChangeText={(value) => setEmployeeWageInput(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "시급, 원 단위" : "Hourly wage, KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
-              <TextInput value={employeeHoursInput} onChangeText={(value) => setEmployeeHoursInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "주 근무시간" : "Weekly hours"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
-              <Pressable onPress={handleAddEmployee} disabled={!employeeNameInput.trim() || !employeeWageInput.trim() || !employeeHoursInput.trim()} style={[styles.secondaryButton, (!employeeNameInput.trim() || !employeeWageInput.trim() || !employeeHoursInput.trim()) && styles.primaryButtonDisabled]}>
-                <Text style={styles.secondaryButtonText}>{language === "ko" ? "직원 추가" : "Add staff"}</Text>
-              </Pressable>
-              {employees.slice(0, 3).map((employee) => (
-                <View key={employee.id} style={styles.inlineSummaryRow}>
-                  <Text style={styles.inlineSummaryLabel}>{employee.name}</Text>
-                  <Text style={styles.inlineSummaryValue}>{formatWonCompact(employee.hourlyWage, language)} · {employee.weeklyHours}h/w</Text>
-                </View>
-              ))}
-            </View>
+            {/* 재고 관리 — 실물 발주 업종만 (food·카페·소매·이커머스·펫·공간·뷰티) */}
+            {showInventoryCard ? (
+              <View style={styles.budgetPanel}>
+                <Text style={styles.budgetLabel}>{language === "ko" ? "재고" : "Inventory"}</Text>
+                <TextInput value={inventoryNameInput} onChangeText={setInventoryNameInput} placeholder={language === "ko" ? "재고명" : "Inventory item"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+                <TextInput value={inventoryQtyInput} onChangeText={(value) => setInventoryQtyInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "현재 수량" : "Quantity"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+                <TextInput value={inventoryThresholdInput} onChangeText={(value) => setInventoryThresholdInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "최소 수량 (발주 알림)" : "Min threshold (reorder alert)"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+                <Pressable onPress={handleAddInventoryItem} disabled={!inventoryNameInput.trim()} style={[styles.secondaryButton, !inventoryNameInput.trim() && styles.primaryButtonDisabled]}>
+                  <Text style={styles.secondaryButtonText}>{language === "ko" ? "재고 추가" : "Add inventory"}</Text>
+                </Pressable>
+                {inventoryItems.length > 0 ? (
+                  inventoryItems.slice(0, 3).map((item) => (
+                    <View key={item.id} style={styles.inlineSummaryRow}>
+                      <Text style={styles.inlineSummaryLabel}>{item.name}</Text>
+                      <Text style={[
+                        styles.inlineSummaryValue,
+                        item.quantity <= item.minThreshold && { color: "#C0392B" },
+                      ]}>
+                        {item.quantity}{item.unit}
+                        {item.quantity <= item.minThreshold
+                          ? (language === "ko" ? " · 발주 필요" : " · Reorder needed")
+                          : ` · ${language === "ko" ? "최소" : "Min"} ${item.minThreshold}`}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.helper}>
+                    {language === "ko"
+                      ? "재고를 추가하면 최소 수량 미만 시 빨간색으로 표시됩니다."
+                      : "Items below minimum threshold will appear in red."}
+                  </Text>
+                )}
+              </View>
+            ) : null}
+
+            {/* 구독/회원 관리 — analytics + profile 양쪽에서 재사용 (subscriptionCardElement 로 추출) */}
+            {subscriptionCardElement}
+
+            {/* 직원 관리 — 오프라인 인력 업종만 (food·카페·뷰티·소매·피트니스·교육·펫·생활서비스) */}
+            {showStaffCard ? (
+              <View style={styles.budgetPanel}>
+                <Text style={styles.budgetLabel}>{language === "ko" ? "직원" : "Staff"}</Text>
+                <TextInput value={employeeNameInput} onChangeText={setEmployeeNameInput} placeholder={language === "ko" ? "직원 이름" : "Employee name"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+                <TextInput value={employeeWageInput} onChangeText={(value) => setEmployeeWageInput(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder={language === "ko" ? "시급, 원 단위" : "Hourly wage, KRW"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+                <TextInput value={employeeHoursInput} onChangeText={(value) => setEmployeeHoursInput(value.replace(/[^0-9.]/g, ""))} keyboardType="decimal-pad" placeholder={language === "ko" ? "주 근무시간" : "Weekly hours"} placeholderTextColor="#8A909C" style={styles.budgetInput} />
+                <Pressable onPress={handleAddEmployee} disabled={!employeeNameInput.trim() || !employeeWageInput.trim() || !employeeHoursInput.trim()} style={[styles.secondaryButton, (!employeeNameInput.trim() || !employeeWageInput.trim() || !employeeHoursInput.trim()) && styles.primaryButtonDisabled]}>
+                  <Text style={styles.secondaryButtonText}>{language === "ko" ? "직원 추가" : "Add staff"}</Text>
+                </Pressable>
+                {employees.length > 0 ? (
+                  employees.slice(0, 3).map((employee) => (
+                    <View key={employee.id} style={styles.inlineSummaryRow}>
+                      <Text style={styles.inlineSummaryLabel}>{employee.name}</Text>
+                      <Text style={styles.inlineSummaryValue}>{formatWonCompact(employee.hourlyWage, language)} · {employee.weeklyHours}h/w</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.helper}>
+                    {language === "ko"
+                      ? "직원을 추가하면 주 인건비 합계가 자동 계산됩니다."
+                      : "Add staff to auto-calculate weekly labor costs."}
+                  </Text>
+                )}
+              </View>
+            ) : null}
             <View style={styles.step}>
               <Text style={styles.stepMeta}>{language === "ko" ? "다음 행동" : "Next actions"}</Text>
               <Text style={styles.stepTitle}>{language === "ko" ? "분석을 채우는 빠른 입력" : "Quick inputs to improve analysis"}</Text>

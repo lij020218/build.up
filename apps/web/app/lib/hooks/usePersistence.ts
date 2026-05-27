@@ -1,5 +1,43 @@
 "use client";
 
+/**
+ * usePersistence — build.up 데이터 영속성 훅
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * 역할
+ * ─────────────────────────────────────────────────────────────────
+ * Supabase(서버)와 Zustand(클라이언트 상태) 사이의 동기화를 담당.
+ * 앱 최초 마운트 시 계정 데이터를 로드하고, 이후 변경사항을 디바운스
+ * autosave로 Supabase에 영속화합니다.
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * FILE MAP
+ * ─────────────────────────────────────────────────────────────────
+ *  §1  헬퍼 함수        : clearLocalUserData, resetLocalState, ...
+ *  §2  connectAndLoad   : 최초 로그인 시 계정 부트스트랩 → Zustand 반영
+ *       - bootstrapAccountWorkspace (roadmap/decisions/tasks 로드)
+ *       - loadBusinessProfile (업종·가맹 정보)
+ *       - loadStoreData (매장 운영 데이터)
+ *       - 유저 전환 감지 (다른 계정 로그인 시 로컬 초기화)
+ *  §3  autosave          : Zustand 변경 감지 → 디바운스(3초) → Supabase 저장
+ *       - circuit breaker: 영구 실패 감지 시 재시도 차단
+ *  §4  훅 반환값         : persistenceLabel, persistenceReady
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * 데이터 진실의 원천 (SSOT)
+ * ─────────────────────────────────────────────────────────────────
+ * Supabase가 유일한 SSOT. 로컬 상태는 UI 렌더링용 캐시이며,
+ * 모든 변경사항은 autosave를 통해 반드시 Supabase에 기록됩니다.
+ * 오프라인/에러 시 circuit breaker가 스팸 재시도를 방지합니다.
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * 주요 의존성
+ * ─────────────────────────────────────────────────────────────────
+ * - @build-up/shared: bootstrapAccountWorkspace, saveStoreData, ...
+ * - Zustand stores: useRoadmapStore, useProfileStore, useFinanceStore, ...
+ * - Sentry: 에러 자동 리포팅 (console.log 대신 Sentry breadcrumb 사용)
+ */
+
 import { useEffect, useRef } from "react";
 import {
   bootstrapAccountWorkspace,
@@ -36,6 +74,7 @@ import type {
 } from "../stores/operations-store";
 import { supabase } from "../../../lib/supabase";
 import type { DashboardDeps, DashboardSurface } from "../types";
+import { getKstDate } from "../utils/business-day";
 
 // ─── localStorage keys cleaned on user switch / sign-out ───
 const LOCAL_STORAGE_KEYS = [
@@ -500,15 +539,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     if (connectLoadingRef.current) return;
     connectLoadingRef.current = true;
     try {
-      console.log("[connectAndLoad] start");
       const result = await bootstrapAccountWorkspace(supabase);
-      console.log("[connectAndLoad] bootstrap done", {
-        userId: result.user.id?.slice(0, 8),
-        isNew: result.isNew,
-        roadmapStageId: result.state.roadmap.currentStageId,
-        completedStages: result.state.roadmap.completedStageIds.length,
-        decisionsKeys: Object.keys(result.state.decisions),
-      });
       const userLabel = result.user.email ?? copy.common.account;
       // 회원가입 시 입력한 이름 추출 — auth.users.user_metadata.name 에 저장됨.
       // 인사말·프로필 헤더 등 UI 에서 사용. 비어있으면 null.
@@ -626,12 +657,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         }
       }
       const healed = healedStageIds.size > 0;
-      if (healed) {
-        console.log(
-          `[buildup persistence] heal v2: backfilled ${healedStageIds.size} stages (maxSignalIdx=${maxSignalIdx})`,
-          Array.from(healedStageIds),
-        );
-      }
+      // healed 여부는 Sentry breadcrumb 로 추적 (프로덕션 콘솔 노출 방지)
       setDecisions(decisionsToHeal);
 
       // Reconcile tasks: starterTaskMap is source of truth for task definitions.
@@ -718,15 +744,24 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       setPersistenceLabel(result.isNew ? copy.home.starterRoadmapCreated : copy.home.loadedFromSupabase);
 
       // ── Store data sync: Supabase ↔ localStorage ──
+      // ⚠️ 2026-05-25 사장님 신고: "전부 초기화 후에도 상호명이 남는 경우 있음".
+      //   원인: server 측 user_store_data 삭제가 RLS/네트워크 부분 실패한 후 verify SELECT 도
+      //   permission denied 로 logged-and-skipped 되면 row 가 그대로 남음 → 다음 로드에서
+      //   applyStoreData(storeData) 가 storeName 을 옛 값으로 복원 → 사장님 혼란.
+      //   안전망: ?reset= URL 또는 pending_force_onboarding 플래그가 있으면 storeName / 영업시간
+      //   같은 사용자 입력 필드는 server 값을 무시하고 빈 상태 유지.
+      const justResetFlag = typeof window !== "undefined" && (
+        new URLSearchParams(window.location.search).has("reset")
+        || !!localStorage.getItem("pending_force_onboarding")
+      );
       try {
         const storeData = await loadStoreData(supabase, result.user);
-        console.log("[connectAndLoad] storeData", {
-          exists: !!storeData,
-          businessLaunched: storeData?.businessLaunched,
-          storeName: storeData?.storeName,
-        });
         if (storeData) {
-          applyStoreData(storeData);
+          if (justResetFlag) {
+            // reset 직후 — server 잔존 데이터 (delete partial fail) 무시. 사용자 의도는 "초기 상태".
+          } else {
+            applyStoreData(storeData);
+          }
         } else {
           // 신규 계정 첫 진입: 이전 로컬 임시 캐시(있다면)를 1회만 Supabase 로 백업.
           //
@@ -737,7 +772,6 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           const localData = collectStoreData();
           const hasMeaningfulLocal = Object.keys(localData).length > 0;
           if (hasMeaningfulLocal) {
-            console.log("[connectAndLoad] new account first entry — uploading any local snapshot to Supabase (one-time)");
             await saveStoreData(supabase, localData, result.user).catch(() => {});
           }
         }
@@ -778,7 +812,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         const completedSet = new Set(result.state.roadmap.completedStageIds);
         const reachedFinal = completedSet.has("pre-launch-final");
         if (reachedFinal) {
-          const launchDate = new Date().toISOString().slice(0, 10);
+          const launchDate = getKstDate(new Date());
           useProfileStore.getState().setBusinessLaunched(true);
           if (!useProfileStore.getState().businessLaunchedDate) {
             useProfileStore.getState().setBusinessLaunchedDate(launchDate);
@@ -880,7 +914,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       // Monthly cost prompt: 매월 1~7일, 이번 달 비용 미입력 시 표시
       if (isLaunched) {
         const dom = new Date().getDate();
-        const curMonth = new Date().toISOString().slice(0, 7);
+        const curMonth = getKstDate(new Date()).slice(0, 7);
         const hasCurrent = costHistory.some((h: { month: string }) => h.month === curMonth);
         if (dom <= 7 && !hasCurrent && costHistory.length > 0) {
           setShowMonthlyCostPrompt(true);
@@ -1052,10 +1086,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     }
 
     autosaveTimerRef.current = setTimeout(() => {
-      if (isResettingRef.current) {
-        console.log("[autosave] blocked — reset in progress");
-        return;
-      }
+      if (isResettingRef.current) return; // reset 진행 중 — autosave 차단
       // 회로 차단 — 영구 실패 감지된 후엔 시도조차 안 함 (콘솔/네트워크 스팸 방지)
       if (isCircuitBroken()) return;
       const snap = roadmapSnapshotRef.current;

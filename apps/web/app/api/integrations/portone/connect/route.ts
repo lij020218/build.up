@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   }
 
   // 2. Rate limit (분당 5회 — 무차별 키 검증 방지)
-  const rl = checkSimpleRateLimit({
+  const rl = await checkSimpleRateLimit({
     key: `portone-connect:${auth.userId}`,
     limit: 5,
     windowMs: 60_000,

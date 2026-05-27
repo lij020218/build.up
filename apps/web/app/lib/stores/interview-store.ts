@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getKstDate } from "../utils/business-day";
 
 // ─── Types ───
 
@@ -80,7 +81,7 @@ export const useInterviewStore = create<InterviewState & InterviewActions>()(
           customerInterviews: [
             {
               id: `iv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-              date: input.date ?? new Date().toISOString().slice(0, 10),
+              date: input.date ?? getKstDate(new Date()),
               ...input,
             },
             ...s.customerInterviews,

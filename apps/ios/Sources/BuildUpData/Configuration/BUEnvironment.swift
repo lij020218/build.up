@@ -19,6 +19,9 @@ public struct BUEnvironment: Sendable {
     public let supabaseURL: URL
     public let supabaseAnonKey: String
     public let environment: Environment
+    /// AI 로드맵 API 등 웹 앱 엔드포인트 기반 URL.
+    /// 개발: http://localhost:3000 | 프로덕션: https://your-domain.com
+    public let webAppURL: URL
 
     public enum Environment: String, Sendable {
         case development
@@ -26,10 +29,11 @@ public struct BUEnvironment: Sendable {
         case production
     }
 
-    public init(supabaseURL: URL, supabaseAnonKey: String, environment: Environment) {
+    public init(supabaseURL: URL, supabaseAnonKey: String, environment: Environment, webAppURL: URL) {
         self.supabaseURL = supabaseURL
         self.supabaseAnonKey = supabaseAnonKey
         self.environment = environment
+        self.webAppURL = webAppURL
     }
 
     /// Info.plist 에서 환경 로드. 누락 시 fatalError (실제 빌드에선 반드시 주입 필요).
@@ -54,13 +58,19 @@ public struct BUEnvironment: Sendable {
         let envString = info["BU_ENVIRONMENT"] as? String ?? "production"
         let env = Environment(rawValue: envString) ?? .production
 
-        return BUEnvironment(supabaseURL: url, supabaseAnonKey: anonKey, environment: env)
+        // ⚠️ 2026-05-25 fix: Info.plist 누락 시 production 환경 기본값을 Vercel 배포 URL 로.
+        //   이전: localhost:3000 — Mac 에서 next dev 안 돌고 있으면 모든 AI 호출 실패.
+        let webURLString = info["WEB_APP_URL"] as? String ?? "https://build-up-gamma.vercel.app"
+        let webURL = URL(string: webURLString) ?? URL(string: "https://build-up-gamma.vercel.app")!
+
+        return BUEnvironment(supabaseURL: url, supabaseAnonKey: anonKey, environment: env, webAppURL: webURL)
     }
 
     /// Preview / 단위 테스트 더미 값.
     public static let mockForPreview = BUEnvironment(
         supabaseURL: URL(string: "https://mock.supabase.co")!,
         supabaseAnonKey: "mock-anon-key",
-        environment: .development
+        environment: .development,
+        webAppURL: URL(string: "http://localhost:3000")!
     )
 }

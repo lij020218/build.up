@@ -57,9 +57,8 @@ public struct MarketingView: View {
     }
 
     public var body: some View {
+        // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
         ZStack {
-            BUBackgroundSurface()
-
             ScrollView {
                 VStack(alignment: .leading, spacing: BUSpacing.md) {
                     header

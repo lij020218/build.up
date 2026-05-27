@@ -669,11 +669,11 @@ export function StartupFoundationStage() {
         // 검증된 데이터 (이중 출처):
         // - 헬프미·자비스: 법인 등록면허세 11.25만 + 지방교육세 (등록면허세 20%) + 법원수수료 2-3.5만 = 14-16만 + 법무사 30-50만
         // - 과밀억제권역 (수도권): 등록면허세 3배 중과세
-        // - 토스페이먼츠/세이브택스: 개인사업자 6-45% / 법인 9-25%, 순이익 2억+ 시 법인 전환 권장
+        // - 토스페이먼츠/세이브택스: 개인사업자 6-45% / 법인 10-25% (2026.1 인상), 순이익 2억+ 시 법인 전환 권장
         // - ZUZU: 옵션풀 일반 10% / 상장 15% / 벤처기업 50%
         // - 한국 상법: 스톡옵션 cliff 최소 2년 / 벤처기업법은 1년 cliff 가능
         // - 매쉬업벤처스/Star Law: 4년 베스팅 + cliff 표준
-        // - KIPRIS: 상표 출원 변리사 30-50만, 직접 무료. 특허 startup 70% 우선심사 할인
+        // - KIPRIS: 상표 출원 변리사 30-50만, 직접 무료. 특허 스타트업 (사업개시 3년 이내) 우선심사 신청료 70% 감면 (연 10건 한정)
         // - 스톡옵션 비과세: 연 2억·누적 5억 (2027.12.31까지 부여)
         const modeContent: Record<string, {
           headline: string;
@@ -747,13 +747,13 @@ export function StartupFoundationStage() {
             ],
             advantages: ko ? [
               "✓ 유한책임 — 개인 자산 보호 (인디 무한책임 대비)",
-              "✓ 법인세 9-25% (개인사업자 6-45% — 고소득 구간에서 절세)",
+              "✓ 법인세 10-25% (2026.1 인상, 개인사업자 6-45% — 고소득 구간에서 절세)",
               "✓ SHA 통한 공동창업자 분쟁 사전 차단",
               "✓ 시드 라운드 시 'corp + SHA + IP' 패키지 = 즉시 due diligence 통과",
               "✓ 정부지원사업 (예비창업·초기창업·청년창업사관학교) 자격 폭 넓어짐",
             ] : [
               "✓ Limited liability",
-              "✓ Corp tax 9-25% beats sole prop 6-45% at higher income",
+              "✓ Corp tax 10-25% (2026.1 hike) beats sole prop 6-45% at higher income",
               "✓ SHA prevents co-founder disputes",
               "✓ Seed-ready cap table",
               "✓ Wider govt program eligibility",
@@ -780,7 +780,7 @@ export function StartupFoundationStage() {
               { label: "1단계: 변호사 위임 SHA 정비 (200-500만)", detail: "시드 VC 가 요구하는 표준 조항 반영: Liquidation Preference 1x non-participating · Anti-dilution Broad-Based · Pro-Rata Right · Drag-Along · Tag-Along · ROFR." },
               { label: "2단계: 옵션풀 10-15% 사전 발행 + ESOP 정책", detail: "시리즈A VC는 옵션풀 부족 시 추가 발행 요구 — 사전 확보가 핵심. 직원 별 grant 정책 (Engineer 0.1-1% / Senior 1-3% / VP 1-5%) 표준화." },
               { label: "3단계: 벤처기업 인증 (투자유치형, 시드 1억+)", detail: "VC·액셀러레이터 1억+ 투자 받았으면 자동 자격. 옵션풀 50% 한도 + 법인세 5년 50% 감면 + R&D 25% 세액공제 + 병역특례." },
-              { label: "4단계: 정식 IP 전략 (변리사 정기 자문 50-100만/월)", detail: "트레이드마크 다국가 (한국·미국·EU·중국) + 핵심 특허 출원 + Trade Secret 정책. startup 70% 우선심사 할인 활용." },
+              { label: "4단계: 정식 IP 전략 (변리사 정기 자문 50-100만/월)", detail: "트레이드마크 다국가 (한국·미국·EU·중국) + 핵심 특허 출원 + Trade Secret 정책. 스타트업 (사업개시 3년 이내) 우선심사 신청료 70% 감면 (연 10건 한정) 활용." },
               { label: "5단계: 회계 시스템 + 월간 결산 (자비스·더존)", detail: "VC 보고용 표준 재무제표. 자비스 SaaS 친화 + 영문 출력. 월 30-50만원." },
             ] : [
               { label: "Step 1: Lawyer-drafted SHA (2-5M KRW)", detail: "Standard VC clauses: Liq Pref 1x non-part, Anti-dilution BB, Pro-Rata, Drag/Tag-Along, ROFR." },

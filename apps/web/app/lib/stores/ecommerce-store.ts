@@ -19,6 +19,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getKstDate } from "../utils/business-day";
 
 export type AdChannel = "naver" | "coupang" | "meta" | "google" | "kakao" | "other";
 
@@ -76,7 +77,7 @@ export const useEcommerceStore = create<EcommerceState>()(
         const today = new Date();
         const days7 = Array.from({ length: 7 }, (_, i) => {
           const d = new Date(today.getTime() - i * 86400000);
-          return d.toISOString().slice(0, 10);
+          return getKstDate(d);
         });
         set({
           adSpends: [

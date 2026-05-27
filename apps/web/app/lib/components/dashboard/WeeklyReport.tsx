@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CalendarDays } from "lucide-react";
 import type { DashboardHook } from "../../useDashboard";
 import { EmptyStateCard } from "./EmptyStateCard";
+import { getKstDate } from "../../utils/business-day";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -27,8 +28,8 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
   const lastSunday = new Date(thisMonday);
   lastSunday.setDate(lastSunday.getDate() - 1);
 
-  const toIso = (dt: Date) => dt.toISOString().slice(0, 10);
-  const todayStr = now.toISOString().slice(0, 10);
+  const toIso = (dt: Date) => getKstDate(dt);
+  const todayStr = getKstDate(now);
 
   const thisWeek = entries.filter((e) => e.date >= toIso(thisMonday) && e.date <= todayStr);
   const lastWeek = entries.filter((e) => e.date >= toIso(lastMonday) && e.date <= toIso(lastSunday));

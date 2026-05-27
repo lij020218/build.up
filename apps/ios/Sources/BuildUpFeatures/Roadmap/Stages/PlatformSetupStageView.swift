@@ -32,8 +32,8 @@ public struct PlatformSetupStageView: View {
 
     /// 2025 한국 주요 이커머스 플랫폼 — 네이버 2025 수수료 개편 반영 (주문 + 판매 분리).
     private let platforms: [PlatformOption] = [
-        PlatformOption(id: "smartstore", name: "네이버 스마트스토어", desc: "주문 1.98~3.74% + 판매 0.91~2.73% (등급별). 국내 1위 트래픽 · 네이버 검색 직접 연결."),
-        PlatformOption(id: "coupang",    name: "쿠팡 마켓플레이스",   desc: "카테고리별 4~10.8% + 월 정액 5.5만원. 와우 1,300만+ 노출 · 로켓배송 별도 심사."),
+        PlatformOption(id: "smartstore", name: "네이버 스마트스토어", desc: "네이버페이 결제 1.98~3.63% (등급별, 2025.10 인하) + 유입 수수료 2% (고정). 국내 1위 트래픽 · 네이버 검색 직접 연결."),
+        PlatformOption(id: "coupang",    name: "쿠팡 마켓플레이스",   desc: "카테고리별 4~10.8% + 월매출 100만원↑ 시 월 정액 55,000원 (VAT 포함). 와우 1,300만+ 노출 · 로켓배송 별도 심사."),
         PlatformOption(id: "kakao",      name: "카카오톡 스토어",     desc: "수수료 약 6% + 결제 수수료. 카카오 메시지·선물하기 연계. 객단가 높은 카테고리 강세."),
         PlatformOption(id: "elevenst",   name: "11번가 / G마켓 (이베이)", desc: "이베이코리아 통합 · 카테고리별 약 8~12%. 멤버십 매출 안정."),
         PlatformOption(id: "own",        name: "자체 쇼핑몰",         desc: "카페24·아임웹·Shopify · 월 0~7만원 + PG 3%. 마진 최대 + CRM 자유. 트래픽 직접 확보."),
@@ -91,7 +91,7 @@ public struct PlatformSetupStageView: View {
                 verifyItems: [
                 "사업자등록 + 통신판매업 신고 사전 확인 — 스마트스토어 외 모든 플랫폼은 통신판매업 신고증 필수",
                 "스마트스토어 — 일반과세자/간이과세자별 수수료 차이 + 매월 정산일·세금계산서 발급 일정",
-                "쿠팡 — 월 정액비 55,000원 + 로켓그로스 입점 시 별도 수수료, 첫 매출 전 부담 인식",
+                "쿠팡 — 월매출 100만원↑ 시에만 정액 55,000원 (VAT 포함) + 로켓그로스 입점 시 별도 수수료. 매출 미달 시 정액 청구 X",
                 "오픈마켓 약관 — 분쟁 시 「플랫폼 책임 면책」 조항 다수, 사진·증빙 자체 보관 필수",
                 "PG사 별도 — 일부 플랫폼은 자체 PG 강제, 통합 PG(이니시스·KG이니시스 등) 비교",
                 "광고비 — 네이버 검색광고·쿠팡 광고 모두 ROAS 200% 이상 못 맞추면 적자, 단가 시뮬 필수",
@@ -138,8 +138,8 @@ public struct PlatformSetupStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("플랫폼별 수수료 비교")
-                    feeRow(platform: "네이버 스마트스토어", fee: "주문 1.98~3.74% + 판매 0.91~2.73% (등급별, 2025 개편)")
-                    feeRow(platform: "쿠팡 마켓플레이스", fee: "카테고리별 4~10.8% + 월 정액 55,000원")
+                    feeRow(platform: "네이버 스마트스토어", fee: "결제 수수료 1.98~3.63% (등급별) + 유입 수수료 2% (2025.10 인하 반영)")
+                    feeRow(platform: "쿠팡 마켓플레이스", fee: "카테고리별 4~10.8% + 월매출 100만원↑ 시 정액 55,000원 (VAT 포함)")
                     feeRow(platform: "카카오톡 스토어", fee: "수수료 약 6% + 결제 수수료 별도")
                     feeRow(platform: "자체 쇼핑몰 (카페24·아임웹)", fee: "월 사용료 0~7만원 + PG 수수료 약 3%")
                 }
@@ -194,8 +194,8 @@ public struct PlatformSetupStageView: View {
             BUInteractiveChecklist(
                 title: "온라인 커머스 필수 셋업",
                 items: [
-                    .init(id: "biz",     label: "사업자등록 완료",              detail: "통신판매업 신고용 — 홈택스에서 5분 무료 발급"),
-                    .init(id: "telecom", label: "통신판매업 신고 완료",        detail: "공정위 ftc.go.kr 신고 — 법인 설립 후 14일 이내"),
+                    .init(id: "biz",     label: "사업자등록 완료",              detail: "홈택스에서 5분 무료 발급 — 통신판매업 신고 전 선행 필수"),
+                    .init(id: "telecom", label: "통신판매업 신고 완료",        detail: "정부24 또는 관할 시·군·구청에 신고 — 미신고 영업 시 1년↓ 징역 또는 1천만원↓ 벌금"),
                     .init(id: "pg",      label: "PG (결제 게이트웨이) 연동",   detail: "토스페이먼츠·KG이니시스·NHN KCP·나이스페이먼츠 중 선택"),
                 ],
                 checked: psChecksBinding
@@ -203,10 +203,14 @@ public struct PlatformSetupStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("통신판매업 신고 방법")
-                    infoRow(text: "공정거래위원회 전자공정거래시스템 (ftc.go.kr) 온라인 신청")
-                    infoRow(text: "필요 서류: 사업자등록증·대표자 신분증·통신판매 관련 정보")
-                    infoRow(text: "처리 기간: 5-7 영업일")
+                    BUEyebrow("통신판매업 신고 방법 (2026년 검증)")
+                    // ⚠️ 2026-05-25 fix: 이전 「공정위 ftc.go.kr 신고」 는 거짓 — 통신판매업 신고는
+                    //   정부24 또는 관할 시·군·구청에 함. 공정위 ftc.go.kr 은 신고 후 자동 연동되어
+                    //   통신판매업자 정보가 조회되는 「조회 시스템」 일 뿐 신고 접수처가 아님.
+                    infoRow(text: "정부24 (gov.kr) → '통신판매업신고' 검색 → 시·군·구 발급하기 (온라인 2~3일)")
+                    infoRow(text: "오프라인: 관할 시·군·구청 직접 방문 (영업일 3~7일 처리)")
+                    infoRow(text: "필요 서류: 사업자등록증 + 구매안전서비스(에스크로) 이용확인증 + 신분증")
+                    infoRow(text: "신고 후 공정위 ftc.go.kr 통신판매업자 정보 조회 페이지에 2~3시간 내 자동 등재")
                 }
             }
 

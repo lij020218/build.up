@@ -261,6 +261,23 @@ export const INTEGRATION_CHANNELS: IntegrationChannel[] = [
     marketReach: "medium",
     priority: 2,
   },
+  {
+    // 2026-05-27 추가: Pull API (개발자용 고급 연결).
+    //   사장님 서버에 읽기 전용 GET endpoint 를 두면 build.up 이 매일 04:00 KST 에 호출.
+    //   Webhook 보다 보안팀 설득이 쉬운 케이스 (사내 → 외부 POST 대신, 외부가 사내 read-only 호출).
+    //   UI: SaasMetricsConnectCard 의 "고급 연결" 섹션 내부.
+    id: "saas-pull",
+    labelKo: "Pull API (build.up → 사장님 서버)",
+    labelEn: "Pull API",
+    dataKo: "build.up 이 매일 1회 사장님 read-only endpoint 호출 — 가입자·활성·구독 funnel",
+    industries: ["startup-tech", "online-digital"],
+    cost: "free",
+    status: "available",
+    authType: "api-key",
+    dataDepth: "full",
+    marketReach: "low",
+    priority: 3,
+  },
 
   // ─── 외식·카페 채널 ────────────────────────────────────────────────
   {

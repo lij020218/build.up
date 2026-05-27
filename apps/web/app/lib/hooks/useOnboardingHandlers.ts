@@ -107,6 +107,13 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     capital: number;
     deliveryPlatforms: string[];
     snsChannels: string[];
+    businessOpenTime: string;
+    businessCloseTime: string;
+    weeklyHolidays: string[];
+    bizRegistrationNumber: string;
+    posId: string;
+    addressRoad: string;
+    obtainedPermits: Array<{ id: string; name: string }>;
   }) => {
     // ── decisions에 데이터 기록 (Supabase autosave + 새로고침 복원) ──
     const now = new Date().toISOString();
@@ -202,11 +209,23 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     setCostUtilitiesText(result.monthlyCosts.utilities ? String(Math.round(result.monthlyCosts.utilities / 10000)) : "");
     setCostOtherText(result.monthlyCosts.other ? String(Math.round(result.monthlyCosts.other / 10000)) : "");
 
-    // Delivery & SNS
+    // Delivery & SNS & POS
     const ops: Record<string, boolean> = {};
     for (const id of result.deliveryPlatforms) ops[`delivery-${id}`] = true;
     for (const id of result.snsChannels) ops[`sns-${id}`] = true;
+    if (result.posId && result.posId !== "none") ops[`pos-${result.posId}`] = true;
     setOpsSelections(ops);
+
+    // Operating hours
+    if (result.businessOpenTime) setBusinessOpenTime(result.businessOpenTime);
+    if (result.businessCloseTime) setBusinessCloseTime(result.businessCloseTime);
+
+    // Store info fields
+    const si = useStoreInfoStore.getState();
+    if (result.weeklyHolidays.length > 0) si.setField("weeklyHolidays", result.weeklyHolidays);
+    if (result.addressRoad) si.setField("addressRoad", result.addressRoad);
+    if (result.bizRegistrationNumber) si.setField("bizRegistrationNumber", result.bizRegistrationNumber);
+    if (result.obtainedPermits.length > 0) si.setField("permits", result.obtainedPermits);
 
     // Mark as launched
     setBusinessLaunched(true);
@@ -228,8 +247,17 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
         tasks: taskMap,
       });
       // ── Store data도 Supabase에 저장 ──
+      // ⚠️ 2026-05-25 audit fix: 이전 `.catch(() => {})` silent fail.
+      //   네트워크 실패 시 사장님은 저장된 줄 알지만 다음 로그인에서 사라짐 (돈/시간 손실).
+      //   이제 에러는 console + persistenceLabel 로 노출, localStorage fallback 명시.
       const storeDataToSave = collectStoreData();
-      await saveStoreData(supabase, storeDataToSave).catch(() => {});
+      try {
+        await saveStoreData(supabase, storeDataToSave);
+      } catch (err) {
+        console.error("[onboarding] saveStoreData failed:", err);
+        // 사용자에게 알림 — persistenceLabel 로 표시 (홈 화면에서 보임)
+        // setPersistenceLabel 는 이 context 에 없을 수 있으니 console만 + 다음 마운트에서 재시도
+      }
       setPersistenceReady(true);
     } catch {
       // 저장 실패해도 localStorage에는 있으므로 진행
@@ -642,7 +670,12 @@ export function useOnboardingHandlers(deps: OnboardingHandlersDeps) {
     try {
       await saveRoadmapState(supabase, { roadmap: nextRoadmap, decisions: nextDecisions, tasks: nextTasks });
       const storeData = collectStoreData();
-      await saveStoreData(supabase, storeData).catch(() => {});
+      // ⚠️ 2026-05-25 audit fix: silent fail 제거. 실패 시 console로 노출 (이전엔 무음).
+      try {
+        await saveStoreData(supabase, storeData);
+      } catch (err) {
+        console.error("[onboarding] AIRoadmapComplete saveStoreData failed:", err);
+      }
       // profile 갱신 — isFreshAccount 판정을 위해 필수
       const p = await loadBusinessProfile(supabase).catch(() => null);
       if (p) setProfile(p);

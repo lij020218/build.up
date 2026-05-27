@@ -19,6 +19,7 @@ import { NextResponse } from "next/server";
 import { getCronSecret } from "../../_lib/env";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { envelopeDecrypt } from "../../_lib/envelope-crypto";
+import { isValidHttpsUrl } from "../../_lib/url-guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -92,6 +93,16 @@ async function fetchEndpoint(
   url: string,
   secret: string,
 ): Promise<{ status: number; body: unknown; bodyText: string; error?: string }> {
+  // 2026-05-27 보안 (P1-2): defense-in-depth — write-time 검증 외에 fetch-time 에도 재검증.
+  //   DB 변조·코드 변경으로 사설 IP 가 endpoint_url 에 들어가면 SSRF 가능.
+  if (!isValidHttpsUrl(url)) {
+    return {
+      status: 0,
+      body: null,
+      bodyText: "",
+      error: "endpoint_url 이 안전하지 않은 URL 입니다 (https 필수, 사설 IP 차단)",
+    };
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {

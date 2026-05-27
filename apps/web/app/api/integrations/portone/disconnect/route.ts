@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
   }
-  const rl = checkSimpleRateLimit({
+  const rl = await checkSimpleRateLimit({
     key: `portone-disconnect:${auth.userId}`,
     limit: 10,
     windowMs: 60_000,

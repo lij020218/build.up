@@ -76,7 +76,7 @@ export function PermitCheckPanels() {
       building: "건축물대장 용도(근린생활시설), 정화조 용량, 환기·배수",
       person: "휴게음식점 위생교육 6시간 수료증 (신규 영업자, 식품위생법 시행규칙) + 보건증",
       facility: "소방완비증명서(2층 이상 또는 100㎡↑)",
-      pitfall: "휴게음식점 영업신고 누락 후 오픈 → 단속 시 영업정지 + 과태료",
+      pitfall: "휴게음식점 영업신고 누락 후 오픈 → 식품위생법 §97에 따라 3년 이하 징역 또는 3천만원 이하 벌금 (형사처벌)",
     },
     beauty: {
       building: "건축물대장 용도, 환기·세면설비",
@@ -264,7 +264,7 @@ export function PermitCheckPanels() {
           how={[
             { title: ko ? "본인 면허 보유 여부 확인" : "Verify owner's license status", detail: ko ? "미용·이용 = 미용사 면허 / 식품접객업 = 위생교육 6시간 + 보건증 / 학원 = 강사 자격." : "Salon = beautician license / F&B = 6h hygiene + health cert / academy = instructor cert." },
             { title: ko ? "위생교육 6시간 사전 신청 (식품접객업)" : "Pre-register 6h hygiene course", detail: ko ? "한국외식업중앙회 또는 식품위생교육원. 영업 시작 전 의무. 미이수 시 영업신고 거절." : "KFIA or hygiene institute. Mandatory pre-launch. No cert = registration denied." },
-            { title: ko ? "보건증 (건강진단결과서) — 본인 + 종업원 전원" : "Health cert — owner + all staff", detail: ko ? "보건소 or 지정 의료기관 1만원. 1년 유효. 갱신 D-day 이후 영업 불가." : "Public health center / designated clinic ~₩10K. Valid 1 year. Renew before expiry." },
+            { title: ko ? "보건증 (건강진단결과서) — 본인 + 종업원 전원" : "Health cert — owner + all staff", detail: ko ? "보건소 3,000원 (지자체별 무료~3천원) · 민간병원 1.5~3만원. 1년 유효. 갱신 D-day 이후 영업 불가." : "Public health center ₩3K (free in some districts) / private clinic ₩15K~30K. Valid 1 year. Renew before expiry." },
           ]}
           watchouts={ko ? [
             { label: "면허자 채용에만 의존 = 퇴사 시 즉시 무자격 영업", text: "본인이 면허 없을 때 채용 면허자가 퇴사하면 그날부터 무자격 영업. 본인 면허 취득 또는 2명+ 채용으로 분산." },

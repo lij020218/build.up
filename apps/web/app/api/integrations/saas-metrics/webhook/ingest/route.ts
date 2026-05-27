@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "유효하지 않거나 비활성 토큰" }, { status: 401 });
   }
 
-  const rl = checkSimpleRateLimit({ key: `saas-webhook-ingest:${conn.user_id}`, limit: 60, windowMs: 60_000 });
+  const rl = await checkSimpleRateLimit({ key: `saas-webhook-ingest:${conn.user_id}`, limit: 60, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
 
   let body: Body;

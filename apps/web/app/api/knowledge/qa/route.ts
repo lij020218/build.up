@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const rateLimit = checkSimpleRateLimit({
+  const rateLimit = await checkSimpleRateLimit({
     key: `knowledge-qa:${auth.userId}`,
     limit: 10,
     windowMs: 60_000,

@@ -106,7 +106,7 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
     {
       id: "comprehensive",
       label: { ko: "통합 경영보고서", en: "Comprehensive report" },
-      desc: { ko: "매출·비용·재고·직원 한 파일 (Excel)", en: "All data in one Excel" },
+      desc: { ko: "매출·비용·재고·직원 한 파일 (CSV)", en: "All data in one CSV" },
       Icon: TrendingUp,
       iconColor: "#059669",
       type: "excel",
@@ -126,8 +126,8 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
           <div style={title}>{ko ? "세무사·은행·투자자용" : "For CPA, Banks, Investors"}</div>
           <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "4px" }}>
             {ko
-              ? "버튼 한 번으로 경영 데이터를 내려받으세요. 한글 엑셀 호환."
-              : "One-click download. Korean Excel compatible."}
+              ? "버튼 한 번으로 경영 데이터를 내려받으세요. 한글 CSV 호환."
+              : "One-click download. Korean CSV compatible."}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

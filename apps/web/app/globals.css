@@ -244,6 +244,18 @@ a {
   box-shadow: 0 12px 32px rgba(15,23,42,0.06), 0 1px 0 rgba(255,255,255,0.8) inset;
 }
 
+/* ── Franchise bento cards ── */
+@media (hover: hover) {
+  .bento-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(25,25,112,0.10), 0 1px 0 rgba(255,255,255,0.8) inset;
+    border-color: rgba(25,25,112,0.20) !important;
+  }
+}
+@media (max-width: 767px) {
+  .bento-grid { grid-template-columns: 1fr !important; }
+}
+
 /* ── Positive/negative value glow ── */
 .value-positive { color: #177245; text-shadow: 0 0 20px rgba(23,114,69,0.08); }
 .value-negative { color: #b42318; text-shadow: 0 0 20px rgba(180,35,24,0.08); }

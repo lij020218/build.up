@@ -377,13 +377,13 @@ public struct VendorSetupStageView: View {
     }
 
     private var canCompleteStage: Bool {
-        !selectedSuppliers.isEmpty
+        !selectedSuppliers.isEmpty && !selectedEquipment.isEmpty && !selectedPos.isEmpty
     }
 
     private var advanceHint: String {
         if selectedSuppliers.isEmpty { return cluster.advanceMissingHint }
-        if selectedEquipment.isEmpty { return "장비 선택 권장 — 그래도 진행 가능" }
-        if selectedPos.isEmpty { return "POS 선택 권장 — 그래도 진행 가능" }
+        if selectedEquipment.isEmpty { return "장비를 최소 1개 선택하세요" }
+        if selectedPos.isEmpty { return "POS / 결제 시스템을 최소 1개 선택하세요" }
         return "공급처 \(selectedSuppliers.count)곳 선택됨 — 다음 단계로"
     }
 

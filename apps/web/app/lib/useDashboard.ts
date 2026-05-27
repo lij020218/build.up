@@ -28,6 +28,7 @@ import { useOperationsHandlers } from "./hooks/useOperationsHandlers";
 import { useAiAnalysisHandlers } from "./hooks/useAiAnalysisHandlers";
 import { usePersistence } from "./hooks/usePersistence";
 import { useDataLoading } from "./hooks/useDataLoading";
+import { getKstDate } from "./utils/business-day";
 
 // ── Re-exported types (consumers import from useDashboard) ──
 export type { DailyEntry, MonthlyCosts, CostSnapshot } from "./stores/finance-store";
@@ -44,10 +45,53 @@ export type {
   Member,
 } from "./stores/operations-store";
 
-// ════════════════════════════════════════════════════════════════════════════════
-// useDashboard — thin orchestrator
-// ════════════════════════════════════════════════════════════════════════════════
-
+/**
+ * ════════════════════════════════════════════════════════════════════════════════
+ * useDashboard — 앱 전체 상태를 하나로 묶는 thin orchestrator hook
+ * ════════════════════════════════════════════════════════════════════════════════
+ *
+ * 역할
+ * ────
+ * - 6개 Zustand 스토어에서 raw state/setter를 읽어와 소비 컴포넌트에 일괄 전달
+ * - 9개 sub-hook을 조합해 "computed + handlers + persistence" 를 단일 반환값으로 합성
+ * - AI actions 일 1회 캐시(localStorage) 및 fetchAiActions 오케스트레이션 담당
+ * - 스타트업/온라인 업종 rent/utilities 유령값 정리 migration effect 포함
+ *
+ * ────────────────────────────────────────────────────────────────────────────────
+ * Sub-hook 구성도
+ * ────────────────────────────────────────────────────────────────────────────────
+ *  §1  useComputedDashboard   — currentStage, activeSurface, healthScore, industryCategoryId
+ *  §2  useSelectionHandlers   — handleIndustryContinue … handleSignOut, resetDemo
+ *  §3  useTaskHandlers        — handleContractTaskToggle … handleLaunchBusiness
+ *  §4  useTaskAutoCompletion  — task 자동 완료 사이드이펙트
+ *  §5  useOnboardingHandlers  — handleExistingBusinessComplete, handleAIRoadmapComplete
+ *  §6  useOperationsHandlers  — handleAddDailyEntry … saveTaxSettings
+ *  §7  useAiAnalysisHandlers  — contractTasks, activeGuide, effectiveGuideAnswer
+ *  §8  usePersistence         — connectAndLoad, flushStoreData, collectStoreData (SSOT)
+ *  §9  useDataLoading         — contractors, nearbyFranchiseStores, locationMapReady
+ *
+ * ────────────────────────────────────────────────────────────────────────────────
+ * Zustand 스토어 매핑
+ * ────────────────────────────────────────────────────────────────────────────────
+ *  useOnboardingStore  → auth·UI 상태 (showOnboardingChoice, authLabel, persistenceLabel …)
+ *  useProfileStore     → 업종·창업 설정 (selectedIndustryId, storeName, businessLaunched …)
+ *  useRoadmapStore     → AI 로드맵 (roadmap, taskMap, decisions, stageGuideContent …)
+ *  useFinanceStore     → 매출·비용 (dailyEntries, monthlyCosts, costHistory …)
+ *  useOperationsStore  → 운영 데이터 (inventory, employees, products, subscriptionPlans …)
+ *  useAiStore          → AI 결과 (aiActions, contractAnalysis, guideAnswer …)
+ *
+ * ────────────────────────────────────────────────────────────────────────────────
+ * AI actions 캐시 규칙 (KST 자정 무효)
+ * ────────────────────────────────────────────────────────────────────────────────
+ *  key: "buildup-ai-actions-v1:{userId}:{YYYY-MM-DD}"
+ *  - force=true → 캐시 우회, LLM 재호출
+ *  - 매출 미기록 ≥ 3일 → skip (stale-data)
+ *  - 미런칭 → skip (not-launched)
+ *
+ * ────────────────────────────────────────────────────────────────────────────────
+ * @param surface  현재 화면 탭 ("home" | "franchise" | "reports" | …)
+ *                 기본값 "home" — StarterStageDemo 에서 activeSurface 로 덮어씀
+ */
 export function useDashboard(surface: DashboardSurface = "home") {
   // ── 1. Framework deps ──
   const router = useRouter();
@@ -400,7 +444,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
       const thisMonday = new Date(now); thisMonday.setDate(now.getDate() + mondayOffset);
       const lastMonday = new Date(thisMonday); lastMonday.setDate(lastMonday.getDate() - 7);
       const lastSunday = new Date(thisMonday); lastSunday.setDate(lastSunday.getDate() - 1);
-      const toIso = (d: Date) => d.toISOString().slice(0, 10);
+      const toIso = (d: Date) => getKstDate(d);
       // 일자 컷오프: 사장의 closeTime + 30분 (utils/business-day) — KST 정확
       const todayIso = getBusinessDay(now, { categoryId: selectedIndustryCategoryId, closeTime: businessCloseTime });
       const thisWeekSales = entries.filter(e => e.date >= toIso(thisMonday) && e.date <= todayIso).reduce((s, e) => s + e.sales, 0);
@@ -414,9 +458,9 @@ export function useDashboard(surface: DashboardSurface = "home") {
       let proactiveInsightsForAI: Array<{ kind: string; severity: "critical" | "warning" | "info"; headline: string; analysis: string; suggestedAction: string }> = [];
       try {
         const { detectProactiveInsights } = await import("./services/profit-anomaly-detector");
-        const curMonth = new Date().toISOString().slice(0, 7);
+        const curMonth = getKstDate(new Date()).slice(0, 7);
         const prevMonthDate = new Date(); prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-        const prevMonthKey = prevMonthDate.toISOString().slice(0, 7);
+        const prevMonthKey = getKstDate(prevMonthDate).slice(0, 7);
         const thisMonthEntries = entries.filter(e => e.date.startsWith(curMonth));
         const prevMonthEntries = entries.filter(e => e.date.startsWith(prevMonthKey));
         const costSnapshots = (costHistory as Array<{ month: string; ingredients: number; labor: number; rent: number; utilities: number; other: number }>) ?? [];
@@ -489,9 +533,9 @@ export function useDashboard(surface: DashboardSurface = "home") {
           })(),
           // 비용 구조 추세 (이번달 prime cost vs 지난달)
           ...(() => {
-            const curMonth = new Date().toISOString().slice(0, 7);
+            const curMonth = getKstDate(new Date()).slice(0, 7);
             const prevDate = new Date(); prevDate.setMonth(prevDate.getMonth() - 1);
-            const prevMonth = prevDate.toISOString().slice(0, 7);
+            const prevMonth = getKstDate(prevDate).slice(0, 7);
             const thisRev = entries.filter((e) => e.date.startsWith(curMonth)).reduce((s, e) => s + e.sales, 0);
             const prevRev = entries.filter((e) => e.date.startsWith(prevMonth)).reduce((s, e) => s + e.sales, 0);
             const costSnaps = (costHistory as Array<{ month: string; ingredients: number; labor: number }> | undefined) ?? [];
@@ -545,7 +589,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
             try {
               const { useMarketingStore: mktStore } = require("./stores/marketing-store");
               const mktState = mktStore.getState();
-              const curMonth = new Date().toISOString().slice(0, 7);
+              const curMonth = getKstDate(new Date()).slice(0, 7);
               const monthCamps = (mktState.campaigns ?? []).filter((c: { month: string }) => c.month === curMonth);
               const totalMktSpend = monthCamps.reduce((s: number, c: { spend: number }) => s + c.spend, 0);
               const totalAttrRev = monthCamps.reduce((s: number, c: { attributedRevenue?: number }) => s + (c.attributedRevenue ?? 0), 0);

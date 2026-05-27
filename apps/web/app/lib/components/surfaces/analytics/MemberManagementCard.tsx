@@ -3,6 +3,7 @@
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import type { Member } from "../../../stores/operations-store";
+import { getKstDate } from "../../../utils/business-day";
 
 /** Format number as Korean currency */
 const fmt = (n: number) =>
@@ -27,8 +28,8 @@ export function MemberManagementCard() {
     try { localStorage.setItem("members", JSON.stringify(list)); } catch { /* ignore */ }
   };
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const in7days = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const todayStr = getKstDate(new Date());
+  const in7days = getKstDate(new Date(Date.now() + 7 * 86400000));
 
   const enriched = members.map(m => ({
     ...m,

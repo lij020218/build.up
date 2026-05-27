@@ -71,6 +71,17 @@ public final class StoreInfoStore: ObservableObject {
         await performSave()
     }
 
+    /// 진행 초기화 — in-memory state 를 빈값으로 리셋. 저장은 호출하지 않음
+    /// (서버 row 는 ProfileView 의 performReset 안에서 AccountResetRepository 가 별도 처리).
+    /// isLoaded=false 로 되돌려 다음 .load() 호출이 fresh 데이터를 받게 함.
+    public func reset() {
+        saveTask?.cancel()
+        saveTask = nil
+        self.state = StoreInfoState()
+        self.saveStatus = .idle
+        self.isLoaded = false
+    }
+
     // MARK: - Internals
 
     private func scheduleSave() {

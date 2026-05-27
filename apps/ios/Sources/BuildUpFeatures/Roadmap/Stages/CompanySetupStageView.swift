@@ -134,13 +134,14 @@ public struct CompanySetupStageView: View {
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("법인 vs 개인사업자 비교")
+                    BUEyebrow("법인 vs 개인사업자 비교 (2026년 세율)")
                     let rows: [(String, String, String)] = [
                         ("투자 유치", "✓ 가능", "✗ 불가"),
                         ("세율", "10·20·22·25%", "6~45%"),
                         ("설립 비용", "50-100만원", "무료"),
                         ("추천 시점", "팀 2명+ + 투자 계획", "1인 초기 검증"),
                     ]
+                    // ⚠️ 2026.1.1 이후 사업연도부터 법인세 전 구간 1%p 인상 (9·19·21·24% → 10·20·22·25%).
                     HStack {
                         Text("").frame(maxWidth: .infinity, alignment: .leading)
                         Text("법인").font(BUFont.eyebrow.weight(.bold)).foregroundStyle(BUColor.midnight).frame(width: 90, alignment: .center)
@@ -167,9 +168,9 @@ public struct CompanySetupStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("IP 우선순위")
                     let items: [(String, String, String)] = [
-                        ("shield", "특허", "출원료 ₩56-62K/class + 등록 ₩210K(10년) + 우선심사 ₩160K. 일반 18-24개월·우선심사 5-7개월. 스타트업 70% 감면 (2026.2.28까지 한시)."),
-                        ("tag", "상표", "출원료 ₩62K/class·등록 ₩211K(10년). 일반 15개월·우선심사 5개월. 브랜드 모방 방지 핵심."),
-                        ("doc.text", "저작권", "소스코드 자동 보호 (별도 등록 불필요). 저작권 등록은 분쟁 시 유리."),
+                        ("shield", "특허", "출원료 4.6~6.6만원/구분 + 등록 24,000원/년(1~3년차) + 우선심사 ₩160K. 일반 18-24개월·우선심사 5-7개월. 중소기업 자동 70% 감면 + 스타트업(3년 이내) 우선심사료 70% 감면."),
+                        ("tag", "상표", "출원료 62,000원/구분·등록료 211,000원(10년). 일반 15개월·우선심사 5개월. 브랜드 모방 방지 핵심."),
+                        ("doc.text", "저작권", "소스코드 자동 보호 (별도 등록 불필요). 분쟁 시 입증력 위해 저작권 등록(2만원/저작물) 권장."),
                     ]
                     ForEach(items, id: \.1) { icon, title, detail in
                         HStack(alignment: .top, spacing: BUSpacing.sm) {

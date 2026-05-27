@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Calendar, CalendarCheck, X } from "lucide-react";
+import { getKstDate } from "../../utils/business-day";
 
 type Props = {
   ko: boolean;
@@ -28,7 +29,7 @@ export function RitualBanner({ ko }: Props) {
 
   useEffect(() => {
     const now = new Date();
-    const today = now.toISOString().slice(0, 10);
+    const today = getKstDate(now);
     const dayOfWeek = now.getDay();
     const hour = now.getHours();
     const dayOfMonth = now.getDate();
@@ -63,7 +64,7 @@ export function RitualBanner({ ko }: Props) {
   if (!ritual) return null;
 
   const handleDismiss = () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getKstDate(new Date());
     if (ritual === "weekly") {
       localStorage.setItem(LS_WEEKLY_DISMISS, today);
     } else {

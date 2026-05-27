@@ -259,7 +259,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     clearLocalUserData();
     resetLocalState();
     await supabase.auth.signOut();
-    router.push("/auth");
+    window.location.assign("/auth"); // hard reload — login도 동일 패턴 (auth/page.tsx:112)
   };
 
   const resetDemo = async () => {
@@ -323,8 +323,6 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
         throw new Error("NO_SESSION");
       }
 
-      console.log("[reset] start", { userId: userId.slice(0, 8) });
-
       // ── 1차: API 풀-와이프 (service role) ──
       setResetProgress(30);
       const apiStarted = Date.now();
@@ -337,14 +335,6 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
       report.apiOk = !!data?.ok;
       report.apiDeleted = data?.totalDeleted ?? 0;
       report.apiFailures = data?.failures ?? [];
-
-      console.log("[reset] api", {
-        status: res.status,
-        ok: report.apiOk,
-        deleted: report.apiDeleted,
-        failures: report.apiFailures.length,
-        elapsedMs: apiElapsed,
-      });
 
       // ── 2차: client-side 직접 삭제 (RLS 사용) ──
       //  API 가 부분 실패해도 자기 권한으로 핵심 테이블만 다시 시도.
@@ -413,10 +403,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
           continue;
         }
         if (r.count > 0) {
-          console.error(`[reset] verify FAILED: ${r.table} still has ${r.count} rows`);
           report.verifyFailures.push({ table: r.table, remaining: r.count });
-        } else {
-          console.log(`[reset] verify ok: ${r.table} = 0 rows`);
         }
       }
     } catch (error) {

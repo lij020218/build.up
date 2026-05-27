@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Clock, Users, Wrench, Megaphone, X, ChevronRight } from "lucide-react";
 import { useTimeLogStore } from "../../stores/time-log-store";
+import { getKstDate } from "../../utils/business-day";
 
 type Props = {
   ko: boolean;
@@ -45,7 +46,7 @@ export function TimeLogCheckIn({ ko }: Props) {
 
   const handleSubmit = () => {
     setSubmitting(true);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getKstDate(new Date());
     addEntry({
       date: today,
       customerPct: customer,

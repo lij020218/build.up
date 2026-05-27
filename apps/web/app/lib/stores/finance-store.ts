@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { FinancialSimulationResult } from "@build-up/shared";
 import type { AiStructuredResponse } from "@build-up/ai";
+import { getKstDate } from "../utils/business-day";
 
 // ─── Types ───
 
@@ -143,7 +144,7 @@ const initialState: FinanceState = {
       const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" });
       return fmt.format(new Date());
     } catch {
-      return new Date().toISOString().slice(0, 10);
+      return getKstDate();
     }
   })(),
   dailySalesInput: "",

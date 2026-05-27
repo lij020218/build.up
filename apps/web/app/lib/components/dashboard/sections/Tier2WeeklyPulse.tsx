@@ -77,6 +77,7 @@ export function Tier2WeeklyPulse({ d, c, ko, fmt }: Props) {
           totalSales={c.totalSales}
           netProfit={c.netProfit}
           totalCosts={c.totalCosts}
+          healthScoreNumeric={c.healthScore}
         />
         <CostCompositionDonutCard
           ko={ko}

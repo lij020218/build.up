@@ -25,6 +25,7 @@
  */
 
 import { supabase } from "../../lib/supabase";
+import { getKstDate } from "./utils/business-day";
 
 export type CoachingSignalKind = "critical" | "important" | "notable" | "good";
 
@@ -52,7 +53,7 @@ const STORAGE_KEY = "buildup_coaching_history_v1";
 const WINDOW_DAYS = 30;
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return getKstDate(new Date());
 }
 
 function daysAgo(dateStr: string): number {

@@ -31,6 +31,21 @@
     <string>$(BU_ENVIRONMENT)</string>
     <key>KAKAO_NATIVE_APP_KEY</key>
     <string>$(KAKAO_NATIVE_APP_KEY)</string>
+    <key>WEB_APP_URL</key>
+    <string>$(WEB_APP_URL)</string>
+
+    <!-- ATS: localhost 개발 서버 허용 (프로덕션 HTTPS 도메인은 기본 허용) -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>localhost</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
 
     <!-- 권한 사유 -->
     <key>NSCameraUsageDescription</key>

@@ -1,11 +1,11 @@
 /**
- * 데이터 Export 서비스 — CSV/Excel/PDF 내보내기.
- * xlsx + jsPDF는 이미 package.json에 있음.
+ * 데이터 Export 서비스 — CSV/PDF 내보내기.
  * SSR 안전을 위해 dynamic import 사용.
  */
 
 import type { DailyEntry, MonthlyCosts } from "../stores/finance-store";
 import type { InventoryItem, Employee, Product, UnifiedProduct, ServiceMenuItem } from "../stores/operations-store";
+import { getKstDate } from "../utils/business-day";
 
 // ── 헬퍼: 현재 월 ISO (예: "2026-04") ──
 export function currentMonthIso(): string {
@@ -124,7 +124,7 @@ export function exportEmployeesCsv(employees: Employee[]): void {
   triggerDownload(blob, `직원_${currentMonthIso()}.csv`);
 }
 
-// ─── 5. 통합 P&L Excel (여러 시트) ───
+// ─── 5. 통합 경영보고서 CSV ───
 
 export async function exportComprehensiveExcel(params: {
   month: string;
@@ -137,10 +137,7 @@ export async function exportComprehensiveExcel(params: {
   serviceMenu?: ServiceMenuItem[];
 }): Promise<void> {
   const { month, entries, monthlyCosts, inventory, employees, products, unifiedProducts, serviceMenu } = params;
-  const XLSX = await import("xlsx");
-  const wb = XLSX.utils.book_new();
 
-  // Sheet 1: 손익계산서
   const monthEntries = entries.filter((e) => e.date.startsWith(month));
   const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
   const totalCustomers = monthEntries.reduce((s, e) => s + e.customers, 0);
@@ -163,22 +160,17 @@ export async function exportComprehensiveExcel(params: {
     { "항목": "(-) 대출이자", "금액(원)": monthlyCosts.interest, "비율": pct(monthlyCosts.interest) },
     { "항목": "순이익", "금액(원)": netProfit, "비율": pct(netProfit) },
   ];
-  const pnlSheet = XLSX.utils.json_to_sheet(pnlRows);
-  XLSX.utils.book_append_sheet(wb, pnlSheet, "손익계산서");
 
-  // Sheet 2: 일별매출
   const salesRows = monthEntries.sort((a, b) => a.date.localeCompare(b.date)).map((e) => ({
     "날짜": e.date,
     "매출(원)": e.sales,
     "고객수": e.customers,
     "객단가(원)": e.customers > 0 ? Math.round(e.sales / e.customers) : 0,
   }));
-  const salesSheet = XLSX.utils.json_to_sheet(salesRows);
-  XLSX.utils.book_append_sheet(wb, salesSheet, "일별매출");
 
-  // Sheet 3: 재고
+  let invRows: Array<Record<string, unknown>> = [];
   if (inventory.length > 0) {
-    const invRows = inventory.map((i) => ({
+    invRows = inventory.map((i) => ({
       "상품명": i.name,
       "카테고리": i.category,
       "유형": i.itemType === "material" ? "원재료" : "완제품",
@@ -190,26 +182,22 @@ export async function exportComprehensiveExcel(params: {
       "판매가(원)": i.sellingPrice || 0,
       "공급처": i.supplierName,
     }));
-    const invSheet = XLSX.utils.json_to_sheet(invRows);
-    XLSX.utils.book_append_sheet(wb, invSheet, "재고");
   }
 
-  // Sheet 4: 직원
+  let empRows: Array<Record<string, unknown>> = [];
   if (employees.length > 0) {
-    const empRows = employees.map((e) => ({
+    empRows = employees.map((e) => ({
       "이름": e.name,
       "시급(원)": e.hourlyWage,
       "주간근무(시)": e.weeklyHours,
       "월급여추정(원)": Math.round(e.hourlyWage * e.weeklyHours * 4.33),
       "4대보험": e.isInsured ? "가입" : "미가입",
     }));
-    const empSheet = XLSX.utils.json_to_sheet(empRows);
-    XLSX.utils.book_append_sheet(wb, empSheet, "직원");
   }
 
-  // Sheet 5: 상품/메뉴 (있으면)
+  let prodRows: Array<Record<string, unknown>> = [];
   if (products && products.length > 0) {
-    const prodRows = products.map((p) => ({
+    prodRows = products.map((p) => ({
       "상품명": p.name,
       "카테고리": p.category,
       "판매가(원)": p.price,
@@ -220,10 +208,10 @@ export async function exportComprehensiveExcel(params: {
       "월판매": p.monthlySold,
       "단위": p.unit,
     }));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prodRows), "상품");
   }
+  let upRows: Array<Record<string, unknown>> = [];
   if (unifiedProducts && unifiedProducts.length > 0) {
-    const upRows = unifiedProducts.map((p) => ({
+    upRows = unifiedProducts.map((p) => ({
       "상품명": p.name,
       "카테고리": p.category,
       "판매가(원)": p.price,
@@ -233,20 +221,18 @@ export async function exportComprehensiveExcel(params: {
       "월판매": p.monthlySold,
       "소모성": p.isConsumable ? "Y" : "N",
     }));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(upRows), "제품");
   }
+  let smRows: Array<Record<string, unknown>> = [];
   if (serviceMenu && serviceMenu.length > 0) {
-    const smRows = serviceMenu.map((s) => ({
+    smRows = serviceMenu.map((s) => ({
       "서비스명": s.name,
       "카테고리": s.category,
       "가격(원)": s.price,
       "소요시간(분)": s.duration,
       "월판매": s.monthlySold,
     }));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(smRows), "서비스");
   }
 
-  // Sheet 6: 요약 지표
   const summaryRows = [
     { "지표": "매출", "값": totalSales.toLocaleString() + "원" },
     { "지표": "총 고객수", "값": totalCustomers.toLocaleString() + "명" },
@@ -257,13 +243,23 @@ export async function exportComprehensiveExcel(params: {
     { "지표": "영업일수", "값": monthEntries.length + "일" },
     { "지표": "일평균 매출", "값": monthEntries.length > 0 ? Math.round(totalSales / monthEntries.length).toLocaleString() + "원" : "-" },
   ];
-  const summarySheet = XLSX.utils.json_to_sheet(summaryRows);
-  XLSX.utils.book_append_sheet(wb, summarySheet, "요약");
 
-  // 다운로드
-  const wbOut = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([wbOut], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  triggerDownload(blob, `buildup_경영보고서_${month}.xlsx`);
+  const sections = [
+    { title: "요약", rows: summaryRows, headers: ["지표", "값"] },
+    { title: "손익계산서", rows: pnlRows, headers: ["항목", "금액(원)", "비율"] },
+    { title: "일별매출", rows: salesRows, headers: ["날짜", "매출(원)", "고객수", "객단가(원)"] },
+    { title: "재고", rows: invRows, headers: ["상품명", "카테고리", "유형", "수량", "단위", "최소재고", "단가(원)", "총액(원)", "판매가(원)", "공급처"] },
+    { title: "직원", rows: empRows, headers: ["이름", "시급(원)", "주간근무(시)", "월급여추정(원)", "4대보험"] },
+    { title: "상품", rows: prodRows, headers: ["상품명", "카테고리", "판매가(원)", "원가(원)", "마진(원)", "마진율", "재고", "월판매", "단위"] },
+    { title: "제품", rows: upRows, headers: ["상품명", "카테고리", "판매가(원)", "원가(원)", "마진율", "재고", "월판매", "소모성"] },
+    { title: "서비스", rows: smRows, headers: ["서비스명", "카테고리", "가격(원)", "소요시간(분)", "월판매"] },
+  ];
+  const csv = sections
+    .filter((section) => section.rows.length > 0)
+    .map((section) => `# ${section.title}\n${buildCsv(section.rows, section.headers).replace(/^\uFEFF/, "")}`)
+    .join("\n\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  triggerDownload(blob, `buildup_경영보고서_${month}.csv`);
 }
 
 // ─── 6. 월간 P&L PDF ───
@@ -302,7 +298,7 @@ export async function exportMonthlyPnLPdf(params: {
     doc.text(`Store: ${storeName}`, 40, y);
     y += 14;
   }
-  doc.text(`Generated: ${new Date().toISOString().slice(0, 10)} | build.up`, 40, y);
+  doc.text(`Generated: ${getKstDate(new Date())} | build.up`, 40, y);
   y += 26;
 
   // 요약 박스

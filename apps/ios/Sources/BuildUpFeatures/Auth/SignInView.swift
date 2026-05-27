@@ -108,25 +108,43 @@ private enum EmailAuthMode: String, CaseIterable, Identifiable {
 private struct EmailAuthSheet: View {
     @Bindable var coordinator: AuthCoordinator
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var mode: EmailAuthMode = .login
-    @State private var name = ""
+    @State private var lastName = ""
+    @State private var firstName = ""
+    @State private var birthYearText = ""
     @State private var email = ""
     @State private var password = ""
+    @State private var agreedToTerms = false
     @FocusState private var focusedField: Field?
 
     private enum Field: Hashable {
-        case name
+        case lastName
+        case firstName
+        case birthYear
         case email
         case password
     }
 
+    private var passwordStrong: Bool {
+        password.count >= 8 && password.range(of: #"[0-9]"#, options: .regularExpression) != nil
+    }
+
     private var canSubmit: Bool {
-        let hasCredentials = email.trimmingCharacters(in: .whitespacesAndNewlines).contains("@")
-            && password.count >= 6
+        let hasEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).contains("@")
+        let hasPassword = password.count >= 1
         if mode == .signup {
-            return hasCredentials && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let year = Int(birthYearText) ?? 0
+            let validYear = year >= 1900 && year <= Calendar.current.component(.year, from: Date()) - 14
+            // 신규 가입: 강력한 비밀번호 + 이름 + 출생연도 + 약관 모두 필요
+            return hasEmail && passwordStrong
+                && !lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && validYear
+                && agreedToTerms
         }
-        return hasCredentials
+        // 로그인: Supabase가 실제 인증 처리 — 형식만 확인
+        return hasEmail && hasPassword
     }
 
     private var isAuthenticating: Bool {
@@ -138,107 +156,187 @@ private struct EmailAuthSheet: View {
         ZStack {
             BUBackgroundSurface()
 
-            VStack(alignment: .leading, spacing: 18) {
-                HStack {
-                    Text(mode == .signup ? "이메일로 가입" : "이메일 로그인")
-                        .font(.system(size: 18, weight: .bold))
+            if case .needsEmailConfirmation(let pendingEmail) = coordinator.state {
+                // ── 이메일 인증 대기 화면 ──
+                VStack(spacing: 0) {
+                    Spacer()
+                    ZStack {
+                        Circle()
+                            .fill(BUColor.auroraNavy.opacity(0.1))
+                            .frame(width: 72, height: 72)
+                        Image(systemName: "envelope.badge.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(BUColor.auroraNavy)
+                    }
+                    .padding(.bottom, 20)
+
+                    Text("이메일을 확인해 주세요")
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(BUColor.ink)
-                    Spacer(minLength: 0)
-                    Button("닫기") {
-                        dismiss()
-                    }
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(BUColor.inkSecondary)
-                }
+                        .padding(.bottom, 10)
 
-                Picker("이메일 인증 모드", selection: $mode) {
-                    ForEach(EmailAuthMode.allCases) { item in
-                        Text(item.rawValue).tag(item)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    if mode == .signup {
-                        AuthTextField(
-                            title: "이름",
-                            text: $name,
-                            submitLabel: .next
-                        )
-                        .focused($focusedField, equals: .name)
-                        .onSubmit { focusedField = .email }
-                    }
-
-                    AuthTextField(
-                        title: "이메일",
-                        text: $email,
-                        submitLabel: .next
-                    )
-                    .focused($focusedField, equals: .email)
-                    .onSubmit { focusedField = .password }
-
-                    AuthSecureField(title: "비밀번호", text: $password)
-                        .focused($focusedField, equals: .password)
-                        .onSubmit { submit() }
-                }
-
-                if case .failed(let message) = coordinator.state {
-                    Text(message)
-                        .font(.system(size: 12.5, weight: .medium))
-                        .foregroundStyle(BUColor.danger)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(mode == .signup ? "웹과 같은 Supabase 계정으로 새 워크스페이스를 만듭니다." : "웹에서 쓰는 이메일 계정 그대로 로그인합니다.")
-                        .font(.system(size: 12.5, weight: .medium))
+                    Text("\(pendingEmail)로\n인증 링크를 발송했습니다.\n링크 클릭 후 앱으로 돌아와 로그인해 주세요.")
+                        .font(.system(size: 14))
                         .foregroundStyle(BUColor.inkMuted)
-                }
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                Button(action: submit) {
-                    HStack(spacing: 8) {
-                        if isAuthenticating {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(.white)
+                    Spacer()
+
+                    VStack(spacing: 10) {
+                        Button {
+                            Task { await coordinator.resendEmailConfirmation(email: pendingEmail) }
+                        } label: {
+                            Text("인증 이메일 재발송")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity, minHeight: 52)
+                                .background(BUColor.auroraNavy, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
                         }
-                        Text(mode == .signup ? "계정 만들기" : "로그인")
-                            .font(.system(size: 15, weight: .bold))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, minHeight: 52)
-                    .background(
-                        LinearGradient(
-                            colors: [BUColor.auroraNavy, BUColor.auroraBlue],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
-                        in: RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    )
-                    .opacity(canSubmit && !isAuthenticating ? 1 : 0.48)
-                }
-                .buttonStyle(PressableButtonStyle())
-                .disabled(!canSubmit || isAuthenticating)
+                        .buttonStyle(PressableButtonStyle())
 
-                Spacer(minLength: 0)
+                        Button {
+                            mode = .login
+                            coordinator.cancelSignup()
+                        } label: {
+                            Text("로그인으로 돌아가기")
+                                .font(.system(size: 14))
+                                .foregroundStyle(BUColor.inkSecondary)
+                        }
+                    }
+                }
+                .padding(BUSpacing.lg)
+            } else {
+                // ── 로그인 / 회원가입 폼 ──
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack {
+                        Text(mode == .signup ? "이메일로 가입" : "이메일 로그인")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                        Spacer(minLength: 0)
+                        Button("닫기") { dismiss() }
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(BUColor.inkSecondary)
+                    }
+
+                    Picker("이메일 인증 모드", selection: $mode) {
+                        ForEach(EmailAuthMode.allCases) { item in
+                            Text(item.rawValue).tag(item)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        if mode == .signup {
+                            HStack(spacing: 8) {
+                                AuthTextField(title: "성", text: $lastName, submitLabel: .next)
+                                    .focused($focusedField, equals: .lastName)
+                                    .onSubmit { focusedField = .firstName }
+                                AuthTextField(title: "이름", text: $firstName, submitLabel: .next)
+                                    .focused($focusedField, equals: .firstName)
+                                    .onSubmit { focusedField = .birthYear }
+                            }
+                            AuthTextField(title: "출생연도 (예: 1990)", text: $birthYearText, submitLabel: .next)
+                                .focused($focusedField, equals: .birthYear)
+                                .onSubmit { focusedField = .email }
+                        }
+
+                        AuthTextField(title: "이메일", text: $email, submitLabel: .next)
+                            .focused($focusedField, equals: .email)
+                            .onSubmit { focusedField = .password }
+
+                        AuthSecureField(title: "비밀번호", text: $password)
+                            .focused($focusedField, equals: .password)
+                            .onSubmit { submit() }
+
+                        if mode == .signup && !password.isEmpty {
+                            Text("8자 이상, 숫자 포함\(passwordStrong ? " ✓" : "")")
+                                .font(.system(size: 11))
+                                .foregroundStyle(passwordStrong ? Color(red: 0.2, green: 0.78, blue: 0.35) : BUColor.danger)
+                        }
+                    }
+
+                    if case .failed(let message) = coordinator.state {
+                        Text(message)
+                            .font(.system(size: 12.5, weight: .medium))
+                            .foregroundStyle(BUColor.danger)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text(mode == .signup ? "웹과 같은 계정으로 새 워크스페이스를 만듭니다." : "웹에서 쓰는 이메일 계정 그대로 로그인합니다.")
+                            .font(.system(size: 12.5, weight: .medium))
+                            .foregroundStyle(BUColor.inkMuted)
+                    }
+
+                    if mode == .signup {
+                        HStack(alignment: .top, spacing: 10) {
+                            Toggle("", isOn: $agreedToTerms)
+                                .labelsHidden()
+                                .tint(BUColor.auroraNavy)
+                                .frame(width: 32)
+                            HStack(spacing: 0) {
+                                Button("이용약관") { openURL(URL(string: "https://buildup.kr/terms")!) }
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(BUColor.auroraNavy)
+                                Text(" 및 ")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(BUColor.inkMuted)
+                                Button("개인정보처리방침") { openURL(URL(string: "https://buildup.kr/privacy")!) }
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(BUColor.auroraNavy)
+                                Text("에 동의합니다")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(BUColor.inkMuted)
+                            }
+                        }
+                    }
+
+                    Button(action: submit) {
+                        HStack(spacing: 8) {
+                            if isAuthenticating {
+                                ProgressView().controlSize(.small).tint(.white)
+                            }
+                            Text(mode == .signup ? "계정 만들기" : "로그인")
+                                .font(.system(size: 15, weight: .bold))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .background(
+                            LinearGradient(colors: [BUColor.auroraNavy, BUColor.auroraBlue], startPoint: .leading, endPoint: .trailing),
+                            in: RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        )
+                        .opacity(canSubmit && !isAuthenticating ? 1 : 0.48)
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .disabled(!canSubmit || isAuthenticating)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(BUSpacing.lg)
             }
-            .padding(BUSpacing.lg)
         }
         .onChange(of: coordinator.isAuthenticated) { _, isAuthenticated in
-            if isAuthenticated {
-                dismiss()
-            }
+            if isAuthenticated { dismiss() }
         }
     }
 
     private func submit() {
         guard canSubmit, !isAuthenticating else { return }
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
         Task {
             switch mode {
             case .login:
                 await coordinator.signInWithEmail(email: trimmedEmail, password: password)
             case .signup:
-                await coordinator.signUpWithEmail(name: trimmedName, email: trimmedEmail, password: password)
+                await coordinator.signUpWithEmail(
+                    firstName: trimmedFirstName,
+                    lastName: trimmedLastName,
+                    birthYear: Int(birthYearText),
+                    email: trimmedEmail,
+                    password: password
+                )
             }
         }
     }
@@ -454,6 +552,8 @@ private struct EmailButton: View {
 }
 
 private struct LegalFooter: View {
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
         VStack(spacing: 6) {
             Text("로그인 시 약관에 동의합니다")
@@ -461,15 +561,19 @@ private struct LegalFooter: View {
                 .foregroundStyle(BUColor.inkMuted.opacity(0.7))
 
             HStack(spacing: BUSpacing.sm) {
-                Button("이용약관") {}
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(BUColor.inkSecondary)
+                Button("이용약관") {
+                    openURL(URL(string: "https://buildup.kr/terms")!)
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(BUColor.inkSecondary)
                 Text("·")
                     .font(.system(size: 11))
                     .foregroundStyle(BUColor.inkSubtle)
-                Button("개인정보처리방침") {}
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(BUColor.inkSecondary)
+                Button("개인정보처리방침") {
+                    openURL(URL(string: "https://buildup.kr/privacy")!)
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(BUColor.inkSecondary)
             }
         }
     }

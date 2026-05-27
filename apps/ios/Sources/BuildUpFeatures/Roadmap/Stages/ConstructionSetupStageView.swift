@@ -29,6 +29,11 @@ public struct ConstructionSetupStageView: View {
     @AppStorage("construction.concept")  private var selectedConcept = ""
     @AppStorage("construction.done")     private var constructionDone = false
 
+    // 웹 SSOT 누락 3개 (2026-05-24 추가)
+    @AppStorage("construction.contractorSelected") private var contractorSelected = false
+    @AppStorage("construction.designApproved")     private var designApproved     = false
+    @AppStorage("construction.fireHealthApplied")  private var fireHealthApplied  = false
+
     private let pages = ["마감재·설비", "컨셉 선택"]
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
@@ -298,12 +303,18 @@ public struct ConstructionSetupStageView: View {
         }
     }
 
-    private var canCompleteStage: Bool { constructionDone && !selectedConcept.isEmpty }
+    private var canCompleteStage: Bool {
+        !selectedConcept.isEmpty && contractorSelected && designApproved
+            && constructionDone && fireHealthApplied
+    }
 
     private var advanceHint: String {
         if selectedConcept.isEmpty { return "공간 디자인 컨셉을 선택하세요" }
-        if !constructionDone { return "인테리어 컨셉·업체 확정 완료를 체크하세요" }
-        return "컨셉·업체 확정 — 다음 단계로"
+        if !contractorSelected { return "시공업체 선정 및 견적 비교 완료를 체크하세요" }
+        if !designApproved { return "최종 설계·시공 계획 승인을 체크하세요" }
+        if !constructionDone { return "인테리어 공사 완료를 체크하세요" }
+        if !fireHealthApplied { return "소방필증·보건증 신청 완료를 체크하세요 (14일 대기)" }
+        return "컨셉·업체 확정·공사 완료 — 다음 단계로"
     }
 
     public init() {}
@@ -451,9 +462,40 @@ public struct ConstructionSetupStageView: View {
             }
 
             BUCard(.card) {
-                Toggle(isOn: $constructionDone) {
-                    Text("인테리어 컨셉·업체 확정 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                }.tint(BUColor.midnight)
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("공사 진행 체크리스트")
+                    Toggle(isOn: $contractorSelected) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("시공업체 선정 및 최소 2곳 견적 비교 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text("자재 브랜드·규격·면적 4항목 명시된 견적서 확인 후 계약").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                        }
+                    }.tint(BUColor.midnight)
+                    Divider()
+                    Toggle(isOn: $designApproved) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("최종 설계 및 시공 계획 승인").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text("도면·자재 사양·공사 일정 3단계(착공·중간·완공) 최종 확인").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                        }
+                    }.tint(BUColor.midnight)
+                    Divider()
+                    Toggle(isOn: $constructionDone) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("인테리어 공사 완료 및 최종 확인").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                            Text("현장 점검·하자 확인·잔금 30% 정산").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                        }
+                    }.tint(BUColor.midnight)
+                    Divider()
+                    Toggle(isOn: $fireHealthApplied) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 6) {
+                                Text("소방필증·보건증 신청 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                                Text("14일 대기").font(.system(size: 10, weight: .bold)).foregroundStyle(Color.red)
+                                    .padding(.horizontal, 6).padding(.vertical, 2).background(Color.red.opacity(0.1), in: Capsule())
+                            }
+                            Text("공사 중 병행 신청 필수 — 소방완비증명서(다중이용시설)·보건증 없이는 영업신고 불가").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
+                        }
+                    }.tint(BUColor.midnight)
+                }
             }
         }
     }

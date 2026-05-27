@@ -74,7 +74,7 @@ const PERMIT_BY_CATEGORY: Record<string, PermitInfo> = {
     kind: "신고",
     name: "일반음식점 영업신고 (식품위생법)",
     where: "관할 구청 위생과 또는 정부24",
-    cost: "약 6.6만원 (위생교육 2.6만 + 보건증 1.2만 + 신고수수료 2.8만)",
+    cost: "약 5.7만원 (위생교육 2.6만 + 보건증 보건소 3천원 + 신고수수료 2.8만). 민간병원 보건증 시 1.5~3만원 추가",
     duration: "7~14일 (현장점검 포함)",
     documents: [
       "사업자등록증",
@@ -98,7 +98,7 @@ const PERMIT_BY_CATEGORY: Record<string, PermitInfo> = {
     kind: "신고",
     name: "휴게음식점 영업신고 (식품위생법)",
     where: "관할 구청 위생과 또는 정부24",
-    cost: "약 6.6만원 (위생교육 2.6만 + 보건증 1.2만 + 수수료 2.8만)",
+    cost: "약 5.7만원 (위생교육 2.6만 + 보건증 보건소 3천원 + 수수료 2.8만). 민간병원 보건증 시 1.5~3만원 추가",
     duration: "7~14일",
     documents: [
       "사업자등록증",
@@ -881,7 +881,7 @@ export function RegistrationSetupStage() {
             <li>위생교육 온라인 수강 (외식업·휴게음식업중앙회 / 약 2.6만원 / 6시간)</li>
           )}
           {(industryCategoryId === "food" || industryCategoryId === "cafe-dessert" || industryCategoryId === "beauty" || industryCategoryId === "living-service") && (
-            <li>관할 보건소 방문 → 보건증 발급 (약 1.2만원 / 1주 내)</li>
+            <li>관할 보건소 방문 → 보건증 발급 (보건소 3,000원 / 1주 내, 민간병원은 1.5~3만원)</li>
           )}
           <li>{permit.name} 접수 (정부24 또는 관할 행정기관)</li>
           <li>현장점검 대응 → 영업{permit.kind === "허가" ? "허가증" : permit.kind === "등록" ? "등록증" : "신고증"} 수령</li>

@@ -2,7 +2,6 @@
 
 import {
   answerGuideQuestion,
-  completeCurrentStage,
   getFreshnessPresentation,
   runFinancialSimulation,
   saveRoadmapState,
@@ -12,6 +11,7 @@ import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai"
 import { useAiStore, useFinanceStore, useRoadmapStore, useOnboardingStore } from "../stores";
 import { supabase } from "../../../lib/supabase";
 import {
+  advanceStageWithChainBackfill,
   getContractTaskDetail,
   getGuideSections,
   inferFinanceDefaults,
@@ -330,10 +330,14 @@ export function useAiAnalysisHandlers(
   };
 
   // ── Handler: verification continue (permit/tax/loan/financial-review) ──
+  // ⚠️ 2026-05-25 fix: 이전 completeCurrentStage(roadmap, ...) 는 roadmap.currentStageId 기준으로
+  //    advance 하므로, 사용자가 완료된 단계를 재방문하면 현재 진행 중인 단계를 advance 하는 버그 발생.
+  //    advanceStageWithChainBackfill(stageId, ...) 를 사용해 stageId 를 명시적으로 지정.
   const handleVerificationContinue = (
     stageId: "permit-guide" | "tax-guide" | "loan-guide" | "financial-review",
     extraInputs: Record<string, unknown> = {},
   ) => {
+    // 먼저 reviewed: true 등 inputs 를 upsert 한 decisions 생성
     const nextDecisions = upsertStageDecision(decisions, stageId, {
       stageId,
       inputs: {
@@ -343,12 +347,14 @@ export function useAiAnalysisHandlers(
       completedAt: new Date().toISOString(),
     });
 
-    const transition = completeCurrentStage(roadmap, nextDecisions, taskMap);
-    setDecisions(nextDecisions);
-    setRoadmap(transition.roadmap);
-    setLastUnlocked(transition.newlyUnlockedStageIds);
+    // path-aware advance: nextDecisions 를 넘기면 advanceStageWithChainBackfill 내부
+    //   upsertStageDecision 이 inputs 를 merge 하므로 reviewed: true 보존.
+    const result = advanceStageWithChainBackfill(stageId, nextDecisions, roadmap, taskMap);
+    setDecisions(result.decisions);
+    setRoadmap(result.roadmap);
+    setLastUnlocked(result.newlyUnlockedStageIds);
     setViewingStageId(null);
-    setTransitionNotice(buildTransitionNotice(transition.roadmap, language));
+    setTransitionNotice(buildTransitionNotice(result.roadmap, language));
   };
 
   // ── Handler: knowledge Q&A (streaming) ──
