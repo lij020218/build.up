@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
-import { generateRoadmap, selectFromPool } from "@build-up/ai";
+import { generateRoadmap, selectFromPool } from "@foundone/ai";
 import type {
   RoadmapGenerationInput,
   RoadmapGenerationResult,
@@ -11,13 +11,13 @@ import type {
   PoolMaterial,
   PoolConcept,
   PoolChannel,
-} from "@build-up/ai";
+} from "@foundone/ai";
 import {
   loadVendorRecommendations,
   getVendorTypeLabel,
   getPlatformsForCategory,
   getLogisticsTypeLabel,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   getUniversalVendorFallback,
   getUniversalMaterialFallback,

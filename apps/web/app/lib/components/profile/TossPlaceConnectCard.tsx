@@ -118,8 +118,8 @@ export function TossPlaceConnectCard({ ko }: { ko: boolean }) {
                 </div>
                 <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.5, marginTop: "3px" }}>
                   {ko
-                    ? "토스 단말기 매출이 자동으로 들어옵니다. 매장 대시보드에서 build.up 앱 사용 활성화 → Access Key 발급."
-                    : "Auto-sync your TOSS Place revenue. Activate build.up app in merchant dashboard → issue Access Key."}
+                    ? "토스 단말기 매출이 자동으로 들어옵니다. 매장 대시보드에서 Found.One 앱 사용 활성화 → Access Key 발급."
+                    : "Auto-sync your TOSS Place revenue. Activate Found.One app in merchant dashboard → issue Access Key."}
                 </div>
               </div>
             </div>

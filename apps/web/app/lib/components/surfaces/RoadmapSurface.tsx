@@ -1,7 +1,7 @@
 "use client";
 
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { localizeStage, getUiCopy, formatStageStatus } from "@build-up/shared";
+import { localizeStage, getUiCopy, formatStageStatus } from "@foundone/shared";
 import { styles } from "../../styles";
 import { useRouter } from "next/navigation";
 import { AuroraBackground } from "../../../../components/ui/aurora-background";

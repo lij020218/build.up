@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * PortOneConnectCard — 사장님이 자기 포트원 V2 API Secret 을 build.up 에 연결.
+ * PortOneConnectCard — 사장님이 자기 포트원 V2 API Secret 을 Found.One 에 연결.
  *
  * UX 흐름:
  *   미연결 상태: "왜 연결?" + 보안 약속 + [연결하기] CTA
@@ -490,7 +490,7 @@ const primaryBtn: React.CSSProperties = {
   padding: "10px 18px",
   borderRadius: "10px",
   border: "none",
-  // build.up 시그니처 인디고 그라데이션
+  // Found.One 시그니처 인디고 그라데이션
   background: "linear-gradient(135deg, #1d3557 0%, #2c4f80 100%)",
   color: "#fff",
   cursor: "pointer",

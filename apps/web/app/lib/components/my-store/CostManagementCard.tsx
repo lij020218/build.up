@@ -23,7 +23,7 @@ import {
   COST_CLASSIFICATION_LABELS,
   COST_CLASSIFICATION_COLORS,
   type CostClassification,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   PALETTE,
   editBtnStyle,

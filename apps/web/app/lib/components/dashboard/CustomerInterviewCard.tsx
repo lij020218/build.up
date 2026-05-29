@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Users, Sparkles, MessageCircle, Plus, X, Loader2, Lightbulb, Copy, Check, ExternalLink, Share2, BookOpen, Download, ClipboardList, MessageSquare, AlertCircle, Heart, Lock, ChevronDown, ChevronUp, type LucideIcon } from "lucide-react";
 import { useInterviewStore, type CustomerInterview, type CustomerInterviewType } from "../../stores/interview-store";
 import { supabase } from "../../../../lib/supabase";
-import { INTERVIEW_TEMPLATES, type InterviewTemplate } from "@build-up/shared";
+import { INTERVIEW_TEMPLATES, type InterviewTemplate } from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 /**
@@ -185,7 +185,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
    * 사장님 흐름:
    *   1. Google Forms 응답 → Google Sheets 자동 저장
    *   2. Sheets 메뉴 → "파일 → 공유 → 웹에 게시" → CSV 형식 → 게시 → 링크 복사
-   *   3. build.up 에 그 URL 붙여넣고 "결과 가져오기" → 각 응답이 인터뷰 1건으로 저장
+   *   3. Found.One 에 그 URL 붙여넣고 "결과 가져오기" → 각 응답이 인터뷰 1건으로 저장
    *
    * 파싱 규칙:
    *   - 첫 행 = 헤더 (질문 텍스트들)
@@ -591,7 +591,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               "NPS": "#059669",
               "CSAT": "#191970",
               "YC": "#ea580c",
-              "build.up": "#191970",
+              "Found.One": "#191970",
             };
 
             return (

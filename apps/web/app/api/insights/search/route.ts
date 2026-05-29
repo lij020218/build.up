@@ -4,7 +4,7 @@
 // Returns the chunks the AI coach would inject — useful as a stand-alone
 // API and for debugging retrieval quality.
 
-import { retrieveInsightChunks } from "@build-up/ai";
+import { retrieveInsightChunks } from "@foundone/ai";
 import { supabase } from "../../../../lib/supabase";
 import { requireApiUser } from "../../_lib/auth";
 import { getOpenAiApiKey } from "../../_lib/env";

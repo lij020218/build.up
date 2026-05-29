@@ -3,14 +3,14 @@ import OpenAI from "openai";
 import { getOpenAIApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkDailyRateLimit, checkSimpleRateLimit } from "../../../_lib/rate-limit";
-import { ANTI_HALLUCINATION_DIRECTIVE } from "@build-up/ai";
+import { ANTI_HALLUCINATION_DIRECTIVE } from "@foundone/ai";
 import {
   formatKRW,
   detectRubric,
   PASS_SIGNALS,
   FAIL_SIGNALS,
   type Rubric,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 /**
  * Funding AI Score — 사장님 데이터 vs 지원 프로그램 요건 정밀 매칭 평가.

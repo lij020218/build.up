@@ -15,7 +15,7 @@ import {
   type FreshnessMeta,
   type KnowledgeItemRecord,
   type KnowledgeItemSourceRecord
-} from "@build-up/shared";
+} from "@foundone/shared";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";

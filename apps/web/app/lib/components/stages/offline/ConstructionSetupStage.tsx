@@ -16,7 +16,7 @@ import {
 import { supabase } from "../../../../../lib/supabase";
 import { SUB_INDUSTRY_INTERIOR_DATA } from "./sub-industry-interior-data";
 import { FRANCHISE_INTERIOR_DATA } from "./franchise-interior-data";
-import { getFranchiseBrandById } from "@build-up/shared";
+import { getFranchiseBrandById } from "@foundone/shared";
 import { StageWrapup } from "../shared/StageWrapup";
 
 export function ConstructionSetupStage() {
@@ -36,7 +36,7 @@ export function ConstructionSetupStage() {
                   // 업종 변경 시 리로드를 위해 categoryId를 키로 사용
                   const loadDbGuides = async () => {
                     try {
-                      const { loadInteriorGuides } = await import("@build-up/shared");
+                      const { loadInteriorGuides } = await import("@foundone/shared");
                       const result = await loadInteriorGuides(supabase, industryCategoryId, selectedIndustryId);
                       if (result.materials.length > 0 || result.concepts.length > 0) {
                         setInteriorGuidesData(result);

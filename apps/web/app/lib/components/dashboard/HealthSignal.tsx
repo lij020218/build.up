@@ -7,7 +7,7 @@
  *  - HealthDot: 인라인 작은 점 (모든 KPI 옆)
  *  - HealthBadge: 운영 대시보드 최상단 한 줄 요약 배지
  *
- * 모든 색상·라벨은 SSOT (`@build-up/shared` unified-health) 에서 가져옴.
+ * 모든 색상·라벨은 SSOT (`@foundone/shared` unified-health) 에서 가져옴.
  *  → 통합 4단계: healthy / caution / warning / critical (+ unknown)
  */
 
@@ -16,7 +16,7 @@ import {
   HEALTH_LABEL_KO,
   HEALTH_LABEL_EN,
   type HealthGrade as SharedHealthGrade,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 // 호환 type alias — 외부에서 HealthGrade 로 import 하던 코드 보존
 export type HealthGrade = Exclude<SharedHealthGrade, "unknown">;
@@ -245,7 +245,7 @@ export function gradeFromMetrics(grade: "healthy" | "caution" | "warning" | "cri
 
 /**
  * 단일 KPI 값 → 임계값 비교로 HealthGrade 결정
- *  - 새 코드는 `@build-up/shared`의 `gradeKpi(value, KpiThreshold)` 를 직접 사용 권장.
+ *  - 새 코드는 `@foundone/shared`의 `gradeKpi(value, KpiThreshold)` 를 직접 사용 권장.
  *  - 본 wrapper 는 기존 호출부 호환을 위해 남김.
  *  - good ≤ val 이면 healthy (lowerIsBetter 일 때) 식으로 동작.
  */

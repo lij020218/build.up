@@ -1,7 +1,7 @@
 // ─── 경영 건강 진단 AI 프롬프트 v2 ────────────────────────────────────────────
 // 경영학적 프레임워크 + 한국 규제 지식 + 위기 플레이북 기반 전문 진단
 
-import { formatKRW } from "@build-up/shared";
+import { formatKRW } from "@foundone/shared";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 export type HealthDiagnosisContext = {

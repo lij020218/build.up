@@ -8,8 +8,8 @@
  *    1) GA4 OAuth (한국 스타트업 ~95% 가 보유, 무료) — 사장님이 바로 이해
  *
  *  [고급 연결 (개발자용) — toggle 안에 숨김]
- *    2) Custom Webhook   (사장님 서버 → build.up POST)
- *    3) Pull API         (build.up → 사장님 read-only GET endpoint, 매일 04:00 KST)
+ *    2) Custom Webhook   (사장님 서버 → Found.One POST)
+ *    3) Pull API         (Found.One → 사장님 read-only GET endpoint, 매일 04:00 KST)
  *
  * 표시 조건: 스타트업 업종(industryCategoryId === "startup-tech") 일 때만.
  *
@@ -19,7 +19,7 @@
  *   Pull API · Webhook 은 "있으면 좋은" 신뢰 신호. 주력 흐름으로 밀면 비개발자 이탈 위험.
  *   "조용히 열어두기" 전략 — 개발팀 있는 B2B 고객만 발견하도록.
  *
- * 디자인: build.up 토큰 (lavender-mist 위 순백 카드 + 미드나잇 네이비 액센트).
+ * 디자인: Found.One 토큰 (lavender-mist 위 순백 카드 + 미드나잇 네이비 액센트).
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -495,7 +495,7 @@ export function SaasMetricsConnectCard({
                 : "If you have a dev team, hook up automated sync directly. Most owners only need GA4 above."}
             </div>
 
-            {/* ── Webhook 영역 (자체 서버 → build.up POST) ── */}
+            {/* ── Webhook 영역 (자체 서버 → Found.One POST) ── */}
             <div style={{ padding: "0 18px 16px" }}>
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "10px" }}>
                 <div
@@ -540,8 +540,8 @@ export function SaasMetricsConnectCard({
                   </div>
                   <div style={{ fontSize: "12px", color: "#5A6BAE", lineHeight: 1.55, marginTop: "3px" }}>
                     {ko
-                      ? "사장님 백엔드 → build.up 으로 매일 POST. 자체 추적 데이터를 그대로 전송."
-                      : "Your backend POSTs daily metrics to build.up."}
+                      ? "사장님 백엔드 → Found.One 으로 매일 POST. 자체 추적 데이터를 그대로 전송."
+                      : "Your backend POSTs daily metrics to Found.One."}
                   </div>
                 </div>
               </div>
@@ -620,7 +620,7 @@ export function SaasMetricsConnectCard({
               )}
             </div>
 
-            {/* ── Pull API 영역 (build.up → 사장님 read-only GET) ── */}
+            {/* ── Pull API 영역 (Found.One → 사장님 read-only GET) ── */}
             <div style={{ padding: "0 18px 16px", borderTop: "1px dashed rgba(30,42,85,0.08)", paddingTop: "16px" }}>
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "10px" }}>
                 <div
@@ -665,8 +665,8 @@ export function SaasMetricsConnectCard({
                   </div>
                   <div style={{ fontSize: "12px", color: "#5A6BAE", lineHeight: 1.55, marginTop: "3px" }}>
                     {ko
-                      ? "build.up 이 매일 04:00 KST 에 사장님 read-only endpoint 를 호출. 사내 보안팀 설득이 쉬울 때."
-                      : "build.up calls your read-only endpoint daily at 04:00 KST. Easier to get security team approval."}
+                      ? "Found.One 이 매일 04:00 KST 에 사장님 read-only endpoint 를 호출. 사내 보안팀 설득이 쉬울 때."
+                      : "Found.One calls your read-only endpoint daily at 04:00 KST. Easier to get security team approval."}
                   </div>
                 </div>
               </div>
@@ -852,7 +852,7 @@ export function SaasMetricsConnectCard({
                         {s.curl_example && (
                           <>
                             <div style={{ color: "#8090C4", margin: "8px 0 4px" }}>
-                              {ko ? "// build.up 이 매일 호출할 명령" : "// build.up will call this daily"}
+                              {ko ? "// Found.One 이 매일 호출할 명령" : "// Found.One will call this daily"}
                             </div>
                             <pre style={{ margin: 0, whiteSpace: "pre" }}>{s.curl_example}</pre>
                           </>

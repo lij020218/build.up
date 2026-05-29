@@ -9,7 +9,7 @@ import {
   getStageModeContent,
   MODE_DISPLAY_INFO,
   type OperatingMode,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { SuccessCasesShowcase } from "./SuccessCasesShowcase";
 
 const MIDNIGHT = "#191970";

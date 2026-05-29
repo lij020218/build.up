@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
 import { supabase } from "../../../../lib/supabase";
-import { checkSeveranceObligation, type SeveranceCheck } from "@build-up/shared";
+import { checkSeveranceObligation, type SeveranceCheck } from "@foundone/shared";
 
 type EmployeeEntry = {
   id: string;
@@ -220,7 +220,7 @@ export function StaffOpsCard({
         <div style={inlineEditor}>
           <div style={inlineEditorTitle}>{ko ? "직원 추가" : "Add staff"}</div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginBottom: "14px", lineHeight: 1.5 }}>
-            {ko ? "이 직원이 build.up 회원인가요?" : "Is this employee a build.up member?"}
+            {ko ? "이 직원이 Found.One 회원인가요?" : "Is this employee a Found.One member?"}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
             <button type="button" onClick={() => setAddMode("member")} style={{
@@ -363,7 +363,7 @@ export function StaffOpsCard({
           </div>
           {!isEditing && (
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginBottom: "10px" }}>
-              {ko ? "나중에 이 직원이 build.up에 가입하면 연동할 수 있습니다." : "You can link this employee later if they join build.up."}
+              {ko ? "나중에 이 직원이 Found.One에 가입하면 연동할 수 있습니다." : "You can link this employee later if they join Found.One."}
             </div>
           )}
           <div style={formGridTwo}>

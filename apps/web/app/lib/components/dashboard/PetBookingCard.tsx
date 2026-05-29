@@ -7,7 +7,7 @@
  *  Gingr·VetPort·DaySmart·Petfolk·플러스벳·KPMG 반려동물 시장·펫프렌즈 재구매 85%
  *  → 펫 사장님 daily KPI: 예약·서비스 mix (미용/호텔/병원/판매)·재방문 cycle (60일).
  *
- *  build.up 데이터: booking-store 재사용 (Beauty 와 동일 모델).
+ *  Found.One 데이터: booking-store 재사용 (Beauty 와 동일 모델).
  *    · service 필드에 "미용·호텔·진료·미용+호텔" 등 자유 입력
  *    · providerName=미용사·수의사
  *
@@ -29,7 +29,7 @@ import {
   petServiceMix,
   bookingRepeatRate,
   type PetServiceCategory,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 

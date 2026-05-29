@@ -10,7 +10,7 @@ export type StartupTool = {
   monthlyEstimate?: string;  // 월 예상 비용
   koreanSupport: boolean;
   aiPowered: boolean;
-  recommended: boolean;      // build.up 추천
+  recommended: boolean;      // Found.One 추천
   tags: string[];
 };
 

@@ -1,5 +1,5 @@
 {
-  "name": "@build-up/integrations",
+  "name": "@foundone/integrations",
   "private": true,
   "version": "0.1.0",
   "main": "src/index.ts",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@build-up/shared": "workspace:*"
+    "@foundone/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.2"

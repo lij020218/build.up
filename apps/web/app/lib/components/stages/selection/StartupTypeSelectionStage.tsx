@@ -13,7 +13,7 @@ import {
   getFranchiseBrandsForSubIndustry,
   getScoreColor,
   getScoreLabel,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 export function StartupTypeSelectionStage() {
   const d = useDashboardCtx();

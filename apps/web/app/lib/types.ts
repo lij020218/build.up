@@ -1,6 +1,6 @@
-import type { KnowledgeItemRecord, KnowledgeItemSourceRecord, GuideQaAnswer } from "@build-up/shared";
-import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
-import type { FreshnessMeta } from "@build-up/shared";
+import type { KnowledgeItemRecord, KnowledgeItemSourceRecord, GuideQaAnswer } from "@foundone/shared";
+import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai";
+import type { FreshnessMeta } from "@foundone/shared";
 
 export type GuideRecord = KnowledgeItemRecord & {
   sources: KnowledgeItemSourceRecord[];
@@ -43,7 +43,7 @@ export type DashboardSurface = "home" | "current" | "roadmap" | "guides" | "fran
 /** 서브훅에 전달되는 공통 의존성 */
 export type DashboardDeps = {
   language: "ko" | "en";
-  copy: ReturnType<typeof import("@build-up/shared").getUiCopy>;
+  copy: ReturnType<typeof import("@foundone/shared").getUiCopy>;
   router: ReturnType<typeof import("next/navigation").useRouter>;
   searchParams: ReturnType<typeof import("next/navigation").useSearchParams>;
 };

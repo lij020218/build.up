@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
-import { getFullToolKit } from "@build-up/shared";
+import { getFullToolKit } from "@foundone/shared";
 import { MIDNIGHT, MIDNIGHT_SOFT, MIDNIGHT_BORDER } from "./StartupStageShell";
 
 export function StartupToolkitPanel() {

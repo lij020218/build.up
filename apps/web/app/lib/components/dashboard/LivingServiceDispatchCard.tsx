@@ -8,7 +8,7 @@
  *  청소연구소 (88% 재구매)·세탁특공대·런드리고
  *  → 생활서비스 daily KPI: 의뢰·FTFR (First-Time Fix Rate)·기사 가동률·재의뢰
  *
- *  build.up 데이터: booking-store 재사용 (provider = 기사, service = 청소·수리·배달).
+ *  Found.One 데이터: booking-store 재사용 (provider = 기사, service = 청소·수리·배달).
  *
  *  ── 카드 구조 ───────────────────────────────────────────────────────
  *  ① 상황: 오늘 의뢰 + 미배정 + 어제 완료/취소
@@ -26,7 +26,7 @@ import {
   providerStats as ssotProviderStats,
   bookingRepeatRate,
   unassignedCount as ssotUnassignedCount,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";

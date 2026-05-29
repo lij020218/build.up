@@ -10,13 +10,13 @@ import {
   getProgramCategoryLabel,
   formatBudgetPresetLabel,
   type ProgramCategory,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { fetchLiveSupportPrograms } from "../../../services/live-data";
 import { supabase } from "../../../../../lib/supabase";
 import { styles } from "../../../styles";
 import { StageWrapup } from "../shared/StageWrapup";
-import { LOAN_FAQ_ENTRIES, matchLoanFaq, type LoanFaqEntry } from "@build-up/shared";
+import { LOAN_FAQ_ENTRIES, matchLoanFaq, type LoanFaqEntry } from "@foundone/shared";
 import { useMemo, useState } from "react";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러
@@ -261,7 +261,7 @@ export function LoanGuideStage() {
         industry: industryCategoryId,
         subIndustry: selectedIndustryId ?? "",
         startupType: startupType ?? "independent",
-        franchiseBrand: selectedFranchiseBrandId ? (await import("@build-up/shared")).getFranchiseBrandById(selectedFranchiseBrandId)?.name.ko : undefined,
+        franchiseBrand: selectedFranchiseBrandId ? (await import("@foundone/shared")).getFranchiseBrandById(selectedFranchiseBrandId)?.name.ko : undefined,
         businessModel: selectedBusinessModelId ?? "",
         capital: selectedBudget ?? 0,
         targetOpenDate: decisions["budget-setup"]?.inputs?.targetOpenDate ?? "",

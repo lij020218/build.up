@@ -1,5 +1,5 @@
-import { generateReportInsight } from "@build-up/ai";
-import type { ReportInsightInput } from "@build-up/ai";
+import { generateReportInsight } from "@foundone/ai";
+import type { ReportInsightInput } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";

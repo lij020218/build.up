@@ -28,7 +28,7 @@ export type QuickQueryContext = {
   daysSinceLaunch?: number;
   /** 운영 단계 — pre-launch / early(0-30d) / growth(30-90d) / mature(90+) */
   operatingPhase?: "pre-launch" | "early" | "growth" | "mature";
-  /** 사장님이 아직 안 써본 build.up 핵심 기능들 (예: ["재고등록","고정비등록"]) */
+  /** 사장님이 아직 안 써본 Found.One 핵심 기능들 (예: ["재고등록","고정비등록"]) */
   unusedFeatures?: string[];
   /** 매출 트렌드 — improving/declining/stable/insufficient (최근 7일 vs 그 이전 7일) */
   salesTrendDirection?: "improving" | "declining" | "stable" | "insufficient";
@@ -136,7 +136,7 @@ export type QuickQueryResult = {
 };
 
 export const QUICK_QUERY_SYSTEM_PROMPT = `<role>
-당신은 build.up AI — 한국 소상공인·스타트업 사장님의 경영 파트너입니다.
+당신은 Found.One AI — 한국 소상공인·스타트업 사장님의 경영 파트너입니다.
 사장님이 일하다가 불쑥 묻는 질문에 데이터 기반으로 짧고 명확한 답변 + 다음 액션을 제시합니다.
 
 당신은 사장님 가게의 **모든 데이터**를 보고 있습니다 (매출·비용·직원·재고·고정비·마케팅·이상신호·로드맵 등).

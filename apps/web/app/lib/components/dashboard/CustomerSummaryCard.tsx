@@ -8,6 +8,7 @@
  */
 
 import type { DashboardHook } from "../../useDashboard";
+import { getKstDate, shiftIsoDate } from "../../utils/business-day";
 
 // ─── 고객/회원 관리 요약 (비스타트업) ────────────────────────────────────────
 
@@ -19,16 +20,17 @@ export function CustomerSummaryCard({ d, ko, fmt }: { d: DashboardHook; ko: bool
   // 업종별 표시 정보
   const title = ko ? label.ko : label.en;
 
-  const activeMembers = members.filter((m) => {
-    if (!m.endDate) return true;
-    return new Date(m.endDate) >= new Date();
-  });
-
-  const expiringMembers = members.filter((m) => {
-    if (!m.endDate) return false;
-    const diff = new Date(m.endDate).getTime() - Date.now();
-    return diff > 0 && diff < 7 * 86400000;
-  });
+  // ⚠️ 2026-05-27 fix (버그 #3): endDate 는 "YYYY-MM-DD" 문자열.
+  //   기존: `new Date(endDate) >= new Date()` → endDate 가 UTC 자정으로 파싱돼
+  //   KST 09:00 부터 24:00 까지 9~15시간 동안 만료일=오늘인 회원이 active 에서 빠지고
+  //   expiring 에서도 (diff > 0 조건) 빠져 stats 에서 완전히 사라지던 버그.
+  //   해결: ISO 문자열끼리 직접 비교 (iOS BUMember.isActive 와 동일 패턴).
+  const todayKst = getKstDate(new Date());
+  const expiryThreshold = shiftIsoDate(todayKst, 7); // 7일 이내 만료 임박
+  const activeMembers = members.filter((m) => !m.endDate || m.endDate >= todayKst);
+  const expiringMembers = members.filter(
+    (m) => m.endDate && m.endDate >= todayKst && m.endDate < expiryThreshold
+  );
 
   const totalRevenue = activeMembers.reduce((s, m) => s + (m.fee ?? 0), 0);
 

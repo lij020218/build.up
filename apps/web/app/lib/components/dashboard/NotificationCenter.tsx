@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import type { DashboardHook } from "../../useDashboard";
-import { buildTaxCalendar } from "@build-up/shared";
+import { buildTaxCalendar } from "@foundone/shared";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 type InventoryEntry = { id: string; name: string; quantity: number; minThreshold?: number };

@@ -164,7 +164,7 @@ export default function InvitePage() {
 
         {state.status === "invalid" && (
           <>
-            <div style={eyebrowStyle}>build.up</div>
+            <div style={eyebrowStyle}>Found.One</div>
             <h1 style={titleStyle}>
               {state.reason === "not-found" && "유효하지 않은 초대 링크입니다"}
               {state.reason === "expired" && "만료된 초대 링크입니다"}
@@ -185,7 +185,7 @@ export default function InvitePage() {
 
         {state.status === "valid" && !accepted && (
           <>
-            <div style={eyebrowStyle}>build.up · 직원 초대</div>
+            <div style={eyebrowStyle}>Found.One · 직원 초대</div>
             <h1 style={titleStyle}>
               <span style={{ color: MIDNIGHT }}>{state.ownerName}</span>의<br />
               <span style={{ color: MIDNIGHT }}>{state.storeName}</span> 직원이<br />
@@ -220,14 +220,14 @@ export default function InvitePage() {
             </div>
 
             <div style={footnoteStyle}>
-              아직 build.up 계정이 없다면 「맞아요」를 누른 뒤 직원으로 회원가입하실 수 있습니다.
+              아직 Found.One 계정이 없다면 「맞아요」를 누른 뒤 직원으로 회원가입하실 수 있습니다.
             </div>
           </>
         )}
 
         {state.status === "valid" && accepted && (
           <>
-            <div style={eyebrowStyle}>build.up</div>
+            <div style={eyebrowStyle}>Found.One</div>
             <h1 style={titleStyle}>
               {state.storeName} 가족이 되신 걸<br />축하합니다 🎉
             </h1>

@@ -8,7 +8,7 @@ import {
   calculateCostRatios,
   type BusinessSituation,
   type CaseStudy,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { Lightbulb } from "lucide-react";
 import { entriesInLastDays, entriesInWindow } from "../../utils/daily-windows";
 

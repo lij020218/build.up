@@ -84,8 +84,8 @@ import {
   type FranchiseBrand,
   getFullToolKit,
   getRecommendedStack,
-} from "@build-up/shared";
-import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
+} from "@foundone/shared";
+import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -156,8 +156,8 @@ import LifecycleCard from "./lib/components/LifecycleCard";
 import OperationalDashboard from "./lib/components/dashboard/OperationalDashboard";
 import RoleSelectionScreen from "./lib/components/RoleSelectionScreen";
 import AIRoadmapWizard from "./lib/components/AIRoadmapWizard";
-import { calculateHealthMetrics, forecastSales } from "@build-up/shared";
-import type { BusinessHealthMetrics, SalesForecast } from "@build-up/shared";
+import { calculateHealthMetrics, forecastSales } from "@foundone/shared";
+import type { BusinessHealthMetrics, SalesForecast } from "@foundone/shared";
 import { useDashboard, type InventoryItem, type InvForm, type Employee, type DeliveryPlatform, type Product, type TaxSettings, type FixedExpense, type Member, type DailyEntry, type MonthlyCosts, type UnifiedProduct, type ServiceMenuItem } from "./lib/useDashboard";
 import { getKstDate } from "./lib/utils/business-day";
 import {
@@ -169,7 +169,7 @@ import {
 } from "./app-shell-styles";
 
 /**
- * StarterStageDemo — build.up 앱 메인 셸
+ * StarterStageDemo — Found.One 앱 메인 셸
  *
  * ─────────────────────────────────────────────────────
  * FILE MAP (1300+ 줄 단일 컴포넌트 — 향후 분리 예정)
@@ -983,7 +983,7 @@ export default function StarterStageDemo({
       <nav className="bup-mobile-topnav" aria-label="Mobile navigation">
         <div className="bup-mobile-topnav-logo">
           <span className="bup-mobile-topnav-logo-mark">b</span>
-          <span>Build.UP</span>
+          <span>Found.One</span>
         </div>
         {surfaceTabs.map((tab) => {
           const active = activeSurface === tab.id;
@@ -1058,7 +1058,7 @@ export default function StarterStageDemo({
     >
       {showOperationalHero ? (
       <section style={styles.hero}>
-        <div style={styles.eyebrow}>build.up</div>
+        <div style={styles.eyebrow}>Found.One</div>
         <div style={styles.title}>
           {isFreshAccount ? copy.home.heroFresh : copy.home.heroActive}
         </div>
@@ -1070,7 +1070,7 @@ export default function StarterStageDemo({
       </section>
       ) : null}
 
-      {/* ━━━ Build.UP 로고 — 네비게이션 바 위 (사이드바 모드에서는 숨김 → 사이드바 안에 노출) ━━━ */}
+      {/* ━━━ Found.One 로고 — 네비게이션 바 위 (사이드바 모드에서는 숨김 → 사이드바 안에 노출) ━━━ */}
       {showSurfaceNav && !isHomeOperational && (
       <div style={{
         display: "flex", alignItems: "center", gap: "10px",

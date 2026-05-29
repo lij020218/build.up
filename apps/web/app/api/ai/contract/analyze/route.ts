@@ -1,5 +1,5 @@
-import { analyzeContract, AiParseError } from "@build-up/ai";
-import type { ContractAnalysisResult, ContractType } from "@build-up/ai";
+import { analyzeContract, AiParseError } from "@foundone/ai";
+import type { ContractAnalysisResult, ContractType } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";

@@ -16,7 +16,7 @@
  *   • Marc Lou 트위터 매출 분석 — 콘텐츠 70%+ 매출 기여
  *   • Pieter Levels — Product Hunt + Hacker News 단일 launch 패턴
  *   • Sean Ellis Test 40%+ — PMF 측정 표준
- *   • build.up 사례 — 한국 SaaS 표준 채널 (네이버 블로그·당근·디스콰이엇)
+ *   • Found.One 사례 — 한국 SaaS 표준 채널 (네이버 블로그·당근·디스콰이엇)
  */
 
 import { useState } from "react";
@@ -29,7 +29,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
-import { getRecommendedStack } from "@build-up/shared";
+import { getRecommendedStack } from "@foundone/shared";
 import { ModePathCard } from "./ModePathCard";
 import { SecurityChecklist } from "../../knowledge/SecurityChecklist";
 import { BuildMethodDialog, BuildMethodTrigger } from "./BuildMethodDialog";
@@ -659,7 +659,7 @@ End: "Ask me anything ↓"`,
                   bestFor: "한국 시장 · 1인 인디 · B2C",
                   cadence: "주 1-2회 가치 제공 + 부드러운 자기 제품 언급",
                   why: "디스콰이엇 = 한국 인디 해커 모임 #1 (스타트업 2K+). 당근 비즈니스 = 동네 매장. 맘카페 = 키즈·유아 SaaS.",
-                  example: "build.up — 디스콰이엇 빌드 로그로 첫 100명 확보. 당근 비즈니스 = 동네 카페·미용실 마케팅 표준."
+                  example: "Found.One — 디스콰이엇 빌드 로그로 첫 100명 확보. 당근 비즈니스 = 동네 카페·미용실 마케팅 표준."
                 },
                 {
                   Icon: Megaphone,
@@ -680,7 +680,7 @@ End: "Ask me anything ↓"`,
               ] : [
                 { Icon: Sparkles, title: "Build in Public — Twitter/X", bestFor: "B2B SaaS, global", cadence: "5-7/wk + weekly revenue", why: "Algo pushes transparency.", example: "Marc Lou: 0→$70K/mo public." },
                 { Icon: BarChart3, title: "SEO + Blog", bestFor: "B2B info-seeking", cadence: "1-2 deep posts/wk", why: "Search intent = 100%.", example: "Compounds at 6mo." },
-                { Icon: Users, title: "Korean communities", bestFor: "KR market", cadence: "1-2/wk value-add", why: "Disquiet, Karrot.", example: "build.up first 100." },
+                { Icon: Users, title: "Korean communities", bestFor: "KR market", cadence: "1-2/wk value-add", why: "Disquiet, Karrot.", example: "Found.One first 100." },
                 { Icon: Megaphone, title: "PH + HN single launch", bestFor: "Global B2B", cadence: "Once/qtr", why: "Top 5 PH = 5-10K visits.", example: "Cursor HN explosion." },
                 { Icon: CreditCard, title: "Paid ads (optional)", bestFor: "Post-PMF, big LTV", cadence: "$300-1K/mo start", why: "Don't burn before PMF.", example: "Notion post-Series A only." },
               ]).map((c, i) => (

@@ -63,7 +63,7 @@ export default function PricingPage() {
         storeId: STORE_ID,
         channelKey: CHANNEL_KEY,
         paymentId,
-        orderName: "build.up 프리미엄 1개월",
+        orderName: "Found.One 프리미엄 1개월",
         totalAmount: PRICE,
         currency: "KRW",
         payMethod: "CARD",

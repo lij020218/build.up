@@ -2,7 +2,7 @@
  * 브라우저 알림 (Web Notifications API) 래퍼.
  *
  * 제약: 웹 앱은 service worker push 가 없으면 페이지가 열려있을 때만 알림 가능.
- *  - 사장님이 build.up 탭을 닫으면 알림 안 옴 (PWA 마이그레이션 시 service worker 로 백그라운드 푸시 가능)
+ *  - 사장님이 Found.One 탭을 닫으면 알림 안 옴 (PWA 마이그레이션 시 service worker 로 백그라운드 푸시 가능)
  *  - 그래도 페이지 열려있는 동안에는 OS 시스템 알림으로 정상 노출
  *
  * 정책:

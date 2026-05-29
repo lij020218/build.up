@@ -6,7 +6,7 @@ import {
   COST_RATIO_THRESHOLDS,
   gradeKpi,
   type HealthGrade,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 type Props = {
   totalSales: number;

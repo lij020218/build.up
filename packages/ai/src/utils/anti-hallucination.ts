@@ -38,5 +38,5 @@ export const ANTI_HALLUCINATION_DIRECTIVE = `
  */
 export const GROUNDED_DATA_HEADER = `
 [사장님 현황 — 검증된 서버 데이터]
-※ 아래 수치는 사장님이 build.up 에 직접 입력하신 값. 이 블록 외 숫자는 추측·환각이며 카드에 사용 금지.
+※ 아래 수치는 사장님이 Found.One 에 직접 입력하신 값. 이 블록 외 숫자는 추측·환각이며 카드에 사용 금지.
 `.trim();

@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
-import { analyzeInterviews } from "@build-up/ai";
-import type { InterviewAnalysisInput } from "@build-up/ai";
+import { analyzeInterviews } from "@foundone/ai";
+import type { InterviewAnalysisInput } from "@foundone/ai";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel function timeout

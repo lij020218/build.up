@@ -31,7 +31,7 @@ import {
   RECOMMENDED_PROGRAM_COUNT_BY_MODE,
   type FundingProgram,
   type OperatingMode,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   MIDNIGHT,
   MIDNIGHT_SOFT,

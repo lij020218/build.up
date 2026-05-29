@@ -1,5 +1,5 @@
-import { diagnoseBusinessHealth, AiParseError } from "@build-up/ai";
-import type { HealthDiagnosisContext } from "@build-up/ai";
+import { diagnoseBusinessHealth, AiParseError } from "@foundone/ai";
+import type { HealthDiagnosisContext } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";

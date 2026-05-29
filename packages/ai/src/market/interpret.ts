@@ -1,5 +1,5 @@
 import { createAiClient } from "../utils/client";
-import type { RecommendationItem } from "@build-up/shared";
+import type { RecommendationItem } from "@foundone/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";

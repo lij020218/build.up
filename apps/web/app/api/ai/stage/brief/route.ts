@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { generateStageBrief } from "@build-up/ai";
-import type { StageBriefParams } from "@build-up/ai";
+import { generateStageBrief } from "@foundone/ai";
+import type { StageBriefParams } from "@foundone/ai";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 

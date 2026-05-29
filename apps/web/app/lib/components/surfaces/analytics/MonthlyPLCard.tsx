@@ -2,7 +2,7 @@
 
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
-import { calculateCostRatios } from "@build-up/shared";
+import { calculateCostRatios } from "@foundone/shared";
 
 /** Format number as Korean currency */
 const fmt = (n: number) =>

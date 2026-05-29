@@ -1,5 +1,5 @@
 import { createAiClient } from "../utils/client";
-import { isValidFeatureId } from "@build-up/shared";
+import { isValidFeatureId } from "@foundone/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
@@ -41,7 +41,7 @@ export type DashboardAction = {
   /** AI 가 이 액션의 reason 에서 K-히트 사례를 인용했을 때 함께 넘김 */
   referencedCase?: ReferencedCase;
   /**
-   * AI 가 이 액션을 실행하기 위해 사장님께 추천하는 build.up 기능 ID.
+   * AI 가 이 액션을 실행하기 위해 사장님께 추천하는 Found.One 기능 ID.
    * features-catalog.ts 의 ID 와 일치해야 함 (parseResponse 에서 검증).
    * UI 에서 "→ [기능 이름] 보러 가기" CTA 배지로 노출 → 클릭 시 해당 surface 로 navigate.
    */
@@ -58,7 +58,7 @@ export type CrisisAction = {
   impact: string;
   difficulty: "easy" | "medium" | "hard";
   referencedCase?: ReferencedCase;
-  /** todayActions 와 동일 — 위기 상황에서 사장님이 즉시 사용할 수 있는 build.up 기능. */
+  /** todayActions 와 동일 — 위기 상황에서 사장님이 즉시 사용할 수 있는 Found.One 기능. */
   feature?: string;
   /** 위기 판단 근거 — 데이터 포인트 1~3 개. */
   evidence?: ActionEvidence[];

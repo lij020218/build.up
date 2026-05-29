@@ -46,7 +46,7 @@ export type ReportInsightInput = {
   phase: "pre-launch" | "early" | "growth" | "mature";
 };
 
-import { formatKRW } from "@build-up/shared";
+import { formatKRW } from "@foundone/shared";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 export function buildReportInsightPrompt(input: ReportInsightInput): string {

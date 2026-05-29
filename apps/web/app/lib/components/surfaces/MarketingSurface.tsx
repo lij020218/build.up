@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
-import { starterIndustryOptions, localizeRecommendationItem } from "@build-up/shared";
+import { starterIndustryOptions, localizeRecommendationItem } from "@foundone/shared";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { supabase } from "../../../../lib/supabase";
 import {

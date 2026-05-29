@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { interpretMarketScore } from "@build-up/ai";
-import type { RecommendationItem } from "@build-up/shared";
+import { interpretMarketScore } from "@foundone/ai";
+import type { RecommendationItem } from "@foundone/shared";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 

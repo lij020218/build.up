@@ -1,5 +1,5 @@
 {
-  "name": "@build-up/mobile",
+  "name": "@foundone/mobile",
   "private": true,
   "version": "0.1.0",
   "main": "expo-router/entry",
@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.27.6",
-    "@build-up/ai": "workspace:*",
-    "@build-up/shared": "workspace:*",
+    "@foundone/ai": "workspace:*",
+    "@foundone/shared": "workspace:*",
     "@expo/vector-icons": "^14.0.4",
     "@supabase/supabase-js": "^2.106.2",
     "expo": "^52.0.30",

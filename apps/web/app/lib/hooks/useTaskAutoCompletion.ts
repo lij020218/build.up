@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRoadmapStore, useProfileStore } from "../stores";
-import { buildRoadmapState, updateTaskStatus } from "@build-up/shared";
-import type { WorkflowTaskMap } from "@build-up/shared";
+import { buildRoadmapState, updateTaskStatus } from "@foundone/shared";
+import type { WorkflowTaskMap } from "@foundone/shared";
 import { baseRoadmap } from "../helpers";
 import type { DashboardDeps, DashboardSurface } from "../types";
 

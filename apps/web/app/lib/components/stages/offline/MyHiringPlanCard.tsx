@@ -22,7 +22,7 @@ import {
   hourlyToMonthly,
   MINIMUM_WAGE_2026,
   type StaffPlan,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
@@ -297,7 +297,7 @@ export function MyHiringPlanCard({ ko }: Props) {
           : "Carried into Financial Review's labor field. Blank = industry average shown."}
       </div>
 
-      {/* ── 직원 초대 링크 발송 — 직원이 build.up 으로 가게에 연결되도록 ── */}
+      {/* ── 직원 초대 링크 발송 — 직원이 Found.One 으로 가게에 연결되도록 ── */}
       {status !== "not-yet" && <InviteLinkSection ko={ko} />}
     </div>
   );

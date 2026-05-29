@@ -3,12 +3,12 @@ import {
   buildGuideContextBlock,
   type GuideContextBlock,
   type GuideRecordWithSources
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions, GuideAiStructuredResponse } from "../types/ai";
 import { systemWithCache } from "../utils/client";
 import { GUIDE_QA_SYSTEM_PROMPT, buildGuideQaUserPrompt } from "./prompt";
-import type { Language } from "@build-up/shared";
+import type { Language } from "@foundone/shared";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 1200;

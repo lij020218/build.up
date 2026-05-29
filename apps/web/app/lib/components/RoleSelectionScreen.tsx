@@ -63,9 +63,9 @@ export default function RoleSelectionScreen({ language, onSelect }: Props) {
       <div style={card}>
         {/* header */}
         <div style={header}>
-          <div style={eyebrow}>build.up</div>
+          <div style={eyebrow}>Found.One</div>
           <h1 style={title}>
-            {ko ? "어떤 역할로 시작할까요?" : "How will you use build.up?"}
+            {ko ? "어떤 역할로 시작할까요?" : "How will you use Found.One?"}
           </h1>
           <p style={subtitle}>
             {ko

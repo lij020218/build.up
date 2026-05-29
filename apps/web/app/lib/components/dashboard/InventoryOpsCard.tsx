@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { DashboardHook } from "../../useDashboard";
 import { supabase } from "../../../../lib/supabase";
-import { detectOverstockItems, type OverstockAlert } from "@build-up/shared";
+import { detectOverstockItems, type OverstockAlert } from "@foundone/shared";
 
 type InventoryEntry = {
   id: string;

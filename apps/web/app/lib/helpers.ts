@@ -1,4 +1,4 @@
-import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
+import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai";
 import {
   buildRoadmapState,
   formatGuideSectionTitle,
@@ -13,12 +13,12 @@ import {
   type RoadmapState,
   type WorkflowDecisionMap,
   type WorkflowTaskMap,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import type { GuideRecord, SavedFinanceSnapshot, SavedContractAnalysisSnapshot, SavedGuideQaSnapshot } from "./types";
 
 export function getGuideSections(
   guide: GuideRecord | null,
-  language: import("@build-up/shared").Language
+  language: import("@foundone/shared").Language
 ) {
   if (!guide) {
     return [];

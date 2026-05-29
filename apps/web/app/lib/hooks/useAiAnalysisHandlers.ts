@@ -6,8 +6,8 @@ import {
   runFinancialSimulation,
   saveRoadmapState,
   upsertStageDecision,
-} from "@build-up/shared";
-import type { AiStructuredResponse, ContractAnalysisResult } from "@build-up/ai";
+} from "@foundone/shared";
+import type { AiStructuredResponse, ContractAnalysisResult } from "@foundone/ai";
 import { useAiStore, useFinanceStore, useRoadmapStore, useOnboardingStore } from "../stores";
 import { supabase } from "../../../lib/supabase";
 import {
@@ -30,7 +30,7 @@ export function useAiAnalysisHandlers(
   ctx: {
     currentStageCode: string;
     selectedIndustryLabel: string;
-    finalSelectedMarket: import("@build-up/shared").RecommendationItem | null;
+    finalSelectedMarket: import("@foundone/shared").RecommendationItem | null;
   },
 ) {
   const { language, copy } = deps;

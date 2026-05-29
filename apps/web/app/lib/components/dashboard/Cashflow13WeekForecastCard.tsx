@@ -4,7 +4,7 @@
  * Cashflow13WeekForecastCard — 13주 rolling cash flow forecast.
  *
  * 글로벌 SMB 표준 (Quicken·CFO 매뉴얼) — 13주 = 약 90일 = 1분기.
- * 캐시노트가 못 푸는 영역. build.up 만의 "위기 조기 감지" 무기.
+ * 캐시노트가 못 푸는 영역. Found.One 만의 "위기 조기 감지" 무기.
  *
  * 작동:
  *   1. 기존 projectCashflow 엔진을 91일로 호출 (이미 projectionDays 옵션 보유)
@@ -12,7 +12,7 @@
  *   3. 어느 주에서 잔고가 음수로 빠지는지 즉시 식별
  *   4. AI 처방: "X주 후 -200만 → 지금 무엇을 해야 하나" 한 줄 권고
  *
- * 디자인: Build.UP 토큰 (lavender-mist + 미드나잇 네이비 + cream amber 경고).
+ * 디자인: Found.One 토큰 (lavender-mist + 미드나잇 네이비 + cream amber 경고).
  *
  * 분기: 사용자가 currentBalance 또는 fixedExpenses 등록 시점부터 표시.
  *       미설정 시 onboarding nudge.

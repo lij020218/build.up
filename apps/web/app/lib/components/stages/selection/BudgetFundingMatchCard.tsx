@@ -24,7 +24,7 @@ import {
   getProgramCategoryLabel,
   type MatchCriteria,
   type ProgramMatch,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 export function BudgetFundingMatchCard() {
   const d = useDashboardCtx();

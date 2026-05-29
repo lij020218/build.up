@@ -4,7 +4,7 @@
 // (Ingestion is a service-side operation — we don't expose it to end users.
 // Once an admin role exists in the project, swap the token check for that.)
 
-import { ingestInsightDocument, type InsightDocumentInput } from "@build-up/ai";
+import { ingestInsightDocument, type InsightDocumentInput } from "@foundone/ai";
 import { getEnvVar, getOpenAiApiKey } from "../../_lib/env";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 

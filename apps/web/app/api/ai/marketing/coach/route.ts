@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createAiClient } from "@build-up/ai/utils/client";
-import { resolveTrendGroup, TREND_GROUP_LABELS } from "@build-up/shared";
+import { createAiClient } from "@foundone/ai/utils/client";
+import { resolveTrendGroup, TREND_GROUP_LABELS } from "@foundone/shared";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";

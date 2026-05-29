@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { calculateHiringCost, MINIMUM_WAGE_2026, checkMinimumWage, annualToMonthly } from "@build-up/shared";
+import { calculateHiringCost, MINIMUM_WAGE_2026, checkMinimumWage, annualToMonthly } from "@foundone/shared";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 

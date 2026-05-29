@@ -191,7 +191,7 @@ const MVP_CODING_METHODS: BuildMethod[] = [
       "Next.js·React·Tailwind·Supabase 기본 지식 필요",
       "월 $40 비용 (Lovable 단일 $20 대비 2배)",
     ],
-    example: "build.up 본 서비스도 이 조합으로 빌드됨. Cursor 인라인 편집 + Claude Code 멀티파일 리팩토링.",
+    example: "Found.One 본 서비스도 이 조합으로 빌드됨. Cursor 인라인 편집 + Claude Code 멀티파일 리팩토링.",
   },
   {
     id: "claude-code-only",
@@ -926,7 +926,7 @@ const BACKEND_DEPLOY_METHODS: BuildMethod[] = [
       "Supabase 종속적 (다른 DB 마이그 어려움)",
       "Vercel 서버리스 제약 (10초 타임아웃, function size)",
     ],
-    example: "build.up 본 서비스도 Supabase + Vercel. Marc Lou·Pieter Levels 도 동일 스택.",
+    example: "Found.One 본 서비스도 Supabase + Vercel. Marc Lou·Pieter Levels 도 동일 스택.",
   },
   {
     id: "cloudflare-pages-workers",

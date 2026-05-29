@@ -21,7 +21,7 @@
 
 import { useEffect, useState } from "react";
 import { LogOut, Store, Calendar, Boxes } from "lucide-react";
-import { signOutUser } from "@build-up/shared";
+import { signOutUser } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
 
 const MIDNIGHT = "#191970";
@@ -102,7 +102,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
     return (
       <main style={pageStyle}>
         <div style={cardStyle}>
-          <div style={eyebrowStyle}>build.up · {ko ? "직원" : "Staff"}</div>
+          <div style={eyebrowStyle}>Found.One · {ko ? "직원" : "Staff"}</div>
           <h1 style={titleStyle}>{ko ? "아직 가게에 연결되지 않았어요" : "Not connected to a store yet"}</h1>
           <p style={subtitleStyle}>
             {ko
@@ -121,7 +121,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   return (
     <main style={pageStyle}>
       <div style={cardStyle}>
-        <div style={eyebrowStyle}>build.up · {ko ? "직원 대시보드" : "Staff dashboard"}</div>
+        <div style={eyebrowStyle}>Found.One · {ko ? "직원 대시보드" : "Staff dashboard"}</div>
         <h1 style={titleStyle}>
           <span style={{ color: MIDNIGHT }}>{membership.storeName}</span>
           {ko ? "에서 일하고 있어요" : ""}

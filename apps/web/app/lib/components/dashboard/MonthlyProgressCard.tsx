@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { calculateMoM } from "@build-up/shared";
+import { calculateMoM } from "@foundone/shared";
 import { TrendingUp } from "lucide-react";
 
 /* ─── Formatting ─── */

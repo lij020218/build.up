@@ -12,7 +12,7 @@ import {
   getSupplyTypeColor,
   estimateFranchiseCost,
   formatCostBreakdownItems,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 type Props = {
   brand: FranchiseBrand;

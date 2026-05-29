@@ -1,7 +1,7 @@
-import type { GuideContextBlock } from "@build-up/shared";
-import type { Language } from "@build-up/shared";
+import type { GuideContextBlock } from "@foundone/shared";
+import type { Language } from "@foundone/shared";
 
-export const GUIDE_QA_SYSTEM_PROMPT = `당신은 창업 로드맵 앱 build.up의 가이드 해석 도우미입니다.
+export const GUIDE_QA_SYSTEM_PROMPT = `당신은 창업 로드맵 앱 Found.One의 가이드 해석 도우미입니다.
 
 규칙:
 1. 제공된 가이드 컨텍스트만 사용합니다.

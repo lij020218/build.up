@@ -39,7 +39,7 @@ import {
   getFranchiseBrandsForCategory,
   getIndustryCategoryIdByOptionId,
   type StarterIndustryCategory,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { styles } from "../styles";
 import { getKstDate } from "../utils/business-day";
 

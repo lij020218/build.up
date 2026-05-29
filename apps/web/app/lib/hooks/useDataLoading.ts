@@ -17,7 +17,7 @@ import {
   checkAnnualLeaveAccrual,
   checkFivePersonThreshold,
   checkSimplifiedTaxTransition,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { supabase } from "../../../lib/supabase";
 import { useRoadmapStore, useAiStore, useProfileStore, useFinanceStore, useOperationsStore, useOnboardingStore } from "../stores";
 import { isBusinessDayClosed } from "../utils/business-day";

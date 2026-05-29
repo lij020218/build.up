@@ -1,0 +1,410 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		20AF6A0DE8FE22F823A180DC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9B759E63D689CD78BB9C658B /* PrivacyInfo.xcprivacy */; };
+		2B8BBB2BFC9A0F7D01C4D773 /* FoundOneData in Frameworks */ = {isa = PBXBuildFile; productRef = 58733DC4D2BA1B216B7ABE14 /* FoundOneData */; };
+		2CBEF6B0A8C9F0F1C0ADF667 /* FoundOneFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = D1FDA2A2019B536498EA5F8D /* FoundOneFeatures */; };
+		81645B87CB682409EF6B9AA0 /* FoundOneAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 89E44E7398BE894CFE1BF4E8 /* FoundOneAuth */; };
+		8C76A7C896F824B92F880B66 /* FoundOneNotifications in Frameworks */ = {isa = PBXBuildFile; productRef = 20BAB2C0864B03932D03F285 /* FoundOneNotifications */; };
+		8EF5EC0AA1FDAC0FA53600A7 /* FoundOneDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = BA2819368D98A197D143715D /* FoundOneDesignSystem */; };
+		DFC0DB79A771FB9E105FFCA9 /* FoundOneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25AFE09C41264330A2956447 /* FoundOneApp.swift */; };
+		F2EA06CB85C3889857D30C7A /* FoundOneCore in Frameworks */ = {isa = PBXBuildFile; productRef = 092ED2CD8BA10953F70FBBCF /* FoundOneCore */; };
+		FE5B495AB1C1F4523314F7AA /* FoundOneComponents in Frameworks */ = {isa = PBXBuildFile; productRef = 5ED5C84A98450FED6F6E804B /* FoundOneComponents */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		25AFE09C41264330A2956447 /* FoundOneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundOneApp.swift; sourceTree = "<group>"; };
+		3E56630AB0C860C959557C43 /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = .; sourceTree = SOURCE_ROOT; };
+		9B759E63D689CD78BB9C658B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		DFB19677D47C4027234F1466 /* FoundOne.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FoundOne.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE08022DB59C9431BC7A0FF3 /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9B91F7C488BB008E275FCEB2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8EF5EC0AA1FDAC0FA53600A7 /* FoundOneDesignSystem in Frameworks */,
+				F2EA06CB85C3889857D30C7A /* FoundOneCore in Frameworks */,
+				FE5B495AB1C1F4523314F7AA /* FoundOneComponents in Frameworks */,
+				2B8BBB2BFC9A0F7D01C4D773 /* FoundOneData in Frameworks */,
+				81645B87CB682409EF6B9AA0 /* FoundOneAuth in Frameworks */,
+				8C76A7C896F824B92F880B66 /* FoundOneNotifications in Frameworks */,
+				2CBEF6B0A8C9F0F1C0ADF667 /* FoundOneFeatures in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		19C4FEE1715250981231ADF3 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				FE08022DB59C9431BC7A0FF3 /* Build.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		2B0CF06E55CFA8DF97ECF4AC /* App */ = {
+			isa = PBXGroup;
+			children = (
+				972883F22EEFC4C4F64778A9 /* FoundOne */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		347C1182614C8CED6942D510 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DFB19677D47C4027234F1466 /* FoundOne.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8DBD2D530A03117705FFAE9C = {
+			isa = PBXGroup;
+			children = (
+				2B0CF06E55CFA8DF97ECF4AC /* App */,
+				19C4FEE1715250981231ADF3 /* Config */,
+				A1DC9A1CCD468D0542CA9357 /* Packages */,
+				347C1182614C8CED6942D510 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		972883F22EEFC4C4F64778A9 /* FoundOne */ = {
+			isa = PBXGroup;
+			children = (
+				25AFE09C41264330A2956447 /* FoundOneApp.swift */,
+				9B759E63D689CD78BB9C658B /* PrivacyInfo.xcprivacy */,
+			);
+			path = FoundOne;
+			sourceTree = "<group>";
+		};
+		A1DC9A1CCD468D0542CA9357 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				3E56630AB0C860C959557C43 /* ios */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DCB6D0EF33F2A895BF76E3CC /* FoundOne */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 880245F5C6CD4E34F0E3F1C7 /* Build configuration list for PBXNativeTarget "FoundOne" */;
+			buildPhases = (
+				3ED25A3F1244C64BE332675F /* Sources */,
+				8590BCCE218538A73552C032 /* Resources */,
+				9B91F7C488BB008E275FCEB2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FoundOne;
+			packageProductDependencies = (
+				BA2819368D98A197D143715D /* FoundOneDesignSystem */,
+				092ED2CD8BA10953F70FBBCF /* FoundOneCore */,
+				5ED5C84A98450FED6F6E804B /* FoundOneComponents */,
+				58733DC4D2BA1B216B7ABE14 /* FoundOneData */,
+				89E44E7398BE894CFE1BF4E8 /* FoundOneAuth */,
+				20BAB2C0864B03932D03F285 /* FoundOneNotifications */,
+				D1FDA2A2019B536498EA5F8D /* FoundOneFeatures */,
+			);
+			productName = FoundOne;
+			productReference = DFB19677D47C4027234F1466 /* FoundOne.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2B1DED47616FF10FC8B16204 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					DCB6D0EF33F2A895BF76E3CC = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = C9448F3B2258463DBFBF1F34 /* Build configuration list for PBXProject "FoundOne" */;
+			developmentRegion = ko;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				ko,
+			);
+			mainGroup = 8DBD2D530A03117705FFAE9C;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8F34A62215AEEE9EB3D59405 /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 347C1182614C8CED6942D510 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DCB6D0EF33F2A895BF76E3CC /* FoundOne */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8590BCCE218538A73552C032 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				20AF6A0DE8FE22F823A180DC /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3ED25A3F1244C64BE332675F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DFC0DB79A771FB9E105FFCA9 /* FoundOneApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		95A2544E529C45E4D342C9B4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		CD9B89E129164754C65A9DB6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FE08022DB59C9431BC7A0FF3 /* Build.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/FoundOne/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.buildup.mobile;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		CF2A6A9A1E5632B7C56BE11E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		E74FD9162D15A4CE59C47192 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FE08022DB59C9431BC7A0FF3 /* Build.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/FoundOne/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.buildup.mobile;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		880245F5C6CD4E34F0E3F1C7 /* Build configuration list for PBXNativeTarget "FoundOne" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E74FD9162D15A4CE59C47192 /* Debug */,
+				CD9B89E129164754C65A9DB6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C9448F3B2258463DBFBF1F34 /* Build configuration list for PBXProject "FoundOne" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95A2544E529C45E4D342C9B4 /* Debug */,
+				CF2A6A9A1E5632B7C56BE11E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8F34A62215AEEE9EB3D59405 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		092ED2CD8BA10953F70FBBCF /* FoundOneCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FoundOneCore;
+		};
+		20BAB2C0864B03932D03F285 /* FoundOneNotifications */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FoundOneNotifications;
+		};
+		58733DC4D2BA1B216B7ABE14 /* FoundOneData */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FoundOneData;
+		};
+		5ED5C84A98450FED6F6E804B /* FoundOneComponents */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FoundOneComponents;
+		};
+		89E44E7398BE894CFE1BF4E8 /* FoundOneAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FoundOneAuth;
+		};
+		BA2819368D98A197D143715D /* FoundOneDesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FoundOneDesignSystem;
+		};
+		D1FDA2A2019B536498EA5F8D /* FoundOneFeatures */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FoundOneFeatures;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2B1DED47616FF10FC8B16204 /* Project object */;
+}

@@ -3,7 +3,7 @@
 /**
  * ReportView — period 별 정식 보고서 본문.
  *
- * 디자인 철학 (build.up):
+ * 디자인 철학 (Found.One):
  *   - Apple 미니멀 + Midnight #191970 단색 + 1px outline
  *   - 사이드 컬러 strip 절대 금지 — 1px outline + 살짝 틴트 배경으로 대체
  *   - lucide stroke 1.5, round caps, 8 배수 size
@@ -41,7 +41,7 @@ import {
   matchCaseStudies,
   type CaseStudy,
   type BusinessSituation,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_DEEP = "#0f0f4a";

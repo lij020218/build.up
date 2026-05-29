@@ -8,7 +8,7 @@ import {
   type WorkflowDecisionMap,
   type WorkflowTaskMap,
   type StageGuideContent,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 type RoadmapState = {
   decisions: WorkflowDecisionMap;

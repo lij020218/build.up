@@ -65,7 +65,7 @@ export function useCashflowNotifications() {
       : `${shortfall.toLocaleString()}원`;
     fireNotification({
       kind: "cashflow-crisis",
-      title: "🚨 build.up — 현금흐름 위기 신호",
+      title: "🚨 Found.One — 현금흐름 위기 신호",
       body: `${days}일 후 통장 잔고가 약 ${shortfallTxt} 부족합니다. 지금 해결책을 확인하세요.`,
       tag: "cashflow-crisis",
     });
@@ -108,7 +108,7 @@ export function useCashflowNotifications() {
 
       fireNotification({
         kind: "morning-briefing",
-        title: "☀ build.up — 오늘 한 줄 요약",
+        title: "☀ Found.One — 오늘 한 줄 요약",
         body,
         tag: "morning-briefing",
       });

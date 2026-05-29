@@ -6,9 +6,9 @@ import {
   askQuickQuery,
   formatInsightContext,
   retrieveInsightChunks,
-} from "@build-up/ai";
-import type { QuickQueryContext } from "@build-up/ai";
-import { matchKHitCases } from "@build-up/shared";
+} from "@foundone/ai";
+import type { QuickQueryContext } from "@foundone/ai";
+import { matchKHitCases } from "@foundone/shared";
 import { supabase as supabaseAnon } from "../../../../lib/supabase";
 
 const DAILY_LIMIT = 10;

@@ -19,7 +19,7 @@
  *   - 핸들러 함수 (state setter 의존성)
  */
 
-import type { UserStoreData } from "@build-up/shared";
+import type { UserStoreData } from "@foundone/shared";
 
 // ────────────────────────────────────────────────────────────────────────
 // 1) Types

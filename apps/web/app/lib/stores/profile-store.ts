@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { PersistedBusinessProfile } from "@build-up/shared";
+import type { PersistedBusinessProfile } from "@foundone/shared";
 
 type ProfileState = {
   selectedIndustryId: string | undefined;

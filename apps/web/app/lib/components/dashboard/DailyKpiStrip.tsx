@@ -17,7 +17,7 @@ import {
   getDailyKpiCells,
   type KpiCellConfig,
   type KpiThresholds,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 export type KpiValue = {
   /** 표시할 raw 값 (number 형식). 데이터 없으면 null/undefined */

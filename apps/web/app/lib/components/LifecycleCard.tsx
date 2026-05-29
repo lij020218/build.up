@@ -6,8 +6,8 @@ import {
   determineCurrentLifecycleStage,
   getPhaseLabel,
   getPhaseColor,
-} from "@build-up/shared";
-import type { LifecycleStage } from "@build-up/shared";
+} from "@foundone/shared";
+import type { LifecycleStage } from "@foundone/shared";
 
 type Props = {
   businessLaunched: boolean;

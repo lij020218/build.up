@@ -2,7 +2,7 @@
  * 자동 데이터 수집 채널 SSOT — 사장님 수기 입력 마찰을 최소화하기 위한 카탈로그.
  *
  *  ── 왜 만들었나 (2026-05-12) ──────────────────────────────────────────
- *  build.up 최대 약점 = 사장님이 매출·비용을 수기 입력해야 룰엔진이 작동.
+ *  Found.One 최대 약점 = 사장님이 매출·비용을 수기 입력해야 룰엔진이 작동.
  *  → OfflineFounderBrief 의 신호 90%가 "data not ready" 로 끝날 위험.
  *  → 캐시노트는 카드사·VAN 자동연동 — 압도적 우위.
  *
@@ -98,7 +98,7 @@ export const INTEGRATION_CHANNELS: IntegrationChannel[] = [
     cost: "free",
     // OAuth2 Client Credentials + bcrypt 서명. 2025.05 부터 호출 IP 화이트리스트 필수
     //   (Vercel dynamic IP 와 충돌 → 고정 IP 프록시 필요)
-    costNote: "사장님이 commerce.naver.com 에서 client 키 발급 → build.up 에 입력. IP 화이트리스트 필요",
+    costNote: "사장님이 commerce.naver.com 에서 client 키 발급 → Found.One 에 입력. IP 화이트리스트 필요",
     status: "coming-soon",
     authType: "api-key",
     dataDepth: "full",
@@ -250,7 +250,7 @@ export const INTEGRATION_CHANNELS: IntegrationChannel[] = [
   },
   {
     id: "saas-webhook",
-    labelKo: "Custom Webhook (자체 서버 → build.up)",
+    labelKo: "Custom Webhook (자체 서버 → Found.One)",
     labelEn: "Custom Webhook",
     dataKo: "임의 이벤트 직접 푸시 — saas_metrics_* 테이블 입력",
     industries: ["startup-tech", "online-digital"],
@@ -263,13 +263,13 @@ export const INTEGRATION_CHANNELS: IntegrationChannel[] = [
   },
   {
     // 2026-05-27 추가: Pull API (개발자용 고급 연결).
-    //   사장님 서버에 읽기 전용 GET endpoint 를 두면 build.up 이 매일 04:00 KST 에 호출.
+    //   사장님 서버에 읽기 전용 GET endpoint 를 두면 Found.One 이 매일 04:00 KST 에 호출.
     //   Webhook 보다 보안팀 설득이 쉬운 케이스 (사내 → 외부 POST 대신, 외부가 사내 read-only 호출).
     //   UI: SaasMetricsConnectCard 의 "고급 연결" 섹션 내부.
     id: "saas-pull",
-    labelKo: "Pull API (build.up → 사장님 서버)",
+    labelKo: "Pull API (Found.One → 사장님 서버)",
     labelEn: "Pull API",
-    dataKo: "build.up 이 매일 1회 사장님 read-only endpoint 호출 — 가입자·활성·구독 funnel",
+    dataKo: "Found.One 이 매일 1회 사장님 read-only endpoint 호출 — 가입자·활성·구독 funnel",
     industries: ["startup-tech", "online-digital"],
     cost: "free",
     status: "available",

@@ -48,6 +48,7 @@ import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
 import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
 import { TeamCard } from "../TeamCard";
+import { CustomerSummaryCard } from "../CustomerSummaryCard";
 import { PrimeCostCard } from "../PrimeCostCard";
 import { SaaSKeyMetricsCard, SubscriptionEnableNudge } from "./Tier3Operations";
 import { useProfileStore } from "../../../stores/profile-store";
@@ -77,14 +78,28 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
     return shouldShowCardByIndustry(cardId, d.industryCategoryId as import("../../../industry-card-matrix").IndustryId | undefined);
   };
 
-  // 재고·직원 카드 동적 행 — 표시 대상 카드 갯수에 따라 1-up 또는 2-up.
-  // (구독 사용 시엔 재고가 SubscriptionPlanManager 로 대체되므로 Tier 3 에서 처리, 여기엔 Team 만 노출 가능)
+  // 재고·고객·직원 카드 동적 행 — 표시 대상 카드 갯수에 따라 1-up 또는 2-up.
+  // (구독 사용 시엔 재고가 SubscriptionPlanManager 로 대체되므로 Tier 3 에서 처리)
+  //
+  // 분기 원칙 (web SSOT: business-context.ts):
+  //   showInventoryCard=true  (food/cafe/retail/pet/beauty 등)  → 재고 카드
+  //   showInventoryCard=false (fitness/education/space)         → 재고 카드 없음
+  //   showCustomerCard=true                                     → 고객 카드 (재고 없는 업종에서 그 자리 대체)
+  //   두 플래그 모두 true (beauty/pet 등 service 모드)           → 재고 + 고객 둘 다 (인지 부하 허용 범위)
   const showInventory = !c.usesSubscriptions && d.businessCtx.showInventoryCard && showByMatrix("inventory-ops");
+  const showCustomer  = !c.usesSubscriptions && d.businessCtx.showCustomerCard && !hide("customer-summary");
   const showTeam = showByMatrix("team-card");
   const opsCards: React.ReactNode[] = [];
   if (showInventory) {
     opsCards.push(
       <InventoryOpsCard key="inv" ko={ko} inventory={c.inventory} lowStockItems={c.lowStockItems} d={d} />,
+    );
+  }
+  if (showCustomer && !showInventory) {
+    // 재고 카드가 없는 업종 (fitness/education/space/beauty without inv/pet without inv)
+    // → 같은 행에 고객 카드 표시
+    opsCards.push(
+      <CustomerSummaryCard key="customer" d={d} ko={ko} fmt={fmt} />,
     );
   }
   if (showTeam) {

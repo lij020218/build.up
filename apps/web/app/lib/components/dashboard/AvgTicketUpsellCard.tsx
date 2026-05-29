@@ -13,12 +13,12 @@
  *   3. 각 제안에 예상 효과 (객단가 +N%) 명시
  *   4. AI 호출 0원 — 룰 기반 즉시 응답
  *
- * 디자인: Build.UP 토큰.
+ * 디자인: Found.One 토큰.
  */
 
 import { useMemo, useState } from "react";
 import { TrendingUp, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
-import { suggestUpsells, type UpsellSuggestion, type MenuItemInput } from "@build-up/shared";
+import { suggestUpsells, type UpsellSuggestion, type MenuItemInput } from "@foundone/shared";
 
 const MIDNIGHT_DEEP = "#141C3D";
 const MIDNIGHT_SOFT = "#5A6BAE";

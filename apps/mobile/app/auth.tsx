@@ -7,7 +7,7 @@ import {
   signUpWithEmail,
   updateCurrentUserPassword,
   type Language
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";

@@ -4,7 +4,7 @@ import {
   loadVendorRecommendations,
   groupVendorsByType,
   type VendorRecommendationGroup
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const VALID_STARTUP_TYPES = ["franchise", "independent", "undecided"] as const;
 type StartupType = (typeof VALID_STARTUP_TYPES)[number];

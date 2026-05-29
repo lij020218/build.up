@@ -6,7 +6,7 @@
 import type { DashboardContext } from "./prompt";
 
 // shared 패키지에서 데이터 모듈 import
-// 빌드 시 @build-up/shared로 resolve됨
+// 빌드 시 @foundone/shared로 resolve됨
 import {
   getFranchiseBenchmark,
   getIndustryBenchmark,
@@ -14,7 +14,7 @@ import {
   matchCaseStudies,
   matchKHitCases,
   type KHitTheme,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 // franchise-data.ts에서 브랜드 조회용
 let _getFranchiseBrandById: ((id: string) => { name: { ko: string } } | undefined) | null = null;
@@ -22,7 +22,7 @@ let _getFranchiseBrandById: ((id: string) => { name: { ko: string } } | undefine
 async function loadFranchiseBrandFn() {
   if (_getFranchiseBrandById) return _getFranchiseBrandById;
   try {
-    const mod = await import("@build-up/shared");
+    const mod = await import("@foundone/shared");
     _getFranchiseBrandById = (mod as Record<string, unknown>).getFranchiseBrandById as typeof _getFranchiseBrandById ?? null;
   } catch {
     _getFranchiseBrandById = null;

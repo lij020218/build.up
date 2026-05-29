@@ -7,7 +7,7 @@ import {
   getSupplyTypeColor,
   getSupplyTypeLabel,
   type SupplyType,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { Search, Building2, Info, AlertCircle } from "lucide-react";
 
 const MIDNIGHT = "#191970"; // CSS MidnightBlue — 서비스 메인 포인트 컬러 (PermitCheck/ContractReview 와 통일)

@@ -3,7 +3,7 @@ import {
   ALL_TREND_GROUPS,
   GROUP_TO_SUB_INDUSTRIES,
   TREND_GROUP_LABELS,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   getAnthropicApiKey,
   getCronSecret,

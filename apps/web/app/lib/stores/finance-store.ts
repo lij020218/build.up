@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { FinancialSimulationResult } from "@build-up/shared";
-import type { AiStructuredResponse } from "@build-up/ai";
+import type { FinancialSimulationResult } from "@foundone/shared";
+import type { AiStructuredResponse } from "@foundone/ai";
 import { getKstDate } from "../utils/business-day";
 
 // ─── Types ───

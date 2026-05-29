@@ -21,7 +21,7 @@ import {
   contractCheckpoints,
   formatFranchiseCost,
   getFranchiseBrandById,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { AlertTriangle, FileText, Clock, MapPin } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import {

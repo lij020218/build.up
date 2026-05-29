@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { calculateSalesBreakdown } from "@build-up/shared";
+import { calculateSalesBreakdown } from "@foundone/shared";
 import { Users } from "lucide-react";
 
 /* ─── Formatting ─── */

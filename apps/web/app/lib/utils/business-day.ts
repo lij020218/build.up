@@ -128,6 +128,28 @@ export function getKstDate(now: Date = new Date()): string {
 }
 
 /**
+ * YYYY-MM-DD 문자열에 delta 일을 더한 결과를 YYYY-MM-DD 로 반환.
+ * 월말·연말·윤년 경계 모두 안전.
+ *
+ * ⚠️ 2026-05-27 추가: "어제 매출" 비교 버그(#1) 의 근본 fix.
+ *   기존 패턴 `getKstDate(new Date(Date.now() - 86400000))` 는 *달력 KST -1일* 로,
+ *   `todayStr = getBusinessDay(...)` 가 영업일 컷오프로 다음날로 롤오버된 경우
+ *   "어제" 가 실제로 2일 전을 가리키는 버그를 발생시킴.
+ *
+ * 사용:
+ *   const todayStr = getBusinessDay(now, ctx);
+ *   const yesterdayIso = shiftIsoDate(todayStr, -1);  // 항상 todayStr 기준 -1일
+ */
+export function shiftIsoDate(isoDate: string, deltaDays: number): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!m) return isoDate; // 잘못된 입력은 그대로 반환 (graceful)
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  return shiftKstDay(y, mo, d, deltaDays);
+}
+
+/**
  * 사장님의 오늘 영업이 종료됐는지 판정 (일일 보고서 활성화 기준).
  *
  * 규칙:

@@ -7,7 +7,7 @@ import { styles } from "../../../styles";
 import {
   getFranchiseBenchmark, getIndustryBenchmark, getFranchiseBrandById,
   FEATURES_BY_ID, type FeatureCatalogItem,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 type ActionEvidenceItem = { text: string };
 
@@ -239,7 +239,7 @@ export function AiCoachCard() {
                   </div>
                 </div>
 
-                {/* AI \uac00 \ucd94\ucc9c\ud55c build.up \uae30\ub2a5 \u2014 \ud074\ub9ad \uc2dc \ud574\ub2f9 surface \ub85c \uc774\ub3d9 */}
+                {/* AI \uac00 \ucd94\ucc9c\ud55c Found.One \uae30\ub2a5 \u2014 \ud074\ub9ad \uc2dc \ud574\ub2f9 surface \ub85c \uc774\ub3d9 */}
                 {feature && (
                   <button
                     type="button"

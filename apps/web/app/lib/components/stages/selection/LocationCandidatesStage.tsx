@@ -13,7 +13,7 @@ import {
   getFreshnessPresentation,
   loadBestMarketSignal,
   localizeRecommendationItem,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { LocationMapPanel } from "../../LocationMapPanel";
 import { supabase } from "../../../../../lib/supabase";
 import {
@@ -231,7 +231,7 @@ export function LocationCandidatesStage() {
             { stepLabel: ko ? "결정" : "Decide", title: ko ? "최종 1곳 선택 → 계약 검토 단계로" : "Pick one → Contract Review" },
           ]}
           outcome={ko
-            ? "최종 상권 1곳이 build.up 에 저장됩니다. 그 상권의 임대료·유동·경쟁·타겟 정보를 다음 단계 (계약 전 검토) 가 자동으로 받아서 맞춤 체크리스트를 생성."
+            ? "최종 상권 1곳이 Found.One 에 저장됩니다. 그 상권의 임대료·유동·경쟁·타겟 정보를 다음 단계 (계약 전 검토) 가 자동으로 받아서 맞춤 체크리스트를 생성."
             : "Your final market is saved. Next stage (Contract Review) auto-receives rent/traffic/competition/target data for tailored checklists."}
           nextStage={ko ? "계약 전 검토 (contract-review)" : "Contract review"}
         />
@@ -983,7 +983,7 @@ export function LocationCandidatesStage() {
               <div style={styles.optionSummary}>{manualMarketEvaluation.summary}</div>
               <div style={styles.helper}>
                 {language === "ko"
-                  ? "이 상권으로 진행할지, build.up이 한 번 더 제안하는 대안을 볼지 선택하세요."
+                  ? "이 상권으로 진행할지, Found.One이 한 번 더 제안하는 대안을 볼지 선택하세요."
                   : "Choose whether to keep this market or review one suggested alternative."}
               </div>
               <div style={styles.stageInlineActions}>

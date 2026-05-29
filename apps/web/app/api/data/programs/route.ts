@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
 import { getRequestId, logApiError } from "../../_lib/observability";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
-import { fetchBizInfoPrograms } from "@build-up/shared";
-import type { BizInfoParams } from "@build-up/shared";
+import { fetchBizInfoPrograms } from "@foundone/shared";
+import type { BizInfoParams } from "@foundone/shared";
 
 export async function GET(request: Request) {
   const route = "/api/data/programs";

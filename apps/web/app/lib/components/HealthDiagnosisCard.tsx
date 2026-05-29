@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { HealthDiagnosisResult } from "@build-up/ai";
-import type { BusinessHealthMetrics } from "@build-up/shared";
+import type { HealthDiagnosisResult } from "@foundone/ai";
+import type { BusinessHealthMetrics } from "@foundone/shared";
 
 type Props = {
   metrics: BusinessHealthMetrics;

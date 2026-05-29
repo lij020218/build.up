@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getRequestId, logApiError } from "../../../_lib/observability";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
-import { verifyBusinessRegistration } from "@build-up/shared";
+import { verifyBusinessRegistration } from "@foundone/shared";
 
 export async function POST(request: Request) {
   const route = "/api/data/business/verify";

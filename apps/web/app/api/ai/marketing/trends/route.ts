@@ -5,7 +5,7 @@ import {
   TREND_GROUP_LABELS,
   SUB_INDUSTRY_TO_GROUP,
   GROUP_TO_SUB_INDUSTRIES,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   getAnthropicApiKey,
   getNaverApiCreds,

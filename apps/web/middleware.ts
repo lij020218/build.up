@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   h.set("X-Frame-Options", "DENY");
   h.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
-  // 2026-05-27 보안 (P1-1): HSTS — buildup.kr 의 HTTPS 다운그레이드/MITM 방어.
+  // 2026-05-27 보안 (P1-1): HSTS — foundone.dev 의 HTTPS 다운그레이드/MITM 방어.
   //   max-age 1년 + includeSubDomains + preload (Chrome HSTS preload list 신청 가능).
   //   ※ HTTP 응답에선 무시되므로 안전 (HTTPS 환경에서만 효과).
   //   ※ 한 번 설정 후엔 max-age 만료까지 클라이언트가 HTTP 접속 자체 차단 — preload 등록 신중히.

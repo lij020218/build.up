@@ -25,7 +25,7 @@ import {
   type ClusterId,
   type ProgramMatch,
   type StartupProgram,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 export function BudgetInsightCard() {
   const d = useDashboardCtx();

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createAiClient } from "@build-up/ai/utils/client";
+import { createAiClient } from "@foundone/ai/utils/client";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";

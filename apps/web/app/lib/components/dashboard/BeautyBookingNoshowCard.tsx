@@ -9,7 +9,7 @@
  *  카카오헤어샵 노쇼 0.09% 사례 (기존 20% → 99.5% 감소) — 한국 뷰티 대표 성공 사례.
  *  Meevo: 업계 평균 rebook 75%, 목표 85%.
  *
- *  build.up 데이터 (ARCHITECTURE 체크리스트):
+ *  Found.One 데이터 (ARCHITECTURE 체크리스트):
  *    · useBookingStore.bookings — 예약·노쇼·취소 (신규 store, Phase 2e)
  *    · useBookingStore.providers — 디자이너·트레이너 매트릭스
  *    · 데이터 없으면 *seedDemo* 버튼으로 사장님이 카드 이해 가능
@@ -34,7 +34,7 @@ import { useBookingStore } from "../../stores";
 import {
   noshowRate as ssotNoshowRate,
   providerStats as ssotProviderStats,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";

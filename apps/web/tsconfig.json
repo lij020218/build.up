@@ -13,12 +13,12 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@build-up/shared": ["../../packages/shared/src/index.ts"],
-      "@build-up/shared/*": ["../../packages/shared/src/*"],
-      "@build-up/ai": ["../../packages/ai/src/index.ts"],
-      "@build-up/ai/*": ["../../packages/ai/src/*"],
-      "@build-up/integrations": ["../../packages/integrations/src/index.ts"],
-      "@build-up/integrations/*": ["../../packages/integrations/src/*"]
+      "@foundone/shared": ["../../packages/shared/src/index.ts"],
+      "@foundone/shared/*": ["../../packages/shared/src/*"],
+      "@foundone/ai": ["../../packages/ai/src/index.ts"],
+      "@foundone/ai/*": ["../../packages/ai/src/*"],
+      "@foundone/integrations": ["../../packages/integrations/src/index.ts"],
+      "@foundone/integrations/*": ["../../packages/integrations/src/*"]
     }
   },
   "include": [

@@ -33,7 +33,7 @@ import {
   aggregateByChannel,
   returnRate as ssotReturnRate,
   topReturnReasons,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 

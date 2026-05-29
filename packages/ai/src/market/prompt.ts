@@ -1,6 +1,6 @@
-import type { RecommendationItem } from "@build-up/shared";
+import type { RecommendationItem } from "@foundone/shared";
 
-export const MARKET_NARRATIVE_SYSTEM_PROMPT = `당신은 창업 로드맵 앱 build.up의 상권 분석 해설가입니다.
+export const MARKET_NARRATIVE_SYSTEM_PROMPT = `당신은 창업 로드맵 앱 Found.One의 상권 분석 해설가입니다.
 
 규칙:
 1. 제공된 점수 항목 데이터를 바탕으로 창업자 관점의 자연어 해설을 2~3문장으로 생성합니다.

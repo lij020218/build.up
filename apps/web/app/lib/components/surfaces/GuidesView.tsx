@@ -11,7 +11,7 @@ import {
   type ProgramCategory,
   type ApplicationStatus,
   type MatchCriteria,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2 } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { FundingScoreModal, type FundingScore } from "./FundingScoreModal";

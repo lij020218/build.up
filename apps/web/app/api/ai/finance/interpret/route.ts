@@ -1,6 +1,6 @@
-import { interpretFinancialSimulation, AiParseError } from "@build-up/ai";
-import type { AiStructuredResponse } from "@build-up/ai";
-import type { FinancialSimulationResult } from "@build-up/shared";
+import { interpretFinancialSimulation, AiParseError } from "@foundone/ai";
+import type { AiStructuredResponse } from "@foundone/ai";
+import type { FinancialSimulationResult } from "@foundone/shared";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";

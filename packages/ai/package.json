@@ -1,5 +1,5 @@
 {
-  "name": "@build-up/ai",
+  "name": "@foundone/ai",
   "private": true,
   "version": "0.1.0",
   "main": "src/index.ts",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "@build-up/shared": "workspace:*",
+    "@foundone/shared": "workspace:*",
     "openai": "^6.39.0",
     "zod": "^4.3.6"
   },

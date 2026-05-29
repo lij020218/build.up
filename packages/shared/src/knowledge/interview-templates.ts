@@ -29,7 +29,7 @@ export type InterviewTemplate = {
   descriptionKo: string;
   descriptionEn: string;
   /** 출처 방법론 — UI 작은 배지 */
-  source: "Mom Test" | "Sean Ellis (PMF)" | "JTBD" | "NPS" | "CSAT" | "YC" | "build.up";
+  source: "Mom Test" | "Sean Ellis (PMF)" | "JTBD" | "NPS" | "CSAT" | "YC" | "Found.One";
   /** 어떤 상황에 쓰면 좋은지 — UI tooltip / hint */
   whenToUseKo: string;
   whenToUseEn: string;
@@ -162,7 +162,7 @@ export const INTERVIEW_TEMPLATES: InterviewTemplate[] = [
     target: "new",
     descriptionKo: "인지 채널 + 첫인상 + 재방문 결정 요인",
     descriptionEn: "Discovery channel, first impression, return likelihood",
-    source: "build.up",
+    source: "Found.One",
     whenToUseKo: "광고 채널 ROI 검증·신규 유입 분석·온보딩 경험 점검 시.",
     whenToUseEn: "Ad channel ROI, new customer analysis, onboarding check.",
     questionsKo: [
@@ -255,7 +255,7 @@ export const INTERVIEW_TEMPLATES: InterviewTemplate[] = [
     target: "regular",
     descriptionKo: "도입 전 구매 의향·가격 적정선·이름·페어링",
     descriptionEn: "Pre-launch interest, price, name, pairing",
-    source: "build.up",
+    source: "Found.One",
     whenToUseKo: "신메뉴 출시 1~2주 전 단골에게 사전 검증.",
     whenToUseEn: "1-2 weeks before launching a new menu — validate with regulars.",
     questionsKo: [
@@ -286,7 +286,7 @@ export const INTERVIEW_TEMPLATES: InterviewTemplate[] = [
     target: "regular",
     descriptionKo: "인상 폭별 수용도 + 이탈 위험 + 가치 인식",
     descriptionEn: "Acceptance by hike level, churn risk, value perception",
-    source: "build.up",
+    source: "Found.One",
     whenToUseKo: "재료비 상승·임대료 인상 → 가격 조정 결정 전 단골 의향 확인.",
     whenToUseEn: "Before pricing decisions due to cost pressures.",
     questionsKo: [

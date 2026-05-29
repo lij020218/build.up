@@ -5,7 +5,7 @@ import { RADIUS } from "./operationalStyles";
 import { useStartupMetrics } from "../../hooks/useStartupMetrics";
 import { useFinanceStore, useOperationsStore } from "../../stores";
 import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
-import type { MetricCard, StartupMetricHealth } from "@build-up/shared";
+import type { MetricCard, StartupMetricHealth } from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 /**
@@ -21,7 +21,7 @@ import { getKstDate } from "../../utils/business-day";
  *
  * 페이지 디자인 철학에 정렬:
  *  - 카드 = 순백 + hairline + ambient shadow (lavender-mist 페이지 위에 띄움)
- *  - 액센트 = 미드나잇 네이비-보라 (#1E2A55) — Build.UP 시그니처
+ *  - 액센트 = 미드나잇 네이비-보라 (#1E2A55) — Found.One 시그니처
  *  - 큰 숫자는 미드나잇 통일, 톤 색은 status pill 에만 (시각 피로 방지)
  */
 

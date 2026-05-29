@@ -5,7 +5,7 @@
  * 동일 그라운딩 파이프라인 (Tavily + Naver + Claude web_search).
  */
 
-import { createAiClient } from "@build-up/ai/utils/client";
+import { createAiClient } from "@foundone/ai/utils/client";
 import {
   fetchNaverDataLab,
   fetchNaverBlogSearch,

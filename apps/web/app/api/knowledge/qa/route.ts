@@ -1,4 +1,4 @@
-import { createAiClient } from "@build-up/ai/utils/client";
+import { createAiClient } from "@foundone/ai/utils/client";
 import { supabase } from "../../../../lib/supabase";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
@@ -19,7 +19,7 @@ type KnowledgeChunk = {
   verified_at: string | null;
 };
 
-const SYSTEM_PROMPT = `당신은 한국 초보 창업자를 돕는 build.up 서비스의 전문 상담사입니다.
+const SYSTEM_PROMPT = `당신은 한국 초보 창업자를 돕는 Found.One 서비스의 전문 상담사입니다.
 
 역할:
 - 세무(부가세, 종합소득세, 원천세, 4대보험 등)와 사업 대출(정책자금, 소진공, 중진공)에 대한 질문에 답합니다.

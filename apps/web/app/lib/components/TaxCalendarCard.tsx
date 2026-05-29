@@ -6,8 +6,8 @@ import {
   getTaxCategoryLabel,
   getTaxCategoryColor,
   getUrgencyColor,
-} from "@build-up/shared";
-import type { TaxCalendarInput, PersonalizedTaxItem, TaxCalendarSurface } from "@build-up/shared";
+} from "@foundone/shared";
+import type { TaxCalendarInput, PersonalizedTaxItem, TaxCalendarSurface } from "@foundone/shared";
 
 type Props = {
   isSimplified: boolean;

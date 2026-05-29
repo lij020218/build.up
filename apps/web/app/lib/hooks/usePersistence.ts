@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * usePersistence — build.up 데이터 영속성 훅
+ * usePersistence — Found.One 데이터 영속성 훅
  *
  * ─────────────────────────────────────────────────────────────────
  * 역할
@@ -33,7 +33,7 @@
  * ─────────────────────────────────────────────────────────────────
  * 주요 의존성
  * ─────────────────────────────────────────────────────────────────
- * - @build-up/shared: bootstrapAccountWorkspace, saveStoreData, ...
+ * - @foundone/shared: bootstrapAccountWorkspace, saveStoreData, ...
  * - Zustand stores: useRoadmapStore, useProfileStore, useFinanceStore, ...
  * - Sentry: 에러 자동 리포팅 (console.log 대신 Sentry breadcrumb 사용)
  */
@@ -54,7 +54,7 @@ import {
   type UserStoreData,
   type WorkflowDecisionMap,
   type WorkflowTaskMap,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { baseRoadmap } from "../helpers";
 import {
   useOperationsStore,

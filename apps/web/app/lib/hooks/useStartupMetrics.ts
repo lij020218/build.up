@@ -20,7 +20,7 @@ import {
   type MetricAction,
   type StartupMetricHealth,
   type StartupContext,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 import { useFinanceStore, useProfileStore } from "../stores";
 import { useUnifiedRevenue } from "./useUnifiedRevenue";

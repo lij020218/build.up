@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { SECURITY_CHECKLIST, SECURITY_CATEGORIES, calculateSecurityScore, type SecurityCategory } from "@build-up/shared";
+import { SECURITY_CHECKLIST, SECURITY_CATEGORIES, calculateSecurityScore, type SecurityCategory } from "@foundone/shared";
 
 type Props = { ko: boolean; checks: Record<string, boolean>; onToggle: (id: string) => void };
 

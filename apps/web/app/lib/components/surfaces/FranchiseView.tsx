@@ -8,7 +8,7 @@ import {
   formatFranchiseCost,
   getScoreColor,
   getScoreLabel,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { FranchiseDetailModal } from "./FranchiseDetailModal";
 
 const MIDNIGHT = "#191970";

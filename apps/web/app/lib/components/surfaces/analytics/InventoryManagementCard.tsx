@@ -10,7 +10,7 @@ import {
   getFranchiseBrandById,
   getFranchiseSupplyInfo,
   getSupplyTypeColor,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { getKstDate } from "../../../utils/business-day";
 
 export function InventoryManagementCard() {

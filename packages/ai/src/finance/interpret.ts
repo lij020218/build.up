@@ -1,5 +1,5 @@
 import { createAiClient } from "../utils/client";
-import type { FinancialSimulationResult } from "@build-up/shared";
+import type { FinancialSimulationResult } from "@foundone/shared";
 import { AiParseError } from "../types/ai";
 import type { AiStructuredResponse, AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";

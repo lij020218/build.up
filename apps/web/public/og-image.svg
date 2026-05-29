@@ -16,7 +16,7 @@
 
   <!-- Brand name -->
   <text x="200" y="127" font-family="-apple-system, Helvetica, sans-serif"
-        font-size="42" font-weight="700" fill="#191970" letter-spacing="-0.025em">build.up</text>
+        font-size="42" font-weight="700" fill="#191970" letter-spacing="-0.025em">Found.One</text>
   <text x="200" y="160" font-family="-apple-system, Helvetica, sans-serif"
         font-size="18" font-weight="500" fill="rgba(15,23,42,0.5)">창업 로드맵 멘토링</text>
 
@@ -61,5 +61,5 @@
 
   <!-- URL -->
   <text x="80" y="590" font-family="-apple-system, Helvetica, sans-serif"
-        font-size="18" font-weight="500" fill="rgba(15,23,42,0.4)">buildup.kr</text>
+        font-size="18" font-weight="500" fill="rgba(15,23,42,0.4)">foundone.dev</text>
 </svg>

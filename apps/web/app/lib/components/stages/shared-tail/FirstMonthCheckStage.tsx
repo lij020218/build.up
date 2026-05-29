@@ -6,7 +6,7 @@ import {
   Wallet, MessageSquare, Star, BarChart3, ClipboardList,
   Lightbulb, Calendar, MapPin, Building2,
 } from "lucide-react";
-import { COST_RATIOS, HEALTH_THRESHOLDS } from "@build-up/shared";
+import { COST_RATIOS, HEALTH_THRESHOLDS } from "@foundone/shared";
 import { StageWrapup } from "../shared/StageWrapup";
 import { RoadmapToDashboardTransition } from "../shared/RoadmapToDashboardTransition";
 
@@ -284,7 +284,7 @@ export function FirstMonthCheckStage() {
         ],
         3: ko ? [
           { label: "리뷰 10개 이전에 광고 시작 = ROAS 음수", text: "네이버 플레이스 리뷰 10개 이전엔 광고 효율 50% 미만. 진성 리뷰 누적 (영수증 이벤트) 후 배민·인스타 광고 시작." },
-          { label: "매일 기록 빠뜨리면 데이터 끊김 — 추세 분석 불가", text: "하루 5분, 같은 시간 (마감 직후 권장). 캐시노트·build.up 자동 집계 활용. 1주만 빼먹어도 첫 달 추세 파악 불가." },
+          { label: "매일 기록 빠뜨리면 데이터 끊김 — 추세 분석 불가", text: "하루 5분, 같은 시간 (마감 직후 권장). 캐시노트·Found.One 자동 집계 활용. 1주만 빼먹어도 첫 달 추세 파악 불가." },
         ] : [
           { label: "Ads before 10 reviews = negative ROAS", text: "Build genuine reviews first (receipt event)." },
           { label: "Skipped days break trend analysis", text: "5 min daily after closing. One missed week breaks month-1 view." },
@@ -323,20 +323,20 @@ export function FirstMonthCheckStage() {
   // ─── 도구 추천 (사용자 컨텍스트 기반) ───
   const tools = isStartup
     ? (ko ? [
-        { name: "build.up 운영 대시보드", desc: "이 앱에서 바로 — 일별 매출·KPI 자동 분석 + AI 모닝 브리핑", badge: "지금 바로", primary: true },
+        { name: "Found.One 운영 대시보드", desc: "이 앱에서 바로 — 일별 매출·KPI 자동 분석 + AI 모닝 브리핑", badge: "지금 바로", primary: true },
         { name: "Mixpanel / PostHog", desc: "이벤트 기반 사용자 행동 분석 — 퍼널·리텐션·코호트 무료 시작", badge: "필수" },
         { name: "Notion / Linear", desc: "주간 리뷰 + 실험 로그 + OKR 관리. 인터뷰 노트 템플릿화", badge: "주간" },
       ] : [
-        { name: "build.up Dashboard", desc: "In-app — daily KPIs + AI morning briefing", badge: "Now", primary: true },
+        { name: "Found.One Dashboard", desc: "In-app — daily KPIs + AI morning briefing", badge: "Now", primary: true },
         { name: "Mixpanel / PostHog", desc: "Event analytics, funnel, retention — free start", badge: "Essential" },
         { name: "Notion / Linear", desc: "Weekly review + experiments + OKR + interview templates", badge: "Weekly" },
       ])
     : (ko ? [
-        { name: "build.up 내 가게 현황", desc: "이 앱에서 바로 — 일별 매출 + 비용 구조 + 업종 평균 비교 자동", badge: "지금 바로", primary: true },
+        { name: "Found.One 내 가게 현황", desc: "이 앱에서 바로 — 일별 매출 + 비용 구조 + 업종 평균 비교 자동", badge: "지금 바로", primary: true },
         { name: "캐시노트 (CashNote)", desc: "카드사·POS 연동 자동 집계 — 일별 매출 무료 확인 (소상공인 1위 앱)", badge: "쉬움" },
         { name: "엑셀·구글 스프레드시트", desc: "자유도 최고 — 직접 수식 관리, 별도 학습 필요", badge: "고급" },
       ] : [
-        { name: "build.up My Store", desc: "In-app daily sales + cost structure + industry comparison", badge: "Now", primary: true },
+        { name: "Found.One My Store", desc: "In-app daily sales + cost structure + industry comparison", badge: "Now", primary: true },
         { name: "CashNote", desc: "Auto-sync POS — free daily view, #1 SMB app", badge: "Easy" },
         { name: "Excel / Sheets", desc: "Max flexibility — DIY formulas", badge: "Power" },
       ]);

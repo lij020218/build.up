@@ -22,7 +22,7 @@ type DeepDiveSectionProps = {
   subtitle?: string;
   defaultOpen?: boolean;
   children: ReactNode;
-  /** 한국어 모드 — 라벨 분기. 미지정 시 한국어 (build.up 기본). */
+  /** 한국어 모드 — 라벨 분기. 미지정 시 한국어 (Found.One 기본). */
   ko?: boolean;
 };
 

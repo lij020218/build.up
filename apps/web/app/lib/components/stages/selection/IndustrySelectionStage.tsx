@@ -37,7 +37,7 @@ import {
   localizeStarterIndustryCategory,
   starterIndustryCategories,
   starterIndustryOptions,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 /**
  * 업종별 아이콘 매핑.

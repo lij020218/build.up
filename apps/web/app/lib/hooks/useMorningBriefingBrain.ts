@@ -12,7 +12,7 @@ import { useIndustryInsight, type IndustryInsight } from "./useIndustryInsight";
 import { computeIndustryRule, type IndustryRuleResult } from "./useIndustryRuleSignal";
 import type { DailyEntry, MonthlyCosts } from "../useDashboard";
 import { getBusinessDay } from "../utils/business-day";
-import { calculateCostRatios, calculateUnifiedHealthScore, type HealthGrade } from "@build-up/shared";
+import { calculateCostRatios, calculateUnifiedHealthScore, type HealthGrade } from "@foundone/shared";
 import { honestDailyAverage } from "../utils/daily-windows";
 
 /**

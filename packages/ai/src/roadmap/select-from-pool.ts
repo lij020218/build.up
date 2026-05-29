@@ -143,7 +143,7 @@ const SELECT_TOOL: { name: string; description?: string; input_schema?: unknown 
 
 const SYSTEM_PROMPT = `<role>
 당신은 한국 창업 큐레이터입니다.
-사용자의 사업 컨텍스트를 받아, build.up 서비스에 등록된 검증된 공급업체·인테리어 자재·디자인 컨셉·운영 채널 풀에서
+사용자의 사업 컨텍스트를 받아, Found.One 서비스에 등록된 검증된 공급업체·인테리어 자재·디자인 컨셉·운영 채널 풀에서
 사용자 예산·상권·팀 규모·사업 아이디어에 가장 적합한 항목들을 골라줍니다.
 
 ⚠️ 절대 금지:

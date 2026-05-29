@@ -24,7 +24,7 @@ import {
 import type { DashboardHook } from "../../useDashboard";
 import { CountUp } from "./animations";
 import { activityCard } from "./operationalStyles";
-import { getKstDate } from "../../utils/business-day";
+import { shiftIsoDate } from "../../utils/business-day";
 
 type DailyEntry = { date: string; sales: number; customers: number };
 
@@ -73,11 +73,11 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
     : (usesSubs ? "ARPU" : isOnlineCat ? "AOV" : "Avg ticket");
 
   // ── 7일 슬롯 ──
-  const last7 = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - index));
-    return getKstDate(date);
-  });
+  // ⚠️ 2026-05-27 fix (버그 #2): todayStr (영업일) 기준으로 역산.
+  //   기존: `new Date(); setDate(-6+i); getKstDate()` → 달력 KST 기준 7일.
+  //   카페·바 22:30~01:30 시간대에 todayStr 가 다음 영업일로 롤오버되면 last7 마지막 슬롯
+  //   ("오늘") 이 사라지고 isToday 가 어떤 막대에도 매치되지 않던 버그.
+  const last7 = Array.from({ length: 7 }, (_, index) => shiftIsoDate(todayStr, index - 6));
   const entryMap = Object.fromEntries(recent7Entries.map((e) => [e.date, e]));
   const bars = last7.map((date) => {
     const entry = entryMap[date];
@@ -100,7 +100,8 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
     ? Math.round(((recent7Customers - prev7Customers) / prev7Customers) * 100)
     : null;
 
-  const yesterdayIso = getKstDate(new Date(Date.now() - 86_400_000));
+  // ⚠️ 2026-05-27 fix (버그 #1): todayStr (영업일) 기준 -1일.
+  const yesterdayIso = shiftIsoDate(todayStr, -1);
   const yesterdayEntry = entryMap[yesterdayIso];
   const dodDelta = todayEntry && yesterdayEntry && yesterdayEntry.customers > 0
     ? Math.round(((todayEntry.customers - yesterdayEntry.customers) / yesterdayEntry.customers) * 100)

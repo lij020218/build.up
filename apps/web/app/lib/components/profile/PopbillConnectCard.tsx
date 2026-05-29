@@ -12,7 +12,7 @@
  *   - 전자세금계산서 매출/매입 (B2B)
  *   - 사장님이 발행한 현금영수증 (현금 매출 일부)
  *
- * 디자인: build.up 토큰 (lavender-mist 위 순백 카드 + 미드나잇 네이비 액센트).
+ * 디자인: Found.One 토큰 (lavender-mist 위 순백 카드 + 미드나잇 네이비 액센트).
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -677,8 +677,8 @@ function PopbillWizard({
             }}
           >
             {ko
-              ? "build.up 가 팝빌(LinkHub)을 통해 홈택스에서 발행한 세금계산서·현금영수증을 자동으로 수집합니다. 인증서 위임은 등록 후 안내드려요."
-              : "build.up auto-collects tax invoices and cash receipts from Hometax via Popbill (LinkHub)."}
+              ? "Found.One 가 팝빌(LinkHub)을 통해 홈택스에서 발행한 세금계산서·현금영수증을 자동으로 수집합니다. 인증서 위임은 등록 후 안내드려요."
+              : "Found.One auto-collects tax invoices and cash receipts from Hometax via Popbill (LinkHub)."}
           </div>
         </div>
 

@@ -12,7 +12,7 @@ import { checkSimpleRateLimit } from "../../../../_lib/rate-limit";
 import { getSupabaseAdmin } from "../../../../_lib/supabase-admin";
 import { envelopeDecrypt } from "../../../../_lib/envelope-crypto";
 import { CodefClient, CodefApiError, type CodefBankTxRaw } from "../../../../_lib/codef-client";
-import { normalizeCodefBankTx } from "@build-up/integrations";
+import { normalizeCodefBankTx } from "@foundone/integrations";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

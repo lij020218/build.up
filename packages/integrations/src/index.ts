@@ -1,5 +1,5 @@
 /**
- * @build-up/integrations
+ * @foundone/integrations
  *
  * 외부 금융·세무 API 연동 어댑터 레이어.
  *

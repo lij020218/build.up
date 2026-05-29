@@ -5,7 +5,7 @@
 //
 // 실재하는 한국 B2B 공급망 (2025-2026 기준). 모든 항목 web 검증 완료.
 
-import type { PoolVendor, PoolMaterial, PoolConcept } from "@build-up/ai";
+import type { PoolVendor, PoolMaterial, PoolConcept } from "@foundone/ai";
 
 const UUID_PREFIX = "fb-"; // fallback 아이디는 fb- 접두사로 식별
 

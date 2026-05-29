@@ -3,7 +3,7 @@
 /**
  * ReportsSurface — 일/주/월/분기 보고서 탭 surface.
  *
- * 디자인 철학 (build.up):
+ * 디자인 철학 (Found.One):
  *   - Apple 미니멀, Midnight 단색 + 1px outline
  *   - 사이드 컬러 strip 절대 금지
  *   - 도착 시퀀스 (영업 종료 직후 첫 진입 시 1회 alert chip + auto fade)

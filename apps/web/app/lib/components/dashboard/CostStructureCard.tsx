@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
-import { COST_RATIOS, calculateCostRatios } from "@build-up/shared";
+import { COST_RATIOS, calculateCostRatios } from "@foundone/shared";
 import { PieChart } from "lucide-react";
 
 /* ─── Types ─── */

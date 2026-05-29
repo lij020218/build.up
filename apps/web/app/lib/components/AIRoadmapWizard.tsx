@@ -6,7 +6,7 @@ import {
   Sparkles, ArrowLeft, Building2, ShieldCheck, Tv, MapPin, Wallet, Truck,
   Home, Clock, Users, Umbrella, Stamp, Landmark, Lightbulb, Target,
 } from "lucide-react";
-import type { RoadmapGenerationResult } from "@build-up/ai";
+import type { RoadmapGenerationResult } from "@foundone/ai";
 import { FloatingInspiration } from "./FloatingInspiration";
 
 // ── 미드나이트 톤 일관 — 로드맵 단계 카드 디자인과 통일 ──
@@ -279,7 +279,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           <div style={header}>
             <div style={eyebrow}>
               <Sparkles size={11} strokeWidth={1.5} />
-              build.up AI
+              Found.One AI
             </div>
             <h1 style={title}>{ko ? "어떤 사업을 시작하고 싶으세요?" : "What business do you want to start?"}</h1>
             <p style={subtitle}>
@@ -548,7 +548,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
           <div style={{ textAlign: "center" as const, marginBottom: "20px" }}>
             <div style={{ ...eyebrow, justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#191970" strokeWidth="2"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.8 5.6 21.2 8 14 2 9.2h7.6z" /></svg>
-              build.up AI
+              Found.One AI
             </div>
             <h1 style={{ ...title, fontSize: "clamp(26px, 4vw, 34px)", textAlign: "center" as const }}>{ko ? "로드맵 초안이 완성되었습니다" : "Your roadmap is ready"}</h1>
             <p style={{ ...subtitle, textAlign: "center" as const }}>{storeName ? `${storeName} · ` : ""}{result.parsed.industryLabel} · {result.parsed.preferredRegion || (ko ? "지역 미정" : "Location TBD")} · {fmt(totalBudget)}</p>
@@ -841,7 +841,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               <StageCard
                 icon={Tv}
                 label={ko ? `운영 채널 — 주력 ${result.recommendations.operationalChannels.filter(c => c.priority === 1).length} · 보조 ${result.recommendations.operationalChannels.filter(c => c.priority === 2).length}` : `Channels`}
-                hint={ko ? "build.up 등록 채널에서 사장님의 업종·예산에 맞춰 AI 가 선택" : "AI selected from registered channels"}
+                hint={ko ? "Found.One 등록 채널에서 사장님의 업종·예산에 맞춰 AI 가 선택" : "AI selected from registered channels"}
               >
                 <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
                   {result.recommendations.operationalChannels.map((ch) => (
@@ -875,7 +875,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                 result.recommendations.suppliers.length === 0
                   ? (ko ? "⚠️ 추천 데이터 매칭 실패. 다시 생성을 눌러주세요." : "No matches. Regenerate.")
                   : result.recommendations.suppliers.some(s => s.id)
-                    ? (ko ? "build.up 등록 검증 업체에서 사장님 상황에 맞춰 AI 가 선택. 풀에 없는 가상 업체 0%." : "AI selected from verified DB pool.")
+                    ? (ko ? "Found.One 등록 검증 업체에서 사장님 상황에 맞춰 AI 가 선택. 풀에 없는 가상 업체 0%." : "AI selected from verified DB pool.")
                     : (ko ? "AI 일반 추천 (DB 풀 매칭 데이터 부족)" : "AI general recommendation")
               }
             >
@@ -907,7 +907,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               <StageCard
                 icon={Lightbulb}
                 label={ko ? "디자인 컨셉 — 선택됨" : "Design concept — selected"}
-                hint={ko ? "build.up 등록 컨셉 풀에서 AI 가 사장님 상황에 맞춰 선택" : "AI selected from concept pool"}
+                hint={ko ? "Found.One 등록 컨셉 풀에서 AI 가 사장님 상황에 맞춰 선택" : "AI selected from concept pool"}
               >
                 <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.10)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -950,7 +950,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               <StageCard
                 icon={Home}
                 label={ko ? `인테리어 시공 업체 · ${result.recommendations.interiorVendors.length}곳` : `Interior contractors · ${result.recommendations.interiorVendors.length}`}
-                hint={ko ? "build.up 등록 시공 업체 풀에서 사장님 컨셉·예산에 맞춰 선정" : "From verified contractor pool"}
+                hint={ko ? "Found.One 등록 시공 업체 풀에서 사장님 컨셉·예산에 맞춰 선정" : "From verified contractor pool"}
               >
                 <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
                   {result.recommendations.interiorVendors.map((v) => (
@@ -986,7 +986,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                 label={ko ? `인테리어 자재 · ${result.recommendations.interior.length}건` : `Interior materials · ${result.recommendations.interior.length}`}
                 hint={
                   result.recommendations.interior.some(i => i.id)
-                    ? (ko ? "build.up 등록 자재에서 컨셉·예산에 맞춰 AI 가 선택" : "AI picked from material pool")
+                    ? (ko ? "Found.One 등록 자재에서 컨셉·예산에 맞춰 AI 가 선택" : "AI picked from material pool")
                     : (ko ? "AI 일반 추천 (DB 풀 매칭 데이터 부족)" : "AI general recommendation")
                 }
               >

@@ -12,7 +12,7 @@ import {
   getSuccessCases,
   MODE_DISPLAY_INFO,
   type OperatingMode,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getUiCopy } from "@build-up/shared";
+import { getUiCopy } from "@foundone/shared";
 import {
   useOperationsStore,
   useFinanceStore,

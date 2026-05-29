@@ -10,7 +10,7 @@ import {
   updateTaskStatus,
   upsertStageDecision,
   type UserStoreData,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { useProfileStore, useRoadmapStore, useOnboardingStore } from "../stores";
 import { supabase } from "../../../lib/supabase";
 import { baseRoadmap, buildTransitionNotice, getContractTaskDetail, advanceStageWithChainBackfill } from "../helpers";

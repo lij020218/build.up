@@ -14,8 +14,8 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { DashboardHook } from "../useDashboard";
-import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore } from "@build-up/shared";
-import type { MonthlyCosts, HealthScoreResult } from "@build-up/shared";
+import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore } from "@foundone/shared";
+import type { MonthlyCosts, HealthScoreResult } from "@foundone/shared";
 import { getBusinessDay } from "../utils/business-day";
 import { useUnifiedSaasMetrics } from "./useUnifiedSaasMetrics";
 import { useUnifiedRevenue } from "./useUnifiedRevenue";

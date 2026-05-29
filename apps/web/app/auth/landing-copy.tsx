@@ -1,6 +1,6 @@
 "use client";
 
-import type { Language } from "@build-up/shared";
+import type { Language } from "@foundone/shared";
 
 /* ─── Feature grid icon ─── */
 export function FeatureIcon({ color, d }: { color: string; d: string }) {
@@ -48,7 +48,7 @@ export function txt(lang: Language) {
       heroEyebrow: "창업의 모든 단계를 함께",
       heroTitle: "시작부터 운영까지,\n한 흐름으로.",
       heroSub:
-        "build.up은 창업 로드맵을 단계별로 안내하고, 검증된 가이드와 분석 도구로 판단을 도와줍니다. 지금 시작하세요.",
+        "Found.One은 창업 로드맵을 단계별로 안내하고, 검증된 가이드와 분석 도구로 판단을 도와줍니다. 지금 시작하세요.",
       heroCta: "무료로 시작하기",
       heroLearn: "더 알아보기",
       ctaTitle: "지금 시작할 준비가\n되셨나요?",
@@ -60,7 +60,7 @@ export function txt(lang: Language) {
     heroEyebrow: "Every stage of your business, guided",
     heroTitle: "From idea to\noperations, in one flow.",
     heroSub:
-      "build.up walks you through a step-by-step startup roadmap with verified guides and analysis tools. Start free today.",
+      "Found.One walks you through a step-by-step startup roadmap with verified guides and analysis tools. Start free today.",
     heroCta: "Get started free",
     heroLearn: "Learn more",
     ctaTitle: "Ready to begin?",

@@ -9,7 +9,7 @@
  *  한국 학원은 월 단위 갱신 — 매월 25-30일 재등록 알람 필수. 미수금 5-10%
  *  ARS 의무 (교육청 현금출납부 점검) — v1 은 재등록 + 잔존 우선.
  *
- *  build.up 기존 데이터 (ARCHITECTURE 체크리스트):
+ *  Found.One 기존 데이터 (ARCHITECTURE 체크리스트):
  *    · operations-store.members — { id, name, plan, fee, startDate, endDate }
  *      → 학원·학생은 동일 모델 활용 (plan=반·과목, endDate=수강 마감)
  *    · 출석·미수금 데이터 없음 (v2 — 신규 데이터 모델)
@@ -40,7 +40,7 @@ import {
   memberCohortRetention,
   expiringMembers,
   newMemberCount,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";

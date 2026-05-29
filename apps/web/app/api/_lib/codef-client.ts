@@ -4,7 +4,7 @@
  * CODEF = 한국 마이데이터·금융데이터 통합 중계 플랫폼.
  * 카카오페이·뱅크샐러드·페이코·캐시노트가 사용.
  *
- * build.up 가치: 마이데이터 사업자 인가 없이도 사장님 위임 받아
+ * Found.One 가치: 마이데이터 사업자 인가 없이도 사장님 위임 받아
  *               여신금융협회 매통조 (10개 카드사 매출) 자동 fetch.
  *
  * 인증: OAuth 2.0 client_credentials (CODEF Client ID/Secret 환경변수)

@@ -23,7 +23,7 @@
  *    - 기본: industryCategoryId / businessYears / age / monthlyAvgRevenue / runway
  *    - 사용자 추가 입력: NCB 신용점수 / 폐업 검토 여부 / 장애인 여부
  *
- *  디자인: Build.UP 토큰. 위기 시그널 시 amber/rose, 평상시 sky.
+ *  디자인: Found.One 토큰. 위기 시그널 시 amber/rose, 평상시 sky.
  */
 
 import { useMemo, useState } from "react";
@@ -32,7 +32,7 @@ import {
   getRecommendedPrograms,
   type MatchCriteria,
   type ProgramMatch,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT_DEEP = "#141C3D";
 const MIDNIGHT_SOFT = "#5A6BAE";

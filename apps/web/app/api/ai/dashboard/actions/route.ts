@@ -1,5 +1,5 @@
-import { generateDashboardActions, enrichDashboardContext } from "@build-up/ai";
-import type { DashboardContext } from "@build-up/ai";
+import { generateDashboardActions, enrichDashboardContext } from "@foundone/ai";
+import type { DashboardContext } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";

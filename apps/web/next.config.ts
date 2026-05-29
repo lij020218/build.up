@@ -13,7 +13,7 @@ if (process.env.NODE_ENV !== "production") {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@build-up/shared", "@build-up/ai"],
+  transpilePackages: ["@foundone/shared", "@foundone/ai"],
   async redirects() {
     return [
       { source: "/privacy", destination: "/legal/privacy", permanent: true },

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Users, FileSignature, ShieldCheck, ExternalLink, ChevronRight, Calculator, Check } from "lucide-react";
-import { LEGAL } from "@build-up/shared";
+import { LEGAL } from "@foundone/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { HiringCostCalculator } from "../../knowledge/HiringCostCalculator";
 import { MyHiringPlanCard } from "./MyHiringPlanCard";

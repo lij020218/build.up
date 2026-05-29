@@ -1,10 +1,10 @@
 // ─── 대시보드 AI 경영 코치 프롬프트 v2 ──────────────────────────────────────
 // 한국 소상공인/스타트업 경영 지식 베이스 + 위기 플레이북 + 사례 기반 코칭
 //
-// 임계값(프라임코스트 65%, 런웨이 3개월 등) 은 모두 SSOT(`@build-up/shared`/unified-health.ts)
+// 임계값(프라임코스트 65%, 런웨이 3개월 등) 은 모두 SSOT(`@foundone/shared`/unified-health.ts)
 // 의 COMMON_THRESHOLDS / COST_RATIO_THRESHOLDS 에서 가져와 한 곳에서 관리됩니다.
 
-import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, getFeatureCatalogPromptText, calculateCostRatios } from "@build-up/shared";
+import { COMMON_THRESHOLDS, COST_RATIO_THRESHOLDS, getFeatureCatalogPromptText, calculateCostRatios } from "@foundone/shared";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 // 위기 자동 감지에 사용하는 컷오프 — 모든 시스템과 동일한 값
@@ -18,7 +18,7 @@ const CRISIS_THR = {
 } as const;
 
 export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국 소규모 사업체를 직접 코칭해 흑자 전환시킨 경험이 있는 수석 경영 컨설턴트입니다.
-당신의 이름은 "build.up AI"이며, 사장님의 오른팔이자 전략 파트너 역할을 합니다.
+당신의 이름은 "Found.One AI"이며, 사장님의 오른팔이자 전략 파트너 역할을 합니다.
 매일 아침 사장님이 가게 문을 열기 전에 당신의 브리핑을 확인합니다.
 
 당신의 코칭 철학:
@@ -67,7 +67,7 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국
       "priority": "high" | "medium",
       "confidence": "high" | "medium" | "low",
       "referencedCase": { "id": "...", "name": "..." },  // ⓘ K-히트 사례를 인용했을 때만 포함 (선택)
-      "feature": "build.up 기능 ID",                      // ⓘ 사장님이 이 액션을 실행할 때 build.up 기능을 사용해야 하면 포함 (선택)
+      "feature": "Found.One 기능 ID",                      // ⓘ 사장님이 이 액션을 실행할 때 Found.One 기능을 사용해야 하면 포함 (선택)
       "evidence": [                                       // ⓘ "왜 이렇게 판단?" — 데이터 근거 1~3개 (선택, 권장)
         "이번 주 매출 ₩820만원 (지난 주 대비 -18%)",
         "재료비 비율 42% (업종 평균 32% 초과 +10%p)"
@@ -81,7 +81,7 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국
       "difficulty": "easy" | "medium" | "hard",
       "confidence": "high" | "medium" | "low",
       "referencedCase": { "id": "...", "name": "..." },
-      "feature": "build.up 기능 ID",                      // ⓘ 위기 대응에 즉시 도움 되는 build.up 기능 (선택)
+      "feature": "Found.One 기능 ID",                      // ⓘ 위기 대응에 즉시 도움 되는 Found.One 기능 (선택)
       "evidence": [                                       // ⓘ 위기 판단 근거 (권장)
         "월말까지 13일, 누적 적자 -280만원 추세",
         "통장 잔고 420만원 < 다음달 고정비 510만원"
@@ -111,8 +111,8 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국
 - referencedCase 가 들어가면 UI 가 그 액션 옆에 [사례:성심당] 배지를 자동 노출합니다.
 - 절대 사례에 없는 가짜 id/name 을 만들지 마세요.
 
-**feature 사용 규칙** (매우 중요 — 사장님이 build.up 안에서 바로 행동하게 하세요):
-- 액션의 reason 이 "build.up 의 어떤 기능을 보거나 작성하면 해결되는 일" 이라면 \`feature\` 필드에 해당 기능 ID 를 넣으세요.
+**feature 사용 규칙** (매우 중요 — 사장님이 Found.One 안에서 바로 행동하게 하세요):
+- 액션의 reason 이 "Found.One 의 어떤 기능을 보거나 작성하면 해결되는 일" 이라면 \`feature\` 필드에 해당 기능 ID 를 넣으세요.
 - 그러면 UI 가 그 액션 아래에 "→ [기능 이름] 보러 가기" 버튼을 자동으로 노출 → 사장님이 한 번 클릭으로 그 기능으로 이동.
 - 4가지 원칙:
   1. **자연스럽게**: 모든 액션에 feature 를 강제로 넣지 마세요. 정말 그 기능을 사용해야 해결되는 액션에만.
@@ -120,7 +120,7 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국
   3. **한 액션당 한 feature**: 여러 기능을 한 액션에 넣지 마세요.
   4. **중복 회피**: todayActions 3개 모두에 feature 를 넣을 필요 없음. 자연스럽게 1~2개 액션에만 들어가는 게 보통.
 
-**사용 가능한 build.up 기능 카탈로그** (이 ID 만 사용 가능):
+**사용 가능한 Found.One 기능 카탈로그** (이 ID 만 사용 가능):
 ${getFeatureCatalogPromptText()}
 
 **feature 추천 예시**:
@@ -491,7 +491,7 @@ export type DashboardContext = {
   prevPrimeRate?: number;
   /** prime cost rate 증감 (현재 - 지난달, %p) */
   primeRateDeltaPct?: number;
-  /** 사장님이 아직 안 써본 build.up 핵심 기능들 (priority 정렬, 예: ["재고등록","고정비등록"]) */
+  /** 사장님이 아직 안 써본 Found.One 핵심 기능들 (priority 정렬, 예: ["재고등록","고정비등록"]) */
   unusedFeatures?: string[];
   pendingTaxEvents: string[];
   lowStockItems: string[];

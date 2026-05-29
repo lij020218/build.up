@@ -1,5 +1,5 @@
-import { matchPrograms, AiParseError } from "@build-up/ai";
-import type { ProgramMatchingResult } from "@build-up/ai";
+import { matchPrograms, AiParseError } from "@foundone/ai";
+import type { ProgramMatchingResult } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
@@ -8,8 +8,8 @@ import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-li
 import {
   startupPrograms,
   getMatchedProgramsV2,
-} from "@build-up/shared";
-import type { MatchCriteria } from "@build-up/shared";
+} from "@foundone/shared";
+import type { MatchCriteria } from "@foundone/shared";
 
 type RequestBody = {
   age?: number;

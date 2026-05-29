@@ -130,7 +130,7 @@ export function OnboardingChoiceScreen({ ko, onChooseManual, onChooseAI, onChoos
             marginBottom: 18,
           }}>
             <Sparkles size={12} strokeWidth={1.5} />
-            build.up
+            Found.One
           </div>
           <h1 style={{
             fontSize: "clamp(32px, 5.5vw, 52px)",

@@ -11,7 +11,7 @@ import {
   getMatchedHighlights,
   getProgramCategoryLabel,
   getProgramCategoryColor,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   AnimatedBar,
   AnimatedProgressBar,
@@ -83,8 +83,8 @@ export function HomeView() {
             <div style={styles.homeMainBody}>
               {isFreshAccount
                 ? language === "ko"
-                  ? "build.up은 긴 체크리스트 대신, 지금 정해야 할 것 하나만 또렷하게 보여줍니다."
-                  : "build.up keeps the startup process focused by surfacing only the decision that matters now."
+                  ? "Found.One은 긴 체크리스트 대신, 지금 정해야 할 것 하나만 또렷하게 보여줍니다."
+                  : "Found.One keeps the startup process focused by surfacing only the decision that matters now."
                 : language === "ko"
                   ? "현재 단계는 크게, 나머지는 얇게. 복잡한 창업 과정을 실행 가능한 리듬으로 정리합니다."
                   : "The current step stays large while everything else stays quiet, so the process feels actionable instead of overwhelming."}

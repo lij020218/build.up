@@ -1,4 +1,4 @@
-name: BuildUp
+name: FoundOne
 options:
   bundleIdPrefix: com.buildup
   deploymentTarget:
@@ -27,14 +27,14 @@ settings:
 # Local Swift Package — 본 디렉토리(apps/ios) 의 Sources/* 모듈
 # ─────────────────────────────────────────────────────────────────
 packages:
-  BuildUp:
+  FoundOne:
     path: .
 
 # ─────────────────────────────────────────────────────────────────
 # App Target
 # ─────────────────────────────────────────────────────────────────
 targets:
-  BuildUp:
+  FoundOne:
     type: application
     platform: iOS
     deploymentTarget: "18.0"
@@ -44,26 +44,26 @@ targets:
       Release: Config/Build.xcconfig
 
     sources:
-      - path: App/BuildUp
+      - path: App/FoundOne
         type: group
         excludes:
           - Info.plist
 
     dependencies:
-      - package: BuildUp
-        product: BuildUpDesignSystem
-      - package: BuildUp
-        product: BuildUpCore
-      - package: BuildUp
-        product: BuildUpComponents
-      - package: BuildUp
-        product: BuildUpData
-      - package: BuildUp
-        product: BuildUpAuth
-      - package: BuildUp
-        product: BuildUpNotifications
-      - package: BuildUp
-        product: BuildUpFeatures
+      - package: FoundOne
+        product: FoundOneDesignSystem
+      - package: FoundOne
+        product: FoundOneCore
+      - package: FoundOne
+        product: FoundOneComponents
+      - package: FoundOne
+        product: FoundOneData
+      - package: FoundOne
+        product: FoundOneAuth
+      - package: FoundOne
+        product: FoundOneNotifications
+      - package: FoundOne
+        product: FoundOneFeatures
 
     settings:
       base:
@@ -71,7 +71,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"  # iPhone only
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "-"  # 시뮬레이터용 unsigned
-        INFOPLIST_FILE: App/BuildUp/Info.plist
+        INFOPLIST_FILE: App/FoundOne/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_PREVIEWS: YES
         # Live Activity / Widget Extension entitlements 는 추후 Widget target 추가 시

@@ -106,7 +106,7 @@ export const UNIVERSAL_ESSENTIAL_CARDS: readonly CardId[] = [
  * 200+ 자료 교차 검증 결과 — 각 업종 본업에 직결되는 KPI 만.
  *
  * 우선순위 (배열 순서):
- *   1. 기존 카드 (이미 build.up 에 존재) — 즉시 노출 가능
+ *   1. 기존 카드 (이미 Found.One 에 존재) — 즉시 노출 가능
  *   2. 신규 카드 (Phase 2b-f 에서 작성 예정) — *부재 상태* 표시
  */
 export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
@@ -241,7 +241,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
 /**
  * 카드 ID → 메타데이터 (자료 인용 + 상태).
  */
-export type CardStatus = "existing" | "planned"; // existing = build.up 에 이미 존재 / planned = Phase 2b-f 작성 예정
+export type CardStatus = "existing" | "planned"; // existing = Found.One 에 이미 존재 / planned = Phase 2b-f 작성 예정
 
 export type CardMeta = {
   id: CardId;
@@ -306,7 +306,7 @@ export const CARD_META: Record<CardId, CardMeta> = {
     id: "coaching-history", status: "existing", industries: "universal",
     sources: [
       "First Round: weekly review = reflection",
-      "build.up moat: lock-in 자산 누적",
+      "Found.One moat: lock-in 자산 누적",
       "30일+ 메타 인사이트 (자기 의사결정 패턴)",
     ],
   },

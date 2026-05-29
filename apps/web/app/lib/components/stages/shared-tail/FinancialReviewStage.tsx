@@ -31,7 +31,7 @@ import {
   starterIndustryOptions,
   localizeRecommendationItem,
   franchiseBrands,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
 

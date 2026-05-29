@@ -16,7 +16,7 @@
  *   - 정적 체크리스트 (food-safety-checklist.ts, 식약처 매뉴얼)
  *   - 사장님 점검 상태 → localStorage (간단·빠름. 추후 cross-device sync 시 DB)
  *
- * 디자인: Build.UP 토큰 (lavender-mist + 미드나잇 네이비 + cream amber 경고).
+ * 디자인: Found.One 토큰 (lavender-mist + 미드나잇 네이비 + cream amber 경고).
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -28,7 +28,7 @@ import {
   calculateFoodSafetyGrade,
   type FoodSafetyCheckItem,
   type FoodSafetyCheckCategory,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT_DEEP = "#141C3D";
 const MIDNIGHT_SOFT = "#5A6BAE";

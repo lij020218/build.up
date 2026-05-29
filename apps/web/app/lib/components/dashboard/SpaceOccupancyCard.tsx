@@ -8,7 +8,7 @@
  *  플랜트스터디카페·세컨드샐러리 — 공간임대 daily KPI = POR (Percent Occupied
  *  Rate) + RevPAD (Revenue per Available Day). 한국 무인 스터디카페 BEP = 60-70% POR.
  *
- *  build.up 데이터: booking-store 재사용.
+ *  Found.One 데이터: booking-store 재사용.
  *    · providerName = 룸 ID (룸A·룸B·테이블1 등)
  *    · service = "2시간 4명" 등 자유 입력
  *
@@ -28,7 +28,7 @@ import {
   calculatePOR,
   timeDistribution,
   peakBucket as ssotPeakBucket,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";

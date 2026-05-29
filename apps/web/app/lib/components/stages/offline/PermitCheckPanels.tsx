@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Building2, User, ShieldCheck } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { supabase } from "../../../../../lib/supabase";
-import { getPermitsForCategory, getTotalPermitCost } from "@build-up/shared";
+import { getPermitsForCategory, getTotalPermitCost } from "@foundone/shared";
 import {
   KeyActionHero,
   StageTabNav,

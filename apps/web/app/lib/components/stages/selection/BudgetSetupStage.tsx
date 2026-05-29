@@ -10,7 +10,7 @@ import {
   getFranchiseBrandById,
   starterBudgetPresets,
   starterOpenDatePresets,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { StageWrapup } from "../shared/StageWrapup";
 import { BudgetInsightCard } from "./BudgetInsightCard";
 import { BudgetFundingMatchCard } from "./BudgetFundingMatchCard";

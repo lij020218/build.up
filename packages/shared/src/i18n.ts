@@ -41,7 +41,7 @@ const uiCopy = {
       requiredReviewItem: "Required review item before signing a lease."
     },
     auth: {
-      eyebrow: "build.up auth",
+      eyebrow: "Found.One auth",
       title: "Create an account, sign in, or change password.",
       subtitle:
         "Use your name, email, and password to create an account and continue your roadmap.",
@@ -72,12 +72,12 @@ const uiCopy = {
       heroFreshBody:
         "New accounts start directly from industry selection, so the first useful decision happens immediately.",
       heroActiveBody:
-        "Open build.up and move one clear stage forward. The product keeps your roadmap, profile, and progress aligned without turning the home screen into a cluttered dashboard.",
+        "Open Found.One and move one clear stage forward. The product keeps your roadmap, profile, and progress aligned without turning the home screen into a cluttered dashboard.",
       today: "Today",
       profile: "Your Business Profile",
       savedFounderSetup: "Saved founder setup",
       profileBody:
-        "Completed stages sync into your profile so build.up can keep adapting the roadmap.",
+        "Completed stages sync into your profile so Found.One can keep adapting the roadmap.",
       operationalGuides: "Operational Guides",
       starterFlow: "Starter Flow",
       progress: "Progress",
@@ -93,7 +93,7 @@ const uiCopy = {
       subIndustry: "Sub-industry",
       authRequiredTitle: "Sign in to open your roadmap.",
       authRequiredBody:
-        "build.up now keeps roadmap progress per account. Open auth, sign in, and the current step will be restored automatically.",
+        "Found.One now keeps roadmap progress per account. Open auth, sign in, and the current step will be restored automatically.",
       authRequiredAction: "Go to auth",
       noAccountSession: "No account session",
       signInRequired: "Sign in required",
@@ -134,7 +134,7 @@ const uiCopy = {
       nextStepPermit: "Review the permit sequence that fits your business before moving on.",
       nextStepTax: "Check the first tax setup guidance before opening.",
       nextStepLoan: "Review financing guidance and current funding assumptions.",
-      nextStepDone: "Your first build.up starter loop is complete.",
+      nextStepDone: "Your first Found.One starter loop is complete.",
       markPermitReviewed: "Finish permit review and continue",
       markTaxReviewed: "Finish tax review and continue",
       markLoanReviewed: "Finish loan review and continue",
@@ -175,7 +175,7 @@ const uiCopy = {
       requiredReviewItem: "임대차 계약 전 꼭 확인해야 하는 항목입니다."
     },
     auth: {
-      eyebrow: "build.up 인증",
+      eyebrow: "Found.One 인증",
       title: "회원가입, 로그인, 비밀번호 변경",
       subtitle:
         "이름, 이메일, 비밀번호로 계정을 만들고 바로 로드맵을 이어갈 수 있습니다.",
@@ -206,12 +206,12 @@ const uiCopy = {
       heroFreshBody:
         "새 계정은 업종 선택부터 바로 시작합니다. 가장 먼저 필요한 결정이 곧바로 화면에 나타납니다.",
       heroActiveBody:
-        "build.up을 열면 지금 해야 할 단계 하나에만 집중할 수 있습니다. 로드맵, 프로필, 진행 상태는 계속 동기화되지만 홈은 복잡해지지 않습니다.",
+        "Found.One을 열면 지금 해야 할 단계 하나에만 집중할 수 있습니다. 로드맵, 프로필, 진행 상태는 계속 동기화되지만 홈은 복잡해지지 않습니다.",
       today: "오늘",
       profile: "내 창업 프로필",
       savedFounderSetup: "저장된 창업 설정",
       profileBody:
-        "완료한 단계는 프로필에 자동 반영되어 build.up이 다음 로드맵을 더 정확하게 조정합니다.",
+        "완료한 단계는 프로필에 자동 반영되어 Found.One이 다음 로드맵을 더 정확하게 조정합니다.",
       operationalGuides: "운영 가이드",
       starterFlow: "스타터 플로우",
       progress: "진행률",
@@ -227,7 +227,7 @@ const uiCopy = {
       subIndustry: "세부 업종",
       authRequiredTitle: "로드맵을 열려면 로그인해주세요.",
       authRequiredBody:
-        "이제 build.up은 계정 기준으로 로드맵을 저장합니다. 인증 화면에서 로그인하면 현재 단계를 자동으로 이어서 보여줍니다.",
+        "이제 Found.One은 계정 기준으로 로드맵을 저장합니다. 인증 화면에서 로그인하면 현재 단계를 자동으로 이어서 보여줍니다.",
       authRequiredAction: "인증으로 이동",
       noAccountSession: "계정 세션 없음",
       signInRequired: "로그인 필요",
@@ -267,7 +267,7 @@ const uiCopy = {
       nextStepPermit: "내 업종에 맞는 등록·인허가 순서를 먼저 확인하세요.",
       nextStepTax: "오픈 전 기본 세무 세팅을 먼저 확인하세요.",
       nextStepLoan: "자금 조달과 대출 가정을 검토하세요.",
-      nextStepDone: "첫 번째 build.up 스타터 루프를 모두 완료했습니다.",
+      nextStepDone: "첫 번째 Found.One 스타터 루프를 모두 완료했습니다.",
       markPermitReviewed: "인허가 검토를 마치고 계속",
       markTaxReviewed: "세무 검토를 마치고 계속",
       markLoanReviewed: "대출 검토를 마치고 계속",

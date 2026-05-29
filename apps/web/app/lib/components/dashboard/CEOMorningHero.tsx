@@ -13,8 +13,8 @@ import { recordSignal } from "../../coaching-history";
 import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
 import { useCashflowStore } from "../../stores/cashflow-store";
-import { calculateHealthScore, type HealthScoreResult, type HealthScoreGrade, HEALTH_COLORS } from "@build-up/shared";
-import { getKstDate } from "../../utils/business-day";
+import { calculateHealthScore, type HealthScoreResult, type HealthScoreGrade, HEALTH_COLORS } from "@foundone/shared";
+import { getKstDate, shiftIsoDate } from "../../utils/business-day";
 
 // ─── North Star Metric 옵션 (사장님이 직접 고르는 단 1개 숫자) ────
 //  YC: "팀 전원이 외울 만큼 단 하나". 자동 (auto) 은 현재 로직 유지 (스타트업→런웨이, 외식→매출).
@@ -616,7 +616,11 @@ export function CEOMorningHero({ d }: Props) {
     if (isStartup) return null; // startup은 런웨이 메인 — narrative 별도 안 만듦
     const todaySales = todayEntry?.sales ?? 0;
     if (todaySales === 0) return null;
-    const yesterdayIso = getKstDate(new Date(now.getTime() - 86400000));
+    // ⚠️ 2026-05-27 fix (버그 #1): todayIso (영업일 컷오프 적용) 기준 -1일로 yesterday 계산.
+    //   기존: getKstDate(now - 86400000) → 달력 KST -1일. 카페·바 22:30~01:30 시간대에
+    //   todayIso 가 이미 다음 영업일로 롤오버됐는데 yesterday 는 캘린더 어제 (=2일 전 영업일) 가
+    //   되어 "어제 대비 매출 변동" 이 잘못 계산되던 버그.
+    const yesterdayIso = shiftIsoDate(todayIso, -1);
     const yesterday = dailyEntries.find((e) => e.date === yesterdayIso)?.sales ?? 0;
     // ⚠️ 2026-05-25 audit fix: 이전 분모 `last14.length` (입력 entry 수) → 1일 입력 200K 시
     //   "평균 200K" 거짓. 14일(달력 기준)로 고정. main heroMetric 의 fix와 동기화.
@@ -636,7 +640,7 @@ export function CEOMorningHero({ d }: Props) {
         : `${aPct >= 0 ? "+" : ""}${aPct.toFixed(0)}% vs avg — check the 14-day trend.`;
     }
     return ko ? "평소 흐름 안에서 안정적." : "Stable within normal flow.";
-  }, [isStartup, todayEntry, dailyEntries, last14, last14Total, now, ko]);
+  }, [isStartup, todayEntry, dailyEntries, last14, last14Total, todayIso, ko]);
 
   // ─── framer-motion variants (Apple stock easing) ───
   const containerVariants = {

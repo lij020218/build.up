@@ -33,7 +33,7 @@ import {
   LABOR_EMPLOYER_BURDEN_MULTIPLIER,
   type PrimeTone,
   type PrimeCostBenchmark,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 // ─── 디자인 토큰 ─────────────────────────────────────────────────
 const MIDNIGHT_DEEP = "#141C3D";

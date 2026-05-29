@@ -154,7 +154,7 @@ export async function exchangeCodeForRefreshToken(
   if (!tokens.refresh_token) {
     throw new Ga4ApiError(
       "GA4_NO_REFRESH_TOKEN",
-      "Google 이 refresh_token 을 반환하지 않았습니다. 사용자가 이전에 동의했을 수 있습니다 — Google 계정 권한에서 build.up 을 제거하고 다시 시도해 주세요.",
+      "Google 이 refresh_token 을 반환하지 않았습니다. 사용자가 이전에 동의했을 수 있습니다 — Google 계정 권한에서 Found.One 을 제거하고 다시 시도해 주세요.",
     );
   }
   return {

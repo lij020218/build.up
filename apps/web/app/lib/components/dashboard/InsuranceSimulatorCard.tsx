@@ -13,7 +13,7 @@
  *   3. 단시간 근로자(주 15h 미만) 자동 분기
  *   4. 정규직 vs 파트타임 시뮬 — 같은 인건비로 어느 쪽이 유리한가
  *
- * 디자인: Build.UP 토큰 (lavender-mist + 미드나잇).
+ * 디자인: Found.One 토큰 (lavender-mist + 미드나잇).
  */
 
 import { useMemo, useState } from "react";
@@ -24,7 +24,7 @@ import {
   hourlyToMonthly,
   TOTAL_EMPLOYER_RATE_PCT,
   type InsuranceSimResult,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIN_WAGE_2026_HOURLY = MINIMUM_WAGE_2026;
 const MIN_WAGE_2026_MONTHLY = hourlyToMonthly(MINIMUM_WAGE_2026, 40);

@@ -1,4 +1,4 @@
-import { createAiClient } from "@build-up/ai/utils/client";
+import { createAiClient } from "@foundone/ai/utils/client";
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";

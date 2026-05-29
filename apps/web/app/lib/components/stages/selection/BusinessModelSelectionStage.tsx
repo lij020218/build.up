@@ -6,7 +6,7 @@ import { styles } from "../../../styles";
 import {
   getStarterBusinessModelOptions,
   localizeRecommendationItem,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { BusinessHoursInput } from "../shared/BusinessHoursInput";
 import { StageWrapup } from "../shared/StageWrapup";
 

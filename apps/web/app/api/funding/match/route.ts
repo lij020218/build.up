@@ -7,7 +7,7 @@ import {
   type ProgramMatch,
   type ApplicationStatus,
   type ProgramCategory,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 /**
  * Funding Match API — iOS 클라이언트가 사용. 웹은 packages/shared 를 직접 import 하므로 불필요.

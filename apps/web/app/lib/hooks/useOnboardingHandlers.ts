@@ -8,7 +8,7 @@ import {
   saveStoreData,
   upsertStageDecision,
   type UserStoreData,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   useProfileStore,
   useRoadmapStore,

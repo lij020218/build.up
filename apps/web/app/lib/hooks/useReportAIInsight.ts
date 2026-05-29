@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../lib/supabase";
-import { getReportInsightCache, setReportInsightCache, makeSnapshotHash } from "@build-up/shared";
+import { getReportInsightCache, setReportInsightCache, makeSnapshotHash } from "@foundone/shared";
 import type { ReportSnapshot, ReportPeriod } from "./useReportSnapshot";
 import type { MorningBriefingBrain } from "./useMorningBriefingBrain";
-import type { ReportInsightInput } from "@build-up/ai";
+import type { ReportInsightInput } from "@foundone/ai";
 import { getKstDate } from "../utils/business-day";
 
 function buildPeriodKey(period: ReportPeriod, now: Date): string {

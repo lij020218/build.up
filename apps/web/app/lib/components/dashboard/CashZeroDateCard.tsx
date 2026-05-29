@@ -9,7 +9,7 @@
  *    "런웨이 14개월" 같은 *추상 월수* 가 아니라 **"2027-08-15에 자본 0원 도달"**
  *    *절대 날짜* 가 2025-2026 실리콘밸리 founder daily KPI 표준 #1.
  *
- *  build.up StartupFounderBrief 는 runway "월수" 만 표시 — 갭.
+ *  Found.One StartupFounderBrief 는 runway "월수" 만 표시 — 갭.
  *  → 절대 날짜 (YYYY-MM-DD) + 18m 임계 경고 + 채용 시뮬 추가.
  *
  *  ── 채용 시뮬 ────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ import { useFinanceStore } from "../../stores/finance-store";
 import { useProfileStore } from "../../stores/profile-store";
 // 2026-05-13 — SSOT (cash-zero-date.ts, 7 unit tests 검증)
 //   computeCashZeroDate — Mercury·Puzzle·Bessemer 표준 (절대 날짜 + 채용 시뮬).
-import { computeCashZeroDate, DEFAULT_HIRE_COST_KRW } from "@build-up/shared";
+import { computeCashZeroDate, DEFAULT_HIRE_COST_KRW } from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 

@@ -20,7 +20,7 @@ import type {
   RegionalSalesData,
   GovernmentSupportProgram,
   StoreChangeData,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 // ── 카테고리 → API 업종코드 매핑 ──
 const CATEGORY_TO_INDUSTRY_CODE: Record<string, string> = {

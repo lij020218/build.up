@@ -14,7 +14,7 @@ import type {
   StoreChangeData,
   BuildingRegistryData,
   TaxCalendarApiData,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 async function apiFetch<T>(path: string, token?: string): Promise<AdapterResult<T>> {
   const headers: Record<string, string> = {};

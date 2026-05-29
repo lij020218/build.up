@@ -11,7 +11,7 @@ import {
   localizeRecommendationItem,
   formatBudgetPresetLabel,
   formatStartupType,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 export function LaunchRoadmapCard() {
   const d = useDashboardCtx();

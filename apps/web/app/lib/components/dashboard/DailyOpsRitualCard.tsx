@@ -13,7 +13,7 @@ import {
   type DailyRitualItem,
   type RitualIconKey,
   type RitualConditionContext,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 const MIDNIGHT = "#191970";

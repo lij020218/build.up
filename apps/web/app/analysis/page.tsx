@@ -8,7 +8,7 @@ import {
   formatKRW,
   type OperatingSimulationResult,
   type WhatIfScenario,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { useDashboard } from "../lib/useDashboard";
 
 type Tab = "pnl" | "cashflow" | "costs" | "scenario";

@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { ContractAnalysisResult, DashboardActionsResponse } from "@build-up/ai";
-import type { GuideQaAnswer, loadPermitKnowledge } from "@build-up/shared";
+import type { ContractAnalysisResult, DashboardActionsResponse } from "@foundone/ai";
+import type { GuideQaAnswer, loadPermitKnowledge } from "@foundone/shared";
 
 // ─── Types for knowledge guides ───
 type KnowledgeGuide = Awaited<ReturnType<typeof loadPermitKnowledge>>[number];

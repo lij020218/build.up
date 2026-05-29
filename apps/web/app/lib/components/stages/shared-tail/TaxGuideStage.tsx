@@ -6,7 +6,7 @@ import {
   ShieldCheck, AlertTriangle, Calendar, FileText, Banknote,
   Sparkles, ClipboardList, ExternalLink, ChevronRight, type LucideIcon,
 } from "lucide-react";
-import { LEGAL, TAX_FAQ_ENTRIES, matchTaxFaq, type TaxFaqEntry } from "@build-up/shared";
+import { LEGAL, TAX_FAQ_ENTRIES, matchTaxFaq, type TaxFaqEntry } from "@foundone/shared";
 import { StageWrapup } from "../shared/StageWrapup";
 import { useMemo, useState } from "react";
 

@@ -6,7 +6,7 @@
  *  ── 왜 만들었나 (2026-05-13) ──────────────────────────────────────────
  *  Agent B 12 자료 (Lightspeed·Shopify·Square Retail·TruRating·i-boss·Fanruan)
  *  합의: 소매 사장님 daily KPI #1 = *sell-through rate*. 한국 SaaS 거의 부재
- *  (오늘얼마·캐시노트는 매출 중심) → build.up 차별점.
+ *  (오늘얼마·캐시노트는 매출 중심) → Found.One 차별점.
  *
  *  공식:
  *    Sell-through rate = (월 판매 수량 / (현재 재고 + 월 판매)) × 100
@@ -15,7 +15,7 @@
  *      <60% = slow mover
  *      <20% 또는 monthlySold=0 → dead stock (단종/할인 권고)
  *
- *  ── build.up 데이터 인벤토리 (ARCHITECTURE 체크리스트) ───────────────
+ *  ── Found.One 데이터 인벤토리 (ARCHITECTURE 체크리스트) ───────────────
  *  · useOperationsStore.products / unifiedProducts
  *    { id, name, category, price, cost, stock, monthlySold }
  *  · 두 store 머지 (legacy products + 신규 unifiedProducts)
@@ -47,7 +47,7 @@ import {
   topNRevenueShare,
   deadStockCapital,
   type SellThroughProduct,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 

@@ -9,7 +9,7 @@
  *  FIA: 신규 회원 50% 가 *90일 내 이탈*. 한국 "바디프로필 열풍" 후 1회성 가입
  *  비중 더 큼 — 90일 잔존이 살아남는 헬스장의 결정적 지표.
  *
- *  build.up 기존 데이터:
+ *  Found.One 기존 데이터:
  *    · operations-store.members — { id, name, plan, fee, startDate, endDate }
  *    · 회원권 만료일 (endDate) → D-7 만료 임박 자동 검출
  *    · startDate → 30/60/90일 cohort 잔존율 계산
@@ -36,7 +36,7 @@ import {
   expiringMembers,
   activeMemberCount,
   newMemberCount,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 const MIDNIGHT = "#191970";
 

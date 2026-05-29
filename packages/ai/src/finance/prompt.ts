@@ -1,5 +1,5 @@
-import type { FinancialSimulationResult } from "@build-up/shared";
-import { formatKRW } from "@build-up/shared";
+import type { FinancialSimulationResult } from "@foundone/shared";
+import { formatKRW } from "@foundone/shared";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 // ─── 재무 해석 AI 프롬프트 v2 ──────────────────────────────────────────────

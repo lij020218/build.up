@@ -12,8 +12,8 @@ import {
   starterStepCards,
   calculateCostRatios,
   traverseUserPath,
-} from "@build-up/shared";
-import type { RoadmapStageState } from "@build-up/shared";
+} from "@foundone/shared";
+import type { RoadmapStageState } from "@foundone/shared";
 import {
   useProfileStore,
   useRoadmapStore,

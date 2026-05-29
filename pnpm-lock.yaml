@@ -45,15 +45,15 @@ importers:
       '@babel/runtime':
         specifier: ^7.27.6
         version: 7.29.2
-      '@build-up/ai':
-        specifier: workspace:*
-        version: link:../../packages/ai
-      '@build-up/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@expo/vector-icons':
         specifier: ^14.0.4
         version: 14.0.4
+      '@foundone/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+      '@foundone/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@supabase/supabase-js':
         specifier: ^2.106.2
         version: 2.106.2
@@ -109,13 +109,13 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.39.0
         version: 0.39.0
-      '@build-up/ai':
+      '@foundone/ai':
         specifier: workspace:*
         version: link:../../packages/ai
-      '@build-up/integrations':
+      '@foundone/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
-      '@build-up/shared':
+      '@foundone/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@portone/browser-sdk':
@@ -209,7 +209,7 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.39.0
         version: 0.39.0
-      '@build-up/shared':
+      '@foundone/shared':
         specifier: workspace:*
         version: link:../shared
       openai:
@@ -230,7 +230,7 @@ importers:
 
   packages/integrations:
     dependencies:
-      '@build-up/shared':
+      '@foundone/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -1275,9 +1275,6 @@ packages:
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
 
-  '@build-up/web@file:apps/web':
-    resolution: {directory: apps/web, type: directory}
-
   '@emnapi/core@1.9.1':
     resolution: {integrity: sha512-mukuNALVsoix/w1BJwFzwXBN/dHeejQtuVzcDsfOEsdpCumXb/E9j8w11h5S54tT1xhifGfbbSm/ICrObRb3KA==}
 
@@ -1448,7 +1445,7 @@ packages:
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {node: '>=0.10.0'}
+    engines: {'0': node >=0.10.0}
 
   '@expo/cli@0.22.28':
     resolution: {integrity: sha512-lvt72KNitGuixYD2l3SZmRKVu2G4zJpmg5V7WfUBNpmUU5oODBw/6qmiJ6kSLAlfDozscUk+BBGknBBzxUrwrA==}
@@ -1567,6 +1564,9 @@ packages:
     resolution: {integrity: sha512-3TASCATfw+ctICSb4ymrv7iCm0qJ0N9CarB+CZ7zIJ7KqNbwI5JjyDL1/sxoC0ccTO1Zyd1iQ+oqncPg5FJXaA==}
     peerDependencies:
       '@opentelemetry/api': ^1.9.0
+
+  '@foundone/web@file:apps/web':
+    resolution: {directory: apps/web, type: directory}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -7450,48 +7450,6 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@build-up/web@file:apps/web(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(@types/react@18.3.28)(use-sync-external-store@1.6.0(react@18.3.1))(ws@8.21.0)(zod@4.3.6)':
-    dependencies:
-      '@anthropic-ai/sdk': 0.39.0
-      '@build-up/ai': link:packages/ai
-      '@build-up/integrations': link:packages/integrations
-      '@build-up/shared': link:packages/shared
-      '@portone/browser-sdk': 0.1.8
-      '@radix-ui/react-slot': 1.2.4(@types/react@18.3.28)(react@18.3.1)
-      '@supabase/supabase-js': 2.106.2
-      '@tailwindcss/postcss': 4.3.0
-      '@upstash/ratelimit': 2.0.8(@upstash/redis@1.38.0)
-      '@upstash/redis': 1.38.0
-      autoprefixer: 10.5.0(postcss@8.5.15)
-      class-variance-authority: 0.7.1
-      clsx: 2.1.1
-      framer-motion: 12.40.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      jspdf: 4.2.1
-      lucide-react: 0.577.0(react@18.3.1)
-      next: 15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      openai: 6.39.0(ws@8.21.0)(zod@4.3.6)
-      popbill: 1.64.0(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(@types/react@18.3.28)(use-sync-external-store@1.6.0(react@18.3.1))(ws@8.21.0)(zod@4.3.6)
-      postcss: 8.5.15
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      tailwind-merge: 3.6.0
-      tailwindcss: 4.3.0
-      zustand: 5.0.13(@types/react@18.3.28)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@emotion/is-prop-valid'
-      - '@opentelemetry/api'
-      - '@playwright/test'
-      - '@types/react'
-      - babel-plugin-macros
-      - babel-plugin-react-compiler
-      - encoding
-      - immer
-      - sass
-      - use-sync-external-store
-      - ws
-      - zod
-
   '@emnapi/core@1.9.1':
     dependencies:
       '@emnapi/wasi-threads': 1.2.0
@@ -7963,6 +7921,48 @@ snapshots:
       minimatch: 10.2.5
     transitivePeerDependencies:
       - supports-color
+
+  '@foundone/web@file:apps/web(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(@types/react@18.3.28)(use-sync-external-store@1.6.0(react@18.3.1))(ws@8.21.0)(zod@4.3.6)':
+    dependencies:
+      '@anthropic-ai/sdk': 0.39.0
+      '@foundone/ai': link:packages/ai
+      '@foundone/integrations': link:packages/integrations
+      '@foundone/shared': link:packages/shared
+      '@portone/browser-sdk': 0.1.8
+      '@radix-ui/react-slot': 1.2.4(@types/react@18.3.28)(react@18.3.1)
+      '@supabase/supabase-js': 2.106.2
+      '@tailwindcss/postcss': 4.3.0
+      '@upstash/ratelimit': 2.0.8(@upstash/redis@1.38.0)
+      '@upstash/redis': 1.38.0
+      autoprefixer: 10.5.0(postcss@8.5.15)
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      framer-motion: 12.40.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      jspdf: 4.2.1
+      lucide-react: 0.577.0(react@18.3.1)
+      next: 15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      openai: 6.39.0(ws@8.21.0)(zod@4.3.6)
+      popbill: 1.64.0(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(@types/react@18.3.28)(use-sync-external-store@1.6.0(react@18.3.1))(ws@8.21.0)(zod@4.3.6)
+      postcss: 8.5.15
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      tailwind-merge: 3.6.0
+      tailwindcss: 4.3.0
+      zustand: 5.0.13(@types/react@18.3.28)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@emotion/is-prop-valid'
+      - '@opentelemetry/api'
+      - '@playwright/test'
+      - '@types/react'
+      - babel-plugin-macros
+      - babel-plugin-react-compiler
+      - encoding
+      - immer
+      - sass
+      - use-sync-external-store
+      - ws
+      - zod
 
   '@img/colour@1.1.0':
     optional: true
@@ -11013,7 +11013,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.19.15
+      '@types/node': 22.13.10
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -11787,7 +11787,7 @@ snapshots:
   popbill@1.64.0(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(@types/react@18.3.28)(use-sync-external-store@1.6.0(react@18.3.1))(ws@8.21.0)(zod@4.3.6):
     dependencies:
       linkhub: 1.8.2
-      popbill: '@build-up/web@file:apps/web(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(@types/react@18.3.28)(use-sync-external-store@1.6.0(react@18.3.1))(ws@8.21.0)(zod@4.3.6)'
+      popbill: '@foundone/web@file:apps/web(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(@types/react@18.3.28)(use-sync-external-store@1.6.0(react@18.3.1))(ws@8.21.0)(zod@4.3.6)'
     transitivePeerDependencies:
       - '@babel/core'
       - '@emotion/is-prop-valid'

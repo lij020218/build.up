@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { INVESTMENT_TERMS, TERM_CATEGORIES, getTermsByCategory, searchTerms, getKoreaSpecificTerms, type TermCategory } from "@build-up/shared";
+import { INVESTMENT_TERMS, TERM_CATEGORIES, getTermsByCategory, searchTerms, getKoreaSpecificTerms, type TermCategory } from "@foundone/shared";
 
 type Props = { ko: boolean };
 

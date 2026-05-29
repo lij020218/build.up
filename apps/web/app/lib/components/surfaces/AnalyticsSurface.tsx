@@ -12,7 +12,7 @@ import {
   getMatchedProgramsV2,
   getApplicationStatusLabel, getMatchedHighlights,
   getProgramCategoryColor, getProgramCategoryLabel,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 // ── 10 extracted card components ──
 import { AiCoachCard } from "./analytics/AiCoachCard";
@@ -1075,8 +1075,8 @@ export function AnalyticsSurface() {
                       </div>
                       <div style={{ fontSize: "12px", lineHeight: 1.6, color: "var(--muted)", marginTop: "4px" }}>
                         {ko
-                          ? "어려운 결정이 필요한 순간에도 build.up이 함께합니다."
-                          : "build.up is with you even in difficult decisions."}
+                          ? "어려운 결정이 필요한 순간에도 Found.One이 함께합니다."
+                          : "Found.One is with you even in difficult decisions."}
                       </div>
                     </div>
 

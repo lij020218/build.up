@@ -9,12 +9,12 @@ import {
   detectBusinessSituation,
   matchCaseStudies,
   type BusinessSituation,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   ANTI_HALLUCINATION_DIRECTIVE,
   formatInsightContext,
   retrieveInsightChunks,
-} from "@build-up/ai";
+} from "@foundone/ai";
 import { supabase as supabaseAnon } from "../../../../../lib/supabase";
 
 /**
@@ -128,7 +128,7 @@ const SYSTEM_PROMPT = `당신은 한국 자영업·창업 경영 컨설턴트입
 ═══════════════════════════════════════════════════════════════
 각 인사이트마다 **targetCard 필드를 반드시 1개** 선택. 사장님이 그 카드에서 *실제로 액션을 수행* 가능한 곳으로 보내야 함.
 
-build.up 운영 대시보드의 실제 카드 카탈로그:
+Found.One 운영 대시보드의 실제 카드 카탈로그:
 
 | targetCard      | 어떤 인사이트일 때 사용?                                                        | 카드 위치 (참고)                          |
 |-----------------|--------------------------------------------------------------------------------|------------------------------------------|

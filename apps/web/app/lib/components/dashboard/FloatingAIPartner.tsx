@@ -61,7 +61,7 @@ export type AIPartnerContext = {
   lowStockItems?: string[];
   upcomingFixedExpenses?: string[];
   pendingTaxEvents?: string[];
-  /** 사장님이 아직 안 써본 build.up 기능들 (priority 정렬) — AI 가 자연스럽게 안내 가능 */
+  /** 사장님이 아직 안 써본 Found.One 기능들 (priority 정렬) — AI 가 자연스럽게 안내 가능 */
   unusedFeatures?: string[];
   // 마케팅
   totalMarketingSpend?: number;

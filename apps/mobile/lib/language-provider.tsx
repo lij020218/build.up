@@ -1,4 +1,4 @@
-import type { Language } from "@build-up/shared";
+import type { Language } from "@foundone/shared";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, radii, shadows } from "./design";

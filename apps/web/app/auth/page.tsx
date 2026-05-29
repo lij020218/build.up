@@ -12,7 +12,7 @@ import {
   updateCurrentUserPassword,
   validatePassword,
   type Language
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { MockupByIndex, HeroDashboardPreview } from "./mockups";
 import { FeatureIcon, getSummaryFeatures, txt, getFeatures } from "./landing-copy";
 import { useEffect, useRef, useState } from "react";
@@ -189,7 +189,7 @@ export default function AuthPage() {
           borderBottom: "1px solid rgba(255,255,255,0.08)"
         }}
       >
-        <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>build.up</span>
+        <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>Found.One</span>
         <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
           <button
             type="button"
@@ -367,7 +367,7 @@ export default function AuthPage() {
               >
                 b
               </div>
-              <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>build.up</div>
+              <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>Found.One</div>
             </div>
 
             {/* mode tabs */}
@@ -906,7 +906,7 @@ export default function AuthPage() {
           color: "rgba(255,255,255,0.3)"
         }}
       >
-        © 2026 build.up. All rights reserved.
+        © 2026 Found.One. All rights reserved.
       </footer>
     </div>
   );

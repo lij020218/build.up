@@ -1,7 +1,7 @@
 /**
  * Seed script: ingest all 124 success case studies into the insight RAG.
  *
- * Run from apps/web (so @build-up/* workspace deps resolve):
+ * Run from apps/web (so @foundone/* workspace deps resolve):
  *   cd apps/web && node --experimental-strip-types scripts/seed-insights/case-studies.ts
  *   cd apps/web && node --experimental-strip-types scripts/seed-insights/case-studies.ts --replace
  *
@@ -19,9 +19,9 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { ingestInsightDocument } from "@build-up/ai";
-import type { InsightCategory } from "@build-up/ai";
-import { getAllCaseStudies, type BusinessSituation, type CaseStudy } from "@build-up/shared";
+import { ingestInsightDocument } from "@foundone/ai";
+import type { InsightCategory } from "@foundone/ai";
+import { getAllCaseStudies, type BusinessSituation, type CaseStudy } from "@foundone/shared";
 import { createClient } from "@supabase/supabase-js";
 
 const SOURCE_NAME = "case-studies-v1";

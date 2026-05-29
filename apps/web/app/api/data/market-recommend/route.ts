@@ -13,8 +13,8 @@
  */
 
 import { NextResponse } from "next/server";
-import { createAiClient } from "@build-up/ai/utils/client";
-import type { RecommendationItem } from "@build-up/shared";
+import { createAiClient } from "@foundone/ai/utils/client";
+import type { RecommendationItem } from "@foundone/shared";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../_lib/rate-limit";
 import { getAnthropicApiKey, getEnvVar } from "../../_lib/env";

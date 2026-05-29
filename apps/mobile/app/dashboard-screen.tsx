@@ -66,8 +66,8 @@ import {
   type UserStoreData,
   type WorkflowTaskMap,
   type WorkflowDecisionMap
-} from "@build-up/shared";
-import type { AiStructuredResponse, ContractAnalysisResult, RoadmapGenerationResult } from "@build-up/ai";
+} from "@foundone/shared";
+import type { AiStructuredResponse, ContractAnalysisResult, RoadmapGenerationResult } from "@foundone/ai";
 import { useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -290,7 +290,7 @@ function formatConfidenceBadge(confidence: GuideQaAnswer["confidence"], language
 
 type GuideRecord = KnowledgeItemRecord & {
   sources: KnowledgeItemSourceRecord[];
-  freshness?: import("@build-up/shared").FreshnessMeta;
+  freshness?: import("@foundone/shared").FreshnessMeta;
 };
 
 type SavedFinanceSnapshot = {
@@ -321,7 +321,7 @@ type SavedFinanceInterpretationSnapshot = {
 
 const GUIDE_STAGE_CODES = ["permit_guide", "tax_guide", "loan_guide"] as const;
 
-function getGuideSections(guide: GuideRecord | null, language: import("@build-up/shared").Language) {
+function getGuideSections(guide: GuideRecord | null, language: import("@foundone/shared").Language) {
   if (!guide) {
     return [];
   }

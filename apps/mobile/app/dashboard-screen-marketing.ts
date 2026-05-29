@@ -16,7 +16,7 @@
  */
 
 // MarketingChannelKey 는 dashboard-screen.tsx 안에 정의되어 있음.
-//   추후 더 많은 채널 확장 시 @build-up/shared 로 이동 검토.
+//   추후 더 많은 채널 확장 시 @foundone/shared 로 이동 검토.
 export type MarketingChannelKey =
   | "naver-place"
   | "instagram"

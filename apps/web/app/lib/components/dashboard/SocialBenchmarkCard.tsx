@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Users, TrendingUp, Award } from "lucide-react";
-import { getIndustryBenchmark } from "@build-up/shared";
+import { getIndustryBenchmark } from "@foundone/shared";
 import type { DailyEntry } from "../../stores/finance-store";
 import { EmptyStateCard } from "./EmptyStateCard";
 import { getKstDate } from "../../utils/business-day";
@@ -17,7 +17,7 @@ type Props = {
  * Social Benchmark Card — Hook Model의 "Tribe Reward" (사회적 보상).
  *
  * 사용자 월매출을 업종 평균·상위10%·하위10%와 비교.
- * 데이터 출처: @build-up/shared/franchise-benchmarks (공정거래위원회 기반).
+ * 데이터 출처: @foundone/shared/franchise-benchmarks (공정거래위원회 기반).
  *
  * Phase 1: 정적 업종 벤치마크 기반 위치 추정
  * Phase 2: Supabase 익명 집계 (같은 지역·업종 실시간 비교)

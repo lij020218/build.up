@@ -1,5 +1,5 @@
 {
-  "name": "@build-up/web",
+  "name": "@foundone/web",
   "private": true,
   "version": "0.1.0",
   "scripts": {
@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "@build-up/ai": "workspace:*",
-    "@build-up/integrations": "workspace:*",
-    "@build-up/shared": "workspace:*",
+    "@foundone/ai": "workspace:*",
+    "@foundone/integrations": "workspace:*",
+    "@foundone/shared": "workspace:*",
     "@portone/browser-sdk": "^0.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/supabase-js": "^2.106.2",

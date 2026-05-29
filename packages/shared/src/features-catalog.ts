@@ -1,5 +1,5 @@
 /**
- * Features Catalog — AI 경영 코칭이 사장님께 추천할 수 있는 build.up 서비스 기능 목록.
+ * Features Catalog — AI 경영 코칭이 사장님께 추천할 수 있는 Found.One 서비스 기능 목록.
  *
  * 흐름:
  *  1. AI 가 todayActions / crisisActions 에 `feature` 필드로 ID 를 넣음 (예: "cashflow-hero")

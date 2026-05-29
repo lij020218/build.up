@@ -6,8 +6,8 @@ import {
   type GuideQaRequest,
   type GuideQaAnswer,
   type Language
-} from "@build-up/shared";
-import { interpretGuideQuestion } from "@build-up/ai";
+} from "@foundone/shared";
+import { interpretGuideQuestion } from "@foundone/ai";
 import { NextResponse } from "next/server";
 import { supabase } from "../../../../../lib/supabase";
 import { requireApiUser } from "../../../_lib/auth";

@@ -9,7 +9,7 @@ import { TodaySalesSummary } from "./TodaySalesSummary";
 import { activityCard } from "./operationalStyles";
 import { AnimatedBar, CountUp } from "./animations";
 import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
-import { calculateBreakEven } from "@build-up/shared";
+import { calculateBreakEven } from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
 type DailyEntry = { date: string; sales: number; customers: number };

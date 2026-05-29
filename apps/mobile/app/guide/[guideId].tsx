@@ -11,7 +11,7 @@ import {
   type FreshnessMeta,
   type KnowledgeItemRecord,
   type KnowledgeItemSourceRecord
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";

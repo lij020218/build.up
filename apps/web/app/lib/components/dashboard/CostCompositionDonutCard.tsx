@@ -10,7 +10,7 @@ import {
   getCostThreshold,
   mapIndustryToGroup,
   type HealthGrade,
-} from "@build-up/shared";
+} from "@foundone/shared";
 
 /**
  * CostCompositionDonutCard — 비용 구조 도넛
@@ -23,7 +23,7 @@ import {
  *
  * 모든 업종 100% 적용 (모든 사장님이 매월 비용 입력 필수).
  *
- * 점수·색상·임계값은 모두 `@build-up/shared`의 unified-health.ts 에서 가져옴.
+ * 점수·색상·임계값은 모두 `@foundone/shared`의 unified-health.ts 에서 가져옴.
  */
 
 type Props = {

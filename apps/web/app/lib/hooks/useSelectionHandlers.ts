@@ -12,7 +12,7 @@ import {
   saveStoreData,
   type RecommendationItem,
   type WorkflowDecisionMap,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import {
   useFinanceStore,
   useAiStore,

@@ -64,7 +64,7 @@ import {
   formatStageType,
   getFranchiseBrandById,
   localizeTaskTitle,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import { Star, Store } from "lucide-react";
 // SecurityChecklist 는 LaunchGtmStage 내부에서 collapsible 로 직접 import.
 // import { SecurityChecklist } from "../knowledge/SecurityChecklist";
@@ -1459,8 +1459,8 @@ export function CurrentStageView() {
                   </div>
                   <div style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>
                     {language === "ko"
-                      ? "이제 build.up과 함께 실제 운영을 시작하세요. 매출·비용·손익분기점을 함께 추적합니다."
-                      : "Start your real operations with build.up. Track daily revenue, costs, and break-even together."}
+                      ? "이제 Found.One과 함께 실제 운영을 시작하세요. 매출·비용·손익분기점을 함께 추적합니다."
+                      : "Start your real operations with Found.One. Track daily revenue, costs, and break-even together."}
                   </div>
                   <button
                     type="button"

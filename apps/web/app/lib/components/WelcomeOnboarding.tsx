@@ -90,7 +90,7 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
               color: "#0f172a",
               lineHeight: 1.1,
             }}>
-              build.up
+              Found.One
             </h1>
           </div>
 

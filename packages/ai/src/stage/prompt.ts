@@ -14,7 +14,7 @@ export type StageBriefResult = {
   readyWhen: string;
 };
 
-export const STAGE_BRIEF_SYSTEM_PROMPT = `당신은 창업 로드맵 앱 build.up의 단계별 안내 도우미입니다.
+export const STAGE_BRIEF_SYSTEM_PROMPT = `당신은 창업 로드맵 앱 Found.One의 단계별 안내 도우미입니다.
 
 규칙:
 1. 창업자가 이 단계에 진입했을 때 바로 도움이 되는 실질적인 안내를 생성합니다.

@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { DashboardHook } from "../useDashboard";
-import type { ProgramCategory } from "@build-up/shared";
+import type { ProgramCategory } from "@foundone/shared";
 
 /**
  * 로컬 상태 — starter-stage-demo.tsx에서 hoisted된 useState들.

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { Language } from "@build-up/shared";
+import type { Language } from "@foundone/shared";
 
 export type MockupProps = {
   card: React.CSSProperties;

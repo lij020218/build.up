@@ -9,7 +9,7 @@ import {
   classifyCost,
   type CostItem,
   type CostClassification,
-} from "@build-up/shared";
+} from "@foundone/shared";
 import TaxCalendarCard from "../TaxCalendarCard";
 
 type Props = {
