@@ -8,6 +8,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 import FoundOneDesignSystem
 import FoundOneData
 
@@ -188,6 +191,22 @@ private struct StepShell<Content: View>: View {
             .padding(.top, 16)
             .padding(.bottom, 40)
         }
+        #if os(iOS)
+        // 2026-05-29 P0: 위저드는 셸을 안 써서 키보드 회피가 없었음. numberPad(예산)·TextEditor(아이디어)
+        //   입력 시 키보드가 필드를 가리고 닫을 방법이 없던 문제. 드래그 dismiss + "완료" 버튼 부착.
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("완료") {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil
+                    )
+                }
+                .font(.system(size: 16, weight: .semibold))
+            }
+        }
+        #endif
     }
 }
 

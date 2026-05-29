@@ -28,6 +28,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 import FoundOneDesignSystem
 import FoundOneCore
 
@@ -166,6 +169,23 @@ public struct BUStageShell<Content: View>: View {
                 onEditSave: onEditSave
             )
         }
+        #if os(iOS)
+        // 2026-05-29 P0: numberPad/decimalPad 는 리턴 키가 없어 키보드를 닫을 방법이 없음.
+        //   40~60대 사장님이 "키보드 어떻게 닫지?" 에서 막히던 문제. 키보드 위 "완료" 버튼 공통 부착.
+        //   resignFirstResponder 로 현재 포커스 필드 해제 — content 의 어떤 TextField 든 작동.
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("완료") {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil
+                    )
+                }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(BUColor.midnight)
+            }
+        }
+        #endif
     }
 }
 
