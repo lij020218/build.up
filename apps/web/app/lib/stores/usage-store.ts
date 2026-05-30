@@ -116,7 +116,7 @@ export const useUsageStore = create<UsageState & UsageActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-usage-stats-v1",
+      name: "foundone-usage-stats-v1",
       version: 1,
     }
   )

@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RecommendationItem } from "../types/roadmap";
 import type { FreshnessMeta, FreshnessStatus } from "../types/freshness";
-import type { BuildUpDatabase } from "./client";
+import type { FoundOneDatabase } from "./client";
 
-type Client = SupabaseClient<BuildUpDatabase>;
-type MarketLocationSignalRow = BuildUpDatabase["public"]["Tables"]["market_location_signals"]["Row"];
+type Client = SupabaseClient<FoundOneDatabase>;
+type MarketLocationSignalRow = FoundOneDatabase["public"]["Tables"]["market_location_signals"]["Row"];
 
 function normalizeText(value: string) {
   return value.trim().toLowerCase();

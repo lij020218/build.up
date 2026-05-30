@@ -162,7 +162,7 @@ public struct CustomPullSetupSheet: View {
             Divider().background(BUColor.borderSubtle)
 
             fieldGroup(title: "Endpoint URL", helper: "https:// 로 시작하는 사장님 서버 주소") {
-                TextField("https://api.example.com/buildup/funnel", text: $endpointURL)
+                TextField("https://api.example.com/foundone/funnel", text: $endpointURL)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14, design: .monospaced))
                     .foregroundStyle(BUColor.ink)

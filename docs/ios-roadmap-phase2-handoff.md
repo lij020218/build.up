@@ -44,10 +44,10 @@
 ## 기반 (Phase 1 완료된 것)
 
 ### 데이터 모델
-- `apps/ios/Sources/BuildUpFeatures/Roadmap/RoadmapStage.swift`:
+- `apps/ios/Sources/FoundOneFeatures/Roadmap/RoadmapStage.swift`:
   - 17 stage 외식 path 데이터 (RoadmapSampleData.stages)
   - stageId 기반 식별 (웹과 1:1)
-- `apps/ios/Sources/BuildUpData/Stores/DashboardStore.swift`:
+- `apps/ios/Sources/FoundOneData/Stores/DashboardStore.swift`:
   - @Observable `category`, `storeName`, `businessLaunched` 등 보유
   - `setProfile(...)` 로 업데이트
 
@@ -93,7 +93,7 @@ apps/web/app/lib/components/stages/{offline|shared|startup}/{Stage}.tsx
 ```
 
 ### 3. iOS 미러 컴포넌트 (모바일 최적화)
-- 위치: `apps/ios/Sources/BuildUpFeatures/Roadmap/Stages/{StageName}View.swift`
+- 위치: `apps/ios/Sources/FoundOneFeatures/Roadmap/Stages/{StageName}View.swift`
 - 디자인 토큰:
   - `BUColor.midnight` (#191970), `.midnightDeep`, `.midnight08`, `.midnightInk`
   - `BUSpacing.heroOuterPadding` (14), `.heroGap` (12), `.opsGap` (14)
@@ -164,7 +164,7 @@ docs/ios-roadmap-phase2-handoff.md 읽고 시작해.
 
 우선순위: target-customer-definition stage 먼저.
 웹 SSOT: apps/web/app/lib/components/stages/shared/TargetCustomerStage.tsx
-모바일 위치: apps/ios/Sources/BuildUpFeatures/Roadmap/Stages/TargetCustomerStageView.swift
+모바일 위치: apps/ios/Sources/FoundOneFeatures/Roadmap/Stages/TargetCustomerStageView.swift
 RoadmapView.swift 의 StageDetailSheet 분기에 등록까지.
 ```
 

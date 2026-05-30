@@ -1,9 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { BuildUpDatabase } from "./client";
+import type { FoundOneDatabase } from "./client";
 import type { ProgramCategory, StartupProgram, ApplicationStatus } from "../startup-programs";
 
-type Client = SupabaseClient<BuildUpDatabase>;
-type ProgramRow = BuildUpDatabase["public"]["Tables"]["support_programs"]["Row"];
+type Client = SupabaseClient<FoundOneDatabase>;
+type ProgramRow = FoundOneDatabase["public"]["Tables"]["support_programs"]["Row"];
 
 // ─── Row → Domain 매핑 ──────────────────────────────────────────────────────
 

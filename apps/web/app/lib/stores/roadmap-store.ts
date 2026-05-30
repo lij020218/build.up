@@ -243,7 +243,7 @@ export const useRoadmapStore = create<RoadmapState & RoadmapActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-roadmap",
+      name: "foundone-roadmap",
       partialize: (state) => ({
         decisions: state.decisions,
         roadmap: state.roadmap,

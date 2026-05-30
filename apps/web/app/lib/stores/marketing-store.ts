@@ -255,7 +255,7 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-marketing",
+      name: "foundone-marketing",
       partialize: (state) => ({
         campaigns: state.campaigns,
         monthlyBudget: state.monthlyBudget,

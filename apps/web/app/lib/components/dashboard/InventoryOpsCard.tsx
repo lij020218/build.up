@@ -1008,12 +1008,12 @@ export function InventoryOpsCard({
                   ? (ko ? `공급업체명 (선택한 ${supplierSuggestions.length}곳 자동 제안)` : `Supplier (${supplierSuggestions.length} suggested)`)
                   : (ko ? "공급업체명" : "Supplier")
               }
-              list={supplierSuggestions.length > 0 ? "buildup-supplier-suggestions" : undefined}
+              list={supplierSuggestions.length > 0 ? "foundone-supplier-suggestions" : undefined}
               style={inputStyle}
               autoComplete="off"
             />
             {supplierSuggestions.length > 0 && (
-              <datalist id="buildup-supplier-suggestions">
+              <datalist id="foundone-supplier-suggestions">
                 {supplierSuggestions.map((name) => (
                   <option key={name} value={name} />
                 ))}

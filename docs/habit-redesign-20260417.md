@@ -1,4 +1,4 @@
-# build.up 매일 쓰는 경영 비서 재설계 — 경영 대가 지혜 기반
+# Found.One 매일 쓰는 경영 비서 재설계 — 경영 대가 지혜 기반
 
 **작성일**: 2026-04-17
 **문제**: 현재 서비스는 "충분한 데이터가 있는 사용자에겐 좋지만, 매일 열 동기가 약함" (3/5점)
@@ -54,7 +54,7 @@
 3. **Embrace external trends** — 외부 트렌드를 적극 수용 (AI, 모바일 등)
 4. **High-velocity decision making** — 빠르되 70% 정보면 결정하라
 
-**build.up 적용**: 사용자(자영업자)에게도 **"Day 1 마인드"** 유지하게 해야. 매일 "오늘 첫날처럼 뭘 개선할까?" 자극이 필요.
+**Found.One 적용**: 사용자(자영업자)에게도 **"Day 1 마인드"** 유지하게 해야. 매일 "오늘 첫날처럼 뭘 개선할까?" 자극이 필요.
 
 ### 2-2. **Charlie Munger** — 멘탈 모델 & 체크리스트 (Berkshire Hathaway 부회장)
 
@@ -66,7 +66,7 @@
 3. **Second-Order Thinking** — 1차 결과(인건비 절감)가 아니라 **2차·3차 결과**(품질 하락→고객이탈→매출감소)까지 생각
 4. **Checklist Discipline** — 조종사처럼 중요 결정 전에 체크리스트 (감정 개입 방지)
 
-**build.up 적용**: 이미 **흑자부도(Inversion)** 철학은 구현 완료. 하지만 **체크리스트 규율**과 **2차 결과 시뮬**은 부족.
+**Found.One 적용**: 이미 **흑자부도(Inversion)** 철학은 구현 완료. 하지만 **체크리스트 규율**과 **2차 결과 시뮬**은 부족.
 
 ### 2-3. **Peter Drucker** — 효과적 경영자의 5원칙 (현대 경영학의 아버지)
 
@@ -79,7 +79,7 @@
 4. **Concentrate on the few major tasks** — **First things first**. 한 번에 하나만
 5. **Make effective decisions** — 사실이 아니라 **견해**에서 출발. 반대 의견도 적극 찾아라
 
-**build.up 적용**: 자영업자는 **"Time Log"** 를 안 함. 우리가 자동 생성하면 킬러 기능. 또 "한 번에 하나" 원칙 → **오늘 집중할 1가지** 선명하게.
+**Found.One 적용**: 자영업자는 **"Time Log"** 를 안 함. 우리가 자동 생성하면 킬러 기능. 또 "한 번에 하나" 원칙 → **오늘 집중할 1가지** 선명하게.
 
 ### 2-4. **Nir Eyal** — Hook Model (습관 설계)
 
@@ -94,7 +94,7 @@
    - **Self**: 자기 보상 (마스터리, 달성감)
 4. **Investment** — 사용자가 투자한 노력이 제품을 더 가치 있게 만든다 (데이터, 설정, 팔로우)
 
-**build.up 적용**: 현재 Trigger→Action까지는 있는데 **Variable Reward**와 **Investment**가 약함. 매일 로그인할 때마다 **다른 인사이트**(Hunt), **진전 표시**(Self), **커뮤니티 비교**(Tribe)가 있어야 한다.
+**Found.One 적용**: 현재 Trigger→Action까지는 있는데 **Variable Reward**와 **Investment**가 약함. 매일 로그인할 때마다 **다른 인사이트**(Hunt), **진전 표시**(Self), **커뮤니티 비교**(Tribe)가 있어야 한다.
 
 ---
 
@@ -152,7 +152,7 @@
   - **순 영향**: 장기 +5만원 (위험 포함)
 - What-If에 "2차 결과 자동 전개" 옵션 추가
 
-**구현 방법**: `WhatIfSimulator.tsx` 확장. 업종별 "행동→결과" 연관 DB 구축 (`@build-up/shared` 확장)
+**구현 방법**: `WhatIfSimulator.tsx` 확장. 업종별 "행동→결과" 연관 DB 구축 (`@foundone/shared` 확장)
 **영향**: 대시보드의 **"판단 엔진"** 정체성 확립
 
 ### 🟡 개선 #5: 경영 리추얼 3종 — Drucker Habit + Hook Loop
@@ -241,7 +241,7 @@
 ### Week 7 (정체성 강화)
 | # | 기능 | 일정 | 파일 |
 |---|---|---|---|
-| 6 | 2차 결과 시뮬 | 5일 | `WhatIfSimulator.tsx` 확장 + `@build-up/shared` DB |
+| 6 | 2차 결과 시뮬 | 5일 | `WhatIfSimulator.tsx` 확장 + `@foundone/shared` DB |
 | 7 | Progress Milestones | 2일 | `ProgressMilestones.tsx` + `agents-store` 확장 |
 
 ### Week 8 (지속 가치)
@@ -295,7 +295,7 @@
 - **우리 해자**: 캐시노트가 못 주는 **"생각의 리추얼"**
 
 ### 6-2. 앞으로 나아갈 방향
-build.up은 이제 **"매일 5분, 생각하는 경영자를 만드는 서비스"**가 되어야 한다.
+Found.One은 이제 **"매일 5분, 생각하는 경영자를 만드는 서비스"**가 되어야 한다.
 
 세 가지 다짐:
 1. **Day 1 마인드 주입**: 매일 작게라도 개선 1개

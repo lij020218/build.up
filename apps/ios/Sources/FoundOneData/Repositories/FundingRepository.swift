@@ -357,7 +357,7 @@ public actor FundingRepository {
     public init(
         supabase: SupabaseClient,
         // ⚠️ 2026-05-25: foundone.dev DNS A 레코드 미설정 → Vercel 배포 URL 사용.
-        baseURL: URL = URL(string: "https://build-up-gamma.vercel.app")!,
+        baseURL: URL = URL(string: "https://foundone.dev")!,
         urlSession: URLSession = .shared
     ) {
         self.supabase = supabase

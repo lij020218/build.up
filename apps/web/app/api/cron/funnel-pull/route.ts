@@ -111,7 +111,7 @@ async function fetchEndpoint(
       headers: {
         Authorization: `Bearer ${secret}`,
         Accept: "application/json",
-        "User-Agent": "buildup-funnel-pull/1.0",
+        "User-Agent": "foundone-funnel-pull/1.0",
       },
       signal: controller.signal,
       cache: "no-store",

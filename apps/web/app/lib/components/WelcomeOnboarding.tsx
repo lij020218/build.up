@@ -146,7 +146,7 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
           <button
             type="button"
             onClick={() => {
-              try { localStorage.setItem("__buildup_welcomed", "true"); } catch {}
+              try { localStorage.setItem("__foundone_welcomed", "true"); } catch {}
               onComplete();
             }}
             style={{

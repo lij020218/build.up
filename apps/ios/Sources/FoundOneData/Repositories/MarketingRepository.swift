@@ -233,7 +233,7 @@ public actor MarketingRepository {
         // ⚠️ 2026-05-25: foundone.dev 은 도메인은 보유 중이나 DNS A 레코드 미설정 → resolve 실패.
         //   Vercel 배포 URL 로 변경. foundone.dev 도메인 연결 완료 후 다시 변경 가능.
         //   BUEnvironment.webAppURL 을 받도록 리팩토링하면 환경별 분기 가능.
-        baseURL: URL = URL(string: "https://build-up-gamma.vercel.app")!,
+        baseURL: URL = URL(string: "https://foundone.dev")!,
         urlSession: URLSession = .shared
     ) {
         self.supabase = supabase

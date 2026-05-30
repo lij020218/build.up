@@ -370,7 +370,7 @@ function ConnectWizard({
               </li>
               <li>{ko ? "좌측 메뉴 → [결제연동] → [API Keys]" : "Sidebar → [Integrations] → [API Keys]"}</li>
               <li>{ko ? "[V2 API Secret 발급] 버튼 클릭" : "Click [Generate V2 API Secret]"}</li>
-              <li>{ko ? "이름: \"buildup-readonly\", 만료: 90일 권장" : "Name: \"buildup-readonly\", expiry: 90 days recommended"}</li>
+              <li>{ko ? "이름: \"foundone-readonly\", 만료: 90일 권장" : "Name: \"foundone-readonly\", expiry: 90 days recommended"}</li>
               <li style={{ color: "#b45309", fontWeight: 600 }}>
                 {ko ? "⚠ 발급 직후 한 번만 보입니다 — 미리 메모장에 복사하세요" : "⚠ Shown only once — copy to a notepad first"}
               </li>

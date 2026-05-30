@@ -60,8 +60,8 @@ public struct BUEnvironment: Sendable {
 
         // ⚠️ 2026-05-25 fix: Info.plist 누락 시 production 환경 기본값을 Vercel 배포 URL 로.
         //   이전: localhost:3000 — Mac 에서 next dev 안 돌고 있으면 모든 AI 호출 실패.
-        let webURLString = info["WEB_APP_URL"] as? String ?? "https://build-up-gamma.vercel.app"
-        let webURL = URL(string: webURLString) ?? URL(string: "https://build-up-gamma.vercel.app")!
+        let webURLString = info["WEB_APP_URL"] as? String ?? "https://foundone.dev"
+        let webURL = URL(string: webURLString) ?? URL(string: "https://foundone.dev")!
 
         return BUEnvironment(supabaseURL: url, supabaseAnonKey: anonKey, environment: env, webAppURL: webURL)
     }

@@ -73,7 +73,7 @@ export const useTimeLogStore = create<TimeLogState & TimeLogActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-time-log",
+      name: "foundone-time-log",
       partialize: (state) => ({
         entries: state.entries,
         lastPromptDismissedAt: state.lastPromptDismissedAt,

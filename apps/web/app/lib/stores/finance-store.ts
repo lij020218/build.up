@@ -198,7 +198,7 @@ export const useFinanceStore = create<FinanceState & FinanceActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-finance",
+      name: "foundone-finance",
       partialize: (state) => ({
         dailyEntries: state.dailyEntries,
         monthlyCosts: state.monthlyCosts,

@@ -105,7 +105,7 @@ export const useInterviewStore = create<InterviewState & InterviewActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-customer-interviews",
+      name: "foundone-customer-interviews",
       version: 1,
     }
   )

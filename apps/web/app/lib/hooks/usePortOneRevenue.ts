@@ -32,7 +32,7 @@ export type PortOneRevenueState = {
 };
 
 const REFETCH_INTERVAL = 30 * 60 * 1000;         // 30분
-const STATUS_CACHE_KEY = "buildup-portone-status-v1";
+const STATUS_CACHE_KEY = "foundone-portone-status-v1";
 
 export function usePortOneRevenue(fromDays = 30): PortOneRevenueState {
   const [loading, setLoading] = useState(true);

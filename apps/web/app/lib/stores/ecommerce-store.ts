@@ -98,6 +98,6 @@ export const useEcommerceStore = create<EcommerceState>()(
       },
       clearAll: () => set({ adSpends: [], returns: [] }),
     }),
-    { name: "buildup-ecommerce" },
+    { name: "foundone-ecommerce" },
   ),
 );

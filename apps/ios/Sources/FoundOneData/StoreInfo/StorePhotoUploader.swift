@@ -17,6 +17,7 @@
 //  UI side state 는 Hero 가 @State 로 관리 — actor 는 비즈니스 로직만.
 //
 
+#if canImport(UIKit)
 import Foundation
 import Supabase
 import UIKit
@@ -160,3 +161,5 @@ public actor StorePhotoUploader {
         return path.isEmpty ? nil : path
     }
 }
+
+#endif

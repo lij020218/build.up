@@ -50,7 +50,7 @@ The React Native app must reach feature parity with the web app while using nati
 
 ## Verification
 
-- `pnpm --filter @build-up/mobile typecheck`
+- `pnpm --filter @foundone/mobile typecheck`
 - Expo export/build
 - iPhone SE, modern iPhone, 360px Android, tablet checks
 - 44px minimum touch targets

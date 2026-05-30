@@ -82,7 +82,7 @@ type Input = {
 };
 
 // v16 — 2026-05-09 케이스 카탈로그 77 → 124 (성심당·런던베이글뮤지엄·Manus·Lovable·Cursor 등).
-const CACHE_KEY_PREFIX = "buildup-industry-insight-v16:";
+const CACHE_KEY_PREFIX = "foundone-industry-insight-v16:";
 
 // 같은 키로 동시에 여러 mount (Strict Mode / 다중 caller) 가 fetch 하지 않도록 in-flight 공유.
 const INSIGHT_INFLIGHT = new Map<string, Promise<IndustryInsight | null>>();

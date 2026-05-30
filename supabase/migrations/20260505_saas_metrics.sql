@@ -1,7 +1,7 @@
 -- SaaS metrics: GA4 + Custom Webhook 으로 자동 수집한 스타트업 사용자 지표.
 --
 -- 목적: 스타트업 업종 사장님이 자기 제품의 DAU/WAU/MAU/signup/churn 을
---       build.up 대시보드에서 자동으로 보게 함.
+--       Found.One 대시보드에서 자동으로 보게 함.
 --
 -- 패턴: portone_connections (envelope encryption) 미러.
 --   * encrypted_secret + DEK + KEK 회전 가능

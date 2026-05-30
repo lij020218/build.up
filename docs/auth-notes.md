@@ -1,4 +1,4 @@
-# build.up Auth Notes
+# Found.One Auth Notes
 
 ## Auth Flows
 

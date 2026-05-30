@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
   const { data, error } = await supabase
-    .from("buildup_subscriptions")
+    .from("foundone_subscriptions")
     .select("plan, status, current_period_start, current_period_end, cancel_at_period_end, billing_method_label")
     .eq("user_id", auth.userId)
     .maybeSingle();
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 
   if (isPastDue) {
     await supabase!
-      .from("buildup_subscriptions")
+      .from("foundone_subscriptions")
       .update({ status: "past_due" })
       .eq("user_id", auth.userId);
     return NextResponse.json({ ...data, status: "past_due" });

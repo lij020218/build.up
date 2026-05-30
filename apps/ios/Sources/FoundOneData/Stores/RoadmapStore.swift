@@ -14,7 +14,7 @@
 //
 //  Persistence:
 //   • UserDefaults (JSON Codable) — Supabase 동기화는 후속 단계 (선택)
-//   • Key: "buildup.roadmap.decisions.v1"
+//   • Key: "foundone.roadmap.decisions.v1"
 //
 //  좀비 (zombie) 방지:
 //   • completeStage 호출은 cluster path 에 속한 stageId 만 허용
@@ -25,7 +25,7 @@ import Foundation
 import Observation
 import OSLog
 
-private let logger = Logger(subsystem: "com.buildup.ios", category: "RoadmapStore")
+private let logger = Logger(subsystem: "com.foundone.ios", category: "RoadmapStore")
 
 // MARK: - StageDecision
 
@@ -105,8 +105,8 @@ public final class RoadmapStore {
 
     // MARK: - Persistence
 
-    private static let userDefaultsKey = "buildup.roadmap.decisions.v1"
-    private static let clusterKey = "buildup.roadmap.cluster.v1"
+    private static let userDefaultsKey = "foundone.roadmap.decisions.v1"
+    private static let clusterKey = "foundone.roadmap.cluster.v1"
     private let defaults: UserDefaults
     private let repo: (any RoadmapDecisionsRepositoryProtocol)?
 
@@ -234,7 +234,7 @@ public final class RoadmapStore {
             "insTax.", "lab.", "loan.", "loc.", "mfg.", "mpw.", "mvp.", "om.",
             "ops.", "or2.", "permit.", "pf.", "pi.", "pkg.", "plf.", "prelaunch.",
             "ps.", "regsub.", "roadmap.", "sf.", "src.", "stage.", "sto.",
-            "taxGuide.", "vc.", "buildup.roadmap.",
+            "taxGuide.", "vc.", "foundone.roadmap.",
         ]
         let defaults = UserDefaults.standard
         for key in defaults.dictionaryRepresentation().keys {

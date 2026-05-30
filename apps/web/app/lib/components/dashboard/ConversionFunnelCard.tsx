@@ -9,7 +9,7 @@
  *   • 헤더에 "전환율" 명시 (iOS ConversionFunnelFocusCard 패턴 동일).
  *
  * iOS SSOT:
- *   apps/ios/Sources/BuildUpFeatures/DailyHub/ConversionFunnelFocusCard.swift
+ *   apps/ios/Sources/FoundOneFeatures/DailyHub/ConversionFunnelFocusCard.swift
  *
  * 데이터:
  *   v_saas_funnel_unified (manual > ga4 > webhook). useFunnelMetrics 훅 사용.

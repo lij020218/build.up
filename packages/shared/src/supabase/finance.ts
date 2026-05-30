@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { BuildUpDatabase } from "./client";
+import type { FoundOneDatabase } from "./client";
 import type { FinancialBenchmark } from "../types/finance";
 import { buildFinancialSimulation } from "../finance/simulation";
 import type {
@@ -7,9 +7,9 @@ import type {
   FinancialSimulationResult
 } from "../types/finance";
 
-type Client = SupabaseClient<BuildUpDatabase>;
+type Client = SupabaseClient<FoundOneDatabase>;
 type BenchmarkRow =
-  BuildUpDatabase["public"]["Tables"]["financial_benchmarks"]["Row"];
+  FoundOneDatabase["public"]["Tables"]["financial_benchmarks"]["Row"];
 
 // ─── 행 → 타입 변환 ──────────────────────────────────────────────────────────
 

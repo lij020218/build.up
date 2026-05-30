@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_TTL_MS } from "./types";
 
 // persistence.ts 패턴을 따라 untyped client를 사용합니다.
-// typed client(BuildUpDatabase)의 upsert/update 타입 추론 이슈를 회피합니다.
+// typed client(FoundOneDatabase)의 upsert/update 타입 추론 이슈를 회피합니다.
 type Client = SupabaseClient;
 
 // ─── 캐시 레이어 ─────────────────────────────────────────────────────────────

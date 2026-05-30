@@ -1,4 +1,4 @@
--- build.up: user_store_data에 AI 생성 결과 컬럼 추가
+-- Found.One: user_store_data에 AI 생성 결과 컬럼 추가
 -- 2026-04-11: guideSelections, aiRoadmapResult, interiorConcept, businessPlan, interview 결과
 
 ALTER TABLE user_store_data

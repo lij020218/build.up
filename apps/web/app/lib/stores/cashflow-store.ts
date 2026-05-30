@@ -241,7 +241,7 @@ export const useCashflowStore = create<CashflowState & CashflowActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-cashflow",
+      name: "foundone-cashflow",
       partialize: (state) => ({
         currentBalance: state.currentBalance,
         currentBalanceUpdatedAt: state.currentBalanceUpdatedAt,

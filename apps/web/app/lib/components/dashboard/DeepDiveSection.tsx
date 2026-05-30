@@ -26,7 +26,7 @@ type DeepDiveSectionProps = {
   ko?: boolean;
 };
 
-const LS_KEY = "buildup-deepdive-open";
+const LS_KEY = "foundone-deepdive-open";
 
 function loadOpenState(): Record<string, boolean> {
   if (typeof window === "undefined") return {};

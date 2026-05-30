@@ -88,7 +88,7 @@ for (const it of integrations) {
 ### OAuth 설정
 
 - Google Cloud Console → OAuth 2.0 Client ID 등록
-- Redirect URI: `https://buildup.kr/auth/ga4/callback` (web) + `buildup://ga4/callback` (iOS deep link)
+- Redirect URI: `https://foundone.dev/auth/ga4/callback` (web) + `foundone://ga4/callback` (iOS deep link)
 - iOS: `ASWebAuthenticationSession` 으로 시스템 브라우저 OAuth (custom URL scheme callback)
 - Web: 표준 OAuth redirect flow
 
@@ -106,7 +106,7 @@ for (const it of integrations) {
 2. 토큰 발급: 64자 무작위 token 생성 → `saas_integrations.webhook_token` 저장
 3. URL + cURL 예제 노출:
    ```bash
-   curl -X POST https://api.buildup.kr/v1/track \
+   curl -X POST https://api.foundone.dev/v1/track \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"event_key":"signup","occurred_at":"2026-05-19T10:00:00Z","mode":"saas"}'

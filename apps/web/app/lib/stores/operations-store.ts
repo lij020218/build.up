@@ -393,7 +393,7 @@ export const useOperationsStore = create<OperationsState & OperationsActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-operations",
+      name: "foundone-operations",
       partialize: (state) => ({
         // 폼 UI 상태는 persist 하지 않음 — 데이터만 persist
         inventory: state.inventory,

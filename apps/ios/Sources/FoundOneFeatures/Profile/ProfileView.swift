@@ -42,7 +42,7 @@ public struct ProfileView: View {
     @AppStorage("profile.notif.weeklyCheckup")  private var notifWeeklyCheckup: Bool = true
 
     // 언어 — 웹과 동일하게 localStorage(@AppStorage) 만. Supabase 동기화 X (사용자별 디바이스 선호).
-    @AppStorage("buildup.language") private var language: String = "ko"
+    @AppStorage("foundone.language") private var language: String = "ko"
 
     @Environment(RoadmapStore.self) private var roadmap
     @Environment(ResetCoordinator.self) private var resetCoordinator

@@ -1,4 +1,4 @@
-# build.up Architecture Notes
+# Found.One Architecture Notes
 
 ## Current Direction
 

@@ -12,9 +12,9 @@ import type {
   StageGuideWarning,
   StageGuideAiTool
 } from "../types/stage-guide";
-import type { BuildUpDatabase } from "./client";
+import type { FoundOneDatabase } from "./client";
 
-type Client = SupabaseClient<BuildUpDatabase>;
+type Client = SupabaseClient<FoundOneDatabase>;
 
 type LoadKnowledgeRecommendationsParams = {
   domain: string;
@@ -29,7 +29,7 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function mapKnowledgeItemRow(
-  row: BuildUpDatabase["public"]["Tables"]["knowledge_items"]["Row"]
+  row: FoundOneDatabase["public"]["Tables"]["knowledge_items"]["Row"]
 ): KnowledgeItemRecord {
   return {
     id: row.id,
@@ -48,7 +48,7 @@ function mapKnowledgeItemRow(
 }
 
 function mapKnowledgeSourceRow(
-  row: BuildUpDatabase["public"]["Tables"]["knowledge_item_sources"]["Row"]
+  row: FoundOneDatabase["public"]["Tables"]["knowledge_item_sources"]["Row"]
 ): KnowledgeItemSourceRecord {
   return {
     id: row.id,
@@ -275,7 +275,7 @@ export async function loadLoanKnowledge(client: Client, categoryId?: string) {
 }
 
 function mapStageGuideRow(
-  row: BuildUpDatabase["public"]["Tables"]["stage_guide_content"]["Row"]
+  row: FoundOneDatabase["public"]["Tables"]["stage_guide_content"]["Row"]
 ): StageGuideContent {
   return {
     id: row.id,
@@ -361,7 +361,7 @@ export async function loadInteriorGuides(
   categoryId: string,
   subIndustryId?: string
 ): Promise<InteriorGuideResult> {
-  type InteriorRow = BuildUpDatabase["public"]["Tables"]["interior_design_guides"]["Row"];
+  type InteriorRow = FoundOneDatabase["public"]["Tables"]["interior_design_guides"]["Row"];
 
   const mapRow = (row: InteriorRow): InteriorGuideItem => ({
     id: row.id,

@@ -133,6 +133,6 @@ export const useBookingStore = create<BookingState>()(
       },
       clearAll: () => set({ bookings: [], providers: [] }),
     }),
-    { name: "buildup-bookings" },
+    { name: "foundone-bookings" },
   ),
 );

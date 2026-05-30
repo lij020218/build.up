@@ -95,7 +95,7 @@ public actor PortOneRepository {
 
     public init(
         supabase: SupabaseClient,
-        baseURL: URL = URL(string: "https://build-up-gamma.vercel.app")!,
+        baseURL: URL = URL(string: "https://foundone.dev")!,
         urlSession: URLSession = .shared
     ) {
         self.supabase = supabase

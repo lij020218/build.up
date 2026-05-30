@@ -259,7 +259,7 @@ export const useAgentsStore = create<AgentsState & AgentsActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-agents",
+      name: "foundone-agents",
       partialize: (state) => ({
         proposals: state.proposals,
         enabledAgents: state.enabledAgents,

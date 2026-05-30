@@ -8,7 +8,7 @@ import { getKstDate } from "../utils/business-day";
  * localStorage 영구 저장. 30일 지난 기록은 자동 정리.
  */
 
-const STORAGE_KEY = "buildup-anomaly-history-v1";
+const STORAGE_KEY = "foundone-anomaly-history-v1";
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30일
 
 export type AnomalyHistoryEntry = {

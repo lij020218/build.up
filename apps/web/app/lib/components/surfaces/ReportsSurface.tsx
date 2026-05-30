@@ -30,7 +30,7 @@ const PERIOD_LABELS: Record<ReportPeriod, { ko: string; en: string }> = {
   quarter: { ko: "분기", en: "Quarterly" },
 };
 
-const ARRIVED_KEY = "buildup-daily-report-arrived-day";
+const ARRIVED_KEY = "foundone-daily-report-arrived-day";
 
 export function ReportsSurface() {
   const d = useDashboardCtx();

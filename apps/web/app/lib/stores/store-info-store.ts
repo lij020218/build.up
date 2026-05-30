@@ -310,7 +310,7 @@ export const useStoreInfoStore = create<State & Actions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-store-info",
+      name: "foundone-store-info",
       partialize: (s) => ({
         mission: s.mission,
         shortDescription: s.shortDescription,

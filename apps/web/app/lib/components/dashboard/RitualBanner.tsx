@@ -19,8 +19,8 @@ type Props = {
  * Dismiss: 주 단위/월 단위 localStorage 저장. 해당 기간엔 다시 안 나옴.
  */
 
-const LS_WEEKLY_DISMISS = "buildup-ritual-weekly-dismissed";
-const LS_MONTHLY_DISMISS = "buildup-ritual-monthly-dismissed";
+const LS_WEEKLY_DISMISS = "foundone-ritual-weekly-dismissed";
+const LS_MONTHLY_DISMISS = "foundone-ritual-monthly-dismissed";
 
 type RitualKind = "weekly" | "monthly" | null;
 

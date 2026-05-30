@@ -166,7 +166,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       resetAll: () => set(initialState),
     }),
     {
-      name: "buildup-profile",
+      name: "foundone-profile",
       partialize: (state) => ({
         selectedIndustryId: state.selectedIndustryId,
         selectedIndustryCategoryId: state.selectedIndustryCategoryId,

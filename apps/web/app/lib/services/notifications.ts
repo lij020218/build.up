@@ -13,7 +13,7 @@
 
 export type NotificationKind = "cashflow-crisis" | "morning-briefing";
 
-const LS_KEY = "buildup-notification-history";
+const LS_KEY = "foundone-notification-history";
 
 type NotificationHistory = Record<string, number>; // kind:dateKey → epoch ms
 

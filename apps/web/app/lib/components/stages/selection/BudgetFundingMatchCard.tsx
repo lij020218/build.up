@@ -4,7 +4,7 @@
  * BudgetFundingMatchCard — 예산 단계에서 사용자 선택 (업종·자본금·창업 형태) 기준으로
  *  79개 정부/민간 지원 프로그램 풀에서 매칭된 상위 4개를 표시.
  *
- *  iOS SSOT: apps/ios/Sources/BuildUpFeatures/Roadmap/Stages/BudgetSetupStageView.swift
+ *  iOS SSOT: apps/ios/Sources/FoundOneFeatures/Roadmap/Stages/BudgetSetupStageView.swift
  *  데이터 SSOT: packages/shared/src/startup-programs.ts (getMatchedProgramsV2)
  *
  *  목적:

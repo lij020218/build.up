@@ -1,6 +1,6 @@
 // swift-tools-version: 6.0
 //
-// build.up iOS — Swift Package
+// Found.One iOS — Swift Package
 //
 // 한국 SMB 사장님 운영 대시보드의 모바일 앱.
 // 현재 FoundOneDesignSystem 모듈만 존재 (1단계). 후속: FoundOneCore / Components / Features.
@@ -13,8 +13,8 @@ let package = Package(
     name: "FoundOne",
     defaultLocalization: "ko",
     platforms: [
-        .iOS(.v18),       // 기본 (모든 사장님 사용 가능)
-        .macOS(.v15),     // SwiftUI preview / Xcode Mac 대상
+        // iOS 전용. swift build CLI 는 macOS host 호환성 이슈로 비활성 — Xcode + iOS 시뮬레이터로 빌드.
+        .iOS(.v18),
     ],
     products: [
         // 1단계: 디자인 시스템

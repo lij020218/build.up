@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type BuildUpAuthClient = SupabaseClient;
+export type FoundOneAuthClient = SupabaseClient;
 
 export type SignUpWithEmailParams = {
   firstName: string;
@@ -45,7 +45,7 @@ export type SignUpResult =
   | { needsConfirmation: true; email: string };
 
 export async function signUpWithEmail(
-  client: BuildUpAuthClient,
+  client: FoundOneAuthClient,
   params: SignUpWithEmailParams
 ): Promise<SignUpResult> {
   const displayName = `${params.lastName}${params.firstName}`.trim();
@@ -74,7 +74,7 @@ export async function signUpWithEmail(
 }
 
 export async function resendConfirmationEmail(
-  client: BuildUpAuthClient,
+  client: FoundOneAuthClient,
   email: string
 ) {
   const { error } = await client.auth.resend({
@@ -88,7 +88,7 @@ export async function resendConfirmationEmail(
 }
 
 export async function signInWithEmail(
-  client: BuildUpAuthClient,
+  client: FoundOneAuthClient,
   params: SignInWithEmailParams
 ) {
   const { data, error } = await client.auth.signInWithPassword({
@@ -103,7 +103,7 @@ export async function signInWithEmail(
   return data;
 }
 
-export async function signOutUser(client: BuildUpAuthClient) {
+export async function signOutUser(client: FoundOneAuthClient) {
   const { error } = await client.auth.signOut();
 
   if (error) {
@@ -112,7 +112,7 @@ export async function signOutUser(client: BuildUpAuthClient) {
 }
 
 export async function updateCurrentUserPassword(
-  client: BuildUpAuthClient,
+  client: FoundOneAuthClient,
   nextPassword: string
 ) {
   const { data, error } = await client.auth.updateUser({

@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-export type BuildUpDatabase = {
+export type FoundOneDatabase = {
   public: {
     Tables: {
       business_profiles: {
@@ -23,8 +23,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["business_profiles"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["business_profiles"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["business_profiles"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["business_profiles"]["Row"]>;
       };
       roadmaps: {
         Row: {
@@ -37,8 +37,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["roadmaps"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["roadmaps"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["roadmaps"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["roadmaps"]["Row"]>;
       };
       stage_decisions: {
         Row: {
@@ -53,8 +53,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["stage_decisions"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["stage_decisions"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["stage_decisions"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["stage_decisions"]["Row"]>;
       };
       stage_tasks: {
         Row: {
@@ -69,8 +69,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["stage_tasks"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["stage_tasks"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["stage_tasks"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["stage_tasks"]["Row"]>;
       };
       knowledge_items: {
         Row: {
@@ -89,8 +89,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["knowledge_items"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["knowledge_items"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["knowledge_items"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["knowledge_items"]["Row"]>;
       };
       knowledge_item_sources: {
         Row: {
@@ -103,8 +103,8 @@ export type BuildUpDatabase = {
           confidence: "high" | "medium" | "low";
           created_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["knowledge_item_sources"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["knowledge_item_sources"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["knowledge_item_sources"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["knowledge_item_sources"]["Row"]>;
       };
       knowledge_refresh_reviews: {
         Row: {
@@ -117,8 +117,8 @@ export type BuildUpDatabase = {
           reviewer_user_id: string | null;
           snapshot: Record<string, unknown>;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["knowledge_refresh_reviews"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["knowledge_refresh_reviews"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["knowledge_refresh_reviews"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["knowledge_refresh_reviews"]["Row"]>;
       };
       market_location_signals: {
         Row: {
@@ -145,8 +145,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["market_location_signals"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["market_location_signals"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["market_location_signals"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["market_location_signals"]["Row"]>;
       };
       financial_benchmarks: {
         Row: {
@@ -174,8 +174,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["financial_benchmarks"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["financial_benchmarks"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["financial_benchmarks"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["financial_benchmarks"]["Row"]>;
       };
       support_programs: {
         Row: {
@@ -215,8 +215,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["support_programs"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["support_programs"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["support_programs"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["support_programs"]["Row"]>;
       };
       vendor_recommendations: {
         Row: {
@@ -233,8 +233,8 @@ export type BuildUpDatabase = {
           is_active: boolean;
           created_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["vendor_recommendations"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["vendor_recommendations"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["vendor_recommendations"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["vendor_recommendations"]["Row"]>;
       };
       stage_guide_content: {
         Row: {
@@ -255,8 +255,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["stage_guide_content"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["stage_guide_content"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["stage_guide_content"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["stage_guide_content"]["Row"]>;
       };
       interior_design_guides: {
         Row: {
@@ -279,8 +279,8 @@ export type BuildUpDatabase = {
           is_active: boolean;
           created_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["interior_design_guides"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["interior_design_guides"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["interior_design_guides"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["interior_design_guides"]["Row"]>;
       };
       customers: {
         Row: {
@@ -301,8 +301,8 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["customers"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["customers"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["customers"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["customers"]["Row"]>;
       };
       customer_visits: {
         Row: {
@@ -318,8 +318,8 @@ export type BuildUpDatabase = {
           meta: Record<string, unknown>;
           created_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["customer_visits"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["customer_visits"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["customer_visits"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["customer_visits"]["Row"]>;
       };
       user_store_data: {
         Row: {
@@ -358,18 +358,18 @@ export type BuildUpDatabase = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Partial<BuildUpDatabase["public"]["Tables"]["user_store_data"]["Row"]>;
-        Update: Partial<BuildUpDatabase["public"]["Tables"]["user_store_data"]["Row"]>;
+        Insert: Partial<FoundOneDatabase["public"]["Tables"]["user_store_data"]["Row"]>;
+        Update: Partial<FoundOneDatabase["public"]["Tables"]["user_store_data"]["Row"]>;
       };
     };
   };
 };
 
-export function createBuildUpSupabaseClient(
+export function createFoundOneSupabaseClient(
   url: string,
   anonKey: string
-): SupabaseClient<BuildUpDatabase> {
-  return createClient<BuildUpDatabase>(url, anonKey, {
+): SupabaseClient<FoundOneDatabase> {
+  return createClient<FoundOneDatabase>(url, anonKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true

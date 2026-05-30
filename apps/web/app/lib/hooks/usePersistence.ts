@@ -86,7 +86,7 @@ const LOCAL_STORAGE_KEYS = [
   "products", "taxSettings", "members", "inventoryItems",
   "onlinePlatformSales", "onlineSelectedPlatforms", "onlineSelectedCourier",
   "onlineMonthlyParcels", "unifiedProducts", "serviceMenuItems", "costHistory",
-  "__buildup_decisions", "__buildup_roadmap", "__buildup_taskmap",
+  "__foundone_decisions", "__foundone_roadmap", "__foundone_taskmap",
 ];
 
 // ─── Pure helpers (no hooks, use getState()) ───
@@ -95,18 +95,18 @@ const LOCAL_STORAGE_KEYS = [
 export function clearLocalUserData(): void {
   try {
     LOCAL_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
-    // Zustand persist 키 — 모든 buildup-* store. 한 곳에 빠지면 hydration 시 stale 상태가 살아남는다.
+    // Zustand persist 키 — 모든 foundone-* store. 한 곳에 빠지면 hydration 시 stale 상태가 살아남는다.
     [
-      "buildup-operations",
-      "buildup-finance",
-      "buildup-profile",
-      "buildup-roadmap",
-      "buildup-cashflow",
-      "buildup-marketing",
-      "buildup-agents",
-      "buildup-customer-interviews",
-      "buildup-time-log",
-      "buildup-usage-stats-v1",
+      "foundone-operations",
+      "foundone-finance",
+      "foundone-profile",
+      "foundone-roadmap",
+      "foundone-cashflow",
+      "foundone-marketing",
+      "foundone-agents",
+      "foundone-customer-interviews",
+      "foundone-time-log",
+      "foundone-usage-stats-v1",
     ].forEach((k) => localStorage.removeItem(k));
   } catch {
     /* ignore */
@@ -550,12 +550,12 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       setUserName(rawName.length > 0 ? rawName : null);
 
       // CRITICAL: Detect user switch — clear previous user's localStorage data
-      const previousUserId = localStorage.getItem("__buildup_uid");
+      const previousUserId = localStorage.getItem("__foundone_uid");
       if (previousUserId && previousUserId !== result.user.id) {
         clearLocalUserData();
         resetLocalState();
       }
-      localStorage.setItem("__buildup_uid", result.user.id);
+      localStorage.setItem("__foundone_uid", result.user.id);
 
       setAuthLabel(`${userLabel} · ${result.user.id.slice(0, 8)}`);
       setRequiresAuth(false);
@@ -829,7 +829,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       // Show onboarding choice when no industry has been selected yet
       const hasIndustry = loadedIndustryId || loadedProfile?.subIndustryId;
       const isLaunched = useProfileStore.getState().businessLaunched || businessLaunched;
-      const dismissed = localStorage.getItem("buildup_onboarding_dismissed") === "true";
+      const dismissed = localStorage.getItem("foundone_onboarding_dismissed") === "true";
       if (!hasIndustry && !isLaunched && !dismissed) {
         setShowOnboardingChoice(true);
       }
@@ -1154,8 +1154,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       try {
         const data = storeDataSnapshotRef.current;
         if (data && Object.keys(data).length > 0) {
-          localStorage.setItem("__buildup_last_snapshot", JSON.stringify(data));
-          localStorage.setItem("__buildup_last_snapshot_at", new Date().toISOString());
+          localStorage.setItem("__foundone_last_snapshot", JSON.stringify(data));
+          localStorage.setItem("__foundone_last_snapshot_at", new Date().toISOString());
         }
       } catch {
         /* ignore — unload 중 에러 무시 */

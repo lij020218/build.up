@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CustomerMode } from "../business-context";
-import type { BuildUpDatabase } from "./client";
+import type { FoundOneDatabase } from "./client";
 
-type Client = SupabaseClient<BuildUpDatabase>;
+type Client = SupabaseClient<FoundOneDatabase>;
 
 // ── 타입 ──────────────────────────────────────────────────────────────────
 
@@ -58,8 +58,8 @@ export type CreateVisitInput = {
 
 // ── 매핑 ──────────────────────────────────────────────────────────────────
 
-type CustomerRow = BuildUpDatabase["public"]["Tables"]["customers"]["Row"];
-type VisitRow = BuildUpDatabase["public"]["Tables"]["customer_visits"]["Row"];
+type CustomerRow = FoundOneDatabase["public"]["Tables"]["customers"]["Row"];
+type VisitRow = FoundOneDatabase["public"]["Tables"]["customer_visits"]["Row"];
 
 function mapCustomer(row: CustomerRow): Customer {
   return {

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
 
   const { data: sub, error: fetchErr } = await supabase
-    .from("buildup_subscriptions")
+    .from("foundone_subscriptions")
     .select("plan, status, current_period_end")
     .eq("user_id", auth.userId)
     .maybeSingle();
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   // 즉시 취소가 아니라 기간 종료 후 만료 (cancel_at_period_end)
   const { error: updateErr } = await supabase
-    .from("buildup_subscriptions")
+    .from("foundone_subscriptions")
     .update({ cancel_at_period_end: true })
     .eq("user_id", auth.userId);
 

@@ -1,5 +1,5 @@
--- build.up 서비스 구독 테이블
--- 사장님이 build.up 프리미엄 플랜을 구독하는 상태를 관리
+-- Found.One 서비스 구독 테이블
+-- 사장님이 Found.One 프리미엄 플랜을 구독하는 상태를 관리
 
 CREATE TABLE buildup_subscriptions (
   id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -37,7 +37,7 @@ CREATE POLICY "서비스롤 전체 접근"
   USING (true) WITH CHECK (true);
 
 
--- build.up 결제 이력
+-- Found.One 결제 이력
 CREATE TABLE buildup_payments (
   id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             uuid        REFERENCES auth.users ON DELETE CASCADE NOT NULL,

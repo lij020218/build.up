@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
   // 구독 활성화 (upsert)
   const { error: subError } = await supabase
-    .from("buildup_subscriptions")
+    .from("foundone_subscriptions")
     .upsert({
       user_id: auth.userId,
       plan: "premium",
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   }
 
   // 결제 이력 기록
-  await supabase.from("buildup_payments").insert({
+  await supabase.from("foundone_payments").insert({
     user_id: auth.userId,
     portone_payment_id: paymentId,
     amount: payment.amount.total,

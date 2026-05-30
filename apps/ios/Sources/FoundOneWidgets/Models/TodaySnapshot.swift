@@ -1,7 +1,7 @@
 //
 //  TodaySnapshot.swift — 위젯 + Live Activity 가 공유하는 데이터 모델
 //
-//  App Group (group.com.buildup.shared) 을 통해 메인 앱이 쓰고 위젯이 읽음.
+//  App Group (group.com.foundone.shared) 을 통해 메인 앱이 쓰고 위젯이 읽음.
 //  UserDefaults(suiteName:) 또는 FileManager.containerURL 활용.
 //
 
@@ -68,7 +68,7 @@ public struct TodaySnapshot: Codable, Sendable, Hashable {
 
 public actor SnapshotStore {
 
-    public static let appGroupID = "group.com.buildup.shared"
+    public static let appGroupID = "group.com.foundone.shared"
     public static let key = "today-snapshot"
 
     private let suite: UserDefaults?

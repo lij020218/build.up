@@ -1,4 +1,4 @@
-# build.up — 전체 서비스 명세서 (A to Z)
+# Found.One — 전체 서비스 명세서 (A to Z)
 
 **작성일**: 2026-04-17
 **버전**: 0.1.0 (MVP 완성도 ~95/100)
@@ -213,7 +213,7 @@ ai/src/
 | **Kakao Maps 로컬** | `/api/contractors/local` (지역 시공업체) | `KAKAO_REST_API_KEY` |
 | **Kakao Maps JS** | 상권 분석 UI | `NEXT_PUBLIC_KAKAO_JS_KEY` |
 
-### 4-3. `@build-up/shared/adapters/` — 18개 어댑터
+### 4-3. `@foundone/shared/adapters/` — 18개 어댑터
 
 국한국 공공 데이터를 소화하는 레이어:
 - `nts-business`, `kftc-disclosure`, `kftc-franchise`
@@ -358,7 +358,7 @@ type: "selection" | "comparison" | "execution" | "verification"
 ### 7-4. i18n (ko/en)
 
 - `LanguageProvider` Context + `localStorage`
-- `@build-up/shared/i18n.ts` (94KB) — `getUiCopy(language)`
+- `@foundone/shared/i18n.ts` (94KB) — `getUiCopy(language)`
 - 모든 신규 UI는 ko/en 양어 필수
 - 단순 번역 X → **문화 적응 (UX 카피 현지화)**
   - "Let's start your roadmap" → "당신의 앞날을 위한 첫단계"
@@ -427,7 +427,7 @@ type: "selection" | "comparison" | "execution" | "verification"
 
 ### 10-1. 한국 경쟁 제품
 
-| 제품 | 특징 | build.up 대비 |
+| 제품 | 특징 | Found.One 대비 |
 |---|---|---|
 | 삼다도 POS | 매출 집계 | AI 없음, 예측 없음 |
 | 아임포스 | POS+통계 | 업종 분기 없음, 로드맵 없음 |
@@ -443,7 +443,7 @@ type: "selection" | "comparison" | "execution" | "verification"
 | Toast (US) | 한국 미진출 |
 | QuickBooks | 실시간 cashflow 없음, 한글 약함 |
 
-### 10-3. build.up 고유 해자 (2년+ 대체 불가)
+### 10-3. Found.One 고유 해자 (2년+ 대체 불가)
 
 1. **11개 한국 채널 수수료/정산 DB** (배민·쿠팡이츠·네이버페이·카카오페이·11번가·토스)
 2. **흑자부도 14일 예측 + 원버튼 액션** — 국내 SaaS 최초
@@ -502,6 +502,6 @@ type: "selection" | "comparison" | "execution" | "verification"
 
 > **"조언하는 도구"에서 "실행하는 동료"로** — 2026-04-17 완성.
 >
-> build.up은 이제 단순한 로드맵이 아니라, **매일 아침 통장을 확인하고, 위기를 감지하고, 한 탭으로 쿠폰을 발송하고, 공급처에 카톡 메시지를 보내고, 인스타 포스트 초안을 만드는** 한국 자영업자의 디지털 동료다.
+> Found.One은 이제 단순한 로드맵이 아니라, **매일 아침 통장을 확인하고, 위기를 감지하고, 한 탭으로 쿠폰을 발송하고, 공급처에 카톡 메시지를 보내고, 인스타 포스트 초안을 만드는** 한국 자영업자의 디지털 동료다.
 >
 > 이 조합을 2년 안에 복제할 수 있는 경쟁자는 없다.

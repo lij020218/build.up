@@ -83,7 +83,7 @@ export type {
  * ────────────────────────────────────────────────────────────────────────────────
  * AI actions 캐시 규칙 (KST 자정 무효)
  * ────────────────────────────────────────────────────────────────────────────────
- *  key: "buildup-ai-actions-v1:{userId}:{YYYY-MM-DD}"
+ *  key: "foundone-ai-actions-v1:{userId}:{YYYY-MM-DD}"
  *  - force=true → 캐시 우회, LLM 재호출
  *  - 매출 미기록 ≥ 3일 → skip (stale-data)
  *  - 미런칭 → skip (not-launched)
@@ -348,7 +348,7 @@ export function useDashboard(surface: DashboardSurface = "home") {
   //  키: 사용자 ID + KST 날짜. 자정(KST) 지나면 자동 무효 (옛 키는 cleanup).
   //
   //  ※ industryInsight 는 useIndustryInsight.ts 가 이미 동일 패턴으로 캐싱.
-  const AI_ACTIONS_CACHE_PREFIX = "buildup-ai-actions-v1:";
+  const AI_ACTIONS_CACHE_PREFIX = "foundone-ai-actions-v1:";
   const todayKst = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
   const buildAiActionsCacheKey = (userId: string) => `${AI_ACTIONS_CACHE_PREFIX}${userId}:${todayKst()}`;
   const loadCachedAiActions = (userId: string): unknown | null => {

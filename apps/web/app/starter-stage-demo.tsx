@@ -195,7 +195,7 @@ export default function StarterStageDemo({
 }) {
   const [mounted, setMounted] = useState(false);
   const [welcomed, setWelcomed] = useState(() => {
-    try { return localStorage.getItem("__buildup_welcomed") === "true"; } catch { return false; }
+    try { return localStorage.getItem("__foundone_welcomed") === "true"; } catch { return false; }
   });
   useEffect(() => { setMounted(true); }, []);
 
@@ -230,7 +230,7 @@ export default function StarterStageDemo({
   const [bpExpandedIdx, setBpExpandedIdx] = useState<number | null>(null);
   const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("buildup_onboarding_dismissed") === "true";
+      return localStorage.getItem("foundone_onboarding_dismissed") === "true";
     }
     return false;
   });
@@ -594,13 +594,13 @@ export default function StarterStageDemo({
   // localStorage 영속.
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    try { return localStorage.getItem("buildup-sidebar-collapsed") === "true"; }
+    try { return localStorage.getItem("foundone-sidebar-collapsed") === "true"; }
     catch { return false; }
   });
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((v) => {
       const next = !v;
-      try { localStorage.setItem("buildup-sidebar-collapsed", String(next)); } catch { /* ignore */ }
+      try { localStorage.setItem("foundone-sidebar-collapsed", String(next)); } catch { /* ignore */ }
       return next;
     });
   }, []);
@@ -720,7 +720,7 @@ export default function StarterStageDemo({
   if (shouldShowOnboardingChoice) {
     return <OnboardingChoiceScreen
       ko={language === "ko"}
-      onChooseManual={() => { setOnboardingDismissed(true); localStorage.setItem("buildup_onboarding_dismissed", "true"); setShowOnboardingChoice(false); navigateToSurface("current"); }}
+      onChooseManual={() => { setOnboardingDismissed(true); localStorage.setItem("foundone_onboarding_dismissed", "true"); setShowOnboardingChoice(false); navigateToSurface("current"); }}
       onChooseAI={() => { setShowOnboardingChoice(false); setShowAIRoadmapWizard(true); }}
       onChooseExisting={() => { setShowOnboardingChoice(false); setShowExistingOnboarding(true); }}
     />;

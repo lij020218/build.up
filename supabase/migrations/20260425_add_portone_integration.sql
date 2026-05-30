@@ -1,5 +1,5 @@
 -- 포트원(PortOne) 매출 자동 동기화 통합
--- 사장님이 자기 PG (포트원 V2) Secret 을 build.up 에 read-only 로 연결 → 매출 자동 가져오기.
+-- 사장님이 자기 PG (포트원 V2) Secret 을 Found.One 에 read-only 로 연결 → 매출 자동 가져오기.
 --
 -- 보안 원칙:
 --   1. PG Secret 은 봉투 암호화(AES-256-GCM + per-user DEK + KEK from env) 로만 저장.

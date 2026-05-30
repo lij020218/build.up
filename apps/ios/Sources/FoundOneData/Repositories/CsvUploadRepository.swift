@@ -89,7 +89,7 @@ public actor CsvUploadRepository {
     public init(
         supabase: SupabaseClient,
         // ⚠️ 2026-05-25: foundone.dev DNS A 미설정 — Vercel URL 사용 (MarketingRepository 와 동일).
-        baseURL: URL = URL(string: "https://build-up-gamma.vercel.app")!,
+        baseURL: URL = URL(string: "https://foundone.dev")!,
         urlSession: URLSession = .shared
     ) {
         self.supabase = supabase

@@ -49,7 +49,7 @@ export type CoachingEntry = {
   };
 };
 
-const STORAGE_KEY = "buildup_coaching_history_v1";
+const STORAGE_KEY = "foundone_coaching_history_v1";
 const WINDOW_DAYS = 30;
 
 function todayKey(): string {

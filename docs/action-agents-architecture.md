@@ -12,7 +12,7 @@
 - 인증: `requireApiUser(request)` (Supabase 세션)
 - Rate limit: `checkSimpleRateLimit` (서버 메모리 버킷, 5/min 기본)
 - **현재 prompt caching 미사용** → Agent API에서 **최초 도입** 필요 (비용 절감)
-- 일부는 `@build-up/ai` 패키지 경유 (dashboard/actions, interview)
+- 일부는 `@foundone/ai` 패키지 경유 (dashboard/actions, interview)
 - 단순한 건 직접 Anthropic SDK (marketing/trends)
 
 ### 1-2. 기존 스토어 간 데이터 흐름

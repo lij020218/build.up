@@ -100,7 +100,7 @@ export async function POST(request: Request) {
       headers: {
         Authorization: `Bearer ${secretToken}`,
         Accept: "application/json",
-        "User-Agent": "buildup-funnel-pull/1.0",
+        "User-Agent": "foundone-funnel-pull/1.0",
       },
       signal: controller.signal,
       // Vercel/Next 의 fetch 캐시 회피

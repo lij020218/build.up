@@ -1,4 +1,4 @@
-import { createBuildUpSupabaseClient } from "@foundone/shared";
+import { createFoundOneSupabaseClient } from "@foundone/shared";
 
 // 클라이언트 컴포넌트 전용 Supabase 인스턴스.
 // API 라우트에서는 요청별 인증이 필요한 경우 _lib/auth.ts의 별도 클라이언트를 사용할 것.
@@ -9,4 +9,4 @@ if (!url || !anonKey) {
   throw new Error("Missing Next.js Supabase environment variables.");
 }
 
-export const supabase = createBuildUpSupabaseClient(url, anonKey);
+export const supabase = createFoundOneSupabaseClient(url, anonKey);

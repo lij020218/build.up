@@ -538,10 +538,10 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     //     모두 제거. 다음 마운트에서 store 들은 initialState 로 시작.
     setResetProgress(90);
     try {
-      localStorage.removeItem("buildup_onboarding_dismissed");
-      localStorage.removeItem("__buildup_uid");
-      localStorage.removeItem("__buildup_last_snapshot");
-      localStorage.removeItem("__buildup_last_snapshot_at");
+      localStorage.removeItem("foundone_onboarding_dismissed");
+      localStorage.removeItem("__foundone_uid");
+      localStorage.removeItem("__foundone_last_snapshot");
+      localStorage.removeItem("__foundone_last_snapshot_at");
     } catch { /* ignore */ }
     hardWipeBuildupStorage();
 
