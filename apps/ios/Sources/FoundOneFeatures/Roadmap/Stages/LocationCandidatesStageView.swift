@@ -10,10 +10,19 @@
 //
 
 import SwiftUI
+import MapKit
 import FoundOneDesignSystem
 import FoundOneComponents
 import FoundOneCore
 import FoundOneData
+
+/// AI 추천 상권을 Apple 지도에 표시할 핀.
+private struct MarketMapPin: Identifiable {
+    let id: String
+    let coord: CLLocationCoordinate2D
+    let title: String
+    let score: Int
+}
 
 public struct LocationCandidatesStageView: View {
 
@@ -53,23 +62,49 @@ public struct LocationCandidatesStageView: View {
     @State private var aiItems: [MarketScoredItem] = []
     @State private var aiLoading = false
     @State private var aiError: String?
+    @State private var aiCenter: CLLocationCoordinate2D?
+    @State private var aiPins: [MarketMapPin] = []
 
     private func requestAiRecommend() {
         let region = aiRegion.trimmingCharacters(in: .whitespaces)
         guard !region.isEmpty, !aiLoading else { return }
-        aiLoading = true; aiError = nil
+        aiLoading = true; aiError = nil; aiPins = []; aiCenter = nil
         let categoryId = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
         let sub = industryId.isEmpty ? nil : industryId
         Task {
             do {
-                let items = try await MarketRecommendService.shared().recommend(
+                let result = try await MarketRecommendService.shared().recommend(
                     MarketRecommendInput(region: region, categoryId: categoryId, subIndustryId: sub)
                 )
-                await MainActor.run { aiItems = items; aiLoading = false }
+                await MainActor.run {
+                    aiItems = result.items
+                    aiLoading = false
+                    if let lat = result.centerLat, let lng = result.centerLng {
+                        aiCenter = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+                    }
+                }
+                await geocodePins(items: result.items, center: aiCenter)
             } catch {
                 await MainActor.run { aiError = error.localizedDescription; aiLoading = false }
             }
         }
+    }
+
+    /// 추천 상권 이름을 Apple 지도 좌표로 변환(MKLocalSearch) — 실패 항목은 핀 생략(best-effort).
+    @MainActor
+    private func geocodePins(items: [MarketScoredItem], center: CLLocationCoordinate2D?) async {
+        guard let center else { return }
+        var pins: [MarketMapPin] = []
+        for item in items.prefix(5) {
+            let req = MKLocalSearch.Request()
+            req.naturalLanguageQuery = item.title
+            req.region = MKCoordinateRegion(center: center, latitudinalMeters: 8000, longitudinalMeters: 8000)
+            if let resp = try? await MKLocalSearch(request: req).start(),
+               let coord = resp.mapItems.first?.placemark.coordinate {
+                pins.append(MarketMapPin(id: item.id, coord: coord, title: item.title, score: item.score))
+            }
+        }
+        aiPins = pins
     }
 
     private var canCompleteStage: Bool {
@@ -180,6 +215,23 @@ public struct LocationCandidatesStageView: View {
                 if let aiError {
                     Text("⚠ \(aiError)")
                         .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                }
+                if let center = aiCenter {
+                    Map(initialPosition: .region(MKCoordinateRegion(
+                        center: center, latitudinalMeters: 5000, longitudinalMeters: 5000
+                    ))) {
+                        ForEach(aiPins) { pin in
+                            Marker("\(pin.score)점 · \(pin.title)", coordinate: pin.coord)
+                                .tint(scoreColor(pin.score))
+                        }
+                    }
+                    .mapStyle(.standard)
+                    .frame(height: 220)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(BUColor.midnight.opacity(0.08), lineWidth: 1)
+                    )
                 }
                 ForEach(aiItems) { item in
                     recommendItemRow(item)

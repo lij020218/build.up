@@ -56,10 +56,12 @@ public actor MarketRecommendService {
     private struct Response: Decodable {
         let ok: Bool
         let items: [MarketScoredItem]?
+        let centerLat: Double?
+        let centerLng: Double?
         let error: String?
     }
 
-    public func recommend(_ input: MarketRecommendInput) async throws -> [MarketScoredItem] {
+    public func recommend(_ input: MarketRecommendInput) async throws -> MarketRecommendResult {
         let endpoint = webAppURL.appendingPathComponent("/api/data/market-recommend")
         var request = URLRequest(url: endpoint, timeoutInterval: 60)
         request.httpMethod = "POST"
@@ -75,8 +77,14 @@ public actor MarketRecommendService {
         }
         let decoded = try? JSONDecoder().decode(Response.self, from: data)
         if http.statusCode == 200, let decoded, decoded.ok, let items = decoded.items {
-            return items
+            return MarketRecommendResult(items: items, centerLat: decoded.centerLat, centerLng: decoded.centerLng)
         }
         throw AIRoadmapError.apiError(decoded?.error ?? "상권 추천 오류 (\(http.statusCode))")
     }
+}
+
+public struct MarketRecommendResult: Sendable {
+    public let items: [MarketScoredItem]
+    public let centerLat: Double?
+    public let centerLng: Double?
 }
