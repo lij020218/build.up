@@ -341,6 +341,8 @@ public struct VendorSetupStageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    // 발주 계획 → 재고 자동 반영용 (웹 InitialOrderPlanCard.syncMaterialsToInventory 미러).
+    @EnvironmentObject private var storeInfoStore: StoreInfoStore
     private let stageId = "vendor-setup"
 
     @AppStorage("stage.vendor.suppliersJson")  private var suppliersJson  = "[]"
@@ -660,7 +662,7 @@ public struct VendorSetupStageView: View {
         let qty = Double(fQtyText) ?? 0
         let cost = Int(fCostText) ?? 0
         let item = InitialMaterialItem(
-            id: UUID().uuidString,
+            id: "init-mat-\(UUID().uuidString)",   // 재고 보존·재진입 갱신 식별 (웹과 동일 prefix)
             name: fMatName.trimmingCharacters(in: .whitespaces),
             supplier: fSupplier,
             quantity: qty,
@@ -671,6 +673,7 @@ public struct VendorSetupStageView: View {
         var current = materials
         current.append(item)
         materialsJson = encodeMaterials(current)
+        syncMaterialsToInventory()
         fMatName = ""; fSupplier = ""; fQtyText = ""; fCostText = ""; fUnit = "kg"; fCategory = "식재료"
     }
 
@@ -678,6 +681,56 @@ public struct VendorSetupStageView: View {
         var current = materials
         current.removeAll { $0.id == id }
         materialsJson = encodeMaterials(current)
+        syncMaterialsToInventory()
+    }
+
+    // MARK: - 발주 계획 → 재고 자동 반영 (웹 SSOT: InitialOrderPlanCard.syncMaterialsToInventory)
+
+    /// 입력한 발주 품목을 재고(StoreInfoStore.inventory)에 즉시 반영.
+    /// 보존 규칙: product(메뉴) + 손수 추가한 material(init-mat- prefix 아님)은 유지.
+    /// 재진입 시 name 매칭으로 quantity·unitCost 만 갱신하고 minThreshold·lastOrderedAt 보존.
+    private func syncMaterialsToInventory() {
+        let mats = materials
+        storeInfoStore.commit { s in
+            // 1) 보존 대상 — product 또는 발주계획이 만든 게 아닌 item
+            let preserved = s.inventory.filter { $0.itemType == "product" || !$0.id.hasPrefix("init-mat-") }
+            // 2) 기존 init-mat item 을 name 으로 매핑 (threshold·lastOrdered 보존용)
+            let existingInitMat = Dictionary(
+                s.inventory.filter { $0.id.hasPrefix("init-mat-") }.map { ($0.name, $0) },
+                uniquingKeysWith: { a, _ in a }
+            )
+            // 3) 발주 품목 → 재고 item
+            let generated: [BUInventoryItem] = mats.map { m in
+                let ex = existingInitMat[m.name]
+                return BUInventoryItem(
+                    id: ex?.id ?? m.id,
+                    name: m.name,
+                    quantity: m.quantity,
+                    unit: m.unit,
+                    minThreshold: ex?.minThreshold ?? max(1, m.quantity * 0.2),
+                    unitCost: Double(m.unitCost),
+                    category: Self.inventoryCategory(from: m.category),
+                    itemType: "material",
+                    sellingPrice: ex?.sellingPrice ?? 0,
+                    leadTimeDays: ex?.leadTimeDays ?? 1,
+                    dailyUsage: ex?.dailyUsage ?? 0,
+                    lastOrderedAt: ex?.lastOrderedAt,
+                    wasteLog: ex?.wasteLog ?? []
+                )
+            }
+            s.inventory = preserved + generated
+        }
+    }
+
+    /// 발주 폼의 한글 카테고리 → 재고 enum("fresh"|"dry"|"frozen"|"beverage"|"supply"|"other").
+    private static func inventoryCategory(from korean: String) -> String {
+        switch korean {
+        case "식재료":            return "fresh"
+        case "포장재", "소모품":   return "supply"
+        case "매입 상품":         return "dry"
+        case "음료":              return "beverage"
+        default:                  return "other"
+        }
     }
 }
 
@@ -864,11 +917,14 @@ private extension View {
     let store = RoadmapStore()
     store.pathProvider = { _ in ["vendor-setup"] }
     return VendorSetupStageView().environment(store)
+        .environmentObject(StoreInfoStore(repository: MockStoreInfoRepository()))
 }
 
 #Preview("VendorSetup — Dark") {
     let store = RoadmapStore()
     store.pathProvider = { _ in ["vendor-setup"] }
-    return VendorSetupStageView().environment(store).preferredColorScheme(.dark)
+    return VendorSetupStageView().environment(store)
+        .environmentObject(StoreInfoStore(repository: MockStoreInfoRepository()))
+        .preferredColorScheme(.dark)
 }
 #endif

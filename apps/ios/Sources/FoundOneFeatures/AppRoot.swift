@@ -33,6 +33,8 @@ public struct AppRoot: View {
     /// 내 가게 페이지 store — DashboardStore 와 분리. 로그인 후 Supabase load.
     /// MyStoreView 에 prop 으로 주입 (ObservableObject — environment 가 아닌 직접 전달).
     @State private var storeInfoStore: StoreInfoStore?
+    /// 안정적 fallback — storeInfoStore 가 아직 nil 일 때 .environmentObject 용 (재생성 방지).
+    @State private var storeInfoFallback = StoreInfoStore(repository: FallbackStoreInfoRepository())
     /// 전역 로드맵 store — TodayView / RoadmapView / Stage 시트 모두에서 공유.
     /// AppRoot 에서 한 번 생성 → .environment 로 자식 트리에 주입. 로그인 시 Supabase 동기화.
     @State private var roadmapStore: RoadmapStore = {
@@ -180,6 +182,8 @@ public struct AppRoot: View {
         }
         .environment(roadmapStore)
         .environment(resetCoordinator)
+        // 로드맵 위저드(VendorSetupStageView 등)에서 재고 store 접근용 — 발주 계획 → 재고 자동 반영.
+        .environmentObject(storeInfoStore ?? storeInfoFallback)
         .overlay {
             // "진행 초기화" 풀스크린 오버레이 — fade-in/out.
             //   오버레이가 표시되는 동안 store.resetAll() + clearAllAppStorage() 가 호출되어
