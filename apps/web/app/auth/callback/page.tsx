@@ -42,13 +42,14 @@ function AuthCallbackInner() {
     const token_hash = searchParams.get("token_hash");
     const type = searchParams.get("type") as "signup" | "email" | "recovery" | null;
 
-    // 2026-05-27 보안 (P0-4): 토큰을 URL 에서 즉시 제거.
-    //   Supabase 이메일 링크는 ?token_hash=... 형식이라 query 가 불가피하지만,
-    //   read 후 즉시 history.replaceState 로 정리하면:
-    //     - 브라우저 히스토리에 토큰 잔존 안 함
-    //     - 외부 링크 클릭 시 Referer 헤더에 토큰 미포함
-    //     - Sentry/analytics 가 URL 캡처 시 토큰 미포함
-    //   (token 자체는 1회용 + 단시간 만료지만 defense-in-depth)
+    // 기본 비밀번호 재설정 링크({{ .ConfirmationURL }})는 Supabase verify 후 세션을
+    // URL 해시(#access_token=...)로 우리 콜백에 전달 → supabase-js 가 자동 파싱하며
+    // PASSWORD_RECOVERY 이벤트 발생. 이걸 잡아 새 비밀번호 화면으로 전환.
+    const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setStatus("recovery-form");
+    });
+
+    // 보안: 쿼리의 token 흔적 제거 (해시는 supabase-js 가 파싱 후 정리).
     if (typeof window !== "undefined" && (token_hash || type)) {
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete("token_hash");
@@ -56,36 +57,43 @@ function AuthCallbackInner() {
       window.history.replaceState({}, "", cleanUrl.toString());
     }
 
-    if (!token_hash || !type) {
-      setStatus("error");
-      setErrorMsg("유효하지 않은 인증 링크입니다.");
-      return;
+    // (A) token_hash 방식 — 가입 확인 메일, 또는 token_hash 템플릿 링크.
+    if (token_hash && type) {
+      supabase.auth
+        .verifyOtp({ token_hash, type: type === "signup" ? "email" : type })
+        .then(({ error }) => {
+          if (error) {
+            setStatus("error");
+            setErrorMsg(
+              error.message === "Token has expired or is invalid"
+                ? "링크가 만료됐습니다. 다시 시도하거나 이메일 재발송을 요청해 주세요."
+                : error.message
+            );
+            return;
+          }
+          if (type === "recovery") { setStatus("recovery-form"); return; }
+          setStatus("success");
+          setTimeout(() => { window.location.assign("/"); }, 1200);
+        });
+      return () => authSub.subscription.unsubscribe();
     }
 
-    supabase.auth
-      .verifyOtp({ token_hash, type: type === "signup" ? "email" : type })
-      .then(({ error }) => {
-        if (error) {
+    // (B) 해시 기반 recovery (기본 ConfirmationURL) — supabase-js 가 이미 세션을 만들었는지 확인.
+    //     PASSWORD_RECOVERY 이벤트를 놓쳤을 수 있으므로 getSession 으로도 확인 + 대기 후 에러.
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) { setStatus("recovery-form"); return; }
+      setTimeout(async () => {
+        const { data: d2 } = await supabase.auth.getSession();
+        if (d2.session) setStatus("recovery-form");
+        else {
           setStatus("error");
-          setErrorMsg(
-            error.message === "Token has expired or is invalid"
-              ? "링크가 만료됐습니다. 다시 가입하거나 이메일 재발송을 요청해 주세요."
-              : error.message
-          );
-          return;
+          setErrorMsg("유효하지 않거나 만료된 링크입니다. 비밀번호 재설정을 다시 요청해 주세요.");
         }
-        // 비밀번호 재설정(recovery): 임시 세션이 생성됨 → 새 비밀번호 입력 화면으로.
-        if (type === "recovery") {
-          setStatus("recovery-form");
-          return;
-        }
-        setStatus("success");
-        // 세션이 localStorage에 저장됨 → hard reload로 홈 진입
-        setTimeout(() => {
-          window.location.assign("/");
-        }, 1200);
-      });
-    // searchParams 의존성 제거 — URL 정리 후 재실행 방지 (mount 시 한 번만)
+      }, 2500);
+    })();
+
+    return () => authSub.subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
