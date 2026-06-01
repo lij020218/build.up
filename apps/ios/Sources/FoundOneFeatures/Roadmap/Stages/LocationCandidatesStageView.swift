@@ -48,6 +48,30 @@ public struct LocationCandidatesStageView: View {
 
     private let pages = ["상권 분석", "매물 체크", "최종 선택"]
 
+    // AI 라이브 상권 추천 (웹 패리티 — POST /api/data/market-recommend)
+    @State private var aiRegion = ""
+    @State private var aiItems: [MarketScoredItem] = []
+    @State private var aiLoading = false
+    @State private var aiError: String?
+
+    private func requestAiRecommend() {
+        let region = aiRegion.trimmingCharacters(in: .whitespaces)
+        guard !region.isEmpty, !aiLoading else { return }
+        aiLoading = true; aiError = nil
+        let categoryId = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
+        let sub = industryId.isEmpty ? nil : industryId
+        Task {
+            do {
+                let items = try await MarketRecommendService.shared().recommend(
+                    MarketRecommendInput(region: region, categoryId: categoryId, subIndustryId: sub)
+                )
+                await MainActor.run { aiItems = items; aiLoading = false }
+            } catch {
+                await MainActor.run { aiError = error.localizedDescription; aiLoading = false }
+            }
+        }
+    }
+
     private var canCompleteStage: Bool {
         finalDone && !finalAddress.trimmingCharacters(in: .whitespaces).isEmpty
     }
@@ -116,10 +140,94 @@ public struct LocationCandidatesStageView: View {
         }
     }
 
+    // MARK: - AI 상권 추천 카드 (웹 패리티)
+
+    private var aiRecommendCard: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow("AI 상권 추천")
+                Text("희망 지역을 입력하면 카카오 지도 + AI가 주변 후보 상권을 0~100점으로 점수화해 추천합니다.")
+                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+
+                HStack(spacing: 8) {
+                    TextField("예: 강남역, 연남동, 수원 영통", text: $aiRegion)
+                        .font(BUFont.body)
+                        .padding(.horizontal, 12).padding(.vertical, 10)
+                        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .submitLabel(.search)
+                        .onSubmit { requestAiRecommend() }
+                    Button(action: requestAiRecommend) {
+                        Group {
+                            if aiLoading {
+                                ProgressView().tint(.white)
+                            } else {
+                                Image(systemName: "sparkles").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                            }
+                        }
+                        .frame(width: 46, height: 42)
+                        .background(
+                            aiRegion.trimmingCharacters(in: .whitespaces).isEmpty ? BUColor.midnight.opacity(0.3) : BUColor.midnight,
+                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        )
+                    }
+                    .disabled(aiRegion.trimmingCharacters(in: .whitespaces).isEmpty || aiLoading)
+                }
+
+                if aiLoading {
+                    Text("AI가 주변 상권을 분석 중입니다… (10~30초)")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                }
+                if let aiError {
+                    Text("⚠ \(aiError)")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                }
+                ForEach(aiItems) { item in
+                    recommendItemRow(item)
+                }
+            }
+        }
+    }
+
+    private func recommendItemRow(_ item: MarketScoredItem) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text("\(item.score)")
+                    .font(.system(size: 15, weight: .heavy)).foregroundStyle(.white)
+                    .frame(minWidth: 38, minHeight: 26)
+                    .background(scoreColor(item.score), in: Capsule())
+                Text(item.title)
+                    .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                Spacer(minLength: 0)
+            }
+            if !item.summary.isEmpty {
+                Text(item.summary).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+            }
+            ForEach(item.reasons.prefix(2), id: \.self) { r in
+                Label(r, systemImage: "checkmark.circle.fill")
+                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.success).labelStyle(.titleAndIcon)
+            }
+            ForEach(item.warnings.prefix(2), id: \.self) { w in
+                Label(w, systemImage: "exclamationmark.triangle.fill")
+                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).labelStyle(.titleAndIcon)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight.opacity(0.035), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func scoreColor(_ score: Int) -> Color {
+        if score >= 70 { return BUColor.success }
+        if score >= 50 { return Color.orange }
+        return BUColor.danger
+    }
+
     // MARK: - pg 0 상권 분석
 
     private var marketPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            aiRecommendCard
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("4대 무료 상권 분석 도구")
