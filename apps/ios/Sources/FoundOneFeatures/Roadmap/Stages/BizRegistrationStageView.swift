@@ -26,6 +26,8 @@ public struct BizRegistrationStageView: View {
     @AppStorage("biz.bankDone")          private var bankDone         = false
     @AppStorage("biz.storeNameFinal")    private var storeNameFinal   = false
     @AppStorage("roadmap.selectedIndustryId") private var industryId  = ""
+    @State private var page = 0
+    private let pages = ["이전 결정", "상호명", "사업용 통장"]
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
@@ -66,9 +68,9 @@ public struct BizRegistrationStageView: View {
     }
 
     private var advanceHint: String {
-        if storeName.isEmpty { return "상호명을 입력하세요" }
+        if storeName.isEmpty { return "「상호명」 탭에서 가게 이름을 입력하세요" }
         if !storeNameFinal { return "상호명 확정 토글을 켜세요" }
-        if !bankDone { return "사업용 통장 개설 완료를 체크하세요" }
+        if !bankDone { return "「사업용 통장」 탭에서 개설 완료를 체크하세요" }
         return "통장 + 상호명 확정 — 다음 단계로"
     }
 
@@ -85,12 +87,38 @@ public struct BizRegistrationStageView: View {
                 roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["storeName": storeName])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["storeName": storeName]) }
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["storeName": storeName]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 상호명 최종 확정", detail: "사업자등록증·간판·SNS·세금계산서까지 같은 이름 사용"),
+                    .init(label: "2. 사업용 통장 개설", detail: "개인 통장과 분리 — 세무 비용 입증의 최소 조건"),
+                ],
+                verifyItems: [
+                    "상호명은 등록 후 변경 시 등록증 재발급 필요 — 간판·메뉴판·온라인까지 일관되게 확정했는지 확인",
+                    "개인 통장과 사업 통장 분리 — 혼용 시 세무조사에서 사업 비용 입증 불가",
+                    "통장 개설 준비물: 사업자등록증 원본 · 대표자 신분증 (도장 선택)",
+                ],
+                nextStageLabel: "세무·자금 가이드",
+                nextSummary: "상호명·통장 확정 → 과세 신고·정책자금 단계로"
+            ),
+            currentPage: page,
+            totalPages: pages.count
         ) {
             VStack(alignment: .leading, spacing: 16) {
-                previousDecisions
-                storeNameSection
-                bankSection
+                BUWizardPageNav(
+                    page: page,
+                    totalPages: pages.count,
+                    labels: pages,
+                    onChange: { newPage in withAnimation(.easeInOut(duration: 0.22)) { page = newPage } }
+                )
+
+                Group {
+                    switch page {
+                    case 0: previousDecisions
+                    case 1: storeNameSection
+                    default: bankSection
+                    }
+                }
             }
         }
     }
