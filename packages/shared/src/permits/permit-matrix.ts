@@ -66,8 +66,8 @@ const healthCertificate: PermitItem = {
   name: { ko: "건강진단결과서 (보건증)", en: "Health Certificate" },
   priority: "required",
   agency: { ko: "관할 보건소", en: "Local Health Center" },
-  costWon: 12000,
-  costNote: { ko: "보건소 기준 약 12,000원 (병원 시 3~5만원)", en: "~12,000 won at health center (30~50K at hospital)" },
+  costWon: 3000,
+  costNote: { ko: "보건소 약 3,000원 (지자체별 무료~3천원) · 민간병원 1.5~3만원", en: "~3,000 won at health center (free~3K by district) · 15~30K at private clinic" },
   duration: { ko: "검사 당일~3일", en: "Same day to 3 days" },
   documents: [
     { ko: "신분증", en: "ID card" },
