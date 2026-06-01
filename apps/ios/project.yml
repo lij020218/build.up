@@ -40,7 +40,7 @@ targets:
     deploymentTarget: "18.0"
 
     configFiles:
-      Debug: Config/Debug.xcconfig
+      Debug: Config/Build.xcconfig
       Release: Config/Build.xcconfig
 
     sources:
