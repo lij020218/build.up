@@ -203,6 +203,48 @@ public struct LocationCandidatesStageView: View {
         }
     }
 
+    // MARK: - 왜 상권 분석이 중요한가 (웹 StageOverview 패리티)
+
+    private var whyMarketCard: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 12) {
+                BUEyebrow("이 단계 개요")
+                Text("상권 = 매출 천장. 후회 없는 1곳을 정하기 위한 25분")
+                    .font(.system(size: 18, weight: .heavy)).tracking(-0.3)
+                    .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("상권은 1~2년 묶이는 의사결정입니다. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. 라이브 상권 데이터 + 직접 답사 + 4지표 점수화로 후회 없이 결정하세요.")
+                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // stat — 47% 폐업이 상권 후회
+                HStack(spacing: 12) {
+                    Text("47%").font(.system(size: 30, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                    Text("초기 폐점 사장님이\n「상권 선택」을 후회")
+                        .font(.system(size: 12, weight: .medium)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    Spacer(minLength: 0)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                // outcome
+                HStack(alignment: .top, spacing: 9) {
+                    Image(systemName: "arrow.up.right.circle.fill").font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(BUColor.success).padding(.top, 1)
+                    Text("최종 상권 1곳을 확정하면, 그 상권의 임대료·유동·경쟁·타겟 정보를 다음 「계약 전 검토」 단계가 자동으로 받아 맞춤 체크리스트를 만들어 줍니다.")
+                        .font(.system(size: 12.5)).foregroundStyle(BUColor.ink.opacity(0.78)).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BUColor.success.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.success.opacity(0.16), lineWidth: 1))
+            }
+        }
+    }
+
     // MARK: - AI 상권 추천 카드 (웹 패리티)
 
     private var aiRecommendCard: some View {
@@ -359,6 +401,7 @@ public struct LocationCandidatesStageView: View {
 
     private var marketPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            whyMarketCard
             aiRecommendCard
 
             BUCard(.card) {
