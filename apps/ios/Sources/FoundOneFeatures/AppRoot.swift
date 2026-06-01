@@ -414,6 +414,8 @@ private struct OnboardingFlow: View {
                             currentCash: nil,
                             businessLaunched: true
                         )
+                        // 웹·앱 SSOT: 상호명을 Supabase 에도 저장 → 웹에서 동일하게 표시.
+                        StoreProfileRepository.persistStoreNameForCurrentUser(reg.storeName)
 
                         // AppStorage 키 — UserDefaults 직접 기록
                         // (RoadmapStage 뷰들이 @AppStorage 로 이 값을 읽음)
@@ -496,6 +498,8 @@ private struct OnboardingFlow: View {
                             currentCash: nil,
                             businessLaunched: false
                         )
+                        // 웹·앱 SSOT: 상호명을 Supabase 에도 저장 → 웹에서 동일하게 표시.
+                        StoreProfileRepository.persistStoreNameForCurrentUser(finalName)
                         selectedTab = .roadmap
                     },
                     onBack: { path = nil }

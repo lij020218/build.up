@@ -31,6 +31,21 @@ public actor StoreProfileRepository {
         self.userId = userId
     }
 
+    /// 온보딩/위저드 등 어디서든 호출 — 현재 로그인 사용자의 store_name 을 Supabase(user_store_data)에 저장.
+    /// 웹은 StoreNameInput 이 입력 즉시 flushStoreDataImmediate 로 저장하므로, iOS 도 상호명 확정 시점에
+    /// 동일하게 서버에 반영해 웹·앱 SSOT 를 유지한다. (빈값/placeholder "내 가게" / 비로그인 시 무시)
+    @MainActor
+    public static func persistStoreNameForCurrentUser(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != "내 가게" else { return }
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let client = BUSupabase.shared.client
+        Task {
+            let repo = StoreProfileRepository(supabase: client, userId: uid)
+            try? await repo.updateStoreName(trimmed)
+        }
+    }
+
     public func load() async throws -> StoreProfileInfo {
         let rows: [Row] = try await supabase
             .from("user_store_data")

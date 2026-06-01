@@ -84,10 +84,15 @@ public struct BizRegistrationStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
+                // 웹·앱 SSOT: 상호명을 Supabase(user_store_data.store_name)에도 저장 → 웹에서 동일 표시.
+                StoreProfileRepository.persistStoreNameForCurrentUser(storeName)
                 roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["storeName": storeName])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["storeName": storeName]) },
+            onEditSave: {
+                StoreProfileRepository.persistStoreNameForCurrentUser(storeName)
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["storeName": storeName])
+            },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 상호명 최종 확정", detail: "사업자등록증·간판·SNS·세금계산서까지 같은 이름 사용"),
@@ -174,6 +179,10 @@ public struct BizRegistrationStageView: View {
                 Toggle(isOn: $storeNameFinal) {
                     Text("상호명 최종 확정 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                 }.tint(BUColor.midnight)
+                    .onChange(of: storeNameFinal) { _, isFinal in
+                        // 확정 토글을 켜는 즉시 서버에 상호명 저장 (advance 안 해도 웹과 동기화).
+                        if isFinal { StoreProfileRepository.persistStoreNameForCurrentUser(storeName) }
+                    }
             }
         }
     }
