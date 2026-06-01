@@ -176,10 +176,15 @@ public struct RegistrationSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
+                // 웹·앱 SSOT: 과세유형을 Supabase(tax_settings.vatType)에도 저장.
+                StoreProfileRepository.persistVatTypeForCurrentUser(taxTypeChoice)
                 roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["taxTypeChoice": taxTypeChoice])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["taxTypeChoice": taxTypeChoice]) },
+            onEditSave: {
+                StoreProfileRepository.persistVatTypeForCurrentUser(taxTypeChoice)
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["taxTypeChoice": taxTypeChoice])
+            },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 상호·업태·종목 결정", detail: "상호 중복 검색 + 업태(소매·서비스 등) + 종목(세부 업종) 정확 매칭"),
@@ -433,6 +438,19 @@ public struct RegistrationSetupStageView: View {
                 }
             }
 
+            // 과세유형 선택 — 웹과 동일 어휘("simplified"/"general") → tax_settings.vatType 동기화.
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("내 과세유형 선택")
+                    HStack(spacing: 10) {
+                        taxTypeChip(value: "simplified", title: "간이과세", subtitle: "연매출 1억 400만 미만")
+                        taxTypeChip(value: "general", title: "일반과세", subtitle: "1억 400만 이상·B2B")
+                    }
+                    Text("선택하면 부가세·현금흐름 계산에 반영됩니다. (홈택스 사업자등록 시 실제 선택과 동일하게 맞추세요)")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                }
+            }
+
             let paths: [(String, String, String)] = [
                 ("예상 매출 4,800만 미만", "간이과세 + 부가세 면제 활용", "4,800만 미만은 부가세 납부 의무 자체 면제. 1년차 소형 매장에 가장 유리."),
                 ("예상 매출 4,800만 ~ 1억 400만", "간이과세 (부가세율 1.5~4%)", "음식점 부가가치율 15% × 10% = 실질 1.5%. 일반과세 10% 대비 부담 큰 폭 감소."),
@@ -464,6 +482,38 @@ public struct RegistrationSetupStageView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func taxTypeChip(value: String, title: String, subtitle: String) -> some View {
+        let isSelected = taxTypeChoice == value
+        Button {
+            taxTypeChoice = value
+            // 선택 즉시 Supabase 동기화 (advance 안 해도 웹과 일치).
+            StoreProfileRepository.persistVatTypeForCurrentUser(value)
+        } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(BUFont.bodySmall.weight(.bold))
+                    .foregroundStyle(isSelected ? BUColor.midnightInk : BUColor.ink)
+                Text(subtitle)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(BUColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12).padding(.vertical, 11)
+            .background(
+                (isSelected ? BUColor.midnight.opacity(0.10) : BUColor.midnight.opacity(0.04)),
+                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(isSelected ? BUColor.midnight.opacity(0.45) : Color.clear, lineWidth: 1.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
     private func pathCard(condition: String, recommendation: String, reason: String) -> some View {

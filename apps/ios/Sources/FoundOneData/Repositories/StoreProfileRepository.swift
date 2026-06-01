@@ -73,6 +73,43 @@ public actor StoreProfileRepository {
         }
     }
 
+    /// 과세유형(간이/일반)을 user_store_data.tax_settings.vatType 에 저장.
+    /// jsonb 의 hasEmployees 는 보존하기 위해 read-merge-write. ("general"|"simplified" — 웹과 동일 어휘)
+    @MainActor
+    public static func persistVatTypeForCurrentUser(_ vatType: String) {
+        guard vatType == "general" || vatType == "simplified" else { return }
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let client = BUSupabase.shared.client
+        Task {
+            let repo = StoreProfileRepository(supabase: client, userId: uid)
+            try? await repo.mergeTaxVatType(vatType)
+        }
+    }
+
+    /// tax_settings jsonb 의 vatType 만 갱신, hasEmployees 등 기존 키 보존.
+    public func mergeTaxVatType(_ vatType: String) async throws {
+        guard vatType == "general" || vatType == "simplified" else { return }
+        struct ReadRow: Decodable, Sendable { let tax_settings: TaxSettingsDTO? }
+        let rows: [ReadRow] = try await supabase
+            .from("user_store_data")
+            .select("tax_settings")
+            .eq("user_id", value: userId)
+            .limit(1)
+            .execute()
+            .value
+        var settings = rows.first?.tax_settings ?? TaxSettingsDTO(vatType: "general", hasEmployees: false)
+        settings.vatType = vatType
+        let payload = TaxUpsert(
+            user_id: userId,
+            tax_settings: settings,
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+        _ = try await supabase
+            .from("user_store_data")
+            .upsert(payload, onConflict: "user_id")
+            .execute()
+    }
+
     /// 세무 처리 방식 단독 저장.
     public func updateCpaDecision(_ choice: String?) async throws {
         let trimmed = choice?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -167,6 +204,18 @@ public actor StoreProfileRepository {
     private struct CpaUpsert: Encodable, Sendable {
         let user_id: UUID
         let cpa_decision: String?
+        let updated_at: String
+    }
+
+    /// user_store_data.tax_settings jsonb 구조 (웹 operations-store.ts TaxSettings 와 동일).
+    struct TaxSettingsDTO: Codable, Sendable, Hashable {
+        var vatType: String       // "general" | "simplified"
+        var hasEmployees: Bool
+    }
+
+    private struct TaxUpsert: Encodable, Sendable {
+        let user_id: UUID
+        let tax_settings: TaxSettingsDTO
         let updated_at: String
     }
 
