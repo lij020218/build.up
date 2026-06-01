@@ -125,3 +125,20 @@ export async function updateCurrentUserPassword(
 
   return data;
 }
+
+/**
+ * 비밀번호 재설정 메일 발송.
+ *  redirectTo = `{origin}/auth/callback?type=recovery` 권장 — 메일 링크 클릭 시
+ *  콜백이 recovery 세션을 만든 뒤 새 비밀번호 입력 화면으로 전환.
+ *  보안: Supabase 는 미가입 이메일이어도 동일 성공 응답(계정 존재 노출 방지).
+ */
+export async function sendPasswordReset(
+  client: FoundOneAuthClient,
+  email: string,
+  redirectTo: string
+) {
+  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) {
+    throw error;
+  }
+}

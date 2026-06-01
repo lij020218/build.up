@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { updateCurrentUserPassword, validatePassword } from "@foundone/shared";
 
 // Next.js 15: useSearchParams() 는 Suspense 경계 안에서만 빌드 가능 (정적 생성 bailout).
 // OAuth 콜백은 본질적으로 동적이므로 내부 컴포넌트를 Suspense 로 감싼다.
@@ -17,12 +18,29 @@ export default function AuthCallbackPage() {
 function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
+  const [status, setStatus] = useState<"verifying" | "success" | "error" | "recovery-form">("verifying");
   const [errorMsg, setErrorMsg] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSetNewPassword = async () => {
+    const pwdErr = validatePassword(newPw);
+    if (pwdErr) { setErrorMsg(pwdErr); return; }
+    setSubmitting(true); setErrorMsg("");
+    try {
+      await updateCurrentUserPassword(supabase, newPw);
+      setStatus("success");
+      setTimeout(() => { window.location.assign("/"); }, 1200);
+    } catch (e) {
+      setErrorMsg((e as Error).message || "비밀번호 변경에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const token_hash = searchParams.get("token_hash");
-    const type = searchParams.get("type") as "signup" | "email" | null;
+    const type = searchParams.get("type") as "signup" | "email" | "recovery" | null;
 
     // 2026-05-27 보안 (P0-4): 토큰을 URL 에서 즉시 제거.
     //   Supabase 이메일 링크는 ?token_hash=... 형식이라 query 가 불가피하지만,
@@ -56,6 +74,11 @@ function AuthCallbackInner() {
           );
           return;
         }
+        // 비밀번호 재설정(recovery): 임시 세션이 생성됨 → 새 비밀번호 입력 화면으로.
+        if (type === "recovery") {
+          setStatus("recovery-form");
+          return;
+        }
         setStatus("success");
         // 세션이 localStorage에 저장됨 → hard reload로 홈 진입
         setTimeout(() => {
@@ -80,6 +103,44 @@ function AuthCallbackInner() {
         <div>
           <Spinner />
           <p style={{ color: "rgba(255,255,255,0.6)", marginTop: "20px" }}>이메일 인증 중...</p>
+        </div>
+      )}
+
+      {status === "recovery-form" && (
+        <div style={{ width: "100%", maxWidth: "340px" }}>
+          <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>새 비밀번호 설정</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", marginBottom: "20px", lineHeight: 1.6 }}>
+            8자 이상, 숫자를 포함한 새 비밀번호를 입력해 주세요.
+          </p>
+          <input
+            type="password"
+            value={newPw}
+            onChange={(e) => setNewPw(e.target.value)}
+            placeholder="새 비밀번호"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter" && !submitting) void handleSetNewPassword(); }}
+            style={{
+              width: "100%", padding: "13px 14px", borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)",
+              color: "#fff", fontSize: "15px", marginBottom: "12px", boxSizing: "border-box",
+            }}
+          />
+          {errorMsg && (
+            <p style={{ color: "#ff6b6b", fontSize: "13px", marginBottom: "12px" }}>{errorMsg}</p>
+          )}
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => { void handleSetNewPassword(); }}
+            style={{
+              width: "100%", padding: "13px 0", borderRadius: "10px", border: "none",
+              background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)",
+              color: "#fff", fontSize: "15px", fontWeight: 600,
+              cursor: submitting ? "wait" : "pointer", opacity: submitting ? 0.6 : 1,
+            }}
+          >
+            비밀번호 변경
+          </button>
         </div>
       )}
 

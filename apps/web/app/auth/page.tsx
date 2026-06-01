@@ -6,6 +6,7 @@ import {
   getAuthErrorMessage,
   getUiCopy,
   resendConfirmationEmail,
+  sendPasswordReset,
   signInWithEmail,
   signOutUser,
   signUpWithEmail,
@@ -21,7 +22,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../language-provider";
 
 /* ─── types ─── */
-type AuthMode = "signup" | "login" | "password";
+type AuthMode = "signup" | "login" | "password" | "reset";
 
 /* ─── Apple-inspired landing + auth page ─── */
 export default function AuthPage() {
@@ -158,6 +159,15 @@ export default function AuthPage() {
       await updateCurrentUserPassword(supabase, nextPassword);
       setMessage(copy.auth.passwordUpdated);
       setNextPassword("");
+    });
+
+  const handleSendReset = () =>
+    run(async () => {
+      if (!email.trim()) { setMessage("이메일을 입력해 주세요."); return; }
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      await sendPasswordReset(supabase, email.trim(), `${origin}/auth/callback?type=recovery`);
+      // 보안: 가입 여부와 무관하게 동일 안내 (계정 존재 노출 방지)
+      setMessage("입력하신 이메일로 비밀번호 재설정 링크를 보냈습니다. 메일함을 확인해 주세요. (소셜 로그인 계정은 메일이 오지 않습니다)");
     });
 
   const handleSignOut = () =>
@@ -420,14 +430,21 @@ export default function AuthPage() {
                   />
                 </>
               )}
+              {mode === "reset" && (
+                <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: "0 0 4px" }}>
+                  가입한 이메일을 입력하면 비밀번호 재설정 링크를 보내드립니다.
+                </p>
+              )}
               {mode !== "password" && (
+                <AuthInput
+                  label={copy.auth.email}
+                  value={email}
+                  onChange={setEmail}
+                  type="email"
+                />
+              )}
+              {(mode === "login" || mode === "signup") && (
                 <>
-                  <AuthInput
-                    label={copy.auth.email}
-                    value={email}
-                    onChange={setEmail}
-                    type="email"
-                  />
                   <AuthInput
                     label={copy.auth.passwordLabel}
                     value={password}
@@ -461,7 +478,9 @@ export default function AuthPage() {
                     ? handleSignup
                     : mode === "login"
                       ? handleLogin
-                      : handlePasswordChange
+                      : mode === "reset"
+                        ? handleSendReset
+                        : handlePasswordChange
                 }
                 style={{
                   marginTop: 4,
@@ -484,8 +503,37 @@ export default function AuthPage() {
                   ? copy.auth.createAccount
                   : mode === "login"
                     ? copy.auth.logIn
-                    : copy.auth.updatePassword}
+                    : mode === "reset"
+                      ? "재설정 메일 받기"
+                      : copy.auth.updatePassword}
               </button>
+
+              {mode === "login" && (
+                <button
+                  type="button"
+                  onClick={() => { setMode("reset"); setMessage(""); }}
+                  style={{
+                    background: "none", border: "none", color: "rgba(255,255,255,0.55)",
+                    fontSize: 13, cursor: "pointer", textDecoration: "underline",
+                    padding: "2px 0", margin: "2px auto 0", display: "block",
+                  }}
+                >
+                  비밀번호를 잊으셨나요?
+                </button>
+              )}
+              {mode === "reset" && (
+                <button
+                  type="button"
+                  onClick={() => { setMode("login"); setMessage(""); }}
+                  style={{
+                    background: "none", border: "none", color: "rgba(255,255,255,0.55)",
+                    fontSize: 13, cursor: "pointer", textDecoration: "underline",
+                    padding: "2px 0", margin: "2px auto 0", display: "block",
+                  }}
+                >
+                  ← 로그인으로 돌아가기
+                </button>
+              )}
 
               {mode === "signup" && (
                 <p style={{

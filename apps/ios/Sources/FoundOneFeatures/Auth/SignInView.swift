@@ -116,6 +116,8 @@ private struct EmailAuthSheet: View {
     @State private var email = ""
     @State private var password = ""
     @State private var agreedToTerms = false
+    @State private var resetInfo: String?
+    @State private var resetIsError = false
     @FocusState private var focusedField: Field?
 
     private enum Field: Hashable {
@@ -310,6 +312,28 @@ private struct EmailAuthSheet: View {
                     .buttonStyle(PressableButtonStyle())
                     .disabled(!canSubmit || isAuthenticating)
 
+                    if mode == .login {
+                        Button {
+                            sendReset()
+                        } label: {
+                            Text("비밀번호를 잊으셨나요?")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .underline()
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 4)
+                        }
+                        .buttonStyle(.plain)
+                        if let resetInfo {
+                            Text(resetInfo)
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(resetIsError ? BUColor.danger : BUColor.success)
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(2)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+
                     Spacer(minLength: 0)
                 }
                 .padding(BUSpacing.lg)
@@ -317,6 +341,25 @@ private struct EmailAuthSheet: View {
         }
         .onChange(of: coordinator.isAuthenticated) { _, isAuthenticated in
             if isAuthenticated { dismiss() }
+        }
+    }
+
+    private func sendReset() {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.contains("@") else {
+            resetIsError = true
+            resetInfo = "가입한 이메일을 먼저 입력해 주세요."
+            return
+        }
+        Task {
+            do {
+                try await coordinator.sendPasswordReset(email: trimmed)
+                resetIsError = false
+                resetInfo = "재설정 메일을 보냈습니다. 메일의 링크를 열어 새 비밀번호를 설정하세요. (카카오·애플 로그인 계정은 메일이 오지 않습니다)"
+            } catch {
+                resetIsError = true
+                resetInfo = "메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."
+            }
         }
     }
 

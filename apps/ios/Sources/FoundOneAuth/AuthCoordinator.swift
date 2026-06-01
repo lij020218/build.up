@@ -156,6 +156,14 @@ public final class AuthCoordinator {
         }
     }
 
+    /// 비밀번호 재설정 메일 발송. 메일 링크는 사용자 기기 브라우저에서 열리므로
+    /// 항상 프로덕션 웹 콜백(foundone.dev/auth/callback?type=recovery)으로 보내 거기서 새 비번 설정.
+    /// (iOS 는 recovery 딥링크 scheme 이 없어 웹에서 완료) — throws 로 호출부가 성공/오류 처리.
+    public func sendPasswordReset(email: String) async throws {
+        let redirect = URL(string: "https://foundone.dev/auth/callback?type=recovery")
+        try await supabase.auth.resetPasswordForEmail(email, redirectTo: redirect)
+    }
+
     public func cancelSignup() {
         state = .unauthenticated
     }
