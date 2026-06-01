@@ -98,7 +98,7 @@ public struct OnboardingChoiceView: View {
             HStack(spacing: 5) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 10, weight: .semibold))
-                Text("BUILD.UP")
+                Text("Found.One")
                     .font(.system(size: 10.5, weight: .heavy))
                     .tracking(1.6)
             }

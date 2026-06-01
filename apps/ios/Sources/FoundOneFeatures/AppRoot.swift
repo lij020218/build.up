@@ -809,7 +809,7 @@ private struct FoundOneBrandBar<Accessory: View>: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
-                Text("b")
+                Text("f")
                     .font(.system(size: 17, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white)
                     .tracking(-0.3)
@@ -818,7 +818,7 @@ private struct FoundOneBrandBar<Accessory: View>: View {
             .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             .shadow(color: BUColor.midnightInk.opacity(0.12), radius: 6, x: 0, y: 2)
 
-            Text("Build")
+            Text("Found")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(BUColor.ink)
                 .tracking(-0.48)
@@ -826,7 +826,7 @@ private struct FoundOneBrandBar<Accessory: View>: View {
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(BUColor.midnightInk)
                 .tracking(-0.48)
-            + Text("UP")
+            + Text("One")
                 .font(.system(size: 15, weight: .heavy))
                 .foregroundStyle(BUColor.ink)
                 .tracking(-0.48)
@@ -855,7 +855,7 @@ private struct FoundOneLiquidSidebar: View {
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
-                    Text("b")
+                    Text("f")
                         .font(.system(size: 17, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
                         .tracking(-0.3)

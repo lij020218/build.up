@@ -37,6 +37,7 @@ public struct StartupTypeStageView: View {
     @AppStorage("stage.startupType.selected") private var selected = ""
     @AppStorage("stage.franchise.selectedBrandId") private var franchiseBrandId = ""
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    @AppStorage("roadmap.selectedSpecialtyId") private var selectedSpecialtyId = ""
     @State private var page = 0
     private let stageId = "startup-type"
 
@@ -62,7 +63,10 @@ public struct StartupTypeStageView: View {
     /// 정렬: 5축 종합 점수 내림차순 (웹의 computeOverallScore 패턴 미러).
     private var franchiseCandidates: [FranchiseBrand] {
         let base: [FranchiseBrand]
-        let sub = FranchiseBrandRegistry.brands(forSubIndustry: industryId)
+        let sub = FranchiseBrandRegistry.brands(
+            forSubIndustry: industryId,
+            specialtyId: selectedSpecialtyId.isEmpty ? nil : selectedSpecialtyId
+        )
         if !sub.isEmpty { base = sub }
         else { base = FranchiseBrandRegistry.brands(forCategory: categoryId) }
         return base.sorted { overallScore($0.scores) > overallScore($1.scores) }

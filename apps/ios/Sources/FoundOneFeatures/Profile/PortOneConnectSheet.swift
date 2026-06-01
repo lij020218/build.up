@@ -124,7 +124,7 @@ public struct PortOneConnectSheet: View {
                 guideStep(num: "1", text: "포트원 콘솔에 Owner/Admin 계정으로 로그인", linkTitle: "admin.portone.io", linkUrl: "https://admin.portone.io")
                 guideStep(num: "2", text: "좌측 메뉴 → [결제연동] → [API Keys]")
                 guideStep(num: "3", text: "[V2 API Secret 발급] 버튼 클릭")
-                guideStep(num: "4", text: "이름: \"buildup-readonly\", 만료: 90일 권장")
+                guideStep(num: "4", text: "이름: \"foundone-readonly\", 만료: 90일 권장")
                 guideStep(
                     num: "5",
                     text: "발급 직후 한 번만 보입니다 — 미리 메모장에 복사하세요",

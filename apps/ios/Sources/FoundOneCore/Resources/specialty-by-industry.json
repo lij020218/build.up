@@ -166,9 +166,9 @@
     },
     {
       "id": "fb-burger",
-      "label": "수제 햄버거 전문",
-      "desc": "프리미엄 패티 + 사이드 — 객단가 1.2만~1.8만",
-      "labelEn": "Premium burger"
+      "label": "햄버거 전문",
+      "desc": "프랜차이즈·수제 패티 버거 — 객단가 0.7만~1.5만",
+      "labelEn": "Burger"
     },
     {
       "id": "fb-hotdog",

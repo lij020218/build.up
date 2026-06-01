@@ -394,7 +394,7 @@ private struct BrandMark: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
-                Text("b")
+                Text("f")
                     .font(.system(size: 36, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white)
                     .tracking(-0.5)
@@ -405,13 +405,13 @@ private struct BrandMark: View {
 
             // Wordmark
             HStack(spacing: 0) {
-                Text("Build")
+                Text("Found")
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(BUColor.ink)
                 Text(".")
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(BUColor.midnightInk)
-                Text("UP")
+                Text("One")
                     .font(.system(size: 30, weight: .heavy))
                     .foregroundStyle(BUColor.ink)
             }

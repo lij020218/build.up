@@ -180,7 +180,7 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     if (startupType === "franchise" && !showFranchisePicker) {
       const brands = (() => {
         const sub = selectedIndustryId
-          ? getFranchiseBrandsForSubIndustry(selectedIndustryId)
+          ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId)
           : [];
         return sub.length > 0 ? sub : getFranchiseBrandsForCategory(industryCategoryId);
       })();

@@ -1,11 +1,13 @@
 //
-//  FranchiseBrandRegistry.swift — 한국 실재 프랜차이즈 120개 데이터 로더.
+//  FranchiseBrandRegistry.swift — 한국 실재 프랜차이즈 215개 데이터 로더.
 //
-//  웹 SSOT: packages/shared/src/franchise-data.ts (franchiseBrands)
+//  웹 SSOT: packages/shared/src/franchise-brands.json (심볼릭 링크로 공유)
+//    Resources/franchise-brands.json → ../../../../../packages/shared/src/franchise-brands.json
 //
 //  데이터 소스:
-//    Resources/franchise-brands.json (TS 에서 자동 추출 — 120개 브랜드).
+//    packages/shared/src/franchise-brands.json (웹·iOS 공통 단일 소스 — 215개 브랜드).
 //    BBQ·BHC·교촌·도미노피자·본죽·CU·이디야·다이소·올리브영 등 실재 브랜드.
+//    각 브랜드는 subIndustryIds + specialtyIds(세부업종) 로 필터링.
 //
 //  추출 방법:
 //    cd packages/shared && ./node_modules/.bin/tsc --module nodenext --moduleResolution nodenext \
@@ -51,6 +53,11 @@ public struct FranchiseBrandSource: Decodable, Sendable, Hashable {
 public struct FranchiseBrand: Decodable, Sendable, Identifiable, Hashable {
     public let id: String
     public let subIndustryIds: [String]
+    /// 세부업종(specialty) 매핑 — sub-industry 보다 세밀한 필터.
+    ///   예: korean-casual 안의 "국밥·해장국 전문점" / "한정식" / "분식" 등.
+    ///   nil = 매핑 미정의 (sub-industry 매칭만으로 노출).
+    ///   [] = 빈 배열 (specialty 선택 시 명시적 제외 — 한식 매핑 오류 brand 등).
+    public let specialtyIds: [String]?
     public let categoryId: String
     public let name: FranchiseBrandLocalized
     public let tagline: FranchiseBrandLocalized
@@ -136,10 +143,28 @@ public enum FranchiseBrandRegistry {
             .sorted { $0.startupCostWon < $1.startupCostWon }
     }
 
-    /// subIndustryId 매칭 브랜드 (정렬: startupCost 낮은 순).
-    public static func brands(forSubIndustry subIndustryId: String) -> [FranchiseBrand] {
-        all.filter { $0.subIndustryIds.contains(subIndustryId) }
+    /// subIndustryId + (선택) specialtyId 매칭 브랜드 (정렬: startupCost 낮은 순).
+    /// - specialtyId == nil: sub-industry 매칭만 (기존 동작)
+    /// - specialtyId != nil + brand.specialtyIds 정의: specialty 포함된 brand 만
+    /// - specialtyId != nil + brand.specialtyIds == nil: sub-industry fallback (포함)
+    /// - specialtyId != nil + brand.specialtyIds == []: 명시적 제외 (한식 매핑 오류 brand 등)
+    ///
+    /// Graceful fallback: specialty 필터 결과가 0개면 (예: '냉면'처럼 한국에 전용
+    /// 가맹 프랜차이즈가 없는 세부업종) sub-industry 전체로 fallback — 빈 화면 방지.
+    public static func brands(forSubIndustry subIndustryId: String, specialtyId: String? = nil) -> [FranchiseBrand] {
+        let inSub = all
+            .filter { $0.subIndustryIds.contains(subIndustryId) }
             .sorted { $0.startupCostWon < $1.startupCostWon }
+        guard let sid = specialtyId else { return inSub }
+
+        let matched = inSub.filter { brand in
+            if let specs = brand.specialtyIds {
+                return specs.contains(sid)
+            }
+            return true // specialtyIds 미정의 → fallback 노출
+        }
+        // specialty 전용 가맹 브랜드가 없는 세부업종 → sub-industry 전체로 graceful fallback
+        return matched.isEmpty ? inSub : matched
     }
 
     // MARK: - Bundle loader

@@ -110,7 +110,7 @@ public struct TossPlaceConnectSheet: View {
         BUCard(.outer) {
             VStack(alignment: .leading, spacing: 12) {
                 guideStep(num: "1", text: "TOSS Place 개발자 콘솔에 로그인", linkTitle: "developer.tossplace.com", linkUrl: "https://developer.tossplace.com")
-                guideStep(num: "2", text: "앱 등록 → Access Key 발급 (이름: \"buildup\" 권장)")
+                guideStep(num: "2", text: "앱 등록 → Access Key 발급 (이름: \"foundone\" 권장)")
                 guideStep(
                     num: "3",
                     text: "Access Secret 은 발급 직후 1회만 표시됩니다 — 미리 복사해 두세요.",

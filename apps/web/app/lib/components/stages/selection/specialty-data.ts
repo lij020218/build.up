@@ -57,7 +57,7 @@ export const SPECIALTY_BY_INDUSTRY: Record<string, SpecialtyOption[]> = {
   "chicken-burger": [
     { id: "fb-chicken", label: "치킨 전문점", desc: "프라이드·양념·간장·로제 — 야간 배달 핵심", labelEn: "Chicken shop" },
     { id: "fb-pizza", label: "피자 전문점", desc: "프리미엄 피자·미국식 피자 — 가족 단위", labelEn: "Pizza" },
-    { id: "fb-burger", label: "수제 햄버거 전문", desc: "프리미엄 패티 + 사이드 — 객단가 1.2만~1.8만", labelEn: "Premium burger" },
+    { id: "fb-burger", label: "햄버거 전문", desc: "프랜차이즈·수제 패티 버거 — 객단가 0.7만~1.5만", labelEn: "Burger" },
     { id: "fb-hotdog", label: "핫도그·코로케 전문", desc: "스트리트 푸드 — 회전율·테이크아웃", labelEn: "Hotdog / korroke" },
     { id: "fb-fried-chicken-bites", label: "닭강정·치킨 핑거 푸드", desc: "포장·테이크아웃 + 분식 hybrid", labelEn: "Korean fried chicken" },
     { id: "fb-chimaek-bar", label: "치맥·치킨바", desc: "치킨 + 생맥주 — 야간 술집 hybrid", labelEn: "Chicken bar (chimaek)" },

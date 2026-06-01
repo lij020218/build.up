@@ -22,6 +22,7 @@ export function StartupTypeSelectionStage() {
     copy,
     industryCategoryId,
     selectedIndustryId,
+    selectedSpecialtyId,
     startupType, setStartupType,
     showFranchisePicker, setShowFranchisePicker,
     selectedFranchiseBrandId, setSelectedFranchiseBrandId,
@@ -164,7 +165,7 @@ export function StartupTypeSelectionStage() {
       ) : (
         /* ── Screen 2: Franchise brand picker ── */
         (() => {
-          const brands = (() => { const sub = selectedIndustryId ? getFranchiseBrandsForSubIndustry(selectedIndustryId) : []; return sub.length > 0 ? sub : getFranchiseBrandsForCategory(industryCategoryId); })();
+          const brands = (() => { const sub = selectedIndustryId ? getFranchiseBrandsForSubIndustry(selectedIndustryId, selectedSpecialtyId) : []; return sub.length > 0 ? sub : getFranchiseBrandsForCategory(industryCategoryId); })();
           const ko = language === "ko";
           return (
             <>
