@@ -630,16 +630,21 @@ public struct VendorSetupStageView: View {
                         .disabled(!canAddMaterial)
                     }
                 }
+                // 공급처를 선택하면 폼 공급처를 자동 지정 — 칩 수동 탭 마찰 제거.
+                .task(id: suppliersJson) { autoPickSupplier() }
 
                 // Material list
                 if !materials.isEmpty {
                     VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                        HStack {
-                            Text("등록 원자재 \(materials.count)개")
+                        HStack(spacing: 5) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(BUColor.success)
+                            Text("재고에 자동 등록됨 · \(materials.count)개")
                                 .font(BUFont.eyebrow)
-                                .foregroundStyle(BUColor.inkMuted)
+                                .foregroundStyle(BUColor.success)
                             Spacer()
-                            Text("총 예상 비용 \(totalOrderCost.formatted())원")
+                            Text("총 \(totalOrderCost.formatted())원")
                                 .font(BUFont.bodyCaption.weight(.semibold))
                                 .foregroundStyle(BUColor.midnight)
                         }
@@ -656,6 +661,15 @@ public struct VendorSetupStageView: View {
     }
 
     // MARK: - Actions
+
+    /// 공급처를 하나라도 선택했고 폼 공급처가 비었거나 목록에서 사라졌으면 첫 공급처 자동 선택.
+    /// (사용자가 칩을 수동으로 안 눌러도 「추가」 버튼이 바로 활성화되도록 — 입력 마찰 제거)
+    private func autoPickSupplier() {
+        let sel = selectedSuppliers
+        if fSupplier.isEmpty || !sel.contains(fSupplier) {
+            fSupplier = sel.first ?? ""
+        }
+    }
 
     private func addMaterial() {
         guard canAddMaterial else { return }
