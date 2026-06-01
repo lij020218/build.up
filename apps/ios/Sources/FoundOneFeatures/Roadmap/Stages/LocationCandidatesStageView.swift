@@ -64,10 +64,14 @@ public struct LocationCandidatesStageView: View {
     @State private var aiError: String?
     @State private var aiCenter: CLLocationCoordinate2D?
     @State private var aiPins: [MarketMapPin] = []
+    @State private var aiDistrictMatches: [MarketDistrict] = []   // 113-상권 DB 키워드 매칭 (즉시·오프라인)
 
     private func requestAiRecommend() {
         let region = aiRegion.trimmingCharacters(in: .whitespaces)
         guard !region.isEmpty, !aiLoading else { return }
+        // 1) 113-상권 정적 DB 즉시 매칭 (오프라인·풍부 — 성수동 → 성수동 상권 + 서울숲·성수카페거리…)
+        aiDistrictMatches = MarketDistrictRegistry.match(region)
+        // 2) AI 라이브 추천 (Kakao+Claude — 등록 도메인·dev 서버 필요)
         aiLoading = true; aiError = nil; aiPins = []; aiCenter = nil
         let categoryId = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
         let sub = industryId.isEmpty ? nil : industryId
@@ -212,6 +216,12 @@ public struct LocationCandidatesStageView: View {
                     Text("AI가 주변 상권을 분석 중입니다… (10~30초)")
                         .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
                 }
+                // 113-상권 DB 매칭 (즉시 표시 — AI 응답 전이라도 풍부한 상권 정보 제공)
+                if !aiDistrictMatches.isEmpty {
+                    Text("매칭된 상권 \(aiDistrictMatches.count)곳")
+                        .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+                    ForEach(aiDistrictMatches) { d in districtMatchRow(d) }
+                }
                 if let aiError {
                     Text("⚠ \(aiError)")
                         .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
@@ -272,6 +282,53 @@ public struct LocationCandidatesStageView: View {
         if score >= 70 { return BUColor.success }
         if score >= 50 { return Color.orange }
         return BUColor.danger
+    }
+
+    /// 113-상권 DB 매칭 카드 — 점수·요약 + 임대료/경쟁/유동 메타 칩 (웹 정적 DB 수준 풍부함).
+    private func districtMatchRow(_ d: MarketDistrict) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text("\(d.score)")
+                    .font(.system(size: 15, weight: .heavy)).foregroundStyle(.white)
+                    .frame(minWidth: 38, minHeight: 26)
+                    .background(scoreColor(d.score), in: Capsule())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(d.title.ko).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    Text(d.guName).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                }
+                Spacer(minLength: 0)
+            }
+            Text(d.summary.ko)
+                .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+            // 메타 칩 — 임대료·경쟁·유동·성장
+            HStack(spacing: 6) {
+                metaChip("임대료 " + rentLabel(d.meta.rentBand))
+                metaChip("경쟁 " + levelLabel(d.meta.competitionLevel))
+                metaChip("유동 " + trafficLabel(d.meta.footTraffic))
+                if d.meta.growthTrend == "rising" { metaChip("성장 ↑", tint: BUColor.success) }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight.opacity(0.035), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func metaChip(_ text: String, tint: Color = BUColor.midnight) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 7).padding(.vertical, 3)
+            .background(tint.opacity(0.08), in: Capsule())
+    }
+    private func rentLabel(_ b: String) -> String {
+        switch b { case "low": return "낮음"; case "mid": return "중간"; case "mid-high": return "중상"; case "high": return "높음"; default: return b }
+    }
+    private func levelLabel(_ l: String) -> String {
+        switch l { case "low": return "낮음"; case "mid": return "중간"; case "high": return "높음"; default: return l }
+    }
+    private func trafficLabel(_ t: String) -> String {
+        switch t { case "mid": return "중간"; case "high": return "많음"; case "very-high": return "매우많음"; default: return t }
     }
 
     // MARK: - pg 0 상권 분석
