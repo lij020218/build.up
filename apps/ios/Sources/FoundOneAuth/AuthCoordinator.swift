@@ -178,14 +178,34 @@ public final class AuthCoordinator {
     public func deleteAccount() async {
         let provider = currentSession?.provider
         do {
+            // 1. 서버에서 데이터 + auth 계정 완전 삭제 (토큰 유효한 동안 먼저).
+            try await deleteAccountOnServer()
+            // 2. 로컬 세션 정리 (provider 별 signOut — 서버에서 이미 계정 삭제됨).
             switch provider {
-            case .apple: try await appleProvider.deleteAccount()
-            case .kakao: try await kakaoProvider.deleteAccount()
-            default:     try await supabase.auth.signOut()
+            case .apple: try? await appleProvider.signOut()
+            case .kakao: try? await kakaoProvider.signOut()
+            default:     try? await supabase.auth.signOut()
             }
             state = .unauthenticated
         } catch {
             state = .failed("계정 삭제 실패: \(error.localizedDescription)")
+        }
+    }
+
+    /// 웹 API `/api/account/delete` 호출 — 데이터 + auth 계정 본체 삭제.
+    /// 개인정보처리방침 "계정 삭제" 권리 + Apple 5.1.1(v) 충족.
+    private func deleteAccountOnServer() async throws {
+        let token = try await supabase.auth.session.accessToken
+        let base = BUSupabase.shared.env.webAppURL
+        let url = base.appendingPathComponent("api/account/delete")
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = 30
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            throw AuthError.networkFailure("계정 삭제 서버 오류 (\((resp as? HTTPURLResponse)?.statusCode ?? -1)): \(body)")
         }
     }
 

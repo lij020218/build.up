@@ -87,6 +87,37 @@ export function ProfileView() {
     router.push("/auth");
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmed = typeof window !== "undefined" && window.confirm(
+      ko
+        ? "정말 계정을 삭제하시겠어요?\n모든 데이터와 구독이 영구 삭제되며, 되돌릴 수 없습니다."
+        : "Delete your account?\nAll data and subscriptions are permanently removed. This cannot be undone."
+    );
+    if (!confirmed) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert(ko ? "로그인이 필요합니다." : "Sign in required.");
+        return;
+      }
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error ?? (ko ? "계정 삭제에 실패했습니다." : "Failed to delete account."));
+        return;
+      }
+      await supabase.auth.signOut();
+      router.push("/auth");
+    } catch (e) {
+      console.error("[deleteAccount]", e);
+      alert(ko ? "오류가 발생했습니다. 잠시 후 다시 시도해 주세요." : "An error occurred. Please try again.");
+    }
+  };
+
   return (
     <section style={styles.section}>
 
@@ -325,6 +356,29 @@ export function ProfileView() {
               }}
             >
               {ko ? "로그아웃" : "Sign out"}
+            </button>
+          </div>
+        )}
+        {!isAnonymous && (
+          <div style={rowLast}>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px", color: "#ff3b30" }}>
+                {ko ? "계정 삭제" : "Delete account"}
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--muted)" }}>
+                {ko ? "모든 데이터·구독 영구 삭제 (되돌릴 수 없음)" : "Permanently remove all data & subscriptions"}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => { void handleDeleteAccount(); }}
+              style={{
+                fontSize: "12px", fontWeight: 600, color: "#fff",
+                background: "#ff3b30", border: "none", borderRadius: "10px",
+                padding: "8px 14px", cursor: "pointer", flexShrink: 0,
+              }}
+            >
+              {ko ? "계정 삭제" : "Delete"}
             </button>
           </div>
         )}
