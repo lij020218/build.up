@@ -71,8 +71,10 @@ public struct LocationCandidatesStageView: View {
         guard !region.isEmpty, !aiLoading else { return }
         // 1) 113-상권 정적 DB 즉시 매칭 (오프라인·풍부 — 성수동 → 성수동 상권 + 서울숲·성수카페거리…)
         aiDistrictMatches = MarketDistrictRegistry.match(region)
-        // 2) AI 라이브 추천 (Kakao+Claude — 등록 도메인·dev 서버 필요)
         aiLoading = true; aiError = nil; aiPins = []; aiCenter = nil
+        // 매칭 상권을 Apple 지도 핀으로 (위치는 MKLocalSearch 로 변환 — 카카오·dev 서버 무관)
+        Task { await geocodeDistrictPins(aiDistrictMatches) }
+        // 2) AI 라이브 추천 (Kakao+Claude — 등록 도메인·dev 서버 필요)
         let categoryId = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
         let sub = industryId.isEmpty ? nil : industryId
         Task {
@@ -105,10 +107,32 @@ public struct LocationCandidatesStageView: View {
             req.region = MKCoordinateRegion(center: center, latitudinalMeters: 8000, longitudinalMeters: 8000)
             if let resp = try? await MKLocalSearch(request: req).start(),
                let coord = resp.mapItems.first?.placemark.coordinate {
-                pins.append(MarketMapPin(id: item.id, coord: coord, title: item.title, score: item.score))
+                pins.append(MarketMapPin(id: "ai-" + item.id, coord: coord, title: item.title, score: item.score))
             }
         }
-        aiPins = pins
+        aiPins.append(contentsOf: pins)
+        if aiCenter == nil { aiCenter = pins.first?.coord }
+    }
+
+    /// 113-상권 DB 매칭 상권을 Apple 지도 좌표로 변환 → 점수 핀. (MKLocalSearch — 키/서버 불필요)
+    @MainActor
+    private func geocodeDistrictPins(_ districts: [MarketDistrict]) async {
+        let seoul = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
+        var pins: [MarketMapPin] = []
+        for d in districts.prefix(8) {
+            let query = (d.matchKeywords.first ?? d.title.ko)
+            let req = MKLocalSearch.Request()
+            req.naturalLanguageQuery = query + " 서울"
+            req.region = MKCoordinateRegion(center: seoul, latitudinalMeters: 45000, longitudinalMeters: 45000)
+            if let resp = try? await MKLocalSearch(request: req).start(),
+               let coord = resp.mapItems.first?.placemark.coordinate {
+                pins.append(MarketMapPin(id: "db-" + d.id, coord: coord, title: d.title.ko, score: d.score))
+            }
+        }
+        guard !pins.isEmpty else { return }
+        // 동일 검색 세션의 핀만 유지 (이전 검색 잔여 제거 없이 누적 — append)
+        aiPins.append(contentsOf: pins)
+        if aiCenter == nil { aiCenter = pins.first?.coord }
     }
 
     private var canCompleteStage: Bool {
