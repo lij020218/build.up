@@ -416,6 +416,16 @@ private struct OnboardingFlow: View {
                         )
                         // 웹·앱 SSOT: 상호명을 Supabase 에도 저장 → 웹에서 동일하게 표시.
                         StoreProfileRepository.persistStoreNameForCurrentUser(reg.storeName)
+                        // 웹·앱 SSOT: 업종·창업유형·영업개시도 Supabase 에 즉시 반영.
+                        OnboardingProfileSync.persistIndustry(
+                            categoryId: StarterIndustryData.option(by: reg.industryOptionId)?.categoryId,
+                            subIndustryId: reg.industryOptionId,
+                            startupType: reg.startupType
+                        )
+                        OnboardingProfileSync.persistBusinessLaunched(
+                            true,
+                            launchedDate: Calendar.current.date(byAdding: .day, value: -reg.daysSinceLaunch, to: Date())
+                        )
 
                         // AppStorage 키 — UserDefaults 직접 기록
                         // (RoadmapStage 뷰들이 @AppStorage 로 이 값을 읽음)
@@ -500,6 +510,12 @@ private struct OnboardingFlow: View {
                         )
                         // 웹·앱 SSOT: 상호명을 Supabase 에도 저장 → 웹에서 동일하게 표시.
                         StoreProfileRepository.persistStoreNameForCurrentUser(finalName)
+                        // 웹·앱 SSOT: AI 위저드에서 정한 업종도 business_profiles 에 반영 (영업 전).
+                        OnboardingProfileSync.persistIndustry(
+                            categoryId: result.parsed.industryCategoryId,
+                            subIndustryId: nil
+                        )
+                        OnboardingProfileSync.persistBusinessLaunched(false)
                         selectedTab = .roadmap
                     },
                     onBack: { path = nil }
@@ -532,6 +548,13 @@ private struct OnboardingFlow: View {
                         currentCash: nil,
                         businessLaunched: false
                     )
+                    // 웹·앱 SSOT: 매뉴얼 위저드에서 정한 업종·창업유형도 business_profiles 에 반영.
+                    OnboardingProfileSync.persistIndustry(
+                        categoryId: opt.categoryId,
+                        subIndustryId: id,
+                        startupType: UserDefaults.standard.string(forKey: "stage.startupType.selected")
+                    )
+                    OnboardingProfileSync.persistBusinessLaunched(false)
                 }
                 selectedTab = .roadmap
             }
