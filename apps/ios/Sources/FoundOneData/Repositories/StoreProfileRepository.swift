@@ -46,6 +46,47 @@ public actor StoreProfileRepository {
         }
     }
 
+    /// 영업시간을 현재 로그인 사용자의 user_store_data(business_open/close_time)에 저장.
+    /// 정수 시(0~23)를 "HH:00" 형식으로 변환. (웹 BusinessHoursInput 과 동일 컬럼)
+    @MainActor
+    public static func persistBusinessHoursForCurrentUser(openHour: Int, closeHour: Int) {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let client = BUSupabase.shared.client
+        let open = String(format: "%02d:00", max(0, min(23, openHour)))
+        let close = String(format: "%02d:00", max(0, min(23, closeHour)))
+        Task {
+            let repo = StoreProfileRepository(supabase: client, userId: uid)
+            try? await repo.updateBusinessHours(open: open, close: close)
+        }
+    }
+
+    /// 세무 처리 방식(세무사/직접)을 user_store_data.cpa_decision 에 저장. ("cpa" | "self" — 웹과 동일 어휘)
+    @MainActor
+    public static func persistCpaDecisionForCurrentUser(_ choice: String) {
+        let trimmed = choice.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed == "cpa" || trimmed == "self" else { return }
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let client = BUSupabase.shared.client
+        Task {
+            let repo = StoreProfileRepository(supabase: client, userId: uid)
+            try? await repo.updateCpaDecision(trimmed)
+        }
+    }
+
+    /// 세무 처리 방식 단독 저장.
+    public func updateCpaDecision(_ choice: String?) async throws {
+        let trimmed = choice?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let payload = CpaUpsert(
+            user_id: userId,
+            cpa_decision: (trimmed?.isEmpty ?? true) ? nil : trimmed,
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+        _ = try await supabase
+            .from("user_store_data")
+            .upsert(payload, onConflict: "user_id")
+            .execute()
+    }
+
     public func load() async throws -> StoreProfileInfo {
         let rows: [Row] = try await supabase
             .from("user_store_data")
@@ -120,6 +161,12 @@ public actor StoreProfileRepository {
     private struct NameUpsert: Encodable, Sendable {
         let user_id: UUID
         let store_name: String?
+        let updated_at: String
+    }
+
+    private struct CpaUpsert: Encodable, Sendable {
+        let user_id: UUID
+        let cpa_decision: String?
         let updated_at: String
     }
 

@@ -93,10 +93,15 @@ public struct InsuranceTaxSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
+                // 웹·앱 SSOT: 세무 처리 방식을 Supabase(cpa_decision)에도 저장.
+                StoreProfileRepository.persistCpaDecisionForCurrentUser(cpaChoice)
                 roadmapStore.advanceToNext(currentStageId: stageId)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: {
+                StoreProfileRepository.persistCpaDecisionForCurrentUser(cpaChoice)
+                roadmapStore.saveStageEdit(currentStageId: stageId)
+            },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 4대보험 의무 이해", detail: "1인 고용부터 4대보험 의무 — 국민·건강·고용·산재 4축 이해"),
