@@ -62,6 +62,19 @@ public struct EdaToolingSetupStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["edaTool": edaTool]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. EDA 툴 선정·라이선스 확보", detail: "Synopsys·Cadence·Siemens·오픈소스 중 선택, 클라우드·대학·파운드리 번들로 비용 절감."),
+                    .init(label: "2. PDK·IP 라이브러리 확보", detail: "파운드리 공정 PDK + 표준 셀·Hard/Soft IP 결정."),
+                ],
+                verifyItems: [
+                    "선택한 PDK가 목표 파운드리 공정과 일치하는가 — 공정 변경 시 전체 재설계가 필요합니다.",
+                    "오픈소스 툴 선택 시 목표 공정(N7 이상) PDK 지원 한계를 확인했는가.",
+                    "Hard IP 라이선스 비용(수억~수십억)이 예산에 반영돼 있는가.",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "확보한 EDA 환경으로 본격 설계·검증에 들어갑니다."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

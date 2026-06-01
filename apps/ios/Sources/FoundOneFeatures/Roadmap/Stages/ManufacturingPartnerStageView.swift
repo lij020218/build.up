@@ -52,6 +52,21 @@ public struct ManufacturingPartnerStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. EMS 파트너 선정", detail: "MOQ·소통·포트폴리오·위치 기준으로 견적 3곳 이상 비교."),
+                    .init(label: "2. 공장 감사 완료", detail: "직접 방문해 생산 라인·품질 관리를 감사."),
+                    .init(label: "3. 첫 양산 수량 결정", detail: "재고 부담 vs 단가 트레이드오프로 초도 물량 확정."),
+                ],
+                verifyItems: [
+                    "공장 직접 방문·감사를 생략하지 않았는지 — 원격 견적만으로 결정 시 품질 리스크.",
+                    "PVT 완료·ECO 반영 후 양산 지시했는지 확인.",
+                    "KC/CE 인증 취득 후 마킹을 적용했는지 — 미인증 양산은 전량 폐기 위험.",
+                    "물류·창고(3PL 또는 직접) 계획이 확정됐는지 확인.",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "양산 파트너와 첫 물량 계획이 확정되면 본격 생산·출하 단계로 넘어갑니다."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

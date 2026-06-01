@@ -52,6 +52,19 @@ public struct BomSupplyChainStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. BOM v1.0 확정", detail: "핵심 IC·기구·패키징 부품 + 부품별 대체품 1개 이상, EOL 부품 없음."),
+                    .init(label: "2. 공급사 lock-in", detail: "핵심 부품 2곳 이상 계약·MOQ·리드타임 8주 이하 확정."),
+                ],
+                verifyItems: [
+                    "단일 소싱 부품이 남아 있지 않은가 — 1곳뿐이면 공급 중단 시 양산 전체가 멈춥니다.",
+                    "BOM Cost × 3 = 목표 소비자가 시뮬레이션이 맞는가.",
+                    "QC 기준이 계약서에 문서화돼 있는가.",
+                ],
+                nextStageLabel: "다음: 현장·임상 시험",
+                nextSummary: "확정된 BOM으로 만든 제품을 실제 환경에서 검증합니다."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

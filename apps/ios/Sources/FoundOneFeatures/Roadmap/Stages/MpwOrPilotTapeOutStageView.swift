@@ -62,6 +62,21 @@ public struct MpwOrPilotTapeOutStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["tapeOutType": tapeOutType]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. MPW vs 풀마스크 선택", detail: "공동 웨이퍼(90~95% 절감) 또는 풀 마스크셋 결정."),
+                    .init(label: "2. 설계 Freeze", detail: "RTL·레이아웃 변경 금지 선언."),
+                    .init(label: "3. 테이프아웃 제출", detail: "파운드리에 테이프아웃 데이터 제출 완료."),
+                ],
+                verifyItems: [
+                    "DRC 100% 통과 — 미통과 시 제조 자체가 거절됩니다.",
+                    "LVS 일치·EMIR(전류 밀도) 검증을 마쳤는지 확인.",
+                    "노드·파운드리 선택이 맞는지 — 되돌리면 수십억과 6~9개월이 날아갑니다.",
+                    "TSMC 2/3nm 등 인기 노드는 매진 전 캐파를 미리 락인했는지 확인.",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "테이프아웃 후 6~28주 제조를 거쳐 패키징·테스트 단계로 넘어갑니다."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

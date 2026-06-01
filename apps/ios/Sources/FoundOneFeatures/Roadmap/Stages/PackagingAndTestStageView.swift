@@ -61,6 +61,21 @@ public struct PackagingAndTestStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 패키지 유형·OSAT 선정", detail: "QFN/BGA/WLP/CoWoS 중 선택 후 OSAT 파트너 확정."),
+                    .init(label: "2. 테스트 계획 수립", detail: "EWS·FT·SLT 단계와 ATE 프로그램 완성."),
+                    .init(label: "3. 초도 샘플 테스트", detail: "첫 샘플 기능·수율 검증 통과."),
+                ],
+                verifyItems: [
+                    "OSAT가 원하는 패키지 유형 경험·인증을 보유했는지 확인.",
+                    "MPW 샘플 수준 MOQ(50~200개)가 가능한 곳인지 — 대량 전용 OSAT는 소량 거절.",
+                    "Fault Coverage 95%·수율 목표를 충족했는지 (첫 MPW는 50~70%도 정상).",
+                    "OSAT 가동률 90%·가격 인상기 — 캐파를 일찍 락인했는지 확인.",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "패키징·테스트를 통과한 검증 칩으로 양산 파트너 선정 단계로 넘어갑니다."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

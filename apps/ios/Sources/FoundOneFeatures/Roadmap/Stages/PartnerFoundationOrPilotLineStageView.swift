@@ -62,6 +62,20 @@ public struct PartnerFoundationOrPilotLineStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["foundryPartner": foundryPartner]) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 파운드리 파트너 선정", detail: "TSMC·삼성·UMC 등 공정·접근성 비교 후 한 곳 확정."),
+                    .init(label: "2. NDA·양산 계약 체결", detail: "MPW 수율 확인 후 NDA와 양산 계약 서명."),
+                    .init(label: "3. 양산 스케일업 계획 확정", detail: "PO 확보·BOM 최적화·스케일업 예산까지 정리."),
+                ],
+                verifyItems: [
+                    "선단 공정 캐파 — TSMC 2/3nm는 2027–2028 매진. 예약 슬롯과 leadtime(CoWoS 52–78주)을 계약서로 확인했는가",
+                    "고객 PO 확보 — 양산 비용 선지급 전에 구매발주서가 실제로 있는가",
+                    "스케일업 예산 — 시리즈 A 또는 정부 R&D로 양산 자금이 확보됐는가",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "양산 계약과 스케일업 자금이 확정됐다면 다음 단계로 진행하세요."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

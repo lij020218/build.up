@@ -64,6 +64,19 @@ public struct FieldOrClinicalTestStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 시험 유형·계획 수립", detail: "현장 테스트(파일럿 3–5곳·지표·4~12주) 또는 임상시험(IND·IRB) 경로 확정."),
+                    .init(label: "2. 시험 실행·결과 정리", detail: "성능 지표·부작용·사용자 피드백 데이터 + 규제 제출용 보고서 작성."),
+                ],
+                verifyItems: [
+                    "임상이면 피험자 보상 보험 한국어 증서를 IND에 첨부했는가 — 미제출 시 즉시 거절됩니다.",
+                    "측정 지표를 시험 시작 전에 사전 정의했는가 — 사후 정의는 데이터 신뢰도를 떨어뜨립니다.",
+                    "Pre-IND consultation으로 우려사항을 미리 식별했는가.",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "검증된 결과를 양산·인증·IR 자료에 활용합니다."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

@@ -63,6 +63,21 @@ public struct RegulatorySubmissionStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 허가 경로 선택", detail: "Fast-Track(80~140일) vs 일반 심사를 등급에 맞춰 결정."),
+                    .init(label: "2. 식약처 사전상담 완료", detail: "등급·경로·필요 서류를 사전 상담으로 확정."),
+                    .init(label: "3. 규제 패키지 제출", detail: "기술문서·임상·GMP·라벨링 서류 일체 제출."),
+                ],
+                verifyItems: [
+                    "Fast-Track 자격 — 199개 device 카테고리(AI 디지털 의료기기 113개)에 실제 해당하는지 pre-consultation으로 확정했는가",
+                    "등급 판정 정확성 — 1~4등급 분류에 따라 심사 기간(295일~3년)이 크게 달라진다, 등급을 오판하지 않았는가",
+                    "GMP/ISO 13485 — 제조·품질관리 기준서가 제출 시점에 갖춰져 있는가",
+                    "임상 데이터 충분성 — 해당 등급이 요구하는 임상 근거가 누락 없이 포함됐는가",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "규제 패키지가 제출됐다면 승인 대응 단계로 진행하세요."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

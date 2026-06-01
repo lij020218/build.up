@@ -62,6 +62,20 @@ public struct LabSetupStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 기업부설연구소 설립", detail: "KOITA 신청·연구인력 확보·전용 공간으로 인정서 발급."),
+                    .init(label: "2. 안전 프로토콜 수립", detail: "화학물질·장비 안전 관리 체계 마련."),
+                    .init(label: "3. 핵심 장비 확보", detail: "분야별 필수 장비를 구매·임대·공용으로 확보."),
+                ],
+                verifyItems: [
+                    "연구개발인력 요건(석사 1명 또는 학사 2명) 충족 — 미달 시 RNDIP 인정 거절.",
+                    "GLP·BSL·클린룸 등 시설 표준 미달 여부 — 미달 시 인증·데이터가 무효가 됩니다.",
+                    "장비 바우처·공동 장비 활용으로 초기 비용을 최소화했는지 확인.",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "연구소·장비 기반이 갖춰지면 시제품 제작·검증 단계로 넘어갑니다."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {

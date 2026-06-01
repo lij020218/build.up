@@ -62,6 +62,21 @@ public struct PrototypeIterationStageView: View {
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            wrapup: BUStageWrapupData(
+                doneItems: [
+                    .init(label: "1. 반복 계획·게이트 기준 수립", detail: "목표 KPI와 반복 주기, go/no-go 기준을 사전 정의."),
+                    .init(label: "2. v1 프로토타입 완성·데모", detail: "핵심 기능 1가지 동작 + 외부 전문가 데모 수준 도달."),
+                    .init(label: "3. go/no-go 게이트 통과", detail: "정밀도·생존율 등 사전 기준 충족 확인."),
+                ],
+                verifyItems: [
+                    "go/no-go 기준 명확성 — 정밀도 ±2mm·세포 생존율 80% 같은 수치 cutoff가 모호하지 않은가",
+                    "멈출 용기 — 미달 시 No-go·재설계 결정을 실제로 적용했는가, 매몰비용으로 끌고 가지 않았는가",
+                    "핵심 가정 검증 — v1으로 가장 위험한 가정이 실제 검증됐는가",
+                    "반복 예산 — 로봇 v1 3천만~1억, 바이오 1천만~5천만원 범위에서 다음 사이클 자금이 있는가",
+                ],
+                nextStageLabel: "다음 단계",
+                nextSummary: "v1이 게이트를 통과했다면 다음 단계로 진행하세요."
+            ),
             currentPage: page,
             totalPages: pages.count
         ) {
