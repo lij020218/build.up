@@ -350,6 +350,28 @@ public struct VendorSetupStageView: View {
 
     private var cluster: VendorCluster { VendorCluster.from(industryId: industryId) }
 
+    // 공급처 리스트는 웹 SSOT(vendor-data.json) 에서 세부업종별로 resolved 된 데이터 사용.
+    // 섹션 제목/부제는 cluster(카테고리) 유지. 데이터가 비면 cluster 하드코딩으로 폴백.
+    private var vendorBundle: BUVendorBundle? {
+        let categoryId = StarterIndustryData.option(by: industryId)?.categoryId
+        return VendorDataRegistry.bundle(forSubIndustry: industryId, categoryId: categoryId)
+    }
+    private func toEntries(_ items: [BUVendorItem]) -> [VendorEntry] {
+        items.map { VendorEntry(name: $0.name, desc: $0.desc, tag: $0.tag) }
+    }
+    private var suppliers: [VendorEntry] {
+        if let b = vendorBundle, !b.suppliers.isEmpty { return toEntries(b.suppliers) }
+        return cluster.suppliers
+    }
+    private var equipment: [VendorEntry] {
+        if let b = vendorBundle, !b.equipment.isEmpty { return toEntries(b.equipment) }
+        return cluster.equipment
+    }
+    private var posEntries: [VendorEntry] {
+        if let b = vendorBundle, !b.pos.isEmpty { return toEntries(b.pos) }
+        return cluster.pos
+    }
+
     private var selectedSuppliers: [String] { parseStrings(suppliersJson) }
     private var selectedEquipment: [String]  { parseStrings(equipmentJson) }
     private var selectedPos: [String]        { parseStrings(posJson) }
@@ -428,7 +450,7 @@ public struct VendorSetupStageView: View {
                     title: cluster.supplierSectionTitle,
                     subtitle: cluster.supplierSectionSubtitle,
                     icon: "cart.fill",
-                    entries: cluster.suppliers,
+                    entries: suppliers,
                     selectedJson: $suppliersJson
                 )
 
@@ -436,7 +458,7 @@ public struct VendorSetupStageView: View {
                     title: cluster.equipmentSectionTitle,
                     subtitle: cluster.equipmentSectionSubtitle,
                     icon: "wrench.adjustable.fill",
-                    entries: cluster.equipment,
+                    entries: equipment,
                     selectedJson: $equipmentJson
                 )
 
@@ -444,7 +466,7 @@ public struct VendorSetupStageView: View {
                     title: "POS / 결제 시스템",
                     subtitle: "토스플레이스는 수수료 0% — 채널·예약 연동 확인",
                     icon: "creditcard.fill",
-                    entries: cluster.pos,
+                    entries: posEntries,
                     selectedJson: $posJson
                 )
 

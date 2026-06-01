@@ -1102,7 +1102,7 @@ export const SUB_INDUSTRY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorD
 /**
  * sub-industry → 카테고리 매핑 (vendor-setup-data 폴백용)
  */
-const SUB_TO_CATEGORY: Record<string, string> = {
+export const SUB_TO_CATEGORY: Record<string, string> = {
   // food (6)
   "korean-casual": "food", "delivery-meals": "food", "salad-healthy": "food",
   "ramen-noodle": "food", "chicken-burger": "food", "western-pasta-brunch": "food",
