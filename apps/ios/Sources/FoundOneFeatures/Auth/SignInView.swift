@@ -324,6 +324,17 @@ private struct EmailAuthSheet: View {
                                 .padding(.top, 4)
                         }
                         .buttonStyle(.plain)
+                        Button {
+                            resetIsError = false
+                            resetInfo = "FoundOne은 가입한 이메일이 곧 아이디입니다. 카카오·애플로 가입하셨다면 이 창을 닫고 카카오/애플 버튼으로 바로 로그인하세요. 이메일로 가입하셨다면 기억나는 이메일로 「비밀번호를 잊으셨나요?」를 눌러 확인하세요."
+                        } label: {
+                            Text("이메일(아이디)이 기억나지 않으세요?")
+                                .font(.system(size: 12.5, weight: .regular))
+                                .foregroundStyle(BUColor.inkMuted)
+                                .underline()
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.plain)
                         if let resetInfo {
                             Text(resetInfo)
                                 .font(.system(size: 12.5))

@@ -521,6 +521,19 @@ export default function AuthPage() {
                   비밀번호를 잊으셨나요?
                 </button>
               )}
+              {mode === "login" && (
+                <button
+                  type="button"
+                  onClick={() => setMessage("FoundOne은 가입한 이메일이 곧 아이디입니다. 이메일이 기억나지 않으시면, 기억나는 이메일로 「비밀번호를 잊으셨나요?」를 눌러 재설정 메일을 보내보세요 — 메일이 도착하면 그 이메일이 가입된 아이디입니다.")}
+                  style={{
+                    background: "none", border: "none", color: "rgba(255,255,255,0.4)",
+                    fontSize: 12.5, cursor: "pointer", textDecoration: "underline",
+                    padding: "2px 0", margin: "0 auto", display: "block",
+                  }}
+                >
+                  이메일(아이디)이 기억나지 않으세요?
+                </button>
+              )}
               {mode === "reset" && (
                 <button
                   type="button"
