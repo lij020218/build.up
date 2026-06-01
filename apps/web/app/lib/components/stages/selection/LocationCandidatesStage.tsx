@@ -250,6 +250,7 @@ export function LocationCandidatesStage() {
           how={[
             { title: ko ? "희망 지역 입력 (구체적으로)" : "Enter region (specific)", detail: ko ? "지하철역·핫스폿 + 도보 시간 또는 「~동·구 메인」. 카카오 Local 라이브 + 공공데이터 조회." : "Subway + walking distance or 'main street of ~dong'. Pulls Kakao Local + public data." },
             { title: ko ? "AI 라이브 추천 받기" : "AI scout", detail: ko ? "AI 가 그 지역의 평균 임대료·공실률·경쟁 밀도·유동인구·타겟 적합도 즉시 분석. 후보 3~5곳 점수와 함께." : "AI returns 3-5 candidates with rent / vacancy / competition / traffic / target-fit scores." },
+            { title: ko ? "무료 공공 도구로 교차 검증" : "Cross-check with free public tools", detail: ko ? "소상공인마당(sg.sbiz.or.kr) 업종별 상권 리포트 · 카카오맵 반경 500m 동업종 검색 · 네이버 위성·로드뷰로 가시성 · 행정안전부 생활인구(data.mois.go.kr) 시간대별 유동인구. AI 추천을 직접 도구로 재확인하면 신뢰도 ↑." : "소상공인마당 (sg.sbiz.or.kr) industry reports · Kakao Map 500m competitor scan · Naver satellite/roadview · MOIS living-population (data.mois.go.kr). Cross-checking AI picks with these free tools raises confidence." },
           ]}
         />
       )}
