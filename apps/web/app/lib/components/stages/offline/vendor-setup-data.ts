@@ -496,7 +496,8 @@ export const SUB_INDUSTRY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorD
   },
   "self-serve-cafe": {
     suppliers: [
-      { name: "메가커피·컴포즈급 도매 원두", desc: "가격 경쟁력 우선. kg당 12,000-20,000원", priceRange: "kg당 1.2-2만", priority: "primary" },
+      { name: "코라커피·리믹스커피 (대용량 원두 OEM)", desc: "카페 납품·OEM 원두 10kg부터. 사업자 전용", priceRange: "kg당 1.2-2만", priority: "primary", url: "https://www.koracoffee.co.kr" },
+      { name: "보사노바 커피로스터스 (도매)", desc: "HACCP 로스팅팩토리 원두 도매 납품", priceRange: "도매가", priority: "recommended", url: "https://www.bncr.co.kr/wholesale" },
     ],
     equipment: [
       { name: "셀프 머신 (eversys·Schaerer·다토 빈투컵)", desc: "전자동 빈투컵 머신 1000-2500만", priceRange: "1000~2500만", priority: "primary" },
@@ -528,7 +529,8 @@ export const SUB_INDUSTRY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorD
   },
   "skin-care-room": {
     suppliers: [
-      { name: "AWC 피부미용도매센터", desc: "마사지 오일·앰플·필러 정기 매입", priceRange: "전문가가", priority: "primary", url: "https://gopibu.com/" },
+      { name: "우진코스메틱 (에스테틱 전문몰)", desc: "관리실 화장품·스파·미용기기 사업자 전용", priceRange: "전문가가", priority: "primary", url: "https://m.woojincosmetic.co.kr" },
+      { name: "스킨도매·AWC 피부미용도매센터", desc: "에스테틱 화장품·재료·앰플 종합 도매", priceRange: "전문가가", priority: "recommended", url: "https://skindomae.co.kr" },
     ],
     equipment: [
       { name: "관리 베드 (전동 리프트)", desc: "전동식 관리 베드 110-220만", priceRange: "110~220만", priority: "primary" },
@@ -537,7 +539,8 @@ export const SUB_INDUSTRY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorD
   },
   "waxing-studio": {
     suppliers: [
-      { name: "왁스 도매 (Cirepil·Jax Wax·Lyn Beauty)", desc: "벨라(Cirepil) Bleue 5kg 8-12만 / Jax Wax 250g 1.5-3만", priceRange: "kg당 1-3만", priority: "primary" },
+      { name: "SB-SHOP·뷰티난다 (왁싱 소모품 도매)", desc: "슈가링/소프트/하드왁스·워머기·부직포·전후처리제", priceRange: "kg당 1-3만", priority: "primary", url: "https://sb-shop.co.kr" },
+      { name: "사라센 (왁싱 부자재)", desc: "워머기·실리콘바스켓·부직포 페이퍼·왁스", priceRange: "도매가", priority: "recommended", url: "https://thesaracen.com" },
     ],
     equipment: [
       { name: "왁스 워머 (1구·2구·5구)", desc: "1구 5-15만 / 2구 10-25만 / 5구 30-60만", priceRange: "5~60만", priority: "primary" },
@@ -556,7 +559,8 @@ export const SUB_INDUSTRY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorD
   },
   "makeup-bridal": {
     suppliers: [
-      { name: "프로 메이크업 도매 (MAC·NARS)", desc: "프로페셔널 메이크업 라인 정기 매입", priceRange: "전문가가", priority: "primary" },
+      { name: "헤어2000·글로벌뷰티 (미용재료 도매)", desc: "메이크업·헤어재료 미용인 전용 최대 도매", priceRange: "전문가가", priority: "primary", url: "https://m.hair2000.co.kr" },
+      { name: "CAC화장품·민팩토리 (브러쉬·툴)", desc: "전문가용 메이크업 제품·브러쉬 제조", priceRange: "전문가가", priority: "recommended", url: "https://caccosme.co.kr" },
     ],
     equipment: [
       { name: "메이크업 거울·LED 조명", desc: "스탠드 거울 + LED 50-150만", priceRange: "50~150만", priority: "primary" },
@@ -564,9 +568,535 @@ export const SUB_INDUSTRY_VENDOR_DATA: Record<string, Partial<SubIndustryVendorD
     ],
   },
 
-  // ─── 나머지 sub-industries — 카테고리 베이스 사용 ────────────
-  // (retail, fitness, education, pet, living, space 6개 sub-industry 각각은
-  //  카테고리 공통 베이스로 충분히 커버됨. 추가 분기 데이터는 차후 확장)
+  // ─── RETAIL (6) — 2026-06 웹 검증 ──────────────────────────
+  "convenience-small": {
+    suppliers: [
+      { name: "주류특공대 (9bottle1box)", desc: "사업자 전용 주류 발주. 맥주·소주·와인 소량발주 + 세금계산서", priceRange: "도매가", priority: "primary", url: "https://www.9bottle1box.com/" },
+      { name: "고래마트 (음료 도매)", desc: "음료·생수 사업자 도매. 회원가 + 세금계산서", priceRange: "도매가", priority: "primary", url: "https://m.whalemart.co.kr/" },
+      { name: "코카콜라·롯데칠성 지역대리점", desc: "음료 직거래 정기납품. 거래처 등록 후 공급가", priceRange: "대리점가", priority: "recommended" },
+    ],
+    equipment: [
+      { name: "라셀르·한성 쇼케이스 (음료 냉장)", desc: "음료 쇼케이스 신품 60-250만 / 중고 30-120만", priceRange: "60~250만", priority: "primary", url: "https://lasselemall.com/" },
+      { name: "오케이포스·포스뱅크 (소매 POS)", desc: "바코드·재고관리 국산 POS. 26만 가맹점", priceRange: "70~150만", priority: "primary", url: "https://www.okpos.co.kr/" },
+    ],
+    pos: [
+      { name: "토스플레이스 POS", desc: "결제·재고·고객 통합. SW 무료", priceRange: "기기 별도", priority: "recommended", url: "https://tossplace.com/product/pos" },
+    ],
+  },
+  "lifestyle-goods": {
+    suppliers: [
+      { name: "도매꾹 (B2B 도매 1위)", desc: "잡화·인테리어 소품 소량 사입", priceRange: "도매가", priority: "primary", url: "https://domeggook.com/" },
+      { name: "오너클랜 (위탁·도매)", desc: "사업자 승인 후 도매가. 위탁 무재고 가능", priceRange: "도매가", priority: "recommended", url: "https://www.ownerclan.com/" },
+      { name: "도매토피아 (직수입·직발송)", desc: "생활소품 다품종 종합 도매", priceRange: "도매가", priority: "recommended", url: "https://dometopia.com/" },
+    ],
+    equipment: [
+      { name: "마켓비 (상업용 진열가구)", desc: "선반·진열대 5-30만. 매장 디스플레이", priceRange: "5~30만", priority: "recommended", url: "https://marketb.kr/" },
+    ],
+    pos: [
+      { name: "토스플레이스 / 페이히어", desc: "소품샵 POS·재고·멤버십", priceRange: "구독+수수료", priority: "primary", url: "https://payhere.in/" },
+    ],
+  },
+  "beauty-supplies": {
+    suppliers: [
+      { name: "화장품 도매마켓", desc: "기초·기능성·메이크업 종합 도매. 창업 지원", priceRange: "도매가", priority: "primary", url: "https://domaemarket.kr/" },
+      { name: "화장품스토리 (CMT)", desc: "K-Beauty 브랜드 도매·위탁 B2B", priceRange: "도매가", priority: "recommended", url: "https://www.cmtstory.com/" },
+      { name: "화곡동 화장품 도매단지", desc: "서울 최대 오프라인 도매. 직접 단가협상", priceRange: "현장 도매가", priority: "optional" },
+    ],
+    equipment: [
+      { name: "마켓비 (진열·테스터대)", desc: "진열 선반·디스플레이 5-40만", priceRange: "5~40만", priority: "recommended", url: "https://marketb.kr/" },
+    ],
+    pos: [
+      { name: "페이히어 (멤버십 강점)", desc: "단골 적립·멤버십 태블릿 POS", priceRange: "구독+수수료", priority: "primary", url: "https://payhere.in/" },
+    ],
+  },
+  "fashion-accessories": {
+    suppliers: [
+      { name: "신상마켓 (동대문 도매 1위)", desc: "동대문 도매 80%+ 입점. 앱 사입·배송", priceRange: "도매가", priority: "primary", url: "https://sinsangmarket.kr/" },
+      { name: "딜리버드 (사입·검수·배송 대행)", desc: "신상마켓 운영사. 사입대행 통합", priceRange: "대행 수수료", priority: "primary", url: "https://dealicious.kr/services" },
+      { name: "남도마켓 (액세서리 강점)", desc: "남대문·동대문 도매 소싱", priceRange: "도매가", priority: "recommended", url: "https://www.ndmarket.co.kr/" },
+    ],
+    equipment: [
+      { name: "마켓비 (행거·진열)", desc: "행거·전신거울·진열 테이블 3-20만", priceRange: "3~20만", priority: "recommended", url: "https://marketb.kr/" },
+    ],
+    pos: [
+      { name: "오케이포스 (SKU 재고)", desc: "사이즈·컬러 SKU 재고관리 강점", priceRange: "70~150만", priority: "primary", url: "https://www.okpos.co.kr/" },
+    ],
+  },
+  "health-food-store": {
+    suppliers: [
+      { name: "노바렉스 (건기식 ODM 1위)", desc: "개별인정원료 다수. 자체 브랜드 제조", priceRange: "OEM 견적", priority: "primary", url: "https://www.novarex.co.kr/" },
+      { name: "코스맥스엔비티·콜마비앤에이치", desc: "건기식 OEM/ODM 대형 제조사", priceRange: "OEM 견적", priority: "recommended", url: "https://www.cosmaxnbt.com/" },
+      { name: "QOEM (소량 OEM)", desc: "소규모 창업·초기물량 낮은 MOQ", priceRange: "소량 OEM", priority: "optional", url: "https://www.qoem.co.kr/OEM" },
+    ],
+    equipment: [
+      { name: "마켓비 진열대 + 냉장 쇼케이스", desc: "상온 매대 5-30만 / 유산균 냉장 쇼케이스", priceRange: "5~200만", priority: "recommended" },
+    ],
+    pos: [
+      { name: "오케이포스 (유통기한·로트)", desc: "다품목 재고·유통기한 관리", priceRange: "70~150만", priority: "primary", url: "https://www.okpos.co.kr/" },
+    ],
+  },
+  "unmanned-retail": {
+    suppliers: [
+      { name: "지역 빙과 대리점 (빙그레·롯데웰푸드·해태)", desc: "무인 아이스크림점 핵심. 대리점 정기납품", priceRange: "대리점가", priority: "primary" },
+      { name: "도매토피아·미성비즈몰 (스낵·음료)", desc: "무인 스낵점 보충 + 차별화 수입과자", priceRange: "도매가", priority: "recommended", url: "https://dometopia.com/" },
+    ],
+    equipment: [
+      { name: "에어포스 무인매장 IoT", desc: "키오스크+CCTV+냉난방+출입문 앱 통합제어", priceRange: "패키지 견적", priority: "primary", url: "https://airpos.co.kr/" },
+      { name: "테크맥스·넥스니즈 키오스크", desc: "셀프결제 키오스크 200-500만", priceRange: "200~500만", priority: "recommended" },
+    ],
+    pos: [
+      { name: "토스플레이스 무인 셀프결제", desc: "바코드 셀프결제 24시 무인운영", priceRange: "기기 별도", priority: "primary", url: "https://tossplace.com/sector/cashierless" },
+      { name: "ADT캡스·에스원 무인 AI CCTV", desc: "이상탐지·출동경비·게이트 통합 보안", priceRange: "월 구독", priority: "recommended", url: "https://www.adtcaps.co.kr/" },
+    ],
+  },
+
+  // ─── FITNESS (6) — 2026-06 웹 검증 ─────────────────────────
+  "pilates-studio": {
+    suppliers: [
+      { name: "요가몰 (매트·소도구 도매)", desc: "강사·센터 도매할인. 매트·링·볼", priceRange: "도매가", priority: "primary", url: "https://yogamall.co.kr/" },
+    ],
+    equipment: [
+      { name: "케어필라테스 (국산 리포머)", desc: "국산 리포머·캐딜락·체어. 1,000+ 센터 납품", priceRange: "국산 중가", priority: "primary", url: "https://pilatesmall.kr/" },
+      { name: "발란스드바디 (수입 리포머)", desc: "미국 프리미엄 정식수입. 2년 보증", priceRange: "수입 고가", priority: "recommended", url: "https://balancedbodyshop.co.kr/" },
+    ],
+    pos: [
+      { name: "하이파이브 (필라테스 예약 강점)", desc: "협회 최다 지점. 무료 예약앱+매출관리", priceRange: "무료+유료", priority: "primary", url: "https://www.hifive.center/" },
+      { name: "바디코디 (CRM 1위)", desc: "4,000+ 시설. 키오스크·출입 통합", priceRange: "월 구독", priority: "recommended", url: "https://bodycodi.com/" },
+    ],
+  },
+  "pt-gym": {
+    suppliers: [
+      { name: "머슬팩토리 (보충제 도매)", desc: "단백질 보충제 위탁배송 도매", priceRange: "도매가", priority: "primary", url: "https://www.musclefactory.co.kr/" },
+    ],
+    equipment: [
+      { name: "KO Health (헬스기구 제조·직수입)", desc: "300평 전시매장. 신규 일괄 셋업 견적", priceRange: "신품 견적", priority: "primary", url: "https://m.kohealthco.or.kr/" },
+      { name: "헬스119 (신품+중고 가성비)", desc: "중고 머신으로 초기투자 절감", priceRange: "중고/신품", priority: "recommended", url: "https://health119.kr/" },
+    ],
+    pos: [
+      { name: "바디코디 (헬스 CRM 1위)", desc: "회원·키오스크·출입통제 통합. 170만+ 사용자", priceRange: "월 구독", priority: "primary", url: "https://bodycodi.com/" },
+      { name: "핏투비 (다업종 범용)", desc: "회원·예약·출석·정산·지점 관리", priceRange: "월 구독", priority: "recommended", url: "https://fittobe.oopy.io/" },
+    ],
+  },
+  "yoga-studio": {
+    suppliers: [
+      { name: "요가몰 (매트·소도구 도매)", desc: "블록·스트랩·볼스터 강사 도매할인", priceRange: "도매가", priority: "primary", url: "https://yogamall.co.kr/" },
+      { name: "만두카 (프리미엄 매트)", desc: "원장·강사 선호 프리미엄 매트", priceRange: "프리미엄", priority: "recommended", url: "https://manduka.co.kr/" },
+    ],
+    equipment: [
+      { name: "요가 도구 일괄 (요가몰)", desc: "블록·스트랩·볼스터·해먹", priceRange: "도매가", priority: "primary", url: "https://yogamall.co.kr/" },
+    ],
+    pos: [
+      { name: "하이파이브 / 바디코디", desc: "부티크 스튜디오 예약·회원관리", priceRange: "무료+유료", priority: "primary", url: "https://www.hifive.center/" },
+    ],
+  },
+  "crossfit-box": {
+    suppliers: [
+      { name: "와드프렌즈코리아", desc: "그립·의류·바닥재 등 크로스핏 전문", priceRange: "도매가", priority: "primary", url: "https://wodfriendskorea.com/" },
+    ],
+    equipment: [
+      { name: "와드프렌즈코리아 (박스 셋업)", desc: "바벨·케틀벨·리그·링·박스점프 일괄", priceRange: "견적", priority: "primary", url: "https://wodfriendskorea.com/equipment" },
+      { name: "베스트유어즈 (Rogue 정품)", desc: "Rogue 리프팅벨트·짐네스틱 국내 판매", priceRange: "수입 정품", priority: "recommended", url: "https://bestyours.co.kr/" },
+    ],
+    pos: [
+      { name: "하이파이브 (WOD·예약)", desc: "크로스핏 협회 최다. 클래스 예약·공석알림", priceRange: "무료+유료", priority: "primary", url: "https://www.hifive.center/" },
+    ],
+  },
+  "golf-studio": {
+    suppliers: [
+      { name: "골프씨이오 (점주 도매)", desc: "스크린골프 점주 전용 도매 (공·장갑·소모품)", priceRange: "점주가", priority: "primary", url: "http://m.golfceo.co.kr/" },
+      { name: "골프존마켓 (용품)", desc: "골프존커머스. 정품 용품 일괄", priceRange: "정품가", priority: "recommended", url: "https://golfzonmarket.com/" },
+    ],
+    equipment: [
+      { name: "골프존 / 카카오VX (스크린 시스템)", desc: "구질분석 1·2위. 5룸 시스템+인테리어 약 5억", priceRange: "시스템 2.6억~", priority: "primary", url: "https://www.golfzon.com/" },
+      { name: "SG골프 (가성비 시스템)", desc: "36개월 최대 80% 할부. 평당 120-130만", priceRange: "할부 가능", priority: "recommended", url: "http://www.sg-golf.kr/" },
+    ],
+    pos: [
+      { name: "핏투비 (골프 회원·정산)", desc: "스크린골프 회원·예약·정산 관리", priceRange: "월 구독", priority: "recommended", url: "https://fittobe.oopy.io/" },
+    ],
+  },
+  "unmanned-fitness": {
+    suppliers: [
+      { name: "머슬팩토리 (보충제 자판 도매)", desc: "무인 자판기·진열 보충용 보충제 도매", priceRange: "도매가", priority: "recommended", url: "https://www.musclefactory.co.kr/" },
+    ],
+    equipment: [
+      { name: "헬스119 / KO Health (머신 셋업)", desc: "중고+신품 무인점 일괄 셋업", priceRange: "견적", priority: "primary", url: "https://health119.kr/" },
+    ],
+    pos: [
+      { name: "트랩핏 (무인 헬스 전용)", desc: "회원+출입통제+예약+자동결제 올인원", priceRange: "월 구독", priority: "primary", url: "https://trepfit.co.kr/" },
+      { name: "바디코디 (무인 운영 검증)", desc: "CRM+키오스크+출입통제 통합", priceRange: "월 구독", priority: "recommended", url: "https://bodycodi.com/" },
+    ],
+  },
+
+  // ─── EDUCATION (6) — 2026-06 웹 검증 ───────────────────────
+  "study-room": {
+    suppliers: [
+      { name: "쿠팡 비즈니스 (운영 소모품)", desc: "생수·간식·청소용품 정기배송 + 세금계산서", priceRange: "품목별", priority: "recommended", url: "https://biz.coupang.com" },
+    ],
+    equipment: [
+      { name: "아하 (전자칠판·전자교탁)", desc: "회의실 55-86인치 디스플레이 200만대~", priceRange: "200만~", priority: "recommended", url: "https://i-aha.com/" },
+      { name: "룸앤오피스 (B2B 가구)", desc: "회의 테이블·의자·캐비닛 위탁배송", priceRange: "품목별", priority: "recommended", url: "https://www.roomnoffice.com" },
+    ],
+    pos: [
+      { name: "스페이스클라우드 (공간대여 1위)", desc: "예약·결제·정산. 수수료 10% (호스트)", priceRange: "수수료 10%", priority: "primary", url: "https://www.spacecloud.kr/" },
+      { name: "제로아이즈·코보시스 (무인출입)", desc: "QR/지문 출입+결제 키오스크 무인운영", priceRange: "도입비", priority: "recommended", url: "https://www.zero-eyes.com/study-cafe" },
+    ],
+  },
+  "kids-academy": {
+    suppliers: [
+      { name: "비상교육·천재교육 (교재 직판)", desc: "초·중 검인정 교재·문제집 학원 공급", priceRange: "교재별", priority: "primary", url: "https://book.visang.com/main" },
+      { name: "화방넷 (예체능 교구)", desc: "아동미술 재료·교구 도매", priceRange: "품목별", priority: "recommended", url: "https://hwabang.net/" },
+    ],
+    equipment: [
+      { name: "아하 (전자칠판)·룸앤오피스 (가구)", desc: "교실 전자칠판 + 아동 책걸상·사물함", priceRange: "견적", priority: "recommended", url: "https://i-aha.com/" },
+    ],
+    pos: [
+      { name: "클래스업 (무료 학원관리)", desc: "출결·수납·키오스크 올인원. 알림톡", priceRange: "기본 무료", priority: "primary", url: "https://www.classup.io/" },
+      { name: "학원조아 (수납·미납 관리)", desc: "출결·수납·상담·간편결제 통합", priceRange: "월 구독", priority: "recommended", url: "https://hakwonjoa.com/" },
+    ],
+  },
+  "adult-class": {
+    suppliers: [
+      { name: "화방넷·크래프트피아 (원데이 재료)", desc: "미술·공예·캔들·가죽 등 키트 재료 도매", priceRange: "품목별", priority: "primary", url: "https://hwabang.net/" },
+    ],
+    equipment: [
+      { name: "룸앤오피스 (작업 가구)", desc: "작업 테이블·스툴·수납 도매", priceRange: "품목별", priority: "recommended", url: "https://www.roomnoffice.com" },
+    ],
+    pos: [
+      { name: "솜씨당 (원데이 집객 1위)", desc: "원데이클래스 집객·예약·결제 대표 플랫폼", priceRange: "수수료", priority: "primary", url: "https://www.sssd.co.kr" },
+      { name: "프립 (취미·여가)", desc: "취미·액티비티 예약. 성인 클래스 집객", priceRange: "수수료", priority: "recommended", url: "https://www.frip.co.kr" },
+    ],
+  },
+  "language-academy": {
+    suppliers: [
+      { name: "YBM (어학 교재 1위)", desc: "영어·중국어 교재·회화. 화상·전화영어 콘텐츠", priceRange: "교재별", priority: "primary", url: "https://www.ybm.co.kr/" },
+      { name: "능률교육·다락원 (코스북)", desc: "초중고 영어·원서 ESL 코스북 공급", priceRange: "교재별", priority: "recommended", url: "https://www.neungyule.com" },
+    ],
+    equipment: [
+      { name: "아하 (어학실 전자칠판)·룸앤오피스", desc: "오디오 연동 디스플레이 + 1:1 부스 가구", priceRange: "견적", priority: "recommended", url: "https://i-aha.com/" },
+    ],
+    pos: [
+      { name: "클래스업·캠스몬 (학원관리)", desc: "출결·수납·알림 + LMS. 어학원 커스터마이즈", priceRange: "무료/구독", priority: "primary", url: "https://www.classup.io/" },
+    ],
+  },
+  "coding-class": {
+    suppliers: [
+      { name: "에듀이노 (코딩 교구 전문)", desc: "아두이노·보드·키트·로봇 학원 공급", priceRange: "키트별", priority: "primary", url: "https://www.eduino.kr/" },
+      { name: "디바이스마트 (교육용 키트)", desc: "아두이노·마이크로비트 대량. 스타터 1-3만", priceRange: "1~3만", priority: "recommended", url: "https://www.devicemart.co.kr/" },
+    ],
+    equipment: [
+      { name: "롯데렌탈·AJ렌탈 (PC·태블릿 리스)", desc: "실습용 PC·태블릿 장기 렌탈. 초기비 절감", priceRange: "월 렌탈", priority: "recommended", url: "https://www.lotterental.com" },
+    ],
+    pos: [
+      { name: "엔트리 (무료 코딩 LMS)", desc: "네이버 커넥트재단 블록코딩 국내 표준. 무료", priceRange: "무료", priority: "primary", url: "https://playentry.org/" },
+      { name: "클래스업·학원조아 (학원관리)", desc: "출결·수납·알림 통합 SaaS", priceRange: "무료/구독", priority: "recommended", url: "https://www.classup.io/" },
+    ],
+  },
+  "small-study-room": {
+    suppliers: [
+      { name: "EBS·천재교육·비상교육 (교재)", desc: "EBS 교재·보습 문제집 직판. 공부방 핵심", priceRange: "교재별", priority: "primary", url: "https://book.ebs.co.kr/" },
+    ],
+    equipment: [
+      { name: "룸앤오피스 (소량 가구)", desc: "책걸상·화이트보드·수납 소량 도매", priceRange: "품목별", priority: "recommended", url: "https://www.roomnoffice.com" },
+    ],
+    pos: [
+      { name: "클래스업 (1인 무료)", desc: "교습소·공부방 출결·수납·알림 무료", priceRange: "기본 무료", priority: "primary", url: "https://www.classup.io/" },
+      { name: "자란다 (과외 매칭)", desc: "초등 과외·돌봄 튜터 매칭·집객", priceRange: "수수료", priority: "recommended", url: "https://www.jaranda.kr" },
+    ],
+  },
+
+  // ─── PET (6) — 2026-06 웹 검증 ─────────────────────────────
+  "pet-grooming": {
+    suppliers: [
+      { name: "펫도매·펫허그 B2B (소모품)", desc: "미용 소모품·약품·타올 사업자 도매", priceRange: "사업자가", priority: "primary", url: "https://petdome.co.kr/" },
+      { name: "도쿠몰 (미용 커뮤니티몰)", desc: "미용가위·소모품·약품 전문", priceRange: "회원가", priority: "recommended", url: "https://dokumall.com/" },
+    ],
+    equipment: [
+      { name: "하성아이몰 (미용 테이블·기기)", desc: "애견 미용테이블·미용기 직판 10-40만", priceRange: "10~40만", priority: "primary", url: "https://m.hasungimall.com/" },
+      { name: "비요세까이 (미용가위)·벨라펫 (블로어)", desc: "전문 가위 10-50만 / 드라이·블로어 20-70만", priceRange: "10~70만", priority: "recommended", url: "https://biyosekkai.com/" },
+    ],
+    pos: [
+      { name: "공비서 (애견미용 공식 지원)", desc: "예약·고객·매출 CRM. 네이버예약 연동", priceRange: "월 구독", priority: "primary", url: "https://gongbiz.kr/" },
+      { name: "티피·반짝 (펫 예약)", desc: "예약·동의서·이용권·알림장 올인원", priceRange: "월 구독", priority: "recommended", url: "https://teepee.co.kr/" },
+    ],
+  },
+  "pet-supplies": {
+    suppliers: [
+      { name: "더펫마트·펫비투비 (용품 도매)", desc: "사료·간식·용품 B2B 도매. 펫샵 납품", priceRange: "사업자가", priority: "primary", url: "https://thepetmart.co.kr/" },
+      { name: "펫도매 (위탁·사입)", desc: "위탁배송 무재고 소매 가능", priceRange: "사업자가", priority: "recommended", url: "https://petdome.co.kr/" },
+    ],
+    equipment: [
+      { name: "수진펫·포에버마이펫 (진열 용품)", desc: "진열·구색용 용품 대량 공급", priceRange: "도매가", priority: "recommended", url: "https://www.sujinpet.co.kr/" },
+    ],
+    pos: [
+      { name: "마이포스 (애견샵 POS)", desc: "예약·고객관리·결제·통계", priceRange: "월 구독", priority: "primary", url: "http://my-pos.co.kr/" },
+    ],
+  },
+  "pet-hotel": {
+    suppliers: [
+      { name: "펫허그 B2B·더펫마트 (소모품)", desc: "배변패드·식기·사료 사업자 도매", priceRange: "사업자가", priority: "primary", url: "https://pethugb2b.co.kr/" },
+    ],
+    equipment: [
+      { name: "애니멀코드 (켄넬·케이지 제작)", desc: "맞춤 켄넬·견사 (대형견 포함) 제작", priceRange: "제작 견적", priority: "primary", url: "https://animalcage.creatorlink.net/" },
+      { name: "CIP시스템 (CCTV 라이브)", desc: "호실별 실시간 모니터링 구축", priceRange: "설치 견적", priority: "primary", url: "https://cipsystem.co.kr/solution/cctv" },
+    ],
+    pos: [
+      { name: "공비서 (애견호텔 공식 지원)", desc: "예약·입퇴실·고객관리 CRM", priceRange: "월 구독", priority: "primary", url: "https://gongbiz.kr/" },
+      { name: "똑독 (유치원·호텔 관리)", desc: "예약·알림장·사진앨범 앱", priceRange: "월 구독", priority: "recommended", url: "https://home.knockdog.net/" },
+    ],
+  },
+  "pet-cafe": {
+    suppliers: [
+      { name: "펫비투비·펫도매 (용품·간식)", desc: "매장 비치 간식·용품·위생용품 도매", priceRange: "사업자가", priority: "recommended", url: "https://petbtob.co.kr/" },
+    ],
+    equipment: [
+      { name: "수진펫 (펜스·식기·놀이용품)", desc: "카페 비치 동물 용품 도매", priceRange: "도매가", priority: "recommended", url: "https://www.sujinpet.co.kr/" },
+    ],
+    pos: [
+      { name: "오케이포스·토스플레이스 (카페 POS)", desc: "음료 결제·매출·재고. 카페 범용 POS", priceRange: "기기+월", priority: "primary", url: "https://tossplace.com/" },
+    ],
+  },
+  "pet-training-school": {
+    suppliers: [
+      { name: "펫허그 B2B·펫비투비 (훈련 간식)", desc: "훈련 간식·배변패드·위생용품 도매", priceRange: "사업자가", priority: "primary", url: "https://pethugb2b.co.kr/" },
+    ],
+    equipment: [
+      { name: "애구애구 (어질리티 기구)", desc: "허들·터널·시소 등 운동기구 제작", priceRange: "수만~수십만", priority: "primary", url: "https://eguegu.co.kr/" },
+      { name: "CIP시스템 (운동장 CCTV)", desc: "운동장·견사 실시간 모니터링", priceRange: "설치 견적", priority: "recommended", url: "https://cipsystem.co.kr/solution/cctv" },
+    ],
+    pos: [
+      { name: "다이얼독·똑독 (유치원 관리)", desc: "AI 알림장·예약·출결·회원관리", priceRange: "월 구독", priority: "primary", url: "https://www.dialodog.com/" },
+    ],
+  },
+  "pet-walking-visit": {
+    suppliers: [
+      { name: "펫도매·수진펫 (케어용품)", desc: "산책줄·하네스·배변봉투 소량 사입", priceRange: "사업자가", priority: "recommended", url: "https://petdome.co.kr/" },
+    ],
+    equipment: [
+      { name: "바램펫 라일리 (이동형 펫캠)", desc: "방문 케어 시 보호자 공유용 펫캠 10-20만", priceRange: "10~20만", priority: "optional", url: "https://www.varram.co.kr/" },
+    ],
+    pos: [
+      { name: "도그메이트 (펫시터 매칭 1위)", desc: "방문돌봄·산책 매칭·예약·정산", priceRange: "건당 수수료", priority: "primary", url: "https://www.dogmate.co.kr" },
+      { name: "펫트너·와요 (예약 슈퍼앱)", desc: "펫시터·방문미용 통합 예약", priceRange: "건당", priority: "recommended", url: "https://www.petner.kr/" },
+    ],
+  },
+
+  // ─── LIVING-SERVICE (6) — 2026-06 웹 검증 ──────────────────
+  "laundry-service": {
+    suppliers: [
+      { name: "세탁몰·오성크린몰 (용제·세제)", desc: "드라이클리닝 용제·세제·악취제거제 도매", priceRange: "도매가", priority: "primary", url: "https://setacmall.com" },
+    ],
+    equipment: [
+      { name: "LG 상업용 세탁기 (B2B)", desc: "자동 세제공급·원격 코스설정 업소용", priceRange: "견적", priority: "primary", url: "https://www.lge.co.kr/" },
+      { name: "런드리마켓 (세탁·건조 설비)", desc: "업소용 세탁기·건조기·다림질 설비", priceRange: "견적", priority: "recommended", url: "https://laundrymarket.co.kr" },
+    ],
+    pos: [
+      { name: "세탁특공대·런드리고 (수거배송)", desc: "비대면 세탁 수거·배송 물량 연계 채널", priceRange: "제휴", priority: "recommended", url: "https://www.getwashswat.com" },
+    ],
+  },
+  "cleaning-service": {
+    suppliers: [
+      { name: "크린글로벌·하나로종합 (청소용품)", desc: "전문세제·청소도구·건물관리 소모품 도소매", priceRange: "도매가", priority: "primary", url: "https://cleaniglobal.kr" },
+    ],
+    equipment: [
+      { name: "한국카처 (고압·진공·스팀)", desc: "업소용 청소장비. 렌탈로 초기비 절감", priceRange: "구매/렌탈", priority: "primary", url: "https://karcher.co.kr" },
+    ],
+    pos: [
+      { name: "미소 (홈서비스 매칭 1위)", desc: "입주·정기청소 매칭. 평당 1만원~ 견적", priceRange: "수수료", priority: "primary", url: "https://miso.kr" },
+      { name: "숨고 (맞춤견적 매칭)", desc: "청소 도우미 실시간 견적 매칭", priceRange: "수수료", priority: "recommended", url: "https://soomgo.com" },
+    ],
+  },
+  "repair-service": {
+    suppliers: [
+      { name: "슈미즈·슈토프 (신발 부자재)", desc: "비브람·아웃솔·굽 등 수선재료 도매", priceRange: "도매가", priority: "primary", url: "https://shoemiz.com" },
+      { name: "슈닥터 (슈케어 용품)", desc: "가죽클리너·방수스프레이·수선재료", priceRange: "도매가", priority: "recommended", url: "https://www.shoedr.co.kr" },
+    ],
+    equipment: [
+      { name: "수선 도구 (슈미즈 재단·접착)", desc: "재단판·접착도구 등 수선 공구", priceRange: "품목별", priority: "recommended", url: "https://shoemiz.com" },
+    ],
+    pos: [
+      { name: "패피스 (명품 수선 견적)", desc: "가방·구두 수선 가격·견적 플랫폼", priceRange: "수수료", priority: "recommended", url: "https://fapis.io" },
+    ],
+  },
+  "self-laundry": {
+    suppliers: [
+      { name: "세탁몰 (세제·용제 보충)", desc: "무인 빨래방 세제·섬유유연제 보충 도매", priceRange: "도매가", priority: "recommended", url: "https://setacmall.com" },
+    ],
+    equipment: [
+      { name: "워시엔조이 (셀프빨래방 1위)", desc: "900호점+. 원격 매장관리·키오스크 솔루션", priceRange: "창업 ~1.8억", priority: "primary", url: "https://washenjoy.co.kr" },
+      { name: "크린토피아 코인워시 (지르바우 장비)", desc: "코인빨래방 1위 1,148개. 지르바우 독점", priceRange: "복합 ~1.2억", priority: "primary", url: "https://www.cleantopia.com/kr/establish/coin.do" },
+    ],
+    pos: [
+      { name: "워시엔조이 매장관리 솔루션", desc: "키오스크 원격관리·매출분석·고객관리", priceRange: "포함", priority: "primary", url: "https://washenjoy.co.kr" },
+    ],
+  },
+  "print-copy": {
+    suppliers: [
+      { name: "한솔제지·한국제지 (복사용지)", desc: "A4 복사용지 박스(2,500매) 대량공급", priceRange: "박스가", priority: "primary", url: "https://www.hansolpaper.co.kr" },
+    ],
+    equipment: [
+      { name: "신도리코 (디지털 복합기·인쇄기)", desc: "컬러 복합기·대형 디지털 인쇄기. 렌탈/판매", priceRange: "렌탈/구매", priority: "primary", url: "https://www.sindoh.com" },
+      { name: "제록스마켓 (복합기 임대)", desc: "컬러복합기 임대 (토너·A/S 포함)", priceRange: "약정 임대", priority: "recommended", url: "https://xeroxmarket.co.kr" },
+    ],
+    pos: [
+      { name: "성원애드피아·레드프린팅 (인쇄 발주)", desc: "명함·전단·책자 온라인 인쇄 발주 (1장~)", priceRange: "발주별", priority: "primary", url: "https://www.swadpia.co.kr" },
+    ],
+  },
+  "device-repair": {
+    suppliers: [
+      { name: "YJCNC (액정·부품 도매)", desc: "수리업체 대상 액정·부품 도매 + 수입대행", priceRange: "도매가", priority: "primary", url: "https://www.yjcnc.co.kr" },
+      { name: "디바이스마트 (부품·공구)", desc: "전자부품·분해공구 종합 (범용 수리)", priceRange: "품목별", priority: "recommended", url: "https://www.devicemart.co.kr" },
+    ],
+    equipment: [
+      { name: "수리 공구 (디바이스마트)", desc: "핫플레이트·현미경·분해도구 소형 공구", priceRange: "품목별", priority: "recommended", url: "https://www.devicemart.co.kr" },
+    ],
+    pos: [
+      { name: "청년폰 (수리 프랜차이즈)", desc: "휴대폰 수리 본사 공급·운영 (가맹 시)", priceRange: "가맹", priority: "optional", url: "https://www.cnphone.co.kr" },
+    ],
+  },
+
+  // ─── SPACE (6) — 2026-06 웹 검증 ───────────────────────────
+  "guesthouse": {
+    suppliers: [
+      { name: "호텔용품샵·신라어메니티 (어메니티)", desc: "객실 어메니티·일회용 비품 사업자 도매", priceRange: "B2B 도매", priority: "primary", url: "https://shillaamenity.kr/" },
+      { name: "침구친구 (침구 도매)", desc: "이불·침구 도매·위탁. 소량 가능", priceRange: "세트 도매가", priority: "recommended", url: "https://xn--2e0ba904wlba.com/" },
+    ],
+    equipment: [
+      { name: "비품넷 (객실 비품)", desc: "객실 소모품·청소용품·일회용 비품 도매", priceRange: "도매가", priority: "recommended", url: "https://www.bipum.net/" },
+    ],
+    pos: [
+      { name: "야놀자·여기어때·에어비앤비 (OTA)", desc: "국내 OTA 1·2위 + 글로벌. 필수 입점", priceRange: "수수료 ~10%", priority: "primary", url: "https://www.yanolja.com/" },
+      { name: "온다 (채널매니저+PMS)", desc: "OTA 16개+ 통합 연동 한국형 PMS", priceRange: "월 구독", priority: "recommended", url: "https://www.onda.me/" },
+    ],
+  },
+  "rental-studio": {
+    suppliers: [
+      { name: "디지탈창신 (배경지·소품)", desc: "사베지 배경지·전동배경·포멕스 5-15만", priceRange: "5~15만", priority: "primary", url: "https://www.cscamera.co.kr/" },
+    ],
+    equipment: [
+      { name: "키렌탈·콩렌탈 (촬영장비 렌탈)", desc: "카메라·렌즈·LED조명·짐벌 일 단위 대여", priceRange: "일 대여", priority: "primary", url: "https://keyrental.co.kr/" },
+    ],
+    pos: [
+      { name: "아워플레이스 (촬영공간 예약)", desc: "촬영 공간 전문 시간제 예약. 채광·장비 필터", priceRange: "수수료 10%", priority: "primary", url: "https://hourplace.co.kr/" },
+      { name: "스페이스클라우드 (공간 1위)", desc: "촬영 카테고리 포함 예약 플랫폼", priceRange: "수수료 10%", priority: "recommended", url: "https://www.spacecloud.kr/" },
+    ],
+  },
+  "party-room": {
+    suppliers: [
+      { name: "조이파티B2B·파티클럽 (파티용품)", desc: "풍선·가랜드·일회용품 도매. 당일출고", priceRange: "도매가", priority: "primary", url: "https://www.joypartyb2b.co.kr/" },
+    ],
+    equipment: [
+      { name: "TJ미디어·금영 (노래반주기)", desc: "올인원 이동식 노래방 기기 30-150만", priceRange: "30~150만", priority: "primary", url: "https://www.tjmedia.com/" },
+    ],
+    pos: [
+      { name: "스페이스클라우드 (파티룸 예약 1위)", desc: "파티룸 예약 점유 1위. 입점 핵심", priceRange: "수수료 10%", priority: "primary", url: "https://www.spacecloud.kr/" },
+    ],
+  },
+  "study-cafe-space": {
+    suppliers: [
+      { name: "옐로아이템 (운영 소모품)", desc: "음료·티슈·청소용품 사업자 도매", priceRange: "도매가", priority: "optional", url: "https://yelloitem.co.kr/" },
+    ],
+    equipment: [
+      { name: "퍼시스·데스커 (좌석·파티션)", desc: "스터디카페 책상·파티션. 렌탈 가능", priceRange: "구매/렌탈", priority: "primary", url: "https://www.fursys.com/" },
+    ],
+    pos: [
+      { name: "픽코 (스터디카페 무인 1위)", desc: "키오스크·좌석/출입/결제 통합. 3,500매장", priceRange: "설치+월", priority: "primary", url: "https://www.pickko.co.kr/studycafe-kiosk" },
+      { name: "지오스크 (무인 공간임대)", desc: "자동문 원격·좌석 점등·회원/매출관리", priceRange: "설치+월", priority: "recommended", url: "https://gosk.co.kr/" },
+    ],
+  },
+  "shared-office": {
+    suppliers: [
+      { name: "퍼시스 (사무가구)", desc: "데스크·의자·파티션 국내 대표 공급", priceRange: "구매/렌탈", priority: "primary", url: "https://www.fursys.com/" },
+    ],
+    equipment: [
+      { name: "데스커 (모션데스크)·FURPLAB (중고)", desc: "스타트업 선호 가구 + 중고 매입 초기비 절감", priceRange: "20~50만", priority: "primary", url: "https://desker.co.kr/" },
+    ],
+    pos: [
+      { name: "스파크플러스 SP워크스페이스", desc: "QR 출입·미팅룸 예약·근태 (자사 운영 검증)", priceRange: "멤버십", priority: "primary", url: "https://www.sparkplus.co/" },
+      { name: "스페이스클라우드 (단기 회의실)", desc: "단기·시간제 회의실 외부 예약 채널", priceRange: "수수료 10%", priority: "recommended", url: "https://www.spacecloud.kr/" },
+    ],
+  },
+  "practice-room": {
+    suppliers: [
+      { name: "뮬 (Mule) 중고악기 마켓", desc: "합주실 앰프·드럼·신디 중고 사입", priceRange: "중고 시세", priority: "primary", url: "https://mule.co.kr/" },
+    ],
+    equipment: [
+      { name: "뮬 (음향장비)·방음 시공", desc: "앰프·드럼·믹서 + 방음부스 시공 평당 100만~", priceRange: "장비별/평당", priority: "primary", url: "https://mule.co.kr/" },
+    ],
+    pos: [
+      { name: "스페이스클라우드 (연습실 예약 1위)", desc: "연습실·합주실 예약 점유 1위", priceRange: "수수료 10%", priority: "primary", url: "https://www.spacecloud.kr/" },
+      { name: "방음방 (음악인 전용)", desc: "연습실/합주실 전용 검색·예약", priceRange: "건별", priority: "recommended", url: "https://bub.searchroom.kr/" },
+    ],
+  },
+
+  // ─── ONLINE-DIGITAL (6) — 2026-06 웹 검증 ──────────────────
+  "smart-store": {
+    suppliers: [
+      { name: "도매매 (위탁 1위)·온채널", desc: "위탁판매 최다 사용. 무재고 등록·판매", priceRange: "위탁가", priority: "primary", url: "https://domeme.domeggook.com/" },
+      { name: "도매꾹 (사입 도매)", desc: "사입형 도매. MOQ 5-10개, 단가 흥정", priceRange: "MOQ 도매가", priority: "recommended", url: "https://domeggook.com/" },
+    ],
+    equipment: [
+      { name: "박스공장닷컴·라로박스 (포장재)", desc: "택배박스·완충재·라벨 도매·제작", priceRange: "도매가", priority: "primary", url: "https://www.boxmake.co.kr/" },
+    ],
+    pos: [
+      { name: "네이버 스마트스토어 (입점 무료)", desc: "초기 셀러 1순위 채널. 결제수수료 3.8-4.5%", priceRange: "수수료 3.8~4.5%", priority: "primary", url: "https://sell.smartstore.naver.com/" },
+      { name: "사방넷·플레이오토 (멀티채널 OMS)", desc: "주문·재고·송장 통합관리", priceRange: "월 구독", priority: "recommended", url: "https://sabangnet.co.kr/" },
+    ],
+  },
+  "digital-products": {
+    suppliers: [
+      { name: "Canva·노션 (제작 소스)", desc: "전자책·템플릿·디자인 디지털 상품 제작 도구", priceRange: "무료~구독", priority: "recommended", url: "https://www.canva.com/" },
+    ],
+    equipment: [],
+    pos: [
+      { name: "크몽 (디지털 마켓)", desc: "전자책·템플릿·서비스 마켓. 수수료 ~15%", priceRange: "수수료 ~15%", priority: "primary", url: "https://kmong.com/" },
+      { name: "페이앱·부트페이 (자체 결제)", desc: "무료 주문서 링크·코딩없는 결제 연동", priceRange: "PG 수수료", priority: "recommended", url: "https://www.payapp.kr/" },
+    ],
+  },
+  "creator-service": {
+    suppliers: [],
+    equipment: [
+      { name: "키렌탈·콩렌탈 (촬영장비 렌탈)", desc: "카메라·마이크·LED조명·짐벌 (구매 전 테스트)", priceRange: "일 대여", priority: "primary", url: "https://keyrental.co.kr/" },
+    ],
+    pos: [
+      { name: "투네이션 (국내 후원 1위)", desc: "크리에이터 후원·도네이션 대표 플랫폼", priceRange: "후원 수수료", priority: "primary", url: "https://toon.at/" },
+      { name: "Buy Me a Coffee (해외 팬)", desc: "해외 후원·멤버십·디지털판매. 수수료 5%", priceRange: "수수료 5%", priority: "recommended", url: "https://buymeacoffee.com/" },
+    ],
+  },
+  "consignment-commerce": {
+    suppliers: [
+      { name: "도매매·온채널 (위탁 도매)", desc: "재고 없이 등록·판매. 도매처 직배송", priceRange: "위탁가", priority: "primary", url: "https://domeme.domeggook.com/" },
+      { name: "셀러나우 (발주 자동화)", desc: "도매사이트 모음·발주 자동화·통합관리", priceRange: "구독", priority: "recommended", url: "https://sellernow.co.kr/" },
+    ],
+    equipment: [
+      { name: "라벨·송장 프린터", desc: "주문 송장·운송장 출력 10-30만", priceRange: "10~30만", priority: "optional", url: "https://www.boxmake.co.kr/" },
+    ],
+    pos: [
+      { name: "사방넷·플레이오토·이지어드민 (OMS)", desc: "위탁 발주 자동화·멀티채널·재고연동", priceRange: "월 구독", priority: "primary", url: "https://www.ezadmin.co.kr/" },
+    ],
+  },
+  "newsletter-membership": {
+    suppliers: [],
+    equipment: [
+      { name: "Canva·노션 (콘텐츠 제작)", desc: "뉴스레터 본문·이미지·아카이브 제작", priceRange: "무료~구독", priority: "optional", url: "https://www.canva.com/" },
+    ],
+    pos: [
+      { name: "스티비 (뉴스레터 1위)", desc: "발송·구독자 관리·유료구독. 무료 500명", priceRange: "PG 3.2%", priority: "primary", url: "https://stibee.com/" },
+      { name: "메일리 (멤버십·후원)", desc: "노션형 UI. 유료 멤버십·개별판매·후원", priceRange: "7,900원~", priority: "recommended", url: "https://maily.so/" },
+    ],
+  },
+  "global-buying": {
+    suppliers: [
+      { name: "1688 (알리바바 도매)", desc: "중국 최대 B2B 도매. 구매대행·사입 소싱", priceRange: "중국 도매가", priority: "primary", url: "https://www.1688.com/" },
+      { name: "타오바오 (소량 소싱)", desc: "중국 소매·소량 소싱", priceRange: "소매가", priority: "recommended", url: "https://www.taobao.com/" },
+    ],
+    equipment: [
+      { name: "박스공장닷컴 (검수·재포장)", desc: "검수·재포장·라벨 부착용 포장재", priceRange: "도매가", priority: "optional", url: "https://www.boxmake.co.kr/" },
+    ],
+    pos: [
+      { name: "몰테일·오마이집 (배송대행지)", desc: "미·중·독·일 배대지+풀필먼트. 업계 최대", priceRange: "무게별 배송비", priority: "primary", url: "https://www.malltail.com/" },
+      { name: "네이버 스마트스토어 (판매)", desc: "구매대행 상품 판매 오픈마켓", priceRange: "수수료", priority: "recommended", url: "https://sell.smartstore.naver.com/" },
+    ],
+  },
 };
 
 /**
