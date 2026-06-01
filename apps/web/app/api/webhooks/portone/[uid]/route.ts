@@ -75,29 +75,34 @@ export async function POST(
   const webhookTs = request.headers.get("webhook-timestamp") ?? "";
   const webhookSig = request.headers.get("webhook-signature") ?? "";
 
-  // 사장님이 webhook secret 등록한 경우만 시그니처 검증
-  // (PoC: webhook_secret 컬럼은 추가 마이그레이션 후 활성. 현재는 ID 기반 dedup 만)
-  // TODO: portone_connections 에 webhook_secret_encrypted 컬럼 채우기
+  // 시그니처 검증 — fail-closed.
+  //   secret 미설정 또는 시그니처 헤더 누락 시 처리 거부(401). 검증 안 된 이벤트를
+  //   신뢰하면 uid(=user_id)만 아는 공격자가 위조 매출/결제 이벤트를 주입할 수 있음.
+  //   매출 데이터는 폴링 경로(GET /payments)로 복구되므로 거부해도 유실 없음.
+  //   ⚠️ 프로덕션 필수: PORTONE_WEBHOOK_SECRET 환경변수 등록.
   const webhookSecretRaw = await loadWebhookSecret(supabase, uid);
-  if (webhookSecretRaw && webhookId && webhookTs && webhookSig) {
-    // 2026-05-27 보안 (P1-3): timestamp 5분 만료 — replay attack 방어.
-    //   HMAC 검증만으로는 옛 메시지 그대로 재전송 가능. Standard Webhooks 명세도
-    //   클라이언트가 별도로 timestamp tolerance check 하도록 권장 (https://www.standardwebhooks.com).
-    const tsSec = Number(webhookTs);
-    const nowSec = Math.floor(Date.now() / 1000);
-    if (!Number.isFinite(tsSec) || Math.abs(nowSec - tsSec) > 300) {
-      return NextResponse.json({ error: "timestamp out of window" }, { status: 401 });
-    }
-    const valid = verifyStandardWebhook({
-      secret: webhookSecretRaw,
-      id: webhookId,
-      timestamp: webhookTs,
-      signature: webhookSig,
-      body: rawBody,
-    });
-    if (!valid) {
-      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
-    }
+  if (!webhookSecretRaw) {
+    console.error("[webhooks/portone] PORTONE_WEBHOOK_SECRET 미설정 — 웹훅 거부 (fail-closed)");
+    return NextResponse.json({ error: "webhook secret not configured" }, { status: 503 });
+  }
+  if (!webhookId || !webhookTs || !webhookSig) {
+    return NextResponse.json({ error: "missing signature headers" }, { status: 401 });
+  }
+  // 2026-05-27 보안 (P1-3): timestamp 5분 만료 — replay attack 방어.
+  const tsSec = Number(webhookTs);
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(tsSec) || Math.abs(nowSec - tsSec) > 300) {
+    return NextResponse.json({ error: "timestamp out of window" }, { status: 401 });
+  }
+  const valid = verifyStandardWebhook({
+    secret: webhookSecretRaw,
+    id: webhookId,
+    timestamp: webhookTs,
+    signature: webhookSig,
+    body: rawBody,
+  });
+  if (!valid) {
+    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
   // ── 3. 멱등성 (webhook-id 중복) ──

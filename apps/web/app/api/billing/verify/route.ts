@@ -52,8 +52,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "결제 금액이 일치하지 않습니다." }, { status: 400 });
   }
 
+  // 결제-사용자 바인딩: 체크아웃에서 customer.customerId 에 심은 userId 가
+  // 호출자와 다르면 거부 (남의 결제를 내 구독으로 활성화하는 도용 차단).
+  if (payment.customer?.id && payment.customer.id !== auth.userId) {
+    console.error(`[billing/verify] Customer mismatch: payment customer=${payment.customer.id}, caller=${auth.userId}`);
+    return NextResponse.json({ error: "결제자와 로그인 사용자가 일치하지 않습니다." }, { status: 403 });
+  }
+
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
+
+  // 중복 결제 차단: 동일 portone_payment_id 가 이미 처리됐으면 거부
+  // (하나의 PAID 결제 ID 를 여러 계정이 재사용해 프리미엄을 무료 획득하는 것 방지).
+  const { data: existingPayment } = await supabase
+    .from("foundone_payments")
+    .select("id, user_id")
+    .eq("portone_payment_id", paymentId)
+    .maybeSingle();
+  if (existingPayment) {
+    console.error(`[billing/verify] Duplicate paymentId reuse: ${paymentId} (orig user=${existingPayment.user_id}, caller=${auth.userId})`);
+    return NextResponse.json({ error: "이미 처리된 결제입니다." }, { status: 409 });
+  }
   const now = new Date();
   const periodEnd = new Date(now);
   periodEnd.setMonth(periodEnd.getMonth() + 1);

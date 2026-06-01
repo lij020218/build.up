@@ -51,23 +51,27 @@ export async function POST(
 
   const rawBody = await request.text();
 
-  // ── 0. HMAC 시그니처 검증 (TOSS_WEBHOOK_SECRET 설정 시) ──
+  // ── 0. HMAC 시그니처 검증 — fail-closed ──
+  //   secret 미설정 또는 시그니처 헤더 누락 시 거부. 검증 안 된 이벤트를 신뢰하면
+  //   uid 만 아는 공격자가 위조 결제 이벤트를 주입할 수 있음.
+  //   ⚠️ 프로덕션 필수: TOSS_WEBHOOK_SECRET 환경변수 등록.
   const tossSecret = process.env.TOSS_WEBHOOK_SECRET;
   const tossSig = request.headers.get("tosspayments-webhook-signature");
   const tossTime = request.headers.get("tosspayments-webhook-transmission-time");
-  if (tossSecret && tossSig) {
-    if (!tossTime) {
-      return NextResponse.json({ error: "missing transmission time" }, { status: 400 });
-    }
-    // 2026-05-27 보안 (P1-3): transmission-time 5분 만료 검증 — replay attack 방어.
-    //   transmissionTime 은 ISO 8601 ("2026-05-27T10:30:00.000Z"). Date.parse 로 epoch ms 환산.
-    const tsMs = Date.parse(tossTime);
-    if (!Number.isFinite(tsMs) || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
-      return NextResponse.json({ error: "transmission time out of window" }, { status: 401 });
-    }
-    if (!verifyTossWebhook({ secret: tossSecret, signature: tossSig, transmissionTime: tossTime, body: rawBody })) {
-      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
-    }
+  if (!tossSecret) {
+    console.error("[webhooks/toss] TOSS_WEBHOOK_SECRET 미설정 — 웹훅 거부 (fail-closed)");
+    return NextResponse.json({ error: "webhook secret not configured" }, { status: 503 });
+  }
+  if (!tossSig || !tossTime) {
+    return NextResponse.json({ error: "missing signature headers" }, { status: 401 });
+  }
+  // 2026-05-27 보안 (P1-3): transmission-time 5분 만료 검증 — replay attack 방어.
+  const tsMs = Date.parse(tossTime);
+  if (!Number.isFinite(tsMs) || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
+    return NextResponse.json({ error: "transmission time out of window" }, { status: 401 });
+  }
+  if (!verifyTossWebhook({ secret: tossSecret, signature: tossSig, transmissionTime: tossTime, body: rawBody })) {
+    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
   const supabase = getSupabaseAdmin();
