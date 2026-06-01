@@ -407,17 +407,22 @@ public struct BudgetInsightCard: View {
         let p75Pct = maxWan > 0 ? Double(bench.p75Wan) / maxWan : 0
         let userPct = maxWan > 0 ? min(1.0, Double(insight.userWan) / maxWan) : 0
 
+        // 웹 SSOT(BudgetInsightCard.tsx) 와 동일한 세로 간격 구조:
+        //   평균 라벨(위) — 충분한 gap — 트랙+마커 — 충분한 gap — 내 예산 라벨(아래).
+        //   마커(원·세로선)는 트랙 행 안에서 수직 중앙 정렬만 하고 위 라벨 영역을 침범하지 않음.
         return VStack(alignment: .leading, spacing: 0) {
             // 평균 라벨 (위)
             GeometryReader { geo in
                 Text("평균 \(bench.avgWan.formatted())만")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(BUColor.inkMuted)
-                    .position(x: geo.size.width * avgPct, y: 8)
+                    .fixedSize()
+                    // 라벨이 카드 밖으로 잘리지 않도록 중심 x clamp (마커는 실제 위치 유지)
+                    .position(x: min(max(geo.size.width * avgPct, 42), geo.size.width - 42), y: 9)
             }
-            .frame(height: 16)
+            .frame(height: 18)
 
-            // 트랙
+            // 트랙 (모든 마커 수직 중앙 정렬 — y offset 없음 → 위 라벨과 겹치지 않음)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     // 베이스 트랙
@@ -428,14 +433,14 @@ public struct BudgetInsightCard: View {
                     // p25-p75 분위 밴드
                     Capsule()
                         .fill(BUColor.midnight.opacity(0.16))
-                        .frame(width: geo.size.width * (p75Pct - p25Pct), height: 8)
+                        .frame(width: max(0, geo.size.width * (p75Pct - p25Pct)), height: 8)
                         .offset(x: geo.size.width * p25Pct)
 
                     // 평균 마커 (세로선)
                     Rectangle()
                         .fill(BUColor.midnight.opacity(0.5))
                         .frame(width: 2, height: 16)
-                        .offset(x: geo.size.width * avgPct - 1, y: -4)
+                        .offset(x: geo.size.width * avgPct - 1)
 
                     // 사용자 입력 마커 (원)
                     if insight.userWan > 0 {
@@ -444,12 +449,12 @@ public struct BudgetInsightCard: View {
                             .frame(width: 16, height: 16)
                             .overlay(Circle().stroke(.white, lineWidth: 3))
                             .shadow(color: BUColor.midnight.opacity(0.35), radius: 4, y: 2)
-                            .offset(x: geo.size.width * userPct - 8, y: -4)
+                            .offset(x: geo.size.width * userPct - 8)
                     }
                 }
-                .frame(height: 8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(height: 16)
+            .frame(height: 24)
 
             // 사용자 값 라벨 (아래)
             if insight.userWan > 0 {
@@ -457,14 +462,16 @@ public struct BudgetInsightCard: View {
                     Text("내 예산 \(insight.userWan.formatted())만")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(BUColor.midnight)
-                        .position(x: geo.size.width * userPct, y: 10)
+                        .fixedSize()
+                        // 라벨이 카드 밖으로 잘리지 않도록 중심 x clamp (마커는 실제 위치 유지)
+                        .position(x: min(max(geo.size.width * userPct, 48), geo.size.width - 48), y: 11)
                 }
-                .frame(height: 20)
+                .frame(height: 22)
             } else {
-                Color.clear.frame(height: 4)
+                Color.clear.frame(height: 6)
             }
         }
-        .frame(height: 56)
+        .frame(height: 64)
     }
 
     // MARK: 프로그램 섹션

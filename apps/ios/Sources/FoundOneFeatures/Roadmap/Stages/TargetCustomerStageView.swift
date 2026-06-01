@@ -103,30 +103,23 @@ public struct TargetCustomerStageView: View {
 
     private var priceLabel: String {
         switch clusterGroup {
-        case .tech:    return "3. 도입 결정 권한 + 예산 규모 *"
-        case .online:  return "3. 객단가 + 결제 의사 *"
-        case .offline: return "3. 객단가 기대치 + 가격 민감도 *"
+        case .tech:             return "3. 예산 권한 + 가격 한도 *"
+        case .online, .offline: return "3. 객단가 기대치 + 가격 민감도 *"
         }
     }
     private var priceChips: [(label: String, value: String)] {
         switch clusterGroup {
         case .tech: return [
-            ("Self-serve (≤$50/mo)", "self-serve-low"),
-            ("팀 도입 ($50-500)",    "team-mid"),
-            ("연 계약 ($5K-50K)",    "annual-contract"),
-            ("엔터프라이즈 (PO)",     "enterprise"),
+            ("셀프서비스 월 5만원↓", "self-serve-low"),
+            ("팀 월 5~30만원",      "team-mid"),
+            ("연 30만원↑",         "annual-contract"),
+            ("기업 (PO)",          "enterprise"),
         ]
-        case .online: return [
-            ("저가 (₩5-15k)",     "value-budget"),
-            ("중가 (₩15-40k)",    "mid-quality"),
-            ("프리미엄 (₩40-100k)", "premium"),
-            ("럭셔리 (₩100k↑)",   "luxury"),
-        ]
-        case .offline: return [
-            ("가성비 (₩5-10k)",    "value-budget"),
-            ("중간 (₩10-20k)",     "mid-quality"),
-            ("프리미엄 (₩20-40k)", "premium"),
-            ("럭셔리 (₩40k↑)",    "luxury"),
+        case .online, .offline: return [
+            ("가성비 5천~1만원",   "value-budget"),
+            ("중간 1만~2만원",     "mid-quality"),
+            ("프리미엄 2만~4만원", "premium"),
+            ("럭셔리 4만원↑",      "luxury"),
         ]
         }
     }
