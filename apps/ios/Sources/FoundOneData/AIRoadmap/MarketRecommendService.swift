@@ -47,7 +47,8 @@ public actor MarketRecommendService {
         self.supabaseClient = supabaseClient
     }
 
-    /// 편의 초기화 — 공유 싱글톤 사용.
+    /// 편의 초기화 — 공유 싱글톤 사용. (BUSupabase.shared 가 @MainActor 라 메인에서 생성)
+    @MainActor
     public static func shared() -> MarketRecommendService {
         MarketRecommendService(webAppURL: BUSupabase.shared.env.webAppURL, supabaseClient: BUSupabase.shared.client)
     }
