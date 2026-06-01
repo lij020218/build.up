@@ -1,10 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
+// Next.js 15: useSearchParams() 는 Suspense 경계 안에서만 빌드 가능 (정적 생성 bailout).
+// OAuth 콜백은 본질적으로 동적이므로 내부 컴포넌트를 Suspense 로 감싼다.
 export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<CallbackShell><Spinner /></CallbackShell>}>
+      <AuthCallbackInner />
+    </Suspense>
+  );
+}
+
+function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
@@ -116,6 +126,22 @@ export default function AuthCallbackPage() {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function CallbackShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#000",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+      color: "#fff",
+      padding: "24px",
+      textAlign: "center",
+    }}>
+      {children}
     </div>
   );
 }
