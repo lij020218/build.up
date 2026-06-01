@@ -10,6 +10,7 @@ import {
   Cog, Megaphone, Check, ArrowRight, Sparkles,
 } from "lucide-react";
 import { StageWrapup } from "../shared/StageWrapup";
+import { getOpsChannels, getOpsChannelLabel } from "@foundone/shared";
 
 const MIDNIGHT = "#191970"; // 서비스 메인 포인트 컬러 (PermitCheck/ContractReview/Hiring 과 통일)
 
@@ -18,9 +19,11 @@ export function OperationsSetupStage() {
   const {
     language, opsStep, setOpsStep,
     opsSelections, setOpsSelections, opsPosChecks, setOpsPosChecks,
-    taskMap,
+    taskMap, industryCategoryId,
   } = d;
   const ko = language === "ko";
+  // 채널 섹션 라벨 (업종별: 배달 플랫폼/예약 플랫폼/마켓플레이스/...)
+  const channelSectionLabel = getOpsChannelLabel(industryCategoryId);
 
   type OpsDetail = { id: string; name: string; tagline: string; color: string; url: string; pros: string[]; cons: string[]; icon?: React.ReactNode };
   type Trap = { label: string; text: string };
@@ -36,32 +39,10 @@ export function OperationsSetupStage() {
   //   · SNS: 네이버 플레이스 '실질 상호작용' 지수 → 첫 주 리뷰·전화·길찾기 폭발 필요
   // ─────────────────────────────────────────────────────────────
 
-  const deliveryPlatforms: OpsDetail[] = [
-    {
-      id: "baemin", name: "배달의민족", color: "#00C73C", url: "https://ceo.baemin.com",
-      tagline: "국내 점유율 1위 · 차등 수수료 2026 (7.8/6.8/2.0%)",
-      pros: ["국내 점유율 약 60% — 가장 많은 주문량 확보", "사장님 앱으로 메뉴·주문·정산 직관적 관리", "울트라콜·오픈리스트 광고로 노출 확대"],
-      cons: ["배민배달 vs 가게배달 정산 체계 달라 복잡", "광고비 경쟁 치열 — 초기 노출 비용 부담"],
-    },
-    {
-      id: "coupangeats", name: "쿠팡이츠", color: "#E52222", url: "https://store.coupangeats.com",
-      tagline: "단건 배달 전문 · 차등 7.8/6.8/2.0% + 쿠팡 신뢰도",
-      pros: ["단건 배달 — 배달 품질·고객 만족도 업계 최고", "쿠팡 브랜드 신뢰도 연계로 신규 고객 유입", "와우 회원 우선 노출 — 충성 고객 확보"],
-      cons: ["배달 단가가 다소 높아 점주 부담 ↑", "단건 구조라 라이더 확보 불안정 시간대 있음"],
-    },
-    {
-      id: "yogiyo", name: "요기요", color: "#FF5A00", url: "https://partner.yogiyo.co.kr",
-      tagline: "GS리테일 운영 · 차등 4.7~9.7% · 요기패스 구독",
-      pros: ["요기패스 구독 고객에게 우선 노출", "특정 프로모션 기간 수수료 감면 이벤트 多", "GS25·GS슈퍼 오프라인 제휴 혜택 연계"],
-      cons: ["시장 점유율 하락세 (약 10~15%)", "광고 효율 배민·쿠팡이츠 대비 낮음"],
-    },
-    {
-      id: "naver-order", name: "네이버 주문", color: "#03C75A", url: "https://new.smartplace.naver.com",
-      tagline: "스마트플레이스 연동 · 중개 수수료 0% (결제 수수료만)",
-      pros: ["네이버 지도·검색에 주문 버튼 자동 노출", "중개 수수료 없음 — 결제 수수료만 부담", "포장·예약·테이블 주문 통합 관리"],
-      cons: ["자체 배달망 X — 외부 라이더 별도 연동 필요", "배달 기능보다 포장·테이블 주문에 적합"],
-    },
-  ];
+  // 채널(배달/예약/마켓플레이스/런칭) — 공유 SSOT(operations-channels) 에서 업종별 로드.
+  //   ⚠️ 2026-06-02: 이전엔 음식점 채널을 전 업종에 고정 노출(콘텐츠 버그) + iOS 와 id 불일치.
+  //   이제 웹·iOS 가 동일 카탈로그·동일 ops_selections 시맨틱 id(delivery-<id>) 를 공유.
+  const deliveryPlatforms: OpsDetail[] = getOpsChannels(industryCategoryId);
 
   const posSystems: OpsDetail[] = [
     {
@@ -569,7 +550,7 @@ export function OperationsSetupStage() {
   // ─── steps 의 subtitle = "이 step 이 다른 단계와 어떻게 연결되는지" (서비스 흐름의 일부) ───
   //   사용자가 사업 시작 흐름을 따라가면서 "이전에 끝낸 것이 여기서 어떻게 쓰이는지" 자연스럽게 이해.
   const steps = [
-    { key: "delivery", title: ko ? "배달앱 입점 등록" : "Delivery App Registration",    subtitle: ko ? "사업자등록·통신판매업 신고가 끝났으니 이제 첫 주문 채널을 엽니다. 메뉴 사진은 인테리어 단계에서 찍어둔 매장 사진과 함께 등록." : "Now that biz registration is done, open the order channels.", taskId: "delivery-app-registered" },
+    { key: "delivery", title: ko ? `${channelSectionLabel} 입점·등록` : "Channel Registration",    subtitle: ko ? "사업자등록·통신판매업 신고가 끝났으니 이제 첫 주문 채널을 엽니다. 메뉴 사진은 인테리어 단계에서 찍어둔 매장 사진과 함께 등록." : "Now that biz registration is done, open the order channels.", taskId: "delivery-app-registered" },
     { key: "pos",      title: ko ? "POS 실거래 테스트" : "POS Live Test",              subtitle: ko ? "공급처·메뉴·가격이 확정됐으니 결제 흐름의 중심을 만듭니다. 사업자등록증·통장사본을 준비해두세요." : "Suppliers and prices are set — now build your payment hub.", taskId: "pos-live" },
     { key: "sns",      title: ko ? "SNS·플레이스 + 런칭 캠페인" : "SNS & Launch Campaign",     subtitle: ko ? "매장 사진과 브랜드 톤이 준비됐으니 손님이 찾아올 길을 만듭니다. 등록만으로는 부족 — 첫 주 상호작용까지." : "Photos and brand tone ready — now make customers find you.", taskId: "sns-setup" },
     { key: "van",      title: ko ? "카드 가맹점 등록 (VAN)" : "Card Merchant Registration (VAN)",  subtitle: ko ? "POS 결정이 끝났다면 VAN 한 곳만 신청. 카드·간편결제가 모두 자동 연계됩니다." : "POS decided — now apply to one VAN to enable all cards.", taskId: "card-merchant-registered" },
