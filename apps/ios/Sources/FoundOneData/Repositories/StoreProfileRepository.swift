@@ -86,6 +86,44 @@ public actor StoreProfileRepository {
         }
     }
 
+    /// 운영 선택(ops_selections) + POS 체크(ops_pos_checks)를 Supabase 에 read-merge-write 저장.
+    /// 웹 OperationsSetupStage 와 동일한 시맨틱 키(delivery-<id>, pos-system-<id>, sns-<id>, menu-check 등).
+    /// 웹에 없는 비음식 채널 키는 호출부에서 애초에 넣지 않아 오염을 막는다.
+    @MainActor
+    public static func persistOperationsForCurrentUser(opsSelections: [String: Bool], posChecks: [String: Bool]) {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let client = BUSupabase.shared.client
+        Task {
+            let repo = StoreProfileRepository(supabase: client, userId: uid)
+            if !opsSelections.isEmpty { try? await repo.mergeOpsSelections(opsSelections) }
+            if !posChecks.isEmpty { try? await repo.mergeOpsPosChecks(posChecks) }
+        }
+    }
+
+    /// ops_selections jsonb dict 에 키 병합 (기존 웹 전용 키 보존).
+    public func mergeOpsSelections(_ updates: [String: Bool]) async throws {
+        struct ReadRow: Decodable, Sendable { let ops_selections: [String: Bool]? }
+        let rows: [ReadRow] = try await supabase
+            .from("user_store_data").select("ops_selections")
+            .eq("user_id", value: userId).limit(1).execute().value
+        var merged = rows.first?.ops_selections ?? [:]
+        for (k, v) in updates { merged[k] = v }
+        let payload = OpsSelectionsUpsert(user_id: userId, ops_selections: merged, updated_at: ISO8601DateFormatter().string(from: Date()))
+        _ = try await supabase.from("user_store_data").upsert(payload, onConflict: "user_id").execute()
+    }
+
+    /// ops_pos_checks jsonb dict 에 키 병합.
+    public func mergeOpsPosChecks(_ updates: [String: Bool]) async throws {
+        struct ReadRow: Decodable, Sendable { let ops_pos_checks: [String: Bool]? }
+        let rows: [ReadRow] = try await supabase
+            .from("user_store_data").select("ops_pos_checks")
+            .eq("user_id", value: userId).limit(1).execute().value
+        var merged = rows.first?.ops_pos_checks ?? [:]
+        for (k, v) in updates { merged[k] = v }
+        let payload = OpsPosChecksUpsert(user_id: userId, ops_pos_checks: merged, updated_at: ISO8601DateFormatter().string(from: Date()))
+        _ = try await supabase.from("user_store_data").upsert(payload, onConflict: "user_id").execute()
+    }
+
     /// tax_settings jsonb 의 vatType 만 갱신, hasEmployees 등 기존 키 보존.
     public func mergeTaxVatType(_ vatType: String) async throws {
         guard vatType == "general" || vatType == "simplified" else { return }
@@ -216,6 +254,18 @@ public actor StoreProfileRepository {
     private struct TaxUpsert: Encodable, Sendable {
         let user_id: UUID
         let tax_settings: TaxSettingsDTO
+        let updated_at: String
+    }
+
+    private struct OpsSelectionsUpsert: Encodable, Sendable {
+        let user_id: UUID
+        let ops_selections: [String: Bool]
+        let updated_at: String
+    }
+
+    private struct OpsPosChecksUpsert: Encodable, Sendable {
+        let user_id: UUID
+        let ops_pos_checks: [String: Bool]
         let updated_at: String
     }
 

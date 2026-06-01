@@ -194,6 +194,50 @@ public struct OperationsSetupStageView: View {
         return "운영 시스템 셋업 완료 — 다음 단계로"
     }
 
+    /// 웹·앱 SSOT 동기화용 ops_selections (웹 OperationsSetupStage 와 동일 시맨틱 키).
+    ///  - POS·SNS: 웹 카탈로그가 고정이라 모든 오프라인 업종 공통 매핑.
+    ///  - 배달 채널: 웹은 음식점 중심 고정 카탈로그 → 음식/카페만 id 일치. 그 외 업종은
+    ///    웹에 대응 id가 없어 넣지 않음(웹 데이터 오염 방지).
+    private var opsSelectionsForSync: [String: Bool] {
+        var m: [String: Bool] = [:]
+        // SNS (snsPage — 전 업종 공통, 웹 고정 id)
+        m["sns-naver-place"] = snsNaver
+        m["sns-instagram"]   = snsInstagram
+        m["sns-kakao-channel"] = snsKakao
+        // POS (오프라인 공통, 웹 pos-system 고정 id). iOS "order" → 웹 "orderplace".
+        if cluster.category.isOffline {
+            let posMap = ["toss": "toss", "kis": "kis", "order": "orderplace", "smartro": "smartro", "ipos": "ipos"]
+            for (iosId, webId) in posMap {
+                m["pos-system-\(webId)"] = (posSelected == iosId)
+            }
+        }
+        // 배달 채널 — 음식/카페만 웹 시맨틱 id 일치.
+        if cluster.category == .food || cluster.category == .cafeDessert {
+            m["delivery-baemin"]      = deliveryBaemin
+            m["delivery-coupangeats"] = deliveryCoupang
+            m["delivery-yogiyo"]      = deliveryYogiyo
+            m["delivery-naver-order"] = deliveryNaver
+        }
+        return m
+    }
+
+    /// 웹 ops_pos_checks 와 동일 키.
+    private var posChecksForSync: [String: Bool] {
+        [
+            "menu-check":       posMenuDone,
+            "payment-check":    posPayDone,
+            "receipt-check":    posReceiptDone,
+            "settlement-check": posSettleDone,
+        ]
+    }
+
+    private func syncOperations() {
+        StoreProfileRepository.persistOperationsForCurrentUser(
+            opsSelections: opsSelectionsForSync,
+            posChecks: posChecksForSync
+        )
+    }
+
     public init() {}
 
     public var body: some View {
@@ -206,10 +250,15 @@ public struct OperationsSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
+                // 웹·앱 SSOT: 운영 선택(POS·SNS·배달)을 user_store_data 에도 저장.
+                syncOperations()
                 roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["pos": posSelected])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["pos": posSelected]) },
+            onEditSave: {
+                syncOperations()
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["pos": posSelected])
+            },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. POS·결제·주문 시스템 연동", detail: "토스플레이스/배민·쿠팡이츠 연동 + 키오스크·테이블 오더 셋업"),
