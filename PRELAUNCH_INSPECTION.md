@@ -21,7 +21,8 @@
 | 법적 페이지(개인정보·약관) 본문 | ✅ Found.One 정확 |
 
 ### ⚠️ 사장님 직접 처리 필요 (출시 전)
-1. **Vercel 환경변수 등록**: `PORTONE_WEBHOOK_SECRET`, `TOSS_WEBHOOK_SECRET` (없으면 웹훅 503), `NEXT_PUBLIC_BASE_URL`(=https://foundone.dev, 없으면 OAuth redirect 깨짐), `UPSTASH_REDIS_*`(rate limit)
+1. **Vercel 환경변수 등록**: `PORTONE_WEBHOOK_SECRET`, `TOSS_WEBHOOK_SECRET` (없으면 웹훅 503), `NEXT_PUBLIC_BASE_URL`(=https://foundone.dev, 없으면 OAuth redirect 깨짐), `UPSTASH_REDIS_*`(rate limit), **`KAKAO_REST_API_KEY` + `NEXT_PUBLIC_APP_URL=https://foundone.dev`** (AI 상권 추천)
+1-b. **카카오 개발자 콘솔 도메인 등록** — AI 상권 추천(market-recommend)이 카카오 Local API KA헤더 origin 을 등록 도메인과 대조함. 현재 `localhost:3000` 만 등록됨 → **플랫폼 Web 사이트도메인에 `https://foundone.dev`·`https://www.foundone.dev` 추가** 필요. (미등록 시 prod 에서 "domain mismatched" 401 → 상권 추천 실패. iOS Debug 빌드는 localhost 로 우회됨)
 2. **Supabase 마이그레이션 적용**: `20260529...rename` + `20260601...payment_id_unique`
 3. **Vercel 재배포**: 빌드 차단이 풀렸으니 main HEAD로 재배포
 4. **사업자 식별정보**: 사업자등록·통신판매업 신고 후 상호·등록번호·신고번호·주소·연락처를 푸터/약관에 표기 (전자상거래법). 현재 등록 전 → 등록 즉시 추가.
