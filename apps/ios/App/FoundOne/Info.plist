@@ -47,6 +47,21 @@
         </dict>
     </dict>
 
+    <!-- 커스텀 URL 스킴: 비밀번호 재설정 메일 링크(foundone://auth/reset)가 앱을 다시 열도록 -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>com.foundone.mobile</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>foundone</string>
+            </array>
+        </dict>
+    </array>
+
     <!-- 권한 사유 -->
     <key>NSCameraUsageDescription</key>
     <string>영수증을 촬영해 비용을 자동으로 기록하기 위해 카메라 권한이 필요합니다.</string>

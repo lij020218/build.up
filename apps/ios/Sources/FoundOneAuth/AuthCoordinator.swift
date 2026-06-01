@@ -25,6 +25,18 @@ public final class AuthCoordinator {
 
     public private(set) var state: State = .unauthenticated
 
+    // MARK: - 비밀번호 재설정 (앱 네이티브 흐름)
+    //
+    // 메일 링크(foundone://auth/reset?code=…)가 앱을 다시 열면 onOpenURL →
+    // handlePasswordRecoveryURL → PKCE code 교환으로 복구 세션 생성 →
+    // isPasswordRecovery=true → AppRoot 가 ResetPasswordView(앱 내 새 비번 화면) 표시.
+    // 웹과 동일한 안내·흐름이되, 완료는 앱 안에서 이뤄진다.
+
+    /// 메일 링크로 진입해 새 비밀번호 입력 화면을 띄워야 하는 상태.
+    public private(set) var isPasswordRecovery: Bool = false
+    /// 코드 교환 실패 등 복구 진입 자체가 실패한 경우의 메시지(있으면 화면이 에러를 표시).
+    public private(set) var recoveryError: String?
+
     public var currentSession: AuthSession? {
         if case .authenticated(let session) = state { return session }
         return nil
@@ -156,12 +168,48 @@ public final class AuthCoordinator {
         }
     }
 
-    /// 비밀번호 재설정 메일 발송. 메일 링크는 사용자 기기 브라우저에서 열리므로
-    /// 항상 프로덕션 웹 콜백(foundone.dev/auth/callback?type=recovery)으로 보내 거기서 새 비번 설정.
-    /// (iOS 는 recovery 딥링크 scheme 이 없어 웹에서 완료) — throws 로 호출부가 성공/오류 처리.
+    /// 비밀번호 재설정 메일 발송.
+    /// redirect 를 앱 커스텀 스킴(foundone://auth/reset)으로 보내, 같은 기기에서 메일 링크를 열면
+    /// 앱이 다시 열리고 앱 안에서 새 비밀번호를 설정한다. (PKCE — verifier 가 이 기기에 저장돼 있어야 함)
     public func sendPasswordReset(email: String) async throws {
-        let redirect = URL(string: "https://foundone.dev/auth/callback?type=recovery")
+        let redirect = URL(string: "foundone://auth/reset")
         try await supabase.auth.resetPasswordForEmail(email, redirectTo: redirect)
+    }
+
+    /// 메일 링크(foundone://auth/reset?code=…)로 앱이 열렸을 때 호출.
+    /// PKCE code 를 교환해 복구 세션을 만들고, 새 비밀번호 입력 화면을 띄운다.
+    public func handlePasswordRecoveryURL(_ url: URL) async {
+        recoveryError = nil
+        do {
+            _ = try await supabase.auth.session(from: url)
+            // 복구 세션 확보 — 새 비밀번호 화면 표시. (자동 로그인 분기로 새지 않도록
+            //  state 는 아직 .unauthenticated 로 두고, 화면이 cover 로 덮는다.)
+            isPasswordRecovery = true
+        } catch {
+            // 만료/위변조/다른 기기 등 — 화면은 띄우되 에러를 보여 재요청을 안내.
+            recoveryError = "링크가 만료되었거나 유효하지 않습니다. 비밀번호 재설정을 다시 요청해 주세요."
+            isPasswordRecovery = true
+        }
+    }
+
+    /// 복구 세션 상태에서 새 비밀번호로 변경.
+    public func updatePassword(_ newPassword: String) async throws {
+        _ = try await supabase.auth.update(user: UserAttributes(password: newPassword))
+    }
+
+    /// 비밀번호 변경 성공 후 — 복구 세션을 그대로 로그인 상태로 승격하고 화면을 닫는다.
+    public func completePasswordRecovery() {
+        isPasswordRecovery = false
+        recoveryError = nil
+        restoreSessionIfPresent()
+    }
+
+    /// 사용자가 새 비밀번호 화면을 취소 — 복구 세션을 정리하고 로그인 화면으로 돌아간다.
+    public func cancelPasswordRecovery() async {
+        isPasswordRecovery = false
+        recoveryError = nil
+        try? await supabase.auth.signOut()
+        state = .unauthenticated
     }
 
     public func cancelSignup() {

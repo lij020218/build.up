@@ -196,6 +196,23 @@ public struct AppRoot: View {
             }
         }
         .animation(.easeInOut(duration: 0.35), value: resetCoordinator.isResetting)
+        // 비밀번호 재설정 딥링크 — 메일 링크(foundone://auth/reset?code=…)가 앱을 다시 열면
+        //   복구 세션을 만들고 isPasswordRecovery=true → 아래 cover 로 앱 내 새 비번 화면 표시.
+        .onOpenURL { url in
+            guard url.scheme == "foundone" else { return }
+            Task { await coordinator.handlePasswordRecoveryURL(url) }
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { coordinator.isPasswordRecovery },
+            set: { presented in
+                // 인터랙티브 dismiss 로 닫히면 복구 세션 정리 (정상 완료는 completePasswordRecovery 가 직접 해제).
+                if !presented && coordinator.isPasswordRecovery {
+                    Task { await coordinator.cancelPasswordRecovery() }
+                }
+            }
+        )) {
+            ResetPasswordView(coordinator: coordinator)
+        }
     }
 
     @MainActor

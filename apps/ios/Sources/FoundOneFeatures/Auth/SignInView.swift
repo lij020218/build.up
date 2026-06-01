@@ -366,7 +366,7 @@ private struct EmailAuthSheet: View {
             do {
                 try await coordinator.sendPasswordReset(email: trimmed)
                 resetIsError = false
-                resetInfo = "재설정 메일을 보냈습니다. 메일의 링크를 열어 새 비밀번호를 설정하세요. (카카오·애플 로그인 계정은 메일이 오지 않습니다)"
+                resetInfo = "재설정 메일을 보냈습니다. 이 기기에서 메일의 「새 비밀번호 설정」 링크를 누르면 앱으로 돌아와 바로 새 비밀번호를 설정할 수 있어요. (카카오·애플 로그인 계정은 메일이 오지 않습니다)"
             } catch {
                 resetIsError = true
                 resetInfo = "메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."
