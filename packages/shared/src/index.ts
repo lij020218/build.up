@@ -17,6 +17,7 @@ export * from "./guide/qa";
 export * from "./i18n";
 export * from "./starter-data";
 export * from "./operations-channels";
+export * from "./cashflow-presets";
 export * from "./cluster-budget-benchmarks";
 export * from "./supabase/auth";
 export * from "./supabase/client";

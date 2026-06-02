@@ -1,0 +1,30 @@
+{
+  "_doc": "현금흐름(Cash-flow Crunch Tracker) 채널 프리셋 + 업종별 기본 채널 믹스 공유 SSOT. 웹 cashflow-store.ts + iOS CashflowPresetsRegistry 가 동일 소비. 출처: 2025-Q1~2026 한국시장 평균 수수료·정산주기.",
+  "channelPresets": {
+    "cash":         { "id": "cash",         "labelKo": "현금·계좌이체",       "labelEn": "Cash / Transfer",        "settlementDays": 0,  "commissionRate": 0,    "paymentFeeRate": 0 },
+    "card":         { "id": "card",         "labelKo": "카드 (PG)",           "labelEn": "Card (PG)",              "settlementDays": 2,  "commissionRate": 0,    "paymentFeeRate": 2.9, "rateNoteKo": "신용카드 가맹점 평균 (소상공인 우대 시 1.5~2.5%)", "rateNoteEn": "Avg PG fee; SMB-discounted: 1.5~2.5%" },
+    "baemin":       { "id": "baemin",       "labelKo": "배민",                "labelEn": "Baemin",                 "settlementDays": 1,  "commissionRate": 6.8,  "paymentFeeRate": 3.3, "rateNoteKo": "차등 수수료 (상위 35% → 7.8% / 35~80% → 6.8% / 하위 20% → 2.0%) — 매일 정산, 분기마다 구간 재산정", "rateNoteEn": "Tiered (top35% 7.8 / 35-80% 6.8 / bottom20% 2.0). Daily settle." },
+    "coupangeats":  { "id": "coupangeats",  "labelKo": "쿠팡이츠",             "labelEn": "Coupang Eats",           "settlementDays": 1,  "commissionRate": 6.8,  "paymentFeeRate": 3.3, "rateNoteKo": "차등 수수료 (배민과 동일 2.0~7.8%) — 매일 정산 + 익월 5영업일 차액 환급. 포장수수료 무료(~2026.03)", "rateNoteEn": "Tiered same as Baemin. Daily settle + monthly rebate." },
+    "yogiyo":       { "id": "yogiyo",       "labelKo": "요기요",               "labelEn": "Yogiyo",                 "settlementDays": 5,  "commissionRate": 7.7,  "paymentFeeRate": 3.3, "rateNoteKo": "배달 중개 4.7~9.7% (중간값 7.7%) — 하위 40% 점주는 중개료 20% 페이백. 포장 수수료 7.7%", "rateNoteEn": "Delivery 4.7~9.7%, bottom40% gets 20% rebate" },
+    "ttanggyeoyo":  { "id": "ttanggyeoyo",  "labelKo": "땡겨요 (신한)",        "labelEn": "Ttanggyeoyo",            "settlementDays": 1,  "commissionRate": 2.0,  "paymentFeeRate": 3.3, "rateNoteKo": "신한은행 운영 — 2.0% 저수수료 (공공기관·지자체 협약 식당 우선)", "rateNoteEn": "Shinhan-run, 2.0% low-fee model" },
+    "naverpay":     { "id": "naverpay",     "labelKo": "네이버페이",            "labelEn": "Naver Pay",              "settlementDays": 2,  "commissionRate": 2.5,  "paymentFeeRate": 0,   "rateNoteKo": "일반 가맹점 평균 (영세 가맹점 1.5~2.0%)", "rateNoteEn": "Avg fee, small-merchant: 1.5~2.0%" },
+    "kakaopay":     { "id": "kakaopay",     "labelKo": "카카오페이",            "labelEn": "Kakao Pay",              "settlementDays": 2,  "commissionRate": 2.5,  "paymentFeeRate": 0,   "rateNoteKo": "일반 가맹점 평균 (영세 가맹점 우대)", "rateNoteEn": "Avg fee, SMB-discounted available" },
+    "naverbooking": { "id": "naverbooking", "labelKo": "네이버 주문·예약",      "labelEn": "Naver Booking",          "settlementDays": 2,  "commissionRate": 3.3,  "paymentFeeRate": 0 },
+    "smartstore":   { "id": "smartstore",   "labelKo": "스마트스토어",          "labelEn": "Naver SmartStore",       "settlementDays": 1,  "commissionRate": 5.85, "paymentFeeRate": 0,   "rateNoteKo": "구매확정 후 1영업일. 카테고리별 1~12% 차등 (평균 5.85%)", "rateNoteEn": "1 biz-day after confirmation. 1~12% by category." },
+    "coupangwing":  { "id": "coupangwing",  "labelKo": "쿠팡 마켓플레이스",     "labelEn": "Coupang Marketplace",    "settlementDays": 15, "commissionRate": 10.8, "paymentFeeRate": 0,   "rateNoteKo": "월 2회 정산 (15일·말일). 수수료 4~10.8% 카테고리별 차등", "rateNoteEn": "Bi-monthly settle. 4~10.8% by category" },
+    "other":        { "id": "other",        "labelKo": "기타",                 "labelEn": "Other",                  "settlementDays": 3,  "commissionRate": 0,    "paymentFeeRate": 0 }
+  },
+  "industryDefaultMix": {
+    "food":           [ { "id": "cash", "salesRatio": 5 }, { "id": "card", "salesRatio": 45 }, { "id": "baemin", "salesRatio": 25 }, { "id": "coupangeats", "salesRatio": 15 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 } ],
+    "cafe-dessert":   [ { "id": "cash", "salesRatio": 5 }, { "id": "card", "salesRatio": 70 }, { "id": "baemin", "salesRatio": 10 }, { "id": "coupangeats", "salesRatio": 5 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 } ],
+    "retail":         [ { "id": "cash", "salesRatio": 5 }, { "id": "card", "salesRatio": 80 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 }, { "id": "naverbooking", "salesRatio": 5 } ],
+    "beauty":         [ { "id": "cash", "salesRatio": 5 }, { "id": "card", "salesRatio": 80 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 }, { "id": "naverbooking", "salesRatio": 5 } ],
+    "pet":            [ { "id": "cash", "salesRatio": 5 }, { "id": "card", "salesRatio": 80 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 }, { "id": "naverbooking", "salesRatio": 5 } ],
+    "health":         [ { "id": "cash", "salesRatio": 5 }, { "id": "card", "salesRatio": 80 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 }, { "id": "naverbooking", "salesRatio": 5 } ],
+    "online-digital": [ { "id": "smartstore", "salesRatio": 45 }, { "id": "coupangwing", "salesRatio": 30 }, { "id": "card", "salesRatio": 15 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 } ],
+    "ecommerce":      [ { "id": "smartstore", "salesRatio": 45 }, { "id": "coupangwing", "salesRatio": 30 }, { "id": "card", "salesRatio": 15 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "kakaopay", "salesRatio": 5 } ],
+    "startup-tech":   [ { "id": "card", "salesRatio": 75 }, { "id": "kakaopay", "salesRatio": 10 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "cash", "salesRatio": 10 } ],
+    "saas":           [ { "id": "card", "salesRatio": 75 }, { "id": "kakaopay", "salesRatio": 10 }, { "id": "naverpay", "salesRatio": 5 }, { "id": "cash", "salesRatio": 10 } ],
+    "_fallback":      [ { "id": "cash", "salesRatio": 10 }, { "id": "card", "salesRatio": 90 } ]
+  }
+}
