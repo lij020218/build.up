@@ -181,8 +181,18 @@ public struct InsuranceTaxSetupStageView: View {
                         .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
                     Text("4insure.or.kr 신고 시 두루누리 동시 신청 가능.")
                         .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    Text("⚠️ 취득신고 시점에만 신청 가능 — 한 번 놓치면 재신청 불가. 청년·신규 사업주에겐 사업주 부담을 약 5%까지 낮추는 결정적 자금 여유.")
+                        .font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.midnightDeep).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
+
+            warningCard(title: "사장님이 자주 빠지는 함정", items: [
+                "현금 급여 지급 후 미신고 — 카드 매출(PCI) 분석으로 추적, 가산세 50%+",
+                "친·인척 직원도 4대보험 신고 의무 (배우자·자녀 포함)",
+                "알바 시급 신고 누락 — 일용직도 산재보험 의무 가입",
+                "퇴사자 자격상실 신고 지연 — 사업주가 보험료 계속 부담",
+            ], color: .red)
 
             // 부담 시뮬레이션 (2026-05-25 정합화: 근로자 4축 모두 표시 + 합계)
             BUCard(.card) {
@@ -247,7 +257,39 @@ public struct InsuranceTaxSetupStageView: View {
                     }
                 }
             }
+
+            // 직원 수별 유리한 길 (웹 PATH "당신 상황에 유리한 길" 1:1)
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("직원 수별 유리한 길")
+                    pathRow("1인 사업자 (직원 0)", "4대보험 신고 불필요 — 본인은 지역가입자",
+                            "대표자 본인은 직장가입자 대상이 아님. 지역의보 + 지역연금으로 자동 가입. 본인을 임원으로 등재한 경우는 별개.")
+                    pathRow("직원 1~2명 + 월급 270만 미만", "두루누리 80% 지원 + 수기 엑셀로 시작",
+                            "신규 가입자면 두루누리로 보험료 80% 지원 → 사업주 부담 약 5%. 페이퍼워크는 엑셀+매월 신고로 충분. 첫 신고는 세무서 방문 권장.")
+                    pathRow("직원 3~5명", "급여 SaaS (flex / 알밤) + 두루누리 + 반기납부",
+                            "SaaS 월 5만 < 수기 실수 위험+시간 비용. 반기납부로 페이퍼워크 1/6. 두루누리 가능자는 반드시 신청. 세무사 위임은 5명부터 검토.")
+                    pathRow("직원 6명 이상", "세무사 위임 적극 검토",
+                            "월 10~30만 = 본인 시간 5시간 가치 이상. 부가세·종소세까지 통합 처리 + 세무조사 리스크 0. 매장 운영 집중이 ROI 높음.")
+                    pathRow("알바·시급 직원만 운영", "일용근로자 신고 — 월 60시간 + 1개월 미만 기준",
+                            "일용직은 산재만 의무. 월 60시간↑ + 1개월↑ 근무 시 4대보험 모두 의무. 시급 알바 늘릴 때 사회보험 부담 미리 계산.")
+                }
+            }
         }
+    }
+
+    private func pathRow(_ condition: String, _ recommendation: String, _ reason: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(condition).font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
+            HStack(alignment: .top, spacing: 6) {
+                Image(systemName: "arrow.turn.down.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(BUColor.midnight).padding(.top, 2)
+                Text(recommendation).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            Text(reason).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 7)
+        .overlay(alignment: .top) { Divider().opacity(0.5) }
     }
 
     // MARK: - pg 1 세무 세팅
