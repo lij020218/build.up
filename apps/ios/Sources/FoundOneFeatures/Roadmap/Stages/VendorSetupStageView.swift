@@ -448,6 +448,8 @@ public struct VendorSetupStageView: View {
             )
         ) {
             LazyVStack(alignment: .leading, spacing: BUSpacing.lg) {
+                goldenWindowCard
+
                 vendorSection(
                     title: cluster.supplierSectionTitle,
                     subtitle: cluster.supplierSectionSubtitle,
@@ -477,6 +479,39 @@ public struct VendorSetupStageView: View {
                 initialOrderSection
             }
         }
+    }
+
+    // MARK: - 골든타임 카드 (웹 KEY ACTION 히어로 1:1 — web==app)
+
+    /// "개업 4~6주 전 골든타임 + 견적→비교→선납 + 미니 팁 3개" — 웹 vendor 히어로 미러.
+    private var goldenWindowCard: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 12) {
+                BUEyebrow("골든타임 — 개업 4~6주 전")
+                Text("개업 4~6주 전이 구매·계약의 골든타임입니다. 한국에서 검증된 도매처·장비를 「견적 → 비교 → 선납」 순서로 진행하세요.")
+                    .font(.system(size: 13.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    vendorMiniTip("lightbulb.fill", "견적 3곳", "도매·중고·신품 모두 비교")
+                    vendorMiniTip("checkmark.shield.fill", "인증 확인", "가스·전기 KC 인증 필수")
+                    vendorMiniTip("creditcard.fill", "POS 먼저", "개업일 1주 전 세팅 끝")
+                }
+            }
+        }
+    }
+
+    private func vendorMiniTip(_ icon: String, _ title: String, _ desc: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                Image(systemName: icon).font(.system(size: 10)).foregroundStyle(BUColor.midnight)
+                Text(title).font(.system(size: 10.5, weight: .bold)).foregroundStyle(BUColor.midnightDeep)
+            }
+            Text(desc).font(.system(size: 10.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(1.5)
+                .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: - Vendor section builder
