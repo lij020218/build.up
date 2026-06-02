@@ -29,6 +29,7 @@ public struct LocationCandidatesStageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
+    @AppStorage("stage.budget.startupWon") private var startupWon = 0   // 예산별 유리한 전략 분기(웹 budgetTier)
     @State private var page = 0
     private let stageId = "location-candidates"
 
@@ -253,6 +254,102 @@ public struct LocationCandidatesStageView: View {
                 .background(BUColor.success.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.success.opacity(0.16), lineWidth: 1))
             }
+        }
+    }
+
+    // MARK: - 교육 콘텐츠 (웹 SSOT 미러 — "왜 중요하고 어떻게 해야 유리한가")
+
+    /// 상권을 보는 3원칙 — 웹 WorkStep WHY 카피 미러(체크리스트가 아니라 "왜·어떻게").
+    private var strategyCard: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 12) {
+                BUEyebrow("상권, 이렇게 보면 유리합니다")
+                principleRow("1", "후보 3곳 이상 동일 기준 비교",
+                             "1곳만 보면 ‘좋아 보인다’가 끝입니다. 3곳을 같은 잣대(유동·임대료·경쟁·타겟)로 보면 차이가 명확해집니다.")
+                principleRow("2", "AI 데이터 + 직접 답사 = 정량 + 정성",
+                             "AI·공공데이터는 임대료·유동 같은 ‘숫자’만 봅니다. 분위기·동선·소음·간판 가시성 같은 ‘정성’은 직접 답사로만 확인됩니다.")
+                principleRow("3", "느낌이 아니라 4지표로 채점",
+                             "유동(일평균 통행)·임대료(평당 월세)·경쟁(반경 500m 동종)·타겟(연령·소득)으로 객관 채점 후 본인 직관과 교차 검증해야 후회가 없습니다.")
+            }
+        }
+    }
+
+    private func principleRow(_ num: String, _ title: String, _ body: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(num)
+                .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                .frame(width: 22, height: 22)
+                .background(LinearGradient(colors: [BUColor.midnight, BUColor.midnightDeep], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(BUColor.ink)
+                Text(body).font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    /// 사장님 상황(업종×예산)에 유리한 입지 전략 — 웹 compareFavorable 1:1 이식.
+    private var favorableCard: some View {
+        let cat = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
+        let tier: String = startupWon >= 200_000_000 ? "high" : (startupWon >= 80_000_000 ? "mid" : "low")
+        let tip = favorableTip(categoryId: cat, tier: tier)
+        return BUCard(.card) {
+            VStack(alignment: .leading, spacing: 10) {
+                BUEyebrow("사장님 상황에 유리한 길")
+                Text(tip.context)
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(BUColor.midnight08, in: Capsule())
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill").font(.system(size: 15)).foregroundStyle(scoreColor(86)).padding(.top, 1)
+                    Text(tip.recommendation)
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(BUColor.ink).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Text(tip.rationale)
+                    .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    /// 웹 compareFavorable[categoryId] (budgetTier high/mid/low) 1:1 포팅.
+    private func favorableTip(categoryId: String, tier: String) -> (context: String, recommendation: String, rationale: String) {
+        switch categoryId {
+        case "food":
+            return (
+                tier == "low" ? "예산 8천만원 이하 + 음식점" : tier == "mid" ? "예산 8천~2억 + 음식점" : "예산 2억+ + 음식점",
+                tier == "low" ? "메인 1블록 안쪽 이면 골목 — 임대료 30~40% 절감 + 단골 모델"
+                    : tier == "mid" ? "준메인 + 점심·저녁 직장인 수요 가시권"
+                    : "메인 상권 + 코너·1층 가시성 — 회전율 모델",
+                tier == "low" ? "유동 1/3 손실 vs 임대료 1/2 절감 = 단골 60%+ 흑자 가능. 인스타·네이버 플레이스로 메인 효과 일부 회복."
+                    : tier == "mid" ? "메인은 임대료 회수 4~5년. 준메인은 회전 + 단골 모두 노려 수지 균형 좋음."
+                    : "메인은 회전율 = 매출. 임대료 부담 크지만 매출 천장 높아 객단가 8천~1.2만 모델 BEP 빠름."
+            )
+        case "cafe-dessert":
+            return ("카페 / 디저트",
+                tier == "low" ? "주거지 인접 + 산책 동선 — 단골 모델" : "메인 + 인스타 가능한 외관 — SNS 바이럴",
+                tier == "low" ? "동네 카페는 단골 70%+ 가 매출 결정. 일관 동선 + 친절이 더 효율." : "메인 + 사진 잘 나오는 외관 = 인스타 자동 마케팅, 광고비 0.")
+        case "retail":
+            return ("리테일 / 셀렉트샵", "메인 1블록 안쪽 골목 셀렉트샵 — 인스타로 발견되는 모델",
+                "메인 1층 임대료 부담 ↑. 골목 + 컨셉 외관 + SNS 마케팅으로 「발견하는 가게」 포지셔닝.")
+        case "beauty":
+            return ("미용·뷰티", "지하철 도보 5분 + 1~2층 (3층+ 회피)",
+                "예약 모델은 접근성이 매출 직결. 3층+ 신규 유입 50% 감소.")
+        case "fitness":
+            return ("필라테스·요가·PT", "주거 밀집 + 도보 10분 + 지하·1층 (2층+ 회피)",
+                "회원제는 집 근처가 재계약률 2배. 기구 운반 위해 1층 또는 엘리베이터 필수.")
+        case "education":
+            return ("학원 / 교육", "초·중등 학원은 학교 도보 10분 + 1층 + 주차 가능",
+                "픽업 시 주차 못하면 다른 학원으로. 학교 가까울수록 신규 등록 ↑.")
+        case "pet":
+            return ("펫", "주거 단독 입지 + 1층 + 분리 동선 (다른 매장 X)",
+                "짖음·털 알레르기 민원이 시간 제한 1순위. 상가 단독 또는 펫 클러스터 선호.")
+        case "online-digital":
+            return ("온라인·디지털", "물리 매장 X — 작업·창고만 필요. 주거 겸용 사무실로 시작",
+                "고객 방문 0. 임대료 절감이 마진 직결. 매출 안정화 후 별도 사무실·창고로 분리.")
+        default:
+            return favorableTip(categoryId: "food", tier: tier)
         }
     }
 
@@ -545,6 +642,8 @@ public struct LocationCandidatesStageView: View {
     private var marketPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             whyMarketCard
+            strategyCard
+            favorableCard
             aiRecommendCard
 
             BUCard(.card) {
@@ -582,10 +681,10 @@ public struct LocationCandidatesStageView: View {
                 }
             }
 
-            warningCard(title: "상권 함정", items: [
-                "유명 상권 = 높은 임대료 + 치열한 경쟁 → 초기 생존율 낮음",
-                "골목 상권은 고정 단골 형성 시 수익성이 더 안정적",
-                "권리금 있는 매물 = 전 업주 영업력 포함 가격 — 업종 변경 시 권리금 손실",
+            warningCard(title: "흔한 함정 — 이건 피하세요", items: [
+                "‘임대료 싸 보임’ 함정: 월세 100만원 싸도 매출 잠재력이 200만원 적으면 손해. ‘평당 임대료 ÷ 평당 매출 잠재력’ 비율로 판단하세요.",
+                "권리금 매물: 매도자가 부르는 권리금은 보통 매출 6~12개월치. 양수 후 본인 매출이 70%+ 유지돼야 회수됩니다. 매출이 떨어지는 이유(사장·메뉴 변경)를 사전 검증하세요.",
+                "유명 상권 = 높은 임대료 + 치열한 경쟁 → 초기 생존율은 오히려 낮을 수 있습니다. 골목 상권은 단골이 형성되면 수익성이 더 안정적입니다.",
             ], color: .orange)
         }
     }
