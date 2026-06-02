@@ -12,6 +12,7 @@
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneComponents
+import FoundOneCore
 import FoundOneData
 
 public struct ContractReviewStageView: View {
@@ -19,6 +20,7 @@ public struct ContractReviewStageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
     @State private var page = 0
+    @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     private let stageId = "contract-review"
 
     // 계약 체크
@@ -106,10 +108,75 @@ public struct ContractReviewStageView: View {
         }
     }
 
+    // MARK: - 업종별 특약 카드 (웹 clauseFavorable 1:1 — web==app)
+
+    /// 사장님 업종에 따라 "꼭 받아야 할 특약" — 웹 clauseFavorable[categoryId] 미러.
+    private var clauseFavorableCard: some View {
+        let tip = clauseFavorableTip(IndustryCluster.from(industryId: industryId).category.rawValue)
+        return BUCard(.card) {
+            VStack(alignment: .leading, spacing: 10) {
+                BUEyebrow("사장님 업종 — 꼭 받을 특약")
+                Text(tip.context)
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(BUColor.midnight08, in: Capsule())
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill").font(.system(size: 15)).foregroundStyle(BUColor.success).padding(.top, 1)
+                    Text(tip.recommendation)
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(BUColor.ink).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Text(tip.rationale)
+                    .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    /// 웹 clauseFavorable(ContractReviewStage.tsx) 10업종 1:1 포팅.
+    private func clauseFavorableTip(_ categoryId: String) -> (context: String, recommendation: String, rationale: String) {
+        switch categoryId {
+        case "food":
+            return ("음식점 / F&B", "「환기·정화조·전기 보강 비용 임대인 부담」 특약 무조건 받기",
+                "후드·덕트·정화조 증축은 임대 후 발견 시 500~3,000만원. 임대인 부담 명시 또는 임대료 5% 인하로 보상. 거부 임대인 = 매물 변경.")
+        case "cafe-dessert":
+            return ("카페 / 베이커리", "「전기 30A↑ 증설 가능 + 비용 분담」 명시",
+                "머신·오븐·제빙기 동시 가동 시 20A 차단기 빈번. 한전 신청 30~80만원. 임대인 부담 또는 임대료 인하로 보상.")
+        case "retail":
+            return ("리테일 / 소매", "「온라인 판매 병행 가능」 + 「업종변경 자유」 명시",
+                "오프라인만 묶이면 매출 다각화 어려움. 스마트스토어 병행이 매출 안전망. 미명시 시 분쟁 발생 시 임대인 우위.")
+        case "beauty":
+            return ("미용·뷰티", "「소음·향기 민원 시 임대인 1차 중재 책임」 명시",
+                "옆 가게 민원으로 영업시간 제한 사례 다수. 임대인이 중재 안 하면 임차인이 직접 분쟁 — 책임 분담 명시 필수.")
+        case "fitness":
+            return ("필라테스·요가·PT", "「방음 보강 비용 임대인 부담」 + 「영업시간 06-23시 보장」",
+                "운동 소음 민원이 폐점 1순위. 방음 보강 1,000~3,000만원을 임대인이 분담 안 하면 매물 변경.")
+        case "education":
+            return ("학원", "「학원 등록 가능 용도」 + 「소방완비증명서 책임 분담」 명시",
+                "건축물 용도 「교육연구시설」 또는 학원 가능 「근린생활시설」 확약 안 받으면 등록 거부. 100㎡↑ 소방완비 필수.")
+        case "pet":
+            return ("펫", "「소음·냄새 민원 1차 중재 임대인 책임」 + 「업종 폐쇄 명령 시 환불」",
+                "펫 업종 민원 영업정지 빈번. 환불 조항 없으면 보증금 묶인 채 폐업. 임대인 중재 + 환불 보장이 안전망.")
+        case "online-digital":
+            return ("온라인·디지털 (사무실·창고)", "「사업자등록 가능」 명시",
+                "주거용 임대차 계약서는 「사업자 등록 금지」 가 default. 사업자등록 못 하면 매출 신고·세금계산서 불가.")
+        case "living-service":
+            return ("세탁·청소·수리", "「폐수·소음 기준 적합 매물 + 위반 시 임대인 책임」",
+                "폐수·소음 위반은 영업정지 사유. 임대인이 사전 적합성 확약 없이 단속 시 임차인 부담.")
+        case "space":
+            return ("공간 임대", "「숙박 가능 여부 + 데시벨·시간 제한 명시」",
+                "건축물 용도 미일치 시 영업허가 거부. 소음·시간 분쟁 1순위 — 특약에 명시.")
+        default:
+            return clauseFavorableTip("food")
+        }
+    }
+
     // MARK: - pg 0 핵심 조항
 
     private var clausePage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            clauseFavorableCard
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("9대 핵심 확인 조항")
