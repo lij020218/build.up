@@ -45,10 +45,15 @@ type Props = {
   industryCategoryId?: string;
 };
 
-export function ConversionFunnelCard({ mode, ko = true, industryCategoryId }: Props) {
-  // 업종 가드 — 상위에서도 분기하지만 컴포넌트 자체에도 안전망.
+export function ConversionFunnelCard(props: Props) {
+  // 업종 가드 — wrapper/inner 분리로 훅 전 early return 회피(rules-of-hooks). 동작 동일.
+  const { mode, industryCategoryId } = props;
   if (mode === "commerce" && industryCategoryId && industryCategoryId !== "ecommerce") return null;
   if (mode === "saas" && industryCategoryId && industryCategoryId !== "startup-tech") return null;
+  return <ConversionFunnelCardInner {...props} />;
+}
+
+function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Props) {
 
   const { rows, loading, save } = useFunnelMetrics(mode);
 

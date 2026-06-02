@@ -42,9 +42,13 @@ type Props = {
   menuItems: MenuItemInput[];
 };
 
-export function AvgTicketUpsellCard({ ko, industryCategoryId, currentAvgTicket, menuItems }: Props) {
-  if (!industryCategoryId || !ELIGIBLE_INDUSTRIES.includes(industryCategoryId)) return null;
+export function AvgTicketUpsellCard(props: Props) {
+  // 적격 업종 게이팅 — 훅 전 early return 회피 위해 wrapper/inner 분리(rules-of-hooks). 동작 동일.
+  if (!props.industryCategoryId || !ELIGIBLE_INDUSTRIES.includes(props.industryCategoryId)) return null;
+  return <AvgTicketUpsellCardInner {...props} />;
+}
 
+function AvgTicketUpsellCardInner({ ko, industryCategoryId, currentAvgTicket, menuItems }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const suggestions = useMemo<UpsellSuggestion[]>(
@@ -72,7 +76,7 @@ export function AvgTicketUpsellCard({ ko, industryCategoryId, currentAvgTicket, 
             </div>
             <div style={{ fontSize: "12px", color: TEXT_MUTED, lineHeight: 1.55, marginTop: "2px" }}>
               {ko
-                ? `사장님 메뉴와 ${industryDisplayName(industryCategoryId)} 업종 패턴 매칭 기반 추천 — 회전율은 그대로 둔 채 매출만 +10–20%.`
+                ? `사장님 메뉴와 ${industryDisplayName(industryCategoryId!)} 업종 패턴 매칭 기반 추천 — 회전율은 그대로 둔 채 매출만 +10–20%.`
                 : "Pattern-matched to your industry — same traffic, +10–20% revenue."}
             </div>
           </div>

@@ -85,15 +85,20 @@ type Stats30d = {
   totalNewUsers: number;
 };
 
-export function SaasMetricsConnectCard({
+export function SaasMetricsConnectCard(props: { ko: boolean; industryCategoryId?: string | null }) {
+  // 스타트업 업종에만 노출 — wrapper/inner 분리로 훅·이펙트 전 early return 회피(rules-of-hooks).
+  //   inner 는 startup-tech 일 때만 마운트 → useEffect 의 API 호출도 그때만 (동작 동일).
+  if (props.industryCategoryId !== "startup-tech") return null;
+  return <SaasMetricsConnectCardInner {...props} />;
+}
+
+function SaasMetricsConnectCardInner({
   ko,
   industryCategoryId,
 }: {
   ko: boolean;
   industryCategoryId?: string | null;
 }) {
-  // 스타트업 업종에만 노출
-  if (industryCategoryId !== "startup-tech") return null;
 
   const [conns, setConns] = useState<Connection[]>([]);
   const [stats, setStats] = useState<Stats30d | null>(null);

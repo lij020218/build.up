@@ -69,7 +69,7 @@ type Status = {
 /**
  * ⚠ COMING SOON 가드 — CODEF 운영 비용 부담 (월 최소 5만~10만원 + 건당 과금) 고려해
  *   현재는 "추후 공개 예정" placeholder. 사용자 100명+ & 가치 입증 후 활성화.
- *   활성화 시: 이 export 본체를 `return <_CodefConnectCardLive ko={ko} />;` 로 교체.
+ *   활성화 시: 이 export 본체를 `return <CodefConnectCardLive ko={ko} />;` 로 교체.
  */
 export function CodefConnectCard({ ko }: { ko: boolean }) {
   return (
@@ -174,8 +174,8 @@ export function CodefConnectCard({ ko }: { ko: boolean }) {
 
 // ⚠ 라이브 컴포넌트 — 추후 활성화 시 사용 (현재 dead code, 빌드에서 tree-shaken).
 //   CODEF_NOT_CONFIGURED 503 시 wizard 가 친절 메시지 응답.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _CodefConnectCardLive({ ko }: { ko: boolean }) {
+// eslint-disable-next-line no-unused-vars
+function CodefConnectCardLive({ ko }: { ko: boolean }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [busy, setBusy] = useState(false);

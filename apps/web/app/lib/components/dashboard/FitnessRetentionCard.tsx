@@ -42,24 +42,14 @@ const MIDNIGHT = "#191970";
 
 type Props = { ko: boolean; industryCategoryId?: string };
 
-export function FitnessRetentionCard({ ko, industryCategoryId }: Props) {
-  const members = useOperationsStore((s) => s.members);
+export function FitnessRetentionCard(props: Props) {
+  // 업종 가드 — wrapper/inner 분리로 훅 전 early return 회피(rules-of-hooks). 동작 동일.
+  if (props.industryCategoryId !== "fitness") return null;
+  return <FitnessRetentionCardInner {...props} />;
+}
 
-  // 내부 가드 — 피트니스 외 업종은 자체 null 반환 (라우터 매트릭스 외에 안전망)
-  if (industryCategoryId !== "fitness") return null;
-  if (!members || members.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><Users size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "회원 Retention · 피트니스" : "Member Retention · Fitness"}</div>
-        </header>
-        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
-          {ko ? "회원 데이터를 입력하면 만료 임박 + cohort 잔존율 분석이 시작됩니다 (내 가게 > 회원 관리)" : "Enter member data to unlock retention analysis"}
-        </div>
-      </article>
-    );
-  }
+function FitnessRetentionCardInner({ ko }: Props) {
+  const members = useOperationsStore((s) => s.members);
 
   const analysis = useMemo(() => {
     const now = new Date();
@@ -137,6 +127,21 @@ export function FitnessRetentionCard({ ko, industryCategoryId }: Props) {
       topAction,
     };
   }, [members, ko]);
+
+  // 회원 데이터 없으면 빈 상태 — 훅 뒤로 이동(rules-of-hooks). analysis 는 빈 members 에도 안전.
+  if (!members || members.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><Users size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "회원 Retention · 피트니스" : "Member Retention · Fitness"}</div>
+        </header>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+          {ko ? "회원 데이터를 입력하면 만료 임박 + cohort 잔존율 분석이 시작됩니다 (내 가게 > 회원 관리)" : "Enter member data to unlock retention analysis"}
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article style={cardStyle}>

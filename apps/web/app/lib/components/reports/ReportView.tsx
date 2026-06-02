@@ -119,6 +119,35 @@ export function ReportView({ period }: Props) {
     };
   }, [costHistory]);
 
+  // 현재 상황에 맞는 실제 기업 사례 매칭 (클라이언트 사이드, 추가 API 호출 없음).
+  //   ⚠️ 훅(useMemo)은 아래 빈-상태 early return 보다 위에 있어야 함(rules-of-hooks).
+  const benchmarkCase = useMemo<{ study: CaseStudy; situation: BusinessSituation } | null>(() => {
+    if (!d.industryCategoryId) return null;
+    const weeklyChange = brain.weeklyChangePct ?? snap.revenueChangePct ?? 0;
+    const situation = detectBusinessSituation({
+      runway: snap.marginKrw >= 0 ? -1 : 1,
+      monthlySales: snap.revenueKrw,
+      weeklyChange,
+      primeRate: snap.primeRatePct ?? 0,
+      daysSinceLaunch: brain.daysSinceLaunch ?? 0,
+      categoryId: d.industryCategoryId,
+      // 이번 기간 변화율이 ±5% 이내면 4주 정체로 간주 → marketing-stagnant 감지
+      consecutiveFlatWeeks:
+        snap.revenueChangePct != null && Math.abs(snap.revenueChangePct) <= 5 ? 4 : undefined,
+    });
+    if (!situation) return null;
+    const cases = matchCaseStudies(situation, d.industryCategoryId);
+    if (cases.length === 0) return null;
+    // period 기반 안정적 픽 (같은 기간 = 같은 회사, 매 조회마다 바뀌지 않음)
+    const now = new Date();
+    const seed =
+      period === "day" ? now.getDate() :
+      period === "week" ? Math.floor(now.getDate() / 7) :
+      period === "month" ? now.getMonth() :
+      Math.floor(now.getMonth() / 3);
+    return { study: cases[seed % cases.length], situation };
+  }, [snap, brain, d.industryCategoryId, period]);
+
   // ── Empty / business-open 분기 ──
   // 영업 중이면 어제 영업일 보고서를 보여줌. 어제 데이터도 없을 때만 빈 안내.
   if (period === "day" && !isDayClosed && snap.insufficientData) {
@@ -151,34 +180,6 @@ export function ReportView({ period }: Props) {
   const wisdom = pickReportWisdom(period, ko);
   const topNudge = nudges[0];
   const isQuarter = period === "quarter";
-
-  // 현재 상황에 맞는 실제 기업 사례 매칭 (클라이언트 사이드, 추가 API 호출 없음)
-  const benchmarkCase = useMemo<{ study: CaseStudy; situation: BusinessSituation } | null>(() => {
-    if (!d.industryCategoryId) return null;
-    const weeklyChange = brain.weeklyChangePct ?? snap.revenueChangePct ?? 0;
-    const situation = detectBusinessSituation({
-      runway: snap.marginKrw >= 0 ? -1 : 1,
-      monthlySales: snap.revenueKrw,
-      weeklyChange,
-      primeRate: snap.primeRatePct ?? 0,
-      daysSinceLaunch: brain.daysSinceLaunch ?? 0,
-      categoryId: d.industryCategoryId,
-      // 이번 기간 변화율이 ±5% 이내면 4주 정체로 간주 → marketing-stagnant 감지
-      consecutiveFlatWeeks:
-        snap.revenueChangePct != null && Math.abs(snap.revenueChangePct) <= 5 ? 4 : undefined,
-    });
-    if (!situation) return null;
-    const cases = matchCaseStudies(situation, d.industryCategoryId);
-    if (cases.length === 0) return null;
-    // period 기반 안정적 픽 (같은 기간 = 같은 회사, 매 조회마다 바뀌지 않음)
-    const now = new Date();
-    const seed =
-      period === "day" ? now.getDate() :
-      period === "week" ? Math.floor(now.getDate() / 7) :
-      period === "month" ? now.getMonth() :
-      Math.floor(now.getMonth() / 3);
-    return { study: cases[seed % cases.length], situation };
-  }, [snap, brain, d.industryCategoryId, period]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

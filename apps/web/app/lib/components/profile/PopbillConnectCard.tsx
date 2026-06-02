@@ -86,7 +86,7 @@ type Stats30d = {
 /**
  * ⚠ COMING SOON 가드 — 팝빌은 사용량 과금 (월 0~3만원, 사장님 가게 규모에 따라).
  *   현재는 "추후 공개 예정" placeholder. 사용자 100명+ & 가치 입증 후 활성화.
- *   활성화 시: 이 export 본체를 `return <_PopbillConnectCardLive ko={ko} />;` 로 교체.
+ *   활성화 시: 이 export 본체를 `return <PopbillConnectCardLive ko={ko} />;` 로 교체.
  */
 export function PopbillConnectCard({ ko }: { ko: boolean }) {
   return (
@@ -194,8 +194,8 @@ export function PopbillConnectCard({ ko }: { ko: boolean }) {
 
 // ⚠ 라이브 컴포넌트 — 추후 활성화 시 사용 (현재 dead code, 빌드에서 tree-shaken).
 //   POPBILL_NOT_CONFIGURED 503 시 wizard 가 친절 메시지 응답.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _PopbillConnectCardLive({ ko }: { ko: boolean }) {
+// eslint-disable-next-line no-unused-vars
+function PopbillConnectCardLive({ ko }: { ko: boolean }) {
   const [conn, setConn] = useState<ConnStatus | null>(null);
   const [stats, setStats] = useState<Stats30d | null>(null);
   const [showWizard, setShowWizard] = useState(false);

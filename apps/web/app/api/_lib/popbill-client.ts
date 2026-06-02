@@ -105,7 +105,6 @@ let _configured = false;
 function loadSdk(): PopbillSDK {
   if (_sdk) return _sdk;
   try {
-    /* eslint-disable @typescript-eslint/no-require-imports */
     _sdk = require("popbill") as PopbillSDK;
     return _sdk;
   } catch (e) {

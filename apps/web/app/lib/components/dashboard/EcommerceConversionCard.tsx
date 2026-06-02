@@ -43,31 +43,16 @@ const CHANNEL_LABEL: Record<string, string> = {
   naver: "네이버", coupang: "쿠팡", meta: "메타", google: "구글", kakao: "카카오", other: "기타",
 };
 
-export function EcommerceConversionCard({ ko, industryCategoryId }: Props) {
+export function EcommerceConversionCard(props: Props) {
+  // 업종 가드 — wrapper/inner 분리로 훅 전 early return 회피(rules-of-hooks). 동작 동일.
+  if (props.industryCategoryId !== "ecommerce") return null;
+  return <EcommerceConversionCardInner {...props} />;
+}
+
+function EcommerceConversionCardInner({ ko, industryCategoryId }: Props) {
   const adSpends = useEcommerceStore((s) => s.adSpends);
   const returns = useEcommerceStore((s) => s.returns);
   const seedDemo = useEcommerceStore((s) => s.seedDemo);
-
-  if (industryCategoryId !== "ecommerce") return null;
-
-  if (adSpends.length === 0 && returns.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><ShoppingCart size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "전환·ROAS·반품 · 이커머스" : "CVR · Ecommerce"}</div>
-        </header>
-        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
-          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
-            {ko ? "광고비·반품 데이터를 입력하면 CVR/ROAS/반품률 분석이 시작됩니다" : "Enter ad/returns data for CVR/ROAS analysis"}
-          </div>
-          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
-            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
-          </button>
-        </div>
-      </article>
-    );
-  }
 
   const analysis = useMemo(() => {
     const now = new Date();
@@ -153,6 +138,26 @@ export function EcommerceConversionCard({ ko, industryCategoryId }: Props) {
 
     return { totalSpend: overall.spend, totalConvValue, avgCvr, avgRoas, returnRate, returnCount, channels, topAction };
   }, [adSpends, returns, ko]);
+
+  // 데이터 없으면 빈 상태(데모 유도) — 훅 뒤로 이동(rules-of-hooks). analysis 는 빈 입력에도 안전.
+  if (adSpends.length === 0 && returns.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><ShoppingCart size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "전환·ROAS·반품 · 이커머스" : "CVR · Ecommerce"}</div>
+        </header>
+        <div style={{ padding: "16px 0", textAlign: "center" as const }}>
+          <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
+            {ko ? "광고비·반품 데이터를 입력하면 CVR/ROAS/반품률 분석이 시작됩니다" : "Enter ad/returns data for CVR/ROAS analysis"}
+          </div>
+          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
+            {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
+          </button>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article style={cardStyle}>

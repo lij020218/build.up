@@ -88,7 +88,6 @@ let _sdk: GoogleApis | null = null;
 function loadSdk(): GoogleApis {
   if (_sdk) return _sdk;
   try {
-    /* eslint-disable @typescript-eslint/no-require-imports */
     _sdk = require("googleapis") as GoogleApis;
     return _sdk;
   } catch (e) {

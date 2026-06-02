@@ -99,7 +99,6 @@ export function useFunnelMetrics(mode: FunnelMode): UseFunnelMetricsResult {
       if (!user) throw new Error("not authenticated");
 
       const weekStart = isoWeekMonday();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: err } = await (supabase as any)
         .from("saas_funnel_manual_weekly")
         .upsert(

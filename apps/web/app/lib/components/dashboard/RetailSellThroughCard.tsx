@@ -56,11 +56,15 @@ type Props = { ko: boolean; industryCategoryId?: string };
 // 카드 내부에서 *category 표시용* 필드 유지 — SSOT 타입은 category optional.
 type ProductLite = SellThroughProduct & { category: string };
 
-export function RetailSellThroughCard({ ko, industryCategoryId }: Props) {
+export function RetailSellThroughCard(props: Props) {
+  // 업종 가드 — wrapper/inner 분리로 훅 전 early return 회피(rules-of-hooks). 동작 동일.
+  if (props.industryCategoryId !== "retail") return null;
+  return <RetailSellThroughCardInner {...props} />;
+}
+
+function RetailSellThroughCardInner({ ko, industryCategoryId }: Props) {
   const products = useOperationsStore((s) => s.products);
   const unifiedProducts = useOperationsStore((s) => s.unifiedProducts);
-
-  if (industryCategoryId !== "retail") return null;
 
   // 두 store 머지 — id 중복 시 unifiedProducts 우선 (더 정교한 데이터)
   const all: ProductLite[] = useMemo(() => {
@@ -79,20 +83,6 @@ export function RetailSellThroughCard({ ko, industryCategoryId }: Props) {
     }
     return Array.from(byId.values());
   }, [products, unifiedProducts]);
-
-  if (all.length === 0) {
-    return (
-      <article style={cardStyle}>
-        <header style={headerRow}>
-          <span style={iconBadge}><ShoppingBag size={14} strokeWidth={2.2} /></span>
-          <div style={labelStyle}>{ko ? "Sell-Through · 소매" : "Sell-Through · Retail"}</div>
-        </header>
-        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
-          {ko ? "상품 데이터를 입력하면 sell-through rate + best seller + dead stock 분석 (내 가게 > 상품 관리)" : "Enter product data for sell-through analysis"}
-        </div>
-      </article>
-    );
-  }
 
   const analysis = useMemo(() => {
     // 2026-05-13 — SSOT (sell-through.ts) 적용. 카드는 *컴포지션* + UX 결정.
@@ -164,6 +154,21 @@ export function RetailSellThroughCard({ ko, industryCategoryId }: Props) {
 
     return { withRate, topSellers, deadStock, lowStock, avgRate, top5RevShare, topAction };
   }, [all, ko]);
+
+  // 상품 데이터 없으면 빈 상태 — 훅 뒤로 이동(rules-of-hooks). analysis 는 빈 입력에도 안전.
+  if (all.length === 0) {
+    return (
+      <article style={cardStyle}>
+        <header style={headerRow}>
+          <span style={iconBadge}><ShoppingBag size={14} strokeWidth={2.2} /></span>
+          <div style={labelStyle}>{ko ? "Sell-Through · 소매" : "Sell-Through · Retail"}</div>
+        </header>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+          {ko ? "상품 데이터를 입력하면 sell-through rate + best seller + dead stock 분석 (내 가게 > 상품 관리)" : "Enter product data for sell-through analysis"}
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article style={cardStyle}>

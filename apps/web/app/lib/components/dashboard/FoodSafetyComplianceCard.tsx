@@ -106,7 +106,6 @@ export function FoodSafetyComplianceCard({
   industryCategoryId?: string | null;
 }) {
   const items = useMemo(() => filterByCategory(industryCategoryId), [industryCategoryId]);
-  if (items.length === 0) return null;
 
   const [checks, setChecks] = useState<CheckState[]>([]);
   const [expandedCategory, setExpandedCategory] = useState<FoodSafetyCheckCategory | null>("daily");
@@ -170,6 +169,10 @@ export function FoodSafetyComplianceCard({
       return !isItemFresh(item, c);
     });
   }, [items, checksByItem]);
+
+  // 해당 업종에 점검 항목이 없으면 카드 미표시.
+  //   ⚠️ 모든 훅 뒤로 이동 — rules-of-hooks. 위 훅들은 빈 items 에도 안전(빈 배열 순회).
+  if (items.length === 0) return null;
 
   function toggleCheck(itemId: string) {
     const existing = checksByItem.get(itemId);

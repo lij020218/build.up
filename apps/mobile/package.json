@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.27.6",
+    "@expo/vector-icons": "^14.0.4",
     "@foundone/ai": "workspace:*",
     "@foundone/shared": "workspace:*",
-    "@expo/vector-icons": "^14.0.4",
     "@supabase/supabase-js": "^2.106.2",
     "expo": "^52.0.30",
     "expo-asset": "^55.0.10",
@@ -31,6 +31,8 @@
   "devDependencies": {
     "@types/node": "^22.13.10",
     "@types/react": "^18.3.12",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "~8.0.1",
     "typescript": "^5.8.2"
   }
 }

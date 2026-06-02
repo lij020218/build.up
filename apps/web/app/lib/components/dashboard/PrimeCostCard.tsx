@@ -117,12 +117,13 @@ export function PrimeCostCard({
   /** dailyEntries.length (N일) */
   days: number;
 }) {
-  // 외식·카페 전용 — 다른 업종은 컨셉 자체가 맞지 않음 (예: 학원 식자재 X)
-  if (industryCategoryId !== "food" && industryCategoryId !== "cafe-dessert") return null;
-
   // 추적 주기 — 업계 표준 (Toast POS·R365·RestaurantOwner.com): 주간 디폴트.
   //  "Good operators know their prime cost weekly, not monthly" (R365)
   const [period, setPeriod] = useState<"week" | "month">("week");
+
+  // 외식·카페 전용 — 다른 업종은 컨셉 자체가 맞지 않음 (예: 학원 식자재 X).
+  //   ⚠️ 훅(useState) 뒤로 이동 — rules-of-hooks(early return 전 훅 호출). 동작 동일.
+  if (industryCategoryId !== "food" && industryCategoryId !== "cafe-dessert") return null;
 
   const bench = getPrimeCostBenchmark(industryCategoryId, subIndustryId);
   const result = calculatePrimeCost({
