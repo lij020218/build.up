@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import { franchiseBrands } from "../franchise-data";
 
 describe("franchiseBrands — 120 브랜드 확장 (Round 2, 2026-05-12)", () => {
-  it("총 브랜드 개수는 120개", () => {
-    expect(franchiseBrands.length).toBe(120);
+  it("총 브랜드 개수는 120개 이상 (데이터 증가 허용 — 손실만 가드)", () => {
+    // ⚠️ 정확값(toBe) 가드는 데이터가 늘 때마다 CI 를 빨갛게 만들어 자동배포 신뢰를 떨어뜨렸음.
+    //   중복은 아래 별도 테스트가 잡으므로, 여기선 "브랜드가 줄지 않았는지"(손실)만 하한선으로 가드.
+    expect(franchiseBrands.length).toBeGreaterThanOrEqual(120);
   });
   it("브랜드 ID 중복 없음", () => {
     const ids = franchiseBrands.map((b) => b.id);

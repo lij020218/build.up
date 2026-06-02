@@ -289,8 +289,15 @@ public struct LocationCandidatesStageView: View {
                     ForEach(aiDistrictMatches) { d in districtMatchRow(d) }
                 }
                 if let aiError {
-                    Text("⚠ \(aiError)")
-                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                    if aiDistrictMatches.isEmpty {
+                        // 오프라인 매칭도 없을 때만 빨간 경고 — 입력을 더 구체화하도록 안내.
+                        Text("⚠ \(aiError)")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                    } else {
+                        // 정적 113-상권 데이터가 이미 위에 표시됨 → 라이브 실시간 추천 실패는 조용히 안내(비경고).
+                        Text("실시간 AI 추천은 지금 불러오지 못했어요. 위 상권 정보로 확인하시거나 잠시 후 다시 시도해 주세요.")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                    }
                 }
                 if let center = aiCenter {
                     Map(initialPosition: .region(MKCoordinateRegion(
