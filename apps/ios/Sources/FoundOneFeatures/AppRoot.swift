@@ -181,6 +181,8 @@ public struct AppRoot: View {
             }
         }
         .environment(roadmapStore)
+        // 단계 번호를 경로 위치 기준으로 계산하도록 현재 클러스터 경로 주입 (5→11 점프 버그 방지).
+        .environment(\.roadmapStageOrder, roadmapStore.pathStageIds)
         .environment(resetCoordinator)
         // 로드맵 위저드(VendorSetupStageView 등)에서 재고 store 접근용 — 발주 계획 → 재고 자동 반영.
         .environmentObject(storeInfoStore ?? storeInfoFallback)

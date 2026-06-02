@@ -34,6 +34,17 @@ import UIKit
 import FoundOneDesignSystem
 import FoundOneCore
 
+// 현재 로드맵 클러스터의 stageId 순서. 주입되면 BUStageShell 이 단계 번호를 경로 위치로 계산.
+public struct RoadmapStageOrderKey: EnvironmentKey {
+    public static let defaultValue: [String] = []
+}
+public extension EnvironmentValues {
+    var roadmapStageOrder: [String] {
+        get { self[RoadmapStageOrderKey.self] }
+        set { self[RoadmapStageOrderKey.self] = newValue }
+    }
+}
+
 public struct BUStageShell<Content: View>: View {
 
     public let stageId: String
@@ -54,6 +65,27 @@ public struct BUStageShell<Content: View>: View {
     public let content: Content
 
     @Environment(\.dismiss) private var dismiss
+    // 현재 클러스터 경로(stageId 순서) — 주입되면 단계 번호를 경로 위치 기준으로 계산.
+    @Environment(\.roadmapStageOrder) private var stageOrder
+
+    /// 표시용 eyebrow — 하드코딩된 "단계 N" 대신 실제 경로 위치(idx+1/total)로 치환.
+    /// ⚠️ 각 stage 가 전역 고정 번호("단계 10" 등)를 박아 둬서 클러스터별 경로에서 5→11 처럼
+    ///   점프하던 버그 수정. stageOrder 가 비면(주입 안 됨) 원래 문자열 유지(후방호환).
+    private var resolvedEyebrow: String {
+        guard let idx = stageOrder.firstIndex(of: stageId) else { return stageEyebrow }
+        let n = idx + 1
+        let total = stageOrder.count
+        // 라벨 추출: "단계 N · 라벨" → "라벨", "단계 · 라벨" → "라벨", 그 외 → 전체.
+        let label: String
+        if let r = stageEyebrow.range(of: " · ") {
+            label = String(stageEyebrow[r.upperBound...]).trimmingCharacters(in: .whitespaces)
+        } else if stageEyebrow.hasPrefix("단계") {
+            label = ""
+        } else {
+            label = stageEyebrow
+        }
+        return label.isEmpty ? "단계 \(n) / \(total)" : "단계 \(n) · \(label)"
+    }
 
     public init(
         stageId: String,
@@ -159,7 +191,7 @@ public struct BUStageShell<Content: View>: View {
         #endif
         .safeAreaInset(edge: .bottom, spacing: 0) {
             BUStageContinueBar(
-                stageEyebrow: stageEyebrow,
+                stageEyebrow: resolvedEyebrow,
                 advanceLabel: advanceLabel,
                 advanceHint: advanceHint,
                 canAdvance: canAdvance,
