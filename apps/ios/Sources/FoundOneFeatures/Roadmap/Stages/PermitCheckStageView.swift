@@ -329,20 +329,45 @@ public struct PermitCheckStageView: View {
         )
     }
 
+    /// 웹 negotiateFavorable(PermitCheckPanels.tsx) 9업종 1:1 + iOS 시설 디테일 합본 — web==app.
     private var negotiationFavorable: BUWorkStepFavorable {
         switch cluster.category {
-        case .food, .cafeDessert:
-            return .init(context: "음식점 / 카페",
+        case .food:
+            return .init(context: "음식점 / F&B",
                          recommendation: "정화조 BOD 부족 매물은 협상 X — 무조건 패스",
-                         rationale: "정화조 증축은 건물주 동의 + 1,000~3,000만원 + 1~2개월 공사. 환기 덕트 외부 배기 불가도 패스.")
+                         rationale: "정화조 증축은 건물주 동의 + 1,000~3,000만원 + 1~2개월 공사. 환기 덕트 외부 배기 불가 매물도 패스.")
+        case .cafeDessert:
+            return .init(context: "카페 / 디저트",
+                         recommendation: "「전기 30A↑ + 급배수 가능」 임대 전 확답 받기",
+                         rationale: "머신·제빙기 동시 가동 시 20A 차단기 빈번. 임대인 확답 없으면 매물 변경.")
         case .beauty:
             return .init(context: "미용 / 뷰티",
-                         recommendation: "배수·온수 용량 부족은 보강 비용 임대인 분담 특약",
-                         rationale: "샴푸대 추가 시공 200~500만원. 펌·염색 환기 미달 매물은 시술 자체가 불가하니 패스.")
+                         recommendation: "면허자 의존 X(본인 취득·2명+) · 배수·온수 부족은 임대인 분담 특약",
+                         rationale: "채용 면허자 퇴사 시 즉시 무자격 영업. 샴푸대 추가 시공 200~500만원, 펌·염색 환기 미달 매물은 패스.")
+        case .retail:
+            return .init(context: "리테일 / 일반 소매",
+                         recommendation: "건축물 「판매시설」·「근린생활시설」 만 확인하면 끝",
+                         rationale: "건강식·주류·의약품·전자담배 외엔 인허가 거의 없음. 사업자등록만으로 시작.")
         case .fitness:
-            return .init(context: "피트니스 / 필라테스",
+            return .init(context: "필라테스·요가·PT",
                          recommendation: "층고 2.5m 이하·바닥 하중 부족은 패스",
                          rationale: "PT·필라 3m+, 요가 2.7m+ 권장. 바닥 보강은 2,000만원+ — 협상보다 매물 변경이 빠름.")
+        case .education:
+            return .init(context: "학원 / 교육",
+                         recommendation: "건축물 용도 「교육연구시설」·「근린생활시설(학원)」 + 100㎡↑ 소방완비",
+                         rationale: "용도 미일치 시 학원 등록 거부. 어린이 학원은 안전 기준 엄격.")
+        case .pet:
+            return .init(context: "펫 미용·호텔·훈련",
+                         recommendation: "주거 인접 매물 X — 상가 단독 입지 우선",
+                         rationale: "짖음·털 알레르기 민원으로 시간 제한·계약 해지 사례 다수.")
+        case .livingService:
+            return .init(context: "세탁·청소·수리",
+                         recommendation: "특수 업종 신고/등록 의무 사전 확인",
+                         rationale: "세탁업·인쇄업은 시·구청 별도 신고 절차. 일반 청소는 면제.")
+        case .space:
+            return .init(context: "공간 임대 (스튜디오·파티룸·연습실)",
+                         recommendation: "「숙박 가능 여부 + 소음 허용」 명문화",
+                         rationale: "소음 분쟁 1순위. 영업시간·데시벨 제한 특약 안 적으면 후일 분쟁.")
         default:
             return .init(context: cluster.categoryNounKo,
                          recommendation: "부족 시설은 「임대인 1/2 부담 + 원상복구 면제」 특약으로",
