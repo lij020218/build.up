@@ -164,6 +164,34 @@ public struct SourcingSetupStageView: View {
                 }
             }
 
+            // 상세페이지 6단 구조 (웹 "상세페이지 구성 순서" 1:1 — web==app)
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("상세페이지 6단 구조 — 전환율 높이는 검증된 순서")
+                    let steps: [(String, String, String)] = [
+                        ("1", "히어로 이미지", "배경 제거한 깔끔한 메인 컷. 3초 안에 매력 전달."),
+                        ("2", "고객 불안 해소", "교환/반품 정책, 인증 마크, 리뷰 수 강조."),
+                        ("3", "상세 스펙 표", "소재·사이즈·중량 — 표로 정리. 비교가 쉬워야 구매."),
+                        ("4", "라이프스타일 컷", "실사용 장면. ‘내가 쓰면 이렇게 되겠구나’ 상상 유도."),
+                        ("5", "리뷰/후기 섹션", "구매자 97.2%가 리뷰 확인 — 포토 리뷰가 전환율 3배."),
+                        ("6", "배송/CS 안내", "배송 소요일, 교환/반품 절차, 고객센터 연락처."),
+                    ]
+                    ForEach(steps, id: \.0) { num, title, detail in
+                        HStack(alignment: .top, spacing: 10) {
+                            Text(num).font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                                .frame(width: 22, height: 22)
+                                .background(BUColor.midnight, in: Circle())
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(title).font(.system(size: 13, weight: .bold)).foregroundStyle(BUColor.ink)
+                                Text(detail).font(.system(size: 11.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                    }
+                    infoRow(text: "AI 상세페이지 도구: 망고보드 AI(mangoboard.net)·미리캔버스(miricanvas.com)·Canva AI — 상품 사진만 넣으면 자동 생성.")
+                }
+            }
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("가격 책정 공식")

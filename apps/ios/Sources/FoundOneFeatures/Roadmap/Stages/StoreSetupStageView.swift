@@ -117,6 +117,16 @@ public struct StoreSetupStageView: View {
                 }
             }
 
+            // 쿠팡·11번가 퀵레프 (웹 멀티 플랫폼 가이드 1:1 — 매출 안정 후 확장)
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("매출 안정 후 — 쿠팡·11번가 확장 퀵레프")
+                    labeledRow(label: "쿠팡", text: "WING 판매자센터 가입→사업자 인증. 로켓그로스(월 55,000원 + 수수료 4~10.8%) 입고 시 바코드 부착→물류센터 발송. 정산 구매확정 후 7~14영업일.")
+                    labeledRow(label: "11번가", text: "셀러오피스 가입 — 신규 셀러 수수료 6% 혜택(12개월) + SKT 멤버십(T멤버십 적립) 연동.")
+                    infoRow(text: "멀티 채널 동시 운영 시 샵링커·올라 등 통합관리 툴로 재고·주문 동기화(월 3~5만원).")
+                }
+            }
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     Toggle(isOn: $storeFront) {
