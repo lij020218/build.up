@@ -66,6 +66,7 @@ public struct LocationCandidatesStageView: View {
     @State private var aiPins: [MarketMapPin] = []
     @State private var aiDistrictMatches: [MarketDistrict] = []   // 내장 상권 DB 매칭 (즉시·오프라인 — 메인)
     @State private var didSearch = false                          // 한 번이라도 검색했는지 (AI 옵트인 노출 게이팅)
+    @State private var selectedMarketId: String?                  // 사용자가 탭으로 고른 상권 (카드↔지도 핀 동기·확장)
 
     /// Found.One 상권 추천 (내장 상권 데이터 — **메인**·오프라인 즉시). 웹 buildRecommendedMarkets 대응.
     ///   AI 를 부르지 않는다. 지역 입력 → 내장 DB 매칭 + Apple 지도 핀.
@@ -295,23 +296,29 @@ public struct LocationCandidatesStageView: View {
                         .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
                 }
 
-                // 지도 (내장 매칭 또는 AI 핀)
+                // 지도 (내장 매칭 또는 AI 핀) — 핀 탭 시 카드와 동기 선택(앱 장점: 인터랙티브 Apple 지도)
                 if let center = aiCenter {
                     Map(initialPosition: .region(MKCoordinateRegion(
                         center: center, latitudinalMeters: 5000, longitudinalMeters: 5000
                     ))) {
                         ForEach(aiPins) { pin in
-                            Marker("\(pin.score)점 · \(pin.title)", coordinate: pin.coord)
-                                .tint(scoreColor(pin.score))
+                            Annotation(pin.title, coordinate: pin.coord, anchor: .bottom) {
+                                mapPin(pin)
+                            }
+                            .annotationTitles(.hidden)
                         }
                     }
                     .mapStyle(.standard)
-                    .frame(height: 220)
+                    .frame(height: 240)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .strokeBorder(BUColor.midnight.opacity(0.08), lineWidth: 1)
                     )
+                    if aiPins.count > 1 {
+                        Text("지도 핀을 탭하면 그 상권이 선택됩니다.")
+                            .font(.system(size: 11)).foregroundStyle(BUColor.inkMuted)
+                    }
                 }
 
                 // ── 별도 옵트인: AI 실시간 상권 추천 (검색 후 노출) ──
@@ -350,78 +357,178 @@ public struct LocationCandidatesStageView: View {
                 }
             }
         }
+        .sensoryFeedback(.selection, trigger: selectedMarketId)   // 앱 장점 — 선택 시 햅틱
     }
 
     private func recommendItemRow(_ item: MarketScoredItem) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Text("\(item.score)")
-                    .font(.system(size: 15, weight: .heavy)).foregroundStyle(.white)
-                    .frame(minWidth: 38, minHeight: 26)
-                    .background(scoreColor(item.score), in: Capsule())
-                Text(item.title)
-                    .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
-                Spacer(minLength: 0)
-            }
-            if !item.summary.isEmpty {
-                Text(item.summary).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-            }
-            ForEach(item.reasons.prefix(2), id: \.self) { r in
-                Label(r, systemImage: "checkmark.circle.fill")
-                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.success).labelStyle(.titleAndIcon)
-            }
-            ForEach(item.warnings.prefix(2), id: \.self) { w in
-                Label(w, systemImage: "exclamationmark.triangle.fill")
-                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).labelStyle(.titleAndIcon)
-            }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(BUColor.midnight.opacity(0.035), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    private func scoreColor(_ score: Int) -> Color {
-        if score >= 70 { return BUColor.success }
-        if score >= 50 { return Color.orange }
-        return BUColor.danger
-    }
-
-    /// 113-상권 DB 매칭 카드 — 점수·요약 + 임대료/경쟁/유동 메타 칩 (웹 정적 DB 수준 풍부함).
-    private func districtMatchRow(_ d: MarketDistrict) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Text("\(d.score)")
-                    .font(.system(size: 15, weight: .heavy)).foregroundStyle(.white)
-                    .frame(minWidth: 38, minHeight: 26)
-                    .background(scoreColor(d.score), in: Capsule())
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(d.title.ko).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
-                    Text(d.guName).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+        let isSel = selectedMarketId == item.id
+        let sc = scoreColor(item.score)
+        return Button {
+            selectMarket(id: item.id, title: item.title)
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 12) {
+                    Text(item.title)
+                        .font(.system(size: 16, weight: .semibold)).foregroundStyle(BUColor.ink).tracking(-0.3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text("\(item.score)")
+                        .font(.system(size: 16, weight: .bold)).foregroundStyle(sc).monospacedDigit()
+                        .frame(width: 42, height: 42)
+                        .background(sc.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                Spacer(minLength: 0)
+                if !item.summary.isEmpty {
+                    Text(item.summary).font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                ForEach(item.reasons.prefix(2), id: \.self) { r in
+                    Label(r, systemImage: "checkmark.circle.fill")
+                        .font(.system(size: 12)).foregroundStyle(scoreColor(86)).labelStyle(.titleAndIcon)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                ForEach(item.warnings.prefix(isSel ? 2 : 1), id: \.self) { w in
+                    Label(w, systemImage: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12)).foregroundStyle(scoreColor(0)).labelStyle(.titleAndIcon)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if isSel {
+                    Divider().opacity(0.4)
+                    Label("입지 후보로 선택됨 — ‘최종 선택’에 자동 반영", systemImage: "mappin.circle.fill")
+                        .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                }
             }
-            Text(d.summary.ko)
-                .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-            // 메타 칩 — 임대료·경쟁·유동·성장
-            HStack(spacing: 6) {
-                metaChip("임대료 " + rentLabel(d.meta.rentBand))
-                metaChip("경쟁 " + levelLabel(d.meta.competitionLevel))
-                metaChip("유동 " + trafficLabel(d.meta.footTraffic))
-                if d.meta.growthTrend == "rising" { metaChip("성장 ↑", tint: BUColor.success) }
-            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(isSel ? BUColor.midnight.opacity(0.05) : Color.white.opacity(0.82), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(isSel ? BUColor.midnight : BUColor.borderSubtle, lineWidth: isSel ? 2 : 1))
+            .shadow(color: isSel ? BUColor.midnight.opacity(0.14) : Color.black.opacity(0.03), radius: isSel ? 8 : 2, x: 0, y: isSel ? 3 : 1)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(BUColor.midnight.opacity(0.035), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .buttonStyle(.plain)
     }
 
-    private func metaChip(_ text: String, tint: Color = BUColor.midnight) -> some View {
+    /// 점수→색상 — 웹 LocationCandidatesStage 와 동일 임계/색(≥85 green / ≥70 blue / <70 amber).
+    private func scoreColor(_ score: Int) -> Color {
+        if score >= 85 { return Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255) }   // #34c759
+        if score >= 70 { return Color(red: 0x00/255, green: 0x7A/255, blue: 0xFF/255) }   // #007aff
+        return Color(red: 0xFF/255, green: 0x9F/255, blue: 0x0A/255)                       // #ff9f0a
+    }
+
+    /// 상권 카드/핀 탭 → 선택 토글. 선택 시 햅틱 + (비어있으면) 최종 입지 주소 자동 프리필(추천→결정 연결).
+    private func selectMarket(id: String, title: String) {
+        withAnimation(.easeOut(duration: 0.2)) {
+            selectedMarketId = (selectedMarketId == id) ? nil : id
+        }
+        if selectedMarketId == id, finalAddress.trimmingCharacters(in: .whitespaces).isEmpty {
+            finalAddress = title
+        }
+    }
+
+    /// 지도 핀(id = "db-"/"ai-" 접두) → 카드 선택과 동기.
+    private func selectMarketByPin(_ pin: MarketMapPin) {
+        selectMarket(id: bareId(pin.id), title: pin.title)
+    }
+    private func bareId(_ pinId: String) -> String {
+        (pinId.hasPrefix("db-") || pinId.hasPrefix("ai-")) ? String(pinId.dropFirst(3)) : pinId
+    }
+
+    /// 지도 핀 뷰 — 웹 핀 디자인(점수 배지 + 제목 pill) 미러. 선택 시 미드나잇 강조 + 확대(앱 장점).
+    private func mapPin(_ pin: MarketMapPin) -> some View {
+        let isSel = selectedMarketId == bareId(pin.id)
+        let sc = scoreColor(pin.score)
+        return Button { selectMarketByPin(pin) } label: {
+            HStack(spacing: 5) {
+                Text("\(pin.score)")
+                    .font(.system(size: 11, weight: .bold)).monospacedDigit()
+                    .foregroundStyle(isSel ? .white : sc)
+                    .frame(width: 22, height: 22)
+                    .background((isSel ? Color.white.opacity(0.22) : sc.opacity(0.18)), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                Text(pin.title)
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(isSel ? .white : BUColor.ink).lineLimit(1)
+            }
+            .padding(.leading, 6).padding(.trailing, 10).padding(.vertical, 6)
+            .background(isSel ? BUColor.midnight : Color.white, in: Capsule())
+            .overlay(Capsule().strokeBorder(isSel ? BUColor.midnight : Color.black.opacity(0.1), lineWidth: 1.5))
+            .shadow(color: Color.black.opacity(0.18), radius: isSel ? 6 : 3, y: 2)
+            .scaleEffect(isSel ? 1.08 : 1.0)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Found.One 상권 카드 — 웹 디자인(42×42 점수배지·메타칩·선택 하이라이트) 미러 + 앱 장점(탭 선택·확장·햅틱).
+    private func districtMatchRow(_ d: MarketDistrict) -> some View {
+        let isSel = selectedMarketId == d.id
+        let sc = scoreColor(d.score)
+        return Button {
+            selectMarket(id: d.id, title: d.title.ko)
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(d.title.ko)
+                            .font(.system(size: 16, weight: .semibold)).foregroundStyle(BUColor.ink).tracking(-0.3)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(d.guName).font(.system(size: 12)).foregroundStyle(BUColor.inkMuted)
+                    }
+                    Spacer(minLength: 0)
+                    Text("\(d.score)")
+                        .font(.system(size: 16, weight: .bold)).foregroundStyle(sc).monospacedDigit()
+                        .frame(width: 42, height: 42)
+                        .background(sc.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                Text(d.summary.ko)
+                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                HStack(spacing: 6) {
+                    metaChip("임대료 " + rentLabel(d.meta.rentBand))
+                    metaChip("경쟁 " + levelLabel(d.meta.competitionLevel))
+                    metaChip("유동 " + trafficLabel(d.meta.footTraffic))
+                    if d.meta.growthTrend == "rising" { metaChip("성장 ↑", tint: scoreColor(86)) }
+                }
+                // 앱 장점 — 선택 시 인라인 확장(웹은 별도 패널). 메타 기반 상세 + 결정 연결 안내.
+                if isSel {
+                    Divider().opacity(0.4)
+                    Label("입지 후보로 선택됨 — ‘최종 선택’에 자동 반영", systemImage: "mappin.circle.fill")
+                        .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    Text(detailNarrative(d))
+                        .font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(isSel ? BUColor.midnight.opacity(0.05) : Color.white.opacity(0.82), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(isSel ? BUColor.midnight : BUColor.borderSubtle, lineWidth: isSel ? 2 : 1))
+            .shadow(color: isSel ? BUColor.midnight.opacity(0.14) : Color.black.opacity(0.03), radius: isSel ? 8 : 2, x: 0, y: isSel ? 3 : 1)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// 웹 score 라벨이 iOS 정적 데이터엔 없어 meta 기반 한 줄 요약 — 임대료·경쟁·유동·고객적합·상권유형.
+    private func detailNarrative(_ d: MarketDistrict) -> String {
+        [
+            "임대료 " + rentLabel(d.meta.rentBand),
+            "경쟁 " + levelLabel(d.meta.competitionLevel),
+            "유동 " + trafficLabel(d.meta.footTraffic),
+            "적합도 " + fitLabel(d.meta.customerFit),
+            styleLabel(d.meta.marketStyle) + " 상권",
+        ].joined(separator: " · ")
+    }
+
+    private func metaChip(_ text: String, tint: Color? = nil) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(tint)
-            .padding(.horizontal, 7).padding(.vertical, 3)
-            .background(tint.opacity(0.08), in: Capsule())
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(tint ?? BUColor.inkSecondary)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .background((tint ?? BUColor.midnight).opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(BUColor.borderSubtle, lineWidth: 1))
+    }
+    private func fitLabel(_ f: String) -> String {
+        switch f { case "strong": return "강함"; case "steady": return "안정적"; case "mixed": return "혼합"; case "throughput": return "통행형"; default: return f }
+    }
+    private func styleLabel(_ s: String) -> String {
+        switch s { case "destination": return "목적지형"; case "office": return "오피스"; case "residential": return "주거"; case "balanced": return "균형"; default: return s }
     }
     private func rentLabel(_ b: String) -> String {
         switch b { case "low": return "낮음"; case "mid": return "중간"; case "mid-high": return "중상"; case "high": return "높음"; default: return b }
