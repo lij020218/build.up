@@ -182,6 +182,8 @@ public final class RoadmapStore {
         decisions[stageId] = d
         persist()
         pushUpsert(d)
+        // 정식 컬럼 중앙 투영 (수동 persist* 누락 방지). 사용자 commit 지점에서만 호출.
+        StageInputProjector.project(inputs)
         return true
     }
 
@@ -211,6 +213,8 @@ public final class RoadmapStore {
     @discardableResult
     public func advanceToNext(currentStageId: String, inputs: [String: String] = [:]) -> String? {
         completeStage(currentStageId, inputs: inputs)
+        // 정식 컬럼 중앙 투영 (수동 persist* 누락 방지). 사용자 commit 지점에서만 호출.
+        StageInputProjector.project(inputs)
         let path = pathStageIds
         guard let idx = path.firstIndex(of: currentStageId) else { return nil }
         // sanity check — 웹의 "idx diff > 4" 좀비 점프 방지와 동일 정신
@@ -305,6 +309,19 @@ public final class RoadmapStore {
 
 #if DEBUG
 extension RoadmapStore {
+    /// 투영 커버리지 감사 — 완료된 decision 들의 투영 키 값이 정식 컬럼에 반영됐는지 점검(경고만).
+    /// AppRoot 가 syncFromRemote() 직후 호출. best-effort.
+    public func auditProjectionCoverage() async {
+        var merged: [String: String] = [:]
+        for d in decisions.values where d.isCompleted {
+            for (k, v) in d.inputs where StageInputProjector.projectedKeys.contains(k) {
+                merged[k] = v
+            }
+        }
+        guard !merged.isEmpty else { return }
+        await StageInputProjector.audit(mergedInputs: merged)
+    }
+
     /// Preview / 테스트용 시나리오 시드.
     public static func previewSeeded(cluster: String = "offline-food", completedCount: Int = 5) -> RoadmapStore {
         let store = RoadmapStore(defaults: UserDefaults(suiteName: "preview-\(UUID().uuidString)") ?? .standard)

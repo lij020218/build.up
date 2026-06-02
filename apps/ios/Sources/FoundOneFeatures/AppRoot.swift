@@ -35,6 +35,8 @@ public struct AppRoot: View {
     @State private var storeInfoStore: StoreInfoStore?
     /// 안정적 fallback — storeInfoStore 가 아직 nil 일 때 .environmentObject 용 (재생성 방지).
     @State private var storeInfoFallback = StoreInfoStore(repository: FallbackStoreInfoRepository())
+    /// 현금흐름 store — TodayView 게이팅(설정 프롬프트 ↔ HeroCard) + 설정 시트 공유. 로그인 후 Supabase load.
+    @State private var cashflowStore: CashflowStore?
     /// 전역 로드맵 store — TodayView / RoadmapView / Stage 시트 모두에서 공유.
     /// AppRoot 에서 한 번 생성 → .environment 로 자식 트리에 주입. 로그인 시 Supabase 동기화.
     @State private var roadmapStore: RoadmapStore = {
@@ -125,6 +127,7 @@ public struct AppRoot: View {
                         MainTabs(
                             store: store,
                             storeInfo: storeInfoStore ?? Self.makeFallbackStoreInfo(),
+                            cashflow: cashflowStore,
                             coordinator: coordinator,
                             selectedTab: $selectedTab
                         )
@@ -260,6 +263,16 @@ public struct AppRoot: View {
         }
         self.dashboardStore = store
 
+        // 현금흐름 store — store.category 기반 업종 기본 채널 믹스로 초기화 후 Supabase hydrate.
+        //   webCategoryId: iOS IndustryCategory → 웹 카테고리 id (presets 키와 동일, 예: "food").
+        let cashflowRepo = CashflowRepository(supabase: supabase, userId: userId)
+        let cashflow = CashflowStore(
+            repository: cashflowRepo,
+            defaultCategoryKey: webCategoryId(from: store.category)
+        )
+        await cashflow.load()
+        self.cashflowStore = cashflow
+
         // 내 가게 store — Supabase 연결 + 즉시 load.
         // MyStoreView 의 .task { store.load() } 가 다시 호출돼도 isLoaded guard 로 no-op.
         let storeInfoRepo = StoreInfoRepository(
@@ -301,6 +314,10 @@ public struct AppRoot: View {
         }
         self.roadmapStore = connectedRoadmap
         await connectedRoadmap.syncFromRemote()
+        #if DEBUG
+        // 투영 커버리지 감사 — stage 입력이 정식 컬럼에 반영됐는지 경고(개발 빌드 전용, best-effort).
+        await connectedRoadmap.auditProjectionCoverage()
+        #endif
     }
 
     /// 로딩 완료 전 임시 — 빈 state. load() 가 끝나면 즉시 storeInfoStore 가 set 되어
@@ -621,6 +638,8 @@ private struct AuthenticatedLoadingView: View {
 private struct MainTabs: View {
     let store: DashboardStore
     @ObservedObject var storeInfo: StoreInfoStore
+    /// nil = 아직 로드 전 (TodayView 가 mock 예측 카드로 fallback). 로드 후 게이팅 동작.
+    let cashflow: CashflowStore?
     let coordinator: AuthCoordinator
     @Binding var selectedTab: AppRoot.Tab
 
@@ -649,7 +668,7 @@ private struct MainTabs: View {
             switch selectedTab {
             case .home:
                 if store.businessLaunched {
-                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo)
+                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo, cashflowStore: cashflow)
                 } else {
                     PreLaunchHomeView(
                         store: store,
@@ -1231,12 +1250,18 @@ struct DemoTabs: View {
         return s
     }
 
+    /// Demo 모드용 현금흐름 store — repository nil (메모리 전용, 미설정 상태) →
+    /// TodayView 에 설정 프롬프트가 노출되어 설정 시트 플로우를 시각 검증할 수 있다.
+    private var demoCashflowStore: CashflowStore {
+        CashflowStore(repository: nil, defaultCategoryKey: webCategoryId(from: mockData.category))
+    }
+
     @ViewBuilder
     private var content: some View {
         switch selectedTab {
             case .home:
                 if mockData.resolverInput.businessLaunched {
-                    TodayView(mock: mockData, dashboardStore: demoDashboardStore, storeInfo: demoStoreInfo)
+                    TodayView(mock: mockData, dashboardStore: demoDashboardStore, storeInfo: demoStoreInfo, cashflowStore: demoCashflowStore)
                 } else {
                     PreLaunchHomeView(
                         store: demoDashboardStore,

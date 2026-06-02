@@ -162,6 +162,27 @@ public actor StoreProfileRepository {
             .execute()
     }
 
+    /// tax_settings.vatType 읽기 — 미설정 시 nil. (캐시플로 vatRate 산출·투영 audit 용)
+    public func loadVatType() async throws -> String? {
+        struct ReadRow: Decodable, Sendable { let tax_settings: TaxSettingsDTO? }
+        let rows: [ReadRow] = try await supabase
+            .from("user_store_data")
+            .select("tax_settings")
+            .eq("user_id", value: userId)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first?.tax_settings?.vatType
+    }
+
+    /// 현재 로그인 사용자의 vatType("general"|"simplified") 편의 read. 비로그인·실패 시 nil.
+    @MainActor
+    public static func vatTypeForCurrentUser() async -> String? {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return nil }
+        let repo = StoreProfileRepository(supabase: BUSupabase.shared.client, userId: uid)
+        return try? await repo.loadVatType()
+    }
+
     public func load() async throws -> StoreProfileInfo {
         let rows: [Row] = try await supabase
             .from("user_store_data")

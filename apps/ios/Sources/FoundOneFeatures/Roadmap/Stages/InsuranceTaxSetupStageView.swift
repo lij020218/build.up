@@ -93,14 +93,12 @@ public struct InsuranceTaxSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                // 웹·앱 SSOT: 세무 처리 방식을 Supabase(cpa_decision)에도 저장.
-                StoreProfileRepository.persistCpaDecisionForCurrentUser(cpaChoice)
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                // cpaDecision 을 inputs 로 전달 → StageInputProjector 가 cpa_decision 컬럼에 자동 투영(웹 SSOT).
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["cpaDecision": cpaChoice])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                StoreProfileRepository.persistCpaDecisionForCurrentUser(cpaChoice)
-                roadmapStore.saveStageEdit(currentStageId: stageId)
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["cpaDecision": cpaChoice])
             },
             wrapup: BUStageWrapupData(
                 doneItems: [

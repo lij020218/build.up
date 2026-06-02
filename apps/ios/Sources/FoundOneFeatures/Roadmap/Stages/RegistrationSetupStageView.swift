@@ -176,13 +176,11 @@ public struct RegistrationSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                // 웹·앱 SSOT: 과세유형을 Supabase(tax_settings.vatType)에도 저장.
-                StoreProfileRepository.persistVatTypeForCurrentUser(taxTypeChoice)
+                // taxTypeChoice 는 inputs 로 전달 → StageInputProjector 가 tax_settings.vatType 에 자동 투영(웹 SSOT).
                 roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["taxTypeChoice": taxTypeChoice])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                StoreProfileRepository.persistVatTypeForCurrentUser(taxTypeChoice)
                 roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["taxTypeChoice": taxTypeChoice])
             },
             wrapup: BUStageWrapupData(

@@ -43,6 +43,8 @@ public struct TodayView: View {
     /// 모바일에서도 별도 탭 이동이 아니라 popup sheet 로 보여줘야 멘탈 모델이 일치.
     let dashboardStore: DashboardStore?
     let storeInfo: StoreInfoStore?
+    /// 현금흐름 store — nil 이면 mock 예측 카드로 fallback(데모/프리뷰). 있으면 설정 게이팅 동작.
+    let cashflowStore: CashflowStore?
     @State private var showInputSheet = false
     @State private var showInventorySheet = false
     @State private var showTeamSheet = false
@@ -56,7 +58,8 @@ public struct TodayView: View {
     public init(
         mock: MockData,
         dashboardStore: DashboardStore? = nil,
-        storeInfo: StoreInfoStore? = nil
+        storeInfo: StoreInfoStore? = nil,
+        cashflowStore: CashflowStore? = nil
     ) {
         self.mock = mock
         self.healthResult = HealthScore.calculate(
@@ -69,6 +72,7 @@ public struct TodayView: View {
         self.hero = HeroResolver.resolve(mock.resolverInput)
         self.dashboardStore = dashboardStore
         self.storeInfo = storeInfo
+        self.cashflowStore = cashflowStore
     }
 
     public var body: some View {
@@ -107,13 +111,22 @@ public struct TodayView: View {
                     avgTicket: avgTicket
                 )
 
-                // 5. CashflowHeroCard — 14일 잔고 ★ 사장님 명시
-                CashflowHeroCard(
-                    currentBalance: mock.currentCash ?? 0,
-                    projectedBalances: projected14,
-                    isCrisis: (projected14.last ?? 0) < 0,
-                    crisisDaysUntil: crisisDaysUntil()
-                )
+                // 5. 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고 HeroCard ★ 사장님 명시
+                //   (P3) 게이팅 + 설정 시트 진입. (P4b) 설정 완료 시 실제 CashflowProjection 으로 교체 예정.
+                if let cs = cashflowStore {
+                    CashflowSection(
+                        store: cs,
+                        recentDailyEntries: mock.entries.map { CashflowDailyEntry(date: $0.date, sales: $0.sales) },
+                        fallbackMonthlyCostsTotal: mock.costs.total
+                    )
+                } else {
+                    CashflowHeroCard(
+                        currentBalance: mock.currentCash ?? 0,
+                        projectedBalances: projected14,
+                        isCrisis: (projected14.last ?? 0) < 0,
+                        crisisDaysUntil: crisisDaysUntil()
+                    )
+                }
 
                 // 6. DailyOpsRitualCard — 오늘 운영 의식
                 DailyOpsRitualCard(category: mock.category)
@@ -1061,6 +1074,139 @@ private struct QuickInputSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+}
+
+// MARK: - 현금흐름 섹션 (게이팅: 설정 프롬프트 ↔ HeroCard)
+//
+// store.settings.isConfigured(setupCompletedAt != nil) 로 분기 — 웹 CashflowHeroCard 의
+// setup-state ↔ main-metrics 분기와 동일. store 를 @ObservedObject 로 관찰하므로
+// 설정 시트에서 저장(setupCompletedAt 스탬프) 직후 자동으로 HeroCard 로 전환된다.
+//
+private struct CashflowSection: View {
+    @ObservedObject var store: CashflowStore
+    /// 매출 평균 산출용 — DashboardStore.entries → "yyyy-MM-dd"+sales.
+    let recentDailyEntries: [CashflowDailyEntry]
+    /// 고정비 미설정 시 일할 출금 fallback (월 비용 합).
+    let fallbackMonthlyCostsTotal: Double
+    /// 부가세 적립률 — tax_settings.vatType 으로 결정(간이 0.03 / 일반 0.10). 읽기 전 기본 0.10.
+    @State private var vatRate: Double = 0.10
+    @State private var showSetup = false
+    @State private var showDetail = false
+
+    /// 실제 14일 예측 — 웹 SSOT 와 1:1 (회귀 기준값 보존).
+    private var projections: [CashflowDayProjection] {
+        CashflowProjection.project(
+            currentBalance: store.settings.currentBalance,
+            recentDailyEntries: recentDailyEntries,
+            salesChannels: store.settings.salesChannels,
+            fixedExpenses: store.settings.fixedExpenses,
+            vatReserveEnabled: store.settings.vatReserveEnabled,
+            vatRate: vatRate,
+            fallbackMonthlyCostsTotal: fallbackMonthlyCostsTotal
+        )
+    }
+
+    var body: some View {
+        Group {
+            if store.settings.isConfigured {
+                let proj = projections
+                let crisis = CashflowProjection.detectCrisis(proj, thresholdDays: store.settings.crisisThresholdDays)
+                CashflowRadarCard(
+                    projections: proj,
+                    crisis: crisis,
+                    currentBalanceUpdatedAt: store.settings.currentBalanceUpdatedAt,
+                    onDetail: { showDetail = true },
+                    onEditSettings: { showSetup = true }
+                )
+            } else {
+                CashflowSetupPrompt { showSetup = true }
+            }
+        }
+        .sheet(isPresented: $showSetup) {
+            CashflowSetupSheet(store: store)
+        }
+        .sheet(isPresented: $showDetail) {
+            CashflowDetailSheet(projections: projections, settings: store.settings)
+        }
+        .task {
+            // tax_settings.vatType → vatRate (간이 0.03 / 일반 0.10). 비로그인·실패 시 0.10 유지.
+            if let t = await StoreProfileRepository.vatTypeForCurrentUser() {
+                vatRate = (t == "simplified") ? 0.03 : 0.10
+            }
+        }
+    }
+}
+
+// MARK: - 현금흐름 설정 프롬프트 (미설정 상태 — 웹 CashflowHeroCard setup-state 미러)
+
+private struct CashflowSetupPrompt: View {
+    let onStart: () -> Void
+
+    private let bullets: [(String, String)] = [
+        ("calendar.badge.clock", "채널별 정산주기·수수료로 14일 통장 잔고를 예측"),
+        ("exclamationmark.triangle", "잔고가 마이너스로 갈 위험을 미리 경고"),
+        ("creditcard", "월세·급여 등 고정비 빠지는 날까지 반영"),
+    ]
+
+    var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(LinearGradient(colors: [BUColor.midnight, BUColor.midnightDeep], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "wonsign.circle.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("현금 흐름")
+                            .buSectionEyebrowStyle()
+                        Text("통장이 비기 전에 미리 대비하세요")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(BUColor.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 0)
+                }
+
+                VStack(alignment: .leading, spacing: 9) {
+                    ForEach(bullets, id: \.0) { icon, text in
+                        HStack(alignment: .top, spacing: 9) {
+                            Image(systemName: icon)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(BUColor.midnight)
+                                .frame(width: 18)
+                            Text(text)
+                                .font(.system(size: 12.5, weight: .medium))
+                                .foregroundStyle(BUColor.inkSecondary)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+
+                Button(action: onStart) {
+                    HStack(spacing: 6) {
+                        Text("2분 빠른 설정")
+                            .font(.system(size: 14, weight: .bold))
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(colors: [BUColor.midnight, BUColor.midnightDeep], startPoint: .leading, endPoint: .trailing),
+                        in: RoundedRectangle(cornerRadius: BURadius.button, style: .continuous)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
 

@@ -196,17 +196,12 @@ public struct BusinessModelStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                // 웹·앱 SSOT: 영업시간을 Supabase(business_open/close_time)에도 저장.
-                if showBusinessHours {
-                    StoreProfileRepository.persistBusinessHoursForCurrentUser(openHour: openHour, closeHour: closeHour)
-                }
+                // openHour/closeHour 는 currentInputs(showBusinessHours 시 포함) → StageInputProjector 가
+                // business_open/close_time 컬럼에 자동 투영(웹 SSOT).
                 roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                if showBusinessHours {
-                    StoreProfileRepository.persistBusinessHoursForCurrentUser(openHour: openHour, closeHour: closeHour)
-                }
                 roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs)
             },
             wrapup: BUStageWrapupData(

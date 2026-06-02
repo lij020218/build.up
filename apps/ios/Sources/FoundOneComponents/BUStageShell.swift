@@ -68,6 +68,12 @@ public struct BUStageShell<Content: View>: View {
     // 현재 클러스터 경로(stageId 순서) — 주입되면 단계 번호를 경로 위치 기준으로 계산.
     @Environment(\.roadmapStageOrder) private var stageOrder
 
+    /// 키보드 표시 여부 — 키보드가 뜨면 하단 Continue 바를 숨긴다.
+    /// ⚠️ .safeAreaInset(.bottom) 바는 키보드가 뜨면 키보드 위로 따라 올라가 콘텐츠와 겹쳐 깨져 보인다.
+    ///   .ignoresSafeArea(.keyboard) 로 고정하면 TextField 키보드 회피가 깨지므로(상호 배타),
+    ///   권장 해법대로 키보드 표시 중에는 바를 숨기고 키보드 위 "완료" 버튼으로 닫게 한다.
+    @State private var keyboardVisible = false
+
     /// 표시용 eyebrow — 하드코딩된 "단계 N" 대신 실제 경로 위치(idx+1/total)로 치환.
     /// ⚠️ 각 stage 가 전역 고정 번호("단계 10" 등)를 박아 둬서 클러스터별 경로에서 5→11 처럼
     ///   점프하던 버그 수정. stageOrder 가 비면(주입 안 됨) 원래 문자열 유지(후방호환).
@@ -190,17 +196,30 @@ public struct BUStageShell<Content: View>: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            BUStageContinueBar(
-                stageEyebrow: resolvedEyebrow,
-                advanceLabel: advanceLabel,
-                advanceHint: advanceHint,
-                canAdvance: canAdvance,
-                isCompleted: isCompleted,
-                onAdvance: onAdvance,
-                onUncomplete: onUncomplete,
-                onEditSave: onEditSave
-            )
+            // 키보드가 떠 있는 동안에는 바를 숨겨 키보드 위로 따라 올라가며 겹치는 깨짐을 방지.
+            // (입력 중에는 키보드 위 "완료" 버튼으로 닫고, 닫으면 바가 다시 하단에 고정 노출)
+            if !keyboardVisible {
+                BUStageContinueBar(
+                    stageEyebrow: resolvedEyebrow,
+                    advanceLabel: advanceLabel,
+                    advanceHint: advanceHint,
+                    canAdvance: canAdvance,
+                    isCompleted: isCompleted,
+                    onAdvance: onAdvance,
+                    onUncomplete: onUncomplete,
+                    onEditSave: onEditSave
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        #if os(iOS)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.22)) { keyboardVisible = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.22)) { keyboardVisible = false }
+        }
+        #endif
         #if os(iOS)
         // 2026-05-29 P0: numberPad/decimalPad 는 리턴 키가 없어 키보드를 닫을 방법이 없음.
         //   40~60대 사장님이 "키보드 어떻게 닫지?" 에서 막히던 문제. 키보드 위 "완료" 버튼 공통 부착.

@@ -84,13 +84,11 @@ public struct BizRegistrationStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                // 웹·앱 SSOT: 상호명을 Supabase(user_store_data.store_name)에도 저장 → 웹에서 동일 표시.
-                StoreProfileRepository.persistStoreNameForCurrentUser(storeName)
+                // storeName 은 inputs 로 전달 → StageInputProjector 가 store_name 컬럼에 자동 투영(웹 SSOT).
                 roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["storeName": storeName])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                StoreProfileRepository.persistStoreNameForCurrentUser(storeName)
                 roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["storeName": storeName])
             },
             wrapup: BUStageWrapupData(
