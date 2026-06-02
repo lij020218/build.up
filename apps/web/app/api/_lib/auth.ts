@@ -1,18 +1,23 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!url || !anonKey) {
-  throw new Error("Missing Supabase environment variables for API auth.");
-}
-
-const supabaseAdminless = createClient(url, anonKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+// ⚠️ lazy init — 모듈 로드 시점에 env 체크/throw 하면 `next build` 의 page-data 수집 단계에서
+//   (CI 처럼 env 미설정 환경) 라우트 import 만으로 빌드가 실패한다. 요청 시점에만 생성·검증.
+let _supabaseAdminless: SupabaseClient | null = null;
+function getAdminlessClient(): SupabaseClient {
+  if (_supabaseAdminless) return _supabaseAdminless;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error("Missing Supabase environment variables for API auth.");
   }
-});
+  _supabaseAdminless = createClient(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+  return _supabaseAdminless;
+}
 
 export type ApiAuthResult =
   | { ok: true; userId: string }
@@ -30,7 +35,7 @@ export async function requireApiUser(request: Request): Promise<ApiAuthResult> {
     };
   }
 
-  const { data, error } = await supabaseAdminless.auth.getUser(token);
+  const { data, error } = await getAdminlessClient().auth.getUser(token);
 
   if (error || !data.user || data.user.is_anonymous) {
     return {
@@ -67,7 +72,7 @@ export async function requireApiUserAllowAnon(request: Request): Promise<ApiAuth
     };
   }
 
-  const { data, error } = await supabaseAdminless.auth.getUser(token);
+  const { data, error } = await getAdminlessClient().auth.getUser(token);
 
   if (error || !data.user) {
     return {
