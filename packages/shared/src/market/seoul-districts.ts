@@ -252,11 +252,60 @@ export const seoulMarketDistricts: MarketDistrict[] = [
   m({ id: "ui-bukhansan", guName: "강북구", matchKeywords: ["우이동", "우이", "북한산우이", "솔밭공원", "삼각산", "우이신설", "송중동", "인수동"], title: { ko: "우이·북한산 상권", en: "Ui / Bukhansan" }, score: 70, summary: { ko: "우이신설선 종점+북한산 등산 관문. 주거 수요와 주말 등산·나들이 수요가 결합된 생활 상권으로 임대료가 낮습니다.", en: "Ui LRT terminus + Bukhansan trailhead; residential + weekend hiking demand, low rent." }, meta: { districtName: "강북구", rentBand: "low", competitionLevel: "low", customerFit: "steady", footTraffic: "mid", growthTrend: "stable", marketStyle: "residential" } }),
 ];
 
+// 서울 25개 구 인접 관계 — 근처(구 경계 너머) 상권 보강용. iOS guAdjacency 와 동일.
+const SEOUL_GU_ADJACENCY: Record<string, string[]> = {
+  "종로구": ["중구", "서대문구", "성북구", "동대문구", "용산구", "은평구"],
+  "중구": ["종로구", "용산구", "성동구", "동대문구", "서대문구"],
+  "용산구": ["중구", "종로구", "마포구", "성동구", "서대문구", "동작구", "영등포구"],
+  "성동구": ["중구", "동대문구", "광진구", "용산구", "강남구"],
+  "광진구": ["성동구", "동대문구", "중랑구", "강남구", "송파구", "강동구"],
+  "동대문구": ["종로구", "중구", "성동구", "광진구", "중랑구", "성북구"],
+  "중랑구": ["동대문구", "광진구", "노원구", "성북구"],
+  "성북구": ["종로구", "동대문구", "중랑구", "강북구", "노원구"],
+  "강북구": ["성북구", "도봉구", "노원구"],
+  "도봉구": ["강북구", "노원구"],
+  "노원구": ["도봉구", "강북구", "중랑구", "성북구"],
+  "은평구": ["서대문구", "마포구", "종로구"],
+  "서대문구": ["종로구", "중구", "용산구", "마포구", "은평구"],
+  "마포구": ["서대문구", "용산구", "은평구", "영등포구"],
+  "양천구": ["강서구", "영등포구", "구로구"],
+  "강서구": ["양천구", "구로구"],
+  "구로구": ["양천구", "영등포구", "금천구", "관악구", "강서구"],
+  "금천구": ["구로구", "관악구"],
+  "영등포구": ["양천구", "구로구", "동작구", "마포구", "용산구"],
+  "동작구": ["영등포구", "관악구", "서초구", "용산구"],
+  "관악구": ["동작구", "금천구", "구로구", "서초구"],
+  "서초구": ["강남구", "동작구", "관악구"],
+  "강남구": ["서초구", "송파구", "성동구", "광진구"],
+  "송파구": ["강남구", "강동구", "광진구"],
+  "강동구": ["송파구", "광진구"],
+};
+
+/** 인접 구의 대표(최고점) 상권을 근처 후보로 보강 — 구 경계에 걸친 검색에서 옆 구 상권도 노출(최대 3). */
+function enrichWithAdjacent(base: MarketDistrict[]): MarketDistrict[] {
+  if (base.length === 0) return base;
+  const gus = new Set(base.map((d) => d.guName));
+  const adjGus = new Set<string>();
+  for (const g of gus) for (const a of SEOUL_GU_ADJACENCY[g] ?? []) if (!gus.has(a)) adjGus.add(a);
+  const cands: MarketDistrict[] = [];
+  for (const ag of adjGus) {
+    const top = seoulMarketDistricts.filter((d) => d.guName === ag).sort((a, b) => b.score - a.score)[0];
+    if (top) cands.push(top);
+  }
+  cands.sort((a, b) => b.score - a.score);
+  const ids = new Set(base.map((d) => d.id));
+  return [...base, ...cands.slice(0, 3).filter((c) => !ids.has(c.id))];
+}
+
 /**
  * Search districts matching user's region input.
- * Returns at least 3 results if any match found.
+ * Returns at least 3 results if any match found. + 인접 구 근처 상권 보강(웹·앱 동일).
  */
 export function findMatchingDistricts(regionInput: string): MarketDistrict[] {
+  return enrichWithAdjacent(matchDistrictsCore(regionInput));
+}
+
+function matchDistrictsCore(regionInput: string): MarketDistrict[] {
   const q = regionInput.trim().replace(/\s+/g, "");
   if (!q) return [];
 

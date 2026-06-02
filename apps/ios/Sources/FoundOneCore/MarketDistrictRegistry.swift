@@ -47,13 +47,60 @@ public enum MarketDistrictRegistry {
         }
     }()
 
+    /// 서울 25개 구 인접 관계 — 근처(구 경계 너머) 상권 보강용. 웹 SEOUL_GU_ADJACENCY 와 동일.
+    private static let guAdjacency: [String: [String]] = [
+        "종로구": ["중구", "서대문구", "성북구", "동대문구", "용산구", "은평구"],
+        "중구": ["종로구", "용산구", "성동구", "동대문구", "서대문구"],
+        "용산구": ["중구", "종로구", "마포구", "성동구", "서대문구", "동작구", "영등포구"],
+        "성동구": ["중구", "동대문구", "광진구", "용산구", "강남구"],
+        "광진구": ["성동구", "동대문구", "중랑구", "강남구", "송파구", "강동구"],
+        "동대문구": ["종로구", "중구", "성동구", "광진구", "중랑구", "성북구"],
+        "중랑구": ["동대문구", "광진구", "노원구", "성북구"],
+        "성북구": ["종로구", "동대문구", "중랑구", "강북구", "노원구"],
+        "강북구": ["성북구", "도봉구", "노원구"],
+        "도봉구": ["강북구", "노원구"],
+        "노원구": ["도봉구", "강북구", "중랑구", "성북구"],
+        "은평구": ["서대문구", "마포구", "종로구"],
+        "서대문구": ["종로구", "중구", "용산구", "마포구", "은평구"],
+        "마포구": ["서대문구", "용산구", "은평구", "영등포구"],
+        "양천구": ["강서구", "영등포구", "구로구"],
+        "강서구": ["양천구", "구로구"],
+        "구로구": ["양천구", "영등포구", "금천구", "관악구", "강서구"],
+        "금천구": ["구로구", "관악구"],
+        "영등포구": ["양천구", "구로구", "동작구", "마포구", "용산구"],
+        "동작구": ["영등포구", "관악구", "서초구", "용산구"],
+        "관악구": ["동작구", "금천구", "구로구", "서초구"],
+        "서초구": ["강남구", "동작구", "관악구"],
+        "강남구": ["서초구", "송파구", "성동구", "광진구"],
+        "송파구": ["강남구", "강동구", "광진구"],
+        "강동구": ["송파구", "광진구"],
+    ]
+
     /// 입력 지역명 매칭 → 상권 후보 목록.
     ///
     /// ⚠️ **웹 SSOT `findMatchingDistricts`(packages/shared/src/market/seoul-districts.ts) 1:1 포팅.**
-    ///   웹·앱 결과가 반드시 동일해야 함 → 알고리즘·정렬·cap 을 그대로 미러한다(임의 변형 금지).
-    ///   단순 키워드 매칭은 "강남역"이 1곳만 잡히던 문제 → 웹과 동일하게 정확매칭(≥3) → 같은 구 →
-    ///   fuzzy → 인근 구 보충 → 구 추출 fallback. 강남역 → 강남구 7곳(점수순) 반환.
+    ///   웹·앱 결과가 반드시 동일해야 함 → core 매칭 + 인접 구 보강 모두 동일.
+    ///   강남역 → 강남구 7곳 + 근처(성수·잠실 등) 보강.
     public static func match(_ regionInput: String) -> [MarketDistrict] {
+        enrichWithAdjacent(matchCore(regionInput))
+    }
+
+    /// 인접 구의 대표(최고점) 상권을 근처 후보로 보강 — 구 경계에 걸친 검색에서 옆 구 상권도 노출(최대 3).
+    private static func enrichWithAdjacent(_ base: [MarketDistrict]) -> [MarketDistrict] {
+        guard !base.isEmpty else { return base }
+        let gus = Set(base.map(\.guName))
+        var adjGus = Set<String>()
+        for g in gus { for a in (guAdjacency[g] ?? []) where !gus.contains(a) { adjGus.insert(a) } }
+        var cands: [MarketDistrict] = []
+        for ag in adjGus {
+            if let top = all.filter({ $0.guName == ag }).max(by: { $0.score < $1.score }) { cands.append(top) }
+        }
+        cands.sort { $0.score > $1.score }
+        let ids = Set(base.map(\.id))
+        return base + cands.prefix(3).filter { !ids.contains($0.id) }
+    }
+
+    private static func matchCore(_ regionInput: String) -> [MarketDistrict] {
         // 웹: regionInput.trim().replace(/\s+/g, "") — 공백 전부 제거. 소문자화 안 함(한글).
         let q = regionInput.components(separatedBy: .whitespacesAndNewlines).joined()
         guard !q.isEmpty else { return [] }
