@@ -262,8 +262,38 @@ public struct OperationsSetupStageView: View {
 
     // MARK: - pg 0 배달 플랫폼
 
+    // MARK: - 왜 지금 — 정량 임팩트 (웹 WhyItem metric 1:1, 음식·카페 한정)
+
+    @ViewBuilder private var opsWhyImpactCard: some View {
+        if cluster.category == .food || cluster.category == .cafeDessert {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: 11) {
+                    BUEyebrow("왜 지금 — 정량 임팩트")
+                    opsImpactRow("배달 등록 지연 1주", "첫 달 매출의 30~50%가 배달앱. 지연 1주 = 평균 매출 300~800만원 손실 + 광고 없이 신규 노출 ≈ 0 (초기 광고 매출 5~15% 권장).")
+                    opsImpactRow("POS 첫날 결제 오류", "메뉴 미등록·카드 미연동 시 손님 앞 결제 실패 — 첫날 오류 매장 평균 별점 -0.4점, 신뢰 회복 수개월.")
+                    opsImpactRow("네이버 플레이스 미등록", "한국 음식점 검색 80%가 네이버 — 미등록 첫 주 신규 방문 -60%. 노출까지 최대 7일 + 1주차 상호작용 50건 = 상위 노출 진입선.")
+                    opsImpactRow("VAN 미신청", "VAN 없이 카드 결제 0건 — 신청→활성화 약 7일. 사업자등록 후 D+0 신청이 골든타임.")
+                    opsImpactRow("매장 음악 저작권 (50㎡↑)", "미가입 = 손해배상 + 최대 5년 이하 징역 또는 5천만원 이하 벌금. 직접 신고 월 4천원~.")
+                }
+            }
+        }
+    }
+
+    private func opsImpactRow(_ title: String, _ body: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "bolt.fill").font(.system(size: 12)).foregroundStyle(BUColor.midnight).padding(.top, 2)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(BUColor.ink)
+                Text(body).font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
     private var deliveryPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            opsWhyImpactCard
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("\(channelPageLabel) (2026 수수료 기준)")
