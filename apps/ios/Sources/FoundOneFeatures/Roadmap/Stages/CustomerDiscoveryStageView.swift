@@ -126,6 +126,9 @@ public struct CustomerDiscoveryStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("인터뷰 황금 5문항")
+                    Text("Mom Test·JTBD 원칙 — “살 거예요?” 같은 의견 질문은 답이 늘 Yes. 과거 행동·빈도·강도를 물어 고객이 해결하려는 ‘일(Job-to-be-Done)’을 찾습니다.")
+                        .font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     let questions: [(Int, String)] = [
                         (1, "지금 이 문제를 어떻게 해결하고 있나요? (현재 행동)"),
                         (2, "마지막으로 이 문제를 경험한 게 언제였나요? (빈도)"),

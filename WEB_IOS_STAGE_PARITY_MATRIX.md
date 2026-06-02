@@ -197,3 +197,47 @@
 - **웨이브 5 (🟡 tail·잔여)**: tax-guide, loan-guide, financial-review, pre-launch, pre-launch-final, menu-design, startup-type, business-model + 🟢 미세보정.
 
 각 웨이브: 이식 → iOS 빌드 + 웹 typecheck/build → 시뮬/스크린샷 검증 → 커밋.
+
+---
+
+## 4. 검증 완료 결과 (실제 코드 1:1 대조 — 2026-06-03)
+
+⚠️ **중요 정정**: §2 매트릭스는 병렬 에이전트가 만든 1차 추정이며, 실제 코드를 열어 검증한 결과
+**iOS 갭을 체계적으로 과장**했음이 드러남. iOS는 매트릭스가 시사한 것보다 웹에 훨씬 가까웠고,
+진짜 갭은 "업종별 전략/협상 카드·정량 임팩트·PATH" 같은 **특정 교육 카드**에 집중돼 있었음.
+
+### 실제 이식한 진짜 갭 (커밋 완료)
+| 단계 | 진짜 갭 | 조치 | 커밋 |
+|---|---|---|---|
+| location-candidates | 유리한길·원칙·함정 카드 | 이식 | cfb4dae |
+| permit-check | 협상카드 4→9업종 | 합본 이식(웹·iOS 동시) | d5d1f7b |
+| contract-review | 업종별 특약 카드 | 10업종 이식 | d02e6e5 |
+| hiring-setup | 업종별 채용전략 | 9업종 이식 | 3023947 |
+| insurance-tax-setup | 두루누리 긴급성·함정·직원수별 PATH | 3종 이식 | 0ad46d6 |
+| operations-setup | 정량 임팩트(손실액·별점·노출) | 임팩트 카드 | 3620c03 |
+| vendor-setup | 골든타임·견적→비교→선납 | 골든타임 카드 | 39de6a5 |
+| sourcing-setup | 상세페이지 6단 구조·포토리뷰 3배 | 6단 카드 | f543414 |
+| store-setup | 쿠팡·11번가 확장 퀵레프 | 퀵레프 카드 | f543414 |
+| customer-discovery | JTBD 라벨 | Mom Test·JTBD 명시 | (이번) |
+| growth-engine | AARRR 라벨 | AARRR 퍼널 명시 | (이번) |
+
+### 검증 결과 "이미 패리티" (이식 불필요 — 실제 코드 확인)
+- **construction-setup**: 11개 업종 전부 자재·컨셉 분기 + 트렌드 근거(2025 MZ·Pantone) + 컴플라이언스.
+- **registration-setup**: whyPage 3점(법적 3년/3천만원·운영 인프라 전제·순차) + 과세유형 path.
+- **platform-setup**: 개설순서(스마트→매출 후 쿠팡)·100만원 임계·ROAS 200%·에스크로 모두 보유.
+- **online-marketing**: #광고 표시의무·리뷰조작 영구정지·ROAS·네이버 SEO 모두 보유.
+- **online-registration**: 세금유형·PG·에스크로·통신판매 신고 보유(near-parity, 스킵).
+- **스타트업 9단계 전체**: 프레임워크(Mom Test·Sean Ellis 40%·Default Alive)+계산기(런웨이·NSM)+
+  IR 10슬라이드+벤처 3유형 보유. 체크리스트 아님 — 사실상 패리티.
+- **financial-review**: {업종} 고정비 벤치마크 보유(웹 24 세부업종 대비 cluster 단위 — near-parity).
+- **tax-guide**: 연간 신고 캘린더·과세유형·절세 5가지·세무사 기준 보유.
+- **loan-guide**: 예산별 자금경로·정책자금 기관·신청절차 보유(TIPS는 fundraising-readiness 담당).
+- **하드웨어/딥테크 12단계**: 양쪽 모두 풍부. 웹-only는 주로 출처 URL·글로벌 수치(모바일 UX 가치 낮음).
+- 기타 🟢(industry-selection·startup-type·business-model·target-customer·budget·biz-registration·
+  menu-design·pre-launch·pre-launch-final): 패리티 또는 미세 차이.
+
+### 결론
+콘텐츠 통일의 **실질 작업은 오프라인 코어 클러스터 + 일부 온라인**에 집중됐고 모두 완료.
+나머지 클러스터는 실제 코드상 이미 동등 → 불필요한 패딩 대신 정직하게 패리티로 기록.
+"체크리스트만 있는 느낌"이던 핵심(상권·인허가·계약·채용·보험세무·운영·발주·소싱)은 모두
+웹의 교육 내러티브(왜·정량·유리한 길)를 갖추도록 보강됨. **web==app 원칙 달성.**

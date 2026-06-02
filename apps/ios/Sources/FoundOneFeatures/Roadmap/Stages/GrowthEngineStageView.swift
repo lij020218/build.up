@@ -200,6 +200,9 @@ public struct GrowthEngineStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("주요 성장 지표 목표 (초기 SaaS 기준)")
+                    Text("AARRR 퍼널(획득·활성·유지·추천·매출) 기준 — 북극성 지표는 이 5단계 중 가장 약한 곳을 매주 본다. 리텐션 없는 획득은 밑 빠진 독.")
+                        .font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     let metrics: [(String, String)] = [
                         ("주간 성장률 (YC 표준)", "5-7%/week (Seed)"),
                         ("MoM 성장률", "20-30% (Seed 단계)"),
