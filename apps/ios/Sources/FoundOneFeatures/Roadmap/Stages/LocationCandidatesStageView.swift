@@ -64,19 +64,29 @@ public struct LocationCandidatesStageView: View {
     @State private var aiError: String?
     @State private var aiCenter: CLLocationCoordinate2D?
     @State private var aiPins: [MarketMapPin] = []
-    @State private var aiDistrictMatches: [MarketDistrict] = []   // 113-상권 DB 키워드 매칭 (즉시·오프라인)
+    @State private var aiDistrictMatches: [MarketDistrict] = []   // 내장 상권 DB 매칭 (즉시·오프라인 — 메인)
+    @State private var didSearch = false                          // 한 번이라도 검색했는지 (AI 옵트인 노출 게이팅)
 
-    private func requestAiRecommend() {
+    /// Found.One 상권 추천 (내장 상권 데이터 — **메인**·오프라인 즉시). 웹 buildRecommendedMarkets 대응.
+    ///   AI 를 부르지 않는다. 지역 입력 → 내장 DB 매칭 + Apple 지도 핀.
+    private func runFoundOneRecommend() {
+        let region = aiRegion.trimmingCharacters(in: .whitespaces)
+        guard !region.isEmpty else { return }
+        didSearch = true
+        aiDistrictMatches = MarketDistrictRegistry.match(region)
+        // 새 검색 — 이전 AI 결과/에러/핀 초기화 후 내장 매칭으로 다시 핀 표시.
+        aiItems = []; aiError = nil; aiPins = []; aiCenter = nil
+        Task { await geocodeDistrictPins(aiDistrictMatches) }
+    }
+
+    /// AI 실시간 상권 추천 (**별도 옵트인** — Kakao+Claude). 내장 데이터에 없는 지역(비-서울 등) 보강.
+    ///   웹 requestAiMarketRecommend(/api/data/market-recommend) 대응. 사용자가 명시적으로 누를 때만 호출.
+    private func runAiRecommend() {
         let region = aiRegion.trimmingCharacters(in: .whitespaces)
         guard !region.isEmpty, !aiLoading else { return }
-        // 1) 113-상권 정적 DB 즉시 매칭 (오프라인·풍부 — 성수동 → 성수동 상권 + 서울숲·성수카페거리…)
-        aiDistrictMatches = MarketDistrictRegistry.match(region)
-        aiLoading = true; aiError = nil; aiPins = []; aiCenter = nil
-        // 매칭 상권을 Apple 지도 핀으로 (위치는 MKLocalSearch 로 변환 — 카카오·dev 서버 무관)
-        Task { await geocodeDistrictPins(aiDistrictMatches) }
-        // 2) AI 라이브 추천 (Kakao+Claude — 등록 도메인·dev 서버 필요)
         let categoryId = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
         let sub = industryId.isEmpty ? nil : industryId
+        aiLoading = true; aiError = nil
         Task {
             do {
                 let result = try await MarketRecommendService.shared().recommend(
@@ -248,57 +258,44 @@ public struct LocationCandidatesStageView: View {
     // MARK: - AI 상권 추천 카드 (웹 패리티)
 
     private var aiRecommendCard: some View {
-        BUCard(.card) {
+        let region = aiRegion.trimmingCharacters(in: .whitespaces)
+        return BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                BUEyebrow("AI 상권 추천")
-                Text("희망 지역을 입력하면 카카오 지도 + AI가 주변 후보 상권을 0~100점으로 점수화해 추천합니다.")
+                // ── 메인: Found.One 상권 추천 (내장 데이터) ──
+                BUEyebrow("Found.One 상권 추천")
+                Text("희망 지역을 입력하면 서울 상권 데이터에서 유동인구·임대료·경쟁을 점수화해 근처 상권까지 추천합니다.")
                     .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
 
                 HStack(spacing: 8) {
-                    TextField("예: 강남역, 연남동, 수원 영통", text: $aiRegion)
+                    TextField("예: 강남역, 연남동, 홍대", text: $aiRegion)
                         .font(BUFont.body)
                         .padding(.horizontal, 12).padding(.vertical, 10)
                         .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         .submitLabel(.search)
-                        .onSubmit { requestAiRecommend() }
-                    Button(action: requestAiRecommend) {
-                        Group {
-                            if aiLoading {
-                                ProgressView().tint(.white)
-                            } else {
-                                Image(systemName: "sparkles").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                            }
-                        }
-                        .frame(width: 46, height: 42)
-                        .background(
-                            aiRegion.trimmingCharacters(in: .whitespaces).isEmpty ? BUColor.midnight.opacity(0.3) : BUColor.midnight,
-                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        )
+                        .onSubmit { runFoundOneRecommend() }
+                    Button(action: runFoundOneRecommend) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                            .frame(width: 46, height: 42)
+                            .background(
+                                region.isEmpty ? BUColor.midnight.opacity(0.3) : BUColor.midnight,
+                                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            )
                     }
-                    .disabled(aiRegion.trimmingCharacters(in: .whitespaces).isEmpty || aiLoading)
+                    .disabled(region.isEmpty)
                 }
 
-                if aiLoading {
-                    Text("AI가 주변 상권을 분석 중입니다… (10~30초)")
-                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
-                }
-                // 113-상권 DB 매칭 (즉시 표시 — AI 응답 전이라도 풍부한 상권 정보 제공)
+                // 내장 데이터 결과 (메인)
                 if !aiDistrictMatches.isEmpty {
-                    Text("매칭된 상권 \(aiDistrictMatches.count)곳")
+                    Text("추천 상권 \(aiDistrictMatches.count)곳")
                         .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
                     ForEach(aiDistrictMatches) { d in districtMatchRow(d) }
+                } else if didSearch {
+                    Text("‘\(region)’ 은(는) 내장 상권 데이터에 없어요. 아래 ‘AI 실시간 추천’을 이용해 보세요.")
+                        .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
                 }
-                if let aiError {
-                    if aiDistrictMatches.isEmpty {
-                        // 오프라인 매칭도 없을 때만 빨간 경고 — 입력을 더 구체화하도록 안내.
-                        Text("⚠ \(aiError)")
-                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
-                    } else {
-                        // 정적 113-상권 데이터가 이미 위에 표시됨 → 라이브 실시간 추천 실패는 조용히 안내(비경고).
-                        Text("실시간 AI 추천은 지금 불러오지 못했어요. 위 상권 정보로 확인하시거나 잠시 후 다시 시도해 주세요.")
-                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
-                    }
-                }
+
+                // 지도 (내장 매칭 또는 AI 핀)
                 if let center = aiCenter {
                     Map(initialPosition: .region(MKCoordinateRegion(
                         center: center, latitudinalMeters: 5000, longitudinalMeters: 5000
@@ -316,8 +313,40 @@ public struct LocationCandidatesStageView: View {
                             .strokeBorder(BUColor.midnight.opacity(0.08), lineWidth: 1)
                     )
                 }
-                ForEach(aiItems) { item in
-                    recommendItemRow(item)
+
+                // ── 별도 옵트인: AI 실시간 상권 추천 (검색 후 노출) ──
+                if didSearch {
+                    Divider().padding(.vertical, 2)
+                    HStack(alignment: .top, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("AI 실시간 상권 추천")
+                                .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.midnight)
+                            Text("내장 데이터에 없는 지역(비-서울 등)은 Kakao + AI 로 실시간 분석합니다.")
+                                .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        }
+                        Spacer(minLength: 8)
+                        Button(action: runAiRecommend) {
+                            Group {
+                                if aiLoading { ProgressView().tint(.white) }
+                                else { Text("AI 추천").font(.system(size: 13, weight: .bold)).foregroundStyle(.white) }
+                            }
+                            .frame(minWidth: 64, minHeight: 38)
+                            .background(
+                                region.isEmpty || aiLoading ? BUColor.midnight.opacity(0.3) : BUColor.midnight,
+                                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            )
+                        }
+                        .disabled(region.isEmpty || aiLoading)
+                    }
+                    if aiLoading {
+                        Text("AI가 주변 상권을 분석 중입니다… (10~30초)")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                    }
+                    if let aiError {
+                        Text("⚠ \(aiError)")
+                            .font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
+                    }
+                    ForEach(aiItems) { item in recommendItemRow(item) }
                 }
             }
         }
