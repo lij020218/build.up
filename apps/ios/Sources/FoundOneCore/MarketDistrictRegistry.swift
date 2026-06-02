@@ -47,35 +47,71 @@ public enum MarketDistrictRegistry {
         }
     }()
 
-    /// 한 번에 보여줄 최대 상권 후보 수 (대형 상권 비교 UX).
-    public static let maxMatches = 6
-
-    /// 입력 지역명 매칭 → 상권 후보 목록(점수 높은 순).
+    /// 입력 지역명 매칭 → 상권 후보 목록.
     ///
-    /// ⚠️ 단순 키워드 매칭만 하면 "강남역" 처럼 특정 역명을 입력했을 때 그 키워드를 가진
-    ///   상권 1개만 잡혀(예: gangnam-station), 강남 같은 대형 상권이 1곳만 보이는 문제가 있었다.
-    ///   실제 데이터엔 강남구 7곳(강남역·삼성코엑스·역삼·신사가로수·압구정·고속터미널·대치) 처럼
-    ///   비교할 상권이 충분하다 → **직접 매칭 + 같은 구(區) 형제 상권 확장**으로 후보를 넓힌다.
-    ///   (웹 라이브 Kakao 반경 sub-area 발굴과 동일 정신.)
-    public static func match(_ query: String) -> [MarketDistrict] {
-        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+    /// ⚠️ **웹 SSOT `findMatchingDistricts`(packages/shared/src/market/seoul-districts.ts) 1:1 포팅.**
+    ///   웹·앱 결과가 반드시 동일해야 함 → 알고리즘·정렬·cap 을 그대로 미러한다(임의 변형 금지).
+    ///   단순 키워드 매칭은 "강남역"이 1곳만 잡히던 문제 → 웹과 동일하게 정확매칭(≥3) → 같은 구 →
+    ///   fuzzy → 인근 구 보충 → 구 추출 fallback. 강남역 → 강남구 7곳(점수순) 반환.
+    public static func match(_ regionInput: String) -> [MarketDistrict] {
+        // 웹: regionInput.trim().replace(/\s+/g, "") — 공백 전부 제거. 소문자화 안 함(한글).
+        let q = regionInput.components(separatedBy: .whitespacesAndNewlines).joined()
         guard !q.isEmpty else { return [] }
+        let byScore: (MarketDistrict, MarketDistrict) -> Bool = { $0.score > $1.score }
 
-        // 1) 직접 매칭 — 키워드 / 제목 / 구 이름.
-        let direct = all.filter { d in
-            if d.matchKeywords.contains(where: { q.contains($0.lowercased()) || $0.lowercased().contains(q) }) { return true }
-            if d.title.ko.lowercased().contains(q) || d.guName.lowercased().contains(q) { return true }
-            return false
+        // 1. 정확 키워드 매칭
+        let exact = all.filter { d in d.matchKeywords.contains { q.contains($0) || $0.contains(q) } }
+        if exact.count >= 3 { return exact.sorted(by: byScore) }
+
+        // 2. 같은 구(區)로 매칭됐고 3개 미만이면 그 구 전체
+        if let matchedGu = exact.first?.guName {
+            let guResults = all.filter { $0.guName == matchedGu }.sorted(by: byScore)
+            if guResults.count >= 3 { return guResults }
         }
-        guard !direct.isEmpty else { return [] }
 
-        // 2) 같은 구(區)의 형제 상권으로 확장 — 대형 상권은 인근 후보를 함께 비교.
-        let directIds = Set(direct.map(\.id))
-        let gus = Set(direct.map(\.guName))
-        let siblings = all.filter { gus.contains($0.guName) && !directIds.contains($0.id) }
+        // 3. fuzzy — 부분 키워드 / 구 이름 / 제목
+        let fuzzy = all.filter { d in
+            d.matchKeywords.contains { $0.contains(q) || q.contains($0) }
+                || d.guName.contains(q) || d.title.ko.contains(q)
+        }
+        if fuzzy.count >= 3 { return fuzzy.sorted(by: byScore) }
 
-        // 검색 지역(직접 매칭) 우선 → 그다음 형제. 각 그룹 내 점수 내림차순. 최대 maxMatches.
-        let ordered = direct.sorted { $0.score > $1.score } + siblings.sorted { $0.score > $1.score }
-        return Array(ordered.prefix(maxMatches))
+        // 4. 그래도 3개 미만이면 인근 구(점수 상위) 보충
+        if !exact.isEmpty || !fuzzy.isEmpty {
+            let base = !exact.isEmpty ? exact : fuzzy
+            let baseGus = Set(base.map(\.guName))
+            let supplement = all.filter { !baseGus.contains($0.guName) }
+                .sorted(by: byScore)
+                .prefix(max(0, 3 - base.count))
+            return (base + supplement).sorted(by: byScore)
+        }
+
+        // 5. 입력에서 "○○구" 추출 → 그 구 전체
+        if let r = q.range(of: "[가-힣]+구", options: .regularExpression) {
+            let guName = String(q[r])
+            let guResults = all.filter { $0.guName == guName || $0.guName.contains(guName) }.sorted(by: byScore)
+            if !guResults.isEmpty { return guResults }
+        }
+
+        // 5b. 동(洞) 이름 기반 구 추정: "장위" → "장위동" 등
+        let dongBase = String(q.filter { !"동로가".contains($0) })
+        if let guFromDong = all.first(where: { d in
+            d.matchKeywords.contains { kw in
+                let kwBase = String(kw.filter { !"동로가역".contains($0) })
+                return dongBase.count >= 2 && kwBase.count >= 2
+                    && (dongBase == kwBase || dongBase.contains(kwBase) || kwBase.contains(dongBase))
+            }
+        }) {
+            let guResults = all.filter { $0.guName == guFromDong.guName }.sorted(by: byScore)
+            if !guResults.isEmpty { return guResults }
+        }
+
+        // 5c. 최후 fallback: 임대료 낮은(접근성↑) 순 → 점수 순, 상위 3개
+        let rentOrder: [String: Int] = ["low": 0, "mid-low": 1, "mid": 2, "mid-high": 3, "high": 4]
+        return Array(all.sorted { a, b in
+            let ra = rentOrder[a.meta.rentBand] ?? 2
+            let rb = rentOrder[b.meta.rentBand] ?? 2
+            return ra != rb ? ra < rb : a.score > b.score
+        }.prefix(3))
     }
 }
