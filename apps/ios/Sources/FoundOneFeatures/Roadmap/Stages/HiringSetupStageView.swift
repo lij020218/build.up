@@ -133,8 +133,70 @@ public struct HiringSetupStageView: View {
 
     // MARK: - pg 0 공고
 
+    // MARK: - 업종별 채용 전략 카드 (웹 myHiring 1:1 — web==app)
+
+    /// 사장님 업종별 "어떻게 채용해야 유리한가" — 웹 myHiring[categoryId] 미러.
+    private var hiringFavorableCard: some View {
+        let tip = hiringTip(cluster.category.rawValue)
+        return BUCard(.card) {
+            VStack(alignment: .leading, spacing: 10) {
+                BUEyebrow("사장님 업종 — 채용 전략")
+                Text(tip.context)
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(BUColor.midnight08, in: Capsule())
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill").font(.system(size: 15)).foregroundStyle(BUColor.success).padding(.top, 1)
+                    Text(tip.recommendation)
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(BUColor.ink).lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Text(tip.rationale)
+                    .font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    /// 웹 myHiring(HiringSetupStage.tsx) 9업종 1:1 포팅. retail 등은 web 과 동일하게 food 로 폴백.
+    private func hiringTip(_ categoryId: String) -> (context: String, recommendation: String, rationale: String) {
+        switch categoryId {
+        case "food":
+            return ("음식점 / F&B", "초기엔 알바몬·당근으로 알바 1~2명, 정직원은 매출 3개월 검증 후",
+                "F&B는 매출 변동 큼. 정직원 무리하게 뽑으면 인건비가 매출의 40%↑로 폭증. 알바 → 우수 알바 정직원 전환이 안전.")
+        case "cafe-dessert":
+            return ("카페 / 디저트", "오픈 1~2주 전 알바천국 + 당근으로 평일·주말 분리 채용",
+                "카페는 시간대 편차 큼. 평일 오전·오후 / 주말 풀타임으로 시급 분산 채용 시 인건비 효율 ↑")
+        case "beauty":
+            return ("미용·뷰티", "디자이너·관리사는 사람인·잡코리아, 보조는 알바몬",
+                "면허·경력 검증이 필요한 직군은 이력서 기반 플랫폼이 정확. 보조 인력은 단기 알바로 충분.")
+        case "fitness":
+            return ("필라테스·요가·PT", "강사는 트레이너스 / 잡플래닛 + 자격증 사전 검증",
+                "지도자 자격증·경력이 매출 직결. 일반 알바몬보다 트레이너 전문 플랫폼이 채용 품질 ↑")
+        case "education":
+            return ("학원", "강사는 사람인·강사인, 행정 보조는 알바몬",
+                "강사는 경력·과목 매칭이 핵심 — 전문 플랫폼. 행정·청소·셔틀 보조는 단기 알바로 분리.")
+        case "pet":
+            return ("펫", "미용사는 펫업 + 자격증 검증, 일반 보조는 당근",
+                "반려동물 미용사·훈련사는 자격이 매출 직결. 펫 전문 플랫폼에서 검증된 인력 채용.")
+        case "online-digital":
+            return ("온라인·디지털", "포장·배송 보조는 당근·알바천국, 운영 도우미는 사람인",
+                "택배·재고 작업은 인근 거주자가 효율적 — 동네 알바. 마케팅·CS 등 사무 보조는 사람인.")
+        case "living-service":
+            return ("세탁·청소·수리", "기술자는 사람인 + 면허 검증, 보조는 알바천국",
+                "기술 인력은 자격·경력 검증 필요. 보조는 단기 알바로 시작해 적성 본 후 정직원 전환.")
+        case "space":
+            return ("공간 임대", "관리·청소 인력은 당근·알바천국으로 단기 채용",
+                "공간 임대는 상주 인력 적음. 청소·관리 단기 알바로 운영 비용 최소화.")
+        default:
+            return hiringTip("food")
+        }
+    }
+
     private var postingPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            hiringFavorableCard
+
             BUCard(.card) {
                 Toggle(isOn: $noHireChoice) {
                     VStack(alignment: .leading, spacing: 2) {
