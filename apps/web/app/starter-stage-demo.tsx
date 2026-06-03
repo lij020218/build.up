@@ -90,6 +90,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import { FoundOneSpiralLogo } from "./lib/components/ui/FoundOneSpiralLogo";
 import { fetchLiveSupportPrograms } from "./lib/services/live-data";
 import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/DashboardContext";
 import { AuroraBackground } from "../components/ui/aurora-background";
@@ -780,11 +781,9 @@ export default function StarterStageDemo({
       }
       .bup-sidebar-logo-mark {
         width: 32px; height: 32px; border-radius: 9px;
-        background: linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%);
+        background: rgba(58,58,200,0.12);
         display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 2px 8px rgba(29,53,87,0.18);
-        font-size: 17px; font-weight: 800; color: #fff;
-        letter-spacing: -0.02em;
+        box-shadow: 0 2px 6px rgba(29,53,87,0.10);
         flex-shrink: 0;
       }
       .bup-sidebar-logo-text {
@@ -950,8 +949,7 @@ export default function StarterStageDemo({
         display: inline-flex; align-items: center; justify-content: center;
         width: 26px; height: 26px;
         border-radius: 8px;
-        background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
-        color: #fff; font-weight: 800; font-size: 13px;
+        background: rgba(58,58,200,0.12);
       }
       .bup-mobile-topnav-btn {
         flex-shrink: 0;
@@ -982,7 +980,7 @@ export default function StarterStageDemo({
     {isHomeOperational && showSurfaceNav && (
       <nav className="bup-mobile-topnav" aria-label="Mobile navigation">
         <div className="bup-mobile-topnav-logo">
-          <span className="bup-mobile-topnav-logo-mark">b</span>
+          <span className="bup-mobile-topnav-logo-mark"><FoundOneSpiralLogo size={16} color="#3A3AC8" /></span>
           <span>Found.One</span>
         </div>
         {surfaceTabs.map((tab) => {
@@ -1006,7 +1004,7 @@ export default function StarterStageDemo({
     {isHomeOperational && showSurfaceNav && (
       <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} aria-label="Navigation">
         <div className="bup-sidebar-logo">
-          <div className="bup-sidebar-logo-mark">b</div>
+          <div className="bup-sidebar-logo-mark"><FoundOneSpiralLogo size={20} color="#3A3AC8" /></div>
           <span className="bup-sidebar-logo-text">
             Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
           </span>
@@ -1078,16 +1076,12 @@ export default function StarterStageDemo({
       }}>
         <div style={{
           width: "32px", height: "32px", borderRadius: "9px",
-          background: "linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%)",
+          background: "rgba(58,58,200,0.12)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 2px 8px rgba(29,53,87,0.15)",
+          boxShadow: "0 2px 6px rgba(29,53,87,0.10)",
           flexShrink: 0,
         }}>
-          <span style={{
-            fontSize: "17px", fontWeight: 800, color: "#fff",
-            fontFamily: "inherit",
-            letterSpacing: "-0.02em",
-          }}>b</span>
+          <FoundOneSpiralLogo size={20} color="#3A3AC8" />
         </div>
         <span style={{
           fontSize: "16px", fontWeight: 750, color: "#0f172a",

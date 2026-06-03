@@ -927,19 +927,12 @@ private struct FoundOneBrandBar<Accessory: View>: View {
             .accessibilityLabel("메뉴")
 
             ZStack {
-                LinearGradient(
-                    colors: [BUColor.auroraNavy, BUColor.auroraBlue, BUColor.auroraTeal],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Text("f")
-                    .font(.system(size: 17, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white)
-                    .tracking(-0.3)
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(BUColor.midnightBright.opacity(0.12))
+                FoundOneSpiralLogo(size: 19, color: BUColor.midnightBright)
             }
             .frame(width: 30, height: 30)
-            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-            .shadow(color: BUColor.midnightInk.opacity(0.12), radius: 6, x: 0, y: 2)
+            .shadow(color: BUColor.midnightInk.opacity(0.10), radius: 5, x: 0, y: 2)
 
             Text("Found")
                 .font(.system(size: 15, weight: .bold))
@@ -973,18 +966,11 @@ private struct FoundOneLiquidSidebar: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 10) {
                 ZStack {
-                    LinearGradient(
-                        colors: [BUColor.auroraNavy, BUColor.auroraBlue, BUColor.auroraTeal],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    Text("f")
-                        .font(.system(size: 17, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
-                        .tracking(-0.3)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(BUColor.midnightBright.opacity(0.12))
+                    FoundOneSpiralLogo(size: 22, color: BUColor.midnightBright)
                 }
                 .frame(width: 34, height: 34)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Found.One")

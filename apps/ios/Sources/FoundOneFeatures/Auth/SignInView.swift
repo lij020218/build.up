@@ -443,19 +443,12 @@ private struct BrandMark: View {
         VStack(spacing: BUSpacing.md) {
             // Logo mark — 둥근 사각 + Aurora 그라디언트 (BrandBar 와 동일 톤)
             ZStack {
-                LinearGradient(
-                    colors: [BUColor.auroraNavy, BUColor.auroraBlue, BUColor.auroraTeal],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Text("f")
-                    .font(.system(size: 36, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white)
-                    .tracking(-0.5)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(BUColor.midnightBright.opacity(0.12))
+                FoundOneSpiralLogo(size: 46, color: BUColor.midnightBright)
             }
             .frame(width: 72, height: 72)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .shadow(color: BUColor.midnightInk.opacity(0.18), radius: 16, x: 0, y: 8)
+            .shadow(color: BUColor.midnightInk.opacity(0.14), radius: 16, x: 0, y: 8)
 
             // Wordmark
             HStack(spacing: 0) {

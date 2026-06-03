@@ -15,6 +15,7 @@ import {
   type Language
 } from "@foundone/shared";
 import { MockupByIndex, HeroDashboardPreview } from "./mockups";
+import { FoundOneSpiralLogo } from "../lib/components/ui/FoundOneSpiralLogo";
 import { FeatureIcon, getSummaryFeatures, txt, getFeatures } from "./landing-copy";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";  // 랜딩 nav "서비스" 버튼만 사용 (login 은 hard reload).
@@ -360,22 +361,16 @@ export default function AuthPage() {
                   width: 40,
                   height: 40,
                   borderRadius: 10,
-                  background: "linear-gradient(135deg, #5B8CFF 0%, #1D3557 100%)",
+                  background: "rgba(255,255,255,0.95)",
                   margin: "0 auto 12px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#fff",
-                  fontSize: 22,
-                  fontWeight: 700,
-                  fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                  textShadow: "0 1px 2px rgba(0,0,0,0.18)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
                 }}
                 aria-hidden="true"
               >
-                b
+                <FoundOneSpiralLogo size={26} color="#3A3AC8" />
               </div>
               <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>Found.One</div>
             </div>

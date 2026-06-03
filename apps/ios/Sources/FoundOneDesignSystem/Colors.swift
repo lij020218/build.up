@@ -70,6 +70,11 @@ public enum BUColor {
         light: Color(red: 0x1D/255, green: 0x35/255, blue: 0x57/255),
         dark:  Color(red: 0x8A/255, green: 0xB0/255, blue: 0xD5/255)
     )
+    /// MIDNIGHT_BRIGHT — 밝은 미드나이트 블루 (#3A3AC8) — 나선 로고/액센트
+    public static let midnightBright = Color(
+        light: Color(red: 0x3A/255, green: 0x3A/255, blue: 0xC8/255),
+        dark:  Color(red: 0x7E/255, green: 0x7E/255, blue: 0xE8/255)
+    )
     public static let midnight08 = midnight.opacity(0.08)
     public static let midnight12 = midnight.opacity(0.12)
     public static let midnight18 = midnight.opacity(0.18)
