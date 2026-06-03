@@ -264,7 +264,33 @@ export function useComputedDashboard(
   // 같은 stage 가 cluster 별로 다른 위치에서 방문되는데 (예: biz-registration: offline #9,
   // online #7, startup #16) 한 가지만 표시 → 다른 path 사장님 pathStepNumber 틀림.
   // traverseUserPath 는 nextStageIds + nextStageConditions 따라가 *실제 navigation* 반환.
-  const pathStageList = traverseUserPath(roadmap.stages, decisions, isPathStage);
+  // ⚠️ traverseUserPath 의 nextStageConditions 평가(biz-registration·loan-guide·budget-setup)는
+  //   decisions["industry-selection"].inputs.categoryId / startup-type.inputs.startupType 에 의존한다.
+  //   수동 선택·구계정·fresh 계정은 이 키가 decisions 에 없어 분기가 실패 → path 가 ~11단계에서 잘림
+  //   (offline build-out: construction·menu·vendor·hiring·insurance·operations·pre-launch·tax·loan 누락).
+  //   여기서 *이미 robust 하게 해석된* industryCategoryId/startupType 을 보장 주입해 full path 를 복원한다.
+  const decisionsForPath = {
+    ...decisions,
+    "industry-selection": {
+      ...(decisions["industry-selection"] ?? { stageId: "industry-selection" }),
+      inputs: {
+        ...(decisions["industry-selection"]?.inputs ?? {}),
+        categoryId: industryCategoryId,
+      },
+    },
+    ...(startupType
+      ? {
+          "startup-type": {
+            ...(decisions["startup-type"] ?? { stageId: "startup-type" }),
+            inputs: {
+              ...(decisions["startup-type"]?.inputs ?? {}),
+              startupType,
+            },
+          },
+        }
+      : {}),
+  } as typeof decisions;
+  const pathStageList = traverseUserPath(roadmap.stages, decisionsForPath, isPathStage);
   const pathStageIds = new Set(pathStageList.map((s) => s.stageId));
   const pathTotalStages = pathStageList.length;
 

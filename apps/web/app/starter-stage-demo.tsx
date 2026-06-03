@@ -1155,7 +1155,7 @@ export default function StarterStageDemo({
           </CardErrorBoundary>
         ) : null}
 
-        {activeSurface === "roadmap" && !isFreshAccount ? (
+        {activeSurface === "roadmap" ? (
           <RoadmapSurface />
         ) : null}
       </div>
