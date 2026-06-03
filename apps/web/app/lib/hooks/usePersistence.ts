@@ -316,6 +316,7 @@ export function applyStoreData(data: UserStoreData): void {
       digitalFootprint: Array.isArray(data.digitalFootprint) ? (data.digitalFootprint as never) : [],
       vehicles: Array.isArray(data.vehicles) ? (data.vehicles as never) : [],
       industrySpecifics: (data.industrySpecifics as Record<string, unknown> | null) ?? {},
+      businessDocuments: Array.isArray(data.businessDocuments) ? (data.businessDocuments as never) : [],
     });
   } catch (err) {
     console.error("[buildup persistence] store-info hydrate failed", err);
@@ -460,6 +461,7 @@ export function collectStoreData(): Partial<UserStoreData> {
     r.digitalFootprint = si.digitalFootprint;
     r.vehicles = si.vehicles;
     r.industrySpecifics = si.industrySpecifics;
+    r.businessDocuments = si.businessDocuments;
   } catch (err) {
     console.error("[buildup persistence] store-info collect failed", err);
   }
@@ -1067,6 +1069,34 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
 
     return () => {
       subscription.unsubscribe();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 3b. 탭 포커스/가시성 복귀 시 원격 재조회 — 다른 기기·iOS 앱에서 저장한 내용을 웹에 반영.
+  //   순서: (1) 미저장 store 데이터 먼저 flush(클로버 방지) → (2) connectAndLoad 재실행(프로필·
+  //   store_data·로드맵 재하이드레이트). 10초 쓰로틀로 과도한 재조회 방지. connectAndLoad 는
+  //   auth 의 SOT 라 미인증 시 알아서 처리. (mount 직후 중복 로드 방지 위해 lastSync 를 now 로 초기화.)
+  useEffect(() => {
+    let lastSync = Date.now();
+    const refetchOnFocus = () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      const now = Date.now();
+      if (now - lastSync < 10_000) return;
+      lastSync = now;
+      void (async () => {
+        try {
+          await flushStoreDataImmediate();
+        } catch {
+          /* flush 실패해도 재조회는 진행 */
+        }
+        void connectAndLoad();
+      })();
+    };
+    window.addEventListener("focus", refetchOnFocus);
+    document.addEventListener("visibilitychange", refetchOnFocus);
+    return () => {
+      window.removeEventListener("focus", refetchOnFocus);
+      document.removeEventListener("visibilitychange", refetchOnFocus);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

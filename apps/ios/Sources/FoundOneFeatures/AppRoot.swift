@@ -50,6 +50,7 @@ public struct AppRoot: View {
     @State private var notificationFlow = NotificationPermissionFlow()
     @State private var showNotificationSheet = false
     @State private var selectedTab: Tab = .home
+    @Environment(\.scenePhase) private var scenePhase   // 포그라운드 복귀 시 원격 재동기화 트리거
     /// 전역 "진행 초기화" 코디네이터 — ProfileView 가 트리거, AppRoot 가 오버레이 표시.
     @State private var resetCoordinator = ResetCoordinator()
     /// DEBUG 빌드에서 SignInView 우회 — 시뮬레이터 시각 검증용.
@@ -184,6 +185,12 @@ public struct AppRoot: View {
             }
         }
         .environment(roadmapStore)
+        // 포그라운드 복귀 시 원격 재동기화 — 웹에서 저장한 내용이 앱에 바로 반영되게.
+        //   초기 로드(dashboardStore==nil) 전에는 skip — loadDashboardIfNeeded 가 담당.
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            guard newPhase == .active, oldPhase != .active, dashboardStore != nil else { return }
+            Task { await refreshAllFromRemote() }
+        }
         // 단계 번호를 경로 위치 기준으로 계산하도록 현재 클러스터 경로 주입 (5→11 점프 버그 방지).
         .environment(\.roadmapStageOrder, roadmapStore.pathStageIds)
         .environment(resetCoordinator)
@@ -318,6 +325,39 @@ public struct AppRoot: View {
         // 투영 커버리지 감사 — stage 입력이 정식 컬럼에 반영됐는지 경고(개발 빌드 전용, best-effort).
         await connectedRoadmap.auditProjectionCoverage()
         #endif
+    }
+
+    /// 포그라운드 복귀 시 원격 재동기화 — 웹·다른 기기에서 저장한 내용을 앱에 반영.
+    ///   순서: (1) 미저장 로컬 편집 flush → (2) 재조회. 기존 store 인스턴스에 재주입(재생성 X).
+    ///   syncFromRemote 는 key-merge(로컬-only 입력 보존), storeInfo.refresh 는 flush-우선이라
+    ///   진행 중 편집을 덮어쓰지 않는다. best-effort — 네트워크 오류는 무시(기존 값 유지).
+    private func refreshAllFromRemote() async {
+        guard let session = coordinator.currentSession else { return }
+        let supabase = BUSupabase.shared.client
+        let userId = session.userId
+
+        // 1. 내 가게 — 미저장분 flush 후 재조회 (웹에서 바꾼 상호명·주소·서류 등 반영)
+        await storeInfoStore?.refresh()
+
+        // 2. 로드맵 decisions/stage 입력 — 원격과 key-merge (웹에서 완료한 단계 반영)
+        await roadmapStore.syncFromRemote()
+
+        // 3. 대시보드 스냅샷 — 프로필(상호명·업종·영업여부)·매출·비용 재조회
+        if let store = dashboardStore {
+            do {
+                let repo = UserDashboardRepository(
+                    supabase: supabase,
+                    userId: userId,
+                    fallbackUserName: session.displayName ?? session.email ?? "사장님"
+                )
+                let snapshot = try await repo.fetchSnapshot()
+                store.applyRemoteData(
+                    profile: snapshot.profile,
+                    entries: snapshot.entries,
+                    costs: snapshot.costs
+                )
+            } catch { /* best-effort — 기존 값 유지 */ }
+        }
     }
 
     /// 로딩 완료 전 임시 — 빈 state. load() 가 끝나면 즉시 storeInfoStore 가 set 되어

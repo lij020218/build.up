@@ -71,6 +71,15 @@ public final class StoreInfoStore: ObservableObject {
         await performSave()
     }
 
+    /// 포그라운드 복귀 시 원격 재동기화 — 미저장 로컬 편집을 먼저 flush(클로버 방지)한 뒤
+    /// isLoaded 가드를 풀어 fresh 데이터를 다시 읽는다. state 는 비우지 않으므로(load 가 성공 시에만
+    /// overwrite) 깜빡임·데이터 손실 없음. 웹에서 바꾼 "내 가게" 필드가 앱에 반영되게 한다.
+    public func refresh() async {
+        await flushImmediate()
+        isLoaded = false
+        await load()
+    }
+
     /// 진행 초기화 — in-memory state 를 빈값으로 리셋. 저장은 호출하지 않음
     /// (서버 row 는 ProfileView 의 performReset 안에서 AccountResetRepository 가 별도 처리).
     /// isLoaded=false 로 되돌려 다음 .load() 호출이 fresh 데이터를 받게 함.
