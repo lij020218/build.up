@@ -926,13 +926,8 @@ private struct FoundOneBrandBar<Accessory: View>: View {
             .buttonStyle(.plain)
             .accessibilityLabel("메뉴")
 
-            ZStack {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(BUColor.midnightBright.opacity(0.12))
-                FoundOneSpiralLogo(size: 25, color: BUColor.midnightBright)
-            }
-            .frame(width: 30, height: 30)
-            .shadow(color: BUColor.midnightInk.opacity(0.10), radius: 5, x: 0, y: 2)
+            FoundOneSpiralLogo(size: 30, color: BUColor.midnightBright)
+                .frame(width: 30, height: 30)
 
             Text("Found")
                 .font(.system(size: 15, weight: .bold))
@@ -965,12 +960,8 @@ private struct FoundOneLiquidSidebar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(BUColor.midnightBright.opacity(0.12))
-                    FoundOneSpiralLogo(size: 28, color: BUColor.midnightBright)
-                }
-                .frame(width: 34, height: 34)
+                FoundOneSpiralLogo(size: 34, color: BUColor.midnightBright)
+                    .frame(width: 34, height: 34)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Found.One")

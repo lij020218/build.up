@@ -356,22 +356,11 @@ export default function AuthPage() {
                 marginBottom: 24
               }}
             >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  background: "rgba(255,255,255,0.95)",
-                  margin: "0 auto 12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-                }}
-                aria-hidden="true"
-              >
-                <FoundOneSpiralLogo size={33} color="#3A3AC8" />
-              </div>
+              <FoundOneSpiralLogo
+                size={44}
+                color="#8A8AF0"
+                style={{ margin: "0 auto 12px", display: "block" }}
+              />
               <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>Found.One</div>
             </div>
 

@@ -442,13 +442,8 @@ private struct BrandMark: View {
     var body: some View {
         VStack(spacing: BUSpacing.md) {
             // Logo mark — 둥근 사각 + Aurora 그라디언트 (BrandBar 와 동일 톤)
-            ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(BUColor.midnightBright.opacity(0.12))
-                FoundOneSpiralLogo(size: 60, color: BUColor.midnightBright)
-            }
-            .frame(width: 72, height: 72)
-            .shadow(color: BUColor.midnightInk.opacity(0.14), radius: 16, x: 0, y: 8)
+            FoundOneSpiralLogo(size: 68, color: BUColor.midnightBright)
+                .frame(width: 72, height: 72)
 
             // Wordmark
             HStack(spacing: 0) {

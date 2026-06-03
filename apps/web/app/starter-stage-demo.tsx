@@ -980,7 +980,7 @@ export default function StarterStageDemo({
     {isHomeOperational && showSurfaceNav && (
       <nav className="bup-mobile-topnav" aria-label="Mobile navigation">
         <div className="bup-mobile-topnav-logo">
-          <span className="bup-mobile-topnav-logo-mark"><FoundOneSpiralLogo size={21} color="#3A3AC8" /></span>
+          <FoundOneSpiralLogo size={24} color="#3A3AC8" style={{ flexShrink: 0 }} />
           <span>Found.One</span>
         </div>
         {surfaceTabs.map((tab) => {
@@ -1004,7 +1004,7 @@ export default function StarterStageDemo({
     {isHomeOperational && showSurfaceNav && (
       <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} aria-label="Navigation">
         <div className="bup-sidebar-logo">
-          <div className="bup-sidebar-logo-mark"><FoundOneSpiralLogo size={26} color="#3A3AC8" /></div>
+          <FoundOneSpiralLogo size={28} color="#3A3AC8" style={{ flexShrink: 0 }} />
           <span className="bup-sidebar-logo-text">
             Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
           </span>
@@ -1074,15 +1074,7 @@ export default function StarterStageDemo({
         display: "flex", alignItems: "center", gap: "10px",
         padding: showOperationalHero ? "0 24px 8px" : "12px 20px 8px",
       }}>
-        <div style={{
-          width: "32px", height: "32px", borderRadius: "9px",
-          background: "rgba(58,58,200,0.12)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 2px 6px rgba(29,53,87,0.10)",
-          flexShrink: 0,
-        }}>
-          <FoundOneSpiralLogo size={26} color="#3A3AC8" />
-        </div>
+        <FoundOneSpiralLogo size={28} color="#3A3AC8" style={{ flexShrink: 0 }} />
         <span style={{
           fontSize: "16px", fontWeight: 750, color: "#0f172a",
           letterSpacing: "-0.03em",
