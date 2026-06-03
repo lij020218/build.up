@@ -929,7 +929,7 @@ private struct FoundOneBrandBar<Accessory: View>: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .fill(BUColor.midnightBright.opacity(0.12))
-                FoundOneSpiralLogo(size: 19, color: BUColor.midnightBright)
+                FoundOneSpiralLogo(size: 25, color: BUColor.midnightBright)
             }
             .frame(width: 30, height: 30)
             .shadow(color: BUColor.midnightInk.opacity(0.10), radius: 5, x: 0, y: 2)
@@ -968,7 +968,7 @@ private struct FoundOneLiquidSidebar: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(BUColor.midnightBright.opacity(0.12))
-                    FoundOneSpiralLogo(size: 22, color: BUColor.midnightBright)
+                    FoundOneSpiralLogo(size: 28, color: BUColor.midnightBright)
                 }
                 .frame(width: 34, height: 34)
 

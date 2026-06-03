@@ -445,7 +445,7 @@ private struct BrandMark: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(BUColor.midnightBright.opacity(0.12))
-                FoundOneSpiralLogo(size: 46, color: BUColor.midnightBright)
+                FoundOneSpiralLogo(size: 60, color: BUColor.midnightBright)
             }
             .frame(width: 72, height: 72)
             .shadow(color: BUColor.midnightInk.opacity(0.14), radius: 16, x: 0, y: 8)

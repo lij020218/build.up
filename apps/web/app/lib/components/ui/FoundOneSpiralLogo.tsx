@@ -17,7 +17,7 @@ export function FoundOneSpiralLogo({
     <svg
       width={size}
       height={size}
-      viewBox="0 0 1024 1024"
+      viewBox="228 206 580 580"
       fill={color}
       role="img"
       aria-label={title}

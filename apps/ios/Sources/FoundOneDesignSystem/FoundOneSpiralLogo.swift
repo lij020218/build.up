@@ -22,9 +22,13 @@ public struct FoundOneSpiralLogo: View {
 struct SpiralShape: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()
-        let s = min(rect.width, rect.height) / 1024.0
+        // 아트 경계(x 242–794, y 234–757, 중심 ~518,496)에 맞춘 타이트 viewBox — 여백 제거해 크게.
+        let vbX: CGFloat = 228, vbY: CGFloat = 206, vbSide: CGFloat = 580
+        let s = min(rect.width, rect.height) / vbSide
+        let dx = rect.minX - vbX * s
+        let dy = rect.minY - vbY * s
         for d in FoundOneSpiralPaths.all {
-            SVGPathParser.append(d, to: &p, scale: s, dx: rect.minX, dy: rect.minY)
+            SVGPathParser.append(d, to: &p, scale: s, dx: dx, dy: dy)
         }
         return p
     }

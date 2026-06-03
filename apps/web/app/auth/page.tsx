@@ -370,7 +370,7 @@ export default function AuthPage() {
                 }}
                 aria-hidden="true"
               >
-                <FoundOneSpiralLogo size={26} color="#3A3AC8" />
+                <FoundOneSpiralLogo size={33} color="#3A3AC8" />
               </div>
               <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>Found.One</div>
             </div>
