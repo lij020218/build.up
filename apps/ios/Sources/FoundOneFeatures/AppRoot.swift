@@ -19,6 +19,7 @@
 //
 
 import SwiftUI
+import Combine
 import FoundOneDesignSystem
 import FoundOneCore
 import FoundOneComponents
@@ -51,6 +52,7 @@ public struct AppRoot: View {
     @State private var showNotificationSheet = false
     @State private var selectedTab: Tab = .home
     @Environment(\.scenePhase) private var scenePhase   // 포그라운드 복귀 시 원격 재동기화 트리거
+    @State private var realtimeSync: RealtimeSyncManager? = nil   // 2단계 실시간 동기화 구독
     /// 전역 "진행 초기화" 코디네이터 — ProfileView 가 트리거, AppRoot 가 오버레이 표시.
     @State private var resetCoordinator = ResetCoordinator()
     /// DEBUG 빌드에서 SignInView 우회 — 시뮬레이터 시각 검증용.
@@ -191,6 +193,10 @@ public struct AppRoot: View {
             guard newPhase == .active, oldPhase != .active, dashboardStore != nil else { return }
             Task { await refreshAllFromRemote() }
         }
+        // 2단계 실시간 — RealtimeSyncManager 가 원격 변경 수신 시 알림 → 안전한 재조회.
+        .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteDataChanged)) { _ in
+            Task { await refreshAllFromRemote() }
+        }
         // 단계 번호를 경로 위치 기준으로 계산하도록 현재 클러스터 경로 주입 (5→11 점프 버그 방지).
         .environment(\.roadmapStageOrder, roadmapStore.pathStageIds)
         .environment(resetCoordinator)
@@ -325,6 +331,14 @@ public struct AppRoot: View {
         // 투영 커버리지 감사 — stage 입력이 정식 컬럼에 반영됐는지 경고(개발 빌드 전용, best-effort).
         await connectedRoadmap.auditProjectionCoverage()
         #endif
+
+        // 2단계 실시간 동기화 — user_store_data·business_profiles 본인 행 변경 구독.
+        //   수신 시 .buildupRemoteDataChanged 알림 → onReceive 가 refreshAllFromRemote 호출.
+        if realtimeSync == nil {
+            let rt = RealtimeSyncManager(client: supabase, userId: userId.uuidString.lowercased())
+            self.realtimeSync = rt
+            await rt.start()
+        }
     }
 
     /// 포그라운드 복귀 시 원격 재동기화 — 웹·다른 기기에서 저장한 내용을 앱에 반영.

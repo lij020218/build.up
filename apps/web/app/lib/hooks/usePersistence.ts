@@ -508,6 +508,10 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const connectLoadingRef = useRef(false);
   const storeDataTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 2단계 실시간 동기화 — 유저별 채널 1회 구독 + 스로틀된 재조회.
+  const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const realtimeUserRef = useRef<string | null>(null);
+  const realtimeThrottleRef = useRef(0);
   /**
    * In-flight guard — 같은 user_store_data row 에 4채널이 동시 upsert 하면 stale 가 fresh 를
    * 덮어쓸 위험. 모든 saveStoreData 호출은 이 guard 를 거쳐 직전 호출이 끝난 뒤 실행.
@@ -562,6 +566,37 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       setAuthLabel(`${userLabel} · ${result.user.id.slice(0, 8)}`);
       setRequiresAuth(false);
       setAuthResolved(true);
+
+      // ── 2단계 실시간 동기화 — 유저별 채널 1회 구독 (user_store_data·business_profiles 본인 행) ──
+      //   변경 수신 시 5초 스로틀된 재조회(flush 우선 → connectAndLoad). connectAndLoad 가 재진입해도
+      //   같은 user 면 채널 재생성 skip. iOS·다른 기기에서 저장한 내용이 웹에 즉시 반영되게 한다.
+      if (realtimeUserRef.current !== result.user.id) {
+        if (realtimeChannelRef.current) {
+          void supabase.removeChannel(realtimeChannelRef.current);
+          realtimeChannelRef.current = null;
+        }
+        const uid = result.user.id;
+        const onRemote = () => {
+          const now = Date.now();
+          if (now - realtimeThrottleRef.current < 5000) return;
+          realtimeThrottleRef.current = now;
+          void (async () => {
+            try {
+              await flushStoreDataImmediate();
+            } catch {
+              /* flush 실패해도 재조회 진행 */
+            }
+            void connectAndLoad();
+          })();
+        };
+        const ch = supabase
+          .channel(`buildup-sync-${uid}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "user_store_data", filter: `user_id=eq.${uid}` }, onRemote)
+          .on("postgres_changes", { event: "*", schema: "public", table: "business_profiles", filter: `user_id=eq.${uid}` }, onRemote)
+          .subscribe();
+        realtimeChannelRef.current = ch;
+        realtimeUserRef.current = uid;
+      }
 
       // ── 역할 확인: Supabase가 유일한 진실의 원천 ──
       let resolvedRole: "owner" | "staff" | "manager" = "owner";
@@ -1034,6 +1069,14 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   // 1. Initial connect on mount
   useEffect(() => {
     void connectAndLoad();
+    return () => {
+      // 2단계 realtime 채널 정리 — 언마운트 시 구독 해제(누수 방지).
+      if (realtimeChannelRef.current) {
+        void supabase.removeChannel(realtimeChannelRef.current);
+        realtimeChannelRef.current = null;
+        realtimeUserRef.current = null;
+      }
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 2. Finance panel URL sync
