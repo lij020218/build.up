@@ -9,85 +9,109 @@
 --  조치:
 --    1. 유저별 canonical roadmap = 가장 최근 (updated_at desc, created_at desc, id desc).
 --    2. 비-canonical roadmap 의 stage_decisions / stage_tasks 를 canonical 로 병합.
---       - (user, stage_code) [+ task_code] 충돌 시 최신 1건만 보존(completed_at·updated_at 우선), 나머지 삭제.
+--       - (user, stage_code) [+ task_code] 충돌 시 최신 1건만 보존, 나머지 삭제.
 --       - 생존 row 를 canonical roadmap_id 로 re-parent (unique(roadmap_id, …) 위반 없음).
 --    3. 비-canonical roadmap row 삭제.
 --    4. unique(user_id) 제약 추가 → 이후 중복 생성 차단.
 --
---  멱등: 재실행 안전. 중복이 없으면 1~3 은 no-op, 4 는 이미 있으면 skip.
+--  ⚠️ 각 문장은 CTE 로 자기완결(임시 테이블 미사용). Supabase SQL 러너가 문장을
+--     개별 세션으로 분할 실행해도 안전. 멱등(재실행 안전).
 -- ════════════════════════════════════════════════════════════════════════
 
-drop table if exists _canon_roadmap;
-drop table if exists _roadmap_map;
-
--- 1. 유저별 canonical roadmap
-create temporary table _canon_roadmap as
-select distinct on (user_id) user_id, id as roadmap_id
-from public.roadmaps
-order by user_id, updated_at desc nulls last, created_at desc nulls last, id desc;
-
--- 2. 모든 roadmap → 해당 유저의 canonical 매핑
-create temporary table _roadmap_map as
-select r.id as roadmap_id, r.user_id, c.roadmap_id as canon_id
-from public.roadmaps r
-join _canon_roadmap c on c.user_id = r.user_id;
-
--- 3a. stage_decisions: (user, stage_code) 당 최신 1건만 보존, 나머지 삭제
+-- 1. stage_decisions: (user, stage_code) 당 최신 1건만 남기고 중복 삭제.
+with canon as (
+  select distinct on (user_id) user_id, id as roadmap_id
+  from public.roadmaps
+  order by user_id, updated_at desc nulls last, created_at desc nulls last, id desc
+),
+rmap as (
+  select r.id as roadmap_id, r.user_id
+  from public.roadmaps r
+  join canon c on c.user_id = r.user_id
+),
+ranked as (
+  select d.id,
+    row_number() over (
+      partition by m.user_id, d.stage_code
+      order by d.completed_at desc nulls last, d.updated_at desc nulls last, d.id desc
+    ) as rn
+  from public.stage_decisions d
+  join rmap m on m.roadmap_id = d.roadmap_id
+)
 delete from public.stage_decisions d
-using (
-  select id from (
-    select d.id,
-      row_number() over (
-        partition by m.user_id, d.stage_code
-        order by d.completed_at desc nulls last, d.updated_at desc nulls last, d.id desc
-      ) as rn
-    from public.stage_decisions d
-    join _roadmap_map m on m.roadmap_id = d.roadmap_id
-  ) ranked
-  where ranked.rn > 1
-) loser
-where d.id = loser.id;
+using ranked rk
+where d.id = rk.id and rk.rn > 1;
 
--- 3b. 생존 decisions 를 canonical 로 re-parent
+-- 2. 생존 stage_decisions 를 canonical roadmap 으로 re-parent.
+with canon as (
+  select distinct on (user_id) user_id, id as roadmap_id
+  from public.roadmaps
+  order by user_id, updated_at desc nulls last, created_at desc nulls last, id desc
+),
+rmap as (
+  select r.id as roadmap_id, c.roadmap_id as canon_id
+  from public.roadmaps r
+  join canon c on c.user_id = r.user_id
+)
 update public.stage_decisions d
 set roadmap_id = m.canon_id
-from _roadmap_map m
+from rmap m
 where d.roadmap_id = m.roadmap_id
   and d.roadmap_id <> m.canon_id;
 
--- 4a. stage_tasks: (user, stage_code, task_code) 당 최신 1건만 보존
+-- 3. stage_tasks: (user, stage_code, task_code) 당 최신 1건만 남기고 중복 삭제.
+with canon as (
+  select distinct on (user_id) user_id, id as roadmap_id
+  from public.roadmaps
+  order by user_id, updated_at desc nulls last, created_at desc nulls last, id desc
+),
+rmap as (
+  select r.id as roadmap_id, r.user_id
+  from public.roadmaps r
+  join canon c on c.user_id = r.user_id
+),
+ranked as (
+  select t.id,
+    row_number() over (
+      partition by m.user_id, t.stage_code, t.task_code
+      order by t.updated_at desc nulls last, t.id desc
+    ) as rn
+  from public.stage_tasks t
+  join rmap m on m.roadmap_id = t.roadmap_id
+)
 delete from public.stage_tasks t
-using (
-  select id from (
-    select t.id,
-      row_number() over (
-        partition by m.user_id, t.stage_code, t.task_code
-        order by t.updated_at desc nulls last, t.id desc
-      ) as rn
-    from public.stage_tasks t
-    join _roadmap_map m on m.roadmap_id = t.roadmap_id
-  ) ranked
-  where ranked.rn > 1
-) loser
-where t.id = loser.id;
+using ranked rk
+where t.id = rk.id and rk.rn > 1;
 
--- 4b. 생존 tasks 를 canonical 로 re-parent
+-- 4. 생존 stage_tasks 를 canonical roadmap 으로 re-parent.
+with canon as (
+  select distinct on (user_id) user_id, id as roadmap_id
+  from public.roadmaps
+  order by user_id, updated_at desc nulls last, created_at desc nulls last, id desc
+),
+rmap as (
+  select r.id as roadmap_id, c.roadmap_id as canon_id
+  from public.roadmaps r
+  join canon c on c.user_id = r.user_id
+)
 update public.stage_tasks t
 set roadmap_id = m.canon_id
-from _roadmap_map m
+from rmap m
 where t.roadmap_id = m.roadmap_id
   and t.roadmap_id <> m.canon_id;
 
--- 5. 비-canonical roadmap row 삭제 (decisions/tasks 는 이미 이동 완료)
+-- 5. 비-canonical roadmap row 삭제 (decisions/tasks 는 이미 이동 완료).
+with canon as (
+  select distinct on (user_id) user_id, id as roadmap_id
+  from public.roadmaps
+  order by user_id, updated_at desc nulls last, created_at desc nulls last, id desc
+)
 delete from public.roadmaps r
-using _canon_roadmap c
+using canon c
 where r.user_id = c.user_id
   and r.id <> c.roadmap_id;
 
-drop table if exists _canon_roadmap;
-drop table if exists _roadmap_map;
-
--- 6. unique(user_id) 제약 추가 (멱등)
+-- 6. unique(user_id) 제약 추가 (멱등).
 do $$
 begin
   if not exists (
