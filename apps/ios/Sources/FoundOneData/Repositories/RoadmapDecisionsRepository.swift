@@ -84,6 +84,21 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
             .from("stage_decisions")
             .upsert(payload, onConflict: "roadmap_id,stage_code")
             .execute()
+
+        // roadmaps.updated_at bump — realtime(roadmaps user_id 필터) 발화용.
+        //   stage_decisions 는 user_id 컬럼이 없어 직접 필터 구독 불가하므로, 부모 roadmaps 를
+        //   touch 해 웹·다른 기기가 즉시 재조회하게 한다. (웹 saveRoadmapState 도 동일하게 bump)
+        await touchRoadmap(roadmapId)
+    }
+
+    /// roadmaps.updated_at 갱신 (best-effort, realtime 트리거용). 실패해도 decision 저장은 유효.
+    private func touchRoadmap(_ roadmapId: UUID) async {
+        let nowIso = ISO8601DateFormatter().string(from: Date())
+        _ = try? await supabase
+            .from("roadmaps")
+            .update(RoadmapTouchDTO(updated_at: nowIso))
+            .eq("id", value: roadmapId)
+            .execute()
     }
 
     public func delete(stageId: String) async throws {
@@ -98,6 +113,8 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
             .eq("roadmap_id", value: roadmapId)
             .eq("stage_code", value: stageId)
             .execute()
+
+        await touchRoadmap(roadmapId)
     }
 
     // MARK: - Roadmap row 보장
@@ -206,6 +223,10 @@ private struct StageDecisionReadDTO: Decodable {
             inputs: inputs?.toStringDict() ?? [:]
         )
     }
+}
+
+private struct RoadmapTouchDTO: Encodable {
+    let updated_at: String
 }
 
 private struct StageDecisionWriteDTO: Encodable {

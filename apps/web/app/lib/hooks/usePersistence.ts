@@ -593,6 +593,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           .channel(`buildup-sync-${uid}`)
           .on("postgres_changes", { event: "*", schema: "public", table: "user_store_data", filter: `user_id=eq.${uid}` }, onRemote)
           .on("postgres_changes", { event: "*", schema: "public", table: "business_profiles", filter: `user_id=eq.${uid}` }, onRemote)
+          // roadmaps — 로드맵 진행도(stage_decisions) 즉시 양방향 동기화. stage_decisions 는 user_id
+          //   컬럼이 없어 직접 필터 구독 불가하므로, 양쪽(웹 saveRoadmapState / iOS upsert)이 저장 시
+          //   roadmaps.updated_at 을 bump 하고, 여기서 roadmaps(user_id 필터)를 구독해 앱·다른 기기의
+          //   로드맵 변경을 즉시 재조회한다.
+          .on("postgres_changes", { event: "*", schema: "public", table: "roadmaps", filter: `user_id=eq.${uid}` }, onRemote)
           .subscribe();
         realtimeChannelRef.current = ch;
         realtimeUserRef.current = uid;

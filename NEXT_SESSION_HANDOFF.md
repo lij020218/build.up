@@ -98,6 +98,13 @@
   - ✅ **roadmaps row 해석 일치**: 웹 `getLatestRoadmapRow` == iOS `resolveRoadmapId` 둘 다 `(user_id, updated_at desc, limit 1)`. 정상 사용 시 동일 row 수렴.
   - ✅ **하드닝 완료 (2026-06-04)**: `supabase/migrations/20260604_000001_roadmaps_unique_user.sql` 신설 — 유저별 canonical roadmap(최신)으로 stage_decisions/stage_tasks 병합(충돌 시 최신 보존) → 비-canonical roadmap 삭제 → **`roadmaps.unique(user_id)` 추가**. 멱등(재실행 안전). iOS `RoadmapDecisionsRepository.resolveRoadmapId` 도 insert 충돌 시 재조회하도록 하드닝(중복 대신 공유). **⚠️ 미적용**: prod 에 마이그레이션 실행 필요(로컬 DB 없어 SQL 실행검증은 못 함 — 문법 리뷰만). 웹 `saveRoadmapState` 의 no-id insert 도 동일 레이스 시 unique 위반 가능 — 후속 guard 권장(현재는 find-first 로 대부분 회피).
 
+## 4.6 양방향 실시간 동기화 점검·수정 (2026-06-04)
+**점검**: 앱 입력이 웹에 즉시 반영되는가(반대도)?
+- ✅ **운영 대시보드(user_store_data: 재고·직원·비용·구독플랜·매출·일별)**: 양방향 즉시 — 웹·iOS 둘 다 `user_store_data`+`business_profiles` realtime 구독.
+- 🐞 **발견**: 로드맵(stage_decisions/roadmaps)은 양쪽 다 미구독 → 즉시 동기화 안 됨(투영 필드 우연 의존 + 포그라운드 재조회만). publication·REPLICA IDENTITY FULL 은 4테이블 다 포함돼 있었음(DB는 준비됨, 클라이언트만 누락).
+- **수정**: 웹·iOS 둘 다 `roadmaps`(user_id 필터) realtime 구독 추가. `stage_decisions` 는 user_id 컬럼이 없어 직접 필터 구독 불가 → 양쪽이 저장 시 부모 `roadmaps.updated_at` 을 bump(웹 saveRoadmapState 는 기존부터, iOS `RoadmapDecisionsRepository.upsert/delete` 에 `touchRoadmap` 추가)하여 roadmaps 구독 하나로 안전하게(항상 user_id 필터 유지) 커버. 수신 시 iOS=refreshAllFromRemote(syncFromRemote 포함)/웹=flush+connectAndLoad. 웹 tsc·iOS BUILD 통과.
+- 전제(운영): Supabase 대시보드 Database→Replication 에서 `roadmaps` Realtime 토글 ON 필요(publication 추가는 마이그레이션에 있음).
+
 ## 5. 선택적 정리(backlog, 가짜 아님)
 - iOS `MockData` → `DashboardSnapshot` 리네이밍 + `AppRoot.swift:776` stale 주석 정리.
 - iOS 히어로 Row2 NSM을 스타트업이면 런웨이로(웹과 완전 일치).
