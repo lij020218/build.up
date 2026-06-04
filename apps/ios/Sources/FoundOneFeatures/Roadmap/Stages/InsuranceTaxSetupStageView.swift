@@ -24,8 +24,10 @@ import FoundOneComponents
 import FoundOneCore
 import FoundOneData
 
-private let WAGE_2026 = 10_320
-private let MONTH_HOURS = 209
+// ⚠️ 요율·최저임금은 FoundOneCore SSOT(InsuranceRates2026 / MINIMUM_WAGE_2026)만 참조.
+//    이 파일이 요율을 따로 들고 있던 게 "옛 요율 버그" 원인 — 중복정의 금지.
+private let WAGE_2026 = MINIMUM_WAGE_2026
+private let MONTH_HOURS = MONTHLY_WORK_HOURS_2026
 
 public struct InsuranceTaxSetupStageView: View {
 
@@ -56,16 +58,23 @@ public struct InsuranceTaxSetupStageView: View {
     //   이전 계산식 누락 / 과대:
     //     • 장기요양 사업주분 0.9% → 0.4724% 로 (절반만 사업주)
     //     • 고용보험 사업주 실업급여 0.9% 완전 누락 — 추가
-    private var pensionEmployee: Int   { Int(Double(monthlyWage) * 0.0475) }
-    private var healthEmployee: Int    { Int(Double(monthlyWage) * 0.03595) }
-    private var ltcareEmployee: Int    { Int(Double(monthlyWage) * 0.004724) }  // 장기요양 근로자분
-    private var employmentEmployee: Int { Int(Double(monthlyWage) * 0.009) }    // 고용보험 근로자분 0.9%
+    private var pensionEmployee: Int   { Int(Double(monthlyWage) * InsuranceRates2026.pensionEmployee) }
+    private var healthEmployee: Int    { Int(Double(monthlyWage) * InsuranceRates2026.healthEmployee) }
+    private var ltcareEmployee: Int    { Int(Double(healthEmployee) * InsuranceRates2026.longTermCareRateOfHealth) }  // 장기요양 = 건보료 × 13.14%
+    private var employmentEmployee: Int { Int(Double(monthlyWage) * InsuranceRates2026.employmentEmployee) }
     private var employeeTotal: Int     { pensionEmployee + healthEmployee + ltcareEmployee + employmentEmployee }
 
-    /// 사업주 부담 = 국민(4.75%) + 건강(3.595%) + 장기요양 사업주분(0.4724%) + 산재(업종별, 100%)
-    ///              + 고용보험 실업급여 사업주분(0.9%) + 고용안정·직업능력개발(0.25%)
+    /// 사업주 부담 = 국민(4.75%) + 건강(3.595%) + 장기요양 사업주분(건보료×13.14%) + 산재(업종별, 100%)
+    ///              + 고용보험 실업급여 사업주분(0.9%) + 고용안정·직업능력개발(0.25%, 사업주만)
     private var employerExtra: Int {
-        Int(Double(monthlyWage) * (0.0475 + 0.03595 + 0.004724 + accidentRateDecimal + 0.009 + 0.0025))
+        Int(Double(monthlyWage) * (
+            InsuranceRates2026.pensionEmployer
+            + InsuranceRates2026.healthEmployer
+            + InsuranceRates2026.healthEmployer * InsuranceRates2026.longTermCareRateOfHealth
+            + accidentRateDecimal
+            + InsuranceRates2026.employmentEmployer
+            + InsuranceRates2026.employmentStabilityEmployer
+        ))
     }
 
     private let pages = ["4대보험", "세무 세팅", "체크리스트"]

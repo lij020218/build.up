@@ -10,6 +10,7 @@
 //
 
 import Foundation
+import FoundOneCore
 
 // MARK: - Entity types (array items)
 
@@ -330,9 +331,15 @@ public struct BUEmployee: Identifiable, Sendable, Codable, Hashable {
         (hourlyWage * weeklyHours + weeklyAllowance) * 4.345
     }
 
-    /// 사업주 4대보험 부담금: monthlyWage × 10.41%
+    /// 사업주 4대보험 부담금 — 요율 SSOT: FoundOneCore `simulateInsurance` (하드코딩 금지).
+    /// 미가입 시 0. 산재 0.7%(일반서비스업) 가정, 주 15h 미만 단시간 분기 자동 처리.
     public var employerInsurance: Double {
-        isInsured ? monthlyWage * 0.1041 : 0
+        guard isInsured else { return 0 }
+        let sim = simulateInsurance(InsuranceSimInput(
+            monthlySalary: Int(monthlyWage.rounded()),
+            weeklyHours: weeklyHours
+        ))
+        return Double(sim.employer.total)
     }
 
     /// 사업주 실부담: 월급 + 4대보험

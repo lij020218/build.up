@@ -217,9 +217,22 @@ private struct CashZeroDateFocusCard: View {
 }
 
 // MARK: - 미용/펫/피트니스: Booking Focus
+//
+//  정직성 (가짜 숫자 금지): iOS 에는 예약·노쇼 데이터 모델이 없음(DailyEntry 는 매출·고객수만).
+//   따라서 "오늘 예약 8 / 노쇼 2 / 노쇼율 3.2%" 같은 허구 수치를 표시하지 않는다.
+//   실데이터로 줄 수 있는 「최근 일평균 고객」만 보여주고, 예약·노쇼는 연동 안내로 정직하게 처리.
+//   예약 시스템(네이버 예약·캐치테이블 등) 연동 시 실 예약·노쇼율로 교체.
 
 private struct BookingFocusCard: View {
     let mock: MockData
+
+    /// 최근 기록된 일평균 고객 수 — 실데이터(기록 없으면 nil).
+    private var avgDailyCustomers: Int? {
+        let withData = mock.entries.filter { $0.customers > 0 }
+        guard !withData.isEmpty else { return nil }
+        let total = withData.reduce(0) { $0 + $1.customers }
+        return Int((Double(total) / Double(withData.count)).rounded())
+    }
 
     var body: some View {
         BUCard(.outer) {
@@ -234,20 +247,19 @@ private struct BookingFocusCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("\(mock.category.labelKo) · 예약")
                             .buSectionEyebrowStyle()
-                        Text("오늘 예약 + 노쇼 위험")
+                        Text("예약·노쇼 관리")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(BUColor.inkMuted)
                     }
                     Spacer()
                 }
 
-                HStack(spacing: 10) {
-                    statTile(label: "오늘", value: "8", tint: BUColor.midnight)
-                    statTile(label: "노쇼 위험", value: "2", tint: BUColor.warn)
-                    statTile(label: "노쇼율", value: "3.2%", tint: BUColor.success)
+                // 실데이터: 최근 일평균 고객 (기록 있을 때만)
+                if let avg = avgDailyCustomers {
+                    statTile(label: "최근 일평균 고객", value: "\(avg)명", tint: BUColor.midnight)
                 }
 
-                Text("노쇼 위험 2명에게 카톡 한 통이면 회수율 60%+")
+                Text(bookingNote)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(BUColor.inkSecondary)
                     .lineSpacing(2)
@@ -255,6 +267,12 @@ private struct BookingFocusCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+    }
+
+    private var bookingNote: String {
+        avgDailyCustomers == nil
+            ? "매출·고객을 기록하면 일평균 방문 추세가 표시돼요. 예약·노쇼율은 예약 시스템 연동 시 자동 집계됩니다."
+            : "예약·노쇼율은 예약 시스템(네이버 예약·캐치테이블 등) 연동 시 자동 집계됩니다. 노쇼가 잦은 시간대 고객에게 미리 확인 연락을 하면 회수율이 올라가요."
     }
 
     private func statTile(label: String, value: String, tint: Color) -> some View {

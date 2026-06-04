@@ -38,6 +38,9 @@ public struct AppRoot: View {
     @State private var storeInfoFallback = StoreInfoStore(repository: FallbackStoreInfoRepository())
     /// 현금흐름 store — TodayView 게이팅(설정 프롬프트 ↔ HeroCard) + 설정 시트 공유. 로그인 후 Supabase load.
     @State private var cashflowStore: CashflowStore?
+    @State private var coachingStore: CoachingHistoryStore?
+    @State private var saasStore: SaasMetricsStore?
+    @State private var subscriptionStore: SubscriptionStore?
     /// 전역 로드맵 store — TodayView / RoadmapView / Stage 시트 모두에서 공유.
     /// AppRoot 에서 한 번 생성 → .environment 로 자식 트리에 주입. 로그인 시 Supabase 동기화.
     @State private var roadmapStore: RoadmapStore = {
@@ -131,6 +134,9 @@ public struct AppRoot: View {
                             store: store,
                             storeInfo: storeInfoStore ?? Self.makeFallbackStoreInfo(),
                             cashflow: cashflowStore,
+                            coaching: coachingStore,
+                            saas: saasStore,
+                            subscription: subscriptionStore,
                             coordinator: coordinator,
                             selectedTab: $selectedTab
                         )
@@ -251,6 +257,10 @@ public struct AppRoot: View {
         let store = DashboardStore(dailyRepo: dailyRepo, costsRepo: costsRepo)
         await store.loadAll()
 
+        // 로드맵 cluster hydration 용 — 원격 업종 (아래 do 블록에서 채움).
+        var remoteCategoryId: String?
+        var remoteSubIndustryId: String?
+
         do {
             let dashboardRepo = UserDashboardRepository(
                 supabase: supabase,
@@ -263,6 +273,8 @@ public struct AppRoot: View {
                 entries: snapshot.entries,
                 costs: snapshot.costs
             )
+            remoteCategoryId = snapshot.industryCategoryId
+            remoteSubIndustryId = snapshot.subIndustryId
         } catch {
             store.recordError("Supabase 데이터 로딩 실패: \(Self.readableError(error))")
             store.setProfile(
@@ -285,6 +297,24 @@ public struct AppRoot: View {
         )
         await cashflow.load()
         self.cashflowStore = cashflow
+
+        // 코칭 일지 — 웹과 동일 Supabase coaching_history 테이블. 14일 로드 (best-effort).
+        let coachingRepo = CoachingHistoryRepository(supabase: supabase, getUserId: { userId })
+        let coaching = CoachingHistoryStore(repository: coachingRepo)
+        await coaching.load()
+        self.coachingStore = coaching
+
+        // SaaS 사용자 지표 — 웹과 동일 Supabase saas_metrics_daily. 스타트업만 fetch, 그 외 빈 결과.
+        let saasRepo = SaasMetricsRepository(supabase: supabase, getUserId: { userId })
+        let saas = SaasMetricsStore(repository: saasRepo)
+        await saas.load(isStartup: store.category == .startupTech)
+        self.saasStore = saas
+
+        // 구독 운영 상태 — 웹과 동일 Supabase user_store_data(uses_subscriptions/subscription_plans).
+        let subRepo = StoreProfileRepository(supabase: supabase, userId: userId)
+        let subscription = SubscriptionStore(repository: subRepo)
+        await subscription.load()
+        self.subscriptionStore = subscription
 
         // 내 가게 store — Supabase 연결 + 즉시 load.
         // MyStoreView 의 .task { store.load() } 가 다시 호출돼도 isLoaded guard 로 no-op.
@@ -325,6 +355,10 @@ public struct AppRoot: View {
             let c = BusinessCluster(rawValue: raw) ?? .offlineFood
             return RoadmapSampleData.stageIds(for: c)
         }
+        // ⚠️ cluster(=로드맵 경로 선택자)를 원격 업종에서 hydrate. 이게 없으면 웹에서 업종 선택한
+        //   사용자가 iOS 로그인 시 cluster 가 기본값(offline-food)에 머물러, syncFromRemote 로 받은
+        //   stage_decisions 가 경로에 매핑되지 않아 진행도가 틀어진다. (decisions 머지보다 먼저 실행)
+        Self.hydrateRoadmapIndustry(categoryId: remoteCategoryId, subIndustryId: remoteSubIndustryId, into: connectedRoadmap)
         self.roadmapStore = connectedRoadmap
         await connectedRoadmap.syncFromRemote()
         #if DEBUG
@@ -370,6 +404,8 @@ public struct AppRoot: View {
                     entries: snapshot.entries,
                     costs: snapshot.costs
                 )
+                // 업종 변경(웹·다른 기기)도 로드맵 경로에 반영 — cluster re-hydrate.
+                Self.hydrateRoadmapIndustry(categoryId: snapshot.industryCategoryId, subIndustryId: snapshot.subIndustryId, into: roadmapStore)
             } catch { /* best-effort — 기존 값 유지 */ }
         }
     }
@@ -379,6 +415,30 @@ public struct AppRoot: View {
     @MainActor
     private static func makeFallbackStoreInfo() -> StoreInfoStore {
         StoreInfoStore(repository: FallbackStoreInfoRepository())
+    }
+
+    /// 원격 업종(business_profiles)에서 로드맵 cluster/selectedIndustryId 를 hydrate.
+    /// 웹·다른 기기에서 선택한 업종을 iOS 로드맵 경로에 반영 — 진행도 매핑 정합성의 핵심.
+    /// 세부 업종 id 가 있으면 정밀 cluster(딥테크 포함), 카테고리만 있으면 coarse 매핑.
+    /// 원격 업종 정보가 전혀 없으면 로컬 유지(온보딩 중 사용자 보호).
+    @MainActor
+    private static func hydrateRoadmapIndustry(categoryId: String?, subIndustryId: String?, into roadmap: RoadmapStore) {
+        let ud = UserDefaults.standard
+        if let sub = subIndustryId, let option = StarterIndustryData.option(by: sub) {
+            let clusterRaw = StarterIndustryData.cluster(for: option)
+            ud.set(clusterRaw, forKey: "roadmap.cluster")
+            ud.set(option.id, forKey: "roadmap.selectedIndustryId")
+            roadmap.setCluster(clusterRaw)
+        } else if let cat = categoryId, !cat.isEmpty {
+            let clusterRaw: String
+            switch cat {
+            case "online-digital": clusterRaw = "online-digital"
+            case "startup-tech":   clusterRaw = "startup-tech"
+            default:               clusterRaw = "offline-food"
+            }
+            ud.set(clusterRaw, forKey: "roadmap.cluster")
+            roadmap.setCluster(clusterRaw)
+        }
     }
 
     private static func readableError(_ error: any Error) -> String {
@@ -694,6 +754,9 @@ private struct MainTabs: View {
     @ObservedObject var storeInfo: StoreInfoStore
     /// nil = 아직 로드 전 (TodayView 가 mock 예측 카드로 fallback). 로드 후 게이팅 동작.
     let cashflow: CashflowStore?
+    let coaching: CoachingHistoryStore?
+    let saas: SaasMetricsStore?
+    let subscription: SubscriptionStore?
     let coordinator: AuthCoordinator
     @Binding var selectedTab: AppRoot.Tab
 
@@ -744,7 +807,7 @@ private struct MainTabs: View {
             switch selectedTab {
             case .home:
                 if store.businessLaunched {
-                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo, cashflowStore: cashflow)
+                    TodayView(mock: mockData, dashboardStore: store, storeInfo: storeInfo, cashflowStore: cashflow, coaching: coaching, saas: saas, subscription: subscription)
                 } else {
                     PreLaunchHomeView(
                         store: store,

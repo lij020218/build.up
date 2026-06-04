@@ -13,6 +13,9 @@ public struct UserDashboardSnapshot: Sendable, Hashable {
     public let profile: DashboardProfile
     public let entries: [DailyEntry]
     public let costs: MonthlyCosts?
+    /// 원격 업종 (로드맵 cluster/path hydration 용). 웹에서 선택한 업종을 iOS 로드맵 경로에 반영.
+    public let industryCategoryId: String?
+    public let subIndustryId: String?
 }
 
 public actor UserDashboardRepository {
@@ -62,7 +65,9 @@ public actor UserDashboardRepository {
         return UserDashboardSnapshot(
             profile: profile,
             entries: loadedStore?.daily_entries ?? [],
-            costs: loadedStore?.monthly_costs
+            costs: loadedStore?.monthly_costs,
+            industryCategoryId: Self.nonEmpty(loadedProfile?.industry_category_id),
+            subIndustryId: Self.nonEmpty(loadedProfile?.sub_industry_id)
         )
     }
 
@@ -172,6 +177,7 @@ private struct UserStoreDataDTO: Decodable, Sendable, Hashable {
 
 private struct BusinessProfileDTO: Decodable, Sendable, Hashable {
     let industry_category_id: String?
+    let sub_industry_id: String?
     let capital: Double?
 }
 

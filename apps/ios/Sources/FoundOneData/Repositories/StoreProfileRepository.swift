@@ -22,6 +22,33 @@ public struct StoreProfileInfo: Sendable, Hashable {
     }
 }
 
+/// 구독 플랜 (웹 operations-store.ts SubscriptionPlan + user_store_data.subscription_plans jsonb 미러).
+/// 관대한 디코딩 — 일부 키 누락/타입 차이로 대시보드 전체 로딩이 깨지지 않게.
+public struct BUSubscriptionPlan: Sendable, Hashable, Identifiable, Decodable {
+    public let id: String
+    public let name: String
+    public let price: Double
+    public let billingCycle: String   // "monthly" | "annual"
+    public let isActive: Bool
+
+    enum CodingKeys: String, CodingKey { case id, name, price, billingCycle, isActive }
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = (try? c.decode(String.self, forKey: .id)) ?? UUID().uuidString
+        name = (try? c.decode(String.self, forKey: .name)) ?? "플랜"
+        price = (try? c.decode(Double.self, forKey: .price)) ?? 0
+        billingCycle = (try? c.decode(String.self, forKey: .billingCycle)) ?? "monthly"
+        isActive = (try? c.decode(Bool.self, forKey: .isActive)) ?? true
+    }
+}
+
+/// 구독 운영 상태 (대시보드 게이팅 + 구독관리 카드용).
+public struct SubscriptionState: Sendable, Hashable {
+    public let usesSubscriptions: Bool
+    public let plans: [BUSubscriptionPlan]
+    public static let empty = SubscriptionState(usesSubscriptions: false, plans: [])
+}
+
 public actor StoreProfileRepository {
     private let supabase: SupabaseClient
     private let userId: UUID
@@ -162,6 +189,50 @@ public actor StoreProfileRepository {
             .execute()
     }
 
+    /// 구독 운영 여부(uses_subscriptions) 단독 저장. 웹 setSelectedRevenueModelId 의 usesSubscriptions 미러.
+    public func updateUsesSubscriptions(_ value: Bool) async throws {
+        let payload = SubFlagUpsert(
+            user_id: userId,
+            uses_subscriptions: value,
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+        _ = try await supabase
+            .from("user_store_data")
+            .upsert(payload, onConflict: "user_id")
+            .execute()
+    }
+
+    /// 구독 운영 여부를 현재 로그인 사용자에 저장 (StageInputProjector revenueModel 투영용).
+    @MainActor
+    public static func persistUsesSubscriptionsForCurrentUser(_ value: Bool) {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let client = BUSupabase.shared.client
+        Task {
+            let repo = StoreProfileRepository(supabase: client, userId: uid)
+            try? await repo.updateUsesSubscriptions(value)
+        }
+    }
+
+    /// 구독 운영 상태(uses_subscriptions + subscription_plans) 읽기. 웹과 동일 컬럼.
+    public func loadSubscriptionState() async throws -> SubscriptionState {
+        struct ReadRow: Decodable, Sendable {
+            let uses_subscriptions: Bool?
+            let subscription_plans: [BUSubscriptionPlan]?
+        }
+        let rows: [ReadRow] = try await supabase
+            .from("user_store_data")
+            .select("uses_subscriptions, subscription_plans")
+            .eq("user_id", value: userId)
+            .limit(1)
+            .execute()
+            .value
+        let r = rows.first
+        return SubscriptionState(
+            usesSubscriptions: r?.uses_subscriptions ?? false,
+            plans: r?.subscription_plans ?? []
+        )
+    }
+
     /// tax_settings.vatType 읽기 — 미설정 시 nil. (캐시플로 vatRate 산출·투영 audit 용)
     public func loadVatType() async throws -> String? {
         struct ReadRow: Decodable, Sendable { let tax_settings: TaxSettingsDTO? }
@@ -263,6 +334,12 @@ public actor StoreProfileRepository {
     private struct CpaUpsert: Encodable, Sendable {
         let user_id: UUID
         let cpa_decision: String?
+        let updated_at: String
+    }
+
+    private struct SubFlagUpsert: Encodable, Sendable {
+        let user_id: UUID
+        let uses_subscriptions: Bool
         let updated_at: String
     }
 

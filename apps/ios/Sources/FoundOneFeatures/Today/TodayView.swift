@@ -45,6 +45,12 @@ public struct TodayView: View {
     let storeInfo: StoreInfoStore?
     /// 현금흐름 store — nil 이면 mock 예측 카드로 fallback(데모/프리뷰). 있으면 설정 게이팅 동작.
     let cashflowStore: CashflowStore?
+    /// 코칭 일지 store (웹과 동일 Supabase). nil = 데모/프리뷰 (기록·카드 비활성).
+    let coaching: CoachingHistoryStore?
+    /// SaaS 사용자 지표 store (스타트업 전용, 웹과 동일 Supabase). nil = 데모/프리뷰.
+    let saas: SaasMetricsStore?
+    /// 구독 운영 store (웹과 동일 Supabase). nil = 데모/프리뷰.
+    let subscription: SubscriptionStore?
     @State private var showInputSheet = false
     @State private var showInventorySheet = false
     @State private var showTeamSheet = false
@@ -59,7 +65,10 @@ public struct TodayView: View {
         mock: MockData,
         dashboardStore: DashboardStore? = nil,
         storeInfo: StoreInfoStore? = nil,
-        cashflowStore: CashflowStore? = nil
+        cashflowStore: CashflowStore? = nil,
+        coaching: CoachingHistoryStore? = nil,
+        saas: SaasMetricsStore? = nil,
+        subscription: SubscriptionStore? = nil
     ) {
         self.mock = mock
         self.healthResult = HealthScore.calculate(
@@ -73,6 +82,18 @@ public struct TodayView: View {
         self.dashboardStore = dashboardStore
         self.storeInfo = storeInfo
         self.cashflowStore = cashflowStore
+        self.coaching = coaching
+        self.saas = saas
+        self.subscription = subscription
+    }
+
+    /// hero → 코칭 신호 종류 (웹 CEOMorningHero 매핑: crisis→critical, warning→important, 그 외 drucker=good/나머지 notable).
+    private var coachingSignalKind: CoachingSignalKind {
+        switch hero.tone {
+        case .crisis:  return .critical
+        case .warning: return .important
+        case .neutral: return hero.source == .drucker ? .good : .notable
+        }
     }
 
     public var body: some View {
@@ -176,7 +197,10 @@ public struct TodayView: View {
                         avgTicket: avgTicket
                     ),
                     dashboardStore: dashboardStore,
-                    storeInfo: storeInfo
+                    storeInfo: storeInfo,
+                    coaching: coaching,
+                    saas: saas,
+                    subscription: subscription
                 )
 
                 // 하단 탭바 회피
@@ -212,6 +236,16 @@ public struct TodayView: View {
                     label: mock.category.customerLabelKo
                 )
             }
+        }
+        // 코칭 일지 — 오늘 노출된 hero 신호 1개 자동 기록 (웹 recordSignal 미러). 영업 시작 후만.
+        .task(id: "coaching-record") {
+            guard mock.resolverInput.businessLaunched, let coaching else { return }
+            await coaching.recordTodaySignal(
+                brief: mock.category == .startupTech ? .startup : .offline,
+                kind: coachingSignalKind,
+                headline: String(hero.analysisKo.prefix(200)),
+                action: String(hero.actionKo.prefix(300))
+            )
         }
         // 2026-05-27 P0-A: AI 모닝 브리핑 비동기 fetch.
         //   - View 마운트 시 1회 호출 (server 측에 24h KST 캐시)
@@ -1347,6 +1381,7 @@ private struct DailyDetailView: View {
     let mock: MockData
     let dailyKpiCells: [KpiCellData]
     let userActivity: UserActivitySummary
+    var coaching: CoachingHistoryStore? = nil
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -1358,6 +1393,10 @@ private struct DailyDetailView: View {
                     dailyAvgCustomers: userActivity.dailyAvg,
                     avgTicket: userActivity.avgTicket
                 )
+                // 코칭 14일 누적 일지 (웹과 동일 Supabase) — 매일 히어로 신호 + 사장님 대응 시간선
+                if let coaching {
+                    CoachingHistoryCard(store: coaching)
+                }
                 DailyOpsRitualCard(category: mock.category)
                 Color.clear.frame(height: 24)
             }
@@ -1375,6 +1414,9 @@ private struct MoreInsightsStrip: View {
     let userActivity: UserActivitySummary
     let dashboardStore: DashboardStore?
     let storeInfo: StoreInfoStore?
+    var coaching: CoachingHistoryStore? = nil
+    var saas: SaasMetricsStore? = nil
+    var subscription: SubscriptionStore? = nil
 
     enum SheetID: String, Identifiable {
         case dailyDetail, weeklyPulse, growth, myStore, roadmap
@@ -1482,11 +1524,15 @@ private struct MoreInsightsStrip: View {
     private func sheetContent(for id: SheetID) -> some View {
         switch id {
         case .dailyDetail:
-            DailyDetailView(mock: mock, dailyKpiCells: dailyKpiCells, userActivity: userActivity)
+            DailyDetailView(mock: mock, dailyKpiCells: dailyKpiCells, userActivity: userActivity, coaching: coaching)
         case .weeklyPulse:
-            WeeklyPulseView(mock: mock)
+            WeeklyPulseView(mock: mock, saas: saas, subscription: subscription)
         case .growth:
-            GrowthForecastView(mock: mock)
+            GrowthForecastView(
+                mock: mock,
+                // 실데이터 직원 수 — 두루누리 자격(10인 미만)·게이팅에 사용 (storeInfo 미로드 시 0)
+                currentEmployeeCount: (storeInfo?.isLoaded == true) ? (storeInfo?.state.employees.count ?? 0) : 0
+            )
         case .myStore:
             if let dashboardStore, let storeInfo {
                 MyStoreView(store: dashboardStore, storeInfo: storeInfo)

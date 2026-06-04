@@ -130,27 +130,46 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
 
         guard createIfMissing else { return nil }
 
-        // starter roadmap insert — 웹 packages/shared/src/roadmap/starter.ts 의 기본 구조
-        let inserted: [RoadmapRowDTO] = try await supabase
-            .from("roadmaps")
-            .insert(
-                RoadmapInsertDTO(
-                    user_id: userId,
-                    template_id: "default",
-                    current_stage_code: "industry-selection",
-                    progress_percent: 0,
-                    status: "in_progress"
+        // starter roadmap insert — 웹 packages/shared/src/roadmap/starter.ts 의 기본 구조.
+        // ⚠️ roadmaps.unique(user_id) (20260604 마이그레이션) 때문에 웹·다른 기기와 *동시 최초 생성*
+        //   레이스 시 insert 가 unique 위반으로 실패할 수 있다. 그 경우 다른 클라이언트가 방금 만든
+        //   row 를 재조회해 사용 — 중복 생성 대신 공유 (진행도 분할 방지).
+        do {
+            let inserted: [RoadmapRowDTO] = try await supabase
+                .from("roadmaps")
+                .insert(
+                    RoadmapInsertDTO(
+                        user_id: userId,
+                        template_id: "default",
+                        current_stage_code: "industry-selection",
+                        progress_percent: 0,
+                        status: "in_progress"
+                    )
                 )
-            )
-            .select("id,updated_at")
-            .execute()
-            .value
-
-        guard let row = inserted.first else {
-            throw RoadmapDecisionsRepositoryError.roadmapInsertFailed
+                .select("id,updated_at")
+                .execute()
+                .value
+            if let row = inserted.first {
+                cachedRoadmapId = row.id
+                return row.id
+            }
+        } catch {
+            // unique(user_id) 레이스 추정 — 재조회로 기존 row 회수.
+            let retry: [RoadmapRowDTO] = try await supabase
+                .from("roadmaps")
+                .select("id,updated_at")
+                .eq("user_id", value: userId)
+                .order("updated_at", ascending: false)
+                .limit(1)
+                .execute()
+                .value
+            if let row = retry.first {
+                cachedRoadmapId = row.id
+                return row.id
+            }
+            throw error
         }
-        cachedRoadmapId = row.id
-        return row.id
+        throw RoadmapDecisionsRepositoryError.roadmapInsertFailed
     }
 }
 

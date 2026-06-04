@@ -10,7 +10,9 @@ export const INSURANCE_RATES_2026 = {
   nationalPension: { employer: 0.0475, employee: 0.0475 },     // 국민연금 9.5% (50:50, 2026 인상)
   healthInsurance: { employer: 0.03595, employee: 0.03595 },   // 건강보험 7.19% (50:50, 2026 인상)
   longTermCare: { rateOfHealth: 0.1314 },                      // 장기요양 = 건강보험의 13.14% (0.9448 / 7.19)
-  employmentInsurance: { employer: 0.009, employee: 0.009 },   // 고용보험 1.8% (50:50 기본, 사업주는 규모별 추가 부담)
+  employmentInsurance: { employer: 0.009, employee: 0.009 },   // 고용보험 실업급여 1.8% (50:50)
+  // 고용안정·직업능력개발사업 — 사업주 전액 부담. 150인 미만 0.25% (2022.7~ 동결). 의무.
+  employmentStability: { employer: 0.0025 },
   industrialAccident: { employer: 0.007 },                     // 산재보험 ~0.7% (업종별 상이, 일반 서비스업 가정)
 } as const;
 
@@ -84,7 +86,8 @@ export function calculateHiringCost(input: HiringCostInput): HiringCostBreakdown
   const pension = Math.round(totalGross * rates.nationalPension.employer);
   const health = Math.round(totalGross * rates.healthInsurance.employer);
   const longTermCare = Math.round(health * rates.longTermCare.rateOfHealth);
-  const employment = Math.round(totalGross * rates.employmentInsurance.employer);
+  // 고용보험 사업주분 = 실업급여 0.9% + 고용안정·직업능력개발 0.25% = 1.15%
+  const employment = Math.round(totalGross * (rates.employmentInsurance.employer + rates.employmentStability.employer));
   const accident = Math.round(totalGross * rates.industrialAccident.employer);
   const totalInsuranceEmployer = pension + health + longTermCare + employment + accident;
 
@@ -172,8 +175,9 @@ export const DURUNURI_2026 = {
   durationMonths: 36,
 } as const;
 
-/** 사업주 4대보험 총 부담률(%) — 2026 기준 (국민연금 4.75 + 건보 3.595 + 장기요양 0.4724 + 고용 0.9 + 산재 0.7 일반서비스업) */
-export const TOTAL_EMPLOYER_RATE_PCT = 4.75 + 3.595 + 0.4724 + 0.9 + 0.7;
+/** 사업주 4대보험 총 부담률(%) — 2026 기준
+ *  국민연금 4.75 + 건보 3.595 + 장기요양 0.4724 + 고용보험(실업급여 0.9 + 고용안정·직업능력개발 0.25) + 산재 0.7(일반서비스업) */
+export const TOTAL_EMPLOYER_RATE_PCT = 4.75 + 3.595 + 0.4724 + (0.9 + 0.25) + 0.7;
 /** 근로자 4대보험 총 공제율(%) — 2026 기준 */
 export const TOTAL_EMPLOYEE_RATE_PCT = 4.75 + 3.595 + 0.4724 + 0.9;
 
@@ -236,7 +240,10 @@ export function simulateInsurance(input: InsuranceSimInput): InsuranceSimResult 
   const empPension = isShortTime ? 0 : Math.round(salary * r.nationalPension.employer);
   const empHealth = isShortTime ? 0 : Math.round(salary * r.healthInsurance.employer);
   const empLtc = isShortTime ? 0 : Math.round(empHealth * r.longTermCare.rateOfHealth);
-  const empEmployment = Math.round(salary * r.employmentInsurance.employer);
+  // 고용보험 사업주분 = 실업급여(0.9%, 두루누리 대상) + 고용안정·직업능력개발(0.25%, 사업주 전액·비대상)
+  const empUnemployment = Math.round(salary * r.employmentInsurance.employer);
+  const empStability = Math.round(salary * r.employmentStability.employer);
+  const empEmployment = empUnemployment + empStability;
   const empWorkers = Math.round(salary * r.industrialAccident.employer);
   const empTotal = empPension + empHealth + empLtc + empEmployment + empWorkers;
 
@@ -252,8 +259,9 @@ export function simulateInsurance(input: InsuranceSimInput): InsuranceSimResult 
     totalEmployeeCount < DURUNURI_2026.maxEmployees &&
     !!input.isDuruduriEligible;
 
+  // 두루누리는 국민연금 + 고용보험 실업급여분만 지원 (고용안정·직업능력개발분은 비대상)
   const employerSaving = duruduriEligible
-    ? Math.round((empPension + empEmployment) * (DURUNURI_2026.subsidyPct / 100))
+    ? Math.round((empPension + empUnemployment) * (DURUNURI_2026.subsidyPct / 100))
     : 0;
   const employeeSaving = duruduriEligible
     ? Math.round((eePension + eeEmployment) * (DURUNURI_2026.subsidyPct / 100))

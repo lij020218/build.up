@@ -350,9 +350,10 @@ public enum ReportsCalculator {
     }
 
     private static func buildCostSparkline(costs: MonthlyCosts) -> [Double] {
-        // iOS 는 6개월 cost history 가 아직 저장되지 않음 — 현재 비용으로 6포인트 채움
-        // (향후 cost_history 테이블 추가 시 실 데이터로 교체)
-        Array(repeating: costs.total, count: 6)
+        // 정직성: iOS 는 6개월 cost history 가 아직 저장되지 않음. 현재 비용을 6번 복제하면
+        // "비용이 6개월간 평탄했다"는 가짜 추세를 만든다 → 빈 배열 반환(소비측에서 미표시).
+        // cost_history 테이블 도입 시 실 월별 총비용으로 교체.
+        []
     }
 
     // MARK: - Anomaly detection (rule-based)

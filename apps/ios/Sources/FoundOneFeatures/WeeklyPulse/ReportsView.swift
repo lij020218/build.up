@@ -95,11 +95,8 @@ public struct ReportsView: View {
                         )
                     }
                     WeeklyChecklistBlock()
-                    MonthlyPnLCompareBlock(
-                        thisMonthRevenue: ratios.monthlyRevenueEquivalent,
-                        thisMonthCosts: mock.costs.total
-                    )
-                    WeeklyInsightsBlock()
+                    MonthlyRevenueProgressBlock(entries: mock.entries)
+                    WeeklyInsightsBlock(entries: mock.entries, ratios: ratios, category: mock.category)
                 }
 
                 Color.clear.frame(height: 110)

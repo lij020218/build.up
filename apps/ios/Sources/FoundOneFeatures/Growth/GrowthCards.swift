@@ -442,12 +442,263 @@ public struct FirstCustomersCard: View {
     }
 }
 
+// MARK: - InsuranceSimulatorCard (4대보험 시뮬레이터 — 채용 결정 즉답)
+//
+//  웹 SSOT 미러: apps/web/.../dashboard/InsuranceSimulatorCard.tsx
+//  계산은 FoundOneCore `simulateInsurance` (요율 단일 정의 — 중복정의 금지).
+//  월급은 사용자 입력(what-if), 산재 0.7% 일반서비스업 가정 — 웹과 동일.
+//
+public struct InsuranceSimulatorCard: View {
+
+    /// 현재 사업장 직원 수 (두루누리 10인 미만 자격 판단). 실데이터: user_store_data.employees → storeInfo.state.employees.count.
+    let currentEmployeeCount: Int
+    public init(currentEmployeeCount: Int = 0) { self.currentEmployeeCount = currentEmployeeCount }
+
+    private struct Preset: Identifiable {
+        let id: String
+        let label: String
+        let salary: Int
+        let hours: Double
+    }
+
+    private static let minWageMonthly = hourlyToMonthly(MINIMUM_WAGE_2026, weeklyHours: 40)
+    private static let presets: [Preset] = [
+        .init(id: "min-fulltime", label: "최저시급 풀타임", salary: minWageMonthly, hours: 40),
+        .init(id: "common-3m",    label: "월 300만 정규직", salary: 3_000_000, hours: 40),
+        .init(id: "part-25h",     label: "파트타임 25시간", salary: Int((Double(MINIMUM_WAGE_2026) * 25 * 4.345).rounded()), hours: 25),
+        .init(id: "part-14h",     label: "주 14시간 단시간", salary: Int((Double(MINIMUM_WAGE_2026) * 14 * 4.345).rounded()), hours: 14),
+    ]
+
+    @State private var salary: Int = InsuranceSimulatorCard.minWageMonthly
+    @State private var salaryText: String = "\(InsuranceSimulatorCard.minWageMonthly)"
+    @State private var weeklyHours: Double = 40
+    @State private var duruduri: Bool = true
+    @State private var showBreakdown: Bool = false
+
+    private var sim: InsuranceSimResult {
+        simulateInsurance(InsuranceSimInput(
+            monthlySalary: salary,
+            weeklyHours: weeklyHours,
+            totalEmployeeCount: currentEmployeeCount + 1,   // 시뮬 직원 1명 추가 가정
+            isDuruduriEligible: duruduri
+        ))
+    }
+
+    private var employerBurdenPct: Double {
+        salary > 0 ? Double(sim.employer.afterDuruduri) / Double(salary) * 100 : 0
+    }
+    private var takeHomePct: Double {
+        salary > 0 ? Double(salary - sim.employee.afterDuruduri) / Double(salary) * 100 : 0
+    }
+
+    public var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
+                header
+                presetChips
+                inputRow
+                duruduriToggle
+                statsRow
+                if !sim.warnings.isEmpty { warningsBox }
+                breakdownToggle
+                if showBreakdown { breakdown }
+                footer
+            }
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(BUColor.midnight.opacity(0.08)).frame(width: 36, height: 36)
+                Image(systemName: "person.2.badge.gearshape").font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text("4대보험 시뮬레이터").buSectionEyebrowStyle()
+                Text("직원 1명 채용하면 실제 얼마?").font(.system(size: 15, weight: .bold)).foregroundStyle(BUColor.ink)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var presetChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(Self.presets) { p in
+                    let on = salary == p.salary && weeklyHours == p.hours
+                    Button {
+                        salary = p.salary
+                        salaryText = "\(p.salary)"
+                        weeklyHours = p.hours
+                    } label: {
+                        Text(p.label)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(on ? BUColor.midnight : BUColor.inkMuted)
+                            .padding(.horizontal, 11).padding(.vertical, 6)
+                            .background(on ? BUColor.midnight08 : BUColor.surface, in: Capsule())
+                            .overlay(Capsule().strokeBorder(on ? BUColor.midnight.opacity(0.35) : BUColor.inkSubtle.opacity(0.4), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var inputRow: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("월급 (원)").font(.system(size: 10.5, weight: .bold)).foregroundStyle(BUColor.inkMuted).tracking(0.4).textCase(.uppercase)
+                TextField("월급여", text: $salaryText)
+                    .font(.system(size: 14, weight: .bold)).monospacedDigit()
+                    .keyboardType(.numberPad)
+                    .foregroundStyle(BUColor.midnightDeep)
+                    .padding(.horizontal, 10).padding(.vertical, 8)
+                    .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+                    .onChange(of: salaryText) { _, new in
+                        let digits = new.filter(\.isNumber)
+                        salary = min(20_000_000, Int(digits) ?? 0)
+                    }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("주 근무시간").font(.system(size: 10.5, weight: .bold)).foregroundStyle(BUColor.inkMuted).tracking(0.4).textCase(.uppercase)
+                HStack(spacing: 8) {
+                    Text("\(Int(weeklyHours))시간").font(.system(size: 14, weight: .bold)).monospacedDigit().foregroundStyle(BUColor.midnightDeep)
+                    Spacer(minLength: 0)
+                    Stepper("", value: $weeklyHours, in: 1...60, step: 1).labelsHidden()
+                }
+                .padding(.horizontal, 10).padding(.vertical, 4)
+                .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+            }
+        }
+    }
+
+    private var duruduriToggle: some View {
+        let active = duruduri && sim.duruduriEligible
+        return Button { duruduri.toggle() } label: {
+            HStack(spacing: 9) {
+                Image(systemName: duruduri ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(active ? BUColor.midnight : BUColor.inkSubtle)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("두루누리 80% 지원 적용").font(.system(size: 12.5, weight: .bold)).foregroundStyle(BUColor.midnightDeep)
+                    Text("월 270만 미만 + 10인 미만 + 신규 가입 36개월").font(.system(size: 10.5, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .background(active ? BUColor.midnight08 : BUColor.surface, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(active ? BUColor.midnight.opacity(0.3) : BUColor.inkSubtle.opacity(0.3), lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var statsRow: some View {
+        HStack(spacing: 8) {
+            statBox(label: "사장님 실부담", value: formatKRW(Double(sim.totalMonthlyCostToEmployer)),
+                    sub: "급여 +\(String(format: "%.1f", employerBurdenPct))%", emphasize: true)
+            statBox(label: "직원 실수령", value: formatKRW(Double(salary - sim.employee.afterDuruduri)),
+                    sub: "\(String(format: "%.1f", takeHomePct))% 수령", emphasize: false)
+            statBox(label: "두루누리 절감", value: formatKRW(Double(sim.duruduriMonthlySaving)),
+                    sub: sim.duruduriEligible ? "/ 월" : "자격 X", emphasize: false)
+        }
+    }
+
+    private func statBox(label: String, value: String, sub: String, emphasize: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label).font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.inkMuted).tracking(0.3).textCase(.uppercase)
+            Text(value).font(.system(size: 16, weight: .bold)).monospacedDigit()
+                .foregroundStyle(emphasize ? BUColor.midnightDeep : BUColor.ink)
+                .lineLimit(1).minimumScaleFactor(0.6)
+            Text(sub).font(.system(size: 10, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10).padding(.vertical, 10)
+        .background(emphasize ? BUColor.midnight08 : BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var warningsBox: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(sim.warnings.enumerated()), id: \.offset) { _, w in
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "sparkles").font(.system(size: 11, weight: .semibold)).foregroundStyle(BUColor.midnight).padding(.top, 1)
+                    Text(w).font(.system(size: 11.5, weight: .medium)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .background(BUColor.midnight.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var breakdownToggle: some View {
+        Button { withAnimation(.easeInOut(duration: 0.2)) { showBreakdown.toggle() } } label: {
+            HStack {
+                Text("보험료 항목별 분해").font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnightDeep)
+                Spacer()
+                Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.inkMuted)
+                    .rotationEffect(.degrees(showBreakdown ? 180 : 0))
+            }
+            .padding(.horizontal, 12).padding(.vertical, 9)
+            .background(BUColor.surface, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.inkSubtle.opacity(0.3), lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var breakdown: some View {
+        VStack(spacing: 0) {
+            breakdownRow("국민연금", employer: sim.employer.pension, employee: sim.employee.pension)
+            breakdownRow("건강보험", employer: sim.employer.health, employee: sim.employee.health)
+            breakdownRow("장기요양", employer: sim.employer.longTermCare, employee: sim.employee.longTermCare)
+            breakdownRow("고용보험", employer: sim.employer.employment, employee: sim.employee.employment)
+            breakdownRow("산재보험", employer: sim.employer.workers, employee: 0, note: "사업주 100%")
+            Divider().padding(.vertical, 4)
+            breakdownRow("합계 (적용 전)", employer: sim.employer.total, employee: sim.employee.total, bold: true)
+            if sim.duruduriEligible {
+                breakdownRow("두루누리 적용 후", employer: sim.employer.afterDuruduri, employee: sim.employee.afterDuruduri, bold: true)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(BUColor.surface, in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(BUColor.inkSubtle.opacity(0.25), lineWidth: 1))
+    }
+
+    private func breakdownRow(_ label: String, employer: Int, employee: Int, note: String? = nil, bold: Bool = false) -> some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 4) {
+                Text(label).font(.system(size: 11.5, weight: bold ? .bold : .medium)).foregroundStyle(bold ? BUColor.midnightDeep : BUColor.ink)
+                if let note { Text("· \(note)").font(.system(size: 10, weight: .regular)).foregroundStyle(BUColor.inkMuted) }
+            }
+            Spacer(minLength: 0)
+            Text("사장 \(employer.formatted())").font(.system(size: 11, weight: bold ? .bold : .medium)).monospacedDigit().foregroundStyle(BUColor.midnightDeep)
+            Text("직원 \(employee.formatted())").font(.system(size: 11, weight: bold ? .bold : .medium)).monospacedDigit().foregroundStyle(BUColor.inkMuted)
+                .frame(minWidth: 78, alignment: .trailing)
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var footer: some View {
+        Text("2026 요율 기준 (산재 0.7% 일반 서비스업 가정). 정확한 산재 요율은 근로복지공단(1588-0075)에서 업종별 확인하세요.")
+            .font(.system(size: 10.5, weight: .medium)).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 6)
+            .overlay(alignment: .top) { Divider().opacity(0.5) }
+    }
+}
+
 public struct GrowthForecastView: View {
 
     let mock: MockData
+    /// 현재 사업장 직원 수 (실데이터 — storeInfo.state.employees.count). 두루누리 자격·게이팅용.
+    let currentEmployeeCount: Int
 
-    public init(mock: MockData) {
+    public init(mock: MockData, currentEmployeeCount: Int = 0) {
         self.mock = mock
+        self.currentEmployeeCount = currentEmployeeCount
     }
 
     private var totalSales: Double { mock.entries.reduce(0) { $0 + $1.sales } }
@@ -516,6 +767,11 @@ public struct GrowthForecastView: View {
                 // 고객 인터뷰 (Mom Test) — 전 업종
                 CustomerInterviewCard()
 
+                // 4대보험 시뮬레이터 — 웹 게이팅 1:1 (직원 ≥1 또는 인건비 입력)
+                if currentEmployeeCount > 0 || mock.costs.labor > 0 {
+                    InsuranceSimulatorCard(currentEmployeeCount: currentEmployeeCount)
+                }
+
                 // 마케팅 블록은 MarketingView 로 이전됨 (LoyaltyDonut / CampaignIdeas).
 
                 Color.clear.frame(height: 110)
@@ -528,140 +784,17 @@ public struct GrowthForecastView: View {
     }
 }
 
-// MARK: - MarketingChannelROIBlock
-
-public struct MarketingChannelROIBlock: View {
-
-    struct Channel: Identifiable {
-        let id = UUID()
-        let name: String
-        let icon: String
-        let tint: Color
-        let cost: Int          // 이번 달 비용 (원)
-        let visitors: Int      // 유입 고객 (명)
-        let roas: Double       // %
-    }
-
-    private let channels: [Channel] = [
-        .init(name: "네이버 플레이스", icon: "mappin.circle.fill", tint: Color(red: 0.13, green: 0.71, blue: 0.39),
-              cost: 150_000, visitors: 84, roas: 312),
-        .init(name: "인스타그램", icon: "camera.fill", tint: Color(red: 0.91, green: 0.30, blue: 0.55),
-              cost: 220_000, visitors: 62, roas: 178),
-        .init(name: "카카오 채널", icon: "bubble.left.and.bubble.right.fill", tint: Color(red: 0.99, green: 0.81, blue: 0.10),
-              cost: 80_000, visitors: 45, roas: 245),
-        .init(name: "배민 광고", icon: "bicycle", tint: Color(red: 0.18, green: 0.74, blue: 0.78),
-              cost: 380_000, visitors: 128, roas: 142),
-        .init(name: "쿠팡이츠", icon: "cart.fill", tint: Color(red: 0.93, green: 0.31, blue: 0.20),
-              cost: 290_000, visitors: 91, roas: 165),
-    ]
-
-    private var totalCost: Int { channels.reduce(0) { $0 + $1.cost } }
-    private var totalVisitors: Int { channels.reduce(0) { $0 + $1.visitors } }
-
-    public init() {}
-
-    public var body: some View {
-        BUCard(.outer) {
-            VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle().fill(BUColor.midnight08).frame(width: 36, height: 36)
-                        Image(systemName: "megaphone.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(BUColor.midnight)
-                    }
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("MARKETING")
-                            .buSectionEyebrowStyle()
-                        Text("채널 ROI 요약")
-                            .font(.system(size: 15, weight: .bold))
-                    }
-                    Spacer()
-                }
-
-                // 상단 KPI
-                HStack(spacing: 8) {
-                    miniKPI(label: "이번 달 지출", value: formatKRW(Double(totalCost)))
-                    miniKPI(label: "유입 고객", value: "\(totalVisitors)명")
-                }
-
-                VStack(spacing: 8) {
-                    ForEach(channels) { ch in
-                        channelRow(ch)
-                    }
-                }
-            }
-        }
-    }
-
-    private func miniKPI(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(BUColor.ink.opacity(0.48))
-                .tracking(0.4)
-                .textCase(.uppercase)
-            Text(value)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(BUColor.ink)
-                .monospacedDigit()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 10)
-        .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 10))
-    }
-
-    private func channelRow(_ ch: Channel) -> some View {
-        let roasGood = ch.roas >= 200
-        let roasOk = ch.roas >= 150
-        let roasTint: Color = roasGood ? BUColor.success : (roasOk ? BUColor.midnight : BUColor.danger)
-        return HStack(spacing: 10) {
-            ZStack {
-                Circle().fill(ch.tint.opacity(0.12)).frame(width: 32, height: 32)
-                Image(systemName: ch.icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(ch.tint)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(ch.name)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(BUColor.ink)
-                Text("\(formatKRW(Double(ch.cost))) · \(ch.visitors)명")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(BUColor.inkMuted)
-                    .monospacedDigit()
-            }
-            Spacer()
-            Text("\(Int(ch.roas))%")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(roasTint)
-                .monospacedDigit()
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(roasTint.opacity(0.10), in: Capsule())
-        }
-        .frame(minHeight: 44)
-    }
-}
+// 삭제됨: MarketingChannelROIBlock — 채널별 비용·방문·ROAS 가 전부 허구 상수였고
+//   어디에서도 렌더링되지 않는 dead code 였음 (가짜 숫자 금지). 실 마케팅 지출은
+//   MarketingView 의 MarketingCampaignsList(실 캠페인 repository) 가 담당한다.
 
 // MARK: - LoyaltyDonutBlock
 
+//  정직성 (가짜 숫자 금지): 단골/신규/일회성 비율은 고객별 방문 이력(per-customer)이 있어야
+//   계산 가능. iOS·웹 모두 DailyEntry 는 일별 고객 "수"만 보유 → 비율 산출 불가.
+//   기존 "단골 38% / 신규 24% / 일회성 38%" 는 모든 사용자에게 동일하게 박힌 허구였음.
+//   가짜 도넛 대신 정직한 안내를 보여주고, 고객 단위 데이터 연동 시 실 비율로 교체.
 public struct LoyaltyDonutBlock: View {
-
-    struct Segment {
-        let label: String
-        let value: Double
-        let color: Color
-    }
-
-    private let segments: [Segment] = [
-        .init(label: "단골", value: 38, color: BUColor.midnight),
-        .init(label: "신규", value: 24, color: BUColor.success),
-        .init(label: "일회성", value: 38, color: BUColor.inkSubtle),
-    ]
-
-    private var total: Double { segments.reduce(0) { $0 + $1.value } }
 
     public init() {}
 
@@ -684,89 +817,14 @@ public struct LoyaltyDonutBlock: View {
                     Spacer()
                 }
 
-                HStack(spacing: 18) {
-                    LoyaltyDonut(segments: segments, total: total)
-                        .frame(width: 110, height: 110)
-
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(segments.indices, id: \.self) { i in
-                            let s = segments[i]
-                            HStack(spacing: 8) {
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(s.color)
-                                    .frame(width: 10, height: 10)
-                                Text(s.label)
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(BUColor.ink.opacity(0.75))
-                                Spacer()
-                                Text("\(Int(s.value))%")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(s.color)
-                                    .monospacedDigit()
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                Text("재방문 고객이 전체의 38%. 일회성 비중을 단골로 전환하면 매출이 안정됩니다.")
+                Text("단골·신규·일회성 비율은 고객별 방문 이력이 쌓이면 자동으로 분석해 드려요. 멤버십·예약 연동이나 재방문 기록이 모이면 여기에 실제 비율이 표시됩니다.")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted)
                     .lineSpacing(2)
-                    .padding(.top, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 6)
             }
         }
-    }
-}
-
-private struct LoyaltyDonut: View {
-    let segments: [LoyaltyDonutBlock.Segment]
-    let total: Double
-
-    var body: some View {
-        GeometryReader { geo in
-            let size = min(geo.size.width, geo.size.height)
-            let lw: CGFloat = size * 0.18
-            ZStack {
-                // ring background
-                Circle()
-                    .stroke(BUColor.midnight.opacity(0.05), lineWidth: lw)
-
-                // segments
-                let _: Double = 0
-                ZStack {
-                    ForEach(segments.indices, id: \.self) { i in
-                        let start = startFraction(at: i)
-                        let end = start + segments[i].value / total
-                        Circle()
-                            .trim(from: start, to: end)
-                            .stroke(segments[i].color, style: StrokeStyle(lineWidth: lw, lineCap: .butt))
-                            .rotationEffect(.degrees(-90))
-                    }
-                }
-
-                // center value
-                VStack(spacing: 0) {
-                    if let primary = segments.first {
-                        Text("\(Int(primary.value))%")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(BUColor.ink)
-                            .monospacedDigit()
-                        Text(primary.label)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(BUColor.inkMuted)
-                            .tracking(0.4)
-                            .textCase(.uppercase)
-                    }
-                }
-            }
-            .frame(width: size, height: size)
-        }
-    }
-
-    private func startFraction(at index: Int) -> Double {
-        guard total > 0 else { return 0 }
-        return segments.prefix(index).reduce(0) { $0 + $1.value } / total
     }
 }
 
@@ -783,34 +841,37 @@ public struct CampaignIdeasBlock: View {
         let details: String
     }
 
+    // 정직성: 아래는 업종 공통 "예시 플레이북"(일반 가이드)이며 특정 가게 데이터로 계산된 값이 아님.
+    //   기존엔 "단골 24명·회수율 18%·미답글 6건·유입 +15-20명" 같은 허구 수치를 가게별 실측처럼
+    //   보여줬음. 고객·리뷰·광고 데이터가 연동되기 전까지는 가짜 수치 없이 행동 가이드만 제공한다.
     private let ideas: [Idea] = [
         .init(
             title: "단골 win-back 메시지",
             icon: "envelope.badge.fill",
             tint: BUColor.midnight,
-            summary: "30일 이상 방문 없는 단골 24명",
-            details: "카카오 채널로 5,000원 할인 쿠폰 발송. 예상 회수율 18% (4-5명). 비용 약 25,000원."
+            summary: "한동안 안 오신 단골 다시 부르기",
+            details: "마지막 방문일이 오래된 고객에게 카카오 채널·문자로 할인 쿠폰(예: 5,000원)을 보내 재방문을 유도하세요. 대상은 좁게, 메시지는 짧고 따뜻하게."
         ),
         .init(
-            title: "리뷰 답글 자동화",
+            title: "리뷰 답글 관리",
             icon: "text.bubble.fill",
             tint: BUColor.success,
-            summary: "이번 주 미답글 리뷰 6건",
-            details: "네이버 플레이스 신규 리뷰에 24시간 내 답글. 검색 노출 +12% 평균치."
+            summary: "새 리뷰에 빠르게 답글",
+            details: "네이버 플레이스·배민 신규 리뷰에 24시간 안에 답글을 달면 신뢰도와 노출에 도움이 됩니다. 부정 리뷰일수록 정중하고 빠른 응대가 중요해요."
         ),
         .init(
             title: "점심 직장인 타임 광고",
             icon: "clock.fill",
             tint: Color(red: 0.18, green: 0.74, blue: 0.78),
-            summary: "11:30-13:30 배민 광고 강화",
-            details: "주변 오피스 1km 타겟. 일 1만원 × 5일 = 5만원. 예상 유입 +15-20명."
+            summary: "피크 시간대 집중 노출",
+            details: "주변 오피스 상권을 타겟으로 배달앱·지역 광고를 점심 시간대(11:30~13:30)에 집중하세요. 예산은 소액(예: 일 1만원)으로 시작해 반응을 보고 조정합니다."
         ),
         .init(
             title: "주말 SNS 콘텐츠",
             icon: "camera.fill",
             tint: Color(red: 0.91, green: 0.30, blue: 0.55),
-            summary: "신메뉴 릴스 1개",
-            details: "인스타 릴스 1개 + 스토리 3개. 평균 도달 1,500-3,000명. 비용 0원."
+            summary: "신메뉴·매장 분위기 릴스",
+            details: "인스타 릴스·스토리로 신메뉴나 매장 분위기를 보여주세요. 비용 없이 시작할 수 있고, 꾸준히 올릴수록 도달이 늘어납니다."
         ),
     ]
 
@@ -831,7 +892,7 @@ public struct CampaignIdeasBlock: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("CAMPAIGN")
                             .buSectionEyebrowStyle()
-                        Text("다음 캠페인 아이디어")
+                        Text("캠페인 아이디어 (예시 가이드)")
                             .font(.system(size: 15, weight: .bold))
                     }
                     Spacer()

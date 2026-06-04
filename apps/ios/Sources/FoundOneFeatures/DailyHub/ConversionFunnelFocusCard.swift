@@ -87,14 +87,6 @@ public struct ConversionFunnelFocusCard: View {
         }
     }
 
-    /// WoW 변화 (sample)
-    private var conversionWoWPct: Double {
-        switch mode {
-        case .commerce: return 0.4    // +0.4%p
-        case .saas:     return -0.2   // -0.2%p
-        }
-    }
-
     private var overallConvPct: Double {
         guard let first = stepValues.first, first > 0, let last = stepValues.last else { return 0 }
         return Double(last) / Double(first) * 100
@@ -256,21 +248,8 @@ public struct ConversionFunnelFocusCard: View {
                 .foregroundStyle(BUColor.inkMuted)
                 .padding(.leading, 4)
             Spacer(minLength: 0)
-            // WoW trend pill
-            HStack(spacing: 3) {
-                Image(systemName: conversionWoWPct >= 0 ? "arrow.up.right" : "arrow.down.right")
-                    .font(.system(size: 9, weight: .heavy))
-                Text(String(format: "%+.1f%%p WoW", conversionWoWPct))
-                    .font(.system(size: 10, weight: .heavy))
-                    .monospacedDigit()
-            }
-            .foregroundStyle(conversionWoWPct >= 0 ? BUColor.success : BUColor.danger)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                (conversionWoWPct >= 0 ? BUColor.success : BUColor.danger).opacity(0.10),
-                in: Capsule()
-            )
+            // WoW(전주 대비) 추세는 전주 funnel 스냅샷이 저장돼야 정직하게 계산 가능 —
+            // 현재는 현 시점 값만 보유하므로 가짜 추세 pill 을 표시하지 않음. (이력 적재 시 부활)
         }
     }
 

@@ -43,14 +43,26 @@
 
 | 카드 | 걸림돌 | 권장 접근 | iOS 배치 |
 |---|---|---|---|
-| **동종업 벤치마크** | 공정위 매출 백분위 데이터 iOS 미존재(웹: `@foundone/shared` `getIndustryBenchmark()`) | shared franchise-benchmarks → iOS 레지스트리 codegen 포팅(웹TS→Swift 패턴) 후 백분위 계산 | 주간점검 `WeeklyPulseView` |
-| **4대보험 시뮬** | ⚠️ 요율 정확도(옛 요율 버그 이력) | iOS `InsuranceTaxSetupStageView.swift` 요율/계산 **재사용**(중복정의 금지) | 성장 `GrowthCards` |
-| **코칭 14일 일지** | iOS가 일별 신호 **저장 안 함**(웹: Supabase coaching_history) | iOS 영속 레이어부터 — HeroResolver 결과 매일 1건 저장→14일 표시 | 오늘상세/홈 히어로 아래 |
-| **SaaS 핵심지표** | GA4/webhook **연동 데이터** 필요 | 미연동 시 정직한 "연동 필요" 빈상태만(가짜 금지). 웹 `useUnifiedSaasMetrics` 참고 | 주간점검/내가게 |
-| **구독 플랜 관리** | CRUD+webhook 무거움·저가치 | 후순위(읽기전용부터) | 내가게 |
+| ~~**동종업 벤치마크**~~ ✅ 2026-06-04 완료 | 공정위 매출 백분위 데이터 iOS 미존재 | **FoundOneCore `IndustryBenchmarkRegistry.swift` 신설** = 웹 `INDUSTRY_BENCHMARKS` 11업종 1:1 포팅 + 백분위(3점 선형보간) + `IndustryCategory→categoryId` 매핑. 카드 `IndustryBenchmarkCard`(WeeklyPulse). 가드: 기록<3일·스타트업(매출기준0) 비표시 | 주간점검 `WeeklyPulseView` |
+| ~~**4대보험 시뮬**~~ ✅ 2026-06-04 완료 | ⚠️ 요율 정확도(옛 요율 버그 이력) | **FoundOneCore `InsuranceSimulator.swift` 신설** = 웹 SSOT `simulateInsurance` 1:1 포팅. 요율 단일 정의(`InsuranceRates2026`). `InsuranceTaxSetupStageView`도 이 상수 참조하도록 매직넘버 제거 → 중복정의 근절 | 성장 `GrowthCards`(`labor>0` 게이팅, `CustomerInterviewCard` 뒤) |
+| ~~**코칭 14일 일지**~~ ✅ 2026-06-04 완료 | iOS가 일별 신호 저장 안 함 → **웹과 동일 Supabase `coaching_history` 테이블 직접 연결**(별도 인프라 불필요) | `CoachingHistoryRepository`+`CoachingHistoryStore`(FoundOneData, Supabase Swift SDK) + `CoachingHistoryCard`(Today). 매일 히어로 신호 1건 자동 upsert(중복 가드), "했음" 토글. 30일 AI 메타뷰는 후속 | 오늘 상세 팝업(`DailyDetailView`) |
+| ~~**SaaS 핵심지표**~~ ✅ 2026-06-04 완료 | GA4/webhook 연동 데이터 필요 | **웹과 동일 Supabase `saas_metrics_daily` 직접 읽기**(RLS select-own, view 대신 하부테이블+클라 dedup). 연동(웹 GA4/웹훅)되면 실데이터, 아니면 정직한 "연동 필요" 빈상태(가짜 0 금지). `SaasMetricsRepository`+`SaasMetricsStore`(FoundOneData) + `SaasMetricsCard`(WeeklyPulse, 스타트업만) | 주간점검 `WeeklyPulseView` |
+| ~~**구독 플랜 관리**~~ ✅ 2026-06-04 완료 | CRUD+webhook 무거움 | **웹은 이미 완비**(구독 수익모델→`usesSubscriptions`→Tier3 `SubscriptionPlanManager` 게이팅). iOS 신규: `revenueModel`→`uses_subscriptions` 투영(StageInputProjector) + `loadSubscriptionState`(StoreProfileRepository) + `SubscriptionStore` + `SubscriptionManagementCard`(읽기전용, 웹과 동일 Supabase). 게이팅 `usesSubscriptions` | 주간점검 `WeeklyPulseView` |
 | LOW(미사용안내·인기상품·최근활동·주간시간·내보내기) | 보조 | 후순위 | — |
 
-**권장 순서**: (1) 4대보험(재사용=안전) → (2) 동종업 벤치마크(데이터 포팅) → (3) 코칭일지(영속 인프라) → (4) SaaS 빈상태 → (5) 나머지.
+**권장 순서**: ~~(1) 4대보험~~ ✅ → ~~(2) 동종업 벤치마크~~ ✅ → ~~(3) 코칭일지~~ ✅ → ~~(4) SaaS 빈상태~~ ✅ → ~~(5) 구독 플랜 관리~~ ✅. **카드 패리티 HIGH/MED/구독 전부 완료.** 남은 LOW(미사용안내·인기상품·최근활동·주간시간·내보내기)는 보조 — 필요 시.
+
+> **구독제 메모(2026-06-04)**: 웹·앱 모두 "정기 구독" 수익모델 옵션은 startup-tech·online-digital 에 이미 존재. 웹은 게이팅·관리카드까지 완비돼 있었고, iOS만 (a) `revenueModel`→`uses_subscriptions` Supabase 투영 (b) 구독관리 카드(읽기전용)를 신규 추가. 플랜 CRUD·MRR(구독자 집계)은 후속 — 현재 iOS는 웹에서 만든 플랜을 읽어 표시. iOS BUILD SUCCEEDED, 웹 무변경.
+
+> **SaaS 지표 메모(2026-06-04)**: iOS는 `saas_metrics_daily`(authenticated select-own + grant)를 직접 read. view `v_saas_metrics_unified`는 security_invoker 아님→RLS 우회 위험이라 하부 테이블 + 클라이언트 소스우선순위 dedup 으로 미러. 연동(GA4 OAuth·웹훅)은 웹 전용 — iOS는 읽기만. 스타트업 외 업종은 fetch 안 함. iOS BUILD SUCCEEDED.
+
+> **코칭일지 메모(2026-06-04)**: 핸드오프 원안은 "iOS 영속 인프라부터"였으나, 실제로는 웹이 쓰는 `coaching_history` 테이블이 이미 있어 iOS Supabase 리포지토리만 붙이면 됐음(같은 SSOT = 웹·앱 자동 동기화). 기록 시점: 홈 진입 시 `.task`로 그날 hero 신호 1건 upsert(tone→kind 매핑은 웹 CEOMorningHero 1:1). v1은 14일 타임라인+통계+토글. 30일 AI 메타 인사이트(웹 `v_coaching_meta_30d` 뷰)는 iOS 미연동 — 후속. iOS BUILD SUCCEEDED.
+
+> **동종업 벤치마크 메모(2026-06-04)**: 웹 `SocialBenchmarkCard`의 주간 4주 라인차트는 iOS에서 단일 바(내 매장 + 평균/상위10% 기준선)로 단순화 — 핵심(위치·갭·메시지) 동일. 4주 트렌드 라인은 후속 가능. projectedMonthly = 일평균×26(웹과 동일 가정). iOS BUILD SUCCEEDED.
+> **발견(별도 처리)**: `WeeklyPulseView.MonthlyPnLCompareBlock` 의 "지난 달 = 이번 달 ×0.92" 샘플값이 사장님께 실데이터처럼 표시됨 → 가짜 숫자. 정리 작업 칩으로 분리.
+
+> **4대보험 검증 메모(2026-06-04)**: 요율 WebSearch 재확인 — 국민연금 9.5%·건강 7.19%·고용보험 사업주 1.15%(실업급여 0.9% + **고용안정·직업능력개발 0.25%**, 150인 미만 사업주 전액)·장기요양 건보료×13.14%·산재 0.7%(일반서비스업).
+> **요율 SSOT 단일화 완료(2026-06-04)**: 4대보험 사업주 요율을 4곳에서 단일 SSOT로 통일 — 웹 `packages/shared/.../hiring-cost.ts`(`INSURANCE_RATES_2026`/`simulateInsurance`/`TOTAL_EMPLOYER_RATE_PCT`=10.67%) + iOS `FoundOneCore/InsuranceSimulator.swift`(`InsuranceRates2026`) 미러. **고용안정 0.25% 포함이 법적 정답**(사장님 결정). 두루누리 감면은 실업급여분에만 적용(고용안정 비대상). iOS 중복정의 3건 제거: 스테이지뷰 매직넘버·`BUEmployee.employerInsurance`(옛 `×0.1041` 하드코딩→`simulateInsurance`)·시뮬카드. 직원 수는 실데이터(`user_store_data.employees`→`storeInfo.state.employees.count`) 주입. 웹 tsc·iOS BUILD 모두 통과.
 
 ---
 
@@ -75,6 +87,16 @@
 - 시뮬: iPhone 17 Pro `BCE8302D-EC64-4D2E-906E-51B316A21C8C`, `SIMCTL_CHILD_BU_DEMO_STAGE`.
 
 ---
+
+## 4.5 로드맵 Supabase 로드 검증·수정 (2026-06-04)
+**검증 요청**: iOS가 로드맵 저장 데이터를 Supabase에서 올바르게 가져오는가?
+- ✅ `stage_decisions` 자체는 정상 로드 — `RoadmapDecisionsRepository.fetchAll()`(roadmap_id FK) → `RoadmapStore.syncFromRemote()` key-merge.
+- 🐞 **발견·수정**: 로드맵 `cluster`(=경로 선택자)가 **로그인 세션 hydration에서 원격 업종으로 세팅 안 됨**(온보딩·AI위저드 경로에만 `setCluster` 존재). 웹에서 업종 선택한 사용자가 iOS 로그인 시 cluster가 기본값(offline-food)에 머물러, 받아온 `stage_decisions`가 경로에 매핑 안 돼 진행도가 틀어짐.
+- **수정**: `UserDashboardRepository` 가 `business_profiles.sub_industry_id`+`industry_category_id` 도 노출 → `AppRoot.hydrateRoadmapIndustry()` 가 `StarterIndustryData.cluster(for:)`(딥테크 포함 정밀 매핑)로 `roadmap.cluster`/`roadmap.selectedIndustryId` UserDefaults + `roadmapStore.setCluster()` hydrate. `loadDashboardIfNeeded`(syncFromRemote 직전) + `refreshAllFromRemote` 양쪽 적용. iOS BUILD SUCCEEDED.
+- **잔여 점검 완료 (2026-06-04)**:
+  - ✅ **stage code 1:1 일치**: iOS 경로 stage id(RoadmapStage.swift offline/online/startup/hardware/lab/semi paths) 48개 == 웹 `starterStageFlow`(starter-data.ts) 48개. 양방향 diff 0. 매핑 불일치 없음(franchise-application 포함).
+  - ✅ **roadmaps row 해석 일치**: 웹 `getLatestRoadmapRow` == iOS `resolveRoadmapId` 둘 다 `(user_id, updated_at desc, limit 1)`. 정상 사용 시 동일 row 수렴.
+  - ✅ **하드닝 완료 (2026-06-04)**: `supabase/migrations/20260604_000001_roadmaps_unique_user.sql` 신설 — 유저별 canonical roadmap(최신)으로 stage_decisions/stage_tasks 병합(충돌 시 최신 보존) → 비-canonical roadmap 삭제 → **`roadmaps.unique(user_id)` 추가**. 멱등(재실행 안전). iOS `RoadmapDecisionsRepository.resolveRoadmapId` 도 insert 충돌 시 재조회하도록 하드닝(중복 대신 공유). **⚠️ 미적용**: prod 에 마이그레이션 실행 필요(로컬 DB 없어 SQL 실행검증은 못 함 — 문법 리뷰만). 웹 `saveRoadmapState` 의 no-id insert 도 동일 레이스 시 unique 위반 가능 — 후속 guard 권장(현재는 find-first 로 대부분 회피).
 
 ## 5. 선택적 정리(backlog, 가짜 아님)
 - iOS `MockData` → `DashboardSnapshot` 리네이밍 + `AppRoot.swift:776` stale 주석 정리.

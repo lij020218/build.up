@@ -18,8 +18,9 @@
 //   startupType            → business_profiles.startup_type          (제공 컬럼만 upsert, 나머지 보존)
 //   vatType | taxTypeChoice→ user_store_data.tax_settings.vatType     (JSONB read-merge-write, hasEmployees 보존)
 //   cpaDecision            → user_store_data.cpa_decision             (직접, "cpa"|"self" 가드는 헬퍼 내장)
+//   revenueModel           → user_store_data.uses_subscriptions       (subscription|freemium|hybrid → true, 웹 usesSubscriptions 미러)
 //
-//  로드맵 전용(투영 X, stage_decisions 에만 남음): certType, model, revenueModel, total*, menuCount,
+//  로드맵 전용(투영 X, stage_decisions 에만 남음): certType, model, total*, menuCount,
 //   suppliers, address, northStar, franchiseBrandId(정식 컬럼 부재) 등.
 //
 
@@ -34,8 +35,11 @@ public enum StageInputProjector {
 
     /// 투영 대상 키 (project + audit 가 공유 — 드리프트 방지용 단일 목록).
     public static let projectedKeys: Set<String> = [
-        "storeName", "openHour", "closeHour", "startupType", "vatType", "taxTypeChoice", "cpaDecision",
+        "storeName", "openHour", "closeHour", "startupType", "vatType", "taxTypeChoice", "cpaDecision", "revenueModel",
     ]
+
+    /// 구독형 수익 모델 (웹 setSelectedRevenueModelId 의 usesSubscriptions 판정과 동일).
+    private static let subscriptionRevenueModels: Set<String> = ["subscription", "freemium", "hybrid"]
 
     /// stage 입력을 정식 컬럼으로 투영. 기존 persist 헬퍼에 위임(새 영속 로직 없음).
     /// 모든 헬퍼는 idempotent upsert + 빈값/형식 가드 내장 → 중복 호출·빈 입력 무해.
@@ -60,6 +64,10 @@ public enum StageInputProjector {
         // 5. cpaDecision → cpa_decision
         if let v = inputs["cpaDecision"] {
             StoreProfileRepository.persistCpaDecisionForCurrentUser(v)
+        }
+        // 6. revenueModel → uses_subscriptions (구독형이면 true → 운영 대시보드 구독관리 카드 게이팅)
+        if let v = inputs["revenueModel"], !v.trimmingCharacters(in: .whitespaces).isEmpty {
+            StoreProfileRepository.persistUsesSubscriptionsForCurrentUser(subscriptionRevenueModels.contains(v))
         }
     }
 
