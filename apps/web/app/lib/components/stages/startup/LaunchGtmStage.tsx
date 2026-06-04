@@ -551,7 +551,7 @@ End: "Ask me anything ↓"`,
           </Section>
 
           {/* 2026-05-12: Pre-launch distribution buildup — 출시 *전에* 분배 만들기 */}
-          <Section icon={Megaphone} title={ko ? "출시 3-4주 전 분배 buildup (PH 는 분배를 만들지 않고 드러낼 뿐)" : "Pre-launch distribution buildup (3-4 wks before)"}>
+          <Section icon={Megaphone} title={ko ? "출시 3-4주 전 분배 사전 구축 (PH 는 분배를 만들지 않고 드러낼 뿐)" : "Pre-launch distribution buildup (3-4 wks before)"}>
             <div style={{ padding: "14px 18px" }}>
               <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65, marginBottom: "12px" }}>
                 {ko

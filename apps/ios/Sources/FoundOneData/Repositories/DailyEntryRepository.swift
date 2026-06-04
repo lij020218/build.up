@@ -123,7 +123,7 @@ private struct StoreDataWriteDTO: Encodable {
 struct AnyEncodable: Encodable {
     let value: Any
 
-    func encode(to encoder: Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         switch value {
         case let v as String: try container.encode(v)

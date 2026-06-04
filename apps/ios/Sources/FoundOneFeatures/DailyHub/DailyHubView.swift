@@ -37,7 +37,6 @@ public struct DailyHubView: View {
     }
 
     private var kpiCells: [KpiCellData] {
-        let totalRev = mock.entries.reduce(0.0) { $0 + $1.sales }
         // ⚠️ 2026-05-25 fix: 이전 `.sorted.last` 는 "가장 최근 entry" 라 어제 미입력 시
         //    3일 전 데이터가 "어제 매출" 로 표시되는 거짓말 버그. 정확히 어제 날짜로 검색.
         let yesterdayEntry = mock.entries.yesterdayEntry()

@@ -325,7 +325,7 @@ public struct PortOneConnectSheet: View {
                     step = .input
                 }
             } catch let repoError as PortOneRepositoryError {
-                errorMessage = repoError.localizedDescription ?? "오류가 발생했습니다."
+                errorMessage = repoError.errorDescription ?? "오류가 발생했습니다."
                 step = .input
             } catch {
                 errorMessage = "네트워크 오류: \(error.localizedDescription)"

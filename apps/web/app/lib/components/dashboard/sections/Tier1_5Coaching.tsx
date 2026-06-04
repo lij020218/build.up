@@ -24,7 +24,6 @@ import { DailyImprovementCard } from "../DailyImprovementCard";
 import { AvgTicketUpsellCard } from "../AvgTicketUpsellCard";
 import { PolicyFundMatchCard } from "../PolicyFundMatchCard";
 import { StartupHealthSection } from "../StartupHealthSection";
-import { StartupFounderBrief } from "../StartupFounderBrief";
 import { CashZeroDateCard } from "../CashZeroDateCard";
 import { FitnessRetentionCard } from "../FitnessRetentionCard";
 import { EducationEnrollmentCard } from "../EducationEnrollmentCard";
@@ -340,15 +339,10 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
         </div>
       )}
 
-      {/* 2026-05-12 킬러 기능 — AI 공동창업자 데일리 브리프 (startup-tech 만)
-          사장님 비판적 질문 "매출+사용자 수만으로 우리 제품 쓸까?" → 해석 레이어 신설.
-          런웨이·burn·CMGR·Rule of 40 자동 분석 → 5 신호 룰엔진 → 가장 중요한 1개 + 행동.
-          StartupHealthSection 의 raw 숫자 *위에* 위치 — 사장님이 먼저 *무엇이 중요한지* 봄. */}
-      {c.isStartupCompany && !hide("startup-founder-brief") && (
-        <div className="dash-stagger-item" style={nextStaggerStyle()}>
-          <StartupFounderBrief ko={ko} />
-        </div>
-      )}
+      {/* 2026-06-04: AI 공동창업자 데일리 브리프(StartupFounderBrief) → CEOMorningHero 로 흡수.
+          런웨이·burn·default-dead·CMGR·Rule of 40 신호를 computeStartupRule 이 산출해
+          brain.industryRule 슬롯으로 주입 → 단일 히어로가 표시(오프라인 OfflineFounderBrief 흡수와 동일 패턴).
+          별도 카드 제거 = 중복 신호·coaching history 이중 기록 해소. */}
 
       {/* 2026-05-12 Phase 2 startup-tech 보강 — CashZeroDate (절대 날짜 + 채용 시뮬).
           30+ 실리콘밸리 2025-2026 자료 (Mercury·Puzzle·Bessemer·ICONIQ·a16z) 합의:

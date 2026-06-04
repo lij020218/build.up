@@ -67,7 +67,6 @@ export type CardId =
   | "daily-improvement"
   | "avg-ticket-upsell"
   | "policy-fund-match"
-  | "startup-founder-brief"
   | "startup-health"
   | "saas-key-metrics"
   | "integration-hub"
@@ -231,7 +230,6 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //   향후 P1: ARRPerEmployee ($500K=새 $200K), NRRByUseCase (AI-native 48% 함정)
   "startup-tech": [
     "cash-zero-date",
-    "startup-founder-brief",
     "startup-health",
     "saas-key-metrics",
     "policy-fund-match",
@@ -377,14 +375,6 @@ export const CARD_META: Record<CardId, CardMeta> = {
       "중기부·sbiz.or.kr 2026 정책자금",
       "사장님 자격 자동 매칭 + 대환 시뮬",
       "위기 시 elevation (cashflowCriticalElevation)",
-    ],
-  },
-  "startup-founder-brief": {
-    id: "startup-founder-brief", status: "existing", industries: ["startup-tech"],
-    sources: [
-      "Mercury Insights / Brex KPI Dashboard",
-      "Datadrivenvc Burn Multiple",
-      "Paul Graham Default Alive",
     ],
   },
   "startup-health": {

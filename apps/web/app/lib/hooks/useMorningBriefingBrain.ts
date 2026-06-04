@@ -10,6 +10,8 @@ import { detectProactiveInsights, type ProactiveInsight } from "../services/prof
 import { updateAnomalyHistory, getAnomalyContext } from "../services/anomaly-history";
 import { useIndustryInsight, type IndustryInsight } from "./useIndustryInsight";
 import { computeIndustryRule, type IndustryRuleResult } from "./useIndustryRuleSignal";
+import { computeStartupRule } from "./computeStartupRule";
+import { useStartupMetrics } from "./useStartupMetrics";
 import type { DailyEntry, MonthlyCosts } from "../useDashboard";
 import { getBusinessDay } from "../utils/business-day";
 import { calculateCostRatios, calculateUnifiedHealthScore, type HealthGrade } from "@foundone/shared";
@@ -282,7 +284,14 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
   //   OfflineFounderBrief 안에 고립되어 있던 룰엔진을 brain 으로 끌어올림.
   //   resolveHero 의 우선순위 1.6 (anomaly 다음) 에서 사용.
   const ko = d.language === "ko";
+  // 2026-06-04: 스타트업 신호는 StartupFounderBrief(별도 카드)에서 흡수 → 같은 슬롯으로.
+  const startupMetricsResult = useStartupMetrics();
+  const isStartup = d.industryCategoryId === "startup-tech";
   const industryRule = useMemo<IndustryRuleResult>(() => {
+    // 스타트업: 런웨이·burn·default-dead·CMGR·Rule of 40 신호를 히어로로 통합.
+    if (isStartup) {
+      return computeStartupRule(startupMetricsResult.metrics, ko, entries.length >= 7);
+    }
     const currentMonth = new Date().toISOString().slice(0, 7);
     const monthEntries = entries.filter((e) => e.date.startsWith(currentMonth));
     const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
@@ -321,7 +330,7 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
       dailyEntriesCount: entries.length,
       ko,
     });
-  }, [entries, costs, monthlyBurn, salesTrend.changePct, d.industryCategoryId, ko]);
+  }, [entries, costs, monthlyBurn, salesTrend.changePct, d.industryCategoryId, ko, isStartup, startupMetricsResult.metrics]);
 
   // ── 2026-05-13: 다중 위험신호 (구 MorningBriefing 717-789 이식) ──
   //   Hero 의 HealthScore "78점" 같은 단일 숫자만 보고는 "무엇이 위험한지" 모름.

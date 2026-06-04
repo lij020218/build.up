@@ -62,7 +62,7 @@ public struct BomSupplyChainStageView: View {
                     "BOM Cost × 3 = 목표 소비자가 시뮬레이션이 맞는가.",
                     "QC 기준이 계약서에 문서화돼 있는가.",
                 ],
-                nextStageLabel: "다음: 현장·임상 시험",
+                nextStageLabel: "다음: KC·CE·FCC 인증",
                 nextSummary: "확정된 BOM으로 만든 제품을 실제 환경에서 검증합니다."
             ),
             currentPage: page,

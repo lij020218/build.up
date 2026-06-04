@@ -154,6 +154,7 @@ public struct AIRoadmapWizardView: View {
 
 private let midnight = Color(red: 0.098, green: 0.098, blue: 0.439) // #191970
 
+@MainActor
 private func primaryButton(label: String, disabled: Bool = false, action: @escaping () -> Void) -> some View {
     Button(action: action) {
         Text(label)
@@ -167,6 +168,7 @@ private func primaryButton(label: String, disabled: Bool = false, action: @escap
     .disabled(disabled)
 }
 
+@MainActor
 private func secondaryButton(label: String, action: @escaping () -> Void) -> some View {
     Button(action: action) {
         Text(label)
@@ -852,6 +854,7 @@ private struct AISectionCard<Content: View>: View {
 
 // MARK: - Helpers
 
+@MainActor
 private func backButton(action: @escaping () -> Void) -> some View {
     Button(action: action) {
         HStack(spacing: 4) {

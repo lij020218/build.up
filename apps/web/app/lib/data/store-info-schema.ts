@@ -847,7 +847,7 @@ const CATEGORY_SECTIONS: Record<CategoryId, SectionSpec[]> = {
       icon: "Building2",
       subtitle: "법인명 · 단계 · 도메인 · 한 줄 피치 — 투자자 자료의 기본",
       fields: [
-        { key: "legalNameKo", label: "법인명 (한글)", type: "text", placeholder: "예: 주식회사 빌드업" },
+        { key: "legalNameKo", label: "법인명 (한글)", type: "text", placeholder: "예: 주식회사 파운드원" },
         { key: "legalNameEn", label: "법인명 (영문)", type: "text", optional: true, placeholder: "Found.One Inc." },
         { key: "incorporatedAt", label: "법인 설립일", type: "date", optional: true },
         { key: "corporateRegistrationNumber", label: "법인등록번호", type: "text", optional: true, helper: "상업등기 13자리" },

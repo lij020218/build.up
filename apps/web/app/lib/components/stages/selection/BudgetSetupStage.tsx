@@ -12,6 +12,7 @@ import {
   starterOpenDatePresets,
 } from "@foundone/shared";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 import { BudgetInsightCard } from "./BudgetInsightCard";
 import { BudgetFundingMatchCard } from "./BudgetFundingMatchCard";
 
@@ -48,6 +49,17 @@ export function BudgetSetupStage() {
 
   return (
     <>
+      <KeyActionHero
+        ko={language === "ko"}
+        action={{
+          title: language === "ko"
+            ? "총 초기 자본의 30%는 운영 예비비로 — 1·2층 망함률을 가르는 한 줄"
+            : "Reserve 30% of total capital as operating buffer — the line that decides survival",
+          detail: language === "ko"
+            ? "보증금·인테리어·집기·인허가 외에 6개월 운영비를 따로 떼어 놓아야 첫 매출까지 버틴다. 운영비 없이 시작한 가게의 1년 폐업률이 3배."
+            : "Beyond deposit, interior, equipment, and permits, set aside 6 months of operating costs to survive until first revenue. Stores starting without it close at 3x the 1-year rate.",
+        }}
+      />
       <div style={styles.helper}>
         {copy.home.budgetHelp}
       </div>
@@ -617,7 +629,7 @@ export function BudgetSetupStage() {
 
       <StageWrapup
         ko={language === "ko"}
-        nextStageLabelKo="입지 후보 분석"
+        nextStageLabelKo="상권 후보 비교"
         doneItemsKo={[
           { label: "1. 자본 규모 설정", detail: "보유 자본 + 대출 가용액 + 운영자본 6개월 분리 — 3구간 프리셋 비교" },
           { label: "2. 오픈 일정 설정", detail: "오픈 희망일 시점에서 역산해 핵심 마일스톤 자동 배치" },
@@ -632,7 +644,7 @@ export function BudgetSetupStage() {
           "프랜차이즈 가맹비·교육비·인테리어 강제 비용 모두 합산 — 광고비·로열티 매월 별도 발생",
           "업종별 손익분기점 매출 추정 — 통상 매출 대비 인건비 25%, 재료비 30%, 임대료 10% 한계선",
         ]}
-        nextSummaryKo="자본·일정·예비비 확정 → 입지 후보 분석 단계로 진입"
+        nextSummaryKo="자본·일정·예비비 확정 → 상권 후보 비교 단계로 진입"
       />
 
       <div style={styles.stageFooter}>

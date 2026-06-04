@@ -66,8 +66,8 @@ public struct VentureCertificationStageView: View {
                 "병역특례 — 전문연구요원·산업기능요원 36개월 활용 가능 (인재 채용 핵심 혜택)",
                 "개인투자자 소득공제 — 3천만원 이하 100%·5천만원 70%·초과 30%, 투자자 모집 시 강력한 카드",
                 ],
-                nextStageLabel: "성장 엔진 구축",
-                nextSummary: "벤처 유형·요건·신청 완료 → 인증 후 혜택 활성화 + 성장 엔진 단계로 진입"
+                nextStageLabel: "세무 가이드",
+                nextSummary: "벤처 유형·요건·신청 완료 → 인증 후 혜택 활성화 + 세무 가이드 단계로 진입"
             ),
             currentPage: page,
             totalPages: pages.count

@@ -345,7 +345,7 @@ public struct CustomerManagementSheet: View {
 
     // MARK: - File Import
 
-    private func handleFileImport(_ result: Result<[URL], Error>) {
+    private func handleFileImport(_ result: Result<[URL], any Error>) {
         guard case .success(let urls) = result, let url = urls.first else { return }
         isImporting = true
         Task {

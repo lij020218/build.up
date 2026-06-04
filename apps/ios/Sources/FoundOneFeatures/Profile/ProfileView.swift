@@ -583,7 +583,7 @@ public struct ProfileView: View {
             _ = try await repo.resetAccount()
             await tick(to: 0.65, over: 0.25)
         } catch {
-            let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            let msg = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
             store.recordError("서버 초기화 실패 (로컬은 초기화 완료): \(msg)")
             // 실패해도 로컬은 정리 — 진행률은 진행
             await tick(to: 0.65, over: 0.15)

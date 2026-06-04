@@ -300,7 +300,7 @@ export function VentureCertificationStage() {
 
       <StageWrapup
         ko={ko}
-        nextStageLabelKo="사업자등록"
+        nextStageLabelKo="세무 가이드"
         doneItemsKo={[
           { label: "1. 벤처 유형 결정", detail: "벤처투자유형·연구개발유형·혁신성장유형 비교 후 선택" },
           { label: "2. 자격 요건 점검", detail: "투자 유치액·R&D 비율·매출·인력 등 유형별 요건 충족 확인" },
@@ -315,7 +315,7 @@ export function VentureCertificationStage() {
           "갱신 — 벤처 인증은 3년, 갱신 시 자격 재충족 의무 (미충족 시 인증 취소)",
           "혜택 활용 — 세제 감면·정부지원금 가산점·인재 채용 우대 등 자동 적용 X, 별도 신청 필요",
         ]}
-        nextSummaryKo="벤처 유형·요건·신청 완료 → 사업자등록 단계로 진입 (또는 다음 정부지원 신청)"
+        nextSummaryKo="벤처 유형·요건·신청 완료 → 세무 가이드 단계로 진입 (또는 다음 정부지원 신청)"
       />
     </div>
   );

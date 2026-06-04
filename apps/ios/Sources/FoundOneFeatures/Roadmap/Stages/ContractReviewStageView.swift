@@ -3,10 +3,14 @@
 //
 //  stageId: "contract-review"
 //
-//  3-page (세그먼트):
-//    pg 0 — 핵심 조항 (9대 필수 항목)
-//    pg 1 — 레드플래그 & 협상 포인트
-//    pg 2 — 계약 체크리스트
+//  웹 SSOT 미러 (apps/web/.../selection/ContractReviewStage.tsx) — 6 페이지:
+//    pg 0 — 개요 (StageOverview)
+//    pg 1 — 1. 서류 (WorkStep)
+//    pg 2 — 2. 현장 (WorkStep)
+//    pg 3 — 3. 특약 (WorkStep + 업종별 특약)
+//    pg 4 — 4. 사인 (WorkStep)
+//    pg 5 — 마무리 (9대 핵심 조항 체크리스트 + 확정 토글)
+//  상단 KEY ACTION 히어로는 BUStageKeyActionRegistry["contract-review"] 자동 노출.
 //
 
 import SwiftUI
@@ -23,7 +27,7 @@ public struct ContractReviewStageView: View {
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     private let stageId = "contract-review"
 
-    // 계약 체크
+    // 계약 체크 (마무리 페이지 — 완료 게이트)
     @AppStorage("contract.check.term")        private var checkTerm        = false
     @AppStorage("contract.check.deposit")     private var checkDeposit     = false
     @AppStorage("contract.check.rent")        private var checkRent        = false
@@ -32,9 +36,6 @@ public struct ContractReviewStageView: View {
     @AppStorage("contract.check.restore")     private var checkRestore     = false
     @AppStorage("contract.check.sublease")    private var checkSublease    = false
     @AppStorage("contract.check.facility")    private var checkFacility    = false
-    // ⚠️ 2026-05-25 fix: clausePage 에 9번째 조항 "주요 시설 보수"가 표시되지만
-    //    checklistPage 에 대응 체크항목이 없어 allChecked 가 실제 8개만 평가하는 버그.
-    //    9번째 체크 추가.
     @AppStorage("contract.check.maintenance") private var checkMaintenance = false
     @AppStorage("contract.check.done")        private var contractDone     = false
 
@@ -43,12 +44,12 @@ public struct ContractReviewStageView: View {
         checkRenewal && checkRestore && checkSublease && checkFacility && checkMaintenance
     }
 
-    private let pages = ["핵심 조항", "레드플래그", "체크리스트"]
+    private let pages = ["개요", "1. 서류", "2. 현장", "3. 특약", "4. 사인", "마무리"]
 
     private var canCompleteStage: Bool { allChecked && contractDone }
 
     private var advanceHint: String {
-        if !allChecked { return "9대 핵심 조항을 모두 체크하세요" }
+        if !allChecked { return "「마무리」 탭에서 9대 핵심 조항을 모두 체크하세요" }
         if !contractDone { return "임대 계약서 서명 완료 토글을 켜세요" }
         return "계약 검토 완료 — 다음 단계로"
     }
@@ -99,18 +100,281 @@ public struct ContractReviewStageView: View {
 
                 Group {
                     switch page {
-                    case 0: clausePage
-                    case 1: redFlagPage
-                    default: checklistPage
+                    case 0: overviewPage
+                    case 1: docsPage
+                    case 2: sitePage
+                    case 3: clausesPage
+                    case 4: signPage
+                    default: wrapupPage
                     }
                 }
             }
         }
     }
 
+    // MARK: - pg 0 개요 (웹 StageOverview 미러)
+
+    private var overviewPage: some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 14) {
+                BUEyebrow("이 단계 개요")
+                Text("계약서 사인 전 75분이 보증금 1,000~5,000만원을 결정합니다")
+                    .font(.system(size: 18, weight: .heavy)).tracking(-0.3)
+                    .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("임대차 계약은 사인 후 정정 가능성이 거의 0%. 건물(용도·정화조·전기)·계약(특약)·보호(확정일자·근저당)를 사전에 점검해야 분쟁·손실을 막습니다. 인근 점주 인터뷰 + 정부 서류 + 표준 특약 5종만으로 80% 리스크 차단.")
+                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 12) {
+                    Text("₩2,800만").font(.system(size: 26, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                    Text("분쟁 시 평균 손실액")
+                        .font(.system(size: 12, weight: .medium)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    Spacer(minLength: 0)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("이 단계에서 진행 — 총 5단계")
+                        .font(BUFont.eyebrow).foregroundStyle(BUColor.midnight.opacity(0.7))
+                    outlineRow("1. 서류", "건축물대장 + 등기부등본 발급", "20분")
+                    outlineRow("2. 현장", "현장 방문 + 영상 + 인접 점주 인터뷰", "30분")
+                    outlineRow("3. 특약", "특약 5종 협상 — 임대료·갱신·원상복구·업종·시설", "25분")
+                    outlineRow("4. 사인", "사인 즉시 확정일자 (동주민센터)", "당일")
+                    outlineRow("마무리", "필수 확인 항목 마킹 + 서명 완료", nil)
+                }
+
+                HStack(alignment: .top, spacing: 9) {
+                    Image(systemName: "arrow.up.right.circle.fill").font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(BUColor.success).padding(.top, 1)
+                    Text("보증금 보호 (확정일자 + 5% 상한 + 갱신 10년 + 원상복구 「임차 시 상태」 기준) 가 모두 계약서에 명문화됩니다. 다음 단계 (인테리어 발주) 부터는 보증금 묶임 리스크가 사라진 상태에서 진행.")
+                        .font(.system(size: 12.5)).foregroundStyle(BUColor.ink.opacity(0.78)).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BUColor.success.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.success.opacity(0.16), lineWidth: 1))
+            }
+        }
+    }
+
+    private func outlineRow(_ step: String, _ title: String, _ time: String?) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(step).font(.system(size: 10.5, weight: .bold)).tracking(0.4).textCase(.uppercase)
+                    .foregroundStyle(BUColor.midnight.opacity(0.7))
+                Text(title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(BUColor.ink)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            Spacer(minLength: 0)
+            if let time {
+                Text(time).font(.system(size: 11, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Color.white, in: Capsule())
+                    .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.1), lineWidth: 1))
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.06), lineWidth: 1))
+    }
+
+    // MARK: - WorkStep 공통 카드 (웹 WorkStep 미러)
+
+    private func workStepCard(stepLabel: String, time: String, headline: String,
+                              why: String, how: [(String, String)],
+                              watchouts: [(String, String)] = []) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    Text(stepLabel)
+                        .font(.system(size: 11, weight: .bold)).tracking(0.5)
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 9).padding(.vertical, 3)
+                        .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                    Text("· \(time)").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+                    Spacer(minLength: 0)
+                }
+                Text(headline)
+                    .font(.system(size: 17, weight: .heavy)).tracking(-0.3)
+                    .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                Text(why)
+                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("할 일").font(BUFont.eyebrow).foregroundStyle(BUColor.midnight.opacity(0.75))
+                        .padding(.bottom, 8)
+                    ForEach(Array(how.enumerated()), id: \.offset) { idx, h in
+                        HStack(alignment: .top, spacing: 12) {
+                            Text("\(idx + 1)")
+                                .font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                                .frame(width: 28, height: 28)
+                                .background(BUColor.midnight.opacity(0.08), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(h.0).font(.system(size: 14, weight: .bold)).foregroundStyle(BUColor.ink)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                                Text(h.1).font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 8)
+                        if idx < how.count - 1 { Divider().opacity(0.5) }
+                    }
+                }
+
+                if !watchouts.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("주의", systemImage: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.danger)
+                        ForEach(Array(watchouts.enumerated()), id: \.offset) { _, w in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(w.0).font(.system(size: 13, weight: .bold)).foregroundStyle(BUColor.danger)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                                Text(w.1).font(.system(size: 12)).foregroundStyle(BUColor.danger.opacity(0.85)).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(BUColor.danger.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.danger.opacity(0.16), lineWidth: 1))
+                }
+            }
+        }
+    }
+
+    // MARK: - pg 1 서류
+
+    private var docsPage: some View {
+        workStepCard(
+            stepLabel: "1. 서류 발급", time: "20분",
+            headline: "건축물대장 + 등기부등본을 사인 전에 직접 확인",
+            why: "임대인 말로 「용도 OK·근저당 적음」 = 절대 신뢰 X. 정부 서류로만 검증. 근저당 50%↑ 매물은 임대인 부도 시 보증금 회수 위험.",
+            how: [
+                ("건축물대장 발급 (정부24·무료·5분)", "정부24 → 「건축물대장 등본」 검색 → PDF 다운. 「용도」 + 「위반건축물」 표시 + 「정화조 BOD 용량」 확인."),
+                ("등기부등본 발급 (인터넷등기소·700원·5분)", "iros.go.kr → 「등기사항전부증명서」 → 부동산 주소 검색. 「갑구」 = 소유권, 「을구」 = 근저당·압류. 근저당 합계 ÷ 매물 시세 = 부도 위험률."),
+            ],
+            watchouts: [
+                ("위반건축물 표시 = 영업신고 영구 불가", "건축물대장에 「위반건축물」 표기 시 무조건 매물 변경. 무허가 증축·용도 변경은 시정 명령 + 보증금 묶임."),
+                ("근저당 50%↑ = 임대인 부도 시 보증금 후순위", "근저당 권자 (은행 등) 가 우선. 보증금이 후순위면 임대인 부도 시 잃을 가능성 큼."),
+            ]
+        )
+    }
+
+    // MARK: - pg 2 현장
+
+    private var sitePage: some View {
+        workStepCard(
+            stepLabel: "2. 현장 방문", time: "30분",
+            headline: "휴대폰 영상 + 옆 가게 점주 인터뷰 = 80% 리스크 차단",
+            why: "사진은 못 잡는 「소음·냄새·동선·환기」를 직접 점검. 옆 가게 점주에게 30초만 물어봐도 임대인 평판이 보임.",
+            how: [
+                ("영상 기록 — 매장 전체 + 외부 + 시설", "휴대폰으로 한 번에 쭉 촬영. 누수·곰팡이·전기 패널·환기 후드·정화조 위치까지. 분쟁 시 증거."),
+                ("옆 가게 점주에게 3개 질문", "「이 건물주 어때요?」 + 「임대료 어떻게 인상하세요?」 + 「민원 자주 있나요?」 — 임대인 평판 80% 노출."),
+                ("전기 용량·정화조 용량 직접 확인", "전기 패널 30A 표기 확인 + 건물 외부 정화조 위치·크기 확인. 임대인 답변과 다르면 협상 카드."),
+            ],
+            watchouts: [
+                ("낮 시간대만 가지 말 것 — 야간 소음 못 봄", "주거 인접 매물은 저녁 7시·아침 7시 다시 방문해 소음 점검. 영업 후 민원으로 시간 제한 가능성 사전 차단."),
+            ]
+        )
+    }
+
+    // MARK: - pg 3 특약 (+ 업종별 특약)
+
+    private var clausesPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            workStepCard(
+                stepLabel: "3. 특약 협상", time: "25분",
+                headline: "표준 임대차계약서 + 5종 특약 — 거부 임대인 = 매물 변경",
+                why: "사인 후 정정 거의 불가. 5종 특약을 협상 못 하는 임대인은 분쟁 시 일방적. 협상 거부 자체가 위험 신호.",
+                how: [
+                    ("표준 임대차계약서 사용 (법무부 양식)", "법무부 「상가건물 임대차 표준계약서」 다운. 임대인이 본인 양식 고집하면 추가 위험 조항 의심."),
+                    ("특약 5종 명시 — 임대료 5%·갱신 10년·원상복구·업종변경·시설보강", "「특약사항」 란에 5종 모두 명시. ① 임대료 인상 연 5% 이내 ② 10년 갱신권 ③ 원상복구 = 「임차 시 상태」 기준 ④ 업종변경 자유 ⑤ 시설보강 비용 임대인 부담."),
+                    ("거부 시 매물 변경 — 협상 못 하는 임대인은 위험", "5종 모두 거부하면 분쟁 가능성 매우 높은 임대인. 보증금 1,000~5,000만원 묶을 가치 없음."),
+                ],
+                watchouts: [
+                    ("「임대료 5% 상한」 미명시 = 무제한 인상 가능", "⚠ 환산보증금 상한 — 서울 9억, 광역시 6.9억, 그 외 5.4억 (상가건물 임대차보호법 시행령 §2). 환산보증금 = 보증금 + (월세 × 100). 상한 초과면 법정 보호(5% 상한·우선변제권) 적용 X — 특약에 「갱신 시 5% 이내」 명시해야 안전. ✓ 대항력·계약갱신요구권(10년)·권리금 회수기회는 환산보증금 상관없이 모든 임차인에게 적용."),
+                    ("원상복구 「최초 인도 시 상태」 = 인테리어 철거 1,000~3,000만원", "본인이 한 시공을 모두 철거 + 원래대로 복구해야 함. 「임차 시 상태」 로 명시해야 본인 시공만 책임."),
+                ]
+            )
+            clauseFavorableCard
+        }
+    }
+
+    // MARK: - pg 4 사인 + 확정일자
+
+    private var signPage: some View {
+        workStepCard(
+            stepLabel: "4. 사인 + 확정일자", time: "당일 30분",
+            headline: "사인 당일 무조건 확정일자 — 1일 늦으면 보증금 후순위",
+            why: "확정일자가 보증금 우선변제권 결정. 다른 채권자가 그 사이 등기하면 사장님 보증금이 후순위로 밀려 임대인 부도 시 잃음.",
+            how: [
+                ("관할 동주민센터 또는 세무서 방문", "임차물건 주소 관할. 1,000원 수수료. 30분 안에 끝남. 토요일 일부 가능 — 평일에 사인하는 게 안전."),
+                ("필요 서류 — 임대차계약서 + 신분증", "원본 계약서 + 본인 신분증. 임대인 동행 X (임차인 단독 신청)."),
+                ("확정일자 도장 받은 계약서는 절대 분실 X", "스캔본 클라우드 + 원본 금고 보관. 분쟁 시 핵심 증거."),
+                ("다음 단계 — 인테리어·집기 발주", "확정일자 받으면 보증금 보호 완료. 다음 단계로 진행."),
+            ],
+            watchouts: [
+                ("확정일자 1일 늦어도 우선변제권 후순위", "사인 후 다른 채권자가 그날 등기하면 사장님 보증금이 후순위. 사인 직후 바로 동주민센터로."),
+                ("권리금 회수기회 보호 — 임대차 종료 6개월 전~종료 시점", "상가건물 임대차보호법 §10조의4 — 임대인이 정당한 사유 없이 신규 임차인 거절 시 권리금 손해배상 청구 가능. 환산보증금 무관 모든 임차인에게 적용. 임대인 거절 사유는 서면 요구·증거 확보 필수."),
+            ]
+        )
+    }
+
+    // MARK: - pg 5 마무리 (9대 핵심 조항 체크리스트 + 확정 토글)
+
+    private var wrapupPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("사인 전 최종 체크리스트 (9대 핵심 조항)")
+                    contractCheckRow("계약 기간 2년 이상 + 갱신 청구권 10년 확인", isChecked: $checkTerm)
+                    contractCheckRow("보증금·월세 금액·지급일 정확히 기재", isChecked: $checkDeposit)
+                    contractCheckRow("임대 면적 건축물대장과 일치 여부 확인", isChecked: $checkArea)
+                    contractCheckRow("월세 인상률 상한 조항 삽입 (5% 이내)", isChecked: $checkRent)
+                    contractCheckRow("갱신 청구권 조항 확인 (강행규정)", isChecked: $checkRenewal)
+                    contractCheckRow("원상복구 범위 「임차 시 상태」로 명시", isChecked: $checkRestore)
+                    contractCheckRow("후드·간판·덕트 설치 허용 특약 확인", isChecked: $checkFacility)
+                    contractCheckRow("전대차 관련 조항 확인", isChecked: $checkSublease)
+                    contractCheckRow("냉난방·전기·수도 주요 시설 하자 수리 주체 명확히", isChecked: $checkMaintenance)
+                }
+            }
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("진행 상황")
+                    wrapRow(label: "9대 핵심 조항 확인", done: allChecked)
+                    if allChecked {
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.seal.fill").foregroundStyle(BUColor.success)
+                            Text("모든 항목 확인 완료! 계약 체결 가능합니다.")
+                                .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.success)
+                        }.padding(.top, 4)
+                    }
+                    Toggle(isOn: $contractDone) {
+                        Text("임대 계약서 서명 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    }.tint(BUColor.midnight)
+                }
+            }
+
+            warningCard(title: "계약 후 즉시 할 일", items: [
+                "계약서 사진·사본 즉시 안전한 곳에 백업 (분실 시 분쟁 증거 불가)",
+                "확정일자 받기 — 관할 동주민센터/세무서 (1,000원). 임대인 파산 시 보증금 우선변제권 확보",
+                "전입신고 (사업장 주소) — 확정일자와 함께 대항력 확보",
+            ], color: .orange)
+        }
+    }
+
     // MARK: - 업종별 특약 카드 (웹 clauseFavorable 1:1 — web==app)
 
-    /// 사장님 업종에 따라 "꼭 받아야 할 특약" — 웹 clauseFavorable[categoryId] 미러.
     private var clauseFavorableCard: some View {
         let tip = clauseFavorableTip(IndustryCluster.from(industryId: industryId).category.rawValue)
         return BUCard(.card) {
@@ -168,143 +432,6 @@ public struct ContractReviewStageView: View {
                 "건축물 용도 미일치 시 영업허가 거부. 소음·시간 분쟁 1순위 — 특약에 명시.")
         default:
             return clauseFavorableTip("food")
-        }
-    }
-
-    // MARK: - pg 0 핵심 조항
-
-    private var clausePage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            clauseFavorableCard
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("9대 핵심 확인 조항")
-                    let clauses: [(String, String, String)] = [
-                        ("계약 기간", "2년 이상 권장 (상가임대차보호법 최초 10년 갱신 청구권)", "clock"),
-                        ("보증금·월세", "금액·지급일·인상률 상한 명시 (5% 이내 권장)", "wonsign"),
-                        ("임대 면적", "건축물대장 실면적 vs 계약서 면적 일치 여부 확인", "ruler"),
-                        ("권리금", "권리금 있을 경우 별도 계약서 작성 (미작성 시 분쟁 발생)", "doc.text"),
-                        ("계약 갱신", "갱신 청구권 10년 보장 (2018년 10월 이후 체결 계약)", "arrow.clockwise"),
-                        ("원상복구", "인테리어 원상복구 범위 구체적으로 명시 (무제한 금지)", "arrow.uturn.backward"),
-                        ("전대차 금지", "영업 중 사정으로 재임대 필요 시 허용 여부 확인", "person.2"),
-                        ("시설 설치", "환기 덕트·후드·간판 설치 허용 특약 삽입 여부", "wrench.and.screwdriver"),
-                        ("주요 시설 보수", "냉난방·전기·수도 주요 시설 하자 수리 주체 명확히", "hammer"),
-                    ]
-                    ForEach(clauses, id: \.0) { title, detail, icon in
-                        HStack(alignment: .top, spacing: BUSpacing.sm) {
-                            ZStack {
-                                Circle().fill(BUColor.midnight.opacity(0.1)).frame(width: 28, height: 28)
-                                Image(systemName: icon).font(.system(size: 11)).foregroundStyle(BUColor.midnight)
-                            }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                            }
-                            Spacer()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - pg 1 레드플래그 & 협상
-
-    private var redFlagPage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            warningCard(title: "절대 사인하면 안 되는 조항", items: [
-                "\"임대인 요구 시 즉시 명도\" — 사실상 퇴거 요청 때마다 이사 각오",
-                "\"원상복구 무제한\" — 임대인이 전체 리모델링 비용 청구 가능",
-                "\"월세 인상률 제한 없음\" — 매년 급격한 인상으로 수익 증발",
-                "임차인 권리금 보호 조항 누락 — 권리금 회수 불가능",
-            ], color: .red)
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("협상 성공 특약 예시")
-                    let specials: [(String, String)] = [
-                        ("인테리어 기간 무상 임대", "\"착공일로부터 OO일간 임대료 면제\" — 수백만원 절감"),
-                        ("인테리어 비용 일부 임대인 부담", "\"후드·덕트 설치비 50% 임대인 부담\" — 공사비 절감"),
-                        ("간판 설치 허용 명시", "\"건물 외벽 간판 설치 동의\" — 추후 분쟁 방지"),
-                        ("영업 양도 시 권리금 보호", "\"임차인 권리금 회수 기회 보장\" — 상가임대차보호법 준용"),
-                        ("월세 인상 상한 5%", "\"연간 임대료 인상은 5% 초과 불가\" — 5년 수익 예측 가능"),
-                    ]
-                    ForEach(specials, id: \.0) { title, detail in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("✓").font(.system(size: 12, weight: .bold)).foregroundStyle(BUColor.success)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                            }
-                        }
-                    }
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("전문가 활용 (5~10만원)")
-                    let pros: [(String, String)] = [
-                        ("법무사 계약서 검토", "계약서 리스크 조항 식별 + 특약 추가 대행"),
-                        ("상가임대차 전문 변호사", "분쟁 이력 있는 건물 또는 고가 권리금 매물"),
-                        ("공인중개사 동행 협상", "임대인과 조율 경험 있는 중개사에게 중간 협상 위임"),
-                    ]
-                    ForEach(pros, id: \.0) { name, desc in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("→").font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.midnight).padding(.top, 1)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(name).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - pg 2 체크리스트
-
-    private var checklistPage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("사인 전 최종 체크리스트")
-                    contractCheckRow("계약 기간 2년 이상 + 갱신 청구권 10년 확인", isChecked: $checkTerm)
-                    contractCheckRow("보증금·월세 금액·지급일 정확히 기재", isChecked: $checkDeposit)
-                    contractCheckRow("임대 면적 건축물대장과 일치 여부 확인", isChecked: $checkArea)
-                    contractCheckRow("월세 인상률 상한 조항 삽입", isChecked: $checkRent)
-                    contractCheckRow("갱신 청구권 조항 확인 (강행규정)", isChecked: $checkRenewal)
-                    contractCheckRow("원상복구 범위 구체적으로 명시", isChecked: $checkRestore)
-                    contractCheckRow("후드·간판·덕트 설치 허용 특약 확인", isChecked: $checkFacility)
-                    contractCheckRow("전대차 관련 조항 확인", isChecked: $checkSublease)
-                    contractCheckRow("냉난방·전기·수도 주요 시설 하자 수리 주체 명확히", isChecked: $checkMaintenance)
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("진행 상황")
-                    wrapRow(label: "9대 핵심 조항 확인", done: allChecked)
-                    if allChecked {
-                        HStack(spacing: 6) {
-                            Image(systemName: "checkmark.seal.fill").foregroundStyle(BUColor.success)
-                            Text("모든 항목 확인 완료! 계약 체결 가능합니다.")
-                                .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.success)
-                        }.padding(.top, 4)
-                    }
-                    Toggle(isOn: $contractDone) {
-                        Text("임대 계약서 서명 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                    }.tint(BUColor.midnight)
-                }
-            }
-
-            warningCard(title: "계약 후 즉시 할 일", items: [
-                "계약서 사진·사본 즉시 안전한 곳에 백업 (분실 시 분쟁 증거 불가)",
-                "확정일자 받기 — 동사무소 방문 or 인터넷등기소 (600원). 임대인 파산 시 보증금 보호",
-                "전입신고 (사업장 주소) — 확정일자와 함께 대항력 확보",
-            ], color: .orange)
         }
     }
 

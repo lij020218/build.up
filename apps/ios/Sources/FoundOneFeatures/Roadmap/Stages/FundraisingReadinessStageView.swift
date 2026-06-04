@@ -285,7 +285,7 @@ public struct FundraisingReadinessStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("주요 스타트업 지원 프로그램 (2026)")
                     let programs: [(String, String)] = [
-                        ("TIPS (팁스)", "민간투자 연계 · R&D 최대 5억 (성공 시 환수 10%만) · 149개 운영사 추천 필수 · jointips.or.kr"),
+                        ("TIPS (팁스)", "민간투자 연계 · R&D 5억 + 사업화 3억 = 총 8억 (성공 시 R&D 10% 환수) · 149개 운영사 추천 필수 · jointips.or.kr"),
                         ("중진공 청년창업사관학교", "만 39세 이하. 공간·자금·멘토링. 연 1000명 선정."),
                         ("K-스타트업 창업패키지", "3년 미만 법인. 최대 1억. k-startup.go.kr 공고 확인."),
                         ("산업부 R&D", "딥테크 스타트업. 최대 수억~수십억. 기술성 평가 필수."),

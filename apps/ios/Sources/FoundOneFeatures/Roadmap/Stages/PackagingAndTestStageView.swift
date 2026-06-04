@@ -178,7 +178,7 @@ public struct PackagingAndTestStageView: View {
                     BUEyebrow("테스트 커버리지 목표")
                     let targets: [(String, String)] = [
                         ("Fault Coverage", "95% 이상"),
-                        ("수율 (Yield)", "80% 이상 (첫 MPW 기준 50–70%도 정상)"),
+                        ("수율 (Yield)", "양산 손익분기 95% 이상 (wafer·final test 모두 — 첫 MPW 검증 단계는 50–70%도 정상)"),
                     ]
                     ForEach(targets, id: \.0) { label, value in
                         HStack(spacing: BUSpacing.sm) {

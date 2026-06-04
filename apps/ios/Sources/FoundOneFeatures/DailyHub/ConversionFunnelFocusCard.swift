@@ -198,6 +198,18 @@ public struct ConversionFunnelFocusCard: View {
                     .foregroundStyle(BUColor.inkMuted)
             }
             Spacer(minLength: 0)
+            // 2026-06-04: 입력 전 sample funnel 을 *진짜처럼* 보여주던 문제(가짜) → "예시" 배지 명시.
+            //   웹 ConversionFunnelCard 의 "샘플" 배지와 동일 처리. 사장님이 자기 전환율로 오인 방지.
+            if isManualEmpty {
+                Text("예시 데이터")
+                    .font(.system(size: 9.5, weight: .heavy))
+                    .tracking(0.3)
+                    .foregroundStyle(BUColor.midnight)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(BUColor.midnight08, in: Capsule())
+                    .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.22), style: StrokeStyle(lineWidth: 0.7, dash: [3, 2])))
+            }
             // SaaS 모드: 런웨이 mini chip
             if mode == .saas, let d = daysUntilZero {
                 HStack(spacing: 3) {
@@ -529,7 +541,7 @@ private struct FunnelManualInputSheet: View {
         // Fire-and-forget — 실패해도 로컬 데이터는 유지.
         Task {
             do {
-                guard let uid = try await BUSupabase.shared.currentUser?.id else { return }
+                guard let uid = BUSupabase.shared.currentUser?.id else { return }
                 let repo = FunnelMetricsRepository(
                     supabase: BUSupabase.shared.client,
                     getUserId: { uid }

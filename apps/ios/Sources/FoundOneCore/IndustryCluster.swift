@@ -110,26 +110,51 @@ public struct IndustryCluster: Sendable, Hashable {
 
     // MARK: - Prime Cost 벤치마크 (월 매출 대비 %, 한국외식산업연구원 + 소진공 2024)
 
+    /// 업종 월 비용 벤치마크 — 웹 SSOT (FinancialReviewStage CATEGORY_FALLBACK_BENCHMARKS) 1:1 미러.
+    ///   8개 비용 항목 + 영업이익률 + Prime Cost 상한. isBurnBasis=true 면 월 번레이트 대비(스타트업).
     public struct CostBenchmark: Sendable, Hashable {
-        public let materialsPctRange: ClosedRange<Int>   // 원재료/매입 원가
+        public let materialsPctRange: ClosedRange<Int>   // 원재료/매입 (=ingredients, 스타트업은 인프라·SaaS·API)
         public let laborPctRange: ClosedRange<Int>       // 인건비
-        public let rentPctRange: ClosedRange<Int>        // 임대료
-        public let primeMaxPct: Int                      // 재료+인건비 합 상한
+        public let rentPctRange: ClosedRange<Int>        // 임대료 (스타트업은 사무실·코워킹)
+        public let utilitiesPctRange: ClosedRange<Int>   // 공과금 (스타트업은 통신·기기·SaaS)
+        public let sgaPctRange: ClosedRange<Int>         // 운영 수수료 (배달·POS·카드, 또는 결제·회계·법무)
+        public let marketingPctRange: ClosedRange<Int>   // 마케팅
+        public let otherPctRange: ClosedRange<Int>       // 기타 (IP·인증 등)
+        public let marginPctRange: ClosedRange<Int>      // 영업이익률 (burn 기준이면 목표 gross margin)
+        public let primeMaxPct: Int                      // 재료+인건비 합 상한 (Prime Cost 게이지용)
+        public let isBurnBasis: Bool                     // true=월 번레이트 대비 (스타트업, 매출 전)
+        public let notes: String                         // 세부업종 핵심 인사이트 (1줄, 카테고리는 빈 문자열)
+
+        public init(materialsPctRange: ClosedRange<Int>, laborPctRange: ClosedRange<Int>, rentPctRange: ClosedRange<Int>,
+                    utilitiesPctRange: ClosedRange<Int>, sgaPctRange: ClosedRange<Int>, marketingPctRange: ClosedRange<Int>,
+                    otherPctRange: ClosedRange<Int>, marginPctRange: ClosedRange<Int>, primeMaxPct: Int, isBurnBasis: Bool = false, notes: String = "") {
+            self.materialsPctRange = materialsPctRange
+            self.laborPctRange = laborPctRange
+            self.rentPctRange = rentPctRange
+            self.utilitiesPctRange = utilitiesPctRange
+            self.sgaPctRange = sgaPctRange
+            self.marketingPctRange = marketingPctRange
+            self.otherPctRange = otherPctRange
+            self.marginPctRange = marginPctRange
+            self.primeMaxPct = primeMaxPct
+            self.isBurnBasis = isBurnBasis
+            self.notes = notes
+        }
     }
 
     public var costBenchmark: CostBenchmark {
         switch category {
-        case .food:           return .init(materialsPctRange: 35...45, laborPctRange: 20...28, rentPctRange: 8...12,  primeMaxPct: 65)
-        case .cafeDessert:    return .init(materialsPctRange: 28...38, laborPctRange: 20...28, rentPctRange: 10...15, primeMaxPct: 60)
-        case .beauty:         return .init(materialsPctRange: 15...25, laborPctRange: 35...50, rentPctRange: 10...18, primeMaxPct: 70)
-        case .fitness:        return .init(materialsPctRange: 5...15,  laborPctRange: 30...40, rentPctRange: 15...25, primeMaxPct: 55)
-        case .education:      return .init(materialsPctRange: 5...12,  laborPctRange: 40...55, rentPctRange: 12...20, primeMaxPct: 65)
-        case .pet:            return .init(materialsPctRange: 20...30, laborPctRange: 30...40, rentPctRange: 10...15, primeMaxPct: 65)
-        case .livingService:  return .init(materialsPctRange: 15...25, laborPctRange: 25...35, rentPctRange: 8...15,  primeMaxPct: 55)
-        case .space:          return .init(materialsPctRange: 5...12,  laborPctRange: 15...25, rentPctRange: 25...40, primeMaxPct: 45)
-        case .retail:         return .init(materialsPctRange: 50...65, laborPctRange: 12...20, rentPctRange: 6...10,  primeMaxPct: 78)
-        case .onlineDigital:  return .init(materialsPctRange: 40...55, laborPctRange: 10...18, rentPctRange: 2...6,   primeMaxPct: 65)
-        case .startupTech:    return .init(materialsPctRange: 8...18,  laborPctRange: 50...70, rentPctRange: 4...8,   primeMaxPct: 75)
+        case .food:           return .init(materialsPctRange: 38...45, laborPctRange: 22...28, rentPctRange: 8...12,  utilitiesPctRange: 4...6, sgaPctRange: 4...8,  marketingPctRange: 2...5,  otherPctRange: 3...5,  marginPctRange: 10...18, primeMaxPct: 65)
+        case .cafeDessert:    return .init(materialsPctRange: 30...38, laborPctRange: 22...28, rentPctRange: 10...15, utilitiesPctRange: 4...6, sgaPctRange: 3...5,  marketingPctRange: 3...5,  otherPctRange: 3...5,  marginPctRange: 12...22, primeMaxPct: 60)
+        case .beauty:         return .init(materialsPctRange: 8...12,  laborPctRange: 45...55, rentPctRange: 12...18, utilitiesPctRange: 3...5, sgaPctRange: 2...4,  marketingPctRange: 4...7,  otherPctRange: 4...6,  marginPctRange: 12...22, primeMaxPct: 70)
+        case .fitness:        return .init(materialsPctRange: 3...6,   laborPctRange: 40...55, rentPctRange: 18...25, utilitiesPctRange: 4...7, sgaPctRange: 3...5,  marketingPctRange: 4...7,  otherPctRange: 4...6,  marginPctRange: 10...22, primeMaxPct: 55)
+        case .education:      return .init(materialsPctRange: 5...10,  laborPctRange: 40...55, rentPctRange: 15...22, utilitiesPctRange: 3...5, sgaPctRange: 2...4,  marketingPctRange: 5...8,  otherPctRange: 4...6,  marginPctRange: 12...22, primeMaxPct: 65)
+        case .pet:            return .init(materialsPctRange: 20...35, laborPctRange: 30...45, rentPctRange: 12...20, utilitiesPctRange: 3...6, sgaPctRange: 3...5,  marketingPctRange: 4...7,  otherPctRange: 4...8,  marginPctRange: 10...20, primeMaxPct: 65)
+        case .livingService:  return .init(materialsPctRange: 15...30, laborPctRange: 25...45, rentPctRange: 10...20, utilitiesPctRange: 5...12, sgaPctRange: 3...5, marketingPctRange: 4...7,  otherPctRange: 5...10, marginPctRange: 10...20, primeMaxPct: 55)
+        case .space:          return .init(materialsPctRange: 3...6,   laborPctRange: 10...18, rentPctRange: 28...40, utilitiesPctRange: 5...10, sgaPctRange: 4...7, marketingPctRange: 5...8,  otherPctRange: 10...15, marginPctRange: 15...25, primeMaxPct: 45)
+        case .retail:         return .init(materialsPctRange: 45...60, laborPctRange: 15...22, rentPctRange: 10...18, utilitiesPctRange: 2...4, sgaPctRange: 3...5,  marketingPctRange: 4...7,  otherPctRange: 3...5,  marginPctRange: 8...15,  primeMaxPct: 78)
+        case .onlineDigital:  return .init(materialsPctRange: 25...50, laborPctRange: 15...35, rentPctRange: 0...8,   utilitiesPctRange: 3...8, sgaPctRange: 8...15, marketingPctRange: 12...25, otherPctRange: 3...8, marginPctRange: 20...50, primeMaxPct: 65)
+        case .startupTech:    return .init(materialsPctRange: 15...30, laborPctRange: 40...55, rentPctRange: 5...12,  utilitiesPctRange: 2...7, sgaPctRange: 8...15, marketingPctRange: 3...12, otherPctRange: 3...10, marginPctRange: 60...80, primeMaxPct: 75, isBurnBasis: true)
         }
     }
 

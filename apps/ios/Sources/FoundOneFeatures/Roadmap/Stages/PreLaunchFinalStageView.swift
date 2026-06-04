@@ -111,6 +111,50 @@ public struct PreLaunchFinalStageView: View {
         }
     }
 
+    // ── 페이지별 KEY ACTION (웹 PreLaunchFinalStage keyActions 1:1 미러) ──
+    //   웹은 isStartup × cluster(online/offline) 분기, iOS 는 cluster 3분기.
+    //   웹 page0 = "왜 중요한가" 역할 겸함 → iOS page 인덱스와 정렬.
+    private var pageKeyActions: [BUStageKeyAction] {
+        switch cluster {
+        case .startup: return [
+            .init(title: "론칭은 1일 이벤트가 아니라 6주 프로젝트 — 지금부터 베타 사용자 10명 확보",
+                  detail: "Product Hunt #1 팀의 공통점: 4-6주 전 시작, 200+ first-hour supporters 사전 확보, 12:01 PT 화/수 게시. 2026 알고리즘은 업보트 수보다 댓글·체류 시간 가중."),
+            .init(title: "Sentry + Slack 알람을 실제 에러로 1번 트리거 — '연결만' 끝내지 말고 '경보가 정말 울리는지' 확인",
+                  detail: "프로덕션 배포 + 도메인 + SSL + 결제 실제 1건 성공 + 모든 모니터링 alarm 실제 트리거 테스트. 론칭 후 첫 30분이 가장 위험합니다."),
+            .init(title: "역할 분담 = 버그 1명 / CS 1명 / 마케팅 1명 — 솔로면 우선순위만 명확히",
+                  detail: "Product Hunt 12:01 PT 게시 → 메이커 코멘트 1번째 댓글로 'Ask Me Anything' → 인터뷰했던 고객 10명에게 개인 메시지. 업보트 부탁 X, '솔직한 피드백' 부탁 O."),
+            .init(title: "D-7부터 매일 1개 행동 — 캘린더에 미리 등록하고 시작",
+                  detail: "D-7 PH 예약 + 메일링 알림 / D-3 SNS 티저 + 데모 영상 / D-1 최종 배포 + 모니터링 / D-Day 06시 PT 게시 / D+1 핫픽스 + 감사 메시지 / D+7 첫 주 지표 리뷰."),
+        ]
+        case .online: return [
+            .init(title: "첫 주문 처리 1번 모의 시뮬레이션 — 박스·완충재·송장 전부 준비",
+                  detail: "스마트스토어 발송기한 (오늘출발 = 결제 당일 또는 +1영업일) 미준수 시 구매자 즉시 환불. 첫 리뷰 3개가 노출 순위 좌우. 실제 주문→포장→사진→발송까지 1번 끝까지 돌려보세요."),
+            .init(title: "재고 시스템 실수량 vs 표시수량 일치 확인 — 품절·중복판매 방지",
+                  detail: "스토어 카테고리·반품정책 최종 확인 + 카카오톡 채널/네이버 톡톡 CS 오픈 + 택배사 집하 시간 사전 확정. 2026 수수료 약 6.6%, 정산 3-4일."),
+            .init(title: "주문 알림 즉시 확인 → 30분 내 발송 처리 워크플로 고정",
+                  detail: "구매자 취소 요청 → 발송 미처리 시 즉시 환불 + 부정 리뷰. 알림 OFF 절대 금지. 송장번호 입력 시 오타 = 추적 불가 = 분쟁. 포장 사진 1장씩 보관."),
+            .init(title: "오픈 7일 전부터 인스타 릴스 매일 1개 — 카운트다운 노출 누적",
+                  detail: "D-7 첫 구매 쿠폰 + 오픈 예약 / D-3 릴스 언박싱 / D-1 최종 점검 / D-Day SNS 공유 + 첫 리뷰 요청 / D+7 데이터 분석 + 네이버 쇼핑광고 시작."),
+        ]
+        case .offline: return [
+            .init(title: "첫 손님이 카드를 내미는 순간을 1번 리허설 — POS·단말기·Wi-Fi·영수증 한 번에",
+                  detail: "2026 네이버 플레이스 알고리즘은 리뷰 수보다 클릭·전화·길찾기·체류 시간 가중. 첫 3개 리뷰가 향후 노출을 결정. 외식업 46.5%가 인력 감축한 시기 — 1인 운영이라면 동선 리허설이 더 중요."),
+            .init(title: "카드 단말기·POS·Wi-Fi 백업 핫스팟까지 4중 점검 — 가장 흔한 오픈 사고 1순위",
+                  detail: "단말기 결제·취소·영수증 출력 실제 테스트 + Wi-Fi 끊김 시 핫스팟 자동전환 확인 + 냉장고 온도 + 식자재 입고. 신규 매장 오픈 직후 첫 주에 가장 자주 일어나는 사고는 결제 실패와 인터넷 끊김."),
+            .init(title: "직원 모의 운영 1시간 — 주문→제조→서빙→정산 한 사이클",
+                  detail: "1인 운영이면 더 중요. 첫 러시(rush)에 손이 꼬이면 첫 리뷰가 1점이 됩니다. 비상 시나리오: 단말기 다운→현금, Wi-Fi 끊김→핫스팟, 식자재 소진→긴급 발주 연락처 미리 확보."),
+            .init(title: "네이버 플레이스 등록 + 오픈 7일 전부터 인스타 1일 1콘텐츠 — '실제 방문 가능성' 시그널 누적",
+                  detail: "2026 알고리즘은 등록만으로는 안 뜸. 검색→클릭→전화→길찾기→저장→재방문 흐름이 누적되어야 노출. 첫 주는 영수증 리뷰 이벤트 (할인 쿠폰)로 진성 리뷰 3개를 가장 빨리 만드는 게 핵심."),
+        ]
+        }
+    }
+
+    private var pageKeyAction: BUStageKeyAction {
+        let arr = pageKeyActions
+        let idx = min(max(page, 0), arr.count - 1)
+        return arr[idx]
+    }
+
     private var preChecks: [(String, Binding<Bool>)] {
         switch cluster {
         case .offline: return [
@@ -221,7 +265,8 @@ public struct PreLaunchFinalStageView: View {
                 nextSummary: "그랜드 오픈 — 운영 대시보드에서 매일 매출·고객·재고 기록 시작"
             ),
             currentPage: page,
-            totalPages: pages.count
+            totalPages: pages.count,
+            keyActionOverride: pageKeyAction
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 // 가로 스크롤 탭바 (4개 탭)

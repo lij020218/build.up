@@ -830,6 +830,14 @@ const starterBusinessModelOptionsByCategory: Record<string, RecommendationItem[]
       warnings: ["Need strong throughput and sharper menu positioning"]
     },
     {
+      id: "cafe-delivery-hybrid",
+      title: "Cafe + Delivery Hybrid",
+      score: 84,
+      summary: "Storefront plus delivery and pickup — captures drink and dessert delivery demand.",
+      reasons: ["Adds delivery/pickup revenue on top of seating", "Strong fit for dessert and beverage demand on apps"],
+      warnings: ["Delivery app fees and packaging cost add up", "Drink/dessert quality must survive transit"]
+    },
+    {
       id: "self-serve-light",
       title: "Self-serve / Unmanned Light",
       score: 68,

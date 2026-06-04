@@ -65,7 +65,9 @@ public final class RealtimeSyncManager {
         }
 
         self.channel = ch
-        await ch.subscribe()
+        // subscribe() (deprecated) 는 내부적으로 `try? await subscribeWithError()` 와 동일.
+        // 동작 보존 + deprecation 경고 제거를 위해 직접 호출.
+        try? await ch.subscribeWithError()
     }
 
     public func stop() async {

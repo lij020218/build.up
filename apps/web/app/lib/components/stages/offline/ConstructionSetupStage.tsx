@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { KeyActionHero } from "../shared/StageActionHero";
 import type { LucideIcon } from "lucide-react";
 import {
   Layers, Lightbulb, VolumeX, Shield, Zap, Droplets, Wind, Gem,
@@ -310,6 +311,17 @@ export function ConstructionSetupStage() {
 
                   return (
                     <>
+                      <KeyActionHero
+                        ko={language === "ko"}
+                        action={{
+                          title: language === "ko"
+                            ? "공사 중에 소방필증·보건증 병행 신청 — 시공 후엔 영업까지 14일 더 걸린다"
+                            : "Apply for fire & health certs during construction — doing it after adds 14 days to opening",
+                          detail: language === "ko"
+                            ? "인테리어 컨셉 → 견적 2곳 비교 → 설계 확정 → 시공 → 최종 점검. 소방·보건은 공사 시작 시점에 동시 신청해야 오픈 일정이 안 밀린다."
+                            : "Concept → compare 2 quotes → finalize design → build → final check. File fire and health applications at construction start so the opening date doesn't slip.",
+                        }}
+                      />
                       {/* ── 프랜차이즈 본사 공급 패키지 (선택 시 우선 노출) ── */}
                       {franchiseData ? (() => {
                         const flexLabel = language === "ko"

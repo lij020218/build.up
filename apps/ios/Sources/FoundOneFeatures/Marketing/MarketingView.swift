@@ -297,7 +297,7 @@ public struct MarketingView: View {
             state.coachActions = actions
             state.coachGeneratedAt = ISO8601DateFormatter().string(from: Date())
         } catch {
-            state.coachError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            state.coachError = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
         }
     }
 
@@ -322,7 +322,7 @@ public struct MarketingView: View {
                 state.focusedTrendIdx = 0
             }
         } catch {
-            state.trendsError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            state.trendsError = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
         }
     }
 

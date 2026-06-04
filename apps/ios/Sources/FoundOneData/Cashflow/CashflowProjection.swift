@@ -148,7 +148,7 @@ public enum CashflowProjection {
             let dow = jsDay(date)
             let isWeekend = dow == 0 || dow == 6
 
-            var inflowEvents = isWeekend
+            let inflowEvents = isWeekend
                 ? []
                 : computeDayInflow(date, avgDailySales, salesChannels, vatReserveEnabled, vatRate)
             var outflowEvents = computeDayOutflow(date, fixedExpenses)

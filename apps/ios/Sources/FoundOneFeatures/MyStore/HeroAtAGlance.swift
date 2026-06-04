@@ -161,7 +161,7 @@ public struct HeroAtAGlance: View {
             uploadState = .idle
         } catch {
             uploadState = .failed
-            uploadError = (error as? LocalizedError)?.errorDescription
+            uploadError = (error as? (any LocalizedError))?.errorDescription
                 ?? error.localizedDescription
         }
 

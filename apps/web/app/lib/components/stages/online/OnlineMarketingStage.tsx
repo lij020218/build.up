@@ -1,6 +1,7 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 
 export function OnlineMarketingStage() {
   const d = useDashboardCtx();
@@ -8,6 +9,17 @@ export function OnlineMarketingStage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "14px" }}>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "SEO + 첫 광고 + 초기 리뷰 — 노출·전환·신뢰 3축을 동시에"
+            : "SEO + first ads + early reviews — exposure, conversion, trust at once",
+          detail: ko
+            ? "네이버 쇼핑 상품명·태그 최적화로 무료 노출, 첫 광고 캠페인은 ROAS 200% 목표로 작게 시작, 초기 리뷰는 지인·체험단·낮은 가격 신규 할인 3종 병행."
+            : "Optimize Naver Shopping titles/tags for free exposure, start the first ad campaign small at a 200% ROAS target, and seed early reviews via friends, testers, and new-customer discounts.",
+        }}
+      />
       {/* 네이버 SEO */}
       <div style={{ borderRadius: "20px", border: "1px solid rgba(3,199,90,0.1)", background: "linear-gradient(180deg, rgba(3,199,90,0.03) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>

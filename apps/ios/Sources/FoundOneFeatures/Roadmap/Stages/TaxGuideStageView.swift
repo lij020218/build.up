@@ -21,6 +21,7 @@
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneComponents
+import FoundOneCore
 import FoundOneData
 
 // 2026 간이과세 기준 — 부가가치세법 시행령 §109
@@ -38,6 +39,37 @@ public struct TaxGuideStageView: View {
     @AppStorage("taxGuide.cashReceipt")   private var cashReceiptDone  = false
     @AppStorage("taxGuide.cpaDecision")   private var cpaDecision      = "" // "cpa" or "self"
     @AppStorage("taxGuide.vatCalendar")   private var vatCalendar      = false
+    @AppStorage("roadmap.selectedIndustryId") private var industryId   = ""
+
+    private var isStartup: Bool { IndustryCluster.from(industryId: industryId).isStartupTech }
+
+    // ── 페이지별 KEY ACTION (웹 TaxGuideStage keyActions 미러). 스타트업은 4페이지
+    //   모두, 비-스타트업(SMB)은 신고캘린더·홈택스만 웹 카피 — 절세/세무사/FAQ 는
+    //   nil → 레지스트리 단일값 폴백 (비-스타트업 웹엔 해당 KEY ACTION 없음). ──
+    private var pageKeyAction: BUStageKeyAction? {
+        switch (isStartup, page) {
+        case (true, 0):
+            return .init(title: "2026 법인세 1%p 인상 — 신고 캘린더 미등록 = 가산세 20% + 일 0.022%",
+                         detail: "2026년부터 법인세율 전 구간 1%p 인상: 2억 이하 9→10% / 2-200억 19→20% / 200-3000억 21→22% / 3000억+ 24→25%. 가공 세금계산서 가산세 3%→4%. 법인세 3월 31일 / 부가세 분기 25일 / 원천세·4대보험 매월 10일.")
+        case (true, 1):
+            return .init(title: "홈택스 법인 가입 + 법인카드 의무 — 개인카드 = 비용 불인정",
+                         detail: "공동인증서 → 세금계산서 발행·법인세 신고 활성화. 모든 경비 법인카드 결제. 영수증 5년 보관 (앱 백업 권장). R&D 인건비는 별도 분류 — 25% 세액공제 받기 위해.")
+        case (true, 2):
+            return .init(title: "절세 핵심: 청년창업 세액감면 + 벤처인증 + R&D — 누락 시 수천만원 손실",
+                         detail: "① 청년창업 (만 15~34세, 병역 6년까지 차감) — 5년간 법인세/소득세 100% (수도권외+인구감소) / 75% (수도권) / 50% (수도권과밀). ② 벤처기업 인증 — 별도 5년 50% 감면 + 스톡옵션 행사이익 연 2억·누적 5억 비과세 (~2027.12.31 부여분). ③ R&D 인건비 세액공제 25% (벤처기업).")
+        case (true, 3):
+            return .init(title: "본인 모드에 맞는 세무 처리 결정 — 1인 인디는 DIY OK, 시드+ 는 세무사 필수",
+                         detail: "인디·솔로 1인 = 자비스·삼쩜삼 SaaS + 분기당 1회 세무사 검토 (10-30만). 부트스트랩 3-5명 = 월 기장 10만+ 세무조정 30만. 시드 이상 = 월 위임 30-50만 (R&D·스톡옵션 처리).")
+        case (false, 0):
+            return .init(title: "부가세·종소세 신고 캘린더 등록 — 1건 누락 = 무신고 가산세 20%",
+                         detail: "일반과세: 부가세 1·7월 25일 / 간이과세: 1월 25일 / 종소세: 5월 1~31일 (2026년은 6월 1일까지). 미신고 시 무신고 20% + 납부지연 일 0.022%.")
+        case (false, 1):
+            return .init(title: "지금 홈택스 가입 + 사업용 카드 1개 분리 — 첫 영업일부터 적용",
+                         detail: "공인인증서 등록 → 세금계산서 발행 가능 + 사업용 카드로 모든 경비 결제. 개인카드 혼용은 비용처리 거부 사유.")
+        default:
+            return nil   // 절세·세무사판단·FAQ → 레지스트리 단일 KEY ACTION 폴백
+        }
+    }
 
     // 웹 SSOT (TaxGuideStage.tsx) — FAQ 우선, AI 는 향후 추가.
     private let pages = ["신고 캘린더", "홈택스 세팅", "절세 포인트", "세무사 판단", "FAQ"]
@@ -105,7 +137,8 @@ public struct TaxGuideStageView: View {
                 nextSummary: "세무 신고 일정·비용처리·절세 포인트 셋업 완료 → 채용·운영 세팅 단계로 진입"
             ),
             currentPage: page,
-            totalPages: pages.count
+            totalPages: pages.count,
+            keyActionOverride: pageKeyAction
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 // 수평 캡슐 스크롤 — 5개 segment 에서 native Picker 의 hit area 가 너무 작음.
@@ -136,7 +169,7 @@ public struct TaxGuideStageView: View {
             BUCard(.hero) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("세무 가이드 · 신고 캘린더")
-                    Text("부가세·종소세 신고 캘린더 —\n1건 누락 = 가산세 20%")
+                    Text(isStartup ? "법인세·부가세·원천세 신고 캘린더 —\n1건 누락 = 가산세 20%" : "부가세·종소세 신고 캘린더 —\n1건 누락 = 가산세 20%")
                         .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
                     Text("미신고 시 무신고 가산세 20% + 납부지연 일 0.022%. 캘린더에 미리 등록 + 모바일 알림 필수.")
                         .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
@@ -146,7 +179,13 @@ public struct TaxGuideStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("연간 세금 신고 캘린더")
-                    let calendar: [(String, String, String)] = [
+                    let calendar: [(String, String, String)] = isStartup ? [
+                        ("3월 31일", "법인세 신고·납부", "전년도 사업연도 법인세. 2026년 세율 전 구간 1%p 인상 (2억↓ 9→10% 등)"),
+                        ("분기 25일", "부가세 신고 (법인)", "법인 일반과세 분기별 (1·4·7·10월 25일) 예정·확정신고"),
+                        ("매월 10일", "원천세 신고·납부", "임직원 급여 지급 월 다음달 10일까지"),
+                        ("매월 10일", "4대보험료 자동이체", "자동이체 설정 권장 — 연체 시 가산금 발생"),
+                        ("5월 1~31일", "대표자 종합소득세", "법인 대표 개인 급여·배당 등 소득 별도 신고"),
+                    ] : [
                         ("1월 25일", "부가세 신고·납부", "간이과세: 연 1회. 일반과세: 7월분 예정신고 + 확정신고"),
                         ("7월 25일", "부가세 예정신고", "일반과세만 해당. 상반기 매출·매입 신고"),
                         ("5월 1~31일", "종합소득세 신고", "전년도 사업소득 신고. 2026년은 6월 1일까지"),
@@ -203,7 +242,7 @@ public struct TaxGuideStageView: View {
                 items: [
                     .init(id: "hometax",     label: "홈택스 회원가입 + 사업장 등록", detail: "공인인증서 or 금융인증서 → 세금계산서 발행 활성화"),
                     .init(id: "bizCard",     label: "사업용 카드 1개 분리",        detail: "모든 사업 경비 사업용 카드만 사용 — 혼용 = 비용 불인정"),
-                    .init(id: "cashReceipt", label: "현금영수증 가맹점 등록",      detail: "연 매출 2,400만원+ 의무. 미등록 시 가산세 5%"),
+                    .init(id: "cashReceipt", label: "현금영수증 가맹점 등록",      detail: "연 매출 2,400만원+ 또는 의무발행업종은 가맹 의무. 미가맹 시 수입금액 1%, 미발급(1만원+ 거래)은 거래액 20% 가산세"),
                 ],
                 checked: taxChecksBinding
             )
@@ -237,17 +276,23 @@ public struct TaxGuideStageView: View {
             BUCard(.hero) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("절세 포인트")
-                    Text("매입세금계산서 받기 —\nVAT 환급의 시작점")
+                    Text(isStartup ? "절세 핵심: 청년창업 + 벤처인증 + R&D —\n누락 시 수천만원 손실" : "매입세금계산서 받기 —\nVAT 환급의 시작점")
                         .font(.system(size: 22, weight: .bold)).foregroundStyle(BUColor.midnightDeep).tracking(-0.3).lineSpacing(4)
-                    Text("거래처에 사업자등록증 전달 → 세금계산서 발급 요청. 카드영수증·간이영수증 5년 보관 (앱 백업 권장).")
+                    Text(isStartup ? "① 청년창업 세액감면 ② 벤처기업 인증 ③ R&D 세액공제 25% — 세무사 통해 적용 여부 확인. 모든 경비 법인카드 + 매입세금계산서 수취." : "거래처에 사업자등록증 전달 → 세금계산서 발급 요청. 카드영수증·간이영수증 5년 보관 (앱 백업 권장).")
                         .font(BUFont.bodySmall).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
                 }
             }
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("소상공인 핵심 절세 5가지")
-                    let tips: [(String, String, String)] = [
+                    BUEyebrow(isStartup ? "기술 스타트업 핵심 절세 5가지" : "소상공인 핵심 절세 5가지")
+                    let tips: [(String, String, String)] = isStartup ? [
+                        ("청년창업 세액감면", "만 15~34세(병역 6년 차감) — 5년간 법인세/소득세 100%(수도권외+인구감소)/75%(수도권)/50%(과밀).", "sparkles"),
+                        ("벤처기업 인증", "별도 5년 50% 감면 + 스톡옵션 행사이익 연 2억·누적 5억 비과세 (~2027.12.31 부여분).", "rosette"),
+                        ("R&D 인건비 세액공제 25%", "벤처기업 연구개발 인건비 25% 세액공제. R&D 인건비는 별도 분류해야 적용.", "percent"),
+                        ("법인카드 경비 처리", "모든 경비 법인카드 결제 — 개인카드 혼용 = 비용 불인정. 영수증 5년 보관.", "creditcard.fill"),
+                        ("매입세금계산서 수취", "거래처에 세금계산서 요청 → 부가세 매입세액 공제. VAT 절감 핵심.", "doc.text.fill"),
+                    ] : [
                         ("매입세금계산서 수취", "공급업체에 사업자등록증 전달 → 세금계산서 요청. 부가세 매입세액 공제 = VAT 절감의 핵심.", "doc.text.fill"),
                         ("사업용 카드 경비 처리", "모든 사업 경비를 사업용 카드로 — 연말 소득 차감. 회식·소모품·교통비 포함.", "creditcard.fill"),
                         ("인건비·4대보험 비용 처리", "직원 급여 + 사업주 부담 4대보험 전액 비용 처리 가능.", "person.2.fill"),

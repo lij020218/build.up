@@ -322,7 +322,7 @@ struct FundingScoreSheet: View {
         do {
             self.result = try await repo.scoreProgram(program: scoreInput, user: ctx)
         } catch {
-            self.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            self.error = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
         }
     }
 }

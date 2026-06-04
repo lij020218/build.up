@@ -31,7 +31,7 @@ public struct OnlineMarketingStageView: View {
     }
 
     private let adOptions: [AdOption] = [
-        AdOption(id: "naver", name: "네이버 쇼핑 광고", desc: "CPC 클릭당 30-300원. 구매 의도 높은 트래픽. 초기 추천."),
+        AdOption(id: "naver", name: "네이버 쇼핑 광고", desc: "CPC 클릭당 300~800원. 구매 의도 높은 트래픽. 초기 추천."),
         AdOption(id: "kakao", name: "카카오 모먼트",    desc: "디스플레이 광고. 브랜드 인지도. CPC 100-500원."),
         AdOption(id: "meta",  name: "Meta (인스타·페이스북)", desc: "비주얼 상품에 효과적. 리타겟팅 강력. CPM 방식."),
         AdOption(id: "none",  name: "광고 없이 시작",   desc: "SEO·SNS 무료 채널로만. 성장 느리지만 비용 없음."),

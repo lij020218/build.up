@@ -2,6 +2,7 @@
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StoreNameInput } from "../shared/StoreNameInput";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 
 export function OnlineRegistrationStage() {
   const d = useDashboardCtx();
@@ -275,6 +276,17 @@ export function OnlineRegistrationStage() {
 
   return (
     <div style={{ marginBottom: "16px" }}>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "사업자등록 + 통신판매업 + 에스크로 — 3종 모두 통신판매업 신고 전 필요"
+            : "Business reg + e-commerce license + escrow — all three before the e-commerce filing",
+          detail: ko
+            ? "사업자등록 → 사업용 통장·구매안전서비스(에스크로) 가입 → 지자체 통신판매업 신고 순서. 에스크로 없이 통신판매업 신고는 불가."
+            : "Business registration → business bank account & escrow (purchase-safety service) → local e-commerce filing. No escrow means no e-commerce license.",
+        }}
+      />
       {/* 페이지 네비게이션 */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
         <button type="button" onClick={() => setRegPage(0)} disabled={regPage === 0}

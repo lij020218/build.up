@@ -698,7 +698,26 @@ private struct MainTabs: View {
     @Binding var selectedTab: AppRoot.Tab
 
     private var mockData: MockData {
-        MockData(
+        // 스타트업 신호용 — 모두 실데이터 기반(가짜 금지).
+        let ratios = CostRatios.calculate(
+            costs: store.costs,
+            totalRevenue: store.entries.reduce(0) { $0 + $1.sales },
+            days: store.entries.count
+        )
+        let monthlyNetBurn = store.costs.total - ratios.monthlyRevenueEquivalent
+        let runway: Double? = {
+            guard let cash = store.currentCash, cash > 0, monthlyNetBurn > 0 else { return nil }
+            return cash / monthlyNetBurn
+        }()
+        let weeklyChange: Double? = {
+            let sorted = store.entries.sorted { $0.date < $1.date }
+            guard sorted.count >= 14 else { return nil }
+            let r7 = sorted.suffix(7).reduce(0.0) { $0 + $1.sales }
+            let p7 = sorted.suffix(14).prefix(7).reduce(0.0) { $0 + $1.sales }
+            guard p7 > 0 else { return nil }
+            return (r7 - p7) / p7 * 100
+        }()
+        return MockData(
             entries: store.entries,
             costs: store.costs,
             category: store.category,
@@ -712,7 +731,10 @@ private struct MainTabs: View {
                 businessLaunched: store.businessLaunched,
                 totalEntries: store.entries.count,
                 daysSinceLastSalesEntry: store.daysSinceLastEntry,
-                monthlyBurn: store.costs.total
+                monthlyBurn: store.costs.total,
+                categoryId: webCategoryId(from: store.category),
+                runwayMonths: runway,
+                weeklySalesChangePct: weeklyChange
             )
         )
     }

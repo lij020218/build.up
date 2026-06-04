@@ -1,6 +1,7 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 
 export function SourcingSetupStage() {
   const d = useDashboardCtx();
@@ -15,6 +16,17 @@ export function SourcingSetupStage() {
 
   return (
     <div style={{ display: "grid", gap: "14px", marginBottom: "16px" }}>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "KC 인증·상표권 — 소싱 전 확인, 소싱 후엔 늦습니다"
+            : "KC certification & trademark — check before sourcing, not after",
+          detail: ko
+            ? "전자제품·아동용품은 KC 인증 필수, 미인증 판매는 즉시 게시중지·과태료. 상표권 검색은 키프리스(KIPRIS)에서 무료, 5분이면 미리 충돌 피한다."
+            : "Electronics and kids' goods require KC certification — selling uncertified means instant takedown and fines. Trademark search is free on KIPRIS; 5 minutes avoids a conflict.",
+        }}
+      />
       {/* 소싱 방법 비교 */}
       <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>

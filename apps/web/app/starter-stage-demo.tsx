@@ -165,8 +165,6 @@ import {
   operationalShell,
   operationalShellSidebar,
   operationalShellSidebarCollapsed,
-  operationalNavSection,
-  operationalSurfaceNav,
 } from "./app-shell-styles";
 
 /**
@@ -176,13 +174,11 @@ import {
  * FILE MAP (1300+ 줄 단일 컴포넌트 — 향후 분리 예정)
  * ─────────────────────────────────────────────────────
  *  L164–550   : 상태·훅 선언 (useDashboard, useHandlers, computed values)
- *  L550–660   : 상황 감지 파생값 (showOperationalHero, isHomeOperational, ...)
+ *  L550–660   : 상황 감지 파생값 (showOperationalHero, showAppShell, ...)
  *  L660–705   : 조기 반환 (로딩 중 / 인증 미완료)
  *  L705–955   : 온보딩 경로 분기 (WelcomeOnboarding / AIRoadmapWizard / ExistingBusinessOnboarding / OnboardingChoiceScreen)
- *  L955–1050  : 모바일 수평 nav (isHomeOperational && showSurfaceNav)
- *  L1050–1155 : 데스크탑 좌측 사이드바 (isHomeOperational)
- *  L1155–1295 : 상단 nav 바 + surface 탭 (showSurfaceNav && !isHomeOperational)
- *  L1295–1305 : surface 콘텐츠 렌더러 (activeSurface switch)
+ *  네비게이션(출시 전/후 통일): 모바일 상단 탭바 + 데스크탑 좌측 사이드바 (둘 다 showAppShell)
+ *  surface 콘텐츠 렌더러 (activeSurface switch)
  *
  * 스타일 상수 → ./app-shell-styles.ts
  * ─────────────────────────────────────────────────────
@@ -585,9 +581,12 @@ export default function StarterStageDemo({
     activeSurface === "franchise" ||
     activeSurface === "guides"
   );
-  // 운영 중 (창업 완료 후) → 모든 페이지에서 좌측 사이드바, 상단 nav 숨김
-  // (이전엔 홈에서만 사이드바였으나 사용자 결정으로 통일)
-  const isHomeOperational = mounted && businessLaunched;
+  // ━━━ 네비게이션 통일 (2026-06-04) ━━━
+  //   이전: 출시 전 = 상단 pill nav / 출시 후 = 좌측 사이드바 → 출시 경계에서 네비 위치가
+  //         통째로 이동해 이질감(사장님 신고). Notion·Linear·Stripe·Figma 표준은 "영구 사이드바".
+  //   변경: 출시 전/후 모두 데스크탑=좌측 사이드바, 모바일=상단 탭바 로 통일.
+  //         (≤1080px 에선 CSS 가 사이드바→모바일 탭바 자동 전환)
+  const showAppShell = mounted && showSurfaceNav;
 
   // 사이드바 접기/펼치기 (Linear/Notion 표준 패턴)
   //   접힘: 60px (아이콘만, 라벨 tooltip)
@@ -605,6 +604,17 @@ export default function StarterStageDemo({
       return next;
     });
   }, []);
+
+  // 모바일 드로어 (≤1080px) — 햄버거 → 좌측 슬라이드 사이드바.
+  //   iOS FoundOneLiquidSidebar(햄버거 → 좌측 드로어) 와 동일 메타포로 통일.
+  //   목적지 8~9개(출시 후)는 하단 탭바 한계(≤5) 초과 → 드로어가 모바일 정석.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileNavOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileNavOpen]);
 
   useEffect(() => {
     if (activeSurface !== "analytics") {
@@ -898,115 +908,115 @@ export default function StarterStageDemo({
       /* main 의 좌측 padding 도 사이드바 폭에 맞춰 동적 */
       .bup-shell-sidebar { transition: padding-left .25s cubic-bezier(0.16, 1, 0.3, 1); }
 
-      /* 좁은 화면 — 사이드바 숨김 + main 좌측 padding 0으로 (HTML class 로 보정) */
+      /* ━━━ 모바일 (≤1080px) — 사이드바를 햄버거로 여닫는 좌측 드로어로 전환 (iOS 와 동일 메타포) ━━━ */
+      .bup-mobile-topbar { display: none; }
+      .bup-mobile-scrim { display: none; }
+      @keyframes bupScrimIn { from { opacity: 0; } to { opacity: 1; } }
       @media (max-width: 1080px) {
-        .bup-sidebar { display: none; }
-        .bup-shell-sidebar { padding-left: 16px !important; padding-top: 64px !important; }
-      }
+        /* 데스크탑 고정 사이드바 → 화면 밖 드로어 (햄버거로 슬라이드 인) */
+        .bup-sidebar {
+          display: flex;
+          transform: translateX(-105%);
+          transition: transform .26s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: none;            /* 데스크탑 진입 애니메이션과 충돌 방지 */
+          width: 280px !important;
+          z-index: 200;
+          box-shadow: 0 12px 44px rgba(15,23,42,0.20);
+        }
+        .bup-sidebar[data-mobile-open="true"] { transform: translateX(0); }
+        /* 모바일 드로어는 항상 펼침(라벨 노출) — 데스크탑 collapse 상태 무시 */
+        .bup-sidebar[data-collapsed="true"] { width: 280px !important; }
+        .bup-sidebar[data-collapsed="true"] .bup-sidebar-logo-text,
+        .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn-label {
+          opacity: 1; width: auto; pointer-events: auto;
+        }
+        .bup-sidebar[data-collapsed="true"] .bup-sidebar-btn { justify-content: flex-start; }
+        .bup-sidebar-toggle { display: none !important; }   /* collapse 토글은 모바일에서 숨김 */
 
-      /* ⚠️ 2026-05-19 모바일 horizontal nav — 사이드바 대체 */
-      .bup-mobile-topnav {
-        display: none;
-      }
-      @media (max-width: 1080px) {
-        .bup-mobile-topnav {
+        /* main — 좌측 padding 0 + 상단바 높이만큼 top padding */
+        .bup-shell-sidebar { padding-left: 16px !important; padding-top: 64px !important; }
+
+        /* 상단바 (햄버거 + 로고) */
+        .bup-mobile-topbar {
           display: flex;
           position: fixed;
           top: 0; left: 0; right: 0;
-          z-index: 60;
+          z-index: 100;
           height: 52px;
-          padding: 6px 12px;
+          align-items: center;
+          gap: 10px;
+          padding: 6px 14px;
           padding-top: max(6px, env(safe-area-inset-top));
-          padding-left: max(12px, env(safe-area-inset-left));
-          padding-right: max(12px, env(safe-area-inset-right));
+          padding-left: max(14px, env(safe-area-inset-left));
+          padding-right: max(14px, env(safe-area-inset-right));
           background: rgba(255,255,255,0.92);
           backdrop-filter: saturate(180%) blur(20px);
           -webkit-backdrop-filter: saturate(180%) blur(20px);
           border-bottom: 0.5px solid rgba(15,23,42,0.08);
           box-shadow: 0 1px 2px rgba(15,23,42,0.04);
-          align-items: center;
-          gap: 8px;
-          overflow-x: auto;
-          overflow-y: hidden;
-          scroll-behavior: smooth;
-          -webkit-overflow-scrolling: touch;
         }
-        .bup-mobile-topnav::-webkit-scrollbar { display: none; }
-        .bup-mobile-topnav { scrollbar-width: none; }
+        /* 드로어 스크림 — 상단바까지 덮음 */
+        .bup-mobile-scrim {
+          display: block;
+          position: fixed;
+          inset: 0;
+          z-index: 150;
+          background: rgba(15,23,42,0.18);
+          animation: bupScrimIn .2s ease both;
+        }
       }
-      .bup-mobile-topnav-logo {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 8px 0 4px;
-        font-size: 14px;
-        font-weight: 700;
-        color: #1d3557;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      .bup-mobile-topnav-logo-mark {
+      .bup-mobile-hamburger {
         display: inline-flex; align-items: center; justify-content: center;
-        width: 26px; height: 26px;
-        border-radius: 8px;
-        background: rgba(58,58,200,0.12);
-      }
-      .bup-mobile-topnav-btn {
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        height: 36px;
-        padding: 0 12px;
-        border-radius: 999px;
-        border: 0.5px solid rgba(15,23,42,0.08);
-        background: rgba(255,255,255,0.6);
-        color: rgba(15,23,42,0.7);
-        font-size: 12.5px;
-        font-weight: 600;
+        width: 34px; height: 34px;
+        border-radius: 9px;
+        border: 0.6px solid rgba(29,53,87,0.10);
+        background: rgba(29,53,87,0.06);
+        color: #1d3557;
         cursor: pointer;
-        transition: background .12s, color .12s;
-        font-family: inherit;
-        scroll-snap-align: start;
+        flex-shrink: 0;
+        transition: transform .1s, background .12s;
       }
-      .bup-mobile-topnav-btn-active {
-        background: linear-gradient(135deg, rgba(29,53,87,0.12) 0%, rgba(69,123,157,0.06) 100%);
-        color: #1d3557 !important;
-        font-weight: 700;
-        border-color: rgba(29,53,87,0.2);
+      .bup-mobile-hamburger:hover { background: rgba(29,53,87,0.10); }
+      .bup-mobile-hamburger:active { transform: scale(0.95); }
+      .bup-mobile-topbar-logo {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 14px; font-weight: 700; color: #1d3557;
+        white-space: nowrap;
       }
     `}</style>
-    {/* ━━━ 모바일 horizontal nav — 2026-05-19 추가 (사이드바 대체) ━━━ */}
-    {isHomeOperational && showSurfaceNav && (
-      <nav className="bup-mobile-topnav" aria-label="Mobile navigation">
-        <div className="bup-mobile-topnav-logo">
+    {/* ━━━ 모바일 상단바 — 햄버거 + 로고 (≤1080px). 탭은 좌측 드로어(아래 .bup-sidebar)가 담당 ━━━ */}
+    {showAppShell && (
+      <header className="bup-mobile-topbar">
+        <button
+          type="button"
+          className="bup-mobile-hamburger"
+          aria-label="메뉴 열기"
+          aria-expanded={mobileNavOpen}
+          onClick={() => setMobileNavOpen(true)}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+            <path d="M2.5 5h13M2.5 9h13M2.5 13h13" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="bup-mobile-topbar-logo">
           <FoundOneSpiralLogo size={24} color="#3A3AC8" style={{ flexShrink: 0 }} />
           <span>Found.One</span>
         </div>
-        {surfaceTabs.map((tab) => {
-          const active = activeSurface === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => navigateToSurface(tab.id)}
-              className={`bup-mobile-topnav-btn ${active ? "bup-mobile-topnav-btn-active" : ""}`}
-            >
-              <SurfaceIcon surface={tab.id} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+      </header>
     )}
 
-    {/* ━━━ 사이드바 — 운영 중일 때 모든 페이지 (좌측 고정 vertical nav, 데스크탑 전용) ━━━ */}
-    {isHomeOperational && showSurfaceNav && (
-      <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} aria-label="Navigation">
+    {/* 모바일 드로어 스크림 — 탭 외부 클릭 시 닫기 */}
+    {showAppShell && mobileNavOpen && (
+      <div className="bup-mobile-scrim" aria-hidden onClick={() => setMobileNavOpen(false)} />
+    )}
+
+    {/* ━━━ 사이드바 — 출시 전/후 통일. 데스크탑=고정, ≤1080px=햄버거로 여닫는 좌측 드로어 ━━━ */}
+    {showAppShell && (
+      <aside className="bup-sidebar" data-collapsed={sidebarCollapsed} data-mobile-open={mobileNavOpen} aria-label="Navigation">
         <div className="bup-sidebar-logo">
           <FoundOneSpiralLogo size={28} color="#3A3AC8" style={{ flexShrink: 0 }} />
           <span className="bup-sidebar-logo-text">
-            Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
+            Found<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>One</span>
           </span>
         </div>
         {/* 접기/펼치기 토글 — 우측 가장자리 floating */}
@@ -1034,7 +1044,7 @@ export default function StarterStageDemo({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => navigateToSurface(tab.id)}
+                onClick={() => { navigateToSurface(tab.id); setMobileNavOpen(false); }}
                 className={`bup-sidebar-btn ${active ? "bup-sidebar-btn-active" : ""}`}
                 title={sidebarCollapsed ? tab.label : undefined}
               >
@@ -1048,11 +1058,11 @@ export default function StarterStageDemo({
     )}
 
     <main
-      className={isHomeOperational ? "bup-shell-sidebar" : undefined}
-      data-collapsed={isHomeOperational ? sidebarCollapsed : undefined}
-      style={showOperationalHero
-        ? styles.shell
-        : (isHomeOperational ? (sidebarCollapsed ? operationalShellSidebarCollapsed : operationalShellSidebar) : operationalShell)}
+      className={showAppShell ? "bup-shell-sidebar" : undefined}
+      data-collapsed={showAppShell ? sidebarCollapsed : undefined}
+      style={showAppShell
+        ? (sidebarCollapsed ? operationalShellSidebarCollapsed : operationalShellSidebar)
+        : (showOperationalHero ? styles.shell : operationalShell)}
     >
       {showOperationalHero ? (
       <section style={styles.hero}>
@@ -1068,46 +1078,8 @@ export default function StarterStageDemo({
       </section>
       ) : null}
 
-      {/* ━━━ Found.One 로고 — 네비게이션 바 위 (사이드바 모드에서는 숨김 → 사이드바 안에 노출) ━━━ */}
-      {showSurfaceNav && !isHomeOperational && (
-      <div style={{
-        display: "flex", alignItems: "center", gap: "10px",
-        padding: showOperationalHero ? "0 24px 8px" : "12px 20px 8px",
-      }}>
-        <FoundOneSpiralLogo size={28} color="#3A3AC8" style={{ flexShrink: 0 }} />
-        <span style={{
-          fontSize: "16px", fontWeight: 750, color: "#0f172a",
-          letterSpacing: "-0.03em",
-          fontFamily: "inherit",
-        }}>
-          Build<span style={{ color: "#1d3557" }}>.</span><span style={{ fontWeight: 800 }}>UP</span>
-        </span>
-      </div>
-      )}
-
-      {/* 상단 nav — 사이드바 모드에선 숨김 (사이드바에 동일 nav 노출) */}
-      {showSurfaceNav && !isHomeOperational ? (
-      <section style={showOperationalHero ? styles.section : operationalNavSection}>
-        <div style={styles.surfaceNav}>
-          {surfaceTabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              style={{
-                ...styles.surfaceNavButton,
-                ...(activeSurface === tab.id ? styles.surfaceNavButtonSelected : {})
-              }}
-              onClick={() => navigateToSurface(tab.id)}
-            >
-              <span style={styles.surfaceNavButtonInner}>
-                <SurfaceIcon surface={tab.id} />
-                <span>{tab.label}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-      ) : null}
+      {/* 네비게이션 통일(2026-06-04): 출시 전 상단 pill nav + 인라인 로고 제거.
+          → 데스크탑은 좌측 사이드바, 모바일은 상단 탭바 가 출시 전/후 모두 담당. */}
 
       {/* surface 전환 — 애니메이션 제거, 즉시 표시 (key 는 React remount 유지를 위해 보존) */}
       <div key={activeSurface}>

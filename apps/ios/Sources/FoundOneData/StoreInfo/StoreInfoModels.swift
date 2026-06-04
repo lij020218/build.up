@@ -489,11 +489,11 @@ public struct AnyCodableValue: Sendable, Codable, Hashable {
 
     public init(_ raw: AnyCodable) { self.raw = raw }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         self.raw = try AnyCodable(from: decoder)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         try raw.encode(to: encoder)
     }
 }
@@ -515,7 +515,7 @@ public struct AnyCodable: Sendable, Codable, Hashable {
     public init(_ value: Value) { self.value = value }
     public init(nilLiteral: ()) { self.value = .null }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let c = try decoder.singleValueContainer()
         if c.decodeNil() { self.value = .null; return }
         if let v = try? c.decode(Bool.self)    { self.value = .bool(v); return }
@@ -527,7 +527,7 @@ public struct AnyCodable: Sendable, Codable, Hashable {
         throw DecodingError.dataCorruptedError(in: c, debugDescription: "Unknown JSON value")
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var c = encoder.singleValueContainer()
         switch value {
         case .null:           try c.encodeNil()

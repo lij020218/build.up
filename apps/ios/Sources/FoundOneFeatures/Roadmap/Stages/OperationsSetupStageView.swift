@@ -67,6 +67,27 @@ public struct OperationsSetupStageView: View {
             : [channelPageLabel, "SNS 세팅"]
     }
 
+    // ── 페이지별 KEY ACTION (웹 OperationsSetupStage keyActions 미러).
+    //   웹은 6개 KEY ACTION(F&B 오프라인 중심) — iOS 오프라인 3페이지에 의미 대응분만 매핑:
+    //   채널→배달앱입점(웹0) / POS선택→VAN카드(웹3) / SNS세팅→네이버플레이스(웹2).
+    //   온라인 클러스터는 웹 콘텐츠(배달앱)와 안 맞아 nil → 레지스트리 단일값 폴백. ──
+    private var pageKeyAction: BUStageKeyAction? {
+        guard cluster.category.isOffline else { return nil }
+        switch page {
+        case 0:
+            return .init(title: "오픈 1주 전, 배민·쿠팡이츠 입점 신청 동시 접수",
+                         detail: "심사에 2~5 영업일 소요 — 늦으면 첫날 배달 채널이 막힙니다. 통신판매업 신고증·영업신고증 미리 PDF로 준비하세요.")
+        case 1:
+            return .init(title: "사업자등록 직후 VAN사 1곳에 가맹점 등록 신청 — 카드 결제까지 약 1주",
+                         detail: "VAN사 1곳에 신청하면 모든 카드사·간편결제(카카오·네이버·애플페이) 자동 연계. 토스플레이스 등 통합 솔루션 사용 시 별도 VAN 신청 불필요.")
+        case 2:
+            return .init(title: "지금 바로 네이버 플레이스 등록 — 검색 노출까지 최대 7일",
+                         detail: "한국인 매장 검색의 80%가 네이버. 등록 늦으면 첫 주 신규 손님이 0명일 수 있습니다.")
+        default:
+            return nil
+        }
+    }
+
     // MARK: - Cluster-aware channels (페이지 0) — 공유 SSOT (OperationsChannelRegistry)
 
     private var clusterChannels: [BUOpsChannel] {
@@ -238,7 +259,8 @@ public struct OperationsSetupStageView: View {
                 nextSummary: "POS·SOP·마케팅·손익 4축 셋업 완료 → 프리오픈·본 오픈 준비 단계로 진입"
             ),
             currentPage: page,
-            totalPages: pages.count
+            totalPages: pages.count,
+            keyActionOverride: pageKeyAction
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 BUWizardPageNav(
@@ -374,6 +396,9 @@ public struct OperationsSetupStageView: View {
                 ],
                 checked: posChecksBinding
             )
+
+            // 카드 가맹점 — VAN사 비교 (웹 vanProviders 미러). 1곳만 신청, 약 1주.
+            opsDetailCard(title: "카드 가맹점 — VAN사 5곳 비교 (1곳만 신청·약 1주)", items: OperationsDetailRegistry.van)
         }
     }
 
@@ -441,6 +466,13 @@ public struct OperationsSetupStageView: View {
                 "인스타 팔로워 0에서 시작 — 광고 없이 성과까지 2~3개월 예상",
                 "리뷰 무시 = 별점 하락 → 방문율 즉각 영향 (응답률 100% 목표)",
             ], color: .orange)
+
+            if cluster.category.isOffline {
+                // 매장 음악 저작권 (웹 musicLicenseOptions 미러) — 50㎡↑ 의무.
+                opsDetailCard(title: "매장 음악 저작권 — 4개 옵션 (50㎡↑ 의무)", items: OperationsDetailRegistry.music)
+                // 브랜드 디자인 (웹 designPlatforms 미러) — 간판·메뉴판·로고.
+                opsDetailCard(title: "브랜드 디자인 — 4개 플랫폼 (간판·메뉴판·로고)", items: OperationsDetailRegistry.design)
+            }
 
             if cluster.category.isOffline {
                 BUCard(.card) {
@@ -524,6 +556,46 @@ public struct OperationsSetupStageView: View {
                     HStack(alignment: .top, spacing: 6) {
                         Circle().fill(color).frame(width: 4, height: 4).padding(.top, 5)
                         Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                    }
+                }
+            }
+        }
+    }
+
+    /// 웹 SSOT (OperationsDetailRegistry) 상세 비교 카드 — VAN·음악·디자인 공통.
+    private func opsDetailCard(title: String, items: [OperationsDetailRegistry.Item]) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow(title)
+                ForEach(items, id: \.name) { it in
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text(it.name).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                            Spacer(minLength: 0)
+                            if !it.url.isEmpty {
+                                Text(it.url.replacingOccurrences(of: "https://", with: "").replacingOccurrences(of: "www.", with: ""))
+                                    .font(.system(size: 9)).foregroundStyle(BUColor.midnight).lineLimit(1)
+                            }
+                        }
+                        if !it.tagline.isEmpty {
+                            Text(it.tagline).font(BUFont.bodyCaption).foregroundStyle(BUColor.midnight).lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        ForEach(it.pros.prefix(2), id: \.self) { p in
+                            HStack(alignment: .top, spacing: 4) {
+                                Text("✓").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.success)
+                                Text(p).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        ForEach(it.cons.prefix(1), id: \.self) { c in
+                            HStack(alignment: .top, spacing: 4) {
+                                Text("—").font(.system(size: 10, weight: .bold)).foregroundStyle(.orange)
+                                Text(c).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        Divider().opacity(0.3)
                     }
                 }
             }

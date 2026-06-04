@@ -267,16 +267,6 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     industryHint: "startup-tech",
   },
   {
-    // 2026-05-12 킬러 기능: AI 공동창업자 데일리 브리프 — *해석* 레이어
-    id: "startup-founder-brief",
-    labelKo: "AI 공동창업자 데일리 브리프",
-    labelEn: "AI Co-Founder Daily Brief",
-    hintKo: "런웨이·burn·CMGR·Rule of 40 자동 분석 → 가장 중요한 1개 + 오늘 행동",
-    hintEn: "Auto runway/burn/CMGR/RoF40 → top signal + today's action",
-    category: "coaching",
-    industryHint: "startup-tech",
-  },
-  {
     id: "startup-health",
     labelKo: "스타트업 핵심 지표 (Burn Multiple·Rule of 40)",
     labelEn: "Startup Health (Burn Multiple/Rule of 40)",

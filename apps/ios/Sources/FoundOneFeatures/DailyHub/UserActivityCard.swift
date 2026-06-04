@@ -18,21 +18,23 @@ import FoundOneComponents
 public struct UserActivityCard: View {
 
     let totalCustomers: Int
-    let newThisMonth: Int          // 이번 달 신규
-    let repeatRate: Double         // 재방문률 (0-100)
-    let avgTicket: Double          // 객단가
+    // ⚠️ 2026-06-04: 종전 newThisMonth/repeatRate 는 하드코딩 가짜(32/42)였음 → 실데이터 지표로 교체.
+    //   재방문률은 일별 집계 데이터로 계산 불가(개별 고객 식별 없음)라 표시하지 않는다(가짜 금지).
+    let thisMonthCustomers: Int     // 이번 달 누적 고객 (실데이터)
+    let dailyAvgCustomers: Double   // 일평균 고객 (실데이터: 누적 ÷ 경과 영업일)
+    let avgTicket: Double           // 객단가 (실데이터)
     let ko: Bool
 
     public init(
         totalCustomers: Int,
-        newThisMonth: Int,
-        repeatRate: Double,
+        thisMonthCustomers: Int,
+        dailyAvgCustomers: Double,
         avgTicket: Double,
         ko: Bool = true
     ) {
         self.totalCustomers = totalCustomers
-        self.newThisMonth = newThisMonth
-        self.repeatRate = repeatRate
+        self.thisMonthCustomers = thisMonthCustomers
+        self.dailyAvgCustomers = dailyAvgCustomers
         self.avgTicket = avgTicket
         self.ko = ko
     }
@@ -115,17 +117,19 @@ public struct UserActivityCard: View {
 
                 Spacer(minLength: 0)
 
-                if newThisMonth > 0 {
+                if thisMonthCustomers > 0 {
                     HStack(spacing: 3) {
-                        Image(systemName: "plus")
+                        Image(systemName: "calendar")
                             .font(.system(size: 9, weight: .heavy))
-                        Text("\(newThisMonth)")
+                        Text(ko ? "이번 달 " : "This mo ")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text("\(thisMonthCustomers)")
                             .font(.system(size: 11.5, weight: .bold))
                             .monospacedDigit()
                         Text(ko ? "명" : "")
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .foregroundStyle(BUColor.success)
+                    .foregroundStyle(BUColor.midnight)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 3)
                     .background(BUColor.success.opacity(0.10), in: Capsule())
@@ -191,16 +195,16 @@ public struct UserActivityCard: View {
     private var statsRowSection: some View {
         HStack(spacing: 6) {
             statTile(
-                label: ko ? "신규" : "New",
-                value: "+\(newThisMonth)",
+                label: ko ? "이번 달" : "This mo",
+                value: "\(thisMonthCustomers)",
                 unit: ko ? "명" : "",
-                tint: BUColor.success
+                tint: BUColor.midnight
             )
             statTile(
-                label: ko ? "재방문" : "Repeat",
-                value: String(format: "%.0f%%", repeatRate),
-                unit: "",
-                tint: repeatRate >= 30 ? BUColor.success : BUColor.warn
+                label: ko ? "일평균" : "Daily avg",
+                value: dailyAvgCustomers > 0 ? String(format: "%.0f", dailyAvgCustomers) : "—",
+                unit: dailyAvgCustomers > 0 ? (ko ? "명" : "") : "",
+                tint: BUColor.midnight
             )
             statTile(
                 label: ko ? "객단가" : "ARPU",
@@ -262,8 +266,8 @@ private func formatKRWCompact(_ value: Double) -> String {
         ScrollView {
             UserActivityCard(
                 totalCustomers: 847,
-                newThisMonth: 32,
-                repeatRate: 42,
+                thisMonthCustomers: 128,
+                dailyAvgCustomers: 21,
                 avgTicket: 27_500
             )
             .padding(BUSpacing.md)

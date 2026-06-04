@@ -338,6 +338,110 @@ private struct ForecastSparkline: View {
 
 // MARK: - GrowthForecastView (Tier 4 + 5 통합)
 
+// MARK: - CustomerInterviewCard (고객 인터뷰 — Mom Test, 정적 질문)
+//
+//  웹 SSOT: apps/web/.../CustomerInterviewCard.tsx. iOS 컴팩트본 — 핵심 가치(질문지)만.
+//  정적 콘텐츠(가짜 아님). AI 생성·CSV 등 백엔드 기능은 웹 전용.
+//
+public struct CustomerInterviewCard: View {
+    public init() {}
+
+    private let questions = [
+        "이 가게에 처음 오신 게 언제였어요?",
+        "오늘 말고 가장 최근에는 언제 오셨어요?",
+        "보통 우리 가게 말고 어디를 가시나요?",
+        "여기에 다시 오시는 가장 큰 이유가 뭐예요?",
+        "혹시 불편하거나 아쉬운 점이 있나요?",
+    ]
+
+    public var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(BUColor.midnight.opacity(0.08)).frame(width: 36, height: 36)
+                        Image(systemName: "quote.bubble.fill").font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("고객 인터뷰").buSectionEyebrowStyle()
+                        Text("Mom Test · 의견 말고 과거 행동을 묻기").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+                    }
+                    Spacer(minLength: 0)
+                }
+                Text("\"맛있어요?\"(의견) 대신 \"최근에 어디 가셨어요?\"(행동)를 물어야 진짜 답이 나와요.")
+                    .font(.system(size: 12, weight: .medium)).foregroundStyle(BUColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach(Array(questions.enumerated()), id: \.offset) { idx, q in
+                        HStack(alignment: .top, spacing: 9) {
+                            Text("\(idx + 1)").font(.system(size: 11, weight: .heavy)).monospacedDigit()
+                                .foregroundStyle(BUColor.midnight)
+                                .frame(width: 18, height: 18)
+                                .background(BUColor.midnight08, in: Circle())
+                            Text(q).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(BUColor.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - FirstCustomersCard (첫 100명 고객 확보 — 진행률 실데이터 + 정적 전술)
+public struct FirstCustomersCard: View {
+    let cumulativeCustomers: Int
+    public init(cumulativeCustomers: Int) { self.cumulativeCustomers = cumulativeCustomers }
+
+    private let tactics = [
+        "지인·단골 10명에게 직접 알리기 (오픈 소식 + 첫 방문 혜택)",
+        "네이버 플레이스 등록 + 사진 10장 + 첫 리뷰 5개 모으기",
+        "당근 동네홍보 / 전단 — 반경 500m 집중",
+        "재방문 쿠폰(2번째 방문 할인)으로 단골 전환",
+    ]
+    private var pct: Double { min(1, Double(cumulativeCustomers) / 100) }
+
+    public var body: some View {
+        BUCard(.outer) {
+            VStack(alignment: .leading, spacing: BUSpacing.opsGap) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(BUColor.midnight.opacity(0.08)).frame(width: 36, height: 36)
+                        Image(systemName: "flag.checkered").font(.system(size: 15, weight: .semibold)).foregroundStyle(BUColor.midnight)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("첫 100명 고객").buSectionEyebrowStyle()
+                        Text("초기 확보 플레이북").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+                    }
+                    Spacer(minLength: 0)
+                    Text("\(cumulativeCustomers) / 100").font(.system(size: 14, weight: .heavy)).monospacedDigit().foregroundStyle(BUColor.midnight)
+                }
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(BUColor.midnight.opacity(0.08))
+                        Capsule().fill(LinearGradient(colors: [BUColor.midnight, BUColor.midnightDeep], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(6, geo.size.width * pct))
+                    }
+                }
+                .frame(height: 8)
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(Array(tactics.enumerated()), id: \.offset) { _, t in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "circle").font(.system(size: 13, weight: .semibold)).foregroundStyle(BUColor.inkSubtle)
+                            Text(t).font(.system(size: 12, weight: .medium)).foregroundStyle(BUColor.inkSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 public struct GrowthForecastView: View {
 
     let mock: MockData
@@ -364,12 +468,15 @@ public struct GrowthForecastView: View {
         }
     }
 
+    private var cumulativeCustomers: Int { mock.entries.reduce(0) { $0 + $1.customers } }
+
+    // ⚠️ 2026-06-04: 종전 "재방문 42% / 단골 67명" 은 하드코딩 가짜였음 → 전부 실데이터로 교체.
     private var milestones: [ProgressMilestonesCard.Milestone] {
         [
-            .init(label: "손익분기 달성", current: mock.entries.count > 7 ? 1 : 0, target: 1, unit: "", achieved: totalSales > mock.costs.total),
+            .init(label: "손익분기 달성", current: totalSales > mock.costs.total ? 1 : 0, target: 1, unit: "", achieved: totalSales > mock.costs.total),
             .init(label: "월 매출 1000만 돌파", current: min(1000, totalSales / 10000), target: 1000, unit: "만", achieved: totalSales >= 10_000_000),
-            .init(label: "재방문 30%+", current: 42, target: 30, unit: "%", achieved: true),
-            .init(label: "100명 단골 확보", current: 67, target: 100, unit: "명", achieved: false),
+            .init(label: "매출 기록 30일+", current: min(30, Double(mock.entries.count)), target: 30, unit: "일", achieved: mock.entries.count >= 30),
+            .init(label: "100명 고객 확보", current: min(100, Double(cumulativeCustomers)), target: 100, unit: "명", achieved: cumulativeCustomers >= 100),
         ]
     }
 
@@ -401,8 +508,15 @@ public struct GrowthForecastView: View {
 
                 ProgressMilestonesCard(milestones: milestones)
 
+                // 첫 100명 고객 확보 — 개업 90일 이내 또는 아직 100명 미만 (진행률 실데이터)
+                if mock.daysSinceLaunch <= 90 || cumulativeCustomers < 100 {
+                    FirstCustomersCard(cumulativeCustomers: cumulativeCustomers)
+                }
+
+                // 고객 인터뷰 (Mom Test) — 전 업종
+                CustomerInterviewCard()
+
                 // 마케팅 블록은 MarketingView 로 이전됨 (LoyaltyDonut / CampaignIdeas).
-                // MarketingChannelROIBlock 는 실데이터 KPI + Campaigns List 로 대체.
 
                 Color.clear.frame(height: 110)
             }

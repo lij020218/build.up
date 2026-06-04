@@ -30,7 +30,10 @@ public struct FinancialReviewStageView: View {
     private let stageId = "financial-review"
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
-    private var benchmark: IndustryCluster.CostBenchmark { cluster.costBenchmark }
+    // 세부업종(specialty) 벤치마크 우선 → 없으면 카테고리 폴백 (웹 SSOT 로직 1:1).
+    private var benchmark: IndustryCluster.CostBenchmark {
+        FinancialBenchmarkRegistry.benchmark(forSpecialty: industryId) ?? cluster.costBenchmark
+    }
 
     @State private var tab = 0 // 0=고정비, 1=변동비, 2=기타
 
@@ -162,6 +165,8 @@ public struct FinancialReviewStageView: View {
 
                 // 항상 표시되는 시뮬레이션 결과
                 simulationCard
+                // 업종 8필드 벤치마크 (웹 SSOT 미러)
+                benchmarkCard
             }
         }
         .onAppear {
@@ -183,9 +188,9 @@ public struct FinancialReviewStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("고정비 입력 (만원/월)")
-                    finRow(label: "임대료", hint: "월세 + 관리비", text: $rentText) { rent = Int($0) ?? 0 }
-                    finRow(label: "인건비", hint: "월급 + 4대보험 사업주 부담", text: $laborText) { labor = Int($0) ?? 0 }
-                    finRow(label: "공과금", hint: "전기·가스·수도·통신", text: $utilText) { utilities = Int($0) ?? 0 }
+                    finRow(label: fLabel("rent", "임대료"), hint: fHint("rent", "월세 + 관리비"), text: $rentText) { rent = Int($0) ?? 0 }
+                    finRow(label: fLabel("labor", "인건비"), hint: fHint("labor", "월급 + 4대보험 사업주 부담"), text: $laborText) { labor = Int($0) ?? 0 }
+                    finRow(label: fLabel("utilities", "공과금"), hint: fHint("utilities", "전기·가스·수도·통신"), text: $utilText) { utilities = Int($0) ?? 0 }
                     finRow(label: "대출 이자", hint: "월 이자 상환 (없으면 0)", text: $intText) { interest = Int($0) ?? 0 }
                     Divider()
                     HStack {
@@ -221,8 +226,8 @@ public struct FinancialReviewStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("변동비 입력 (만원/월)")
-                    finRow(label: "식자재 원가", hint: "월 재료비 총액", text: $ingrText) { ingredients = Int($0) ?? 0 }
-                    finRow(label: "운영 수수료", hint: "배달앱·POS·카드 수수료", text: $sgaText) { sga = Int($0) ?? 0 }
+                    finRow(label: fLabel("ingredients", "식자재 원가"), hint: fHint("ingredients", "월 재료비 총액"), text: $ingrText) { ingredients = Int($0) ?? 0 }
+                    finRow(label: fLabel("sga", "운영 수수료"), hint: fHint("sga", "배달앱·POS·카드 수수료"), text: $sgaText) { sga = Int($0) ?? 0 }
                     Divider()
                     HStack {
                         Text("변동비 합계").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
@@ -241,8 +246,8 @@ public struct FinancialReviewStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("기타 비용 입력 (만원/월)")
-                    finRow(label: "마케팅·광고", hint: "배달앱 광고·SNS 광고비", text: $mktText) { marketing = Int($0) ?? 0 }
-                    finRow(label: "기타", hint: "소모품·수리·예비비 등", text: $otherText) { other = Int($0) ?? 0 }
+                    finRow(label: fLabel("marketing", "마케팅·광고"), hint: fHint("marketing", "배달앱 광고·SNS 광고비"), text: $mktText) { marketing = Int($0) ?? 0 }
+                    finRow(label: fLabel("other", "기타"), hint: fHint("other", "소모품·수리·예비비 등"), text: $otherText) { other = Int($0) ?? 0 }
                     Divider()
                     HStack {
                         Text("기타 합계").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
@@ -312,7 +317,62 @@ public struct FinancialReviewStageView: View {
         }
     }
 
+    // MARK: - 업종 8필드 벤치마크 (웹 CATEGORY_FALLBACK_BENCHMARKS 미러)
+
+    private var benchmarkCard: some View {
+        let b = benchmark
+        let isBurn = b.isBurnBasis
+        let rows: [(String, ClosedRange<Int>)] = [
+            (isBurn ? "인프라·SaaS·API" : "원재료·식자재", b.materialsPctRange),
+            ("인건비", b.laborPctRange),
+            (isBurn ? "사무실·코워킹" : "임대료", b.rentPctRange),
+            (isBurn ? "통신·기기·SaaS" : "공과금", b.utilitiesPctRange),
+            (isBurn ? "결제·회계·법무" : "운영 수수료", b.sgaPctRange),
+            ("마케팅", b.marketingPctRange),
+            (isBurn ? "기타 (IP·인증)" : "기타", b.otherPctRange),
+        ]
+        return BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow("\(cluster.categoryNounKo) 월 비용 벤치마크")
+                Text(isBurn ? "월 번레이트(총 지출) 대비 권장 비중 — 매출 전 단계" : "월 매출 대비 권장 비중 — 업종 평균과 비교해 검증")
+                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+                if !b.notes.isEmpty {
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "star.fill").font(.system(size: 10)).foregroundStyle(.orange).padding(.top, 2)
+                        Text(b.notes).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.vertical, 2)
+                }
+                ForEach(rows, id: \.0) { label, range in
+                    HStack {
+                        Text(label).font(BUFont.bodySmall).foregroundStyle(BUColor.ink)
+                        Spacer()
+                        Text("\(range.lowerBound)~\(range.upperBound)%")
+                            .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.midnight).monospacedDigit()
+                    }
+                }
+                Divider()
+                HStack {
+                    Text(isBurn ? "목표 Gross Margin" : "영업이익률")
+                        .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                    Spacer()
+                    Text("\(b.marginPctRange.lowerBound)~\(b.marginPctRange.upperBound)%")
+                        .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.success).monospacedDigit()
+                }
+            }
+        }
+    }
+
     // MARK: - Helpers
+
+    /// 세부업종 입력 필드 재라벨 (웹 SUB_INDUSTRY_FIELDS 미러) — 없으면 기본 라벨.
+    private func fLabel(_ key: String, _ def: String) -> String {
+        SubIndustryFieldRegistry.fields(forSpecialty: industryId)?[key]?.label ?? def
+    }
+    private func fHint(_ key: String, _ def: String) -> String {
+        SubIndustryFieldRegistry.fields(forSpecialty: industryId)?[key]?.hint ?? def
+    }
 
     private func finRow(label: String, hint: String, text: Binding<String>, onChange: @escaping (String) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 4) {

@@ -181,7 +181,7 @@ public struct OnlineRegistrationStageView: View {
                     BUEyebrow("신고 방법")
                     infoRow(text: "정부24 (gov.kr) 또는 관할 시·군·구청 온라인 접수")
                     infoRow(text: "필요 서류: 사업자등록증·통신판매 방법(인터넷·전화 등)")
-                    infoRow(text: "처리 기간: 5-7 영업일 / 수수료 없음")
+                    infoRow(text: "처리 기간: 당일~5영업일 / 수수료 없음")
                 }
             }
 

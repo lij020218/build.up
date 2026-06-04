@@ -245,7 +245,7 @@ struct StoreInfoEditSheet: View {
             onSaved(name.trimmingCharacters(in: .whitespaces), openVal, closeVal)
             dismiss()
         } catch {
-            self.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            self.error = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
         }
     }
 

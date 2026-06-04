@@ -56,12 +56,12 @@ public struct HardwarePrototypeStageView: View {
                 doneItems: [
                     .init(label: "1. EVT — 설계 개념 검증", detail: "핵심 기능 동작 확인, 주요 부품 선정, 내부 팀 테스트."),
                     .init(label: "2. DVT — 설계 완성도 검증", detail: "폼팩터 확정, BOM 95%+ 확정, 베타 10~30명, 내구성·환경 테스트."),
-                    .init(label: "3. PVT — 양산 공정 검증", detail: "EMS 시험 생산 50~200개, 수율 98%+, KC/CE/FCC 인증 병행."),
+                    .init(label: "3. PVT — 양산 공정 검증", detail: "EMS 시험 생산 50~200개, 수율 95%+, KC/CE/FCC 인증 병행."),
                 ],
                 verifyItems: [
                     "BOM 확정 전에 KC 인증을 신청하지 않았는가 — 설계 변경 시 재인증 비용이 발생합니다.",
                     "핵심 부품 단일 소싱이 남아 있지 않은가 — 단종 시 양산이 중단됩니다.",
-                    "PVT 수율 98% 이상을 실제로 달성했는가.",
+                    "PVT 수율 95% 이상을 실제로 달성했는가.",
                 ],
                 nextStageLabel: "다음: 양산 준비",
                 nextSummary: "검증을 마친 설계로 양산 체제로 전환합니다."
@@ -124,7 +124,7 @@ public struct HardwarePrototypeStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("EVT 가이드")
                     let infos = [
-                        ("소요 기간", "4–8주"),
+                        ("소요 기간", "4-6주"),
                         ("예산 범위", "500만~3,000만원 (부품·외주 가공비)"),
                     ]
                     ForEach(infos, id: \.0) { label, value in

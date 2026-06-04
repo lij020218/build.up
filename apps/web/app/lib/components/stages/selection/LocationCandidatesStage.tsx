@@ -149,8 +149,8 @@ export function LocationCandidatesStage() {
   const ko = language === "ko";
   // ★ 페이지 0 = 개요. 그 후 작업 흐름.
   const pageLabels = ko
-    ? ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "후보 비교·결정"]
-    : ["Overview", "1. Region·AI", "2. Visit", "3. Score", "Decide"];
+    ? ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "4. 매물 체크", "후보 비교·결정"]
+    : ["Overview", "1. Region·AI", "2. Visit", "3. Score", "4. Property", "Decide"];
 
   // 카테고리·예산 별 사장님 상황 권장 — 페이지 2 (점수 비교) 의 inline favorable
   const budgetTier = (selectedBudget ?? 0) >= 200_000_000 ? "high" : (selectedBudget ?? 0) >= 80_000_000 ? "mid" : "low";
@@ -228,6 +228,7 @@ export function LocationCandidatesStage() {
             { stepLabel: ko ? "1. 지역·AI" : "1. Region·AI", title: ko ? "구체적 지역 입력 → AI 라이브 추천" : "Specific region → AI live scout", time: ko ? "5분" : "5m" },
             { stepLabel: ko ? "2. 답사 후보" : "2. Visit", title: ko ? "직접 답사한 매물 1-2곳 추가 (정성 요소)" : "Add 1-2 properties you visited", time: ko ? "10분" : "10m" },
             { stepLabel: ko ? "3. 점수 비교" : "3. Score", title: ko ? "4지표 (유동·임대료·경쟁·타겟) 점수 + 직관 검증" : "4 metrics + gut check", time: ko ? "10분" : "10m" },
+            { stepLabel: ko ? "4. 매물 체크" : "4. Property", title: ko ? "현장 5가지 필수 확인 — 계약 전 최종 관문" : "5 in-person checks — last gate before signing", time: ko ? "15분" : "15m" },
             { stepLabel: ko ? "결정" : "Decide", title: ko ? "최종 1곳 선택 → 계약 검토 단계로" : "Pick one → Contract Review" },
           ]}
           outcome={ko
@@ -300,8 +301,80 @@ export function LocationCandidatesStage() {
         />
       )}
 
-      {/* ── 페이지 3 (후보 비교·결정) — 실제 후보 입력·점수화·선택 패널 ── */}
+      {/* ── 페이지 4: 매물 체크 ── */}
       {pageIdx === 4 && (
+        <WorkStep
+          ko={ko}
+          stepLabel={ko ? "4. 매물 체크" : "4. Property Check"}
+          time={ko ? "15분" : "15m"}
+          headline={ko ? "임대 매물 현장 — 5가지 필수 확인 후 계약 진행" : "5 must-checks before signing any lease"}
+          why={ko
+            ? "계약서에 서명하면 취소 불가. 현장에서 직접 눈으로 확인하지 않으면 권리금·인테리어 손실로 이어집니다."
+            : "Once signed, no going back. In-person checks prevent key-money and fit-out losses."}
+          how={[
+            {
+              title: ko ? "간판 가시성 — 3방향 이상 노출" : "Sign visibility — 3+ directions",
+              detail: ko
+                ? "대로변·코너 매물은 3방향 노출 가능. 골목 매물은 메인 진입로에서 보이는지 로드뷰로 먼저 예비 확인 후 현장 확인."
+                : "Corner units need 3-direction exposure. Alley units: pre-check visibility on roadview before visiting.",
+            },
+            {
+              title: ko ? "주차 — 인근 공영주차장 도보 3분" : "Parking — public lot within 3-min walk",
+              detail: ko
+                ? "주차 불가 매물은 객단가 1만원+ 고객 방문이 줄어듦. 테이크아웃 전용 모델이라면 무관."
+                : "No parking = fewer high-ticket customers. Not relevant for take-away-only models.",
+            },
+            {
+              title: ko ? "대중교통 — 도보 5분 이내" : "Transit — within 5-min walk",
+              detail: ko
+                ? "지하철·버스 정류장 5분 내. 6분+ 면 신규 유입 30% 감소(공공 데이터 기준). 배달 전용이라면 무관."
+                : "Subway/bus within 5 min. 6+ min = ~30% fewer new walk-ins per public data.",
+            },
+            {
+              title: ko ? "실내 면적 — 업종별 최소 기준" : "Floor area — minimum by category",
+              detail: ko
+                ? "15평 이하 = 배달·테이크아웃 전용. 15~25평 = 테이블 6~10개. 25~40평 = 홀 직원 1~2명 필요. 40평+ = 인건비 비중 급증."
+                : "<15 pyeong: delivery/take-away only. 15-25: 6-10 tables. 25-40: 1-2 floor staff. 40+: labour cost spikes.",
+            },
+            {
+              title: ko ? "환기·덕트 설치 가능 여부" : "Ventilation duct installation feasible?",
+              detail: ko
+                ? "음식점·카페는 외부 환기 덕트 필수. 건물 구조상 설치 불가하면 영업 허가 자체가 불가. 임대인에게 반드시 사전 확인."
+                : "Food/café require exterior duct. Structurally impossible = no operating permit. Confirm with landlord upfront.",
+            },
+          ]}
+          watchouts={ko ? [
+            {
+              label: "건축물대장 용도 확인",
+              text: "근린생활시설이어야 음식점·카페 영업 가능. 용도가 다를 경우 용도 변경 허가 비용 + 수개월 추가 소요.",
+            },
+            {
+              label: "전 업주 폐업 이유 반드시 확인",
+              text: "낮은 임대료가 함정인 경우 있음. 전 임차인이 왜 폐업했는지 임대인 또는 인근 상인에게 직접 물어보세요.",
+            },
+            {
+              label: "관리비·원상복구 범위 사전 명문화",
+              text: "월 관리비가 계약 후 30~50만원 추가되면 수지 계산이 무너짐. 원상복구 면제 항목도 계약서에 구체적으로 기재.",
+            },
+          ] : [
+            {
+              label: "Building use permit",
+              text: "Must be 'neighborhood commercial' use. Different use = permit change cost + months of delay.",
+            },
+            {
+              label: "Why previous tenant closed",
+              text: "Low rent is often a red flag. Ask landlord or neighboring merchants directly.",
+            },
+            {
+              label: "Mgmt fee & restoration scope",
+              text: "Surprise ₩300-500k/mo mgmt fees break the unit economics. Specify restoration exemptions in writing.",
+            },
+          ]}
+        />
+      )}
+
+      {/* ── 페이지 5 (후보 비교·결정) — 실제 후보 입력·점수화·선택 패널 ── */}
+      {pageIdx === 5 && (
         <>
       <div style={styles.helper}>{locationHelpText}</div>
 

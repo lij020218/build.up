@@ -81,74 +81,106 @@ public struct BusinessModelStageView: View {
         return all.filter { $0.applicableTo.isEmpty || $0.applicableTo.contains(cluster.category.rawValue) }
     }
 
-    /// 웹 SSOT: packages/shared/starter-data.ts category 별 businessModelOptions.
-    /// food/cafe → 외식 운영 모델 / 서비스업 → 매장·예약·방문 / 리테일 → 오프·온·하이브리드 /
-    /// 온라인 → 채널 / 스타트업 → SaaS 수익 모델.
+    /// 운영 모델 — 웹 SSOT (packages/shared/starter-data.ts `starterBusinessModelOptionsByCategory`
+    ///   + i18n.ts 한국어) 1:1 미러. id·한국어 라벨·설명을 웹과 정확히 일치시켜 양쪽 통일.
+    ///   업종마다 운영 모델이 다름 (음식=홀/테이크아웃/하이브리드, 요가=멤버십/코치드/무인 등).
     private var models: [BizModelOption] {
+        let blue   = Color(red: 0.149, green: 0.388, blue: 0.922)
+        let orange = Color(red: 0.918, green: 0.345, blue: 0.047)
+        let green  = Color(red: 0.020, green: 0.588, blue: 0.412)
         switch cluster.category {
-        case .food, .cafeDessert: return [
-            .init(id: "delivery-hybrid",    icon: "box.truck.fill", color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "하이브리드 (홀+배달)", descKo: "홀 식사·배달·픽업 모두 운영", tagKo: "추천"),
-            .init(id: "dine-in-restaurant", icon: "fork.knife",      color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "홀 매장 중심",     descKo: "테이블 식사·홀 서비스 위주",   tagKo: nil),
-            .init(id: "takeout-focused",    icon: "bag.fill",        color: Color(red: 0.020, green: 0.588, blue: 0.412),
-                  titleKo: "테이크아웃 전문",  descKo: "픽업·포장 위주·좌석 최소",     tagKo: nil),
+        case .food: return [
+            .init(id: "dine-in-restaurant", icon: "fork.knife",     color: blue,
+                  titleKo: "매장 식사형", descKo: "한식·파스타·브런치처럼 매장 내 식사 경험이 중요한 외식형", tagKo: nil),
+            .init(id: "takeout-focused",    icon: "bag.fill",       color: green,
+                  titleKo: "테이크아웃 중심", descKo: "작은 공간·빠른 세팅·단순 인력 구조에 유리", tagKo: nil),
+            .init(id: "delivery-hybrid",    icon: "box.truck.fill", color: orange,
+                  titleKo: "하이브리드 (홀+배달)", descKo: "홀 식사·배달·픽업 모두 운영 — 한국 외식 가장 흔한 운영", tagKo: "추천"),
         ]
-        case .beauty, .fitness, .pet, .education: return [
-            .init(id: "in-shop",   icon: "building.2.fill",       color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "매장 운영",     descKo: "예약·방문 위주 — 단골·LTV 모델",       tagKo: "추천"),
-            .init(id: "mobile",    icon: "car.fill",              color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "출장·방문",     descKo: "고객 위치로 이동 (반려동물·청소·뷰티)", tagKo: nil),
-            .init(id: "hybrid",    icon: "arrow.triangle.swap",   color: Color(red: 0.486, green: 0.227, blue: 0.929),
-                  titleKo: "매장 + 출장 혼합", descKo: "매장 + 출장 양쪽 가능",               tagKo: nil),
-            .init(id: "membership", icon: "creditcard.fill",      color: Color(red: 0.020, green: 0.588, blue: 0.412),
-                  titleKo: "회원제·구독",    descKo: "월 정기·시즌권 — 리텐션 중심",          tagKo: nil),
+        case .cafeDessert: return [
+            .init(id: "storefront-cafe",  icon: "cup.and.saucer.fill", color: blue,
+                  titleKo: "매장형 카페", descKo: "브랜드 노출·좌석 운영·지역 충성도까지 균형", tagKo: "추천"),
+            .init(id: "takeout-focused",  icon: "bag.fill",            color: green,
+                  titleKo: "테이크아웃 중심", descKo: "작은 공간·빠른 세팅·단순 인력 구조에 유리", tagKo: nil),
+            .init(id: "cafe-delivery-hybrid", icon: "box.truck.fill",  color: orange,
+                  titleKo: "하이브리드 (매장+배달)", descKo: "매장 + 배달앱·픽업 병행 — 음료·디저트 배달 수요까지 흡수", tagKo: nil),
+            .init(id: "self-serve-light", icon: "cube.box.fill",       color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "무인/셀프 운영형", descKo: "인건비↓ — 기기 품질·입지 적합도가 더 중요", tagKo: nil),
+        ]
+        case .beauty: return [
+            .init(id: "appointment-studio",  icon: "calendar",        color: blue,
+                  titleKo: "예약 중심 스튜디오형", descKo: "미용실·네일·왁싱 — 예약 반복이 핵심", tagKo: "추천"),
+            .init(id: "premium-private-room", icon: "sparkles",        color: orange,
+                  titleKo: "프라이빗 프리미엄형", descKo: "피부관리·브라이덜 — 신뢰·프라이버시·고가", tagKo: nil),
+            .init(id: "beauty-retail-hybrid", icon: "bag.fill", color: green,
+                  titleKo: "시술+제품 하이브리드형", descKo: "서비스 + 홈케어 제품 판매로 업셀·재구매", tagKo: nil),
+        ]
+        case .fitness: return [
+            .init(id: "membership-studio", icon: "figure.yoga",       color: blue,
+                  titleKo: "멤버십 스튜디오형", descKo: "필라테스·요가 — 반복 수강·멤버십에 강한 모델", tagKo: "추천"),
+            .init(id: "coach-led-premium", icon: "figure.strengthtraining.traditional", color: orange,
+                  titleKo: "코치 중심 프리미엄형", descKo: "PT·골프 — 개인 코칭 가치가 큰 고단가", tagKo: nil),
+            .init(id: "low-touch-fitness", icon: "key.fill",          color: green,
+                  titleKo: "저접촉/무인 피트니스형", descKo: "인력↓ — 출입·장비 관리가 더 중요", tagKo: nil),
+        ]
+        case .education: return [
+            .init(id: "academy-classroom",   icon: "studentdesk",     color: blue,
+                  titleKo: "클래스룸/학원형", descKo: "어학·학습·기술 — 반복 수업 구조가 분명", tagKo: "추천"),
+            .init(id: "small-group-tutoring", icon: "person.2.fill",  color: green,
+                  titleKo: "소규모 튜터링형", descKo: "공부방·소그룹 — 작은 공간에서 시작하기 좋음", tagKo: nil),
+            .init(id: "hybrid-learning",      icon: "laptopcomputer", color: orange,
+                  titleKo: "오프라인+온라인 교육형", descKo: "코딩·성인 교육처럼 온라인을 함께 쓰는 혼합형", tagKo: nil),
+        ]
+        case .pet: return [
+            .init(id: "pet-service-studio", icon: "pawprint.fill",    color: blue,
+                  titleKo: "예약형 펫 서비스 스튜디오", descKo: "펫미용처럼 반복 예약·소형 공간 운영이 핵심", tagKo: "추천"),
+            .init(id: "pet-care-center",    icon: "house.fill",       color: orange,
+                  titleKo: "펫 돌봄 센터형", descKo: "호텔·데이케어·유치원 — 돌봄·관리가 핵심", tagKo: nil),
+            .init(id: "pet-retail-hybrid",  icon: "bag.fill", color: green,
+                  titleKo: "서비스+용품 하이브리드형", descKo: "펫 서비스 + 용품·소모품 반복 판매", tagKo: nil),
         ]
         case .livingService: return [
-            .init(id: "mobile",  icon: "car.fill",         color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "출장·방문 위주",  descKo: "세탁·청소·수리 등 고객 위치 이동", tagKo: "추천"),
-            .init(id: "in-shop", icon: "building.2.fill",  color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "매장 운영",      descKo: "코인세탁·수리 매장 등 고정 매장",  tagKo: nil),
-            .init(id: "hybrid",  icon: "arrow.triangle.swap", color: Color(red: 0.486, green: 0.227, blue: 0.929),
-                  titleKo: "매장 + 출장",    descKo: "매장 운영 + 출장 병행",            tagKo: nil),
+            .init(id: "utility-storefront",  icon: "building.2.fill", color: blue,
+                  titleKo: "생활 밀착 점포형", descKo: "세탁·수리·인쇄처럼 오프라인 실용 수요", tagKo: "추천"),
+            .init(id: "self-service-model",  icon: "cube.box.fill",   color: green,
+                  titleKo: "셀프서비스형", descKo: "셀프 빨래방처럼 저접촉 운영 가능", tagKo: nil),
+            .init(id: "visit-service-model", icon: "car.fill",        color: orange,
+                  titleKo: "방문/출동 서비스형", descKo: "청소·수리 — 점포보다 스케줄·대응력이 중요", tagKo: nil),
         ]
         case .space: return [
-            .init(id: "manned",   icon: "person.fill",     color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "유인 운영",       descKo: "체크인·청소·운영 직접",        tagKo: nil),
-            .init(id: "unmanned", icon: "key.fill",        color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "무인 (스마트락)",  descKo: "스마트락 + 예약 자동화",       tagKo: "추천"),
-            .init(id: "hybrid",   icon: "arrow.triangle.swap", color: Color(red: 0.486, green: 0.227, blue: 0.929),
-                  titleKo: "혼합 운영",       descKo: "주말 유인 + 평일 무인",         tagKo: nil),
+            .init(id: "reservation-space",      icon: "calendar.badge.clock", color: blue,
+                  titleKo: "예약형 공간 대여", descKo: "스튜디오·파티룸·연습실 — 시간 단위 예약 중심", tagKo: "추천"),
+            .init(id: "membership-space",       icon: "person.badge.key.fill", color: green,
+                  titleKo: "멤버십 공간형", descKo: "스터디카페·공유오피스 — 반복 이용 중심", tagKo: nil),
+            .init(id: "hospitality-operations", icon: "bed.double.fill", color: orange,
+                  titleKo: "숙박/호스피탈리티 운영형", descKo: "게스트하우스처럼 운영 난도가 더 높은 숙박형", tagKo: nil),
         ]
         case .retail: return [
-            .init(id: "offline-shop", icon: "building.2.fill", color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "오프라인 매장",   descKo: "고정 매장 — 진열·직접 판매",      tagKo: nil),
-            .init(id: "online-shop",  icon: "globe",            color: Color(red: 0.020, green: 0.588, blue: 0.412),
-                  titleKo: "온라인 전용",     descKo: "스마트스토어·자체몰만 운영",     tagKo: nil),
-            .init(id: "omni-channel", icon: "arrow.triangle.swap", color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "옴니채널",        descKo: "오프라인 + 온라인 통합 운영",    tagKo: "추천"),
-            .init(id: "popup-only",   icon: "calendar.badge.clock", color: Color(red: 0.486, green: 0.227, blue: 0.929),
-                  titleKo: "팝업·기간한정",   descKo: "단기 임대 + 기간한정 마케팅",     tagKo: nil),
+            .init(id: "small-storefront-retail", icon: "building.2.fill", color: blue,
+                  titleKo: "오프라인 소형 매장형", descKo: "큐레이션·동네 재방문 수요를 살리는 기본 소매", tagKo: "추천"),
+            .init(id: "unmanned-retail-model",   icon: "cube.box.fill",   color: green,
+                  titleKo: "무인 소매형", descKo: "저접촉 — 상품 회전·위치 적합도가 더 중요", tagKo: nil),
+            .init(id: "omni-retail",             icon: "arrow.triangle.swap", color: orange,
+                  titleKo: "오프라인+온라인 병행형", descKo: "매장 판매 + 온라인 유입을 함께 가져가는 혼합", tagKo: nil),
         ]
         case .onlineDigital: return [
-            .init(id: "marketplace",  icon: "cart.fill",  color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "마켓플레이스 입점", descKo: "스마트스토어·쿠팡·11번가 등",    tagKo: "추천"),
-            .init(id: "direct-store", icon: "globe",      color: Color(red: 0.020, green: 0.588, blue: 0.412),
-                  titleKo: "자체몰 직판매",     descKo: "카페24·Shopify 등 자체 도메인", tagKo: nil),
-            .init(id: "multi-channel", icon: "arrow.triangle.swap", color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "멀티 채널",         descKo: "마켓+자체몰+SNS 동시 운영",       tagKo: nil),
-            .init(id: "subscription",  icon: "creditcard.fill",  color: Color(red: 0.486, green: 0.227, blue: 0.929),
-                  titleKo: "구독 박스·리필",     descKo: "정기배송 + 멤버십 LTV 중심",       tagKo: nil),
+            .init(id: "marketplace-seller",       icon: "cart.fill", color: blue,
+                  titleKo: "마켓플레이스 판매형", descKo: "스마트스토어·위탁판매처럼 입점형 판매 중심", tagKo: "추천"),
+            .init(id: "brand-storefront-online",  icon: "globe",     color: green,
+                  titleKo: "브랜드 자사몰형", descKo: "브랜드 경험·반복 구매·고객 데이터를 직접 관리", tagKo: nil),
+            .init(id: "content-membership-model", icon: "newspaper.fill", color: orange,
+                  titleKo: "콘텐츠/멤버십형", descKo: "디지털 상품·뉴스레터·크리에이터 — 구독 중심", tagKo: nil),
         ]
         case .startupTech: return [
-            // 웹 SSOT (getStarterBusinessModelOptions("startup-tech")) — biz model 은 제품 형태.
-            //   수익 모델 (어떻게 돈 받는가) 은 별도 selector 로 분리됨.
-            .init(id: "saas-product",   icon: "macbook.and.iphone", color: Color(red: 0.149, green: 0.388, blue: 0.922),
-                  titleKo: "SaaS 제품",   descKo: "웹·모바일 앱 형태로 사용자에게 직접 제공",       tagKo: "추천"),
-            .init(id: "platform-model", icon: "rectangle.connected.to.line.below", color: Color(red: 0.918, green: 0.345, blue: 0.047),
-                  titleKo: "플랫폼·마켓플레이스", descKo: "공급자·수요자 매칭 — 거래 수수료 기반",   tagKo: nil),
-            .init(id: "api-infra",      icon: "bolt.horizontal.fill", color: Color(red: 0.020, green: 0.588, blue: 0.412),
-                  titleKo: "API·인프라",   descKo: "개발자 대상 API·SDK — Stripe·Twilio 패턴",   tagKo: nil),
+            // 웹 SSOT — GTM 모션 (제품 형태가 아니라 시장 진입 방식). 수익 모델은 별도 selector.
+            .init(id: "plg-saas",                icon: "macbook.and.iphone", color: blue,
+                  titleKo: "제품 주도형 SaaS", descKo: "셀프서브·가벼운 터치 — 활성화 속도가 중요할 때", tagKo: "추천"),
+            .init(id: "sales-led-b2b",           icon: "briefcase.fill",     color: orange,
+                  titleKo: "영업 주도형 B2B", descKo: "고가 페인·소수 구매자·파일럿→확장", tagKo: nil),
+            .init(id: "usage-based-api",         icon: "bolt.horizontal.fill", color: green,
+                  titleKo: "사용량 기반 API/인프라", descKo: "개발자 대상 — 사용량·자동화 볼륨에 가치 비례", tagKo: nil),
+            .init(id: "hybrid-software-service", icon: "person.2.fill", color: Color(red: 0.486, green: 0.227, blue: 0.929),
+                  titleKo: "소프트웨어+서비스 하이브리드", descKo: "수동 서비스로 수요 증명 후 제품화", tagKo: nil),
         ]
         }
     }

@@ -1,6 +1,7 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 
 export function StoreSetupStage() {
   const d = useDashboardCtx();
@@ -12,6 +13,17 @@ export function StoreSetupStage() {
 
   return (
     <div style={{ display: "grid", gap: "14px", marginBottom: "16px" }}>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "상세페이지·배송·반품 정책 — 첫 100주문 전에 모두 라이브"
+            : "Detail pages, shipping, returns — all live before your first 100 orders",
+          detail: ko
+            ? "카테고리·배너·반품 정책 + 택배사 연동 + (자체몰) PG 연동 + CS 채널(카톡·톡톡) + 포장재 풀세트 실제 워크플로 테스트. 첫 주문 와서 막히면 리뷰가 망가진다."
+            : "Categories, banners, return policy + courier integration + (own mall) PG + CS channels + packaging — test the real workflow. Getting stuck on order #1 wrecks your reviews.",
+        }}
+      />
       {/* 선택된 플랫폼 안내 */}
       {selectedPlatforms.length > 0 && (
         <div style={{ padding: "12px 16px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.08)", display: "flex", gap: "8px", alignItems: "center" }}>

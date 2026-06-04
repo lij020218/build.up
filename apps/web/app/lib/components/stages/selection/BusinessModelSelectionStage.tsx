@@ -9,6 +9,7 @@ import {
 } from "@foundone/shared";
 import { BusinessHoursInput } from "../shared/BusinessHoursInput";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
@@ -93,6 +94,17 @@ export function BusinessModelSelectionStage() {
 
   return (
     <>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "한 가지 운영 모델에 우선 락인 — 분산은 매출 후"
+            : "Lock in one operating model first — diversify after revenue",
+          detail: ko
+            ? "홀·배달·하이브리드 중 하나로 락인. 한국 외식업은 75%+ 하이브리드지만 첫 3개월은 한 모델로 표준화 — 매출 안정 후 두 번째 채널 추가."
+            : "Lock to dine-in, delivery, or hybrid. Korea's F&B is 75%+ hybrid, but standardize on one for the first 3 months — add a second channel after revenue stabilizes.",
+        }}
+      />
       <div style={styles.helper}>
         {copy.home.businessModelHelp}
       </div>

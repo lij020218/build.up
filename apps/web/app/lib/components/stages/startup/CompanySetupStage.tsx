@@ -77,7 +77,7 @@ export function CompanySetupStage() {
       {pg === 0 && (
       <StoreNameInput
         label={ko ? "상호명 / 법인명" : "Company / Brand name"}
-        placeholder={ko ? "예: 빌드업, BuildUp Inc." : "e.g. BuildUp, Acme Inc."}
+        placeholder={ko ? "예: 파운드원, Acme Inc." : "e.g. Found.One, Acme Inc."}
         helperText={ko
           ? "사업자등록·법인등기·도메인·상표 출원·통장 모두 동일하게 사용됩니다. KIPRIS·USPTO에서 동일 상표 등록 여부를 먼저 확인하세요. 입력하면 자동 저장됩니다."
           : "Used identically across registration, incorporation, domain, trademark, and bank account. Search KIPRIS/USPTO first. Auto-saves as you type."}

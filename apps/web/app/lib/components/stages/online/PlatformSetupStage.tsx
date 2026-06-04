@@ -1,6 +1,7 @@
 "use client";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 
 export function PlatformSetupStage() {
   const d = useDashboardCtx();
@@ -21,6 +22,17 @@ export function PlatformSetupStage() {
 
   return (
     <div style={{ marginBottom: "16px" }}>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "1개 플랫폼에 우선 집중 — 멀티는 매출 1억 이후"
+            : "Focus on one platform first — go multi after ₩100M revenue",
+          detail: ko
+            ? "스마트스토어 · 쿠팡 · 자체몰 — 수수료·트래픽·정산 구조가 모두 다름. 첫 6개월은 한 곳에 집중해서 리뷰·랭킹을 쌓아야 두 번째 채널로 확장 시 시너지가 난다."
+            : "SmartStore · Coupang · own mall — fees, traffic, and settlement all differ. Focus on one for the first 6 months to build reviews and ranking before expanding to a second channel.",
+        }}
+      />
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
         <span style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.38)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
           {ko ? "판매 플랫폼 비교 · 선택" : "Compare & Select Platforms"}

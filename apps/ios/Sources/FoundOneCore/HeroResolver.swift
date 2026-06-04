@@ -126,6 +126,10 @@ public struct HeroResolverInput: Sendable {
     /// Hero 카드엔 첫 번째만, "오늘의 집중" popup 엔 전체 3개 (high → low priority).
     public let aiTopActions: [AiAction]
     public let categoryId: String?
+    /// 스타트업 신호용 — 실데이터 기반(현금 ÷ 월 순burn). nil = 미계산/데이터부족.
+    public let runwayMonths: Double?
+    /// 주간 매출 변화율(%) — 실데이터 기반. default-dead 판정 보조. nil = 데이터부족.
+    public let weeklySalesChangePct: Double?
 
     /// 단일 액션 fallback (예전 코드 호환) — aiTopActions.first.
     public var aiTopAction: AiAction? { aiTopActions.first }
@@ -139,7 +143,9 @@ public struct HeroResolverInput: Sendable {
         cashflowCrisis: CashflowCrisis? = nil,
         topAnomaly: Anomaly? = nil,
         aiTopActions: [AiAction] = [],
-        categoryId: String? = nil
+        categoryId: String? = nil,
+        runwayMonths: Double? = nil,
+        weeklySalesChangePct: Double? = nil
     ) {
         self.ko = ko
         self.businessLaunched = businessLaunched
@@ -150,6 +156,8 @@ public struct HeroResolverInput: Sendable {
         self.topAnomaly = topAnomaly
         self.aiTopActions = aiTopActions
         self.categoryId = categoryId
+        self.runwayMonths = runwayMonths
+        self.weeklySalesChangePct = weeklySalesChangePct
     }
 
     /// 이전 단일-액션 init — 호환 유지.
@@ -311,6 +319,48 @@ public enum HeroResolver {
                 ctaEn: "See details",
                 ctaTarget: target
             )
+        }
+
+        // ── 1.6 스타트업 신호 (웹 computeStartupRule 미러) ──
+        //   웹 SSOT: apps/web/app/lib/hooks/computeStartupRule.ts
+        //   ⚠️ 정직성 원칙: iOS 는 burnMultiple·CMGR·Rule of 40 을 실데이터로 계산하지 않으므로
+        //      *표시하지 않는다*(가짜 금지). 실데이터로 계산 가능한 런웨이·Default Dead 만.
+        if input.categoryId == "startup-tech", let runway = input.runwayMonths, runway.isFinite {
+            // Default Dead 판정: 순burn 상태(monthlyBurn>0 가정) + 성장 정체(주간 ≤0) + 런웨이 < 18개월
+            let notGrowing = (input.weeklySalesChangePct ?? 0) <= 0
+            let defaultDead = notGrowing && runway < 18
+            if runway < 6 {
+                return Hero(
+                    source: .anomaly, tone: .crisis,
+                    tagKo: "런웨이 위기", tagEn: "Runway critical",
+                    analysisKo: "런웨이 \(String(format: "%.1f", runway))개월 — 6개월 미만. 한국 VC 표준(18-24개월)의 1/3 이하예요.",
+                    analysisEn: "Runway \(String(format: "%.1f", runway))mo — under 6 months (1/3 of the 18-24mo standard).",
+                    actionKo: "오늘: 시드 데크 작성 시작 + 비지분 자금(TIPS·예비창업) 동시 신청.",
+                    actionEn: "Today: start seed deck + apply non-dilutive funds (TIPS, K-Startup) in parallel.",
+                    ctaKo: "현금흐름 보기", ctaEn: "See cash flow", ctaTarget: .cashflow
+                )
+            } else if defaultDead {
+                return Hero(
+                    source: .anomaly, tone: .warning,
+                    tagKo: "Default Dead 경계", tagEn: "Default Dead watch",
+                    analysisKo: "성장이 멈춘 채 현금이 줄고 있어요(런웨이 \(String(format: "%.1f", runway))개월). 지금 속도로는 흑자 전 자본이 소진될 수 있어요.",
+                    analysisEn: "Growth stalled while cash burns (runway \(String(format: "%.1f", runway))mo). At this pace you may run out before profit.",
+                    actionKo: "다음 3개월: ① 매출 +20% 또는 ② 비용 −30% 중 하나는 반드시 달성하세요.",
+                    actionEn: "Next 3mo: hit either +20% revenue or −30% cost.",
+                    ctaKo: "현금흐름 보기", ctaEn: "See cash flow", ctaTarget: .cashflow
+                )
+            } else if runway < 12 {
+                return Hero(
+                    source: .anomaly, tone: .warning,
+                    tagKo: "런웨이 점검", tagEn: "Runway watch",
+                    analysisKo: "런웨이 \(String(format: "%.1f", runway))개월 — 안전선(18-24개월)까지 여유가 적어요. 시드 라운드 리드타임(4-12주) 고려가 필요해요.",
+                    analysisEn: "Runway \(String(format: "%.1f", runway))mo — short of the safe 18-24mo. Seed rounds take 4-12 weeks.",
+                    actionKo: "이번 달: 시드 timing 결정 + 메트릭 1page 데크 초안 작성.",
+                    actionEn: "This month: decide seed timing + draft a 1-page metrics deck.",
+                    ctaKo: "현금흐름 보기", ctaEn: "See cash flow", ctaTarget: .cashflow
+                )
+            }
+            // runway ≥ 12 이고 성장 중이면 — 스타트업 전용 위기 신호 없음 → 아래 일반 우선순위로.
         }
 
         // ── 3. AI 액션 ──

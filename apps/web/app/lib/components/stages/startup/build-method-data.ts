@@ -398,7 +398,7 @@ const DESIGN_IMAGE_METHODS: BuildMethod[] = [
       { name: "GPT Image 2 (ChatGPT)", url: "https://chatgpt.com", pricing: "$20/mo" },
     ],
     steps: [
-      { title: "ChatGPT 에서 이미지 프롬프트", detail: "\"미니멀 SaaS 로고, 미드나이트 블루, '빌드업' 한글 포함\" — 한국어 텍스트 99% 정확하게 렌더링." },
+      { title: "ChatGPT 에서 이미지 프롬프트", detail: "\"미니멀 SaaS 로고, 미드나이트 블루, '파운드원' 한글 포함\" — 한국어 텍스트 99% 정확하게 렌더링." },
       { title: "사이즈·비율 명시", detail: "1024×1024 (square), 1536×1024 (hero), 1024×1792 (vertical), 1200×630 (OG)." },
       { title: "Thinking 모드로 캠페인 자산 일괄", detail: "한 프롬프트로 Instagram 1:1 + Twitter 3:1 + LinkedIn wide + Facebook OG 동시 생성. 브랜드 일관성." },
       { title: "다운로드 → Figma·Canva 에서 마무리", detail: "필요 시 텍스트 추가 편집." },

@@ -211,7 +211,7 @@ struct AnyJSONDict: Codable, Sendable {
 
     func toStringDict() -> [String: String] { values }
 
-    func encode(to encoder: Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: DynamicCodingKey.self)
         for (k, v) in values {
             guard let key = DynamicCodingKey(stringValue: k) else { continue }
@@ -223,7 +223,7 @@ struct AnyJSONDict: Codable, Sendable {
         self.values = values
     }
 
-    init(from decoder: Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: DynamicCodingKey.self)
         var out: [String: String] = [:]
         for key in container.allKeys {

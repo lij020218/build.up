@@ -59,6 +59,25 @@ public struct MonthlyCosts: Sendable, Hashable, Codable {
     public var total: Double {
         ingredients + labor + rent + utilities + sga + marketing + other + interest
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case ingredients, labor, rent, utilities, sga, marketing, other, interest
+    }
+
+    // ⚠️ 관대한 디코딩 — Supabase monthly_costs jsonb 에 일부 키(예: sga)가 없는
+    //   옛 레코드도 0 으로 채워 디코딩 성공시킨다. 키 하나 없다고 대시보드 전체
+    //   로딩이 실패하던 버그(DecodingError.keyNotFound) 방지. (Encodable 은 자동 합성 유지)
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.ingredients = try c.decodeIfPresent(Double.self, forKey: .ingredients) ?? 0
+        self.labor       = try c.decodeIfPresent(Double.self, forKey: .labor) ?? 0
+        self.rent        = try c.decodeIfPresent(Double.self, forKey: .rent) ?? 0
+        self.utilities   = try c.decodeIfPresent(Double.self, forKey: .utilities) ?? 0
+        self.sga         = try c.decodeIfPresent(Double.self, forKey: .sga) ?? 0
+        self.marketing   = try c.decodeIfPresent(Double.self, forKey: .marketing) ?? 0
+        self.other       = try c.decodeIfPresent(Double.self, forKey: .other) ?? 0
+        self.interest    = try c.decodeIfPresent(Double.self, forKey: .interest) ?? 0
+    }
 }
 
 // MARK: - IndustryCategory (업종)

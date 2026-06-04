@@ -416,7 +416,7 @@ public struct GuidesView: View {
             state.programs = response.programs
             state.stats = response.stats
         } catch {
-            state.error = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            state.error = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
         }
     }
 }

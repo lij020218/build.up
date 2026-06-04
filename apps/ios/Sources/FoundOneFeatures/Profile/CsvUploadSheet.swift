@@ -255,7 +255,7 @@ public struct CsvUploadSheet: View {
 
     // MARK: - Actions
 
-    private func handlePickedFile(result: Result<[URL], Error>) {
+    private func handlePickedFile(result: Result<[URL], any Error>) {
         switch result {
         case .success(let urls):
             guard let url = urls.first else { return }
@@ -299,7 +299,7 @@ public struct CsvUploadSheet: View {
                     phase = .error(response.error ?? "업로드 실패")
                 }
             } catch let repoError as CsvUploadRepositoryError {
-                phase = .error(repoError.localizedDescription ?? "업로드 실패")
+                phase = .error(repoError.errorDescription ?? "업로드 실패")
             } catch {
                 phase = .error("파일 읽기 실패: \(error.localizedDescription)")
             }

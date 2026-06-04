@@ -62,6 +62,9 @@ public struct BUStageShell<Content: View>: View {
     public let currentPage: Int?
     public let totalPages: Int?
     public let onEditSave: (() -> Void)?
+    /// 페이지별 KEY ACTION 오버라이드 (웹 패리티 — operations/loan/tax/pre-launch-final 처럼
+    /// 페이지마다 KEY ACTION 이 다른 단계). nil 이면 BUStageKeyActionRegistry 단일값 사용.
+    public let keyActionOverride: BUStageKeyAction?
     public let content: Content
 
     @Environment(\.dismiss) private var dismiss
@@ -109,6 +112,7 @@ public struct BUStageShell<Content: View>: View {
         industryCategoryId: String? = nil,
         currentPage: Int? = nil,
         totalPages: Int? = nil,
+        keyActionOverride: BUStageKeyAction? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.stageId = stageId
@@ -126,6 +130,7 @@ public struct BUStageShell<Content: View>: View {
         self.currentPage = currentPage
         self.totalPages = totalPages
         self.onEditSave = onEditSave
+        self.keyActionOverride = keyActionOverride
         self.content = content()
     }
 
@@ -150,8 +155,8 @@ public struct BUStageShell<Content: View>: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // KEY ACTION 미드나이트 히어로 — registry 에 있으면 단계 최상단 자동 노출 (웹 SSOT 미러)
-                    if let keyAction = BUStageKeyActionRegistry.action(for: stageId) {
+                    // KEY ACTION 미드나이트 히어로 — 페이지별 오버라이드 우선, 없으면 registry 단일값 (웹 SSOT 미러)
+                    if let keyAction = keyActionOverride ?? BUStageKeyActionRegistry.action(for: stageId) {
                         BUStageKeyActionHero(title: keyAction.title, detail: keyAction.detail)
                             .padding(.horizontal, BUSpacing.md)
                             .padding(.top, 4)

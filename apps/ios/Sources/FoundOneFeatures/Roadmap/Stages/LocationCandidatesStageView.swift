@@ -1,12 +1,16 @@
 //
-//  LocationCandidatesStageView.swift — 입지 후보 분석 (iOS 네이티브)
+//  LocationCandidatesStageView.swift — 상권 후보 비교 (iOS 네이티브)
 //
 //  stageId: "location-candidates"
 //
-//  3-page (세그먼트):
-//    pg 0 — 상권 분석 (배후 인구·경쟁·유동인구)
-//    pg 1 — 매물 체크리스트 (접근성·주차·시설)
-//    pg 2 — 최종 선택 & 메모
+//  웹 SSOT 미러 (apps/web/.../selection/LocationCandidatesStage.tsx) — 6 페이지:
+//    pg 0 — 개요 (StageOverview: 왜 + 작업 목차 + 기대 결과)
+//    pg 1 — 1. 지역·AI (WorkStep)
+//    pg 2 — 2. 답사 후보 (WorkStep)
+//    pg 3 — 3. 점수 비교 (WorkStep + 사장님 상황 유리한 길)
+//    pg 4 — 4. 매물 체크 (WorkStep)
+//    pg 5 — 후보 비교·결정 (실제 지역 입력·AI 추천·지도·최종 선택 패널)
+//  상단 KEY ACTION 히어로는 BUStageKeyActionRegistry["location-candidates"] 자동 노출(웹 KeyActionHero 미러).
 //
 
 import SwiftUI
@@ -35,28 +39,13 @@ public struct LocationCandidatesStageView: View {
 
     private var cluster: IndustryCluster { IndustryCluster.from(industryId: industryId) }
 
-    // 상권 체크
-    @AppStorage("loc.market.population")  private var marketPop      = false
-    @AppStorage("loc.market.foot")        private var marketFoot     = false
-    @AppStorage("loc.market.compete")     private var marketCompete  = false
-    @AppStorage("loc.market.growth")      private var marketGrowth   = false
-
-    // 매물 체크
-    @AppStorage("loc.prop.access")        private var propAccess     = false
-    @AppStorage("loc.prop.parking")       private var propParking    = false
-    @AppStorage("loc.prop.visibility")    private var propVisibility = false
-    @AppStorage("loc.prop.area")          private var propArea       = false
-    @AppStorage("loc.prop.hood")          private var propHood       = false
-
-    // 최종
+    // 최종 결정
     @AppStorage("loc.finalAddress")       private var finalAddress   = ""
     @AppStorage("loc.finalNote")          private var finalNote      = ""
     @AppStorage("loc.finalDone")          private var finalDone      = false
 
-    private var marketOk: Bool { marketPop && marketFoot && marketCompete && marketGrowth }
-    private var propOk: Bool   { propAccess && propParking && propVisibility && propArea && propHood }
-
-    private let pages = ["상권 분석", "매물 체크", "최종 선택"]
+    // 웹 pageLabels 미러
+    private let pages = ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "4. 매물 체크", "후보 비교·결정"]
 
     // AI 라이브 상권 추천 (웹 패리티 — POST /api/data/market-recommend)
     @State private var aiRegion = ""
@@ -70,19 +59,16 @@ public struct LocationCandidatesStageView: View {
     @State private var selectedMarketId: String?                  // 사용자가 탭으로 고른 상권 (카드↔지도 핀 동기·확장)
 
     /// Found.One 상권 추천 (내장 상권 데이터 — **메인**·오프라인 즉시). 웹 buildRecommendedMarkets 대응.
-    ///   AI 를 부르지 않는다. 지역 입력 → 내장 DB 매칭 + Apple 지도 핀.
     private func runFoundOneRecommend() {
         let region = aiRegion.trimmingCharacters(in: .whitespaces)
         guard !region.isEmpty else { return }
         didSearch = true
         aiDistrictMatches = MarketDistrictRegistry.match(region)
-        // 새 검색 — 이전 AI 결과/에러/핀 초기화 후 내장 매칭으로 다시 핀 표시.
         aiItems = []; aiError = nil; aiPins = []; aiCenter = nil
         Task { await geocodeDistrictPins(aiDistrictMatches) }
     }
 
-    /// AI 실시간 상권 추천 (**별도 옵트인** — Kakao+Claude). 내장 데이터에 없는 지역(비-서울 등) 보강.
-    ///   웹 requestAiMarketRecommend(/api/data/market-recommend) 대응. 사용자가 명시적으로 누를 때만 호출.
+    /// AI 실시간 상권 추천 (**별도 옵트인** — Kakao+Claude). 웹 requestAiMarketRecommend 대응.
     private func runAiRecommend() {
         let region = aiRegion.trimmingCharacters(in: .whitespaces)
         guard !region.isEmpty, !aiLoading else { return }
@@ -126,7 +112,7 @@ public struct LocationCandidatesStageView: View {
         if aiCenter == nil { aiCenter = pins.first?.coord }
     }
 
-    /// 113-상권 DB 매칭 상권을 Apple 지도 좌표로 변환 → 점수 핀. (MKLocalSearch — 키/서버 불필요)
+    /// 내장 상권 DB 매칭 상권을 Apple 지도 좌표로 변환 → 점수 핀. (MKLocalSearch — 키/서버 불필요)
     @MainActor
     private func geocodeDistrictPins(_ districts: [MarketDistrict]) async {
         let seoul = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
@@ -142,7 +128,6 @@ public struct LocationCandidatesStageView: View {
             }
         }
         guard !pins.isEmpty else { return }
-        // 동일 검색 세션의 핀만 유지 (이전 검색 잔여 제거 없이 누적 — append)
         aiPins.append(contentsOf: pins)
         if aiCenter == nil { aiCenter = pins.first?.coord }
     }
@@ -152,10 +137,8 @@ public struct LocationCandidatesStageView: View {
     }
 
     private var advanceHint: String {
-        if finalAddress.trimmingCharacters(in: .whitespaces).isEmpty { return "최종 선택 매물 주소를 입력하세요" }
+        if finalAddress.trimmingCharacters(in: .whitespaces).isEmpty { return "「후보 비교·결정」 탭에서 최종 매물 주소를 입력하세요" }
         if !finalDone { return "입지 최종 확정 토글을 켜세요" }
-        if !marketOk { return "상권 분석 4항목 점검 권장" }
-        if !propOk { return "매물 체크 5항목 점검 권장" }
         return "입지 확정 — 다음 단계로"
     }
 
@@ -165,7 +148,7 @@ public struct LocationCandidatesStageView: View {
         BUStageShell(
             stageId: stageId,
             title: "상권 후보 비교",
-            stageEyebrow: "단계 7 · 입지 후보 분석",
+            stageEyebrow: "단계 7 · 상권 후보 비교",
             helperText: "\(cluster.categoryNounKo) 입지 분석: \(cluster.locationAnalysisFocus). 권장 키워드 — \(cluster.locationKeywords.joined(separator: "·")).",
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
@@ -206,30 +189,33 @@ public struct LocationCandidatesStageView: View {
 
                 Group {
                     switch page {
-                    case 0: marketPage
-                    case 1: propertyPage
-                    default: finalPage
+                    case 0: overviewPage
+                    case 1: regionAiPage
+                    case 2: visitPage
+                    case 3: scorePage
+                    case 4: propertyCheckPage
+                    default: decisionPage
                     }
                 }
             }
         }
     }
 
-    // MARK: - 왜 상권 분석이 중요한가 (웹 StageOverview 패리티)
+    // MARK: - pg 0 개요 (웹 StageOverview 미러)
 
-    private var whyMarketCard: some View {
+    private var overviewPage: some View {
         BUCard(.card) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 BUEyebrow("이 단계 개요")
                 Text("상권 = 매출 천장. 후회 없는 1곳을 정하기 위한 25분")
                     .font(.system(size: 18, weight: .heavy)).tracking(-0.3)
                     .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("상권은 1~2년 묶이는 의사결정입니다. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. 라이브 상권 데이터 + 직접 답사 + 4지표 점수화로 후회 없이 결정하세요.")
+                Text("상권은 1~2년 묶이는 의사결정입니다. 잘못 고르면 마케팅·메뉴·인테리어를 다 잘해도 매출이 임대료를 못 따라잡습니다. AI 라이브 데이터 + 직접 답사 후보 + 4지표 점수화로 후회 없는 결정.")
                     .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
 
-                // stat — 47% 폐업이 상권 후회
+                // stat — 47% 초기 폐점이 상권 후회
                 HStack(spacing: 12) {
                     Text("47%").font(.system(size: 30, weight: .heavy)).foregroundStyle(BUColor.midnight)
                     Text("초기 폐점 사장님이\n「상권 선택」을 후회")
@@ -240,11 +226,22 @@ public struct LocationCandidatesStageView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
+                // 작업 목차 (웹 workOutline 미러)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("이 단계에서 진행 — 총 5단계")
+                        .font(BUFont.eyebrow).foregroundStyle(BUColor.midnight.opacity(0.7))
+                    outlineRow("1. 지역·AI", "구체적 지역 입력 → AI 라이브 추천", "5분")
+                    outlineRow("2. 답사 후보", "직접 답사한 매물 1-2곳 추가 (정성 요소)", "10분")
+                    outlineRow("3. 점수 비교", "4지표 (유동·임대료·경쟁·타겟) 점수 + 직관 검증", "10분")
+                    outlineRow("4. 매물 체크", "현장 5가지 필수 확인 — 계약 전 최종 관문", "15분")
+                    outlineRow("결정", "최종 1곳 선택 → 계약 검토 단계로", nil)
+                }
+
                 // outcome
                 HStack(alignment: .top, spacing: 9) {
                     Image(systemName: "arrow.up.right.circle.fill").font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(BUColor.success).padding(.top, 1)
-                    Text("최종 상권 1곳을 확정하면, 그 상권의 임대료·유동·경쟁·타겟 정보를 다음 「계약 전 검토」 단계가 자동으로 받아 맞춤 체크리스트를 만들어 줍니다.")
+                    Text("최종 상권 1곳이 Found.One 에 저장됩니다. 그 상권의 임대료·유동·경쟁·타겟 정보를 다음 단계 (계약 전 검토) 가 자동으로 받아서 맞춤 체크리스트를 생성.")
                         .font(.system(size: 12.5)).foregroundStyle(BUColor.ink.opacity(0.78)).lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
@@ -257,38 +254,202 @@ public struct LocationCandidatesStageView: View {
         }
     }
 
-    // MARK: - 교육 콘텐츠 (웹 SSOT 미러 — "왜 중요하고 어떻게 해야 유리한가")
-
-    /// 상권을 보는 3원칙 — 웹 WorkStep WHY 카피 미러(체크리스트가 아니라 "왜·어떻게").
-    private var strategyCard: some View {
-        BUCard(.card) {
-            VStack(alignment: .leading, spacing: 12) {
-                BUEyebrow("상권, 이렇게 보면 유리합니다")
-                principleRow("1", "후보 3곳 이상 동일 기준 비교",
-                             "1곳만 보면 ‘좋아 보인다’가 끝입니다. 3곳을 같은 잣대(유동·임대료·경쟁·타겟)로 보면 차이가 명확해집니다.")
-                principleRow("2", "AI 데이터 + 직접 답사 = 정량 + 정성",
-                             "AI·공공데이터는 임대료·유동 같은 ‘숫자’만 봅니다. 분위기·동선·소음·간판 가시성 같은 ‘정성’은 직접 답사로만 확인됩니다.")
-                principleRow("3", "느낌이 아니라 4지표로 채점",
-                             "유동(일평균 통행)·임대료(평당 월세)·경쟁(반경 500m 동종)·타겟(연령·소득)으로 객관 채점 후 본인 직관과 교차 검증해야 후회가 없습니다.")
-            }
-        }
-    }
-
-    private func principleRow(_ num: String, _ title: String, _ body: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text(num)
-                .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
-                .frame(width: 22, height: 22)
-                .background(LinearGradient(colors: [BUColor.midnight, BUColor.midnightDeep], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            VStack(alignment: .leading, spacing: 2) {
+    private func outlineRow(_ step: String, _ title: String, _ time: String?) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(step).font(.system(size: 10.5, weight: .bold)).tracking(0.4).textCase(.uppercase)
+                    .foregroundStyle(BUColor.midnight.opacity(0.7))
                 Text(title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(BUColor.ink)
-                Text(body).font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
             }
+            Spacer(minLength: 0)
+            if let time {
+                Text(time).font(.system(size: 11, weight: .semibold)).foregroundStyle(BUColor.inkMuted)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Color.white, in: Capsule())
+                    .overlay(Capsule().strokeBorder(BUColor.midnight.opacity(0.1), lineWidth: 1))
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .background(BUColor.midnight.opacity(0.03), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.06), lineWidth: 1))
+    }
+
+    // MARK: - WorkStep 공통 카드 (웹 WorkStep 미러)
+
+    private func workStepCard(stepLabel: String, time: String, headline: String,
+                              why: String, how: [(String, String)],
+                              watchouts: [(String, String)] = []) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    Text(stepLabel)
+                        .font(.system(size: 11, weight: .bold)).tracking(0.5)
+                        .foregroundStyle(BUColor.midnight)
+                        .padding(.horizontal, 9).padding(.vertical, 3)
+                        .background(BUColor.midnight.opacity(0.06), in: Capsule())
+                    Text("· \(time)").font(.system(size: 11, weight: .medium)).foregroundStyle(BUColor.inkMuted)
+                    Spacer(minLength: 0)
+                }
+                Text(headline)
+                    .font(.system(size: 17, weight: .heavy)).tracking(-0.3)
+                    .foregroundStyle(BUColor.midnightDeep).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                Text(why)
+                    .font(.system(size: 13)).foregroundStyle(BUColor.inkSecondary).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+
+                // 할 일 — 번호 + 제목 + 설명
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("할 일").font(BUFont.eyebrow).foregroundStyle(BUColor.midnight.opacity(0.75))
+                        .padding(.bottom, 8)
+                    ForEach(Array(how.enumerated()), id: \.offset) { idx, h in
+                        HStack(alignment: .top, spacing: 12) {
+                            Text("\(idx + 1)")
+                                .font(.system(size: 13, weight: .heavy)).foregroundStyle(BUColor.midnight)
+                                .frame(width: 28, height: 28)
+                                .background(BUColor.midnight.opacity(0.08), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(h.0).font(.system(size: 14, weight: .bold)).foregroundStyle(BUColor.ink)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                                Text(h.1).font(.system(size: 12.5)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 8)
+                        if idx < how.count - 1 { Divider().opacity(0.5) }
+                    }
+                }
+
+                if !watchouts.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("주의", systemImage: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11, weight: .bold)).foregroundStyle(BUColor.danger)
+                        ForEach(Array(watchouts.enumerated()), id: \.offset) { _, w in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(w.0).font(.system(size: 13, weight: .bold)).foregroundStyle(BUColor.danger)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                                Text(w.1).font(.system(size: 12)).foregroundStyle(BUColor.danger.opacity(0.85)).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(BUColor.danger.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.danger.opacity(0.16), lineWidth: 1))
+                }
+            }
         }
     }
 
-    /// 사장님 상황(업종×예산)에 유리한 입지 전략 — 웹 compareFavorable 1:1 이식.
+    // MARK: - pg 1 지역·AI (웹 WorkStep 미러)
+
+    private var regionAiPage: some View {
+        workStepCard(
+            stepLabel: "1. 지역·AI 추천", time: "5분",
+            headline: "구체적 지역 입력 → AI 가 라이브 데이터로 후보 추천",
+            why: "「강남구」 같이 넓은 입력은 추천 정확도 ↓. 「강남역 도보 10분」, 「홍대 메인」 처럼 좁힐수록 평균 임대료·공실률·경쟁 밀도 정확.",
+            how: [
+                ("희망 지역 입력 (구체적으로)", "지하철역·핫스폿 + 도보 시간 또는 「~동·구 메인」. 카카오 Local 라이브 + 공공데이터 조회."),
+                ("AI 라이브 추천 받기", "AI 가 그 지역의 평균 임대료·공실률·경쟁 밀도·유동인구·타겟 적합도 즉시 분석. 후보 3~5곳 점수와 함께."),
+                ("무료 공공 도구로 교차 검증", "소상공인마당(sg.sbiz.or.kr) 업종별 상권 리포트 · 카카오맵 반경 500m 동업종 검색 · 네이버 위성·로드뷰로 가시성 · 행정안전부 생활인구(data.mois.go.kr) 시간대별 유동인구. AI 추천을 직접 도구로 재확인하면 신뢰도 ↑."),
+            ]
+        )
+    }
+
+    // MARK: - pg 2 답사 후보 (웹 WorkStep 미러)
+
+    private var visitPage: some View {
+        workStepCard(
+            stepLabel: "2. 답사 후보 추가", time: "10분",
+            headline: "AI 추천만 ≠ 결정. 직접 답사한 매물 1-2곳 추가해야 함",
+            why: "AI 는 정량 데이터 (임대료·유동) 만 봄. 사장님이 직접 본 「분위기·동선·소음」 같은 정성 요소는 직접 답사 매물에서만 확인 가능.",
+            how: [
+                ("직접 답사한 매물 입력", "주소·평수·임대료·메모. AI 추천 매물과 동일한 점수 기준으로 비교됨."),
+                ("최소 3곳 이상 비교 필수", "1곳만 보면 「이게 좋아 보인다」 가 끝. 3곳 이상 동일 기준으로 보면 차이가 명확."),
+            ],
+            watchouts: [
+                ("권리금 매물 — 매출 추정 없이 지불 = 묻힘", "매도자가 부르는 권리금은 매출 6~12개월치. 양수 후 본인 매출이 70%+ 유지돼야 회수 가능. 매출 떨어지는 이유 (사장 변경·메뉴 변경) 사전 검증."),
+            ]
+        )
+    }
+
+    // MARK: - pg 3 점수 비교 (웹 WorkStep + 사장님 상황 유리한 길)
+
+    private var scorePage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            workStepCard(
+                stepLabel: "3. 점수 비교", time: "10분",
+                headline: "유동인구·임대료·경쟁 밀도·타겟 적합도 — 4지표로 동일 채점",
+                why: "주관적 「느낌」 만으로 결정하면 후회 1순위. 객관 4지표로 채점한 후 본인 직관과 교차 검증해야 후회 없음.",
+                how: [
+                    ("4지표 점수 확인", "유동(일평균 통행) · 임대료(평당 월세) · 경쟁(반경 500m 동종 수) · 타겟(연령·소득). 각 25점, 총 100."),
+                    ("점수 1위 + 본인 직관 교차 검증", "1위가 직관과 맞으면 결정. 다르면 그 이유를 메모 — 보통 직관이 놓친 요소가 보임."),
+                ],
+                watchouts: [
+                    ("「임대료 싸 보임」 함정", "월세 100만원 싸도 매출 잠재력이 200만원 적으면 손해. 평당 임대료 / 평당 매출 잠재력 비율로 판단."),
+                ]
+            )
+            favorableCard
+        }
+    }
+
+    // MARK: - pg 4 매물 체크 (웹 WorkStep 미러)
+
+    private var propertyCheckPage: some View {
+        workStepCard(
+            stepLabel: "4. 매물 체크", time: "15분",
+            headline: "임대 매물 현장 — 5가지 필수 확인 후 계약 진행",
+            why: "계약서에 서명하면 취소 불가. 현장에서 직접 눈으로 확인하지 않으면 권리금·인테리어 손실로 이어집니다.",
+            how: [
+                ("간판 가시성 — 3방향 이상 노출", "대로변·코너 매물은 3방향 노출 가능. 골목 매물은 메인 진입로에서 보이는지 로드뷰로 먼저 예비 확인 후 현장 확인."),
+                ("주차 — 인근 공영주차장 도보 3분", "주차 불가 매물은 객단가 1만원+ 고객 방문이 줄어듦. 테이크아웃 전용 모델이라면 무관."),
+                ("대중교통 — 도보 5분 이내", "지하철·버스 정류장 5분 내. 6분+ 면 신규 유입 30% 감소(공공 데이터 기준). 배달 전용이라면 무관."),
+                ("실내 면적 — 업종별 최소 기준", "15평 이하 = 배달·테이크아웃 전용. 15~25평 = 테이블 6~10개. 25~40평 = 홀 직원 1~2명 필요. 40평+ = 인건비 비중 급증."),
+                ("환기·덕트 설치 가능 여부", "음식점·카페는 외부 환기 덕트 필수. 건물 구조상 설치 불가하면 영업 허가 자체가 불가. 임대인에게 반드시 사전 확인."),
+            ],
+            watchouts: [
+                ("건축물대장 용도 확인", "근린생활시설이어야 음식점·카페 영업 가능. 용도가 다를 경우 용도 변경 허가 비용 + 수개월 추가 소요."),
+                ("전 업주 폐업 이유 반드시 확인", "낮은 임대료가 함정인 경우 있음. 전 임차인이 왜 폐업했는지 임대인 또는 인근 상인에게 직접 물어보세요."),
+                ("관리비·원상복구 범위 사전 명문화", "월 관리비가 계약 후 30~50만원 추가되면 수지 계산이 무너짐. 원상복구 면제 항목도 계약서에 구체적으로 기재."),
+            ]
+        )
+    }
+
+    // MARK: - pg 5 후보 비교·결정 (실제 입력·추천·지도·최종 선택)
+
+    private var decisionPage: some View {
+        VStack(alignment: .leading, spacing: BUSpacing.md) {
+            aiRecommendCard
+
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("최종 선택 매물 주소")
+                    TextField("예) 서울 마포구 연남동 OO길 00번지 1층", text: $finalAddress, axis: .vertical)
+                        .font(BUFont.body)
+                        .padding(.horizontal, 10).padding(.vertical, 8)
+                        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .lineLimit(2...4)
+
+                    BUEyebrow("협상 메모")
+                    TextField("권리금·월세 협상 내용, 임대인 특약 요청 사항 등", text: $finalNote, axis: .vertical)
+                        .font(BUFont.bodySmall)
+                        .padding(.horizontal, 10).padding(.vertical, 8)
+                        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .lineLimit(3...6)
+
+                    Toggle(isOn: $finalDone) {
+                        Text("입지 최종 확정 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    }.tint(BUColor.midnight)
+                }
+            }
+        }
+    }
+
+    // MARK: - 사장님 상황(업종×예산)에 유리한 입지 전략 — 웹 compareFavorable 1:1 이식
+
     private var favorableCard: some View {
         let cat = StarterIndustryData.option(by: industryId)?.categoryId ?? "food"
         let tier: String = startupWon >= 200_000_000 ? "high" : (startupWon >= 80_000_000 ? "mid" : "low")
@@ -353,13 +514,12 @@ public struct LocationCandidatesStageView: View {
         }
     }
 
-    // MARK: - AI 상권 추천 카드 (웹 패리티)
+    // MARK: - AI 상권 추천 카드 (웹 후보 비교·결정 패널 패리티)
 
     private var aiRecommendCard: some View {
         let region = aiRegion.trimmingCharacters(in: .whitespaces)
         return BUCard(.card) {
             VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                // ── 메인: Found.One 상권 추천 (내장 데이터) ──
                 BUEyebrow("Found.One 상권 추천")
                 Text("희망 지역을 입력하면 서울 상권 데이터에서 유동인구·임대료·경쟁을 점수화해 근처 상권까지 추천합니다.")
                     .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
@@ -383,7 +543,6 @@ public struct LocationCandidatesStageView: View {
                     .disabled(region.isEmpty)
                 }
 
-                // 내장 데이터 결과 (메인)
                 if !aiDistrictMatches.isEmpty {
                     Text("추천 상권 \(aiDistrictMatches.count)곳")
                         .font(BUFont.eyebrow).foregroundStyle(BUColor.inkMuted)
@@ -393,7 +552,6 @@ public struct LocationCandidatesStageView: View {
                         .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
                 }
 
-                // 지도 (내장 매칭 또는 AI 핀) — 핀 탭 시 카드와 동기 선택(앱 장점: 인터랙티브 Apple 지도)
                 if let center = aiCenter {
                     Map(initialPosition: .region(MKCoordinateRegion(
                         center: center, latitudinalMeters: 5000, longitudinalMeters: 5000
@@ -418,7 +576,6 @@ public struct LocationCandidatesStageView: View {
                     }
                 }
 
-                // ── 별도 옵트인: AI 실시간 상권 추천 (검색 후 노출) ──
                 if didSearch {
                     Divider().padding(.vertical, 2)
                     HStack(alignment: .top, spacing: 10) {
@@ -454,7 +611,7 @@ public struct LocationCandidatesStageView: View {
                 }
             }
         }
-        .sensoryFeedback(.selection, trigger: selectedMarketId)   // 앱 장점 — 선택 시 햅틱
+        .sensoryFeedback(.selection, trigger: selectedMarketId)
     }
 
     private func recommendItemRow(_ item: MarketScoredItem) -> some View {
@@ -490,7 +647,7 @@ public struct LocationCandidatesStageView: View {
                 }
                 if isSel {
                     Divider().opacity(0.4)
-                    Label("입지 후보로 선택됨 — ‘최종 선택’에 자동 반영", systemImage: "mappin.circle.fill")
+                    Label("입지 후보로 선택됨 — 아래 ‘최종 선택’에 자동 반영", systemImage: "mappin.circle.fill")
                         .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
                 }
             }
@@ -506,12 +663,12 @@ public struct LocationCandidatesStageView: View {
 
     /// 점수→색상 — 웹 LocationCandidatesStage 와 동일 임계/색(≥85 green / ≥70 blue / <70 amber).
     private func scoreColor(_ score: Int) -> Color {
-        if score >= 85 { return Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255) }   // #34c759
-        if score >= 70 { return Color(red: 0x00/255, green: 0x7A/255, blue: 0xFF/255) }   // #007aff
-        return Color(red: 0xFF/255, green: 0x9F/255, blue: 0x0A/255)                       // #ff9f0a
+        if score >= 85 { return Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255) }
+        if score >= 70 { return Color(red: 0x00/255, green: 0x7A/255, blue: 0xFF/255) }
+        return Color(red: 0xFF/255, green: 0x9F/255, blue: 0x0A/255)
     }
 
-    /// 상권 카드/핀 탭 → 선택 토글. 선택 시 햅틱 + (비어있으면) 최종 입지 주소 자동 프리필(추천→결정 연결).
+    /// 상권 카드/핀 탭 → 선택 토글. 선택 시 햅틱 + (비어있으면) 최종 입지 주소 자동 프리필.
     private func selectMarket(id: String, title: String) {
         withAnimation(.easeOut(duration: 0.2)) {
             selectedMarketId = (selectedMarketId == id) ? nil : id
@@ -521,7 +678,6 @@ public struct LocationCandidatesStageView: View {
         }
     }
 
-    /// 지도 핀(id = "db-"/"ai-" 접두) → 카드 선택과 동기.
     private func selectMarketByPin(_ pin: MarketMapPin) {
         selectMarket(id: bareId(pin.id), title: pin.title)
     }
@@ -529,7 +685,6 @@ public struct LocationCandidatesStageView: View {
         (pinId.hasPrefix("db-") || pinId.hasPrefix("ai-")) ? String(pinId.dropFirst(3)) : pinId
     }
 
-    /// 지도 핀 뷰 — 웹 핀 디자인(점수 배지 + 제목 pill) 미러. 선택 시 미드나잇 강조 + 확대(앱 장점).
     private func mapPin(_ pin: MarketMapPin) -> some View {
         let isSel = selectedMarketId == bareId(pin.id)
         let sc = scoreColor(pin.score)
@@ -582,10 +737,9 @@ public struct LocationCandidatesStageView: View {
                     metaChip("유동 " + trafficLabel(d.meta.footTraffic))
                     if d.meta.growthTrend == "rising" { metaChip("성장 ↑", tint: scoreColor(86)) }
                 }
-                // 앱 장점 — 선택 시 인라인 확장(웹은 별도 패널). 메타 기반 상세 + 결정 연결 안내.
                 if isSel {
                     Divider().opacity(0.4)
-                    Label("입지 후보로 선택됨 — ‘최종 선택’에 자동 반영", systemImage: "mappin.circle.fill")
+                    Label("입지 후보로 선택됨 — 아래 ‘최종 선택’에 자동 반영", systemImage: "mappin.circle.fill")
                         .font(.system(size: 12, weight: .semibold)).foregroundStyle(BUColor.midnight)
                     Text(detailNarrative(d))
                         .font(.system(size: 12)).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
@@ -602,7 +756,7 @@ public struct LocationCandidatesStageView: View {
         .buttonStyle(.plain)
     }
 
-    /// 웹 score 라벨이 iOS 정적 데이터엔 없어 meta 기반 한 줄 요약 — 임대료·경쟁·유동·고객적합·상권유형.
+    /// 웹 score 라벨이 iOS 정적 데이터엔 없어 meta 기반 한 줄 요약.
     private func detailNarrative(_ d: MarketDistrict) -> String {
         [
             "임대료 " + rentLabel(d.meta.rentBand),
@@ -635,200 +789,6 @@ public struct LocationCandidatesStageView: View {
     }
     private func trafficLabel(_ t: String) -> String {
         switch t { case "mid": return "중간"; case "high": return "많음"; case "very-high": return "매우많음"; default: return t }
-    }
-
-    // MARK: - pg 0 상권 분석
-
-    private var marketPage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            whyMarketCard
-            strategyCard
-            favorableCard
-            aiRecommendCard
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("4대 무료 상권 분석 도구")
-                    let tools: [(String, String)] = [
-                        ("소상공인마당 (sg.sbiz.or.kr)", "업종별 상권 분석 리포트 무료 — 예상 매출·경쟁 업체 수 자동 계산"),
-                        ("네이버 지도 위성·로드뷰", "매장 앞 유동인구·주차공간·간판 가시성 현장 확인 전 예비 체크"),
-                        ("카카오맵 주변 업체 검색", "반경 500m 내 동업종 수·리뷰 수·영업 상태 파악"),
-                        ("행정안전부 생활인구 데이터", "시간대별·연령대별 실제 유동인구 데이터 (data.mois.go.kr 무료)"),
-                    ]
-                    ForEach(tools, id: \.0) { name, desc in
-                        HStack(alignment: .top, spacing: BUSpacing.sm) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(BUColor.midnight).frame(width: 32, height: 32)
-                                Text(String(name.prefix(1))).font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
-                            }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(name).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
-                            }
-                            Spacer()
-                        }
-                    }
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("상권 분석 체크리스트")
-                    locationCheckRow("배후 주거·직장 인구 충분 (반경 500m 내 500세대 이상)", isChecked: $marketPop)
-                    locationCheckRow("점심·저녁 시간대 유동인구 직접 현장 확인 완료", isChecked: $marketFoot)
-                    locationCheckRow("반경 200m 내 동업종 3개 미만 또는 수요 충분히 큼", isChecked: $marketCompete)
-                    locationCheckRow("주변 신규 개발·재개발 이슈 확인 (상권 성장 or 공실 위험)", isChecked: $marketGrowth)
-                }
-            }
-
-            warningCard(title: "흔한 함정 — 이건 피하세요", items: [
-                "‘임대료 싸 보임’ 함정: 월세 100만원 싸도 매출 잠재력이 200만원 적으면 손해. ‘평당 임대료 ÷ 평당 매출 잠재력’ 비율로 판단하세요.",
-                "권리금 매물: 매도자가 부르는 권리금은 보통 매출 6~12개월치. 양수 후 본인 매출이 70%+ 유지돼야 회수됩니다. 매출이 떨어지는 이유(사장·메뉴 변경)를 사전 검증하세요.",
-                "유명 상권 = 높은 임대료 + 치열한 경쟁 → 초기 생존율은 오히려 낮을 수 있습니다. 골목 상권은 단골이 형성되면 수익성이 더 안정적입니다.",
-            ], color: .orange)
-        }
-    }
-
-    // MARK: - pg 1 매물 체크
-
-    private var propertyPage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("매물 현장 체크리스트")
-                    locationCheckRow("대로변 or 코너 위치 — 간판 3방향 이상 가시성 확보", isChecked: $propVisibility)
-                    locationCheckRow("주차 공간 or 인근 공영주차장 도보 3분 이내", isChecked: $propParking)
-                    locationCheckRow("대중교통 (버스·지하철) 도보 5분 이내 접근", isChecked: $propAccess)
-                    locationCheckRow("실내 면적 주방 + 홀 배치 가능 (최소 20~30평 권장)", isChecked: $propArea)
-                    locationCheckRow("외부 환기 덕트·후드 설치 가능 여부 임대인 확인", isChecked: $propHood)
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("면적별 매장 구성 가이드")
-                    let sizes: [(String, String)] = [
-                        ("10~15평", "1인 운영 배달전문 또는 테이크아웃. 좌석 최소화."),
-                        ("15~25평", "테이블 6~10개. 아르바이트 1명 + 사장님 운영 적정."),
-                        ("25~40평", "테이블 12~20개. 홀 직원 1~2명 필요. 주방 분리 가능."),
-                        ("40평 이상", "대형 홀. 주방장 + 홀 2명+ 이상. 인건비 비중 급증."),
-                    ]
-                    ForEach(sizes, id: \.0) { size, desc in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text(size).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight).frame(width: 60, alignment: .leading)
-                            Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                        }
-                    }
-                }
-            }
-
-            warningCard(title: "매물 레드플래그", items: [
-                "건축물대장 용도가 근린생활시설 외 → 영업신고 불가",
-                "전 업주 폐업 이유 확인 필수 — 낮은 임대료가 함정인 경우 있음",
-                "관리비·원상복구 비용 임대 계약 전 확인 — 나중에 수백만원 추가 발생",
-            ], color: .red)
-        }
-    }
-
-    // MARK: - pg 2 최종 선택
-
-    private var finalPage: some View {
-        VStack(alignment: .leading, spacing: BUSpacing.md) {
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("분석 요약")
-                    wrapRow(label: "상권 분석 4항목", done: marketOk)
-                    wrapRow(label: "매물 현장 체크 5항목", done: propOk)
-                    if marketOk && propOk {
-                        HStack(spacing: 6) {
-                            Image(systemName: "checkmark.seal.fill").foregroundStyle(BUColor.success)
-                            Text("모든 체크 통과 — 임대 계약 검토 단계로 진행하세요.")
-                                .font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.success)
-                        }.padding(.top, 4)
-                    }
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.sm) {
-                    BUEyebrow("최종 선택 매물 주소")
-                    TextField("예) 서울 마포구 연남동 OO길 00번지 1층", text: $finalAddress, axis: .vertical)
-                        .font(BUFont.body)
-                        .padding(.horizontal, 10).padding(.vertical, 8)
-                        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .lineLimit(2...4)
-
-                    BUEyebrow("협상 메모")
-                    TextField("권리금·월세 협상 내용, 임대인 특약 요청 사항 등", text: $finalNote, axis: .vertical)
-                        .font(BUFont.bodySmall)
-                        .padding(.horizontal, 10).padding(.vertical, 8)
-                        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .lineLimit(3...6)
-
-                    Toggle(isOn: $finalDone) {
-                        Text("입지 최종 확정 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                    }.tint(BUColor.midnight)
-                }
-            }
-
-            BUCard(.card) {
-                VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                    BUEyebrow("임대 계약 전 협상 팁")
-                    tipRow("월세 10~20% 인하 요구", detail: "3개월치 선납 제안 시 임대인이 수용 확률 높음")
-                    tipRow("인테리어 기간 (1~2개월) 무상 임대 협상", detail: "공사 중 임대료 면제 특약 — 수백만원 절감")
-                    tipRow("원상복구 범위 사전 명문화", detail: "계약서에 '원상복구 면제 항목' 구체적으로 기재")
-                }
-            }
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func locationCheckRow(_ label: String, isChecked: Binding<Bool>) -> some View {
-        Button { isChecked.wrappedValue.toggle() } label: {
-            HStack(alignment: .top, spacing: BUSpacing.sm) {
-                Image(systemName: isChecked.wrappedValue ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 18)).foregroundStyle(isChecked.wrappedValue ? BUColor.success : BUColor.inkSubtle).padding(.top, 1)
-                Text(label).font(BUFont.bodySmall).foregroundStyle(isChecked.wrappedValue ? BUColor.ink : BUColor.inkMuted).multilineTextAlignment(.leading)
-                Spacer()
-            }
-            .padding(.vertical, 8).contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func wrapRow(label: String, done: Bool) -> some View {
-        HStack(spacing: BUSpacing.sm) {
-            Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 16)).foregroundStyle(done ? BUColor.success : BUColor.inkSubtle)
-            Text(label).font(BUFont.bodySmall).foregroundStyle(done ? BUColor.ink : BUColor.inkMuted)
-            Spacer()
-        }
-    }
-
-    private func tipRow(_ text: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("→").font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.midnight).padding(.top, 1)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(text).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func warningCard(title: String, items: [String], color: Color) -> some View {
-        BUCard(.card) {
-            VStack(alignment: .leading, spacing: BUSpacing.xs) {
-                Text(title).font(BUFont.eyebrow.weight(.bold)).foregroundStyle(color)
-                ForEach(items, id: \.self) { item in
-                    HStack(alignment: .top, spacing: 6) {
-                        Circle().fill(color).frame(width: 4, height: 4).padding(.top, 5)
-                        Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
-                    }
-                }
-            }
-        }
     }
 }
 

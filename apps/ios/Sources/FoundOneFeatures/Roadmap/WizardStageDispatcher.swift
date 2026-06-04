@@ -8,6 +8,7 @@
 
 import SwiftUI
 
+@MainActor
 @ViewBuilder
 public func wizardStageView(for stageId: String) -> some View {
     switch stageId {

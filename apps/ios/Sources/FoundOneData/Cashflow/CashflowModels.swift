@@ -85,7 +85,7 @@ public struct CashflowSettings: Codable, Sendable, Hashable {
     }
 
     // 빈 jsonb('{}') 나 일부 키 누락도 안전하게 디코딩 (웹과 호환).
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         currentBalance = try c.decodeIfPresent(Double.self, forKey: .currentBalance) ?? 0
         currentBalanceUpdatedAt = try c.decodeIfPresent(String.self, forKey: .currentBalanceUpdatedAt)

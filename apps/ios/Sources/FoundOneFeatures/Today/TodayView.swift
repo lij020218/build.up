@@ -82,11 +82,11 @@ public struct TodayView: View {
                 StoreStatusHeader(mock: mock)
                 HomeRitualBanner()
 
-                // ─ 7 카드 (사장님 결정 2026-05-14) ─
+                // ─ 모바일 홈 = 공통 6장 + 업종 핵심 (2026-06-04 사장님 결정) ─
+                //   원칙: 홈은 가장 중요한 카드만. 강등(KPI 스트립·고객·운영의식)은 "더 알아보기 > 오늘 상세"
+                //         팝업으로 — 카드 종류는 펼치면 도달(누락 0).
 
-                // 1. CEOMorningHero — 인사 + 위험신호 + NSM + AI 코칭
-                //   AI 액션은 .task 에서 비동기 fetch → aiActions @State 에 저장.
-                //   서버 응답 전 / 인증 없음 / 오류 시: mock.resolverInput.aiTopActions 자동 fallback.
+                // ① AI 모닝 히어로 — 인사 + 위험신호(+스타트업 신호) + NSM + AI 코칭
                 HeroOuterCard(
                     mock: mock,
                     healthResult: healthResult,
@@ -94,25 +94,13 @@ public struct TodayView: View {
                     aiActions: aiActions
                 )
 
-                // 2. DailyKpiStrip — 5칸 핵심 KPI
-                DailyKpiStrip(cells: dailyKpiCells)
-
-                // 3. ActivitySnapshotCard — 7일 매출 흐름
+                // ② 매출 흐름
                 ActivitySnapshotCard(
                     entries: mock.entries,
                     bepDailySales: bepDailySales
                 )
 
-                // 4. UserActivityCard — 고객 변화 ★ 사장님 명시
-                UserActivityCard(
-                    totalCustomers: totalCustomers,
-                    newThisMonth: 32,
-                    repeatRate: 42,
-                    avgTicket: avgTicket
-                )
-
-                // 5. 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고 HeroCard ★ 사장님 명시
-                //   (P3) 게이팅 + 설정 시트 진입. (P4b) 설정 완료 시 실제 CashflowProjection 으로 교체 예정.
+                // ③ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
                 if let cs = cashflowStore {
                     CashflowSection(
                         store: cs,
@@ -128,14 +116,17 @@ public struct TodayView: View {
                     )
                 }
 
-                // 6. DailyOpsRitualCard — 오늘 운영 의식
-                DailyOpsRitualCard(category: mock.category)
+                // ④ 손익 (2026-06-04 홈 신규 편입) — 월 환산 매출 vs 월 비용 (실데이터)
+                PLHeroCard(
+                    totalSales: ratios.monthlyRevenueEquivalent,
+                    totalCosts: mock.costs.total,
+                    ingredientRatio: ratios.ingredientRatio,
+                    laborRatio: ratios.laborRatio,
+                    rentRatio: ratios.rentRatio,
+                    thresholds: IndustryThresholds.thresholds(for: mock.category)
+                )
 
-                // 7. 재고 관리 vs 고객 관리 (업종별 분기)
-                // web SSOT: business-context.ts showsCustomerCardInsteadOfInventory
-                //   true  → fitness / education / space / beauty / pet : 고객 관리 카드
-                //   false → restaurant / cafe / retail / ecommerce / livingService : 재고 카드
-                //   startupTech : 두 카드 모두 표시 안 함
+                // ⑤ 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략
                 if mock.category.showsCustomerCardInsteadOfInventory {
                     let mode = BUCustomerMode(rawValue: mock.category.customerModeRaw) ?? .membership
                     CustomerSummaryCard(
@@ -151,22 +142,39 @@ public struct TodayView: View {
                     )
                 }
 
-                // 8. 직원 관리 (전 업종)
+                // ⑥ 직원 관리 (전 업종)
                 TeamCard(
                     employees: realEmployees,
                     manualLaborCost: mock.costs.labor,
                     onManage: { showTeamSheet = true }
                 )
 
-                // 9. 업종 특화 (외식 → PrimeCost / 스타트업 → CashZero / 미용 → 예약 …)
+                // 업종 핵심 (외식 → 원가율 / 스타트업 → 전환율·CashZero / 미용 → 예약 …)
                 IndustryFocusCard(mock: mock)
+
+                // 스타트업 핵심 지표 점수판 (런웨이·순burn·성장률·ARR/직원·총이익률·Burn Multiple, 전부 실데이터)
+                if mock.category == .startupTech {
+                    StartupHealthCard(metrics: startupHealthMetrics)
+                }
+
+                // 외식·카페 위생점검 — 원가율(IndustryFocus)과 나란히 홈에 (사장님: "둘 다")
+                if mock.category == .restaurant || mock.category == .cafe {
+                    FoodSafetyCard()
+                }
 
                 // 빠른 매출 입력
                 QuickInputButton(action: { showInputSheet = true })
 
-                // ─ 더 알아보기 — 팝업으로 다른 도구 미리보기 ─
+                // ─ 더 알아보기 — 팝업 (오늘 상세[KPI·고객·운영의식] · 주간점검 · 성장 · 내 가게 · 로드맵) ─
                 MoreInsightsStrip(
                     mock: mock,
+                    dailyKpiCells: dailyKpiCells,
+                    userActivity: UserActivitySummary(
+                        total: totalCustomers,
+                        thisMonth: thisMonthCustomers,
+                        dailyAvg: dailyAvgCustomers,
+                        avgTicket: avgTicket
+                    ),
                     dashboardStore: dashboardStore,
                     storeInfo: storeInfo
                 )
@@ -291,6 +299,62 @@ public struct TodayView: View {
 
     private var totalCustomers: Int {
         max(1, mock.entries.reduce(0) { $0 + $1.customers })
+    }
+
+    /// 이번 달 누적 고객 (실데이터) — 현재 월 entry 의 고객 수 합.
+    private var thisMonthCustomers: Int {
+        let ym: String = {
+            let df = DateFormatter()
+            df.locale = Locale(identifier: "en_US_POSIX")
+            df.dateFormat = "yyyy-MM"
+            return df.string(from: Date())
+        }()
+        return mock.entries.filter { $0.date.hasPrefix(ym) }.reduce(0) { $0 + $1.customers }
+    }
+
+    /// 일평균 고객 (실데이터) — 누적 고객 ÷ 고객 입력된 일수.
+    private var dailyAvgCustomers: Double {
+        let daysWithCustomers = mock.entries.filter { $0.customers > 0 }.count
+        guard daysWithCustomers > 0 else { return 0 }
+        let total = mock.entries.reduce(0) { $0 + $1.customers }
+        return Double(total) / Double(daysWithCustomers)
+    }
+
+    private func monthPrefix(offset: Int) -> String {
+        let cal = Calendar.current
+        let base = cal.date(byAdding: .month, value: offset, to: Date()) ?? Date()
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.dateFormat = "yyyy-MM"
+        return df.string(from: base)
+    }
+    private var thisMonthSales: Double {
+        let ym = monthPrefix(offset: 0)
+        return mock.entries.filter { $0.date.hasPrefix(ym) }.reduce(0) { $0 + $1.sales }
+    }
+    private var lastMonthSales: Double {
+        let ym = monthPrefix(offset: -1)
+        return mock.entries.filter { $0.date.hasPrefix(ym) }.reduce(0) { $0 + $1.sales }
+    }
+
+    /// 스타트업 핵심 지표 — 전부 실데이터 계산. 불가 항목은 nil → 카드가 "—" 표시(가짜 금지).
+    private var startupHealthMetrics: StartupHealthMetrics {
+        let monthlyRev = ratios.monthlyRevenueEquivalent
+        let netBurn = mock.costs.total - monthlyRev
+        let runway: Double? = {
+            guard let cash = mock.currentCash, cash > 0, netBurn > 0 else { return nil }
+            return cash / netBurn
+        }()
+        let mom: Double? = lastMonthSales > 0 ? (thisMonthSales - lastMonthSales) / lastMonthSales * 100 : nil
+        let emp = realEmployees.count
+        let arrPerEmp: Double? = (emp > 0 && monthlyRev > 0) ? (monthlyRev * 12) / Double(emp) : nil
+        let gm: Double? = ratios.ready ? max(0, 100 - ratios.ingredientRatio) : nil
+        let netNew = thisMonthSales - lastMonthSales
+        let bm: Double? = (netBurn > 0 && netNew > 0) ? netBurn / netNew : nil
+        return StartupHealthMetrics(
+            runwayMonths: runway, netBurnMonthly: netBurn, momGrowthPct: mom,
+            arrPerEmployee: arrPerEmp, grossMarginPct: gm, burnMultiple: bm
+        )
     }
 
     private var avgTicket: Double {
@@ -1270,18 +1334,55 @@ private struct ChipTrend: View {
 //     모바일에서도 popup sheet 로 보여줘서 멘탈 모델 일치
 //   • 별도 탭 이동 시 사장님이 다른 surface 로 떠난 느낌 → 혼동 발생
 //
+/// 홈에서 강등된 고객 지표 — "오늘 상세" 팝업에 전달 (실데이터).
+struct UserActivitySummary {
+    let total: Int
+    let thisMonth: Int
+    let dailyAvg: Double
+    let avgTicket: Double
+}
+
+/// "오늘 상세" 팝업 — 홈에서 내린 KPI 스트립·고객·운영 의식 (카드 종류 누락 0).
+private struct DailyDetailView: View {
+    let mock: MockData
+    let dailyKpiCells: [KpiCellData]
+    let userActivity: UserActivitySummary
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: BUSpacing.shellGap) {
+                DailyKpiStrip(cells: dailyKpiCells)
+                UserActivityCard(
+                    totalCustomers: userActivity.total,
+                    thisMonthCustomers: userActivity.thisMonth,
+                    dailyAvgCustomers: userActivity.dailyAvg,
+                    avgTicket: userActivity.avgTicket
+                )
+                DailyOpsRitualCard(category: mock.category)
+                Color.clear.frame(height: 24)
+            }
+            .padding(.horizontal, BUSpacing.screenMargin)
+            .padding(.top, BUSpacing.sm)
+        }
+    }
+}
+
 private struct MoreInsightsStrip: View {
 
     let mock: MockData
+    // 2026-06-04: 홈에서 강등된 KPI 스트립·고객 지표를 "오늘 상세" 팝업으로 전달 (누락 0).
+    let dailyKpiCells: [KpiCellData]
+    let userActivity: UserActivitySummary
     let dashboardStore: DashboardStore?
     let storeInfo: StoreInfoStore?
 
     enum SheetID: String, Identifiable {
-        case weeklyPulse, growth, myStore, roadmap
+        case dailyDetail, weeklyPulse, growth, myStore, roadmap
         var id: String { rawValue }
 
         var title: String {
             switch self {
+            case .dailyDetail: return "오늘 상세"
             case .weeklyPulse: return "주간 점검"
             case .growth:      return "성장 도구"
             case .myStore:     return "내 가게"
@@ -1301,6 +1402,7 @@ private struct MoreInsightsStrip: View {
 
     private var insights: [Insight] {
         var items: [Insight] = [
+            .init(id: .dailyDetail, icon: "square.grid.2x2.fill", label: "오늘 상세", subtitle: "KPI · 고객 · 의식"),
             .init(id: .weeklyPulse, icon: "doc.richtext",   label: "주간 점검",  subtitle: "WoW · BEP"),
             .init(id: .growth,      icon: "megaphone.fill", label: "성장 도구",  subtitle: "고객 · 마케팅"),
         ]
@@ -1379,6 +1481,8 @@ private struct MoreInsightsStrip: View {
     @ViewBuilder
     private func sheetContent(for id: SheetID) -> some View {
         switch id {
+        case .dailyDetail:
+            DailyDetailView(mock: mock, dailyKpiCells: dailyKpiCells, userActivity: userActivity)
         case .weeklyPulse:
             WeeklyPulseView(mock: mock)
         case .growth:

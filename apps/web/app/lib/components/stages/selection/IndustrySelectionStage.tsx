@@ -31,6 +31,7 @@ import {
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { StageWrapup } from "../shared/StageWrapup";
+import { KeyActionHero } from "../shared/StageActionHero";
 import { getSpecialtyOptions } from "./specialty-data";
 import {
   localizeRecommendationItem,
@@ -194,6 +195,17 @@ export function IndustrySelectionStage() {
 
   return (
     <>
+      <KeyActionHero
+        ko={ko}
+        action={{
+          title: ko
+            ? "한 업종에 깊게 — 다중 선택은 분산만 키웁니다"
+            : "Go deep on one industry — multi-select only dilutes focus",
+          detail: ko
+            ? "한 업종을 고르면 입지·메뉴·인허가·세무까지 14단계 가이드가 자동 맞춤. 멀티 카테고리 분산보다 한 업종 집중이 첫 12개월 매출에 4배 효과."
+            : "Pick one industry and the 14-stage guide auto-tailors location, menu, permits, and tax. Focusing beats spreading — 4x the month 1–12 revenue impact.",
+        }}
+      />
       <div style={styles.helper}>
         {copy.home.chooseIndustryHelp}
       </div>
