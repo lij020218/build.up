@@ -128,9 +128,8 @@ private struct EmailAuthSheet: View {
         case password
     }
 
-    private var passwordStrong: Bool {
-        password.count >= 8 && password.range(of: #"[0-9]"#, options: .regularExpression) != nil
-    }
+    // 웹 SSOT(@foundone/shared validatePassword)와 동일 규칙: 8자 이상 + 영문 + 숫자 + 흔한 비번 제외.
+    private var passwordStrong: Bool { PasswordPolicy.isStrong(password) }
 
     private var canSubmit: Bool {
         let hasEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).contains("@")
@@ -253,7 +252,7 @@ private struct EmailAuthSheet: View {
                             .onSubmit { submit() }
 
                         if mode == .signup && !password.isEmpty {
-                            Text("8자 이상, 숫자 포함\(passwordStrong ? " ✓" : "")")
+                            Text("8자 이상, 영문·숫자 포함\(passwordStrong ? " ✓" : "")")
                                 .font(.system(size: 11))
                                 .foregroundStyle(passwordStrong ? Color(red: 0.2, green: 0.78, blue: 0.35) : BUColor.danger)
                         }

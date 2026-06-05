@@ -10,9 +10,21 @@ export type SignUpWithEmailParams = {
   password: string;
 };
 
+/** 너무 흔해 사전공격 1순위인 비밀번호 (소문자 비교). */
+const COMMON_PASSWORDS = new Set([
+  "password", "password1", "password123", "12345678", "123456789", "1234567890",
+  "qwerty123", "qwertyui", "11111111", "00000000", "abcd1234", "asdf1234",
+  "iloveyou", "admin123", "welcome1", "letmein1", "1q2w3e4r", "zxcvbnm1",
+]);
+
 export function validatePassword(password: string): string | null {
   if (password.length < 8) return "비밀번호는 8자 이상이어야 합니다.";
+  // ⚠️ 2026-06-05 보안: 영문+숫자 모두 요구 → "12345678" 같은 전부 숫자 약한 비번 차단.
+  if (!/[a-zA-Z]/.test(password)) return "비밀번호에 영문자를 1개 이상 포함해야 합니다.";
   if (!/\d/.test(password)) return "비밀번호에 숫자를 1개 이상 포함해야 합니다.";
+  if (COMMON_PASSWORDS.has(password.toLowerCase())) {
+    return "너무 흔한 비밀번호입니다. 추측하기 어려운 비밀번호를 사용해 주세요.";
+  }
   return null;
 }
 

@@ -11,6 +11,7 @@ import {
   getTavilyApiKey,
   getYoutubeApiKey,
 } from "../../_lib/env";
+import { timingSafeEqualStr } from "../../_lib/timing-safe";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { generateTrends } from "../../_lib/trend-generator";
 
@@ -38,7 +39,7 @@ function isAuthorized(request: Request): boolean {
   const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
   const secret = getCronSecret();
   if (!secret) return false;
-  return token === secret;
+  return timingSafeEqualStr(token, secret);
 }
 
 export async function GET(request: Request) {

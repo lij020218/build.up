@@ -129,7 +129,16 @@
 - **마이그레이션 prod 적용**: `20260604_000001`(roadmaps unique, 단 웹 onConflict 수정 먼저 배포 후) + `20260605_000001`(보안). `supabase db push`.
 - **business-documents**: 마이그레이션이 버킷/RLS를 정식화하나, 운영 DB에서 Studio→Replication/Storage 실제 상태 확인 권장.
 - **AI 비용 결정**: 백엔드가 실제 OpenAI gpt-5.4-mini(Anthropic 잔액부족 2026-05 전환). 로드맵 등 고난도까지 mini → 모델 등급 상향은 비용 결정. temperature 전 호출 고정·industry-daily 서버캐시·웹↔iOS 히어로 코칭 통일은 미적용(구조 변경 큼).
-- **남은 P1**(미적용): 약한 비번정책(8자+숫자1), 웹 토큰 localStorage(XSS), getCurrentUser 만료버퍼, cron timing-safe, 고객 전화·이메일 평문, portone 글로벌 웹훅시크릿.
+- **보안·인증 P1 일괄 수정 완료(2026-06-05)**:
+  - ✅ 비밀번호 정책 강화: `validatePassword`(shared) 영문+숫자 필수(전부숫자 "12345678" 차단) + 흔한비번 블랙리스트. iOS `PasswordPolicy.swift` 신설로 웹·앱 동일 규칙(SignInView·ResetPasswordView 미러).
+  - ✅ `getCurrentUser` 60초 만료 버퍼(만료임박 토큰 통과→첫 쓰기 401 race 방지).
+  - ✅ cron 4종(portone-sync/tossplace-sync/marketing-trends/funnel-pull) secret 비교 `===`→`timingSafeEqualStr`(신규 `_lib/timing-safe.ts`).
+  - 웹 tsc·iOS BUILD 통과.
+- **남은 보안 항목(아키텍처 변경 큼 — 별도 진행 권장, 출시 차단 아님)**:
+  - 고객 `customers.phone/email` 평문 → 앱레벨 암호화(현재 RLS 로 횡적 접근은 차단됨). CRUD·표시 경로 다수 수정 필요.
+  - 웹 토큰 localStorage → `@supabase/ssr` 쿠키 기반(XSS 노출면 축소). 미들웨어 가드 동반.
+  - portone 글로벌 웹훅시크릿 → 사장님별 봉투암호화 컬럼.
+  - 운영: Supabase Auth 측 password policy(최소길이/HIBP) ON 권장(클라 검증 보강용).
 
 ## 5. 선택적 정리(backlog, 가짜 아님)
 - iOS `MockData` → `DashboardSnapshot` 리네이밍 + `AppRoot.swift:776` stale 주석 정리.

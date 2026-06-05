@@ -13,6 +13,7 @@
 
 import { NextResponse } from "next/server";
 import { getCronSecret } from "../../_lib/env";
+import { timingSafeEqualStr } from "../../_lib/timing-safe";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { envelopeDecrypt } from "../../_lib/envelope-crypto";
 import { PortOneClient, PortOneApiError, type PortOnePayment } from "../../_lib/portone-client";
@@ -29,7 +30,7 @@ function isAuthorized(request: Request): boolean {
   const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
   const secret = getCronSecret();
   if (!secret) return false;
-  return token === secret;
+  return timingSafeEqualStr(token, secret);
 }
 
 export async function GET(request: Request) {

@@ -79,10 +79,12 @@ export async function getCurrentUser(client: Client): Promise<User | null> {
   // 1단계 — 로컬 세션 (네트워크 X). 로그인 직후엔 항상 이걸로 잡힘.
   const { data: { session } } = await client.auth.getSession();
   if (session?.user) {
-    // JWT 만료 검사 — 만료됐으면 다음 단계로 (refresh 시도).
+    // JWT 만료 검사 — 만료됐거나 60초 내 만료 임박이면 다음 단계로 (강제 refresh).
+    // ⚠️ 2026-06-05 보안: 버퍼 없이 expiresAt>now 만 보면 만료 직전 토큰으로 통과 → 직후
+    //   첫 쓰기(autosave/saveStoreData)가 401. autoRefresh 가 따라잡기 전 race 방지용 60초 버퍼.
     const expiresAt = session.expires_at; // unix seconds
     const nowSec = Math.floor(Date.now() / 1000);
-    if (!expiresAt || expiresAt > nowSec) {
+    if (!expiresAt || expiresAt > nowSec + 60) {
       return session.user;
     }
   }

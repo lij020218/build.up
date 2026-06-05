@@ -21,11 +21,8 @@ struct ResetPasswordView: View {
     @State private var done = false
     @FocusState private var focused: Bool
 
-    /// 웹과 동일 규칙: 8자 이상 + 숫자 포함.
-    private var strong: Bool {
-        newPassword.count >= 8 &&
-        newPassword.range(of: #"[0-9]"#, options: .regularExpression) != nil
-    }
+    /// 웹 SSOT 와 동일 규칙: 8자 이상 + 영문 + 숫자 + 흔한 비번 제외.
+    private var strong: Bool { PasswordPolicy.isStrong(newPassword) }
 
     var body: some View {
         ZStack {
@@ -66,7 +63,7 @@ struct ResetPasswordView: View {
                     .foregroundStyle(BUColor.ink)
                     .tracking(-0.5)
 
-                Text("8자 이상, 숫자를 포함한 새 비밀번호를 입력해 주세요.")
+                Text("8자 이상, 영문과 숫자를 포함한 새 비밀번호를 입력해 주세요.")
                     .font(.system(size: 14))
                     .foregroundStyle(BUColor.inkSecondary)
                     .lineSpacing(3)
@@ -87,7 +84,7 @@ struct ResetPasswordView: View {
 
                 // 강도 힌트
                 if !newPassword.isEmpty && !strong {
-                    Text("8자 이상이며 숫자를 1개 이상 포함해야 합니다.")
+                    Text(PasswordPolicy.validate(newPassword) ?? "8자 이상, 영문·숫자를 포함해야 합니다.")
                         .font(.system(size: 12.5, weight: .medium))
                         .foregroundStyle(BUColor.inkMuted)
                 }
@@ -224,7 +221,7 @@ struct ResetPasswordView: View {
                 coordinator.completePasswordRecovery()
             } catch {
                 submitting = false
-                errorText = "비밀번호 변경에 실패했어요. 8자 이상·숫자 포함인지 확인하고 다시 시도해 주세요."
+                errorText = "비밀번호 변경에 실패했어요. 8자 이상·영문·숫자 포함인지 확인하고 다시 시도해 주세요."
             }
         }
     }
