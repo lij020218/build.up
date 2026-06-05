@@ -200,7 +200,7 @@
       "ko": "저금리 융자 (운전·시설자금)",
       "en": "Low-interest loan (working capital & facilities)"
     },
-    "amount": "운전 최대 5억, 시설 포함 최대 10억",
+    "amount": "운전 최대 1억, 시설 최대 5억 (특화자금은 시설 최대 10억)",
     "season": {
       "ko": "상시 신청 (연 초 공고)",
       "en": "Year-round (annual notice)"
@@ -342,10 +342,10 @@
       "en": "All ages (4 tracks: Global, Diversity, ClimateTech, Pre-startup)"
     },
     "benefit": {
-      "ko": "총 상금 4억원 + 멘토링 + 해외진출 + MARU 입주 + 투자 연계",
-      "en": "4B KRW prize + mentoring + overseas + MARU + investment"
+      "ko": "총 상금 약 3.7억원 + 멘토링 + 해외진출 + MARU 입주 + 투자 연계",
+      "en": "~370M KRW prize + mentoring + overseas + MARU + investment"
     },
-    "amount": "총 상금 4억원",
+    "amount": "총 상금 약 3.7억원",
     "season": {
       "ko": "상반기 모집, 하반기 데모데이",
       "en": "H1 recruitment, H2 demo day"
@@ -1695,16 +1695,16 @@
     "id": "mashup-angels",
     "category": "private",
     "name": {
-      "ko": "매쉬업엔젤스 (Mashup Angels)",
-      "en": "Mashup Angels"
+      "ko": "매쉬업벤처스 (Mashup Ventures)",
+      "en": "Mashup Ventures"
     },
     "organizer": {
-      "ko": "Mashup Angels",
-      "en": "Mashup Angels"
+      "ko": "Mashup Ventures",
+      "en": "Mashup Ventures"
     },
     "target": {
-      "ko": "초기 단계 (시드) 한국 스타트업 — 30+개 포트폴리오",
-      "en": "Early seed Korean startups, 30+ portfolio"
+      "ko": "초기 단계 (시드) 한국 스타트업 — 누적 200+개 포트폴리오",
+      "en": "Early seed Korean startups, 200+ portfolio"
     },
     "benefit": {
       "ko": "1억-5억 시드 투자 + 멘토링",
@@ -1715,7 +1715,7 @@
       "ko": "상시",
       "en": "Always"
     },
-    "url": "https://mashupangels.com/",
+    "url": "https://www.mashupventures.co/",
     "forSmallBiz": false,
     "forFranchise": false,
     "dataYear": "2026",
@@ -1840,8 +1840,8 @@
     },
     "amount": "$500,000 (지분 7%)",
     "season": {
-      "ko": "Winter (겨울 1월), Summer (여름 6월) 배치",
-      "en": "Winter (Jan), Summer (Jun) batches"
+      "ko": "연 4회 배치 (Winter·Spring·Summer·Fall)",
+      "en": "4 batches/yr (Winter·Spring·Summer·Fall)"
     },
     "url": "https://www.ycombinator.com/apply",
     "forSmallBiz": false,
@@ -1973,12 +1973,13 @@
       "en": "7-yr companies seeking overseas expansion"
     },
     "benefit": {
-      "ko": "분야별 특화 액셀러레이팅 + 법인설립·투자유치 멘토링",
-      "en": "Field-specific acceleration + legal/IR mentoring"
+      "ko": "해외진출자금 + 분야별 특화 액셀러레이팅 + 법인설립·투자유치 멘토링",
+      "en": "Overseas fund + field-specific acceleration + legal/IR mentoring"
     },
+    "amount": "해외진출자금 2,500만~4,000만원 (차등)",
     "season": {
-      "ko": "매년 상반기 모집",
-      "en": "Annual H1"
+      "ko": "매년 초 공고, 2026 접수: 2/27~3/31 마감",
+      "en": "Annual early-year, 2026 deadline: Mar 31"
     },
     "url": "https://www.bizinfo.go.kr/sii/siia/selectSIIA200Detail.do?pblancId=PBLN_000000000116762",
     "forSmallBiz": false,
@@ -1988,7 +1989,8 @@
       0,
       7
     ],
-    "applicationStatus": "upcoming"
+    "applicationDeadline": "2026-03-31",
+    "applicationStatus": "closed"
   },
   {
     "id": "ktng-sangsangmadang-eco",

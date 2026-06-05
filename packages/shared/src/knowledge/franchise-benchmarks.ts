@@ -89,8 +89,8 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   },
   {
     brandId: "nene-chicken",
-    avgMonthlyRevenue: 2917,
-    topStoreMonthlyRevenue: 7000,
+    avgMonthlyRevenue: 1826,
+    topStoreMonthlyRevenue: 4382,
     topStoreMultiplier: 2.4,
     costStructure: { ingredientRatio: 40, laborRatio: 20, rentRatio: 10, deliveryRatio: 15 },
     operationalInsights: [
@@ -100,8 +100,8 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   },
   {
     brandId: "hosik-two-chicken",
-    avgMonthlyRevenue: 2500,
-    topStoreMonthlyRevenue: 6000,
+    avgMonthlyRevenue: 1946,
+    topStoreMonthlyRevenue: 4670,
     topStoreMultiplier: 2.4,
     costStructure: { ingredientRatio: 45, laborRatio: 18, rentRatio: 10, deliveryRatio: 15 },
     operationalInsights: [
@@ -232,9 +232,9 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   },
   {
     brandId: "mega-coffee",
-    avgMonthlyRevenue: 2383,
-    topStoreMonthlyRevenue: 6000,
-    topStoreMultiplier: 2.5,
+    avgMonthlyRevenue: 2908,
+    topStoreMonthlyRevenue: 9747,
+    topStoreMultiplier: 3.4,
     costStructure: { ingredientRatio: 32, laborRatio: 25, rentRatio: 10 },
     operationalInsights: [
       "매장 수 3,038개 전국 1위 — 브랜드 인지도 급성장",
@@ -306,8 +306,8 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   },
   {
     brandId: "papa-johns",
-    avgMonthlyRevenue: 3333,
-    topStoreMonthlyRevenue: 8000,
+    avgMonthlyRevenue: 4725,
+    topStoreMonthlyRevenue: 11340,
     topStoreMultiplier: 2.4,
     costStructure: { ingredientRatio: 38, laborRatio: 22, rentRatio: 10, deliveryRatio: 12 },
     operationalInsights: [
