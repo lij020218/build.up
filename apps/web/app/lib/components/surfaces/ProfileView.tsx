@@ -14,6 +14,7 @@ import { SaasMetricsConnectCard } from "../profile/SaasMetricsConnectCard";
 import { SubscriptionWebhookConnectCard } from "../profile/SubscriptionWebhookConnectCard";
 import { SubscriptionPlanManager } from "../dashboard/SubscriptionPlanManager";
 import { DashboardLayoutCard } from "../profile/DashboardLayoutCard";
+import { OwnerProfileChips } from "../dashboard/OwnerProfileChips";
 import { formatKrw } from "../../utils/format-krw";
 import { StoreNameInput } from "../stages/shared/StoreNameInput";
 import { BusinessHoursInput } from "../stages/shared/BusinessHoursInput";
@@ -227,6 +228,22 @@ export function ProfileView() {
         {d.industryCategoryId !== "online-digital" && d.industryCategoryId !== "startup-tech" && (
           <BusinessHoursInput />
         )}
+      </article>
+
+      {/* ── 카드 2.6: 사장님 정보 (지원사업 맞춤 매칭) ──
+       *   출생연도·신용점수·폐업검토·장애 — 청년/시니어/신용취약/폐업/장애 정책자금 매칭에 사용.
+       *   ⚠️ 민감정보라 기기(localStorage)에만 저장하고 서버로 전송하지 않음. 모두 선택 입력.
+       */}
+      <article style={{ ...card, marginTop: "12px", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ ...sectionLabel, padding: 0, borderBottom: "none" }}>
+          {ko ? "사장님 정보 (지원사업 매칭)" : "Owner info (program matching)"}
+        </div>
+        <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5, marginTop: "-2px" }}>
+          {ko
+            ? "출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원을 더 정확히 찾아드려요. 모두 선택 입력 · 기기에만 저장."
+            : "Add your birth year to surface youth (≤39) / senior (40+) programs. All optional, stored on device only."}
+        </div>
+        <OwnerProfileChips ko={ko} />
       </article>
 
       {/* ── 카드 3: 앱 설정 ── */}

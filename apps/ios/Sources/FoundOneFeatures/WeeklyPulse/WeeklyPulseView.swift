@@ -21,6 +21,9 @@ public struct WeeklyPulseView: View {
     /// 구독 운영 store. usesSubscriptions=true 일 때만 구독관리 카드 노출.
     var subscription: SubscriptionStore? = nil
 
+    /// 선택한 프랜차이즈 브랜드 id (창업유형/프랜차이즈 단계에서 영속) — 브랜드 벤치마크 비교용.
+    @AppStorage("stage.franchise.selectedBrandId") private var selectedFranchiseBrandId: String = ""
+
     public init(mock: MockData, saas: SaasMetricsStore? = nil, subscription: SubscriptionStore? = nil) {
         self.mock = mock
         self.saas = saas
@@ -89,6 +92,17 @@ public struct WeeklyPulseView: View {
                 if let benchmark = IndustryBenchmarkRegistry.benchmark(for: mock.category),
                    mock.entries.count >= 3 {
                     IndustryBenchmarkCard(benchmark: benchmark, entries: mock.entries)
+                }
+
+                // 브랜드 비교 (선택 프랜차이즈 + 벤치마크 존재 + 기록 3일+) — 웹 AiCoachCard 1:1
+                if !selectedFranchiseBrandId.isEmpty,
+                   let fb = FranchiseBenchmarkRegistry.benchmark(brandId: selectedFranchiseBrandId),
+                   mock.entries.count >= 3 {
+                    FranchiseBenchmarkCard(
+                        benchmark: fb,
+                        brandName: FranchiseBrandRegistry.brand(by: selectedFranchiseBrandId)?.name.ko ?? selectedFranchiseBrandId,
+                        entries: mock.entries
+                    )
                 }
 
                 // SaaS 사용자 지표 (스타트업 전용) — 연동되면 실데이터, 아니면 정직한 "연동 필요"
@@ -206,9 +220,10 @@ public struct IndustryBenchmarkCard: View {
                     .padding(.horizontal, 12).padding(.vertical, 10)
                     .background(toneColor.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
 
-                // 출처
-                Text("출처: 공정거래위원회 가맹사업 정보공개서 · 소상공인실태조사")
+                // 출처 (정직성: 출처·기준연도·분포추정 명시)
+                Text("※ 기준 \(String(IndustryBenchmarkProvenance.disclosureYear))년 · \(IndustryBenchmarkProvenance.source)\n\(IndustryBenchmarkProvenance.distributionNoteKo)")
                     .font(.system(size: 10, weight: .medium)).foregroundStyle(BUColor.inkSubtle)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

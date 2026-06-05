@@ -63,6 +63,7 @@ public struct ProfileView: View {
                 accountCard
                 journeyCard
                 storeCard
+                ownerProfileCard
                 dataConnectionCard
                 notificationCard
                 languageCard
@@ -422,6 +423,22 @@ public struct ProfileView: View {
                     isOn: $notifWeeklyCheckup
                 )
             }
+        }
+    }
+
+    // MARK: - 4.5 ownerProfileCard (지원사업 매칭 — 출생연도·신용·폐업·장애, 로컬 전용·서버 미전송)
+
+    private var ownerProfileCard: some View {
+        profileCard(eyebrow: "OWNER · 사장님", title: "지원사업 매칭 정보") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원을 더 정확히 찾아드려요. 모두 선택 · 기기에만 저장.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                OwnerProfileChips(onChange: {})
+            }
+            .padding(.horizontal, BUSpacing.md)
+            .padding(.vertical, BUSpacing.sm)
         }
     }
 

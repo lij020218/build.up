@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getUiCopy } from "@foundone/shared";
+import { getUiCopy, getRecommendedPrograms } from "@foundone/shared";
+import { useCashflowStore } from "./stores/cashflow-store";
+import { projectCashflow, detectCrisis } from "./services/cashflow-projection";
+import { ageFromBirthYear } from "./components/dashboard/OwnerProfileChips";
+import { recordTodayAction, getPreviousActionForPrompt } from "./services/morning-action-log";
 import {
   useOperationsStore,
   useFinanceStore,
@@ -494,10 +498,87 @@ export function useDashboard(surface: DashboardSurface = "home") {
         console.warn("[fetchAiActions] anomaly detection failed:", err);
       }
 
+      // ── 미래 지향 신호 (2026-06-05) — AI 가 "곧 일어날 일" 을 먼저 말하도록 ──
+      const forwardSignals: Record<string, unknown> = (() => {
+        const out: Record<string, unknown> = {};
+        // 요일
+        out.dayOfWeek = ["일", "월", "화", "수", "목", "금", "토"][now.getDay()];
+        // North Star Metric (사장님이 고른 핵심 지표) → 한국어 라벨로
+        if (profileStore.northStarMetric && profileStore.northStarMetric !== "auto") {
+          const nsm: Record<string, string> = {
+            todaySales: "오늘 매출", avgDailySales14d: "14일 평균 매출", customers: "고객 수",
+            aov: "객단가", weeklySales7d: "주간 매출", monthlyProfit: "월 순익", runway: "런웨이", mrr: "MRR",
+          };
+          out.northStarMetric = nsm[profileStore.northStarMetric] ?? profileStore.northStarMetric;
+        }
+        // 현금흐름 위기 — useMorningBriefingBrain 과 동일 로직 재사용(DRY)
+        try {
+          const cf = useCashflowStore.getState();
+          if (cf.setupCompletedAt) {
+            const crisis = detectCrisis(
+              projectCashflow({
+                currentBalance: cf.currentBalance,
+                recentDailyEntries: entries,
+                salesChannels: cf.salesChannels,
+                fixedExpenses: cf.fixedExpenses,
+                vatReserveEnabled: cf.vatReserveEnabled,
+              }),
+              cf.crisisThresholdDays,
+            );
+            if (crisis.willCrisis && crisis.daysUntilCrisis != null) {
+              out.cashflowCrisis = { daysUntilCrisis: crisis.daysUntilCrisis, shortfallWon: Math.abs(crisis.shortfallAmount) };
+            }
+          }
+        } catch { /* cashflow 미설정 — skip */ }
+        // 곧 닥치는 의무 지출 (고정비 dueDay + 월급일) — 다음 14일
+        const todayDate = now.getDate();
+        const dUntil = (dueDay: number) => (dueDay >= todayDate ? dueDay - todayDate : dueDay + 30 - todayDate);
+        const obligations: Array<{ label: string; daysUntil: number; amountWon: number }> = [];
+        (fixedExpenses as { name: string; amount: number; dueDay: number }[]).forEach((f) => {
+          const du = dUntil(f.dueDay);
+          if (du >= 0 && du <= 14) obligations.push({ label: f.name, daysUntil: du, amountWon: f.amount });
+        });
+        if (profileStore.payDay) {
+          const du = dUntil(profileStore.payDay);
+          if (du >= 0 && du <= 14) obligations.push({ label: "직원 월급일", daysUntil: du, amountWon: 0 });
+        }
+        obligations.sort((a, b) => a.daysUntil - b.daysUntil);
+        if (obligations.length > 0) out.upcomingObligations = obligations.slice(0, 4);
+        // 매칭 정책자금 상위 1~2 (자금 부족 시 구체 제안용)
+        try {
+          const businessYears = businessLaunched && businessLaunchedDate
+            ? Math.max(0, Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / (365 * 86400000)))
+            : 0;
+          const recs = getRecommendedPrograms({
+            startupType: startupType || undefined,
+            industryCategoryId,
+            businessYears,
+            region: preferredRegionInput || undefined,
+            capital: selectedBudget ?? undefined,
+            monthlyAvgRevenue: monthlySales > 0 ? monthlySales : undefined,
+            runwayMonths: runway,
+            age: ageFromBirthYear(profileStore.ownerBirthYear),
+            ncbScore: profileStore.ownerNcbScore,
+            consideringClosure: profileStore.ownerConsideringClosure,
+            isDisabledOwner: profileStore.ownerIsDisabledOwner,
+          }, 2);
+          const programs = recs
+            .filter((p) => p.applicationStatus !== "closed")
+            .slice(0, 2)
+            .map((p) => ({ name: p.name.ko, amount: p.amount ?? "", deadline: p.applicationDeadline ?? undefined }));
+          if (programs.length > 0) out.matchedPrograms = programs;
+        } catch { /* skip */ }
+        // 전일 제안 후속 (액션→결과 루프)
+        const prev = getPreviousActionForPrompt(session.user.id);
+        if (prev) out.previousAction = prev;
+        return out;
+      })();
+
       const res = await fetch("/api/ai/dashboard/actions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
+          ...forwardSignals,
           industryCategoryId,
           // 세부업종 — 있으면 K-히트 사례 매칭 정밀도 향상 (예: chicken-burger > food)
           industrySubIndustryId: (profile as { subIndustryId?: string } | null)?.subIndustryId,
@@ -608,6 +689,9 @@ export function useDashboard(surface: DashboardSurface = "home") {
         setAiActions(data);
         // 오늘(KST) 캐시에 저장 — 같은 사용자가 새로고침해도 동일한 hero 가 유지됨.
         saveCachedAiActions(session.user.id, data);
+        // 액션→결과 루프: 오늘 최우선 액션을 기록 → 다음 날 아침 프롬프트가 후속 코칭.
+        const topTitle = (data as { todayActions?: Array<{ title?: string }> })?.todayActions?.[0]?.title;
+        if (typeof topTitle === "string") recordTodayAction(session.user.id, topTitle);
       } else {
         // API 에러 — 상태 + 메시지 저장 (사용자에게 "다시 시도" 버튼 제공 가능)
         let rawMsg = `HTTP ${res.status}`;

@@ -33,6 +33,8 @@ import {
   type MatchCriteria,
   type ProgramMatch,
 } from "@foundone/shared";
+import { useProfileStore } from "../../stores/profile-store";
+import { OwnerProfileChips, ageFromBirthYear } from "./OwnerProfileChips";
 
 const MIDNIGHT_DEEP = "#141C3D";
 const MIDNIGHT_SOFT = "#5A6BAE";
@@ -64,16 +66,22 @@ type Props = {
 export function PolicyFundMatchCard({ ko, input, isCrisis = false, currentMonthlyInterest }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const [extraInput, setExtraInput] = useState<{
-    ncbScore?: number;
-    consideringClosure?: boolean;
-    isDisabledOwner?: boolean;
-  }>({});
+  // 사장님 프로필(출생연도·신용·폐업·장애) — 로컬 영속(profile-store, 서버 미전송). 매칭 정밀화.
+  const ownerBirthYear = useProfileStore((s) => s.ownerBirthYear);
+  const ownerNcbScore = useProfileStore((s) => s.ownerNcbScore);
+  const ownerConsideringClosure = useProfileStore((s) => s.ownerConsideringClosure);
+  const ownerIsDisabledOwner = useProfileStore((s) => s.ownerIsDisabledOwner);
 
   // 펀딩 페이지와 동일 SSOT — getRecommendedPrograms (startup-programs.ts) 사용.
   //  필터: 정부 카테고리 + 정책자금 류 (cash/credit/grant) + policyFundSubCategory 보유.
   const matches: ProgramMatch[] = useMemo(() => {
-    const criteria: MatchCriteria = { ...input, ...extraInput };
+    const criteria: MatchCriteria = {
+      ...input,
+      age: ageFromBirthYear(ownerBirthYear) ?? input.age,
+      ncbScore: ownerNcbScore ?? input.ncbScore,
+      consideringClosure: ownerConsideringClosure || input.consideringClosure,
+      isDisabledOwner: ownerIsDisabledOwner || input.isDisabledOwner,
+    };
     // 추천 점수 기반 상위 N개 (eligibility + personalFit 통과한 것만)
     const recommended = getRecommendedPrograms(criteria, showAll ? 10 : 3, 0);
     // 정책자금 (정부 + 대출/보조/현금)만 필터
@@ -84,7 +92,7 @@ export function PolicyFundMatchCard({ ko, input, isCrisis = false, currentMonthl
       // 세부 카테고리 없어도 fundingType 이 정책자금 류면 포함
       return p.fundingType === "cash" || p.fundingType === "credit" || p.fundingType === "grant";
     });
-  }, [input, extraInput, showAll]);
+  }, [input, ownerBirthYear, ownerNcbScore, ownerConsideringClosure, ownerIsDisabledOwner, showAll]);
 
   if (matches.length === 0) return null;
 
@@ -160,50 +168,9 @@ export function PolicyFundMatchCard({ ko, input, isCrisis = false, currentMonthl
         </div>
       </header>
 
-      {/* ── 매칭 보강 입력 (선택) — 사용자가 폐업·신용·장애 추가 입력하면 매칭 점수 정밀화 ── */}
-      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px", marginTop: "4px" }}>
-        <button
-          type="button"
-          onClick={() => setExtraInput((p) => ({ ...p, consideringClosure: !p.consideringClosure }))}
-          style={{
-            ...optionChip,
-            background: extraInput.consideringClosure ? SKY_BG : "#fff",
-            borderColor: extraInput.consideringClosure ? SKY : HAIRLINE_STRONG,
-            color: extraInput.consideringClosure ? "#1F46A8" : MIDNIGHT_SOFT,
-          }}
-        >
-          {ko ? "폐업 검토 중" : "Considering closure"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setExtraInput((p) => ({ ...p, isDisabledOwner: !p.isDisabledOwner }))}
-          style={{
-            ...optionChip,
-            background: extraInput.isDisabledOwner ? SKY_BG : "#fff",
-            borderColor: extraInput.isDisabledOwner ? SKY : HAIRLINE_STRONG,
-            color: extraInput.isDisabledOwner ? "#1F46A8" : MIDNIGHT_SOFT,
-          }}
-        >
-          {ko ? "장애인 사장님" : "Disabled owner"}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            const v = window.prompt(ko ? "NCB 신용점수 (선택, 모르면 취소)" : "NCB score (optional)");
-            const n = v ? parseInt(v, 10) : undefined;
-            if (n && n > 0 && n <= 1000) setExtraInput((p) => ({ ...p, ncbScore: n }));
-          }}
-          style={{
-            ...optionChip,
-            background: extraInput.ncbScore != null ? SKY_BG : "#fff",
-            borderColor: extraInput.ncbScore != null ? SKY : HAIRLINE_STRONG,
-            color: extraInput.ncbScore != null ? "#1F46A8" : MIDNIGHT_SOFT,
-          }}
-        >
-          {extraInput.ncbScore != null
-            ? `NCB ${extraInput.ncbScore}`
-            : ko ? "NCB 신용점수 입력" : "Enter NCB"}
-        </button>
+      {/* ── 매칭 보강 입력 (선택) — 나이·폐업·신용·장애. 로컬 저장(서버 미전송). ── */}
+      <div style={{ marginTop: "4px" }}>
+        <OwnerProfileChips ko={ko} />
       </div>
 
       {/* ── 매칭 결과 — 펀딩 페이지와 동일 SSOT(getRecommendedPrograms) ── */}
@@ -418,16 +385,6 @@ const title: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "-0.025em",
   color: MIDNIGHT_DEEP,
-};
-
-const optionChip: React.CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 600,
-  padding: "6px 11px",
-  borderRadius: "999px",
-  border: "1px solid",
-  cursor: "pointer",
-  transition: "all 120ms ease",
 };
 
 const matchCard: React.CSSProperties = {

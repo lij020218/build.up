@@ -7,8 +7,13 @@ import { DASHBOARD_ACTION_SYSTEM_PROMPT, buildDashboardActionPrompt } from "./pr
 import type { DashboardContext } from "./prompt";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
-// 1024 → 1536: insight 가 4단계 서사 (150~300자) 로 확장되어 토큰 여유 필요
-const DEFAULT_MAX_TOKENS = 1536;
+// 1024 → 1536 → 2048: insight 4단계 서사 + 액션별 정량 ROI(estimatedImpactWon) +
+//   전일 제안 후속(previousAction follow-up) 으로 출력이 늘어 토큰 여유 확대.
+const DEFAULT_MAX_TOKENS = 2048;
+// ✦ 낮은 분산(temperature 0.3): 매일 아침 같은 데이터 → 일관된 코칭.
+//   GPT 인사이트 라우트는 이미 0.4. claude-sonnet-4-6 은 temperature 지원(Opus 4.7+ 만 제거됨).
+//   0.3 미만은 장문(>2000토큰)에서 반복 위험이라 0.3 채택. 강건 JSON 파서는 그대로 유지.
+const DEFAULT_TEMPERATURE = 0.3;
 
 /**
  * AI 가 K-히트 사례를 인용했을 때 함께 넘기는 메타데이터.
@@ -51,6 +56,12 @@ export type DashboardAction = {
    * UI 에서 "왜 이렇게 판단?" 펼침으로 노출 → 신뢰도 표시.
    */
   evidence?: ActionEvidence[];
+  /**
+   * 이 액션의 예상 효과 (원). 정량화 가능할 때만 — 컨텍스트 숫자로 계산되는 경우.
+   *   예) "객단가 +1,200원 × 일 80명 × 26일 ≈ +250만원/월" → 2_500_000.
+   * UI 에서 "예상 +250만원" 배지로 노출. 데이터 없으면 생략(거짓 추정 금지).
+   */
+  estimatedImpactWon?: number;
 };
 
 export type CrisisAction = {
@@ -203,6 +214,9 @@ function parseResponse(raw: string): DashboardActionsResponse {
       referencedCase: parseRefCase(a.referencedCase),
       feature: parseFeature(a.feature),
       evidence: parseEvidence(a.evidence),
+      estimatedImpactWon: typeof a.estimatedImpactWon === "number" && a.estimatedImpactWon > 0
+        ? Math.round(a.estimatedImpactWon)
+        : undefined,
     }));
 
   const crisisActions = Array.isArray(obj.crisisActions)
@@ -236,6 +250,7 @@ export async function generateDashboardActions(
   const response = await client.messages.create({
     model: options.model ?? DEFAULT_MODEL,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+    temperature: DEFAULT_TEMPERATURE,
     // ✦ Prompt Caching (5m TTL) — 같은 사용자가 짧은 시간 내 여러 번 요청 (대시보드 진입·refresh)
     system: systemWithCache(DASHBOARD_ACTION_SYSTEM_PROMPT),
     messages: [

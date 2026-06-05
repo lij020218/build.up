@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
+import { useProfileStore } from "../../stores/profile-store";
+import { OwnerProfileChips, ageFromBirthYear } from "../dashboard/OwnerProfileChips";
 import {
   getMatchedProgramsV2,
   getRecommendedPrograms,
@@ -58,6 +60,11 @@ export function GuidesView() {
   const selectedIndustryId = (d as { selectedIndustryId?: string }).selectedIndustryId;
   const products = ((d as { products?: unknown[] }).products as unknown[] | undefined) ?? [];
   const taxSettings = (d as { taxSettings?: { vatType?: string; hasEmployees?: boolean } }).taxSettings;
+  // 지원사업 매칭 보강 — 출생연도·신용·폐업·장애 (로컬 영속 profile-store, primitive selector = 안전).
+  const ownerBirthYear = useProfileStore((s) => s.ownerBirthYear);
+  const ownerNcbScore = useProfileStore((s) => s.ownerNcbScore);
+  const ownerConsideringClosure = useProfileStore((s) => s.ownerConsideringClosure);
+  const ownerIsDisabledOwner = useProfileStore((s) => s.ownerIsDisabledOwner);
 
   // ⚠️ 이전: useStoreInfoStore + useInterviewStore 직접 구독 → React #185 무한 렌더 루프 발생
   //  (Zustand persist hydration + 다중 셀렉터가 어디선가 setState 무한 루프 유발).
@@ -134,8 +141,13 @@ export function GuidesView() {
       employeesCount: employees.length,
       monthlyAvgRevenue: monthlyAvgRevenue > 0 ? monthlyAvgRevenue : undefined,
       hasUserSales,
+      // 사장님 프로필 보강 (청년/시니어/신용취약/폐업/장애 정책자금 매칭 활성화)
+      age: ageFromBirthYear(ownerBirthYear),
+      ncbScore: ownerNcbScore,
+      consideringClosure: ownerConsideringClosure,
+      isDisabledOwner: ownerIsDisabledOwner,
     };
-  }, [startupType, industryCategoryId, businessLaunchedDate, businessLaunched, preferredRegionInput, selectedBudget, runwayMonths, weeklySalesChangePct, employees.length, dailyEntries]);
+  }, [startupType, industryCategoryId, businessLaunchedDate, businessLaunched, preferredRegionInput, selectedBudget, runwayMonths, weeklySalesChangePct, employees.length, dailyEntries, ownerBirthYear, ownerNcbScore, ownerConsideringClosure, ownerIsDisabledOwner]);
 
   // ⚠️ 마감된 프로그램은 펀딩 페이지에서 숨김 (2026-05-11).
   //  데이터(startup-programs.ts)는 보존 — 대부분 매년 동일 시기 재공고이므로
@@ -403,6 +415,26 @@ export function GuidesView() {
                 : `Top ${RECOMMEND_TOP_N} by industry · stage · revenue / size · runway match score`}
             </div>
           )}
+        </div>
+
+        {/* ── 3.5 매칭 보강 입력 — 출생연도·신용·폐업·장애 (로컬 저장, 청년/시니어/신용취약/폐업 매칭) ── */}
+        <div style={{ display: "grid", gap: "6px", padding: "0 2px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A6BAE", letterSpacing: "0.02em" }}>
+            {ko ? "내 정보 추가 (선택) — 더 정확한 추천 · 기기에만 저장" : "Add your info (optional) — better matches, stored on device"}
+          </div>
+          {/* 넛지 — 출생연도 미입력 시 청년·시니어 매칭 가치 안내 */}
+          {ownerBirthYear == null && (
+            <div style={{
+              fontSize: "12px", color: "#1F46A8", fontWeight: 600, lineHeight: 1.5,
+              padding: "8px 10px", borderRadius: "8px",
+              background: "#EAF2FF", border: "1px solid rgba(59,91,191,0.18)",
+            }}>
+              {ko
+                ? "💡 출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원사업을 더 정확히 찾아드려요"
+                : "💡 Add your birth year to surface youth (≤39) and senior (40+) programs"}
+            </div>
+          )}
+          <OwnerProfileChips ko={ko} />
         </div>
 
         {/* ── 4. Filters ── */}

@@ -224,12 +224,15 @@ public struct AiAction: Sendable {
     public let reason: String
     public let priority: Hero.Priority
     public let referencedCase: Hero.ReferencedCase?
+    /// 예상 효과(원) — 정량 ROI. 웹과 동일. UI "예상 +250만" 배지.
+    public let estimatedImpactWon: Int?
 
-    public init(title: String, reason: String, priority: Hero.Priority, referencedCase: Hero.ReferencedCase? = nil) {
+    public init(title: String, reason: String, priority: Hero.Priority, referencedCase: Hero.ReferencedCase? = nil, estimatedImpactWon: Int? = nil) {
         self.title = title
         self.reason = reason
         self.priority = priority
         self.referencedCase = referencedCase
+        self.estimatedImpactWon = estimatedImpactWon
     }
 }
 

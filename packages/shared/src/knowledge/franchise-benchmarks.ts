@@ -1,8 +1,28 @@
 /* ─────────────────────────────────────────────
  *  franchise-benchmarks.ts
  *  프랜차이즈 브랜드별 상위 매장 벤치마크 + 업종별 벤치마크
- *  Data sources: 2024-2025 정보공개서, 한국경제, 헤럴드경제, 마이프차
+ *
+ *  ⚠️ 정직성 원칙 (가짜 숫자 금지):
+ *   - avgMonthlyRevenue: 공정위 가맹사업 정보공개서 '가맹점 평균매출' 기반.
+ *     정보공개서는 매년 공시되며 1~2년 시차가 있음 (FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear).
+ *   - topStoreMonthlyRevenue: '평균 × topStoreMultiplier'로 산출한 **모델 추정치**.
+ *     특정 매장의 실측 매출이 아님 → UI 에서 "상위 추정"으로 표기할 것.
+ *   - isEstimate: true 인 레코드는 공개 정보공개서 매출이 없어 업계 자료로 추정한 브랜드.
+ *     UI 에 "추정" 라벨을 반드시 노출.
+ *   - operationalInsights: 일반적 운영 베스트프랙티스이며 개별 매장 감사 결과가 아님.
  * ───────────────────────────────────────────── */
+
+/** 벤치마크 데이터 출처/시점 공유 메타 — UI 출처표기 SSOT */
+export const FRANCHISE_BENCHMARK_PROVENANCE = {
+  /** 1차 출처 */
+  source: "공정거래위원회 가맹사업거래 정보공개서 · 소상공인시장진흥공단 상가업소 실태조사",
+  /** 매출 데이터 기준 영업연도 (최신 공시의 시차 반영) */
+  disclosureYear: 2023,
+  /** 상위매장 매출이 모델 추정임을 알리는 캡션 */
+  modeledNoteKo: "상위 매장 매출은 평균×배수로 산출한 추정치이며, 특정 매장의 실측이 아닙니다.",
+  /** isEstimate 레코드에 붙는 사유 */
+  estimateNoteKo: "공개된 정보공개서 매출이 없어 업계 자료로 추정한 값입니다.",
+} as const;
 
 export type FranchiseCostStructure = {
   ingredientRatio: number;   // % (재료비/매출)
@@ -14,11 +34,15 @@ export type FranchiseCostStructure = {
 
 export type FranchiseBenchmark = {
   brandId: string;
-  avgMonthlyRevenue: number;         // 만원
-  topStoreMonthlyRevenue: number;    // 만원
+  avgMonthlyRevenue: number;         // 만원 — 정보공개서 가맹점 평균매출 기반
+  topStoreMonthlyRevenue: number;    // 만원 — ⚠️ 평균×배수 모델 추정치 (실측 아님)
   topStoreMultiplier: number;        // 평균 대비 배수
   costStructure: FranchiseCostStructure;
-  operationalInsights: string[];     // 상위 매장 비결 (2-3 한국어)
+  operationalInsights: string[];     // 일반 운영 베스트프랙티스 (2-3 한국어, 개별 매장 감사 아님)
+  /** 데이터 기준 영업연도 (미지정 시 FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear 사용) */
+  yearReported?: number;
+  /** true = 공개 정보공개서 매출이 없어 업계 자료로 추정 → UI "추정" 라벨 노출 필수 */
+  isEstimate?: boolean;
   regionalVariance?: {
     highRegion: string;
     highAnnualRevenue: number;       // 만원
@@ -29,10 +53,12 @@ export type FranchiseBenchmark = {
 
 export type IndustryBenchmark = {
   categoryId: string;
-  avgAnnualRevenue: number;          // 만원
-  top10PctRevenue: number;           // 만원 (연간)
-  bottom10PctRevenue: number;        // 만원 (연간)
+  avgAnnualRevenue: number;          // 만원 — 소상공인 실태조사 평균
+  top10PctRevenue: number;           // 만원 (연간) — ⚠️ 분포 추정치
+  bottom10PctRevenue: number;        // 만원 (연간) — ⚠️ 분포 추정치
   keyDifferentiators: string[];      // 상위 10% 차별화 요인
+  /** true = 상·하위 분포가 직접 조사값이 아닌 추정 (대부분의 업종이 해당) */
+  isEstimate?: boolean;
 };
 
 // ─── 브랜드별 벤치마크 ──────────────────────────────────────
@@ -77,7 +103,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     ],
   },
   {
-    brandId: "goobne-chicken",
+    brandId: "goobne",
     avgMonthlyRevenue: 4108,
     topStoreMonthlyRevenue: 10000,
     topStoreMultiplier: 2.5,
@@ -99,7 +125,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     ],
   },
   {
-    brandId: "hosik-two-chicken",
+    brandId: "hosik-chicken",
     avgMonthlyRevenue: 1946,
     topStoreMonthlyRevenue: 4670,
     topStoreMultiplier: 2.4,
@@ -138,7 +164,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
 
   // ── 한식 ──
   {
-    brandId: "hansot",
+    brandId: "hansot-lunchbox",
     avgMonthlyRevenue: 3841,
     topStoreMonthlyRevenue: 9000,
     topStoreMultiplier: 2.3,
@@ -161,7 +187,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     ],
   },
   {
-    brandId: "gimgane",
+    brandId: "kimgane",
     avgMonthlyRevenue: 3175,
     topStoreMonthlyRevenue: 7000,
     topStoreMultiplier: 2.2,
@@ -219,7 +245,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     ],
   },
   {
-    brandId: "paik-dabang",
+    brandId: "paiks-dabang",
     avgMonthlyRevenue: 2417,
     topStoreMonthlyRevenue: 6000,
     topStoreMultiplier: 2.5,
@@ -255,7 +281,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     ],
   },
   {
-    brandId: "ediya",
+    brandId: "ediya-coffee",
     avgMonthlyRevenue: 1558,
     topStoreMonthlyRevenue: 4000,
     topStoreMultiplier: 2.6,
@@ -293,7 +319,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
 
   // ── 피자 ──
   {
-    brandId: "dominos-pizza",
+    brandId: "dominos",
     avgMonthlyRevenue: 6242,
     topStoreMonthlyRevenue: 15000,
     topStoreMultiplier: 2.4,
@@ -306,8 +332,8 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   },
   {
     brandId: "papa-johns",
-    avgMonthlyRevenue: 4725,
-    topStoreMonthlyRevenue: 11340,
+    avgMonthlyRevenue: 4917,
+    topStoreMonthlyRevenue: 11801,
     topStoreMultiplier: 2.4,
     costStructure: { ingredientRatio: 38, laborRatio: 22, rentRatio: 10, deliveryRatio: 12 },
     operationalInsights: [
@@ -346,6 +372,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   // ── 뷰티 ──
   {
     brandId: "juno-hair",
+    isEstimate: true,
     avgMonthlyRevenue: 10417,
     topStoreMonthlyRevenue: 25000,
     topStoreMultiplier: 2.4,
@@ -357,7 +384,8 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     ],
   },
   {
-    brandId: "leekaja-hairbis",
+    brandId: "leekajahair",
+    isEstimate: true,
     avgMonthlyRevenue: 7500,
     topStoreMonthlyRevenue: 18000,
     topStoreMultiplier: 2.4,
@@ -369,6 +397,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   },
   {
     brandId: "blue-club",
+    isEstimate: true,
     avgMonthlyRevenue: 3500,
     topStoreMonthlyRevenue: 7500,
     topStoreMultiplier: 2.1,
@@ -382,6 +411,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   // ── 피트니스 ──
   {
     brandId: "anytime-fitness",
+    isEstimate: true,
     avgMonthlyRevenue: 5000,
     topStoreMonthlyRevenue: 12000,
     topStoreMultiplier: 2.4,
@@ -394,6 +424,7 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   },
   {
     brandId: "curves",
+    isEstimate: true,
     avgMonthlyRevenue: 4200,
     topStoreMonthlyRevenue: 9000,
     topStoreMultiplier: 2.1,
@@ -412,19 +443,12 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
   //  의 가맹비/창업비용 DB 로만 유지. 매출 벤치마크에서는 제외.
 
   // ── 생활서비스 ──
+  // 클린바스켓 제거(2026-06-05): 세탁 O2O는 직영 플랫폼(런드리고·세탁특공대)이며
+  //  클린바스켓은 가맹사업이 아님. 유일한 세탁 가맹은 크린토피아(별도). "가맹점 평균매출"
+  //  데이터 모델이 성립하지 않아 벤치마크에서 제외(가짜 숫자 금지).
   {
-    brandId: "cleanbasket",
-    avgMonthlyRevenue: 4000,
-    topStoreMonthlyRevenue: 9000,
-    topStoreMultiplier: 2.3,
-    costStructure: { ingredientRatio: 20, laborRatio: 30, rentRatio: 10 },
-    operationalInsights: [
-      "모바일 주문 기반 세탁 O2O — 픽업/배달 서비스",
-      "구독 모델(월 정기 세탁)로 안정적 반복 매출",
-    ],
-  },
-  {
-    brandId: "wash-enjoy",
+    brandId: "washnjoy",
+    isEstimate: true,
     avgMonthlyRevenue: 2800,
     topStoreMonthlyRevenue: 6000,
     topStoreMultiplier: 2.1,
@@ -437,18 +461,21 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
 
   // ── 공간 ──
   {
-    brandId: "toc-study-cafe",
-    avgMonthlyRevenue: 5000,
-    topStoreMonthlyRevenue: 12000,
+    // toc-study-cafe → zaksim-study 매핑 + 수치 정정(2026-06-05): 기존 월 5,000만은 과대.
+    //  작심 정보공개서 기준 가맹점 평균 연 1.04억(월 약 867만). 카탈로그 zaksim-study와 일치.
+    brandId: "zaksim-study",
+    avgMonthlyRevenue: 1125,
+    topStoreMonthlyRevenue: 2700,
     topStoreMultiplier: 2.4,
     costStructure: { ingredientRatio: 5, laborRatio: 15, rentRatio: 25 },
     operationalInsights: [
-      "스터디카페 시장 선두 — 자동 좌석 관리 시스템",
-      "음료 자판기 부가 매출 + 시간대별 요금 차등",
+      "무인 픽코(Pickko) 시스템 — 출입·예약·결제·회원 전과정 무인화로 인건비 최소",
+      "성인 이용 80% — 자격증·입시·업무 장기 수요로 매출 안정성 확보",
     ],
   },
   {
-    brandId: "friends-screen-golf",
+    brandId: "friends-screen",
+    isEstimate: true,
     avgMonthlyRevenue: 6000,
     topStoreMonthlyRevenue: 14000,
     topStoreMultiplier: 2.3,

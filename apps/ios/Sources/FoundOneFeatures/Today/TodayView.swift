@@ -290,14 +290,45 @@ public struct TodayView: View {
         // iOS category enum 은 raw value 가 web 과 달라서 (restaurant vs food) 매핑 필수.
         let webCategoryId = webCategoryId(from: mock.category)
 
+        // ── 웹 파리티: 클라이언트가 보낼 수 있는 운영 신호 (백엔드는 웹·iOS 동일 enrich) ──
+        let totalCostWon = monthlyCosts.ingredients + monthlyCosts.labor + monthlyCosts.rent + monthlyCosts.utilities + monthlyCosts.other
+        let primeRate = monthlySalesWon > 0
+            ? Double(monthlyCosts.ingredients + monthlyCosts.labor) / Double(monthlySalesWon) : 0
+        let sortedEntries = mock.entries.sorted { $0.date < $1.date }
+        let last7Sum = sortedEntries.suffix(7).reduce(0.0) { $0 + $1.sales }
+        let prev7Sum = sortedEntries.dropLast(7).suffix(7).reduce(0.0) { $0 + $1.sales }
+        let weeklyChange = prev7Sum > 0 ? ((last7Sum - prev7Sum) / prev7Sum) * 100 : 0
+        let monthlyBurn = max(0.0, Double(totalCostWon - monthlySalesWon))
+        let runwayMonths: Double = {
+            guard let cash = mock.currentCash, cash > 0, monthlyBurn > 0 else { return 0 }
+            return cash / monthlyBurn
+        }()
+        let operatingPhase: String = mock.daysSinceLaunch <= 0 ? "pre-launch"
+            : mock.daysSinceLaunch > 90 ? "mature"
+            : mock.daysSinceLaunch > 30 ? "growth" : "early"
+        let salesTrend: String = {
+            let last14 = Array(sortedEntries.suffix(14))
+            guard last14.count >= 14 else { return "insufficient" }
+            let r7 = last14.suffix(7).reduce(0.0) { $0 + $1.sales } / 7
+            let p7 = last14.prefix(7).reduce(0.0) { $0 + $1.sales } / 7
+            guard p7 > 0 else { return "insufficient" }
+            let ch = (r7 - p7) / p7 * 100
+            return ch >= 5 ? "improving" : ch <= -5 ? "declining" : "stable"
+        }()
+
         let context = AIDashboardContext(
             industryCategoryId: webCategoryId,
             storeName: mock.storeName,
             industryLabel: mock.category.labelKo,
             monthlySales: monthlySalesWon,
             monthlyCosts: monthlyCosts,
+            weeklyChange: weeklyChange,
+            primeRate: primeRate,
+            runway: runwayMonths,
             businessHealthScore: healthString,
-            daysSinceLaunch: mock.daysSinceLaunch
+            daysSinceLaunch: mock.daysSinceLaunch,
+            operatingPhase: operatingPhase,
+            salesTrendDirection: salesTrend
         )
 
         let repo = AIDashboardActionsRepository(supabase: BUSupabase.shared.client)
@@ -1069,6 +1100,20 @@ private struct AIActionsSheet: View {
                         .padding(.horizontal, 7)
                         .padding(.vertical, 2)
                         .background(BUColor.midnight08, in: Capsule())
+                    }
+                    // 정량 ROI 배지 — 웹과 동일 "예상 +X만"
+                    if let impact = action.estimatedImpactWon, impact > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.system(size: 9, weight: .bold))
+                            Text("예상 +\((impact / 10_000).formatted())만")
+                                .font(.system(size: 10, weight: .bold))
+                                .tracking(0.2)
+                        }
+                        .foregroundStyle(BUColor.success)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(BUColor.success.opacity(0.12), in: Capsule())
                     }
                     Spacer(minLength: 0)
                 }

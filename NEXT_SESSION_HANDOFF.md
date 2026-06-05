@@ -2,6 +2,38 @@
 
 > 이전 2026-06-02 핸드오프 대체. 이번 세션에서 한 일 + 다음 세션이 바로 이어갈 백로그 명세.
 
+---
+## 🚀 다음 세션 즉시 시작 (2026-06-06 갱신 — 여기부터 읽기)
+
+**git**: `main` 브랜치, **41파일 미커밋**(이번 세션 누적). 신규 파일: `OwnerProfileChips`(웹/iOS), `FranchiseBenchmarkRegistry.swift`, `FranchiseBenchmarkCard.swift`, `morning-action-log.ts`, `scripts/gen-franchise-benchmark-swift.mts`, `scripts/gen-startup-programs-json.mts`, SQL `20260606_add_promo_playbook_agent_columns.sql`.
+→ **먼저 커밋 권장**(아직 안 했으면). 검증 완료 상태라 안전.
+
+**검증 상태(이번 세션 끝 기준)**: web tsc ✓ · shared tsc ✓ · iOS BUILD SUCCEEDED ✓ · 점수 테스트 5/5 ✓.
+
+**⚠️ prod 실행 필요한 마이그레이션**:
+- `supabase/migrations/20260606_add_promo_playbook_agent_columns.sql` (promo_codes·playbook_checklist·agent_settings)
+- (그 외 이번 세션 이전 신규: 20260604/20260605 보안·암호화 계열 — 적용 여부 확인)
+
+**다음 작업 = 웹↔앱 전체 동기화 (§4.16) 우선순위**:
+1. **A. iOS realtime 구독** (최우선·체감 큼): iOS가 `user_store_data`·`business_profiles`·`roadmaps` realtime 구독 → 웹 입력이 앱에 즉시. 시작점: iOS `DashboardStore`/데이터 로드 경로 + Supabase RealtimeClient(Swift), 5초 throttle. (웹←iOS는 이미 동작.)
+2. **C. iOS 단계입력 ~70 @AppStorage → `stage_decisions.inputs`**: 로드맵 진행 웹↔iOS 일치. 대(1~2일).
+3. **D. PII 봉투암호화 동기화**(사용자 결정): owner.birthYear/ncbScore/consideringClosure/isDisabledOwner → 봉투암호화(PORTONE_KEK 인프라) 컬럼 동기화. 웹 `profile-store`(localStorage) + iOS UserDefaults(`owner.*`).
+- 설계 메모: "같은 숫자 100% 보장"의 정석 = **신호 계산을 서버(packages/ai/route)로 이동**, 클라는 raw만 전송(§4.16 하단).
+
+**또 다른 진행중 트랙 — AI 모닝 히어로(§4.15)**: 웹 1~3단계 완료(temp 0.3·정량ROI·미래신호·배선·배지). iOS 4a(배지)+4b부분(운영신호5) 완료. 남음: iOS 미래신호 6종(또는 위 "서버 계산" 리팩터로 흡수).
+
+**검증 명령**:
+```
+cd packages/shared && npx tsc --noEmit
+cd apps/web && npx tsc --noEmit
+cd "$ROOT" && npx vitest run packages/shared/src/__tests__/startup-programs-score.test.ts
+cd apps/ios && xcodebuild -scheme FoundOne -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+codegen 재생성: npx tsx scripts/gen-franchise-benchmark-swift.mts && npx tsx scripts/gen-startup-programs-json.mts
+```
+세부 작업 로그는 아래 §4.7~4.16 참조.
+
+---
+
 브랜치: `feat/dashboard-honesty-parity-2026-06-04` (main 아님 — 머지/FF는 사용자 판단)
 
 이번 세션 주제: **웹↔iOS 통일 + 운영 대시보드 "데이터 정직성" + 카드 종류 패리티**.
@@ -172,6 +204,107 @@ catalog-2026.ts 삭제(미사용·노후) + 프랜차이즈/공급처/배달앱/
   - 비외식 12개 브랜드 매출: 정보공개서 비공개/봇차단(403)으로 검증 불가 — 공공데이터 오픈API로만 가능.
   - 배달앱 MAU(배민 2249만·쿠팡이츠 1249만·요기요 397만 하락) 시점 갱신은 minor라 보류.
   - 로열티 필드가 만원 정액이라 정률(도미노 6%·써브웨이 8%·투썸 3% 등) 표현 한계 — 정률/정액 메타필드 추가 검토.
+
+## 4.10 벤치마크 정직성(출처·추정 라벨) 보강 (2026-06-05)
+공공데이터 API 발급 난이도로 자동검증은 보류하고, **"거짓 숫자로 신뢰 잃지 않기"** 원칙에 따라 사용자에게 보이는 매출/비용 숫자에 **출처·기준연도·추정 여부**를 명시. 핵심 리스크는 "상위 매장 매출"이 실측처럼 보이지만 실제는 `평균×배수` 모델 추정이라는 점.
+- **데이터 레이어 `franchise-benchmarks.ts`**: `FRANCHISE_BENCHMARK_PROVENANCE` 상수 신설(source·disclosureYear=2023·modeledNoteKo·estimateNoteKo). 타입에 `yearReported?`/`isEstimate?` 추가 + topStore가 모델 추정임을 주석 명시. 공개 정보공개서 매출이 없는 **비외식 9개 브랜드(준오·이가자·블루클럽·애니타임·커브스·클린바스켓·워시엔조이·토즈·프렌즈스크린골프)에 `isEstimate: true`** 플래그.
+- **웹 `AiCoachCard.tsx`**: "상위 매장" → **"상위 추정"** 라벨 변경 + 비교바 하단에 출처·기준연도·캐비엇 푸트노트 추가(프랜차이즈=상위매장 모델추정/브랜드추정, 업종=상·하위 분포추정 — 경로별 정확 분기).
+- **iOS `IndustryBenchmarkRegistry.swift`**: `IndustryBenchmarkProvenance`(source·disclosureYear·distributionNoteKo) 신설. `WeeklyPulseView` 출처 라벨에 기준연도+분포추정 캡션 추가.
+- **iOS `FranchiseView.swift`**: `FranchiseBrandView`에 costVerified/costSource/dataYear/confidence 추가 + 상세시트 `initialCostBlock`에 **정직성 푸터(검증/추정 칩·기준연도·출처·신뢰도)** 신설 — 웹 FranchiseDetailModal 1:1 패리티.
+- **이미 잘 되어있던 곳(추가 작업 불필요)**: `franchise-brands.json`(costVerified/costSource/dataYear/sources/confidence 풀 보유) + 웹 FranchiseDetailModal 풀 라벨 렌더. `cluster-budget-benchmarks.ts` + 웹 BudgetInsightCard(출처·추정치칩·연도 렌더). 웹 SocialBenchmarkCard·iOS WeeklyPulse 출처 라벨.
+- **웹·앱 동일화 추가(2026-06-05, "웹과 앱은 똑같아야" 원칙)**:
+  - **창업유형 단계**: 웹 `StartupTypeSelectionStage`는 데이터연도만, iOS `StartupTypeStageView`는 출처만 표시하던 비대칭 → 양방향으로 **둘 다 {출처 + 데이터 기준연도}** 표시하도록 맞춤(iOS에 `데이터 기준 {dataYear}년` 추가, 웹에 `출처: {costSource}` 추가).
+  - **업종 벤치마크**: 웹 `SocialBenchmarkCard`(출처만) → iOS `WeeklyPulse`와 동일하게 **기준연도 + "상·하위10% 분포 추정" 캡션** 추가.
+- **검증**: shared tsc ✓ / web tsc ✓ / iOS xcodebuild(iPhone 17 Pro) BUILD SUCCEEDED ✓ (전 변경 후 재빌드 통과).
+- **브랜드별 프랜차이즈 벤치마크 카드 iOS 포팅 완료(2026-06-05)**: 웹 `AiCoachCard`의 브랜드 비교바를 iOS에 1:1 포팅.
+  - **Codegen**: `scripts/gen-franchise-benchmark-swift.mts`(tsx) — 웹 `franchise-benchmarks.ts`를 import해 `FoundOneCore/FranchiseBenchmarkRegistry.swift`(34개 브랜드 + `FranchiseBenchmarkProvenance`) 자동 생성. 전사 오류 0. **수정은 웹 SSOT 후 재생성**(직접 편집 금지). costStructure·regionalVariance는 iOS 미렌더라 생성 제외.
+  - **카드**: `FoundOneFeatures/WeeklyPulse/FranchiseBenchmarkCard.swift` 신설 — 내 매장(예상 월매출=일평균×26) vs 같은 브랜드 평균/**상위 추정** + 상위매장 비결 + 출처·기준연도·추정 푸트노트. `WeeklyPulseView`에 IndustryBenchmarkCard 다음 배치(`@AppStorage("stage.franchise.selectedBrandId")` + 벤치마크 존재 + 기록 3일+ 가드).
+  - 🔴 **부수 버그 수정(웹+iOS 동시)**: `franchise-benchmarks.ts`의 brandId 13개가 `franchise-brands.json` canonical id와 불일치 → **웹 `getFranchiseBenchmark(selectedBrandId)`도 그 브랜드들에서 카드 미표시**였음(잠재 버그). 10개 id 정렬(goobne-chicken→goobne, hosik-two-chicken→hosik-chicken, hansot→hansot-lunchbox, gimgane→kimgane, paik-dabang→paiks-dabang, ediya→ediya-coffee, dominos-pizza→dominos, leekaja-hairbis→leekajahair, wash-enjoy→washnjoy, friends-screen-golf→friends-screen). 매칭 21→31/34.
+  - **orphan 3 전부 해결(2026-06-05, WebSearch 실태조사 후)** → 매칭 31→**33/33(orphan 0)**:
+    - **파파존스**: 실제 가맹사업 확정(가맹개시 2004.12, 가맹226/직영13=94% 가맹, 다점포율 45%, 공식 가맹모집 페이지, 로열티 매출 5%). **`franchise-brands.json`에 신규 추가**(id papa-johns, 창업 2.3억·가맹비 1100·평균매출 5.9억·로열티 246만(5% 환산)·정보공개서 2022·costVerified·sources 5건·confidence medium). 벤치마크 월평균 4725→4917, top 11340→11801 정합.
+    - **클린바스켓**: 가맹 아님(세탁 O2O=직영 플랫폼, 유일 세탁가맹은 크린토피아). **벤치마크 제거**(가짜 데이터 모델, kumon/petbox와 동일 원칙).
+    - **toc-study-cafe**: 작심(`zaksim-study`, 이미 카탈로그)이 스터디카페 1위 가맹. **벤치마크를 zaksim-study로 매핑 + 월 5,000만(과대)→867만(정보공개서 연 1.04억) 정정**, isEstimate 제거, 작심 실제 차별점(픽코 무인시스템)으로 operationalInsights 갱신.
+  - 검증: web/shared tsc ✓ · iOS BUILD SUCCEEDED ✓ · brandId 매칭 33/33.
+  - **작심 매출 불일치 보정(2026-06-05)**: 카탈로그 `zaksim-study.avgAnnualRevenueWon` 10400(월867)이 자체 roadmapNote "월 1,000~1,500만/연 1.2~1.5억"과 불일치 → **13500(연 1.35억=월 1,125, 정보공개서 범위 중간값)으로 보정**. 벤치마크도 zaksim avg 867→1125·top 2080→2700 정합. 카탈로그↔벤치마크↔설명문 3자 일치.
+  - 검증: web/shared tsc ✓ · iOS BUILD SUCCEEDED ✓.
+  - **계산 차이(의도적)**: iOS는 옆 IndustryBenchmarkCard와 일관성 위해 projectedMonthly(일평균×26) 사용. 웹 AiCoachCard는 당월 raw 합계. 동일 화면 내 일관성 우선.
+- **남은 minor**: iOS `FranchiseBrandCard` 그리드(목록)는 라벨 없음(웹도 목록은 요약, 상세에 풀라벨이라 패리티 일치).
+
+## 4.11 지원사업(정책자금) 정확성·점수·발굴 (2026-06-05)
+3개 에이전트 WebSearch 검증 후 `startup-programs.ts`(SSOT) 정정·보강. 79→**92개**. iOS json codegen 신설로 동기화.
+- **① 정확성 정정(WebSearch 검증)**:
+  - 🔴 **대환대출**: "금리 3.5-4.5%/7년" → **연 4.5% 고정/최대 10년**(loanDetails termMonths 84→120).
+  - 🔴 **TIPS**: 글로벌TIPS "50억" → **4년 최대 60억**(+스케일업 30억 신설 반영). 일반 R&D 8억은 유지.
+  - 🔴 **재도전특별자금**: "최대 1억" → **유형별 7천만~2억**(기준금리 연동, limitWon 1억→2억).
+  - **청년농업인 영농정착**: status upcoming → **open**(2026 2차 6/1~7/10).
+  - **사회적기업가 육성**: "최대 5천만" → **평균 5천만/초기창업형 최대 8천만**.
+  - (참고: SEMAS 자금 다수가 분기 변동금리인데 고정범위로 표기됨 — 큰 오류는 아니나 추후 "기준금리 연동" 라벨 권장.)
+- **② 점수 일관성**: 매칭 부스트 중 addReason 누락 4건(isUrgentCrisis+20, medium private/corp+6, large grant+6, redemption+25)에 사유 추가 — 웹+**iOS match() 동시 미러링**(손수 포팅 복제본이므로). 점수 0~100 클램프·2종(matchScore/personalFitScore) 구조는 일관. **age 이중가산(maxAge+15 & youth+20), smallBiz 이중(+10 & 사이즈+12)은 "프로그램속성 vs 사용자속성" 별개 신호라 의도적 레이어링으로 판단(버그 아님)**.
+- **③ 신규 발굴 13개 추가**(WebSearch 검증, web+iOS): 소상공인 온라인판로·스마트상점·**도약(舊 로컬크리에이터+강한소상공인 통합)**·신사업창업사관학교, **지역신용보증재단 보증(상시 open)**, **KAIST OverEdge(오엣 — AI에이전트 1인창업, 6/15 마감, 사용자가 본 광고)**, 혁신소상공인 AI 활용지원, 창업중심대학, 생애최초 청년창업, 여성창업경진대회, IP나래·디딤돌, 재창업자금(중진공), 관광벤처.
+- **iOS 동기화 복구**: `scripts/gen-startup-programs-json.mts`(tsx) 신설 — `startup-programs.ts` → `startup-programs.json` 자동 추출(기존 수동 추출 대체). 92개 확인.
+- **검증**: shared tsc ✓ · 점수 테스트 5/5 ✓ · web tsc ✓ · iOS BUILD SUCCEEDED ✓.
+- **남은 발굴 후보(미추가, 원하면 추가)**: 청년상인·청년몰, 수출바우처/내수기업화, 스마트공장, 기술보증기금 보증, 소셜벤처 투자역량, 지자체(부산 busanstartup·대구 w-startup), GRAVITY(4대 과기원)·SNU BIG·고려대 GMEP, NIPA AI 통합바우처(소상공인 트랙), AI인재 실증형 창업패키지.
+- **남은 동기화 부채**: DB seed `supabase/migrations/20260327_000028_seed_support_programs.sql`은 79개 시드(정적 배열이 런타임 SSOT라 표시엔 무영향). Supabase 복사본 쓰는 경로 있으면 재시드 필요.
+
+## 4.12 지원사업 2차 — 대량 발굴 + 추천 로직 감사·수정 (2026-06-05)
+- **대량 추가 29개 (92→121)**: 지자체 12(부산·대구여성·인천·대전·광주·울산·경기·강원·충남·전북·경남·제주 — `regions` 태깅), 분야별(스마트공장·수출바우처·기보/신보 보증·콘텐츠코리아랩·중소환경(기후)·K-바이오랩허브·외식인큐베이팅·식품스마트공장), AI(NIPA AI바우처 소상공인·초격차1000+·딥테크챌린지), 소상공인(백년소상공인·전통시장·자영업 고용보험·두루누리), 학생창업유망팀. **업종전용은 우리 enum(food/retail 등)에 맞을 때만 industries 설정**(manufacturing/content 토큰은 hard-filter 전멸 방지 위해 미설정).
+- **추천 로직 감사(2 에이전트, web+iOS)** — 엔진(getMatchedProgramsV2/getRecommendedPrograms)은 정교하나 **호출부가 criteria를 빈약하게 채워 추천이 generic** 했음:
+  - 🔴 **[P0 수정완료] capital 무효 버그**: `criteria.capital`이 매처에서 *전혀 안 읽혀* 로드맵 예산단계 추천이 예산과 무관했음. → 자본(원) 적을수록 정부 정책자금(현금·보증·보조금) 우대하는 보정 추가(<3천만 +15 / <1억 +8). **웹 matcher + iOS Swift match() 동시 미러링**. 점수 테스트 5/5 유지.
+  - 🟡 **[P0 제품갭] age 미수집**: `sajangAge`가 스토어/입력 UI에 아예 없어 `age`는 항상 undefined → 청년 우대(+20)·maxAge 자격 **죽어있음**. 코드 스레딩이 아니라 **나이 입력 필드(온보딩/프로필) 신설 필요** — 가짜 연결 안 함. 별도 기능.
+  - 🟡 **[P1] iOS 신용/폐업/장애 입력 부재**: 웹 PolicyFundMatchCard엔 ncbScore/consideringClosure/isDisabledOwner 칩이 있으나 iOS엔 없음 → 해당 부스트가 iOS에서 전부 죽음(웹↔iOS 패리티 갭). 펀딩페이지(GuidesView)도 위기/신용 칩 없음 → low-credit/closure/operation 부스트 미발화.
+- **검증**: shared tsc ✓ · 점수 테스트 5/5 ✓ · web tsc ✓ · iOS BUILD SUCCEEDED ✓ · json 121개 동기화.
+- **다음 권장(추천 로직 완성)**: ① 나이 입력 필드 신설(youth 매칭 활성화) ② iOS에 신용/폐업 입력(PolicyFundMatchCard iOS 포팅) ③ 펀딩페이지에 위기·신용 칩 노출.
+
+## 4.13 추천 로직 완성 — 나이·신용·폐업·장애 입력 (2026-06-05)
+§4.12 감사에서 죽어있던 age/credit/closure 신호를 **실제 입력·영속·매칭 반영**으로 살림. **민감 PII(나이·신용점수)는 서버 미전송 — 로컬 전용**(웹 localStorage / iOS UserDefaults). 매칭이 클라이언트에서 돌아 로컬값으로 충분 + 프라이버시 안전.
+- **웹**:
+  - `profile-store.ts`에 `ownerAge`/`ownerNcbScore`/`ownerConsideringClosure`/`ownerIsDisabledOwner` 4필드 + 세터 + partialize(localStorage 영속).
+  - **공유 컴포넌트 `OwnerProfileChips.tsx` 신설**(나이·폐업·장애·NCB 칩, profile-store 직결). PolicyFundMatchCard(인라인 칩 → 컴포넌트 교체) + **펀딩페이지 GuidesView(신규 노출)** 양쪽 사용 — SSOT.
+  - GuidesView·PolicyFundMatchCard·**BudgetFundingMatchCard(로드맵 예산단계)** 3곳 criteria에 4필드 주입(primitive selector = #185 루프 회피).
+- **iOS**:
+  - `FundingProfileRepository.makeCriteria`: age/ncb/closure/disabled를 **UserDefaults("owner.*")에서 읽음**(종전 nil 하드코딩 → 실값). FundingMatchCriteria→StartupProgramMatchCriteria 매핑이 필드 보존 확인.
+  - **`OwnerProfileChips.swift` 신설**(@AppStorage "owner.*" 동일 키, 나이/NCB 입력 alert + 폐업/장애 토글, 변경 시 loadPrograms 재매칭). iOS GuidesView body에 노출.
+  - **BudgetSetupStageView**(iOS 예산단계)도 UserDefaults에서 owner 값 읽어 criteria 주입(웹 패리티).
+- **검증**: shared tsc ✓ · 점수 테스트 5/5 ✓ · web tsc ✓ · iOS BUILD SUCCEEDED ✓.
+- **효과**: 이제 나이 입력 시 **청년 정책자금(+20)**, NCB 입력 시 **신용취약(+30)/대환(+25)**, 폐업 토글 시 **희망리턴·재도전(+35/+25)**, 장애 토글 시 **장애인자금(+30)** 부스트가 웹·iOS 양쪽에서 실제 발화. capital(예산) 보정과 합쳐 예산단계·펀딩페이지 추천이 사용자 맞춤으로 작동.
+- **남은 minor**: `salesDeclinePct`(operation 자금 +20)는 매출 데이터에서 산출하는 신호라 미연결(입력 아님). iOS도 매출 기반 계산 추가 시 활성화 가능 — 별도.
+
+## 4.14 나이 수집 — 출생연도 + 넛지 + 프로필 필드 (2026-06-05)
+"회원가입에 나이 물어볼까?" → **회원가입엔 안 넣음**(마찰·PII·로컬전용 정책 충돌). 대신 **점진적 수집**: 프로필 필드 + 펀딩 넛지. 사용자 선택: "프로필 선택 필드 + 넛지(추천)".
+- **나이→출생연도(birthYear)로 표준화**: 정수 나이는 해 바뀌면 stale → `birthYear` 저장 + 매칭 시 `현재연도-birthYear`로 나이 계산. 웹 `profile-store.ownerAge`→`ownerBirthYear`, iOS UserDefaults `owner.age`→`owner.birthYear`. 헬퍼 `ageFromBirthYear()`(웹 export) / `computedAge`(iOS).
+- **펀딩 넛지**: 출생연도 미입력 시 "💡 출생연도 알려주시면 청년(≤39)·시니어(40+) 전용 지원 더 정확히" 배너. 웹 GuidesView(조건부) + iOS OwnerProfileChips(`showNudge` prop, 펀딩만 true).
+- **프로필 필드**: 웹 `surfaces/ProfileView.tsx`에 "사장님 정보(지원사업 매칭)" 카드 + iOS `ProfileView.swift` `ownerProfileCard` — 둘 다 OwnerProfileChips 재사용. 가입 마찰 없이 설정에서 입력 가능.
+- 3 criteria 지점(GuidesView·PolicyFundMatchCard·BudgetFundingMatchCard) + iOS(makeCriteria·BudgetSetupStageView) 모두 birthYear→나이 계산으로 갱신.
+- **검증**: shared tsc ✓ · web tsc ✓ · 점수 테스트 5/5 ✓ · iOS BUILD SUCCEEDED ✓ · 잔여 ownerAge 참조 0.
+
+## 4.15 AI 모닝 히어로 강화 (P0+P1) — 진행 중 (2026-06-05)
+사용자 목표: "진짜 사업에 도움되는 제안". 감사 결과 AI가 **미래를 못 봄**(이번 달 손익만 보고, 13주 위기·월급/세금 타이밍·매칭 정책자금·단골 지표는 앱이 계산해도 AI에 미전달). claude-api 스킬 가이드 적용.
+- **✅ 1단계 AI 코어 (완료·검증: ai tsc ✓ web tsc ✓)** — `packages/ai/src/dashboard/`:
+  - `actions.ts`: **temperature 0.3**(분산↓, sonnet-4-6은 temp 지원) + max_tokens 1536→**2048** + 출력 타입에 **`estimatedImpactWon`(정량 ROI)** 추가·파싱. 강건 JSON 파서 유지.
+  - `prompt.ts`: DashboardContext에 **미래 신호 필드**(`cashflowCrisis`·`upcomingObligations`·`matchedPrograms`·`northStarMetric`·`dayOfWeek`·`previousAction`) 추가 + 렌더링 + 지침(정량 ROI·미래지향 우선순위·전일제안 후속). 출력 계약에 estimatedImpactWon 추가.
+- **✅ 2단계 웹 배선 (완료·검증: web tsc ✓)** — `useDashboard.ts` payload에 6개 미래신호 주입:
+  - dayOfWeek, northStarMetric(profile-store, 한국어 라벨), cashflowCrisis(`useCashflowStore.getState()` + `projectCashflow`/`detectCrisis` 재사용=DRY), upcomingObligations(고정비 dueDay + payDay, 14일내), matchedPrograms(getRecommendedPrograms 상위 2, 마감 제외), previousAction(액션→결과 루프).
+  - **액션→결과 루프**: `services/morning-action-log.ts`(localStorage, 사용자별) 신설 — 응답 후 `recordTodayAction`(오늘 최우선 기록), 다음날 `getPreviousActionForPrompt`(전일 것만) → 프롬프트 후속.
+  - 전달 경로 확인: route가 body 전체 통과 → `enrichDashboardContext`가 `{...base}` 보존 → 프롬프트 렌더. **AI가 실제로 미래신호 수신.**
+- **✅ 3단계 웹 UI (완료·검증: web tsc ✓)** — AiCoachCard todayActions에 **"예상 +X만" ROI 배지**(estimatedImpactWon) 추가. 청록 배지로 "줄이세요"가 아니라 정량 효과 노출.
+  - (보류) "했어요 ✓" done 버튼: AiCoachCard에 userId가 없어 supabase 경로 리스크 → 후속. **루프는 pending 상태로 이미 작동**(다음날 "다시 권하거나 대안"). done 버튼은 "결과를 묻고 다음 단계" 경로 추가용 enhancement.
+- **✅ 4단계 iOS — 4a + 4b부분 (완료·검증: iOS BUILD SUCCEEDED)**:
+  - **4a**: 응답 DTO `AIDashboardAction.estimatedImpactWon` + `AiAction.estimatedImpactWon`(+매핑) 추가 → TodayView actionCard에 **"예상 +X만" ROI 배지**(웹과 동일).
+  - **4b부분**: TodayView가 보내던 ~7필드 → **운영 신호 5종 추가**(primeRate·weeklyChange·runway·operatingPhase·salesTrendDirection, mock 데이터로 계산). 백엔드 동일(route+packages/ai) + 입력 파리티 대폭 개선.
+- **⏳ 남은 4b (미래 신호 struct 추가 필요)**: `AIDashboardContext`에 cashflowCrisis·upcomingObligations·matchedPrograms·northStarMetric·dayOfWeek·previousAction 필드(중첩 Encodable) 추가 + 배선 — cashflowCrisis(CashflowProjection+store sync), upcomingObligations(cashflowStore.settings.fixedExpenses), matchedPrograms(StartupProgramRegistry.recommend, async FundingProfileRepository), northStarMetric(@AppStorage "ge.northStar"=UserDefaults), dayOfWeek(Calendar), previousAction(iOS action-log UserDefaults 신설=web morning-action-log 미러). proactiveInsights/productCount는 iOS 데이터 없음(서버 추정).
+- 핵심: **웹 완전 활성화 + iOS 배지·운영신호 파리티 완료.** iOS 미래신호 6종이 마지막 파리티 항목.
+
+## 4.16 웹↔앱 전체 데이터 동기화 워크스트림 (2026-06-06)
+원칙: **모든 사용자 데이터는 웹·앱 동기화**(어떤 서비스도 "웹 입력이 앱에 안 보임"은 없음). 감사 결과 **이미 ~87% 동기화**(user_store_data·business_profiles·roadmaps + 웹 realtime). 진짜 갭:
+- **✅ Phase B 완료·검증 (web/shared tsc ✓)**: 웹 로컬 전용 3종을 Supabase 동기화.
+  - SQL `supabase/migrations/20260606_add_promo_playbook_agent_columns.sql`(promo_codes·playbook_checklist·agent_settings jsonb, idempotent) — **⚠️ prod 실행 필요**.
+  - `store-data.ts` 타입+FIELD_TO_COLUMN, marketing-store(`setPromoCodes`/`setPlaybookChecklist`)·agents-store(`setEnabledAgents`) bulk setter, collectStoreData(write)+applyStoreData(restore) 배선. → 프로모코드·플레이북·에이전트설정 기기간 보존.
+- **⏳ 남은 갭 (큰 임팩트 순)**:
+  - **A. iOS realtime 구독 (최우선)**: iOS가 user_store_data·business_profiles·roadmaps를 realtime 구독 안 함 → **웹 변경이 앱에 즉시 안 보임**(재실행해야). 이게 사장님 체감 "안 보임"의 진짜 원인. Supabase RealtimeClient(Swift) + 5초 throttle refetch. (웹←iOS는 이미 동작.)
+  - **C. iOS 단계입력 ~70 @AppStorage → stage_decisions.inputs**: 스테이지 입력이 로컬이라 웹↔iOS 로드맵 진행 어긋남. 대(1~2일).
+  - **D. PII 봉투암호화 동기화** (사용자 결정: 암호화 동기화): owner.birthYear/ncbScore/consideringClosure/isDisabledOwner(웹 profile-store localStorage·iOS UserDefaults) → 봉투암호화(PORTONE_KEK 인프라 재사용) 컬럼으로 동기화. "모든 데이터 동기화" 원칙 + 프라이버시 양립.
+  - (proactiveInsights·productCount·agent proposals는 iOS 데이터 없음/ephemeral — 서버 추정·동기화 제외 정당.)
+- **설계 메모(사용자 논의)**: "같은 숫자" 보장의 정석은 **신호 계산을 서버(packages/ai/route)로 이동** → 클라는 raw만 전송 → 웹·iOS 100% 동일 + iOS Swift 글루 최소화. AI 미래신호(§4.15)도 이 방향으로 리팩터 시 iOS 글루 거의 불필요. 단, 잔고·NSM 등 일부 로컬값은 raw 전송 필요(또는 Supabase 승격).
 
 ## 5. 선택적 정리(backlog, 가짜 아님)
 - iOS `MockData` → `DashboardSnapshot` 리네이밍 + `AppRoot.swift:776` stale 주석 정리.

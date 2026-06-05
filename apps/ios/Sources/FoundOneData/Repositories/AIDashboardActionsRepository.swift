@@ -40,6 +40,8 @@ public struct AIDashboardAction: Sendable, Decodable, Identifiable, Hashable {
     /// Found.One 기능 ID (features-catalog SSOT). UI 에서 navigate 시 사용.
     public let feature: String?
     public let evidence: [AIDashboardActionEvidence]?
+    /// 예상 효과(원) — 정량 ROI. 웹과 동일 필드. UI 에서 "예상 +250만" 배지.
+    public let estimatedImpactWon: Int?
 
     public var id: String { title }
 }
@@ -85,7 +87,8 @@ public struct AIDashboardActionsResponse: Sendable, Decodable {
                 title: action.title,
                 reason: action.reason,
                 priority: priority,
-                referencedCase: referencedCase
+                referencedCase: referencedCase,
+                estimatedImpactWon: action.estimatedImpactWon
             )
         }
     }

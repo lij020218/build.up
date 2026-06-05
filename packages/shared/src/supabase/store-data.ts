@@ -56,6 +56,10 @@ export type UserStoreData = {
   // 마케팅
   marketingCampaigns: unknown[];
   marketingMonthlyBudget: number;
+  promoCodes: unknown[];
+  playbookChecklist: unknown[];
+  // 에이전트 on/off 설정 (Record<AgentKind, boolean>)
+  agentSettings: unknown | null;
   // 고객 인터뷰 (Mom Test 노트 + AI 패턴 분석) — 사장님이 직접 입력한 데이터, 손실 시 큰 손실
   customerInterviews: unknown[];
   interviewPatternAnalysis: unknown | null;
@@ -179,6 +183,9 @@ const FIELD_TO_COLUMN: Record<keyof UserStoreData, string> = {
   subscribers: "subscribers",
   marketingCampaigns: "marketing_campaigns",
   marketingMonthlyBudget: "marketing_monthly_budget",
+  promoCodes: "promo_codes",
+  playbookChecklist: "playbook_checklist",
+  agentSettings: "agent_settings",
   customerInterviews: "customer_interviews",
   interviewPatternAnalysis: "interview_pattern_analysis",
   timeLogEntries: "time_log_entries",

@@ -15007,7 +15007,7 @@
     "startupCostWon": 19910,
     "franchiseFee": 550,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 10400,
+    "avgAnnualRevenueWon": 13500,
     "storeCount": 700,
     "closureRate": 5,
     "scores": {
@@ -20250,5 +20250,130 @@
         "tier": "primary"
       }
     ]
+  },
+  {
+    "id": "papa-johns",
+    "subIndustryIds": [
+      "chicken-burger"
+    ],
+    "specialtyIds": [
+      "fb-pizza"
+    ],
+    "categoryId": "food",
+    "name": {
+      "ko": "파파존스피자",
+      "en": "Papa John's Pizza"
+    },
+    "tagline": {
+      "ko": "프리미엄 피자, 262개 매장 (가맹 94%) — 점당 5.9억",
+      "en": "Premium pizza, 262 stores (94% franchise) — 590M per-store"
+    },
+    "startupCostWon": 23032,
+    "franchiseFee": 1100,
+    "monthlyRoyalty": 246,
+    "avgAnnualRevenueWon": 59020,
+    "storeCount": 262,
+    "closureRate": 2,
+    "scores": {
+      "profitability": 75,
+      "stability": 78,
+      "accessibility": 40,
+      "brandPower": 72,
+      "support": 75
+    },
+    "roadmapNotes": {
+      "ko": [
+        "전국 262개 매장 — 가맹 94% (가맹 226·직영 13, 정보공개서 2022)",
+        "가맹점 평균 연매출 약 5.9억 (정보공개서 2022)",
+        "로열티 매출의 5% — 월매출 4,917만 기준 약 246만 환산",
+        "다점포율 45% — 점주 절반이 2개 이상 운영 (점주 수익 안정 신호)",
+        "⚠ 폐점률은 정보공개서 상세 미확인 — 5년 연속 순증(191→262)으로 낮게 추정"
+      ],
+      "en": [
+        "262 stores nationwide — 94% franchise (226 franchise + 13 direct, FTC disclosure 2022)",
+        "Franchise avg annual sales ~KRW 590M (FTC disclosure 2022)",
+        "Royalty 5% of sales — ~KRW 2.46M/mo at KRW 49M monthly sales",
+        "45% multi-store ownership — half of owners run 2+ stores (owner-profit signal)",
+        "WARNING: closure rate not detailed in disclosure — estimated low from 5-yr net growth (191→262)"
+      ]
+    },
+    "franchiseUrl": "https://pji.co.kr/about/franchise/process",
+    "costVerified": true,
+    "costSource": "정보공개서 2022",
+    "costBreakdown": [
+      {
+        "label": {
+          "ko": "가맹비",
+          "en": "Franchise fee"
+        },
+        "amountWon": 1100
+      },
+      {
+        "label": {
+          "ko": "교육비",
+          "en": "Education"
+        },
+        "amountWon": 1100
+      },
+      {
+        "label": {
+          "ko": "보증금",
+          "en": "Deposit"
+        },
+        "amountWon": 2000
+      },
+      {
+        "label": {
+          "ko": "인테리어·장비·기타",
+          "en": "Interior+equip+other"
+        },
+        "amountWon": 18832
+      }
+    ],
+    "dataYear": "2022",
+    "sources": [
+      {
+        "label": "파파존스 공식 가맹모집",
+        "url": "https://pji.co.kr/about/franchise/process",
+        "tier": "primary"
+      },
+      {
+        "label": "공정거래위원회 가맹사업정보 — 파파존스",
+        "url": "https://franchise.ftc.go.kr/",
+        "tier": "primary"
+      },
+      {
+        "label": "Hi-프랜차이즈 — 파파존스 정보공개서(가맹226/직영13·평균매출 5.9억)",
+        "url": "https://hi-franchise.com/bbs/board.php?bo_table=franchise&wr_id=214",
+        "tier": "industry"
+      },
+      {
+        "label": "thebell — 한국파파존스 다점포율 45%·배달권 보장",
+        "url": "https://m.thebell.co.kr/m/newsview.asp?svccode=00&newskey=202405131447174320102563",
+        "tier": "media"
+      },
+      {
+        "label": "뉴시스 — 2024년 262개 매장(2025.9)",
+        "url": "https://www.newsis.com/view/NISX20250905_0003317127",
+        "tier": "media"
+      }
+    ],
+    "confidence": "medium",
+    "description": {
+      "ko": [
+        "한국파파존스㈜가 운영하는 프리미엄 피자 프랜차이즈로, 2004년 12월 가맹사업을 시작해 2024년 기준 262개 매장(2022 정보공개서 기준 가맹 226·직영 13, 가맹 비중 94%)을 운영합니다.",
+        "‘Better Ingredients, Better Pizza’ 프리미엄 재료 포지셔닝으로 6년 연속 매출 성장(2025년 약 805억)을 기록 중입니다.",
+        "정보공개서(2022) 기준 가맹점 평균 연매출 약 5.9억 원, 창업비용 약 2.3억 원(가맹비 1,100·교육비 1,100·보증금 2,000·인테리어 등 1억8,832만)입니다.",
+        "로열티는 매출의 5%이며, 다점포율 45%로 점주 절반이 2개 이상 매장을 운영할 만큼 점주 수익 안정성이 확인됩니다.",
+        "미국 본사가 2026년 북미 매장 약 300개를 폐점하는 가운데서도 한국 법인은 독립 운영으로 나홀로 성장 중입니다. 단, 가맹점 폐점률은 정보공개서 상세가 확인되지 않아 순증 추세 기반 추정치입니다."
+      ],
+      "en": [
+        "Premium pizza franchise run by Korea Papa John's Co.; franchising since Dec 2004, 262 stores as of 2024 (226 franchise + 13 direct per 2022 FTC disclosure — 94% franchise).",
+        "'Better Ingredients, Better Pizza' premium positioning with 6 consecutive years of revenue growth (~KRW 80.5B in 2025).",
+        "Per 2022 FTC disclosure: franchise avg annual sales ~KRW 590M, startup ~KRW 230M (fee 11M + education 11M + deposit 20M + interior etc. 188M).",
+        "Royalty is 5% of sales; 45% multi-store ownership shows confirmed owner-profit stability.",
+        "While the US parent closes ~300 North-American stores in 2026, the Korean entity grows independently. Note: franchise closure rate is estimated from net-growth trend as the disclosure detail was unverified."
+      ]
+    }
   }
 ]

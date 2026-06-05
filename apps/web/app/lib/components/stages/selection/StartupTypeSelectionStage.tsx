@@ -296,6 +296,11 @@ export function StartupTypeSelectionStage() {
                               <span>·</span>
                               <span>{ko ? `데이터 ${fb.dataYear}년` : `Data ${fb.dataYear}`}</span>
                             </div>
+                            {fb.costSource && (
+                              <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5 }}>
+                                {ko ? `출처: ${fb.costSource}` : `Source: ${fb.costSource}`}
+                              </div>
+                            )}
                             {fb.franchiseUrl && (
                               <a
                                 href={fb.franchiseUrl}

@@ -54,6 +54,16 @@ type ProfileState = {
    *  essential 카드는 메타에서 차단되어 여기 들어와도 무시됨 (안전망).
    */
   hiddenCards: string[];
+  /**
+   * ── 지원사업 매칭용 사장님 프로필 (민감 PII — 로컬 전용, 서버 미전송) ──
+   *  출생연도·신용점수(NCB)·폐업검토·장애 여부. 청년/시니어/신용취약/폐업/장애 정책자금 매칭에 사용.
+   *  ⚠️ 나이가 아니라 출생연도(birthYear)로 저장 — 정수 나이는 해가 바뀌면 틀려지므로.
+   *     매칭 시 (현재연도 - birthYear)로 나이 계산. 민감정보라 localStorage 에만 저장(서버 미전송).
+   */
+  ownerBirthYear: number | undefined;
+  ownerNcbScore: number | undefined;
+  ownerConsideringClosure: boolean;
+  ownerIsDisabledOwner: boolean;
 };
 
 type ProfileActions = {
@@ -88,6 +98,10 @@ type ProfileActions = {
   setNorthStarMetric: (v: string | null) => void;
   setHiddenCards: (v: string[]) => void;
   toggleHiddenCard: (id: string) => void;
+  setOwnerBirthYear: (v: number | undefined) => void;
+  setOwnerNcbScore: (v: number | undefined) => void;
+  setOwnerConsideringClosure: (v: boolean) => void;
+  setOwnerIsDisabledOwner: (v: boolean) => void;
   resetAll: () => void;
 };
 
@@ -122,6 +136,10 @@ const initialState: ProfileState = {
   startupOperatingMode: "bootstrap",
   northStarMetric: null,
   hiddenCards: [],
+  ownerBirthYear: undefined,
+  ownerNcbScore: undefined,
+  ownerConsideringClosure: false,
+  ownerIsDisabledOwner: false,
 };
 
 export const useProfileStore = create<ProfileState & ProfileActions>()(
@@ -163,6 +181,10 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
           ? s.hiddenCards.filter((x) => x !== id)
           : [...s.hiddenCards, id],
       })),
+      setOwnerBirthYear: (v) => set({ ownerBirthYear: v }),
+      setOwnerNcbScore: (v) => set({ ownerNcbScore: v }),
+      setOwnerConsideringClosure: (v) => set({ ownerConsideringClosure: v }),
+      setOwnerIsDisabledOwner: (v) => set({ ownerIsDisabledOwner: v }),
       resetAll: () => set(initialState),
     }),
     {
@@ -193,6 +215,10 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
         northStarMetric: state.northStarMetric,
         hiddenCards: state.hiddenCards,
         selectedInteriorConcept: state.selectedInteriorConcept,
+        ownerBirthYear: state.ownerBirthYear,
+        ownerNcbScore: state.ownerNcbScore,
+        ownerConsideringClosure: state.ownerConsideringClosure,
+        ownerIsDisabledOwner: state.ownerIsDisabledOwner,
       }),
     },
   ),

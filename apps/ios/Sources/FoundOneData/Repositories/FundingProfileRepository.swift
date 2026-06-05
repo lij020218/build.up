@@ -156,10 +156,22 @@ public actor FundingProfileRepository {
             if snapshot.businessYears >= 3 { return "growth" }
             return "early"
         }()
+        // ── 사장님 프로필 보강 (출생연도·신용·폐업·장애) — 민감 PII라 UserDefaults 로컬 전용(서버 미전송).
+        //    웹 profile-store(localStorage)와 동일 정책. OwnerProfileChips 가 동일 키로 입력.
+        //    ⚠️ 나이가 아니라 출생연도(birthYear) 저장 — 매칭 시 (현재연도 - birthYear)로 나이 계산.
+        let defaults = UserDefaults.standard
+        let storedBirthYear = defaults.integer(forKey: "owner.birthYear")
+        let storedNcb = defaults.integer(forKey: "owner.ncbScore")
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let computedAge: Int? = {
+            guard storedBirthYear >= 1900, storedBirthYear <= currentYear else { return nil }
+            let a = currentYear - storedBirthYear
+            return (a >= 0 && a < 120) ? a : nil
+        }()
         return FundingMatchCriteria(
             startupType: snapshot.startupType,
             industryCategoryId: snapshot.industryCategoryId,
-            age: nil,                           // iOS 에 age 필드 없음 (스키마 미존재)
+            age: computedAge,
             businessYears: snapshot.businessLaunched ? snapshot.businessYears : 0,
             region: snapshot.preferredRegion,
             capital: snapshot.capital,
@@ -169,10 +181,10 @@ public actor FundingProfileRepository {
             employeesCount: snapshot.employeesCount,
             monthlyAvgRevenue: snapshot.monthlyAvgRevenue,
             hasUserSales: snapshot.hasUserSales,
-            ncbScore: nil,
-            consideringClosure: nil,
+            ncbScore: storedNcb > 0 ? storedNcb : nil,
+            consideringClosure: defaults.bool(forKey: "owner.consideringClosure"),
             salesDeclinePct: nil,
-            isDisabledOwner: nil
+            isDisabledOwner: defaults.bool(forKey: "owner.isDisabledOwner")
         )
     }
 

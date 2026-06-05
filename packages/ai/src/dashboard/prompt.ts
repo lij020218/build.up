@@ -71,7 +71,8 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국
       "evidence": [                                       // ⓘ "왜 이렇게 판단?" — 데이터 근거 1~3개 (선택, 권장)
         "이번 주 매출 ₩820만원 (지난 주 대비 -18%)",
         "재료비 비율 42% (업종 평균 32% 초과 +10%p)"
-      ]
+      ],
+      "estimatedImpactWon": 2500000                       // ⓘ 예상 효과(원). 컨텍스트 숫자로 계산 가능할 때만. 추정 불가 시 생략(거짓 금지)
     }
   ],
   "crisisActions": [
@@ -103,6 +104,16 @@ export const DASHBOARD_ACTION_SYSTEM_PROMPT = `당신은 500개 이상의 한국
   - ❌ "이번 달 매출 ₩1,200만" (컨텍스트에 없는 숫자 — 환각)
 - 환각 방지: ctx 에 없는 숫자는 절대 만들지 마세요. 데이터가 부족하면 evidence 자체를 omit.
 - 한 액션당 최대 3개 (UI 가 잘라냄).
+
+**estimatedImpactWon 사용 규칙** (정량 ROI — "줄이세요"가 아니라 "+X원"):
+- 액션 효과를 컨텍스트 숫자로 계산할 수 있으면 estimatedImpactWon(원) 을 넣으세요. UI 가 "예상 +250만원" 배지로 노출합니다.
+- 계산 근거를 reason/evidence 에 한 줄로: 예) "객단가 +1,200원 × 일 80명 × 26일 ≈ +250만". 보수적으로 추정.
+- ⚠️ 추정 불가하면 **생략**(거짓 숫자 금지). 모든 액션에 강제로 넣지 말 것 — 1~2개면 충분.
+
+**미래 지향 원칙** (가장 중요 — 뻔한 조언 vs 진짜 도움의 차이):
+- 단순히 "지금 상태"가 아니라 **"곧 일어날 일"** 을 먼저 말하세요. 컨텍스트의 현금흐름 위기 경고·곧 닥치는 지출·매출 예측을 적극 활용.
+- 우선순위: ① 현금흐름 위기(며칠 뒤 마이너스) → ② 곧 닥치는 의무 지출(월급일·세금) → ③ 매출 하락 추세 → ④ 기회.
+- 어제 제안 후속(previousAction)이 있으면 반드시 반영 — 결과를 묻거나 다시 권하되 잔소리 금지.
 
 **referencedCase 사용 규칙** (중요):
 - K-히트 사례를 인용한 항목에만 referencedCase를 포함하세요. 인용 안 했으면 필드를 생략(omit)하세요.
@@ -567,6 +578,23 @@ export type DashboardContext = {
     /** "공급처 단가 재협상 또는 대체 공급처 견적" */
     suggestedAction: string;
   }>;
+  // ─── 미래 지향 신호 (2026-06-05 추가) — "곧 일어날 일" 을 먼저 경고하는 코칭의 핵심 ───
+  /** 13주 현금흐름 위기 — 며칠 뒤 잔고가 마이너스로 가는지 + 부족액. (app 의 projectCashflow 계산) */
+  cashflowCrisis?: { daysUntilCrisis: number; shortfallWon: number };
+  /** 곧 닥치는 의무 지출 (월급일·부가세·4대보험) — 날짜·금액. 미리 준비시키는 선제 코칭용. */
+  upcomingObligations?: Array<{ label: string; daysUntil: number; amountWon: number }>;
+  /** 사장님께 매칭된 정책자금/지원사업 상위 1~2개 (이름·금액·마감) — 자금 부족 시 구체 제안. */
+  matchedPrograms?: Array<{ name: string; amount: string; deadline?: string }>;
+  /** 사장님이 고른 North Star Metric (예: "오늘매출"·"런웨이"·"MRR") — 코칭을 이 지표에 정렬. */
+  northStarMetric?: string;
+  /** 오늘 요일 (예: "월"·"토") — 요일별 매출 패턴·주말 대비 선제 조언용. */
+  dayOfWeek?: string;
+  /**
+   * 액션→결과 루프: 어제 제안한 최우선 액션 + 사장님 실행 여부.
+   *   done → 결과를 묻고 다음 단계 제안. pending → 부드럽게 다시 권하거나 더 쉬운 대안.
+   *   이게 "매일 보는 운세"가 아니라 "진짜 오른팔"로 만드는 핵심.
+   */
+  previousAction?: { title: string; status: "done" | "pending" | "unknown"; date: string };
 };
 
 export function buildDashboardActionPrompt(ctx: DashboardContext): string {
@@ -701,6 +729,12 @@ ${ctx.months3CashProjection != null ? `- 3개월 후 예상 현금: ${fmtW(ctx.m
 ${ctx.unansweredReviews != null && ctx.unansweredReviews > 0 ? `- 미답변 리뷰: ${ctx.unansweredReviews}건 (네이버/카카오 노출 순위 하락 위험)` : ""}
 ${ctx.daysSinceLastSnsPost != null && ctx.daysSinceLastSnsPost > 3 ? `- SNS 최근 포스팅: ${ctx.daysSinceLastSnsPost}일 전 (3일 이상 미포스팅 시 도달률 감소)` : ""}
 ${ctx.inventoryTurnoverDays != null ? `- 재고 회전일: ${ctx.inventoryTurnoverDays}일` : ""}
+${ctx.dayOfWeek ? `- 오늘 요일: ${ctx.dayOfWeek}요일 (요일별 매출 패턴·주말 대비 고려)` : ""}
+${ctx.cashflowCrisis ? `\n### ⚠ 현금흐름 위기 경고 (미래 예측 — 최우선)\n- ${ctx.cashflowCrisis.daysUntilCrisis}일 뒤 잔고가 마이너스(부족 약 ${fmtW(ctx.cashflowCrisis.shortfallWon)})로 갑니다.\n  → todayActions 1순위로 "며칠 안에 이렇게 막으세요"를 구체 금액과 함께 제시하세요.` : ""}
+${(ctx.upcomingObligations ?? []).length > 0 ? `\n### 📅 곧 닥치는 지출 (미리 준비시키기)\n${ctx.upcomingObligations!.map(o => `- D-${o.daysUntil} ${o.label}: ${fmtW(o.amountWon)}`).join("\n")}\n  → 잔고로 감당 가능한지 점검하고, 부족하면 선제 조치를 제안하세요.` : ""}
+${(ctx.matchedPrograms ?? []).length > 0 ? `\n### 💰 매칭된 정책자금/지원사업 (자금 부족 시 구체 제안)\n${ctx.matchedPrograms!.map(p => `- ${p.name}: ${p.amount}${p.deadline ? ` (마감 ${p.deadline})` : ""}`).join("\n")}\n  → 자금이 필요한 상황이면 이 중 1개를 todayActions 에 "앱에서 바로 신청" 톤으로 포함하세요.` : ""}
+${ctx.northStarMetric ? `\n### 🎯 사장님의 핵심 지표(NSM): ${ctx.northStarMetric}\n  → insight 와 todayActions 를 이 지표를 끌어올리는 방향으로 정렬하세요.` : ""}
+${ctx.previousAction ? `\n### 🔁 어제 제안한 액션 (후속 — 진짜 파트너의 핵심)\n- "${ctx.previousAction.title}" — ${ctx.previousAction.status === "done" ? "사장님이 ✓ 완료 표시함" : ctx.previousAction.status === "pending" ? "아직 실행 안 함" : "상태 미확인"}\n  → ${ctx.previousAction.status === "done" ? "결과를 짧게 묻고 다음 단계 1개를 제안하세요(insight 또는 todayActions)." : "부드럽게 다시 권하거나 더 쉬운 대안 1개를 제시하세요. 잔소리·반복 금지."}` : ""}
 
 ${buildPreLaunchSection(ctx)}${buildFranchiseSection(ctx, fmtW)}${buildIndustrySection(ctx, fmtW)}${buildCaseStudySection(ctx)}${buildKHitCaseSection(ctx)}
 위 데이터를 분석하여:

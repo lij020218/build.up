@@ -17,6 +17,8 @@
 
 import { useMemo, useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { useProfileStore } from "../../../stores/profile-store";
+import { ageFromBirthYear } from "../../dashboard/OwnerProfileChips";
 import {
   getMatchedProgramsV2,
   getApplicationStatusLabel,
@@ -34,6 +36,11 @@ export function BudgetFundingMatchCard() {
     startupType,
     selectedBudget,
   } = d;
+  // 사장님 프로필 보강 (로컬 영속) — 청년/시니어/신용취약/폐업/장애 정책자금 매칭에 반영.
+  const ownerBirthYear = useProfileStore((s) => s.ownerBirthYear);
+  const ownerNcbScore = useProfileStore((s) => s.ownerNcbScore);
+  const ownerConsideringClosure = useProfileStore((s) => s.ownerConsideringClosure);
+  const ownerIsDisabledOwner = useProfileStore((s) => s.ownerIsDisabledOwner);
 
   const ko = language === "ko";
   const [showAll, setShowAll] = useState(false);
@@ -51,6 +58,10 @@ export function BudgetFundingMatchCard() {
       industryCategoryId: industryCategoryId || "food",
       capital: selectedBudget,
       businessStage,
+      age: ageFromBirthYear(ownerBirthYear),
+      ncbScore: ownerNcbScore,
+      consideringClosure: ownerConsideringClosure,
+      isDisabledOwner: ownerIsDisabledOwner,
     };
     const all = getMatchedProgramsV2(criteria);
     // 자격 충족 + 마감 안 된 것 우선, 개인화 점수 내림차순
@@ -61,7 +72,7 @@ export function BudgetFundingMatchCard() {
         return b.personalFitScore - a.personalFitScore;
       })
       .slice(0, 20);
-  }, [industryCategoryId, startupType, selectedBudget, businessStage]);
+  }, [industryCategoryId, startupType, selectedBudget, businessStage, ownerBirthYear, ownerNcbScore, ownerConsideringClosure, ownerIsDisabledOwner]);
 
   if (matched.length === 0) {
     return null;

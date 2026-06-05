@@ -6,6 +6,7 @@ import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import {
   getFranchiseBenchmark, getIndustryBenchmark, getFranchiseBrandById,
+  FRANCHISE_BENCHMARK_PROVENANCE,
   FEATURES_BY_ID, type FeatureCatalogItem,
 } from "@foundone/shared";
 
@@ -196,8 +197,28 @@ export function AiCoachCard() {
                 {/* \ub808\uc774\ube14 */}
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px", fontSize: "10px", color: "var(--muted)" }}>
                   <span>{ko ? `\ub0b4 \ub9e4\uc7a5 ${userMonthlyMan.toLocaleString()}\ub9cc` : `You ${userMonthlyMan.toLocaleString()}\ub9cc`}</span>
-                  <span>{ko ? `\uc0c1\uc704 \ub9e4\uc7a5 ${benchTop.toLocaleString()}\ub9cc` : `Top ${benchTop.toLocaleString()}\ub9cc`}</span>
+                  <span>{ko ? `\uc0c1\uc704 \ucd94\uc815 ${benchTop.toLocaleString()}\ub9cc` : `Top est. ${benchTop.toLocaleString()}\ub9cc`}</span>
                 </div>
+                {/* \ucd9c\ucc98\u00b7\uc5f0\ub3c4\u00b7\ucd94\uc815 \ub77c\ubca8 (\uc815\uc9c1\uc131) */}
+                {(() => {
+                  const yr = fBench?.yearReported ?? FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear;
+                  // \uacbd\ub85c\ubcc4 \uc815\ud655\ud55c \uce90\ube44\uc5c7: \ud504\ub79c\ucc28\uc774\uc988=\uc0c1\uc704\ub9e4\uc7a5 \ubaa8\ub378\ucd94\uc815(+\ube0c\ub79c\ub4dc \ucd94\uc815), \uc5c5\uc885=\uc0c1\u00b7\ud558\uc704 \ubd84\ud3ec\ucd94\uc815
+                  const caveatKo = fBench
+                    ? `${FRANCHISE_BENCHMARK_PROVENANCE.modeledNoteKo}${fBench.isEstimate ? " " + FRANCHISE_BENCHMARK_PROVENANCE.estimateNoteKo : ""}`
+                    : "\uc0c1\u00b7\ud558\uc704 \uad6c\uac04\uc740 \ubd84\ud3ec \ucd94\uc815\uce58\uc785\ub2c8\ub2e4.";
+                  const caveatEn = fBench
+                    ? `Top-store figure is modeled (avg \u00d7 multiplier), not an actual store.${fBench.isEstimate ? " Brand revenue is estimated." : ""}`
+                    : "Upper/lower bands are distribution estimates.";
+                  return (
+                    <div style={{ marginTop: "6px", fontSize: "9.5px", lineHeight: 1.45, color: "rgba(15,23,42,0.4)" }}>
+                      {ko
+                        ? `\u203b \uae30\uc900 ${yr}\ub144 \u00b7 ${FRANCHISE_BENCHMARK_PROVENANCE.source}`
+                        : `* As of ${yr} \u00b7 Korea FTC franchise disclosures \u00b7 SEMAS survey`}
+                      <br />
+                      {ko ? caveatKo : caveatEn}
+                    </div>
+                  );
+                })()}
                 {/* \uc0c1\uc704 \ub9e4\uc7a5 \ube44\uacb0 (\ud504\ub79c\ucc28\uc774\uc988\ub9cc) */}
                 {fBench?.operationalInsights?.[0] && (
                   <div style={{ marginTop: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(0,122,255,0.03)", border: "0.5px solid rgba(0,122,255,0.08)" }}>
@@ -234,7 +255,21 @@ export function AiCoachCard() {
                     {i + 1}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{action.title}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" as const }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{action.title}</div>
+                      {/* 정량 ROI 배지 — "줄이세요" 가 아니라 "예상 +X" */}
+                      {action.estimatedImpactWon != null && action.estimatedImpactWon > 0 && (
+                        <span style={{
+                          fontSize: "10.5px", fontWeight: 700, color: "#0d9488",
+                          background: "rgba(45,212,191,0.1)", border: "0.5px solid rgba(45,212,191,0.28)",
+                          borderRadius: "6px", padding: "1px 7px", whiteSpace: "nowrap" as const,
+                        }}>
+                          {ko
+                            ? `예상 +${Math.round(action.estimatedImpactWon / 10000).toLocaleString()}만`
+                            : `Est. +${Math.round(action.estimatedImpactWon / 10000).toLocaleString()}만`}
+                        </span>
+                      )}
+                    </div>
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.4 }}>{action.reason}</div>
                   </div>
                 </div>

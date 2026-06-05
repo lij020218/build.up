@@ -1,18 +1,16 @@
 //
-//  StartupProgramRegistry.swift — 청년·소상공인 창업 지원 프로그램 79개.
+//  StartupProgramRegistry.swift — 청년·소상공인 창업 지원 프로그램 92개.
 //
 //  웹 SSOT: packages/shared/src/startup-programs.ts (startupPrograms + getMatchedProgramsV2)
 //
 //  데이터 소스:
 //    Resources/startup-programs.json — TS 에서 자동 추출.
-//    Pre-Startup Package, Initial Startup Package, TIPS, 두루누리, 희망리턴 등 79개.
+//    Pre-Startup Package, TIPS, 소상공인 정책자금, 소상공인 도약·온라인판로·스마트상점,
+//    KAIST OverEdge, 혁신소상공인 AI, 지역신보 보증, 재창업자금 등 92개.
 //
-//  추출 방법:
-//    cd packages/shared && ./node_modules/.bin/tsc --module nodenext --moduleResolution nodenext \
-//      --target es2022 --outDir /tmp/shared-build src/startup-programs.ts
-//    node -e "import('/tmp/shared-build/startup-programs.js').then(m => \
-//      require('fs').writeFileSync('apps/ios/Sources/FoundOneCore/Resources/startup-programs.json', \
-//      JSON.stringify(m.startupPrograms, null, 2)))"
+//  추출 방법 (web↔iOS 동기화):
+//    npx tsx scripts/gen-startup-programs-json.mts
+//    ⚠️ match() 점수 로직은 손수 포팅이므로 로직 변경 시 이 파일도 직접 미러링.
 //
 
 import Foundation
@@ -223,9 +221,26 @@ public enum StartupProgramRegistry {
             }
             if sizeTier == "medium" && (p.category == "private" || p.category == "corporate") {
                 score += 6; personalFitScore += 6
+                reasons.append(.init(kind: "size", textKo: "성장 단계 — 액셀러레이터·대기업 프로그램 적합", textEn: "Growth-stage — accelerator/corporate fit", weight: 6))
             }
             if sizeTier == "large" && p.fundingType == "grant" && p.category == "government" {
                 score += 6; personalFitScore += 6
+                reasons.append(.init(kind: "size", textKo: "규모 있는 사업 — 정부 보조금 사업 적합", textEn: "Scaled biz — government grant fit", weight: 6))
+            }
+
+            // ── 자본금(예산) 매칭 — capital 입력 실제 반영 (종전 무효 버그 수정 2026-06-05) ──
+            if let cap = criteria.capital, cap > 0 {
+                let isFundingSupplement = p.category == "government" &&
+                    (p.fundingType == "cash" || p.fundingType == "credit" || p.fundingType == "grant")
+                if isFundingSupplement {
+                    if cap < 30_000_000 {
+                        score += 15; personalFitScore += 15
+                        reasons.append(.init(kind: "size", textKo: "창업 자본이 적어 정책자금 보완이 중요", textEn: "Low capital — policy funding important", weight: 15))
+                    } else if cap < 100_000_000 {
+                        score += 8; personalFitScore += 8
+                        reasons.append(.init(kind: "size", textKo: "자본 보완에 정책자금 활용 권장", textEn: "Policy funding recommended to supplement capital", weight: 8))
+                    }
+                }
             }
 
             // 모집 상태
@@ -242,6 +257,7 @@ public enum StartupProgramRegistry {
             }
             if isUrgentCrisis && p.fundingType == "cash" {
                 score += 20; personalFitScore += 20
+                reasons.append(.init(kind: "crisis", textKo: "런웨이 3개월 미만 — 즉시 현금 확보 시급", textEn: "Runway <3mo — urgent cash", weight: 20))
             }
             if isCashCrisis && p.fundingType == "credit" {
                 score += 15; personalFitScore += 15
@@ -273,6 +289,7 @@ public enum StartupProgramRegistry {
             }
             if p.policyFundSubCategory == "redemption" && (criteria.consideringClosure ?? false) {
                 score += 25; personalFitScore += 25
+                reasons.append(.init(kind: "crisis", textKo: "폐업 후 재창업 단계 — 재도전 전용 자금 우대", textEn: "Re-entry stage — redemption fund preferred", weight: 25))
             }
             if p.policyFundSubCategory == "operation", let decline = criteria.salesDeclinePct, decline > 10 {
                 score += 20; personalFitScore += 20

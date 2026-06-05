@@ -189,6 +189,9 @@ type MarketingActions = {
   incrementPromoUsage: (id: string) => void;
   togglePromoActive: (id: string) => void;
   setCurrentCustomerCount: (n: number) => void;
+  /** Supabase 복원용 bulk setter (applyStoreData) — 웹·앱 동기화 */
+  setPromoCodes: (v: PromoCode[]) => void;
+  setPlaybookChecklist: (v: PlaybookChecklistItem[]) => void;
   resetAll: () => void;
 };
 
@@ -237,6 +240,8 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
             playbookChecklist: [...s.playbookChecklist, { id, done: true, completedAt: new Date().toISOString() }],
           };
         }),
+      setPromoCodes: (v) => set({ promoCodes: v }),
+      setPlaybookChecklist: (v) => set({ playbookChecklist: v }),
       addPromoCode: (code) => set((s) => ({ promoCodes: [code, ...s.promoCodes] })),
       removePromoCode: (id) => set((s) => ({ promoCodes: s.promoCodes.filter((c) => c.id !== id) })),
       incrementPromoUsage: (id) =>

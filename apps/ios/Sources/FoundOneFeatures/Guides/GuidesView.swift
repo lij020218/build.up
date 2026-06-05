@@ -125,6 +125,7 @@ public struct GuidesView: View {
                     } else {
                         kpiSummary
                         recommendToggle
+                        OwnerProfileChips(onChange: { Task { await loadPrograms() } }, showNudge: true)
                         categoryChips
                         statusChips
                         programList

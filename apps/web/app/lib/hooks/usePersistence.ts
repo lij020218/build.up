@@ -223,7 +223,16 @@ export function applyStoreData(data: UserStoreData): void {
     const mkt = useMarketingStore.getState();
     if ((data.marketingCampaigns as unknown[])?.length) mkt.setCampaigns(data.marketingCampaigns);
     if (data.marketingMonthlyBudget && data.marketingMonthlyBudget > 0) mkt.setMonthlyBudget(data.marketingMonthlyBudget);
+    if ((data.promoCodes as unknown[])?.length) mkt.setPromoCodes(data.promoCodes);
+    if ((data.playbookChecklist as unknown[])?.length) mkt.setPlaybookChecklist(data.playbookChecklist);
   } catch { /* marketing store not loaded yet */ }
+  // 에이전트 on/off 설정 복원 — 웹·앱 동기화
+  try {
+    const { useAgentsStore } = require("../stores/agents-store");
+    if (data.agentSettings && typeof data.agentSettings === "object") {
+      useAgentsStore.getState().setEnabledAgents(data.agentSettings);
+    }
+  } catch { /* agents store not loaded yet */ }
   // 고객 인터뷰 복원 — Mom Test 노트 + AI 패턴 분석 (다른 기기 접속 시에도 유지)
   try {
     const { useInterviewStore } = require("../stores/interview-store");
@@ -377,7 +386,14 @@ export function collectStoreData(): Partial<UserStoreData> {
     const mkt = useMarketingStore.getState();
     if (mkt.campaigns.length) r.marketingCampaigns = mkt.campaigns;
     if (mkt.monthlyBudget > 0) r.marketingMonthlyBudget = mkt.monthlyBudget;
+    if (mkt.promoCodes.length) r.promoCodes = mkt.promoCodes;
+    if (mkt.playbookChecklist.length) r.playbookChecklist = mkt.playbookChecklist;
   } catch { /* marketing store not loaded yet */ }
+  // 에이전트 on/off 설정 — 웹·앱 동기화
+  try {
+    const { useAgentsStore } = require("../stores/agents-store");
+    r.agentSettings = useAgentsStore.getState().enabledAgents;
+  } catch { /* agents store not loaded yet */ }
   // 고객 인터뷰 — Mom Test 노트 + AI 패턴 분석
   try {
     const { useInterviewStore } = require("../stores/interview-store");

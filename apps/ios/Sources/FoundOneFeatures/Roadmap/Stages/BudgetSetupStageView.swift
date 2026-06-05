@@ -267,11 +267,23 @@ public struct BudgetSetupStageView: View {
             return "growth"
         }()
 
+        // 사장님 프로필 보강 (출생연도·신용·폐업·장애) — 로컬 전용(UserDefaults). 웹 BudgetFundingMatchCard 패리티.
+        let defaults = UserDefaults.standard
+        let storedBirthYear = defaults.integer(forKey: "owner.birthYear")
+        let storedNcb = defaults.integer(forKey: "owner.ncbScore")
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let computedAge: Int? = (storedBirthYear >= 1900 && storedBirthYear <= currentYear)
+            ? { let a = currentYear - storedBirthYear; return (a >= 0 && a < 120) ? a : nil }()
+            : nil
         let criteria = FundingMatchCriteria(
             startupType: startupType.isEmpty ? nil : startupType,
             industryCategoryId: categoryId,
+            age: computedAge,
             capital: startupWon > 0 ? startupWon : nil,
-            businessStage: stage
+            businessStage: stage,
+            ncbScore: storedNcb > 0 ? storedNcb : nil,
+            consideringClosure: defaults.bool(forKey: "owner.consideringClosure"),
+            isDisabledOwner: defaults.bool(forKey: "owner.isDisabledOwner")
         )
 
         let repo = FundingRepository(supabase: BUSupabase.shared.client)

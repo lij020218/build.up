@@ -12,10 +12,20 @@ import Foundation
 
 public struct IndustryBenchmark: Sendable, Equatable {
     public let categoryId: String
-    public let avgAnnualRevenue: Int      // 만원 (연간)
-    public let top10PctRevenue: Int       // 만원 (연간)
-    public let bottom10PctRevenue: Int    // 만원 (연간)
+    public let avgAnnualRevenue: Int      // 만원 (연간) — 소상공인 실태조사 평균
+    public let top10PctRevenue: Int       // 만원 (연간) — ⚠️ 분포 추정치
+    public let bottom10PctRevenue: Int    // 만원 (연간) — ⚠️ 분포 추정치
     public let keyDifferentiators: [String]
+}
+
+/// 벤치마크 출처/시점 메타 — 웹 FRANCHISE_BENCHMARK_PROVENANCE 와 동기화.
+/// UI 출처표기 SSOT (정직성: 출처·기준연도·분포추정 명시).
+public enum IndustryBenchmarkProvenance {
+    public static let source = "공정거래위원회 가맹사업 정보공개서 · 소상공인시장진흥공단 실태조사"
+    /// 매출 데이터 기준 영업연도 (최신 공시의 1~2년 시차 반영).
+    public static let disclosureYear = 2023
+    /// 상·하위 분포가 직접 조사값이 아닌 추정임을 알리는 캡션.
+    public static let distributionNoteKo = "상·하위 10%는 분포 추정치입니다."
 }
 
 public enum IndustryBenchmarkRegistry {

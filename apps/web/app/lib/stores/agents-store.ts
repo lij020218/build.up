@@ -123,6 +123,8 @@ type AgentsActions = {
   undoAcceptance: (id: string) => void;
   cleanupExpired: () => void;
   setAgentEnabled: (kind: AgentKind, enabled: boolean) => void;
+  /** Supabase 복원용 bulk setter (applyStoreData) — 웹·앱 동기화 */
+  setEnabledAgents: (v: Record<AgentKind, boolean>) => void;
   setLastTriggerCheckAt: (iso: string) => void;
   setAutoApproveEnabled: (kind: AgentKind, enabled: boolean) => void;
   resetAll: () => void;
@@ -248,6 +250,8 @@ export const useAgentsStore = create<AgentsState & AgentsActions>()(
         set((s) => ({
           enabledAgents: { ...s.enabledAgents, [kind]: enabled },
         })),
+
+      setEnabledAgents: (v) => set({ enabledAgents: v }),
 
       setLastTriggerCheckAt: (iso) => set({ lastTriggerCheckAt: iso }),
 

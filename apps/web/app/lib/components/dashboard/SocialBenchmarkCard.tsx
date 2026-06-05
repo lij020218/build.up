@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Users, TrendingUp, Award } from "lucide-react";
-import { getIndustryBenchmark } from "@foundone/shared";
+import { getIndustryBenchmark, FRANCHISE_BENCHMARK_PROVENANCE } from "@foundone/shared";
 import type { DailyEntry } from "../../stores/finance-store";
 import { EmptyStateCard } from "./EmptyStateCard";
 import { getKstDate } from "../../utils/business-day";
@@ -271,11 +271,13 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
         {message}
       </div>
 
-      {/* 출처 */}
-      <div style={{ marginTop: "10px", fontSize: "10px", color: "rgba(15,23,42,0.35)", fontWeight: 500 }}>
+      {/* 출처·기준연도·분포추정 (iOS WeeklyPulse 1:1) */}
+      <div style={{ marginTop: "10px", fontSize: "10px", color: "rgba(15,23,42,0.35)", fontWeight: 500, lineHeight: 1.5 }}>
         {ko
-          ? "출처: 공정거래위원회 가맹사업 정보공개서 · 소상공인실태조사"
-          : "Source: Fair Trade Commission franchise disclosures · SMB survey"}
+          ? `※ 기준 ${FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear}년 · 공정거래위원회 가맹사업 정보공개서 · 소상공인실태조사`
+          : `* As of ${FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear} · Fair Trade Commission franchise disclosures · SMB survey`}
+        <br />
+        {ko ? "상·하위 10%는 분포 추정치입니다." : "Upper/lower 10% bands are distribution estimates."}
       </div>
     </section>
   );

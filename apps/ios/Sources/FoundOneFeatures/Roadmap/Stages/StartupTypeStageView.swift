@@ -518,6 +518,13 @@ private struct FranchiseBrandRow: View {
                             .foregroundStyle(BUColor.midnight)
                     }
 
+                    // 정직성: 데이터 기준연도 (웹 StartupTypeSelectionStage 1:1)
+                    if let yr = info.dataYear, !yr.isEmpty {
+                        Text("데이터 기준 \(yr)년")
+                            .font(.system(size: 10.5, weight: .medium))
+                            .foregroundStyle(BUColor.inkSubtle)
+                    }
+
                     // 웹 SSOT: 선택된 브랜드의 본사 가맹 안내 페이지 link CTA.
                     if let urlString = info.franchiseUrl, let url = URL(string: urlString) {
                         Link(destination: url) {

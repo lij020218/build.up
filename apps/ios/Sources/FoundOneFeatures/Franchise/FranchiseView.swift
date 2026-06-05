@@ -50,6 +50,12 @@ private struct FranchiseBrandView: Identifiable, Equatable {
     let closureRatePct: Double?
     let storeCount: Int?
 
+    // 정직성 메타 (웹 FranchiseDetailModal 1:1 — 출처·연도·검증·신뢰도)
+    let costVerified: Bool
+    let costSource: String?
+    let dataYear: String?
+    let confidence: String?
+
     init(_ b: FranchiseBrand) {
         self.id = b.id
         self.name = b.name.ko
@@ -70,6 +76,10 @@ private struct FranchiseBrandView: Identifiable, Equatable {
         self.avgRevenueOku = b.avgAnnualRevenueWon > 0 ? Double(b.avgAnnualRevenueWon) / 10_000.0 : nil
         self.closureRatePct = b.closureRate
         self.storeCount = b.storeCount > 0 ? b.storeCount : nil
+        self.costVerified = b.costVerified
+        self.costSource = b.costSource
+        self.dataYear = b.dataYear
+        self.confidence = b.confidence
     }
 
     private static func categoryLabel(_ id: String) -> String {
@@ -673,11 +683,55 @@ private struct FranchiseDetailSheet: View {
                     costRow(label: "폐점률 (최근 1년)",  value: String(format: "%.1f%%", cr))
                 }
             }
+            provenanceFooter
         }
         .padding(BUSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.white.opacity(0.85)))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+    }
+
+    /// 정직성 푸터 — 검증/추정 칩 + 기준연도 + 출처 + 신뢰도 (웹 FranchiseDetailModal 1:1).
+    @ViewBuilder
+    private var provenanceFooter: some View {
+        Rectangle().fill(BUColor.inkMuted.opacity(0.08)).frame(height: 1)
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 6) {
+                // 검증 vs 추정 칩
+                Text(brand.costVerified ? "비용 검증" : "비용 추정")
+                    .font(.system(size: 9.5, weight: .heavy))
+                    .foregroundStyle(brand.costVerified ? BUColor.success : BUColor.warn)
+                    .padding(.horizontal, 7).padding(.vertical, 3)
+                    .background((brand.costVerified ? BUColor.success : BUColor.warn).opacity(0.12),
+                               in: Capsule())
+                if let yr = brand.dataYear, !yr.isEmpty {
+                    Text("데이터 기준 \(yr)")
+                        .font(.system(size: 9.5, weight: .bold))
+                        .foregroundStyle(BUColor.inkSubtle)
+                }
+                if let conf = brand.confidence, !conf.isEmpty {
+                    Text("신뢰도 \(confidenceLabel(conf))")
+                        .font(.system(size: 9.5, weight: .bold))
+                        .foregroundStyle(BUColor.inkSubtle)
+                }
+                Spacer(minLength: 0)
+            }
+            if let src = brand.costSource, !src.isEmpty {
+                Text("출처: \(src)")
+                    .font(.system(size: 9.5, weight: .medium))
+                    .foregroundStyle(BUColor.inkSubtle)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func confidenceLabel(_ c: String) -> String {
+        switch c.lowercased() {
+        case "high":   return "높음"
+        case "medium": return "보통"
+        case "low":    return "낮음"
+        default:       return c
+        }
     }
 
     private func costRow(label: String, value: String, emphasize: Bool = false) -> some View {
