@@ -22,6 +22,7 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 import { envelopeDecrypt } from "../../../_lib/envelope-crypto";
+import { sealEmail, redactPaymentRaw } from "../../../_lib/payment-pii";
 import { PortOneClient, type PortOnePayment } from "../../../_lib/portone-client";
 
 export const runtime = "nodejs";
@@ -184,12 +185,14 @@ export async function POST(
       amount_vat: Math.round(payment.amount?.vat ?? 0),
       currency: payment.currency ?? "KRW",
       customer_id: payment.customer?.id ?? null,
-      customer_email: payment.customer?.email ?? null,
+      // 고객 이메일: 평문 저장 금지 → 봉투 암호화만 (2026-06-05 보안).
+      customer_email: null,
+      customer_email_enc: sealEmail(payment.customer?.email),
       paid_at: payment.paidAt ?? null,
       cancelled_at: payment.cancelledAt ?? null,
       pg_provider: payment.channel?.pgProvider ?? null,
       method_type: payment.method?.type ?? null,
-      raw: payment,
+      raw: redactPaymentRaw(payment),
     },
     { onConflict: "id" }
   );

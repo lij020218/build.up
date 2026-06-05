@@ -16,6 +16,7 @@ import { getCronSecret } from "../../_lib/env";
 import { timingSafeEqualStr } from "../../_lib/timing-safe";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { envelopeDecrypt } from "../../_lib/envelope-crypto";
+import { sealEmail, redactPaymentRaw } from "../../_lib/payment-pii";
 import { PortOneClient, PortOneApiError, type PortOnePayment } from "../../_lib/portone-client";
 
 export const runtime = "nodejs";
@@ -129,12 +130,14 @@ export async function GET(request: Request) {
           amount_vat: Math.round(p.amount?.vat ?? 0),
           currency: p.currency ?? "KRW",
           customer_id: p.customer?.id ?? null,
-          customer_email: p.customer?.email ?? null,
+          // 고객 이메일: 평문 저장 금지 → 봉투 암호화만 (2026-06-05 보안).
+          customer_email: null,
+          customer_email_enc: sealEmail(p.customer?.email),
           paid_at: p.paidAt ?? null,
           cancelled_at: p.cancelledAt ?? null,
           pg_provider: p.channel?.pgProvider ?? null,
           method_type: p.method?.type ?? null,
-          raw: p,
+          raw: redactPaymentRaw(p),
         }));
 
         const { error: upErr } = await supabase

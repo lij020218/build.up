@@ -21,6 +21,7 @@ import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit } from "../../../_lib/rate-limit";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 import { envelopeDecrypt } from "../../../_lib/envelope-crypto";
+import { sealEmail, redactPaymentRaw } from "../../../_lib/payment-pii";
 import {
   PortOneClient,
   PortOneApiError,
@@ -196,6 +197,7 @@ type PaymentRow = {
   currency: string;
   customer_id: string | null;
   customer_email: string | null;
+  customer_email_enc?: import("../../../_lib/envelope-crypto").EnvelopedSecret | null;
   paid_at: string | null;
   cancelled_at: string | null;
   pg_provider: string | null;
@@ -215,11 +217,13 @@ function paymentToRow(userId: string, p: PortOnePayment): PaymentRow {
     amount_vat: Math.round(p.amount?.vat ?? 0),
     currency: p.currency ?? "KRW",
     customer_id: p.customer?.id ?? null,
-    customer_email: p.customer?.email ?? null,
+    // 고객 이메일: 평문 저장 금지 → 봉투 암호화(enc) 만 저장 (2026-06-05 보안).
+    customer_email: null,
+    customer_email_enc: sealEmail(p.customer?.email),
     paid_at: p.paidAt ?? null,
     cancelled_at: p.cancelledAt ?? null,
     pg_provider: p.channel?.pgProvider ?? null,
     method_type: p.method?.type ?? null,
-    raw: p,
+    raw: redactPaymentRaw(p),
   };
 }

@@ -134,8 +134,12 @@
   - ✅ `getCurrentUser` 60초 만료 버퍼(만료임박 토큰 통과→첫 쓰기 401 race 방지).
   - ✅ cron 4종(portone-sync/tossplace-sync/marketing-trends/funnel-pull) secret 비교 `===`→`timingSafeEqualStr`(신규 `_lib/timing-safe.ts`).
   - 웹 tsc·iOS BUILD 통과.
+- **고객 PII 봉투 암호화 완료(2026-06-05)**: 조사 결과 감사가 지목한 `customers` 테이블은 **휴면(코드 0건)** 이었고, 실제 라이브 PII 는 `portone_payments.customer_email`(write-only, 미표시) + `raw` jsonb 고객블록. → **봉투 암호화 전환**(사장님 결정: win-back 대비):
+  - 마이그레이션 `20260605_000002`: `portone_payments.customer_email_enc jsonb` 추가 + 기존 평문 customer_email null 처리.
+  - `_lib/payment-pii.ts` 신설: `sealEmail`(envelopeEncrypt, KEK 없으면 null·평문 fallback 금지) / `openEmail`(서버 win-back 복호화용) / `redactPaymentRaw`(raw 의 customer email·name·phone 제거, id·나머지 보존).
+  - portone sync/webhook/cron 3곳: 평문 `customer_email=null` + `customer_email_enc` 저장 + `raw` 레닥션. 웹 tsc 통과.
+  - ⚠️ 적용: 마이그레이션 prod 실행 + **PORTONE_KEK_BASE64 env 설정 필수**(없으면 sealEmail=null 로 이메일 미저장). tossplace/codef raw 의 PII 는 후속 점검 권장.
 - **남은 보안 항목(아키텍처 변경 큼 — 별도 진행 권장, 출시 차단 아님)**:
-  - 고객 `customers.phone/email` 평문 → 앱레벨 암호화(현재 RLS 로 횡적 접근은 차단됨). CRUD·표시 경로 다수 수정 필요.
   - 웹 토큰 localStorage → `@supabase/ssr` 쿠키 기반(XSS 노출면 축소). 미들웨어 가드 동반.
   - portone 글로벌 웹훅시크릿 → 사장님별 봉투암호화 컬럼.
   - 운영: Supabase Auth 측 password policy(최소길이/HIBP) ON 권장(클라 검증 보강용).
