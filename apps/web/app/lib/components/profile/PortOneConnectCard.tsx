@@ -292,6 +292,7 @@ function ConnectWizard({
   const [step, setStep] = useState(1);
   const [secret, setSecret] = useState("");
   const [storeId, setStoreId] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -304,7 +305,11 @@ function ConnectWizard({
       const res = await fetch("/api/integrations/portone/connect", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ apiSecret: secret.trim(), storeId: storeId.trim() || undefined }),
+        body: JSON.stringify({
+          apiSecret: secret.trim(),
+          storeId: storeId.trim() || undefined,
+          webhookSecret: webhookSecret.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -412,6 +417,24 @@ function ConnectWizard({
                 />
                 <div style={fieldHint}>
                   {ko ? "단일 스토어면 비워 두세요." : "Leave empty for single store."}
+                </div>
+              </div>
+              <div>
+                <label style={fieldLabel}>
+                  {ko ? "웹훅 시크릿 (권장)" : "Webhook Secret (recommended)"}
+                </label>
+                <input
+                  type="password"
+                  value={webhookSecret}
+                  onChange={(e) => setWebhookSecret(e.target.value)}
+                  placeholder={ko ? "포트원 콘솔 → 웹훅 → 시크릿 (옵션)" : "PortOne console → Webhook → Secret (optional)"}
+                  style={inputStyle}
+                  autoComplete="off"
+                />
+                <div style={fieldHint}>
+                  {ko
+                    ? "입력하면 결제 알림(웹훅)을 사장님 전용 키로 검증해 더 안전합니다. 비워 두면 공용 키로 동작합니다."
+                    : "Verifies payment webhooks with your own key. Leave empty to use the shared key."}
                 </div>
               </div>
               {error && (

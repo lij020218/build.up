@@ -139,9 +139,12 @@
   - `_lib/payment-pii.ts` 신설: `sealEmail`(envelopeEncrypt, KEK 없으면 null·평문 fallback 금지) / `openEmail`(서버 win-back 복호화용) / `redactPaymentRaw`(raw 의 customer email·name·phone 제거, id·나머지 보존).
   - portone sync/webhook/cron 3곳: 평문 `customer_email=null` + `customer_email_enc` 저장 + `raw` 레닥션. 웹 tsc 통과.
   - ⚠️ 적용: 마이그레이션 prod 실행 + **PORTONE_KEK_BASE64 env 설정 필수**(없으면 sealEmail=null 로 이메일 미저장). tossplace/codef raw 의 PII 는 후속 점검 권장.
+- **portone 사장님별 웹훅시크릿 완료(2026-06-05)**: 글로벌 `PORTONE_WEBHOOK_SECRET` 공유 → 사장님별 봉투암호화로 전환(유출 시 위조 blast radius 축소).
+  - 마이그레이션 `20260605_000003`: `portone_connections.webhook_secret_enc jsonb` 추가.
+  - connect 라우트: 선택적 `webhookSecret` 받아 봉투암호화 저장(미입력 시 기존값 보존). `loadWebhookSecret`(webhook 라우트): 사장님별 enc 우선 복호화 → 없으면 글로벌 env fallback(하위호환). UI `PortOneConnectCard` 에 "웹훅 시크릿(권장)" 선택 입력 추가. 웹 tsc 통과.
+  - ⚠️ 적용: 마이그레이션 prod 실행. 기존 연결은 글로벌 fallback 유지, 사장님이 재연결 시 웹훅시크릿 입력하면 전용 키 적용.
 - **남은 보안 항목(아키텍처 변경 큼 — 별도 진행 권장, 출시 차단 아님)**:
-  - 웹 토큰 localStorage → `@supabase/ssr` 쿠키 기반(XSS 노출면 축소). 미들웨어 가드 동반.
-  - portone 글로벌 웹훅시크릿 → 사장님별 봉투암호화 컬럼.
+  - 웹 토큰 localStorage → `@supabase/ssr` 쿠키 기반(XSS 노출면 축소). 미들웨어 가드 동반. **blast radius 큼 — 명시 요청 시 신중히.**
   - 운영: Supabase Auth 측 password policy(최소길이/HIBP) ON 권장(클라 검증 보강용).
 
 ## 5. 선택적 정리(backlog, 가짜 아님)

@@ -21,7 +21,7 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
-import { envelopeDecrypt } from "../../../_lib/envelope-crypto";
+import { envelopeDecrypt, type EnvelopedSecret } from "../../../_lib/envelope-crypto";
 import { sealEmail, redactPaymentRaw } from "../../../_lib/payment-pii";
 import { PortOneClient, type PortOnePayment } from "../../../_lib/portone-client";
 
@@ -222,14 +222,27 @@ export async function POST(
 // ─── 내부 ─────────────────────────────────────────────────────────────
 
 /**
- * 사장님별 webhook secret 조회.
- * Phase 1: 환경변수 PORTONE_WEBHOOK_SECRET (글로벌 fallback).
- * Phase 2: portone_connections 에 webhook_secret_encrypted 컬럼 추가 + 봉투 복호화.
+ * 사장님별 webhook secret 조회 (2026-06-05).
+ *  1순위: portone_connections.webhook_secret_enc (봉투암호화, 사장님별).
+ *  fallback: 환경변수 PORTONE_WEBHOOK_SECRET (기존 연결 하위호환).
  */
 async function loadWebhookSecret(
-  _supabase: ReturnType<typeof getSupabaseAdmin>,
-  _userId: string
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  userId: string
 ): Promise<string | null> {
+  try {
+    if (supabase) {
+      const { data } = await supabase
+        .from("portone_connections")
+        .select("webhook_secret_enc")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const enc = data?.webhook_secret_enc as EnvelopedSecret | null | undefined;
+      if (enc) return envelopeDecrypt(enc);
+    }
+  } catch {
+    // 조회/복호화 실패 → 글로벌 fallback
+  }
   return process.env.PORTONE_WEBHOOK_SECRET ?? null;
 }
 

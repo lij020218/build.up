@@ -60,9 +60,9 @@ export async function POST(request: Request) {
   }
 
   // 4. Body 파싱
-  let body: { apiSecret?: string; storeId?: string };
+  let body: { apiSecret?: string; storeId?: string; webhookSecret?: string };
   try {
-    body = (await request.json()) as { apiSecret?: string; storeId?: string };
+    body = (await request.json()) as { apiSecret?: string; storeId?: string; webhookSecret?: string };
   } catch {
     return NextResponse.json(
       { ok: false, error: "잘못된 요청 형식입니다." },
@@ -71,6 +71,7 @@ export async function POST(request: Request) {
   }
   const apiSecret = (body.apiSecret ?? "").trim();
   const storeId = body.storeId?.trim() || undefined;
+  const webhookSecret = (body.webhookSecret ?? "").trim();
   if (!apiSecret || apiSecret.length < 20) {
     return NextResponse.json(
       {
@@ -122,10 +123,12 @@ export async function POST(request: Request) {
     );
   }
 
-  // 6. 봉투 암호화
+  // 6. 봉투 암호화 (API Secret + 선택적 사장님별 웹훅 시크릿)
   let enveloped;
+  let webhookEnveloped: ReturnType<typeof envelopeEncrypt> | null = null;
   try {
     enveloped = envelopeEncrypt(apiSecret, 1);
+    if (webhookSecret) webhookEnveloped = envelopeEncrypt(webhookSecret, 1);
   } catch (e) {
     console.error("[portone/connect] envelope encrypt failed", e);
     return NextResponse.json(
@@ -158,6 +161,8 @@ export async function POST(request: Request) {
         dek_auth_tag: enveloped.dekAuthTag,
         kek_version: enveloped.kekVersion,
         secret_mask: masked,
+        // 웹훅 시크릿은 입력했을 때만 갱신 — 미입력 시 기존 값 보존(글로벌 fallback 유지).
+        ...(webhookEnveloped ? { webhook_secret_enc: webhookEnveloped } : {}),
         status: "active",
         last_validated_at: new Date().toISOString(),
         last_sync_error: null,
