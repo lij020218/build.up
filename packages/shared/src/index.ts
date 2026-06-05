@@ -82,7 +82,6 @@ export * from "./features-catalog";
 export * from "./dashboard/daily-kpi-config";
 export * from "./dashboard/food-safety-checklist";
 export * from "./dashboard/daily-ops-rituals";
-export * from "./policy-funds/catalog-2026";
 export * from "./finance/upsell-suggestions";
 // 2026-05-13 — Phase 2b-i 신규 카드 SSOT (8 카드 비즈니스 로직 + 62 tests)
 export * from "./finance/cohort-retention";
