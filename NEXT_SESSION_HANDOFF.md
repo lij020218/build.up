@@ -147,6 +147,14 @@
   - 웹 토큰 localStorage → `@supabase/ssr` 쿠키 기반(XSS 노출면 축소). 미들웨어 가드 동반. **blast radius 큼 — 명시 요청 시 신중히.**
   - 운영: Supabase Auth 측 password policy(최소길이/HIBP) ON 권장(클라 검증 보강용).
 
+## 4.8 로드맵 정책자금 2026 수치 검증·정정 (2026-06-05)
+WebSearch 로 감사 "확인필요" 정책자금 검증 후 정정 (웹 `startup-programs.ts`/`funding/programs.ts` + iOS `startup-programs.json` 동기화):
+- ✅ **TIPS 2026 대개편 반영**: 노후값(R&D 9억/5억, 총 14억) → **일반트랙 R&D 최대 8억 + 운영사 선투자 2억(비수도권 1억) = 총 10억, 졸업 후속 R&D 3년 15억, 글로벌TIPS 최대 50억**. 두 데이터 파일 불일치도 해소.
+- ✅ **예비창업패키지**: "최대 8,000만원"(오류) → **일반 최대 7,000만, 딥테크 최대 1억**.
+- ✅ 초기창업패키지(일반 1억/딥테크 1.5억) — 검증 결과 정확, 변경 없음.
+- iOS BUILD·shared tsc 통과.
+- **남은 확인(별도·범위 큼)**: `franchise-benchmarks.ts` 40+ 브랜드 매출(2024-25 정보공개서) 최신 갱신, `startup-programs.ts` 80개 전수 재검증(특히 "소상공인 정책자금 운전 5억" 등 한도 재확인 권장).
+
 ## 5. 선택적 정리(backlog, 가짜 아님)
 - iOS `MockData` → `DashboardSnapshot` 리네이밍 + `AppRoot.swift:776` stale 주석 정리.
 - iOS 히어로 Row2 NSM을 스타트업이면 런웨이로(웹과 완전 일치).
