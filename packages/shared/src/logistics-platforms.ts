@@ -125,14 +125,14 @@ const deliveryApps: SalesPlatform[] = [
     type: "delivery",
     commissionRate: 6.8,
     commissionNote: {
-      ko: "차등제 (2025.4월~): 매출 하위 20% → 2.0%, 중위 → 6.8%, 상위 35% → 7.8%. 포장(픽업) 수수료 0% (무료 연장 중)",
-      en: "Tiered (from Apr 2025): bottom 20% → 2.0%, mid → 6.8%, top 35% → 7.8%. Pickup commission 0% (free extension ongoing)",
+      ko: "차등제 (2025.4월~): 매출 하위 20% → 2.0%, 중위 → 6.8%, 상위 35% → 7.8%. 포장(픽업) 수수료 6.8% (2026.4.14~ 부과, 영세 하위 20%·전통시장은 2027.3까지 무료)",
+      en: "Tiered (from Apr 2025): bottom 20% → 2.0%, mid → 6.8%, top 35% → 7.8%. Pickup fee 6.8% (from Apr 14 2026; free until Mar 2027 for bottom-20% & traditional markets)",
     },
     deliveryFeePerOrder: 2600,
     monthlyFixed: 0,
     features: {
-      ko: "와우 멤버십 무료배달로 객단가 높은 주문 유리. 단건배달 기본. 서울 지역 점유율 1위 탈환(2025.12). 포장 수수료 무료 유지 중",
-      en: "Wow membership free delivery attracts high-ticket orders. Single delivery default. #1 in Seoul (Dec 2025). Pickup commission remains free",
+      ko: "와우 멤버십 무료배달로 객단가 높은 주문 유리. 단건배달 기본. 서울 지역 점유율 1위 탈환(2025.12). 포장 수수료 2026.4.14부터 6.8% 부과(영세·전통시장 한시 무료)",
+      en: "Wow membership free delivery attracts high-ticket orders. Single delivery default. #1 in Seoul (Dec 2025). Pickup fee 6.8% from Apr 14 2026 (temporary waiver for small/traditional-market stores)",
     },
     settlement: { ko: "D+1 정산", en: "D+1 settlement" },
     url: "https://store.coupangeats.com",
@@ -149,14 +149,12 @@ const deliveryApps: SalesPlatform[] = [
       ko: [
         "와우 멤버십(3,000만+) 연계 — 높은 객단가 주문 유입",
         "단건배달로 빠른 배달 품질",
-        "포장 주문 수수료 0% (배민 대비 강점)",
         "빠른 성장세 — 특히 서울에서 강세",
         "차등 수수료로 소규모 매장 부담 완화",
       ],
       en: [
         "Wow membership (30M+) — high-ticket order inflow",
         "Single delivery ensures fast delivery quality",
-        "0% pickup commission (advantage over Baemin)",
         "Rapid growth — especially strong in Seoul",
         "Tiered commission eases small store burden",
       ],

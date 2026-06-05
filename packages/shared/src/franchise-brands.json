@@ -183,7 +183,7 @@
       "en": "#1 chicken revenue, Ppurinkle brand"
     },
     "startupCostWon": 8543,
-    "franchiseFee": 500,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 25,
     "avgAnnualRevenueWon": 54672,
     "storeCount": 2291,
@@ -683,7 +683,7 @@
       "ko": "버거+치킨 하이브리드, 가성비 1위",
       "en": "Burger+chicken hybrid, best value"
     },
-    "startupCostWon": 11000,
+    "startupCostWon": 16045,
     "franchiseFee": 550,
     "monthlyRoyalty": 25,
     "avgAnnualRevenueWon": 45000,
@@ -1035,9 +1035,9 @@
       "ko": "한국 피자 1위, 484개 매장 (직영 111+가맹 373) — 점당 8.4억",
       "en": "#1 Korea pizza, 484 stores, 8.4B per-store"
     },
-    "startupCostWon": 25250,
-    "franchiseFee": 1500,
-    "monthlyRoyalty": 0,
+    "startupCostWon": 25495,
+    "franchiseFee": 3300,
+    "monthlyRoyalty": 408,
     "avgAnnualRevenueWon": 84000,
     "storeCount": 484,
     "closureRate": 2,
@@ -7662,7 +7662,7 @@
       "en": "#2 budget coffee, 41.3% HQ op margin (#1 in coffee) — but acquired by Filipino Jollibee 2024, lowest owner sales in top 3"
     },
     "startupCostWon": 10430,
-    "franchiseFee": 300,
+    "franchiseFee": 550,
     "monthlyRoyalty": 22,
     "avgAnnualRevenueWon": 26501,
     "storeCount": 2649,
@@ -8459,8 +8459,8 @@
       "ko": "프리미엄 디저트 카페 1,700개·매출 5,201억(2024) — 단 칼라일 사모펀드 인수 후 영업이익 405→219억 ⚠",
       "en": "Premium dessert cafe 1,700 stores, KRW 520.1B (2024) — but Carlyle PE acquisition cut op profit 40.5B→21.9B ⚠"
     },
-    "startupCostWon": 15000,
-    "franchiseFee": 500,
+    "startupCostWon": 27510,
+    "franchiseFee": 2000,
     "monthlyRoyalty": 33,
     "avgAnnualRevenueWon": 52010,
     "storeCount": 1700,
@@ -8646,7 +8646,7 @@
       "en": "#1 ice cream 1,752 stores·10yr growth·0.7% closure — but BR Korea first loss (-29B KRW) ⚠"
     },
     "startupCostWon": 18000,
-    "franchiseFee": 1500,
+    "franchiseFee": 880,
     "monthlyRoyalty": 44,
     "avgAnnualRevenueWon": 28350,
     "storeCount": 1752,
@@ -9005,8 +9005,8 @@
       "ko": "⚠ 국내 매장 정점·내리막, 점당 매출 -5.8% / ★ 美 점당 41억 (국내 6배)",
       "en": "WARNING: domestic stores peaked & declining, per-store -5.8% / US per-store KRW 4.1B (6× Korea)"
     },
-    "startupCostWon": 45000,
-    "franchiseFee": 1500,
+    "startupCostWon": 31380,
+    "franchiseFee": 1430,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 71076,
     "storeCount": 3924,
