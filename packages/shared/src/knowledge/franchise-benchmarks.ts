@@ -404,53 +404,12 @@ const FRANCHISE_BENCHMARKS: FranchiseBenchmark[] = [
     ],
   },
 
-  // ── 교육 ──
-  {
-    brandId: "eye-level",
-    avgMonthlyRevenue: 4500,
-    topStoreMonthlyRevenue: 10000,
-    topStoreMultiplier: 2.2,
-    costStructure: { ingredientRatio: 15, laborRatio: 35, rentRatio: 15 },
-    operationalInsights: [
-      "대교 브랜드 기반 학부모 신뢰 확보",
-      "교재 로열티 수익 + 수강료 이중 매출 구조",
-    ],
-  },
-  {
-    brandId: "kumon",
-    avgMonthlyRevenue: 3800,
-    topStoreMonthlyRevenue: 8500,
-    topStoreMultiplier: 2.2,
-    costStructure: { ingredientRatio: 12, laborRatio: 30, rentRatio: 12 },
-    operationalInsights: [
-      "자기주도학습 브랜드 — 소규모 운영 가능",
-      "교재 구독 모델 기반 안정적 수익",
-    ],
-  },
-
-  // ── 펫 ──
-  {
-    brandId: "petbox",
-    avgMonthlyRevenue: 5500,
-    topStoreMonthlyRevenue: 12000,
-    topStoreMultiplier: 2.2,
-    costStructure: { ingredientRatio: 40, laborRatio: 20, rentRatio: 12 },
-    operationalInsights: [
-      "펫 용품 + 미용 + 호텔 복합 매장 모델",
-      "반려동물 등록 고객 기반 반복 구매율 높음",
-    ],
-  },
-  {
-    brandId: "dogmate",
-    avgMonthlyRevenue: 3500,
-    topStoreMonthlyRevenue: 8000,
-    topStoreMultiplier: 2.3,
-    costStructure: { ingredientRatio: 15, laborRatio: 35, rentRatio: 15 },
-    operationalInsights: [
-      "반려견 미용 전문 — 기술력 기반 프리미엄 가격",
-      "SNS 비포/애프터로 신규 고객 유입",
-    ],
-  },
+  // ── 교육·펫 (2026-06-05 제거) ──
+  //  eye-level(눈높이)·kumon(구몬)은 방문학습지/교습소 위탁 모델이라 "가맹점 월평균 매출" 개념이
+  //  부정확하고, petbox(반려동물 구독커머스)·dogmate(펫시터 매칭 플랫폼)는 가맹사업이 아니다.
+  //  이 4개는 공정위 정보공개서 기반 가맹점 평균매출이 없어 추정 수치를 가맹 벤치마크로 둘 수 없음
+  //  (가짜 숫자 금지). dogmate 는 vendor-setup 의 펫시터 플랫폼으로만, kumon 은 franchise-brands.json
+  //  의 가맹비/창업비용 DB 로만 유지. 매출 벤치마크에서는 제외.
 
   // ── 생활서비스 ──
   {
