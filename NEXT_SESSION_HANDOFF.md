@@ -105,6 +105,32 @@
 - **수정**: 웹·iOS 둘 다 `roadmaps`(user_id 필터) realtime 구독 추가. `stage_decisions` 는 user_id 컬럼이 없어 직접 필터 구독 불가 → 양쪽이 저장 시 부모 `roadmaps.updated_at` 을 bump(웹 saveRoadmapState 는 기존부터, iOS `RoadmapDecisionsRepository.upsert/delete` 에 `touchRoadmap` 추가)하여 roadmaps 구독 하나로 안전하게(항상 user_id 필터 유지) 커버. 수신 시 iOS=refreshAllFromRemote(syncFromRemote 포함)/웹=flush+connectAndLoad. 웹 tsc·iOS BUILD 통과.
 - 전제(운영): Supabase 대시보드 Database→Replication 에서 `roadmaps` Realtime 토글 ON 필요(publication 추가는 마이그레이션에 있음).
 
+## 4.7 출시 전 5대 감사 + P0/P1 수정 (2026-06-05)
+5개 영역 병렬 심층 감사 후 수정. 빌드: 웹 tsc·shared·ai·iOS BUILD 전부 통과.
+
+### 수정 완료 (이번 세션)
+- **보안** `supabase/migrations/20260605_000001_security_hardening.sql` 신설:
+  - ① 뷰 3종(`v_saas_metrics_unified`/`v_coaching_stats_14d`/`v_coaching_meta_30d`) `security_invoker=true` — **전 사용자 데이터 덤프 가능했던 RLS 우회 차단(최우선 P0)**.
+  - ② `business-documents` 버킷 private 강제 + 본인폴더 RLS 4종(사업자등록증 유출 방지).
+  - ③ `buildup_subscriptions.billing_key` 컬럼 SELECT 차단(본인도 평문 조회 불가).
+  - Stripe 웹훅 fail-closed 전환(`api/webhooks/stripe/[uid]`) — 위조 결제 이벤트 주입 차단.
+- **회원가입**:
+  - 웹 `saveRoadmapState` `unique(user_id)` 충돌(23505) 재조회 폴백 — **내 20260604 마이그레이션 회귀 수정**.
+  - 웹 `SIGNED_OUT` 시 로컬 캐시 wipe(공용 PC 이전 계정 정보 노출 방지).
+  - iOS Apple/카카오 로그인에 `bootstrapAccountWorkspace` 추가(이메일 경로와 정합).
+- **로드맵 내용**:
+  - iOS 현금영수증 의무발행 `1만원→10만원`(웹은 이미 정확).
+  - iOS 산재요율 웹 SSOT 전면 정합(food/retail/beauty/fitness/space/living 어긋나 있던 것 → 도소매·음식·숙박 0.8 / 전문·보건·교육·여가 0.6 / 기타·전자상거래 0.7).
+  - iOS 원천세 가산세 `10%↑`→`미납세액 3% + 일 0.022%`(4곳).
+- **AI**: dashboard 프롬프트 사례인용 그라운딩(주입 블록 외 기업·수치 인용 금지) + roadmap 프롬프트 정책수치 그라운딩(인허가비용·지원금·세율 주입데이터/범위 외 임의생성 금지).
+- **대시보드 카드**: 감사 결과 **P0 없음(전부 실데이터/예시배지) — 합격**.
+
+### ⚠️ 적용·결정 필요 (미적용)
+- **마이그레이션 prod 적용**: `20260604_000001`(roadmaps unique, 단 웹 onConflict 수정 먼저 배포 후) + `20260605_000001`(보안). `supabase db push`.
+- **business-documents**: 마이그레이션이 버킷/RLS를 정식화하나, 운영 DB에서 Studio→Replication/Storage 실제 상태 확인 권장.
+- **AI 비용 결정**: 백엔드가 실제 OpenAI gpt-5.4-mini(Anthropic 잔액부족 2026-05 전환). 로드맵 등 고난도까지 mini → 모델 등급 상향은 비용 결정. temperature 전 호출 고정·industry-daily 서버캐시·웹↔iOS 히어로 코칭 통일은 미적용(구조 변경 큼).
+- **남은 P1**(미적용): 약한 비번정책(8자+숫자1), 웹 토큰 localStorage(XSS), getCurrentUser 만료버퍼, cron timing-safe, 고객 전화·이메일 평문, portone 글로벌 웹훅시크릿.
+
 ## 5. 선택적 정리(backlog, 가짜 아님)
 - iOS `MockData` → `DashboardSnapshot` 리네이밍 + `AppRoot.swift:776` stale 주석 정리.
 - iOS 히어로 Row2 NSM을 스타트업이면 런웨이로(웹과 완전 일치).

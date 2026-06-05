@@ -1107,6 +1107,12 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
+        // ⚠️ 2026-06-05 개인정보 수정: 로그아웃 시 로컬 캐시를 비우지 않으면 공용 PC 에서
+        //   다음 계정 로그인 시 이전 계정의 상호명·매출 등 잔존값이 노출됨(applyStoreData 의
+        //   `if (data.x)` 가드가 누락 필드를 안 덮으므로). 명시적으로 전부 wipe.
+        clearLocalUserData();
+        resetLocalState();
+        try { localStorage.removeItem("__foundone_uid"); } catch { /* storage 차단 무시 */ }
         setRequiresAuth(true);
         setAuthResolved(true);
         return;

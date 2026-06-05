@@ -92,19 +92,20 @@ public struct IndustryCluster: Sendable, Hashable {
     // MARK: - 인사·산재보험 — 카테고리별 산재율 (%)
     //
     // 웹 SSOT: apps/web/app/lib/components/stages/offline/InsuranceTaxSetupStage.tsx
-    //          ACCIDENT_RATE_BY_CATEGORY (근로복지공단 2024 기준)
-    //
+    //          ACCIDENT_RATE_BY_CATEGORY (고용노동부 2026 사업종류별 산재보험료율 고시)
+    // ⚠️ 2026-06-05: 웹 SSOT와 다수 업종이 어긋나 있어 전면 정합화(food·retail·beauty·fitness·space·living).
+    //   도소매·음식·숙박 0.8 / 전문·보건·교육·여가 0.6 / 기타서비스·전자상거래 0.7.
     public var accidentInsuranceRatePct: Double {
         switch category {
-        case .food, .cafeDessert:    return 0.7
-        case .beauty, .fitness:      return 0.8
-        case .pet:                   return 0.8
-        case .education:             return 0.6
-        case .livingService:         return 0.9
-        case .space:                 return 0.7
-        case .retail:                return 1.0
-        case .onlineDigital:         return 0.7
-        case .startupTech:           return 0.7
+        case .food, .cafeDessert:    return 0.8   // 도소매·음식·숙박업
+        case .retail:                return 0.8   // 도소매·음식·숙박업
+        case .pet:                   return 0.8   // 도소매·음식·숙박업
+        case .space:                 return 0.8   // 도소매·음식·숙박업
+        case .beauty, .fitness:      return 0.6   // 전문·보건·교육·여가 서비스업
+        case .education:             return 0.6   // 전문·보건·교육·여가 서비스업
+        case .livingService:         return 0.7   // 기타 서비스업
+        case .onlineDigital:         return 0.7   // 전자상거래업
+        case .startupTech:           return 0.7   // 일반 서비스업(기본)
         }
     }
 

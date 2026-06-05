@@ -85,6 +85,9 @@ public final class AuthCoordinator {
         state = .authenticating
         do {
             let session = try await appleProvider.signIn()
+            // ⚠️ 2026-06-05: 이메일 경로와 동일하게 워크스페이스 부트스트랩(business_profiles 행 보장).
+            //   누락 시 OAuth 신규 사용자는 role/profile 미초기화로 웹·앱 정합성이 비대칭이 됨.
+            try? await bootstrapAccountWorkspace(for: session.userId)
             state = .authenticated(session)
         } catch {
             state = .failed((error as? (any LocalizedError))?.errorDescription ?? String(describing: error))
@@ -95,6 +98,7 @@ public final class AuthCoordinator {
         state = .authenticating
         do {
             let session = try await kakaoProvider.signIn()
+            try? await bootstrapAccountWorkspace(for: session.userId)   // 이메일 경로와 동일 보장
             state = .authenticated(session)
         } catch {
             state = .failed((error as? (any LocalizedError))?.errorDescription ?? String(describing: error))

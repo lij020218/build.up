@@ -357,24 +357,37 @@ export async function saveRoadmapState(
     roadmapId = existingRoadmap?.id ?? roadmapId;
   }
 
-  const { data: roadmapRow, error: roadmapError } = await client
+  const roadmapPayload = {
+    user_id: user.id,
+    template_id: state.roadmap.templateId,
+    current_stage_code: state.roadmap.currentStageId,
+    progress_percent: state.roadmap.progressPercent,
+    status: "in_progress",
+    updated_at: new Date().toISOString()
+  };
+
+  let { data: roadmapRow, error: roadmapError } = await client
     .from("roadmaps")
     .upsert(
-      {
-        ...(roadmapId === starterRoadmap.roadmapId ? {} : { id: roadmapId }),
-        user_id: user.id,
-        template_id: state.roadmap.templateId,
-        current_stage_code: state.roadmap.currentStageId,
-        progress_percent: state.roadmap.progressPercent,
-        status: "in_progress",
-        updated_at: new Date().toISOString()
-      },
-      {
-        onConflict: "id"
-      }
+      { ...(roadmapId === starterRoadmap.roadmapId ? {} : { id: roadmapId }), ...roadmapPayload },
+      { onConflict: "id" }
     )
     .select()
     .single();
+
+  // ⚠️ 2026-06-05: roadmaps.unique(user_id)(20260604 마이그레이션) 도입으로, 신규 INSERT 가
+  //   웹·다른 기기와의 레이스에서 user_id 중복(23505)으로 실패할 수 있다. 그 경우 이미 만들어진
+  //   row 를 재조회해 그 id 로 UPDATE 재시도(중복 생성 대신 공유) — 가입/진행저장 실패 방지.
+  if (roadmapError && (roadmapError as { code?: string }).code === "23505") {
+    const existing = await getLatestRoadmapRow(client, user.id);
+    if (existing?.id) {
+      ({ data: roadmapRow, error: roadmapError } = await client
+        .from("roadmaps")
+        .upsert({ id: existing.id, ...roadmapPayload }, { onConflict: "id" })
+        .select()
+        .single());
+    }
+  }
 
   if (roadmapError || !roadmapRow) {
     throw roadmapError ?? new Error("Failed to upsert roadmap.");

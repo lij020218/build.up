@@ -60,33 +60,40 @@ export async function POST(
     return NextResponse.json({ ok: true, ignored: "unknown user" });
   }
 
-  // ── 2. Stripe Signature 검증 ──
+  // ── 2. Stripe Signature 검증 (fail-closed — portone/toss 와 동일) ──
+  //   ⚠️ 2026-06-05 보안 수정: 종전엔 secret 미설정 또는 서명 헤더 누락 시 검증을 건너뛰고
+  //      이벤트를 처리(fail-open)해, uid 만 알면 위조 결제 이벤트 주입이 가능했음.
+  //      → secret 미등록(503) / 서명 누락(401) / 검증 실패(401) 모두 거부한다.
   const sigHeader = request.headers.get("stripe-signature") ?? "";
-  if (conn.encrypted_webhook_secret && sigHeader) {
-    let webhookSecret: string;
-    try {
-      webhookSecret = envelopeDecrypt({
-        encryptedSecret: conn.encrypted_webhook_secret,
-        secretIv: conn.webhook_secret_iv as string,
-        secretAuthTag: conn.webhook_secret_auth_tag as string,
-        encryptedDek: conn.encrypted_dek,
-        dekIv: conn.dek_iv,
-        dekAuthTag: conn.dek_auth_tag,
-        kekVersion: conn.kek_version,
-      });
-    } catch {
-      return NextResponse.json({ error: "decrypt webhook secret" }, { status: 500 });
-    }
-
-    const valid = verifyStripeSignature({
-      secret: webhookSecret,
-      signatureHeader: sigHeader,
-      body: rawBody,
-      toleranceSeconds: 300,
+  if (!conn.encrypted_webhook_secret) {
+    return NextResponse.json({ error: "webhook secret not configured" }, { status: 503 });
+  }
+  if (!sigHeader) {
+    return NextResponse.json({ error: "missing signature" }, { status: 401 });
+  }
+  let webhookSecret: string;
+  try {
+    webhookSecret = envelopeDecrypt({
+      encryptedSecret: conn.encrypted_webhook_secret,
+      secretIv: conn.webhook_secret_iv as string,
+      secretAuthTag: conn.webhook_secret_auth_tag as string,
+      encryptedDek: conn.encrypted_dek,
+      dekIv: conn.dek_iv,
+      dekAuthTag: conn.dek_auth_tag,
+      kekVersion: conn.kek_version,
     });
-    if (!valid) {
-      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
-    }
+  } catch {
+    return NextResponse.json({ error: "decrypt webhook secret" }, { status: 500 });
+  }
+
+  const valid = verifyStripeSignature({
+    secret: webhookSecret,
+    signatureHeader: sigHeader,
+    body: rawBody,
+    toleranceSeconds: 300,
+  });
+  if (!valid) {
+    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
   // ── 3. 파싱 ──
