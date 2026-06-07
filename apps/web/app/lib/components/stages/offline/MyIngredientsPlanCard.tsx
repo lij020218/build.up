@@ -168,7 +168,7 @@ export function MyIngredientsPlanCard({ ko }: { ko: boolean }) {
               <span style={{ fontSize: 13, fontWeight: 700, color: sel ? MIDNIGHT : "#0f172a" }}>
                 {ko ? opt.ko : opt.en}
               </span>
-              <span style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>
+              <span style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.4 }}>
                 {ko ? opt.desc.ko : opt.desc.en}
               </span>
             </button>
@@ -246,7 +246,7 @@ export function MyIngredientsPlanCard({ ko }: { ko: boolean }) {
             {preview != null ? `₩${Math.round(preview).toLocaleString()}` : ko ? "업종 평균으로 표시됨" : "Shown as industry avg"}
           </div>
           {preview != null && mode === "rate" && (
-            <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 3 }}>
+            <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 3 }}>
               {ko
                 ? `예상 매출 ${fmtWon(Number(expectedRevManwon) * 10_000)} × 원가율 ${ratePct}%`
                 : `Revenue ${fmtWon(Number(expectedRevManwon) * 10_000)} × ${ratePct}%`}
@@ -255,7 +255,7 @@ export function MyIngredientsPlanCard({ ko }: { ko: boolean }) {
         </div>
       </div>
 
-      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+      <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.5 }}>
         {ko
           ? "이 값은 「재무 검토」 단계의 식자재 칸으로 자동 전달됩니다. 미입력 시 업종 평균치(매출 평균 × 평균 원가율)로 대체되어 「업종 평균」 으로 라벨링됩니다."
           : "Carries into Financial Review's ingredients field. Blank = industry-average label."}
@@ -284,7 +284,7 @@ const fieldLabel: React.CSSProperties = {
 
 const hint: React.CSSProperties = {
   fontSize: 11.5,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.5,
 };
 
@@ -326,7 +326,7 @@ function TextInput({
           top: "50%",
           transform: "translateY(-50%)",
           fontSize: 11,
-          color: "rgba(15,23,42,0.5)",
+          color: "var(--muted)",
           pointerEvents: "none",
         }}
       >

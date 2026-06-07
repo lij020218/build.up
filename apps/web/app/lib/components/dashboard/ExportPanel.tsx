@@ -124,14 +124,14 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
         <div>
           <div style={eyebrow}>{ko ? "데이터 내보내기" : "Export Data"}</div>
           <div style={title}>{ko ? "세무사·은행·투자자용" : "For CPA, Banks, Investors"}</div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "4px" }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px" }}>
             {ko
               ? "버튼 한 번으로 경영 데이터를 내려받으세요. 한글 CSV 호환."
               : "One-click download. Korean CSV compatible."}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <label style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", fontWeight: 650 }}>
+          <label style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 650 }}>
             {ko ? "기준 월" : "Month"}
           </label>
           <input
@@ -213,7 +213,7 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
                     {typeLabel(item.type)}
                   </div>
                 </div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5 }}>
                   {item.desc[ko ? "ko" : "en"]}
                 </div>
                 {isBusy && (
@@ -245,7 +245,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "2px",
 };
 

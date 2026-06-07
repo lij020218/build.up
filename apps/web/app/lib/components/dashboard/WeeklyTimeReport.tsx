@@ -97,7 +97,7 @@ export function WeeklyTimeReport({ ko }: Props) {
               fontWeight: 650,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "rgba(15,23,42,0.4)",
+              color: "var(--muted)",
               marginBottom: "2px",
             }}
           >

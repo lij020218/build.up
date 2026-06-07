@@ -372,7 +372,7 @@ export const activityMiniStat: React.CSSProperties = {
 
 export const activityMiniLabel: React.CSSProperties = {
   fontSize: "11px",
-  color: "rgba(15,23,42,0.48)",
+  color: "var(--muted)",
   marginBottom: "6px",
 };
 

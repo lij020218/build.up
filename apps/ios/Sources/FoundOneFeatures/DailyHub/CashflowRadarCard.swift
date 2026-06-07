@@ -69,6 +69,7 @@ struct CashflowRadarCard: View {
                         .foregroundStyle(BUColor.midnight.opacity(0.55))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("현금흐름 설정")
             }
             Text(ko ? "통장 잔고 14일 예측" : "14-day Balance Forecast")
                 .buDetailTitleStyle()

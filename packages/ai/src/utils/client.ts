@@ -196,12 +196,19 @@ class LlmClient {
       // ─── 분기 1: Responses API + web_search ─────────────────────
       if (wantSearch) {
         // system + messages 를 단일 input 으로 합침 (Responses API 호환 형식).
-        //  system 은 검색·생성 가이드라인 prefix 로, messages 는 대화 history.
+        //  [SYSTEM]/[USER]/[ASSISTANT] 태그를 사용하므로, 사용자 입력에 포함된 같은 패턴이
+        //  시스템 명령으로 오해될 수 있다 (프롬프트 주입). 유저 콘텐츠의 태그를 zero-width space 로 이스케이프.
+        const escapeRoleTags = (text: string): string =>
+          text.replace(/\[(SYSTEM|USER|ASSISTANT)\]/gi, (m) => m.slice(0, 1) + "​" + m.slice(1));
+
         const parts: string[] = [];
-        if (systemText) parts.push(`[SYSTEM]\n${systemText}`);
+        if (systemText) parts.push(`[SYSTEM]\n${systemText}`); // system 은 신뢰 소스 — 이스케이프 불필요
         for (const m of req.messages) {
           const tag = m.role === "user" ? "USER" : "ASSISTANT";
-          parts.push(`[${tag}]\n${flattenContent(m.content)}`);
+          const safeContent = m.role === "user"
+            ? escapeRoleTags(flattenContent(m.content))
+            : flattenContent(m.content);
+          parts.push(`[${tag}]\n${safeContent}`);
         }
         const inputText = parts.join("\n\n");
 

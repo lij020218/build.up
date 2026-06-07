@@ -94,7 +94,7 @@ export function CashZeroDateCard({ ko }: Props) {
           <span style={iconBadge}><Calendar size={14} strokeWidth={2.2} /></span>
           <div style={labelStyle}>{ko ? "Cash Zero Date" : "Cash Zero Date"}</div>
         </header>
-        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "var(--muted)", fontSize: 13 }}>
           {result.reason}
         </div>
       </article>
@@ -165,14 +165,14 @@ export function CashZeroDateCard({ ko }: Props) {
             {ko ? "채용 시뮬레이터" : "Hire Simulator"}
           </div>
           <span style={{
-            marginLeft: "auto", fontSize: 10.5, color: "rgba(15,23,42,0.5)", fontWeight: 600,
+            marginLeft: "auto", fontSize: 10.5, color: "var(--muted)", fontWeight: 600,
           }}>
             {ko ? `1명당 월 ${Math.round(DEFAULT_HIRE_COST_KRW / 10000)}만원 기준` : `${Math.round(DEFAULT_HIRE_COST_KRW / 10000)}만/mo per hire`}
           </span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Sliders size={13} strokeWidth={2} style={{ color: "rgba(15,23,42,0.4)" }} />
+          <Sliders size={13} strokeWidth={2} style={{ color: "var(--muted)" }} />
           <input
             type="range"
             min={0}
@@ -210,7 +210,7 @@ export function CashZeroDateCard({ ko }: Props) {
 
       {/* footer — 자료 인용 */}
       <div style={{
-        fontSize: 10.5, color: "rgba(15,23,42,0.5)", lineHeight: 1.5,
+        fontSize: 10.5, color: "var(--muted)", lineHeight: 1.5,
         padding: "8px 12px", borderRadius: 9,
         background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
       }}>

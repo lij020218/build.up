@@ -45,6 +45,24 @@ public enum OnboardingProfileSync {
         }
     }
 
+    /// 선호 지역/상권을 business_profiles.preferred_regions 에 upsert (제공 컬럼만, 나머지 보존).
+    ///   웹 SSOT(buildProfilePatchFromState)와 동일하게 단일 원소 배열 `[region]` 로 저장.
+    ///   빈 값이면 호출 무시 — 기존 값을 빈 배열로 덮지 않는다(데이터 보호).
+    public static func persistPreferredRegion(_ region: String?) {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let trimmed = region?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !trimmed.isEmpty else { return }
+        let client = BUSupabase.shared.client
+        let payload = PreferredRegionUpsert(
+            user_id: uid,
+            preferred_regions: [trimmed],
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+        Task.detached {
+            _ = try? await client.from("business_profiles").upsert(payload, onConflict: "user_id").execute()
+        }
+    }
+
     /// 영업개시 여부/일자를 user_store_data 에 upsert.
     public static func persistBusinessLaunched(_ launched: Bool, launchedDate: Date? = nil) {
         guard let uid = BUSupabase.shared.currentUser?.id else { return }
@@ -81,6 +99,12 @@ public enum OnboardingProfileSync {
         let user_id: UUID
         let business_launched: Bool
         let business_launched_date: String?
+        let updated_at: String
+    }
+
+    private struct PreferredRegionUpsert: Encodable, Sendable {
+        let user_id: UUID
+        let preferred_regions: [String]
         let updated_at: String
     }
 }

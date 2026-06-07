@@ -117,11 +117,11 @@ export function SecurityChecklist({ ko, checks, onToggle }: Props) {
                   </span>
                   {item.requiredForSOC2 && <span style={{ fontSize: "8px", fontWeight: 650, padding: "1px 4px", borderRadius: "3px", background: "rgba(37,99,235,0.06)", color: "#2563eb" }}>SOC2</span>}
                 </div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", lineHeight: 1.4 }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>
                   {ko ? item.description.ko : item.description.en}
                 </div>
               </div>
-              <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.25)", flexShrink: 0, whiteSpace: "nowrap" as const }}>
+              <div style={{ fontSize: "10px", color: "var(--muted)", flexShrink: 0, whiteSpace: "nowrap" as const }}>
                 ~{item.estimatedMinutes}{ko ? "분" : "m"}
               </div>
             </div>
@@ -138,7 +138,7 @@ const card: React.CSSProperties = {
   border: "1px solid rgba(15,23,42,0.05)",
   boxShadow: "0 2px 12px rgba(15,23,42,0.03), 0 1px 0 rgba(255,255,255,0.8) inset",
 };
-const eyebrow: React.CSSProperties = { fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(15,23,42,0.4)" };
+const eyebrow: React.CSSProperties = { fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)" };
 const title: React.CSSProperties = { fontSize: "24px", fontWeight: 780, letterSpacing: "-0.04em", color: "#0f172a", lineHeight: 1, fontVariantNumeric: "tabular-nums" };
 const filterBtn: React.CSSProperties = {
   padding: "4px 10px", borderRadius: "8px", border: "1px solid rgba(15,23,42,0.06)",

@@ -228,7 +228,7 @@ export function SubscriptionPlanEntry({
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{plan.name}</div>
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)" }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                       {fmt(plan.price)}/{plan.billingCycle === "monthly" ? (ko ? "월" : "mo") : (ko ? "연" : "yr")}
                       {count > 0 && !isChurn && (
                         <span style={{ color: accent, fontWeight: 600, marginLeft: "6px" }}>
@@ -284,7 +284,7 @@ export function SubscriptionPlanEntry({
             border: (totalSignups > 0 || totalChurns > 0) ? "1px solid rgba(124,58,237,0.1)" : "1px solid transparent",
           }}>
             <div>
-              <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" }}>
+              <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em", textTransform: "uppercase" }}>
                 {ko ? "요약" : "Summary"}
               </div>
               <div style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a", marginTop: "3px", lineHeight: 1.5 }}>
@@ -296,11 +296,11 @@ export function SubscriptionPlanEntry({
                   <span style={{ color: "#b64c4c" }}>-{totalChurns} {ko ? "이탈" : "churn"}{totalChurns > 1 && !ko ? "s" : ""}</span>
                 )}
                 {totalSignups === 0 && totalChurns === 0 && (
-                  <span style={{ color: "rgba(15,23,42,0.25)" }}>--</span>
+                  <span style={{ color: "var(--muted)" }}>--</span>
                 )}
               </div>
               {totalRevenue > 0 && (
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "1px" }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "1px" }}>
                   MRR +{fmt(totalRevenue)}
                 </div>
               )}

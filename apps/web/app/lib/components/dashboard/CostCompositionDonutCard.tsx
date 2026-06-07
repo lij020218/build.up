@@ -556,7 +556,7 @@ const KEYFRAMES = `
   z-index: 2;
 }
 .ccd-center-label {
-  font-size: 9.5px; font-weight: 700; color: rgba(15,23,42,0.5);
+  font-size: 9.5px; font-weight: 700; color: var(--muted);
   letter-spacing: 0.1em; text-transform: uppercase;
 }
 .ccd-center-value {
@@ -581,7 +581,7 @@ const KEYFRAMES = `
   font-variant-numeric: tabular-nums;
 }
 .ccd-center-sub {
-  font-size: 9.5px; color: rgba(15,23,42,0.45); margin-top: 4px;
+  font-size: 9.5px; color: var(--muted); margin-top: 4px;
   font-weight: 500;
 }
 .ccd-center-sub-warn {
@@ -657,7 +657,7 @@ const KEYFRAMES = `
 
 .ccd-empty {
   padding: 36px 20px; text-align: center;
-  font-size: 12.5px; color: rgba(15,23,42,0.5);
+  font-size: 12.5px; color: var(--muted);
   background: rgba(15,23,42,0.025);
   border-radius: 12px;
 }

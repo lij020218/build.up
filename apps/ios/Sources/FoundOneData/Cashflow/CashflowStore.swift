@@ -61,6 +61,19 @@ public final class CashflowStore: ObservableObject {
             isLoaded = true
             return
         }
+        await reloadFromRemote(repository)
+    }
+
+    /// 원격 재동기화 — isLoaded 가드를 우회해 Supabase 에서 다시 읽는다.
+    ///   포커스 복귀·realtime 수신 시 AppRoot.refreshAllFromRemote 가 호출.
+    ///   설정 시트는 별도 working copy 를 편집하므로 진행 중 편집을 덮어쓰지 않는다.
+    ///   (cashflow 는 명시적 저장만 하므로 미저장 store 상태가 없어 reload 안전.)
+    public func refresh() async {
+        guard let repository else { return }
+        await reloadFromRemote(repository)
+    }
+
+    private func reloadFromRemote(_ repository: CashflowRepository) async {
         saveStatus = .loading
         do {
             let loaded = try await repository.load(defaultCategoryKey: defaultCategoryKey)

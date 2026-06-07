@@ -266,7 +266,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
         <div>
           <div style={eyebrow}>{ko ? "What-If 시뮬레이터" : "What-If Simulator"}</div>
           <div style={title}>{ko ? "만약 이렇게 바꾸면?" : "What if we change..."}</div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "4px" }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px" }}>
             {ko
               ? "슬라이더로 비용·매출을 조정하고 월 순익과 런웨이가 어떻게 변하는지 확인하세요."
               : "Drag sliders to adjust costs/revenue and see how profit and runway change."}
@@ -350,7 +350,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
                   300% 초과 시 "300%+" 로 표기하고 시각적으로 적자 강조. */}
               {scenario.bep > 300 ? "300%+" : `${Math.round(scenario.bep)}%`}
             </div>
-            <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
+            <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>
               {scenario.bep > 300
                 ? (ko ? "매출 대비 적자 과다" : "deep loss vs revenue")
                 : (ko ? "매출 대비" : "of revenue")}
@@ -374,7 +374,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
                   <span style={{ fontSize: "12px", fontWeight: 650, color: "#0f172a" }}>
                     {s.label[ko ? "ko" : "en"]}
                   </span>
-                  <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
+                  <span style={{ fontSize: "11px", color: "var(--muted)" }}>
                     {fmt(s.baseAmount)} → <span style={{ color: delta !== 0 ? (isGoodDirection ? "#1d3557" : "#b64c4c") : "rgba(15,23,42,0.5)", fontWeight: 650 }}>
                       {fmt(newAmount)}
                     </span>
@@ -406,7 +406,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
                 }}
               />
               {amountDelta !== 0 && (
-                <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "2px", textAlign: "right" }}>
+                <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px", textAlign: "right" }}>
                   {s.direction === "positive" ? (ko ? "월 매출 기여" : "Monthly revenue impact") : (ko ? "월 절감/증가" : "Monthly savings/increase")}: <span style={{ color: isGoodDirection ? "#1d3557" : "#b64c4c", fontWeight: 650 }}>
                     {amountDelta > 0 ? "+" : ""}{fmt(amountDelta)}
                   </span>
@@ -569,7 +569,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
               <div style={{
                 padding: "8px 12px",
                 fontSize: "11px",
-                color: "rgba(15,23,42,0.5)",
+                color: "var(--muted)",
                 lineHeight: 1.5,
                 background: "rgba(25,25,112,0.025)",
                 borderRadius: "8px",
@@ -602,7 +602,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "2px",
 };
 
@@ -619,6 +619,6 @@ const metricLabel: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.06em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "4px",
 };

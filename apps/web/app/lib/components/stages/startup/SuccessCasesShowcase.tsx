@@ -133,7 +133,7 @@ export function SuccessCasesShowcase({ mode, ko = true, compact = false }: Succe
                     background: "rgba(0,0,0,0.04)",
                     fontSize: "10.5px",
                     fontWeight: 600,
-                    color: "rgba(15,23,42,0.55)",
+                    color: "var(--muted)",
                   }}
                 >
                   {c.industry}
@@ -162,7 +162,7 @@ export function SuccessCasesShowcase({ mode, ko = true, compact = false }: Succe
                   alignItems: "center",
                   gap: "4px",
                   fontSize: "11.5px",
-                  color: "rgba(15,23,42,0.5)",
+                  color: "var(--muted)",
                 }}
               >
                 <MapPin size={11} strokeWidth={2.2} />
@@ -259,7 +259,7 @@ export function SuccessCasesShowcase({ mode, ko = true, compact = false }: Succe
                 alignItems: "center",
                 gap: "4px",
                 fontSize: "11px",
-                color: "rgba(15,23,42,0.5)",
+                color: "var(--muted)",
                 textDecoration: "none",
                 fontWeight: 500,
               }}

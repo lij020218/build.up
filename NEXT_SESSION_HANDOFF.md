@@ -3,7 +3,41 @@
 > 이전 2026-06-02 핸드오프 대체. 이번 세션에서 한 일 + 다음 세션이 바로 이어갈 백로그 명세.
 
 ---
-## 🚀 다음 세션 즉시 시작 (2026-06-06 갱신 — 여기부터 읽기)
+## 🚀 다음 세션 즉시 시작 (2026-06-07 카드누락 복원 후 갱신 — 여기부터 읽기)
+
+**git**: `feat/backend-audit-and-sync-2026-06-07` 브랜치(main 아님). **미커밋 변경 있음(아래 Phase 1 완료분)**. 푸시 안 함.
+최근 커밋: e9faeaa(동기화) · 8f33070(백엔드 P0/P1) · 3a2c78d·6c7eb58·f3d7c45(신호등 박멸).
+
+**⚠️ prod 미적용 마이그레이션** (이전 세션 신규):
+- `20260606_000003_webhook_secret_dek.sql` (stripe·toss webhook DEK 컬럼 — 적용 후 기존 연결은 env fallback, 재연결 시 정상화)
+- (`20260606_000002_owner_profile_enc.sql` 는 사용자가 적용 완료)
+
+**✅ 이번 세션(2026-06-07) 완료**:
+1. 동기화 C·D: iOS 단계입력 19뷰→stage_decisions / 사장님 PII 봉투암호화(owner-profile API·repo).
+2. 백엔드 감사(37-agent): P0 1 + P1 11 + billing JWT + Toss per-user webhook 수정.
+3. 프론트 감사(34-agent) → **신호등 컬러 박멸 100%**.
+4. **Phase 1 카드 누락 복원 완료 — 웹·iOS 패리티**:
+   - **데이터 모델**: `BUInventoryItem`에 `monthlySold: Double = 0` 추가 + custom `init(from: any Decoder)` (decodeIfPresent — 기존 JSON 하위호환). `monthlySold==0 && dailyUsage>0`이면 `×26 추정 + "추정" 배지`.
+   - **FoundOneCore** 헬퍼 2종: `SellThroughCalculator.swift`(웹 sell-through.ts 1:1 포팅) · `CohortRetentionCalculator.swift`(웹 cohort-retention.ts 1:1 포팅, 자체 CohortMember 타입).
+   - **DailyHub 카드 3종** (웹 SSOT 1:1 포팅): `RetailSellThroughCard.swift` · `FitnessRetentionCard.swift` · `EducationEnrollmentCard.swift`.
+   - **IndustryFocusCard** 분기 업데이트: `.retail`→RetailSellThrough / `.fitness`→FitnessRetention / `.education`→EducationEnrollment (기존 `.beauty/.pet/.livingService/.space`→BookingFocusCard 유지).
+   - **TodayView** 호출 업데이트: `IndustryFocusCard(mock:members:inventory:)`.
+   - **빌드 검증**: iOS BUILD SUCCEEDED ✓ · web/shared tsc 0 오류 ✓.
+
+**⏳ 다음 작업 = Phase 2 (예약 인프라 신규, 거대)**:
+- **Phase 2 (예약 인프라 신규, 거대)**: iOS·웹 둘 다 bookings 동기화 없음(웹 booking-store 로컬전용). 
+  - store-data.ts `bookings` 필드+FIELD_TO_COLUMN, 마이그레이션 `user_store_data.bookings jsonb`, 웹 usePersistence collect/apply 배선, iOS `BUBooking` 모델+입력UI+동기화.
+  - 웹 SSOT 카드: `BeautyBookingNoshowCard·SpaceOccupancyCard·PetBookingCard·LivingServiceDispatchCard`(booking-store + `booking-analytics.ts`). 빈상태 처리 패턴 동일.
+  - **원칙**: 현 iOS BookingFocusCard 통합은 데이터 부재 시 정직한 설계였음(가짜숫자 금지). 예약 모델 생기면 4종 실카드 분리.
+
+**프론트 P2 백로그**(감사 confirmed, 미착수): 텍스트 대비 AA 미달 166곳(rgba(15,23,42,0.3) 캡션→var(--muted)) · 브레이크포인트 6종 산재→breakpoints.ts SSOT · iOS SectionEditSheet 저장상태 표시 · iOS accessibilityLabel 7/120 · 웹 진행초기화 native confirm→토큰 모달 · 햄버거 34px→44px 터치타깃 · MarketingTrends/RoadmapView 무지개 hue→네이비농담.
+
+**백엔드 P2 백로그**: billing/verify 트랜잭션 원자성·setMonth overflow · tossplace 부분취소 · God hook 분리(usePersistence/useDataLoading) · 매직넘버 상수화.
+
+**검증 명령**: `cd packages/shared && npx tsc --noEmit` · `cd apps/web && npx tsc --noEmit` · `cd apps/ios && xcodebuild -scheme FoundOne -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build` · `npx vitest run packages/shared/src/__tests__/startup-programs-score.test.ts`
+
+---
+## (이전) 🚀 다음 세션 즉시 시작 (2026-06-06 갱신)
 
 **git**: `main` 브랜치, **41파일 미커밋**(이번 세션 누적). 신규 파일: `OwnerProfileChips`(웹/iOS), `FranchiseBenchmarkRegistry.swift`, `FranchiseBenchmarkCard.swift`, `morning-action-log.ts`, `scripts/gen-franchise-benchmark-swift.mts`, `scripts/gen-startup-programs-json.mts`, SQL `20260606_add_promo_playbook_agent_columns.sql`.
 → **먼저 커밋 권장**(아직 안 했으면). 검증 완료 상태라 안전.

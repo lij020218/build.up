@@ -70,6 +70,7 @@ import { Star, Store } from "lucide-react";
 // import { SecurityChecklist } from "../knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "../knowledge/InvestmentGlossary";
 import { getKstDate } from "../../utils/business-day";
+import { ConfirmModal } from "../ConfirmModal";
 
 export function CurrentStageView() {
   /* ------------------------------------------------------------------ *
@@ -211,6 +212,7 @@ export function CurrentStageView() {
     saveStatus, setSaveStatus,
     // Reset
     resetDemo,
+    resetConfirmOpen, onResetConfirm, onResetCancel,
     // Local stage state (from context)
     filterCat, setFilterCat, expandedId, setExpandedId,
     competitorResults, setCompetitorResults, competitorLoading, setCompetitorLoading,
@@ -241,6 +243,20 @@ export function CurrentStageView() {
 
   return (
     <>
+      <ConfirmModal
+        open={resetConfirmOpen}
+        title={language === "ko" ? "진행 상태 초기화" : "Reset Progress"}
+        message={
+          language === "ko"
+            ? "데모 진행 상태를 정말 초기화할까요?\n현재 저장된 홈 화면과 서버 데이터에도 바로 반영됩니다."
+            : "Reset the demo progress?\nThis will immediately update both your home screen and saved server state."
+        }
+        confirmLabel={language === "ko" ? "초기화" : "Reset"}
+        cancelLabel={language === "ko" ? "취소" : "Cancel"}
+        danger
+        onConfirm={onResetConfirm}
+        onCancel={onResetCancel}
+      />
       {businessLaunched && !viewingStageId ? (() => {
           const ko = language === "ko";
           const currentMonth = getKstDate(new Date()).slice(0, 7);
@@ -463,7 +479,7 @@ export function CurrentStageView() {
                 }} />
               ))}
             </div>
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.4)", whiteSpace: "nowrap" as const, fontVariantNumeric: "tabular-nums" }}>
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--muted)", whiteSpace: "nowrap" as const, fontVariantNumeric: "tabular-nums" }}>
               {pathStepNumber}/{pathTotalStages} · {formatStageType(currentStage.type, language)}
             </span>
           </div>
@@ -953,7 +969,7 @@ export function CurrentStageView() {
                             <div
                               style={{
                                 fontSize: "11.5px",
-                                color: "rgba(15,23,42,0.55)",
+                                color: "var(--muted)",
                                 lineHeight: 1.5,
                                 marginTop: "4px",
                                 fontWeight: 500,

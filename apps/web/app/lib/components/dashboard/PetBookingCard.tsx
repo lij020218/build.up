@@ -161,7 +161,7 @@ export function PetBookingCard({ ko, industryCategoryId }: Props) {
 
       {analysis.mixArr.length > 0 && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
             {ko ? "90일 서비스 mix (Gingr boarding+grooming+medical+retail)" : "90d service mix"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
@@ -267,7 +267,7 @@ const labelStyle: React.CSSProperties = {
 
 const footerStyle: React.CSSProperties = {
   display: "flex", alignItems: "center",
-  fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.5,
+  fontSize: 11, color: "var(--muted)", lineHeight: 1.5,
   padding: "8px 12px", borderRadius: 9,
   background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
 };

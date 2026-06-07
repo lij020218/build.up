@@ -103,7 +103,7 @@ export function GrowthEngineStage() {
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
           {ko ? "리텐션 없는 성장은 밑 빠진 독에 물 붓기입니다." : "Growth without retention is filling a leaky bucket."}
         </div>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
           {ko ? "MVP를 출시했고 초기 사용자가 생겼다면, 이제 \"이 사람들이 돌아오는가?\"를 증명해야 합니다. 주간 성장률을 체계적으로 추적하고, 가장 큰 레버를 매주 실험해야 합니다." : "If you've launched an MVP and have initial users, now prove they come back. Track weekly growth systematically and experiment on the biggest lever each week."}
         </div>
       </div>
@@ -121,7 +121,7 @@ export function GrowthEngineStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.num}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{s.desc}</div>
             </div>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}><path d="M5 3l4 4-4 4" stroke="rgba(0,0,0,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
@@ -144,7 +144,7 @@ export function GrowthEngineStage() {
           ]).map(f => (
             <div key={f.name} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
               <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: MIDNIGHT_SOFT, color: MIDNIGHT, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "1px" }}>{f.name}</span>
-              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>{f.desc}</span>
+              <span style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.45 }}>{f.desc}</span>
             </div>
           ))}
         </div>
@@ -160,7 +160,7 @@ export function GrowthEngineStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "북극성 지표를 하나 선택하세요" : "Choose one North Star Metric"}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "6px" }}>
             {ko ? "회사 전체가 추적하는 하나의 핵심 숫자. 이 숫자가 올라가면 사업이 건강한 것입니다." : "The single number the whole company tracks. If it goes up, the business is healthy."}
           </div>
         </div>
@@ -178,7 +178,7 @@ export function GrowthEngineStage() {
               <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: MIDNIGHT_SOFT, color: MIDNIGHT, whiteSpace: "nowrap" as const, flexShrink: 0 }}>{s.type}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.metric}</div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.ex}</div>
+                <div style={{ fontSize: "11px", color: "var(--muted)" }}>{s.ex}</div>
               </div>
               {sel && <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: MIDNIGHT, padding: "2px 6px", borderRadius: "4px", flexShrink: 0, marginTop: "2px" }}>✓</span>}
             </button>
@@ -206,7 +206,7 @@ export function GrowthEngineStage() {
               onFocus={(e) => { e.currentTarget.style.borderColor = MIDNIGHT; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = MIDNIGHT_BORDER; }}
             />
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "6px" }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "6px" }}>
               {ko ? "자동 저장됩니다. 이 지표가 운영 대시보드에 표시됩니다." : "Auto-saved. This metric will appear on your dashboard."}
             </div>
           </div>
@@ -222,7 +222,7 @@ export function GrowthEngineStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>2</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "매주 월요일, 30분 성장 리뷰를 하세요" : "Run a 30-min growth review every Monday"}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "4px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "4px" }}>
             {ko ? "YC가 가장 강조하는 습관입니다. 주간 5-7% 성장이 목표." : "The habit YC emphasizes most. Target: 5-7% weekly growth."}
           </div>
         </div>
@@ -242,7 +242,7 @@ export function GrowthEngineStage() {
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
               <div>
                 <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
+                <div style={{ fontSize: "11px", color: "var(--muted)" }}>{s.detail}</div>
               </div>
             </div>
           ))}
@@ -264,7 +264,7 @@ export function GrowthEngineStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "리텐션이 먼저입니다" : "Retention comes first"}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "4px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "4px" }}>
             {ko ? "리텐션 없이 광고비를 쓰면 돈만 태웁니다. 먼저 사용자가 돌아오는지 확인하세요." : "Spending on ads without retention burns money. First prove users come back."}
           </div>
         </div>
@@ -285,7 +285,7 @@ export function GrowthEngineStage() {
             </div>
           ))}
         </div>
-        <div style={{ padding: "0 22px 16px", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.55 }}>
+        <div style={{ padding: "0 22px 16px", fontSize: "12px", color: "var(--muted)", lineHeight: 1.55 }}>
           {ko ? "B2B SaaS는 D30 40%+, B2C 앱은 D30 15%+가 양호. 이 기준에 못 미치면 성장보다 제품 개선에 집중하세요." : "B2B SaaS needs D30 40%+, B2C app D30 15%+. Below this, focus on product improvement, not growth."}
         </div>
       </div>
@@ -310,7 +310,7 @@ export function GrowthEngineStage() {
               ? '활성 사용자 30+명에게 *단 1개* 질문: **"이 제품을 더 이상 쓸 수 없다면 어떻게 느끼실까요?"** ① 매우 실망 / ② 다소 실망 / ③ 실망 안 함. **40%+ 가 ①번 = PMF 달성**. 수백 스타트업 데이터로 검증된 임계값.'
               : 'Ask 30+ active users *one* question: "How would you feel if you could no longer use [product]?" ① Very disappointed / ② Somewhat / ③ Not. **40%+ ① = PMF achieved**. Validated across hundreds of startups.'}
           </div>
-          <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.55 }}>
+          <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.55 }}>
             <strong>2026 적용</strong>: ① 분기마다 재측정 (시장 변함) ② 세그먼트 분리 (전체 평균은 거짓말) ③ ICP만 골라 측정 (전체 사용자가 아닌 핵심 ICP의 40%)
           </div>
           <div style={{ marginTop: 8 }}>
@@ -352,7 +352,7 @@ export function GrowthEngineStage() {
                 <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>지표</th>
                 <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>중앙값</th>
                 <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "#1d3557", fontSize: 11.5 }}>Top quartile</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "rgba(15,23,42,0.55)", fontSize: 11.5 }}>주의</th>
+                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "var(--muted)", fontSize: 11.5 }}>주의</th>
               </tr>
             </thead>
             <tbody>
@@ -370,13 +370,13 @@ export function GrowthEngineStage() {
                   <td style={{ padding: "8px 10px", color: "#0f172a", fontWeight: 600 }}>{b.metric}</td>
                   <td style={{ padding: "8px 10px", color: MIDNIGHT, fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{b.median}</td>
                   <td style={{ padding: "8px 10px", color: "#1d3557", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{b.top}</td>
-                  <td style={{ padding: "8px 10px", color: "rgba(15,23,42,0.55)", fontSize: 11 }}>{b.note}</td>
+                  <td style={{ padding: "8px 10px", color: "var(--muted)", fontSize: 11 }}>{b.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div style={{ fontSize: 11, color: "rgba(15,23,42,0.5)", marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
           출처: Recurly 2025·OpenView 2026·Bessemer State of the Cloud 2026·Pepper Effect 2026
         </div>
       </div>
@@ -445,7 +445,7 @@ export function GrowthEngineStage() {
               <div style={{ fontSize: 13, fontWeight: 700, color: "#b64c4c", marginBottom: 2 }}>
                 {s.icon} {s.scenario}
               </div>
-              <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginBottom: 6, fontStyle: "italic" as const }}>
+              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, fontStyle: "italic" as const }}>
                 원인: {s.cause}
               </div>
               <ol style={{ margin: 0, paddingLeft: 18, fontSize: 11.5, color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>
@@ -456,7 +456,7 @@ export function GrowthEngineStage() {
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 12, lineHeight: 1.55, padding: "8px 10px", borderRadius: 8, background: "rgba(15,23,42,0.03)" }}>
+        <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 12, lineHeight: 1.55, padding: "8px 10px", borderRadius: 8, background: "rgba(15,23,42,0.03)" }}>
           💡 <strong>핵심 진실</strong>: 죽음의 평균 시점은 마지막 펀딩 후 22개월 — 자금 소진 직전 3-6개월에 위 4가지 중 하나가 일어남. 통계상 80%+ 의 사장님이 실패 후에도 다시 창업. 막혔다고 끝이 아닙니다.
         </div>
       </div>

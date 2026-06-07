@@ -8,6 +8,7 @@ import { randomBytes, createHmac } from "crypto";
 import { requireApiUser } from "../../../../_lib/auth";
 import { buildAuthUrl, isGa4Configured, Ga4ApiError } from "../../../../_lib/ga4-client";
 import { getEnvVar } from "../../../../_lib/env";
+import { getSupabaseAdmin } from "../../../../_lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,13 @@ export async function GET(request: Request) {
   const payload = `${auth.userId}|${nonce}`;
   const hmac = createHmac("sha256", stateSecret).update(payload).digest("hex").slice(0, 24);
   const state = `${payload}|${hmac}`;
+
+  // Nonce 를 DB 에 저장 — callback 에서 소비(consumed_at 설정)하여 replay 차단.
+  const supabase = getSupabaseAdmin();
+  if (supabase) {
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    await supabase.from("ga4_oauth_nonces").insert({ nonce, user_id: auth.userId, expires_at: expiresAt });
+  }
 
   try {
     const url = buildAuthUrl(state);

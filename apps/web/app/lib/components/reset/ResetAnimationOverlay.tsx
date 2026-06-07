@@ -254,7 +254,7 @@ export function ResetAnimationOverlay({ progress, ko = true }: ResetAnimationOve
             <p
               style={{
                 fontSize: "14px",
-                color: "rgba(15,23,42,0.55)",
+                color: "var(--muted)",
                 margin: "0 0 32px",
                 lineHeight: 1.55,
               }}
@@ -375,7 +375,7 @@ export function ResetAnimationOverlay({ progress, ko = true }: ResetAnimationOve
           style={{
             marginTop: "32px",
             fontSize: "11.5px",
-            color: "rgba(15,23,42,0.45)",
+            color: "var(--muted)",
             letterSpacing: "0.02em",
           }}
         >

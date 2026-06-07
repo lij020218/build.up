@@ -44,7 +44,7 @@ const CARD_TITLE: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.1em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.38)",
+  color: "var(--muted)",
   marginBottom: "18px",
 };
 
@@ -126,7 +126,7 @@ export function AiRoadmapSummary() {
             <div style={{ fontSize: "20px", fontWeight: 700, letterSpacing: "-0.03em", color: "#0f172a", marginBottom: "6px" }}>
               {ko ? "AI 로드맵을 먼저 생성해 주세요" : "Generate your AI roadmap first"}
             </div>
-            <div style={{ fontSize: "15px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
+            <div style={{ fontSize: "15px", color: "var(--muted)", lineHeight: 1.6 }}>
               {ko
                 ? "업종, 예산, 지역 정보를 입력하면 AI가 맞춤 창업 로드맵을 만들어 드립니다."
                 : "Enter your industry, budget, and location to get a personalized startup roadmap."}
@@ -181,7 +181,7 @@ export function AiRoadmapSummary() {
         <div>
           <div style={{
             fontSize: "11px", fontWeight: 650, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: "rgba(15,23,42,0.4)", marginBottom: "6px",
+            textTransform: "uppercase", color: "var(--muted)", marginBottom: "6px",
           }}>
             AI Startup Roadmap
           </div>
@@ -191,7 +191,7 @@ export function AiRoadmapSummary() {
           }}>
             {ko ? "AI 창업 로드맵" : "AI Startup Roadmap"}
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.4)", marginTop: "4px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", marginTop: "4px" }}>
             {ko ? `생성일: ${dateStr}` : `Generated: ${dateStr}`}
           </div>
         </div>
@@ -221,7 +221,7 @@ export function AiRoadmapSummary() {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", marginBottom: "6px" }}>
               {ko ? "종합 점수" : "Overall Score"} <span style={{ fontWeight: 800, fontSize: "20px", letterSpacing: "-0.02em" }}>{ma.score}</span>
-              <span style={{ fontSize: "13px", fontWeight: 400, color: "rgba(15,23,42,0.35)" }}>/100</span>
+              <span style={{ fontSize: "13px", fontWeight: 400, color: "var(--muted)" }}>/100</span>
             </div>
             {/* score bar */}
             <div style={{ height: "6px", borderRadius: "3px", background: "rgba(0,0,0,0.05)", overflow: "hidden" }}>
@@ -244,7 +244,7 @@ export function AiRoadmapSummary() {
             { label: ko ? "타겟 적합도" : "Target Fit", value: ma.targetFit },
           ] as const).map((m) => (
             <div key={m.label} style={METRIC_TILE}>
-              <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", marginBottom: "6px", letterSpacing: "0.04em" }}>
+              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "6px", letterSpacing: "0.04em" }}>
                 {m.label}
               </div>
               <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>{m.value}</div>
@@ -264,7 +264,7 @@ export function AiRoadmapSummary() {
 
         {/* Total */}
         <div style={{ fontSize: "26px", fontWeight: 780, letterSpacing: "-0.04em", color: "#0f172a", marginBottom: "16px" }}>
-          {fmt(ba.total)}<span style={{ fontSize: "14px", fontWeight: 500, color: "rgba(15,23,42,0.35)", marginLeft: "4px" }}>{ko ? "원" : "KRW"}</span>
+          {fmt(ba.total)}<span style={{ fontSize: "14px", fontWeight: 500, color: "var(--muted)", marginLeft: "4px" }}>{ko ? "원" : "KRW"}</span>
         </div>
 
         {/* Stacked bar */}
@@ -289,7 +289,7 @@ export function AiRoadmapSummary() {
               <div style={{ width: 10, height: 10, borderRadius: "3px", background: bi.color, flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{bi.label}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>
+                <div style={{ fontSize: "12px", color: "var(--muted)" }}>
                   {fmt(bi.amount)} ({pct(bi.amount, ba.total)}%)
                 </div>
               </div>
@@ -319,7 +319,7 @@ export function AiRoadmapSummary() {
                     {s.category}
                   </span>
                 </div>
-                <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.55, marginBottom: "6px" }}>
+                <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.55, marginBottom: "6px" }}>
                   {s.reason}
                 </div>
                 <div style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557" }}>
@@ -344,7 +344,7 @@ export function AiRoadmapSummary() {
                 display: "grid", gap: "4px",
               }}>
                 <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>{item.item}</div>
-                <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{item.vendor}</div>
+                <div style={{ fontSize: "13px", color: "var(--muted)" }}>{item.vendor}</div>
                 <div style={{ fontSize: "13px", fontWeight: 650, color: "#1d3557" }}>{item.estimatedCost}</div>
               </div>
             ))}
@@ -362,7 +362,7 @@ export function AiRoadmapSummary() {
             borderRadius: "12px", padding: "12px 18px",
             background: "rgba(29,53,87,0.04)",
           }}>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", marginBottom: "2px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "2px" }}>
               {ko ? "전체 기간" : "Total Duration"}
             </div>
             <div style={{ fontSize: "18px", fontWeight: 750, color: "#0f172a" }}>
@@ -373,7 +373,7 @@ export function AiRoadmapSummary() {
             borderRadius: "12px", padding: "12px 18px",
             background: "rgba(29,53,87,0.04)",
           }}>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", marginBottom: "2px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", marginBottom: "2px" }}>
               {ko ? "목표 오픈일" : "Target Open"}
             </div>
             <div style={{ fontSize: "18px", fontWeight: 750, color: "#0f172a" }}>
@@ -386,11 +386,12 @@ export function AiRoadmapSummary() {
         <div style={{ display: "flex", gap: "4px", alignItems: "flex-end" }}>
           {tl.phases.map((phase, i) => {
             const widthPct = tl.totalWeeks > 0 ? (phase.weeks / tl.totalWeeks) * 100 : 100 / tl.phases.length;
-            const hue = 220 + i * 32;
+            // 네이비 농담: 단계마다 배경 opacity만 증가 (무지개 hue 대신 미드나이트 네이비 톤)
+            const bgOpacity = 0.07 + i * 0.045;
             return (
               <div key={i} style={{ flex: widthPct, minWidth: 0 }}>
                 <div style={{
-                  fontSize: "11px", fontWeight: 600, color: `hsl(${hue}, 40%, 40%)`,
+                  fontSize: "11px", fontWeight: 600, color: "var(--primary)",
                   marginBottom: "6px", overflow: "hidden", textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                 }}>
@@ -399,9 +400,10 @@ export function AiRoadmapSummary() {
                 <div style={{
                   height: "36px",
                   borderRadius: i === 0 ? "8px 0 0 8px" : i === tl.phases.length - 1 ? "0 8px 8px 0" : "0",
-                  background: `hsl(${hue}, 45%, 88%)`,
+                  background: `rgba(29,53,87,${bgOpacity.toFixed(2)})`,
+                  border: "1px solid rgba(29,53,87,0.12)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "12px", fontWeight: 700, color: `hsl(${hue}, 40%, 35%)`,
+                  fontSize: "12px", fontWeight: 700, color: "var(--primary)",
                 }}>
                   {phase.weeks}{ko ? "주" : "w"}
                 </div>
@@ -437,7 +439,7 @@ export function AiRoadmapSummary() {
                   <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", lineHeight: 1.5 }}>
                     {r.description}
                   </div>
-                  <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.55 }}>
+                  <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.55 }}>
                     <span style={{ fontWeight: 650, color: "rgba(15,23,42,0.7)" }}>
                       {ko ? "대응:" : "Mitigation:"}
                     </span>{" "}

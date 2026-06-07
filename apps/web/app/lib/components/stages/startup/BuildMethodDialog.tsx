@@ -248,7 +248,7 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
                             padding: "1px 6px",
                             borderRadius: "4px",
                             background: "rgba(0,0,0,0.05)",
-                            color: "rgba(15,23,42,0.55)",
+                            color: "var(--muted)",
                           }}
                         >
                           {m.timeEstimate.split(",")[0]}
@@ -275,7 +275,7 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
                 justifyContent: "space-between",
                 alignItems: "center",
                 fontSize: "11.5px",
-                color: "rgba(15,23,42,0.55)",
+                color: "var(--muted)",
                 flexShrink: 0,
               }}
             >
@@ -319,7 +319,7 @@ function MethodDetail({ method }: { method: BuildMethod }) {
           >
             {method.difficulty}
           </span>
-          <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)" }}>{method.bestFor}</span>
+          <span style={{ fontSize: "12px", color: "var(--muted)" }}>{method.bestFor}</span>
         </div>
         <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.015em", marginBottom: "6px" }}>
           {method.name}
@@ -372,7 +372,7 @@ function MethodDetail({ method }: { method: BuildMethod }) {
                   href={t.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", color: "rgba(15,23,42,0.5)" }}
+                  style={{ display: "inline-flex", alignItems: "center", color: "var(--muted)" }}
                 >
                   <ExternalLink size={13} strokeWidth={2.2} />
                 </a>

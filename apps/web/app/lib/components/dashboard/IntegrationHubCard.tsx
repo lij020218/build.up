@@ -175,7 +175,7 @@ export function IntegrationHubCard({ ko }: Props) {
       {/* 유료 게이트 — locked badge */}
       {channels.paidGated.length > 0 && (
         <section>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
             {ko ? "프리미엄 (사용자 100명+ 이후 활성화)" : "Premium (after 100+ users)"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
@@ -191,7 +191,7 @@ export function IntegrationHubCard({ ko }: Props) {
         display: "flex", alignItems: "flex-start", gap: 8,
         padding: "10px 12px", borderRadius: 10,
         background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
-        fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.5,
+        fontSize: 11, color: "var(--muted)", lineHeight: 1.5,
       }}>
         <Sparkles size={12} strokeWidth={1.8} style={{ flexShrink: 0, color: MIDNIGHT, opacity: 0.6, marginTop: 2 }} />
         <span style={{ flex: 1 }}>
@@ -252,7 +252,7 @@ function ChannelRow({
           {channel.dataKo}
         </div>
         {channel.costNote && status !== "available" && (
-          <div style={{ fontSize: 10.5, color: "rgba(15,23,42,0.5)", marginTop: 4, fontStyle: "italic" as const }}>
+          <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 4, fontStyle: "italic" as const }}>
             {channel.costNote}
           </div>
         )}

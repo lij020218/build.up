@@ -22,6 +22,7 @@ import { useUnifiedRevenue } from "./useUnifiedRevenue";
 import { checkMilestones } from "../components/dashboard/MilestoneToast";
 import { useCashflowStore } from "../stores/cashflow-store";
 import { getKstDate } from "../utils/business-day";
+import { BP } from "../breakpoints";
 
 export type DailyEntry = {
   date: string;
@@ -67,8 +68,8 @@ export function useDashboardComputed(d: DashboardHook) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  const isWide = viewportWidth >= 980;
-  const isThreeUp = viewportWidth >= 1220;
+  const isWide = viewportWidth >= BP.lg;
+  const isThreeUp = viewportWidth >= BP.xxl;
 
   // 일자 컷오프
   const todayStr = getBusinessDay(new Date(), {

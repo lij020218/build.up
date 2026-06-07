@@ -26,7 +26,7 @@ const STAGE_ICON_BOX: React.CSSProperties = {
 const STAGE_LABEL: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
-  color: "rgba(15,23,42,0.50)",
+  color: "var(--muted)",
   letterSpacing: "0.07em",
   textTransform: "uppercase",
 };
@@ -39,7 +39,7 @@ const STAGE_VALUE: React.CSSProperties = {
 };
 const STAGE_SUB: React.CSSProperties = {
   fontSize: 12.5,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   marginTop: 2,
   fontWeight: 500,
   lineHeight: 1.5,
@@ -66,7 +66,7 @@ function StageCard({ icon: Icon, label, hint, compact, children }: StageCardProp
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={STAGE_LABEL}>{label}</div>
-          {hint && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)", marginTop: 3, fontWeight: 500, lineHeight: 1.45 }}>{hint}</div>}
+          {hint && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 3, fontWeight: 500, lineHeight: 1.45 }}>{hint}</div>}
         </div>
       </div>
       {children}
@@ -88,7 +88,7 @@ function InfraTile({ label, value, reason }: { label: string; value: string; rea
     <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.10)" }}>
       <div style={STAGE_LABEL}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 800, color: "#191970", marginTop: 3, letterSpacing: "-0.01em" }}>{value}</div>
-      {reason && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginTop: 4, lineHeight: 1.45 }}>{reason}</div>}
+      {reason && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4, lineHeight: 1.45 }}>{reason}</div>}
     </div>
   );
 }
@@ -313,7 +313,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
               <div style={{ fontSize: "14px", fontWeight: 650, color: "#b64c4c", marginBottom: "6px" }}>
                 {ko ? "생성에 실패했습니다" : "Generation failed"}
               </div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5, marginBottom: "10px" }}>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5, marginBottom: "10px" }}>
                 {error ?? (ko ? "AI 분석 요청이 많아 지연되고 있습니다." : "AI analysis is experiencing high demand.")}
                 <br />{ko ? "아래 버튼을 눌러 다시 시도해 주세요. 입력하신 내용은 모두 보존됩니다." : "Please retry — your inputs are preserved."}
               </div>
@@ -379,7 +379,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px" }}>
-            <span style={{ fontSize: "13px", color: "rgba(15,23,42,0.4)" }}>{ko ? "또는" : "or"}</span>
+            <span style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "또는" : "or"}</span>
             <input type="text" inputMode="numeric" value={budgetText}
               onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ""); setBudgetText(v); setBudget(v ? Number(v) * 10000 : null); }}
               placeholder={ko ? "직접 입력 (만원)" : "Enter amount (만원)"}
@@ -625,7 +625,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                   </span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", marginBottom: 6, letterSpacing: "-0.01em" }}>
-                  {result.parsed.industryLabel} <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(15,23,42,0.55)" }}>({result.parsed.subIndustryId})</span>
+                  {result.parsed.industryLabel} <span style={{ fontSize: 12, fontWeight: 500, color: "var(--muted)" }}>({result.parsed.subIndustryId})</span>
                 </div>
                 {reason && (
                   <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", lineHeight: 1.6, fontWeight: 500, marginBottom: alts.length > 0 ? 12 : 0 }}>
@@ -634,7 +634,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                 )}
                 {alts.length > 0 && (
                   <div style={{ borderTop: `1px solid ${tone.border}`, paddingTop: 10, marginTop: 10 }}>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(15,23,42,0.5)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
                       {ko ? "차선책 (이게 더 맞으면 알려주세요)" : "Alternatives"}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
@@ -719,7 +719,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                   })()}
                 </div>
                 {result.recommendations.operationalChannels && result.recommendations.operationalChannels.length > 6 && (
-                  <div style={{ fontSize: 11, color: "rgba(15,23,42,0.45)", marginTop: 4 }}>+{result.recommendations.operationalChannels.length - 6} {ko ? "더" : "more"}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>+{result.recommendations.operationalChannels.length - 6} {ko ? "더" : "more"}</div>
                 )}
               </StageCard>
             </div>
@@ -736,7 +736,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                           {r.timing === "now" ? (ko ? "즉시" : "Now") : (ko ? "확장 시" : "Later")}
                         </span>
                       </div>
-                      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>{r.reason}</div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.45 }}>{r.reason}</div>
                     </div>
                   ))}
                 </div>
@@ -759,7 +759,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                     background: "rgba(25,25,112,0.08)", color: "#191970",
                   }}>{result.marketAnalysis.grade}</div>
                   <span style={{ fontSize: 18, fontWeight: 750, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>
-                    {result.marketAnalysis.score}<span style={{ fontSize: 11, fontWeight: 500, color: "rgba(15,23,42,0.4)" }}>/100</span>
+                    {result.marketAnalysis.score}<span style={{ fontSize: 11, fontWeight: 500, color: "var(--muted)" }}>/100</span>
                   </span>
                 </div>
               </div>
@@ -804,7 +804,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                   return (
                     <div key={b.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <div style={{ width: 8, height: 8, borderRadius: 2, background: shades[i % shades.length] }} />
-                      <span style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", fontWeight: 500 }}>{b.label}</span>
+                      <span style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 500 }}>{b.label}</span>
                       <span style={{ fontSize: 12.5, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const }}>{fmt(b.value)}</span>
                     </div>
                   );
@@ -830,7 +830,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: "#191970" }}>
                       {result.legal.taxType === "simplified" ? (ko ? "간이과세" : "Simplified") : result.legal.taxType === "standard" ? (ko ? "일반과세" : "Standard") : (ko ? "법인" : "Corporation")}
                     </span>
-                    {result.legal.industryCode && <span style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)" }}>· {ko ? "업종코드" : "Code"} {result.legal.industryCode}</span>}
+                    {result.legal.industryCode && <span style={{ fontSize: 11.5, color: "var(--muted)" }}>· {ko ? "업종코드" : "Code"} {result.legal.industryCode}</span>}
                   </div>
                 )}
               </StageCard>
@@ -852,7 +852,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                             {ch.priority === 1 ? (ko ? "주력" : "Primary") : (ko ? "보조" : "Secondary")}
                           </span>
                           <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{ch.nameKo}</span>
-                          <span style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>· {ch.typeLabelKo}</span>
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--muted)" }}>· {ch.typeLabelKo}</span>
                         </div>
                         {ch.commissionRate > 0 && (
                           <span style={{ fontSize: 11, fontWeight: 700, color: "#191970", fontVariantNumeric: "tabular-nums" as const }}>
@@ -935,7 +935,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                         <div>
                           <div style={{ ...STAGE_LABEL, marginBottom: 4 }}>{ko ? "주의" : "Cons"}</div>
                           {result.recommendations.selectedConcept.cons.slice(0, 3).map((c, i) => (
-                            <div key={i} style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.45, marginBottom: 2 }}>· {c}</div>
+                            <div key={i} style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.45, marginBottom: 2 }}>· {c}</div>
                           ))}
                         </div>
                       )}
@@ -968,11 +968,11 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                       {v.checkItems.length > 0 && (
                         <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 5, marginBottom: 6 }}>
                           {v.checkItems.slice(0, 4).map((c, i) => (
-                            <span key={i} style={{ fontSize: 10.5, color: "rgba(15,23,42,0.55)", padding: "2px 8px", borderRadius: 999, background: "rgba(15,23,42,0.04)" }}>· {c}</span>
+                            <span key={i} style={{ fontSize: 10.5, color: "var(--muted)", padding: "2px 8px", borderRadius: 999, background: "rgba(15,23,42,0.04)" }}>· {c}</span>
                           ))}
                         </div>
                       )}
-                      {v.reason && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.45, paddingTop: 6, borderTop: "1px dashed rgba(25,25,112,0.10)" }}>· {v.reason}</div>}
+                      {v.reason && <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.45, paddingTop: 6, borderTop: "1px dashed rgba(25,25,112,0.10)" }}>· {v.reason}</div>}
                     </div>
                   ))}
                 </div>
@@ -997,9 +997,9 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                         <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", flex: 1 }}>{it.item}</span>
                         {it.id && <span title={ko ? "DB 풀 검증" : "DB-verified"} style={{ display: "inline-flex", alignItems: "center" }}><ShieldCheck size={11} strokeWidth={1.8} color="#191970" /></span>}
                       </div>
-                      {it.vendor && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 1, lineHeight: 1.5 }}>{it.vendor}</div>}
+                      {it.vendor && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 1, lineHeight: 1.5 }}>{it.vendor}</div>}
                       {it.estimatedCost && <div style={{ fontSize: 11.5, fontWeight: 700, color: "#191970", marginTop: 4 }}>{it.estimatedCost}</div>}
-                      {it.reason && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginTop: 6, lineHeight: 1.45, paddingTop: 6, borderTop: "1px dashed rgba(25,25,112,0.10)" }}>· {it.reason}</div>}
+                      {it.reason && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, lineHeight: 1.45, paddingTop: 6, borderTop: "1px dashed rgba(25,25,112,0.10)" }}>· {it.reason}</div>}
                     </div>
                   ))}
                 </div>
@@ -1016,7 +1016,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{ins.name}</div>
                         {ins.required && <span style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "#191970", color: "white" }}>{ko ? "의무" : "Required"}</span>}
                       </div>
-                      {ins.reason && <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 4, lineHeight: 1.45 }}>{ins.reason}</div>}
+                      {ins.reason && <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 4, lineHeight: 1.45 }}>{ins.reason}</div>}
                       {ins.annualPremiumEstimate > 0 && <div style={{ fontSize: 11.5, fontWeight: 700, color: "#191970", marginTop: 3 }}>{ko ? "연 약 " : "~"}{fmt(ins.annualPremiumEstimate)}</div>}
                     </div>
                   ))}
@@ -1040,7 +1040,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                         </span>
                       </div>
                       <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.45 }}>{fp.eligibility}</div>
-                      {fp.deadline && <div style={{ fontSize: 11, color: "rgba(15,23,42,0.5)", marginTop: 4 }}>· {fp.deadline}</div>}
+                      {fp.deadline && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>· {fp.deadline}</div>}
                     </div>
                   ))}
                 </div>
@@ -1066,7 +1066,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                         {blk.rows.map((r, j) => (
                           <div key={j} style={{ padding: "9px 12px", borderRadius: 12, background: "rgba(25,25,112,0.04)" }}>
                             <div style={{ fontSize: 12.5, fontWeight: 700, color: "#0f172a" }}>{r.name}</div>
-                            <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginTop: 2, lineHeight: 1.45 }}>{r.meta}</div>
+                            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2, lineHeight: 1.45 }}>{r.meta}</div>
                           </div>
                         ))}
                       </div>
@@ -1086,8 +1086,8 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                   return (
                     <div key={i} style={{ width: `${pct}%`, display: "flex", flexDirection: "column" as const, alignItems: "center", minWidth: 40 }}>
                       <div style={{ width: "100%", height: 8, borderRadius: i === 0 ? "4px 0 0 4px" : i === result.timeline.phases.length - 1 ? "0 4px 4px 0" : "0", background: shades[i % shades.length] }} />
-                      <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(15,23,42,0.55)", marginTop: 6, textAlign: "center" as const, lineHeight: 1.2 }}>{p.name}</div>
-                      <div style={{ fontSize: 10, color: "rgba(15,23,42,0.4)" }}>{p.weeks}{ko ? "주" : "w"}</div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--muted)", marginTop: 6, textAlign: "center" as const, lineHeight: 1.2 }}>{p.name}</div>
+                      <div style={{ fontSize: 10, color: "var(--muted)" }}>{p.weeks}{ko ? "주" : "w"}</div>
                     </div>
                   );
                 })}
@@ -1310,7 +1310,7 @@ const rvIconWrap = (bg: string, _stroke: string): React.CSSProperties => ({
 
 const rvLabel: React.CSSProperties = {
   fontSize: "12px", fontWeight: 650, letterSpacing: "0.06em",
-  textTransform: "uppercase", color: "rgba(15,23,42,0.4)", marginBottom: "4px",
+  textTransform: "uppercase", color: "var(--muted)", marginBottom: "4px",
 };
 
 const rvValue: React.CSSProperties = {
@@ -1318,7 +1318,7 @@ const rvValue: React.CSSProperties = {
 };
 
 const rvSub: React.CSSProperties = {
-  fontSize: "13px", color: "rgba(15,23,42,0.45)", marginTop: "2px",
+  fontSize: "13px", color: "var(--muted)", marginTop: "2px",
 };
 
 /** 사업 컨셉 hero 박스의 핵심 태그 — 업종/타입/상권/예산 */

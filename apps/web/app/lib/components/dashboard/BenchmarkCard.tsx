@@ -116,7 +116,7 @@ export function BenchmarkCard() {
     return (
       <div style={card}>
         <div style={headerRow}>
-          <Lightbulb size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} />
+          <Lightbulb size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} />
           <span style={cardTitle}>{ko ? "벤치마킹" : "Benchmarking"}</span>
         </div>
         <div style={emptyState}>
@@ -137,7 +137,7 @@ export function BenchmarkCard() {
   return (
     <div style={card}>
       <div style={headerRow}>
-        <Lightbulb size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} />
+        <Lightbulb size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} />
         <span style={cardTitle}>{ko ? "벤치마킹" : "Benchmarking"}</span>
         <span style={situationBadge}>{ko ? result.label.ko : result.label.en}</span>
       </div>

@@ -200,7 +200,7 @@ export function ReportView({ period }: Props) {
             <span style={{ fontWeight: 700, color: trendColor(snap.revenueChangePct), fontSize: 14 }}>
               {snap.revenueChangePct >= 0 ? "+" : ""}{snap.revenueChangePct}%
             </span>
-            <span style={{ color: "rgba(15,23,42,0.55)", fontSize: 13 }}>
+            <span style={{ color: "var(--muted)", fontSize: 13 }}>
               {ko ? "이전 기간 대비" : "vs previous"}
             </span>
           </div>
@@ -263,7 +263,7 @@ export function ReportView({ period }: Props) {
               {ko ? "이상 신호" : "Anomaly"}
             </span>
             {brain.anomalyContext && (
-              <span style={{ fontSize: 11, color: "rgba(15,23,42,0.5)", marginLeft: "auto" }}>
+              <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: "auto" }}>
                 {brain.anomalyContext.label}
               </span>
             )}
@@ -360,7 +360,7 @@ function KPI({ label, value, valueColor, sub }: { label: string; value: string; 
 function TrendIcon({ change }: { change: number }) {
   if (change >= 5) return <TrendingUp size={14} strokeWidth={1.6} style={{ color: GREEN }} />;
   if (change <= -5) return <TrendingDown size={14} strokeWidth={1.6} style={{ color: RED }} />;
-  return <Minus size={14} strokeWidth={1.6} style={{ color: "rgba(15,23,42,0.5)" }} />;
+  return <Minus size={14} strokeWidth={1.6} style={{ color: "var(--muted)" }} />;
 }
 
 function trendColor(change: number): string {
@@ -545,7 +545,7 @@ const kpiCardStyle: React.CSSProperties = {
 const kpiLabel: React.CSSProperties = {
   fontSize: 10.5,
   fontWeight: 700,
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
   letterSpacing: "0.06em",
   textTransform: "uppercase" as const,
 };
@@ -559,7 +559,7 @@ const kpiValue: React.CSSProperties = {
 
 const kpiSub: React.CSSProperties = {
   fontSize: 11.5,
-  color: "rgba(15,23,42,0.45)",
+  color: "var(--muted)",
   fontFamily: "ui-monospace, monospace",
 };
 
@@ -589,7 +589,7 @@ const actionCardStyle: React.CSSProperties = {
 const cardEyebrow: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   letterSpacing: "0.06em",
   textTransform: "uppercase" as const,
 };
@@ -747,7 +747,7 @@ const exportPlaceholder: React.CSSProperties = {
   borderRadius: 12,
   border: "1px dashed rgba(15,23,42,0.15)",
   background: "transparent",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   fontSize: 12,
   fontWeight: 600,
   cursor: "not-allowed",

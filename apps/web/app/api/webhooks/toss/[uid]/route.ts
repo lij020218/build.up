@@ -99,6 +99,12 @@ export async function POST(
   }
 
   // ── 3. 멱등 (paymentKey + status 조합을 webhook id 로 사용) ──
+  // paymentKey 와 orderId 모두 없으면 dedup ID 가 "undefined-undefined:unknown" 으로
+  // 모든 keyless 이벤트가 같은 ID 를 공유 → 첫 이벤트 이후 모두 무시되는 버그.
+  if (!event.data.paymentKey && !event.data.orderId) {
+    console.warn("[webhooks/toss] paymentKey 와 orderId 모두 없는 이벤트 — 400 반환");
+    return NextResponse.json({ error: "paymentKey or orderId required" }, { status: 400 });
+  }
   const paymentKey = event.data.paymentKey ?? `${event.data.orderId}-${event.data.status}`;
   const dedupId = `${paymentKey}:${event.data.status ?? "unknown"}`;
 

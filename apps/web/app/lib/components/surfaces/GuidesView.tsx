@@ -906,7 +906,7 @@ const recommendBtnStyle: React.CSSProperties = {
 
 const recommendNoteStyle: React.CSSProperties = {
   fontSize: 11.5,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   letterSpacing: "-0.005em",
   fontWeight: 500,
 };

@@ -161,7 +161,7 @@ export function StartupSection({
         <div>
           <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{title}</div>
           {subtitle && (
-            <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", marginTop: "1px" }}>{subtitle}</div>
+            <div style={{ fontSize: "11.5px", color: "var(--muted)", marginTop: "1px" }}>{subtitle}</div>
           )}
         </div>
       </div>

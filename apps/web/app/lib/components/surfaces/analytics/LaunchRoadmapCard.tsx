@@ -356,7 +356,7 @@ export function LaunchRoadmapCard() {
                   fontFamily: "inherit",
                 }}
               />
-              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)" }}>{ko ? "만원" : "만₩"}</span>
+              <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "만원" : "만₩"}</span>
             </div>
           </div>
           {/* 개업 목표일 — 직접 편집 */}

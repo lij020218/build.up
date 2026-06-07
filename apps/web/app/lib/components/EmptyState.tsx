@@ -28,7 +28,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       minHeight: "240px",
     }}>
       {/* Icon — 48px, muted */}
-      <div style={{ marginBottom: "16px", color: "rgba(15,23,42,0.25)" }}>
+      <div style={{ marginBottom: "16px", color: "var(--muted)" }}>
         {icon}
       </div>
 
@@ -49,7 +49,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
         margin: "0 0 20px",
         fontSize: "14px",
         lineHeight: 1.6,
-        color: "rgba(15,23,42,0.45)",
+        color: "var(--muted)",
         maxWidth: "300px",
       }}>
         {description}

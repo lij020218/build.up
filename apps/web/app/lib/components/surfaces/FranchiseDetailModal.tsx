@@ -394,7 +394,7 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
                       </span>
                     )}
                     {s.url && (
-                      <span style={{ flexShrink: 0, fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>↗</span>
+                      <span style={{ flexShrink: 0, fontSize: "10px", color: "var(--muted)" }}>↗</span>
                     )}
                   </div>
                 );

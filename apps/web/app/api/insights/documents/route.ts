@@ -1,15 +1,27 @@
 // GET /api/insights/documents?category=...&limit=50
 //
 // List ingested insight documents (metadata only — no chunk bodies).
+// Admin / service-role only — not exposed to general users.
 
-import { supabase } from "../../../../lib/supabase";
+import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 import { requireApiUser } from "../../_lib/auth";
+import { getEnvVar } from "../../_lib/env";
 
 export async function GET(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) {
     return json({ error: auth.error }, auth.status);
   }
+
+  // Admin token 체크 — 일반 사용자는 접근 불가
+  const adminToken = request.headers.get("x-admin-token");
+  const expectedAdminToken = getEnvVar("INSIGHT_INGEST_TOKEN");
+  if (!expectedAdminToken || adminToken !== expectedAdminToken) {
+    return json({ error: "Forbidden" }, 403);
+  }
+
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return json({ error: "서버 설정 오류" }, 500);
 
   const url = new URL(request.url);
   const category = url.searchParams.get("category");
@@ -33,7 +45,8 @@ export async function GET(request: Request) {
 
   const { data, error } = await query;
   if (error) {
-    return json({ error: error.message }, 500);
+    console.error("[insights/documents] query error:", error.message);
+    return json({ error: "문서 목록 조회에 실패했습니다." }, 500);
   }
 
   return json({ count: data?.length ?? 0, documents: data ?? [] }, 200);

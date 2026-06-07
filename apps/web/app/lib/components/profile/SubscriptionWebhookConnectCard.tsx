@@ -74,10 +74,10 @@ export function SubscriptionWebhookConnectCard({ ko = true }: { ko?: boolean }) 
             {ko ? "결제 시스템 자동 연동" : "Auto-sync payment systems"}
           </span>
         </div>
-        <p style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.55)", margin: "0 0 14px", lineHeight: 1.55 }}>
+        <p style={{ fontSize: "12.5px", color: "var(--muted)", margin: "0 0 14px", lineHeight: 1.55 }}>
           {ko
-            ? "Stripe·토스페이먼츠·자체 서버에서 발생한 신규 구독·결제·취소 이벤트를 실시간으로 받습니다. 매출·MRR·이탈률이 자동 갱신됩니다."
-            : "Receive subscription / payment / cancel events in real time. MRR and churn auto-update."}
+            ? "Stripe·토스페이먼츠·자체 서버에서 발생한 신규 구독·결제·취소 이벤트를 실시간으로 수신·기록합니다. 아래에서 연결 상태와 최근 30일 수신 건수를 확인할 수 있습니다."
+            : "Receive and record subscription / payment / cancel events in real time. See connection status and 30-day event counts below."}
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export function SubscriptionWebhookConnectCard({ ko = true }: { ko?: boolean }) 
               }}>{p.emoji}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a" }}>{p.name}</div>
-                <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.5)", marginTop: "1px" }}>
+                <div style={{ fontSize: "11.5px", color: "var(--muted)", marginTop: "1px" }}>
                   {st.connected
                     ? <>
                         <span style={{ color: "#1d3557", fontWeight: 600 }}>● {ko ? "연결됨" : "Connected"}</span>
@@ -128,7 +128,7 @@ export function SubscriptionWebhookConnectCard({ ko = true }: { ko?: boolean }) 
       </div>
 
       {loading && (
-        <div style={{ padding: "10px 22px", fontSize: "11px", color: "rgba(15,23,42,0.4)" }}>
+        <div style={{ padding: "10px 22px", fontSize: "11px", color: "var(--muted)" }}>
           {ko ? "상태 확인 중..." : "Loading..."}
         </div>
       )}
@@ -289,7 +289,7 @@ function ConnectSheet({
               <input type="password" value={webhookSecret} onChange={(e) => setWebhookSecret(e.target.value)}
                 placeholder="whsec_..." style={inputStyle} />
             </Field>
-            <p style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: "11px", color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
               {ko ? "Dashboard → Developers → Webhooks → Endpoint 추가 후 Signing secret 을 복사해 입력하세요."
                   : "Dashboard → Developers → Webhooks. Sig verification skipped if blank (not recommended)."}
             </p>
@@ -306,7 +306,7 @@ function ConnectSheet({
               <input type="password" value={webhookSecret} onChange={(e) => setWebhookSecret(e.target.value)}
                 placeholder={ko ? "콘솔 → Webhook 시크릿" : "Console → Webhook secret"} style={inputStyle} />
             </Field>
-            <p style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: "11px", color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
               {ko ? "토스페이먼츠 → 개발자센터 → API 키. webhook URL 도 콘솔에 등록 필요. Webhook 시크릿을 입력하면 전용 키로 검증해 더 안전합니다(미입력 시 기본 키 사용)."
                   : "Toss Payments developer center → API keys. Entering a webhook secret enables per-merchant verification."}
             </p>
@@ -319,7 +319,7 @@ function ConnectSheet({
               <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
                 placeholder={ko ? "예: 프로덕션 서버" : "e.g. Production server"} style={inputStyle} />
             </Field>
-            <p style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: "11px", color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
               {ko ? "발급된 토큰을 자체 백엔드의 webhook 헤더 (Authorization: Bearer ...) 로 사용하세요. 토큰은 한 번만 표시됩니다."
                   : "Use the issued token as Bearer auth from your own backend. Shown once."}
             </p>

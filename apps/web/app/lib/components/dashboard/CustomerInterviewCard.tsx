@@ -292,7 +292,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
             <div style={title}>
               {ko ? `누적 ${stats.total}건` : `${stats.total} interviews`}
               {stats.total > 0 && (
-                <span style={{ marginLeft: "8px", fontSize: "12px", fontWeight: 500, color: "rgba(15,23,42,0.45)" }}>
+                <span style={{ marginLeft: "8px", fontSize: "12px", fontWeight: 500, color: "var(--muted)" }}>
                   · {(["regular", "new", "lapsed", "potential"] as CustomerInterviewType[])
                     .filter((t) => stats.byType[t] > 0)
                     .map((t) => `${TYPE_META[t][ko ? "ko" : "en"]} ${stats.byType[t]}`)
@@ -393,7 +393,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
             }}>
               <Download size={13} strokeWidth={1.5} />
               <span>{ko ? "구글 폼 응답 자동 가져오기" : "Auto-import Google Form responses"}</span>
-              <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "10.5px", fontWeight: 600, color: "rgba(15,23,42,0.42)" }}>
+              <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "10.5px", fontWeight: 600, color: "var(--muted)" }}>
                 <span>{ko ? "펼치기" : "Expand"}</span>
                 <ChevronDown size={11} strokeWidth={2.2} />
               </span>
@@ -499,7 +499,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                       {iv.customerName && (
                         <span style={{ fontSize: "12px", fontWeight: 650, color: "#0f172a" }}>{iv.customerName}</span>
                       )}
-                      <span style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.4)", marginLeft: "auto", fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ fontSize: "10.5px", color: "var(--muted)", marginLeft: "auto", fontVariantNumeric: "tabular-nums" }}>
                         {iv.date.slice(5).replace("-", "/")}
                       </span>
                       <button type="button" onClick={() => removeInterview(iv.id)} style={removeBtn} title={ko ? "삭제" : "Delete"}>
@@ -513,7 +513,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 );
               })}
               {interviews.length > 20 && (
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", textAlign: "center" as const, padding: "6px" }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", textAlign: "center" as const, padding: "6px" }}>
                   + {interviews.length - 20}{ko ? "건 더 있음" : " more"}
                 </div>
               )}
@@ -607,7 +607,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                   <div style={{ fontSize: "12px", fontWeight: 700, color: "#0d9488", letterSpacing: "-0.005em" }}>
                     {ko ? `검증된 템플릿 (${filteredTemplates.length}개)` : `Proven templates (${filteredTemplates.length})`}
                   </div>
-                  <div style={{ marginLeft: "auto", fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.45)", letterSpacing: "0.02em" }}>
+                  <div style={{ marginLeft: "auto", fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.02em" }}>
                     {ko ? "AI 호출 X · 즉시 사용" : "No AI · instant"}
                   </div>
                 </div>
@@ -659,20 +659,20 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                         </span>
                         <span style={{
                           fontSize: "10px", fontWeight: 600,
-                          color: "rgba(15,23,42,0.4)",
+                          color: "var(--muted)",
                           flexShrink: 0,
                         }}>
                           {(ko ? tpl.questionsKo : tpl.questionsEn).length}{ko ? "문항" : "q"}
                         </span>
                       </div>
-                      <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>
+                      <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>
                         {ko ? tpl.descriptionKo : tpl.descriptionEn}
                       </div>
                     </button>
                   ))}
                 </div>
 
-                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px", fontSize: "10.5px", color: "rgba(15,23,42,0.5)", marginTop: "2px", lineHeight: 1.45, alignSelf: "center" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "5px", fontSize: "10.5px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.45, alignSelf: "center" }}>
                   <ChevronUp size={11} strokeWidth={1.5} />
                   <span>{ko
                     ? "클릭만 하면 질문이 채워져요. 직접 편집·복사·폼 발송 가능."
@@ -935,7 +935,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                   ? "AI 가 누적 인터뷰들을 한 번에 읽고 뽑은 4가지 발견입니다 — 공통 불편·재방문 동기·고객 그룹·실행 액션."
                   : "Four findings AI extracted by reading all interviews together — common pains, return motivations, customer groups, action items."}
               </div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", gap: "4px" }}>
+              <div style={{ fontSize: "11px", color: "var(--muted)", display: "flex", alignItems: "center", gap: "4px" }}>
                 <MessageCircle size={11} strokeWidth={1.8} />
                 {ko
                   ? `${patternAnalysis.interviewCount}건 분석 · ${patternAnalysis.generatedAt.slice(0, 10)}`
@@ -999,7 +999,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               </div>
 
               {/* 4가지 결과 미리보기 카드 */}
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
                 {ko ? "분석되는 4가지 결과" : "4 outputs"}
               </div>
               {([
@@ -1030,7 +1030,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                     <div style={{ fontSize: "12.5px", fontWeight: 650, color: p.color, letterSpacing: "-0.005em" }}>
                       {ko ? p.titleKo : p.titleEn}
                     </div>
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px", lineHeight: 1.45 }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.45 }}>
                       {ko ? p.exampleKo : p.exampleEn}
                     </div>
                   </div>
@@ -1133,7 +1133,7 @@ const tabBtn: React.CSSProperties = {
   flex: 1, padding: "7px 10px", borderRadius: "8px", border: "none", cursor: "pointer",
   fontSize: "12px", fontWeight: 650,
   background: "transparent",
-  color: "rgba(15,23,42,0.45)",
+  color: "var(--muted)",
   transition: "all 0.15s ease",
 };
 
@@ -1192,7 +1192,7 @@ const removeBtn: React.CSSProperties = {
   width: "20px", height: "20px", borderRadius: "5px", border: "none",
   background: "transparent", cursor: "pointer",
   display: "flex", alignItems: "center", justifyContent: "center",
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
 };
 
 const emptyHint: React.CSSProperties = {
@@ -1200,7 +1200,7 @@ const emptyHint: React.CSSProperties = {
   borderRadius: "10px",
   background: "rgba(124,58,237,0.03)",
   fontSize: "12px",
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
   lineHeight: 1.55,
   textAlign: "center",
 };

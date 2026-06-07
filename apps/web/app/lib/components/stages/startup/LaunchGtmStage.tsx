@@ -303,7 +303,7 @@ export function LaunchGtmStage() {
                           {ko ? l.role : l.roleEn}
                         </div>
                         <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>{l.tool}</div>
-                        <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>{ko ? l.why.ko : l.why.en}</div>
+                        <div style={{ fontSize: "11.5px", color: "var(--muted)", lineHeight: 1.5 }}>{ko ? l.why.ko : l.why.en}</div>
                       </div>
                       <div style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, padding: "3px 8px", borderRadius: "6px", background: MIDNIGHT_SOFT, whiteSpace: "nowrap" as const }}>{l.pricing}</div>
                       <ExternalLink size={12} strokeWidth={2.2} color="rgba(15,23,42,0.4)" />
@@ -352,7 +352,7 @@ export function LaunchGtmStage() {
                 <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>
                   {ko ? "보안 체크리스트 (선택)" : "Security Checklist (Optional)"}
                 </div>
-                <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", marginTop: "1px", lineHeight: 1.4 }}>
+                <div style={{ fontSize: "11.5px", color: "var(--muted)", marginTop: "1px", lineHeight: 1.4 }}>
                   {ko ? "47개 항목 · AI 프롬프트·SOC2·개인정보·DDoS — 출시 전 검토 권장 (생략 가능)" : "47 items · AI/SOC2/Privacy/DDoS — review before launch (optional)"}
                 </div>
               </div>
@@ -529,8 +529,8 @@ End: "Ask me anything ↓"`,
                 <details key={t.label} style={{ background: "white", borderRadius: "12px", border: `1px solid ${MIDNIGHT_BORDER}`, padding: "10px 14px" }}>
                   <summary style={{ cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{t.label}</span>
-                    <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", flex: 1 }}>{t.hint}</span>
-                    <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", fontWeight: 600 }}>{ko ? "펼치기 ▾" : "expand ▾"}</span>
+                    <span style={{ fontSize: "11px", color: "var(--muted)", flex: 1 }}>{t.hint}</span>
+                    <span style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{ko ? "펼치기 ▾" : "expand ▾"}</span>
                   </summary>
                   <pre style={{
                     marginTop: "10px",
@@ -696,7 +696,7 @@ End: "Ask me anything ↓"`,
                     <span style={{ fontSize: "10.5px", fontWeight: 600, padding: "2px 8px", borderRadius: "5px", background: "rgba(0,0,0,0.05)", color: "rgba(15,23,42,0.6)" }}>주기: {c.cadence}</span>
                   </div>
                   <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, marginBottom: "6px" }}>{c.why}</div>
-                  <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", lineHeight: 1.55, fontStyle: "italic" as const, paddingLeft: "10px", borderLeft: `2px solid ${MIDNIGHT_BORDER}` }}>
+                  <div style={{ fontSize: "11.5px", color: "var(--muted)", lineHeight: 1.55, fontStyle: "italic" as const, paddingLeft: "10px", borderLeft: `2px solid ${MIDNIGHT_BORDER}` }}>
                     {ko ? "사례: " : "Ex: "}{c.example}
                   </div>
                 </div>
@@ -762,8 +762,8 @@ End: "Ask me anything ↓"`,
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px", flexWrap: "wrap" as const }}>
                       <span style={{ fontSize: "11px", fontWeight: 700, color: MIDNIGHT, padding: "2px 7px", borderRadius: "5px", background: MIDNIGHT_SOFT, flexShrink: 0 }}>{c.num}</span>
                       <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em" }}>{c.title}</span>
-                      <span style={{ fontSize: "10.5px", fontWeight: 600, color: "rgba(15,23,42,0.55)", padding: "1px 6px", borderRadius: "4px", background: "rgba(0,0,0,0.04)" }}>{c.time}</span>
-                      <span style={{ fontSize: "10.5px", fontWeight: 600, color: "rgba(15,23,42,0.55)", padding: "1px 6px", borderRadius: "4px", background: "rgba(0,0,0,0.04)" }}>{c.cost}</span>
+                      <span style={{ fontSize: "10.5px", fontWeight: 600, color: "var(--muted)", padding: "1px 6px", borderRadius: "4px", background: "rgba(0,0,0,0.04)" }}>{c.time}</span>
+                      <span style={{ fontSize: "10.5px", fontWeight: 600, color: "var(--muted)", padding: "1px 6px", borderRadius: "4px", background: "rgba(0,0,0,0.04)" }}>{c.cost}</span>
                     </div>
                     <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55 }}>{c.desc}</div>
                   </div>
@@ -901,7 +901,7 @@ function ToolStepCard({
             }}
           >
             <strong style={{ fontWeight: 700 }}>{t.name}</strong>
-            <span style={{ color: "rgba(15,23,42,0.55)" }}>· {t.price}</span>
+            <span style={{ color: "var(--muted)" }}>· {t.price}</span>
             <ExternalLink size={11} strokeWidth={2.2} />
           </a>
         ))}

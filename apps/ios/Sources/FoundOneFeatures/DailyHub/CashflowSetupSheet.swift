@@ -219,6 +219,7 @@ public struct CashflowSetupSheet: View {
                         .foregroundStyle(isActive ? BUColor.midnight : BUColor.inkSubtle)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(isActive ? "\(ko ? preset.labelKo : preset.labelEn) 선택됨" : "\(ko ? preset.labelKo : preset.labelEn) 선택 안됨")
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 5) {
@@ -234,6 +235,7 @@ public struct CashflowSetupSheet: View {
                                     .foregroundStyle(BUColor.midnight.opacity(0.6))
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("수수료 안내")
                         }
                     }
                     HStack(spacing: 4) {
@@ -330,6 +332,7 @@ public struct CashflowSetupSheet: View {
                     .foregroundStyle(e.isActive ? BUColor.midnight : BUColor.inkSubtle)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(e.isActive ? "\(e.label) 활성" : "\(e.label) 비활성")
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(e.label)
@@ -352,6 +355,7 @@ public struct CashflowSetupSheet: View {
                     .foregroundStyle(BUColor.danger)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("\(e.label) 삭제")
         }
         .opacity(e.isActive ? 1 : 0.45)
         .padding(.horizontal, 14).padding(.vertical, 11)

@@ -117,7 +117,8 @@ export async function POST(
 
   const result = await persistSubscriptionEvent(supabase, uid, event);
   if (result.error) {
-    return NextResponse.json({ error: "persist failed", detail: result.error }, { status: 500 });
+    console.error("[webhooks/custom] persist failed:", result.error);
+    return NextResponse.json({ error: "persist failed" }, { status: 500 });
   }
   await supabase
     .from("custom_connections")

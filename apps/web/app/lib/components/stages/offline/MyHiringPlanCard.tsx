@@ -180,7 +180,7 @@ export function MyHiringPlanCard({ ko }: Props) {
               <span style={{ fontSize: 13, fontWeight: 700, color: sel ? MIDNIGHT : "#0f172a" }}>
                 {ko ? opt.ko : opt.en}
               </span>
-              <span style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>
+              <span style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.4 }}>
                 {ko ? opt.desc.ko : opt.desc.en}
               </span>
             </button>
@@ -215,7 +215,7 @@ export function MyHiringPlanCard({ ko }: Props) {
                 suffix={ko ? "만원" : "Manwon"}
               />
             </div>
-            <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.4, paddingBottom: 8 }}>
+            <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.4, paddingBottom: 8 }}>
               {ko
                 ? `미입력 시 최저시급(주 40h) × ${Math.round(hourlyToMonthly(MINIMUM_WAGE_2026, 40) / 10_000)}만원으로 추정`
                 : `Defaults to min-wage 40h baseline if blank`}
@@ -241,7 +241,7 @@ export function MyHiringPlanCard({ ko }: Props) {
               <div style={fieldLabel}>{ko ? "주당 시간" : "Hrs/wk"}</div>
               <NumberInput value={ptHoursPerWeek} onChange={setPtHoursPerWeek} min={1} max={60} />
             </div>
-            <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.4, paddingBottom: 8 }}>
+            <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.4, paddingBottom: 8 }}>
               {ko
                 ? `2026 최저시급 ${MINIMUM_WAGE_2026.toLocaleString()}원 자동 적용`
                 : `Auto-applies 2026 min wage ${MINIMUM_WAGE_2026.toLocaleString()} KRW/h`}
@@ -277,7 +277,7 @@ export function MyHiringPlanCard({ ko }: Props) {
               : `₩${cost.total.toLocaleString()}`}
           </div>
           {status !== "not-yet" && (cost.fullTimeCost > 0 || cost.partTimeCost > 0) && (
-            <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 3 }}>
+            <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 3 }}>
               {ko
                 ? `정직원 ${fmt(cost.fullTimeCost)} + 알바 ${fmt(cost.partTimeCost)}`
                 : `FT ${fmt(cost.fullTimeCost)} + PT ${fmt(cost.partTimeCost)}`}
@@ -291,7 +291,7 @@ export function MyHiringPlanCard({ ko }: Props) {
         </div>
       </div>
 
-      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+      <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.5 }}>
         {ko
           ? "이 값은 다음 단계인 「재무 검토」의 월 운영비 인건비 칸으로 자동 전달됩니다. 입력하지 않으면 업종 평균치로 표시됩니다."
           : "Carried into Financial Review's labor field. Blank = industry average shown."}
@@ -448,7 +448,7 @@ function InviteLinkSection({ ko }: { ko: boolean }) {
               {copied ? (ko ? "복사됨" : "Copied") : ko ? "복사" : "Copy"}
             </button>
           </div>
-          <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+          <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.5 }}>
             {ko
               ? "이 링크를 카톡·문자로 직원에게 보내세요. 7일간 유효, 1회만 사용 가능합니다."
               : "Send via KakaoTalk/SMS. Valid 7 days, one-time use."}
@@ -549,7 +549,7 @@ function TextInput({
           top: "50%",
           transform: "translateY(-50%)",
           fontSize: 11,
-          color: "rgba(15,23,42,0.5)",
+          color: "var(--muted)",
           pointerEvents: "none",
         }}
       >

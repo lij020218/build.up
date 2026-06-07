@@ -34,9 +34,25 @@ export const USER_TABLES = [
   "csv_revenue_entries",
   "customers",
   "customer_visits",
-  "collected_sales",
-  "sales_collection_config",
-  "sales_sync_log",
+  // 외부 통합 — GA4 OAuth token + webhook secret hash 포함
+  "saas_metrics_connections",
+  // 팝빌·CODEF 연동 정보
+  "popbill_connections",
+  "codef_bank_accounts",
+  // ── 2026-06-07 점검: account/reset 이 안 지워 잔존하던 데이터 테이블들 추가 ──
+  //   (이전엔 USER_TABLES 누락 → "진행 초기화" 후 옛 매출·세금·지표가 부활)
+  //   delete 는 user_id FK CASCADE 로도 정리되지만 reset 은 사용자 유지라 직접 삭제 필요.
+  "popbill_jobs",
+  "popbill_tax_invoices",
+  "popbill_cashbills",
+  "codef_bank_transactions",
+  "saas_metrics_daily",
+  "saas_funnel_manual_weekly",
+  "saas_funnel_source_daily",
+  "saas_funnel_events_raw",
+  "ai_report_insights",
+  "marketing_coach_cache",
+  "coaching_history",
 ] as const;
 
 // owner_user_id 컬럼 테이블 (사용자가 소유자로 만든 row 만).

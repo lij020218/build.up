@@ -45,7 +45,7 @@ export function StartupToolkitPanel() {
           {tool.aiPowered && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: MIDNIGHT_SOFT, color: MIDNIGHT }}>AI</span>}
           {tool.koreanSupport && <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: MIDNIGHT_SOFT, color: MIDNIGHT }}>KR</span>}
         </div>
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{ko ? tool.description.ko : tool.description.en}</div>
+        <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>{ko ? tool.description.ko : tool.description.en}</div>
         <div style={{ fontSize: "11px", fontWeight: 600, color: MIDNIGHT, marginTop: "2px" }}>{tool.pricing}</div>
       </div>
       <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>

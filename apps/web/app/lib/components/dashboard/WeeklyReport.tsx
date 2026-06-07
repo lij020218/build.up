@@ -91,7 +91,7 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
             )}
           </div>
         </div>
-        <span style={{ fontSize: "18px", color: "rgba(15,23,42,0.3)", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "rotate(0)" }}>
+        <span style={{ fontSize: "18px", color: "var(--muted)", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "rotate(0)" }}>
           ▾
         </span>
       </button>
@@ -117,14 +117,14 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
 
           {/* daily breakdown */}
           <div style={breakdownSection}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.4)", letterSpacing: "0.04em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
               {ko ? "일별 상세" : "Daily breakdown"}
             </div>
             {thisWeek.map((e) => {
               const pct = thisTotal > 0 ? (e.sales / thisTotal) * 100 : 0;
               return (
                 <div key={e.date} style={breakdownRow}>
-                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", width: "36px", flexShrink: 0 }}>
+                  <div style={{ fontSize: "12px", color: "var(--muted)", width: "36px", flexShrink: 0 }}>
                     {new Date(e.date + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: "short" })}
                   </div>
                   <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "rgba(25,25,112,0.05)", overflow: "hidden" }}>
@@ -133,7 +133,7 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
                   <div style={{ fontSize: "12px", fontWeight: 600, fontVariantNumeric: "tabular-nums", width: "64px", textAlign: "right" as const }}>
                     {fmt(e.sales)}
                   </div>
-                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", width: "40px", textAlign: "right" as const }}>
+                  <div style={{ fontSize: "11px", color: "var(--muted)", width: "40px", textAlign: "right" as const }}>
                     {e.customers}{ko ? "명" : ""}
                   </div>
                 </div>
@@ -161,7 +161,7 @@ function KPI({ label, value, change, lastTotal, sub, color, ko }: {
 }) {
   return (
     <div style={kpiCard}>
-      <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>{label}</div>
+      <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>{label}</div>
       <div style={{ fontSize: "17px", fontWeight: 720, color: color || "#0f172a", letterSpacing: "-0.02em", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{value}</div>
       {sub && <div style={{ fontSize: "11px", fontWeight: 600, color: "#191970", marginTop: "1px" }}>{sub}</div>}
       {change != null && lastTotal != null && lastTotal > 0 && (
@@ -201,7 +201,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.06em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.44)",
+  color: "var(--muted)",
 };
 
 const titleStyle: React.CSSProperties = {

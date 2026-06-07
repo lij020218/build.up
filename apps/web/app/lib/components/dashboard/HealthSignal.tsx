@@ -195,7 +195,7 @@ const HEALTH_BADGE_CSS = `
   font-size: 13.5px; font-weight: 700; letter-spacing: -0.02em;
 }
 .health-badge-score {
-  font-size: 10.5px; color: rgba(15,23,42,0.5); font-weight: 600;
+  font-size: 10.5px; color: var(--muted); font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 

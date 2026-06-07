@@ -45,7 +45,7 @@ export function RoadmapSurface() {
       <div style={{ marginBottom: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
           <div>
-            <div style={{ fontSize: "11px", fontWeight: 650, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 650, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "6px" }}>
               {ko ? "창업 로드맵" : "Startup Roadmap"}
             </div>
             <div style={{ fontSize: "28px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a", lineHeight: 1.1 }}>
@@ -54,9 +54,9 @@ export function RoadmapSurface() {
           </div>
           <div style={{ textAlign: "right" as const }}>
             <div style={{ fontSize: "36px", fontWeight: 780, letterSpacing: "-0.05em", color: "#0f172a", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-              {correctedProgressPercent}<span style={{ fontSize: "16px", fontWeight: 500, color: "rgba(15,23,42,0.35)" }}>%</span>
+              {correctedProgressPercent}<span style={{ fontSize: "16px", fontWeight: 500, color: "var(--muted)" }}>%</span>
             </div>
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
               {completedCount} / {pathTotalStages} {ko ? "완료" : "done"}
             </div>
           </div>
@@ -128,7 +128,7 @@ export function RoadmapSurface() {
                 </div>
               )}
               {!isCompleted && (
-                <div style={{ fontSize: isCurrent ? "14px" : "13px", lineHeight: 1.55, color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>
+                <div style={{ fontSize: isCurrent ? "14px" : "13px", lineHeight: 1.55, color: "var(--muted)", marginTop: "2px" }}>
                   {localizeStage(stage, language, industryCategoryId).goal}
                 </div>
               )}

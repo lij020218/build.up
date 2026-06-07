@@ -145,6 +145,19 @@ export function hardWipeBuildupStorage(): void {
   } catch { /* ignore */ }
 }
 
+/**
+ * 독립적으로 hydrate 하는 카드(코칭 일지 등 — Zustand 가 아니라 자체 fetch 로 로드)에
+ * "원격 데이터가 바뀌었으니 다시 읽어라" 를 알리는 window 이벤트.
+ * realtime 수신·포커스 복귀 양쪽에서 발행해 웹↔iOS 가 곧바로 동기화되게 한다.
+ */
+export function notifyRemoteDataChanged(): void {
+  try {
+    window.dispatchEvent(new CustomEvent("buildup:remote-data-changed"));
+  } catch {
+    /* SSR/비브라우저 — 무시 */
+  }
+}
+
 /** Reset all 6 Zustand stores to their initial values */
 export function resetLocalState(): void {
   useOperationsStore.getState().resetAll();
@@ -331,13 +344,24 @@ export function applyStoreData(data: UserStoreData): void {
   }
 }
 
-/** Collect store data for Supabase sync (reads from Zustand stores, not localStorage) */
-export function collectStoreData(): Partial<UserStoreData> {
+/**
+ * Collect store data for Supabase sync (reads from Zustand stores, not localStorage).
+ *
+ * @param includeEmpties 사장님이 리스트의 *마지막 항목까지 삭제*한 경우, 빈 배열도 서버에 보내
+ *   삭제가 반영되게 한다. 기본 false 인 이유: 서버 hydrate 가 끝나기 전(또는 로드 실패 시)
+ *   Zustand 가 일시적으로 비어 있을 때 빈 배열을 보내면 서버의 멀쩡한 데이터를 지워버린다.
+ *   따라서 호출부는 **applyStoreData 로 서버 데이터를 받은 뒤(=storeDataReadyRef)** 에만 true 를 넘긴다.
+ *   (대상: 사장님이 직접 관리하는 리스트 — 직원·캠페인·일매출 등. 로드맵 체크리스트 딕셔너리는
+ *    reset 외엔 통째로 비우지 않으므로 보수적으로 제외.)
+ */
+export function collectStoreData(includeEmpties = false): Partial<UserStoreData> {
   const ops = useOperationsStore.getState();
   const fin = useFinanceStore.getState();
   const prof = useProfileStore.getState();
   const rm = useRoadmapStore.getState();
   const r: Partial<UserStoreData> = {};
+  // 사장 관리 리스트: includeEmpties 면 빈 배열도 전송(삭제 반영), 아니면 기존처럼 비었을 때 생략.
+  const keep = (n: number) => includeEmpties || n > 0;
   if (prof.storeName) r.storeName = prof.storeName;
   // 영업 시간 — null 도 보낸다 (사장이 "24h 영업"으로 바꾼 경우 반영 위해 항상 포함)
   r.businessOpenTime = prof.businessOpenTime ?? null;
@@ -347,16 +371,16 @@ export function collectStoreData(): Partial<UserStoreData> {
   if (prof.cpaDecision) r.cpaDecision = prof.cpaDecision;
   r.taxSettings = ops.taxSettings;
   r.monthlyCosts = fin.monthlyCosts;
-  if (fin.dailyEntries.length) r.dailyEntries = fin.dailyEntries;
-  if (ops.inventory.length) r.inventoryItems = ops.inventory;
-  if (ops.employees.length) r.employees = ops.employees;
-  if (ops.fixedExpenses.length) r.fixedExpenses = ops.fixedExpenses;
-  if (ops.deliveryPlatforms.length) r.deliveryPlatforms = ops.deliveryPlatforms;
-  if (Object.keys(ops.monthlyDeliverySales).length) r.monthlyDeliverySales = ops.monthlyDeliverySales;
-  if (ops.products.length) r.products = ops.products;
-  if (ops.unifiedProducts.length) r.unifiedProducts = ops.unifiedProducts;
-  if (ops.serviceMenuItems.length) r.serviceMenuItems = ops.serviceMenuItems;
-  if (ops.members.length) r.members = ops.members;
+  if (keep(fin.dailyEntries.length)) r.dailyEntries = fin.dailyEntries;
+  if (keep(ops.inventory.length)) r.inventoryItems = ops.inventory;
+  if (keep(ops.employees.length)) r.employees = ops.employees;
+  if (keep(ops.fixedExpenses.length)) r.fixedExpenses = ops.fixedExpenses;
+  if (keep(ops.deliveryPlatforms.length)) r.deliveryPlatforms = ops.deliveryPlatforms;
+  if (keep(Object.keys(ops.monthlyDeliverySales).length)) r.monthlyDeliverySales = ops.monthlyDeliverySales;
+  if (keep(ops.products.length)) r.products = ops.products;
+  if (keep(ops.unifiedProducts.length)) r.unifiedProducts = ops.unifiedProducts;
+  if (keep(ops.serviceMenuItems.length)) r.serviceMenuItems = ops.serviceMenuItems;
+  if (keep(ops.members.length)) r.members = ops.members;
   if (Object.keys(rm.vendorSelections).length) r.vendorSelections = rm.vendorSelections;
   if (Object.keys(rm.vendorCustomInputs).length) r.vendorCustomInputs = rm.vendorCustomInputs;
   if (Object.keys(rm.opsSelections).length) r.opsSelections = rm.opsSelections;
@@ -366,33 +390,33 @@ export function collectStoreData(): Partial<UserStoreData> {
   if (Object.keys(rm.softOpenSkips).length) r.softOpenSkips = rm.softOpenSkips;
   if (Object.keys(rm.taxChecks).length) r.taxChecks = rm.taxChecks;
   if (Object.keys(rm.loanChecks).length) r.loanChecks = rm.loanChecks;
-  if (Object.keys(ops.onlinePlatformSales).length) r.onlinePlatformSales = ops.onlinePlatformSales;
-  if (ops.onlineSelectedPlatforms.length) r.onlineSelectedPlatforms = ops.onlineSelectedPlatforms;
+  if (keep(Object.keys(ops.onlinePlatformSales).length)) r.onlinePlatformSales = ops.onlinePlatformSales;
+  if (keep(ops.onlineSelectedPlatforms.length)) r.onlineSelectedPlatforms = ops.onlineSelectedPlatforms;
   if (ops.onlineSelectedCourier) r.onlineSelectedCourier = ops.onlineSelectedCourier;
   if (ops.onlineMonthlyParcels) r.onlineMonthlyParcels = ops.onlineMonthlyParcels;
-  if (fin.costHistory.length) r.costHistory = fin.costHistory;
+  if (keep(fin.costHistory.length)) r.costHistory = fin.costHistory;
   // AI 생성 결과 — Supabase 동기화 (localStorage 소실 방지)
   if (Object.keys(rm.guideSelections).length) r.guideSelections = rm.guideSelections;
   if (rm.aiRoadmapResult) r.aiRoadmapResult = rm.aiRoadmapResult;
   if (prof.selectedInteriorConcept) r.selectedInteriorConcept = prof.selectedInteriorConcept;
   // 구독 관리
   r.usesSubscriptions = prof.usesSubscriptions ?? false;
-  if (ops.subscriptionPlans.length) r.subscriptionPlans = ops.subscriptionPlans;
-  if (ops.subscribers.length) r.subscribers = ops.subscribers;
+  if (keep(ops.subscriptionPlans.length)) r.subscriptionPlans = ops.subscriptionPlans;
+  if (keep(ops.subscribers.length)) r.subscribers = ops.subscribers;
   // 마케팅
   {
     const mkt = useMarketingStore.getState();
-    if (mkt.campaigns.length) r.marketingCampaigns = mkt.campaigns;
+    if (keep(mkt.campaigns.length)) r.marketingCampaigns = mkt.campaigns;
     if (mkt.monthlyBudget > 0) r.marketingMonthlyBudget = mkt.monthlyBudget;
-    if (mkt.promoCodes.length) r.promoCodes = mkt.promoCodes;
-    if (mkt.playbookChecklist.length) r.playbookChecklist = mkt.playbookChecklist;
+    if (keep(mkt.promoCodes.length)) r.promoCodes = mkt.promoCodes;
+    if (keep(mkt.playbookChecklist.length)) r.playbookChecklist = mkt.playbookChecklist;
   }
   // 에이전트 on/off 설정 — 웹·앱 동기화
   r.agentSettings = useAgentsStore.getState().enabledAgents;
   // 고객 인터뷰 — Mom Test 노트 + AI 패턴 분석
   {
     const iv = useInterviewStore.getState();
-    if (iv.customerInterviews && iv.customerInterviews.length > 0) {
+    if (keep(iv.customerInterviews?.length ?? 0)) {
       r.customerInterviews = iv.customerInterviews;
     }
     if (iv.patternAnalysis) {
@@ -402,7 +426,7 @@ export function collectStoreData(): Partial<UserStoreData> {
   // 시간 로그 — Drucker 매일 저녁 5분 체크인 (사장님 직접 입력)
   {
     const tl = useTimeLogStore.getState();
-    if (tl.entries && tl.entries.length > 0) {
+    if (keep(tl.entries?.length ?? 0)) {
       r.timeLogEntries = tl.entries;
     }
     r.timeLogEnabled = tl.enabled;
@@ -532,6 +556,12 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
    *  이미 false 가 됐다고 보장 못 함. 이 ref 로 콜백 시작 시점에 즉시 차단.
    */
   const isResettingRef = useRef(false);
+  /**
+   * 서버 store data(applyStoreData) 를 한 번이라도 받았는지 동기 플래그.
+   *  true 일 때만 collectStoreData(includeEmpties=true) 로 빈 배열까지 전송 → 삭제 반영.
+   *  hydrate 전/로드 실패/계정전환 윈도우에는 false 라, 일시적 빈 store 가 서버를 지우지 않는다.
+   */
+  const storeDataReadyRef = useRef(false);
 
   // ── In-flight serializer for store data upsert ──
   // 4채널 (800ms autosave / 1s debounce / 5s interval / immediate) 이 동시 호출되면 stale 가
@@ -570,6 +600,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         resetLocalState();
       }
       localStorage.setItem("__foundone_uid", result.user.id);
+      // 새 로드 사이클 시작 — applyStoreData 로 서버 데이터를 받기 전까지는 빈 배열 전송 금지.
+      storeDataReadyRef.current = false;
 
       setAuthLabel(`${userLabel} · ${result.user.id.slice(0, 8)}`);
       setRequiresAuth(false);
@@ -585,6 +617,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         }
         const uid = result.user.id;
         const onRemote = () => {
+          // Zustand 외 독립 hydrate 카드도 재조회하도록 항상 알림 (throttle 무관 — 비용 저렴).
+          notifyRemoteDataChanged();
           const now = Date.now();
           if (now - realtimeThrottleRef.current < 5000) return;
           realtimeThrottleRef.current = now;
@@ -601,6 +635,9 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           .channel(`buildup-sync-${uid}`)
           .on("postgres_changes", { event: "*", schema: "public", table: "user_store_data", filter: `user_id=eq.${uid}` }, onRemote)
           .on("postgres_changes", { event: "*", schema: "public", table: "business_profiles", filter: `user_id=eq.${uid}` }, onRemote)
+          // coaching_history — 코칭 일지는 Zustand 가 아니라 CoachingHistoryCard 가 자체 fetch.
+          //   connectAndLoad 와 무관하므로 가벼운 알림만 발행해 카드가 재-hydrate 하게 한다.
+          .on("postgres_changes", { event: "*", schema: "public", table: "coaching_history", filter: `user_id=eq.${uid}` }, () => notifyRemoteDataChanged())
           // roadmaps — 로드맵 진행도(stage_decisions) 즉시 양방향 동기화. stage_decisions 는 user_id
           //   컬럼이 없어 직접 필터 구독 불가하므로, 양쪽(웹 saveRoadmapState / iOS upsert)이 저장 시
           //   roadmaps.updated_at 을 bump 하고, 여기서 roadmaps(user_id 필터)를 구독해 앱·다른 기기의
@@ -825,6 +862,9 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
             await saveStoreData(supabase, localData, result.user).catch(() => {});
           }
         }
+        // 서버 데이터 로드 사이클 정상 완료 — 이제부터 빈 배열 전송 허용(삭제 반영).
+        //   loadStoreData 가 throw 하면 이 줄에 도달하지 않으므로 false 유지(서버 보호).
+        storeDataReadyRef.current = true;
       } catch (err) {
         console.warn("[connectAndLoad] storeData load failed", err);
         // Silent fail — localStorage already loaded via useState initializers
@@ -1027,7 +1067,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     storeDataTimerRef.current = setTimeout(async () => {
       onb.setPersistStatus("saving");
       try {
-        await safeSaveStoreData(collectStoreData());
+        await safeSaveStoreData(collectStoreData(storeDataReadyRef.current));
         onb.setPersistStatus("saved");
         onb.setPersistError(null);
         onb.setPersistLastSavedAt(Date.now());
@@ -1060,7 +1100,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     if (storeDataTimerRef.current) clearTimeout(storeDataTimerRef.current);
     onb.setPersistStatus("saving");
     try {
-      await safeSaveStoreData(collectStoreData());
+      await safeSaveStoreData(collectStoreData(storeDataReadyRef.current));
       recordSaveSuccess();
       onb.setPersistStatus("saved");
       onb.setPersistError(null);
@@ -1119,6 +1159,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         // ⚠️ 2026-06-05 개인정보 수정: 로그아웃 시 로컬 캐시를 비우지 않으면 공용 PC 에서
         //   다음 계정 로그인 시 이전 계정의 상호명·매출 등 잔존값이 노출됨(applyStoreData 의
         //   `if (data.x)` 가드가 누락 필드를 안 덮으므로). 명시적으로 전부 wipe.
+        storeDataReadyRef.current = false; // 로그아웃 — 빈 store 가 서버 지우지 않게
         clearLocalUserData();
         resetLocalState();
         try { localStorage.removeItem("__foundone_uid"); } catch { /* storage 차단 무시 */ }
@@ -1146,6 +1187,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       const now = Date.now();
       if (now - lastSync < 10_000) return;
       lastSync = now;
+      // 독립 hydrate 카드(코칭 일지 등)도 포커스 복귀 시 재조회 — iOS 에서 바꾼 내용 즉시 반영.
+      notifyRemoteDataChanged();
       void (async () => {
         try {
           await flushStoreDataImmediate();
@@ -1221,7 +1264,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   // 5. Store data interval autosave to Supabase (5-second interval + beforeunload)
   const storeDataSnapshotRef = useRef<Partial<UserStoreData>>({});
   useEffect(() => {
-    storeDataSnapshotRef.current = collectStoreData();
+    // 서버 hydrate 완료 후에만 빈 배열 포함(삭제 반영). 그 전엔 보수적으로 비움 생략.
+    storeDataSnapshotRef.current = collectStoreData(storeDataReadyRef.current);
   });
 
   useEffect(() => {

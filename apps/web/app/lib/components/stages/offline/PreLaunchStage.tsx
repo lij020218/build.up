@@ -532,7 +532,7 @@ export function PreLaunchStage() {
                     <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 2 }}>
                       {link.label}
                     </div>
-                    <div style={{ fontSize: 12, color: "rgba(15,23,42,0.55)", lineHeight: 1.45 }}>
+                    <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.45 }}>
                       {link.desc}
                     </div>
                   </div>
@@ -716,7 +716,7 @@ function PreLaunchCheckList({
                 }}>
                   {it.label}
                 </div>
-                <div style={{ fontSize: 13, color: "rgba(15,23,42,0.55)", lineHeight: 1.6, marginTop: 4 }}>
+                <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, marginTop: 4 }}>
                   {it.detail}
                 </div>
               </div>

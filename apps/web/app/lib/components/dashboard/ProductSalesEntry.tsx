@@ -202,7 +202,7 @@ export function ProductSalesEntry({
                         >
                           <div>
                             <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>{p.name}</div>
-                            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginTop: "1px" }}>{fmt(p.price ?? 0)}</div>
+                            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "1px" }}>{fmt(p.price ?? 0)}</div>
                           </div>
                           {alreadyAdded ? (
                             <span style={{ fontSize: "11px", fontWeight: 700, color: "#191970", background: "rgba(25,25,112,0.08)", borderRadius: "6px", padding: "2px 8px" }}>
@@ -236,7 +236,7 @@ export function ProductSalesEntry({
                       }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "13px", fontWeight: 650, color: "#0f172a" }}>{p.name}</div>
-                          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)" }}>{fmt(p.price ?? 0)} × {count} = {fmt((p.price ?? 0) * count)}</div>
+                          <div style={{ fontSize: "11px", color: "var(--muted)" }}>{fmt(p.price ?? 0)} × {count} = {fmt((p.price ?? 0) * count)}</div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", borderRadius: "9px", overflow: "hidden", border: "1px solid rgba(15,23,42,0.08)", background: "#fff" }}>
                           <button type="button" onClick={() => handleMinus(id)}
@@ -268,7 +268,7 @@ export function ProductSalesEntry({
                 border: totalFromProducts > 0 ? "1px solid rgba(25,25,112,0.1)" : "1px solid transparent",
               }}>
                 <div>
-                  <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>
+                  <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>
                     {ko ? "합계" : "Total"}
                   </div>
                   <div style={{ fontSize: "18px", fontWeight: 700, color: totalFromProducts > 0 ? "#0f172a" : "rgba(15,23,42,0.25)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", marginTop: "2px" }}>

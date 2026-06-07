@@ -36,7 +36,7 @@ export function VentureCertificationStage() {
       <div style={{ padding: "3px 8px", borderRadius: "6px", background: `${p.color}0a`, fontSize: "11px", fontWeight: 700, color: p.color, whiteSpace: "nowrap" as const, flexShrink: 0 }}>{p.amount}</div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "1px" }}>{p.name}</div>
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{p.detail}</div>
+        <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>{p.detail}</div>
       </div>
       <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
     </a>
@@ -85,7 +85,7 @@ export function VentureCertificationStage() {
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
           {ko ? "벤처인증 하나로 수천만원의 세금과 기회를 절약합니다." : "One certification saves millions in tax and unlocks opportunities."}
         </div>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
           {ko ? "벤처기업 인증을 받으면 법인세/소득세 50% 감면(5년), 취득세 75% 감면, 스톡옵션 비과세(연 2억), 정부 지원사업 우선 선발 등 핵심 혜택을 받습니다. 인증 없이 같은 비용을 직접 부담하면 초기 자본이 빠르게 소진됩니다. 정부 지원사업은 마감이 정해져 있어, 놓치면 1년을 기다려야 합니다." : "Venture certification gives you 50% tax reduction (5yr), 75% acquisition tax cut, tax-free stock options (₩200M/yr), and priority for government programs. Missing deadlines means waiting a full year."}
         </div>
       </div>
@@ -103,7 +103,7 @@ export function VentureCertificationStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>{s.num}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{s.desc}</div>
             </div>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}><path d="M5 3l4 4-4 4" stroke="rgba(0,0,0,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
@@ -125,7 +125,7 @@ export function VentureCertificationStage() {
         ];
         return (
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginBottom: "2px" }}>
+        <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "2px" }}>
           {ko ? "우리 회사에 맞는 인증 유형을 선택하세요. 선택 결과는 자동 저장됩니다." : "Choose the certification type that fits your company. Selection is auto-saved."}
         </div>
         {types.map(t => {
@@ -146,7 +146,7 @@ export function VentureCertificationStage() {
               }} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "15px", fontWeight: 700, color: selected ? t.color : "#0f172a", marginBottom: "4px" }}>{t.type}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>{t.who}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>{t.who}</div>
               </div>
             </div>
             <div style={{ padding: "0 18px 12px", display: "grid", gap: "3px" }}>
@@ -161,7 +161,7 @@ export function VentureCertificationStage() {
               <span style={{ fontSize: "11px", fontWeight: 600, color: t.color }}>{t.fast}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: `${t.color}10`, color: t.color }}>{t.timing}</span>
-                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(0,0,0,0.04)", color: "rgba(15,23,42,0.5)" }}>{t.cost}</span>
+                <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(0,0,0,0.04)", color: "var(--muted)" }}>{t.cost}</span>
               </div>
             </div>
           </button>
@@ -182,12 +182,12 @@ export function VentureCertificationStage() {
           <a href="https://smes.go.kr/venturein" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: MIDNIGHT_SOFT, border: `1px solid ${MIDNIGHT_BORDER}`, fontSize: "12px", fontWeight: 600, color: MIDNIGHT, textDecoration: "none" }}>
             {ko ? "벤처확인 신청 바로가기" : "Apply for Venture Cert"} ↗
           </a>
-          <a href="https://www.kibo.or.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.5)", textDecoration: "none" }}>
+          <a href="https://www.kibo.or.kr" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 14px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)", fontSize: "12px", fontWeight: 600, color: "var(--muted)", textDecoration: "none" }}>
             {ko ? "기술보증기금" : "KIBO"} ↗
           </a>
         </div>
 
-        <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(15,23,42,0.02)", fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+        <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(15,23,42,0.02)", fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
           {ko ? "유효기간: 3년 (재인증 필요). 인증 후 세금 감면은 최초 소득 발생 과세연도부터 5년간 적용됩니다." : "Valid: 3 years (renewal required). Tax benefits apply for 5 years from first taxable income."}
         </div>
       </div>
@@ -216,7 +216,7 @@ export function VentureCertificationStage() {
             <span style={{ fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: MIDNIGHT_SOFT, color: MIDNIGHT, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "2px" }}>{b.tag}</span>
             <div>
               <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{b.title}</div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.45 }}>{b.detail}</div>
+              <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.45 }}>{b.detail}</div>
             </div>
           </div>
         ))}

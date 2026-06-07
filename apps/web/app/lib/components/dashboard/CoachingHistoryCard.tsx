@@ -50,8 +50,10 @@ export function CoachingHistoryCard({ ko }: Props) {
     setStats(getStats(14));
   }, [tick]);
 
-  // mount 시 1번 Supabase 에서 다른 디바이스 데이터 hydrate + meta30d 가져오기
-  useEffect(() => {
+  // Supabase 에서 다른 디바이스(iOS 등) 데이터 hydrate + meta30d 가져오기.
+  //   mount 1회 + 원격 변경(buildup:remote-data-changed) 수신 시마다 재실행 →
+  //   웹·앱이 동시에 켜져 있거나 앱→웹 전환 시 코칭 일지가 곧바로 반영된다.
+  const syncFromSupabase = useCallback(() => {
     let cancelled = false;
     setSyncStatus("syncing");
     hydrateFromSupabase()
@@ -69,6 +71,17 @@ export function CoachingHistoryCard({ ko }: Props) {
       });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    const cleanup = syncFromSupabase();
+    // 원격 변경 수신 시 재-hydrate (usePersistence 가 realtime·포커스 복귀에서 발행).
+    const onRemote = () => { syncFromSupabase(); };
+    window.addEventListener("buildup:remote-data-changed", onRemote);
+    return () => {
+      cleanup?.();
+      window.removeEventListener("buildup:remote-data-changed", onRemote);
+    };
+  }, [syncFromSupabase]);
 
   const handleToggle = useCallback((entry: CoachingEntry) => {
     const currentTaken = entry.response?.taken === true;
@@ -154,7 +167,7 @@ export function CoachingHistoryCard({ ko }: Props) {
         ))}
         {entries.length > 10 && (
           <div style={{
-            fontSize: 11, color: "rgba(15,23,42,0.5)", textAlign: "center" as const, paddingTop: 4,
+            fontSize: 11, color: "var(--muted)", textAlign: "center" as const, paddingTop: 4,
           }}>
             {ko ? `+${entries.length - 10}일 더 (전체 14일)` : `+${entries.length - 10} more days`}
           </div>
@@ -281,7 +294,7 @@ function MetaInsightsBlock({ meta, ko }: { meta: Meta30d; ko: boolean }) {
 function SyncBadge({ status, ko }: { status: "idle" | "syncing" | "synced" | "offline"; ko: boolean }) {
   if (status === "idle") return null;
   const cfg = {
-    syncing: { icon: <Cloud size={11} />, text: ko ? "동기화 중" : "Syncing", color: "rgba(15,23,42,0.55)" },
+    syncing: { icon: <Cloud size={11} />, text: ko ? "동기화 중" : "Syncing", color: "var(--muted)" },
     synced: { icon: <Cloud size={11} />, text: ko ? "서버 저장됨" : "Server-backed", color: "#1d3557" },
     offline: { icon: <CloudOff size={11} />, text: ko ? "로컬만 (로그인 필요)" : "Local only", color: "#191970" },
   }[status];
@@ -338,7 +351,7 @@ function HistoryRow({ entry, ko, onToggle }: { entry: CoachingEntry; ko: boolean
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 6, marginBottom: 2,
-          fontSize: 10.5, color: "rgba(15,23,42,0.55)", fontWeight: 600, letterSpacing: "0.02em",
+          fontSize: 10.5, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.02em",
         }}>
           <span>{date}</span>
           <span style={{ opacity: 0.4 }}>·</span>

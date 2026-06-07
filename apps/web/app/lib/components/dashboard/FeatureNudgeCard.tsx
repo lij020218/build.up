@@ -142,7 +142,7 @@ export function FeatureNudgeCard({ ko, nudges }: Props) {
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em", marginBottom: 3 }}>
                   {ko ? n.titleKo : n.titleEn}
                 </div>
-                <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.5 }}>
                   {ko ? n.subKo : n.subEn}
                 </div>
               </div>

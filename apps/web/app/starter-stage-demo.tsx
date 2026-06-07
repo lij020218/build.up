@@ -886,7 +886,7 @@ export default function StarterStageDemo({
           0 0 0 0.5px rgba(255,255,255,0.6) inset;
         cursor: pointer;
         display: flex; align-items: center; justify-content: center;
-        color: rgba(15,23,42,0.5);
+        color: var(--muted);
         z-index: 51;
         opacity: 0;
         transition: opacity .18s ease, transform .18s ease, background .15s ease, color .15s ease;
@@ -967,8 +967,8 @@ export default function StarterStageDemo({
       }
       .bup-mobile-hamburger {
         display: inline-flex; align-items: center; justify-content: center;
-        width: 34px; height: 34px;
-        border-radius: 9px;
+        width: 44px; height: 44px;
+        border-radius: 11px;
         border: 0.6px solid rgba(29,53,87,0.10);
         background: rgba(29,53,87,0.06);
         color: #1d3557;

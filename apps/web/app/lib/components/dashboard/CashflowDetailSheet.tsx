@@ -144,7 +144,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
           </div>
 
           {vatReserveEnabled && (
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginBottom: "14px", padding: "8px 12px", background: "rgba(25,25,112,0.04)", borderRadius: "8px" }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "14px", padding: "8px 12px", background: "rgba(25,25,112,0.04)", borderRadius: "8px" }}>
               {ko
                 ? "※ 부가세 10% 적립이 활성화되어 있어요. 입금액에서 10%를 미리 뺀 실가용 금액이 표시됩니다."
                 : "※ 10% VAT reserve enabled. Displayed amounts have 10% deducted for tax."}
@@ -173,7 +173,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                             +{formatWon(total)}
                           </span>
                         </div>
-                        <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.5)", marginBottom: "4px", display: "flex", gap: "10px" }}>
+                        <div style={{ fontSize: "10px", color: "var(--muted)", marginBottom: "4px", display: "flex", gap: "10px" }}>
                           <span>{ko ? `정산 D+${channel.settlementDays}` : `Settlement D+${channel.settlementDays}`}</span>
                           {(channel.commissionRate + channel.paymentFeeRate) > 0 && (
                             <span>
@@ -207,7 +207,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                       <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>
                         {expense.label}
                       </div>
-                      <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
+                      <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                         {ko ? `매월 ${expense.dayOfMonth}일` : `Day ${expense.dayOfMonth} of month`}
                       </div>
                     </div>
@@ -269,7 +269,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       {p.events.length === 0 ? (
-                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)" }}>
+                        <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                           {ko ? "예정 이벤트 없음" : "No events"}
                         </div>
                       ) : (
@@ -300,7 +300,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                             </div>
                           ))}
                           {p.events.length > 3 && (
-                            <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>
+                            <div style={{ fontSize: "10px", color: "var(--muted)" }}>
                               +{p.events.length - 3} {ko ? "더" : "more"}
                             </div>
                           )}
@@ -318,7 +318,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                       >
                         {formatWon(p.endBalance)}
                       </div>
-                      <div style={{ fontSize: "9px", color: "rgba(15,23,42,0.4)", fontWeight: 600 }}>
+                      <div style={{ fontSize: "9px", color: "var(--muted)", fontWeight: 600 }}>
                         {ko ? "잔고" : "Balance"}
                       </div>
                     </div>
@@ -339,7 +339,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
 function SummaryMetric({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div>
-      <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.5)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
+      <div style={{ fontSize: "10px", fontWeight: 650, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
         {label}
       </div>
       <div style={{ fontSize: "15px", fontWeight: 720, color, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
@@ -362,7 +362,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
 };
 
 const title: React.CSSProperties = {

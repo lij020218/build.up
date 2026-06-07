@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { DashboardHook } from "../../useDashboard";
 import { supabase } from "../../../../lib/supabase";
 import { checkSeveranceObligation, type SeveranceCheck } from "@foundone/shared";
+import { ConfirmModal } from "../ConfirmModal";
 
 type EmployeeEntry = {
   id: string;
@@ -81,7 +82,8 @@ export function StaffOpsCard({
           `※ Approximation. Exact figure requires last-3-month avg wage (consult labor attorney).\n` +
           `Non-payment is wage default (Labor Standards Act §43): 3-yr statute, criminal liability.\n\n` +
           `Continue?`;
-      if (!window.confirm(message)) return;
+      setSeveranceConfirm({ message, employeeId: employee.id });
+      return;
     }
     d.handleEmpDelete(employee.id);
   };
@@ -90,6 +92,7 @@ export function StaffOpsCard({
   const monthlyHours = totalWeeklyHours * 4.34;
   const revenuePerHour = monthlyHours > 0 && totalSales > 0 ? Math.round(totalSales / monthlyHours) : 0;
   const isEditing = Boolean(d.empEditId);
+  const [severanceConfirm, setSeveranceConfirm] = useState<{ message: string; employeeId: string } | null>(null);
   const [addMode, setAddMode] = useState<"choice" | "member" | "manual" | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteStatus, setInviteStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
@@ -106,6 +109,20 @@ export function StaffOpsCard({
   };
 
   return (
+    <>
+    <ConfirmModal
+      open={!!severanceConfirm}
+      title={ko ? "⚠️ 퇴직금 주의" : "⚠️ Severance Warning"}
+      message={severanceConfirm?.message ?? ""}
+      confirmLabel={ko ? "삭제 진행" : "Continue"}
+      cancelLabel={ko ? "취소" : "Cancel"}
+      danger
+      onConfirm={() => {
+        if (severanceConfirm) d.handleEmpDelete(severanceConfirm.employeeId);
+        setSeveranceConfirm(null);
+      }}
+      onCancel={() => setSeveranceConfirm(null)}
+    />
     <section style={opsCard} className="bento-card">
       <div style={opsHeader}>
         <div>
@@ -219,7 +236,7 @@ export function StaffOpsCard({
       {addMode === "choice" && (
         <div style={inlineEditor}>
           <div style={inlineEditorTitle}>{ko ? "직원 추가" : "Add staff"}</div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginBottom: "14px", lineHeight: 1.5 }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "14px", lineHeight: 1.5 }}>
             {ko ? "이 직원이 Found.One 회원인가요?" : "Is this employee a Found.One member?"}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -233,7 +250,7 @@ export function StaffOpsCard({
                 <path d="M17 8l2 2 2-2" stroke="#191970" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a" }}>{ko ? "네, 회원이에요" : "Yes, member"}</div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "4px" }}>
+              <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
                 {ko ? "이메일로 초대합니다" : "Invite by email"}
               </div>
             </button>
@@ -246,7 +263,7 @@ export function StaffOpsCard({
                 <path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="rgba(15,23,42,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
               </svg>
               <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a" }}>{ko ? "아니요" : "No, not yet"}</div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "4px" }}>
+              <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
                 {ko ? "이름/시급만 기록합니다" : "Record name & wage only"}
               </div>
             </button>
@@ -263,7 +280,7 @@ export function StaffOpsCard({
           <div style={inlineEditorTitle}>{ko ? "회원 직원 초대" : "Invite member"}</div>
           {!generatedCode ? (
             <>
-              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginBottom: "12px", lineHeight: 1.5 }}>
+              <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "12px", lineHeight: 1.5 }}>
                 {ko ? "직원의 이메일을 입력하세요. 초대 코드가 생성됩니다." : "Enter the employee's email. An invite code will be generated."}
               </div>
               <div style={formGridTwo}>
@@ -308,14 +325,14 @@ export function StaffOpsCard({
             </>
           ) : (
             <>
-              <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginBottom: "12px", lineHeight: 1.5 }}>
+              <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "12px", lineHeight: 1.5 }}>
                 {ko ? "아래 초대 링크를 직원에게 카톡·문자로 보내세요." : "Send this invite link to your employee via KakaoTalk/SMS."}
               </div>
               <div style={{
                 padding: "16px", borderRadius: "14px", background: "rgba(25,25,112,0.04)",
                 border: "1px solid rgba(25,25,112,0.12)", marginBottom: "12px",
               }}>
-                <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
                   {ko ? "초대 링크" : "Invite Link"}
                 </div>
                 <div style={{
@@ -338,11 +355,11 @@ export function StaffOpsCard({
                     {ko ? "복사" : "Copy"}
                   </button>
                 </div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "8px", fontFamily: "ui-monospace, monospace", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "8px", fontFamily: "ui-monospace, monospace", letterSpacing: "0.05em" }}>
                   {ko ? "코드만 필요할 때:" : "Code only:"} <strong style={{ color: "#0f172a" }}>{generatedCode}</strong>
                 </div>
               </div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginBottom: "12px" }}>
+              <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5, marginBottom: "12px" }}>
                 {ko
                   ? "직원이 링크를 클릭하면 「가게가 맞으신가요?」 확인 화면을 거쳐 자동으로 연결됩니다. 가입은 그 자리에서 가능합니다. 7일간 유효, 1회 사용."
                   : "The employee taps the link, confirms the store, and is connected automatically. Signup happens inline. Valid 7 days, one-time use."}
@@ -362,7 +379,7 @@ export function StaffOpsCard({
             {isEditing ? (ko ? "직원 수정" : "Edit staff") : (ko ? "직원 정보 입력" : "Enter staff info")}
           </div>
           {!isEditing && (
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginBottom: "10px" }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "10px" }}>
               {ko ? "나중에 이 직원이 Found.One에 가입하면 연동할 수 있습니다." : "You can link this employee later if they join Found.One."}
             </div>
           )}
@@ -404,7 +421,7 @@ export function StaffOpsCard({
           {/* 입사일 — 연차 1년 도래 자동 알림용 (선택 입력) */}
           <div style={formGridTwo}>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.55)" }}>
+              <label style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)" }}>
                 {ko ? "입사일 (선택)" : "Hire date (optional)"}
               </label>
               <input
@@ -414,7 +431,7 @@ export function StaffOpsCard({
                 style={inputStyle}
               />
             </div>
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", lineHeight: 1.5, alignSelf: "center" }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5, alignSelf: "center" }}>
               {ko
                 ? "입력하면 1년 도래 시 연차(15일) 자동 알림"
                 : "Auto-alerts when 1-year mark approaches (annual leave)"}
@@ -440,6 +457,7 @@ export function StaffOpsCard({
         </div>
       ) : null}
     </section>
+    </>
   );
 }
 

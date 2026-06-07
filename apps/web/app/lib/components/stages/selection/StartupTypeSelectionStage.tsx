@@ -117,7 +117,7 @@ export function StartupTypeSelectionStage() {
                 <div style={{ fontSize: "17px", fontWeight: 680, letterSpacing: "-0.02em", color: selected ? c.color : "#0f172a" }}>
                   {formatStartupType(type, language)}
                 </div>
-                <div style={{ fontSize: "13px", lineHeight: 1.5, color: "rgba(15,23,42,0.45)" }}>
+                <div style={{ fontSize: "13px", lineHeight: 1.5, color: "var(--muted)" }}>
                   {c.subtitle}
                 </div>
               </button>

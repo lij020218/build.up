@@ -165,7 +165,7 @@ export function TargetCustomerStage() {
                 ? "타깃 페르소나가 없으면 모든 후속 결정 — 입지·메뉴·가격대·광고 채널 — 이 평균값(=경쟁점과 동일)으로 회귀합니다."
                 : "Without a target persona, every downstream decision — location, menu, pricing, ad channel — regresses to the average (= identical to competitors)."}
             </div>
-            <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+            <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
               {ko
                 ? "예: 20대 1인 직장인을 타깃하면 → 도심·테이크아웃 위주·1만원 객단가 → 매장 평수 작아도 OK. 4인 가족이면 → 주차장·4인석 다수·2-3만원 객단가 → 평수 큰 매장 필수. 같은 외식업이라도 타깃이 두 선택을 완전히 갈라놓습니다."
                 : "E.g., 20s single workers → downtown, takeout, ₩10k ticket, small floor OK. Families of 4 → parking, 4-seater tables, ₩20-30k ticket, larger floor required. Same F&B, target splits every choice."}
@@ -308,7 +308,7 @@ export function TargetCustomerStage() {
 
               {/* whyTarget (optional) */}
               <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.55)", marginBottom: "5px", letterSpacing: "0.03em" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--muted)", marginBottom: "5px", letterSpacing: "0.03em" }}>
                   {ko ? "4. 왜 이 타깃인가 (선택)" : "4. Why this target (optional)"}
                 </label>
                 <textarea
@@ -371,7 +371,7 @@ export function TargetCustomerStage() {
               ]).map((item, i) => (
                 <div key={i} style={{ padding: "12px 14px", borderRadius: "12px", border: `1px solid ${MIDNIGHT_BORDER}`, background: `${MIDNIGHT}03` }}>
                   <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "3px" }}>{i + 1}. {item.q}</div>
-                  <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{item.hint}</div>
+                  <div style={{ fontSize: "11.5px", color: "var(--muted)", lineHeight: 1.4 }}>{item.hint}</div>
                 </div>
               ))}
             </div>

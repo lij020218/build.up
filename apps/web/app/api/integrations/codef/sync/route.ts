@@ -53,7 +53,8 @@ export async function POST(request: Request) {
 
   let client: CodefClient;
   try {
-    client = new CodefClient({ env: "sandbox" });
+    const codefEnv = (process.env.CODEF_ENV ?? "sandbox") as "sandbox" | "production";
+    client = new CodefClient({ env: codefEnv });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message, code: "CODEF_NOT_CONFIGURED" }, { status: 503 });
   }

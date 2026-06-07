@@ -251,14 +251,14 @@ const headerRow: React.CSSProperties = {
 const cardEyebrow: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   letterSpacing: "0.06em",
   textTransform: "uppercase" as const,
 };
 
 const totalCount: React.CSSProperties = {
   fontSize: 12,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
 };
 
 const bodyRow: React.CSSProperties = {
@@ -319,7 +319,7 @@ const barFill: React.CSSProperties = {
 
 const rowPct: React.CSSProperties = {
   fontSize: 11.5,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   fontFamily: "ui-monospace, monospace",
   textAlign: "right" as const,
 };
@@ -357,5 +357,5 @@ const emptyStyle: React.CSSProperties = {
   padding: "20px 16px",
   textAlign: "center" as const,
   fontSize: 12.5,
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
 };

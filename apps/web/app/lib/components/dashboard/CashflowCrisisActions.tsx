@@ -247,7 +247,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
             </>
           )}
         </div>
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px" }}>
+        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
           {ko
             ? `아래 조합으로 ${formatWon(shortfall)}+ 확보 가능합니다. 필요한 만큼 탭하세요.`
             : `Below options can cover ${formatWon(shortfall)}+. Tap as needed.`}
@@ -309,8 +309,8 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
                 <span style={{ color: action.severity === "last-resort" ? "#b64c4c" : "#1d3557" }}>
                   {action.impact[ko ? "ko" : "en"]}
                 </span>
-                <span style={{ color: "rgba(15,23,42,0.4)" }}>·</span>
-                <span style={{ color: "rgba(15,23,42,0.5)" }}>
+                <span style={{ color: "var(--muted)" }}>·</span>
+                <span style={{ color: "var(--muted)" }}>
                   {action.timeframe[ko ? "ko" : "en"]}
                 </span>
               </div>

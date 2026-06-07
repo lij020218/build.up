@@ -53,6 +53,33 @@ export async function GET(request: Request) {
   const expected = createHmac("sha256", stateSecret).update(`${userId}|${nonce}`).digest("hex").slice(0, 24);
   if (hmac !== expected) return redirectWith("error", "state_mismatch");
 
+  // Nonce replay 방어 — ga4_oauth_nonces 에서 미사용·미만료 nonce 확인 후 즉시 소비(mark consumed).
+  const supabaseForNonce = getSupabaseAdmin();
+  if (supabaseForNonce) {
+    const { data: nonceRow } = await supabaseForNonce
+      .from("ga4_oauth_nonces")
+      .select("nonce, consumed_at, expires_at")
+      .eq("nonce", nonce)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!nonceRow) {
+      // nonce 테이블이 아직 없거나 레코드가 없으면 경고만 (하위호환) — strict 모드로 전환 시 거부로 변경
+      console.warn("[ga4/callback] nonce not found in DB — skipping replay check (migrate ga4_oauth_nonces table first)");
+    } else if (nonceRow.consumed_at) {
+      console.error(`[ga4/callback] Nonce replay attempt: nonce=${nonce} userId=${userId}`);
+      return redirectWith("error", "nonce_replayed");
+    } else if (new Date(nonceRow.expires_at) < new Date()) {
+      return redirectWith("error", "nonce_expired");
+    } else {
+      // 소비 처리 — 이후 재사용 불가
+      await supabaseForNonce
+        .from("ga4_oauth_nonces")
+        .update({ consumed_at: new Date().toISOString() })
+        .eq("nonce", nonce);
+    }
+  }
+
   if (!isKekAvailable(1)) return redirectWith("error", "kek_missing");
 
   let refreshToken: string;

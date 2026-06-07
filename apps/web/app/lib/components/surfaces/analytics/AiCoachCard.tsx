@@ -60,13 +60,13 @@ function EvidenceDrawer({ ko, evidence, idPrefix, inset = true }: { ko: boolean;
                 fontSize: "11.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.5,
               }}
             >
-              <span style={{ color: "rgba(15,23,42,0.35)", fontWeight: 700, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+              <span style={{ color: "var(--muted)", fontWeight: 700, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
                 {i + 1}.
               </span>
               <span>{e.text}</span>
             </div>
           ))}
-          <div style={{ marginTop: "3px", fontSize: "10px", color: "rgba(15,23,42,0.4)", lineHeight: 1.4 }}>
+          <div style={{ marginTop: "3px", fontSize: "10px", color: "var(--muted)", lineHeight: 1.4 }}>
             {ko ? "AI 가 컨텍스트에서 직접 인용한 데이터 — 환각 방지 검증 통과" : "Cited directly from your context — hallucination-checked"}
           </div>
         </div>
@@ -128,7 +128,7 @@ export function AiCoachCard() {
             <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "6px" }}>
               {ko ? "AI 코칭을 불러올 수 없습니다" : "Could not load AI coaching"}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginBottom: "12px" }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "12px" }}>
               {ko ? "네트워크 연결을 확인하고 다시 시도해주세요" : "Check your connection and try again"}
             </div>
             <button type="button" onClick={() => { void fetchAiActions(true); }} style={{
@@ -210,7 +210,7 @@ export function AiCoachCard() {
                     ? `Top-store figure is modeled (avg \u00d7 multiplier), not an actual store.${fBench.isEstimate ? " Brand revenue is estimated." : ""}`
                     : "Upper/lower bands are distribution estimates.";
                   return (
-                    <div style={{ marginTop: "6px", fontSize: "9.5px", lineHeight: 1.45, color: "rgba(15,23,42,0.4)" }}>
+                    <div style={{ marginTop: "6px", fontSize: "9.5px", lineHeight: 1.45, color: "var(--muted)" }}>
                       {ko
                         ? `\u203b \uae30\uc900 ${yr}\ub144 \u00b7 ${FRANCHISE_BENCHMARK_PROVENANCE.source}`
                         : `* As of ${yr} \u00b7 Korea FTC franchise disclosures \u00b7 SEMAS survey`}

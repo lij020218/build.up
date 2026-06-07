@@ -166,7 +166,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
           {/* 인사이트 한 줄 — 왜 지금 설정해야 하는지 */}
           <div style={{
             fontSize: "12.5px",
-            color: "rgba(15,23,42,0.55)",
+            color: "var(--muted)",
             lineHeight: 1.55,
             padding: "0 2px",
           }}>
@@ -315,7 +315,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
 
         {/* 14일 타임라인 그래프 (작은 미니 바) */}
         <div style={{ padding: "12px 14px", background: "rgba(255,255,255,0.5)", borderRadius: "12px", marginBottom: "14px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.45)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 650, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
             {ko ? "14일 예측" : "14-day forecast"}
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: "3px", height: "52px" }}>
@@ -358,7 +358,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
               );
             })}
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px", fontSize: "10px", color: "rgba(15,23,42,0.4)", fontWeight: 600 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px", fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>
             <span>{ko ? "오늘" : "Today"}</span>
             <span>+7d</span>
             <span>+14d</span>
@@ -482,7 +482,7 @@ function MetricTile({
       background: "rgba(255,255,255,0.6)",
       border: "1px solid rgba(15,23,42,0.04)",
     }}>
-      <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.5)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
+      <div style={{ fontSize: "10px", fontWeight: 650, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
         {label}
       </div>
       <div style={{ fontSize: "17px", fontWeight: 720, letterSpacing: "-0.03em", color, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>
@@ -522,7 +522,7 @@ function EventRow({
     }}>
       <div style={{ flexShrink: 0 }}>{icon}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(15,23,42,0.5)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+        <div style={{ fontSize: "10px", fontWeight: 650, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
         <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.7)", marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{detail}</div>
       </div>
       <div style={{ fontSize: "13px", fontWeight: 700, color: amountColor, fontVariantNumeric: "tabular-nums" }}>{amount}</div>
@@ -576,7 +576,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "2px",
 };
 

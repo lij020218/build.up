@@ -618,7 +618,7 @@ export const styles = {
     color: "#0f172a",
   },
   optionSummary: {
-    color: "rgba(15,23,42,0.45)",
+    color: "var(--muted)",
     lineHeight: 1.6
   },
   compactOptionSummary: {
@@ -686,7 +686,7 @@ export const styles = {
     borderRadius: "10px",
     border: "1px solid rgba(0,0,0,0.06)",
     background: "transparent",
-    color: "rgba(15,23,42,0.45)",
+    color: "var(--muted)",
     padding: "6px 14px",
     cursor: "pointer",
     fontSize: "13px",
@@ -890,7 +890,7 @@ export const styles = {
   compactChoiceCaption: {
     fontSize: "12px",
     lineHeight: 1.5,
-    color: "rgba(15,23,42,0.45)",
+    color: "var(--muted)",
   },
   button: {
     borderRadius: "14px",
@@ -1012,7 +1012,7 @@ export const styles = {
     color: "#0f172a",
   },
   stepBody: {
-    color: "rgba(15,23,42,0.5)",
+    color: "var(--muted)",
     fontSize: "14px",
     lineHeight: 1.7,
   },

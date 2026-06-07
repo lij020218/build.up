@@ -199,7 +199,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
       }}>
         <Users size={12} strokeWidth={1.5} />
         {ko ? `${userKind} 변화` : `${userKind} Trend`}
-        <span style={{ fontSize: "10.5px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.02em", textTransform: "none" as const, marginLeft: "auto" }}>
+        <span style={{ fontSize: "10.5px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.02em", textTransform: "none" as const, marginLeft: "auto" }}>
           {ko ? "최근 7일" : "Last 7d"}
         </span>
       </div>
@@ -223,7 +223,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
               <CountUp to={cumulativeTotal} duration={1.0} format={(n) => Math.round(n).toLocaleString()} />
             </span>
             {userUnitSuffix && (
-              <span style={{ fontSize: "16px", fontWeight: 600, color: "rgba(15,23,42,0.5)", letterSpacing: "-0.02em" }}>
+              <span style={{ fontSize: "16px", fontWeight: 600, color: "var(--muted)", letterSpacing: "-0.02em" }}>
                 {userUnitSuffix}
               </span>
             )}
@@ -291,7 +291,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
               <milestone.Icon size={14} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ color: "#191970", flexShrink: 0 }} />
               {ko ? milestone.label : `${milestone.target.toLocaleString()}`}
             </span>
-            <span style={{ fontSize: "10.5px", fontWeight: 600, color: "rgba(15,23,42,0.5)", fontVariantNumeric: "tabular-nums" as const }}>
+            <span style={{ fontSize: "10.5px", fontWeight: 600, color: "var(--muted)", fontVariantNumeric: "tabular-nums" as const }}>
               {ko ? `${(milestone.target - cumulativeTotal).toLocaleString()}${userUnitSuffix} 남음` : `${(milestone.target - cumulativeTotal).toLocaleString()} to go`}
             </span>
           </div>
@@ -317,7 +317,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
           <div style={miniStatLabel}>
             <Calendar size={11} strokeWidth={1.5} />
             {ko ? "일 평균" : "Daily avg"}
-            {isLowConfidence && <span style={{ fontSize: "9px", color: "rgba(15,23,42,0.4)", fontWeight: 600, marginLeft: "2px" }}>~</span>}
+            {isLowConfidence && <span style={{ fontSize: "9px", color: "var(--muted)", fontWeight: 600, marginLeft: "2px" }}>~</span>}
           </div>
           <div style={miniStatValue}>
             {dailyAvg > 0 ? dailyAvg.toLocaleString() : "—"}
@@ -334,7 +334,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
           <div style={miniStatLabel}>
             <Target size={11} strokeWidth={1.5} />
             {ko ? "월 예상" : "Monthly est"}
-            {isLowConfidence && <span style={{ fontSize: "9px", color: "rgba(15,23,42,0.4)", fontWeight: 600, marginLeft: "2px" }}>~</span>}
+            {isLowConfidence && <span style={{ fontSize: "9px", color: "var(--muted)", fontWeight: 600, marginLeft: "2px" }}>~</span>}
           </div>
           <div style={miniStatValue}>
             {monthlyProjected > 0 ? monthlyProjected.toLocaleString() : "—"}
@@ -397,7 +397,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
             <div style={{
               display: "grid", gridTemplateColumns: "repeat(7, 1fr)",
               marginTop: "4px", fontSize: "10.5px",
-              color: "rgba(15,23,42,0.42)", fontWeight: 600,
+              color: "var(--muted)", fontWeight: 600,
             }}>
               {bars.map((b) => {
                 const dayLabel = new Date(`${b.date}T12:00:00`).toLocaleDateString(ko ? "ko-KR" : "en-US", { weekday: ko ? "narrow" : "short" });
@@ -482,7 +482,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
         display: "flex", alignItems: "center", gap: "10px",
         marginTop: "12px", paddingTop: "12px",
         borderTop: "1px solid rgba(25,25,112,0.06)",
-        fontSize: "11.5px", color: "rgba(15,23,42,0.55)",
+        fontSize: "11.5px", color: "var(--muted)",
         flexWrap: "wrap" as const,
         position: "relative" as const, zIndex: 1,
       }}>
@@ -493,7 +493,7 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
           <span style={{ fontWeight: 700, color: "#0f0f4a", fontVariantNumeric: "tabular-nums" as const, letterSpacing: "-0.005em" }}>
             +<CountUp to={recent7Customers} duration={1.0} format={(n) => Math.round(n).toLocaleString()} />
           </span>
-          {userUnitSuffix && <span style={{ fontWeight: 600, color: "rgba(15,23,42,0.45)" }}>{userUnitSuffix}</span>}
+          {userUnitSuffix && <span style={{ fontWeight: 600, color: "var(--muted)" }}>{userUnitSuffix}</span>}
         </span>
 
         {dodDelta != null && (
@@ -568,5 +568,5 @@ const miniStatValue: React.CSSProperties = {
 const miniStatUnit: React.CSSProperties = {
   fontSize: "11px",
   fontWeight: 600,
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
 };

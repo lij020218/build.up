@@ -126,7 +126,7 @@ function OverstockSection({
           </div>
           <div style={{
             fontSize: "11px",
-            color: "rgba(15,23,42,0.55)",
+            color: "var(--muted)",
             marginTop: "2px",
             lineHeight: 1.4,
           }}>
@@ -191,7 +191,7 @@ function OverstockSection({
                     {ko ? recommendKo : recommendEn}
                   </span>
                 </div>
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "3px", lineHeight: 1.4 }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.4 }}>
                   {ko ? a.reasonKo : a.reasonEn}
                 </div>
                 {a.excessCostKrw != null && a.excessCostKrw > 0 && (
@@ -749,7 +749,7 @@ export function InventoryOpsCard({
           <button type="button" onClick={() => { setInventorySnapshot([...inventory]); setShowAllInventory(true); }} style={{
             width: "100%", padding: "10px", marginTop: "6px", borderRadius: "10px",
             border: "none", background: "rgba(25,25,112,0.035)", cursor: "pointer",
-            fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.45)",
+            fontSize: "13px", fontWeight: 600, color: "var(--muted)",
           }}>
             {ko ? `전체 ${inventory.length}개 보기` : `View all ${inventory.length} items`}
           </button>
@@ -769,13 +769,13 @@ export function InventoryOpsCard({
                 <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
                   {ko ? "전체 재고" : "All Inventory"}
                 </div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
+                <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
                   {inventorySnapshot.length}{ko ? "개 품목" : " items"}
                 </div>
               </div>
               <button type="button" onClick={() => setShowAllInventory(false)} style={{
                 width: "32px", height: "32px", borderRadius: "999px", border: "none",
-                background: "rgba(25,25,112,0.05)", cursor: "pointer", fontSize: "16px", color: "rgba(15,23,42,0.4)",
+                background: "rgba(25,25,112,0.05)", cursor: "pointer", fontSize: "16px", color: "var(--muted)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>✕</button>
             </div>
@@ -808,7 +808,7 @@ export function InventoryOpsCard({
                         <span style={{ fontSize: "10px", fontWeight: 600, color: (item as { itemType?: string }).itemType === "product" ? "#191970" : "rgba(15,23,42,0.4)", background: (item as { itemType?: string }).itemType === "product" ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.04)", borderRadius: "4px", padding: "1px 5px" }}>
                           {(item as { itemType?: string }).itemType === "product" ? (ko ? "상품" : "Product") : (ko ? "재료" : "Material")}
                         </span>
-                        <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.35)" }}>{item.category || (ko ? "일반" : "General")}</span>
+                        <span style={{ fontSize: "10px", color: "var(--muted)" }}>{item.category || (ko ? "일반" : "General")}</span>
                         {urgency !== "ok" && (
                           <span style={{ fontSize: "10px", fontWeight: 700, color: urgencyColor, background: `${urgencyColor}10`, borderRadius: "4px", padding: "1px 5px" }}>
                             {urgency === "critical" ? (ko ? "즉시 발주" : "Order now") : (ko ? "발주 필요" : "Low")}
@@ -821,7 +821,7 @@ export function InventoryOpsCard({
                         {item.quantity}{item.unit ? ` ${item.unit}` : ""}
                       </div>
                       {(item as { sellingPrice?: number }).sellingPrice ? (
-                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)" }}>{fmt((item as { sellingPrice?: number }).sellingPrice ?? 0)}</div>
+                        <div style={{ fontSize: "11px", color: "var(--muted)" }}>{fmt((item as { sellingPrice?: number }).sellingPrice ?? 0)}</div>
                       ) : null}
                     </div>
                     <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>

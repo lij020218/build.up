@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
 import { starterIndustryOptions, localizeRecommendationItem } from "@foundone/shared";
+import { BP } from "../../breakpoints";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { supabase } from "../../../../lib/supabase";
 import {
@@ -92,7 +93,7 @@ export function MarketingSurface() {
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, []);
-  const isMobile = viewportWidth < 640;
+  const isMobile = viewportWidth < BP.sm;
 
   // ── Recommended channels for this business type
   const recommended = RECOMMENDED_CHANNELS[categoryId] ?? RECOMMENDED_CHANNELS["food"];
@@ -420,7 +421,7 @@ export function MarketingSurface() {
           {ko ? "내 가게 마케팅" : "Marketing"}
         </h1>
         <p style={{
-          fontSize: 14, color: "rgba(15,23,42,0.55)",
+          fontSize: 14, color: "var(--muted)",
           lineHeight: 1.55, margin: 0, maxWidth: 580,
         }}>
           {ko
@@ -458,7 +459,7 @@ export function MarketingSurface() {
           {activeChannels.length > 0 ? (
             <div style={{ ...kpiValue, color: "var(--text)" }}>
               {activeChannels.length}
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.45)", marginLeft: "6px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--muted)", marginLeft: "6px" }}>
                 {ko ? "개" : ""}
               </span>
             </div>
@@ -658,7 +659,7 @@ export function MarketingSurface() {
             <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
               {ko ? "오늘의 마케팅 트렌드" : "Today's Marketing Trends"}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "2px", lineHeight: 1.5 }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.5 }}>
               {ko ? "업종별 맞춤 콘텐츠 아이디어 5개" : "5 content ideas curated for your industry"}
             </div>
           </div>
@@ -814,7 +815,7 @@ export function MarketingSurface() {
                       )}
                     </div>
                   )}
-                  <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.55)", marginBottom: "4px", lineHeight: 1.5 }}>
+                  <div style={{ fontSize: "12.5px", color: "var(--muted)", marginBottom: "4px", lineHeight: 1.5 }}>
                     {trend.reason}
                   </div>
                   {/* 2026-05-12: lesson 우선 — "이 업종에 왜 의미 있는지" 가 핵심.
@@ -917,22 +918,22 @@ export function MarketingSurface() {
             marginTop: "14px", paddingTop: "14px",
             borderTop: "1px solid rgba(15,23,42,0.06)",
           }}>
-            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.06em", color: "rgba(15,23,42,0.4)", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.06em", color: "var(--muted)", textTransform: "uppercase" as const, marginBottom: "8px" }}>
               {ko ? "참조 출처" : "Sources"}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
               {trendSources.slice(0, 6).map((s, i) => (
                 <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{
-                  fontSize: "11.5px", color: "rgba(15,23,42,0.55)", textDecoration: "none",
+                  fontSize: "11.5px", color: "var(--muted)", textDecoration: "none",
                   display: "flex", alignItems: "center", gap: "6px",
                   padding: "4px 0", lineHeight: 1.4,
                 }}>
-                  <span style={{ color: "rgba(15,23,42,0.3)" }}>·</span>
+                  <span style={{ color: "var(--muted)" }}>·</span>
                   <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
                     {s.name}
                   </span>
                   {s.publishedDate && (
-                    <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.3)" }}>{s.publishedDate}</span>
+                    <span style={{ fontSize: "10px", color: "var(--muted)" }}>{s.publishedDate}</span>
                   )}
                 </a>
               ))}
@@ -1092,7 +1093,7 @@ export function MarketingSurface() {
       <article style={solidCard}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
           <div>
-            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(15,23,42,0.4)", marginBottom: "2px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "2px" }}>
               {ko ? "지출 추적" : "Spend Tracking"}
             </div>
             <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -1148,7 +1149,7 @@ export function MarketingSurface() {
                     <div style={{ fontSize: "13px", fontWeight: 640, color: "var(--text)" }}>
                       {ko ? (meta?.label.ko ?? camp.channel) : (meta?.label.en ?? camp.channel)}
                     </div>
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)" }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                       {fmt(camp.spend)}
                       {camp.attributedRevenue ? ` → ${fmt(camp.attributedRevenue)}` : ""}
                       {roi ? ` (${roi}x)` : ""}
@@ -1171,7 +1172,7 @@ export function MarketingSurface() {
           <button type="button" onClick={() => mkt.setCampFormOpen(true)} style={{
             width: "100%", padding: "16px", borderRadius: "14px",
             border: "1px dashed rgba(0,122,255,0.15)", background: "transparent",
-            cursor: "pointer", fontSize: "13px", color: "rgba(15,23,42,0.4)", fontWeight: 500,
+            cursor: "pointer", fontSize: "13px", color: "var(--muted)", fontWeight: 500,
             marginBottom: "12px",
           }}>
             {ko ? "마케팅 지출을 기록하면 ROI를 추적할 수 있어요" : "Log marketing spend to track ROI"}

@@ -275,16 +275,15 @@ public struct SectionEditSheet: View {
         ToolbarItem(placement: .topBarLeading) {
             Button("취소") { handleCancel() }
                 .foregroundStyle(BUColor.midnight)
+                .disabled(store.saveStatus == .saving)
         }
         ToolbarItem(placement: .topBarTrailing) {
             Button {
                 handleSave()
             } label: {
-                Text("저장")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(hasChanges ? BUColor.midnight : BUColor.inkMuted)
+                saveButtonLabel
             }
-            .disabled(!hasChanges)
+            .disabled(!hasChanges || store.saveStatus == .saving)
         }
         #else
         ToolbarItem(placement: .cancellationAction) {
@@ -292,9 +291,46 @@ public struct SectionEditSheet: View {
         }
         ToolbarItem(placement: .confirmationAction) {
             Button("저장") { handleSave() }
-                .disabled(!hasChanges)
+                .disabled(!hasChanges || store.saveStatus == .saving)
         }
         #endif
+    }
+
+    @ViewBuilder
+    private var saveButtonLabel: some View {
+        switch store.saveStatus {
+        case .saving:
+            HStack(spacing: 4) {
+                ProgressView()
+                    .scaleEffect(0.75)
+                    .tint(BUColor.inkMuted)
+                Text("저장 중")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
+        case .saved:
+            HStack(spacing: 4) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(BUColor.midnight)
+                Text("저장됨")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(BUColor.midnight)
+            }
+        case .error:
+            HStack(spacing: 4) {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.red)
+                Text("재시도")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.red)
+            }
+        default:
+            Text("저장")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(hasChanges ? BUColor.midnight : BUColor.inkMuted)
+        }
     }
 
     // MARK: - Keyboard toolbar (이전 / 다음 / 완료)
@@ -332,6 +368,8 @@ public struct SectionEditSheet: View {
     private func handleSave() {
         Task {
             await store.flushImmediate()
+            // .saved 상태를 0.5초 보여준 후 닫기
+            try? await Task.sleep(nanoseconds: 500_000_000)
             dismiss()
         }
     }

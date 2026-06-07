@@ -3,24 +3,32 @@
 //
 //  사장님 업종에 따라 자동 분기:
 //   • 외식/카페     → PrimeCost (식자재 + 인건비 합)
-//   • 스타트업/SaaS → CashZeroDate (현금 소진 D-day)
-//   • 미용/펫       → 예약 노쇼율 (간단 미리보기)
-//   • 그 외          → 빠른 영감 (Drucker 인용)
+//   • 스타트업/SaaS → funnel 전환율
+//   • 소매          → RetailSellThroughCard (sell-through + best seller + dead stock)
+//   • 피트니스      → FitnessRetentionCard (cohort 잔존율 + D-7 만료)
+//   • 교육          → EducationEnrollmentCard (재등록 D-14 + cohort 잔존율)
+//   • 미용/펫/기타  → 예약 현황 (데이터 없을 때 정직한 빈상태)
+//   • 일반          → 빠른 영감 (Drucker 인용)
 //
 
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneCore
 import FoundOneComponents
+import FoundOneData
 
 // MARK: - IndustryFocusCard
 
 public struct IndustryFocusCard: View {
 
     let mock: MockData
+    let members: [BUMember]
+    let inventory: [BUInventoryItem]
 
-    public init(mock: MockData) {
+    public init(mock: MockData, members: [BUMember] = [], inventory: [BUInventoryItem] = []) {
         self.mock = mock
+        self.members = members
+        self.inventory = inventory
     }
 
     public var body: some View {
@@ -29,14 +37,22 @@ public struct IndustryFocusCard: View {
             PrimeCostFocusCard(mock: mock)
         case .startupTech:
             // 2026-05-19 사장님 결정: SaaS 핵심 KPI = funnel 전환율.
-            //   런웨이(Cash Zero Date)는 funnel 카드 우상단 mini chip 으로 유지.
             ConversionFunnelFocusCard(mock: mock, mode: .saas)
         case .ecommerce:
             // 2026-05-19: 온라인은 구매 전환율이 최우선 KPI.
             ConversionFunnelFocusCard(mock: mock, mode: .commerce)
-        case .beauty, .pet, .fitness, .education, .livingService, .space:
+        case .retail:
+            // 실카드 — BUInventoryItem(itemType=="product") + SellThroughCalculator
+            RetailSellThroughCard(items: inventory)
+        case .fitness:
+            // 실카드 — BUMember + CohortRetentionCalculator (FIA 90d=50% 기준)
+            FitnessRetentionCard(members: members)
+        case .education:
+            // 실카드 — BUMember + CohortRetentionCalculator (한국 학원 D-14·1년 잔존)
+            EducationEnrollmentCard(members: members)
+        case .beauty, .pet, .livingService, .space:
             BookingFocusCard(mock: mock)
-        case .retail, .general:
+        case .general:
             InspirationCard()
         }
     }

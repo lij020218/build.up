@@ -75,7 +75,7 @@ export function EmptyStateCard({
           fontWeight: 650,
           letterSpacing: "0.08em",
           textTransform: "uppercase" as const,
-          color: "rgba(15,23,42,0.35)",
+          color: "var(--muted)",
           marginBottom: "4px",
         }}
       >
@@ -125,7 +125,7 @@ export function EmptyStateCard({
             style={{
               fontSize: "12.5px",
               fontWeight: 500,
-              color: "rgba(15,23,42,0.5)",
+              color: "var(--muted)",
               lineHeight: 1.55,
             }}
           >
@@ -149,7 +149,7 @@ export function EmptyStateCard({
               style={{
                 fontSize: "10.5px",
                 fontWeight: 650,
-                color: "rgba(15,23,42,0.45)",
+                color: "var(--muted)",
               }}
             >
               {ko ? `${progress.current}/${progress.target} ${progress.unitKo}` : `${progress.current}/${progress.target} ${progress.unitEn}`}

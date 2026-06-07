@@ -267,7 +267,7 @@ const titleStyle: React.CSSProperties = {
 
 const subtitleStyle: React.CSSProperties = {
   fontSize: 14,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.55,
   margin: 0,
   maxWidth: 580,

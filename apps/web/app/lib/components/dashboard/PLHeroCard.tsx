@@ -182,7 +182,7 @@ export function PLHeroCard({
                   </div>
                 )}
                 {m.projection != null && (
-                  <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.45)", marginTop: m.change != null ? "4px" : "6px", letterSpacing: "-0.005em" }}>
+                  <div style={{ fontSize: "10.5px", color: "var(--muted)", marginTop: m.change != null ? "4px" : "6px", letterSpacing: "-0.005em" }}>
                     {ko ? "월말" : "EoM"} <span style={{ fontWeight: 700, color: m.projection >= 0 ? "#1d3557" : "#b64c4c" }}>{m.projection >= 0 ? "+" : ""}{fmt(m.projection)}</span>
                   </div>
                 )}
@@ -212,7 +212,7 @@ export function PLHeroCard({
               />
               {/* 분자·분모 명시 — 사용자가 *왜 N%인지* 즉시 이해 */}
               {monthlyRevenueEquivalent != null && (
-                <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.5)", marginTop: "5px", letterSpacing: "-0.005em" }}>
+                <div style={{ fontSize: "10.5px", color: "var(--muted)", marginTop: "5px", letterSpacing: "-0.005em" }}>
                   {ko
                     ? `월 환산 매출 ${fmt(monthlyRevenueEquivalent)}`
                     : `Monthly equiv. revenue ${fmt(monthlyRevenueEquivalent)}`}
@@ -253,7 +253,7 @@ export function PLHeroCard({
                 </span>
               </div>
               {/* 일일 BEP 분자·분모 명시 */}
-              <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.5)", marginBottom: "7px", letterSpacing: "-0.005em" }}>
+              <div style={{ fontSize: "10.5px", color: "var(--muted)", marginBottom: "7px", letterSpacing: "-0.005em" }}>
                 {ko
                   ? `오늘 매출 ${fmt(todaySales ?? 0)} / 일일 BEP 목표 ${fmt(breakEvenDailySales)}`
                   : `Today ${fmt(todaySales ?? 0)} / Daily BEP target ${fmt(breakEvenDailySales)}`}
@@ -268,7 +268,7 @@ export function PLHeroCard({
                 duration={0.95}
               />
               {daysAboveBreakEven != null && totalDaysRecorded != null && totalDaysRecorded > 0 && (
-                <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "7px", fontWeight: 500 }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "7px", fontWeight: 500 }}>
                   {ko
                     ? `이번 달 ${totalDaysRecorded}일 중 ${daysAboveBreakEven}일 달성`
                     : `${daysAboveBreakEven} of ${totalDaysRecorded} days above BEP`}

@@ -445,7 +445,7 @@ function BrandCard({ brand, onClick }: { brand: Brand; onClick: () => void }) {
 const sectionLabel: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 600,
-  color: "rgba(15,23,42,0.45)",
+  color: "var(--muted)",
   letterSpacing: "0.12em",
   textTransform: "uppercase" as const,
   marginBottom: 14,
@@ -562,7 +562,7 @@ function BrandStoryModal({ brand, onClose }: { brand: Brand; onClose: () => void
             <h2 style={{ margin: 0, fontSize: 28, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.035em", lineHeight: 1.15 }}>
               {brand.name}
             </h2>
-            <div style={{ marginTop: 6, fontSize: 14, fontWeight: 500, color: "rgba(15,23,42,0.55)", letterSpacing: "-0.005em" }}>
+            <div style={{ marginTop: 6, fontSize: 14, fontWeight: 500, color: "var(--muted)", letterSpacing: "-0.005em" }}>
               {brand.tagline} · {brand.founded}
             </div>
           </div>
@@ -592,7 +592,7 @@ function BrandStoryModal({ brand, onClose }: { brand: Brand; onClose: () => void
                   flexShrink: 0,
                   fontSize: 13,
                   fontWeight: 700,
-                  color: "rgba(15,23,42,0.30)",
+                  color: "var(--muted)",
                   fontVariantNumeric: "tabular-nums" as const,
                   letterSpacing: "-0.01em",
                   width: 16,
@@ -633,7 +633,7 @@ function BrandStoryModal({ brand, onClose }: { brand: Brand; onClose: () => void
             <span style={{
               fontSize: 36,
               lineHeight: 1,
-              color: "rgba(15,23,42,0.18)",
+              color: "var(--muted)",
               fontFamily: "Georgia, 'Times New Roman', serif",
               verticalAlign: "top",
               marginRight: 4,
@@ -643,7 +643,7 @@ function BrandStoryModal({ brand, onClose }: { brand: Brand; onClose: () => void
             <span style={{
               fontSize: 36,
               lineHeight: 1,
-              color: "rgba(15,23,42,0.18)",
+              color: "var(--muted)",
               fontFamily: "Georgia, 'Times New Roman', serif",
               verticalAlign: "bottom",
               marginLeft: 2,

@@ -413,6 +413,28 @@ public struct AppRoot: View {
                 Self.hydrateRoadmapIndustry(categoryId: snapshot.industryCategoryId, subIndustryId: snapshot.subIndustryId, into: roadmapStore)
             } catch { /* best-effort — 기존 값 유지 */ }
         }
+
+        // 4. 코칭 일지 — 웹·다른 기기에서 저장한 일지가 즉시 반영되게.
+        //   coaching_history 는 realtime publication 에 포함(20260607_000002 마이그레이션)되므로
+        //   포그라운드 복귀·realtime 이벤트 시 항상 최신 14일치를 재조회한다.
+        await coachingStore?.load()
+
+        // 5. 현금흐름 설정 — user_store_data(cashflow_settings) 기반. realtime 발화하므로 재조회.
+        //   load() 는 isLoaded 가드로 no-op 이라 가드 우회하는 refresh() 사용.
+        await cashflowStore?.refresh()
+
+        // 6. 구독 운영 — user_store_data(uses_subscriptions/subscription_plans). load() 가 매번 재조회.
+        await subscriptionStore?.load()
+
+        // 7. SaaS 사용자 지표 — saas_metrics_daily(스타트업만). 포커스 복귀 시 최신 수집분 반영.
+        if let store = dashboardStore {
+            await saasStore?.load(isStartup: store.category == .startupTech)
+        }
+
+        // 8. owner 프로필(birthYear/ncbScore/closure/disabled) — 웹 connectAndLoad 와 패리티.
+        //   봉투암호화 API 경유, best-effort. 변경 빈도 낮으나 기기 전환 시 최신 유지.
+        let ownerSync = OwnerProfileSyncRepository(supabase: supabase)
+        await ownerSync.load()
     }
 
     /// 로딩 완료 전 임시 — 빈 state. load() 가 끝나면 즉시 storeInfoStore 가 set 되어
@@ -537,6 +559,7 @@ private struct OnboardingFlow: View {
                                     Image(systemName: "chevron.left")
                                         .font(.system(size: 17, weight: .semibold))
                                 }
+                                .accessibilityLabel("뒤로")
                             }
                         }
                 }
@@ -1464,6 +1487,7 @@ private struct ExitButton: View {
                 .background(Circle().fill(BUColor.surfaceElevated.opacity(0.9)))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("닫기")
     }
 }
 

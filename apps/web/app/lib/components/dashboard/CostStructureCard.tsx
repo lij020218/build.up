@@ -193,7 +193,7 @@ export function CostStructureCard() {
     return (
       <div style={card} data-cost-structure>
         <div style={headerRow}>
-          <PieChart size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
+          <PieChart size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
         </div>
         <div style={emptyState}>
           {ko
@@ -208,7 +208,7 @@ export function CostStructureCard() {
     <div style={card} data-cost-structure>
       {/* Header */}
       <div style={headerRow}>
-        <PieChart size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
+        <PieChart size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} /><span style={cardTitle}>비용 구조</span>
       </div>
 
       {/* Cost Rows */}
@@ -369,7 +369,7 @@ const primeSeparator: React.CSSProperties = {
 const benchmarkNote: React.CSSProperties = {
   fontSize: "11px",
   fontWeight: 500,
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
   marginTop: "4px",
   paddingLeft: "60px",
   letterSpacing: "0.01em",
@@ -379,6 +379,6 @@ const emptyState: React.CSSProperties = {
   padding: "28px 0",
   textAlign: "center",
   fontSize: "13px",
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
   lineHeight: 1.5,
 };

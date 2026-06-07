@@ -113,6 +113,7 @@ public struct CoachingHistoryCard: View {
                     .foregroundStyle(taken ? BUColor.success : BUColor.inkSubtle)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(taken ? "실행 완료" : "실행 표시")
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {

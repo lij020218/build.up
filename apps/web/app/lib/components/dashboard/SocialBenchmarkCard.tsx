@@ -247,7 +247,7 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
             <div style={{ position: "absolute" as const, left: `${avgPct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(15,23,42,0.4)" }} />
             <div style={{ position: "absolute" as const, left: `${top10Pct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(52,199,89,0.6)" }} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "4px", fontWeight: 600 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "var(--muted)", marginTop: "4px", fontWeight: 600 }}>
             <span>{ko ? "0" : "0"}</span>
             <span>{ko ? `평균 ${fmt(avgMonthly)}` : `Avg ${fmt(avgMonthly)}`}</span>
             <span style={{ color: "rgba(52,199,89,0.7)" }}>{ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}</span>
@@ -272,7 +272,7 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
       </div>
 
       {/* 출처·기준연도·분포추정 (iOS WeeklyPulse 1:1) */}
-      <div style={{ marginTop: "10px", fontSize: "10px", color: "rgba(15,23,42,0.35)", fontWeight: 500, lineHeight: 1.5 }}>
+      <div style={{ marginTop: "10px", fontSize: "10px", color: "var(--muted)", fontWeight: 500, lineHeight: 1.5 }}>
         {ko
           ? `※ 기준 ${FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear}년 · 공정거래위원회 가맹사업 정보공개서 · 소상공인실태조사`
           : `* As of ${FRANCHISE_BENCHMARK_PROVENANCE.disclosureYear} · Fair Trade Commission franchise disclosures · SMB survey`}
@@ -396,7 +396,7 @@ function WeeklyBenchmarkChart({
           <span style={{ width: "12px", height: "2px", background: toneColor, borderRadius: "1px" }} />
           {ko ? "내 가게" : "My store"} <strong style={{ color: toneColor, fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{fmt(weekly[weekly.length - 1].value)}</strong>
         </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(15,23,42,0.4)" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "var(--muted)" }}>
           <span style={{ width: "12px", height: "1.5px", background: "rgba(15,23,42,0.32)", borderRadius: "1px" }} />
           {ko ? "평균" : "Avg"}
         </span>

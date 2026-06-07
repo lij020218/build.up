@@ -435,45 +435,57 @@ export async function saveRoadmapState(
     }
   }
 
-  // 기존 rows를 먼저 삭제 후 재삽입합니다.
-  // upsert만 사용하면 빈 decisions(초기화 상태)일 때 삭제가 일어나지 않아
-  // 이전 진행 상태가 DB에 남는 버그가 있습니다.
-  //
-  // delete → insert는 원자적이지 않으므로, insert 실패 시 재삽입을 시도합니다.
+  // ⚠️ 2026-06-07 점검: 기존엔 delete→insert(비원자) 라, delete 성공 후 insert 가 (2회) 실패하면
+  //   stage_decisions 가 통째로 비어 진행도가 소실되는 창이 있었다.
+  //   → upsert(기존 row 유지하며 갱신/추가) 먼저 한 뒤, 이번 payload 에 *없는* 옛 stage 만 삭제하는
+  //     "upsert + delete-orphans" 로 변경. 어느 단계에서 실패해도 기존 데이터가 사라지는 순간이 없다.
+  //     (빈 payload 로 전체 비우는 경우는 위 forceReset / 빈-payload 가드가 이미 처리.)
   if (decisionPayload.length > 0) {
-    const { error: deleteDecisionsError } = await client
+    const { error: upsertError } = await client
       .from("stage_decisions")
-      .delete()
+      .upsert(decisionPayload, { onConflict: "roadmap_id,stage_code" });
+    if (upsertError) throw upsertError;
+
+    // 이번 payload 에 없는 옛 stage_decisions 만 제거 (orphan). 실패해도 데이터 소실 아님(잔존만).
+    const keepCodes = new Set(decisionPayload.map((d) => d.stage_code));
+    const { data: existingDecisionRows } = await client
+      .from("stage_decisions")
+      .select("stage_code")
       .eq("roadmap_id", roadmapRow.id);
-
-    if (deleteDecisionsError) {
-      throw deleteDecisionsError;
-    }
-
-    const { error } = await client.from("stage_decisions").insert(decisionPayload);
-
-    if (error) {
-      // 삭제 후 insert 실패 — 데이터 유실 방지를 위해 한번 더 시도
-      const { error: retryError } = await client.from("stage_decisions").insert(decisionPayload);
-      if (retryError) throw retryError;
+    const orphanCodes = (existingDecisionRows ?? [])
+      .map((row: { stage_code: string }) => row.stage_code)
+      .filter((code) => !keepCodes.has(code));
+    if (orphanCodes.length > 0) {
+      const { error: orphanError } = await client
+        .from("stage_decisions")
+        .delete()
+        .eq("roadmap_id", roadmapRow.id)
+        .in("stage_code", orphanCodes);
+      if (orphanError) throw orphanError;
     }
   }
 
   if (taskPayload.length > 0) {
-    const { error: deleteTasksError } = await client
+    const { error: upsertError } = await client
       .from("stage_tasks")
-      .delete()
+      .upsert(taskPayload, { onConflict: "roadmap_id,task_code" });
+    if (upsertError) throw upsertError;
+
+    const keepTaskCodes = new Set(taskPayload.map((t) => t.task_code));
+    const { data: existingTaskRows } = await client
+      .from("stage_tasks")
+      .select("task_code")
       .eq("roadmap_id", roadmapRow.id);
-
-    if (deleteTasksError) {
-      throw deleteTasksError;
-    }
-
-    const { error } = await client.from("stage_tasks").insert(taskPayload);
-
-    if (error) {
-      const { error: retryError } = await client.from("stage_tasks").insert(taskPayload);
-      if (retryError) throw retryError;
+    const orphanTaskCodes = (existingTaskRows ?? [])
+      .map((row: { task_code: string }) => row.task_code)
+      .filter((code) => !keepTaskCodes.has(code));
+    if (orphanTaskCodes.length > 0) {
+      const { error: orphanError } = await client
+        .from("stage_tasks")
+        .delete()
+        .eq("roadmap_id", roadmapRow.id)
+        .in("task_code", orphanTaskCodes);
+      if (orphanError) throw orphanError;
     }
   }
 

@@ -48,7 +48,9 @@ public struct LocationCandidatesStageView: View {
     private let pages = ["개요", "1. 지역·AI", "2. 답사 후보", "3. 점수 비교", "4. 매물 체크", "후보 비교·결정"]
 
     // AI 라이브 상권 추천 (웹 패리티 — POST /api/data/market-recommend)
-    @State private var aiRegion = ""
+    //   @AppStorage 로 영속 — 뷰 이탈 후에도 유지되고, advance 시 stage_decisions.inputs.preferredRegion
+    //   (웹 SSOT 키)로 함께 저장돼 웹 region 폼 복원·business_profiles.preferred_regions 투영에 쓰인다.
+    @AppStorage("loc.region") private var aiRegion = ""
     @State private var aiItems: [MarketScoredItem] = []
     @State private var aiLoading = false
     @State private var aiError: String?
@@ -154,10 +156,11 @@ public struct LocationCandidatesStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["address": finalAddress])
+                // address(구체 매물 주소) + preferredRegion(선호 상권 — 웹 SSOT 키, projector→preferred_regions)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["address": finalAddress, "preferredRegion": aiRegion])
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["address": finalAddress]) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["address": finalAddress, "preferredRegion": aiRegion]) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 113개 상권 데이터 검토", detail: "유동인구·평균임대료·동종업종 밀도 비교 — 점수화된 상권 추천"),

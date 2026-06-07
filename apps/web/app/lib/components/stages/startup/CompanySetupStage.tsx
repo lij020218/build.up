@@ -87,7 +87,7 @@ export function CompanySetupStage() {
       <div style={{ borderRadius: "20px", border: `1px solid ${MIDNIGHT_BORDER}`, background: "white", overflow: "hidden", boxShadow: "0 1px 3px rgba(25,25,112,0.04)" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "사업자등록 — 사업 형태 선택" : "Business Registration — Choose Your Structure"}</span>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "6px" }}>
             {ko ? "먼저 사업 형태를 선택하세요. 선택에 따라 절차가 달라집니다." : "Choose your business structure first. The process differs based on your choice."}
           </div>
         </div>
@@ -107,7 +107,7 @@ export function CompanySetupStage() {
                 <div style={{ fontSize: "14px", fontWeight: 680, color: bizType === "sole" ? MIDNIGHT : "#0f172a" }}>{ko ? "개인사업자" : "Sole Proprietor"}</div>
                 {bizType !== "corp" && <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: "rgba(25,25,112,0.08)", color: MIDNIGHT }}>{ko ? "추천" : "Recommended"}</span>}
               </div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
                 {ko ? "• 등록비 0원 · 홈택스에서 즉시 신청\n• 간이과세 가능 (매출 1억 400만원 미만)\n• 회계 간편 · 간편장부 인정\n• 법인 전환은 투자 유치 시 해도 충분" : "• Free registration via HomeTax\n• Simplified tax available\n• Simple bookkeeping OK\n• Convert to corp when raising investment"}
               </div>
             </button>
@@ -123,7 +123,7 @@ export function CompanySetupStage() {
                 <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: bizType === "corp" ? "6px solid #191970" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
                 <div style={{ fontSize: "14px", fontWeight: 680, color: bizType === "corp" ? MIDNIGHT : "#0f172a" }}>{ko ? "법인 (주식회사)" : "Corporation"}</div>
               </div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
                 {ko ? "• 설립비 30~65만원 · 등기소 등록 필요\n• 복식부기 의무\n• 투자 유치 · 지분 구조 설계에 유리\n• 매출 2억 초과 시 세율 유리" : "• ₩300-650K setup, registry required\n• Double-entry bookkeeping required\n• Better for raising VC / equity splits\n• Tax-efficient above ₩200M revenue"}
               </div>
             </button>
@@ -159,7 +159,7 @@ export function CompanySetupStage() {
               <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", lineHeight: 1.5 }}>{s.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>{s.detail}</div>
               </div>
             </div>
           ))}
@@ -203,7 +203,7 @@ export function CompanySetupStage() {
               <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", lineHeight: 1.5 }}>{s.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>{s.detail}</div>
               </div>
             </div>
           ))}
@@ -234,7 +234,7 @@ export function CompanySetupStage() {
               <Lightbulb size={12} strokeWidth={1.5} color={MIDNIGHT} />
               {ko ? "스톡옵션 · 캡테이블" : "Stock Options & Cap Table"}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
               {ko
                 ? "벤처기업 인증 후 스톡옵션 부여 시 직원 1인당 연 5,000만원까지 비과세. 4년 베스팅/1년 클리프가 업계 표준. ZUZU로 캡테이블 관리 권장."
                 : "After venture cert, stock options tax-free up to ₩50M/yr per employee. 4-year vesting / 1-year cliff is industry standard. Use ZUZU for cap table."}
@@ -330,7 +330,7 @@ export function CompanySetupStage() {
               <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
               <div>
                 <div style={{ fontSize: "13.5px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.55, marginTop: "2px" }}>{s.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.55, marginTop: "2px" }}>{s.detail}</div>
               </div>
             </div>
           ))}
@@ -414,7 +414,7 @@ export function CompanySetupStage() {
               <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
               <div>
                 <div style={{ fontSize: "13.5px", fontWeight: 620, color: "#0f172a" }}>{s.title}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.55, marginTop: "2px" }}>{s.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.55, marginTop: "2px" }}>{s.detail}</div>
               </div>
             </div>
           ))}
@@ -518,7 +518,7 @@ export function CompanySetupStage() {
         return (
       <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginBottom: "10px" }}>{ko ? "과세 유형 결정 · 세무 기초" : "Tax Type & Basics"}</div>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginBottom: "14px" }}>
+        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "14px" }}>
           {isCorp
             ? (ko ? "법인은 일반과세자로 자동 등록됩니다. 복식부기 의무입니다." : "Corporations are automatically registered as general taxpayers. Double-entry bookkeeping required.")
             : (ko ? "과세 유형을 선택하세요. 선택에 따라 세금 신고 방식과 부담이 달라집니다." : "Choose your tax type. This affects filing frequency and tax burden.")}
@@ -538,7 +538,7 @@ export function CompanySetupStage() {
               <div style={{ fontSize: "14px", fontWeight: 680, color: taxType === "simplified" ? MIDNIGHT : "#0f172a" }}>{ko ? "간이과세자" : "Simplified"}</div>
               <span style={{ fontSize: "10px", fontWeight: 650, padding: "2px 6px", borderRadius: "4px", background: "rgba(25,25,112,0.08)", color: MIDNIGHT }}>{ko ? "추천" : "Rec."}</span>
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
               {ko ? "• 매출 1억 400만원 미만\n• 부가세 1.5~4% 수준\n• 4,800만원 미만: 부가세 면제\n• 세금 신고 연 1회\n• 간편장부 허용" : "• Revenue < ₩104M\n• VAT 1.5-4%\n• Under ₩48M: VAT exempt\n• Annual filing\n• Simple bookkeeping"}
             </div>
           </button>
@@ -552,7 +552,7 @@ export function CompanySetupStage() {
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: taxType === "general" ? "6px solid #191970" : "2px solid rgba(0,0,0,0.15)", transition: "all 0.2s ease" }} />
               <div style={{ fontSize: "14px", fontWeight: 680, color: taxType === "general" ? MIDNIGHT : "#0f172a" }}>{ko ? "일반과세자" : "General"}</div>
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6, whiteSpace: "pre-line" }}>
               {ko ? "• 매출 1억 400만원 이상\n• 부가세 10% (매입세액 공제)\n• 세금계산서 발급 의무\n• 반기 신고 (연 2회)\n• B2B 거래 시 필수" : "• Revenue ≥ ₩104M\n• VAT 10% (input deductible)\n• Must issue invoices\n• Semi-annual filing\n• Required for B2B"}
             </div>
           </button>
@@ -586,7 +586,7 @@ export function CompanySetupStage() {
           ]).map(t => (
             <div key={t.title} style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.06)" }}>
               <div style={{ fontSize: "13px", fontWeight: 640, color: MIDNIGHT }}>{t.title}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
             </div>
           ))}
         </div>
@@ -608,7 +608,7 @@ export function CompanySetupStage() {
           ]).map(t => (
             <div key={t.title} style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.06)" }}>
               <div style={{ fontSize: "13px", fontWeight: 640, color: MIDNIGHT }}>{t.title}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
             </div>
           ))}
         </div>
@@ -630,7 +630,7 @@ export function CompanySetupStage() {
           ]).map(t => (
             <div key={t.title} style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.06)" }}>
               <div style={{ fontSize: "13px", fontWeight: 640, color: MIDNIGHT }}>{t.title}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
             </div>
           ))}
         </div>
@@ -642,7 +642,7 @@ export function CompanySetupStage() {
             <Lightbulb size={12} strokeWidth={1.5} color={MIDNIGHT} />
             {ko ? "팁" : "Tip"}
           </div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
             {isCorp
               ? (ko ? "법인 설립 초기에는 자비스(Jobis)나 삼쩜삼으로 기장 비용을 줄일 수 있습니다. R&D 세액공제(최대 25%)를 활용하면 법인세를 크게 절감할 수 있어요." : "Use Jobis or 3o3 to reduce bookkeeping costs. R&D tax credits (up to 25%) significantly reduce corporate tax.")
               : taxType === "general"
@@ -663,7 +663,7 @@ export function CompanySetupStage() {
       {pg === 3 && (
       <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginBottom: "10px" }}>{ko ? "개인정보보호 · 이용약관 · 보안" : "Privacy, Terms & Security"}</div>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginBottom: "14px" }}>
+        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "14px" }}>
           {ko ? "개인사업자라도 고객 데이터를 수집하면 개인정보보호법 적용 대상입니다. 서비스 출시 전에 기본기를 갖추세요." : "Even sole proprietors are subject to privacy law when collecting customer data. Set up basics before launch."}
         </div>
         <div style={{ display: "grid", gap: "8px" }}>
@@ -680,7 +680,7 @@ export function CompanySetupStage() {
           ]).map(t => (
             <div key={t.title} style={{ padding: "10px 14px", borderRadius: "12px", background: `${t.color}06`, border: `1px solid ${t.color}10` }}>
               <div style={{ fontSize: "13px", fontWeight: 640, color: t.color }}>{t.title}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5, marginTop: "2px" }}>{t.desc}</div>
             </div>
           ))}
         </div>
@@ -759,7 +759,7 @@ export function CompanySetupStage() {
             </ul>
           </div>
         </div>
-        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 10, lineHeight: 1.55 }}>
+        <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 10, lineHeight: 1.55 }}>
           {ko
             ? "📌 위 라이센스는 자본금·기간 부담이 커서 시드 단계에선 부수업무 형태로 우회 가능 (예: PG 재판매, 의료기기 미인증 SaaS 등). 본 사업 전환 시 별도 PR/단계로 진행."
             : "📌 These can be deferred via reseller/non-certified SaaS at seed stage; transition during scale."}

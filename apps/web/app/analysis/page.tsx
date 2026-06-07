@@ -51,7 +51,7 @@ function AnalysisPage() {
     return (
       <div style={shell}>
         <div style={{ padding: "80px 24px", textAlign: "center" }}>
-          <div style={{ fontSize: "15px", color: "rgba(15,23,42,0.45)" }}>
+          <div style={{ fontSize: "15px", color: "var(--muted)" }}>
             {ko ? "분석에 필요한 데이터가 부족합니다. 매출을 7일 이상 기록한 후 다시 확인하세요." : "Not enough data. Log at least 7 days of sales."}
           </div>
           <button type="button" onClick={() => router.push("/")} style={backBtn}>
@@ -92,19 +92,19 @@ function AnalysisPage() {
         <div style={heroEyebrow}>{ko ? "경영 분석" : "Business Analysis"}</div>
         <div style={heroRow}>
           <div>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
               {ko ? "다음 달 예상 순이익" : "Next month projected profit"}
             </div>
             <div style={{ fontSize: "36px", fontWeight: 780, letterSpacing: "-0.03em", color: forecast.nextMonthProfit >= 0 ? "#177245" : "#b42318", fontVariantNumeric: "tabular-nums", marginTop: "4px" }}>
               {forecast.nextMonthProfit >= 0 ? "+" : ""}{fmt(forecast.nextMonthProfit)}
             </div>
-            <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", marginTop: "4px" }}>
+            <div style={{ fontSize: "13px", color: "var(--muted)", marginTop: "4px" }}>
               {ko ? `매출 ${fmt(forecast.nextMonthRevenue)} − 비용 ${fmt(forecast.nextMonthCosts)}` : `Revenue ${fmt(forecast.nextMonthRevenue)} − Costs ${fmt(forecast.nextMonthCosts)}`}
             </div>
           </div>
           {/* 민감도 경고 */}
           <div style={leverageBox}>
-            <div style={{ fontSize: "10px", fontWeight: 700, color: "rgba(15,23,42,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               {ko ? "영업레버리지" : "Op. Leverage"}
             </div>
             <div style={{ fontSize: "28px", fontWeight: 750, color: "#0f172a", fontVariantNumeric: "tabular-nums", marginTop: "2px" }}>
@@ -125,7 +125,7 @@ function AnalysisPage() {
             { label: ko ? "투자금 회수" : "Payback", value: roi.paybackMonths ? `${roi.paybackMonths}${ko ? "개월" : "mo"}` : "—" },
           ].map((item) => (
             <div key={item.label} style={roiCard}>
-              <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>{item.label}</div>
+              <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>{item.label}</div>
               <div style={{ fontSize: "17px", fontWeight: 720, color: "#0f172a", fontVariantNumeric: "tabular-nums", marginTop: "4px" }}>{item.value}</div>
             </div>
           ))}
@@ -182,7 +182,7 @@ function PnlTab({ sim, ko, fmt }: { sim: OperatingSimulationResult; ko: boolean;
         <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginTop: "12px" }}>
           {waterfall.map((w) => (
             <div key={w.label} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ width: "60px", fontSize: "12px", color: "rgba(15,23,42,0.5)", flexShrink: 0, textAlign: "right" as const }}>{w.label}</div>
+              <div style={{ width: "60px", fontSize: "12px", color: "var(--muted)", flexShrink: 0, textAlign: "right" as const }}>{w.label}</div>
               <div style={{ flex: 1, height: "20px", borderRadius: "4px", background: "rgba(15,23,42,0.03)", overflow: "hidden", position: "relative" }}>
                 <div style={{
                   height: "100%", borderRadius: "4px",
@@ -205,11 +205,11 @@ function PnlTab({ sim, ko, fmt }: { sim: OperatingSimulationResult; ko: boolean;
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
           {[s.worst, s.base, s.best].map((sc) => (
             <div key={sc.label} style={scenarioCard}>
-              <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.45)", fontWeight: 600 }}>{sc.label}</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{sc.label}</div>
               <div style={{ fontSize: "20px", fontWeight: 740, color: sc.profit >= 0 ? "#177245" : "#b42318", fontVariantNumeric: "tabular-nums", marginTop: "6px" }}>
                 {sc.profit >= 0 ? "+" : ""}{fmt(sc.profit)}
               </div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
+              <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
                 {ko ? "매출" : "Rev"} {fmt(sc.revenue)}
               </div>
             </div>
@@ -247,14 +247,14 @@ function CashFlowTab({ sim, ko, fmt }: { sim: OperatingSimulationResult; ko: boo
             const labels = ko ? ["일", "월", "화", "수", "목", "금", "토"] : ["S", "M", "T", "W", "T", "F", "S"];
             return (
               <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "flex-end" }}>
-                {val > 0 && <div style={{ fontSize: "9px", fontWeight: 600, color: "rgba(15,23,42,0.4)", marginBottom: "2px", fontVariantNumeric: "tabular-nums" }}>{Math.round(val / 10000)}</div>}
+                {val > 0 && <div style={{ fontSize: "9px", fontWeight: 600, color: "var(--muted)", marginBottom: "2px", fontVariantNumeric: "tabular-nums" }}>{Math.round(val / 10000)}</div>}
                 <div style={{ width: "100%", height: `${h}px`, borderRadius: "4px 4px 2px 2px", background: i === 0 || i === 6 ? "rgba(37,99,235,0.12)" : "rgba(15,23,42,0.12)", transition: "height 0.4s ease" }} />
-                <div style={{ fontSize: "10px", fontWeight: 500, color: "rgba(15,23,42,0.4)", marginTop: "4px" }}>{labels[i]}</div>
+                <div style={{ fontSize: "10px", fontWeight: 500, color: "var(--muted)", marginTop: "4px" }}>{labels[i]}</div>
               </div>
             );
           })}
         </div>
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "8px", textAlign: "center" as const }}>
+        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "8px", textAlign: "center" as const }}>
           {ko ? `주간 성장률: ${f.weeklyGrowthRate >= 0 ? "+" : ""}${f.weeklyGrowthRate}%` : `Weekly growth: ${f.weeklyGrowthRate >= 0 ? "+" : ""}${f.weeklyGrowthRate}%`}
         </div>
       </div>
@@ -266,12 +266,12 @@ function CashFlowTab({ sim, ko, fmt }: { sim: OperatingSimulationResult; ko: boo
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "15px", fontWeight: 650 }}>
             <span>{ko ? "ROI" : "ROI"}</span>
             <span style={{ color: "#0f172a" }}>{sim.roiDecomposition.investmentReturn}%</span>
-            <span style={{ color: "rgba(15,23,42,0.3)" }}>=</span>
+            <span style={{ color: "var(--muted)" }}>=</span>
             <span>{ko ? "이익률" : "Margin"} {sim.roiDecomposition.profitMargin}%</span>
-            <span style={{ color: "rgba(15,23,42,0.3)" }}>×</span>
+            <span style={{ color: "var(--muted)" }}>×</span>
             <span>{ko ? "회전" : "Turn"} {sim.roiDecomposition.assetTurnover}x</span>
           </div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "8px", textAlign: "center" as const, lineHeight: 1.5 }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "8px", textAlign: "center" as const, lineHeight: 1.5 }}>
             {ko
               ? "이익률은 매출 대비 얼마나 남기는지, 회전율은 투자금 대비 얼마나 파는지를 의미합니다"
               : "Margin shows how much you keep per sale. Turnover shows how efficiently your investment generates revenue."}
@@ -294,7 +294,7 @@ function CostTab({ sim, ko, fmt }: { sim: OperatingSimulationResult; ko: boolean
           {sens.costSensitivity.map((c) => (
             <div key={c.costName} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderRadius: "12px", background: "rgba(15,23,42,0.02)" }}>
               <div style={{ flex: 1, fontSize: "13px", fontWeight: 600 }}>{c.costName}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", fontVariantNumeric: "tabular-nums" }}>
+              <div style={{ fontSize: "12px", color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
                 {fmt(c.currentAmount)}{ko ? "/월" : "/mo"}
               </div>
               <div style={{ fontSize: "12px", color: "#b42318", fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>
@@ -323,7 +323,7 @@ function CostTab({ sim, ko, fmt }: { sim: OperatingSimulationResult; ko: boolean
 function ScenarioTab({ scenarios, ko, fmt }: { scenarios: WhatIfScenario[]; ko: boolean; fmt: (n: number) => string }) {
   if (scenarios.length === 0) {
     return (
-      <div style={{ padding: "32px", textAlign: "center", color: "rgba(15,23,42,0.4)", fontSize: "13px" }}>
+      <div style={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: "13px" }}>
         {ko ? "시나리오를 계산할 데이터가 부족합니다" : "Not enough data for scenarios"}
       </div>
     );
@@ -337,7 +337,7 @@ function ScenarioTab({ scenarios, ko, fmt }: { scenarios: WhatIfScenario[]; ko: 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>{sc.label}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>{sc.description}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>{sc.description}</div>
             </div>
             <div style={{ fontSize: "18px", fontWeight: 740, color: sc.delta >= 0 ? "#177245" : "#b42318", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
               {sc.delta >= 0 ? "+" : ""}{fmt(sc.delta)}{ko ? "/월" : "/mo"}
@@ -345,32 +345,32 @@ function ScenarioTab({ scenarios, ko, fmt }: { scenarios: WhatIfScenario[]; ko: 
           </div>
           <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
             <div style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", background: "rgba(15,23,42,0.03)" }}>
-              <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{ko ? "현재 순이익" : "Current"}</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)" }}>{ko ? "현재 순이익" : "Current"}</div>
               <div style={{ fontSize: "14px", fontWeight: 650, fontVariantNumeric: "tabular-nums", marginTop: "2px" }}>{fmt(sc.baseProfit)}</div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", fontSize: "14px", color: "rgba(15,23,42,0.3)" }}>→</div>
+            <div style={{ display: "flex", alignItems: "center", fontSize: "14px", color: "var(--muted)" }}>→</div>
             <div style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", background: sc.newProfit >= 0 ? "rgba(23,114,69,0.04)" : "rgba(180,35,24,0.04)" }}>
-              <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{ko ? "변경 후" : "After"}</div>
+              <div style={{ fontSize: "10px", color: "var(--muted)" }}>{ko ? "변경 후" : "After"}</div>
               <div style={{ fontSize: "14px", fontWeight: 650, color: sc.newProfit >= 0 ? "#177245" : "#b42318", fontVariantNumeric: "tabular-nums", marginTop: "2px" }}>{fmt(sc.newProfit)}</div>
             </div>
           </div>
           {/* BEP change */}
           {sc.baseBepDaily !== sc.newBepDaily && (
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "8px" }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "8px" }}>
               {ko ? "BEP 일매출" : "BEP daily"}: {fmt(sc.baseBepDaily)} → {fmt(sc.newBepDaily)}
             </div>
           )}
           {/* assumptions */}
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const, marginTop: "8px" }}>
             {sc.assumptions.map((a) => (
-              <span key={a} style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", background: "rgba(15,23,42,0.04)", borderRadius: "4px", padding: "2px 6px" }}>
+              <span key={a} style={{ fontSize: "10px", color: "var(--muted)", background: "rgba(15,23,42,0.04)", borderRadius: "4px", padding: "2px 6px" }}>
                 {a}
               </span>
             ))}
           </div>
         </div>
       ))}
-      <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "8px", lineHeight: 1.5, textAlign: "center" as const }}>
+      <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "8px", lineHeight: 1.5, textAlign: "center" as const }}>
         {ko
           ? "모든 시나리오는 현재 실적 데이터 기반으로 계산됩니다. AI가 생성한 숫자가 아닙니다."
           : "All scenarios are calculated from your actual data. No AI-generated numbers."}
@@ -384,7 +384,7 @@ function ScenarioTab({ scenarios, ko, fmt }: { scenarios: WhatIfScenario[]; ko: 
 function MetricCard({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ padding: "14px 16px", borderRadius: "14px", background: "rgba(15,23,42,0.025)" }}>
-      <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.4)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>{label}</div>
+      <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em", textTransform: "uppercase" as const }}>{label}</div>
       <div style={{ fontSize: "18px", fontWeight: 720, color, fontVariantNumeric: "tabular-nums", marginTop: "6px" }}>{value}</div>
     </div>
   );
@@ -434,7 +434,7 @@ const heroEyebrow: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "12px",
 };
 
@@ -495,7 +495,7 @@ const tabActive: React.CSSProperties = {
 
 const tabInactive: React.CSSProperties = {
   background: "transparent",
-  color: "rgba(15,23,42,0.45)",
+  color: "var(--muted)",
 };
 
 const tabContent: React.CSSProperties = {};
@@ -505,7 +505,7 @@ const sectionLabel: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.04em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
 };
 
 const scenarioCard: React.CSSProperties = {

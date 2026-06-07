@@ -28,6 +28,7 @@
  * 자세한 분기 표 → `DASHBOARD_MAP.md`
  */
 
+import { BP } from "../../../breakpoints";
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { ActivitySnapshotCard } from "../ActivitySnapshotCard";
@@ -63,7 +64,7 @@ export function Tier1DailyHub({ d, c, ko, fmt, nextStaggerStyle, onOpenCalendar 
           style={{
             display: "grid",
             gridTemplateColumns:
-              showUserActivity && c.viewportWidth >= 1100
+              showUserActivity && c.viewportWidth >= BP.xl
                 ? "minmax(0, 1.35fr) minmax(0, 1fr)"
                 : "1fr",
             gap: "14px",

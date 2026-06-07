@@ -4,9 +4,15 @@
 // (Ingestion is a service-side operation — we don't expose it to end users.
 // Once an admin role exists in the project, swap the token check for that.)
 
+import { timingSafeEqual } from "node:crypto";
 import { ingestInsightDocument, type InsightDocumentInput } from "@foundone/ai";
 import { getEnvVar, getOpenAiApiKey } from "../../_lib/env";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
+
+const MAX_BODY_CHARS = 50_000;
+const MAX_TITLE_CHARS = 500;
+const MAX_CATEGORY_CHARS = 200;
+const MAX_TAG_CHARS = 200;
 
 type RequestBody = Partial<InsightDocumentInput> & { replace?: boolean };
 
@@ -16,7 +22,13 @@ export async function POST(request: Request) {
   if (!expected) {
     return json({ error: "Ingestion is not configured (missing INSIGHT_INGEST_TOKEN)." }, 503);
   }
-  if (!token || token !== expected) {
+  // timing-safe 비교 — 단순 === 는 조기 종료로 timing oracle 가능
+  const tokBuf = Buffer.from(token.padEnd(expected.length, "\0"), "utf8");
+  const expBuf = Buffer.from(expected, "utf8");
+  const tokPad = Buffer.from(token.slice(0, expected.length).padEnd(expected.length, "\0"), "utf8");
+  const valid = token.length === expected.length && timingSafeEqual(tokPad, expBuf);
+  void tokBuf; // suppress unused warning
+  if (!valid) {
     return json({ error: "Unauthorized" }, 401);
   }
 
@@ -41,13 +53,19 @@ export async function POST(request: Request) {
     return json({ error: "title, body, category are required." }, 400);
   }
 
+  // 크기 제한 — 비용 폭탄 방지
+  const titleTrimmed = body.title.trim().slice(0, MAX_TITLE_CHARS);
+  const bodyTrimmed = body.body.slice(0, MAX_BODY_CHARS);
+  const categoryTrimmed = body.category.trim().slice(0, MAX_CATEGORY_CHARS);
+  const tagsTrimmed = body.tags?.map(t => t.slice(0, MAX_TAG_CHARS));
+
   try {
     const result = await ingestInsightDocument(
       {
-        title: body.title.trim(),
-        body: body.body,
-        category: body.category.trim(),
-        tags: body.tags,
+        title: titleTrimmed,
+        body: bodyTrimmed,
+        category: categoryTrimmed,
+        tags: tagsTrimmed,
         sourceName: body.sourceName,
         sourceUrl: body.sourceUrl,
         language: body.language,

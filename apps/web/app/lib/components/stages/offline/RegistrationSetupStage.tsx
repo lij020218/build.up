@@ -326,7 +326,7 @@ function Section({
         <div>
           <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{title}</div>
           {subtitle && (
-            <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", marginTop: "1px" }}>{subtitle}</div>
+            <div style={{ fontSize: "11.5px", color: "var(--muted)", marginTop: "1px" }}>{subtitle}</div>
           )}
         </div>
       </div>
@@ -405,7 +405,7 @@ function MetaPair({ label, value, sublabel }: { label: string; value: string; su
       </div>
       <div style={{ fontSize: "16px", fontWeight: 700, color: MIDNIGHT, marginTop: "3px" }}>{value}</div>
       {sublabel && (
-        <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.55)", marginTop: "1px" }}>{sublabel}</div>
+        <div style={{ fontSize: "10.5px", color: "var(--muted)", marginTop: "1px" }}>{sublabel}</div>
       )}
     </div>
   );
@@ -962,7 +962,7 @@ export function RegistrationSetupStage() {
             />
           )}
         </div>
-        <div style={{ marginTop: 8, fontSize: 11.5, color: "rgba(15,23,42,0.55)", lineHeight: 1.55 }}>
+        <div style={{ marginTop: 8, fontSize: 11.5, color: "var(--muted)", lineHeight: 1.55 }}>
           {language === "ko"
             ? "📌 업로드한 서류는 「내 가게 > 사업 서류 라이브러리」 에서 한꺼번에 관리할 수 있습니다."
             : "📌 Uploaded documents are also accessible from My Store > Business Documents Library."}

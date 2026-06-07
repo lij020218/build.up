@@ -67,7 +67,7 @@ export function RevenueCalendar({ dailyEntries, ko, fmt, onDateClick }: Props) {
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "2px" }}>
             <span style={titleStyle}>{monthLabel}</span>
             {loggedDays > 0 && (
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--muted)" }}>
                 {fmt(monthTotal)} · {loggedDays}{ko ? "일 기록" : "d logged"}
               </span>
             )}
@@ -132,7 +132,7 @@ export function RevenueCalendar({ dailyEntries, ko, fmt, onDateClick }: Props) {
                 </div>
               )}
               {isEmpty && !isFuture && (
-                <div style={{ fontSize: "9px", color: "rgba(15,23,42,0.28)", marginTop: "1px" }}>—</div>
+                <div style={{ fontSize: "9px", color: "var(--muted)", marginTop: "1px" }}>—</div>
               )}
 
               {/* popover */}
@@ -140,7 +140,7 @@ export function RevenueCalendar({ dailyEntries, ko, fmt, onDateClick }: Props) {
                 <div style={popoverStyle}>
                   <div style={{ fontSize: "12px", fontWeight: 700 }}>{fmt(entry.sales)}</div>
                   {entry.customers > 0 && (
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
                       {entry.customers}{ko ? "명" : " pax"} · {ko ? "객단가" : "avg"} {fmt(entry.sales / entry.customers)}
                     </div>
                   )}
@@ -177,7 +177,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.06em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.44)",
+  color: "var(--muted)",
 };
 
 const titleStyle: React.CSSProperties = {
@@ -210,7 +210,7 @@ const legendItem: React.CSSProperties = {
   alignItems: "center",
   gap: "4px",
   fontSize: "10px",
-  color: "rgba(15,23,42,0.48)",
+  color: "var(--muted)",
 };
 
 const legendDot: React.CSSProperties = {
@@ -229,7 +229,7 @@ const grid: React.CSSProperties = {
 const weekdayHeader: React.CSSProperties = {
   fontSize: "11px",
   fontWeight: 600,
-  color: "rgba(15,23,42,0.36)",
+  color: "var(--muted)",
   textAlign: "center",
   padding: "4px 0",
 };

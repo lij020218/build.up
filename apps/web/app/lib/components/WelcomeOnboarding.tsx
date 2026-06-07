@@ -79,7 +79,7 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
 
           {/* Title — Apple "Welcome to" pattern */}
           <div style={{ marginBottom: "12px" }}>
-            <div style={{ fontSize: "16px", fontWeight: 450, color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>
+            <div style={{ fontSize: "16px", fontWeight: 450, color: "var(--muted)", lineHeight: 1.4 }}>
               {ko ? "환영합니다" : "Welcome to"}
             </div>
             <h1 style={{
@@ -97,7 +97,7 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
           <p style={{
             fontSize: "16px",
             lineHeight: 1.6,
-            color: "rgba(15,23,42,0.5)",
+            color: "var(--muted)",
             margin: "0 0 40px",
             maxWidth: "360px",
             marginLeft: "auto",
@@ -134,7 +134,7 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
                   <div style={{ fontSize: "15px", fontWeight: 640, color: "#0f172a", marginBottom: "2px", letterSpacing: "-0.01em" }}>
                     {f.title}
                   </div>
-                  <div style={{ fontSize: "13px", lineHeight: 1.5, color: "rgba(15,23,42,0.5)" }}>
+                  <div style={{ fontSize: "13px", lineHeight: 1.5, color: "var(--muted)" }}>
                     {f.desc}
                   </div>
                 </div>

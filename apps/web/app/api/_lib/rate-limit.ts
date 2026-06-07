@@ -20,7 +20,16 @@ function getRedis(): Redis | null {
   if (_redis) return _redis;
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
+  if (!url || !token) {
+    // serverless 환경에서 in-memory fallback 은 인스턴스 간 공유가 안 됨 — rate limit 무력화.
+    if (process.env.NODE_ENV === "production") {
+      console.warn(
+        "[rate-limit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not configured. " +
+        "Falling back to in-memory rate limiter — ineffective across multiple serverless instances.",
+      );
+    }
+    return null;
+  }
   _redis = new Redis({ url, token });
   return _redis;
 }

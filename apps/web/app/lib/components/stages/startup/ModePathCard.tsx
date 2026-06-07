@@ -111,7 +111,7 @@ export function ModePathCard({
             <ChevronDown size={12} strokeWidth={2.4} style={{ transform: showCompare ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s ease" }} />
           </button>
           {/* 변경 위치 안내 */}
-          <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginLeft: "auto" }}>
+          <span style={{ fontSize: "11px", color: "var(--muted)", marginLeft: "auto" }}>
             {ko ? "변경: 예산 설정 단계" : "Change in: Budget stage"}
           </span>
         </div>
@@ -130,7 +130,7 @@ export function ModePathCard({
             <div style={{
               fontSize: "11px",
               fontWeight: 700,
-              color: "rgba(15,23,42,0.55)",
+              color: "var(--muted)",
               letterSpacing: "0.04em",
               textTransform: "uppercase" as const,
               marginBottom: "8px",
@@ -163,7 +163,7 @@ export function ModePathCard({
                 );
               })}
             </div>
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.5 }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.5 }}>
               {ko
                 ? "⚠️ 칩 클릭 시 본인 모드가 즉시 변경됩니다. 단순 비교만 원하면 다시 본인 모드로 돌아가세요."
                 : "⚠️ Clicking switches your saved mode. Click back to your mode if just comparing."}

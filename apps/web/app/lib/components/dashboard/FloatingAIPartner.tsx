@@ -635,7 +635,7 @@ const KEYFRAMES = `
 }
 .fap-header-sub {
   display: flex; align-items: center; gap: 5px;
-  font-size: 10.5px; color: rgba(15,23,42,0.5); font-weight: 550;
+  font-size: 10.5px; color: var(--muted); font-weight: 550;
   margin-top: 2px; letter-spacing: -0.01em;
 }
 .fap-online-dot {
@@ -646,7 +646,7 @@ const KEYFRAMES = `
 .fap-remaining {
   margin-left: 4px;
   font-size: 10.5px; font-weight: 600;
-  color: rgba(15,23,42,0.5);
+  color: var(--muted);
   letter-spacing: -0.005em;
   font-variant-numeric: tabular-nums;
 }
@@ -658,7 +658,7 @@ const KEYFRAMES = `
   border: none; background: transparent;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: rgba(15,23,42,0.5);
+  color: var(--muted);
   transition: background .15s ease, color .15s ease;
 }
 .fap-close:hover {
@@ -695,7 +695,7 @@ const KEYFRAMES = `
   letter-spacing: -0.02em;
 }
 .fap-intro-sub {
-  font-size: 12px; color: rgba(15,23,42,0.55);
+  font-size: 12px; color: var(--muted);
   line-height: 1.5; max-width: 240px;
   letter-spacing: -0.01em;
 }
@@ -752,7 +752,7 @@ const KEYFRAMES = `
 }
 .fap-confidence-low {
   margin-top: 6px;
-  font-size: 10.5px; color: rgba(15,23,42,0.45);
+  font-size: 10.5px; color: var(--muted);
   font-style: italic;
 }
 
@@ -795,7 +795,7 @@ const KEYFRAMES = `
 /* Disabled input wrap */
 .fap-input-wrap-disabled {
   background: rgba(15,23,42,0.03) !important;
-  border-color: rgba(15,23,42,0.08) !important;
+  border-color: var(--muted) !important;
 }
 
 /* Typing indicator */
@@ -878,16 +878,16 @@ const KEYFRAMES = `
   letter-spacing: -0.01em;
 }
 .fap-input::placeholder {
-  color: rgba(15,23,42,0.35);
+  color: var(--muted);
 }
 .fap-input:disabled {
-  color: rgba(15,23,42,0.4);
+  color: var(--muted);
 }
 .fap-send {
   width: 32px; height: 32px; border-radius: 50%;
   border: none;
   background: rgba(15,23,42,0.05);
-  color: rgba(15,23,42,0.3);
+  color: var(--muted);
   cursor: not-allowed;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;

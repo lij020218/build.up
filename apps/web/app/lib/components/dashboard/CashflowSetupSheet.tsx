@@ -908,7 +908,7 @@ const KEYFRAMES = `
   width: 36px; height: 36px; border-radius: 12px;
   background: rgba(15,23,42,0.04); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: rgba(15,23,42,0.5);
+  color: var(--muted);
   transition: background .15s ease;
 }
 .cfs-close:hover { background: rgba(15,23,42,0.08); color: #0f172a; }
@@ -991,7 +991,7 @@ const KEYFRAMES = `
   box-shadow: 0 0 0 3px rgba(25,25,112, 0.08);
 }
 .cfs-balance-unit {
-  font-size: 13px; color: rgba(15,23,42,0.5); font-weight: 650;
+  font-size: 13px; color: var(--muted); font-weight: 650;
 }
 .cfs-balance-preview {
   margin-top: 8px;
@@ -1063,7 +1063,7 @@ const KEYFRAMES = `
 }
 .cfs-ratio-input:focus { border-color: rgba(25,25,112,0.4); }
 .cfs-ratio-pct {
-  font-size: 12px; color: rgba(15,23,42,0.5); font-weight: 700;
+  font-size: 12px; color: var(--muted); font-weight: 700;
 }
 .cfs-channel-checkbox-wrap input[type="checkbox"]::before {
   content: ""; display: block;
@@ -1120,7 +1120,7 @@ const KEYFRAMES = `
   letter-spacing: -0.01em;
 }
 .cfs-expense-detail {
-  font-size: 11px; color: rgba(15,23,42,0.55);
+  font-size: 11px; color: var(--muted);
   margin-top: 1px; font-weight: 500;
 }
 .cfs-expense-amount {
@@ -1223,7 +1223,7 @@ const KEYFRAMES = `
   letter-spacing: -0.01em;
 }
 .cfs-toggle-desc {
-  font-size: 11.5px; color: rgba(15,23,42,0.55);
+  font-size: 11.5px; color: var(--muted);
   margin-top: 2px; font-weight: 500;
 }
 
@@ -1250,7 +1250,7 @@ const KEYFRAMES = `
   cursor: pointer;
 }
 .cfs-slider-desc {
-  font-size: 11px; color: rgba(15,23,42,0.5);
+  font-size: 11px; color: var(--muted);
   margin-top: 4px; font-weight: 500;
 }
 
@@ -1333,7 +1333,7 @@ const KEYFRAMES = `
   margin-top: 2px;
 }
 .cfs-bank-banner-raw {
-  font-size: 11.5px; font-weight: 500; color: rgba(15,23,42,0.45);
+  font-size: 11.5px; font-weight: 500; color: var(--muted);
   letter-spacing: -0.005em;
 }
 .cfs-bank-stale-pill {
@@ -1371,7 +1371,7 @@ const KEYFRAMES = `
 }
 .cfs-bank-acc-amount { font-weight: 650; color: #0f172a; }
 .cfs-bank-asof {
-  font-size: 10.5px; color: rgba(15,23,42,0.4); letter-spacing: -0.005em;
+  font-size: 10.5px; color: var(--muted); letter-spacing: -0.005em;
 }
 .cfs-bank-actions {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -1387,7 +1387,7 @@ const KEYFRAMES = `
 }
 .cfs-bank-apply-btn:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(30,42,85,0.28); transform: translateY(-1px); }
 .cfs-bank-apply-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.cfs-bank-hint { font-size: 10.5px; color: rgba(15,23,42,0.45); }
+.cfs-bank-hint { font-size: 10.5px; color: var(--muted); }
 
 /* 미연동 안내 (small inline) */
 .cfs-bank-empty {
@@ -1396,7 +1396,7 @@ const KEYFRAMES = `
   background: rgba(15,23,42,0.03);
   border: 1px dashed rgba(15,23,42,0.10);
   border-radius: 8px;
-  font-size: 11.5px; color: rgba(15,23,42,0.55);
+  font-size: 11.5px; color: var(--muted);
   letter-spacing: -0.005em;
 }
 
@@ -1437,7 +1437,7 @@ const KEYFRAMES = `
 .cfs-audit-block .cfs-audit-h {
   font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(15,23,42,0.55);
+  color: var(--muted);
   margin-bottom: 6px;
 }
 .cfs-audit-block ul {

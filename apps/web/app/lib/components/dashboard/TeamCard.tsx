@@ -167,13 +167,13 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
-            <Calendar size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.45)", flexShrink: 0 }} />
+            <Calendar size={14} strokeWidth={1.5} style={{ color: "var(--muted)", flexShrink: 0 }} />
             <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.65)" }}>
               {ko ? "월급 지급일" : "Payday"}
             </span>
             {editingPayDay ? (
               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>{ko ? "매월" : "Day"}</span>
+                <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "매월" : "Day"}</span>
                 <input
                   type="number"
                   min={1}
@@ -196,14 +196,14 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
                     color: "var(--primary)",
                   }}
                 />
-                <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>{ko ? "일" : ""}</span>
+                <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "일" : ""}</span>
               </div>
             ) : payDay ? (
               <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--primary)" }}>
                 {ko ? `매월 ${payDay}일` : `Day ${payDay}`}
               </span>
             ) : (
-              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.4)" }}>
+              <span style={{ fontSize: "12px", color: "var(--muted)" }}>
                 {ko ? "미설정 — 알림 OFF" : "Not set"}
               </span>
             )}
@@ -239,7 +239,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
                     borderRadius: "6px",
                     border: "1px solid rgba(15,23,42,0.1)",
                     background: "white",
-                    color: "rgba(15,23,42,0.55)",
+                    color: "var(--muted)",
                     fontSize: "11px",
                     fontWeight: 600,
                     cursor: "pointer",

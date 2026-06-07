@@ -155,7 +155,7 @@ export function DeepDiveSection({ id, title, subtitle, defaultOpen = false, chil
             <div style={{
               fontSize: "12px",
               fontWeight: 500,
-              color: "rgba(15,23,42,0.5)",
+              color: "var(--muted)",
               letterSpacing: "-0.005em",
               lineHeight: 1.45,
             }}>

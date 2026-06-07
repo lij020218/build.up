@@ -19,6 +19,7 @@
  */
 
 import { BarChart3, TrendingUp, Lightbulb } from "lucide-react";
+import { BP } from "../../../breakpoints";
 import type { DashboardHook } from "../../../useDashboard";
 import type { DashboardComputed } from "../../../hooks/useDashboardComputed";
 import { DeepDiveSection } from "../DeepDiveSection";
@@ -97,7 +98,7 @@ export function SubscriptionEnableNudge({
         <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
           {ko ? "구독제를 운영하시나요?" : "Do you run a subscription model?"}
         </div>
-        <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "3px", lineHeight: 1.5 }}>
+        <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.5 }}>
           {ko
             ? "켜면 MRR·이탈률·플랜별 가입 추적이 활성화됩니다"
             : "Enable to track MRR, churn rate, and plan-level signups"}
@@ -270,7 +271,7 @@ export function SaaSKeyMetricsCard({
       </div>
       <div style={{ display: "grid", gridTemplateColumns: c.isWide ? "1fr 1fr 1fr 1fr" : "1fr 1fr", gap: "10px" }}>
         <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(124,58,237,0.03)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>MRR</div>
+          <div style={{ fontSize: "11px", fontWeight: 650, color: "var(--muted)", marginBottom: "6px" }}>MRR</div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: "#7c3aed", letterSpacing: "-0.02em" }}>{fmt(mrr)}</div>
           {mrrGrowth !== 0 && (
             <div
@@ -287,7 +288,7 @@ export function SaaSKeyMetricsCard({
           )}
         </div>
         <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 650, color: "var(--muted)", marginBottom: "6px" }}>
             {ko ? "이달 신규" : "New MTD"}
           </div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: "#191970", letterSpacing: "-0.02em" }}>
@@ -308,7 +309,7 @@ export function SaaSKeyMetricsCard({
           )}
         </div>
         <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 650, color: "var(--muted)", marginBottom: "6px" }}>
             {ko ? "전환율" : "Conversion"}
           </div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: "#1d3557" }}>
@@ -322,7 +323,7 @@ export function SaaSKeyMetricsCard({
             background: churnRate > 10 ? "rgba(182,76,76,0.04)" : "rgba(0,0,0,0.02)",
           }}
         >
-          <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 650, color: "var(--muted)", marginBottom: "6px" }}>
             {ko ? "이탈률" : "Churn"}
           </div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: churnRate > 10 ? "#b64c4c" : "#0f172a" }}>
@@ -358,7 +359,7 @@ export function SaaSKeyMetricsCard({
             borderRadius: "10px",
             background: "rgba(124,58,237,0.03)",
             fontSize: "12px",
-            color: "rgba(15,23,42,0.5)",
+            color: "var(--muted)",
             lineHeight: 1.5,
             display: "flex",
             alignItems: "center",
@@ -463,7 +464,7 @@ function PopularProductsAndActivity({
       style={{
         ...nextStaggerStyle(),
         display: "grid",
-        gridTemplateColumns: c.viewportWidth >= 768 ? "1fr 1fr" : "1fr",
+        gridTemplateColumns: c.viewportWidth >= BP.md ? "1fr 1fr" : "1fr",
         gap: "16px",
         marginTop: "14px",
       }}
@@ -482,7 +483,7 @@ function PopularProductsAndActivity({
                     : "인기 상품"
                 : "Top Products"}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
               {ko ? "매출 기준 상위 항목" : "Best selling products this month"}
             </div>
           </div>
@@ -513,7 +514,7 @@ function PopularProductsAndActivity({
                       <div style={{ fontSize: "14px", fontWeight: 600, color: "#0f172a", marginBottom: "2px" }}>
                         {product.name}
                       </div>
-                      <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>
+                      <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                         {product.monthlySales ?? 0}
                         {ko ? "개 판매" : " sales"}
                       </div>
@@ -568,7 +569,7 @@ function PopularProductsAndActivity({
             <div style={{ fontSize: "17px", fontWeight: 650, letterSpacing: "-0.02em", color: "#0f172a" }}>
               {ko ? "최근 활동" : "Recent Activity"}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
               {ko ? "대시보드 최근 이벤트" : "Latest events and updates"}
             </div>
           </div>
@@ -615,7 +616,7 @@ function PopularProductsAndActivity({
                     <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>
                       {ko ? "매출 기록" : "Sales recorded"} — {fmt(entry.sales)}
                     </div>
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)" }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                       {ko ? `고객 ${entry.customers}명` : `${entry.customers} customers`} ·{" "}
                       {entry.date.slice(5).replace("-", "/")}
                     </div>
@@ -623,7 +624,7 @@ function PopularProductsAndActivity({
                   <div
                     style={{
                       fontSize: "11px",
-                      color: "rgba(15,23,42,0.35)",
+                      color: "var(--muted)",
                       whiteSpace: "nowrap",
                     }}
                   >

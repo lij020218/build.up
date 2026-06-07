@@ -223,7 +223,7 @@ const eyebrow: React.CSSProperties = {
 };
 
 const subtitle: React.CSSProperties = {
-  fontSize: "11.5px", color: "rgba(15,23,42,0.45)", marginTop: "1px",
+  fontSize: "11.5px", color: "var(--muted)", marginTop: "1px",
 };
 
 const inputRow: React.CSSProperties = {
@@ -307,12 +307,12 @@ const nextActionText: React.CSSProperties = {
 
 const confidenceLow: React.CSSProperties = {
   marginTop: "6px",
-  fontSize: "10.5px", color: "rgba(15,23,42,0.45)", fontStyle: "italic" as const,
+  fontSize: "10.5px", color: "var(--muted)", fontStyle: "italic" as const,
 };
 
 const closeBtn: React.CSSProperties = {
   width: "22px", height: "22px", borderRadius: "6px", border: "none",
   background: "transparent", cursor: "pointer",
   display: "flex", alignItems: "center", justifyContent: "center",
-  color: "rgba(15,23,42,0.35)", flexShrink: 0,
+  color: "var(--muted)", flexShrink: 0,
 };

@@ -256,7 +256,7 @@ const SECTION_TITLE: React.CSSProperties = {
 };
 const SECTION_SUBTITLE: React.CSSProperties = {
   fontSize: 12.5,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   marginLeft: 30,
   marginBottom: 14,
   marginTop: -8,
@@ -340,7 +340,7 @@ export function WhyMattersBlock({ ko, headline, body, stat }: WhyMattersProps) {
               {stat.value}
             </div>
             <div style={{
-              fontSize: 11, fontWeight: 500, color: "rgba(15,23,42,0.55)",
+              fontSize: 11, fontWeight: 500, color: "var(--muted)",
               lineHeight: 1.4, textAlign: "center" as const,
               maxWidth: 180,
             }}>
@@ -410,7 +410,7 @@ export function WhatToDoBlock({ ko, totalTime, steps }: { ko: boolean; totalTime
                 <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
                   {s.title}
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(15,23,42,0.5)", padding: "2px 8px", borderRadius: 999, background: "rgba(15,23,42,0.04)" }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", padding: "2px 8px", borderRadius: 999, background: "rgba(15,23,42,0.04)" }}>
                   {s.time}
                 </span>
               </div>
@@ -606,7 +606,7 @@ export function StageOverview({ ko, headline, why, stat, workOutline, outcome, n
                 {stat.value}
               </div>
               <div style={{
-                fontSize: 11, fontWeight: 500, color: "rgba(15,23,42,0.55)",
+                fontSize: 11, fontWeight: 500, color: "var(--muted)",
                 lineHeight: 1.35, textAlign: "center" as const, maxWidth: 140,
               }}>
                 {stat.label}
@@ -652,7 +652,7 @@ export function StageOverview({ ko, headline, why, stat, workOutline, outcome, n
               </div>
               {w.time && (
                 <span style={{
-                  fontSize: 11, fontWeight: 600, color: "rgba(15,23,42,0.5)",
+                  fontSize: 11, fontWeight: 600, color: "var(--muted)",
                   padding: "3px 9px", borderRadius: 999,
                   background: "white", border: "1px solid rgba(25,25,112,0.08)",
                 }}>
@@ -683,7 +683,7 @@ export function StageOverview({ ko, headline, why, stat, workOutline, outcome, n
           {outcome}
         </div>
         {nextStage && (
-          <div style={{ fontSize: 12, color: "rgba(15,23,42,0.55)", marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6, lineHeight: 1.5 }}>
             {ko ? "→ 다음 단계: " : "→ Next: "}{nextStage}
           </div>
         )}
@@ -739,7 +739,7 @@ export function WorkStep({ ko, stepLabel, time, headline, why, how, watchouts, f
           </span>
           {time && (
             <span style={{
-              fontSize: 11, fontWeight: 600, color: "rgba(15,23,42,0.5)",
+              fontSize: 11, fontWeight: 600, color: "var(--muted)",
               letterSpacing: "-0.005em",
             }}>
               · {time}

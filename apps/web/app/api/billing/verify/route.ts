@@ -52,9 +52,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "결제 금액이 일치하지 않습니다." }, { status: 400 });
   }
 
-  // 결제-사용자 바인딩: 체크아웃에서 customer.customerId 에 심은 userId 가
-  // 호출자와 다르면 거부 (남의 결제를 내 구독으로 활성화하는 도용 차단).
-  if (payment.customer?.id && payment.customer.id !== auth.userId) {
+  // 결제-사용자 바인딩: 체크아웃에서 customer.customerId 에 심은 userId 가 필수.
+  // 없으면 소유권 검증 불가 — 거부.
+  if (!payment.customer?.id) {
+    console.error(`[billing/verify] Missing customer.id for paymentId=${paymentId}`);
+    return NextResponse.json({ error: "결제 소유권을 확인할 수 없습니다." }, { status: 400 });
+  }
+  if (payment.customer.id !== auth.userId) {
     console.error(`[billing/verify] Customer mismatch: payment customer=${payment.customer.id}, caller=${auth.userId}`);
     return NextResponse.json({ error: "결제자와 로그인 사용자가 일치하지 않습니다." }, { status: 403 });
   }
@@ -62,22 +66,35 @@ export async function POST(request: Request) {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
 
-  // 중복 결제 차단: 동일 portone_payment_id 가 이미 처리됐으면 거부
-  // (하나의 PAID 결제 ID 를 여러 계정이 재사용해 프리미엄을 무료 획득하는 것 방지).
-  const { data: existingPayment } = await supabase
-    .from("foundone_payments")
-    .select("id, user_id")
-    .eq("portone_payment_id", paymentId)
-    .maybeSingle();
-  if (existingPayment) {
-    console.error(`[billing/verify] Duplicate paymentId reuse: ${paymentId} (orig user=${existingPayment.user_id}, caller=${auth.userId})`);
-    return NextResponse.json({ error: "이미 처리된 결제입니다." }, { status: 409 });
-  }
+  // setMonth overflow 방지 (1/31 → 3/3 버그): 다음 달 말일로 계산
   const now = new Date();
   const periodEnd = new Date(now);
-  periodEnd.setMonth(periodEnd.getMonth() + 1);
+  periodEnd.setDate(1);
+  periodEnd.setMonth(periodEnd.getMonth() + 2);
+  periodEnd.setDate(0); // 다음 달의 0일 = 이번 달 말일
 
-  // 구독 활성화 (upsert)
+  // 멱등 게이트: payments insert 를 먼저 수행 (portone_payment_id UNIQUE 제약으로 동시 요청 차단).
+  // SELECT → INSERT 비원자적 체크 대신 DB 제약을 atomic gate 로 사용.
+  const { error: payInsertErr } = await supabase.from("foundone_payments").insert({
+    user_id: auth.userId,
+    portone_payment_id: paymentId,
+    amount: payment.amount.total,
+    currency: payment.currency ?? "KRW",
+    status: "PAID",
+    plan: "premium",
+    paid_at: payment.paidAt ?? now.toISOString(),
+  });
+
+  if (payInsertErr) {
+    // 23505 = unique_violation — 이미 처리된 결제
+    if (payInsertErr.code === "23505") {
+      return NextResponse.json({ error: "이미 처리된 결제입니다." }, { status: 409 });
+    }
+    console.error("[billing/verify] Payment insert error:", payInsertErr);
+    return NextResponse.json({ error: "결제 이력 저장에 실패했습니다." }, { status: 500 });
+  }
+
+  // 구독 활성화 (payments insert 성공 후에만 도달)
   const { error: subError } = await supabase
     .from("foundone_subscriptions")
     .upsert({
@@ -93,19 +110,9 @@ export async function POST(request: Request) {
 
   if (subError) {
     console.error("[billing/verify] DB subscription upsert error:", subError);
-    return NextResponse.json({ error: "구독 정보 저장에 실패했습니다." }, { status: 500 });
+    // 결제 이력은 이미 기록됐으므로 수동 복구 가능. 클라이언트에 재시도 안내.
+    return NextResponse.json({ error: "구독 정보 저장에 실패했습니다. 고객센터에 문의해 주세요." }, { status: 500 });
   }
-
-  // 결제 이력 기록
-  await supabase.from("foundone_payments").insert({
-    user_id: auth.userId,
-    portone_payment_id: paymentId,
-    amount: payment.amount.total,
-    currency: payment.currency ?? "KRW",
-    status: "PAID",
-    plan: "premium",
-    paid_at: payment.paidAt ?? now.toISOString(),
-  }).throwOnError();
 
   return NextResponse.json({
     ok: true,

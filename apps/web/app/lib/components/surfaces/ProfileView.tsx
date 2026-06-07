@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { styles } from "../../styles";
@@ -18,6 +18,7 @@ import { OwnerProfileChips } from "../dashboard/OwnerProfileChips";
 import { formatKrw } from "../../utils/format-krw";
 import { StoreNameInput } from "../stages/shared/StoreNameInput";
 import { BusinessHoursInput } from "../stages/shared/BusinessHoursInput";
+import { ConfirmModal } from "../ConfirmModal";
 
 // ── Local styles ──
 const card: React.CSSProperties = {
@@ -60,6 +61,7 @@ export function ProfileView() {
   } = d;
 
   const ko = language === "ko";
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   // ── 계정 정보 파싱 ──
   // authLabel 형식: "email · userId8자리" 또는 "로그인 필요"
@@ -88,13 +90,8 @@ export function ProfileView() {
     router.push("/auth");
   };
 
-  const handleDeleteAccount = async () => {
-    const confirmed = typeof window !== "undefined" && window.confirm(
-      ko
-        ? "정말 계정을 삭제하시겠어요?\n모든 데이터와 구독이 영구 삭제되며, 되돌릴 수 없습니다."
-        : "Delete your account?\nAll data and subscriptions are permanently removed. This cannot be undone."
-    );
-    if (!confirmed) return;
+  const executeDeleteAccount = async () => {
+    setDeleteConfirmOpen(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -120,6 +117,21 @@ export function ProfileView() {
   };
 
   return (
+    <>
+    <ConfirmModal
+      open={deleteConfirmOpen}
+      title={ko ? "계정을 삭제하시겠어요?" : "Delete your account?"}
+      message={
+        ko
+          ? "모든 데이터와 구독이 영구 삭제되며, 되돌릴 수 없습니다."
+          : "All data and subscriptions are permanently removed. This cannot be undone."
+      }
+      confirmLabel={ko ? "삭제" : "Delete"}
+      cancelLabel={ko ? "취소" : "Cancel"}
+      danger
+      onConfirm={() => { void executeDeleteAccount(); }}
+      onCancel={() => setDeleteConfirmOpen(false)}
+    />
     <section style={styles.section}>
 
       {/* 경영 건강 점수 — 사용자 지침 2026-05-11: 내 정보 페이지에서 *운영 대시보드* 로 이동. */}
@@ -388,7 +400,7 @@ export function ProfileView() {
             </div>
             <button
               type="button"
-              onClick={() => { void handleDeleteAccount(); }}
+              onClick={() => setDeleteConfirmOpen(true)}
               style={{
                 fontSize: "12px", fontWeight: 600, color: "#fff",
                 background: "#b64c4c", border: "none", borderRadius: "10px",
@@ -410,5 +422,6 @@ export function ProfileView() {
       </article>
 
     </section>
+    </>
   );
 }

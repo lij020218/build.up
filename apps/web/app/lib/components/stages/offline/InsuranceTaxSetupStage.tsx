@@ -99,7 +99,7 @@ function Section({
         <div>
           <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{title}</div>
           {subtitle && (
-            <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", marginTop: "1px" }}>{subtitle}</div>
+            <div style={{ fontSize: "11.5px", color: "var(--muted)", marginTop: "1px" }}>{subtitle}</div>
           )}
         </div>
       </div>
@@ -178,7 +178,7 @@ function MetaPair({ label, value, sublabel }: { label: string; value: string; su
       </div>
       <div style={{ fontSize: "16px", fontWeight: 700, color: MIDNIGHT, marginTop: "3px" }}>{value}</div>
       {sublabel && (
-        <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.55)", marginTop: "1px" }}>{sublabel}</div>
+        <div style={{ fontSize: "10.5px", color: "var(--muted)", marginTop: "1px" }}>{sublabel}</div>
       )}
     </div>
   );
@@ -394,12 +394,12 @@ export function InsuranceTaxSetupStage() {
                 >
                   <div>
                     <div style={{ fontWeight: 700, color: "#0f172a" }}>{row.name}</div>
-                    <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>{row.note}</div>
+                    <div style={{ fontSize: "10.5px", color: "var(--muted)", marginTop: "2px" }}>{row.note}</div>
                   </div>
                   <div style={{ textAlign: "right" as const, fontWeight: 700, color: MIDNIGHT, fontVariantNumeric: "tabular-nums" }}>
                     {row.emp}
                   </div>
-                  <div style={{ textAlign: "right" as const, color: "rgba(15,23,42,0.5)", fontVariantNumeric: "tabular-nums" }}>
+                  <div style={{ textAlign: "right" as const, color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
                     {row.ee}
                   </div>
                 </div>

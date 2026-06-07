@@ -90,7 +90,7 @@ export function TimeLogCheckIn({ ko }: Props) {
           <div style={{ fontSize: "12.5px", fontWeight: 650, color: "#0f172a", letterSpacing: "-0.01em" }}>
             {ko ? "오늘 시간 체크인" : "Today's time check-in"}
           </div>
-          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "1px" }}>
+          <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "1px" }}>
             {ko ? "30초 · 어디에 시간을 썼나요?" : "30s · Where did your time go?"}
           </div>
         </div>
@@ -129,7 +129,7 @@ export function TimeLogCheckIn({ ko }: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "rgba(15,23,42,0.35)",
+            color: "var(--muted)",
           }}
         >
           <X size={13} strokeWidth={1.8} />
@@ -154,7 +154,7 @@ export function TimeLogCheckIn({ ko }: Props) {
         <div style={{ fontSize: "13px", fontWeight: 650, color: "#1d3557" }}>
           {ko ? "✓ 오늘 체크인 완료" : "✓ Checked in"}
         </div>
-        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "3px" }}>
+        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "3px" }}>
           {ko ? "7일 쌓이면 주간 시간 패턴을 알려드려요." : "Weekly pattern unlocks after 7 days."}
         </div>
       </div>
@@ -191,7 +191,7 @@ export function TimeLogCheckIn({ ko }: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "rgba(15,23,42,0.4)",
+            color: "var(--muted)",
           }}
           aria-label={ko ? "접기" : "Collapse"}
         >
@@ -227,7 +227,7 @@ export function TimeLogCheckIn({ ko }: Props) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px", padding: "8px 10px", borderRadius: "8px", background: "rgba(25,25,112,0.035)" }}>
-        <span style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>
+        <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)" }}>
           {ko ? "기타 (자동)" : "Other (auto)"}
         </span>
         <span style={{ fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.6)", fontVariantNumeric: "tabular-nums" }}>

@@ -124,7 +124,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
           )}
         </div>
         <button type="button" onClick={() => d.setUsesSubscriptions(false)} style={{
-          fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.32)", background: "none", border: "none", cursor: "pointer",
+          fontSize: "11px", fontWeight: 600, color: "var(--muted)", background: "none", border: "none", cursor: "pointer",
           padding: "2px 6px", borderRadius: "6px",
         }}>
           {ko ? "비활성화" : "Disable"}
@@ -152,7 +152,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
             <div style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
               {ko ? "구독제 비즈니스 시작" : "Start your subscription business"}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "5px", lineHeight: 1.55, maxWidth: "260px" }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "5px", lineHeight: 1.55, maxWidth: "260px" }}>
               {ko
                 ? "플랜을 만들고 고객을 추가하면 MRR·이탈률·전환율이 자동으로 계산됩니다"
                 : "Create plans and add customers — MRR, churn, and conversion are tracked automatically"}
@@ -194,7 +194,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
             <button
               type="button"
               onClick={() => { d.setSubPlanFormOpen(false); d.setSubPlanName(""); d.setSubPlanPrice(""); }}
-              style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
+              style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
             >
               {ko ? "취소" : "Cancel"}
             </button>
@@ -325,7 +325,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
                         )}
                       </div>
                       {sub.email && (
-                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.email}</div>
+                        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.email}</div>
                       )}
                     </div>
                     {/* Churn button */}
@@ -369,7 +369,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
                 <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.015em" }}>
                   {ko ? "첫 고객을 등록하세요" : "Register your first customer"}
                 </div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "4px", lineHeight: 1.55, maxWidth: "280px" }}>
+                <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px", lineHeight: 1.55, maxWidth: "280px" }}>
                   {ko
                     ? `${plans.length}개의 플랜이 준비됐어요 — 첫 고객을 추가하면 MRR이 시작됩니다`
                     : `${plans.length} plan${plans.length > 1 ? "s" : ""} ready — add your first customer to start MRR`}
@@ -394,7 +394,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
               </button>
             </div>
           ) : !plans.length && (
-            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.02)", fontSize: "12px", color: "rgba(15,23,42,0.4)", lineHeight: 1.5 }}>
+            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.02)", fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
               {ko ? "먼저 [플랜] 탭에서 구독 플랜을 등록하세요" : "First register plans in the [Plans] tab"}
             </div>
           )}
@@ -453,7 +453,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
           {/* Churned list (collapsed) */}
           {subs.filter((s) => s.status === "churned").length > 0 && (
             <details style={{ marginTop: "2px" }}>
-              <summary style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.35)", cursor: "pointer", userSelect: "none" }}>
+              <summary style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", cursor: "pointer", userSelect: "none" }}>
                 {ko ? "이탈 고객" : "Churned"} ({subs.filter((s) => s.status === "churned").length})
               </summary>
               <div style={{ display: "flex", flexDirection: "column", gap: "3px", marginTop: "6px" }}>
@@ -567,7 +567,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
                         }}>
                           {fmt(plan.price)}
                         </span>
-                        <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", fontWeight: 500 }}>
+                        <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 500 }}>
                           / {plan.billingCycle === "monthly" ? (ko ? "월" : "mo") : (ko ? "연" : "yr")}
                         </span>
                       </div>
@@ -584,7 +584,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
                         border: "none", background: "transparent",
                         cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        color: "rgba(15,23,42,0.3)",
+                        color: "var(--muted)",
                         transition: "background 0.15s ease, color 0.15s ease",
                         flexShrink: 0,
                       }}

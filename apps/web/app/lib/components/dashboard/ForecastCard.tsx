@@ -226,7 +226,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
           <div style={{ ...metricValue, color: dailyEntries.length >= 30 ? "#1d3557" : dailyEntries.length >= 14 ? "#191970" : "#b64c4c" }}>
             {dailyEntries.length >= 30 ? (ko ? "높음" : "High") : dailyEntries.length >= 14 ? (ko ? "보통" : "Medium") : (ko ? "낮음" : "Low")}
           </div>
-          <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.3)", marginTop: "1px" }}>
+          <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "1px" }}>
             {dailyEntries.length}{ko ? "일 데이터" : "d data"}
           </div>
         </div>
@@ -255,7 +255,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "2px",
 };
 
@@ -279,7 +279,7 @@ const metricLabel: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.06em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "4px",
 };
 

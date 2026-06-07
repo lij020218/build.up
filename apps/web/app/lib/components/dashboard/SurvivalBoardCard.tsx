@@ -320,7 +320,7 @@ const survivalMetricLabel: React.CSSProperties = {
   fontSize: "11px",
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.48)",
+  color: "var(--muted)",
 };
 
 const survivalMetricValue: React.CSSProperties = {
@@ -342,5 +342,5 @@ const survivalMetricValueSecondary: React.CSSProperties = {
 const survivalMetricNote: React.CSSProperties = {
   fontSize: "12px",
   lineHeight: 1.5,
-  color: "rgba(15,23,42,0.56)",
+  color: "var(--muted)",
 };

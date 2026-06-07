@@ -48,7 +48,7 @@ export function MonthlyProgressCard() {
     return (
       <div style={card}>
         <div style={headerRow}>
-                    <TrendingUp size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
+                    <TrendingUp size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
         </div>
         <div style={emptyState}>
           {ko
@@ -76,7 +76,7 @@ export function MonthlyProgressCard() {
     <div style={card}>
       {/* Header */}
       <div style={headerRow}>
-                <TrendingUp size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
+                <TrendingUp size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} /><span style={cardTitle}>이번 달 진행</span>
         {hasTarget ? (
           <div style={{
             marginLeft: "auto",
@@ -94,7 +94,7 @@ export function MonthlyProgressCard() {
             marginLeft: "auto",
             fontSize: "11px",
             fontWeight: 600,
-            color: "rgba(15,23,42,0.5)",
+            color: "var(--muted)",
             background: "rgba(25,25,112,0.05)",
             padding: "3px 8px",
             borderRadius: "6px",
@@ -138,7 +138,7 @@ export function MonthlyProgressCard() {
               position: "absolute",
               left: `${expectedProgress}%`,
               transform: "translateX(-50%)",
-              color: "rgba(15,23,42,0.3)",
+              color: "var(--muted)",
               fontSize: "9px",
             }}>
               &#x25BC; {expectedProgress.toFixed(0)}% 경과
@@ -163,7 +163,7 @@ export function MonthlyProgressCard() {
             <div style={{
               fontSize: "13px",
               fontWeight: 600,
-              color: "rgba(15,23,42,0.4)",
+              color: "var(--muted)",
               letterSpacing: "-0.01em",
             }}>
               {ko ? "지난달 데이터 없음" : "No prior data"}
@@ -254,13 +254,13 @@ const currentAmount: React.CSSProperties = {
 const targetSep: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: 300,
-  color: "rgba(15,23,42,0.2)",
+  color: "var(--muted)",
 };
 
 const targetAmount: React.CSSProperties = {
   fontSize: "16px",
   fontWeight: 600,
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
   fontVariantNumeric: "tabular-nums",
 };
 
@@ -317,7 +317,7 @@ const barLabels: React.CSSProperties = {
 const barLabelText: React.CSSProperties = {
   fontSize: "10px",
   fontWeight: 500,
-  color: "rgba(15,23,42,0.25)",
+  color: "var(--muted)",
   fontVariantNumeric: "tabular-nums",
 };
 
@@ -343,7 +343,7 @@ const insightLabel: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
 };
 
 const insightValue = (positive: boolean): React.CSSProperties => ({
@@ -358,14 +358,14 @@ const emptyState: React.CSSProperties = {
   padding: "28px 0",
   textAlign: "center",
   fontSize: "13px",
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
   lineHeight: 1.5,
 };
 
 const targetBasisNote: React.CSSProperties = {
   fontSize: "11px",
   fontWeight: 500,
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   textAlign: "center",
   padding: "8px 12px",
   marginTop: "-4px",

@@ -334,7 +334,7 @@ export function InitialOrderPlanCard({ ko }: { ko: boolean }) {
           {items.length > 0 && (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
                   {ko ? `등록된 발주 ${items.length}건` : `${items.length} order${items.length === 1 ? "" : "s"}`}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: MIDNIGHT }}>
@@ -358,7 +358,7 @@ export function InitialOrderPlanCard({ ko }: { ko: boolean }) {
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{it.name}</div>
-                      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.55)", marginTop: 2 }}>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 2 }}>
                         {it.supplier} · {it.quantity}{it.unit} × ₩{it.unitCost.toLocaleString()} = ₩{Math.round(it.quantity * it.unitCost).toLocaleString()}
                       </div>
                     </div>
@@ -377,7 +377,7 @@ export function InitialOrderPlanCard({ ko }: { ko: boolean }) {
               {/* 공급처별 합계 (3개 이상 공급처일 때) */}
               {Object.keys(bySupplier).length >= 2 && (
                 <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10, background: "rgba(15,23,42,0.025)" }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 5 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 5 }}>
                     {ko ? "공급처별 합계" : "Per supplier"}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -396,7 +396,7 @@ export function InitialOrderPlanCard({ ko }: { ko: boolean }) {
       )}
 
       {/* 하단 안내 */}
-      <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.5)", lineHeight: 1.55 }}>
+      <div style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.55 }}>
         {ko
           ? "여기 입력한 원자재는 운영 대시보드 「재고 관리」 카드에 자동 등록됩니다 (material 타입 + 공급처명 자동). 사장님이 day-1 에 재고 카드를 따로 채울 필요가 없어집니다."
           : "Items entered here auto-register in the operational dashboard's Inventory card (material type + supplier prefilled). No day-1 re-entry needed."}

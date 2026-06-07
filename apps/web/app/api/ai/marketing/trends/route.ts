@@ -14,7 +14,7 @@ import {
 } from "../../../_lib/env";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
 import { generateTrends } from "../../../_lib/trend-generator";
-import { requireApiUserAllowAnon } from "../../../_lib/auth";
+import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 
 /**
@@ -79,10 +79,8 @@ export const runtime = "nodejs";
 export const maxDuration = 90; // Vercel function timeout
 
 export async function POST(request: Request) {
-  // ⚠️ 2026-05-25 audit fix: 이전 무인증 → DoS·OpenAI/Anthropic 지갑 고갈 위험.
-  //   세션 사용자 (anon 포함) 만 호출 가능 + 분당 10회 rate limit.
-  //   캐시 hit 경로는 LLM 비용 없으므로 anon 허용. 미스 시 generateTrends 가 LLM 사용.
-  const auth = await requireApiUserAllowAnon(request);
+  // 인증 필수 — 캐시 미스 시 LLM 호출(비용 발생)이 있으므로 anon 허용 불가.
+  const auth = await requireApiUser(request);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

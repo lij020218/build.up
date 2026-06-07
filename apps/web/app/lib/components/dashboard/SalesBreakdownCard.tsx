@@ -50,7 +50,7 @@ export function SalesBreakdownCard() {
     return (
       <div style={card}>
         <div style={headerRow}>
-                    <Users size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
+                    <Users size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
         </div>
         <div style={emptyState}>
           {ko ? "매출을 7일 이상 기록하면 고객수 × 객단가 분석이 시작됩니다" : "Log 7+ days of sales to unlock customer × ticket analysis"}
@@ -76,7 +76,7 @@ export function SalesBreakdownCard() {
     <div style={card}>
       {/* Header */}
       <div style={headerRow}>
-                <Users size={14} strokeWidth={1.5} style={{ color: "rgba(15,23,42,0.35)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
+                <Users size={14} strokeWidth={1.5} style={{ color: "var(--muted)", marginRight: "6px" }} /><span style={cardTitle}>매출 분해</span>
         <span style={periodBadge}>전주 대비</span>
       </div>
 
@@ -161,7 +161,7 @@ const periodBadge: React.CSSProperties = {
   marginLeft: "auto",
   fontSize: "11px",
   fontWeight: 600,
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   background: "rgba(25,25,112,0.04)",
   padding: "3px 8px",
   borderRadius: "6px",
@@ -195,21 +195,21 @@ const label: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginTop: "4px",
 };
 
 const multiplySign: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: 300,
-  color: "rgba(15,23,42,0.25)",
+  color: "var(--muted)",
   paddingBottom: "18px",
 };
 
 const equalsSign: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: 300,
-  color: "rgba(15,23,42,0.25)",
+  color: "var(--muted)",
   paddingBottom: "18px",
 };
 
@@ -246,7 +246,7 @@ const commentRow: React.CSSProperties = {
 const commentText: React.CSSProperties = {
   fontSize: "13px",
   fontWeight: 500,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.5,
   fontStyle: "italic",
 };
@@ -255,6 +255,6 @@ const emptyState: React.CSSProperties = {
   padding: "28px 0",
   textAlign: "center",
   fontSize: "13px",
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
   lineHeight: 1.5,
 };

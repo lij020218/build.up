@@ -157,7 +157,7 @@ export default function InvitePage() {
     <main style={pageStyle}>
       <div style={cardStyle}>
         {state.status === "loading" && (
-          <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(15,23,42,0.5)" }}>
+          <div style={{ textAlign: "center", padding: "40px 0", color: "var(--muted)" }}>
             초대 정보를 확인하는 중…
           </div>
         )}
@@ -262,7 +262,7 @@ const eyebrowStyle: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: 16,
   textAlign: "center",
 };
@@ -279,7 +279,7 @@ const titleStyle: React.CSSProperties = {
 
 const subtitleStyle: React.CSSProperties = {
   fontSize: 14,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.65,
   textAlign: "center",
   margin: "8px 0 20px",
@@ -326,7 +326,7 @@ const secondaryBtnStyle: React.CSSProperties = {
 
 const footnoteStyle: React.CSSProperties = {
   fontSize: 12,
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   textAlign: "center",
   marginTop: 18,
   lineHeight: 1.5,

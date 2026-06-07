@@ -198,7 +198,7 @@ const toastTitle: React.CSSProperties = {
 
 const toastSub: React.CSSProperties = {
   fontSize: "12px",
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   marginTop: "2px",
   lineHeight: 1.4,
 };
@@ -208,7 +208,7 @@ const dismissBtn: React.CSSProperties = {
   border: "none",
   cursor: "pointer",
   fontSize: "14px",
-  color: "rgba(15,23,42,0.3)",
+  color: "var(--muted)",
   padding: "4px",
   flexShrink: 0,
 };

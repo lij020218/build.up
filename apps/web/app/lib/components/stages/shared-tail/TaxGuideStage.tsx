@@ -896,7 +896,7 @@ function TaxFaqCard({
                       {faq.sources.length > 0 && (
                         <div style={{
                           fontSize: "11px",
-                          color: "rgba(15,23,42,0.5)",
+                          color: "var(--muted)",
                           paddingTop: "8px",
                           borderTop: "1px dashed rgba(0,0,0,0.08)",
                           marginTop: "4px",
@@ -905,7 +905,7 @@ function TaxFaqCard({
                           {" "}
                           <span style={{ marginLeft: "4px" }}>·</span>
                           {" "}
-                          <span style={{ color: "rgba(15,23,42,0.4)" }}>{ko ? "검증" : "verified"} {faq.lastVerified}</span>
+                          <span style={{ color: "var(--muted)" }}>{ko ? "검증" : "verified"} {faq.lastVerified}</span>
                           <div style={{ marginTop: "4px", display: "flex", flexDirection: "column" as const, gap: "2px" }}>
                             {faq.sources.map((src, i) => (
                               <a

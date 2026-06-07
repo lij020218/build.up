@@ -1,10 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import {
   loadVendorRecommendations,
   groupVendorsByType,
   type VendorRecommendationGroup
 } from "@foundone/shared";
+import { requireApiUser } from "../../_lib/auth";
+import { getSupabaseAdmin } from "../../_lib/supabase-admin";
+import { checkSimpleRateLimit } from "../../_lib/rate-limit";
 
 const VALID_STARTUP_TYPES = ["franchise", "independent", "undecided"] as const;
 type StartupType = (typeof VALID_STARTUP_TYPES)[number];
@@ -14,6 +16,16 @@ function isValidStartupType(value: string): value is StartupType {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireApiUser(request);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const rl = await checkSimpleRateLimit({
+    key: `vendor-rec:${auth.userId}`,
+    limit: 30,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) return NextResponse.json({ error: rl.error }, { status: 429 });
+
   const url = new URL(request.url);
   const categoryId = url.searchParams.get("categoryId")?.trim();
   const startupTypeParam = url.searchParams.get("startupType")?.trim() ?? "undecided";
@@ -29,17 +41,11 @@ export async function GET(request: Request) {
     );
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
-  }
-
-  const client = createClient(supabaseUrl, supabaseAnonKey);
+  const client = getSupabaseAdmin();
+  if (!client) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
 
   try {
-    const vendors = await loadVendorRecommendations(client, {
+    const vendors = await loadVendorRecommendations(client as Parameters<typeof loadVendorRecommendations>[0], {
       categoryId,
       startupType: startupTypeParam
     });
@@ -47,10 +53,7 @@ export async function GET(request: Request) {
     const groups: VendorRecommendationGroup[] = groupVendorsByType(vendors);
 
     return NextResponse.json({ categoryId, startupType: startupTypeParam, groups });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to load vendor recommendations." },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "추천 공급처 조회에 실패했습니다." }, { status: 500 });
   }
 }

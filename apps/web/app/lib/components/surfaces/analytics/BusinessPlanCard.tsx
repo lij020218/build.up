@@ -88,7 +88,7 @@ ${sections.map(s => `<div class="section"><h2>${s.title}</h2><p>${s.content}</p>
                 <span style={{ fontSize: "12px", color: "var(--muted)", transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>›</span>
               </button>
               {expanded && (
-                <div style={{ padding: "0 0 12px", fontSize: "12px", lineHeight: 1.7, color: "rgba(15,23,42,0.55)", whiteSpace: "pre-line" }}>
+                <div style={{ padding: "0 0 12px", fontSize: "12px", lineHeight: 1.7, color: "var(--muted)", whiteSpace: "pre-line" }}>
                   {sec.content}
                 </div>
               )}

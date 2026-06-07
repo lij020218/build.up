@@ -128,7 +128,7 @@ export default function RoleSelectionScreen({ language, onSelect }: Props) {
             <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "8px" }}>
               {ko ? "초대 코드를 입력하세요" : "Enter your invite code"}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", marginBottom: "12px", lineHeight: 1.5 }}>
+            <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "12px", lineHeight: 1.5 }}>
               {ko
                 ? "사장님에게 받은 초대 코드를 입력하면 해당 가게에 연결됩니다."
                 : "Enter the invite code from your manager to connect to their store."}
@@ -201,7 +201,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
   marginBottom: "12px",
 };
 
@@ -215,7 +215,7 @@ const title: React.CSSProperties = {
 
 const subtitle: React.CSSProperties = {
   fontSize: "15px",
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
   lineHeight: 1.5,
   margin: 0,
 };
@@ -254,14 +254,14 @@ const roleTitle: React.CSSProperties = {
 
 const roleDesc: React.CSSProperties = {
   fontSize: "13px",
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.5,
   marginBottom: "8px",
 };
 
 const roleDetail: React.CSSProperties = {
   fontSize: "11px",
-  color: "rgba(15,23,42,0.35)",
+  color: "var(--muted)",
   lineHeight: 1.5,
 };
 
@@ -316,6 +316,6 @@ const continueBtn: React.CSSProperties = {
 const footnote: React.CSSProperties = {
   textAlign: "center",
   fontSize: "12px",
-  color: "rgba(15,23,42,0.3)",
+  color: "var(--muted)",
   marginTop: "16px",
 };

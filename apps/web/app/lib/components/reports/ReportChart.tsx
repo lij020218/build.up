@@ -155,7 +155,7 @@ const legendRow: React.CSSProperties = {
   alignItems: "center",
   gap: 10,
   fontSize: 11,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
 };
 
 const legendItem: React.CSSProperties = {
@@ -183,7 +183,7 @@ const chartTitle: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.04em",
   textTransform: "uppercase" as const,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
 };
 
 const chartTodayValue: React.CSSProperties = {
@@ -201,7 +201,7 @@ const axisRow: React.CSSProperties = {
 
 const axisLabel: React.CSSProperties = {
   fontSize: 10.5,
-  color: "rgba(15,23,42,0.45)",
+  color: "var(--muted)",
   fontFamily: "ui-monospace, monospace",
 };
 
@@ -231,7 +231,7 @@ const barStyle: React.CSSProperties = {
 
 const barLabel: React.CSSProperties = {
   fontSize: 10,
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
   fontFamily: "ui-monospace, monospace",
 };
 
@@ -242,5 +242,5 @@ const emptyChartStyle: React.CSSProperties = {
   padding: "32px 16px",
   textAlign: "center",
   fontSize: 12.5,
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
 };

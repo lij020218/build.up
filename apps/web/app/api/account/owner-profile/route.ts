@@ -82,9 +82,24 @@ export async function POST(request: Request) {
     body.consideringClosure !== undefined || body.isDisabledOwner !== undefined;
   if (!hasAny) return NextResponse.json({ ok: true });
 
+  // 숫자 필드 범위 검증 — NaN·음수·터무니 없는 값 차단
+  const birthYearNum = body.birthYear !== undefined ? Number(body.birthYear) : undefined;
+  const ncbScoreNum = body.ncbScore !== undefined ? Number(body.ncbScore) : undefined;
+
+  if (birthYearNum !== undefined) {
+    if (!Number.isInteger(birthYearNum) || birthYearNum < 1900 || birthYearNum > 2010) {
+      return NextResponse.json({ ok: false, error: "birthYear 는 1900~2010 사이 정수여야 합니다." }, { status: 400 });
+    }
+  }
+  if (ncbScoreNum !== undefined) {
+    if (!Number.isFinite(ncbScoreNum) || ncbScoreNum < 0 || ncbScoreNum > 1000) {
+      return NextResponse.json({ ok: false, error: "ncbScore 는 0~1000 사이 숫자여야 합니다." }, { status: 400 });
+    }
+  }
+
   const plain: OwnerProfilePlain = {
-    ...(body.birthYear !== undefined && { birthYear: Number(body.birthYear) }),
-    ...(body.ncbScore !== undefined && { ncbScore: Number(body.ncbScore) }),
+    ...(birthYearNum !== undefined && { birthYear: birthYearNum }),
+    ...(ncbScoreNum !== undefined && { ncbScore: ncbScoreNum }),
     ...(body.consideringClosure !== undefined && { consideringClosure: Boolean(body.consideringClosure) }),
     ...(body.isDisabledOwner !== undefined && { isDisabledOwner: Boolean(body.isDisabledOwner) }),
   };

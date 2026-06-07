@@ -136,7 +136,7 @@ export function BudgetFundingMatchCard() {
         </div>
         <div style={{
           fontSize: 12.5,
-          color: "rgba(15,23,42,0.55)",
+          color: "var(--muted)",
           lineHeight: 1.55,
         }}>
           {subtitle}
@@ -227,7 +227,7 @@ function FundingMiniRow({ program, language }: { program: ProgramMatch; language
         {dDayLabel
           ? <Badge label={dDayLabel} color={dDayColor} />
           : <Badge label={statusInfo.label} color={statusInfo.color} />}
-        <div style={{ marginLeft: "auto", fontSize: 11, color: "rgba(15,23,42,0.4)" }}>↗</div>
+        <div style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>↗</div>
       </div>
 
       {/* title */}
@@ -245,7 +245,7 @@ function FundingMiniRow({ program, language }: { program: ProgramMatch; language
       {/* organizer · amount */}
       <div style={{
         fontSize: 11,
-        color: "rgba(15,23,42,0.55)",
+        color: "var(--muted)",
         marginBottom: 4,
         display: "flex",
         flexWrap: "wrap",
@@ -255,7 +255,7 @@ function FundingMiniRow({ program, language }: { program: ProgramMatch; language
         <span>{pick(program.organizer)}</span>
         {program.amount && (
           <>
-            <span style={{ color: "rgba(15,23,42,0.25)" }}>·</span>
+            <span style={{ color: "var(--muted)" }}>·</span>
             <span style={{ fontWeight: 700, color: "#191970" }}>{program.amount}</span>
           </>
         )}

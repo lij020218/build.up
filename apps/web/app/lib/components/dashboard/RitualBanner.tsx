@@ -125,7 +125,7 @@ export function RitualBanner({ ko }: Props) {
         <div style={{ fontSize: "13px", fontWeight: 660, color: "#0f172a", letterSpacing: "-0.01em" }}>
           {ko ? config.titleKo : config.titleEn}
         </div>
-        <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)", marginTop: "1px", lineHeight: 1.5 }}>
+        <div style={{ fontSize: "11.5px", color: "var(--muted)", marginTop: "1px", lineHeight: 1.5 }}>
           {ko ? config.descKo : config.descEn}
         </div>
       </div>
@@ -143,7 +143,7 @@ export function RitualBanner({ ko }: Props) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "rgba(15,23,42,0.4)",
+          color: "var(--muted)",
           flexShrink: 0,
         }}
       >

@@ -135,7 +135,7 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
 
         {uploads.length > 0 && (
           <div style={{ display: "grid", gap: "6px", marginTop: "8px" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.5)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
               {ko ? "최근 업로드" : "Recent uploads"}
             </div>
             {uploads.slice(0, 5).map((u) => (
@@ -148,7 +148,7 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
                 <span style={{ color: "#0f172a", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, minWidth: 0, flex: 1 }}>
                   {u.filename}
                 </span>
-                <span style={{ color: "rgba(15,23,42,0.55)", fontVariantNumeric: "tabular-nums" as const, marginLeft: "10px" }}>
+                <span style={{ color: "var(--muted)", fontVariantNumeric: "tabular-nums" as const, marginLeft: "10px" }}>
                   {u.row_count}행 · {(u.total_amount / 10000).toLocaleString()}만
                 </span>
               </div>

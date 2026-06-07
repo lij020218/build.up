@@ -136,7 +136,7 @@ function FitnessRetentionCardInner({ ko }: Props) {
           <span style={iconBadge}><Users size={14} strokeWidth={2.2} /></span>
           <div style={labelStyle}>{ko ? "회원 Retention · 피트니스" : "Member Retention · Fitness"}</div>
         </header>
-        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "var(--muted)", fontSize: 13 }}>
           {ko ? "회원 데이터를 입력하면 만료 임박 + cohort 잔존율 분석이 시작됩니다 (내 가게 > 회원 관리)" : "Enter member data to unlock retention analysis"}
         </div>
       </article>
@@ -174,7 +174,7 @@ function FitnessRetentionCardInner({ ko }: Props) {
       {/* ② 대비 — 30/60/90일 cohort 잔존율 */}
       <div>
         <div style={{
-          fontSize: 11, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.06em",
+          fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em",
           textTransform: "uppercase" as const, marginBottom: 8,
           display: "flex", alignItems: "center", gap: 6,
         }}>
@@ -270,13 +270,13 @@ function CohortBox({ days, cohort, ko }: { days: number; cohort: { total: number
       background: "rgba(15,23,42,0.02)", border: "1px solid rgba(25,25,112,0.08)",
       textAlign: "center" as const,
     }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.04em", marginBottom: 4 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.04em", marginBottom: 4 }}>
         {ko ? `${days}일` : `${days}d`}
       </div>
       <div style={{ fontSize: 18, fontWeight: 700, color: c, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
         {cohort.total >= 3 ? `${cohort.rate}%` : "—"}
       </div>
-      <div style={{ fontSize: 10, color: "rgba(15,23,42,0.5)", marginTop: 2 }}>
+      <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
         {cohort.total > 0 ? `${cohort.stillActive}/${cohort.total}` : (ko ? "데이터 부족" : "No data")}
       </div>
     </div>
@@ -323,7 +323,7 @@ const labelStyle: React.CSSProperties = {
 
 const footerStyle: React.CSSProperties = {
   display: "flex", alignItems: "center",
-  fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.5,
+  fontSize: 11, color: "var(--muted)", lineHeight: 1.5,
   padding: "8px 12px", borderRadius: 9,
   background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
 };

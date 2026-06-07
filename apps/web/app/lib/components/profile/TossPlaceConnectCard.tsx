@@ -135,11 +135,11 @@ export function TossPlaceConnectCard({ ko }: { ko: boolean }) {
                   <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1d3557", boxShadow: "0 0 6px rgba(25,25,112,0.5)" }} />
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{ko ? "연결됨" : "Connected"}</span>
                 </div>
-                <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", fontFamily: "monospace" }}>
+                <span style={{ fontSize: "11px", color: "var(--muted)", fontFamily: "monospace" }}>
                   {status?.merchantId} · {status?.accessKeyMask}
                 </span>
               </div>
-              <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)" }}>
+              <div style={{ fontSize: "11.5px", color: "var(--muted)" }}>
                 {ko ? `최근 30일 결제 ${status?.paymentCount30d}건` : `Last 30d: ${status?.paymentCount30d}`}
               </div>
               {msg && (
@@ -206,15 +206,15 @@ function TossWizard({ ko, onClose, onSuccess }: { ko: boolean; onClose: () => vo
       }}>
         <div style={{ padding: "22px 24px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               {ko ? "TOSS Place 연결" : "Connect TOSS Place"}
             </div>
-            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "rgba(15,23,42,0.4)", fontSize: "20px", padding: 0 }}>×</button>
+            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: "20px", padding: 0 }}>×</button>
           </div>
           <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginTop: "6px", letterSpacing: "-0.02em" }}>
             {ko ? "Access Key + Secret + 매장 ID 입력" : "Paste Access Key, Secret, Merchant ID"}
           </div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", marginTop: "8px", lineHeight: 1.55 }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "8px", lineHeight: 1.55 }}>
             {ko
               ? <>1. <a href="https://developer.tossplace.com" target="_blank" rel="noopener" style={{ color: "#2563eb" }}>developer.tossplace.com</a> 로그인 → 앱 등록 → Access Key 발급 (Secret은 1회만 표시)<br/>2. 매장 대시보드 → 앱 사용 활성화 토글 ON</>
               : <>1. Sign in to <a href="https://developer.tossplace.com" target="_blank" rel="noopener" style={{ color: "#2563eb" }}>developer.tossplace.com</a> → register app → issue Access Key<br/>2. Merchant dashboard → enable app toggle</>}

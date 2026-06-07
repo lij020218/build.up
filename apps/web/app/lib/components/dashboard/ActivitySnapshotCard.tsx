@@ -183,7 +183,7 @@ export function ActivitySnapshotCard({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em",
-            textTransform: "uppercase" as const, color: "rgba(15,23,42,0.42)", marginBottom: "6px",
+            textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "6px",
             display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const,
           }}>
             <span>{ko ? "매출 흐름 · 최근 7일" : "Revenue flow · last 7 days"}</span>
@@ -213,7 +213,7 @@ export function ActivitySnapshotCard({
             )}
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" as const }}>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.55)", letterSpacing: "-0.005em" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--muted)", letterSpacing: "-0.005em" }}>
               {heroDateLabel}
             </span>
             <span style={{
@@ -450,7 +450,7 @@ export function ActivitySnapshotCard({
         display: "flex", alignItems: "center", gap: "12px",
         marginTop: "14px", paddingTop: "14px",
         borderTop: "1px solid rgba(15,23,42,0.05)",
-        fontSize: "11.5px", color: "rgba(15,23,42,0.5)",
+        fontSize: "11.5px", color: "var(--muted)",
         flexWrap: "wrap" as const,
       }}>
         <span>
@@ -563,7 +563,7 @@ export function ActivitySnapshotCard({
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: todayEntry ? "#1d3557" : "#191970", boxShadow: todayEntry ? "0 0 8px rgba(25,25,112,0.4)" : "0 0 8px rgba(25,25,112,0.3)" }} />
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--muted)" }}>
                         {isToday ? (ko ? "오늘" : "Today") : new Date(d.dailyDateInput + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long", day: "numeric" })}
                       </span>
                       {streak >= 3 && (
@@ -587,7 +587,7 @@ export function ActivitySnapshotCard({
                             {yesterdayDiff >= 0 ? "↑" : "↓"} {Math.abs(yesterdayDiff)}% {ko ? "어제 대비" : "vs yesterday"}
                           </span>
                         )}
-                        <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>
+                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>
                           {todayEntry.customers > 0 ? (ko ? `${todayEntry.customers}${userUnitSuffix} · ${avgTicketLabel} ${fmt(todayEntry.sales / todayEntry.customers)}` : `${todayEntry.customers} ${userKindEn} · ${avgTicketLabel} ${fmt(todayEntry.sales / todayEntry.customers)}`) : ""}
                         </span>
                         <button type="button" onClick={() => enterEdit(todayStr)} style={{ fontSize: "12px", fontWeight: 600, color: "#191970", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "auto" }}>{ko ? "수정" : "Edit"}</button>
@@ -717,7 +717,7 @@ export function ActivitySnapshotCard({
                           onChange={(event) => d.setDailySalesInput(event.target.value.replace(/[^0-9]/g, ""))}
                           placeholder="0"
                           style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 40px 10px 12px", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
-                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{salesUnit}</span>
+                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>{salesUnit}</span>
                       </div>
                       <div style={{ position: "relative" as const, flex: "0 0 90px" }}>
                         <input type="text" inputMode="numeric" value={d.dailyCustomersInput}
@@ -725,7 +725,7 @@ export function ActivitySnapshotCard({
                           placeholder="0"
                           aria-label={userKind}
                           style={{ width: "100%", fontSize: "16px", fontWeight: 650, padding: "10px 28px 10px 12px", borderRadius: "10px", border: "1px solid rgba(25,25,112,0.08)", background: "rgba(255,255,255,0.9)", color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, outline: "none" }} />
-                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(15,23,42,0.3)", fontWeight: 600 }}>{userUnitSuffix}</span>
+                        <span style={{ position: "absolute" as const, right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>{userUnitSuffix}</span>
                       </div>
                       <button type="button" onClick={() => {
                         d.handleAddDailyEntry();
@@ -750,7 +750,7 @@ export function ActivitySnapshotCard({
                         {ko ? "삭제" : "Delete"}
                       </button>
                       <button type="button" onClick={() => { d.setDailySalesInput(""); d.setDailyCustomersInput(""); d.setDailyDateInput(todayStr); setEditMode(false); }}
-                        style={{ fontSize: "11px", fontWeight: 600, color: "rgba(15,23,42,0.4)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
+                        style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
                         {ko ? "취소" : "Cancel"}
                       </button>
                     </div>

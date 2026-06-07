@@ -234,7 +234,7 @@ export function NotificationCenter({ d, ko }: Props) {
                   {ko ? "모두 읽음" : "Mark all read"}
                 </button>
               ) : (
-                <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.35)" }}>{ko ? "새 알림 없음" : "All read"}</span>
+                <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "새 알림 없음" : "All read"}</span>
               )}
             </div>
             {notifications.length === 0 ? (
@@ -245,7 +245,7 @@ export function NotificationCenter({ d, ko }: Props) {
                     <path d="M11 19.5c0 1.66 1.34 3 3 3s3-1.34 3-3" stroke="rgba(15,23,42,0.15)" strokeWidth="1.4" strokeLinecap="round" fill="none" />
                   </svg>
                 </div>
-                <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.3)", fontWeight: 500 }}>
+                <div style={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}>
                   {ko ? "새 알림이 없습니다" : "No notifications"}
                 </div>
               </div>
@@ -286,7 +286,7 @@ export function NotificationCenter({ d, ko }: Props) {
                             {n.urgency === "critical" ? (ko ? "긴급" : "URGENT") : n.urgency === "warning" ? (ko ? "주의" : "WARN") : "INFO"}
                           </span>
                         </div>
-                        <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "3px", lineHeight: 1.45, whiteSpace: "normal" }}>{n.body}</div>
+                        <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px", lineHeight: 1.45, whiteSpace: "normal" }}>{n.body}</div>
                       </div>
                     </button>
                   );

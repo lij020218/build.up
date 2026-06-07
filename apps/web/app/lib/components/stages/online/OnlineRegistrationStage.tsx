@@ -25,7 +25,7 @@ export function OnlineRegistrationStage() {
               <div style={{ fontSize: "20px", fontWeight: 720, letterSpacing: "-0.03em", color: "#0f172a" }}>{ko ? "사업자등록" : "Business Registration"}</div>
             </div>
           </div>
-          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+          <div style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.65 }}>
             {ko ? "사업자등록증은 모든 상거래의 출발점입니다. 스마트스토어·쿠팡 등 판매 플랫폼 입점, 세금계산서 발행, 사업용 통장 개설에 반드시 필요합니다." : "Business registration is the starting point for all commerce — required for platform onboarding, invoicing, and business banking."}
           </div>
         </div>
@@ -97,7 +97,7 @@ export function OnlineRegistrationStage() {
               <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#191970", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a", marginBottom: "2px" }}>{s.step}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)" }}>{s.detail}</div>
               </div>
             </div>
           ))}
@@ -109,14 +109,14 @@ export function OnlineRegistrationStage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
             <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.1)" }}>
               <div style={{ fontSize: "14px", fontWeight: 680, color: "#1d3557", marginBottom: "6px" }}>{ko ? "간이과세자" : "Simplified"}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
                 {ko ? "연매출 1억 400만원 이하 시 선택 가능. 부가세 면제(4,800만 미만) 또는 감면(1.5~4%). 세금계산서 발행 불가 (4,800만원 이하)." : "Available under ₩104M annual. VAT exempt (<₩48M) or reduced (1.5-4%). Cannot issue tax invoices under ₩48M."}
               </div>
               <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#1d3557", padding: "3px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.08)", display: "inline-block" }}>{ko ? "초기 창업자 추천" : "Recommended for starters"}</div>
             </div>
             <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.08)" }}>
               <div style={{ fontSize: "14px", fontWeight: 680, color: "#191970", marginBottom: "6px" }}>{ko ? "일반과세자" : "Standard"}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
                 {ko ? "연매출 1억 400만원 초과 또는 B2B 거래 시. 부가세 10% 납부. 세금계산서 발행 가능. 매입세액 공제 가능." : "Over ₩104M annual or B2B. 10% VAT. Can issue tax invoices. Input tax deductible."}
               </div>
               <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#191970", padding: "3px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.06)", display: "inline-block" }}>{ko ? "B2B · 고매출 시" : "For B2B / high revenue"}</div>
@@ -159,7 +159,7 @@ export function OnlineRegistrationStage() {
                 : "① Business registration → ② Business bank account → ③ Escrow service → ④ Telecom sales filing"}
             </div>
           </div>
-          <div style={{ fontSize: "14px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+          <div style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.65 }}>
             {ko ? "온라인으로 상품을 판매하려면 통신판매업 신고가 법적 의무입니다. 미신고 시 과태료 최대 1,000만원이며, 네이버 스마트스토어·쿠팡 입점 시 신고번호를 요구합니다." : "Legally required for all online sales. Up to ₩10M fine if unfiled. Smartstore and Coupang require the filing number."}
           </div>
         </div>
@@ -200,7 +200,7 @@ export function OnlineRegistrationStage() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="#7c3aed"/><path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{item.item}</div>
-                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)" }}>{item.detail}</div>
+                  <div style={{ fontSize: "11px", color: "var(--muted)" }}>{item.detail}</div>
                 </div>
               </div>
             ))}
@@ -210,7 +210,7 @@ export function OnlineRegistrationStage() {
         {/* 구매안전서비스 설명 */}
         <div style={{ margin: "0 24px 16px", padding: "16px", borderRadius: "14px", background: "rgba(124,58,237,0.03)", border: "1px solid rgba(124,58,237,0.06)" }}>
           <div style={{ fontSize: "13px", fontWeight: 680, color: "#7c3aed", marginBottom: "6px" }}>{ko ? "구매안전서비스(에스크로)란?" : "What is escrow service?"}</div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.6 }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
             {ko ? "소비자가 결제한 금액을 판매자에게 바로 전달하지 않고, 제3자(PG사)가 보관했다가 상품 수령 확인 후 정산하는 시스템입니다. 통신판매업 신고 시 필수이며, 아래 PG사 중 하나에 가입하면 자동 발급됩니다." : "A system where payment is held by a third party (PG) until the buyer confirms receipt. Required for telecom filing. Auto-issued when signing up with a PG provider below."}
           </div>
           <div style={{ display: "flex", gap: "6px", marginTop: "10px", flexWrap: "wrap" as const }}>
@@ -240,7 +240,7 @@ export function OnlineRegistrationStage() {
               <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 620, color: "#0f172a", marginBottom: "2px" }}>{s.step}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)" }}>{s.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)" }}>{s.detail}</div>
               </div>
             </div>
           ))}

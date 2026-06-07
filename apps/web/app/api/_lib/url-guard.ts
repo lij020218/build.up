@@ -41,6 +41,9 @@ export function isPrivateOrLoopback(hostname: string): boolean {
   // IPv6 — 단순 차단 (loopback, link-local, ULA)
   if (lower === "::1" || lower === "::") return true;
   if (lower.startsWith("fe80:") || lower.startsWith("fc") || lower.startsWith("fd")) return true;
+  // IPv4-mapped IPv6 (::ffff:127.0.0.1, 0:0:0:0:0:ffff:10.0.0.1 등)
+  if (lower.startsWith("::ffff:")) return isPrivateOrLoopback(lower.slice(7));
+  if (lower.startsWith("0:0:0:0:0:ffff:")) return isPrivateOrLoopback(lower.slice(15));
   return false;
 }
 

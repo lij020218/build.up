@@ -259,7 +259,7 @@ export function FundraisingReadinessStage() {
                 <div key={i} style={{ padding: "12px 14px", borderRadius: "12px", background: "white", border: `1px solid ${MIDNIGHT_BORDER}` }}>
                   <div style={{ fontSize: "13px", fontWeight: 700, color: MIDNIGHT, marginBottom: "4px" }}>{q.label}</div>
                   <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.55, marginBottom: "4px" }}>{q.hint}</div>
-                  <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.5)", fontFamily: "ui-monospace, SFMono-Regular, monospace" }}>{q.ex}</div>
+                  <div style={{ fontSize: "11.5px", color: "var(--muted)", fontFamily: "ui-monospace, SFMono-Regular, monospace" }}>{q.ex}</div>
                 </div>
               ))}
             </div>
@@ -474,7 +474,7 @@ export function FundraisingReadinessStage() {
                             marginBottom: "5px",
                           }}>{cLabel}</span>
                           <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>{p.name}</div>
-                          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>{p.organizer}</div>
+                          <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{p.organizer}</div>
                         </div>
                         <div style={{
                           padding: "4px 10px", borderRadius: "8px",
@@ -504,7 +504,7 @@ export function FundraisingReadinessStage() {
               </div>
 
               {recommendedPrograms.length === 0 && (
-                <div style={{ padding: "20px", textAlign: "center" as const, fontSize: "12.5px", color: "rgba(15,23,42,0.5)" }}>
+                <div style={{ padding: "20px", textAlign: "center" as const, fontSize: "12.5px", color: "var(--muted)" }}>
                   {ko ? "이 모드 매칭 프로그램 X — 다른 모드 시도" : "No matches — try another mode"}
                 </div>
               )}

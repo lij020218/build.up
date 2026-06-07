@@ -31,11 +31,14 @@ export async function POST(request: Request) {
   // UPDATE 는 service_role 만 RLS 허용 → admin 클라이언트로 취소 예약.
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
-  // 즉시 취소가 아니라 기간 종료 후 만료 (cancel_at_period_end)
+  // status='active' AND cancel_at_period_end=false 조건 필수 — 이미 취소 예약됐거나
+  // 만료된 구독을 덮어쓰는 의도치 않은 UPDATE 방지.
   const { error: updateErr } = await supabase
     .from("foundone_subscriptions")
     .update({ cancel_at_period_end: true })
-    .eq("user_id", auth.userId);
+    .eq("user_id", auth.userId)
+    .eq("status", "active")
+    .eq("cancel_at_period_end", false);
 
   if (updateErr) {
     console.error("[billing/cancel]", updateErr);

@@ -14,8 +14,12 @@ export function timingSafeEqualStr(
   const ab = Buffer.from(a, "utf8");
   const bb = Buffer.from(b, "utf8");
   if (ab.length !== bb.length) {
-    // 길이 노출 방지용 더미 비교 후 false (early-return 으로 길이를 누설하지 않음)
-    timingSafeEqual(ab, ab);
+    // self-comparison(ab,ab) 은 ab.length 를 timing 으로 노출 — max-pad 방식으로 수정.
+    // 더 짧은 버퍼를 max(len_a, len_b) 로 0-패딩 후 비교 → 길이 정보 타이밍 유출 차단.
+    const maxLen = Math.max(ab.length, bb.length);
+    const padA = Buffer.concat([ab, Buffer.alloc(maxLen - ab.length)]);
+    const padB = Buffer.concat([bb, Buffer.alloc(maxLen - bb.length)]);
+    timingSafeEqual(padA, padB); // 항상 false (길이 불일치); 그래도 상수시간으로 실행
     return false;
   }
   return timingSafeEqual(ab, bb);

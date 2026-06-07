@@ -295,7 +295,7 @@ export function FranchiseApplicationStage() {
                 ? "가맹은 시스템 구매입니다. 본사가 보여주는 매출 자료보다 *정보공개서 + 기존 가맹점주의 실제 증언* 이 진짜 신호입니다."
                 : "Franchising = buying a system. Real signal is in the disclosure + existing franchisees' actual stories — not HQ's revenue pitch."}
             </div>
-            <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+            <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
               {ko
                 ? "공정위가 14일 숙려기간을 의무화한 이유 — 가맹비 입금 전 사장님이 정보공개서를 충분히 읽고 결정할 시간을 강제로 확보하기 위함. 본사가 압박해도 신고 가능."
                 : "KFTC mandates the 14-day cool-off period specifically so you can review the disclosure BEFORE paying. HQ pressure is reportable."}
@@ -366,7 +366,7 @@ export function FranchiseApplicationStage() {
                 <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em" }}>
                   {ko ? "6단계 가맹 절차" : "6-Step Franchise Process"}
                 </div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginTop: "2px" }}>
+                <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
                   {ko
                     ? "각 단계를 마칠 때마다 체크하세요. 6개 모두 체크되면 다음 단계로 진행할 수 있어요."
                     : "Check each step as you complete it. All 6 done = stage complete."}
@@ -478,7 +478,7 @@ export function FranchiseApplicationStage() {
                       >
                         {step.title}
                       </div>
-                      <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
+                      <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
                         {step.detail}
                       </div>
                       {step.link && (
@@ -527,7 +527,7 @@ export function FranchiseApplicationStage() {
             <div style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", marginBottom: "4px", letterSpacing: "-0.02em" }}>
               {ko ? "정보공개서·계약서 핵심 확인 포인트" : "Disclosure / Contract Verify Checklist"}
             </div>
-            <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5, marginBottom: "14px" }}>
+            <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.5, marginBottom: "14px" }}>
               {ko
                 ? "빨간 점 = 반드시 / 주황 점 = 중요 / 회색 점 = 참고. 빨간 점 중 하나라도 미흡하면 계약 보류 권장."
                 : "Red = must-check, orange = important, gray = reference. Pause signing if any red is unclear."}
@@ -554,7 +554,7 @@ export function FranchiseApplicationStage() {
                       <div style={{ width: 8, height: 8, borderRadius: 4, background: dotColor, flexShrink: 0 }} />
                       <span style={{ fontSize: "13.5px", fontWeight: 640 }}>{cp.title[d.language]}</span>
                     </div>
-                    <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5, paddingLeft: "16px" }}>
+                    <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5, paddingLeft: "16px" }}>
                       {cp.description[d.language]}
                     </div>
                   </div>

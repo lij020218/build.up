@@ -196,7 +196,7 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
                 <div key={s.lab} style={{ padding: "12px 10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
                   <div style={{ fontSize: "18px", fontWeight: 780, color: MIDNIGHT }}>{s.num}</div>
                   <div style={{ fontSize: "11.5px", fontWeight: 640, color: "#0f172a", marginTop: "2px" }}>{s.lab}</div>
-                  <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{s.det}</div>
+                  <div style={{ fontSize: "10px", color: "var(--muted)" }}>{s.det}</div>
                 </div>
               ))}
             </div>
@@ -227,7 +227,7 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
           {/* 등록된 메뉴 리스트 */}
           {items.length > 0 && (
             <div style={{ marginTop: "16px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.5)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>
                 {ko ? `등록된 메뉴 ${items.length}개` : `${items.length} item${items.length === 1 ? "" : "s"}`}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -239,13 +239,13 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{it.name}</div>
-                          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px" }}>
+                          <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
                             {it.category && <>{it.category} · </>}
                             ₩{it.price.toLocaleString()} {ko ? "판매" : "sell"} · ₩{it.cost.toLocaleString()} {ko ? "원가" : "cost"} · {ratio.toFixed(0)}%
                             {ratioWarn && <span style={{ color: "#b64c4c", fontWeight: 700 }}> ⚠ {ko ? "원가율 높음" : "high cost"}</span>}
                           </div>
                           {it.notes && (
-                            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{it.notes}</div>
+                            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{it.notes}</div>
                           )}
                         </div>
                         <button
@@ -277,7 +277,7 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
           </div>
 
           {items.length === 0 ? (
-            <div style={{ padding: "20px", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: "13px" }}>
+            <div style={{ padding: "20px", textAlign: "center" as const, color: "var(--muted)", fontSize: "13px" }}>
               {ko ? "메뉴를 먼저 등록하세요 (1. 메뉴 추가 페이지)" : "Add menu items first (1. Add page)"}
             </div>
           ) : (
@@ -701,7 +701,7 @@ const bodyTitleStyle: React.CSSProperties = {
 
 const bodyTextStyle: React.CSSProperties = {
   fontSize: "13px",
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.65,
 };
 

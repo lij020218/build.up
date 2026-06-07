@@ -70,7 +70,7 @@ export function CustomerDiscoveryStage() {
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", lineHeight: 1.5, marginBottom: "8px" }}>
           {ko ? "스타트업의 42%는 \"시장이 필요로 하지 않는 제품\"을 만들어 실패합니다." : "42% of startups fail by building a product nobody needs."}
         </div>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.65 }}>
+        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.65 }}>
           {ko ? "코드를 한 줄도 쓰기 전에, 실제 사람과 대화해서 \"이 문제가 정말 돈이나 시간을 쓸 만큼 고통스러운지\" 확인해야 합니다. 이 과정을 건너뛰면 6개월 후 아무도 쓰지 않는 제품이 됩니다." : "Before writing a single line of code, talk to real people to confirm the pain is real enough to pay for. Skip this and you'll have a product nobody uses in 6 months."}
         </div>
       </div>
@@ -106,7 +106,7 @@ export function CustomerDiscoveryStage() {
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
               <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: `${f.color}10`, color: f.color, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "1px" }}>{f.name}</span>
-              <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.45, flex: 1 }}>{f.desc}</span>
+              <span style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.45, flex: 1 }}>{f.desc}</span>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={MIDNIGHT} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4, flexShrink: 0, marginTop: "3px" }}>
                 <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
                 <polyline points="15 3 21 3 21 9"/>
@@ -128,7 +128,7 @@ export function CustomerDiscoveryStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "AI로 인터뷰 스크립트 만들기" : "Create interview script with AI"}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "6px" }}>
             {ko ? "The Mom Test 원칙: 솔루션을 말하지 말고, 문제만 물어보세요. 아래 질문을 기반으로 AI가 업종에 맞는 스크립트를 만들어줍니다." : "The Mom Test: Don't pitch your solution — only ask about problems. AI will create an industry-specific script based on these questions."}
           </div>
         </div>
@@ -146,7 +146,7 @@ export function CustomerDiscoveryStage() {
           ]).map(item => (
             <div key={item.q} style={{ padding: "12px 14px", borderRadius: "12px", border: `1px solid ${item.color}12`, background: `${item.color}03` }}>
               <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "3px" }}>"{item.q}"</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{item.why}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{item.why}</div>
             </div>
           ))}
         </div>
@@ -265,14 +265,14 @@ export function CustomerDiscoveryStage() {
                   {ko ? "PDF 저장" : "Save PDF"}
                 </button>
               </div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", marginBottom: "10px" }}>{script.duration}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "10px" }}>{script.duration}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {(guideSelections["interview-expanded"] === "true" ? script.questions : script.questions?.slice(0, 5))?.map((q: {phase:string;question:string;purpose:string;followUp?:string}, i: number) => (
                   <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(25,25,112,0.03)", borderLeft: "3px solid rgba(25,25,112,0.15)" }}>
                     <div style={{ fontSize: "9px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "3px" }}>{q.phase}</div>
                     <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", lineHeight: 1.4 }}>{i + 1}. {q.question}</div>
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "3px" }}>{q.purpose}</div>
-                    {q.followUp && <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "2px" }}>{q.followUp}</div>}
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "3px" }}>{q.purpose}</div>
+                    {q.followUp && <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>{q.followUp}</div>}
                   </div>
                 ))}
                 {(script.questions?.length ?? 0) > 5 && (
@@ -329,7 +329,7 @@ export function CustomerDiscoveryStage() {
                       </svg>
                     )}
                   </div>
-                  <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{c.tip}</div>
+                  <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>{c.tip}</div>
                 </>
               );
               if (c.url) {
@@ -376,7 +376,7 @@ export function CustomerDiscoveryStage() {
               <div key={s.num} style={{ padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", textAlign: "center" as const }}>
                 <div style={{ fontSize: "18px", fontWeight: 780, color: MIDNIGHT }}>{s.num}</div>
                 <div style={{ fontSize: "11px", fontWeight: 640, color: "#0f172a" }}>{s.label}</div>
-                <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>{s.detail}</div>
+                <div style={{ fontSize: "10px", color: "var(--muted)" }}>{s.detail}</div>
               </div>
             ))}
           </div>
@@ -395,7 +395,7 @@ export function CustomerDiscoveryStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>3</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "AI로 인터뷰 결과를 분석하세요" : "Analyze results with AI"}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "6px" }}>
             {ko ? "인터뷰 노트를 AI에게 넘기면 반복 패턴, 핵심 고통, 초기 타깃 세그먼트를 자동 정리해줍니다." : "Pass your interview notes to AI — it auto-extracts repeated patterns, core pains, and initial target segments."}
           </div>
         </div>
@@ -485,7 +485,7 @@ export function CustomerDiscoveryStage() {
                       <span style={{ fontSize: "10px", fontWeight: 600, color: MIDNIGHT, background: "rgba(25,25,112,0.06)", padding: "2px 8px", borderRadius: "4px" }}>{p.frequency}</span>
                     </div>
                     {p.quotes?.map((q: string, qi: number) => (
-                      <div key={qi} style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", fontStyle: "italic", lineHeight: 1.4, marginTop: "3px" }}>"{q}"</div>
+                      <div key={qi} style={{ fontSize: "12px", color: "var(--muted)", fontStyle: "italic", lineHeight: 1.4, marginTop: "3px" }}>"{q}"</div>
                     ))}
                   </div>
                 ))}

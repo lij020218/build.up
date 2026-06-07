@@ -31,20 +31,20 @@ export function SourcingSetupStage() {
       <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "소싱 방법 비교" : "Sourcing Methods"}</div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "예산과 목표에 맞는 방법을 선택하세요" : "Choose based on your budget and goals"}</div>
+          <div style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "예산과 목표에 맞는 방법을 선택하세요" : "Choose based on your budget and goals"}</div>
         </div>
         <div style={{ padding: "0 22px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
           {sourcingMethods.map(m => (
             <div key={m.name} style={{ padding: "14px", borderRadius: "14px", border: `1px solid ${m.color}10`, background: `${m.color}03` }}>
               <div style={{ fontSize: "14px", fontWeight: 660, color: m.color, marginBottom: "4px" }}>{m.name}</div>
               <div style={{ fontSize: "12px", fontWeight: 650, color: "#0f172a", marginBottom: "6px" }}>{ko ? "초기 자본" : "Capital"}: {m.capital}</div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4, marginBottom: "4px" }}>
+              <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4, marginBottom: "4px" }}>
                 <span style={{ color: "#1d3557" }}>+</span> {m.pros}
               </div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4, marginBottom: "6px" }}>
+              <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4, marginBottom: "6px" }}>
                 <span style={{ color: "#b64c4c" }}>−</span> {m.cons}
               </div>
-              <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(15,23,42,0.35)" }}>{m.platforms}</div>
+              <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--muted)" }}>{m.platforms}</div>
             </div>
           ))}
         </div>
@@ -54,7 +54,7 @@ export function SourcingSetupStage() {
       <div style={{ borderRadius: "20px", border: "1px solid rgba(124,58,237,0.08)", background: "linear-gradient(180deg, rgba(124,58,237,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "상세페이지 구성 순서" : "Detail Page Structure"}</div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "전환율을 높이는 검증된 구성" : "Proven structure for higher conversion"}</div>
+          <div style={{ fontSize: "13px", color: "var(--muted)" }}>{ko ? "전환율을 높이는 검증된 구성" : "Proven structure for higher conversion"}</div>
         </div>
         <div style={{ padding: "0 22px 16px" }}>
           {(ko ? [
@@ -76,7 +76,7 @@ export function SourcingSetupStage() {
               <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: s.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.45)", lineHeight: 1.4 }}>{s.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{s.detail}</div>
               </div>
             </div>
           ))}
@@ -102,7 +102,7 @@ export function SourcingSetupStage() {
           ].map(t => (
             <div key={t.label} style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(25,25,112,0.03)" }}>
               <div style={{ fontSize: "10px", fontWeight: 650, color: "#1d3557", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "3px" }}>{t.label}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.4 }}>{t.items}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{t.items}</div>
             </div>
           ))}
         </div>

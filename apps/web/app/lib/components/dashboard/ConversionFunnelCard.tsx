@@ -218,7 +218,7 @@ function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Prop
                 ? "스타트업 · 전환율"
                 : "Startup · Conversion"}
           </div>
-          <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)" }}>
+          <div style={{ fontSize: 11, color: "var(--muted)" }}>
             {mode === "commerce"
               ? ko
                 ? "방문 → 구매 funnel"
@@ -257,7 +257,7 @@ function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Prop
         >
           {overallConv.toFixed(1)}%
         </div>
-        <div style={{ fontSize: 12, color: "rgba(15,23,42,0.55)" }}>
+        <div style={{ fontSize: 12, color: "var(--muted)" }}>
           {ko ? "전체 전환율 (1주)" : "Overall (1w)"}
         </div>
         {wowDelta != null && (
@@ -573,7 +573,7 @@ const sampleBadgeStyle: React.CSSProperties = {
   padding: "3px 8px",
   borderRadius: 999,
   background: "rgba(15,23,42,0.06)",
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
 };
 
 const emptyCTAStyle: React.CSSProperties = {
@@ -640,7 +640,7 @@ const footerStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   fontSize: 11,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.5,
   padding: "8px 12px",
   borderRadius: 9,

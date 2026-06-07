@@ -300,7 +300,7 @@ const statusPill: React.CSSProperties = {
 };
 const helperStyle: React.CSSProperties = {
   fontSize: "12px",
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.55,
   fontWeight: 500,
 };

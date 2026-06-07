@@ -470,7 +470,7 @@ export function InsightStack({ related, ko }: { related: Omit<Hero, "relatedSpec
           borderRadius: "10px",
           border: "1px solid rgba(15,23,42,0.06)",
           background: open ? "rgba(15,23,42,0.02)" : "rgba(15,23,42,0.01)",
-          color: "rgba(15,23,42,0.55)",
+          color: "var(--muted)",
           fontSize: "12px",
           fontWeight: 600,
           cursor: "pointer",
@@ -538,7 +538,7 @@ export function InsightStack({ related, ko }: { related: Omit<Hero, "relatedSpec
                     {meta.label}
                   </span>
                   {spec.sourceLabel && (
-                    <span style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)" }}>
+                    <span style={{ fontSize: "10px", color: "var(--muted)" }}>
                       · {spec.sourceLabel}
                     </span>
                   )}
@@ -559,7 +559,7 @@ export function InsightStack({ related, ko }: { related: Omit<Hero, "relatedSpec
                   <div style={{
                     fontSize: "12.5px",
                     fontWeight: 500,
-                    color: "rgba(15,23,42,0.55)",
+                    color: "var(--muted)",
                     lineHeight: 1.5,
                     marginBottom: "10px",
                   }}>

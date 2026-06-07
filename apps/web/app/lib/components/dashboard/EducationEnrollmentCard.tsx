@@ -147,7 +147,7 @@ export function EducationEnrollmentCard({ ko, industryCategoryId }: Props) {
           <span style={iconBadge}><GraduationCap size={14} strokeWidth={2.2} /></span>
           <div style={labelStyle}>{ko ? "재등록 + 학생 잔존 · 교육" : "Re-enrollment · Education"}</div>
         </header>
-        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "var(--muted)", fontSize: 13 }}>
           {ko ? "학생 데이터를 입력하면 재등록 D-14 + cohort 잔존율 분석이 시작됩니다 (내 가게 > 회원 관리)" : "Enter student data to unlock re-enrollment analysis"}
         </div>
       </article>
@@ -195,7 +195,7 @@ export function EducationEnrollmentCard({ ko, industryCategoryId }: Props) {
       {/* ② 대비 — cohort 4-칸 (한국 학원 long retention 강조) */}
       <div>
         <div style={{
-          fontSize: 11, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.06em",
+          fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em",
           textTransform: "uppercase" as const, marginBottom: 8,
           display: "flex", alignItems: "center", gap: 6,
         }}>
@@ -295,13 +295,13 @@ function CohortBox({ days, cohort, threshold, ko, label }: {
       background: "rgba(15,23,42,0.02)", border: "1px solid rgba(25,25,112,0.08)",
       textAlign: "center" as const,
     }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.04em", marginBottom: 3 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.04em", marginBottom: 3 }}>
         {label ?? (ko ? `${days}일` : `${days}d`)}
       </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: c, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
         {cohort.total >= 3 ? `${cohort.rate}%` : "—"}
       </div>
-      <div style={{ fontSize: 9.5, color: "rgba(15,23,42,0.5)", marginTop: 1 }}>
+      <div style={{ fontSize: 9.5, color: "var(--muted)", marginTop: 1 }}>
         {cohort.total > 0 ? `${cohort.stillActive}/${cohort.total}` : (ko ? "—" : "—")}
       </div>
     </div>
@@ -346,7 +346,7 @@ const labelStyle: React.CSSProperties = {
 
 const footerStyle: React.CSSProperties = {
   display: "flex", alignItems: "center",
-  fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.5,
+  fontSize: 11, color: "var(--muted)", lineHeight: 1.5,
   padding: "8px 12px", borderRadius: 9,
   background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
 };

@@ -202,7 +202,7 @@ export default function OperationalDashboard({ d }: Props) {
             <div style={{ fontSize: "13px", fontWeight: 670, color: "#0f172a", letterSpacing: "-0.01em" }}>
               {ko ? "월 비용을 입력하면 손익 분석이 시작됩니다" : "Enter monthly costs to unlock P&L analysis"}
             </div>
-            <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", marginTop: "2px" }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
               {(() => {
                 const ef = d.businessCtx.expenseFields;
                 const ing = ef?.find((f) => f.fieldKey === "ingredients")?.label ?? { ko: "재료비", en: "materials" };
@@ -275,7 +275,7 @@ export default function OperationalDashboard({ d }: Props) {
           <div style={{ width: "min(520px, 90vw)", maxHeight: "85vh", overflowY: "auto", borderRadius: "28px", background: "#fff", boxShadow: "0 32px 80px rgba(0,0,0,0.18)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px 0" }}>
               <div />
-              <button type="button" onClick={() => setShowCalendar(false)} style={{ background: "rgba(25,25,112,0.05)", border: "none", borderRadius: "999px", width: "32px", height: "32px", cursor: "pointer", fontSize: "16px", color: "rgba(15,23,42,0.5)" }}>✕</button>
+              <button type="button" onClick={() => setShowCalendar(false)} style={{ background: "rgba(25,25,112,0.05)", border: "none", borderRadius: "999px", width: "32px", height: "32px", cursor: "pointer", fontSize: "16px", color: "var(--muted)" }}>✕</button>
             </div>
             <div style={{ padding: "0 0 24px" }}>
               <RevenueCalendar

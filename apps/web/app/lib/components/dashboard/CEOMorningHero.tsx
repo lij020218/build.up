@@ -1078,7 +1078,7 @@ export function CEOMorningHero({ d }: Props) {
             border: "1px dashed rgba(25,25,112,0.10)",
           }}>
             <BarChart3 size={18} strokeWidth={1.6} style={{ marginBottom: "6px", opacity: 0.5 }} />
-            <div style={{ fontSize: "12.5px", fontWeight: 650, color: "rgba(15,23,42,0.5)" }}>
+            <div style={{ fontSize: "12.5px", fontWeight: 650, color: "var(--muted)" }}>
               {ko ? "매출 3일 이상 입력하면 추세가 보입니다" : "Log 3+ days to see trend"}
             </div>
             <div style={{ fontSize: "11px", fontWeight: 500, color: PALETTE.MUTED_45, marginTop: "3px" }}>

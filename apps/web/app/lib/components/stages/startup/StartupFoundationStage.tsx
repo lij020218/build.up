@@ -70,7 +70,7 @@ export function StartupFoundationStage() {
         <div style={{ fontSize: "17px", fontWeight: 720, color: "#0f172a", lineHeight: 1.4, marginBottom: "10px" }}>
           {ko ? "먼저 만들고, 법인은 나중에." : "Build first. Incorporate later."}
         </div>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.55)", lineHeight: 1.7, marginBottom: "12px" }}>
+        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.7, marginBottom: "12px" }}>
           {ko
             ? "Facebook은 하버드 기숙사에서 런칭한 후 6개월 뒤에 법인을 세웠습니다. 배달의민족은 앱 출시 5개월 후에야 회사를 설립했습니다. Stripe는 \"노트북 줘봐\"라며 직접 설치해주는 것부터 시작했습니다. 지금 당장 필요한 건 법인이 아니라, 해결할 문제와 만들 제품입니다."
             : "Facebook launched 6 months before incorporating. Baemin released their app 5 months before founding the company. Stripe started by saying \"give me your laptop\" and installing for users manually. What you need now isn't a corporation — it's a problem to solve and a product to build."}
@@ -85,7 +85,7 @@ export function StartupFoundationStage() {
           ]).map(q => (
             <div key={q.author} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)", borderLeft: "3px solid rgba(25,25,112,0.15)" }}>
               <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55, fontStyle: "italic" }}>{q.quote}</div>
-              <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)", marginTop: "4px", fontWeight: 600 }}>— {q.author}</div>
+              <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px", fontWeight: 600 }}>— {q.author}</div>
             </div>
           ))}
         </div>
@@ -102,7 +102,7 @@ export function StartupFoundationStage() {
             <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: MIDNIGHT, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700 }}>1</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "해결할 문제를 한 문장으로 정의하세요" : "Define the problem in one sentence"}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginTop: "6px" }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginTop: "6px" }}>
             {ko ? "Elon Musk는 로켓 비용이 비싼 이유를 원자재 가격까지 분해했습니다 (재료비 = 가격의 2%). Peter Thiel은 \"대부분의 사람들이 동의하지 않는, 당신이 아는 중요한 진실은 무엇인가?\"라고 묻습니다. 이 질문에 답하세요." : "Musk broke down why rockets are expensive to raw materials (2% of price). Thiel asks: \"What important truth do few people agree with you on?\" Answer this question."}
           </div>
         </div>
@@ -121,7 +121,7 @@ export function StartupFoundationStage() {
                 {iconSvg(s.icon, MIDNIGHT)}
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{s.title}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.desc}</div>
+                  <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{s.desc}</div>
                 </div>
               </div>
             ))}
@@ -197,7 +197,7 @@ export function StartupFoundationStage() {
                 ? (ko ? "✓ 확인됨" : "✓ Confirmed")
                 : (ko ? "확인" : "Confirm")}
             </button>
-            <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)" }}>
+            <span style={{ fontSize: "11px", color: "var(--muted)" }}>
               {ko ? "10자 이상 입력 후 확인을 누르면 체크리스트에 자동 반영됩니다" : "Type 10+ characters and confirm to auto-check the task"}
             </span>
           </div>

@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     const result = await analyzeInterviews(body, { apiKey });
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: `분석 실패: ${error instanceof Error ? error.message : String(error)}` }, { status: 503 });
+    console.error("[ai/interview/analyze] 분석 실패:", error);
+    return NextResponse.json({ error: "인터뷰 분석에 실패했습니다. 잠시 후 다시 시도해 주세요." }, { status: 503 });
   }
 }

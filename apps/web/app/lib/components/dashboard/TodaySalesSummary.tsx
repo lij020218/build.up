@@ -30,7 +30,7 @@ export function TodaySalesSummary({ d, ko, fmt }: { d: DashboardHook; ko: boolea
 
   return (
     <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-      <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.4)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
+      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
         {ko ? "오늘 상품 판매" : "Today's product sales"}
       </div>
 
@@ -53,13 +53,13 @@ export function TodaySalesSummary({ d, ko, fmt }: { d: DashboardHook; ko: boolea
               );
             })}
           </div>
-          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.35)" }}>
+          <div style={{ fontSize: "11px", color: "var(--muted)" }}>
             {ko ? `총 ${totalSold}개 판매` : `${totalSold} total sold`}
           </div>
         </>
       ) : (
         <div style={{ padding: "20px 16px", borderRadius: "14px", background: "rgba(15,23,42,0.015)", border: "1px solid rgba(15,23,42,0.04)", textAlign: "center" as const }}>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.3)", lineHeight: 1.5 }}>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.5 }}>
             {ko ? "상품별 매출을 입력하면\n판매 수량이 여기에 표시됩니다" : "Product sales will\nappear here"}
           </div>
         </div>

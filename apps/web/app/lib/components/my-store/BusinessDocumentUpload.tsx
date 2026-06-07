@@ -18,6 +18,7 @@
 
 import { useRef, useState } from "react";
 import { Upload, Check, AlertCircle, Loader2, FileText, ExternalLink, Trash2 } from "lucide-react";
+import { ConfirmModal } from "../ConfirmModal";
 import { useStoreInfoStore, type BusinessDocumentKind } from "../../stores/store-info-store";
 import {
   uploadBusinessDocument,
@@ -48,6 +49,7 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const existing = documents.filter((d) => d.kind === kind);
   const acceptStr = ALLOWED_DOC_TYPES.join(",");
@@ -72,16 +74,10 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
     }
   };
 
-  const handleDelete = async (docId: string) => {
+  const handleDelete = (docId: string) => {
     const doc = documents.find((d) => d.id === docId);
     if (!doc) return;
-    if (!window.confirm(ko ? `${doc.filename} 을 삭제하시겠습니까?` : `Delete ${doc.filename}?`)) return;
-    try {
-      await deleteBusinessDocument(doc);
-    } catch (err) {
-      console.warn("[BusinessDocumentUpload] storage delete error (continuing):", err);
-    }
-    removeDoc(docId);
+    setDeleteTarget(docId);
   };
 
   const handleView = async (docId: string) => {
@@ -98,7 +94,25 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
     }
   };
 
+  const deleteDoc = existing.find((d) => d.id === deleteTarget);
+
   return (
+    <>
+    <ConfirmModal
+      open={!!deleteTarget}
+      title={ko ? "파일 삭제" : "Delete file"}
+      message={deleteDoc ? (ko ? `${deleteDoc.filename} 을 삭제하시겠습니까?` : `Delete ${deleteDoc.filename}?`) : ""}
+      confirmLabel={ko ? "삭제" : "Delete"}
+      cancelLabel={ko ? "취소" : "Cancel"}
+      danger
+      onConfirm={async () => {
+        if (!deleteDoc) { setDeleteTarget(null); return; }
+        try { await deleteBusinessDocument(deleteDoc); } catch (err) { console.warn("[BusinessDocumentUpload] storage delete error:", err); }
+        removeDoc(deleteDoc.id);
+        setDeleteTarget(null);
+      }}
+      onCancel={() => setDeleteTarget(null)}
+    />
     <div style={{
       background: "white",
       borderRadius: 14,
@@ -126,7 +140,7 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
             )}
           </div>
           {hint && (
-            <div style={{ fontSize: 12, color: "rgba(15,23,42,0.55)", lineHeight: 1.5, marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5, marginTop: 2 }}>
               {hint}
             </div>
           )}
@@ -153,7 +167,7 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
             ? <><Loader2 size={13} className="spin" /> {ko ? "업로드 중..." : "Uploading..."}</>
             : <><Upload size={13} strokeWidth={2} /> {ko ? (multiple || existing.length === 0 ? "파일 선택" : "이미 업로드됨") : (multiple || existing.length === 0 ? "Upload" : "Uploaded")}</>}
         </button>
-        <span style={{ fontSize: 11, color: "rgba(15,23,42,0.45)" }}>
+        <span style={{ fontSize: 11, color: "var(--muted)" }}>
           {ko ? "PDF·JPG·PNG, 최대 10MB" : "PDF/JPG/PNG, max 10MB"}
         </span>
       </div>
@@ -194,7 +208,7 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden" as const, textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
                   {doc.filename}
                 </div>
-                <div style={{ fontSize: 10.5, color: "rgba(15,23,42,0.5)", marginTop: 1 }}>
+                <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 1 }}>
                   {new Date(doc.uploadedAt).toLocaleDateString(ko ? "ko-KR" : "en-US")}
                   {doc.sizeBytes && ` · ${(doc.sizeBytes / 1024).toFixed(0)} KB`}
                 </div>
@@ -235,5 +249,6 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
         .spin { animation: spin 1s linear infinite; }
       `}</style>
     </div>
+    </>
   );
 }

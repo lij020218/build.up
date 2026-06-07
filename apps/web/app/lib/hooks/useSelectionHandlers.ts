@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { MutableRefObject } from "react";
 import {
   buildRoadmapState,
@@ -139,6 +140,9 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
   // (needed for resetDemo: reset selected guide / contract fields stored in ai-store)
   // We use getState() in resetDemo to avoid reactive subscription overhead
 
+  // ── 진행 초기화 확인 모달 상태 ────────────────────────────────────────────
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleIndustryContinue = () => {
@@ -262,14 +266,12 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     window.location.assign("/auth"); // hard reload — login도 동일 패턴 (auth/page.tsx:112)
   };
 
-  const resetDemo = async () => {
-    const confirmed = window.confirm(
-      language === "ko"
-        ? "데모 진행 상태를 정말 초기화할까요? 현재 저장된 홈 화면과 서버 데이터에도 바로 반영됩니다."
-        : "Reset the demo progress? This will immediately update both your home screen and saved server state."
-    );
+  /** 진행 초기화 버튼 클릭 → 확인 모달 표시 */
+  const resetDemo = () => setResetConfirmOpen(true);
 
-    if (!confirmed) return;
+  /** 모달 '확인' 클릭 시 실제 초기화 실행 */
+  const executeResetDemo = async () => {
+    setResetConfirmOpen(false);
 
     // ── ⓿ Reset race-condition 차단 (가장 먼저, 동기적) ────────────────────
     //  setTimeout 콜백이 fire 할 때 isResettingRef.current 를 검사해 saveRoadmapState
@@ -571,5 +573,8 @@ export function useSelectionHandlers(deps: SelectionHandlersDeps) {
     handleLocationContinue,
     handleSignOut,
     resetDemo,
+    resetConfirmOpen,
+    onResetConfirm: executeResetDemo,
+    onResetCancel: () => setResetConfirmOpen(false),
   };
 }

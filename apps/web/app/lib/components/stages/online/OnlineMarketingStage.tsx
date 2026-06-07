@@ -27,7 +27,7 @@ export function OnlineMarketingStage() {
             <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#03C75A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "13px", fontWeight: 700 }}>N</div>
             <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a" }}>{ko ? "네이버 쇼핑 SEO 최적화" : "Naver Shopping SEO"}</span>
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>{ko ? "온라인 매출의 60%+가 검색에서 시작됩니다. 첫 1개월이 노출 순위를 결정합니다." : "60%+ of online sales start from search. The first month determines your ranking."}</div>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>{ko ? "온라인 매출의 60%+가 검색에서 시작됩니다. 첫 1개월이 노출 순위를 결정합니다." : "60%+ of online sales start from search. The first month determines your ranking."}</div>
         </div>
         <div style={{ padding: "0 22px 16px", display: "grid", gap: "6px" }}>
           {(ko ? [
@@ -45,7 +45,7 @@ export function OnlineMarketingStage() {
           ]).map(s => (
             <div key={s.title} style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(3,199,90,0.03)", border: "1px solid rgba(3,199,90,0.06)" }}>
               <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{s.title}</div>
-              <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{s.detail}</div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{s.detail}</div>
             </div>
           ))}
         </div>
@@ -55,7 +55,7 @@ export function OnlineMarketingStage() {
       <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "첫 광고 캠페인 세팅" : "First Ad Campaign Setup"}</div>
-          <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6 }}>{ko ? "초기 2주는 데이터 수집 기간. 일 5,000~10,000원부터 시작하세요." : "First 2 weeks are data collection. Start at ₩5-10K/day."}</div>
+          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6 }}>{ko ? "초기 2주는 데이터 수집 기간. 일 5,000~10,000원부터 시작하세요." : "First 2 weeks are data collection. Start at ₩5-10K/day."}</div>
         </div>
         <div style={{ padding: "0 22px 16px", display: "grid", gap: "8px" }}>
           {(ko ? [
@@ -71,7 +71,7 @@ export function OnlineMarketingStage() {
               <div style={{ padding: "3px 8px", borderRadius: "6px", background: `${p.color}10`, color: p.color, fontSize: "10px", fontWeight: 650, whiteSpace: "nowrap" as const, flexShrink: 0, marginTop: "2px" }}>{p.budget}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "2px" }}>{p.platform}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{p.desc}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{p.desc}</div>
               </div>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "4px" }}><path d="M3 11L11 3M11 3H6M11 3V8" stroke="rgba(15,23,42,0.2)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </a>
@@ -82,7 +82,7 @@ export function OnlineMarketingStage() {
       {/* 리뷰 전략 */}
       <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "8px" }}>{ko ? "초기 리뷰 확보 전략" : "Early Review Strategy"}</div>
-        <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginBottom: "10px" }}>{ko ? "리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다." : "Products with 0 reviews get 80% fewer clicks. First 10 reviews are decisive."}</div>
+        <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, marginBottom: "10px" }}>{ko ? "리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다." : "Products with 0 reviews get 80% fewer clicks. First 10 reviews are decisive."}</div>
         <div style={{ display: "grid", gap: "6px" }}>
           {(ko ? [
             { method: "체험단 모집 (소규모)", detail: "블로그 체험단 3~5명. 비용: 제품 원가 + 배송비. 네이버 블로그 리뷰 = 검색 노출 직결", tip: "무료" },
@@ -96,7 +96,7 @@ export function OnlineMarketingStage() {
             <div key={r.method} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{r.method}</div>
-                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{r.detail}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>{r.detail}</div>
               </div>
               <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.08)", color: "#191970", whiteSpace: "nowrap" as const, flexShrink: 0, alignSelf: "flex-start" }}>{r.tip}</span>
             </div>

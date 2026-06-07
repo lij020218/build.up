@@ -91,7 +91,7 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   if (loading) {
     return (
       <main style={pageStyle}>
-        <div style={{ ...cardStyle, textAlign: "center", color: "rgba(15,23,42,0.5)" }}>
+        <div style={{ ...cardStyle, textAlign: "center", color: "var(--muted)" }}>
           {ko ? "직원 정보 불러오는 중…" : "Loading staff info…"}
         </div>
       </main>
@@ -189,7 +189,7 @@ const eyebrowStyle: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: 14,
   textAlign: "center",
 };
@@ -206,7 +206,7 @@ const titleStyle: React.CSSProperties = {
 
 const subtitleStyle: React.CSSProperties = {
   fontSize: 14,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.65,
   textAlign: "center",
   margin: "8px 0 22px",
@@ -263,7 +263,7 @@ const tileTitle: React.CSSProperties = {
 
 const tileDesc: React.CSSProperties = {
   fontSize: 11.5,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.5,
 };
 

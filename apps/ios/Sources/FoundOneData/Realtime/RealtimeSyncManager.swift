@@ -55,7 +55,8 @@ public final class RealtimeSyncManager {
         //   stage_decisions 는 user_id 컬럼이 없어 user_id 필터 구독 불가 → 대신 roadmaps.updated_at 을
         //   양쪽(웹 saveRoadmapState / iOS RoadmapDecisionsRepository.upsert)에서 bump 하여
         //   roadmaps(user_id 필터) 구독 하나로 로드맵 변경을 안전하게 수신.
-        for table in ["user_store_data", "business_profiles", "roadmaps"] {
+        // coaching_history 포함 — 웹에서 저장한 코칭 일지가 iOS 에 즉시 반영되게.
+        for table in ["user_store_data", "business_profiles", "roadmaps", "coaching_history"] {
             let sub = ch.onPostgresChange(
                 AnyAction.self,
                 schema: "public",

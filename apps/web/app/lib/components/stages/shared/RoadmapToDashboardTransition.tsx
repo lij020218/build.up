@@ -260,7 +260,7 @@ const footerStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   fontSize: 11,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   lineHeight: 1.5,
   padding: "8px 12px",
   borderRadius: 9,

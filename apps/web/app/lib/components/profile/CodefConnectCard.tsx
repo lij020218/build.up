@@ -261,11 +261,11 @@ function CodefConnectCardLive({ ko }: { ko: boolean }) {
                   <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1d3557", boxShadow: "0 0 6px rgba(25,25,112,0.5)" }} />
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{ko ? "연결됨" : "Connected"}</span>
                 </div>
-                <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", fontFamily: "monospace" }}>
+                <span style={{ fontSize: "11px", color: "var(--muted)", fontFamily: "monospace" }}>
                   {status?.businessNumberMask}
                 </span>
               </div>
-              <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.55)" }}>
+              <div style={{ fontSize: "11.5px", color: "var(--muted)" }}>
                 {ko ? `최근 30일 카드매출 ${status?.salesCount30d}건` : `Last 30d: ${status?.salesCount30d}`}
               </div>
               {msg && (
@@ -339,15 +339,15 @@ function CodefWizard({ ko, onClose, onSuccess }: { ko: boolean; onClose: () => v
       }}>
         <div style={{ padding: "22px 24px 14px", borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
           <div style={{ display: "flex" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               {ko ? "10개 카드사 연결" : "Connect 10 Card Cos"}
             </div>
-            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "rgba(15,23,42,0.4)", fontSize: "20px", padding: 0 }}>×</button>
+            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: "20px", padding: 0 }}>×</button>
           </div>
           <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginTop: "6px", letterSpacing: "-0.02em" }}>
             {ko ? "사업자 + 카드사 입금계좌 1개만" : "Business + 1 card co. deposit account"}
           </div>
-          <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", marginTop: "8px", lineHeight: 1.55 }}>
+          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "8px", lineHeight: 1.55 }}>
             {ko
               ? "여신금융협회가 사업자번호 + 대표자 생년월일 + 카드사 입금계좌가 일치하면 10개 카드사 전체 매출을 자동으로 등록해 줍니다. 캐시노트와 같은 흐름이에요."
               : "Korean Credit Finance Assoc. auto-registers all 10 card cos when business number + birthday + 1 deposit account match."}

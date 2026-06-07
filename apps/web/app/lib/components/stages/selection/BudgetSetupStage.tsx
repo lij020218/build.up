@@ -443,7 +443,7 @@ export function BudgetSetupStage() {
             {/* ── 운영 모드 선택 (스타트업 전용) ── */}
             {isStartup && (
               <div style={{ marginBottom: "16px" }}>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.04em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase" as const, marginBottom: "8px" }}>
                   {ko ? "운영 모드 — 비용 추정용" : "Operating mode — for cost estimate"}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
@@ -471,7 +471,7 @@ export function BudgetSetupStage() {
                         }}>
                           {mode.label}
                         </div>
-                        <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>
+                        <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>
                           {mode.desc}
                         </div>
                       </button>

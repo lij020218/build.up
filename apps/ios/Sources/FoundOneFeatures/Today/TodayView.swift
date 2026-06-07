@@ -170,8 +170,8 @@ public struct TodayView: View {
                     onManage: { showTeamSheet = true }
                 )
 
-                // 업종 핵심 (외식 → 원가율 / 스타트업 → 전환율·CashZero / 미용 → 예약 …)
-                IndustryFocusCard(mock: mock)
+                // 업종 핵심 (외식→원가율 / 소매→SellThrough / 피트니스→Retention / 교육→재등록 / 미용→예약 …)
+                IndustryFocusCard(mock: mock, members: realMembers, inventory: realInventoryItems)
 
                 // 스타트업 핵심 지표 점수판 (런웨이·순burn·성장률·ARR/직원·총이익률·Burn Multiple, 전부 실데이터)
                 if mock.category == .startupTech {

@@ -93,13 +93,13 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
           <div style={title}>{ko ? "100명까지의 여정" : "Path to 100 Customers"}</div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", fontWeight: 650 }}>
+          <div style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 650 }}>
             {ko ? "목표 일수" : "Target days"}
           </div>
           <div style={{ fontSize: "18px", fontWeight: 700, color: "#191970" }}>
             {playbook.targetDays}{ko ? "일" : "d"}
             {daysSinceLaunch >= 0 && (
-              <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginLeft: "6px", fontWeight: 500 }}>
+              <span style={{ fontSize: "11px", color: "var(--muted)", marginLeft: "6px", fontWeight: 500 }}>
                 / D+{daysSinceLaunch}
               </span>
             )}
@@ -110,7 +110,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
       {/* 고객 수 입력 + 진행률 */}
       <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.06)", marginBottom: "14px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(15,23,42,0.5)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ fontSize: "12px", fontWeight: 650, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             {ko ? "지금까지 확보한 고객" : "Customers so far"}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -146,7 +146,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
             transition: "width 0.4s ease",
           }} />
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px", fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px", fontSize: "11px", color: "var(--muted)" }}>
           <span>{currentCustomerCount} / 100 {ko ? "명" : "customers"}</span>
           <span style={{ color: "#191970", fontWeight: 650 }}>
             {ko ? "현재 단계:" : "Current phase:"} {currentPhase.name[ko ? "ko" : "en"]}
@@ -182,7 +182,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
         <div>
           {/* 전체 진행률 바 */}
           <div style={{ marginBottom: "14px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "rgba(15,23,42,0.5)", marginBottom: "4px", fontWeight: 650 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--muted)", marginBottom: "4px", fontWeight: 650 }}>
               <span>{ko ? "전체 진행률" : "Overall progress"}</span>
               <span>{Math.round(progressRatio * 100)}%</span>
             </div>
@@ -223,7 +223,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                     <div style={{ fontSize: "13px", fontWeight: 660, color: "#0f172a" }}>
                       {phase.name[ko ? "ko" : "en"]}
                     </div>
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "1px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "1px" }}>
                       {phase.description[ko ? "ko" : "en"]}
                     </div>
                   </div>
@@ -270,7 +270,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px", lineHeight: 1.5 }}>
+                          <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", lineHeight: 1.5 }}>
                             {tac.description[ko ? "ko" : "en"]}
                           </div>
                         </div>
@@ -367,7 +367,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
 
           {/* 코드 리스트 */}
           {promoCodes.length === 0 ? (
-            <div style={{ padding: "24px", textAlign: "center", fontSize: "12px", color: "rgba(15,23,42,0.5)" }}>
+            <div style={{ padding: "24px", textAlign: "center", fontSize: "12px", color: "var(--muted)" }}>
               {ko ? "아직 발급한 쿠폰/초대코드가 없습니다." : "No codes issued yet."}
             </div>
           ) : (
@@ -437,11 +437,11 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                     </div>
                   </div>
                   {code.description && (
-                    <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginBottom: "4px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>
                       {code.description}
                     </div>
                   )}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", color: "var(--muted)" }}>
                     <span style={{ fontWeight: 650 }}>
                       {code.usageCount}{code.usageLimit > 0 ? ` / ${code.usageLimit}` : ""} {ko ? "사용" : "used"}
                     </span>
@@ -480,7 +480,7 @@ const eyebrow: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15,23,42,0.4)",
+  color: "var(--muted)",
   marginBottom: "2px",
 };
 
@@ -497,7 +497,7 @@ const tabBtn: React.CSSProperties = {
   padding: "8px",
   fontSize: "12px",
   fontWeight: 620,
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
   background: "transparent",
   border: "none",
   borderRadius: "8px",

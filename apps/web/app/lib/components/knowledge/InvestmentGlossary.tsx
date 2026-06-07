@@ -94,7 +94,7 @@ export function InvestmentGlossary({ ko }: Props) {
                       <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(182,76,76,0.06)", color: "#b64c4c" }}>KR</span>
                     )}
                   </div>
-                  <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>
+                  <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.4 }}>
                     {ko ? term.shortDef.ko : term.shortDef.en}
                   </div>
                 </div>
@@ -137,7 +137,7 @@ const card: React.CSSProperties = {
   border: "1px solid rgba(15,23,42,0.05)",
   boxShadow: "0 2px 12px rgba(15,23,42,0.03), 0 1px 0 rgba(255,255,255,0.8) inset",
 };
-const eyebrow: React.CSSProperties = { fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(15,23,42,0.4)" };
+const eyebrow: React.CSSProperties = { fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)" };
 const title: React.CSSProperties = { fontSize: "18px", fontWeight: 740, letterSpacing: "-0.03em", color: "#0f172a", lineHeight: 1.2 };
 const searchInput: React.CSSProperties = {
   width: "100%", padding: "10px 14px", borderRadius: "12px", border: "1.5px solid rgba(15,23,42,0.06)",

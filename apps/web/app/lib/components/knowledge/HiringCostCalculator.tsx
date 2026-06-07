@@ -78,7 +78,7 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
           style={inputStyle}
           placeholder={inputMode === "annual" ? "3500" : "292"}
         />
-        <span style={{ fontSize: "14px", color: "rgba(15,23,42,0.4)", flexShrink: 0 }}>
+        <span style={{ fontSize: "14px", color: "var(--muted)", flexShrink: 0 }}>
           {ko ? "만원" : "만₩"} / {inputMode === "annual" ? (ko ? "연" : "yr") : (ko ? "월" : "mo")}
         </span>
       </div>
@@ -86,7 +86,7 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
       {/* 업종별 벤치마크 */}
       {industryCategoryId && benchmark && (
         <div style={{ marginTop: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(5,97,252,0.04)", border: "1px solid rgba(5,97,252,0.08)", display: "flex", gap: "6px", alignItems: "center" }}>
-          <span style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)" }}>
+          <span style={{ fontSize: "12px", color: "var(--muted)" }}>
             {ko ? `${benchmark.label} 평균 월급: 약 ${benchmark.monthly}만원 (2025 소상공인 기준)` : `${benchmark.label} avg: ~${benchmark.monthly}만원/mo (2025 SME benchmark)`}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
               {segments.filter(s => s.value > 0).map(s => (
                 <div key={s.label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: s.color }} />
-                  <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>{s.label}</span>
+                  <span style={{ fontSize: "11px", color: "var(--muted)" }}>{s.label}</span>
                   <span style={{ fontSize: "12px", fontWeight: 660, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>{fmt(s.value)}</span>
                 </div>
               ))}
@@ -146,7 +146,7 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
 
           {/* 4대보험 상세 (접이식) */}
           <details style={{ marginTop: "12px" }}>
-            <summary style={{ fontSize: "12px", fontWeight: 600, color: "rgba(15,23,42,0.4)", cursor: "pointer", padding: "4px 0" }}>
+            <summary style={{ fontSize: "12px", fontWeight: 600, color: "var(--muted)", cursor: "pointer", padding: "4px 0" }}>
               {ko ? "4대보험 상세 보기" : "View insurance breakdown"}
             </summary>
             <div style={{ display: "grid", gap: "4px", marginTop: "6px" }} className="bento-fade-in">
@@ -158,12 +158,12 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
                 { label: ko ? "산재보험" : "Accident", emp: result.accident, ee: 0 },
               ].map(row => (
                 <div key={row.label} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px", padding: "6px 8px", borderRadius: "8px", background: "rgba(15,23,42,0.02)", fontSize: "12px" }}>
-                  <span style={{ color: "rgba(15,23,42,0.5)" }}>{row.label}</span>
+                  <span style={{ color: "var(--muted)" }}>{row.label}</span>
                   <span style={{ textAlign: "right" as const, fontWeight: 600, color: "#b64c4c" }}>{fmt(row.emp)}</span>
-                  <span style={{ textAlign: "right" as const, color: "rgba(15,23,42,0.4)" }}>{row.ee > 0 ? fmt(row.ee) : "—"}</span>
+                  <span style={{ textAlign: "right" as const, color: "var(--muted)" }}>{row.ee > 0 ? fmt(row.ee) : "—"}</span>
                 </div>
               ))}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "4px 8px", fontSize: "10px", color: "rgba(15,23,42,0.3)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "4px 8px", fontSize: "10px", color: "var(--muted)" }}>
                 <span />
                 <span style={{ textAlign: "right" as const }}>{ko ? "사업주" : "Employer"}</span>
                 <span style={{ textAlign: "right" as const }}>{ko ? "근로자" : "Employee"}</span>
@@ -184,7 +184,7 @@ const card: React.CSSProperties = {
   boxShadow: "0 2px 12px rgba(15,23,42,0.03), 0 1px 0 rgba(255,255,255,0.8) inset",
   display: "grid", gap: "4px",
 };
-const eyebrow: React.CSSProperties = { fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(15,23,42,0.4)" };
+const eyebrow: React.CSSProperties = { fontSize: "11px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)" };
 const title: React.CSSProperties = { fontSize: "18px", fontWeight: 740, letterSpacing: "-0.03em", color: "#0f172a", lineHeight: 1.1 };
 const inputStyle: React.CSSProperties = {
   flex: 1, padding: "12px 16px", borderRadius: "14px", border: "1.5px solid rgba(15,23,42,0.08)",
@@ -197,6 +197,6 @@ const metricCard: React.CSSProperties = {
   background: "linear-gradient(180deg, rgba(248,250,253,0.92), rgba(242,246,250,0.82))",
   border: "1px solid rgba(15,23,42,0.04)",
 };
-const metricLabel: React.CSSProperties = { fontSize: "10px", fontWeight: 650, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(15,23,42,0.4)", marginBottom: "4px" };
+const metricLabel: React.CSSProperties = { fontSize: "10px", fontWeight: 650, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "4px" };
 const metricValue: React.CSSProperties = { fontSize: "16px", fontWeight: 760, letterSpacing: "-0.03em", lineHeight: 1.1, fontVariantNumeric: "tabular-nums" };
-const metricSub: React.CSSProperties = { fontSize: "10px", color: "rgba(15,23,42,0.35)", marginTop: "2px" };
+const metricSub: React.CSSProperties = { fontSize: "10px", color: "var(--muted)", marginTop: "2px" };

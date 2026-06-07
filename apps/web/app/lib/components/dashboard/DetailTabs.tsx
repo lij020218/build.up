@@ -719,7 +719,7 @@ const tabActive: React.CSSProperties = {
 
 const tabInactive: React.CSSProperties = {
   background: "transparent",
-  color: "rgba(15,23,42,0.55)",
+  color: "var(--muted)",
 };
 
 const tabContent: React.CSSProperties = {

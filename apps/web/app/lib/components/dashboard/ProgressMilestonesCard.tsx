@@ -146,7 +146,7 @@ export function ProgressMilestonesCard({
               fontWeight: 650,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "rgba(15,23,42,0.4)",
+              color: "var(--muted)",
               marginBottom: "2px",
             }}
           >
@@ -224,7 +224,7 @@ export function ProgressMilestonesCard({
                   <div
                     style={{
                       fontSize: "11px",
-                      color: "rgba(15,23,42,0.45)",
+                      color: "var(--muted)",
                       marginTop: "1px",
                     }}
                   >
@@ -274,7 +274,7 @@ export function ProgressMilestonesCard({
         style={{
           marginTop: "12px",
           fontSize: "11px",
-          color: "rgba(15,23,42,0.5)",
+          color: "var(--muted)",
           lineHeight: 1.5,
           textAlign: "center" as const,
           fontWeight: 500,
@@ -304,7 +304,7 @@ export function ProgressMilestonesCard({
             alignItems: "center",
             justifyContent: "space-between",
             fontSize: "11px",
-            color: "rgba(15,23,42,0.5)",
+            color: "var(--muted)",
           }}
         >
           <span>{ko ? "총 기록 일수" : "Total logged"}</span>

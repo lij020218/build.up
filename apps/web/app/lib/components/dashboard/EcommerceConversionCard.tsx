@@ -194,7 +194,7 @@ function EcommerceConversionCardInner({ ko, industryCategoryId }: Props) {
       {/* ② 대비 — 채널별 ROAS */}
       {analysis.channels.length > 0 && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
             {ko ? "채널별 7일 ROAS (목표 300%+, Sellerking)" : "Channel ROAS (target 300%+)"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
@@ -308,7 +308,7 @@ const labelStyle: React.CSSProperties = {
 
 const footerStyle: React.CSSProperties = {
   display: "flex", alignItems: "center",
-  fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.5,
+  fontSize: 11, color: "var(--muted)", lineHeight: 1.5,
   padding: "8px 12px", borderRadius: 9,
   background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
 };

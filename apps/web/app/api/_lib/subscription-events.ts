@@ -44,7 +44,9 @@ export async function persistSubscriptionEvent(
   userId: string,
   event: NormalizedSubscriptionEvent
 ): Promise<{ inserted: boolean; error?: string }> {
-  const { error } = await supabase.from("subscription_events").upsert(
+  // ignoreDuplicates: true + select('id') — 실제로 insert 된 경우에만 행이 반환됨.
+  // 이전에 ignoreDuplicates + error 체크만 했을 때는 dup 도 inserted:true 를 반환하는 버그.
+  const { data, error } = await supabase.from("subscription_events").upsert(
     {
       user_id: userId,
       provider: event.provider,
@@ -60,12 +62,13 @@ export async function persistSubscriptionEvent(
       raw: event.raw as Record<string, unknown>,
     },
     { onConflict: "provider,external_event_id", ignoreDuplicates: true }
-  );
+  ).select("id");
 
   if (error) {
     return { inserted: false, error: error.message };
   }
-  return { inserted: true };
+  // data 가 비어있으면 dup (ignoreDuplicates 로 skip 됨)
+  return { inserted: Array.isArray(data) && data.length > 0 };
 }
 
 // ─── Stripe normalizer ───────────────────────────────────────────────────

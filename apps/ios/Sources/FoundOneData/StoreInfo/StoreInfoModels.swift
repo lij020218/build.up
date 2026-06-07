@@ -215,6 +215,9 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
     public var sellingPrice: Double
     public var leadTimeDays: Int
     public var dailyUsage: Double
+    /// 월 판매 수량 — 소매 sell-through 계산용. 웹 SellThroughProduct.monthlySold 정합.
+    /// 0 이면 카드에서 dailyUsage × 26 추정 + "추정" 배지. 기존 JSON 미포함 → 0 default.
+    public var monthlySold: Double
     public var lastOrderedAt: String?
     public var wasteLog: [WasteLogEntry]
 
@@ -241,6 +244,7 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         sellingPrice: Double = 0,
         leadTimeDays: Int = 1,
         dailyUsage: Double = 0,
+        monthlySold: Double = 0,
         lastOrderedAt: String? = nil,
         wasteLog: [WasteLogEntry] = []
     ) {
@@ -248,7 +252,32 @@ public struct BUInventoryItem: Identifiable, Sendable, Codable, Hashable {
         self.minThreshold = minThreshold; self.unitCost = unitCost; self.category = category
         self.itemType = itemType; self.sellingPrice = sellingPrice
         self.leadTimeDays = leadTimeDays; self.dailyUsage = dailyUsage
+        self.monthlySold = monthlySold
         self.lastOrderedAt = lastOrderedAt; self.wasteLog = wasteLog
+    }
+
+    // MARK: Codable — monthlySold 는 기존 JSON 에 없을 수 있어 decodeIfPresent 로 처리
+    enum CodingKeys: String, CodingKey {
+        case id, name, quantity, unit, minThreshold, unitCost, category, itemType
+        case sellingPrice, leadTimeDays, dailyUsage, monthlySold, lastOrderedAt, wasteLog
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id             = try c.decode(String.self,           forKey: .id)
+        name           = try c.decode(String.self,           forKey: .name)
+        quantity       = try c.decode(Double.self,           forKey: .quantity)
+        unit           = try c.decode(String.self,           forKey: .unit)
+        minThreshold   = try c.decode(Double.self,           forKey: .minThreshold)
+        unitCost       = try c.decode(Double.self,           forKey: .unitCost)
+        category       = try c.decode(String.self,           forKey: .category)
+        itemType       = try c.decode(String.self,           forKey: .itemType)
+        sellingPrice   = try c.decode(Double.self,           forKey: .sellingPrice)
+        leadTimeDays   = try c.decode(Int.self,              forKey: .leadTimeDays)
+        dailyUsage     = try c.decode(Double.self,           forKey: .dailyUsage)
+        monthlySold    = (try? c.decodeIfPresent(Double.self, forKey: .monthlySold)) ?? 0
+        lastOrderedAt  = try? c.decodeIfPresent(String.self, forKey: .lastOrderedAt)
+        wasteLog       = (try? c.decodeIfPresent([WasteLogEntry].self, forKey: .wasteLog)) ?? []
     }
 }
 

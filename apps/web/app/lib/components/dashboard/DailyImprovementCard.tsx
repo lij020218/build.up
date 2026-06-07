@@ -79,7 +79,7 @@ export function DailyImprovementCard({ ko, industryCategoryId }: Props) {
         <div
           style={{
             fontSize: "12px",
-            color: "rgba(15,23,42,0.55)",
+            color: "var(--muted)",
             lineHeight: 1.55,
           }}
         >
@@ -89,7 +89,7 @@ export function DailyImprovementCard({ ko, industryCategoryId }: Props) {
           style={{
             marginTop: "8px",
             fontSize: "10.5px",
-            color: "rgba(15,23,42,0.4)",
+            color: "var(--muted)",
             fontStyle: "italic" as const,
           }}
         >

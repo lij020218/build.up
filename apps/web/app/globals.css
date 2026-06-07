@@ -221,7 +221,7 @@ a {
 .type-display { font-size: clamp(32px, 5vw, 40px); font-weight: 760; letter-spacing: -0.04em; line-height: 0.98; }
 .type-title { font-size: clamp(20px, 3vw, 24px); font-weight: 720; letter-spacing: -0.03em; line-height: 1.1; }
 .type-body { font-size: 14px; font-weight: 450; line-height: 1.65; color: rgba(15,23,42,0.6); }
-.type-caption { font-size: 12px; font-weight: 550; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(15,23,42,0.4); }
+.type-caption { font-size: 12px; font-weight: 550; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .type-micro { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
 
 /* ── Number animation ── */
@@ -294,8 +294,8 @@ textarea:focus-visible {
   outline: none;
 }
 
-/* ── 모바일 반응형 ── */
-@media (max-width: 768px) {
+/* ── 모바일 반응형 — 값은 breakpoints.ts BP 상수와 일치 ── */
+@media (max-width: 768px) { /* BP.md */
   /* Surface 네비게이션: 가로 스크롤 */
   .surface-nav-scroll {
     overflow-x: auto;
@@ -337,12 +337,12 @@ textarea:focus-visible {
   .detail-tab-bar::-webkit-scrollbar { display: none; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px) { /* BP.sm */
   /* Marketing surface */
   .marketing-kpi-grid { grid-template-columns: 1fr !important; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 480px) { /* BP.xs */
   /* 초소형 화면 */
   .type-display {
     font-size: 28px !important;
@@ -375,7 +375,7 @@ html {
 }
 
 /* ⚠️ 2026-05-19 모바일: Aurora 배경 애니메이션 정지 (로우엔드 안드로이드 jank 방지). */
-@media (max-width: 640px) {
+@media (max-width: 640px) { /* BP.sm */
   body::before,
   body::after {
     animation: none !important;

@@ -124,7 +124,7 @@ export function PortOneConnectCard({ ko }: { ko: boolean }) {
     return (
       <article style={card}>
         <div style={SECTION_LABEL}>{ko ? "외부 데이터 연결" : "External Data"}</div>
-        <div style={{ padding: "20px 18px", color: "rgba(15,23,42,0.45)", fontSize: "12.5px" }}>
+        <div style={{ padding: "20px 18px", color: "var(--muted)", fontSize: "12.5px" }}>
           {ko ? "불러오는 중…" : "Loading…"}
         </div>
       </article>
@@ -213,11 +213,11 @@ export function PortOneConnectCard({ ko }: { ko: boolean }) {
                     {ko ? "포트원 연결됨" : "PortOne connected"}
                   </span>
                 </div>
-                <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", fontFamily: "monospace" }}>
+                <span style={{ fontSize: "11px", color: "var(--muted)", fontFamily: "monospace" }}>
                   {status?.maskedSecret ?? ""}
                 </span>
               </div>
-              <div style={{ display: "grid", gap: "4px", fontSize: "11.5px", color: "rgba(15,23,42,0.55)" }}>
+              <div style={{ display: "grid", gap: "4px", fontSize: "11.5px", color: "var(--muted)" }}>
                 <div>
                   {ko ? "최근 30일 결제: " : "Last 30 days: "}
                   <strong style={{ color: "#0f172a" }}>{status?.paymentCount30d ?? 0}건</strong>
@@ -350,10 +350,10 @@ function ConnectWizard({
         {/* 헤더 */}
         <div style={{ padding: "22px 24px 12px", borderBottom: "0.5px solid rgba(0,0,0,0.06)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(15,23,42,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               {ko ? `포트원 연결 · ${step}/3` : `Connect PortOne · ${step}/3`}
             </div>
-            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "rgba(15,23,42,0.4)", fontSize: "20px", padding: 0 }}>
+            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: "20px", padding: 0 }}>
               ×
             </button>
           </div>
@@ -558,7 +558,7 @@ const inputStyle: React.CSSProperties = {
 
 const fieldHint: React.CSSProperties = {
   fontSize: "11px",
-  color: "rgba(15,23,42,0.5)",
+  color: "var(--muted)",
   marginTop: "4px",
   lineHeight: 1.4,
 };

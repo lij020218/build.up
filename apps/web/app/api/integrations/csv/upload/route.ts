@@ -106,28 +106,52 @@ export async function POST(request: Request) {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, error: "DB 설정 오류" }, { status: 500 });
 
-  // 1. 업로드 레코드
+  // 1. 업로드 레코드 — 멱등: 동일 (파일명·행수·총액) 재업로드면 기존 row 재사용.
+  //    csv_revenue_uploads 는 UNIQUE 제약이 없어 그냥 insert 하면 같은 파일 재업로드 시
+  //    uploads 행이 무한 누적된다(entries 는 복합키로 dedup 되지만 uploads 는 아님).
+  //    동일 내용이면 기존 upload.id 를 재사용해 누적을 막는다.
   const totalAmount = parsed.entries.reduce((s, e) => s + e.amount, 0);
-  const { data: upload, error: upErr } = await supabase
-    .from("csv_revenue_uploads")
-    .insert({
-      user_id: auth.userId,
-      filename: file.name,
-      source_label: sourceLabel,
-      row_count: parsed.entries.length,
-      total_amount: totalAmount,
-    })
-    .select("id")
-    .single();
+  let uploadId: string | null = null;
 
-  if (upErr || !upload) {
-    console.error("[csv/upload] insert upload failed", upErr);
-    return NextResponse.json({ ok: false, error: "업로드 기록 저장 실패" }, { status: 500 });
+  const { data: existingUpload } = await supabase
+    .from("csv_revenue_uploads")
+    .select("id")
+    .eq("user_id", auth.userId)
+    .eq("filename", file.name)
+    .eq("row_count", parsed.entries.length)
+    .eq("total_amount", totalAmount)
+    .maybeSingle();
+
+  if (existingUpload) {
+    uploadId = existingUpload.id;
+    // 메타(source_label)만 갱신 — 재업로드 시점 반영
+    await supabase
+      .from("csv_revenue_uploads")
+      .update({ source_label: sourceLabel })
+      .eq("id", existingUpload.id);
+  } else {
+    const { data: upload, error: upErr } = await supabase
+      .from("csv_revenue_uploads")
+      .insert({
+        user_id: auth.userId,
+        filename: file.name,
+        source_label: sourceLabel,
+        row_count: parsed.entries.length,
+        total_amount: totalAmount,
+      })
+      .select("id")
+      .single();
+
+    if (upErr || !upload) {
+      console.error("[csv/upload] insert upload failed", upErr);
+      return NextResponse.json({ ok: false, error: "업로드 기록 저장 실패" }, { status: 500 });
+    }
+    uploadId = upload.id;
   }
 
   // 2. 엔트리들
   const rows = parsed.entries.map((e) => ({
-    upload_id: upload.id,
+    upload_id: uploadId,
     user_id: auth.userId,
     date: e.date,
     amount: e.amount,
@@ -145,7 +169,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    uploadId: upload.id,
+    uploadId,
     rowCount: parsed.entries.length,
     totalAmount,
     detectedHeaders: parsed.headers,

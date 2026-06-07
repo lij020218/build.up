@@ -1,19 +1,16 @@
 //
-//  AccountResetRepository.swift — 진행 초기화 (Supabase 직접 호출, web API 의존성 X).
+//  AccountResetRepository.swift — 진행 초기화 (웹 /api/account/reset 라우팅, SSOT).
 //
-//  2026-05-20 변경: 기존 web /api/account/reset POST 방식 → Supabase 직접 delete.
-//   이유: production 도메인 (foundone.dev) 미배포 상태에서 DNS 실패. RLS 정책이
-//   본인 row delete 를 허용하므로 web 우회해도 안전 (auth.uid() = user_id 가드).
+//  2026-06-07 변경: Supabase 직접 delete → 웹 API(/api/account/reset) POST 로 복귀.
+//   이유(점검 결과): iOS 직접 delete 는 *사용자 JWT* 라 RLS 적용을 받는데, 결제/통합
+//   테이블 다수는 self-DELETE 정책이 없어(SELECT만, 쓰기는 service_role) iOS 가 목록을
+//   늘려도 0 row 만 삭제됨 → 웹 reset(service_role, account-wipe.ts USER_TABLES 전체)과
+//   삭제 집합이 크게 달라 "초기화" 결과가 플랫폼마다 달랐다.
+//   → 웹 API 를 단일 SSOT 로 삼아 "무엇을 지우는가"를 account-wipe.ts 한 곳에서 관리.
+//   (foundone.dev 는 현재 다른 모든 repo 가 쓰는 운영 도메인 — 2026-05-20 의 미배포 사유 해소.)
 //
-//  Cascade:
-//   • roadmaps   → stage_decisions, stage_tasks (FK on delete cascade)
-//   • auth.users → 모든 user_id 참조 테이블 (FK on delete cascade) — 단, 사용자는 유지
-//
-//  RLS 가드 (정책 충족 못 하면 단순 0 row 영향):
-//   • business_profiles_delete_own
-//   • user_store_data_delete_own
-//   • roadmaps_delete_own
-//   • marketing_coach_cache_delete_own (있다면)
+//  웹 라우트가 service_role 로 USER_TABLES + OWNER_TABLES 전수 삭제(구독·결제 보존).
+//  roadmaps → stage_decisions/stage_tasks 는 FK CASCADE 로 함께 삭제.
 //
 
 import Foundation
@@ -46,70 +43,67 @@ public enum AccountResetError: LocalizedError, Sendable {
 public actor AccountResetRepository {
 
     private let supabase: SupabaseClient
+    private let baseURL: URL
 
-    public init(supabase: SupabaseClient) {
+    public init(
+        supabase: SupabaseClient,
+        baseURL: URL = URL(string: "https://foundone.dev")!
+    ) {
         self.supabase = supabase
+        self.baseURL = baseURL
     }
 
-    /// 사장님 본인 데이터 일괄 삭제 (Supabase RLS 보호).
+    /// 사장님 본인 데이터 일괄 초기화 — 웹 /api/account/reset 위임 (service_role 전수 삭제).
     ///
-    /// 핵심 테이블 (business_profiles / user_store_data / roadmaps) 중 하나라도
-    /// 실패하면 AccountResetError.partial throw. 비핵심 테이블 (마케팅 캐시 등) 실패는 무시.
-    /// roadmap 삭제 시 stage_decisions / stage_tasks 는 cascade 로 자동 삭제됨.
+    /// 웹 라우트가 account-wipe.ts 의 USER_TABLES + OWNER_TABLES 를 전부 지우고
+    /// `{ ok, failures, totalDeleted }` 를 반환한다. ok=false(일부 테이블 실패) 또는
+    /// 네트워크/인증 실패 시 throw 하여 호출부가 partial/실패를 인지하게 한다.
     @discardableResult
     public func resetAccount() async throws -> AccountResetResult {
-        // 인증 확인
-        let session: Session
+        // 인증 토큰 확보
+        let token: String
         do {
-            session = try await supabase.auth.session
+            token = try await supabase.auth.session.accessToken
         } catch {
             throw AccountResetError.notAuthenticated
         }
-        let userId = session.user.id
 
-        var coreFailures: [String] = []
-        var attempts = 0
+        var req = URLRequest(url: baseURL.appendingPathComponent("/api/account/reset"))
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // ── 핵심 테이블 (실패 시 partial 처리) ──
-        let coreTables = ["business_profiles", "user_store_data", "roadmaps"]
-        for table in coreTables {
-            attempts += 1
-            do {
-                try await deleteOwnRows(table: table, userId: userId)
-            } catch {
-                coreFailures.append(table)
-                #if DEBUG
-                print("[AccountReset] core table \(table) delete failed: \(error)")
-                #endif
-            }
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: req)
+        } catch {
+            throw AccountResetError.partial(failures: ["network"])
         }
 
-        // ── 비핵심 테이블 (실패해도 무시) ──
-        let optionalTables = [
-            "marketing_coach_cache",
-            "saas_metrics_connections",
-            "saas_funnel_manual_weekly",
-            "saas_funnel_source_daily",
-            "saas_funnel_events_raw",
-        ]
-        for table in optionalTables {
-            attempts += 1
-            try? await deleteOwnRows(table: table, userId: userId)
+        guard let http = response as? HTTPURLResponse else {
+            throw AccountResetError.partial(failures: ["no-response"])
+        }
+        if http.statusCode == 401 || http.statusCode == 403 {
+            throw AccountResetError.notAuthenticated
         }
 
-        if !coreFailures.isEmpty {
-            throw AccountResetError.partial(failures: coreFailures)
+        // 응답 파싱 — ok=false 면 실패한 테이블 목록을 partial 로 전달.
+        let decoded = try? JSONDecoder().decode(ResetResponse.self, from: data)
+        if http.statusCode != 200 || decoded?.ok != true {
+            let failed = decoded?.failures?.map { $0.table } ?? ["server"]
+            throw AccountResetError.partial(failures: failed)
         }
-        return AccountResetResult(attemptedTables: attempts, coreFailures: coreFailures)
+
+        return AccountResetResult(attemptedTables: decoded?.totalDeleted ?? 0, coreFailures: [])
     }
 
-    // MARK: - Helper
+    // MARK: - Response DTO
 
-    private func deleteOwnRows(table: String, userId: UUID) async throws {
-        _ = try await supabase
-            .from(table)
-            .delete()
-            .eq("user_id", value: userId)
-            .execute()
+    private struct ResetResponse: Decodable {
+        let ok: Bool
+        let totalDeleted: Int?
+        let failures: [Failure]?
+        struct Failure: Decodable { let table: String }
     }
 }

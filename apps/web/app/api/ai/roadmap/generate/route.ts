@@ -435,6 +435,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "사업 아이디어를 입력해주세요." }, { status: 400 });
   }
 
+  // 길이 제한 — 비용 폭탄 + 프롬프트 주입 방어
+  const MAX_IDEA_TEXT = 2_000;
+  const MAX_STORE_NAME = 100;
+  const MAX_REGION = 100;
+  body = {
+    ...body,
+    ideaText: body.ideaText.trim().slice(0, MAX_IDEA_TEXT),
+    ...(body.storeName !== undefined && { storeName: body.storeName.trim().slice(0, MAX_STORE_NAME) }),
+    ...(body.region !== undefined && { region: body.region.trim().slice(0, MAX_REGION) }),
+  };
+
   // ── Pass 1: sub-industry 결정 + 전체 컨텍스트 ──
   let result: RoadmapGenerationResult | null = null;
   for (let attempt = 0; attempt < 2; attempt++) {

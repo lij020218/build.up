@@ -27,24 +27,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ plan: "free", status: "active" });
   }
 
-  // 기간이 지났으면 past_due 처리
+  // GET 핸들러에서 DB 쓰기 금지 — REST 멱등성 위반 + concurrent tab race 야기.
+  // effectiveStatus 는 응답 시점에 계산해 클라이언트에 전달하고,
+  // 실제 status 컬럼 갱신은 웹훅/cron 이 담당한다.
   const now = new Date();
   const isPastDue =
     data.status === "active" &&
     data.current_period_end &&
     new Date(data.current_period_end) < now;
 
-  if (isPastDue) {
-    // UPDATE 는 service_role 만 RLS 허용 → admin 클라이언트로 상태 갱신.
-    const admin = getSupabaseAdmin();
-    if (admin) {
-      await admin
-        .from("foundone_subscriptions")
-        .update({ status: "past_due" })
-        .eq("user_id", auth.userId);
-    }
-    return NextResponse.json({ ...data, status: "past_due" });
-  }
+  const effectiveStatus = isPastDue ? "past_due" : data.status;
 
-  return NextResponse.json(data);
+  return NextResponse.json({ ...data, status: effectiveStatus });
 }

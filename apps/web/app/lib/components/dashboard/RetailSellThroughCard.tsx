@@ -163,7 +163,7 @@ function RetailSellThroughCardInner({ ko, industryCategoryId }: Props) {
           <span style={iconBadge}><ShoppingBag size={14} strokeWidth={2.2} /></span>
           <div style={labelStyle}>{ko ? "Sell-Through · 소매" : "Sell-Through · Retail"}</div>
         </header>
-        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
+        <div style={{ padding: "20px 0", textAlign: "center" as const, color: "var(--muted)", fontSize: 13 }}>
           {ko ? "상품 데이터를 입력하면 sell-through rate + best seller + dead stock 분석 (내 가게 > 상품 관리)" : "Enter product data for sell-through analysis"}
         </div>
       </article>
@@ -207,7 +207,7 @@ function RetailSellThroughCardInner({ ko, industryCategoryId }: Props) {
       {/* ② 대비 — Best Seller Top 5 (테이블 형식) */}
       <div>
         <div style={{
-          fontSize: 11, fontWeight: 700, color: "rgba(15,23,42,0.55)", letterSpacing: "0.06em",
+          fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em",
           textTransform: "uppercase" as const, marginBottom: 8,
         }}>
           {ko ? "Top 5 Best Seller (월 판매 + sell-through)" : "Top 5 Best Sellers"}
@@ -221,7 +221,7 @@ function RetailSellThroughCardInner({ ko, industryCategoryId }: Props) {
                 padding: "8px 10px", borderRadius: 8,
                 background: "rgba(15,23,42,0.02)", border: "1px solid rgba(25,25,112,0.06)",
               }}>
-                <span style={{ fontSize: 11, color: "rgba(15,23,42,0.4)", fontWeight: 700 }}>{i + 1}</span>
+                <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 700 }}>{i + 1}</span>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {p.name}
                 </div>
@@ -337,7 +337,7 @@ const labelStyle: React.CSSProperties = {
 
 const footerStyle: React.CSSProperties = {
   display: "flex", alignItems: "center",
-  fontSize: 11, color: "rgba(15,23,42,0.55)", lineHeight: 1.5,
+  fontSize: 11, color: "var(--muted)", lineHeight: 1.5,
   padding: "8px 12px", borderRadius: 9,
   background: "rgba(15,23,42,0.03)", border: "1px solid rgba(15,23,42,0.06)",
 };

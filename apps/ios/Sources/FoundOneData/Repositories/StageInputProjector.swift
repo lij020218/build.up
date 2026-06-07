@@ -19,9 +19,10 @@
 //   vatType | taxTypeChoice→ user_store_data.tax_settings.vatType     (JSONB read-merge-write, hasEmployees 보존)
 //   cpaDecision            → user_store_data.cpa_decision             (직접, "cpa"|"self" 가드는 헬퍼 내장)
 //   revenueModel           → user_store_data.uses_subscriptions       (subscription|freemium|hybrid → true, 웹 usesSubscriptions 미러)
+//   preferredRegion        → business_profiles.preferred_regions      ([region] 단일배열, 웹 buildProfilePatchFromState 미러 — iOS 펀딩 지역매칭·웹 region 폼 복원에 사용)
 //
 //  로드맵 전용(투영 X, stage_decisions 에만 남음): certType, model, total*, menuCount,
-//   suppliers, address, northStar, franchiseBrandId(정식 컬럼 부재) 등.
+//   suppliers, address(구체 매물 주소 — region 과 별개), northStar, franchiseBrandId(정식 컬럼 부재) 등.
 //
 
 import Foundation
@@ -36,6 +37,7 @@ public enum StageInputProjector {
     /// 투영 대상 키 (project + audit 가 공유 — 드리프트 방지용 단일 목록).
     public static let projectedKeys: Set<String> = [
         "storeName", "openHour", "closeHour", "startupType", "vatType", "taxTypeChoice", "cpaDecision", "revenueModel",
+        "preferredRegion",
     ]
 
     /// 구독형 수익 모델 (웹 setSelectedRevenueModelId 의 usesSubscriptions 판정과 동일).
@@ -68,6 +70,10 @@ public enum StageInputProjector {
         // 6. revenueModel → uses_subscriptions (구독형이면 true → 운영 대시보드 구독관리 카드 게이팅)
         if let v = inputs["revenueModel"], !v.trimmingCharacters(in: .whitespaces).isEmpty {
             StoreProfileRepository.persistUsesSubscriptionsForCurrentUser(subscriptionRevenueModels.contains(v))
+        }
+        // 7. preferredRegion → business_profiles.preferred_regions (빈값 가드는 헬퍼 내장)
+        if let v = inputs["preferredRegion"] {
+            OnboardingProfileSync.persistPreferredRegion(v)
         }
     }
 
