@@ -23,6 +23,10 @@ public struct CertificationKcCeStageView: View {
     @AppStorage("cert.ceApplied")   private var ceApplied   = false
     @AppStorage("cert.done")        private var done        = false
 
+    private var currentInputs: [String: String] {
+        ["kcRequired": "\(kcRequired)", "ceRequired": "\(ceRequired)", "fccRequired": "\(fccRequired)", "kcApplied": "\(kcApplied)", "ceApplied": "\(ceApplied)", "done": "\(done)"]
+    }
+
     private let pages = ["인증 종류", "신청 절차"]
 
     public init() {}
@@ -49,10 +53,10 @@ public struct CertificationKcCeStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. Pre-compliance 자체 시험", detail: "정식 신청 전 EMC·Safety 사전 검증 — 'fail and re-submit' 방지, 수개월·수천만원 절감"),

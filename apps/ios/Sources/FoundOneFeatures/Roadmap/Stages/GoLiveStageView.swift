@@ -24,6 +24,10 @@ public struct GoLiveStageView: View {
     @AppStorage("gl.pressRelease") private var pressRelease = false
     @AppStorage("gl.done")         private var done         = false
 
+    private var currentInputs: [String: String] {
+        ["webLive": "\(webLive)", "appStore": "\(appStore)", "productHunt": "\(productHunt)", "community": "\(community)", "pressRelease": "\(pressRelease)", "done": "\(done)"]
+    }
+
     private let pages = ["웹·앱 배포", "런치 채널"]
 
     public init() {}
@@ -49,10 +53,10 @@ public struct GoLiveStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 도메인·SSL·SEO", detail: "도메인 + SSL 인증서 + sitemap.xml + robots.txt 셋업"),

@@ -31,6 +31,10 @@ public struct RegulatorySubmissionStageView: View {
     @AppStorage("regsub.packageSubmitted") private var packageSubmitted = false
     @AppStorage("regsub.done")             private var done             = false
 
+    private var currentInputs: [String: String] {
+        ["pathway": pathway, "mfdsConsult": "\(mfdsConsult)", "packageSubmitted": "\(packageSubmitted)", "done": "\(done)"]
+    }
+
     private let pages = ["규제 경로", "신청 현황"]
 
     public init() {}
@@ -59,10 +63,10 @@ public struct RegulatorySubmissionStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 허가 경로 선택", detail: "Fast-Track(80~140일) vs 일반 심사를 등급에 맞춰 결정."),

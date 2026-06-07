@@ -32,6 +32,10 @@ public struct PackagingAndTestStageView: View {
     @AppStorage("pkg.firstSampleOK")  private var firstSampleOK  = false
     @AppStorage("pkg.done")           private var done           = false
 
+    private var currentInputs: [String: String] {
+        ["osatSelected": "\(osatSelected)", "testPlanDone": "\(testPlanDone)", "firstSampleOK": "\(firstSampleOK)", "done": "\(done)"]
+    }
+
     private let pages = ["OSAT 선정", "테스트 계획"]
 
     public init() {}
@@ -57,10 +61,10 @@ public struct PackagingAndTestStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 패키지 유형·OSAT 선정", detail: "QFN/BGA/WLP/CoWoS 중 선택 후 OSAT 파트너 확정."),

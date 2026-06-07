@@ -32,6 +32,10 @@ public struct FieldOrClinicalTestStageView: View {
     @AppStorage("fct.indSubmitted") private var indSubmitted = false
     @AppStorage("fct.done")         private var done         = false
 
+    private var currentInputs: [String: String] {
+        ["testType": testType, "planDone": "\(planDone)", "testDone": "\(testDone)", "indSubmitted": "\(indSubmitted)", "done": "\(done)"]
+    }
+
     private let pages = ["시험 계획", "진행 현황"]
 
     public init() {}
@@ -60,10 +64,10 @@ public struct FieldOrClinicalTestStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 시험 유형·계획 수립", detail: "현장 테스트(파일럿 3–5곳·지표·4~12주) 또는 임상시험(IND·IRB) 경로 확정."),

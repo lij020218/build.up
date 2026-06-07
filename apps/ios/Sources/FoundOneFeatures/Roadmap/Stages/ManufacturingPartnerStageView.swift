@@ -21,6 +21,10 @@ public struct ManufacturingPartnerStageView: View {
     @AppStorage("mfg.firstRunQty")  private var firstRunQty  = ""
     @AppStorage("mfg.done")         private var done         = false
 
+    private var currentInputs: [String: String] {
+        ["emsSelected": "\(emsSelected)", "auditDone": "\(auditDone)", "firstRunQty": firstRunQty, "done": "\(done)"]
+    }
+
     private let pages = ["EMS 선정", "첫 양산 계획"]
 
     public init() {}
@@ -48,10 +52,10 @@ public struct ManufacturingPartnerStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. EMS 파트너 선정", detail: "MOQ·소통·포트폴리오·위치 기준으로 견적 3곳 이상 비교."),

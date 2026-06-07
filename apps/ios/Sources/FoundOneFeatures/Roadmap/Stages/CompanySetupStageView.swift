@@ -23,6 +23,10 @@ public struct CompanySetupStageView: View {
     @AppStorage("cs.bizAccount")      private var bizAccount      = false
     @AppStorage("cs.done")            private var done            = false
 
+    private var currentInputs: [String: String] {
+        ["corpRegistered": "\(corpRegistered)", "patentFiled": "\(patentFiled)", "trademarkFiled": "\(trademarkFiled)", "bizAccount": "\(bizAccount)", "done": "\(done)"]
+    }
+
     private let pages = ["법인 설립", "IP 보호"]
 
     public init() {}
@@ -48,10 +52,10 @@ public struct CompanySetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 사업 형태 결정", detail: "개인사업자 vs 법인 — 매출·세금·투자 유치 고려 후 확정"),

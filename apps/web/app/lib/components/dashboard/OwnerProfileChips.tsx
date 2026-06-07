@@ -3,13 +3,31 @@
 /**
  * OwnerProfileChips — 지원사업 매칭 보강 입력(나이·폐업검토·장애·NCB 신용점수).
  *
- *  ⚠️ 민감 PII(나이·신용점수)는 로컬(profile-store → localStorage)에만 저장하고
- *     Supabase 등 서버로 전송하지 않음. 매칭은 클라이언트에서 수행되므로 로컬값으로 충분.
+ *  로컬(profile-store → localStorage)에 즉시 반영 + 서버(봉투암호화)로 background sync.
+ *  기기 변경·재설치 시 서버값 복원. 매칭은 로컬에서 수행하므로 API 지연 영향 없음.
  *
  *  PolicyFundMatchCard(대시보드)와 GuidesView(펀딩페이지)에서 공용 — 같은 store 라
  *  한쪽에서 입력하면 양쪽 매칭에 즉시 반영(SSOT).
  */
 import { useProfileStore } from "../../stores/profile-store";
+
+/** 변경 후 서버 background sync (fire-and-forget). KEK 미설정 시 조용히 무시. */
+async function syncOwnerProfileToServer(profile: {
+  birthYear?: number;
+  ncbScore?: number;
+  consideringClosure?: boolean;
+  isDisabledOwner?: boolean;
+}) {
+  try {
+    await fetch("/api/account/owner-profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    });
+  } catch {
+    // 네트워크 오류 — 로컬값은 이미 저장됨, 다음 기기에서 동기화 시 재시도
+  }
+}
 
 /** 출생연도 → 만 나이 (매칭 criteria.age 용). 범위 밖이면 undefined. */
 export function ageFromBirthYear(birthYear: number | undefined): number | undefined {
@@ -64,7 +82,9 @@ export function OwnerProfileChips({ ko }: { ko: boolean }) {
           if (v === null) return;
           const y = parseInt(v, 10);
           const thisYear = new Date().getFullYear();
-          setOwnerBirthYear(y >= 1900 && y <= thisYear ? y : undefined);
+          const newVal = y >= 1900 && y <= thisYear ? y : undefined;
+          setOwnerBirthYear(newVal);
+          void syncOwnerProfileToServer({ birthYear: newVal, ncbScore: ownerNcbScore, consideringClosure: ownerConsideringClosure, isDisabledOwner: ownerIsDisabledOwner });
         }}
         style={chipStyle(ownerBirthYear != null)}
       >
@@ -72,14 +92,22 @@ export function OwnerProfileChips({ ko }: { ko: boolean }) {
       </button>
       <button
         type="button"
-        onClick={() => setOwnerConsideringClosure(!ownerConsideringClosure)}
+        onClick={() => {
+          const newVal = !ownerConsideringClosure;
+          setOwnerConsideringClosure(newVal);
+          void syncOwnerProfileToServer({ birthYear: ownerBirthYear, ncbScore: ownerNcbScore, consideringClosure: newVal, isDisabledOwner: ownerIsDisabledOwner });
+        }}
         style={chipStyle(ownerConsideringClosure)}
       >
         {ko ? "폐업 검토 중" : "Considering closure"}
       </button>
       <button
         type="button"
-        onClick={() => setOwnerIsDisabledOwner(!ownerIsDisabledOwner)}
+        onClick={() => {
+          const newVal = !ownerIsDisabledOwner;
+          setOwnerIsDisabledOwner(newVal);
+          void syncOwnerProfileToServer({ birthYear: ownerBirthYear, ncbScore: ownerNcbScore, consideringClosure: ownerConsideringClosure, isDisabledOwner: newVal });
+        }}
         style={chipStyle(ownerIsDisabledOwner)}
       >
         {ko ? "장애인 사장님" : "Disabled owner"}
@@ -88,10 +116,12 @@ export function OwnerProfileChips({ ko }: { ko: boolean }) {
         type="button"
         onClick={() => {
           const cur = ownerNcbScore != null ? String(ownerNcbScore) : "";
-          const v = window.prompt(ko ? "NCB 신용점수 (선택, 모르면 취소) — 기기에만 저장됩니다" : "NCB score (optional, stored on device only)", cur);
+          const v = window.prompt(ko ? "NCB 신용점수 (선택, 모르면 취소)" : "NCB score (optional)", cur);
           if (v === null) return;
           const n = parseInt(v, 10);
-          setOwnerNcbScore(n > 0 && n <= 1000 ? n : undefined);
+          const newVal = n > 0 && n <= 1000 ? n : undefined;
+          setOwnerNcbScore(newVal);
+          void syncOwnerProfileToServer({ birthYear: ownerBirthYear, ncbScore: newVal, consideringClosure: ownerConsideringClosure, isDisabledOwner: ownerIsDisabledOwner });
         }}
         style={chipStyle(ownerNcbScore != null)}
       >

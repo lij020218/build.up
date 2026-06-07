@@ -26,6 +26,10 @@ public struct LabSetupStageView: View {
     @AppStorage("lab.equipmentDone") private var equipmentDone = false
     @AppStorage("lab.done")          private var done          = false
 
+    private var currentInputs: [String: String] {
+        ["facilityDone": "\(facilityDone)", "safetyDone": "\(safetyDone)", "equipmentDone": "\(equipmentDone)", "done": "\(done)"]
+    }
+
     private let pages = ["시설·안전", "핵심 장비·검증"]
 
     // 웹 defaultContent = biotech. robotics 클러스터만 robotics 변형.
@@ -90,9 +94,9 @@ public struct LabSetupStageView: View {
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
-            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId) },
+            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs) },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: isRobotics ? [
                     .init(label: "1. 시설·작업 영역 분리", detail: "로봇 펜스·컨트롤룸·부품 보관·작업대 — 안전 동선 확보"),

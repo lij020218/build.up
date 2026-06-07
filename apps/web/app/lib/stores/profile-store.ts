@@ -102,6 +102,7 @@ type ProfileActions = {
   setOwnerNcbScore: (v: number | undefined) => void;
   setOwnerConsideringClosure: (v: boolean) => void;
   setOwnerIsDisabledOwner: (v: boolean) => void;
+  hydrateOwnerProfileFromServer: (p: { birthYear?: number; ncbScore?: number; consideringClosure?: boolean; isDisabledOwner?: boolean }) => void;
   resetAll: () => void;
 };
 
@@ -186,6 +187,15 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
       setOwnerConsideringClosure: (v) => set({ ownerConsideringClosure: v }),
       setOwnerIsDisabledOwner: (v) => set({ ownerIsDisabledOwner: v }),
       resetAll: () => set(initialState),
+      /** 서버에서 복호화된 owner profile 을 로컬 스토어에 hydrate (로그인·기기 전환 시). */
+      hydrateOwnerProfileFromServer: (p: { birthYear?: number; ncbScore?: number; consideringClosure?: boolean; isDisabledOwner?: boolean }) => {
+        set({
+          ...(p.birthYear !== undefined && { ownerBirthYear: p.birthYear }),
+          ...(p.ncbScore !== undefined && { ownerNcbScore: p.ncbScore }),
+          ...(p.consideringClosure !== undefined && { ownerConsideringClosure: p.consideringClosure }),
+          ...(p.isDisabledOwner !== undefined && { ownerIsDisabledOwner: p.isDisabledOwner }),
+        });
+      },
     }),
     {
       name: "foundone-profile",

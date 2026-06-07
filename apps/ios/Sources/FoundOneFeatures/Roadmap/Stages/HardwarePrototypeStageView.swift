@@ -21,6 +21,10 @@ public struct HardwarePrototypeStageView: View {
     @AppStorage("hp.pvtDone") private var pvtDone = false
     @AppStorage("hp.done")    private var done    = false
 
+    private var currentInputs: [String: String] {
+        ["evtDone": "\(evtDone)", "dvtDone": "\(dvtDone)", "pvtDone": "\(pvtDone)", "done": "\(done)"]
+    }
+
     private let pages = ["EVT", "DVT", "PVT"]
 
     public init() {}
@@ -48,10 +52,10 @@ public struct HardwarePrototypeStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. EVT — 설계 개념 검증", detail: "핵심 기능 동작 확인, 주요 부품 선정, 내부 팀 테스트."),

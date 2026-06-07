@@ -120,6 +120,10 @@ public struct LaunchGtmStageView: View {
     @AppStorage("gtm.users100")   private var users100   = false
     @AppStorage("gtm.done")       private var done       = false
 
+    private var currentInputs: [String: String] {
+        ["analytics": "\(analytics)", "billing": "\(billing)", "monitoring": "\(monitoring)", "cs": "\(cs)", "users100": "\(users100)", "done": "\(done)"]
+    }
+
     private let pages = ["인프라 셋업", "첫 100 사용자"]
 
     public init() {}
@@ -168,10 +172,10 @@ public struct LaunchGtmStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 출시 스택 4종 셋업", detail: "분석(Mixpanel·Amplitude)·결제(Stripe)·에러(Sentry)·피드백(Canny)"),

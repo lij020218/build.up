@@ -116,6 +116,10 @@ public struct FranchiseApplicationStageView: View {
     @State private var page = 0
     private let stageId = "franchise-application"
 
+    private var currentInputs: [String: String] {
+        ["selectedBrandId": franchiseBrandId, "stepsDoneJson": stepsDoneRaw]
+    }
+
     private let pages = ["왜 중요한가", "가맹 절차", "정보공개서 검증"]
 
     public init() {}
@@ -155,10 +159,10 @@ public struct FranchiseApplicationStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 정보공개서 검토", detail: "공정위 franchise.ftc.go.kr — 가맹점 수·폐점률·평균 매출·가맹비 4항목 직접 확인"),

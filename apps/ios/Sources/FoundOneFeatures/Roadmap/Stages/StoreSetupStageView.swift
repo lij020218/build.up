@@ -24,6 +24,10 @@ public struct StoreSetupStageView: View {
     @AppStorage("sto.pgLive")         private var pgLive         = false
     @AppStorage("sto.done")           private var done           = false
 
+    private var currentInputs: [String: String] {
+        ["storeFront": "\(storeFront)", "productListed": "\(productListed)", "shippingPolicy": "\(shippingPolicy)", "pgLive": "\(pgLive)", "done": "\(done)"]
+    }
+
     private let pages = ["스토어 설정", "배송·결제"]
 
     public init() {}
@@ -49,10 +53,10 @@ public struct StoreSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 상품 페이지 작성", detail: "메인 이미지 + 상세 페이지 + 옵션·재고·가격 설정 — 검색 키워드 최적화"),

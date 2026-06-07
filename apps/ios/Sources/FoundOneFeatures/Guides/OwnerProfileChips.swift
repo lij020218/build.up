@@ -2,19 +2,27 @@
 //  OwnerProfileChips.swift — 지원사업 매칭 보강 입력 (나이·폐업검토·장애·NCB 신용점수).
 //
 //  웹 SSOT: apps/web/.../dashboard/OwnerProfileChips.tsx (동일 정책).
-//  ⚠️ 민감 PII(나이·신용점수)는 UserDefaults 로컬 전용 — Supabase 등 서버 미전송.
-//     키("owner.birthYear"/"owner.ncbScore"/"owner.consideringClosure"/"owner.isDisabledOwner")는
-//     FundingProfileRepository.makeCriteria 가 동일하게 읽어 매칭에 반영.
+//  로컬(UserDefaults "owner.*") 즉시 반영 + 서버(봉투암호화) background sync.
+//  기기 전환·재설치 시 OwnerProfileSyncRepository.load() 로 복원됨.
 //
 
 import SwiftUI
 import FoundOneDesignSystem
+import FoundOneData
+import Supabase
 
 struct OwnerProfileChips: View {
     /// 값 변경 시 부모가 재매칭(loadPrograms) 하도록 콜백.
     var onChange: () -> Void
     /// 출생연도 미입력 시 청년·시니어 매칭 가치 넛지 노출 (펀딩페이지만 true).
     var showNudge: Bool = false
+
+    /// 값 변경 후 서버 background sync (fire-and-forget).
+    private func syncToServer() {
+        let client = BUSupabase.shared.client
+        let repo = OwnerProfileSyncRepository(supabase: client)
+        Task { await repo.save() }
+    }
 
     // ⚠️ 나이가 아니라 출생연도 저장 — 매칭 시 (현재연도 - birthYear)로 나이 계산.
     @AppStorage("owner.birthYear") private var birthYear: Int = 0
@@ -57,10 +65,12 @@ struct OwnerProfileChips: View {
                     chip(label: "폐업 검토 중", active: consideringClosure) {
                         consideringClosure.toggle()
                         onChange()
+                        syncToServer()
                     }
                     chip(label: "장애인 사장님", active: isDisabledOwner) {
                         isDisabledOwner.toggle()
                         onChange()
+                        syncToServer()
                     }
                     chip(label: ncb > 0 ? "NCB \(ncb)" : "NCB 신용점수", active: ncb > 0) {
                         ncbText = ncb > 0 ? "\(ncb)" : ""
@@ -81,6 +91,7 @@ struct OwnerProfileChips: View {
                 let cur = Calendar.current.component(.year, from: Date())
                 birthYear = (y >= 1900 && y <= cur) ? y : 0
                 onChange()
+                syncToServer()
             }
             Button("취소", role: .cancel) {}
         } message: {
@@ -94,6 +105,7 @@ struct OwnerProfileChips: View {
             Button("저장") {
                 if let n = Int(ncbText), n > 0, n <= 1000 { ncb = n } else { ncb = 0 }
                 onChange()
+                syncToServer()
             }
             Button("취소", role: .cancel) {}
         } message: {

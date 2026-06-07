@@ -46,6 +46,10 @@ public struct HiringSetupStageView: View {
     @AppStorage("hiring.insuranceDone")   private var insuranceDone   = false
     @AppStorage("hiring.payslipDone")     private var payslipDone     = false
 
+    private var currentInputs: [String: String] {
+        ["noHireChoice": "\(noHireChoice)", "contractDone": "\(contractDone)", "insuranceDone": "\(insuranceDone)", "payslipDone": "\(payslipDone)"]
+    }
+
     private var wage: Int   { Int(wageText) ?? WAGE_2026 }
     private var hours: Double { Double(hoursText) ?? 30 }
     private var weeklyBase: Int { Int(hours) * wage }
@@ -87,10 +91,10 @@ public struct HiringSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 채용 공고 등록", detail: "알바몬·알바천국·당근·사람인 — 시급·시간·요일·식사 4항목 구체화"),

@@ -373,6 +373,11 @@ public struct AppRoot: View {
             self.realtimeSync = rt
             await rt.start()
         }
+
+        // owner 프로필 서버 복원 — 기기 전환·재설치 시 birthYear/ncbScore/closure/disabled 보존.
+        //   best-effort: KEK 미설정·네트워크 실패 시 로컬 UserDefaults 값 유지.
+        let ownerSync = OwnerProfileSyncRepository(supabase: supabase)
+        await ownerSync.load()
     }
 
     /// 포그라운드 복귀 시 원격 재동기화 — 웹·다른 기기에서 저장한 내용을 앱에 반영.

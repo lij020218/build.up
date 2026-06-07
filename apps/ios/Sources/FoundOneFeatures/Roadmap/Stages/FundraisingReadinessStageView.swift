@@ -46,6 +46,11 @@ public struct FundraisingReadinessStageView: View {
     @AppStorage("fr.govSupport")      private var govSupport      = false
     @AppStorage("fr.done")            private var done            = false
 
+    private var currentInputs: [String: String] {
+        ["monthlyBurnText": monthlyBurnText, "cashText": cashText, "mrrText": mrrText,
+         "pitchDeck": "\(pitchDeck)", "financialModel": "\(financialModel)", "tipsApplied": "\(tipsApplied)", "govSupport": "\(govSupport)", "done": "\(done)"]
+    }
+
     private let pages = ["런웨이 모델", "IR 자료", "정부 지원"]
 
     public init() {}
@@ -81,10 +86,10 @@ public struct FundraisingReadinessStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 캡테이블·런웨이 정리", detail: "지분 구조 + 옵션 풀 + 18개월 런웨이 + 마일스톤"),

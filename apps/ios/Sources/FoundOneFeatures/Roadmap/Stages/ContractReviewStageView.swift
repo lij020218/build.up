@@ -39,6 +39,12 @@ public struct ContractReviewStageView: View {
     @AppStorage("contract.check.maintenance") private var checkMaintenance = false
     @AppStorage("contract.check.done")        private var contractDone     = false
 
+    private var currentInputs: [String: String] {
+        ["term": "\(checkTerm)", "deposit": "\(checkDeposit)", "rent": "\(checkRent)", "area": "\(checkArea)",
+         "renewal": "\(checkRenewal)", "restore": "\(checkRestore)", "sublease": "\(checkSublease)",
+         "facility": "\(checkFacility)", "maintenance": "\(checkMaintenance)", "done": "\(contractDone)"]
+    }
+
     private var allChecked: Bool {
         checkTerm && checkDeposit && checkRent && checkArea &&
         checkRenewal && checkRestore && checkSublease && checkFacility && checkMaintenance
@@ -66,10 +72,10 @@ public struct ContractReviewStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                 .init(label: "1. 서류 발급", detail: "건축물대장 + 등기부등본 — 위반건축물 표시 + 근저당 ÷ 시세 = 부도 위험률"),

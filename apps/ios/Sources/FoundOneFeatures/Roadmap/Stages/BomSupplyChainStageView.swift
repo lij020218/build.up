@@ -21,6 +21,10 @@ public struct BomSupplyChainStageView: View {
     @AppStorage("bom.singleSourceRisk") private var singleSourceRisk = false
     @AppStorage("bom.done")            private var done            = false
 
+    private var currentInputs: [String: String] {
+        ["bomLocked": "\(bomLocked)", "supplierLocked": "\(supplierLocked)", "singleSourceRisk": "\(singleSourceRisk)", "done": "\(done)"]
+    }
+
     private let pages = ["BOM 확정", "공급사 관리"]
 
     public init() {}
@@ -48,10 +52,10 @@ public struct BomSupplyChainStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. BOM v1.0 확정", detail: "핵심 IC·기구·패키징 부품 + 부품별 대체품 1개 이상, EOL 부품 없음."),

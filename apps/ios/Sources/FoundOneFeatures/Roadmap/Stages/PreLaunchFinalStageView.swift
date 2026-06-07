@@ -101,6 +101,13 @@ public struct PreLaunchFinalStageView: View {
     // 완료 플래그
     @AppStorage("plf.done")        private var launchDone    = false
 
+    private var currentInputs: [String: String] {
+        ["permit": "\(permitOK)", "equipment": "\(equipmentOK)", "stock": "\(stockOK)", "staff": "\(staffOK)",
+         "pos": "\(posOK)", "hygiene": "\(hygieneOK)", "emergency": "\(emergencyOK)", "insurance": "\(insuranceOK)",
+         "dayOpen": "\(dayOpenOK)", "dayBriefing": "\(dayBriefingOK)", "dayPhoto": "\(dayPhotoOK)", "dayFeedback": "\(dayFeedbackOK)",
+         "done": "\(launchDone)"]
+    }
+
     private var cluster: PreLaunchCluster { PreLaunchCluster.from(industryId: industryId) }
 
     private var pages: [String] {
@@ -239,13 +246,13 @@ public struct PreLaunchFinalStageView: View {
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
                 launchDone = true
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: {
                 launchDone = false
                 roadmapStore.uncompleteStage(stageId)
             },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 인허가·시설 최종 점검", detail: "영업신고증·소방완비증명·POS·CCTV·간판 모두 작동 확인"),

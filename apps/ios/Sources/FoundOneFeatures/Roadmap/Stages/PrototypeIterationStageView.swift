@@ -31,6 +31,10 @@ public struct PrototypeIterationStageView: View {
     @AppStorage("pi.v1Done")       private var v1Done       = false
     @AppStorage("pi.done")         private var done         = false
 
+    private var currentInputs: [String: String] {
+        ["iterPlanDone": "\(iterPlanDone)", "goNoGo": "\(goNoGo)", "v1Done": "\(v1Done)", "done": "\(done)"]
+    }
+
     private let pages = ["반복 계획", "v1 프로토타입"]
 
     public init() {}
@@ -58,10 +62,10 @@ public struct PrototypeIterationStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId)
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 반복 계획·게이트 기준 수립", detail: "목표 KPI와 반복 주기, go/no-go 기준을 사전 정의."),

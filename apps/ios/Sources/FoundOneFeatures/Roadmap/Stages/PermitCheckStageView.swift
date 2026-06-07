@@ -48,6 +48,12 @@ public struct PermitCheckStageView: View {
     @AppStorage("permit.facility.electric") private var facilityElec     = false
     @AppStorage("permit.facility.gas")      private var facilityGas      = false
 
+    private var currentInputs: [String: String] {
+        ["buildingUsage": "\(buildingUsage)", "buildingSeptic": "\(buildingSeptic)", "buildingNoVio": "\(buildingNoVio)",
+         "personHygiene": "\(personHygiene)", "personHealth": "\(personHealth)",
+         "facilityFire": "\(facilityFire)", "facilityVent": "\(facilityVent)", "facilityElec": "\(facilityElec)", "facilityGas": "\(facilityGas)"]
+    }
+
     private var buildingPassed: Bool { buildingUsage && buildingSeptic && buildingNoVio }
     private var personPassed: Bool   { personHygiene && personHealth }
     private var facilityPassed: Bool { facilityFire && facilityVent && facilityElec && facilityGas }
@@ -84,9 +90,9 @@ public struct PermitCheckStageView: View {
             canAdvance: canCompleteStage,
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
-            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId) },
+            onAdvance: { roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs) },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId) },
+            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs) },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 건물 적합성", detail: "건축물대장 용도·정화조·위반 표시 — 영업 가능 건물인지 확정"),
