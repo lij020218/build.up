@@ -100,7 +100,7 @@ export function SubscriptionWebhookConnectCard({ ko = true }: { ko?: boolean }) 
                 <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.5)", marginTop: "1px" }}>
                   {st.connected
                     ? <>
-                        <span style={{ color: "#059669", fontWeight: 600 }}>● {ko ? "연결됨" : "Connected"}</span>
+                        <span style={{ color: "#1d3557", fontWeight: 600 }}>● {ko ? "연결됨" : "Connected"}</span>
                         {st.maskedSecret && <> · <span style={{ fontFamily: "ui-monospace, monospace" }}>{st.maskedSecret}</span></>}
                         {typeof st.eventCount30d === "number" && st.eventCount30d > 0 && (
                           <> · {ko ? `30일 ${st.eventCount30d}건` : `${st.eventCount30d} events / 30d`}</>
@@ -248,8 +248,8 @@ function ConnectSheet({
 
         {/* 발급 결과 — 토큰 1회 표시 */}
         {issuedToken && (
-          <div style={{ marginBottom: "16px", padding: "14px", borderRadius: "12px", background: "#fff8e1", border: "1px solid #f59e0b" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#b45309", marginBottom: "6px" }}>
+          <div style={{ marginBottom: "16px", padding: "14px", borderRadius: "12px", background: "#fff8e1", border: "1px solid #191970" }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "#191970", marginBottom: "6px" }}>
               <AlertCircle size={12} style={{ display: "inline", marginRight: "4px" }} />
               {ko ? "이 토큰은 한 번만 표시됩니다 — 즉시 복사" : "Token shown once — copy now"}
             </div>
@@ -264,8 +264,8 @@ function ConnectSheet({
         )}
 
         {issuedUrl && (
-          <div style={{ marginBottom: "16px", padding: "14px", borderRadius: "12px", background: "rgba(5,150,105,0.06)", border: "1px solid rgba(5,150,105,0.2)" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#047857", marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
+          <div style={{ marginBottom: "16px", padding: "14px", borderRadius: "12px", background: "rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.2)" }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "#1d3557", marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
               <CheckCircle2 size={12} /> {ko ? "Webhook URL — 결제사 콘솔에 등록" : "Webhook URL — register on your provider"}
             </div>
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
@@ -327,7 +327,7 @@ function ConnectSheet({
         )}
 
         {error && (
-          <div style={{ marginTop: "12px", padding: "10px 12px", borderRadius: "10px", background: "rgba(220,38,38,0.06)", color: "#b91c1c", fontSize: "12px" }}>
+          <div style={{ marginTop: "12px", padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.06)", color: "#b64c4c", fontSize: "12px" }}>
             {error}
           </div>
         )}
@@ -349,8 +349,8 @@ function ConnectSheet({
           {status.connected && (
             <button type="button" onClick={disconnect} disabled={busy}
               style={{
-                padding: "12px 16px", borderRadius: "12px", border: "1px solid rgba(220,38,38,0.2)",
-                background: "rgba(220,38,38,0.04)", color: "#b91c1c",
+                padding: "12px 16px", borderRadius: "12px", border: "1px solid rgba(182,76,76,0.2)",
+                background: "rgba(182,76,76,0.04)", color: "#b64c4c",
                 fontSize: "13px", fontWeight: 650, cursor: "pointer",
               }}>
               {ko ? "연결 해제" : "Disconnect"}

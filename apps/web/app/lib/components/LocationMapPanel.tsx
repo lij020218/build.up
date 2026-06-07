@@ -75,7 +75,7 @@ export function LocationMapPanel(props: {
           bounds.extend(pos);
           pinPosRef.current.set(c.id, pos);
 
-          const scoreColor = (c.score ?? 0) >= 85 ? "#34c759" : (c.score ?? 0) >= 70 ? "#007aff" : "#ff9f0a";
+          const scoreColor = (c.score ?? 0) >= 85 ? "#1d3557" : (c.score ?? 0) >= 70 ? "#007aff" : "#191970";
           const isSelected = c.id === props.selectedId;
 
           const el = document.createElement("div");

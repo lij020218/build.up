@@ -197,7 +197,7 @@ export function NotificationCenter({ d, ko }: Props) {
   };
 
   const urgencyColor = (u: Notification["urgency"]) =>
-    u === "critical" ? "#b42318" : u === "warning" ? "#e85d04" : "#191970";
+    u === "critical" ? "#b64c4c" : u === "warning" ? "#191970" : "#191970";
 
   return (
     <div style={{ position: "relative" }}>
@@ -213,7 +213,7 @@ export function NotificationCenter({ d, ko }: Props) {
           <circle cx="8" cy="2.5" r="0.5" fill="rgba(15,23,42,0.4)" />
         </svg>
         {unreadCount > 0 && (
-          <span style={{ ...badge, background: criticalUnread > 0 ? "#b42318" : "#e85d04" }}>
+          <span style={{ ...badge, background: criticalUnread > 0 ? "#b64c4c" : "#191970" }}>
             {unreadCount}
           </span>
         )}

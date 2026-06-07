@@ -39,14 +39,14 @@ export function SurfaceError({
           width: "48px",
           height: "48px",
           borderRadius: "50%",
-          background: "rgba(220,38,38,0.08)",
+          background: "rgba(182,76,76,0.08)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           marginBottom: "16px",
         }}
       >
-        <AlertCircle size={24} color="#dc2626" strokeWidth={1.8} />
+        <AlertCircle size={24} color="#b64c4c" strokeWidth={1.8} />
       </div>
       <h2 style={{ fontSize: "17px", fontWeight: 600, marginBottom: "6px", color: "#0f172a" }}>
         {surfaceLabel ? `${surfaceLabel} 로딩에 실패했습니다` : "이 화면을 불러올 수 없습니다"}
@@ -55,7 +55,7 @@ export function SurfaceError({
         일시적인 오류입니다. 다시 시도하거나 다른 탭으로 이동해 보세요.
       </p>
       {process.env.NODE_ENV === "development" && (
-        <pre style={{ fontSize: "11px", color: "#dc2626", background: "#fef2f2", padding: "10px 14px", borderRadius: "8px", maxWidth: "500px", overflow: "auto", marginBottom: "14px", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+        <pre style={{ fontSize: "11px", color: "#b64c4c", background: "#fef2f2", padding: "10px 14px", borderRadius: "8px", maxWidth: "500px", overflow: "auto", marginBottom: "14px", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
           {error.message}
         </pre>
       )}

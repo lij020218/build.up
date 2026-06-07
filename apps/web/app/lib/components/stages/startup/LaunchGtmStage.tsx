@@ -103,11 +103,11 @@ export function LaunchGtmStage() {
             <div style={{ padding: "14px 18px" }}>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
                 {(ko ? [
-                  { accent: "#dc2626", title: "출시 후 첫 30일이 PMF 검증의 골든타임", body: "이 30일 동안 사용자 피드백·전환율·리텐션이 명확하지 않으면, 다음 30일도 같습니다. 계측 없이 성장 마케팅 = 소음을 신호로 착각." },
+                  { accent: "#b64c4c", title: "출시 후 첫 30일이 PMF 검증의 골든타임", body: "이 30일 동안 사용자 피드백·전환율·리텐션이 명확하지 않으면, 다음 30일도 같습니다. 계측 없이 성장 마케팅 = 소음을 신호로 착각." },
                   { accent: MIDNIGHT, title: "첫 100명은 자동으로 안 옴 — 직접 영업이 표준", body: "Airbnb 가 NYC 에 매주 비행기 타고 갔고, Stripe 는 \"노트북 줘봐\" 직접 설치. Paul Graham 의 \"Do things that don't scale\" 은 옵션이 아니라 필수." },
                   { accent: "#0561fc", title: "마케팅 채널 1-2개에 집중 (10개 X)", body: "Marc Lou 매출 70%+ = 트위터 + 블로그. Pieter Levels = Product Hunt + Hacker News. 채널 분산하면 어디도 깊이 있는 도달 X." },
                 ] : [
-                  { accent: "#dc2626", title: "First 30 days = PMF validation goldenrun", body: "Without clear feedback/conversion/retention in 30 days, next 30 won't differ. Growth without instrumentation = mistaking noise for signal." },
+                  { accent: "#b64c4c", title: "First 30 days = PMF validation goldenrun", body: "Without clear feedback/conversion/retention in 30 days, next 30 won't differ. Growth without instrumentation = mistaking noise for signal." },
                   { accent: MIDNIGHT, title: "First 100 won't come automatically — direct sales", body: "Airbnb flew to NYC weekly. Stripe \"give me your laptop\" install. Paul Graham's \"Do things that don't scale\" is mandatory." },
                   { accent: "#0561fc", title: "Focus on 1-2 channels (not 10)", body: "Marc Lou 70%+ revenue = Twitter+blog. Pieter Levels = PH+HN. Diluted channels = no deep reach." },
                 ]).map((item, idx, arr) => (

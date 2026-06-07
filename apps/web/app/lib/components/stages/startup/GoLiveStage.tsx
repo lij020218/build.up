@@ -235,9 +235,9 @@ export function GoLiveStage() {
 
           <Section icon={Smartphone} title={ko ? "Apple App Store 단계별 (3-7일)" : "Apple App Store step-by-step"}>
             <div style={{ padding: "14px 16px" }}>
-              <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.2)", marginBottom: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 700, color: "#dc2626", marginBottom: "4px" }}>
-                  <AlertTriangle size={13} strokeWidth={2.4} color="#dc2626" />
+              <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.05)", border: "1px solid rgba(182,76,76,0.2)", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 700, color: "#b64c4c", marginBottom: "4px" }}>
+                  <AlertTriangle size={13} strokeWidth={2.4} color="#b64c4c" />
                   <span>2026 핵심 정책</span>
                 </div>
                 <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.75)", lineHeight: 1.6 }}>
@@ -338,9 +338,9 @@ export function GoLiveStage() {
         <>
           <Section icon={Smartphone} title={ko ? "Google Play 단계별 (2-3주)" : "Google Play step-by-step"}>
             <div style={{ padding: "14px 16px" }}>
-              <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.2)", marginBottom: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 700, color: "#dc2626", marginBottom: "4px" }}>
-                  <AlertTriangle size={13} strokeWidth={2.4} color="#dc2626" />
+              <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.05)", border: "1px solid rgba(182,76,76,0.2)", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 700, color: "#b64c4c", marginBottom: "4px" }}>
+                  <AlertTriangle size={13} strokeWidth={2.4} color="#b64c4c" />
                   <span>2026 핵심 정책</span>
                 </div>
                 <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.75)", lineHeight: 1.6 }}>
@@ -548,8 +548,8 @@ export function GoLiveStage() {
                 "No hotfix prep",
                 "Payment not tested",
               ]).map((s, i) => (
-                <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "10px 12px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.12)" }}>
-                  <XCircle size={14} strokeWidth={2.4} color="#dc2626" style={{ flexShrink: 0, marginTop: "1px" }} />
+                <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.12)" }}>
+                  <XCircle size={14} strokeWidth={2.4} color="#b64c4c" style={{ flexShrink: 0, marginTop: "1px" }} />
                   <span style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.78)", lineHeight: 1.6 }}>{s}</span>
                 </div>
               ))}
@@ -647,7 +647,7 @@ export function GoLiveStage() {
           ))}
         </div>
 
-        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", marginTop: 14, lineHeight: 1.55, padding: "10px 12px", borderRadius: 10, background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.18)" }}>
+        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", marginTop: 14, lineHeight: 1.55, padding: "10px 12px", borderRadius: 10, background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.18)" }}>
           💡 <strong>30일 후 분기점</strong>: PMF 신호 (Sean Ellis 40%+ 또는 retention curve 평평) 잡혔으면 → <strong>성장 엔진 단계</strong>로 진입. 신호 없으면 → ICP 재정의 + 문제 재검증 (피벗 결정 3-6개월 안에).
         </div>
       </div>

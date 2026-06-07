@@ -332,7 +332,7 @@ export function GrowthEngineStage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", padding: "10px 12px", borderRadius: 10, background: "rgba(217,119,6,0.06)", border: "1px solid rgba(217,119,6,0.18)", lineHeight: 1.55 }}>
+        <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", padding: "10px 12px", borderRadius: 10, background: "rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.18)", lineHeight: 1.55 }}>
           ⚠ <strong>임계 미만이면 절대 성장 마케팅 X</strong> — 깨진 양동이에 물 붓는 격. 제품 개선·새 ICP 탐색에 집중. Marc Andreessen: "The only thing that matters is getting to product/market fit. Before, nothing else matters. After, almost nothing else matters."
         </div>
       </div>
@@ -351,7 +351,7 @@ export function GrowthEngineStage() {
               <tr style={{ background: "rgba(25,25,112,0.06)" }}>
                 <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>지표</th>
                 <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: MIDNIGHT, fontSize: 11.5 }}>중앙값</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "#059669", fontSize: 11.5 }}>Top quartile</th>
+                <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "#1d3557", fontSize: 11.5 }}>Top quartile</th>
                 <th style={{ padding: "8px 10px", textAlign: "left" as const, fontWeight: 700, color: "rgba(15,23,42,0.55)", fontSize: 11.5 }}>주의</th>
               </tr>
             </thead>
@@ -369,7 +369,7 @@ export function GrowthEngineStage() {
                 <tr key={b.metric} style={{ borderTop: i === 0 ? "none" : "1px solid rgba(25,25,112,0.06)" }}>
                   <td style={{ padding: "8px 10px", color: "#0f172a", fontWeight: 600 }}>{b.metric}</td>
                   <td style={{ padding: "8px 10px", color: MIDNIGHT, fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{b.median}</td>
-                  <td style={{ padding: "8px 10px", color: "#059669", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{b.top}</td>
+                  <td style={{ padding: "8px 10px", color: "#1d3557", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{b.top}</td>
                   <td style={{ padding: "8px 10px", color: "rgba(15,23,42,0.55)", fontSize: 11 }}>{b.note}</td>
                 </tr>
               ))}
@@ -382,8 +382,8 @@ export function GrowthEngineStage() {
       </div>
 
       {/* ── 2026-05-12: 실패 회복 플레이북 — "막혔어, 어떻게?" 4 시나리오 ── */}
-      <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "white", border: "1px solid rgba(220,38,38,0.18)", boxShadow: "0 1px 3px rgba(220,38,38,0.04)" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
+      <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "white", border: "1px solid rgba(182,76,76,0.18)", boxShadow: "0 1px 3px rgba(182,76,76,0.04)" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#b64c4c", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
           🆘 막혔을 때 — 실패 회복 플레이북
         </div>
         <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 4 }}>
@@ -441,8 +441,8 @@ export function GrowthEngineStage() {
               ],
             },
           ].map((s) => (
-            <div key={s.scenario} style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(220,38,38,0.03)", border: "1px solid rgba(220,38,38,0.12)" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#b91c1c", marginBottom: 2 }}>
+            <div key={s.scenario} style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(182,76,76,0.03)", border: "1px solid rgba(182,76,76,0.12)" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#b64c4c", marginBottom: 2 }}>
                 {s.icon} {s.scenario}
               </div>
               <div style={{ fontSize: 11, color: "rgba(15,23,42,0.55)", marginBottom: 6, fontStyle: "italic" as const }}>

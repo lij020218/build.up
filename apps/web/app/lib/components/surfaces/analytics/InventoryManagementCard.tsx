@@ -70,14 +70,14 @@ export function InventoryManagementCard() {
   };
 
   const CAT: Record<string, { ko: string; en: string; color: string }> = {
-    fresh:    { ko: "신선", en: "Fresh",    color: "#34c759" },
-    dry:      { ko: "건식", en: "Dry",      color: "#ff9f0a" },
+    fresh:    { ko: "신선", en: "Fresh",    color: "#1d3557" },
+    dry:      { ko: "건식", en: "Dry",      color: "#191970" },
     frozen:   { ko: "냉동", en: "Frozen",   color: "#007aff" },
     beverage: { ko: "음료", en: "Beverage", color: "#30b0c7" },
     supply:   { ko: "소모품", en: "Supply", color: "#af52de" },
     other:    { ko: "기타", en: "Other",    color: "#8e8e93" },
   };
-  const SC = { urgent: "#ff3b30", warning: "#ff9f0a", good: "#34c759" } as const;
+  const SC = { urgent: "#b64c4c", warning: "#191970", good: "#1d3557" } as const;
   const SL = {
     urgent: { ko: "긴급", en: "Urgent" },
     warning: { ko: "주의", en: "Low" },
@@ -137,7 +137,7 @@ export function InventoryManagementCard() {
             style={{ fontSize: "12px", fontWeight: 600, color: "#007aff", background: "rgba(0,122,255,0.08)", border: "none", borderRadius: "9px", padding: "6px 13px", cursor: "pointer" }}>
             {ko ? "+ 직접 추가" : "+ Add"}
           </button>
-          <label style={{ fontSize: "12px", fontWeight: 600, color: "#34c759", cursor: "pointer", padding: "6px 13px", background: "rgba(52,199,89,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+          <label style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557", cursor: "pointer", padding: "6px 13px", background: "rgba(52,199,89,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2v12M2 8h12" /></svg>
             {ko ? "CSV" : "CSV"}
             <input type="file" accept=".csv,.tsv,.txt" aria-label={ko ? "재고 CSV 파일 업로드" : "Upload inventory CSV file"} style={{ display: "none" }} onChange={async (e) => {
@@ -190,8 +190,8 @@ export function InventoryManagementCard() {
 
       {/* ── 발주 알림 배너 ── */}
       {urgentList.length > 0 && (
-        <div style={{ padding: "12px 22px", background: "rgba(255,59,48,0.04)", borderBottom: "0.5px solid rgba(255,59,48,0.10)" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "#ff3b30", marginBottom: "2px" }}>
+        <div style={{ padding: "12px 22px", background: "rgba(182,76,76,0.04)", borderBottom: "0.5px solid rgba(182,76,76,0.10)" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#b64c4c", marginBottom: "2px" }}>
             {ko ? `지금 주문하세요 — ${urgentList.map(i => i.name).join(", ")}` : `Order now — ${urgentList.map(i => i.name).join(", ")}`}
           </div>
           <div style={{ fontSize: "11px", color: "rgba(200,40,30,0.8)", lineHeight: 1.4 }}>
@@ -205,8 +205,8 @@ export function InventoryManagementCard() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.07)" }}>
           {[
             { label: ko ? "총 재고 가치" : "Stock value",      value: totalValue > 0 ? fmtV(totalValue) : "—",                               color: "inherit" as const },
-            { label: ko ? "이달 폐기 비용" : "Waste this month", value: wasteCost > 0 ? fmtV(wasteCost) : "—",                                color: wasteCost > 0 ? "#ff9f0a" : "inherit" as const },
-            { label: ko ? "주문 필요" : "To order",             value: orderCount > 0 ? `${orderCount}${ko ? "건" : ""}` : ko ? "없음" : "—", color: orderCount > 0 ? "#ff3b30" : "#34c759" as const },
+            { label: ko ? "이달 폐기 비용" : "Waste this month", value: wasteCost > 0 ? fmtV(wasteCost) : "—",                                color: wasteCost > 0 ? "#191970" : "inherit" as const },
+            { label: ko ? "주문 필요" : "To order",             value: orderCount > 0 ? `${orderCount}${ko ? "건" : ""}` : ko ? "없음" : "—", color: orderCount > 0 ? "#b64c4c" : "#1d3557" as const },
           ].map((m, idx) => (
             <div key={m.label} style={{ padding: "12px 14px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.07)" : "none" }}>
               <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: "5px" }}>{m.label}</div>
@@ -271,7 +271,7 @@ export function InventoryManagementCard() {
           <div key={item.id} style={{
             padding: "16px 22px",
             borderBottom: (!isLast || invForm.open) ? "0.5px solid rgba(0,0,0,0.06)" : "none",
-            background: s === "urgent" ? "rgba(255,59,48,0.018)" : s === "warning" ? "rgba(255,159,10,0.012)" : "transparent",
+            background: s === "urgent" ? "rgba(182,76,76,0.018)" : s === "warning" ? "rgba(25,25,112,0.012)" : "transparent",
           }}>
 
             {/* 이름 · 카테고리 · 상태 */}
@@ -292,7 +292,7 @@ export function InventoryManagementCard() {
             {/* 핵심 인사이트 줄 */}
             <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", marginBottom: "12px", alignItems: "center" }}>
               {d !== null ? (
-                <span style={{ fontSize: "12px", fontWeight: 600, color: d <= (item.leadTimeDays || 1) ? "#ff3b30" : d <= 7 ? "#ff9f0a" : "var(--muted)" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: d <= (item.leadTimeDays || 1) ? "#b64c4c" : d <= 7 ? "#191970" : "var(--muted)" }}>
                   {d === 0 ? (ko ? "오늘 소진" : "Depletes today") : d === 1 ? (ko ? "내일 소진" : "Depletes tomorrow") : (ko ? `D-${d} 소진 예정` : `${d}d left`)}
                 </span>
               ) : (
@@ -301,7 +301,7 @@ export function InventoryManagementCard() {
                 </span>
               )}
               {exp !== null && (
-                <span style={{ fontSize: "12px", fontWeight: exp <= 2 ? 700 : 500, color: exp <= 0 ? "#ff3b30" : exp <= 2 ? "#ff3b30" : exp <= 5 ? "#ff9f0a" : "var(--muted)" }}>
+                <span style={{ fontSize: "12px", fontWeight: exp <= 2 ? 700 : 500, color: exp <= 0 ? "#b64c4c" : exp <= 2 ? "#b64c4c" : exp <= 5 ? "#191970" : "var(--muted)" }}>
                   {exp <= 0 ? (ko ? "유통기한 만료" : "Expired") : (ko ? `유통기한 D+${exp}` : `Exp D+${exp}`)}
                 </span>
               )}
@@ -342,7 +342,7 @@ export function InventoryManagementCard() {
                     {ko ? "주문하기 ›" : "Order ›"}
                   </a>
                 ) : (
-                  <span style={{ fontSize: "11px", color: "#ff9f0a", background: "rgba(255,159,10,0.09)", borderRadius: "8px", padding: "6px 11px", fontWeight: 600 }}>
+                  <span style={{ fontSize: "11px", color: "#191970", background: "rgba(25,25,112,0.09)", borderRadius: "8px", padding: "6px 11px", fontWeight: 600 }}>
                     {item.supplierName ? item.supplierName : (ko ? "공급업체 미등록" : "No supplier")}
                   </span>
                 )
@@ -359,7 +359,7 @@ export function InventoryManagementCard() {
               {/* 폐기 기록 */}
               <button type="button"
                 onClick={() => { setInvWasteTarget(isWasting ? null : item.id); setInvWasteQty(""); setInvWasteReason(""); }}
-                style={{ fontSize: "11px", fontWeight: 500, color: isWasting ? "#ff3b30" : "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
+                style={{ fontSize: "11px", fontWeight: 500, color: isWasting ? "#b64c4c" : "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
                 {ko ? "폐기 기록" : "Log waste"}
               </button>
 
@@ -370,7 +370,7 @@ export function InventoryManagementCard() {
                   {ko ? "수정" : "Edit"}
                 </button>
                 <button type="button" onClick={() => handleInvDelete(item.id)}
-                  style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px 9px", fontWeight: 500 }}>
+                  style={{ fontSize: "11px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer", padding: "4px 9px", fontWeight: 500 }}>
                   {ko ? "삭제" : "Del"}
                 </button>
               </div>
@@ -378,8 +378,8 @@ export function InventoryManagementCard() {
 
             {/* 폐기 기록 인라인 폼 */}
             {isWasting && (
-              <div style={{ marginTop: "12px", padding: "13px 15px", background: "rgba(255,59,48,0.04)", borderRadius: "12px", border: "0.5px solid rgba(255,59,48,0.13)", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#ff3b30", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>
+              <div style={{ marginTop: "12px", padding: "13px 15px", background: "rgba(182,76,76,0.04)", borderRadius: "12px", border: "0.5px solid rgba(182,76,76,0.13)", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#b64c4c", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>
                   {ko ? "폐기 기록" : "Waste log"}
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -399,7 +399,7 @@ export function InventoryManagementCard() {
                 </div>
                 <div style={{ display: "flex", gap: "7px" }}>
                   <button type="button" disabled={!invWasteQty} onClick={() => handleInvWaste(item.id)}
-                    style={{ flex: 1, background: invWasteQty ? "#ff3b30" : "rgba(0,0,0,0.08)", color: invWasteQty ? "#fff" : "var(--muted)", border: "none", borderRadius: "9px", padding: "8px 0", fontSize: "12px", fontWeight: 700, cursor: invWasteQty ? "pointer" : "default" }}>
+                    style={{ flex: 1, background: invWasteQty ? "#b64c4c" : "rgba(0,0,0,0.08)", color: invWasteQty ? "#fff" : "var(--muted)", border: "none", borderRadius: "9px", padding: "8px 0", fontSize: "12px", fontWeight: 700, cursor: invWasteQty ? "pointer" : "default" }}>
                     {ko ? "기록" : "Record"}
                   </button>
                   <button type="button" onClick={() => setInvWasteTarget(null)}
@@ -608,8 +608,8 @@ export function InventoryManagementCard() {
             const lead = Number(invForm.leadTimeDays) || 1;
             const warn = days <= lead;
             return (
-              <div style={{ padding: "11px 14px", borderRadius: "11px", background: warn ? "rgba(255,59,48,0.05)" : "rgba(52,199,89,0.05)", border: `0.5px solid ${warn ? "rgba(255,59,48,0.15)" : "rgba(52,199,89,0.15)"}` }}>
-                <div style={{ fontSize: "12px", fontWeight: 600, color: warn ? "#ff3b30" : "#34c759" }}>
+              <div style={{ padding: "11px 14px", borderRadius: "11px", background: warn ? "rgba(182,76,76,0.05)" : "rgba(52,199,89,0.05)", border: `0.5px solid ${warn ? "rgba(182,76,76,0.15)" : "rgba(52,199,89,0.15)"}` }}>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: warn ? "#b64c4c" : "#1d3557" }}>
                   {warn
                     ? (ko ? `현재 수량으로 ${days}일치 — 리드타임(${lead}일) 고려 시 오늘 주문 필요` : `${days}d of stock — must order today (${lead}d lead time)`)
                     : (ko ? `현재 수량으로 ${days}일치 — 당장 주문 불필요` : `${days} days of stock — no immediate order needed`)}

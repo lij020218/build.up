@@ -297,9 +297,9 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
         padding: "14px",
         borderRadius: "14px",
         background: hasChanges
-          ? (scenario.net > currentNet ? "rgba(5,150,105,0.06)" : "rgba(220,38,38,0.04)")
+          ? (scenario.net > currentNet ? "rgba(25,25,112,0.06)" : "rgba(182,76,76,0.04)")
           : "rgba(25,25,112,0.035)",
-        border: `1px solid ${hasChanges ? (scenario.net > currentNet ? "rgba(5,150,105,0.12)" : "rgba(220,38,38,0.1)") : "rgba(25,25,112,0.04)"}`,
+        border: `1px solid ${hasChanges ? (scenario.net > currentNet ? "rgba(25,25,112,0.12)" : "rgba(182,76,76,0.1)") : "rgba(25,25,112,0.04)"}`,
         marginBottom: "16px",
       }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
@@ -309,13 +309,13 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
               fontSize: "18px",
               fontWeight: 700,
               letterSpacing: "-0.03em",
-              color: scenario.net >= 0 ? "#059669" : "#dc2626",
+              color: scenario.net >= 0 ? "#1d3557" : "#b64c4c",
               lineHeight: 1.1,
             }}>
               {scenario.net >= 0 ? "+" : ""}{fmt(scenario.net)}
             </div>
             {hasChanges && netDelta !== 0 && (
-              <div style={{ fontSize: "11px", fontWeight: 650, color: netDelta > 0 ? "#059669" : "#dc2626", marginTop: "2px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 650, color: netDelta > 0 ? "#1d3557" : "#b64c4c", marginTop: "2px" }}>
                 {netDelta > 0 ? "▲" : "▼"} {fmt(Math.abs(netDelta))} {ko ? "변화" : "change"}
               </div>
             )}
@@ -326,13 +326,13 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
               fontSize: "18px",
               fontWeight: 700,
               letterSpacing: "-0.03em",
-              color: scenario.runway < 0 ? "#059669" : scenario.runway >= 6 ? "#059669" : scenario.runway >= 3 ? "#d97706" : "#dc2626",
+              color: scenario.runway < 0 ? "#1d3557" : scenario.runway >= 6 ? "#1d3557" : scenario.runway >= 3 ? "#191970" : "#b64c4c",
               lineHeight: 1.1,
             }}>
               {scenario.runway < 0 ? (ko ? "∞" : "∞") : `${scenario.runway}${ko ? "개월" : "mo"}`}
             </div>
             {hasChanges && runwayDelta !== 0 && currentRunway >= 0 && (
-              <div style={{ fontSize: "11px", fontWeight: 650, color: runwayDelta > 0 ? "#059669" : "#dc2626", marginTop: "2px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 650, color: runwayDelta > 0 ? "#1d3557" : "#b64c4c", marginTop: "2px" }}>
                 {runwayDelta > 0 ? "▲" : "▼"} {Math.abs(runwayDelta)}{ko ? "개월" : "mo"}
               </div>
             )}
@@ -343,7 +343,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
               fontSize: "18px",
               fontWeight: 700,
               letterSpacing: "-0.03em",
-              color: scenario.bep <= 80 ? "#059669" : scenario.bep <= 95 ? "#d97706" : "#dc2626",
+              color: scenario.bep <= 80 ? "#1d3557" : scenario.bep <= 95 ? "#191970" : "#b64c4c",
               lineHeight: 1.1,
             }}>
               {/* 매출이 비용 대비 너무 작으면 비율이 1000% 를 훨씬 초과 → 사용자에겐 무의미한 숫자.
@@ -375,7 +375,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
                     {s.label[ko ? "ko" : "en"]}
                   </span>
                   <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)" }}>
-                    {fmt(s.baseAmount)} → <span style={{ color: delta !== 0 ? (isGoodDirection ? "#059669" : "#dc2626") : "rgba(15,23,42,0.5)", fontWeight: 650 }}>
+                    {fmt(s.baseAmount)} → <span style={{ color: delta !== 0 ? (isGoodDirection ? "#1d3557" : "#b64c4c") : "rgba(15,23,42,0.5)", fontWeight: 650 }}>
                       {fmt(newAmount)}
                     </span>
                   </span>
@@ -383,7 +383,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
                 <div style={{
                   fontSize: "12px",
                   fontWeight: 700,
-                  color: delta === 0 ? "rgba(15,23,42,0.5)" : isGoodDirection ? "#059669" : "#dc2626",
+                  color: delta === 0 ? "rgba(15,23,42,0.5)" : isGoodDirection ? "#1d3557" : "#b64c4c",
                   minWidth: "52px",
                   textAlign: "right",
                   fontVariantNumeric: "tabular-nums",
@@ -402,12 +402,12 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
                   width: "100%",
                   height: "4px",
                   cursor: "pointer",
-                  accentColor: delta === 0 ? "#94a3b8" : isGoodDirection ? "#059669" : "#dc2626",
+                  accentColor: delta === 0 ? "#94a3b8" : isGoodDirection ? "#1d3557" : "#b64c4c",
                 }}
               />
               {amountDelta !== 0 && (
                 <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.4)", marginTop: "2px", textAlign: "right" }}>
-                  {s.direction === "positive" ? (ko ? "월 매출 기여" : "Monthly revenue impact") : (ko ? "월 절감/증가" : "Monthly savings/increase")}: <span style={{ color: isGoodDirection ? "#059669" : "#dc2626", fontWeight: 650 }}>
+                  {s.direction === "positive" ? (ko ? "월 매출 기여" : "Monthly revenue impact") : (ko ? "월 절감/증가" : "Monthly savings/increase")}: <span style={{ color: isGoodDirection ? "#1d3557" : "#b64c4c", fontWeight: 650 }}>
                     {amountDelta > 0 ? "+" : ""}{fmt(amountDelta)}
                   </span>
                 </div>
@@ -424,16 +424,16 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
             marginTop: "14px",
             padding: "10px 12px",
             borderRadius: "10px",
-            background: realism.level === "unrealistic" ? "rgba(220,38,38,0.05)" : "rgba(217,119,6,0.05)",
-            border: `1px solid ${realism.level === "unrealistic" ? "rgba(220,38,38,0.14)" : "rgba(217,119,6,0.14)"}`,
+            background: realism.level === "unrealistic" ? "rgba(182,76,76,0.05)" : "rgba(25,25,112,0.05)",
+            border: `1px solid ${realism.level === "unrealistic" ? "rgba(182,76,76,0.14)" : "rgba(25,25,112,0.14)"}`,
             fontSize: "12px",
             color: "rgba(15,23,42,0.75)",
             lineHeight: 1.5,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-            <AlertTriangle size={12} strokeWidth={1.6} color={realism.level === "unrealistic" ? "#dc2626" : "#d97706"} />
-            <span style={{ fontWeight: 700, color: realism.level === "unrealistic" ? "#dc2626" : "#d97706", fontSize: "12px" }}>
+            <AlertTriangle size={12} strokeWidth={1.6} color={realism.level === "unrealistic" ? "#b64c4c" : "#191970"} />
+            <span style={{ fontWeight: 700, color: realism.level === "unrealistic" ? "#b64c4c" : "#191970", fontSize: "12px" }}>
               {realism.level === "unrealistic"
                 ? (ko ? "비현실적 시나리오 — 숫자만 보지 마세요" : "Unrealistic scenario — don't trust the numbers alone")
                 : (ko ? "공격적 시나리오 — 실행 난이도 높음" : "Aggressive scenario — hard to execute")}
@@ -464,7 +464,7 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
           lineHeight: 1.5,
         }}>
           <span style={{ fontWeight: 660, color: "#191970", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-            <Lightbulb size={12} strokeWidth={1.5} color="#f59e0b" />
+            <Lightbulb size={12} strokeWidth={1.5} color="#191970" />
             {ko ? "인사이트:" : "Insight:"}
           </span>{" "}
           {scenario.net > currentNet
@@ -523,9 +523,9 @@ export function WhatIfSimulator({ ko, monthlySales, monthlyCosts, capitalLeft, e
           {showSecondOrder && (
             <div style={{ marginTop: "8px", display: "grid", gap: "8px" }}>
               {secondOrderChain.map((item, idx) => {
-                const bg = item.severity === "high" ? "rgba(220,38,38,0.03)" : "rgba(217,119,6,0.03)";
-                const border = item.severity === "high" ? "rgba(220,38,38,0.1)" : "rgba(217,119,6,0.1)";
-                const badgeColor = item.severity === "high" ? "#b91c1c" : "#b45309";
+                const bg = item.severity === "high" ? "rgba(182,76,76,0.03)" : "rgba(25,25,112,0.03)";
+                const border = item.severity === "high" ? "rgba(182,76,76,0.1)" : "rgba(25,25,112,0.1)";
+                const badgeColor = item.severity === "high" ? "#b64c4c" : "#191970";
 
                 return (
                   <div

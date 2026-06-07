@@ -29,8 +29,8 @@ export function SaveStatusBadge({ ko, status, lastSavedAt, errorMessage }: Props
 
   const palette = (() => {
     if (s === "saving") return { bg: "rgba(25,25,112,0.08)", color: PALETTE.MIDNIGHT, label: ko ? "Supabase 저장 중" : "Saving to Supabase" };
-    if (s === "saved")  return { bg: "rgba(52,199,89,0.10)", color: "#0e7c3a",            label: ko ? "저장됨" : "Saved" };
-    if (s === "error")  return { bg: "rgba(255,59,48,0.10)", color: "#b32419",            label: ko ? "저장 실패" : "Save failed" };
+    if (s === "saved")  return { bg: "rgba(52,199,89,0.10)", color: "#1d3557",            label: ko ? "저장됨" : "Saved" };
+    if (s === "error")  return { bg: "rgba(182,76,76,0.10)", color: "#b32419",            label: ko ? "저장 실패" : "Save failed" };
     return { bg: "rgba(25,25,112,0.04)", color: PALETTE.MIDNIGHT, label: ko ? "최신 상태" : "Up to date" };
   })();
 
@@ -87,7 +87,7 @@ export function SaveStatusBadge({ ko, status, lastSavedAt, errorMessage }: Props
           maxWidth: 460,
           padding: "12px 14px",
           background: "white",
-          border: "1px solid rgba(255,59,48,0.30)",
+          border: "1px solid rgba(182,76,76,0.30)",
           borderRadius: 12,
           boxShadow: "0 12px 32px rgba(25,25,112,0.14)",
           zIndex: 100,
@@ -113,7 +113,7 @@ export function SaveStatusBadge({ ko, status, lastSavedAt, errorMessage }: Props
               fontSize: 11,
               fontFamily: "ui-monospace, Menlo, monospace",
               color: PALETTE.INK,
-              background: "rgba(255,59,48,0.04)",
+              background: "rgba(182,76,76,0.04)",
               padding: "8px 10px",
               borderRadius: 8,
               wordBreak: "break-word" as const,

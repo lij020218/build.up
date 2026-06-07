@@ -30,11 +30,11 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
     },
     {
       icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1d3557" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
         </svg>
       ),
-      color: "#059669",
+      color: "#1d3557",
       title: ko ? "실시간 경영 분석" : "Real-time Business Analytics",
       desc: ko ? "매출, 비용, 손익분기를 한눈에. 위험 신호를 AI가 먼저 감지합니다." : "Revenue, costs, break-even at a glance. AI detects warning signs first.",
     },

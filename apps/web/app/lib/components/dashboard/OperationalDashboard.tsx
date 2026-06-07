@@ -183,19 +183,19 @@ export default function OperationalDashboard({ d }: Props) {
         <button className="dash-stagger-item" type="button" onClick={() => d.navigateToSurface("analytics")} style={{
           ...nextStaggerStyle(),
           width: "100%", marginTop: "10px", padding: "14px 18px",
-          borderRadius: "16px", border: "1px solid rgba(245,158,11,0.15)",
-          background: "linear-gradient(180deg, rgba(245,158,11,0.04) 0%, rgba(255,255,255,0.9) 100%)",
+          borderRadius: "16px", border: "1px solid rgba(25,25,112,0.15)",
+          background: "linear-gradient(180deg, rgba(25,25,112,0.04) 0%, rgba(255,255,255,0.9) 100%)",
           cursor: "pointer", display: "flex", alignItems: "center", gap: "12px",
           transition: "all 0.15s ease",
         }}>
           <div style={{
             width: "32px", height: "32px", borderRadius: "10px",
-            background: "rgba(245,158,11,0.1)",
+            background: "rgba(25,25,112,0.1)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 3v6M8 11.5v.5" stroke="#f59e0b" strokeWidth="1.6" strokeLinecap="round" />
-              <circle cx="8" cy="8" r="6.5" stroke="#f59e0b" strokeWidth="1.2" fill="none" />
+              <path d="M8 3v6M8 11.5v.5" stroke="#191970" strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="8" cy="8" r="6.5" stroke="#191970" strokeWidth="1.2" fill="none" />
             </svg>
           </div>
           <div style={{ flex: 1, textAlign: "left" }}>

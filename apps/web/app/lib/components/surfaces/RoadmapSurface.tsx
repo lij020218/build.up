@@ -29,13 +29,13 @@ export function RoadmapSurface() {
     "franchise_application": [{ label: ko ? "가맹 절차" : "Franchise", color: "#0891b2" }],
     "location_candidates": [{ label: ko ? "상권 분석" : "Market Analysis", color: "#2563eb" }],
     "contract_review": [{ label: ko ? "AI 계약 분석" : "AI Contract", color: "#7c3aed" }],
-    "construction_setup": [{ label: ko ? "인테리어 · 집기" : "Interior · FF&E", color: "#d97706" }],
-    "vendor_setup": [{ label: ko ? "공급업체" : "Suppliers", color: "#059669" }],
+    "construction_setup": [{ label: ko ? "인테리어 · 집기" : "Interior · FF&E", color: "#191970" }],
+    "vendor_setup": [{ label: ko ? "공급업체" : "Suppliers", color: "#1d3557" }],
     "operations_setup": [{ label: ko ? "배달 · SNS" : "Delivery · SNS", color: "#db2777" }],
-    "pre_launch": [{ label: ko ? "소프트오픈" : "Soft Open", color: "#ea580c" }],
+    "pre_launch": [{ label: ko ? "소프트오픈" : "Soft Open", color: "#191970" }],
     "tax_guide": [{ label: ko ? "절세 가이드" : "Tax Guide", color: "#0d9488" }],
-    "loan_guide": [{ label: ko ? "자금조달 · 지원사업" : "Funding · Programs", color: "#059669" }],
-    "venture_certification": [{ label: ko ? "벤처인증 · 지원사업" : "Venture Cert", color: "#059669" }],
+    "loan_guide": [{ label: ko ? "자금조달 · 지원사업" : "Funding · Programs", color: "#1d3557" }],
+    "venture_certification": [{ label: ko ? "벤처인증 · 지원사업" : "Venture Cert", color: "#1d3557" }],
     "launch_gtm": [{ label: ko ? "GTM 전략" : "GTM Strategy", color: "#db2777" }],
   };
 

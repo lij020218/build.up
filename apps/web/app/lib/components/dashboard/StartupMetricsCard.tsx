@@ -45,7 +45,7 @@ export function StartupMetricsCard({
       <div style={grid}>
         <div style={block}>
           <div style={label}>{ko ? "월 Burn" : "Monthly burn"}</div>
-          <div style={{ ...value, color: monthlyBurn > 0 ? "#b54708" : "#177245" }}>
+          <div style={{ ...value, color: monthlyBurn > 0 ? "#b54708" : "#1d3557" }}>
             {monthlyBurn > 0 ? <CountUp to={monthlyBurn} duration={1.0} format={fmt} /> : ko ? "흑자" : "Positive"}
           </div>
           <div style={note}>{ko ? "비용 − 매출" : "Costs − revenue"}</div>

@@ -202,7 +202,7 @@ export default function LifecycleCard({
                   height: "20px",
                   borderRadius: "6px",
                   border: checked ? "none" : "1.5px solid rgba(17,17,17,0.15)",
-                  background: checked ? "#34c759" : "transparent",
+                  background: checked ? "#1d3557" : "transparent",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",

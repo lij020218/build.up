@@ -60,7 +60,7 @@ export function PermitCheckPanels() {
   const permitSet = getPermitsForCategory(industryCategoryId);
   const totalCost = getTotalPermitCost(industryCategoryId);
   const priorityLabel = (p: string) => p === "required" ? (ko ? "필수" : "Required") : p === "conditional" ? (ko ? "조건부" : "Conditional") : (ko ? "권장" : "Recommended");
-  const priorityColor = (p: string) => p === "required" ? "#dc2626" : p === "conditional" ? "#d97706" : "#6b7280";
+  const priorityColor = (p: string) => p === "required" ? "#b64c4c" : p === "conditional" ? "#191970" : "#6b7280";
 
   // ── Intro 콘텐츠 (단계 의미·작업·실패 사례) ──
   //  사용자 피드백: 단계 설명이 부족해 "대체 뭘 하라는 건지" 모르겠다는 의견 → 제일 위에
@@ -326,9 +326,9 @@ export function PermitCheckPanels() {
       {(() => {
         if (!livePermitInsights || livePermitInsights.loading) {
           return (
-            <div style={{ marginBottom: "16px", padding: "18px 20px", borderRadius: "20px", border: "1px solid rgba(234,88,12,0.08)", background: "linear-gradient(180deg, rgba(255,237,213,0.1) 0%, rgba(255,255,255,0.9) 100%)" }}>
+            <div style={{ marginBottom: "16px", padding: "18px 20px", borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(255,237,213,0.1) 0%, rgba(255,255,255,0.9) 100%)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ea580c", animation: "bentoPulse 1.5s infinite" }} />
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#191970", animation: "bentoPulse 1.5s infinite" }} />
                 <span style={{ fontSize: "14px", fontWeight: 600 }}>{ko ? "사업자 현황 데이터 조회 중..." : "Loading permit data..."}</span>
               </div>
             </div>
@@ -337,7 +337,7 @@ export function PermitCheckPanels() {
 
         if (!livePermitInsights.data) return null;
         const ins = livePermitInsights.data;
-        const rateColor = ins.survivalRate >= 70 ? "#059669" : ins.survivalRate >= 50 ? "#d97706" : "#dc2626";
+        const rateColor = ins.survivalRate >= 70 ? "#1d3557" : ins.survivalRate >= 50 ? "#191970" : "#b64c4c";
 
         return (
           <div style={{ marginBottom: "16px", borderRadius: "20px", border: `1px solid ${rateColor}15`, background: `linear-gradient(180deg, ${rateColor}06 0%, rgba(255,255,255,0.92) 100%)`, overflow: "hidden" }} className="bento-fade-in">
@@ -354,13 +354,13 @@ export function PermitCheckPanels() {
                 <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "전체 등록" : "Total"}</div>
                 <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#0f172a" }}>{ins.total.toLocaleString()}</div>
               </div>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.06)" }}>
+              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.06)" }}>
                 <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "영업 중" : "Active"}</div>
-                <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#059669" }}>{ins.operating.toLocaleString()}</div>
+                <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#1d3557" }}>{ins.operating.toLocaleString()}</div>
               </div>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(220,38,38,0.04)" }}>
+              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(182,76,76,0.04)" }}>
                 <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "폐업" : "Closed"}</div>
-                <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#dc2626" }}>{ins.closed.toLocaleString()}</div>
+                <div style={{ fontSize: "20px", fontWeight: 740, letterSpacing: "-0.04em", color: "#b64c4c" }}>{ins.closed.toLocaleString()}</div>
               </div>
               <div style={{ padding: "14px", borderRadius: "14px", background: `${rateColor}08` }}>
                 <div style={{ fontSize: "10px", fontWeight: 650, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(0,0,0,0.4)", marginBottom: "4px" }}>{ko ? "생존율" : "Survival"}</div>
@@ -433,9 +433,9 @@ export function PermitCheckPanels() {
                         </div>
                       )}
                       {permit.warnings && permit.warnings.length > 0 && (
-                        <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.08)" }}>
+                        <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.08)" }}>
                           {permit.warnings.map((w: { ko: string; en: string }, wi: number) => (
-                            <div key={wi} style={{ fontSize: "12px", color: "#dc2626", lineHeight: 1.5 }}>⚠ {ko ? w.ko : w.en}</div>
+                            <div key={wi} style={{ fontSize: "12px", color: "#b64c4c", lineHeight: 1.5 }}>⚠ {ko ? w.ko : w.en}</div>
                           ))}
                         </div>
                       )}

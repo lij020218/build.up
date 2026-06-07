@@ -68,26 +68,26 @@ function evaluateColor(value: number | null | undefined, t: KpiThresholds | unde
 
   if (isGood) return {
     bg: "linear-gradient(180deg, rgba(52,199,89,0.06) 0%, rgba(52,199,89,0.02) 100%)",
-    fg: "#0e7c3a",
+    fg: "#1d3557",
     border: "rgba(52,199,89,0.22)",
-    labelColor: "#0e7c3a",
+    labelColor: "#1d3557",
     shadow: "0 1px 3px rgba(52,199,89,0.06), 0 8px 16px -8px rgba(52,199,89,0.10)",
     state: "good",
   };
   if (isWarning && !isBad) return {
-    bg: "linear-gradient(180deg, rgba(255,159,10,0.06) 0%, rgba(255,159,10,0.02) 100%)",
+    bg: "linear-gradient(180deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.02) 100%)",
     fg: "#a35509",
-    border: "rgba(255,159,10,0.24)",
+    border: "rgba(25,25,112,0.24)",
     labelColor: "#a35509",
-    shadow: "0 1px 3px rgba(255,159,10,0.06), 0 8px 16px -8px rgba(255,159,10,0.10)",
+    shadow: "0 1px 3px rgba(25,25,112,0.06), 0 8px 16px -8px rgba(25,25,112,0.10)",
     state: "warning",
   };
   return {
-    bg: "linear-gradient(180deg, rgba(255,59,48,0.06) 0%, rgba(255,59,48,0.02) 100%)",
+    bg: "linear-gradient(180deg, rgba(182,76,76,0.06) 0%, rgba(182,76,76,0.02) 100%)",
     fg: "#b32419",
-    border: "rgba(255,59,48,0.26)",
+    border: "rgba(182,76,76,0.26)",
     labelColor: "#b32419",
-    shadow: "0 1px 3px rgba(255,59,48,0.06), 0 8px 16px -8px rgba(255,59,48,0.12)",
+    shadow: "0 1px 3px rgba(182,76,76,0.06), 0 8px 16px -8px rgba(182,76,76,0.12)",
     state: "bad",
   };
 }
@@ -194,9 +194,9 @@ export function DailyKpiStrip({ ko, industryCategoryId, values }: Props) {
                   background: trend > 0.5
                     ? "rgba(52,199,89,0.10)"
                     : trend < -0.5
-                      ? "rgba(255,59,48,0.10)"
+                      ? "rgba(182,76,76,0.10)"
                       : "rgba(25,25,112,0.06)",
-                  color: trend > 0.5 ? "#0e7c3a" : trend < -0.5 ? "#b32419" : "rgba(25,25,112,0.55)",
+                  color: trend > 0.5 ? "#1d3557" : trend < -0.5 ? "#b32419" : "rgba(25,25,112,0.55)",
                   flexShrink: 0,
                   fontVariantNumeric: "tabular-nums" as const,
                   letterSpacing: "0",

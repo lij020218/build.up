@@ -24,8 +24,8 @@ import { getKstDate } from "../../utils/business-day";
 type Props = { ko: boolean; industryCategoryId?: string };
 
 const TYPE_META: Record<CustomerInterviewType, { ko: string; en: string; color: string; bg: string }> = {
-  regular:   { ko: "단골",      en: "Regular",   color: "#059669", bg: "rgba(5,150,105,0.08)" },
-  lapsed:    { ko: "이탈 단골", en: "Lapsed",    color: "#d97706", bg: "rgba(217,119,6,0.08)" },
+  regular:   { ko: "단골",      en: "Regular",   color: "#1d3557", bg: "rgba(25,25,112,0.08)" },
+  lapsed:    { ko: "이탈 단골", en: "Lapsed",    color: "#191970", bg: "rgba(25,25,112,0.08)" },
   new:       { ko: "신규",      en: "New",       color: "#191970", bg: "rgba(25,25,112,0.08)" },
   potential: { ko: "잠재",      en: "Potential", color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
 };
@@ -470,9 +470,9 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               {importMsg && (
                 <div style={{
                   padding: "8px 11px", borderRadius: "9px",
-                  background: importMsg.kind === "ok" ? "rgba(5,150,105,0.08)" : "rgba(220,38,38,0.06)",
-                  border: `1px solid ${importMsg.kind === "ok" ? "rgba(5,150,105,0.2)" : "rgba(220,38,38,0.18)"}`,
-                  color: importMsg.kind === "ok" ? "#059669" : "#b91c1c",
+                  background: importMsg.kind === "ok" ? "rgba(25,25,112,0.08)" : "rgba(182,76,76,0.06)",
+                  border: `1px solid ${importMsg.kind === "ok" ? "rgba(25,25,112,0.2)" : "rgba(182,76,76,0.18)"}`,
+                  color: importMsg.kind === "ok" ? "#1d3557" : "#b64c4c",
                   fontSize: "11.5px", fontWeight: 600, lineHeight: 1.5,
                   display: "flex", alignItems: "center", gap: "6px",
                 }}>
@@ -572,7 +572,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
       {tab === "guide" && (
         <>
           <div style={hintBox}>
-            <Lightbulb size={14} strokeWidth={1.8} color="#d97706" style={{ flexShrink: 0, marginTop: "2px" }} />
+            <Lightbulb size={14} strokeWidth={1.8} color="#191970" style={{ flexShrink: 0, marginTop: "2px" }} />
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55 }}>
               {ko ? "Mom Test 원칙: 손님에게 의견을 묻지 말고, 과거 행동을 물으세요. \"맛있어요?\"는 데이터가 아닙니다. \"최근에 어디 가셨어요?\"가 데이터입니다." : "Mom Test: Ask about past behavior, not opinions. 'Is it good?' is not data. 'Where else did you go recently?' is."}
             </div>
@@ -585,12 +585,12 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
 
             // source 별 색상 — UI 배지
             const sourceColor: Record<InterviewTemplate["source"], string> = {
-              "Mom Test": "#d97706",
+              "Mom Test": "#191970",
               "Sean Ellis (PMF)": "#7c3aed",
               "JTBD": "#0891b2",
-              "NPS": "#059669",
+              "NPS": "#1d3557",
               "CSAT": "#191970",
-              "YC": "#ea580c",
+              "YC": "#191970",
               "Found.One": "#191970",
             };
 
@@ -809,7 +809,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                       padding: "10px 14px", borderRadius: "10px",
                       border: "none",
                       background: copyFeedback === "questions"
-                        ? "linear-gradient(135deg, #059669 0%, #34d399 100%)"
+                        ? "linear-gradient(135deg, #1d3557 0%, #34d399 100%)"
                         : "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
                       color: "#fff",
                       fontSize: "13px", fontWeight: 650,
@@ -831,8 +831,8 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                       display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px",
                       padding: "9px 14px", borderRadius: "10px",
                       border: "1px solid rgba(124,58,237,0.25)",
-                      background: copyFeedback === "intro" ? "rgba(5,150,105,0.08)" : "transparent",
-                      color: copyFeedback === "intro" ? "#059669" : "#7c3aed",
+                      background: copyFeedback === "intro" ? "rgba(25,25,112,0.08)" : "transparent",
+                      color: copyFeedback === "intro" ? "#1d3557" : "#7c3aed",
                       fontSize: "12.5px", fontWeight: 600,
                       cursor: "pointer",
                       letterSpacing: "-0.005em",
@@ -945,7 +945,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 <InsightSection
                   title={ko ? "자주 언급된 페인 포인트" : "Top pain points"}
                   items={patternAnalysis.topPainPoints}
-                  color="#dc2626"
+                  color="#b64c4c"
                   Icon={AlertCircle}
                 />
               )}
@@ -953,7 +953,7 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 <InsightSection
                   title={ko ? "재방문 동기" : "Motivations to return"}
                   items={patternAnalysis.topMotivations}
-                  color="#059669"
+                  color="#1d3557"
                   Icon={Heart}
                 />
               )}
@@ -1003,9 +1003,9 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                 {ko ? "분석되는 4가지 결과" : "4 outputs"}
               </div>
               {([
-                { Icon: AlertCircle, color: "#dc2626", titleKo: "자주 언급된 페인 포인트", titleEn: "Top pain points",
+                { Icon: AlertCircle, color: "#b64c4c", titleKo: "자주 언급된 페인 포인트", titleEn: "Top pain points",
                   exampleKo: "예: '결제 줄이 항상 길다', '주차장 좁다'", exampleEn: "e.g., 'checkout lines always long', 'parking is tight'" },
-                { Icon: Heart, color: "#059669", titleKo: "재방문 동기", titleEn: "Return motivations",
+                { Icon: Heart, color: "#1d3557", titleKo: "재방문 동기", titleEn: "Return motivations",
                   exampleKo: "예: '맛 일관됨', '사장 친절', '가격 합리적'", exampleEn: "e.g., 'consistent taste', 'kind staff', 'fair price'" },
                 { Icon: Users, color: "#191970", titleKo: "발견된 고객 세그먼트", titleEn: "Customer segments",
                   exampleKo: "예: '점심 직장인', '주말 가족', '저녁 술안주'", exampleEn: "e.g., 'lunch workers', 'weekend families', 'late-night drinkers'" },
@@ -1041,9 +1041,9 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
               <div style={{
                 padding: "10px 12px",
                 borderRadius: "10px",
-                background: interviews.length >= 3 ? "rgba(5,150,105,0.05)" : "rgba(217,119,6,0.05)",
-                border: `0.5px solid ${interviews.length >= 3 ? "rgba(5,150,105,0.18)" : "rgba(217,119,6,0.2)"}`,
-                fontSize: "11.5px", color: interviews.length >= 3 ? "#047857" : "#92400e",
+                background: interviews.length >= 3 ? "rgba(25,25,112,0.05)" : "rgba(25,25,112,0.05)",
+                border: `0.5px solid ${interviews.length >= 3 ? "rgba(25,25,112,0.18)" : "rgba(25,25,112,0.2)"}`,
+                fontSize: "11.5px", color: interviews.length >= 3 ? "#1d3557" : "#92400e",
                 lineHeight: 1.5,
                 display: "flex", alignItems: "center", gap: "8px",
               }}>
@@ -1163,8 +1163,8 @@ const inputStyle: React.CSSProperties = {
 const hintBox: React.CSSProperties = {
   display: "flex", gap: "8px", padding: "10px 12px",
   borderRadius: "10px",
-  background: "rgba(217,119,6,0.04)",
-  border: "0.5px solid rgba(217,119,6,0.1)",
+  background: "rgba(25,25,112,0.04)",
+  border: "0.5px solid rgba(25,25,112,0.1)",
 };
 
 const interviewItemStyle: React.CSSProperties = {
@@ -1208,8 +1208,8 @@ const emptyHint: React.CSSProperties = {
 const errorHint: React.CSSProperties = {
   padding: "8px 10px",
   borderRadius: "8px",
-  background: "rgba(220,38,38,0.05)",
+  background: "rgba(182,76,76,0.05)",
   fontSize: "11.5px",
-  color: "#dc2626",
+  color: "#b64c4c",
   lineHeight: 1.4,
 };

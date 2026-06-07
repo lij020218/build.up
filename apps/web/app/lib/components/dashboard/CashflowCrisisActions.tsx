@@ -43,7 +43,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
     {
       id: "reduce-delivery-ad",
       Icon: Megaphone,
-      iconColor: "#b45309",
+      iconColor: "#191970",
       label: {
         ko: "배달앱 광고비 감액",
         en: "Reduce delivery app ad spend",
@@ -87,7 +87,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
     {
       id: "supplier-delay",
       Icon: MessageCircle,
-      iconColor: "#059669",
+      iconColor: "#1d3557",
       label: {
         ko: "공급처 결제 연기 요청",
         en: "Request supplier payment delay",
@@ -166,7 +166,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
     {
       id: "credit-line",
       Icon: CreditCard,
-      iconColor: "#b91c1c",
+      iconColor: "#b64c4c",
       label: {
         ko: "카드 한도 · 마이너스 통장 조회",
         en: "Check credit limit / overdraft",
@@ -185,7 +185,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
     {
       id: "postpone-orders",
       Icon: Package,
-      iconColor: "#b45309",
+      iconColor: "#191970",
       label: {
         ko: "재고 발주 연기",
         en: "Postpone inventory orders",
@@ -219,20 +219,20 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
       style={{
         padding: "14px",
         borderRadius: "14px",
-        background: "rgba(220,38,38,0.04)",
-        border: "1px solid rgba(220,38,38,0.12)",
+        background: "rgba(182,76,76,0.04)",
+        border: "1px solid rgba(182,76,76,0.12)",
       }}
     >
       {/* 크라이시스 요약 */}
       <div style={{ marginBottom: "12px" }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "#b91c1c", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: "4px" }}>
+        <div style={{ fontSize: "12px", fontWeight: 700, color: "#b64c4c", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: "4px" }}>
           {ko ? "빠른 대응이 필요해요" : "Quick response needed"}
         </div>
         <div style={{ fontSize: "14px", fontWeight: 650, color: "#0f172a", lineHeight: 1.5 }}>
           {ko ? (
             <>
               {daysUntil}일 후 ({crisisDay?.slice(5)}) 통장이{" "}
-              <span style={{ color: "#b91c1c", fontWeight: 720 }}>
+              <span style={{ color: "#b64c4c", fontWeight: 720 }}>
                 {formatWon(-shortfall)}
               </span>
               로 떨어질 수 있어요.
@@ -240,7 +240,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
           ) : (
             <>
               In {daysUntil} days ({crisisDay?.slice(5)}) balance may drop to{" "}
-              <span style={{ color: "#b91c1c", fontWeight: 720 }}>
+              <span style={{ color: "#b64c4c", fontWeight: 720 }}>
                 {formatWon(-shortfall)}
               </span>
               .
@@ -265,7 +265,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
               padding: "12px 14px",
               borderRadius: "12px",
               background: "#fff",
-              border: `1px solid ${action.severity === "last-resort" ? "rgba(220,38,38,0.15)" : "rgba(25,25,112,0.05)"}`,
+              border: `1px solid ${action.severity === "last-resort" ? "rgba(182,76,76,0.15)" : "rgba(25,25,112,0.05)"}`,
               cursor: "pointer",
               textAlign: "left" as const,
               fontFamily: "inherit",
@@ -280,7 +280,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "#fff";
-              e.currentTarget.style.borderColor = action.severity === "last-resort" ? "rgba(220,38,38,0.15)" : "rgba(25,25,112,0.05)";
+              e.currentTarget.style.borderColor = action.severity === "last-resort" ? "rgba(182,76,76,0.15)" : "rgba(25,25,112,0.05)";
             }}
           >
             <div style={{
@@ -306,7 +306,7 @@ export function CashflowCrisisActions({ ko, crisis, currentBalance }: Props) {
                 {action.description[ko ? "ko" : "en"]}
               </div>
               <div style={{ display: "flex", gap: "10px", fontSize: "10px", fontWeight: 650 }}>
-                <span style={{ color: action.severity === "last-resort" ? "#b91c1c" : "#059669" }}>
+                <span style={{ color: action.severity === "last-resort" ? "#b64c4c" : "#1d3557" }}>
                   {action.impact[ko ? "ko" : "en"]}
                 </span>
                 <span style={{ color: "rgba(15,23,42,0.4)" }}>·</span>

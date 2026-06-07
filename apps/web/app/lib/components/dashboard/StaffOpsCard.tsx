@@ -159,7 +159,7 @@ export function StaffOpsCard({
                 label: sev.level === "eligible"
                   ? (ko ? "퇴직금 의무" : "Severance owed")
                   : (ko ? `퇴직금 D-${Math.max(0, 365 - sev.daysSinceHire)}` : `Severance D-${Math.max(0, 365 - sev.daysSinceHire)}`),
-                color: sev.level === "eligible" ? "#b42318" : "#e85d04",
+                color: sev.level === "eligible" ? "#b64c4c" : "#191970",
               }
             : null;
           return (
@@ -564,7 +564,7 @@ const tinyAction: React.CSSProperties = {
 const tinyDangerAction: React.CSSProperties = {
   border: "none",
   background: "none",
-  color: "#b42318",
+  color: "#b64c4c",
   fontSize: "12px",
   fontWeight: 700,
   cursor: "pointer",

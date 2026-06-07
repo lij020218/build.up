@@ -16,13 +16,13 @@ const pct = (part: number, total: number) =>
   total === 0 ? "0" : ((part / total) * 100).toFixed(1);
 
 const gradeColor: Record<string, string> = {
-  S: "#7c3aed", A: "#059669", B: "#2563eb", C: "#d97706", D: "#dc2626",
+  S: "#7c3aed", A: "#1d3557", B: "#2563eb", C: "#191970", D: "#b64c4c",
 };
 
 const riskColor: Record<string, { bg: string; fg: string; border: string }> = {
-  high:   { bg: "rgba(239,68,68,0.06)",  fg: "#dc2626", border: "rgba(239,68,68,0.15)" },
-  medium: { bg: "rgba(245,158,11,0.06)", fg: "#d97706", border: "rgba(245,158,11,0.15)" },
-  low:    { bg: "rgba(16,185,129,0.06)", fg: "#059669", border: "rgba(16,185,129,0.15)" },
+  high:   { bg: "rgba(182,76,76,0.06)",  fg: "#b64c4c", border: "rgba(182,76,76,0.15)" },
+  medium: { bg: "rgba(25,25,112,0.06)", fg: "#191970", border: "rgba(25,25,112,0.15)" },
+  low:    { bg: "rgba(25,25,112,0.06)", fg: "#1d3557", border: "rgba(25,25,112,0.15)" },
 };
 
 const riskLabel: Record<string, string> = { high: "높음", medium: "보통", low: "낮음" };
@@ -158,7 +158,7 @@ export function AiRoadmapSummary() {
     { key: "deposit", label: ko ? "보증금" : "Deposit", amount: ba.deposit, color: "#1d3557" },
     { key: "interior", label: ko ? "인테리어" : "Interior", amount: ba.interior, color: "#2563eb" },
     { key: "equipment", label: ko ? "집기/장비" : "Equipment", amount: ba.equipment, color: "#7c3aed" },
-    { key: "workingCapital", label: ko ? "운영자금" : "Working Capital", amount: ba.workingCapital, color: "#059669" },
+    { key: "workingCapital", label: ko ? "운영자금" : "Working Capital", amount: ba.workingCapital, color: "#1d3557" },
   ];
 
   const dateStr = (() => {

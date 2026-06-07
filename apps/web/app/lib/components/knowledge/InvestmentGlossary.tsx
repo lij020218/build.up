@@ -18,7 +18,7 @@ export function InvestmentGlossary({ ko }: Props) {
         ? getKoreaSpecificTerms()
         : getTermsByCategory(activeCategory as TermCategory);
 
-  const dangerColor = { safe: "#059669", caution: "#d97706", danger: "#dc2626" };
+  const dangerColor = { safe: "#1d3557", caution: "#191970", danger: "#b64c4c" };
   const dangerLabel = {
     safe: ko ? "안전" : "Safe",
     caution: ko ? "주의" : "Caution",
@@ -54,9 +54,9 @@ export function InvestmentGlossary({ ko }: Props) {
           color: activeCategory === "all" ? "#fff" : "rgba(15,23,42,0.4)",
         }}>{ko ? "전체" : "All"}</button>
         <button type="button" onClick={() => { setActiveCategory("korea"); setSearchQuery(""); }} style={{
-          ...filterBtn, background: activeCategory === "korea" ? "#dc2626" : "transparent",
+          ...filterBtn, background: activeCategory === "korea" ? "#b64c4c" : "transparent",
           color: activeCategory === "korea" ? "#fff" : "rgba(15,23,42,0.4)",
-          border: activeCategory !== "korea" ? "1px solid rgba(220,38,38,0.15)" : "1px solid transparent",
+          border: activeCategory !== "korea" ? "1px solid rgba(182,76,76,0.15)" : "1px solid transparent",
         }}>🇰🇷 {ko ? "한국 특유" : "Korea"}</button>
         {TERM_CATEGORIES.map(cat => (
           <button key={cat.id} type="button" onClick={() => { setActiveCategory(cat.id); setSearchQuery(""); }} style={{
@@ -91,7 +91,7 @@ export function InvestmentGlossary({ ko }: Props) {
                       </span>
                     )}
                     {term.koreaSpecific && (
-                      <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(220,38,38,0.06)", color: "#dc2626" }}>KR</span>
+                      <span style={{ fontSize: "9px", fontWeight: 650, padding: "1px 5px", borderRadius: "4px", background: "rgba(182,76,76,0.06)", color: "#b64c4c" }}>KR</span>
                     )}
                   </div>
                   <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>

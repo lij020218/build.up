@@ -135,14 +135,14 @@ export function CoachingHistoryCard({ ko }: Props) {
           icon={<CheckCircle2 size={12} strokeWidth={2.2} />}
           label={ko ? "액션 완료" : "Actions"}
           value={`${stats.actionsTaken}회 (${stats.takenRate}%)`}
-          color="#059669"
+          color="#1d3557"
         />
         {stats.criticalSignals > 0 && (
           <StatChip
             icon={<Flame size={12} strokeWidth={2.2} />}
             label={ko ? "위험 신호" : "Critical"}
             value={`${stats.criticalSignals}회`}
-            color="#b91c1c"
+            color="#b64c4c"
           />
         )}
       </div>
@@ -260,7 +260,7 @@ function MetaInsightsBlock({ meta, ko }: { meta: Meta30d; ko: boolean }) {
       </div>
       <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
         {insights.map((i, idx) => {
-          const c = { critical: "#b91c1c", important: "#b45309", good: "#059669" }[i.tone];
+          const c = { critical: "#b64c4c", important: "#191970", good: "#1d3557" }[i.tone];
           return (
             <div key={idx} style={{
               display: "flex", alignItems: "flex-start", gap: 9,
@@ -282,8 +282,8 @@ function SyncBadge({ status, ko }: { status: "idle" | "syncing" | "synced" | "of
   if (status === "idle") return null;
   const cfg = {
     syncing: { icon: <Cloud size={11} />, text: ko ? "동기화 중" : "Syncing", color: "rgba(15,23,42,0.55)" },
-    synced: { icon: <Cloud size={11} />, text: ko ? "서버 저장됨" : "Server-backed", color: "#059669" },
-    offline: { icon: <CloudOff size={11} />, text: ko ? "로컬만 (로그인 필요)" : "Local only", color: "#b45309" },
+    synced: { icon: <Cloud size={11} />, text: ko ? "서버 저장됨" : "Server-backed", color: "#1d3557" },
+    offline: { icon: <CloudOff size={11} />, text: ko ? "로컬만 (로그인 필요)" : "Local only", color: "#191970" },
   }[status];
   return (
     <span style={{
@@ -303,10 +303,10 @@ function SyncBadge({ status, ko }: { status: "idle" | "syncing" | "synced" | "of
 function HistoryRow({ entry, ko, onToggle }: { entry: CoachingEntry; ko: boolean; onToggle: () => void }) {
   const taken = entry.response?.taken === true;
   const kindColor = {
-    critical: "#b91c1c",
-    important: "#b45309",
+    critical: "#b64c4c",
+    important: "#191970",
     notable: MIDNIGHT,
-    good: "#059669",
+    good: "#1d3557",
   }[entry.signal.kind];
   const date = formatDate(entry.date, ko);
   const briefLabel = entry.brief === "startup"
@@ -317,8 +317,8 @@ function HistoryRow({ entry, ko, onToggle }: { entry: CoachingEntry; ko: boolean
     <div style={{
       display: "flex", alignItems: "center", gap: 12,
       padding: "10px 12px", borderRadius: 10,
-      background: taken ? "rgba(5,150,105,0.04)" : "white",
-      border: `1px solid ${taken ? "rgba(5,150,105,0.15)" : "rgba(15,23,42,0.08)"}`,
+      background: taken ? "rgba(25,25,112,0.04)" : "white",
+      border: `1px solid ${taken ? "rgba(25,25,112,0.15)" : "rgba(15,23,42,0.08)"}`,
       transition: "all 0.15s",
     }}>
       <button
@@ -329,7 +329,7 @@ function HistoryRow({ entry, ko, onToggle }: { entry: CoachingEntry; ko: boolean
           flexShrink: 0,
           width: 24, height: 24, borderRadius: 6,
           background: "transparent", border: "none", cursor: "pointer",
-          color: taken ? "#059669" : "rgba(15,23,42,0.35)",
+          color: taken ? "#1d3557" : "rgba(15,23,42,0.35)",
           display: "inline-flex", alignItems: "center", justifyContent: "center",
         }}
       >

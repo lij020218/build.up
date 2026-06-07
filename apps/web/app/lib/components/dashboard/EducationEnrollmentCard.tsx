@@ -249,9 +249,9 @@ function StatBox({
   icon: React.ReactNode;
 }) {
   const c = {
-    critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c" },
-    warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.20)", text: "#b45309" },
-    good: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669" },
+    critical: { bg: "rgba(182,76,76,0.06)", border: "rgba(182,76,76,0.20)", text: "#b64c4c" },
+    warning: { bg: "rgba(25,25,112,0.06)", border: "rgba(25,25,112,0.20)", text: "#191970" },
+    good: { bg: "rgba(25,25,112,0.05)", border: "rgba(25,25,112,0.18)", text: "#1d3557" },
     notable: { bg: `${MIDNIGHT}08`, border: `${MIDNIGHT}22`, text: MIDNIGHT },
   }[tone];
   return (
@@ -284,9 +284,9 @@ function CohortBox({ days, cohort, threshold, ko, label }: {
       : cohort.rate >= threshold - 15 ? "warning"
         : "critical";
   const c = {
-    critical: "#b91c1c",
-    warning: "#b45309",
-    good: "#059669",
+    critical: "#b64c4c",
+    warning: "#191970",
+    good: "#1d3557",
     notable: "rgba(15,23,42,0.5)",
   }[tone];
   return (
@@ -309,9 +309,9 @@ function CohortBox({ days, cohort, threshold, ko, label }: {
 }
 
 const actionColors = {
-  critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c" },
-  warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.20)", text: "#b45309" },
-  good: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669" },
+  critical: { bg: "rgba(182,76,76,0.06)", border: "rgba(182,76,76,0.20)", text: "#b64c4c" },
+  warning: { bg: "rgba(25,25,112,0.06)", border: "rgba(25,25,112,0.20)", text: "#191970" },
+  good: { bg: "rgba(25,25,112,0.05)", border: "rgba(25,25,112,0.18)", text: "#1d3557" },
 } as const;
 
 const cardStyle: React.CSSProperties = {

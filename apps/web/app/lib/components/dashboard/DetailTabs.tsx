@@ -400,7 +400,7 @@ function InventoryPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n
                 {(it.status === "urgent" || it.status === "warning") && (
                   <span style={{
                     fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "5px",
-                    background: "rgba(255,59,48,0.08)", color: "#ff3b30",
+                    background: "rgba(182,76,76,0.08)", color: "#b64c4c",
                   }}>
                     {ko ? "발주" : "Order"}
                   </span>
@@ -513,7 +513,7 @@ function ProductsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n:
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
           {products.map((p) => {
             const margin = p.price > 0 ? ((p.price - p.cost) / p.price * 100) : 0;
-            const marginColor = margin >= 60 ? "#34c759" : margin >= 40 ? "#ff9f0a" : "#ff3b30";
+            const marginColor = margin >= 60 ? "#1d3557" : margin >= 40 ? "#191970" : "#b64c4c";
             return (
               <div key={p.id} style={{
                 padding: "12px 14px", borderRadius: "12px",
@@ -620,16 +620,16 @@ function SummaryRow({ items }: { items: SummaryItem[] }) {
       marginBottom: "18px",
     }}>
       {items.map((it, i) => {
-        const accent = it.tone === "alert" ? "#ff3b30" : it.tone === "warn" ? "#ff9f0a" : "var(--text)";
+        const accent = it.tone === "alert" ? "#b64c4c" : it.tone === "warn" ? "#191970" : "var(--text)";
         const border = it.tone === "alert"
-          ? "1px solid rgba(255,59,48,0.18)"
+          ? "1px solid rgba(182,76,76,0.18)"
           : it.tone === "warn"
-            ? "1px solid rgba(255,159,10,0.2)"
+            ? "1px solid rgba(25,25,112,0.2)"
             : "1px solid var(--border)";
         const bg = it.tone === "alert"
-          ? "rgba(255,59,48,0.04)"
+          ? "rgba(182,76,76,0.04)"
           : it.tone === "warn"
-            ? "rgba(255,159,10,0.04)"
+            ? "rgba(25,25,112,0.04)"
             : "var(--surface)";
         return (
           <div key={i} style={{ ...miniCard, background: bg, border }}>

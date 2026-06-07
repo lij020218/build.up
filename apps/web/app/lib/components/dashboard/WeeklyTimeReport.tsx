@@ -47,7 +47,7 @@ export function WeeklyTimeReport({ ko }: Props) {
 
   const categories = [
     { key: "customer", Icon: Users, color: "#191970", labelKo: "고객 응대", labelEn: "Customer", pct: avg.customerAvg },
-    { key: "operations", Icon: Wrench, color: "#b45309", labelKo: "운영·관리", labelEn: "Operations", pct: avg.operationsAvg },
+    { key: "operations", Icon: Wrench, color: "#191970", labelKo: "운영·관리", labelEn: "Operations", pct: avg.operationsAvg },
     { key: "marketing", Icon: Megaphone, color: "#7c3aed", labelKo: "마케팅·성장", labelEn: "Marketing", pct: avg.marketingAvg },
     { key: "other", Icon: Clock, color: "#64748b", labelKo: "기타", labelEn: "Other", pct: avg.otherAvg },
   ];
@@ -112,10 +112,10 @@ export function WeeklyTimeReport({ ko }: Props) {
             style={{
               padding: "4px 10px",
               borderRadius: "8px",
-              background: "rgba(5,150,105,0.08)",
+              background: "rgba(25,25,112,0.08)",
               fontSize: "11px",
               fontWeight: 700,
-              color: "#059669",
+              color: "#1d3557",
               display: "inline-flex",
               alignItems: "center",
               gap: "4px",

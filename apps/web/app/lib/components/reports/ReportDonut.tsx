@@ -18,8 +18,8 @@ import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const MIDNIGHT = "#191970";
-const GREEN = "#059669";
-const RED = "#dc2626";
+const GREEN = "#1d3557";
+const RED = "#b64c4c";
 
 // 도넛 5개 색상 — midnight 그라디언트 (단색의 명도 변형, 무지개 X)
 const SLICE_COLORS = [

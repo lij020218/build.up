@@ -996,11 +996,11 @@ export function OperationsSetupStage() {
           <div key={trap.label} style={{
             display: "flex", gap: "10px", alignItems: "flex-start",
             padding: "13px 15px", borderRadius: "14px",
-            background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
+            background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.14)",
           }}>
-            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#dc2626", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
+              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
               <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(180,28,28,0.85)" }}>{trap.text}</div>
             </div>
           </div>
@@ -1270,11 +1270,11 @@ export function OperationsSetupStage() {
               <div key={trap.label} style={{
                 display: "flex", gap: "9px", alignItems: "flex-start",
                 padding: "10px 12px", borderRadius: "10px",
-                background: "rgba(220,38,38,0.05)", border: "0.5px solid rgba(220,38,38,0.14)",
+                background: "rgba(182,76,76,0.05)", border: "0.5px solid rgba(182,76,76,0.14)",
               }}>
-                <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+                <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#dc2626", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
+                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b64c4c", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
                   <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(180,28,28,0.8)" }}>{trap.text}</div>
                 </div>
               </div>
@@ -1474,11 +1474,11 @@ export function OperationsSetupStage() {
             <div key={trap.label} style={{
               display: "flex", gap: "9px", alignItems: "flex-start",
               padding: "10px 12px", borderRadius: "10px",
-              background: "rgba(220,38,38,0.05)", border: "0.5px solid rgba(220,38,38,0.14)",
+              background: "rgba(182,76,76,0.05)", border: "0.5px solid rgba(182,76,76,0.14)",
             }}>
-              <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+              <AlertTriangle size={14} strokeWidth={2.2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#dc2626", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
+                <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b64c4c", marginBottom: "2px", letterSpacing: "-0.005em" }}>{trap.label}</div>
                 <div style={{ fontSize: "12px", lineHeight: 1.5, color: "rgba(180,28,28,0.8)" }}>{trap.text}</div>
               </div>
             </div>
@@ -1547,13 +1547,13 @@ export function OperationsSetupStage() {
         marginTop: "20px",
         padding: "18px 20px",
         borderRadius: "16px",
-        background: "linear-gradient(180deg, rgba(220,38,38,0.04) 0%, rgba(220,38,38,0.02) 100%)",
-        border: "1px solid rgba(220,38,38,0.18)",
+        background: "linear-gradient(180deg, rgba(182,76,76,0.04) 0%, rgba(182,76,76,0.02) 100%)",
+        border: "1px solid rgba(182,76,76,0.18)",
       }}>
         <div style={{
           fontSize: 11,
           fontWeight: 800,
-          color: "#dc2626",
+          color: "#b64c4c",
           letterSpacing: "0.06em",
           textTransform: "uppercase" as const,
           marginBottom: 4,
@@ -1577,13 +1577,13 @@ export function OperationsSetupStage() {
             padding: "12px 14px",
             borderRadius: 12,
             background: "white",
-            border: "1px solid rgba(220,38,38,0.12)",
+            border: "1px solid rgba(182,76,76,0.12)",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
               <span style={{
-                fontSize: 10, fontWeight: 800, color: "#dc2626",
+                fontSize: 10, fontWeight: 800, color: "#b64c4c",
                 padding: "2px 7px", borderRadius: 999,
-                background: "rgba(220,38,38,0.12)",
+                background: "rgba(182,76,76,0.12)",
               }}>{ko ? "법적 의무" : "Mandatory"}</span>
               <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
                 {ko ? "현금영수증 의무발급 가맹점 가입" : "Cash Receipt Mandatory Issuance Registration"}
@@ -1601,13 +1601,13 @@ export function OperationsSetupStage() {
             padding: "12px 14px",
             borderRadius: 12,
             background: "white",
-            border: "1px solid rgba(220,38,38,0.12)",
+            border: "1px solid rgba(182,76,76,0.12)",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
               <span style={{
-                fontSize: 10, fontWeight: 800, color: "#dc2626",
+                fontSize: 10, fontWeight: 800, color: "#b64c4c",
                 padding: "2px 7px", borderRadius: 999,
-                background: "rgba(220,38,38,0.12)",
+                background: "rgba(182,76,76,0.12)",
               }}>{ko ? "법적 의무" : "Mandatory"}</span>
               <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em" }}>
                 {ko ? "옥외 간판 신고 (구청 광고물 신고)" : "Outdoor Signage Filing (district office)"}

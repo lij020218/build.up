@@ -391,13 +391,13 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
               <div>
                 <div style={labelStyle}>{ko ? "가게 이름" : "Store name"}</div>
                 <input
-                  style={{ ...inputStyle, ...(showValidation && !storeName.trim() ? { borderColor: "#ff3b30", boxShadow: "0 0 0 3px rgba(255,59,48,0.1)" } : {}) }}
+                  style={{ ...inputStyle, ...(showValidation && !storeName.trim() ? { borderColor: "#b64c4c", boxShadow: "0 0 0 3px rgba(182,76,76,0.1)" } : {}) }}
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder={ko ? "예: 성수 커피랩" : "e.g. Seongsu Coffee Lab"}
                 />
                 {showValidation && !storeName.trim() && (
-                  <div style={{ fontSize: "12px", color: "#ff3b30", marginTop: "6px" }}>
+                  <div style={{ fontSize: "12px", color: "#b64c4c", marginTop: "6px" }}>
                     {ko ? "가게 이름을 입력해주세요" : "Please enter a store name"}
                   </div>
                 )}
@@ -644,7 +644,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                     {ingNum > 0 && (
                       <div>
                         <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "2px" }}>{ko ? "재료비 비중" : "COGS ratio"}</div>
-                        <div style={{ fontSize: "18px", fontWeight: 650, color: ingNum / totalCost > 0.4 ? "#ff3b30" : ingNum / totalCost > 0.35 ? "#ff9f0a" : "#34c759" }}>
+                        <div style={{ fontSize: "18px", fontWeight: 650, color: ingNum / totalCost > 0.4 ? "#b64c4c" : ingNum / totalCost > 0.35 ? "#191970" : "#1d3557" }}>
                           {totalCost > 0 ? ((ingNum / totalCost) * 100).toFixed(0) : 0}%
                         </div>
                       </div>
@@ -652,7 +652,7 @@ export function ExistingBusinessOnboarding({ language, onComplete, onBack }: Pro
                     {labNum > 0 && (
                       <div>
                         <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "2px" }}>{ko ? "인건비 비중" : "Labor ratio"}</div>
-                        <div style={{ fontSize: "18px", fontWeight: 650, color: labNum / totalCost > 0.35 ? "#ff3b30" : labNum / totalCost > 0.3 ? "#ff9f0a" : "#34c759" }}>
+                        <div style={{ fontSize: "18px", fontWeight: 650, color: labNum / totalCost > 0.35 ? "#b64c4c" : labNum / totalCost > 0.3 ? "#191970" : "#1d3557" }}>
                           {totalCost > 0 ? ((labNum / totalCost) * 100).toFixed(0) : 0}%
                         </div>
                       </div>

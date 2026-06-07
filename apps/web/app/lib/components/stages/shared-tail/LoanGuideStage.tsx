@@ -360,11 +360,11 @@ export function LoanGuideStage() {
           <div key={trap.label} style={{
             display: "flex", gap: "10px", alignItems: "flex-start",
             padding: "13px 15px", borderRadius: "14px",
-            background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
+            background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.14)",
           }}>
-            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#dc2626", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
+              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
               <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(180,28,28,0.85)" }}>{trap.text}</div>
             </div>
           </div>
@@ -643,11 +643,11 @@ export function LoanGuideStage() {
             )}
 
             {bpError && (
-              <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)", marginTop: "10px" }}>
+              <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.14)", marginTop: "10px" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                  <AlertTriangle size={14} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+                  <AlertTriangle size={14} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
                   <div>
-                    <div style={{ fontSize: "13px", color: "#dc2626", fontWeight: 700, marginBottom: "4px" }}>
+                    <div style={{ fontSize: "13px", color: "#b64c4c", fontWeight: 700, marginBottom: "4px" }}>
                       {ko ? "생성 실패" : "Generation Failed"}
                     </div>
                     <div style={{ fontSize: "12px", color: "rgba(180,28,28,0.85)" }}>{bpError}</div>
@@ -751,9 +751,9 @@ export function LoanGuideStage() {
           padding: "14px 16px",
           borderRadius: 12,
           background: loanReviewed
-            ? "linear-gradient(180deg, rgba(5,150,105,0.06) 0%, rgba(5,150,105,0.02) 100%)"
+            ? "linear-gradient(180deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.02) 100%)"
             : "rgba(25,25,112,0.04)",
-          border: loanReviewed ? "1px solid rgba(5,150,105,0.28)" : "1px solid rgba(25,25,112,0.14)",
+          border: loanReviewed ? "1px solid rgba(25,25,112,0.28)" : "1px solid rgba(25,25,112,0.14)",
           cursor: "pointer",
           display: "flex",
           alignItems: "flex-start",
@@ -764,8 +764,8 @@ export function LoanGuideStage() {
         <span style={{
           flexShrink: 0,
           width: 22, height: 22, borderRadius: 6,
-          background: loanReviewed ? "#059669" : "white",
-          border: loanReviewed ? "1px solid #059669" : "1.5px solid rgba(25,25,112,0.25)",
+          background: loanReviewed ? "#1d3557" : "white",
+          border: loanReviewed ? "1px solid #1d3557" : "1.5px solid rgba(25,25,112,0.25)",
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
@@ -776,7 +776,7 @@ export function LoanGuideStage() {
           {loanReviewed ? "✓" : ""}
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: loanReviewed ? "#059669" : MIDNIGHT, letterSpacing: "-0.005em" }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: loanReviewed ? "#1d3557" : MIDNIGHT, letterSpacing: "-0.005em" }}>
             {ko ? "정책자금·대출 내용을 모두 검토했습니다" : "I have reviewed all the funding & loan content above"}
           </div>
           <div style={{ fontSize: 12.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.55, marginTop: 3 }}>
@@ -903,8 +903,8 @@ function LoanFaqCard({
           <div style={{
             padding: "16px",
             borderRadius: "12px",
-            background: "rgba(220,38,38,0.04)",
-            border: "1px dashed rgba(220,38,38,0.2)",
+            background: "rgba(182,76,76,0.04)",
+            border: "1px dashed rgba(182,76,76,0.2)",
             marginBottom: "12px",
           }}>
             <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", marginBottom: "6px" }}>
@@ -936,7 +936,7 @@ function LoanFaqCard({
                 ? (ko ? "AI 답변 생성 중..." : "Generating...")
                 : (ko ? "AI 에게 묻기 (참고용)" : "Ask AI (reference)")}
             </button>
-            {qaError && <div style={{ marginTop: "8px", fontSize: "12px", color: "#dc2626" }}>{qaError}</div>}
+            {qaError && <div style={{ marginTop: "8px", fontSize: "12px", color: "#b64c4c" }}>{qaError}</div>}
             {qaText && qaStatus !== "loading" && (
               <div style={{
                 marginTop: "12px",

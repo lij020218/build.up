@@ -60,16 +60,16 @@ const LEVEL_META: Record<FundingScore["level"], {
   Icon: LucideIcon;
 }> = {
   high: {
-    label: "높음", color: "#059669", bg: "rgba(5,150,105,0.10)",
-    ring: "#059669", ringBg: "rgba(5,150,105,0.12)", Icon: Target,
+    label: "높음", color: "#1d3557", bg: "rgba(25,25,112,0.10)",
+    ring: "#1d3557", ringBg: "rgba(25,25,112,0.12)", Icon: Target,
   },
   medium: {
-    label: "보통", color: "#b45309", bg: "rgba(180,83,9,0.10)",
-    ring: "#b45309", ringBg: "rgba(180,83,9,0.12)", Icon: AlertCircle,
+    label: "보통", color: "#191970", bg: "rgba(180,83,9,0.10)",
+    ring: "#191970", ringBg: "rgba(180,83,9,0.12)", Icon: AlertCircle,
   },
   low: {
-    label: "낮음", color: "#dc2626", bg: "rgba(220,38,38,0.10)",
-    ring: "#dc2626", ringBg: "rgba(220,38,38,0.12)", Icon: AlertTriangle,
+    label: "낮음", color: "#b64c4c", bg: "rgba(182,76,76,0.10)",
+    ring: "#b64c4c", ringBg: "rgba(182,76,76,0.12)", Icon: AlertTriangle,
   },
 };
 
@@ -187,11 +187,11 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
         {!loading && error && (
           <div style={{
             padding: "30px 20px", textAlign: "center",
-            background: "rgba(220,38,38,0.04)", borderRadius: 14,
-            border: "1px solid rgba(220,38,38,0.12)",
+            background: "rgba(182,76,76,0.04)", borderRadius: 14,
+            border: "1px solid rgba(182,76,76,0.12)",
           }}>
-            <AlertTriangle size={24} strokeWidth={1.6} color="#dc2626" style={{ margin: "0 auto 10px" }} />
-            <div style={{ fontSize: 14, color: "#dc2626", fontWeight: 600, marginBottom: 4 }}>
+            <AlertTriangle size={24} strokeWidth={1.6} color="#b64c4c" style={{ margin: "0 auto 10px" }} />
+            <div style={{ fontSize: 14, color: "#b64c4c", fontWeight: 600, marginBottom: 4 }}>
               {ko ? "평가 실패" : "Evaluation failed"}
             </div>
             <div style={{ fontSize: 12, color: TEXT_MUTED }}>{error}</div>
@@ -253,11 +253,11 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
             {result.disqualified.length > 0 && (
               <div style={{
                 padding: "12px 14px", marginBottom: 14,
-                background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.18)",
+                background: "rgba(182,76,76,0.06)", border: "1px solid rgba(182,76,76,0.18)",
                 borderRadius: 12,
               }}>
                 <div style={{
-                  fontSize: 11.5, fontWeight: 700, color: "#dc2626",
+                  fontSize: 11.5, fontWeight: 700, color: "#b64c4c",
                   marginBottom: 6, display: "flex", alignItems: "center", gap: 5,
                   letterSpacing: "0.02em",
                 }}>
@@ -269,7 +269,7 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
                     <li key={i} style={{ paddingLeft: 12, position: "relative" }}>
                       <span style={{
                         position: "absolute", left: 0, top: "0.55em",
-                        width: 4, height: 4, borderRadius: "50%", background: "#dc2626",
+                        width: 4, height: 4, borderRadius: "50%", background: "#b64c4c",
                       }} />
                       {d}
                     </li>
@@ -290,7 +290,7 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {result.breakdown.map((b, i) => {
                     const pct = Math.max(0, Math.min(100, (b.itemScore / b.weight) * 100));
-                    const barColor = pct >= 75 ? "#059669" : pct >= 50 ? "#b45309" : "#dc2626";
+                    const barColor = pct >= 75 ? "#1d3557" : pct >= 50 ? "#191970" : "#b64c4c";
                     return (
                       <div key={i} style={{
                         padding: "10px 12px", background: "rgba(15,23,42,0.02)",
@@ -331,18 +331,18 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
             {/* Sections */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <Section
-                icon={<CheckCircle2 size={14} strokeWidth={1.8} color="#059669" />}
+                icon={<CheckCircle2 size={14} strokeWidth={1.8} color="#1d3557" />}
                 title={ko ? "부합하는 점" : "Strengths"}
                 items={result.strengths}
                 emptyText={ko ? "현재 데이터로는 명확한 강점을 찾기 어려워요" : "No clear strengths"}
-                color="#059669"
+                color="#1d3557"
               />
               <Section
-                icon={<AlertTriangle size={14} strokeWidth={1.8} color="#b45309" />}
+                icon={<AlertTriangle size={14} strokeWidth={1.8} color="#191970" />}
                 title={ko ? "약점 / 미충족 요건" : "Weaknesses"}
                 items={result.weaknesses}
                 emptyText={ko ? "특별한 약점은 없어요" : "No major weaknesses"}
-                color="#b45309"
+                color="#191970"
               />
               <Section
                 icon={<ArrowUpRight size={14} strokeWidth={1.8} color={MIDNIGHT} />}
@@ -357,7 +357,7 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
             {result.bonusEligible.length > 0 && (
               <div style={{ marginTop: 14 }}>
                 <div style={{
-                  fontSize: 11.5, fontWeight: 700, color: "#059669",
+                  fontSize: 11.5, fontWeight: 700, color: "#1d3557",
                   marginBottom: 6, display: "flex", alignItems: "center", gap: 5,
                 }}>
                   <Award size={12} strokeWidth={1.8} />
@@ -366,9 +366,9 @@ export function FundingScoreModal({ open, onClose, programName, loading, error, 
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {result.bonusEligible.map((b, i) => (
                     <span key={i} style={{
-                      fontSize: 11, fontWeight: 600, color: "#059669",
-                      background: "rgba(5,150,105,0.08)", padding: "3px 9px",
-                      borderRadius: 999, border: "1px solid rgba(5,150,105,0.18)",
+                      fontSize: 11, fontWeight: 600, color: "#1d3557",
+                      background: "rgba(25,25,112,0.08)", padding: "3px 9px",
+                      borderRadius: 999, border: "1px solid rgba(25,25,112,0.18)",
                     }}>
                       +{b}
                     </span>

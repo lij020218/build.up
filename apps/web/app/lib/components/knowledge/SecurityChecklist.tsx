@@ -16,7 +16,7 @@ export function SecurityChecklist({ ko, checks, onToggle }: Props) {
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
   const sorted = [...filtered].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-  const priorityColor = { critical: "#dc2626", high: "#d97706", medium: "#2563eb", low: "rgba(15,23,42,0.35)" };
+  const priorityColor = { critical: "#b64c4c", high: "#191970", medium: "#2563eb", low: "rgba(15,23,42,0.35)" };
   const priorityLabel = { critical: ko ? "필수" : "Critical", high: ko ? "높음" : "High", medium: ko ? "보통" : "Medium", low: ko ? "낮음" : "Low" };
 
   const readinessLabel = {
@@ -25,7 +25,7 @@ export function SecurityChecklist({ ko, checks, onToggle }: Props) {
     intermediate: ko ? "중간" : "Intermediate",
     production_ready: ko ? "프로덕션 준비 완료" : "Production Ready",
   };
-  const readinessColor = { not_started: "#dc2626", basic: "#d97706", intermediate: "#2563eb", production_ready: "#059669" };
+  const readinessColor = { not_started: "#b64c4c", basic: "#191970", intermediate: "#2563eb", production_ready: "#1d3557" };
 
   // SVG 원형 게이지
   const circumference = 2 * Math.PI * 38;
@@ -61,9 +61,9 @@ export function SecurityChecklist({ ko, checks, onToggle }: Props) {
 
       {/* Critical 경고 */}
       {score.criticalCompleted < score.criticalTotal && (
-        <div style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.08)", display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }} className="bento-fade-in">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>
+        <div style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.08)", display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }} className="bento-fade-in">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b64c4c" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#b64c4c" }}>
             {ko ? `필수 항목 ${score.criticalTotal - score.criticalCompleted}개 미완료` : `${score.criticalTotal - score.criticalCompleted} critical items incomplete`}
           </span>
         </div>
@@ -94,14 +94,14 @@ export function SecurityChecklist({ ko, checks, onToggle }: Props) {
           return (
             <div key={item.id} onClick={() => onToggle(item.id)} style={{
               display: "flex", gap: "12px", padding: "12px 14px", borderRadius: "14px", cursor: "pointer",
-              background: checked ? "rgba(5,150,105,0.03)" : "rgba(255,255,255,0.6)",
-              border: checked ? "1px solid rgba(5,150,105,0.1)" : "1px solid rgba(15,23,42,0.04)",
+              background: checked ? "rgba(25,25,112,0.03)" : "rgba(255,255,255,0.6)",
+              border: checked ? "1px solid rgba(25,25,112,0.1)" : "1px solid rgba(15,23,42,0.04)",
               transition: "all 0.2s ease",
             }}>
               <div style={{
                 width: "20px", height: "20px", borderRadius: "6px", flexShrink: 0,
                 border: checked ? "none" : `1.5px solid ${priorityColor[item.priority]}40`,
-                background: checked ? "#059669" : "transparent",
+                background: checked ? "#1d3557" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "all 0.15s ease",
               }}>

@@ -239,8 +239,8 @@ export function AIFeedbackFormGenerator({
             display: "flex", alignItems: "flex-start", gap: "8px",
             padding: "10px 12px", marginTop: "12px",
             borderRadius: "10px",
-            background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
-            fontSize: "12.5px", color: "#dc2626", lineHeight: 1.5,
+            background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.14)",
+            fontSize: "12.5px", color: "#b64c4c", lineHeight: 1.5,
           }}>
             <AlertCircle size={14} strokeWidth={2} style={{ flexShrink: 0, marginTop: "1px" }} />
             <span>{error}</span>
@@ -287,7 +287,7 @@ export function AIFeedbackFormGenerator({
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.4 }}>
                         {q.question}
-                        {q.required && <span style={{ color: "#dc2626", marginLeft: "4px" }}>*</span>}
+                        {q.required && <span style={{ color: "#b64c4c", marginLeft: "4px" }}>*</span>}
                       </div>
                       {q.description && (
                         <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.5)", marginTop: "3px", lineHeight: 1.5 }}>

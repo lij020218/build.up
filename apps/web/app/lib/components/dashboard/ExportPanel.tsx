@@ -72,7 +72,7 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
       label: { ko: "비용 구조", en: "Cost structure" },
       desc: { ko: "8항목별 비용 + 매출 대비 비율", en: "8-item breakdown + revenue ratio" },
       Icon: Wallet,
-      iconColor: "#b45309",
+      iconColor: "#191970",
       type: "csv",
       action: () => exportCostsCsv(monthlyCosts, totalSales, month),
     },
@@ -99,7 +99,7 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
       label: { ko: "월간 P&L 리포트", en: "Monthly P&L Report" },
       desc: { ko: "손익계산서 + 운영지표 (PDF)", en: "Income statement + metrics (PDF)" },
       Icon: FileText,
-      iconColor: "#dc2626",
+      iconColor: "#b64c4c",
       type: "pdf",
       action: () => exportMonthlyPnLPdf({ month, storeName, entries, monthlyCosts }),
     },
@@ -108,14 +108,14 @@ export function ExportPanel({ ko, storeName, entries, monthlyCosts, inventory, e
       label: { ko: "통합 경영보고서", en: "Comprehensive report" },
       desc: { ko: "매출·비용·재고·직원 한 파일 (CSV)", en: "All data in one CSV" },
       Icon: TrendingUp,
-      iconColor: "#059669",
+      iconColor: "#1d3557",
       type: "excel",
       action: () => exportComprehensiveExcel({ month, entries, monthlyCosts, inventory, employees, products, unifiedProducts, serviceMenu }),
     },
   ];
 
   const typeColor = (t: "csv" | "excel" | "pdf") =>
-    t === "csv" ? "#10b981" : t === "excel" ? "#059669" : "#dc2626";
+    t === "csv" ? "#1d3557" : t === "excel" ? "#1d3557" : "#b64c4c";
   const typeLabel = (t: "csv" | "excel" | "pdf") => t.toUpperCase();
 
   return (

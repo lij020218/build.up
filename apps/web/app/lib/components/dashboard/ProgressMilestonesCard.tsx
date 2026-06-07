@@ -85,7 +85,7 @@ export function ProgressMilestonesCard({
       current: Math.min(bepProgress, 100),
       target: 100,
       Icon: TrendingUp,
-      color: "#059669",
+      color: "#1d3557",
     },
     {
       id: "health-80",
@@ -96,7 +96,7 @@ export function ProgressMilestonesCard({
       current: Math.min(healthScore, 80),
       target: 80,
       Icon: ShieldCheck,
-      color: "#059669",
+      color: "#1d3557",
     },
   ];
 
@@ -161,10 +161,10 @@ export function ProgressMilestonesCard({
             style={{
               padding: "4px 10px",
               borderRadius: "8px",
-              background: "rgba(5,150,105,0.08)",
+              background: "rgba(25,25,112,0.08)",
               fontSize: "11px",
               fontWeight: 700,
-              color: "#059669",
+              color: "#1d3557",
               display: "inline-flex",
               alignItems: "center",
               gap: "4px",

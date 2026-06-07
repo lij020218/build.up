@@ -81,19 +81,19 @@ export function PlatformSetupStage() {
               </div>
               {isSelected && (
                 <div style={{ padding: "0 18px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }} className="bento-fade-in">
-                  <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(5,150,105,0.04)" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 650, color: "#059669", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "장점" : "Pros"}</div>
+                  <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(25,25,112,0.04)" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 650, color: "#1d3557", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "장점" : "Pros"}</div>
                     {item.pros.map((p, pi) => (
                       <div key={pi} style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5, display: "flex", gap: "4px" }}>
-                        <span style={{ color: "#059669", flexShrink: 0 }}>+</span> {p}
+                        <span style={{ color: "#1d3557", flexShrink: 0 }}>+</span> {p}
                       </div>
                     ))}
                   </div>
-                  <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(220,38,38,0.03)" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 650, color: "#dc2626", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "주의" : "Cons"}</div>
+                  <div style={{ padding: "10px 12px", borderRadius: "12px", background: "rgba(182,76,76,0.03)" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 650, color: "#b64c4c", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{ko ? "주의" : "Cons"}</div>
                     {item.cons.map((c, ci) => (
                       <div key={ci} style={{ fontSize: "12px", color: "rgba(0,0,0,0.55)", lineHeight: 1.5, display: "flex", gap: "4px" }}>
-                        <span style={{ color: "#dc2626", flexShrink: 0 }}>-</span> {c}
+                        <span style={{ color: "#b64c4c", flexShrink: 0 }}>-</span> {c}
                       </div>
                     ))}
                   </div>

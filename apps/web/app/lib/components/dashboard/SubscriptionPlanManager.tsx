@@ -22,9 +22,9 @@ import { getKstDate } from "../../utils/business-day";
 const PLAN_COLORS: Record<number, { bg: string; text: string; border: string }> = {
   0: { bg: "rgba(124,58,237,0.08)", text: "#7c3aed", border: "rgba(124,58,237,0.15)" },
   1: { bg: "rgba(25,25,112,0.08)", text: "#191970", border: "rgba(25,25,112,0.15)" },
-  2: { bg: "rgba(5,150,105,0.08)", text: "#059669", border: "rgba(5,150,105,0.15)" },
-  3: { bg: "rgba(234,88,12,0.08)", text: "#ea580c", border: "rgba(234,88,12,0.15)" },
-  4: { bg: "rgba(220,38,38,0.08)", text: "#dc2626", border: "rgba(220,38,38,0.15)" },
+  2: { bg: "rgba(25,25,112,0.08)", text: "#1d3557", border: "rgba(25,25,112,0.15)" },
+  3: { bg: "rgba(25,25,112,0.08)", text: "#191970", border: "rgba(25,25,112,0.15)" },
+  4: { bg: "rgba(182,76,76,0.08)", text: "#b64c4c", border: "rgba(182,76,76,0.15)" },
 };
 
 function getPlanColor(index: number) {
@@ -118,7 +118,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
             </span>
           )}
           {currentMrr > 0 && (
-            <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.06)", color: "#059669" }}>
+            <span style={{ fontSize: "11px", fontWeight: 650, padding: "2px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.06)", color: "#1d3557" }}>
               MRR {fmt(currentMrr)}
             </span>
           )}
@@ -321,7 +321,7 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
                           </span>
                         )}
                         {sub.status === "trial" && (
-                          <span style={{ fontSize: "10px", fontWeight: 650, color: "#f59e0b", background: "rgba(245,158,11,0.08)", padding: "1px 6px", borderRadius: "5px" }}>Trial</span>
+                          <span style={{ fontSize: "10px", fontWeight: 650, color: "#191970", background: "rgba(25,25,112,0.08)", padding: "1px 6px", borderRadius: "5px" }}>Trial</span>
                         )}
                       </div>
                       {sub.email && (
@@ -463,10 +463,10 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
                     borderRadius: "8px", background: "rgba(15,23,42,0.015)", opacity: 0.6,
                   }}>
                     <span style={{ fontSize: "12px", fontWeight: 600, color: "#0f172a", flex: 1 }}>{sub.name}</span>
-                    <button type="button" onClick={() => handleReactivate(sub.id)} style={{ fontSize: "10px", fontWeight: 650, padding: "2px 8px", borderRadius: "5px", border: "none", cursor: "pointer", background: "rgba(5,150,105,0.08)", color: "#059669" }}>
+                    <button type="button" onClick={() => handleReactivate(sub.id)} style={{ fontSize: "10px", fontWeight: 650, padding: "2px 8px", borderRadius: "5px", border: "none", cursor: "pointer", background: "rgba(25,25,112,0.08)", color: "#1d3557" }}>
                       {ko ? "복구" : "Reactivate"}
                     </button>
-                    <button type="button" onClick={() => handleDeleteSub(sub.id)} style={{ fontSize: "10px", fontWeight: 650, padding: "2px 8px", borderRadius: "5px", border: "none", cursor: "pointer", background: "rgba(220,38,38,0.06)", color: "#dc2626" }}>
+                    <button type="button" onClick={() => handleDeleteSub(sub.id)} style={{ fontSize: "10px", fontWeight: 650, padding: "2px 8px", borderRadius: "5px", border: "none", cursor: "pointer", background: "rgba(182,76,76,0.06)", color: "#b64c4c" }}>
                       {ko ? "삭제" : "Delete"}
                     </button>
                   </div>
@@ -589,8 +589,8 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
                         flexShrink: 0,
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(220,38,38,0.08)";
-                        e.currentTarget.style.color = "#dc2626";
+                        e.currentTarget.style.background = "rgba(182,76,76,0.08)";
+                        e.currentTarget.style.color = "#b64c4c";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = "transparent";

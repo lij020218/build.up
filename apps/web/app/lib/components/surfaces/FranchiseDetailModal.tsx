@@ -129,11 +129,11 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
                 {ko ? "데이터 기준" : "Data year"} {fb.dataYear}
               </span>
               {fb.costVerified ? (
-                <span style={{ ...chipStyle, color: "#15803d", borderColor: "rgba(21,128,61,0.25)", background: "rgba(21,128,61,0.06)" }}>
+                <span style={{ ...chipStyle, color: "#1d3557", borderColor: "rgba(21,128,61,0.25)", background: "rgba(21,128,61,0.06)" }}>
                   {ko ? "비용 검증" : "Cost verified"}
                 </span>
               ) : (
-                <span style={{ ...chipStyle, color: "#a16207", borderColor: "rgba(161,98,7,0.25)", background: "rgba(161,98,7,0.06)" }}>
+                <span style={{ ...chipStyle, color: "#191970", borderColor: "rgba(161,98,7,0.25)", background: "rgba(161,98,7,0.06)" }}>
                   {ko ? "비용 추정" : "Cost estimated"}
                 </span>
               )}
@@ -226,8 +226,8 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
         {(fb.pros || fb.cons) && (
           <Section title={ko ? "장점 · 단점" : "Pros & Cons"}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#15803d", marginBottom: "8px", letterSpacing: "0.04em" }}>
+              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.2)" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#1d3557", marginBottom: "8px", letterSpacing: "0.04em" }}>
                   {ko ? "👍 장점" : "👍 Pros"}
                 </div>
                 {(fb.pros?.[language] ?? []).map((p, i) => (
@@ -240,8 +240,8 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
                   <div style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "데이터 보강 예정" : "Data pending"}</div>
                 )}
               </div>
-              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#b91c1c", marginBottom: "8px", letterSpacing: "0.04em" }}>
+              <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(182,76,76,0.05)", border: "1px solid rgba(182,76,76,0.2)" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#b64c4c", marginBottom: "8px", letterSpacing: "0.04em" }}>
                   {ko ? "⚠️ 단점" : "⚠️ Cons"}
                 </div>
                 {(fb.cons?.[language] ?? []).map((p, i) => (
@@ -315,7 +315,7 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
             </div>
           ) : estimatedItems.length > 0 ? (
             <>
-              <div style={{ fontSize: "11px", color: "#a16207", marginBottom: "8px", padding: "6px 10px", borderRadius: "8px", background: "rgba(161,98,7,0.06)", border: "1px solid rgba(161,98,7,0.2)" }}>
+              <div style={{ fontSize: "11px", color: "#191970", marginBottom: "8px", padding: "6px 10px", borderRadius: "8px", background: "rgba(161,98,7,0.06)", border: "1px solid rgba(161,98,7,0.2)" }}>
                 {ko ? "⚠️ 본사 미공개 — 산업 평균 기반 추정치" : "⚠️ Estimated from industry average (HQ data unavailable)"}
               </div>
               <div style={{ display: "grid", gap: "6px" }}>
@@ -348,7 +348,7 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
                   : s.tier === "industry" ? "업계"
                   : s.tier === "media" ? "매체"
                   : s.tier === "aggregator" ? "보조" : null;
-                const tierColor = s.tier === "primary" ? "#15803d"
+                const tierColor = s.tier === "primary" ? "#1d3557"
                   : s.tier === "industry" ? "#1d3557"
                   : s.tier === "media" ? "#0561fc"
                   : "#737373";

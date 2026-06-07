@@ -161,13 +161,13 @@ export function BusinessHoursInput({
           </span>
         )}
         {showSaved && (
-          <span style={{ ...statusPill, color: "#0e7c3a", background: "rgba(52,199,89,0.10)" }}>
+          <span style={{ ...statusPill, color: "#1d3557", background: "rgba(52,199,89,0.10)" }}>
             <CheckCircle2 size={11} strokeWidth={1.5} strokeLinecap="round" />
             {ko ? "저장됨" : "Saved"}
           </span>
         )}
         {showError && (
-          <span style={{ ...statusPill, color: "#b32419", background: "rgba(255,59,48,0.10)" }}>
+          <span style={{ ...statusPill, color: "#b32419", background: "rgba(182,76,76,0.10)" }}>
             <AlertCircle size={11} strokeWidth={1.5} strokeLinecap="round" />
             {ko ? "저장 실패" : "Save failed"}
           </span>

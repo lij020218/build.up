@@ -109,8 +109,8 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
         <span style={{
           width: 32, height: 32, borderRadius: 9,
-          background: existing.length > 0 ? "rgba(5,150,105,0.10)" : "rgba(25,25,112,0.08)",
-          color: existing.length > 0 ? "#059669" : MIDNIGHT,
+          background: existing.length > 0 ? "rgba(25,25,112,0.10)" : "rgba(25,25,112,0.08)",
+          color: existing.length > 0 ? "#1d3557" : MIDNIGHT,
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
         }}>
@@ -120,7 +120,7 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
           <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", lineHeight: 1.4 }}>
             {label}
             {existing.length > 0 && (
-              <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: "#059669" }}>
+              <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: "#1d3557" }}>
                 · {existing.length}{ko ? "개 보관 중" : ` uploaded`}
               </span>
             )}
@@ -171,8 +171,8 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
         <div style={{
           display: "flex", alignItems: "flex-start", gap: 6,
           marginTop: 8, padding: "8px 10px", borderRadius: 8,
-          background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.12)",
-          color: "#b91c1c", fontSize: 12,
+          background: "rgba(182,76,76,0.06)", border: "1px solid rgba(182,76,76,0.12)",
+          color: "#b64c4c", fontSize: 12,
         }}>
           <AlertCircle size={13} strokeWidth={1.8} style={{ marginTop: 1, flexShrink: 0 }} />
           <span>{error}</span>
@@ -219,7 +219,7 @@ export function BusinessDocumentUpload({ ko, kind, label, hint, multiple = false
                 style={{
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
                   width: 28, height: 28, borderRadius: 7,
-                  background: "rgba(220,38,38,0.06)", color: "#dc2626",
+                  background: "rgba(182,76,76,0.06)", color: "#b64c4c",
                   border: "none", cursor: "pointer",
                 }}
               >

@@ -277,7 +277,7 @@ export function SaaSKeyMetricsCard({
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: mrrGrowth > 0 ? "#059669" : "#dc2626",
+                color: mrrGrowth > 0 ? "#1d3557" : "#b64c4c",
                 marginTop: "3px",
               }}
             >
@@ -298,7 +298,7 @@ export function SaaSKeyMetricsCard({
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: netNew >= 0 ? "#059669" : "#dc2626",
+                color: netNew >= 0 ? "#1d3557" : "#b64c4c",
                 marginTop: "3px",
               }}
             >
@@ -307,11 +307,11 @@ export function SaaSKeyMetricsCard({
             </div>
           )}
         </div>
-        <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.03)" }}>
+        <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)" }}>
           <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>
             {ko ? "전환율" : "Conversion"}
           </div>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#059669" }}>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#1d3557" }}>
             {convRate > 0 ? `${convRate}%` : "—"}
           </div>
         </div>
@@ -319,13 +319,13 @@ export function SaaSKeyMetricsCard({
           style={{
             padding: "14px",
             borderRadius: "14px",
-            background: churnRate > 10 ? "rgba(220,38,38,0.04)" : "rgba(0,0,0,0.02)",
+            background: churnRate > 10 ? "rgba(182,76,76,0.04)" : "rgba(0,0,0,0.02)",
           }}
         >
           <div style={{ fontSize: "11px", fontWeight: 650, color: "rgba(15,23,42,0.4)", marginBottom: "6px" }}>
             {ko ? "이탈률" : "Churn"}
           </div>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: churnRate > 10 ? "#dc2626" : "#0f172a" }}>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: churnRate > 10 ? "#b64c4c" : "#0f172a" }}>
             {churnRate > 0 ? `${churnRate}%` : "—"}
           </div>
         </div>
@@ -365,7 +365,7 @@ export function SaaSKeyMetricsCard({
             gap: "6px",
           }}
         >
-          <Lightbulb size={13} strokeWidth={1.5} color="#f59e0b" />
+          <Lightbulb size={13} strokeWidth={1.5} color="#191970" />
           {ko
             ? "매출을 기록하면 MRR·유저·전환율·이탈률이 자동 계산됩니다"
             : "Log revenue to auto-calculate MRR, users, conversion, churn"}
@@ -606,7 +606,7 @@ function PopularProductsAndActivity({
                     }}
                   >
                     {entry.sales > c.avgDailySales ? (
-                      <TrendingUp size={14} strokeWidth={1.5} color="#059669" />
+                      <TrendingUp size={14} strokeWidth={1.5} color="#1d3557" />
                     ) : (
                       <BarChart3 size={14} strokeWidth={1.5} color="#191970" />
                     )}

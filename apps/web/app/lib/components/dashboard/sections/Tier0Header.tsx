@@ -59,8 +59,8 @@ export function Tier0Header({ d, ko, isStaff, nextStaggerStyle }: Props) {
               fontWeight: 650,
               padding: "4px 10px",
               borderRadius: "999px",
-              background: "rgba(5,150,105,0.08)",
-              color: "#059669",
+              background: "rgba(25,25,112,0.08)",
+              color: "#1d3557",
               letterSpacing: "0.01em",
               display: "inline-flex",
               alignItems: "center",
@@ -73,8 +73,8 @@ export function Tier0Header({ d, ko, isStaff, nextStaggerStyle }: Props) {
                 width: "6px",
                 height: "6px",
                 borderRadius: "50%",
-                background: "#059669",
-                boxShadow: "0 0 0 3px rgba(5,150,105,0.15)",
+                background: "#1d3557",
+                boxShadow: "0 0 0 3px rgba(25,25,112,0.15)",
               }}
             />
             {ko ? "운영 중" : "LIVE"}

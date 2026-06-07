@@ -216,7 +216,7 @@ export function CostManagementCard({ ko, expenseFields }: Props) {
           {/* 수정 / 저장·취소 버튼 */}
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             {saveStatus === "saved" && (
-              <span style={{ fontSize: 11.5, color: "#15803d", fontWeight: 600 }}>
+              <span style={{ fontSize: 11.5, color: "#1d3557", fontWeight: 600 }}>
                 {ko ? "✓ 저장됨" : "✓ Saved"}
               </span>
             )}

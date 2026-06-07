@@ -150,7 +150,7 @@ export function BudgetSetupStage() {
                   </div>
                 ))}
                 <div style={{ marginTop: "8px", fontSize: "11px", color: "var(--muted)", display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: 3, background: "#34c759", display: "inline-block" }} />
+                  <span style={{ width: 6, height: 6, borderRadius: 3, background: "#1d3557", display: "inline-block" }} />
                   {ko ? `출처: ${fb.costSource} · VAT 별도 · 점포 구입비 별도` : `Source: ${fb.costSource} · Excl. VAT · Excl. property`}
                 </div>
               </div>
@@ -159,10 +159,10 @@ export function BudgetSetupStage() {
                 <div style={{
                   padding: "14px 16px",
                   borderRadius: "14px",
-                  background: "rgba(255,159,10,0.06)",
-                  border: "1px solid rgba(255,159,10,0.12)"
+                  background: "rgba(25,25,112,0.06)",
+                  border: "1px solid rgba(25,25,112,0.12)"
                 }}>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#ff9f0a", marginBottom: "4px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#191970", marginBottom: "4px" }}>
                     {ko ? "상세 비용 미확인" : "Detailed Costs Unverified"}
                   </div>
                   <div style={{ fontSize: "12px", lineHeight: 1.55, color: "var(--muted)" }}>
@@ -212,7 +212,7 @@ export function BudgetSetupStage() {
             업종·자본금 기준 상위 4개 (자격 충족 우선) 동적 매칭. */}
       <BudgetFundingMatchCard />
 
-      <div ref={budgetRef} style={{ ...styles.budgetPanel, ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
+      <div ref={budgetRef} style={{ ...styles.budgetPanel, ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
         <div style={styles.budgetHeader}>
           <div style={styles.budgetLabel}>
             {language === "ko" ? "시작 자본금" : "Starting capital"}
@@ -368,16 +368,16 @@ export function BudgetSetupStage() {
           ratioLabel = ko ? "아직 입력하지 않음" : "Not set yet";
           ratioColor = "rgba(15,23,42,0.35)";
         } else if (isStartup) {
-          if (ratio >= 24) { ratioLabel = ko ? "넉넉 (24개월+ 런웨이)" : "Strong (24+ mo runway)"; ratioColor = "#059669"; }
-          else if (ratio >= 18) { ratioLabel = ko ? "적정 (18~24개월)" : "Adequate (18-24 mo)"; ratioColor = "#059669"; }
-          else if (ratio >= 12) { ratioLabel = ko ? "타이트 (12~18개월)" : "Tight (12-18 mo)"; ratioColor = "#d97706"; }
-          else if (ratio >= 6) { ratioLabel = ko ? "부족 (6~12개월)" : "Short (6-12 mo)"; ratioColor = "#d97706"; }
-          else { ratioLabel = ko ? "심각 — 시리즈A 전 소진 위험" : "Critical — risk of running out before Series A"; ratioColor = "#dc2626"; }
+          if (ratio >= 24) { ratioLabel = ko ? "넉넉 (24개월+ 런웨이)" : "Strong (24+ mo runway)"; ratioColor = "#1d3557"; }
+          else if (ratio >= 18) { ratioLabel = ko ? "적정 (18~24개월)" : "Adequate (18-24 mo)"; ratioColor = "#1d3557"; }
+          else if (ratio >= 12) { ratioLabel = ko ? "타이트 (12~18개월)" : "Tight (12-18 mo)"; ratioColor = "#191970"; }
+          else if (ratio >= 6) { ratioLabel = ko ? "부족 (6~12개월)" : "Short (6-12 mo)"; ratioColor = "#191970"; }
+          else { ratioLabel = ko ? "심각 — 시리즈A 전 소진 위험" : "Critical — risk of running out before Series A"; ratioColor = "#b64c4c"; }
         } else {
-          if (ratio >= 6) { ratioLabel = ko ? "매우 여유 (6개월+)" : "Very safe (6+ months)"; ratioColor = "#059669"; }
-          else if (ratio >= 3) { ratioLabel = ko ? "적정 (3~6개월)" : "Adequate (3-6 months)"; ratioColor = "#059669"; }
-          else if (ratio >= 1) { ratioLabel = ko ? "부족 (3개월 미만)" : "Tight (<3 months)"; ratioColor = "#d97706"; }
-          else { ratioLabel = ko ? "매우 부족 (1개월 미만)" : "Critical (<1 month)"; ratioColor = "#dc2626"; }
+          if (ratio >= 6) { ratioLabel = ko ? "매우 여유 (6개월+)" : "Very safe (6+ months)"; ratioColor = "#1d3557"; }
+          else if (ratio >= 3) { ratioLabel = ko ? "적정 (3~6개월)" : "Adequate (3-6 months)"; ratioColor = "#1d3557"; }
+          else if (ratio >= 1) { ratioLabel = ko ? "부족 (3개월 미만)" : "Tight (<3 months)"; ratioColor = "#191970"; }
+          else { ratioLabel = ko ? "매우 부족 (1개월 미만)" : "Critical (<1 month)"; ratioColor = "#b64c4c"; }
         }
 
         // ── 슬라이더 상한 (모드 × 세부 업종 기반) ──

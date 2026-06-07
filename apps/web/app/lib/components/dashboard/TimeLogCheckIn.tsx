@@ -146,12 +146,12 @@ export function TimeLogCheckIn({ ko }: Props) {
           margin: "12px 22px 0",
           padding: "14px",
           borderRadius: "12px",
-          background: "rgba(5,150,105,0.05)",
-          border: "1px solid rgba(5,150,105,0.12)",
+          background: "rgba(25,25,112,0.05)",
+          border: "1px solid rgba(25,25,112,0.12)",
           textAlign: "center" as const,
         }}
       >
-        <div style={{ fontSize: "13px", fontWeight: 650, color: "#059669" }}>
+        <div style={{ fontSize: "13px", fontWeight: 650, color: "#1d3557" }}>
           {ko ? "✓ 오늘 체크인 완료" : "✓ Checked in"}
         </div>
         <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", marginTop: "3px" }}>
@@ -210,7 +210,7 @@ export function TimeLogCheckIn({ ko }: Props) {
         />
         <SliderRow
           Icon={Wrench}
-          color="#b45309"
+          color="#191970"
           labelKo="운영·관리"
           labelEn="Operations"
           value={operations}

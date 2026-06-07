@@ -86,64 +86,66 @@ public enum HealthColors {
     public static func palette(for grade: HealthGrade) -> HealthColorPalette {
         switch grade {
 
+        // ⚠️ 신호등 컬러 금지 — 웹 HEALTH_COLORS 와 1:1. healthy→warning 은 미드나잇 네이비(#191970)
+        //   농담(옅음=양호, 짙음=위험), critical 1단계만 벽돌 danger(#b64c4c). 라벨 항상 동반(색각 접근성).
         case .healthy:
-            // 웹: text #15803d / dot #22c55e (green-500/700)
+            // 옅은 네이비 = 양호
             return HealthColorPalette(
-                bgLight:     .rgb(34, 197, 94, opacity: 0.08),
-                bgDark:      .rgb(34, 197, 94, opacity: 0.14),
-                borderLight: .rgb(34, 197, 94, opacity: 0.25),
-                borderDark:  .rgb(34, 197, 94, opacity: 0.35),
-                textLight:   .hex(0x15803D),
-                textDark:    .hex(0x4ADE80),    // green-400 (Dark 대비)
-                dotLight:    .hex(0x22C55E),
-                dotDark:     .hex(0x4ADE80),
-                glowLight:   .rgb(34, 197, 94, opacity: 0.40),
-                glowDark:    .rgb(34, 197, 94, opacity: 0.55)
+                bgLight:     .rgb(25, 25, 112, opacity: 0.05),
+                bgDark:      .rgb(123, 123, 196, opacity: 0.12),
+                borderLight: .rgb(25, 25, 112, opacity: 0.14),
+                borderDark:  .rgb(123, 123, 196, opacity: 0.30),
+                textLight:   .hex(0x1D3557),
+                textDark:    .hex(0x8AB0D5),
+                dotLight:    .rgb(25, 25, 112, opacity: 0.38),
+                dotDark:     .rgb(123, 123, 196, opacity: 0.55),
+                glowLight:   .rgb(25, 25, 112, opacity: 0.18),
+                glowDark:    .rgb(123, 123, 196, opacity: 0.30)
             )
 
         case .caution:
-            // 웹: text #b45309 / dot #f59e0b (amber-500/700)
+            // 중간 네이비
             return HealthColorPalette(
-                bgLight:     .rgb(245, 158, 11, opacity: 0.09),
-                bgDark:      .rgb(245, 158, 11, opacity: 0.14),
-                borderLight: .rgb(245, 158, 11, opacity: 0.28),
-                borderDark:  .rgb(245, 158, 11, opacity: 0.38),
-                textLight:   .hex(0xB45309),
-                textDark:    .hex(0xFBBF24),    // amber-400
-                dotLight:    .hex(0xF59E0B),
-                dotDark:     .hex(0xFBBF24),
-                glowLight:   .rgb(245, 158, 11, opacity: 0.45),
-                glowDark:    .rgb(245, 158, 11, opacity: 0.60)
+                bgLight:     .rgb(25, 25, 112, opacity: 0.07),
+                bgDark:      .rgb(123, 123, 196, opacity: 0.14),
+                borderLight: .rgb(25, 25, 112, opacity: 0.18),
+                borderDark:  .rgb(123, 123, 196, opacity: 0.34),
+                textLight:   .hex(0x1D3557),
+                textDark:    .hex(0x8AB0D5),
+                dotLight:    .rgb(25, 25, 112, opacity: 0.58),
+                dotDark:     .rgb(123, 123, 196, opacity: 0.70),
+                glowLight:   .rgb(25, 25, 112, opacity: 0.26),
+                glowDark:    .rgb(123, 123, 196, opacity: 0.40)
             )
 
         case .warning:
-            // 웹: text #c2410c / dot #ea580c (orange-600/700)
+            // 짙은 네이비 = 위험 임박
             return HealthColorPalette(
-                bgLight:     .rgb(234, 88, 12, opacity: 0.09),
-                bgDark:      .rgb(234, 88, 12, opacity: 0.14),
-                borderLight: .rgb(234, 88, 12, opacity: 0.30),
-                borderDark:  .rgb(234, 88, 12, opacity: 0.40),
-                textLight:   .hex(0xC2410C),
-                textDark:    .hex(0xFB923C),    // orange-400
-                dotLight:    .hex(0xEA580C),
-                dotDark:     .hex(0xFB923C),
-                glowLight:   .rgb(234, 88, 12, opacity: 0.50),
-                glowDark:    .rgb(234, 88, 12, opacity: 0.65)
+                bgLight:     .rgb(25, 25, 112, opacity: 0.10),
+                bgDark:      .rgb(123, 123, 196, opacity: 0.16),
+                borderLight: .rgb(25, 25, 112, opacity: 0.24),
+                borderDark:  .rgb(123, 123, 196, opacity: 0.40),
+                textLight:   .hex(0x191970),
+                textDark:    .hex(0x9A9AD8),
+                dotLight:    .rgb(25, 25, 112, opacity: 0.85),
+                dotDark:     .rgb(154, 154, 216, opacity: 0.90),
+                glowLight:   .rgb(25, 25, 112, opacity: 0.34),
+                glowDark:    .rgb(123, 123, 196, opacity: 0.50)
             )
 
         case .critical:
-            // 웹: text #b91c1c / dot #ef4444 (red-500/700)
+            // 위험 1색 (벽돌 danger #b64c4c)
             return HealthColorPalette(
-                bgLight:     .rgb(220, 38, 38, opacity: 0.09),
-                bgDark:      .rgb(220, 38, 38, opacity: 0.14),
-                borderLight: .rgb(220, 38, 38, opacity: 0.30),
-                borderDark:  .rgb(220, 38, 38, opacity: 0.40),
-                textLight:   .hex(0xB91C1C),
-                textDark:    .hex(0xF87171),    // red-400
-                dotLight:    .hex(0xEF4444),
-                dotDark:     .hex(0xF87171),
-                glowLight:   .rgb(239, 68, 68, opacity: 0.50),
-                glowDark:    .rgb(239, 68, 68, opacity: 0.65)
+                bgLight:     .rgb(182, 76, 76, opacity: 0.10),
+                bgDark:      .rgb(182, 76, 76, opacity: 0.16),
+                borderLight: .rgb(182, 76, 76, opacity: 0.32),
+                borderDark:  .rgb(182, 76, 76, opacity: 0.42),
+                textLight:   .hex(0xB64C4C),
+                textDark:    .hex(0xD98A8A),
+                dotLight:    .hex(0xB64C4C),
+                dotDark:     .hex(0xD98A8A),
+                glowLight:   .rgb(182, 76, 76, opacity: 0.45),
+                glowDark:    .rgb(182, 76, 76, opacity: 0.60)
             )
 
         case .unknown:

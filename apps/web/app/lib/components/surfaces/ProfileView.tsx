@@ -195,7 +195,7 @@ export function ProfileView() {
             <span style={{ fontSize: "13px", color: "var(--muted)" }}>
               {ko ? `${completedCount}개 단계 완료` : `${completedCount} stages completed`}
             </span>
-            <span style={{ fontSize: "20px", fontWeight: 700, color: correctedProgressPercent >= 100 ? "#34c759" : "#007aff", letterSpacing: "-0.5px" }}>
+            <span style={{ fontSize: "20px", fontWeight: 700, color: correctedProgressPercent >= 100 ? "#1d3557" : "#007aff", letterSpacing: "-0.5px" }}>
               {correctedProgressPercent}%
             </span>
           </div>
@@ -203,7 +203,7 @@ export function ProfileView() {
             <div style={{
               height: "100%", borderRadius: "4px",
               background: correctedProgressPercent >= 100
-                ? "#34c759"
+                ? "#1d3557"
                 : "linear-gradient(90deg, #007aff 0%, #5ac8fa 100%)",
               width: `${correctedProgressPercent}%`,
               transition: "width 0.4s ease",
@@ -349,8 +349,8 @@ export function ProfileView() {
             type="button"
             onClick={resetDemo}
             style={{
-              fontSize: "12px", fontWeight: 600, color: "#ff3b30",
-              background: "rgba(255,59,48,0.08)", border: "none", borderRadius: "10px",
+              fontSize: "12px", fontWeight: 600, color: "#b64c4c",
+              background: "rgba(182,76,76,0.08)", border: "none", borderRadius: "10px",
               padding: "8px 14px", cursor: "pointer", flexShrink: 0,
             }}
           >
@@ -379,7 +379,7 @@ export function ProfileView() {
         {!isAnonymous && (
           <div style={rowLast}>
             <div>
-              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px", color: "#ff3b30" }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "2px", color: "#b64c4c" }}>
                 {ko ? "계정 삭제" : "Delete account"}
               </div>
               <div style={{ fontSize: "11px", color: "var(--muted)" }}>
@@ -391,7 +391,7 @@ export function ProfileView() {
               onClick={() => { void handleDeleteAccount(); }}
               style={{
                 fontSize: "12px", fontWeight: 600, color: "#fff",
-                background: "#ff3b30", border: "none", borderRadius: "10px",
+                background: "#b64c4c", border: "none", borderRadius: "10px",
                 padding: "8px 14px", cursor: "pointer", flexShrink: 0,
               }}
             >

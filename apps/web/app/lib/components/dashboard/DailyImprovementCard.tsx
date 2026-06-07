@@ -30,7 +30,7 @@ export function DailyImprovementCard({ ko, industryCategoryId }: Props) {
         borderRadius: "18px",
         padding: "16px 20px",
         background: "linear-gradient(180deg, rgba(254,243,199,0.3) 0%, rgba(255,255,255,0.95) 100%)",
-        border: "1px solid rgba(245,158,11,0.12)",
+        border: "1px solid rgba(25,25,112,0.12)",
         display: "flex",
         alignItems: "flex-start",
         gap: "12px",
@@ -42,14 +42,14 @@ export function DailyImprovementCard({ ko, industryCategoryId }: Props) {
           width: "34px",
           height: "34px",
           borderRadius: "10px",
-          background: "rgba(245,158,11,0.1)",
+          background: "rgba(25,25,112,0.1)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
         }}
       >
-        <Sparkles size={17} strokeWidth={1.5} color="#d97706" />
+        <Sparkles size={17} strokeWidth={1.5} color="#191970" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
@@ -58,7 +58,7 @@ export function DailyImprovementCard({ ko, industryCategoryId }: Props) {
             fontWeight: 650,
             letterSpacing: "0.08em",
             textTransform: "uppercase" as const,
-            color: "#d97706",
+            color: "#191970",
             marginBottom: "3px",
           }}
         >

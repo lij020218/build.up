@@ -206,7 +206,7 @@ export function PortOneConnectCard({ ko }: { ko: boolean }) {
                   <span
                     style={{
                       width: "8px", height: "8px", borderRadius: "50%",
-                      background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.5)",
+                      background: "#1d3557", boxShadow: "0 0 6px rgba(25,25,112,0.5)",
                     }}
                   />
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>
@@ -229,7 +229,7 @@ export function PortOneConnectCard({ ko }: { ko: boolean }) {
                   </div>
                 )}
                 {status?.lastSyncError && (
-                  <div style={{ color: "#b91c1c", fontWeight: 600 }}>
+                  <div style={{ color: "#b64c4c", fontWeight: 600 }}>
                     ⚠ {status.lastSyncError}
                   </div>
                 )}
@@ -240,11 +240,11 @@ export function PortOneConnectCard({ ko }: { ko: boolean }) {
                       padding: "6px 10px",
                       borderRadius: "8px",
                       background: syncResult.includes("실패") || syncResult.includes("오류") || syncResult.includes("Failed")
-                        ? "rgba(239,68,68,0.06)"
-                        : "rgba(34,197,94,0.06)",
+                        ? "rgba(182,76,76,0.06)"
+                        : "rgba(25,25,112,0.06)",
                       color: syncResult.includes("실패") || syncResult.includes("오류") || syncResult.includes("Failed")
-                        ? "#b91c1c"
-                        : "#15803d",
+                        ? "#b64c4c"
+                        : "#1d3557",
                       fontWeight: 600,
                     }}
                   >
@@ -376,7 +376,7 @@ function ConnectWizard({
               <li>{ko ? "좌측 메뉴 → [결제연동] → [API Keys]" : "Sidebar → [Integrations] → [API Keys]"}</li>
               <li>{ko ? "[V2 API Secret 발급] 버튼 클릭" : "Click [Generate V2 API Secret]"}</li>
               <li>{ko ? "이름: \"foundone-readonly\", 만료: 90일 권장" : "Name: \"foundone-readonly\", expiry: 90 days recommended"}</li>
-              <li style={{ color: "#b45309", fontWeight: 600 }}>
+              <li style={{ color: "#191970", fontWeight: 600 }}>
                 {ko ? "⚠ 발급 직후 한 번만 보입니다 — 미리 메모장에 복사하세요" : "⚠ Shown only once — copy to a notepad first"}
               </li>
               <li>{ko ? "복사한 Secret 을 다음 단계에 붙여넣으세요" : "Paste the copied Secret in the next step"}</li>
@@ -388,7 +388,7 @@ function ConnectWizard({
               <div>
                 <label style={fieldLabel}>
                   {ko ? "V2 API Secret" : "V2 API Secret"}
-                  <span style={{ color: "#b91c1c", marginLeft: "3px" }}>*</span>
+                  <span style={{ color: "#b64c4c", marginLeft: "3px" }}>*</span>
                 </label>
                 <input
                   type="password"
@@ -438,7 +438,7 @@ function ConnectWizard({
                 </div>
               </div>
               {error && (
-                <div style={{ background: "rgba(239,68,68,0.06)", border: "0.5px solid rgba(239,68,68,0.2)", borderRadius: "10px", padding: "10px 12px", color: "#b91c1c", fontSize: "12.5px", lineHeight: 1.5 }}>
+                <div style={{ background: "rgba(182,76,76,0.06)", border: "0.5px solid rgba(182,76,76,0.2)", borderRadius: "10px", padding: "10px 12px", color: "#b64c4c", fontSize: "12.5px", lineHeight: 1.5 }}>
                   {error}
                 </div>
               )}
@@ -534,8 +534,8 @@ const secondaryBtn: React.CSSProperties = {
 const dangerBtn: React.CSSProperties = {
   ...secondaryBtn,
   marginLeft: "auto",
-  color: "#b91c1c",
-  borderColor: "rgba(220,38,38,0.2)",
+  color: "#b64c4c",
+  borderColor: "rgba(182,76,76,0.2)",
 };
 
 const fieldLabel: React.CSSProperties = {

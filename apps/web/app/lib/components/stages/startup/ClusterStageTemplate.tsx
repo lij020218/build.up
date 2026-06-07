@@ -198,12 +198,12 @@ export function ClusterStageTemplate({
             <div key={trap.label} style={{
               display: "flex", gap: "10px", alignItems: "flex-start",
               padding: "13px 15px", borderRadius: "14px",
-              background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
+              background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.14)",
             }}>
-              <AlertTriangle size={18} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+              <AlertTriangle size={18} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontSize: "13.5px", fontWeight: 700, color: "#dc2626",
+                  fontSize: "13.5px", fontWeight: 700, color: "#b64c4c",
                   marginBottom: "3px", letterSpacing: "-0.01em",
                 }}>
                   {trap.label}

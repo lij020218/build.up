@@ -199,7 +199,7 @@ function EcommerceConversionCardInner({ ko, industryCategoryId }: Props) {
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
             {analysis.channels.map((c) => {
-              const roasColor = c.roas >= 400 ? "#059669" : c.roas >= 300 ? MIDNIGHT : c.roas >= 200 ? "#b45309" : "#b91c1c";
+              const roasColor = c.roas >= 400 ? "#1d3557" : c.roas >= 300 ? MIDNIGHT : c.roas >= 200 ? "#191970" : "#b64c4c";
               return (
                 <div key={c.channel} style={{
                   display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 10, alignItems: "center",
@@ -254,9 +254,9 @@ function EcommerceConversionCardInner({ ko, industryCategoryId }: Props) {
 
 function StatBox({ label, value, tone, icon }: { label: string; value: string; tone: "critical" | "warning" | "good" | "notable"; icon: React.ReactNode }) {
   const c = {
-    critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c" },
-    warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.20)", text: "#b45309" },
-    good: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669" },
+    critical: { bg: "rgba(182,76,76,0.06)", border: "rgba(182,76,76,0.20)", text: "#b64c4c" },
+    warning: { bg: "rgba(25,25,112,0.06)", border: "rgba(25,25,112,0.20)", text: "#191970" },
+    good: { bg: "rgba(25,25,112,0.05)", border: "rgba(25,25,112,0.18)", text: "#1d3557" },
     notable: { bg: `${MIDNIGHT}08`, border: `${MIDNIGHT}22`, text: MIDNIGHT },
   }[tone];
   return (
@@ -271,9 +271,9 @@ function StatBox({ label, value, tone, icon }: { label: string; value: string; t
 }
 
 const actionColors = {
-  critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c" },
-  warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.20)", text: "#b45309" },
-  good: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669" },
+  critical: { bg: "rgba(182,76,76,0.06)", border: "rgba(182,76,76,0.20)", text: "#b64c4c" },
+  warning: { bg: "rgba(25,25,112,0.06)", border: "rgba(25,25,112,0.20)", text: "#191970" },
+  good: { bg: "rgba(25,25,112,0.05)", border: "rgba(25,25,112,0.18)", text: "#1d3557" },
 } as const;
 
 const demoBtnStyle: React.CSSProperties = {

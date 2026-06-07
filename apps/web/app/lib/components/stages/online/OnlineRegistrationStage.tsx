@@ -107,12 +107,12 @@ export function OnlineRegistrationStage() {
         <div style={{ padding: "0 24px 16px" }}>
           <div style={{ fontSize: "12px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "8px" }}>{ko ? "간이과세 vs 일반과세" : "Tax Type Comparison"}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.1)" }}>
-              <div style={{ fontSize: "14px", fontWeight: 680, color: "#059669", marginBottom: "6px" }}>{ko ? "간이과세자" : "Simplified"}</div>
+            <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.1)" }}>
+              <div style={{ fontSize: "14px", fontWeight: 680, color: "#1d3557", marginBottom: "6px" }}>{ko ? "간이과세자" : "Simplified"}</div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5 }}>
                 {ko ? "연매출 1억 400만원 이하 시 선택 가능. 부가세 면제(4,800만 미만) 또는 감면(1.5~4%). 세금계산서 발행 불가 (4,800만원 이하)." : "Available under ₩104M annual. VAT exempt (<₩48M) or reduced (1.5-4%). Cannot issue tax invoices under ₩48M."}
               </div>
-              <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#059669", padding: "3px 8px", borderRadius: "6px", background: "rgba(5,150,105,0.08)", display: "inline-block" }}>{ko ? "초기 창업자 추천" : "Recommended for starters"}</div>
+              <div style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#1d3557", padding: "3px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.08)", display: "inline-block" }}>{ko ? "초기 창업자 추천" : "Recommended for starters"}</div>
             </div>
             <div style={{ padding: "14px", borderRadius: "14px", background: "rgba(25,25,112,0.03)", border: "1px solid rgba(25,25,112,0.08)" }}>
               <div style={{ fontSize: "14px", fontWeight: 680, color: "#191970", marginBottom: "6px" }}>{ko ? "일반과세자" : "Standard"}</div>
@@ -149,8 +149,8 @@ export function OnlineRegistrationStage() {
             </div>
           </div>
           {/* 필수 행정 순서 안내 */}
-          <div style={{ margin: "0 24px 12px", padding: "12px 16px", borderRadius: "12px", background: "rgba(217,119,6,0.06)", border: "1px solid rgba(217,119,6,0.12)" }}>
-            <div style={{ fontSize: "12px", fontWeight: 680, color: "#d97706", marginBottom: "4px" }}>
+          <div style={{ margin: "0 24px 12px", padding: "12px 16px", borderRadius: "12px", background: "rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.12)" }}>
+            <div style={{ fontSize: "12px", fontWeight: 680, color: "#191970", marginBottom: "4px" }}>
               {ko ? "⚠ 필수 행정 순서 (반드시 이 순서대로)" : "⚠ Required Admin Sequence (follow this order)"}
             </div>
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.6 }}>
@@ -165,9 +165,9 @@ export function OnlineRegistrationStage() {
         </div>
 
         {/* 경고 */}
-        <div style={{ margin: "0 24px 16px", padding: "12px 16px", borderRadius: "12px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.08)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "#dc2626", lineHeight: 1.5 }}>
+        <div style={{ margin: "0 24px 16px", padding: "12px 16px", borderRadius: "12px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.08)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b64c4c" strokeWidth="1.8" strokeLinecap="round" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "#b64c4c", lineHeight: 1.5 }}>
             {ko ? "미신고 시 과태료 최대 1,000만원. 사업자등록 후 반드시 진행하세요." : "Fine up to ₩10M if unfiled. Must complete after business registration."}
           </span>
         </div>
@@ -248,13 +248,13 @@ export function OnlineRegistrationStage() {
 
         {/* 비용 */}
         <div style={{ margin: "0 24px 16px", display: "flex", gap: "8px" }}>
-          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", textAlign: "center" as const }}>
+          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", textAlign: "center" as const }}>
             <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "신고 수수료" : "Filing Fee"}</div>
-            <div style={{ fontSize: "18px", fontWeight: 740, color: "#059669" }}>{ko ? "무료" : "Free"}</div>
+            <div style={{ fontSize: "18px", fontWeight: 740, color: "#1d3557" }}>{ko ? "무료" : "Free"}</div>
           </div>
-          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(217,119,6,0.04)", textAlign: "center" as const }}>
+          <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", textAlign: "center" as const }}>
             <div style={{ fontSize: "10px", fontWeight: 650, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, marginBottom: "4px" }}>{ko ? "등록면허세" : "License Tax"}</div>
-            <div style={{ fontSize: "18px", fontWeight: 740, color: "#d97706" }}>~40,500{ko ? "원" : "₩"}</div>
+            <div style={{ fontSize: "18px", fontWeight: 740, color: "#191970" }}>~40,500{ko ? "원" : "₩"}</div>
             <div style={{ fontSize: "10px", color: "rgba(0,0,0,0.35)" }}>{ko ? "구청별 상이" : "Varies"}</div>
           </div>
           <div style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", textAlign: "center" as const }}>

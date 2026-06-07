@@ -118,11 +118,11 @@ export function StageWrapup({
       {/* 다음 단계 진입 전 반드시 확인 */}
       <div style={{
         padding: "14px 16px", borderRadius: 12,
-        background: "rgba(220,38,38,0.04)",
-        border: "1px solid rgba(220,38,38,0.14)",
+        background: "rgba(182,76,76,0.04)",
+        border: "1px solid rgba(182,76,76,0.14)",
       }}>
         <div style={{
-          fontSize: 11, fontWeight: 700, color: "#dc2626",
+          fontSize: 11, fontWeight: 700, color: "#b64c4c",
           letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8,
         }}>
           {ko ? `다음 단계(${nextStageLabel}) 전 반드시 확인` : `Verify before ${nextStageLabel}`}
@@ -130,7 +130,7 @@ export function StageWrapup({
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
           {verifyItems.map((item, i) => (
             <li key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
-              <span style={{ flexShrink: 0, marginTop: 7, width: 5, height: 5, borderRadius: "50%", background: "#dc2626" }} />
+              <span style={{ flexShrink: 0, marginTop: 7, width: 5, height: 5, borderRadius: "50%", background: "#b64c4c" }} />
               <span style={{ fontSize: 13, color: "#7f1d1d", lineHeight: 1.6, fontWeight: 500 }}>
                 {item}
               </span>
@@ -143,19 +143,19 @@ export function StageWrapup({
       <div style={{
         display: "flex", alignItems: "center", gap: 10,
         padding: "13px 15px", borderRadius: 12,
-        background: "linear-gradient(180deg, rgba(5,150,105,0.05) 0%, rgba(5,150,105,0.02) 100%)",
-        border: "1px solid rgba(5,150,105,0.16)",
+        background: "linear-gradient(180deg, rgba(25,25,112,0.05) 0%, rgba(25,25,112,0.02) 100%)",
+        border: "1px solid rgba(25,25,112,0.16)",
       }}>
         <div style={{
           width: 26, height: 26, borderRadius: 8,
-          background: "rgba(5,150,105,0.12)", color: "#059669",
+          background: "rgba(25,25,112,0.12)", color: "#1d3557",
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
         }}>
           <Check size={14} strokeWidth={2.4} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1d3557", letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 2 }}>
             {ko ? "이 단계가 끝나면" : "When done"}
           </div>
           <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.005em", lineHeight: 1.4 }}>

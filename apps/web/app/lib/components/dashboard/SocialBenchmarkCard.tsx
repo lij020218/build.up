@@ -163,8 +163,8 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
     };
   })();
 
-  const toneColor = tone === "positive" ? "#0e7c3a" : tone === "warning" ? "#b45309" : "#191970";
-  const toneBg = tone === "positive" ? "rgba(52,199,89,0.04)" : tone === "warning" ? "rgba(217,119,6,0.04)" : "rgba(25,25,112,0.04)";
+  const toneColor = tone === "positive" ? "#1d3557" : tone === "warning" ? "#191970" : "#191970";
+  const toneBg = tone === "positive" ? "rgba(52,199,89,0.04)" : tone === "warning" ? "rgba(25,25,112,0.04)" : "rgba(25,25,112,0.04)";
 
   // 막대 차트 3 구간 — 0 ~ top10Monthly
   const barMax = Math.max(top10Monthly, projectedMonthly * 1.1);
@@ -340,7 +340,7 @@ function WeeklyBenchmarkChart({
           {ko ? "주간 매출 (월 환산, 최근 4주)" : "Weekly revenue (monthly est., last 4w)"}
         </span>
         {momDelta !== null && (
-          <span style={{ fontSize: "12px", fontWeight: 650, color: momDelta >= 0 ? "#0e7c3a" : "#dc2626", fontVariantNumeric: "tabular-nums" as const }}>
+          <span style={{ fontSize: "12px", fontWeight: 650, color: momDelta >= 0 ? "#1d3557" : "#b64c4c", fontVariantNumeric: "tabular-nums" as const }}>
             {momDelta >= 0 ? "↑" : "↓"} {Math.abs(momDelta).toFixed(1)}%
           </span>
         )}

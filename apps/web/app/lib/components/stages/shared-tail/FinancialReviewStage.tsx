@@ -965,8 +965,8 @@ export function FinancialReviewStage() {
                       <span style={{
                         fontSize: "11px", fontWeight: 700,
                         padding: "3px 9px", borderRadius: "999px",
-                        background: inRange ? "rgba(34,167,73,0.1)" : above ? "rgba(220,38,38,0.1)" : "rgba(255,159,10,0.12)",
-                        color: inRange ? "rgb(34,167,73)" : above ? "#dc2626" : "rgb(184,100,0)",
+                        background: inRange ? "rgba(34,167,73,0.1)" : above ? "rgba(182,76,76,0.1)" : "rgba(25,25,112,0.12)",
+                        color: inRange ? "rgb(34,167,73)" : above ? "#b64c4c" : "rgb(184,100,0)",
                         whiteSpace: "nowrap" as const,
                       }}>
                         {ko
@@ -1106,11 +1106,11 @@ export function FinancialReviewStage() {
           <div style={{
             marginTop: "18px", padding: "12px 14px",
             borderRadius: "12px",
-            background: "rgba(255,159,10,0.06)",
-            border: "1px solid rgba(255,159,10,0.18)",
+            background: "rgba(25,25,112,0.06)",
+            border: "1px solid rgba(25,25,112,0.18)",
             display: "flex", gap: "8px", alignItems: "flex-start",
           }}>
-            <Info size={14} strokeWidth={2} color="#ff9f0a" style={{ flexShrink: 0, marginTop: "2px" }} />
+            <Info size={14} strokeWidth={2} color="#191970" style={{ flexShrink: 0, marginTop: "2px" }} />
             <div style={{ fontSize: "12.5px", color: "var(--text)", lineHeight: 1.5 }}>
               {ko
                 ? `남은 ${totalFields - confirmedCount}개 항목을 확인하면 재무 시뮬이 자동 실행됩니다.`
@@ -1188,8 +1188,8 @@ function SourceBadge({
   field: FieldKey;
   details: ReturnType<typeof estimateMonthlyCosts>["details"];
 }) {
-  const color = sourceMeta.tone === "accent" ? "#191970" : sourceMeta.tone === "warn" ? "#ff9f0a" : "var(--muted)";
-  const bg = sourceMeta.tone === "accent" ? "rgba(25,25,112,0.08)" : sourceMeta.tone === "warn" ? "rgba(255,159,10,0.08)" : "rgba(17,17,17,0.05)";
+  const color = sourceMeta.tone === "accent" ? "#191970" : sourceMeta.tone === "warn" ? "#191970" : "var(--muted)";
+  const bg = sourceMeta.tone === "accent" ? "rgba(25,25,112,0.08)" : sourceMeta.tone === "warn" ? "rgba(25,25,112,0.08)" : "rgba(17,17,17,0.05)";
 
   // 상세 hint 제공
   let detailHint: string | null = null;

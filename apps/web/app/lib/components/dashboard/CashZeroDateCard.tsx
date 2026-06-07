@@ -102,9 +102,9 @@ export function CashZeroDateCard({ ko }: Props) {
   }
 
   const colors = {
-    critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c" },
-    warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.20)", text: "#b45309" },
-    good: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669" },
+    critical: { bg: "rgba(182,76,76,0.06)", border: "rgba(182,76,76,0.20)", text: "#b64c4c" },
+    warning: { bg: "rgba(25,25,112,0.06)", border: "rgba(25,25,112,0.20)", text: "#191970" },
+    good: { bg: "rgba(25,25,112,0.05)", border: "rgba(25,25,112,0.18)", text: "#1d3557" },
   } as const;
   const c = colors[result.tone];
 
@@ -194,11 +194,11 @@ export function CashZeroDateCard({ ko }: Props) {
         {hireCount > 0 && (
           <div style={{
             marginTop: 10, padding: "9px 12px", borderRadius: 9,
-            background: "rgba(217,119,6,0.06)", border: "1px solid rgba(217,119,6,0.18)",
+            background: "rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.18)",
             fontSize: 12, color: "#0f172a", lineHeight: 1.5,
             display: "flex", alignItems: "flex-start", gap: 8,
           }}>
-            <AlertTriangle size={13} strokeWidth={2.2} style={{ color: "#b45309", flexShrink: 0, marginTop: 1 }} />
+            <AlertTriangle size={13} strokeWidth={2.2} style={{ color: "#191970", flexShrink: 0, marginTop: 1 }} />
             <span>
               {ko
                 ? <><strong>cash zero -{result.monthsShifted.toFixed(1)}개월 당겨짐</strong> · {hireCount}명 추가 시 월 burn {Math.round(result.simulatedBurn / 10000).toLocaleString()}만원 ({Math.round((hireCount * DEFAULT_HIRE_COST_KRW) / 10000).toLocaleString()}만 추가)</>

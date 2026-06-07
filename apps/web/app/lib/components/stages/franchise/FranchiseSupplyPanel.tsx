@@ -129,11 +129,11 @@ export function FranchiseSupplyPanel() {
           <div>
             {ko ? (
               <>
-                <strong style={{ color: "rgba(0,0,0,0.7)" }}>본 데이터는 가이드용입니다.</strong> 실제 필수품목·권장품목·공급가는 본사 정보공개서에 따라 다를 수 있습니다. 계약 전 반드시 정보공개서를 직접 확인하세요. <strong style={{ color: "#dc2626" }}>브랜드 로고가 인쇄된 일회용품·포장재는 거의 모두 본사 공급</strong>이며 외부 매입이 금지됩니다.
+                <strong style={{ color: "rgba(0,0,0,0.7)" }}>본 데이터는 가이드용입니다.</strong> 실제 필수품목·권장품목·공급가는 본사 정보공개서에 따라 다를 수 있습니다. 계약 전 반드시 정보공개서를 직접 확인하세요. <strong style={{ color: "#b64c4c" }}>브랜드 로고가 인쇄된 일회용품·포장재는 거의 모두 본사 공급</strong>이며 외부 매입이 금지됩니다.
               </>
             ) : (
               <>
-                <strong style={{ color: "rgba(0,0,0,0.7)" }}>This is a guide only.</strong> Actual mandatory/recommended items and supply prices follow the official franchise disclosure. Verify the disclosure before signing. <strong style={{ color: "#dc2626" }}>Branded disposables and packaging are almost always HQ-supplied</strong> with external purchase prohibited.
+                <strong style={{ color: "rgba(0,0,0,0.7)" }}>This is a guide only.</strong> Actual mandatory/recommended items and supply prices follow the official franchise disclosure. Verify the disclosure before signing. <strong style={{ color: "#b64c4c" }}>Branded disposables and packaging are almost always HQ-supplied</strong> with external purchase prohibited.
               </>
             )}
           </div>

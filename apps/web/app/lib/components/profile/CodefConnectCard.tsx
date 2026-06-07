@@ -90,10 +90,10 @@ export function CodefConnectCard({ ko }: { ko: boolean }) {
           <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "12px" }}>
             <div style={{
               width: "36px", height: "36px", borderRadius: "10px",
-              background: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
+              background: "linear-gradient(135deg, #191970 0%, #191970 100%)",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff",
-              boxShadow: "0 2px 8px rgba(245,158,11,0.25)",
+              boxShadow: "0 2px 8px rgba(25,25,112,0.25)",
               flexShrink: 0,
             }}>
               <Layers size={18} strokeWidth={1.75} />
@@ -221,10 +221,10 @@ function CodefConnectCardLive({ ko }: { ko: boolean }) {
             <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "12px" }}>
               <div style={{
                 width: "36px", height: "36px", borderRadius: "10px",
-                background: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
+                background: "linear-gradient(135deg, #191970 0%, #191970 100%)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff",
-                boxShadow: "0 2px 8px rgba(245,158,11,0.25)",
+                boxShadow: "0 2px 8px rgba(25,25,112,0.25)",
                 flexShrink: 0,
               }}>
                 <Layers size={18} strokeWidth={1.75} />
@@ -241,7 +241,7 @@ function CodefConnectCardLive({ ko }: { ko: boolean }) {
               </div>
             </div>
             <div style={{
-              background: "rgba(245,158,11,0.05)", border: "0.5px solid rgba(245,158,11,0.2)",
+              background: "rgba(25,25,112,0.05)", border: "0.5px solid rgba(25,25,112,0.2)",
               borderRadius: "10px", padding: "9px 12px", marginBottom: "12px",
               fontSize: "11.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.5,
             }}>
@@ -258,7 +258,7 @@ function CodefConnectCardLive({ ko }: { ko: boolean }) {
             <div style={{ padding: "14px 18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.5)" }} />
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1d3557", boxShadow: "0 0 6px rgba(25,25,112,0.5)" }} />
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{ko ? "연결됨" : "Connected"}</span>
                 </div>
                 <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", fontFamily: "monospace" }}>
@@ -271,8 +271,8 @@ function CodefConnectCardLive({ ko }: { ko: boolean }) {
               {msg && (
                 <div style={{
                   marginTop: "8px", padding: "6px 10px", borderRadius: "8px",
-                  background: msg.startsWith("❌") ? "rgba(239,68,68,0.06)" : "rgba(34,197,94,0.06)",
-                  color: msg.startsWith("❌") ? "#b91c1c" : "#15803d",
+                  background: msg.startsWith("❌") ? "rgba(182,76,76,0.06)" : "rgba(25,25,112,0.06)",
+                  color: msg.startsWith("❌") ? "#b64c4c" : "#1d3557",
                   fontSize: "12px", fontWeight: 600,
                 }}>{msg}</div>
               )}
@@ -373,7 +373,7 @@ function CodefWizard({ ko, onClose, onSuccess }: { ko: boolean; onClose: () => v
             <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.7)", marginBottom: "4px" }}>{ko ? "카드 매출 입금계좌" : "Card co. deposit account"}</label>
             <input type="text" inputMode="numeric" value={ba} onChange={(e) => setBa(e.target.value)} placeholder="123-456-789012" style={inputStyle} />
           </div>
-          {err && <div style={{ background: "rgba(239,68,68,0.06)", border: "0.5px solid rgba(239,68,68,0.2)", borderRadius: "10px", padding: "10px 12px", color: "#b91c1c", fontSize: "12.5px" }}>{err}</div>}
+          {err && <div style={{ background: "rgba(182,76,76,0.06)", border: "0.5px solid rgba(182,76,76,0.2)", borderRadius: "10px", padding: "10px 12px", color: "#b64c4c", fontSize: "12.5px" }}>{err}</div>}
         </div>
 
         <div style={{ display: "flex", gap: "8px", padding: "12px 24px 20px", borderTop: "0.5px solid rgba(0,0,0,0.05)" }}>

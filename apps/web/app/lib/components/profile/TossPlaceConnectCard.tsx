@@ -132,7 +132,7 @@ export function TossPlaceConnectCard({ ko }: { ko: boolean }) {
             <div style={{ padding: "14px 18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.5)" }} />
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1d3557", boxShadow: "0 0 6px rgba(25,25,112,0.5)" }} />
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{ko ? "연결됨" : "Connected"}</span>
                 </div>
                 <span style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", fontFamily: "monospace" }}>
@@ -143,7 +143,7 @@ export function TossPlaceConnectCard({ ko }: { ko: boolean }) {
                 {ko ? `최근 30일 결제 ${status?.paymentCount30d}건` : `Last 30d: ${status?.paymentCount30d}`}
               </div>
               {msg && (
-                <div style={{ marginTop: "8px", padding: "6px 10px", borderRadius: "8px", background: msg.startsWith("❌") ? "rgba(239,68,68,0.06)" : "rgba(34,197,94,0.06)", color: msg.startsWith("❌") ? "#b91c1c" : "#15803d", fontSize: "12px", fontWeight: 600 }}>
+                <div style={{ marginTop: "8px", padding: "6px 10px", borderRadius: "8px", background: msg.startsWith("❌") ? "rgba(182,76,76,0.06)" : "rgba(25,25,112,0.06)", color: msg.startsWith("❌") ? "#b64c4c" : "#1d3557", fontSize: "12px", fontWeight: 600 }}>
                   {msg}
                 </div>
               )}
@@ -155,7 +155,7 @@ export function TossPlaceConnectCard({ ko }: { ko: boolean }) {
               <button type="button" onClick={() => sync(true)} disabled={busy} style={secondaryBtn}>
                 {ko ? "백필 (1y)" : "Backfill 1y"}
               </button>
-              <button type="button" onClick={disconnect} disabled={busy} style={{ ...secondaryBtn, marginLeft: "auto", color: "#b91c1c", borderColor: "rgba(220,38,38,0.2)" }}>
+              <button type="button" onClick={disconnect} disabled={busy} style={{ ...secondaryBtn, marginLeft: "auto", color: "#b64c4c", borderColor: "rgba(182,76,76,0.2)" }}>
                 {ko ? "해제" : "Disconnect"}
               </button>
             </div>
@@ -234,7 +234,7 @@ function TossWizard({ ko, onClose, onSuccess }: { ko: boolean; onClose: () => vo
             <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "rgba(15,23,42,0.7)", marginBottom: "4px" }}>{ko ? "매장 ID" : "Merchant ID"}</label>
             <input type="text" value={merchantId} onChange={(e) => setMi(e.target.value)} placeholder="merchant-xxxx" style={inputStyle} />
           </div>
-          {err && <div style={{ background: "rgba(239,68,68,0.06)", border: "0.5px solid rgba(239,68,68,0.2)", borderRadius: "10px", padding: "10px 12px", color: "#b91c1c", fontSize: "12.5px" }}>{err}</div>}
+          {err && <div style={{ background: "rgba(182,76,76,0.06)", border: "0.5px solid rgba(182,76,76,0.2)", borderRadius: "10px", padding: "10px 12px", color: "#b64c4c", fontSize: "12.5px" }}>{err}</div>}
         </div>
 
         <div style={{ display: "flex", gap: "8px", padding: "12px 24px 20px", borderTop: "0.5px solid rgba(0,0,0,0.05)" }}>

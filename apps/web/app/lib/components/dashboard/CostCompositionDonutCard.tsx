@@ -75,17 +75,17 @@ const SLICE_GRADIENTS: Array<[string, string]> = [
   ["#3b5c8c", "#5f8bb8"], // 3: steel → light steel
   ["#5f8bb8", "#8db5d3"], // 4: light steel → sky
   ["#0d9488", "#22d3a3"], // 5: teal → mint
-  ["#d4a017", "#fbbf24"], // 6: gold → amber
+  ["#191970", "#191970"], // 6: gold → amber
   ["#9ca3af", "#cbd5e1"], // 7: gray (기타)
-  ["#dc2626", "#f87171"], // 8: red → coral (이자/위험)
+  ["#b64c4c", "#d98a8a"], // 8: red → coral (이자/위험)
 ];
 
 // SSOT 색상 — 같은 등급은 모든 카드에서 같은 색
 const HEALTH_COLOR: Record<Health, string> = {
-  healthy: HEALTH_COLORS.healthy.dot,    // #22c55e
-  caution: HEALTH_COLORS.caution.dot,    // #f59e0b
-  warning: HEALTH_COLORS.warning.dot,    // #ea580c
-  critical: HEALTH_COLORS.critical.dot,  // #ef4444
+  healthy: HEALTH_COLORS.healthy.dot,    // #1d3557
+  caution: HEALTH_COLORS.caution.dot,    // #191970
+  warning: HEALTH_COLORS.warning.dot,    // #191970
+  critical: HEALTH_COLORS.critical.dot,  // #b64c4c
   unknown: HEALTH_COLORS.unknown.dot,
 };
 const HEALTH_LABEL_KO: Record<Health, string> = {
@@ -569,7 +569,7 @@ const KEYFRAMES = `
   background-clip: text;
 }
 .ccd-loss {
-  background: linear-gradient(180deg, #b91c1c 0%, #ef4444 100%);
+  background: linear-gradient(180deg, #b64c4c 0%, #b64c4c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -633,19 +633,19 @@ const KEYFRAMES = `
   position: relative; z-index: 1;
 }
 .ccd-footer-good {
-  background: linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(34,197,94,0.03) 100%);
-  border: 0.5px solid rgba(34,197,94,0.22);
-  color: #15803d;
+  background: linear-gradient(135deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.03) 100%);
+  border: 0.5px solid rgba(25,25,112,0.22);
+  color: #1d3557;
 }
 .ccd-footer-caution {
-  background: linear-gradient(135deg, rgba(255,159,10,0.08) 0%, rgba(255,159,10,0.04) 100%);
-  border: 0.5px solid rgba(255,159,10,0.25);
-  color: #b45309;
+  background: linear-gradient(135deg, rgba(25,25,112,0.08) 0%, rgba(25,25,112,0.04) 100%);
+  border: 0.5px solid rgba(25,25,112,0.25);
+  color: #191970;
 }
 .ccd-footer-danger {
-  background: linear-gradient(135deg, rgba(255,59,48,0.07) 0%, rgba(255,59,48,0.03) 100%);
-  border: 0.5px solid rgba(255,59,48,0.25);
-  color: #b91c1c;
+  background: linear-gradient(135deg, rgba(182,76,76,0.07) 0%, rgba(182,76,76,0.03) 100%);
+  border: 0.5px solid rgba(182,76,76,0.25);
+  color: #b64c4c;
 }
 .ccd-footer-info {
   background: linear-gradient(135deg, rgba(25,25,112,0.05) 0%, rgba(25,25,112,0.02) 100%);

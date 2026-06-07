@@ -116,7 +116,7 @@ export function FranchiseView() {
                   <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "3px", display: "flex", alignItems: "center", gap: "6px" }}>
                     {fb.name[language]}
                     {hasDetailedData && (
-                      <span title={ko ? "상세 데이터 보강" : "Detailed data available"} style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "999px", background: "rgba(34,197,94,0.1)", color: "#15803d", fontWeight: 600 }}>
+                      <span title={ko ? "상세 데이터 보강" : "Detailed data available"} style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "999px", background: "rgba(25,25,112,0.1)", color: "#1d3557", fontWeight: 600 }}>
                         ✓
                       </span>
                     )}

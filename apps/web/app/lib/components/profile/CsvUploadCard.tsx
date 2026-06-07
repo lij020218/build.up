@@ -84,7 +84,7 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
         <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "12px" }}>
           <div style={{
             width: "36px", height: "36px", borderRadius: "10px",
-            background: "linear-gradient(135deg, #16a34a 0%, #4ade80 100%)",
+            background: "linear-gradient(135deg, #1d3557 0%, #1d3557 100%)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "#fff",
             boxShadow: "0 2px 8px rgba(22,163,74,0.25)",
@@ -126,8 +126,8 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
         {msg && (
           <div style={{
             padding: "8px 12px", borderRadius: "9px",
-            background: msg.startsWith("❌") ? "rgba(239,68,68,0.06)" : "rgba(34,197,94,0.06)",
-            color: msg.startsWith("❌") ? "#b91c1c" : "#15803d",
+            background: msg.startsWith("❌") ? "rgba(182,76,76,0.06)" : "rgba(25,25,112,0.06)",
+            color: msg.startsWith("❌") ? "#b64c4c" : "#1d3557",
             fontSize: "12.5px", fontWeight: 600,
             marginBottom: "10px",
           }}>{msg}</div>

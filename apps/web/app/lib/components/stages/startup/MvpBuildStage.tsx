@@ -539,8 +539,8 @@ pnpm dlx vercel
         ], MIDNIGHT)}
 
         {/* 핵심 변화 요약 박스 */}
-        <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "12px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.2)" }}>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#dc2626", marginBottom: "6px" }}>⚠️ 2026.4 시장 변화 — 알아둘 것</div>
+        <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "12px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.2)" }}>
+          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b64c4c", marginBottom: "6px" }}>⚠️ 2026.4 시장 변화 — 알아둘 것</div>
           <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12.5px", color: "rgba(15,23,42,0.72)", lineHeight: 1.7 }}>
             <li><strong>OpenAI Sora 종료</strong> (2026.3) → 비디오는 PixVerse·Runway·Kling 으로 이동</li>
             <li><strong>DALL-E 2·3 종료</strong> (2026.5.12) → GPT Image 2 가 OpenAI 유일 이미지 모델</li>

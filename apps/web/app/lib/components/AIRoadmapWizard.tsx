@@ -310,7 +310,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
 
           {error && (
             <div style={{ marginTop: "12px", padding: "14px 16px", borderRadius: "14px", background: "rgba(180,35,24,0.05)", border: "1px solid rgba(180,35,24,0.1)" }}>
-              <div style={{ fontSize: "14px", fontWeight: 650, color: "#b42318", marginBottom: "6px" }}>
+              <div style={{ fontSize: "14px", fontWeight: 650, color: "#b64c4c", marginBottom: "6px" }}>
                 {ko ? "생성에 실패했습니다" : "Generation failed"}
               </div>
               <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.55)", lineHeight: 1.5, marginBottom: "10px" }}>
@@ -322,7 +322,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                 onClick={() => { setError(null); handleGenerate(); }}
                 style={{
                   padding: "10px 20px", borderRadius: "10px", border: "none",
-                  background: "#b42318", color: "#fff", fontSize: "13px", fontWeight: 650,
+                  background: "#b64c4c", color: "#fff", fontSize: "13px", fontWeight: 650,
                   cursor: "pointer", width: "100%",
                 }}
               >
@@ -538,7 +538,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
       { label: ko ? "보증금" : "Deposit", value: ba.deposit, color: "#3b82f6" },
       { label: ko ? "인테리어" : "Interior", value: ba.interior, color: "#8b5cf6" },
       { label: ko ? "설비" : "Equipment", value: ba.equipment, color: "#06b6d4" },
-      { label: ko ? "운전자금" : "Working", value: ba.workingCapital, color: "#10b981" },
+      { label: ko ? "운전자금" : "Working", value: ba.workingCapital, color: "#1d3557" },
     ].filter(b => b.value > 0);
 
     return (
@@ -593,9 +593,9 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                   {result.parsed.startupType === "franchise" ? (ko ? "프랜차이즈" : "Franchise") : (ko ? "독립 창업" : "Independent")}
                 </span>
                 {result.parsed.preferredRegion && (
-                  <span style={conceptTagStyle("#d97706")}>📍 {result.parsed.preferredRegion}</span>
+                  <span style={conceptTagStyle("#191970")}>📍 {result.parsed.preferredRegion}</span>
                 )}
-                <span style={conceptTagStyle("#059669")}>{fmt(totalBudget)}</span>
+                <span style={conceptTagStyle("#1d3557")}>{fmt(totalBudget)}</span>
               </div>
             </div>
           )}
@@ -606,7 +606,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
             const reason = (result.parsed as { matchingReason?: string }).matchingReason ?? "";
             const alts = (result.parsed as { alternativeSubIndustries?: Array<{ id: string; reason: string }> }).alternativeSubIndustries ?? [];
             const isLowConf = conf < 60;
-            const tone = isLowConf ? { bg: "rgba(255,159,10,0.06)", border: "rgba(255,159,10,0.20)", accent: "#b45309" }
+            const tone = isLowConf ? { bg: "rgba(25,25,112,0.06)", border: "rgba(25,25,112,0.20)", accent: "#191970" }
                                     : { bg: "rgba(25,25,112,0.04)", border: "rgba(25,25,112,0.10)", accent: "#191970" };
             return (
               <div style={{
@@ -894,7 +894,7 @@ export default function AIRoadmapWizard({ language, onComplete, onBack }: Props)
                   ))}
                 </div>
               ) : (
-                <div style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(255,159,10,0.06)", border: "1px solid rgba(255,159,10,0.20)", color: "#b45309", fontSize: 13, fontWeight: 600, lineHeight: 1.55 }}>
+                <div style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(25,25,112,0.06)", border: "1px solid rgba(25,25,112,0.20)", color: "#191970", fontSize: 13, fontWeight: 600, lineHeight: 1.55 }}>
                   {ko
                     ? "공급업체 매칭에 실패했습니다. 아래 \"다시 생성\" 버튼으로 재시도해 주세요."
                     : "Supplier matching failed. Please regenerate."}

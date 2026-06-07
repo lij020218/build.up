@@ -155,7 +155,7 @@ export function PLHeroCard({
           {hasDanger && (
             <span
               title={ko ? "비용 구조 점검 필요" : "Cost structure alert"}
-              style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#ff3b30", flexShrink: 0 }}
+              style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#b64c4c", flexShrink: 0 }}
             />
           )}
         </div>
@@ -168,7 +168,7 @@ export function PLHeroCard({
             {[
               { label: ko ? "매출" : "Revenue", raw: totalSales, signed: false, color: "#191970", change: pctChange(totalSales, prevMonthSales), projection: undefined as number | undefined },
               { label: ko ? "비용" : "Costs", raw: totalCosts, signed: false, color: "rgba(15,23,42,0.7)", change: pctChange(totalCosts, prevMonthCosts), projection: undefined },
-              { label: ko ? "순이익" : "Profit", raw: netProfit, signed: true, color: netProfit >= 0 ? "#34c759" : "#ff3b30", change: pctChange(netProfit, prevProfit), projection: hasCosts ? projectedProfit : undefined },
+              { label: ko ? "순이익" : "Profit", raw: netProfit, signed: true, color: netProfit >= 0 ? "#0f172a" : "#b64c4c", change: pctChange(netProfit, prevProfit), projection: hasCosts ? projectedProfit : undefined },
             ].map((m) => (
               <div key={m.label} style={{ background: "#ffffff", padding: "16px 12px", textAlign: "center" as const }}>
                 <div style={{ fontSize: "10.5px", fontWeight: 700, color: "#191970", opacity: 0.6, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{m.label}</div>
@@ -177,13 +177,13 @@ export function PLHeroCard({
                   <CountUp to={m.raw} duration={1.0} format={fmt} />
                 </div>
                 {m.change != null && (
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: m.label === (ko ? "비용" : "Costs") ? (m.change <= 0 ? "#177245" : "#b42318") : (m.change >= 0 ? "#177245" : "#b42318"), marginTop: "3px", letterSpacing: "-0.005em" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: m.label === (ko ? "비용" : "Costs") ? (m.change <= 0 ? "#1d3557" : "#b64c4c") : (m.change >= 0 ? "#1d3557" : "#b64c4c"), marginTop: "3px", letterSpacing: "-0.005em" }}>
                     {m.change >= 0 ? "↑" : "↓"}{Math.abs(m.change)}% {ko ? "전월" : "MoM"}
                   </div>
                 )}
                 {m.projection != null && (
                   <div style={{ fontSize: "10.5px", color: "rgba(15,23,42,0.45)", marginTop: m.change != null ? "4px" : "6px", letterSpacing: "-0.005em" }}>
-                    {ko ? "월말" : "EoM"} <span style={{ fontWeight: 700, color: m.projection >= 0 ? "#177245" : "#b42318" }}>{m.projection >= 0 ? "+" : ""}{fmt(m.projection)}</span>
+                    {ko ? "월말" : "EoM"} <span style={{ fontWeight: 700, color: m.projection >= 0 ? "#1d3557" : "#b64c4c" }}>{m.projection >= 0 ? "+" : ""}{fmt(m.projection)}</span>
                   </div>
                 )}
               </div>
@@ -197,13 +197,13 @@ export function PLHeroCard({
                 <span style={{ fontSize: "11.5px", color: "#191970", opacity: 0.7, fontWeight: 600 }}>
                   {ko ? "월간 손익분기 달성" : "Monthly break-even"}
                 </span>
-                <span style={{ fontSize: "12px", fontWeight: 700, color: bepProgress >= 100 ? "#34c759" : "#191970", fontVariantNumeric: "tabular-nums" as const }}>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: bepProgress >= 100 ? "#1d3557" : "#191970", fontVariantNumeric: "tabular-nums" as const }}>
                   <CountUp to={bepProgress} duration={1.0} format={(n) => `${Math.round(n)}%`} />
                 </span>
               </div>
               <AnimatedProgressBar
                 pct={bepProgress}
-                color={bepProgress >= 100 ? "#34c759" : "#191970"}
+                color={bepProgress >= 100 ? "#1d3557" : "#191970"}
                 trackColor="rgba(25,25,112,0.08)"
                 height={6}
                 borderRadius={3}
@@ -244,7 +244,7 @@ export function PLHeroCard({
                 <span style={{ fontSize: "11.5px", fontWeight: 600, color: "#191970", opacity: 0.7 }}>
                   {ko ? "오늘 일일 손익분기" : "Today's daily BEP"}
                 </span>
-                <span style={{ fontSize: "12px", fontWeight: 700, color: todayBepProgress != null && todayBepProgress >= 100 ? "#34c759" : "#0f0f4a", fontVariantNumeric: "tabular-nums" as const }}>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: todayBepProgress != null && todayBepProgress >= 100 ? "#1d3557" : "#0f0f4a", fontVariantNumeric: "tabular-nums" as const }}>
                   {(() => {
                     const gap = (todaySales ?? 0) - breakEvenDailySales;
                     if (gap >= 0) return ko ? `BEP +${fmt(gap)} 초과` : `BEP +${fmt(gap)}`;
@@ -260,7 +260,7 @@ export function PLHeroCard({
               </div>
               <AnimatedProgressBar
                 pct={todayBepProgress ?? 0}
-                color={todayBepProgress != null && todayBepProgress >= 100 ? "#34c759" : "#191970"}
+                color={todayBepProgress != null && todayBepProgress >= 100 ? "#1d3557" : "#191970"}
                 trackColor="rgba(25,25,112,0.08)"
                 height={6}
                 borderRadius={3}
@@ -364,7 +364,7 @@ export function PLHeroCard({
                 <div key={i} style={{
                   fontSize: "12.5px", lineHeight: 1.5, padding: "10px 12px", borderRadius: "10px",
                   background: d.ok ? "rgba(52,199,89,0.06)" : "rgba(255,59,48,0.05)",
-                  color: d.ok ? "#177245" : "#b91c1c",
+                  color: d.ok ? "#1d3557" : "#b64c4c",
                   border: d.ok ? "1px solid rgba(52,199,89,0.18)" : "1px solid rgba(255,59,48,0.18)",
                   fontWeight: 500,
                   display: "flex",

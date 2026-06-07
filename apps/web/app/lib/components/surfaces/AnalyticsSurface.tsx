@@ -177,7 +177,7 @@ export function AnalyticsSurface() {
                   <div style={{ height: "3px", borderRadius: "2px", background: "rgba(0,0,0,0.07)", overflow: "hidden", marginBottom: "8px" }}>
                     <div style={{
                       height: "100%", borderRadius: "2px",
-                      background: progressPct >= 100 ? "#34c759" : "#007aff",
+                      background: progressPct >= 100 ? "#1d3557" : "#007aff",
                       width: `${progressPct}%`, transition: "width 0.4s ease",
                     }} />
                   </div>
@@ -265,8 +265,8 @@ export function AnalyticsSurface() {
                   {[
                     { label: language === "ko" ? "이달 매출" : "Revenue", value: fmt(totalSales), color: "#1d3557" },
                     { label: language === "ko" ? "총 비용" : "Costs", value: fmt(totalCosts), color: "#5b616e" },
-                    { label: language === "ko" ? "순이익" : "Net Profit", value: `${netProfit >= 0 ? "+" : ""}${fmt(netProfit)}`, color: netProfit >= 0 ? "#34c759" : "#ff3b30" },
-                    { label: language === "ko" ? "손익분기" : "BEP", value: `${bepProgress.toFixed(0)}%`, color: bepProgress >= 100 ? "#34c759" : bepProgress >= 70 ? "#ff9f0a" : "#ff3b30" },
+                    { label: language === "ko" ? "순이익" : "Net Profit", value: `${netProfit >= 0 ? "+" : ""}${fmt(netProfit)}`, color: netProfit >= 0 ? "#1d3557" : "#b64c4c" },
+                    { label: language === "ko" ? "손익분기" : "BEP", value: `${bepProgress.toFixed(0)}%`, color: bepProgress >= 100 ? "#1d3557" : bepProgress >= 70 ? "#191970" : "#b64c4c" },
                   ].map((kpi) => (
                     <div key={kpi.label} style={{
                       padding: "14px 16px", borderRadius: "18px",
@@ -535,7 +535,7 @@ export function AnalyticsSurface() {
                                 onChange={(e) => setMonthlySales(e.target.value.replace(/[^0-9]/g, ""))}
                                 placeholder={ko ? "월 매출 (만원)" : "Monthly sales (10K)"}
                                 style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "8px 12px", fontSize: "14px", outline: "none", background: "rgba(255,255,255,0.9)", flex: 1, boxSizing: "border-box" as const }} />
-                              <div style={{ fontSize: "13px", fontWeight: 600, color: sales > 0 ? "#ff3b30" : "var(--muted)", flexShrink: 0 }}>
+                              <div style={{ fontSize: "13px", fontWeight: 600, color: sales > 0 ? "#b64c4c" : "var(--muted)", flexShrink: 0 }}>
                                 {sales > 0 ? `−${fmtO(fee)}` : "—"}
                               </div>
                             </div>
@@ -564,7 +564,7 @@ export function AnalyticsSurface() {
                           onChange={(e) => setMonthlyParcels(e.target.value.replace(/[^0-9]/g, ""))}
                           placeholder={ko ? "월 택배 건수" : "Monthly parcels"}
                           style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "8px 12px", fontSize: "14px", outline: "none", background: "rgba(255,255,255,0.9)", flex: 1, boxSizing: "border-box" as const }} />
-                        <div style={{ fontSize: "13px", fontWeight: 600, color: parcelCount > 0 ? "#ff3b30" : "var(--muted)", flexShrink: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: parcelCount > 0 ? "#b64c4c" : "var(--muted)", flexShrink: 0 }}>
                           {parcelCount > 0 ? `−${fmtO(totalShipping)}` : "—"}
                         </div>
                       </div>
@@ -630,9 +630,9 @@ export function AnalyticsSurface() {
                 const allEvents = [
                   ...(hasEmployees ? [
                     { label: ko ? "원천세 납부" : "Withholding tax", sub: ko ? "매월 10일" : "Monthly 10th", date: withholdingDate, icon: "원", color: "#007aff", alwaysShow: false, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
-                    { label: ko ? "4대보험료 납부" : "Social insurance", sub: ko ? "매월 10일" : "Monthly 10th", date: insuranceDate, icon: "4", color: "#34c759", alwaysShow: false, url: "https://www.4insure.or.kr", urlLabel: ko ? "4대보험 포털" : "4 Insurance" },
+                    { label: ko ? "4대보험료 납부" : "Social insurance", sub: ko ? "매월 10일" : "Monthly 10th", date: insuranceDate, icon: "4", color: "#1d3557", alwaysShow: false, url: "https://www.4insure.or.kr", urlLabel: ko ? "4대보험 포털" : "4 Insurance" },
                   ] : []),
-                  { label: ko ? "부가세 확정신고" : "VAT filing", sub: vatSub, date: vatDate, icon: "부", color: "#ff9f0a", alwaysShow: true, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
+                  { label: ko ? "부가세 확정신고" : "VAT filing", sub: vatSub, date: vatDate, icon: "부", color: "#191970", alwaysShow: true, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   ...(vatType === "general" ? [
                     { label: ko ? "부가세 예정신고" : "VAT provisional", sub: ko ? "일반과세자 — 4·10월 25일" : "General VAT — Apr & Oct 25", date: vatProvisionalDate, icon: "예", color: "#ff6b00", alwaysShow: false, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                   ] : []),
@@ -642,7 +642,7 @@ export function AnalyticsSurface() {
 
                 const urgencyColor = (d: Date) => {
                   const n = diffDays(d);
-                  return n < 0 ? "rgba(0,0,0,0.25)" : n <= 7 ? "#ff3b30" : n <= 30 ? "#ff9f0a" : "var(--muted)";
+                  return n < 0 ? "rgba(0,0,0,0.25)" : n <= 7 ? "#b64c4c" : n <= 30 ? "#191970" : "var(--muted)";
                 };
                 const dLabel = (d: Date) => {
                   const n = diffDays(d);
@@ -741,9 +741,9 @@ export function AnalyticsSurface() {
                     <div style={{ padding: "12px 22px 16px", borderTop: "0.5px solid rgba(0,0,0,0.06)", display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                       {[
                         { label: ko ? "홈택스" : "HomeTax", url: "https://www.hometax.go.kr", color: "#5856d6" },
-                        { label: ko ? "4대보험 포털" : "4 Insurance", url: "https://www.4insure.or.kr", color: "#34c759" },
+                        { label: ko ? "4대보험 포털" : "4 Insurance", url: "https://www.4insure.or.kr", color: "#1d3557" },
                         { label: ko ? "근로복지공단" : "COMWEL", url: "https://www.comwel.or.kr", color: "#007aff" },
-                        { label: ko ? "캐시노트" : "CashNote", url: "https://cashnote.kr", color: "#ff9f0a" },
+                        { label: ko ? "캐시노트" : "CashNote", url: "https://cashnote.kr", color: "#191970" },
                       ].map(link => (
                         <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" style={{
                           display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 12px",
@@ -791,13 +791,13 @@ export function AnalyticsSurface() {
                         <div style={{ display: "flex", height: "8px", borderRadius: "4px", overflow: "hidden", marginBottom: "10px" }}>
                           {[
                             { value: ingredients, color: "#007aff" },
-                            { value: labor, color: "#34c759" },
-                            { value: rent, color: "#ff9f0a" },
+                            { value: labor, color: "#1d3557" },
+                            { value: rent, color: "#191970" },
                             { value: utilities, color: "#af52de" },
                             { value: sga ?? 0, color: "#ff9500" },
                             { value: marketing ?? 0, color: "#af52de" },
                             { value: other, color: "#8e8e93" },
-                            { value: interest ?? 0, color: "#ef4444" },
+                            { value: interest ?? 0, color: "#b64c4c" },
                           ].filter(r => r.value > 0).map((r, i) => (
                             <div key={i} style={{ width: `${(r.value / totalCosts) * 100}%`, background: r.color, minWidth: "2px" }} />
                           ))}
@@ -806,13 +806,13 @@ export function AnalyticsSurface() {
                         <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px 14px" }}>
                           {[
                             { label: ko ? "재료비" : "COGS", value: ingredients, color: "#007aff" },
-                            { label: ko ? "인건비" : "Labor", value: labor, color: "#34c759" },
-                            { label: ko ? "임대료" : "Rent", value: rent, color: "#ff9f0a" },
+                            { label: ko ? "인건비" : "Labor", value: labor, color: "#1d3557" },
+                            { label: ko ? "임대료" : "Rent", value: rent, color: "#191970" },
                             { label: ko ? "공과금" : "Util.", value: utilities, color: "#af52de" },
                             { label: ko ? "운영비" : "SGA", value: sga ?? 0, color: "#ff9500" },
                             { label: ko ? "마케팅" : "Mktg.", value: marketing ?? 0, color: "#af52de" },
                             { label: ko ? "기타" : "Other", value: other, color: "#8e8e93" },
-                            { label: ko ? "이자" : "Interest", value: interest ?? 0, color: "#ef4444" },
+                            { label: ko ? "이자" : "Interest", value: interest ?? 0, color: "#b64c4c" },
                           ].filter(r => r.value > 0).map(r => (
                             <div key={r.label} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                               <div style={{ width: "6px", height: "6px", borderRadius: "2px", background: r.color }} />
@@ -842,7 +842,7 @@ export function AnalyticsSurface() {
                           <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "10px" }}>
                             {ko ? "비용 추세" : "Cost Trend"}
                             {changePct !== 0 && (
-                              <span style={{ marginLeft: "8px", fontSize: "11px", fontWeight: 700, color: changePct > 0 ? "#ff3b30" : "#34c759" }}>
+                              <span style={{ marginLeft: "8px", fontSize: "11px", fontWeight: 700, color: changePct > 0 ? "#b64c4c" : "#1d3557" }}>
                                 {changePct > 0 ? "↑" : "↓"} {Math.abs(changePct)}%
                               </span>
                             )}
@@ -867,12 +867,12 @@ export function AnalyticsSurface() {
                           {monthlyRev > 0 && (ingRatio > 35 || labRatio > 30) && (
                             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                               {ingRatio > 35 && (
-                                <div style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "8px", background: "rgba(255,59,48,0.08)", color: "#ff3b30" }}>
+                                <div style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "8px", background: "rgba(182,76,76,0.08)", color: "#b64c4c" }}>
                                   {ko ? `재료비율 ${ingRatio}% — 35% 초과` : `COGS ${ingRatio}% — over 35%`}
                                 </div>
                               )}
                               {labRatio > 30 && (
-                                <div style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "8px", background: "rgba(255,149,0,0.08)", color: "#ff9f0a" }}>
+                                <div style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "8px", background: "rgba(255,149,0,0.08)", color: "#191970" }}>
                                   {ko ? `인건비율 ${labRatio}% — 30% 초과` : `Labor ${labRatio}% — over 30%`}
                                 </div>
                               )}
@@ -943,7 +943,7 @@ export function AnalyticsSurface() {
                               <div key={fe.id} style={{
                                 display: "flex", alignItems: "center", gap: "10px",
                                 padding: "8px 10px", borderRadius: "10px",
-                                background: urgent ? "rgba(255,59,48,0.04)" : "rgba(0,0,0,0.02)",
+                                background: urgent ? "rgba(182,76,76,0.04)" : "rgba(0,0,0,0.02)",
                               }}>
                                 {(() => {
                                   const CatIcon = catIcon[fe.category] ?? ClipboardList;
@@ -956,7 +956,7 @@ export function AnalyticsSurface() {
                                   </div>
                                 </div>
                                 <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
-                                  <div style={{ fontSize: "14px", fontWeight: 700, color: urgent ? "#ff3b30" : dLeft <= 7 ? "#ff9f0a" : "var(--text)" }}>
+                                  <div style={{ fontSize: "14px", fontWeight: 700, color: urgent ? "#b64c4c" : dLeft <= 7 ? "#191970" : "var(--text)" }}>
                                     D-{dLeft}
                                   </div>
                                 </div>
@@ -1038,18 +1038,18 @@ export function AnalyticsSurface() {
                   {(isDanger || isCaution) && (
                     <article style={{
                       ...styles.card, padding: "18px 22px", marginBottom: "14px",
-                      background: isDanger ? "rgba(255,59,48,0.04)" : "rgba(255,149,0,0.04)",
-                      border: `1px solid ${isDanger ? "rgba(255,59,48,0.15)" : "rgba(255,149,0,0.15)"}`,
+                      background: isDanger ? "rgba(182,76,76,0.04)" : "rgba(255,149,0,0.04)",
+                      border: `1px solid ${isDanger ? "rgba(182,76,76,0.15)" : "rgba(255,149,0,0.15)"}`,
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                        <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: isDanger ? "rgba(255,59,48,0.12)" : "rgba(255,149,0,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: isDanger ? "rgba(182,76,76,0.12)" : "rgba(255,149,0,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M7 1L13 12H1L7 1Z" fill={isDanger ? "#ff3b30" : "#ff9f0a"} />
+                            <path d="M7 1L13 12H1L7 1Z" fill={isDanger ? "#b64c4c" : "#191970"} />
                             <rect x="6.25" y="5" width="1.5" height="3.5" rx="0.75" fill="white" />
                             <circle cx="7" cy="10" r="0.85" fill="white" />
                           </svg>
                         </div>
-                        <div style={{ fontSize: "15px", fontWeight: 700, color: isDanger ? "#ff3b30" : "#ff9f0a" }}>
+                        <div style={{ fontSize: "15px", fontWeight: 700, color: isDanger ? "#b64c4c" : "#191970" }}>
                           {isDanger ? (ko ? "사업 위기 감지" : "Business crisis detected") : (ko ? "주의 필요" : "Attention needed")}
                         </div>
                       </div>
@@ -1099,9 +1099,9 @@ export function AnalyticsSurface() {
                             </div>
                           ))}
                         </div>
-                        <div style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", background: "rgba(255,59,48,0.04)", textAlign: "center" as const }}>
-                          <div style={{ fontSize: "10px", color: "#ff3b30", marginBottom: "2px" }}>{ko ? "예상 총 폐업 비용" : "Est. total closure cost"}</div>
-                          <div style={{ fontSize: "18px", fontWeight: 700, color: "#ff3b30" }}>{fmtC(totalClosureCost)}</div>
+                        <div style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.04)", textAlign: "center" as const }}>
+                          <div style={{ fontSize: "10px", color: "#b64c4c", marginBottom: "2px" }}>{ko ? "예상 총 폐업 비용" : "Est. total closure cost"}</div>
+                          <div style={{ fontSize: "18px", fontWeight: 700, color: "#b64c4c" }}>{fmtC(totalClosureCost)}</div>
                         </div>
                       </div>
                     )}

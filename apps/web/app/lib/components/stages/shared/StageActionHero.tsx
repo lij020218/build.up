@@ -215,13 +215,13 @@ export function TrapsCard({ traps }: { traps: Trap[] }) {
           style={{
             display: "flex", gap: 10, alignItems: "flex-start",
             padding: "13px 15px", borderRadius: 14,
-            background: "rgba(220,38,38,0.04)",
-            border: "1px solid rgba(220,38,38,0.14)",
+            background: "rgba(182,76,76,0.04)",
+            border: "1px solid rgba(182,76,76,0.14)",
           }}
         >
-          <AlertTriangle size={18} strokeWidth={1.8} style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }} />
+          <AlertTriangle size={18} strokeWidth={1.8} style={{ color: "#b64c4c", flexShrink: 0, marginTop: 1 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#dc2626", marginBottom: 3, letterSpacing: "-0.01em" }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#b64c4c", marginBottom: 3, letterSpacing: "-0.01em" }}>
               {trap.label}
             </div>
             <div style={{ fontSize: 13, lineHeight: 1.55, color: "rgba(180,28,28,0.85)" }}>
@@ -439,9 +439,9 @@ export function WatchoutsBlock({ ko, traps }: { ko: boolean; traps: Trap[] }) {
       <div style={SECTION_HEADER_BASE}>
         <span style={{
           width: 22, height: 22, borderRadius: 7,
-          background: "rgba(220,38,38,0.10)",
+          background: "rgba(182,76,76,0.10)",
           display: "inline-flex", alignItems: "center", justifyContent: "center",
-          color: "#dc2626",
+          color: "#b64c4c",
         }}>
           <AlertCircle size={13} strokeWidth={1.6} />
         </span>
@@ -452,12 +452,12 @@ export function WatchoutsBlock({ ko, traps }: { ko: boolean; traps: Trap[] }) {
           <div key={i} style={{
             display: "flex", gap: 10, alignItems: "flex-start",
             padding: "12px 14px", borderRadius: 12,
-            background: "rgba(220,38,38,0.04)",
-            border: "1px solid rgba(220,38,38,0.12)",
+            background: "rgba(182,76,76,0.04)",
+            border: "1px solid rgba(182,76,76,0.12)",
           }}>
-            <AlertTriangle size={16} strokeWidth={1.8} style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }} />
+            <AlertTriangle size={16} strokeWidth={1.8} style={{ color: "#b64c4c", flexShrink: 0, marginTop: 1 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#b91c1c", marginBottom: 3, letterSpacing: "-0.005em" }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#b64c4c", marginBottom: 3, letterSpacing: "-0.005em" }}>
                 {trap.label}
               </div>
               <div style={{ fontSize: 12.5, lineHeight: 1.55, color: "rgba(180,28,28,0.82)" }}>
@@ -485,18 +485,18 @@ export function FavorablePathBlock({ ko, tips }: { ko: boolean; tips: FavorableT
   if (tips.length === 0) return null;
   return (
     <div style={{
-      background: "linear-gradient(180deg, rgba(5,150,105,0.04) 0%, rgba(255,255,255,0.96) 100%)",
+      background: "linear-gradient(180deg, rgba(25,25,112,0.04) 0%, rgba(255,255,255,0.96) 100%)",
       borderRadius: 16,
-      border: "1px solid rgba(5,150,105,0.16)",
-      boxShadow: "0 1px 3px rgba(5,150,105,0.06)",
+      border: "1px solid rgba(25,25,112,0.16)",
+      boxShadow: "0 1px 3px rgba(25,25,112,0.06)",
       padding: "18px 20px",
     }}>
       <div style={SECTION_HEADER_BASE}>
         <span style={{
           width: 22, height: 22, borderRadius: 7,
-          background: "rgba(5,150,105,0.12)",
+          background: "rgba(25,25,112,0.12)",
           display: "inline-flex", alignItems: "center", justifyContent: "center",
-          color: "#059669",
+          color: "#1d3557",
         }}>
           <TrendingUp size={13} strokeWidth={1.6} />
         </span>
@@ -507,9 +507,9 @@ export function FavorablePathBlock({ ko, tips }: { ko: boolean; tips: FavorableT
           <div key={i} style={{
             padding: "13px 15px", borderRadius: 12,
             background: "white",
-            border: "1px solid rgba(5,150,105,0.12)",
+            border: "1px solid rgba(25,25,112,0.12)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 5 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#1d3557", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 5 }}>
               {tip.context}
             </div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.01em", marginBottom: 4, lineHeight: 1.45 }}>
@@ -667,11 +667,11 @@ export function StageOverview({ ko, headline, why, stat, workOutline, outcome, n
       {/* ③ 기대 결과 — 끝나면 무엇이 확정되는지 */}
       <div style={{
         padding: "12px 14px", borderRadius: 12,
-        background: "linear-gradient(180deg, rgba(5,150,105,0.04) 0%, rgba(255,255,255,0.96) 100%)",
-        border: "1px solid rgba(5,150,105,0.16)",
+        background: "linear-gradient(180deg, rgba(25,25,112,0.04) 0%, rgba(255,255,255,0.96) 100%)",
+        border: "1px solid rgba(25,25,112,0.16)",
       }}>
         <div style={{
-          fontSize: 10.5, fontWeight: 700, color: "#059669",
+          fontSize: 10.5, fontWeight: 700, color: "#1d3557",
           letterSpacing: "0.06em", textTransform: "uppercase" as const,
           marginBottom: 4,
           display: "inline-flex", alignItems: "center", gap: 5,
@@ -822,12 +822,12 @@ export function WorkStep({ ko, stepLabel, time, headline, why, how, watchouts, f
       {watchouts && watchouts.length > 0 && (
         <div style={{
           padding: "11px 13px", borderRadius: 12,
-          background: "rgba(220,38,38,0.04)",
-          border: "1px solid rgba(220,38,38,0.14)",
+          background: "rgba(182,76,76,0.04)",
+          border: "1px solid rgba(182,76,76,0.14)",
           display: "flex", flexDirection: "column" as const, gap: 6,
         }}>
           <div style={{
-            fontSize: 10.5, fontWeight: 700, color: "#dc2626",
+            fontSize: 10.5, fontWeight: 700, color: "#b64c4c",
             letterSpacing: "0.06em", textTransform: "uppercase" as const,
             display: "inline-flex", alignItems: "center", gap: 5,
           }}>
@@ -836,7 +836,7 @@ export function WorkStep({ ko, stepLabel, time, headline, why, how, watchouts, f
           </div>
           {watchouts.map((w, i) => (
             <div key={i}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#b91c1c", letterSpacing: "-0.005em" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#b64c4c", letterSpacing: "-0.005em" }}>
                 {w.label}
               </div>
               <div style={{ fontSize: 12, color: "rgba(180,28,28,0.85)", lineHeight: 1.55, marginTop: 2 }}>
@@ -851,11 +851,11 @@ export function WorkStep({ ko, stepLabel, time, headline, why, how, watchouts, f
       {favorable && (
         <div style={{
           padding: "11px 13px", borderRadius: 12,
-          background: "rgba(5,150,105,0.04)",
-          border: "1px solid rgba(5,150,105,0.16)",
+          background: "rgba(25,25,112,0.04)",
+          border: "1px solid rgba(25,25,112,0.16)",
         }}>
           <div style={{
-            fontSize: 10.5, fontWeight: 700, color: "#059669",
+            fontSize: 10.5, fontWeight: 700, color: "#1d3557",
             letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 4,
             display: "inline-flex", alignItems: "center", gap: 5,
           }}>
@@ -884,10 +884,10 @@ export type DotItem = {
 };
 
 const DOT_COLORS: Record<DotItem["color"], string> = {
-  red: "#dc2626",
+  red: "#b64c4c",
   blue: "#2563eb",
-  green: "#059669",
-  amber: "#d97706",
+  green: "#1d3557",
+  amber: "#191970",
   midnight: "#191970",
 };
 

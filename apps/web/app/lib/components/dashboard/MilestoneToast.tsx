@@ -87,21 +87,21 @@ export function checkMilestones(opts: {
       title: ko ? "7일 연속 기록!" : "7-Day Streak!",
       subtitle: ko ? "주간 리포트가 해금되었습니다" : "Weekly report unlocked",
       Icon: Flame,
-      iconColor: "#ea580c",
+      iconColor: "#191970",
     },
     {
       id: "streak-30",
       title: ko ? "30일 연속 기록!" : "30-Day Streak!",
       subtitle: ko ? "월간 트렌드 분석이 해금됩니다" : "Monthly trend analysis unlocked",
       Icon: Trophy,
-      iconColor: "#eab308",
+      iconColor: "#191970",
     },
     {
       id: "streak-90",
       title: ko ? "90일 연속 기록!" : "90-Day Streak!",
       subtitle: ko ? "AI 연간 경영 리포트가 해금됩니다" : "AI annual business report unlocked",
       Icon: Gem,
-      iconColor: "#059669",
+      iconColor: "#1d3557",
     },
     // ── 수익 성과 ──
     {
@@ -124,7 +124,7 @@ export function checkMilestones(opts: {
       title: ko ? "건강한 가게!" : "Healthy Business!",
       subtitle: ko ? "건강점수 80점 이상 — 이 구조를 유지하세요" : "Health score above 80 — maintain this structure",
       Icon: ShieldCheck,
-      iconColor: "#059669",
+      iconColor: "#1d3557",
     },
     // ── 비용 효율 ──
     {

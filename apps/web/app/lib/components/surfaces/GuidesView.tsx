@@ -37,9 +37,9 @@ const MIDNIGHT_TINT = "rgba(25,25,112,0.04)";
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_MUTED = "rgba(15,23,42,0.55)";
 const TEXT_SUBTLE = "rgba(15,23,42,0.45)";
-const GREEN = "#059669";
-const AMBER = "#b45309";
-const RED = "#dc2626";
+const GREEN = "#1d3557";
+const AMBER = "#191970";
+const RED = "#b64c4c";
 
 type CategoryFilter = "all" | ProgramCategory;
 type StatusFilter = "all" | ApplicationStatus;
@@ -645,7 +645,7 @@ function ProgramCard({
             <span style={{
               ...badgeStyle,
               color: program.daysUntilDeadline <= 3 ? RED : program.daysUntilDeadline <= 7 ? AMBER : MIDNIGHT,
-              background: program.daysUntilDeadline <= 3 ? "rgba(220,38,38,0.08)"
+              background: program.daysUntilDeadline <= 3 ? "rgba(182,76,76,0.08)"
                 : program.daysUntilDeadline <= 7 ? "rgba(180,83,9,0.08)"
                 : MIDNIGHT_TINT,
               fontWeight: 700,

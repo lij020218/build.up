@@ -77,7 +77,7 @@ export function ContractReviewStage() {
       : _editStatus === "error"
         ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
         : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
-  const _editBg = _editStatus === "saved" ? "#16a34a" : _editStatus === "error" ? "#dc2626" : "#34c759";
+  const _editBg = _editStatus === "saved" ? "#1d3557" : _editStatus === "error" ? "#b64c4c" : "#1d3557";
 
   const contractRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
@@ -373,7 +373,7 @@ export function ContractReviewStage() {
           flexDirection: "column",
           gap: "10px",
           marginBottom: "16px",
-          ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}),
+          ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}),
         }}
       >
         {visibleContractTasks.map((task) => {
@@ -456,7 +456,7 @@ export function ContractReviewStage() {
                       : !canMarkComplete
                         ? "1.5px dashed rgba(0,0,0,0.18)"
                         : "1.5px solid rgba(0,0,0,0.22)",
-                    background: completed ? "#34c759" : "transparent",
+                    background: completed ? "#1d3557" : "transparent",
                     boxShadow: completed ? "0 2px 6px rgba(52,199,89,0.28)" : "none",
                     display: "flex",
                     alignItems: "center",
@@ -469,7 +469,7 @@ export function ContractReviewStage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!completed && canMarkComplete) {
-                      e.currentTarget.style.borderColor = "#34c759";
+                      e.currentTarget.style.borderColor = "#1d3557";
                       e.currentTarget.style.background = "rgba(52,199,89,0.06)";
                     }
                   }}
@@ -524,8 +524,8 @@ export function ContractReviewStage() {
                         fontWeight: 700,
                         padding: "2px 6px",
                         borderRadius: "4px",
-                        background: "rgba(220,38,38,0.10)",
-                        color: "#dc2626",
+                        background: "rgba(182,76,76,0.10)",
+                        color: "#b64c4c",
                         letterSpacing: "0.04em",
                       }}>
                         {ko ? "필수" : "REQUIRED"}
@@ -627,7 +627,7 @@ export function ContractReviewStage() {
                           <div style={{
                             fontSize: "11px",
                             fontWeight: 600,
-                            color: allChecked ? "#34c759" : "rgba(0,0,0,0.45)",
+                            color: allChecked ? "#1d3557" : "rgba(0,0,0,0.45)",
                             fontVariantNumeric: "tabular-nums",
                           }}>
                             {checkedCount} / {detail.checklist.length}
@@ -666,7 +666,7 @@ export function ContractReviewStage() {
                                   width: "18px", height: "18px",
                                   borderRadius: "5px",
                                   border: checked ? "none" : `1.5px solid rgba(${MIDNIGHT_RGB},0.30)`,
-                                  background: checked ? "#34c759" : "rgba(255,255,255,0.7)",
+                                  background: checked ? "#1d3557" : "rgba(255,255,255,0.7)",
                                   flexShrink: 0, marginTop: "1px",
                                   display: "flex", alignItems: "center", justifyContent: "center",
                                   transition: "all 0.15s ease",
@@ -712,10 +712,10 @@ export function ContractReviewStage() {
                           <div key={trap.label} style={{
                             padding: "12px 14px",
                             borderRadius: "12px",
-                            background: "rgba(220,38,38,0.04)",
-                            border: "1px solid rgba(220,38,38,0.14)",
+                            background: "rgba(182,76,76,0.04)",
+                            border: "1px solid rgba(182,76,76,0.14)",
                           }}>
-                            <div style={{ fontSize: "13px", fontWeight: 620, color: "#dc2626", marginBottom: "4px" }}>
+                            <div style={{ fontSize: "13px", fontWeight: 620, color: "#b64c4c", marginBottom: "4px" }}>
                               ⚠ {trap.label}
                             </div>
                             <div style={{ fontSize: "13px", lineHeight: 1.6, color: "rgba(0,0,0,0.65)" }}>{trap.desc}</div>

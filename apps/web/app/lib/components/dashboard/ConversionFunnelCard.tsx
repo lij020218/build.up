@@ -154,7 +154,7 @@ function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Prop
       case "manual":
         return { label: "수동", bg: `${MIDNIGHT}10`, text: MIDNIGHT };
       case "ga4":
-        return { label: "GA4 연동", bg: "rgba(5,150,105,0.10)", text: "#047857" };
+        return { label: "GA4 연동", bg: "rgba(25,25,112,0.10)", text: "#1d3557" };
       case "webhook":
         return { label: "Webhook", bg: "rgba(124,58,237,0.10)", text: "#6d28d9" };
       default:
@@ -189,10 +189,10 @@ function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Prop
 
   // ─── 색상 톤 ────────────────────────────────────────────────────
   const tone = {
-    good: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669" },
+    good: { bg: "rgba(25,25,112,0.05)", border: "rgba(25,25,112,0.18)", text: "#1d3557" },
     notable: { bg: `${MIDNIGHT}08`, border: `${MIDNIGHT}22`, text: MIDNIGHT },
-    warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.20)", text: "#b45309" },
-    critical: { bg: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.20)", text: "#b91c1c" },
+    warning: { bg: "rgba(25,25,112,0.06)", border: "rgba(25,25,112,0.20)", text: "#191970" },
+    critical: { bg: "rgba(182,76,76,0.06)", border: "rgba(182,76,76,0.20)", text: "#b64c4c" },
   }[grade];
 
   const maxValue = Math.max(...stepValues, 1);
@@ -264,8 +264,8 @@ function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Prop
           <span
             style={{
               ...wowPillStyle,
-              background: wowDelta >= 0 ? "rgba(5,150,105,0.10)" : "rgba(220,38,38,0.08)",
-              color: wowDelta >= 0 ? "#059669" : "#b91c1c",
+              background: wowDelta >= 0 ? "rgba(25,25,112,0.10)" : "rgba(182,76,76,0.08)",
+              color: wowDelta >= 0 ? "#1d3557" : "#b64c4c",
             }}
           >
             {wowDelta >= 0 ? "▲" : "▼"} {Math.abs(wowDelta).toFixed(1)}%p {ko ? "전주" : "WoW"}
@@ -302,8 +302,8 @@ function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Prop
                   alignItems: "center",
                   padding: "6px 10px",
                   borderRadius: 9,
-                  background: isLeak ? "rgba(217,119,6,0.05)" : "rgba(15,23,42,0.02)",
-                  border: `1px solid ${isLeak ? "rgba(217,119,6,0.20)" : "rgba(25,25,112,0.06)"}`,
+                  background: isLeak ? "rgba(25,25,112,0.05)" : "rgba(15,23,42,0.02)",
+                  border: `1px solid ${isLeak ? "rgba(25,25,112,0.20)" : "rgba(25,25,112,0.06)"}`,
                 }}
               >
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a" }}>{stepLabels[i]}</div>
@@ -335,7 +335,7 @@ function ConversionFunnelCardInner({ mode, ko = true, industryCategoryId }: Prop
                       style={{
                         fontSize: 11,
                         fontWeight: 700,
-                        color: isLeak ? "#b45309" : "rgba(15,23,42,0.55)",
+                        color: isLeak ? "#191970" : "rgba(15,23,42,0.55)",
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
@@ -472,12 +472,12 @@ function EditForm({
           <span>{ko ? "취소" : "Cancel"}</span>
         </button>
         {state === "error" && (
-          <span style={{ fontSize: 11.5, color: "#b91c1c", fontWeight: 600 }}>
+          <span style={{ fontSize: 11.5, color: "#b64c4c", fontWeight: 600 }}>
             {ko ? "저장 실패 — 다시 시도해 주세요" : "Save failed — retry"}
           </span>
         )}
         {state === "saved" && (
-          <span style={{ fontSize: 11.5, color: "#059669", fontWeight: 600 }}>
+          <span style={{ fontSize: 11.5, color: "#1d3557", fontWeight: 600 }}>
             {ko ? "저장됨" : "Saved"}
           </span>
         )}

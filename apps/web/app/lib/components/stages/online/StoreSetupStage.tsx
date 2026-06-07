@@ -123,7 +123,7 @@ export function StoreSetupStage() {
       </div>
 
       {/* 택배사 계약 가이드 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 14px" }}>
           <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "4px" }}>{ko ? "택배 계약 가이드" : "Courier Contract Guide"}</div>
           <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)" }}>{ko ? "초기에는 우체국택배 → 물량 늘면 계약택배로 전환" : "Start with post office → switch to contract when volume grows"}</div>
@@ -150,8 +150,8 @@ export function StoreSetupStage() {
             </div>
           ))}
         </div>
-        <div style={{ margin: "0 22px 18px", padding: "12px 14px", borderRadius: "12px", background: "rgba(217,119,6,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#d97706" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#d97706" strokeWidth="1.4" strokeLinecap="round"/></svg>
+        <div style={{ margin: "0 22px 18px", padding: "12px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "2px" }}><circle cx="7" cy="7" r="6" stroke="#191970" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="#191970" strokeWidth="1.4" strokeLinecap="round"/></svg>
           <span style={{ fontSize: "12px", color: "rgba(180,95,6,0.8)", lineHeight: 1.55 }}>
             {ko ? "택배비 협상 팁: 월 30건 이상이면 계약택배 요청 가능. CJ대한통운 1588-1255로 전화하여 '온라인 셀러 계약 택배' 문의하세요. 초기 단가 2,500~3,000원 가능." : "Negotiate tip: CJ Logistics offers contract rates at 30+ shipments/month. Call 1588-1255 for 'online seller contract'. Starting rate ₩2,500-3,000."}
           </span>
@@ -159,7 +159,7 @@ export function StoreSetupStage() {
       </div>
 
       {/* 필수 설정 체크리스트 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(5,150,105,0.08)", background: "linear-gradient(180deg, rgba(5,150,105,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
         <div style={{ fontSize: "15px", fontWeight: 680, color: "#0f172a", marginBottom: "10px" }}>{ko ? "오픈 전 필수 확인 사항" : "Pre-launch Checklist"}</div>
         <div style={{ display: "grid", gap: "6px" }}>
           {(ko ? [
@@ -177,8 +177,8 @@ export function StoreSetupStage() {
             { item: "Test order completed?", why: "Test payment → shipping → settlement flow once" },
             { item: "Customer inquiry channel ready?", why: "Channel Talk/KakaoTalk. Response within 24h affects seller grade" },
           ]).map((check, i) => (
-            <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 10px", borderRadius: "10px", background: "rgba(5,150,105,0.02)" }}>
-              <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: "1.5px solid rgba(5,150,105,0.3)", flexShrink: 0, marginTop: "1px" }} />
+            <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "8px 10px", borderRadius: "10px", background: "rgba(25,25,112,0.02)" }}>
+              <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: "1.5px solid rgba(25,25,112,0.3)", flexShrink: 0, marginTop: "1px" }} />
               <div>
                 <div style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>{check.item}</div>
                 <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.4)", lineHeight: 1.4 }}>{check.why}</div>

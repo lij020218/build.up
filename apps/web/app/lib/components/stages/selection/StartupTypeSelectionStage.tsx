@@ -59,7 +59,7 @@ export function StartupTypeSelectionStage() {
           <div style={styles.helper}>
             {copy.home.startupTypeHelp}
           </div>
-          <div ref={startupTypeRef} style={{ display: "grid", gridTemplateColumns: `repeat(${startupTypeOptions.length}, 1fr)`, gap: "10px", ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
+          <div ref={startupTypeRef} style={{ display: "grid", gridTemplateColumns: `repeat(${startupTypeOptions.length}, 1fr)`, gap: "10px", ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
             {startupTypeOptions.map((type) => {
               const ko = language === "ko";
               const selected = startupType === type;

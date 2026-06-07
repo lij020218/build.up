@@ -286,7 +286,7 @@ export function InsuranceTaxSetupStage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {[
                 {
-                  accent: "#dc2626",
+                  accent: "#b64c4c",
                   title: "근로계약서 미체결 = 500만원 과태료 (1차)",
                   body:
                     "채용 당일 또는 출근 전 반드시 작성·교부. 임금·근로시간·휴일·휴가 등 핵심 조건 명시 의무. 표준근로계약서는 고용노동부에서 무료 다운로드 — 근로기준법 17조 위반 시 1차 500만원, 2차 1,000만원.",
@@ -304,7 +304,7 @@ export function InsuranceTaxSetupStage() {
                     "근로자 월급 250만원이면 사업주가 추가 부담하는 4대보험료만 약 25만원. 인건비를 계산할 때 '급여 + 사업주 부담분' 으로 봐야 정확한 손익. 2026.1 인상 요율: 국민연금 9.5% (각 4.75%)·건강보험 7.19% (각 3.595%)·고용 1.8% (각 0.9%)+사업주α·산재 0.7-0.8% (업종별).",
                 },
                 {
-                  accent: "#059669",
+                  accent: "#1d3557",
                   title: "두루누리 80% 국가 지원 — 신고 시점에만 신청 가능",
                   body:
                     "월 보수 270만원 미만 신규 가입자 + 10인 미만 사업장 = 고용·국민연금 보험료 80%를 정부가 최대 36개월 지원. 4대보험 취득신고 시 '두루누리 지원' 체크박스 — 한 번 놓치면 재신청 불가. 청년·신규 사업주에게 결정적인 자금 여유.",
@@ -389,7 +389,7 @@ export function InsuranceTaxSetupStage() {
                     padding: "12px 16px",
                     borderTop: "1px solid rgba(0,0,0,0.05)",
                     fontSize: "13px",
-                    background: i === arr.length - 1 ? "rgba(220,38,38,0.02)" : "white",
+                    background: i === arr.length - 1 ? "rgba(182,76,76,0.02)" : "white",
                   }}
                 >
                   <div>
@@ -477,16 +477,16 @@ export function InsuranceTaxSetupStage() {
               marginBottom: "20px",
               padding: "14px 18px",
               borderRadius: "14px",
-              background: "rgba(220,38,38,0.04)",
-              border: "1px solid rgba(220,38,38,0.18)",
+              background: "rgba(182,76,76,0.04)",
+              border: "1px solid rgba(182,76,76,0.18)",
               display: "flex",
               gap: "10px",
               alignItems: "flex-start",
             }}
           >
-            <AlertTriangle size={18} strokeWidth={2.2} color="#dc2626" style={{ flexShrink: 0, marginTop: "1px" }} />
+            <AlertTriangle size={18} strokeWidth={2.2} color="#b64c4c" style={{ flexShrink: 0, marginTop: "1px" }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "13px", fontWeight: 700, color: "#dc2626", marginBottom: "4px" }}>
+              <div style={{ fontSize: "13px", fontWeight: 700, color: "#b64c4c", marginBottom: "4px" }}>
                 사장님이 자주 빠지는 함정
               </div>
               <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12.5px", color: "rgba(15,23,42,0.75)", lineHeight: 1.6 }}>
@@ -578,8 +578,8 @@ export function InsuranceTaxSetupStage() {
                   <strong>권장: 직원 5명+ 또는 변동 잦은 매장</strong>
                 </div>
               </div>
-              <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.18)" }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#059669", marginBottom: "6px" }}>반기납부 (20인 이하)</div>
+              <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.18)" }}>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#1d3557", marginBottom: "6px" }}>반기납부 (20인 이하)</div>
                 <div style={{ fontSize: "11.5px", color: "rgba(15,23,42,0.65)", lineHeight: 1.55 }}>
                   ✓ 1월·7월 연 2회만 신고<br />
                   ✓ 페이퍼워크 부담 1/6<br />

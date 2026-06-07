@@ -158,7 +158,7 @@ export function EmptyStateCard({
               style={{
                 fontSize: "10.5px",
                 fontWeight: 650,
-                color: progressPct >= 100 ? "#059669" : "rgba(15,23,42,0.4)",
+                color: progressPct >= 100 ? "#1d3557" : "rgba(15,23,42,0.4)",
               }}
             >
               {Math.round(progressPct)}%
@@ -176,7 +176,7 @@ export function EmptyStateCard({
               style={{
                 height: "100%",
                 width: `${progressPct}%`,
-                background: progressPct >= 100 ? "#059669" : "rgba(15,23,42,0.35)",
+                background: progressPct >= 100 ? "#1d3557" : "rgba(15,23,42,0.35)",
                 transition: "width 0.4s ease",
               }}
             />

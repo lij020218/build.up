@@ -45,8 +45,8 @@ export function WeeklySummaryCard() {
           {lastTotal > 0 && (
             <div style={{
               fontSize: "12px", fontWeight: 700, padding: "3px 10px", borderRadius: "8px",
-              background: change >= 0 ? "rgba(52,199,89,0.1)" : "rgba(255,59,48,0.1)",
-              color: change >= 0 ? "#34c759" : "#ff3b30",
+              background: change >= 0 ? "rgba(52,199,89,0.1)" : "rgba(182,76,76,0.1)",
+              color: change >= 0 ? "#1d3557" : "#b64c4c",
             }}>
               {change >= 0 ? "\u2191" : "\u2193"} {Math.abs(change)}% {ko ? "\uc804\uc8fc \ub300\ube44" : "vs last week"}
             </div>

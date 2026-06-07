@@ -195,7 +195,7 @@ export function FundraisingReadinessStage() {
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
                 {(ko ? [
                   {
-                    accent: "#dc2626",
+                    accent: "#b64c4c",
                     title: "Default Dead vs Default Alive — 2026 투자 표준",
                     body: "Paul Graham 의 분류. \"Default Dead\" = 현재 매출 추세 + 현금으로 죽음 → 외부 투자 없이는 생존 불가. \"Default Alive\" = 자체 매출로 생존 가능 → 투자는 가속 옵션. 2026 투자자는 Default Alive 만 선호 — 폭발적 성장 아니면 Default Dead 거의 펀딩 안 받음.",
                   },
@@ -210,15 +210,15 @@ export function FundraisingReadinessStage() {
                     body: "월 신규 ARR 1억 추가 시 = 월 burn 2억 이내. 이 비율 못 맞추면 \"비효율적 성장\" 으로 시리즈A·B 거절. 이건 SaaS 표준이며 한국 VC 도 점점 중시.",
                   },
                   {
-                    accent: "#059669",
+                    accent: "#1d3557",
                     title: "솔로 파운더 52%는 투자 없이 엑싯 (2026)",
                     body: "Marc Lou·Pieter Levels 처럼 부트스트랩으로 $1M+ ARR 가능. 투자는 강제 아님. \"빠른 성장 시장\" 이거나 \"네트워크 효과\" 가 핵심일 때만 진짜 필요.",
                   },
                 ] : [
-                  { accent: "#dc2626", title: "Default Dead vs Default Alive", body: "Paul Graham. 2026 VCs only fund Default Alive." },
+                  { accent: "#b64c4c", title: "Default Dead vs Default Alive", body: "Paul Graham. 2026 VCs only fund Default Alive." },
                   { accent: MIDNIGHT, title: "18+ month runway = standard", body: "12mo too short — Series A takes 9-12mo." },
                   { accent: "#0561fc", title: "Net Burn < 2x Net New ARR", body: "Standard SaaS metric." },
-                  { accent: "#059669", title: "52% solo founders exit no VC", body: "Marc Lou, Pieter Levels: $1M+ bootstrapped." },
+                  { accent: "#1d3557", title: "52% solo founders exit no VC", body: "Marc Lou, Pieter Levels: $1M+ bootstrapped." },
                 ]).map((item, idx, arr) => (
                   <div key={idx}>
                     <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
@@ -376,8 +376,8 @@ export function FundraisingReadinessStage() {
           <Section icon={Sparkles} title={ko ? "결정 매트릭스 — 본인 상황 체크" : "Decision matrix"}>
             <div style={{ padding: "14px 16px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(5,150,105,0.04)", border: "1px solid rgba(5,150,105,0.2)" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#059669", marginBottom: "6px" }}>Bootstrap 권장 ✓</div>
+                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.2)" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#1d3557", marginBottom: "6px" }}>Bootstrap 권장 ✓</div>
                   <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "11.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.65 }}>
                     {(ko ? [
                       "솔로 또는 1-3명 팀",
@@ -592,7 +592,7 @@ export function FundraisingReadinessStage() {
               )}
 
               {bpError && (
-                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.18)", fontSize: "12px", color: "#dc2626", marginTop: "10px" }}>
+                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(182,76,76,0.05)", border: "1px solid rgba(182,76,76,0.18)", fontSize: "12px", color: "#b64c4c", marginTop: "10px" }}>
                   {ko ? "오류: " : "Error: "}{bpError}
                 </div>
               )}

@@ -23,7 +23,7 @@ const getHealth = (val: number, good: number, caution: number): HealthLevel =>
   val < good ? "good" : val < caution ? "caution" : "danger";
 
 const healthColor = (h: HealthLevel): string =>
-  h === "good" ? "#34C759" : h === "caution" ? "#FF9F0A" : "#FF3B30";
+  h === "good" ? "#1d3557" : h === "caution" ? "#191970" : "#b64c4c";
 
 // healthDot removed — replaced with CSS dot in JSX
 

@@ -392,11 +392,11 @@ export function FirstMonthCheckStage() {
           <div key={trap.label} style={{
             display: "flex", gap: "10px", alignItems: "flex-start",
             padding: "13px 15px", borderRadius: "14px",
-            background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
+            background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.14)",
           }}>
-            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#dc2626", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
+              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
               <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(180,28,28,0.85)" }}>{trap.text}</div>
             </div>
           </div>
@@ -619,20 +619,20 @@ export function FirstMonthCheckStage() {
                 <div style={{
                   padding: "16px 18px",
                   background: ratios.primeCostStatus === "critical"
-                    ? "rgba(220,38,38,0.04)"
+                    ? "rgba(182,76,76,0.04)"
                     : ratios.primeCostStatus === "warning"
-                      ? "rgba(245,158,11,0.06)"
+                      ? "rgba(25,25,112,0.06)"
                       : "rgba(34,167,73,0.04)",
                   borderBottom: "0.5px solid rgba(0,0,0,0.07)",
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                    {ratios.primeCostStatus === "critical" ? <TrendingDown size={16} color="#dc2626" />
-                      : ratios.primeCostStatus === "warning" ? <AlertTriangle size={16} color="#d97706" />
+                    {ratios.primeCostStatus === "critical" ? <TrendingDown size={16} color="#b64c4c" />
+                      : ratios.primeCostStatus === "warning" ? <AlertTriangle size={16} color="#191970" />
                       : <TrendingUp size={16} color="rgb(34,167,73)" />}
                     <span style={{
                       fontSize: "12px", fontWeight: 700, letterSpacing: "0.04em",
-                      color: ratios.primeCostStatus === "critical" ? "#dc2626"
-                        : ratios.primeCostStatus === "warning" ? "#d97706"
+                      color: ratios.primeCostStatus === "critical" ? "#b64c4c"
+                        : ratios.primeCostStatus === "warning" ? "#191970"
                         : "rgb(34,167,73)",
                     }}>
                       {ko ? "프라임코스트 (재료비 + 인건비)" : "Prime Cost (Ingredients + Labor)"}
@@ -663,8 +663,8 @@ export function FirstMonthCheckStage() {
                             <span style={{
                               fontSize: "11px", fontWeight: 600,
                               padding: "2px 8px", borderRadius: 999,
-                              background: inRange ? "rgba(34,167,73,0.1)" : "rgba(245,158,11,0.1)",
-                              color: inRange ? "rgb(34,167,73)" : "#d97706",
+                              background: inRange ? "rgba(34,167,73,0.1)" : "rgba(25,25,112,0.1)",
+                              color: inRange ? "rgb(34,167,73)" : "#191970",
                             }}>
                               {ko ? `평균 ${row.target[0]}~${row.target[1]}%` : `${row.target[0]}-${row.target[1]}%`}
                             </span>

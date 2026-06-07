@@ -831,11 +831,11 @@ export function PreLaunchFinalStage() {
           <div key={trap.label} style={{
             display: "flex", gap: "10px", alignItems: "flex-start",
             padding: "13px 15px", borderRadius: "14px",
-            background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.14)",
+            background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.14)",
           }}>
-            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+            <AlertTriangle size={18} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#dc2626", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
+              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>{trap.label}</div>
               <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(180,28,28,0.85)" }}>{trap.text}</div>
             </div>
           </div>
@@ -920,14 +920,14 @@ export function PreLaunchFinalStage() {
                   <div key={c.title} style={{
                     display: "flex", gap: "10px", alignItems: "flex-start",
                     padding: "13px 15px", borderRadius: "14px",
-                    background: c.kind === "win" ? "rgba(34,167,73,0.06)" : "rgba(220,38,38,0.05)",
-                    border: c.kind === "win" ? "1px solid rgba(34,167,73,0.18)" : "1px solid rgba(220,38,38,0.14)",
+                    background: c.kind === "win" ? "rgba(34,167,73,0.06)" : "rgba(182,76,76,0.05)",
+                    border: c.kind === "win" ? "1px solid rgba(34,167,73,0.18)" : "1px solid rgba(182,76,76,0.14)",
                   }}>
                     {c.kind === "win"
                       ? <CheckCircle2 size={18} strokeWidth={2.2} style={{ color: "rgb(34,167,73)", flexShrink: 0, marginTop: "1px" }} />
-                      : <XCircle size={18} strokeWidth={2.2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />}
+                      : <XCircle size={18} strokeWidth={2.2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13.5px", fontWeight: 700, color: c.kind === "win" ? "rgb(34,127,53)" : "#dc2626", marginBottom: "3px", letterSpacing: "-0.01em" }}>{c.title}</div>
+                      <div style={{ fontSize: "13.5px", fontWeight: 700, color: c.kind === "win" ? "rgb(34,127,53)" : "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>{c.title}</div>
                       <div style={{ fontSize: "13px", lineHeight: 1.55, color: "rgba(0,0,0,0.6)" }}>{c.body}</div>
                     </div>
                   </div>
@@ -996,7 +996,7 @@ export function PreLaunchFinalStage() {
                       background: row.required ? "rgba(180,28,28,0.08)" : "rgba(25,25,112,0.08)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
-                      color: row.required ? "#dc2626" : MIDNIGHT,
+                      color: row.required ? "#b64c4c" : MIDNIGHT,
                       fontSize: "11px", fontWeight: 800, letterSpacing: "-0.01em",
                     }}>
                       {row.priority.charAt(0)}
@@ -1007,7 +1007,7 @@ export function PreLaunchFinalStage() {
                       </div>
                       <div style={{
                         fontSize: "11.5px", fontWeight: 700,
-                        color: row.required ? "#dc2626" : MIDNIGHT,
+                        color: row.required ? "#b64c4c" : MIDNIGHT,
                         marginTop: "4px",
                         letterSpacing: "0.04em",
                       }}>
@@ -1081,7 +1081,7 @@ export function PreLaunchFinalStage() {
                         background: "rgba(180,28,28,0.08)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
-                        color: "#dc2626",
+                        color: "#b64c4c",
                       }}>
                         <ScrollText size={17} strokeWidth={2} />
                       </div>
@@ -1090,7 +1090,7 @@ export function PreLaunchFinalStage() {
                           <span style={{ fontSize: "14.5px", fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em" }}>{l.title}</span>
                           <span style={{
                             fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px",
-                            background: "rgba(180,28,28,0.08)", color: "#dc2626", letterSpacing: "0.02em",
+                            background: "rgba(180,28,28,0.08)", color: "#b64c4c", letterSpacing: "0.02em",
                           }}>{l.deadline}</span>
                         </div>
                         <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.6)", lineHeight: 1.55, marginTop: "4px" }}>{l.detail}</div>
@@ -1246,15 +1246,15 @@ export function PreLaunchFinalStage() {
                     <div style={{ display: "flex", gap: "14px", alignItems: "flex-start", padding: "14px 16px" }}>
                       <div style={{
                         width: 36, height: 36, borderRadius: 10,
-                        background: "rgba(220,38,38,0.08)",
+                        background: "rgba(182,76,76,0.08)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
-                        color: "#dc2626",
+                        color: "#b64c4c",
                       }}>
                         <ShieldAlert size={17} strokeWidth={2} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#dc2626", letterSpacing: "-0.01em", marginBottom: "5px" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#b64c4c", letterSpacing: "-0.01em", marginBottom: "5px" }}>
                           {e.trigger}
                         </div>
                         <div style={{ fontSize: "13px", color: "rgba(0,0,0,0.65)", lineHeight: 1.6 }}>{e.playbook}</div>
@@ -1427,7 +1427,7 @@ export function PreLaunchFinalStage() {
             ))}
           </div>
 
-          <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", marginTop: 14, lineHeight: 1.55, padding: "10px 12px", borderRadius: 10, background: "rgba(5,150,105,0.05)", border: "1px solid rgba(5,150,105,0.18)" }}>
+          <div style={{ fontSize: 11.5, color: "rgba(15,23,42,0.6)", marginTop: 14, lineHeight: 1.55, padding: "10px 12px", borderRadius: 10, background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.18)" }}>
             💡 <strong>30일 분기점</strong>: 재방문률 30%+ 잡혔으면 → 본격 마케팅 / 미달이면 → 메뉴·서비스·입지 재점검 (3-6개월 안에 결정). 한국 음식업 데이터: 단골 비율 40%+ 매장이 5년 생존율 80%+, 단골 비율 20% 미만은 첫 1년 폐업 위험.
           </div>
         </div>

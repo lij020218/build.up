@@ -406,7 +406,7 @@ function InviteLinkSection({ ko }: { ko: boolean }) {
       )}
 
       {status === "error" && (
-        <div style={{ marginTop: 8, fontSize: 12, color: "#dc2626" }}>
+        <div style={{ marginTop: 8, fontSize: 12, color: "#b64c4c" }}>
           {ko ? "초대 링크 생성에 실패했습니다. 로그인 상태와 네트워크를 확인해 주세요." : "Failed to create invite. Check sign-in / network."}
         </div>
       )}

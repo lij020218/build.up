@@ -124,7 +124,7 @@ export function IntegrationHubCard({ ko }: Props) {
       {/* 즉시 연동 가능 — green badge */}
       {channels.available.length > 0 && (
         <section>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#1d3557", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
             {ko ? "지금 바로 연결 가능" : "Available now"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
@@ -142,8 +142,8 @@ export function IntegrationHubCard({ ko }: Props) {
           {connectError && (
             <div style={{
               marginTop: 8, padding: "8px 12px", borderRadius: 8,
-              background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.20)",
-              color: "#b91c1c", fontSize: 12, lineHeight: 1.5,
+              background: "rgba(182,76,76,0.06)", border: "1px solid rgba(182,76,76,0.20)",
+              color: "#b64c4c", fontSize: 12, lineHeight: 1.5,
             }}>
               {connectError}
             </div>
@@ -154,7 +154,7 @@ export function IntegrationHubCard({ ko }: Props) {
       {/* 곧 출시 — amber badge with "알림 신청" */}
       {channels.comingSoon.length > 0 && (
         <section>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#b45309", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#191970", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
             {ko ? "다음 분기 출시 예정" : "Coming next quarter"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
@@ -224,8 +224,8 @@ function ChannelRow({
   connecting?: boolean;
 }) {
   const palette = {
-    available: { bg: "rgba(5,150,105,0.05)", border: "rgba(5,150,105,0.18)", text: "#059669", iconBg: "rgba(5,150,105,0.10)" },
-    "coming-soon": { bg: "rgba(217,119,6,0.04)", border: "rgba(217,119,6,0.15)", text: "#b45309", iconBg: "rgba(217,119,6,0.10)" },
+    available: { bg: "rgba(25,25,112,0.05)", border: "rgba(25,25,112,0.18)", text: "#1d3557", iconBg: "rgba(25,25,112,0.10)" },
+    "coming-soon": { bg: "rgba(25,25,112,0.04)", border: "rgba(25,25,112,0.15)", text: "#191970", iconBg: "rgba(25,25,112,0.10)" },
     "paid-gated": { bg: "rgba(15,23,42,0.03)", border: "rgba(15,23,42,0.08)", text: "rgba(15,23,42,0.55)", iconBg: "rgba(15,23,42,0.05)" },
   } as const;
   const c = palette[status];

@@ -129,17 +129,17 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
             <SummaryMetric
               label={ko ? "총 입금 예상" : "Total inflow"}
               value={formatWon(totalInflow)}
-              color="#059669"
+              color="#1d3557"
             />
             <SummaryMetric
               label={ko ? "총 지출 예상" : "Total outflow"}
               value={formatWon(totalOutflow)}
-              color="#b91c1c"
+              color="#b64c4c"
             />
             <SummaryMetric
               label={ko ? "순 변화" : "Net change"}
               value={`${netChange >= 0 ? "+" : ""}${formatWon(Math.abs(netChange))}`}
-              color={netChange >= 0 ? "#059669" : "#b91c1c"}
+              color={netChange >= 0 ? "#1d3557" : "#b64c4c"}
             />
           </div>
 
@@ -155,7 +155,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
           {channelTotals.length > 0 && (
             <section style={{ marginBottom: "20px" }}>
               <div style={sectionTitle}>
-                <ArrowDownRight size={14} strokeWidth={1.8} color="#059669" />
+                <ArrowDownRight size={14} strokeWidth={1.8} color="#1d3557" />
                 {ko ? "채널별 입금 예상 (14일)" : "Inflow by channel (14d)"}
               </div>
               <div style={{ display: "grid", gap: "6px" }}>
@@ -169,7 +169,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                           <span style={{ fontSize: "13px", fontWeight: 620, color: "#0f172a" }}>
                             {channel.label[ko ? "ko" : "en"]}
                           </span>
-                          <span style={{ fontSize: "13px", fontWeight: 700, color: "#059669", fontVariantNumeric: "tabular-nums" }}>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: "#1d3557", fontVariantNumeric: "tabular-nums" }}>
                             +{formatWon(total)}
                           </span>
                         </div>
@@ -183,7 +183,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                           <span>{channel.salesRatio}%</span>
                         </div>
                         <div style={{ height: "3px", background: "rgba(25,25,112,0.05)", borderRadius: "2px", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${pct}%`, background: "#059669", borderRadius: "2px" }} />
+                          <div style={{ height: "100%", width: `${pct}%`, background: "#1d3557", borderRadius: "2px" }} />
                         </div>
                       </div>
                     </div>
@@ -197,7 +197,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
           {expenseTotals.length > 0 && (
             <section style={{ marginBottom: "20px" }}>
               <div style={sectionTitle}>
-                <ArrowUpRight size={14} strokeWidth={1.8} color="#b91c1c" />
+                <ArrowUpRight size={14} strokeWidth={1.8} color="#b64c4c" />
                 {ko ? "고정비 지출 예정 (14일)" : "Fixed expenses (14d)"}
               </div>
               <div style={{ display: "grid", gap: "4px" }}>
@@ -211,7 +211,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                         {ko ? `매월 ${expense.dayOfMonth}일` : `Day ${expense.dayOfMonth} of month`}
                       </div>
                     </div>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: total > 0 ? "#b91c1c" : "rgba(15,23,42,0.3)", fontVariantNumeric: "tabular-nums" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: total > 0 ? "#b64c4c" : "rgba(15,23,42,0.3)", fontVariantNumeric: "tabular-nums" }}>
                       {total > 0 ? `−${formatWon(total)}` : (ko ? "해당없음" : "—")}
                     </div>
                   </div>
@@ -248,14 +248,14 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                       background: isToday
                         ? "rgba(25,25,112,0.04)"
                         : isNegative
-                          ? "rgba(220,38,38,0.03)"
+                          ? "rgba(182,76,76,0.03)"
                           : hasEvents
                             ? "rgba(255,255,255,0.8)"
                             : "transparent",
                       border: isToday
                         ? "1px solid rgba(25,25,112,0.1)"
                         : isNegative
-                          ? "1px solid rgba(220,38,38,0.08)"
+                          ? "1px solid rgba(182,76,76,0.08)"
                           : "1px solid transparent",
                     }}
                   >
@@ -263,7 +263,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                       <div style={{ fontSize: "11px", fontWeight: 700, color: isToday ? "#191970" : "rgba(15,23,42,0.6)" }}>
                         {isToday ? (ko ? "오늘" : "Today") : p.date.slice(5)}
                       </div>
-                      <div style={{ fontSize: "10px", color: p.isWeekend ? "#b91c1c" : "rgba(15,23,42,0.4)", fontWeight: 600 }}>
+                      <div style={{ fontSize: "10px", color: p.isWeekend ? "#b64c4c" : "rgba(15,23,42,0.4)", fontWeight: 600 }}>
                         {dayNames[p.dayOfWeek]}
                       </div>
                     </div>
@@ -290,7 +290,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                               <span
                                 style={{
                                   fontWeight: 650,
-                                  color: e.type === "inflow" ? "#059669" : "#b91c1c",
+                                  color: e.type === "inflow" ? "#1d3557" : "#b64c4c",
                                   fontVariantNumeric: "tabular-nums",
                                 }}
                               >
@@ -312,7 +312,7 @@ export function CashflowDetailSheet({ ko, projections, onClose }: Props) {
                         style={{
                           fontSize: "12px",
                           fontWeight: 700,
-                          color: isNegative ? "#b91c1c" : "#0f172a",
+                          color: isNegative ? "#b64c4c" : "#0f172a",
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >

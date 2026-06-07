@@ -539,7 +539,7 @@ export function RegistrationSetupStage() {
                 body: "사업자등록증이 없으면 사업용 통장 개설, 카드 단말기 가입(POS), 세금계산서 발행, 배달앱·플랫폼 입점이 모두 불가능합니다. 실질적으로 매출이 0원으로 묶입니다.",
               },
               {
-                accent: "#dc2626",
+                accent: "#b64c4c",
                 title: "순서가 중요 — 두 절차는 '병렬'이 아니라 '순차'",
                 body: "사업자등록증 없이는 인허가 신청도 안 됩니다. ① 임대차계약 → ② 사업자등록 → ③ 인허가 → ④ 매장 오픈 순서. 위생교육·보건증은 사업자등록과 병행 가능 (시간 절약).",
               },
@@ -776,16 +776,16 @@ export function RegistrationSetupStage() {
             marginBottom: "20px",
             padding: "14px 18px",
             borderRadius: "14px",
-            background: "rgba(220,38,38,0.04)",
-            border: "1px solid rgba(220,38,38,0.18)",
+            background: "rgba(182,76,76,0.04)",
+            border: "1px solid rgba(182,76,76,0.18)",
             display: "flex",
             gap: "10px",
             alignItems: "flex-start",
           }}
         >
-          <AlertTriangle size={18} strokeWidth={2.2} color="#dc2626" style={{ flexShrink: 0, marginTop: "1px" }} />
+          <AlertTriangle size={18} strokeWidth={2.2} color="#b64c4c" style={{ flexShrink: 0, marginTop: "1px" }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#dc2626", marginBottom: "4px" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#b64c4c", marginBottom: "4px" }}>
               자주 거절되는 사유 — 사전 확인 필수
             </div>
             <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12.5px", color: "rgba(15,23,42,0.75)", lineHeight: 1.6 }}>

@@ -48,7 +48,7 @@ export function ProductPerformanceCard() {
   const sorted = [...products].sort((a, b) => calcRevenue(b) - calcRevenue(a));
   const dangerItems = products.filter(p => p.cost > 0 && calcMargin(p) < 20);
 
-  const marginColor = (m: number) => m < 0 ? "#ff3b30" : m < 20 ? "#ff9f0a" : m < 40 ? "var(--primary)" : "#34c759";
+  const marginColor = (m: number) => m < 0 ? "#b64c4c" : m < 20 ? "#191970" : m < 40 ? "var(--primary)" : "#1d3557";
 
   // 카테고리 목록 (업종별 기본값)
   const defaultCategories = isRestaurant
@@ -80,7 +80,7 @@ export function ProductPerformanceCard() {
               style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
               {ko ? "+ 직접 추가" : "+ Add manually"}
             </button>
-            <label style={{ fontSize: "13px", fontWeight: 600, color: "#34c759", cursor: "pointer", padding: "4px 0", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            <label style={{ fontSize: "13px", fontWeight: 600, color: "#1d3557", cursor: "pointer", padding: "4px 0", display: "inline-flex", alignItems: "center", gap: "4px" }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M8 2v12M2 8h12" />
               </svg>
@@ -148,7 +148,7 @@ export function ProductPerformanceCard() {
             </label>
           </div>
         </div>
-        <div id="excel-upload-status" style={{ fontSize: "12px", fontWeight: 600, color: "#34c759", minHeight: "18px", marginTop: "4px", padding: "0 22px" }} />
+        <div id="excel-upload-status" style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557", minHeight: "18px", marginTop: "4px", padding: "0 22px" }} />
         {/* 업종 태그 */}
         <div style={{ display: "flex", gap: "4px", marginTop: "4px", flexWrap: "wrap" as const, padding: "0 22px" }}>
           <span style={{ fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "16px", border: "1px solid #007aff", background: "rgba(0,122,255,0.08)", color: "#007aff" }}>
@@ -159,8 +159,8 @@ export function ProductPerformanceCard() {
 
       {/* 위험 경보 */}
       {dangerItems.length > 0 && (
-        <div style={{ padding: "10px 22px", background: "rgba(255,59,48,0.04)", borderBottom: "0.5px solid rgba(255,59,48,0.10)" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "#ff3b30" }}>
+        <div style={{ padding: "10px 22px", background: "rgba(182,76,76,0.04)", borderBottom: "0.5px solid rgba(182,76,76,0.10)" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#b64c4c" }}>
             {ko ? `마진 20% 미만 경고: ${dangerItems.map(p => p.name).join(", ")}` : `Low margin (<20%): ${dangerItems.map(p => p.name).join(", ")}`}
           </div>
         </div>
@@ -171,7 +171,7 @@ export function ProductPerformanceCard() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
           {[
             { label: ko ? "이달 매출" : "Revenue", value: fmt(totalRevenue), color: "inherit" },
-            { label: ko ? "이달 이익" : "Gross profit", value: fmt(totalProfit), color: totalProfit >= 0 ? "#34c759" : "#ff3b30" },
+            { label: ko ? "이달 이익" : "Gross profit", value: fmt(totalProfit), color: totalProfit >= 0 ? "#1d3557" : "#b64c4c" },
             { label: ko ? "평균 마진율" : "Avg margin", value: `${overallMargin.toFixed(1)}%`, color: marginColor(overallMargin) },
           ].map((col, idx) => (
             <div key={col.label} style={{ padding: "14px 12px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
@@ -206,7 +206,7 @@ export function ProductPerformanceCard() {
                       <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)" }}>{p.name}</span>
                       <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "10px", background: "rgba(0,0,0,0.05)", color: "var(--muted)" }}>{p.category}</span>
                       {idx === 0 && totalRevenue > 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(0,122,255,0.10)", color: "#007aff" }}>{ko ? "베스트" : "Best"}</span>}
-                      {margin < 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(255,59,48,0.10)", color: "#ff3b30" }}>{ko ? "적자주의" : "Loss!"}</span>}
+                      {margin < 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(182,76,76,0.10)", color: "#b64c4c" }}>{ko ? "적자주의" : "Loss!"}</span>}
                     </div>
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "3px" }}>
                       {ko ? `판매가 ${fmtN(p.price)}원 · 원가 ${p.cost > 0 ? fmtN(p.cost) + "원" : "미입력"} · 재고 ${p.stock}${p.unit}` : `Price ₩${fmtN(p.price)} · Cost ${p.cost > 0 ? "₩" + fmtN(p.cost) : "N/A"} · Stock ${p.stock}${p.unit}`}
@@ -214,7 +214,7 @@ export function ProductPerformanceCard() {
                   </div>
                   <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
                     <button type="button" onClick={() => openProdEdit(p)} style={{ fontSize: "11px", color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
-                    <button type="button" onClick={() => handleProdDelete(p.id)} style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
+                    <button type="button" onClick={() => handleProdDelete(p.id)} style={{ fontSize: "11px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
                   </div>
                 </div>
                 {/* 마진율 바 */}
@@ -324,10 +324,10 @@ export function ProductPerformanceCard() {
                   if (p <= 0) return null;
                   const m = ((p - c) / p * 100);
                   return (
-                    <div style={{ fontSize: "12px", color: m < 0 ? "#ff3b30" : marginColor(m), fontWeight: 600 }}>
+                    <div style={{ fontSize: "12px", color: m < 0 ? "#b64c4c" : marginColor(m), fontWeight: 600 }}>
                       {ko ? `마진율 ${m.toFixed(1)}% · 건당 이익 ${(p - c).toLocaleString()}원` : `Margin ${m.toFixed(1)}% · ₩${(p - c).toLocaleString()} per item`}
-                      {m < 0 && <span style={{ color: "#ff3b30", marginLeft: "8px", fontWeight: 600 }}>{ko ? "⚠ 역마진" : "⚠ Negative"}</span>}
-                      {m >= 0 && m < 20 && <span style={{ color: "#ff9f0a", marginLeft: "8px", fontWeight: 600 }}>{ko ? "마진 낮음" : "Low margin"}</span>}
+                      {m < 0 && <span style={{ color: "#b64c4c", marginLeft: "8px", fontWeight: 600 }}>{ko ? "⚠ 역마진" : "⚠ Negative"}</span>}
+                      {m >= 0 && m < 20 && <span style={{ color: "#191970", marginLeft: "8px", fontWeight: 600 }}>{ko ? "마진 낮음" : "Low margin"}</span>}
                     </div>
                   );
                 })()}

@@ -327,7 +327,7 @@ export function ConstructionSetupStage() {
                         const flexLabel = language === "ko"
                           ? (franchiseData.flexibility === "strict" ? "본사 지정 (자율도 낮음)" : franchiseData.flexibility === "moderate" ? "본사 표준 (일부 자율)" : "본사 가이드 (점주 자율)")
                           : (franchiseData.flexibility === "strict" ? "HQ-mandated (low flex)" : franchiseData.flexibility === "moderate" ? "HQ standard (partial flex)" : "HQ guideline (owner flex)");
-                        const flexColor = franchiseData.flexibility === "strict" ? "#dc2626" : franchiseData.flexibility === "moderate" ? "#f59e0b" : "#16a34a";
+                        const flexColor = franchiseData.flexibility === "strict" ? "#b64c4c" : franchiseData.flexibility === "moderate" ? "#191970" : "#1d3557";
                         return (
                           <div style={{ marginBottom: "28px" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap" as const, gap: "8px" }}>

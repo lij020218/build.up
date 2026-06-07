@@ -18,7 +18,7 @@ const health = (val: number, good: number, caution: number): HealthLevel =>
   val <= good ? "good" : val <= caution ? "caution" : "danger";
 
 const healthColor = (h: HealthLevel) =>
-  h === "good" ? "#34c759" : h === "caution" ? "#ff9f0a" : "#ff3b30";
+  h === "good" ? "#1d3557" : h === "caution" ? "#191970" : "#b64c4c";
 
 export function MonthlyPLCard() {
   const d = useDashboardCtx();
@@ -96,13 +96,13 @@ export function MonthlyPLCard() {
     <article style={{ ...styles.card, padding: "0", overflow: "hidden" as const, gap: "0" }}>
       {/* \uc704\ud5d8 \uacbd\ubcf4 \ubc30\ub108 */}
       {hasDangerZone && hasData && (
-        <div style={{ padding: "11px 20px", background: "rgba(255,59,48,0.05)", borderBottom: "0.5px solid rgba(255,59,48,0.12)", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ padding: "11px 20px", background: "rgba(182,76,76,0.05)", borderBottom: "0.5px solid rgba(182,76,76,0.12)", display: "flex", alignItems: "center", gap: "8px" }}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
-            <path d="M7 1L13 12H1L7 1Z" stroke="#ff3b30" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
-            <line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#ff3b30" strokeWidth="1.4" strokeLinecap="round"/>
-            <circle cx="7" cy="10.5" r="0.7" fill="#ff3b30"/>
+            <path d="M7 1L13 12H1L7 1Z" stroke="#b64c4c" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+            <line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#b64c4c" strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="7" cy="10.5" r="0.7" fill="#b64c4c"/>
           </svg>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: "#ff3b30", lineHeight: 1.4 }}>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#b64c4c", lineHeight: 1.4 }}>
             {ko ? "\ube44\uc6a9 \uad6c\uc870\uc5d0 \uc704\ud5d8 \uc2e0\ud638\uac00 \uc788\uc2b5\ub2c8\ub2e4. \uc544\ub798 \uc9c4\ub2e8\uc744 \ud655\uc778\ud558\uc138\uc694." : "Cost structure alert. Review diagnostics below."}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function MonthlyPLCard() {
             </div>
           )}
           {projectedSales > 0 && (
-            <div style={{ fontSize: "12px", color: projectedProfit >= 0 ? "#34c759" : "#ff3b30", fontWeight: 600 }}>
+            <div style={{ fontSize: "12px", color: projectedProfit >= 0 ? "#1d3557" : "#b64c4c", fontWeight: 600 }}>
               {ko
                 ? `\uc6d4\ub9d0 \uc608\uc0c1 ${projectedProfit >= 0 ? "+" : ""}${fmt(projectedProfit)}`
                 : `Projected month-end ${projectedProfit >= 0 ? "+" : ""}${fmt(projectedProfit)}`}
@@ -137,7 +137,7 @@ export function MonthlyPLCard() {
           {
             label: ko ? "\uc21c\uc774\uc775" : "Net profit",
             value: hasData && hasCosts ? fmt(Math.abs(netProfit)) : "\u2014",
-            color: (hasData && hasCosts ? (netProfit >= 0 ? "#34c759" : "#ff3b30") : "inherit") as string,
+            color: (hasData && hasCosts ? (netProfit >= 0 ? "#1d3557" : "#b64c4c") : "inherit") as string,
             prefix: hasData && hasCosts ? (netProfit >= 0 ? "+" : "\u2212") : "",
           },
         ].map((m, idx) => (
@@ -161,12 +161,12 @@ export function MonthlyPLCard() {
               <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em" }}>
                 {ko ? "\uc190\uc775\ubd84\uae30\uc810 \ub2ec\uc131\ub960" : "Break-even progress"}
               </span>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: bepProgress >= 100 ? "#34c759" : "#007aff" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: bepProgress >= 100 ? "#1d3557" : "#007aff" }}>
                 {bepProgress.toFixed(0)}%{bepProgress >= 100 ? (ko ? " \xb7 \ub2ec\uc131 \u2713" : " \xb7 Hit \u2713") : ""}
               </span>
             </div>
             <div style={{ height: "5px", borderRadius: "3px", background: "rgba(0,0,0,0.07)", overflow: "hidden" as const }}>
-              <div style={{ height: "100%", borderRadius: "3px", width: `${Math.min(100, bepProgress)}%`, background: bepProgress >= 100 ? "#34c759" : "#007aff", transition: "width 0.5s ease" }} />
+              <div style={{ height: "100%", borderRadius: "3px", width: `${Math.min(100, bepProgress)}%`, background: bepProgress >= 100 ? "#1d3557" : "#007aff", transition: "width 0.5s ease" }} />
             </div>
           </div>
           {/* \ube44\uc728 2x2 \uadf8\ub9ac\ub4dc */}
@@ -202,13 +202,13 @@ export function MonthlyPLCard() {
             return (
               <div key={i} style={{
                 display: "flex", gap: "8px", padding: "10px 12px", borderRadius: "10px",
-                background: isWarn ? "rgba(255,59,48,0.05)" : "rgba(52,199,89,0.05)",
-                border: `0.5px solid ${isWarn ? "rgba(255,59,48,0.15)" : "rgba(52,199,89,0.15)"}`,
+                background: isWarn ? "rgba(182,76,76,0.05)" : "rgba(52,199,89,0.05)",
+                border: `0.5px solid ${isWarn ? "rgba(182,76,76,0.15)" : "rgba(52,199,89,0.15)"}`,
                 fontSize: "12px", lineHeight: 1.5, color: "rgba(0,0,0,0.72)",
               }}>
                 {isWarn
-                  ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M7 1.5L12.5 12H1.5L7 1.5Z" stroke="#ff3b30" strokeWidth="1.4" strokeLinejoin="round" fill="none"/><line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#ff3b30" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7" cy="10.5" r="0.65" fill="#ff3b30"/></svg>
-                  : <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: "1px" }}><polyline points="2,7 5,10 11,3" stroke="#34c759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                  ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M7 1.5L12.5 12H1.5L7 1.5Z" stroke="#b64c4c" strokeWidth="1.4" strokeLinejoin="round" fill="none"/><line x1="7" y1="5.5" x2="7" y2="8.5" stroke="#b64c4c" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7" cy="10.5" r="0.65" fill="#b64c4c"/></svg>
+                  : <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: "1px" }}><polyline points="2,7 5,10 11,3" stroke="#1d3557" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
                 }
                 {msg}
               </div>

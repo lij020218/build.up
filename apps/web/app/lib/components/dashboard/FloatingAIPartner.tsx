@@ -640,8 +640,8 @@ const KEYFRAMES = `
 }
 .fap-online-dot {
   width: 6px; height: 6px; border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34,197,94,0.18);
+  background: #1d3557;
+  box-shadow: 0 0 0 2px rgba(25,25,112,0.18);
 }
 .fap-remaining {
   margin-left: 4px;
@@ -651,7 +651,7 @@ const KEYFRAMES = `
   font-variant-numeric: tabular-nums;
 }
 .fap-remaining-empty {
-  color: #b91c1c;
+  color: #b64c4c;
 }
 .fap-close {
   width: 28px; height: 28px; border-radius: 8px;
@@ -779,11 +779,11 @@ const KEYFRAMES = `
 .fap-limit-banner {
   margin: 0 16px 8px;
   padding: 12px 14px; border-radius: 12px;
-  background: linear-gradient(135deg, rgba(239,68,68,0.05) 0%, rgba(220,38,38,0.03) 100%);
-  border: 0.5px solid rgba(220,38,38,0.18);
+  background: linear-gradient(135deg, rgba(182,76,76,0.05) 0%, rgba(182,76,76,0.03) 100%);
+  border: 0.5px solid rgba(182,76,76,0.18);
 }
 .fap-limit-banner-title {
-  font-size: 12.5px; font-weight: 700; color: #b91c1c;
+  font-size: 12.5px; font-weight: 700; color: #b64c4c;
   letter-spacing: -0.01em;
   margin-bottom: 3px;
 }
@@ -816,12 +816,12 @@ const KEYFRAMES = `
   display: flex; justify-content: space-between; align-items: center;
   margin: 4px 0;
   padding: 8px 12px; border-radius: 10px;
-  background: rgba(220,38,38,0.06);
-  color: #dc2626;
+  background: rgba(182,76,76,0.06);
+  color: #b64c4c;
   font-size: 11.5px; font-weight: 600;
 }
 .fap-error button {
-  background: none; border: none; cursor: pointer; color: #dc2626;
+  background: none; border: none; cursor: pointer; color: #b64c4c;
   display: flex; align-items: center;
 }
 

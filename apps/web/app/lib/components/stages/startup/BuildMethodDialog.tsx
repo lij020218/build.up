@@ -23,9 +23,9 @@ const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
 
 const DIFFICULTY_COLOR: Record<string, string> = {
-  "초급": "#059669",
-  "중급": "#d97706",
-  "고급": "#dc2626",
+  "초급": "#1d3557",
+  "중급": "#191970",
+  "고급": "#b64c4c",
 };
 
 export type BuildMethodDialogProps = {
@@ -429,13 +429,13 @@ function MethodDetail({ method }: { method: BuildMethod }) {
           style={{
             padding: "12px 14px",
             borderRadius: "10px",
-            background: "rgba(5,150,105,0.04)",
-            border: "1px solid rgba(5,150,105,0.18)",
+            background: "rgba(25,25,112,0.04)",
+            border: "1px solid rgba(25,25,112,0.18)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "8px" }}>
-            <Check size={12} strokeWidth={2.4} color="#059669" />
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "#059669", letterSpacing: "0.06em" }}>장점</span>
+            <Check size={12} strokeWidth={2.4} color="#1d3557" />
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#1d3557", letterSpacing: "0.06em" }}>장점</span>
           </div>
           <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", color: "rgba(15,23,42,0.72)", lineHeight: 1.65 }}>
             {method.pros.map((p, i) => <li key={i}>{p}</li>)}
@@ -445,13 +445,13 @@ function MethodDetail({ method }: { method: BuildMethod }) {
           style={{
             padding: "12px 14px",
             borderRadius: "10px",
-            background: "rgba(220,38,38,0.04)",
-            border: "1px solid rgba(220,38,38,0.18)",
+            background: "rgba(182,76,76,0.04)",
+            border: "1px solid rgba(182,76,76,0.18)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "8px" }}>
-            <AlertCircle size={12} strokeWidth={2.4} color="#dc2626" />
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em" }}>단점</span>
+            <AlertCircle size={12} strokeWidth={2.4} color="#b64c4c" />
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#b64c4c", letterSpacing: "0.06em" }}>단점</span>
           </div>
           <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", color: "rgba(15,23,42,0.72)", lineHeight: 1.65 }}>
             {method.cons.map((c, i) => <li key={i}>{c}</li>)}

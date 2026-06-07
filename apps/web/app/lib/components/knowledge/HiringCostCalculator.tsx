@@ -94,9 +94,9 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
 
       {/* 최저임금 경고 */}
       {monthlySalary > 0 && !minWageCheck.compliant && (
-        <div style={{ marginTop: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.1)", display: "flex", gap: "6px", alignItems: "center" }} className="bento-fade-in">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626" }}>
+        <div style={{ marginTop: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.1)", display: "flex", gap: "6px", alignItems: "center" }} className="bento-fade-in">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b64c4c" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#b64c4c" }}>
             {ko ? `최저임금 미달! 최소 월 ${fmt(minWageCheck.minimumMonthly)} (시급 ${MINIMUM_WAGE_2026.toLocaleString()}원)` : `Below minimum wage! Min ${fmt(minWageCheck.minimumMonthly)}/mo`}
           </span>
         </div>
@@ -131,12 +131,12 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "14px" }}>
             <div style={metricCard}>
               <div style={metricLabel}>{ko ? "사업주 월 총비용" : "Employer monthly"}</div>
-              <div className="bento-number" style={{ ...metricValue, color: "#dc2626" }}>{fmt(result.totalEmployerCostMonthly)}</div>
+              <div className="bento-number" style={{ ...metricValue, color: "#b64c4c" }}>{fmt(result.totalEmployerCostMonthly)}</div>
               <div style={metricSub}>+{result.totalOverheadRatio.toFixed(0)}% {ko ? "추가 부담" : "overhead"}</div>
             </div>
             <div style={metricCard}>
               <div style={metricLabel}>{ko ? "직원 실수령" : "Employee net"}</div>
-              <div className="bento-number" style={{ ...metricValue, color: "#059669" }}>{fmt(result.netPayToEmployee)}</div>
+              <div className="bento-number" style={{ ...metricValue, color: "#1d3557" }}>{fmt(result.netPayToEmployee)}</div>
             </div>
             <div style={metricCard}>
               <div style={metricLabel}>{ko ? "연간 총비용" : "Annual total"}</div>
@@ -159,7 +159,7 @@ export function HiringCostCalculator({ ko, industryCategoryId }: Props) {
               ].map(row => (
                 <div key={row.label} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px", padding: "6px 8px", borderRadius: "8px", background: "rgba(15,23,42,0.02)", fontSize: "12px" }}>
                   <span style={{ color: "rgba(15,23,42,0.5)" }}>{row.label}</span>
-                  <span style={{ textAlign: "right" as const, fontWeight: 600, color: "#dc2626" }}>{fmt(row.emp)}</span>
+                  <span style={{ textAlign: "right" as const, fontWeight: 600, color: "#b64c4c" }}>{fmt(row.emp)}</span>
                   <span style={{ textAlign: "right" as const, color: "rgba(15,23,42,0.4)" }}>{row.ee > 0 ? fmt(row.ee) : "—"}</span>
                 </div>
               ))}

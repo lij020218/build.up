@@ -195,7 +195,7 @@ function FundingMiniRow({ program, language }: { program: ProgramMatch; language
     if (d <= 0) return null;
     return `D-${d}`;
   })();
-  const dDayColor = (program.daysUntilDeadline ?? 999) <= 7 ? "#dc2626" : "#ea580c";
+  const dDayColor = (program.daysUntilDeadline ?? 999) <= 7 ? "#b64c4c" : "#191970";
 
   const categoryColor = getProgramCategoryColor(program.category);
   const categoryLabel = getProgramCategoryLabel(program.category, language);
@@ -223,7 +223,7 @@ function FundingMiniRow({ program, language }: { program: ProgramMatch; language
       {/* badge row */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6, alignItems: "center" }}>
         <Badge label={categoryLabel} color={categoryColor} />
-        {program.eligible && <Badge label={ko ? "자격 충족" : "Eligible"} color="#059669" />}
+        {program.eligible && <Badge label={ko ? "자격 충족" : "Eligible"} color="#1d3557" />}
         {dDayLabel
           ? <Badge label={dDayLabel} color={dDayColor} />
           : <Badge label={statusInfo.label} color={statusInfo.color} />}

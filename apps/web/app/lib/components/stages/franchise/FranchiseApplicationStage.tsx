@@ -536,9 +536,9 @@ export function FranchiseApplicationStage() {
               {contractCheckpoints.map((cp) => {
                 const dotColor =
                   cp.riskLevel === "critical"
-                    ? "#ff3b30"
+                    ? "#b64c4c"
                     : cp.riskLevel === "important"
-                      ? "#ff9f0a"
+                      ? "#191970"
                       : "var(--muted)";
                 return (
                   <div
@@ -546,8 +546,8 @@ export function FranchiseApplicationStage() {
                     style={{
                       padding: "12px 14px",
                       borderRadius: "12px",
-                      border: `1px solid ${cp.riskLevel === "critical" ? "rgba(255,59,48,0.12)" : MIDNIGHT_BORDER}`,
-                      background: cp.riskLevel === "critical" ? "rgba(255,59,48,0.03)" : "rgba(255,255,255,0.6)",
+                      border: `1px solid ${cp.riskLevel === "critical" ? "rgba(182,76,76,0.12)" : MIDNIGHT_BORDER}`,
+                      background: cp.riskLevel === "critical" ? "rgba(182,76,76,0.03)" : "rgba(255,255,255,0.6)",
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>

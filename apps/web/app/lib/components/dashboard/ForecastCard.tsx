@@ -133,7 +133,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
 
   // 예측 방향
   const trendLabel = trend > 0.03 ? (ko ? "상승 추세" : "Uptrend") : trend < -0.03 ? (ko ? "하락 추세" : "Downtrend") : (ko ? "유지 추세" : "Stable");
-  const trendColor = trend > 0.03 ? "#059669" : trend < -0.03 ? "#dc2626" : "#d97706";
+  const trendColor = trend > 0.03 ? "#1d3557" : trend < -0.03 ? "#b64c4c" : "#191970";
 
   return (
     <section style={card} className="bento-card">
@@ -168,8 +168,8 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
           {/* BEP 기준선 */}
           {breakEvenDailySales > 0 && (
             <>
-              <line x1={padL} y1={bepY} x2={chartW} y2={bepY} stroke="#dc2626" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-              <text x={chartW - 2} y={bepY - 4} textAnchor="end" fontSize="8" fill="#dc2626" opacity="0.5">BEP</text>
+              <line x1={padL} y1={bepY} x2={chartW} y2={bepY} stroke="#b64c4c" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
+              <text x={chartW - 2} y={bepY - 4} textAnchor="end" fontSize="8" fill="#b64c4c" opacity="0.5">BEP</text>
             </>
           )}
 
@@ -223,7 +223,7 @@ export function ForecastCard({ ko, dailyEntries, monthlyCosts, capitalLeft, brea
         </div>
         <div style={metricBox}>
           <div style={metricLabel}>{ko ? "신뢰도" : "Confidence"}</div>
-          <div style={{ ...metricValue, color: dailyEntries.length >= 30 ? "#059669" : dailyEntries.length >= 14 ? "#d97706" : "#dc2626" }}>
+          <div style={{ ...metricValue, color: dailyEntries.length >= 30 ? "#1d3557" : dailyEntries.length >= 14 ? "#191970" : "#b64c4c" }}>
             {dailyEntries.length >= 30 ? (ko ? "높음" : "High") : dailyEntries.length >= 14 ? (ko ? "보통" : "Medium") : (ko ? "낮음" : "Low")}
           </div>
           <div style={{ fontSize: "10px", color: "rgba(15,23,42,0.3)", marginTop: "1px" }}>

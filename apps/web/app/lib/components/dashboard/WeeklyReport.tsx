@@ -85,7 +85,7 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "2px" }}>
             <span style={titleStyle}>{dateRange}</span>
             {lastTotal > 0 && (
-              <span style={{ fontSize: "12px", fontWeight: 700, color: salesChange >= 0 ? "#177245" : "#b42318", background: salesChange >= 0 ? "rgba(23,114,69,0.08)" : "rgba(180,35,24,0.08)", borderRadius: "6px", padding: "2px 8px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: salesChange >= 0 ? "#1d3557" : "#b64c4c", background: salesChange >= 0 ? "rgba(23,114,69,0.08)" : "rgba(180,35,24,0.08)", borderRadius: "6px", padding: "2px 8px" }}>
                 {salesChange >= 0 ? "↑" : "↓"}{Math.abs(salesChange)}%
               </span>
             )}
@@ -104,7 +104,7 @@ export function WeeklyReport({ d, ko, fmt }: Props) {
             <KPI label={ko ? "일평균" : "Daily avg"} value={fmt(avgDaily)} ko={ko} />
             <KPI label={ko ? "고객 수" : "Customers"} value={`${thisCust}${ko ? "명" : ""}`} change={custChange} lastTotal={lastCust} ko={ko} />
             <KPI label={ko ? "객단가" : "Avg ticket"} value={fmt(avgTicket)} ko={ko} />
-            <KPI label={ko ? "주간 손익" : "Weekly P&L"} value={`${weeklyProfit >= 0 ? "+" : ""}${fmt(weeklyProfit)}`} color={weeklyProfit >= 0 ? "#177245" : "#b42318"} ko={ko} />
+            <KPI label={ko ? "주간 손익" : "Weekly P&L"} value={`${weeklyProfit >= 0 ? "+" : ""}${fmt(weeklyProfit)}`} color={weeklyProfit >= 0 ? "#1d3557" : "#b64c4c"} ko={ko} />
             {bestDay && (
               <KPI
                 label={ko ? "최고 매출일" : "Best day"}
@@ -165,7 +165,7 @@ function KPI({ label, value, change, lastTotal, sub, color, ko }: {
       <div style={{ fontSize: "17px", fontWeight: 720, color: color || "#0f172a", letterSpacing: "-0.02em", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{value}</div>
       {sub && <div style={{ fontSize: "11px", fontWeight: 600, color: "#191970", marginTop: "1px" }}>{sub}</div>}
       {change != null && lastTotal != null && lastTotal > 0 && (
-        <div style={{ fontSize: "11px", fontWeight: 600, color: change >= 0 ? "#177245" : "#b42318", marginTop: "2px" }}>
+        <div style={{ fontSize: "11px", fontWeight: 600, color: change >= 0 ? "#1d3557" : "#b64c4c", marginTop: "2px" }}>
           {change >= 0 ? "↑" : "↓"}{Math.abs(change)}% {ko ? "전주" : "WoW"}
         </div>
       )}

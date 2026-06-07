@@ -7,7 +7,7 @@
  *   - 카드가 아닌 "배너" 형태 (높이 낮음, 가로 꽉 참)
  *   - 4종 긴급 이슈: 현금 14일 경고 · 악성 리뷰 · 재고 바닥 · 미수금
  *   - 가장 시급한 1개만 노출 (복수면 우선순위 최상위만)
- *   - 원색 빨강 금지 — iOS amber #ff9f0a 또는 red #ff3b30을 subtle 틴트로
+ *   - 원색 빨강 금지 — iOS amber #191970 또는 red #b64c4c을 subtle 틴트로
  *   - Dismissible (세션 동안만 숨김, localStorage는 매일 자정 초기화)
  *
  * 데이터 소스: DashboardContext의 기존 계산값 재활용
@@ -32,16 +32,16 @@ const SEVERITY_STYLES: Record<"critical" | "warning", {
   bg: string; border: string; accent: string; icon: string;
 }> = {
   critical: {
-    bg: "rgba(255,59,48,0.04)",
-    border: "rgba(255,59,48,0.18)",
-    accent: "#ff3b30",
-    icon: "rgba(255,59,48,0.9)",
+    bg: "rgba(182,76,76,0.04)",
+    border: "rgba(182,76,76,0.18)",
+    accent: "#b64c4c",
+    icon: "rgba(182,76,76,0.9)",
   },
   warning: {
-    bg: "rgba(255,159,10,0.05)",
-    border: "rgba(255,159,10,0.2)",
-    accent: "#ff9f0a",
-    icon: "rgba(255,159,10,0.95)",
+    bg: "rgba(25,25,112,0.05)",
+    border: "rgba(25,25,112,0.2)",
+    accent: "#191970",
+    icon: "rgba(25,25,112,0.95)",
   },
 };
 

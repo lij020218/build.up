@@ -135,41 +135,41 @@ const INDUSTRY_ICONS: Record<string, LucideIcon> = {
 /** 업종별 테마 색상 — Apple-style 모노톤 + 카테고리별 톤 통일 */
 const INDUSTRY_COLORS: Record<string, string> = {
   // food — warm orange/red
-  "korean-casual": "#e25822", "delivery-meals": "#d94f00", "salad-healthy": "#16a34a",
-  "ramen-noodle": "#c2410c", "chicken-burger": "#dc2626", "western-pasta-brunch": "#b45309",
+  "korean-casual": "#e25822", "delivery-meals": "#d94f00", "salad-healthy": "#1d3557",
+  "ramen-noodle": "#191970", "chicken-burger": "#b64c4c", "western-pasta-brunch": "#191970",
   // cafe — brown/warm
   "takeout-coffee": "#92400e", "specialty-coffee": "#78350f", "dessert-cafe": "#db2777",
-  "bakery-studio": "#a16207", "icecream-bingsu": "#0891b2", "self-serve-cafe": "#6366f1",
+  "bakery-studio": "#191970", "icecream-bingsu": "#0891b2", "self-serve-cafe": "#6366f1",
   // retail — teal/purple
   "convenience-small": "#0d9488", "lifestyle-goods": "#7c3aed", "beauty-supplies": "#db2777",
-  "fashion-accessories": "#9333ea", "health-food-store": "#16a34a", "unmanned-retail": "#4f46e5",
+  "fashion-accessories": "#9333ea", "health-food-store": "#1d3557", "unmanned-retail": "#4f46e5",
   // beauty — pink/rose/magenta (단계별 농도)
   "hair-salon": "#be185d", "nail-studio": "#e11d48", "skin-care-room": "#ec4899",
   "waxing-studio": "#d946ef", "eyelash-brow": "#c026d3", "makeup-bridal": "#a21caf",
   // fitness — energetic
   "pilates-studio": "#0ea5e9", "pt-gym": "#1d4ed8", "yoga-studio": "#0d9488",
-  "crossfit-box": "#dc2626", "golf-studio": "#059669", "unmanned-fitness": "#6366f1",
+  "crossfit-box": "#b64c4c", "golf-studio": "#1d3557", "unmanned-fitness": "#6366f1",
   // education — calm blue
-  "study-room": "#2563eb", "kids-academy": "#f59e0b", "adult-class": "#7c3aed",
+  "study-room": "#2563eb", "kids-academy": "#191970", "adult-class": "#7c3aed",
   "language-academy": "#0891b2", "coding-class": "#4f46e5", "small-study-room": "#1d4ed8",
   // pet — warm friendly
-  "pet-grooming": "#ea580c", "pet-supplies": "#16a34a", "pet-hotel": "#0891b2",
-  "pet-cafe": "#92400e", "pet-training-school": "#d97706", "pet-walking-visit": "#059669",
+  "pet-grooming": "#191970", "pet-supplies": "#1d3557", "pet-hotel": "#0891b2",
+  "pet-cafe": "#92400e", "pet-training-school": "#191970", "pet-walking-visit": "#1d3557",
   // living — functional
-  "laundry-service": "#0d9488", "cleaning-service": "#2563eb", "repair-service": "#b45309",
+  "laundry-service": "#0d9488", "cleaning-service": "#2563eb", "repair-service": "#191970",
   "self-laundry": "#0891b2", "print-copy": "#64748b", "device-repair": "#4f46e5",
   // space — indigo/purple
   "guesthouse": "#7c3aed", "rental-studio": "#6366f1", "party-room": "#ec4899",
   "study-cafe-space": "#1d4ed8", "shared-office": "#0f172a", "practice-room": "#9333ea",
   // online — modern
   "smart-store": "#2563eb", "digital-products": "#7c3aed", "creator-service": "#ec4899",
-  "consignment-commerce": "#0891b2", "newsletter-membership": "#6366f1", "global-buying": "#059669",
+  "consignment-commerce": "#0891b2", "newsletter-membership": "#6366f1", "global-buying": "#1d3557",
   // startup — tech (software)
   "ai-application": "#7c3aed", "developer-tools": "#0f172a", "b2b-saas": "#2563eb",
-  "fintech-startup": "#059669", "healthtech-startup": "#dc2626", "security-startup": "#1e40af",
+  "fintech-startup": "#1d3557", "healthtech-startup": "#b64c4c", "security-startup": "#1e40af",
   // startup — hardware / deeptech (high-capital, distinct tones)
   "hardware-iot": "#0891b2", "robotics-physical-ai": "#475569",
-  "semiconductor": "#1e293b", "biotech-medtech": "#15803d", "climate-energy": "#65a30d",
+  "semiconductor": "#1e293b", "biotech-medtech": "#1d3557", "climate-energy": "#65a30d",
 };
 
 export function IndustrySelectionStage() {
@@ -230,7 +230,7 @@ export function IndustrySelectionStage() {
           );
         })}
       </div>
-      <div ref={optionGridRef} style={{ ...styles.optionGrid, ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
+      <div ref={optionGridRef} style={{ ...styles.optionGrid, ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
         {starterIndustryOptions
           .filter((option) => option.meta?.categoryId === selectedIndustryCategoryId)
           .slice(0, 6)

@@ -180,13 +180,13 @@ export function BizRegistrationPanel() {
         <div style={{
           padding: "12px 14px", marginBottom: "10px",
           borderRadius: "12px",
-          background: "rgba(220,38,38,0.04)",
-          border: "1px solid rgba(220,38,38,0.14)",
+          background: "rgba(182,76,76,0.04)",
+          border: "1px solid rgba(182,76,76,0.14)",
           display: "flex", gap: "10px", alignItems: "flex-start",
         }}>
-          <AlertTriangle size={16} strokeWidth={2} style={{ color: "#dc2626", flexShrink: 0, marginTop: "1px" }} />
+          <AlertTriangle size={16} strokeWidth={2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#dc2626", marginBottom: "3px", letterSpacing: "-0.01em" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>
               {ko ? "개인 통장과 사업 통장은 반드시 분리" : "Personal and business accounts MUST be separated"}
             </div>
             <div style={{ fontSize: "12.5px", color: "rgba(180,28,28,0.85)", lineHeight: 1.55 }}>

@@ -441,10 +441,12 @@ export function resolveHero(input: {
 
 // ─── PRIORITY_META + InsightStack ────────────────────────────────────────
 
+// 우선순위는 숫자(1·2·3 rank)와 라벨로 구분 — 색은 네이비 농담(1순위 짙음 → 3순위 옅음).
+//   (종전 신호등: 1순위 빨강/2순위 주황/3순위 초록.) 1순위만 약한 벽돌 강조 가능하나 통일성 위해 네이비.
 export const PRIORITY_META: Record<"high" | "medium" | "low", { label: string; rank: string; color: string; bg: string }> = {
-  high:   { label: "1순위", rank: "1", color: "#dc2626", bg: "rgba(220,38,38,0.08)" },
-  medium: { label: "2순위", rank: "2", color: "#d97706", bg: "rgba(217,119,6,0.08)" },
-  low:    { label: "3순위", rank: "3", color: "#059669", bg: "rgba(5,150,105,0.08)" },
+  high:   { label: "1순위", rank: "1", color: "#191970", bg: "rgba(25,25,112,0.10)" },
+  medium: { label: "2순위", rank: "2", color: "#1d3557", bg: "rgba(25,25,112,0.07)" },
+  low:    { label: "3순위", rank: "3", color: "#475569", bg: "rgba(25,25,112,0.05)" },
 };
 
 /**

@@ -80,7 +80,7 @@ export function OnlineMarketingStage() {
       </div>
 
       {/* 리뷰 전략 */}
-      <div style={{ borderRadius: "20px", border: "1px solid rgba(217,119,6,0.08)", background: "linear-gradient(180deg, rgba(217,119,6,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
+      <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "linear-gradient(180deg, rgba(25,25,112,0.02) 0%, rgba(255,255,255,0.98) 100%)", padding: "20px 22px" }}>
         <div style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.02em", color: "#0f172a", marginBottom: "8px" }}>{ko ? "초기 리뷰 확보 전략" : "Early Review Strategy"}</div>
         <div style={{ fontSize: "13px", color: "rgba(15,23,42,0.5)", lineHeight: 1.6, marginBottom: "10px" }}>{ko ? "리뷰 0개 상품은 클릭률이 80% 낮습니다. 첫 10개 리뷰가 결정적입니다." : "Products with 0 reviews get 80% fewer clicks. First 10 reviews are decisive."}</div>
         <div style={{ display: "grid", gap: "6px" }}>
@@ -93,12 +93,12 @@ export function OnlineMarketingStage() {
             { method: "Photo review event", detail: "₩500-1K store credit for photo reviews. Most efficient conversion", tip: "₩500/ea" },
             { method: "Friends & family first buys", detail: "Be honest. Fake reviews get penalized. Real purchase required", tip: "Cost" },
           ]).map(r => (
-            <div key={r.method} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(217,119,6,0.03)" }}>
+            <div key={r.method} style={{ display: "flex", gap: "10px", padding: "10px 14px", borderRadius: "12px", background: "rgba(25,25,112,0.03)" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "13px", fontWeight: 640, color: "#0f172a" }}>{r.method}</div>
                 <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.5)", lineHeight: 1.4 }}>{r.detail}</div>
               </div>
-              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(217,119,6,0.08)", color: "#d97706", whiteSpace: "nowrap" as const, flexShrink: 0, alignSelf: "flex-start" }}>{r.tip}</span>
+              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(25,25,112,0.08)", color: "#191970", whiteSpace: "nowrap" as const, flexShrink: 0, alignSelf: "flex-start" }}>{r.tip}</span>
             </div>
           ))}
         </div>

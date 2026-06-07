@@ -291,9 +291,9 @@ export function CurrentStageView() {
                       ))}
                     </div>
                     {totalCosts2 > 0 && (
-                      <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderRadius: "12px", background: netProfit2 >= 0 ? "rgba(52,199,89,0.08)" : "rgba(255,59,48,0.08)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderRadius: "12px", background: netProfit2 >= 0 ? "rgba(52,199,89,0.08)" : "rgba(182,76,76,0.08)" }}>
                         <span style={{ fontSize: "13px", fontWeight: 600 }}>{ko ? "예상 손익" : "Est. profit"}</span>
-                        <span style={{ fontSize: "14px", fontWeight: 700, color: netProfit2 >= 0 ? "#34c759" : "#ff3b30" }}>{netProfit2 >= 0 ? "+" : ""}{fmt2(netProfit2)}</span>
+                        <span style={{ fontSize: "14px", fontWeight: 700, color: netProfit2 >= 0 ? "#1d3557" : "#b64c4c" }}>{netProfit2 >= 0 ? "+" : ""}{fmt2(netProfit2)}</span>
                       </div>
                     )}
                   </>
@@ -304,7 +304,7 @@ export function CurrentStageView() {
               <article style={{ ...styles.card, gap: "14px" }}>
                 {todayEntry2 ? (
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#34c759", flexShrink: 0 }} />
+                    <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#1d3557", flexShrink: 0 }} />
                     <span style={{ fontSize: "14px", fontWeight: 600 }}>
                       {ko ? `오늘 입력 완료 — ${fmt2(todayEntry2.sales)}` : `Today logged — ${fmt2(todayEntry2.sales)}`}
                     </span>
@@ -373,7 +373,7 @@ export function CurrentStageView() {
                   marginBottom: "24px",
                 }}>
                   <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                    <circle cx="18" cy="18" r="18" fill="#34c759"/>
+                    <circle cx="18" cy="18" r="18" fill="#1d3557"/>
                     <path d="M10 18L15.5 24L26 13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
@@ -393,10 +393,10 @@ export function CurrentStageView() {
                     <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 600 }}>
                       {ko ? "진행률" : "Progress"}
                     </span>
-                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#34c759" }}>100%</span>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#1d3557" }}>100%</span>
                   </div>
                   <div style={{ height: "6px", background: "rgba(0,0,0,0.08)", borderRadius: "999px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: "100%", background: "#34c759", borderRadius: "999px" }} />
+                    <div style={{ height: "100%", width: "100%", background: "#1d3557", borderRadius: "999px" }} />
                   </div>
                 </div>
 
@@ -440,7 +440,7 @@ export function CurrentStageView() {
                     { label: ko ? "소요 기간" : "Journey", value: ko ? "창업 준비 완료" : "Ready to launch" },
                   ].map(item => (
                     <div key={item.label} style={{ textAlign: "center" as const }}>
-                      <div style={{ fontSize: "18px", fontWeight: 720, color: "#34c759", letterSpacing: "-0.3px" }}>{item.value}</div>
+                      <div style={{ fontSize: "18px", fontWeight: 720, color: "#1d3557", letterSpacing: "-0.3px" }}>{item.value}</div>
                       <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px", fontWeight: 500 }}>{item.label}</div>
                     </div>
                   ))}
@@ -940,7 +940,7 @@ export function CurrentStageView() {
                             <div
                               style={{
                                 fontSize: "12px",
-                                color: "#dc2626",
+                                color: "#b64c4c",
                                 lineHeight: 1.5,
                                 marginTop: "4px",
                                 fontWeight: 600,
@@ -1026,7 +1026,7 @@ export function CurrentStageView() {
                       style={{
                         ...styles.primaryButton,
                         opacity: saveStatus === "saving" ? 0.6 : 1,
-                        background: saveStatus === "saved" ? "#34c759" : saveStatus === "error" ? "#ff3b30" : undefined,
+                        background: saveStatus === "saved" ? "#1d3557" : saveStatus === "error" ? "#b64c4c" : undefined,
                         transition: "background 0.2s, opacity 0.2s",
                       }}
                       onClick={async () => {
@@ -1052,7 +1052,7 @@ export function CurrentStageView() {
                   ) : stageId === "pre-launch-final" ? (
                     <button
                       type="button"
-                      style={{ ...styles.primaryButton, opacity: allDone ? 1 : 0.45, background: allDone ? "linear-gradient(135deg, #34c759, #30a84e)" : undefined }}
+                      style={{ ...styles.primaryButton, opacity: allDone ? 1 : 0.45, background: allDone ? "linear-gradient(135deg, #1d3557, #30a84e)" : undefined }}
                       onClick={() => { handleStageContinue(stageId); handleLaunchBusiness(); }}
                       disabled={!allDone}
                     >
@@ -1082,10 +1082,10 @@ export function CurrentStageView() {
                             ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
                             : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
                       const editBg = editStatus === "saved"
-                        ? "#16a34a"
+                        ? "#1d3557"
                         : editStatus === "error"
-                          ? "#dc2626"
-                          : "#34c759";
+                          ? "#b64c4c"
+                          : "#1d3557";
                       return (
                         <>
                           {isStageCompleted && (
@@ -1256,7 +1256,7 @@ export function CurrentStageView() {
                             <div>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ fontSize: "14px", fontWeight: 560, color: "var(--text)", letterSpacing: "-0.2px" }}>{fund.name}</span>
-                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(0,122,255)" : fund.tag === "긴급" ? "rgb(255,59,48)" : "rgb(52,199,89)", background: fund.tag === "청년" ? "rgba(0,122,255,0.1)" : fund.tag === "긴급" ? "rgba(255,59,48,0.1)" : "rgba(52,199,89,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
+                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(0,122,255)" : fund.tag === "긴급" ? "rgb(255,59,48)" : "rgb(52,199,89)", background: fund.tag === "청년" ? "rgba(0,122,255,0.1)" : fund.tag === "긴급" ? "rgba(182,76,76,0.1)" : "rgba(52,199,89,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
                               </div>
                               <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.4)", marginTop: "2px" }}>{fund.target}</div>
                             </div>
@@ -1464,7 +1464,7 @@ export function CurrentStageView() {
                   </div>
                   <button
                     type="button"
-                    style={{ ...styles.primaryButton, background: "linear-gradient(135deg, #34c759, #30a84e)", marginTop: "4px" }}
+                    style={{ ...styles.primaryButton, background: "linear-gradient(135deg, #1d3557, #30a84e)", marginTop: "4px" }}
                     onClick={handleLaunchBusiness}
                   >
                     {language === "ko" ? "가오픈 시작하기" : "Start soft opening"}

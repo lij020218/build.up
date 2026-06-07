@@ -79,33 +79,37 @@ export const HEALTH_COLORS: Record<HealthGrade, {
   dot: string;      // 점/슬라이스 채움
   glow: string;     // 펄스/그림자
 }> = {
+  // ⚠️ 신호등 컬러(빨강/노랑/초록) 금지 — 메모리 디자인 원칙.
+  //   healthy→warning 은 미드나잇 네이비(#191970) 농담(옅음=양호, 짙음=위험)으로 정도를 표현하고,
+  //   "긴급(critical)" 1단계에서만 차분한 벽돌 danger(#b64c4c)로 경고. 색만으로 구분하지 말고
+  //   라벨(건강/주의/위험/긴급)·아이콘을 항상 동반할 것(색각 접근성).
   healthy: {
-    bg: "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.04))",
-    border: "rgba(34,197,94,0.25)",
-    text: "#15803d",  // green-700
-    dot: "#22c55e",   // green-500
-    glow: "rgba(34,197,94,0.4)",
+    bg: "linear-gradient(135deg, rgba(25,25,112,0.05), rgba(25,25,112,0.02))",
+    border: "rgba(25,25,112,0.14)",
+    text: "#1d3557",                 // midnight-ink (가독성)
+    dot: "rgba(25,25,112,0.38)",     // 옅은 네이비 = 양호
+    glow: "rgba(25,25,112,0.18)",
   },
   caution: {
-    bg: "linear-gradient(135deg, rgba(245,158,11,0.09), rgba(245,158,11,0.04))",
-    border: "rgba(245,158,11,0.28)",
-    text: "#b45309",  // amber-700
-    dot: "#f59e0b",   // amber-500
-    glow: "rgba(245,158,11,0.45)",
+    bg: "linear-gradient(135deg, rgba(25,25,112,0.07), rgba(25,25,112,0.03))",
+    border: "rgba(25,25,112,0.18)",
+    text: "#1d3557",
+    dot: "rgba(25,25,112,0.58)",     // 중간 네이비
+    glow: "rgba(25,25,112,0.26)",
   },
   warning: {
-    bg: "linear-gradient(135deg, rgba(234,88,12,0.09), rgba(234,88,12,0.04))",
-    border: "rgba(234,88,12,0.30)",
-    text: "#c2410c",  // orange-700
-    dot: "#ea580c",   // orange-600
-    glow: "rgba(234,88,12,0.50)",
+    bg: "linear-gradient(135deg, rgba(25,25,112,0.10), rgba(25,25,112,0.04))",
+    border: "rgba(25,25,112,0.24)",
+    text: "#191970",                 // midnight 풀톤
+    dot: "rgba(25,25,112,0.85)",     // 짙은 네이비 = 위험 임박
+    glow: "rgba(25,25,112,0.34)",
   },
   critical: {
-    bg: "linear-gradient(135deg, rgba(220,38,38,0.09), rgba(220,38,38,0.04))",
-    border: "rgba(220,38,38,0.30)",
-    text: "#b91c1c",  // red-700
-    dot: "#ef4444",   // red-500
-    glow: "rgba(239,68,68,0.50)",
+    bg: "linear-gradient(135deg, rgba(182,76,76,0.10), rgba(182,76,76,0.04))",
+    border: "rgba(182,76,76,0.32)",
+    text: "#b64c4c",                 // 위험 1색 (--danger 벽돌)
+    dot: "#b64c4c",
+    glow: "rgba(182,76,76,0.45)",
   },
   unknown: {
     bg: "rgba(15,23,42,0.03)",

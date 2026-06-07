@@ -96,7 +96,7 @@ export function CustomerSummaryCard({ d, ko, fmt }: { d: DashboardHook; ko: bool
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
         {stats.map((s) => (
           <div key={s.label} style={{ padding: "10px", borderRadius: "10px", background: s.alert ? "rgba(255,59,48,0.04)" : "rgba(0,0,0,0.02)", textAlign: "center" }}>
-            <div style={{ fontSize: "18px", fontWeight: 700, color: s.alert ? "#ff3b30" : "#0f172a" }}>{s.value}</div>
+            <div style={{ fontSize: "18px", fontWeight: 700, color: s.alert ? "#b64c4c" : "#0f172a" }}>{s.value}</div>
             <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>{s.label}</div>
           </div>
         ))}

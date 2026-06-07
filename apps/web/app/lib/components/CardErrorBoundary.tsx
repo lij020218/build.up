@@ -51,12 +51,12 @@ export class CardErrorBoundary extends Component<Props, State> {
           style={{
             padding: "20px",
             borderRadius: "16px",
-            border: "1px solid rgba(220,38,38,0.15)",
+            border: "1px solid rgba(182,76,76,0.15)",
             background: "rgba(254,242,242,0.5)",
             textAlign: "center",
           }}
         >
-          <div style={{ fontSize: "13px", fontWeight: 600, color: "#dc2626", marginBottom: "6px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: "#b64c4c", marginBottom: "6px" }}>
             {this.props.cardLabel
               ? `${this.props.cardLabel} 로딩 실패`
               : "이 영역을 표시할 수 없습니다"}
@@ -65,7 +65,7 @@ export class CardErrorBoundary extends Component<Props, State> {
             일시적인 오류입니다. 새로고침하면 복구될 수 있습니다.
           </div>
           {process.env.NODE_ENV === "development" && this.state.error && (
-            <pre style={{ fontSize: "10px", color: "#dc2626", background: "#fef2f2", padding: "8px", borderRadius: "6px", textAlign: "left", overflow: "auto", maxHeight: "80px", marginBottom: "10px" }}>
+            <pre style={{ fontSize: "10px", color: "#b64c4c", background: "#fef2f2", padding: "8px", borderRadius: "6px", textAlign: "left", overflow: "auto", maxHeight: "80px", marginBottom: "10px" }}>
               {this.state.error.message}
             </pre>
           )}
@@ -74,9 +74,9 @@ export class CardErrorBoundary extends Component<Props, State> {
             style={{
               padding: "6px 16px",
               borderRadius: "8px",
-              border: "1px solid rgba(220,38,38,0.2)",
+              border: "1px solid rgba(182,76,76,0.2)",
               background: "white",
-              color: "#dc2626",
+              color: "#b64c4c",
               fontSize: "12px",
               fontWeight: 600,
               cursor: "pointer",

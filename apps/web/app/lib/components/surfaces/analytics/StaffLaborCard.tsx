@@ -58,8 +58,8 @@ export function StaffLaborCard() {
 
       {/* monthlyCosts.labor \ube44\uad50 \uc54c\ub9bc */}
       {employees.length > 0 && manualLabor > 0 && Math.abs(laborDiff) > 10000 && (
-        <div style={{ margin: "0 22px 12px", padding: "10px 14px", borderRadius: "12px", background: laborDiff > 0 ? "rgba(255,159,10,0.07)" : "rgba(0,122,255,0.06)", border: `0.5px solid ${laborDiff > 0 ? "rgba(255,159,10,0.2)" : "rgba(0,122,255,0.15)"}` }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: laborDiff > 0 ? "#ff9f0a" : "#007aff", lineHeight: 1.5 }}>
+        <div style={{ margin: "0 22px 12px", padding: "10px 14px", borderRadius: "12px", background: laborDiff > 0 ? "rgba(25,25,112,0.07)" : "rgba(0,122,255,0.06)", border: `0.5px solid ${laborDiff > 0 ? "rgba(25,25,112,0.2)" : "rgba(0,122,255,0.15)"}` }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: laborDiff > 0 ? "#191970" : "#007aff", lineHeight: 1.5 }}>
             {ko
               ? laborDiff > 0
                 ? `\ube44\uc6a9 \uce74\ub4dc \uc778\uac74\ube44(${fmt(manualLabor)})\uac00 \uc2e4\uc81c \uc608\uc0c1(${fmt(totalEmpBurden)})\ubcf4\ub2e4 ${fmt(laborDiff)} \ub0ae\uac8c \uc785\ub825\ub428`
@@ -104,7 +104,7 @@ export function StaffLaborCard() {
                     <button type="button" onClick={() => openEmpEdit(emp)} style={{ fontSize: "12px", color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
                       {ko ? "\uc218\uc815" : "Edit"}
                     </button>
-                    <button type="button" onClick={() => handleEmpDelete(emp.id)} style={{ fontSize: "12px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
+                    <button type="button" onClick={() => handleEmpDelete(emp.id)} style={{ fontSize: "12px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
                       {ko ? "\uc0ad\uc81c" : "Del"}
                     </button>
                   </div>

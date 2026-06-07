@@ -114,7 +114,7 @@ export function HomeView() {
               }}>
                 <div style={{
                   width: "40px", height: "40px", borderRadius: "50%", flexShrink: 0,
-                  background: "#34c759", display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "#1d3557", display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M4 10L8.5 15L16 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

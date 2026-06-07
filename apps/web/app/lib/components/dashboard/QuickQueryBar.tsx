@@ -149,7 +149,7 @@ export function QuickQueryBar({ ko, context }: Props) {
       {error && (
         <div style={errorBox}>
           <span>⚠ {error}</span>
-          <button type="button" onClick={() => setError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626" }}>
+          <button type="button" onClick={() => setError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#b64c4c" }}>
             <X size={12} strokeWidth={1.5} />
           </button>
         </div>
@@ -264,8 +264,8 @@ const suggestionChip: React.CSSProperties = {
 const errorBox: React.CSSProperties = {
   display: "flex", justifyContent: "space-between", alignItems: "center",
   padding: "8px 12px", borderRadius: "8px",
-  background: "rgba(220,38,38,0.05)",
-  fontSize: "11.5px", color: "#dc2626", fontWeight: 600,
+  background: "rgba(182,76,76,0.05)",
+  fontSize: "11.5px", color: "#b64c4c", fontWeight: 600,
 };
 
 const answerBox: React.CSSProperties = {

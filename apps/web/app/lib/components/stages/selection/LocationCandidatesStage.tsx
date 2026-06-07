@@ -87,7 +87,7 @@ export function LocationCandidatesStage() {
       : _editStatus === "error"
         ? (language === "ko" ? "⚠ 다시 시도" : "⚠ Retry")
         : (language === "ko" ? "✓ 수정 저장" : "✓ Save edits");
-  const _editBg = _editStatus === "saved" ? "#16a34a" : _editStatus === "error" ? "#dc2626" : "#34c759";
+  const _editBg = _editStatus === "saved" ? "#1d3557" : _editStatus === "error" ? "#b64c4c" : "#1d3557";
 
   const locationRef = useRef<HTMLDivElement>(null);
   const [shakeWarning, setShakeWarning] = useState(false);
@@ -384,7 +384,7 @@ export function LocationCandidatesStage() {
         if (!fb) return null;
         const ko = language === "ko";
         const density = fb.storeCount > 2000 ? "high" : fb.storeCount > 500 ? "medium" : "low";
-        const densityColor = density === "high" ? "#ff3b30" : density === "medium" ? "#ff9f0a" : "#34c759";
+        const densityColor = density === "high" ? "#b64c4c" : density === "medium" ? "#191970" : "#1d3557";
         const densityLabel = density === "high"
           ? (ko ? "매우 높음" : "Very High")
           : density === "medium"
@@ -489,10 +489,10 @@ export function LocationCandidatesStage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: 16,
-                    background: nearbyFranchiseStores.totalCount === 0 ? "#34c75918" : nearbyFranchiseStores.totalCount <= 3 ? "#ff9f0a18" : "#ff3b3018",
+                    background: nearbyFranchiseStores.totalCount === 0 ? "#1d355718" : nearbyFranchiseStores.totalCount <= 3 ? "#19197018" : "#b64c4c18",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "14px", fontWeight: 700,
-                    color: nearbyFranchiseStores.totalCount === 0 ? "#34c759" : nearbyFranchiseStores.totalCount <= 3 ? "#ff9f0a" : "#ff3b30"
+                    color: nearbyFranchiseStores.totalCount === 0 ? "#1d3557" : nearbyFranchiseStores.totalCount <= 3 ? "#191970" : "#b64c4c"
                   }}>
                     {nearbyFranchiseStores.totalCount}
                   </div>
@@ -649,10 +649,10 @@ export function LocationCandidatesStage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: 16,
-                    background: competitorResults.totalCount <= 5 ? "#34c75918" : competitorResults.totalCount <= 15 ? "#ff9f0a18" : "#ff3b3018",
+                    background: competitorResults.totalCount <= 5 ? "#1d355718" : competitorResults.totalCount <= 15 ? "#19197018" : "#b64c4c18",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "14px", fontWeight: 700,
-                    color: competitorResults.totalCount <= 5 ? "#34c759" : competitorResults.totalCount <= 15 ? "#ff9f0a" : "#ff3b30"
+                    color: competitorResults.totalCount <= 5 ? "#1d3557" : competitorResults.totalCount <= 15 ? "#191970" : "#b64c4c"
                   }}>
                     {competitorResults.totalCount}
                   </div>
@@ -870,7 +870,7 @@ export function LocationCandidatesStage() {
                 : `Kakao Local + Claude analyse around "${preferredRegionInput.trim() || "region"}" and score 3–5 candidates.`}
             </div>
             {aiMarketError ? (
-              <div style={{ marginTop: "6px", fontSize: "12px", color: "#dc2626", lineHeight: 1.5 }}>
+              <div style={{ marginTop: "6px", fontSize: "12px", color: "#b64c4c", lineHeight: 1.5 }}>
                 {aiMarketError}
               </div>
             ) : null}
@@ -917,11 +917,11 @@ export function LocationCandidatesStage() {
             region={preferredRegionInput}
           />
         )}
-        <div ref={locationRef} style={{ display: "grid", gap: "10px", ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
+        <div ref={locationRef} style={{ display: "grid", gap: "10px", ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
           {activeLocationCandidates.map((item) => {
             const selected = selectedLocationId === item.id;
             const freshness = getFreshnessPresentation(item.freshness);
-            const scoreColor = (item.score ?? 0) >= 85 ? "#34c759" : (item.score ?? 0) >= 70 ? "#007aff" : "#ff9f0a";
+            const scoreColor = (item.score ?? 0) >= 85 ? "#1d3557" : (item.score ?? 0) >= 70 ? "#007aff" : "#191970";
             return (
               <button
                 key={item.id}

@@ -203,8 +203,8 @@ export function SubscriptionPlanEntry({
               <button key={m} type="button" onClick={() => setMode(m)} style={{
                 flex: 1, padding: "8px 0", borderRadius: "10px", border: "none", cursor: "pointer",
                 fontSize: "13px", fontWeight: 650, fontFamily: FONT_STACK,
-                background: mode === m ? (m === "signup" ? "rgba(124,58,237,0.08)" : "rgba(220,38,38,0.06)") : "rgba(25,25,112,0.035)",
-                color: mode === m ? (m === "signup" ? "#7c3aed" : "#dc2626") : "rgba(15,23,42,0.4)",
+                background: mode === m ? (m === "signup" ? "rgba(124,58,237,0.08)" : "rgba(182,76,76,0.06)") : "rgba(25,25,112,0.035)",
+                color: mode === m ? (m === "signup" ? "#7c3aed" : "#b64c4c") : "rgba(15,23,42,0.4)",
                 transition: "all 0.15s ease",
               }}>
                 {m === "signup" ? (ko ? "신규 가입" : "New Signups") : (ko ? "이탈" : "Churns")}
@@ -217,13 +217,13 @@ export function SubscriptionPlanEntry({
             {plans.map((plan) => {
               const count = activeCounts[plan.id] ?? 0;
               const isChurn = mode === "churn";
-              const accent = isChurn ? "#dc2626" : "#7c3aed";
+              const accent = isChurn ? "#b64c4c" : "#7c3aed";
               return (
                 <div key={plan.id} style={{
                   display: "flex", alignItems: "center", gap: "10px",
                   padding: "10px 12px", borderRadius: "12px",
-                  background: count > 0 ? (isChurn ? "rgba(220,38,38,0.03)" : "rgba(124,58,237,0.03)") : "rgba(15,23,42,0.015)",
-                  border: count > 0 ? `1px solid ${isChurn ? "rgba(220,38,38,0.1)" : "rgba(124,58,237,0.1)"}` : "1px solid rgba(15,23,42,0.04)",
+                  background: count > 0 ? (isChurn ? "rgba(182,76,76,0.03)" : "rgba(124,58,237,0.03)") : "rgba(15,23,42,0.015)",
+                  border: count > 0 ? `1px solid ${isChurn ? "rgba(182,76,76,0.1)" : "rgba(124,58,237,0.1)"}` : "1px solid rgba(15,23,42,0.04)",
                   transition: "all 0.15s ease",
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -293,7 +293,7 @@ export function SubscriptionPlanEntry({
                 )}
                 {totalSignups > 0 && totalChurns > 0 && " · "}
                 {totalChurns > 0 && (
-                  <span style={{ color: "#dc2626" }}>-{totalChurns} {ko ? "이탈" : "churn"}{totalChurns > 1 && !ko ? "s" : ""}</span>
+                  <span style={{ color: "#b64c4c" }}>-{totalChurns} {ko ? "이탈" : "churn"}{totalChurns > 1 && !ko ? "s" : ""}</span>
                 )}
                 {totalSignups === 0 && totalChurns === 0 && (
                   <span style={{ color: "rgba(15,23,42,0.25)" }}>--</span>

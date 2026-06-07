@@ -743,11 +743,11 @@ export function CEOMorningHero({ d }: Props) {
             {brain.salesTrend.direction !== "insufficient" && brain.salesTrend.changePct != null && (
               <span style={{
                 padding: "2px 8px", borderRadius: "999px",
-                background: brain.salesTrend.direction === "improving" ? "rgba(5,150,105,0.10)"
-                  : brain.salesTrend.direction === "declining" ? "rgba(220,38,38,0.10)"
+                background: brain.salesTrend.direction === "improving" ? "rgba(25,25,112,0.08)"
+                  : brain.salesTrend.direction === "declining" ? "rgba(182,76,76,0.10)"
                   : "rgba(15,23,42,0.06)",
-                color: brain.salesTrend.direction === "improving" ? "#059669"
-                  : brain.salesTrend.direction === "declining" ? "#dc2626"
+                color: brain.salesTrend.direction === "improving" ? "#1d3557"
+                  : brain.salesTrend.direction === "declining" ? "#b64c4c"
                   : "rgba(15,23,42,0.6)",
                 fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em",
               }}>
@@ -773,7 +773,7 @@ export function CEOMorningHero({ d }: Props) {
             background:
               d.persistStatus === "saving" ? "rgba(25,25,112,0.08)" :
               d.persistStatus === "saved" ? "rgba(52,199,89,0.10)" :
-              "rgba(255,59,48,0.10)",
+              "rgba(182,76,76,0.10)",
             color:
               d.persistStatus === "saving" ? PALETTE.MIDNIGHT :
               d.persistStatus === "saved" ? PALETTE.SUCCESS :
@@ -1198,14 +1198,14 @@ export function CEOMorningHero({ d }: Props) {
             style={{
               width: "100%",
               background: briefing.tone === "crisis"
-                ? "rgba(255,59,48,0.05)"
+                ? "rgba(182,76,76,0.05)"
                 : briefing.tone === "warning"
-                  ? "rgba(255,159,10,0.04)"
+                  ? "rgba(25,25,112,0.04)"
                   : "#ffffff",
               border: briefing.tone === "crisis"
-                ? "1px solid rgba(255,59,48,0.22)"
+                ? "1px solid rgba(182,76,76,0.22)"
                 : briefing.tone === "warning"
-                  ? "1px solid rgba(255,159,10,0.20)"
+                  ? "1px solid rgba(25,25,112,0.20)"
                   : "1px solid rgba(25,25,112,0.08)",
               borderRadius: "14px",
               padding: "14px 16px",
@@ -1220,9 +1220,9 @@ export function CEOMorningHero({ d }: Props) {
             <div style={{
               width: 34, height: 34, borderRadius: 10,
               background: briefing.tone === "crisis"
-                ? "rgba(255,59,48,0.10)"
+                ? "rgba(182,76,76,0.10)"
                 : briefing.tone === "warning"
-                  ? "rgba(255,159,10,0.10)"
+                  ? "rgba(25,25,112,0.10)"
                   : PALETTE.MIDNIGHT_8,
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
@@ -1287,7 +1287,7 @@ export function CEOMorningHero({ d }: Props) {
                 cursor: "pointer",
                 flexShrink: 0,
                 alignSelf: "center",
-                boxShadow: briefing.tone === "crisis" ? "0 2px 6px rgba(255,59,48,0.25)" : briefing.tone === "warning" ? "0 2px 6px rgba(255,159,10,0.25)" : "0 2px 6px rgba(25,25,112,0.22)",
+                boxShadow: briefing.tone === "crisis" ? "0 2px 6px rgba(182,76,76,0.25)" : briefing.tone === "warning" ? "0 2px 6px rgba(25,25,112,0.25)" : "0 2px 6px rgba(25,25,112,0.22)",
                 transition: "transform 0.15s ease, box-shadow 0.2s ease",
               }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
@@ -1348,7 +1348,7 @@ function fmtKrw(n: number, ko: boolean): string {
  *   · 7px dot + glow (Apple Health 톤)
  *   · "건강도 · 건강 78" 형식 (label · grade + score)
  *   · 색조: GREEN/AMBER/ROSE × 0.08 tint background — 시각 부담 최소
- *   · grade 별 텍스트 색은 진한 톤 (#047857 / #a16207 / #b91c1c) 가독성
+ *   · grade 별 텍스트 색은 진한 톤 (#1d3557 / #191970 / #b64c4c) 가독성
  *   · confidence < 50 일 때 점수 옆 ⚠ 표시 (모델 자체 신뢰도 낮음 신호)
  *   · title 속성으로 hover tooltip — 차원별 진단 풀 설명 (UI 노이즈 X)
  */
@@ -1367,17 +1367,18 @@ function HealthScoreBadge({
     : grade === "caution" ? (ko ? "주의" : "Caution")
     : grade === "danger" ? (ko ? "위험" : "Danger")
     : (ko ? "—" : "—");
-  const dotColor = grade === "healthy" ? "#059669"
-    : grade === "caution" ? "#d97706"
-    : grade === "danger" ? "#dc2626"
+  // 신호등 금지 — healthy/caution 은 네이비 농담(옅음→짙음), danger 만 벽돌. 라벨 동반.
+  const dotColor = grade === "healthy" ? "rgba(25,25,112,0.45)"
+    : grade === "caution" ? "rgba(25,25,112,0.80)"
+    : grade === "danger" ? "#b64c4c"
     : "rgba(15,23,42,0.4)";
-  const bgColor = grade === "healthy" ? "rgba(5,150,105,0.08)"
-    : grade === "caution" ? "rgba(217,119,6,0.08)"
-    : grade === "danger" ? "rgba(220,38,38,0.08)"
+  const bgColor = grade === "healthy" ? "rgba(25,25,112,0.06)"
+    : grade === "caution" ? "rgba(25,25,112,0.10)"
+    : grade === "danger" ? "rgba(182,76,76,0.08)"
     : "rgba(15,23,42,0.04)";
-  const textColor = grade === "healthy" ? "#047857"
-    : grade === "caution" ? "#a16207"
-    : grade === "danger" ? "#b91c1c"
+  const textColor = grade === "healthy" ? "#1d3557"
+    : grade === "caution" ? "#191970"
+    : grade === "danger" ? "#b64c4c"
     : "rgba(15,23,42,0.5)";
   const isLowConfidence = confidence < 50;
 

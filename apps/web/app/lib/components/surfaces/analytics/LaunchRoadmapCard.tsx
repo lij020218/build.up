@@ -120,7 +120,7 @@ export function LaunchRoadmapCard() {
 
   // 위험도 색상
   const riskColor = (r: string | undefined) =>
-    r === "low" ? "#34c759" : r === "medium" ? "#ff9f0a" : r === "high" || r === "critical" ? "#ff3b30" : "var(--muted)";
+    r === "low" ? "#1d3557" : r === "medium" ? "#191970" : r === "high" || r === "critical" ? "#b64c4c" : "var(--muted)";
   const riskLabel = (r: string | undefined) =>
     !r ? notSet :
     ko ? (r === "low" ? "낮음" : r === "medium" ? "보통" : r === "high" ? "높음" : "위험") :
@@ -182,7 +182,7 @@ export function LaunchRoadmapCard() {
         const runwayScore = runway >= 6 ? 3 : runway >= 3 ? 2 : runway >= 1 ? 1 : 0;
         const totalScore = bepScore + primeScore + runwayScore;
         const overallHealth = totalScore >= 7 ? "good" : totalScore >= 4 ? "caution" : "danger";
-        const healthColor = overallHealth === "good" ? "#34c759" : overallHealth === "caution" ? "#ff9f0a" : "#ff3b30";
+        const healthColor = overallHealth === "good" ? "#1d3557" : overallHealth === "caution" ? "#191970" : "#b64c4c";
         const healthMsg = overallHealth === "good"
           ? (ko ? "양호한 흐름입니다. 현재 방향을 유지하세요." : "On track. Maintain current direction.")
           : overallHealth === "caution"
@@ -217,19 +217,19 @@ export function LaunchRoadmapCard() {
             {/* 핵심 지표 3개 */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
               <div style={{ padding: "10px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", textAlign: "center" }}>
-                <div style={{ fontSize: "18px", fontWeight: 700, color: bepAchievement >= 100 ? "#34c759" : bepAchievement >= 70 ? "#ff9f0a" : "#ff3b30" }}>
+                <div style={{ fontSize: "18px", fontWeight: 700, color: bepAchievement >= 100 ? "#1d3557" : bepAchievement >= 70 ? "#191970" : "#b64c4c" }}>
                   {totalDays > 0 ? `${bepAchievement}%` : "—"}
                 </div>
                 <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "BEP 달성률" : "BEP Rate"}</div>
               </div>
               <div style={{ padding: "10px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", textAlign: "center" }}>
-                <div style={{ fontSize: "18px", fontWeight: 700, color: primeRate <= 60 ? "#34c759" : primeRate <= 65 ? "#ff9f0a" : "#ff3b30" }}>
+                <div style={{ fontSize: "18px", fontWeight: 700, color: primeRate <= 60 ? "#1d3557" : primeRate <= 65 ? "#191970" : "#b64c4c" }}>
                   {totalDays > 0 ? `${primeRate.toFixed(0)}%` : "—"}
                 </div>
                 <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "프라임코스트" : "Prime Cost"}</div>
               </div>
               <div style={{ padding: "10px", borderRadius: "12px", background: "rgba(255,255,255,0.7)", textAlign: "center" }}>
-                <div style={{ fontSize: "18px", fontWeight: 700, color: runway < 0 ? "#34c759" : runway >= 6 ? "#34c759" : runway >= 3 ? "#ff9f0a" : "#ff3b30" }}>
+                <div style={{ fontSize: "18px", fontWeight: 700, color: runway < 0 ? "#1d3557" : runway >= 6 ? "#1d3557" : runway >= 3 ? "#191970" : "#b64c4c" }}>
                   {totalCost > 0 ? (runway < 0 ? (ko ? "흑자" : "Surplus") : `${runway}${ko ? "개월" : "mo"}`) : "—"}
                 </div>
                 <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>{ko ? "현금 런웨이" : "Runway"}</div>
@@ -247,7 +247,7 @@ export function LaunchRoadmapCard() {
               const crisisGuides: CrisisAction[] = [];
               if (bepAchievement < 70) {
                 crisisGuides.push({
-                  Icon: TrendingUp, iconColor: "#059669", title: ko ? "매출 증가 전략" : "Revenue Growth",
+                  Icon: TrendingUp, iconColor: "#1d3557", title: ko ? "매출 증가 전략" : "Revenue Growth",
                   actions: ko
                     ? ["네이버 플레이스 리뷰 관리 — 별점 4.5 이상 유지가 신규 유입 핵심", "배달앱 상위노출 광고 (첫 주 집중)", "오프닝 프로모션 연장 또는 재이벤트", "주변 오피스/주거 타겟 전단지 + 쿠폰"]
                     : ["Maintain 4.5+ Naver Place rating", "Delivery app top-exposure ads (focus first week)", "Extend/repeat opening promotions", "Flyers + coupons targeting nearby offices/residents"]
@@ -263,7 +263,7 @@ export function LaunchRoadmapCard() {
               }
               if (runway < 3) {
                 crisisGuides.push({
-                  Icon: AlertOctagon, iconColor: "#b91c1c", title: ko ? "긴급 자금 확보" : "Emergency Funding",
+                  Icon: AlertOctagon, iconColor: "#b64c4c", title: ko ? "긴급 자금 확보" : "Emergency Funding",
                   actions: ko
                     ? ["소상공인 긴급경영안정자금 신청 (소진공 1357)", "불필요한 고정비 즉시 해지 (미사용 구독, 과잉 보험)", "매출 집중 — 배달 전용 메뉴 추가로 매출원 다변화", "세무사 상담 — 비용 처리 최적화로 현금흐름 개선"]
                     : ["Apply for emergency SME stabilization fund (SEMAS 1357)", "Cancel unnecessary fixed costs (unused subscriptions, excess insurance)", "Diversify revenue — add delivery-only menu", "Tax advisor — optimize expense treatment for cash flow"]
@@ -312,8 +312,8 @@ export function LaunchRoadmapCard() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {sectionLabel(ko ? "사업 기본 정보" : "Business Info")}
           <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "10px" }}>
-            <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: businessLaunched ? "#34c759" : "#ff9f0a" }} />
-            <span style={{ fontSize: "12px", fontWeight: 600, color: businessLaunched ? "#34c759" : "#ff9f0a" }}>
+            <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: businessLaunched ? "#1d3557" : "#191970" }} />
+            <span style={{ fontSize: "12px", fontWeight: 600, color: businessLaunched ? "#1d3557" : "#191970" }}>
               {businessLaunched ? (ko ? "개업 운영 중" : "Open") : (ko ? "준비 중" : "Preparing")}
             </span>
           </div>
@@ -578,11 +578,11 @@ export function LaunchRoadmapCard() {
           <span style={{ fontSize: "15px", color: "var(--muted)", fontWeight: 500 }}>/ {totalStages}{ko ? "단계 완료" : " stages"}</span>
         </div>
         <div style={{ height: "6px", borderRadius: "4px", background: "rgba(0,0,0,0.08)", overflow: "hidden" as const }}>
-          <div style={{ height: "100%", borderRadius: "4px", background: completedCount >= totalStages ? "#34c759" : "#007aff", width: `${progressPct}%`, transition: "width 0.4s ease" }} />
+          <div style={{ height: "100%", borderRadius: "4px", background: completedCount >= totalStages ? "#1d3557" : "#007aff", width: `${progressPct}%`, transition: "width 0.4s ease" }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
           <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "창업 준비 시작" : "Start"}</span>
-          <span style={{ fontSize: "12px", fontWeight: 700, color: completedCount >= totalStages ? "#34c759" : "#007aff" }}>{progressPct}%</span>
+          <span style={{ fontSize: "12px", fontWeight: 700, color: completedCount >= totalStages ? "#1d3557" : "#007aff" }}>{progressPct}%</span>
           <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "개업 완료" : "Open"}</span>
         </div>
       </article>

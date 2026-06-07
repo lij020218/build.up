@@ -205,8 +205,8 @@ export function ActivitySnapshotCard({
               >
                 <span style={{
                   width: "5px", height: "5px", borderRadius: "50%",
-                  background: "#22c55e",
-                  boxShadow: "0 0 4px rgba(34,197,94,0.5)",
+                  background: "#1d3557",
+                  boxShadow: "0 0 4px rgba(25,25,112,0.5)",
                 }} />
                 {ko ? `자동 ${connectedSourceCount(unifiedRev.sources)}곳` : `Auto ${connectedSourceCount(unifiedRev.sources)} src`}
               </span>
@@ -294,7 +294,7 @@ export function ActivitySnapshotCard({
               left: "4px",
               right: "4px",
               height: "0",
-              borderTop: "1.5px dashed rgba(220,38,38,0.45)",
+              borderTop: "1.5px dashed rgba(182,76,76,0.45)",
               pointerEvents: "none" as const,
               zIndex: 1,
             }}
@@ -305,12 +305,12 @@ export function ActivitySnapshotCard({
                 top: "-9px",
                 right: 0,
                 background: "rgba(255,255,255,0.95)",
-                color: "#dc2626",
+                color: "#b64c4c",
                 fontSize: "9.5px",
                 fontWeight: 700,
                 padding: "2px 7px",
                 borderRadius: "999px",
-                border: "1px solid rgba(220,38,38,0.25)",
+                border: "1px solid rgba(182,76,76,0.25)",
                 letterSpacing: "-0.005em",
                 whiteSpace: "nowrap" as const,
                 lineHeight: 1.3,
@@ -399,16 +399,16 @@ export function ActivitySnapshotCard({
                     background: isHighlight
                       ? "linear-gradient(180deg, #191970 0%, #2d4a6b 100%)"
                       : profitable
-                        ? "linear-gradient(180deg, #16a34a 0%, #22c55e 100%)"
+                        ? "linear-gradient(180deg, #1d3557 0%, #1d3557 100%)"
                         : lossy
-                          ? "linear-gradient(180deg, #ef4444 0%, #fca5a5 100%)"
+                          ? "linear-gradient(180deg, #b64c4c 0%, #b64c4c 100%)"
                           : "linear-gradient(180deg, #e8ebef 0%, #eff2f5 100%)",
                     boxShadow: isHighlight
                       ? "0 -3px 12px rgba(25,25,112,0.14)"
                       : profitable
                         ? "0 -2px 8px rgba(22,163,74,0.16)"
                         : lossy
-                          ? "0 -2px 8px rgba(239,68,68,0.14)"
+                          ? "0 -2px 8px rgba(182,76,76,0.14)"
                           : "none",
                     transition: "background 0.25s ease, box-shadow 0.25s ease",
                   }}
@@ -469,13 +469,13 @@ export function ActivitySnapshotCard({
           return (
             <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginLeft: "auto" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "linear-gradient(180deg, #16a34a 0%, #22c55e 100%)" }} />
-                <span style={{ color: "#15803d", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{profitDays}</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "linear-gradient(180deg, #1d3557 0%, #1d3557 100%)" }} />
+                <span style={{ color: "#1d3557", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{profitDays}</span>
                 <span>{ko ? "흑자" : "profit"}</span>
               </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "linear-gradient(180deg, #ef4444 0%, #fca5a5 100%)" }} />
-                <span style={{ color: "#b91c1c", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{lossDays}</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: "linear-gradient(180deg, #b64c4c 0%, #b64c4c 100%)" }} />
+                <span style={{ color: "#b64c4c", fontWeight: 700, fontVariantNumeric: "tabular-nums" as const }}>{lossDays}</span>
                 <span>{ko ? "적자" : "loss"}</span>
               </span>
             </span>
@@ -556,23 +556,23 @@ export function ActivitySnapshotCard({
           return (
             <>
               {/* ── 오늘 상태 + 입력 통합 카드 (Apple 스타일) ── */}
-              <div style={{ borderRadius: "16px", overflow: "hidden", background: todayEntry ? "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(232,245,233,0.3) 100%)" : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,244,255,0.4) 100%)", border: `1px solid ${todayEntry ? "rgba(5,150,105,0.08)" : "rgba(25,25,112,0.06)"}`, boxShadow: "0 21px 94px rgba(0,0,0,0.03)" }}>
+              <div style={{ borderRadius: "16px", overflow: "hidden", background: todayEntry ? "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,242,250,0.3) 100%)" : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,244,255,0.4) 100%)", border: `1px solid ${todayEntry ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.06)"}`, boxShadow: "0 21px 94px rgba(0,0,0,0.03)" }}>
 
                 {/* 상단: 오늘 매출 히어로 */}
                 <div style={{ padding: "20px 22px 16px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: todayEntry ? "#059669" : "#191970", boxShadow: todayEntry ? "0 0 8px rgba(5,150,105,0.4)" : "0 0 8px rgba(25,25,112,0.3)" }} />
+                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: todayEntry ? "#1d3557" : "#191970", boxShadow: todayEntry ? "0 0 8px rgba(25,25,112,0.4)" : "0 0 8px rgba(25,25,112,0.3)" }} />
                       <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(15,23,42,0.5)" }}>
                         {isToday ? (ko ? "오늘" : "Today") : new Date(d.dailyDateInput + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long", day: "numeric" })}
                       </span>
                       {streak >= 3 && (
-                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#e85d04", background: "rgba(232,93,4,0.08)", borderRadius: "8px", padding: "2px 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#191970", background: "rgba(232,93,4,0.08)", borderRadius: "8px", padding: "2px 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                           <Flame size={11} strokeWidth={1.5} />
                           {streak}{ko ? "일 연속" : "d"}
                         </span>
                       )}
-                      {missedDays.length >= 2 && <span style={{ fontSize: "11px", fontWeight: 600, color: "#dc2626", background: "rgba(220,38,38,0.06)", borderRadius: "8px", padding: "2px 10px" }}>{missedDays.length}{ko ? "일째 미기록" : "d missed"}</span>}
+                      {missedDays.length >= 2 && <span style={{ fontSize: "11px", fontWeight: 600, color: "#b64c4c", background: "rgba(182,76,76,0.06)", borderRadius: "8px", padding: "2px 10px" }}>{missedDays.length}{ko ? "일째 미기록" : "d missed"}</span>}
                     </div>
                     <input type="date" value={d.dailyDateInput} onChange={(event) => enterEdit(event.target.value)}
                       style={{ fontSize: "12px", padding: "5px 10px", borderRadius: "8px", border: "1px solid rgba(25,25,112,0.08)", background: "rgba(255,255,255,0.8)", color: "#0f172a", fontWeight: 500 }} />
@@ -583,7 +583,7 @@ export function ActivitySnapshotCard({
                       <div style={{ fontSize: "36px", fontWeight: 780, letterSpacing: "-0.05em", color: "#0f172a", lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }} className="bento-number">{fmt(todayEntry.sales)}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
                         {yesterdayDiff != null && (
-                          <span style={{ fontSize: "12px", fontWeight: 650, padding: "3px 10px", borderRadius: "8px", background: yesterdayDiff >= 0 ? "rgba(5,150,105,0.08)" : "rgba(220,38,38,0.06)", color: yesterdayDiff >= 0 ? "#059669" : "#dc2626" }}>
+                          <span style={{ fontSize: "12px", fontWeight: 650, padding: "3px 10px", borderRadius: "8px", background: yesterdayDiff >= 0 ? "rgba(25,25,112,0.08)" : "rgba(182,76,76,0.06)", color: yesterdayDiff >= 0 ? "#1d3557" : "#b64c4c" }}>
                             {yesterdayDiff >= 0 ? "↑" : "↓"} {Math.abs(yesterdayDiff)}% {ko ? "어제 대비" : "vs yesterday"}
                           </span>
                         )}
@@ -746,7 +746,7 @@ export function ActivitySnapshotCard({
                     </div>
                     <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                       <button type="button" onClick={() => handleDelete(d.dailyDateInput)}
-                        style={{ fontSize: "11px", fontWeight: 600, color: "#dc2626", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
+                        style={{ fontSize: "11px", fontWeight: 600, color: "#b64c4c", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>
                         {ko ? "삭제" : "Delete"}
                       </button>
                       <button type="button" onClick={() => { d.setDailySalesInput(""); d.setDailyCustomersInput(""); d.setDailyDateInput(todayStr); setEditMode(false); }}

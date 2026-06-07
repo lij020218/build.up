@@ -554,14 +554,14 @@ export function StartupFoundationStage() {
               <div style={{
                 padding: "14px 16px",
                 borderRadius: "14px",
-                background: isSole ? "rgba(5,150,105,0.06)" : `${MIDNIGHT}10`,
-                border: `1px solid ${isSole ? "rgba(5,150,105,0.18)" : MIDNIGHT + "30"}`,
+                background: isSole ? "rgba(25,25,112,0.06)" : `${MIDNIGHT}10`,
+                border: `1px solid ${isSole ? "rgba(25,25,112,0.18)" : MIDNIGHT + "30"}`,
                 marginBottom: "12px",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                   <span style={{
                     fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "6px",
-                    background: isSole ? "#059669" : MIDNIGHT, color: "#fff",
+                    background: isSole ? "#1d3557" : MIDNIGHT, color: "#fff",
                     letterSpacing: "0.06em",
                   }}>
                     {ko

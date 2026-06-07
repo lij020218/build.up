@@ -141,7 +141,7 @@ export function BusinessModelSelectionStage() {
         };
         const options = getStarterBusinessModelOptions(industryCategoryId);
         return (
-          <div ref={businessModelRef} style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, 1fr)`, gap: "10px", ...(shakeWarning ? { outline: "2px solid #dc2626", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
+          <div ref={businessModelRef} style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, 1fr)`, gap: "10px", ...(shakeWarning ? { outline: "2px solid #b64c4c", outlineOffset: "4px", borderRadius: "16px", transition: "outline 0.3s ease" } : {}) }}>
             {options.map((rawOption) => {
               const option = localizeRecommendationItem(rawOption, language);
               const selected = selectedBusinessModelId === rawOption.id;

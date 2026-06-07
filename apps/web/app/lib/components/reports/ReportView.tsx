@@ -47,8 +47,8 @@ const MIDNIGHT = "#191970";
 const MIDNIGHT_DEEP = "#0f0f4a";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.16)";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.06)";
-const GREEN = "#059669";
-const RED = "#dc2626";
+const GREEN = "#1d3557";
+const RED = "#b64c4c";
 
 type Props = { period: ReportPeriod };
 
@@ -564,8 +564,8 @@ const kpiSub: React.CSSProperties = {
 };
 
 const anomalyCardStyle: React.CSSProperties = {
-  background: "rgba(220,38,38,0.03)",
-  border: "1px solid rgba(220,38,38,0.18)",
+  background: "rgba(182,76,76,0.03)",
+  border: "1px solid rgba(182,76,76,0.18)",
   borderRadius: 16,
   padding: "16px 18px",
 };

@@ -83,8 +83,8 @@ export function DeliveryPlatformCard() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderTop: "0.5px solid rgba(0,0,0,0.08)", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
           {[
             { label: ko ? "배달 총 매출" : "Gross", value: fmt(totalGross), color: "inherit" },
-            { label: ko ? "수수료+광고비" : "Fees+Ads", value: fmt(totalGross - totalNet), color: "#ff3b30" },
-            { label: ko ? "실 순매출" : "Net revenue", value: fmt(totalNet), color: totalNet > 0 ? "#34c759" : "#ff3b30" },
+            { label: ko ? "수수료+광고비" : "Fees+Ads", value: fmt(totalGross - totalNet), color: "#b64c4c" },
+            { label: ko ? "실 순매출" : "Net revenue", value: fmt(totalNet), color: totalNet > 0 ? "#1d3557" : "#b64c4c" },
           ].map((col, idx) => (
             <div key={col.label} style={{ padding: "14px 12px", borderLeft: idx > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
               <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "6px" }}>{col.label}</div>
@@ -136,7 +136,7 @@ export function DeliveryPlatformCard() {
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button type="button" onClick={() => openDlvEdit(p)} style={{ fontSize: "12px", color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
-                  <button type="button" onClick={() => handleDlvDelete(p.id)} style={{ fontSize: "12px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
+                  <button type="button" onClick={() => handleDlvDelete(p.id)} style={{ fontSize: "12px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
                 </div>
               </div>
               {/* 이번 달 매출 입력 + 결과 */}
@@ -159,9 +159,9 @@ export function DeliveryPlatformCard() {
                 {p.gross > 0 && (
                   <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                     {[
-                      { label: ko ? "수수료+광고" : "Fees", value: fmt(p.commission + p.adCost), color: "#ff3b30" },
-                      { label: ko ? "실순매출" : "Net", value: fmt(p.net), color: p.net > 0 ? "#34c759" : "#ff3b30" },
-                      { label: ko ? "실질수수료율" : "Real rate", value: `${p.realRate.toFixed(1)}%`, color: p.realRate > 25 ? "#ff3b30" : p.realRate > 15 ? "#ff9f0a" : "var(--muted)" },
+                      { label: ko ? "수수료+광고" : "Fees", value: fmt(p.commission + p.adCost), color: "#b64c4c" },
+                      { label: ko ? "실순매출" : "Net", value: fmt(p.net), color: p.net > 0 ? "#1d3557" : "#b64c4c" },
+                      { label: ko ? "실질수수료율" : "Real rate", value: `${p.realRate.toFixed(1)}%`, color: p.realRate > 25 ? "#b64c4c" : p.realRate > 15 ? "#191970" : "var(--muted)" },
                     ].map(item => (
                       <div key={item.label} style={{ background: "rgba(0,0,0,0.03)", borderRadius: "8px", padding: "4px 10px" }}>
                         <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700, textTransform: "uppercase" as const }}>{item.label}</div>

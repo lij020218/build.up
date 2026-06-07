@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { HealthDiagnosisResult } from "@foundone/ai";
 import type { BusinessHealthMetrics } from "@foundone/shared";
+import { HEALTH_COLORS, HEALTH_LABEL_KO, HEALTH_LABEL_EN } from "@foundone/shared";
 
 type Props = {
   metrics: BusinessHealthMetrics;
@@ -17,13 +18,20 @@ export default function HealthDiagnosisCard({ metrics, language, businessType, m
   const [showDetail, setShowDetail] = useState(false);
   const ko = language === "ko";
 
-  const gradeConfig = {
-    healthy: { color: "#34c759", bg: "#34c75912", label: ko ? "건강" : "Healthy" },
-    caution: { color: "#ff9f0a", bg: "#ff9f0a12", label: ko ? "주의" : "Caution" },
-    warning: { color: "#ff6b35", bg: "#ff6b3512", label: ko ? "경고" : "Warning" },
-    critical: { color: "#ff3b30", bg: "#ff3b3012", label: ko ? "위험" : "Critical" },
+  // 건강 등급 색상·라벨은 SSOT(HEALTH_COLORS / HEALTH_LABEL) 사용 — 네이비 농담 + 위험 1색.
+  //   (종전 자체 gradeConfig 는 신호등 컬러 + SSOT 와 다른 라벨이었음.)
+  const gradePalette = HEALTH_COLORS[metrics.healthGrade];
+  const grade = {
+    color: gradePalette.text,
+    bg: gradePalette.bg,
+    border: gradePalette.border,
+    label: ko ? HEALTH_LABEL_KO[metrics.healthGrade] : HEALTH_LABEL_EN[metrics.healthGrade],
   };
-  const grade = gradeConfig[metrics.healthGrade];
+
+  // 색각 보강 색: 위험만 danger(벽돌), 그 외는 중립 ink / 주의 네이비. 방향은 부호·화살표로 전달.
+  const INK = "var(--text)";
+  const DANGER = "var(--danger)";
+  const NAVY_CAUTION = "#191970";
 
   async function requestDiagnosis() {
     setLoading(true);
@@ -57,8 +65,9 @@ export default function HealthDiagnosisCard({ metrics, language, businessType, m
     }
   }
 
+  // 방향은 화살표(↑↓→)로 1차 전달. 색은 declining 만 위험(danger), growing 은 중립 ink.
   const trendArrow = metrics.salesTrend === "growing" ? "↑" : metrics.salesTrend === "declining" ? "↓" : "→";
-  const trendColor = metrics.salesTrend === "growing" ? "#34c759" : metrics.salesTrend === "declining" ? "#ff3b30" : "var(--muted)";
+  const trendColor = metrics.salesTrend === "declining" ? DANGER : metrics.salesTrend === "growing" ? INK : "var(--muted)";
 
   return (
     <div style={{
@@ -95,6 +104,7 @@ export default function HealthDiagnosisCard({ metrics, language, businessType, m
           padding: "6px 14px",
           borderRadius: "999px",
           background: grade.bg,
+          border: `1px solid ${grade.border}`,
         }}>
           {grade.label}
         </span>
@@ -112,9 +122,10 @@ export default function HealthDiagnosisCard({ metrics, language, businessType, m
       }}>
         {[
           {
+            // 부호(+/-)로 방향 전달. 음수(적자)만 위험색, 양수는 중립.
             label: ko ? "영업이익률" : "Op. Margin",
             value: `${metrics.operatingMargin > 0 ? "+" : ""}${metrics.operatingMargin.toFixed(1)}%`,
-            color: metrics.operatingMargin >= 0 ? "#34c759" : "#ff3b30",
+            color: metrics.operatingMargin >= 0 ? INK : DANGER,
           },
           {
             label: ko ? "매출 추세" : "Trend",
@@ -122,9 +133,10 @@ export default function HealthDiagnosisCard({ metrics, language, businessType, m
             color: trendColor,
           },
           {
+            // %값으로 정도 전달. 70% 초과만 위험색, 65~70 주의 네이비, 이하 중립.
             label: ko ? "프라임코스트" : "Prime Cost",
             value: `${metrics.primeCostRatio.toFixed(1)}%`,
-            color: metrics.primeCostRatio <= 65 ? "#34c759" : metrics.primeCostRatio <= 70 ? "#ff9f0a" : "#ff3b30",
+            color: metrics.primeCostRatio <= 65 ? INK : metrics.primeCostRatio <= 70 ? NAVY_CAUTION : DANGER,
           },
         ].map((item) => (
           <div key={item.label} style={{
@@ -195,8 +207,9 @@ export default function HealthDiagnosisCard({ metrics, language, businessType, m
                             fontSize: "11px",
                             padding: "3px 8px",
                             borderRadius: "999px",
-                            background: action.difficulty === "easy" ? "#34c75914" : action.difficulty === "hard" ? "#ff3b3014" : "#ff9f0a14",
-                            color: action.difficulty === "easy" ? "#34c759" : action.difficulty === "hard" ? "#ff3b30" : "#ff9f0a",
+                            // 난이도는 라벨(쉬움/보통/어려움)로 구분 — 색은 네이비 농담(easy 옅음 → hard 짙음).
+                            background: action.difficulty === "easy" ? "rgba(25,25,112,0.06)" : action.difficulty === "hard" ? "rgba(25,25,112,0.14)" : "rgba(25,25,112,0.10)",
+                            color: action.difficulty === "hard" ? "#191970" : "#1d3557",
                             fontWeight: 600,
                           }}>
                             {action.difficulty === "easy" ? (ko ? "쉬움" : "Easy") : action.difficulty === "hard" ? (ko ? "어려움" : "Hard") : (ko ? "보통" : "Medium")}
@@ -215,10 +228,10 @@ export default function HealthDiagnosisCard({ metrics, language, businessType, m
                   <div style={{
                     fontSize: "13px",
                     lineHeight: 1.5,
-                    color: "#34c759",
+                    color: "#1d3557",
                     padding: "10px 14px",
                     borderRadius: "12px",
-                    background: "#34c75908",
+                    background: "rgba(25,25,112,0.05)",
                   }}>
                     {diagnosis.encouragement}
                   </div>

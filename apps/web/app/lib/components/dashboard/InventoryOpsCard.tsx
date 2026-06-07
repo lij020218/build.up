@@ -68,7 +68,7 @@ function OverstockSection({
 
   const totalExcessCost = alerts.reduce((s, a) => s + (a.excessCostKrw ?? 0), 0);
   const hasAlertSeverity = alerts.some((a) => a.severity === "alert");
-  const accentColor = hasAlertSeverity ? "#b45309" : "#1F46A8";
+  const accentColor = hasAlertSeverity ? "#191970" : "#1F46A8";
   const accentBg = hasAlertSeverity ? "rgba(180,83,9,0.06)" : "rgba(25,25,112,0.05)";
   const accentBorder = hasAlertSeverity ? "rgba(180,83,9,0.18)" : "rgba(25,25,112,0.12)";
 
@@ -155,7 +155,7 @@ function OverstockSection({
           gap: "6px",
         }}>
           {alerts.map((a) => {
-            const itemColor = a.severity === "alert" ? "#b45309" : "rgba(15,23,42,0.62)";
+            const itemColor = a.severity === "alert" ? "#191970" : "rgba(15,23,42,0.62)";
             const recommendKo =
               a.recommendation === "reduce-quantity" ? "발주량 줄이기 권장"
               : a.recommendation === "extend-cycle" ? "발주 주기 연장 권장"
@@ -318,7 +318,7 @@ const tinyAction: React.CSSProperties = {
 const tinyDangerAction: React.CSSProperties = {
   border: "none",
   background: "none",
-  color: "#b42318",
+  color: "#b64c4c",
   fontSize: "12px",
   fontWeight: 700,
   cursor: "pointer",
@@ -627,21 +627,21 @@ export function InventoryOpsCard({
       {excelImportState.status !== "idle" && (
         <div style={{
           padding: "12px 16px", borderRadius: "12px", marginBottom: "8px",
-          background: excelImportState.status === "error" ? "rgba(220,38,38,0.04)" : excelImportState.status === "done" ? "rgba(5,150,105,0.04)" : "rgba(25,25,112,0.04)",
-          border: `1px solid ${excelImportState.status === "error" ? "rgba(220,38,38,0.1)" : excelImportState.status === "done" ? "rgba(5,150,105,0.1)" : "rgba(25,25,112,0.1)"}`,
+          background: excelImportState.status === "error" ? "rgba(182,76,76,0.04)" : excelImportState.status === "done" ? "rgba(25,25,112,0.04)" : "rgba(25,25,112,0.04)",
+          border: `1px solid ${excelImportState.status === "error" ? "rgba(182,76,76,0.1)" : excelImportState.status === "done" ? "rgba(25,25,112,0.1)" : "rgba(25,25,112,0.1)"}`,
         }} className="bento-fade-in">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: excelImportState.total > 0 ? "8px" : "0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               {excelImportState.status === "error" ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b64c4c" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
               ) : excelImportState.status === "done" ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1d3557" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
               ) : (
                 <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(25,25,112,0.3)", borderTopColor: "#191970", animation: "spin 0.8s linear infinite" }} />
               )}
               <span style={{
                 fontSize: "13px", fontWeight: 600,
-                color: excelImportState.status === "error" ? "#dc2626" : excelImportState.status === "done" ? "#059669" : "#191970",
+                color: excelImportState.status === "error" ? "#b64c4c" : excelImportState.status === "done" ? "#1d3557" : "#191970",
               }}>
                 {excelImportState.message}
               </span>
@@ -657,7 +657,7 @@ export function InventoryOpsCard({
               <div style={{
                 height: "100%", borderRadius: "2px",
                 width: `${(excelImportState.current / excelImportState.total) * 100}%`,
-                background: excelImportState.status === "done" ? "#059669" : "#191970",
+                background: excelImportState.status === "done" ? "#1d3557" : "#191970",
                 transition: "width 0.15s ease",
               }} />
             </div>
@@ -668,7 +668,7 @@ export function InventoryOpsCard({
       <div style={opsMetricGrid}>
         <div style={opsMetricCard}>
           <div style={opsMetricLabel}>{ko ? "발주 필요" : "Reorder"}</div>
-          <div style={{ ...opsMetricValue, color: lowStockItems.length > 0 ? "#b42318" : "#177245" }}>
+          <div style={{ ...opsMetricValue, color: lowStockItems.length > 0 ? "#b64c4c" : "#1d3557" }}>
             {lowStockItems.length}{ko ? "개" : ""}
           </div>
         </div>
@@ -696,7 +696,7 @@ export function InventoryOpsCard({
           const isLow = lowStockItems.some((c) => c.id === item.id);
           const threshold = item.minThreshold ?? 0;
           const urgency = threshold > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
-          const urgencyColor = urgency === "critical" ? "#b42318" : urgency === "warning" ? "#e85d04" : "#177245";
+          const urgencyColor = urgency === "critical" ? "#b64c4c" : urgency === "warning" ? "#191970" : "#1d3557";
           return (
           <div key={item.id} style={{ ...listRow, borderLeft: `3px solid ${urgencyColor}` }}>
             <div>
@@ -794,7 +794,7 @@ export function InventoryOpsCard({
                 .map((item) => {
                 const isLow = (item.minThreshold ?? 0) > 0 && item.quantity <= (item.minThreshold ?? 0);
                 const urgency = (item.minThreshold ?? 0) > 0 && item.quantity <= 0 ? "critical" : isLow ? "warning" : "ok";
-                const urgencyColor = urgency === "critical" ? "#b42318" : urgency === "warning" ? "#e85d04" : "#177245";
+                const urgencyColor = urgency === "critical" ? "#b64c4c" : urgency === "warning" ? "#191970" : "#1d3557";
                 return (
                   <div key={item.id} style={{
                     display: "flex", alignItems: "center", gap: "12px",

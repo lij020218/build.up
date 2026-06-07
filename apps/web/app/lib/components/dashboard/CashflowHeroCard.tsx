@@ -323,11 +323,12 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
               const isToday = idx === 0;
               const isNegative = p.endBalance < 0;
               const heightPct = Math.max(6, (Math.abs(p.endBalance) / maxAbs) * 100);
+              // 잔액 막대: 음수=위험(벽돌), 30%미만=주의(짙은 네이비), 충분=양호(옅은 네이비).
               const color = isNegative
-                ? "#dc2626"
+                ? "#b64c4c"
                 : p.endBalance < currentBalance * 0.3
-                  ? "#d97706"
-                  : "#059669";
+                  ? "rgba(25,25,112,0.80)"
+                  : "rgba(25,25,112,0.45)";
 
               return (
                 <div
@@ -369,20 +370,20 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
           <div style={{ display: "grid", gridTemplateColumns: upcoming.nextInflow && upcoming.nextOutflow ? "1fr 1fr" : "1fr", gap: "8px", marginBottom: isCrisis ? "14px" : "4px" }}>
             {upcoming.nextInflow && (
               <EventRow
-                icon={<ArrowDownRight size={14} strokeWidth={1.8} color="#059669" />}
+                icon={<ArrowDownRight size={14} strokeWidth={1.8} color="#1d3557" />}
                 label={ko ? "다음 입금" : "Next inflow"}
                 detail={`${upcoming.nextInflow.date.slice(5)} · ${upcoming.nextInflow.label[ko ? "ko" : "en"]}`}
                 amount={`+${formatWon(upcoming.nextInflow.amount)}`}
-                amountColor="#059669"
+                amountColor="#1d3557"
               />
             )}
             {upcoming.nextOutflow && (
               <EventRow
-                icon={<ArrowUpRight size={14} strokeWidth={1.8} color="#b91c1c" />}
+                icon={<ArrowUpRight size={14} strokeWidth={1.8} color="#475569" />}
                 label={ko ? "다음 지출" : "Next outflow"}
                 detail={`${upcoming.nextOutflow.date.slice(5)} · ${upcoming.nextOutflow.label[ko ? "ko" : "en"]}`}
                 amount={`−${formatWon(upcoming.nextOutflow.amount)}`}
-                amountColor="#b91c1c"
+                amountColor="#475569"
               />
             )}
           </div>
@@ -403,10 +404,10 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
             marginTop: "10px",
             padding: "8px 12px",
             borderRadius: "10px",
-            background: "rgba(217,119,6,0.06)",
-            border: "1px solid rgba(217,119,6,0.12)",
+            background: "rgba(25,25,112,0.06)",
+            border: "1px solid rgba(25,25,112,0.12)",
             fontSize: "11px",
-            color: "#b45309",
+            color: "#191970",
             display: "flex",
             alignItems: "center",
             gap: "6px",
@@ -425,7 +426,7 @@ export function CashflowHeroCard({ ko, dailyEntries, fallbackMonthlyCostsTotal }
                 padding: "4px 10px",
                 borderRadius: "6px",
                 border: "none",
-                background: "#d97706",
+                background: "#191970",
                 color: "#fff",
                 fontSize: "11px",
                 fontWeight: 650,
@@ -473,7 +474,7 @@ function MetricTile({
   trend?: number;
   ko: boolean;
 }) {
-  const color = tone === "negative" ? "#b91c1c" : tone === "positive" ? "#0f172a" : "#0f172a";
+  const color = tone === "negative" ? "#b64c4c" : "#0f172a";
   return (
     <div style={{
       padding: "12px",
@@ -488,7 +489,7 @@ function MetricTile({
         {value}
       </div>
       {typeof trend === "number" && trend !== 0 && (
-        <div style={{ fontSize: "10px", fontWeight: 650, color: trend > 0 ? "#059669" : "#b91c1c", marginTop: "2px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 650, color: trend > 0 ? "#1d3557" : "#b64c4c", marginTop: "2px" }}>
           {trend > 0 ? "▲" : "▼"} {formatWon(Math.abs(trend))}
         </div>
       )}
@@ -540,24 +541,25 @@ function formatWon(n: number): string {
 
 // ─── Styles ───
 
+// 톤: safe/warning 은 네이비 농담(옅음→짙음), crisis 만 벽돌 danger. 라벨·아이콘 동반.
 const toneColors = {
   safe: {
-    bg: "linear-gradient(180deg, rgba(255,255,255,0.988), rgba(243,250,246,0.92))",
-    border: "rgba(5,150,105,0.1)",
-    iconBg: "rgba(5,150,105,0.08)",
-    primary: "#059669",
+    bg: "linear-gradient(180deg, rgba(255,255,255,0.988), rgba(246,247,251,0.92))",
+    border: "rgba(25,25,112,0.10)",
+    iconBg: "rgba(25,25,112,0.06)",
+    primary: "#1d3557",
   },
   warning: {
-    bg: "linear-gradient(180deg, rgba(255,252,246,0.988), rgba(254,245,232,0.92))",
-    border: "rgba(217,119,6,0.15)",
-    iconBg: "rgba(217,119,6,0.08)",
-    primary: "#b45309",
+    bg: "linear-gradient(180deg, rgba(255,255,255,0.988), rgba(244,245,250,0.92))",
+    border: "rgba(25,25,112,0.16)",
+    iconBg: "rgba(25,25,112,0.10)",
+    primary: "#191970",
   },
   crisis: {
-    bg: "linear-gradient(180deg, rgba(255,250,250,0.988), rgba(254,242,242,0.92))",
-    border: "rgba(220,38,38,0.15)",
-    iconBg: "rgba(220,38,38,0.08)",
-    primary: "#b91c1c",
+    bg: "linear-gradient(180deg, rgba(255,250,250,0.988), rgba(252,244,244,0.92))",
+    border: "rgba(182,76,76,0.18)",
+    iconBg: "rgba(182,76,76,0.08)",
+    primary: "#b64c4c",
   },
 } as const;
 

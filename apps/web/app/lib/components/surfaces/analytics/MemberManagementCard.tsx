@@ -46,7 +46,7 @@ export function MemberManagementCard() {
       ? (ko ? ["\uc2dc\uac04\uad8c", "\uc6d4\uc815\uc561", "\uc8fc\uac04\uad8c", "\ub2e8\uae30"] : ["Hourly", "Monthly", "Weekly", "Short-term"])
       : (ko ? ["\uc6d4 \uc218\uac15", "\ubd84\uae30 \uc218\uac15", "\ub2e8\uacfc", "\ud2b9\uac15"] : ["Monthly", "Quarterly", "Single", "Special"]);
 
-  const statusColor = (s: string) => s === "expired" ? "#ff3b30" : s === "expiring" ? "#ff9f0a" : "#34c759";
+  const statusColor = (s: string) => s === "expired" ? "#b64c4c" : s === "expiring" ? "#191970" : "#1d3557";
   const statusLabel = (s: string) => s === "expired" ? (ko ? "\ub9cc\ub8cc" : "Expired") : s === "expiring" ? (ko ? "\ub9cc\ub8cc\uc784\ubc15" : "Expiring") : (ko ? "\uc815\uc0c1" : "Active");
 
   return (
@@ -78,8 +78,8 @@ export function MemberManagementCard() {
 
       {/* \ub9cc\ub8cc \uc784\ubc15 \uacbd\ubcf4 */}
       {expiringCount > 0 && (
-        <div style={{ padding: "10px 22px", background: "rgba(255,159,10,0.06)", borderBottom: "0.5px solid rgba(255,159,10,0.12)" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "#ff9f0a" }}>
+        <div style={{ padding: "10px 22px", background: "rgba(25,25,112,0.06)", borderBottom: "0.5px solid rgba(25,25,112,0.12)" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#191970" }}>
             {ko ? `7\uc77c \ub0b4 \ub9cc\ub8cc ${expiringCount}\uba85 \u2014 \uac31\uc2e0 \uc548\ub0b4 \ud544\uc694` : `${expiringCount} member${expiringCount > 1 ? "s" : ""} expiring in 7 days`}
           </div>
         </div>
@@ -90,7 +90,7 @@ export function MemberManagementCard() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
           {[
             { label: ko ? "\uc804\uccb4" : "Total", value: `${members.length}\uba85`, color: "inherit" },
-            { label: ko ? "\ub9cc\ub8cc\uc784\ubc15" : "Expiring", value: `${expiringCount}\uba85`, color: expiringCount > 0 ? "#ff9f0a" : "inherit" },
+            { label: ko ? "\ub9cc\ub8cc\uc784\ubc15" : "Expiring", value: `${expiringCount}\uba85`, color: expiringCount > 0 ? "#191970" : "inherit" },
             { label: ko ? "\uc774\ub2ec \uc218\uc785" : "Revenue", value: fmt(monthlyRevenue * 10000), color: "#007aff" },
           ].map((col, i) => (
             <div key={col.label} style={{ padding: "12px 12px", borderLeft: i > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
@@ -129,7 +129,7 @@ export function MemberManagementCard() {
                   <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
                     {m.plan} \xb7 {fmt(m.fee * 10000)} \xb7 {m.endDate}
                     {m.status !== "expired" && daysLeft >= 0 && (
-                      <span style={{ color: m.status === "expiring" ? "#ff9f0a" : "var(--muted)" }}>
+                      <span style={{ color: m.status === "expiring" ? "#191970" : "var(--muted)" }}>
                         {" "}{ko ? `(D-${daysLeft})` : `(${daysLeft}d left)`}
                       </span>
                     )}
@@ -138,7 +138,7 @@ export function MemberManagementCard() {
                 <button type="button"
                   onClick={() => saveMembers(members.filter(x => x.id !== m.id))}
                   aria-label={ko ? `${m.name} \uc0ad\uc81c` : `Delete ${m.name}`}
-                  style={{ fontSize: "11px", color: "#ff3b30", background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
+                  style={{ fontSize: "11px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
                   {ko ? "\uc0ad\uc81c" : "Del"}
                 </button>
               </div>

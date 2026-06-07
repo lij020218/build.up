@@ -251,8 +251,8 @@ export function CompanySetupStage() {
         {/* 헤더 + 핵심 경고 */}
         <div style={{ borderRadius: "20px", border: "1px solid rgba(25,25,112,0.08)", background: "white", padding: "20px 22px" }}>
           <span style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a" }}>{ko ? "특허·상표 출원 — 공개 전 필수" : "Patent & Trademark Filing — Before Public Disclosure"}</span>
-          <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.18)", marginTop: "10px" }}>
-            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#dc2626", lineHeight: 1.6 }}>
+          <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(182,76,76,0.05)", border: "1px solid rgba(182,76,76,0.18)", marginTop: "10px" }}>
+            <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#b64c4c", lineHeight: 1.6 }}>
               {ko ? "⚠️ 데모·베타·보도자료·SNS 공개 후에는 특허권을 영구히 잃을 수 있습니다 (신규성 상실). 반드시 공개 전에 출원하세요." : "⚠️ Public disclosure permanently forfeits patent rights (novelty lost). File BEFORE any disclosure."}
             </div>
           </div>
@@ -420,8 +420,8 @@ export function CompanySetupStage() {
           ))}
 
           {/* 특허 우선심사 + 스타트업 감면 */}
-          <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "12px", background: "rgba(5,150,105,0.05)", border: "1px solid rgba(5,150,105,0.2)" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#059669", marginBottom: "6px" }}>
+          <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "12px", background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.2)" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#1d3557", marginBottom: "6px" }}>
               {ko ? "💰 스타트업 특혜 — 등록료 70% 감면 (~2026.2.28)" : "💰 Startup perk — 70% fee reduction"}
             </div>
             <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>

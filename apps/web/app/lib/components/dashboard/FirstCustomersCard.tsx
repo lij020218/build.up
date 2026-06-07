@@ -142,7 +142,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
           <div style={{
             height: "100%",
             width: `${customerProgress * 100}%`,
-            background: customerProgress >= 1 ? "linear-gradient(90deg, #059669, #10b981)" : "linear-gradient(90deg, #191970, #457b9d)",
+            background: customerProgress >= 1 ? "linear-gradient(90deg, #1d3557, #1d3557)" : "linear-gradient(90deg, #191970, #457b9d)",
             transition: "width 0.4s ease",
           }} />
         </div>
@@ -244,8 +244,8 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                           gap: "10px",
                           padding: "10px 12px",
                           borderRadius: "10px",
-                          background: done ? "rgba(5,150,105,0.04)" : "rgba(255,255,255,0.6)",
-                          border: `1px solid ${done ? "rgba(5,150,105,0.1)" : "rgba(25,25,112,0.04)"}`,
+                          background: done ? "rgba(25,25,112,0.04)" : "rgba(255,255,255,0.6)",
+                          border: `1px solid ${done ? "rgba(25,25,112,0.1)" : "rgba(25,25,112,0.04)"}`,
                           cursor: "pointer",
                           transition: "all 0.15s",
                         }}
@@ -254,7 +254,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                           type="checkbox"
                           checked={done}
                           onChange={() => togglePlaybookTactic(tac.id)}
-                          style={{ marginTop: "2px", cursor: "pointer", accentColor: "#059669" }}
+                          style={{ marginTop: "2px", cursor: "pointer", accentColor: "#1d3557" }}
                         />
                         <div style={{ flex: 1 }}>
                           <div style={{
@@ -388,8 +388,8 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                       <code style={{
                         fontSize: "13px",
                         fontWeight: 700,
-                        color: code.kind === "invite" ? "#059669" : "#191970",
-                        background: code.kind === "invite" ? "rgba(5,150,105,0.08)" : "rgba(25,25,112,0.08)",
+                        color: code.kind === "invite" ? "#1d3557" : "#191970",
+                        background: code.kind === "invite" ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.08)",
                         padding: "3px 8px",
                         borderRadius: "6px",
                         letterSpacing: "0.04em",
@@ -399,7 +399,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                       <span style={{
                         fontSize: "10px",
                         fontWeight: 700,
-                        color: code.kind === "invite" ? "#059669" : "#191970",
+                        color: code.kind === "invite" ? "#1d3557" : "#191970",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                       }}>
@@ -430,7 +430,7 @@ export function FirstCustomersCard({ ko, industryCategoryId, businessLaunched, b
                         type="button"
                         onClick={() => removePromoCode(code.id)}
                         title={ko ? "삭제" : "Delete"}
-                        style={{ ...miniBtn, color: "#dc2626" }}
+                        style={{ ...miniBtn, color: "#b64c4c" }}
                       >
                         ✕
                       </button>

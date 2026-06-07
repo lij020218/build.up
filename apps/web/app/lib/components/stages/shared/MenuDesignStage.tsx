@@ -235,14 +235,14 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
                   const ratio = it.price > 0 ? (it.cost / it.price) * 100 : 0;
                   const ratioWarn = ratio > 35;
                   return (
-                    <div key={it.id} style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${ratioWarn ? "rgba(220,38,38,0.20)" : MIDNIGHT_BORDER}`, background: ratioWarn ? "rgba(220,38,38,0.03)" : "rgba(25,25,112,0.02)" }}>
+                    <div key={it.id} style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${ratioWarn ? "rgba(182,76,76,0.20)" : MIDNIGHT_BORDER}`, background: ratioWarn ? "rgba(182,76,76,0.03)" : "rgba(25,25,112,0.02)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{it.name}</div>
                           <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.55)", marginTop: "2px" }}>
                             {it.category && <>{it.category} · </>}
                             ₩{it.price.toLocaleString()} {ko ? "판매" : "sell"} · ₩{it.cost.toLocaleString()} {ko ? "원가" : "cost"} · {ratio.toFixed(0)}%
-                            {ratioWarn && <span style={{ color: "#dc2626", fontWeight: 700 }}> ⚠ {ko ? "원가율 높음" : "high cost"}</span>}
+                            {ratioWarn && <span style={{ color: "#b64c4c", fontWeight: 700 }}> ⚠ {ko ? "원가율 높음" : "high cost"}</span>}
                           </div>
                           {it.notes && (
                             <div style={{ fontSize: "11px", color: "rgba(15,23,42,0.45)", marginTop: "2px" }}>{it.notes}</div>
@@ -251,7 +251,7 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
                         <button
                           type="button"
                           onClick={() => persistLineup(items.filter((x) => x.id !== it.id))}
-                          style={{ padding: "6px", background: "transparent", border: "none", color: "rgba(220,38,38,0.7)", cursor: "pointer" }}
+                          style={{ padding: "6px", background: "transparent", border: "none", color: "rgba(182,76,76,0.7)", cursor: "pointer" }}
                           aria-label="delete"
                         >
                           <Trash2 size={14} />
@@ -286,8 +286,8 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
               <div style={{
                 padding: "14px 16px",
                 borderRadius: "12px",
-                background: avgPrimeCostPct > 35 ? "rgba(220,38,38,0.06)" : avgPrimeCostPct > 30 ? "rgba(245,158,11,0.06)" : "rgba(5,150,105,0.06)",
-                border: `1.5px solid ${avgPrimeCostPct > 35 ? "rgba(220,38,38,0.20)" : avgPrimeCostPct > 30 ? "rgba(245,158,11,0.20)" : "rgba(5,150,105,0.20)"}`,
+                background: avgPrimeCostPct > 35 ? "rgba(182,76,76,0.06)" : avgPrimeCostPct > 30 ? "rgba(25,25,112,0.06)" : "rgba(25,25,112,0.06)",
+                border: `1.5px solid ${avgPrimeCostPct > 35 ? "rgba(182,76,76,0.20)" : avgPrimeCostPct > 30 ? "rgba(25,25,112,0.20)" : "rgba(25,25,112,0.20)"}`,
                 marginBottom: "12px",
               }}>
                 <div style={{ fontSize: "10px", fontWeight: 700, color: MIDNIGHT, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "4px" }}>
@@ -308,12 +308,12 @@ function FoodMenuPanel({ cluster, ko }: { cluster: "food" | "cafe"; ko: boolean 
               {/* 메뉴별 원가율 위험 항목 */}
               {items.filter((i) => i.price > 0 && (i.cost / i.price) > 0.33).length > 0 && (
                 <div>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#b64c4c", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>
                     {ko ? "원가율 33% 초과 메뉴" : "Items above 33%"}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {items.filter((i) => i.price > 0 && (i.cost / i.price) > 0.33).map((it) => (
-                      <div key={it.id} style={{ padding: "9px 12px", borderRadius: "10px", background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.16)" }}>
+                      <div key={it.id} style={{ padding: "9px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.04)", border: "1px solid rgba(182,76,76,0.16)" }}>
                         <div style={{ fontSize: "12.5px", fontWeight: 640, color: "#7f1d1d" }}>
                           {it.name} — {((it.cost / it.price) * 100).toFixed(0)}%
                         </div>

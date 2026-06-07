@@ -444,7 +444,7 @@ export function MarketingSurface() {
         <div style={{ ...kpiCard, borderColor: "rgba(52,199,89,0.1)" }}>
           <div style={kpiLabel}>ROAS</div>
           {blendedRoas > 0 ? (
-            <div style={{ ...kpiValue, color: blendedRoas >= 1 ? "#34c759" : "#dc2626" }}>
+            <div style={{ ...kpiValue, color: blendedRoas >= 1 ? "#1d3557" : "#b64c4c" }}>
               {blendedRoas.toFixed(1)}x
             </div>
           ) : (
@@ -472,7 +472,7 @@ export function MarketingSurface() {
       <article style={solidCard}>
         <div style={{ marginBottom: coachActions.length > 0 ? "14px" : "6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#34c759", marginBottom: "2px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#1d3557", marginBottom: "2px" }}>
               {ko ? "내 가게 맞춤 코칭" : "Your Store Coaching"}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
@@ -482,7 +482,7 @@ export function MarketingSurface() {
                   : "Actions for your store right now"}
               </div>
               {coachLoading && (
-                <span style={{ fontSize: "11px", fontWeight: 600, color: "#34c759", padding: "3px 9px", borderRadius: "8px", background: "rgba(52,199,89,0.08)" }}>
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#1d3557", padding: "3px 9px", borderRadius: "8px", background: "rgba(52,199,89,0.08)" }}>
                   {ko ? "분석 중" : "Analyzing"}
                 </span>
               )}
@@ -527,10 +527,10 @@ export function MarketingSurface() {
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {coachActions.map((action, ai) => {
               const priorityMeta = action.priority === "now"
-                ? { label: ko ? "지금" : "Now", color: "#ff3b30" }
+                ? { label: ko ? "지금" : "Now", color: "#b64c4c" }
                 : action.priority === "this-week"
-                ? { label: ko ? "이번 주" : "This week", color: "#ff9f0a" }
-                : { label: ko ? "이번 달" : "This month", color: "#34c759" };
+                ? { label: ko ? "이번 주" : "This week", color: "#191970" }
+                : { label: ko ? "이번 달" : "This month", color: "#1d3557" };
               return (
                 <div key={ai} style={{
                   padding: "16px",
@@ -550,7 +550,7 @@ export function MarketingSurface() {
                     </span>
                   </div>
                   <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.55, marginBottom: "10px" }}>
-                    <span style={{ fontWeight: 680, color: "#34c759", marginRight: "4px" }}>
+                    <span style={{ fontWeight: 680, color: "#1d3557", marginRight: "4px" }}>
                       {ko ? "왜" : "Why"}
                     </span>
                     {action.why}
@@ -577,7 +577,7 @@ export function MarketingSurface() {
 
                   {action.expectedImpact && (
                     <div style={{ fontSize: "12px", color: "var(--text)", lineHeight: 1.5, marginBottom: Array.isArray(action.tools) && action.tools.length > 0 ? "10px" : 0 }}>
-                      <span style={{ fontWeight: 680, color: "#34c759", marginRight: "4px" }}>
+                      <span style={{ fontWeight: 680, color: "#1d3557", marginRight: "4px" }}>
                         {ko ? "기대 효과" : "Impact"}
                       </span>
                       {action.expectedImpact}
@@ -587,7 +587,7 @@ export function MarketingSurface() {
                   {Array.isArray(action.tools) && action.tools.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                       {action.tools.map((tool, ti) => {
-                        const tierColor = tool.tier === "free" ? "#34c759" : tool.tier === "paid" ? "#007aff" : "#ff9f0a";
+                        const tierColor = tool.tier === "free" ? "#1d3557" : tool.tier === "paid" ? "#007aff" : "#191970";
                         const tierLabel = tool.tier === "free" ? (ko ? "무료" : "Free") : tool.tier === "paid" ? (ko ? "유료" : "Paid") : (ko ? "부분 무료" : "Freemium");
                         const chip = (
                           <span style={{
@@ -634,8 +634,8 @@ export function MarketingSurface() {
         ) : (
           <div style={{
             padding: "20px", borderRadius: "14px",
-            background: coachError ? "rgba(255,59,48,0.04)" : "rgba(17,17,17,0.02)",
-            border: coachError ? "1px solid rgba(255,59,48,0.16)" : "1px solid rgba(17,17,17,0.04)",
+            background: coachError ? "rgba(182,76,76,0.04)" : "rgba(17,17,17,0.02)",
+            border: coachError ? "1px solid rgba(182,76,76,0.16)" : "1px solid rgba(17,17,17,0.04)",
             textAlign: "center" as const, color: coachError ? "#9F1A2D" : "var(--muted)",
             fontSize: "12.5px", lineHeight: 1.5,
           }}>
@@ -718,22 +718,22 @@ export function MarketingSurface() {
               </span>
             )}
             {trendMeta.usedDataLab && (
-              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#34c759" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#1d3557" }}>
                 {ko ? "네이버 DataLab" : "Naver DataLab"}
               </span>
             )}
             {trendMeta.usedNaverBlog && (
-              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#34c759" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#1d3557" }}>
                 {ko ? "네이버 블로그" : "Naver Blog"}
               </span>
             )}
             {trendMeta.usedTavily && (
-              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#34c759" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#1d3557" }}>
                 {ko ? "웹 검색 요약" : "Web summary"}
               </span>
             )}
             {(trendMeta.webSearches ?? 0) > 0 && (
-              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#34c759" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "6px", background: "rgba(52,199,89,0.08)", color: "#1d3557" }}>
                 {ko ? `Claude 웹검색 ${trendMeta.webSearches}회` : `${trendMeta.webSearches} searches`}
               </span>
             )}
@@ -896,8 +896,8 @@ export function MarketingSurface() {
           <div style={{
             padding: "20px",
             borderRadius: "14px",
-            background: trendError ? "rgba(255,59,48,0.04)" : "rgba(15,23,42,0.02)",
-            border: trendError ? "1px solid rgba(255,59,48,0.16)" : "1px solid rgba(15,23,42,0.04)",
+            background: trendError ? "rgba(182,76,76,0.04)" : "rgba(15,23,42,0.02)",
+            border: trendError ? "1px solid rgba(182,76,76,0.16)" : "1px solid rgba(15,23,42,0.04)",
             textAlign: "center" as const,
             color: trendError ? "#9F1A2D" : "rgba(15,23,42,0.5)",
             fontSize: "12.5px",
@@ -1009,12 +1009,12 @@ export function MarketingSurface() {
                 background: "rgba(52,199,89,0.04)", border: "1px solid rgba(52,199,89,0.1)",
                 display: "flex", flexDirection: "column", gap: "8px",
               }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#34c759" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#1d3557" }}>
                   {ko ? "왜 이렇게 해야 하나 — 브랜드 사례·효과" : "Why It Works — Brand Case & Impact"}
                 </div>
                 {focused.strategyExample && (
                   <div style={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.55 }}>
-                    <span style={{ fontWeight: 680, color: "#34c759", marginRight: "4px" }}>
+                    <span style={{ fontWeight: 680, color: "#1d3557", marginRight: "4px" }}>
                       {ko ? "사례" : "Case"}
                     </span>
                     {focused.strategyExample}
@@ -1022,7 +1022,7 @@ export function MarketingSurface() {
                 )}
                 {focused.effectiveness && (
                   <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.55 }}>
-                    <span style={{ fontWeight: 680, color: "#34c759", marginRight: "4px" }}>
+                    <span style={{ fontWeight: 680, color: "#1d3557", marginRight: "4px" }}>
                       {ko ? "기대 효과" : "Impact"}
                     </span>
                     {focused.effectiveness}
@@ -1043,7 +1043,7 @@ export function MarketingSurface() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {focused.tools!.map((tool, ti) => {
-                    const tierColor = tool.tier === "free" ? "#34c759" : "#007aff";
+                    const tierColor = tool.tier === "free" ? "#1d3557" : "#007aff";
                     const tierLabel = tool.tier === "free" ? (ko ? "무료" : "Free") : tool.tier === "paid" ? (ko ? "유료" : "Paid") : (ko ? "부분 무료" : "Freemium");
                     const inner = (
                       <div style={{
@@ -1117,7 +1117,7 @@ export function MarketingSurface() {
               <span key={ch} style={{
                 fontSize: "11px", fontWeight: 620, padding: "4px 10px", borderRadius: "8px",
                 background: active ? "rgba(52,199,89,0.08)" : "rgba(15,23,42,0.03)",
-                color: active ? "#34c759" : "rgba(15,23,42,0.4)",
+                color: active ? "#1d3557" : "rgba(15,23,42,0.4)",
                 border: active ? "1px solid rgba(52,199,89,0.15)" : "1px solid rgba(15,23,42,0.04)",
                 display: "inline-flex", alignItems: "center", gap: "4px",
               }}>
@@ -1218,10 +1218,10 @@ export function MarketingSurface() {
 
 // ─── 공통 스타일 (앱 전역 토큰 기반 · Apple HIG) ───
 // 기준: styles.card(radius 28px), AnalyticsSurface(KPI radius 18px)
-// 액센트: iOS 시스템 색 (블루 #007aff, 그린 #34c759, 오렌지 #ff9f0a, 레드 #ff3b30)
+// 액센트: iOS 시스템 색 (블루 #007aff, 그린 #1d3557, 오렌지 #191970, 레드 #b64c4c)
 
 const COLOR_ACCENT = "#007aff";           // Apple 포커스·코칭 강조
-const COLOR_SUCCESS = "#34c759";          // iOS green — 성공 사례·효과
+const COLOR_SUCCESS = "#1d3557";          // iOS green — 성공 사례·효과
 const COLOR_NEUTRAL_TEXT = "var(--text)"; // #111
 const COLOR_NEUTRAL_MUTED = "var(--muted)"; // #5b616e
 

@@ -163,7 +163,7 @@ export function BusinessDocumentsLibraryCard({ ko }: Props) {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             padding: "5px 11px", borderRadius: 999,
-            background: "rgba(5,150,105,0.08)", color: "#059669",
+            background: "rgba(25,25,112,0.08)", color: "#1d3557",
             fontSize: 12, fontWeight: 700,
           }}>
             {ko ? `${stats.total}건 보관` : `${stats.total} stored`}
@@ -172,7 +172,7 @@ export function BusinessDocumentsLibraryCard({ ko }: Props) {
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               padding: "5px 11px", borderRadius: 999,
-              background: "rgba(217,119,6,0.08)", color: "#d97706",
+              background: "rgba(25,25,112,0.08)", color: "#191970",
               fontSize: 12, fontWeight: 700,
             }}>
               <Calendar size={11} strokeWidth={2} />
@@ -183,7 +183,7 @@ export function BusinessDocumentsLibraryCard({ ko }: Props) {
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               padding: "5px 11px", borderRadius: 999,
-              background: "rgba(220,38,38,0.08)", color: "#dc2626",
+              background: "rgba(182,76,76,0.08)", color: "#b64c4c",
               fontSize: 12, fontWeight: 700,
             }}>
               <AlertTriangle size={11} strokeWidth={2} />

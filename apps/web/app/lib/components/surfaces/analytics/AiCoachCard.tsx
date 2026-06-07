@@ -121,8 +121,8 @@ export function AiCoachCard() {
         <div style={{ padding: "12px 22px 20px" }}>
           <div style={{
             padding: "20px", borderRadius: "16px",
-            background: "rgba(245,158,11,0.04)",
-            border: "1px solid rgba(245,158,11,0.1)",
+            background: "rgba(25,25,112,0.04)",
+            border: "1px solid rgba(25,25,112,0.1)",
             textAlign: "center" as const,
           }}>
             <div style={{ fontSize: "14px", fontWeight: 640, color: "#0f172a", marginBottom: "6px" }}>
@@ -173,7 +173,7 @@ export function AiCoachCard() {
 
             const pct = Math.min(Math.round((userMonthlyMan / benchTop) * 100), 100);
             const avgPct = Math.min(Math.round((benchAvg / benchTop) * 100), 100);
-            const barColor = userMonthlyMan >= benchAvg ? "#34c759" : userMonthlyMan >= benchAvg * 0.7 ? "#ff9f0a" : "#ff3b30";
+            const barColor = userMonthlyMan >= benchAvg ? "#1d3557" : userMonthlyMan >= benchAvg * 0.7 ? "#191970" : "#b64c4c";
 
             return (
               <div style={{ padding: "0 22px 14px" }}>
@@ -319,16 +319,16 @@ export function AiCoachCard() {
           {/* \uc704\uae30 \ud574\uacb0 \ubc29\ubc95 (\uc788\uc744 \ub54c\ub9cc) */}
           {aiActions.crisisActions.length > 0 && (
             <div style={{ borderTop: "0.5px solid rgba(0,0,0,0.06)", padding: "14px 22px 16px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#ff3b30", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "10px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "#b64c4c", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "10px" }}>
                 {ko ? "\uc704\uae30 \ub300\uc751 \ubc29\ubc95" : "Crisis Response"}
               </div>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
                 {aiActions.crisisActions.map((action, i) => {
-                  const diffColor = action.difficulty === "easy" ? "#34c759" : action.difficulty === "hard" ? "#ff9f0a" : "#007aff";
+                  const diffColor = action.difficulty === "easy" ? "#1d3557" : action.difficulty === "hard" ? "#191970" : "#007aff";
                   const diffLabel = action.difficulty === "easy" ? (ko ? "\uc26c\uc6c0" : "Easy") : action.difficulty === "hard" ? (ko ? "\uc5b4\ub824\uc6c0" : "Hard") : (ko ? "\ubcf4\ud1b5" : "Medium");
                   const feature = action.feature ? FEATURES_BY_ID[action.feature] : undefined;
                   return (
-                    <div key={i} style={{ display: "flex", flexDirection: "column" as const, gap: "10px", padding: "12px 14px", borderRadius: "14px", background: "rgba(255,59,48,0.03)", border: "0.5px solid rgba(255,59,48,0.08)" }}>
+                    <div key={i} style={{ display: "flex", flexDirection: "column" as const, gap: "10px", padding: "12px 14px", borderRadius: "14px", background: "rgba(182,76,76,0.03)", border: "0.5px solid rgba(182,76,76,0.08)" }}>
                       <div style={{ display: "flex", gap: "12px" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{action.title}</div>

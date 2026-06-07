@@ -963,11 +963,11 @@ const KEYFRAMES = `
   padding: 4px 10px; border-radius: 999px;
 }
 .cfs-sum-ok {
-  background: rgba(34, 197, 94, 0.1); color: #15803d;
+  background: rgba(34, 197, 94, 0.1); color: #1d3557;
   border: 0.5px solid rgba(34, 197, 94, 0.25);
 }
 .cfs-sum-bad {
-  background: rgba(220, 38, 38, 0.08); color: #b91c1c;
+  background: rgba(220, 38, 38, 0.08); color: #b64c4c;
   border: 0.5px solid rgba(220, 38, 38, 0.22);
 }
 
@@ -1036,7 +1036,7 @@ const KEYFRAMES = `
 }
 .cfs-channel-fee-pill {
   background: rgba(220, 38, 38, 0.06);
-  color: #b91c1c;
+  color: #b64c4c;
 }
 .cfs-info-btn {
   width: 16px; height: 16px; border-radius: 50%;
@@ -1092,7 +1092,7 @@ const KEYFRAMES = `
   margin-top: 10px; padding: 10px 12px; border-radius: 10px;
   background: rgba(220, 38, 38, 0.05);
   border: 0.5px solid rgba(220, 38, 38, 0.18);
-  font-size: 11.5px; color: #b91c1c; font-weight: 600;
+  font-size: 11.5px; color: #b64c4c; font-weight: 600;
 }
 
 /* ===== Total pill ===== */
@@ -1124,7 +1124,7 @@ const KEYFRAMES = `
   margin-top: 1px; font-weight: 500;
 }
 .cfs-expense-amount {
-  font-size: 13.5px; font-weight: 700; color: #b91c1c;
+  font-size: 13.5px; font-weight: 700; color: #b64c4c;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
@@ -1132,7 +1132,7 @@ const KEYFRAMES = `
   width: 28px; height: 28px; border-radius: 8px;
   background: rgba(220, 38, 38, 0.06); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: #b91c1c;
+  color: #b64c4c;
   transition: background .15s;
   flex-shrink: 0;
 }
@@ -1196,13 +1196,13 @@ const KEYFRAMES = `
 .cfs-perm-warn {
   background: rgba(220, 38, 38, 0.06);
   border: 0.5px solid rgba(220, 38, 38, 0.22);
-  color: #b91c1c;
+  color: #b64c4c;
 }
 .cfs-perm-warn svg { flex-shrink: 0; }
 .cfs-perm-ok {
   background: rgba(34, 197, 94, 0.07);
   border: 0.5px solid rgba(34, 197, 94, 0.22);
-  color: #15803d;
+  color: #1d3557;
 }
 .cfs-perm-ok svg { flex-shrink: 0; }
 
@@ -1259,7 +1259,7 @@ const KEYFRAMES = `
   margin-top: 8px; padding: 12px 14px; border-radius: 12px;
   background: rgba(34, 197, 94, 0.04);
   border: 0.5px solid rgba(34, 197, 94, 0.18);
-  font-size: 11.5px; color: #15803d;
+  font-size: 11.5px; color: #1d3557;
   line-height: 1.55; font-weight: 500;
   letter-spacing: -0.005em;
 }
@@ -1338,7 +1338,7 @@ const KEYFRAMES = `
 }
 .cfs-bank-stale-pill {
   padding: 1px 7px; border-radius: 999px;
-  background: rgba(255,159,10,0.14); color: #b45309;
+  background: rgba(25,25,112,0.14); color: #191970;
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.02em;
 }
 .cfs-bank-refresh {

@@ -69,9 +69,9 @@ function Sparkline({
 function RunwayGauge({ runwayMonths }: { runwayMonths: number }) {
   const pct = Math.min(100, (runwayMonths / 12) * 100);
   const color =
-    runwayMonths <= 3 ? "#ff3b30"
-    : runwayMonths <= 6 ? "#ff9f0a"
-    : "#34c759";
+    runwayMonths <= 3 ? "#b64c4c"
+    : runwayMonths <= 6 ? "#191970"
+    : "#1d3557";
   return (
     <div style={{ marginTop: 10, position: "relative" as const }}>
       <AnimatedProgressBar
@@ -220,20 +220,20 @@ export function SurvivalBoardCard({
         {/* 2. 손익 — 보조 메트릭 */}
         <div style={survivalMetricCard}>
           <div style={survivalMetricLabel}>{ko ? "MTD 손익" : "MTD P&L"}</div>
-          <div style={{ ...survivalMetricValueSecondary, color: totalSales === 0 && totalCosts === 0 ? "rgba(15,23,42,0.25)" : netProfit >= 0 ? "#0e7c3a" : "#dc2626" }}>
+          <div style={{ ...survivalMetricValueSecondary, color: totalSales === 0 && totalCosts === 0 ? "rgba(15,23,42,0.25)" : netProfit >= 0 ? "#1d3557" : "#b64c4c" }}>
             {totalSales === 0 && totalCosts === 0
               ? "—"
               : <>{netProfit >= 0 ? "+" : ""}<CountUp to={netProfit} duration={1.0} format={fmt} /></>}
           </div>
           <div style={survivalMetricNote}>{totalCosts > 0 ? (ko ? `비용 ${fmt(totalCosts)}` : `Costs ${fmt(totalCosts)}`) : (ko ? "비용 미입력" : "No costs")}</div>
           {hasSalesSeries && totalCosts > 0 && (
-            <Sparkline values={profitSeries} color={netProfit >= 0 ? "#34c759" : "#ff3b30"} fill />
+            <Sparkline values={profitSeries} color={netProfit >= 0 ? "#1d3557" : "#b64c4c"} fill />
           )}
         </div>
         {/* 3. 런웨이 — 보조 메트릭 (hero는 MorningBriefing 노스스타) */}
         <div style={survivalMetricCard}>
           <div style={survivalMetricLabel}>{ko ? "런웨이" : "Runway"}</div>
-          <div style={{ ...survivalMetricValueSecondary, color: runwayMonths >= 0 && runwayMonths <= 3 ? "#dc2626" : runwayMonths <= 6 ? "#d97706" : "#0f172a" }}>
+          <div style={{ ...survivalMetricValueSecondary, color: runwayMonths >= 0 && runwayMonths <= 3 ? "#b64c4c" : runwayMonths <= 6 ? "#191970" : "#0f172a" }}>
             {runwayMonths < 0
               ? (ko ? "흑자" : "Surplus")
               : <><CountUp to={runwayMonths} duration={0.9} format={(n) => Math.round(n).toString()} />{ko ? "개월" : "mo"}</>}
@@ -246,12 +246,12 @@ export function SurvivalBoardCard({
         {/* 4. 주간 성장 */}
         <div style={survivalMetricCard}>
           <div style={survivalMetricLabel}>{ko ? "주간 성장" : "Weekly"}</div>
-          <div style={{ ...survivalMetricValue, color: weeklySalesChange >= 0 ? "#0e7c3a" : "#dc2626" }}>
+          <div style={{ ...survivalMetricValue, color: weeklySalesChange >= 0 ? "#1d3557" : "#b64c4c" }}>
             {weeklySignalLabel}
           </div>
           <div style={survivalMetricNote}>{ko ? "7일 vs 직전 7일" : "7d vs prev 7d"}</div>
           {hasSalesSeries && (
-            <Sparkline values={last14.slice(-7)} color={weeklySalesChange >= 0 ? "#34c759" : "#ff3b30"} fill />
+            <Sparkline values={last14.slice(-7)} color={weeklySalesChange >= 0 ? "#1d3557" : "#b64c4c"} fill />
           )}
         </div>
       </div>
