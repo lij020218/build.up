@@ -205,8 +205,8 @@ public struct MyStoreView: View {
 
     private func ddayTint(_ urgency: StoreInfoFormatters.ExpiryUrgency) -> Color {
         switch urgency {
-        case .overdue: return .red.opacity(0.85)
-        case .urgent:  return .orange
+        case .overdue: return BUColor.danger.opacity(0.85)
+        case .urgent:  return BUColor.warn
         case .soon:    return BUColor.midnight.opacity(0.7)
         case .later:   return BUColor.inkMuted
         case .none:    return BUColor.inkMuted

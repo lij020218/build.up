@@ -240,7 +240,7 @@ public struct HeroAtAGlance: View {
             }
         case .failed:
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(.red.opacity(0.65), lineWidth: 1.5)
+                .strokeBorder(BUColor.danger.opacity(0.65), lineWidth: 1.5)
         case .idle:
             EmptyView()
         }
@@ -519,7 +519,7 @@ public struct HeroAtAGlance: View {
                     .foregroundStyle(BUColor.inkMuted)
                 if m.hasAlert {
                     Circle()
-                        .fill(.orange)
+                        .fill(BUColor.warn)
                         .frame(width: 5, height: 5)
                         .accessibilityLabel("주의 필요")
                 }
@@ -544,7 +544,7 @@ public struct HeroAtAGlance: View {
     private var dDayPill: some View {
         let summary = DDayCalculator.summary(from: s)
         let hasOverdue = dDayItems.contains { $0.daysRemaining < 0 }
-        let tint: Color = hasOverdue ? .red.opacity(0.85) : .orange
+        let tint: Color = hasOverdue ? BUColor.danger.opacity(0.85) : BUColor.warn
 
         return Button {
             showDDayList = true
@@ -599,7 +599,7 @@ private struct DDayListSheet: View {
                             // Overdue 섹션
                             let overdue = items.filter { $0.daysRemaining < 0 }
                             if !overdue.isEmpty {
-                                groupHeader("이미 만료", tint: .red.opacity(0.85))
+                                groupHeader("이미 만료", tint: BUColor.danger.opacity(0.85))
                                 ForEach(overdue) { row($0) }
                                 Spacer(minLength: BUSpacing.md)
                             }
@@ -607,7 +607,7 @@ private struct DDayListSheet: View {
                             // 임박
                             let urgent = items.filter { $0.daysRemaining >= 0 && $0.daysRemaining <= 7 }
                             if !urgent.isEmpty {
-                                groupHeader("7일 이내", tint: .orange)
+                                groupHeader("7일 이내", tint: BUColor.warn)
                                 ForEach(urgent) { row($0) }
                                 Spacer(minLength: BUSpacing.md)
                             }
@@ -715,8 +715,8 @@ private struct DDayListSheet: View {
 
     private func tint(for u: StoreInfoFormatters.ExpiryUrgency) -> Color {
         switch u {
-        case .overdue: return .red.opacity(0.85)
-        case .urgent:  return .orange
+        case .overdue: return BUColor.danger.opacity(0.85)
+        case .urgent:  return BUColor.warn
         case .soon:    return BUColor.midnight.opacity(0.7)
         case .later:   return BUColor.inkMuted
         case .none:    return BUColor.inkMuted

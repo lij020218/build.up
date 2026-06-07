@@ -671,7 +671,7 @@ public struct ExistingStoreRegistrationView: View {
                             .foregroundStyle(BUColor.inkMuted)
                         Text("\(Int(ingRatio * 100))%")
                             .font(.system(size: 17, weight: .heavy))
-                            .foregroundStyle(ingRatio > 0.4 ? Color.red : ingRatio > 0.35 ? Color.orange : Color.green)
+                            .foregroundStyle(ingRatio > 0.4 ? BUColor.danger : ingRatio > 0.35 ? BUColor.warn : BUColor.success)
                     }
                 }
             }
@@ -1049,7 +1049,7 @@ public struct ExistingStoreRegistrationView: View {
     private func validationText(_ msg: String) -> some View {
         Text(msg)
             .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(.red)
+            .foregroundStyle(BUColor.danger)
     }
 }
 

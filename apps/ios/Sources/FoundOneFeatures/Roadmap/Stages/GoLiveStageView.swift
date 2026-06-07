@@ -141,7 +141,7 @@ public struct GoLiveStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(BUColor.warn)
                             .font(.system(size: 13))
                         Text("앱스토어 심사 소요 시간")
                             .font(BUFont.bodySmall.weight(.bold))
@@ -155,7 +155,7 @@ public struct GoLiveStageView: View {
                     ]
                     ForEach(storeItems, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {
-                            Circle().fill(Color.orange).frame(width: 4, height: 4).padding(.top, 5)
+                            Circle().fill(BUColor.warn).frame(width: 4, height: 4).padding(.top, 5)
                             Text(item)
                                 .font(BUFont.bodyCaption)
                                 .foregroundStyle(BUColor.inkSecondary)

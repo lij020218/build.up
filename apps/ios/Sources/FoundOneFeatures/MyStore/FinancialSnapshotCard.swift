@@ -68,7 +68,7 @@ public struct FinancialSnapshotCard: View {
     private var runwayColor: Color {
         guard let r = runwayMonths else { return BUColor.midnightDeep }
         if r < 6 { return BUColor.danger }
-        if r < 12 { return .orange }
+        if r < 12 { return BUColor.warn }
         return BUColor.success
     }
 

@@ -375,7 +375,7 @@ public struct ContractReviewStageView: View {
                 "계약서 사진·사본 즉시 안전한 곳에 백업 (분실 시 분쟁 증거 불가)",
                 "확정일자 받기 — 관할 동주민센터/세무서 (1,000원). 임대인 파산 시 보증금 우선변제권 확보",
                 "전입신고 (사업장 주소) — 확정일자와 함께 대항력 확보",
-            ], color: .orange)
+            ], color: BUColor.warn)
         }
     }
 

@@ -167,7 +167,7 @@ public struct MpwOrPilotTapeOutStageView: View {
                     ]
                     ForEach(warnings, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 13)).foregroundStyle(Color.red.opacity(0.8))
+                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 13)).foregroundStyle(BUColor.danger.opacity(0.8))
                             Text(item).font(BUFont.bodySmall).foregroundStyle(BUColor.ink).lineSpacing(2)
                         }
                     }

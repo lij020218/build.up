@@ -213,7 +213,7 @@ public struct TaxGuideStageView: View {
                 "신고 기한 1일 늦으면 무신고 가산세 20% + 매일 0.022% 추가",
                 "2026년부터 가공 세금계산서 가산세 3% → 4% 상향",
                 "세금계산서 받을 때 진위 확인 필수 — 허위 발급 4% 부과",
-            ], color: .red)
+            ], color: BUColor.danger)
 
             BUCard(.card) {
                 Toggle(isOn: $vatCalendar) {
@@ -319,7 +319,7 @@ public struct TaxGuideStageView: View {
                 "현금 거래 + 영수증 미수취 = 비용 불인정 → 세금 늘어남",
                 "간이과세자는 세금계산서 발행 불가 — B2B 거래 시 일반과세 전환 검토",
                 "영수증 분실 → 5년 내 세무조사 때 추가 세금 부과",
-            ], color: .orange)
+            ], color: BUColor.warn)
         }
     }
 

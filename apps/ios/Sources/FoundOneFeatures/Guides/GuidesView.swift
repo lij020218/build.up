@@ -39,15 +39,9 @@ private enum CategoryFilter: String, CaseIterable, Identifiable {
         }
     }
 
+    // ⚠️ 신호등/무지개 금지 — 웹 GuidesView 와 동일하게 미드나잇 단색. 카테고리 구분은 라벨로.
     var color: Color {
-        switch self {
-        case .all:         return BUColor.midnight
-        case .government:  return Color(red: 0.149, green: 0.388, blue: 0.922)  // #2563eb
-        case .private:     return Color(red: 0.486, green: 0.227, blue: 0.929)  // #7c3aed
-        case .local:       return Color(red: 0.020, green: 0.588, blue: 0.412)  // #059669
-        case .corporate:   return Color(red: 0.918, green: 0.345, blue: 0.047)  // #ea580c
-        case .competition: return Color(red: 0.859, green: 0.157, blue: 0.467)  // #db2777
-        }
+        BUColor.midnight
     }
 
     static func from(_ apiValue: String) -> CategoryFilter {
@@ -202,7 +196,7 @@ public struct GuidesView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle")
-                    .foregroundStyle(Color(red: 0.706, green: 0.137, blue: 0.094))
+                    .foregroundStyle(BUColor.danger)
                 Text("매칭 불러오기 실패")
                     .font(.system(size: 14, weight: .heavy))
             }
@@ -250,13 +244,13 @@ public struct GuidesView: View {
                     eyebrow: "내 자격",
                     value: "\(state.stats?.eligible ?? 0)개",
                     sub: "조건 충족",
-                    tint: Color(red: 0.020, green: 0.588, blue: 0.412)
+                    tint: BUColor.success
                 )
                 KPIMini(
                     eyebrow: "모집중",
                     value: "\(state.stats?.open ?? 0)개",
                     sub: "신청 가능",
-                    tint: Color(red: 0.918, green: 0.345, blue: 0.047)
+                    tint: BUColor.warn
                 )
                 KPIMini(
                     eyebrow: "예정",
@@ -513,7 +507,7 @@ private struct ProgramCard: View {
                 if program.highlight {
                     Image(systemName: "star.fill")
                         .font(.system(size: 9, weight: .heavy))
-                        .foregroundStyle(Color(red: 0.918, green: 0.345, blue: 0.047))
+                        .foregroundStyle(BUColor.warn)
                 }
                 Spacer(minLength: 0)
                 if program.eligible {
@@ -523,7 +517,7 @@ private struct ProgramCard: View {
                         Text("자격 충족")
                             .font(.system(size: 10, weight: .heavy))
                     }
-                    .foregroundStyle(Color(red: 0.020, green: 0.588, blue: 0.412))
+                    .foregroundStyle(BUColor.success)
                 }
             }
 
@@ -653,9 +647,9 @@ private struct StatusBadge: View {
     private var info: (label: String, color: Color) {
         switch status {
         case "open":
-            return ("모집중", Color(red: 0.020, green: 0.588, blue: 0.412))
+            return ("모집중", BUColor.success)
         case "upcoming":
-            return ("예정", Color(red: 0.918, green: 0.345, blue: 0.047))
+            return ("예정", BUColor.warn)
         default:
             return ("마감", BUColor.inkMuted)
         }
@@ -675,9 +669,9 @@ private struct DDayBadge: View {
     let days: Int
 
     private var color: Color {
-        if days <= 3 { return Color(red: 0.706, green: 0.137, blue: 0.094) }   // urgent red
-        if days <= 7 { return Color(red: 0.918, green: 0.345, blue: 0.047) }   // orange
-        if days <= 14 { return Color(red: 0.918, green: 0.624, blue: 0.047) }  // amber
+        if days <= 3 { return BUColor.danger }   // urgent red
+        if days <= 7 { return BUColor.warn }   // orange
+        if days <= 14 { return BUColor.warn }  // amber
         return BUColor.inkMuted
     }
 

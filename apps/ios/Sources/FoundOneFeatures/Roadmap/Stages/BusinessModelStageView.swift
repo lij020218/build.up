@@ -360,7 +360,7 @@ public struct BusinessModelStageView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 7) {
                 Image(systemName: "info.circle.fill")
-                    .foregroundStyle(Color.orange)
+                    .foregroundStyle(BUColor.warn)
                     .font(.system(size: 13, weight: .bold))
                 Text("하이브리드 운영 — 주의사항")
                     .font(.system(size: 14, weight: .heavy))
@@ -377,20 +377,20 @@ public struct BusinessModelStageView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
-                colors: [Color.orange.opacity(0.07), Color.orange.opacity(0.02)],
+                colors: [BUColor.warn.opacity(0.07), BUColor.warn.opacity(0.02)],
                 startPoint: .topLeading, endPoint: .bottomTrailing
             ),
             in: RoundedRectangle(cornerRadius: 16, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.orange.opacity(0.22), lineWidth: 1)
+                .strokeBorder(BUColor.warn.opacity(0.22), lineWidth: 1)
         )
     }
 
     private func noteRow(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 7) {
-            Circle().fill(Color.orange).frame(width: 4, height: 4).padding(.top, 7)
+            Circle().fill(BUColor.warn).frame(width: 4, height: 4).padding(.top, 7)
             Text(text)
                 .font(.system(size: 12))
                 .foregroundStyle(BUColor.inkSecondary)
@@ -444,14 +444,14 @@ public struct BusinessModelStageView: View {
             HStack(spacing: 6) {
                 Image(systemName: hoursPerDay > 12 ? "exclamationmark.triangle" : "checkmark.circle")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(hoursPerDay > 12 ? Color.orange : BUColor.success)
+                    .foregroundStyle(hoursPerDay > 12 ? BUColor.warn : BUColor.success)
                 Text("하루 \(hoursPerDay)시간 · 주 6일 기준 주 \(hoursPerDay * 6)시간")
                     .font(.system(size: 12))
                     .foregroundStyle(BUColor.inkSecondary)
                 if hoursPerDay > 12 {
                     Text("(주 52시간 검토 필요)")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color.orange)
+                        .foregroundStyle(BUColor.warn)
                 }
             }
         }

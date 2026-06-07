@@ -177,7 +177,7 @@ public struct ConstructionSetupStageView: View {
                 "방염 처리 의무 — 다중이용시설(음식·미용·헬스 등) 벽지·천장재 방염필증 필수 (위반 시 영업정지)",
                 "전기 용량 증설은 한전 신청 필요 — 2~4주 소요, 착공 전 신청",
                 "추가 공사 단가 사전 합의 — 공사 중 '추가' 요청은 분쟁 1순위 원인",
-            ], color: .orange)
+            ], color: BUColor.warn)
         }
     }
 
@@ -248,8 +248,8 @@ public struct ConstructionSetupStageView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
                                 Text("소방필증·보건증 신청 완료").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                Text("14일 대기").font(.system(size: 10, weight: .bold)).foregroundStyle(Color.red)
-                                    .padding(.horizontal, 6).padding(.vertical, 2).background(Color.red.opacity(0.1), in: Capsule())
+                                Text("14일 대기").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.danger)
+                                    .padding(.horizontal, 6).padding(.vertical, 2).background(BUColor.danger.opacity(0.1), in: Capsule())
                             }
                             Text("공사 중 병행 신청 필수 — 소방완비증명서(다중이용시설)·보건증 없이는 영업신고 불가").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
                         }

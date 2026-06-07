@@ -191,10 +191,10 @@ public struct BizRegistrationStageView: View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
             BUCard(.card) {
                 HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.system(size: 13))
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.danger).font(.system(size: 13))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("개인 통장과 사업 통장은 반드시 분리")
-                            .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(.red)
+                            .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.danger)
                         Text("혼용 시 세무조사에서 사업 비용 입증 불가 → 전부 과세 대상. 사업자등록증 발급 직후 즉시 개설하세요.")
                             .font(BUFont.bodyCaption).foregroundStyle(Color(red: 0.7, green: 0.1, blue: 0.1)).lineSpacing(2)
                     }

@@ -465,7 +465,7 @@ public struct OperationsSetupStageView: View {
                 "네이버 플레이스 등록 → 노출까지 최대 7일 → 오픈 2주 전 등록",
                 "인스타 팔로워 0에서 시작 — 광고 없이 성과까지 2~3개월 예상",
                 "리뷰 무시 = 별점 하락 → 방문율 즉각 영향 (응답률 100% 목표)",
-            ], color: .orange)
+            ], color: BUColor.warn)
 
             if cluster.category.isOffline {
                 // 매장 음악 저작권 (웹 musicLicenseOptions 미러) — 50㎡↑ 의무.
@@ -496,8 +496,8 @@ public struct OperationsSetupStageView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 6) {
                                     Text("매장음악 저작권 등록").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
-                                    Text("50㎡+ 의무").font(.system(size: 10, weight: .bold)).foregroundStyle(Color.orange)
-                                        .padding(.horizontal, 6).padding(.vertical, 2).background(Color.orange.opacity(0.1), in: Capsule())
+                                    Text("50㎡+ 의무").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.warn)
+                                        .padding(.horizontal, 6).padding(.vertical, 2).background(BUColor.warn.opacity(0.1), in: Capsule())
                                 }
                                 Text("한국음악저작권협회(KOMCA) 또는 매장음악 서비스 가입 — 영업장 50㎡ 이상 법적 의무").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)
                             }
@@ -590,7 +590,7 @@ public struct OperationsSetupStageView: View {
                         }
                         ForEach(it.cons.prefix(1), id: \.self) { c in
                             HStack(alignment: .top, spacing: 4) {
-                                Text("—").font(.system(size: 10, weight: .bold)).foregroundStyle(.orange)
+                                Text("—").font(.system(size: 10, weight: .bold)).foregroundStyle(BUColor.warn)
                                 Text(c).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
                                     .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
                             }

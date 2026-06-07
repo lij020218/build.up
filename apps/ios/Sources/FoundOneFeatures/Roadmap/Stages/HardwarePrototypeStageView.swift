@@ -183,7 +183,7 @@ public struct HardwarePrototypeStageView: View {
                     ]
                     ForEach(warnings, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 13)).foregroundStyle(Color.orange)
+                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 13)).foregroundStyle(BUColor.warn)
                             Text(item).font(BUFont.bodySmall).foregroundStyle(BUColor.ink).lineSpacing(2)
                         }
                     }

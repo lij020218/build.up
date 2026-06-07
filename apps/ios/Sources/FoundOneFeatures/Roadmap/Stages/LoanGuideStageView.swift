@@ -325,7 +325,7 @@ public struct LoanGuideStageView: View {
                 "카드론·대부업 고금리 → 10% 이상 금리는 사업 수익으로 감당 불가",
                 "과다 차입 → 원리금 > 월 수익의 30% = 존폐 위기",
                 "개인 명의 대출로 사업자금 = 세금·보증 불이익 + 개인 신용 훼손",
-            ], color: .red)
+            ], color: BUColor.danger)
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
@@ -337,7 +337,7 @@ public struct LoanGuideStageView: View {
                     ]
                     ForEach(principles, id: \.0) { title, detail in
                         HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "lightbulb.fill").foregroundStyle(.orange).font(.system(size: 11)).padding(.top, 2)
+                            Image(systemName: "lightbulb.fill").foregroundStyle(BUColor.warn).font(.system(size: 11)).padding(.top, 2)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                                 Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)

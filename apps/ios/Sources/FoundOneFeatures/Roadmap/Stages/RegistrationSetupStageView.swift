@@ -236,7 +236,7 @@ public struct RegistrationSetupStageView: View {
                 title: "운영 인프라의 전제 조건",
                 body: "사업자등록증 없으면 사업용 통장 개설, POS 가맹, 세금계산서 발행, 배달앱 입점이 모두 불가능합니다.")
 
-            whyCard(accent: .red,
+            whyCard(accent: BUColor.danger,
                 title: "순서가 중요 — 순차 진행 필수",
                 body: "① 임대차계약 → ② 사업자등록 → ③ 인허가 신고 → ④ 오픈. 위생교육·보건증은 사업자등록과 병행 가능(시간 절약).")
         }
@@ -338,9 +338,9 @@ public struct RegistrationSetupStageView: View {
             // 핵심 주의 — 카테고리별
             BUCard(.card) {
                 HStack(alignment: .top, spacing: BUSpacing.sm) {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Color.red).font(.system(size: 16))
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.danger).font(.system(size: 16))
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("자주 거절·지연 사유").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(Color.red)
+                        Text("자주 거절·지연 사유").font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.danger)
                         ForEach(permitPitfalls, id: \.self) { p in
                             HStack(alignment: .top, spacing: 6) {
                                 Text("⚠").font(.system(size: 10)).padding(.top, 2)

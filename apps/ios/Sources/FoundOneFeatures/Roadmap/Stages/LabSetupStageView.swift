@@ -165,7 +165,7 @@ public struct LabSetupStageView: View {
                 }
             }
 
-            warningCard(title: "흔한 함정 — 이건 피하세요", items: traps.map { "\($0.0) — \($0.1)" }, color: .red)
+            warningCard(title: "흔한 함정 — 이건 피하세요", items: traps.map { "\($0.0) — \($0.1)" }, color: BUColor.danger)
 
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {

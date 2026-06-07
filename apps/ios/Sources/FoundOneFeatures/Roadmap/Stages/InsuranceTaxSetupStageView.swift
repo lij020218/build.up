@@ -201,7 +201,7 @@ public struct InsuranceTaxSetupStageView: View {
                 "친·인척 직원도 4대보험 신고 의무 (배우자·자녀 포함)",
                 "알바 시급 신고 누락 — 일용직도 산재보험 의무 가입",
                 "퇴사자 자격상실 신고 지연 — 사업주가 보험료 계속 부담",
-            ], color: .red)
+            ], color: BUColor.danger)
 
             // 부담 시뮬레이션 (2026-05-25 정합화: 근로자 4축 모두 표시 + 합계)
             BUCard(.card) {
@@ -346,7 +346,7 @@ public struct InsuranceTaxSetupStageView: View {
                     ]
                     ForEach(tips, id: \.0) { title, detail in
                         HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "lightbulb.fill").foregroundStyle(.orange).font(.system(size: 11))
+                            Image(systemName: "lightbulb.fill").foregroundStyle(BUColor.warn).font(.system(size: 11))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                                 Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
@@ -396,7 +396,7 @@ public struct InsuranceTaxSetupStageView: View {
                 "현금 급여 + 미신고 = 세무조사 (국세청 PCI 자동 추적)",
                 "원천세 납부지연 시 미납세액 3% + 일 0.022% 가산세 — 매월 10일까지",
                 "두루누리 신청 대상인지 확인 — 월보수 270만 미만 근로자",
-            ], color: .red)
+            ], color: BUColor.danger)
         }
     }
 

@@ -340,7 +340,7 @@ public struct PreLaunchFinalStageView: View {
                 "인허가·영업신고필증 — 게시 의무 위반 시 즉시 영업정지",
                 "POS 실전 결제 테스트 — 오픈 당일 결제 불가 시 고객 이탈",
                 "식자재 냉장 온도 기록 — 위생점검 시 1순위 확인 항목",
-            ], color: .orange)
+            ], color: BUColor.warn)
         }
     }
 
@@ -502,7 +502,7 @@ public struct PreLaunchFinalStageView: View {
                     ]
                     ForEach(tips, id: \.0) { title, detail in
                         HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "star.fill").foregroundStyle(.yellow).font(.system(size: 10)).padding(.top, 2)
+                            Image(systemName: "star.fill").foregroundStyle(BUColor.warn).font(.system(size: 10)).padding(.top, 2)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
                                 Text(detail).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)

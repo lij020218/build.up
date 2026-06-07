@@ -244,7 +244,7 @@ public struct HiringSetupStageView: View {
                 "근무 시간·요일 구체적으로",
                 "식사 제공 여부",
                 "오픈 1~2주 전 채용 필수 (교육 기간)",
-            ], color: .orange)
+            ], color: BUColor.warn)
 
             BUCard(.card) {
                 HStack(spacing: 6) {
@@ -315,9 +315,9 @@ public struct HiringSetupStageView: View {
 
                     if wage < WAGE_2026 {
                         HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.system(size: 12))
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.danger).font(.system(size: 12))
                             Text("최저임금 미달! 2026 최저시급 \(WAGE_2026.formatted())원 이상으로 수정하세요.")
-                                .font(BUFont.eyebrow).foregroundStyle(.red)
+                                .font(BUFont.eyebrow).foregroundStyle(BUColor.danger)
                         }
                     }
                 }
@@ -327,7 +327,7 @@ public struct HiringSetupStageView: View {
                 "계약서 미교부 시 500만원 이하 과태료 — 사인 후 즉시 1부 교부",
                 "주휴수당 「포함된 시급」 협상은 불법 — 시급·주휴 별도 표기 필수",
                 "수습 90% 감액은 1년 이상 계약 + 3개월 이내만 적용",
-            ], color: .red)
+            ], color: BUColor.danger)
 
             BUCard(.card) {
                 Toggle(isOn: $contractDone) {
@@ -386,7 +386,7 @@ public struct HiringSetupStageView: View {
                 "1인 고용도 4대보험 의무 (5인 미만 예외 없음)",
                 "현금 급여 + 미신고 = 세무조사 (국세청 PCI 자동 추적)",
                 "산재보험은 사업주 100% 부담 (\(cluster.categoryNounKo) 약 \(String(format: "%.1f", cluster.accidentInsuranceRatePct))% 요율)",
-            ], color: .red)
+            ], color: BUColor.danger)
         }
     }
 

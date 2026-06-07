@@ -128,12 +128,12 @@ public struct BudgetSetupStageView: View {
         if operatingWon == 0 { return BUColor.inkMuted }
         if isStartup {
             if ratio >= 18 { return BUColor.success }
-            if ratio >= 12 { return Color.orange }
-            return Color.red
+            if ratio >= 12 { return BUColor.warn }
+            return BUColor.danger
         } else {
             if ratio >= 3 { return BUColor.success }
-            if ratio >= 1 { return Color.orange }
-            return Color.red
+            if ratio >= 1 { return BUColor.warn }
+            return BUColor.danger
         }
     }
 
@@ -845,7 +845,7 @@ private struct FundingMiniCard: View {
         switch program.applicationStatus {
         case "open":
             if let days = program.daysUntilDeadline, days <= 30 {
-                return ("D-\(days)", days <= 7 ? BUColor.danger : Color.orange)
+                return ("D-\(days)", days <= 7 ? BUColor.danger : BUColor.warn)
             }
             return ("모집중", BUColor.success)
         case "upcoming":

@@ -224,7 +224,7 @@ public struct StartupFoundationStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.system(size: 13))
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.warn).font(.system(size: 13))
                         Text("공동창업자가 있다면 — 첫 주에 결정할 것들")
                             .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
                     }
@@ -235,7 +235,7 @@ public struct StartupFoundationStageView: View {
                     ]
                     ForEach(warnings, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {
-                            Circle().fill(Color.orange).frame(width: 4, height: 4).padding(.top, 5)
+                            Circle().fill(BUColor.warn).frame(width: 4, height: 4).padding(.top, 5)
                             Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                         }
                     }

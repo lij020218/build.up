@@ -206,9 +206,9 @@ public struct FundraisingReadinessStageView: View {
 
     private func runwayStatus(months: Double) -> (String, Color) {
         if months >= 18 { return ("Default Alive — 18개월+ 표준", BUColor.success) }
-        if months >= 12 { return ("Default Dead 경계 — 12개월은 짧음", .orange) }
-        if months >= 6  { return ("주의 — 6개월 이내 라운드", .orange) }
-        return ("위험 — 즉시 투자 활동 시작", .red)
+        if months >= 12 { return ("Default Dead 경계 — 12개월은 짧음", BUColor.warn) }
+        if months >= 6  { return ("주의 — 6개월 이내 라운드", BUColor.warn) }
+        return ("위험 — 즉시 투자 활동 시작", BUColor.danger)
     }
 
     // MARK: - pg 1 IR 자료
@@ -256,7 +256,7 @@ public struct FundraisingReadinessStageView: View {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(BUColor.warn)
                             .font(.system(size: 13))
                         Text("투자자가 가장 많이 거절하는 이유")
                             .font(BUFont.bodySmall.weight(.bold))
@@ -270,7 +270,7 @@ public struct FundraisingReadinessStageView: View {
                     ]
                     ForEach(reasons, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {
-                            Circle().fill(Color.orange).frame(width: 4, height: 4).padding(.top, 5)
+                            Circle().fill(BUColor.warn).frame(width: 4, height: 4).padding(.top, 5)
                             Text(item)
                                 .font(BUFont.bodyCaption)
                                 .foregroundStyle(BUColor.inkSecondary)

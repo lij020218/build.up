@@ -60,7 +60,7 @@ public struct FieldEditorView: View {
             if !spec.optional {
                 Text("*")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.red.opacity(0.7))
+                    .foregroundStyle(BUColor.danger.opacity(0.7))
                     .accessibilityLabel("필수")
             }
             if let unit = spec.unit {
@@ -250,10 +250,10 @@ public struct FieldEditorView: View {
             HStack(spacing: 4) {
                 Image(systemName: "exclamationmark.circle.fill")
                     .font(.system(size: 10))
-                    .foregroundStyle(.red.opacity(0.8))
+                    .foregroundStyle(BUColor.danger.opacity(0.8))
                 Text(msg)
                     .font(.system(size: 11))
-                    .foregroundStyle(.red.opacity(0.8))
+                    .foregroundStyle(BUColor.danger.opacity(0.8))
             }
             .padding(.top, 2)
         } else if let convHint = conversionHint {
@@ -274,7 +274,7 @@ public struct FieldEditorView: View {
     private var invalidBorderOverlay: some View {
         if case .invalid = displayedValidation {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(.red.opacity(0.55), lineWidth: 1)
+                .strokeBorder(BUColor.danger.opacity(0.55), lineWidth: 1)
         }
     }
 

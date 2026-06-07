@@ -78,8 +78,8 @@ public struct FinancialReviewStageView: View {
     }
     private var primeCostStatus: Color {
         let cap = Double(benchmark.primeMaxPct)
-        if primeCostPct > cap { return .red }
-        if primeCostPct > cap * 0.85 { return .orange }
+        if primeCostPct > cap { return BUColor.danger }
+        if primeCostPct > cap * 0.85 { return BUColor.warn }
         return BUColor.success
     }
 
@@ -301,15 +301,15 @@ public struct FinancialReviewStageView: View {
 
                     if primeCostPct > 65 {
                         HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red).font(.system(size: 12))
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.danger).font(.system(size: 12))
                             Text("Prime Cost \(Int(primeCostPct))% — 위험 수준. 식자재 원가 또는 인건비 재조정 필요.")
-                                .font(BUFont.eyebrow).foregroundStyle(.red)
+                                .font(BUFont.eyebrow).foregroundStyle(BUColor.danger)
                         }
                     } else if primeCostPct > 55 {
                         HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange).font(.system(size: 12))
+                            Image(systemName: "exclamationmark.circle.fill").foregroundStyle(BUColor.warn).font(.system(size: 12))
                             Text("Prime Cost 관리 주의 — 매출 증가 또는 원가 절감 필요.")
-                                .font(BUFont.eyebrow).foregroundStyle(.orange)
+                                .font(BUFont.eyebrow).foregroundStyle(BUColor.warn)
                         }
                     }
                 }
@@ -338,7 +338,7 @@ public struct FinancialReviewStageView: View {
                     .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
                 if !b.notes.isEmpty {
                     HStack(alignment: .top, spacing: 6) {
-                        Image(systemName: "star.fill").font(.system(size: 10)).foregroundStyle(.orange).padding(.top, 2)
+                        Image(systemName: "star.fill").font(.system(size: 10)).foregroundStyle(BUColor.warn).padding(.top, 2)
                         Text(b.notes).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                             .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -408,7 +408,7 @@ public struct FinancialReviewStageView: View {
     private func benchRow(label: String, range: String, good: Bool) -> some View {
         HStack(spacing: BUSpacing.sm) {
             Image(systemName: good ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                .font(.system(size: 14)).foregroundStyle(good ? BUColor.success : .orange)
+                .font(.system(size: 14)).foregroundStyle(good ? BUColor.success : BUColor.warn)
             Text(label).font(BUFont.bodySmall).foregroundStyle(BUColor.ink)
             Spacer()
             Text(range).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary)

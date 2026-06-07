@@ -152,8 +152,8 @@ public struct CustomerDiscoveryStageView: View {
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.system(size: 13))
-                        Text("하지 말아야 할 것").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(.orange)
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.warn).font(.system(size: 13))
+                        Text("하지 말아야 할 것").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.warn)
                     }
                     let donts = [
                         "제품 피칭 — 인터뷰가 아니라 영업이 됨",
@@ -162,7 +162,7 @@ public struct CustomerDiscoveryStageView: View {
                     ]
                     ForEach(donts, id: \.self) { item in
                         HStack(alignment: .top, spacing: 6) {
-                            Circle().fill(Color.orange).frame(width: 4, height: 4).padding(.top, 5)
+                            Circle().fill(BUColor.warn).frame(width: 4, height: 4).padding(.top, 5)
                             Text(item).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
                         }
                     }

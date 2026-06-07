@@ -99,27 +99,27 @@ public enum BUColor {
     public static let borderSubtle = midnight.opacity(0.06)
     public static let border = cardBorder  // alias
 
-    // MARK: - Semantic (globals.css value-positive / negative 톤 = less saturated)
-    /// SUCCESS — #177245 (globals.css value-positive) — 차분한 진녹색
-    /// (operationalStyles PALETTE.SUCCESS #34c759 보다 사용자 보기 편함)
+    // MARK: - Semantic (⚠️ 신호등 컬러 금지 — 양호/주의는 미드나잇 네이비 농담, 위험만 벽돌)
+    //   웹 HEALTH_COLORS / unified-health.ts 와 일관. 색만으로 구분 말고 라벨·아이콘 동반.
+    /// SUCCESS(양호) — #1d3557 midnight-ink (옅은 의미는 opacity 로). 종전 진녹색 #177245 폐기.
     public static let success = Color(
-        light: Color(red: 0x17/255, green: 0x72/255, blue: 0x45/255),
-        dark:  Color(red: 0x4A/255, green: 0xBE/255, blue: 0x7F/255)
+        light: Color(red: 0x1D/255, green: 0x35/255, blue: 0x57/255),
+        dark:  Color(red: 0x8A/255, green: 0xB0/255, blue: 0xD5/255)
     )
     public static let success08 = success.opacity(0.08)
     public static let successGlow = success.opacity(0.08)
 
-    /// WARN — #c58b2a (차분한 ocher, --warning)
+    /// WARN(주의) — #191970 midnight (짙은 네이비). 종전 ocher #c58b2a 폐기.
     public static let warn = Color(
-        light: Color(red: 0xC5/255, green: 0x8B/255, blue: 0x2A/255),
-        dark:  Color(red: 0xE3/255, green: 0xAE/255, blue: 0x5B/255)
+        light: Color(red: 0x19/255, green: 0x19/255, blue: 0x70/255),
+        dark:  Color(red: 0x9A/255, green: 0x9A/255, blue: 0xD8/255)
     )
     public static let warn08 = warn.opacity(0.08)
 
-    /// DANGER — #b42318 (globals.css value-negative) — 차분한 빨강
+    /// DANGER(위험) — #b64c4c 벽돌 (웹 --danger 와 통일). 종전 #b42318(빨강) 폐기.
     public static let danger = Color(
-        light: Color(red: 0xB4/255, green: 0x23/255, blue: 0x18/255),
-        dark:  Color(red: 0xE5/255, green: 0x6B/255, blue: 0x5C/255)
+        light: Color(red: 0xB6/255, green: 0x4C/255, blue: 0x4C/255),
+        dark:  Color(red: 0xD9/255, green: 0x8A/255, blue: 0x8A/255)
     )
     public static let danger08 = danger.opacity(0.08)
     public static let dangerGlow = danger.opacity(0.08)

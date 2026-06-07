@@ -81,7 +81,7 @@ public struct SectionCard: View {
     private var expiryDot: some View {
         if let urgency = highestUrgency {
             Circle()
-                .fill(urgency == .overdue ? .red.opacity(0.85) : .orange)
+                .fill(urgency == .overdue ? BUColor.danger.opacity(0.85) : BUColor.warn)
                 .frame(width: 6, height: 6)
                 .accessibilityLabel(urgency == .overdue ? "만료된 항목 있음" : "갱신 임박")
         }
@@ -258,8 +258,8 @@ public struct SectionCard: View {
     private func arrayItemDot(for expIso: String?) -> Color {
         guard let expIso else { return BUColor.midnight.opacity(0.35) }
         switch StoreInfoFormatters.expiryUrgency(expIso) {
-        case .overdue: return .red.opacity(0.85)
-        case .urgent:  return .orange
+        case .overdue: return BUColor.danger.opacity(0.85)
+        case .urgent:  return BUColor.warn
         case .soon:    return BUColor.midnight.opacity(0.5)
         case .later:   return BUColor.midnight.opacity(0.35)
         case .none:    return BUColor.midnight.opacity(0.35)
