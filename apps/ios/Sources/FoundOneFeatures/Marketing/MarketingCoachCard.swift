@@ -102,13 +102,13 @@ struct MarketingCoachCard: View {
     private func errorBlock(_ msg: String) -> some View {
         Text(msg)
             .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(Color(red: 0.624, green: 0.102, blue: 0.176))
+            .foregroundStyle(BUColor.danger)
             .padding(14)
             .frame(maxWidth: .infinity)
-            .background(Color(red: 1, green: 0.231, blue: 0.188).opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+            .background(BUColor.danger.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(Color(red: 1, green: 0.231, blue: 0.188).opacity(0.16), lineWidth: 1)
+                    .strokeBorder(BUColor.danger.opacity(0.16), lineWidth: 1)
             )
     }
 
@@ -213,7 +213,7 @@ private struct ActionFullCard: View {
                 .font(.system(size: 10.5, weight: .heavy))
                 .tracking(0.4)
                 .textCase(.uppercase)
-                .foregroundStyle(Color(red: 0.204, green: 0.78, blue: 0.349))
+                .foregroundStyle(BUColor.success)
             Text(action.expectedImpact)
                 .font(.system(size: 12.5, weight: .semibold))
                 .foregroundStyle(BUColor.ink)
@@ -224,10 +224,10 @@ private struct ActionFullCard: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+        .background(BUColor.success.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.1), lineWidth: 1)
+                .strokeBorder(BUColor.success.opacity(0.1), lineWidth: 1)
         )
     }
 
@@ -255,8 +255,8 @@ private struct PriorityBadge: View {
 
     private var info: (label: String, color: Color) {
         switch priority {
-        case "now":       return ("지금 당장", Color(red: 0.706, green: 0.137, blue: 0.094))
-        case "this-week": return ("이번 주", Color(red: 0.918, green: 0.345, blue: 0.047))
+        case "now":       return ("지금 당장", BUColor.danger)
+        case "this-week": return ("이번 주", BUColor.warn)
         default:          return ("이번 달", Color(red: 0, green: 0.478, blue: 1.0))
         }
     }
@@ -281,9 +281,9 @@ private struct CoachToolPill: View {
 
     private var tierColor: Color {
         switch tool.tier {
-        case "free":  return Color(red: 0.204, green: 0.78, blue: 0.349)
+        case "free":  return BUColor.success
         case "paid":  return Color(red: 0, green: 0.478, blue: 1.0)
-        default:      return Color(red: 0.918, green: 0.345, blue: 0.047)
+        default:      return BUColor.warn
         }
     }
 

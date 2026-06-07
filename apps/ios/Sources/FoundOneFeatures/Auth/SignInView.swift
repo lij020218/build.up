@@ -254,7 +254,7 @@ private struct EmailAuthSheet: View {
                         if mode == .signup && !password.isEmpty {
                             Text("8자 이상, 영문·숫자 포함\(passwordStrong ? " ✓" : "")")
                                 .font(.system(size: 11))
-                                .foregroundStyle(passwordStrong ? Color(red: 0.2, green: 0.78, blue: 0.35) : BUColor.danger)
+                                .foregroundStyle(passwordStrong ? BUColor.success : BUColor.danger)
                         }
                     }
 
@@ -534,7 +534,7 @@ private struct KakaoButton: View {
             }
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(
-                Color(red: 0.99, green: 0.85, blue: 0.0),
+                BUColor.warn,
                 in: RoundedRectangle(cornerRadius: 14, style: .continuous)
             )
         }

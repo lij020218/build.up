@@ -575,10 +575,10 @@ private struct FranchiseBrandRow: View {
     // MARK: - 5축 점수 바 (웹 FranchiseBrand.scores 미러)
 
     private func scoreColor(_ v: Int) -> Color {
-        if v >= 80 { return Color(red: 0.020, green: 0.588, blue: 0.412) } // green
+        if v >= 80 { return BUColor.success } // green
         if v >= 60 { return Color(red: 0.149, green: 0.388, blue: 0.922) } // blue
-        if v >= 40 { return Color(red: 0.918, green: 0.612, blue: 0.047) } // amber
-        return Color(red: 0.863, green: 0.149, blue: 0.149)                // red
+        if v >= 40 { return BUColor.warn } // amber
+        return BUColor.danger                // red
     }
 
     @ViewBuilder

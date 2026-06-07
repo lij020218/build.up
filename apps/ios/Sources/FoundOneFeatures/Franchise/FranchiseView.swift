@@ -503,10 +503,10 @@ private struct FranchiseDetailSheet: View {
 
                         // 장점 / 단점
                         if !brand.pros.isEmpty {
-                            prosConsBlock(title: "장점", color: Color(red: 0.020, green: 0.588, blue: 0.412), icon: "checkmark.circle.fill", items: brand.pros)
+                            prosConsBlock(title: "장점", color: BUColor.success, icon: "checkmark.circle.fill", items: brand.pros)
                         }
                         if !brand.cons.isEmpty {
-                            prosConsBlock(title: "단점", color: Color(red: 0.706, green: 0.137, blue: 0.094), icon: "exclamationmark.circle.fill", items: brand.cons)
+                            prosConsBlock(title: "단점", color: BUColor.danger, icon: "exclamationmark.circle.fill", items: brand.cons)
                         }
 
                         // 정보공개서 링크
@@ -630,9 +630,9 @@ private struct FranchiseDetailSheet: View {
                 if let v = brand.closureRatePct {
                     statTile(label: "최근 1년 폐점률",
                              value: String(format: "%.1f%%", v),
-                             tint: v >= 20 ? Color(red: 0.706, green: 0.137, blue: 0.094)
-                                   : v >= 10 ? Color(red: 0.918, green: 0.345, blue: 0.047)
-                                   : Color(red: 0.020, green: 0.588, blue: 0.412))
+                             tint: v >= 20 ? BUColor.danger
+                                   : v >= 10 ? BUColor.warn
+                                   : BUColor.success)
                 }
                 if let v = brand.storeCount {
                     statTile(label: "전체 가맹점", value: "\(v.formatted())개")
@@ -789,10 +789,10 @@ private struct FranchiseDetailSheet: View {
 
     private func scoreColor(_ value: Int) -> Color {
         switch value {
-        case 75...:  return Color(red: 0.020, green: 0.588, blue: 0.412)
+        case 75...:  return BUColor.success
         case 55..<75: return BUColor.midnight
-        case 35..<55: return Color(red: 0.918, green: 0.345, blue: 0.047)
-        default:     return Color(red: 0.706, green: 0.137, blue: 0.094)
+        case 35..<55: return BUColor.warn
+        default:     return BUColor.danger
         }
     }
 }

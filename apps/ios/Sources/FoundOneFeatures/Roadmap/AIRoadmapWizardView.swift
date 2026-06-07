@@ -322,7 +322,7 @@ private struct IdeaStepView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("생성에 실패했습니다")
                         .font(.system(size: 13.5, weight: .bold))
-                        .foregroundStyle(Color(red: 0.706, green: 0.137, blue: 0.090))
+                        .foregroundStyle(BUColor.danger)
                     Text(err)
                         .font(.system(size: 12.5, weight: .medium))
                         .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.6))
@@ -332,8 +332,8 @@ private struct IdeaStepView: View {
                         .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.45))
                 }
                 .padding(16)
-                .background(Color(red: 0.706, green: 0.137, blue: 0.090).opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color(red: 0.706, green: 0.137, blue: 0.090).opacity(0.15), lineWidth: 1))
+                .background(BUColor.danger.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(BUColor.danger.opacity(0.15), lineWidth: 1))
                 .padding(.top, 14)
             }
 
@@ -654,9 +654,9 @@ private struct ReviewStepView: View {
                                 tagChip(result.parsed.startupType == "franchise" ? "프랜차이즈" : "독립 창업",
                                         color: Color(red: 0.231, green: 0.490, blue: 0.867))
                                 if !result.parsed.preferredRegion.isEmpty {
-                                    tagChip("📍 \(result.parsed.preferredRegion)", color: Color(red: 0.851, green: 0.467, blue: 0.024))
+                                    tagChip("📍 \(result.parsed.preferredRegion)", color: BUColor.warn)
                                 }
-                                tagChip(fmt(totalBudget), color: Color(red: 0.020, green: 0.588, blue: 0.412))
+                                tagChip(fmt(totalBudget), color: BUColor.success)
                             }
                         }
                     }
@@ -708,7 +708,7 @@ private struct ReviewStepView: View {
     private var matchCard: some View {
         let conf = result.parsed.matchingConfidence
         let isLow = conf < 60
-        let accent = isLow ? Color(red: 0.706, green: 0.349, blue: 0) : midnight
+        let accent = isLow ? BUColor.warn : midnight
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(isLow ? "업종 매칭 — 확인 필요" : "업종 매칭")

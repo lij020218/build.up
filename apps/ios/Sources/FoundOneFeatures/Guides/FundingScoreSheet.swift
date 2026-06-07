@@ -128,7 +128,7 @@ struct FundingScoreSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle")
-                    .foregroundStyle(Color(red: 0.706, green: 0.137, blue: 0.094))
+                    .foregroundStyle(BUColor.danger)
                 Text("평가 불러오기 실패")
                     .font(.system(size: 14, weight: .heavy))
             }
@@ -196,11 +196,11 @@ struct FundingScoreSheet: View {
     }
 
     private func strengthsBlock(_ items: [String]) -> some View {
-        bulletBlock(title: "강점", color: Color(red: 0.020, green: 0.588, blue: 0.412), icon: "checkmark.circle.fill", items: items)
+        bulletBlock(title: "강점", color: BUColor.success, icon: "checkmark.circle.fill", items: items)
     }
 
     private func weaknessesBlock(_ items: [String]) -> some View {
-        bulletBlock(title: "약점", color: Color(red: 0.706, green: 0.137, blue: 0.094), icon: "exclamationmark.circle.fill", items: items)
+        bulletBlock(title: "약점", color: BUColor.danger, icon: "exclamationmark.circle.fill", items: items)
     }
 
     private func improvementsBlock(_ items: [String]) -> some View {
@@ -208,11 +208,11 @@ struct FundingScoreSheet: View {
     }
 
     private func bonusBlock(_ items: [String]) -> some View {
-        bulletBlock(title: "받을 수 있는 가점", color: Color(red: 0.918, green: 0.345, blue: 0.047), icon: "plus.circle.fill", items: items)
+        bulletBlock(title: "받을 수 있는 가점", color: BUColor.warn, icon: "plus.circle.fill", items: items)
     }
 
     private func disqualifiedBlock(_ items: [String]) -> some View {
-        bulletBlock(title: "미충족 자격", color: Color(red: 0.706, green: 0.137, blue: 0.094), icon: "minus.circle.fill", items: items)
+        bulletBlock(title: "미충족 자격", color: BUColor.danger, icon: "minus.circle.fill", items: items)
     }
 
     private func bulletBlock(title: String, color: Color, icon: String, items: [String]) -> some View {
@@ -280,9 +280,9 @@ struct FundingScoreSheet: View {
 
     private func levelColor(_ level: String) -> Color {
         switch level {
-        case "high":   return Color(red: 0.020, green: 0.588, blue: 0.412)
-        case "low":    return Color(red: 0.706, green: 0.137, blue: 0.094)
-        default:       return Color(red: 0.918, green: 0.345, blue: 0.047)
+        case "high":   return BUColor.success
+        case "low":    return BUColor.danger
+        default:       return BUColor.warn
         }
     }
 
@@ -335,9 +335,9 @@ private struct LevelBadge: View {
     var body: some View {
         let (label, color): (String, Color) = {
             switch level {
-            case "high":   return ("가능성 높음", Color(red: 0.020, green: 0.588, blue: 0.412))
-            case "low":    return ("거리 멀음", Color(red: 0.706, green: 0.137, blue: 0.094))
-            default:       return ("노력 필요", Color(red: 0.918, green: 0.345, blue: 0.047))
+            case "high":   return ("가능성 높음", BUColor.success)
+            case "low":    return ("거리 멀음", BUColor.danger)
+            default:       return ("노력 필요", BUColor.warn)
             }
         }()
         return Text(label)
@@ -389,9 +389,9 @@ private struct BreakdownRow: View {
     }
 
     private var color: Color {
-        if pct >= 0.8 { return Color(red: 0.020, green: 0.588, blue: 0.412) }
-        if pct >= 0.5 { return Color(red: 0.918, green: 0.345, blue: 0.047) }
-        return Color(red: 0.706, green: 0.137, blue: 0.094)
+        if pct >= 0.8 { return BUColor.success }
+        if pct >= 0.5 { return BUColor.warn }
+        return BUColor.danger
     }
 
     var body: some View {

@@ -206,15 +206,15 @@ private struct RecommendedChip: View {
             Text(meta.labelKo)
                 .font(.system(size: 11, weight: .heavy))
         }
-        .foregroundStyle(active ? Color(red: 0.204, green: 0.78, blue: 0.349) : BUColor.inkMuted.opacity(0.55))
+        .foregroundStyle(active ? BUColor.success : BUColor.inkMuted.opacity(0.55))
         .padding(.horizontal, 10).padding(.vertical, 4)
         .background(
-            (active ? Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.08) : BUColor.inkMuted.opacity(0.04)),
+            (active ? BUColor.success.opacity(0.08) : BUColor.inkMuted.opacity(0.04)),
             in: RoundedRectangle(cornerRadius: 8)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(active ? Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.16) : BUColor.cardBorder.opacity(0.5), lineWidth: 1)
+                .strokeBorder(active ? BUColor.success.opacity(0.16) : BUColor.cardBorder.opacity(0.5), lineWidth: 1)
         )
     }
 }
@@ -256,9 +256,9 @@ private struct CampaignRow: View {
                             .foregroundStyle(BUColor.inkMuted.opacity(0.65))
                         Text(String(format: "(%.1fx)", roas))
                             .font(.system(size: 11, weight: .heavy))
-                            .foregroundStyle(roas >= 2 ? Color(red: 0.204, green: 0.78, blue: 0.349)
-                                            : roas >= 1 ? Color(red: 0.918, green: 0.345, blue: 0.047)
-                                            : Color(red: 0.706, green: 0.137, blue: 0.094))
+                            .foregroundStyle(roas >= 2 ? BUColor.success
+                                            : roas >= 1 ? BUColor.warn
+                                            : BUColor.danger)
                     }
                 }
             }

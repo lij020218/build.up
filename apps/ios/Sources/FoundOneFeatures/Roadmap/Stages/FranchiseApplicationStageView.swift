@@ -94,8 +94,8 @@ private let contractCheckpoints: [ContractCheckpoint] = [
 
 private func riskColor(_ level: String) -> Color {
     switch level {
-    case "critical":  return Color(red: 0.863, green: 0.149, blue: 0.149) // red
-    case "important": return Color(red: 0.918, green: 0.612, blue: 0.047) // amber
+    case "critical":  return BUColor.danger // red
+    case "important": return BUColor.warn // amber
     default:          return Color(red: 0.420, green: 0.451, blue: 0.502) // gray
     }
 }
@@ -317,11 +317,11 @@ public struct FranchiseApplicationStageView: View {
                         Text("\(completedCount) / \(franchiseSteps.count)")
                             .font(.system(size: 11, weight: .heavy))
                             .monospacedDigit()
-                            .foregroundStyle(allDone ? Color(red: 0.020, green: 0.588, blue: 0.412) : BUColor.midnight)
+                            .foregroundStyle(allDone ? BUColor.success : BUColor.midnight)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
                             .background(
-                                (allDone ? Color(red: 0.020, green: 0.588, blue: 0.412) : BUColor.midnight).opacity(0.10),
+                                (allDone ? BUColor.success : BUColor.midnight).opacity(0.10),
                                 in: Capsule()
                             )
                     }

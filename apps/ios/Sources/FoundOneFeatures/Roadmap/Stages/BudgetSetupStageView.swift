@@ -859,8 +859,8 @@ private struct FundingMiniCard: View {
         switch program.category {
         case "government":  return Color(red: 0.149, green: 0.388, blue: 0.922)
         case "private":     return Color(red: 0.486, green: 0.227, blue: 0.929)
-        case "local":       return Color(red: 0.020, green: 0.588, blue: 0.412)
-        case "corporate":   return Color(red: 0.918, green: 0.345, blue: 0.047)
+        case "local":       return BUColor.success
+        case "corporate":   return BUColor.warn
         case "competition": return Color(red: 0.859, green: 0.157, blue: 0.467)
         default:            return BUColor.midnight
         }

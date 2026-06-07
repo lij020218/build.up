@@ -174,15 +174,15 @@ public struct MarketingView: View {
                     sub: state.kpis.spendWon == 0
                         ? "기여 매출 입력"
                         : (state.kpis.blendedRoas >= 2 ? "건강" : state.kpis.blendedRoas >= 1 ? "보통" : "미달"),
-                    tint: state.kpis.blendedRoas >= 2 ? Color(red: 0.204, green: 0.78, blue: 0.349)
-                          : state.kpis.blendedRoas >= 1 ? Color(red: 0.918, green: 0.345, blue: 0.047)
-                          : Color(red: 0.706, green: 0.137, blue: 0.094)
+                    tint: state.kpis.blendedRoas >= 2 ? BUColor.success
+                          : state.kpis.blendedRoas >= 1 ? BUColor.warn
+                          : BUColor.danger
                 )
                 KpiTile(
                     eyebrow: "활성 채널",
                     value: "\(state.kpis.activeChannels)개",
                     sub: state.kpis.activeChannels >= 3 ? "다채널" : state.kpis.activeChannels == 0 ? "없음" : "확장 가능",
-                    tint: state.kpis.activeChannels >= 3 ? Color(red: 0.204, green: 0.78, blue: 0.349) : BUColor.inkMuted
+                    tint: state.kpis.activeChannels >= 3 ? BUColor.success : BUColor.inkMuted
                 )
             }
             .padding(.horizontal, 2)

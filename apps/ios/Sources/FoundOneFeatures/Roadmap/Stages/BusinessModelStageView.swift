@@ -86,8 +86,8 @@ public struct BusinessModelStageView: View {
     ///   업종마다 운영 모델이 다름 (음식=홀/테이크아웃/하이브리드, 요가=멤버십/코치드/무인 등).
     private var models: [BizModelOption] {
         let blue   = Color(red: 0.149, green: 0.388, blue: 0.922)
-        let orange = Color(red: 0.918, green: 0.345, blue: 0.047)
-        let green  = Color(red: 0.020, green: 0.588, blue: 0.412)
+        let orange = BUColor.warn
+        let green  = BUColor.success
         switch cluster.category {
         case .food: return [
             .init(id: "dine-in-restaurant", icon: "fork.knife",     color: blue,

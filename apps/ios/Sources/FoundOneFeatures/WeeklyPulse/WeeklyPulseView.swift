@@ -575,7 +575,7 @@ public struct WeeklyInsightsBlock: View {
         if ratio > ing.caution {
             return Insight(
                 icon: "exclamationmark.triangle.fill",
-                tint: Color(red: 0.77, green: 0.55, blue: 0.16),
+                tint: BUColor.warn,
                 title: "재료비 비율 \(pct(ratio))% → 권장 \(pct(recommended))% 초과",
                 body: "주요 품목 단가를 재점검하거나 레시피 표준화로 식자재 손실을 줄여 보세요."
             )

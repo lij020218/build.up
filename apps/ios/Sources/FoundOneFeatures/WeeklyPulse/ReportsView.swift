@@ -204,8 +204,8 @@ private struct ReportHeroCard: View {
     let data: ReportPeriodData
 
     private var deltaColor: Color {
-        if data.deltaPercent >= 5 { return Color(red: 0.204, green: 0.78, blue: 0.349) }
-        if data.deltaPercent <= -5 { return Color(red: 0.706, green: 0.137, blue: 0.094) }
+        if data.deltaPercent >= 5 { return BUColor.success }
+        if data.deltaPercent <= -5 { return BUColor.danger }
         return BUColor.inkMuted
     }
 
@@ -260,15 +260,15 @@ private struct ReportKpiRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            kpi(label: "비용", value: formatWon(Int(data.kpiCostWon)), tint: Color(red: 0.918, green: 0.345, blue: 0.047))
+            kpi(label: "비용", value: formatWon(Int(data.kpiCostWon)), tint: BUColor.warn)
             kpi(label: "마진", value: String(format: "%.1f%%", data.kpiMarginPercent),
-                tint: data.kpiMarginPercent >= 15 ? Color(red: 0.204, green: 0.78, blue: 0.349)
-                      : data.kpiMarginPercent >= 0 ? Color(red: 0.918, green: 0.345, blue: 0.047)
-                      : Color(red: 0.706, green: 0.137, blue: 0.094))
+                tint: data.kpiMarginPercent >= 15 ? BUColor.success
+                      : data.kpiMarginPercent >= 0 ? BUColor.warn
+                      : BUColor.danger)
             kpi(label: "프라임", value: String(format: "%.0f%%", data.kpiPrimeRatePercent),
-                tint: data.kpiPrimeRatePercent <= 65 ? Color(red: 0.204, green: 0.78, blue: 0.349)
-                      : data.kpiPrimeRatePercent <= 75 ? Color(red: 0.918, green: 0.345, blue: 0.047)
-                      : Color(red: 0.706, green: 0.137, blue: 0.094))
+                tint: data.kpiPrimeRatePercent <= 65 ? BUColor.success
+                      : data.kpiPrimeRatePercent <= 75 ? BUColor.warn
+                      : BUColor.danger)
         }
     }
 
@@ -547,7 +547,7 @@ private struct AnomalySignalsCard: View {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 12, weight: .heavy))
-                    .foregroundStyle(Color(red: 0.918, green: 0.345, blue: 0.047))
+                    .foregroundStyle(BUColor.warn)
                 Text("이상 신호 \(anomalies.count)건")
                     .font(.system(size: 11, weight: .heavy))
                     .tracking(0.5)
@@ -574,8 +574,8 @@ private struct AnomalySignalsCard: View {
 
     private func signalRow(_ s: AnomalySignal) -> some View {
         let color: Color = s.severity == .danger
-            ? Color(red: 0.706, green: 0.137, blue: 0.094)
-            : Color(red: 0.918, green: 0.345, blue: 0.047)
+            ? BUColor.danger
+            : BUColor.warn
         return HStack(alignment: .top, spacing: 10) {
             Circle()
                 .fill(color)

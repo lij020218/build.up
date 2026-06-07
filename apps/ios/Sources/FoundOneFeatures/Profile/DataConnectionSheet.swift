@@ -373,7 +373,7 @@ public struct DataConnectionSheet: View {
             Button { showCodefConnect = true } label: {
                 connectionTile(
                     iconSystemName: "creditcard.and.123",
-                    iconBackground: Color(red: 0.96, green: 0.62, blue: 0.04),
+                    iconBackground: BUColor.warn,
                     title: codefTitle,
                     badgeText: codefBadge,
                     badgeColor: codefBadgeColor,
@@ -520,7 +520,7 @@ public struct DataConnectionSheet: View {
         codefConnected ? "카드사 연결됨" : "10개 카드사 자동 동기화"
     }
     private var codefBadge: String { codefConnected ? "활성" : "베타" }
-    private var codefBadgeColor: Color { codefConnected ? BUColor.success : Color(red: 0.96, green: 0.62, blue: 0.04) }
+    private var codefBadgeColor: Color { codefConnected ? BUColor.success : BUColor.warn }
     private var codefSubtitle: String {
         if codefConnected {
             if let count = codefStatus?.salesCount30d { return "최근 30일 \(count)건 카드매출 · 매일 자동" }

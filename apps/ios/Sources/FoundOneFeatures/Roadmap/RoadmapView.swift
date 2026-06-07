@@ -26,13 +26,13 @@ private let stageTagMap: [String: (label: String, color: Color)] = [
     "budget-setup":          ("재무 시뮬레이션", Color(red: 0.486, green: 0.227, blue: 0.929)),  // #7c3aed
     "location-candidates":   ("상권 분석",       Color(red: 0.149, green: 0.388, blue: 0.922)),  // #2563eb
     "contract-review":       ("AI 계약 분석",    Color(red: 0.486, green: 0.227, blue: 0.929)),
-    "construction-setup":    ("인테리어·집기",   Color(red: 0.851, green: 0.467, blue: 0.024)),  // #d97706
-    "vendor-setup":          ("공급업체",         Color(red: 0.020, green: 0.588, blue: 0.412)),  // #059669
+    "construction-setup":    ("인테리어·집기",   BUColor.warn),  // #d97706
+    "vendor-setup":          ("공급업체",         BUColor.success),  // #059669
     "operations-setup":      ("배달·SNS",         Color(red: 0.859, green: 0.157, blue: 0.467)),  // #db2777
-    "pre-launch":            ("소프트오픈",       Color(red: 0.918, green: 0.345, blue: 0.047)),  // #ea580c
+    "pre-launch":            ("소프트오픈",       BUColor.warn),  // #ea580c
     "tax-guide":             ("절세 가이드",      Color(red: 0.051, green: 0.600, blue: 0.533)),  // #0d9488
-    "loan-guide":            ("자금조달·지원사업", Color(red: 0.020, green: 0.588, blue: 0.412)),
-    "venture-certification": ("벤처인증",         Color(red: 0.020, green: 0.588, blue: 0.412)),
+    "loan-guide":            ("자금조달·지원사업", BUColor.success),
+    "venture-certification": ("벤처인증",         BUColor.success),
     "launch-gtm":            ("GTM 전략",         Color(red: 0.859, green: 0.157, blue: 0.467)),
 ]
 
@@ -556,7 +556,7 @@ private struct AuroraGradientLayer: View {
                     .blur(radius: 50)
                     .offset(x: proxy.size.width * 0.3, y: proxy.size.height * 0.1)
                 Circle()
-                    .fill(Color(red: 0.20, green: 0.78, blue: 0.349))      // green
+                    .fill(BUColor.success)      // green
                     .frame(width: proxy.size.width * 0.5, height: proxy.size.width * 0.5)
                     .blur(radius: 45)
                     .offset(x: proxy.size.width * 0.1, y: proxy.size.height * 0.5)

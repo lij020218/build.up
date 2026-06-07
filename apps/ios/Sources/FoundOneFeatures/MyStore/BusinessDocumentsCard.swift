@@ -114,13 +114,13 @@ struct BusinessDocumentsCard: View {
             HStack(spacing: 6) {
                 statChip(label: "\(filledCount)/\(allKinds.count) 항목 채움", color: BUColor.midnight)
                 if totalDocs > 0 {
-                    statChip(label: "\(totalDocs)건 보관", color: Color(red: 0.020, green: 0.588, blue: 0.412))
+                    statChip(label: "\(totalDocs)건 보관", color: BUColor.success)
                 }
                 if expiringSoonCount > 0 {
-                    statChip(label: "\(expiringSoonCount)건 30일 내 만료", color: Color(red: 0.918, green: 0.345, blue: 0.047))
+                    statChip(label: "\(expiringSoonCount)건 30일 내 만료", color: BUColor.warn)
                 }
                 if expiredCount > 0 {
-                    statChip(label: "\(expiredCount)건 만료됨", color: Color(red: 0.706, green: 0.137, blue: 0.094))
+                    statChip(label: "\(expiredCount)건 만료됨", color: BUColor.danger)
                 }
             }
         }
@@ -163,7 +163,7 @@ struct BusinessDocumentsCard: View {
             HStack(spacing: 10) {
                 Image(systemName: filled ? "checkmark.circle.fill" : "doc.text")
                     .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(filled ? Color(red: 0.020, green: 0.588, blue: 0.412) : BUColor.inkMuted.opacity(0.4))
+                    .foregroundStyle(filled ? BUColor.success : BUColor.inkMuted.opacity(0.4))
                     .frame(width: 18)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(kind.labelKo)
@@ -183,7 +183,7 @@ struct BusinessDocumentsCard: View {
                 if warningDoc != nil {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(Color(red: 0.918, green: 0.345, blue: 0.047))
+                        .foregroundStyle(BUColor.warn)
                 }
                 Image(systemName: filled ? "chevron.right" : "plus.circle")
                     .font(.system(size: 11, weight: .heavy))

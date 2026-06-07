@@ -126,22 +126,22 @@ struct MarketingTrendsCard: View {
                 .font(.system(size: 10, weight: .heavy))
                 .tracking(0.4)
                 .textCase(.uppercase)
-                .foregroundStyle(Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.85))
+                .foregroundStyle(BUColor.success.opacity(0.85))
 
             if isLive {
-                metaChip(label: "YouTube \(m.youtubeVideos ?? 0)건", color: Color(red: 0.8, green: 0, blue: 0))
+                metaChip(label: "YouTube \(m.youtubeVideos ?? 0)건", color: BUColor.inkSecondary)
             }
             if m.usedDataLab ?? false {
-                metaChip(label: "네이버 DataLab", color: Color(red: 0.204, green: 0.78, blue: 0.349))
+                metaChip(label: "네이버 DataLab", color: BUColor.success)
             }
             if m.usedNaverBlog ?? false {
-                metaChip(label: "네이버 블로그", color: Color(red: 0.204, green: 0.78, blue: 0.349))
+                metaChip(label: "네이버 블로그", color: BUColor.success)
             }
             if m.usedTavily ?? false {
-                metaChip(label: "웹 검색 요약", color: Color(red: 0.204, green: 0.78, blue: 0.349))
+                metaChip(label: "웹 검색 요약", color: BUColor.success)
             }
             if let n = m.webSearches, n > 0 {
-                metaChip(label: "Claude 웹검색 \(n)회", color: Color(red: 0.204, green: 0.78, blue: 0.349))
+                metaChip(label: "Claude 웹검색 \(n)회", color: BUColor.success)
             }
             Spacer(minLength: 0)
         }
@@ -149,11 +149,11 @@ struct MarketingTrendsCard: View {
             .padding(10)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.04))
+                    .fill(BUColor.success.opacity(0.04))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.1), lineWidth: 1)
+                    .strokeBorder(BUColor.success.opacity(0.1), lineWidth: 1)
             )
     }
 
@@ -184,13 +184,13 @@ struct MarketingTrendsCard: View {
     private func errorBlock(_ msg: String) -> some View {
         Text(msg)
             .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(Color(red: 0.624, green: 0.102, blue: 0.176))
+            .foregroundStyle(BUColor.danger)
             .padding(14)
             .frame(maxWidth: .infinity)
-            .background(Color(red: 1, green: 0.231, blue: 0.188).opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+            .background(BUColor.danger.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(Color(red: 1, green: 0.231, blue: 0.188).opacity(0.16), lineWidth: 1)
+                    .strokeBorder(BUColor.danger.opacity(0.16), lineWidth: 1)
             )
     }
 
@@ -325,9 +325,9 @@ private struct TrendRow: View {
                 if let views = trend.viewCount, views > 0 {
                     Text("▶ \(formatViews(views))")
                         .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(Color(red: 0.8, green: 0, blue: 0))
+                        .foregroundStyle(BUColor.inkSecondary)
                         .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(Color(red: 1, green: 0, blue: 0).opacity(0.06), in: RoundedRectangle(cornerRadius: 5))
+                        .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 5))
                 }
                 Spacer(minLength: 0)
             }
@@ -392,7 +392,7 @@ private struct TrendRow: View {
 
     private func videoLinkInfo(_ url: String) -> (label: String, color: Color) {
         if url.contains("youtube.com") || url.contains("youtu.be") {
-            return ("▶ 유튜브 영상", Color(red: 0.8, green: 0, blue: 0))
+            return ("▶ 유튜브 영상", BUColor.inkSecondary)
         }
         if url.contains("instagram.com") {
             return ("▶ 인스타 영상", Color(red: 0, green: 0.478, blue: 1.0))
@@ -406,12 +406,12 @@ private struct TrendRow: View {
 func formatInfo(_ format: String) -> (label: String, color: Color) {
     switch format {
     case "reel":     return ("릴스",   Color(red: 0.859, green: 0.157, blue: 0.467))
-    case "story":    return ("스토리", Color(red: 0.918, green: 0.345, blue: 0.047))
-    case "short":    return ("쇼츠",   Color(red: 0.847, green: 0.078, blue: 0.078))
+    case "story":    return ("스토리", BUColor.warn)
+    case "short":    return ("쇼츠",   BUColor.danger)
     case "post":     return ("포스트", Color(red: 0, green: 0.478, blue: 1.0))
-    case "blog":     return ("블로그", Color(red: 0.020, green: 0.588, blue: 0.412))
+    case "blog":     return ("블로그", BUColor.success)
     case "campaign": return ("캠페인", Color(red: 0.486, green: 0.227, blue: 0.929))
-    case "ad":       return ("광고",   Color(red: 0.918, green: 0.624, blue: 0.047))
+    case "ad":       return ("광고",   BUColor.warn)
     default:         return (format,   BUColor.midnight)
     }
 }
@@ -560,13 +560,13 @@ struct TrendInlinePlaybook: View {
             Text("왜 이렇게 해야 하나 — 브랜드 사례·효과")
                 .font(.system(size: 11, weight: .heavy))
                 .tracking(0.8)
-                .foregroundStyle(Color(red: 0.204, green: 0.78, blue: 0.349))
+                .foregroundStyle(BUColor.success)
                 .textCase(.uppercase)
             if let strat = trend.strategyExample, !strat.isEmpty {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("사례")
                         .font(.system(size: 12, weight: .heavy))
-                        .foregroundStyle(Color(red: 0.204, green: 0.78, blue: 0.349))
+                        .foregroundStyle(BUColor.success)
                     Text(strat)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(BUColor.ink)
@@ -579,7 +579,7 @@ struct TrendInlinePlaybook: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("기대 효과")
                         .font(.system(size: 12, weight: .heavy))
-                        .foregroundStyle(Color(red: 0.204, green: 0.78, blue: 0.349))
+                        .foregroundStyle(BUColor.success)
                     Text(eff)
                         .font(.system(size: 12.5, weight: .medium))
                         .foregroundStyle(BUColor.inkMuted)
@@ -591,10 +591,10 @@ struct TrendInlinePlaybook: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+        .background(BUColor.success.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(Color(red: 0.204, green: 0.78, blue: 0.349).opacity(0.1), lineWidth: 1)
+                .strokeBorder(BUColor.success.opacity(0.1), lineWidth: 1)
         )
     }
 
@@ -627,9 +627,9 @@ private struct ToolPill: View {
 
     private var tierColor: Color {
         switch tool.tier {
-        case "free":  return Color(red: 0.204, green: 0.78, blue: 0.349)
+        case "free":  return BUColor.success
         case "paid":  return Color(red: 0, green: 0.478, blue: 1.0)
-        default:      return Color(red: 0.918, green: 0.345, blue: 0.047)
+        default:      return BUColor.warn
         }
     }
 

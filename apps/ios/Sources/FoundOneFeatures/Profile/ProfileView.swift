@@ -235,7 +235,7 @@ public struct ProfileView: View {
                         .font(.system(size: 22, weight: .heavy))
                         .tracking(-0.5)
                         .foregroundStyle(progressPercent >= 100
-                            ? Color(red: 0.204, green: 0.78, blue: 0.349)
+                            ? BUColor.success
                             : Color(red: 0, green: 0.478, blue: 1.0))
                 }
                 ProgressBar(percent: progressPercent)
@@ -769,8 +769,8 @@ private struct AccountTypeBadge: View {
 
     var body: some View {
         let (label, fg, bg, border): (String, Color, Color, Color) = isAnonymous
-            ? ("미로그인", Color(red: 0.70, green: 0.38, blue: 0), Color(red: 1.0, green: 0.58, blue: 0).opacity(0.10), Color(red: 1.0, green: 0.58, blue: 0).opacity(0.2))
-            : ("이메일 계정", Color(red: 0.10, green: 0.48, blue: 0.21), Color(red: 0.20, green: 0.78, blue: 0.35).opacity(0.10), Color(red: 0.20, green: 0.78, blue: 0.35).opacity(0.2))
+            ? ("미로그인", BUColor.warn, BUColor.warn.opacity(0.10), BUColor.warn.opacity(0.2))
+            : ("이메일 계정", BUColor.success, BUColor.success.opacity(0.10), BUColor.success.opacity(0.2))
         return Text(label)
             .font(.system(size: 11, weight: .heavy))
             .foregroundStyle(fg)
@@ -794,7 +794,7 @@ private struct ProgressBar: View {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(
                         clamped >= 100
-                            ? AnyShapeStyle(Color(red: 0.20, green: 0.78, blue: 0.35))
+                            ? AnyShapeStyle(BUColor.success)
                             : AnyShapeStyle(LinearGradient(
                                 colors: [Color(red: 0, green: 0.478, blue: 1.0), Color(red: 0.353, green: 0.784, blue: 0.98)],
                                 startPoint: .leading, endPoint: .trailing

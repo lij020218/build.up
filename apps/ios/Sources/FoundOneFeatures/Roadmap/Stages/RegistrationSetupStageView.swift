@@ -344,7 +344,7 @@ public struct RegistrationSetupStageView: View {
                         ForEach(permitPitfalls, id: \.self) { p in
                             HStack(alignment: .top, spacing: 6) {
                                 Text("⚠").font(.system(size: 10)).padding(.top, 2)
-                                Text(p).font(BUFont.bodyCaption).foregroundStyle(Color(red: 0.5, green: 0.1, blue: 0.1)).lineSpacing(2)
+                                Text(p).font(BUFont.bodyCaption).foregroundStyle(BUColor.danger).lineSpacing(2)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }

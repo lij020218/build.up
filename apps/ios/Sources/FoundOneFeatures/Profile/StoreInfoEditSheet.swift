@@ -77,10 +77,10 @@ struct StoreInfoEditSheet: View {
                         if let err = error {
                             Text(err)
                                 .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(Color(red: 0.624, green: 0.102, blue: 0.176))
+                                .foregroundStyle(BUColor.danger)
                                 .padding(12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color(red: 1, green: 0.231, blue: 0.188).opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+                                .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
                         }
 
                         saveButton

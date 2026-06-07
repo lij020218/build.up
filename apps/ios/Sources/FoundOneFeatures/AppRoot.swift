@@ -1438,7 +1438,7 @@ private struct DemoModeBanner: View {
         .frame(maxWidth: .infinity)
         .background(
             LinearGradient(
-                colors: [Color(red: 0.71, green: 0.21, blue: 0.18), Color(red: 0.55, green: 0.14, blue: 0.12)],
+                colors: [BUColor.danger, BUColor.danger],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
