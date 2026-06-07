@@ -152,15 +152,25 @@ export async function GET(request: Request) {
         if (resp.items.length < PAGE_SIZE) break;
       }
 
-      // 성공 마킹
-      await supabase
-        .from("portone_connections")
-        .update({
-          last_sync_at: new Date().toISOString(),
-          last_sync_error: null,
-        })
-        .eq("user_id", conn.user_id);
-      report.processed += 1;
+      // ⚠️ upsert 실패(userReport.error)가 있으면 '성공 마킹'을 건너뛴다.
+      //   종전엔 break 후에도 무조건 last_sync_at 을 갱신해(성공 오기록) 다음 cron 이
+      //   이 사장님을 '최근 동기화됨'으로 인식 → 실패한 페이지 결제가 영구 누락될 수 있었다.
+      if (userReport.error) {
+        await supabase
+          .from("portone_connections")
+          .update({ last_sync_error: userReport.error })
+          .eq("user_id", conn.user_id);
+      } else {
+        // 성공 마킹 (오류 없을 때만)
+        await supabase
+          .from("portone_connections")
+          .update({
+            last_sync_at: new Date().toISOString(),
+            last_sync_error: null,
+          })
+          .eq("user_id", conn.user_id);
+        report.processed += 1;
+      }
     } catch (e) {
       const errMsg = e instanceof PortOneApiError
         ? `${e.errorType}: ${e.message}`

@@ -175,9 +175,14 @@ public enum StartupProgramRegistry {
             if isFranchise && p.forFranchise == false { eligible = false }
             if !isFranchise && p.forFranchise == true && p.forSmallBiz == false { eligible = false }
 
-            // industries hard filter
-            if let inds = p.industries, !inds.isEmpty, let cid = criteria.industryCategoryId {
-                if !inds.contains(cid) { eligible = false }
+            // industries hard filter — 업종 제한이 있으면 미설정·불일치 모두 부적격
+            //   (웹 match.ts 와 동일: industryCategoryId 미설정 시에도 업종 격리 프로그램은 제외)
+            if let inds = p.industries, !inds.isEmpty {
+                if let cid = criteria.industryCategoryId, inds.contains(cid) {
+                    // 일치 — 통과
+                } else {
+                    eligible = false
+                }
             }
 
             // 정책자금 가드

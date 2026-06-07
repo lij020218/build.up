@@ -50,7 +50,7 @@ export async function POST(
   const { data: conn, error: connErr } = await supabase
     .from("stripe_connections")
     .select(
-      "user_id, status, encrypted_webhook_secret, webhook_secret_iv, webhook_secret_auth_tag, encrypted_dek, dek_iv, dek_auth_tag, kek_version"
+      "user_id, status, encrypted_webhook_secret, webhook_secret_iv, webhook_secret_auth_tag, webhook_secret_dek_enc, webhook_secret_dek_iv, webhook_secret_dek_auth_tag, kek_version"
     )
     .eq("user_id", uid)
     .maybeSingle();
@@ -65,7 +65,9 @@ export async function POST(
   //      이벤트를 처리(fail-open)해, uid 만 알면 위조 결제 이벤트 주입이 가능했음.
   //      → secret 미등록(503) / 서명 누락(401) / 검증 실패(401) 모두 거부한다.
   const sigHeader = request.headers.get("stripe-signature") ?? "";
-  if (!conn.encrypted_webhook_secret) {
+  // webhook secret 봉투 + 전용 DEK 가 모두 있어야 복호화 가능.
+  //   webhook_secret_dek_* 가 없으면 (구버전에 잘못 저장된 데이터) 재연결 필요 → 503.
+  if (!conn.encrypted_webhook_secret || !conn.webhook_secret_dek_enc) {
     return NextResponse.json({ error: "webhook secret not configured" }, { status: 503 });
   }
   if (!sigHeader) {
@@ -77,9 +79,10 @@ export async function POST(
       encryptedSecret: conn.encrypted_webhook_secret,
       secretIv: conn.webhook_secret_iv as string,
       secretAuthTag: conn.webhook_secret_auth_tag as string,
-      encryptedDek: conn.encrypted_dek,
-      dekIv: conn.dek_iv,
-      dekAuthTag: conn.dek_auth_tag,
+      // ⚠️ webhook secret 전용 DEK 사용 (apiSecret DEK 아님 — P0 버그 수정).
+      encryptedDek: conn.webhook_secret_dek_enc as string,
+      dekIv: conn.webhook_secret_dek_iv as string,
+      dekAuthTag: conn.webhook_secret_dek_auth_tag as string,
       kekVersion: conn.kek_version,
     });
   } catch {
@@ -126,7 +129,9 @@ export async function POST(
 
   const result = await persistSubscriptionEvent(supabase, uid, normalized);
   if (result.error) {
-    return NextResponse.json({ error: "persist failed", detail: result.error }, { status: 500 });
+    // 내부 DB 오류 상세는 서버 로그에만 — 응답에 스키마 정보 노출 금지.
+    console.error("[webhooks/stripe] persist failed:", result.error);
+    return NextResponse.json({ error: "persist failed" }, { status: 500 });
   }
 
   await supabase.from("stripe_webhook_log").insert({

@@ -51,7 +51,8 @@ export async function POST(request: Request) {
     const result = await generateInterviewScript(body, { apiKey });
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: `인터뷰지 생성 실패: ${message}` }, { status: 503 });
+    // 내부 오류 상세는 서버 로그에만 — 클라이언트엔 고정 문자열.
+    console.error("[ai/interview] generate failed:", error);
+    return NextResponse.json({ error: "인터뷰지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." }, { status: 503 });
   }
 }

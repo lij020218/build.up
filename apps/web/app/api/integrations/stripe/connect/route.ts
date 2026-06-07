@@ -86,7 +86,12 @@ export async function POST(request: Request) {
     row.encrypted_webhook_secret = webhookEnc.encryptedSecret;
     row.webhook_secret_iv = webhookEnc.secretIv;
     row.webhook_secret_auth_tag = webhookEnc.secretAuthTag;
-    // webhook secret 의 DEK 는 apiSecret 과 동일 (같은 KEK 사용).
+    // ⚠️ webhook secret 은 apiSecret 과 *다른* DEK 로 암호화됨(envelopeEncrypt 가 매번 새 DEK 생성).
+    //   따라서 webhook DEK 봉투를 전용 컬럼에 저장해야 핸들러가 복호화할 수 있다.
+    //   (종전엔 미저장 → 핸들러가 apiSecret DEK 로 복호화 시도 → auth tag 불일치 → 항상 실패하던 P0 버그.)
+    row.webhook_secret_dek_enc = webhookEnc.encryptedDek;
+    row.webhook_secret_dek_iv = webhookEnc.dekIv;
+    row.webhook_secret_dek_auth_tag = webhookEnc.dekAuthTag;
   }
 
   const { error: upErr } = await supabase

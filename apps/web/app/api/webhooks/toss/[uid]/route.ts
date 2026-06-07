@@ -18,6 +18,7 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { getSupabaseAdmin } from "../../../_lib/supabase-admin";
+import { envelopeDecrypt, type EnvelopedSecret } from "../../../_lib/envelope-crypto";
 import { normalizeTossEvent, persistSubscriptionEvent } from "../../../_lib/subscription-events";
 
 export const runtime = "nodejs";
@@ -51,15 +52,30 @@ export async function POST(
 
   const rawBody = await request.text();
 
+  const supabase = getSupabaseAdmin();
+  if (!supabase) {
+    return NextResponse.json({ error: "DB config" }, { status: 500 });
+  }
+
+  // ── 1. 사장님 연결 조회 (webhook secret 봉투 포함) ──
+  const { data: conn, error: connErr } = await supabase
+    .from("toss_connections")
+    .select("user_id, status, encrypted_webhook_secret, webhook_secret_iv, webhook_secret_auth_tag, webhook_secret_dek_enc, webhook_secret_dek_iv, webhook_secret_dek_auth_tag, kek_version")
+    .eq("user_id", uid)
+    .maybeSingle();
+
+  if (connErr || !conn || conn.status !== "active") {
+    return NextResponse.json({ ok: true, ignored: "unknown user" });
+  }
+
   // ── 0. HMAC 시그니처 검증 — fail-closed ──
-  //   secret 미설정 또는 시그니처 헤더 누락 시 거부. 검증 안 된 이벤트를 신뢰하면
-  //   uid 만 아는 공격자가 위조 결제 이벤트를 주입할 수 있음.
-  //   ⚠️ 프로덕션 필수: TOSS_WEBHOOK_SECRET 환경변수 등록.
-  const tossSecret = process.env.TOSS_WEBHOOK_SECRET;
+  //   사장님별 webhook secret(봉투암호화) 우선, 없으면 글로벌 env fallback.
+  //   secret 미설정 또는 시그니처 헤더 누락 시 거부 — uid 만 아는 공격자의 위조 이벤트 주입 차단.
+  const tossSecret = loadTossWebhookSecret(conn);
   const tossSig = request.headers.get("tosspayments-webhook-signature");
   const tossTime = request.headers.get("tosspayments-webhook-transmission-time");
   if (!tossSecret) {
-    console.error("[webhooks/toss] TOSS_WEBHOOK_SECRET 미설정 — 웹훅 거부 (fail-closed)");
+    console.error("[webhooks/toss] webhook secret 미설정/복호화 실패 — 웹훅 거부 (fail-closed)");
     return NextResponse.json({ error: "webhook secret not configured" }, { status: 503 });
   }
   if (!tossSig || !tossTime) {
@@ -72,22 +88,6 @@ export async function POST(
   }
   if (!verifyTossWebhook({ secret: tossSecret, signature: tossSig, transmissionTime: tossTime, body: rawBody })) {
     return NextResponse.json({ error: "invalid signature" }, { status: 401 });
-  }
-
-  const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    return NextResponse.json({ error: "DB config" }, { status: 500 });
-  }
-
-  // ── 1. 사장님 연결 조회 ──
-  const { data: conn, error: connErr } = await supabase
-    .from("toss_connections")
-    .select("user_id, status")
-    .eq("user_id", uid)
-    .maybeSingle();
-
-  if (connErr || !conn || conn.status !== "active") {
-    return NextResponse.json({ ok: true, ignored: "unknown user" });
   }
 
   // ── 2. 파싱 ──
@@ -122,7 +122,8 @@ export async function POST(
 
   const result = await persistSubscriptionEvent(supabase, uid, normalized);
   if (result.error) {
-    return NextResponse.json({ error: "persist failed", detail: result.error }, { status: 500 });
+    console.error("[webhooks/toss] persist failed:", result.error);
+    return NextResponse.json({ error: "persist failed" }, { status: 500 });
   }
 
   await supabase.from("toss_webhook_log").insert({
@@ -137,6 +138,44 @@ export async function POST(
 }
 
 // ─── 내부 ─────────────────────────────────────────────────────────────
+
+type TossConnRow = {
+  encrypted_webhook_secret?: string | null;
+  webhook_secret_iv?: string | null;
+  webhook_secret_auth_tag?: string | null;
+  webhook_secret_dek_enc?: string | null;
+  webhook_secret_dek_iv?: string | null;
+  webhook_secret_dek_auth_tag?: string | null;
+  kek_version?: number | null;
+};
+
+/**
+ * 사장님별 Toss webhook secret 로드 (portone loadWebhookSecret 패턴, fail-closed).
+ *  1순위: toss_connections.encrypted_webhook_secret (+ 전용 DEK) 봉투 복호화.
+ *  fallback: 글로벌 env TOSS_WEBHOOK_SECRET (사장님별 enc 미설정 시에만 — 하위호환).
+ *
+ *  ⚠️ enc 가 존재하는데 복호화 실패(KEK 오류 등)하면 env fallback 하지 않고 null(fail-closed).
+ */
+function loadTossWebhookSecret(conn: TossConnRow): string | null {
+  if (conn.encrypted_webhook_secret && conn.webhook_secret_dek_enc) {
+    try {
+      return envelopeDecrypt({
+        encryptedSecret: conn.encrypted_webhook_secret,
+        secretIv: conn.webhook_secret_iv as string,
+        secretAuthTag: conn.webhook_secret_auth_tag as string,
+        encryptedDek: conn.webhook_secret_dek_enc,
+        dekIv: conn.webhook_secret_dek_iv as string,
+        dekAuthTag: conn.webhook_secret_dek_auth_tag as string,
+        kekVersion: conn.kek_version ?? 1,
+      } as EnvelopedSecret);
+    } catch {
+      console.error("[webhooks/toss] webhook secret 복호화 실패 — fail-closed, env fallback 안 함");
+      return null;
+    }
+  }
+  // 사장님별 enc 미설정 → 글로벌 env fallback (하위호환).
+  return process.env.TOSS_WEBHOOK_SECRET ?? null;
+}
 
 /**
  * Toss Payments 웹훅 서명 검증.

@@ -1,5 +1,5 @@
 import type { FinancialSimulationResult } from "@foundone/shared";
-import { formatKRW } from "@foundone/shared";
+import { formatKRW, buildPolicySourceBlock } from "@foundone/shared";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 // ─── 재무 해석 AI 프롬프트 v2 ──────────────────────────────────────────────
@@ -87,6 +87,11 @@ export function buildFinanceUserPrompt(
   if (riskLevel === "critical") crisisSignals.push(`종합 위험도: 위험 — 현재 계획으로는 사업 지속이 어려울 수 있음`);
 
   const lines: string[] = [];
+
+  // 검증된 정책자금·생존율 출처 블록 주입 — AI 가 이 블록 수치만 인용하도록 그라운딩.
+  //   (SYSTEM_PROMPT 가 이 블록 부재 시 구체 수치 답변을 거부하도록 지시하므로 반드시 주입.)
+  lines.push(buildPolicySourceBlock());
+  lines.push("");
 
   lines.push(`## 재무 시뮬레이션 분석 요청`);
   if (categoryLabel) lines.push(`업종: ${categoryLabel}`);

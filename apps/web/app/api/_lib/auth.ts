@@ -23,6 +23,29 @@ export type ApiAuthResult =
   | { ok: true; userId: string }
   | { ok: false; status: number; error: string };
 
+/**
+ * 요청의 Bearer 토큰을 그대로 설정한 Supabase 클라이언트 (RLS 적용).
+ *
+ *  service_role(getSupabaseAdmin)과 달리 RLS 가 강제되므로, "본인 데이터 읽기" 경로에서
+ *  defense-in-depth 로 사용한다 — 코드에서 user_id 필터를 실수로 빠뜨려도 RLS 가 타 사용자
+ *  데이터 노출을 막는다. 쓰기(INSERT/UPDATE)는 해당 테이블에 authenticated RLS 정책이 있을 때만
+ *  동작하므로, 정책이 service_role 전용인 경우엔 getSupabaseAdmin 을 사용해야 한다.
+ *
+ *  토큰이 없거나 env 미설정이면 null. 호출부는 requireApiUser 통과 후 사용하므로 보통 non-null.
+ */
+export function getUserScopedClient(request: Request): SupabaseClient | null {
+  const authHeader = request.headers.get("authorization") ?? request.headers.get("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  if (!token) return null;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) return null;
+  return createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
 export async function requireApiUser(request: Request): Promise<ApiAuthResult> {
   const authHeader = request.headers.get("authorization") ?? request.headers.get("Authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";

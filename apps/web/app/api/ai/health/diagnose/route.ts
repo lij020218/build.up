@@ -80,8 +80,9 @@ export async function POST(request: Request) {
       logApiError(route, "parse_failed", error, {
         requestId, userId: auth.userId, status: 502,
       });
+      // 내부 오류 상세(error.message)는 서버 로그에만 — 클라이언트엔 고정 문자열.
       return NextResponse.json(
-        { error: "AI 응답 파싱 실패.", detail: error.message },
+        { error: "AI 응답을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요." },
         { status: 502, headers: { "x-request-id": requestId } }
       );
     }
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
       requestId, userId: auth.userId, status: 500,
     });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "건강 진단 중 오류가 발생했습니다." },
+      { error: "건강 진단 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500, headers: { "x-request-id": requestId } }
     );
   }

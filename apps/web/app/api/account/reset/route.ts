@@ -45,7 +45,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: failures.length === 0, deleted, failures, totalDeleted });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
+    // 내부 오류 상세는 서버 로그에만 — 클라이언트엔 고정 문자열.
     console.error("[/api/account/reset] FATAL — uncaught exception:", msg, error instanceof Error ? error.stack : undefined);
-    return NextResponse.json({ ok: false, error: `서버 예외: ${msg}` }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." }, { status: 500 });
   }
 }

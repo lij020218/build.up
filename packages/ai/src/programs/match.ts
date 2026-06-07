@@ -82,9 +82,14 @@ export function checkEligibility(
   }
 
   // Industry check
-  if (program.industries && program.industries.length > 0 && profile.industryId) {
-    if (program.industries.includes(profile.industryId)) {
+  //   ⚠️ 업종 제한이 있는 프로그램은 불일치 시 반드시 부적격 처리해야 한다.
+  //   종전엔 일치 시에만 reasons 추가하고 불일치(또는 업종 미설정) 시 아무것도 안 해서,
+  //   농업 전용 등 업종 격리 프로그램이 무관 업종(예: 음식점) 사장님에게도 eligible 로 노출됐다.
+  if (program.industries && program.industries.length > 0) {
+    if (profile.industryId && program.industries.includes(profile.industryId)) {
       reasons.push("업종 조건 충족");
+    } else {
+      ineligibleReasons.push(`업종 제한 (${program.industries.join(", ")} 한정)`);
     }
   }
 

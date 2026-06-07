@@ -54,8 +54,10 @@ export async function POST(request: Request) {
     const insight = await generateReportInsight(body, { apiKey });
     return NextResponse.json({ insight });
   } catch (err) {
+    // 내부 오류 상세는 서버 로그에만 — 클라이언트엔 고정 문자열.
+    console.error("[ai/report/insight] generate failed:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate insight." },
+      { error: "인사이트 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }

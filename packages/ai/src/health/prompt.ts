@@ -1,7 +1,7 @@
 // ─── 경영 건강 진단 AI 프롬프트 v2 ────────────────────────────────────────────
 // 경영학적 프레임워크 + 한국 규제 지식 + 위기 플레이북 기반 전문 진단
 
-import { formatKRW } from "@foundone/shared";
+import { formatKRW, buildPolicySourceBlock } from "@foundone/shared";
 import { ANTI_HALLUCINATION_DIRECTIVE } from "../utils/anti-hallucination";
 
 export type HealthDiagnosisContext = {
@@ -123,6 +123,9 @@ export function buildHealthDiagnosisUserPrompt(ctx: HealthDiagnosisContext): str
   const avgTicket = ctx.avgDailyCustomers > 0 ? Math.round(ctx.avgDailySales / ctx.avgDailyCustomers) : 0;
 
   const lines = [
+    // 검증된 정책자금·생존율 출처 블록 — "정부 지원 프로그램 이름·금액 명시" 지시의 그라운딩.
+    buildPolicySourceBlock(),
+    ``,
     `## 사업 현황`,
     `업종: ${ctx.businessType} | 영업 ${ctx.monthsInBusiness}개월 | 단계: ${stage}`,
     ``,

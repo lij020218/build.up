@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireApiUser } from "../../_lib/auth";
+import { requireApiUser, getUserScopedClient } from "../../_lib/auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -8,7 +8,8 @@ export async function GET(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const supabase = getSupabaseAdmin();
+  // 읽기는 사용자 JWT 클라이언트로 — RLS 가 본인 행만 반환(defense-in-depth).
+  const supabase = getUserScopedClient(request);
   if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
   const { data, error } = await supabase
     .from("foundone_subscriptions")
@@ -34,10 +35,14 @@ export async function GET(request: Request) {
     new Date(data.current_period_end) < now;
 
   if (isPastDue) {
-    await supabase!
-      .from("foundone_subscriptions")
-      .update({ status: "past_due" })
-      .eq("user_id", auth.userId);
+    // UPDATE 는 service_role 만 RLS 허용 → admin 클라이언트로 상태 갱신.
+    const admin = getSupabaseAdmin();
+    if (admin) {
+      await admin
+        .from("foundone_subscriptions")
+        .update({ status: "past_due" })
+        .eq("user_id", auth.userId);
+    }
     return NextResponse.json({ ...data, status: "past_due" });
   }
 

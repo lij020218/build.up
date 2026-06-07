@@ -39,19 +39,21 @@ export type KoreaPolicyFundEntry = {
  */
 export const KOREA_POLICY_FUNDS: readonly KoreaPolicyFundEntry[] = [
   {
+    // ⚠️ 운전자금 한도는 업체당 1억원. 5억은 소공인특화·시설자금 한도와 혼동된 과대값(2026-05-11 정정).
     name: "소상공인 정책자금 (일반경영안정자금)",
-    maxAmount: 500_000_000,
-    maxAmountLabel: "최대 5억원",
+    maxAmount: 100_000_000,
+    maxAmountLabel: "운전 최대 1억원 / 시설 최대 5억원",
     eligibility: "소상공인 (상시근로자 5인 미만, 제조·건설·운수·광업은 10인 미만)",
     source: "https://www.semas.or.kr",
     lastVerified: "2026-05",
     interestRate: "변동 (~2.96% 수준, 분기 갱신)",
   },
   {
+    // 예비창업패키지는 전 연령 대상. 지원금은 일반/딥테크 트랙 구분(2026-05 검증).
     name: "예비창업패키지",
     maxAmount: 100_000_000,
-    maxAmountLabel: "최대 1억원",
-    eligibility: "창업 전 또는 창업 3년 이내",
+    maxAmountLabel: "일반 최대 7,000만원 / 딥테크 최대 1억원",
+    eligibility: "창업 전 (사업자 미등록), 전 연령",
     source: "https://www.k-startup.go.kr",
     lastVerified: "2026-05",
   },

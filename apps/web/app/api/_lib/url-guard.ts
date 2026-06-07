@@ -10,11 +10,15 @@
  *   1. https:// 강제 (http 평문 차단)
  *   2. 사설 IP·loopback·링크-로컬 차단 (AWS 메타데이터 169.254.169.254 포함)
  *   3. ULA·multicast 차단
+ *   4. (nodejs runtime) DNS resolve 후 실제 IP 재검증 — DNS 재바인딩 방어 (assertSafeHttpsUrl)
  *
- * 한계: hostname 이 도메인이면 DNS 재바인딩 공격 가능 (DNS resolve 후 IP 재검증해야 완전).
- *       Vercel Edge runtime 한계로 hostname 기반 1차 방어까지만.
- *       프로덕션에선 outbound network ACL 로 추가 차단 권장.
+ * 사용 가이드:
+ *   - isValidHttpsUrl: 동기 1차 방어 (protocol·hostname 문자열 검증). write-time 입력 검증용.
+ *   - assertSafeHttpsUrl: fetch 직전 호출 (async). hostname 을 IP 로 resolve 해 사설망 재검증.
+ *     반드시 fetch 직전에 호출해야 TOCTOU(write-time→fetch-time DNS 재바인딩) 창을 최소화.
  */
+
+import { lookup } from "dns/promises";
 
 export function isPrivateOrLoopback(hostname: string): boolean {
   const lower = hostname.toLowerCase();
@@ -48,5 +52,46 @@ export function isValidHttpsUrl(raw: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * fetch 직전 SSRF 재검증 (nodejs runtime 전용, async).
+ *  1차 동기 검증(isValidHttpsUrl) 통과 후, hostname 을 실제 IP 로 resolve 하여
+ *  모든 resolve 된 주소가 사설/loopback/링크-로컬이 아닌지 재확인한다.
+ *  → write-time 엔 공개 IP 였다가 fetch-time 에 사설 IP 로 바뀌는 DNS 재바인딩 공격 차단.
+ *
+ *  반환: { ok: true } | { ok: false, reason }. 호출부는 ok=false 면 fetch 를 중단해야 한다.
+ */
+export async function assertSafeHttpsUrl(raw: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+  let hostname: string;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:" || !u.hostname) return { ok: false, reason: "https URL 아님" };
+    hostname = u.hostname;
+  } catch {
+    return { ok: false, reason: "URL 파싱 실패" };
+  }
+
+  // hostname 문자열 자체가 사설 IP/내부 호스트명이면 즉시 차단.
+  if (isPrivateOrLoopback(hostname)) return { ok: false, reason: "사설/내부 호스트" };
+
+  // 대괄호 IPv6 리터럴([::1])은 URL.hostname 이 대괄호 제거해 주므로 그대로 검증됨.
+  // hostname 이 IP 리터럴이면 DNS resolve 불필요 — 이미 위에서 검증됨.
+  const isIpLiteral = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) || hostname.includes(":");
+  if (isIpLiteral) return { ok: true };
+
+  // 도메인 → 모든 A/AAAA 레코드 resolve 후 각 IP 재검증.
+  try {
+    const addrs = await lookup(hostname, { all: true });
+    if (addrs.length === 0) return { ok: false, reason: "DNS resolve 실패" };
+    for (const a of addrs) {
+      if (isPrivateOrLoopback(a.address)) {
+        return { ok: false, reason: `resolve 된 IP 가 사설망: ${a.address}` };
+      }
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "DNS lookup 오류" };
   }
 }

@@ -113,7 +113,7 @@ export async function POST(request: Request) {
         status: 502
       });
       return NextResponse.json(
-        { error: "AI 응답 파싱 실패.", detail: error.message },
+        { error: "AI 응답을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요." },
         {
           status: 502,
           headers: {
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "계약서 분석 중 오류가 발생했습니다."
+        error: "계약서 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
       },
       {
         status: 500,

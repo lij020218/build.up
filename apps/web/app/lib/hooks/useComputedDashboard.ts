@@ -21,6 +21,7 @@ import {
   useAiStore,
 } from "../stores";
 import { GUIDE_STAGE_CODES, SURFACE_HREFS } from "../constants";
+import { makeIsPathStage } from "../utils/path-filter";
 import type { DashboardDeps, DashboardSurface } from "../types";
 import type {
   DailyEntry,
@@ -171,93 +172,12 @@ export function useComputedDashboard(
     industryCategoryId === "startup-tech";
   const isStartupCategory = industryCategoryId === "startup-tech";
 
-  // ── Path stage filtering ──
-  const onlineOnlyIds = new Set([
-    "platform-setup",
-    "online-registration",
-    "sourcing-setup",
-    "store-setup",
-    "online-marketing",
-  ]);
-  const startupOnlyIds = new Set([
-    "startup-foundation",
-    "customer-discovery",
-    "mvp-build",
-    "launch-gtm",
-    "go-live",
-    "growth-engine",
-    "company-setup",
-    "fundraising-readiness",
-    "venture-certification",
-    // Cluster B: Hardware/IoT NPI 4
-    "hardware-prototype",
-    "bom-supply-chain",
-    "certification-kc-ce",
-    "manufacturing-partner",
-    // Cluster C: Deep Tech Lab 4
-    "lab-setup",
-    "prototype-iteration",
-    "field-or-clinical-test",
-    "regulatory-submission",
-    // Cluster D: Extreme Deep Tech 4
-    "eda-tooling-setup",
-    "mpw-or-pilot-tape-out",
-    "packaging-and-test",
-    "partner-foundation-or-pilot-line",
-  ]);
-
-  // ── 클러스터별 stage 가시성 — 다른 클러스터의 단계는 숨김 ──
-  const clusterBStages = new Set(["hardware-prototype", "bom-supply-chain", "certification-kc-ce", "manufacturing-partner"]);
-  const clusterCStages = new Set(["lab-setup", "prototype-iteration", "field-or-clinical-test", "regulatory-submission"]);
-  const clusterDStages = new Set(["eda-tooling-setup", "mpw-or-pilot-tape-out", "packaging-and-test", "partner-foundation-or-pilot-line"]);
-  const allClusterStages = new Set([...clusterBStages, ...clusterCStages, ...clusterDStages]);
-
-  const subInd = selectedIndustryId ?? "";
-  const isClusterB = subInd === "hardware-iot";
-  const isClusterC = subInd === "robotics-physical-ai" || subInd === "biotech-medtech";
-  const isClusterD = subInd === "semiconductor" || subInd === "climate-energy";
-  const offlineOnlyIds = new Set([
-    "permit-check",
-    "location-candidates",
-    "contract-review",
-    "construction-setup",
-    "vendor-setup",
-    "registration-setup",
-    "insurance-tax-setup",
-    "hiring-setup",
-    "operations-setup",
-    "pre-launch",
-  ]);
-  const franchiseOnlyIds = new Set(["franchise-application"]);
-
-  const isPathStage = (stageId: string): boolean => {
-    if (isStartupCategory) {
-      if (
-        onlineOnlyIds.has(stageId) ||
-        offlineOnlyIds.has(stageId) ||
-        franchiseOnlyIds.has(stageId)
-      )
-        return false;
-      // ── 클러스터 단계는 해당 sub-industry 만 표시 ──
-      // hardware-iot → Cluster B / robotics·biotech → Cluster C / 반도체·클린테크 → Cluster D
-      if (clusterBStages.has(stageId)) return isClusterB;
-      if (clusterCStages.has(stageId)) return isClusterC;
-      if (clusterDStages.has(stageId)) return isClusterD;
-      return true;
-    }
-    if (isDigitalCategory) {
-      if (offlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId))
-        return false;
-      if (franchiseOnlyIds.has(stageId) && startupType !== "franchise")
-        return false;
-      return true;
-    }
-    if (onlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId)) return false;
-    if (allClusterStages.has(stageId)) return false;
-    if (franchiseOnlyIds.has(stageId) && startupType !== "franchise")
-      return false;
-    return true;
-  };
+  // ── Path stage filtering (단일 SSOT: lib/utils/path-filter.ts) ──
+  const isPathStage = makeIsPathStage({
+    industryCategoryId,
+    selectedIndustryId,
+    startupType,
+  });
 
   // ── Path 정렬: 사용자 *실제 navigation 순서* 로 stage 추림 ──
   // 2026-05-12 P3 fix: 종전엔 `roadmap.stages.filter(isPath)` 로 *배열 순서* 만 반영,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireApiUser } from "../../_lib/auth";
+import { requireApiUser, getUserScopedClient } from "../../_lib/auth";
 import { getSupabaseAdmin } from "../../_lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -8,10 +8,11 @@ export async function POST(request: Request) {
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
+  // 읽기는 사용자 JWT 클라이언트로 — RLS 가 본인 행만 반환(defense-in-depth).
+  const reader = getUserScopedClient(request);
+  if (!reader) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
 
-  const { data: sub, error: fetchErr } = await supabase
+  const { data: sub, error: fetchErr } = await reader
     .from("foundone_subscriptions")
     .select("plan, status, current_period_end")
     .eq("user_id", auth.userId)
@@ -27,6 +28,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "이미 취소된 구독입니다." }, { status: 400 });
   }
 
+  // UPDATE 는 service_role 만 RLS 허용 → admin 클라이언트로 취소 예약.
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
   // 즉시 취소가 아니라 기간 종료 후 만료 (cancel_at_period_end)
   const { error: updateErr } = await supabase
     .from("foundone_subscriptions")

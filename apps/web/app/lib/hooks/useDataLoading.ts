@@ -21,6 +21,7 @@ import {
 import { supabase } from "../../../lib/supabase";
 import { useRoadmapStore, useAiStore, useProfileStore, useFinanceStore, useOperationsStore, useOnboardingStore } from "../stores";
 import { isBusinessDayClosed } from "../utils/business-day";
+import { makeIsPathStage } from "../utils/path-filter";
 import { useCashflowStore } from "../stores/cashflow-store";
 import { useNotifications, type NotifNavigate } from "../../notification-context";
 import type { InventoryItem, FixedExpense } from "../stores/operations-store";
@@ -168,43 +169,12 @@ export function useDataLoading(
     ?? undefined;
 
   // ⚠️ 2026-05-18 fix (사장님 신고: 알림에 "로드맵 33/35 완료" 표시 — path 가 cluster 별 다른데
-  //   모든 cluster stage 를 합산하니 35로 inflate). useComputedDashboard.isPathStage 와 동일한
-  //   sub-industry 별 cluster 분기 로직을 복제. startup-tech 의 hardware-iot 사장님은 cluster B
-  //   stage 만, robotics·biotech 는 cluster C, 반도체·클린테크는 cluster D 만 path 에 포함.
-  const isDigitalCategory = industryCategoryId === "online-digital" || industryCategoryId === "startup-tech";
-  const isStartupCategory = industryCategoryId === "startup-tech";
-  const subInd = selectedIndustryId ?? "";
-  const isClusterB = subInd === "hardware-iot";
-  const isClusterC = subInd === "robotics-physical-ai" || subInd === "biotech-medtech";
-  const isClusterD = subInd === "semiconductor" || subInd === "climate-energy";
-  const onlineOnlyIds = new Set(["platform-setup", "online-registration", "sourcing-setup", "store-setup", "online-marketing"]);
-  const startupOnlyIds = new Set(["startup-foundation", "customer-discovery", "mvp-build", "launch-gtm", "growth-engine", "company-setup", "fundraising-readiness", "venture-certification"]);
-  const offlineOnlyIds = new Set(["permit-check", "location-candidates", "contract-review", "construction-setup", "vendor-setup", "registration-setup", "insurance-tax-setup", "hiring-setup", "operations-setup", "pre-launch"]);
-  const clusterBStages = new Set(["hardware-prototype", "bom-supply-chain", "certification-kc-ce", "manufacturing-partner"]);
-  const clusterCStages = new Set(["lab-setup", "prototype-iteration", "field-or-clinical-test", "regulatory-submission"]);
-  const clusterDStages = new Set(["eda-tooling-setup", "mpw-or-pilot-tape-out", "packaging-and-test", "partner-foundation-or-pilot-line"]);
-  const allClusterStages = new Set([...clusterBStages, ...clusterCStages, ...clusterDStages]);
-  const franchiseOnlyIds = new Set(["franchise-application"]);
-  const isPathStage = (stageId: string): boolean => {
-    if (isStartupCategory) {
-      if (onlineOnlyIds.has(stageId) || offlineOnlyIds.has(stageId) || franchiseOnlyIds.has(stageId)) return false;
-      // 클러스터 단계는 sub-industry 매칭만 포함
-      if (clusterBStages.has(stageId)) return isClusterB;
-      if (clusterCStages.has(stageId)) return isClusterC;
-      if (clusterDStages.has(stageId)) return isClusterD;
-      return true;
-    }
-    if (isDigitalCategory) {
-      if (offlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId)) return false;
-      if (franchiseOnlyIds.has(stageId) && startupType !== "franchise") return false;
-      return true;
-    }
-    // offline (음식·카페·소매·미용 등) 사장님은 cluster·startup-only·online-only 모두 제외
-    if (onlineOnlyIds.has(stageId) || startupOnlyIds.has(stageId)) return false;
-    if (allClusterStages.has(stageId)) return false;
-    if (franchiseOnlyIds.has(stageId) && startupType !== "franchise") return false;
-    return true;
-  };
+  //   모든 cluster stage 를 합산하니 35로 inflate). 단일 SSOT(lib/utils/path-filter.ts) 사용.
+  const isPathStage = makeIsPathStage({
+    industryCategoryId: industryCategoryId ?? "",
+    selectedIndustryId,
+    startupType,
+  });
   const pathStageIds = new Set(roadmap.stages.filter(s => isPathStage(s.stageId)).map(s => s.stageId));
   const pathTotalStages = pathStageIds.size;
   const completedCount = roadmap.completedStageIds.filter(id => pathStageIds.has(id)).length;

@@ -63,6 +63,11 @@ import {
   useProfileStore,
   useRoadmapStore,
   useOnboardingStore,
+  useMarketingStore,
+  useAgentsStore,
+  useInterviewStore,
+  useTimeLogStore,
+  useCashflowStore,
 } from "../stores";
 import { useStoreInfoStore } from "../stores/store-info-store";
 import { isCircuitBroken, recordSaveFailure, recordSaveSuccess } from "../services/save-circuit-breaker";
@@ -75,6 +80,7 @@ import type {
 import { supabase } from "../../../lib/supabase";
 import type { DashboardDeps, DashboardSurface } from "../types";
 import { getKstDate } from "../utils/business-day";
+import { makeIsPathStage } from "../utils/path-filter";
 
 // ─── localStorage keys cleaned on user switch / sign-out ───
 const LOCAL_STORAGE_KEYS = [
@@ -218,24 +224,19 @@ export function applyStoreData(data: UserStoreData): void {
   if ((data.subscriptionPlans as unknown[])?.length) ops.setSubscriptionPlans(data.subscriptionPlans as never);
   if ((data.subscribers as unknown[])?.length) ops.setSubscribers(data.subscribers as never);
   // 마케팅 복원
-  try {
-    const { useMarketingStore } = require("../stores/marketing-store");
+  {
     const mkt = useMarketingStore.getState();
-    if ((data.marketingCampaigns as unknown[])?.length) mkt.setCampaigns(data.marketingCampaigns);
+    if ((data.marketingCampaigns as unknown[])?.length) mkt.setCampaigns(data.marketingCampaigns as never);
     if (data.marketingMonthlyBudget && data.marketingMonthlyBudget > 0) mkt.setMonthlyBudget(data.marketingMonthlyBudget);
-    if ((data.promoCodes as unknown[])?.length) mkt.setPromoCodes(data.promoCodes);
-    if ((data.playbookChecklist as unknown[])?.length) mkt.setPlaybookChecklist(data.playbookChecklist);
-  } catch { /* marketing store not loaded yet */ }
+    if ((data.promoCodes as unknown[])?.length) mkt.setPromoCodes(data.promoCodes as never);
+    if ((data.playbookChecklist as unknown[])?.length) mkt.setPlaybookChecklist(data.playbookChecklist as never);
+  }
   // 에이전트 on/off 설정 복원 — 웹·앱 동기화
-  try {
-    const { useAgentsStore } = require("../stores/agents-store");
-    if (data.agentSettings && typeof data.agentSettings === "object") {
-      useAgentsStore.getState().setEnabledAgents(data.agentSettings);
-    }
-  } catch { /* agents store not loaded yet */ }
+  if (data.agentSettings && typeof data.agentSettings === "object") {
+    useAgentsStore.getState().setEnabledAgents(data.agentSettings as never);
+  }
   // 고객 인터뷰 복원 — Mom Test 노트 + AI 패턴 분석 (다른 기기 접속 시에도 유지)
-  try {
-    const { useInterviewStore } = require("../stores/interview-store");
+  {
     const iv = useInterviewStore.getState();
     if ((data.customerInterviews as unknown[])?.length) {
       iv.setCustomerInterviews(data.customerInterviews as never);
@@ -243,10 +244,9 @@ export function applyStoreData(data: UserStoreData): void {
     if (data.interviewPatternAnalysis) {
       iv.setPatternAnalysis(data.interviewPatternAnalysis as never);
     }
-  } catch { /* interview store not loaded yet */ }
+  }
   // 시간 로그 복원 — Drucker 5분 체크인 (다른 기기 접속 시에도 유지)
-  try {
-    const { useTimeLogStore } = require("../stores/time-log-store");
+  {
     const tl = useTimeLogStore.getState();
     if ((data.timeLogEntries as unknown[])?.length) {
       tl.setEntries(data.timeLogEntries as never);
@@ -254,10 +254,9 @@ export function applyStoreData(data: UserStoreData): void {
     if (data.timeLogEnabled === false) {
       tl.setEnabled(false);
     }
-  } catch { /* time-log store not loaded yet */ }
+  }
   // 현금흐름 설정 복원 — 통장 잔고·판매 채널·알림 설정
-  try {
-    const { useCashflowStore } = require("../stores/cashflow-store");
+  {
     const cf = useCashflowStore.getState();
     const settings = data.cashflowSettings as Record<string, unknown> | null | undefined;
     if (settings && typeof settings === "object") {
@@ -280,7 +279,7 @@ export function applyStoreData(data: UserStoreData): void {
       if (typeof settings.vatReserveEnabled === "boolean") cf.setVatReserveEnabled(settings.vatReserveEnabled);
       // setupCompletedAt 은 markSetupCompleted action 만 있어, 이미 완료된 상태면 그대로 둠
     }
-  } catch { /* cashflow store not loaded yet */ }
+  }
 
   // ── "내 가게" store 복원 ──
   try {
@@ -381,22 +380,17 @@ export function collectStoreData(): Partial<UserStoreData> {
   if (ops.subscriptionPlans.length) r.subscriptionPlans = ops.subscriptionPlans;
   if (ops.subscribers.length) r.subscribers = ops.subscribers;
   // 마케팅
-  try {
-    const { useMarketingStore } = require("../stores/marketing-store");
+  {
     const mkt = useMarketingStore.getState();
     if (mkt.campaigns.length) r.marketingCampaigns = mkt.campaigns;
     if (mkt.monthlyBudget > 0) r.marketingMonthlyBudget = mkt.monthlyBudget;
     if (mkt.promoCodes.length) r.promoCodes = mkt.promoCodes;
     if (mkt.playbookChecklist.length) r.playbookChecklist = mkt.playbookChecklist;
-  } catch { /* marketing store not loaded yet */ }
+  }
   // 에이전트 on/off 설정 — 웹·앱 동기화
-  try {
-    const { useAgentsStore } = require("../stores/agents-store");
-    r.agentSettings = useAgentsStore.getState().enabledAgents;
-  } catch { /* agents store not loaded yet */ }
+  r.agentSettings = useAgentsStore.getState().enabledAgents;
   // 고객 인터뷰 — Mom Test 노트 + AI 패턴 분석
-  try {
-    const { useInterviewStore } = require("../stores/interview-store");
+  {
     const iv = useInterviewStore.getState();
     if (iv.customerInterviews && iv.customerInterviews.length > 0) {
       r.customerInterviews = iv.customerInterviews;
@@ -404,19 +398,17 @@ export function collectStoreData(): Partial<UserStoreData> {
     if (iv.patternAnalysis) {
       r.interviewPatternAnalysis = iv.patternAnalysis;
     }
-  } catch { /* interview store not loaded yet */ }
+  }
   // 시간 로그 — Drucker 매일 저녁 5분 체크인 (사장님 직접 입력)
-  try {
-    const { useTimeLogStore } = require("../stores/time-log-store");
+  {
     const tl = useTimeLogStore.getState();
     if (tl.entries && tl.entries.length > 0) {
       r.timeLogEntries = tl.entries;
     }
     r.timeLogEnabled = tl.enabled;
-  } catch { /* time-log store not loaded yet */ }
+  }
   // 현금흐름 설정 — Cash-flow Crunch Tracker (사장님 직접 입력, 손실 시 큰 손실)
-  try {
-    const { useCashflowStore } = require("../stores/cashflow-store");
+  {
     const cf = useCashflowStore.getState();
     // setupCompletedAt 이 있을 때만 의미 있는 설정으로 간주해 저장
     if (cf.setupCompletedAt || cf.currentBalance > 0 || cf.fixedExpenses.length > 0) {
@@ -432,7 +424,7 @@ export function collectStoreData(): Partial<UserStoreData> {
         setupCompletedAt: cf.setupCompletedAt,
       };
     }
-  } catch { /* cashflow store not loaded yet */ }
+  }
 
   // ── 내 가게 store 수집 ──
   try {
@@ -838,6 +830,27 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         // Silent fail — localStorage already loaded via useState initializers
       }
 
+      // ── Owner 프로필 서버 복원 (기기 전환·재설치 대응) ──
+      //   user_store_data.owner_profile_enc → 서버 복호화(봉투암호화) → 로컬 hydrate.
+      //   KEK 미설정이면 204 반환 → 조용히 skip (로컬값 유지).
+      try {
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        if (token) {
+          const res = await fetch("/api/account/owner-profile", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok && res.status === 200) {
+            const json = (await res.json()) as { ok: boolean; profile?: { birthYear?: number; ncbScore?: number; consideringClosure?: boolean; isDisabledOwner?: boolean } };
+            if (json.ok && json.profile) {
+              useProfileStore.getState().hydrateOwnerProfileFromServer(json.profile);
+            }
+          }
+        }
+      } catch {
+        // 네트워크·파싱 실패 — 로컬값 유지, 무시
+      }
+
       // ── ⚠️ Stale `businessLaunched` 플래그 자가복구 ──
       // 시나리오: 데모 초기화(/api/account/reset)가 일부 테이블 삭제에 실패하거나 (RLS·권한·partial fail),
       //  비인증 상태에서 client-only reset 만 일어나는 경우, server 의 user_store_data.businessLaunched=true
@@ -909,32 +922,12 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         const cat = indDec?.inputs?.categoryId;
         const subId = indDec?.selectedPrimaryOptionId ?? "";
         const sType = stDec?.selectedPrimaryOptionId ?? stDec?.inputs?.startupType;
-        const onlineOnly = new Set(["platform-setup","online-registration","sourcing-setup","store-setup","online-marketing"]);
-        const startupOnly = new Set(["startup-foundation","customer-discovery","mvp-build","launch-gtm","go-live","growth-engine","company-setup","fundraising-readiness","venture-certification","hardware-prototype","bom-supply-chain","certification-kc-ce","manufacturing-partner","lab-setup","prototype-iteration","field-or-clinical-test","regulatory-submission","eda-tooling-setup","mpw-or-pilot-tape-out","packaging-and-test","partner-foundation-or-pilot-line"]);
-        const offlineOnly = new Set(["permit-check","location-candidates","contract-review","construction-setup","vendor-setup","registration-setup","insurance-tax-setup","hiring-setup","operations-setup","pre-launch"]);
-        const clusterB = new Set(["hardware-prototype","bom-supply-chain","certification-kc-ce","manufacturing-partner"]);
-        const clusterC = new Set(["lab-setup","prototype-iteration","field-or-clinical-test","regulatory-submission"]);
-        const clusterD = new Set(["eda-tooling-setup","mpw-or-pilot-tape-out","packaging-and-test","partner-foundation-or-pilot-line"]);
-        const isClusterB = subId === "hardware-iot";
-        const isClusterC = subId === "robotics-physical-ai" || subId === "biotech-medtech";
-        const isClusterD = subId === "semiconductor" || subId === "climate-energy";
-        const isInPath = (stageId: string): boolean => {
-          if (cat === "startup-tech") {
-            if (onlineOnly.has(stageId) || offlineOnly.has(stageId) || stageId === "franchise-application") return false;
-            if (clusterB.has(stageId)) return isClusterB;
-            if (clusterC.has(stageId)) return isClusterC;
-            if (clusterD.has(stageId)) return isClusterD;
-            return true;
-          }
-          if (cat === "online-digital") {
-            if (offlineOnly.has(stageId) || startupOnly.has(stageId) || stageId === "franchise-application") return false;
-            return true;
-          }
-          // offline (default)
-          if (onlineOnly.has(stageId) || startupOnly.has(stageId)) return false;
-          if (stageId === "franchise-application" && sType !== "franchise") return false;
-          return true;
-        };
+        // 단일 SSOT(lib/utils/path-filter.ts) 사용 — 3곳 중복·diverge 제거.
+        const isInPath = makeIsPathStage({
+          industryCategoryId: cat ?? "",
+          selectedIndustryId: subId,
+          startupType: sType,
+        });
 
         const pathStageList = currentStages.filter((s: { stageId: string }) => isInPath(s.stageId));
         const missing = pathStageList.filter(

@@ -172,7 +172,7 @@ function ConnectSheet({
       const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
       const body: Record<string, unknown> =
         provider === "stripe" ? { apiSecret, webhookSecret: webhookSecret || undefined } :
-        provider === "toss"   ? { apiSecret } :
+        provider === "toss"   ? { apiSecret, webhookSecret: webhookSecret || undefined } :
                                 { description: description || undefined };
 
       const res = await fetch(`/api/integrations/${provider}/connect`, {
@@ -302,9 +302,13 @@ function ConnectSheet({
               <input type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)}
                 placeholder="live_sk_..." style={inputStyle} />
             </Field>
+            <Field label={ko ? "Webhook Secret (선택, 권장)" : "Webhook Secret (optional, recommended)"}>
+              <input type="password" value={webhookSecret} onChange={(e) => setWebhookSecret(e.target.value)}
+                placeholder={ko ? "콘솔 → Webhook 시크릿" : "Console → Webhook secret"} style={inputStyle} />
+            </Field>
             <p style={{ fontSize: "11px", color: "rgba(15,23,42,0.5)", margin: 0, lineHeight: 1.5 }}>
-              {ko ? "토스페이먼츠 → 개발자센터 → API 키. webhook URL 도 콘솔에 등록 필요."
-                  : "Toss Payments developer center → API keys."}
+              {ko ? "토스페이먼츠 → 개발자센터 → API 키. webhook URL 도 콘솔에 등록 필요. Webhook 시크릿을 입력하면 전용 키로 검증해 더 안전합니다(미입력 시 기본 키 사용)."
+                  : "Toss Payments developer center → API keys. Entering a webhook secret enables per-merchant verification."}
             </p>
           </div>
         )}

@@ -222,27 +222,45 @@ export async function POST(
 // ─── 내부 ─────────────────────────────────────────────────────────────
 
 /**
- * 사장님별 webhook secret 조회 (2026-06-05).
+ * 사장님별 webhook secret 조회 (2026-06-05, fail-closed 보강 2026-06-06).
  *  1순위: portone_connections.webhook_secret_enc (봉투암호화, 사장님별).
- *  fallback: 환경변수 PORTONE_WEBHOOK_SECRET (기존 연결 하위호환).
+ *  fallback: 환경변수 PORTONE_WEBHOOK_SECRET (DB enc *미설정* 시에만 — 하위호환).
+ *
+ *  ⚠️ fail-closed: 사장님별 enc 가 *존재하는데* 복호화에 실패하면(KEK 누락·키 오류·AuthTag 불일치)
+ *     env 평문으로 fallback 하지 않고 null 을 반환한다. 잘못된 키(env)로 서명 검증이 이뤄지면
+ *     정상 웹훅이 거부되거나, env secret 이 노출된 경우 위조 웹훅이 통과할 수 있으므로 위험.
+ *     (payment-pii.sealEmail 의 fail-closed 정책과 일관.)
  */
 async function loadWebhookSecret(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   userId: string
 ): Promise<string | null> {
-  try {
-    if (supabase) {
+  let enc: EnvelopedSecret | null | undefined;
+  if (supabase) {
+    try {
       const { data } = await supabase
         .from("portone_connections")
         .select("webhook_secret_enc")
         .eq("user_id", userId)
         .maybeSingle();
-      const enc = data?.webhook_secret_enc as EnvelopedSecret | null | undefined;
-      if (enc) return envelopeDecrypt(enc);
+      enc = data?.webhook_secret_enc as EnvelopedSecret | null | undefined;
+    } catch {
+      // DB 조회 자체 실패 — enc 불명 → env fallback 허용
+      enc = undefined;
     }
-  } catch {
-    // 조회/복호화 실패 → 글로벌 fallback
   }
+
+  // 사장님별 enc 가 존재 → 반드시 이걸로만 복호화. 실패 시 fail-closed(null), env fallback 금지.
+  if (enc) {
+    try {
+      return envelopeDecrypt(enc);
+    } catch {
+      console.error("[webhooks/portone] webhook secret 복호화 실패 (KEK 오류 추정) — fail-closed, env fallback 안 함");
+      return null;
+    }
+  }
+
+  // DB enc 미설정(최초 연결) → 글로벌 env fallback (하위호환).
   return process.env.PORTONE_WEBHOOK_SECRET ?? null;
 }
 

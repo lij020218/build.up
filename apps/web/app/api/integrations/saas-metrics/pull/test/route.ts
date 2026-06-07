@@ -16,7 +16,7 @@
  */
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../../_lib/auth";
-import { isValidHttpsUrl } from "../../../../_lib/url-guard";
+import { assertSafeHttpsUrl } from "../../../../_lib/url-guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -80,14 +80,16 @@ export async function POST(request: Request) {
   if (!endpointUrl) {
     return NextResponse.json({ ok: false, error: "endpoint_url 이 비어 있습니다." }, { status: 400 });
   }
-  if (!isValidHttpsUrl(endpointUrl)) {
-    return NextResponse.json(
-      { ok: false, error: "endpoint_url 은 https:// 로 시작해야 합니다." },
-      { status: 400 },
-    );
-  }
   if (!secretToken) {
     return NextResponse.json({ ok: false, error: "secret_token 이 비어 있습니다." }, { status: 400 });
+  }
+  // fetch 직전 SSRF 재검증 — https 강제 + DNS resolve 후 사설 IP 차단(재바인딩 방어).
+  const safe = await assertSafeHttpsUrl(endpointUrl);
+  if (!safe.ok) {
+    return NextResponse.json(
+      { ok: false, error: `endpoint_url 이 안전하지 않습니다 (https 필수, 사설 IP 차단): ${safe.reason}` },
+      { status: 400 },
+    );
   }
 
   const controller = new AbortController();
