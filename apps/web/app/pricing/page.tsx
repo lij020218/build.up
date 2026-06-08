@@ -71,39 +71,36 @@ export default function PricingPage() {
       }
 
       const PortOne = await import("@portone/browser-sdk/v2");
-      const paymentId = `bup-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const issueId = `bk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-      const response = await PortOne.requestPayment({
+      // 정기결제: 단건결제 대신 *빌링키* 발급 → 서버가 첫 달 청구 + 매월 자동 갱신.
+      const response = await PortOne.requestIssueBillingKey({
         storeId: STORE_ID,
         channelKey: CHANNEL_KEY,
-        paymentId,
-        orderName: "Found.One 프리미엄 1개월",
-        totalAmount: PRICE,
-        currency: "KRW",
-        payMethod: "CARD",
+        billingKeyMethod: "CARD",
+        issueId,
+        issueName: "Found.One 프리미엄 정기결제",
         customer: {
-          // verify 는 payment.customer.id === auth.userId 를 요구한다. 반드시 userId 를 심어야 함.
+          // 빌링키 소유권을 userId 에 바인딩(서버에서 검증).
           customerId: userId,
           email: session?.user?.email ?? undefined,
         },
       });
 
-      if (!response || response.code !== undefined) {
-        setMessage(`결제 실패: ${response?.message ?? "결제가 취소됐거나 오류가 발생했습니다."}`);
+      if (!response || response.code !== undefined || !response.billingKey) {
+        setMessage(`결제 등록 실패: ${response?.message ?? "카드 등록이 취소됐거나 오류가 발생했습니다."}`);
         return;
       }
 
-      // 서버에서 결제 검증 + 구독 활성화 (Bearer 토큰 필수 — 없으면 401 로 활성화 실패)
-      const verifyRes = await fetch("/api/billing/verify", {
+      // 서버: 빌링키 소유권 검증 → 첫 달 청구 → 구독 활성화 (Bearer 필수).
+      const subRes = await fetch("/api/billing/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          paymentId: response.paymentId ?? paymentId,
-        }),
+        body: JSON.stringify({ billingKey: response.billingKey }),
       });
 
-      if (!verifyRes.ok) {
-        const err = await verifyRes.json().catch(() => ({}));
+      if (!subRes.ok) {
+        const err = await subRes.json().catch(() => ({}));
         setMessage(err.error ?? "구독 활성화에 실패했습니다.");
         return;
       }
@@ -240,7 +237,7 @@ export default function PricingPage() {
 
         {/* 부가 설명 */}
         <p style={{ textAlign: "center", fontSize: "13px", color: "#6e6e73", marginTop: "32px", lineHeight: 1.6 }}>
-          언제든지 취소 가능 · 취소 후에도 이용 기간 만료까지 프리미엄 유지 · 카드 정보는 PortOne(포트원)에서 안전하게 관리
+          매월 자동 갱신 · 언제든지 취소 가능(취소 시 기간 만료까지 이용) · 카드 정보는 PortOne(포트원)에서 안전하게 관리
         </p>
       </div>
     </div>

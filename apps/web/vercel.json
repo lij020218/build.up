@@ -16,6 +16,10 @@
     {
       "path": "/api/cron/funnel-pull",
       "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/cron/billing-renew",
+      "schedule": "0 18 * * *"
     }
   ]
 }

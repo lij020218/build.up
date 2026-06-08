@@ -101,9 +101,11 @@ export default function BillingPage() {
               </div>
               <Row label="현재 구독 기간" value={`${fmt(sub.currentPeriodStart)} ~ ${fmt(sub.currentPeriodEnd)}`} />
               {sub.billingMethodLabel && <Row label="결제 수단" value={sub.billingMethodLabel} />}
-              {sub.cancelAtPeriodEnd && (
+              {sub.cancelAtPeriodEnd ? (
                 <Row label="자동 갱신" value={`${fmt(sub.currentPeriodEnd)} 이후 종료`} warning />
-              )}
+              ) : sub.status === "active" ? (
+                <Row label="다음 결제 예정" value={`${fmt(sub.currentPeriodEnd)} · ₩${(19900).toLocaleString()}`} />
+              ) : null}
             </div>
 
             {message && (

@@ -216,6 +216,22 @@ export class PortOneClient {
   }
 
   /**
+   * 빌링키 단건 조회 — 소유권 검증용(customer.id === userId 확인).
+   * (V2 GET /billing-keys/{billingKey})
+   */
+  async getBillingKey(billingKey: string): Promise<{
+    billingKey: string;
+    status?: string;
+    customer?: { id?: string; name?: string };
+    methods?: Array<{ card?: { name?: string; publisher?: string; issuer?: string; number?: string } }>;
+  }> {
+    return this.fetchJson(
+      `/billing-keys/${encodeURIComponent(billingKey)}`,
+      this.storeId ? { query: { storeId: this.storeId } } : {},
+    );
+  }
+
+  /**
    * 검증용 — Secret 이 유효한지 가벼운 호출 1회.
    * 최근 1일 결제 1건 조회. 0건이라도 인증 OK 면 true.
    */
