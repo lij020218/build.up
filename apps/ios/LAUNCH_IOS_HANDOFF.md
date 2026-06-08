@@ -6,12 +6,13 @@
 
 ## 🔴 P0 — App Store 제출 차단 (Xcode/포털)
 
-### 1. 앱 아이콘 / Asset Catalog 추가
-- 현상: 레포에 `.xcassets`·`AppIcon`이 **0개** → App Store Connect 업로드 검증에서 거부.
-- 조치:
-  1. `App/FoundOne/Assets.xcassets/AppIcon.appiconset` 생성, **1024×1024 PNG**(알파 없음) 포함.
-  2. `project.yml` 앱 타깃 `sources`에 `Assets.xcassets` 추가.
-  3. 빌드세팅 `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`.
+### 1. 앱 아이콘 / Asset Catalog ✅ 완료 (이번 작업)
+- 나선(fieri) 마크 on 미드나잇 네이비로 **앱 아이콘 생성 완료**:
+  - `App/FoundOne/Assets.xcassets/AppIcon.appiconset/icon-1024.png` (1024×1024, 알파 없음, full-bleed)
+  - `AppIcon.appiconset/Contents.json`(single-size universal), 카탈로그 루트 `Contents.json`
+  - `project.yml` 에 `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` 추가(앱 타깃은 `App/FoundOne` 그룹 전체 포함이라 .xcassets 자동 반영)
+  - 소스 SVG: `apps/web/public/found-one-appicon.svg`
+- **남은 일**: `xcodegen generate` 재실행(또는 Xcode가 자동 인식) 후 빌드 시 아이콘 적용 확인.
 
 ### 2. Sign in with Apple — entitlement 추가
 - 현상: `.entitlements` 파일 자체가 없어, 실기기에서 "Apple로 시작" 누르면 `ASAuthorizationError 1000`로 **가입 불가**. (코드 로직 `AppleAuthProvider.swift`는 정상)

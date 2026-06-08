@@ -11,7 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#191970",
     lang: "ko",
     icons: [
-      { src: "/icon", sizes: "64x64", type: "image/png" },
+      { src: "/found-one-appicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/found-one-appicon.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
     ],
   };
 }

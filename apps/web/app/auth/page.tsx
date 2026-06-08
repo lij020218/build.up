@@ -15,7 +15,7 @@ import {
   type Language
 } from "@foundone/shared";
 import { MockupByIndex, HeroDashboardPreview } from "./mockups";
-import { FoundOneSpiralLogo } from "../lib/components/ui/FoundOneSpiralLogo";
+import { FoundOneLogo } from "../lib/components/ui/FoundOneLogo";
 import { FeatureIcon, getSummaryFeatures, txt, getFeatures } from "./landing-copy";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";  // 랜딩 nav "서비스" 버튼만 사용 (login 은 hard reload).
@@ -220,7 +220,7 @@ export default function AuthPage() {
           borderBottom: "1px solid rgba(255,255,255,0.08)"
         }}
       >
-        <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>Found.One</span>
+        <FoundOneLogo height={20} markColor="#8A8AF0" />
         <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
           <button
             type="button"
@@ -376,12 +376,12 @@ export default function AuthPage() {
                 marginBottom: 24
               }}
             >
-              <FoundOneSpiralLogo
-                size={44}
-                color="#8A8AF0"
-                style={{ margin: "0 auto 12px", display: "block" }}
+              <FoundOneLogo
+                height={46}
+                direction="column"
+                markColor="#8A8AF0"
+                style={{ margin: "0 auto" }}
               />
-              <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>Found.One</div>
             </div>
 
             {/* mode tabs */}

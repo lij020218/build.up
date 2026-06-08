@@ -19,6 +19,34 @@ public struct FoundOneSpiralLogo: View {
     }
 }
 
+/// 브랜드 로고 락업 — 나선(fieri) 마크 + "Found.One" 클래식 세리프(New York) 워드마크.
+///   "." 은 마크색 액센트. 비즈니스 격조 톤.
+public struct FoundOneLogoLockup: View {
+    public var markSize: CGFloat
+    public var fontSize: CGFloat
+    public var markColor: Color
+    public var wordColor: Color
+    public init(
+        markSize: CGFloat = 30,
+        fontSize: CGFloat = 24,
+        markColor: Color = BUColor.midnightBright,
+        wordColor: Color = BUColor.ink
+    ) {
+        self.markSize = markSize
+        self.fontSize = fontSize
+        self.markColor = markColor
+        self.wordColor = wordColor
+    }
+    public var body: some View {
+        HStack(spacing: markSize * 0.32) {
+            FoundOneSpiralLogo(size: markSize, color: markColor)
+            (Text("Found") + Text(".").foregroundColor(markColor) + Text("One"))
+                .font(.system(size: fontSize, weight: .semibold, design: .serif))
+                .foregroundColor(wordColor)
+        }
+    }
+}
+
 struct SpiralShape: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()
