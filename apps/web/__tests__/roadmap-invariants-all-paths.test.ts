@@ -53,6 +53,15 @@ describe("로드맵 불변식 — 전 카테고리", () => {
     });
   }
 
+  it("[franchise + online-digital] franchise-application 다음이 온라인(platform-setup) — 점포경로 아님", () => {
+    // 자료조사(2026-06-09): 온라인/무점포 프랜차이즈는 점포·인테리어 없이 사업자등록→통신판매업→플랫폼.
+    const path = pathIds("online-digital", "franchise");
+    expect(path, "franchise-application 누락").toContain("franchise-application");
+    const fi = path.indexOf("franchise-application");
+    expect(path[fi + 1], `franchise-application 다음이 온라인 아님 — ${path[fi + 1]}`).toBe("platform-setup");
+    expect(path, "온라인인데 인테리어(construction-setup) 들어옴").not.toContain("construction-setup");
+  });
+
   it("[startup-tech] 경로 비어있지 않음 + 중복 없음 (truncation/사이클 가드)", () => {
     const path = pathIds("startup-tech", "b2b-saas");
     expect(path.length).toBeGreaterThan(8);

@@ -1829,7 +1829,18 @@ export const starterStageFlow: RoadmapStageState[] = [
     completionRule: { kind: "required_tasks", requiredTaskIds: ["fc-inquiry", "fc-disclosure", "fc-visit", "fc-contract", "fc-training"] },
     taskIds: ["fc-inquiry", "fc-disclosure", "fc-visit", "fc-legal", "fc-contract", "fc-training"],
     riskIds: [],
-    nextStageIds: ["permit-check"]
+    // 2026-06-09 정정(자료조사): 온라인/무점포 프랜차이즈(쇼핑몰·이커머스·배달전문)는 점포·인테리어가 없고
+    //   사업자등록 → 통신판매업 → 플랫폼/소싱(온라인 경로)을 따른다 → online-digital 이면 platform-setup.
+    //   점포형 프랜차이즈(음식·소매 등)는 default permit-check(오프라인 점포 경로). iOS pathFor 와 동일.
+    nextStageIds: ["permit-check"],
+    nextStageConditions: [
+      {
+        decisionStageId: "industry-selection",
+        decisionKey: "categoryId",
+        matchValue: "online-digital",
+        stageIds: ["platform-setup"],
+      },
+    ],
   },
 
   // ── Offline path: stages 5-12 (or 6-12 for franchise) ─────────────────────
