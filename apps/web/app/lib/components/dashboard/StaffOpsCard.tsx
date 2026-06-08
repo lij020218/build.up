@@ -484,7 +484,7 @@ const sectionEyebrow: React.CSSProperties = {
   fontSize: "11px",
   letterSpacing: "0.09em",
   textTransform: "uppercase",
-  color: "rgba(15, 23, 42, 0.46)",
+  color: "var(--muted)",
   marginBottom: "6px",
 };
 
@@ -551,7 +551,7 @@ const opsMetricCard: React.CSSProperties = {
 
 const opsMetricLabel: React.CSSProperties = {
   fontSize: "11px",
-  color: "rgba(15, 23, 42, 0.46)",
+  color: "var(--muted)",
   marginBottom: "8px",
 };
 
@@ -614,7 +614,7 @@ const listTitle: React.CSSProperties = {
 const listMeta: React.CSSProperties = {
   marginTop: "4px",
   fontSize: "11px",
-  color: "rgba(15, 23, 42, 0.48)",
+  color: "var(--muted)",
 };
 
 const emptyState: React.CSSProperties = {

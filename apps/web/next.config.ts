@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/privacy", destination: "/legal/privacy", permanent: true },
       { source: "/terms", destination: "/legal/terms", permanent: true },
+      // /analysis 는 고아 라우트 — 실제 분석 화면은 /analytics. 통합.
+      { source: "/analysis", destination: "/analytics", permanent: false },
     ];
   },
   webpack: (config, { dev }) => {

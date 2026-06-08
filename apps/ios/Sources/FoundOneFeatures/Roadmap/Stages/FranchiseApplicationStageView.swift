@@ -499,7 +499,7 @@ public struct FranchiseApplicationStageView: View {
     }
 
     private func linkRow(title: String, url: String) -> some View {
-        Link(destination: URL(string: url)!) {
+        Link(destination: URL(string: url) ?? URL(string: "https://www.ftc.go.kr")!) {
             HStack {
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))

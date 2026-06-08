@@ -372,7 +372,11 @@ export function createFoundOneSupabaseClient(
   return createClient<FoundOneDatabase>(url, anonKey, {
     auth: {
       autoRefreshToken: true,
-      persistSession: true
+      persistSession: true,
+      // OAuth(카카오 등)를 ?code= 로 돌려받아 auto code-exchange. 콜백(auth/callback)의 code 분기와 일치.
+      // 이메일 가입/확인(verifyOtp)·비밀번호 로그인은 flowType 무관하게 동작하므로 영향 없음.
+      flowType: "pkce",
+      detectSessionInUrl: true,
     }
   });
 }

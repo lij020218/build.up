@@ -265,7 +265,7 @@ const sectionEyebrow: React.CSSProperties = {
   fontSize: "11px",
   letterSpacing: "0.09em",
   textTransform: "uppercase",
-  color: "rgba(15, 23, 42, 0.46)",
+  color: "var(--muted)",
   marginBottom: "6px",
 };
 

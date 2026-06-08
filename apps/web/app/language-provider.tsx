@@ -104,17 +104,17 @@ export function LanguageProvider(props: { children: ReactNode }) {
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 1.5C5.79 1.5 4 3.29 4 5.5V9L2.5 11h11L12 9V5.5C12 3.29 10.21 1.5 8 1.5Z"
-                stroke={badgeCount > 0 ? "#007aff" : "rgba(17,17,17,0.5)"}
+                stroke={badgeCount > 0 ? "#1d3557" : "rgba(17,17,17,0.5)"}
                 strokeWidth="1.3" strokeLinejoin="round" fill="none" />
               <path d="M6.5 11.5C6.5 12.33 7.17 13 8 13C8.83 13 9.5 12.33 9.5 11.5"
-                stroke={badgeCount > 0 ? "#007aff" : "rgba(17,17,17,0.5)"}
+                stroke={badgeCount > 0 ? "#1d3557" : "rgba(17,17,17,0.5)"}
                 strokeWidth="1.3" strokeLinecap="round" fill="none" />
             </svg>
             {badgeCount > 0 && (
               <span style={{
                 position: "absolute", top: "-3px", right: "-3px",
                 minWidth: "16px", height: "16px", borderRadius: "999px",
-                background: urgentCount > 0 ? "#ff3b30" : "#ff9f0a",
+                background: urgentCount > 0 ? "#b64c4c" : "#191970",
                 color: "#fff", fontSize: "9px", fontWeight: 700,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 padding: "0 3px", lineHeight: 1,
@@ -150,7 +150,7 @@ export function LanguageProvider(props: { children: ReactNode }) {
                   )}
                 </div>
                 {urgentCount > 0 && (
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#ff3b30", background: "rgba(255,59,48,0.08)", padding: "3px 8px", borderRadius: "999px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#b64c4c", background: "rgba(182,76,76,0.08)", padding: "3px 8px", borderRadius: "999px" }}>
                     {ko ? `긴급 ${urgentCount}건` : `${urgentCount} urgent`}
                   </span>
                 )}

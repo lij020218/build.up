@@ -790,12 +790,12 @@ export function AnalyticsSurface() {
                         {/* 스택 바 */}
                         <div style={{ display: "flex", height: "8px", borderRadius: "4px", overflow: "hidden", marginBottom: "10px" }}>
                           {[
-                            { value: ingredients, color: "#007aff" },
+                            { value: ingredients, color: "#3a5f8a" },
                             { value: labor, color: "#1d3557" },
                             { value: rent, color: "#191970" },
-                            { value: utilities, color: "#af52de" },
-                            { value: sga ?? 0, color: "#ff9500" },
-                            { value: marketing ?? 0, color: "#af52de" },
+                            { value: utilities, color: "#6e8fb8" },
+                            { value: sga ?? 0, color: "#8a7fb0" },
+                            { value: marketing ?? 0, color: "#b07da6" },
                             { value: other, color: "#8e8e93" },
                             { value: interest ?? 0, color: "#b64c4c" },
                           ].filter(r => r.value > 0).map((r, i) => (
@@ -805,12 +805,12 @@ export function AnalyticsSurface() {
                         {/* 범례 */}
                         <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px 14px" }}>
                           {[
-                            { label: ko ? "재료비" : "COGS", value: ingredients, color: "#007aff" },
+                            { label: ko ? "재료비" : "COGS", value: ingredients, color: "#3a5f8a" },
                             { label: ko ? "인건비" : "Labor", value: labor, color: "#1d3557" },
                             { label: ko ? "임대료" : "Rent", value: rent, color: "#191970" },
-                            { label: ko ? "공과금" : "Util.", value: utilities, color: "#af52de" },
-                            { label: ko ? "운영비" : "SGA", value: sga ?? 0, color: "#ff9500" },
-                            { label: ko ? "마케팅" : "Mktg.", value: marketing ?? 0, color: "#af52de" },
+                            { label: ko ? "공과금" : "Util.", value: utilities, color: "#6e8fb8" },
+                            { label: ko ? "운영비" : "SGA", value: sga ?? 0, color: "#8a7fb0" },
+                            { label: ko ? "마케팅" : "Mktg.", value: marketing ?? 0, color: "#b07da6" },
                             { label: ko ? "기타" : "Other", value: other, color: "#8e8e93" },
                             { label: ko ? "이자" : "Interest", value: interest ?? 0, color: "#b64c4c" },
                           ].filter(r => r.value > 0).map(r => (

@@ -505,11 +505,6 @@ public struct ProfileView: View {
         profileCard(eyebrow: "SUPPORT · 지원", title: "도움말 및 지원") {
             VStack(spacing: 0) {
                 supportRow(
-                    title: "도움말",
-                    url: URL(string: "https://foundone.dev/help")
-                )
-                divider
-                supportRow(
                     title: "이용약관",
                     url: URL(string: "https://foundone.dev/terms")
                 )
@@ -523,8 +518,26 @@ public struct ProfileView: View {
                     title: "문의하기",
                     url: URL(string: "mailto:support@foundone.dev")
                 )
+                divider
+                HStack {
+                    Text("버전")
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(BUColor.inkSecondary)
+                    Spacer(minLength: BUSpacing.sm)
+                    Text(appVersionString)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(BUColor.inkMuted)
+                }
+                .frame(minHeight: 44)
+                .padding(.horizontal, BUSpacing.md)
             }
         }
+    }
+
+    private var appVersionString: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+        return "\(v) (\(b))"
     }
 
     // MARK: - 9. accountActionsCard (진행 초기화 + 로그아웃 + 계정 삭제)
@@ -590,23 +603,26 @@ public struct ProfileView: View {
                 }
                 .buttonStyle(.plain)
 
-                Button {
-                    showDeleteConfirm = true
-                } label: {
-                    Text("계정 삭제")
-                        .font(BUFont.label)
-                        .foregroundStyle(BUColor.danger)
-                        .frame(maxWidth: .infinity, minHeight: 52)
-                        .background(
-                            RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
-                                .fill(BUColor.danger.opacity(0.06))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
-                                .strokeBorder(BUColor.danger.opacity(0.20), lineWidth: 1)
-                        )
+                // 계정 삭제는 실계정만 — 익명 세션은 /api/account/delete 가 401 이므로 버튼 숨김.
+                if !isAnonymousAccount {
+                    Button {
+                        showDeleteConfirm = true
+                    } label: {
+                        Text("계정 삭제")
+                            .font(BUFont.label)
+                            .foregroundStyle(BUColor.danger)
+                            .frame(maxWidth: .infinity, minHeight: 52)
+                            .background(
+                                RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
+                                    .fill(BUColor.danger.opacity(0.06))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: BURadius.md, style: .continuous)
+                                    .strokeBorder(BUColor.danger.opacity(0.20), lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.top, BUSpacing.xs)

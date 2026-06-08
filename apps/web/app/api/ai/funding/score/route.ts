@@ -422,7 +422,7 @@ ${userContext}
   } catch (err) {
     console.error("[funding/score] error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "AI 평가 실패" },
+      { error: "AI 평가에 실패했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 },
     );
   }

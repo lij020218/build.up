@@ -209,7 +209,7 @@ function TossWizard({ ko, onClose, onSuccess }: { ko: boolean; onClose: () => vo
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               {ko ? "TOSS Place 연결" : "Connect TOSS Place"}
             </div>
-            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: "20px", padding: 0 }}>×</button>
+            <button type="button" aria-label={ko ? "닫기" : "Close"} onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: "20px", minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>×</button>
           </div>
           <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f172a", marginTop: "6px", letterSpacing: "-0.02em" }}>
             {ko ? "Access Key + Secret + 매장 ID 입력" : "Paste Access Key, Secret, Merchant ID"}

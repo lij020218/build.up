@@ -123,7 +123,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("[quick-query] error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to answer." },
+      { error: "답변 생성에 실패했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 },
     );
   }

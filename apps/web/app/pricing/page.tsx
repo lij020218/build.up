@@ -212,7 +212,7 @@ export default function PricingPage() {
                   transition: "background 0.15s",
                 }}
               >
-                {loading ? "결제 창 열는 중..." : `월 ₩${PRICE.toLocaleString()} 시작하기`}
+                {loading ? "결제 창 여는 중..." : `월 ₩${PRICE.toLocaleString()} 시작하기`}
               </button>
             )}
 

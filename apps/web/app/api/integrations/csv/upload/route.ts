@@ -156,15 +156,29 @@ export async function POST(request: Request) {
     uploadId = upload.id;
   }
 
-  // 2. 엔트리들 (위에서 비웠으므로 upsert = 신규 삽입)
-  const rows = parsed.entries.map((e) => ({
+  // 2. 엔트리들 — 같은 날짜 여러 행(거래단위 CSV)을 날짜로 사전 합산.
+  //    ⚠️ csv_revenue_entries 는 unique(user_id,upload_id,date) 라, 한 배치에 같은 날짜가 2건↑이면
+  //    upsert 가 21000 (ON CONFLICT ... cannot affect row a second time) 로 *전체* 실패한다.
+  //    POS·카드단말기·은행 export 는 대부분 "거래 1건=1행" → 날짜 중복이 흔하므로 반드시 합산.
+  //    (csv/list 도 날짜 합산하므로 업로드 단계와 정책 일치.)
+  const byDate = new Map<string, { amount: number; customers: number; description: string | null; raw: Record<string, string> | null }>();
+  for (const e of parsed.entries) {
+    const cur = byDate.get(e.date);
+    if (cur) {
+      cur.amount += e.amount;
+      cur.customers += e.customers ?? 0;
+    } else {
+      byDate.set(e.date, { amount: e.amount, customers: e.customers ?? 0, description: e.description ?? null, raw: e.raw ?? null });
+    }
+  }
+  const rows = [...byDate.entries()].map(([date, v]) => ({
     upload_id: uploadId,
     user_id: auth.userId,
-    date: e.date,
-    amount: e.amount,
-    customer_count: e.customers ?? 0,
-    description: e.description ?? null,
-    raw: e.raw ?? null,
+    date,
+    amount: v.amount,
+    customer_count: v.customers,
+    description: v.description,
+    raw: v.raw,
   }));
   const { error: entryErr } = await supabase.from("csv_revenue_entries").upsert(rows, {
     onConflict: "user_id,upload_id,date",

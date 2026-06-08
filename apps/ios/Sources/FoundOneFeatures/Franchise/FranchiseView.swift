@@ -510,7 +510,7 @@ private struct FranchiseDetailSheet: View {
                         }
 
                         // 정보공개서 링크
-                        Link(destination: URL(string: brand.infoDisclosureURL)!) {
+                        Link(destination: URL(string: brand.infoDisclosureURL) ?? URL(string: "https://www.ftc.go.kr")!) {
                             HStack(spacing: 6) {
                                 Image(systemName: "safari")
                                     .font(.system(size: 13, weight: .heavy))

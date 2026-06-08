@@ -136,7 +136,7 @@ struct RevenueBasisSheet: View {
 
     private func save() {
         saving = true
-        Task {
+        Task { @MainActor in
             var s = cashflowStore.settings
             s.revenueBasis = RevenueBasis(card: draftCard, countCashReceipt: draftCash)
             await cashflowStore.save(s)

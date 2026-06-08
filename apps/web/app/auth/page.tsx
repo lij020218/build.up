@@ -134,7 +134,9 @@ export default function AuthPage() {
       const pwdErr = validatePassword(password);
       if (pwdErr) { setMessage(pwdErr); return; }
       const byInt = parseInt(birthYear, 10);
-      if (!birthYear || Number.isNaN(byInt) || byInt < 1900 || byInt > new Date().getFullYear() - 14) {
+      // 상한 2010 — user_profiles CHECK·트리거·owner-profile API 와 동일 SSOT.
+      //   (불일치 시 폼은 통과하나 트리거가 birth_year 를 NULL 로 저장 → 입력 유실.)
+      if (!birthYear || Number.isNaN(byInt) || byInt < 1900 || byInt > 2010) {
         setMessage("올바른 출생연도를 입력해 주세요. (예: 1990)");
         return;
       }

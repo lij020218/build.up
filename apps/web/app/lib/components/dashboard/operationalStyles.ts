@@ -132,7 +132,7 @@ export const heroEyebrow: React.CSSProperties = {
   fontSize: "12px",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
-  color: "rgba(15, 23, 42, 0.48)",
+  color: "var(--muted)",
   marginBottom: "6px",
 };
 
@@ -240,7 +240,7 @@ export const headlineLabel: React.CSSProperties = {
   fontSize: "11px",
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "rgba(15, 23, 42, 0.48)",
+  color: "var(--muted)",
   marginBottom: "8px",
 };
 

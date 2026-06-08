@@ -353,7 +353,7 @@ function ConnectWizard({
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
               {ko ? `포트원 연결 · ${step}/3` : `Connect PortOne · ${step}/3`}
             </div>
-            <button type="button" onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: "20px", padding: 0 }}>
+            <button type="button" aria-label={ko ? "닫기" : "Close"} onClick={onClose} style={{ marginLeft: "auto", border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: "20px", minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
               ×
             </button>
           </div>

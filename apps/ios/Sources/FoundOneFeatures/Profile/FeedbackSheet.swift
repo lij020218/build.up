@@ -112,7 +112,7 @@ struct FeedbackSheet: View {
         guard !msg.isEmpty, !sending else { return }
         sending = true
         failed = false
-        Task {
+        Task { @MainActor in
             let repo = FeedbackRepository(supabase: BUSupabase.shared.client)
             let ok = await repo.send(category: category, area: area, message: String(msg.prefix(2000)), screen: "profile")
             sending = false
