@@ -33,6 +33,16 @@ public final class DashboardStore {
     public private(set) var isLoading: Bool = false
     public private(set) var lastError: String? = nil
     public private(set) var pendingSyncCount: Int = 0
+    /// 자동수집(PortOne·TossPlace·CODEF·팝빌 등) 연결 채널 수 — "자동 N곳" 배지용.
+    public private(set) var autoSourceCount: Int = 0
+    /// 채널별 매출 내역 (집계 기준으로 합산된 출처만, 최근 30일) — 매출 카드 breakdown 표시.
+    public private(set) var autoBreakdown: [RevenueBreakdownEntry] = []
+    /// 카드매출이 여러 채널에 겹쳐 사용자 선택이 의미있는 상태 — 기준 선택 sheet 노출 게이팅.
+    public private(set) var autoCardOverlap: Bool = false
+    /// 팝빌(현금영수증) 연결 여부 — 현금 토글 노출 게이팅.
+    public private(set) var autoHasPopbill: Bool = false
+    /// 현재 적용 중인 집계 기준 (스마트 기본 포함) — 기준 선택 sheet 초기값.
+    public private(set) var autoBasis: RevenueBasis = RevenueBasis(card: "individual", countCashReceipt: false)
 
     // MARK: - Derived (computed, healthResult 캐시)
 
@@ -166,6 +176,30 @@ public final class DashboardStore {
         recomputeHealth()
     }
 
+    /// 자동수집 매출을 일별로 머지 — 자동(auto) 우선, 수동은 자동 없는 날만 (웹 useDashboardComputed 미러).
+    ///   호출 순서: applyRemoteData(수동 entries 세팅) → mergeAutoEntries(자동 overlay).
+    ///   매 호출이 "수동 위에 자동 overlay" 라 멱등 — 이중계상 없음(같은 날 자동이 수동을 대체).
+    public func mergeAutoEntries(
+        _ auto: [DailyEntry],
+        sourceCount: Int,
+        breakdown: [RevenueBreakdownEntry] = [],
+        cardOverlap: Bool = false,
+        hasPopbill: Bool = false,
+        basis: RevenueBasis = RevenueBasis(card: "individual", countCashReceipt: false)
+    ) {
+        self.autoSourceCount = sourceCount
+        self.autoBreakdown = breakdown
+        self.autoCardOverlap = cardOverlap
+        self.autoHasPopbill = hasPopbill
+        self.autoBasis = basis
+        guard !auto.isEmpty else { return }
+        var byDate: [String: DailyEntry] = [:]
+        for e in entries { byDate[e.date] = e }   // 기존(수동/원격) 먼저
+        for a in auto { byDate[a.date] = a }       // 자동이 같은 날 덮어씀
+        self.entries = byDate.values.sorted { $0.date < $1.date }
+        recomputeHealth()
+    }
+
     public func setProfile(
         storeName: String,
         userName: String,
@@ -204,6 +238,10 @@ public final class DashboardStore {
         self.daysSinceLaunch = 0
         self.businessLaunched = false
         self.pendingSyncCount = 0
+        self.autoSourceCount = 0
+        self.autoBreakdown = []
+        self.autoCardOverlap = false
+        self.autoHasPopbill = false
         self.lastError = nil
         recomputeHealth()
     }

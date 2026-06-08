@@ -8,7 +8,8 @@ import { SubscriptionPlanEntry } from "./SubscriptionPlanEntry";
 import { TodaySalesSummary } from "./TodaySalesSummary";
 import { activityCard } from "./operationalStyles";
 import { AnimatedBar, CountUp } from "./animations";
-import { useUnifiedRevenue } from "../../hooks/useUnifiedRevenue";
+import { useUnifiedRevenue, revenueSourceLabel } from "../../hooks/useUnifiedRevenue";
+import { RevenueBasisChooser } from "./RevenueBasisChooser";
 import { calculateBreakEven } from "@foundone/shared";
 import { getKstDate } from "../../utils/business-day";
 
@@ -39,6 +40,7 @@ export function ActivitySnapshotCard({
 }) {
   const [editMode, setEditMode] = useState(false);
   const [postEntryReaction, setPostEntryReaction] = useState<string | null>(null);
+  const [showBasis, setShowBasis] = useState(false);
 
   // suppress unused variable warnings
   void postEntryReaction;
@@ -187,11 +189,15 @@ export function ActivitySnapshotCard({
             display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const,
           }}>
             <span>{ko ? "매출 흐름 · 최근 7일" : "Revenue flow · last 7 days"}</span>
-            {unifiedRev.anyConnected && (
-              <span
+            {unifiedRev.anyConnected && (() => {
+              const hasChoice = unifiedRev.cardOverlap || unifiedRev.sources.popbill;
+              return (
+              <button
+                type="button"
+                onClick={hasChoice ? () => setShowBasis((v) => !v) : undefined}
                 title={ko
-                  ? `자동 동기화 중: ${connectedSourceList(unifiedRev.sources, ko)}${unifiedRev.lastFetched ? ` · 마지막 ${formatRelativeTime(unifiedRev.lastFetched, ko)}` : ""}`
-                  : `Auto-synced: ${connectedSourceList(unifiedRev.sources, ko)}${unifiedRev.lastFetched ? ` · last ${formatRelativeTime(unifiedRev.lastFetched, ko)}` : ""}`}
+                  ? `자동 동기화 중: ${connectedSourceList(unifiedRev.sources, ko)}${unifiedRev.lastFetched ? ` · 마지막 ${formatRelativeTime(unifiedRev.lastFetched, ko)}` : ""}${hasChoice ? " · 탭하여 집계 기준 변경" : ""}`
+                  : `Auto-synced: ${connectedSourceList(unifiedRev.sources, ko)}${unifiedRev.lastFetched ? ` · last ${formatRelativeTime(unifiedRev.lastFetched, ko)}` : ""}${hasChoice ? " · tap to change basis" : ""}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "5px",
                   padding: "2px 8px", borderRadius: "999px",
@@ -201,6 +207,7 @@ export function ActivitySnapshotCard({
                   color: "#191970",
                   letterSpacing: "0.04em",
                   textTransform: "none" as const,
+                  cursor: hasChoice ? "pointer" : "default",
                 }}
               >
                 <span style={{
@@ -209,8 +216,10 @@ export function ActivitySnapshotCard({
                   boxShadow: "0 0 4px rgba(25,25,112,0.5)",
                 }} />
                 {ko ? `자동 ${connectedSourceCount(unifiedRev.sources)}곳` : `Auto ${connectedSourceCount(unifiedRev.sources)} src`}
-              </span>
-            )}
+                {hasChoice && <span style={{ opacity: 0.6, marginLeft: 1 }}>{showBasis ? "▾" : "›"}</span>}
+              </button>
+              );
+            })()}
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" as const }}>
             <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--muted)", letterSpacing: "-0.005em" }}>
@@ -247,6 +256,18 @@ export function ActivitySnapshotCard({
           </button>
         </div>
       </div>
+
+      {/* ── 매출 집계 기준 선택 패널 (자동 N곳 배지 탭 시) ── */}
+      {showBasis && (
+        <RevenueBasisChooser
+          ko={ko}
+          sources={unifiedRev.sources}
+          basis={unifiedRev.basis}
+          cardOverlap={unifiedRev.cardOverlap}
+          onClose={() => setShowBasis(false)}
+          onSaved={() => { void (d as { flushStoreDataImmediate?: () => Promise<void> }).flushStoreDataImmediate?.(); }}
+        />
+      )}
 
       {/* ── 차트: 항상 표시. 0매출 막대도 그라데이션 슬롯으로 보임. ──
           1일만 기록해도 그 막대가 즉시 활성화되고, 옆 슬롯들은 비어있어도 일평균·예상 월매출이 계산됨. */}
@@ -482,6 +503,36 @@ export function ActivitySnapshotCard({
           );
         })()}
       </div>
+
+      {/* ── 채널별 매출 내역 (자동수집 연결 시) — 어느 채널에서 얼마 들어왔는지 ── */}
+      {unifiedRev.breakdown.length > 0 && (
+        <div style={{
+          marginTop: "12px", padding: "12px 14px",
+          borderRadius: "12px",
+          background: "rgba(25,25,112,0.025)",
+          border: "0.5px solid rgba(25,25,112,0.10)",
+        }}>
+          <div style={{
+            fontSize: "10px", fontWeight: 700, letterSpacing: "0.04em",
+            textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "8px",
+          }}>
+            {ko ? "채널별 매출 · 최근 30일" : "By channel · last 30d"}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+            {unifiedRev.breakdown.map((item) => (
+              <div key={item.source} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontSize: "12.5px", color: "#3a3f4b", minWidth: 0 }}>
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1d3557", flexShrink: 0 }} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{revenueSourceLabel(item.source, ko)}</span>
+                </span>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" as const, flexShrink: 0 }}>
+                  {fmt(Math.round(item.sales))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── 구분선 ── */}
       <div style={{ height: "1px", background: "rgba(25,25,112,0.06)", margin: "8px 0" }} />

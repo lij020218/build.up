@@ -14,6 +14,7 @@ import { computeStartupRule } from "./computeStartupRule";
 import { useStartupMetrics } from "./useStartupMetrics";
 import type { DailyEntry, MonthlyCosts } from "../useDashboard";
 import { getBusinessDay } from "../utils/business-day";
+import { computeWeakestDayPct } from "../utils/weakest-day";
 import { calculateCostRatios, calculateUnifiedHealthScore, type HealthGrade } from "@foundone/shared";
 import { honestDailyAverage } from "../utils/daily-windows";
 
@@ -153,12 +154,16 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     return Math.max(0, Math.floor((Date.now() - new Date(businessLaunchedDate).getTime()) / 86400000));
   }, [d.businessLaunched, businessLaunchedDate]);
 
+  // ── 요일별 매출 패턴 — 가장 약한 요일이 일평균의 몇 %인지 (AI 가 "월요일만 정상화하면 +N만원" 류 제안에 활용) ──
+  const weakestDayPct = useMemo<number | undefined>(() => computeWeakestDayPct(entries), [entries]);
+
   // ── Industry insight ──
   const { insight: industryInsight } = useIndustryInsight({
     categoryId: d.industryCategoryId,
     hasUserSales: entries.length > 0,
     avgDailySales: avgDailySales7 > 0 ? avgDailySales7 : undefined,
     daysSinceLaunch,
+    weakestDayPct,
     enabled: entries.length > 0 || !!d.industryCategoryId,
   });
 

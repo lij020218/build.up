@@ -38,6 +38,8 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nextPassword, setNextPassword] = useState("");
+  // 가입 동의 — [필수] 이용약관 + 개인정보 수집·이용 (명시적 동의, 정보통신망법/개인정보보호법)
+  const [agreedRequired, setAgreedRequired] = useState(false);
   const [message, setMessage] = useState<string>(copy.auth.initialMessage);
   const [loading, setLoading] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -125,6 +127,10 @@ export default function AuthPage() {
 
   const handleSignup = () =>
     run(async () => {
+      if (!agreedRequired) {
+        setMessage("이용약관과 개인정보 수집·이용에 동의해 주세요.");
+        return;
+      }
       const pwdErr = validatePassword(password);
       if (pwdErr) { setMessage(pwdErr); return; }
       const byInt = parseInt(birthYear, 10);
@@ -153,6 +159,18 @@ export default function AuthPage() {
       await signInWithEmail(supabase, { email, password });
       setMessage(copy.auth.loggedIn);
       navigateToHomeHard();
+    });
+
+  // 카카오 OAuth (login·signup 공용). 카카오로 "계속"하는 행위가 약관·개인정보 동의 의사표시
+  //   (버튼 위 고지 문구). 성공 시 카카오로 redirect → /auth/callback 가 세션 수립.
+  const handleKakao = () =>
+    run(async () => {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "kakao",
+        options: { redirectTo: `${origin}/auth/callback` },
+      });
+      if (error) setMessage("카카오 로그인을 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.");
     });
 
   const handlePasswordChange = () =>
@@ -456,7 +474,7 @@ export default function AuthPage() {
 
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || (mode === "signup" && !agreedRequired)}
                 onClick={
                   mode === "signup"
                     ? handleSignup
@@ -491,6 +509,37 @@ export default function AuthPage() {
                       ? "재설정 메일 받기"
                       : copy.auth.updatePassword}
               </button>
+
+              {/* 카카오 로그인 — Supabase Kakao provider 설정 완료 후 NEXT_PUBLIC_KAKAO_LOGIN_ENABLED=true 로 노출. */}
+              {(mode === "login" || mode === "signup") && process.env.NEXT_PUBLIC_KAKAO_LOGIN_ENABLED === "true" && (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0 12px" }}>
+                    <span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.12)" }} />
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>또는</span>
+                    <span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.12)" }} />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={handleKakao}
+                    style={{
+                      width: "100%", padding: "13px 0", borderRadius: 10, border: "none",
+                      background: "#FEE500", color: "#000000", fontSize: 15, fontWeight: 700,
+                      cursor: loading ? "wait" : "pointer", opacity: loading ? 0.6 : 1,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>💬</span> 카카오로 계속하기
+                  </button>
+                  <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.4)", textAlign: "center", margin: "8px 0 0", lineHeight: 1.5 }}>
+                    카카오로 계속하면{" "}
+                    <a href="/legal/terms" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "underline" }}>이용약관</a>
+                    {" "}및{" "}
+                    <a href="/legal/privacy" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "underline" }}>개인정보처리방침</a>
+                    에 동의하게 됩니다.
+                  </p>
+                </>
+              )}
 
               {mode === "login" && (
                 <button
@@ -533,16 +582,25 @@ export default function AuthPage() {
               )}
 
               {mode === "signup" && (
-                <p style={{
-                  fontSize: 12, color: "rgba(255,255,255,0.45)",
-                  textAlign: "center", lineHeight: 1.6, margin: "4px 0 0",
+                <label style={{
+                  display: "flex", alignItems: "flex-start", gap: 8,
+                  fontSize: 12.5, color: "rgba(255,255,255,0.7)", lineHeight: 1.55,
+                  margin: "6px 2px 0", cursor: "pointer",
                 }}>
-                  가입하면{" "}
-                  <a href="/legal/terms" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "underline" }}>이용약관</a>
-                  {" "}및{" "}
-                  <a href="/legal/privacy" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "underline" }}>개인정보처리방침</a>
-                  에 동의하는 것으로 간주합니다.
-                </p>
+                  <input
+                    type="checkbox"
+                    checked={agreedRequired}
+                    onChange={(e) => setAgreedRequired(e.target.checked)}
+                    style={{ marginTop: 2, width: 16, height: 16, accentColor: "#5b7cfa", flexShrink: 0, cursor: "pointer" }}
+                  />
+                  <span>
+                    <span style={{ color: "#9db4ff", fontWeight: 700 }}>[필수]</span>{" "}
+                    <a href="/legal/terms" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "underline" }}>이용약관</a>
+                    {" "}및{" "}
+                    <a href="/legal/privacy" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.9)", textDecoration: "underline" }}>개인정보 수집·이용</a>
+                    에 동의합니다.
+                  </span>
+                </label>
               )}
 
               {mode === "login" && (

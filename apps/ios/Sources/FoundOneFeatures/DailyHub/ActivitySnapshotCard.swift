@@ -20,6 +20,7 @@ import SwiftUI
 import FoundOneDesignSystem
 import FoundOneCore
 import FoundOneComponents
+import FoundOneData
 
 // MARK: - ActivitySnapshotCard
 
@@ -28,11 +29,37 @@ public struct ActivitySnapshotCard: View {
     let entries: [DailyEntry]
     let bepDailySales: Double?    // 손익분기 일매출
     let ko: Bool
+    let autoSourceCount: Int      // 자동수집 연결 채널 수 (>0이면 "자동 N곳" 배지 — 웹 패리티)
+    let autoBreakdown: [RevenueBreakdownEntry]  // 채널별 매출 내역
+    let onTapBasis: (() -> Void)?  // "자동 N곳" 배지 탭 → 기준 선택 sheet (nil이면 탭 비활성)
 
-    public init(entries: [DailyEntry], bepDailySales: Double? = nil, ko: Bool = true) {
+    public init(
+        entries: [DailyEntry],
+        bepDailySales: Double? = nil,
+        ko: Bool = true,
+        autoSourceCount: Int = 0,
+        autoBreakdown: [RevenueBreakdownEntry] = [],
+        onTapBasis: (() -> Void)? = nil
+    ) {
         self.entries = entries
         self.bepDailySales = bepDailySales
         self.ko = ko
+        self.autoSourceCount = autoSourceCount
+        self.autoBreakdown = autoBreakdown
+        self.onTapBasis = onTapBasis
+    }
+
+    /// 채널별 매출 내역 라벨 (웹 revenueSourceLabel 미러).
+    private func sourceLabel(_ source: String) -> String {
+        switch source {
+        case "portone": return ko ? "포트원 (온라인)" : "PortOne (online)"
+        case "tossplace": return ko ? "토스플레이스 (매장)" : "TossPlace (in-store)"
+        case "codef": return ko ? "카드 매출 (통합)" : "Card sales (CODEF)"
+        case "popbill": return ko ? "현금 매출" : "Cash sales"
+        case "codef-bank": return ko ? "통장 입금" : "Bank deposits"
+        case "csv": return ko ? "CSV 업로드" : "CSV upload"
+        default: return source
+        }
     }
 
     /// 오늘 기준 최근 7일 슬롯 (-6, -5, …, 0=오늘).
@@ -103,18 +130,93 @@ public struct ActivitySnapshotCard: View {
 
                 // ── 7일 막대 차트 ──
                 chartSection
+
+                // ── 채널별 매출 내역 (자동수집 연결 시) ──
+                if !autoBreakdown.isEmpty {
+                    breakdownSection
+                }
             }
         }
+    }
+
+    // MARK: Auto badge ("자동 N곳")
+
+    private var autoBadge: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(BUColor.midnightInk)
+                .frame(width: 5, height: 5)
+            Text(ko ? "자동 \(autoSourceCount)곳" : "Auto \(autoSourceCount)")
+                .font(.system(size: 9.5, weight: .bold))
+                .foregroundStyle(BUColor.midnight)
+                .tracking(0.4)
+            if onTapBasis != nil {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 7, weight: .bold))
+                    .foregroundStyle(BUColor.midnight.opacity(0.5))
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2.5)
+        .background(Capsule().fill(BUColor.midnight.opacity(0.06)))
+        .overlay(Capsule().stroke(BUColor.midnight.opacity(0.18), lineWidth: 0.5))
+    }
+
+    // MARK: Breakdown (채널별 매출)
+
+    private var breakdownSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider().overlay(BUColor.midnight.opacity(0.06))
+            Text(ko ? "채널별 매출 · 최근 30일" : "By channel · last 30d")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(BUColor.inkMuted)
+                .textCase(.uppercase)
+                .tracking(0.4)
+            ForEach(autoBreakdown) { item in
+                HStack(spacing: 8) {
+                    Circle().fill(BUColor.midnightInk).frame(width: 6, height: 6)
+                    Text(sourceLabel(item.source))
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(BUColor.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 8)
+                    Text(formatKRW(item.sales))
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(BUColor.midnightDeep)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(13)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(BUColor.midnight.opacity(0.025))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(BUColor.midnight.opacity(0.10), lineWidth: 0.5)
+        )
     }
 
     // MARK: Header
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(ko ? "매출 흐름" : "Revenue Flow")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(BUColor.ink)
-                .tracking(-0.88)
+            HStack(spacing: 8) {
+                Text(ko ? "매출 흐름" : "Revenue Flow")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                    .tracking(-0.88)
+
+                if autoSourceCount > 0 {
+                    if let onTapBasis {
+                        Button(action: onTapBasis) { autoBadge }
+                            .buttonStyle(.plain)
+                    } else {
+                        autoBadge
+                    }
+                }
+            }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(formatKRW(todaySales))

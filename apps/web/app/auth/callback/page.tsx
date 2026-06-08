@@ -57,6 +57,33 @@ function AuthCallbackInner() {
       window.history.replaceState({}, "", cleanUrl.toString());
     }
 
+    // (OAuth) 소셜 로그인(카카오 등) PKCE 콜백 — `?code=` 또는 `?error=`.
+    //   supabase 클라이언트가 detectSessionInUrl(pkce)로 code 를 자동 교환하므로(수동 교환 시 이중소비),
+    //   여기서는 세션이 잡히는지 폴링으로 확인 후 홈으로 보낸다.
+    const oauthCode = searchParams.get("code");
+    const oauthError = searchParams.get("error") || searchParams.get("error_description");
+    if (oauthError) {
+      setStatus("error");
+      setErrorMsg("로그인이 취소되었거나 실패했습니다. 다시 시도해 주세요.");
+      return () => authSub.subscription.unsubscribe();
+    }
+    if (oauthCode) {
+      void (async () => {
+        for (let i = 0; i < 10; i++) {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            setStatus("success");
+            setTimeout(() => { window.location.assign("/"); }, 600);
+            return;
+          }
+          await new Promise((r) => setTimeout(r, 400));
+        }
+        setStatus("error");
+        setErrorMsg("로그인 처리에 실패했습니다. 다시 시도해 주세요.");
+      })();
+      return () => authSub.subscription.unsubscribe();
+    }
+
     // (A) token_hash 방식 — 가입 확인 메일, 또는 token_hash 템플릿 링크.
     if (token_hash && type) {
       supabase.auth

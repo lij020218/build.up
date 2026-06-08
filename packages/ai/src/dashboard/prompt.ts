@@ -498,6 +498,8 @@ export type DashboardContext = {
   operatingPhase?: "pre-launch" | "early" | "growth" | "mature";
   /** 매출 트렌드 — improving/declining/stable/insufficient (최근 7일 vs 그 이전 7일) */
   salesTrendDirection?: "improving" | "declining" | "stable" | "insufficient";
+  /** 요일별 매출 패턴 — 가장 약한 요일이 일평균의 몇 %인지 (예: 64 = 최약 요일이 평균의 64%). 2주+ 데이터 시만. */
+  weakestDayPct?: number;
   /** 지난달 prime cost rate (%) — 이번달과 비교 가능할 때만 */
   prevPrimeRate?: number;
   /** prime cost rate 증감 (현재 - 지난달, %p) */
@@ -670,6 +672,10 @@ export function buildDashboardActionPrompt(ctx: DashboardContext): string {
   const unusedLine = ctx.unusedFeatures && ctx.unusedFeatures.length > 0
     ? `\n- 아직 안 써본 핵심 기능: ${ctx.unusedFeatures.join(", ")}`
     : "";
+  // 요일별 매출 패턴 — 최약 요일이 일평균의 N% (편차 클 때만). "이 요일만 정상화하면 +N만원" 류 제안 유도.
+  const weakestDayLine = ctx.weakestDayPct !== undefined && ctx.weakestDayPct < 95
+    ? `\n- 요일별 매출 패턴: 가장 약한 요일이 일평균의 ${ctx.weakestDayPct}% — 이 요일만 끌어올리면 큰 개선 (요일 타겟 프로모션·메뉴 고려)`
+    : "";
 
   return `## ${ctx.storeName} 경영 현황
 ${!ratiosReady ? `
@@ -684,7 +690,7 @@ ${ctx.productCount !== undefined && ctx.productCount === 0 ? "   · 제품·메�
 ✓ **비율 신뢰 가능** — 매출·비용·제품 데이터 충분. 아래 표시된 비율(%) 그대로 인용 OK.
    단, 화면에 *없는* 비율은 새로 만들어내지 마세요 (있는 숫자만 사용).
 `}
-업종: ${ctx.industryLabel} | 개업 ${ctx.daysSinceLaunch + 1}일차${phaseLabel ? ` | 단계: ${phaseLabel}` : ` | ${stage}`}${trendTag}${unusedLine}${costRatioLine}
+업종: ${ctx.industryLabel} | 개업 ${ctx.daysSinceLaunch + 1}일차${phaseLabel ? ` | 단계: ${phaseLabel}` : ` | ${stage}`}${trendTag}${weakestDayLine}${unusedLine}${costRatioLine}
 
 ### 재무 현황
 - 월 매출: ${fmtW(ctx.monthlySales)}

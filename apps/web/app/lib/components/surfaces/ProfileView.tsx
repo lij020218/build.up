@@ -12,6 +12,7 @@ import { CodefConnectCard } from "../profile/CodefConnectCard";
 import { PopbillConnectCard } from "../profile/PopbillConnectCard";
 import { SaasMetricsConnectCard } from "../profile/SaasMetricsConnectCard";
 import { SubscriptionWebhookConnectCard } from "../profile/SubscriptionWebhookConnectCard";
+import { FeedbackCard } from "../profile/FeedbackCard";
 import { SubscriptionPlanManager } from "../dashboard/SubscriptionPlanManager";
 import { DashboardLayoutCard } from "../profile/DashboardLayoutCard";
 import { OwnerProfileChips } from "../dashboard/OwnerProfileChips";
@@ -319,6 +320,9 @@ export function ProfileView() {
       <TossPlaceConnectCard ko={ko} />
       <PopbillConnectCard ko={ko} />
       <CodefConnectCard ko={ko} />
+
+      {/* ── 의견 보내기 (인앱 피드백) ── */}
+      <FeedbackCard ko={ko} />
 
       {/* ── 카드 4: 계정 관리 ── */}
       <article style={{ ...card, marginTop: "12px" }}>

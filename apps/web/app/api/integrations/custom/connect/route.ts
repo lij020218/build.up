@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   }, { onConflict: "user_id" });
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
 
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://buildup.example.com").replace(/\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://foundone.dev").replace(/\/$/, "");
   return NextResponse.json({
     ok: true,
     token: plaintextToken,                         // ⚠ 1회만 반환 — 사장님이 안전한 곳에 복사 필요

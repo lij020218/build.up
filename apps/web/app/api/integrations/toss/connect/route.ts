@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     .upsert(row, { onConflict: "user_id" });
   if (upErr) return NextResponse.json({ ok: false, error: upErr.message }, { status: 500 });
 
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://buildup.example.com").replace(/\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://foundone.dev").replace(/\/$/, "");
   return NextResponse.json({
     ok: true,
     status: "active",

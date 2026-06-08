@@ -55,6 +55,7 @@ public struct TodayView: View {
     @State private var showInventorySheet = false
     @State private var showTeamSheet = false
     @State private var showCustomerSheet = false
+    @State private var showBasisSheet = false
 
     /// 2026-05-27 P0-A: AI dashboard/actions 응답 (Hero 코칭 카드에 주입).
     /// nil = 미 fetch 또는 미인증 (mock fallback). 빈 배열 = AI 가 빈 응답 반환.
@@ -115,10 +116,14 @@ public struct TodayView: View {
                     aiActions: aiActions
                 )
 
-                // ② 매출 흐름
+                // ② 매출 흐름 (PortOne·TossPlace 등 자동수집 매출 합산 — autoSourceCount 배지)
                 ActivitySnapshotCard(
                     entries: mock.entries,
-                    bepDailySales: bepDailySales
+                    bepDailySales: bepDailySales,
+                    autoSourceCount: dashboardStore?.autoSourceCount ?? 0,
+                    autoBreakdown: dashboardStore?.autoBreakdown ?? [],
+                    onTapBasis: ((dashboardStore?.autoCardOverlap ?? false) || (dashboardStore?.autoHasPopbill ?? false))
+                        ? { showBasisSheet = true } : nil
                 )
 
                 // ③ 현금흐름 — 미설정이면 설정 프롬프트, 설정 완료면 14일 잔고
@@ -237,6 +242,18 @@ public struct TodayView: View {
                 )
             }
         }
+        .sheet(isPresented: $showBasisSheet) {
+            if let ds = dashboardStore, let cs = cashflowStore {
+                RevenueBasisSheet(
+                    ko: true,
+                    cardOverlap: ds.autoCardOverlap,
+                    hasPopbill: ds.autoHasPopbill,
+                    basis: ds.autoBasis,
+                    cashflowStore: cs,
+                    onSaved: { Task { await refetchUnifiedRevenue() } }
+                )
+            }
+        }
         // 코칭 일지 — 오늘 노출된 hero 신호 1개 자동 기록 (웹 recordSignal 미러). 영업 시작 후만.
         .task(id: "coaching-record") {
             guard mock.resolverInput.businessLaunched, let coaching else { return }
@@ -260,6 +277,18 @@ public struct TodayView: View {
 
     /// AI dashboard/actions 호출 → aiActions @State 업데이트.
     /// MockData 의 매출·비용 데이터를 context 로 보내고, 서버가 enrichDashboardContext 로 나머지 채움.
+    /// 매출 집계 기준 변경 후 재합산 — 새 basis 로 다시 fetch 해 매출 카드·breakdown 즉시 갱신.
+    private func refetchUnifiedRevenue() async {
+        guard let ds = dashboardStore else { return }
+        let svc = UnifiedRevenueService(supabase: BUSupabase.shared.client)
+        let u = await svc.fetch(basis: cashflowStore?.settings.revenueBasis, fromDays: 30)
+        ds.mergeAutoEntries(
+            u.entries, sourceCount: u.sources.count,
+            breakdown: u.breakdown, cardOverlap: u.cardOverlap,
+            hasPopbill: u.sources.popbill, basis: u.basis
+        )
+    }
+
     private func loadAIActions() async {
         // BUSupabase 의 currentSession 으로 인증 가능 확인. demo/anonymous 면 skip.
         guard BUSupabase.shared.currentUser != nil else {
@@ -315,6 +344,31 @@ public struct TodayView: View {
             let ch = (r7 - p7) / p7 * 100
             return ch >= 5 ? "improving" : ch <= -5 ? "declining" : "stable"
         }()
+        // 요일별 매출 패턴 — 최약 요일이 일평균의 N% (웹 computeWeakestDayPct 미러). 달력 날짜 요일은 UTC 기준(TZ 무관).
+        let weakestDayPct: Int? = {
+            let withSales = sortedEntries.filter { $0.sales > 0 }
+            guard withSales.count >= 14 else { return nil }
+            let df = DateFormatter()
+            df.dateFormat = "yyyy-MM-dd"
+            df.timeZone = TimeZone(identifier: "UTC")
+            var cal = Calendar(identifier: .gregorian)
+            cal.timeZone = TimeZone(identifier: "UTC")!
+            var sums = [Double](repeating: 0, count: 7)
+            var counts = [Int](repeating: 0, count: 7)
+            for e in withSales {
+                guard let d = df.date(from: e.date) else { continue }
+                let dow = cal.component(.weekday, from: d) - 1  // 1=일 → 0
+                sums[dow] += e.sales
+                counts[dow] += 1
+            }
+            var weekdayAvgs: [Double] = []
+            for i in 0..<7 where counts[i] >= 2 { weekdayAvgs.append(sums[i] / Double(counts[i])) }
+            guard weekdayAvgs.count >= 4 else { return nil }
+            let overallAvg = withSales.reduce(0.0) { $0 + $1.sales } / Double(withSales.count)
+            guard overallAvg > 0, let weakest = weekdayAvgs.min() else { return nil }
+            let pct = Int((weakest / overallAvg * 100).rounded())
+            return pct < 95 ? pct : nil
+        }()
 
         let context = AIDashboardContext(
             industryCategoryId: webCategoryId,
@@ -328,7 +382,8 @@ public struct TodayView: View {
             businessHealthScore: healthString,
             daysSinceLaunch: mock.daysSinceLaunch,
             operatingPhase: operatingPhase,
-            salesTrendDirection: salesTrend
+            salesTrendDirection: salesTrend,
+            weakestDayPct: weakestDayPct
         )
 
         let repo = AIDashboardActionsRepository(supabase: BUSupabase.shared.client)

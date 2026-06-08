@@ -56,25 +56,28 @@ public actor DailyEntryRepository: DailyEntryRepositoryProtocol {
     public func upsert(_ entry: DailyEntry) async throws {
         let userId = try await getUserId()
 
-        // 1) 기존 전체 fetch
-        var current = try await list(limit: 9999, ascending: true)
-        if let idx = current.firstIndex(where: { $0.date == entry.date }) {
-            current[idx] = entry
+        // 1) 원본 JSON 배열 fetch — 모든 키 보존 (productSales/planSignups/planChurns 등 웹 전용 필드 유지).
+        //    ⚠️ 과거 버그: DailyEntry(3필드)로 디코드→재인코드 하면서 웹 부가필드가 전 기간 소실됐음.
+        //    → 원본 객체를 그대로 들고 sales/customers 만 갱신하는 JSON 레벨 머지로 수정.
+        var arr = try await fetchRawEntries(userId: userId)
+        if let idx = arr.firstIndex(where: { $0["date"]?.stringValue == entry.date }) {
+            arr[idx]["sales"] = .number(entry.sales)
+            arr[idx]["customers"] = .int(entry.customers)
         } else {
-            current.append(entry)
-            current.sort { $0.date < $1.date }
+            arr.append([
+                "date": .string(entry.date),
+                "sales": .number(entry.sales),
+                "customers": .int(entry.customers),
+            ])
         }
+        arr.sort { ($0["date"]?.stringValue ?? "") < ($1["date"]?.stringValue ?? "") }
 
-        // 2) JSON 직렬화
-        let json = current.map { $0.toJSON() }
-
-        // 3) upsert (user_id PK)
         try await supabase
             .from("user_store_data")
             .upsert(
                 StoreDataWriteDTO(
                     user_id: userId,
-                    daily_entries: json,
+                    daily_entries: arr,
                     updated_at: ISO8601DateFormatter().string(from: Date())
                 ),
                 onConflict: "user_id"
@@ -84,20 +87,32 @@ public actor DailyEntryRepository: DailyEntryRepositoryProtocol {
 
     public func delete(date: String) async throws {
         let userId = try await getUserId()
-        var current = try await list(limit: 9999, ascending: true)
-        current.removeAll { $0.date == date }
+        var arr = try await fetchRawEntries(userId: userId)
+        arr.removeAll { $0["date"]?.stringValue == date }
 
         try await supabase
             .from("user_store_data")
             .upsert(
                 StoreDataWriteDTO(
                     user_id: userId,
-                    daily_entries: current.map { $0.toJSON() },
+                    daily_entries: arr,
                     updated_at: ISO8601DateFormatter().string(from: Date())
                 ),
                 onConflict: "user_id"
             )
             .execute()
+    }
+
+    /// 원본 daily_entries JSON 객체 배열 — 모든 키 보존(부가필드 유실 방지)용 fetch.
+    private func fetchRawEntries(userId: UUID) async throws -> [[String: JSONValue]] {
+        let rows: [RawStoreRow] = try await supabase
+            .from("user_store_data")
+            .select("daily_entries")
+            .eq("user_id", value: userId)
+            .limit(1)
+            .execute()
+            .value
+        return (rows.first?.daily_entries ?? []).compactMap { $0.objectValue }
     }
 }
 
@@ -113,27 +128,15 @@ private struct DailyEntryJSON: Decodable {
     let customers: Int?
 }
 
-private struct StoreDataWriteDTO: Encodable {
-    let user_id: UUID
-    let daily_entries: [[String: AnyEncodable]]
-    let updated_at: String
+/// 원본 JSON 보존 fetch 용 — daily_entries 의 모든 키를 그대로 들고 옴.
+private struct RawStoreRow: Decodable {
+    let daily_entries: [JSONValue]?
 }
 
-/// `AnyEncodable` — Codable-safe wrapper for heterogeneous JSON values.
-struct AnyEncodable: Encodable {
-    let value: Any
-
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch value {
-        case let v as String: try container.encode(v)
-        case let v as Double: try container.encode(v)
-        case let v as Int:    try container.encode(v)
-        case let v as Bool:   try container.encode(v)
-        default:
-            try container.encodeNil()
-        }
-    }
+private struct StoreDataWriteDTO: Encodable {
+    let user_id: UUID
+    let daily_entries: [[String: JSONValue]]
+    let updated_at: String
 }
 
 private extension DailyEntry {
@@ -145,13 +148,54 @@ private extension DailyEntry {
             customers: json.customers ?? 0
         )
     }
+}
 
-    func toJSON() -> [String: AnyEncodable] {
-        [
-            "date": AnyEncodable(value: date),
-            "sales": AnyEncodable(value: sales),
-            "customers": AnyEncodable(value: customers),
-        ]
+/// 임의 JSON 값 — daily_entries 의 부가필드(productSales/planSignups/planChurns 등)를
+/// 디코드→인코드 왕복에서 손실 없이 보존하기 위한 Codable 표현. (SDK 의존 없음)
+enum JSONValue: Codable, Sendable, Hashable {
+    case string(String)
+    case int(Int)
+    case number(Double)
+    case bool(Bool)
+    case null
+    case array([JSONValue])
+    case object([String: JSONValue])
+
+    var stringValue: String? { if case .string(let s) = self { return s }; return nil }
+    var objectValue: [String: JSONValue]? { if case .object(let o) = self { return o }; return nil }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if c.decodeNil() {
+            self = .null
+        } else if let b = try? c.decode(Bool.self) {
+            self = .bool(b)
+        } else if let i = try? c.decode(Int.self) {
+            self = .int(i)
+        } else if let d = try? c.decode(Double.self) {
+            self = .number(d)
+        } else if let s = try? c.decode(String.self) {
+            self = .string(s)
+        } else if let a = try? c.decode([JSONValue].self) {
+            self = .array(a)
+        } else if let o = try? c.decode([String: JSONValue].self) {
+            self = .object(o)
+        } else {
+            self = .null
+        }
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.singleValueContainer()
+        switch self {
+        case .string(let s): try c.encode(s)
+        case .int(let i): try c.encode(i)
+        case .number(let d): try c.encode(d)
+        case .bool(let b): try c.encode(b)
+        case .null: try c.encodeNil()
+        case .array(let a): try c.encode(a)
+        case .object(let o): try c.encode(o)
+        }
     }
 }
 

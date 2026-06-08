@@ -867,7 +867,7 @@ const CATEGORY_SECTIONS: Record<CategoryId, SectionSpec[]> = {
           { value: "series-b-plus", label: "시리즈 B+" },
           { value: "growth", label: "Growth (Series C+)" },
         ]},
-        { key: "primaryDomain", label: "주 도메인", type: "url", optional: true, placeholder: "buildup.io" },
+        { key: "primaryDomain", label: "주 도메인", type: "url", optional: true, placeholder: "foundone.dev" },
         { key: "oneLinerKo", label: "한 줄 피치 (한글)", type: "textarea", optional: true, placeholder: "한 문장으로 회사가 무엇을 하는지" },
         { key: "oneLinerEn", label: "한 줄 피치 (영문)", type: "textarea", optional: true, placeholder: "Single-line elevator pitch" },
         { key: "headquarters", label: "본사 소재지", type: "text", optional: true },

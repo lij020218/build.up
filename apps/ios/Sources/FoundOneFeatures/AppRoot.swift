@@ -298,6 +298,17 @@ public struct AppRoot: View {
         await cashflow.load()
         self.cashflowStore = cashflow
 
+        // 자동수집 매출 통합 — PortOne·TossPlace·CODEF·팝빌 일별 매출을 구간별 합산해 매출 카드에 반영.
+        //   basis = cashflow_settings.revenueBasis (웹·iOS 공용). 매출 카드는 store.entries 를 읽으므로
+        //   머지만 하면 UI 변경 없이 자동 합산값이 즉시 표시된다. best-effort(실패 시 수동 entries 유지).
+        let unifiedService = UnifiedRevenueService(supabase: supabase)
+        let unified = await unifiedService.fetch(basis: cashflow.settings.revenueBasis, fromDays: 30)
+        store.mergeAutoEntries(
+            unified.entries, sourceCount: unified.sources.count,
+            breakdown: unified.breakdown, cardOverlap: unified.cardOverlap,
+            hasPopbill: unified.sources.popbill, basis: unified.basis
+        )
+
         // 코칭 일지 — 웹과 동일 Supabase coaching_history 테이블. 14일 로드 (best-effort).
         let coachingRepo = CoachingHistoryRepository(supabase: supabase, getUserId: { userId })
         let coaching = CoachingHistoryStore(repository: coachingRepo)
@@ -435,6 +446,18 @@ public struct AppRoot: View {
         //   봉투암호화 API 경유, best-effort. 변경 빈도 낮으나 기기 전환 시 최신 유지.
         let ownerSync = OwnerProfileSyncRepository(supabase: supabase)
         await ownerSync.load()
+
+        // 9. 자동수집 매출 재합산 — 위 applyRemoteData(수동 entries) 후 자동매출 overlay.
+        //    포커스 복귀·realtime 시 PortOne·TossPlace 등 최신 매출이 매출 카드에 반영.
+        if let store = dashboardStore {
+            let unifiedService = UnifiedRevenueService(supabase: supabase)
+            let unified = await unifiedService.fetch(basis: cashflowStore?.settings.revenueBasis, fromDays: 30)
+            store.mergeAutoEntries(
+                unified.entries, sourceCount: unified.sources.count,
+                breakdown: unified.breakdown, cardOverlap: unified.cardOverlap,
+                hasPopbill: unified.sources.popbill, basis: unified.basis
+            )
+        }
     }
 
     /// 로딩 완료 전 임시 — 빈 state. load() 가 끝나면 즉시 storeInfoStore 가 set 되어

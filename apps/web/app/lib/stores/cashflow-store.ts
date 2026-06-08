@@ -63,6 +63,19 @@ export type FixedExpenseSchedule = {
   notes?: string;
 };
 
+// ─── 매출 집계 기준 (자동수집 채널 중복 방지) ───
+//
+//  같은 카드매출이 여러 채널에 잡힐 수 있어(PortOne/TossPlace ↔ CODEF 슈퍼셋),
+//  사장님이 "어느 경로로 집계할지" 선택한다. 시스템은 선택 경로만 합산해 이중계상을 막는다.
+//   - card "individual": PortOne(온라인) + TossPlace(매장) 각각 실시간 합산
+//   - card "codef":      여신협회(CODEF) 통합 — 모든 카드 한 번에 (배달앱·타사단말 포함, 하루 지연)
+//   - countCashReceipt:  팝빌 현금영수증을 현금매출로 합산할지 (카드결제에도 현금영수증 끊으면 OFF=중복방지)
+//  null = 미설정 → 엔진이 연결 채널 기준 스마트 기본값 사용.
+export type RevenueBasis = {
+  card: "individual" | "codef";
+  countCashReceipt: boolean;
+};
+
 // ─── Store ───
 
 type CashflowState = {
@@ -75,6 +88,7 @@ type CashflowState = {
   dailyMorningBriefing: boolean;
   vatReserveEnabled: boolean;                 // 부가세 10% 적립 여부
   setupCompletedAt: string | null;            // 최초 설정 완료 시각 (온보딩 게이팅용)
+  revenueBasis: RevenueBasis | null;          // 매출 집계 기준 (null=미설정→스마트 기본)
 };
 
 type CashflowActions = {
@@ -89,6 +103,7 @@ type CashflowActions = {
   setNotifyOnCrisis: (v: boolean) => void;
   setDailyMorningBriefing: (v: boolean) => void;
   setVatReserveEnabled: (v: boolean) => void;
+  setRevenueBasis: (v: RevenueBasis) => void;
   markSetupCompleted: () => void;
   /** 업종별 *기본* 채널 믹스로 한 번에 갈아끼우기 — 시트 초기 진입 시 추천 적용. */
   applyIndustryDefaults: (categoryId: string) => void;
@@ -121,6 +136,7 @@ const initialState: CashflowState = {
   dailyMorningBriefing: true,
   vatReserveEnabled: false,
   setupCompletedAt: null,
+  revenueBasis: null,
 };
 
 export const useCashflowStore = create<CashflowState & CashflowActions>()(
@@ -163,6 +179,7 @@ export const useCashflowStore = create<CashflowState & CashflowActions>()(
       setNotifyOnCrisis: (v) => set({ notifyOnCrisis: v }),
       setDailyMorningBriefing: (v) => set({ dailyMorningBriefing: v }),
       setVatReserveEnabled: (v) => set({ vatReserveEnabled: v }),
+      setRevenueBasis: (v) => set({ revenueBasis: v }),
       markSetupCompleted: () => set({ setupCompletedAt: new Date().toISOString() }),
       applyIndustryDefaults: (categoryId) =>
         set({ salesChannels: defaultChannelsForIndustry(categoryId) }),
@@ -180,6 +197,7 @@ export const useCashflowStore = create<CashflowState & CashflowActions>()(
         dailyMorningBriefing: state.dailyMorningBriefing,
         vatReserveEnabled: state.vatReserveEnabled,
         setupCompletedAt: state.setupCompletedAt,
+        revenueBasis: state.revenueBasis,
       }),
     },
   ),

@@ -102,7 +102,7 @@ export async function POST(request: Request) {
   }
 
   // webhook URL 안내
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://buildup.example.com").replace(/\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://foundone.dev").replace(/\/$/, "");
   return NextResponse.json({
     ok: true,
     status: "active",

@@ -33,6 +33,7 @@ import { useAiAnalysisHandlers } from "./hooks/useAiAnalysisHandlers";
 import { usePersistence } from "./hooks/usePersistence";
 import { useDataLoading } from "./hooks/useDataLoading";
 import { getKstDate } from "./utils/business-day";
+import { computeWeakestDayPct } from "./utils/weakest-day";
 
 // ── Re-exported types (consumers import from useDashboard) ──
 export type { DailyEntry, MonthlyCosts, CostSnapshot } from "./stores/finance-store";
@@ -612,6 +613,8 @@ export function useDashboard(surface: DashboardSurface = "home") {
             const ch = ((r7 - p7) / p7) * 100;
             return ch >= 5 ? "improving" : ch <= -5 ? "declining" : "stable";
           })(),
+          // 요일별 매출 패턴 — 최약 요일이 일평균의 N% (AI 가 요일 타겟 제안에 활용)
+          weakestDayPct: computeWeakestDayPct(entries),
           // 비용 구조 추세 (이번달 prime cost vs 지난달)
           ...(() => {
             const curMonth = getKstDate(new Date()).slice(0, 7);

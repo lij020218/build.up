@@ -106,10 +106,10 @@ export async function POST(request: Request) {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, error: "DB 설정 오류" }, { status: 500 });
 
-  // 1. 업로드 레코드 — 멱등: 동일 (파일명·행수·총액) 재업로드면 기존 row 재사용.
-  //    csv_revenue_uploads 는 UNIQUE 제약이 없어 그냥 insert 하면 같은 파일 재업로드 시
-  //    uploads 행이 무한 누적된다(entries 는 복합키로 dedup 되지만 uploads 는 아님).
-  //    동일 내용이면 기존 upload.id 를 재사용해 누적을 막는다.
+  // 1. 업로드 레코드 — 멱등: 같은 *파일명* 재업로드면 기존 row 재사용(내용이 바뀌어도).
+  //    ⚠️ 과거: dedup 키가 (파일명·행수·총액)이라, 같은 파일을 *수정* 재업로드하면 행수/총액이
+  //    달라져 새 upload 가 생기고, csv/list 가 날짜별로 여러 upload 를 합산해 이중계상됐음.
+  //    → 파일명 1개당 upload 1개로 고정하고, 재업로드 시 기존 entries 를 비운 뒤 새로 넣어 깨끗이 교체.
   const totalAmount = parsed.entries.reduce((s, e) => s + e.amount, 0);
   let uploadId: string | null = null;
 
@@ -118,17 +118,24 @@ export async function POST(request: Request) {
     .select("id")
     .eq("user_id", auth.userId)
     .eq("filename", file.name)
-    .eq("row_count", parsed.entries.length)
-    .eq("total_amount", totalAmount)
     .maybeSingle();
 
   if (existingUpload) {
     uploadId = existingUpload.id;
-    // 메타(source_label)만 갱신 — 재업로드 시점 반영
     await supabase
       .from("csv_revenue_uploads")
-      .update({ source_label: sourceLabel })
+      .update({ source_label: sourceLabel, row_count: parsed.entries.length, total_amount: totalAmount })
       .eq("id", existingUpload.id);
+    // 기존 entries 전부 제거 후 새로 삽입 — 수정 재업로드 시 옛 날짜/금액이 남아 합산되는 것 방지.
+    const { error: clearErr } = await supabase
+      .from("csv_revenue_entries")
+      .delete()
+      .eq("user_id", auth.userId)
+      .eq("upload_id", uploadId);
+    if (clearErr) {
+      console.error("[csv/upload] clear old entries failed", clearErr);
+      return NextResponse.json({ ok: false, error: "엔트리 교체 실패" }, { status: 500 });
+    }
   } else {
     const { data: upload, error: upErr } = await supabase
       .from("csv_revenue_uploads")
@@ -149,7 +156,7 @@ export async function POST(request: Request) {
     uploadId = upload.id;
   }
 
-  // 2. 엔트리들
+  // 2. 엔트리들 (위에서 비웠으므로 upsert = 신규 삽입)
   const rows = parsed.entries.map((e) => ({
     upload_id: uploadId,
     user_id: auth.userId,

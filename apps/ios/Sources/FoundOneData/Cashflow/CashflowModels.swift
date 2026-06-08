@@ -48,6 +48,29 @@ public struct CashflowFixedExpense: Codable, Sendable, Hashable, Identifiable {
     }
 }
 
+/// 매출 집계 기준 — 웹 cashflow-store.RevenueBasis 와 동일 JSON (양방향 동기).
+///   card: "individual"(PortOne+TossPlace 합산) | "codef"(여신협회 통합)
+///   countCashReceipt: 팝빌 현금영수증을 현금매출로 합산할지
+public struct RevenueBasis: Codable, Sendable, Hashable {
+    public var card: String
+    public var countCashReceipt: Bool
+    public init(card: String, countCashReceipt: Bool) {
+        self.card = card
+        self.countCashReceipt = countCashReceipt
+    }
+}
+
+/// 채널별 매출 내역 1줄 — 매출 카드 breakdown 표시용 (집계 기준으로 실제 합산된 출처만).
+public struct RevenueBreakdownEntry: Sendable, Hashable, Identifiable {
+    public let source: String   // "portone" | "tossplace" | "codef" | "popbill"
+    public let sales: Double
+    public var id: String { source }
+    public init(source: String, sales: Double) {
+        self.source = source
+        self.sales = sales
+    }
+}
+
 public struct CashflowSettings: Codable, Sendable, Hashable {
     public var currentBalance: Double
     public var currentBalanceUpdatedAt: String?
@@ -58,6 +81,7 @@ public struct CashflowSettings: Codable, Sendable, Hashable {
     public var dailyMorningBriefing: Bool
     public var vatReserveEnabled: Bool
     public var setupCompletedAt: String?
+    public var revenueBasis: RevenueBasis?
 
     /// 설정 완료 여부 — 웹 게이팅과 동일(setupCompletedAt 존재 시 HeroCard 노출).
     public var isConfigured: Bool { setupCompletedAt != nil }
@@ -71,7 +95,8 @@ public struct CashflowSettings: Codable, Sendable, Hashable {
         notifyOnCrisis: Bool = true,
         dailyMorningBriefing: Bool = true,
         vatReserveEnabled: Bool = false,
-        setupCompletedAt: String? = nil
+        setupCompletedAt: String? = nil,
+        revenueBasis: RevenueBasis? = nil
     ) {
         self.currentBalance = currentBalance
         self.currentBalanceUpdatedAt = currentBalanceUpdatedAt
@@ -82,6 +107,7 @@ public struct CashflowSettings: Codable, Sendable, Hashable {
         self.dailyMorningBriefing = dailyMorningBriefing
         self.vatReserveEnabled = vatReserveEnabled
         self.setupCompletedAt = setupCompletedAt
+        self.revenueBasis = revenueBasis
     }
 
     // 빈 jsonb('{}') 나 일부 키 누락도 안전하게 디코딩 (웹과 호환).
@@ -96,5 +122,6 @@ public struct CashflowSettings: Codable, Sendable, Hashable {
         dailyMorningBriefing = try c.decodeIfPresent(Bool.self, forKey: .dailyMorningBriefing) ?? true
         vatReserveEnabled = try c.decodeIfPresent(Bool.self, forKey: .vatReserveEnabled) ?? false
         setupCompletedAt = try c.decodeIfPresent(String.self, forKey: .setupCompletedAt)
+        revenueBasis = try c.decodeIfPresent(RevenueBasis.self, forKey: .revenueBasis)
     }
 }

@@ -50,6 +50,7 @@ public struct ProfileView: View {
     @State private var showDeleteConfirm: Bool = false
     @State private var showResetConfirm: Bool = false
     @State private var showDataConnections: Bool = false
+    @State private var showFeedbackSheet: Bool = false
     @State private var showStoreEdit: Bool = false
     @State private var connectionCount: Int? = nil
     @State private var resetting: Bool = false
@@ -68,6 +69,7 @@ public struct ProfileView: View {
                 notificationCard
                 languageCard
                 supportCard
+                feedbackCard
                 accountActionsCard
                 Color.clear.frame(height: 110)
             }
@@ -79,6 +81,9 @@ public struct ProfileView: View {
             Task { await refreshConnectionCount() }
         }) {
             DataConnectionSheet()
+        }
+        .sheet(isPresented: $showFeedbackSheet) {
+            FeedbackSheet()
         }
         .sheet(isPresented: $showStoreEdit) {
             StoreInfoEditSheet(
@@ -325,6 +330,42 @@ public struct ProfileView: View {
         case .growth: return "성장기"
         case .mature: return "안정 운영"
         }
+    }
+
+    // MARK: - 의견 보내기 (인앱 피드백)
+
+    private var feedbackCard: some View {
+        Button { showFeedbackSheet = true } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(BUColor.midnight08)
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "bubble.left.and.text.bubble.right")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(BUColor.midnight)
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("의견 보내기")
+                        .font(.system(size: 14.5, weight: .heavy))
+                        .foregroundStyle(BUColor.ink)
+                    Text("불편한 점·제안 무엇이든 — 빠르게 반영하겠습니다")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(BUColor.inkSecondary)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
+            .padding(BUSpacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.white.opacity(0.72)))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - 3.5 dataConnectionCard (사장님 외부 데이터 자동 수집)

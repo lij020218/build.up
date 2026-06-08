@@ -118,6 +118,7 @@ public struct AIDashboardContext: Sendable, Encodable {
 
     public var operatingPhase: String?         // "pre-launch" | "early" | "growth" | "mature"
     public var salesTrendDirection: String?    // "improving" | "declining" | "stable" | "insufficient"
+    public var weakestDayPct: Int?             // 가장 약한 요일이 일평균의 N% (요일 패턴, 2주+ 데이터 시만)
 
     public var pendingTaxEvents: [String]
     public var lowStockItems: [String]
@@ -139,6 +140,7 @@ public struct AIDashboardContext: Sendable, Encodable {
         daysSinceLaunch: Int = 0,
         operatingPhase: String? = nil,
         salesTrendDirection: String? = nil,
+        weakestDayPct: Int? = nil,
         pendingTaxEvents: [String] = [],
         lowStockItems: [String] = [],
         upcomingFixedExpenses: [String] = []
@@ -158,6 +160,7 @@ public struct AIDashboardContext: Sendable, Encodable {
         self.daysSinceLaunch = daysSinceLaunch
         self.operatingPhase = operatingPhase
         self.salesTrendDirection = salesTrendDirection
+        self.weakestDayPct = weakestDayPct
         self.pendingTaxEvents = pendingTaxEvents
         self.lowStockItems = lowStockItems
         self.upcomingFixedExpenses = upcomingFixedExpenses

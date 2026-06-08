@@ -46,9 +46,9 @@ public struct SignInView: View {
                 Spacer(minLength: 0)
 
                 VStack(spacing: 10) {
-                    KakaoButton {
-                        Task { await coordinator.signInWithKakao() }
-                    }
+                    // ⚠️ 카카오 로그인은 네이티브 SDK 미연동(KakaoAuthProvider 스텁, Package.swift 주석)이라
+                    //   누르면 개발자 에러가 노출됨 → 출시 전 버튼 숨김. SDK 연동 + Supabase/카카오콘솔 설정 후 복구.
+                    //    KakaoButton { Task { await coordinator.signInWithKakao() } }
                     AppleButton {
                         Task { await coordinator.signInWithApple() }
                     }

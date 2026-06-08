@@ -290,6 +290,11 @@ export function applyStoreData(data: UserStoreData): void {
       if (typeof settings.notifyOnCrisis === "boolean") cf.setNotifyOnCrisis(settings.notifyOnCrisis);
       if (typeof settings.dailyMorningBriefing === "boolean") cf.setDailyMorningBriefing(settings.dailyMorningBriefing);
       if (typeof settings.vatReserveEnabled === "boolean") cf.setVatReserveEnabled(settings.vatReserveEnabled);
+      // 매출 집계 기준 복원
+      const rb = settings.revenueBasis as { card?: unknown; countCashReceipt?: unknown } | null | undefined;
+      if (rb && (rb.card === "individual" || rb.card === "codef")) {
+        cf.setRevenueBasis({ card: rb.card, countCashReceipt: rb.countCashReceipt === true });
+      }
       // setupCompletedAt 은 markSetupCompleted action 만 있어, 이미 완료된 상태면 그대로 둠
     }
   }
@@ -434,8 +439,8 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
   // 현금흐름 설정 — Cash-flow Crunch Tracker (사장님 직접 입력, 손실 시 큰 손실)
   {
     const cf = useCashflowStore.getState();
-    // setupCompletedAt 이 있을 때만 의미 있는 설정으로 간주해 저장
-    if (cf.setupCompletedAt || cf.currentBalance > 0 || cf.fixedExpenses.length > 0) {
+    // setupCompletedAt·잔고·고정비·매출집계기준 중 하나라도 있으면 의미 있는 설정으로 간주해 저장
+    if (cf.setupCompletedAt || cf.currentBalance > 0 || cf.fixedExpenses.length > 0 || cf.revenueBasis) {
       r.cashflowSettings = {
         currentBalance: cf.currentBalance,
         currentBalanceUpdatedAt: cf.currentBalanceUpdatedAt,
@@ -446,6 +451,7 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
         dailyMorningBriefing: cf.dailyMorningBriefing,
         vatReserveEnabled: cf.vatReserveEnabled,
         setupCompletedAt: cf.setupCompletedAt,
+        ...(cf.revenueBasis ? { revenueBasis: cf.revenueBasis } : {}),
       };
     }
   }

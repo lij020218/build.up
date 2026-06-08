@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     .eq("provider", "custom")
     .gte("occurred_at", thirtyDaysAgo);
 
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://buildup.example.com").replace(/\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://foundone.dev").replace(/\/$/, "");
   return NextResponse.json({
     ok: true,
     connected: conn.status === "active",
