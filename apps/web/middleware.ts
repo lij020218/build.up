@@ -41,7 +41,9 @@ export function middleware(request: NextRequest) {
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://pay.portone.io",
+      // 카카오 지도 SDK: dapi.kakao.com(sdk.js) → 내부적으로 t1.daumcdn.net 의 지도 엔진 스크립트 로드.
+      //   (지도 타일 이미지·API 연결은 아래 img-src/connect-src 의 https: 가 커버)
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://pay.portone.io https://dapi.kakao.com https://t1.daumcdn.net",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
