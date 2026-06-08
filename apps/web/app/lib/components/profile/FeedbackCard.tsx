@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { MessageSquareHeart, Send } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
+import { FEEDBACK_AREAS, screenToArea, type FeedbackAreaKey } from "../../feedback/areas";
 
 const MIDNIGHT = "#191970";
 
@@ -15,6 +16,10 @@ type Status = "idle" | "sending" | "sent" | "error";
 
 export function FeedbackCard({ ko }: { ko: boolean }) {
   const [category, setCategory] = useState<Category>("idea");
+  // 영역: 현재 화면에서 자동 감지(사장님이 수정 가능).
+  const [area, setArea] = useState<FeedbackAreaKey>(() =>
+    typeof window !== "undefined" ? screenToArea(window.location.pathname) : "other",
+  );
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
 
@@ -38,6 +43,7 @@ export function FeedbackCard({ ko }: { ko: boolean }) {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           category,
+          area,
           message: msg,
           context: {
             platform: "web",
@@ -74,7 +80,27 @@ export function FeedbackCard({ ko }: { ko: boolean }) {
           </div>
         </div>
 
-        {/* 카테고리 칩 */}
+        {/* 영역 — 현재 화면에서 자동 감지, 수정 가능 */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, flexShrink: 0 }}>
+            {ko ? "어디에 관한 의견인가요?" : "Which area?"}
+          </span>
+          <select
+            value={area}
+            onChange={(e) => setArea(e.target.value as FeedbackAreaKey)}
+            style={{
+              flex: 1, padding: "7px 10px", borderRadius: 9, fontSize: 12.5, fontFamily: "inherit",
+              border: "1px solid rgba(0,0,0,0.12)", background: "#fff", color: "#16181d",
+              cursor: "pointer", outline: "none",
+            }}
+          >
+            {FEEDBACK_AREAS.map((a) => (
+              <option key={a.key} value={a.key}>{a.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* 종류 칩 */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
           {cats.map((c) => {
             const on = category === c.key;

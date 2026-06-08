@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../_lib/auth";
 import { checkSimpleRateLimit } from "../_lib/rate-limit";
 import { getSupabaseAdmin } from "../_lib/supabase-admin";
+import { isFeedbackArea, screenToArea } from "../../lib/feedback/areas";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
   const rl = await checkSimpleRateLimit({ key: `feedback:${auth.userId}`, limit: 5, windowMs: 60_000 });
   if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
 
-  let body: { category?: string; message?: string; context?: unknown };
+  let body: { category?: string; area?: string; message?: string; context?: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -47,12 +48,18 @@ export async function POST(request: Request) {
     /* context 직렬화 실패 — 무시 */
   }
 
+  // 영역: 사용자가 보낸 area(화이트리스트) 우선, 없으면 context.screen 에서 서버측 자동 판별.
+  const area = isFeedbackArea(body.area)
+    ? body.area
+    : screenToArea(typeof context.screen === "string" ? context.screen : "");
+
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, error: "서버 설정 오류" }, { status: 500 });
 
   const { error } = await supabase.from("user_feedback").insert({
     user_id: auth.userId,
     category,
+    area,
     message,
     context,
   });

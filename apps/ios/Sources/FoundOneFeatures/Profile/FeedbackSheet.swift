@@ -11,6 +11,7 @@ struct FeedbackSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var category = "idea"
+    @State private var area = "other"   // 설정에서 진입하므로 기본 '기타', 사용자가 선택
     @State private var message = ""
     @State private var sending = false
     @State private var sent = false
@@ -27,6 +28,29 @@ struct FeedbackSheet: View {
                     Text("불편한 점·제안 무엇이든 — 빠르게 반영하겠습니다")
                         .font(.system(size: 13))
                         .foregroundStyle(BUColor.inkMuted)
+
+                    // 영역 — 어디에 관한 의견인가 (웹과 동일 분류)
+                    HStack(spacing: 8) {
+                        Text("어디에 관한 의견인가요?")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(BUColor.inkMuted)
+                        Spacer(minLength: 0)
+                        Menu {
+                            ForEach(FeedbackAreas.all) { a in
+                                Button(a.label) { area = a.key }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(FeedbackAreas.label(area))
+                                    .font(.system(size: 12.5, weight: .semibold))
+                                Image(systemName: "chevron.up.chevron.down").font(.system(size: 10))
+                            }
+                            .foregroundStyle(BUColor.midnight)
+                            .padding(.horizontal, 11).padding(.vertical, 6)
+                            .background(Capsule().fill(BUColor.midnight.opacity(0.06)))
+                            .overlay(Capsule().stroke(BUColor.midnight.opacity(0.5), lineWidth: 1))
+                        }
+                    }
 
                     // 카테고리 칩
                     FlexChips(cats: cats, selected: $category)
@@ -90,7 +114,7 @@ struct FeedbackSheet: View {
         failed = false
         Task {
             let repo = FeedbackRepository(supabase: BUSupabase.shared.client)
-            let ok = await repo.send(category: category, message: String(msg.prefix(2000)), screen: "today")
+            let ok = await repo.send(category: category, area: area, message: String(msg.prefix(2000)), screen: "profile")
             sending = false
             if ok { sent = true } else { failed = true }
         }

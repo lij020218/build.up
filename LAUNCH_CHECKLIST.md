@@ -10,6 +10,7 @@
   - `20260607_000002_coaching_history_realtime.sql` (코칭 realtime)
   - `20260607_000003_drop_dead_sales_tables.sql` (평문 자격증명 죽은 테이블 드롭)
   - `20260608_000001_user_feedback.sql` (인앱 피드백)
+  - `20260608_000002_feedback_area_status.sql` (피드백 영역 분류 + 처리 상태 — 관리자 인박스)
 - **최근(적용 확인):** `20260529_rename_buildup_to_foundone`(이거 미적용이면 결제 전부 실패) → `20260601_payment_id_unique` → `20260603_realtime_publication` → `20260604_roadmaps_unique_user` → `20260605_security_hardening/encrypt_payment_pii/portone_webhook_secret` → `20260606_owner_profile_enc/webhook_secret_dek/promo_playbook_agent`.
 
 ## 2. Supabase 대시보드 수동 작업 (마이그레이션만으론 안 됨)
@@ -21,6 +22,7 @@
 **🔴 핵심:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`(=메인 LLM, getAnthropicApiKey도 이걸 반환), `PORTONE_KEK_BASE64`(봉투암호화 KEK — 없으면 결제·통합·PII 복호화 전부 실패), `CRON_SECRET`(없으면 cron 4개 401).
 **🔴 결제 출시 시:** `PORTONE_MERCHANT_API_SECRET`, `NEXT_PUBLIC_PORTONE_STORE_ID`, `NEXT_PUBLIC_PORTONE_BILLING_CHANNEL_KEY`, `PORTONE_WEBHOOK_SECRET`, `TOSS_WEBHOOK_SECRET`, `NEXT_PUBLIC_PREMIUM_PRICE_KRW`(실판매가와 일치 — 불일치 시 결제 reject).
 **🟡 기능별:** `NEXT_PUBLIC_BASE_URL`(=https://foundone.dev), `KAKAO_REST_API_KEY`+`NEXT_PUBLIC_KAKAO_JS_KEY`(상권추천·지도), `UPSTASH_REDIS_REST_URL/_TOKEN`(rate limit), GA4 4종, 팝빌 3종, NAVER/TAVILY/YOUTUBE, 공공데이터 키들, Sentry 3종.
+**🟢 관리자 콘솔:** `ADMIN_EMAILS=lij020218@naver.com` (콤마구분 다중 가능). 이 이메일로 로그인하면 `https://foundone.dev/admin` 접근(개요·피드백·사용자·매출). **미설정 시 아무도 관리자 아님**(안전 기본값). 보안 경계는 모든 `/api/admin/*` 서버 검증 — 이 env가 유일한 권한 소스이므로 prod/Preview 환경 모두에 동일 설정 필요.
 
 ## 4. 배포 설정
 - **Vercel Pro 필요** (cron 4개 `maxDuration=300` — Hobby면 10초로 강등). cron: portone-sync(매시), tossplace-sync(매시 15분), marketing-trends(23시), funnel-pull(19시).

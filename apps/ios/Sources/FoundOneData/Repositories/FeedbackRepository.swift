@@ -15,8 +15,8 @@ public struct FeedbackRepository: Sendable {
         self.baseURL = baseURL
     }
 
-    /// 피드백 전송. category: "bug"|"idea"|"ux"|"other". 성공 시 true.
-    public func send(category: String, message: String, screen: String = "ios") async -> Bool {
+    /// 피드백 전송. category: "bug"|"idea"|"ux"|"other". area: FeedbackAreas key. 성공 시 true.
+    public func send(category: String, area: String, message: String, screen: String = "ios") async -> Bool {
         guard let token = try? await supabase.auth.session.accessToken else { return false }
 
         var req = URLRequest(url: baseURL.appendingPathComponent("/api/feedback"))
@@ -27,6 +27,7 @@ public struct FeedbackRepository: Sendable {
 
         let body: [String: Any] = [
             "category": category,
+            "area": area,
             "message": message,
             "context": ["platform": "ios", "screen": screen],
         ]

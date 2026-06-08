@@ -102,3 +102,20 @@ export function getCronSecret(): string | undefined {
   const secret = getEnvVar("CRON_SECRET");
   return secret && secret.length >= 10 ? secret : undefined;
 }
+
+/**
+ * 관리자 콘솔(/admin) 접근 허용 이메일 목록 — 콤마 구분, 소문자 정규화.
+ *
+ *   서버 전용 allowlist 이므로 사용자가 변조 불가(앱 user_metadata 와 무관).
+ *   미설정 시 빈 배열 → 아무도 관리자가 아님(안전한 기본값).
+ *   다관리자/세분권한이 필요해지면 app_metadata.is_admin(service-role 만 수정) 으로 승급.
+ *   예: ADMIN_EMAILS=lij020218@naver.com,ops@foundone.dev
+ */
+export function getAdminEmails(): string[] {
+  const raw = getEnvVar("ADMIN_EMAILS");
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e.length > 0);
+}

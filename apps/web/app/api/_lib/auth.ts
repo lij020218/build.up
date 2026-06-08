@@ -20,7 +20,7 @@ function getAdminlessClient(): SupabaseClient {
 }
 
 export type ApiAuthResult =
-  | { ok: true; userId: string }
+  | { ok: true; userId: string; email?: string }
   | { ok: false; status: number; error: string };
 
 /**
@@ -70,7 +70,9 @@ export async function requireApiUser(request: Request): Promise<ApiAuthResult> {
 
   return {
     ok: true,
-    userId: data.user.id
+    userId: data.user.id,
+    // 관리자 게이팅(requireAdmin)에서 email + email_confirmed 검증에 사용. 일반 호출부는 무시.
+    email: data.user.email ?? undefined,
   };
 }
 
