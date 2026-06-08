@@ -229,6 +229,8 @@ public final class AuthCoordinator {
             case .kakao: try await kakaoProvider.signOut()
             default:     try await supabase.auth.signOut()
             }
+            // 로컬 사용자 데이터 전면 제거 — cross-account 누출 방지(공용기기에서 다음 사용자 보호).
+            LocalDataWipe.wipeAllLocalUserData()
             state = .unauthenticated
         } catch {
             state = .failed("로그아웃 실패: \(error.localizedDescription)")
@@ -246,6 +248,8 @@ public final class AuthCoordinator {
             case .kakao: try? await kakaoProvider.signOut()
             default:     try? await supabase.auth.signOut()
             }
+            // 서버 삭제에 더해 로컬 캐시도 전면 제거.
+            LocalDataWipe.wipeAllLocalUserData()
             state = .unauthenticated
         } catch {
             state = .failed("계정 삭제 실패: \(error.localizedDescription)")

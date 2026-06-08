@@ -46,8 +46,8 @@ export async function getTossPlaceDailyEntries(
       buckets.set(dateKst, bucket);
     }
     if (row.cancelled_at) {
-      bucket.sales -= Number(row.amount ?? 0);
-      bucket.customers = Math.max(0, bucket.customers - 1);
+      // tossplace_payments 도 결제 1건=row 1개(onConflict:"id") 모델 — 취소 시 같은 row 에
+      // cancelled_at 만 세팅된다. 이 매출은 가산된 적이 없으므로 차감 금지(음수·과소계상 방지). skip.
       bucket.cancelledCount += 1;
     } else {
       bucket.sales += Number(row.amount ?? 0);

@@ -82,9 +82,9 @@ export async function getPortOneDailyEntries(
       bucket.customers += 1;
       bucket.paymentCount += 1;
     } else if (row.status === "CANCELLED") {
-      // 전체 환불: 같은 날 매출에서 차감
-      bucket.sales -= Number(row.amount_total ?? 0);
-      bucket.customers = Math.max(0, bucket.customers - 1);
+      // 전체 환불: portone_payments 는 결제 1건=row 1개(onConflict:"id") 모델이라
+      // PAID→CANCELLED 전이 시 같은 row 의 status 만 바뀐다. 즉 이 매출은 애초에
+      // 가산된 적이 없으므로 *차감하면 안 된다*(차감 시 음수·과소계상). 그냥 0 기여로 skip.
       bucket.cancelledCount += 1;
     } else if (row.status === "PARTIAL_CANCELLED") {
       // 부분 환불: amount_total 이 환불 후 잔액 — 그냥 그대로 가산 (이중 처리 방지)

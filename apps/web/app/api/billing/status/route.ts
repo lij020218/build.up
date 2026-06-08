@@ -30,15 +30,27 @@ export async function GET(request: Request) {
   }
 
   // GET 핸들러에서 DB 쓰기 금지 — REST 멱등성 위반 + concurrent tab race 야기.
-  // effectiveStatus 는 응답 시점에 계산해 클라이언트에 전달하고,
-  // 실제 status 컬럼 갱신은 웹훅/cron 이 담당한다.
+  // effectiveStatus/effectivePlan 은 응답 시점에 계산해 클라이언트에 전달한다.
+  // (정기결제 cron 이 아직 없으므로) 기간 만료분은 *읽기 시점*에 강등해
+  //   취소·만료 후에도 프리미엄이 영구 유지되는 버그를 막는다. DB 컬럼은 그대로 둔다.
   const now = new Date();
-  const isPastDue =
-    data.status === "active" &&
-    data.current_period_end &&
-    new Date(data.current_period_end) < now;
+  const expired = !!data.current_period_end && new Date(data.current_period_end) < now;
 
-  const effectiveStatus = isPastDue ? "past_due" : data.status;
+  let effectiveStatus: string = data.status;
+  let effectivePlan: string = data.plan;
+  if (expired) {
+    // 취소 예약돼 있었으면 canceled, 아니면 결제 필요(past_due). 어느 쪽이든 접근 권한은 회수.
+    effectiveStatus = data.cancel_at_period_end ? "canceled" : "past_due";
+    effectivePlan = "free";
+  }
 
-  return NextResponse.json({ ...data, status: effectiveStatus });
+  // 클라이언트 계약은 camelCase 로 통일 (billing/pricing 페이지가 camelCase 로 읽음).
+  return NextResponse.json({
+    plan: effectivePlan,
+    status: effectiveStatus,
+    currentPeriodStart: data.current_period_start ?? undefined,
+    currentPeriodEnd: data.current_period_end ?? undefined,
+    cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
+    billingMethodLabel: data.billing_method_label ?? undefined,
+  });
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 
 type Sub = {
   plan: "free" | "premium";
@@ -21,17 +22,28 @@ export default function BillingPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useEffect(() => {
-    fetch("/api/billing/status")
-      .then((r) => r.json())
-      .then((data) => setSub(data))
-      .catch(() => setSub({ plan: "free", status: "active" }))
-      .finally(() => setLoading(false));
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) { setSub({ plan: "free", status: "active" }); setLoading(false); return; }
+      fetch("/api/billing/status", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((data) => setSub(data))
+        .catch(() => setSub({ plan: "free", status: "active" }))
+        .finally(() => setLoading(false));
+    })();
   }, []);
 
   const handleCancel = async () => {
     setCanceling(true);
     try {
-      const res = await fetch("/api/billing/cancel", { method: "POST" });
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) { setMessage("로그인이 필요합니다."); setCanceling(false); return; }
+      const res = await fetch("/api/billing/cancel", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (!res.ok) { setMessage(data.error ?? "취소 처리에 실패했습니다."); return; }
       setMessage(data.message ?? "구독이 취소 예정으로 설정됐습니다.");

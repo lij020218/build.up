@@ -68,9 +68,12 @@ import {
   useInterviewStore,
   useTimeLogStore,
   useCashflowStore,
+  useUsageStore,
+  useBookingStore,
+  useEcommerceStore,
 } from "../stores";
 import { useStoreInfoStore } from "../stores/store-info-store";
-import { isCircuitBroken, recordSaveFailure, recordSaveSuccess } from "../services/save-circuit-breaker";
+import { isCircuitBroken, recordSaveFailure, recordSaveSuccess, resetCircuit } from "../services/save-circuit-breaker";
 import type { AiRoadmapSnapshot } from "../stores/roadmap-store";
 import type { DailyEntry, MonthlyCosts, CostSnapshot } from "../stores/finance-store";
 import type {
@@ -97,23 +100,34 @@ const LOCAL_STORAGE_KEYS = [
 
 // ─── Pure helpers (no hooks, use getState()) ───
 
+/**
+ * 모든 Zustand persist 키 (localStorage). 계정 전환·로그아웃 시 전부 비워야 cross-account 누출이 없다.
+ * persist 되는 store 를 새로 만들면 *반드시 여기에 추가*. (clearLocalUserData 의 SSOT)
+ */
+const PERSISTED_STORE_KEYS = [
+  "foundone-operations",
+  "foundone-finance",
+  "foundone-profile",
+  "foundone-roadmap",
+  "foundone-cashflow",
+  "foundone-marketing",
+  "foundone-agents",
+  "foundone-customer-interviews",
+  "foundone-time-log",
+  "foundone-usage-stats-v1",
+  "foundone-store-info",  // 상호·주소 PII — 누락 시 공용기기에서 다음 사용자에게 노출
+  "foundone-bookings",
+  "foundone-ecommerce",
+] as const;
+
 /** Remove all user-specific localStorage keys */
 export function clearLocalUserData(): void {
   try {
     LOCAL_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
-    // Zustand persist 키 — 모든 foundone-* store. 한 곳에 빠지면 hydration 시 stale 상태가 살아남는다.
-    [
-      "foundone-operations",
-      "foundone-finance",
-      "foundone-profile",
-      "foundone-roadmap",
-      "foundone-cashflow",
-      "foundone-marketing",
-      "foundone-agents",
-      "foundone-customer-interviews",
-      "foundone-time-log",
-      "foundone-usage-stats-v1",
-    ].forEach((k) => localStorage.removeItem(k));
+    // Zustand persist 키 — 모든 foundone-* store. 한 곳에 빠지면 계정 전환 시 stale 상태가
+    //   살아남아 cross-account 누출(특히 store-info=상호·주소 PII)이 발생한다.
+    //   PERSISTED_STORE_KEYS 가 SSOT — store 추가 시 여기 한 곳만 갱신하면 됨.
+    PERSISTED_STORE_KEYS.forEach((k) => localStorage.removeItem(k));
   } catch {
     /* ignore */
   }
@@ -158,7 +172,12 @@ export function notifyRemoteDataChanged(): void {
   }
 }
 
-/** Reset all 6 Zustand stores to their initial values */
+/**
+ * 모든 persist Zustand store 의 *메모리 상태*를 초기화.
+ *   (localStorage 만 지우고 메모리를 안 지우면, 같은 탭에서 로그아웃→재로그인 시 이전 계정
+ *    데이터가 화면에 남는다. 특히 store-info 의 상호·주소 PII.)
+ *   clearLocalUserData(localStorage) 와 짝으로 호출된다.
+ */
 export function resetLocalState(): void {
   useOperationsStore.getState().resetAll();
   useFinanceStore.getState().resetAll();
@@ -166,6 +185,16 @@ export function resetLocalState(): void {
   useRoadmapStore.getState().resetAll();
   useAiStore.getState().resetAll();
   useOnboardingStore.getState().resetAll();
+  // 이전에 누락돼 cross-account 로 남던 store 들 — 전부 초기화.
+  useStoreInfoStore.getState().resetAll();
+  useCashflowStore.getState().resetAll();
+  useMarketingStore.getState().resetAll();
+  useAgentsStore.getState().resetAll();
+  useTimeLogStore.getState().resetAll();
+  useInterviewStore.getState().resetAll();
+  useUsageStore.getState().resetAll();
+  useBookingStore.getState().clearAll();    // booking/ecommerce 는 clearAll 시그니처
+  useEcommerceStore.getState().clearAll();
 }
 
 /** Apply Supabase-loaded store data to Zustand stores (persist auto-syncs to localStorage) */
@@ -604,6 +633,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       if (previousUserId && previousUserId !== result.user.id) {
         clearLocalUserData();
         resetLocalState();
+        resetCircuit();  // 이전 계정에서 trip 된 저장 차단을 새 계정으로 이월하지 않음
       }
       localStorage.setItem("__foundone_uid", result.user.id);
       // 새 로드 사이클 시작 — applyStoreData 로 서버 데이터를 받기 전까지는 빈 배열 전송 금지.
@@ -1168,6 +1198,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         storeDataReadyRef.current = false; // 로그아웃 — 빈 store 가 서버 지우지 않게
         clearLocalUserData();
         resetLocalState();
+        resetCircuit();  // 저장 차단 상태도 초기화 — 다음 로그인 첫 저장이 지연되지 않게
         try { localStorage.removeItem("__foundone_uid"); } catch { /* storage 차단 무시 */ }
         setRequiresAuth(true);
         setAuthResolved(true);
@@ -1285,10 +1316,15 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       safeSaveStoreData(storeDataSnapshotRef.current).then(
         () => { recordSaveSuccess("store"); },
         (err) => {
-          const { message } = recordSaveFailure(err, "store");
+          const { message, tripped } = recordSaveFailure(err, "store");
           const onb = useOnboardingStore.getState();
+          const isAuth = /AUTH_REQUIRED/.test(message);
           onb.setPersistStatus("error");
-          onb.setPersistError(message);
+          // raw "AUTH_REQUIRED" 영문 노출 금지 — 사람이 읽을 메시지로.
+          onb.setPersistError(isAuth ? "세션이 만료됐어요. 다시 로그인하면 저장이 재개됩니다." : message);
+          // 일시적 토큰 갱신 중 조기 redirect(과거 "한번 더 로그인" 버그) 방지 위해
+          //   *지속 실패(circuit tripped)* 일 때만 재로그인 유도. (SIGNED_OUT 은 별도로 즉시 처리됨.)
+          if (isAuth && tripped) setRequiresAuth(true);
         },
       );
     }, 5000);

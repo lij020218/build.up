@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 
 const PRICE = Number(process.env.NEXT_PUBLIC_PREMIUM_PRICE_KRW ?? 19900);
 const STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID ?? "";
@@ -34,10 +35,16 @@ export default function PricingPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("/api/billing/status")
-      .then((r) => r.json())
-      .then((data) => setSub(data))
-      .catch(() => setSub({ plan: "free", status: "active" }));
+    (async () => {
+      // 인증 토큰 없이 호출하면 401 → 항상 free 로 보여 프리미엄 사용자가 재결제 유도됨.
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) { setSub({ plan: "free", status: "active" }); return; }
+      fetch("/api/billing/status", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((data) => setSub(data))
+        .catch(() => setSub({ plan: "free", status: "active" }));
+    })();
   }, []);
 
   const isPremium = sub?.plan === "premium" && sub?.status === "active";
@@ -52,9 +59,16 @@ export default function PricingPage() {
     setMessage("");
 
     try {
-      // 사용자 정보 조회 (이름, 이메일)
-      const profileRes = await fetch("/api/account/profile").catch(() => null);
-      const profile = profileRes?.ok ? await profileRes.json() : {};
+      // 로그인 세션에서 userId/이메일을 직접 얻는다.
+      //   (이전엔 존재하지 않는 /api/account/profile 을 호출해 customerId 가 항상 undefined →
+      //    verify 의 소유권 검증에서 100% 거부됐다. = 결제됐는데 프리미엄 미활성.)
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const userId = session?.user?.id;
+      if (!token || !userId) {
+        setMessage("로그인이 필요합니다. 다시 로그인 후 시도해 주세요.");
+        return;
+      }
 
       const PortOne = await import("@portone/browser-sdk/v2");
       const paymentId = `bup-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -68,9 +82,9 @@ export default function PricingPage() {
         currency: "KRW",
         payMethod: "CARD",
         customer: {
-          customerId: profile.userId ?? undefined,
-          email: profile.email ?? undefined,
-          fullName: profile.name ?? undefined,
+          // verify 는 payment.customer.id === auth.userId 를 요구한다. 반드시 userId 를 심어야 함.
+          customerId: userId,
+          email: session?.user?.email ?? undefined,
         },
       });
 
@@ -79,10 +93,10 @@ export default function PricingPage() {
         return;
       }
 
-      // 서버에서 결제 검증 + 구독 활성화
+      // 서버에서 결제 검증 + 구독 활성화 (Bearer 토큰 필수 — 없으면 401 로 활성화 실패)
       const verifyRes = await fetch("/api/billing/verify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           paymentId: response.paymentId ?? paymentId,
         }),
