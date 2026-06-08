@@ -88,8 +88,9 @@ struct OwnerProfileChips: View {
                 #endif
             Button("저장") {
                 let y = Int(birthYearText) ?? 0
-                let cur = Calendar.current.component(.year, from: Date())
-                birthYear = (y >= 1900 && y <= cur) ? y : 0
+                // 상한 2010 — 웹 폼·owner-profile API·user_profiles DB CHECK 와 통일.
+                //   (현재연도로 두면 2011~26년생 입력이 서버 sync 때 400/CHECK 위반으로 사일런트 실패)
+                birthYear = (y >= 1900 && y <= 2010) ? y : 0
                 onChange()
                 syncToServer()
             }

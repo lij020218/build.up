@@ -48,9 +48,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (e) {
-    return NextResponse.json(
-      { ok: false, error: (e as Error).message },
-      { status: 500 }
-    );
+    console.warn("[portone/daily] graceful empty:", (e as Error).message);
+    return NextResponse.json({ ok: true, entries: [] });
   }
 }

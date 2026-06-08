@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     .gte("date", since)
     .order("date", { ascending: true });
 
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) { console.warn("[saas-metrics/daily] graceful empty:", error.message); return NextResponse.json({ ok: true, entries: [] }); }
 
   return NextResponse.json({ ok: true, entries: data ?? [] });
 }

@@ -169,11 +169,15 @@ export function useTaskAutoCompletion(
     const stageId = "startup-foundation";
     const inputs = (decisions[stageId] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
     if (!inputs) return;
-    applyAutoComplete(stageId, [
+    const result = applyAutoComplete(stageId, [
       { taskId: "problem-defined", shouldComplete: !!(inputs.problemConfirmed && (inputs.problemStatement as string)?.trim()?.length >= 10) },
       { taskId: "founder-alignment", shouldComplete: !!(inputs.teamStructure && (inputs.teamStructure as string).length > 0) },
       { taskId: "company-formation-path", shouldComplete: !!(inputs.formationPath && (inputs.formationPath as string).length > 0) },
     ]);
+    // ⚠️ 자동완료로 단계가 advance 되어도 화면은 핀 — 사용자가 "다음 단계로" 눌러야 이동(자동 화면 점프 차단).
+    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(result.viewingStageHint);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -181,10 +185,13 @@ export function useTaskAutoCompletion(
   useEffect(() => {
     const stageId = "company-setup";
     const { guideSelections } = useRoadmapStore.getState();
-    applyAutoComplete(stageId, [
+    const result = applyAutoComplete(stageId, [
       { taskId: "business-structure-decided", shouldComplete: !!(guideSelections["biz-structure"]) },
       { taskId: "tax-setup-basics", shouldComplete: !!(guideSelections["tax-type"]) },
     ]);
+    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(result.viewingStageHint);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -192,11 +199,14 @@ export function useTaskAutoCompletion(
   useEffect(() => {
     const stageId = "customer-discovery";
     const { guideSelections } = useRoadmapStore.getState();
-    applyAutoComplete(stageId, [
+    const result = applyAutoComplete(stageId, [
       { taskId: "customer-interviews-done", shouldComplete: !!(guideSelections["interview-target"] && (guideSelections["interview-target"] as string).length > 0) },
       { taskId: "pain-pattern-documented", shouldComplete: !!(guideSelections["analysis-notes"] && (guideSelections["analysis-notes"] as string).length >= 10) },
       { taskId: "narrow-wedge-defined", shouldComplete: !!(guideSelections["analysis-result"]) },
     ]);
+    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(result.viewingStageHint);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -204,9 +214,12 @@ export function useTaskAutoCompletion(
   useEffect(() => {
     const stageId = "growth-engine";
     const geInputs = (decisions[stageId] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
-    applyAutoComplete(stageId, [
+    const result = applyAutoComplete(stageId, [
       { taskId: "north-star-set", shouldComplete: !!(geInputs?.northStarType && geInputs?.northStarMetricName && (geInputs.northStarMetricName as string).length > 0) },
     ]);
+    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(result.viewingStageHint);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -214,9 +227,12 @@ export function useTaskAutoCompletion(
   useEffect(() => {
     const stageId = "fundraising-readiness";
     const frInputs = (decisions[stageId] as Record<string, unknown>)?.inputs as Record<string, unknown> | undefined;
-    applyAutoComplete(stageId, [
+    const result = applyAutoComplete(stageId, [
       { taskId: "investor-material-ready", shouldComplete: !!(frInputs?.bpSections) },
     ]);
+    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(result.viewingStageHint);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 
@@ -224,9 +240,12 @@ export function useTaskAutoCompletion(
   useEffect(() => {
     const stageId = "venture-certification";
     const { guideSelections } = useRoadmapStore.getState();
-    applyAutoComplete(stageId, [
+    const result = applyAutoComplete(stageId, [
       { taskId: "venture-cert-type-checked", shouldComplete: !!(guideSelections["venture-cert-type"]) },
     ]);
+    if (result.viewingStageHint && viewingStageId === null && !searchParams.get("editStage")) {
+      setViewingStageId(result.viewingStageHint);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions]);
 

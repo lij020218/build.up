@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     .gte("transaction_at", since)
     .gt("amount_in", 0)
     .in("category", REVENUE_CATEGORIES);
-  if (error) return NextResponse.json({ ok: false, error: "조회 실패" }, { status: 500 });
+  if (error) { console.warn("[codef/bank/daily] graceful empty:", error.message); return NextResponse.json({ ok: true, entries: [] }); }
 
   const byDate = new Map<string, { sales: number; count: number }>();
   for (const r of rows ?? []) {

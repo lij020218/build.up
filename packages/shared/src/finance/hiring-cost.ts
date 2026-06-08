@@ -1,5 +1,6 @@
 // ─── 채용 비용 계산기 (2026 한국) ────────────────────────────────────────
 // 연봉/시급 → 실제 사업주 부담 비용 (4대보험 + 퇴직금 + 원천세)
+import { LEGAL } from "../constants/benchmarks"; // SSOT: 최저시급 등 법정 수치
 
 // ── 2026 4대보험 요율 ── (출처: 국민연금공단·국민건강보험공단·근로복지공단)
 //   ⚠ 매년 1월 갱신. 2026 인상사항:
@@ -16,7 +17,7 @@ export const INSURANCE_RATES_2026 = {
   industrialAccident: { employer: 0.007 },                     // 산재보험 ~0.7% (업종별 상이, 일반 서비스업 가정)
 } as const;
 
-export const MINIMUM_WAGE_2026 = 10_320; // 시급 (원) — 2026 확정 (2025 10,030 → +290원, +2.9%)
+export const MINIMUM_WAGE_2026 = LEGAL.MINIMUM_WAGE_HOURLY; // SSOT: constants/benchmarks LEGAL.MINIMUM_WAGE_HOURLY (드리프트 방지)
 export const MONTHLY_WORK_HOURS = 209;    // 주 40시간 기준 월 소정근로시간
 export const SEVERANCE_RESERVE_RATE = 1 / 12; // 월별 퇴직금 적립 비율
 

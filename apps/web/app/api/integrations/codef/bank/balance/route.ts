@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     .eq("status", "active")
     .order("is_primary", { ascending: false });
 
-  if (accErr) return NextResponse.json({ ok: false, error: "통장 조회 실패" }, { status: 500 });
+  if (accErr) { console.warn("[codef/bank/balance] graceful:", accErr.message); return NextResponse.json({ ok: true, connected: false, totalBalance: 0, accounts: [] }); }
   if (!accounts || accounts.length === 0) {
     return NextResponse.json({ ok: true, connected: false, totalBalance: 0, accounts: [] });
   }

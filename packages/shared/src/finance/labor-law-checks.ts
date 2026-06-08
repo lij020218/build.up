@@ -1,3 +1,5 @@
+import { LEGAL } from "../constants/benchmarks"; // SSOT: 간이과세 기준 등 법정 수치
+
 /**
  * 노동법·세법 무지 보호 — 위반/경계 자동 탐지 SSOT.
  *
@@ -227,7 +229,7 @@ export function checkFivePersonThreshold(currentCount: number): FivePersonThresh
 //  부가가치세법 시행령 제109조: 직전 연도 매출 1억 400만원 이상 → 일반과세자 전환.
 //  무지로 매출 신고 누락 / 환급 시점 오해 시 가산세 발생.
 
-export const SIMPLIFIED_TAX_THRESHOLD_KRW = 104_000_000;
+export const SIMPLIFIED_TAX_THRESHOLD_KRW = LEGAL.SIMPLIFIED_TAX_THRESHOLD; // SSOT: constants/benchmarks (드리프트 방지)
 
 export type SimplifiedTaxCheck = {
   yearlySales: number;

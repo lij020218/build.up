@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     .eq("user_id", auth.userId)
     .order("is_primary", { ascending: false })
     .order("created_at", { ascending: true });
-  if (error) return NextResponse.json({ ok: false, error: "조회 실패" }, { status: 500 });
+  if (error) { console.warn("[codef/bank/status] graceful:", error.message); return NextResponse.json({ ok: true, accounts: [] }); }
 
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const accountsWithStats = await Promise.all(

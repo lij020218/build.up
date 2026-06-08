@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=300" } }
     );
   } catch (e) {
-    return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });
+    console.warn("[tossplace/daily] graceful empty:", (e as Error).message);
+    return NextResponse.json({ ok: true, entries: [] });
   }
 }

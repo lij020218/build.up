@@ -19,6 +19,12 @@ export type StarterIndustryCategory = {
   summary: string;
 };
 
+// 오프라인(점포형) 카테고리 SSOT — 단계 분기(nextStageConditions)가 공유.
+//   ⚠️ 새 오프라인 업종 추가 시 *여기만* 갱신. (종전엔 분기마다 raw 배열 중복 → 한쪽만 갱신되면 단계 누락)
+export const OFFLINE_CATEGORY_IDS = [
+  "food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space",
+];
+
 const officialFreshness: FreshnessMeta = {
   status: "fresh",
   label: "Official source reviewed",
@@ -2262,7 +2268,7 @@ export const starterStageFlow: RoadmapStageState[] = [
       {
         decisionStageId: "industry-selection",
         decisionKey: "categoryId",
-        matchValueIn: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space"],
+        matchValueIn: [...OFFLINE_CATEGORY_IDS],
         stageIds: ["menu-design"]
       },
       {
@@ -2304,7 +2310,7 @@ export const starterStageFlow: RoadmapStageState[] = [
       {
         decisionStageId: "industry-selection",
         decisionKey: "categoryId",
-        matchValueIn: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space", "online-digital"],
+        matchValueIn: [...OFFLINE_CATEGORY_IDS, "online-digital"],
         stageIds: ["tax-guide"]
       }
     ]

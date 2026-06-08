@@ -94,6 +94,8 @@ export type RoadmapStageState = {
   title: string;
   type: StageType;
   status: StageStatus;
+  /** @deprecated 표시는 useComputedDashboard.pathStepNumber(traverseUserPath 기반 동적) 사용.
+   *   starter-data 의 하드코딩 stepNumber 는 path 와 어긋날 수 있어 *읽지 말 것*(과거 번호 점프 원인). */
   stepNumber: number;
   totalSteps: number;
   goal: string;
