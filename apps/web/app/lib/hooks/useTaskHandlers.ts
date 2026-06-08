@@ -78,29 +78,15 @@ export function useTaskHandlers(
       existing.status === "completed" ? "todo" : "completed"
     );
 
-    // 같은 패턴: rule 이 완료되면 completedAt 즉시 set (refresh-safe).
-    let nextDecisions = decisions;
-    const stageDef = baseRoadmap.stages.find(s => s.stageId === "contract-review");
-    if (stageDef) {
-      const stageWithStatus = { ...stageDef, status: "in_progress" as const };
-      const completion = evaluateStageCompletion(stageWithStatus, decisions, nextTaskMap);
-      const alreadyCompleted = !!decisions["contract-review"]?.completedAt;
-      if (completion.isComplete && !alreadyCompleted) {
-        nextDecisions = upsertStageDecision(decisions, "contract-review", {
-          stageId: "contract-review",
-          completedAt: new Date().toISOString(),
-        });
-        setDecisions(nextDecisions);
-      }
-    }
-
-    const nextRoadmap = buildRoadmapState(baseRoadmap, nextDecisions, nextTaskMap);
+    // ⚠️ 체크리스트 완료는 단계 완료/진행을 *자동 트리거하지 않는다* (사용자 지침 2026-06-08).
+    //   pre-launch-final 과 동일 원칙 — completedAt 은 오직 "다음 단계로" 버튼(handleContractContinue)
+    //   에서만 set 한다. 모든 항목을 체크해도 사용자가 명시적으로 버튼을 눌러야 다음 단계로 넘어감.
+    //   (체크 상태는 taskMap 에 영속되므로 새로고침해도 보존됨.)
+    const nextRoadmap = buildRoadmapState(baseRoadmap, decisions, nextTaskMap);
     setTaskMap(nextTaskMap);
     setRoadmap(nextRoadmap);
 
-    // ⚠️ 자동 이동 방지 — 모든 필수 task 가 완료되어 roadmap.currentStageId 가
-    //  자동으로 다음 단계로 advance 되더라도, 사용자가 명시적으로 "다음 단계로" 버튼을
-    //  누를 때까지 현재 contract-review 화면 유지 (다른 단계의 handleTaskToggle 과 동일 패턴).
+    // 이전 세션에서 이미 completedAt 이 set 된 경우(buildRoadmapState 가 advance)에 대비한 화면 핀.
     if (nextRoadmap.currentStageId !== "contract-review" && viewingStageId === null && !searchParams.get("editStage")) {
       setViewingStageId("contract-review");
     }

@@ -1898,11 +1898,12 @@ export const starterStageFlow: RoadmapStageState[] = [
     },
     taskIds: ["use-check", "facility-check", "restriction-check", "septic-tank-checked", "certified-date-obtained"],
     riskIds: [],
-    // 2026-05-12 P3: contract-review → registration-setup (was construction-setup).
-    //   실제 사업 흐름은 임대차계약 직후 사업자등록 (홈택스 5분, 무료) → 통장 → 인테리어.
-    //   인테리어 발주 전 사업자등록증 있어야 세금계산서 받고 부가세 환급 가능.
-    //   세법: 사업개시일로부터 20일 이내 + 인테리어 부가세 환급은 같은 과세기간 내 등록 필수.
-    nextStageIds: ["registration-setup"]
+    // 2026-06-08 정정 (웹 자료조사 + 사장님 신고): 임대차계약 직후 = *인테리어/공사*.
+    //   한국 음식점/소매 표준 순서: 임대차계약 → 인테리어·공사 → 영업신고(시설 갖춘 뒤·보건소) → 사업자등록(세무서).
+    //   ※ 이전(2026-05-12)의 "사업자등록 먼저" 근거는 오류였음 — 인테리어 세금계산서는
+    //     *주민등록번호로 발급* 후 등록 시 홈택스 이관하면 부가세 환급 그대로 받음(사업자등록증 불요).
+    //   ※ 영업신고는 시설(인테리어·주방) 완료 후 가능하고, 사업자등록은 영업신고증이 있어야 신청.
+    nextStageIds: ["construction-setup"]
   },
   {
     stageId: "construction-setup",
@@ -1915,7 +1916,7 @@ export const starterStageFlow: RoadmapStageState[] = [
     stepNumber: 12,
     totalSteps: 19,
     goal: "Select interior contractors, approve the layout design, and manage the construction timeline. Also plan furniture, fixtures, and equipment (FF&E) including IT devices if applicable.",
-    whyNow: "Interior and FF&E are usually the largest single cost — locking in contractors, furniture, and equipment early prevents overrun. With biz reg + tax type already set, every interior invoice can be input-tax-credit eligible.",
+    whyNow: "Interior and FF&E are usually the largest single cost — locking in contractors, furniture, and equipment early prevents overrun. 사업자등록 전이라도 인테리어 세금계산서를 *주민등록번호로* 받아두면, 사업자등록 후 홈택스에서 사업장으로 이관해 부가세(매입세액) 환급을 그대로 받을 수 있다.",
     // ⚠️ 5개 모두 필수 — 인테리어 단계는 가장 변수 많은 phase 라 partial-check advance 가
     //    개업 직전 치명적인 누락으로 이어진다 (사용자 보고: 2026-05-03 "체크리스트 3개만 했는데 다음 단계로").
     //    legally required: 소방필증·보건증 신청 (open 전 필수). business-essential: 컨셉 결정.
@@ -1937,11 +1938,10 @@ export const starterStageFlow: RoadmapStageState[] = [
       "fire-health-parallel"
     ],
     riskIds: [],
-    // 2026-05-14 사장님 신고: "메뉴를 결정하는 과정이 새로 들어가면 좋겠어.
-    //   미리 메뉴를 결정하면 재고 관리 카드에 들어가게 해서 수고를 덜을 수 있어."
-    //   construction-setup (인테리어 거의 끝) → menu-design (메뉴/서비스 라인업 확정)
-    //   → vendor-setup (메뉴 알아야 식자재·공급처·장비 결정 가능).
-    nextStageIds: ["menu-design"]
+    // 2026-06-08 정정: 인테리어/시설 완료 → 영업신고+사업자등록(registration-setup) 으로 진행.
+    //   (시설 갖춰져야 영업신고 가능 → 영업신고증 있어야 사업자등록 신청 가능 — 한국 음식점 실무 순서)
+    //   메뉴/공급업체(menu-design/vendor-setup)는 자금·세무 결정(loan-guide) 이후로 이동.
+    nextStageIds: ["registration-setup"]
   },
   // ──────────────────────────────────────────────────────────────────────────
   //  Stage (NEW 2026-05-14) — 메뉴/서비스 라인업 확정
@@ -2007,14 +2007,12 @@ export const starterStageFlow: RoadmapStageState[] = [
     title: "Business registration and permits",
     type: "execution",
     status: "locked",
-    // 2026-05-12 P3 reorder (사장님 신고: "이 단계가 더 늦게 왔어야 되는 거 아닌가?").
-    //   임대차계약 직후 사업자등록 = 황금타이밍 — 인테리어·집기 세금계산서 모두
-    //   사업자등록번호로 발행받아야 부가세 환급 가능. 사업개시일 20일 이내 등록.
-    //   원래 위치 #10 → 새 위치 #8 (contract-review 직후).
-    stepNumber: 8,
+    // 2026-06-08 정정: 인테리어/시설 완료 후 단계. 시설이 갖춰져야 영업신고(보건소)가 가능하고,
+    //   영업신고증이 있어야 사업자등록(세무서)을 신청할 수 있다(한국 음식점 실무 순서).
+    stepNumber: 9,
     totalSteps: 19,
-    goal: "Complete the business registration at the tax office (HomeTax 5min, free). 영업신고증 (operating permit) is filed later after interior is built — task description notes when.",
-    whyNow: "사업자등록은 임대차계약 직후가 황금타이밍. 인테리어·집기·공급업체 세금계산서를 모두 사업자등록번호로 받아야 부가세 환급 가능. 사업개시일 20일 이내 의무.",
+    goal: "After the interior is built: file the 영업신고 (operating permit, health center — requires the facility), then complete 사업자등록 at the tax office (HomeTax, free).",
+    whyNow: "영업신고는 시설(인테리어·주방) 기준 검사를 통과해야 하므로 인테리어 후. 사업자등록은 영업신고증을 첨부해 신청. 인테리어 세금계산서를 주민번호로 받아뒀다면 이 시점 등록 후 이관해 부가세 환급(사업개시일 20일 이내 등록 의무).",
     completionRule: {
       kind: "required_tasks",
       requiredTaskIds: ["tax-type-decided", "business-registered", "permit-filed"]
@@ -2255,8 +2253,8 @@ export const starterStageFlow: RoadmapStageState[] = [
     completionRule: { kind: "required_inputs", requiredKeys: ["reviewed"] },
     taskIds: [],
     riskIds: [],
-    // 2026-05-12 P3: path 별 분기.
-    //   offline (음식·카페·소매·뷰티 등) → construction-setup (인테리어 발주)
+    // 2026-06-08 정정: 인테리어는 이미 contract-review 직후로 이동. 자금/세무 결정 후엔 메뉴·공급업체로.
+    //   offline (음식·카페·소매·뷰티 등) → menu-design (메뉴/라인업 → vendor-setup 공급업체)
     //   online-digital → sourcing-setup (재고 발주)
     //   startup-tech → biz-registration (default — startup 은 후반에 통장·세무사 결정)
     nextStageIds: ["biz-registration"],
@@ -2265,7 +2263,7 @@ export const starterStageFlow: RoadmapStageState[] = [
         decisionStageId: "industry-selection",
         decisionKey: "categoryId",
         matchValueIn: ["food", "cafe-dessert", "retail", "beauty", "fitness", "education", "pet", "living-service", "space"],
-        stageIds: ["construction-setup"]
+        stageIds: ["menu-design"]
       },
       {
         decisionStageId: "industry-selection",

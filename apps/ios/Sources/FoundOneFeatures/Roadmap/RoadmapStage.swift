@@ -250,16 +250,20 @@ public enum RoadmapSampleData {
     ]
 
     // OFFLINE-FOOD: 21 stages.
-    // 웹 SSOT 순서: ...biz-registration → tax-guide → loan-guide → construction-setup → ...
+    // 웹 SSOT 순서 (2026-06-08 정정 — 인테리어 우선):
+    //   contract-review → construction-setup(인테리어) → registration-setup(영업신고+사업자등록)
+    //   → biz-registration(통장) → tax-guide → loan-guide → menu-design → vendor-setup → ...
+    //   근거: 한국 음식점 실무 — 시설 갖춰야 영업신고 가능, 영업신고증 있어야 사업자등록 신청.
+    //   (phase 는 단조 유지를 위해 등록·세무·자금을 "오픈 준비" 밴드로 묶음)
     private static let offlinePath: [(String, StagePhase)] = sharedPrefix + [
         ("permit-check",        .registration),
         ("location-candidates", .registration),
         ("contract-review",     .registration),
-        ("registration-setup",  .registration),
-        ("biz-registration",    .registration),
-        ("tax-guide",           .registration),
-        ("loan-guide",          .registration),
         ("construction-setup",  .setup),
+        ("registration-setup",  .setup),
+        ("biz-registration",    .setup),
+        ("tax-guide",           .setup),
+        ("loan-guide",          .setup),
         ("menu-design",         .setup),
         ("vendor-setup",        .setup),
         ("hiring-setup",        .setup),

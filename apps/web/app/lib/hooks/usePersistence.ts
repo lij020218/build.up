@@ -1099,15 +1099,15 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       onb.setPersistError("로그인이 필요합니다 — 데이터가 서버에 저장되지 않습니다.");
       throw new Error("AUTH_REQUIRED");
     }
-    // 회로 차단 — 영구 실패 감지된 후엔 시도조차 안 함
-    if (isCircuitBroken()) {
+    // 회로 차단(store 채널) — 영구 실패 감지된 후엔 시도조차 안 함
+    if (isCircuitBroken("store")) {
       throw new Error("CIRCUIT_BROKEN");
     }
     if (storeDataTimerRef.current) clearTimeout(storeDataTimerRef.current);
     onb.setPersistStatus("saving");
     try {
       await safeSaveStoreData(collectStoreData(storeDataReadyRef.current));
-      recordSaveSuccess();
+      recordSaveSuccess("store");
       onb.setPersistStatus("saved");
       onb.setPersistError(null);
       onb.setPersistLastSavedAt(Date.now());
@@ -1117,7 +1117,7 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         }
       }, 2000);
     } catch (err) {
-      const { message } = recordSaveFailure(err);
+      const { message } = recordSaveFailure(err, "store");
       onb.setPersistStatus("error");
       onb.setPersistError(message);
       throw err;
@@ -1229,8 +1229,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
 
     autosaveTimerRef.current = setTimeout(() => {
       if (isResettingRef.current) return; // reset 진행 중 — autosave 차단
-      // 회로 차단 — 영구 실패 감지된 후엔 시도조차 안 함 (콘솔/네트워크 스팸 방지)
-      if (isCircuitBroken()) return;
+      // 회로 차단(roadmap 채널 — store 와 분리) — 영구 실패 후엔 시도조차 안 함 (콘솔/네트워크 스팸 방지)
+      if (isCircuitBroken("roadmap")) return;
       const snap = roadmapSnapshotRef.current;
       // ⚠️ 두 save 를 독립적으로 처리 — 하나가 실패해도 다른 하나는 진행, 각자 회로 차단기 알림.
       //   이전엔 Promise.all 로 묶고 saveRoadmapState 실패는 recordSaveFailure 호출 안 했음.
@@ -1246,11 +1246,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
         tasks: snap.taskMap,
       }).then(
         () => {
-          recordSaveSuccess();
+          recordSaveSuccess("roadmap");
           setPersistenceLabel(copy.home.autosaved);
         },
         (err) => {
-          recordSaveFailure(err);
+          recordSaveFailure(err, "roadmap");
           setPersistenceLabel(
             err instanceof Error
               ? `${copy.home.autosaveFailed}: ${err.message}`
@@ -1280,12 +1280,12 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     const interval = setInterval(() => {
       if (isResettingRef.current) return;
       if (!useOnboardingStore.getState().persistenceReady) return;
-      // 전역 circuit breaker — 영구 실패 후엔 시도조차 안 함
-      if (isCircuitBroken()) return;
+      // circuit breaker(store 채널) — 영구 실패 후엔 시도조차 안 함
+      if (isCircuitBroken("store")) return;
       safeSaveStoreData(storeDataSnapshotRef.current).then(
-        () => { recordSaveSuccess(); },
+        () => { recordSaveSuccess("store"); },
         (err) => {
-          const { message } = recordSaveFailure(err);
+          const { message } = recordSaveFailure(err, "store");
           const onb = useOnboardingStore.getState();
           onb.setPersistStatus("error");
           onb.setPersistError(message);

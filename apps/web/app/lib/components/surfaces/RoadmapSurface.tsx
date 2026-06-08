@@ -14,13 +14,18 @@ export function RoadmapSurface() {
   const {
     language, roadmap, currentStage, industryCategoryId,
     completedCount, pathTotalStages, correctedProgressPercent,
-    pathStageIds, // ⚠️ useComputedDashboard의 path filter 사용 — 자체 Set은 go-live·cluster 누락
+    pathStageList, // ⚠️ 실제 navigation 순서(traverseUserPath). 배열 순서 X — 번호 점프 방지.
   } = d;
   const copy = getUiCopy(language);
 
-  // pathStageIds는 useComputedDashboard에서 isPathStage로 정확히 계산된 사용자 path
-  // (offline/online/startup × franchise × cluster B/C/D 모두 반영)
-  const visibleStages = roadmap.stages.filter((s) => pathStageIds.has(s.stageId));
+  // ⚠️ 리스트 순서·단계 번호는 *실제 navigation 경로 순서*(pathStageList)를 따른다.
+  //   이전엔 roadmap.stages *배열 순서*로 필터해서, nextStageIds 재정렬(예: 계약검토→사업자등록)과
+  //   어긋나 "다음 단계로"가 가는 단계와 리스트가 보여주는 다음 단계가 달랐고 번호가 튀었다.
+  //   status(completed/locked/current)는 roadmap.stages 의 계산값을 사용.
+  const stageById = new Map(roadmap.stages.map((s) => [s.stageId, s]));
+  const visibleStages = pathStageList
+    .map((s) => stageById.get(s.stageId))
+    .filter((s): s is (typeof roadmap.stages)[number] => Boolean(s));
 
   const ko = language === "ko";
 

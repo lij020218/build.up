@@ -714,6 +714,10 @@ export function useComputedDashboard(
     // path filtering
     isPathStage,
     pathStageIds,
+    // 실제 navigation 순서(traverseUserPath)로 정렬된 path 단계 목록.
+    //   ⚠️ roadmap.stages 배열 순서와 다를 수 있음(nextStageIds 재정렬). 리스트/번호는 이걸 써야
+    //   "다음 단계로" 네비게이션과 일치하고 단계 번호가 튀지 않는다.
+    pathStageList,
     pathTotalStages,
     // ── 사용자 path에서의 현재 단계 위치 (1-based). Hardcoded stepNumber 보다 정확. ──
     pathStepNumber: currentStage

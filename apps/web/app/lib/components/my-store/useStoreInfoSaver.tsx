@@ -69,13 +69,13 @@ export function useStoreInfoSaver(flushStoreDataImmediate: Flush | undefined) {
       return;
     }
     // 전역 회로 차단 — 영구 실패 감지된 후엔 시도 안 함
-    if (isCircuitBroken()) return;
+    if (isCircuitBroken("store")) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       const fn = flushRef.current;
       if (!fn) return;
       // 호출 직전 다시 한 번 회로 상태 확인 (다른 경로에서 트립됐을 수 있음)
-      if (isCircuitBroken()) return;
+      if (isCircuitBroken("store")) return;
       fn().catch(() => {
         // 에러 처리·로그·status 갱신은 flushStoreDataImmediate 안에서 circuit breaker 가 통합 관리.
       });
