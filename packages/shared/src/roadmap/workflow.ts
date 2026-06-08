@@ -170,6 +170,9 @@ function resolveDecisionValue(
   return undefined;
 }
 
+// zombie/타 cluster 경고를 단계당 1회만 — 콘솔 도배 방지(세션 단위).
+const warnedZombieStages = new Set<string>();
+
 export function resolveNextStageIds(
   stage: RoadmapStageState,
   decisions: WorkflowDecisionMap
@@ -203,9 +206,13 @@ export function resolveNextStageIds(
     // 콘솔 경고로 진단 가능 + 호출처가 *path 의 직계 다음 stage* 를 별도 추정해야 한다는 신호.
     // 빈 배열 반환 시 traverseUserPath / buildRoadmapState 는 path 종료로 인식.
     // 호출처는 useTaskHandlers.handleStageContinue 의 sanity-check fallback 으로 처리.
-    if (typeof console !== "undefined") {
+    // ⚠️ buildRoadmapState 는 *전 단계*를 평가하므로, 사용자 cluster 와 무관한 단계
+    //   (예: 음식 사용자에게 startup 단계 mvp-build)는 매번 여기로 와 콘솔을 도배한다.
+    //   default fallback 으로 안전하게 처리되는 정상 동작이므로, 단계당 1회만 경고(노이즈 억제).
+    if (typeof console !== "undefined" && !warnedZombieStages.has(stage.stageId)) {
+      warnedZombieStages.add(stage.stageId);
       console.warn(
-        `[resolveNextStageIds] stage "${stage.stageId}" 의 모든 nextStageConditions 매칭 실패 — decisions zombie 가능성. 호출처 fallback 필요.`,
+        `[resolveNextStageIds] stage "${stage.stageId}" 의 모든 nextStageConditions 매칭 실패 — decisions zombie 가능성(또는 타 cluster 단계). default fallback 사용.`,
         { conditions: stage.nextStageConditions.map((c) => `${c.decisionStageId}.${c.decisionKey}`) },
       );
     }
