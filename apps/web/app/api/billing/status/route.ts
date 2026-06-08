@@ -17,9 +17,11 @@ export async function GET(request: Request) {
     .eq("user_id", auth.userId)
     .maybeSingle();
 
+  // 조회 실패(테이블 미존재=마이그레이션 미적용 등) → 무료 플랜으로 graceful.
+  //   (500 던지면 대시보드 콘솔 도배 + 결제카드 깨짐. 메모리 규칙: 500 금지·graceful empty)
   if (error) {
-    console.error("[billing/status]", error);
-    return NextResponse.json({ error: "구독 정보를 불러올 수 없습니다." }, { status: 500 });
+    console.warn("[billing/status] 조회 실패 — free 폴백:", error.message);
+    return NextResponse.json({ plan: "free", status: "active" });
   }
 
   // 구독 레코드 없으면 무료 플랜

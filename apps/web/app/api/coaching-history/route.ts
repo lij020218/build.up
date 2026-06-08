@@ -63,7 +63,10 @@ export async function GET(request: Request) {
   ]);
 
   if (entriesRes.error) {
-    return NextResponse.json({ ok: false, error: entriesRes.error.message }, { status: 500 });
+    // 테이블/뷰 미존재(마이그레이션 미적용) 등 → 500 대신 graceful empty.
+    //   대시보드가 안 깨지고, 콘솔 500 도배도 방지(메모리 규칙: 500 throw 금지·graceful empty).
+    console.warn("[coaching-history] GET 실패 — graceful empty:", entriesRes.error.message);
+    return NextResponse.json({ ok: true, entries: [], stats14d: null, meta30d: null });
   }
 
   const entries = (entriesRes.data ?? []).map((r) => ({
@@ -137,7 +140,9 @@ export async function POST(request: Request) {
     );
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    // 저장 실패(테이블 미존재 등)는 best-effort — 500 대신 200 ok:false 로 비치명 처리.
+    console.warn("[coaching-history] POST 실패 — 비치명 처리:", error.message);
+    return NextResponse.json({ ok: false, error: "saved-later" });
   }
 
   return NextResponse.json({ ok: true });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FoundOneSpiralLogo } from "./ui/FoundOneSpiralLogo";
 
 /**
  * Apple "Welcome to [App]" 스타일 온보딩.
@@ -74,7 +75,7 @@ export function WelcomeOnboarding({ language, onComplete }: Props) {
             margin: "0 auto 28px",
             boxShadow: "0 8px 24px rgba(29,53,87,0.2)",
           }}>
-            <span style={{ fontSize: "32px", fontWeight: 800, color: "#fff", letterSpacing: "-0.04em" }}>b.</span>
+            <FoundOneSpiralLogo size={46} color="#fff" />
           </div>
 
           {/* Title — Apple "Welcome to" pattern */}
