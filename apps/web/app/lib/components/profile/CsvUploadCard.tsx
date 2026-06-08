@@ -32,6 +32,7 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploads, setUploads] = useState<Array<{ id: string; filename: string; row_count: number; total_amount: number; uploaded_at: string }>>([]);
+  const [overlapDates, setOverlapDates] = useState<string[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [sourceLabel, setSourceLabel] = useState("");
 
@@ -43,7 +44,10 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
       headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
     });
     const d = await res.json();
-    if (d.ok) setUploads(d.uploads ?? []);
+    if (d.ok) {
+      setUploads(d.uploads ?? []);
+      setOverlapDates(Array.isArray(d.overlapDates) ? d.overlapDates : []);
+    }
   }, []);
 
   useEffect(() => { void load(); }, [load]);
@@ -131,6 +135,18 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
             fontSize: "12.5px", fontWeight: 600,
             marginBottom: "10px",
           }}>{msg}</div>
+        )}
+
+        {overlapDates.length > 0 && (
+          <div style={{
+            marginTop: "8px", padding: "10px 12px", borderRadius: "10px",
+            background: "rgba(180,140,40,0.07)", border: "1px solid rgba(180,140,40,0.18)",
+            fontSize: "12px", color: "#7a5a18", lineHeight: 1.5,
+          }}>
+            {ko
+              ? `여러 파일에 겹치는 날짜 ${overlapDates.length}일이 있어요. 이중 계산을 막기 위해 겹친 날짜는 가장 최근에 올린 파일 기준으로 표시됩니다. (예: ${overlapDates.slice(0, 3).join(", ")}${overlapDates.length > 3 ? " 외" : ""})`
+              : `${overlapDates.length} date(s) appear in multiple files. To avoid double-counting, overlapping dates use your most recent upload.`}
+          </div>
         )}
 
         {uploads.length > 0 && (
