@@ -16,7 +16,7 @@ import {
   type ApplicationStatus,
   type MatchCriteria,
 } from "@foundone/shared";
-import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2, MapPin, Lightbulb } from "lucide-react";
+import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2, MapPin, Lightbulb, Search } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { FundingScoreModal, type FundingScore } from "./FundingScoreModal";
 
@@ -45,6 +45,14 @@ const RED = "#b64c4c";
 
 type CategoryFilter = "all" | ProgramCategory;
 type StatusFilter = "all" | ApplicationStatus;
+
+// 검색 별칭 — 한글로 쳐도 영문 표기 기관/사업이 잡히도록 (예: "카이스트" → "kaist")
+const SEARCH_ALIASES: Record<string, string> = {
+  "카이스트": "kaist", "케이스트": "kaist", "포스텍": "postech", "유니스트": "unist",
+  "지스트": "gist", "디지스트": "dgist", "서울대": "snu", "연세대": "yonsei", "고려대": "korea",
+  "네이버": "naver", "카카오": "kakao", "삼성": "samsung", "현대": "hyundai", "엘지": "lg",
+  "에스케이": "sk", "티아이피에스": "tips", "팁스": "tips",
+};
 
 const INDUSTRY_LABEL_KO: Record<string, string> = {
   food: "음식", "cafe-dessert": "카페·디저트", retail: "소매·유통", beauty: "뷰티",
@@ -82,6 +90,7 @@ export function GuidesView() {
 
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   // 지역/업종/연령 필터 (라이브+큐레이션 공통)
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [industryFilter, setIndustryFilter] = useState<string>("all");
@@ -332,7 +341,21 @@ export function GuidesView() {
     [recommendMode, criteria, livePrograms],
   );
 
+  // 검색 — 사업명·기관명·대상 텍스트(ko/en)에서 매칭. 한글 별칭(카이스트→kaist) 확장.
+  const searchTerms = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    const extra = Object.entries(SEARCH_ALIASES)
+      .filter(([k]) => searchQuery.includes(k))
+      .map(([, v]) => v);
+    return [q, ...extra];
+  }, [searchQuery]);
+
   const passFilters = (p: StartupProgram) => {
+    if (searchTerms.length > 0) {
+      const hay = `${p.name.ko} ${p.name.en} ${p.organizer.ko} ${p.organizer.en} ${p.target.ko}`.toLowerCase();
+      if (!searchTerms.some((t) => hay.includes(t))) return false;
+    }
     if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
     if (statusFilter !== "all" && p.applicationStatus !== statusFilter) return false;
     // 지역: 프로그램이 전국(undefined)이면 통과, 지역 제한이 있으면 선택 지역 포함해야
@@ -347,7 +370,7 @@ export function GuidesView() {
   const filtered = useMemo(() => {
     return (recommendMode ? recommended : matchedAll).filter(passFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchedAll, recommended, categoryFilter, statusFilter, regionFilter, industryFilter, ageFilter, recommendMode]);
+  }, [matchedAll, recommended, categoryFilter, statusFilter, regionFilter, industryFilter, ageFilter, recommendMode, searchTerms]);
 
   const stats = useMemo(() => {
     // matchedAll 단계에서 이미 마감 제외됨. open + upcoming 합이 total 과 일치하도록
@@ -494,6 +517,26 @@ export function GuidesView() {
 
         {/* ── 4. Filters ── */}
         <div style={filterCardStyle} className="bento-card">
+          {/* 검색 — 사업명·기관명(예: 카이스트, 서울시, TIPS) */}
+          <div style={searchWrapStyle}>
+            <Search size={15} strokeWidth={1.8} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={ko ? "사업명·기관 검색 (예: 카이스트, 서울시, TIPS)" : "Search by program or organizer"}
+              style={searchInputStyle}
+              aria-label={ko ? "펀딩 검색" : "Search funding"}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                style={searchClearStyle}
+                aria-label={ko ? "검색어 지우기" : "Clear"}
+              >✕</button>
+            )}
+          </div>
           <FilterGroup
             label={ko ? "분류" : "Category"}
             options={categoryOptions}
@@ -967,6 +1010,43 @@ const filterCardStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: 12,
+};
+
+const searchWrapStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "10px 14px",
+  borderRadius: 12,
+  background: "#fff",
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+};
+
+const searchInputStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  border: "none",
+  outline: "none",
+  background: "transparent",
+  fontSize: 13.5,
+  color: "#0f172a",
+  fontWeight: 500,
+};
+
+const searchClearStyle: React.CSSProperties = {
+  flexShrink: 0,
+  width: 18,
+  height: 18,
+  borderRadius: 9,
+  border: "none",
+  background: "rgba(15,23,42,0.06)",
+  color: TEXT_MUTED,
+  fontSize: 10,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  lineHeight: 1,
 };
 
 const selectStyle: React.CSSProperties = {
