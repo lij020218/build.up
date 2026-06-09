@@ -34,6 +34,15 @@ private struct FranchiseBrandView: Identifiable, Equatable {
 
     let franchiseFeeManwon: Int
     let totalInitialManwon: Int
+    let monthlyRoyaltyManwon: Double
+    let royaltyPercent: Double?
+
+    /// 로열티 표시 — 정률(%) 우선, 없으면 정액(만원/월), 둘 다 0/nil 이면 "없음".
+    var royaltyLabel: String {
+        if let p = royaltyPercent, p > 0 { return "매출 \(p.formatted())%" }
+        if monthlyRoyaltyManwon > 0 { return "\(monthlyRoyaltyManwon.formatted())만원/월" }
+        return "없음"
+    }
 
     // 5-bar score (registry scores 직접 매핑)
     let scoreProfitability: Int
@@ -64,6 +73,8 @@ private struct FranchiseBrandView: Identifiable, Equatable {
         self.tagline = b.tagline.ko
         self.franchiseFeeManwon = b.franchiseFee
         self.totalInitialManwon = b.startupCostWon
+        self.monthlyRoyaltyManwon = b.monthlyRoyalty
+        self.royaltyPercent = b.royaltyPercent
         self.scoreProfitability = b.scores.profitability
         self.scoreStability     = b.scores.stability
         self.scoreAccessibility = b.scores.accessibility
@@ -671,6 +682,7 @@ private struct FranchiseDetailSheet: View {
                 .foregroundStyle(BUColor.inkMuted.opacity(0.7))
             VStack(spacing: 8) {
                 costRow(label: "가맹비",         value: "\(brand.franchiseFeeManwon.formatted())만원")
+                costRow(label: "로열티",         value: brand.royaltyLabel)
                 if let store = brand.storeCount {
                     costRow(label: "매장 수",       value: "\(store.formatted())개")
                 }

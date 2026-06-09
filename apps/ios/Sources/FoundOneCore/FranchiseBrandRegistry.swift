@@ -64,6 +64,8 @@ public struct FranchiseBrand: Decodable, Sendable, Identifiable, Hashable {
     public let startupCostWon: Int           // 만원 단위
     public let franchiseFee: Int             // 만원 단위
     public let monthlyRoyalty: Double        // 만원/월 — 일부 브랜드는 소수 (예: 60계치킨 16.5만)
+    /// 정률 로열티 — 매출의 N%. 설정 시 "매출 N%" 로 표시(예: 도미노 6, 투썸 3). 정액 브랜드는 nil.
+    public let royaltyPercent: Double?
     public let avgAnnualRevenueWon: Int      // 만원 단위
     public let storeCount: Int
     public let closureRate: Double
