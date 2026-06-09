@@ -3167,11 +3167,11 @@
       "en": "Paik's signature Chinese, 277 stores (-16 in 2024)"
     },
     "startupCostWon": 10400,
-    "franchiseFee": 330,
+    "franchiseFee": 220,
     "monthlyRoyalty": 25,
-    "avgAnnualRevenueWon": 63000,
-    "storeCount": 277,
-    "closureRate": 5.5,
+    "avgAnnualRevenueWon": 74341,
+    "storeCount": 293,
+    "closureRate": 2.4,
     "scores": {
       "profitability": 78,
       "stability": 60,
@@ -3203,7 +3203,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 330
+        "amountWon": 220
       },
       {
         "label": {
@@ -4603,12 +4603,12 @@
       "ko": "프리미엄 돼지 브랜드 — 전국 약 300개점, 회식·고기집 강자",
       "en": "Premium pork — ~300 stores, strong in work-dinner/grilled meat"
     },
-    "startupCostWon": 18000,
-    "franchiseFee": 1500,
+    "startupCostWon": 14469,
+    "franchiseFee": 1650,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 78000,
-    "storeCount": 300,
-    "closureRate": 5,
+    "avgAnnualRevenueWon": 63136,
+    "storeCount": 158,
+    "closureRate": 18.7,
     "scores": {
       "profitability": 80,
       "stability": 70,
@@ -4968,12 +4968,12 @@
       "ko": "★ ㈜보강엔터프라이즈 운영 ~336개 매장 점당 월 1,741만 / ⚠ 8개월새 가격 +33% 인상",
       "en": "Run by Bogang Enterprise; ~336 stores at KRW 17.41M/mo per-store; WARNING: prices +33% in 8 months"
     },
-    "startupCostWon": 7000,
-    "franchiseFee": 300,
+    "startupCostWon": 9017,
+    "franchiseFee": 550,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 21600,
-    "storeCount": 336,
-    "closureRate": 3.5,
+    "avgAnnualRevenueWon": 20919,
+    "storeCount": 294,
+    "closureRate": 24.8,
     "scores": {
       "profitability": 70,
       "stability": 68,
@@ -9946,12 +9946,12 @@
       "ko": "⚠ 2010년대 1위 브랜드 — 현재 261개점으로 축소, 회복 시도 중",
       "en": "⚠ Once #1 in 2010s — now 261 stores, on a recovery effort"
     },
-    "startupCostWon": 8500,
-    "franchiseFee": 800,
+    "startupCostWon": 17550,
+    "franchiseFee": 770,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 18000,
-    "storeCount": 261,
-    "closureRate": 7.5,
+    "storeCount": 99,
+    "closureRate": 24,
     "scores": {
       "profitability": 60,
       "stability": 55,
@@ -9961,6 +9961,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 쇠퇴 브랜드 — 가맹점 244(2021)→99 급감, 폐점률 높음. 신규 진입 신중",
         "2008년 시작 — 한때 한국 카페 1위 (1,000개+) 브랜드",
         "⚠ 2017년 회생 후 현재 국내 261개·해외 81개로 축소",
         "이전 영광 대비 매장·매출 모두 큰 폭 감소",
@@ -10951,65 +10952,6 @@
     "dataYear": "2024"
   },
   {
-    "id": "abc-mart",
-    "subIndustryIds": [
-      "convenience-small"
-    ],
-    "categoryId": "retail",
-    "name": {
-      "ko": "ABC마트",
-      "en": "ABC-Mart"
-    },
-    "tagline": {
-      "ko": "신발 retail 1위 — 254개 매장, 본사 매출 5,114억",
-      "en": "#1 footwear retail — 254 stores, HQ revenue KRW 511.4B"
-    },
-    "startupCostWon": 40000,
-    "franchiseFee": 2500,
-    "monthlyRoyalty": 44,
-    "avgAnnualRevenueWon": 180000,
-    "storeCount": 254,
-    "closureRate": 2,
-    "scores": {
-      "profitability": 75,
-      "stability": 88,
-      "accessibility": 18,
-      "brandPower": 88,
-      "support": 82
-    },
-    "roadmapNotes": {
-      "ko": [
-        "2002년 한국 진출 — 일본 모기업 ABC-Mart 본사",
-        "전국 254개 매장 — 신발 retail 사실상 독점",
-        "본사 매출 5,114억 — 한국 retail 상위권",
-        "⚠ 직영 비중 매우 높음 — 가맹 진입 사실상 제한"
-      ],
-      "en": [
-        "Entered Korea 2002 — Japanese parent ABC-Mart HQ",
-        "254 stores nationwide — practical monopoly in shoe retail",
-        "HQ revenue KRW 511.4B — top retail tier",
-        "⚠ Very direct-heavy — franchise entry practically restricted"
-      ]
-    },
-    "franchiseUrl": "https://www.abcmartkorea.com/",
-    "costVerified": false,
-    "basePyeong": 50,
-    "sources": [
-      {
-        "label": "ABC마트코리아 회사소개",
-        "url": "https://www.abcmartkorea.com/%ED%9A%8C%EC%82%AC%EC%86%8C%EA%B0%9C/",
-        "tier": "primary"
-      },
-      {
-        "label": "나무위키 — ABC마트",
-        "url": "https://namu.wiki/w/ABC%EB%A7%88%ED%8A%B8",
-        "tier": "aggregator"
-      }
-    ],
-    "confidence": "low",
-    "dataYear": "2024"
-  },
-  {
     "id": "nobrand",
     "subIndustryIds": [
       "convenience-small"
@@ -11023,11 +10965,11 @@
       "ko": "이마트 자체 retail — 91 가맹점 평균 33억, 편의점보다 면적당 매출 15% 높음",
       "en": "Emart PB retail — 91 franchises avg KRW 3.3B; 15% higher sqm sales than CVS"
     },
-    "startupCostWon": 28000,
-    "franchiseFee": 2000,
+    "startupCostWon": 74530,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 44,
     "avgAnnualRevenueWon": 331954,
-    "storeCount": 263,
+    "storeCount": 252,
     "closureRate": 1.5,
     "scores": {
       "profitability": 85,
@@ -11088,11 +11030,11 @@
       "ko": "⚠ 100% 직영 모델 — 가맹 모집 X. 직원 공동투자(10년 이상) 만 매장 운영 가능",
       "en": "WARNING: 100% direct only — no franchising. Only 10+ year staff joint-investment opens stores"
     },
-    "startupCostWon": 36000,
-    "franchiseFee": 1000,
+    "startupCostWon": 39100,
+    "franchiseFee": 0,
     "monthlyRoyalty": 55,
     "avgAnnualRevenueWon": 160000,
-    "storeCount": 250,
+    "storeCount": 181,
     "closureRate": 1,
     "scores": {
       "profitability": 92,
@@ -11371,11 +11313,11 @@
       "en": "WARNING: Men's hair — 800 (2004) → ~323 (2025), 60%+ shrinkage + limited HQ info"
     },
     "startupCostWon": 5938,
-    "franchiseFee": 300,
+    "franchiseFee": 1463,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 18000,
+    "avgAnnualRevenueWon": 7941,
     "storeCount": 323,
-    "closureRate": 5.2,
+    "closureRate": 3.7,
     "scores": {
       "profitability": 50,
       "stability": 50,
@@ -12406,11 +12348,11 @@
       "en": "Women-only 30-min circuit — ~336 stores (2015), <1% exit (10yr) — 2025 data limited ⚠"
     },
     "startupCostWon": 12000,
-    "franchiseFee": 1500,
+    "franchiseFee": 1320,
     "monthlyRoyalty": 55,
-    "avgAnnualRevenueWon": 24000,
-    "storeCount": 336,
-    "closureRate": 1,
+    "avgAnnualRevenueWon": 8539,
+    "storeCount": 188,
+    "closureRate": 9.1,
     "scores": {
       "profitability": 65,
       "stability": 78,
@@ -14809,9 +14751,9 @@
     "startupCostWon": 9300,
     "franchiseFee": 363,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 74500,
-    "storeCount": 300,
-    "closureRate": 8.5,
+    "avgAnnualRevenueWon": 69760,
+    "storeCount": 212,
+    "closureRate": 4,
     "scores": {
       "profitability": 78,
       "stability": 70,
@@ -15763,12 +15705,12 @@
       "ko": "프리미엄 도우 한국형 피자 브랜드",
       "en": "Korean premium-dough pizza brand"
     },
-    "startupCostWon": 12000,
-    "franchiseFee": 1000,
+    "startupCostWon": 10510,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 35000,
-    "storeCount": 280,
-    "closureRate": 7,
+    "avgAnnualRevenueWon": 28120,
+    "storeCount": 234,
+    "closureRate": 20.9,
     "scores": {
       "profitability": 65,
       "stability": 65,
@@ -16742,12 +16684,12 @@
       "ko": "프리미엄 카페 + 베이커리 결합",
       "en": "Premium cafe + bakery"
     },
-    "startupCostWon": 20762,
-    "franchiseFee": 1500,
+    "startupCostWon": 21093,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 35000,
-    "storeCount": 279,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 37413,
+    "storeCount": 228,
+    "closureRate": 23.7,
     "scores": {
       "profitability": 60,
       "stability": 68,
@@ -17181,12 +17123,12 @@
       "ko": "매머드커피 익스프레스(소형)형",
       "en": "Mammoth Coffee Express (small)"
     },
-    "startupCostWon": 6500,
-    "franchiseFee": 800,
+    "startupCostWon": 9640,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 18000,
-    "storeCount": 300,
-    "closureRate": 7.5,
+    "avgAnnualRevenueWon": 23074,
+    "storeCount": 836,
+    "closureRate": 4.7,
     "scores": {
       "profitability": 68,
       "stability": 65,
@@ -19504,10 +19446,10 @@
       "ko": "프리미엄 피자, 262개 매장 (가맹 94%) — 점당 5.9억",
       "en": "Premium pizza, 262 stores (94% franchise) — 590M per-store"
     },
-    "startupCostWon": 23032,
+    "startupCostWon": 21912,
     "franchiseFee": 1100,
     "monthlyRoyalty": 246,
-    "avgAnnualRevenueWon": 59020,
+    "avgAnnualRevenueWon": 57971,
     "storeCount": 262,
     "closureRate": 2,
     "scores": {
@@ -19563,7 +19505,7 @@
           "ko": "인테리어·장비·기타",
           "en": "Interior+equip+other"
         },
-        "amountWon": 18832
+        "amountWon": 17712
       }
     ],
     "dataYear": "2022",
