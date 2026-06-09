@@ -182,12 +182,12 @@
       "ko": "매출 1위 치킨 프랜차이즈, 뿌링클 브랜드",
       "en": "#1 chicken revenue, Ppurinkle brand"
     },
-    "startupCostWon": 8543,
+    "startupCostWon": 9003,
     "franchiseFee": 1100,
     "monthlyRoyalty": 25,
-    "avgAnnualRevenueWon": 54672,
-    "storeCount": 2291,
-    "closureRate": 6.6,
+    "avgAnnualRevenueWon": 52972,
+    "storeCount": 2228,
+    "closureRate": 6.3,
     "scores": {
       "profitability": 88,
       "stability": 55,
@@ -241,7 +241,7 @@
           "ko": "인테리어·장비",
           "en": "Interior+equip"
         },
-        "amountWon": 6200
+        "amountWon": 6663
       }
     ],
     "description": {
@@ -1709,11 +1709,11 @@
       "en": "Premium chicken rising star, 138.4B 2024 revenue"
     },
     "startupCostWon": 11500,
-    "franchiseFee": 700,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 30,
-    "avgAnnualRevenueWon": 52000,
-    "storeCount": 1100,
-    "closureRate": 3,
+    "avgAnnualRevenueWon": 45086,
+    "storeCount": 715,
+    "closureRate": 3.8,
     "scores": {
       "profitability": 85,
       "stability": 75,
@@ -1745,7 +1745,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 700
+        "amountWon": 1100
       },
       {
         "label": {
@@ -1863,12 +1863,12 @@
       "ko": "★ 양념치킨 원조 1981·가맹점 1,254개 #4 / 2026.02 배민 상생 협약 점당 매출 +109%",
       "en": "Yangnyeom pioneer 1981 / 1,254 stores #4 / Feb 2026 Baemin partnership +109% per-store sales"
     },
-    "startupCostWon": 7800,
-    "franchiseFee": 500,
+    "startupCostWon": 2905,
+    "franchiseFee": 550,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 30000,
+    "avgAnnualRevenueWon": 31870,
     "storeCount": 1254,
-    "closureRate": 4.5,
+    "closureRate": 5.8,
     "scores": {
       "profitability": 70,
       "stability": 65,
@@ -1900,7 +1900,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 500
+        "amountWon": 550
       },
       {
         "label": {
@@ -1921,7 +1921,7 @@
           "ko": "인테리어·장비",
           "en": "Interior+equip"
         },
-        "amountWon": 6800
+        "amountWon": 1855
       }
     ],
     "dataYear": "2024",
@@ -2204,12 +2204,12 @@
       "ko": "저가 피자 1위, 5,000원대 피자, 600+ 매장",
       "en": "#1 budget pizza, 5K won pizzas, 600+ stores"
     },
-    "startupCostWon": 5800,
-    "franchiseFee": 300,
+    "startupCostWon": 7710,
+    "franchiseFee": 363,
     "monthlyRoyalty": 11,
-    "avgAnnualRevenueWon": 22000,
-    "storeCount": 620,
-    "closureRate": 5,
+    "avgAnnualRevenueWon": 15611,
+    "storeCount": 322,
+    "closureRate": 2.5,
     "scores": {
       "profitability": 70,
       "stability": 62,
@@ -2241,7 +2241,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 300
+        "amountWon": 363
       },
       {
         "label": {
@@ -2262,7 +2262,7 @@
           "ko": "인테리어·장비",
           "en": "Interior+equip"
         },
-        "amountWon": 5000
+        "amountWon": 6847
       }
     ],
     "dataYear": "2024",
@@ -2324,12 +2324,12 @@
       "ko": "한국 토종 버거 1위, 1,300+ 매장, 롯데GRS",
       "en": "#1 Korean burger, 1,300+ stores, Lotte GRS"
     },
-    "startupCostWon": 38000,
-    "franchiseFee": 2000,
+    "startupCostWon": 48821,
+    "franchiseFee": 1650,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 95000,
-    "storeCount": 1300,
-    "closureRate": 2.5,
+    "avgAnnualRevenueWon": 93598,
+    "storeCount": 1286,
+    "closureRate": 2.7,
     "scores": {
       "profitability": 80,
       "stability": 85,
@@ -2361,7 +2361,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 2000
+        "amountWon": 1650
       },
       {
         "label": {
@@ -2382,7 +2382,7 @@
           "ko": "인테리어·장비·기타",
           "en": "Interior+equip+other"
         },
-        "amountWon": 30000
+        "amountWon": 41171
       }
     ],
     "dataYear": "2024",
@@ -2448,12 +2448,12 @@
       "ko": "1982년 시작 — 1,080개 가맹점·평균 운영 18.7년",
       "en": "Since 1982 — 1,080 stores, avg 18.7yr tenure"
     },
-    "startupCostWon": 4500,
-    "franchiseFee": 300,
+    "startupCostWon": 3595,
+    "franchiseFee": 0,
     "monthlyRoyalty": 11,
-    "avgAnnualRevenueWon": 18500,
-    "storeCount": 1080,
-    "closureRate": 4.5,
+    "avgAnnualRevenueWon": 13700,
+    "storeCount": 995,
+    "closureRate": 6.1,
     "scores": {
       "profitability": 70,
       "stability": 78,
@@ -2515,12 +2515,12 @@
       "ko": "10평 소형 모델 — 716개 매장 평균 2.98억 매출, 폐점률 9.3% ⚠",
       "en": "10-pyeong small model, 716 stores avg KRW 298M; 9.3% closure ⚠"
     },
-    "startupCostWon": 4290,
-    "franchiseFee": 715,
+    "startupCostWon": 7150,
+    "franchiseFee": 550,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 29789,
-    "storeCount": 716,
-    "closureRate": 9.3,
+    "avgAnnualRevenueWon": 36329,
+    "storeCount": 708,
+    "closureRate": 10.7,
     "scores": {
       "profitability": 75,
       "stability": 55,
@@ -2552,7 +2552,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 715
+        "amountWon": 550
       },
       {
         "label": {
@@ -2573,7 +2573,7 @@
           "ko": "주방·집기",
           "en": "Kitchen+equip"
         },
-        "amountWon": 1980
+        "amountWon": 5005
       }
     ],
     "sources": [
@@ -2678,9 +2678,9 @@
     "startupCostWon": 3185,
     "franchiseFee": 440,
     "monthlyRoyalty": 11,
-    "avgAnnualRevenueWon": 22379,
-    "storeCount": 868,
-    "closureRate": 5.5,
+    "avgAnnualRevenueWon": 22741,
+    "storeCount": 738,
+    "closureRate": 17.9,
     "scores": {
       "profitability": 70,
       "stability": 72,
@@ -3040,12 +3040,12 @@
       "ko": "급성장 가성비 버거 — 정보공개서 2024 기준 623개점",
       "en": "Fast-growing value burger — 623 stores (2024 disclosure)"
     },
-    "startupCostWon": 8000,
-    "franchiseFee": 800,
+    "startupCostWon": 12236,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 16.5,
-    "avgAnnualRevenueWon": 38000,
+    "avgAnnualRevenueWon": 36907,
     "storeCount": 623,
-    "closureRate": 4,
+    "closureRate": 10.5,
     "scores": {
       "profitability": 78,
       "stability": 70,
@@ -4307,11 +4307,11 @@
       "ko": "전국 1,434개점 — 매출 1.13억, 월 로열티 10만원 (가성비 1위)",
       "en": "1,434 nationwide — KRW 113M, monthly royalty KRW 100K (lowest)"
     },
-    "startupCostWon": 4136,
+    "startupCostWon": 4500,
     "franchiseFee": 330,
     "monthlyRoyalty": 1,
-    "avgAnnualRevenueWon": 11251,
-    "storeCount": 1434,
+    "avgAnnualRevenueWon": 16900,
+    "storeCount": 1378,
     "closureRate": 5.5,
     "scores": {
       "profitability": 65,
@@ -4473,12 +4473,12 @@
       "ko": "한식 매장 수 최대 1,103개 — 본죽보다 빠른 확장",
       "en": "Korea's largest Korean-food chain 1,103 stores — faster than Bonjuk"
     },
-    "startupCostWon": 11000,
-    "franchiseFee": 1000,
+    "startupCostWon": 14315,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 22,
     "avgAnnualRevenueWon": 32000,
-    "storeCount": 1103,
-    "closureRate": 3.5,
+    "storeCount": 1151,
+    "closureRate": 0.5,
     "scores": {
       "profitability": 75,
       "stability": 78,
@@ -9063,10 +9063,10 @@
       "ko": "★ CJ푸드빌 7년만 매출 1조 회복, 美 매출 +42%·190개 매장",
       "en": "CJ Foodville back to KRW 1T (first in 7y), US revenue +42% / 190 stores"
     },
-    "startupCostWon": 35000,
-    "franchiseFee": 1000,
+    "startupCostWon": 40010,
+    "franchiseFee": 1430,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 46272,
+    "avgAnnualRevenueWon": 51720,
     "storeCount": 1300,
     "closureRate": 4,
     "scores": {
@@ -9205,11 +9205,11 @@
       "ko": "글로벌 버블티 1위, 한국 800+ 매장",
       "en": "#1 global bubble tea, 800+ Korean stores"
     },
-    "startupCostWon": 18500,
-    "franchiseFee": 1000,
+    "startupCostWon": 15080,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 55,
     "avgAnnualRevenueWon": 38000,
-    "storeCount": 850,
+    "storeCount": 898,
     "closureRate": 3.2,
     "scores": {
       "profitability": 80,
@@ -9242,7 +9242,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 1000
+        "amountWon": 1100
       },
       {
         "label": {
@@ -9263,7 +9263,7 @@
           "ko": "인테리어",
           "en": "Interior"
         },
-        "amountWon": 9000
+        "amountWon": 5480
       },
       {
         "label": {
@@ -10834,11 +10834,11 @@
       "ko": "균일가 1위 — 497개 가맹점 평균 16.5억, 직영 1,022개",
       "en": "#1 price-point — 497 franchises avg KRW 1.65B; 1,022 direct"
     },
-    "startupCostWon": 37700,
-    "franchiseFee": 2530,
+    "startupCostWon": 38940,
+    "franchiseFee": 3740,
     "monthlyRoyalty": 33,
     "avgAnnualRevenueWon": 165186,
-    "storeCount": 1519,
+    "storeCount": 497,
     "closureRate": 1.5,
     "scores": {
       "profitability": 80,
@@ -10886,65 +10886,6 @@
     "dataYear": "2024"
   },
   {
-    "id": "ministop",
-    "subIndustryIds": [
-      "convenience-small"
-    ],
-    "categoryId": "retail",
-    "name": {
-      "ko": "미니스톱",
-      "en": "Ministop"
-    },
-    "tagline": {
-      "ko": "롯데 인수 편의점 — 월 4,921만 매출, CU·GS25 추격",
-      "en": "Lotte-acquired CVS — monthly KRW 49.21M, chasing CU/GS25"
-    },
-    "startupCostWon": 6920,
-    "franchiseFee": 800,
-    "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 59052,
-    "storeCount": 2500,
-    "closureRate": 3.5,
-    "scores": {
-      "profitability": 65,
-      "stability": 70,
-      "accessibility": 80,
-      "brandPower": 72,
-      "support": 70
-    },
-    "roadmapNotes": {
-      "ko": [
-        "2022년 롯데에 인수 — 본사 자본 안정",
-        "월평균 매출 4,921만원 (2020 기준) — 편의점 빅3 다음",
-        "약 2,500개 매장 — CU·GS25 대비 1/5 수준",
-        "⚠ 편의점 시장 포화 + 본사 매출 정체 — 차별화 어려움"
-      ],
-      "en": [
-        "Acquired by Lotte in 2022 — strong HQ capital",
-        "Monthly revenue KRW 49.21M (2020) — next tier after Big 3",
-        "~2,500 stores — about 1/5 of CU/GS25",
-        "⚠ Saturated CVS market + HQ revenue stagnation = hard to differentiate"
-      ]
-    },
-    "franchiseUrl": "https://www.ministop.co.kr/MiniStopHomePage/page/franchise.do",
-    "costVerified": false,
-    "basePyeong": 25,
-    "sources": [
-      {
-        "label": "미니스톱 가맹 안내",
-        "url": "https://www.ministop.co.kr/MiniStopHomePage/page/franchise.do",
-        "tier": "primary"
-      },
-      {
-        "label": "Catalk — 편의점 점포수 비교",
-        "url": "https://catalk.kr/information/largest-convenience-store-chains.html",
-        "tier": "aggregator"
-      }
-    ],
-    "confidence": "low",
-    "dataYear": "2023"
-  },
-  {
     "id": "olive-young",
     "subIndustryIds": [
       "convenience-small"
@@ -10959,10 +10900,10 @@
       "en": "#1 health & beauty — 223 franchises + 1,148 direct, KRW 4.79T HQ"
     },
     "startupCostWon": 50000,
-    "franchiseFee": 3000,
+    "franchiseFee": 1000,
     "monthlyRoyalty": 55,
     "avgAnnualRevenueWon": 120000,
-    "storeCount": 1371,
+    "storeCount": 223,
     "closureRate": 1,
     "scores": {
       "profitability": 78,
@@ -13222,11 +13163,11 @@
       "ko": "1980년 설립 영어 어학 — 학원·공부방·우리집앞영어교실 등 다중 브랜드, 신규 가맹 최대 533만 지원",
       "en": "Since 1980 English — multi-brand (academy/study room/in-home), up to KRW 5.33M new-franchise support"
     },
-    "startupCostWon": 2000,
-    "franchiseFee": 100,
+    "startupCostWon": 1000,
+    "franchiseFee": 180,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 4800,
-    "storeCount": 2000,
+    "avgAnnualRevenueWon": 0,
+    "storeCount": 680,
     "closureRate": 3,
     "scores": {
       "profitability": 58,
@@ -13237,6 +13178,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 위탁 학습지(방문) + 교습소 가맹 혼합 — \"매장수\"는 우리집앞영어교실 교습소 기준, 점당매출은 일반 매장과 성격 다름",
         "운영사 현대영어사(주) + 윤선생엘리트(주)",
         "1980년 설립 — 45년+ 운영 영어 어학 카테고리",
         "다중 브랜드: 윤선생영어교실·우리집앞영어교실·영어숲·영어랑",
@@ -13244,6 +13186,7 @@
         "⚠ 학령인구 감소 + 디지털 영어 학습 (Speak·콴다 등) 잠식"
       ],
       "en": [
+        "Note: home-study + tutoring-room hybrid — store count = tutoring rooms, revenue not comparable to retail",
         "Operator: Hyundai English Co. + Yoonsaeng Elite Co.",
         "Est. 1980 — 45+ years in English education",
         "Multi-brand: Yoon's English Class / Our Home English / English Forest / English Rang",
@@ -13631,67 +13574,6 @@
     ],
     "confidence": "low",
     "dataYear": "2025",
-    "specialtyIds": []
-  },
-  {
-    "id": "ppalganpen",
-    "subIndustryIds": [
-      "kids-academy",
-      "adult-class"
-    ],
-    "categoryId": "education",
-    "name": {
-      "ko": "빨간펜",
-      "en": "Red Pen (Kyowon)"
-    },
-    "tagline": {
-      "ko": "교원 운영 — 회원 약 120만명, 교육 사업 매출 1조원 돌파",
-      "en": "Kyowon Group — ~1.2M members, KRW 1T+ education revenue"
-    },
-    "startupCostWon": 5000,
-    "franchiseFee": 500,
-    "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 18000,
-    "storeCount": 1500,
-    "closureRate": 4.5,
-    "scores": {
-      "profitability": 70,
-      "stability": 82,
-      "accessibility": 80,
-      "brandPower": 88,
-      "support": 82
-    },
-    "roadmapNotes": {
-      "ko": [
-        "교원그룹 운영 — 교육 카테고리 본사 매출 1조원+",
-        "전국 약 1,500개 학습지·공부방 네트워크",
-        "약 120만 회원 — 한국 교육 프랜차이즈 최대급",
-        "방문 학습지 + 공부방 + 단과학원 복합 모델"
-      ],
-      "en": [
-        "Operated by Kyowon Group — KRW 1T+ HQ education revenue",
-        "~1,500 learning-paper / study-room outlets nationwide",
-        "~1.2M members — largest-scale education franchise in Korea",
-        "Home-tutor + study room + class academy hybrid model"
-      ]
-    },
-    "franchiseUrl": "https://www.kyowonedu.com/",
-    "costVerified": false,
-    "basePyeong": 15,
-    "sources": [
-      {
-        "label": "교원 빨간펜 공식",
-        "url": "https://www.kyowonedu.com/KEP/RED/KEPRedStory.jsp",
-        "tier": "primary"
-      },
-      {
-        "label": "교원 그룹 소개",
-        "url": "https://www.kyowon.co.kr/",
-        "tier": "primary"
-      }
-    ],
-    "confidence": "low",
-    "dataYear": "2024",
     "specialtyIds": []
   },
   {
@@ -15564,12 +15446,12 @@
       "ko": "테이크아웃 가성비 피자 1세대",
       "en": "First-gen takeout value pizza"
     },
-    "startupCostWon": 5500,
+    "startupCostWon": 7968,
     "franchiseFee": 500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 22000,
-    "storeCount": 628,
-    "closureRate": 8,
+    "avgAnnualRevenueWon": 18555,
+    "storeCount": 525,
+    "closureRate": 6.7,
     "scores": {
       "profitability": 65,
       "stability": 70,
@@ -15657,12 +15539,12 @@
       "ko": "출근길 간편식 1위 토스트 브랜드",
       "en": "Korea's #1 grab-and-go toast brand"
     },
-    "startupCostWon": 4700,
+    "startupCostWon": 11259,
     "franchiseFee": 300,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 20800,
+    "avgAnnualRevenueWon": 22190,
     "storeCount": 900,
-    "closureRate": 3.5,
+    "closureRate": 4.5,
     "scores": {
       "profitability": 75,
       "stability": 82,
@@ -15853,9 +15735,9 @@
       "en": "Spicy-glazed grilled chicken-leg specialist"
     },
     "startupCostWon": 5700,
-    "franchiseFee": 500,
+    "franchiseFee": 800,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 28000,
+    "avgAnnualRevenueWon": 25824,
     "storeCount": 709,
     "closureRate": 5.5,
     "scores": {
@@ -18007,7 +17889,7 @@
       "en": "Busan-born specialty low-cost coffee with 2.3% closure rate"
     },
     "startupCostWon": 10360,
-    "franchiseFee": 550,
+    "franchiseFee": 500,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 22523,
     "storeCount": 814,
