@@ -14,7 +14,7 @@
       "en": "#1 by store count, olive chicken pioneer"
     },
     "startupCostWon": 9079,
-    "franchiseFee": 500,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 25,
     "avgAnnualRevenueWon": 49684,
     "storeCount": 2238,
@@ -351,8 +351,8 @@
       "ko": "점당매출 1위, 프리미엄 치킨 브랜드",
       "en": "#1 per-store revenue, premium chicken"
     },
-    "startupCostWon": 24015,
-    "franchiseFee": 676,
+    "startupCostWon": 13924,
+    "franchiseFee": 660,
     "monthlyRoyalty": 33,
     "avgAnnualRevenueWon": 69430,
     "storeCount": 1377,
@@ -520,8 +520,8 @@
       "ko": "오븐 구이 치킨 대표, 건강한 이미지",
       "en": "Oven-roasted chicken leader, health image"
     },
-    "startupCostWon": 9200,
-    "franchiseFee": 500,
+    "startupCostWon": 9110,
+    "franchiseFee": 550,
     "monthlyRoyalty": 25,
     "avgAnnualRevenueWon": 49264,
     "storeCount": 1154,
@@ -683,10 +683,10 @@
       "ko": "버거+치킨 하이브리드, 가성비 1위",
       "en": "Burger+chicken hybrid, best value"
     },
-    "startupCostWon": 16045,
-    "franchiseFee": 550,
+    "startupCostWon": 10896,
+    "franchiseFee": 500,
     "monthlyRoyalty": 25,
-    "avgAnnualRevenueWon": 45000,
+    "avgAnnualRevenueWon": 54499,
     "storeCount": 1450,
     "closureRate": 1.8,
     "scores": {
@@ -742,7 +742,7 @@
           "ko": "인테리어",
           "en": "Interior"
         },
-        "amountWon": 5056
+        "amountWon": 5350
       },
       {
         "label": {
@@ -888,11 +888,11 @@
       "ko": "치킨 매출 4위, 매일 신선 60마리 콘셉트 — 가성비 + 공격적 마케팅",
       "en": "#4 chicken revenue, daily 60-bird concept"
     },
-    "startupCostWon": 6500,
-    "franchiseFee": 300,
+    "startupCostWon": 7390,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 16.5,
-    "avgAnnualRevenueWon": 37424,
-    "storeCount": 800,
+    "avgAnnualRevenueWon": 45000,
+    "storeCount": 665,
     "closureRate": 4,
     "scores": {
       "profitability": 75,
@@ -925,7 +925,7 @@
           "ko": "총 창업비용",
           "en": "Total startup cost"
         },
-        "amountWon": 8550
+        "amountWon": 7390
       }
     ],
     "description": {
@@ -1036,8 +1036,8 @@
       "en": "#1 Korea pizza, 484 stores, 8.4B per-store"
     },
     "startupCostWon": 25495,
-    "franchiseFee": 3300,
-    "monthlyRoyalty": 408,
+    "franchiseFee": 1500,
+    "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 84000,
     "storeCount": 484,
     "closureRate": 2,
@@ -1079,7 +1079,7 @@
           "ko": "인테리어·장비·기타",
           "en": "Interior+equip+other"
         },
-        "amountWon": 23750
+        "amountWon": 23995
       }
     ],
     "description": {
@@ -1175,7 +1175,8 @@
     "dataYear": "2025",
     "specialtyIds": [
       "fb-pizza"
-    ]
+    ],
+    "royaltyPercent": 6
   },
   {
     "id": "nene-chicken",
@@ -1191,12 +1192,12 @@
       "ko": "⚠ 매출 -10% / 가맹점 1,060→951개 3년 연속 감소",
       "en": "WARNING: revenue -10%, stores fell 1,060→951 (3y straight)"
     },
-    "startupCostWon": 7500,
-    "franchiseFee": 500,
+    "startupCostWon": 6111,
+    "franchiseFee": 0,
     "monthlyRoyalty": 22,
     "avgAnnualRevenueWon": 28000,
     "storeCount": 951,
-    "closureRate": 4,
+    "closureRate": 9,
     "scores": {
       "profitability": 65,
       "stability": 58,
@@ -1345,12 +1346,12 @@
       "ko": "⚠ 2017 회장 성추행 사건 매출 -60% 직격탄, 8년만 회복 추세",
       "en": "WARNING: 2017 chairman scandal -60% sales hit; 8y recovery trajectory"
     },
-    "startupCostWon": 5500,
-    "franchiseFee": 300,
+    "startupCostWon": 2260,
+    "franchiseFee": 270,
     "monthlyRoyalty": 11,
     "avgAnnualRevenueWon": 22000,
-    "storeCount": 900,
-    "closureRate": 5.5,
+    "storeCount": 780,
+    "closureRate": 11,
     "scores": {
       "profitability": 62,
       "stability": 50,
@@ -1515,8 +1516,8 @@
       "ko": "★ 매출 1,067억(+12%)·영업이익 127억, 6년 CAGR 17.8% / ⚠ 졸리비 매각 무산",
       "en": "Sales KRW 106.7B (+12%), CAGR 17.8% over 6y / WARNING: Jollibee deal collapsed"
     },
-    "startupCostWon": 6800,
-    "franchiseFee": 300,
+    "startupCostWon": 5750,
+    "franchiseFee": 400,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 39323,
     "storeCount": 860,
@@ -3661,11 +3662,11 @@
       "ko": "죽 1위 1,721개 매장 (본죽+본죽&비빔밥), 본아이에프 매출 +27% 성장",
       "en": "#1 porridge 1,721 stores, Bon-IF revenue +27%"
     },
-    "startupCostWon": 8000,
-    "franchiseFee": 330,
+    "startupCostWon": 10000,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 25,
     "avgAnnualRevenueWon": 28000,
-    "storeCount": 1721,
+    "storeCount": 748,
     "closureRate": 0.9,
     "scores": {
       "profitability": 78,
@@ -3835,7 +3836,7 @@
     "startupCostWon": 8619,
     "franchiseFee": 330,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 32000,
+    "avgAnnualRevenueWon": 45000,
     "storeCount": 814,
     "closureRate": 2.5,
     "scores": {
@@ -5298,7 +5299,7 @@
           "ko": "인테리어·시설(평당220만)",
           "en": "Interior(220/py)"
         },
-        "amountWon": 3960
+        "amountWon": 7770
       },
       {
         "label": {
@@ -5415,7 +5416,7 @@
       "ko": "분식 매장 수 1위 818개, 점당 4.29억 — 본사 영업이익 -16% 주의",
       "en": "#1 by count (818), 4.29B per-store, HQ op -16%"
     },
-    "startupCostWon": 7000,
+    "startupCostWon": 8500,
     "franchiseFee": 500,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 42905,
@@ -5843,7 +5844,7 @@
       "ko": "핫도그 1위 — 613개점 평균 1.68억, 7평 6,951만원 진입 가능",
       "en": "#1 hot dog franchise — 613 stores avg KRW 168M, KRW 69.5M for 7-pyeong"
     },
-    "startupCostWon": 6951,
+    "startupCostWon": 5148,
     "franchiseFee": 550,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 16819,
@@ -6326,12 +6327,14 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ CJ푸드빌 직영 중심 — 가맹 표본이 적어 일부 수치는 참고용",
         "⚠ CJ푸드빌 100% 직영 운영 — 가맹 모집 사실상 없음",
         "2025년 매장 35개로 회복세 (전년 30개 돌파 후)",
         "CJ푸드빌 2025 매출 1조 208억 — 7년 만에 1조 클럽 복귀",
         "프리미엄 패밀리레스토랑·샐러드바 시그니처"
       ],
       "en": [
+        "Note: CJ Foodville direct-run brand — limited franchise sample, some figures indicative",
         "WARNING: CJ Foodville 100% direct-operated — virtually no franchise opportunity",
         "35 stores in 2025 (recovered after 30+ in 2024)",
         "CJ Foodville 2025 revenue KRW 1.0208T — back to 1T club after 7 years",
@@ -7307,11 +7310,11 @@
       "ko": "저가커피 1위 3,800개 (2025.08) — 단 2025.10 공정위 과징금 23억·점주 323명 집단소송 ⚠",
       "en": "#1 budget coffee 3,800 stores — but FTC fined 2.3B + 323 owners suing"
     },
-    "startupCostWon": 7093,
+    "startupCostWon": 6924,
     "franchiseFee": 500,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 34902,
-    "storeCount": 3800,
+    "storeCount": 3325,
     "closureRate": 0.5,
     "scores": {
       "profitability": 88,
@@ -7345,7 +7348,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 1000
+        "amountWon": 500
       },
       {
         "label": {
@@ -7521,12 +7524,12 @@
       "ko": "저가커피 2위 2,649개·본사 영업이익률 41.3%(커피 1위) — 단 2024 필리핀 졸리비 인수 + 점주 매출 빅3 중 최저 ⚠",
       "en": "#2 budget coffee, 41.3% HQ op margin (#1 in coffee) — but acquired by Filipino Jollibee 2024, lowest owner sales in top 3"
     },
-    "startupCostWon": 10430,
-    "franchiseFee": 550,
+    "startupCostWon": 6708,
+    "franchiseFee": 500,
     "monthlyRoyalty": 22,
     "avgAnnualRevenueWon": 26501,
     "storeCount": 2649,
-    "closureRate": 0.5,
+    "closureRate": 1,
     "scores": {
       "profitability": 75,
       "stability": 92,
@@ -7724,8 +7727,8 @@
       "ko": "더본 매장 1,712개(55.8%)·전체 매출 40% — 단 점포당 매출 2021년 이후 하락 + 백종원 논란 영향 ⚠",
       "en": "1,712 stores (55.8% of The Born), 40% revenue — but per-store sales declining since 2021 + Paik fallout ⚠"
     },
-    "startupCostWon": 7987,
-    "franchiseFee": 300,
+    "startupCostWon": 10080,
+    "franchiseFee": 330,
     "monthlyRoyalty": 27.5,
     "avgAnnualRevenueWon": 31908,
     "storeCount": 1712,
@@ -7907,7 +7910,7 @@
       "ko": "⚠ 매장 2022년 3,019개 → 2025년 2,562개로 감소(3위 추락) + 폐점률 2.7%→12.6% 폭증 + 매출 3년 연속 하락",
       "en": "WARNING: stores 3,019 (2022) → 2,562 (2025) #3 demoted + exit rate 2.7→12.6% + 3yr revenue decline"
     },
-    "startupCostWon": 12913,
+    "startupCostWon": 10780,
     "franchiseFee": 500,
     "monthlyRoyalty": 27.5,
     "avgAnnualRevenueWon": 18986,
@@ -7944,7 +7947,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 1200
+        "amountWon": 500
       },
       {
         "label": {
@@ -8117,12 +8120,12 @@
       "ko": "1,500호점 임박 + 가맹점 평균 매출 2.3억(상한 7.5억) — 미국 라스베이거스 진출",
       "en": "Approaching 1,500 stores + franchise avg KRW 230M (max 750M) — Las Vegas US launch"
     },
-    "startupCostWon": 7781,
-    "franchiseFee": 300,
+    "startupCostWon": 8870,
+    "franchiseFee": 500,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 23001,
     "storeCount": 1500,
-    "closureRate": 2.9,
+    "closureRate": 5.5,
     "scores": {
       "profitability": 75,
       "stability": 78,
@@ -8321,7 +8324,7 @@
     },
     "startupCostWon": 27510,
     "franchiseFee": 2000,
-    "monthlyRoyalty": 33,
+    "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 52010,
     "storeCount": 1700,
     "closureRate": 2.8,
@@ -8377,7 +8380,7 @@
           "ko": "인테리어+장비+기타",
           "en": "Interior+equip+other"
         },
-        "amountWon": 22000
+        "amountWon": 24360
       }
     ],
     "description": {
@@ -8488,7 +8491,8 @@
     "specialtyIds": [
       "coffee-cafe-roastery",
       "dessert-cake-shop"
-    ]
+    ],
+    "royaltyPercent": 3
   },
   {
     "id": "baskin-robbins",
@@ -8505,8 +8509,8 @@
       "ko": "아이스크림 1위 1,752개·10년 연속 매장 증가·폐점률 0.7% — 단 비알코리아 첫 적자(-290억) ⚠",
       "en": "#1 ice cream 1,752 stores·10yr growth·0.7% closure — but BR Korea first loss (-29B KRW) ⚠"
     },
-    "startupCostWon": 18000,
-    "franchiseFee": 880,
+    "startupCostWon": 19340,
+    "franchiseFee": 500,
     "monthlyRoyalty": 44,
     "avgAnnualRevenueWon": 28350,
     "storeCount": 1752,
@@ -8866,7 +8870,7 @@
       "en": "WARNING: domestic stores peaked & declining, per-store -5.8% / US per-store KRW 4.1B (6× Korea)"
     },
     "startupCostWon": 31380,
-    "franchiseFee": 1430,
+    "franchiseFee": 1500,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 71076,
     "storeCount": 3924,
@@ -8944,7 +8948,7 @@
           "ko": "장비·설비",
           "en": "Equipment"
         },
-        "amountWon": 27000
+        "amountWon": 13230
       }
     ],
     "description": {
@@ -10382,7 +10386,7 @@
           "ko": "전대보증금",
           "en": "Sub-lease deposit"
         },
-        "amountWon": 2000
+        "amountWon": 5000
       }
     ],
     "description": {
@@ -10707,31 +10711,8 @@
       ]
     },
     "franchiseUrl": "https://www.emart24.co.kr/franchise/intro",
-    "costVerified": true,
+    "costVerified": false,
     "costSource": "정보공개서 2024",
-    "costBreakdown": [
-      {
-        "label": {
-          "ko": "브랜드사용료",
-          "en": "Brand fee"
-        },
-        "amountWon": 2370
-      },
-      {
-        "label": {
-          "ko": "보증금",
-          "en": "Deposit"
-        },
-        "amountWon": 5000
-      },
-      {
-        "label": {
-          "ko": "기타초기비용",
-          "en": "Other initial"
-        },
-        "amountWon": 7197
-      }
-    ],
     "description": {
       "ko": [
         "⚠ 한국 편의점 빅4 중 4위 + 위기 깊이는 세븐일레븐과 함께 가장 큰 브랜드입니다.",
@@ -12961,6 +12942,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 위탁 학습지 모델 — \"매장수\"는 점포가 아닌 위탁교사/지국 수",
         "⚠ 대교 그룹 — 26년 연속 학습지 1위, 매출 약 7,000억(2025) 유지",
         "⚠ 학령인구 2020년 673만 → 2025년 593만 → 2030년 474만 (-200만)",
         "방문학습 — 매장 불필요, 학습지 교사 모집 사업 (회원 25명에 월 300만 수익)",
@@ -12968,6 +12950,7 @@
         "시니어 사업·디지털 교육 전환 시도 중"
       ],
       "en": [
+        "Note: home-study model — store count = contract teachers/branches, not shops",
         "Daekyo — 26 yrs consecutive #1 in workbooks, ~KRW 700B revenue (2025)",
         "WARNING: School-age population 6.73M (2020) → 5.93M (2025) → 4.74M (2030), -2M total",
         "Home-visit — no store; tutor-recruitment business (25 members → KRW 3M/mo)",
@@ -13111,6 +13094,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 위탁 학습지 모델 — \"매장수\"는 점포가 아닌 위탁교사/지국 수",
         "운영사 ㈜교원구몬 — 교원그룹 100% 자회사 (한국 기업)",
         "1991년 일본 구몬 판권 인수, 구몬수학만 일본 로열티 지급",
         "자기주도학습 프린트 기반 — 수학·국어·영어·과학·한자",
@@ -13118,6 +13102,7 @@
         "⚠ 학령인구 감소 (눈높이와 동일) 구조적 위기"
       ],
       "en": [
+        "Note: home-study model — store count = contract teachers/branches, not shops",
         "Operator: Kyowon Kumon (100% subsidiary of Kyowon Group, Korean company)",
         "Acquired Japan Kumon license 1991; only Kumon Math pays Japan royalty",
         "Self-paced worksheet — Math/Korean/English/Science/Hanja",

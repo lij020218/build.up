@@ -449,7 +449,9 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
           <div style={{ flex: 1, fontSize: "12px", color: "var(--muted)", display: "flex", gap: "10px" }}>
             <span>{ko ? `가맹비 ${formatFranchiseCost(fb.franchiseFee)}원` : `Fee ${formatFranchiseCost(fb.franchiseFee)}`}</span>
             <span>·</span>
-            <span>{ko ? `로열티 ${fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "만원/월" : "없음"}` : `Royalty ${fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "K/mo" : "None"}`}</span>
+            <span>{ko
+              ? `로열티 ${fb.royaltyPercent ? "매출 " + fb.royaltyPercent + "%" : fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "만원/월" : "없음"}`
+              : `Royalty ${fb.royaltyPercent ? fb.royaltyPercent + "% of sales" : fb.monthlyRoyalty > 0 ? fb.monthlyRoyalty + "K/mo" : "None"}`}</span>
           </div>
           {fb.storeLocatorUrl && (
             <a

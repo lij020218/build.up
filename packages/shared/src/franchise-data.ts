@@ -27,7 +27,10 @@ export type FranchiseBrand = {
   tagline: { ko: string; en: string };
   startupCostWon: number;
   franchiseFee: number;
+  /** 정액 로열티(만원/월). 정률(%) 브랜드는 royaltyPercent 를 쓰고 이 값은 0. */
   monthlyRoyalty: number;
+  /** 정률 로열티 — 매출의 N%. 설정 시 UI 가 "매출의 N%" 로 표시(예: 도미노 6, 투썸 3). */
+  royaltyPercent?: number;
   avgAnnualRevenueWon: number;
   storeCount: number;
   closureRate: number;
