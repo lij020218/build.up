@@ -10,6 +10,7 @@ import {
   getApplicationStatusLabel,
   getProgramCategoryLabel,
   getProgramBonusFactors,
+  isFundableProgram,
   type StartupProgram,
   type ProgramCategory,
   type ApplicationStatus,
@@ -673,6 +674,8 @@ function ProgramCard({
   const lang = ko ? "ko" : "en";
   const statusInfo = getApplicationStatusLabel(program.applicationStatus, lang);
   const catLabel = getProgramCategoryLabel(program.category, lang);
+  // 피칭형 자금지원만 AI 점수·유리점 노출 (행사·교육·시설형은 점수 무의미 → 일관성·정확성)
+  const fundable = isFundableProgram(program.name.ko, program.category);
 
   // 상태별 미드나이트 톤 매핑 (다채로운 컬러 → midnight 통일, 상태만 의미 컬러)
   const statusColor = program.applicationStatus === "open" ? GREEN
@@ -808,8 +811,8 @@ function ProgramCard({
         <span>{program.season[lang]}</span>
       </div>
 
-      {/* 유리한 점 — 이 지원사업 가점 요소(비수도권·청년·특허·벤처인증 등) */}
-      {(() => {
+      {/* 유리한 점 — 이 지원사업 가점 요소(비수도권·청년·특허·벤처인증 등). 자금지원형만. */}
+      {fundable && (() => {
         const bonus = getProgramBonusFactors(program.name.ko, program.category).slice(0, 4);
         if (bonus.length === 0) return null;
         return (
@@ -832,20 +835,22 @@ function ProgramCard({
         </div>
       )}
 
-      {/* CTA — AI 점수 보기 + 공식 사이트 */}
+      {/* CTA — AI 점수 보기(자금지원형만) + 공식 사이트 */}
       <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-        <button
-          type="button"
-          onClick={onScoreClick}
-          style={{
-            ...ctaSecondaryStyle,
-            flexShrink: 0,
-          }}
-          aria-label={ko ? "AI 점수 보기" : "View AI score"}
-        >
-          <Wand2 size={13} strokeWidth={1.6} />
-          {ko ? "AI 점수 보기" : "AI score"}
-        </button>
+        {fundable && (
+          <button
+            type="button"
+            onClick={onScoreClick}
+            style={{
+              ...ctaSecondaryStyle,
+              flexShrink: 0,
+            }}
+            aria-label={ko ? "AI 점수 보기" : "View AI score"}
+          >
+            <Wand2 size={13} strokeWidth={1.6} />
+            {ko ? "AI 점수 보기" : "AI score"}
+          </button>
+        )}
         <button
           type="button"
           onClick={handleOpen}

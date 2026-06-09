@@ -5,6 +5,7 @@ import {
   getMatchedProgramsV2,
   getRecommendedPrograms,
   getProgramBonusFactors,
+  isFundableProgram,
   type MatchCriteria,
   type ProgramMatch,
   type ApplicationStatus,
@@ -129,7 +130,9 @@ function resolveProgram(p: ProgramMatch, lang: Lang): ResolvedProgram {
     regions: p.regions ?? null,
     industries: p.industries ?? null,
     maxAge: p.maxAge ?? null,
-    bonusFactors: getProgramBonusFactors(p.name.ko, p.category).slice(0, 5).map((b) => b.label),
+    bonusFactors: isFundableProgram(p.name.ko, p.category)
+      ? getProgramBonusFactors(p.name.ko, p.category).slice(0, 5).map((b) => b.label)
+      : [],
     matchScore: p.matchScore,
     personalFitScore: p.personalFitScore,
     eligible: p.eligible,

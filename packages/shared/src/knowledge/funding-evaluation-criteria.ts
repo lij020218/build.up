@@ -501,6 +501,29 @@ export function getProgramStageGuide(programName: string, category?: string): st
   return detectRubric(programName, category).stageGuide;
 }
 
+/**
+ * 이 프로그램이 *피칭형 자금지원*(AI 점수·가점이 의미있는)인지 판정.
+ *   false = 행사·교육·네트워크·시설·멘토링·인력 등 정보/참가형 → 점수·유리점 미노출(혼선 방지).
+ *   라이브 K-Startup 공고(supt_biz_clsfc)와 큐레이션 모두에 적용.
+ */
+export function isFundableProgram(programName: string, category?: string): boolean {
+  const t = `${programName} ${category ?? ""}`;
+  // 명시적 자금지원형 키워드 → 점수 의미 있음
+  if (/예비창업|초기창업|창업도약|청년창업사관|사업화|R&D|기술개발|tips|팁스|정책자금|융자|투자유치|보증|운영자금|재도전|희망리턴|긴급경영|바우처|지원금|보조금/i.test(t)) {
+    return true;
+  }
+  // 정보·참가·인프라형 → 점수 무의미(피칭 평가가 안 맞음)
+  if (/행사|네트워크|교육|세미나|설명회|박람회|컨설팅|멘토링|입주|공간|시설|보육|인력|채용|수출상담|판로|글로벌\s*진출|콘텐츠|esg|인증$/i.test(t)) {
+    return false;
+  }
+  // 분야 코드 기반 (K-Startup supt_biz_clsfc 한글값)
+  if (/시설ㆍ공간ㆍ보육|행사ㆍ네트워크|멘토링ㆍ컨설팅ㆍ교육|창업교육|판로ㆍ해외진출|인력/.test(t)) {
+    return false;
+  }
+  // 기본 — 사업화/자금 계열로 간주(점수 가능)
+  return true;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  합격/탈락 키워드 — AI 가 사장님 데이터 평가 시 인용 가능
 //  출처: 사업계획서 100개 분석 (2026)
