@@ -14127,153 +14127,6 @@
     ]
   },
   {
-    "id": "pet-friends",
-    "subIndustryIds": [
-      "pet-supplies"
-    ],
-    "categoryId": "pet",
-    "name": {
-      "ko": "펫프렌즈",
-      "en": "Pet Friends"
-    },
-    "tagline": {
-      "ko": "⚠ 가맹 모집 X (D2C 펫커머스). 거래액 1,515억(2025)·연간 흑자 첫 달성·GS리테일 매각 추진 중",
-      "en": "WARNING: NOT a franchise (D2C pet commerce). 2025 GMV KRW 151.5B + first annual profit + GS Retail sale being pursued"
-    },
-    "startupCostWon": 8000,
-    "franchiseFee": 300,
-    "monthlyRoyalty": 15,
-    "avgAnnualRevenueWon": 20000,
-    "storeCount": 0,
-    "closureRate": 0,
-    "scores": {
-      "profitability": 75,
-      "stability": 70,
-      "accessibility": 5,
-      "brandPower": 80,
-      "support": 60
-    },
-    "roadmapNotes": {
-      "ko": [
-        "⚠ 가맹사업 X — D2C 펫커머스 (반려동물 쇼핑몰)",
-        "2025 거래액 1,515억 + 매출 1,285억 (전년 +9.8%)",
-        "운영사 ㈜펫프렌즈 (IMM PE + GS리테일 인수, 2021)",
-        "2025 첫 연간 흑자 달성 (분기 → 반기 → 연간 흑자)",
-        "⚠ GS리테일 매각 추진 중 (어바웃펫 남기는 전략)"
-      ],
-      "en": [
-        "WARNING: NOT a franchise — D2C pet commerce (pet shopping mall)",
-        "2025 GMV KRW 151.5B + revenue KRW 128.5B (+9.8% YoY)",
-        "Operator: Pet Friends Co. (IMM PE + GS Retail acquisition 2021)",
-        "2025 first annual profit achieved (quarterly → semi-annual → annual)",
-        "WARNING: GS Retail pursuing sale (keeping AboutPet strategy)"
-      ]
-    },
-    "franchiseUrl": "https://m.pet-friends.co.kr/",
-    "costVerified": false,
-    "description": {
-      "ko": [
-        "⚠ 펫프렌즈는 가맹사업이 아닌 D2C 펫커머스(반려동물 쇼핑몰) 입니다 — 사장님이 가맹점주로 진입하는 모델 X.",
-        "운영사 ㈜펫프렌즈(2015 설립, 2021 IMM PE + GS리테일 인수) 가 2025년 거래액 1,515억 원 + 매출 1,285억 원(전년 +9.8%)으로 펫커머스 업계 첫 1,500억 거래액 돌파 달성.",
-        "2025년 첫 연간 흑자 달성 — 분기 → 반기 → 연간 흑자 단계적 진입 + 영업이익률 0.4% (전년 대비 +3.7%p).",
-        "⚠ GS리테일이 비주력 사업 정리 방침으로 펫프렌즈 매각 추진 중 (어바웃펫만 남길 가능성) — 인수자 미정.",
-        "**사장님이 펫커머스 가맹 옵션을 찾는다면 폴리파크 등 가맹 가능 펫샵 검토 권장 — 본 데이터는 시장 비교 참고용으로만 활용**."
-      ],
-      "en": [
-        "WARNING: Pet Friends is D2C pet commerce (online shopping mall), NOT a franchise — no franchisee entry model.",
-        "Operator Pet Friends Co. (founded 2015, acquired by IMM PE + GS Retail 2021) achieved 2025 GMV KRW 151.5B + revenue KRW 128.5B (+9.8% YoY) — first in Korean pet commerce to exceed KRW 150B GMV.",
-        "Achieved first annual profit in 2025 — gradual progression quarterly → semi-annual → annual + op margin 0.4% (+3.7%p YoY).",
-        "WARNING: GS Retail pursuing sale as part of non-core business divestiture (likely keeping only AboutPet) — acquirer undetermined.",
-        "**Owners seeking pet commerce franchise options should consider Polypark and other franchise-capable pet shops — this data is for market-comparison reference only**."
-      ]
-    },
-    "pros": {
-      "ko": [
-        "펫커머스 업계 첫 1,500억 거래액 돌파 — 카테고리 1위",
-        "2025년 첫 연간 흑자 달성 — 수익성 회복",
-        "IMM PE + GS리테일 인수 — 자본력 강함",
-        "한국 반려동물 시장 2027 6조 예상 — 카테고리 모멘텀",
-        "광고 매출 +108% 급등 — 다각화 진행"
-      ],
-      "en": [
-        "First in pet commerce to break KRW 150B GMV — category #1",
-        "First annual profit achieved 2025 — profitability recovering",
-        "IMM PE + GS Retail acquisition — strong capital",
-        "Korean pet market projected KRW 6T by 2027 — category momentum",
-        "Ad revenue +108% surge — diversification"
-      ]
-    },
-    "cons": {
-      "ko": [
-        "⚠⚠ 가맹사업 아님 — 사장님 창업 옵션 X (가장 큰 단점)",
-        "⚠ GS리테일 매각 추진 중 — 인수자에 따라 사업 방향 변동",
-        "본 데이터는 펫 시장 비교 참고용 (사장님이 점주로 진입 불가)",
-        "예비 사장님은 폴리파크·펫마트 등 가맹 가능 브랜드 검토 권장"
-      ],
-      "en": [
-        "WARNING: Not a franchise — no owner option (biggest drawback)",
-        "WARNING: GS Retail pursuing sale — direction depends on acquirer",
-        "Data is for pet market comparison only (no franchisee entry possible)",
-        "Prospective owners: consider franchise-capable brands like Polypark, Petmart"
-      ]
-    },
-    "bestLocation": {
-      "ko": [
-        "⚠ 가맹 모집 X — 사장님 창업 옵션 아님",
-        "참고: 펫프렌즈는 100% 온라인 D2C 모델 (오프라인 매장 X)",
-        "예비 사장님은 폴리파크·펫마트 등 가맹 가능 펫샵 브랜드 검토 권장"
-      ],
-      "en": [
-        "WARNING: No franchise recruitment — not an owner option",
-        "Reference: Pet Friends is 100% online D2C (no offline stores)",
-        "Prospective owners: consider franchise-capable pet shops like Polypark, Petmart"
-      ]
-    },
-    "sources": [
-      {
-        "label": "펫프렌즈 공식 쇼핑몰",
-        "url": "https://m.pet-friends.co.kr/",
-        "tier": "primary"
-      },
-      {
-        "label": "벤처스퀘어 — 펫프렌즈 2025 거래액 1,500억 돌파 (2025)",
-        "url": "https://www.venturesquare.net/1046147",
-        "tier": "media"
-      },
-      {
-        "label": "파이낸셜뉴스 — 펫프렌즈 작년 매출 1,171억 역대 최고 (2025.05)",
-        "url": "https://www.fnnews.com/news/202505071646167123",
-        "tier": "media"
-      },
-      {
-        "label": "파이낸셜투데이 — GS리테일 펫프렌즈 매각 추진 어바웃펫 남길까",
-        "url": "http://www.ftoday.co.kr/news/articleView.html?idxno=320068",
-        "tier": "media"
-      },
-      {
-        "label": "팜뉴스 — 펫프렌즈 광고 매출 역대 최대 +108% 급등",
-        "url": "https://www.pharmnews.com/news/articleView.html?idxno=258324",
-        "tier": "media"
-      },
-      {
-        "label": "뉴시스 — 펫과함께 사료부터 헬스케어까지 펫프렌즈 (2025.01)",
-        "url": "https://www.newsis.com/view/NISX20250110_0003027397",
-        "tier": "media"
-      },
-      {
-        "label": "THE VC — 펫프렌즈 기업정보·투자 이력",
-        "url": "https://thevc.kr/petfriends",
-        "tier": "aggregator"
-      }
-    ],
-    "confidence": "high",
-    "dataYear": "2025",
-    "specialtyIds": [
-      "ps-food",
-      "ps-toys"
-    ]
-  },
-  {
     "id": "cleantopia",
     "subIndustryIds": [
       "laundry-service"
@@ -18621,11 +18474,11 @@
       "ko": "1세대 멕시칸 프랜차이즈 — 부리또·케사디야 전문",
       "en": "1st-gen Mexican franchise"
     },
-    "startupCostWon": 8000,
+    "startupCostWon": 10500,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 12,
+    "avgAnnualRevenueWon": 45716,
+    "storeCount": 16,
     "closureRate": 0,
     "scores": {
       "profitability": 65,
@@ -18786,7 +18639,7 @@
     "startupCostWon": 6500,
     "franchiseFee": 500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
+    "avgAnnualRevenueWon": 4317,
     "storeCount": 100,
     "closureRate": 0,
     "scores": {
@@ -18945,11 +18798,11 @@
       "ko": "숯불구이 이자카야 — 35개점, 20평 9,150만원 진입",
       "en": "Charcoal izakaya, 35 stores"
     },
-    "startupCostWon": 9150,
+    "startupCostWon": 11280,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 35,
+    "avgAnnualRevenueWon": 5268,
+    "storeCount": 53,
     "closureRate": 0,
     "scores": {
       "profitability": 66,
@@ -18999,11 +18852,11 @@
       "ko": "베트남 쌀국수 대표 — 100개점, 데일리킹 운영 20주년",
       "en": "Leading Vietnamese pho, 100 stores"
     },
-    "startupCostWon": 9000,
+    "startupCostWon": 18595,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 100,
+    "avgAnnualRevenueWon": 4815,
+    "storeCount": 81,
     "closureRate": 0,
     "scores": {
       "profitability": 68,
@@ -19058,11 +18911,11 @@
       "ko": "정통 베트남 쌀국수 — 업계 선두 약 100개점",
       "en": "Authentic Vietnamese pho, ~100 stores"
     },
-    "startupCostWon": 9000,
+    "startupCostWon": 13265,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 100,
+    "avgAnnualRevenueWon": 3806,
+    "storeCount": 12,
     "closureRate": 0,
     "scores": {
       "profitability": 66,
@@ -19115,8 +18968,8 @@
     "startupCostWon": 6000,
     "franchiseFee": 500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 50,
+    "avgAnnualRevenueWon": 1600,
+    "storeCount": 88,
     "closureRate": 0,
     "scores": {
       "profitability": 68,
@@ -19166,11 +19019,11 @@
       "ko": "베트남 쌀국수·분짜 — 전국 확장 중",
       "en": "Vietnamese pho & bun cha"
     },
-    "startupCostWon": 8500,
+    "startupCostWon": 12404,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 60,
+    "avgAnnualRevenueWon": 4024,
+    "storeCount": 28,
     "closureRate": 0,
     "scores": {
       "profitability": 66,
@@ -19224,8 +19077,8 @@
     "startupCostWon": 10350,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 158,
+    "avgAnnualRevenueWon": 4807,
+    "storeCount": 135,
     "closureRate": 0,
     "scores": {
       "profitability": 70,
@@ -19278,8 +19131,8 @@
     "startupCostWon": 2500,
     "franchiseFee": 300,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 100,
+    "avgAnnualRevenueWon": 6118,
+    "storeCount": 68,
     "closureRate": 0,
     "scores": {
       "profitability": 64,
@@ -19330,11 +19183,11 @@
       "ko": "핸드드립·자가로스팅 카페 — 84개점, ㈜지핸즈",
       "en": "Hand-drip & roastery cafe, 84 stores"
     },
-    "startupCostWon": 18750,
+    "startupCostWon": 16396,
     "franchiseFee": 1500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 84,
+    "avgAnnualRevenueWon": 35550,
+    "storeCount": 58,
     "closureRate": 0,
     "scores": {
       "profitability": 60,
@@ -19443,7 +19296,7 @@
     "startupCostWon": 18300,
     "franchiseFee": 1500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
+    "avgAnnualRevenueWon": 29416,
     "storeCount": 27,
     "closureRate": 0,
     "scores": {
@@ -19554,8 +19407,8 @@
     "startupCostWon": 35000,
     "franchiseFee": 2000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 100,
+    "avgAnnualRevenueWon": 19434,
+    "storeCount": 158,
     "closureRate": 0,
     "scores": {
       "profitability": 60,
@@ -19662,7 +19515,7 @@
     "startupCostWon": 8000,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
+    "avgAnnualRevenueWon": 7020,
     "storeCount": 400,
     "closureRate": 0,
     "scores": {
@@ -19714,10 +19567,10 @@
       "ko": "유아 놀이·체육 교육 — 한국짐보리(짐월드), 30+센터",
       "en": "Kids play & physical education, 30+ centers"
     },
-    "startupCostWon": 15000,
+    "startupCostWon": 41900,
     "franchiseFee": 2000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
+    "avgAnnualRevenueWon": 15010,
     "storeCount": 30,
     "closureRate": 0,
     "scores": {
@@ -19771,8 +19624,8 @@
     "startupCostWon": 6020,
     "franchiseFee": 500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 132,
+    "avgAnnualRevenueWon": 7270,
+    "storeCount": 55,
     "closureRate": 0,
     "scores": {
       "profitability": 62,
@@ -19828,8 +19681,8 @@
     "startupCostWon": 6875,
     "franchiseFee": 500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 131,
+    "avgAnnualRevenueWon": 9470,
+    "storeCount": 56,
     "closureRate": 0,
     "scores": {
       "profitability": 64,
@@ -19882,8 +19735,8 @@
     "startupCostWon": 14230,
     "franchiseFee": 1000,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 26,
+    "avgAnnualRevenueWon": 22030,
+    "storeCount": 37,
     "closureRate": 0,
     "scores": {
       "profitability": 60,
