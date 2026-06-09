@@ -3509,11 +3509,11 @@
       "en": "WARNING: no trademark, no unified HQ — 286 (2018) → 92 (2025)"
     },
     "startupCostWon": 5000,
-    "franchiseFee": 200,
+    "franchiseFee": 935,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 22000,
-    "storeCount": 92,
-    "closureRate": 25,
+    "storeCount": 91,
+    "closureRate": 1.8,
     "scores": {
       "profitability": 55,
       "stability": 30,
@@ -3523,6 +3523,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 상표 난립 브랜드 — 수치는 FTC 등록 본부 기준(동네 김밥집 전체 통계와 다름)",
         "⚠ '김밥' '천국' 모두 보통명사 → 상표권 등록 실패, 정식 프랜차이즈 X",
         "정다믄 + 나누리프랜차이즈 2개 회사가 공유, 그 외 무허가 사용 다수",
         "2018년 286개 → 2023년 285개 → 2025년 92개로 매장 급감",
@@ -3544,14 +3545,14 @@
           "ko": "가맹비(정다믄 기준)",
           "en": "Franchise fee"
         },
-        "amountWon": 200
+        "amountWon": 935
       },
       {
         "label": {
           "ko": "인테리어·장비·기타",
           "en": "Interior+equip+other"
         },
-        "amountWon": 4800
+        "amountWon": 4065
       }
     ],
     "description": {
@@ -11455,21 +11456,22 @@
       "ko": "⚠ 본사·매장·매출 공개치 부족 — 정보공개서 직접 확인 필수",
       "en": "WARNING: scarce public HQ/store/revenue data — verify FTC info disclosure"
     },
-    "startupCostWon": 3300,
-    "franchiseFee": 300,
+    "startupCostWon": 4399,
+    "franchiseFee": 330,
     "monthlyRoyalty": 11,
     "avgAnnualRevenueWon": 14000,
-    "storeCount": 80,
-    "closureRate": 5,
+    "storeCount": 26,
+    "closureRate": 81.8,
     "scores": {
       "profitability": 55,
-      "stability": 55,
+      "stability": 32,
       "accessibility": 90,
       "brandPower": 50,
       "support": 55
     },
     "roadmapNotes": {
       "ko": [
+        "※ 최근 폐점률 급등·매장 급감(붕괴 신호) — 신규 진입 신중",
         "⚠ 본사 매출·정확한 매장 수·점당 매출 등 공개 데이터 매우 제한적",
         "창업비용 3,300만원 — 네일 카테고리 진입장벽 매우 낮음",
         "소형 매장 (5~8평) + 1~2인 운영 가능 모델",
@@ -13265,9 +13267,9 @@
     "startupCostWon": 17850,
     "franchiseFee": 880,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 52500,
-    "storeCount": 100,
-    "closureRate": 3,
+    "avgAnnualRevenueWon": 47860,
+    "storeCount": 131,
+    "closureRate": 3.5,
     "scores": {
       "profitability": 80,
       "stability": 75,
@@ -14253,11 +14255,11 @@
       "en": "24h unmanned study, reasonable cost"
     },
     "startupCostWon": 14454,
-    "franchiseFee": 440,
+    "franchiseFee": 330,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 9600,
+    "avgAnnualRevenueWon": 8961,
     "storeCount": 70,
-    "closureRate": 3.5,
+    "closureRate": 4.3,
     "scores": {
       "profitability": 70,
       "stability": 75,
@@ -14529,11 +14531,11 @@
       "en": "Korean-style malatang & malaxiangguo"
     },
     "startupCostWon": 9366,
-    "franchiseFee": 500,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 31000,
-    "storeCount": 93,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 57201,
+    "storeCount": 99,
+    "closureRate": 5.1,
     "scores": {
       "profitability": 68,
       "stability": 62,
@@ -15344,14 +15346,14 @@
       "en": "20+ year veteran chicken franchise"
     },
     "startupCostWon": 5920,
-    "franchiseFee": 500,
+    "franchiseFee": 330,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 25000,
-    "storeCount": 67,
-    "closureRate": 4.5,
+    "avgAnnualRevenueWon": 30012,
+    "storeCount": 80,
+    "closureRate": 10,
     "scores": {
       "profitability": 68,
-      "stability": 80,
+      "stability": 52,
       "accessibility": 75,
       "brandPower": 68,
       "support": 70
@@ -15535,14 +15537,14 @@
       "en": "Office-lunch salad bowl specialist"
     },
     "startupCostWon": 5100,
-    "franchiseFee": 500,
+    "franchiseFee": 660,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 22000,
-    "storeCount": 68,
-    "closureRate": 6.5,
+    "avgAnnualRevenueWon": 20474,
+    "storeCount": 38,
+    "closureRate": 39.5,
     "scores": {
       "profitability": 68,
-      "stability": 70,
+      "stability": 32,
       "accessibility": 78,
       "brandPower": 65,
       "support": 68
@@ -16124,21 +16126,22 @@
       "ko": "돼지갈비 샤브샤브 무한리필",
       "en": "AYCE pork ribs + shabu"
     },
-    "startupCostWon": 9500,
-    "franchiseFee": 0,
+    "startupCostWon": 10358,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 100000,
-    "storeCount": 70,
-    "closureRate": 8,
+    "avgAnnualRevenueWon": 3256,
+    "storeCount": 37,
+    "closureRate": 29.7,
     "scores": {
       "profitability": 72,
-      "stability": 62,
+      "stability": 32,
       "accessibility": 65,
       "brandPower": 65,
       "support": 68
     },
     "roadmapNotes": {
       "ko": [
+        "※ 본사 \"월매출 1억\" 홍보는 일부 상위매장 — 정보공개서 가맹점 평균은 점당 약 3,256만원. 폐점률 높음(주의)",
         "가맹교육비 0원 소자본 창업 지원",
         "월매출 1억 돌파 매장 다수 (브랜드 홍보 기준)",
         "돼지갈비+샤브샤브 결합 메뉴 차별화",
@@ -16174,11 +16177,11 @@
       "en": "Oven-roasted chicken franchise"
     },
     "startupCostWon": 7442,
-    "franchiseFee": 700,
+    "franchiseFee": 880,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 32000,
-    "storeCount": 86,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 15702,
+    "storeCount": 105,
+    "closureRate": 8.3,
     "scores": {
       "profitability": 65,
       "stability": 62,
@@ -16467,15 +16470,15 @@
       "ko": "젤라또·아이스크림 전문 카페",
       "en": "Gelato & ice cream cafe"
     },
-    "startupCostWon": 17705,
-    "franchiseFee": 1000,
+    "startupCostWon": 7185,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 9060,
-    "storeCount": 99,
-    "closureRate": 10,
+    "avgAnnualRevenueWon": 12657,
+    "storeCount": 47,
+    "closureRate": 32.7,
     "scores": {
       "profitability": 55,
-      "stability": 52,
+      "stability": 32,
       "accessibility": 50,
       "brandPower": 70,
       "support": 68
@@ -16614,14 +16617,14 @@
       "en": "Korean lunchbox & deli"
     },
     "startupCostWon": 13450,
-    "franchiseFee": 1000,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 36000,
-    "storeCount": 58,
-    "closureRate": 7,
+    "avgAnnualRevenueWon": 43806,
+    "storeCount": 35,
+    "closureRate": 17.1,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 42,
       "accessibility": 55,
       "brandPower": 65,
       "support": 70
@@ -16710,12 +16713,12 @@
       "ko": "전국 116호점의 헬스 가맹 브랜드",
       "en": "116-store fitness franchise"
     },
-    "startupCostWon": 21000,
-    "franchiseFee": 2000,
+    "startupCostWon": 59500,
+    "franchiseFee": 2530,
     "monthlyRoyalty": 100,
-    "avgAnnualRevenueWon": 120000,
-    "storeCount": 92,
-    "closureRate": 6,
+    "avgAnnualRevenueWon": 0,
+    "storeCount": 102,
+    "closureRate": 0,
     "scores": {
       "profitability": 65,
       "stability": 72,
@@ -16725,6 +16728,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 2023년 가맹 시작 — 대부분 직영(91), 가맹 표본 적어 평균매출 미공개",
         "60평 스마트 타입 2억 1천만원 (PRO 타입 대비 5.6억 저렴)",
         "전국 116호 매장, 100호점 연 매출 1,200억원",
         "QR 출입·구독제 자율운영짐 모델 도입",
@@ -16809,14 +16813,14 @@
       "en": "Korea's 1st hair franchise"
     },
     "startupCostWon": 18000,
-    "franchiseFee": 2000,
+    "franchiseFee": 2200,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 80000,
-    "storeCount": 67,
-    "closureRate": 5,
+    "avgAnnualRevenueWon": 0,
+    "storeCount": 62,
+    "closureRate": 16.1,
     "scores": {
       "profitability": 68,
-      "stability": 72,
+      "stability": 42,
       "accessibility": 45,
       "brandPower": 85,
       "support": 80
