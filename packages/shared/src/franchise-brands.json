@@ -2980,20 +2980,21 @@
       "en": "20yr veteran — stores 367→159; per-store KRW 400M"
     },
     "startupCostWon": 17488,
-    "franchiseFee": 1100,
+    "franchiseFee": 3300,
     "monthlyRoyalty": 27.5,
-    "avgAnnualRevenueWon": 40000,
-    "storeCount": 159,
-    "closureRate": 7,
+    "avgAnnualRevenueWon": 20316,
+    "storeCount": 128,
+    "closureRate": 21.2,
     "scores": {
       "profitability": 72,
-      "stability": 55,
+      "stability": 32,
       "accessibility": 50,
       "brandPower": 70,
       "support": 65
     },
     "roadmapNotes": {
       "ko": [
+        "※ 쇠퇴 브랜드 — 가맹점 급감(피크 200+→128)·매출 7.4억→2억·폐점률 21%. 신규 진입 신중",
         "1990년 시작 — 한국 토종 피자 1세대",
         "⚠ 매장 2016년 367→2018년 277→현재 159개 지속 감소",
         "⚠ 본사 매출 2016년 971억→2018년 657억 (-32%)",
@@ -3104,10 +3105,10 @@
       "en": "Premium pub-style chicken — 176 stores, ~KRW 150M startup"
     },
     "startupCostWon": 15110,
-    "franchiseFee": 1100,
+    "franchiseFee": 770,
     "monthlyRoyalty": 27.5,
-    "avgAnnualRevenueWon": 36000,
-    "storeCount": 176,
+    "avgAnnualRevenueWon": 45309,
+    "storeCount": 187,
     "closureRate": 3,
     "scores": {
       "profitability": 75,
@@ -3335,15 +3336,15 @@
       "ko": "백종원 한식 대표, 열탄불고기 시그니처 — 2024년 24개 순감소",
       "en": "Paik's Korean flagship, -24 stores in 2024"
     },
-    "startupCostWon": 15000,
-    "franchiseFee": 330,
+    "startupCostWon": 8779,
+    "franchiseFee": 550,
     "monthlyRoyalty": 25,
-    "avgAnnualRevenueWon": 72000,
-    "storeCount": 176,
-    "closureRate": 12,
+    "avgAnnualRevenueWon": 59927,
+    "storeCount": 92,
+    "closureRate": 16.8,
     "scores": {
       "profitability": 88,
-      "stability": 52,
+      "stability": 42,
       "accessibility": 52,
       "brandPower": 88,
       "support": 82
@@ -3372,7 +3373,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 330
+        "amountWon": 550
       },
       {
         "label": {
@@ -3393,7 +3394,7 @@
           "ko": "인테리어·시설·기타",
           "en": "Interior+facility+other"
         },
-        "amountWon": 13820
+        "amountWon": 7379
       }
     ],
     "description": {
@@ -5118,16 +5119,16 @@
       "ko": "★ 콩나물국밥 카테고리 점유율 1위, 1979 전주 노포 모회사",
       "en": "#1 in bean-sprout-soup category, 1979 Jeonju heritage"
     },
-    "startupCostWon": 8500,
+    "startupCostWon": 11701,
     "franchiseFee": 500,
     "monthlyRoyalty": 25,
-    "avgAnnualRevenueWon": 30000,
-    "storeCount": 180,
+    "avgAnnualRevenueWon": 49296,
+    "storeCount": 191,
     "closureRate": 2.5,
     "scores": {
       "profitability": 75,
       "stability": 80,
-      "accessibility": 75,
+      "accessibility": 65,
       "brandPower": 78,
       "support": 72
     },
@@ -6760,11 +6761,11 @@
       "en": "#1 low-capital pasta — 171 stores, 14.1M startup (5+ yrs)"
     },
     "startupCostWon": 1410,
-    "franchiseFee": 200,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 16.5,
-    "avgAnnualRevenueWon": 15000,
+    "avgAnnualRevenueWon": 31200,
     "storeCount": 171,
-    "closureRate": 4,
+    "closureRate": 6,
     "scores": {
       "profitability": 72,
       "stability": 72,
@@ -12114,12 +12115,12 @@
     "startupCostWon": 19490,
     "franchiseFee": 1100,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 36732,
-    "storeCount": 168,
-    "closureRate": 3.5,
+    "avgAnnualRevenueWon": 51233,
+    "storeCount": 153,
+    "closureRate": 6,
     "scores": {
       "profitability": 78,
-      "stability": 80,
+      "stability": 72,
       "accessibility": 45,
       "brandPower": 82,
       "support": 78
@@ -14891,14 +14892,14 @@
       "en": "Korean malatang brand expanding to US"
     },
     "startupCostWon": 7890,
-    "franchiseFee": 500,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 32372,
-    "storeCount": 183,
-    "closureRate": 8,
+    "avgAnnualRevenueWon": 35444,
+    "storeCount": 138,
+    "closureRate": 38.69,
     "scores": {
       "profitability": 73,
-      "stability": 62,
+      "stability": 32,
       "accessibility": 75,
       "brandPower": 73,
       "support": 70
@@ -14985,10 +14986,10 @@
       "en": "Instant tteokbokki you'll exclaim over"
     },
     "startupCostWon": 4881,
-    "franchiseFee": 700,
+    "franchiseFee": 770,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 22000,
-    "storeCount": 181,
+    "avgAnnualRevenueWon": 11200,
+    "storeCount": 130,
     "closureRate": 12,
     "scores": {
       "profitability": 68,
@@ -15754,12 +15755,12 @@
       "ko": "감자탕 프랜차이즈 1위 노포 브랜드",
       "en": "Korea's #1 gamjatang veteran franchise"
     },
-    "startupCostWon": 13000,
-    "franchiseFee": 1000,
+    "startupCostWon": 19200,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 55000,
-    "storeCount": 200,
-    "closureRate": 5.5,
+    "avgAnnualRevenueWon": 50516,
+    "storeCount": 58,
+    "closureRate": 1.92,
     "scores": {
       "profitability": 72,
       "stability": 72,
@@ -16540,11 +16541,11 @@
       "en": "Heritage fried chicken since 1981"
     },
     "startupCostWon": 7590,
-    "franchiseFee": 500,
+    "franchiseFee": 1430,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 30000,
-    "storeCount": 190,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 30250,
+    "storeCount": 202,
+    "closureRate": 5.94,
     "scores": {
       "profitability": 65,
       "stability": 62,
@@ -16589,11 +16590,11 @@
       "en": "20+ year heritage pizza chain"
     },
     "startupCostWon": 8550,
-    "franchiseFee": 700,
+    "franchiseFee": 1430,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 23580,
-    "storeCount": 200,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 20171,
+    "storeCount": 193,
+    "closureRate": 9.42,
     "scores": {
       "profitability": 65,
       "stability": 62,
@@ -17027,15 +17028,15 @@
       "ko": "헤어 디자이너 전문 미용실 프랜차이즈",
       "en": "Designer-led hair salon chain"
     },
-    "startupCostWon": 15000,
-    "franchiseFee": 1500,
+    "startupCostWon": 16960,
+    "franchiseFee": 1650,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 60000,
-    "storeCount": 200,
-    "closureRate": 5.5,
+    "avgAnnualRevenueWon": 48520,
+    "storeCount": 98,
+    "closureRate": 8.33,
     "scores": {
       "profitability": 68,
-      "stability": 72,
+      "stability": 62,
       "accessibility": 50,
       "brandPower": 80,
       "support": 75
@@ -17422,15 +17423,15 @@
       "ko": "프리미엄 김밥·분식 프랜차이즈",
       "en": "Premium kimbap & bunsik chain"
     },
-    "startupCostWon": 9500,
-    "franchiseFee": 1000,
+    "startupCostWon": 7411,
+    "franchiseFee": 770,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 35000,
-    "storeCount": 200,
-    "closureRate": 7,
+    "avgAnnualRevenueWon": 30178,
+    "storeCount": 229,
+    "closureRate": 15.04,
     "scores": {
       "profitability": 68,
-      "stability": 70,
+      "stability": 42,
       "accessibility": 75,
       "brandPower": 72,
       "support": 70
@@ -17504,55 +17505,6 @@
     "dataYear": "2024",
     "specialtyIds": [
       "fb-pizza"
-    ]
-  },
-  {
-    "id": "sevenstarkaraoke",
-    "subIndustryIds": [
-      "practice-room"
-    ],
-    "categoryId": "space",
-    "name": {
-      "ko": "세븐스타 노래연습장",
-      "en": "Seven Star Karaoke"
-    },
-    "tagline": {
-      "ko": "무인 코인 노래방 프랜차이즈",
-      "en": "Unmanned coin karaoke chain"
-    },
-    "startupCostWon": 18000,
-    "franchiseFee": 1500,
-    "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 50000,
-    "storeCount": 200,
-    "closureRate": 6.5,
-    "scores": {
-      "profitability": 72,
-      "stability": 70,
-      "accessibility": 50,
-      "brandPower": 72,
-      "support": 70
-    },
-    "roadmapNotes": {
-      "ko": [
-        "무인 코인 노래방 카테고리 상위권",
-        "대형 매장 위주, 초기 자본 큼",
-        "야간·심야 매출 집중",
-        "전기료·임대료 비중 큼"
-      ],
-      "en": [
-        "Top-tier unmanned coin-karaoke chain",
-        "Large stores, heavy capex",
-        "Night-revenue heavy",
-        "Electricity + rent are major opex"
-      ]
-    },
-    "costVerified": false,
-    "costSource": "공식사이트 + 정보공개서",
-    "franchiseUrl": "https://www.sevenstar.co.kr/",
-    "dataYear": "2024",
-    "specialtyIds": [
-      "space-vocal-practice"
     ]
   },
   {
