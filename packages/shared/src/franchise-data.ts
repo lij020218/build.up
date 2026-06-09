@@ -632,7 +632,7 @@ const brandSupplyOverrides: Record<string, FranchiseSupplyItem[]> = {
     { category: { ko: "장비·POS", en: "Equipment & POS" }, type: "hq-designated", items: [{ ko: "주방장비·POS 본사 사양", en: "Kitchen equipment, POS HQ spec" }] },
     { category: { ko: "소모품", en: "Consumables" }, type: "free-purchase", items: [{ ko: "세제·위생용품", en: "Detergent, hygiene" }] },
   ],
-  "saladit": [
+  "salady": [
     { category: { ko: "샐러드 재료·드레싱", en: "Salad ingredients & dressing" }, type: "hq-exclusive", items: [{ ko: "본사 레시피 드레싱·토핑 공급", en: "HQ recipe dressing/topping supply" }] },
     { category: { ko: "신선 채소", en: "Fresh vegetables" }, type: "free-purchase", items: [{ ko: "채소·과일 현지 구매 (신선도 관리 핵심)", en: "Vegetables/fruit local purchase (freshness critical)" }], note: { ko: "식재료 신선도 관리가 핵심 — 오피스 상권 필수", en: "Freshness management is key — office district essential" } },
     { category: { ko: "포장재", en: "Packaging" }, type: "hq-designated", items: [{ ko: "브랜드 용기·봉투", en: "Brand containers/bags" }] },

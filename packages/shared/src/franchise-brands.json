@@ -1518,7 +1518,7 @@
     "startupCostWon": 6800,
     "franchiseFee": 300,
     "monthlyRoyalty": 16.5,
-    "avgAnnualRevenueWon": 50000,
+    "avgAnnualRevenueWon": 39323,
     "storeCount": 860,
     "closureRate": 4.2,
     "scores": {
@@ -5987,146 +5987,6 @@
     "dataYear": "2023",
     "specialtyIds": [
       "delivery-korean-lunch"
-    ]
-  },
-  {
-    "id": "saladit",
-    "subIndustryIds": [
-      "salad-healthy"
-    ],
-    "categoryId": "food",
-    "name": {
-      "ko": "샐러디",
-      "en": "Salady"
-    },
-    "tagline": {
-      "ko": "샐러드 프랜차이즈 1위, 400호점 돌파 — 1조 샐러드 시장 선두",
-      "en": "#1 salad franchise, 400+ stores in 1T salad market"
-    },
-    "startupCostWon": 8000,
-    "franchiseFee": 500,
-    "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 30227,
-    "storeCount": 400,
-    "closureRate": 3,
-    "scores": {
-      "profitability": 78,
-      "stability": 75,
-      "accessibility": 80,
-      "brandPower": 78,
-      "support": 75
-    },
-    "roadmapNotes": {
-      "ko": [
-        "건강식 트렌드 수혜 — 1조 원 샐러드 시장 1위",
-        "오피스 상권 필수",
-        "식재료 신선도 관리 핵심",
-        "소형 매장 (10평~) 가능, 영업이익률 약 25%"
-      ],
-      "en": [
-        "Health food trend beneficiary — #1 in KRW 1T salad market",
-        "Office district essential",
-        "Ingredient freshness critical",
-        "Small stores (10+ pyeong), op. margin ~25%"
-      ]
-    },
-    "franchiseUrl": "https://www.salady.co.kr/",
-    "costVerified": false,
-    "description": {
-      "ko": [
-        "전국 매장 약 400호점을 돌파한 한국 샐러드 프랜차이즈 1위 브랜드입니다(샐러드 시장 규모 1조 원 추정).",
-        "월 평균 매출 2019년 1,480만 원 → 2021년 2,915만 원으로 매년 약 2배씩 성장한 카테고리 모멘텀이 핵심 강점입니다.",
-        "원가율 약 35%, 영업이익률 약 25% — 외식업 중에서 매우 높은 수익성 구조입니다.",
-        "다만 가맹점 평균 연 매출 약 3억 227만 원으로 객단가·점포당 매출 모델은 치킨·분식 대비 작고 식자재 신선도 관리가 까다롭습니다.",
-        "8천만 원 자본으로 10평 소형 매장 + 오피스/대학가 상권에 들어가 건강 트렌드를 활용할 사장님에게 적합 — 운영 단순성·고마진이 매력."
-      ],
-      "en": [
-        "#1 Korean salad franchise with ~400 stores nationwide (KRW 1T salad market est.).",
-        "Monthly avg sales grew from KRW 14.8M (2019) → 29.15M (2021) — doubling yearly with strong category momentum.",
-        "Cost ratio ~35%, op. margin ~25% — very high profitability for foodservice.",
-        "However, franchise avg annual sales ~KRW 302M is smaller than chicken/snack and freshness management is demanding.",
-        "Best for owners with KRW 80M targeting 10-pyeong small stores in office/university districts to ride health trend — simple ops, high margin."
-      ]
-    },
-    "pros": {
-      "ko": [
-        "샐러드 카테고리 매장 수 1위 — 1조 원 시장의 카테고리 오너",
-        "월 평균 매출 매년 약 2배 성장 (2019→2021)",
-        "영업이익률 약 25% — 외식업 최상위 수익성 구조",
-        "원가율 약 35%로 안정적 — 마진 관리 쉬움",
-        "10평 소형 매장 — 인건비·임대료 부담 낮음, 1인 운영 가능"
-      ],
-      "en": [
-        "#1 by stores in salad — category owner of KRW 1T market",
-        "Monthly avg revenue ~2x yearly growth (2019→2021)",
-        "Op. margin ~25% — top-tier foodservice profitability",
-        "Stable cost ratio ~35% — easy margin management",
-        "10-pyeong small store — low labor/rent, solo operation viable"
-      ]
-    },
-    "cons": {
-      "ko": [
-        "가맹점 평균 매출 약 3억 — 치킨·분식 대비 점포당 매출 작음",
-        "식재료 신선도 관리 매우 까다로움 — 폐기 손실 위험 높음",
-        "오피스 상권 필수 — 주거·역세권 단독은 매출 약함",
-        "여름 vs 겨울 매출 격차 큼 (계절성)",
-        "비용 검증 데이터(공정위 정보공개서) 본문에 미포함 — 추정 일부"
-      ],
-      "en": [
-        "Franchise avg sales ~KRW 300M — smaller per-store than chicken/snack",
-        "Freshness management very demanding — high spoilage risk",
-        "Office district essential — residential/station alone gives weak sales",
-        "Large summer vs winter gap (seasonality)",
-        "Cost verification data (FTC disclosure) partially missing — estimates included"
-      ]
-    },
-    "bestLocation": {
-      "ko": [
-        "오피스 밀집 상권 — 평일 점심 직장인 건강식 수요 핵심 (가장 중요)",
-        "대학가·학원가 — 여학생·청년 다이어트 트렌드 강함",
-        "신축 아파트·신도시 — 30~40대 여성 건강 트렌드",
-        "역세권 + 오피스 혼합 — 점심 + 저녁 픽업 동시",
-        "주거 단독 골목은 부적합 — 객단가·트렌드 모두 약함"
-      ],
-      "en": [
-        "Office-dense areas — weekday lunch worker health demand is core (most critical)",
-        "University/academy districts — strong female student/youth diet trend",
-        "New apartments/new towns — 30s-40s women health trend",
-        "Mixed station/office — lunch + evening pickup",
-        "Pure residential side streets NOT suitable — weak ticket and trend"
-      ]
-    },
-    "sources": [
-      {
-        "label": "샐러디 가맹 안내 공식",
-        "url": "https://salady.com/franchise/info",
-        "tier": "primary"
-      },
-      {
-        "label": "공정거래위원회 가맹사업정보 — 샐러디",
-        "url": "https://franchise.ftc.go.kr/",
-        "tier": "primary"
-      },
-      {
-        "label": "식품외식경제 — 밥 대신 샐러드 1조 원 넘은 샐러드 시장 (2025)",
-        "url": "https://www.foodbank.co.kr/news/articleView.html?idxno=61909",
-        "tier": "industry"
-      },
-      {
-        "label": "푸드투데이 — 한 끼 식사된 샐러드 1조원 시장 형성",
-        "url": "https://foodtoday.or.kr/news/article.html?no=168174",
-        "tier": "industry"
-      },
-      {
-        "label": "신아일보 — 건강식 트렌드 타고 성장하는 샐러드 프랜차이즈 (2025)",
-        "url": "http://www.shinailbo.co.kr/news/articleView.html?idxno=2166434",
-        "tier": "media"
-      }
-    ],
-    "confidence": "medium",
-    "dataYear": "2025",
-    "specialtyIds": [
-      "salad-bowl"
     ]
   },
   {
@@ -12488,7 +12348,7 @@
     "franchiseFee": 3000,
     "monthlyRoyalty": 110,
     "avgAnnualRevenueWon": 36000,
-    "storeCount": 50,
+    "storeCount": 10,
     "closureRate": 3,
     "scores": {
       "profitability": 75,
@@ -12936,7 +12796,7 @@
     "franchiseFee": 1000,
     "monthlyRoyalty": 55,
     "avgAnnualRevenueWon": 40000,
-    "storeCount": 6000,
+    "storeCount": 2750,
     "closureRate": 4.5,
     "scores": {
       "profitability": 80,
@@ -14864,131 +14724,6 @@
       "ls-laundry-shop",
       "ls-dry-cleaning"
     ]
-  },
-  {
-    "id": "clean-lab",
-    "subIndustryIds": [
-      "repair-service"
-    ],
-    "categoryId": "living-service",
-    "name": {
-      "ko": "청소연구소",
-      "en": "Clean Lab"
-    },
-    "tagline": {
-      "ko": "⚠ 가맹 모델 아님 — 매니저 등록형 플랫폼 (생활연구소 운영)",
-      "en": "WARNING: NOT a franchise — manager-registration platform (Lifelab)"
-    },
-    "startupCostWon": 0,
-    "franchiseFee": 0,
-    "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 4500,
-    "storeCount": 0,
-    "closureRate": 0,
-    "scores": {
-      "profitability": 50,
-      "stability": 55,
-      "accessibility": 92,
-      "brandPower": 78,
-      "support": 60
-    },
-    "roadmapNotes": {
-      "ko": [
-        "⚠ 가맹점 모델 아님 — 청소매니저 개인 등록형 플랫폼",
-        "운영사 ㈜생활연구소 2024 매출 151억 (+20.5%) / 영업손실 13.7억 — 적자 상태",
-        "재구매율 85% + 신규 고객 월 20% 증가 — 수요 증명",
-        "가사도우미 시장 8조 원 규모 (카카오벤처스 추산)"
-      ],
-      "en": [
-        "WARNING: not a franchise — individual manager-registration platform",
-        "Operator Lifelab Co.: 2024 revenue KRW 15.1B (+20.5%) / operating loss KRW 1.37B — still loss-making",
-        "85% repeat rate + 20% MoM new-user growth — demand proven",
-        "Domestic home-help market sized at KRW 8T (per Kakao Ventures)"
-      ]
-    },
-    "franchiseUrl": "https://www.cleaninglab.co.kr/about",
-    "costVerified": false,
-    "description": {
-      "ko": [
-        "㈜생활연구소(Lifelab)가 운영하는 홈클리닝 플랫폼으로, 카카오 출신 창업자들이 2016년 설립한 스타트업입니다.",
-        "⚠ Found.One 의 다른 브랜드와 달리 '가맹 사업'이 아닌 '청소매니저 등록형 플랫폼' — 사장님이 매장을 여는 구조가 아니라 개인 매니저로 등록해 일감을 받는 모델입니다.",
-        "운영사 2024년 매출 약 151억 원(+20.5%)이지만 영업손실 13.7억 원으로 아직 흑자 전환 전 단계입니다.",
-        "재구매율 85% + 매월 신규 고객 20% 증가 추이로 수요 자체는 강하고, 가사도우미 시장 규모는 약 8조 원으로 추산됩니다.",
-        "B2C 청소 매니저로 일하려는 분께 적합 — 가맹 창업을 원하시면 청소연구소가 아닌 '크린토피아 입주청소' 등 가맹 모델 브랜드를 비교하셔야 합니다."
-      ],
-      "en": [
-        "Home-cleaning platform run by Lifelab Co., founded in 2016 by ex-Kakao team.",
-        "WARNING: unlike other brands in Found.One, this is NOT a franchise — it's a manager-registration platform; owners don't open stores but register as individual managers receiving job orders.",
-        "Operator 2024 revenue ~KRW 15.1B (+20.5%) but operating loss of KRW 1.37B — still pre-profit.",
-        "85% repeat rate + 20% MoM new-user growth — strong demand; home-help market estimated at ~KRW 8T.",
-        "Best for individuals wanting B2C cleaning-manager work — for franchise startups, compare brands like Cleantopia move-in cleaning instead."
-      ]
-    },
-    "pros": {
-      "ko": [
-        "창업비용 사실상 0원 — 매니저 개인 등록만 필요",
-        "재구매율 85% — 안정적 일감 흐름",
-        "본사 마케팅으로 신규 고객 매월 20% 증가 — 매니저는 광고비 부담 없음",
-        "가사도우미 8조 원 시장 + 1인가구·맞벌이 증가 트렌드"
-      ],
-      "en": [
-        "Effectively zero startup cost — only individual manager registration needed",
-        "85% repeat rate — stable order flow",
-        "20% MoM new-user growth from HQ marketing — managers carry no ad cost",
-        "KRW 8T home-help market + rising single/dual-income household trend"
-      ]
-    },
-    "cons": {
-      "ko": [
-        "⚠ 가맹점 창업이 아니라 매니저 등록 — 사장님 사업체 개념 아님",
-        "⚠ 운영사 2024 영업손실 13.7억 — 플랫폼 수수료 인상·정책 변경 리스크",
-        "수입은 시간당 단가 × 일감 수 — 안정적 월급 구조 아님",
-        "본사 평판·고객 리뷰가 매니저 일감에 직접 영향"
-      ],
-      "en": [
-        "WARNING: not a franchise startup but manager registration — no own-business structure",
-        "WARNING: operator 2024 operating loss KRW 1.37B — risk of platform commission hikes / policy changes",
-        "Income = hourly rate × jobs — not a stable salary structure",
-        "HQ reputation and customer reviews directly affect a manager's order flow"
-      ]
-    },
-    "bestLocation": {
-      "ko": [
-        "수도권·광역시 거주자 (일감 분포 집중)",
-        "주중 평일 풀타임 가능 매니저 — 시간당 수익 극대화",
-        "차량 보유 + 서비스 권역 자율 설정 가능"
-      ],
-      "en": [
-        "Resident in Seoul-metro / metropolitan cities (job density)",
-        "Full-time weekday available — maximizes hourly earnings",
-        "Vehicle owned + flexible service-area setting"
-      ]
-    },
-    "sources": [
-      {
-        "label": "청소연구소 공식 (생활연구소)",
-        "url": "https://www.cleaninglab.co.kr/about",
-        "tier": "primary"
-      },
-      {
-        "label": "THE VC — 생활연구소 재무 (2024 매출 151억)",
-        "url": "https://thevc.kr/lifelab",
-        "tier": "primary"
-      },
-      {
-        "label": "플래텀 — 220억원 투자 유치",
-        "url": "https://platum.kr/archives/162575",
-        "tier": "media"
-      },
-      {
-        "label": "K스타트업밸리 — 청소연구소 220억 투자",
-        "url": "https://ksvalley.com/news/article.html?no=7250",
-        "tier": "media"
-      }
-    ],
-    "confidence": "high",
-    "dataYear": "2025",
-    "specialtyIds": []
   },
   {
     "id": "zaksim-study",
@@ -20193,61 +19928,6 @@
         "label": "착한구두 창업비용",
         "url": "https://sosangong.com/franchise-startup-costs/",
         "tier": "aggregator"
-      }
-    ]
-  },
-  {
-    "id": "rehoboth",
-    "subIndustryIds": [
-      "shared-office"
-    ],
-    "specialtyIds": [
-      "space-private-office",
-      "space-virtual-office"
-    ],
-    "categoryId": "space",
-    "name": {
-      "ko": "르호봇",
-      "en": "Rehoboth"
-    },
-    "tagline": {
-      "ko": "공유오피스 1세대 — 1998년 국내 최초, 전국 가맹",
-      "en": "1st-gen shared office, since 1998"
-    },
-    "startupCostWon": 0,
-    "franchiseFee": 0,
-    "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 0,
-    "storeCount": 0,
-    "closureRate": 0,
-    "scores": {
-      "profitability": 58,
-      "stability": 66,
-      "accessibility": 44,
-      "brandPower": 64,
-      "support": 66
-    },
-    "roadmapNotes": {
-      "ko": [
-        "국내 최초(1998) 공유오피스·비즈니스인큐베이터",
-        "전국 가맹 모델 운영",
-        "수치 미공개 — 본사 직접 문의 필요"
-      ],
-      "en": [
-        "",
-        "",
-        ""
-      ]
-    },
-    "franchiseUrl": "https://www.ibusiness.co.kr/franchise/",
-    "costVerified": false,
-    "confidence": "low",
-    "dataYear": "2025",
-    "sources": [
-      {
-        "label": "르호봇 가맹안내",
-        "url": "https://www.ibusiness.co.kr/franchise/",
-        "tier": "primary"
       }
     ]
   },

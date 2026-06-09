@@ -4,13 +4,16 @@ import type { WorkflowDecisionMap } from "../types/roadmap";
 
 /**
  * 2026-05-12 P3 — 사용자 path 의 *실제 navigation 순서* 검증.
+ * 2026-06-09 정정 — 자료조사 기반 실제 창업 순서로 교정.
  *
- * 사장님 신고: "이 단계가 더 늦게 왔어야 되는 거 아닌가?" 라고 느끼면 안 됨.
- *   → 임대차계약 직후 사업자등록·통장·세무·자금 결정 → 인테리어 발주 순서.
+ * 대한민국 실제 오프라인 창업 순서(헬프미·찾기쉬운생활법령 등 확인):
+ *   임대차계약 → **인테리어/공사** → 영업신고(보건소) → 사업자등록(세무서) → 세무·자금 → 발주·채용 …
+ *   즉 인테리어(construction-setup)가 사업자등록(registration-setup) *앞*에 온다.
+ *   (이전 버전은 사업자등록을 인테리어 앞에 두는 잘못된 순서를 단언 → 본 테스트가 그걸 못 잡았던 stale 테스트였음.)
  *
  * 이 테스트는:
- *   1. 각 path 의 실제 navigation 순서가 기대 순서와 일치하는지
- *   2. registration-setup → biz-registration → tax → loan 순서가 인테리어 *전*인지
+ *   1. 각 path 의 실제 navigation 순서가 교정된 실제 순서와 일치하는지
+ *   2. construction-setup(인테리어) 가 registration-setup(사업자등록) *앞*인지
  *   3. starter-tech 도 기존 흐름 유지하는지
  *   를 검증.
  */
@@ -27,18 +30,19 @@ function pathOrder(categoryId: string): string[] {
 }
 
 describe("traverseUserPath — path order matches real-world sequence", () => {
-  it("offline (food): 임대차 → 사업자등록 → 통장·세무사 → 세무 → 자금 → 인테리어 순서", () => {
+  it("offline (food): 임대차 → 인테리어 → 사업자등록 → 세무 → 자금 → 메뉴 → 발주 순서", () => {
     const order = pathOrder("food");
 
     const idx = (id: string) => order.indexOf(id);
 
-    // 핵심 검증: registration-setup → biz-registration → tax-guide → loan-guide → construction-setup
-    expect(idx("contract-review")).toBeLessThan(idx("registration-setup"));
+    // 핵심 검증(실제 순서): contract-review → construction-setup(인테리어) → registration-setup → biz-registration → tax → loan → menu → vendor …
+    expect(idx("contract-review")).toBeLessThan(idx("construction-setup"));
+    expect(idx("construction-setup")).toBeLessThan(idx("registration-setup"));
     expect(idx("registration-setup")).toBeLessThan(idx("biz-registration"));
     expect(idx("biz-registration")).toBeLessThan(idx("tax-guide"));
     expect(idx("tax-guide")).toBeLessThan(idx("loan-guide"));
-    expect(idx("loan-guide")).toBeLessThan(idx("construction-setup"));
-    expect(idx("construction-setup")).toBeLessThan(idx("vendor-setup"));
+    expect(idx("loan-guide")).toBeLessThan(idx("menu-design"));
+    expect(idx("menu-design")).toBeLessThan(idx("vendor-setup"));
     expect(idx("vendor-setup")).toBeLessThan(idx("hiring-setup"));
     expect(idx("hiring-setup")).toBeLessThan(idx("insurance-tax-setup"));
     expect(idx("insurance-tax-setup")).toBeLessThan(idx("operations-setup"));
@@ -47,21 +51,21 @@ describe("traverseUserPath — path order matches real-world sequence", () => {
     expect(idx("financial-review")).toBeLessThan(idx("pre-launch-final"));
   });
 
-  it("offline (cafe): 동일한 reorder 흐름 적용됨", () => {
+  it("offline (cafe): 인테리어가 사업자등록 *앞* (실제 순서)", () => {
     const order = pathOrder("cafe-dessert");
     const idx = (id: string) => order.indexOf(id);
-    expect(idx("registration-setup")).toBeLessThan(idx("construction-setup"));
-    expect(idx("biz-registration")).toBeLessThan(idx("construction-setup"));
-    expect(idx("loan-guide")).toBeLessThan(idx("construction-setup"));
+    expect(idx("construction-setup")).toBeLessThan(idx("registration-setup"));
+    expect(idx("construction-setup")).toBeLessThan(idx("biz-registration"));
+    expect(idx("construction-setup")).toBeLessThan(idx("loan-guide"));
   });
 
-  it("offline (beauty·pet·fitness 등): 모두 동일 흐름", () => {
+  it("offline (beauty·pet·fitness 등): 모두 인테리어 우선 흐름", () => {
     for (const cat of ["retail", "beauty", "fitness", "education", "pet", "living-service", "space"]) {
       const order = pathOrder(cat);
       const idx = (id: string) => order.indexOf(id);
-      expect(idx("registration-setup"), `${cat}: registration-setup`).toBeLessThan(idx("construction-setup"));
-      expect(idx("biz-registration"), `${cat}: biz-registration`).toBeLessThan(idx("construction-setup"));
-      expect(idx("loan-guide"), `${cat}: loan-guide`).toBeLessThan(idx("construction-setup"));
+      expect(idx("construction-setup"), `${cat}: construction-setup`).toBeLessThan(idx("registration-setup"));
+      expect(idx("construction-setup"), `${cat}: construction<biz`).toBeLessThan(idx("biz-registration"));
+      expect(idx("construction-setup"), `${cat}: construction<loan`).toBeLessThan(idx("loan-guide"));
     }
   });
 

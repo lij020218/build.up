@@ -429,32 +429,17 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
           </Section>
         )}
 
-        {/* Sources */}
-        <Section title={ko ? "데이터 출처" : "Data Sources"}>
-          {fb.sources && fb.sources.length > 0 ? (
-            <div style={{ display: "grid", gap: "6px" }}>
-              {fb.sources.map((src, i) => (
-                <div key={i} style={{ fontSize: "12px", color: "var(--muted)", display: "flex", gap: "8px", lineHeight: 1.5 }}>
-                  <span style={{ color: "var(--primary)" }}>{i + 1}.</span>
-                  {src.url ? (
-                    <a href={src.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "underline" }}>
-                      {src.label}
-                    </a>
-                  ) : (
-                    <span>{src.label}</span>
-                  )}
-                  {src.accessedAt && <span style={{ opacity: 0.6 }}>(접근 {src.accessedAt})</span>}
-                </div>
-              ))}
-            </div>
-          ) : (
+        {/* 데이터 출처 안내 — 위 "출처·검증" 섹션이 없을(출처 미등록) 때만 노출.
+            (이전엔 출처가 있어도 이 섹션이 같은 sources 를 한 번 더 렌더해 중복 표시됐음) */}
+        {(!fb.sources || fb.sources.length === 0) && (
+          <Section title={ko ? "데이터 출처" : "Data Sources"}>
             <div style={{ fontSize: "12px", color: "var(--muted)", padding: "10px", borderRadius: "10px", background: "rgba(0,0,0,0.025)" }}>
               {ko
                 ? "공정거래위원회 정보공개서 · 마이프차 · 본사 공식자료 기반 (2024–2025). 상세 출처는 추가 보강 예정."
                 : "Based on KFTC disclosures, MyFranchise, and HQ official data (2024–2025). Detailed sources to be added."}
             </div>
-          )}
-        </Section>
+          </Section>
+        )}
 
         {/* CTA */}
         <div style={{
