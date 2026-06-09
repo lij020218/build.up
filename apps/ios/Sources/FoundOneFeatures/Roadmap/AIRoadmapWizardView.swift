@@ -261,21 +261,25 @@ private struct IdeaStepView: View {
     private let examples = ["마포구에서 1인 카페 창업", "온라인 반려동물 용품 쇼핑몰", "AI 기반 B2B SaaS 스타트업"]
 
     var body: some View {
-        StepShell {
-            // 뒤로
-            Button(action: onBack) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 11, weight: .semibold))
-                    Text("뒤로")
-                        .font(.system(size: 13, weight: .semibold))
-                }
-                .foregroundStyle(midnight)
-            }
-            .buttonStyle(.plain)
-            .padding(.bottom, 16)
+        GeometryReader { geo in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    // 뒤로 — 상단 고정(센터 정렬에서 제외)
+                    Button(action: onBack) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text("뒤로")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .foregroundStyle(midnight)
+                    }
+                    .buttonStyle(.plain)
 
-            StepHeader(
+                    // ↑ 콘텐츠를 화면 중앙으로 — 위 아래 동일 여백(떠다니는 카드 공간 확보)
+                    Spacer(minLength: 28)
+
+                    StepHeader(
                 eyebrow: "Found.One AI",
                 title: "어떤 사업을 시작하고 싶으세요?",
                 subtitle: "자유롭게 설명해주세요. 한 줄이든 긴 설명이든 괜찮습니다.\nAI가 분석해서 맞춤 로드맵을 만들어드립니다."
@@ -294,7 +298,6 @@ private struct IdeaStepView: View {
                     .foregroundStyle(Color(red: 0.059, green: 0.090, blue: 0.161))
                     .scrollContentBackground(.hidden)
                     .padding(14)
-                    .frame(minHeight: 130)
                 if vm.ideaText.isEmpty {
                     Text("예: 강남역 근처에서 건강한 샐러드 전문 가게를 열고 싶어요. 직장인 점심 수요를 공략하고, 배달도 병행하려 합니다...")
                         .font(.system(size: 14.5, weight: .regular))
@@ -304,6 +307,8 @@ private struct IdeaStepView: View {
                         .allowsHitTesting(false)
                 }
             }
+            // 고정 높이 — TextEditor 가 남는 세로 공간을 흡수하지 않게 해 Spacer 가 콘텐츠를 센터링.
+            .frame(height: 150)
 
             // 예시 칩
             HStack(spacing: 6) {
@@ -341,10 +346,33 @@ private struct IdeaStepView: View {
                 .padding(.top, 14)
             }
 
-            primaryButton(label: "다음", disabled: vm.ideaText.trimmingCharacters(in: .whitespaces).count < 5) {
-                vm.step = .budget
+                    primaryButton(label: "다음", disabled: vm.ideaText.trimmingCharacters(in: .whitespaces).count < 5) {
+                        vm.step = .budget
+                    }
+                    .padding(.top, 20)
+
+                    // ↓ 하단 동일 여백 — 콘텐츠 센터링 + 하단 카드 공간
+                    Spacer(minLength: 28)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 40)
+                .frame(minHeight: geo.size.height)
             }
-            .padding(.top, 20)
+            #if os(iOS)
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("완료") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil
+                        )
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                }
+            }
+            #endif
         }
     }
 }
