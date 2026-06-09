@@ -22,6 +22,8 @@ export type InspirationBrand = {
   color: string;
   iconSlug?: string;
   iconColor?: string;
+  /** true = 실제 앱 아이콘(풀컬러, 타일 가득) — 한국 브랜드. false/없음 = Simple Icons 실루엣. */
+  appIcon?: boolean;
   glyph: string;
   textColor?: string;
   /** 창업 시작 — "어떤 인사이트로 시작했는가" (모달 헤드) */

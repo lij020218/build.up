@@ -163,17 +163,29 @@ private struct CardBody: View {
     }
 
     private var logoTile: some View {
-        let tileColor = brandColor(brand.color)
         let fg = brand.textColor.map { brandColor($0) } ?? Color.white
-        return ZStack {
-            RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tileColor)
-            if let img = brandLogoImage(brand.iconSlug) {
-                img.resizable().scaledToFit().frame(width: 21, height: 21)
+        let img = brandLogoImage(brand.iconSlug)
+        return Group {
+            if let img, brand.appIcon == true {
+                // 풀컬러 앱 아이콘 — 타일 가득(자체 배경).
+                img.resizable().scaledToFill()
             } else {
-                Text(brand.glyph).font(.system(size: 15, weight: .heavy)).foregroundStyle(fg)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous).fill(brandColor(brand.color))
+                    if let img {
+                        img.resizable().scaledToFit().frame(width: 21, height: 21) // 실루엣 inset
+                    } else {
+                        Text(brand.glyph).font(.system(size: 15, weight: .heavy)).foregroundStyle(fg)
+                    }
+                }
             }
         }
         .frame(width: 36, height: 36)
+        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .strokeBorder(BUColor.ink.opacity(brand.appIcon == true ? 0.06 : 0), lineWidth: 0.5)
+        )
     }
 }
 
@@ -259,13 +271,20 @@ private struct BrandStorySheet: View {
 
     private var header: some View {
         VStack(alignment: .center, spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous).fill(brandColor(brand.color))
-                if let img = brandLogoImage(brand.iconSlug) {
-                    img.resizable().scaledToFit().frame(width: 42, height: 42)
-                } else { glyphText }
+            Group {
+                if let img = brandLogoImage(brand.iconSlug), brand.appIcon == true {
+                    img.resizable().scaledToFill()   // 앱 아이콘 풀블리드
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous).fill(brandColor(brand.color))
+                        if let img = brandLogoImage(brand.iconSlug) {
+                            img.resizable().scaledToFit().frame(width: 42, height: 42)
+                        } else { glyphText }
+                    }
+                }
             }
             .frame(width: 72, height: 72)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .shadow(color: Color.black.opacity(0.14), radius: 10, x: 0, y: 6)
 
             VStack(spacing: 4) {

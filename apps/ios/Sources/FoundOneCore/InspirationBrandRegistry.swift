@@ -18,8 +18,9 @@ public struct InspirationBrand: Decodable, Sendable, Identifiable, Hashable {
     public let name: String
     public let tagline: String
     public let color: String          // hex "#0064ff"
-    public let iconSlug: String?      // Simple Icons slug (글로벌 브랜드) — 없으면 glyph
+    public let iconSlug: String?      // Simple Icons slug 또는 앱아이콘 슬러그 — 없으면 glyph
     public let iconColor: String?     // 아이콘 색(hex, "#" 없음)
+    public let appIcon: Bool?         // true = 풀컬러 앱 아이콘(타일 가득). 없음 = Simple Icons 실루엣
     public let glyph: String          // fallback 글리프 (한국 브랜드 등)
     public let textColor: String?     // 타일 글자색 override (예: 카카오 노랑 위 검정)
     public let origin: String         // 시작 인사이트

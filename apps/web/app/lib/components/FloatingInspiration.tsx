@@ -125,10 +125,11 @@ export function FloatingInspiration() {
 
 function BrandCard({ brand, onClick }: { brand: Brand; onClick: () => void }) {
   const [iconFailed, setIconFailed] = useState(false);
-  const showIcon = !!brand.iconSlug && !iconFailed;
-  const iconUrl = brand.iconSlug
-    ? `https://cdn.simpleicons.org/${brand.iconSlug}/${brand.iconColor ?? "ffffff"}`
-    : null;
+  // appIcon(한국 브랜드) → 로컬 풀컬러 앱아이콘 / 그 외 → Simple Icons 실루엣.
+  const appIconUrl = brand.appIcon && brand.iconSlug ? `/inspiration-logos/${brand.iconSlug}.png` : null;
+  const iconUrl = appIconUrl
+    ?? (brand.iconSlug ? `https://cdn.simpleicons.org/${brand.iconSlug}/${brand.iconColor ?? "ffffff"}` : null);
+  const showIcon = !!iconUrl && !iconFailed;
 
   return (
     <button
@@ -156,7 +157,7 @@ function BrandCard({ brand, onClick }: { brand: Brand; onClick: () => void }) {
     >
       <div style={{
         width: 46, height: 46, borderRadius: 12,
-        background: brand.color,
+        background: appIconUrl ? "transparent" : brand.color,
         color: brand.textColor ?? "#ffffff",
         display: "inline-flex", alignItems: "center" as const, justifyContent: "center" as const,
         fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em",
@@ -166,8 +167,11 @@ function BrandCard({ brand, onClick }: { brand: Brand; onClick: () => void }) {
       }}>
         {showIcon && iconUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={iconUrl} alt="" width={26} height={26}
-            style={{ width: 26, height: 26, display: "block" }}
+          <img src={iconUrl} alt=""
+            width={appIconUrl ? 46 : 26} height={appIconUrl ? 46 : 26}
+            style={appIconUrl
+              ? { width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }
+              : { width: 26, height: 26, display: "block" }}
             onError={() => setIconFailed(true)} />
         ) : (
           brand.glyph
@@ -213,10 +217,10 @@ function BrandStoryModal({ brand, onClose }: { brand: Brand; onClose: () => void
   }, [onClose]);
 
   const [iconFailed, setIconFailed] = useState(false);
-  const showIcon = !!brand.iconSlug && !iconFailed;
-  const iconUrl = brand.iconSlug
-    ? `https://cdn.simpleicons.org/${brand.iconSlug}/${brand.iconColor ?? "ffffff"}`
-    : null;
+  const appIconUrl = brand.appIcon && brand.iconSlug ? `/inspiration-logos/${brand.iconSlug}.png` : null;
+  const iconUrl = appIconUrl
+    ?? (brand.iconSlug ? `https://cdn.simpleicons.org/${brand.iconSlug}/${brand.iconColor ?? "ffffff"}` : null);
+  const showIcon = !!iconUrl && !iconFailed;
 
   return (
     <motion.div
@@ -285,7 +289,7 @@ function BrandStoryModal({ brand, onClose }: { brand: Brand; onClose: () => void
         <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center" as const, gap: 16, marginBottom: 28, textAlign: "center" as const }}>
           <div style={{
             width: 80, height: 80, borderRadius: 20,
-            background: brand.color,
+            background: appIconUrl ? "transparent" : brand.color,
             color: brand.textColor ?? "#ffffff",
             display: "inline-flex", alignItems: "center" as const, justifyContent: "center" as const,
             fontSize: 32, fontWeight: 800, letterSpacing: "-0.02em",
@@ -295,8 +299,11 @@ function BrandStoryModal({ brand, onClose }: { brand: Brand; onClose: () => void
           }}>
             {showIcon && iconUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={iconUrl} alt="" width={44} height={44}
-                style={{ width: 44, height: 44, display: "block" }}
+              <img src={iconUrl} alt=""
+                width={appIconUrl ? 80 : 44} height={appIconUrl ? 80 : 44}
+                style={appIconUrl
+                  ? { width: "100%", height: "100%", objectFit: "cover" as const, display: "block" }
+                  : { width: 44, height: 44, display: "block" }}
                 onError={() => setIconFailed(true)} />
             ) : (
               brand.glyph
