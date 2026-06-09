@@ -35,6 +35,7 @@ export * from "./types/roadmap";
 export * from "./types/stage-guide";
 export * from "./business-context";
 export * from "./franchise-data";
+export * from "./inspiration-data";
 export * from "./marketing-trend-clusters";
 export * from "./permits/permit-matrix";
 export * from "./market/seoul-districts";

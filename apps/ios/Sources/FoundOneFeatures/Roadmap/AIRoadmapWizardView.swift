@@ -131,7 +131,11 @@ public struct AIRoadmapWizardView: View {
         ZStack {
             BUBackgroundSurface()
             switch vm.step {
-            case .idea:       IdeaStepView(vm: vm, onBack: onBack)
+            case .idea:
+                // 입력 화면 + 뒤로 떠다니는 성공 스타트업 카드(웹 FloatingInspiration 미러).
+                // 카드 버튼에서만 hit-test → 빈 영역 탭은 입력으로 통과.
+                IdeaStepView(vm: vm, onBack: onBack)
+                FloatingInspirationView()
             case .budget:     BudgetStepView(vm: vm)
             case .region:     RegionStepView(vm: vm)
             case .storeName:  StoreNameStepView(vm: vm)
