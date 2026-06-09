@@ -2031,12 +2031,12 @@
       "ko": "⚠⚠⚠ 2024.11 한국피자헛 회생절차 신청, 215억 점주 반환 + 3년 적자 + 현금 16억",
       "en": "WARNING: Nov 2024 Korea Pizza Hut filed rehabilitation; KRW 21.5B owner refund + 3y losses + only KRW 1.6B cash"
     },
-    "startupCostWon": 28000,
-    "franchiseFee": 2000,
+    "startupCostWon": 19065,
+    "franchiseFee": 2604,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 75000,
-    "storeCount": 350,
-    "closureRate": 3.5,
+    "avgAnnualRevenueWon": 44600,
+    "storeCount": 260,
+    "closureRate": 15.4,
     "scores": {
       "profitability": 78,
       "stability": 75,
@@ -2068,7 +2068,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 2000
+        "amountWon": 2604
       },
       {
         "label": {
@@ -2089,7 +2089,7 @@
           "ko": "인테리어·장비·기타",
           "en": "Interior+equip+other"
         },
-        "amountWon": 23000
+        "amountWon": 13461
       }
     ],
     "dataYear": "2024",
@@ -4375,12 +4375,12 @@
       "ko": "김밥 빅3 — 424개점 평균 3.62억, 즉석조리형 김밥 강점",
       "en": "Kimbap Big 3 — 424 stores avg KRW 362M, made-to-order kimbap"
     },
-    "startupCostWon": 9470,
+    "startupCostWon": 11585,
     "franchiseFee": 770,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 36180,
-    "storeCount": 424,
-    "closureRate": 4,
+    "avgAnnualRevenueWon": 41905,
+    "storeCount": 338,
+    "closureRate": 15.6,
     "scores": {
       "profitability": 72,
       "stability": 75,
@@ -4433,7 +4433,7 @@
           "ko": "인테리어·기타",
           "en": "Interior+misc"
         },
-        "amountWon": 8170
+        "amountWon": 10285
       }
     ],
     "sources": [
@@ -5644,12 +5644,12 @@
       "ko": "★ 매출 2,400억(2024) + 점당 5.62억, 11개국 415개점 글로벌",
       "en": "Sales KRW 240B (2024), per-store KRW 562M, 415 stores in 11 countries"
     },
-    "startupCostWon": 12000,
-    "franchiseFee": 700,
+    "startupCostWon": 18980,
+    "franchiseFee": 2200,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 56247,
-    "storeCount": 415,
-    "closureRate": 4,
+    "avgAnnualRevenueWon": 44100,
+    "storeCount": 245,
+    "closureRate": 2.9,
     "scores": {
       "profitability": 82,
       "stability": 72,
@@ -9680,12 +9680,12 @@
       "ko": "SPC 그룹 — 440여개 매장, 리브랜딩 후 3년 연속 매출 성장",
       "en": "SPC Group — ~440 stores, 3yrs of growth post-rebrand"
     },
-    "startupCostWon": 22000,
-    "franchiseFee": 1500,
+    "startupCostWon": 24795,
+    "franchiseFee": 880,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 47000,
-    "storeCount": 440,
-    "closureRate": 2.5,
+    "avgAnnualRevenueWon": 34075,
+    "storeCount": 661,
+    "closureRate": 8,
     "scores": {
       "profitability": 75,
       "stability": 82,
@@ -9878,12 +9878,12 @@
       "ko": "447개점 월평균 3,436만 — ⚠ 2024 매출 부풀림 보도 주의",
       "en": "447 stores avg KRW 34.36M/month — ⚠ 2024 inflated-revenue report"
     },
-    "startupCostWon": 13704,
-    "franchiseFee": 1000,
+    "startupCostWon": 15180,
+    "franchiseFee": 770,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 41200,
-    "storeCount": 447,
-    "closureRate": 6.5,
+    "avgAnnualRevenueWon": 24630,
+    "storeCount": 407,
+    "closureRate": 13.3,
     "scores": {
       "profitability": 70,
       "stability": 55,
@@ -11233,11 +11233,11 @@
       "en": "#1 franchisable hair (452 stores) — Dec 2025 'Seoul Co-Prosperity Franchise' designation"
     },
     "startupCostWon": 9845,
-    "franchiseFee": 500,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 27288,
+    "avgAnnualRevenueWon": 29888,
     "storeCount": 452,
-    "closureRate": 4.5,
+    "closureRate": 5.8,
     "scores": {
       "profitability": 70,
       "stability": 80,
@@ -12531,174 +12531,6 @@
     "dataYear": "2025",
     "specialtyIds": [
       "pt-women-only"
-    ]
-  },
-  {
-    "id": "friends-screen",
-    "subIndustryIds": [
-      "golf-studio"
-    ],
-    "categoryId": "fitness",
-    "name": {
-      "ko": "프렌즈스크린",
-      "en": "Friends Screen (Kakao VX)"
-    },
-    "tagline": {
-      "ko": "스크린골프 2위 (점유율 20% vs 골프존 60%) — ★ 2025.10 카카오인베 IVG로 내부 이관 (2,549억)",
-      "en": "#2 screen golf (20% share vs Golfzon 60%) — Oct 2025 transferred to Kakao Invest's IVG (KRW 254.9B)"
-    },
-    "startupCostWon": 54400,
-    "franchiseFee": 1000,
-    "monthlyRoyalty": 55,
-    "avgAnnualRevenueWon": 38556,
-    "storeCount": 450,
-    "closureRate": 5,
-    "scores": {
-      "profitability": 70,
-      "stability": 60,
-      "accessibility": 25,
-      "brandPower": 78,
-      "support": 70
-    },
-    "roadmapNotes": {
-      "ko": [
-        "운영사 카카오VX (카카오게임즈 자회사)",
-        "스크린골프 시장 점유율 약 20% (vs 골프존 60%) — 2위",
-        "매출 2018 300억 → 2020 572억 → 2022 3Q 1,376억 (1년새 +20%)",
-        "한국 매장 약 450개 (해외 포함 4,300개+)",
-        "★ 2025년 10월 카카오게임즈 → 카카오인베스트먼트 자회사 IVG로 100% 지분 이관 완료 (총 2,549억) — 외부 매각 무산(뮤렉스 5월 결렬) 후 내부 그룹 이관"
-      ],
-      "en": [
-        "Operator: Kakao VX (Kakao Games subsidiary)",
-        "Screen golf market share ~20% (vs Golfzon 60%) — #2",
-        "Revenue 2018 KRW 30B → 2020 57.2B → Q3 2022 137.6B (+20% YoY)",
-        "~450 stores in Korea (4,300+ globally)",
-        "Oct 2025: 100% transferred from Kakao Games to Kakao Invest's IVG (KRW 254.9B total) — after external sale collapsed (Murex talks broke May)"
-      ]
-    },
-    "franchiseUrl": "https://www.friendsscreen.kr/",
-    "costVerified": false,
-    "costSource": "공정거래위원회 자료 2024",
-    "description": {
-      "ko": [
-        "카카오게임즈 자회사 카카오VX가 운영하는 한국 스크린골프 시장 2위 브랜드(점유율 약 20%) — 1위 골프존(60%) 의 1/3 수준입니다.",
-        "카카오 캐릭터 UI + 24시간 무인 운영 가능 + VR 게임 연계 플랫폼 차별점으로 성장 — 매출 2018년 300억 → 2022년 3분기 1,376억으로 빠른 외형 성장.",
-        "한국 매장 약 450개 (해외 포함 4,300개+) — 점포당 월 매출 약 3,213만 원, 수익률 37.7% (공정위 자료 기준).",
-        "★ 2025년 10월 카카오게임즈가 외부 매각(뮤렉스파트너스)이 자금 조달 문제로 5월 결렬되자, 카카오인베스트먼트 자회사 IVG로 100% 지분 이관 (총 2,549억) — 카카오 그룹 내 잔류 결정으로 시스템·점주 정책 급격한 변동 리스크는 일단 완화.",
-        "5.4억 원 자본 + 30평 이상 대형 매장 + 24시간 무인 운영(보안·관리) 가능한 사장님에게 적합 — 외부 PE 인수가 아닌 카카오 그룹 내 이관 결과 단기 안정성은 확보됐으나 향후 IVG 정책·재매각 가능성은 모니터링 필요."
-      ],
-      "en": [
-        "Korea's #2 screen golf brand (~20% share) operated by Kakao VX (Kakao Games subsidiary) — about 1/3 of leader Golfzon (60%).",
-        "Kakao character UI + 24h unmanned operation + VR game-linked platform differentiation — revenue grew KRW 30B (2018) → KRW 137.6B (Q3 2022).",
-        "~450 stores in Korea (4,300+ globally) — per-store monthly revenue ~KRW 32.13M with 37.7% profit margin (FTC data).",
-        "Oct 2025: after external sale (Murex Partners) collapsed in May over financing issues, 100% transferred to Kakao Invest's IVG (KRW 254.9B total) — staying within Kakao group eases short-term system/owner-policy risk.",
-        "Best for owners with KRW 540M+ + 30+ pyeong + 24h unmanned operation — staying within Kakao group provides short-term stability vs an external PE buyer, but IVG policy / future re-sale possibility still need monitoring."
-      ]
-    },
-    "pros": {
-      "ko": [
-        "스크린골프 시장 점유율 20% — 한국 2위 브랜드",
-        "매출 2018→2022 약 4.6배 성장 — 빠른 외형 모멘텀",
-        "월 매출 3,213만 + 수익률 37.7% — 점당 수익 양호",
-        "24시간 무인 운영 가능 — 인건비 부담 최소",
-        "카카오 캐릭터 UI + VR 연계 — Z세대·MZ세대 충성도"
-      ],
-      "en": [
-        "~20% screen golf market share — #2 in Korea",
-        "Revenue 2018→2022 ~4.6x growth — fast external momentum",
-        "Monthly KRW 32.13M + 37.7% margin — solid per-store profitability",
-        "24h unmanned ops — minimum labor burden",
-        "Kakao character UI + VR linkage — Z/MZ-gen loyalty"
-      ]
-    },
-    "cons": {
-      "ko": [
-        "⚠ 2025.10 카카오인베 IVG로 이관 완료 — 단기 안정성 확보됐으나 IVG 정책 변경·향후 재매각 가능성 모니터링 필요",
-        "⚠ 1위 골프존(점유율 60%) 의 1/3 수준 — 출점 경쟁 매우 치열",
-        "창업비용 5.44억 — 한국 피트니스·골프 카테고리 최고 수준 진입장벽",
-        "30평 이상 대형 매장 + 골프 시뮬레이터 + 보안 시설 필수",
-        "스크린골프 트렌드 정점 통과 우려 (코로나 후 야외 골프 회귀)"
-      ],
-      "en": [
-        "WARNING: Oct 2025 transferred to Kakao Invest's IVG — short-term stability secured but IVG-policy changes / future re-sale need monitoring",
-        "WARNING: 1/3 of Golfzon's 60% — intense opening competition",
-        "KRW 544M startup — top entry barrier in Korean fitness/golf category",
-        "30+ pyeong + golf simulator + security facilities required",
-        "Screen-golf trend may have peaked (return to outdoor golf post-COVID)"
-      ]
-    },
-    "bestLocation": {
-      "ko": [
-        "역세권 + 오피스 혼합 — 직장인 회식·접대·취미 골프 수요",
-        "신축 아파트 메인 상권 — 30~50대 가족·친구 모임 수요",
-        "골프장 근처·교외 — 라운딩 전 연습 수요",
-        "지하 1층 + 2층 매장 — 30평+ 임대 부담 완화",
-        "주거 단독 골목·대학가는 부적합 — 대형 모델·골프 타겟과 충돌"
-      ],
-      "en": [
-        "Mixed station/office — worker dining/entertaining/hobby golf demand",
-        "New-apartment main commercial — 30s-50s family/friends gathering",
-        "Near golf courses/suburbs — pre-round practice demand",
-        "Basement + 2nd floor — eases 30-pyeong+ rent burden",
-        "Pure residential side streets/university districts NOT suitable — conflicts with large model/golf target"
-      ]
-    },
-    "sources": [
-      {
-        "label": "프렌즈스크린 가맹 안내 공식 (카카오VX)",
-        "url": "https://www.friendsscreen.kr/",
-        "tier": "primary"
-      },
-      {
-        "label": "공정거래위원회 가맹사업정보 — 프렌즈스크린",
-        "url": "https://franchise.ftc.go.kr/",
-        "tier": "primary"
-      },
-      {
-        "label": "골프저널 — 카카오VX 스크린골프 업계 1위가 뒤바뀔까",
-        "url": "https://www.golfjournal.co.kr/news/articleView.html?idxno=3210",
-        "tier": "industry"
-      },
-      {
-        "label": "이뉴스투데이 — 골프존 vs 카카오VX 골프 유행 벌크업",
-        "url": "https://www.enewstoday.co.kr/news/articleView.html?idxno=1506982",
-        "tier": "media"
-      },
-      {
-        "label": "더벨 — 카카오VX 역대급 매출에 본격 사세 확장 (2022)",
-        "url": "https://www.thebell.co.kr/free/content/ArticleView.asp?key=202208261610356120105569&lcode=00",
-        "tier": "media"
-      },
-      {
-        "label": "골프저널 — 골프사업 접는 카카오게임즈",
-        "url": "https://www.golfjournal.co.kr/news/articleView.html?idxno=10426",
-        "tier": "media"
-      },
-      {
-        "label": "더벨 — 카카오게임즈 카카오VX 정리 (2025.10)",
-        "url": "https://www.thebell.co.kr/free/content/ArticleView.asp?key=202510011724459080104324",
-        "tier": "media"
-      },
-      {
-        "label": "다음 — 카카오VX 지분 매각 마무리 IVG (2025.10)",
-        "url": "https://v.daum.net/v/20251020100147175",
-        "tier": "media"
-      },
-      {
-        "label": "인베스트조선 — 카카오VX 외부 매각 중단 (2025.05)",
-        "url": "https://www.investchosun.com/site/data/html_dir/2025/05/13/2025051380210.html",
-        "tier": "media"
-      },
-      {
-        "label": "THE VC — 카카오브이엑스(프렌즈 스크린) 기업정보",
-        "url": "https://thevc.kr/kakaovx",
-        "tier": "aggregator"
-      }
-    ],
-    "confidence": "high",
-    "dataYear": "2025",
-    "specialtyIds": [
-      "gs-screen"
     ]
   },
   {
@@ -15162,12 +14994,12 @@
       "ko": "푸짐한 토핑 떡볶이와 통큰 커피",
       "en": "Generous-topping tteokbokki with bold coffee"
     },
-    "startupCostWon": 11000,
-    "franchiseFee": 1000,
+    "startupCostWon": 9015,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 40000,
-    "storeCount": 400,
-    "closureRate": 5.5,
+    "avgAnnualRevenueWon": 42900,
+    "storeCount": 352,
+    "closureRate": 14.8,
     "scores": {
       "profitability": 75,
       "stability": 78,
@@ -15494,12 +15326,12 @@
       "ko": "쌀도우 기반 저가 피자 프랜차이즈",
       "en": "Low-cost pizza on rice dough"
     },
-    "startupCostWon": 5500,
-    "franchiseFee": 500,
+    "startupCostWon": 5830,
+    "franchiseFee": 440,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 20000,
-    "storeCount": 400,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 11980,
+    "storeCount": 360,
+    "closureRate": 14.4,
     "scores": {
       "profitability": 64,
       "stability": 65,
@@ -15509,6 +15341,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 현재 브랜드명 오구피자(구 59쌀피자)",
         "쌀도우 차별화, 5,900원대 피자로 진입",
         "2011년 500호점 돌파한 노포 브랜드",
         "소상권/주거지 적합, 10~15평 운영",
@@ -15686,12 +15519,12 @@
       "ko": "직화 와퍼 글로벌 버거 브랜드",
       "en": "Flame-grilled Whopper global burger"
     },
-    "startupCostWon": 35000,
-    "franchiseFee": 3400,
+    "startupCostWon": 59560,
+    "franchiseFee": 4471,
     "monthlyRoyalty": 5,
-    "avgAnnualRevenueWon": 100000,
-    "storeCount": 472,
-    "closureRate": 2,
+    "avgAnnualRevenueWon": 107740,
+    "storeCount": 132,
+    "closureRate": 2.3,
     "scores": {
       "profitability": 72,
       "stability": 85,
@@ -15701,6 +15534,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 직영 비중 높음 — 매장수는 가맹점 기준(전체는 약 538개)",
         "맥도날드 매장수 추월, 한국 1위 버거 (533개)",
         "직영 비중 73%, 가맹점은 BMI 검증 필수",
         "가맹비 3,400만원 + 인테리어/설비 약 3억원",
@@ -16859,12 +16693,12 @@
       "ko": "10년 이상 중견 카페 프랜차이즈",
       "en": "Mid-tier cafe chain (10+ yrs)"
     },
-    "startupCostWon": 9927,
-    "franchiseFee": 700,
+    "startupCostWon": 6692,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 24000,
-    "storeCount": 421,
-    "closureRate": 8,
+    "avgAnnualRevenueWon": 8519,
+    "storeCount": 287,
+    "closureRate": 34.3,
     "scores": {
       "profitability": 65,
       "stability": 70,
@@ -17006,12 +16840,12 @@
       "ko": "와플 테이크아웃 전문 프랜차이즈",
       "en": "Waffle takeout franchise"
     },
-    "startupCostWon": 6700,
+    "startupCostWon": 5475,
     "franchiseFee": 550,
     "monthlyRoyalty": 20,
-    "avgAnnualRevenueWon": 16000,
-    "storeCount": 377,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 16565,
+    "storeCount": 336,
+    "closureRate": 18.2,
     "scores": {
       "profitability": 62,
       "stability": 60,
@@ -17152,12 +16986,12 @@
       "ko": "대형 입시·학원 가맹 브랜드",
       "en": "Major test-prep academy franchise"
     },
-    "startupCostWon": 3510,
-    "franchiseFee": 880,
+    "startupCostWon": 3260,
+    "franchiseFee": 627,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 30000,
+    "avgAnnualRevenueWon": 5570,
     "storeCount": 419,
-    "closureRate": 5,
+    "closureRate": 16.9,
     "scores": {
       "profitability": 68,
       "stability": 78,
@@ -17167,6 +17001,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 정보공개서 등록 브랜드명: 엠베스트SE(메가스터디교육㈜ 운영). 점당매출은 학원 면적·지역 편차 큼",
         "34평 기준 3,510만원 (가맹비 880만+교육비 220만+기타 760만+인테 1,650만)",
         "전국 419개 가맹점, 대형 입시 브랜드",
         "온라인 컨텐츠·강사진 인프라 강점",
@@ -17593,12 +17428,12 @@
       "ko": "전국 400개+ 죽 전문 프랜차이즈",
       "en": "400+ store porridge chain"
     },
-    "startupCostWon": 8500,
-    "franchiseFee": 1000,
+    "startupCostWon": 8549,
+    "franchiseFee": 1650,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 26000,
-    "storeCount": 400,
-    "closureRate": 6.5,
+    "avgAnnualRevenueWon": 12180,
+    "storeCount": 318,
+    "closureRate": 24,
     "scores": {
       "profitability": 65,
       "stability": 75,
