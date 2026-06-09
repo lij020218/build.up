@@ -819,6 +819,167 @@ const brandSupplyOverrides: Record<string, FranchiseSupplyItem[]> = {
     { category: { ko: "매장 설비·진열·POS", en: "Fixtures, display, POS" }, type: "hq-designated", items: [{ ko: "진열대·테스터존·POS·CCTV (본사 표준)", en: "Displays, tester zone, POS, CCTV (HQ standard)" }] },
     { category: { ko: "소모품", en: "Consumables" }, type: "free-purchase", items: [{ ko: "쇼핑백·청소용품", en: "Shopping bags, cleaning supplies" }] },
   ],
+  // ── 2026-06 추가 조사 30개: 전국 치킨·피자·버거·한식·분식·카페 (WebSearch·공정위 검증) ──
+  // 치킨
+  "perikana": [
+    { category: { ko: "양념소스·시즈닝", en: "Sauce & seasoning" }, type: "hq-exclusive", items: [{ ko: "본사 자체 양념소스·파우더 — 1979년 양념치킨 원조, 시판 유통할 만큼 제조 역량", en: "HQ sauce/powder — 1979 seasoned-chicken originator, retail-grade production" }] },
+    { category: { ko: "닭 원육", en: "Chicken" }, type: "hq-exclusive", items: [{ ko: "본사 또는 본사 지정 계육업체 공급(업종 표준)", en: "HQ or HQ-designated poultry supplier (industry standard)" }] },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·POS·브랜드 박스 (본사 사양)", en: "Fryer, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "cheogapjib": [
+    { category: { ko: "닭 원육·양념·원부재료", en: "Chicken, sauce, materials" }, type: "hq-exclusive", items: [{ ko: "㈜한국일오삼 본사 1차 공급 — 10호닭·순살·양념소스", en: "Korea153 HQ primary supply — size-10 chicken, boneless, sauce" }], note: { ko: "본사→지역지사→가맹점 다단계 유통. 차액가맹금이 본사·지사 2중 부과되고 지역별 납품가 격차 보도. 2026년 점주협의회 공정위 신고 — 지사계약·정보공개서 면밀 확인", en: "HQ→regional sub-HQ→store multi-tier. Double supply mark-up & regional price gaps reported; 2026 owner-association FTC complaint — review sub-HQ contract & disclosure" } },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·POS·브랜드 박스 (본사 사양)", en: "Fryer, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "mexicana": [
+    { category: { ko: "양념소스·시즈닝", en: "Sauce & seasoning" }, type: "hq-exclusive", items: [{ ko: "㈜멕시카나 본사 양념소스·파우더 (1985년 안동 시작)", en: "Mexicana HQ sauce/powder (est. 1985 Andong)" }] },
+    { category: { ko: "닭 원육", en: "Chicken" }, type: "hq-exclusive", items: [{ ko: "본사 지정 계육 공급", en: "HQ-designated poultry supply" }], note: { ko: "본사 물품공급 의존도 높음(매출 추정식상 ~40%). 과거 무항생제 닭 미공급 미고지 보도(2023) — 원육 소싱 확인 권장", en: "High HQ-supply dependence (~40% of sales by estimate); 2023 antibiotic-free chicken disclosure issue — verify sourcing" } },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·POS·브랜드 박스 (본사 사양)", en: "Fryer, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "toraeorae": [
+    { category: { ko: "닭 원육·튀김유", en: "Chicken & frying oil" }, type: "hq-exclusive", items: [{ ko: "㈜농협목우촌(농협 계열) 국내산 1등급 냉장닭 + 해바라기·카놀라 혼합유", en: "Nonghyup Mokuchon (Nonghyup affiliate) domestic grade-1 chilled chicken + sunflower/canola blend oil" }], note: { ko: "농협경제지주 100% 출자 계열사 — 원육이 농협 계육 인프라와 직결", en: "100% Nonghyup-owned — chicken tied to Nonghyup poultry infrastructure" } },
+    { category: { ko: "양념·소스", en: "Sauce" }, type: "hq-exclusive", items: [{ ko: "본사 레시피 양념·소스", en: "HQ-recipe sauce" }] },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·POS·브랜드 박스 (본사 사양)", en: "Fryer, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "puradak": [
+    { category: { ko: "원육·소스·파우더", en: "Chicken, sauce, powder" }, type: "hq-exclusive", items: [{ ko: "㈜아이더스에프앤비 본사 공급 — 소스·파우더·지정 계육", en: "Idus F&B HQ supply — sauce, powder, designated chicken" }] },
+    { category: { ko: "장비·POS", en: "Equipment & POS" }, type: "hq-designated", items: [{ ko: "튀김기·POS (본사 사양)", en: "Fryer, POS (HQ spec)" }] },
+    { category: { ko: "POS용지·스티커 등 일반 소모품", en: "Generic consumables" }, type: "free-purchase", items: [{ ko: "영수증용지·보안스티커·라벨·세제·장갑 — 자유 구매", en: "Receipt paper, security stickers, labels, detergent, gloves — free purchase" }], note: { ko: "2018~2024년 본사가 POS용지·치킨박스 보안스티커·라벨을 지정구매 강제(위반 시 공급중단/위약금) → 2025년 공정위 '거래상대방 구속' 위법 시정명령. 통일성에 필수 아닌 품목은 자유구매가 원칙", en: "2018–2024 HQ forced exclusive purchase of receipt paper/security stickers/labels → 2025 FTC corrective order; non-essential items should be free-purchase" } },
+  ],
+  "kkanbu-chicken": [
+    { category: { ko: "초벌 가공육·양념", en: "Pre-cooked chicken & sauce" }, type: "hq-exclusive", items: [{ ko: "㈜깐부 본사 가공·직배송(일일배송) — 초벌육·양념", en: "Kkanbu HQ-processed daily direct delivery — pre-cooked chicken, sauce" }], note: { ko: "전국 무리한 확장 지양, 수도권 중심 직영 물류망으로 품질 통제", en: "Limits expansion; metro-focused in-house logistics for quality control" } },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·POS·브랜드 박스 (본사 사양)", en: "Fryer, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "ziccoba-chicken": [
+    { category: { ko: "계육·양념소스", en: "Chicken & sauce" }, type: "hq-exclusive", items: [{ ko: "㈜지코바 본사 물류센터(양산+중부권) 공급 — 계육 100수당 양념 1통(22kg) 비율", en: "Ziccoba HQ centers (Yangsan+central) — sauce 22kg per 100 birds" }], note: { ko: "차액가맹금 반환소송(점주 72명) 진행. 양념-계육 비율 분쟁 중 정보공개서 사후 수정·공급중단 후 해지 절차 위반 지적 — 계약서·정보공개서 면밀 확인", en: "72-owner mark-up refund lawsuit; disclosure amended mid-dispute, contract-termination procedure issues — review carefully" } },
+    { category: { ko: "장비·POS", en: "Equipment & POS" }, type: "hq-designated", items: [{ ko: "튀김기·POS (본사 사양)", en: "Fryer, POS (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  // 피자
+  "pizza-hut": [
+    { category: { ko: "도우·치즈·소스", en: "Dough, cheese, sauce" }, type: "hq-exclusive", items: [{ ko: "본사 중앙 공급 — 도우·치즈·소스 (Yum! 글로벌 사양, 한국 PH코리아)", en: "HQ central supply — dough, cheese, sauce (Yum! global spec, PH Korea)" }], note: { ko: "차액가맹금 분쟁 — 2026.1 대법원 본사 패소, 약 215억 반환 확정. 회생 후 PH코리아로 영업권 이전돼 공급 정책 변동 가능 — 정보공개서 확인", en: "Mark-up lawsuit — Jan 2026 Supreme Court ruled against HQ (~₩21.5B refund). Ops transferred to PH Korea post-rehabilitation; policy may change" } },
+    { category: { ko: "오븐·POS·포장재", en: "Oven, POS, packaging" }, type: "hq-designated", items: [{ ko: "오븐·POS·브랜드 박스 (본사 사양)", en: "Oven, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "papa-johns": [
+    { category: { ko: "치즈·도우·소스", en: "Cheese, dough, sauce" }, type: "hq-exclusive", items: [{ ko: "치즈는 미국 Leprino(세계 최대 모차렐라) 본사 직공수 + 도우·소스 본사 공급", en: "Cheese direct-imported from Leprino (US) + HQ dough/sauce" }], note: { ko: "한국파파존스(마스터 프랜차이즈). 치즈 직수입이 저가 브랜드와의 차별점", en: "Korea Papa John's (master franchise); direct cheese import differentiates vs budget brands" } },
+    { category: { ko: "오븐·POS·포장재", en: "Oven, POS, packaging" }, type: "hq-designated", items: [{ ko: "오븐·POS·브랜드 박스 (본사 사양)", en: "Oven, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "mister-pizza": [
+    { category: { ko: "치즈·도우·소스", en: "Cheese, dough, sauce" }, type: "hq-exclusive", items: [{ ko: "본사 공급 — 치즈·도우·소스", en: "HQ supply — cheese, dough, sauce" }], note: { ko: "과거 '치즈 통행세'(친인척 중간업체 끼움)·갑질로 전 회장 구속·공정위 과징금. 매장 전성기 1/3로 급감 — 본사 안정성·정보공개서 확인 필수", en: "Past 'cheese toll' (related-party middleman) & abuse: ex-chairman jailed, FTC fines. Stores shrank to ~1/3 — verify HQ stability & disclosure" } },
+    { category: { ko: "오븐·POS·포장재", en: "Oven, POS, packaging" }, type: "hq-designated", items: [{ ko: "오븐·POS·브랜드 박스 (본사 사양)", en: "Oven, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "pizza-school": [
+    { category: { ko: "도우·소스·치즈", en: "Dough, sauce, cheese" }, type: "hq-exclusive", items: [{ ko: "본사 대량계약 일괄 공급 (저가 테이크아웃 모델)", en: "HQ bulk-contract supply (budget takeout model)" }], note: { ko: "본사/피자스쿨남부(㈜씨에이치컴퍼니) 2개 법인 분리 — 가맹 지역에 따라 계약 주체 다름. 저가 표방하나 본사 영업이익률 높아 공급 마진 점검 권장", en: "Two entities (HQ + Pizza School South/CH Company) by region; high HQ margin despite budget claim — check supply markup" } },
+    { category: { ko: "오븐·POS·포장재", en: "Oven, POS, packaging" }, type: "hq-designated", items: [{ ko: "오븐·POS·브랜드 박스 (본사 사양)", en: "Oven, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "pizza-maru": [
+    { category: { ko: "도우(특허 웰빙도우)·치즈·소스", en: "Dough (patented), cheese, sauce" }, type: "hq-exclusive", items: [{ ko: "㈜푸드죤 자체생산 — 특허 그린티·12곡 웰빙도우(사실상 본사 독점) + 치즈·소스", en: "FoodZone in-house — patented green-tea/12-grain dough (HQ-only) + cheese/sauce" }] },
+    { category: { ko: "오븐·POS·인테리어", en: "Oven, POS, interior" }, type: "hq-designated", items: [{ ko: "오븐·POS·인테리어 본사 사양 (간판·전기·가스 추가공사는 점주 부담)", en: "Oven, POS, interior HQ spec (signage/electric/gas extra at owner's cost)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "pizza-alvolo": [
+    { category: { ko: "도우(흑미)·치즈·소스", en: "Dough (black rice), cheese, sauce" }, type: "hq-exclusive", items: [{ ko: "㈜알볼로에프앤씨 논산 직영 도우공장·물류센터 생산 — 흑미 도우 + 치즈(매일유업)·소스", en: "Alvolo F&C Nonsan in-house dough plant & center — black-rice dough + cheese (Maeil)/sauce" }], note: { ko: "본사 직영 도우공장+물류센터 보유. 치즈 공급사 변경 이력(남양→매일유업) — 공급가·품질 정책 변동 가능", en: "HQ-owned dough plant & center; cheese vendor changed (Namyang→Maeil)" } },
+    { category: { ko: "오븐·POS·포장재", en: "Oven, POS, packaging" }, type: "hq-designated", items: [{ ko: "오븐·POS·브랜드 박스 (본사 사양)", en: "Oven, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "gopizza": [
+    { category: { ko: "파베이크 도우·치즈·소스", en: "Par-bake dough, cheese, sauce" }, type: "hq-exclusive", items: [{ ko: "㈜고피자 충북 음성 자체 HACCP 공장 생산 — 파베이크 도우(매장 숙성 불필요) + 치즈·소스", en: "GOPIZZA Eumseong HACCP plant — par-bake dough (no in-store proofing) + cheese/sauce" }] },
+    { category: { ko: "자동화 화덕·AI 조리 장비", en: "Automated oven & AI cooking" }, type: "hq-designated", items: [{ ko: "자체 개발 화덕 '고븐(GOVEN)' + AI 토핑 'GOVISION' + 키오스크·POS — 본사 패키지", en: "In-house 'GOVEN' oven + AI 'GOVISION' topping + kiosk/POS — HQ package" }], note: { ko: "비숙련도 5분 조리 — 푸드테크 모델상 본사 장비·도우 종속도가 가장 높음", en: "Non-expert 5-min cooking — highest HQ equipment/dough dependence (foodtech model)" } },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  // 버거·샌드위치
+  "nobrand-burger": [
+    { category: { ko: "번·패티·소스", en: "Bun, patty, sauce" }, type: "hq-exclusive", items: [{ ko: "신세계푸드 직접 제조·원가 공급 — 상품 공급 마진 없음(수익은 로열티)", en: "Shinsegae Food in-house, cost-based supply — no product markup (revenue via royalty)" }], note: { ko: "로열티 8.8% + 광고비 2.2%(실질 ~11%). 콤팩트 모델로 창업비 인하", en: "Royalty 8.8% + ad fee 2.2% (~11% effective); compact model lowers startup cost" } },
+    { category: { ko: "자동 그릴·POS·포장재", en: "Auto grill, POS, packaging" }, type: "hq-designated", items: [{ ko: "자동 그릴·POS·브랜드 박스 (본사 사양)", en: "Auto grill, POS, branded boxes (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "subway": [
+    { category: { ko: "빵·소스·식자재", en: "Bread, sauce, ingredients" }, type: "hq-exclusive", items: [{ ko: "글로벌 승인 공급망 — 구매협동조합(IPC) 경유, 승인 공급업체에서만 구매 의무", en: "Global approved-supplier network via IPC co-op; purchase only from approved suppliers" }], note: { ko: "채소도 원칙상 승인 채널(임의 현지조달 제한). 한국 마스터 프랜차이즈는 청오SW. 2025년 양상추 폭등 시 전국 샐러드 일시 중단", en: "Vegetables also via approved channel (limited local sourcing). Korea master franchise: Cheongoh SW; 2025 lettuce spike paused salads nationwide" } },
+    { category: { ko: "오븐·토스터·POS·포장재", en: "Oven, toaster, POS, packaging" }, type: "hq-designated", items: [{ ko: "오븐·토스터·POS·브랜드 포장재 (글로벌 표준)", en: "Oven, toaster, POS, branded packaging (global standard)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "frank-burger": [
+    { category: { ko: "패티·번·소스", en: "Patty, bun, sauce" }, type: "hq-exclusive", items: [{ ko: "㈜프랭크에프앤비 자체 생산·직영 물류 — 패티·번·소스", en: "Frank F&B in-house production & logistics — patty, bun, sauce" }] },
+    { category: { ko: "그릴·POS", en: "Grill & POS" }, type: "hq-designated", items: [{ ko: "그릴·POS (본사 사양)", en: "Grill, POS (HQ spec)" }] },
+    { category: { ko: "일반 공산품·위생용품", en: "Generic goods & hygiene" }, type: "free-purchase", items: [{ ko: "포크·나이프 등 시중 대체 가능 공산품·세제·장갑 — 자유 구매", en: "Forks, knives & other generic goods, detergent, gloves — free purchase" }], note: { ko: "2025.11 공정위 과징금 6.4억 — 포크·나이프 등 13개 일반 공산품 구매강제(차액 9~22% 수취)·허위 수익정보·판촉비 전가. 일반 공산품은 자유구매 영역", en: "Nov 2025 FTC fine ₩641M — forced exclusive purchase of 13 generic items (9–22% markup), false revenue claims, ad-cost shifting; generic goods are free-purchase" } },
+  ],
+  "isaac-toast": [
+    { category: { ko: "소스", en: "Sauce" }, type: "hq-exclusive", items: [{ ko: "본사 소스 공급(물류 마진 최소화 표방)", en: "HQ sauce supply (minimal logistics margin)" }] },
+    { category: { ko: "신선식품(계란·양배추·과일)", en: "Fresh items (egg, cabbage, fruit)" }, type: "free-purchase", items: [{ ko: "계란·양배추·과일 등 일부 신선식품 현지 조달 허용 — 자유 구매", en: "Egg, cabbage, fruit etc. allowed local sourcing — free purchase" }], note: { ko: "신선식품 현지조달 자유도가 동종 대비 높음. 가맹비는 정액 모델", en: "Higher local-sourcing freedom than peers; flat franchise fee model" } },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "철판·POS·브랜드 포장재 (인테리어 부담 낮은 모델)", en: "Griddle, POS, branded packaging (low-interior-cost model)" }] },
+  ],
+  // 한식·정식
+  "myungryun-galbi": [
+    { category: { ko: "양념·양념육", en: "Marinade & marinated meat" }, type: "hq-exclusive", items: [{ ko: "㈜명륜당 본사 공장 가공·공급 — 양념·양념육(갈비 30%+목살·앞다리 70% 구성)", en: "Myungryundang HQ plant — marinade & marinated meat (rib 30% + pork 70%)" }], note: { ko: "무한리필 모델. 2025년 본사의 가맹점 대상 고리(15%) 대출 영업 공정위 제재 착수 — 금융 모델 리스크 별도 점검", en: "All-you-can-eat model; 2025 FTC review of HQ's 15% high-rate lending to owners — financial-model risk" } },
+    { category: { ko: "불판·로스터·POS·포장재", en: "Grill, roaster, POS, packaging" }, type: "hq-designated", items: [{ ko: "무한리필 불판·로스터·POS (본사 사양)", en: "Grill, roaster, POS (HQ spec)" }] },
+    { category: { ko: "야채·쌈·쌀·위생용품", en: "Vegetables, rice, hygiene" }, type: "free-purchase", items: [{ ko: "쌈채소·공깃밥 재료·세제·청소용품", en: "Leaf vegetables, rice, detergent, cleaning supplies" }] },
+  ],
+  "hancheon-seolleongtang": [
+    { category: { ko: "육수·사골 베이스", en: "Broth & bone base" }, type: "hq-exclusive", items: [{ ko: "㈜이연에프엔씨 충북 오송 자체 식품공장 생산·독점 — 설렁탕 육수·사골 베이스", en: "Iyeon F&C Osong in-house plant — exclusive seolleongtang broth/bone base" }], note: { ko: "오송 공장은 국내 최대 규모 육수 공장(연 육수 약 3.6만톤)", en: "Osong is Korea's largest broth plant (~36,000t/yr)" } },
+    { category: { ko: "뚝배기·주방장비·POS·포장재", en: "Pot, kitchen, POS, packaging" }, type: "hq-designated", items: [{ ko: "뚝배기·주방장비·POS (본사 사양)", en: "Earthen pot, kitchen equipment, POS (HQ spec)" }] },
+    { category: { ko: "반찬채소·쌀·위생용품", en: "Side veg, rice, hygiene" }, type: "free-purchase", items: [{ ko: "깍두기·반찬 채소·공깃밥·세제·청소용품", en: "Kkakdugi, side vegetables, rice, detergent, cleaning supplies" }] },
+  ],
+  "bon-dosirak": [
+    { category: { ko: "반찬·소스·반조리 식자재", en: "Side dishes, sauce, semi-prepped" }, type: "hq-exclusive", items: [{ ko: "본아이에프(본그룹) — 물류 자회사 본푸드서비스가 전국 4개 물류센터(용인·논산·창녕·장성) 콜드체인 공급", en: "Bon IF (Bon Group) — Bon Food Service 4 centers (Yongin/Nonsan/Changnyeong/Jangseong) cold-chain supply" }], note: { ko: "물류 구조가 명확히 공개됨(자체 물류 법인 + 4개 센터, 약 2,200개 가맹점). 본죽=본아이에프 모회사", en: "Transparent logistics (own logistics arm + 4 centers, ~2,200 stores). Bonjuk shares parent Bon IF" } },
+    { category: { ko: "도시락 용기·포장재·POS", en: "Lunchbox container, packaging, POS" }, type: "hq-designated", items: [{ ko: "도시락 용기·브랜드 포장재·POS (본사 사양)", en: "Lunchbox container, branded packaging, POS (HQ spec)" }] },
+    { category: { ko: "쌀·일부 신선채소·위생용품", en: "Rice, some fresh veg, hygiene" }, type: "free-purchase", items: [{ ko: "쌀·일부 신선채소·세제·청소용품", en: "Rice, some fresh vegetables, detergent, cleaning supplies" }] },
+  ],
+  "kimgane": [
+    { category: { ko: "소스·양념·가공 식자재", en: "Sauce, seasoning, processed" }, type: "hq-exclusive", items: [{ ko: "㈜김가네 본사 직배송(자체 물류 차량·인원) — 소스·양념·단무지 등", en: "Gimgane HQ direct delivery (own fleet) — sauce, seasoning, pickled radish" }], note: { ko: "본사가 '모든 식자재 본사 공급'을 표방 — 실제 필수구매 vs 자유구매 경계는 정보공개서 확인 권장", en: "HQ claims 'all ingredients HQ-supplied' — verify mandatory vs free in disclosure" } },
+    { category: { ko: "주방장비·POS·포장재", en: "Kitchen, POS, packaging" }, type: "hq-designated", items: [{ ko: "주방장비·POS·브랜드 포장재 (본사 사양)", en: "Kitchen equipment, POS, branded packaging (HQ spec)" }] },
+    { category: { ko: "신선채소·쌀·위생용품", en: "Fresh veg, rice, hygiene" }, type: "free-purchase", items: [{ ko: "오이·당근 등 신선채소·쌀·세제·청소용품", en: "Cucumber, carrot etc., rice, detergent, cleaning supplies" }] },
+  ],
+  "barda-kimsunsaeng": [
+    { category: { ko: "소스·반조리 식자재", en: "Sauce & semi-prepped" }, type: "hq-exclusive", items: [{ ko: "㈜죠스푸드 본사 공급 — 김밥 소스·반조리 식자재", en: "Jaws Food HQ supply — kimbap sauce & semi-prepped" }], note: { ko: "2014~2016년 일반공산품 15개+주문생산품 3개(총 18품목)를 시중가보다 높게 필수공급 강제 → 공정위 과징금 약 6.4억. 통일성에 불필요한 공산품은 자유구매가 원칙 — 정보공개서 확인", en: "2014–2016 forced 18 items (15 generic + 3 made-to-order) above market → FTC fine ~₩640M; non-essential goods should be free-purchase" } },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "주방장비·POS·브랜드 포장재 (본사 사양)", en: "Kitchen equipment, POS, branded packaging (HQ spec)" }] },
+    { category: { ko: "신선채소·쌀·위생용품", en: "Fresh veg, rice, hygiene" }, type: "free-purchase", items: [{ ko: "신선채소·쌀·세제·청소용품", en: "Fresh vegetables, rice, detergent, cleaning supplies" }] },
+  ],
+  "chaesundang": [
+    { category: { ko: "육수·소스·식육 가공품", en: "Broth, sauce, processed meat" }, type: "hq-exclusive", items: [{ ko: "㈜채선당 남양주 통합물류센터+식육 가공센터 생산·독점 — 육수 5종·소스 약 30종·샤브용 식육", en: "Chaesundang Namyangju integrated center + meat-processing — 5 broths, ~30 sauces, shabu meat" }], note: { ko: "식육 가공센터까지 수직계열화 — 육수·소스·육류 본사 독점도 높음", en: "Vertically integrated incl. meat processing — high HQ exclusivity" } },
+    { category: { ko: "인덕션·냄비·POS·포장재", en: "Induction, pot, POS, packaging" }, type: "hq-designated", items: [{ ko: "샤브 인덕션·냄비·POS (본사 사양)", en: "Shabu induction, pot, POS (HQ spec)" }] },
+    { category: { ko: "신선채소·고명·위생용품", en: "Fresh veg, garnish, hygiene" }, type: "free-purchase", items: [{ ko: "샤브용 신선채소·고명·세제·청소용품", en: "Shabu vegetables, garnish, detergent, cleaning supplies" }] },
+  ],
+  "hanampigjib": [
+    { category: { ko: "돼지고기·명이나물·참숯·육수", en: "Pork, myungi, charcoal, broth" }, type: "hq-exclusive", items: [{ ko: "㈜하남에프앤비 본사 직공급 — 돼지고기·명이나물·참숯·육수", en: "Hanam F&B HQ direct supply — pork, myungi greens, charcoal, broth" }], note: { ko: "2025년 공정위 과징금 8천만 — 계약서 미기재 김치·소면·육수·배달용기 등 26개를 위법 필수지정, 미준수 시 공급중단·해지. 필수품목 무단 확대 — 계약서·정보공개서 확인", en: "2025 FTC fine ₩80M — illegally added 26 undisclosed items (kimchi, noodles, broth, delivery containers); review contract & disclosure" } },
+    { category: { ko: "배달용기·POS·초벌장비", en: "Delivery container, POS, grill" }, type: "hq-designated", items: [{ ko: "배달용기·POS·초벌용 장비 (본사 사양)", en: "Delivery container, POS, pre-grill equipment (HQ spec)" }] },
+    { category: { ko: "일반채소·쌈·위생용품", en: "Vegetables, ssam, hygiene" }, type: "free-purchase", items: [{ ko: "일반 채소·쌈·반찬·세제·청소용품", en: "General vegetables, ssam, sides, detergent, cleaning supplies" }] },
+  ],
+  // 분식·핫도그·카페
+  "jaws-tteokbokki": [
+    { category: { ko: "떡·어묵·떡볶이 소스", en: "Rice cake, fish cake, sauce" }, type: "hq-exclusive", items: [{ ko: "㈜죠스푸드(바르다김선생과 동일 운영사) 본사 공급 — 떡·어묵·소스", en: "Jaws Food (same operator as Barda Kimsunsaeng) HQ supply — rice cake, fish cake, sauce" }], note: { ko: "2015년 매장 리뉴얼 비용 점주 전가로 공정위 시정명령 이력", en: "2015 FTC corrective order for shifting remodel costs to owners" } },
+    { category: { ko: "튀김기·POS·포장재", en: "Fryer, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·POS·브랜드 일회용품 (본사 사양)", en: "Fryer, POS, branded disposables (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "youngdabang": [
+    { category: { ko: "소스·핵심 재료", en: "Sauce & core ingredients" }, type: "hq-exclusive", items: [{ ko: "㈜한경기획 — 핵심 소스·재료는 일정한 맛 위해 본사 지정업체 구매 의무(공식 명시). 식자재 일요 제외 매일 직배송", en: "Hankyung Planning — core sauce/ingredients must be bought from HQ-designated suppliers (official); daily delivery exc. Sundays" }], note: { ko: "지정구매 범위가 넓을 수 있어 차액가맹금 점검 권장", en: "Wide designated-purchase scope — check supply markup" } },
+    { category: { ko: "장비·POS·포장재", en: "Equipment, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·POS·브랜드 포장재 (본사 사양)", en: "Fryer, POS, branded packaging (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "myungrang-hotdog": [
+    { category: { ko: "쌀가루·소스·소시지·치즈", en: "Rice flour, sauce, sausage, cheese" }, type: "hq-exclusive", items: [{ ko: "본사(명랑시대 협동조합·㈜케이푸드 제조 연관) 공급 — 쌀가루·전용 소스·시그니처 소시지/치즈", en: "HQ (Myungrang co-op / K-Food manufacturing) — rice flour, sauce, signature sausage/cheese" }], note: { ko: "반죽은 매장에서 매일 직접 제조 — 본사 완제품 마진보다 부재료(쌀가루·소스 등) 공급 마진 중심", en: "Dough made fresh in-store daily — margin centered on sub-ingredients, not finished dough" } },
+    { category: { ko: "튀김기·집기·POS·포장재", en: "Fryer, tools, POS, packaging" }, type: "hq-designated", items: [{ ko: "튀김기·집기·POS·브랜드 포장재 (본사 사양)", en: "Fryer, tools, POS, branded packaging (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "tomntoms": [
+    { category: { ko: "원두", en: "Coffee beans" }, type: "hq-exclusive", items: [{ ko: "㈜탐앤탐스 자체 로스팅 공장 생산·공급 (토종 커피전문점 최초 로스팅 공장)", en: "TOM N TOMS in-house roasting plant (first among Korean coffee chains)" }] },
+    { category: { ko: "프레즐·베이커리 재료", en: "Pretzel & bakery materials" }, type: "hq-exclusive", items: [{ ko: "매장 제조 프레즐 등 시그니처 베이커리 재료 본사 공급", en: "Signature pretzel/bakery materials HQ supply" }] },
+    { category: { ko: "장비·POS·브랜드 컵·인테리어", en: "Equipment, POS, cup, interior" }, type: "hq-designated", items: [{ ko: "에스프레소 머신·그라인더·POS·브랜드 컵·인테리어 (본사 사양)", en: "Espresso machine, grinder, POS, branded cups, interior (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
+  "mammoth-coffee": [
+    { category: { ko: "원두", en: "Coffee beans" }, type: "hq-exclusive", items: [{ ko: "㈜매머드커피랩 자체 로스팅(경기 광주) 생산·공급", en: "Mammoth Coffee Lab in-house roasting (Gwangju, Gyeonggi)" }], note: { ko: "저가 카페 모델 — 원두·부자재 공급 마진이 본사 수익 핵심. 동종업계 차액가맹금 반환 소송 사례 있어 정보공개서·공급가 점검 권장", en: "Budget-cafe model — bean/material supply margin is HQ's core revenue; peer brands faced refund lawsuits — review disclosure" } },
+    { category: { ko: "시럽·파우더", en: "Syrup & powder" }, type: "hq-exclusive", items: [{ ko: "음료 베이스 시럽·파우더 본사 공급", en: "Beverage base syrup/powder HQ supply" }] },
+    { category: { ko: "자동 머신·키오스크·POS·브랜드 컵", en: "Auto machine, kiosk, POS, cup" }, type: "hq-designated", items: [{ ko: "자동 에스프레소 머신·키오스크(익스프레스)·POS·브랜드 컵 (본사 사양)", en: "Auto espresso machine, kiosk (Express), POS, branded cups (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품", en: "Generic hygiene" }, type: "free-purchase", items: [{ ko: "세제·장갑·청소용품", en: "Detergent, gloves, cleaning supplies" }] },
+  ],
 };
 
 /** Get supply structure for a franchise brand — brand-specific first, then category fallback */
