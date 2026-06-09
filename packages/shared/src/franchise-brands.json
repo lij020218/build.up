@@ -692,7 +692,7 @@
     "scores": {
       "profitability": 90,
       "stability": 82,
-      "accessibility": 70,
+      "accessibility": 65,
       "brandPower": 92,
       "support": 85
     },
@@ -897,7 +897,7 @@
     "scores": {
       "profitability": 75,
       "stability": 68,
-      "accessibility": 88,
+      "accessibility": 80,
       "brandPower": 70,
       "support": 72
     },
@@ -1525,7 +1525,7 @@
     "scores": {
       "profitability": 82,
       "stability": 75,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 78,
       "support": 72
     },
@@ -2039,7 +2039,7 @@
     "closureRate": 15.4,
     "scores": {
       "profitability": 78,
-      "stability": 75,
+      "stability": 42,
       "accessibility": 32,
       "brandPower": 90,
       "support": 85
@@ -2213,7 +2213,7 @@
     "scores": {
       "profitability": 70,
       "stability": 62,
-      "accessibility": 92,
+      "accessibility": 80,
       "brandPower": 75,
       "support": 65
     },
@@ -2332,7 +2332,7 @@
     "closureRate": 2.7,
     "scores": {
       "profitability": 80,
-      "stability": 85,
+      "stability": 82,
       "accessibility": 28,
       "brandPower": 95,
       "support": 90
@@ -2456,7 +2456,7 @@
     "closureRate": 6.1,
     "scores": {
       "profitability": 70,
-      "stability": 78,
+      "stability": 72,
       "accessibility": 92,
       "brandPower": 70,
       "support": 65
@@ -2523,8 +2523,8 @@
     "closureRate": 10.7,
     "scores": {
       "profitability": 75,
-      "stability": 55,
-      "accessibility": 88,
+      "stability": 52,
+      "accessibility": 80,
       "brandPower": 72,
       "support": 65
     },
@@ -2621,7 +2621,7 @@
     "closureRate": 12.5,
     "scores": {
       "profitability": 65,
-      "stability": 70,
+      "stability": 52,
       "accessibility": 85,
       "brandPower": 70,
       "support": 68
@@ -2683,8 +2683,8 @@
     "closureRate": 17.9,
     "scores": {
       "profitability": 70,
-      "stability": 72,
-      "accessibility": 95,
+      "stability": 42,
+      "accessibility": 92,
       "brandPower": 78,
       "support": 70
     },
@@ -2918,7 +2918,7 @@
     "scores": {
       "profitability": 78,
       "stability": 70,
-      "accessibility": 90,
+      "accessibility": 80,
       "brandPower": 75,
       "support": 70
     },
@@ -3048,8 +3048,8 @@
     "closureRate": 10.5,
     "scores": {
       "profitability": 78,
-      "stability": 70,
-      "accessibility": 78,
+      "stability": 52,
+      "accessibility": 65,
       "brandPower": 72,
       "support": 68
     },
@@ -3175,7 +3175,7 @@
     "scores": {
       "profitability": 78,
       "stability": 60,
-      "accessibility": 70,
+      "accessibility": 65,
       "brandPower": 80,
       "support": 78
     },
@@ -3342,7 +3342,7 @@
     "closureRate": 12,
     "scores": {
       "profitability": 88,
-      "stability": 60,
+      "stability": 52,
       "accessibility": 52,
       "brandPower": 88,
       "support": 82
@@ -3515,7 +3515,7 @@
     "scores": {
       "profitability": 55,
       "stability": 30,
-      "accessibility": 92,
+      "accessibility": 80,
       "brandPower": 50,
       "support": 35
     },
@@ -3671,7 +3671,7 @@
     "scores": {
       "profitability": 78,
       "stability": 92,
-      "accessibility": 82,
+      "accessibility": 65,
       "brandPower": 88,
       "support": 85
     },
@@ -3841,7 +3841,7 @@
     "closureRate": 2.5,
     "scores": {
       "profitability": 82,
-      "stability": 90,
+      "stability": 82,
       "accessibility": 80,
       "brandPower": 88,
       "support": 85
@@ -3993,7 +3993,7 @@
     "closureRate": 11.1,
     "scores": {
       "profitability": 82,
-      "stability": 80,
+      "stability": 52,
       "accessibility": 65,
       "brandPower": 80,
       "support": 82
@@ -4315,8 +4315,8 @@
     "closureRate": 5.5,
     "scores": {
       "profitability": 65,
-      "stability": 78,
-      "accessibility": 95,
+      "stability": 72,
+      "accessibility": 92,
       "brandPower": 70,
       "support": 60
     },
@@ -4383,8 +4383,8 @@
     "closureRate": 15.6,
     "scores": {
       "profitability": 72,
-      "stability": 75,
-      "accessibility": 78,
+      "stability": 42,
+      "accessibility": 65,
       "brandPower": 80,
       "support": 70
     },
@@ -4482,7 +4482,7 @@
     "scores": {
       "profitability": 75,
       "stability": 78,
-      "accessibility": 75,
+      "accessibility": 65,
       "brandPower": 82,
       "support": 75
     },
@@ -4611,7 +4611,7 @@
     "closureRate": 18.7,
     "scores": {
       "profitability": 80,
-      "stability": 70,
+      "stability": 42,
       "accessibility": 45,
       "brandPower": 80,
       "support": 72
@@ -4976,7 +4976,7 @@
     "closureRate": 24.8,
     "scores": {
       "profitability": 70,
-      "stability": 68,
+      "stability": 32,
       "accessibility": 80,
       "brandPower": 72,
       "support": 70
@@ -5258,7 +5258,7 @@
     "scores": {
       "profitability": 96,
       "stability": 88,
-      "accessibility": 72,
+      "accessibility": 65,
       "brandPower": 88,
       "support": 82
     },
@@ -5426,7 +5426,7 @@
     "scores": {
       "profitability": 72,
       "stability": 72,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 80,
       "support": 70
     },
@@ -5786,7 +5786,7 @@
     "scores": {
       "profitability": 75,
       "stability": 72,
-      "accessibility": 70,
+      "accessibility": 65,
       "brandPower": 78,
       "support": 72
     },
@@ -5854,7 +5854,7 @@
     "scores": {
       "profitability": 70,
       "stability": 70,
-      "accessibility": 88,
+      "accessibility": 80,
       "brandPower": 82,
       "support": 70
     },
@@ -5952,7 +5952,7 @@
     "scores": {
       "profitability": 68,
       "stability": 60,
-      "accessibility": 95,
+      "accessibility": 92,
       "brandPower": 70,
       "support": 60
     },
@@ -6767,7 +6767,7 @@
     "scores": {
       "profitability": 72,
       "stability": 72,
-      "accessibility": 95,
+      "accessibility": 92,
       "brandPower": 65,
       "support": 65
     },
@@ -7190,7 +7190,7 @@
     "scores": {
       "profitability": 60,
       "stability": 45,
-      "accessibility": 96,
+      "accessibility": 92,
       "brandPower": 35,
       "support": 50
     },
@@ -7320,7 +7320,7 @@
     "scores": {
       "profitability": 88,
       "stability": 88,
-      "accessibility": 88,
+      "accessibility": 80,
       "brandPower": 95,
       "support": 65
     },
@@ -7737,7 +7737,7 @@
     "scores": {
       "profitability": 80,
       "stability": 70,
-      "accessibility": 82,
+      "accessibility": 65,
       "brandPower": 85,
       "support": 70
     },
@@ -8129,8 +8129,8 @@
     "closureRate": 5.5,
     "scores": {
       "profitability": 75,
-      "stability": 78,
-      "accessibility": 84,
+      "stability": 72,
+      "accessibility": 80,
       "brandPower": 78,
       "support": 78
     },
@@ -8748,7 +8748,7 @@
     "scores": {
       "profitability": 65,
       "stability": 60,
-      "accessibility": 65,
+      "accessibility": 52,
       "brandPower": 80,
       "support": 70
     },
@@ -9375,7 +9375,7 @@
     "closureRate": 13.68,
     "scores": {
       "profitability": 78,
-      "stability": 72,
+      "stability": 52,
       "accessibility": 38,
       "brandPower": 82,
       "support": 80
@@ -9535,7 +9535,7 @@
     "scores": {
       "profitability": 75,
       "stability": 75,
-      "accessibility": 88,
+      "accessibility": 80,
       "brandPower": 78,
       "support": 70
     },
@@ -9626,7 +9626,7 @@
     "scores": {
       "profitability": 70,
       "stability": 70,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 72,
       "support": 65
     },
@@ -9688,7 +9688,7 @@
     "closureRate": 8,
     "scores": {
       "profitability": 75,
-      "stability": 82,
+      "stability": 62,
       "accessibility": 50,
       "brandPower": 90,
       "support": 85
@@ -9756,7 +9756,7 @@
     "closureRate": 2,
     "scores": {
       "profitability": 75,
-      "stability": 85,
+      "stability": 82,
       "accessibility": 30,
       "brandPower": 88,
       "support": 80
@@ -9819,7 +9819,7 @@
     "closureRate": 2,
     "scores": {
       "profitability": 78,
-      "stability": 88,
+      "stability": 82,
       "accessibility": 18,
       "brandPower": 88,
       "support": 85
@@ -9886,7 +9886,7 @@
     "closureRate": 13.3,
     "scores": {
       "profitability": 70,
-      "stability": 55,
+      "stability": 52,
       "accessibility": 60,
       "brandPower": 70,
       "support": 60
@@ -9954,8 +9954,8 @@
     "closureRate": 24,
     "scores": {
       "profitability": 60,
-      "stability": 55,
-      "accessibility": 72,
+      "stability": 32,
+      "accessibility": 65,
       "brandPower": 70,
       "support": 60
     },
@@ -10093,7 +10093,7 @@
     "scores": {
       "profitability": 65,
       "stability": 50,
-      "accessibility": 90,
+      "accessibility": 80,
       "brandPower": 78,
       "support": 60
     },
@@ -10162,7 +10162,7 @@
     "scores": {
       "profitability": 82,
       "stability": 65,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 95,
       "support": 82
     },
@@ -10340,7 +10340,7 @@
     "scores": {
       "profitability": 80,
       "stability": 60,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 95,
       "support": 80
     },
@@ -10518,7 +10518,7 @@
     "scores": {
       "profitability": 50,
       "stability": 25,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 70,
       "support": 55
     },
@@ -10694,7 +10694,7 @@
     "scores": {
       "profitability": 50,
       "stability": 30,
-      "accessibility": 86,
+      "accessibility": 80,
       "brandPower": 65,
       "support": 60
     },
@@ -11182,7 +11182,7 @@
     "closureRate": 5.8,
     "scores": {
       "profitability": 70,
-      "stability": 80,
+      "stability": 72,
       "accessibility": 75,
       "brandPower": 80,
       "support": 85
@@ -11321,7 +11321,7 @@
     "scores": {
       "profitability": 50,
       "stability": 50,
-      "accessibility": 88,
+      "accessibility": 80,
       "brandPower": 60,
       "support": 55
     },
@@ -11721,7 +11721,7 @@
     "scores": {
       "profitability": 60,
       "stability": 60,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 55,
       "support": 65
     },
@@ -12355,7 +12355,7 @@
     "closureRate": 9.1,
     "scores": {
       "profitability": 65,
-      "stability": 78,
+      "stability": 62,
       "accessibility": 65,
       "brandPower": 75,
       "support": 80
@@ -12804,7 +12804,7 @@
     "scores": {
       "profitability": 60,
       "stability": 78,
-      "accessibility": 94,
+      "accessibility": 92,
       "brandPower": 85,
       "support": 82
     },
@@ -12947,7 +12947,7 @@
     "scores": {
       "profitability": 58,
       "stability": 75,
-      "accessibility": 95,
+      "accessibility": 92,
       "brandPower": 80,
       "support": 82
     },
@@ -13091,7 +13091,7 @@
     "closureRate": 5,
     "scores": {
       "profitability": 75,
-      "stability": 75,
+      "stability": 72,
       "accessibility": 45,
       "brandPower": 85,
       "support": 82
@@ -13806,7 +13806,7 @@
     "scores": {
       "profitability": 78,
       "stability": 92,
-      "accessibility": 95,
+      "accessibility": 92,
       "brandPower": 95,
       "support": 88
     },
@@ -13993,7 +13993,7 @@
     "scores": {
       "profitability": 62,
       "stability": 92,
-      "accessibility": 88,
+      "accessibility": 80,
       "brandPower": 78,
       "support": 78
     },
@@ -14803,7 +14803,7 @@
     "closureRate": 9,
     "scores": {
       "profitability": 68,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 70,
       "brandPower": 65,
       "support": 65
@@ -14897,7 +14897,7 @@
     "closureRate": 8,
     "scores": {
       "profitability": 73,
-      "stability": 70,
+      "stability": 62,
       "accessibility": 75,
       "brandPower": 73,
       "support": 70
@@ -14944,7 +14944,7 @@
     "closureRate": 14.8,
     "scores": {
       "profitability": 75,
-      "stability": 78,
+      "stability": 52,
       "accessibility": 70,
       "brandPower": 82,
       "support": 78
@@ -14991,7 +14991,7 @@
     "closureRate": 12,
     "scores": {
       "profitability": 68,
-      "stability": 60,
+      "stability": 52,
       "accessibility": 82,
       "brandPower": 68,
       "support": 65
@@ -15038,7 +15038,7 @@
     "closureRate": 10.5,
     "scores": {
       "profitability": 68,
-      "stability": 62,
+      "stability": 52,
       "accessibility": 70,
       "brandPower": 72,
       "support": 65
@@ -15086,7 +15086,7 @@
     "closureRate": 9,
     "scores": {
       "profitability": 70,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 75,
       "brandPower": 62,
       "support": 65
@@ -15230,7 +15230,7 @@
     "scores": {
       "profitability": 65,
       "stability": 70,
-      "accessibility": 88,
+      "accessibility": 80,
       "brandPower": 72,
       "support": 65
     },
@@ -15276,8 +15276,8 @@
     "closureRate": 14.4,
     "scores": {
       "profitability": 64,
-      "stability": 65,
-      "accessibility": 85,
+      "stability": 52,
+      "accessibility": 80,
       "brandPower": 68,
       "support": 60
     },
@@ -15324,7 +15324,7 @@
     "scores": {
       "profitability": 75,
       "stability": 82,
-      "accessibility": 90,
+      "accessibility": 65,
       "brandPower": 85,
       "support": 78
     },
@@ -15371,7 +15371,7 @@
     "closureRate": 9.5,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 65,
       "brandPower": 78,
       "support": 60
@@ -15469,8 +15469,8 @@
     "closureRate": 2.3,
     "scores": {
       "profitability": 72,
-      "stability": 85,
-      "accessibility": 60,
+      "stability": 82,
+      "accessibility": 40,
       "brandPower": 92,
       "support": 88
     },
@@ -15519,8 +15519,8 @@
     "closureRate": 5.5,
     "scores": {
       "profitability": 73,
-      "stability": 75,
-      "accessibility": 82,
+      "stability": 72,
+      "accessibility": 80,
       "brandPower": 75,
       "support": 70
     },
@@ -15713,7 +15713,7 @@
     "closureRate": 20.9,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 32,
       "accessibility": 65,
       "brandPower": 78,
       "support": 65
@@ -15760,7 +15760,7 @@
     "closureRate": 5.5,
     "scores": {
       "profitability": 72,
-      "stability": 80,
+      "stability": 72,
       "accessibility": 62,
       "brandPower": 78,
       "support": 72
@@ -15956,7 +15956,7 @@
     "closureRate": 7.5,
     "scores": {
       "profitability": 72,
-      "stability": 75,
+      "stability": 72,
       "accessibility": 55,
       "brandPower": 82,
       "support": 80
@@ -16005,7 +16005,7 @@
     "closureRate": 9,
     "scores": {
       "profitability": 70,
-      "stability": 70,
+      "stability": 62,
       "accessibility": 70,
       "brandPower": 80,
       "support": 78
@@ -16054,7 +16054,7 @@
     "closureRate": 10,
     "scores": {
       "profitability": 68,
-      "stability": 70,
+      "stability": 52,
       "accessibility": 75,
       "brandPower": 75,
       "support": 78
@@ -16103,7 +16103,7 @@
     "closureRate": 15,
     "scores": {
       "profitability": 55,
-      "stability": 55,
+      "stability": 42,
       "accessibility": 70,
       "brandPower": 65,
       "support": 70
@@ -16202,7 +16202,7 @@
     "closureRate": 6,
     "scores": {
       "profitability": 70,
-      "stability": 80,
+      "stability": 72,
       "accessibility": 55,
       "brandPower": 78,
       "support": 75
@@ -16251,7 +16251,7 @@
     "closureRate": 8,
     "scores": {
       "profitability": 65,
-      "stability": 70,
+      "stability": 62,
       "accessibility": 50,
       "brandPower": 70,
       "support": 72
@@ -16300,7 +16300,7 @@
     "closureRate": 6,
     "scores": {
       "profitability": 72,
-      "stability": 75,
+      "stability": 72,
       "accessibility": 45,
       "brandPower": 80,
       "support": 82
@@ -16349,7 +16349,7 @@
     "closureRate": 8,
     "scores": {
       "profitability": 68,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 60,
       "brandPower": 70,
       "support": 70
@@ -16398,7 +16398,7 @@
     "closureRate": 8,
     "scores": {
       "profitability": 72,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 65,
       "brandPower": 65,
       "support": 68
@@ -16447,7 +16447,7 @@
     "closureRate": 9,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 75,
       "brandPower": 62,
       "support": 65
@@ -16496,7 +16496,7 @@
     "closureRate": 8.5,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 72,
       "brandPower": 68,
       "support": 75
@@ -16545,7 +16545,7 @@
     "closureRate": 9,
     "scores": {
       "profitability": 65,
-      "stability": 70,
+      "stability": 62,
       "accessibility": 70,
       "brandPower": 68,
       "support": 65
@@ -16594,7 +16594,7 @@
     "closureRate": 9,
     "scores": {
       "profitability": 65,
-      "stability": 70,
+      "stability": 62,
       "accessibility": 72,
       "brandPower": 70,
       "support": 70
@@ -16643,7 +16643,7 @@
     "closureRate": 34.3,
     "scores": {
       "profitability": 65,
-      "stability": 70,
+      "stability": 32,
       "accessibility": 72,
       "brandPower": 70,
       "support": 70
@@ -16692,7 +16692,7 @@
     "closureRate": 23.7,
     "scores": {
       "profitability": 60,
-      "stability": 68,
+      "stability": 32,
       "accessibility": 45,
       "brandPower": 75,
       "support": 70
@@ -16741,7 +16741,7 @@
     "closureRate": 10,
     "scores": {
       "profitability": 55,
-      "stability": 60,
+      "stability": 52,
       "accessibility": 50,
       "brandPower": 70,
       "support": 68
@@ -16790,7 +16790,7 @@
     "closureRate": 18.2,
     "scores": {
       "profitability": 62,
-      "stability": 60,
+      "stability": 42,
       "accessibility": 80,
       "brandPower": 65,
       "support": 60
@@ -16936,7 +16936,7 @@
     "closureRate": 16.9,
     "scores": {
       "profitability": 68,
-      "stability": 78,
+      "stability": 42,
       "accessibility": 80,
       "brandPower": 88,
       "support": 80
@@ -16984,7 +16984,7 @@
     "closureRate": 6,
     "scores": {
       "profitability": 65,
-      "stability": 75,
+      "stability": 72,
       "accessibility": 40,
       "brandPower": 80,
       "support": 75
@@ -17033,7 +17033,7 @@
     "closureRate": 5.5,
     "scores": {
       "profitability": 68,
-      "stability": 75,
+      "stability": 72,
       "accessibility": 50,
       "brandPower": 80,
       "support": 75
@@ -17082,7 +17082,7 @@
     "closureRate": 5,
     "scores": {
       "profitability": 68,
-      "stability": 78,
+      "stability": 72,
       "accessibility": 45,
       "brandPower": 85,
       "support": 80
@@ -17132,7 +17132,7 @@
     "scores": {
       "profitability": 68,
       "stability": 65,
-      "accessibility": 85,
+      "accessibility": 80,
       "brandPower": 75,
       "support": 70
     },
@@ -17180,7 +17180,7 @@
     "closureRate": 8.5,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 62,
       "accessibility": 75,
       "brandPower": 65,
       "support": 65
@@ -17378,7 +17378,7 @@
     "closureRate": 24,
     "scores": {
       "profitability": 65,
-      "stability": 75,
+      "stability": 32,
       "accessibility": 75,
       "brandPower": 72,
       "support": 72
@@ -17575,7 +17575,7 @@
     "closureRate": 5,
     "scores": {
       "profitability": 72,
-      "stability": 80,
+      "stability": 72,
       "accessibility": 65,
       "brandPower": 65,
       "support": 65
@@ -17624,7 +17624,7 @@
     "closureRate": 6,
     "scores": {
       "profitability": 70,
-      "stability": 75,
+      "stability": 72,
       "accessibility": 55,
       "brandPower": 68,
       "support": 70
@@ -17674,8 +17674,8 @@
     "closureRate": 2.3,
     "scores": {
       "profitability": 70,
-      "stability": 88,
-      "accessibility": 80,
+      "stability": 82,
+      "accessibility": 65,
       "brandPower": 72,
       "support": 70
     },
@@ -17725,7 +17725,7 @@
     "closureRate": 29.4,
     "scores": {
       "profitability": 50,
-      "stability": 45,
+      "stability": 32,
       "accessibility": 65,
       "brandPower": 55,
       "support": 50
@@ -17776,7 +17776,7 @@
     "closureRate": 41.2,
     "scores": {
       "profitability": 55,
-      "stability": 35,
+      "stability": 32,
       "accessibility": 50,
       "brandPower": 60,
       "support": 55
@@ -17878,7 +17878,7 @@
     "closureRate": 8.3,
     "scores": {
       "profitability": 85,
-      "stability": 70,
+      "stability": 62,
       "accessibility": 75,
       "brandPower": 75,
       "support": 65
@@ -17929,7 +17929,7 @@
     "closureRate": 10,
     "scores": {
       "profitability": 65,
-      "stability": 75,
+      "stability": 52,
       "accessibility": 65,
       "brandPower": 45,
       "support": 55
@@ -17978,7 +17978,7 @@
     "closureRate": 26.3,
     "scores": {
       "profitability": 45,
-      "stability": 35,
+      "stability": 32,
       "accessibility": 60,
       "brandPower": 50,
       "support": 40
@@ -18029,7 +18029,7 @@
     "closureRate": 18.8,
     "scores": {
       "profitability": 60,
-      "stability": 50,
+      "stability": 42,
       "accessibility": 60,
       "brandPower": 65,
       "support": 55
@@ -18251,7 +18251,7 @@
     "scores": {
       "profitability": 70,
       "stability": 68,
-      "accessibility": 86,
+      "accessibility": 80,
       "brandPower": 64,
       "support": 62
     },
@@ -18305,7 +18305,7 @@
     "scores": {
       "profitability": 68,
       "stability": 64,
-      "accessibility": 84,
+      "accessibility": 80,
       "brandPower": 58,
       "support": 58
     },
@@ -18359,7 +18359,7 @@
     "scores": {
       "profitability": 66,
       "stability": 62,
-      "accessibility": 82,
+      "accessibility": 80,
       "brandPower": 56,
       "support": 56
     },
@@ -19018,7 +19018,7 @@
     "scores": {
       "profitability": 60,
       "stability": 62,
-      "accessibility": 46,
+      "accessibility": 40,
       "brandPower": 60,
       "support": 62
     },
@@ -19073,7 +19073,7 @@
     "scores": {
       "profitability": 60,
       "stability": 62,
-      "accessibility": 48,
+      "accessibility": 40,
       "brandPower": 72,
       "support": 66
     },
@@ -19236,7 +19236,7 @@
     "scores": {
       "profitability": 58,
       "stability": 62,
-      "accessibility": 50,
+      "accessibility": 40,
       "brandPower": 70,
       "support": 64
     },
