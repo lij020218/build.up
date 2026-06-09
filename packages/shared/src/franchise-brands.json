@@ -2777,8 +2777,8 @@
     "franchiseFee": 1100,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 57700,
-    "storeCount": 225,
-    "closureRate": 2,
+    "storeCount": 189,
+    "closureRate": 1.6,
     "scores": {
       "profitability": 82,
       "stability": 80,
@@ -2846,16 +2846,17 @@
     "monthlyRoyalty": 55,
     "avgAnnualRevenueWon": 95000,
     "storeCount": 224,
-    "closureRate": 1.5,
+    "closureRate": 7.4,
     "scores": {
       "profitability": 78,
-      "stability": 85,
+      "stability": 72,
       "accessibility": 25,
       "brandPower": 92,
       "support": 85
     },
     "roadmapNotes": {
       "ko": [
+        "※ 40년 직영 운영 후 2023년부터 가맹 개시 — 가맹 표본 적어 평균매출 해석 주의. 매장수는 직영+가맹 합산",
         "직영 198개 + 가맹 26개 (2025) — 본격 가맹 확장 1년차",
         "본사 매출 3,780억 (2025) — 2년 연속 최대 실적",
         "글로벌 브랜드 인지도 + 칼라일 인수 후 공격적 확장",
@@ -4542,14 +4543,14 @@
       "en": "25yr shabu-shabu — solo Shabu-boat model from ~KRW 100M"
     },
     "startupCostWon": 11000,
-    "franchiseFee": 1000,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 42000,
-    "storeCount": 220,
-    "closureRate": 4.5,
+    "avgAnnualRevenueWon": 55322,
+    "storeCount": 147,
+    "closureRate": 17.8,
     "scores": {
       "profitability": 72,
-      "stability": 75,
+      "stability": 42,
       "accessibility": 60,
       "brandPower": 78,
       "support": 75
@@ -4837,11 +4838,11 @@
       "en": "20y value Japanese food + ~200 stores; WARNING: small public HQ revenue"
     },
     "startupCostWon": 9584,
-    "franchiseFee": 500,
+    "franchiseFee": 1320,
     "monthlyRoyalty": 25,
-    "avgAnnualRevenueWon": 36174,
-    "storeCount": 200,
-    "closureRate": 3,
+    "avgAnnualRevenueWon": 35167,
+    "storeCount": 181,
+    "closureRate": 7.8,
     "scores": {
       "profitability": 75,
       "stability": 65,
@@ -5777,15 +5778,15 @@
       "ko": "200+개 떡볶이 전문점 — 15평 창업 1.3억대, 평균매출 1위 보도",
       "en": "200+ tteokbokki specialty — KRW 130M startup, top avg revenue per report"
     },
-    "startupCostWon": 13000,
+    "startupCostWon": 13559,
     "franchiseFee": 1100,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 35000,
-    "storeCount": 200,
-    "closureRate": 3.5,
+    "avgAnnualRevenueWon": 16180,
+    "storeCount": 138,
+    "closureRate": 29,
     "scores": {
       "profitability": 75,
-      "stability": 72,
+      "stability": 32,
       "accessibility": 65,
       "brandPower": 78,
       "support": 72
@@ -11453,15 +11454,15 @@
       "ko": "★ 미용실 카테고리 점포 수 1위 약 201개, 서울 점당 월 4,561만원",
       "en": "#1 hair-salon by store count ~201, Seoul per-store KRW 45.6M/mo"
     },
-    "startupCostWon": 18000,
-    "franchiseFee": 700,
+    "startupCostWon": 19490,
+    "franchiseFee": 5500,
     "monthlyRoyalty": 44,
     "avgAnnualRevenueWon": 49000,
-    "storeCount": 201,
-    "closureRate": 5,
+    "storeCount": 189,
+    "closureRate": 12.2,
     "scores": {
       "profitability": 80,
-      "stability": 70,
+      "stability": 52,
       "accessibility": 50,
       "brandPower": 88,
       "support": 75
@@ -14567,16 +14568,16 @@
       "ko": "⚠ 노래방 시장 신규 -76% 폭락, 무인코인노래방 50%+ 1년내 폐업",
       "en": "WARNING: noraebang sector new openings -76%; 50%+ unmanned coin shops close <1y"
     },
-    "startupCostWon": 8500,
-    "franchiseFee": 500,
+    "startupCostWon": 20440,
+    "franchiseFee": 660,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 12000,
-    "storeCount": 200,
-    "closureRate": 12,
+    "storeCount": 245,
+    "closureRate": 3.3,
     "scores": {
       "profitability": 50,
       "stability": 35,
-      "accessibility": 78,
+      "accessibility": 52,
       "brandPower": 60,
       "support": 60
     },
@@ -15079,14 +15080,14 @@
       "en": "Dual-concept tteokbokki + chicken store"
     },
     "startupCostWon": 5788,
-    "franchiseFee": 800,
+    "franchiseFee": 770,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 28000,
-    "storeCount": 200,
-    "closureRate": 9,
+    "avgAnnualRevenueWon": 18290,
+    "storeCount": 90,
+    "closureRate": 41.8,
     "scores": {
       "profitability": 70,
-      "stability": 62,
+      "stability": 32,
       "accessibility": 75,
       "brandPower": 62,
       "support": 65
@@ -15128,20 +15129,21 @@
       "en": "Personal-size wood-fired pizza, automated"
     },
     "startupCostWon": 8604,
-    "franchiseFee": 330,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 25700,
-    "storeCount": 200,
-    "closureRate": 6,
+    "avgAnnualRevenueWon": 31100,
+    "storeCount": 95,
+    "closureRate": 31.6,
     "scores": {
       "profitability": 72,
-      "stability": 70,
+      "stability": 32,
       "accessibility": 80,
       "brandPower": 75,
       "support": 80
     },
     "roadmapNotes": {
       "ko": [
+        "※ 매장수는 국내 가맹점 기준 — 언론의 1,000+개는 해외+직영 글로벌 합산",
         "특허 자동화 오븐으로 1인 인력 운영 가능",
         "1인 피자 트렌드 + 배민 단품 강세",
         "해외 + 국내 200여 매장, GS25 협업 사례",
@@ -15174,12 +15176,12 @@
       "ko": "더본코리아의 가성비 피자 프랜차이즈",
       "en": "Theborn's value-pizza franchise"
     },
-    "startupCostWon": 8500,
-    "franchiseFee": 500,
+    "startupCostWon": 6601,
+    "franchiseFee": 330,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 40000,
+    "avgAnnualRevenueWon": 37830,
     "storeCount": 228,
-    "closureRate": 4.5,
+    "closureRate": 3.3,
     "scores": {
       "profitability": 75,
       "stability": 78,
@@ -15412,15 +15414,15 @@
       "ko": "부산 출신 프리미엄 김밥 브랜드",
       "en": "Premium kimbap brand from Busan"
     },
-    "startupCostWon": 9500,
-    "franchiseFee": 500,
+    "startupCostWon": 6987,
+    "franchiseFee": 770,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 24684,
-    "storeCount": 250,
-    "closureRate": 7,
+    "avgAnnualRevenueWon": 21437,
+    "storeCount": 450,
+    "closureRate": 15.1,
     "scores": {
       "profitability": 70,
-      "stability": 72,
+      "stability": 42,
       "accessibility": 72,
       "brandPower": 72,
       "support": 68
@@ -15561,14 +15563,14 @@
       "en": "Value chicken specializing in acquired stores"
     },
     "startupCostWon": 3504,
-    "franchiseFee": 300,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 22000,
-    "storeCount": 240,
-    "closureRate": 6,
+    "avgAnnualRevenueWon": 20245,
+    "storeCount": 158,
+    "closureRate": 16.5,
     "scores": {
       "profitability": 70,
-      "stability": 70,
+      "stability": 42,
       "accessibility": 88,
       "brandPower": 62,
       "support": 70
@@ -16488,11 +16490,11 @@
       "ko": "올리브유 후라이드 치킨 전문",
       "en": "Olive-oil fried chicken"
     },
-    "startupCostWon": 8800,
-    "franchiseFee": 1000,
+    "startupCostWon": 4940,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 28000,
-    "storeCount": 250,
+    "avgAnnualRevenueWon": 24453,
+    "storeCount": 147,
     "closureRate": 8.5,
     "scores": {
       "profitability": 65,
