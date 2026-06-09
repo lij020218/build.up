@@ -2613,12 +2613,12 @@
       "ko": "농협목우촌 운영 — 국내산 1등급 닭 + 가맹 점진 감소 추세 ⚠",
       "en": "Nonghyup-run, domestic Grade-1 chicken; store count declining ⚠"
     },
-    "startupCostWon": 4800,
-    "franchiseFee": 350,
+    "startupCostWon": 3268,
+    "franchiseFee": 660,
     "monthlyRoyalty": 16.5,
-    "avgAnnualRevenueWon": 20000,
-    "storeCount": 554,
-    "closureRate": 5,
+    "avgAnnualRevenueWon": 13000,
+    "storeCount": 527,
+    "closureRate": 12.5,
     "scores": {
       "profitability": 65,
       "stability": 70,
@@ -2912,9 +2912,9 @@
     "startupCostWon": 5975,
     "franchiseFee": 110,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 33700,
+    "avgAnnualRevenueWon": 37427,
     "storeCount": 550,
-    "closureRate": 4,
+    "closureRate": 7.8,
     "scores": {
       "profitability": 78,
       "stability": 70,
@@ -3985,12 +3985,12 @@
       "ko": "본아이에프 프리미엄 도시락, 점당 4억+",
       "en": "Bon IF premium lunchbox, 400M+ per-store"
     },
-    "startupCostWon": 12000,
-    "franchiseFee": 800,
+    "startupCostWon": 8610,
+    "franchiseFee": 1210,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 40000,
-    "storeCount": 480,
-    "closureRate": 2.8,
+    "avgAnnualRevenueWon": 29438,
+    "storeCount": 406,
+    "closureRate": 11.1,
     "scores": {
       "profitability": 82,
       "stability": 80,
@@ -4022,7 +4022,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 800
+        "amountWon": 1210
       },
       {
         "label": {
@@ -4043,7 +4043,7 @@
           "ko": "인테리어·장비",
           "en": "Interior+equip"
         },
-        "amountWon": 10300
+        "amountWon": 6500
       }
     ],
     "dataYear": "2024",
@@ -4105,12 +4105,12 @@
       "ko": "무한리필 갈비 — 561개점 월 7,853만 매출, 40평 2.6억 창업비",
       "en": "All-you-can-eat galbi — 561 stores, monthly KRW 78.53M; KRW 261M startup"
     },
-    "startupCostWon": 26114,
+    "startupCostWon": 18854,
     "franchiseFee": 1500,
     "monthlyRoyalty": 33,
     "avgAnnualRevenueWon": 94000,
     "storeCount": 561,
-    "closureRate": 5,
+    "closureRate": 4.29,
     "scores": {
       "profitability": 82,
       "stability": 75,
@@ -4156,7 +4156,7 @@
           "ko": "본사 패키지(40평)",
           "en": "HQ package 40py"
         },
-        "amountWon": 17140
+        "amountWon": 9880
       },
       {
         "label": {
@@ -4665,12 +4665,12 @@
       "ko": "더본코리아 우동 전문, 폐점률 3.5% — 더본 25개 브랜드 중 안정 상위",
       "en": "The Born udon, 3.5% closure — top stability in The Born 25"
     },
-    "startupCostWon": 11000,
-    "franchiseFee": 300,
+    "startupCostWon": 7177,
+    "franchiseFee": 220,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 30000,
-    "storeCount": 563,
-    "closureRate": 3.5,
+    "avgAnnualRevenueWon": 37273,
+    "storeCount": 223,
+    "closureRate": 4.13,
     "scores": {
       "profitability": 75,
       "stability": 75,
@@ -4680,6 +4680,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 역전우동0410 단독 브랜드(역전할머니맥주와 별개 법인)",
         "더본코리아(KOSPI 139670) 계열",
         "주방기물 3천만원 장기 렌탈 가능",
         "최대 5천만원 창업 대출 지원",
@@ -4702,7 +4703,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 300
+        "amountWon": 220
       },
       {
         "label": {
@@ -4723,7 +4724,7 @@
           "ko": "인테리어·시설·기타",
           "en": "Interior+facility+other"
         },
-        "amountWon": 10070
+        "amountWon": 6327
       }
     ],
     "description": {
@@ -5578,11 +5579,11 @@
       "ko": "마라탕 1위 — 494개점 (1년 47%↑), MZ 1020 핵심 타깃",
       "en": "#1 malatang — 494 stores (+47% YoY), MZ 10-20s core"
     },
-    "startupCostWon": 8500,
-    "franchiseFee": 1000,
+    "startupCostWon": 9760,
+    "franchiseFee": 550,
     "monthlyRoyalty": 16.5,
-    "avgAnnualRevenueWon": 32000,
-    "storeCount": 494,
+    "avgAnnualRevenueWon": 61786,
+    "storeCount": 540,
     "closureRate": 5.5,
     "scores": {
       "profitability": 78,
@@ -5942,12 +5943,12 @@
       "ko": "밥버거 브랜드 — 600여 점 10평 3,300만원 진입 가능",
       "en": "Rice-burger brand — ~600 stores, KRW 33M for 10-pyeong"
     },
-    "startupCostWon": 3300,
-    "franchiseFee": 300,
+    "startupCostWon": 4114,
+    "franchiseFee": 550,
     "monthlyRoyalty": 11,
-    "avgAnnualRevenueWon": 13000,
-    "storeCount": 600,
-    "closureRate": 6,
+    "avgAnnualRevenueWon": 9078,
+    "storeCount": 474,
+    "closureRate": 8.25,
     "scores": {
       "profitability": 68,
       "stability": 60,
@@ -6006,11 +6007,11 @@
       "en": "Korea hit 600 stores + 5y revenue +20% / WARNING: global -3.8% / -28% store reduction"
     },
     "startupCostWon": 19750,
-    "franchiseFee": 1637,
+    "franchiseFee": 2000,
     "monthlyRoyalty": 55,
     "avgAnnualRevenueWon": 78732,
-    "storeCount": 600,
-    "closureRate": 6,
+    "storeCount": 582,
+    "closureRate": 0.95,
     "scores": {
       "profitability": 70,
       "stability": 60,
@@ -6042,7 +6043,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 1637
+        "amountWon": 2000
       },
       {
         "label": {
@@ -8738,12 +8739,12 @@
       "ko": "⚠ 거래구조 변경 매출 외형 3배 '착시', 영업이익률 39.6→14.6 반토막",
       "en": "WARNING: revenue ~3× from structure change — 'optical illusion'; OPM 39.6→14.6 halved"
     },
-    "startupCostWon": 12000,
-    "franchiseFee": 700,
+    "startupCostWon": 21613,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 28000,
-    "storeCount": 500,
-    "closureRate": 5,
+    "avgAnnualRevenueWon": 43733,
+    "storeCount": 586,
+    "closureRate": 1.8,
     "scores": {
       "profitability": 65,
       "stability": 60,
@@ -9366,12 +9367,12 @@
       "ko": "1998년 설립 토종 프리미엄 커피, 580+ 매장",
       "en": "Est. 1998 Korean premium coffee, 580+ stores"
     },
-    "startupCostWon": 22000,
+    "startupCostWon": 26265,
     "franchiseFee": 1000,
     "monthlyRoyalty": 50,
-    "avgAnnualRevenueWon": 48000,
-    "storeCount": 580,
-    "closureRate": 4,
+    "avgAnnualRevenueWon": 34534,
+    "storeCount": 464,
+    "closureRate": 13.68,
     "scores": {
       "profitability": 78,
       "stability": 72,
@@ -9424,7 +9425,7 @@
           "ko": "인테리어",
           "en": "Interior"
         },
-        "amountWon": 11000
+        "amountWon": 15265
       },
       {
         "label": {
@@ -9616,12 +9617,12 @@
       "ko": "1L 대용량 커피 컨셉 — 저가 커피 3위권 추격 브랜드",
       "en": "1L mega-size coffee concept — chasing budget coffee top 3"
     },
-    "startupCostWon": 9500,
-    "franchiseFee": 700,
+    "startupCostWon": 7336,
+    "franchiseFee": 550,
     "monthlyRoyalty": 11,
-    "avgAnnualRevenueWon": 22000,
-    "storeCount": 600,
-    "closureRate": 3,
+    "avgAnnualRevenueWon": 14115,
+    "storeCount": 575,
+    "closureRate": 7.45,
     "scores": {
       "profitability": 70,
       "stability": 70,
@@ -10082,8 +10083,8 @@
       "ko": "요거트 아이스크림 1위 — 372→528개 1년 폭증, 트렌드 의존 ⚠",
       "en": "#1 yogurt ice cream — 372→528 in 1yr, trend-dependent ⚠"
     },
-    "startupCostWon": 4930,
-    "franchiseFee": 800,
+    "startupCostWon": 5330,
+    "franchiseFee": 550,
     "monthlyRoyalty": 22,
     "avgAnnualRevenueWon": 14600,
     "storeCount": 528,
@@ -14462,9 +14463,9 @@
     "startupCostWon": 19910,
     "franchiseFee": 550,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 13500,
+    "avgAnnualRevenueWon": 11858,
     "storeCount": 700,
-    "closureRate": 5,
+    "closureRate": 9.74,
     "scores": {
       "profitability": 65,
       "stability": 60,
@@ -17053,11 +17054,11 @@
       "en": "Budae jjigae + meal-kit chain"
     },
     "startupCostWon": 4260,
-    "franchiseFee": 500,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 24000,
+    "avgAnnualRevenueWon": 17245,
     "storeCount": 555,
-    "closureRate": 7,
+    "closureRate": 3,
     "scores": {
       "profitability": 72,
       "stability": 72,
