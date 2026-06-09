@@ -41,13 +41,16 @@ const INDUSTRY_KEYWORDS: Array<{ id: string; words: string[] }> = [
 export function extractMaxAge(text: string | undefined): number | undefined {
   if (!text) return undefined;
   const t = text.toLowerCase();
+  // 0) "만 40세 이상" 브래킷이 포함되면 40대+도 신청 가능 → 사실상 연령 제한 없음.
+  //    (K-Startup biz_trgt_age 가 "만 20세 미만,20~39,만 40세 이상" 식 전 연령대 나열 케이스)
+  if (/(?:4\d|[5-9]\d)\s*세\s*이상/.test(text)) return undefined;
   // 1) 상한 명시 "N세 이하/미만/까지"
   const upper = text.match(/(\d{2})\s*세\s*(?:이하|미만|까지)/);
   if (upper) return Number(upper[1]);
   // 2) 범위 "N세 ~ M세" → 상한 M
   const range = text.match(/\d{2}\s*세[^0-9]{1,6}만?\s*(\d{2})\s*세/);
   if (range) return Number(range[1]);
-  // 3) "만 40세 이상"만 있으면(하한) 상한 없음 → undefined
+  // 3) "만 N세 이상"(하한)만 있으면 상한 없음 → undefined
   if (/\d{2}\s*세\s*이상/.test(text) && !/이하|미만|까지/.test(text)) return undefined;
   if (t.includes("청년")) return 39; // 통상 청년 기준 만 39세
   return undefined;

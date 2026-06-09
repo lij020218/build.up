@@ -14,6 +14,8 @@ describe("funding-normalizer — 텍스트 파싱", () => {
     expect(extractMaxAge("만 20세 이상 ~ 만 39세 이하")).toBe(39);
     // 하한만 → 연령 제한 없음
     expect(extractMaxAge("만 40세 이상")).toBeUndefined();
+    // 전 연령대 나열(만 40세 이상 포함) → 연령 무관 (실 K-Startup 응답 케이스)
+    expect(extractMaxAge("만 20세 미만,만 20세 이상 ~ 만 39세 이하,만 40세 이상")).toBeUndefined();
     expect(extractMaxAge("청년 창업자 대상")).toBe(39);
     expect(extractMaxAge("연령 제한 없음")).toBeUndefined();
   });
