@@ -16,7 +16,7 @@ import {
   type ApplicationStatus,
   type MatchCriteria,
 } from "@foundone/shared";
-import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2 } from "lucide-react";
+import { ExternalLink, Award, Calendar, Building2, Target, Sparkles, AlertCircle, Wand2, MapPin, Lightbulb } from "lucide-react";
 import { supabase } from "../../../../lib/supabase";
 import { FundingScoreModal, type FundingScore } from "./FundingScoreModal";
 
@@ -391,7 +391,7 @@ export function GuidesView() {
   ];
   const ageOptions: { id: "all" | "youth" | "senior"; label: string }[] = [
     { id: "all", label: ko ? "전체" : "All" },
-    { id: "youth", label: ko ? "청년(만39세↓)" : "Youth ≤39" },
+    { id: "youth", label: ko ? "청년 (만 39세 이하)" : "Youth ≤39" },
     { id: "senior", label: ko ? "연령 무관" : "No age limit" },
   ];
 
@@ -457,7 +457,7 @@ export function GuidesView() {
             <Sparkles size={14} strokeWidth={1.8} />
             <span>
               {recommendMode
-                ? (ko ? `✓ 추천 모드 (TOP ${RECOMMEND_TOP_N})` : `✓ Recommend mode (TOP ${RECOMMEND_TOP_N})`)
+                ? (ko ? `추천 모드 · TOP ${RECOMMEND_TOP_N}` : `Recommend mode · TOP ${RECOMMEND_TOP_N}`)
                 : (ko ? "내게 가장 잘 맞는 프로그램 추천" : "Recommend best-fit programs")}
             </span>
           </button>
@@ -475,16 +475,18 @@ export function GuidesView() {
           <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A6BAE", letterSpacing: "0.02em" }}>
             {ko ? "내 정보 추가 (선택) — 더 정확한 추천 · 기기에만 저장" : "Add your info (optional) — better matches, stored on device"}
           </div>
-          {/* 넛지 — 출생연도 미입력 시 청년·시니어 매칭 가치 안내 */}
+          {/* 넛지 — 출생연도 미입력 시 청년·시니어 매칭 가치 안내 (미드나이트 톤·라인 아이콘) */}
           {ownerBirthYear == null && (
             <div style={{
-              fontSize: "12px", color: "#1F46A8", fontWeight: 600, lineHeight: 1.5,
-              padding: "8px 10px", borderRadius: "8px",
-              background: "#EAF2FF", border: "1px solid rgba(59,91,191,0.18)",
+              display: "flex", alignItems: "flex-start", gap: 8,
+              fontSize: "12px", color: MIDNIGHT, fontWeight: 500, lineHeight: 1.5,
+              padding: "9px 12px", borderRadius: "10px",
+              background: MIDNIGHT_TINT, border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
             }}>
-              {ko
-                ? "💡 출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원사업을 더 정확히 찾아드려요"
-                : "💡 Add your birth year to surface youth (≤39) and senior (40+) programs"}
+              <Lightbulb size={14} strokeWidth={1.6} style={{ flexShrink: 0, marginTop: 1, color: MIDNIGHT, opacity: 0.7 }} />
+              <span>{ko
+                ? "출생연도를 알려주시면 청년(만 39세 이하)·시니어(40세+) 전용 지원사업을 더 정확히 찾아드려요"
+                : "Add your birth year to surface youth (≤39) and senior (40+) programs"}</span>
             </div>
           )}
           <OwnerProfileChips ko={ko} />
@@ -782,8 +784,10 @@ function ProgramCard({
       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
         {/* 지역 */}
         {program.regions && program.regions.length > 0
-          ? program.regions.slice(0, 3).map((r) => <span key={r} style={dimBadgeStyle}>📍 {r}</span>)
-          : <span style={dimBadgeMutedStyle}>📍 {ko ? "전국" : "Nationwide"}</span>}
+          ? program.regions.slice(0, 3).map((r) => (
+              <span key={r} style={dimBadgeStyle}><MapPin size={9} strokeWidth={1.8} style={{ flexShrink: 0 }} />{r}</span>
+            ))
+          : <span style={dimBadgeMutedStyle}><MapPin size={9} strokeWidth={1.8} style={{ flexShrink: 0 }} />{ko ? "전국" : "Nationwide"}</span>}
         {/* 업종 */}
         {program.industries && program.industries.length > 0
           ? program.industries.slice(0, 2).map((i) => <span key={i} style={dimBadgeStyle}>{INDUSTRY_LABEL_KO[i] ?? i}</span>)
@@ -978,10 +982,13 @@ const selectStyle: React.CSSProperties = {
 };
 
 const dimBadgeStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 3,
   fontSize: 10.5,
   fontWeight: 600,
   color: MIDNIGHT,
-  padding: "2px 7px",
+  padding: "2px 8px",
   borderRadius: 999,
   background: MIDNIGHT_SOFT,
   border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
@@ -990,10 +997,13 @@ const dimBadgeStyle: React.CSSProperties = {
 
 // 제한 없음(전국·전업종·연령무관) — 흐린 톤으로 "열려있음" 표현(누락이 아님)
 const dimBadgeMutedStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 3,
   fontSize: 10.5,
   fontWeight: 500,
   color: TEXT_SUBTLE,
-  padding: "2px 7px",
+  padding: "2px 8px",
   borderRadius: 999,
   background: "rgba(15,23,42,0.03)",
   border: "1px solid rgba(15,23,42,0.06)",
