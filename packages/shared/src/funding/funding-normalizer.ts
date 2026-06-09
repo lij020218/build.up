@@ -32,14 +32,37 @@ const INDUSTRY_KEYWORDS: Array<{ id: string; words: string[] }> = [
   { id: "startup-tech", words: ["기술창업", "딥테크", "ai", "인공지능", "반도체", "바이오", "로보틱스", "it", "소프트웨어", "제조"] },
 ];
 
-/** "만 39세", "39세 이하", "청년"(=39) 등에서 최대 나이 추출 */
+/**
+ * 최대 나이(상한) 추출. "만 40세 이상"처럼 하한만 있으면 제한 없음(undefined).
+ *  - "만 39세 이하/미만/까지" → 39 (상한 우선)
+ *  - "만 20세 이상 ~ 만 39세 이하"(범위) → 39 (상한)
+ *  - "청년" → 39
+ */
 export function extractMaxAge(text: string | undefined): number | undefined {
   if (!text) return undefined;
   const t = text.toLowerCase();
-  const m = text.match(/만?\s*(\d{2})\s*세\s*(이하|미만|까지)?/);
-  if (m) return Number(m[1]);
+  // 1) 상한 명시 "N세 이하/미만/까지"
+  const upper = text.match(/(\d{2})\s*세\s*(?:이하|미만|까지)/);
+  if (upper) return Number(upper[1]);
+  // 2) 범위 "N세 ~ M세" → 상한 M
+  const range = text.match(/\d{2}\s*세[^0-9]{1,6}만?\s*(\d{2})\s*세/);
+  if (range) return Number(range[1]);
+  // 3) "만 40세 이상"만 있으면(하한) 상한 없음 → undefined
+  if (/\d{2}\s*세\s*이상/.test(text) && !/이하|미만|까지/.test(text)) return undefined;
   if (t.includes("청년")) return 39; // 통상 청년 기준 만 39세
   return undefined;
+}
+
+/** 창업기간(biz_enyy "7년미만,3년미만,예비창업자") → [min, max] 연차. 없으면 undefined */
+export function extractBusinessYearRange(text: string | undefined): [number, number] | undefined {
+  if (!text) return undefined;
+  const years = (text.match(/(\d+)\s*년/g) ?? []).map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+  if (years.length === 0) {
+    // "예비창업자"만 있으면 0~0 (창업 전)
+    if (text.includes("예비")) return [0, 0];
+    return undefined;
+  }
+  return [0, Math.max(...years)];
 }
 
 /** 지원대상/공고명에서 지역 제한 추출 (없으면 전국 = undefined) */
@@ -91,6 +114,7 @@ export function normalizeLiveProgram(
   gov: GovernmentSupportProgram,
   todayISO?: string,
 ): StartupProgram {
+  // 텍스트 파싱용 — 구조화 필드(K-Startup)가 있으면 그것을 우선, 없으면(기업마당) 텍스트에서 추출.
   const haystack = `${gov.programName} ${gov.targetDescription ?? ""}`;
   const start = gov.applicationStart;
   const end = gov.applicationEnd;
@@ -99,21 +123,36 @@ export function normalizeLiveProgram(
     ? `신청 ${start ?? "?"} ~ ${end ?? "상시"}`
     : "상시·수시 (공고 확인)";
 
+  // 연령: K-Startup biz_trgt_age(targetAge) 우선
+  const maxAge = extractMaxAge(gov.targetAge) ?? extractMaxAge(haystack);
+  // 지역: K-Startup supt_regin(region) 우선, "전국"이면 제한 없음
+  const regions = gov.region && !gov.region.includes("전국")
+    ? extractRegions(gov.region) ?? [gov.region.replace(/특별시|광역시|특별자치시|특별자치도|도$/g, "").slice(0, 2)]
+    : extractRegions(haystack);
+  // 창업기간: K-Startup biz_enyy(businessPeriod)
+  const businessYearRange = extractBusinessYearRange(gov.businessPeriod);
+
+  // 우대사항(prfn_matr)이 있으면 지원내용 뒤에 덧붙여 노출(유리한 점).
+  const benefitKo = gov.preferentialNote
+    ? `${gov.benefitDescription || gov.supportCategory} · 우대: ${gov.preferentialNote}`
+    : (gov.benefitDescription || gov.supportCategory);
+
   return {
     id: gov.id,
     category: deriveCategory(gov.supportCategory, gov.organizerName),
     name: { ko: gov.programName, en: gov.programName },
     organizer: { ko: gov.organizerName || "정부·공공기관", en: gov.organizerName || "Government" },
-    target: { ko: gov.targetDescription || "공고 상세 참조", en: gov.targetDescription || "See announcement" },
-    benefit: { ko: gov.benefitDescription || gov.supportCategory, en: gov.benefitDescription || gov.supportCategory },
+    target: { ko: gov.targetDescription || gov.targetAge || "공고 상세 참조", en: gov.targetDescription || "See announcement" },
+    benefit: { ko: benefitKo, en: benefitKo },
     season: { ko: seasonKo, en: seasonKo },
-    url: gov.url || "https://www.bizinfo.go.kr",
+    url: gov.url || (gov.source === "bizinfo" ? "https://www.bizinfo.go.kr" : "https://www.k-startup.go.kr"),
     forSmallBiz: true,
     forFranchise: true,
     dataYear: (todayISO ?? new Date().toISOString()).slice(0, 4),
-    maxAge: extractMaxAge(haystack),
+    maxAge,
+    businessYearRange,
     industries: extractIndustries(haystack),
-    regions: extractRegions(haystack),
+    regions,
     applicationStatus: status,
     applicationDeadline: end,
     fundingType: deriveFundingType(gov.supportCategory),

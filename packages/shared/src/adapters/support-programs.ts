@@ -28,12 +28,38 @@ export type GovernmentSupportProgram = {
   applicationMethod?: string;
   contactInfo?: string;
   url?: string;
+  // ── K-Startup getAnnouncementInformation01 구조화 필드 (공식 설계서 v2.0) ──
+  /** 지역명 (supt_regin) — 예: "서울특별시" */
+  region?: string;
+  /** 대상 연령 (biz_trgt_age) — 예: "만 20세 이상 ~ 만 39세 이하" */
+  targetAge?: string;
+  /** 창업 기간 (biz_enyy) — 예: "7년미만,3년미만,예비창업자" */
+  businessPeriod?: string;
+  /** 우대 사항 (prfn_matr) — "유리한 점" */
+  preferentialNote?: string;
   fetchedAt: string;
 };
 
 const KSTARTUP_BASE_URL = "https://apis.data.go.kr/B552735/kisedKstartupService01";
 const DEFAULT_TIMEOUT = 10_000;
 
+/** "2012-11-29 00:00:00" 또는 "20121129" → "2012-11-29" */
+function normKstartupDate(raw: unknown): string | undefined {
+  if (!raw) return undefined;
+  const s = String(raw).trim();
+  if (!s) return undefined;
+  const m = s.match(/(\d{4})[-.]?(\d{2})[-.]?(\d{2})/);
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : undefined;
+}
+
+/**
+ * 창업진흥원 K-Startup 지원사업 공고 조회 — 공식 설계서 v2.0 기준.
+ *   엔드포인트: /getAnnouncementInformation01 (구 getAnnouncementList 아님)
+ *   요청: serviceKey + page/perPage/returnType=json (구 pageNo/numOfRows 아님)
+ *   응답(신규 data.go.kr 포맷): { data:[...] } / 구포맷 items.item 도 robust 수용
+ *   필드: biz_pbanc_nm·supt_biz_clsfc·supt_regin·biz_trgt_age·biz_enyy·prfn_matr·
+ *         pbanc_rcpt_bgng_dt·pbanc_rcpt_end_dt·detl_pg_url·sprv_inst·pbanc_ntrp_nm·Rcrt_prgs_yn
+ */
 export async function fetchKStartupPrograms(
   config: SupportProgramsConfig,
   params: SupportProgramsParams = {}
@@ -43,14 +69,13 @@ export async function fetchKStartupPrograms(
 
   const searchParams = new URLSearchParams({
     serviceKey: config.apiKey,
-    dataType: "json",
-    pageNo: String(params.pageNo ?? 1),
-    numOfRows: String(params.numOfRows ?? 50),
+    returnType: "json",
+    page: String(params.pageNo ?? 1),
+    perPage: String(params.numOfRows ?? 100),
   });
+  if (params.searchKeyword) searchParams.set("biz_pbanc_nm", params.searchKeyword);
 
-  if (params.searchKeyword) searchParams.set("searchKeyword", params.searchKeyword);
-
-  const url = `${baseUrl}/getAnnouncementList?${searchParams.toString()}`;
+  const url = `${baseUrl}/getAnnouncementInformation01?${searchParams.toString()}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -59,36 +84,50 @@ export async function fetchKStartupPrograms(
     if (!response.ok) throw new Error(`K-Startup API responded with ${response.status}`);
 
     const json = await response.json();
-    const items = json?.response?.body?.items?.item ?? [];
-    const arr = Array.isArray(items) ? items : [items];
+    // 신규 포맷 { data:[...] } 우선, 구포맷(items.item) 폴백.
+    const rawItems =
+      (Array.isArray(json?.data) ? json.data : undefined) ??
+      json?.items?.item ??
+      json?.response?.body?.items?.item ??
+      [];
+    const arr: Record<string, unknown>[] = Array.isArray(rawItems) ? rawItems : [rawItems];
     const now = new Date().toISOString();
+    const today = now.slice(0, 10).replace(/-/g, "");
 
     const data: GovernmentSupportProgram[] = arr
-      .filter((item: Record<string, unknown>) => item && item.pblancNm)
-      .map((item: Record<string, unknown>) => ({
-        id: `kstartup-${item.pblancId ?? item.pblancNm}`,
-        source: "kstartup" as const,
-        programName: String(item.pblancNm ?? ""),
-        organizerName: String(item.jrsdInsttNm ?? ""),
-        supportCategory: String(item.sprtFieldNm ?? "창업"),
-        applicationStart: item.reqstBeginDe ? String(item.reqstBeginDe) : undefined,
-        applicationEnd: item.reqstEndDe ? String(item.reqstEndDe) : undefined,
-        isOpen: (() => {
-          const end = String(item.reqstEndDe ?? "");
-          if (!end) return true;
-          return end.replace(/-/g, "") >= now.slice(0, 10).replace(/-/g, "");
-        })(),
-        targetDescription: item.trgetNm ? String(item.trgetNm) : undefined,
-        benefitDescription: item.sprtCn ? String(item.sprtCn) : undefined,
-        url: item.pblancUrl ? String(item.pblancUrl) : undefined,
-        fetchedAt: now,
-      }));
+      .filter((it) => it && it.biz_pbanc_nm)
+      .map((it) => {
+        const start = normKstartupDate(it.pbanc_rcpt_bgng_dt);
+        const end = normKstartupDate(it.pbanc_rcpt_end_dt);
+        const rcrt = String(it.Rcrt_prgs_yn ?? it.rcrt_prgs_yn ?? "").toUpperCase();
+        const isOpen = rcrt === "Y" || (end ? end.replace(/-/g, "") >= today : true);
+        return {
+          id: `kstartup-${it.pbanc_sn ?? it.biz_pbanc_nm}`,
+          source: "kstartup" as const,
+          programName: String(it.biz_pbanc_nm ?? ""),
+          organizerName: String(it.pbanc_ntrp_nm || it.sprv_inst || "창업진흥원"),
+          supportCategory: String(it.supt_biz_clsfc ?? "창업"),
+          applicationStart: start,
+          applicationEnd: end,
+          isOpen,
+          targetDescription: String(it.aply_trgt_ctnt || it.aply_trgt || "") || undefined,
+          benefitDescription: String(it.pbanc_ctnt || "") || undefined,
+          applicationMethod: it.aply_mthd_onli_rcpt_istc ? String(it.aply_mthd_onli_rcpt_istc) : undefined,
+          contactInfo: it.prch_cnpl_no ? String(it.prch_cnpl_no) : undefined,
+          url: String(it.detl_pg_url || it.biz_gdnc_url || "") || undefined,
+          region: it.supt_regin ? String(it.supt_regin) : undefined,
+          targetAge: it.biz_trgt_age ? String(it.biz_trgt_age) : undefined,
+          businessPeriod: it.biz_enyy ? String(it.biz_enyy) : undefined,
+          preferentialNote: it.prfn_matr ? String(it.prfn_matr) : undefined,
+          fetchedAt: now,
+        };
+      });
 
     return {
       data,
       fetchedAt: now,
       source: { name: "K-Startup 창업지원사업", url: "https://www.k-startup.go.kr", confidence: "high" },
-      totalCount: Number(json?.response?.body?.totalCount ?? data.length),
+      totalCount: Number(json?.totalCount ?? json?.matchCount ?? data.length),
     };
   } finally {
     clearTimeout(timeoutId);

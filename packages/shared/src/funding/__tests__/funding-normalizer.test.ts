@@ -1,15 +1,19 @@
 import { describe, it, expect } from "vitest";
 import {
-  extractMaxAge, extractRegions, extractIndustries, deriveStatus,
+  extractMaxAge, extractRegions, extractIndustries, deriveStatus, extractBusinessYearRange,
   normalizeLiveProgram, normalizeName, mergeFundingPrograms,
 } from "../funding-normalizer";
 import type { GovernmentSupportProgram } from "../../adapters/support-programs";
 import type { StartupProgram } from "../../startup-programs";
 
 describe("funding-normalizer — 텍스트 파싱", () => {
-  it("연령: 만 39세/청년/39세 이하 추출", () => {
+  it("연령: 상한·범위·하한 정확 추출", () => {
     expect(extractMaxAge("만 39세 이하 청년")).toBe(39);
     expect(extractMaxAge("만34세까지")).toBe(34);
+    // K-Startup biz_trgt_age 범위 — 상한 39 (하한 20 아님)
+    expect(extractMaxAge("만 20세 이상 ~ 만 39세 이하")).toBe(39);
+    // 하한만 → 연령 제한 없음
+    expect(extractMaxAge("만 40세 이상")).toBeUndefined();
     expect(extractMaxAge("청년 창업자 대상")).toBe(39);
     expect(extractMaxAge("연령 제한 없음")).toBeUndefined();
   });
@@ -47,6 +51,26 @@ describe("funding-normalizer — 정규화 + 병합", () => {
     expect(p.applicationStatus).toBe("open");
     expect(p.applicationDeadline).toBe("2026-07-31");
     expect(p.name.ko).toBe("서울 청년 창업 지원사업");
+  });
+  it("창업기간 추출(biz_enyy)", () => {
+    expect(extractBusinessYearRange("7년미만,3년미만,예비창업자")).toEqual([0, 7]);
+    expect(extractBusinessYearRange("예비창업자")).toEqual([0, 0]);
+    expect(extractBusinessYearRange(undefined)).toBeUndefined();
+  });
+  it("K-Startup 구조화 필드 우선(supt_regin·biz_trgt_age·biz_enyy·prfn_matr)", () => {
+    const ks: GovernmentSupportProgram = {
+      id: "kstartup-1", source: "kstartup",
+      programName: "초기창업패키지", organizerName: "창업진흥원", supportCategory: "사업화",
+      applicationStart: "2026-06-01", applicationEnd: "2026-06-30", isOpen: true,
+      region: "서울특별시", targetAge: "만 20세 이상 ~ 만 39세 이하",
+      businessPeriod: "3년미만,예비창업자", preferentialNote: "여성기업·청년 우대",
+      benefitDescription: "사업화 자금 최대 1억", fetchedAt: "2026-06-09T00:00:00Z",
+    };
+    const p = normalizeLiveProgram(ks, "2026-06-09");
+    expect(p.maxAge).toBe(39);            // biz_trgt_age 상한
+    expect(p.regions).toEqual(["서울"]);   // supt_regin → 서울
+    expect(p.businessYearRange).toEqual([0, 3]); // biz_enyy
+    expect(p.benefit.ko).toContain("우대: 여성기업·청년 우대"); // prfn_matr 노출
   });
   it("이름 정규화 — 연도·차수·괄호 제거", () => {
     expect(normalizeName("2026년 예비창업패키지(일반형) 제2차")).toBe(normalizeName("예비창업패키지"));
