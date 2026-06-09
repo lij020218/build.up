@@ -188,10 +188,11 @@ export function FranchiseDetailModal({ brand: fb, language, onClose }: Props) {
         {/* Key metrics */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "24px" }}>
           {[
-            { l: ko ? "창업비용" : "Startup", v: formatFranchiseCost(fb.startupCostWon), sub: ko ? "총액 기준" : "Total" },
-            { l: ko ? "연매출" : "Revenue", v: formatFranchiseCost(fb.avgAnnualRevenueWon), sub: ko ? "점당 평균" : "Per store" },
-            { l: ko ? "폐점률" : "Closure", v: `${fb.closureRate}%`, sub: ko ? "최근 1년" : "Last 1yr" },
-            { l: ko ? "매장수" : "Stores", v: fb.storeCount.toLocaleString(), sub: ko ? "전국" : "Nation" },
+            // 0 = 데이터 미확보 → "—" (가짜 0원·0개 표시 금지. iOS 와 동일하게 graceful.)
+            { l: ko ? "창업비용" : "Startup", v: fb.startupCostWon > 0 ? formatFranchiseCost(fb.startupCostWon) : "—", sub: ko ? "총액 기준" : "Total" },
+            { l: ko ? "연매출" : "Revenue", v: fb.avgAnnualRevenueWon > 0 ? formatFranchiseCost(fb.avgAnnualRevenueWon) : "—", sub: ko ? "점당 평균" : "Per store" },
+            { l: ko ? "폐점률" : "Closure", v: fb.closureRate > 0 ? `${fb.closureRate}%` : "—", sub: ko ? "최근 1년" : "Last 1yr" },
+            { l: ko ? "매장수" : "Stores", v: fb.storeCount > 0 ? fb.storeCount.toLocaleString() : "—", sub: ko ? "전국" : "Nation" },
           ].map(m => (
             <div key={m.l} style={{
               padding: "14px 12px", borderRadius: "14px",
