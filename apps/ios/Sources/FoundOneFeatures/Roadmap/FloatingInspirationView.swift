@@ -15,6 +15,9 @@
 import SwiftUI
 import FoundOneDesignSystem
 import FoundOneCore
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - hex("#0064ff") → Color (문자열 파서)
 
@@ -164,22 +167,21 @@ private struct CardBody: View {
         let fg = brand.textColor.map { brandColor($0) } ?? Color.white
         return ZStack {
             RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tileColor)
-            if let slug = brand.iconSlug,
-               let url = URL(string: "https://cdn.simpleicons.org/\(slug)/\(brand.iconColor ?? "ffffff")") {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable().scaledToFit().frame(width: 20, height: 20)
-                    default:
-                        Text(brand.glyph).font(.system(size: 15, weight: .heavy)).foregroundStyle(fg)
-                    }
-                }
+            if let img = brandLogoImage(brand.iconSlug) {
+                img.resizable().scaledToFit().frame(width: 21, height: 21)
             } else {
                 Text(brand.glyph).font(.system(size: 15, weight: .heavy)).foregroundStyle(fg)
             }
         }
         .frame(width: 36, height: 36)
     }
+}
+
+/// 번들된 실제 로고 PNG(Simple Icons CC0 → 빌드타임 래스터화). 없으면 nil → 글리프 fallback.
+private func brandLogoImage(_ slug: String?) -> Image? {
+    guard let url = InspirationBrandRegistry.logoURL(forSlug: slug),
+          let ui = UIImage(contentsOfFile: url.path) else { return nil }
+    return Image(uiImage: ui)
 }
 
 // MARK: - 성공 스토리 시트 (웹 BrandStoryModal iOS 대응)
@@ -259,14 +261,8 @@ private struct BrandStorySheet: View {
         VStack(alignment: .center, spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous).fill(brandColor(brand.color))
-                if let slug = brand.iconSlug,
-                   let url = URL(string: "https://cdn.simpleicons.org/\(slug)/\(brand.iconColor ?? "ffffff")") {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img): img.resizable().scaledToFit().frame(width: 40, height: 40)
-                        default: glyphText
-                        }
-                    }
+                if let img = brandLogoImage(brand.iconSlug) {
+                    img.resizable().scaledToFit().frame(width: 42, height: 42)
                 } else { glyphText }
             }
             .frame(width: 72, height: 72)

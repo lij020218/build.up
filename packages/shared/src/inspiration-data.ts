@@ -1,9 +1,8 @@
 // ⚠️ AUTO-GENERATED — 손으로 편집 금지.
-//  소스(SSOT): apps/web/app/lib/components/FloatingInspiration.tsx 의 BRANDS 배열.
-//  재생성: node /tmp/extract_brands.cjs (스크립트는 scripts/extract-inspiration-brands.cjs 로도 보관).
+//  SSOT: packages/shared/src/inspiration-brands.json. 편집 후 `node scripts/gen-inspiration-data.cjs`.
 //
 //  창업 성공 스타트업 카드 데이터 — 웹 FloatingInspiration + iOS FloatingInspirationView 공유.
-//  iOS 는 동일 데이터를 packages/shared/src/inspiration-brands.json(심볼릭 링크)로 번들.
+//  iOS 는 동일 JSON(심볼릭 링크) + 실제 로고 PNG(scripts/gen-inspiration-logos.cjs)를 번들.
 
 export type InspirationBrand = {
   name: string;
@@ -28,8 +27,6 @@ export const inspirationBrands: InspirationBrand[] = [
     "name": "토스",
     "tagline": "핀테크",
     "color": "#0064ff",
-    "iconSlug": "toss",
-    "iconColor": "ffffff",
     "glyph": "토",
     "founded": "2013 출시 · 비바리퍼블리카 (2011년 설립)",
     "origin": "이승건 — 서울대 치과 출신, 공중보건의 시절 사업 구상. 비바리퍼블리카 설립 후 '울라불라' '다보트' 등 8번 실패. 9번째 시도가 토스 (2013년 12월 실험 페이지).",
@@ -60,8 +57,6 @@ export const inspirationBrands: InspirationBrand[] = [
     "name": "쿠팡",
     "tagline": "이커머스",
     "color": "#cc0000",
-    "iconSlug": "coupang",
-    "iconColor": "ffffff",
     "glyph": "쿠",
     "founded": "2010, 서울 (창업자 김범석)",
     "origin": "김범석 — 7살 때 미국 이주, 하버드 → BCG → 하버드 비즈니스 스쿨 자퇴. 2010년 8월 그루폰 따라한 소셜커머스로 출발.",

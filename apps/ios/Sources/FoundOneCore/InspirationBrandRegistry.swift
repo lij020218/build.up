@@ -35,6 +35,13 @@ public enum InspirationBrandRegistry {
     /// 전체 브랜드 (웹과 동일 순서).
     public static let all: [InspirationBrand] = loadFromBundle()
 
+    /// 번들된 실제 로고 PNG 파일 URL (Simple Icons, CC0 → 빌드타임 래스터화).
+    ///  scripts/gen-inspiration-logos.cjs 가 ilogo-{slug}.png 로 생성. 없으면 nil(글리프 fallback).
+    public static func logoURL(forSlug slug: String?) -> URL? {
+        guard let slug, !slug.isEmpty else { return nil }
+        return Bundle.module.url(forResource: "ilogo-\(slug)", withExtension: "png")
+    }
+
     // MARK: - Bundle loader
 
     private static func loadFromBundle() -> [InspirationBrand] {
