@@ -163,9 +163,20 @@ export function MarketingSurface() {
 
     const existing = TREND_INFLIGHT.get(inflightKey);
     const promise = existing ?? (async () => {
+      // ── 인증 헤더 — Supabase Bearer (서버 requireApiUser 통과용. coach fetch 와 동일 패턴) ──
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        const e = new Error(ko ? "로그인 세션이 만료됐어요." : "Session expired.") as Error & { status?: number };
+        e.status = 401;
+        throw e;
+      }
       const res = await fetch("/api/ai/marketing/trends", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           subIndustryId,
           businessType: categoryId,
