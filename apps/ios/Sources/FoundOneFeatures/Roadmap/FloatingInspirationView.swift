@@ -45,11 +45,11 @@ public struct FloatingInspirationView: View {
             let bottom = Array(brands.suffix(from: half))
             ZStack {
                 MarqueeRow(brands: top, toLeft: true, reduceMotion: reduceMotion) { selected = $0 }
-                    .frame(width: geo.size.width, height: 60, alignment: .leading)
+                    .frame(width: geo.size.width, height: 110, alignment: .leading)
                     .position(x: geo.size.width / 2, y: geo.size.height * 0.12)
 
                 MarqueeRow(brands: bottom, toLeft: false, reduceMotion: reduceMotion) { selected = $0 }
-                    .frame(width: geo.size.width, height: 60, alignment: .leading)
+                    .frame(width: geo.size.width, height: 110, alignment: .leading)
                     .position(x: geo.size.width / 2, y: geo.size.height * 0.87)
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -77,14 +77,23 @@ private struct MarqueeRow: View {
     @State private var period: CGFloat = 0   // 한 세트 폭(+간격) — 이만큼 흐르면 seamless 반복
     @State private var offset: CGFloat = 0
 
-    private let spacing: CGFloat = 12
+    private let spacing: CGFloat = 14
     private let speed: CGFloat = 26          // pt/sec (천천히)
+
+    // 흩뿌림(jitter) — 일직선 "기차" 느낌 제거. offset/rotation/scale 은 레이아웃에 영향 없어
+    //  HStack 폭이 유지 → seamless 루프 보존. 두 세트가 같은 인덱스로 동일 적용돼 이음새 없음.
+    private static let jitterY: [CGFloat] = [-16, 11, -6, 19, -12, 4, -20, 14, -3, 8]
+    private static let jitterR: [Double]  = [-2.5, 2, -1.5, 3, -2, 1.5, -3, 2, -1, 2.5]
+    private static let jitterS: [CGFloat] = [0.96, 1.05, 0.93, 1.0, 1.04, 0.95, 1.0, 0.98, 1.03, 0.94]
 
     private func strip() -> some View {
         HStack(spacing: spacing) {
-            ForEach(brands) { b in
+            ForEach(Array(brands.enumerated()), id: \.element.id) { idx, b in
                 Button { onTap(b) } label: { CardBody(brand: b) }
                     .buttonStyle(.plain)
+                    .scaleEffect(Self.jitterS[idx % Self.jitterS.count])
+                    .rotationEffect(.degrees(Self.jitterR[idx % Self.jitterR.count]))
+                    .offset(y: Self.jitterY[idx % Self.jitterY.count])
             }
         }
     }
