@@ -93,11 +93,32 @@ export function deriveStatus(start?: string, end?: string, todayISO?: string): A
   return "open";
 }
 
-/** 분야명 → ProgramCategory (대부분 정부/공공) */
-function deriveCategory(supportCategory: string, organizer: string): ProgramCategory {
-  const t = `${supportCategory} ${organizer}`;
-  if (/대회|경진|공모/.test(t)) return "competition";
-  if (/지자체|시청|도청|센터|지역/.test(t)) return "local";
+/** 대기업·계열사 키워드 (기관명 기반 corporate 판별) */
+const CORP_RE = /삼성|현대차?|기아|에스케이|sk\b|엘지|lg\b|네이버|naver|카카오|kakao|kt&g|kt\b|신한|국민은행|kb\b|우리은행|하나은행|롯데|포스코|posco|한화|cj\b|gs\b|두산|효성|아모레|토스|toss|배달의민족|우아한형제|당근|쿠팡|넥슨|엔씨|크래프톤|컴투스|넷마블|라인|line/i;
+
+/**
+ * 프로그램 분류 — 큐레이션·라이브 공통 규칙.
+ *   우선순위: 대회(공모전류) > 대기업 > 지자체 > 민간·재단·대학 > 정부·공공.
+ *   organizerType = K-Startup sprv_inst("공공기관"·"지자체"·"민간"·"교육기관").
+ */
+/** 17개 시·도 + 지역 산하기관 키워드 → 지자체(local) 신호 */
+const LOCAL_RE = /서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주|시청|도청|구청|군청|창조경제혁신센터|테크노파크|경제진흥원|산업진흥원|콘텐츠진흥원|관광공사|지역신용보증/;
+
+export function classifyProgramCategory(
+  programName: string,
+  organizer: string,
+  organizerType?: string,
+): ProgramCategory {
+  // 1. 대회/공모전 (프로그램 성격이 우선)
+  if (/경진대회|공모전|해커톤|챌린지|오디션|콘테스트|경연|아이디어\s*공모/.test(programName)) return "competition";
+  // 2. 대기업 (기관명)
+  if (CORP_RE.test(organizer)) return "corporate";
+  // 3. 지자체 — sprv_inst=지자체 OR 지역명·지역 산하기관(중앙 공공기관보다 우선해 직관적 분류)
+  if (organizerType === "지자체" || LOCAL_RE.test(organizer)) return "local";
+  // 4. 민간·재단·대학 (sprv_inst=민간/교육기관 또는 기관명)
+  if (organizerType === "민간" || organizerType === "교육기관") return "private";
+  if (/재단|벤처스|파트너스|액셀러|인큐베이|대학교?|투자조합|캐피탈|벤처투자/.test(organizer)) return "private";
+  // 5. 정부·공공기관 (중앙) 또는 기본
   return "government";
 }
 
@@ -142,7 +163,7 @@ export function normalizeLiveProgram(
 
   return {
     id: gov.id,
-    category: deriveCategory(gov.supportCategory, gov.organizerName),
+    category: classifyProgramCategory(gov.programName, gov.organizerName, gov.organizerType),
     name: { ko: gov.programName, en: gov.programName },
     organizer: { ko: gov.organizerName || "정부·공공기관", en: gov.organizerName || "Government" },
     target: { ko: gov.targetDescription || gov.targetAge || "공고 상세 참조", en: gov.targetDescription || "See announcement" },

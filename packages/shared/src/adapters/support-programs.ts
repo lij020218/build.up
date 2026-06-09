@@ -39,6 +39,8 @@ export type GovernmentSupportProgram = {
   businessPeriod?: string;
   /** 우대 사항 (prfn_matr) — "유리한 점" */
   preferentialNote?: string;
+  /** 주관기관 유형 (sprv_inst) — "공공기관"·"지자체"·"민간"·"교육기관" → 분류에 사용 */
+  organizerType?: string;
   fetchedAt: string;
 };
 
@@ -108,7 +110,8 @@ export async function fetchKStartupPrograms(
           id: `kstartup-${it.pbanc_sn ?? it.biz_pbanc_nm}`,
           source: "kstartup" as const,
           programName: String(it.biz_pbanc_nm ?? ""),
-          organizerName: String(it.pbanc_ntrp_nm || it.sprv_inst || "창업진흥원"),
+          organizerName: String(it.pbanc_ntrp_nm || "창업지원기관"),
+          organizerType: it.sprv_inst ? String(it.sprv_inst) : undefined,
           supportCategory: String(it.supt_biz_clsfc ?? "창업"),
           applicationStart: start,
           applicationEnd: end,

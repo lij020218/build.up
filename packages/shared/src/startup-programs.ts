@@ -337,7 +337,7 @@ export const startupPrograms: StartupProgram[] = [
   },
   {
     id: "samsung-clab",
-    category: "private",
+    category: "corporate",
     name: { ko: "삼성 C-Lab Outside", en: "Samsung C-Lab Outside" },
     organizer: { ko: "삼성전자 / 삼성금융네트웍스", en: "Samsung Electronics / Samsung Financial" },
     target: { ko: "혁신 기술 보유 스타트업 (AI·핀테크·업무효율화)", en: "Tech startups (AI, FinTech, efficiency)" },
@@ -367,7 +367,7 @@ export const startupPrograms: StartupProgram[] = [
   },
   {
     id: "naver-d2sf",
-    category: "private",
+    category: "corporate",
     name: { ko: "네이버 D2SF", en: "NAVER D2SF" },
     organizer: { ko: "네이버", en: "NAVER" },
     target: { ko: "기술 기반 초기 스타트업 (AI·로보틱스·데이터)", en: "Tech-based early startups (AI, robotics, data)" },
@@ -383,7 +383,7 @@ export const startupPrograms: StartupProgram[] = [
   },
   {
     id: "hyundai-cmk",
-    category: "private",
+    category: "corporate",
     name: { ko: "CMK 임팩트프러너 (구 H-온드림)", en: "CMK Impactpreneur (fmr H-OnDream)" },
     organizer: { ko: "현대차 정몽구 재단", en: "Hyundai CMK Foundation" },
     target: { ko: "사회문제 해결 임팩트 스타트업", en: "Social impact startups" },
@@ -397,7 +397,7 @@ export const startupPrograms: StartupProgram[] = [
   },
   {
     id: "sk-lookie",
-    category: "private",
+    category: "corporate",
     name: { ko: "SK LOOKIE", en: "SK LOOKIE" },
     organizer: { ko: "SK 행복나눔재단", en: "SK Happiness Foundation" },
     target: { ko: "대학생 소셜 이노베이터 (비즈니스 모델로 사회문제 해결)", en: "University social innovators (solving social problems via biz models)" },

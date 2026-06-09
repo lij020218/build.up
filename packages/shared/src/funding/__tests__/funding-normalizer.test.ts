@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   extractMaxAge, extractRegions, extractIndustries, deriveStatus, extractBusinessYearRange,
-  normalizeLiveProgram, normalizeName, mergeFundingPrograms,
+  normalizeLiveProgram, normalizeName, mergeFundingPrograms, classifyProgramCategory,
 } from "../funding-normalizer";
 import type { GovernmentSupportProgram } from "../../adapters/support-programs";
 import type { StartupProgram } from "../../startup-programs";
@@ -28,6 +28,21 @@ describe("funding-normalizer — 텍스트 파싱", () => {
     expect(extractIndustries("외식·음식점 대상")).toEqual(["food"]);
     expect(extractIndustries("AI·반도체 기술창업")).toEqual(["startup-tech"]);
     expect(extractIndustries("일반 중소기업")).toBeUndefined();
+  });
+  it("분류: 대회>대기업>지자체>민간>정부 우선순위", () => {
+    // 대회(공모전류) 최우선 — 대기업 주최라도 공모전이면 대회
+    expect(classifyProgramCategory("KT&G 친환경 화장품 창업 공모전", "KT&G", "민간")).toBe("competition");
+    // 대기업
+    expect(classifyProgramCategory("C-Lab Inside", "삼성전자", "민간")).toBe("corporate");
+    expect(classifyProgramCategory("D2SF 투자", "네이버", "민간")).toBe("corporate");
+    // 지자체 — sprv_inst 또는 지역 산하기관
+    expect(classifyProgramCategory("청년창업 지원", "서울특별시 영등포구", "지자체")).toBe("local");
+    expect(classifyProgramCategory("스타트업 모집", "경기도경제과학진흥원", "공공기관")).toBe("local");
+    // 민간·재단·대학
+    expect(classifyProgramCategory("창업 지원", "중소상공인희망재단", "민간")).toBe("private");
+    expect(classifyProgramCategory("AI 창업", "KAIST 창업원", "교육기관")).toBe("private");
+    // 정부·공공(중앙)
+    expect(classifyProgramCategory("예비창업패키지", "창업진흥원", "공공기관")).toBe("government");
   });
   it("상태: 시작/종료일 기준 open/upcoming/closed", () => {
     expect(deriveStatus("2026-01-01", "2026-12-31", "2026-06-09")).toBe("open");
