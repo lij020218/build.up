@@ -778,20 +778,21 @@ function ProgramCard({
         <span>{program.target[lang]}</span>
       </div>
 
-      {/* 차원 배지 — 지역·업종·연령 (데이터 있을 때만 노출 = 가짜값 금지) */}
-      {(!!program.regions?.length || !!program.industries?.length || program.maxAge != null) && (
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-          {program.regions?.slice(0, 3).map((r) => (
-            <span key={r} style={dimBadgeStyle}>📍 {r}</span>
-          ))}
-          {program.industries?.slice(0, 2).map((i) => (
-            <span key={i} style={dimBadgeStyle}>{INDUSTRY_LABEL_KO[i] ?? i}</span>
-          ))}
-          {program.maxAge != null && (
-            <span style={dimBadgeStyle}>{ko ? `만 ${program.maxAge}세 이하` : `≤${program.maxAge}y`}</span>
-          )}
-        </div>
-      )}
+      {/* 차원 배지 — 지역·업종·연령. 제한 없으면 "전국·전 업종·연령 무관"으로 *항상* 명시(누락처럼 안 보이게). */}
+      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+        {/* 지역 */}
+        {program.regions && program.regions.length > 0
+          ? program.regions.slice(0, 3).map((r) => <span key={r} style={dimBadgeStyle}>📍 {r}</span>)
+          : <span style={dimBadgeMutedStyle}>📍 {ko ? "전국" : "Nationwide"}</span>}
+        {/* 업종 */}
+        {program.industries && program.industries.length > 0
+          ? program.industries.slice(0, 2).map((i) => <span key={i} style={dimBadgeStyle}>{INDUSTRY_LABEL_KO[i] ?? i}</span>)
+          : <span style={dimBadgeMutedStyle}>{ko ? "전 업종" : "All industries"}</span>}
+        {/* 연령 */}
+        {program.maxAge != null
+          ? <span style={dimBadgeStyle}>{ko ? `만 ${program.maxAge}세 이하` : `≤${program.maxAge}y`}</span>
+          : <span style={dimBadgeMutedStyle}>{ko ? "연령 무관" : "Any age"}</span>}
+      </div>
 
       {/* Benefit */}
       <div style={benefitBoxStyle}>
@@ -984,6 +985,18 @@ const dimBadgeStyle: React.CSSProperties = {
   borderRadius: 999,
   background: MIDNIGHT_SOFT,
   border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
+  whiteSpace: "nowrap",
+};
+
+// 제한 없음(전국·전업종·연령무관) — 흐린 톤으로 "열려있음" 표현(누락이 아님)
+const dimBadgeMutedStyle: React.CSSProperties = {
+  fontSize: 10.5,
+  fontWeight: 500,
+  color: TEXT_SUBTLE,
+  padding: "2px 7px",
+  borderRadius: 999,
+  background: "rgba(15,23,42,0.03)",
+  border: "1px solid rgba(15,23,42,0.06)",
   whiteSpace: "nowrap",
 };
 
