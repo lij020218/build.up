@@ -4214,12 +4214,12 @@
     "startupCostWon": 14900,
     "franchiseFee": 1650,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 84000,
+    "avgAnnualRevenueWon": 50981,
     "storeCount": 147,
-    "closureRate": 3,
+    "closureRate": 6.4,
     "scores": {
       "profitability": 82,
-      "stability": 80,
+      "stability": 72,
       "accessibility": 50,
       "brandPower": 75,
       "support": 85
@@ -6449,11 +6449,11 @@
       "ko": "더본코리아 파스타 전문, 폐점률 4.8% — 더본 25개 브랜드 중 안정권",
       "en": "The Born pasta, 4.8% closure — stable in The Born 25 brands"
     },
-    "startupCostWon": 12418,
-    "franchiseFee": 550,
+    "startupCostWon": 11745,
+    "franchiseFee": 330,
     "monthlyRoyalty": 33,
-    "avgAnnualRevenueWon": 70392,
-    "storeCount": 120,
+    "avgAnnualRevenueWon": 60026,
+    "storeCount": 126,
     "closureRate": 4.8,
     "scores": {
       "profitability": 72,
@@ -6486,7 +6486,7 @@
           "ko": "가맹비",
           "en": "Franchise fee"
         },
-        "amountWon": 550
+        "amountWon": 330
       },
       {
         "label": {
@@ -6507,14 +6507,14 @@
           "ko": "기타설비",
           "en": "Equipment"
         },
-        "amountWon": 5210
+        "amountWon": 5430
       },
       {
         "label": {
           "ko": "인테리어",
           "en": "Interior"
         },
-        "amountWon": 5808
+        "amountWon": 5135
       }
     ],
     "description": {
@@ -9737,136 +9737,6 @@
     ]
   },
   {
-    "id": "paul-bassett",
-    "subIndustryIds": [
-      "specialty-coffee"
-    ],
-    "categoryId": "cafe-dessert",
-    "name": {
-      "ko": "폴바셋",
-      "en": "Paul Bassett"
-    },
-    "tagline": {
-      "ko": "매일유업 운영 — 110+개 매장 프리미엄 스페셜티 커피",
-      "en": "Operated by Maeil Dairies — 110+ stores premium specialty coffee"
-    },
-    "startupCostWon": 25000,
-    "franchiseFee": 2000,
-    "monthlyRoyalty": 44,
-    "avgAnnualRevenueWon": 60000,
-    "storeCount": 110,
-    "closureRate": 2,
-    "scores": {
-      "profitability": 75,
-      "stability": 82,
-      "accessibility": 30,
-      "brandPower": 88,
-      "support": 80
-    },
-    "roadmapNotes": {
-      "ko": [
-        "매일유업 운영 — 본사 재무 매우 안정",
-        "2008년 강남 1호점 — 프리미엄 스페셜티 카테고리",
-        "스탠바이미·코스트코 등 B2B 협업 강함",
-        "직영 비중 높음 — 가맹 진입장벽 매우 높음 (2.5억+)"
-      ],
-      "en": [
-        "Operated by Maeil Dairies — strong HQ balance sheet",
-        "Founded 2008 in Gangnam — premium specialty coffee category",
-        "Strong B2B partnerships (StandbyMe, Costco)",
-        "Mostly direct stores — very high franchise barrier (KRW 250M+)"
-      ]
-    },
-    "franchiseUrl": "https://www.baristapaulbassett.co.kr/",
-    "costVerified": false,
-    "basePyeong": 25,
-    "sources": [
-      {
-        "label": "폴바셋 공식",
-        "url": "https://www.baristapaulbassett.co.kr/",
-        "tier": "primary"
-      },
-      {
-        "label": "나무위키 — 폴 바셋",
-        "url": "https://namu.wiki/w/%ED%8F%B4%20%EB%B0%94%EC%85%8B(%EC%BB%A4%ED%94%BC%20%EC%B2%B4%EC%9D%B8%EC%A0%90)",
-        "tier": "aggregator"
-      }
-    ],
-    "confidence": "low",
-    "dataYear": "2024",
-    "specialtyIds": [
-      "coffee-roastery",
-      "coffee-cafe-roastery"
-    ]
-  },
-  {
-    "id": "krispy-kreme",
-    "subIndustryIds": [
-      "dessert-cafe"
-    ],
-    "categoryId": "cafe-dessert",
-    "name": {
-      "ko": "크리스피크림 도넛",
-      "en": "Krispy Kreme Korea"
-    },
-    "tagline": {
-      "ko": "롯데GRS 운영 — 직영 위주, 110여개 매장 글로벌 도넛 브랜드",
-      "en": "Operated by Lotte GRS — mostly direct, ~110 stores global donut"
-    },
-    "startupCostWon": 30000,
-    "franchiseFee": 2500,
-    "monthlyRoyalty": 55,
-    "avgAnnualRevenueWon": 95000,
-    "storeCount": 110,
-    "closureRate": 2,
-    "scores": {
-      "profitability": 78,
-      "stability": 82,
-      "accessibility": 18,
-      "brandPower": 88,
-      "support": 85
-    },
-    "roadmapNotes": {
-      "ko": [
-        "롯데GRS 운영 — 본사 자본·물류 매우 안정",
-        "전국 약 110개 매장 — 직영 비중 압도적 높음",
-        "글로벌 도넛 브랜드 인지도 + Hot Light 신메뉴 운영",
-        "⚠ 가맹 사실상 제한적 — 직영 중심 전략"
-      ],
-      "en": [
-        "Operated by Lotte GRS — very strong HQ capital & logistics",
-        "~110 stores nationwide — heavily direct-run",
-        "Global donut brand recognition + Hot Light fresh-baked offer",
-        "⚠ Franchise opportunities effectively limited — direct-focused"
-      ]
-    },
-    "franchiseUrl": "https://www.lotteeatz.com/brand/kkd",
-    "costVerified": false,
-    "basePyeong": 30,
-    "sources": [
-      {
-        "label": "크리스피크림 (LOTTE EATZ)",
-        "url": "https://www.lotteeatz.com/brand/kkd",
-        "tier": "primary"
-      },
-      {
-        "label": "롯데GRS — 크리스피크림 페이지",
-        "url": "https://www.lottegrs.com/kor/business/kkd.jsp",
-        "tier": "primary"
-      },
-      {
-        "label": "나무위키 — 크리스피크림",
-        "url": "https://namu.wiki/w/%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%94%BC%20%ED%81%AC%EB%A6%BC%20%EB%8F%84%EB%84%9B/%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD",
-        "tier": "aggregator"
-      }
-    ],
-    "confidence": "low",
-    "dataYear": "2024",
-    "specialtyIds": [
-      "dessert-donut"
-    ]
-  },
-  {
     "id": "dessert39",
     "subIndustryIds": [
       "dessert-cafe"
@@ -13085,21 +12955,22 @@
       "ko": "정상JLS — 직영 56개+가맹 78개=총 134개 (수도권 중심), 코스닥 상장",
       "en": "JLS — 56 direct + 78 franchise = 134 stores (Seoul metro), KOSDAQ-listed"
     },
-    "startupCostWon": 15000,
-    "franchiseFee": 1500,
+    "startupCostWon": 67700,
+    "franchiseFee": 24585,
     "monthlyRoyalty": 50,
-    "avgAnnualRevenueWon": 48000,
+    "avgAnnualRevenueWon": 121766,
     "storeCount": 134,
-    "closureRate": 5,
+    "closureRate": 2.7,
     "scores": {
       "profitability": 75,
       "stability": 72,
-      "accessibility": 45,
+      "accessibility": 30,
       "brandPower": 85,
       "support": 82
     },
     "roadmapNotes": {
       "ko": [
+        "※ FTC 등록명 JLS정상어학원 — 대형 어학원 모델(창업비 약 6.8억)",
         "운영사 ㈜정상제이엘에스 (코스닥 상장 007810)",
         "직영 56개 + 가맹 78개 = 총 134개 (수도권 중심)",
         "매출 구성: 학원 64% + 교재 18.5% + 온라인 14.1% + 기타 3.4%",
@@ -13214,146 +13085,6 @@
     ]
   },
   {
-    "id": "milal-coding",
-    "subIndustryIds": [
-      "kids-academy"
-    ],
-    "categoryId": "education",
-    "name": {
-      "ko": "마이크로비트 코딩학원",
-      "en": "Micro:bit Coding Academy"
-    },
-    "tagline": {
-      "ko": "⚠ 본사 정보 매우 부족 + 코딩학원 시장 자체는 2019 1,500억→2030 1조 5,000억 (10배 성장 전망)",
-      "en": "WARNING: Very limited HQ info + coding-academy market 2019 KRW 150B → 2030 1.5T (10x projection)"
-    },
-    "startupCostWon": 5000,
-    "franchiseFee": 500,
-    "monthlyRoyalty": 30,
-    "avgAnnualRevenueWon": 12000,
-    "storeCount": 120,
-    "closureRate": 6,
-    "scores": {
-      "profitability": 60,
-      "stability": 50,
-      "accessibility": 75,
-      "brandPower": 45,
-      "support": 60
-    },
-    "roadmapNotes": {
-      "ko": [
-        "⚠ '마이크로비트 코딩학원' 본사·운영사 정보 매우 부족 (직접 검증 필수)",
-        "2025년부터 초중등 코딩 필수과목 — 시장 폭발적 성장 전망",
-        "코딩교육 시장 2019 1,500억 → 2030 1조 5,000억 (10배)",
-        "20평 소규모 + 교사 1~2인 운영 가능",
-        "신생 카테고리 — 안정성 미검증"
-      ],
-      "en": [
-        "WARNING: Very limited Micro:bit Coding Academy HQ/operator info (direct verification required)",
-        "Coding mandatory in elementary/middle from 2025 — explosive market growth forecast",
-        "Coding education market: KRW 150B (2019) → 1.5T (2030) — 10x",
-        "20-pyeong small store + 1-2 teacher operation viable",
-        "New category — stability unproven"
-      ]
-    },
-    "franchiseUrl": "https://franchise.ftc.go.kr/",
-    "costVerified": false,
-    "description": {
-      "ko": [
-        "⚠ '마이크로비트 코딩학원' 의 본사·운영사·매출·재무 등 공개 정보가 매우 제한적 — 본 데이터는 시장 카테고리 비교 참고용입니다.",
-        "한국 코딩 학원 카테고리는 2025년 초중등 코딩 필수과목 도입으로 폭발적 성장 전망 — 시장 규모 2019년 1,500억 → 2030년 1조 5,000억 원(10배) 예상.",
-        "20평 소규모 매장 + 교사 1~2인 운영 + 본사 교육 과정 제공으로 진입 모델 자체는 단순합니다.",
-        "⚠ 신생 카테고리이므로 폐점률·점주 만족도·본사 안정성 등 핵심 데이터 부재 — 사장님이 공정위 정보공개서·본사 직접 면담·기존 점주 인터뷰 필수.",
-        "5,000만 원대 자본으로 코딩 트렌드 + SW 교육 의무화 수혜를 노리는 사장님에게 적합 — 단 '마이크로비트 코딩학원' 외에도 코딩맘·코딩베리·이젠아카데미 등 경쟁 브랜드 비교 후 결정 권장."
-      ],
-      "en": [
-        "WARNING: Very limited public HQ/operator/revenue/financial info on 'Micro:bit Coding Academy' — this data is for category-level reference only.",
-        "Korean coding academy category projects explosive growth from 2025 mandatory coding curriculum — market KRW 150B (2019) → 1.5T (2030), 10x.",
-        "20-pyeong small store + 1-2 teacher operation + HQ curriculum — entry model itself is simple.",
-        "WARNING: As a new category, exit rate/owner satisfaction/HQ stability key data is absent — owner must verify FTC disclosure + HQ direct interview + existing owner interviews.",
-        "Suitable for owners with KRW 50M+ wanting to ride coding trend + mandatory SW education benefit — but compare with Coding Mom, Coding Berry, eZen Academy etc. before committing."
-      ]
-    },
-    "pros": {
-      "ko": [
-        "⭐ 2025년 초중등 코딩 필수과목 — 카테고리 자체가 폭발적 성장 전망",
-        "코딩 시장 2019 1,500억 → 2030 1조 5,000억 (10배 예상)",
-        "창업비용 5,000만 원 — 학원 카테고리 대비 합리적",
-        "20평 소규모 + 교사 1~2인 — 운영 부담 작음",
-        "AI·SW 교육 트렌드 직접 수혜"
-      ],
-      "en": [
-        "STAR: 2025 mandatory coding for elementary/middle — explosive category growth",
-        "Coding market: KRW 150B (2019) → 1.5T (2030), 10x projection",
-        "KRW 50M startup — reasonable vs academy category",
-        "20-pyeong + 1-2 teachers — light operational burden",
-        "Direct beneficiary of AI/SW education trend"
-      ]
-    },
-    "cons": {
-      "ko": [
-        "⚠⚠ 본사 정보·재무·매출·점주 후기 공개 매우 부족 (가장 큰 리스크)",
-        "신생 카테고리 — 5년+ 안정성 미검증",
-        "코딩 교사 채용 어려움 (전문 인력 부족)",
-        "경쟁 브랜드 다수 (코딩맘·코딩베리·이젠아카데미 등)",
-        "공정거래위원회 정보공개서 직접 검증 필수"
-      ],
-      "en": [
-        "WARNING: HQ info/financials/revenue/owner reviews publicly very limited (biggest risk)",
-        "New category — 5+ year stability unproven",
-        "Coding teacher hiring difficult (specialist shortage)",
-        "Many competing brands (Coding Mom, Coding Berry, eZen Academy etc.)",
-        "FTC franchise disclosure direct verification required"
-      ]
-    },
-    "bestLocation": {
-      "ko": [
-        "주거 밀집 아파트 단지 — 초중등 자녀 학부모 핵심",
-        "신축 아파트·신도시 — 30~40대 IT 친화 학부모",
-        "학원가 인근 — 영어·수학과 묶인 코딩 보완 수요",
-        "20평 임대 가능한 일반 상가 — 임대료 부담 합리적",
-        "외곽·지방은 비추 — IT 트렌드 친화 학부모 적음"
-      ],
-      "en": [
-        "Dense apartment-cluster zones — elementary/middle parents core",
-        "New apartments/new towns — 30s-40s tech-friendly parents",
-        "Near academy districts — coding complementary to English/Math",
-        "20-pyeong leasable general retail — reasonable rent burden",
-        "Outer/regional areas NOT suitable — fewer tech-friendly parents"
-      ]
-    },
-    "sources": [
-      {
-        "label": "공정거래위원회 가맹사업정보 — 마이크로비트 코딩학원 (직접 검증 필수)",
-        "url": "https://franchise.ftc.go.kr/",
-        "tier": "primary"
-      },
-      {
-        "label": "더스탁 — 2025년 초중등 필수과목 코딩교육 스타트업 성장 (2025)",
-        "url": "https://www.the-stock.kr/news/articleView.html?idxno=20099",
-        "tier": "media"
-      },
-      {
-        "label": "전자신문 — 초등 디지털 교육 시장 쑥쑥 (코딩 의무화)",
-        "url": "https://www.etnews.com/20191230000023",
-        "tier": "media"
-      },
-      {
-        "label": "ZDNet Korea — 코딩 교육 필수 시대 K코딩 로봇 (2023)",
-        "url": "https://zdnet.co.kr/view/?no=20230608142723",
-        "tier": "media"
-      },
-      {
-        "label": "고대신문 — 코딩 교육 의무화 바람",
-        "url": "http://www.kunews.ac.kr/news/articleView.html?idxno=42387",
-        "tier": "media"
-      }
-    ],
-    "confidence": "low",
-    "dataYear": "2025",
-    "specialtyIds": []
-  },
-  {
     "id": "polypark",
     "subIndustryIds": [
       "pet-supplies",
@@ -13371,12 +13102,12 @@
     "startupCostWon": 9592,
     "franchiseFee": 440,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 24000,
-    "storeCount": 122,
-    "closureRate": 4,
+    "avgAnnualRevenueWon": 35174,
+    "storeCount": 78,
+    "closureRate": 10,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 52,
       "accessibility": 75,
       "brandPower": 65,
       "support": 68
@@ -14847,7 +14578,7 @@
     "startupCostWon": 8085,
     "franchiseFee": 500,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 35000,
+    "avgAnnualRevenueWon": 32000,
     "storeCount": 123,
     "closureRate": 7.5,
     "scores": {
@@ -15032,15 +14763,15 @@
       "ko": "감성 인테리어 + 매콤 떡볶이 트렌디 분식",
       "en": "Aesthetic interior with spicy trendy bunsik"
     },
-    "startupCostWon": 8000,
-    "franchiseFee": 800,
+    "startupCostWon": 4150,
+    "franchiseFee": 330,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 23931,
-    "storeCount": 130,
-    "closureRate": 10.5,
+    "storeCount": 232,
+    "closureRate": 17.7,
     "scores": {
       "profitability": 68,
-      "stability": 52,
+      "stability": 42,
       "accessibility": 70,
       "brandPower": 72,
       "support": 65
@@ -15367,14 +15098,14 @@
       "en": "Premium kimbap pioneer"
     },
     "startupCostWon": 13009,
-    "franchiseFee": 1000,
+    "franchiseFee": 1430,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 36000,
-    "storeCount": 144,
-    "closureRate": 9.5,
+    "storeCount": 93,
+    "closureRate": 16.1,
     "scores": {
       "profitability": 65,
-      "stability": 62,
+      "stability": 42,
       "accessibility": 65,
       "brandPower": 78,
       "support": 60
@@ -16003,8 +15734,8 @@
     "startupCostWon": 9823,
     "franchiseFee": 550,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 45000,
-    "storeCount": 110,
+    "avgAnnualRevenueWon": 53704,
+    "storeCount": 116,
     "closureRate": 9,
     "scores": {
       "profitability": 70,
@@ -17175,15 +16906,15 @@
       "ko": "중저가 에스프레소 전문 카페",
       "en": "Mid-budget espresso cafe"
     },
-    "startupCostWon": 7500,
-    "franchiseFee": 700,
+    "startupCostWon": 6726,
+    "franchiseFee": 330,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 18000,
-    "storeCount": 159,
-    "closureRate": 8.5,
+    "avgAnnualRevenueWon": 6841,
+    "storeCount": 98,
+    "closureRate": 31.6,
     "scores": {
       "profitability": 65,
-      "stability": 62,
+      "stability": 32,
       "accessibility": 75,
       "brandPower": 65,
       "support": 65
@@ -17323,11 +17054,11 @@
       "en": "Diet lunchbox & salad chain"
     },
     "startupCostWon": 7500,
-    "franchiseFee": 700,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 20000,
+    "avgAnnualRevenueWon": 34167,
     "storeCount": 130,
-    "closureRate": 7.5,
+    "closureRate": 6.5,
     "scores": {
       "profitability": 68,
       "stability": 70,
