@@ -132,6 +132,7 @@ private let franchiseSampleBrands: [FranchiseBrandView] = FranchiseBrandRegistry
 public struct FranchiseView: View {
 
     @State private var selectedCategoryId: String = "all"
+    @State private var searchQuery: String = ""
     @State private var selectedBrand: FranchiseBrandView?
     /// BudgetSetup 단계에서 프랜차이즈 비용 패널을 표시하기 위해 선택한 브랜드를 영속.
     @AppStorage("stage.franchise.selectedBrandId") private var selectedBrandIdStorage: String = ""
@@ -139,9 +140,15 @@ public struct FranchiseView: View {
     public init() {}
 
     private var filteredBrands: [FranchiseBrandView] {
-        let base = selectedCategoryId == "all"
-            ? franchiseSampleBrands
-            : franchiseSampleBrands.filter { $0.categoryId == selectedCategoryId }
+        let q = searchQuery.trimmingCharacters(in: .whitespaces).lowercased()
+        let base = franchiseSampleBrands.filter { b in
+            if selectedCategoryId != "all" && b.categoryId != selectedCategoryId { return false }
+            if !q.isEmpty {
+                let hay = "\(b.name) \(b.tagline) \(b.category)".lowercased()
+                if !hay.contains(q) { return false }
+            }
+            return true
+        }
         // overall score 내림차순 정렬 (웹과 동일)
         return base.sorted { overallScore($0) > overallScore($1) }
     }
@@ -158,6 +165,7 @@ public struct FranchiseView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     header
+                    searchBar
                     categoryChips
                     brandCards
                     disclaimerCard
@@ -199,6 +207,44 @@ public struct FranchiseView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Search (웹 SSOT FranchiseView 검색과 톤 통일 — 흰 배경·라운드·미드나잇 보더)
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(BUColor.inkSubtle)
+            TextField("브랜드 검색 (예: 교촌, BBQ, 메가커피)", text: $searchQuery)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(BUColor.ink)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+                .submitLabel(.search)
+            if !searchQuery.isEmpty {
+                Button {
+                    searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(BUColor.inkSubtle)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.white.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+        )
     }
 
     // MARK: - Category chips (horizontal scroll)
@@ -254,7 +300,9 @@ public struct FranchiseView: View {
             }
 
             if filteredBrands.isEmpty {
-                Text("이 카테고리에 등록된 프랜차이즈가 없습니다.")
+                Text(searchQuery.trimmingCharacters(in: .whitespaces).isEmpty
+                     ? "이 카테고리에 등록된 프랜차이즈가 없습니다."
+                     : "'\(searchQuery.trimmingCharacters(in: .whitespaces))' 검색 결과가 없습니다.")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(BUColor.inkMuted)
                     .frame(maxWidth: .infinity)

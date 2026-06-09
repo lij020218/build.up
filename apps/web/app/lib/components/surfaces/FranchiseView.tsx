@@ -10,6 +10,7 @@ import {
   getScoreLabel,
 } from "@foundone/shared";
 import { FranchiseDetailModal } from "./FranchiseDetailModal";
+import { Search } from "lucide-react";
 
 const MIDNIGHT = "#191970";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.16)";
@@ -36,8 +37,17 @@ export function FranchiseView() {
     { id: "space", label: ko ? "공간" : "Space" },
   ];
   const [filterCat, setFilterCat] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
-  const filtered = filterCat === "all" ? allBrands : allBrands.filter(b => b.categoryId === filterCat);
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = allBrands.filter(b => {
+    if (filterCat !== "all" && b.categoryId !== filterCat) return false;
+    if (q) {
+      const hay = `${b.name.ko} ${b.name.en} ${b.tagline.ko} ${b.tagline.en}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
   const sorted = [...filtered].sort((a, b) => computeOverallScore(b.scores) - computeOverallScore(a.scores));
   const selectedBrand = selectedBrandId ? allBrands.find(b => b.id === selectedBrandId) ?? null : null;
 
@@ -55,6 +65,22 @@ export function FranchiseView() {
             : `Compare profitability, stability, and startup costs across ${allBrands.length} brands. Click any card for detailed scores, pros/cons, and sources.`}
         </p>
       </header>
+
+      {/* 검색 — 브랜드명·태그라인 (예: 교촌, BBQ, 메가커피) */}
+      <div style={searchWrapStyle}>
+        <Search size={15} strokeWidth={1.8} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={ko ? "브랜드 검색 (예: 교촌, BBQ, 메가커피)" : "Search brands"}
+          style={searchInputStyle}
+          aria-label={ko ? "프랜차이즈 검색" : "Search franchises"}
+        />
+        {searchQuery && (
+          <button type="button" onClick={() => setSearchQuery("")} style={searchClearStyle} aria-label={ko ? "지우기" : "Clear"}>✕</button>
+        )}
+      </div>
 
       {/* Category filter chips — midnight 톤 통일 */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
@@ -190,7 +216,9 @@ export function FranchiseView() {
       {sorted.length === 0 && (
         <div style={emptyBoxStyle}>
           <div style={{ fontSize: 13, color: TEXT_MUTED }}>
-            {ko ? "이 카테고리에 등록된 프랜차이즈가 없습니다." : "No franchises in this category."}
+            {q
+              ? (ko ? `'${searchQuery.trim()}' 검색 결과가 없습니다.` : `No results for '${searchQuery.trim()}'.`)
+              : (ko ? "이 카테고리에 등록된 프랜차이즈가 없습니다." : "No franchises in this category.")}
           </div>
         </div>
       )}
@@ -255,4 +283,43 @@ const emptyBoxStyle: React.CSSProperties = {
   borderRadius: 16,
   background: MIDNIGHT_TINT,
   border: `1px dashed ${MIDNIGHT_BORDER}`,
+};
+
+// ── 검색 — 펀딩 페이지와 톤 통일(흰 배경·라운드·미드나잇 보더) ──
+const searchWrapStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  background: "white",
+  maxWidth: 420,
+};
+
+const searchInputStyle: React.CSSProperties = {
+  flex: 1,
+  border: "none",
+  outline: "none",
+  background: "transparent",
+  fontSize: 13.5,
+  color: TEXT_PRIMARY,
+  fontFamily: "inherit",
+  padding: 0,
+};
+
+const searchClearStyle: React.CSSProperties = {
+  flexShrink: 0,
+  width: 20,
+  height: 20,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 9999,
+  border: "none",
+  background: MIDNIGHT_TINT,
+  color: TEXT_MUTED,
+  fontSize: 11,
+  cursor: "pointer",
+  lineHeight: 1,
 };
