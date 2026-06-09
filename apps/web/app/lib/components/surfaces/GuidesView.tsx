@@ -60,6 +60,10 @@ const INDUSTRY_LABEL_KO: Record<string, string> = {
   space: "공간", "online-digital": "온라인", "startup-tech": "기술창업",
 };
 
+// 라이브 공고 클라이언트 캐시 — 재방문 시 네트워크 응답 전이라도 직전 결과(342개) 즉시 복원.
+const LIVE_CACHE_KEY = "foundone.funding.live.v1";
+const LIVE_CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12h — 서버 Data Cache 와 동일 주기
+
 export function GuidesView() {
   const d = useDashboardCtx();
   const {
@@ -101,6 +105,17 @@ export function GuidesView() {
   const [livePrograms, setLivePrograms] = useState<StartupProgram[] | null>(null);
   useEffect(() => {
     let alive = true;
+    // (a) 직전 라이브 결과 즉시 복원 — 네트워크 응답 전이라도 342개 바로 표시(깜빡임 제거).
+    try {
+      const raw = localStorage.getItem(LIVE_CACHE_KEY);
+      if (raw) {
+        const c = JSON.parse(raw) as { at: number; programs: StartupProgram[] };
+        if (c && Array.isArray(c.programs) && c.programs.length > 0 && Date.now() - c.at < LIVE_CACHE_TTL_MS) {
+          setLivePrograms(c.programs);
+        }
+      }
+    } catch { /* ignore — 캐시 손상/미지원 */ }
+    // (b) 최신 라이브 페치 → 갱신 + 캐시 저장.
     (async () => {
       try {
         const session = await supabase.auth.getSession();
@@ -109,7 +124,12 @@ export function GuidesView() {
         const res = await fetch("/api/funding/live", { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) return;
         const data = await res.json();
-        if (alive && Array.isArray(data.programs)) setLivePrograms(data.programs as StartupProgram[]);
+        if (alive && Array.isArray(data.programs)) {
+          setLivePrograms(data.programs as StartupProgram[]);
+          try {
+            localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify({ at: Date.now(), programs: data.programs }));
+          } catch { /* quota 초과 등 — 무시 */ }
+        }
       } catch { /* graceful — 정적 큐레이션 폴백 */ }
     })();
     return () => { alive = false; };
