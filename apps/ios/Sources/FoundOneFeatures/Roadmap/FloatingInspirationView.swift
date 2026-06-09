@@ -1,13 +1,13 @@
 //
-//  FloatingInspirationView.swift — AI 로드맵 입력 화면 뒤로 떠다니는 창업 성공 스타트업 카드.
+//  FloatingInspirationView.swift — AI 로드맵 입력 화면 위·아래로 흐르는 창업 성공 스타트업 카드.
 //
 //  웹 SSOT: apps/web/app/lib/components/FloatingInspiration.tsx
 //  데이터 SSOT: packages/shared/src/inspiration-data.ts → InspirationBrandRegistry (20개).
 //
-//  인터랙션(웹 미러):
-//   · 카드들이 화면을 가로질러 천천히 드리프트(부유) + 은은한 명멸
-//   · 카드 탭 → 창업 시작 인사이트·차별점·교훈 시트
-//   · 카드 버튼에서만 hit-test → 빈 영역 탭은 아래 입력 화면으로 통과(입력 정상 동작)
+//  레이아웃: 입력 콘텐츠는 화면 중앙(IdeaStepView 센터링). 카드는 겹치지 않는 일렬 마퀴 2줄 —
+//   · 상단 줄: 왼쪽으로 무한 순환
+//   · 하단 줄: 오른쪽으로 무한 순환
+//  카드 탭 → 창업 스토리 시트. 카드(버튼)에서만 hit-test → 빈 영역 탭은 입력으로 통과.
 //
 //  로고: Simple Icons CDN(글로벌 브랜드) + glyph fallback(한국 브랜드).
 //
@@ -16,7 +16,7 @@ import SwiftUI
 import FoundOneDesignSystem
 import FoundOneCore
 
-// MARK: - hex("#0064ff") → Color (문자열 파서 — 디자인시스템 Color.hex(UInt32) 보완)
+// MARK: - hex("#0064ff") → Color (문자열 파서)
 
 private func brandColor(_ hex: String, opacity: Double = 1.0) -> Color {
     var s = hex.trimmingCharacters(in: .whitespaces)
@@ -28,7 +28,7 @@ private func brandColor(_ hex: String, opacity: Double = 1.0) -> Color {
     return Color(red: r, green: g, blue: b).opacity(opacity)
 }
 
-// MARK: - Floating layer
+// MARK: - Floating layer (마퀴 2줄)
 
 public struct FloatingInspirationView: View {
     @State private var selected: InspirationBrand?
@@ -36,81 +36,88 @@ public struct FloatingInspirationView: View {
 
     private let brands = InspirationBrandRegistry.all
 
-    // 모바일 배치 — 입력 콘텐츠를 화면 중앙에 두고(IdeaStepView 센터링), 카드는 위·아래
-    //  두 밴드에 골고루. 카드 레이어가 입력 위에 떠 있어(빈 영역 탭 통과) 텍스트는 가리지 않음:
-    //  상단 밴드(뒤로버튼 아래 ~ 센터 헤더 위) + 하단 밴드("다음" 버튼 아래) 각 10개.
-    private static let positions: [(CGFloat, CGFloat)] = [
-        // 상단 밴드 (y 0.06–0.20) — 센터 헤더 위, 좌상단 뒤로버튼(x<22 && y<8) 회피
-        (12, 9), (33, 7), (54, 8), (75, 7), (90, 13),
-        (22, 16), (45, 18), (66, 16), (87, 18), (8, 19),
-        // 하단 밴드 (y 0.80–0.97) — "다음" 버튼 아래(충돌 회피)
-        (12, 83), (33, 81), (54, 83), (75, 81), (90, 85),
-        (20, 90), (42, 92), (63, 90), (85, 92), (50, 97),
-    ]
-
     public init() {}
 
     public var body: some View {
         GeometryReader { geo in
+            let half = max(1, brands.count / 2)
+            let top = Array(brands.prefix(half))
+            let bottom = Array(brands.suffix(from: half))
             ZStack {
-                ForEach(Array(brands.enumerated()), id: \.element.id) { idx, b in
-                    let pos = Self.positions[idx % Self.positions.count]
-                    FloatingCard(brand: b, index: idx, xPct: pos.0, reduceMotion: reduceMotion) {
-                        selected = b
-                    }
-                    .position(x: geo.size.width * pos.0 / 100, y: geo.size.height * pos.1 / 100)
-                }
+                MarqueeRow(brands: top, toLeft: true, reduceMotion: reduceMotion) { selected = $0 }
+                    .frame(width: geo.size.width, height: 60, alignment: .leading)
+                    .position(x: geo.size.width / 2, y: geo.size.height * 0.12)
+
+                MarqueeRow(brands: bottom, toLeft: false, reduceMotion: reduceMotion) { selected = $0 }
+                    .frame(width: geo.size.width, height: 60, alignment: .leading)
+                    .position(x: geo.size.width / 2, y: geo.size.height * 0.87)
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
-        // ZStack 빈 영역은 hit-test 안 됨 → 입력 화면으로 탭 통과. 카드 버튼만 반응.
+        // 빈 영역 hit-test 통과 → 입력 화면 정상 동작. 카드 버튼만 반응.
         .sheet(item: $selected) { b in
             BrandStorySheet(brand: b)
         }
     }
 }
 
-// MARK: - Drifting card
+// MARK: - 무한 순환 마퀴 한 줄
 
-private struct FloatingCard: View {
-    let brand: InspirationBrand
-    let index: Int
-    let xPct: CGFloat
+private struct WidthKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+private struct MarqueeRow: View {
+    let brands: [InspirationBrand]
+    let toLeft: Bool
     let reduceMotion: Bool
-    let onTap: () -> Void
+    let onTap: (InspirationBrand) -> Void
 
-    @State private var drift = false
+    @State private var period: CGFloat = 0   // 한 세트 폭(+간격) — 이만큼 흐르면 seamless 반복
+    @State private var offset: CGFloat = 0
 
-    // 웹 placementFor 의 seed 기반 파라미터 미러.
-    private var seed: Int { (index * 31) % 100 }
-    private var dx: CGFloat { CGFloat(18 + seed % 22) }
-    private var dy: CGFloat { CGFloat(14 + (seed * 3) % 18) }
-    private var duration: Double { Double(16 + (seed * 7) % 14) }
-    private var delay: Double { Double(seed % 12) }
-    private var baseOpacity: Double { 0.52 + Double(seed % 10) / 50.0 } // 0.52–0.70 (배경 느낌)
-    private var rotate: Double { Double((seed % 7) - 3) * 0.6 }
-    // x<50 → 오른쪽으로, else 왼쪽으로 드리프트(웹 driftX).
-    private var driftX: CGFloat { xPct < 50 ? dx : -dx }
+    private let spacing: CGFloat = 12
+    private let speed: CGFloat = 26          // pt/sec (천천히)
 
-    var body: some View {
-        Button(action: onTap) {
-            CardBody(brand: brand)
-        }
-        .buttonStyle(.plain)
-        .rotationEffect(.degrees(reduceMotion ? 0 : (drift ? rotate + 0.8 : rotate - 0.8)))
-        .offset(
-            x: reduceMotion ? 0 : (drift ? driftX : 0),
-            y: reduceMotion ? 0 : (drift ? -dy : 0)
-        )
-        .opacity(reduceMotion ? baseOpacity : (drift ? baseOpacity : baseOpacity * 0.6))
-        .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true).delay(delay * 0.05)) {
-                drift = true
+    private func strip() -> some View {
+        HStack(spacing: spacing) {
+            ForEach(brands) { b in
+                Button { onTap(b) } label: { CardBody(brand: b) }
+                    .buttonStyle(.plain)
             }
         }
     }
+
+    var body: some View {
+        // 동일 세트 2개 → offset 이 한 세트 폭만큼 흐르면 두 번째 세트가 첫 세트 자리에 와 seamless loop.
+        HStack(spacing: spacing) {
+            strip()
+                .background(
+                    GeometryReader { g in
+                        Color.clear.preference(key: WidthKey.self, value: g.size.width)
+                    }
+                )
+            strip()
+        }
+        .offset(x: offset)
+        .onPreferenceChange(WidthKey.self) { w in
+            guard w > 0, period == 0 else { return }
+            period = w + spacing
+            startScroll()
+        }
+    }
+
+    private func startScroll() {
+        guard !reduceMotion, period > 0 else { return }
+        offset = toLeft ? 0 : -period
+        withAnimation(.linear(duration: Double(period / speed)).repeatForever(autoreverses: false)) {
+            offset = toLeft ? -period : 0
+        }
+    }
 }
+
+// MARK: - Card visual
 
 private struct CardBody: View {
     let brand: InspirationBrand
@@ -139,7 +146,7 @@ private struct CardBody: View {
             RoundedRectangle(cornerRadius: 13, style: .continuous)
                 .strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1)
         )
-        .shadow(color: BUColor.midnight.opacity(0.14), radius: 12, x: 0, y: 6)
+        .shadow(color: BUColor.midnight.opacity(0.12), radius: 10, x: 0, y: 5)
         .fixedSize()
     }
 
