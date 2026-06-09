@@ -17,17 +17,21 @@ import {
 } from "@foundone/shared";
 
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
-// 라이브 페치 건수 — 최근 공고 위주. 필터·매칭으로 좁혀지므로 과다 페치 불필요.
-const KSTARTUP_FETCH = 300;
+// 라이브 페치 건수 — 모집중(Rcrt_prgs_yn=Y) 최근 공고. 현재 공고 중인 것만 노출하므로 과다 페치 불필요.
+const KSTARTUP_FETCH = 500;
 let cache: { programs: StartupProgram[]; live: boolean; at: number } | null = null;
 
 async function fetchLiveNormalized(): Promise<StartupProgram[]> {
   const ksKey = process.env.KSTARTUP_API_KEY;
   if (!ksKey) return [];
-  const gov = await fetchKStartupPrograms({ apiKey: ksKey, baseUrl: "" }, { numOfRows: KSTARTUP_FETCH })
+  const gov = await fetchKStartupPrograms(
+    { apiKey: ksKey, baseUrl: "" },
+    { numOfRows: KSTARTUP_FETCH, recruitingOnly: true },
+  )
     .then((r) => r.data)
     .catch(() => []);
-  return gov.map((g) => normalizeLiveProgram(g)).filter((p) => p.applicationStatus !== "closed");
+  // ★ 현재 "공고 중"(접수 진행) 인 것만 — 마감·예정 제외(사용자 요청).
+  return gov.map((g) => normalizeLiveProgram(g)).filter((p) => p.applicationStatus === "open");
 }
 
 /**

@@ -12,6 +12,8 @@ export type SupportProgramsParams = {
   pageNo?: number;
   numOfRows?: number;
   searchKeyword?: string;
+  /** 모집 진행중(Rcrt_prgs_yn=Y)만 — 현재 공고 중 공고 우선 */
+  recruitingOnly?: boolean;
 };
 
 export type GovernmentSupportProgram = {
@@ -74,6 +76,7 @@ export async function fetchKStartupPrograms(
     perPage: String(params.numOfRows ?? 100),
   });
   if (params.searchKeyword) searchParams.set("biz_pbanc_nm", params.searchKeyword);
+  if (params.recruitingOnly !== false) searchParams.set("Rcrt_prgs_yn", "Y"); // 기본: 모집중만
 
   const url = `${baseUrl}/getAnnouncementInformation01?${searchParams.toString()}`;
   const controller = new AbortController();
