@@ -771,6 +771,54 @@ const brandSupplyOverrides: Record<string, FranchiseSupplyItem[]> = {
     { category: { ko: "인테리어·가구", en: "Interior & furniture" }, type: "hq-designated", items: [{ ko: "본사 표준 인테리어 (60평+ 권장)", en: "HQ standard interior (60+ pyeong recommended)" }] },
     { category: { ko: "커피머신·자판기", en: "Coffee machine & vending" }, type: "free-purchase", items: [{ ko: "무인 커피머신·자판기 (작심커피 연동 가능)", en: "Unmanned coffee machine, vending (Zaksim Coffee linkable)" }] },
   ],
+  // ── 2026-06 추가 조사: 전국 대형 QSR·커피·리테일 (FTC·물류 구조 기반) ──
+  "lotteria": [
+    { category: { ko: "번·패티·식자재", en: "Bun, patty, ingredients" }, type: "hq-exclusive", items: [{ ko: "롯데GRS 통합 물류 직배송 — 패티·소스·식자재", en: "Lotte GRS unified logistics — patty, sauce, ingredients" }], note: { ko: "햄버거 번은 1979년부터 샤니(SPC삼립) 납품, 식자재는 롯데GRS 물류센터 정기 배송", en: "Buns supplied by Shany (SPC Samlip) since 1979; ingredients via Lotte GRS logistics" } },
+    { category: { ko: "소스·시즈닝", en: "Sauce & seasoning" }, type: "hq-exclusive", items: [{ ko: "본사 레시피 전용 소스·시즈닝 — 메뉴 표준화 핵심", en: "HQ-recipe exclusive sauce/seasoning — menu standardization" }] },
+    { category: { ko: "장비·POS·키오스크", en: "Equipment, POS, kiosk" }, type: "hq-designated", items: [{ ko: "튀김기·그릴·POS·키오스크 (본사 사양)", en: "Fryer, grill, POS, kiosk (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품 (로고 無)", en: "Generic hygiene (no logo)" }, type: "free-purchase", items: [{ ko: "주방세제·청소포·고무장갑·쓰레기봉투·페이퍼타올", en: "Dish soap, cloth, gloves, trash bags, paper towels" }] },
+  ],
+  "burger-king-kr": [
+    { category: { ko: "번·패티·식자재", en: "Bun, patty, ingredients" }, type: "hq-exclusive", items: [{ ko: "삼립GFS 3자물류(3PL) 통합 배송 — 냉동·냉장·상온 일 3회", en: "Samlip GFS 3PL unified delivery — frozen/chilled/ambient 3x/day" }], note: { ko: "전국 250+ 점포 대상 24개 배송센터·1,400여 냉동차량. 와퍼 번은 삼립(SPC) 공급, 2026년 롯데웰푸드 등 공급사 다변화 진행", en: "24 centers, 1,400+ trucks for 250+ stores. Whopper buns from Samlip (SPC); supplier diversification (Lotte Wellfood) underway 2026" } },
+    { category: { ko: "와퍼 소스·패티", en: "Whopper sauce & patty" }, type: "hq-exclusive", items: [{ ko: "직화 패티·전용 소스 본사 공급 — 브랜드 맛 보장", en: "Flame-grilled patty, exclusive sauce HQ supply" }] },
+    { category: { ko: "장비·POS·키오스크", en: "Equipment, POS, kiosk" }, type: "hq-designated", items: [{ ko: "브로일러·POS·키오스크 (본사 사양)", en: "Broiler, POS, kiosk (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품 (로고 無)", en: "Generic hygiene (no logo)" }, type: "free-purchase", items: [{ ko: "주방세제·청소포·고무장갑·쓰레기봉투·페이퍼타올", en: "Dish soap, cloth, gloves, trash bags, paper towels" }] },
+  ],
+  "kfc-korea": [
+    { category: { ko: "닭고기·치킨 파우더·소스", en: "Chicken, batter, sauce" }, type: "hq-exclusive", items: [{ ko: "본사 물류 직공급 — 염지 닭·전용 튀김 파우더·오리지널 시즈닝", en: "HQ logistics — marinated chicken, exclusive batter, original seasoning" }], note: { ko: "2024년 4월 가맹 1호점(문정역) 시작한 신생 가맹 모델. 2026년 칼라일 인수 — 본사 매각 이력상 로열티·물류 마진 정책 변동 가능, 정보공개서 사전 확인 필수", en: "Franchise model launched Apr 2024 (Munjeong). Carlyle acquired 2026 — royalty/logistics-margin policy may shift; review disclosure first" } },
+    { category: { ko: "장비·POS·키오스크", en: "Equipment, POS, kiosk" }, type: "hq-designated", items: [{ ko: "압력 튀김기·POS·키오스크 (본사 사양)", en: "Pressure fryer, POS, kiosk (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품 (로고 無)", en: "Generic hygiene (no logo)" }, type: "free-purchase", items: [{ ko: "주방세제·청소포·고무장갑·쓰레기봉투·페이퍼타올", en: "Dish soap, cloth, gloves, trash bags, paper towels" }] },
+  ],
+  "dunkin": [
+    { category: { ko: "도넛·생지·식재료", en: "Donut, dough, ingredients" }, type: "hq-exclusive", items: [{ ko: "SPC 비알코리아 통합 공급 — DD음성·부산물류센터, DD안양공장 + 허브키친(수제도넛 제조기지) 인근 점포 배송", en: "SPC BR Korea — DD Eumseong/Busan centers, Anyang plant + Hub Kitchen (handmade donut base) local delivery" }], note: { ko: "프리미엄 수제도넛은 허브키친(성남 사송·부산) 반경 15km 내 점포 공급. SPC GFS 물류", en: "Premium handmade donuts via Hub Kitchens within 15km radius; SPC GFS logistics" } },
+    { category: { ko: "원두·시럽·파우더", en: "Beans, syrup, powder" }, type: "hq-exclusive", items: [{ ko: "비알코리아 공급 — 음료 메뉴 표준화", en: "BR Korea supply — beverage standardization" }] },
+    { category: { ko: "던킨 브랜드 일회용품", en: "Dunkin-branded disposables" }, type: "hq-designated", items: [{ ko: "던킨 로고 컵·박스·캐리어·종이가방", en: "Dunkin-logo cups, boxes, carriers, paper bags" }] },
+    { category: { ko: "장비·POS·인테리어", en: "Equipment, POS, interior" }, type: "hq-designated", items: [{ ko: "에스프레소 머신·쇼케이스·POS·인테리어 본사 사양", en: "Espresso machine, showcase, POS, interior HQ spec" }] },
+    { category: { ko: "일반 위생·청소용품 (로고 無)", en: "Generic hygiene (no logo)" }, type: "free-purchase", items: [{ ko: "주방세제·청소포·고무장갑·쓰레기봉투·페이퍼타올", en: "Dish soap, cloth, gloves, trash bags, paper towels" }] },
+  ],
+  "hollys": [
+    { category: { ko: "원두", en: "Coffee beans" }, type: "hq-exclusive", items: [{ ko: "KG에프앤비 자체 로스팅 — 파주 문산 '커피클럽 로스팅센터'(연 1,700톤)", en: "KG F&B in-house roasting — Paju 'Coffee Club Roasting Center' (1,700t/yr)" }], note: { ko: "연 1,700톤(에스프레소 약 1억 잔) 규모 자체 로스팅·물류로 안정 공급", en: "1,700t/yr (~100M shots) in-house roasting & logistics" } },
+    { category: { ko: "시럽·파우더·원부자재", en: "Syrup, powder, materials" }, type: "hq-exclusive", items: [{ ko: "B2B 전용 원두·카페 원부자재 본사 공급", en: "B2B beans & cafe materials HQ supply" }] },
+    { category: { ko: "할리스 브랜드 일회용품", en: "Hollys-branded disposables" }, type: "hq-designated", items: [{ ko: "할리스 로고 컵·홀더·캐리어·테이크아웃 박스", en: "Hollys-logo cups, sleeves, carriers, boxes" }] },
+    { category: { ko: "장비·POS·인테리어", en: "Equipment, POS, interior" }, type: "hq-designated", items: [{ ko: "에스프레소 머신·제빙기·POS·인테리어 본사 사양", en: "Espresso machine, ice maker, POS, interior HQ spec" }] },
+    { category: { ko: "일반 위생·청소용품 (로고 無)", en: "Generic hygiene (no logo)" }, type: "free-purchase", items: [{ ko: "주방세제·청소포·고무장갑·쓰레기봉투·페이퍼타올", en: "Dish soap, cloth, gloves, trash bags, paper towels" }] },
+  ],
+  "gongcha": [
+    { category: { ko: "차·펄·토핑·파우더", en: "Tea, pearls, topping, powder" }, type: "hq-exclusive", items: [{ ko: "공차코리아 본사 표준 원료 — 찻잎·타피오카 펄·토핑·밀크티 파우더", en: "Gongcha Korea standard ingredients — tea, tapioca pearls, toppings, milk tea powder" }], note: { ko: "글로벌 밀크티 맛 표준화를 위해 본사 지정 원료 공급(직영 60·가맹 800여 점)", en: "HQ-designated ingredients for global milk-tea consistency (60 direct, 800+ franchise)" } },
+    { category: { ko: "공차 브랜드 일회용품", en: "Gongcha-branded disposables" }, type: "hq-designated", items: [{ ko: "공차 로고 컵·실링 필름·빨대·캐리어", en: "Gongcha-logo cups, sealing film, straws, carriers" }] },
+    { category: { ko: "장비·POS", en: "Equipment & POS" }, type: "hq-designated", items: [{ ko: "실링기·제빙기·정수 시스템·POS (본사 사양)", en: "Sealing machine, ice maker, water system, POS (HQ spec)" }] },
+    { category: { ko: "일반 위생·청소용품 (로고 無)", en: "Generic hygiene (no logo)" }, type: "free-purchase", items: [{ ko: "주방세제·청소포·고무장갑·쓰레기봉투·페이퍼타올", en: "Dish soap, cloth, gloves, trash bags, paper towels" }] },
+  ],
+  "daiso": [
+    { category: { ko: "전체 상품", en: "All products" }, type: "hq-exclusive", items: [{ ko: "아성다이소 자체 물류망 본사 일괄 공급 (용인 남사·부산·안성 + 세종·양주 신규)", en: "Asung Daiso in-house logistics — HQ bulk supply (Yongin, Busan, Anseong + new Sejong, Yangju)" }], note: { ko: "1,000~5,000원 균일가. 가맹점은 본사 물류·MD에 100% 의존(자체 발주 폭 제한적) — 마진은 균일가 구조상 박리다매. 가맹 초기투자 큼", en: "Flat ₩1,000–5,000 pricing. Franchisees fully rely on HQ logistics/MD (limited self-ordering); thin-margin high-volume. High initial investment" } },
+    { category: { ko: "매장 설비·POS", en: "Store fixtures & POS" }, type: "hq-designated", items: [{ ko: "진열 집기·POS·CCTV (본사 표준)", en: "Display fixtures, POS, CCTV (HQ standard)" }] },
+    { category: { ko: "소모품", en: "Consumables" }, type: "free-purchase", items: [{ ko: "청소용품·봉투", en: "Cleaning supplies, bags" }] },
+  ],
+  "olive-young": [
+    { category: { ko: "전체 상품", en: "All products" }, type: "hq-exclusive", items: [{ ko: "CJ올리브영 물류 직공급 — 양지센터(수도권)·경산센터(영남·제주·충청·호남 600+점)", en: "CJ Olive Young logistics — Yangji (metro) + Gyeongsan (Yeongnam/Jeju/Chungcheong/Honam 600+ stores)" }], note: { ko: "경산센터 90% 자동화(AMR·로봇 피킹). 구매 패턴·재고 분석 기반 데이터 자동발주 — 본사 MD가 상품 구성 주도", en: "Gyeongsan 90% automated (AMR, robotic picking). Data-driven auto-ordering; HQ MD drives assortment" } },
+    { category: { ko: "매장 설비·진열·POS", en: "Fixtures, display, POS" }, type: "hq-designated", items: [{ ko: "진열대·테스터존·POS·CCTV (본사 표준)", en: "Displays, tester zone, POS, CCTV (HQ standard)" }] },
+    { category: { ko: "소모품", en: "Consumables" }, type: "free-purchase", items: [{ ko: "쇼핑백·청소용품", en: "Shopping bags, cleaning supplies" }] },
+  ],
 };
 
 /** Get supply structure for a franchise brand — brand-specific first, then category fallback */
