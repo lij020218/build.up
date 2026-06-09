@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { useProfileStore } from "../../stores/profile-store";
 import { OwnerProfileChips, ageFromBirthYear } from "../dashboard/OwnerProfileChips";
@@ -9,6 +9,7 @@ import {
   getRecommendedPrograms,
   getApplicationStatusLabel,
   getProgramCategoryLabel,
+  getProgramBonusFactors,
   type StartupProgram,
   type ProgramCategory,
   type ApplicationStatus,
@@ -44,6 +45,12 @@ const RED = "#b64c4c";
 type CategoryFilter = "all" | ProgramCategory;
 type StatusFilter = "all" | ApplicationStatus;
 
+const INDUSTRY_LABEL_KO: Record<string, string> = {
+  food: "음식", "cafe-dessert": "카페·디저트", retail: "소매·유통", beauty: "뷰티",
+  fitness: "피트니스", education: "교육", pet: "반려동물", "living-service": "생활서비스",
+  space: "공간", "online-digital": "온라인", "startup-tech": "기술창업",
+};
+
 export function GuidesView() {
   const d = useDashboardCtx();
   const {
@@ -74,6 +81,29 @@ export function GuidesView() {
 
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  // 지역/업종/연령 필터 (라이브+큐레이션 공통)
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [industryFilter, setIndustryFilter] = useState<string>("all");
+  const [ageFilter, setAgeFilter] = useState<"all" | "youth" | "senior">("all");
+
+  // ── 라이브 공고 병합 (기업마당 + K-Startup) — 키 없거나 실패 시 큐레이션 폴백 ──
+  //   /api/funding/live 가 큐레이션+라이브를 이미 병합해 반환. 로드 전엔 정적 큐레이션 사용.
+  const [livePrograms, setLivePrograms] = useState<StartupProgram[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        if (!token) return;
+        const res = await fetch("/api/funding/live", { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (alive && Array.isArray(data.programs)) setLivePrograms(data.programs as StartupProgram[]);
+      } catch { /* graceful — 정적 큐레이션 폴백 */ }
+    })();
+    return () => { alive = false; };
+  }, []);
   /**
    * 추천 모드 — 사용자 지침 (2026-05-11):
    *  "사용자의 업종, 현 상황, 매출, 사업 규모 크기 등을 고려해서 사용자에게 적합한 지원 프로그램을
@@ -154,8 +184,8 @@ export function GuidesView() {
   //  내년에는 applicationDeadline·applicationStatus만 갱신하면 자동 노출.
   //  사용자 요청 시 hard delete 옵션도 있음.
   const matchedAll = useMemo(
-    () => getMatchedProgramsV2(criteria).filter((p) => p.applicationStatus !== "closed"),
-    [criteria],
+    () => getMatchedProgramsV2(criteria, livePrograms ?? undefined).filter((p) => p.applicationStatus !== "closed"),
+    [criteria, livePrograms],
   );
 
   // ─── AI 점수 보기 모달 상태 ───
@@ -297,25 +327,26 @@ export function GuidesView() {
 
   // 추천 전용 (개인화 점수만으로 상위 N개 — 마감 부스트·status 부스트 제외)
   const recommended = useMemo(
-    () => recommendMode ? getRecommendedPrograms(criteria, RECOMMEND_TOP_N) : [],
-    [recommendMode, criteria],
+    () => recommendMode ? getRecommendedPrograms(criteria, RECOMMEND_TOP_N, 25, livePrograms ?? undefined) : [],
+    [recommendMode, criteria, livePrograms],
   );
 
+  const passFilters = (p: StartupProgram) => {
+    if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+    if (statusFilter !== "all" && p.applicationStatus !== statusFilter) return false;
+    // 지역: 프로그램이 전국(undefined)이면 통과, 지역 제한이 있으면 선택 지역 포함해야
+    if (regionFilter !== "all" && p.regions && !p.regions.includes(regionFilter)) return false;
+    // 업종: 전업종(undefined)이면 통과, 제한 있으면 선택 업종 포함해야
+    if (industryFilter !== "all" && p.industries && !p.industries.includes(industryFilter)) return false;
+    // 연령: 청년전용(maxAge≤39만) / 시니어(연령제한 없음 = 누구나)
+    if (ageFilter === "youth" && (!p.maxAge || p.maxAge > 39)) return false;
+    if (ageFilter === "senior" && p.maxAge != null) return false;
+    return true;
+  };
   const filtered = useMemo(() => {
-    if (recommendMode) {
-      // 카테고리/상태 필터는 추천 결과 위에 보조로 작동 (예: 추천 + "정부" 만)
-      return recommended.filter((p) => {
-        if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
-        if (statusFilter !== "all" && p.applicationStatus !== statusFilter) return false;
-        return true;
-      });
-    }
-    return matchedAll.filter((p) => {
-      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
-      if (statusFilter !== "all" && p.applicationStatus !== statusFilter) return false;
-      return true;
-    });
-  }, [matchedAll, recommended, categoryFilter, statusFilter, recommendMode]);
+    return (recommendMode ? recommended : matchedAll).filter(passFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchedAll, recommended, categoryFilter, statusFilter, regionFilter, industryFilter, ageFilter, recommendMode]);
 
   const stats = useMemo(() => {
     // matchedAll 단계에서 이미 마감 제외됨. open + upcoming 합이 total 과 일치하도록
@@ -340,6 +371,27 @@ export function GuidesView() {
     { id: "open", label: ko ? "신청 가능" : "Open" },
     { id: "upcoming", label: ko ? "공고 예정" : "Upcoming" },
     // "마감" 옵션은 제거 (2026-05-11) — 마감 프로그램은 matchedAll 단계에서 이미 필터됨
+  ];
+
+  const REGIONS_KO = ["서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"];
+  const industryOptions: { id: string; label: string }[] = [
+    { id: "all", label: ko ? "전 업종" : "All industries" },
+    { id: "food", label: ko ? "음식" : "Food" },
+    { id: "cafe-dessert", label: ko ? "카페·디저트" : "Cafe" },
+    { id: "retail", label: ko ? "소매·유통" : "Retail" },
+    { id: "beauty", label: ko ? "뷰티" : "Beauty" },
+    { id: "fitness", label: ko ? "피트니스" : "Fitness" },
+    { id: "education", label: ko ? "교육" : "Education" },
+    { id: "pet", label: ko ? "반려동물" : "Pet" },
+    { id: "living-service", label: ko ? "생활서비스" : "Living" },
+    { id: "space", label: ko ? "공간" : "Space" },
+    { id: "online-digital", label: ko ? "온라인·이커머스" : "Online" },
+    { id: "startup-tech", label: ko ? "기술창업" : "Tech" },
+  ];
+  const ageOptions: { id: "all" | "youth" | "senior"; label: string }[] = [
+    { id: "all", label: ko ? "전체" : "All" },
+    { id: "youth", label: ko ? "청년(만39세↓)" : "Youth ≤39" },
+    { id: "senior", label: ko ? "연령 무관" : "No age limit" },
   ];
 
   return (
@@ -451,6 +503,35 @@ export function GuidesView() {
             active={statusFilter}
             onChange={(v) => setStatusFilter(v as StatusFilter)}
           />
+          <FilterGroup
+            label={ko ? "연령" : "Age"}
+            options={ageOptions}
+            active={ageFilter}
+            onChange={(v) => setAgeFilter(v as "all" | "youth" | "senior")}
+          />
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#5A6BAE" }}>{ko ? "지역" : "Region"}</span>
+              <select
+                value={regionFilter}
+                onChange={(e) => setRegionFilter(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="all">{ko ? "전국" : "Nationwide"}</option>
+                {REGIONS_KO.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#5A6BAE" }}>{ko ? "업종" : "Industry"}</span>
+              <select
+                value={industryFilter}
+                onChange={(e) => setIndustryFilter(e.target.value)}
+                style={selectStyle}
+              >
+                {industryOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+            </label>
+          </div>
         </div>
 
         {/* ── 4. Program list ── */}
@@ -694,6 +775,21 @@ function ProgramCard({
         <span>{program.target[lang]}</span>
       </div>
 
+      {/* 차원 배지 — 지역·업종·연령 (데이터 있을 때만 노출 = 가짜값 금지) */}
+      {(!!program.regions?.length || !!program.industries?.length || program.maxAge != null) && (
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          {program.regions?.slice(0, 3).map((r) => (
+            <span key={r} style={dimBadgeStyle}>📍 {r}</span>
+          ))}
+          {program.industries?.slice(0, 2).map((i) => (
+            <span key={i} style={dimBadgeStyle}>{INDUSTRY_LABEL_KO[i] ?? i}</span>
+          ))}
+          {program.maxAge != null && (
+            <span style={dimBadgeStyle}>{ko ? `만 ${program.maxAge}세 이하` : `≤${program.maxAge}y`}</span>
+          )}
+        </div>
+      )}
+
       {/* Benefit */}
       <div style={benefitBoxStyle}>
         <div style={benefitLabelStyle}>{ko ? "지원 내용" : "Benefit"}</div>
@@ -711,6 +807,20 @@ function ProgramCard({
         <Calendar size={12} strokeWidth={1.5} style={{ color: TEXT_SUBTLE, flexShrink: 0 }} />
         <span>{program.season[lang]}</span>
       </div>
+
+      {/* 유리한 점 — 이 지원사업 가점 요소(비수도권·청년·특허·벤처인증 등) */}
+      {(() => {
+        const bonus = getProgramBonusFactors(program.name.ko, program.category).slice(0, 4);
+        if (bonus.length === 0) return null;
+        return (
+          <div style={bonusRowStyle}>
+            <span style={bonusLabelStyle}>{ko ? "유리한 점" : "Bonus"}</span>
+            {bonus.map((b) => (
+              <span key={b.key} style={bonusChipStyle}>+{b.label}</span>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Required docs */}
       {program.requiredDocs && program.requiredDocs.length > 0 && (
@@ -847,6 +957,55 @@ const filterCardStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: 12,
+};
+
+const selectStyle: React.CSSProperties = {
+  fontSize: 12.5,
+  fontWeight: 600,
+  color: "#0f172a",
+  padding: "7px 10px",
+  borderRadius: 9,
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  background: "#fff",
+  cursor: "pointer",
+  minWidth: 120,
+};
+
+const dimBadgeStyle: React.CSSProperties = {
+  fontSize: 10.5,
+  fontWeight: 600,
+  color: MIDNIGHT,
+  padding: "2px 7px",
+  borderRadius: 999,
+  background: MIDNIGHT_SOFT,
+  border: `1px solid ${MIDNIGHT_BORDER_LIGHT}`,
+  whiteSpace: "nowrap",
+};
+
+const bonusRowStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 5,
+  flexWrap: "wrap",
+  alignItems: "center",
+  paddingTop: 2,
+};
+
+const bonusLabelStyle: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  color: GREEN,
+  letterSpacing: "0.02em",
+};
+
+const bonusChipStyle: React.CSSProperties = {
+  fontSize: 10.5,
+  fontWeight: 600,
+  color: GREEN,
+  padding: "2px 7px",
+  borderRadius: 999,
+  background: "rgba(29,53,87,0.06)",
+  border: "1px solid rgba(29,53,87,0.16)",
+  whiteSpace: "nowrap",
 };
 
 const filterLabelStyle: React.CSSProperties = {

@@ -16,7 +16,7 @@ export type SupportProgramsParams = {
 
 export type GovernmentSupportProgram = {
   id: string;
-  source: "kstartup" | "mss";
+  source: "kstartup" | "mss" | "bizinfo";
   programName: string;
   organizerName: string;
   supportCategory: string;     // 지원분야 (금융/기술/인력/창업/경영)

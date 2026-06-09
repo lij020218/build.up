@@ -2123,7 +2123,10 @@ export type ProgramMatch = StartupProgram & {
   matchReasons: MatchReason[];
 };
 
-export function getMatchedProgramsV2(criteria: MatchCriteria): ProgramMatch[] {
+export function getMatchedProgramsV2(
+  criteria: MatchCriteria,
+  programs: StartupProgram[] = startupPrograms,
+): ProgramMatch[] {
   const isFranchise = criteria.startupType === "franchise";
   // 위기 신호 — 런웨이 부족 + 매출 하락. 둘 중 하나만 강해도 위기로 분류.
   const isCashCrisis = (criteria.runwayMonths != null && criteria.runwayMonths < 6) ||
@@ -2142,7 +2145,7 @@ export function getMatchedProgramsV2(criteria: MatchCriteria): ProgramMatch[] {
     : monthlyRev < 300_000_000 ? "medium"
     : "large";
 
-  return startupPrograms.map((p): ProgramMatch => {
+  return programs.map((p): ProgramMatch => {
     let score = 0;
     let personalFitScore = 0; // 개인화 점수 — 마감·status 부스트 제외
     let eligible = true;
@@ -2396,8 +2399,9 @@ export function getRecommendedPrograms(
   criteria: MatchCriteria,
   limit: number = 6,
   minFitScore: number = 25,
+  programs?: StartupProgram[],
 ): ProgramMatch[] {
-  const all = getMatchedProgramsV2(criteria);
+  const all = getMatchedProgramsV2(criteria, programs);
   return all
     .filter((p) => p.applicationStatus !== "closed")
     .filter((p) => p.eligible)

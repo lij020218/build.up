@@ -3,6 +3,7 @@ export * from "./roadmap/clusters";
 export * from "./roadmap/startup-mode-content";
 export * from "./roadmap/startup-success-cases";
 export * from "./funding/programs";
+export * from "./funding/funding-normalizer";
 export * from "./market/scoring";
 export * from "./finance/simulation";
 export * from "./finance/cost-ratios";

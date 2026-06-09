@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../_lib/auth";
+import { getMergedFundingPrograms } from "../../_lib/funding-live";
 import {
   getMatchedProgramsV2,
   getRecommendedPrograms,
+  getProgramBonusFactors,
   type MatchCriteria,
   type ProgramMatch,
   type ApplicationStatus,
@@ -68,6 +70,12 @@ type ResolvedProgram = {
     termMonths: number | null;
   } | null;
   policyFundSubCategory: string | null;
+  // ── 차원(필터·배지) 필드 — 웹 카드와 동일 ──
+  regions: string[] | null;
+  industries: string[] | null;
+  maxAge: number | null;
+  /** 유리한 점 — 가점 요소 라벨(비수도권·청년·특허·벤처인증 등) */
+  bonusFactors: string[];
   // ── match fields ──
   matchScore: number;
   personalFitScore: number;
@@ -118,6 +126,10 @@ function resolveProgram(p: ProgramMatch, lang: Lang): ResolvedProgram {
         }
       : null,
     policyFundSubCategory: p.policyFundSubCategory ?? null,
+    regions: p.regions ?? null,
+    industries: p.industries ?? null,
+    maxAge: p.maxAge ?? null,
+    bonusFactors: getProgramBonusFactors(p.name.ko, p.category).slice(0, 5).map((b) => b.label),
     matchScore: p.matchScore,
     personalFitScore: p.personalFitScore,
     eligible: p.eligible,
@@ -148,12 +160,15 @@ export async function POST(request: Request) {
   const limit = typeof body.limit === "number" && body.limit > 0 ? Math.min(50, Math.floor(body.limit)) : 6;
   const criteria: MatchCriteria = body.criteria ?? {};
 
+  // 라이브(기업마당+K-Startup) + 큐레이션 병합 — 웹 GuidesView 와 동일 데이터(파리티). 폴백 안전.
+  const { programs: pool } = await getMergedFundingPrograms();
+
   let matched: ProgramMatch[];
   if (mode === "recommend") {
-    matched = getRecommendedPrograms(criteria, limit);
+    matched = getRecommendedPrograms(criteria, limit, 25, pool);
   } else {
     // 마감된 프로그램은 숨김 (웹 GuidesView 와 동일)
-    matched = getMatchedProgramsV2(criteria).filter((p) => p.applicationStatus !== "closed");
+    matched = getMatchedProgramsV2(criteria, pool).filter((p) => p.applicationStatus !== "closed");
   }
 
   const programs = matched.map((p) => resolveProgram(p, lang));

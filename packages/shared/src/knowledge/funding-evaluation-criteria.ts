@@ -488,6 +488,19 @@ export function detectRubric(programName: string, category?: string): Rubric {
   return PSST_RUBRIC;
 }
 
+/**
+ * 프로그램 → "이 지원사업을 얻기 위해 유리한 점"(가점 요소) 목록.
+ *  카드/모달이 "비수도권·청년·여성·특허·벤처인증…" 칩으로 노출.
+ */
+export function getProgramBonusFactors(programName: string, category?: string): BonusFactor[] {
+  return detectRubric(programName, category).bonusFactors;
+}
+
+/** 프로그램 → "어떤 단계의 사장님께 유리한지" 한 줄 가이드 */
+export function getProgramStageGuide(programName: string, category?: string): string {
+  return detectRubric(programName, category).stageGuide;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  합격/탈락 키워드 — AI 가 사장님 데이터 평가 시 인용 가능
 //  출처: 사업계획서 100개 분석 (2026)
