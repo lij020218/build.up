@@ -6628,11 +6628,11 @@
       "en": "Low-capital pasta (23.5M), avg sales 970M — top 9% in category"
     },
     "startupCostWon": 2353,
-    "franchiseFee": 300,
+    "franchiseFee": 330,
     "monthlyRoyalty": 22,
-    "avgAnnualRevenueWon": 97131,
-    "storeCount": 52,
-    "closureRate": 3,
+    "avgAnnualRevenueWon": 9455,
+    "storeCount": 79,
+    "closureRate": 0,
     "scores": {
       "profitability": 88,
       "stability": 60,
@@ -6893,14 +6893,14 @@
       "en": "New pasta (24 stores, <5yr) — limited HQ info ⚠"
     },
     "startupCostWon": 8275,
-    "franchiseFee": 500,
+    "franchiseFee": 1210,
     "monthlyRoyalty": 27.5,
-    "avgAnnualRevenueWon": 25000,
+    "avgAnnualRevenueWon": 17227,
     "storeCount": 24,
-    "closureRate": 2.5,
+    "closureRate": 82.6,
     "scores": {
       "profitability": 70,
-      "stability": 50,
+      "stability": 32,
       "accessibility": 75,
       "brandPower": 50,
       "support": 60
@@ -7018,11 +7018,11 @@
     "franchiseFee": 1430,
     "monthlyRoyalty": 44,
     "avgAnnualRevenueWon": 58644,
-    "storeCount": 17,
-    "closureRate": 3,
+    "storeCount": 18,
+    "closureRate": 5.6,
     "scores": {
       "profitability": 75,
-      "stability": 78,
+      "stability": 72,
       "accessibility": 35,
       "brandPower": 60,
       "support": 72
@@ -7185,14 +7185,14 @@
       "en": "WARNING: Ultra-low-cost delivery pasta (17.8M, 4-21 stores discrepancy)"
     },
     "startupCostWon": 1782,
-    "franchiseFee": 200,
+    "franchiseFee": 330,
     "monthlyRoyalty": 16.5,
     "avgAnnualRevenueWon": 12000,
     "storeCount": 21,
-    "closureRate": 5,
+    "closureRate": 26.3,
     "scores": {
       "profitability": 60,
-      "stability": 45,
+      "stability": 32,
       "accessibility": 92,
       "brandPower": 35,
       "support": 50
@@ -9888,15 +9888,15 @@
       "ko": "프리미엄 케이크 카페 — 케이크 매출 비중 40-45%, 직영·소수 가맹",
       "en": "Premium cake café — 40-45% cake revenue mix, mostly direct"
     },
-    "startupCostWon": 15000,
-    "franchiseFee": 1200,
+    "startupCostWon": 23610,
+    "franchiseFee": 700,
     "monthlyRoyalty": 27.5,
-    "avgAnnualRevenueWon": 36000,
-    "storeCount": 25,
-    "closureRate": 3,
+    "avgAnnualRevenueWon": 12821,
+    "storeCount": 17,
+    "closureRate": 80,
     "scores": {
       "profitability": 72,
-      "stability": 70,
+      "stability": 32,
       "accessibility": 25,
       "brandPower": 78,
       "support": 72
@@ -11710,8 +11710,8 @@
       "ko": "글로벌 슈가링 시장 32억$ CAGR 6.4%, 소자본 5천만원대 진입",
       "en": "Global sugaring market US$3.2B (CAGR 6.4%); KRW 50M low-capital entry"
     },
-    "startupCostWon": 5000,
-    "franchiseFee": 300,
+    "startupCostWon": 4685,
+    "franchiseFee": 330,
     "monthlyRoyalty": 30,
     "avgAnnualRevenueWon": 12000,
     "storeCount": 35,
@@ -11844,14 +11844,14 @@
       "en": "Operated by Le Heim Anaden Co.; per-store monthly avg ~KRW 9.6M (2024)"
     },
     "startupCostWon": 8000,
-    "franchiseFee": 300,
+    "franchiseFee": 660,
     "monthlyRoyalty": 30,
     "avgAnnualRevenueWon": 11500,
-    "storeCount": 20,
-    "closureRate": 3.5,
+    "storeCount": 114,
+    "closureRate": 25.4,
     "scores": {
       "profitability": 72,
-      "stability": 65,
+      "stability": 32,
       "accessibility": 70,
       "brandPower": 55,
       "support": 68
@@ -14105,7 +14105,7 @@
       "en": "WARNING: Jul 2024 corporate split + Study Center being divested + only 11 Meeting Centers remain"
     },
     "startupCostWon": 25000,
-    "franchiseFee": 770,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 44,
     "avgAnnualRevenueWon": 14000,
     "storeCount": 30,
@@ -14119,6 +14119,7 @@
     },
     "roadmapNotes": {
       "ko": [
+        "※ 토즈는 스터디센터/모임공간 2개 등록 — 수치는 모임공간 기준(브랜드별 상이)",
         "⚠⚠ 2024년 7월 1일 회사 분할 — 운영사 ㈜피투피시스템즈 사업 구조 본격 재편 진행",
         "⚠⚠ 토즈 스터디센터 = 분할 매각 진행 중 → 인수자에 따라 점주 정책 급변 가능성",
         "⚠ 토즈 워크센터 = 전점 폐업 → 모임센터로 흡수",
@@ -14433,7 +14434,7 @@
       "en": "High-protein meals for fitness lovers"
     },
     "startupCostWon": 9828,
-    "franchiseFee": 1000,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 30000,
     "storeCount": 32,
@@ -15395,7 +15396,7 @@
       "en": "#1 revenue-per-area malatang franchise"
     },
     "startupCostWon": 4370,
-    "franchiseFee": 500,
+    "franchiseFee": 330,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 31648,
     "storeCount": 40,
@@ -15586,15 +15587,15 @@
       "ko": "포장 특화 1세대 샐러드 브랜드",
       "en": "First-gen takeout-focused salad brand"
     },
-    "startupCostWon": 8000,
-    "franchiseFee": 1200,
+    "startupCostWon": 6679,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 21000,
-    "storeCount": 45,
-    "closureRate": 7,
+    "avgAnnualRevenueWon": 29681,
+    "storeCount": 23,
+    "closureRate": 18,
     "scores": {
       "profitability": 66,
-      "stability": 68,
+      "stability": 42,
       "accessibility": 72,
       "brandPower": 65,
       "support": 65
@@ -15636,16 +15637,16 @@
       "ko": "일본식 돈가스 프리미엄 프랜차이즈",
       "en": "Premium Japanese-style tonkatsu franchise"
     },
-    "startupCostWon": 15000,
-    "franchiseFee": 1500,
+    "startupCostWon": 31520,
+    "franchiseFee": 2530,
     "monthlyRoyalty": 5,
     "avgAnnualRevenueWon": 50000,
-    "storeCount": 31,
+    "storeCount": 27,
     "closureRate": 4,
     "scores": {
       "profitability": 68,
       "stability": 75,
-      "accessibility": 55,
+      "accessibility": 52,
       "brandPower": 80,
       "support": 75
     },
@@ -15782,16 +15783,16 @@
       "ko": "더본코리아의 소자본 설렁탕 전문점",
       "en": "Theborn Korea's compact seolleongtang"
     },
-    "startupCostWon": 9300,
-    "franchiseFee": 990,
+    "startupCostWon": 10055,
+    "franchiseFee": 330,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 44557,
-    "storeCount": 22,
-    "closureRate": 10,
+    "avgAnnualRevenueWon": 33228,
+    "storeCount": 25,
+    "closureRate": 16,
     "scores": {
       "profitability": 68,
-      "stability": 52,
-      "accessibility": 75,
+      "stability": 42,
+      "accessibility": 65,
       "brandPower": 75,
       "support": 78
     },
@@ -15832,11 +15833,11 @@
       "en": "Theborn Korea's noodle shop"
     },
     "startupCostWon": 8500,
-    "franchiseFee": 1000,
+    "franchiseFee": 220,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 28000,
-    "storeCount": 18,
-    "closureRate": 15,
+    "avgAnnualRevenueWon": 39529,
+    "storeCount": 17,
+    "closureRate": 11,
     "scores": {
       "profitability": 55,
       "stability": 42,
@@ -15881,16 +15882,16 @@
       "ko": "빽다방+베이커리 결합 매장",
       "en": "Paik Dabang + bakery combo"
     },
-    "startupCostWon": 13000,
-    "franchiseFee": 1000,
+    "startupCostWon": 25291,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 40000,
-    "storeCount": 19,
-    "closureRate": 5,
+    "storeCount": 25,
+    "closureRate": 5.6,
     "scores": {
       "profitability": 70,
       "stability": 68,
-      "accessibility": 60,
+      "accessibility": 52,
       "brandPower": 80,
       "support": 80
     },
@@ -15935,10 +15936,10 @@
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 60000,
     "storeCount": 22,
-    "closureRate": 6,
+    "closureRate": 12.5,
     "scores": {
       "profitability": 70,
-      "stability": 72,
+      "stability": 52,
       "accessibility": 55,
       "brandPower": 78,
       "support": 75
@@ -15980,7 +15981,7 @@
       "en": "Standalone seolleongtang under Bonga"
     },
     "startupCostWon": 18350,
-    "franchiseFee": 1500,
+    "franchiseFee": 550,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 50000,
     "storeCount": 30,
@@ -16031,9 +16032,9 @@
     "startupCostWon": 20206,
     "franchiseFee": 1650,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 90000,
-    "storeCount": 56,
-    "closureRate": 6,
+    "avgAnnualRevenueWon": 10751,
+    "storeCount": 64,
+    "closureRate": 0,
     "scores": {
       "profitability": 72,
       "stability": 72,
@@ -16078,14 +16079,14 @@
       "en": "AYCE thin-sliced pork belly"
     },
     "startupCostWon": 11170,
-    "franchiseFee": 1500,
+    "franchiseFee": 1540,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 55000,
-    "storeCount": 20,
-    "closureRate": 8,
+    "storeCount": 15,
+    "closureRate": 33.3,
     "scores": {
       "profitability": 68,
-      "stability": 62,
+      "stability": 32,
       "accessibility": 60,
       "brandPower": 70,
       "support": 70
@@ -17008,15 +17009,15 @@
       "ko": "프리미엄 샐러드·웰빙 식단 브랜드",
       "en": "Premium salad & wellness chain"
     },
-    "startupCostWon": 8000,
-    "franchiseFee": 800,
+    "startupCostWon": 6540,
+    "franchiseFee": 990,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 24000,
-    "storeCount": 40,
-    "closureRate": 7,
+    "avgAnnualRevenueWon": 16681,
+    "storeCount": 25,
+    "closureRate": 25,
     "scores": {
       "profitability": 65,
-      "stability": 65,
+      "stability": 32,
       "accessibility": 70,
       "brandPower": 65,
       "support": 65
@@ -17207,12 +17208,12 @@
       "ko": "신생 가성비 피자 브랜드",
       "en": "Newer budget pizza brand"
     },
-    "startupCostWon": 7800,
-    "franchiseFee": 700,
+    "startupCostWon": 7460,
+    "franchiseFee": 1100,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 22000,
     "storeCount": 29,
-    "closureRate": 9,
+    "closureRate": 0,
     "scores": {
       "profitability": 65,
       "stability": 60,
@@ -17409,8 +17410,8 @@
     "startupCostWon": 9300,
     "franchiseFee": 770,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 17373,
-    "storeCount": 38,
+    "avgAnnualRevenueWon": 15204,
+    "storeCount": 34,
     "closureRate": 29.4,
     "scores": {
       "profitability": 50,
@@ -17462,7 +17463,7 @@
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 19771,
     "storeCount": 11,
-    "closureRate": 41.2,
+    "closureRate": 63.6,
     "scores": {
       "profitability": 55,
       "stability": 32,
@@ -17559,16 +17560,16 @@
       "ko": "대구 명물 통옥수수빵 베이커리",
       "en": "Daegu-iconic corn bread bakery"
     },
-    "startupCostWon": 6538,
+    "startupCostWon": 27130,
     "franchiseFee": 2200,
     "monthlyRoyalty": 0,
-    "avgAnnualRevenueWon": 90180,
-    "storeCount": 24,
-    "closureRate": 8.3,
+    "avgAnnualRevenueWon": 66733,
+    "storeCount": 34,
+    "closureRate": 11.8,
     "scores": {
       "profitability": 85,
-      "stability": 62,
-      "accessibility": 75,
+      "stability": 52,
+      "accessibility": 52,
       "brandPower": 75,
       "support": 65
     },
@@ -17664,7 +17665,7 @@
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 11604,
     "storeCount": 29,
-    "closureRate": 26.3,
+    "closureRate": 34.5,
     "scores": {
       "profitability": 45,
       "stability": 32,
@@ -17714,7 +17715,7 @@
     "franchiseFee": 1320,
     "monthlyRoyalty": 0,
     "avgAnnualRevenueWon": 24983,
-    "storeCount": 54,
+    "storeCount": 48,
     "closureRate": 18.8,
     "scores": {
       "profitability": 60,
