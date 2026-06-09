@@ -16,7 +16,8 @@ import {
   type StartupProgram,
 } from "@foundone/shared";
 
-const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const FRESH_TTL_MS = 12 * 60 * 60 * 1000;     // 라이브 성공 시 12시간
+const FALLBACK_TTL_MS = 5 * 60 * 1000;        // 라이브 실패(키 없음/오류) 시 5분 — 키 추가/배포 후 빠르게 회복
 // 라이브 페치 건수 — 모집중(Rcrt_prgs_yn=Y) 최근 공고. 현재 공고 중인 것만 노출하므로 과다 페치 불필요.
 const KSTARTUP_FETCH = 500;
 let cache: { programs: StartupProgram[]; live: boolean; at: number } | null = null;
@@ -38,7 +39,10 @@ async function fetchLiveNormalized(): Promise<StartupProgram[]> {
  * 큐레이션 + 라이브 병합 결과(캐시). `live` = 라이브 데이터가 실제로 합쳐졌는지.
  */
 export async function getMergedFundingPrograms(): Promise<{ programs: StartupProgram[]; live: boolean; at: number }> {
-  if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache;
+  if (cache) {
+    const ttl = cache.live ? FRESH_TTL_MS : FALLBACK_TTL_MS;
+    if (Date.now() - cache.at < ttl) return cache;
+  }
   let live: StartupProgram[] = [];
   let isLive = false;
   try {
@@ -46,6 +50,9 @@ export async function getMergedFundingPrograms(): Promise<{ programs: StartupPro
     isLive = live.length > 0;
   } catch (e) {
     console.warn("[funding-live] 라이브 페치 실패 — 큐레이션 폴백:", (e as Error).message);
+  }
+  if (!isLive && !process.env.KSTARTUP_API_KEY) {
+    console.warn("[funding-live] KSTARTUP_API_KEY 미설정 — 큐레이션만 반환(라이브 공고 없음)");
   }
   cache = { programs: mergeFundingPrograms(startupPrograms, live), live: isLive, at: Date.now() };
   return cache;
