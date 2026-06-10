@@ -121,11 +121,12 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   ],
 
   // 카페 — Prime Cost·Food Safety (외식 공유), Inventory (원두·유제품·시럽 발주), Team
-  //   신규 필요: 시간대별 매출 + 메뉴 카테고리 + 원두 폐기 (Phase 2c)
+  //   ⚠️ cafe-hourly-sales 는 status:"planned" (미구현) — 렌더되는 컴포넌트가 없어
+  //      "필수 선언 but 부재" 모순을 만든다. 실데이터+컴포넌트 생기기 전엔 default 에서 제외
+  //      (2026-06-10 P1-8 audit). 빈 슬롯·가짜 카드 금지 원칙.
   "cafe-dessert": [
     "prime-cost",
     "food-safety",
-    "cafe-hourly-sales", // 신규
     "inventory-ops",     // 원두·우유·시럽·컵 등 발주 필수 (2026-05-26 추가)
     "team-card",
     "avg-ticket-upsell",
@@ -134,11 +135,14 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
 
   // 뷰티 — Team, 객단가 업셀
   //   신규 필요: 예약·노쇼·디자이너 rebook (Phase 2d)
+  //   ⚠️ saas-key-metrics 제거 (2026-06-10 P1-8 audit): 멤버십(구독) 운영 *시에만* 의미.
+  //      비구독 뷰티샵엔 MRR·이탈률이 전부 0/— 인 빈 카드 → "무조건 필수" 선언은 거짓.
+  //      렌더 계약상 usesSubscriptions=true 일 때만 노출되며 그 경로는 Tier 3 (DASHBOARD_MAP
+  //      line 103). 업종 무조건 default 가 아니므로 매트릭스에서 제외.
   beauty: [
     "beauty-booking-noshow", // 신규
     "team-card",
     "avg-ticket-upsell",
-    "saas-key-metrics",      // 멤버십 운영 시
     "daily-improvement",
     "policy-fund-match",
   ],
@@ -164,12 +168,14 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
     "policy-fund-match",
   ],
 
-  // 피트니스 — Team, SaaSKeyMetrics (회원권)
+  // 피트니스 — Team, 회원권 (회원권 = 구독제일 때만 saas-key-metrics, 아래 ⚠️ 참조)
   //   신규 필요: 출석·노쇼·회원권 만료·90일 잔존 (Phase 2g)
+  //   ⚠️ saas-key-metrics 제거 (2026-06-10 P1-8 audit): 구독제(회원권 정기결제) 운영 시에만
+  //      MRR·이탈률이 실값. 단건 PT/일일권 위주 헬스장엔 빈 카드 → 무조건 필수 선언은 거짓.
+  //      usesSubscriptions=true 일 때 Tier 3 에서 노출 (DASHBOARD_MAP line 103).
   fitness: [
     "fitness-retention",  // 신규
     "team-card",
-    "saas-key-metrics",
     "avg-ticket-upsell",
     "daily-improvement",
     "policy-fund-match",
@@ -177,10 +183,11 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
 
   // 교육 — Team
   //   신규 필요: 출석·미수금·재등록·반별 충원 (Phase 2h)
+  //   ⚠️ saas-key-metrics 제거 (2026-06-10 P1-8 audit): 정기 결제(구독) 운영 시에만 실값.
+  //      비구독 학원엔 빈 카드. usesSubscriptions=true 시 Tier 3 노출 (DASHBOARD_MAP line 103).
   education: [
     "education-enrollment", // 신규
     "team-card",
-    "saas-key-metrics",     // 정기 결제 시
     "daily-improvement",
     "policy-fund-match",
   ],
@@ -214,10 +221,13 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
     "policy-fund-match",
   ],
 
-  // 온라인 디지털 — SaaSKeyMetrics
-  //   신규 필요: MRR breakdown·DAU·전환퍼널·완료율 (Phase 2l)
+  // 온라인 디지털 — SaaSKeyMetrics 가 핵심 지표 (Stripe·Patreon·ConvertKit 구독 모델)
+  //   ⚠️ online-digital-metrics 제거 (2026-06-10 P1-8 audit): status:"planned" (미구현) —
+  //      렌더 컴포넌트 부재로 "필수 선언 but 부재" 모순. 실데이터+컴포넌트 생기기 전 제외.
+  //   ⚠️ saas-key-metrics 는 구독(usesSubscriptions) 운영 시 실값 — 온라인 디지털은 본질이
+  //      구독/유료 멤버십이라 핵심 지표로 유지. 단 무조건 default 가 아니라 usesSubscriptions
+  //      게이팅이며 렌더 경로는 Tier 3 (DASHBOARD_MAP line 103). 비구독이면 빈 카드라 노출 X.
   "online-digital": [
-    "online-digital-metrics", // 신규
     "saas-key-metrics",
     "daily-improvement",
     "policy-fund-match",
@@ -385,9 +395,13 @@ export const CARD_META: Record<CardId, CardMeta> = {
       "Equals SaaS Engagement Metrics",
     ],
   },
+  // ⚠️ 2026-06-10 P1-8 audit: industries 를 구독-네이티브 업종(startup-tech·online-digital)으로
+  //   한정. beauty/fitness/education 은 구독(멤버십) 운영 *시에만* 의미 있어 무조건 default 가
+  //   아니다 (usesSubscriptions 게이팅, Tier 3 노출). 비구독 업종에 무조건 노출하면 MRR·이탈률
+  //   전부 0/— 인 빈 카드 → 가짜 숫자 금지 원칙 위반. INDUSTRY_CARDS 와 동기화.
   "saas-key-metrics": {
     id: "saas-key-metrics", status: "existing",
-    industries: ["startup-tech", "online-digital", "beauty", "fitness", "education"],
+    industries: ["startup-tech", "online-digital"],
     sources: [
       "Stripe Subscription Analytics",
       "ConvertKit / Patreon Insights",

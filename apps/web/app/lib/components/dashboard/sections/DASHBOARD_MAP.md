@@ -166,19 +166,25 @@ SSOT: `industry-card-matrix.ts` — 11 업종 × 30 카드 매핑.
 | 업종 | 매일 노출 카드 수 (universal 8 + 업종 추가) |
 |---|---|
 | food (외식) | 12 (food-safety·prime-cost·inventory·team·daily-improvement·policy-fund) |
-| cafe-dessert | 12 (food-safety·prime-cost·cafe-hourly*·team·upsell·policy-fund) |
-| beauty | 11 (beauty-booking*·team·upsell·saas·improvement·policy-fund) |
+| cafe-dessert | 13 (food-safety·prime-cost·inventory·team·upsell·policy-fund) |
+| beauty | 13 (beauty-booking*·team·upsell·improvement·policy-fund) |
 | retail | 11 (retail-sell-through*·inventory·upsell·team·improvement·policy-fund) |
 | ecommerce | 10 (ecommerce-conversion*·inventory·upsell·improvement·policy-fund) |
-| fitness | 11 (fitness-retention*·team·saas·upsell·improvement·policy-fund) |
-| education | 10 (education-enrollment*·team·saas·improvement·policy-fund) |
+| fitness | 13 (fitness-retention*·team·upsell·improvement·policy-fund) |
+| education | 12 (education-enrollment*·team·improvement·policy-fund) |
 | pet | 12 (pet-booking*·inventory·team·upsell·improvement·policy-fund) |
 | living-service | 9 (living-dispatch*·team·improvement·policy-fund) |
 | space | 9 (space-occupancy*·inventory·improvement·policy-fund) |
-| online-digital | 9 (online-metrics*·saas·improvement·policy-fund) |
+| online-digital | 11 (saas†·improvement·policy-fund) |
 | startup-tech | 13 (cash-zero-date·startup-founder-brief·startup-health·saas·policy-fund) |
 
 *: 신규 카드 status="planned" — Phase 2b-l 작성 예정 (matrix 슬롯만 예약).
+†: saas-key-metrics 는 usesSubscriptions=true 일 때만 노출 (Tier 3). 비구독이면 빈 카드라 미노출.
+
+2026-06-10 P1-8 audit: 선언 vs 렌더 불일치 정합. cafe-hourly-sales·online-digital-metrics
+(planned, 컴포넌트 부재)와 beauty/fitness/education 의 무조건 saas-key-metrics 선언을 매트릭스에서
+제거. 빈 카드·"필수인데 부재" 모순 해소. saas-key-metrics 는 구독-네이티브(startup-tech·
+online-digital)만 industries 유지 + usesSubscriptions 게이팅.
 
 ## 사장님 카드 표시 설정 (2026-05-11 추가)
 

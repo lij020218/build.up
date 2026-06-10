@@ -289,14 +289,16 @@ export function useDashboardComputed(d: DashboardHook) {
       ? Math.max(0, Math.round(capitalLeft / Math.abs(netProfit)))
       : -1;
 
-  // 건강 라벨
+  // 건강 라벨 — 신호등 컬러 금지. HEALTH_COLORS(@foundone/shared) 농담 스케일과 동일 SSOT:
+  //   healthy=옅은 네이비(0.55), caution=짙은 네이비(0.85), danger=벽돌 danger(#b64c4c), unknown=뉴트럴.
+  //   gauge·label 은 라벨(안정/주의/위험)을 항상 동반하므로 색만으로 구분하지 않음(색각 접근성).
   const healthTone =
     d.businessHealthScore === "healthy"
-      ? "#177245"
+      ? "rgba(25,25,112,0.55)"
       : d.businessHealthScore === "danger"
-        ? "#b42318"
+        ? "#b64c4c"
         : d.businessHealthScore === "caution"
-          ? "#b54708"
+          ? "rgba(25,25,112,0.85)"
           : "rgba(15, 23, 42, 0.82)";
   const healthLabel =
     d.businessHealthScore === "healthy"

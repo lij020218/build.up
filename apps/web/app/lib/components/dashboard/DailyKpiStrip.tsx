@@ -9,7 +9,8 @@
  * 디자인:
  *  - 5칸 horizontal grid (반응형: 모바일은 2-3개씩 wrap)
  *  - 각 칸: 라벨(작게) + 큰 숫자 + 트렌드(±%) + 임계값 색
- *  - 색: green(good) / amber(warning) / red(bad) / neutral(데이터 없음)
+ *  - 색: 신호등 금지 — good=옅은 네이비 / warning=짙은 네이비 / bad=벽돌 danger / neutral(데이터 없음).
+ *        HEALTH_COLORS(@foundone/shared) 농담 스케일과 동일 SSOT.
  */
 
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -67,26 +68,29 @@ function evaluateColor(value: number | null | undefined, t: KpiThresholds | unde
     : !isWarning;
 
   if (isGood) return {
-    bg: "linear-gradient(180deg, rgba(52,199,89,0.06) 0%, rgba(52,199,89,0.02) 100%)",
+    // good = 옅은 네이비 (HEALTH healthy 톤)
+    bg: "linear-gradient(180deg, rgba(25,25,112,0.05) 0%, rgba(25,25,112,0.02) 100%)",
     fg: "#1d3557",
-    border: "rgba(52,199,89,0.22)",
+    border: "rgba(25,25,112,0.14)",
     labelColor: "#1d3557",
-    shadow: "0 1px 3px rgba(52,199,89,0.06), 0 8px 16px -8px rgba(52,199,89,0.10)",
+    shadow: "0 1px 3px rgba(25,25,112,0.05), 0 8px 16px -8px rgba(25,25,112,0.10)",
     state: "good",
   };
   if (isWarning && !isBad) return {
-    bg: "linear-gradient(180deg, rgba(25,25,112,0.06) 0%, rgba(25,25,112,0.02) 100%)",
-    fg: "#a35509",
+    // warning = 짙은 네이비 (HEALTH warning 톤)
+    bg: "linear-gradient(180deg, rgba(25,25,112,0.10) 0%, rgba(25,25,112,0.04) 100%)",
+    fg: "#191970",
     border: "rgba(25,25,112,0.24)",
-    labelColor: "#a35509",
+    labelColor: "#191970",
     shadow: "0 1px 3px rgba(25,25,112,0.06), 0 8px 16px -8px rgba(25,25,112,0.10)",
     state: "warning",
   };
   return {
-    bg: "linear-gradient(180deg, rgba(182,76,76,0.06) 0%, rgba(182,76,76,0.02) 100%)",
-    fg: "#b32419",
-    border: "rgba(182,76,76,0.26)",
-    labelColor: "#b32419",
+    // bad = 벽돌 danger (HEALTH critical 톤, #b64c4c 단일색)
+    bg: "linear-gradient(180deg, rgba(182,76,76,0.10) 0%, rgba(182,76,76,0.04) 100%)",
+    fg: "#b64c4c",
+    border: "rgba(182,76,76,0.32)",
+    labelColor: "#b64c4c",
     shadow: "0 1px 3px rgba(182,76,76,0.06), 0 8px 16px -8px rgba(182,76,76,0.12)",
     state: "bad",
   };
@@ -192,11 +196,11 @@ export function DailyKpiStrip({ ko, industryCategoryId, values }: Props) {
                   padding: "2px 6px",
                   borderRadius: "999px",
                   background: trend > 0.5
-                    ? "rgba(52,199,89,0.10)"
+                    ? "rgba(25,25,112,0.10)"
                     : trend < -0.5
                       ? "rgba(182,76,76,0.10)"
                       : "rgba(25,25,112,0.06)",
-                  color: trend > 0.5 ? "#1d3557" : trend < -0.5 ? "#b32419" : "rgba(25,25,112,0.55)",
+                  color: trend > 0.5 ? "#1d3557" : trend < -0.5 ? "#b64c4c" : "rgba(25,25,112,0.55)",
                   flexShrink: 0,
                   fontVariantNumeric: "tabular-nums" as const,
                   letterSpacing: "0",

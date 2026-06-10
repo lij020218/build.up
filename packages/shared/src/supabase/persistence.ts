@@ -23,6 +23,60 @@ export type PersistedRoadmapState = {
   tasks: WorkflowTaskMap;
 };
 
+/**
+ * orphan 삭제 가드 윈도우 (ms).
+ *
+ * ⚠️ 2026-06-10 P1-2 (정합성·동시성): 웹 autosave 의 "upsert + delete-orphans" 는 이번 payload 에
+ *   *없는* stage_code/task_code row 를 orphan 으로 보고 지운다. 하지만 웹의 realtime 재조회는
+ *   5초 throttle(usePersistence.ts onRemote) 이라, iOS 가 방금 새로 만든 단계 row 를 웹 로컬 상태가
+ *   아직 모르는 사이 그 단계를 orphan 으로 *오인* 해 삭제 → iOS 진행 유실의 레이스 윈도우가 있다.
+ *
+ *   가드: 삭제 후보 row 의 updated_at 이 이 윈도우 내(=다른 기기가 방금 썼을 가능성)면 삭제 제외.
+ *   - iOS RoadmapDecisionsRepository.upsert 는 매 저장 시 updated_at=now 를 명시 기록한다.
+ *   - 웹 saveRoadmapState 의 stage upsert 는 updated_at 을 *건드리지 않는다* (serialize* 에 미포함,
+ *     stage_decisions/stage_tasks 에 updated_at 트리거 없음). 즉 "최근 updated_at" = 다른 기기 쓰기 신호.
+ *   - 따라서 이 가드는 웹 자신의 활동을 오탐하지 않고, 오직 타 기기의 최신 쓰기만 보호한다.
+ *
+ *   트레이드오프: 사용자가 *경로를 바꿔* 더는 유효하지 않은 단계라도, 그게 직전 N분 내 (다른 기기에서)
+ *     갱신됐다면 이번 save 에선 안 지워진다. 그러나 그 row 는 더 이상 어떤 기기도 payload 에 포함하지
+ *     않으므로 updated_at 이 더는 갱신되지 않고, N분 경과 후 다음 save 에서 자연 정리된다 (영구 누적 없음).
+ *   윈도우 길이: realtime throttle(5s) + 재조회 왕복 여유를 충분히 덮도록 2분.
+ */
+const ORPHAN_DELETE_GUARD_MS = 2 * 60 * 1000;
+
+/**
+ * orphan 삭제 후보 중 *최근 갱신된 row 의 키* 를 골라낸다 (다른 기기 동시 쓰기 보호).
+ * updated_at 이 없거나 파싱 불가하면 보수적으로 "최근" 으로 간주해 보존 (삭제하지 않음).
+ */
+function recentlyTouchedKeys<K extends string>(
+  rows: Array<Record<string, unknown>>,
+  keyField: K,
+  now: number = Date.now()
+): Set<string> {
+  const recent = new Set<string>();
+  for (const row of rows) {
+    const key = row[keyField];
+    if (typeof key !== "string") continue;
+    const rawUpdatedAt = row.updated_at;
+    if (typeof rawUpdatedAt !== "string") {
+      // updated_at 누락 — 알 수 없으므로 보존 측으로 (데이터 유실 방지 우선).
+      recent.add(key);
+      continue;
+    }
+    const ts = Date.parse(rawUpdatedAt);
+    if (Number.isNaN(ts)) {
+      recent.add(key);
+      continue;
+    }
+    if (now - ts < ORPHAN_DELETE_GUARD_MS) {
+      recent.add(key);
+    }
+  }
+  return recent;
+}
+
+export { ORPHAN_DELETE_GUARD_MS, recentlyTouchedKeys };
+
 const baseRoadmap = {
   roadmapId: starterRoadmap.roadmapId,
   templateId: starterRoadmap.templateId,
@@ -447,14 +501,17 @@ export async function saveRoadmapState(
     if (upsertError) throw upsertError;
 
     // 이번 payload 에 없는 옛 stage_decisions 만 제거 (orphan). 실패해도 데이터 소실 아님(잔존만).
+    // ⚠️ 레이스 가드 (2026-06-10 P1-2): 후보 중 최근 N분 내 갱신된 row (= iOS 등 다른 기기가 방금 쓴
+    //   단계, 웹 로컬 상태가 아직 모르는) 는 삭제 제외. updated_at 도 함께 조회한다. (위 ORPHAN_DELETE_GUARD_MS)
     const keepCodes = new Set(decisionPayload.map((d) => d.stage_code));
     const { data: existingDecisionRows } = await client
       .from("stage_decisions")
-      .select("stage_code")
+      .select("stage_code,updated_at")
       .eq("roadmap_id", roadmapRow.id);
+    const recentDecisionCodes = recentlyTouchedKeys(existingDecisionRows ?? [], "stage_code");
     const orphanCodes = (existingDecisionRows ?? [])
       .map((row: { stage_code: string }) => row.stage_code)
-      .filter((code) => !keepCodes.has(code));
+      .filter((code) => !keepCodes.has(code) && !recentDecisionCodes.has(code));
     if (orphanCodes.length > 0) {
       const { error: orphanError } = await client
         .from("stage_decisions")
@@ -471,14 +528,17 @@ export async function saveRoadmapState(
       .upsert(taskPayload, { onConflict: "roadmap_id,task_code" });
     if (upsertError) throw upsertError;
 
+    // ⚠️ 레이스 가드 (2026-06-10 P1-2): decisions 와 동일 — 최근 N분 내 갱신된 task row 는 삭제 제외.
+    //   (현재 stage_tasks 는 웹 전용 쓰기지만, 추후 타 기기가 쓰더라도 안전하도록 일관 적용.)
     const keepTaskCodes = new Set(taskPayload.map((t) => t.task_code));
     const { data: existingTaskRows } = await client
       .from("stage_tasks")
-      .select("task_code")
+      .select("task_code,updated_at")
       .eq("roadmap_id", roadmapRow.id);
+    const recentTaskCodes = recentlyTouchedKeys(existingTaskRows ?? [], "task_code");
     const orphanTaskCodes = (existingTaskRows ?? [])
       .map((row: { task_code: string }) => row.task_code)
-      .filter((code) => !keepTaskCodes.has(code));
+      .filter((code) => !keepTaskCodes.has(code) && !recentTaskCodes.has(code));
     if (orphanTaskCodes.length > 0) {
       const { error: orphanError } = await client
         .from("stage_tasks")

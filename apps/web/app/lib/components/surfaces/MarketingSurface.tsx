@@ -356,7 +356,7 @@ export function MarketingSurface() {
             <div style={kpiHint}>{ko ? "캠페인 추가 시 집계" : "Add campaigns to track"}</div>
           )}
         </div>
-        <div style={{ ...kpiCard, borderColor: "rgba(52,199,89,0.1)" }}>
+        <div style={{ ...kpiCard, borderColor: "rgba(25,25,112,0.1)" }}>
           <div style={kpiLabel}>ROAS</div>
           {blendedRoas > 0 ? (
             <div style={{ ...kpiValue, color: blendedRoas >= 1 ? "#1d3557" : "#b64c4c" }}>
@@ -412,9 +412,9 @@ export function MarketingSurface() {
             return (
               <span key={ch} style={{
                 fontSize: "11px", fontWeight: 620, padding: "4px 10px", borderRadius: "8px",
-                background: active ? "rgba(52,199,89,0.08)" : "rgba(15,23,42,0.03)",
+                background: active ? "rgba(25,25,112,0.08)" : "rgba(15,23,42,0.03)",
                 color: active ? "#1d3557" : "rgba(15,23,42,0.4)",
-                border: active ? "1px solid rgba(52,199,89,0.15)" : "1px solid rgba(15,23,42,0.04)",
+                border: active ? "1px solid rgba(25,25,112,0.15)" : "1px solid rgba(15,23,42,0.04)",
                 display: "inline-flex", alignItems: "center", gap: "4px",
               }}>
                 <MetaIcon size={12} strokeWidth={1.5} />
@@ -514,10 +514,11 @@ export function MarketingSurface() {
 
 // ─── 공통 스타일 (앱 전역 토큰 기반 · Apple HIG) ───
 // 기준: styles.card(radius 28px), AnalyticsSurface(KPI radius 18px)
-// 액센트: iOS 시스템 색 (블루 #007aff, 그린 #1d3557, 오렌지 #191970, 레드 #b64c4c)
+// 액센트: 블루 #007aff(중립 포커스), 미드나잇 네이비 #1d3557/#191970, 벽돌 danger #b64c4c.
+// 신호등 컬러 금지 — 성공/효과는 네이비 농담으로 표현(초록 사용 X).
 
 const COLOR_ACCENT = "#007aff";           // Apple 포커스·코칭 강조
-const COLOR_SUCCESS = "#1d3557";          // iOS green — 성공 사례·효과
+const COLOR_SUCCESS = "#1d3557";          // 미드나잇 네이비 — 성공 사례·효과 (초록 아님)
 const COLOR_NEUTRAL_TEXT = "var(--text)"; // #111
 const COLOR_NEUTRAL_MUTED = "var(--muted)"; // #5b616e
 
@@ -662,8 +663,8 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
         {top.map((c) => {
           const done = activeSet.has(c);
           const isNext = c === next;
-          const color = done ? "#34c759" : isNext ? "#007aff" : "var(--muted)";
-          const bg = done ? "rgba(52,199,89,0.08)" : isNext ? "rgba(0,122,255,0.10)" : "rgba(17,17,17,0.03)";
+          const color = done ? "#1d3557" : isNext ? "#007aff" : "var(--muted)";
+          const bg = done ? "rgba(25,25,112,0.08)" : isNext ? "rgba(0,122,255,0.10)" : "rgba(17,17,17,0.03)";
           return (
             <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: 600, color, background: bg, border: `1px solid ${color}22`, padding: "4px 9px", borderRadius: "8px" }}>
               {done ? "✓" : isNext ? "→" : ""} {labelOf(c)}
@@ -722,7 +723,7 @@ function PlayBlock({ p, ko, done, onToggleDone }: { p: MarketingPlay; ko: boolea
       {/* 내 사업 적용 — 단계·효과·도구 */}
       <div style={{ padding: "12px 15px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", gap: "8px" }}>
-          <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: upper, color: "#34c759" }}>
+          <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: upper, color: "#1d3557" }}>
             {ko ? "내 사업에 이렇게 적용" : "Apply to your business"}
           </div>
           <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", border: "1px solid var(--border)", padding: "1px 7px", borderRadius: "5px", flexShrink: 0 }}>{effortLabel}</span>
@@ -730,13 +731,13 @@ function PlayBlock({ p, ko, done, onToggleDone }: { p: MarketingPlay; ko: boolea
         <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "7px" }}>
           {p.application.steps.map((s, i) => (
             <li key={i} style={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.5, display: "flex", gap: "9px", alignItems: "flex-start" }}>
-              <span style={{ flexShrink: 0, width: "19px", height: "19px", borderRadius: "6px", background: "#34c759", color: "#fff", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: "1px" }}>{i + 1}</span>
+              <span style={{ flexShrink: 0, width: "19px", height: "19px", borderRadius: "6px", background: "#1d3557", color: "#fff", fontSize: "11px", fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", marginTop: "1px" }}>{i + 1}</span>
               <span style={{ flex: 1 }}>{s}</span>
             </li>
           ))}
         </ol>
         {p.application.expectedEffect && (
-          <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.5, marginTop: "9px", padding: "9px 11px", borderRadius: "10px", background: "rgba(52,199,89,0.05)" }}>
+          <div style={{ fontSize: "12.5px", color: "var(--muted)", lineHeight: 1.5, marginTop: "9px", padding: "9px 11px", borderRadius: "10px", background: "rgba(25,25,112,0.05)" }}>
             <b style={{ color: "#1d3557", fontWeight: 680 }}>{ko ? "기대 효과 " : "Impact "}</b>{p.application.expectedEffect}
           </div>
         )}
@@ -763,9 +764,9 @@ function PlayBlock({ p, ko, done, onToggleDone }: { p: MarketingPlay; ko: boolea
               marginTop: "12px", width: "100%", padding: "10px 14px", borderRadius: "10px",
               fontSize: "13px", fontWeight: 700, fontFamily: "inherit", cursor: "pointer",
               display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px",
-              border: done ? "1px solid #34c759" : "1px solid var(--border)",
-              background: done ? "rgba(52,199,89,0.10)" : "var(--surface-strong)",
-              color: done ? "#1d7a3e" : "var(--text)",
+              border: done ? "1px solid #1d3557" : "1px solid var(--border)",
+              background: done ? "rgba(25,25,112,0.10)" : "var(--surface-strong)",
+              color: done ? "#1d3557" : "var(--text)",
             }}
           >
             {done

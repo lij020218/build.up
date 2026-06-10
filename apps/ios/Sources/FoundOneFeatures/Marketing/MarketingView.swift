@@ -5,11 +5,10 @@
 //   섹션 순서 (모두 인라인, 시트 없음):
 //    1. Header + KPI 3 (이달 지출 / ROAS / 활성 채널)
 //    2. 성장 예측 진입 카드 (탭 → GrowthForecastView sheet)
-//    3. AI 코칭 (3 액션 full inline)
-//    4. AI 트렌드 (출처 메타 + 5 트렌드 + 참조 출처 리스트)
-//    5. 마케팅 작업하기 (focused 트렌드의 playbook + case + tools)
-//    6. 채널별 지출 추적 (추천 chip + list + collapsible add form)
-//    7. 보조: LoyaltyDonut + CampaignIdeas (iOS 고유 유지)
+//    3. 마케팅 작업하기 = 사례 엔진 (MarketingCasesCard) — 히어로 1 + 채널 진행도 + 더 보기.
+//       2026-06-10: 기존 코칭·트렌드 2개 섹션은 이 단일 엔진으로 통합·삭제됨.
+//    4. 채널별 지출 추적 (추천 chip + list + collapsible add form)
+//    5. 보조: LoyaltyDonut + CampaignIdeas (iOS 고유 유지)
 //
 
 import SwiftUI
@@ -50,6 +49,21 @@ public struct MarketingView: View {
         self.mock = mock
     }
 
+    // 이번 달 활성 채널 — 웹 MarketingSurface.tsx:104,108 패리티.
+    //   monthCampaigns = campaigns.filter(c.month === curMonth(KST)) → 채널 Set.
+    //   computeKpis 와 동일한 KST currentMonthKey 기준.
+    private var activeChannelsThisMonth: [String] {
+        let month = MarketingRepository.currentMonthKey()
+        return Array(Set(state.campaigns.filter { $0.month == month }.map(\.channel)))
+    }
+
+    // 재생성 게이팅 — 웹 MarketingSurface.tsx:267 패리티.
+    //   "이미 콘텐츠가 정상 표시 중이면 force 재생성 X (LLM/web_search 비용·6회/시 한도 보호).
+    //    진짜 문제(에러 또는 빈 결과)일 때만 force 허용." canRegenerate = error != nil || plays.isEmpty.
+    private var canRegenerateCases: Bool {
+        state.casesError != nil || state.plays.isEmpty
+    }
+
     public var body: some View {
         // ⚠️ 2026-05-25: 중복 BUBackgroundSurface 제거 — MobileShell 풀스크린 Aurora 사용.
         ZStack {
@@ -66,9 +80,10 @@ public struct MarketingView: View {
                         error: state.casesError,
                         plays: state.plays,
                         sources: state.casesSources,
-                        activeChannels: Array(Set(state.campaigns.map(\.channel))),
+                        activeChannels: activeChannelsThisMonth,
                         categoryId: state.profile?.industryCategoryId,
                         doneTitles: state.doneTitles,
+                        canRefresh: canRegenerateCases,
                         onToggleDone: { title in togglePlayDone(title) },
                         onRefresh: { Task { await loadCases(force: true) } }
                     )
@@ -84,7 +99,6 @@ public struct MarketingView: View {
                     LoyaltyDonutBlock()
                     CampaignIdeasBlock()
 
-                    footnote
                     Color.clear.frame(height: 110)
                 }
                 .padding(.horizontal, BUSpacing.screenMargin)
@@ -122,13 +136,15 @@ public struct MarketingView: View {
                 .tracking(1.54)
                 .foregroundStyle(BUColor.inkMuted.opacity(0.7))
                 .textCase(.uppercase)
-            Text("이번 주, 매출 만들기")
+            Text("내 가게 마케팅")
                 .font(.system(size: 28, weight: .bold))
                 .tracking(-1.12)
                 .foregroundStyle(BUColor.ink)
-            Text("AI 코칭 + 트렌드 + 캠페인 ROI")
+            // 웹 MarketingSurface.tsx:326 헤더 카피와 통일.
+            Text("이번 주에 딱 하나만 — 내 업종 성공사례로 만든 가장 중요한 마케팅 1가지부터.")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(BUColor.inkMuted.opacity(0.78))
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 2)
         }
     }
@@ -142,23 +158,22 @@ public struct MarketingView: View {
                     sub: state.kpis.spendWon > 0 ? "원" : "캠페인 추가",
                     tint: Color(red: 0, green: 0.478, blue: 1.0)
                 )
+                // ROAS — 웹 MarketingSurface.tsx:362 패리티. 신호등 색 제거:
+                //   ROAS ≥ 1 → 네이비(success #1d3557), < 1 → 벽돌(danger #b64c4c) 2색 분기만.
                 KpiTile(
                     eyebrow: "블렌디드 ROAS",
                     value: state.kpis.spendWon > 0
                         ? String(format: "%.1fx", state.kpis.blendedRoas)
                         : "—",
-                    sub: state.kpis.spendWon == 0
-                        ? "기여 매출 입력"
-                        : (state.kpis.blendedRoas >= 2 ? "건강" : state.kpis.blendedRoas >= 1 ? "보통" : "미달"),
-                    tint: state.kpis.blendedRoas >= 2 ? BUColor.success
-                          : state.kpis.blendedRoas >= 1 ? BUColor.warn
-                          : BUColor.danger
+                    sub: state.kpis.spendWon == 0 ? "기여 매출 입력" : "",
+                    tint: state.kpis.blendedRoas >= 1 ? BUColor.success : BUColor.danger
                 )
+                // 활성 채널 — 웹은 중립 텍스트 색(var(--text)). 신호등 강조 없음.
                 KpiTile(
                     eyebrow: "활성 채널",
                     value: "\(state.kpis.activeChannels)개",
-                    sub: state.kpis.activeChannels >= 3 ? "다채널" : state.kpis.activeChannels == 0 ? "없음" : "확장 가능",
-                    tint: state.kpis.activeChannels >= 3 ? BUColor.success : BUColor.inkMuted
+                    sub: state.kpis.activeChannels == 0 ? "아직 없음" : "",
+                    tint: BUColor.inkMuted
                 )
             }
             .padding(.horizontal, 2)
@@ -198,14 +213,6 @@ public struct MarketingView: View {
         .buttonStyle(.plain)
     }
 
-    private var footnote: some View {
-        Text("코칭은 주 1회, 트렌드는 일 1회 캐시됩니다. 재생성으로 즉시 갱신 가능.")
-            .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(BUColor.inkMuted.opacity(0.7))
-            .lineSpacing(2)
-            .padding(.top, 4)
-    }
-
     // MARK: - Load
 
     private func initialLoad() async {
@@ -241,8 +248,11 @@ public struct MarketingView: View {
     }
 
     private func refreshAll() async {
+        // 웹 패리티(MarketingSurface.tsx:267): 정상 표시 중인 사례는 풀-투-리프레시로 force 재생성하지 않음.
+        //   LLM/web_search 비용·6회/시 한도 보호. 에러/빈 결과일 때만 force 허용, 그 외엔 캐시 사용.
+        let allowForce = canRegenerateCases
         async let kpi: () = loadKpisAndCampaigns()
-        async let cases: () = loadCases(force: true)
+        async let cases: () = loadCases(force: allowForce)
         _ = await (kpi, cases)
     }
 

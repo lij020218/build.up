@@ -1,13 +1,14 @@
 //
-//  MarketingRepository.swift — 마케팅 코칭·트렌드·캠페인 통합
+//  MarketingRepository.swift — 마케팅 사례 엔진·캠페인 통합
 //
 //  웹 SSOT:
-//   • /api/ai/marketing/coach        — 가게 맞춤 3 액션 (now / this-week / this-month)
-//   • /api/ai/marketing/trends       — 일일 5 트렌드 (Supabase marketing_trend_cache 우선)
+//   • /api/ai/marketing/cases        — 업종 최신 성공사례·트렌드 → 내 사업 적용 plays (주 1회 캐시)
+//   • /api/ai/marketing/play-progress — 플레이 "했어요" 피드백 루프
 //   • user_store_data.marketing_campaigns (JSONB) — 캠페인 기록
 //   • user_store_data.marketing_monthly_budget (int) — 월 예산
 //
-//  코칭/트렌드 endpoint 는 공개 (auth 불필요) 지만 Bearer 첨부해 telemetry/일관성 유지.
+//  2026-06-10: 코칭(/coach)·트렌드(/trends) endpoint 는 사례 엔진(/cases)으로 통합 — 관련 DTO/메서드 제거.
+//  cases endpoint 는 공개 (auth 불필요) 지만 Bearer 첨부해 telemetry/일관성 유지.
 //
 
 import Foundation
@@ -15,83 +16,6 @@ import Supabase
 import FoundOneCore
 
 // MARK: - DTOs
-
-public struct CoachTool: Sendable, Decodable, Hashable {
-    public let name: String
-    public let purpose: String
-    public let tier: String       // "free" | "paid" | "freemium"
-    public let url: String?
-}
-
-public struct CoachAction: Sendable, Decodable, Identifiable, Hashable {
-    public let priority: String   // "now" | "this-week" | "this-month"
-    public let title: String
-    public let why: String
-    public let howToExecute: [String]
-    public let expectedImpact: String
-    public let tools: [CoachTool]
-
-    public var id: String { title }
-}
-
-public struct CoachResponse: Sendable, Decodable {
-    public let actions: [CoachAction]
-    public let generatedAt: String?
-    public let cached: Bool?
-    public let weekKey: String?
-    public let error: String?
-}
-
-public struct TrendTool: Sendable, Decodable, Hashable {
-    public let name: String
-    public let purpose: String
-    public let tier: String
-    public let url: String?
-}
-
-public struct TrendItem: Sendable, Decodable, Identifiable, Hashable {
-    public let title: String
-    public let reason: String
-    public let contentIdea: String
-    public let format: String                // "reel" | "story" | "short" | "post" | "blog" | "campaign" | "ad"
-    public let hashtags: [String]
-    public let referenceUrl: String?
-    public let howToExecute: [String]?
-    public let strategyExample: String?
-    public let effectiveness: String?
-    public let tools: [TrendTool]?
-    public let brandName: String?
-    public let campaignName: String?
-    public let viewCount: Int?
-    public let lesson: String?
-
-    public var id: String { title }
-}
-
-public struct TrendSource: Sendable, Decodable, Hashable {
-    public let name: String
-    public let url: String
-    public let publishedDate: String?
-}
-
-public struct TrendMeta: Sendable, Decodable, Hashable {
-    public let usedDataLab: Bool?
-    public let usedNaverBlog: Bool?
-    public let usedTavily: Bool?
-    public let usedYoutube: Bool?
-    public let youtubeVideos: Int?
-    public let webSearches: Int?
-}
-
-public struct TrendsResponse: Sendable, Decodable {
-    public let trends: [TrendItem]
-    public let sources: [TrendSource]
-    public let meta: TrendMeta?
-    public let cached: Bool?
-    public let generatedAt: String?
-    public let groupKey: String?
-    public let error: String?
-}
 
 public struct CampaignRecord: Sendable, Codable, Identifiable, Hashable {
     public var id: String
@@ -193,8 +117,25 @@ public enum MarketingRepositoryError: LocalizedError, Sendable {
                 return "네트워크 오류: \(urlError.localizedDescription)"
             }
         case .httpStatus(let code, let body):
-            if let body, !body.isEmpty { return "HTTP \(code) — \(body)" }
-            return "HTTP \(code) 오류."
+            // 웹 humanizeAiError 패리티 — raw json/HTTP 코드 대신 한국어 안내.
+            //   raw 에 API 키·청구 정보 포함 가능 → 그대로 노출 금지.
+            let lower = (body ?? "").lowercased()
+            if code == 429 || (lower.contains("rate") && (lower.contains("limit") || lower.contains("exceeded"))) {
+                return "AI 호출이 잠시 몰렸어요. 1분 뒤 다시 시도해주세요."
+            }
+            if lower.contains("daily") && lower.contains("limit") {
+                return "오늘 사용량 한도에 도달했어요. 내일 다시 시도해주세요."
+            }
+            if code == 402 || lower.contains("credit balance") || lower.contains("billing") || lower.contains("payment_required") {
+                return "AI 일시 중단 — 관리자에게 문의해주세요 (서비스 점검 중)."
+            }
+            if code == 529 || lower.contains("overloaded") {
+                return "AI 서버 일시 과부하. 잠시 후 다시 시도해주세요."
+            }
+            if code == 401 || lower.contains("authentication") || lower.contains("invalid api") {
+                return "AI 인증 오류 — 관리자에게 문의해주세요."
+            }
+            return "AI 응답을 받지 못했어요. 잠시 후 다시 시도해주세요."
         case .decoding(let msg): return "응답 형식 오류: \(msg)"
         }
     }
@@ -293,39 +234,6 @@ public actor MarketingRepository {
         self.userId = userId
         self.baseURL = baseURL
         self.urlSession = urlSession
-    }
-
-    // MARK: - Coach
-
-    public func fetchCoaching(context: MarketingCoachContext) async throws -> [CoachAction] {
-        var ctx = context
-        if ctx.language == nil { ctx.language = "ko" }
-        let req = try await jsonRequest(path: "/api/ai/marketing/coach", method: "POST", body: ctx, timeoutSec: 65)
-        let resp: CoachResponse = try await perform(req)
-        if let err = resp.error, !err.isEmpty, resp.actions.isEmpty {
-            throw MarketingRepositoryError.httpStatus(500, err)
-        }
-        return resp.actions
-    }
-
-    // MARK: - Trends
-
-    public struct TrendsRequest: Sendable, Encodable {
-        public var subIndustryId: String?
-        public var businessType: String?
-        public var language: String? = "ko"
-        public init(subIndustryId: String?, businessType: String?, language: String? = "ko") {
-            self.subIndustryId = subIndustryId
-            self.businessType = businessType
-            self.language = language
-        }
-    }
-
-    public func fetchTrends(subIndustryId: String?, businessType: String?) async throws -> TrendsResponse {
-        let body = TrendsRequest(subIndustryId: subIndustryId, businessType: businessType, language: "ko")
-        let req = try await jsonRequest(path: "/api/ai/marketing/trends", method: "POST", body: body, timeoutSec: 90)
-        let resp: TrendsResponse = try await perform(req)
-        return resp
     }
 
     // MARK: - Cases (성공사례·트렌드 → 내 사업 적용)

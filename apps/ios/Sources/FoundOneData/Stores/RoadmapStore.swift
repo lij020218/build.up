@@ -71,6 +71,10 @@ public final class RoadmapStore {
     /// stageId → decision.
     public private(set) var decisions: [String: StageDecision] = [:]
 
+    /// upsert 에 실패한 stageId — 다음 syncFromRemote 성공(네트워크 복구) 시 재전송.
+    ///   fire-and-forget 가 실패하면 그 단계가 영영 서버 미반영되던 것 보정. 멱등(서버 upsert 키 머지).
+    private var pendingPushStageIds: Set<String> = []
+
     // MARK: - Derived
 
     /// cluster path 의 stageId 순서 — RoadmapSampleData 에 위임.
@@ -304,6 +308,7 @@ public final class RoadmapStore {
             }
             decisions = merged
             persist()
+            retryPendingPushes()  // 네트워크 복구됨 — 이전에 실패한 단계 재전송(보정)
         } catch {
             logger.error("syncFromRemote 실패: \(error.localizedDescription)")
         }
@@ -315,15 +320,28 @@ public final class RoadmapStore {
         await syncFromRemote()
     }
 
-    /// 백그라운드 fire-and-forget upsert. Supabase upsert 는 idempotent → debounce 불필요.
+    /// 백그라운드 upsert. Supabase upsert 는 idempotent → debounce 불필요.
+    ///   실패 시 stageId 를 pendingPushStageIds 에 적재 → 다음 syncFromRemote 성공 시 재전송(보정).
     private func pushUpsert(_ decision: StageDecision) {
         guard let repo else { return }
         Task { [decision] in
             do {
                 try await repo.upsert(decision)
+                self.pendingPushStageIds.remove(decision.stageId)
             } catch {
-                logger.error("upsert 실패 stageId=\(decision.stageId, privacy: .public): \(error.localizedDescription)")
+                self.pendingPushStageIds.insert(decision.stageId)
+                logger.error("upsert 실패(재전송 대기) stageId=\(decision.stageId, privacy: .public): \(error.localizedDescription)")
             }
+        }
+    }
+
+    /// syncFromRemote 성공(=네트워크 복구) 직후 호출 — 미전송 단계를 현재 로컬 값으로 재-push.
+    ///   무한 루프 방지: 재시도분도 실패 시 pendingPushStageIds 에 그대로 남아 다음 sync 때 다시 시도.
+    private func retryPendingPushes() {
+        guard !pendingPushStageIds.isEmpty else { return }
+        for stageId in Array(pendingPushStageIds) {  // 복사본 순회 — 아래 remove(순회 중 변경) 안전
+            if let d = decisions[stageId] { pushUpsert(d) }
+            else { pendingPushStageIds.remove(stageId) }  // 더 이상 로컬에 없으면 폐기
         }
     }
 

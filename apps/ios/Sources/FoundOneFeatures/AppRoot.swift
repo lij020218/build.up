@@ -260,6 +260,7 @@ public struct AppRoot: View {
         // 로드맵 cluster hydration 용 — 원격 업종 (아래 do 블록에서 채움).
         var remoteCategoryId: String?
         var remoteSubIndustryId: String?
+        var remoteStartupType: String?
 
         do {
             let dashboardRepo = UserDashboardRepository(
@@ -275,6 +276,7 @@ public struct AppRoot: View {
             )
             remoteCategoryId = snapshot.industryCategoryId
             remoteSubIndustryId = snapshot.subIndustryId
+            remoteStartupType = snapshot.startupType
         } catch {
             store.recordError("Supabase 데이터 로딩 실패: \(Self.readableError(error))")
             store.setProfile(
@@ -369,7 +371,7 @@ public struct AppRoot: View {
         // ⚠️ cluster(=로드맵 경로 선택자)를 원격 업종에서 hydrate. 이게 없으면 웹에서 업종 선택한
         //   사용자가 iOS 로그인 시 cluster 가 기본값(offline-food)에 머물러, syncFromRemote 로 받은
         //   stage_decisions 가 경로에 매핑되지 않아 진행도가 틀어진다. (decisions 머지보다 먼저 실행)
-        Self.hydrateRoadmapIndustry(categoryId: remoteCategoryId, subIndustryId: remoteSubIndustryId, into: connectedRoadmap)
+        Self.hydrateRoadmapIndustry(categoryId: remoteCategoryId, subIndustryId: remoteSubIndustryId, startupType: remoteStartupType, into: connectedRoadmap)
         self.roadmapStore = connectedRoadmap
         await connectedRoadmap.syncFromRemote()
         #if DEBUG
@@ -421,7 +423,7 @@ public struct AppRoot: View {
                     costs: snapshot.costs
                 )
                 // 업종 변경(웹·다른 기기)도 로드맵 경로에 반영 — cluster re-hydrate.
-                Self.hydrateRoadmapIndustry(categoryId: snapshot.industryCategoryId, subIndustryId: snapshot.subIndustryId, into: roadmapStore)
+                Self.hydrateRoadmapIndustry(categoryId: snapshot.industryCategoryId, subIndustryId: snapshot.subIndustryId, startupType: snapshot.startupType, into: roadmapStore)
             } catch { /* best-effort — 기존 값 유지 */ }
         }
 
@@ -472,8 +474,14 @@ public struct AppRoot: View {
     /// 세부 업종 id 가 있으면 정밀 cluster(딥테크 포함), 카테고리만 있으면 coarse 매핑.
     /// 원격 업종 정보가 전혀 없으면 로컬 유지(온보딩 중 사용자 보호).
     @MainActor
-    private static func hydrateRoadmapIndustry(categoryId: String?, subIndustryId: String?, into roadmap: RoadmapStore) {
+    private static func hydrateRoadmapIndustry(categoryId: String?, subIndustryId: String?, startupType: String? = nil, into roadmap: RoadmapStore) {
         let ud = UserDefaults.standard
+        // 창업유형 hydrate — franchise 분기(RoadmapStage.pathFor)가 이 UD 키를 읽어 franchise-application
+        //   단계를 삽입. 웹에서 franchise 로 온보딩한 사용자가 iOS 로그인 시 단계 누락되던 것 복원.
+        //   (빈/nil 이면 기존 로컬값 보존 — 덮어쓰지 않음.)
+        if let st = startupType, !st.isEmpty {
+            ud.set(st, forKey: "stage.startupType.selected")
+        }
         if let sub = subIndustryId, let option = StarterIndustryData.option(by: sub) {
             let clusterRaw = StarterIndustryData.cluster(for: option)
             ud.set(clusterRaw, forKey: "roadmap.cluster")
@@ -655,13 +663,19 @@ private struct OnboardingFlow: View {
                 AIRoadmapWizardView(
                     webAppURL: BUSupabase.shared.env.webAppURL,
                     onComplete: { result, nameInput in
+                        let parsed = result.parsed
                         // cluster: industryCategoryId → BusinessCluster rawValue
                         let clusterRaw: String
-                        switch result.parsed.industryCategoryId {
+                        switch parsed.industryCategoryId {
                         case "online-digital": clusterRaw = "online-digital"
                         case "startup-tech":   clusterRaw = "startup-tech"
                         default:               clusterRaw = "offline-food"
                         }
+                        // ⚠️ franchise 분기(RoadmapStage.pathFor)는 이 UD 키를 읽음 → setCluster/path 계산 전에 먼저 기록.
+                        let ud = UserDefaults.standard
+                        if !parsed.startupType.isEmpty { ud.set(parsed.startupType, forKey: "stage.startupType.selected") }
+                        if !parsed.subIndustryId.isEmpty { ud.set(parsed.subIndustryId, forKey: "roadmap.selectedIndustryId") }
+                        ud.set(clusterRaw, forKey: "roadmap.cluster")
                         roadmapStore.setCluster(clusterRaw)
 
                         // 상호명: 사용자 입력 → AI 추천 → 기본값
@@ -694,12 +708,39 @@ private struct OnboardingFlow: View {
                         )
                         // 웹·앱 SSOT: 상호명을 Supabase 에도 저장 → 웹에서 동일하게 표시.
                         StoreProfileRepository.persistStoreNameForCurrentUser(finalName)
-                        // 웹·앱 SSOT: AI 위저드에서 정한 업종도 business_profiles 에 반영 (영업 전).
+                        // 웹·앱 SSOT: AI 위저드 결과(업종·세부업종·창업유형·자본)를 business_profiles 에 반영.
+                        //   (종전 버그: subIndustryId=nil·startupType 미전달 → 세부업종·창업유형 유실.)
                         OnboardingProfileSync.persistIndustry(
-                            categoryId: result.parsed.industryCategoryId,
-                            subIndustryId: nil
+                            categoryId: parsed.industryCategoryId,
+                            subIndustryId: parsed.subIndustryId.isEmpty ? nil : parsed.subIndustryId,
+                            startupType: parsed.startupType.isEmpty ? nil : parsed.startupType,
+                            capitalKrw: result.budgetAllocation.displayTotal > 0 ? result.budgetAllocation.displayTotal : nil
                         )
                         OnboardingProfileSync.persistBusinessLaunched(false)
+
+                        // 웹 패리티(useOnboardingHandlers): AI 위저드 결과를 stage_decisions 로 prefill+완료 →
+                        //   웹·iOS 진행도 일치. 웹은 5건(industry/startup-type/business-model/budget/location)이나,
+                        //   iOS result 에 businessModelId·targetOpenDate 가 없어 그 둘은 정직하게 제외(위조 금지).
+                        if !parsed.subIndustryId.isEmpty {
+                            roadmapStore.completeStage(
+                                "industry-selection",
+                                inputs: ["subIndustryId": parsed.subIndustryId, "categoryId": parsed.industryCategoryId],
+                                selectedPrimaryOptionId: parsed.subIndustryId
+                            )
+                        }
+                        if !parsed.startupType.isEmpty {
+                            roadmapStore.completeStage("startup-type", selectedPrimaryOptionId: parsed.startupType)
+                        }
+                        let capital = result.budgetAllocation.displayTotal
+                        if capital > 0 {
+                            roadmapStore.completeStage("budget-setup", inputs: ["capital": String(capital)])
+                        }
+                        if !parsed.preferredRegion.isEmpty {
+                            roadmapStore.completeStage(
+                                "location-candidates",
+                                inputs: ["preferredRegion": parsed.preferredRegion, "selectionMode": "direct"]
+                            )
+                        }
                         selectedTab = .roadmap
                     },
                     onBack: { path = nil }

@@ -43,16 +43,19 @@ function getDomainLabel(domain: string, language: "ko" | "en") {
 }
 
 function getDomainColor(domain: string) {
-  if (domain === "permit-guide") return "#ff9f0a";
+  // 도메인 구분용 뉴트럴 컬러(성과 신호 아님) — 신호등 컬러 금지 원칙에 따라
+  // 초록/주황 대신 네이비 농담 + 중립 블루로 카테고리만 구분.
+  if (domain === "permit-guide") return "#457b9d";
   if (domain === "tax-guide") return "#007aff";
-  if (domain === "loan-guide") return "#34c759";
+  if (domain === "loan-guide") return "#1d3557";
   return "#8e8e93";
 }
 
 function getConfidenceColor(confidence: GuideQaAnswer["confidence"]) {
-  if (confidence === "high") return "#34c759";
-  if (confidence === "medium") return "#ff9f0a";
-  return "#ff3b30";
+  // 신뢰도 신호: 높음=짙은 네이비, 보통=중간 네이비, 낮음=벽돌 danger.
+  if (confidence === "high") return "#191970";
+  if (confidence === "medium") return "rgba(25,25,112,0.58)";
+  return "#b64c4c";
 }
 
 function formatConfidenceBadge(confidence: GuideQaAnswer["confidence"], language: "ko" | "en") {
@@ -283,7 +286,7 @@ const styles = {
     padding: "6px 0"
   },
   checkIcon: {
-    color: "#34c759",
+    color: "#1d3557",
     fontWeight: 700,
     fontSize: "14px",
     flexShrink: 0,
@@ -458,7 +461,7 @@ const styles = {
     color: "var(--primary)"
   },
   warningText: {
-    color: "#ff9f0a",
+    color: "#b64c4c",
     fontSize: "13px",
     lineHeight: 1.6
   },
@@ -626,21 +629,21 @@ function GuideDetailPage() {
             <div style={{
               ...styles.freshnessRow,
               background: freshness.tone === "critical"
-                ? "rgba(255,59,48,0.06)"
+                ? "rgba(182,76,76,0.06)"
                 : freshness.tone === "warning"
-                  ? "rgba(255,159,10,0.06)"
-                  : "rgba(52,199,89,0.06)"
+                  ? "rgba(25,25,112,0.08)"
+                  : "rgba(25,25,112,0.04)"
             }}>
               <div style={{
                 ...styles.dot,
-                background: freshness.tone === "critical" ? "#ff3b30"
-                  : freshness.tone === "warning" ? "#ff9f0a" : "#34c759"
+                background: freshness.tone === "critical" ? "#b64c4c"
+                  : freshness.tone === "warning" ? "rgba(25,25,112,0.85)" : "rgba(25,25,112,0.38)"
               }} />
               <span style={{
                 fontSize: "13px",
                 fontWeight: 600,
-                color: freshness.tone === "critical" ? "#ff3b30"
-                  : freshness.tone === "warning" ? "#ff9f0a" : "#34c759"
+                color: freshness.tone === "critical" ? "#b64c4c"
+                  : freshness.tone === "warning" ? "#191970" : "#1d3557"
               }}>
                 {freshnessLocalized.label}
               </span>
@@ -761,7 +764,7 @@ function GuideDetailPage() {
                           <div style={styles.answerListLabel}>{ko ? "주의할 점" : "Cautions"}</div>
                           {entry.answer.cautions.map((item) => (
                             <div key={item} style={styles.answerListItem}>
-                              <span style={{ color: "#ff9f0a", flexShrink: 0 }}>!</span>
+                              <span style={{ color: "#b64c4c", flexShrink: 0 }}>!</span>
                               <span>{item}</span>
                             </div>
                           ))}

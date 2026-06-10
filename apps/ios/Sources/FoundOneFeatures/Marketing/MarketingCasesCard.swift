@@ -1,8 +1,10 @@
 //
 //  MarketingCasesCard.swift — 마케팅 작업하기 (업종 최신 성공사례·트렌드 → 내 사업 적용)
 //
-//  웹 SSOT: MarketingSurface.tsx 섹션 2-B (PlayBlock).
-//  /api/ai/marketing/cases 가 OpenAI web_search 로 조사한 plays 를 인라인으로 모두 표시.
+//  웹 SSOT: MarketingSurface.tsx 의 MarketingFocus (히어로 1 + 채널 진행도 + 더 보기).
+//  /api/ai/marketing/cases 가 OpenAI web_search 로 조사한 plays.
+//   - plays[0] = "이번 주 핵심 1가지" 히어로 (항상 표시)
+//   - plays[1...] = "이번 주 추가 플레이 N개 더 보기" 접힘 (탭하면 펼침)
 //  각 play = 종류(사례/트렌드) + 왜 통했나 + 내 사업 적용(단계·효과·도구).
 //
 
@@ -18,10 +20,13 @@ struct MarketingCasesCard: View {
     let activeChannels: [String]
     let categoryId: String?
     let doneTitles: Set<String>
+    /// 재생성 허용 여부 — 웹 canRegenerateCases 패리티(에러/빈 결과일 때만 true).
+    let canRefresh: Bool
     let onToggleDone: (String) -> Void
     let onRefresh: () -> Void
 
     @Environment(\.openURL) private var openURL
+    @State private var showMore: Bool = false
 
     private let blue = Color(red: 0, green: 0.478, blue: 1.0)
 
@@ -36,20 +41,7 @@ struct MarketingCasesCard: View {
                 emptyBlock
             } else {
                 channelProgress
-                Text("이번 주 핵심 1가지")
-                    .font(.system(size: 11, weight: .heavy))
-                    .tracking(0.5).textCase(.uppercase)
-                    .foregroundStyle(blue)
-                VStack(spacing: 12) {
-                    ForEach(plays) { play in
-                        PlayFullCard(
-                            play: play,
-                            done: doneTitles.contains(play.title),
-                            onToggleDone: { onToggleDone(play.title) },
-                            openURL: openURL
-                        )
-                    }
-                }
+                heroAndMore
                 if !sources.isEmpty {
                     sourcesRow
                 }
@@ -86,20 +78,73 @@ struct MarketingCasesCard: View {
                     .padding(.top, 2)
             }
             Spacer(minLength: 6)
-            Button(action: onRefresh) {
+            // 웹 패리티(MarketingSurface.tsx:559-573): 정상 표시 중이면 disabled.
+            //   재생성은 에러/빈 결과(canRefresh)일 때만 — 비용·중복 LLM 호출 차단.
+            Button(action: { if canRefresh && !loading { onRefresh() } }) {
                 HStack(spacing: 4) {
                     Image(systemName: loading ? "arrow.triangle.2.circlepath" : "arrow.clockwise")
                         .font(.system(size: 11, weight: .heavy))
-                    Text(loading ? "조사 중" : "다시 찾기")
+                    Text(loading ? "조사 중" : (canRefresh ? "다시 찾기" : "최신"))
                         .font(.system(size: 11, weight: .heavy))
                 }
                 .foregroundStyle(Color(red: 0.122, green: 0.275, blue: 0.659))
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(blue.opacity(0.2), lineWidth: 1))
+                .opacity(canRefresh && !loading ? 1 : 0.45)
             }
             .buttonStyle(.plain)
-            .disabled(loading)
+            .disabled(!canRefresh || loading)
+        }
+    }
+
+    // 히어로 1순위 + "더 보기" 접힘 — 웹 MarketingFocus(plays[0] 히어로 + rest 접힘) 패리티.
+    @ViewBuilder private var heroAndMore: some View {
+        let hero = plays[0]
+        let rest = Array(plays.dropFirst())
+        Text("이번 주 핵심 1가지")
+            .font(.system(size: 11, weight: .heavy))
+            .tracking(0.5).textCase(.uppercase)
+            .foregroundStyle(blue)
+        PlayFullCard(
+            play: hero,
+            done: doneTitles.contains(hero.title),
+            onToggleDone: { onToggleDone(hero.title) },
+            openURL: openURL
+        )
+        if !rest.isEmpty {
+            Button {
+                withAnimation(.easeInOut(duration: 0.18)) { showMore.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(showMore ? "접기" : "이번 주 추가 플레이 \(rest.count)개 더 보기")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(BUColor.ink)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(BUColor.inkMuted)
+                        .rotationEffect(.degrees(showMore ? 90 : 0))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 14).padding(.vertical, 11)
+                .background(Color.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(BUColor.cardBorder, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+            if showMore {
+                VStack(spacing: 12) {
+                    ForEach(rest) { play in
+                        PlayFullCard(
+                            play: play,
+                            done: doneTitles.contains(play.title),
+                            onToggleDone: { onToggleDone(play.title) },
+                            openURL: openURL
+                        )
+                    }
+                }
+                .padding(.top, 4)
+            }
         }
     }
 
