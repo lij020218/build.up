@@ -90,6 +90,14 @@ export function useFunnelMetrics(mode: FunnelMode): UseFunnelMetricsResult {
 
   useEffect(() => {
     void fetchRows();
+    // 원격 변경(iOS 등에서 주간 퍼널 입력) 수신 시 재조회 → 동기화 메시에 연결.
+    //   Zustand 밖에서 독립 hydrate 하는 카드이므로 buildup:remote-data-changed 를 구독해야
+    //   새로고침 없이 최신값 반영. fetchRows 의 inFlight 가드가 중복 호출을 흡수한다.
+    const onRemote = () => { void fetchRows(); };
+    window.addEventListener("buildup:remote-data-changed", onRemote);
+    return () => {
+      window.removeEventListener("buildup:remote-data-changed", onRemote);
+    };
   }, [fetchRows]);
 
   const save = useCallback(

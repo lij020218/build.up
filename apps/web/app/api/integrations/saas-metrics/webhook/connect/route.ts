@@ -38,7 +38,11 @@ export async function POST(request: Request) {
     { onConflict: "user_id,source" },
   );
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    console.error("[integrations/saas-metrics/webhook/connect] persist failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "연결 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 500 },
+    );
   }
 
   const base = getEnvVar("APP_BASE_URL") ?? "http://localhost:3000";

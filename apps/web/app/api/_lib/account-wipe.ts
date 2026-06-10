@@ -53,6 +53,10 @@ export const USER_TABLES = [
   "ai_report_insights",
   "marketing_coach_cache",
   "coaching_history",
+  // ── 2026-06-10 감사: 마케팅 사례 엔진 신규 테이블 (미포함 시 초기화 후 부활) ──
+  //   marketing_trend_cache 는 user_id 없는 업종 공용 캐시라 제외(개인 데이터 아님).
+  "marketing_cases_cache",
+  "marketing_play_progress",
 ] as const;
 
 // owner_user_id 컬럼 테이블 (사용자가 소유자로 만든 row 만).

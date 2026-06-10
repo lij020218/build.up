@@ -160,6 +160,52 @@ public struct BudgetSetupStageView: View {
 
     private var canContinue: Bool { startupWon > 0 && !openDateId.isEmpty }
 
+    // MARK: - Stage inputs (웹 계약 키 병행 기록 — 2026-06-10 P0-B)
+
+    /// stage_decisions.inputs 페이로드.
+    ///  • 기존 iOS 키 (startupWon/operatingWon/openDateId/startupOperatingMode) — 하위호환 유지.
+    ///  • 웹 계약 키 병행:
+    ///    - capital — 웹 SSOT (starter-data.ts budget-setup completionRule requiredKeys,
+    ///      usePersistence.ts typeof === "number" 복원). Repository 의 StageInputsCodec.numberKeys
+    ///      에 등록되어 있어 JSONB 에는 number 로 기록됨.
+    ///    - targetOpenDate — ISO "YYYY-MM-DD" (웹 getStarterOpenDatePresets 의 value 형식).
+    private var stageInputs: [String: String] {
+        var m: [String: String] = [
+            "startupWon": "\(startupWon)",
+            "operatingWon": "\(operatingWon)",
+            "openDateId": openDateId,
+            "startupOperatingMode": isStartup ? startupMode : "",
+            "capital": "\(startupWon)",
+        ]
+        if let iso = Self.targetOpenDateISO(openDateId: openDateId) {
+            m["targetOpenDate"] = iso
+        }
+        return m
+    }
+
+    /// iOS 오픈시점 프리셋 id → 오늘 기준 ISO 날짜 (웹 _addMonths 미러 — 상대 개월 가산).
+    /// 알 수 없는 id 는 nil (targetOpenDate 미기록 — 거짓 데이터 금지).
+    static func targetOpenDateISO(openDateId: String, from now: Date = Date()) -> String? {
+        let months: Int
+        switch openDateId {
+        case "1mo":   months = 1
+        case "3mo":   months = 3
+        case "6mo":   months = 6
+        case "12mo":  months = 12
+        case "later": months = 18   // "1년 이상" — 보수적으로 +18개월
+        default:      return nil
+        }
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
+        guard let target = cal.date(byAdding: .month, value: months, to: now) else { return nil }
+        let f = DateFormatter()
+        f.calendar = cal
+        f.timeZone = cal.timeZone
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: target)
+    }
+
     private var advanceHint: String {
         if startupWon == 0 && openDateId.isEmpty { return "자본금과 오픈 시점을 입력하세요" }
         if startupWon == 0 { return "시작 자본금을 입력하세요" }
@@ -184,25 +230,11 @@ public struct BudgetSetupStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(
-                    currentStageId: stageId,
-                    inputs: [
-                        "startupWon": "\(startupWon)",
-                        "operatingWon": "\(operatingWon)",
-                        "openDateId": openDateId,
-                        "startupOperatingMode": isStartup ? startupMode : "",
-                    ]
-                )
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: stageInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(currentStageId: stageId,
-                    inputs: [
-                        "startupWon": "\(startupWon)",
-                        "operatingWon": "\(operatingWon)",
-                        "openDateId": openDateId,
-                        "startupOperatingMode": isStartup ? startupMode : "",
-                    ])
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: stageInputs)
             },
             wrapup: BUStageWrapupData(
                 doneItems: [

@@ -13,7 +13,7 @@ import { computeIndustryRule, type IndustryRuleResult } from "./useIndustryRuleS
 import { computeStartupRule } from "./computeStartupRule";
 import { useStartupMetrics } from "./useStartupMetrics";
 import type { DailyEntry, MonthlyCosts } from "../useDashboard";
-import { getBusinessDay } from "../utils/business-day";
+import { getBusinessDay, getKstMonthKey, prevMonthKey } from "../utils/business-day";
 import { computeWeakestDayPct } from "../utils/weakest-day";
 import { calculateCostRatios, calculateUnifiedHealthScore, type HealthGrade } from "@foundone/shared";
 import { honestDailyAverage } from "../utils/daily-windows";
@@ -188,13 +188,12 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
   // ── 룰 기반 이상 감지 ──
   const topAnomaly = useMemo<ProactiveInsight | null>(() => {
     if (entries.length < 5) return null;
-    const curMonth = new Date().toISOString().slice(0, 7);
-    const prevMonthDate = new Date(); prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-    const prevMonthKey = prevMonthDate.toISOString().slice(0, 7);
+    const curMonth = getKstMonthKey();
+    const prevMonth = prevMonthKey(curMonth);
     const thisMonthEntries = entries.filter((e) => e.date.startsWith(curMonth));
-    const prevMonthEntries = entries.filter((e) => e.date.startsWith(prevMonthKey));
+    const prevMonthEntries = entries.filter((e) => e.date.startsWith(prevMonth));
     const costHistory = (d.costHistory ?? []) as Array<{ month: string; ingredients: number; labor: number; rent: number; utilities: number; other: number }>;
-    const prevSnap = costHistory.find((h) => h.month === prevMonthKey);
+    const prevSnap = costHistory.find((h) => h.month === prevMonth);
     const inventory = (d.inventory as Array<{ name: string; quantity: number; minThreshold?: number; dailyUsage?: number; lastOrderedAt?: string }> | undefined) ?? undefined;
 
     const insights = detectProactiveInsights({
@@ -260,18 +259,16 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
 
   // ── 비용 구조 추세 (이번 달 vs 지난 달 prime cost rate) ──
   const costRatioTrend = useMemo<MorningBriefingBrain["costRatioTrend"]>(() => {
-    const curMonth = new Date().toISOString().slice(0, 7);
-    const prevMonthDate = new Date();
-    prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-    const prevMonthKey = prevMonthDate.toISOString().slice(0, 7);
+    const curMonth = getKstMonthKey();
+    const prevMonth = prevMonthKey(curMonth);
 
     const thisMonthEntries = entries.filter((e) => e.date.startsWith(curMonth));
-    const prevMonthEntries = entries.filter((e) => e.date.startsWith(prevMonthKey));
+    const prevMonthEntries = entries.filter((e) => e.date.startsWith(prevMonth));
     const thisRev = thisMonthEntries.reduce((s, e) => s + e.sales, 0);
     const prevRev = prevMonthEntries.reduce((s, e) => s + e.sales, 0);
 
     const costHistory = (d.costHistory ?? []) as Array<{ month: string; ingredients: number; labor: number }>;
-    const prevSnap = costHistory.find((h) => h.month === prevMonthKey);
+    const prevSnap = costHistory.find((h) => h.month === prevMonth);
 
     const currentPrimeCost = costs.ingredients + costs.labor;
     const currentPrimeRate = thisRev > 0 ? (currentPrimeCost / thisRev) * 100 : null;
@@ -297,7 +294,7 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
     if (isStartup) {
       return computeStartupRule(startupMetricsResult.metrics, ko, entries.length >= 7);
     }
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = getKstMonthKey();
     const monthEntries = entries.filter((e) => e.date.startsWith(currentMonth));
     const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
     const totalCustomers = monthEntries.reduce((s, e) => s + (e.customers ?? 0), 0);

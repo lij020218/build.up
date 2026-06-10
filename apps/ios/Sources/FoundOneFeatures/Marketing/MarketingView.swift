@@ -25,20 +25,14 @@ fileprivate final class MarketingPageState {
     var monthlyBudget: Int = 0
     var kpis: MarketingKpis = MarketingKpis(month: "", spendWon: 0, attributedRevenueWon: 0, blendedRoas: 0, activeChannels: 0)
 
-    var coachLoading: Bool = false
-    var coachError: String? = nil
-    var coachActions: [CoachAction] = []
-    var coachGeneratedAt: String? = nil
 
-    var trendsLoading: Bool = false
-    var trendsError: String? = nil
-    var trends: [TrendItem] = []
-    var trendMeta: TrendMeta? = nil
-    var trendSources: [TrendSource] = []
-    var trendsCached: Bool = false
-
-    /// 웹의 focusedTrendIdx — 클릭한 트렌드의 playbook 을 인라인으로 표시.
-    var focusedTrendIdx: Int = 0
+    // 마케팅 작업하기 = 성공사례·트렌드 → 내 사업 적용
+    var casesLoading: Bool = false
+    var casesError: String? = nil
+    var plays: [MarketingPlay] = []
+    var casesSources: [CasesSourceItem] = []
+    var casesWeekKey: String? = nil
+    var doneTitles: Set<String> = []
 
     var profile: FundingProfileSnapshot? = nil
 }
@@ -65,37 +59,19 @@ public struct MarketingView: View {
                     kpiSection
                     growthNavCard
 
-                    MarketingCoachCard(
-                        loading: state.coachLoading,
-                        error: state.coachError,
-                        actions: state.coachActions,
-                        onRefresh: { Task { await loadCoach(force: true) } }
+                    // 2026-06-10: 코칭·트렌드·작업하기 3개 AI 섹션 → 단일 엔진(MarketingCasesCard)으로 통합.
+                    //   웹 MarketingFocus 와 패리티. 히어로 1순위 + 채널 진행도 + 더 보기.
+                    MarketingCasesCard(
+                        loading: state.casesLoading,
+                        error: state.casesError,
+                        plays: state.plays,
+                        sources: state.casesSources,
+                        activeChannels: Array(Set(state.campaigns.map(\.channel))),
+                        categoryId: state.profile?.industryCategoryId,
+                        doneTitles: state.doneTitles,
+                        onToggleDone: { title in togglePlayDone(title) },
+                        onRefresh: { Task { await loadCases(force: true) } }
                     )
-
-                    MarketingTrendsCard(
-                        loading: state.trendsLoading,
-                        error: state.trendsError,
-                        trends: state.trends,
-                        meta: state.trendMeta,
-                        sources: state.trendSources,
-                        cached: state.trendsCached,
-                        focusedIndex: state.trends.isEmpty ? nil : state.focusedTrendIdx,
-                        onRefresh: { Task { await loadTrends(force: true) } },
-                        onFocus: { idx in
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                state.focusedTrendIdx = idx
-                            }
-                        }
-                    )
-
-                    // 인라인 playbook — focused 트렌드의 실행 가이드
-                    if !state.trends.isEmpty,
-                       state.focusedTrendIdx < state.trends.count {
-                        TrendInlinePlaybook(
-                            trend: state.trends[state.focusedTrendIdx],
-                            index: state.focusedTrendIdx
-                        )
-                    }
 
                     MarketingCampaignsList(
                         campaigns: state.campaigns,
@@ -239,9 +215,8 @@ public struct MarketingView: View {
         if state.profile == nil {
             state.profile = await loadProfileQuiet()
         }
-        async let coach: () = loadCoach()
-        async let trends: () = loadTrends()
-        _ = await (coach, trends)
+        // 2026-06-10: 코칭·트렌드는 단일 엔진(loadCases)으로 통합 — 불필요 LLM 호출 차단.
+        await loadCases()
     }
 
     private func loadProfileQuiet() async -> FundingProfileSnapshot? {
@@ -267,16 +242,15 @@ public struct MarketingView: View {
 
     private func refreshAll() async {
         async let kpi: () = loadKpisAndCampaigns()
-        async let coach: () = loadCoach(force: true)
-        async let trends: () = loadTrends(force: true)
-        _ = await (kpi, coach, trends)
+        async let cases: () = loadCases(force: true)
+        _ = await (kpi, cases)
     }
 
-    private func loadCoach(force: Bool = false) async {
+    private func loadCases(force: Bool = false) async {
         guard let uid = BUSupabase.shared.currentUser?.id else { return }
-        state.coachLoading = true
-        state.coachError = nil
-        defer { state.coachLoading = false }
+        state.casesLoading = true
+        state.casesError = nil
+        defer { state.casesLoading = false }
 
         if state.profile == nil { state.profile = await loadProfileQuiet() }
         var ctx = MarketingCoachContext()
@@ -287,42 +261,36 @@ public struct MarketingView: View {
         ctx.monthlySpendWon = state.kpis.spendWon
         ctx.blendedRoas = state.kpis.blendedRoas
         ctx.activeChannels = Array(Set(state.campaigns.map(\.channel)))
-        ctx.currentStageLabel = "운영 중"
+        ctx.currentStageLabel = (state.profile?.businessLaunched ?? true) ? "운영 중" : "오픈 준비"
         ctx.launchDate = state.profile?.businessLaunchedDate
-        ctx.force = force        // 사용자 "재생성" 버튼 시 서버 캐시 무시
+        ctx.hasUserSales = state.profile?.hasUserSales
+        ctx.salesTrendPct = state.profile?.weeklySalesChangePct
+        ctx.force = force
 
         let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
         do {
-            let actions = try await repo.fetchCoaching(context: ctx)
-            state.coachActions = actions
-            state.coachGeneratedAt = ISO8601DateFormatter().string(from: Date())
+            let resp = try await repo.fetchCases(context: ctx)
+            state.plays = resp.plays
+            state.casesSources = resp.sources ?? []
+            state.casesWeekKey = resp.weekKey
+            if resp.plays.isEmpty {
+                state.casesError = "사례를 받아오지 못했어요. 잠시 후 다시 시도해주세요."
+            } else if let wk = resp.weekKey {
+                // 이번 주 "했어요" 체크 상태 로드 (피드백 루프)
+                state.doneTitles = Set(await repo.playProgress(weekKey: wk))
+            }
         } catch {
-            state.coachError = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
+            state.casesError = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
         }
     }
 
-    private func loadTrends(force: Bool = false) async {
-        guard let uid = BUSupabase.shared.currentUser?.id else { return }
-        state.trendsLoading = true
-        state.trendsError = nil
-        defer { state.trendsLoading = false }
-
-        if state.profile == nil { state.profile = await loadProfileQuiet() }
-        let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
-        do {
-            let resp = try await repo.fetchTrends(
-                subIndustryId: state.profile?.subIndustryId,
-                businessType: state.profile?.industryCategoryId
-            )
-            state.trends = resp.trends
-            state.trendMeta = resp.meta
-            state.trendSources = resp.sources
-            state.trendsCached = resp.cached ?? false
-            if state.focusedTrendIdx >= resp.trends.count {
-                state.focusedTrendIdx = 0
-            }
-        } catch {
-            state.trendsError = (error as? (any LocalizedError))?.errorDescription ?? error.localizedDescription
+    private func togglePlayDone(_ title: String) {
+        guard let uid = BUSupabase.shared.currentUser?.id, let wk = state.casesWeekKey else { return }
+        let willDo = !state.doneTitles.contains(title)
+        if willDo { state.doneTitles.insert(title) } else { state.doneTitles.remove(title) }  // optimistic
+        Task {
+            let repo = MarketingRepository(supabase: BUSupabase.shared.client, userId: uid)
+            await repo.setPlayDone(weekKey: wk, title: title, done: willDo)
         }
     }
 

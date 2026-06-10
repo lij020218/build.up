@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { BILLING_ENABLED, PREMIUM_PRICE_KRW } from "../../lib/billing-gate";
 
-const PRICE = Number(process.env.NEXT_PUBLIC_PREMIUM_PRICE_KRW ?? 19900);
+const PRICE = PREMIUM_PRICE_KRW;
 const STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID ?? "";
 const CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_BILLING_CHANNEL_KEY ?? "";
 
@@ -34,7 +35,13 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // 결제 게이트 닫힘(전 기능 무료 기간) → 결제 UI 폐쇄. 홈으로 이동.
   useEffect(() => {
+    if (!BILLING_ENABLED) router.replace("/");
+  }, [router]);
+
+  useEffect(() => {
+    if (!BILLING_ENABLED) return;
     (async () => {
       // 인증 토큰 없이 호출하면 401 → 항상 free 로 보여 프리미엄 사용자가 재결제 유도됨.
       const { data: { session } } = await supabase.auth.getSession();
@@ -115,6 +122,9 @@ export default function PricingPage() {
       setLoading(false);
     }
   };
+
+  // 게이트 닫힘: redirect 진행 중 빈 화면(결제 UI 노출 방지).
+  if (!BILLING_ENABLED) return null;
 
   return (
     <div style={{
@@ -239,6 +249,16 @@ export default function PricingPage() {
         <p style={{ textAlign: "center", fontSize: "13px", color: "#6e6e73", marginTop: "32px", lineHeight: 1.6 }}>
           매월 자동 갱신 · 언제든지 취소 가능(취소 시 기간 만료까지 이용) · 카드 정보는 PortOne(포트원)에서 안전하게 관리
         </p>
+
+        {/* 법적 고지 — 결제 진행 전 약관·정책 확인 */}
+        <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "8px 16px", marginTop: "16px", fontSize: "12px" }}>
+          <a href="/legal/terms" style={{ color: "#6e6e73", textDecoration: "none" }}>이용약관</a>
+          <span style={{ color: "rgba(0,0,0,0.15)" }}>·</span>
+          <a href="/legal/privacy" style={{ color: "#6e6e73", textDecoration: "none" }}>개인정보처리방침</a>
+          <span style={{ color: "rgba(0,0,0,0.15)" }}>·</span>
+          {/* 환불정책은 이용약관 제8조(유료 서비스 및 환불)에 포함 */}
+          <a href="/legal/terms#refund" style={{ color: "#6e6e73", textDecoration: "none" }}>환불정책</a>
+        </div>
       </div>
     </div>
   );

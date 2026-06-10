@@ -27,6 +27,7 @@ import { SubscriptionPlanManager } from "../SubscriptionPlanManager";
 import { CustomerSummaryCard } from "../CustomerSummaryCard";
 import { SubscriptionWebhookConnectCard } from "../../profile/SubscriptionWebhookConnectCard";
 import { opsCard, opsHeader, sectionEyebrow, emptyState } from "../operationalStyles";
+import { getKstMonthKey, prevMonthKey } from "../../../utils/business-day";
 
 type Props = {
   d: DashboardHook;
@@ -150,11 +151,9 @@ export function SaaSKeyMetricsCard({
   nextStaggerStyle: () => React.CSSProperties;
 }) {
   const typed = c.allEntries as PlanEntry[];
-  const curKey = new Date().toISOString().slice(0, 7);
+  const curKey = getKstMonthKey();
   const monthEntries = typed.filter((e) => e.date.startsWith(curKey));
-  const prevMonth = new Date();
-  prevMonth.setMonth(prevMonth.getMonth() - 1);
-  const prevKey = prevMonth.toISOString().slice(0, 7);
+  const prevKey = prevMonthKey(curKey);
   const prevEntries = typed.filter((e) => e.date.startsWith(prevKey));
 
   const plans = (d.subscriptionPlans ?? []) as Array<{

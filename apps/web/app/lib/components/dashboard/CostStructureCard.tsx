@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { COST_RATIOS, calculateCostRatios } from "@foundone/shared";
 import { PieChart } from "lucide-react";
+import { getKstMonthKey } from "../../utils/business-day";
 
 /* ─── Types ─── */
 
@@ -128,9 +129,8 @@ export function CostStructureCard() {
       return { totalSales: 0, rows: [] as CostRow[], hasCosts: false };
     }
 
-    // Current month total sales
-    const now = new Date();
-    const currentMonth = now.toISOString().slice(0, 7);
+    // Current month total sales (KST 기준 월 키)
+    const currentMonth = getKstMonthKey();
     const monthEntries = entries.filter(e => e.date.startsWith(currentMonth));
     const sales = monthEntries.reduce((s, e) => s + e.sales, 0);
 

@@ -37,11 +37,21 @@ public struct StageDecision: Codable, Sendable, Equatable {
     /// 단계별 자유 형식 JSON 입력값 (선택 카드·체크박스 등).
     /// Codable 안전성을 위해 String dictionary 로 직렬화.
     public var inputs: [String: String]
+    /// 웹 stage_decisions.selected_primary_option_id 미러 (예: industry-selection 의 sub-industry id).
+    /// 웹 분기 엔진(workflow.ts resolveDecisionValue)이 inputs 가 아닌 이 컬럼을 직접 읽는다.
+    /// nil → 쓰기 시 컬럼을 건드리지 않음 (웹이 쓴 값 보존). 구버전 로컬 캐시 디코드 시 자동 nil (하위호환).
+    public var selectedPrimaryOptionId: String?
 
-    public init(stageId: String, completedAt: String? = nil, inputs: [String: String] = [:]) {
+    public init(
+        stageId: String,
+        completedAt: String? = nil,
+        inputs: [String: String] = [:],
+        selectedPrimaryOptionId: String? = nil
+    ) {
         self.stageId = stageId
         self.completedAt = completedAt
         self.inputs = inputs
+        self.selectedPrimaryOptionId = selectedPrimaryOptionId
     }
 
     public var isCompleted: Bool { completedAt != nil }
@@ -153,7 +163,12 @@ public final class RoadmapStore {
     }
 
     /// 특정 stage 완료 처리. 이미 완료된 stage 는 no-op.
-    public func completeStage(_ stageId: String, inputs: [String: String] = [:]) {
+    /// `selectedPrimaryOptionId` — 웹 분기 엔진이 읽는 컬럼 미러. nil 이면 기존 값 유지 (지우지 않음).
+    public func completeStage(
+        _ stageId: String,
+        inputs: [String: String] = [:],
+        selectedPrimaryOptionId: String? = nil
+    ) {
         // path 외 stageId 차단 (좀비 방지)
         guard pathStageIds.contains(stageId) else {
             logger.warning("completeStage 거부 — path 외 stageId: \(stageId, privacy: .public)")
@@ -165,6 +180,7 @@ public final class RoadmapStore {
         }
         // inputs 머지 (덮어쓰기 X — 사장님 데이터 보호)
         for (k, v) in inputs { d.inputs[k] = v }
+        if let primary = selectedPrimaryOptionId { d.selectedPrimaryOptionId = primary }
         decisions[stageId] = d
         persist()
         pushUpsert(d)
@@ -175,10 +191,15 @@ public final class RoadmapStore {
     ///   • completedAt 새로고침 + inputs 머지 + Supabase 즉시 sync.
     ///   • 다른 단계 상태에 영향 없음.
     @discardableResult
-    public func saveStageEdit(currentStageId stageId: String, inputs: [String: String] = [:]) -> Bool {
+    public func saveStageEdit(
+        currentStageId stageId: String,
+        inputs: [String: String] = [:],
+        selectedPrimaryOptionId: String? = nil
+    ) -> Bool {
         guard var d = decisions[stageId], d.completedAt != nil else { return false }
         d.completedAt = Self.isoNow()
         for (k, v) in inputs { d.inputs[k] = v }
+        if let primary = selectedPrimaryOptionId { d.selectedPrimaryOptionId = primary }
         decisions[stageId] = d
         persist()
         pushUpsert(d)
@@ -211,8 +232,12 @@ public final class RoadmapStore {
 
     /// 현재 stage 를 완료 처리하고 다음으로 진행. 다음 stage 가 없으면 nil 반환.
     @discardableResult
-    public func advanceToNext(currentStageId: String, inputs: [String: String] = [:]) -> String? {
-        completeStage(currentStageId, inputs: inputs)
+    public func advanceToNext(
+        currentStageId: String,
+        inputs: [String: String] = [:],
+        selectedPrimaryOptionId: String? = nil
+    ) -> String? {
+        completeStage(currentStageId, inputs: inputs, selectedPrimaryOptionId: selectedPrimaryOptionId)
         // 정식 컬럼 중앙 투영 (수동 persist* 누락 방지). 사용자 commit 지점에서만 호출.
         StageInputProjector.project(inputs)
         let path = pathStageIds
@@ -267,6 +292,10 @@ public final class RoadmapStore {
                     var combined = r
                     for (k, v) in existing.inputs where combined.inputs[k] == nil {
                         combined.inputs[k] = v
+                    }
+                    // selectedPrimaryOptionId — 원격 우선, 원격에 없으면 로컬 보존 (오프라인 입력 보호)
+                    if combined.selectedPrimaryOptionId == nil {
+                        combined.selectedPrimaryOptionId = existing.selectedPrimaryOptionId
                     }
                     merged[r.stageId] = combined
                 } else {

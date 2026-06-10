@@ -87,7 +87,13 @@ export async function POST(request: Request) {
   const { error: upErr } = await supabase
     .from("toss_connections")
     .upsert(row, { onConflict: "user_id" });
-  if (upErr) return NextResponse.json({ ok: false, error: upErr.message }, { status: 500 });
+  if (upErr) {
+    console.error("[integrations/toss/connect] persist failed:", upErr);
+    return NextResponse.json(
+      { ok: false, error: "연결 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 500 },
+    );
+  }
 
   const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://foundone.dev").replace(/\/$/, "");
   return NextResponse.json({
@@ -110,6 +116,12 @@ export async function DELETE(request: Request) {
     .from("toss_connections")
     .update({ status: "revoked", updated_at: new Date().toISOString() })
     .eq("user_id", auth.userId);
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[integrations/toss/connect] revoke failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "연결 해제에 실패했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 500 },
+    );
+  }
   return NextResponse.json({ ok: true });
 }

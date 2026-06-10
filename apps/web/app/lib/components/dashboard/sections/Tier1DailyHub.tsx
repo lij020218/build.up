@@ -177,26 +177,18 @@ function buildKpiValues(
     yesterdayCustomers != null && prevWeekSameDay?.customers != null && prevWeekSameDay.customers > 0
       ? ((yesterdayCustomers - prevWeekSameDay.customers) / prevWeekSameDay.customers) * 100
       : undefined;
-  const primeCost =
-    c.totalSales > 0
-      ? ((c.monthlyCosts.ingredients + c.monthlyCosts.labor) / c.totalSales) * 100
-      : null;
+  // ⚠️ 2026-06-10 (P1-5): prime-cost/cogs/labor/rent 비율은 SSOT(useDashboardComputed)의
+  //   보정값만 사용. 종전엔 `월비용 ÷ MTD 매출` 생나눗셈 → 월초(부분월 입력) 시 200%+ 폭주.
+  //   calculateCostRatios 가 월 환산 매출(monthlyRevenueEquivalent)로 나눠 부분월 보정.
+  //   ratiosReady===false 면 모든 비율 undefined → "준비 중" empty state.
+  const primeCost = c.ratiosReady ? c.primeCost : null;
+  const cogsRatio = c.ratiosReady ? c.ingredientRatio : null;
+  const laborRatio = c.ratiosReady ? c.laborRatio : null;
+  const rentRatio = c.ratiosReady ? c.rentRatio : null;
   const selectedBudget = (d.selectedBudget ?? 0) as number;
   const cashRunway =
     c.totalCosts > 0 && selectedBudget > 0 ? selectedBudget / c.totalCosts : null;
   const avgTicket = c.totalCustomers > 0 ? c.totalSales / c.totalCustomers : null;
-  const cogsRatio =
-    c.totalSales > 0 && c.monthlyCosts.ingredients
-      ? (c.monthlyCosts.ingredients / c.totalSales) * 100
-      : null;
-  const laborRatio =
-    c.totalSales > 0 && c.monthlyCosts.labor
-      ? (c.monthlyCosts.labor / c.totalSales) * 100
-      : null;
-  const rentRatio =
-    c.totalSales > 0 && c.monthlyCosts.rent
-      ? (c.monthlyCosts.rent / c.totalSales) * 100
-      : null;
 
   // SaaS — GA4/Webhook 자동 수집 우선, 없으면 사장님이 입력한 subscribers.active fallback
   const subs = (d as { subscribers?: { active?: number } }).subscribers;
@@ -210,15 +202,38 @@ function buildKpiValues(
   //   로 대체하면 의미 왜곡. 데이터 없을 때 undefined 로 두어 "준비 중" 표시되도록 한다.
   const cumulativeUsers = autoCumulativeUsers;
 
-  // ⚠️ MRR fix: 종전엔 어제 일 매출(yesterdaySales) 을 MRR 자리에 표시 → 의미 왜곡. 활성 구독자 × 평균
-  //   플랜 가격으로 계산. 플랜 정보 없으면 undefined → "준비 중" 표시.
+  // ⚠️ MRR fix (2026-06-10, P1-6): 종전엔 GA4 active_users(= 방문 활성 사용자, *유료 구독자 아님*)
+  //   × 평균 플랜가로 계산 → 허수 MRR. MRR 정의는 "확정 유료 구독자 × 플랜 가격" 이므로
+  //   Tier3 와 동일하게 누적 planSignups − planChurns(확정 구독 이벤트)로만 계산한다.
+  //   구독 이벤트가 하나도 없으면 undefined → "준비 중" (연동/입력 유도). active_users 로 대체 금지.
   const plans = (d as { subscriptionPlans?: Array<{ id: string; price: number; isActive: boolean }> }).subscriptionPlans ?? [];
-  const activePlans = plans.filter((p) => p.isActive && p.price > 0);
-  const avgPlanPrice = activePlans.length > 0
-    ? activePlans.reduce((s, p) => s + p.price, 0) / activePlans.length
-    : 0;
-  const computedMrr = activeUsers != null && avgPlanPrice > 0
-    ? Math.round(activeUsers * avgPlanPrice)
+  const planPriceMap = new Map(plans.map((p) => [p.id, p.price]));
+  const subEntries = c.allEntries as Array<{
+    planSignups?: Record<string, number>;
+    planChurns?: Record<string, number>;
+  }>;
+  const activeByPlan: Record<string, number> = {};
+  let hasSubEvents = false;
+  for (const e of subEntries) {
+    if (e.planSignups) {
+      hasSubEvents = true;
+      for (const [pid, n] of Object.entries(e.planSignups)) {
+        activeByPlan[pid] = (activeByPlan[pid] ?? 0) + (n ?? 0);
+      }
+    }
+    if (e.planChurns) {
+      for (const [pid, n] of Object.entries(e.planChurns)) {
+        activeByPlan[pid] = (activeByPlan[pid] ?? 0) - (n ?? 0);
+      }
+    }
+  }
+  const computedMrr = hasSubEvents
+    ? Math.round(
+        Object.entries(activeByPlan).reduce(
+          (s, [pid, count]) => s + Math.max(0, count) * (planPriceMap.get(pid) ?? 0),
+          0,
+        ),
+      )
     : null;
 
   return {

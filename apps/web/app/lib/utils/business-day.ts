@@ -150,6 +150,36 @@ export function shiftIsoDate(isoDate: string, deltaDays: number): string {
 }
 
 /**
+ * 현재 월 키 ("YYYY-MM") — KST 기준.
+ *
+ * ⚠️ `new Date().toISOString().slice(0, 7)` 는 UTC 월이라 KST 매월 1일 00~09시에
+ *    전월을 가리키는 버그가 있음 (한국 자정 직후 = 전날 UTC 15:00). KST 일자에서 추출.
+ */
+export function getKstMonthKey(now: Date = new Date()): string {
+  return getKstDate(now).slice(0, 7);
+}
+
+/**
+ * "YYYY-MM" → 전월 "YYYY-MM" (순수 문자열 연산, Date 객체 미사용).
+ *
+ * ⚠️ `d.setMonth(d.getMonth() - 1)` 패턴은 월말(29~31일)에 롤오버 버그가 있음.
+ *    예) 7/31 에 setMonth(-1) → 6/31 은 없으므로 7/1 로 정규화되어 "전월"="이번 달".
+ *    문자열 산술은 일자가 없으므로 항상 안전. 1월 → 전년 12월도 처리.
+ */
+export function prevMonthKey(monthKey: string): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(monthKey);
+  if (!m) return monthKey; // 잘못된 입력은 그대로 (graceful)
+  let year = Number(m[1]);
+  let month = Number(m[2]); // 1~12
+  month -= 1;
+  if (month < 1) {
+    month = 12;
+    year -= 1;
+  }
+  return `${year}-${pad2(month)}`;
+}
+
+/**
  * 사장님의 오늘 영업이 종료됐는지 판정 (일일 보고서 활성화 기준).
  *
  * 규칙:

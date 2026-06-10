@@ -12,9 +12,12 @@
 //                   inputs jsonb, notes text, completed_at timestamptz,
 //                   created_at, updated_at, unique(roadmap_id, stage_code))
 //
-//  iOS RoadmapStore 의 StageDecision (stageId / completedAt / inputs[String:String])
-//  은 stage_decisions 의 부분집합. 다른 컬럼 (selected_*, notes) 은 보존 모드 — 읽을 때만
-//  무시, 쓸 때는 inputs 외 컬럼은 건드리지 않는다 (웹 데이터 유실 방지).
+//  iOS RoadmapStore 의 StageDecision (stageId / completedAt / inputs[String:String] /
+//  selectedPrimaryOptionId) 은 stage_decisions 의 부분집합.
+//   • inputs — read-merge-write: 서버 원본(AnyJSON 원형) 위에 iOS 가 가진 키만 patch.
+//     웹 전용 키·nested 객체·null 보존, 타입(number/bool/array) 보존. (2026-06-10 P0-A)
+//   • selected_primary_option_id — decision 에 값이 있을 때만 기록 (nil → 컬럼 미포함 = 웹 값 보존).
+//   • 그 외 컬럼 (selected_option_ids, notes) — 건드리지 않는다 (웹 데이터 유실 방지).
 //
 
 import Foundation
@@ -59,7 +62,7 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
 
         let rows: [StageDecisionReadDTO] = try await supabase
             .from("stage_decisions")
-            .select("stage_code,inputs,completed_at")
+            .select("stage_code,selected_primary_option_id,inputs,completed_at")
             .eq("roadmap_id", value: roadmapId)
             .execute()
             .value
@@ -71,11 +74,30 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
         let userId = try await getUserId()
         let roadmapId = try await resolveRoadmapId(userId: userId, createIfMissing: true)!
 
+        // ── 2026-06-10 P0-A: read-merge-write — inputs 전체 덮어쓰기 금지.
+        //   종전: iOS 의 [String:String] 강제변환 dict 로 inputs 컬럼 전체를 교체 →
+        //         웹이 저장한 number/bool/array 가 string 으로, nested 객체·null 은 통째로 소실.
+        //   현행: 서버 원본 inputs(AnyJSON 원형) 위에 iOS 가 가진 키만 patch.
+        //     • 서버에만 있는 키(nested 객체, null, 웹 전용 키)는 그대로 보존
+        //     • 값이 안 바뀐 키는 서버 원형(타입 그대로) 유지 — 디코드→인코드 왕복 무손실
+        //     • 값이 바뀐 키는 서버 타입에 맞춰 재인코딩 (StageInputsCodec.patchedValue)
+        //   서버 읽기 실패 시 throw — 파괴적 덮어쓰기로 fallback 하지 않는다 (다음 commit 에서 재시도).
+        let serverInputs = try await fetchServerInputs(roadmapId: roadmapId, stageCode: decision.stageId)
+        var mergedInputs = serverInputs
+        for (key, newValue) in decision.inputs {
+            mergedInputs[key] = StageInputsCodec.patchedValue(
+                key: key,
+                newString: newValue,
+                server: serverInputs[key]
+            )
+        }
+
         let nowIso = ISO8601DateFormatter().string(from: Date())
         let payload = StageDecisionWriteDTO(
             roadmap_id: roadmapId,
             stage_code: decision.stageId,
-            inputs: AnyJSONDict.fromStringDict(decision.inputs),
+            selected_primary_option_id: decision.selectedPrimaryOptionId,
+            inputs: mergedInputs,
             completed_at: decision.completedAt,
             updated_at: nowIso
         )
@@ -89,6 +111,23 @@ public actor RoadmapDecisionsRepository: RoadmapDecisionsRepositoryProtocol {
         //   stage_decisions 는 user_id 컬럼이 없어 직접 필터 구독 불가하므로, 부모 roadmaps 를
         //   touch 해 웹·다른 기기가 즉시 재조회하게 한다. (웹 saveRoadmapState 도 동일하게 bump)
         await touchRoadmap(roadmapId)
+    }
+
+    /// upsert 전 read-merge 용 — 서버에 저장된 원본 inputs (AnyJSON 원형) 조회.
+    /// row 가 아직 없으면 빈 dict (정상). 네트워크 오류는 throw (호출부에서 upsert 자체를 중단).
+    private func fetchServerInputs(roadmapId: UUID, stageCode: String) async throws -> [String: AnyJSON] {
+        struct InputsRowDTO: Decodable {
+            let inputs: [String: AnyJSON]?
+        }
+        let rows: [InputsRowDTO] = try await supabase
+            .from("stage_decisions")
+            .select("inputs")
+            .eq("roadmap_id", value: roadmapId)
+            .eq("stage_code", value: stageCode)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first?.inputs ?? [:]
     }
 
     /// roadmaps.updated_at 갱신 (best-effort, realtime 트리거용). 실패해도 decision 저장은 유효.
@@ -213,14 +252,16 @@ private struct RoadmapInsertDTO: Encodable {
 
 private struct StageDecisionReadDTO: Decodable {
     let stage_code: String
-    let inputs: AnyJSONDict?
+    let selected_primary_option_id: String?
+    let inputs: [String: AnyJSON]?
     let completed_at: String?
 
     func toDomain() -> StageDecision {
         StageDecision(
             stageId: stage_code,
             completedAt: completed_at,
-            inputs: inputs?.toStringDict() ?? [:]
+            inputs: StageInputsCodec.toStringDict(inputs ?? [:]),
+            selectedPrimaryOptionId: selected_primary_option_id
         )
     }
 }
@@ -232,67 +273,94 @@ private struct RoadmapTouchDTO: Encodable {
 private struct StageDecisionWriteDTO: Encodable {
     let roadmap_id: UUID
     let stage_code: String
-    let inputs: AnyJSONDict
+    /// nil 이면 synthesized Codable 의 encodeIfPresent 로 키 자체가 생략 →
+    /// PostgREST upsert 가 이 컬럼을 건드리지 않음 (웹이 쓴 기존 값 보존).
+    let selected_primary_option_id: String?
+    /// AnyJSON 원형 — 서버 inputs 와 read-merge 된 결과 (타입 보존).
+    let inputs: [String: AnyJSON]
     let completed_at: String?
     let updated_at: String
 }
 
-// MARK: - JSONB 디코딩 보조
+// MARK: - inputs JSONB 타입 보존 codec (2026-06-10 P0-A)
 
-/// JSONB 컬럼 → [String: String] 변환을 위한 헬퍼.
-/// 웹의 inputs 는 string | number | boolean | string[] | null 다양한 타입을 갖지만
-/// iOS RoadmapStore 는 String dictionary 만 다룬다 → 다른 타입은 String 으로 coerce.
-struct AnyJSONDict: Codable, Sendable {
-    var values: [String: String]
+/// stage_decisions.inputs JSONB ↔ iOS [String: String] 변환 규칙.
+///
+/// 원칙: **저장 레이어는 AnyJSON 원형을 보존**하고, String 변환은 *읽기(표시)* 에서만 수행.
+///  • 읽기: AnyJSON → 표시용 String coerce (number → "50000000", bool → "true", [String] → "a,b").
+///    nested 객체·null 은 String 으로 표현 불가 → 표시 dict 에서 제외 (upsert 의 read-merge 가 보존).
+///  • 쓰기: 서버 원형과 비교 — 값이 같으면 서버 원형 그대로 (디코드→인코드 왕복 무손실),
+///    값이 바뀌었으면 서버 타입에 맞춰 재인코딩 (웹의 typeof === "number" / Array.isArray 계약 유지).
+///
+/// `AnyJSON` 은 supabase-swift SDK 의 타입 보존 JSON enum (.null/.bool/.integer/.double/.string/.object/.array).
+enum StageInputsCodec {
 
-    static func fromStringDict(_ dict: [String: String]) -> AnyJSONDict {
-        AnyJSONDict(values: dict)
-    }
+    /// 웹이 number 로 읽는 키 — 서버에 기존 값이 없어도 number 로 기록해야 하는 키.
+    /// 웹 사용처: inputs.capital → usePersistence.ts(typeof === "number"),
+    ///   persistence.ts buildProfilePatchFromState, helpers.ts hydrateSavedFinanceSnapshot.
+    static let numberKeys: Set<String> = ["capital"]
 
-    func toStringDict() -> [String: String] { values }
-
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: DynamicCodingKey.self)
-        for (k, v) in values {
-            guard let key = DynamicCodingKey(stringValue: k) else { continue }
-            try container.encode(v, forKey: key)
+    /// AnyJSON → 표시용 String. 표현 불가 타입 (object/null) 은 nil.
+    static func displayString(_ value: AnyJSON) -> String? {
+        switch value {
+        case .string(let s):
+            return s
+        case .integer(let n):
+            return String(n)
+        case .double(let d):
+            // 정수면 정수처럼, 아니면 소수 (종전 AnyJSONDict 와 동일 규칙)
+            if d.rounded() == d, abs(d) < Double(Int.max) { return String(Int(d)) }
+            return String(d)
+        case .bool(let b):
+            return b ? "true" : "false"
+        case .array(let arr):
+            // 전부 String 인 배열만 콤마 join (RoadmapStore 가 다시 split 할 수 있도록)
+            let strings = arr.compactMap(\.stringValue)
+            guard strings.count == arr.count else { return nil }
+            return strings.joined(separator: ",")
+        case .object, .null:
+            return nil
         }
     }
 
-    init(values: [String: String]) {
-        self.values = values
-    }
-
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: DynamicCodingKey.self)
+    /// [String: AnyJSON] → 표시용 [String: String] (RoadmapStore 소비용 읽기 레이어).
+    static func toStringDict(_ json: [String: AnyJSON]) -> [String: String] {
         var out: [String: String] = [:]
-        for key in container.allKeys {
-            // String / Number / Bool / Array<String> 등 다양한 케이스를 coerce
-            if let s = try? container.decode(String.self, forKey: key) {
-                out[key.stringValue] = s
-            } else if let d = try? container.decode(Double.self, forKey: key) {
-                // 정수면 정수처럼, 아니면 소수
-                if d.rounded() == d, abs(d) < Double(Int.max) {
-                    out[key.stringValue] = String(Int(d))
-                } else {
-                    out[key.stringValue] = String(d)
-                }
-            } else if let b = try? container.decode(Bool.self, forKey: key) {
-                out[key.stringValue] = b ? "true" : "false"
-            } else if let arr = try? container.decode([String].self, forKey: key) {
-                // JSON 배열 → 콤마 join (RoadmapStore 가 다시 split 할 수 있도록)
-                out[key.stringValue] = arr.joined(separator: ",")
-            }
-            // null / 기타 타입은 skip — 분실 안전 (decoder graceful)
+        out.reserveCapacity(json.count)
+        for (k, v) in json {
+            if let s = displayString(v) { out[k] = s }
         }
-        self.values = out
+        return out
     }
 
-    private struct DynamicCodingKey: CodingKey {
-        var stringValue: String
-        var intValue: Int? { nil }
-        init?(stringValue: String) { self.stringValue = stringValue }
-        init?(intValue: Int) { return nil }
+    /// iOS 의 String 입력값 1개를 서버 원형과 비교해 최종 저장값 결정.
+    static func patchedValue(key: String, newString: String, server: AnyJSON?) -> AnyJSON {
+        if let server {
+            // 1) 변경 없음 (읽기 시 coerce 했던 값 그대로) → 서버 원형 유지. 타입 파괴 0.
+            if displayString(server) == newString { return server }
+            // 2) 실제 변경 → 서버 타입에 맞춰 재인코딩.
+            switch server {
+            case .integer:
+                if let n = Int(newString) { return .integer(n) }
+            case .double:
+                if let d = Double(newString) { return .double(d) }
+            case .bool:
+                if newString == "true" { return .bool(true) }
+                if newString == "false" { return .bool(false) }
+            case .array(let arr) where arr.allSatisfy({ $0.stringValue != nil }):
+                // 읽기 시 콤마 join → 쓰기 시 콤마 split 으로 복원
+                return .array(newString.split(separator: ",").map { .string(String($0)) })
+            default:
+                break
+            }
+            return .string(newString)
+        }
+        // 3) 서버에 없는 신규 키 — 키 스키마로 타입 결정.
+        if numberKeys.contains(key) {
+            if let n = Int(newString) { return .integer(n) }
+            if let d = Double(newString) { return .double(d) }
+        }
+        return .string(newString)
     }
 }
 

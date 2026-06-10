@@ -16,6 +16,7 @@
  */
 import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../../_lib/auth";
+import { checkSimpleRateLimit } from "../../../../_lib/rate-limit";
 import { assertSafeHttpsUrl } from "../../../../_lib/url-guard";
 
 export const runtime = "nodejs";
@@ -66,6 +67,13 @@ export async function POST(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
   }
+
+  // 인증된 사용자가 임의 https URL 로 서버발 GET 을 무제한 트리거(아웃바운드 증폭/스캔)하는 것을 차단.
+  const rl = await checkSimpleRateLimit({
+    key: `pull-test:${auth.userId}`, limit: 10, windowMs: 60_000,
+    message: "잠시 후 다시 시도해 주세요.",
+  });
+  if (!rl.ok) return NextResponse.json({ ok: false, error: rl.error }, { status: rl.status });
 
   let body: TestBody;
   try {

@@ -86,15 +86,31 @@ function toIso(date: Date): string {
 
 /**
  * 최근 N일 평균 일매출 계산.
- * 데이터가 적으면 보수적으로 계산 (있는 만큼 평균).
+ *
+ *  ⚠️ 분모는 *경과 캘린더 일수* — entry 개수로 나누면 안 됨.
+ *     버그 패턴: 14일 윈도우에 2일치만 입력 → 합계/2 → 일평균 7배 과대 →
+ *     유입(inflow) 과대 → detectCrisis 가 현금 위기를 놓침 (보수성 원칙 위배).
+ *     "입력 안 한 날 = 0" 으로 자연 반영해 과소(보수) 추정 — useMorningBriefingBrain
+ *     의 avgDailySales7 / daily-avg-elapsed-days.test.ts 와 동일 방식.
+ *
+ *  분모 = MIN(windowDays, 가장 이른 입력일 ~ 오늘 경과 일수), 최소 1.
+ *  기록 기간이 0/음수면 0 반환 (계산 불가 가드).
  */
-function computeAverageDailySales(entries: DailyEntry[], windowDays: number = 14): number {
+function computeAverageDailySales(entries: DailyEntry[], windowDays: number = 14, today: Date = new Date()): number {
   if (entries.length === 0) return 0;
   const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
   const recent = sorted.slice(-windowDays);
   if (recent.length === 0) return 0;
   const sum = recent.reduce((s, e) => s + e.sales, 0);
-  return sum / recent.length;
+  // 윈도우 내 가장 이른 입력일부터 오늘까지 경과한 캘린더 일수 (입력 안 한 날도 분모에 포함).
+  //  ⚠️ today 는 projectCashflow 에서 주입 (테스트 결정성 + 주입된 기준일 일관성).
+  const earliestMs = new Date(`${recent[0].date}T00:00:00`).getTime();
+  const todayMs = new Date(`${toIso(today)}T00:00:00`).getTime();
+  if (!Number.isFinite(earliestMs) || !Number.isFinite(todayMs)) return 0;
+  const elapsedDays = Math.floor((todayMs - earliestMs) / 86_400_000) + 1;
+  const denominator = Math.min(windowDays, Math.max(1, elapsedDays));
+  if (denominator <= 0) return 0;
+  return sum / denominator;
 }
 
 /**
@@ -188,7 +204,7 @@ export function projectCashflow(input: ProjectionInput): DayProjection[] {
   const today = input.today ? new Date(input.today) : new Date();
   today.setHours(0, 0, 0, 0);
 
-  const avgDailySales = computeAverageDailySales(recentDailyEntries);
+  const avgDailySales = computeAverageDailySales(recentDailyEntries, 14, today);
   const projections: DayProjection[] = [];
   let runningBalance = currentBalance;
 

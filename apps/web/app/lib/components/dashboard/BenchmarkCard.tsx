@@ -11,6 +11,7 @@ import {
 } from "@foundone/shared";
 import { Lightbulb } from "lucide-react";
 import { entriesInLastDays, entriesInWindow } from "../../utils/daily-windows";
+import { getKstMonthKey } from "../../utils/business-day";
 
 // ─── 상황 라벨 매핑 ─────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ export function BenchmarkCard() {
   const empCount = (d.employees as Array<unknown>)?.length ?? 0;
 
   const result = useMemo(() => {
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = getKstMonthKey();
     const monthEntries = entries.filter(e => e.date.startsWith(currentMonth));
     const totalSales = monthEntries.reduce((s, e) => s + e.sales, 0);
     const costs = mc ?? { ingredients: 0, labor: 0, rent: 0, utilities: 0, sga: 0, marketing: 0, other: 0, interest: 0 };

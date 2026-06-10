@@ -5,6 +5,21 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { updateCurrentUserPassword, validatePassword } from "@foundone/shared";
 
+/**
+ * 인증 완료 후 복귀 경로 결정 — auth 페이지가 sessionStorage 에 남긴 returnTo 를 소비.
+ *   open redirect 방지: `/` 로 시작하는 내부 경로만 허용(`//`·`/\`·scheme 거부). 실패 시 `/`.
+ *   1회용이므로 읽은 뒤 즉시 제거.
+ */
+function consumeReturnTo(): string {
+  if (typeof window === "undefined") return "/";
+  const raw = window.sessionStorage.getItem("buildup:auth-return-to");
+  window.sessionStorage.removeItem("buildup:auth-return-to");
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return "/";
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(raw)) return "/";
+  return raw;
+}
+
 // Next.js 15: useSearchParams() 는 Suspense 경계 안에서만 빌드 가능 (정적 생성 bailout).
 // OAuth 콜백은 본질적으로 동적이므로 내부 컴포넌트를 Suspense 로 감싼다.
 export default function AuthCallbackPage() {
@@ -73,7 +88,8 @@ function AuthCallbackInner() {
           const { data } = await supabase.auth.getSession();
           if (data.session) {
             setStatus("success");
-            setTimeout(() => { window.location.assign("/"); }, 600);
+            const dest = consumeReturnTo();
+            setTimeout(() => { window.location.assign(dest); }, 600);
             return;
           }
           await new Promise((r) => setTimeout(r, 400));
@@ -100,7 +116,8 @@ function AuthCallbackInner() {
           }
           if (type === "recovery") { setStatus("recovery-form"); return; }
           setStatus("success");
-          setTimeout(() => { window.location.assign("/"); }, 1200);
+          const dest = consumeReturnTo();
+          setTimeout(() => { window.location.assign(dest); }, 1200);
         });
       return () => authSub.subscription.unsubscribe();
     }

@@ -98,7 +98,11 @@ export async function POST(request: Request) {
     .from("stripe_connections")
     .upsert(row, { onConflict: "user_id" });
   if (upErr) {
-    return NextResponse.json({ ok: false, error: "저장 실패: " + upErr.message }, { status: 500 });
+    console.error("[integrations/stripe/connect] persist failed:", upErr);
+    return NextResponse.json(
+      { ok: false, error: "연결 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 500 },
+    );
   }
 
   // webhook URL 안내
@@ -125,6 +129,12 @@ export async function DELETE(request: Request) {
     .from("stripe_connections")
     .update({ status: "revoked", updated_at: new Date().toISOString() })
     .eq("user_id", auth.userId);
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[integrations/stripe/connect] revoke failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "연결 해제에 실패했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 500 },
+    );
+  }
   return NextResponse.json({ ok: true });
 }

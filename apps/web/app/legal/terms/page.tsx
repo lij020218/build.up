@@ -92,7 +92,7 @@ export default function TermsPage() {
           </ul>
         </Section>
 
-        <Section title="제8조 (유료 서비스 및 환불)">
+        <Section id="refund" title="제8조 (유료 서비스 및 환불)">
           <ul>
             <li>유료 서비스 이용 요금은 서비스 내 공지된 가격 정책에 따릅니다.</li>
             <li>구독 서비스는 결제일로부터 해당 기간 동안 제공됩니다.</li>
@@ -125,9 +125,9 @@ export default function TermsPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section style={{ marginBottom: "40px" }}>
+    <section id={id} style={{ marginBottom: "40px", scrollMarginTop: "80px" }}>
       <h2 style={{
         fontSize: "18px", fontWeight: 700, letterSpacing: "-0.01em",
         color: "#1d1d1f", marginBottom: "14px", paddingBottom: "10px",

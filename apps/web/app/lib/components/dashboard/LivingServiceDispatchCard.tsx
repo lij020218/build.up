@@ -38,6 +38,9 @@ export function LivingServiceDispatchCard({ ko, industryCategoryId }: Props) {
   const bookings = useBookingStore((s) => s.bookings);
   const providers = useBookingStore((s) => s.providers);
   const seedDemo = useBookingStore((s) => s.seedDemo);
+  const clearDemo = useBookingStore((s) => s.clearDemo);
+
+  const hasDemo = useMemo(() => bookings.some((b) => b.isDemo), [bookings]);
 
   const analysis = useMemo(() => {
     const now = new Date();
@@ -130,7 +133,7 @@ export function LivingServiceDispatchCard({ ko, industryCategoryId }: Props) {
           <div style={{ fontSize: 13, color: "rgba(15,23,42,0.65)", marginBottom: 12 }}>
             {ko ? "의뢰·기사 데이터 입력 시 FTFR·재의뢰·기사 가동률 분석" : "Enter dispatch data"}
           </div>
-          <button type="button" onClick={() => seedDemo()} style={demoBtnStyle}>
+          <button type="button" onClick={() => seedDemo("living-service")} style={demoBtnStyle}>
             {ko ? "예시 데이터로 카드 보기" : "Load demo data"}
           </button>
         </div>
@@ -143,10 +146,26 @@ export function LivingServiceDispatchCard({ ko, industryCategoryId }: Props) {
       <header style={headerRow}>
         <span style={iconBadge}><Truck size={14} strokeWidth={2.2} /></span>
         <div style={labelStyle}>{ko ? "의뢰·기사·FTFR · 생활서비스" : "Dispatch · Service"}</div>
+        {hasDemo && (
+          <span style={demoBadgeStyle}>{ko ? "예시 데이터" : "Sample"}</span>
+        )}
         <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.6 }}>
           {ko ? `재의뢰 ${analysis.repeatRate}%` : `Repeat ${analysis.repeatRate}%`}
         </span>
       </header>
+
+      {hasDemo && (
+        <div style={demoNoticeRow}>
+          <span style={{ flex: 1 }}>
+            {ko
+              ? "예시 데이터를 보고 있습니다. 실제 의뢰를 추가하면 자동으로 교체됩니다."
+              : "Showing sample data. It is replaced automatically once you add a real request."}
+          </span>
+          <button type="button" onClick={() => clearDemo()} style={clearDemoBtnStyle}>
+            {ko ? "예시 지우기" : "Clear sample"}
+          </button>
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
         <StatBox label={ko ? "오늘 의뢰" : "Today"} value={`${analysis.todayBookings.length}건`} tone="notable" icon={<Calendar size={12} strokeWidth={2.2} />} />
@@ -237,6 +256,28 @@ const demoBtnStyle: React.CSSProperties = {
   background: `${MIDNIGHT}15`, color: MIDNIGHT,
   border: `1px solid ${MIDNIGHT}30`,
   fontSize: 12, fontWeight: 700, cursor: "pointer",
+};
+
+// 예시(데모) 데이터 배지 + 안내 — ConversionFunnelCard sampleBadgeStyle 패턴 (네이비 토큰)
+const demoBadgeStyle: React.CSSProperties = {
+  fontSize: 10.5, fontWeight: 700,
+  padding: "3px 8px", borderRadius: 999,
+  background: "rgba(25,25,112,0.08)", color: MIDNIGHT,
+};
+
+const demoNoticeRow: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: 10,
+  fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.45,
+  padding: "8px 12px", borderRadius: 9,
+  background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.10)",
+};
+
+const clearDemoBtnStyle: React.CSSProperties = {
+  flexShrink: 0,
+  padding: "5px 10px", borderRadius: 7,
+  background: "white", color: MIDNIGHT,
+  border: `1px solid ${MIDNIGHT}33`,
+  fontSize: 11, fontWeight: 700, cursor: "pointer",
 };
 
 const cardStyle: React.CSSProperties = {

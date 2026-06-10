@@ -16,12 +16,11 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import type { DashboardHook } from "../useDashboard";
 import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore } from "@foundone/shared";
 import type { MonthlyCosts, HealthScoreResult } from "@foundone/shared";
-import { getBusinessDay } from "../utils/business-day";
+import { getBusinessDay, getKstDate, getKstMonthKey, prevMonthKey } from "../utils/business-day";
 import { useUnifiedSaasMetrics } from "./useUnifiedSaasMetrics";
 import { useUnifiedRevenue } from "./useUnifiedRevenue";
 import { checkMilestones } from "../components/dashboard/MilestoneToast";
 import { useCashflowStore } from "../stores/cashflow-store";
-import { getKstDate } from "../utils/business-day";
 import { BP } from "../breakpoints";
 
 export type DailyEntry = {
@@ -248,16 +247,12 @@ export function useDashboardComputed(d: DashboardHook) {
     utilities: number;
     other: number;
   }>;
-  const prevMonthKey = (() => {
-    const dt = new Date();
-    dt.setMonth(dt.getMonth() - 1);
-    return getKstDate(dt).slice(0, 7);
-  })();
-  const prevSnap = costHistory.find((h) => h.month === prevMonthKey);
+  const prevMonthKeyStr = prevMonthKey(getKstMonthKey());
+  const prevSnap = costHistory.find((h) => h.month === prevMonthKeyStr);
   const prevMonthCosts = prevSnap
     ? prevSnap.ingredients + prevSnap.labor + prevSnap.rent + prevSnap.utilities + prevSnap.other
     : undefined;
-  const prevMonthEntries = allEntries.filter((e) => e.date.startsWith(prevMonthKey));
+  const prevMonthEntries = allEntries.filter((e) => e.date.startsWith(prevMonthKeyStr));
   const prevMonthSales =
     prevMonthEntries.length > 0 ? prevMonthEntries.reduce((s, e) => s + e.sales, 0) : undefined;
 

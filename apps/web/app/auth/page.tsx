@@ -25,6 +25,28 @@ import { useLanguage } from "../language-provider";
 /* ─── types ─── */
 type AuthMode = "signup" | "login" | "password" | "reset";
 
+/**
+ * returnTo 안전 검증 — open redirect 방지.
+ *   허용: `/` 로 시작하는 *내부* 절대경로만 (예: /invite/ABCD1234).
+ *   거부: `//evil.com`(scheme-relative), `/\evil.com`, `http(s)://...`, 빈 값 등.
+ *   검증 실패 시 null 반환 → 호출부에서 `/` 폴백.
+ */
+function sanitizeReturnTo(raw: string | null): string | null {
+  if (!raw) return null;
+  let value = raw;
+  try {
+    value = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  // 내부 경로는 단일 `/` 로 시작해야 함. `//` 또는 `/\` 는 scheme-relative 외부 URL.
+  if (!value.startsWith("/")) return null;
+  if (value.startsWith("//") || value.startsWith("/\\")) return null;
+  // http: / https: / javascript: 등 어떤 scheme 도 거부 (이미 `/` 시작이라 이론상 불가하나 방어).
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value)) return null;
+  return value;
+}
+
 /* ─── Apple-inspired landing + auth page ─── */
 export default function AuthPage() {
   const router = useRouter();
@@ -45,6 +67,16 @@ export default function AuthPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  // 초대 등에서 넘어온 복귀 경로(returnTo). open redirect 방지를 위해 검증된 내부 경로만 보관.
+  //   (이 페이지는 전부 client-side 라 useSearchParams 대신 window.location 을 effect 에서 읽어
+  //    Suspense bailout 없이 처리 — 콜백 페이지와 달리 거대 컴포넌트라 Suspense 래핑을 피한다.)
+  const [returnTo, setReturnTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = new URLSearchParams(window.location.search).get("returnTo");
+    setReturnTo(sanitizeReturnTo(raw));
+  }, []);
 
   /* scroll-reveal */
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -119,9 +151,11 @@ export default function AuthPage() {
   //     • auth page 의 bootstrap 호출 제거 — home page 의 connectAndLoad 가 *유일한 진입점*
   //     • router.push 대신 window.location.assign → hard reload → 모든 client state 초기화
   //       (localStorage 세션은 유지). 다음 페이지가 깨끗한 상태로 마운트.
+  //   복귀 경로(returnTo, 예: /invite/ABCD1234)가 검증을 통과했으면 그쪽으로, 아니면 홈으로.
+  //   hard reload 라 invite 페이지가 깨끗한 상태로 마운트되어 로그인된 user 로 초대 수락을 이어간다.
   const navigateToHomeHard = () => {
     if (typeof window !== "undefined") {
-      window.location.assign("/");
+      window.location.assign(returnTo ?? "/");
     }
   };
 
@@ -144,6 +178,11 @@ export default function AuthPage() {
       if (result.needsConfirmation) {
         setPendingEmail(result.email);
         setShowConfirmation(true);
+        // 이메일 확인 플로우는 /auth/callback 으로 돌아오므로(emailRedirectTo 고정),
+        //   returnTo 를 sessionStorage 로 넘겨 콜백이 인증 완료 후 복귀하게 한다.
+        if (typeof window !== "undefined" && returnTo) {
+          window.sessionStorage.setItem("buildup:auth-return-to", returnTo);
+        }
         return;
       }
       setMessage(copy.auth.accountCreatedNew);

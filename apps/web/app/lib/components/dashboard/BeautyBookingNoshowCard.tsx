@@ -48,6 +48,9 @@ export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
   const bookings = useBookingStore((s) => s.bookings);
   const providers = useBookingStore((s) => s.providers);
   const seedDemo = useBookingStore((s) => s.seedDemo);
+  const clearDemo = useBookingStore((s) => s.clearDemo);
+
+  const hasDemo = useMemo(() => bookings.some((b) => b.isDemo), [bookings]);
 
   const analysis = useMemo(() => {
     const now = new Date();
@@ -138,7 +141,7 @@ export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
           </div>
           <button
             type="button"
-            onClick={() => seedDemo()}
+            onClick={() => seedDemo("beauty")}
             style={{
               padding: "8px 14px", borderRadius: 8,
               background: `${MIDNIGHT}15`, color: MIDNIGHT,
@@ -158,10 +161,26 @@ export function BeautyBookingNoshowCard({ ko, industryCategoryId }: Props) {
       <header style={headerRow}>
         <span style={iconBadge}><Calendar size={14} strokeWidth={2.2} /></span>
         <div style={labelStyle}>{ko ? "예약·노쇼·디자이너 · 뷰티" : "Booking · Beauty"}</div>
+        {hasDemo && (
+          <span style={demoBadgeStyle}>{ko ? "예시 데이터" : "Sample"}</span>
+        )}
         <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: MIDNIGHT, opacity: 0.6 }}>
           {ko ? `30일 노쇼 ${analysis.last30NoshowRate}%` : `30d no-show ${analysis.last30NoshowRate}%`}
         </span>
       </header>
+
+      {hasDemo && (
+        <div style={demoNoticeRow}>
+          <span style={{ flex: 1 }}>
+            {ko
+              ? "예시 데이터를 보고 있습니다. 실제 예약을 추가하면 자동으로 교체됩니다."
+              : "Showing sample data. It is replaced automatically once you add a real booking."}
+          </span>
+          <button type="button" onClick={() => clearDemo()} style={clearDemoBtnStyle}>
+            {ko ? "예시 지우기" : "Clear sample"}
+          </button>
+        </div>
+      )}
 
       {/* ① 상황 (4-col stats) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
@@ -279,6 +298,28 @@ const cardStyle: React.CSSProperties = {
   boxShadow: "0 2px 8px rgba(15,23,42,0.04)",
   padding: "22px 24px",
   display: "flex", flexDirection: "column" as const, gap: 14,
+};
+
+// 예시(데모) 데이터 배지 + 안내 — ConversionFunnelCard sampleBadgeStyle 패턴 (네이비 토큰, 신호등 금지)
+const demoBadgeStyle: React.CSSProperties = {
+  fontSize: 10.5, fontWeight: 700,
+  padding: "3px 8px", borderRadius: 999,
+  background: "rgba(25,25,112,0.08)", color: MIDNIGHT,
+};
+
+const demoNoticeRow: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: 10,
+  fontSize: 11.5, color: "rgba(15,23,42,0.6)", lineHeight: 1.45,
+  padding: "8px 12px", borderRadius: 9,
+  background: "rgba(25,25,112,0.04)", border: "1px solid rgba(25,25,112,0.10)",
+};
+
+const clearDemoBtnStyle: React.CSSProperties = {
+  flexShrink: 0,
+  padding: "5px 10px", borderRadius: 7,
+  background: "white", color: MIDNIGHT,
+  border: `1px solid ${MIDNIGHT}33`,
+  fontSize: 11, fontWeight: 700, cursor: "pointer",
 };
 
 const headerRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 10 };

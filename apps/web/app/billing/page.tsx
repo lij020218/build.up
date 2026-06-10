@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { BILLING_ENABLED, PREMIUM_PRICE_KRW } from "../../lib/billing-gate";
 
 type Sub = {
   plan: "free" | "premium";
@@ -21,18 +22,25 @@ export default function BillingPage() {
   const [message, setMessage] = useState("");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
+  // 결제 게이트 닫힘(전 기능 무료 기간) → 구독 관리 UI 폐쇄. 홈으로 이동.
   useEffect(() => {
+    if (!BILLING_ENABLED) router.replace("/");
+  }, [router]);
+
+  useEffect(() => {
+    if (!BILLING_ENABLED) return;
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      if (!token) { setSub({ plan: "free", status: "active" }); setLoading(false); return; }
+      // 비로그인 → 로그인 페이지로. (게이트 열려도 구독 관리는 로그인 필수)
+      if (!token) { router.replace("/auth"); return; }
       fetch("/api/billing/status", { headers: { Authorization: `Bearer ${token}` } })
         .then((r) => r.json())
         .then((data) => setSub(data))
         .catch(() => setSub({ plan: "free", status: "active" }))
         .finally(() => setLoading(false));
     })();
-  }, []);
+  }, [router]);
 
   const handleCancel = async () => {
     setCanceling(true);
@@ -56,6 +64,9 @@ export default function BillingPage() {
 
   const fmt = (iso?: string) =>
     iso ? new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }) : "—";
+
+  // 게이트 닫힘: redirect 진행 중 빈 화면(구독 관리 UI 노출 방지).
+  if (!BILLING_ENABLED) return null;
 
   return (
     <div style={{
@@ -96,7 +107,7 @@ export default function BillingPage() {
                   <StatusBadge status={sub.status} cancelAtPeriodEnd={sub.cancelAtPeriodEnd} />
                 </div>
                 <div style={{ fontSize: "24px", fontWeight: 700, color: "#1d3557" }}>
-                  ₩{(19900).toLocaleString()}<span style={{ fontSize: "13px", fontWeight: 400, color: "#6e6e73" }}>/월</span>
+                  ₩{PREMIUM_PRICE_KRW.toLocaleString()}<span style={{ fontSize: "13px", fontWeight: 400, color: "#6e6e73" }}>/월</span>
                 </div>
               </div>
               <Row label="현재 구독 기간" value={`${fmt(sub.currentPeriodStart)} ~ ${fmt(sub.currentPeriodEnd)}`} />
@@ -104,7 +115,7 @@ export default function BillingPage() {
               {sub.cancelAtPeriodEnd ? (
                 <Row label="자동 갱신" value={`${fmt(sub.currentPeriodEnd)} 이후 종료`} warning />
               ) : sub.status === "active" ? (
-                <Row label="다음 결제 예정" value={`${fmt(sub.currentPeriodEnd)} · ₩${(19900).toLocaleString()}`} />
+                <Row label="다음 결제 예정" value={`${fmt(sub.currentPeriodEnd)} · ₩${PREMIUM_PRICE_KRW.toLocaleString()}`} />
               ) : null}
             </div>
 

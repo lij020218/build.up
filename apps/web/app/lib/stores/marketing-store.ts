@@ -2,12 +2,13 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { MapPin, Camera, Bike, Search, Carrot, PenLine, MessageCircle, Globe, Smartphone, FileText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { MARKETING_CHANNELS, RECOMMENDED_CHANNELS, type MarketingChannelKey } from "@foundone/shared";
 
 // ─── Types ───
 
-export type MarketingChannel =
-  | "naver-place" | "instagram" | "delivery-ads" | "naver-keyword"
-  | "daangn" | "blog-review" | "kakao" | "google-ads" | "meta-ads" | "offline";
+// 채널 메타·업종별 추천은 @foundone/shared(marketing-channels.ts) SSOT. 웹은 lucide 아이콘만 덧붙임.
+export type MarketingChannel = MarketingChannelKey;
+export { RECOMMENDED_CHANNELS };
 
 export type CampaignRecord = {
   id: string;
@@ -91,6 +92,38 @@ export type CoachCache = {
   actions: CoachAction[];
 };
 
+// ─── Marketing Plays (사례·트렌드 → 내 사업 적용, 주 1회 생성) ───
+
+export type PlayTool = { name: string; purpose: string; tier: "free" | "paid" | "freemium"; url?: string };
+
+export type MarketingPlay = {
+  /** 검증된 성공사례 기반(case) vs 현재 트렌드 기반(trend) — AI 가 더 유용한 쪽 선택 */
+  kind: "case" | "trend";
+  title: string;
+  source: {
+    brand?: string;
+    whatHappened: string;
+    whyItWorked: string;
+    metric?: string;
+    url?: string;
+  };
+  application: {
+    steps: string[];
+    expectedEffect: string;
+    effortLevel: "low" | "medium" | "high";
+  };
+  tools: PlayTool[];
+};
+
+export type CasesSource = { name: string; url: string };
+
+export type CasesCache = {
+  weekKey: string;
+  contextKey: string;    // storeName|subIndustryId|language
+  plays: MarketingPlay[];
+  sources: CasesSource[];
+};
+
 // ─── First 100 Customers Playbook ───
 
 export type PlaybookTacticId = string;
@@ -124,33 +157,27 @@ export type ChannelMeta = {
   iconColor: string;
 };
 
-export const CHANNEL_LIST: ChannelMeta[] = [
-  { key: "naver-place", label: { ko: "네이버 플레이스", en: "Naver Place" }, Icon: MapPin, iconColor: "#059669" },
-  { key: "instagram", label: { ko: "인스타그램", en: "Instagram" }, Icon: Camera, iconColor: "#e1306c" },
-  { key: "delivery-ads", label: { ko: "배달앱 광고", en: "Delivery Ads" }, Icon: Bike, iconColor: "#2ac1bc" },
-  { key: "naver-keyword", label: { ko: "네이버 키워드", en: "Naver Keyword" }, Icon: Search, iconColor: "#03c75a" },
-  { key: "daangn", label: { ko: "당근마켓", en: "Daangn" }, Icon: Carrot, iconColor: "#ff7e36" },
-  { key: "blog-review", label: { ko: "블로그·체험단", en: "Blog Review" }, Icon: PenLine, iconColor: "#2563eb" },
-  { key: "kakao", label: { ko: "카카오톡 채널", en: "KakaoTalk" }, Icon: MessageCircle, iconColor: "#fee500" },
-  { key: "google-ads", label: { ko: "구글 애즈", en: "Google Ads" }, Icon: Globe, iconColor: "#4285f4" },
-  { key: "meta-ads", label: { ko: "Meta 광고", en: "Meta Ads" }, Icon: Smartphone, iconColor: "#1877f2" },
-  { key: "offline", label: { ko: "오프라인 (전단지 등)", en: "Offline" }, Icon: FileText, iconColor: "#64748b" },
-];
-
-/** 업종별 추천 채널 (우선순위 순) */
-export const RECOMMENDED_CHANNELS: Record<string, MarketingChannel[]> = {
-  "food": ["naver-place", "delivery-ads", "instagram", "daangn", "blog-review"],
-  "cafe-dessert": ["instagram", "blog-review", "naver-place", "daangn"],
-  "retail": ["daangn", "naver-keyword", "instagram"],
-  "beauty": ["naver-place", "blog-review", "kakao", "instagram"],
-  "pet": ["naver-place", "blog-review", "kakao", "instagram"],
-  "fitness": ["daangn", "instagram", "naver-place", "kakao"],
-  "education": ["daangn", "instagram", "naver-place", "kakao"],
-  "space": ["naver-place", "instagram", "daangn"],
-  "online-digital": ["naver-keyword", "meta-ads", "instagram", "google-ads"],
-  "startup-tech": ["meta-ads", "google-ads", "instagram", "blog-review"],
-  "living-service": ["daangn", "naver-place", "kakao"],
+// 키 → lucide 아이콘 (아이콘은 React 컴포넌트라 SSOT(shared)에 못 둠 — 웹에서만 매핑)
+const CHANNEL_ICONS: Record<MarketingChannel, LucideIcon> = {
+  "naver-place": MapPin,
+  "instagram": Camera,
+  "delivery-ads": Bike,
+  "naver-keyword": Search,
+  "daangn": Carrot,
+  "blog-review": PenLine,
+  "kakao": MessageCircle,
+  "google-ads": Globe,
+  "meta-ads": Smartphone,
+  "offline": FileText,
 };
+
+// CHANNEL_LIST = SSOT 메타 + lucide 아이콘. 라벨·컬러·순서는 shared 가 결정.
+export const CHANNEL_LIST: ChannelMeta[] = MARKETING_CHANNELS.map((c) => ({
+  key: c.key,
+  label: { ko: c.labelKo, en: c.labelEn },
+  Icon: CHANNEL_ICONS[c.key],
+  iconColor: c.color,
+}));
 
 // ─── Store ───
 
@@ -160,6 +187,7 @@ type MarketingState = {
   trendCache: TrendCache | null;
   trendLoading: boolean;
   coachCache: CoachCache | null;
+  casesCache: CasesCache | null;
   // 캠페인 폼
   campFormOpen: boolean;
   campChannel: MarketingChannel;
@@ -178,6 +206,7 @@ type MarketingActions = {
   setTrendCache: (v: TrendCache | null) => void;
   setTrendLoading: (v: boolean) => void;
   setCoachCache: (v: CoachCache | null) => void;
+  setCasesCache: (v: CasesCache | null) => void;
   setCampFormOpen: (v: boolean) => void;
   setCampChannel: (v: MarketingChannel) => void;
   setCampSpend: (v: string) => void;
@@ -201,6 +230,7 @@ const initialState: MarketingState = {
   trendCache: null,
   trendLoading: false,
   coachCache: null,
+  casesCache: null,
   campFormOpen: false,
   campChannel: "instagram",
   campSpend: "",
@@ -221,6 +251,7 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
       setTrendCache: (v) => set({ trendCache: v }),
       setTrendLoading: (v) => set({ trendLoading: v }),
       setCoachCache: (v) => set({ coachCache: v }),
+      setCasesCache: (v) => set({ casesCache: v }),
       setCampFormOpen: (v) => set({ campFormOpen: v }),
       setCampChannel: (v) => set({ campChannel: v }),
       setCampSpend: (v) => set({ campSpend: v }),
@@ -270,6 +301,7 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
         // AI 응답 캐시 — 비용 절감을 위해 반드시 persist
         trendCache: state.trendCache,
         coachCache: state.coachCache,
+        casesCache: state.casesCache,
       }),
     },
   ),

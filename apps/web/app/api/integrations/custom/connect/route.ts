@@ -44,7 +44,13 @@ export async function POST(request: Request) {
     status: "active",
     rotated_at: new Date().toISOString(),
   }, { onConflict: "user_id" });
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[integrations/custom/connect] persist failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "연결 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 500 },
+    );
+  }
 
   const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://foundone.dev").replace(/\/$/, "");
   return NextResponse.json({
@@ -67,6 +73,12 @@ export async function DELETE(request: Request) {
     .from("custom_connections")
     .update({ status: "revoked" })
     .eq("user_id", auth.userId);
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[integrations/custom/connect] revoke failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "연결 해제에 실패했어요. 잠시 후 다시 시도해 주세요." },
+      { status: 500 },
+    );
+  }
   return NextResponse.json({ ok: true });
 }

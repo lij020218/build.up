@@ -339,15 +339,17 @@ export function CEOMorningHero({ d }: Props) {
         };
       }
       case "mrr": {
-        // MRR — 14일 매출 합계 × 30/14 환산 (간단 추정. 정확한 산정은 SaaSKeyMetricsCard 참조)
+        // ⚠️ 2026-06-10 (P1-6): 이 값은 *전체 매출* 14일 합계 × 30/14 환산이라 구독 기반 MRR
+        //   (반복 매출)이 아님. "MRR(반복 매출)" 라벨은 허수 → "월 매출 추정"으로 정직화.
+        //   진짜 MRR(구독 누적)은 SaaSKeyMetricsCard / Tier3 참조.
         const last14Sales = entriesInDays(14).reduce((s, e) => s + e.sales, 0);
-        const mrr = last14Sales * (30 / 14);
+        const estMonthlyRevenue = last14Sales * (30 / 14);
         return {
-          label: ko ? "MRR (월간 반복 매출)" : "MRR",
-          value: mrr,
+          label: ko ? "월 매출 추정" : "Est. Monthly Revenue",
+          value: estMonthlyRevenue,
           format: (n) => fmtKrw(n, ko),
           delta: wowDelta,
-          deltaLabel: ko ? "지난 2주 매출 대비" : "vs prev 2 weeks",
+          deltaLabel: ko ? "최근 14일 환산 · 지난 2주 대비" : "14d est. · vs prev 2 weeks",
           tone: tonePos(wowDelta),
         };
       }

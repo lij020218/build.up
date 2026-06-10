@@ -127,14 +127,16 @@ public struct MarketingChannelMeta: Sendable, Hashable {
         .init(key: "kakao",         labelKo: "카카오톡 채널",    labelEn: "KakaoTalk",     colorHex: "#fee500"),
         .init(key: "google-ads",    labelKo: "구글 애즈",        labelEn: "Google Ads",    colorHex: "#4285f4"),
         .init(key: "meta-ads",      labelKo: "Meta 광고",        labelEn: "Meta Ads",      colorHex: "#1877f2"),
-        .init(key: "offline",       labelKo: "오프라인",         labelEn: "Offline",       colorHex: "#64748b"),
+        .init(key: "offline",       labelKo: "오프라인 (전단지 등)", labelEn: "Offline",   colorHex: "#64748b"),
     ]
 
     public static func meta(for key: String) -> MarketingChannelMeta? {
         all.first { $0.key == key }
     }
 
-    /// 업종별 추천 채널 (우선순위 순) — 웹 marketing-store.ts RECOMMENDED_CHANNELS 미러
+    /// 업종별 추천 채널 (우선순위 순).
+    ///  SSOT = packages/shared/src/marketing-channels.ts (RECOMMENDED_CHANNELS).
+    ///  드리프트는 marketing-channels-ios-sync.test.ts 가 이 파일을 파싱해 CI 에서 차단.
     public static func recommendedChannels(for industryCategoryId: String?) -> [String] {
         switch industryCategoryId {
         case "food":            return ["naver-place", "delivery-ads", "instagram", "daangn", "blog-review"]
@@ -212,11 +214,62 @@ public struct MarketingCoachContext: Sendable, Encodable {
     public var currentStageLabel: String?
     public var launchDate: String?
     public var language: String?
+    /// 매출 데이터 유무 — cases 엔진이 "돈 적게 드는 플레이 우선" 판단에 사용.
+    public var hasUserSales: Bool?
+    /// 최근 매출 추세(%, 최근 vs 직전) — 피드백 루프(지난주 실행 후 숫자 변화) 반영.
+    public var salesTrendPct: Double?
     /// true → 서버가 Supabase 캐시 무시하고 LLM 재생성 (사용자 "재생성" 버튼).
     public var force: Bool?
 
     public init() {}
 }
+
+// MARK: - Marketing Cases (성공사례·트렌드 → 내 사업 적용)
+
+public struct PlayTool: Sendable, Decodable, Hashable {
+    public let name: String
+    public let purpose: String
+    public let tier: String          // "free" | "paid" | "freemium"
+    public let url: String?
+}
+
+public struct PlaySource: Sendable, Decodable, Hashable {
+    public let brand: String?
+    public let whatHappened: String
+    public let whyItWorked: String
+    public let metric: String?
+    public let url: String?
+}
+
+public struct PlayApplication: Sendable, Decodable, Hashable {
+    public let steps: [String]
+    public let expectedEffect: String
+    public let effortLevel: String   // "low" | "medium" | "high"
+}
+
+public struct MarketingPlay: Sendable, Decodable, Identifiable, Hashable {
+    public var id: String { "\(kind)-\(title)" }
+    public let kind: String          // "case" | "trend"
+    public let title: String
+    public let source: PlaySource
+    public let application: PlayApplication
+    public let tools: [PlayTool]
+}
+
+public struct CasesSourceItem: Sendable, Decodable, Hashable {
+    public let name: String
+    public let url: String
+}
+
+public struct CasesResponse: Sendable, Decodable {
+    public let plays: [MarketingPlay]
+    public let sources: [CasesSourceItem]?
+    public let cached: Bool?
+    public let weekKey: String?
+    public let error: String?
+}
+
+struct PlayProgressResponse: Decodable { let done: [String] }
 
 // MARK: - Repository
 
@@ -273,6 +326,48 @@ public actor MarketingRepository {
         let req = try await jsonRequest(path: "/api/ai/marketing/trends", method: "POST", body: body, timeoutSec: 90)
         let resp: TrendsResponse = try await perform(req)
         return resp
+    }
+
+    // MARK: - Cases (성공사례·트렌드 → 내 사업 적용)
+
+    public func fetchCases(context: MarketingCoachContext) async throws -> CasesResponse {
+        var ctx = context
+        if ctx.language == nil { ctx.language = "ko" }
+        let req = try await jsonRequest(path: "/api/ai/marketing/cases", method: "POST", body: ctx, timeoutSec: 75)
+        let resp: CasesResponse = try await perform(req)
+        if let err = resp.error, !err.isEmpty, resp.plays.isEmpty {
+            throw MarketingRepositoryError.httpStatus(500, err)
+        }
+        return resp
+    }
+
+    // MARK: - Play progress ("했어요" 피드백 루프)
+
+    /// 이번 주 완료한 플레이 제목 목록. 실패 시 빈 배열.
+    public func playProgress(weekKey: String) async -> [String] {
+        guard var comps = URLComponents(url: baseURL.appendingPathComponent("/api/ai/marketing/play-progress"), resolvingAgainstBaseURL: false) else { return [] }
+        comps.queryItems = [URLQueryItem(name: "weekKey", value: weekKey)]
+        guard let url = comps.url else { return [] }
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.timeoutInterval = 20
+        do {
+            try await attachAuth(&req)
+            let resp: PlayProgressResponse = try await perform(req)
+            return resp.done
+        } catch {
+            return []
+        }
+    }
+
+    /// 플레이 "했어요" 체크/해제. best-effort.
+    public func setPlayDone(weekKey: String, title: String, done: Bool) async {
+        struct Body: Encodable { let weekKey: String; let playTitle: String; let done: Bool }
+        guard let req = try? await jsonRequest(
+            path: "/api/ai/marketing/play-progress", method: "POST",
+            body: Body(weekKey: weekKey, playTitle: title, done: done), timeoutSec: 20
+        ) else { return }
+        let _: PlayProgressResponse? = try? await perform(req)
     }
 
     // MARK: - Campaigns (Supabase user_store_data 직접)

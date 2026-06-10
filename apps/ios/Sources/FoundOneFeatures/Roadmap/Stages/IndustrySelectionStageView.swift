@@ -65,7 +65,23 @@ public struct IndustrySelectionStageView: View {
     private var currentInputs: [String: String] {
         var m = ["industryId": selectedIndustryId, "cluster": selectedCluster]
         if !selectedSpecialtyId.isEmpty { m["specialtyId"] = selectedSpecialtyId }
+        // ── 웹 계약 키 미러 (2026-06-10 P0-C) ──
+        //   웹 handleIndustryContinue 는 inputs.categoryId + inputs.subIndustryId 를 기록하고,
+        //   분기 엔진(starter-data.ts nextStageConditions)·path-filter(usePersistence.ts)·
+        //   business_profiles 투영(persistence.ts)이 이 키들을 읽는다.
+        //   industryId/cluster 만 기록하면 iOS 온보딩 유저가 웹에서 경로 분기에 실패 → 병행 기록.
+        if let opt = StarterIndustryData.option(by: selectedIndustryId) {
+            m["categoryId"] = opt.categoryId
+            m["subIndustryId"] = selectedIndustryId
+        }
         return m
+    }
+
+    /// 웹 stage_decisions.selected_primary_option_id 미러 — 웹은 sub-industry id 를 그대로 넣는다
+    /// (useSelectionHandlers.handleIndustryContinue: selectedPrimaryOptionId = selectedIndustryId).
+    /// startup-tech 하위 분기 (hardware-iot/robotics 등) 가 이 컬럼을 직접 읽으므로 필수.
+    private var currentPrimaryOptionId: String? {
+        selectedIndustryId.isEmpty ? nil : selectedIndustryId
     }
 
     // ── Onboarding 통합 옵션 (2026-05-20) ──
@@ -113,12 +129,20 @@ public struct IndustrySelectionStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId, inputs: currentInputs)
+                roadmapStore.advanceToNext(
+                    currentStageId: stageId,
+                    inputs: currentInputs,
+                    selectedPrimaryOptionId: currentPrimaryOptionId
+                )
                 // dismiss / wizard push 는 BUStageShell 이 \.wizardOnAdvance 환경값 보고 자동 처리.
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: currentInputs)
+                roadmapStore.saveStageEdit(
+                    currentStageId: stageId,
+                    inputs: currentInputs,
+                    selectedPrimaryOptionId: currentPrimaryOptionId
+                )
             },
             wrapup: BUStageWrapupData(
                 doneItems: [
