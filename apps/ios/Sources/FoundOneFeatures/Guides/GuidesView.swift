@@ -87,6 +87,10 @@ fileprivate final class FundingPageState {
         if statusFilter != .all {
             list = list.filter { $0.applicationStatus == statusFilter.rawValue }
         }
+        // 파운드원 자체 운영 지원사업(앱 내부 신청)은 노출될 때 항상 맨 위 고정.
+        if let idx = list.firstIndex(where: { $0.internalApply }), idx > 0 {
+            list.insert(list.remove(at: idx), at: 0)
+        }
         return list
     }
 }
@@ -99,6 +103,7 @@ public struct GuidesView: View {
 
     @State private var state = FundingPageState()
     @State private var scoreTarget: FundingProgram? = nil
+    @State private var applyTarget: FundingProgram? = nil
     @Environment(\.openURL) private var openURL
 
     public init(store: DashboardStore) {
@@ -145,6 +150,11 @@ public struct GuidesView: View {
         .sheet(item: $scoreTarget) { program in
             if let snapshot = state.profileSnapshot {
                 FundingScoreSheet(program: program, profile: snapshot)
+            }
+        }
+        .sheet(item: $applyTarget) { program in
+            if let snapshot = state.profileSnapshot {
+                GrantApplySheet(program: program, snapshot: snapshot)
             }
         }
     }
@@ -384,8 +394,12 @@ public struct GuidesView: View {
     // MARK: - Actions
 
     private func applyTo(_ program: FundingProgram) {
-        guard let url = URL(string: program.url) else { return }
-        openURL(url)
+        // 앱 내부 신청형 → 신청 시트, 그 외 → 외부 공식사이트.
+        if program.internalApply {
+            applyTarget = program
+        } else if let url = URL(string: program.url) {
+            openURL(url)
+        }
     }
 
     private func loadPrograms() async {
@@ -609,9 +623,9 @@ private struct ProgramCard: View {
 
                 Button(action: onApply) {
                     HStack(spacing: 4) {
-                        Text("신청")
+                        Text(program.internalApply ? "신청하기" : "신청")
                             .font(.system(size: 12, weight: .heavy))
-                        Image(systemName: "arrow.up.right")
+                        Image(systemName: program.internalApply ? "paperplane.fill" : "arrow.up.right")
                             .font(.system(size: 10, weight: .heavy))
                     }
                     .foregroundStyle(.white)
@@ -800,3 +814,170 @@ private struct RequiredDocsView: View {
 }
 
 // FundingScoreSheet 는 FundingScoreSheet.swift 에 분리.
+
+// MARK: - 창업지원금 신청 시트 (앱 내부 신청 — 현 사업체로 즉시 신청)
+
+private struct GrantApplySheet: View {
+    let program: FundingProgram
+    let snapshot: FundingProfileSnapshot
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var pitch: String = ""
+    @State private var submitting = false
+    @State private var errorMsg: String? = nil
+    @State private var done = false
+    @State private var announce: String? = nil
+
+    // 접수 기간·발표일 — 서버(/api/funding/apply)와 동일.
+    private let applyOpen = "2026-06-15"
+    private let applyClose = "2026-08-15"
+    private let announceDefault = "2026-08-22"
+
+    private func kstToday() -> String {
+        let fmt = DateFormatter()
+        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+        fmt.dateFormat = "yyyy-MM-dd"
+        return fmt.string(from: Date())
+    }
+    private var windowState: String {
+        let today = kstToday()
+        if today < applyOpen { return "before" }
+        if today > applyClose { return "closed" }
+        return "open"
+    }
+    private func dot(_ s: String) -> String { s.replacingOccurrences(of: "-", with: ".") }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                if done {
+                    successView
+                } else {
+                    formView
+                }
+            }
+            .navigationTitle("창업지원금 신청")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(done ? "닫기" : "취소") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private var formView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(program.name)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(BUColor.ink)
+            Text("신청 \(dot(applyOpen))~\(dot(applyClose)) · 발표 \(dot(announceDefault)) · 1팀 100만원")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted)
+
+            // 신청할 사업체
+            VStack(alignment: .leading, spacing: 6) {
+                Text("신청할 사업체")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted)
+                Text(snapshot.storeName ?? "(사업체 이름 미입력)")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(BUColor.midnightDeep)
+                Text("현재 사업체 정보(최근 매출·사용자 수 변화 등)가 함께 전달돼요.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+            // 아이디어·열정
+            VStack(alignment: .leading, spacing: 6) {
+                Text("사업 아이디어와 열정 (선택)")
+                    .font(.system(size: 12.5, weight: .bold))
+                    .foregroundStyle(BUColor.ink)
+                TextEditor(text: $pitch)
+                    .font(.system(size: 14))
+                    .frame(minHeight: 100)
+                    .padding(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(BUColor.cardBorder, lineWidth: 1)
+                    )
+                Text("어떤 사업을, 왜 하고 있는지 / 무엇에 열정을 쏟는지 적어주세요. 심사에서 가장 중요해요.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(BUColor.inkMuted.opacity(0.8))
+            }
+
+            if windowState == "before" {
+                Text("신청은 \(dot(applyOpen))부터 가능해요.")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.inkMuted)
+            } else if windowState == "closed" {
+                Text("신청이 마감되었어요.")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.danger)
+            }
+            if let err = errorMsg {
+                Text(err)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(BUColor.danger)
+            }
+
+            Button(action: { Task { await submit() } }) {
+                Text(submitting ? "신청 중…" : "예, 신청할게요")
+                    .font(.system(size: 15, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .opacity(windowState == "open" && !submitting ? 1 : 0.5)
+            }
+            .buttonStyle(.plain)
+            .disabled(windowState != "open" || submitting)
+        }
+        .padding(20)
+    }
+
+    private var successView: some View {
+        VStack(spacing: 12) {
+            Text("🎉").font(.system(size: 40))
+            Text("신청 완료!")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(BUColor.midnightDeep)
+            Text("\(snapshot.storeName ?? "회원님의 사업체")(으)로 신청이 접수됐어요. 선정 결과는 \(dot(announce ?? announceDefault))에 발표됩니다. 그때까지 열정을 잃지 마세요!")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(BUColor.inkMuted)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+            Button(action: { dismiss() }) {
+                Text("확인")
+                    .font(.system(size: 15, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(BUColor.midnight, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 8)
+        }
+        .padding(28)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func submit() async {
+        submitting = true
+        errorMsg = nil
+        let repo = FundingApplyRepository(supabase: BUSupabase.shared.client)
+        let result = await repo.apply(programId: program.id, pitch: pitch, snapshot: snapshot)
+        submitting = false
+        if result.ok {
+            announce = result.announce
+            done = true
+        } else {
+            errorMsg = result.message ?? "신청에 실패했어요."
+        }
+    }
+}

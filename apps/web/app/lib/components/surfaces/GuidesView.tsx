@@ -64,6 +64,25 @@ const INDUSTRY_LABEL_KO: Record<string, string> = {
 const LIVE_CACHE_KEY = "foundone.funding.live.v1";
 const LIVE_CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12h — 서버 Data Cache 와 동일 주기
 
+// ── 파운드원 1차 창업지원금 (앱 내부 신청) — 접수 기간·발표일은 서버(/api/funding/apply)와 동일 ──
+const GRANT_PROGRAM_ID = "foundone-startup-grant-1";
+const GRANT_APPLY_OPEN = "2026-06-15";
+const GRANT_APPLY_CLOSE = "2026-08-15";
+const GRANT_ANNOUNCE = "2026-08-22";
+/** 현재 KST 날짜 (YYYY-MM-DD). */
+function kstTodayStr(): string {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+type GrantWindowState = "before" | "open" | "closed";
+function grantWindowState(today = kstTodayStr()): GrantWindowState {
+  if (today < GRANT_APPLY_OPEN) return "before";
+  if (today > GRANT_APPLY_CLOSE) return "closed";
+  return "open";
+}
+function fmtDot(iso: string): string {
+  return iso.replaceAll("-", ".");
+}
+
 export function GuidesView() {
   const d = useDashboardCtx();
   const {
@@ -217,6 +236,62 @@ export function GuidesView() {
     () => getMatchedProgramsV2(criteria, livePrograms ?? undefined).filter((p) => p.applicationStatus !== "closed"),
     [criteria, livePrograms],
   );
+
+  // ─── 파운드원 창업지원금 신청 ───
+  const [applyModalProgram, setApplyModalProgram] = useState<StartupProgram | null>(null);
+  const [grantApplied, setGrantApplied] = useState<boolean | null>(null);
+
+  // 본인 신청 여부 — 마운트 시 1회 조회(버튼 "신청 완료" 표시용).
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        if (!token) return;
+        const res = await fetch(`/api/funding/apply?programId=${GRANT_PROGRAM_ID}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (alive) setGrantApplied(!!j.applied);
+      } catch { /* graceful — 미로그인/네트워크 시 미적용으로 둠 */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // 신청 시 함께 보낼 현 사업체 스냅샷 (이름·아이디어 보강용 지표).
+  const applySnapshot = useMemo(() => {
+    const sorted = [...dailyEntries].sort((a, b) => a.date.localeCompare(b.date));
+    const last7 = sorted.slice(-7);
+    const prev7 = sorted.slice(-14, -7);
+    const avgSales7 = last7.length ? last7.reduce((s, e) => s + e.sales, 0) / last7.length : 0;
+    const monthlyAvgRevenue = avgSales7 > 0 ? Math.round(avgSales7 * 26) : null;
+    const hasUserSales = dailyEntries.some((e) => e.sales > 0);
+    // 손님·사용자 수 (있을 때만) — 스타트업·SaaS 는 사용자 수, 오프라인은 손님 수.
+    const custOf = (e: { customers?: number }) => (typeof e.customers === "number" ? e.customers : null);
+    const last7Cust = last7.map((e) => custOf(e as { customers?: number })).filter((n): n is number => n != null);
+    const prev7Cust = prev7.map((e) => custOf(e as { customers?: number })).filter((n): n is number => n != null);
+    const recentCustomers = last7Cust.length ? Math.round(last7Cust.reduce((s, n) => s + n, 0) / last7Cust.length) : null;
+    let customerChangePct: number | null = null;
+    if (last7Cust.length && prev7Cust.length) {
+      const a = last7Cust.reduce((s, n) => s + n, 0) / last7Cust.length;
+      const p = prev7Cust.reduce((s, n) => s + n, 0) / prev7Cust.length;
+      if (p > 0) customerChangePct = Math.round(((a - p) / p) * 1000) / 10;
+    }
+    return {
+      storeName: storeName || null,
+      industryCategoryId: industryCategoryId || null,
+      businessLaunched: !!businessLaunched,
+      businessLaunchedDate: businessLaunchedDate || null,
+      monthlyAvgRevenue,
+      hasUserSales,
+      weeklySalesChangePct: weeklySalesChangePct ?? null,
+      recentCustomers,
+      customerChangePct,
+      employeesCount: employees.length,
+    };
+  }, [dailyEntries, storeName, industryCategoryId, businessLaunched, businessLaunchedDate, weeklySalesChangePct, employees.length]);
 
   // ─── AI 점수 보기 모달 상태 ───
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
@@ -388,7 +463,11 @@ export function GuidesView() {
     return true;
   };
   const filtered = useMemo(() => {
-    return (recommendMode ? recommended : matchedAll).filter(passFilters);
+    const base = (recommendMode ? recommended : matchedAll).filter(passFilters);
+    // 파운드원 자체 운영 지원사업(앱 내부 신청)은 노출될 때 항상 맨 위 고정.
+    const idx = base.findIndex((p) => p.id === GRANT_PROGRAM_ID);
+    if (idx > 0) base.unshift(base.splice(idx, 1)[0]);
+    return base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchedAll, recommended, categoryFilter, statusFilter, regionFilter, industryFilter, ageFilter, recommendMode, searchTerms]);
 
@@ -618,6 +697,8 @@ export function GuidesView() {
                 program={program}
                 ko={ko}
                 onScoreClick={() => handleScoreClick(program)}
+                onApplyClick={() => setApplyModalProgram(program)}
+                applyState={{ windowState: grantWindowState(), applied: grantApplied === true }}
                 rank={recommendMode ? idx + 1 : undefined}
                 showReasons={recommendMode}
               />
@@ -642,6 +723,18 @@ export function GuidesView() {
         error={scoreError}
         result={scoreResult}
         ko={ko}
+      />
+
+      {/* 창업지원금 신청 모달 */}
+      <GrantApplyModal
+        program={applyModalProgram}
+        ko={ko}
+        storeName={storeName}
+        snapshot={applySnapshot}
+        alreadyApplied={grantApplied === true}
+        windowState={grantWindowState()}
+        onClose={() => setApplyModalProgram(null)}
+        onApplied={() => setGrantApplied(true)}
       />
     </main>
   );
@@ -719,6 +812,8 @@ function ProgramCard({
   program,
   ko,
   onScoreClick,
+  onApplyClick,
+  applyState,
   rank,
   showReasons,
 }: {
@@ -731,6 +826,10 @@ function ProgramCard({
   };
   ko: boolean;
   onScoreClick: () => void;
+  /** 앱 내부 신청(internalApply)형 카드의 "신청하기" 클릭 — 신청 모달 오픈 */
+  onApplyClick?: () => void;
+  /** 앱 내부 신청형 카드의 접수 기간/신청완료 상태 */
+  applyState?: { windowState: "before" | "open" | "closed"; applied: boolean };
   /** 추천 모드일 때 1-based 순위 — 카드 좌상단에 "N순위" 배지 표시 */
   rank?: number;
   /** 추천 모드일 때 "왜 추천?" 사유 칩 노출 */
@@ -919,22 +1018,196 @@ function ProgramCard({
             {ko ? "AI 점수 보기" : "AI score"}
           </button>
         )}
-        <button
-          type="button"
-          onClick={handleOpen}
-          disabled={!program.url}
-          style={{
-            ...ctaButtonStyle,
-            flex: 1,
-            opacity: program.url ? 1 : 0.5,
-            cursor: program.url ? "pointer" : "not-allowed",
-          }}
-        >
-          {ko ? "공식 사이트에서 신청하기" : "Apply at official site"}
-          <ExternalLink size={13} strokeWidth={1.5} />
-        </button>
+        {program.internalApply ? (() => {
+          // 앱 내부 신청 — 외부 URL 없이 현 사업체로 바로 신청.
+          const ws = applyState?.windowState ?? "open";
+          const applied = applyState?.applied ?? false;
+          const disabled = ws === "before" || ws === "closed";
+          const label = applied
+            ? (ko ? "신청 완료 ✓" : "Applied ✓")
+            : ws === "before"
+              ? (ko ? `${fmtDot(GRANT_APPLY_OPEN)} 신청 시작` : `Opens ${GRANT_APPLY_OPEN}`)
+              : ws === "closed"
+                ? (ko ? "신청 마감" : "Closed")
+                : (ko ? "신청하기" : "Apply now");
+          return (
+            <button
+              type="button"
+              onClick={() => { if (!disabled) onApplyClick?.(); }}
+              disabled={disabled}
+              style={{
+                ...ctaSecondaryStyle,
+                flex: 1,
+                ...(applied
+                  ? { background: "white", color: MIDNIGHT, border: `1px solid ${MIDNIGHT_BORDER}`, boxShadow: "none" }
+                  : {}),
+                opacity: disabled ? 0.5 : 1,
+                cursor: disabled ? "not-allowed" : "pointer",
+              }}
+            >
+              <Award size={13} strokeWidth={1.6} />
+              {label}
+            </button>
+          );
+        })() : (
+          <button
+            type="button"
+            onClick={handleOpen}
+            disabled={!program.url}
+            style={{
+              ...ctaButtonStyle,
+              flex: 1,
+              opacity: program.url ? 1 : 0.5,
+              cursor: program.url ? "pointer" : "not-allowed",
+            }}
+          >
+            {ko ? "공식 사이트에서 신청하기" : "Apply at official site"}
+            <ExternalLink size={13} strokeWidth={1.5} />
+          </button>
+        )}
       </div>
     </article>
+  );
+}
+
+// ─── 파운드원 창업지원금 신청 모달 ───
+function GrantApplyModal({
+  program,
+  ko,
+  storeName,
+  snapshot,
+  alreadyApplied,
+  windowState,
+  onClose,
+  onApplied,
+}: {
+  program: StartupProgram | null;
+  ko: boolean;
+  storeName: string;
+  snapshot: Record<string, unknown>;
+  alreadyApplied: boolean;
+  windowState: "before" | "open" | "closed";
+  onClose: () => void;
+  onApplied: () => void;
+}) {
+  const [pitch, setPitch] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  // 모달이 열릴 때마다(프로그램 변경) 입력·상태 초기화.
+  useEffect(() => {
+    if (program) { setPitch(""); setError(null); setDone(false); setSubmitting(false); }
+  }, [program?.id]);
+
+  if (!program) return null;
+
+  const name = program.name[ko ? "ko" : "en"];
+  const canApply = windowState === "open";
+
+  const submit = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) {
+        setError(ko ? "로그인 세션이 만료됐어요. 새로고침 후 다시 시도해주세요." : "Session expired. Refresh and retry.");
+        setSubmitting(false);
+        return;
+      }
+      const res = await fetch("/api/funding/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ programId: program.id, pitch: pitch.trim() || undefined, snapshot }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(j?.error ?? (ko ? "신청에 실패했어요. 잠시 후 다시 시도해주세요." : "Failed. Try again."));
+        setSubmitting(false);
+        return;
+      }
+      setDone(true);
+      onApplied();
+    } catch {
+      setError(ko ? "네트워크 오류예요. 잠시 후 다시 시도해주세요." : "Network error.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div onClick={onClose} style={modalOverlayStyle}>
+      <div onClick={(e) => e.stopPropagation()} style={modalCardStyle} role="dialog" aria-modal="true">
+        {done ? (
+          <div style={{ textAlign: "center", padding: "8px 4px" }}>
+            <div style={{ fontSize: 34, marginBottom: 10 }}>🎉</div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: MIDNIGHT, margin: "0 0 8px" }}>{ko ? "신청 완료!" : "Applied!"}</h3>
+            <p style={{ fontSize: 13.5, color: TEXT_SUBTLE, lineHeight: 1.6, margin: "0 0 18px" }}>
+              {ko
+                ? `${storeName || "회원님의 사업체"}로 신청이 접수됐어요. 선정 결과는 ${fmtDot(GRANT_ANNOUNCE)}에 발표됩니다. 그때까지 열정을 잃지 마세요!`
+                : `Submitted for ${storeName || "your business"}. Results will be announced on ${GRANT_ANNOUNCE}.`}
+            </p>
+            <button type="button" onClick={onClose} style={{ ...ctaSecondaryStyle, width: "100%", marginTop: 0 }}>{ko ? "확인" : "Done"}</button>
+          </div>
+        ) : (
+          <>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: MIDNIGHT, margin: "0 0 4px" }}>{name}</h3>
+            <p style={{ fontSize: 12.5, color: TEXT_SUBTLE, margin: "0 0 14px" }}>
+              {ko
+                ? `신청 ${fmtDot(GRANT_APPLY_OPEN)}~${fmtDot(GRANT_APPLY_CLOSE)} · 발표 ${fmtDot(GRANT_ANNOUNCE)} · 1팀 100만원`
+                : `Apply ${GRANT_APPLY_OPEN}–${GRANT_APPLY_CLOSE} · Results ${GRANT_ANNOUNCE}`}
+            </p>
+
+            <div style={{ background: MIDNIGHT_TINT, borderRadius: 12, padding: "13px 15px", marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: TEXT_SUBTLE, marginBottom: 3 }}>{ko ? "신청할 사업체" : "Applying as"}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: MIDNIGHT }}>{storeName || (ko ? "(사업체 이름 미입력)" : "(no business name)")}</div>
+              <div style={{ fontSize: 12, color: TEXT_SUBTLE, marginTop: 6, lineHeight: 1.5 }}>
+                {ko ? "현재 사업체 정보(최근 매출·사용자 수 변화 등)가 함께 전달돼요." : "Your current business snapshot is included."}
+              </div>
+            </div>
+
+            {alreadyApplied && (
+              <div style={{ fontSize: 12.5, color: AMBER, background: "rgba(180,83,9,0.07)", borderRadius: 10, padding: "9px 12px", marginBottom: 12 }}>
+                {ko ? "이미 신청한 사업체예요. 다시 제출하면 내용이 최신으로 갱신돼요." : "Already applied — resubmitting updates your entry."}
+              </div>
+            )}
+
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: TEXT_PRIMARY, marginBottom: 6 }}>
+              {ko ? "사업 아이디어와 열정 (선택)" : "Your idea & passion (optional)"}
+            </label>
+            <textarea
+              value={pitch}
+              onChange={(e) => setPitch(e.target.value)}
+              maxLength={1000}
+              rows={4}
+              placeholder={ko ? "어떤 사업을, 왜 하고 있는지 / 무엇에 열정을 쏟고 있는지 한두 줄로 적어주세요. 심사에서 가장 중요하게 봐요." : "Tell us about your idea and what you're passionate about."}
+              style={modalTextareaStyle}
+            />
+
+            {windowState === "before" && (
+              <div style={{ fontSize: 12.5, color: TEXT_SUBTLE, marginTop: 10 }}>{ko ? `신청은 ${fmtDot(GRANT_APPLY_OPEN)}부터 가능해요.` : `Opens ${GRANT_APPLY_OPEN}.`}</div>
+            )}
+            {windowState === "closed" && (
+              <div style={{ fontSize: 12.5, color: RED, marginTop: 10 }}>{ko ? "신청이 마감되었어요." : "Applications are closed."}</div>
+            )}
+            {error && <div style={{ fontSize: 12.5, color: RED, marginTop: 10 }}>{error}</div>}
+
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <button type="button" onClick={onClose} style={{ ...ctaButtonStyle, flex: 1, marginTop: 0 }}>{ko ? "취소" : "Cancel"}</button>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={!canApply || submitting}
+                style={{ ...ctaSecondaryStyle, flex: 1.4, marginTop: 0, opacity: !canApply || submitting ? 0.55 : 1, cursor: !canApply || submitting ? "not-allowed" : "pointer" }}
+              >
+                {submitting ? (ko ? "신청 중…" : "Submitting…") : (ko ? "예, 신청할게요" : "Yes, apply")}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1374,6 +1647,45 @@ const ctaSecondaryStyle: React.CSSProperties = {
   cursor: "pointer",
   letterSpacing: "-0.005em",
   boxShadow: "0 2px 8px rgba(25,25,112,0.18)",
+};
+
+// 창업지원금 신청 모달
+const modalOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(15,23,42,0.32)",
+  backdropFilter: "blur(2px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 20,
+  zIndex: 1000,
+};
+
+const modalCardStyle: React.CSSProperties = {
+  background: "white",
+  borderRadius: 18,
+  padding: "22px 22px 20px",
+  width: "100%",
+  maxWidth: 440,
+  maxHeight: "90vh",
+  overflowY: "auto",
+  boxShadow: "0 12px 48px rgba(15,23,42,0.22)",
+  fontFamily: "inherit",
+};
+
+const modalTextareaStyle: React.CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box",
+  border: `1px solid ${MIDNIGHT_BORDER}`,
+  borderRadius: 12,
+  padding: "11px 13px",
+  fontSize: 13.5,
+  fontFamily: "inherit",
+  color: TEXT_PRIMARY,
+  resize: "vertical",
+  outline: "none",
+  lineHeight: 1.55,
 };
 
 const emptyBoxStyle: React.CSSProperties = {

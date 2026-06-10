@@ -28,6 +28,8 @@ public struct FundingProgram: Sendable, Decodable, Identifiable, Hashable {
     public let amount: String?
     public let season: String
     public let url: String
+    /// 앱 내부 신청형 — true 면 외부 URL 대신 앱 안에서 "신청하기" 플로우(현 사업체 즉시 신청).
+    public var internalApply: Bool = false
     public let forSmallBiz: Bool
     public let forFranchise: Bool
     public let highlight: Bool
@@ -46,7 +48,7 @@ public struct FundingProgram: Sendable, Decodable, Identifiable, Hashable {
 
     public init(
         id: String, category: String, name: String, organizer: String, target: String,
-        benefit: String, amount: String?, season: String, url: String,
+        benefit: String, amount: String?, season: String, url: String, internalApply: Bool = false,
         forSmallBiz: Bool, forFranchise: Bool, highlight: Bool, dataYear: String,
         applicationStatus: String, applicationDeadline: String?, requiredDocs: [String],
         fundingType: String?, loanDetails: FundingLoanDetails?, policyFundSubCategory: String?,
@@ -55,7 +57,8 @@ public struct FundingProgram: Sendable, Decodable, Identifiable, Hashable {
     ) {
         self.id = id; self.category = category; self.name = name; self.organizer = organizer
         self.target = target; self.benefit = benefit; self.amount = amount; self.season = season
-        self.url = url; self.forSmallBiz = forSmallBiz; self.forFranchise = forFranchise
+        self.url = url; self.internalApply = internalApply
+        self.forSmallBiz = forSmallBiz; self.forFranchise = forFranchise
         self.highlight = highlight; self.dataYear = dataYear
         self.applicationStatus = applicationStatus; self.applicationDeadline = applicationDeadline
         self.requiredDocs = requiredDocs; self.fundingType = fundingType
@@ -461,6 +464,7 @@ public actor FundingRepository {
             amount: p.amount,
             season: pick(p.season),
             url: p.url,
+            internalApply: p.internalApply ?? false,
             forSmallBiz: p.forSmallBiz,
             forFranchise: p.forFranchise,
             highlight: p.highlight ?? false,

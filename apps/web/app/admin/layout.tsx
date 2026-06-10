@@ -13,6 +13,7 @@ import { BG, NAVY, MUTED, BORDER } from "../lib/components/admin/ui";
 const NAV = [
   { href: "/admin", label: "개요", exact: true },
   { href: "/admin/feedback", label: "피드백" },
+  { href: "/admin/applications", label: "지원사업 신청" },
   { href: "/admin/users", label: "사용자" },
   { href: "/admin/revenue", label: "매출·구독" },
 ];

@@ -19,6 +19,12 @@ export type StartupProgram = {
   amount?: string;
   season: { ko: string; en: string };
   url: string;
+  /**
+   * 앱 내부 신청형 — true 면 외부 공식사이트 URL 로 보내지 않고, 앱 안에서 바로
+   *  "신청하기"(현 사업체로 즉시 신청) 플로우를 띄운다. 파운드원이 직접 운영하는
+   *  지원사업 전용. 이 경우 url 은 빈 문자열("").
+   */
+  internalApply?: boolean;
   /** 소상공인/자영업에 특히 적합한지 */
   forSmallBiz: boolean;
   /** 프랜차이즈 창업에도 해당되는지 */
@@ -139,6 +145,34 @@ export type ProgramMatchResult = {
 };
 
 export const startupPrograms: StartupProgram[] = [
+  // ── 파운드원 자체 운영 (앱 내부 신청 — 외부 URL 없이 현 사업체로 바로 신청) ──
+  {
+    id: "foundone-startup-grant-1",
+    category: "private",
+    name: { ko: "파운드원 1차 창업지원금", en: "Found.One 1st Startup Grant" },
+    organizer: { ko: "파운드원", en: "Found.One" },
+    target: {
+      ko: "파운드원을 사용하는 창업자·예비창업자 누구나 — 나이·지역·매출 제한 없음",
+      en: "Any Found.One user — founders & pre-founders. No age, region, or revenue limits.",
+    },
+    benefit: {
+      ko: "사업 아이디어와 열정, 그리고 실제로 쏟는 노동량을 최우선으로 보고 1팀을 선정해 100만원을 지원합니다. 아직 매출이 없어도, 꾸준히 열정을 가지고 사업을 밀고 나가는 팀이 유리합니다.",
+      en: "We judge first on your idea, your passion, and the work you actually put in — then award ₩1,000,000 to a single team. No revenue yet? Teams that keep pushing with genuine passion have the edge.",
+    },
+    amount: "100만원 · 1팀 선정",
+    season: { ko: "신청 6/15~8/15 · 발표 8/22 (2026)", en: "Apply Jun 15–Aug 15 · Results Aug 22 (2026)" },
+    // 앱 내부 신청 — 외부 공식사이트 없음.
+    url: "",
+    internalApply: true,
+    forSmallBiz: true,
+    forFranchise: true,
+    highlight: true,
+    dataYear: "2026",
+    // 나이·지역·업종·연차 제한 없음 → maxAge/regions/industries/businessYearRange 미설정 = 전원 자격.
+    applicationStatus: "open",
+    applicationDeadline: "2026-08-15",
+    fundingType: "grant",
+  },
   // ── Government ──
   {
     id: "pre-startup-package",

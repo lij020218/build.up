@@ -39,6 +39,8 @@ public struct StartupProgram: Decodable, Sendable, Hashable, Identifiable {
     public let amount: String?
     public let season: StartupProgramLocalized
     public let url: String
+    /// 앱 내부 신청형 — true 면 외부 URL 대신 앱 안에서 바로 "신청하기" 플로우(현 사업체 즉시 신청).
+    public let internalApply: Bool?
     public let forSmallBiz: Bool
     public let forFranchise: Bool
     public let highlight: Bool?

@@ -1,5 +1,39 @@
 [
   {
+    "id": "foundone-startup-grant-1",
+    "category": "private",
+    "name": {
+      "ko": "파운드원 1차 창업지원금",
+      "en": "Found.One 1st Startup Grant"
+    },
+    "organizer": {
+      "ko": "파운드원",
+      "en": "Found.One"
+    },
+    "target": {
+      "ko": "파운드원을 사용하는 창업자·예비창업자 누구나 — 나이·지역·매출 제한 없음",
+      "en": "Any Found.One user — founders & pre-founders. No age, region, or revenue limits."
+    },
+    "benefit": {
+      "ko": "사업 아이디어와 열정, 그리고 실제로 쏟는 노동량을 최우선으로 보고 1팀을 선정해 100만원을 지원합니다. 아직 매출이 없어도, 꾸준히 열정을 가지고 사업을 밀고 나가는 팀이 유리합니다.",
+      "en": "We judge first on your idea, your passion, and the work you actually put in — then award ₩1,000,000 to a single team. No revenue yet? Teams that keep pushing with genuine passion have the edge."
+    },
+    "amount": "100만원 · 1팀 선정",
+    "season": {
+      "ko": "신청 6/15~8/15 · 발표 8/22 (2026)",
+      "en": "Apply Jun 15–Aug 15 · Results Aug 22 (2026)"
+    },
+    "url": "",
+    "internalApply": true,
+    "forSmallBiz": true,
+    "forFranchise": true,
+    "highlight": true,
+    "dataYear": "2026",
+    "applicationStatus": "open",
+    "applicationDeadline": "2026-08-15",
+    "fundingType": "grant"
+  },
+  {
     "id": "pre-startup-package",
     "category": "government",
     "name": {
@@ -420,7 +454,7 @@
   },
   {
     "id": "samsung-clab",
-    "category": "private",
+    "category": "corporate",
     "name": {
       "ko": "삼성 C-Lab Outside",
       "en": "Samsung C-Lab Outside"
@@ -480,7 +514,7 @@
   },
   {
     "id": "naver-d2sf",
-    "category": "private",
+    "category": "corporate",
     "name": {
       "ko": "네이버 D2SF",
       "en": "NAVER D2SF"
@@ -511,7 +545,7 @@
   },
   {
     "id": "hyundai-cmk",
-    "category": "private",
+    "category": "corporate",
     "name": {
       "ko": "CMK 임팩트프러너 (구 H-온드림)",
       "en": "CMK Impactpreneur (fmr H-OnDream)"
@@ -540,7 +574,7 @@
   },
   {
     "id": "sk-lookie",
-    "category": "private",
+    "category": "corporate",
     "name": {
       "ko": "SK LOOKIE",
       "en": "SK LOOKIE"
