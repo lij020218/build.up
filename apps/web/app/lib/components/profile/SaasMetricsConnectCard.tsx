@@ -726,7 +726,7 @@ function SaasMetricsConnectCardInner({
                     type="url"
                     value={pullEndpoint}
                     onChange={(e) => setPullEndpoint(e.target.value)}
-                    placeholder="https://api.example.com/buildup/funnel"
+                    placeholder="https://api.example.com/foundone/funnel"
                     style={{
                       width: "100%",
                       padding: "8px 10px",

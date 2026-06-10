@@ -116,6 +116,16 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     category: "coaching",
   },
   {
+    // 재고 카드 없는 서비스 업종(피트니스·교육·공간 등)에서 그 자리에 노출되는 고객 요약 카드.
+    //   Tier1_5Coaching 의 hide("customer-summary") 토글 대상 → 카탈로그 정합 필요.
+    id: "customer-summary",
+    labelKo: "고객 요약",
+    labelEn: "Customer Summary",
+    hintKo: "신규/재방문 손님 + 단골 비율. 재고가 없는 서비스 업종에서 의미 있음",
+    hintEn: "New/returning + regulars — service businesses without inventory",
+    category: "coaching",
+  },
+  {
     id: "food-safety",
     labelKo: "식약처 위생점검 대비",
     labelEn: "Food Safety Compliance",
@@ -283,6 +293,17 @@ export const DASHBOARD_CARDS: DashboardCardMeta[] = [
     hintEn: "MRR/churn/conversion for subscription business",
     category: "coaching",
     industryHint: "subscription",
+  },
+  {
+    // 가입→활성화→유료 통합 전환율 카드. startup-tech 에서만 노출.
+    //   Tier1_5Coaching 의 hide("saas-funnel-conversion") 토글 대상 → 카탈로그 정합 필요.
+    id: "saas-funnel-conversion",
+    labelKo: "통합 전환율 (가입→활성화→유료)",
+    labelEn: "Conversion Funnel (signup→active→paid)",
+    hintKo: "가입 → 활성화 → 유료 funnel 전환률. 기술 스타트업만",
+    hintEn: "Signup→activation→paid funnel — startup-tech only",
+    category: "coaching",
+    industryHint: "startup-tech",
   },
 ];
 

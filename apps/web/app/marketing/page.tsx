@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import StarterStageDemo from "../starter-stage-demo";
+import { DashboardSkeleton } from "../lib/components/ui/Skeleton";
 
 export default function MarketingPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#f5f5f7" }} />}>
+    <Suspense fallback={<DashboardSkeleton />}>
       <StarterStageDemo surface="marketing" />
     </Suspense>
   );

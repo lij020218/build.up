@@ -211,7 +211,7 @@ export const appleAppStoreGuide: AppStoreGuide = {
       },
       estimatedTime: { ko: "30분~1시간", en: "30min-1hr" },
       tips: [
-        { ko: "번들 ID는 com.회사명.앱이름 형식 (예: com.buildup.app)", en: "Bundle ID format: com.companyname.appname (e.g., com.buildup.app)" },
+        { ko: "번들 ID는 com.회사명.앱이름 형식 (예: com.foundone.app)", en: "Bundle ID format: com.companyname.appname (e.g., com.foundone.app)" },
         { ko: "앱 이름은 30자 이내. 키워드 필드(100자)도 미리 준비", en: "App name max 30 chars. Prepare keyword field (100 chars) in advance" },
       ],
     },

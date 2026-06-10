@@ -47,7 +47,7 @@ export async function GET() {
       commerce: sampleCommerce,
     },
     curl_example: [
-      "curl -X GET 'https://api.example.com/buildup/funnel' \\",
+      "curl -X GET 'https://api.example.com/foundone/funnel' \\",
       "  -H 'Authorization: Bearer YOUR_SECRET_TOKEN' \\",
       "  -H 'Accept: application/json'",
     ].join("\n"),

@@ -485,6 +485,14 @@ private struct StageRow: View {
 // 2026-05-19: NavigationStack 제거 (RoadmapView 가 push).
 private struct StageDetailSheet: View {
     let stage: RoadmapStage
+    // 현재 클러스터 경로(stageId 순서) — 주입되면 단계 번호를 경로 위치 기준으로 계산.
+    @Environment(\.roadmapStageOrder) private var stageOrder
+
+    /// 경로 내 위치 기반 단계 번호. path 에 없으면 nil → 숫자 라벨 숨김(잘못된 전역 번호 표시 금지).
+    private var resolvedStepLabel: String? {
+        guard let idx = stageOrder.firstIndex(of: stage.id) else { return nil }
+        return "\(idx + 1)단계"
+    }
 
     var body: some View {
         ZStack {
@@ -503,7 +511,7 @@ private struct StageDetailSheet: View {
                 .padding(BUSpacing.md)
             }
         }
-        .navigationTitle("\(stage.stepNumber)단계")
+        .navigationTitle(resolvedStepLabel ?? stage.titleKo)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

@@ -23,11 +23,9 @@ export async function POST(request: Request) {
     return json({ error: "Ingestion is not configured (missing INSIGHT_INGEST_TOKEN)." }, 503);
   }
   // timing-safe 비교 — 단순 === 는 조기 종료로 timing oracle 가능
-  const tokBuf = Buffer.from(token.padEnd(expected.length, "\0"), "utf8");
   const expBuf = Buffer.from(expected, "utf8");
   const tokPad = Buffer.from(token.slice(0, expected.length).padEnd(expected.length, "\0"), "utf8");
   const valid = token.length === expected.length && timingSafeEqual(tokPad, expBuf);
-  void tokBuf; // suppress unused warning
   if (!valid) {
     return json({ error: "Unauthorized" }, 401);
   }

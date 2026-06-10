@@ -164,14 +164,18 @@ export function useIndustryInsight(input: Input): {
     // 하루 1회만 생성 — localStorage 캐시. 키에 오늘 날짜 포함이라 자정 지나면 자동 무효.
     const cached = loadCached(key);
     if (cached) {
-      console.info(`[industry-insight] cache HIT (${key})`, {
-        insights: cached.insights?.length ?? 0,
-        confidence: cached.confidence,
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.info(`[industry-insight] cache HIT (${key})`, {
+          insights: cached.insights?.length ?? 0,
+          confidence: cached.confidence,
+        });
+      }
       setInsight(cached);
       return;
     }
-    console.info(`[industry-insight] cache MISS (${key}) — fetching new`);
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[industry-insight] cache MISS (${key}) — fetching new`);
+    }
 
     let cancelled = false;
 
@@ -214,7 +218,9 @@ export function useIndustryInsight(input: Input): {
         const data = (await res.json()) as IndustryInsight;
         // 응답 즉시 캐시에 저장 — 동시 caller 도 다음 mount 부터는 cache hit
         saveCache(key, data);
-        console.info(`[industry-insight] saved to cache (${key})`);
+        if (process.env.NODE_ENV !== "production") {
+          console.info(`[industry-insight] saved to cache (${key})`);
+        }
         return data;
       } catch (e) {
         console.warn("[industry-insight] fetch failed:", e instanceof Error ? e.message : e);
@@ -228,12 +234,14 @@ export function useIndustryInsight(input: Input): {
       .then((data) => {
         if (cancelled) return;
         if (data) {
-          console.info("[industry-insight] received", {
-            insights: data.insights?.length ?? 0,
-            confidence: data.confidence,
-            priorities: (data.insights ?? []).map((i) => i.priority),
-            firstHeadline: data.insights?.[0]?.headline,
-          });
+          if (process.env.NODE_ENV !== "production") {
+            console.info("[industry-insight] received", {
+              insights: data.insights?.length ?? 0,
+              confidence: data.confidence,
+              priorities: (data.insights ?? []).map((i) => i.priority),
+              firstHeadline: data.insights?.[0]?.headline,
+            });
+          }
           setInsight(data);
         }
       })

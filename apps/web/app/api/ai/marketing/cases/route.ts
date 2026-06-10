@@ -24,9 +24,18 @@ import { researchMarketingCases, type ResearchSource } from "../../../_lib/marke
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/** ISO 주차 키 (YYYY-Www) — coach 와 동일. */
+/**
+ * ISO 주차 키 (YYYY-Www) — **KST 기준**.
+ *
+ * ⚠️ 2026-06-10 fix: 기존엔 UTC 캘린더로 주차를 계산해, 클라이언트(MarketingSurface,
+ *    KST 기준)와 어긋남. KST 월요일 00~09시(=UTC 일요일 15~24시)에는 서버가 전주 키를
+ *    돌려줘 주간 갱신이 사실상 월 오전 9시 이후로 밀렸음.
+ *    MarketingSurface.getIsoWeekKey 와 동일하게 KST 캘린더 일자에서 ISO 주차를 계산.
+ */
 function getIsoWeekKey(date: Date = new Date()): string {
-  const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  // 입력 시각을 KST 캘린더 Y/M/D 로 환산 (클라이언트와 동일한 toLocaleString 방식)
+  const kst = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  const target = new Date(Date.UTC(kst.getFullYear(), kst.getMonth(), kst.getDate()));
   const dayNr = (target.getUTCDay() + 6) % 7;
   target.setUTCDate(target.getUTCDate() - dayNr + 3);
   const jan4 = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));

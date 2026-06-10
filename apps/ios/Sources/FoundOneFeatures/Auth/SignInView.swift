@@ -325,7 +325,7 @@ private struct EmailAuthSheet: View {
                         .buttonStyle(.plain)
                         Button {
                             resetIsError = false
-                            resetInfo = "FoundOne은 가입한 이메일이 곧 아이디입니다. 카카오·애플로 가입하셨다면 이 창을 닫고 카카오/애플 버튼으로 바로 로그인하세요. 이메일로 가입하셨다면 기억나는 이메일로 「비밀번호를 잊으셨나요?」를 눌러 확인하세요."
+                            resetInfo = "FoundOne은 가입한 이메일이 곧 아이디입니다. Apple로 가입하셨다면 이 창을 닫고 Apple 버튼으로 바로 로그인하세요. 이메일로 가입하셨다면 기억나는 이메일로 「비밀번호를 잊으셨나요?」를 눌러 확인하세요."
                         } label: {
                             Text("이메일(아이디)이 기억나지 않으세요?")
                                 .font(.system(size: 12.5, weight: .regular))
@@ -365,7 +365,7 @@ private struct EmailAuthSheet: View {
             do {
                 try await coordinator.sendPasswordReset(email: trimmed)
                 resetIsError = false
-                resetInfo = "재설정 메일을 보냈습니다. 이 기기에서 메일의 「새 비밀번호 설정」 링크를 누르면 앱으로 돌아와 바로 새 비밀번호를 설정할 수 있어요. (카카오·애플 로그인 계정은 메일이 오지 않습니다)"
+                resetInfo = "재설정 메일을 보냈습니다. 이 기기에서 메일의 「새 비밀번호 설정」 링크를 누르면 앱으로 돌아와 바로 새 비밀번호를 설정할 수 있어요. (Apple 로그인 계정은 메일이 오지 않습니다)"
             } catch {
                 resetIsError = true
                 resetInfo = "메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."

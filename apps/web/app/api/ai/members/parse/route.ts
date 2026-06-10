@@ -127,7 +127,9 @@ Rules:
         }
       }
 
-      console.log("[members/parse] Cleaned (first 300):", cleaned.slice(0, 300));
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[members/parse] Cleaned (first 300):", cleaned.slice(0, 300));
+      }
       members = JSON.parse(cleaned);
       if (!Array.isArray(members)) throw new Error("Not an array");
       members = members
@@ -150,7 +152,7 @@ Rules:
         "[members/parse] Parse error:",
         parseErr instanceof Error ? parseErr.message : parseErr
       );
-      console.error("[members/parse] Raw AI text:", content.text.slice(0, 1000));
+      console.error("[members/parse] AI text length:", content.text.length);
       return NextResponse.json(
         { error: `AI 응답 파싱 실패: ${content.text.slice(0, 100)}` },
         { status: 502 }

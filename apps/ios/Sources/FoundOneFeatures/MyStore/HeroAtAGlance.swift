@@ -366,14 +366,14 @@ public struct HeroAtAGlance: View {
         let url: URL?
         if scheme == "maps://" {
             // 애플맵 universal link 도 같이 시도
-            url = URL(string: "http://maps.apple.com/?q=\(encoded)")
+            url = URL(string: "https://maps.apple.com/?q=\(encoded)")
         } else {
             url = URL(string: "\(scheme)\(host)\(encoded)")
         }
         #if canImport(UIKit)
         if let url, UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
-        } else if let fallback = URL(string: "http://maps.apple.com/?q=\(encoded)") {
+        } else if let fallback = URL(string: "https://maps.apple.com/?q=\(encoded)") {
             UIApplication.shared.open(fallback)
         }
         #endif

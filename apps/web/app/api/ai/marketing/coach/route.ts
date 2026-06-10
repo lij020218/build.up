@@ -21,10 +21,13 @@ import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-li
  * 인증: Supabase Bearer 필수.
  */
 
-/** ISO 주차 키 (YYYY-Www) — 매주 월요일 시작. */
+/** ISO 주차 키 (YYYY-Www) — 매주 월요일 시작, **KST 기준**.
+ *  ⚠️ 2026-06-11 fix: UTC 캘린더로 계산하면 KST 월요일 00~09시에 전주 키를 반환해
+ *     주간 갱신이 밀림. cases/route 와 동일하게 KST 캘린더 일자에서 ISO 주차 계산. */
 function getIsoWeekKey(date: Date = new Date()): string {
   // ISO 8601: week starts Monday, week 1 contains January 4.
-  const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const kst = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  const target = new Date(Date.UTC(kst.getFullYear(), kst.getMonth(), kst.getDate()));
   const dayNr = (target.getUTCDay() + 6) % 7; // Mon=0..Sun=6
   target.setUTCDate(target.getUTCDate() - dayNr + 3); // nearest Thursday
   const jan4 = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));

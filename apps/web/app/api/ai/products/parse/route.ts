@@ -133,7 +133,9 @@ Rules:
         }
       }
 
-      console.log("[products/parse] Cleaned (first 300):", cleaned.slice(0, 300));
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[products/parse] Cleaned (first 300):", cleaned.slice(0, 300));
+      }
       products = JSON.parse(cleaned);
       if (!Array.isArray(products)) throw new Error("Not an array");
       products = products.filter(
@@ -148,7 +150,7 @@ Rules:
       }));
     } catch (parseErr) {
       console.error("[products/parse] Parse error:", parseErr instanceof Error ? parseErr.message : parseErr);
-      console.error("[products/parse] Raw AI text:", content.text.slice(0, 1000));
+      console.error("[products/parse] AI text length:", content.text.length);
       return NextResponse.json({ error: `AI 응답 파싱 실패: ${content.text.slice(0, 100)}` }, { status: 502 });
     }
 

@@ -299,8 +299,9 @@ export function resolveHero(input: {
     const ctaTarget: "sales" | "users" | "costs" | "cashflow" =
       head.includes("재료") || head.includes("매입") || head.includes("인건") || head.includes("임대") || head.includes("프라임")
         ? "costs"
-        : head.includes("객단가") || head.includes("매출")
-          ? "sales"
+        // 객단가(AOV)는 고객 카드 소관 — SSOT 주석(line 47): users = 단골/재방문/객단가/리텐션
+        : head.includes("객단가")
+          ? "users"
           : "sales";
     return {
       source: "industry-rule",
