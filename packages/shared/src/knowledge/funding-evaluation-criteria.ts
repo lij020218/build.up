@@ -493,6 +493,13 @@ export function detectRubric(programName: string, category?: string): Rubric {
  *  카드/모달이 "비수도권·청년·여성·특허·벤처인증…" 칩으로 노출.
  */
 export function getProgramBonusFactors(programName: string, category?: string): BonusFactor[] {
+  // 파운드원 자체 운영 지원사업 — 아이디어·열정 평가. 정형 가점(여성·청년 등) 대신 전용 두 가지만.
+  if (/파운드원/.test(programName)) {
+    return [
+      { key: "foundone-user", label: "파운드원 사용자", points: 3, category: "biz-cert" },
+      { key: "hardworking-owner", label: "노력하는 사장님", points: 3, category: "track-record" },
+    ];
+  }
   return detectRubric(programName, category).bonusFactors;
 }
 
