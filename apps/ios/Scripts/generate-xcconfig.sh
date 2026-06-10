@@ -35,6 +35,10 @@ SUPABASE_ANON_KEY=$(get_env "NEXT_PUBLIC_SUPABASE_ANON_KEY")
 KAKAO_REST_KEY=$(get_env "KAKAO_REST_API_KEY")
 KAKAO_JS_KEY=$(get_env "NEXT_PUBLIC_KAKAO_JS_KEY")
 
+# Apple Developer Team ID — .env.local 의 APPLE_TEAM_ID 로 주입(아카이브 서명용).
+#   없으면 빈값 → Xcode 에서 수동 선택 필요. 설정해두면 재생성해도 유지됨.
+APPLE_TEAM_ID=$(get_env "APPLE_TEAM_ID")
+
 # Kakao Native App Key — 별도 키. .env.local 에 KAKAO_NATIVE_APP_KEY 가 없으면 placeholder.
 KAKAO_NATIVE_KEY=$(get_env "KAKAO_NATIVE_APP_KEY")
 if [ -z "$KAKAO_NATIVE_KEY" ]; then
@@ -80,20 +84,20 @@ KAKAO_URL_SCHEME = kakao\$(KAKAO_NATIVE_APP_KEY)
 BU_ENVIRONMENT = production
 
 // Build settings
-PRODUCT_BUNDLE_IDENTIFIER = com.buildup.mobile
-MARKETING_VERSION = 0.1.0
+PRODUCT_BUNDLE_IDENTIFIER = com.foundone.mobile
+MARKETING_VERSION = 1.0.0
 CURRENT_PROJECT_VERSION = 1
-DEVELOPMENT_TEAM =
+DEVELOPMENT_TEAM = ${APPLE_TEAM_ID}
 IPHONEOS_DEPLOYMENT_TARGET = 18.0
 
 // App Group (Widget + Live Activity 공유)
-APP_GROUP_IDENTIFIER = group.com.buildup.shared
+APP_GROUP_IDENTIFIER = group.com.foundone.shared
 EOF
 
 echo "✅ Build.xcconfig 생성 완료: $OUTPUT"
 echo ""
 echo "📌 다음 단계:"
-echo "  1. Xcode 에서 App target 생성 (Bundle ID: com.buildup.mobile)"
+echo "  1. Xcode 에서 App target 생성 (Bundle ID: com.foundone.mobile)"
 echo "  2. Project → Configurations → Debug/Release 모두 Build.xcconfig 연결"
 echo "  3. Info.plist 의 키들은 \$(SUPABASE_URL) 등으로 참조"
 

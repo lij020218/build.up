@@ -45,8 +45,8 @@ export default function PrivacyPage() {
           <p>Found.One (이하 "회사" 또는 "서비스")는 창업자 및 소상공인을 위한 경영 지원 서비스를 제공하며, 개인정보보호법에 따라 이용자의 개인정보를 보호하고 관련 고충을 신속하게 처리합니다.</p>
           <Table rows={[
             ["서비스명", "Found.One"],
-            ["운영 책임자", "대표자 (이메일 문의)"],
-            ["개인정보 보호 책임자", "lki720412@gmail.com"],
+            ["운영 책임자", "이영준"],
+            ["개인정보 보호 책임자", "이영준 (lki720412@gmail.com)"],
             ["서비스 URL", "https://foundone.dev"],
           ]} />
         </Section>
@@ -129,7 +129,7 @@ export default function PrivacyPage() {
 
         <Section title="10. 개인정보 보호 책임자">
           <Table rows={[
-            ["이름", "Found.One 개인정보 보호 담당"],
+            ["이름", "이영준"],
             ["이메일", "lki720412@gmail.com"],
             ["민원 처리", "접수 후 10영업일 이내 처리"],
           ]} />

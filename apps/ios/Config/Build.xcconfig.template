@@ -21,10 +21,11 @@ KAKAO_URL_SCHEME = kakao$(KAKAO_NATIVE_APP_KEY)
 BU_ENVIRONMENT = production
 
 // Build settings
-PRODUCT_BUNDLE_IDENTIFIER = com.buildup.mobile
-MARKETING_VERSION = 0.1.0
+PRODUCT_BUNDLE_IDENTIFIER = com.foundone.mobile
+MARKETING_VERSION = 1.0.0
 CURRENT_PROJECT_VERSION = 1
+// .env.local 의 APPLE_TEAM_ID 로 채워짐(아카이브 서명). 비우면 Xcode 에서 수동 선택.
 DEVELOPMENT_TEAM =
 IPHONEOS_DEPLOYMENT_TARGET = 18.0
 
-APP_GROUP_IDENTIFIER = group.com.buildup.shared
+APP_GROUP_IDENTIFIER = group.com.foundone.shared

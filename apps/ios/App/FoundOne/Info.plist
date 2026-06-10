@@ -34,6 +34,11 @@
     <key>WEB_APP_URL</key>
     <string>$(WEB_APP_URL)</string>
 
+    <!-- 수출 규정 자가분류: 표준 HTTPS/TLS·플랫폼 암호화만 사용(KEK 복호화는 서버 측) →
+         면제(exempt). 이 키가 있으면 App Store Connect 가 제출마다 암호화 질문을 묻지 않음. -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+
     <!-- ATS: localhost 개발 서버 허용 (프로덕션 HTTPS 도메인은 기본 허용) -->
     <key>NSAppTransportSecurity</key>
     <dict>
