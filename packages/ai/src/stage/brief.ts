@@ -2,6 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
+import { looseExtractJson } from "../utils/parse-json";
 import {
   STAGE_BRIEF_SYSTEM_PROMPT,
   buildStageBriefUserPrompt,
@@ -13,7 +14,7 @@ const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TOKENS = 600;
 
 function parseStageBriefResponse(raw: string): StageBriefResult {
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+  const cleaned = looseExtractJson(raw);
 
   let parsed: unknown;
   try {

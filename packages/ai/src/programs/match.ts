@@ -2,6 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
+import { looseExtractJson } from "../utils/parse-json";
 import {
   PROGRAM_MATCHING_SYSTEM_PROMPT,
   buildProgramMatchingUserPrompt,
@@ -110,7 +111,7 @@ export function checkEligibility(
 // ─── 응답 파싱 ──────────────────────────────────────────────────────────────
 
 function parseMatchingResponse(raw: string): ProgramMatchingResult {
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+  const cleaned = looseExtractJson(raw);
 
   let parsed: unknown;
   try {

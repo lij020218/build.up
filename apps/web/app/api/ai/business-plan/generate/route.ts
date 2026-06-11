@@ -181,7 +181,9 @@ PSST 프레임워크 (창업진흥원 평가 기준):
       },
       body: JSON.stringify({
         model: "gpt-5.4-mini",
-        max_tokens: 8192,
+        // ⚠️ GPT-5.4 시리즈는 max_tokens 미지원(2026 API 변경) → max_completion_tokens.
+        //   종전 max_tokens 는 400(unsupported parameter) → 502 로 사업계획서 100% 실패.
+        max_completion_tokens: 8192,
         messages: [
           { role: "system", content: systemPrompt },
           {

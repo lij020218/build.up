@@ -2,6 +2,7 @@ import { createAiClient } from "../utils/client";
 import { AiParseError } from "../types/ai";
 import type { AiCallOptions } from "../types/ai";
 import { systemWithCache } from "../utils/client";
+import { looseExtractJson } from "../utils/parse-json";
 import { getSystemPromptForType, buildContractUserPrompt } from "./prompt";
 import type { ContractAnalysisResult, ContractClause, ContractType } from "./prompt";
 
@@ -15,7 +16,7 @@ const DEFAULT_MAX_TOKENS = 2048;
 // ─── 응답 파싱 & 검증 ─────────────────────────────────────────────────────────
 
 function parseContractResponse(raw: string): ContractAnalysisResult {
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+  const cleaned = looseExtractJson(raw);
 
   let parsed: unknown;
   try {
