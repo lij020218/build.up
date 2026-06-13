@@ -2,6 +2,7 @@ import { createAiClient } from "@foundone/ai/utils/client";
 import { supabase } from "../../../../lib/supabase";
 import { requireApiUser } from "../../_lib/auth";
 import { checkSimpleRateLimit } from "../../_lib/rate-limit";
+import { getAnthropicApiKey } from "../../_lib/env";
 
 type RequestBody = {
   question?: string;
@@ -140,8 +141,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── Claude API streaming ──────────────────────────────────────
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    // ── LLM streaming ─────────────────────────────────────────────
+    //   getAnthropicApiKey(): OPENAI_API_KEY 우선 반환(메인 LLM) → ANTHROPIC 폴백.
+    //   종전 process.env.ANTHROPIC_API_KEY 직접 참조 시 그 키가 비면 prod 에서 이 라우트만 503.
+    const apiKey = getAnthropicApiKey();
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "AI 서비스가 아직 설정되지 않았습니다." }), {
         status: 503,

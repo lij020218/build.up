@@ -43,6 +43,23 @@ type KakaoPlace = {
 
 type KakaoSearchRes = { documents: KakaoPlace[]; meta?: { total_count?: number; pageable_count?: number } };
 
+/**
+ * 동/가/읍/면 단위 cluster 키 추출.
+ *  ⚠️ 2026-06-11 fix: 현 Kakao Local API 응답 document 에 region_3depth_name 이 없음
+ *  → 항상 빈 cluster → 상권 후보가 입력 지역 1개로만 떨어지던 조용한 기능 저하.
+ *  region_3depth_name 이 있으면 그대로, 없으면 address_name 에서 동 토큰을 파생.
+ */
+function districtKeyFromPlace(place: KakaoPlace): string | null {
+  const fromField = place.region_3depth_name?.trim();
+  if (fromField) return fromField;
+  const addr = place.address_name?.trim();
+  if (!addr) return null;
+  const dong = addr.match(/(\S+(?:동|가|읍|면|리))/);
+  if (dong) return dong[1];
+  const gu = addr.match(/(\S+(?:구|시|군))/);
+  return gu ? gu[1] : null;
+}
+
 type SubAreaCandidate = {
   id: string;             // 안정적 id (district + lat coord)
   name: string;           // 사용자에게 보여줄 명칭
@@ -274,7 +291,7 @@ async function discoverSubAreas(
   for (const r of results) {
     if (!r?.documents) continue;
     for (const place of r.documents) {
-      const district = place.region_3depth_name?.trim();
+      const district = districtKeyFromPlace(place);
       if (!district) continue;
       if (byDistrict.has(district)) continue;
       const lat = parseFloat(place.y);
@@ -301,7 +318,7 @@ async function discoverSubAreas(
     for (const r of fallback) {
       if (!r?.documents) continue;
       for (const place of r.documents) {
-        const district = place.region_3depth_name?.trim();
+        const district = districtKeyFromPlace(place);
         if (!district) continue;
         if (byDistrict.has(district)) continue;
         const lat = parseFloat(place.y);
