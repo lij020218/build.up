@@ -23,6 +23,10 @@ type RoadmapState = {
   manualAlternative: RecommendationItem | null;
   locationOptions: RecommendationItem[];
   locationSourceLabel: string;
+  // 입력 지역에 큐레이션 상권(market_location_signals) 매칭이 있었는지.
+  //   true = 우리 조사 데이터로 카드 표시 → 라이브 AI 버튼 숨김(덮어쓰기 방지).
+  //   false = 큐레이션 없는 지역 → 수동 "AI로 분석" 버튼 노출.
+  hasCuratedMarket: boolean;
   // 벤더/운영 준비
   vendorSelections: Record<string, string>;
   vendorCustomInputs: Record<string, string>;
@@ -150,6 +154,7 @@ type RoadmapActions = {
   setManualAlternative: (v: RecommendationItem | null) => void;
   setLocationOptions: (v: RecommendationItem[]) => void;
   setLocationSourceLabel: (v: string) => void;
+  setHasCuratedMarket: (v: boolean) => void;
   setVendorSelections: (v: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
   setVendorCustomInputs: (v: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
   setOpsSelections: (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void;
@@ -183,6 +188,7 @@ const initialState: RoadmapState = {
   manualAlternative: null,
   locationOptions: [],
   locationSourceLabel: "",
+  hasCuratedMarket: false,
   vendorSelections: {},
   vendorCustomInputs: {},
   opsSelections: {},
@@ -222,6 +228,7 @@ export const useRoadmapStore = create<RoadmapState & RoadmapActions>()(
       setManualAlternative: (v) => set({ manualAlternative: v }),
       setLocationOptions: (v) => set({ locationOptions: v }),
       setLocationSourceLabel: (v) => set({ locationSourceLabel: v }),
+      setHasCuratedMarket: (v) => set({ hasCuratedMarket: v }),
       setVendorSelections: (v) => set((s) => ({ vendorSelections: withFn(v, s.vendorSelections) })),
       setVendorCustomInputs: (v) => set((s) => ({ vendorCustomInputs: withFn(v, s.vendorCustomInputs) })),
       setOpsSelections: (v) => set((s) => ({ opsSelections: withFn(v, s.opsSelections) })),

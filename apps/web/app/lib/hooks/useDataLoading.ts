@@ -108,6 +108,7 @@ export function useDataLoading(
     setLocationOptions,
     setLocationSourceLabel,
     setRecommendedMarkets,
+    setHasCuratedMarket,
     setStageGuideContent,
     setGuideStepIndex,
     roadmap,
@@ -214,6 +215,7 @@ export function useDataLoading(
 
     if (!preferredRegionInput.trim()) {
       setRecommendedMarkets([]);
+      setHasCuratedMarket(false);
       return;
     }
 
@@ -230,8 +232,11 @@ export function useDataLoading(
         if (signalItems.length > 0) {
           setRecommendedMarkets(signalItems.map((item) => localizeRecommendationItem(item, language)));
           setLocationSourceLabel(language === "ko" ? "상권 신호 데이터" : "Market signal data");
+          setHasCuratedMarket(true);  // 우리 조사 데이터 매칭 → 라이브 AI 버튼 숨김(덮어쓰기 방지)
           return;
         }
+        // 큐레이션 0건 → 큐레이션 없는 지역. 수동 "AI로 분석" 버튼 노출(빈 곳만 AI).
+        setHasCuratedMarket(false);
 
         // 신호 매칭 0건 → 카테고리·예산 기반 fallback (검색어 무시) 만 표시. 단 라벨에서
         //   "입력한 지역과 매칭된 상권을 찾지 못함" 을 명시해야 함.
@@ -260,6 +265,7 @@ export function useDataLoading(
           }).map((item) => localizeRecommendationItem(item, language))
         );
         setLocationSourceLabel(copy.common.starterFallback);
+        setHasCuratedMarket(false);  // 신호 로드 실패 → 큐레이션 없음 취급, AI 버튼 노출
       });
   }, [preferredRegionInput, industryCategoryId, selectedBudget, locationOptions, language, locationMode]); // eslint-disable-line react-hooks/exhaustive-deps
 

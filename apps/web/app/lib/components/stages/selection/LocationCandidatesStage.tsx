@@ -44,7 +44,7 @@ export function LocationCandidatesStage() {
     canCompleteLocationStep, handleLocationContinue,
     preferredRegionInput, setPreferredRegionInput,
     locationMode, setLocationMode,
-    setRecommendedMarkets,
+    setRecommendedMarkets, hasCuratedMarket,
     customMarketName, setCustomMarketName,
     customMarketReason, setCustomMarketReason,
     manualMarketEvaluation, setManualMarketEvaluation,
@@ -847,8 +847,9 @@ export function LocationCandidatesStage() {
         </div>
 
         {/* ── AI + Kakao 라이브 추천 CTA ────────────────────────────
-            서버 내장 데이터로는 모든 지역(특히 비-서울)을 커버 못 함 →
-            "AI로 실시간 추천" 버튼으로 Kakao Local 라이브 검색 + Claude 점수화. */}
+            큐레이션(우리 조사) 상권 데이터가 없는 지역에서만 노출 — 라이브 Kakao+AI.
+            큐레이션 매칭이 있으면(hasCuratedMarket) 숨겨 조사 데이터가 덮어쓰이지 않게. */}
+        {!hasCuratedMarket && (
         <div style={{
           marginTop: "12px",
           padding: "14px 16px",
@@ -903,6 +904,7 @@ export function LocationCandidatesStage() {
               : (language === "ko" ? "AI 추천 받기" : "Get AI picks")}
           </button>
         </div>
+        )}
       </div>
 
       {locationMapReady && locationMode === "recommended" ? (
