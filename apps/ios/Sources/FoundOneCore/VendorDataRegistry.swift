@@ -15,12 +15,22 @@ public struct BUVendorItem: Decodable, Sendable, Hashable, Identifiable {
     public let name: String
     public let desc: String
     public let priceRange: String?
-    public let priority: String?   // primary | recommended | optional
+    public let priority: String?     // primary | recommended | optional
     public let url: String?
+    public let budgetTier: String?   // value | standard | premium — 예산 단계 태그
 
     public var id: String { name }
     /// 섹션 칩에 표시할 태그 — 가격대 우선, 없으면 우선순위.
     public var tag: String? { priceRange ?? priority }
+    /// 예산 단계 한글 라벨 (가성비/표준/프리미엄).
+    public var budgetLabel: String? {
+        switch budgetTier {
+        case "value": return "가성비"
+        case "standard": return "표준"
+        case "premium": return "프리미엄"
+        default: return nil
+        }
+    }
 }
 
 public struct BUVendorBundle: Decodable, Sendable {

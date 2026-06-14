@@ -35,6 +35,9 @@
  * 장비를 즉시 추천하는 데 쓰임. category-level 폴백도 제공.
  */
 
+/** 예산 단계 — 사장님이 자기 예산에 맞는 업체를 한눈에 고르도록 하는 태그. */
+export type BudgetTier = "value" | "standard" | "premium";
+
 export type VendorItem = {
   /** 공급처/장비 이름 (브랜드명 포함) */
   name: string;
@@ -46,7 +49,54 @@ export type VendorItem = {
   priority?: "primary" | "recommended" | "optional";
   /** 공식 URL (있으면) */
   url?: string;
+  /**
+   * 예산 단계 태그 (가성비/표준/프리미엄). 명시값이 없으면 getVendorData 가
+   * classifyBudgetTier 로 가격대·키워드에서 결정해 부여. 항목별로 직접 지정해 덮어쓸 수 있음.
+   */
+  budgetTier?: BudgetTier;
 };
+
+const BUDGET_VALUE_HINTS = [
+  "중고", "황학동", "번개장터", "회원가", "코스트코", "트레이더스",
+  "가성비", "저가", "1688", "알리", "도매꾹", "절감", "무료",
+];
+const BUDGET_PREMIUM_HINTS = [
+  // "수입"(직수입 도매 등)은 너무 광범위 → "수입가"/"고가" 등 명시 프리미엄 신호만 사용
+  "프리미엄", "하이엔드", "고가", "수입가", "라마르조코", "GB5", "KB90", "Hobart", "호바트",
+  "발로나", "이즈니", "트러플", "화덕", "모렐로", "슬레이어", "Slayer", "오마카세",
+];
+
+/** priceRange 문자열에서 "N만" 표기들의 최댓값(만원 단위)을 추출. 없으면 null. */
+function maxManwon(priceRange?: string): number | null {
+  if (!priceRange) return null;
+  const nums = [...priceRange.matchAll(/([\d,.]+)\s*만/g)].map((m) =>
+    parseFloat(m[1].replace(/,/g, "")),
+  );
+  return nums.length ? Math.max(...nums) : null;
+}
+
+/**
+ * 가격대·키워드로 예산 단계를 결정 (결정적·휴리스틱).
+ *   value    — 중고·회원가·무료·월 0원·소액(≤50만) 등 가장 저렴한 선택지
+ *   premium  — 수입·하이엔드 브랜드·고가(≥800만) 등 상위 선택지
+ *   standard — 그 외 표준
+ */
+export function classifyBudgetTier(item: VendorItem): BudgetTier {
+  if (item.budgetTier) return item.budgetTier;
+  const pr = item.priceRange ?? "";
+  const hay = `${item.name} ${item.desc} ${pr}`;
+  if (/월\s*0원|(^|\s)0원/.test(pr) || /월\s*0원/.test(hay)) return "value";
+  if (BUDGET_VALUE_HINTS.some((h) => hay.includes(h))) return "value";
+  if (BUDGET_PREMIUM_HINTS.some((h) => hay.includes(h))) return "premium";
+  // 단가 표기(kg당·병당·L당 등)는 총 투자액이 아니므로 금액 휴리스틱 제외 — 키워드로만 판정.
+  const isUnitPrice = /kg|병당|개당|잔당|리터|L당|ml|인당/.test(pr);
+  const mx = isUnitPrice ? null : maxManwon(pr);
+  if (mx != null) {
+    if (mx >= 800) return "premium";
+    if (mx <= 50) return "value";
+  }
+  return "standard";
+}
 
 export type SubIndustryVendorData = {
   /** 식자재·원자재·소모품 공급처 */
@@ -2868,27 +2918,31 @@ export function getVendorData(
   const subOverride = subIndustryId ? SUB_INDUSTRY_VENDOR_DATA[subIndustryId] : undefined;
   const specialtyOverride = specialtyId ? SPECIALTY_VENDOR_DATA[specialtyId] : undefined;
 
+  // 예산 단계 태그 부여 — 명시값 우선, 없으면 가격대·키워드에서 결정.
+  const withTier = (items: VendorItem[]): VendorItem[] =>
+    items.map((it) => ({ ...it, budgetTier: classifyBudgetTier(it) }));
+
   // 우선순위 머지: specialty (가장 우선) → sub → base
   return {
-    suppliers: [
+    suppliers: withTier([
       ...(specialtyOverride?.suppliers ?? []),
       ...(subOverride?.suppliers ?? []),
       ...base.suppliers,
-    ],
-    equipment: [
+    ]),
+    equipment: withTier([
       ...(specialtyOverride?.equipment ?? []),
       ...(subOverride?.equipment ?? []),
       ...base.equipment,
-    ],
-    pos: [
+    ]),
+    pos: withTier([
       ...(specialtyOverride?.pos ?? []),
       ...(subOverride?.pos ?? []),
       ...base.pos,
-    ],
-    channels: [
+    ]),
+    channels: withTier([
       ...(specialtyOverride?.channels ?? []),
       ...(subOverride?.channels ?? []),
       ...(base.channels ?? []),
-    ],
+    ]),
   };
 }

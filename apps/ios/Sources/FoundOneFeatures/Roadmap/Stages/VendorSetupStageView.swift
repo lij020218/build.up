@@ -50,6 +50,8 @@ private struct VendorEntry: Identifiable {
     let name: String
     let desc: String
     let tag: String?
+    /// 예산 단계 (가성비/표준/프리미엄). 하드코딩 폴백에는 없음.
+    var budgetLabel: String? = nil
 }
 
 /// 카테고리 클러스터 — 공급처·장비·POS 데이터를 분기.
@@ -359,7 +361,7 @@ public struct VendorSetupStageView: View {
         return VendorDataRegistry.bundle(forSubIndustry: industryId, categoryId: categoryId)
     }
     private func toEntries(_ items: [BUVendorItem]) -> [VendorEntry] {
-        items.map { VendorEntry(name: $0.name, desc: $0.desc, tag: $0.tag) }
+        items.map { VendorEntry(name: $0.name, desc: $0.desc, tag: $0.tag, budgetLabel: $0.budgetLabel) }
     }
     private var suppliers: [VendorEntry] {
         if let b = vendorBundle, !b.suppliers.isEmpty { return toEntries(b.suppliers) }
@@ -819,6 +821,14 @@ private struct VendorRow: View {
                                 .padding(.vertical, 2)
                                 .background(BUColor.midnight.opacity(0.1), in: Capsule())
                         }
+                        if let budget = entry.budgetLabel {
+                            Text(budget)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(Self.budgetColor(budget))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Self.budgetColor(budget).opacity(0.12), in: Capsule())
+                        }
                     }
                     Text(entry.desc)
                         .font(BUFont.bodyCaption)
@@ -831,6 +841,15 @@ private struct VendorRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// 예산 단계 칩 색 — 신호등 회피, 민트(가성비)·슬레이트(표준)·골드(프리미엄) 사다리.
+    private static func budgetColor(_ label: String) -> Color {
+        switch label {
+        case "가성비": return Color(red: 0.04, green: 0.45, blue: 0.52)
+        case "프리미엄": return Color(red: 0.54, green: 0.40, blue: 0.09)
+        default: return Color(red: 0.30, green: 0.34, blue: 0.42)
+        }
     }
 
     private func toggle() {

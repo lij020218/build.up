@@ -42,6 +42,29 @@ const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
 
 type Priority = NonNullable<VendorItem["priority"]>;
+type BudgetTier = NonNullable<VendorItem["budgetTier"]>;
+
+// 예산 단계 칩 — 사장님이 자기 예산대에 맞는 업체를 한눈에 구분. (신호등 컬러 회피: 민트·슬레이트·골드 사다리)
+const BUDGET_BADGE: Record<BudgetTier, { label: string; bg: string; fg: string; border: string }> = {
+  value: {
+    label: "가성비",
+    bg: "rgba(11,114,133,0.10)",
+    fg: "#0b7285",
+    border: "rgba(11,114,133,0.20)",
+  },
+  standard: {
+    label: "표준",
+    bg: "rgba(15,23,42,0.05)",
+    fg: "rgba(15,23,42,0.58)",
+    border: "rgba(15,23,42,0.12)",
+  },
+  premium: {
+    label: "프리미엄",
+    bg: "rgba(160,120,40,0.12)",
+    fg: "#8a6516",
+    border: "rgba(160,120,40,0.22)",
+  },
+};
 
 const PRIORITY_BADGE: Record<Priority, { label: string; bg: string; fg: string; border: string }> = {
   primary: {
@@ -75,6 +98,7 @@ function VendorRow({
 }) {
   const priority = item.priority ?? "recommended";
   const badge = PRIORITY_BADGE[priority];
+  const budget = item.budgetTier ? BUDGET_BADGE[item.budgetTier] : null;
   const hasUrl = !!item.url;
 
   return (
@@ -146,6 +170,22 @@ function VendorRow({
           >
             {badge.label}
           </span>
+          {budget && (
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "6px",
+                fontSize: "10.5px",
+                fontWeight: 700,
+                background: budget.bg,
+                color: budget.fg,
+                border: `1px solid ${budget.border}`,
+                letterSpacing: "0.02em",
+              }}
+            >
+              {budget.label}
+            </span>
+          )}
           {hasUrl && (
             <a
               href={item.url}
