@@ -109,6 +109,7 @@ const climate: ClusterStageContent = {
 export function PackagingAndTestStage() {
   return (
     <ClusterStageTemplate
+      stageId="packaging-and-test"
       stepLabel="Cluster D — Extreme Deep Tech 3/4"
       title="패키징 및 테스트 (OSAT)"
       contextLabel="11단계 / 22"

@@ -174,6 +174,10 @@ public struct BUStageShell<Content: View>: View {
                     content
                         .padding(.horizontal, BUSpacing.md)
 
+                    // 스타트업 단계 추천 도구·공급사·기술스택 (웹 SSOT 미러, 데이터 없으면 미렌더)
+                    BUStartupToolingSection(stageId: stageId)
+                        .padding(.horizontal, BUSpacing.md)
+
                     // 마무리 — 단계 wrap-up (페이지네이션 stage 는 마지막 페이지에서만, 그 외엔 항상)
                     if shouldShowWrapup, let wrapup {
                         BUStageWrapup(data: wrapup)

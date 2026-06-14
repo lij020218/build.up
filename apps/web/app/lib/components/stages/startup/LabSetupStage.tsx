@@ -110,6 +110,7 @@ const biotech: ClusterStageContent = {
 export function LabSetupStage() {
   return (
     <ClusterStageTemplate
+      stageId="lab-setup"
       stepLabel="Cluster C — Deep Tech Lab 1/4"
       title="연구실·시제품 작업장 셋업"
       contextLabel="9단계 / 22"

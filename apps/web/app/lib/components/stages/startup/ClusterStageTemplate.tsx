@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { StageWrapup, type WrapupItem } from "../shared/StageWrapup";
 import { StartupKeyActionHero } from "./StartupStageShell";
+import { getClusterStageVendors } from "./cluster-stage-vendors";
 
 const MIDNIGHT = "#191970";
 
@@ -46,16 +47,25 @@ export type ClusterStageTemplateProps = {
   title: string;
   /** 단계 컨텍스트 (서브 라벨, 예: "Cluster B · Hardware NPI 1/4") */
   contextLabel?: string;
+  /** 단계 ID (예: "hardware-prototype") — 추천 공급사·도구 조회용 */
+  stageId?: string;
   /** sub-industry → 콘텐츠 매핑 */
   contentBySubIndustry: Record<string, ClusterStageContent>;
   /** 폴백 콘텐츠 (sub-industry 콘텐츠 없을 때) */
   defaultContent: ClusterStageContent;
 };
 
+const TIER_BADGE: Record<"essential" | "recommended" | "optional", { label: string; bg: string; fg: string }> = {
+  essential:   { label: "필수", bg: "rgba(25,25,112,0.10)", fg: "#191970" },
+  recommended: { label: "권장", bg: "rgba(11,114,133,0.10)", fg: "#0b7285" },
+  optional:    { label: "선택", bg: "rgba(15,23,42,0.05)",  fg: "rgba(15,23,42,0.55)" },
+};
+
 export function ClusterStageTemplate({
   stepLabel,
   title,
   contextLabel,
+  stageId,
   contentBySubIndustry,
   defaultContent,
 }: ClusterStageTemplateProps) {
@@ -66,6 +76,8 @@ export function ClusterStageTemplate({
   const content = (selectedIndustryId && contentBySubIndustry[selectedIndustryId])
     ? contentBySubIndustry[selectedIndustryId]
     : defaultContent;
+
+  const vendors = stageId ? getClusterStageVendors(stageId, selectedIndustryId ?? undefined) : [];
 
   const sectionLabel: React.CSSProperties = {
     fontSize: "12.5px",
@@ -214,6 +226,59 @@ export function ClusterStageTemplate({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 추천 공급사·도구 (2026 조사) */}
+      {vendors.length > 0 && (
+        <div>
+          <div style={sectionLabel}>{ko ? "추천 공급사 · 도구" : "Recommended Vendors · Tools"}</div>
+          <div style={{
+            fontSize: "12px", color: "rgba(180,100,0,0.85)", lineHeight: 1.5,
+            padding: "9px 13px", borderRadius: "11px", background: "rgba(255,149,0,0.08)", marginBottom: "10px",
+          }}>
+            {ko
+              ? "💡 광고가 아닌 참고용입니다. 가격·사양은 시점에 따라 변하니 발주·계약·인증 전 직접 검증하세요."
+              : "💡 Reference only, not advertising. Verify directly before ordering, contracting or certifying."}
+          </div>
+          <div style={{
+            background: "white", borderRadius: "16px",
+            border: "1px solid rgba(0,0,0,0.06)", overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+          }}>
+            {vendors.map((v, i) => {
+              const badge = TIER_BADGE[v.tier];
+              const Tag = v.href ? "a" : "div";
+              return (
+                <Tag
+                  key={v.name}
+                  {...(v.href ? { href: v.href, target: "_blank", rel: "noopener noreferrer" } : {})}
+                  style={{
+                    display: "flex", gap: "12px", alignItems: "flex-start", padding: "13px 16px",
+                    borderTop: i > 0 ? "0.5px solid rgba(0,0,0,0.07)" : "none",
+                    textDecoration: "none", color: "inherit",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap", marginBottom: "2px" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 650, color: "var(--text)", letterSpacing: "-0.01em" }}>
+                        {v.name}
+                      </span>
+                      <span style={{ fontSize: "10px", fontWeight: 700, padding: "1px 6px", borderRadius: "5px", background: badge.bg, color: badge.fg }}>
+                        {badge.label}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "rgba(0,0,0,0.4)" }}>{v.category}</span>
+                    </div>
+                    <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.6)", lineHeight: 1.5 }}>{v.descKo}</div>
+                    {v.pricing && (
+                      <div style={{ fontSize: "11.5px", fontWeight: 600, color: MIDNIGHT, marginTop: "3px" }}>{v.pricing}</div>
+                    )}
+                  </div>
+                  {v.href && <ExternalLink size={14} strokeWidth={2} style={{ color: "rgba(0,0,0,0.3)", flexShrink: 0, marginTop: "2px" }} />}
+                </Tag>
+              );
+            })}
+          </div>
         </div>
       )}
 

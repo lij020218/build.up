@@ -106,6 +106,7 @@ const climate: ClusterStageContent = {
 export function EdaToolingSetupStage() {
   return (
     <ClusterStageTemplate
+      stageId="eda-tooling-setup"
       stepLabel="Cluster D — Extreme Deep Tech 1/4"
       title="EDA 도구·설계 환경 셋업"
       contextLabel="9단계 / 22"

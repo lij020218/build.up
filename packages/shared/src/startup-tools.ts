@@ -226,12 +226,37 @@ export const FINTECH_STARTUP_EXTRA_TOOLS: SubCategoryToolOverride = {
   specificTip: { ko: "핀테크는 규제가 가장 큰 장벽입니다. 혁신금융서비스 샌드박스를 먼저 신청하세요 (심사 3-6개월). 전자금융업 등록에는 자본금 5억원이 필요합니다.", en: "Regulation is the biggest barrier. Apply for sandbox first (3-6 month review). E-finance license requires 500M KRW capital." },
 };
 
+// ── 헬스테크 추가 (의료 워크플로) ──
+export const HEALTHTECH_STARTUP_EXTRA_TOOLS: SubCategoryToolOverride = {
+  subIndustryId: "healthtech-startup",
+  additionalTools: [
+    { name: "Medplum", category: "FHIR 임상 백엔드", description: { ko: "FHIR 네이티브 오픈소스 헤드리스 EHR. 자체 EHR을 짓지 않고 임상 워크플로를 표준 리소스로 구현.", en: "FHIR-native open-source headless EHR — build clinical workflows on standard resources instead of a custom EHR." }, url: "https://www.medplum.com/pricing", pricing: "Free / Production $2,000/mo(BAA) / 셀프호스팅 무료", monthlyEstimate: "$0~$2,000", koreanSupport: false, aiPowered: false, recommended: true, tags: ["FHIR", "EHR", "오픈소스", "HIPAA", "BAA"] },
+    { name: "Paubox Email API", category: "HIPAA 준수 통신", description: { ko: "PHI 포함 환자 알림을 암호화로 안전 발송하는 HIPAA 준수 트랜잭션 이메일 API.", en: "HIPAA-compliant transactional email API to safely send PHI-containing patient notifications." }, url: "https://www.paubox.com/pricing/paubox-email-api", pricing: "월 300건 무료, 이후 유료", monthlyEstimate: "$0~사용량", koreanSupport: false, aiPowered: false, recommended: true, tags: ["HIPAA", "이메일", "PHI", "BAA"] },
+    { name: "AWS HealthLake", category: "관리형 FHIR 데이터스토어", description: { ko: "HL7 FHIR로 임상·행정 데이터를 적재·정규화·검색하는 HIPAA 적격 관리형 서비스.", en: "HIPAA-eligible managed service to ingest/normalize/query data in HL7 FHIR." }, url: "https://aws.amazon.com/healthlake/pricing/", pricing: "$0.27/데이터스토어-시간 + 저장료", monthlyEstimate: "약 $195+/mo", koreanSupport: false, aiPowered: true, recommended: false, tags: ["FHIR", "AWS", "HIPAA"] },
+  ],
+  specificTip: { ko: "진단·치료 판단 로직이 들어가면 식약처 SaMD(소프트웨어 의료기기) 해당 여부부터 판정하라(분류·등급 가이드 2026.3 개정). 비대면진료는 의료법 개정으로 2026.12.24 정식 시행되니 전자처방전·약배송 연동을 처음부터 설계에 반영할 것. 의료데이터는 BAA 가능한 클라우드에만 올리고, 동의·접근 감사로그는 FHIR Consent/AuditEvent로 표준화하라.", en: "If diagnostic/therapeutic logic is involved, first assess MFDS SaMD classification. Telehealth becomes law on 2026-12-24 — design e-prescription/Rx-delivery from day one. Keep medical data only on BAA-capable clouds; standardize consent/audit logs via FHIR Consent/AuditEvent." },
+};
+
+// ── 보안 추가 (트러스트·컴플라이언스) ──
+export const SECURITY_STARTUP_EXTRA_TOOLS: SubCategoryToolOverride = {
+  subIndustryId: "security-startup",
+  additionalTools: [
+    { name: "Aikido Security", category: "올인원 AppSec", description: { ko: "SAST·SCA·DAST·IaC·CSPM·시크릿·컨테이너를 한 대시보드로 통합한 개발자 친화 보안 플랫폼.", en: "Developer-friendly platform unifying SAST/SCA/DAST/IaC/CSPM/secrets/containers in one dashboard." }, url: "https://www.aikido.dev/", pricing: "Free(2명·10repo) / Basic $300/mo / Pro $600/mo", monthlyEstimate: "$0~$600", koreanSupport: false, aiPowered: true, recommended: true, tags: ["AppSec", "SAST", "DAST", "CSPM"] },
+    { name: "Vanta", category: "컴플라이언스 자동화", description: { ko: "SOC2·ISO27001·HIPAA·GDPR 증적을 상시 자동 수집해 첫 엔터프라이즈 딜의 보안 실사를 통과시키는 GRC 자동화.", en: "GRC automation continuously collecting SOC2/ISO27001/HIPAA/GDPR evidence to pass enterprise security reviews." }, url: "https://www.vanta.com/", pricing: "Core ~$10,000/yr(<50명), 스타트업 할인", monthlyEstimate: "약 $800+/mo", koreanSupport: false, aiPowered: true, recommended: true, tags: ["SOC2", "ISO27001", "GRC", "트러스트센터"] },
+    { name: "GitGuardian", category: "시크릿 유출 탐지", description: { ko: "코드·CI/CD·git 히스토리·협업툴 전반에서 하드코딩된 API키·시크릿(420+종)을 탐지.", en: "Detect hardcoded API keys/secrets (420+ types) across code, CI/CD, git history and collab tools." }, url: "https://www.gitguardian.com/", pricing: "개인/공개 repo 무료, 비공개·팀 유료", monthlyEstimate: "$0~개발자당", koreanSupport: false, aiPowered: true, recommended: true, tags: ["시크릿", "유출탐지", "git"] },
+    { name: "Cobalt (PTaaS)", category: "펜테스트", description: { ko: "SOC2/ISO27001·고객 실사용 컴플라이언스 펜테스트를 온디맨드로 제공하는 PTaaS.", en: "PTaaS delivering on-demand compliance pentests for SOC2/ISO27001 and customer security reviews." }, url: "https://www.cobalt.io/", pricing: "$2,500/mo + 크레딧", monthlyEstimate: "약 $2,500+/mo", koreanSupport: false, aiPowered: false, recommended: false, tags: ["펜테스트", "PTaaS", "SOC2"] },
+  ],
+  specificTip: { ko: "보안 제품을 파는 회사일수록 자기 보안을 먼저 증명해야 한다. 글로벌 SOC2/ISO27001(Vanta)은 해외 딜용, 한국 공공·금융·SaaS 조달엔 ISMS-P 인증과 CSAP가 사실상 필수다. CSAP는 ISMS 기반 민간 자율인증으로 개편 중이고, ISMS-P 2026 개편은 CTEM·AI 거버넌스·실시간 자동스캔을 요구하니 Cloud SIEM 상시 모니터링을 일찍 깔아두라.", en: "A company selling security must prove its own first. Global SOC2/ISO27001 (Vanta) is for overseas deals; Korean public/finance/SaaS procurement needs ISMS-P and CSAP. ISMS-P 2026 mandates CTEM/AI-governance/real-time auto-scan — stand up Cloud SIEM early." },
+};
+
 // ── 모든 서브카테고리 오버라이드 맵 ──
 export const SUB_CATEGORY_TOOL_OVERRIDES: Record<string, SubCategoryToolOverride> = {
   "ai-application": AI_STARTUP_EXTRA_TOOLS,
   "b2b-saas": SAAS_STARTUP_EXTRA_TOOLS,
   "developer-tools": DEVTOOL_STARTUP_EXTRA_TOOLS,
   "fintech-startup": FINTECH_STARTUP_EXTRA_TOOLS,
+  "healthtech-startup": HEALTHTECH_STARTUP_EXTRA_TOOLS,
+  "security-startup": SECURITY_STARTUP_EXTRA_TOOLS,
 };
 
 // ── 유틸리티 ──
@@ -349,6 +374,64 @@ export const RECOMMENDED_STACKS: RecommendedStack[] = [
     ],
     totalMonthlyCost: "$100~200+/월 (+ 자본금 5억원 필요)",
     startupCredits: { ko: "AWS Activate: 최대 $100,000 크레딧 (스타트업 프로그램)", en: "AWS Activate: up to $100K credits" },
+  },
+
+  // ── 헬스테크 스택 ──
+  {
+    id: "healthtech-startup-stack",
+    name: { ko: "헬스테크 의료 워크플로 스택", en: "Healthtech Clinical Workflow Stack" },
+    description: { ko: "FHIR 표준 임상 데이터, 의료정보 보안(HIPAA·개인정보), 한국 의료 규제(비대면진료·식약처 SaMD)를 동시에 만족시키는 의료 B2B SaaS 인프라. 제네릭 SaaS 스택 위에 '규제 가능한 의료 데이터 레이어'를 얹는 구성.", en: "Clinical B2B SaaS infra satisfying FHIR data, medical-grade security, and Korean medical regulation — a regulated health-data layer on the generic SaaS stack." },
+    targetSubIndustries: ["healthtech-startup"],
+    layers: [
+      { role: "FHIR 임상 백엔드", roleEn: "FHIR Clinical Backend", tool: "Medplum", why: { ko: "FHIR 네이티브 헤드리스 EHR. 차팅·오더·동의를 FHIR 리소스로 직접 다뤄 자체 EHR 불필요. 오픈소스 셀프호스팅 또는 BAA 호스팅.", en: "FHIR-native headless EHR — no custom EHR needed. Open-source self-host or BAA hosting." }, url: "https://www.medplum.com", pricing: "Free / Production $2,000/mo / 셀프호스팅 무료", icon: "🩺", color: "#1A6FE3" },
+      { role: "HIPAA 적격 클라우드", roleEn: "HIPAA-Eligible Cloud", tool: "Google Cloud Healthcare API / AWS HealthLake", why: { ko: "FHIR/HL7v2/DICOM을 BAA 하에 운영. 제네릭 Vercel/Supabase로 못 채우는 의료데이터 BAA 요건을 메움.", en: "Run FHIR/HL7v2/DICOM under a BAA — fills the medical-data BAA gap generic clouds can't." }, url: "https://cloud.google.com/healthcare-api", pricing: "종량제", icon: "☁️", color: "#4285F4" },
+      { role: "한국 의료 클라우드", roleEn: "Korean Medical Cloud", tool: "NAVER Cloud (의료) / NHN Cloud", why: { ko: "국내 병원·공공의료 데이터 거주 필요 시. CSAP·ISMS-P·의료정보보호 인증 보유 — 글로벌 클라우드만으론 한국 조달 미충족.", en: "For Korean hospital/public data residency. CSAP/ISMS-P/medical-security certified." }, url: "https://www.ncloud.com/v2/solution/industry/medical", pricing: "종량제", icon: "🇰🇷", color: "#03C75A" },
+      { role: "HIPAA 준수 통신", roleEn: "HIPAA-Compliant Comms", tool: "Paubox Email API", why: { ko: "환자 알림을 PHI 포함 상태로 암호화 발송. 제네릭 Resend는 BAA·PHI 발송을 보장하지 않음.", en: "Send PHI-containing patient notifications encrypted — generic Resend doesn't guarantee BAA/PHI." }, url: "https://www.paubox.com", pricing: "월 300건 무료~", icon: "📧", color: "#0B5FFF" },
+      { role: "의료데이터 보안 스캐닝", roleEn: "Security Scanning", tool: "Snyk", why: { ko: "PHI를 다루는 코드·의존성·컨테이너 취약점 상시 스캔. HIPAA 보안규칙의 개발 단계 통제.", en: "Continuously scan code/deps/containers handling PHI — a dev-stage control for the HIPAA Security Rule." }, url: "https://snyk.io/plans/", pricing: "Free / Team $25/dev/mo", icon: "🛡️", color: "#4C4A73" },
+      { role: "한국 의료 규제 (SaMD·비대면)", roleEn: "Korean Medical Regulatory", tool: "식약처 디지털헬스 가이드라인 + 비대면진료 대응", why: { ko: "진단·치료 알고리즘은 SaMD 해당 여부 판정 필요(가이드 2026.3 개정). 비대면진료 2026.12.24 시행 — 전자처방전·약배송 연동 설계.", en: "Diagnostic algorithms need SaMD assessment. Telehealth law effective 2026-12-24 — design e-prescription/Rx-delivery." }, url: "https://www.mfds.go.kr", pricing: "가이드 무료(허가심사 별도)", icon: "📋", color: "#005BAC" },
+      { role: "동의·감사로그", roleEn: "Consent & Audit", tool: "FHIR Consent/AuditEvent (Medplum 내장)", why: { ko: "처리 동의·접근 감사로그를 FHIR 표준 리소스로 기록. ISMS-P/HIPAA가 요구하는 'PHI 접근 증적'을 표준 스키마로 확보.", en: "Record consent/access audit as standard FHIR resources — the PHI-access evidence ISMS-P/HIPAA demand." }, url: "https://www.medplum.com/docs/compliance/hipaa", pricing: "백엔드 플랜 포함", icon: "🔐", color: "#2E7D6B" },
+    ],
+    totalMonthlyCost: "초기 $0~150 / 성장기 $2,500~3,500 + 한국 클라우드 종량제",
+    startupCredits: { ko: "AWS Activate 최대 $100,000 + AWS Healthcare Accelerator. Google for Startups Cloud 크레딧. 식약처 디지털헬스규제지원과 무료 컨설팅.", en: "AWS Activate up to $100K + Healthcare Accelerator. Google for Startups Cloud credits. MFDS free regulatory consultation." },
+  },
+
+  // ── 사이버보안 스택 ──
+  {
+    id: "security-startup-stack",
+    name: { ko: "사이버보안 트러스트 스택", en: "Security Trust Stack" },
+    description: { ko: "보안 제품을 파는 회사일수록 자신의 보안·컴플라이언스를 증명해야 함. SOC2/ISO27001 자동화 + 한국 ISMS-P/CSAP 대응 + 코드·클라우드·시크릿 전 구간 방어.", en: "A company selling security must prove its own. SOC2/ISO27001 automation + Korean ISMS-P/CSAP + end-to-end code/cloud/secrets defense." },
+    targetSubIndustries: ["security-startup"],
+    layers: [
+      { role: "컴플라이언스 자동화", roleEn: "Compliance Automation", tool: "Vanta (또는 Drata)", why: { ko: "SOC2·ISO27001·HIPAA·GDPR 증적 상시 자동 수집. 첫 엔터프라이즈 딜의 게이트키퍼.", en: "Continuously auto-collect SOC2/ISO27001 evidence — the gatekeeper for the first enterprise deal." }, url: "https://www.vanta.com/", pricing: "~$10,000/yr(Core)", icon: "✅", color: "#6A5CFF" },
+      { role: "올인원 AppSec", roleEn: "All-in-One AppSec", tool: "Aikido Security", why: { ko: "SAST·SCA·DAST·IaC·CSPM·시크릿·컨테이너를 한 대시보드로. 시트 무관 정액제라 작은 팀에 현실적.", en: "SAST/SCA/DAST/IaC/CSPM/secrets in one dashboard. Flat pricing realistic for small teams." }, url: "https://www.aikido.dev/", pricing: "Free / Basic $300/mo / Pro $600/mo", icon: "🥋", color: "#FF6B35" },
+      { role: "클라우드 보안 (Cloud SIEM)", roleEn: "Cloud SIEM", tool: "Datadog Cloud SIEM", why: { ko: "클라우드 로그·이벤트 기반 위협 탐지. ISMS-P 2026이 요구하는 실시간 스캔·CTEM에 부합.", en: "Cloud log/event threat detection — aligns with ISMS-P 2026 real-time scan/CTEM." }, url: "https://www.datadoghq.com/product/cloud-siem/", pricing: "$5~7.50/100만 이벤트, Free 티어", icon: "📡", color: "#632CA6" },
+      { role: "시크릿 관리", roleEn: "Secrets Management", tool: "Doppler", why: { ko: "환경별 시크릿·API키 중앙 관리·로테이션·접근통제. Vault 대비 예측 가능한 정액.", en: "Centralized per-env secrets/key management with predictable pricing vs Vault." }, url: "https://www.doppler.com/", pricing: "Free / Team ~$18~21/user/mo", icon: "🔑", color: "#3B0FB0" },
+      { role: "시크릿 유출 탐지", roleEn: "Secrets Leak Detection", tool: "GitGuardian", why: { ko: "코드·CI/CD·git 히스토리·협업툴의 하드코딩 시크릿 탐지(420+종). 보안 회사가 자기 키를 흘리면 치명적.", en: "Detect hardcoded secrets (420+) across code/CI-CD/git/collab — fatal for a security firm to leak its own." }, url: "https://www.gitguardian.com/", pricing: "개인/공개 무료", icon: "🕵️", color: "#222B45" },
+      { role: "펜테스트 (PTaaS)", roleEn: "Penetration Testing", tool: "Cobalt", why: { ko: "SOC2/ISO27001·고객 실사용 컴플라이언스 펜테스트를 온디맨드로. 전통 펜테스트 대비 빠르고 저렴.", en: "On-demand compliance pentests for SOC2/ISO27001 — faster/cheaper than traditional firms." }, url: "https://www.cobalt.io/", pricing: "$2,500/mo + 크레딧", icon: "💥", color: "#1F2A44" },
+      { role: "한국 인증 (ISMS-P / CSAP)", roleEn: "Korean Certification", tool: "ISMS-P + CSAP (KISA/NIS) + 국내 컨설팅", why: { ko: "한국 공공·금융·SaaS 조달의 사실상 필수. CSAP는 ISMS 기반 민간 자율인증으로 개편 중, ISMS-P 2026은 CTEM·AI 거버넌스 추가.", en: "De facto required for Korean public/finance/SaaS procurement. CSAP moving to ISMS-based self-cert; ISMS-P 2026 adds CTEM/AI-governance." }, url: "https://isms-p.or.kr/main.do", pricing: "심사 수수료 + 컨설팅", icon: "🇰🇷", color: "#003478" },
+    ],
+    totalMonthlyCost: "초기 $0~300 / 성장기 $2,000~4,500/mo + ISMS-P 인증 비용 별도",
+    startupCredits: { ko: "Vanta/Drata 스타트업·YC 할인. AWS Activate $100,000. KISA·과기정통부 정보보호 스타트업 지원·CSAP 전환 지원.", en: "Vanta/Drata startup/YC discounts. AWS Activate $100K. KISA/MSIT infosec startup & CSAP transition support." },
+  },
+
+  // ── 하드웨어·IoT 출시 스택 ──
+  {
+    id: "hardware-iot-launch-gtm",
+    name: { ko: "하드웨어·IoT 출시 스택", en: "Hardware / IoT Launch Stack" },
+    description: { ko: "양산 직전~출시(GTM) 단계의 IoT 하드웨어 스타트업을 위한 펌웨어 OTA·클라우드·디바이스 관리·앱·크라우드펀딩 표준 조합.", en: "Firmware OTA, cloud, device management, app, and crowdfunding for IoT hardware startups at the pre-mass-production / GTM stage." },
+    targetSubIndustries: ["hardware-iot"],
+    layers: [
+      { role: "IoT 클라우드", roleEn: "IoT Cloud", tool: "AWS IoT Core", why: { ko: "디바이스 연결·메시징·Device Shadow를 종량제로 제공. 초기 소량 디바이스에서 비용이 낮고 생태계가 가장 넓다.", en: "Pay-as-you-go connectivity/messaging/Device Shadow — low cost at small scale, widest ecosystem." }, url: "https://aws.amazon.com/iot-core/", pricing: "종량제 (1만 대 base ~$596/월)", icon: "☁️", color: "#FF9900" },
+      { role: "IoT 클라우드 (대안)", roleEn: "IoT Cloud (alt)", tool: "Azure IoT Hub", why: { ko: "device twin·direct method로 OTA·설정 푸시가 티어에 포함 — 디바이스 관리가 잦으면 총비용이 낮아질 수 있다.", en: "Device twins/direct methods include OTA/config push — heavy device mgmt can total lower." }, url: "https://azure.microsoft.com/en-us/products/iot-hub", pricing: "티어 정액 (1만 대 ~$751/월)", icon: "🔧", color: "#0078D4" },
+      { role: "펌웨어 OTA", roleEn: "Firmware OTA", tool: "Mender", why: { ko: "AWS·Azure 양쪽과 연동되는 시장 표준 OTA. 멀티 클라우드여도 단일 UI에서 펌웨어 배포·롤백.", en: "Market-leading OTA integrating with both AWS and Azure — rollout/rollback from one UI." }, url: "https://mender.io", pricing: "오픈소스 무료 + 호스팅 유료", icon: "🔄", color: "#2B66F6" },
+      { role: "디바이스 관측·디버깅", roleEn: "Device Observability", tool: "Memfault", why: { ko: "양산 펌웨어의 크래시·메트릭을 원격 수집해 필드 이슈를 조기 발견. 출시 후 품질 사고 감소.", en: "Remotely collect crashes/metrics from production firmware — catch field issues early." }, url: "https://memfault.com", pricing: "디바이스 수 기반 (무료 평가)", icon: "📈", color: "#5B2A86" },
+      { role: "모바일 앱·생태계", roleEn: "Mobile App / Ecosystem", tool: "Samsung SmartThings (연동)", why: { ko: "국내 2천만+ IoT 앱. 자체 앱 준비 전이거나 한국 스마트홈 진입이 목표면 가장 빠른 도달.", en: "Korea's largest IoT app (20M+). Fastest reach if your own app isn't ready or you target Korean smart home." }, url: "https://www.samsung.com/sec/business/b-iot-solutions/smart-home-solution-iot/", pricing: "무료 (연동)", icon: "📱", color: "#1428A0" },
+      { role: "크라우드펀딩 (국내)", roleEn: "Crowdfunding (KR)", tool: "와디즈 (Wadiz)", why: { ko: "국내 1위 리워드형 펀딩. 한국 소비자 대상 선주문·시장검증·초기 매출을 한 번에.", en: "Korea's #1 reward crowdfunding — domestic pre-orders, validation, initial revenue at once." }, url: "https://www.wadiz.kr", pricing: "수수료형", icon: "🚀", color: "#00C2B3" },
+      { role: "크라우드펀딩 (글로벌·양산자금)", roleEn: "Crowdfunding (global)", tool: "Kickstarter / Indiegogo", why: { ko: "글로벌 하드웨어 펀딩의 표준. 해외 선주문으로 초도양산(금형·부품) 자금을 미리 모음.", en: "Global hardware crowdfunding standard — overseas pre-orders pre-fund first-run production." }, url: "https://www.kickstarter.com", pricing: "수수료형 (~5% + 결제)", icon: "🌐", color: "#05CE78" },
+      { role: "양산 파트너 연결", roleEn: "Manufacturing Sourcing", tool: "캐파 (CAPA) / Seeed Fusion", why: { ko: "펀딩 자금을 실제 양산으로 잇는 마지막 레이어. 국내는 CAPA 매칭, 해외 소량양산은 Seeed.", en: "Turns crowdfunded capital into production — CAPA for domestic, Seeed for overseas low-volume." }, url: "https://capa.ai", pricing: "무료 매칭 (양산비 별도)", icon: "🏭", color: "#111827" },
+    ],
+    totalMonthlyCost: "클라우드+OTA+관측 약 $150~600/월 + 펀딩·양산비는 프로젝트성",
+    startupCredits: { ko: "AWS Activate(IoT Core 포함 최대 $10만), Microsoft for Startups(Azure 크레딧), 중기부 제조전문형 메이커스페이스(시제품~초도양산 정부지원).", en: "AWS Activate (up to $100K incl. IoT Core), Microsoft for Startups (Azure credits), MSS Makerspace (prototype→first-run support)." },
   },
 ];
 

@@ -112,6 +112,7 @@ const climate: ClusterStageContent = {
 export function MpwOrPilotTapeOutStage() {
   return (
     <ClusterStageTemplate
+      stageId="mpw-or-pilot-tape-out"
       stepLabel="Cluster D — Extreme Deep Tech 2/4"
       title="MPW 또는 파일럿 테이프아웃"
       contextLabel="10단계 / 22"

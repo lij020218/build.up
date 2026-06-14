@@ -83,6 +83,7 @@ const defaultContent: ClusterStageContent = {
 export function HardwarePrototypeStage() {
   return (
     <ClusterStageTemplate
+      stageId="hardware-prototype"
       stepLabel="Cluster B — Hardware NPI 1/4"
       title="하드웨어 프로토타입 (EVT → DVT → PVT)"
       contextLabel="9단계 / 22"
