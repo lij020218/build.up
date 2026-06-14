@@ -62,6 +62,11 @@ public struct ConstructionSetupStageView: View {
         }
     }
 
+    /// 2026 트렌드·추천 가구·특화 업체 — 웹 SSOT 자동 생성 미러. 세부업종 매칭 시에만 노출.
+    private var interior2026: ConstructionSubIndustryInterior2026Registry.Entry? {
+        ConstructionSubIndustryInterior2026Registry.entry(forSpecialty: industryId)
+    }
+
     private var canCompleteStage: Bool {
         !selectedConcept.isEmpty && contractorSelected && designApproved
             && constructionDone && fireHealthApplied
@@ -220,6 +225,10 @@ public struct ConstructionSetupStageView: View {
                 }
             }
 
+            if let e = interior2026 {
+                interior2026Section(e)
+            }
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("공사 진행 체크리스트")
@@ -310,6 +319,89 @@ public struct ConstructionSetupStageView: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - 2026 트렌드 · 추천 가구 · 특화 업체
+
+    @ViewBuilder
+    private func interior2026Section(_ e: ConstructionSubIndustryInterior2026Registry.Entry) -> some View {
+        BUCard(.card) {
+            VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                BUEyebrow("2026 트렌드 · 추천 가구 · 특화 업체")
+                Text("💡 광고가 아닌 참고용입니다. 브랜드·업체·가격은 시점에 따라 변하니 발주·계약 전 직접 검증하세요. 프랜차이즈는 본사 표준 사양이 우선입니다.")
+                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.warn).lineSpacing(2)
+
+                if let c = e.colorTrend {
+                    interior2026Row(icon: "paintpalette.fill", title: c.nameKo, desc: c.descKo, source: c.sourceKo, badge: "2026 컬러")
+                }
+                ForEach(e.trends, id: \.titleKo) { t in
+                    interior2026Row(icon: "sparkles", title: t.titleKo, desc: t.descKo, source: t.sourceKo, badge: nil)
+                }
+            }
+        }
+
+        if !e.furniture.isEmpty {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("추천 가구 · 용품")
+                    ForEach(e.furniture, id: \.itemKo) { f in
+                        interior2026Row(icon: "shippingbox.fill", title: f.itemKo, desc: f.descKo, source: nil, badge: nil)
+                    }
+                }
+            }
+        }
+
+        if !e.brands.isEmpty {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("추천 가구 · 집기 브랜드")
+                    ForEach(e.brands, id: \.nameKo) { b in
+                        interior2026Row(icon: "bag.fill", title: b.nameKo, desc: b.noteKo, source: b.sourceKo, badge: nil)
+                    }
+                }
+            }
+        }
+
+        if !e.firms.isEmpty {
+            BUCard(.card) {
+                VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                    BUEyebrow("업종 특화 인테리어 업체 · 플랫폼")
+                    ForEach(e.firms, id: \.nameKo) { f in
+                        interior2026Row(icon: "building.2.fill", title: f.nameKo, desc: f.noteKo, source: f.sourceKo, badge: f.typeKo)
+                    }
+                }
+            }
+        }
+
+        Text(e.caveatKo)
+            .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted).lineSpacing(2)
+            .padding(.horizontal, 2)
+    }
+
+    @ViewBuilder
+    private func interior2026Row(icon: String, title: String, desc: String, source: String?, badge: String?) -> some View {
+        HStack(alignment: .top, spacing: BUSpacing.sm) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(BUColor.midnight.opacity(0.08)).frame(width: 32, height: 32)
+                Image(systemName: icon).font(.system(size: 13)).foregroundStyle(BUColor.midnight)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(title).font(BUFont.bodySmall.weight(.semibold)).foregroundStyle(BUColor.ink)
+                    if let badge {
+                        Text(badge).font(.system(size: 10, weight: .medium)).foregroundStyle(BUColor.midnight)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(BUColor.midnight.opacity(0.1), in: Capsule())
+                    }
+                }
+                Text(desc).font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                if let source {
+                    Text("출처 · \(source)").font(.system(size: 10)).foregroundStyle(BUColor.inkMuted)
+                }
+            }
+            Spacer()
+        }
     }
 
     @ViewBuilder

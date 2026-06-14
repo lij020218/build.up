@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { KeyActionHero } from "../shared/StageActionHero";
 import type { LucideIcon } from "lucide-react";
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../../../../lib/supabase";
 import { SUB_INDUSTRY_INTERIOR_DATA } from "./sub-industry-interior-data";
+import { SUB_INDUSTRY_INTERIOR_2026 } from "./sub-industry-interior-2026";
 import { FRANCHISE_INTERIOR_DATA } from "./franchise-interior-data";
 import { getFranchiseBrandById } from "@foundone/shared";
 import { StageWrapup } from "../shared/StageWrapup";
@@ -675,6 +677,153 @@ export function ConstructionSetupStage() {
                                   </button>
                                 );
                               })}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* ── 2026 트렌드 · 추천 가구/브랜드 · 특화 업체 ── */}
+                      {(() => {
+                        const i2026 = selectedIndustryId ? SUB_INDUSTRY_INTERIOR_2026[selectedIndustryId] : undefined;
+                        if (!i2026) return null;
+                        const yearColors = [
+                          { bg: "rgba(0,122,255,0.1)",   fg: "rgb(0,122,255)"   },
+                          { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   },
+                          { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   },
+                          { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   },
+                          { bg: "rgba(90,200,250,0.14)", fg: "rgb(0,160,210)"   },
+                          { bg: "rgba(255,45,85,0.1)",   fg: "rgb(220,40,75)"   },
+                        ];
+                        const sectionTitle: CSSProperties = { fontSize: "15px", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" };
+                        const card: CSSProperties = { background: "white", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)" };
+                        const hairline = (i: number) => i > 0 ? <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", marginLeft: "18px" }} /> : null;
+                        return (
+                          <div style={{ marginBottom: "28px" }}>
+                            <div style={{ marginBottom: "6px" }}>
+                              <span style={sectionTitle}>
+                                {language === "ko" ? "2026 트렌드 · 추천 가구 · 특화 업체" : "2026 Trends · Furniture · Specialists"}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: "12.5px", color: "rgba(180,100,0,0.85)", lineHeight: 1.55, padding: "10px 14px", borderRadius: "12px", background: "rgba(255,149,0,0.08)", marginBottom: "14px" }}>
+                              {language === "ko"
+                                ? "💡 광고가 아닌 참고용 자료입니다. 브랜드·업체·가격은 시점에 따라 변하니 발주·계약 전 직접 검증하세요. 프랜차이즈는 본사 표준 사양이 우선입니다."
+                                : "💡 Reference only, not advertising. Brands, firms and prices change over time — verify directly before ordering or signing. For franchises, HQ standard specs take priority."}
+                            </div>
+
+                            {/* 2026 컬러 + 트렌드 */}
+                            <div style={{ ...card, marginBottom: "12px" }}>
+                              {i2026.colorTrend2026 && (
+                                <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 18px" }}>
+                                  <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: yearColors[3].bg, color: yearColors[3].fg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    <Palette size={18} strokeWidth={1.5} />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: "11px", fontWeight: 600, color: yearColors[3].fg, letterSpacing: "0.02em", marginBottom: "2px" }}>
+                                      {language === "ko" ? "2026 컬러 트렌드" : "2026 Color Trend"}
+                                    </div>
+                                    <div style={{ fontSize: "14px", fontWeight: 590, color: "var(--text)", letterSpacing: "-0.3px", marginBottom: "3px" }}>{i2026.colorTrend2026.nameKo}</div>
+                                    <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.5)", lineHeight: 1.5 }}>{i2026.colorTrend2026.descKo}</div>
+                                    <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.32)", marginTop: "4px" }}>출처 · {i2026.colorTrend2026.sourceKo}</div>
+                                  </div>
+                                </div>
+                              )}
+                              {i2026.trends2026.map((t, i) => {
+                                const color = yearColors[(i + 4) % yearColors.length];
+                                return (
+                                  <div key={t.titleKo}>
+                                    {(i > 0 || i2026.colorTrend2026) && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", marginLeft: "68px" }} />}
+                                    <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "13px 18px" }}>
+                                      <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: color.bg, color: color.fg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                        <Sparkles size={18} strokeWidth={1.5} />
+                                      </div>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: "14px", fontWeight: 590, color: "var(--text)", letterSpacing: "-0.3px", marginBottom: "2px" }}>{t.titleKo}</div>
+                                        <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.5)", lineHeight: 1.5 }}>{t.descKo}</div>
+                                        <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.32)", marginTop: "4px" }}>출처 · {t.sourceKo}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* 추천 가구 · 용품 */}
+                            {i2026.furniture.length > 0 && (
+                              <>
+                                <div style={{ fontSize: "13px", fontWeight: 600, color: "rgba(0,0,0,0.55)", margin: "16px 2px 8px" }}>
+                                  {language === "ko" ? "추천 가구 · 용품" : "Recommended Furniture"}
+                                </div>
+                                <div style={{ ...card, marginBottom: "12px" }}>
+                                  {i2026.furniture.map((f, i) => (
+                                    <div key={f.itemKo}>
+                                      {hairline(i)}
+                                      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 18px" }}>
+                                        <Box size={16} strokeWidth={1.6} style={{ color: "rgba(0,0,0,0.32)", flexShrink: 0, marginTop: "2px" }} />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: "13.5px", fontWeight: 580, color: "var(--text)", letterSpacing: "-0.2px", marginBottom: "2px" }}>{f.itemKo}</div>
+                                          <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.45)", lineHeight: 1.45 }}>{f.descKo}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+
+                            {/* 추천 가구 브랜드 */}
+                            {i2026.furnitureBrands.length > 0 && (
+                              <>
+                                <div style={{ fontSize: "13px", fontWeight: 600, color: "rgba(0,0,0,0.55)", margin: "16px 2px 8px" }}>
+                                  {language === "ko" ? "추천 가구 · 집기 브랜드" : "Furniture Brands"}
+                                </div>
+                                <div style={{ ...card, marginBottom: "12px" }}>
+                                  {i2026.furnitureBrands.map((b, i) => (
+                                    <div key={b.nameKo}>
+                                      {hairline(i)}
+                                      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 18px" }}>
+                                        <Store size={16} strokeWidth={1.6} style={{ color: "rgb(34,167,73)", flexShrink: 0, marginTop: "2px" }} />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: "13.5px", fontWeight: 580, color: "var(--text)", letterSpacing: "-0.2px", marginBottom: "2px" }}>{b.nameKo}</div>
+                                          <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.45)", lineHeight: 1.45 }}>{b.noteKo}</div>
+                                          {b.sourceKo && <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.3)", marginTop: "3px" }}>{b.sourceKo}</div>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+
+                            {/* 업종 특화 인테리어 업체 */}
+                            {i2026.specialistFirms && i2026.specialistFirms.length > 0 && (
+                              <>
+                                <div style={{ fontSize: "13px", fontWeight: 600, color: "rgba(0,0,0,0.55)", margin: "16px 2px 8px" }}>
+                                  {language === "ko" ? "업종 특화 인테리어 업체 · 플랫폼" : "Specialist Firms · Platforms"}
+                                </div>
+                                <div style={{ ...card }}>
+                                  {i2026.specialistFirms.map((s, i) => (
+                                    <div key={s.nameKo}>
+                                      {hairline(i)}
+                                      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 18px" }}>
+                                        <Building2 size={16} strokeWidth={1.6} style={{ color: "rgb(88,86,214)", flexShrink: 0, marginTop: "2px" }} />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap", marginBottom: "2px" }}>
+                                            <span style={{ fontSize: "13.5px", fontWeight: 580, color: "var(--text)", letterSpacing: "-0.2px" }}>{s.nameKo}</span>
+                                            <span style={{ fontSize: "11px", color: "rgb(88,86,214)", background: "rgba(88,86,214,0.1)", borderRadius: "6px", padding: "1px 6px" }}>{s.typeKo}</span>
+                                          </div>
+                                          <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.45)", lineHeight: 1.45 }}>{s.noteKo}</div>
+                                          {s.sourceKo && <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.3)", marginTop: "3px" }}>{s.sourceKo}</div>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+
+                            {/* caveat */}
+                            <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.38)", lineHeight: 1.5, marginTop: "10px", padding: "0 2px" }}>
+                              {i2026.caveatKo}
                             </div>
                           </div>
                         );
