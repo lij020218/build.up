@@ -16,6 +16,7 @@ public struct GoLiveStageView: View {
     private let stageId = "go-live"
 
     @State private var page = 0
+    @State private var showLaunchGuide = false
 
     @AppStorage("gl.webLive")      private var webLive      = false
     @AppStorage("gl.appStore")     private var appStore     = false
@@ -94,12 +95,37 @@ public struct GoLiveStageView: View {
                 }
             }
         }
+        .sheet(isPresented: $showLaunchGuide) {
+            BUMobileLaunchGuideSheet()
+        }
     }
 
     // MARK: - pg 0 웹·앱 배포
 
     private var deployPage: some View {
         VStack(alignment: .leading, spacing: BUSpacing.md) {
+            // 모바일 앱 출시 상세 가이드 — Apple Developer 가입부터 실제 출시까지 (팝업)
+            Button {
+                showLaunchGuide = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "iphone.gen3").font(.system(size: 15))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("📖 앱 출시 상세 가이드").font(BUFont.bodySmall.weight(.bold))
+                        Text("Apple Developer 가입 → 심사 → 실제 출시 (App Store · Google Play)")
+                            .font(.system(size: 11)).foregroundStyle(BUColor.inkSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.system(size: 12)).foregroundStyle(BUColor.inkMuted)
+                }
+                .foregroundStyle(BUColor.midnight)
+                .padding(BUSpacing.md)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(BUColor.midnight.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.18), lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+
             BUCard(.card) {
                 VStack(alignment: .leading, spacing: BUSpacing.sm) {
                     BUEyebrow("배포 전 최종 체크리스트")

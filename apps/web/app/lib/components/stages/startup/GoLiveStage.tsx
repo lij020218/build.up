@@ -19,6 +19,7 @@ import {
   Globe, Smartphone, BookOpen, AlertTriangle, Check, ExternalLink, XCircle, Clock,
 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { MOBILE_LAUNCH_APPLE, MOBILE_LAUNCH_GOOGLE, MOBILE_LAUNCH_KOREA, MOBILE_LAUNCH_CROSSCUTTING } from "@foundone/shared";
 import { ModePathCard } from "./ModePathCard";
 import { BuildMethodDialog, BuildMethodTrigger } from "./BuildMethodDialog";
 import {
@@ -247,87 +248,7 @@ export function GoLiveStage() {
                 </div>
               </div>
 
-              {(ko ? [
-                {
-                  step: 1, title: "Apple Developer Program 가입 ($99/년)", time: "1-7일 (회사 계정 D-U-N-S 발급)",
-                  detail: "developer.apple.com/programs. 개인 = 즉시 활성화 / 회사 = D-U-N-S 번호 1-2주 발급 후 가입.",
-                  todo: [
-                    "Apple ID 만들기 (없으면) + 2FA 활성화 필수",
-                    "developer.apple.com/programs → Enroll → Individual 또는 Organization 선택",
-                    "회사 계정은 D-U-N-S 번호 필요 (https://www.dnb.com 무료 발급, 1-2주)",
-                    "$99/년 결제 → 24h 내 활성화 (개인) 또는 1-7일 (회사)",
-                  ],
-                  links: [
-                    { name: "Apple Developer Program", url: "https://developer.apple.com/programs/" },
-                    { name: "D-U-N-S 무료 발급", url: "https://www.dnb.com/duns-number/get-a-duns.html" },
-                  ],
-                },
-                {
-                  step: 2, title: "Xcode 26 설치 + iOS 26 SDK 빌드", time: "1-2일 (Mac 필수)",
-                  detail: "Xcode 26 다운로드 (macOS Tahoe 26 이상 필요). 본인 앱 프로젝트 열어 iOS 26 SDK 로 빌드. Hardware: M-series Mac 권장.",
-                  todo: [
-                    "Mac App Store 또는 developer.apple.com 에서 Xcode 26 설치 (15GB+)",
-                    "Xcode → Project Settings → Deployment Target = iOS 16+ (호환성 + iOS 26 SDK)",
-                    "Bundle Identifier 신중히 설정 (예: com.yourbiz.app) — 이후 변경 불가",
-                    "Signing & Capabilities → Team = 본인 Developer 계정 선택",
-                    "Product → Archive → Validate (오류 없이 통과해야 함)",
-                  ],
-                  links: [{ name: "Xcode 다운로드", url: "https://apps.apple.com/app/xcode/id497799835" }],
-                },
-                {
-                  step: 3, title: "TestFlight 내부 테스트 (100명 무리뷰)", time: "30분 셋업 + 1주 테스트",
-                  detail: "출시 전 친구·팀 100명 즉시 테스트 가능. 외부 테스터 (10K) 는 첫 빌드만 Beta App Review 필요.",
-                  todo: [
-                    "App Store Connect 접속 → 본인 앱 → TestFlight 탭",
-                    "Internal Testers → Add (Apple ID 이메일) → 100명까지 즉시 가능",
-                    "Archive 업로드 후 자동 처리 → 테스터에게 TestFlight 앱으로 알림",
-                    "외부 테스터 (10,000명) 원하면 Beta App Review (1-2일)",
-                    "1주간 크래시·UX 피드백 수집 → 수정 후 재빌드",
-                  ],
-                  links: [{ name: "TestFlight 가이드", url: "https://developer.apple.com/testflight/" }],
-                },
-                {
-                  step: 4, title: "App Store Connect 메타데이터 작성", time: "2-4시간",
-                  detail: "이름·설명·스크린샷·개인정보 정책·연령등급. 메타데이터 불일치는 거절 #1 사유.",
-                  todo: [
-                    "App Store Connect → My Apps → 새 앱 등록 (Bundle ID 매칭)",
-                    "이름 (30자), 부제 (30자), 키워드 (100자, 콤마 구분)",
-                    "설명 (4000자) — 첫 3줄 = 검색 결과에 보임. 핵심 가치 먼저",
-                    "스크린샷: 6.7\" iPhone 필수 (1290×2796), 6.5\"·5.5\"·iPad 권장",
-                    "App Preview 영상 30초 (선택, 전환율 25% 향상)",
-                    "개인정보 정책 URL (없으면 거절), 데모 계정 (로그인 앱은 필수)",
-                    "App Privacy 설문 (수집 데이터 종류·용도)",
-                  ],
-                  links: [{ name: "App Store Connect", url: "https://appstoreconnect.apple.com" }],
-                },
-                {
-                  step: 5, title: "Submit for Review → 결과 대기", time: "24시간~30일 (2026.3 기준 지연)",
-                  detail: "2026: 90% 24h 내 통과지만 최근 7-30일 지연 빈발. 거절 시 사유 분석 후 재제출.",
-                  todo: [
-                    "App Store Connect → Version → Submit for Review",
-                    "Export Compliance: 암호화 사용 여부 (대부분 No)",
-                    "Content Rights: 본인 콘텐츠인지",
-                    "Advertising ID: 광고 사용 여부 (대부분 No)",
-                    "Submit → \"Waiting for Review\" → \"In Review\" → \"Approved\" 또는 \"Rejected\"",
-                    "거절 시: 사유 메시지 정독 → 메타·코드 수정 → 재제출 (review 큐 다시)",
-                  ],
-                  links: [
-                    { name: "Apple 거절 사유 가이드", url: "https://developer.apple.com/app-store/review/guidelines/" },
-                    { name: "실시간 리뷰 시간", url: "https://www.runway.team/appreviewtimes" },
-                  ],
-                },
-                {
-                  step: 6, title: "출시 일정 + Phased Release (점진 출시)", time: "1주",
-                  detail: "Approved 후 본인이 출시일 결정. Phased Release = 7일 동안 1%→100% 점진 (오류 발견 시 일시 중지 가능).",
-                  todo: [
-                    "Approved 알림 받으면 Release 옵션 결정",
-                    "Phased Release 권장 (7일 점진) — 큰 오류 발견 시 일시 중지 가능",
-                    "특정 시간에 Release (Product Hunt 와 시간 맞추기)",
-                    "Release 후 첫 24h 크래시·리뷰 모니터링 핫픽스 준비",
-                  ],
-                  links: [],
-                },
-              ] : []).map((s) => <StepCard key={s.step} {...s} />)}
+              {MOBILE_LAUNCH_APPLE.map((s) => <StepCard key={s.step} {...s} />)}
             </div>
           </Section>
         </>
@@ -350,76 +271,24 @@ export function GoLiveStage() {
                 </div>
               </div>
 
-              {(ko ? [
-                {
-                  step: 1, title: "Google Play Developer 계정 ($25 일회성)", time: "1-3일",
-                  detail: "Apple $99/년 vs Google $25 일회성·영구. 신규 개인 계정은 추가 검증 (D-U-N-S 또는 정부 ID).",
-                  todo: [
-                    "play.google.com/console → 가입",
-                    "$25 일회성 결제 (영구, 갱신 없음)",
-                    "신규 개인 계정: 정부 ID 인증 또는 D-U-N-S (회사)",
-                    "1-3일 내 활성화",
-                  ],
-                  links: [{ name: "Google Play Console", url: "https://play.google.com/console" }],
-                },
-                {
-                  step: 2, title: "Android Studio 에서 AAB 빌드", time: "30분~2시간",
-                  detail: "AAB (Android App Bundle) 권장 — Google 이 디바이스별 최적화. APK 직접 X.",
-                  todo: [
-                    "Android Studio 설치 (developer.android.com/studio)",
-                    "Build → Generate Signed Bundle/APK → Android App Bundle (AAB) 선택",
-                    "Keystore 생성·보관 — 이후 모든 업데이트에 같은 키 사용 (분실 시 앱 영구 잠김)",
-                    "release variant 선택 → Build",
-                    "build/outputs/bundle/release/app-release.aab 생성 확인",
-                  ],
-                  links: [{ name: "Android Studio", url: "https://developer.android.com/studio" }],
-                },
-                {
-                  step: 3, title: "Internal Testing (100명 즉시·테스트 14일 카운트 X)", time: "30분",
-                  detail: "내부 테스트 = 본인·팀 빠른 검증. 14일 폐쇄 테스트 의무에 카운트 안 됨 (별도).",
-                  todo: [
-                    "Play Console → 본인 앱 → Testing → Internal testing",
-                    "AAB 업로드 → Release notes 작성",
-                    "Email 리스트로 테스터 100명 추가 (Google 계정 이메일)",
-                    "테스터에게 옵트인 링크 공유 → 즉시 다운로드 가능",
-                    "1주간 크래시·UX 피드백",
-                  ],
-                  links: [],
-                },
-                {
-                  step: 4, title: "Closed Testing — 12명 × 14일 (개인 계정 의무)", time: "14일 (필수)",
-                  detail: "2026 정책: 개인 계정은 폐쇄 테스트 12명 옵트인 + 14일 연속 활성 사용 후 프로덕션 가능.",
-                  todo: [
-                    "Closed testing → 새 트랙 생성",
-                    "Email 리스트 또는 Google Group 으로 12명+ 옵트인",
-                    "각 테스터가 Google Play 에서 앱 설치 + 정기 사용 (User Engagement Time 측정)",
-                    "14일 연속 - 중간 0일 사용 = 카운트 리셋",
-                    "Google Play Services 가 emulator 자동 감지 — 실기기 권장",
-                    "14일 통과 시 Production 트랙 자동 활성화",
-                  ],
-                  links: [
-                    { name: "Closed Testing 정책", url: "https://support.google.com/googleplay/android-developer/answer/14151465" },
-                    { name: "12명 모집 팁", url: "https://12testers14days.pro" },
-                  ],
-                },
-                {
-                  step: 5, title: "Production Release 신청 + 메타데이터", time: "30분 + 리뷰 7일",
-                  detail: "메타·스크린샷·콘텐츠 등급·데이터 안전 선언 모두 필수. 첫 리뷰 7일, 이후 빠름.",
-                  todo: [
-                    "Production → Create new release → AAB 업로드",
-                    "Store listing: 이름·짧은 설명 (80자)·전체 설명 (4000자)",
-                    "스크린샷: 폰 4-8장 (16:9 또는 9:16) + 7-10인치 태블릿 권장",
-                    "Feature graphic 1024×500 PNG (검색 결과에 표시)",
-                    "Content Rating: IARC 설문 (10분) — 누드/폭력/도박 등",
-                    "Data safety: 어떤 데이터 수집/공유 명시 (필수)",
-                    "Privacy policy URL (없으면 거절)",
-                    "Submit → 7일 이내 리뷰 (보통 몇 시간~3일)",
-                  ],
-                  links: [{ name: "Play Console 매뉴얼", url: "https://support.google.com/googleplay/android-developer" }],
-                },
-              ] : []).map((s) => <StepCard key={s.step} {...s} />)}
+              {MOBILE_LAUNCH_GOOGLE.map((s) => <StepCard key={s.step} {...s} />)}
             </div>
           </Section>
+
+          {ko && (
+            <>
+              <Section icon={AlertTriangle} title="양 스토어 공통 2026 필수">
+                <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {MOBILE_LAUNCH_CROSSCUTTING.map((n) => <NoteCard key={n.title} {...n} />)}
+                </div>
+              </Section>
+              <Section icon={Globe} title="한국 특화 — 사업자·게임·결제">
+                <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {MOBILE_LAUNCH_KOREA.map((n) => <NoteCard key={n.title} {...n} />)}
+                </div>
+              </Section>
+            </>
+          )}
         </>
       )}
 
@@ -738,6 +607,21 @@ function StepCard({
             </a>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function NoteCard({ title, body, link }: { title: string; body: string; link?: { name: string; url: string } }) {
+  return (
+    <div style={{ padding: "14px 16px", borderRadius: "12px", background: "white", border: `1px solid ${MIDNIGHT_BORDER}` }}>
+      <div style={{ fontSize: "13.5px", fontWeight: 700, color: MIDNIGHT, marginBottom: "5px" }}>{title}</div>
+      <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6 }}>{body}</div>
+      {link && (
+        <a href={link.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "7px", fontSize: "12px", fontWeight: 600, color: MIDNIGHT, textDecoration: "none" }}>
+          {link.name}
+          <ExternalLink size={12} strokeWidth={2.2} />
+        </a>
       )}
     </div>
   );

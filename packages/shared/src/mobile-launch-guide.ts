@@ -1,0 +1,358 @@
+/**
+ * 모바일 앱 출시 상세 가이드 SSOT — Apple Developer 가입 → 실제 출시.
+ *
+ * go-live 단계에서 모바일 앱(B2C/SaaS) 창업자에게 단계별로 안내. 웹·iOS 공통 소스.
+ * 2026-06 WebSearch 검증(공식 문서 기준). 변동되는 정책이므로 출시 직전 공식 페이지 재확인 권장.
+ *
+ * 검증 핵심(2026):
+ *   • iOS 26 SDK + Xcode 26 필수 (2026-04-28~, 신규·업데이트 모두) — developer.apple.com 공식
+ *   • App Store 심사: 신규 2~5일·업데이트 24~72h·피크 7일+ (예전 "24h" 아님)
+ *   • Phased Release 고정 곡선 1→2→5→10→20→50→100% (7일)
+ *   • Google Play 개인계정: 비공개 테스트 12명 × 14일 연속 (2023-11-13 이후 계정)
+ *   • Google 개발자 신원확인 의무화 (2026-09~, 법인 D-U-N-S, 사이드로드 포함)
+ *   • Apple 연령등급 개편(4+/9+/13+/16+/18+) — AI 챗봇 고지 포함, 설문 마감 2026-01-31
+ *   • EU DSA 트레이더(사업자) 상태 선언 — 양 스토어 필수(EU 미배포여도 선언)
+ */
+
+export type LaunchStep = {
+  step: number;
+  title: string;
+  time: string;
+  detail: string;
+  todo: string[];
+  links: { name: string; url: string }[];
+};
+
+export type LaunchNote = {
+  title: string;
+  body: string;
+  link?: { name: string; url: string };
+};
+
+export const MOBILE_LAUNCH_APPLE: LaunchStep[] = [
+  {
+    step: 1,
+    title: "Apple Developer Program 가입 + 신원확인",
+    time: "1~3주 (2026 신원확인 강화로 길어짐)",
+    detail: "$99/년. 모든 작업의 관문 — 멤버십 없으면 앱 레코드 생성·빌드 업로드 불가. 2026은 신원확인이 느려졌으니 가장 먼저 시작.",
+    todo: [
+      "Apple ID + 2단계 인증 → developer.apple.com/programs → Enroll",
+      "개인(Individual): 본인 법적 이름이 판매자로 노출, D-U-N-S 불필요(가장 빠름)",
+      "법인(Organization): 회사명이 판매자, D-U-N-S 번호 필수 + 대표 권한 확인(Account Holder)",
+      "신원확인: 정부 신분증 번호·사진·셀피 요구될 수 있음 — iPhone 'Apple Developer' 앱으로 진행 권장",
+      "$99/년 결제 — Apple 공지는 24~48h지만 2026엔 수 주 대기 보고 다수",
+    ],
+    links: [
+      { name: "Apple Developer Program", url: "https://developer.apple.com/programs/" },
+      { name: "가입·신원확인 안내", url: "https://developer.apple.com/help/account/membership/identity-verification/" },
+    ],
+  },
+  {
+    step: 2,
+    title: "계약·세무·은행 (가장 많이 빠뜨리는 단계)",
+    time: "30~60분 + 통신판매업 ~3~4일",
+    detail: "App Store Connect → Business(계약·세무·은행)가 모두 초록불이어야 유료앱·인앱결제 판매 가능. 순서: 유료앱 계약 → 세무 → 은행.",
+    todo: [
+      "무료 앱: Apple Developer Program 사용권 계약 동의만으로 충분",
+      "유료/IAP: 유료 앱 계약 서명 → 세무 양식 → 은행 정보 순서(세무는 계약 후 열림)",
+      "세무(비미국): W-8BEN(개인)/W-8BEN-E(법인) + 한국 세무정보 — 제출 후 수정 불가, 신중히",
+      "한국: 유료 세무 흐름에서 통신판매업 신고 필요(약 3~4일) — 사업자등록 선행",
+      "은행: Apple 정산 수령 계좌(외화 가능 권장)",
+      "한국 VAT 10%는 Apple이 대신 징수·납부(수수료는 VAT 포함가 기준 — 표준 약 33%)",
+    ],
+    links: [{ name: "App Store Connect", url: "https://appstoreconnect.apple.com" }],
+  },
+  {
+    step: 3,
+    title: "서명 셋업 (Bundle ID·인증서·프로비저닝)",
+    time: "자동 30분 / 수동 수 시간",
+    detail: "앱이 설치·배포되게 하는 암호화 신원. 첫 앱은 Xcode 자동 서명이 가장 쉽습니다.",
+    todo: [
+      "App ID/Bundle ID 등록(com.회사.앱) — 앱 레코드에 쓰이면 변경 불가, 최종값으로",
+      "배포용 인증서(Distribution certificate) + 프로비저닝 프로파일(App ID+인증서+권한 결합)",
+      "Xcode → Signing & Capabilities → 'Automatically manage signing' 체크(인증서·프로파일 자동 생성/갱신)",
+      "팀·CI 필요 시에만 수동 서명",
+    ],
+    links: [{ name: "인증서·식별자·프로파일", url: "https://developer.apple.com/account/resources/" }],
+  },
+  {
+    step: 4,
+    title: "Xcode 26 + iOS 26 SDK 빌드·Archive·업로드 (2026-04-28 의무)",
+    time: "30~60분",
+    detail: "2026-04-28부터 App Store Connect 업로드는 Xcode 26 + iOS 26 SDK 빌드만 허용. macOS Sequoia 15.6+ 필요.",
+    todo: [
+      "Xcode 26 설치(macOS 15.6+) — SDK는 26이지만 최소지원 OS(Deployment Target)는 낮춰도 됨",
+      "Liquid Glass 주의: iOS 26 SDK 빌드 시 네이티브 UI 자동 리스타일 — 원치 않으면 opt-out",
+      "스킴을 Any iOS Device(arm64) → Product → Archive",
+      "Organizer에서 Validate App(서명·매니페스트 오류 사전 점검) → Distribute App → App Store Connect 업로드",
+      "대안: .ipa 내보내 Transporter 앱으로 업로드",
+    ],
+    links: [{ name: "2026 빌드 요건(공식)", url: "https://developer.apple.com/news/upcoming-requirements/" }],
+  },
+  {
+    step: 5,
+    title: "Privacy Manifest (PrivacyInfo.xcprivacy) — 조용한 업로드 차단 주범",
+    time: "1~3시간 (SDK 많으면 더)",
+    detail: "수집 데이터와 'required-reason API' 사용을 선언하는 파일. 누락 시 업로드 거절 메일을 받습니다 — 제출 전 처리.",
+    todo: [
+      "프로젝트에 PrivacyInfo.xcprivacy 추가 — required-reason API(파일 타임스탬프·디스크 용량·UserDefaults 등) 사유 코드 명시(TN3183)",
+      "수집 데이터 타입 + 추적 도메인(tracking domains) 선언",
+      "서드파티 SDK: Apple 목록 SDK는 각자 privacy manifest + 유효 서명 필요 — 구버전 SDK는 최신화(미포함 시 업로드 반려)",
+      "시행: 2024-05-01(공통 SDK)·2025-02-12(신규 앱/신규 SDK 추가 시) 강제",
+    ],
+    links: [{ name: "Privacy Manifest", url: "https://developer.apple.com/documentation/bundleresources/describing-data-use-in-privacy-manifests" }],
+  },
+  {
+    step: 6,
+    title: "앱 레코드 생성 + 메타데이터 (정확 사양)",
+    time: "2~4시간 (스크린샷 제작 포함)",
+    detail: "My Apps → + 로 앱 레코드 생성 후 Bundle ID 연결. 메타데이터 불일치는 거절 1순위.",
+    todo: [
+      "앱 이름 30자(검색 가중치 최강) · 부제 30자 · 키워드 100자(콤마 구분, 공백 X, 앱명/카테고리 반복 X)",
+      "프로모션 텍스트 170자(심사 없이 수정 가능) · 설명 4000자",
+      "앱 아이콘 1024×1024 PNG(투명·둥근모서리 없이 꽉 채움) — 빌드 에셋 카탈로그에 포함(Apple이 마스킹/축소)",
+      "스크린샷: 6.9형 iPhone 마스터 1320×2868(또는 1290×2796·1260×2736) 업로드 시 작은 기기 자동 축소 — 기기당 1~10장, 최소 1장",
+      "앱 미리보기 영상(선택) 15~30초, 로컬라이즈당 최대 3개",
+      "기본·보조 카테고리 + 지원 URL(필수) + 마케팅 URL(선택) + 버전·빌드 번호",
+    ],
+    links: [{ name: "스크린샷 사양", url: "https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications/" }],
+  },
+  {
+    step: 7,
+    title: "App Privacy 라벨 + 개인정보처리방침 + ATT",
+    time: "1~2시간",
+    detail: "Privacy Manifest(5단계)와 별개인 공개용 'App Privacy' 설문. 추적하면 ATT 동의창은 또 다른 필수 단계입니다.",
+    todo: [
+      "개인정보처리방침 URL 필수(모든 앱)",
+      "App Privacy: 수집 데이터 타입·용도(분석·개인화·앱기능)·사용자 식별 연결 여부·추적 여부 선언(서드파티 SDK 포함)",
+      "ATT: 앱 간 추적·IDFA 사용 시 AppTrackingTransparency 동의창 표시(라벨 작성과 별개 필수)",
+    ],
+    links: [{ name: "App Privacy 세부", url: "https://developer.apple.com/app-store/app-privacy-details/" }],
+  },
+  {
+    step: 8,
+    title: "연령등급 + 콘텐츠 권리 + 수출규정(암호화)",
+    time: "30분",
+    detail: "2026 새 연령등급(4+/9+/13+/16+/18+, 12+·17+ 폐지)과 AI 챗봇 고지. 암호화 수출규정 선언도 필요.",
+    todo: [
+      "연령등급 설문(인앱 통제·채팅/웹 접근·의료/웰니스·폭력) — 기존앱 재응답 마감 2026-01-31",
+      "AI 챗봇/어시스턴트가 민감 콘텐츠 빈도에 미치는 영향 반영 + 서드파티 AI 데이터 공유는 사용자 동의 필요",
+      "콘텐츠 권리: 서드파티 콘텐츠 사용 권리 보유 확인",
+      "수출규정: Info.plist의 ITSAppUsesNonExemptEncryption — HTTPS만 쓰면 면제(NO), 자체 암호화면 YES+문서. 프랑스 배포 시 별도 신고",
+    ],
+    links: [{ name: "심사 가이드라인", url: "https://developer.apple.com/app-store/review/guidelines/" }],
+  },
+  {
+    step: 9,
+    title: "TestFlight 베타 테스트",
+    time: "테스트 1일~2주 + Beta App Review ~1일",
+    detail: "실기기 검증. 내부 100명은 즉시, 외부 1만명은 첫 빌드만 Beta App Review.",
+    todo: [
+      "내부 테스터 100명(App Store Connect 역할 보유자) — 무심사 즉시 배포",
+      "외부 테스터 1만명 — 첫 빌드만 Beta App Review(정식 심사보다 가벼움)",
+      "테스트 노트 + 로그인 앱이면 데모 계정 제공(10단계로 이어짐)",
+    ],
+    links: [{ name: "TestFlight", url: "https://developer.apple.com/testflight/" }],
+  },
+  {
+    step: 10,
+    title: "심사 제출 + 주요 거절 사유 회피",
+    time: "심사 보통 1~3일 (공식 SLA 아님, 피크 더)",
+    detail: "버전에 빌드 연결 후 Submit for Review. 흔한 거절 사유를 미리 막으면 재심사 지연을 피합니다.",
+    todo: [
+      "2.1 완성도: 크래시·깨진 화면·placeholder 금지(거절 40%+) — 제출 빌드 그대로 테스트",
+      "2.1 데모 계정: 로그인 앱은 작동하는 계정+안내를 App Review Notes에 기재",
+      "4.2 최소 기능: 단순 웹사이트 래퍼 거절 — 실제 네이티브 가치 제공",
+      "3.1.1 인앱결제: 디지털 재화·구독은 Apple IAP 필수(한국 제3자 결제 예외는 별도 권한)",
+      "5.1.1 개인정보: 권한(카메라·위치 등)마다 명확한 용도 문자열, 안 쓰는 데이터 요청 금지(거절 1위 영역)",
+    ],
+    links: [{ name: "실시간 심사 시간", url: "https://www.runway.team/appreviewtimes" }],
+  },
+  {
+    step: 11,
+    title: "출시 + Phased Release (7일 점진)",
+    time: "즉시~7일",
+    detail: "승인 후 출시 방식 선택. Phased Release는 업데이트에 7일 고정 곡선으로 적용됩니다.",
+    todo: [
+      "출시 방식: 수동 / 자동(승인 시) / 예약(특정일)",
+      "Phased Release(업데이트): 1일 1%·2일 2%·3일 5%·4일 10%·5일 20%·6일 50%·7일 100%",
+      "일시중지 가능(총 30일 한도, 재개 시 이어서) — 사용자는 수동 100% 다운로드 가능",
+      "출시 첫 24h 크래시·리뷰 모니터링 + 핫픽스 대기(프로모션 텍스트는 재심사 없이 수정)",
+    ],
+    links: [],
+  },
+];
+
+export const MOBILE_LAUNCH_GOOGLE: LaunchStep[] = [
+  {
+    step: 1,
+    title: "Play Console 계정 생성 ($25 일회성) + 신원확인",
+    time: "등록 2~3h · 결제수단 검증 ~5일 · (법인) D-U-N-S ~최대 30일",
+    detail: "$25 일회성(영구). 계정 유형(개인/법인)은 사실상 변경 불가하니 신중히. 2026-09부터 개발자 신원확인이 단계적으로 의무화됩니다.",
+    todo: [
+      "play.google.com/console 가입 → $25 일회성 결제(갱신 없음)",
+      "개인: 정부 발급 신분증으로 본인 신원확인",
+      "법인: D-U-N-S 번호 필수(없으면 무료 신청, 최대 ~30일) — 미리 신청",
+      "개발자 이름(공개)·법적 이름·주소·연락 이메일/전화(OTP) 입력",
+      "결제수단 검증에 최대 5일 → 등록 즉시 시작",
+      "2026-09~ 개발자 신원확인 단계적 의무(법인 D-U-N-S·웹사이트 검증, 사이드로드 포함) — 한국 적용 시점은 추후 공지",
+    ],
+    links: [
+      { name: "Google Play Console", url: "https://play.google.com/console" },
+      { name: "개발자 신원확인(2026)", url: "https://developer.android.com/developer-verification" },
+    ],
+  },
+  {
+    step: 2,
+    title: "Play App Signing + 업로드 키 (AAB 필수)",
+    time: "30분~1시간",
+    detail: "Google이 '앱 서명 키'를 안전 보관하고 개발자는 '업로드 키'만 관리합니다. 신규 앱은 AAB 필수라 이 방식이 사실상 강제됩니다.",
+    todo: [
+      "Android Studio Generate Signed Bundle 또는 keytool로 업로드 키스토어(.jks) 생성",
+      "키스토어 비밀번호·별칭(alias) 안전 보관(분실 주의)",
+      "Play App Signing 등록 — 앱 서명 키는 Google 보관(사용자 배포 서명)",
+      "업로드 키 분실 시: 계정 소유자가 Console 도움 양식으로 재설정 가능(앱 서명 키 영향 없음)",
+      "신규 앱은 AAB(Android App Bundle) 필수 — APK 직접 업로드 불가, Google이 기기별 최적화",
+    ],
+    links: [{ name: "Play App Signing", url: "https://support.google.com/googleplay/android-developer/answer/9842756" }],
+  },
+  {
+    step: 3,
+    title: "타깃 API 레벨 (Android 15 / API 35 의무)",
+    time: "빌드 설정 (가변)",
+    detail: "2025-08-31부터 신규 앱·업데이트는 Android 15(API 35) 이상을 타깃해야 Play에 제출 가능합니다(Wear/TV/Automotive는 API 34+).",
+    todo: [
+      "build.gradle의 targetSdkVersion = 35 이상 설정",
+      "minSdkVersion은 낮게 유지 가능(구버전 사용자 지원) — 타깃만 35+",
+      "API 35 동작 변경(엣지투엣지 등) 점검 후 빌드",
+    ],
+    links: [{ name: "타깃 API 요건", url: "https://developer.android.com/google/play/requirements/target-sdk" }],
+  },
+  {
+    step: 4,
+    title: "Console에서 앱 생성 + 스토어 등록정보 자산",
+    time: "디자인 별도 + 업로드 30분",
+    detail: "앱 레코드를 만들고 스토어 페이지 그래픽·텍스트를 올립니다. 사양 미달이면 업로드가 거부됩니다.",
+    todo: [
+      "앱 만들기: 이름(최대 30자)·기본 언어·앱/게임·무료/유료(무료→유료 전환 불가 주의)",
+      "앱 아이콘: 512×512 32-bit PNG(알파), 최대 1024KB",
+      "피처 그래픽: 1024×500 JPEG/24-bit PNG(알파 없음) — 게시 필수",
+      "폰 스크린샷: 최소 2개(프로모션엔 4+ 권장), 320~3840px, 16:9 또는 9:16, 기기당 최대 8개",
+      "7인치·10인치 태블릿 스크린샷 권장(태블릿 노출 시)",
+      "짧은 설명 80자 + 전체 설명 4000자(첫 줄에 핵심 가치)",
+      "프로모션 동영상: YouTube 단일 영상 URL(선택)",
+    ],
+    links: [{ name: "그래픽 자산 사양", url: "https://support.google.com/googleplay/android-developer/answer/9866151" }],
+  },
+  {
+    step: 5,
+    title: "App content — 정책 선언 (가장 많이 막히는 곳)",
+    time: "1~3시간",
+    detail: "Policy → App content에서 모든 선언을 완료해야 출시 가능. 개인정보처리방침·광고·앱 액세스를 먼저 채우면 뒤 항목이 풀립니다.",
+    todo: [
+      "개인정보처리방침 URL(데이터 안전 작성의 전제, 앱 내에도 링크) ",
+      "광고 포함 여부 선언(광고는 콘텐츠 등급에 부합해야 함)",
+      "앱 액세스: 로그인 앱이면 데모 계정(테스트 로그인) 제공 — 리뷰어 막히면 거부",
+      "콘텐츠 등급: IARC 설문 작성(한국 GRAC 자동 산정) — 미작성/허위 시 거부",
+      "타깃 연령·어린이: 대상 연령 선언, 어린이 포함 시 Families 정책 준수",
+      "뉴스/보건/정부/금융 기능·건강 선언(해당 시) + 광고 ID(AD_ID) 권한 선언",
+    ],
+    links: [{ name: "App content 정책", url: "https://support.google.com/googleplay/android-developer/answer/10787469" }],
+  },
+  {
+    step: 6,
+    title: "데이터 안전(Data safety) 양식",
+    time: "1~2시간 (SDK 많으면 더)",
+    detail: "앱이 수집·공유하는 데이터를 투명하게 표시. 개인정보처리방침과 모순되면 안 되고, 책임은 개발자에게 있습니다.",
+    todo: [
+      "데이터 13종(위치·개인정보·금융·건강·메시지·사진/영상·파일·캘린더·연락처·앱활동·검색기록·앱성능·기기ID) 점검",
+      "수집(기기 밖 전송) vs 공유(서드파티 전송) 구분 — 온디바이스·E2E 암호화는 면제",
+      "목적(앱기능·분석·광고·보안·개인화·계정관리 등) + 필수/선택 + 전송 중 암호화 + 삭제요청 경로 선언",
+      "주의: Firebase·Crashlytics·광고 SDK가 보내는 데이터도 본인 수집으로 신고",
+    ],
+    links: [{ name: "데이터 안전", url: "https://support.google.com/googleplay/android-developer/answer/10787469" }],
+  },
+  {
+    step: 7,
+    title: "Internal Testing (100명 즉시, 14일 카운트 X)",
+    time: "30분",
+    detail: "내부 테스트는 빠른 검증용. 개인계정 의무인 '12명×14일'에는 카운트되지 않습니다(별도 트랙).",
+    todo: [
+      "Testing → Internal testing → AAB 업로드 + Release notes",
+      "테스터 100명 이메일 추가 → 옵트인 링크 공유 → 즉시 설치",
+      "Pre-launch report 확인(Google이 실기기 자동 테스트 → 충돌·접근성·보안 리포트)",
+      "1주간 크래시·UX 피드백",
+    ],
+    links: [],
+  },
+  {
+    step: 8,
+    title: "Closed Testing — 12명 × 14일 연속 (개인계정 의무)",
+    time: "14일 (필수)",
+    detail: "2023-11-13 이후 개인 계정은 비공개 테스트 12명 옵트인 + 14일 연속 활성 사용 후에야 프로덕션 신청 가능. 법인 계정은 면제.",
+    todo: [
+      "Closed testing 트랙 생성 → 이메일 목록 또는 Google Groups로 12명+ 옵트인",
+      "각 테스터가 실기기로 설치·정기 사용(실사용자처럼 다양한 기능) — 14일 '연속'",
+      "중간 옵트아웃·미사용 시 카운트 리셋, 에뮬레이터보다 실기기 권장",
+      "요건 충족 후 Dashboard → 'Apply for production'(테스트 내용·앱 정보·준비도 3섹션 답변)",
+    ],
+    links: [{ name: "비공개 테스트 정책", url: "https://support.google.com/googleplay/android-developer/answer/14151465" }],
+  },
+  {
+    step: 9,
+    title: "Production 출시 + 국가·단계적 출시",
+    time: "제출 30분 + 심사 (보통 수일~7일)",
+    detail: "릴리스를 만들어 배포 국가를 정하고 심사 제출. 첫 출시는 전체 공개, 단계적 출시(staged rollout)는 업데이트에만 적용됩니다.",
+    todo: [
+      "Production → Create release → AAB 업로드 + Release notes",
+      "배포 국가/지역 선택(한국 포함 전 세계 가능)",
+      "Start rollout to production → 첫 출시는 선택 국가 전체 공개",
+      "업데이트는 staged rollout %를 직접 지정·수동 증가(자동 X)",
+      "심사 수일~7일, 드물게 그 이상 — 제출 후 변경하면 큐 뒤로 밀림(손대지 말 것)",
+    ],
+    links: [{ name: "Play Console 매뉴얼", url: "https://support.google.com/googleplay/android-developer" }],
+  },
+];
+
+/** 한국 특화 — 앱 판매·게임·결제 관련 의무 */
+export const MOBILE_LAUNCH_KOREA: LaunchNote[] = [
+  {
+    title: "사업자등록 + 통신판매업 신고 (유료·인앱결제 앱)",
+    body: "유료 앱·인앱결제로 매출이 발생하면 사업자등록이 전제이고 통신판매업 신고 대상입니다. 앱은 실물이 아니라 '구매안전서비스 비적용 대상 확인서'로 신고하는 경우가 많고, 신고 후 Play Console → 계정 세부정보(Account details) → '업체 문의 연락처 세부정보'에 사업자등록번호·통신판매업 신고번호·신고기관(시/군/구청)을 입력하면 한국 사용자 대상 앱 설명 하단에 표시됩니다.",
+    link: { name: "정부24 통신판매업 신고", url: "https://www.gov.kr" },
+  },
+  {
+    title: "게임이면 등급분류 — 모바일은 스토어 자체등급(IARC) 자동",
+    body: "게임물은 GRAC 등급분류 대상이나, 모바일은 Apple·Google이 자체등급분류사업자로 IARC 설문을 통해 제출 시 자동 분류됩니다(직접 GRAC 신고 보통 불필요). 비스토어·고위험 타이틀은 GRAC 직접 신고 경로가 남아 있습니다.",
+    link: { name: "GRAC IARC", url: "https://www.grac.or.kr/Institution/IARC.aspx" },
+  },
+  {
+    title: "한국 제3자 결제 옵션 (전기통신사업법)",
+    body: "한국에서는 Apple·Google이 자사 인앱결제를 강제할 수 없어 외부(제3자) 결제를 낮은 수수료로 제공합니다. 의무는 아니지만 한국 인앱 매출 수수료를 줄이고 싶으면 검토 가치가 있습니다.",
+  },
+];
+
+/** 양 스토어 공통 2026 신규 필수 사항 */
+export const MOBILE_LAUNCH_CROSSCUTTING: LaunchNote[] = [
+  {
+    title: "Apple 연령등급 개편 — 마감 지난 의무",
+    body: "2025-07-24 4+/9+/13+/16+/18+ 체계로 전환. 새 설문(인앱 통제·기능·의료/웰니스·폭력 + AI 어시스턴트/챗봇 고지)을 2026-01-31까지 완료해야 업데이트 게시가 가능합니다. AI 챗봇이 있으면 등급에 직접 영향.",
+    link: { name: "Apple 연령등급", url: "https://developer.apple.com/help/app-store-connect/manage-app-information/set-an-app-age-rating/" },
+  },
+  {
+    title: "EU DSA 트레이더(사업자) 상태 — 양 스토어 필수 선언",
+    body: "Apple·Google 모두 트레이더/비트레이더 상태 선언을 요구합니다. 트레이더는 법인명·주소·전화·이메일이 제품 페이지에 공개됩니다. EU 배포가 없어도 상태는 선언해야 하며, Apple은 미선언 시 EU 노출을 제거합니다.",
+  },
+  {
+    title: "Google 개발자 신원확인 의무화 (2026-09~)",
+    body: "안드로이드 모든 개발자가 신원확인(법인은 D-U-N-S + 웹사이트 검증) 대상이 됩니다. Google Play 외 사이드로드 앱에도 적용 — 법인은 D-U-N-S 발급을 출시 일정에 미리 반영하세요.",
+    link: { name: "안드로이드 개발자 신원확인", url: "https://developer.android.com/developer-verification" },
+  },
+];
+
+export const MOBILE_LAUNCH_GUIDE = {
+  apple: MOBILE_LAUNCH_APPLE,
+  google: MOBILE_LAUNCH_GOOGLE,
+  korea: MOBILE_LAUNCH_KOREA,
+  crossCutting: MOBILE_LAUNCH_CROSSCUTTING,
+};
