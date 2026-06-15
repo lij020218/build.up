@@ -1,3 +1,13 @@
+## ▶▶ 다음 세션 즉시 시작 (2026-06-15) — 출시 전 전수 점검
+
+**`PRELAUNCH_FULL_INSPECTION_2026_06_15.md` 를 열고 Phase 0부터 순서대로 수행.** (이 파일이 점검 정본)
+- 정본 보조: `LAUNCH_CHECKLIST.md`(사람이 할 ops) · `LAUNCH_AUDIT_2026_06_10.md`(코드 P0/P1) · `WEB_IOS_STAGE_PARITY_MATRIX.md`.
+- git: 브랜치 `feat/backend-audit-and-sync-2026-06-07` = main 동기, HEAD `1808cf0`. 워킹트리 클린.
+- 🔴 최우선 = Phase 1: 2026-06-15 추가 4기능(인테리어2026·vendor태그·스타트업툴링·앱출시가이드)이 **웹·iOS에서 실제 렌더되는지 미검증** — 시뮬/프리뷰 확인부터.
+- 아래(2026-06-04~) 핸드오프는 참고만.
+
+---
+
 # NEXT SESSION HANDOFF — 2026-06-04
 
 > 이전 2026-06-02 핸드오프 대체. 이번 세션에서 한 일 + 다음 세션이 바로 이어갈 백로그 명세.
