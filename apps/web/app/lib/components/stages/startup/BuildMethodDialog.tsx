@@ -22,6 +22,10 @@ const MIDNIGHT = "#191970";
 const MIDNIGHT_SOFT = "rgba(25,25,112,0.08)";
 const MIDNIGHT_BORDER = "rgba(25,25,112,0.18)";
 
+// Found.One 표면 — 라벤더-미스트 (heroGradient 135deg, iOS BUColor.heroGradient 1:1)
+const LAVENDER_SURFACE = "linear-gradient(135deg, #F7F8FE 0%, #EEF0FB 50%, #E5E8F7 100%)";
+const LAVENDER_TRACK = "rgba(238,240,251,0.66)"; // 좌측 리스트·푸터 옅은 라벤더 트랙
+
 const DIFFICULTY_COLOR: Record<string, string> = {
   "초급": "#1d3557",
   "중급": "#191970",
@@ -107,9 +111,10 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
               width: "100%",
               maxWidth: "1080px",
               maxHeight: "90vh",
-              background: "white",
-              borderRadius: "20px",
-              boxShadow: "0 20px 60px rgba(25,25,112,0.35)",
+              background: LAVENDER_SURFACE,
+              borderRadius: "24px",
+              boxShadow: "0 24px 70px rgba(25,25,112,0.28)",
+              border: "1px solid rgba(25,25,112,0.08)",
               overflow: "hidden",
               display: "flex",
               flexDirection: "column" as const,
@@ -118,9 +123,11 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
             {/* ─── 헤더 ─── */}
             <div
               style={{
-                padding: "20px 24px 16px",
-                borderBottom: `1px solid ${MIDNIGHT_BORDER}`,
-                background: `linear-gradient(135deg, ${MIDNIGHT}08 0%, white 100%)`,
+                padding: "22px 26px 18px",
+                borderBottom: "1px solid rgba(25,25,112,0.10)",
+                background: "rgba(255,255,255,0.5)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -174,8 +181,8 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
               {/* 좌측 — 방법 리스트 */}
               <div
                 style={{
-                  borderRight: `1px solid ${MIDNIGHT_BORDER}`,
-                  background: "rgba(0,0,0,0.015)",
+                  borderRight: "1px solid rgba(25,25,112,0.10)",
+                  background: LAVENDER_TRACK,
                   overflowY: "auto" as const,
                   padding: "12px 8px",
                 }}
@@ -192,9 +199,10 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
                         textAlign: "left" as const,
                         padding: "12px 14px",
                         marginBottom: "4px",
-                        borderRadius: "10px",
-                        border: "none",
-                        background: active ? MIDNIGHT_SOFT : "transparent",
+                        borderRadius: "12px",
+                        border: active ? "1px solid rgba(25,25,112,0.12)" : "1px solid transparent",
+                        background: active ? "white" : "transparent",
+                        boxShadow: active ? "0 2px 10px rgba(25,25,112,0.10)" : "none",
                         cursor: "pointer",
                         transition: "all 0.15s ease",
                         display: "flex",
@@ -268,9 +276,9 @@ export function BuildMethodDialog({ taskId, onClose }: BuildMethodDialogProps) {
             {/* ─── 푸터 ─── */}
             <div
               style={{
-                padding: "12px 20px",
-                borderTop: `1px solid ${MIDNIGHT_BORDER}`,
-                background: "rgba(0,0,0,0.015)",
+                padding: "12px 22px",
+                borderTop: "1px solid rgba(25,25,112,0.10)",
+                background: LAVENDER_TRACK,
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
