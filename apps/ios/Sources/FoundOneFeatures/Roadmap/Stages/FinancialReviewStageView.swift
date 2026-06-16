@@ -92,6 +92,24 @@ public struct FinancialReviewStageView: View {
         rent > 0 && labor > 0
     }
 
+    /// stage 입력 — 집계(만원) + 8개 비용필드(만원). 8필드는 StageInputProjector 가 ×10000(원)으로
+    /// user_store_data.monthly_costs 에 투영해 웹 finance-store monthlyCosts 와 SSOT 동기(2026-06-16).
+    private var stageInputs: [String: String] {
+        [
+            "totalFixed": "\(totalFixed)",
+            "totalVariable": "\(totalVariable)",
+            "totalCost": "\(totalCost)",
+            "costRent": "\(rent)",
+            "costLabor": "\(labor)",
+            "costUtilities": "\(utilities)",
+            "costInterest": "\(interest)",
+            "costIngredients": "\(ingredients)",
+            "costSga": "\(sga)",
+            "costMarketing": "\(marketing)",
+            "costOther": "\(other)",
+        ]
+    }
+
     private var advanceHint: String {
         if rent <= 0 && labor <= 0 { return "임대료·인건비를 입력하세요" }
         if rent <= 0 { return "임대료를 입력하세요" }
@@ -112,19 +130,11 @@ public struct FinancialReviewStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId, inputs: [
-                    "totalFixed": "\(totalFixed)",
-                    "totalVariable": "\(totalVariable)",
-                    "totalCost": "\(totalCost)",
-                ])
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: stageInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
             onEditSave: {
-                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: [
-                    "totalFixed": "\(totalFixed)",
-                    "totalVariable": "\(totalVariable)",
-                    "totalCost": "\(totalCost)",
-                ])
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: stageInputs)
             },
             wrapup: BUStageWrapupData(
                 doneItems: [

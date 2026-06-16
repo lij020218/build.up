@@ -145,7 +145,12 @@ public enum ReportsCalculator {
         // ── KPI 보조 (비용·마진·프라임코스트) ──
         let costForPeriod = costs.total * period.costMultiplier
         let marginPct: Double = heroVal > 0 ? ((heroVal - costForPeriod) / heroVal) * 100 : 0
-        let primeRate: Double = costs.total > 0 ? ((costs.ingredients + costs.labor) / costs.total) * 100 : 0
+        // ⚠️ 2026-06-16 fix: 프라임코스트 = (재료+인건비)/**매출** (외식업 표준·SSOT cost-ratios.ts:230·웹 useReportSnapshot).
+        //   종전 `/costs.total`(총비용 대비)은 비표준 + 자기 marginPct(매출기준)·웹과 불일치 → 65% 위험선이 틀린 값으로 동작.
+        //   웹과 동일하게 기간 비례(costMultiplier) 적용한 prime 을 기간 매출로 나눔.
+        let primeRate: Double = heroVal > 0
+            ? (((costs.ingredients + costs.labor) * period.costMultiplier) / heroVal) * 100
+            : 0
 
         // ── 차트 포인트 ──
         let chart = buildChart(period: period, entries: sortedEntries, today: today)

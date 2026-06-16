@@ -64,8 +64,8 @@ const LEVEL_META: Record<FundingScore["level"], {
     ring: "#1d3557", ringBg: "rgba(25,25,112,0.12)", Icon: Target,
   },
   medium: {
-    label: "보통", color: "#191970", bg: "rgba(180,83,9,0.10)",
-    ring: "#191970", ringBg: "rgba(180,83,9,0.12)", Icon: AlertCircle,
+    label: "보통", color: "#191970", bg: "rgba(25,25,112,0.10)", // 신호등 앰버 잔재 제거 → 미드나잇(2026-06-16)
+    ring: "#191970", ringBg: "rgba(25,25,112,0.12)", Icon: AlertCircle,
   },
   low: {
     label: "낮음", color: "#b64c4c", bg: "rgba(182,76,76,0.10)",

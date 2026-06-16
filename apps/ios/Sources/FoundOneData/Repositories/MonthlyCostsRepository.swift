@@ -57,6 +57,19 @@ public actor MonthlyCostsRepository: MonthlyCostsRepositoryProtocol {
             )
             .execute()
     }
+
+    /// StageInputProjector 등 어디서든 호출 — 현재 로그인 사용자의 monthly_costs 를 fire-and-forget 으로 저장.
+    /// 웹 finance-store monthlyCosts(원 단위) SSOT 와 동일 컬럼. 비로그인 시 무시.
+    /// ⚠️ costs 는 **원 단위**여야 함(웹 CostManagementCard 가 만원 입력 ×10000 후 저장). 호출 측 단위 변환 책임.
+    @MainActor
+    public static func persistForCurrentUser(_ costs: MonthlyCosts) {
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let client = BUSupabase.shared.client
+        Task {
+            let repo = MonthlyCostsRepository(supabase: client, getUserId: { uid })
+            try? await repo.upsert(costs)
+        }
+    }
 }
 
 // MARK: - DTOs

@@ -108,8 +108,8 @@ export function HomeView() {
             {allStagesDone ? (
               <div style={{
                 padding: "18px 20px", borderRadius: "16px",
-                background: "rgba(52,199,89,0.07)",
-                border: "1px solid rgba(52,199,89,0.2)",
+                background: "rgba(29,53,87,0.07)", // 완료 = 양호(네이비 success). 신호등 그린 폐기(2026-06-16)
+                border: "1px solid rgba(29,53,87,0.18)",
                 display: "flex", alignItems: "center", gap: "14px",
               }}>
                 <div style={{

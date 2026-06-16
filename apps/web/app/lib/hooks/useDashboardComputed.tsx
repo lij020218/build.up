@@ -14,7 +14,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { DashboardHook } from "../useDashboard";
-import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore } from "@foundone/shared";
+import { calculateHealthMetrics, buildTaxCalendar, calculateCostRatios, calculateHealthScore, TOTAL_EMPLOYER_RATE_PCT } from "@foundone/shared";
 import type { MonthlyCosts, HealthScoreResult } from "@foundone/shared";
 import { getBusinessDay, getKstDate, getKstMonthKey, prevMonthKey } from "../utils/business-day";
 import { useUnifiedSaasMetrics } from "./useUnifiedSaasMetrics";
@@ -260,10 +260,16 @@ export function useDashboardComputed(d: DashboardHook) {
   const inventory = d.inventory as InventoryEntry[];
   const lowStockItems = inventory.filter((i) => i.quantity <= (i.minThreshold ?? 0));
   const employees = d.employees as EmployeeEntry[];
-  const estimatedMonthlyPayroll = employees.reduce(
-    (sum, e) => sum + (e.hourlyWage ?? 0) * (e.weeklyHours ?? 0) * 4.34,
-    0,
-  );
+  // 월 인건비 = 실부담(임금 + 주휴수당 + 사업주 4대보험). 종전 임금만 계산(×4.34)은 ~20% 과소표시 →
+  //   StaffLaborCard.calcEmployee / iOS monthlyBurden 과 동일 공식으로 통일 (SSOT 요율, 4.345).
+  const estimatedMonthlyPayroll = employees.reduce((sum, e) => {
+    const wage = e.hourlyWage ?? 0;
+    const hours = e.weeklyHours ?? 0;
+    const weeklyAllowance = hours >= 15 ? (hours / 5) * wage : 0;
+    const monthlyWage = Math.round((wage * hours + weeklyAllowance) * 4.345);
+    const insurance = e.isInsured ? Math.round(monthlyWage * (TOTAL_EMPLOYER_RATE_PCT / 100)) : 0;
+    return sum + monthlyWage + insurance;
+  }, 0);
   const insuredEmployees = employees.filter((e) => e.isInsured).length;
   const monthlyBurn = Math.max(totalCosts - totalSales, 0);
 

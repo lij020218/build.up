@@ -809,8 +809,8 @@ export function CustomerInterviewCard({ ko, industryCategoryId }: Props) {
                       padding: "10px 14px", borderRadius: "10px",
                       border: "none",
                       background: copyFeedback === "questions"
-                        ? "linear-gradient(135deg, #1d3557 0%, #34d399 100%)"
-                        : "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+                        ? "linear-gradient(135deg, #1d3557 0%, #191970 100%)" // 복사완료 = 네이비 success (신호등 그린 폐기)
+                        : "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)", // 기본 = 미드나잇 primary (보라 폐기)
                       color: "#fff",
                       fontSize: "13px", fontWeight: 650,
                       cursor: "pointer",

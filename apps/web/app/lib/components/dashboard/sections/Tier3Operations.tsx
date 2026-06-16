@@ -597,7 +597,7 @@ function PopularProductsAndActivity({
                       borderRadius: "8px",
                       background:
                         entry.sales > c.avgDailySales
-                          ? "rgba(101,197,101,0.12)"
+                          ? "rgba(29,53,87,0.14)" // 평균 이상 = 양호(네이비 success). 신호등 그린 폐기(2026-06-16)
                           : "rgba(25,25,112,0.08)",
                       display: "flex",
                       alignItems: "center",

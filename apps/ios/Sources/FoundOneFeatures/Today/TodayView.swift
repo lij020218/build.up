@@ -220,7 +220,7 @@ public struct TodayView: View {
         //   독립적인 TimelineView 가 다른 위상으로 애니메이션 → BrandBar 영역과 콘텐츠 영역의
         //   배경이 미묘하게 달라 보이는 분리감 발생. 사장님 신고 — "배경 나눠진게 보기 안 좋아".
         .sheet(isPresented: $showInputSheet) {
-            QuickInputSheet()
+            QuickInputSheet(dashboardStore: dashboardStore)
         }
         .sheet(isPresented: $showInventorySheet) {
             if let si = storeInfo {
@@ -418,7 +418,9 @@ public struct TodayView: View {
     }
 
     private var totalCustomers: Int {
-        max(1, mock.entries.reduce(0) { $0 + $1.customers })
+        // 가짜 금지: 고객 0명이면 0 그대로(종전 max(1,…)은 1명 위조 + 객단가 부풀림).
+        // avgTicket 은 자체 분모 가드(>0)가 있어 0 division 안전.
+        mock.entries.reduce(0) { $0 + $1.customers }
     }
 
     /// 이번 달 누적 고객 (실데이터) — 현재 월 entry 의 고객 수 합.
@@ -568,20 +570,22 @@ private struct StoreStatusHeader: View {
 }
 
 private struct LivePill: View {
+    // 신호등 컬러 금지 — "운영 중"(양호 상태)은 미드나잇 네이비 success 토큰. 종전 에메랄드 #059669 폐기(2026-06-16).
+    private let tint = BUColor.success
     var body: some View {
         HStack(spacing: 5) {
             Circle()
-                .fill(Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255))
+                .fill(tint)
                 .frame(width: 6, height: 6)
-                .shadow(color: Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255).opacity(0.25), radius: 3)
+                .shadow(color: tint.opacity(0.25), radius: 3)
             Text("운영 중")
                 .font(.system(size: 11.5, weight: .semibold))
-                .foregroundStyle(Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255))
+                .foregroundStyle(tint)
                 .tracking(0.1)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(Color(red: 0x05/255, green: 0x96/255, blue: 0x69/255).opacity(0.08), in: Capsule())
+        .background(tint.opacity(0.08), in: Capsule())
         .fixedSize()
     }
 }
@@ -1251,13 +1255,33 @@ private struct QuickInputButton: View {
 // MARK: - Quick Input Sheet
 
 private struct QuickInputSheet: View {
+    /// ⚠️ 2026-06-16 P0 fix: 종전엔 store 미주입 → 입력한 매출이 dismiss 시 버려지는 no-op 였다
+    ///   (웹 handleAddDailyEntry 는 Supabase 저장). dashboardStore.upsertEntry 로 실제 저장하도록 배선.
+    let dashboardStore: DashboardStore?
     @State private var sales: Int = 0
     @Environment(\.dismiss) private var dismiss
+
+    /// 오늘 날짜 (KST — UTC off-by-one 회피, 위젯 LogSalesIntent 와 동일 패턴).
+    private var todayKST: String {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        df.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return df.string(from: Date())
+    }
+
+    private func save() {
+        guard sales > 0, let store = dashboardStore else { dismiss(); return }
+        // 오늘 기존 항목의 고객수 보존(매출만 입력하므로 customers 0 으로 덮지 않음).
+        let existingCustomers = store.entries.first(where: { $0.date == todayKST })?.customers ?? 0
+        let entry = DailyEntry(date: todayKST, sales: Double(sales), customers: existingCustomers)
+        Task { await store.upsertEntry(entry) }
+        dismiss()
+    }
 
     var body: some View {
         NavigationStack {
             BUNumberPad(amount: $sales) {
-                dismiss()
+                save()
             }
             .navigationTitle("매출 입력")
             #if os(iOS)

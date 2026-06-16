@@ -3,6 +3,10 @@
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import type { Employee } from "../../../stores/operations-store";
+import { TOTAL_EMPLOYER_RATE_PCT } from "@foundone/shared";
+
+// 사업주 4대보험 부담률 SSOT (hiring-cost.ts). 옛 0.1041 은 고용안정 0.25% 누락 거짓값 — 사용 금지.
+const EMPLOYER_INSURANCE_RATE = TOTAL_EMPLOYER_RATE_PCT / 100;
 
 /** Format number as Korean currency */
 const fmt = (n: number) =>
@@ -28,7 +32,7 @@ export function StaffLaborCard() {
       ? (emp.weeklyHours / 5) * emp.hourlyWage
       : 0;
     const monthlyWage = Math.round((emp.hourlyWage * emp.weeklyHours + weeklyAllowance) * 4.345);
-    const insurance = emp.isInsured ? Math.round(monthlyWage * 0.1041) : 0;
+    const insurance = emp.isInsured ? Math.round(monthlyWage * EMPLOYER_INSURANCE_RATE) : 0;
     return { monthlyWage, insurance, total: monthlyWage + insurance };
   };
   const totalEmpBurden = employees.reduce((s, e) => s + calcEmployee(e).total, 0);
@@ -175,7 +179,7 @@ export function StaffLaborCard() {
                   const allowance = hours >= 15 ? (hours / 5) * wage : 0;
                   const monthly = Math.round((wage * hours + allowance) * 4.345);
                   const autoInsured = hours * 4.345 >= 60;
-                  const ins = (empInsured || autoInsured) ? Math.round(monthly * 0.1041) : 0;
+                  const ins = (empInsured || autoInsured) ? Math.round(monthly * EMPLOYER_INSURANCE_RATE) : 0;
                   return (
                     <div style={{ fontSize: "12px", color: "#007aff", lineHeight: 1.7 }}>
                       <div>{ko ? `\uc6d4 \uae09\uc5ec: ${(monthly / 10000).toFixed(1)}\ub9cc\uc6d0` : `Monthly wage: ${(monthly / 10000).toFixed(1)}\ub9cc\uc6d0`}</div>

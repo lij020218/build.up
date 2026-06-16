@@ -883,7 +883,7 @@ function ProgramCard({
             {catLabel}
           </span>
           {program.highlight && (
-            <span style={{ ...badgeStyle, color: AMBER, background: "rgba(180,83,9,0.08)", display: "inline-flex", alignItems: "center", gap: 3 }}>
+            <span style={{ ...badgeStyle, color: AMBER, background: "rgba(25,25,112,0.08)", display: "inline-flex", alignItems: "center", gap: 3 }}>
               <Sparkles size={10} strokeWidth={1.5} />
               {ko ? "추천" : "Featured"}
             </span>
@@ -894,7 +894,7 @@ function ProgramCard({
               ...badgeStyle,
               color: program.daysUntilDeadline <= 3 ? RED : program.daysUntilDeadline <= 7 ? AMBER : MIDNIGHT,
               background: program.daysUntilDeadline <= 3 ? "rgba(182,76,76,0.08)"
-                : program.daysUntilDeadline <= 7 ? "rgba(180,83,9,0.08)"
+                : program.daysUntilDeadline <= 7 ? "rgba(25,25,112,0.08)"
                 : MIDNIGHT_TINT,
               fontWeight: 700,
               display: "inline-flex",
@@ -1168,7 +1168,7 @@ function GrantApplyModal({
             </div>
 
             {alreadyApplied && (
-              <div style={{ fontSize: 12.5, color: AMBER, background: "rgba(180,83,9,0.07)", borderRadius: 10, padding: "9px 12px", marginBottom: 12 }}>
+              <div style={{ fontSize: 12.5, color: AMBER, background: "rgba(25,25,112,0.07)", borderRadius: 10, padding: "9px 12px", marginBottom: 12 }}>
                 {ko ? "이미 신청한 사업체예요. 다시 제출하면 내용이 최신으로 갱신돼요." : "Already applied — resubmitting updates your entry."}
               </div>
             )}

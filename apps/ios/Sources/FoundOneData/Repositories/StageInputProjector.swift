@@ -21,6 +21,8 @@
 //   revenueModel           → user_store_data.uses_subscriptions       (subscription|freemium|hybrid → true, 웹 usesSubscriptions 미러)
 //   preferredRegion        → business_profiles.preferred_regions      ([region] 단일배열, 웹 buildProfilePatchFromState 미러 — iOS 펀딩 지역매칭·웹 region 폼 복원에 사용)
 //   capital                → business_profiles.capital                (Int 원 단위, 웹 buildProfilePatchFromState 미러 — 2026-06-10 P0-B)
+//   categoryId+subIndustryId→ business_profiles.industry_category_id/sub_industry_id (업종 = 전 상황맞춤 분기 뿌리값. 웹 handleIndustryContinue 미러 — 2026-06-16)
+//   cost{Rent,Labor,Utilities,Interest,Ingredients,Sga,Marketing,Other} → user_store_data.monthly_costs (8필드, **만원→원 ×10000**. 웹 finance-store monthlyCosts SSOT 미러 — 2026-06-16. 전부 0이면 서버값 보호 위해 생략)
 //
 //  로드맵 전용(투영 X, stage_decisions 에만 남음): certType, model, total*, menuCount,
 //   suppliers, address(구체 매물 주소 — region 과 별개), northStar, franchiseBrandId(정식 컬럼 부재) 등.
@@ -29,6 +31,7 @@
 import Foundation
 import Supabase
 import OSLog
+import FoundOneCore
 
 private let projLogger = Logger(subsystem: "com.foundone.ios", category: "StageInputProjector")
 
@@ -38,7 +41,15 @@ public enum StageInputProjector {
     /// 투영 대상 키 (project + audit 가 공유 — 드리프트 방지용 단일 목록).
     public static let projectedKeys: Set<String> = [
         "storeName", "openHour", "closeHour", "startupType", "vatType", "taxTypeChoice", "cpaDecision", "revenueModel",
-        "preferredRegion", "capital",
+        "preferredRegion", "capital", "categoryId", "subIndustryId",
+        "costRent", "costLabor", "costUtilities", "costInterest",
+        "costIngredients", "costSga", "costMarketing", "costOther",
+    ]
+
+    /// 월 운영비 8필드 입력 키 (만원 단위). financial-review stage 가 emit.
+    private static let costInputKeys = [
+        "costRent", "costLabor", "costUtilities", "costInterest",
+        "costIngredients", "costSga", "costMarketing", "costOther",
     ]
 
     /// 구독형 수익 모델 (웹 setSelectedRevenueModelId 의 usesSubscriptions 판정과 동일).
@@ -79,6 +90,32 @@ public enum StageInputProjector {
         // 8. capital → business_profiles.capital (웹 buildProfilePatchFromState 미러, 0/음수·비정수 가드)
         if let v = inputs["capital"], let won = Int(v), won > 0 {
             OnboardingProfileSync.persistIndustry(categoryId: nil, subIndustryId: nil, capitalKrw: won)
+        }
+        // 9. categoryId + subIndustryId → business_profiles.industry_category_id/sub_industry_id
+        //    업종은 전 상황맞춤 분기의 뿌리값 → 로드맵에서 업종 (재)선택 시 정식 컬럼에 반드시 투영.
+        //    빈값/공백 가드는 persistIndustry 의 clean() 내장. 둘 중 하나만 있어도 제공분만 upsert.
+        let categoryId = inputs["categoryId"]?.trimmingCharacters(in: .whitespaces)
+        let subIndustryId = inputs["subIndustryId"]?.trimmingCharacters(in: .whitespaces)
+        if (categoryId?.isEmpty == false) || (subIndustryId?.isEmpty == false) {
+            OnboardingProfileSync.persistIndustry(categoryId: categoryId, subIndustryId: subIndustryId)
+        }
+        // 10. 월 운영비 8필드(만원) → user_store_data.monthly_costs (원, ×10000). 웹 finance-store monthlyCosts SSOT.
+        //     ⚠️ 전부 0/미입력이면 서버의 웹 입력값을 0으로 덮을 위험 → 합계>0 일 때만 투영(데이터 보호).
+        let manwon = costInputKeys.reduce(into: [String: Int]()) { acc, k in
+            if let s = inputs[k], let n = Int(s), n > 0 { acc[k] = n }
+        }
+        if manwon.values.reduce(0, +) > 0 {
+            let won: (String) -> Double = { Double(manwon[$0] ?? 0) * 10_000 }
+            MonthlyCostsRepository.persistForCurrentUser(MonthlyCosts(
+                ingredients: won("costIngredients"),
+                labor:       won("costLabor"),
+                rent:        won("costRent"),
+                utilities:   won("costUtilities"),
+                sga:         won("costSga"),
+                marketing:   won("costMarketing"),
+                other:       won("costOther"),
+                interest:    won("costInterest")
+            ))
         }
     }
 

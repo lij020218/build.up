@@ -68,9 +68,10 @@ function OverstockSection({
 
   const totalExcessCost = alerts.reduce((s, a) => s + (a.excessCostKrw ?? 0), 0);
   const hasAlertSeverity = alerts.some((a) => a.severity === "alert");
-  const accentColor = hasAlertSeverity ? "#191970" : "#1F46A8";
-  const accentBg = hasAlertSeverity ? "rgba(180,83,9,0.06)" : "rgba(25,25,112,0.05)";
-  const accentBorder = hasAlertSeverity ? "rgba(180,83,9,0.18)" : "rgba(25,25,112,0.12)";
+  // 신호등 금지(2026-06-16): alert 강조는 앰버 대신 브릭 danger(#b64c4c) — 구분 유지하며 팔레트 준수.
+  const accentColor = hasAlertSeverity ? "#b64c4c" : "#1F46A8";
+  const accentBg = hasAlertSeverity ? "rgba(182,76,76,0.06)" : "rgba(25,25,112,0.05)";
+  const accentBorder = hasAlertSeverity ? "rgba(182,76,76,0.18)" : "rgba(25,25,112,0.12)";
 
   return (
     <div style={{
@@ -103,7 +104,7 @@ function OverstockSection({
           width: "22px",
           height: "22px",
           borderRadius: "50%",
-          background: hasAlertSeverity ? "rgba(180,83,9,0.14)" : "rgba(25,25,112,0.10)",
+          background: hasAlertSeverity ? "rgba(182,76,76,0.14)" : "rgba(25,25,112,0.10)",
           color: accentColor,
           flexShrink: 0,
         }}>
@@ -182,7 +183,7 @@ function OverstockSection({
                     fontSize: "10px",
                     fontWeight: 700,
                     color: itemColor,
-                    background: a.severity === "alert" ? "rgba(180,83,9,0.10)" : "rgba(15,23,42,0.05)",
+                    background: a.severity === "alert" ? "rgba(182,76,76,0.10)" : "rgba(15,23,42,0.05)",
                     padding: "1px 6px",
                     borderRadius: "999px",
                     flexShrink: 0,

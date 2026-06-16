@@ -113,7 +113,7 @@ export function TeamCard({ d, c, ko, fmt }: Props) {
             {fmt(c.estimatedMonthlyPayroll)}
           </div>
           <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 600 }}>
-            {ko ? "예상 급여" : "Payroll"}
+            {ko ? "예상 인건비" : "Labor cost"}
           </div>
         </div>
         <div

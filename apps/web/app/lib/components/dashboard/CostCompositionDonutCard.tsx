@@ -585,7 +585,7 @@ const KEYFRAMES = `
   font-weight: 500;
 }
 .ccd-center-sub-warn {
-  font-size: 9.5px; color: rgba(180, 83, 9, 0.85); margin-top: 4px;
+  font-size: 9.5px; color: rgba(182, 76, 76, 0.85); margin-top: 4px; /* 신호등 앰버 → 브릭 danger (2026-06-16) */
   font-weight: 600;
 }
 

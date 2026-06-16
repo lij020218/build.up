@@ -664,11 +664,12 @@ public struct LocationCandidatesStageView: View {
         .buttonStyle(.plain)
     }
 
-    /// 점수→색상 — 웹 LocationCandidatesStage 와 동일 임계/색(≥85 green / ≥70 blue / <70 amber).
+    /// 점수→색상 — 신호등 컬러 금지(2026-06-16). 미드나잇 네이비 농담 스케일: 점수 높을수록 진하게.
+    ///   ≥85 midnightDeep / ≥70 midnight / <70 inkMuted. 색만으로 구분 말고 숫자 라벨 동반(기존).
     private func scoreColor(_ score: Int) -> Color {
-        if score >= 85 { return Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255) }
-        if score >= 70 { return Color(red: 0x00/255, green: 0x7A/255, blue: 0xFF/255) }
-        return Color(red: 0xFF/255, green: 0x9F/255, blue: 0x0A/255)
+        if score >= 85 { return BUColor.midnightDeep }
+        if score >= 70 { return BUColor.midnight }
+        return BUColor.inkMuted
     }
 
     /// 상권 카드/핀 탭 → 선택 토글. 선택 시 햅틱 + (비어있으면) 최종 입지 주소 자동 프리필.
