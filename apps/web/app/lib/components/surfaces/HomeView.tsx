@@ -345,6 +345,12 @@ export function HomeView() {
                     </div>
                     <div style={{ fontSize: "15px", fontWeight: 650, letterSpacing: "-0.02em" }}>{prog.name[language]}</div>
                     <div style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>{prog.benefit[language]}</div>
+                    {/* 접수 타이밍 — 놓치면 다음 공고까지 대기. 풀 D-day·status는 펀딩 탭. 미드나잇 pill(신호등 0). */}
+                    {prog.season && (
+                      <div style={{ fontSize: "10.5px", fontWeight: 600, color: "#191970", background: "rgba(25,25,112,0.06)", padding: "3px 8px", borderRadius: "6px", alignSelf: "flex-start", lineHeight: 1.4 }}>
+                        {prog.season[language]}
+                      </div>
+                    )}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: "11px", color: "var(--muted)" }}>{prog.organizer[language]}</span>
                       <span style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 600 }}>↗</span>
