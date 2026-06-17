@@ -171,6 +171,31 @@ export function BizRegistrationPanel() {
               ? "사업자등록증·간판·메뉴판·SNS·세금계산서까지 모두 동일한 이름. 등록 후 변경하면 등록증 재발급이 필요하므로 신중히 확정하세요."
               : "Same name across registration, signage, menu, social, and invoices. Changing requires re-issuing the certificate."}
           />
+          {/* 상표권 선출원주의 — 상호 확정 시점에 검토. advisory(미드나잇), 수수료는 시점 변동이라 미표기 + 공식 검색 링크 */}
+          <a
+            href="https://www.kipris.or.kr/khome/main.do"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex", gap: "10px", alignItems: "flex-start", textDecoration: "none",
+              marginTop: "10px", padding: "12px 14px", borderRadius: "12px",
+              background: "rgba(25,25,112,0.05)", border: "1px solid rgba(25,25,112,0.12)", color: "inherit",
+            }}
+          >
+            <span style={{ fontSize: "9.5px", fontWeight: 700, color: "#191970", background: "rgba(25,25,112,0.10)", padding: "2px 7px", borderRadius: "5px", flexShrink: 0, marginTop: "1px", letterSpacing: "0.04em" }}>
+              {ko ? "상표" : "TM"}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "13px", fontWeight: 700, color: "#191970", marginBottom: "3px", letterSpacing: "-0.01em" }}>
+                {ko ? "상호 확정 = 상표권도 함께 확인 (한국은 선출원주의)" : "Finalize name = check trademark too (Korea is first-to-file)"}
+              </div>
+              <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.55 }}>
+                {ko
+                  ? "먼저 출원한 사람이 권리를 갖습니다. 내 상호·브랜드를 남이 먼저 등록하면 간판·메뉴판을 못 쓰고 분쟁·배상으로 번질 수 있어요. KIPRIS에서 동일·유사 상표를 검색하고, 핵심 브랜드라면 특허청에 상표 출원으로 선점하세요. ↗ KIPRIS 무료 검색"
+                  : "First to file wins. If someone registers your name first, you may lose your signage/menu rights. Search KIPRIS for conflicts; file a trademark to secure your core brand. ↗ Free KIPRIS search"}
+              </div>
+            </div>
+          </a>
         </div>
       )}
 

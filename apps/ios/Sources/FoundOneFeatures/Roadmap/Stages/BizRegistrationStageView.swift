@@ -181,6 +181,30 @@ public struct BizRegistrationStageView: View {
                         // 확정 토글을 켜는 즉시 서버에 상호명 저장 (advance 안 해도 웹과 동기화).
                         if isFinal { StoreProfileRepository.persistStoreNameForCurrentUser(storeName) }
                     }
+
+                // 상표권 선출원주의 — 상호 확정 시점에 검토. advisory(미드나잇), 수수료는 시점변동이라 미표기.
+                if let url = URL(string: "https://www.kipris.or.kr/khome/main.do") {
+                    Link(destination: url) {
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("상표").font(.system(size: 9.5, weight: .bold)).foregroundStyle(BUColor.midnight)
+                                .padding(.horizontal, 7).padding(.vertical, 2)
+                                .background(BUColor.midnight.opacity(0.10), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("상호 확정 = 상표권도 함께 확인 (한국은 선출원주의)")
+                                    .font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text("먼저 출원한 사람이 권리를 갖습니다. 내 상호·브랜드를 남이 먼저 등록하면 간판·메뉴판을 못 쓰고 분쟁·배상으로 번질 수 있어요. KIPRIS에서 동일·유사 상표를 검색하고, 핵심 브랜드라면 특허청에 상표 출원으로 선점하세요. ↗ KIPRIS 무료 검색")
+                                    .font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(BUSpacing.sm)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(BUColor.midnight.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(BUColor.midnight.opacity(0.12), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
