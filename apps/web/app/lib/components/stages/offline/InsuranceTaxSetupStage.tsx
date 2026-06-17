@@ -39,6 +39,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
+import { mandatoryInsuranceFor } from "@foundone/shared";
 import {
   MIDNIGHT,
   MIDNIGHT_SOFT,
@@ -246,6 +247,9 @@ export function InsuranceTaxSetupStage() {
     return ACCIDENT_RATE_BY_CATEGORY[industryCategoryId ?? ""] ?? { rate: "0.7%", label: "일반 서비스업" };
   }, [industryCategoryId]);
 
+  // 영업장 법정 의무보험 (직원 4대보험과 별개 — 화재배상·체육·학원 배상책임 등). SSOT: mandatory-insurance.ts
+  const mandatoryIns = useMemo(() => mandatoryInsuranceFor(industryCategoryId), [industryCategoryId]);
+
   return (
     <div className="bento-fade-in" style={{ marginBottom: "16px" }}>
       {/* ═══════════════════════════════════════════════════════════
@@ -341,6 +345,36 @@ export function InsuranceTaxSetupStage() {
                 </div>
               ))}
             </div>
+          </div>
+        </Section>
+      )}
+
+      {/* PAGE 0 — 영업장 법정 의무보험 (직원 4대보험과 별개). 카테고리에 해당 의무가 있을 때만 노출 */}
+      {page === 0 && mandatoryIns.length > 0 && (
+        <Section icon={ShieldCheck} title="영업장 법정 의무보험" subtitle="직원 보험과 별개 — 미가입 시 과태료. 영업신고 전 확인">
+          <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: "14px" }}>
+            {mandatoryIns.map((ins, idx, arr) => (
+              <div key={ins.name}>
+                <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>{ins.name}</div>
+                {ins.condition && (
+                  <div style={{ fontSize: "12.5px", color: "rgba(15,23,42,0.7)", lineHeight: 1.6, marginBottom: "8px" }}>
+                    <span style={{ fontWeight: 700, color: MIDNIGHT }}>의무 기준 — </span>{ins.condition}
+                  </div>
+                )}
+                {/* 과태료 경고 — 벽돌 danger 토큰 (신호등 금지) */}
+                <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "10px 12px", borderRadius: "10px", background: "rgba(182,76,76,0.06)", border: "1px solid rgba(182,76,76,0.16)", marginBottom: "8px" }}>
+                  <AlertTriangle size={14} strokeWidth={2.2} color="#b64c4c" style={{ flexShrink: 0, marginTop: "1px" }} />
+                  <div style={{ fontSize: "12.5px", color: "#0f172a", lineHeight: 1.5 }}>{ins.penalty}</div>
+                </div>
+                <div style={{ fontSize: "12px", color: "rgba(15,23,42,0.6)", lineHeight: 1.55 }}>
+                  <span style={{ fontWeight: 600, color: MIDNIGHT }}>가입 </span>{ins.where}
+                </div>
+                <div style={{ fontSize: "10.5px", color: "var(--muted)", marginTop: "4px" }}>출처 · {ins.source} ({ins.law})</div>
+                {idx < arr.length - 1 && (
+                  <div style={{ height: "1px", background: "rgba(0,0,0,0.05)", marginTop: "14px" }} />
+                )}
+              </div>
+            ))}
           </div>
         </Section>
       )}

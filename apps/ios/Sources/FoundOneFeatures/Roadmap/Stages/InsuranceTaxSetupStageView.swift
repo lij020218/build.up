@@ -50,6 +50,11 @@ public struct InsuranceTaxSetupStageView: View {
     private var accidentRate: Double { cluster.accidentInsuranceRatePct }
     private var accidentRateDecimal: Double { accidentRate / 100.0 }
 
+    // 영업장 법정 의무보험(직원 4대보험과 별개). SSOT: packages/shared mandatory-insurance.ts 미러.
+    private var mandatoryIns: [MandatoryInsurance] {
+        MandatoryInsuranceRegistry.forCategory(StarterIndustryData.option(by: industryId)?.categoryId)
+    }
+
     private var monthlyWage: Int { Int(monthlyWageText) ?? (WAGE_2026 * MONTH_HOURS) }
 
     // ⚠️ 2026-05-25 정합화 (사장님 audit):
@@ -193,6 +198,39 @@ public struct InsuranceTaxSetupStageView: View {
                     Text("⚠️ 취득신고 시점에만 신청 가능 — 한 번 놓치면 재신청 불가. 청년·신규 사업주에겐 사업주 부담을 약 5%까지 낮추는 결정적 자금 여유.")
                         .font(BUFont.bodyCaption.weight(.semibold)).foregroundStyle(BUColor.midnightDeep).lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            // 영업장 법정 의무보험 — 해당 업종일 때만. 직원 보험과 별개, 미가입 시 과태료.
+            if !mandatoryIns.isEmpty {
+                BUCard(.card) {
+                    VStack(alignment: .leading, spacing: BUSpacing.sm) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "shield.lefthalf.filled").foregroundStyle(BUColor.midnight).font(.system(size: 13))
+                            Text("영업장 법정 의무보험").font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.midnight)
+                        }
+                        Text("직원 4대보험과 별개 — 영업신고 전 가입 확인.").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkMuted)
+                        ForEach(mandatoryIns, id: \.name) { ins in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(ins.name).font(BUFont.bodySmall.weight(.bold)).foregroundStyle(BUColor.ink)
+                                if let cond = ins.condition {
+                                    (Text("의무 기준 — ").font(BUFont.bodyCaption.weight(.bold)).foregroundColor(BUColor.midnight)
+                                     + Text(cond).font(BUFont.bodyCaption).foregroundColor(BUColor.inkSecondary))
+                                        .lineSpacing(2).fixedSize(horizontal: false, vertical: true)
+                                }
+                                HStack(alignment: .top, spacing: 6) {
+                                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(BUColor.danger).font(.system(size: 11)).padding(.top, 1)
+                                    Text(ins.penalty).font(BUFont.bodyCaption).foregroundStyle(BUColor.ink).lineSpacing(2)
+                                }
+                                .padding(BUSpacing.xs)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(BUColor.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                Text("가입 · \(ins.whereToGet)").font(BUFont.bodyCaption).foregroundStyle(BUColor.inkSecondary).lineSpacing(2)
+                                Text("출처 · \(ins.source)").font(.system(size: 10.5)).foregroundStyle(BUColor.inkMuted)
+                            }
+                            .padding(.top, 2)
+                        }
+                    }
                 }
             }
 

@@ -8,6 +8,7 @@ export * from "./market/scoring";
 export * from "./finance/simulation";
 export * from "./finance/cost-ratios";
 export * from "./finance/prime-cost";
+export * from "./finance/mandatory-insurance";
 export * from "./finance/health-score";
 export * from "./finance/inventory-cycle";
 export * from "./finance/cost-classification";
