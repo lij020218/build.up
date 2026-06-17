@@ -570,7 +570,11 @@ export default function AuthPage() {
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     }}
                   >
-                    <span style={{ fontSize: 16 }}>💬</span> 카카오로 계속하기
+                    {/* 카카오 공식 심볼 (브랜드 가이드 — 옐로우 버튼 + 검정 심볼). 이모지 대체. */}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#000000" aria-hidden style={{ flexShrink: 0 }}>
+                      <path d="M12 3C6.477 3 2 6.463 2 10.694c0 2.74 1.84 5.144 4.6 6.49-.15.5-.97 3.32-1 3.54 0 0-.02.17.09.24.11.06.24.01.24.01.32-.05 3.66-2.39 4.24-2.79.58.08 1.18.13 1.83.13 5.523 0 10-3.463 10-7.694S17.523 3 12 3z" />
+                    </svg>
+                    카카오로 계속하기
                   </button>
                   <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.4)", textAlign: "center", margin: "8px 0 0", lineHeight: 1.5 }}>
                     카카오로 계속하면{" "}

@@ -620,12 +620,18 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     try {
       const result = await bootstrapAccountWorkspace(supabase);
       const userLabel = result.user.email ?? copy.common.account;
-      // 회원가입 시 입력한 이름 추출 — auth.users.user_metadata.name 에 저장됨.
-      // 인사말·프로필 헤더 등 UI 에서 사용. 비어있으면 null.
+      // 사용자 표시 이름 — 이메일 가입은 user_metadata.name, 소셜(카카오 등)은 provider 별로
+      // preferred_username/nickname/user_name 등에 닉네임이 들어온다. ⚠️ 카카오는 account_email 이
+      // 비즈앱 전용이라 이메일이 null 일 수 있으므로(email-less 가입), 이름은 이메일과 무관하게 메타에서 도출.
       const meta = (result.user.user_metadata ?? {}) as Record<string, unknown>;
-      const rawName = typeof meta.name === "string" ? meta.name.trim()
-        : typeof meta.full_name === "string" ? meta.full_name.trim()
-        : "";
+      const pickName = (...keys: string[]): string => {
+        for (const k of keys) {
+          const v = meta[k];
+          if (typeof v === "string" && v.trim().length > 0) return v.trim();
+        }
+        return "";
+      };
+      const rawName = pickName("name", "full_name", "preferred_username", "nickname", "user_name");
       setUserName(rawName.length > 0 ? rawName : null);
 
       // CRITICAL: Detect user switch — clear previous user's localStorage data
