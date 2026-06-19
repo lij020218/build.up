@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { ReactNode } from "react";
 import { LanguageProvider } from "./language-provider";
 import { NotificationProvider } from "./notification-context";
+import { SiteFooter } from "./lib/components/SiteFooter";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -56,7 +57,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <NotificationProvider>
-          <LanguageProvider>{children}</LanguageProvider>
+          <LanguageProvider>
+            {children}
+            {/* 전자상거래법 §10 사업자정보 푸터 — 전역(사이버몰 초기화면 하단 표시 의무) */}
+            <SiteFooter />
+          </LanguageProvider>
         </NotificationProvider>
       </body>
     </html>
