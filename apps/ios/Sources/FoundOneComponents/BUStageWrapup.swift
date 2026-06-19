@@ -198,10 +198,10 @@ public struct BUStageWrapup: View {
         HStack(alignment: .center, spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(red: 0.020, green: 0.588, blue: 0.412).opacity(0.12))
+                    .fill(BUColor.success.opacity(0.12))
                 Image(systemName: "checkmark")
                     .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(Color(red: 0.020, green: 0.588, blue: 0.412))
+                    .foregroundStyle(BUColor.success)
             }
             .frame(width: 26, height: 26)
 
@@ -210,7 +210,7 @@ public struct BUStageWrapup: View {
                     .font(.system(size: 11, weight: .heavy))
                     .tracking(0.5)
                     .textCase(.uppercase)
-                    .foregroundStyle(Color(red: 0.020, green: 0.588, blue: 0.412))
+                    .foregroundStyle(BUColor.success)
                 Text(data.nextSummary)
                     .font(.system(size: 13.5, weight: .heavy))
                     .tracking(-0.05)
@@ -226,8 +226,8 @@ public struct BUStageWrapup: View {
         .background(
             LinearGradient(
                 colors: [
-                    Color(red: 0.020, green: 0.588, blue: 0.412).opacity(0.05),
-                    Color(red: 0.020, green: 0.588, blue: 0.412).opacity(0.02),
+                    BUColor.success.opacity(0.05),
+                    BUColor.success.opacity(0.02),
                 ],
                 startPoint: .top, endPoint: .bottom
             ),
@@ -235,7 +235,7 @@ public struct BUStageWrapup: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color(red: 0.020, green: 0.588, blue: 0.412).opacity(0.16), lineWidth: 1)
+                .strokeBorder(BUColor.success.opacity(0.16), lineWidth: 1)
         )
     }
 }

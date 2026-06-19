@@ -63,11 +63,11 @@ public struct BUStageTaskList: View {
                     .font(.system(size: 11, weight: .heavy))
                     .monospacedDigit()
             }
-            .foregroundStyle(allDone ? Color(red: 0.020, green: 0.588, blue: 0.412) : BUColor.midnight)
+            .foregroundStyle(allDone ? BUColor.success : BUColor.midnight)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(
-                (allDone ? Color(red: 0.020, green: 0.588, blue: 0.412) : BUColor.midnight).opacity(0.08),
+                (allDone ? BUColor.success : BUColor.midnight).opacity(0.08),
                 in: Capsule()
             )
         }

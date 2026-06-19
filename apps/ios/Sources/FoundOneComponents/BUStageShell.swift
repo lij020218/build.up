@@ -451,10 +451,11 @@ public struct BUStageContinueBar: View {
     }
     private var editColor: Color {
         switch editState {
-        case .idle:   return Color(red: 0.204, green: 0.780, blue: 0.349)   // #34c759
-        case .saving: return Color(red: 0.204, green: 0.780, blue: 0.349)
-        case .saved:  return Color(red: 0.086, green: 0.639, blue: 0.290)   // #16a34a
-        case .error:  return Color(red: 0.863, green: 0.149, blue: 0.149)   // #dc2626
+        // 신호등 0: 저장 상태는 BUColor.success(=네이비), 오류만 벽돌(danger).
+        case .idle:   return BUColor.success
+        case .saving: return BUColor.success
+        case .saved:  return BUColor.success
+        case .error:  return BUColor.danger
         }
     }
 
