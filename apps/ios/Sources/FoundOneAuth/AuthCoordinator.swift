@@ -221,7 +221,10 @@ public final class AuthCoordinator {
     }
 
     public func signOut() async {
-        // 현재 provider 에 맞게 sign out
+        // 현재 provider 에 맞게 sign out.
+        // 원격 signOut 은 best-effort — 네트워크 실패해도 사용자는 로그아웃 의도이므로
+        //   로컬 데이터/세션은 *반드시* 정리하고 비인증 상태로 전환한다(이전: catch 에서
+        //   wipe·상태전환을 건너뛰어 데이터가 남고 로그인 상태로 보이던 버그).
         let provider = currentSession?.provider
         do {
             switch provider {
@@ -229,12 +232,21 @@ public final class AuthCoordinator {
             case .kakao: try await kakaoProvider.signOut()
             default:     try await supabase.auth.signOut()
             }
-            // 로컬 사용자 데이터 전면 제거 — cross-account 누출 방지(공용기기에서 다음 사용자 보호).
-            LocalDataWipe.wipeAllLocalUserData()
-            state = .unauthenticated
         } catch {
-            state = .failed("로그아웃 실패: \(error.localizedDescription)")
+            // 원격 실패 무시 — 로컬 정리는 아래에서 보장.
         }
+        // 로컬 사용자 데이터 전면 제거 — cross-account 누출 방지(공용기기에서 다음 사용자 보호).
+        LocalDataWipe.wipeAllLocalUserData()
+        state = .unauthenticated
+    }
+
+    /// 세션 만료·토큰 refresh 실패·외부(다른 기기) 로그아웃을 감지했을 때 호출.
+    /// 로컬 데이터를 정리하고 비인증 상태로 전환 → UI 가 로그인 화면으로 재렌더된다.
+    /// 이미 비인증이면 no-op (초기 nil 세션 이벤트로 인한 오작동 방지).
+    public func handleSessionLost() {
+        guard isAuthenticated else { return }
+        LocalDataWipe.wipeAllLocalUserData()
+        state = .unauthenticated
     }
 
     public func deleteAccount() async {

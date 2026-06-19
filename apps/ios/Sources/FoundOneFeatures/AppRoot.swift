@@ -182,11 +182,19 @@ public struct AppRoot: View {
                         #endif
                     }
                     .task {
-                        // 로그인 성공 후 store 생성
+                        // 인증 상태를 *지속* 관측 (이전: 첫 세션에서 break 해 만료·refresh 실패를
+                        //   놓쳐 stale UI 가 남던 블로커). 세션 생기면 1회 로드, 사라지면 로그인 화면으로.
+                        var loaded = false
                         for await change in BUSupabase.shared.authStateChanges {
                             if change.session != nil {
-                                await loadDashboardIfNeeded(coordinator: coordinator)
-                                break
+                                if !loaded {
+                                    loaded = true
+                                    await loadDashboardIfNeeded(coordinator: coordinator)
+                                }
+                            } else {
+                                // signedOut / tokenRefreshFailed — 비인증 전환 + 로컬 정리(self-gated)
+                                loaded = false
+                                coordinator.handleSessionLost()
                             }
                         }
                     }
