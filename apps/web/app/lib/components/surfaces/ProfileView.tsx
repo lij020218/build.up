@@ -141,7 +141,7 @@ export function ProfileView() {
       <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
         <div style={{
           width: "60px", height: "60px", borderRadius: "50%",
-          background: isAnonymous ? "rgba(0,0,0,0.08)" : "linear-gradient(135deg, #007aff 0%, #5ac8fa 100%)",
+          background: isAnonymous ? "rgba(0,0,0,0.08)" : "linear-gradient(135deg, #3b5c8c 0%, #5f8bb8 100%)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: "22px", fontWeight: 700, color: isAnonymous ? "rgba(0,0,0,0.3)" : "#fff",
           flexShrink: 0,
@@ -208,7 +208,7 @@ export function ProfileView() {
             <span style={{ fontSize: "13px", color: "var(--muted)" }}>
               {ko ? `${completedCount}개 단계 완료` : `${completedCount} stages completed`}
             </span>
-            <span style={{ fontSize: "20px", fontWeight: 700, color: correctedProgressPercent >= 100 ? "#1d3557" : "#007aff", letterSpacing: "-0.5px" }}>
+            <span style={{ fontSize: "20px", fontWeight: 700, color: correctedProgressPercent >= 100 ? "#1d3557" : "#3b5c8c", letterSpacing: "-0.5px" }}>
               {correctedProgressPercent}%
             </span>
           </div>
@@ -217,7 +217,7 @@ export function ProfileView() {
               height: "100%", borderRadius: "4px",
               background: correctedProgressPercent >= 100
                 ? "#1d3557"
-                : "linear-gradient(90deg, #007aff 0%, #5ac8fa 100%)",
+                : "linear-gradient(90deg, #3b5c8c 0%, #5f8bb8 100%)",
               width: `${correctedProgressPercent}%`,
               transition: "width 0.4s ease",
             }} />
@@ -274,7 +274,7 @@ export function ProfileView() {
                   fontSize: "12px", fontWeight: 600, padding: "5px 14px",
                   borderRadius: "8px", cursor: "pointer",
                   border: language === lang ? "none" : "1px solid rgba(0,0,0,0.12)",
-                  background: language === lang ? "#007aff" : "transparent",
+                  background: language === lang ? "#3b5c8c" : "transparent",
                   color: language === lang ? "#fff" : "var(--muted)",
                   transition: "all 0.15s ease",
                 }}
@@ -343,7 +343,7 @@ export function ProfileView() {
               onClick={() => router.push("/auth")}
               style={{
                 fontSize: "12px", fontWeight: 600, color: "#fff",
-                background: "#007aff", border: "none", borderRadius: "10px",
+                background: "#3b5c8c", border: "none", borderRadius: "10px",
                 padding: "8px 16px", cursor: "pointer", flexShrink: 0,
               }}
             >

@@ -46,7 +46,7 @@ function getDomainColor(domain: string) {
   // 도메인 구분용 뉴트럴 컬러(성과 신호 아님) — 신호등 컬러 금지 원칙에 따라
   // 초록/주황 대신 네이비 농담 + 중립 블루로 카테고리만 구분.
   if (domain === "permit-guide") return "#457b9d";
-  if (domain === "tax-guide") return "#007aff";
+  if (domain === "tax-guide") return "#3b5c8c";
   if (domain === "loan-guide") return "#1d3557";
   return "#8e8e93";
 }
@@ -261,8 +261,8 @@ const styles = {
     width: "22px",
     height: "22px",
     borderRadius: "50%",
-    background: "rgba(0,122,255,0.1)",
-    color: "#007aff",
+    background: "rgba(59,92,140,0.1)",
+    color: "#3b5c8c",
     fontSize: "12px",
     fontWeight: 700,
     display: "flex",
@@ -293,8 +293,8 @@ const styles = {
     marginTop: "2px"
   },
   highlightItem: {
-    background: "rgba(0,122,255,0.04)",
-    border: "0.5px solid rgba(0,122,255,0.12)",
+    background: "rgba(59,92,140,0.04)",
+    border: "0.5px solid rgba(59,92,140,0.12)",
     borderRadius: "10px",
     padding: "10px 14px",
     fontSize: "14px",
@@ -325,7 +325,7 @@ const styles = {
     gap: "10px"
   },
   sourceLink: {
-    color: "#007aff",
+    color: "#3b5c8c",
     textDecoration: "none",
     fontSize: "14px",
     fontWeight: 500
@@ -345,12 +345,12 @@ const styles = {
     flexWrap: "wrap" as const
   },
   suggestedChip: {
-    border: "1px solid rgba(0,122,255,0.2)",
-    background: "rgba(0,122,255,0.05)",
+    border: "1px solid rgba(59,92,140,0.2)",
+    background: "rgba(59,92,140,0.05)",
     borderRadius: "999px",
     padding: "7px 14px",
     fontSize: "13px",
-    color: "#007aff",
+    color: "#3b5c8c",
     cursor: "pointer",
     transition: "all 0.15s"
   },
@@ -372,7 +372,7 @@ const styles = {
   askButton: {
     borderRadius: "999px",
     border: "none",
-    background: "#007aff",
+    background: "#3b5c8c",
     color: "#fff",
     padding: "12px 22px",
     fontSize: "14px",
@@ -775,7 +775,7 @@ function GuideDetailPage() {
                           <div style={styles.answerListLabel}>{ko ? "다음 행동" : "Next actions"}</div>
                           {entry.answer.nextActions.map((item) => (
                             <div key={item} style={styles.answerListItem}>
-                              <span style={{ color: "#007aff", flexShrink: 0 }}>→</span>
+                              <span style={{ color: "#3b5c8c", flexShrink: 0 }}>→</span>
                               <span>{item}</span>
                             </div>
                           ))}

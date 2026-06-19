@@ -462,7 +462,7 @@ export function ConstructionSetupStage() {
                       {(() => {
                         // Apple iOS system color palette — 6색 순환
                         const iconColors = [
-                          { bg: "rgba(0,122,255,0.1)",   fg: "rgb(0,122,255)"   }, // blue
+                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(0,122,255)"   }, // blue
                           { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   }, // green
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   }, // orange
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   }, // indigo
@@ -553,7 +553,7 @@ export function ConstructionSetupStage() {
                       {(() => {
                         // Apple 시스템 컬러 — 컨셉 카드용
                         const conceptColors = [
-                          { bg: "rgba(0,122,255,0.1)",   fg: "rgb(0,122,255)"   }, // blue
+                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(0,122,255)"   }, // blue
                           { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   }, // green
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   }, // orange
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   }, // indigo
@@ -687,7 +687,7 @@ export function ConstructionSetupStage() {
                         const i2026 = selectedIndustryId ? SUB_INDUSTRY_INTERIOR_2026[selectedIndustryId] : undefined;
                         if (!i2026) return null;
                         const yearColors = [
-                          { bg: "rgba(0,122,255,0.1)",   fg: "rgb(0,122,255)"   },
+                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(0,122,255)"   },
                           { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   },
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   },
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   },
@@ -951,7 +951,7 @@ export function ConstructionSetupStage() {
                                     width: "38px",
                                     height: "38px",
                                     borderRadius: "10px",
-                                    background: "rgba(0,122,255,0.1)",
+                                    background: "rgba(59,92,140,0.1)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -990,7 +990,7 @@ export function ConstructionSetupStage() {
                                           width: "32px",
                                           height: "32px",
                                           borderRadius: "50%",
-                                          background: "rgba(0,122,255,0.1)",
+                                          background: "rgba(59,92,140,0.1)",
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
@@ -1066,7 +1066,7 @@ export function ConstructionSetupStage() {
                                 fontWeight: 600,
                                 padding: "9px 20px",
                                 borderRadius: "100px",
-                                background: "rgba(0,122,255,0.1)",
+                                background: "rgba(59,92,140,0.1)",
                                 color: "rgb(0,122,255)",
                                 border: "none",
                                 cursor: "pointer",
@@ -1100,7 +1100,7 @@ export function ConstructionSetupStage() {
                           gap: "8px",
                           padding: "12px 14px",
                           borderRadius: "12px",
-                          background: "rgba(0,122,255,0.06)",
+                          background: "rgba(59,92,140,0.06)",
                           marginTop: "10px",
                         }}>
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>

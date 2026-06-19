@@ -72,7 +72,7 @@ export function InventoryManagementCard() {
   const CAT: Record<string, { ko: string; en: string; color: string }> = {
     fresh:    { ko: "신선", en: "Fresh",    color: "#1d3557" },
     dry:      { ko: "건식", en: "Dry",      color: "#191970" },
-    frozen:   { ko: "냉동", en: "Frozen",   color: "#007aff" },
+    frozen:   { ko: "냉동", en: "Frozen",   color: "#3b5c8c" },
     beverage: { ko: "음료", en: "Beverage", color: "#30b0c7" },
     supply:   { ko: "소모품", en: "Supply", color: "#af52de" },
     other:    { ko: "기타", en: "Other",    color: "#8e8e93" },
@@ -134,7 +134,7 @@ export function InventoryManagementCard() {
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <button type="button"
             onClick={() => setInvForm({ ...emptyInvForm, open: true })}
-            style={{ fontSize: "12px", fontWeight: 600, color: "#007aff", background: "rgba(0,122,255,0.08)", border: "none", borderRadius: "9px", padding: "6px 13px", cursor: "pointer" }}>
+            style={{ fontSize: "12px", fontWeight: 600, color: "#3b5c8c", background: "rgba(59,92,140,0.08)", border: "none", borderRadius: "9px", padding: "6px 13px", cursor: "pointer" }}>
             {ko ? "+ 직접 추가" : "+ Add"}
           </button>
           <label style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557", cursor: "pointer", padding: "6px 13px", background: "rgba(52,199,89,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
@@ -229,7 +229,7 @@ export function InventoryManagementCard() {
               style={{
                 flexShrink: 0, fontSize: "11px", fontWeight: 600, border: "none",
                 borderRadius: "8px", padding: "5px 11px", cursor: "pointer", transition: "background 0.15s, color 0.15s",
-                background: invCategoryFilter === tab.id ? "#007aff" : "rgba(0,0,0,0.05)",
+                background: invCategoryFilter === tab.id ? "#3b5c8c" : "rgba(0,0,0,0.05)",
                 color: invCategoryFilter === tab.id ? "#fff" : "var(--muted)",
               }}>
               {tab.label} {tab.count}
@@ -338,7 +338,7 @@ export function InventoryManagementCard() {
               {(s === "urgent" || s === "warning") && (
                 item.supplierUrl ? (
                   <a href={item.supplierUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: "12px", fontWeight: 700, color: "#fff", background: "#007aff", textDecoration: "none", borderRadius: "9px", padding: "7px 14px" }}>
+                    style={{ fontSize: "12px", fontWeight: 700, color: "#fff", background: "#3b5c8c", textDecoration: "none", borderRadius: "9px", padding: "7px 14px" }}>
                     {ko ? "주문하기 ›" : "Order ›"}
                   </a>
                 ) : (
@@ -571,7 +571,7 @@ export function InventoryManagementCard() {
                               fontSize: "12px", fontWeight: 600, padding: "5px 11px",
                               borderRadius: "999px", cursor: "pointer",
                               border: isSelected ? "none" : "1px solid rgba(0,0,0,0.12)",
-                              background: isSelected ? "#007aff" : "rgba(0,0,0,0.04)",
+                              background: isSelected ? "#3b5c8c" : "rgba(0,0,0,0.04)",
                               color: isSelected ? "#fff" : "var(--primary)",
                               transition: "all 0.15s",
                             }}

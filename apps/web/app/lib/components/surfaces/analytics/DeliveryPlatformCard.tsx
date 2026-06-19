@@ -73,7 +73,7 @@ export function DeliveryPlatformCard() {
         </div>
         <button type="button"
           onClick={() => { setDlvFormOpen(true); setDlvEditId(null); setDlvName(""); setDlvRate(""); setDlvAd(""); }}
-          style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
+          style={{ fontSize: "13px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
           {ko ? "+ 플랫폼 추가" : "+ Add platform"}
         </button>
       </div>
@@ -135,7 +135,7 @@ export function DeliveryPlatformCard() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button type="button" onClick={() => openDlvEdit(p)} style={{ fontSize: "12px", color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
+                  <button type="button" onClick={() => openDlvEdit(p)} style={{ fontSize: "12px", color: "#3b5c8c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
                   <button type="button" onClick={() => handleDlvDelete(p.id)} style={{ fontSize: "12px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
                 </div>
               </div>
@@ -195,8 +195,8 @@ export function DeliveryPlatformCard() {
 
       {/* 플랫폼 추가/수정 폼 */}
       {dlvFormOpen && (
-        <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,122,255,0.03)" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "#007aff", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
+        <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(59,92,140,0.03)" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#3b5c8c", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
             {dlvEditId ? (ko ? "플랫폼 수정" : "Edit Platform") : (ko ? "플랫폼 추가" : "Add Platform")}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
@@ -219,7 +219,7 @@ export function DeliveryPlatformCard() {
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <button type="button" onClick={handleDlvSave}
-                style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#007aff", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#3b5c8c", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                 {dlvEditId ? (ko ? "수정 완료" : "Save") : (ko ? "추가" : "Add")}
               </button>
               <button type="button" onClick={() => { setDlvFormOpen(false); setDlvEditId(null); }}

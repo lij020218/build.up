@@ -923,7 +923,7 @@ export function LocationCandidatesStage() {
           {activeLocationCandidates.map((item) => {
             const selected = selectedLocationId === item.id;
             const freshness = getFreshnessPresentation(item.freshness);
-            const scoreColor = (item.score ?? 0) >= 85 ? "#1d3557" : (item.score ?? 0) >= 70 ? "#007aff" : "#191970";
+            const scoreColor = (item.score ?? 0) >= 85 ? "#1d3557" : (item.score ?? 0) >= 70 ? "#3b5c8c" : "#191970";
             return (
               <button
                 key={item.id}

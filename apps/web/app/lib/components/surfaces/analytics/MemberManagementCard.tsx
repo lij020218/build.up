@@ -70,7 +70,7 @@ export function MemberManagementCard() {
           </div>
           <button type="button"
             onClick={() => { setMemFormOpen(true); setMemName(""); setMemPlan(""); setMemFee(""); setMemEnd(""); }}
-            style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
+            style={{ fontSize: "13px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
             {ko ? "+ \ub4f1\ub85d" : "+ Add"}
           </button>
         </div>
@@ -91,7 +91,7 @@ export function MemberManagementCard() {
           {[
             { label: ko ? "\uc804\uccb4" : "Total", value: `${members.length}\uba85`, color: "inherit" },
             { label: ko ? "\ub9cc\ub8cc\uc784\ubc15" : "Expiring", value: `${expiringCount}\uba85`, color: expiringCount > 0 ? "#191970" : "inherit" },
-            { label: ko ? "\uc774\ub2ec \uc218\uc785" : "Revenue", value: fmt(monthlyRevenue * 10000), color: "#007aff" },
+            { label: ko ? "\uc774\ub2ec \uc218\uc785" : "Revenue", value: fmt(monthlyRevenue * 10000), color: "#3b5c8c" },
           ].map((col, i) => (
             <div key={col.label} style={{ padding: "12px 12px", borderLeft: i > 0 ? "0.5px solid rgba(0,0,0,0.08)" : "none" }}>
               <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "4px" }}>{col.label}</div>
@@ -159,7 +159,7 @@ export function MemberManagementCard() {
             {planPresets.map(preset => (
               <button key={preset} type="button"
                 onClick={() => setMemPlan(preset)}
-                style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "14px", border: `1px solid ${memPlan === preset ? "#007aff" : "rgba(0,0,0,0.10)"}`, background: memPlan === preset ? "rgba(0,122,255,0.09)" : "transparent", color: memPlan === preset ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
+                style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "14px", border: `1px solid ${memPlan === preset ? "#3b5c8c" : "rgba(0,0,0,0.10)"}`, background: memPlan === preset ? "rgba(59,92,140,0.09)" : "transparent", color: memPlan === preset ? "#3b5c8c" : "var(--muted)", cursor: "pointer" }}>
                 {preset}
               </button>
             ))}
@@ -182,7 +182,7 @@ export function MemberManagementCard() {
                 saveMembers([...members, newMember]);
                 setMemFormOpen(false);
               }}
-              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: memName.trim() && memEnd ? "#007aff" : "rgba(0,0,0,0.08)", color: memName.trim() && memEnd ? "#fff" : "var(--muted)", border: "none", fontSize: "14px", fontWeight: 700, cursor: memName.trim() && memEnd ? "pointer" : "default" }}>
+              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: memName.trim() && memEnd ? "#3b5c8c" : "rgba(0,0,0,0.08)", color: memName.trim() && memEnd ? "#fff" : "var(--muted)", border: "none", fontSize: "14px", fontWeight: 700, cursor: memName.trim() && memEnd ? "pointer" : "default" }}>
               {ko ? "\ub4f1\ub85d" : "Register"}
             </button>
             <button type="button" onClick={() => setMemFormOpen(false)}

@@ -22,7 +22,7 @@ export function MockupByIndex({ index, isLight, lang }: { index: number; isLight
   };
   const muted = isLight ? "#86868b" : "rgba(255,255,255,0.4)";
   const subtle = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)";
-  const accent = "#007aff";
+  const accent = "#3b5c8c";
 
   const p = { card, muted, subtle, accent, isLight, lang };
   if (index === 0) return <MockupOnboarding {...p} />;
@@ -82,9 +82,9 @@ export function MockupRoadmap({ card, muted, subtle, accent, isLight, lang }: Mo
                   padding: "12px 14px",
                   borderRadius: 12,
                   background: current
-                    ? (isLight ? "rgba(0,122,255,0.06)" : "rgba(0,122,255,0.12)")
+                    ? (isLight ? "rgba(59,92,140,0.06)" : "rgba(59,92,140,0.12)")
                     : subtle,
-                  border: current ? `1px solid ${isLight ? "rgba(0,122,255,0.2)" : "rgba(0,122,255,0.3)"}` : "1px solid transparent",
+                  border: current ? `1px solid ${isLight ? "rgba(59,92,140,0.2)" : "rgba(59,92,140,0.3)"}` : "1px solid transparent",
                   opacity: locked ? 0.4 : 1
                 }}
               >
@@ -393,7 +393,7 @@ export function HeroDashboardPreview({ lang }: { lang: Language }) {
       {/* top nav mockup */}
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
         {(ko ? ["홈", "현재 단계", "로드맵", "펀딩", "분석"] : ["Home", "Current", "Roadmap", "Funding", "Analytics"]).map((tab, i) => (
-          <div key={tab} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: i === 0 ? "rgba(0,122,255,0.15)" : "rgba(255,255,255,0.05)", color: i === 0 ? "#5B8CFF" : "rgba(255,255,255,0.4)" }}>
+          <div key={tab} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: i === 0 ? "rgba(59,92,140,0.15)" : "rgba(255,255,255,0.05)", color: i === 0 ? "#5B8CFF" : "rgba(255,255,255,0.4)" }}>
             {tab}
           </div>
         ))}
@@ -418,7 +418,7 @@ export function HeroDashboardPreview({ lang }: { lang: Language }) {
           </div>
           {/* now / next */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.15)" }}>
+            <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(59,92,140,0.08)", border: "1px solid rgba(59,92,140,0.15)" }}>
               <div style={{ fontSize: 10, color: "#5B8CFF", fontWeight: 600, marginBottom: 4 }}>NOW</div>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{ko ? "인허가 확인" : "Verify Permits"}</div>
             </div>
@@ -508,7 +508,7 @@ export function MockupOnboarding({ card, muted, subtle, accent, isLight, lang }:
             <div key={opt.v} style={{
               padding: "14px 14px",
               borderRadius: 12,
-              background: i === 1 ? (isLight ? "rgba(0,122,255,0.06)" : "rgba(0,122,255,0.12)") : subtle,
+              background: i === 1 ? (isLight ? "rgba(59,92,140,0.06)" : "rgba(59,92,140,0.12)") : subtle,
               border: i === 1 ? `1.5px solid ${accent}` : `1px solid ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"}`,
               cursor: "pointer"
             }}>
@@ -588,7 +588,7 @@ export function MockupMarket({ card, muted, subtle, accent, isLight, lang }: Moc
                 </div>
                 <div style={{
                   fontSize: 13, fontWeight: 700, padding: "4px 10px", borderRadius: 8,
-                  background: a.grade.startsWith("A") ? (isLight ? "rgba(52,199,89,0.1)" : "rgba(52,199,89,0.15)") : (isLight ? "rgba(0,122,255,0.08)" : "rgba(0,122,255,0.12)"),
+                  background: a.grade.startsWith("A") ? (isLight ? "rgba(52,199,89,0.1)" : "rgba(52,199,89,0.15)") : (isLight ? "rgba(59,92,140,0.08)" : "rgba(59,92,140,0.12)"),
                   color: a.grade.startsWith("A") ? "#34c759" : accent
                 }}>
                   {a.grade}

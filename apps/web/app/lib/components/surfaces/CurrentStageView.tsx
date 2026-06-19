@@ -284,7 +284,7 @@ export function CurrentStageView() {
                   <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>
                     {ko ? `${new Date().getMonth() + 1}월 현황` : `${new Date().toLocaleString("en", { month: "long" })} status`}
                   </div>
-                  <button type="button" style={{ fontSize: "12px", color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: 0 }} onClick={() => navigateToSurface("analytics")}>
+                  <button type="button" style={{ fontSize: "12px", color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", padding: 0 }} onClick={() => navigateToSurface("analytics")}>
                     {ko ? "전체 보기 →" : "Full view →"}
                   </button>
                 </div>
@@ -426,7 +426,7 @@ export function CurrentStageView() {
                     style={{
                       padding: "13px 28px", borderRadius: "999px",
                       // 2026-05-19: 운영 대시보드의 메인 액센트 (PALETTE.MIDNIGHT) 로 통일.
-                      // 종전 #007aff (애플 블루) 는 운영 대시보드 톤과 어울리지 않았음.
+                      // 종전 #3b5c8c (애플 블루) 는 운영 대시보드 톤과 어울리지 않았음.
                       background: "#191970", color: "#fff",
                       border: "none", fontSize: "15px", fontWeight: 700,
                       cursor: "pointer", letterSpacing: "-0.2px",
@@ -1272,7 +1272,7 @@ export function CurrentStageView() {
                             <div>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ fontSize: "14px", fontWeight: 560, color: "var(--text)", letterSpacing: "-0.2px" }}>{fund.name}</span>
-                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(0,122,255)" : fund.tag === "긴급" ? "rgb(255,59,48)" : "rgb(52,199,89)", background: fund.tag === "청년" ? "rgba(0,122,255,0.1)" : fund.tag === "긴급" ? "rgba(182,76,76,0.1)" : "rgba(52,199,89,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
+                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(0,122,255)" : fund.tag === "긴급" ? "rgb(255,59,48)" : "rgb(52,199,89)", background: fund.tag === "청년" ? "rgba(59,92,140,0.1)" : fund.tag === "긴급" ? "rgba(182,76,76,0.1)" : "rgba(52,199,89,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
                               </div>
                               <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.4)", marginTop: "2px" }}>{fund.target}</div>
                             </div>
@@ -1419,11 +1419,11 @@ export function CurrentStageView() {
                         </button>
                         {knowledgeQaError && <div style={styles.warningText}>{knowledgeQaError}</div>}
                         {(knowledgeQaText || knowledgeQaStatus === "loading") && (
-                          <div style={{ borderRadius: "14px", background: "rgba(0,122,255,0.04)", border: "0.5px solid rgba(0,122,255,0.15)", padding: "14px 16px" }}>
+                          <div style={{ borderRadius: "14px", background: "rgba(59,92,140,0.04)", border: "0.5px solid rgba(59,92,140,0.15)", padding: "14px 16px" }}>
                             <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(0,80,200,0.6)", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: "8px" }}>AI 답변 · 2026 지식베이스 기반</div>
                             <div style={{ fontSize: "14px", color: "rgba(0,0,0,0.75)", lineHeight: 1.7, whiteSpace: "pre-wrap" as const }}>
                               {knowledgeQaText}
-                              {knowledgeQaStatus === "loading" && <span style={{ display: "inline-block", width: "2px", height: "14px", background: "rgba(0,122,255,0.7)", marginLeft: "2px", verticalAlign: "text-bottom" }} />}
+                              {knowledgeQaStatus === "loading" && <span style={{ display: "inline-block", width: "2px", height: "14px", background: "rgba(59,92,140,0.7)", marginLeft: "2px", verticalAlign: "text-bottom" }} />}
                             </div>
                           </div>
                         )}

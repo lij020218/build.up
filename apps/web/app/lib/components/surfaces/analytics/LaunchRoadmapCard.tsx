@@ -62,7 +62,7 @@ export function LaunchRoadmapCard() {
     </div>
   );
   const chip = (text: string, active = true) => (
-    <span key={text} style={{ display: "inline-block", fontSize: "11px", fontWeight: 500, color: active ? "#007aff" : "var(--muted)", background: active ? "rgba(0,122,255,0.08)" : "rgba(0,0,0,0.05)", borderRadius: "6px", padding: "3px 8px" }}>
+    <span key={text} style={{ display: "inline-block", fontSize: "11px", fontWeight: 500, color: active ? "#3b5c8c" : "var(--muted)", background: active ? "rgba(59,92,140,0.08)" : "rgba(0,0,0,0.05)", borderRadius: "6px", padding: "3px 8px" }}>
       {text}
     </span>
   );
@@ -410,12 +410,12 @@ export function LaunchRoadmapCard() {
               key={label}
               onClick={() => goToStage(stageId)}
               style={{ ...tileStyle, border: "none", cursor: "pointer", textAlign: "left" as const, display: "block", width: "100%", position: "relative" as const, transition: "background 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,122,255,0.06)")}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(59,92,140,0.06)")}
               onMouseLeave={e => (e.currentTarget.style.background = "rgba(0,0,0,0.03)")}
             >
               <div style={tileLabelStyle}>{label}</div>
               <div style={tileValueStyle(value === notSet)}>{value}</div>
-              <div style={{ position: "absolute" as const, top: "9px", right: "9px", fontSize: "10px", fontWeight: 600, color: "rgba(0,122,255,0.6)" }}>
+              <div style={{ position: "absolute" as const, top: "9px", right: "9px", fontSize: "10px", fontWeight: 600, color: "rgba(59,92,140,0.6)" }}>
                 {ko ? "수정 →" : "Edit →"}
               </div>
             </button>
@@ -432,7 +432,7 @@ export function LaunchRoadmapCard() {
             </div>
             <button
               onClick={() => router.push(`/guides?panel=finance`)}
-              style={{ fontSize: "11px", color: "#007aff", fontWeight: 600, background: "rgba(0,122,255,0.08)", border: "none", borderRadius: "8px", padding: "4px 10px", cursor: "pointer" }}
+              style={{ fontSize: "11px", color: "#3b5c8c", fontWeight: 600, background: "rgba(59,92,140,0.08)", border: "none", borderRadius: "8px", padding: "4px 10px", cursor: "pointer" }}
             >
               {ko ? "다시 계산" : "Recalculate"}
             </button>
@@ -502,10 +502,10 @@ export function LaunchRoadmapCard() {
             onClick={onToggle}
             style={{
               display: "inline-block", fontSize: "11px", fontWeight: 600, border: "none", cursor: "pointer",
-              color: active ? "#007aff" : "var(--muted)",
-              background: active ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.05)",
+              color: active ? "#3b5c8c" : "var(--muted)",
+              background: active ? "rgba(59,92,140,0.1)" : "rgba(0,0,0,0.05)",
               borderRadius: "7px", padding: "5px 10px",
-              outline: active ? "1.5px solid rgba(0,122,255,0.3)" : "none",
+              outline: active ? "1.5px solid rgba(59,92,140,0.3)" : "none",
               transition: "all 0.15s"
             }}
           >
@@ -578,11 +578,11 @@ export function LaunchRoadmapCard() {
           <span style={{ fontSize: "15px", color: "var(--muted)", fontWeight: 500 }}>/ {totalStages}{ko ? "단계 완료" : " stages"}</span>
         </div>
         <div style={{ height: "6px", borderRadius: "4px", background: "rgba(0,0,0,0.08)", overflow: "hidden" as const }}>
-          <div style={{ height: "100%", borderRadius: "4px", background: completedCount >= totalStages ? "#1d3557" : "#007aff", width: `${progressPct}%`, transition: "width 0.4s ease" }} />
+          <div style={{ height: "100%", borderRadius: "4px", background: completedCount >= totalStages ? "#1d3557" : "#3b5c8c", width: `${progressPct}%`, transition: "width 0.4s ease" }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
           <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "창업 준비 시작" : "Start"}</span>
-          <span style={{ fontSize: "12px", fontWeight: 700, color: completedCount >= totalStages ? "#1d3557" : "#007aff" }}>{progressPct}%</span>
+          <span style={{ fontSize: "12px", fontWeight: 700, color: completedCount >= totalStages ? "#1d3557" : "#3b5c8c" }}>{progressPct}%</span>
           <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "개업 완료" : "Open"}</span>
         </div>
       </article>

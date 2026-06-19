@@ -86,7 +86,7 @@ export function DailySalesInputCard() {
               <div key={bar.date} style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", flex: 1, justifyContent: "flex-end" }}>
                 <div style={{
                   fontSize: "9px", fontWeight: 700, marginBottom: "3px", lineHeight: 1,
-                  color: bar.isToday ? "#007aff" : bar.sales > 0 ? "rgba(0,0,0,0.45)" : "transparent",
+                  color: bar.isToday ? "#3b5c8c" : bar.sales > 0 ? "rgba(0,0,0,0.45)" : "transparent",
                   minHeight: "10px",
                 }}>
                   {bar.sales > 0 ? `${Math.round(bar.sales / 10000)}` : ""}
@@ -96,13 +96,13 @@ export function DailySalesInputCard() {
                     width: "100%",
                     height: bar.sales > 0 ? `${barH}px` : "2px",
                     borderRadius: "5px 5px 2px 2px",
-                    background: bar.isToday ? "#007aff" : bar.sales > 0 ? "rgba(0,122,255,0.16)" : "rgba(0,0,0,0.04)",
+                    background: bar.isToday ? "#3b5c8c" : bar.sales > 0 ? "rgba(59,92,140,0.16)" : "rgba(0,0,0,0.04)",
                     transition: "height 0.4s cubic-bezier(0.25,0.46,0.45,0.94)",
                   }} />
                 </div>
                 <div style={{
                   fontSize: "10px", fontWeight: bar.isToday ? 700 : 500, marginTop: "5px",
-                  color: bar.isToday ? "#007aff" : "var(--muted)",
+                  color: bar.isToday ? "#3b5c8c" : "var(--muted)",
                 }}>
                   {bar.label}
                 </div>
@@ -144,7 +144,7 @@ export function DailySalesInputCard() {
               setDailyCustomersInput(String(todayEntry.customers));
             }}
               aria-label={ko ? "\uc624\ub298 \ub9e4\ucd9c \uc218\uc815" : "Edit today's sales"}
-              style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>
+              style={{ fontSize: "13px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer" }}>
               {ko ? "\uc218\uc815" : "Edit"}
             </button>
           </div>

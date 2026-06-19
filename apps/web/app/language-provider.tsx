@@ -96,8 +96,8 @@ export function LanguageProvider(props: { children: ReactNode }) {
               position: "relative",
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               width: "36px", height: "36px", borderRadius: "999px",
-              border: notifOpen ? "1px solid rgba(0,122,255,0.30)" : "1px solid rgba(17,17,17,0.10)",
-              background: notifOpen ? "rgba(0,122,255,0.08)" : "rgba(255,255,255,0.86)",
+              border: notifOpen ? "1px solid rgba(59,92,140,0.30)" : "1px solid rgba(17,17,17,0.10)",
+              background: notifOpen ? "rgba(59,92,140,0.08)" : "rgba(255,255,255,0.86)",
               backdropFilter: "blur(12px)",
               cursor: "pointer",
             }}

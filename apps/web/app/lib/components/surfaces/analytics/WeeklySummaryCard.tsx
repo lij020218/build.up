@@ -68,7 +68,7 @@ export function WeeklySummaryCard() {
           <div style={{ background: "rgba(0,0,0,0.03)", borderRadius: "12px", padding: "12px 14px" }}>
             <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>{ko ? "\ucd5c\uace0 \ub9e4\ucd9c\uc77c" : "Best day"}</div>
             <div style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "-0.2px" }}>{bestLabel}</div>
-            <div style={{ fontSize: "12px", color: "#007aff", fontWeight: 600 }}>{fmtW(best.sales)}</div>
+            <div style={{ fontSize: "12px", color: "#3b5c8c", fontWeight: 600 }}>{fmtW(best.sales)}</div>
           </div>
         </div>
       </div>

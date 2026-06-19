@@ -177,7 +177,7 @@ export function AnalyticsSurface() {
                   <div style={{ height: "3px", borderRadius: "2px", background: "rgba(0,0,0,0.07)", overflow: "hidden", marginBottom: "8px" }}>
                     <div style={{
                       height: "100%", borderRadius: "2px",
-                      background: progressPct >= 100 ? "#1d3557" : "#007aff",
+                      background: progressPct >= 100 ? "#1d3557" : "#3b5c8c",
                       width: `${progressPct}%`, transition: "width 0.4s ease",
                     }} />
                   </div>
@@ -187,7 +187,7 @@ export function AnalyticsSurface() {
                         ? (ko ? "로드맵 완료 · 운영 중" : "Roadmap done · Operating")
                         : (ko ? `${completedCount}/${pathTotalStages} 단계` : `${completedCount} of ${pathTotalStages} stages`)}
                     </span>
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#007aff" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#3b5c8c" }}>
                       {ko ? "자세히 보기" : "View details"} ›
                     </span>
                   </div>
@@ -234,7 +234,7 @@ export function AnalyticsSurface() {
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "3px",
                   background: "none", border: "none", cursor: "pointer",
-                  fontSize: "15px", fontWeight: 400, color: "#007aff",
+                  fontSize: "15px", fontWeight: 400, color: "#3b5c8c",
                   padding: "0", marginBottom: "20px",
                 }}
               >
@@ -288,7 +288,7 @@ export function AnalyticsSurface() {
               {showMonthlyCostPrompt && (() => {
                 const lastSnap = costHistory.length > 0 ? (costHistory as { month: string; ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }[]).sort((a, b) => b.month.localeCompare(a.month))[0] : null;
                 return (
-                  <article style={{ ...styles.card, padding: "18px 22px", background: "linear-gradient(135deg, rgba(0,122,255,0.04), rgba(52,199,89,0.04))", border: "1px solid rgba(0,122,255,0.12)" }}>
+                  <article style={{ ...styles.card, padding: "18px 22px", background: "linear-gradient(135deg, rgba(59,92,140,0.04), rgba(52,199,89,0.04))", border: "1px solid rgba(59,92,140,0.12)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
                         <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)", marginBottom: "4px" }}>
@@ -422,7 +422,7 @@ export function AnalyticsSurface() {
                                 {ko ? prog.benefit.ko : prog.benefit.en}
                               </div>
                               {prog.requiredDocs && prog.requiredDocs.length > 0 && (
-                                <div style={{ fontSize: "10px", color: "rgba(0,122,255,0.7)", marginTop: "2px" }}>
+                                <div style={{ fontSize: "10px", color: "rgba(59,92,140,0.7)", marginTop: "2px" }}>
                                   {ko ? "서류: " : "Docs: "}{prog.requiredDocs.map(d => ko ? d.ko : d.en).join(" · ")}
                                 </div>
                               )}
@@ -436,7 +436,7 @@ export function AnalyticsSurface() {
                     </div>
                     <div style={{ padding: "0 20px 14px" }}>
                       <button type="button" onClick={() => navigateToSurface("guides")}
-                        style={{ fontSize: "12px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                        style={{ fontSize: "12px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                         {ko ? "전체 펀딩 보기 →" : "View all funding →"}
                       </button>
                     </div>
@@ -513,7 +513,7 @@ export function AnalyticsSurface() {
                           const active = selectedPlatform === p.id;
                           return (
                             <button key={p.id} type="button" onClick={() => setSelectedPlatform(p.id)}
-                              style={{ fontSize: "12px", fontWeight: active ? 700 : 500, padding: "6px 14px", borderRadius: "12px", border: active ? "1px solid #007aff" : "1px solid rgba(0,0,0,0.10)", background: active ? "rgba(0,122,255,0.08)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
+                              style={{ fontSize: "12px", fontWeight: active ? 700 : 500, padding: "6px 14px", borderRadius: "12px", border: active ? "1px solid #3b5c8c" : "1px solid rgba(0,0,0,0.10)", background: active ? "rgba(59,92,140,0.08)" : "transparent", color: active ? "#3b5c8c" : "var(--muted)", cursor: "pointer" }}>
                               {p.name}
                             </button>
                           );
@@ -528,7 +528,7 @@ export function AnalyticsSurface() {
                           <div style={{ padding: "10px 14px", borderRadius: "12px", background: "rgba(0,0,0,0.03)", marginTop: "4px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                               <span style={{ fontSize: "12px", color: "var(--muted)" }}>{ko ? "수수료율" : "Fee rate"}</span>
-                              <span style={{ fontSize: "13px", fontWeight: 700, color: "#007aff" }}>{p.rate}%</span>
+                              <span style={{ fontSize: "13px", fontWeight: 700, color: "#3b5c8c" }}>{p.rate}%</span>
                             </div>
                             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                               <input type="text" inputMode="numeric" value={monthlySales}
@@ -553,7 +553,7 @@ export function AnalyticsSurface() {
                           const active = selectedCourier === c.id;
                           return (
                             <button key={c.id} type="button" onClick={() => setSelectedCourier(c.id)}
-                              style={{ fontSize: "12px", fontWeight: active ? 700 : 500, padding: "6px 14px", borderRadius: "12px", border: active ? "1px solid #007aff" : "1px solid rgba(0,0,0,0.10)", background: active ? "rgba(0,122,255,0.08)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
+                              style={{ fontSize: "12px", fontWeight: active ? 700 : 500, padding: "6px 14px", borderRadius: "12px", border: active ? "1px solid #3b5c8c" : "1px solid rgba(0,0,0,0.10)", background: active ? "rgba(59,92,140,0.08)" : "transparent", color: active ? "#3b5c8c" : "var(--muted)", cursor: "pointer" }}>
                               {c.name}
                             </button>
                           );
@@ -629,7 +629,7 @@ export function AnalyticsSurface() {
 
                 const allEvents = [
                   ...(hasEmployees ? [
-                    { label: ko ? "원천세 납부" : "Withholding tax", sub: ko ? "매월 10일" : "Monthly 10th", date: withholdingDate, icon: "원", color: "#007aff", alwaysShow: false, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
+                    { label: ko ? "원천세 납부" : "Withholding tax", sub: ko ? "매월 10일" : "Monthly 10th", date: withholdingDate, icon: "원", color: "#3b5c8c", alwaysShow: false, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
                     { label: ko ? "4대보험료 납부" : "Social insurance", sub: ko ? "매월 10일" : "Monthly 10th", date: insuranceDate, icon: "4", color: "#1d3557", alwaysShow: false, url: "https://www.4insure.or.kr", urlLabel: ko ? "4대보험 포털" : "4 Insurance" },
                   ] : []),
                   { label: ko ? "부가세 확정신고" : "VAT filing", sub: vatSub, date: vatDate, icon: "부", color: "#191970", alwaysShow: true, url: "https://www.hometax.go.kr", urlLabel: ko ? "홈택스 신고" : "File on HomeTax" },
@@ -673,7 +673,7 @@ export function AnalyticsSurface() {
                                 <button key={type} type="button"
                                   role="radio" aria-checked={active}
                                   onClick={() => saveTaxSettings({ ...taxSettings, vatType: type })}
-                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#007aff" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(0,122,255,0.10)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
+                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#3b5c8c" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(59,92,140,0.10)" : "transparent", color: active ? "#3b5c8c" : "var(--muted)", cursor: "pointer" }}>
                                   {label}
                                 </button>
                               );
@@ -691,7 +691,7 @@ export function AnalyticsSurface() {
                                 <button key={String(v)} type="button"
                                   role="radio" aria-checked={active}
                                   onClick={() => saveTaxSettings({ ...taxSettings, hasEmployees: v })}
-                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#007aff" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(0,122,255,0.10)" : "transparent", color: active ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
+                                  style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${active ? "#3b5c8c" : "rgba(0,0,0,0.12)"}`, background: active ? "rgba(59,92,140,0.10)" : "transparent", color: active ? "#3b5c8c" : "var(--muted)", cursor: "pointer" }}>
                                   {label}
                                 </button>
                               );
@@ -742,7 +742,7 @@ export function AnalyticsSurface() {
                       {[
                         { label: ko ? "홈택스" : "HomeTax", url: "https://www.hometax.go.kr", color: "#5856d6" },
                         { label: ko ? "4대보험 포털" : "4 Insurance", url: "https://www.4insure.or.kr", color: "#1d3557" },
-                        { label: ko ? "근로복지공단" : "COMWEL", url: "https://www.comwel.or.kr", color: "#007aff" },
+                        { label: ko ? "근로복지공단" : "COMWEL", url: "https://www.comwel.or.kr", color: "#3b5c8c" },
                         { label: ko ? "캐시노트" : "CashNote", url: "https://cashnote.kr", color: "#191970" },
                       ].map(link => (
                         <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" style={{
@@ -857,7 +857,7 @@ export function AnalyticsSurface() {
                                   <div style={{ fontSize: "9px", fontWeight: 600, color: isLatest ? "var(--text)" : "var(--muted)" }}>
                                     {fmtD(totals[i])}
                                   </div>
-                                  <div style={{ width: "100%", height: `${h}px`, borderRadius: "4px", background: isLatest ? "#007aff" : "rgba(0,122,255,0.15)" }} />
+                                  <div style={{ width: "100%", height: `${h}px`, borderRadius: "4px", background: isLatest ? "#3b5c8c" : "rgba(59,92,140,0.15)" }} />
                                   <div style={{ fontSize: "9px", color: "var(--muted)" }}>{s.month.slice(5)}{ko ? "월" : ""}</div>
                                 </div>
                               );
@@ -924,7 +924,7 @@ export function AnalyticsSurface() {
                           {ko ? "고정 지출 납부일" : "Fixed expense due dates"}
                         </div>
                         <button type="button" onClick={() => { setFexpFormOpen(true); setFexpEditId(null); setFexpName(""); setFexpAmount(""); setFexpDueDay(""); setFexpCategory("other"); }}
-                          style={{ fontSize: "12px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>
+                          style={{ fontSize: "12px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer" }}>
                           {ko ? "+ 항목 추가" : "+ Add"}
                         </button>
                       </div>
@@ -971,7 +971,7 @@ export function AnalyticsSurface() {
 
                       {/* 고정 지출 추가 폼 */}
                       {fexpFormOpen && (
-                        <div style={{ marginTop: "10px", padding: "12px", borderRadius: "12px", background: "rgba(0,122,255,0.03)", border: "1px solid rgba(0,122,255,0.08)" }}>
+                        <div style={{ marginTop: "10px", padding: "12px", borderRadius: "12px", background: "rgba(59,92,140,0.03)", border: "1px solid rgba(59,92,140,0.08)" }}>
                           <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
                             <input type="text" placeholder={ko ? "항목명 (예: 대출이자)" : "Name"} value={fexpName} onChange={e => setFexpName(e.target.value)}
                               aria-label={ko ? "고정 지출 항목명" : "Fixed expense name"}

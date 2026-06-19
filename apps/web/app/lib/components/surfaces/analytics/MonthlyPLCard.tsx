@@ -161,12 +161,12 @@ export function MonthlyPLCard() {
               <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", letterSpacing: "0.03em" }}>
                 {ko ? "\uc190\uc775\ubd84\uae30\uc810 \ub2ec\uc131\ub960" : "Break-even progress"}
               </span>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: bepProgress >= 100 ? "#1d3557" : "#007aff" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: bepProgress >= 100 ? "#1d3557" : "#3b5c8c" }}>
                 {bepProgress.toFixed(0)}%{bepProgress >= 100 ? (ko ? " \xb7 \ub2ec\uc131 \u2713" : " \xb7 Hit \u2713") : ""}
               </span>
             </div>
             <div style={{ height: "5px", borderRadius: "3px", background: "rgba(0,0,0,0.07)", overflow: "hidden" as const }}>
-              <div style={{ height: "100%", borderRadius: "3px", width: `${Math.min(100, bepProgress)}%`, background: bepProgress >= 100 ? "#1d3557" : "#007aff", transition: "width 0.5s ease" }} />
+              <div style={{ height: "100%", borderRadius: "3px", width: `${Math.min(100, bepProgress)}%`, background: bepProgress >= 100 ? "#1d3557" : "#3b5c8c", transition: "width 0.5s ease" }} />
             </div>
           </div>
           {/* \ube44\uc728 2x2 \uadf8\ub9ac\ub4dc */}

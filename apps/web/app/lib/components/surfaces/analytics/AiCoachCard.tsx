@@ -112,7 +112,7 @@ export function AiCoachCard() {
           </div>
         </div>
         <button type="button" onClick={() => { void fetchAiActions(true); }} disabled={aiActionsLoading}
-          style={{ fontSize: "11px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", opacity: aiActionsLoading ? 0.4 : 1 }}>
+          style={{ fontSize: "11px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", opacity: aiActionsLoading ? 0.4 : 1 }}>
           {aiActionsLoading ? (ko ? "\ubd84\uc11d \uc911..." : "Loading...") : (ko ? "\uc0c8\ub85c\uace0\uce68" : "Refresh")}
         </button>
       </div>
@@ -153,7 +153,7 @@ export function AiCoachCard() {
           {/* \ud55c \uc904 \uc778\uc0ac\uc774\ud2b8 */}
           {aiActions.insight && (
             <div style={{ padding: "0 22px 12px" }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", lineHeight: 1.5 }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#3b5c8c", lineHeight: 1.5 }}>
                 {aiActions.insight}
               </div>
             </div>
@@ -221,8 +221,8 @@ export function AiCoachCard() {
                 })()}
                 {/* \uc0c1\uc704 \ub9e4\uc7a5 \ube44\uacb0 (\ud504\ub79c\ucc28\uc774\uc988\ub9cc) */}
                 {fBench?.operationalInsights?.[0] && (
-                  <div style={{ marginTop: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(0,122,255,0.03)", border: "0.5px solid rgba(0,122,255,0.08)" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#007aff", marginBottom: "2px" }}>
+                  <div style={{ marginTop: "8px", padding: "8px 10px", borderRadius: "10px", background: "rgba(59,92,140,0.03)", border: "0.5px solid rgba(59,92,140,0.08)" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#3b5c8c", marginBottom: "2px" }}>
                       {ko ? "\uc0c1\uc704 \ub9e4\uc7a5 \ube44\uacb0" : "Top store insight"}
                     </div>
                     <div style={{ fontSize: "11px", color: "var(--text)", lineHeight: 1.4 }}>
@@ -242,15 +242,15 @@ export function AiCoachCard() {
               <div key={i} style={{
                 display: "flex", flexDirection: "column" as const, gap: "10px",
                 padding: "12px 14px", borderRadius: "14px",
-                background: action.priority === "high" ? "rgba(0,122,255,0.04)" : "rgba(0,0,0,0.02)",
-                border: action.priority === "high" ? "0.5px solid rgba(0,122,255,0.1)" : "0.5px solid rgba(0,0,0,0.04)",
+                background: action.priority === "high" ? "rgba(59,92,140,0.04)" : "rgba(0,0,0,0.02)",
+                border: action.priority === "high" ? "0.5px solid rgba(59,92,140,0.1)" : "0.5px solid rgba(0,0,0,0.04)",
               }}>
                 <div style={{ display: "flex", gap: "12px" }}>
                   <div style={{
                     width: "24px", height: "24px", borderRadius: "8px", flexShrink: 0,
-                    background: action.priority === "high" ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.06)",
+                    background: action.priority === "high" ? "rgba(59,92,140,0.1)" : "rgba(0,0,0,0.06)",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "12px", fontWeight: 700, color: action.priority === "high" ? "#007aff" : "var(--muted)",
+                    fontSize: "12px", fontWeight: 700, color: action.priority === "high" ? "#3b5c8c" : "var(--muted)",
                   }}>
                     {i + 1}
                   </div>
@@ -324,7 +324,7 @@ export function AiCoachCard() {
               </div>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
                 {aiActions.crisisActions.map((action, i) => {
-                  const diffColor = action.difficulty === "easy" ? "#1d3557" : action.difficulty === "hard" ? "#191970" : "#007aff";
+                  const diffColor = action.difficulty === "easy" ? "#1d3557" : action.difficulty === "hard" ? "#191970" : "#3b5c8c";
                   const diffLabel = action.difficulty === "easy" ? (ko ? "\uc26c\uc6c0" : "Easy") : action.difficulty === "hard" ? (ko ? "\uc5b4\ub824\uc6c0" : "Hard") : (ko ? "\ubcf4\ud1b5" : "Medium");
                   const feature = action.feature ? FEATURES_BY_ID[action.feature] : undefined;
                   return (

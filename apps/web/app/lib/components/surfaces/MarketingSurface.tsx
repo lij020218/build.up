@@ -346,12 +346,12 @@ export function MarketingSurface() {
 
       {/* ━━━ 섹션 2: 내 마케팅 성과 ━━━ */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "10px" }}>
-        <div style={{ ...kpiCard, borderColor: "rgba(0,122,255,0.1)" }}>
+        <div style={{ ...kpiCard, borderColor: "rgba(59,92,140,0.1)" }}>
           <div style={kpiLabel}>
             {ko ? "이달 마케팅 지출" : "SPEND MTD"}
           </div>
           {totalSpend > 0 ? (
-            <div style={{ ...kpiValue, color: "#007aff" }}>{fmt(totalSpend)}</div>
+            <div style={{ ...kpiValue, color: "#3b5c8c" }}>{fmt(totalSpend)}</div>
           ) : (
             <div style={kpiHint}>{ko ? "캠페인 추가 시 집계" : "Add campaigns to track"}</div>
           )}
@@ -396,7 +396,7 @@ export function MarketingSurface() {
             </div>
           </div>
           <button type="button" onClick={() => mkt.setCampFormOpen(!mkt.campFormOpen)} style={{
-            fontSize: "12px", fontWeight: 640, color: "#007aff", background: "none", border: "none", cursor: "pointer",
+            fontSize: "12px", fontWeight: 640, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer",
           }}>
             {mkt.campFormOpen ? (ko ? "닫기" : "Close") : (ko ? "+ 캠페인 추가" : "+ Add Campaign")}
           </button>
@@ -466,7 +466,7 @@ export function MarketingSurface() {
         ) : !mkt.campFormOpen ? (
           <button type="button" onClick={() => mkt.setCampFormOpen(true)} style={{
             width: "100%", padding: "16px", borderRadius: "14px",
-            border: "1px dashed rgba(0,122,255,0.15)", background: "transparent",
+            border: "1px dashed rgba(59,92,140,0.15)", background: "transparent",
             cursor: "pointer", fontSize: "13px", color: "var(--muted)", fontWeight: 500,
             marginBottom: "12px",
           }}>
@@ -478,7 +478,7 @@ export function MarketingSurface() {
         {mkt.campFormOpen && (
           <div style={{
             padding: "14px", borderRadius: "14px",
-            background: "rgba(0,122,255,0.02)", border: "1px solid rgba(0,122,255,0.08)",
+            background: "rgba(59,92,140,0.02)", border: "1px solid rgba(59,92,140,0.08)",
             display: "flex", flexDirection: "column", gap: "8px",
           }}>
             <select value={mkt.campChannel} onChange={(e) => mkt.setCampChannel(e.target.value as MarketingChannel)}
@@ -499,7 +499,7 @@ export function MarketingSurface() {
             </div>
             <button type="button" onClick={handleAddCampaign} disabled={!mkt.campSpend} style={{
               padding: "10px", borderRadius: "10px", border: "none", cursor: "pointer",
-              background: mkt.campSpend ? "linear-gradient(135deg, #007aff 0%, #a855f7 100%)" : "rgba(15,23,42,0.06)",
+              background: mkt.campSpend ? "linear-gradient(135deg, #3b5c8c 0%, #a855f7 100%)" : "rgba(15,23,42,0.06)",
               color: mkt.campSpend ? "#fff" : "rgba(15,23,42,0.3)",
               fontSize: "13px", fontWeight: 650,
             }}>
@@ -514,10 +514,10 @@ export function MarketingSurface() {
 
 // ─── 공통 스타일 (앱 전역 토큰 기반 · Apple HIG) ───
 // 기준: styles.card(radius 28px), AnalyticsSurface(KPI radius 18px)
-// 액센트: 블루 #007aff(중립 포커스), 미드나잇 네이비 #1d3557/#191970, 벽돌 danger #b64c4c.
+// 액센트: 블루 #3b5c8c(중립 포커스), 미드나잇 네이비 #1d3557/#191970, 벽돌 danger #b64c4c.
 // 신호등 컬러 금지 — 성공/효과는 네이비 농담으로 표현(초록 사용 X).
 
-const COLOR_ACCENT = "#007aff";           // Apple 포커스·코칭 강조
+const COLOR_ACCENT = "#3b5c8c";           // Apple 포커스·코칭 강조
 const COLOR_SUCCESS = "#1d3557";          // 미드나잇 네이비 — 성공 사례·효과 (초록 아님)
 const COLOR_NEUTRAL_TEXT = "var(--text)"; // #111
 const COLOR_NEUTRAL_MUTED = "var(--muted)"; // #5b616e
@@ -547,7 +547,7 @@ function MarketingFocus({
     <article style={solidCard}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "14px" }}>
         <div>
-          <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(0,122,255,0.75)", marginBottom: "2px" }}>
+          <div style={{ fontSize: "10px", fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(59,92,140,0.75)", marginBottom: "2px" }}>
             {ko ? "이번 주 마케팅" : "This Week"}
           </div>
           <div style={{ fontSize: "17px", fontWeight: 750, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -570,7 +570,7 @@ function MarketingFocus({
             cursor: canRefresh && !loading ? "pointer" : "not-allowed", opacity: canRefresh && !loading ? 1 : 0.45,
           }}
         >
-          <RefreshCw size={14} strokeWidth={2} color="#007aff" style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
+          <RefreshCw size={14} strokeWidth={2} color="#3b5c8c" style={loading ? { animation: "spin 1s linear infinite" } : undefined} />
         </button>
       </div>
 
@@ -597,7 +597,7 @@ function MarketingFocus({
 
       {hero && (
         <>
-          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#007aff", margin: "2px 0 8px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#3b5c8c", margin: "2px 0 8px" }}>
             {ko ? "이번 주 핵심 1가지" : "Top priority this week"}
           </div>
           <PlayBlock p={hero} ko={ko} done={doneTitles.has(hero.title)} onToggleDone={onToggleDone} />
@@ -632,7 +632,7 @@ function MarketingFocus({
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "14px", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
           <span style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "var(--muted)" }}>{ko ? "출처" : "Sources"}</span>
           {sources.slice(0, 5).map((s, i) => (
-            <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: "#007aff", textDecoration: "none", background: "rgba(0,122,255,0.06)", padding: "2px 8px", borderRadius: "6px" }}>{s.name}</a>
+            <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", color: "#3b5c8c", textDecoration: "none", background: "rgba(59,92,140,0.06)", padding: "2px 8px", borderRadius: "6px" }}>{s.name}</a>
           ))}
         </div>
       )}
@@ -655,7 +655,7 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
     return m ? (ko ? m.label.ko : m.label.en) : c;
   };
   return (
-    <div style={{ marginBottom: "16px", padding: "12px 14px", borderRadius: "14px", background: "rgba(0,122,255,0.03)", border: "1px solid rgba(0,122,255,0.08)" }}>
+    <div style={{ marginBottom: "16px", padding: "12px 14px", borderRadius: "14px", background: "rgba(59,92,140,0.03)", border: "1px solid rgba(59,92,140,0.08)" }}>
       <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--muted)", marginBottom: "8px" }}>
         {ko ? "채널 우선순위 — 한 번에 하나씩" : "Channel priority — one at a time"}
       </div>
@@ -663,8 +663,8 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
         {top.map((c) => {
           const done = activeSet.has(c);
           const isNext = c === next;
-          const color = done ? "#1d3557" : isNext ? "#007aff" : "var(--muted)";
-          const bg = done ? "rgba(25,25,112,0.08)" : isNext ? "rgba(0,122,255,0.10)" : "rgba(17,17,17,0.03)";
+          const color = done ? "#1d3557" : isNext ? "#3b5c8c" : "var(--muted)";
+          const bg = done ? "rgba(25,25,112,0.08)" : isNext ? "rgba(59,92,140,0.10)" : "rgba(17,17,17,0.03)";
           return (
             <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: 600, color, background: bg, border: `1px solid ${color}22`, padding: "4px 9px", borderRadius: "8px" }}>
               {done ? "✓" : isNext ? "→" : ""} {labelOf(c)}
@@ -674,7 +674,7 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
       </div>
       {next && (
         <div style={{ fontSize: "12px", color: "var(--text)", marginTop: "9px", lineHeight: 1.5 }}>
-          <b style={{ color: "#007aff", fontWeight: 680 }}>{ko ? "다음: " : "Next: "}</b>
+          <b style={{ color: "#3b5c8c", fontWeight: 680 }}>{ko ? "다음: " : "Next: "}</b>
           {ko ? `${labelOf(next)}부터 집중해보세요. 모든 채널 동시에 X.` : `Focus on ${labelOf(next)} next — not all channels at once.`}
         </div>
       )}
@@ -685,7 +685,7 @@ function ChannelProgress({ activeChannels, categoryId, ko }: { activeChannels: M
 // 마케팅 플레이 카드 — 사례/트렌드(왜 통했나) + 내 사업 적용(단계·효과·도구) + "했어요" 체크
 function PlayBlock({ p, ko, done, onToggleDone }: { p: MarketingPlay; ko: boolean; done?: boolean; onToggleDone?: (title: string) => void }) {
   const isCase = p.kind === "case";
-  const accent = isCase ? "#1d3557" : "#007aff";
+  const accent = isCase ? "#1d3557" : "#3b5c8c";
   const kindLabel = isCase ? (ko ? "검증된 사례" : "Proven case") : (ko ? "지금 뜨는 트렌드" : "Trending now");
   const effortLabel = p.application.effortLevel === "low" ? (ko ? "간단" : "Easy")
     : p.application.effortLevel === "high" ? (ko ? "공들임" : "High effort") : (ko ? "보통" : "Medium");
@@ -744,7 +744,7 @@ function PlayBlock({ p, ko, done, onToggleDone }: { p: MarketingPlay; ko: boolea
         {p.tools.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
             {p.tools.map((t, i) => {
-              const tc = t.tier === "free" ? "#1d3557" : "#007aff";
+              const tc = t.tier === "free" ? "#1d3557" : "#3b5c8c";
               const tl = t.tier === "free" ? (ko ? "무료" : "Free") : t.tier === "paid" ? (ko ? "유료" : "Paid") : (ko ? "부분무료" : "Freemium");
               const inner = (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "11.5px", fontWeight: 600, color: "var(--text)", border: `1px solid ${tc}22`, background: `${tc}08`, padding: "4px 9px", borderRadius: "8px" }}>

@@ -77,7 +77,7 @@ export function ProductPerformanceCard() {
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <button type="button"
               onClick={() => { setProdFormOpen(true); setProdEditId(null); setProdName(""); setProdCategory(""); setProdPrice(""); setProdCost(""); setProdStock(""); setProdUnit("개"); }}
-              style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
+              style={{ fontSize: "13px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
               {ko ? "+ 직접 추가" : "+ Add manually"}
             </button>
             <label style={{ fontSize: "13px", fontWeight: 600, color: "#1d3557", cursor: "pointer", padding: "4px 0", display: "inline-flex", alignItems: "center", gap: "4px" }}>
@@ -151,7 +151,7 @@ export function ProductPerformanceCard() {
         <div id="excel-upload-status" style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557", minHeight: "18px", marginTop: "4px", padding: "0 22px" }} />
         {/* 업종 태그 */}
         <div style={{ display: "flex", gap: "4px", marginTop: "4px", flexWrap: "wrap" as const, padding: "0 22px" }}>
-          <span style={{ fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "16px", border: "1px solid #007aff", background: "rgba(0,122,255,0.08)", color: "#007aff" }}>
+          <span style={{ fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "16px", border: "1px solid #3b5c8c", background: "rgba(59,92,140,0.08)", color: "#3b5c8c" }}>
             {ko ? "제품 관리" : "Products"}
           </span>
         </div>
@@ -205,7 +205,7 @@ export function ProductPerformanceCard() {
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--primary)" }}>{p.name}</span>
                       <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "10px", background: "rgba(0,0,0,0.05)", color: "var(--muted)" }}>{p.category}</span>
-                      {idx === 0 && totalRevenue > 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(0,122,255,0.10)", color: "#007aff" }}>{ko ? "베스트" : "Best"}</span>}
+                      {idx === 0 && totalRevenue > 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(59,92,140,0.10)", color: "#3b5c8c" }}>{ko ? "베스트" : "Best"}</span>}
                       {margin < 0 && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "10px", background: "rgba(182,76,76,0.10)", color: "#b64c4c" }}>{ko ? "적자주의" : "Loss!"}</span>}
                     </div>
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "3px" }}>
@@ -213,7 +213,7 @@ export function ProductPerformanceCard() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                    <button type="button" onClick={() => openProdEdit(p)} style={{ fontSize: "11px", color: "#007aff", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
+                    <button type="button" onClick={() => openProdEdit(p)} style={{ fontSize: "11px", color: "#3b5c8c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "수정" : "Edit"}</button>
                     <button type="button" onClick={() => handleProdDelete(p.id)} style={{ fontSize: "11px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer" }}>{ko ? "삭제" : "Del"}</button>
                   </div>
                 </div>
@@ -258,8 +258,8 @@ export function ProductPerformanceCard() {
 
       {/* 추가/수정 폼 */}
       {prodFormOpen && (
-        <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,122,255,0.03)" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "#007aff", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
+        <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(59,92,140,0.03)" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#3b5c8c", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
             {prodEditId ? (ko ? "수정" : "Edit") : (ko ? "제품 추가" : "Add product")}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
@@ -272,7 +272,7 @@ export function ProductPerformanceCard() {
               <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" as const }}>
                 {defaultCategories.map(cat => (
                   <button key={cat} type="button" onClick={() => setProdCategory(cat)}
-                    style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${prodCategory === cat ? "#007aff" : "rgba(0,0,0,0.10)"}`, background: prodCategory === cat ? "rgba(0,122,255,0.09)" : "transparent", color: prodCategory === cat ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
+                    style={{ fontSize: "11px", fontWeight: 600, padding: "5px 12px", borderRadius: "16px", border: `1px solid ${prodCategory === cat ? "#3b5c8c" : "rgba(0,0,0,0.10)"}`, background: prodCategory === cat ? "rgba(59,92,140,0.09)" : "transparent", color: prodCategory === cat ? "#3b5c8c" : "var(--muted)", cursor: "pointer" }}>
                     {cat}
                   </button>
                 ))}
@@ -309,7 +309,7 @@ export function ProductPerformanceCard() {
                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" as const }}>
                   {UNITS.map(u => (
                     <button key={u} type="button" onClick={() => setProdUnit(u)}
-                      style={{ fontSize: "11px", fontWeight: 600, padding: "5px 10px", borderRadius: "12px", border: `1px solid ${prodUnit === u ? "#007aff" : "rgba(0,0,0,0.10)"}`, background: prodUnit === u ? "rgba(0,122,255,0.09)" : "transparent", color: prodUnit === u ? "#007aff" : "var(--muted)", cursor: "pointer" }}>
+                      style={{ fontSize: "11px", fontWeight: 600, padding: "5px 10px", borderRadius: "12px", border: `1px solid ${prodUnit === u ? "#3b5c8c" : "rgba(0,0,0,0.10)"}`, background: prodUnit === u ? "rgba(59,92,140,0.09)" : "transparent", color: prodUnit === u ? "#3b5c8c" : "var(--muted)", cursor: "pointer" }}>
                       {u}
                     </button>
                   ))}
@@ -318,7 +318,7 @@ export function ProductPerformanceCard() {
             </div>
             {/* 마진 미리보기 */}
             {prodPrice && prodCost && parseInt(prodPrice) > 0 && (
-              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(0,122,255,0.05)", border: "0.5px solid rgba(0,122,255,0.12)" }}>
+              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(59,92,140,0.05)", border: "0.5px solid rgba(59,92,140,0.12)" }}>
                 {(() => {
                   const p = parseInt(prodPrice); const c = parseInt(prodCost);
                   if (p <= 0) return null;
@@ -335,7 +335,7 @@ export function ProductPerformanceCard() {
             )}
             <div style={{ display: "flex", gap: "8px" }}>
               <button type="button" onClick={handleProdSave}
-                style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#007aff", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#3b5c8c", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                 {prodEditId ? (ko ? "수정 완료" : "Save") : (ko ? "추가" : "Add")}
               </button>
               <button type="button" onClick={() => { setProdFormOpen(false); setProdEditId(null); }}

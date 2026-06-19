@@ -55,15 +55,15 @@ export function StaffLaborCard() {
         </div>
         <button type="button"
           onClick={() => { setEmpFormOpen(true); setEmpEditId(null); setEmpName(""); setEmpWage(""); setEmpHours(""); setEmpInsured(false); }}
-          style={{ fontSize: "13px", fontWeight: 600, color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
+          style={{ fontSize: "13px", fontWeight: 600, color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
           {ko ? "+ \uc9c1\uc6d0 \ucd94\uac00" : "+ Add staff"}
         </button>
       </div>
 
       {/* monthlyCosts.labor \ube44\uad50 \uc54c\ub9bc */}
       {employees.length > 0 && manualLabor > 0 && Math.abs(laborDiff) > 10000 && (
-        <div style={{ margin: "0 22px 12px", padding: "10px 14px", borderRadius: "12px", background: laborDiff > 0 ? "rgba(25,25,112,0.07)" : "rgba(0,122,255,0.06)", border: `0.5px solid ${laborDiff > 0 ? "rgba(25,25,112,0.2)" : "rgba(0,122,255,0.15)"}` }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: laborDiff > 0 ? "#191970" : "#007aff", lineHeight: 1.5 }}>
+        <div style={{ margin: "0 22px 12px", padding: "10px 14px", borderRadius: "12px", background: laborDiff > 0 ? "rgba(25,25,112,0.07)" : "rgba(59,92,140,0.06)", border: `0.5px solid ${laborDiff > 0 ? "rgba(25,25,112,0.2)" : "rgba(59,92,140,0.15)"}` }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: laborDiff > 0 ? "#191970" : "#3b5c8c", lineHeight: 1.5 }}>
             {ko
               ? laborDiff > 0
                 ? `\ube44\uc6a9 \uce74\ub4dc \uc778\uac74\ube44(${fmt(manualLabor)})\uac00 \uc2e4\uc81c \uc608\uc0c1(${fmt(totalEmpBurden)})\ubcf4\ub2e4 ${fmt(laborDiff)} \ub0ae\uac8c \uc785\ub825\ub428`
@@ -92,7 +92,7 @@ export function StaffLaborCard() {
                 {/* \uc774\ub984 \ud589 */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(0,122,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#007aff" }}>
+                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(59,92,140,0.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#3b5c8c" }}>
                       {emp.name.charAt(0)}
                     </div>
                     <div>
@@ -105,7 +105,7 @@ export function StaffLaborCard() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "8px" }}>
-                    <button type="button" onClick={() => openEmpEdit(emp)} style={{ fontSize: "12px", color: "#007aff", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
+                    <button type="button" onClick={() => openEmpEdit(emp)} style={{ fontSize: "12px", color: "#3b5c8c", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
                       {ko ? "\uc218\uc815" : "Edit"}
                     </button>
                     <button type="button" onClick={() => handleEmpDelete(emp.id)} style={{ fontSize: "12px", color: "#b64c4c", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
@@ -118,7 +118,7 @@ export function StaffLaborCard() {
                   {[
                     { label: ko ? "\uc6d4 \uae09\uc5ec" : "Monthly pay", value: fmt(c.monthlyWage), color: "var(--primary)" },
                     ...(emp.isInsured ? [{ label: ko ? "4\ub300\ubcf4\ud5d8" : "Insurance", value: fmt(c.insurance), color: "var(--muted)" }] : []),
-                    { label: ko ? "\ucd1d\ubd80\ub2f4" : "Total", value: fmt(c.total), color: "#007aff" },
+                    { label: ko ? "\ucd1d\ubd80\ub2f4" : "Total", value: fmt(c.total), color: "#3b5c8c" },
                   ].map(item => (
                     <div key={item.label} style={{ background: "rgba(0,0,0,0.03)", borderRadius: "8px", padding: "5px 10px" }}>
                       <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>{item.label}</div>
@@ -143,8 +143,8 @@ export function StaffLaborCard() {
 
       {/* \ucd94\uac00/\uc218\uc815 \ud3fc */}
       {empFormOpen && (
-        <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(0,122,255,0.03)" }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "#007aff", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
+        <div style={{ padding: "18px 22px", borderTop: "0.5px solid rgba(0,0,0,0.08)", background: "rgba(59,92,140,0.03)" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#3b5c8c", marginBottom: "14px", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
             {empEditId ? (ko ? "\uc9c1\uc6d0 \uc218\uc815" : "Edit Staff") : (ko ? "\uc9c1\uc6d0 \ucd94\uac00" : "Add Staff")}
           </div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: "10px" }}>
@@ -172,7 +172,7 @@ export function StaffLaborCard() {
               </span>
             </label>
             {empWage && empHours && (
-              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(0,122,255,0.06)", border: "0.5px solid rgba(0,122,255,0.15)" }}>
+              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(59,92,140,0.06)", border: "0.5px solid rgba(59,92,140,0.15)" }}>
                 {(() => {
                   const wage = parseInt(empWage, 10) || 0;
                   const hours = parseFloat(empHours) || 0;
@@ -181,7 +181,7 @@ export function StaffLaborCard() {
                   const autoInsured = hours * 4.345 >= 60;
                   const ins = (empInsured || autoInsured) ? Math.round(monthly * EMPLOYER_INSURANCE_RATE) : 0;
                   return (
-                    <div style={{ fontSize: "12px", color: "#007aff", lineHeight: 1.7 }}>
+                    <div style={{ fontSize: "12px", color: "#3b5c8c", lineHeight: 1.7 }}>
                       <div>{ko ? `\uc6d4 \uae09\uc5ec: ${(monthly / 10000).toFixed(1)}\ub9cc\uc6d0` : `Monthly wage: ${(monthly / 10000).toFixed(1)}\ub9cc\uc6d0`}</div>
                       {ins > 0 && <div>{ko ? `4\ub300\ubcf4\ud5d8(\uc0ac\uc5c5\uc8fc): ${(ins / 10000).toFixed(1)}\ub9cc\uc6d0` : `Insurance: ${(ins / 10000).toFixed(1)}\ub9cc\uc6d0`}</div>}
                       <div style={{ fontWeight: 700 }}>{ko ? `\ucd1d\ubd80\ub2f4: ${((monthly + ins) / 10000).toFixed(1)}\ub9cc\uc6d0` : `Total: ${((monthly + ins) / 10000).toFixed(1)}\ub9cc\uc6d0`}</div>
@@ -192,7 +192,7 @@ export function StaffLaborCard() {
             )}
             <div style={{ display: "flex", gap: "8px" }}>
               <button type="button" onClick={handleEmpSave}
-                style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#007aff", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#3b5c8c", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                 {empEditId ? (ko ? "\uc218\uc815 \uc644\ub8cc" : "Save changes") : (ko ? "\ucd94\uac00" : "Add")}
               </button>
               <button type="button" onClick={() => { setEmpFormOpen(false); setEmpEditId(null); }}
