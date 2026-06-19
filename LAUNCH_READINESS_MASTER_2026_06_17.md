@@ -2,7 +2,33 @@
 
 > 작성: 2026-06-17. **출시 임박.** 다음 세션은 인사말·재탐색 없이 **§0 게이트부터 즉시 실행**.
 > 절대 원칙(매 작업 적용): 웹·iOS 동시(SSOT) · 가짜숫자 0(계산불가=—/예시/추정) · Apple 미니멀 · **신호등 컬러 금지**(양호/주의=네이비 농담, 위험만 벽돌 #b64c4c) · 무료 채널 우선 · **인벤토리 먼저(중복 신설 금지 — 대부분 이미 부분 존재, "심화"가 정답)**.
-> git: `origin/main` = `feat/backend-audit-and-sync-2026-06-07` = `2679930` (이번 세션 8커밋 반영 완료, FF 동기). 새 작업은 브랜치 후.
+> git: `origin/main` = `feat/backend-audit-and-sync-2026-06-07` = `3ee3306` (이번 세션 9커밋 반영 완료, FF 동기). 새 작업은 브랜치 후.
+
+> **🟢 다음 세션 실행 순서 (사장님 확정): ① §A 벤치마크 기능 생성 → ② §0~7 최종 점검.** §0 게이트는 양쪽 모두의 선행.
+
+---
+
+## A. 🎯 벤치마크 기능 (다음 세션 **1순위 — 먼저**, §0 게이트 통과 후 바로)
+
+**왜**: VC 심사 급소(*"데이터 독점성·네트워크 효과를 어떻게?"* — 윤덕주 멘토)에 정면으로 답하는 moat 빌딩. 두 외부 전략분석도 같은 결론(수익·리텐션·차별화·독점성)에 수렴 → 진단 확정.
+
+**핵심 구분 (절대 혼동 금지)**:
+- **(A) 업종 평균 (큐레이트)** — 데이터 **이미 있음**(검증값), 지금 텍스트로 노출 가능·정직. **단 moat 아님**(공개 연구데이터).
+- **(B) 코호트 실측 (유저 데이터 집계)** — **이게 VC가 말한 진짜 moat**. 인프라 0 + 스케일 필요 + **위조 절대 금지**(데이터 없이 "상위 30%" 쓰면 가짜숫자 위반·VC 간파).
+- **설계 원칙**: 지금 (A)를 *"업종 평균"*으로 정직 라벨해 넣고, 스케일 오면 **같은 UI 문구의 데이터 소스만 (A)→(B)로 교체**. UI 불변, 출처만 moat로 업그레이드.
+
+**구현 (사장님 지목 그대로 — 별도 카드 신설 ❌, 기존 비교가능 surface에 텍스트 ✅, 카드 막추가 금지 규율 준수)**:
+1. **SSOT 한 함수** `benchmarkText(categoryId, metric, myValue, language)` → `packages/shared/src/finance/` 신규. 기존 레지스트리 재사용: `cluster-budget-benchmarks.ts`·`knowledge/franchise-benchmarks.ts`·`finance/startup-metrics.ts`·`IndustryThresholds`·`FinancialBenchmarkRegistry`. 반환 `{ label, comparison, status: "good"|"watch"|"risk", source: "industry" }`. **벤치마크 없는 category+metric은 null 반환 → 미표시(가짜 0).**
+2. **iOS 미러**: `apps/ios/Sources/FoundOneCore/BenchmarkTextRegistry.swift` (codegen 또는 핸드미러, 웹 SSOT와 1:1).
+3. **노출 위치 (전부 같은 SSOT 끌어씀)**:
+   - **손익/원가율 카드** ⭐ 가장 날카로움(VC 예시 그 자리) — 웹 `dashboard/sections/Tier3Operations.tsx` + iOS `DailyHub/PLHeroCard.swift`. 현재 grade(색)만 → **텍스트 비교 추가**("외식 평균 원가율 35–45% · 사장님 34% — 양호").
+   - **매출 카드** — 객단가/일매출 업종 평균 대비 한 줄.
+   - **일일 보고서** — 웹 `api/ai/insights/industry-daily/route.ts` + iOS `Today/TodayView.swift`: 어제 지표 옆 "업종 평균 대비 +/−".
+   - **AI 경영 코칭** — 코칭 프롬프트 context에 업종 평균 주입 → "원가율이 평균보다 높아요" 류 언급.
+4. **규율**: 웹·iOS 동시 SSOT · 신호등 0(good=네이비 농담, risk만 벽돌 #b64c4c) · 라벨 정직("업종 평균", (B) 사칭 금지) · 회귀 테스트(`benchmark-text.test.ts`).
+5. **인벤토리 먼저**: PLHeroCard는 이미 IndustryThresholds로 grading 중 → **신설 아닌 심화**(같은 데이터를 텍스트로). 노출 전 grep으로 중복 확인.
+
+**(B) 코호트 moat 로드맵 (이번 세션 아님, 메모만)**: 유저 매출/비용 익명 집계 view(`v_cohort_benchmarks` by category×매출단계) + 최소 N(예: 카테고리당 30사장님↑)일 때만 노출. 스케일 도달 시 `benchmarkText`의 source를 "industry"→"cohort"로.
 
 ---
 
@@ -80,7 +106,7 @@ npx vitest run                                                            # 265/
 | `RESEND_SUPABASE_SMTP.md` | B2 SMTP 설정 단계 |
 
 ## 다음 세션 시작 멘트(권장)
-"LAUNCH_READINESS_MASTER_2026_06_17.md §0 게이트부터 실행. 그 다음 §1 출시차단 중 코드로 가능한 B1(사업자 푸터)부터. 사장님 콘솔작업(B2~B6)은 값 받으면 코드 맞춤." — 확인 질문 없이 바로 진행.
+"LAUNCH_READINESS_MASTER §0 게이트 실행 → **§A 벤치마크 기능부터** (SSOT `benchmarkText` → 손익카드 웹·iOS → 매출·일일보고서·코칭). 벤치마크 끝나면 §1 출시차단(코드 B1 사업자푸터) + §2~7 최종 점검." — 확인 질문 없이 바로 진행, 순서 = 벤치마크 → 점검.
 
 ## 사장님(운영자)이 직접 해야 할 것 — 체크리스트
 - [ ] 통신판매업 신고 → 신고번호 확보 (B1 푸터에 필요)
