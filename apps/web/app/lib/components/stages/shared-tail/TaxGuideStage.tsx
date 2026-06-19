@@ -405,7 +405,7 @@ export function TaxGuideStage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
               <span style={sectionLabel}>{ko ? "필수 세무 세팅" : "Required Tax Setup"}</span>
-              <span style={{ fontSize: "11.5px", fontWeight: 700, color: tcChecked === taxCheckItems.length ? "#fff" : "var(--text)", background: tcChecked === taxCheckItems.length ? "rgb(34,167,73)" : "rgba(0,0,0,0.08)", padding: "3px 10px", borderRadius: "999px" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: tcChecked === taxCheckItems.length ? "#fff" : "var(--text)", background: tcChecked === taxCheckItems.length ? "rgb(29,53,87)" : "rgba(0,0,0,0.08)", padding: "3px 10px", borderRadius: "999px" }}>
                 {tcChecked} / {taxCheckItems.length}
               </span>
             </div>

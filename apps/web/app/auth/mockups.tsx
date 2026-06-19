@@ -64,7 +64,7 @@ export function MockupRoadmap({ card, muted, subtle, accent, isLight, lang }: Mo
         </div>
         {/* progress bar */}
         <div style={{ margin: "0 20px 16px", height: 4, borderRadius: 2, background: subtle }}>
-          <div style={{ width: "40%", height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #34c759, #30d158)" }} />
+          <div style={{ width: "40%", height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #1d3557, #30d158)" }} />
         </div>
         {/* stage list */}
         <div style={{ padding: "0 20px 20px", display: "grid", gap: 8 }}>
@@ -100,7 +100,7 @@ export function MockupRoadmap({ card, muted, subtle, accent, isLight, lang }: Mo
                     fontSize: 12,
                     fontWeight: 600,
                     flexShrink: 0,
-                    background: done ? "#34c759" : current ? accent : (isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.1)"),
+                    background: done ? "#1d3557" : current ? accent : (isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.1)"),
                     color: done || current ? "#fff" : muted
                   }}
                 >
@@ -117,7 +117,7 @@ export function MockupRoadmap({ card, muted, subtle, accent, isLight, lang }: Mo
                   </div>
                 )}
                 {done && (
-                  <div style={{ fontSize: 11, fontWeight: 500, color: "#34c759" }}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: "#1d3557" }}>
                     {ko ? "완료" : "Done"}
                   </div>
                 )}
@@ -137,12 +137,12 @@ export function MockupGuides({ card, muted, subtle, accent, isLight, lang }: Moc
     ? [
         { domain: "인허가", color: "#ff9f0a", title: "음식점 영업 신고 절차", source: "식품의약품안전처", date: "2026-02-15", fresh: true },
         { domain: "세무", color: "#5B8CFF", title: "간이과세자 부가세 신고 가이드", source: "국세청 홈택스", date: "2026-01-20", fresh: true },
-        { domain: "대출", color: "#34c759", title: "소상공인 정책자금 신청 방법", source: "소상공인시장진흥공단", date: "2025-08-10", fresh: false }
+        { domain: "대출", color: "#1d3557", title: "소상공인 정책자금 신청 방법", source: "소상공인시장진흥공단", date: "2025-08-10", fresh: false }
       ]
     : [
         { domain: "Permits", color: "#ff9f0a", title: "Restaurant Business License Process", source: "MFDS", date: "2026-02-15", fresh: true },
         { domain: "Tax", color: "#5B8CFF", title: "Simplified Tax Filing Guide", source: "NTS HomeTax", date: "2026-01-20", fresh: true },
-        { domain: "Loans", color: "#34c759", title: "SME Policy Loan Application", source: "SEMAS", date: "2025-08-10", fresh: false }
+        { domain: "Loans", color: "#1d3557", title: "SME Policy Loan Application", source: "SEMAS", date: "2025-08-10", fresh: false }
       ];
 
   return (
@@ -160,8 +160,8 @@ export function MockupGuides({ card, muted, subtle, accent, isLight, lang }: Moc
                   fontWeight: 500,
                   padding: "2px 7px",
                   borderRadius: 6,
-                  background: g.fresh ? (isLight ? "rgba(52,199,89,0.1)" : "rgba(52,199,89,0.15)") : (isLight ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.15)"),
-                  color: g.fresh ? "#34c759" : "#ff3b30"
+                  background: g.fresh ? (isLight ? "rgba(29,53,87,0.1)" : "rgba(29,53,87,0.15)") : (isLight ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.15)"),
+                  color: g.fresh ? "#1d3557" : "#ff3b30"
                 }}
               >
                 {g.fresh ? (ko ? "최신" : "Fresh") : (ko ? "재검토 필요" : "Review needed")}
@@ -225,7 +225,7 @@ export function MockupAnalysis({ card, muted, subtle, accent, isLight, lang }: M
                 borderRadius: 3,
                 background: i < 5
                   ? (isLight ? "rgba(255,59,48,0.25)" : "rgba(255,59,48,0.35)")
-                  : (isLight ? "rgba(52,199,89,0.3)" : "rgba(52,199,89,0.4)")
+                  : (isLight ? "rgba(29,53,87,0.3)" : "rgba(29,53,87,0.4)")
               }}
             />
           ))}
@@ -248,7 +248,7 @@ export function MockupAnalysis({ card, muted, subtle, accent, isLight, lang }: M
             : ["Review locations with lower rent ratio", "Target break-even within 6 months"]
           ).map((t) => (
             <div key={t} style={{ fontSize: 12, color: muted, display: "flex", gap: 6, alignItems: "flex-start" }}>
-              <span style={{ color: "#34c759", flexShrink: 0 }}>→</span>
+              <span style={{ color: "#1d3557", flexShrink: 0 }}>→</span>
               <span>{t}</span>
             </div>
           ))}
@@ -333,7 +333,7 @@ export function MockupMentoring({ card, muted, subtle, accent, isLight, lang }: 
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: item.done ? "#34c759" : subtle,
+                  background: item.done ? "#1d3557" : subtle,
                   border: item.done ? "none" : `1px solid ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"}`,
                   fontSize: 11,
                   color: item.done ? "#fff" : "transparent",
@@ -414,7 +414,7 @@ export function HeroDashboardPreview({ lang }: { lang: Language }) {
           </div>
           {/* progress */}
           <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", marginBottom: 14 }}>
-            <div style={{ width: "60%", height: "100%", borderRadius: 3, background: "linear-gradient(90deg, #5B8CFF, #34c759)" }} />
+            <div style={{ width: "60%", height: "100%", borderRadius: 3, background: "linear-gradient(90deg, #5B8CFF, #1d3557)" }} />
           </div>
           {/* now / next */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -474,13 +474,13 @@ export function MockupOnboarding({ card, muted, subtle, accent, isLight, lang }:
                 width: 28, height: 28, borderRadius: 14,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, fontWeight: 600,
-                background: n < 3 ? "#34c759" : n === 3 ? accent : subtle,
+                background: n < 3 ? "#1d3557" : n === 3 ? accent : subtle,
                 color: n <= 3 ? "#fff" : muted,
                 border: n > 3 ? `1px solid ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"}` : "none"
               }}>
                 {n < 3 ? "✓" : n}
               </div>
-              {n < 4 && <div style={{ width: 24, height: 2, borderRadius: 1, background: n < 3 ? "#34c759" : subtle }} />}
+              {n < 4 && <div style={{ width: 24, height: 2, borderRadius: 1, background: n < 3 ? "#1d3557" : subtle }} />}
             </div>
           ))}
           <span style={{ marginLeft: "auto", fontSize: 12, color: muted }}>{ko ? "3 / 4" : "3 of 4"}</span>
@@ -558,7 +558,7 @@ export function MockupMarket({ card, muted, subtle, accent, isLight, lang }: Moc
           {/* pins */}
           {[{ left: "28%", top: "35%" }, { left: "55%", top: "55%" }, { left: "72%", top: "30%" }].map((pos, i) => (
             <div key={i} style={{ position: "absolute", ...pos, transform: "translate(-50%, -100%)" }}>
-              <div style={{ width: 12, height: 12, borderRadius: 6, background: i === 0 ? "#34c759" : accent, border: "2px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }} />
+              <div style={{ width: 12, height: 12, borderRadius: 6, background: i === 0 ? "#1d3557" : accent, border: "2px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }} />
             </div>
           ))}
           <div style={{ position: "absolute", bottom: 12, left: 16, fontSize: 11, fontWeight: 600, color: isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.4)", background: isLight ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.4)", padding: "4px 10px", borderRadius: 6, backdropFilter: "blur(4px)" }}>
@@ -576,10 +576,10 @@ export function MockupMarket({ card, muted, subtle, accent, isLight, lang }: Moc
               <div key={a.name} style={{
                 display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 12, alignItems: "center",
                 padding: "12px 14px", borderRadius: 12,
-                background: i === 0 ? (isLight ? "rgba(52,199,89,0.05)" : "rgba(52,199,89,0.08)") : subtle,
-                border: i === 0 ? `1px solid ${isLight ? "rgba(52,199,89,0.15)" : "rgba(52,199,89,0.2)"}` : `1px solid ${isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)"}`
+                background: i === 0 ? (isLight ? "rgba(29,53,87,0.05)" : "rgba(29,53,87,0.08)") : subtle,
+                border: i === 0 ? `1px solid ${isLight ? "rgba(29,53,87,0.15)" : "rgba(29,53,87,0.2)"}` : `1px solid ${isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)"}`
               }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", color: a.score >= 90 ? "#34c759" : a.score >= 80 ? accent : muted }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", color: a.score >= 90 ? "#1d3557" : a.score >= 80 ? accent : muted }}>
                   {a.score}
                 </div>
                 <div>
@@ -588,8 +588,8 @@ export function MockupMarket({ card, muted, subtle, accent, isLight, lang }: Moc
                 </div>
                 <div style={{
                   fontSize: 13, fontWeight: 700, padding: "4px 10px", borderRadius: 8,
-                  background: a.grade.startsWith("A") ? (isLight ? "rgba(52,199,89,0.1)" : "rgba(52,199,89,0.15)") : (isLight ? "rgba(59,92,140,0.08)" : "rgba(59,92,140,0.12)"),
-                  color: a.grade.startsWith("A") ? "#34c759" : accent
+                  background: a.grade.startsWith("A") ? (isLight ? "rgba(29,53,87,0.1)" : "rgba(29,53,87,0.15)") : (isLight ? "rgba(59,92,140,0.08)" : "rgba(59,92,140,0.12)"),
+                  color: a.grade.startsWith("A") ? "#1d3557" : accent
                 }}>
                   {a.grade}
                 </div>
@@ -612,8 +612,8 @@ export function MockupOperations({ card, muted, subtle, accent, isLight, lang }:
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 4, background: "#34c759" }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#34c759" }}>{ko ? "운영 중" : "Open & Running"}</span>
+              <div style={{ width: 8, height: 8, borderRadius: 4, background: "#1d3557" }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#1d3557" }}>{ko ? "운영 중" : "Open & Running"}</span>
             </div>
             <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>{ko ? "모링가 카페 성수" : "Moringa Cafe Seongsu"}</div>
           </div>
@@ -623,7 +623,7 @@ export function MockupOperations({ card, muted, subtle, accent, isLight, lang }:
         {/* KPI row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
           {[
-            { v: "2,340" + (ko ? "만" : "K"), l: ko ? "이번 달 매출" : "Monthly Sales", c: "#34c759" },
+            { v: "2,340" + (ko ? "만" : "K"), l: ko ? "이번 달 매출" : "Monthly Sales", c: "#1d3557" },
             { v: "78" + (ko ? "만" : "K"), l: ko ? "일평균 매출" : "Daily Average", c: accent },
             { v: "1.2" + (ko ? "만" : "K"), l: ko ? "객단가" : "Avg. Ticket", c: "#ff9f0a" }
           ].map((m) => (
@@ -637,14 +637,14 @@ export function MockupOperations({ card, muted, subtle, accent, isLight, lang }:
         {/* health bars */}
         <div style={{ display: "grid", gap: 12, marginBottom: 16 }}>
           {[
-            { label: ko ? "프라임 코스트" : "Prime Cost", value: 62, target: 65, color: "#34c759" },
+            { label: ko ? "프라임 코스트" : "Prime Cost", value: 62, target: 65, color: "#1d3557" },
             { label: ko ? "식재료 비율" : "Food Cost Ratio", value: 34, target: 35, color: "#ff9f0a" },
             { label: ko ? "인건비 비율" : "Labor Cost", value: 28, target: 30, color: "#5B8CFF" }
           ].map((bar) => (
             <div key={bar.label}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                 <span style={{ fontSize: 12, fontWeight: 500 }}>{bar.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: bar.value <= bar.target ? "#34c759" : "#ff3b30" }}>{bar.value}%</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: bar.value <= bar.target ? "#1d3557" : "#ff3b30" }}>{bar.value}%</span>
               </div>
               <div style={{ height: 6, borderRadius: 3, background: subtle, position: "relative" }}>
                 <div style={{ width: `${bar.value}%`, height: "100%", borderRadius: 3, background: bar.color }} />
@@ -658,7 +658,7 @@ export function MockupOperations({ card, muted, subtle, accent, isLight, lang }:
         <div style={{ borderRadius: 14, background: subtle, padding: "14px 16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <span style={{ fontSize: 12, fontWeight: 600 }}>{ko ? "최근 7일 매출" : "Last 7 Days"}</span>
-            <span style={{ fontSize: 11, color: "#34c759", fontWeight: 600 }}>+12.4%</span>
+            <span style={{ fontSize: 11, color: "#1d3557", fontWeight: 600 }}>+12.4%</span>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 56 }}>
             {[65, 72, 58, 80, 75, 88, 92].map((h, i) => (

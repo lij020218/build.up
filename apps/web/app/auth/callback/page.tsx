@@ -200,11 +200,11 @@ function AuthCallbackInner() {
         <div>
           <div style={{
             width: "64px", height: "64px", borderRadius: "50%",
-            background: "rgba(52,199,89,0.15)", margin: "0 auto 20px",
+            background: "rgba(29,53,87,0.15)", margin: "0 auto 20px",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <path d="M5 13l4 4L19 7" stroke="#34c759" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5 13l4 4L19 7" stroke="#1d3557" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
           <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>이메일 인증 완료!</h2>

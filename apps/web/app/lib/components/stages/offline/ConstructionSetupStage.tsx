@@ -463,7 +463,7 @@ export function ConstructionSetupStage() {
                         // Apple iOS system color palette — 6색 순환
                         const iconColors = [
                           { bg: "rgba(59,92,140,0.1)",   fg: "rgb(59,92,140)"   }, // blue
-                          { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   }, // green
+                          { bg: "rgba(29,53,87,0.1)",   fg: "rgb(29,53,87)"   }, // green
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   }, // orange
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   }, // indigo
                           { bg: "rgba(90,200,250,0.14)", fg: "rgb(0,160,210)"   }, // teal
@@ -554,7 +554,7 @@ export function ConstructionSetupStage() {
                         // Apple 시스템 컬러 — 컨셉 카드용
                         const conceptColors = [
                           { bg: "rgba(59,92,140,0.1)",   fg: "rgb(59,92,140)"   }, // blue
-                          { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   }, // green
+                          { bg: "rgba(29,53,87,0.1)",   fg: "rgb(29,53,87)"   }, // green
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   }, // orange
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   }, // indigo
                         ];
@@ -688,7 +688,7 @@ export function ConstructionSetupStage() {
                         if (!i2026) return null;
                         const yearColors = [
                           { bg: "rgba(59,92,140,0.1)",   fg: "rgb(59,92,140)"   },
-                          { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   },
+                          { bg: "rgba(29,53,87,0.1)",   fg: "rgb(29,53,87)"   },
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   },
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   },
                           { bg: "rgba(90,200,250,0.14)", fg: "rgb(0,160,210)"   },
@@ -781,7 +781,7 @@ export function ConstructionSetupStage() {
                                     <div key={b.nameKo}>
                                       {hairline(i)}
                                       <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "12px 18px" }}>
-                                        <Store size={16} strokeWidth={1.6} style={{ color: "rgb(34,167,73)", flexShrink: 0, marginTop: "2px" }} />
+                                        <Store size={16} strokeWidth={1.6} style={{ color: "rgb(29,53,87)", flexShrink: 0, marginTop: "2px" }} />
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                           <div style={{ fontSize: "13.5px", fontWeight: 580, color: "var(--text)", letterSpacing: "-0.2px", marginBottom: "2px" }}>{b.nameKo}</div>
                                           <div style={{ fontSize: "12.5px", color: "rgba(0,0,0,0.45)", lineHeight: 1.45 }}>{b.noteKo}</div>
@@ -1011,11 +1011,11 @@ export function ConstructionSetupStage() {
                                           width: "32px",
                                           height: "32px",
                                           borderRadius: "50%",
-                                          background: "rgba(52,199,89,0.1)",
+                                          background: "rgba(29,53,87,0.1)",
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
-                                          color: "rgb(34,167,73)",
+                                          color: "rgb(29,53,87)",
                                         }}
                                       >
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

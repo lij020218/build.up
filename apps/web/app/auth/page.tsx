@@ -497,7 +497,7 @@ export default function AuthPage() {
                   {mode === "signup" && password && (
                     <p style={{
                       fontSize: 11, margin: "-4px 0 0", paddingLeft: 4,
-                      color: password.length >= 8 && /\d/.test(password) ? "#34c759" : "rgba(255,120,120,0.9)",
+                      color: password.length >= 8 && /\d/.test(password) ? "#1d3557" : "rgba(255,120,120,0.9)",
                     }}>
                       8자 이상, 숫자 포함{password.length >= 8 && /\d/.test(password) ? " ✓" : ""}
                     </p>

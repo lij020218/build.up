@@ -965,8 +965,8 @@ export function FinancialReviewStage() {
                       <span style={{
                         fontSize: "11px", fontWeight: 700,
                         padding: "3px 9px", borderRadius: "999px",
-                        background: inRange ? "rgba(34,167,73,0.1)" : above ? "rgba(182,76,76,0.1)" : "rgba(25,25,112,0.12)",
-                        color: inRange ? "rgb(34,167,73)" : above ? "#b64c4c" : "rgb(184,100,0)",
+                        background: inRange ? "rgba(29,53,87,0.1)" : above ? "rgba(182,76,76,0.1)" : "rgba(25,25,112,0.12)",
+                        color: inRange ? "rgb(29,53,87)" : above ? "#b64c4c" : "rgb(184,100,0)",
                         whiteSpace: "nowrap" as const,
                       }}>
                         {ko

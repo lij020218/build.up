@@ -130,10 +130,10 @@ export function BizRegistrationPanel() {
               <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "13px 16px" }}>
                 <div style={{
                   width: 32, height: 32, borderRadius: 10,
-                  background: row.done ? "rgba(34,167,73,0.12)" : "rgba(0,0,0,0.05)",
+                  background: row.done ? "rgba(29,53,87,0.12)" : "rgba(0,0,0,0.05)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0,
-                  color: row.done ? "rgb(34,167,73)" : "rgba(0,0,0,0.35)",
+                  color: row.done ? "rgb(29,53,87)" : "rgba(0,0,0,0.35)",
                 }}>
                   {row.done
                     ? <CheckCircle2 size={17} strokeWidth={2} />
@@ -146,8 +146,8 @@ export function BizRegistrationPanel() {
                 <span style={{
                   fontSize: "11.5px", fontWeight: 700,
                   padding: "3px 9px", borderRadius: "999px",
-                  background: row.done ? "rgba(34,167,73,0.1)" : "rgba(0,0,0,0.05)",
-                  color: row.done ? "rgb(34,167,73)" : "rgba(0,0,0,0.5)",
+                  background: row.done ? "rgba(29,53,87,0.1)" : "rgba(0,0,0,0.05)",
+                  color: row.done ? "rgb(29,53,87)" : "rgba(0,0,0,0.5)",
                   letterSpacing: "-0.01em",
                   whiteSpace: "nowrap" as const,
                   flexShrink: 0,

@@ -148,9 +148,9 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
       >
         <div style={{
           width: 40, height: 40, borderRadius: 12,
-          background: allDone ? "rgba(34,167,73,0.12)" : "rgba(25,25,112,0.08)",
+          background: allDone ? "rgba(29,53,87,0.12)" : "rgba(25,25,112,0.08)",
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          color: allDone ? "rgb(34,167,73)" : MIDNIGHT,
+          color: allDone ? "rgb(29,53,87)" : MIDNIGHT,
         }}>
           <ClipboardCheck size={20} strokeWidth={1.5} />
         </div>
@@ -159,7 +159,7 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
             <span style={{ fontSize: "15.5px", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)" }}>
               {ko ? "오늘의 운영 리추얼" : "Today's Ops Ritual"}
             </span>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "#fff", background: allDone ? "rgb(34,167,73)" : MIDNIGHT, padding: "3px 9px", borderRadius: "999px", letterSpacing: "-0.01em" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#fff", background: allDone ? "rgb(29,53,87)" : MIDNIGHT, padding: "3px 9px", borderRadius: "999px", letterSpacing: "-0.01em" }}>
               {checkedCount} / {total}
             </span>
           </div>
@@ -195,7 +195,7 @@ export function DailyOpsRitualCard({ ko, industryCategoryId, selectedIndustryId,
         <div style={{
           height: "100%",
           width: `${pct}%`,
-          background: allDone ? "rgb(34,167,73)" : MIDNIGHT,
+          background: allDone ? "rgb(29,53,87)" : MIDNIGHT,
           borderRadius: "100px",
           transition: "width 0.35s ease, background 0.2s",
         }} />

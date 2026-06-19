@@ -711,11 +711,11 @@ export function StageGuideViewer() {
     const tierConfig = {
       premium: { bg: "rgba(88,86,214,0.12)", fg: "rgb(88,86,214)", label: language === "ko" ? "프리미엄" : "Premium" },
       standard: { bg: "rgba(59,92,140,0.1)", fg: "rgb(59,92,140)", label: language === "ko" ? "표준" : "Standard" },
-      budget: { bg: "rgba(52,199,89,0.1)", fg: "rgb(34,167,73)", label: language === "ko" ? "가성비" : "Value" },
+      budget: { bg: "rgba(29,53,87,0.1)", fg: "rgb(29,53,87)", label: language === "ko" ? "가성비" : "Value" },
     };
     const categoryColors = [
       { bg: "rgba(59,92,140,0.1)",  fg: "rgb(59,92,140)"  },
-      { bg: "rgba(52,199,89,0.1)",  fg: "rgb(34,167,73)"  },
+      { bg: "rgba(29,53,87,0.1)",  fg: "rgb(29,53,87)"  },
       { bg: "rgba(255,149,0,0.1)",  fg: "rgb(210,120,0)"  },
       { bg: "rgba(88,86,214,0.12)", fg: "rgb(88,86,214)"  },
     ];
@@ -1086,7 +1086,7 @@ export function StageGuideViewer() {
               {language === "ko" ? "POS 점검 체크리스트" : "POS Test Checklist"}
             </span>
             {allChecked && (
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(52,199,89)", background: "rgba(52,199,89,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(29,53,87)", background: "rgba(29,53,87,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
                 {language === "ko" ? "\u2713 완료" : "\u2713 Done"}
               </span>
             )}
@@ -1098,14 +1098,14 @@ export function StageGuideViewer() {
                 <div key={check.id}>
                   {i > 0 && <div style={{ height: "0.5px", background: "rgba(0,0,0,0.08)", marginLeft: "64px" }} />}
                   <div
-                    style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "13px 18px", cursor: "pointer", background: checked ? "rgba(52,199,89,0.04)" : "transparent", transition: "background 0.15s" }}
+                    style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "13px 18px", cursor: "pointer", background: checked ? "rgba(29,53,87,0.04)" : "transparent", transition: "background 0.15s" }}
                     onClick={() => setOpsPosChecks(prev => ({ ...prev, [check.id]: !prev[check.id] }))}
                   >
-                    <div style={{ flexShrink: 0, marginTop: "1px", width: "20px", height: "20px", borderRadius: "6px", border: checked ? "none" : "1.5px solid rgba(0,0,0,0.18)", background: checked ? "rgb(52,199,89)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                    <div style={{ flexShrink: 0, marginTop: "1px", width: "20px", height: "20px", borderRadius: "6px", border: checked ? "none" : "1.5px solid rgba(0,0,0,0.18)", background: checked ? "rgb(29,53,87)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
                       {checked && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "14px", fontWeight: checked ? 600 : 500, color: checked ? "rgb(34,167,73)" : "var(--text)", letterSpacing: "-0.2px", textDecoration: checked ? "line-through" : "none", opacity: checked ? 0.7 : 1 }}>{check.label}</div>
+                      <div style={{ fontSize: "14px", fontWeight: checked ? 600 : 500, color: checked ? "rgb(29,53,87)" : "var(--text)", letterSpacing: "-0.2px", textDecoration: checked ? "line-through" : "none", opacity: checked ? 0.7 : 1 }}>{check.label}</div>
                       {!checked && <div style={{ fontSize: "11.5px", color: "rgba(0,0,0,0.38)", marginTop: "2px", lineHeight: 1.4 }}>{check.hint}</div>}
                     </div>
                   </div>

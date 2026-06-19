@@ -190,7 +190,7 @@ export default function LifecycleCard({
                   padding: "12px 14px",
                   borderRadius: "12px",
                   border: "none",
-                  background: checked ? "rgba(52,199,89,0.06)" : "rgba(0,0,0,0.02)",
+                  background: checked ? "rgba(29,53,87,0.06)" : "rgba(0,0,0,0.02)",
                   cursor: "pointer",
                   textAlign: "left" as const,
                   width: "100%",

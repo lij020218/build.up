@@ -137,7 +137,7 @@ export function InventoryManagementCard() {
             style={{ fontSize: "12px", fontWeight: 600, color: "#3b5c8c", background: "rgba(59,92,140,0.08)", border: "none", borderRadius: "9px", padding: "6px 13px", cursor: "pointer" }}>
             {ko ? "+ 직접 추가" : "+ Add"}
           </button>
-          <label style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557", cursor: "pointer", padding: "6px 13px", background: "rgba(52,199,89,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+          <label style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557", cursor: "pointer", padding: "6px 13px", background: "rgba(29,53,87,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2v12M2 8h12" /></svg>
             {ko ? "CSV" : "CSV"}
             <input type="file" accept=".csv,.tsv,.txt" aria-label={ko ? "재고 CSV 파일 업로드" : "Upload inventory CSV file"} style={{ display: "none" }} onChange={async (e) => {
@@ -608,7 +608,7 @@ export function InventoryManagementCard() {
             const lead = Number(invForm.leadTimeDays) || 1;
             const warn = days <= lead;
             return (
-              <div style={{ padding: "11px 14px", borderRadius: "11px", background: warn ? "rgba(182,76,76,0.05)" : "rgba(52,199,89,0.05)", border: `0.5px solid ${warn ? "rgba(182,76,76,0.15)" : "rgba(52,199,89,0.15)"}` }}>
+              <div style={{ padding: "11px 14px", borderRadius: "11px", background: warn ? "rgba(182,76,76,0.05)" : "rgba(29,53,87,0.05)", border: `0.5px solid ${warn ? "rgba(182,76,76,0.15)" : "rgba(29,53,87,0.15)"}` }}>
                 <div style={{ fontSize: "12px", fontWeight: 600, color: warn ? "#b64c4c" : "#1d3557" }}>
                   {warn
                     ? (ko ? `현재 수량으로 ${days}일치 — 리드타임(${lead}일) 고려 시 오늘 주문 필요` : `${days}d of stock — must order today (${lead}d lead time)`)

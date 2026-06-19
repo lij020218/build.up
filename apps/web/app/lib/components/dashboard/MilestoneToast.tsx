@@ -181,7 +181,7 @@ const iconCircle: React.CSSProperties = {
   width: "44px",
   height: "44px",
   borderRadius: "14px",
-  background: "linear-gradient(135deg, rgba(25,25,112,0.08), rgba(52,199,89,0.08))",
+  background: "linear-gradient(135deg, rgba(25,25,112,0.08), rgba(29,53,87,0.08))",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

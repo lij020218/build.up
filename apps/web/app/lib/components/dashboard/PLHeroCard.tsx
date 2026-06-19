@@ -237,8 +237,8 @@ export function PLHeroCard({
               marginTop: "12px",
               padding: "11px 13px",
               borderRadius: "12px",
-              background: todayBepProgress != null && todayBepProgress >= 100 ? "rgba(52,199,89,0.05)" : "rgba(25,25,112,0.03)",
-              border: todayBepProgress != null && todayBepProgress >= 100 ? "1px solid rgba(52,199,89,0.16)" : "1px solid rgba(25,25,112,0.06)",
+              background: todayBepProgress != null && todayBepProgress >= 100 ? "rgba(29,53,87,0.05)" : "rgba(25,25,112,0.03)",
+              border: todayBepProgress != null && todayBepProgress >= 100 ? "1px solid rgba(29,53,87,0.16)" : "1px solid rgba(25,25,112,0.06)",
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
                 <span style={{ fontSize: "11.5px", fontWeight: 600, color: "#191970", opacity: 0.7 }}>
@@ -363,9 +363,9 @@ export function PLHeroCard({
               {diag.map((d, i) => (
                 <div key={i} style={{
                   fontSize: "12.5px", lineHeight: 1.5, padding: "10px 12px", borderRadius: "10px",
-                  background: d.ok ? "rgba(52,199,89,0.06)" : "rgba(255,59,48,0.05)",
+                  background: d.ok ? "rgba(29,53,87,0.06)" : "rgba(255,59,48,0.05)",
                   color: d.ok ? "#1d3557" : "#b64c4c",
-                  border: d.ok ? "1px solid rgba(52,199,89,0.18)" : "1px solid rgba(255,59,48,0.18)",
+                  border: d.ok ? "1px solid rgba(29,53,87,0.18)" : "1px solid rgba(255,59,48,0.18)",
                   fontWeight: 500,
                   display: "flex",
                   alignItems: "flex-start",

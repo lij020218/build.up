@@ -138,7 +138,7 @@ export function SectionRenderer({
             fontSize: 11,
             fontWeight: 700,
             color: filledCount.filled === filledCount.total ? PALETTE.SUCCESS : PALETTE.MUTED,
-            background: filledCount.filled === filledCount.total ? "rgba(52,199,89,0.10)" : PALETTE.MIDNIGHT_4,
+            background: filledCount.filled === filledCount.total ? "rgba(29,53,87,0.10)" : PALETTE.MIDNIGHT_4,
             padding: "4px 10px",
             borderRadius: 999,
             fontVariantNumeric: "tabular-nums" as const,

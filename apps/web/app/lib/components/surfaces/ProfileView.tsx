@@ -191,9 +191,9 @@ export function ProfileView() {
           <span style={rowKey}>{ko ? "계정 유형" : "Account type"}</span>
           <span style={{
             fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "999px",
-            background: isAnonymous ? "rgba(255,149,0,0.10)" : "rgba(52,199,89,0.10)",
+            background: isAnonymous ? "rgba(255,149,0,0.10)" : "rgba(29,53,87,0.10)",
             color: isAnonymous ? "#b36200" : "#1a7a36",
-            border: `1px solid ${isAnonymous ? "rgba(255,149,0,0.2)" : "rgba(52,199,89,0.2)"}`,
+            border: `1px solid ${isAnonymous ? "rgba(255,149,0,0.2)" : "rgba(29,53,87,0.2)"}`,
           }}>
             {isAnonymous ? (ko ? "미로그인" : "Guest") : (ko ? "이메일 계정" : "Registered")}
           </span>

@@ -83,7 +83,7 @@ export function MonthlyProgressCard() {
             fontSize: "11px",
             fontWeight: 700,
             color: onTrack ? "#1d3557" : "#b64c4c",
-            background: onTrack ? "rgba(52,199,89,0.08)" : "rgba(182,76,76,0.08)",
+            background: onTrack ? "rgba(29,53,87,0.08)" : "rgba(182,76,76,0.08)",
             padding: "3px 8px",
             borderRadius: "6px",
           }}>
@@ -292,7 +292,7 @@ const barFill = (progress: number, onTrack: boolean): React.CSSProperties => ({
     : "linear-gradient(90deg, #191970, #b64c4c)",
   transition: "width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
   boxShadow: onTrack
-    ? "0 0 12px rgba(52,199,89,0.3)"
+    ? "0 0 12px rgba(29,53,87,0.3)"
     : "0 0 12px rgba(182,76,76,0.2)",
 });
 

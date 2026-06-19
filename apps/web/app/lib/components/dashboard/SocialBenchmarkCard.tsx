@@ -164,7 +164,7 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
   })();
 
   const toneColor = tone === "positive" ? "#1d3557" : tone === "warning" ? "#191970" : "#191970";
-  const toneBg = tone === "positive" ? "rgba(52,199,89,0.04)" : tone === "warning" ? "rgba(25,25,112,0.04)" : "rgba(25,25,112,0.04)";
+  const toneBg = tone === "positive" ? "rgba(29,53,87,0.04)" : tone === "warning" ? "rgba(25,25,112,0.04)" : "rgba(25,25,112,0.04)";
 
   // 막대 차트 3 구간 — 0 ~ top10Monthly
   const barMax = Math.max(top10Monthly, projectedMonthly * 1.1);
@@ -245,12 +245,12 @@ export function SocialBenchmarkCard({ ko, industryCategoryId, dailyEntries }: Pr
           <div style={{ height: "6px", background: "rgba(25,25,112,0.04)", borderRadius: "3px", position: "relative" as const, overflow: "hidden" as const }}>
             <div style={{ height: "100%", width: `${userPct}%`, background: toneColor, borderRadius: "3px", opacity: 0.85, transition: "width 0.4s ease" }} />
             <div style={{ position: "absolute" as const, left: `${avgPct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(15,23,42,0.4)" }} />
-            <div style={{ position: "absolute" as const, left: `${top10Pct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(52,199,89,0.6)" }} />
+            <div style={{ position: "absolute" as const, left: `${top10Pct}%`, top: 0, bottom: 0, width: "1.5px", background: "rgba(29,53,87,0.6)" }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "var(--muted)", marginTop: "4px", fontWeight: 600 }}>
             <span>{ko ? "0" : "0"}</span>
             <span>{ko ? `평균 ${fmt(avgMonthly)}` : `Avg ${fmt(avgMonthly)}`}</span>
-            <span style={{ color: "rgba(52,199,89,0.7)" }}>{ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}</span>
+            <span style={{ color: "rgba(29,53,87,0.7)" }}>{ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}</span>
           </div>
         </div>
       )}
@@ -366,9 +366,9 @@ function WeeklyBenchmarkChart({
         {/* 상위 10% dashed 수평선 (mint) */}
         <line
           x1={pad.left} x2={w - pad.right} y1={topY} y2={topY}
-          stroke="rgba(52,199,89,0.5)" strokeWidth={1.2} strokeDasharray="4 4"
+          stroke="rgba(29,53,87,0.5)" strokeWidth={1.2} strokeDasharray="4 4"
         />
-        <text x={w - pad.right - 4} y={topY - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="rgba(52,199,89,0.8)">
+        <text x={w - pad.right - 4} y={topY - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="rgba(29,53,87,0.8)">
           {ko ? `상위 10% ${fmt(top10Monthly)}` : `Top 10% ${fmt(top10Monthly)}`}
         </text>
 
@@ -400,8 +400,8 @@ function WeeklyBenchmarkChart({
           <span style={{ width: "12px", height: "1.5px", background: "rgba(15,23,42,0.32)", borderRadius: "1px" }} />
           {ko ? "평균" : "Avg"}
         </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(52,199,89,0.75)" }}>
-          <span style={{ width: "12px", height: "1.5px", background: "rgba(52,199,89,0.5)", borderRadius: "1px" }} />
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "rgba(29,53,87,0.75)" }}>
+          <span style={{ width: "12px", height: "1.5px", background: "rgba(29,53,87,0.5)", borderRadius: "1px" }} />
           {ko ? "상위 10%" : "Top 10%"}
         </span>
       </div>

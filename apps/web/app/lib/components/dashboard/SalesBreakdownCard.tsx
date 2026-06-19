@@ -225,7 +225,7 @@ const changePill = (positive: boolean): React.CSSProperties => ({
   fontWeight: 600,
   fontVariantNumeric: "tabular-nums",
   color: positive ? "#1d3557" : "#b64c4c",
-  background: positive ? "rgba(52,199,89,0.08)" : "rgba(182,76,76,0.08)",
+  background: positive ? "rgba(29,53,87,0.08)" : "rgba(182,76,76,0.08)",
   padding: "3px 10px",
   borderRadius: "8px",
   whiteSpace: "nowrap",

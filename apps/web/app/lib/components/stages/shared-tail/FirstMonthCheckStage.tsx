@@ -622,18 +622,18 @@ export function FirstMonthCheckStage() {
                     ? "rgba(182,76,76,0.04)"
                     : ratios.primeCostStatus === "warning"
                       ? "rgba(25,25,112,0.06)"
-                      : "rgba(34,167,73,0.04)",
+                      : "rgba(29,53,87,0.04)",
                   borderBottom: "0.5px solid rgba(0,0,0,0.07)",
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                     {ratios.primeCostStatus === "critical" ? <TrendingDown size={16} color="#b64c4c" />
                       : ratios.primeCostStatus === "warning" ? <AlertTriangle size={16} color="#191970" />
-                      : <TrendingUp size={16} color="rgb(34,167,73)" />}
+                      : <TrendingUp size={16} color="rgb(29,53,87)" />}
                     <span style={{
                       fontSize: "12px", fontWeight: 700, letterSpacing: "0.04em",
                       color: ratios.primeCostStatus === "critical" ? "#b64c4c"
                         : ratios.primeCostStatus === "warning" ? "#191970"
-                        : "rgb(34,167,73)",
+                        : "rgb(29,53,87)",
                     }}>
                       {ko ? "프라임코스트 (재료비 + 인건비)" : "Prime Cost (Ingredients + Labor)"}
                     </span>
@@ -663,8 +663,8 @@ export function FirstMonthCheckStage() {
                             <span style={{
                               fontSize: "11px", fontWeight: 600,
                               padding: "2px 8px", borderRadius: 999,
-                              background: inRange ? "rgba(34,167,73,0.1)" : "rgba(25,25,112,0.1)",
-                              color: inRange ? "rgb(34,167,73)" : "#191970",
+                              background: inRange ? "rgba(29,53,87,0.1)" : "rgba(25,25,112,0.1)",
+                              color: inRange ? "rgb(29,53,87)" : "#191970",
                             }}>
                               {ko ? `평균 ${row.target[0]}~${row.target[1]}%` : `${row.target[0]}-${row.target[1]}%`}
                             </span>

@@ -405,7 +405,7 @@ export function ContractReviewStage() {
                 background: expanded
                   ? `linear-gradient(180deg, rgba(${MIDNIGHT_RGB},0.025) 0%, rgba(255,255,255,0.97) 60%)`
                   : completed
-                    ? "linear-gradient(180deg, rgba(52,199,89,0.04) 0%, rgba(255,255,255,0.96) 100%)"
+                    ? "linear-gradient(180deg, rgba(29,53,87,0.04) 0%, rgba(255,255,255,0.96) 100%)"
                     : "rgba(255,255,255,0.94)",
                 overflow: "hidden",
                 transition: "all 0.2s ease",
@@ -457,7 +457,7 @@ export function ContractReviewStage() {
                         ? "1.5px dashed rgba(0,0,0,0.18)"
                         : "1.5px solid rgba(0,0,0,0.22)",
                     background: completed ? "#1d3557" : "transparent",
-                    boxShadow: completed ? "0 2px 6px rgba(52,199,89,0.28)" : "none",
+                    boxShadow: completed ? "0 2px 6px rgba(29,53,87,0.28)" : "none",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -470,7 +470,7 @@ export function ContractReviewStage() {
                   onMouseEnter={(e) => {
                     if (!completed && canMarkComplete) {
                       e.currentTarget.style.borderColor = "#1d3557";
-                      e.currentTarget.style.background = "rgba(52,199,89,0.06)";
+                      e.currentTarget.style.background = "rgba(29,53,87,0.06)";
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -648,7 +648,7 @@ export function ContractReviewStage() {
                                   gap: "10px",
                                   padding: "8px 10px",
                                   borderRadius: "10px",
-                                  background: checked ? "rgba(52,199,89,0.06)" : "transparent",
+                                  background: checked ? "rgba(29,53,87,0.06)" : "transparent",
                                   border: "1px solid transparent",
                                   cursor: "pointer",
                                   textAlign: "left" as const,

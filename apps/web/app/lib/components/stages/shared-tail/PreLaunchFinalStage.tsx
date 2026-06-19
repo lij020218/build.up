@@ -920,11 +920,11 @@ export function PreLaunchFinalStage() {
                   <div key={c.title} style={{
                     display: "flex", gap: "10px", alignItems: "flex-start",
                     padding: "13px 15px", borderRadius: "14px",
-                    background: c.kind === "win" ? "rgba(34,167,73,0.06)" : "rgba(182,76,76,0.05)",
-                    border: c.kind === "win" ? "1px solid rgba(34,167,73,0.18)" : "1px solid rgba(182,76,76,0.14)",
+                    background: c.kind === "win" ? "rgba(29,53,87,0.06)" : "rgba(182,76,76,0.05)",
+                    border: c.kind === "win" ? "1px solid rgba(29,53,87,0.18)" : "1px solid rgba(182,76,76,0.14)",
                   }}>
                     {c.kind === "win"
-                      ? <CheckCircle2 size={18} strokeWidth={2.2} style={{ color: "rgb(34,167,73)", flexShrink: 0, marginTop: "1px" }} />
+                      ? <CheckCircle2 size={18} strokeWidth={2.2} style={{ color: "rgb(29,53,87)", flexShrink: 0, marginTop: "1px" }} />
                       : <XCircle size={18} strokeWidth={2.2} style={{ color: "#b64c4c", flexShrink: 0, marginTop: "1px" }} />}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13.5px", fontWeight: 700, color: c.kind === "win" ? "rgb(34,127,53)" : "#b64c4c", marginBottom: "3px", letterSpacing: "-0.01em" }}>{c.title}</div>

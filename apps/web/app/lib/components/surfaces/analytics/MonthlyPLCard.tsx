@@ -202,8 +202,8 @@ export function MonthlyPLCard() {
             return (
               <div key={i} style={{
                 display: "flex", gap: "8px", padding: "10px 12px", borderRadius: "10px",
-                background: isWarn ? "rgba(182,76,76,0.05)" : "rgba(52,199,89,0.05)",
-                border: `0.5px solid ${isWarn ? "rgba(182,76,76,0.15)" : "rgba(52,199,89,0.15)"}`,
+                background: isWarn ? "rgba(182,76,76,0.05)" : "rgba(29,53,87,0.05)",
+                border: `0.5px solid ${isWarn ? "rgba(182,76,76,0.15)" : "rgba(29,53,87,0.15)"}`,
                 fontSize: "12px", lineHeight: 1.5, color: "rgba(0,0,0,0.72)",
               }}>
                 {isWarn

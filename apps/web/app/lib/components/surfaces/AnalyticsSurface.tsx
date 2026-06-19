@@ -160,7 +160,7 @@ export function AnalyticsSurface() {
                     </div>
                     <div style={{
                       fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "999px",
-                      background: businessLaunched ? "rgba(52,199,89,0.10)" : "rgba(0,0,0,0.05)",
+                      background: businessLaunched ? "rgba(29,53,87,0.10)" : "rgba(0,0,0,0.05)",
                       color: businessLaunched ? "#248a3d" : "var(--muted)",
                       flexShrink: 0, marginLeft: "10px",
                     }}>
@@ -248,7 +248,7 @@ export function AnalyticsSurface() {
                   </div>
                   <div style={{
                     fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "999px",
-                    background: businessLaunched ? "rgba(52,199,89,0.10)" : "rgba(0,0,0,0.05)",
+                    background: businessLaunched ? "rgba(29,53,87,0.10)" : "rgba(0,0,0,0.05)",
                     color: businessLaunched ? "#248a3d" : "var(--muted)",
                   }}>
                     {businessLaunched ? (language === "ko" ? "운영 중" : "Open") : (language === "ko" ? "준비 중" : "Preparing")}
@@ -288,7 +288,7 @@ export function AnalyticsSurface() {
               {showMonthlyCostPrompt && (() => {
                 const lastSnap = costHistory.length > 0 ? (costHistory as { month: string; ingredients: number; labor: number; rent: number; utilities: number; sga: number; marketing: number; other: number; interest: number }[]).sort((a, b) => b.month.localeCompare(a.month))[0] : null;
                 return (
-                  <article style={{ ...styles.card, padding: "18px 22px", background: "linear-gradient(135deg, rgba(59,92,140,0.04), rgba(52,199,89,0.04))", border: "1px solid rgba(59,92,140,0.12)" }}>
+                  <article style={{ ...styles.card, padding: "18px 22px", background: "linear-gradient(135deg, rgba(59,92,140,0.04), rgba(29,53,87,0.04))", border: "1px solid rgba(59,92,140,0.12)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
                         <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)", marginBottom: "4px" }}>

@@ -29,7 +29,7 @@ export function SaveStatusBadge({ ko, status, lastSavedAt, errorMessage }: Props
 
   const palette = (() => {
     if (s === "saving") return { bg: "rgba(25,25,112,0.08)", color: PALETTE.MIDNIGHT, label: ko ? "Supabase 저장 중" : "Saving to Supabase" };
-    if (s === "saved")  return { bg: "rgba(52,199,89,0.10)", color: "#1d3557",            label: ko ? "저장됨" : "Saved" };
+    if (s === "saved")  return { bg: "rgba(29,53,87,0.10)", color: "#1d3557",            label: ko ? "저장됨" : "Saved" };
     if (s === "error")  return { bg: "rgba(182,76,76,0.10)", color: "#b32419",            label: ko ? "저장 실패" : "Save failed" };
     return { bg: "rgba(25,25,112,0.04)", color: PALETTE.MIDNIGHT, label: ko ? "최신 상태" : "Up to date" };
   })();

@@ -161,7 +161,7 @@ export function BusinessHoursInput({
           </span>
         )}
         {showSaved && (
-          <span style={{ ...statusPill, color: "#1d3557", background: "rgba(52,199,89,0.10)" }}>
+          <span style={{ ...statusPill, color: "#1d3557", background: "rgba(29,53,87,0.10)" }}>
             <CheckCircle2 size={11} strokeWidth={1.5} strokeLinecap="round" />
             {ko ? "저장됨" : "Saved"}
           </span>

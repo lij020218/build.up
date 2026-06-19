@@ -775,7 +775,7 @@ export function CEOMorningHero({ d }: Props) {
             fontSize: "11px", fontWeight: 700, letterSpacing: "0.01em",
             background:
               d.persistStatus === "saving" ? "rgba(25,25,112,0.08)" :
-              d.persistStatus === "saved" ? "rgba(52,199,89,0.10)" :
+              d.persistStatus === "saved" ? "rgba(29,53,87,0.10)" :
               "rgba(182,76,76,0.10)",
             color:
               d.persistStatus === "saving" ? PALETTE.MIDNIGHT :

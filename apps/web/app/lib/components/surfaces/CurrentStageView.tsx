@@ -307,7 +307,7 @@ export function CurrentStageView() {
                       ))}
                     </div>
                     {totalCosts2 > 0 && (
-                      <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderRadius: "12px", background: netProfit2 >= 0 ? "rgba(52,199,89,0.08)" : "rgba(182,76,76,0.08)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderRadius: "12px", background: netProfit2 >= 0 ? "rgba(29,53,87,0.08)" : "rgba(182,76,76,0.08)" }}>
                         <span style={{ fontSize: "13px", fontWeight: 600 }}>{ko ? "예상 손익" : "Est. profit"}</span>
                         <span style={{ fontSize: "14px", fontWeight: 700, color: netProfit2 >= 0 ? "#1d3557" : "#b64c4c" }}>{netProfit2 >= 0 ? "+" : ""}{fmt2(netProfit2)}</span>
                       </div>
@@ -384,7 +384,7 @@ export function CurrentStageView() {
                 {/* 완료 아이콘 */}
                 <div style={{
                   width: "72px", height: "72px", borderRadius: "50%",
-                  background: "rgba(52,199,89,0.12)",
+                  background: "rgba(29,53,87,0.12)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   marginBottom: "24px",
                 }}>
@@ -1272,7 +1272,7 @@ export function CurrentStageView() {
                             <div>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ fontSize: "14px", fontWeight: 560, color: "var(--text)", letterSpacing: "-0.2px" }}>{fund.name}</span>
-                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(59,92,140)" : fund.tag === "긴급" ? "rgb(255,59,48)" : "rgb(52,199,89)", background: fund.tag === "청년" ? "rgba(59,92,140,0.1)" : fund.tag === "긴급" ? "rgba(182,76,76,0.1)" : "rgba(52,199,89,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
+                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(59,92,140)" : fund.tag === "긴급" ? "rgb(255,59,48)" : "rgb(29,53,87)", background: fund.tag === "청년" ? "rgba(59,92,140,0.1)" : fund.tag === "긴급" ? "rgba(182,76,76,0.1)" : "rgba(29,53,87,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
                               </div>
                               <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.4)", marginTop: "2px" }}>{fund.target}</div>
                             </div>
@@ -1294,7 +1294,7 @@ export function CurrentStageView() {
                         <div style={cardLabelStyle}>Eligibility Check</div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div style={cardTitleStyle}>자격 요건 확인</div>
-                          <div style={{ fontSize: "13px", fontWeight: 620, color: eligDone === eligChecks.length ? "rgb(52,199,89)" : "rgba(0,0,0,0.35)", transition: "color 0.2s" }}>{eligDone} / {eligChecks.length}</div>
+                          <div style={{ fontSize: "13px", fontWeight: 620, color: eligDone === eligChecks.length ? "rgb(29,53,87)" : "rgba(0,0,0,0.35)", transition: "color 0.2s" }}>{eligDone} / {eligChecks.length}</div>
                         </div>
                         <div style={cardSubStyle}>신청 전 아래 조건을 모두 충족하는지 확인하세요.</div>
                       </div>
@@ -1304,9 +1304,9 @@ export function CurrentStageView() {
                         return (
                           <div key={item.id}>
                             {i > 0 && <div style={dividerSub} />}
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", cursor: "pointer", background: done ? "rgba(52,199,89,0.04)" : "white", transition: "background 0.15s" }}
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", cursor: "pointer", background: done ? "rgba(29,53,87,0.04)" : "white", transition: "background 0.15s" }}
                               onClick={() => setLoanChecks(prev => ({ ...prev, [item.id]: !prev[item.id] }))}>
-                              <div style={{ flexShrink: 0, marginTop: "1px", width: "22px", height: "22px", borderRadius: "7px", border: done ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: done ? "rgb(52,199,89)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                              <div style={{ flexShrink: 0, marginTop: "1px", width: "22px", height: "22px", borderRadius: "7px", border: done ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: done ? "rgb(29,53,87)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
                                 {done && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                               </div>
                               <div style={{ flex: 1 }}>
@@ -1325,7 +1325,7 @@ export function CurrentStageView() {
                         <div style={cardLabelStyle}>Required Docs</div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div style={cardTitleStyle}>신청 준비 서류</div>
-                          <div style={{ fontSize: "13px", fontWeight: 620, color: docDone === docChecks.length ? "rgb(52,199,89)" : "rgba(0,0,0,0.35)", transition: "color 0.2s" }}>{docDone} / {docChecks.length}</div>
+                          <div style={{ fontSize: "13px", fontWeight: 620, color: docDone === docChecks.length ? "rgb(29,53,87)" : "rgba(0,0,0,0.35)", transition: "color 0.2s" }}>{docDone} / {docChecks.length}</div>
                         </div>
                         <div style={cardSubStyle}>서류 누락이 탈락의 두 번째 원인입니다. 미리 준비하세요.</div>
                       </div>
@@ -1335,9 +1335,9 @@ export function CurrentStageView() {
                         return (
                           <div key={item.id}>
                             {i > 0 && <div style={dividerSub} />}
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", cursor: "pointer", background: done ? "rgba(52,199,89,0.04)" : "white", transition: "background 0.15s" }}
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", cursor: "pointer", background: done ? "rgba(29,53,87,0.04)" : "white", transition: "background 0.15s" }}
                               onClick={() => setLoanChecks(prev => ({ ...prev, [item.id]: !prev[item.id] }))}>
-                              <div style={{ flexShrink: 0, marginTop: "1px", width: "22px", height: "22px", borderRadius: "7px", border: done ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: done ? "rgb(52,199,89)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                              <div style={{ flexShrink: 0, marginTop: "1px", width: "22px", height: "22px", borderRadius: "7px", border: done ? "none" : "1.5px solid rgba(0,0,0,0.2)", background: done ? "rgb(29,53,87)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
                                 {done && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4.5 8L9 3" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                               </div>
                               <div style={{ flex: 1 }}>
