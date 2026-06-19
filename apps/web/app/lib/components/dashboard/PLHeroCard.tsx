@@ -363,9 +363,9 @@ export function PLHeroCard({
               {diag.map((d, i) => (
                 <div key={i} style={{
                   fontSize: "12.5px", lineHeight: 1.5, padding: "10px 12px", borderRadius: "10px",
-                  background: d.ok ? "rgba(29,53,87,0.06)" : "rgba(255,59,48,0.05)",
+                  background: d.ok ? "rgba(29,53,87,0.06)" : "rgba(182,76,76,0.05)",
                   color: d.ok ? "#1d3557" : "#b64c4c",
-                  border: d.ok ? "1px solid rgba(29,53,87,0.18)" : "1px solid rgba(255,59,48,0.18)",
+                  border: d.ok ? "1px solid rgba(29,53,87,0.18)" : "1px solid rgba(182,76,76,0.18)",
                   fontWeight: 500,
                   display: "flex",
                   alignItems: "flex-start",

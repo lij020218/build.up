@@ -197,8 +197,8 @@ export function LanguageProvider(props: { children: ReactNode }) {
                       <>
                         <div style={{
                           width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, marginTop: "4px",
-                          background: n.severity === "urgent" ? "#ff3b30" : "#ff9f0a",
-                          boxShadow: n.severity === "urgent" ? "0 0 0 3px rgba(255,59,48,0.14)" : "0 0 0 3px rgba(255,159,10,0.14)",
+                          background: n.severity === "urgent" ? "#b64c4c" : "#191970",
+                          boxShadow: n.severity === "urgent" ? "0 0 0 3px rgba(182,76,76,0.14)" : "0 0 0 3px rgba(25,25,112,0.14)",
                         }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "13px", fontWeight: 600, letterSpacing: "-0.1px", lineHeight: 1.35, color: "#111" }}>
@@ -218,8 +218,8 @@ export function LanguageProvider(props: { children: ReactNode }) {
                         </div>
                         <span style={{
                           fontSize: "10px", fontWeight: 700, flexShrink: 0, marginTop: "2px",
-                          color: n.severity === "urgent" ? "#ff3b30" : "#ff9f0a",
-                          background: n.severity === "urgent" ? "rgba(255,59,48,0.08)" : "rgba(255,159,10,0.08)",
+                          color: n.severity === "urgent" ? "#b64c4c" : "#191970",
+                          background: n.severity === "urgent" ? "rgba(182,76,76,0.08)" : "rgba(25,25,112,0.08)",
                           padding: "2px 7px", borderRadius: "999px",
                         }}>
                           {n.severity === "urgent" ? (ko ? "긴급" : "Urgent") : (ko ? "주의" : "Warning")}

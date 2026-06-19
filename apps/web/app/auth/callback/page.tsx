@@ -216,12 +216,12 @@ function AuthCallbackInner() {
         <div>
           <div style={{
             width: "64px", height: "64px", borderRadius: "50%",
-            background: "rgba(255,59,48,0.15)", margin: "0 auto 20px",
+            background: "rgba(182,76,76,0.15)", margin: "0 auto 20px",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <path d="M12 8v5M12 16.5v.5" stroke="#ff3b30" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="12" cy="12" r="9" stroke="#ff3b30" strokeWidth="1.6" />
+              <path d="M12 8v5M12 16.5v.5" stroke="#b64c4c" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="12" r="9" stroke="#b64c4c" strokeWidth="1.6" />
             </svg>
           </div>
           <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 8px" }}>인증 실패</h2>

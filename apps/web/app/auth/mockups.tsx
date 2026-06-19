@@ -135,12 +135,12 @@ export function MockupGuides({ card, muted, subtle, accent, isLight, lang }: Moc
   const ko = lang === "ko";
   const guides = ko
     ? [
-        { domain: "인허가", color: "#ff9f0a", title: "음식점 영업 신고 절차", source: "식품의약품안전처", date: "2026-02-15", fresh: true },
+        { domain: "인허가", color: "#191970", title: "음식점 영업 신고 절차", source: "식품의약품안전처", date: "2026-02-15", fresh: true },
         { domain: "세무", color: "#5B8CFF", title: "간이과세자 부가세 신고 가이드", source: "국세청 홈택스", date: "2026-01-20", fresh: true },
         { domain: "대출", color: "#1d3557", title: "소상공인 정책자금 신청 방법", source: "소상공인시장진흥공단", date: "2025-08-10", fresh: false }
       ]
     : [
-        { domain: "Permits", color: "#ff9f0a", title: "Restaurant Business License Process", source: "MFDS", date: "2026-02-15", fresh: true },
+        { domain: "Permits", color: "#191970", title: "Restaurant Business License Process", source: "MFDS", date: "2026-02-15", fresh: true },
         { domain: "Tax", color: "#5B8CFF", title: "Simplified Tax Filing Guide", source: "NTS HomeTax", date: "2026-01-20", fresh: true },
         { domain: "Loans", color: "#1d3557", title: "SME Policy Loan Application", source: "SEMAS", date: "2025-08-10", fresh: false }
       ];
@@ -160,8 +160,8 @@ export function MockupGuides({ card, muted, subtle, accent, isLight, lang }: Moc
                   fontWeight: 500,
                   padding: "2px 7px",
                   borderRadius: 6,
-                  background: g.fresh ? (isLight ? "rgba(29,53,87,0.1)" : "rgba(29,53,87,0.15)") : (isLight ? "rgba(255,59,48,0.08)" : "rgba(255,59,48,0.15)"),
-                  color: g.fresh ? "#1d3557" : "#ff3b30"
+                  background: g.fresh ? (isLight ? "rgba(29,53,87,0.1)" : "rgba(29,53,87,0.15)") : (isLight ? "rgba(182,76,76,0.08)" : "rgba(182,76,76,0.15)"),
+                  color: g.fresh ? "#1d3557" : "#b64c4c"
                 }}
               >
                 {g.fresh ? (ko ? "최신" : "Fresh") : (ko ? "재검토 필요" : "Review needed")}
@@ -194,8 +194,8 @@ export function MockupAnalysis({ card, muted, subtle, accent, isLight, lang }: M
               fontWeight: 600,
               padding: "3px 10px",
               borderRadius: 8,
-              background: isLight ? "rgba(255,159,10,0.1)" : "rgba(255,159,10,0.15)",
-              color: "#ff9f0a"
+              background: isLight ? "rgba(25,25,112,0.1)" : "rgba(25,25,112,0.15)",
+              color: "#191970"
             }}
           >
             {ko ? "중간 위험" : "Medium Risk"}
@@ -224,7 +224,7 @@ export function MockupAnalysis({ card, muted, subtle, accent, isLight, lang }: M
                 height: `${h}%`,
                 borderRadius: 3,
                 background: i < 5
-                  ? (isLight ? "rgba(255,59,48,0.25)" : "rgba(255,59,48,0.35)")
+                  ? (isLight ? "rgba(182,76,76,0.25)" : "rgba(182,76,76,0.35)")
                   : (isLight ? "rgba(29,53,87,0.3)" : "rgba(29,53,87,0.4)")
               }}
             />
@@ -257,7 +257,7 @@ export function MockupAnalysis({ card, muted, subtle, accent, isLight, lang }: M
 
       {/* contract card */}
       <div style={{ ...card, padding: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#ff3b30", letterSpacing: "0.04em", marginBottom: 8 }}>{ko ? "계약서 분석" : "Contract Scan"}</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "#b64c4c", letterSpacing: "0.04em", marginBottom: 8 }}>{ko ? "계약서 분석" : "Contract Scan"}</div>
         <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, marginBottom: 10 }}>
           {ko ? "2개 위험 조항 감지" : "2 risk clauses detected"}
         </div>
@@ -267,7 +267,7 @@ export function MockupAnalysis({ card, muted, subtle, accent, isLight, lang }: M
             : ["Missing goodwill recovery clause", "Excessive early termination penalty"]
           ).map((t) => (
             <div key={t} style={{ fontSize: 12, color: muted, display: "flex", gap: 6, alignItems: "flex-start" }}>
-              <span style={{ color: "#ff3b30", flexShrink: 0 }}>!</span>
+              <span style={{ color: "#b64c4c", flexShrink: 0 }}>!</span>
               <span>{t}</span>
             </div>
           ))}
@@ -350,8 +350,8 @@ export function MockupMentoring({ card, muted, subtle, accent, isLight, lang }: 
         </div>
 
         {/* warning card */}
-        <div style={{ margin: "4px 20px 16px", padding: "12px 14px", borderRadius: 12, background: isLight ? "rgba(255,59,48,0.05)" : "rgba(255,59,48,0.1)", border: `1px solid ${isLight ? "rgba(255,59,48,0.1)" : "rgba(255,59,48,0.15)"}` }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "#ff3b30", marginBottom: 4 }}>{ko ? "주의" : "Warning"}</div>
+        <div style={{ margin: "4px 20px 16px", padding: "12px 14px", borderRadius: 12, background: isLight ? "rgba(182,76,76,0.05)" : "rgba(182,76,76,0.1)", border: `1px solid ${isLight ? "rgba(182,76,76,0.1)" : "rgba(182,76,76,0.15)"}` }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#b64c4c", marginBottom: 4 }}>{ko ? "주의" : "Warning"}</div>
           <div style={{ fontSize: 12, lineHeight: 1.5, color: muted }}>
             {ko ? "영업 신고 전 소방 점검이 완료되어야 합니다. 순서를 확인하세요." : "Fire inspection must be completed before filing. Check the order."}
           </div>
@@ -450,7 +450,7 @@ export function HeroDashboardPreview({ lang }: { lang: Language }) {
           <div style={{ borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", padding: 14 }}>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" as const, marginBottom: 8 }}>{ko ? "최근 알림" : "Recent Alert"}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 4, background: "#ff9f0a", flexShrink: 0 }} />
+              <div style={{ width: 8, height: 8, borderRadius: 4, background: "#191970", flexShrink: 0 }} />
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{ko ? "보건증 유효기간 확인 필요" : "Health certificate expiry check needed"}</div>
             </div>
           </div>
@@ -625,7 +625,7 @@ export function MockupOperations({ card, muted, subtle, accent, isLight, lang }:
           {[
             { v: "2,340" + (ko ? "만" : "K"), l: ko ? "이번 달 매출" : "Monthly Sales", c: "#1d3557" },
             { v: "78" + (ko ? "만" : "K"), l: ko ? "일평균 매출" : "Daily Average", c: accent },
-            { v: "1.2" + (ko ? "만" : "K"), l: ko ? "객단가" : "Avg. Ticket", c: "#ff9f0a" }
+            { v: "1.2" + (ko ? "만" : "K"), l: ko ? "객단가" : "Avg. Ticket", c: "#191970" }
           ].map((m) => (
             <div key={m.l} style={{ padding: "14px 10px", borderRadius: 12, background: subtle, textAlign: "center" }}>
               <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", color: m.c }}>{m.v}</div>
@@ -638,13 +638,13 @@ export function MockupOperations({ card, muted, subtle, accent, isLight, lang }:
         <div style={{ display: "grid", gap: 12, marginBottom: 16 }}>
           {[
             { label: ko ? "프라임 코스트" : "Prime Cost", value: 62, target: 65, color: "#1d3557" },
-            { label: ko ? "식재료 비율" : "Food Cost Ratio", value: 34, target: 35, color: "#ff9f0a" },
+            { label: ko ? "식재료 비율" : "Food Cost Ratio", value: 34, target: 35, color: "#191970" },
             { label: ko ? "인건비 비율" : "Labor Cost", value: 28, target: 30, color: "#5B8CFF" }
           ].map((bar) => (
             <div key={bar.label}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                 <span style={{ fontSize: 12, fontWeight: 500 }}>{bar.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: bar.value <= bar.target ? "#1d3557" : "#ff3b30" }}>{bar.value}%</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: bar.value <= bar.target ? "#1d3557" : "#b64c4c" }}>{bar.value}%</span>
               </div>
               <div style={{ height: 6, borderRadius: 3, background: subtle, position: "relative" }}>
                 <div style={{ width: `${bar.value}%`, height: "100%", borderRadius: 3, background: bar.color }} />

@@ -275,7 +275,7 @@ export function StorePhotoUploader({ ko, variant = "hero" }: Props) {
           <div style={{
             position: "absolute" as const,
             bottom: 8, left: 8, right: 8,
-            background: "rgba(255,59,48,0.95)",
+            background: "rgba(182,76,76,0.95)",
             color: "white",
             padding: "6px 10px",
             borderRadius: 8,
@@ -384,8 +384,8 @@ export function StorePhotoUploader({ ko, variant = "hero" }: Props) {
         <div style={{
           padding: "8px 12px",
           borderRadius: 10,
-          background: "rgba(255,59,48,0.06)",
-          border: "1px solid rgba(255,59,48,0.2)",
+          background: "rgba(182,76,76,0.06)",
+          border: "1px solid rgba(182,76,76,0.2)",
           color: PALETTE.DANGER,
           fontSize: 11.5,
           fontWeight: 600,

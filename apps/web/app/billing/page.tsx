@@ -122,8 +122,8 @@ export default function BillingPage() {
             {message && (
               <div style={{
                 padding: "14px 18px", borderRadius: "14px",
-                background: message.includes("실패") ? "rgba(255,59,48,0.08)" : "rgba(29,53,87,0.08)",
-                border: `1px solid ${message.includes("실패") ? "rgba(255,59,48,0.15)" : "rgba(29,53,87,0.15)"}`,
+                background: message.includes("실패") ? "rgba(182,76,76,0.08)" : "rgba(29,53,87,0.08)",
+                border: `1px solid ${message.includes("실패") ? "rgba(182,76,76,0.15)" : "rgba(29,53,87,0.15)"}`,
                 fontSize: "14px", color: message.includes("실패") ? "#c0392b" : "#1a6b3c",
                 marginBottom: "16px",
               }}>{message}</div>
@@ -161,7 +161,7 @@ export default function BillingPage() {
                   </p>
                   <button type="button" onClick={handleCancel} disabled={canceling} style={{
                     width: "100%", padding: "13px 0", borderRadius: "12px",
-                    border: "none", background: "#ff3b30", color: "#fff",
+                    border: "none", background: "#b64c4c", color: "#fff",
                     fontSize: "15px", fontWeight: 600, cursor: canceling ? "wait" : "pointer",
                     marginBottom: "10px",
                   }}>
@@ -182,7 +182,7 @@ export default function BillingPage() {
 
 function StatusBadge({ status, cancelAtPeriodEnd }: { status: string; cancelAtPeriodEnd?: boolean }) {
   const label = cancelAtPeriodEnd ? "취소 예정" : status === "active" ? "이용 중" : status === "past_due" ? "결제 필요" : "취소됨";
-  const color = cancelAtPeriodEnd ? "#f59e0b" : status === "active" ? "#1d3557" : "#ff3b30";
+  const color = cancelAtPeriodEnd ? "#f59e0b" : status === "active" ? "#1d3557" : "#b64c4c";
   return (
     <div style={{ display: "inline-flex", alignItems: "center", gap: "5px", marginTop: "4px" }}>
       <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: color }} />

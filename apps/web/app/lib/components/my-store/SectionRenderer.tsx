@@ -413,7 +413,7 @@ function ArrayEditor({ spec, value, onAdd, onUpdate, onRemove, recommendedPrefil
                   ...subtleButton,
                   padding: "4px 8px",
                   color: PALETTE.DANGER,
-                  borderColor: "rgba(255,59,48,0.20)",
+                  borderColor: "rgba(182,76,76,0.20)",
                   display: "inline-flex",
                   alignItems: "center" as const,
                 }}

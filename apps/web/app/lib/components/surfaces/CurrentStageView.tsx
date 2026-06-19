@@ -1272,7 +1272,7 @@ export function CurrentStageView() {
                             <div>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ fontSize: "14px", fontWeight: 560, color: "var(--text)", letterSpacing: "-0.2px" }}>{fund.name}</span>
-                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(59,92,140)" : fund.tag === "긴급" ? "rgb(255,59,48)" : "rgb(29,53,87)", background: fund.tag === "청년" ? "rgba(59,92,140,0.1)" : fund.tag === "긴급" ? "rgba(182,76,76,0.1)" : "rgba(29,53,87,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
+                                {fund.tag && <span style={{ fontSize: "10px", fontWeight: 700, color: fund.tag === "청년" ? "rgb(59,92,140)" : fund.tag === "긴급" ? "rgb(182,76,76)" : "rgb(29,53,87)", background: fund.tag === "청년" ? "rgba(59,92,140,0.1)" : fund.tag === "긴급" ? "rgba(182,76,76,0.1)" : "rgba(29,53,87,0.1)", borderRadius: "5px", padding: "1px 5px" }}>{fund.tag}</span>}
                               </div>
                               <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.4)", marginTop: "2px" }}>{fund.target}</div>
                             </div>

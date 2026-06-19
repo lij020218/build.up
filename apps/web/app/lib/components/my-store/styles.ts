@@ -164,7 +164,7 @@ export const ddayPill = (days: number): React.CSSProperties => {
     fontSize: 10.5,
     fontWeight: 700,
     color: isCritical ? PALETTE.DANGER : isWarn ? PALETTE.WARN : PALETTE.MIDNIGHT,
-    background: isCritical ? "rgba(255,59,48,0.10)" : isWarn ? "rgba(255,159,10,0.10)" : PALETTE.MIDNIGHT_8,
+    background: isCritical ? "rgba(182,76,76,0.10)" : isWarn ? "rgba(25,25,112,0.10)" : PALETTE.MIDNIGHT_8,
     fontVariantNumeric: "tabular-nums" as const,
     letterSpacing: "-0.01em",
     whiteSpace: "nowrap" as const,
