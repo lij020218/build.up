@@ -17,6 +17,16 @@
 >   - **남은 부채(별도 과제 task_64a47780)**: iOS IndustryThresholds.swift cafe·general 원가율 컷오프가 웹과 드리프트 → 웹 정본으로 정합 필요(restaurant은 일치).
 > - **➡️ 다음 세션: §1 출시차단(B1 사업자푸터 코드) → §2~7 최종 점검.** (커밋·푸시는 사장님 요청 시만 — 아직 미커밋)
 
+> ### ✅ 진행 로그 2026-06-19 (2차) — B1 푸터 + §2·§3·§5 정밀점검·수정 + 메인 푸시
+> origin/main 갱신: `e7b251f` (이번 세션 전 커밋 FF 푸시). 4영역 병렬 정밀점검(auth·결제·법률·디자인) 후 수정:
+> - **B1 사업자정보 푸터**: SiteFooter 전역 + SSOT businessInfo.ts (전상법 §10 8항목, 미신고=준비중, env 주입). 코드 완료, 값은 신고 후 Vercel env 4종.
+> - **§2 auth [블로커 수정]**: iOS AppRoot authStateChanges 리스너가 첫 세션 후 break → 세션 만료·refresh 실패 미감지(stale UI). 지속 관측 + `AuthCoordinator.handleSessionLost()` 신설. signOut 원격실패 시 로컬 wipe 건너뛰던 버그도 수정(best-effort 원격, 로컬 보장).
+> - **§3 결제 [가드 신설]**: UI 게이트(NEXT_PUBLIC_BILLING_ENABLED)는 노출만 막고 과금 경로(subscribe·billing-renew cron)는 안 막던 갭 → 서버 전용 `BILLING_BACKEND_ENABLED`(기본 OFF, fail-closed) 가드. 9월 유료화 시 활성. 웹훅 보안은 이미 fail-closed(HMAC·replay·KEK) 양호.
+> - **§5 디자인 [신호등 0 완성]**: 웹 토큰(operationalStyles·my-store/styles) 녹/황/적 → 미드나잇/벽돌(iOS 토큰과 일치). 상태 녹색 #34c759·#22a749 ~85곳, 비-벽돌 적색·황색·ocher 전부 정합. 블루 sweep 누락 rgb(0,122,255) 24곳도 스틸로. **잔여 신호등/애플블루 0**.
+> - **남은 §2 UX(비차단)**: 웹 재발송 쿨다운 없음, 만료 인증링크 dead-end, iOS PKCE 교차기기 "만료" 오표기.
+> - **남은 §4 법률(사장님 입력 필요)**: ① Tavily 수탁 공개 여부(전달 데이터 확인) ② "익명화/즉시삭제" 문구가 실제와 부합하는지 ③ 국외이전 항목별 상세(국가·항목·연락처) ④ 만14세 미수집 명시 clause ⑤ §10 푸터 실값(통신판매업 신고 or 신고면제 판단). ④는 보일러플레이트라 추가 가능, ①②⑤는 사장님 사실확인 필요.
+> - **§4 법률 본문은 전반적으로 우수**(약관·개인정보·AI 참고용 고지·관할·수탁목록 모두 존재). §6 정합성·§7 인프라는 대부분 사장님 콘솔.
+
 ---
 
 ## A. 🎯 벤치마크 기능 (다음 세션 **1순위 — 먼저**, §0 게이트 통과 후 바로)
