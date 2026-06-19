@@ -8,6 +8,7 @@ import {
   formatKRW,
   detectBusinessSituation,
   matchCaseStudies,
+  benchmarkText,
   type BusinessSituation,
 } from "@foundone/shared";
 import {
@@ -288,6 +289,18 @@ export async function POST(request: Request) {
     if (cr.rent !== undefined) parts.push(`임대료 ${cr.rent.toFixed(1)}%`);
     if (cr.prime !== undefined) parts.push(`프라임코스트 ${cr.prime.toFixed(1)}%`);
     if (parts.length > 0) ctxLines.push(`- 비용 비율 (월 환산 매출 기준): ${parts.join(" / ")}`);
+    // SSOT 업종 평균 비교 주입 — AI 가 손익카드·일일보고서와 *동일한 기준*으로 비용을 판단하도록.
+    const benchParts: string[] = [];
+    const addBench = (metric: Parameters<typeof benchmarkText>[2], v: number | undefined) => {
+      if (v === undefined) return;
+      const r = benchmarkText(categoryId, undefined, metric, v, "ko");
+      if (r) benchParts.push(r.narrative);
+    };
+    addBench("ingredientRatio", cr.ingredient);
+    addBench("laborRatio", cr.labor);
+    addBench("rentRatio", cr.rent);
+    addBench("primeCost", cr.prime);
+    if (benchParts.length > 0) ctxLines.push(`- 비용 비율 업종 평균 비교: ${benchParts.join(" / ")}`);
   }
   if (body.weakestDayPct !== undefined && body.weakestDayPct < 80) {
     ctxLines.push(`- 가장 약한 요일 매출: 일평균의 ${body.weakestDayPct.toFixed(0)}% (저점 발견)`);

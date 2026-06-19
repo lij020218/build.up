@@ -103,7 +103,8 @@ public struct DailyHubView: View {
                         ingredientRatio: ratios.ingredientRatio,
                         laborRatio: ratios.laborRatio,
                         rentRatio: ratios.rentRatio,
-                        thresholds: IndustryThresholds.thresholds(for: mock.category)
+                        thresholds: IndustryThresholds.thresholds(for: mock.category),
+                        categoryId: mock.category.benchmarkCategoryId
                     )
                 }
 

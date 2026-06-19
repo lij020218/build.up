@@ -9,6 +9,8 @@ import {
   gradeKpi,
   getCostThreshold,
   mapIndustryToGroup,
+  benchmarkText,
+  type BenchmarkMetric,
   type HealthGrade,
 } from "@foundone/shared";
 
@@ -429,11 +431,26 @@ function getGenericRange(key: CategoryKey): readonly [number, number, number] | 
   return null;
 }
 
+// 비용 카테고리 → benchmarkText 지표 (SSOT 공유 범위). SSOT 미커버 키는 null.
+const COST_KEY_TO_METRIC: Partial<Record<CategoryKey, BenchmarkMetric>> = {
+  ingredients: "ingredientRatio",
+  labor: "laborRatio",
+  rent: "rentRatio",
+  marketing: "marketingRatio",
+};
+
 function formatBenchmarkRange(
   key: CategoryKey,
   industryCategoryId: string | undefined,
   ko: boolean,
 ): string {
+  // 1순위: SSOT benchmarkText 의 범위 라벨(웹·iOS·일일보고서 공유, "35–45%"). 범위는 myValue 무관.
+  const metric = COST_KEY_TO_METRIC[key];
+  if (metric) {
+    const r = benchmarkText(industryCategoryId, undefined, metric, 0, ko ? "ko" : "en");
+    if (r) return r.rangeLabel;
+  }
+  // SSOT 미커버(general+marketing 등) → 기존 로직 유지 (회귀 방지)
   const industry = mapIndustryToGroup(industryCategoryId);
   const ssotKey = (
     key === "ingredients" || key === "labor" || key === "rent" || key === "marketing"

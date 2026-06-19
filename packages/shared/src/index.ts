@@ -46,6 +46,7 @@ export * from "./supabase/programs";
 export * from "./logistics-platforms";
 export * from "./finance/dashboard";
 export * from "./finance/unified-health";
+export * from "./finance/benchmark-text";
 export * from "./finance/startup-metrics";
 export * from "./finance/metric-actions";
 export * from "./finance/tax-calendar";

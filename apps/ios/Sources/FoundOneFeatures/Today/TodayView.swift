@@ -149,7 +149,8 @@ public struct TodayView: View {
                     ingredientRatio: ratios.ingredientRatio,
                     laborRatio: ratios.laborRatio,
                     rentRatio: ratios.rentRatio,
-                    thresholds: IndustryThresholds.thresholds(for: mock.category)
+                    thresholds: IndustryThresholds.thresholds(for: mock.category),
+                    categoryId: mock.category.benchmarkCategoryId
                 )
 
                 // ⑤ 재고 vs 고객 (업종 분기) — startupTech 는 둘 다 생략

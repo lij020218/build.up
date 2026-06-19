@@ -23,6 +23,8 @@ public struct PLHeroCard: View {
     let laborRatio: Double        // %
     let rentRatio: Double         // %
     let thresholds: CostRatioThresholds
+    /// 웹-canonical categoryId (벤치마크 텍스트 그룹·라벨 해석용). nil 이면 벤치마크 줄 미표시.
+    let categoryId: String?
     let ko: Bool
 
     public init(
@@ -32,6 +34,7 @@ public struct PLHeroCard: View {
         laborRatio: Double,
         rentRatio: Double,
         thresholds: CostRatioThresholds,
+        categoryId: String? = nil,
         ko: Bool = true
     ) {
         self.totalSales = totalSales
@@ -40,6 +43,7 @@ public struct PLHeroCard: View {
         self.laborRatio = laborRatio
         self.rentRatio = rentRatio
         self.thresholds = thresholds
+        self.categoryId = categoryId
         self.ko = ko
     }
 
@@ -71,6 +75,9 @@ public struct PLHeroCard: View {
                 headerSection
                 metricsSection
                 ratiosSection
+                if let b = benchmarkLine {
+                    benchmarkFooter(b)
+                }
             }
         }
     }
@@ -174,6 +181,40 @@ public struct PLHeroCard: View {
             }
             BUGaugeBar(value: ratio, target: target * 2, grade: grade, height: 5)
         }
+    }
+
+    // MARK: Benchmark footer (웹 CostCompositionDonutCard 푸터 패턴 미러)
+
+    /// 3개 비율 중 가장 두드러진(나쁜) 등급 1개의 업종 평균 비교 한 줄.
+    /// SSOT BenchmarkTextRegistry(웹 benchmarkText 거울). categoryId 없거나 벤치마크 없으면 nil.
+    private var benchmarkLine: BenchmarkResult? {
+        guard let cid = categoryId else { return nil }
+        let lang = ko ? "ko" : "en"
+        let results = [
+            BenchmarkTextRegistry.benchmarkText(categoryId: cid, metric: .ingredientRatio, myValue: ingredientRatio, language: lang),
+            BenchmarkTextRegistry.benchmarkText(categoryId: cid, metric: .laborRatio, myValue: laborRatio, language: lang),
+            BenchmarkTextRegistry.benchmarkText(categoryId: cid, metric: .rentRatio, myValue: rentRatio, language: lang),
+        ].compactMap { $0 }
+        guard !results.isEmpty else { return nil }
+        func rank(_ s: BenchmarkStatus) -> Int { s == .risk ? 2 : (s == .watch ? 1 : 0) }
+        return results.max { rank($0.status) < rank($1.status) }
+    }
+
+    private func benchmarkFooter(_ b: BenchmarkResult) -> some View {
+        // 신호등 0: good/watch=미드나잇 농담, risk만 벽돌(danger)
+        let tint = b.status == .risk ? BUColor.danger : BUColor.midnight
+        return HStack(spacing: 6) {
+            Text(b.narrative)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(tint)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10).fill(tint.opacity(0.06)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(tint.opacity(0.18), lineWidth: 0.5))
     }
 }
 
