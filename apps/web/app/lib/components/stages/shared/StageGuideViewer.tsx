@@ -710,11 +710,11 @@ export function StageGuideViewer() {
     const urlMap = VENDOR_URL_MAP;
     const tierConfig = {
       premium: { bg: "rgba(88,86,214,0.12)", fg: "rgb(88,86,214)", label: language === "ko" ? "프리미엄" : "Premium" },
-      standard: { bg: "rgba(59,92,140,0.1)", fg: "rgb(0,122,255)", label: language === "ko" ? "표준" : "Standard" },
+      standard: { bg: "rgba(59,92,140,0.1)", fg: "rgb(59,92,140)", label: language === "ko" ? "표준" : "Standard" },
       budget: { bg: "rgba(52,199,89,0.1)", fg: "rgb(34,167,73)", label: language === "ko" ? "가성비" : "Value" },
     };
     const categoryColors = [
-      { bg: "rgba(59,92,140,0.1)",  fg: "rgb(0,122,255)"  },
+      { bg: "rgba(59,92,140,0.1)",  fg: "rgb(59,92,140)"  },
       { bg: "rgba(52,199,89,0.1)",  fg: "rgb(34,167,73)"  },
       { bg: "rgba(255,149,0,0.1)",  fg: "rgb(210,120,0)"  },
       { bg: "rgba(88,86,214,0.12)", fg: "rgb(88,86,214)"  },
@@ -837,7 +837,7 @@ export function StageGuideViewer() {
                         onClick={() => setVendorSelections(prev => ({ ...prev, [selKey]: isSelected ? "" : item.name }))}
                       >
                         {/* select indicator */}
-                        <div style={{ flexShrink: 0, width: "20px", height: "20px", borderRadius: "50%", border: isSelected ? "none" : "1.5px solid rgba(0,0,0,0.18)", background: isSelected ? "rgb(0,122,255)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                        <div style={{ flexShrink: 0, width: "20px", height: "20px", borderRadius: "50%", border: isSelected ? "none" : "1.5px solid rgba(0,0,0,0.18)", background: isSelected ? "rgb(59,92,140)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
                           {isSelected && (
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                               <path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -849,7 +849,7 @@ export function StageGuideViewer() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px", flexWrap: "wrap" as const }}>
-                            <span style={{ fontSize: "14px", fontWeight: isSelected ? 640 : 590, color: isSelected ? "rgb(0,122,255)" : "var(--text)", letterSpacing: "-0.3px" }}>{item.name}</span>
+                            <span style={{ fontSize: "14px", fontWeight: isSelected ? 640 : 590, color: isSelected ? "rgb(59,92,140)" : "var(--text)", letterSpacing: "-0.3px" }}>{item.name}</span>
                             <span style={{ fontSize: "10.5px", fontWeight: 600, padding: "2px 7px", borderRadius: "100px", background: tier.bg, color: tier.fg, flexShrink: 0 }}>{tier.label}</span>
                           </div>
                           <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)", lineHeight: 1.45 }}>{item.desc}</div>
@@ -877,7 +877,7 @@ export function StageGuideViewer() {
                   style={{ display: "flex", alignItems: "center", gap: "14px", padding: "13px 18px", cursor: "pointer", background: selectedName === etcKey ? "rgba(59,92,140,0.04)" : "transparent", transition: "background 0.15s" }}
                   onClick={() => setVendorSelections(prev => ({ ...prev, [selKey]: selectedName === etcKey ? "" : etcKey }))}
                 >
-                  <div style={{ flexShrink: 0, width: "20px", height: "20px", borderRadius: "50%", border: selectedName === etcKey ? "none" : "1.5px solid rgba(0,0,0,0.18)", background: selectedName === etcKey ? "rgb(0,122,255)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                  <div style={{ flexShrink: 0, width: "20px", height: "20px", borderRadius: "50%", border: selectedName === etcKey ? "none" : "1.5px solid rgba(0,0,0,0.18)", background: selectedName === etcKey ? "rgb(59,92,140)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
                     {selectedName === etcKey && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                         <path d="M2 5L4.2 7.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -892,7 +892,7 @@ export function StageGuideViewer() {
                     </svg>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "14px", fontWeight: selectedName === etcKey ? 640 : 500, color: selectedName === etcKey ? "rgb(0,122,255)" : "rgba(0,0,0,0.5)", letterSpacing: "-0.2px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: selectedName === etcKey ? 640 : 500, color: selectedName === etcKey ? "rgb(59,92,140)" : "rgba(0,0,0,0.5)", letterSpacing: "-0.2px" }}>
                       {language === "ko" ? "기타 (직접 입력)" : "Other (specify)"}
                     </div>
                     {selectedName === etcKey && (
@@ -914,8 +914,8 @@ export function StageGuideViewer() {
         })}
         <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "10px 12px", borderRadius: "12px", background: "rgba(59,92,140,0.06)", marginBottom: "4px" }}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
-            <circle cx="7" cy="7" r="6" stroke="rgb(0,122,255)" strokeWidth="1.4"/>
-            <path d="M7 6v4M7 4.5v.5" stroke="rgb(0,122,255)" strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="7" cy="7" r="6" stroke="rgb(59,92,140)" strokeWidth="1.4"/>
+            <path d="M7 6v4M7 4.5v.5" stroke="rgb(59,92,140)" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
           <span style={{ fontSize: "12px", color: "rgba(0,80,200,0.75)", lineHeight: 1.5 }}>
             {stepTip[guideStepIndex] ?? (language === "ko" ? "첫 주문 전 반드시 샘플 요청 후 품질 확인하세요." : "Always request samples before the first order.")}
@@ -984,7 +984,7 @@ export function StageGuideViewer() {
                 : (language === "ko" ? "채널 개설 현황" : "Channel Setup")}
             </span>
             {selectedCount > 0 && (
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(0,122,255)", background: "rgba(59,92,140,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(59,92,140)", background: "rgba(59,92,140,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
                 {selectedCount}{language === "ko" ? "개 완료" : " done"}
               </span>
             )}
@@ -1059,7 +1059,7 @@ export function StageGuideViewer() {
             })}
           </div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "10px 12px", borderRadius: "12px", background: "rgba(59,92,140,0.06)", marginTop: "10px", marginBottom: "4px" }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="7" cy="7" r="6" stroke="rgb(0,122,255)" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="rgb(0,122,255)" strokeWidth="1.4" strokeLinecap="round"/></svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="7" cy="7" r="6" stroke="rgb(59,92,140)" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="rgb(59,92,140)" strokeWidth="1.4" strokeLinecap="round"/></svg>
             <span style={{ fontSize: "12px", color: "rgba(0,80,200,0.75)", lineHeight: 1.5 }}>{tip}</span>
           </div>
         </>

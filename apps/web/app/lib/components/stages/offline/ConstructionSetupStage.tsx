@@ -462,7 +462,7 @@ export function ConstructionSetupStage() {
                       {(() => {
                         // Apple iOS system color palette — 6색 순환
                         const iconColors = [
-                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(0,122,255)"   }, // blue
+                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(59,92,140)"   }, // blue
                           { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   }, // green
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   }, // orange
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   }, // indigo
@@ -553,7 +553,7 @@ export function ConstructionSetupStage() {
                       {(() => {
                         // Apple 시스템 컬러 — 컨셉 카드용
                         const conceptColors = [
-                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(0,122,255)"   }, // blue
+                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(59,92,140)"   }, // blue
                           { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   }, // green
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   }, // orange
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   }, // indigo
@@ -687,7 +687,7 @@ export function ConstructionSetupStage() {
                         const i2026 = selectedIndustryId ? SUB_INDUSTRY_INTERIOR_2026[selectedIndustryId] : undefined;
                         if (!i2026) return null;
                         const yearColors = [
-                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(0,122,255)"   },
+                          { bg: "rgba(59,92,140,0.1)",   fg: "rgb(59,92,140)"   },
                           { bg: "rgba(52,199,89,0.1)",   fg: "rgb(34,167,73)"   },
                           { bg: "rgba(255,149,0,0.1)",   fg: "rgb(210,120,0)"   },
                           { bg: "rgba(88,86,214,0.12)",  fg: "rgb(88,86,214)"   },
@@ -958,7 +958,7 @@ export function ConstructionSetupStage() {
                                     flexShrink: 0,
                                     fontSize: "15px",
                                     fontWeight: 700,
-                                    color: "rgb(0,122,255)",
+                                    color: "rgb(59,92,140)",
                                     letterSpacing: "-0.5px",
                                   }}>
                                     {i + 1}
@@ -994,7 +994,7 @@ export function ConstructionSetupStage() {
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
-                                          color: "rgb(0,122,255)",
+                                          color: "rgb(59,92,140)",
                                         }}
                                       >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1067,7 +1067,7 @@ export function ConstructionSetupStage() {
                                 padding: "9px 20px",
                                 borderRadius: "100px",
                                 background: "rgba(59,92,140,0.1)",
-                                color: "rgb(0,122,255)",
+                                color: "rgb(59,92,140)",
                                 border: "none",
                                 cursor: "pointer",
                               }}
@@ -1104,8 +1104,8 @@ export function ConstructionSetupStage() {
                           marginTop: "10px",
                         }}>
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}>
-                            <circle cx="7" cy="7" r="6" stroke="rgb(0,122,255)" strokeWidth="1.4"/>
-                            <path d="M7 6v4M7 4.5v.5" stroke="rgb(0,122,255)" strokeWidth="1.4" strokeLinecap="round"/>
+                            <circle cx="7" cy="7" r="6" stroke="rgb(59,92,140)" strokeWidth="1.4"/>
+                            <path d="M7 6v4M7 4.5v.5" stroke="rgb(59,92,140)" strokeWidth="1.4" strokeLinecap="round"/>
                           </svg>
                           <span style={{ fontSize: "12.5px", color: "rgba(0,80,200,0.75)", lineHeight: 1.5 }}>
                             {language === "ko"

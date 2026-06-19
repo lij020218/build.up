@@ -38,7 +38,7 @@ export function PlatformSetupStage() {
           {ko ? "판매 플랫폼 비교 · 선택" : "Compare & Select Platforms"}
         </span>
         {selectedCount > 0 && (
-          <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(0,122,255)", background: "rgba(59,92,140,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: "rgb(59,92,140)", background: "rgba(59,92,140,0.1)", padding: "2px 8px", borderRadius: "100px" }}>
             {selectedCount}{ko ? "개 선택" : " selected"}
           </span>
         )}
@@ -104,7 +104,7 @@ export function PlatformSetupStage() {
         })}
       </div>
       <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "10px 12px", borderRadius: "12px", background: "rgba(59,92,140,0.06)", marginTop: "10px" }}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="7" cy="7" r="6" stroke="rgb(0,122,255)" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="rgb(0,122,255)" strokeWidth="1.4" strokeLinecap="round"/></svg>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="7" cy="7" r="6" stroke="rgb(59,92,140)" strokeWidth="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="rgb(59,92,140)" strokeWidth="1.4" strokeLinecap="round"/></svg>
         <span style={{ fontSize: "12px", color: "rgba(0,80,200,0.75)", lineHeight: 1.5 }}>
           {ko ? "스마트스토어는 수수료가 가장 낮아 필수입니다. 쿠팡은 트래픽이 가장 크지만 월 정액비가 있어 매출이 안정된 후 추가하세요." : "Smartstore is essential due to lowest fees. Add Coupang after sales stabilize due to monthly fee."}
         </span>

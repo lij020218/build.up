@@ -7,6 +7,7 @@ import { payWithBillingKey, billingMethodLabelFrom } from "../../_lib/portone-bi
 import {
   PREMIUM_PRICE_KRW, PREMIUM_ORDER_NAME, addOneMonth, recordPaymentIdempotent,
 } from "../../_lib/subscription";
+import { BILLING_BACKEND_ENABLED } from "../../../../lib/billing-gate";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,10 @@ export const runtime = "nodejs";
  *   이후 갱신은 /api/cron/billing-renew 가 빌링키로 자동 청구.
  */
 export async function POST(request: Request) {
+  // 출시 정책 가드: 9월 유료화 전엔 실제 과금 경로 전면 차단(fail-closed, 서버 전용 플래그).
+  if (!BILLING_BACKEND_ENABLED) {
+    return NextResponse.json({ error: "billing not enabled" }, { status: 503 });
+  }
   const auth = await requireApiUser(request);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 

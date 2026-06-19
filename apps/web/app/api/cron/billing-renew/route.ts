@@ -22,6 +22,7 @@ import {
   PREMIUM_PRICE_KRW, PREMIUM_ORDER_NAME, RENEWAL_MAX_FAILURES,
   addOneMonth, recordPaymentIdempotent,
 } from "../../_lib/subscription";
+import { BILLING_BACKEND_ENABLED } from "../../../../lib/billing-gate";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -38,6 +39,11 @@ function isAuthorized(request: Request): boolean {
 
 export async function GET(request: Request) {
   if (!isAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // 출시 정책 가드: 9월 유료화 전엔 자동 갱신 과금 비활성(fail-closed). 크론은 돌되 no-op.
+  if (!BILLING_BACKEND_ENABLED) {
+    return NextResponse.json({ ok: true, disabled: true, charged: 0, note: "billing backend disabled" });
+  }
 
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Missing SERVICE_ROLE_KEY" }, { status: 500 });

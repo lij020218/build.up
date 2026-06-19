@@ -8,9 +8,9 @@ import type React from "react";
  *   MIDNIGHT      = #191970  — 메인 액센트 (로드맵과 통일)
  *   MIDNIGHT_DEEP = #0f0f4a  — 헤드라인 + 핵심 숫자
  *   MIDNIGHT_INK  = #1d3557  — 호환용 primary (--primary)
- *   SUCCESS       = #34c759  — Apple iOS 그린 (수익·성장)
- *   WARN          = #ff9f0a  — Apple iOS 오렌지 (주의·트렌드 변화)
- *   DANGER        = #ff3b30  — Apple iOS 레드 (런웨이 위험)
+ *   SUCCESS       = #1d3557  — 미드나잇 잉크 (수익·성장). 신호등 금지 — good=네이비
+ *   WARN          = #191970  — 미드나잇 (주의). 신호등 금지 — 황색 아님
+ *   DANGER        = #b64c4c  — 벽돌 (위험). 유일하게 색을 쓰는 상태
  *   INK           = #0f172a  — 본문 텍스트
  *   MUTED         = rgba(15,23,42,0.55)
  *
@@ -34,12 +34,12 @@ export const PALETTE = {
   MIDNIGHT_8: "rgba(25,25,112,0.08)",
   MIDNIGHT_12: "rgba(25,25,112,0.12)",
   MIDNIGHT_18: "rgba(25,25,112,0.18)",
-  SUCCESS: "#34c759",
-  SUCCESS_8: "rgba(52,199,89,0.08)",
-  WARN: "#ff9f0a",
-  WARN_8: "rgba(255,159,10,0.08)",
-  DANGER: "#ff3b30",
-  DANGER_8: "rgba(255,59,48,0.08)",
+  SUCCESS: "#1d3557",
+  SUCCESS_8: "rgba(29,53,87,0.08)",
+  WARN: "#191970",
+  WARN_8: "rgba(25,25,112,0.08)",
+  DANGER: "#b64c4c",
+  DANGER_8: "rgba(182,76,76,0.08)",
   INK: "#0f172a",
   MUTED: "rgba(15,23,42,0.55)",
   MUTED_45: "rgba(15,23,42,0.45)",
@@ -87,8 +87,8 @@ export const CHART_COLORS = {
   // 그라디언트 (그래프 fill용)
   gradients: {
     primary: { from: "rgba(25,25,112,0.32)", to: "rgba(25,25,112,0)" },
-    success: { from: "rgba(52,199,89,0.28)", to: "rgba(52,199,89,0)" },
-    danger: { from: "rgba(255,59,48,0.24)", to: "rgba(255,59,48,0)" },
+    success: { from: "rgba(29,53,87,0.28)", to: "rgba(29,53,87,0)" },
+    danger: { from: "rgba(182,76,76,0.24)", to: "rgba(182,76,76,0)" },
   },
 } as const;
 

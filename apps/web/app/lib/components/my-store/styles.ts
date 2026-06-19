@@ -16,9 +16,9 @@ export const PALETTE = {
   HINT: "rgba(15,23,42,0.4)",
   GHOST: "rgba(15,23,42,0.28)",
   SUBTLE: "rgba(25,25,112,0.04)",
-  SUCCESS: "#34c759",
-  WARN: "#ff9f0a",
-  DANGER: "#ff3b30",
+  SUCCESS: "#1d3557", // 신호등 금지 — good=미드나잇 네이비
+  WARN: "#191970",    // 주의 = 미드나잇 (황색 아님)
+  DANGER: "#b64c4c",  // 위험 = 벽돌 (유일한 컬러 상태)
 } as const;
 
 /** 섹션 카드 — 흰색 베이스, hairline 보더, 부드러운 그림자 */
