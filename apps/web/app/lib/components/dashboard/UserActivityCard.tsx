@@ -138,7 +138,8 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
   // 데이터 신뢰도 — 경과일 대비 입력 일수 비율. 50% 미만이면 추정치 표시 (신뢰도 낮음).
   const dataConfidence = elapsedDays > 0 ? Math.min(1, daysRecorded / elapsedDays) : 0;
   const isLowConfidence = dataConfidence < 0.5 && daysRecorded > 0;
-  const monthlyProjected = dailyAvg * 30;
+  // RP2: 월환산 분모 26영업일로 통일 (코드베이스 컨벤션 — SocialBenchmark·브리핑·자금·캐시플로우와 동일).
+  const monthlyProjected = dailyAvg * 26;
 
   // ── 마일스톤 ──
   const milestone = nextMilestone(cumulativeTotal);
@@ -324,12 +325,12 @@ export function UserActivityCard({ d, ko, todayStr, recent7Entries, todayEntry, 
             {dailyAvg > 0 && userUnitSuffix && <span style={miniStatUnit}>{userUnitSuffix}</span>}
           </div>
         </div>
-        {/* 월 예상 — 일평균 × 30 */}
+        {/* 월 예상 — 일평균 × 26영업일 */}
         <div
           style={miniStat}
           title={ko
-            ? `일 평균 ${dailyAvg.toLocaleString()} × 30일 = 월 예상${isLowConfidence ? ` · ${daysRecorded}일치 입력 기준 (참고)` : ""}`
-            : `Daily avg ${dailyAvg.toLocaleString()} × 30 days${isLowConfidence ? ` · based on ${daysRecorded} days only` : ""}`}
+            ? `일 평균 ${dailyAvg.toLocaleString()} × 26영업일 = 월 예상${isLowConfidence ? ` · ${daysRecorded}일치 입력 기준 (참고)` : ""}`
+            : `Daily avg ${dailyAvg.toLocaleString()} × 26 working days${isLowConfidence ? ` · based on ${daysRecorded} days only` : ""}`}
         >
           <div style={miniStatLabel}>
             <Target size={11} strokeWidth={1.5} />

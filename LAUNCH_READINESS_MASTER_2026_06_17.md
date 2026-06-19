@@ -6,6 +6,17 @@
 
 > **🟢 다음 세션 실행 순서 (사장님 확정): ① §A 벤치마크 기능 생성 → ② §0~7 최종 점검.** §0 게이트는 양쪽 모두의 선행.
 
+> ### ✅ 진행 로그 2026-06-19 — §0 게이트 통과 + §A 벤치마크 기능 구현 완료
+> - **§0 게이트 5종 green**: shared tsc / web tsc+next build / vitest 265 / iOS FoundOneFeatures·FoundOne BUILD SUCCEEDED.
+> - **§A 구현 (조사 기반: Toast 14만 점포 코호트 · LinkedIn Salary 프라이버시 임계값)**:
+>   - **SSOT 신규**: `packages/shared/src/finance/benchmark-text.ts` → `benchmarkText(categoryId, revenueStage, metric, myValue, lang)`. 기존 COST_RATIO_THRESHOLDS·COMMON_THRESHOLDS·INDUSTRY_BENCHMARKS 재사용(심화). cross-group 폴백 금지(정직), 벤치마크 없으면 null. source="industry"(스케일 오면 "cohort"로 교체, UI 불변). 회귀테스트 `benchmark-text.test.ts` 13/13.
+>   - **revenueStage 차원 추가**(사장님 확정): 시그니처에 받되 (A) 큐레이트는 단계 무관이라 폴백 — (B) 코호트 forward-compat. 위조 0.
+>   - **iOS 미러 신규**: `BenchmarkTextRegistry.swift` (웹 1:1, 양쪽 동시 수정 주석).
+>   - **노출**: ① 웹 CostCompositionDonutCard 범위를 SSOT로 통일(웹·iOS 동일 "35–45%") + iOS PLHeroCard 벤치마크 푸터 신규(양쪽 호출부). ② 매출 vs 업종평균 = 기존 SocialBenchmarkCard 담당(중복 회피). ③ 일일보고서 route에 SSOT 비용 벤치마크 주입(매출 벤치마크는 기존). ④ 코칭=industry-daily가 엔진, 비용 벤치마크 컨텍스트화.
+>   - **검증**: 웹 build+tsc, iOS 양쪽 빌드, vitest 모두 green. TodayView 런타임 렌더 확인(simctl). 푸터는 fold 아래라 시뮬 스크롤 게이트(알림센터 hit-test)로 캡처 미완 — 알려진 한계.
+>   - **남은 부채(별도 과제 task_64a47780)**: iOS IndustryThresholds.swift cafe·general 원가율 컷오프가 웹과 드리프트 → 웹 정본으로 정합 필요(restaurant은 일치).
+> - **➡️ 다음 세션: §1 출시차단(B1 사업자푸터 코드) → §2~7 최종 점검.** (커밋·푸시는 사장님 요청 시만 — 아직 미커밋)
+
 ---
 
 ## A. 🎯 벤치마크 기능 (다음 세션 **1순위 — 먼저**, §0 게이트 통과 후 바로)
@@ -57,7 +68,7 @@ npx vitest run                                                            # 265/
 
 | # | 항목 | 누가 | 상태 | 비고 |
 |---|------|------|------|------|
-| B1 | **사업자정보 푸터** (전상법) — 상호·대표자·사업자등록번호·통신판매업 신고번호·주소·연락처 | 코드(나) + 신고(사장님) | ❌ 미비 | 통신판매업 신고 선행 후 푸터 컴포넌트 신설(웹 전역 + /legal). Phase 7 확정 |
+| B1 | **사업자정보 푸터** (전상법) — 상호·대표자·사업자등록번호·통신판매업 신고번호·주소·연락처 | 코드(나) ✅ + 신고/값(사장님) ⬜ | 🟡 코드완료·값대기 | **2026-06-19 구현**: `SiteFooter.tsx`(전역 root layout 마운트) + SSOT `lib/businessInfo.ts`(전상법 §10 8항목). 미신고 항목은 "준비 중"(가짜번호 X). **신고 완료 시 Vercel env만 채우면 자동 노출**: `NEXT_PUBLIC_BIZ_REG_NO`·`NEXT_PUBLIC_MAIL_ORDER_NO`·`NEXT_PUBLIC_BIZ_ADDRESS`·`NEXT_PUBLIC_BIZ_PHONE`. 렌더 검증 완료(/legal/terms 하단). |
 | B2 | **이메일 인증 메일 실제 발송** | 사장님(콘솔) | ⬜ | Supabase: Confirm email ON + **커스텀 SMTP(Resend)** 등록 (`RESEND_SUPABASE_SMTP.md`). 미설정 시 가입 메일 안 감 → **실가입 1건 테스트 필수** |
 | B3 | **Vercel 환경변수** 등록 | 사장님 | ⬜ | `UPSTASH_*`·`CRON_SECRET`·`SUPABASE_SERVICE_ROLE_KEY`·`TAVILY`·`PORTONE_KEK_BASE64`·`KAKAO`·`NEXT_PUBLIC_*` (LAUNCH_CHECKLIST §3). 미등록 시 rate-limit 우회·cron 401 |
 | B4 | **마이그레이션 prod 적용** 확인 | 사장님(DB) | ⬜ | 특히 보안 `20260610_000005` + 상권 `20260613_*`. 코드론 검증 불가 |
@@ -109,7 +120,7 @@ npx vitest run                                                            # 265/
 "LAUNCH_READINESS_MASTER §0 게이트 실행 → **§A 벤치마크 기능부터** (SSOT `benchmarkText` → 손익카드 웹·iOS → 매출·일일보고서·코칭). 벤치마크 끝나면 §1 출시차단(코드 B1 사업자푸터) + §2~7 최종 점검." — 확인 질문 없이 바로 진행, 순서 = 벤치마크 → 점검.
 
 ## 사장님(운영자)이 직접 해야 할 것 — 체크리스트
-- [ ] 통신판매업 신고 → 신고번호 확보 (B1 푸터에 필요)
+- [ ] 통신판매업 신고 → 신고번호 확보 → Vercel env 4종 입력 (B1 푸터 코드는 완료, 값만 대기: `NEXT_PUBLIC_BIZ_REG_NO`·`NEXT_PUBLIC_MAIL_ORDER_NO`·`NEXT_PUBLIC_BIZ_ADDRESS`·`NEXT_PUBLIC_BIZ_PHONE`)
 - [ ] Supabase: Confirm email ON + Resend SMTP + Redirect URLs(prod·localhost) (B2)
 - [ ] Kakao Developers 앱 + Supabase Kakao provider + `NEXT_PUBLIC_KAKAO_LOGIN_ENABLED=true` (§2)
 - [ ] Vercel 환경변수 전체 (B3)

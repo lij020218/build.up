@@ -314,10 +314,11 @@ export function CEOMorningHero({ d }: Props) {
         };
       }
       case "monthlyProfit": {
-        // 진행 중인 달 — 14일 매출의 *날짜 분모* 평균 × 30 - 월 비용 (보수적 근사)
+        // 진행 중인 달 — 14일 매출의 *날짜 분모* 평균 × 26영업일 - 월 비용 (보수적 근사)
+        // RP2: 월환산 분모는 코드베이스 컨벤션 26영업일로 통일 (SocialBenchmark·브리핑·자금·캐시플로우와 동일).
         const last14Sales = entriesInDays(14).reduce((s, e) => s + e.sales, 0);
         const avg14 = last14Sales / 14;
-        const projMonthlySales = avg14 * 30;
+        const projMonthlySales = avg14 * 26;
         const profit = projMonthlySales - totalMonthlyBurn;
         return {
           label: ko ? "이번 달 예상 순익" : "Est. Monthly Profit",
