@@ -88,7 +88,7 @@ export default function TermsPage() {
           <ul>
             <li>AI의 답변은 참고 정보이며, 법적·세무·노무 자문을 대체하지 않습니다.</li>
             <li>중요한 사업 결정에는 전문가 확인을 권장합니다.</li>
-            <li>AI 처리를 위해 입력 내용이 익명화된 형태로 외부 API에 전달될 수 있습니다.</li>
+            <li>AI 처리를 위해 사업 지표 등 입력 내용이 식별정보를 제외하고 외부 AI API(Anthropic·OpenAI, 미국)에 전달될 수 있습니다.</li>
           </ul>
         </Section>
 

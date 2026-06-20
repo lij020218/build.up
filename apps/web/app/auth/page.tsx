@@ -67,6 +67,8 @@ export default function AuthPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  // 인증메일 재발송 쿨다운(초) — Supabase 가 ~60초 throttle 하므로 스팸·throttle 에러 방지.
+  const [resendCooldown, setResendCooldown] = useState(0);
   // 초대 등에서 넘어온 복귀 경로(returnTo). open redirect 방지를 위해 검증된 내부 경로만 보관.
   //   (이 페이지는 전부 client-side 라 useSearchParams 대신 window.location 을 effect 에서 읽어
   //    Suspense bailout 없이 처리 — 콜백 페이지와 달리 거대 컴포넌트라 Suspense 래핑을 피한다.)
@@ -189,11 +191,34 @@ export default function AuthPage() {
       navigateToHomeHard();
     });
 
-  const handleResendEmail = () =>
+  // 쿨다운 1초 틱다운
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  const handleResendEmail = () => {
+    if (resendCooldown > 0 || loading) return;
     run(async () => {
-      await resendConfirmationEmail(supabase, pendingEmail);
-      setMessage("인증 이메일을 다시 발송했습니다.");
+      try {
+        await resendConfirmationEmail(supabase, pendingEmail);
+        setMessage("인증 이메일을 다시 발송했습니다.");
+        setResendCooldown(60);
+      } catch (err) {
+        // Supabase throttle("you can only request this after N seconds") 등 → 한국어로.
+        const raw = err instanceof Error ? err.message : String(err);
+        const m = raw.match(/after (\d+) seconds?/i);
+        if (m) {
+          setResendCooldown(Number(m[1]));
+          setMessage(`잠시 후 다시 시도해 주세요 (${m[1]}초 후 재발송 가능).`);
+        } else {
+          setMessage("재발송에 실패했어요. 잠시 후 다시 시도해 주세요.");
+          setResendCooldown(30);
+        }
+      }
     });
+  };
 
   const handleLogin = () =>
     run(async () => {
@@ -329,16 +354,18 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={handleResendEmail}
-              disabled={loading}
+              disabled={loading || resendCooldown > 0}
               style={{
                 width: "100%", padding: "13px 0", borderRadius: "12px",
                 border: "1px solid rgba(255,255,255,0.12)",
-                background: "transparent", color: "rgba(255,255,255,0.7)",
-                fontSize: "14px", cursor: loading ? "wait" : "pointer",
+                background: "transparent",
+                color: resendCooldown > 0 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.7)",
+                fontSize: "14px",
+                cursor: loading ? "wait" : resendCooldown > 0 ? "not-allowed" : "pointer",
                 marginBottom: "12px",
               }}
             >
-              {loading ? "발송 중..." : "이메일 재발송"}
+              {loading ? "발송 중..." : resendCooldown > 0 ? `${resendCooldown}초 후 재발송` : "이메일 재발송"}
             </button>
             <button
               type="button"

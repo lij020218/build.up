@@ -190,8 +190,10 @@ public final class AuthCoordinator {
             //  state 는 아직 .unauthenticated 로 두고, 화면이 cover 로 덮는다.)
             isPasswordRecovery = true
         } catch {
-            // 만료/위변조/다른 기기 등 — 화면은 띄우되 에러를 보여 재요청을 안내.
-            recoveryError = "링크가 만료되었거나 유효하지 않습니다. 비밀번호 재설정을 다시 요청해 주세요."
+            // 실패 원인은 만료뿐 아니라 *다른 기기에서 링크를 연 경우*(PKCE 검증자가 요청 기기에만
+            //  있어 교차기기 시 실패)도 흔하다. 둘 다 포괄해 정확히 안내한다(이전: "만료"로만 오표기).
+            recoveryError = "링크가 만료되었거나, 재설정을 요청한 기기와 다른 기기에서 열렸을 수 있어요. "
+                + "요청한 기기에서 메일 링크를 다시 열거나, 비밀번호 재설정을 다시 요청해 주세요."
             isPasswordRecovery = true
         }
     }
