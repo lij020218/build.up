@@ -578,6 +578,16 @@ export function ActivitySnapshotCard({
             ? Math.round(((todayEntry.sales - yEntry.sales) / yEntry.sales) * 100)
             : null;
 
+          // ⚠️ 과거 날짜 수정 버그 방지: hero 표시·수정 대상은 *현재 선택된 날짜*(dailyDateInput)의
+          //   entry 여야 한다. 종전엔 항상 todayEntry(오늘)를 표시·수정해, 19일을 골라 수정해도
+          //   20일에 저장되던 버그. 선택 날짜 기준으로 값·전일대비·수정 타깃을 모두 정렬.
+          const selectedEntry = allE.find(e => e.date === d.dailyDateInput) ?? null;
+          const selPrevDate = new Date(d.dailyDateInput + "T12:00:00"); selPrevDate.setDate(selPrevDate.getDate() - 1);
+          const selPrevEntry = allE.find(e => e.date === getKstDate(selPrevDate));
+          const selectedDiff = selectedEntry && selPrevEntry && selPrevEntry.sales > 0
+            ? Math.round(((selectedEntry.sales - selPrevEntry.sales) / selPrevEntry.sales) * 100)
+            : null;
+
           // 수정 모드 진입
           const enterEdit = (dateStr: string) => {
             const entry = allE.find(e => e.date === dateStr);
@@ -607,13 +617,13 @@ export function ActivitySnapshotCard({
           return (
             <>
               {/* ── 오늘 상태 + 입력 통합 카드 (Apple 스타일) ── */}
-              <div style={{ borderRadius: "16px", overflow: "hidden", background: todayEntry ? "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,242,250,0.3) 100%)" : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,244,255,0.4) 100%)", border: `1px solid ${todayEntry ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.06)"}`, boxShadow: "0 21px 94px rgba(0,0,0,0.03)" }}>
+              <div style={{ borderRadius: "16px", overflow: "hidden", background: selectedEntry ? "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,242,250,0.3) 100%)" : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,244,255,0.4) 100%)", border: `1px solid ${selectedEntry ? "rgba(25,25,112,0.08)" : "rgba(25,25,112,0.06)"}`, boxShadow: "0 21px 94px rgba(0,0,0,0.03)" }}>
 
                 {/* 상단: 오늘 매출 히어로 */}
                 <div style={{ padding: "20px 22px 16px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: todayEntry ? "#1d3557" : "#191970", boxShadow: todayEntry ? "0 0 8px rgba(25,25,112,0.4)" : "0 0 8px rgba(25,25,112,0.3)" }} />
+                      <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: selectedEntry ? "#1d3557" : "#191970", boxShadow: selectedEntry ? "0 0 8px rgba(25,25,112,0.4)" : "0 0 8px rgba(25,25,112,0.3)" }} />
                       <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--muted)" }}>
                         {isToday ? (ko ? "오늘" : "Today") : new Date(d.dailyDateInput + "T12:00:00").toLocaleDateString(ko ? "ko-KR" : "en-US", { month: "long", day: "numeric" })}
                       </span>
@@ -629,19 +639,19 @@ export function ActivitySnapshotCard({
                       style={{ fontSize: "12px", padding: "5px 10px", borderRadius: "8px", border: "1px solid rgba(25,25,112,0.08)", background: "rgba(255,255,255,0.8)", color: "#0f172a", fontWeight: 500 }} />
                   </div>
 
-                  {todayEntry ? (
+                  {selectedEntry ? (
                     <div>
-                      <div style={{ fontSize: "36px", fontWeight: 780, letterSpacing: "-0.05em", color: "#0f172a", lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }} className="bento-number">{fmt(todayEntry.sales)}</div>
+                      <div style={{ fontSize: "36px", fontWeight: 780, letterSpacing: "-0.05em", color: "#0f172a", lineHeight: 1, fontVariantNumeric: "tabular-nums" as const }} className="bento-number">{fmt(selectedEntry.sales)}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
-                        {yesterdayDiff != null && (
-                          <span style={{ fontSize: "12px", fontWeight: 650, padding: "3px 10px", borderRadius: "8px", background: yesterdayDiff >= 0 ? "rgba(25,25,112,0.08)" : "rgba(182,76,76,0.06)", color: yesterdayDiff >= 0 ? "#1d3557" : "#b64c4c" }}>
-                            {yesterdayDiff >= 0 ? "↑" : "↓"} {Math.abs(yesterdayDiff)}% {ko ? "어제 대비" : "vs yesterday"}
+                        {selectedDiff != null && (
+                          <span style={{ fontSize: "12px", fontWeight: 650, padding: "3px 10px", borderRadius: "8px", background: selectedDiff >= 0 ? "rgba(25,25,112,0.08)" : "rgba(182,76,76,0.06)", color: selectedDiff >= 0 ? "#1d3557" : "#b64c4c" }}>
+                            {selectedDiff >= 0 ? "↑" : "↓"} {Math.abs(selectedDiff)}% {ko ? (isToday ? "어제 대비" : "전일 대비") : (isToday ? "vs yesterday" : "vs prev day")}
                           </span>
                         )}
                         <span style={{ fontSize: "12px", color: "var(--muted)" }}>
-                          {todayEntry.customers > 0 ? (ko ? `${todayEntry.customers}${userUnitSuffix} · ${avgTicketLabel} ${fmt(todayEntry.sales / todayEntry.customers)}` : `${todayEntry.customers} ${userKindEn} · ${avgTicketLabel} ${fmt(todayEntry.sales / todayEntry.customers)}`) : ""}
+                          {selectedEntry.customers > 0 ? (ko ? `${selectedEntry.customers}${userUnitSuffix} · ${avgTicketLabel} ${fmt(selectedEntry.sales / selectedEntry.customers)}` : `${selectedEntry.customers} ${userKindEn} · ${avgTicketLabel} ${fmt(selectedEntry.sales / selectedEntry.customers)}`) : ""}
                         </span>
-                        <button type="button" onClick={() => enterEdit(todayStr)} style={{ fontSize: "12px", fontWeight: 600, color: "#191970", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "auto" }}>{ko ? "수정" : "Edit"}</button>
+                        <button type="button" onClick={() => enterEdit(d.dailyDateInput)} style={{ fontSize: "12px", fontWeight: 600, color: "#191970", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "auto" }}>{ko ? "수정" : "Edit"}</button>
                       </div>
                     </div>
                   ) : (
