@@ -119,14 +119,14 @@ public enum IndustryThresholds {
     /// 카페·디저트·베이커리 — 식재료 비율 낮고 인건비 비율 높음 (라떼 등)
     public static let cafe = CostRatioThresholds(
         ingredients: KpiThreshold(
-            healthy: 28, caution: 33, warning: 40,
+            healthy: 30, caution: 35, warning: 40,
             direction: .lowerIsBetter, unit: .percent,
-            source: "카페 업계 표준 (커피 원두 28-32%)"
+            source: "카페 평균 25-35% (KB자영업분석)"
         ),
         labor: KpiThreshold(
-            healthy: 28, caution: 35, warning: 42,
+            healthy: 22, caution: 28, warning: 35,
             direction: .lowerIsBetter, unit: .percent,
-            source: "카페 업계 표준 (바리스타 인건비 28-32%)"
+            source: "카페 인건비 20-28%"
         ),
         rent: KpiThreshold(
             healthy: 10, caution: 15, warning: 20,
@@ -140,12 +140,12 @@ public enum IndustryThresholds {
         )
     )
 
-    /// 미용·살롱
+    /// 미용·헤어살롱 — 디자이너 커미션(수익배분 ~30%/인 + 기본급) 구조라 일반 서비스업보다 인건비 비중이 높다.
     public static let beauty = CostRatioThresholds(
         labor: KpiThreshold(
             healthy: 45, caution: 55, warning: 65,
             direction: .lowerIsBetter, unit: .percent,
-            source: "미용업 표준 (디자이너 비율 45-55%)"
+            source: "미용 디자이너 커미션 구조 (인건비 45-55%, 수익배분 ~30%/인)"
         ),
         rent: KpiThreshold(
             healthy: 12, caution: 18, warning: 25,
@@ -157,19 +157,19 @@ public enum IndustryThresholds {
     /// 일반 (보수적 기본값)
     public static let general = CostRatioThresholds(
         ingredients: KpiThreshold(
-            healthy: 35, caution: 45, warning: 55,
+            healthy: 40, caution: 50, warning: 60,
             direction: .lowerIsBetter, unit: .percent,
-            source: "일반 업종 보수적 기준"
+            source: "보수적 기본값 (업종 미지정)"
         ),
         labor: KpiThreshold(
             healthy: 30, caution: 40, warning: 50,
             direction: .lowerIsBetter, unit: .percent,
-            source: "일반 업종 보수적 기준"
+            source: "보수적 기본값"
         ),
         rent: KpiThreshold(
             healthy: 10, caution: 15, warning: 20,
             direction: .lowerIsBetter, unit: .percent,
-            source: "일반 업종 보수적 기준"
+            source: "보수적 기본값"
         )
     )
 

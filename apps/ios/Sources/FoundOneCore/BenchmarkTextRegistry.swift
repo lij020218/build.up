@@ -17,9 +17,8 @@
 //  재사용(신설 아닌 심화): KpiThreshold/.grade() (IndustryThresholds.swift, 웹 gradeKpi 거울),
 //    IndustryBenchmarkRegistry (매출 평균), HealthGrade.
 //
-//  ⚠️ 알려진 패리티 부채: IndustryThresholds.swift 의 cafe·general 값이 웹 COST_RATIO_THRESHOLDS
-//     와 일부 드리프트(예: cafe 식자재 28 vs 웹 30). 본 파일은 **웹 값을 정본**으로 미러한다.
-//     PLHeroCard 게이지(IndustryThresholds)와의 정합은 restaurant(주 사용처)에서 일치.
+//  본 파일과 IndustryThresholds.swift(PLHeroCard 게이지)는 웹 COST_RATIO_THRESHOLDS 와 동일 값으로
+//  정렬됨(2026-06-19 cafe·general 드리프트 교정 + beauty 전용 그룹 신설). 변경 시 웹·양 파일 동시 수정.
 //
 
 import Foundation
@@ -73,7 +72,7 @@ public struct BenchmarkResult: Sendable, Equatable {
 // MARK: - IndustryGroup (웹 IndustryGroup 미러)
 
 public enum BenchmarkIndustryGroup: String, Sendable {
-    case restaurant, cafe, retail, ecommerce, service, saas, general
+    case restaurant, cafe, retail, ecommerce, beauty, service, saas, general
 }
 
 public enum BenchmarkTextRegistry {
@@ -105,6 +104,11 @@ public enum BenchmarkTextRegistry {
         .ecommerce: [
             .ingredients: KpiThreshold(healthy: 50, caution: 60, warning: 70, direction: .lowerIsBetter, unit: .percent, source: "이커머스 매입원가 (KPMG 2024)"),
             .marketing:   KpiThreshold(healthy: 12, caution: 18, warning: 25, direction: .lowerIsBetter, unit: .percent, source: "이커머스 광고비 (의류 카테고리 ROAS 1000% 기준)"),
+        ],
+        .beauty: [
+            // 미용실은 디자이너 커미션(수익배분 ~30%/인 + 기본급) 구조라 일반 서비스업보다 인건비 비중이 높다.
+            .labor:       KpiThreshold(healthy: 45, caution: 55, warning: 65, direction: .lowerIsBetter, unit: .percent, source: "미용 디자이너 커미션 구조 (인건비 45-55%, 수익배분 ~30%/인)"),
+            .rent:        KpiThreshold(healthy: 12, caution: 18, warning: 25, direction: .lowerIsBetter, unit: .percent, source: "미용실 임차료 표준"),
         ],
         .service: [
             .labor:       KpiThreshold(healthy: 35, caution: 45, warning: 55, direction: .lowerIsBetter, unit: .percent, source: "서비스업 인건비 30-50% (Glasswallet)"),
@@ -151,7 +155,9 @@ public enum BenchmarkTextRegistry {
         if raw.contains("online") || raw.contains("digital") || raw.contains("ecom") { return .ecommerce }
         if raw.contains("retail") || raw.contains("convenience") || raw.contains("apparel") { return .retail }
         if raw.contains("startup") || raw.contains("tech") || raw.contains("saas") { return .saas }
-        if raw.contains("beauty") || raw.contains("fitness") || raw.contains("education")
+        // 미용·헤어살롱은 디자이너 커미션 구조라 일반 서비스업과 인건비 임계값이 달라 별도 그룹.
+        if raw.contains("beauty") || raw.contains("hair") || raw.contains("salon") { return .beauty }
+        if raw.contains("fitness") || raw.contains("education")
             || raw.contains("pet") || raw.contains("living-service") || raw.contains("space") { return .service }
         return .general
     }
@@ -161,11 +167,11 @@ public enum BenchmarkTextRegistry {
     private static func groupLabel(_ g: BenchmarkIndustryGroup, _ lang: Lang) -> String {
         let ko: [BenchmarkIndustryGroup: String] = [
             .restaurant: "외식", .cafe: "카페", .retail: "소매", .ecommerce: "이커머스",
-            .service: "서비스업", .saas: "SaaS", .general: "업종",
+            .beauty: "미용", .service: "서비스업", .saas: "SaaS", .general: "업종",
         ]
         let en: [BenchmarkIndustryGroup: String] = [
             .restaurant: "Restaurant", .cafe: "Cafe", .retail: "Retail", .ecommerce: "E-commerce",
-            .service: "Service", .saas: "SaaS", .general: "Industry",
+            .beauty: "Beauty", .service: "Service", .saas: "SaaS", .general: "Industry",
         ]
         return (lang == "en" ? en[g] : ko[g]) ?? (lang == "en" ? "Industry" : "업종")
     }

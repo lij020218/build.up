@@ -96,6 +96,7 @@ const GROUP_LABEL: Record<IndustryGroup, { ko: string; en: string }> = {
   cafe: { ko: "카페", en: "Cafe" },
   retail: { ko: "소매", en: "Retail" },
   ecommerce: { ko: "이커머스", en: "E-commerce" },
+  beauty: { ko: "미용", en: "Beauty" },
   service: { ko: "서비스업", en: "Service" },
   saas: { ko: "SaaS", en: "SaaS" },
   general: { ko: "업종", en: "Industry" },

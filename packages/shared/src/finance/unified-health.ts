@@ -163,7 +163,8 @@ export type IndustryGroup =
   | "cafe"            // 카페·베이커리·디저트
   | "retail"          // 소매업 (편의점·의류·생활용품)
   | "ecommerce"       // 온라인 쇼핑몰
-  | "service"         // 미용·필라테스·학원·세탁
+  | "beauty"          // 미용·헤어살롱 (디자이너 커미션 구조로 인건비 비중 높음 — service 와 별도)
+  | "service"         // 필라테스·학원·세탁 등 일반 대인 서비스
   | "saas"            // SaaS·소프트웨어·플랫폼
   | "general";        // 분류 미지정 (보수적 기본값)
 
@@ -215,6 +216,13 @@ export const COST_RATIO_THRESHOLDS: Record<
       source: "이커머스 매입원가 (KPMG 2024)" },
     marketing:   { healthy: 12, caution: 18, warning: 25, unit: "percent", direction: "lowerIsBetter",
       source: "이커머스 광고비 (의류 카테고리 ROAS 1000% 기준)" },
+  },
+  beauty: {
+    // 미용실은 디자이너 커미션(수익배분 ~30%/인 + 기본급) 구조라 일반 서비스업보다 인건비 비중이 구조적으로 높다.
+    labor:       { healthy: 45, caution: 55, warning: 65, unit: "percent", direction: "lowerIsBetter",
+      source: "미용 디자이너 커미션 구조 (인건비 45-55%, 수익배분 ~30%/인)" },
+    rent:        { healthy: 12, caution: 18, warning: 25, unit: "percent", direction: "lowerIsBetter",
+      source: "미용실 임차료 표준" },
   },
   service: {
     labor:       { healthy: 35, caution: 45, warning: 55, unit: "percent", direction: "lowerIsBetter",
@@ -493,6 +501,7 @@ const BASE_WEIGHTS: Record<IndustryGroup, Record<DomainKey, number>> = {
   cafe:       { cash: 0.40, profit: 0.30, efficiency: 0.15, growth: 0.15 },
   retail:     { cash: 0.35, profit: 0.25, efficiency: 0.25, growth: 0.15 },
   ecommerce:  { cash: 0.30, profit: 0.25, efficiency: 0.20, growth: 0.25 },
+  beauty:     { cash: 0.30, profit: 0.30, efficiency: 0.20, growth: 0.20 }, // service 와 동일 가중치
   service:    { cash: 0.30, profit: 0.30, efficiency: 0.20, growth: 0.20 },
   saas:       { cash: 0.40, profit: 0.15, efficiency: 0.25, growth: 0.20 },
   general:    { cash: 0.35, profit: 0.30, efficiency: 0.20, growth: 0.15 },
@@ -788,7 +797,9 @@ export function mapIndustryToGroup(industryCategoryId?: string): IndustryGroup {
   if (id.includes("online") || id.includes("digital") || id.includes("ecom")) return "ecommerce";
   if (id.includes("retail") || id.includes("convenience") || id.includes("apparel")) return "retail";
   if (id.includes("startup") || id.includes("tech") || id.includes("saas")) return "saas";
-  if (id.includes("beauty") || id.includes("fitness") || id.includes("education")
+  // 미용·헤어살롱은 디자이너 커미션 구조라 일반 서비스업과 인건비 임계값이 달라 별도 그룹.
+  if (id.includes("beauty") || id.includes("hair") || id.includes("salon")) return "beauty";
+  if (id.includes("fitness") || id.includes("education")
     || id.includes("pet") || id.includes("living-service") || id.includes("space")) return "service";
   return "general";
 }

@@ -34,6 +34,22 @@ describe("benchmarkText — 원가율 계열 (COST_RATIO_THRESHOLDS 재사용)",
     const r = benchmarkText("cafe-dessert", "seed", "ingredientRatio", 32, "ko");
     expect(r!.narrative).toContain("카페 평균");
   });
+
+  // 같은 인건비 38% 라도 미용(디자이너 커미션 구조)은 양호, 일반 서비스업은 주의 — 그룹 분리 효과 검증
+  it("미용은 service 와 별도 그룹: 인건비 38% → 미용 평균 45–65% 양호", () => {
+    const r = benchmarkText("beauty-salon", "growth", "laborRatio", 38, "ko");
+    expect(r).not.toBeNull();
+    expect(r!.narrative).toContain("미용 평균 인건비율");
+    expect(r!.rangeLabel).toBe("45–65%");
+    expect(r!.status).toBe("good"); // 38 ≤ healthy(45) → healthy → good
+  });
+
+  it("일반 서비스업(필라테스)은 service 그룹 유지: 인건비 38% → 35–55% 주의", () => {
+    const r = benchmarkText("fitness", "growth", "laborRatio", 38, "ko");
+    expect(r!.narrative).toContain("서비스업 평균 인건비율");
+    expect(r!.rangeLabel).toBe("35–55%");
+    expect(r!.status).toBe("watch"); // 38 > healthy(35), ≤ caution(45) → caution → watch
+  });
 });
 
 describe("benchmarkText — 영업이익률 (COMMON_THRESHOLDS, higherIsBetter)", () => {
