@@ -346,7 +346,7 @@ function CostsPanel({ d, ko, fmt }: { d: DashboardHook; ko: boolean; fmt: (n: nu
               {renderGroup("other")}
               <button
                 type="button"
-                onClick={d.handleSaveMonthlyCosts}
+                onClick={() => d.handleSaveMonthlyCosts()}
                 style={{
                   marginTop: "10px", borderRadius: "12px", border: "none",
                   background: "linear-gradient(135deg, #1E2A55 0%, #2C4F80 100%)", color: "#fff",

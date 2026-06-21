@@ -127,7 +127,9 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     scheduleAiRefresh(); // 매출 입력 → AI 경영 우선순위 자동 갱신
   };
 
-  const handleSaveMonthlyCosts = () => {
+  // targetMonth 미지정 시 현재 월. ⚠️ 과거 월 비용 편집기를 새로 붙일 땐 반드시 그 월을 넘겨야
+  //   현재 월 스냅샷을 덮어쓰지 않는다(매출 날짜 버그의 월 버전 — 방어적 파라미터화).
+  const handleSaveMonthlyCosts = (targetMonth?: string) => {
     const costs = {
       ingredients: (Number((costCogsText ?? costIngredientsText ?? "").replace(/[^0-9]/g, "")) || 0) * 10000,
       labor: (Number(costLaborText.replace(/[^0-9]/g, "")) || 0) * 10000,
@@ -140,9 +142,9 @@ export function useOperationsHandlers(deps: OperationsHandlersDeps) {
     };
     setMonthlyCosts(costs);
     // Archive to costHistory (월별 스냅샷, 최대 12개월)
-    const currentMonth = getKstDate(new Date()).slice(0, 7);
-    const snap: CostSnapshot = { ...costs, month: currentMonth };
-    const updatedHistory = [...costHistory.filter(h => h.month !== currentMonth), snap]
+    const month = targetMonth ?? getKstDate(new Date()).slice(0, 7);
+    const snap: CostSnapshot = { ...costs, month };
+    const updatedHistory = [...costHistory.filter(h => h.month !== month), snap]
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12);
     setCostHistory(updatedHistory);

@@ -141,6 +141,11 @@ export function StaffOpsCard({
                 setGeneratedCode(null);
                 setInviteEmail("");
                 setInviteStatus("idle");
+                // 새 "추가" 흐름 진입 — 직전 "수정"에서 남은 편집 대상(empEditId)·폼값 초기화.
+                //   안 하면 stale empEditId 로 회원 초대가 기존 직원을 덮어쓴다(데이터 무결성 버그).
+                d.setEmpEditId(null);
+                d.setEmpName(""); d.setEmpWage(""); d.setEmpHours("");
+                d.setEmpInsured(false); d.setEmpHireDate("");
               }
             }}
             style={opsActionPrimary}

@@ -912,7 +912,7 @@ export function AnalyticsSurface() {
                             style={inputStyle} />
                         </div>
                       ))}
-                      <button type="button" style={{ ...styles.primaryButton, marginTop: "4px" }} onClick={handleSaveMonthlyCosts}>
+                      <button type="button" style={{ ...styles.primaryButton, marginTop: "4px" }} onClick={() => handleSaveMonthlyCosts()}>
                         {ko ? "비용 저장" : "Save costs"}
                       </button>
                     </div>

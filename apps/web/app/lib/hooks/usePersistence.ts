@@ -324,7 +324,11 @@ export function applyStoreData(data: UserStoreData): void {
       if (rb && (rb.card === "individual" || rb.card === "codef")) {
         cf.setRevenueBasis({ card: rb.card, countCashReceipt: rb.countCashReceipt === true });
       }
-      // setupCompletedAt 은 markSetupCompleted action 만 있어, 이미 완료된 상태면 그대로 둠
+      // setupCompletedAt 복원 — 다른 기기에서 캐시플로우 셋업을 다시 요구하지 않도록 원본 시각 hydrate.
+      //   (종전: 복원 setter 부재로 누락 → 새 기기 진입 시 설정 완료 상태가 사라져 재요구되던 버그.)
+      if (typeof settings.setupCompletedAt === "string" && settings.setupCompletedAt && !cf.setupCompletedAt) {
+        cf.setSetupCompletedAt(settings.setupCompletedAt);
+      }
     }
   }
 
@@ -397,14 +401,20 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
   // 사장 관리 리스트: includeEmpties 면 빈 배열도 전송(삭제 반영), 아니면 기존처럼 비었을 때 생략.
   const keep = (n: number) => includeEmpties || n > 0;
   if (prof.storeName) r.storeName = prof.storeName;
-  // 영업 시간 — null 도 보낸다 (사장이 "24h 영업"으로 바꾼 경우 반영 위해 항상 포함)
-  r.businessOpenTime = prof.businessOpenTime ?? null;
-  r.businessCloseTime = prof.businessCloseTime ?? null;
+  // 🛑 "항상 전송" 필드(영업시간·세금설정·월비용)는 *서버 로드 완료(includeEmpties=true) 후에만* 보낸다.
+  //   로드 전(다른 기기 첫 진입 등)엔 이들이 기본값(null·zeros)이라, 그대로 보내면 서버의 실제 값
+  //   (사장님 월비용·영업시간)을 덮어쓴다 — dailyEntries race 와 동일 부류의 cross-device wipe.
+  //   빈 배열 가드(keep)와 동일한 storeDataReadyRef 규약을 스칼라/객체 필드에도 적용.
+  if (includeEmpties) {
+    // 영업 시간 — null 도 보낸다 (사장이 "24h 영업"으로 바꾼 경우 반영 위해 포함)
+    r.businessOpenTime = prof.businessOpenTime ?? null;
+    r.businessCloseTime = prof.businessCloseTime ?? null;
+    r.taxSettings = ops.taxSettings;
+    r.monthlyCosts = fin.monthlyCosts;
+  }
   if (prof.businessLaunched) r.businessLaunched = true;
   if (prof.businessLaunchedDate) r.businessLaunchedDate = prof.businessLaunchedDate;
   if (prof.cpaDecision) r.cpaDecision = prof.cpaDecision;
-  r.taxSettings = ops.taxSettings;
-  r.monthlyCosts = fin.monthlyCosts;
   if (keep(fin.dailyEntries.length)) r.dailyEntries = fin.dailyEntries;
   if (keep(ops.inventory.length)) r.inventoryItems = ops.inventory;
   if (keep(ops.employees.length)) r.employees = ops.employees;
@@ -433,8 +443,8 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
   if (Object.keys(rm.guideSelections).length) r.guideSelections = rm.guideSelections;
   if (rm.aiRoadmapResult) r.aiRoadmapResult = rm.aiRoadmapResult;
   if (prof.selectedInteriorConcept) r.selectedInteriorConcept = prof.selectedInteriorConcept;
-  // 구독 관리
-  r.usesSubscriptions = prof.usesSubscriptions ?? false;
+  // 구독 관리 (usesSubscriptions 항상-전송 → 로드 후에만, 기본 false 가 서버 true 를 덮지 않게)
+  if (includeEmpties) r.usesSubscriptions = prof.usesSubscriptions ?? false;
   if (keep(ops.subscriptionPlans.length)) r.subscriptionPlans = ops.subscriptionPlans;
   if (keep(ops.subscribers.length)) r.subscribers = ops.subscribers;
   // 마케팅
@@ -445,8 +455,8 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
     if (keep(mkt.promoCodes.length)) r.promoCodes = mkt.promoCodes;
     if (keep(mkt.playbookChecklist.length)) r.playbookChecklist = mkt.playbookChecklist;
   }
-  // 에이전트 on/off 설정 — 웹·앱 동기화
-  r.agentSettings = useAgentsStore.getState().enabledAgents;
+  // 에이전트 on/off 설정 — 웹·앱 동기화 (항상-전송 → 로드 후에만, 기본값이 서버 설정 덮지 않게)
+  if (includeEmpties) r.agentSettings = useAgentsStore.getState().enabledAgents;
   // 고객 인터뷰 — Mom Test 노트 + AI 패턴 분석
   {
     const iv = useInterviewStore.getState();
@@ -463,7 +473,7 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
     if (keep(tl.entries?.length ?? 0)) {
       r.timeLogEntries = tl.entries;
     }
-    r.timeLogEnabled = tl.enabled;
+    if (includeEmpties) r.timeLogEnabled = tl.enabled;
   }
   // 현금흐름 설정 — Cash-flow Crunch Tracker (사장님 직접 입력, 손실 시 큰 손실)
   {
@@ -486,7 +496,11 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
   }
 
   // ── 내 가게 store 수집 ──
-  try {
+  // 🛑 storeInfo 전체(주소·사업자등록번호·전화·PII 등)는 빈 값도 `|| null` 로 항상 보내므로,
+  //   서버 로드 전(includeEmpties=false)엔 절대 보내면 안 된다 — 다른 기기 첫 진입 시 빈 상태가
+  //   서버의 실제 매장정보·사업자번호를 통째로 null 로 덮어쓴다(가장 큰 데이터 유실 노출).
+  //   로드 완료(includeEmpties=true) 후에만 수집한다. ("사장이 지웠을 수 있음"=빈값 전송은 로드 후에만 유효.)
+  if (includeEmpties) try {
     const si = useStoreInfoStore.getState();
     // 모든 필드를 항상 포함 (빈 값도 의도 — 사장이 지웠을 수 있음)
     r.mission = si.mission || null;

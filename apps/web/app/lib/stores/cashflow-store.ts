@@ -105,6 +105,9 @@ type CashflowActions = {
   setVatReserveEnabled: (v: boolean) => void;
   setRevenueBasis: (v: RevenueBasis) => void;
   markSetupCompleted: () => void;
+  /** 서버에서 받은 최초 설정 완료 시각을 그대로 복원(다른 기기 hydrate용). markSetupCompleted 는
+   *  now 로 덮으므로 원본 보존이 필요한 복원에는 이 setter 를 쓴다. */
+  setSetupCompletedAt: (ts: string | null) => void;
   /** 업종별 *기본* 채널 믹스로 한 번에 갈아끼우기 — 시트 초기 진입 시 추천 적용. */
   applyIndustryDefaults: (categoryId: string) => void;
   resetAll: () => void;
@@ -181,6 +184,7 @@ export const useCashflowStore = create<CashflowState & CashflowActions>()(
       setVatReserveEnabled: (v) => set({ vatReserveEnabled: v }),
       setRevenueBasis: (v) => set({ revenueBasis: v }),
       markSetupCompleted: () => set({ setupCompletedAt: new Date().toISOString() }),
+      setSetupCompletedAt: (ts) => set({ setupCompletedAt: ts }),
       applyIndustryDefaults: (categoryId) =>
         set({ salesChannels: defaultChannelsForIndustry(categoryId) }),
       resetAll: () => set(initialState),
