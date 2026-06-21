@@ -666,7 +666,9 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           realtimeThrottleRef.current = now;
           void (async () => {
             try {
-              await flushStoreDataImmediate();
+              // 🛑 서버 로드 완료 전엔 빈 로컬 push 금지 — 다른 기기 저장이 echo 됐을 때
+              //   아직 로드 안 한 이 기기가 빈/기본 상태를 서버에 덮어쓰는 것을 차단(cross-device wipe).
+              if (storeDataReadyRef.current) await flushStoreDataImmediate();
             } catch {
               /* flush 실패해도 재조회 진행 */
             }
@@ -1317,6 +1319,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
     const interval = setInterval(() => {
       if (isResettingRef.current) return;
       if (!useOnboardingStore.getState().persistenceReady) return;
+      // 🛑 데이터 유실 방지(cross-device wipe): 서버 store 데이터 로드(applyStoreData)가
+      //   끝나기 전엔 자동저장 금지. persistenceReady 는 로드맵 복원 직후(서버 store 로드 *전*)
+      //   true 가 되므로, 이 가드가 없으면 다른 기기(B)의 빈 로컬 상태가 인터벌로 서버에 저장돼
+      //   기기 A 가 5일간 쌓은 매출을 덮어쓴다. collectStoreData 의 storeDataReadyRef 규약을 동일 적용.
+      if (!storeDataReadyRef.current) return;
       // circuit breaker(store 채널) — 영구 실패 후엔 시도조차 안 함
       if (isCircuitBroken("store")) return;
       safeSaveStoreData(storeDataSnapshotRef.current).then(
