@@ -74,6 +74,7 @@ export const useTimeLogStore = create<TimeLogState & TimeLogActions>()(
     }),
     {
       name: "foundone-time-log",
+      skipHydration: true,
       partialize: (state) => ({
         entries: state.entries,
         lastPromptDismissedAt: state.lastPromptDismissedAt,

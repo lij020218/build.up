@@ -264,6 +264,7 @@ export const useAgentsStore = create<AgentsState & AgentsActions>()(
     }),
     {
       name: "foundone-agents",
+      skipHydration: true,
       partialize: (state) => ({
         proposals: state.proposals,
         enabledAgents: state.enabledAgents,

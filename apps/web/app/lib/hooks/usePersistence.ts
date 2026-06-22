@@ -197,6 +197,44 @@ export function resetLocalState(): void {
   useEcommerceStore.getState().clearAll();
 }
 
+/**
+ * 계정별 로컬 캐시 격리 (cross-account 누출 차단의 핵심).
+ *
+ * 모든 user-data store 는 `skipHydration: true` — 모듈 로드 시 자동 hydrate 하지 않는다.
+ *   종전엔 자동 hydrate 가 *인증 전에* 이전 계정 캐시를 메모리에 올린 뒤, connectAndLoad 의
+ *   "계정 바뀜 → 삭제" 가 *나중에* 돌아서, 그 사이/누락으로 다른 계정 데이터가 보이는 P0 누출이 있었다.
+ *   (동명이인 염예준 naver↔gmail 신고, 2026-06-22.)
+ *
+ * 이제 hydrate 는 *오직 여기서, uid 일치를 확인한 뒤에만* 일어난다:
+ *   - 직전 uid == 현재 uid → 내 캐시이므로 rehydrate(즉시 로드, UX 유지).
+ *   - 다르거나 미상 → 이전 캐시를 *읽지 않고* clearStorage + 메모리 초기화 → 새 계정은 절대
+ *     이전 계정 캐시를 못 본다(서버 로드로만 채워짐). "지우기에 의존"이 아니라 "안 읽기"로 뒤집음.
+ */
+type PersistApiStore = { persist: { rehydrate: () => Promise<void> | void; clearStorage: () => void } };
+const USER_PERSIST_STORES: PersistApiStore[] = [
+  useOperationsStore, useFinanceStore, useProfileStore, useRoadmapStore,
+  useCashflowStore, useMarketingStore, useAgentsStore, useInterviewStore,
+  useTimeLogStore, useUsageStore, useStoreInfoStore, useBookingStore, useEcommerceStore,
+] as unknown as PersistApiStore[];
+
+export async function hydrateStoresForUser(uid: string): Promise<{ switched: boolean }> {
+  let prev: string | null = null;
+  try { prev = localStorage.getItem("__foundone_uid"); } catch { /* storage 차단 */ }
+  if (prev === uid) {
+    // 같은 계정 — 캐시 즉시 로드.
+    await Promise.all(USER_PERSIST_STORES.map((s) => {
+      try { return Promise.resolve(s.persist.rehydrate()); } catch { return Promise.resolve(); }
+    }));
+    return { switched: false };
+  }
+  // 다른/미상 계정 — 이전 계정 캐시를 *읽지 않고* 전부 제거 + 메모리 초기화.
+  USER_PERSIST_STORES.forEach((s) => { try { s.persist.clearStorage(); } catch { /* */ } });
+  clearLocalUserData();
+  resetLocalState();
+  try { localStorage.setItem("__foundone_uid", uid); } catch { /* */ }
+  return { switched: true };
+}
+
 /** Apply Supabase-loaded store data to Zustand stores (persist auto-syncs to localStorage) */
 export function applyStoreData(data: UserStoreData): void {
   const prof = useProfileStore.getState();
@@ -332,9 +370,39 @@ export function applyStoreData(data: UserStoreData): void {
     }
   }
 
+  // ── 예약·이커머스 store 복원 ──
+  //   booking-store / ecommerce-store 의 사장님 입력 데이터는 별도 DB 컬럼 없이
+  //   industrySpecifics(industry_specifics jsonb)의 예약 키 __bookings / __ecommerce 에 nest 한다
+  //   (마이그레이션 0 — FoodSafety 와 동일 패턴). 키가 있을 때만 교체(없으면 로컬 보존 — 보수적 가드).
+  //   iOS 는 이 두 키를 모르므로 jsonb 라운드트립에서 그대로 보존된다.
+  {
+    const indSpec = (data.industrySpecifics as Record<string, unknown> | null) ?? {};
+    const bk = indSpec.__bookings as { bookings?: unknown[]; providers?: unknown[] } | undefined;
+    if (bk && typeof bk === "object") {
+      useBookingStore.getState().hydrate(
+        (Array.isArray(bk.bookings) ? bk.bookings : []) as never,
+        (Array.isArray(bk.providers) ? bk.providers : []) as never,
+      );
+    }
+    const ec = indSpec.__ecommerce as { adSpends?: unknown[]; returns?: unknown[] } | undefined;
+    if (ec && typeof ec === "object") {
+      useEcommerceStore.getState().hydrate(
+        (Array.isArray(ec.adSpends) ? ec.adSpends : []) as never,
+        (Array.isArray(ec.returns) ? ec.returns : []) as never,
+      );
+    }
+  }
+
   // ── "내 가게" store 복원 ──
   try {
     const si = useStoreInfoStore.getState();
+    // 예약 키(__bookings/__ecommerce)는 booking/ecommerce store 가 SSOT 이므로
+    //   store-info 의 industrySpecifics 에는 넣지 않는다(중복·MyStore 섹션 오염 방지).
+    //   collectStoreData 가 저장 시 다시 합쳐서 내보낸다.
+    const rawIndSpec = (data.industrySpecifics as Record<string, unknown> | null) ?? {};
+    const cleanIndSpec = { ...rawIndSpec };
+    delete cleanIndSpec.__bookings;
+    delete cleanIndSpec.__ecommerce;
     si.hydrate({
       mission: (data.mission as string | null) ?? "",
       shortDescription: (data.shortDescription as string | null) ?? "",
@@ -374,7 +442,7 @@ export function applyStoreData(data: UserStoreData): void {
       tenancy: (data.tenancy as Record<string, unknown> | null) ?? {},
       digitalFootprint: Array.isArray(data.digitalFootprint) ? (data.digitalFootprint as never) : [],
       vehicles: Array.isArray(data.vehicles) ? (data.vehicles as never) : [],
-      industrySpecifics: (data.industrySpecifics as Record<string, unknown> | null) ?? {},
+      industrySpecifics: cleanIndSpec,
       businessDocuments: Array.isArray(data.businessDocuments) ? (data.businessDocuments as never) : [],
     });
   } catch (err) {
@@ -541,7 +609,22 @@ export function collectStoreData(includeEmpties = false): Partial<UserStoreData>
     r.tenancy = si.tenancy;
     r.digitalFootprint = si.digitalFootprint;
     r.vehicles = si.vehicles;
-    r.industrySpecifics = si.industrySpecifics;
+    // 예약·이커머스 입력을 industrySpecifics 예약 키에 합쳐 보낸다(별도 컬럼 없이 동기화).
+    //   booking/ecommerce store 가 SSOT 이므로 매 수집마다 fresh non-demo 데이터로 덮어쓴다.
+    //   includeEmpties=true(서버 로드 후) 일 때만 실행되므로 빈 상태가 서버를 지우지 않는다.
+    const bs = useBookingStore.getState();
+    const es = useEcommerceStore.getState();
+    r.industrySpecifics = {
+      ...si.industrySpecifics,
+      __bookings: {
+        bookings: bs.bookings.filter((b) => !b.isDemo),
+        providers: bs.providers.filter((p) => !p.isDemo),
+      },
+      __ecommerce: {
+        adSpends: es.adSpends.filter((a) => !a.isDemo),
+        returns: es.returns.filter((rt) => !rt.isDemo),
+      },
+    };
     r.businessDocuments = si.businessDocuments;
   } catch (err) {
     console.error("[buildup persistence] store-info collect failed", err);
@@ -650,14 +733,11 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       const rawName = pickName("name", "full_name", "preferred_username", "nickname", "user_name");
       setUserName(rawName.length > 0 ? rawName : null);
 
-      // CRITICAL: Detect user switch — clear previous user's localStorage data
-      const previousUserId = localStorage.getItem("__foundone_uid");
-      if (previousUserId && previousUserId !== result.user.id) {
-        clearLocalUserData();
-        resetLocalState();
-        resetCircuit();  // 이전 계정에서 trip 된 저장 차단을 새 계정으로 이월하지 않음
-      }
-      localStorage.setItem("__foundone_uid", result.user.id);
+      // CRITICAL: 계정별 로컬 캐시 격리 — *내 uid 캐시일 때만* hydrate, 아니면 안 읽고 전부 제거.
+      //   skipHydration(자동 hydrate 차단) + 여기서만 명시 hydrate → 새 계정이 이전 계정 캐시를
+      //   보던 P0 누출(동명이인 naver↔gmail) 구조적 차단. ("지우기 의존"이 아니라 "안 읽기".)
+      const { switched } = await hydrateStoresForUser(result.user.id);
+      if (switched) resetCircuit();  // 이전 계정에서 trip 된 저장 차단을 새 계정으로 이월하지 않음
       // 새 로드 사이클 시작 — applyStoreData 로 서버 데이터를 받기 전까지는 빈 배열 전송 금지.
       storeDataReadyRef.current = false;
 
@@ -725,6 +805,29 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           //   roadmaps.updated_at 을 bump 하고, 여기서 roadmaps(user_id 필터)를 구독해 앱·다른 기기의
           //   로드맵 변경을 즉시 재조회한다.
           .on("postgres_changes", { event: "*", schema: "public", table: "roadmaps", filter: `user_id=eq.${uid}` }, onRemote)
+          // ── 동기화 메시 확장(2026-06-22) — owner 편집 테이블 5종 ──
+          //   분류: 대시보드(Zustand) 재조회가 필요한 데이터는 onRemote(=flush+connectAndLoad),
+          //         Zustand 밖에서 독립 hydrate 하는 카드는 가벼운 notifyRemoteDataChanged() 만 발행
+          //         (해당 카드가 buildup:remote-data-changed 를 구독해 자체 refetch — CoachingHistoryCard 패턴).
+          //   ⚠️ user_id 가 PK 가 아닌 테이블(csv·program·store)은 RLS+FULL 상 DELETE old 레코드에
+          //      user_id 가 빠질 수 있어 삭제 이벤트 필터가 미스날 수 있음(마이그레이션 주석 참고). INSERT/UPDATE 는 정상.
+
+          // marketing_play_progress — 주간 마케팅 플레이 체크. MarketingSurface 가 자체 fetch → 알림만.
+          .on("postgres_changes", { event: "*", schema: "public", table: "marketing_play_progress", filter: `user_id=eq.${uid}` }, () => notifyRemoteDataChanged())
+          // saas_funnel_manual_weekly — 수동 퍼널 입력. useFunnelMetrics 가 이미 이벤트 구독 → 알림만.
+          .on("postgres_changes", { event: "*", schema: "public", table: "saas_funnel_manual_weekly", filter: `user_id=eq.${uid}` }, () => notifyRemoteDataChanged())
+          // program_applications — 지원사업 신청. GuidesView 신청버튼 상태가 이벤트로 갱신 → 알림만.
+          .on("postgres_changes", { event: "*", schema: "public", table: "program_applications", filter: `user_id=eq.${uid}` }, () => notifyRemoteDataChanged())
+          // csv_revenue_uploads/entries — 수동 매출 CSV. 매출(대시보드 Zustand)에 반영되므로 full 재조회.
+          //   onRemote 가 notifyRemoteDataChanged 도 발행하므로 CsvUploadCard 목록도 함께 refetch.
+          .on("postgres_changes", { event: "*", schema: "public", table: "csv_revenue_uploads", filter: `user_id=eq.${uid}` }, onRemote)
+          .on("postgres_changes", { event: "*", schema: "public", table: "csv_revenue_entries", filter: `user_id=eq.${uid}` }, onRemote)
+          // store_members — 팀 멤버십(역할 staff/manager). 역할은 connectAndLoad 가 재-resolve 하므로 full 재조회.
+          //   owner 행은 owner_user_id, 직원(staff) 본인 기기는 member_user_id 로 잡히므로 양쪽 필터 구독.
+          .on("postgres_changes", { event: "*", schema: "public", table: "store_members", filter: `owner_user_id=eq.${uid}` }, onRemote)
+          .on("postgres_changes", { event: "*", schema: "public", table: "store_members", filter: `member_user_id=eq.${uid}` }, onRemote)
+          // store_invites — 팀 초대. 초대 생성/사용을 StaffOps·초대 흐름이 이벤트로 반영 → 알림만(owner 기준).
+          .on("postgres_changes", { event: "*", schema: "public", table: "store_invites", filter: `owner_user_id=eq.${uid}` }, () => notifyRemoteDataChanged())
           .subscribe();
         realtimeChannelRef.current = ch;
         realtimeUserRef.current = uid;

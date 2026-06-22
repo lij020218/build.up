@@ -311,6 +311,7 @@ export const useStoreInfoStore = create<State & Actions>()(
     }),
     {
       name: "foundone-store-info",
+      skipHydration: true,
       partialize: (s) => ({
         mission: s.mission,
         shortDescription: s.shortDescription,

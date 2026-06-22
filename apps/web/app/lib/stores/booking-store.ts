@@ -87,6 +87,12 @@ type BookingState = {
   /** 예시(데모) 항목만 삭제 — 실제 입력 데이터는 보존 */
   clearDemo: () => void;
   clearAll: () => void;
+  /**
+   * Supabase 로딩 시 일괄 적용 — 서버의 실데이터(non-demo)로 교체.
+   *  usePersistence.applyStoreData 가 industrySpecifics.__bookings 에서 읽어 호출.
+   *  서버가 SSOT 이므로 통째로 교체 (로컬 데모는 재시드 가능한 임시 affordance 라 보존하지 않음).
+   */
+  hydrate: (bookings: Booking[], providers: Provider[]) => void;
 };
 
 function newId() {
@@ -232,9 +238,11 @@ export const useBookingStore = create<BookingState>()(
         providers: s.providers.filter((p) => !p.isDemo),
       })),
       clearAll: () => set({ bookings: [], providers: [] }),
+      hydrate: (bookings, providers) => set({ bookings, providers }),
     }),
     {
       name: "foundone-bookings",
+      skipHydration: true,
       // 기존(isDemo 도입 이전) localStorage 데이터 마이그레이션:
       //   옛 헤어샵 데모 시드(id b1~b6 / p1~p2)와 일치하는 항목을 isDemo 로 마킹 →
       //   카드가 "예시" 배지를 붙여 실데이터처럼 보이지 않게 함.

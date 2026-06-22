@@ -292,6 +292,7 @@ export const useMarketingStore = create<MarketingState & MarketingActions>()(
     }),
     {
       name: "foundone-marketing",
+      skipHydration: true,
       partialize: (state) => ({
         campaigns: state.campaigns,
         monthlyBudget: state.monthlyBudget,

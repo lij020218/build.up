@@ -199,6 +199,7 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
     }),
     {
       name: "foundone-profile",
+      skipHydration: true,
       partialize: (state) => ({
         selectedIndustryId: state.selectedIndustryId,
         selectedIndustryCategoryId: state.selectedIndustryCategoryId,

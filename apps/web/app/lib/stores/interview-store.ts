@@ -106,6 +106,7 @@ export const useInterviewStore = create<InterviewState & InterviewActions>()(
     }),
     {
       name: "foundone-customer-interviews",
+      skipHydration: true,
       version: 1,
     }
   )

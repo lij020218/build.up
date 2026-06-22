@@ -251,6 +251,7 @@ export const useRoadmapStore = create<RoadmapState & RoadmapActions>()(
     }),
     {
       name: "foundone-roadmap",
+      skipHydration: true,
       partialize: (state) => ({
         decisions: state.decisions,
         roadmap: state.roadmap,

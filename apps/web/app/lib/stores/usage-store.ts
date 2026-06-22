@@ -117,6 +117,7 @@ export const useUsageStore = create<UsageState & UsageActions>()(
     }),
     {
       name: "foundone-usage-stats-v1",
+      skipHydration: true,
       version: 1,
     }
   )

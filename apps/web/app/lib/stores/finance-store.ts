@@ -199,6 +199,7 @@ export const useFinanceStore = create<FinanceState & FinanceActions>()(
     }),
     {
       name: "foundone-finance",
+      skipHydration: true,
       partialize: (state) => ({
         dailyEntries: state.dailyEntries,
         monthlyCosts: state.monthlyCosts,

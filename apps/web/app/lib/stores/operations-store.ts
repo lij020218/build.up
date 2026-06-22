@@ -394,6 +394,7 @@ export const useOperationsStore = create<OperationsState & OperationsActions>()(
     }),
     {
       name: "foundone-operations",
+      skipHydration: true,
       partialize: (state) => ({
         // 폼 UI 상태는 persist 하지 않음 — 데이터만 persist
         inventory: state.inventory,

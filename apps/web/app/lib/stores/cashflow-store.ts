@@ -191,6 +191,7 @@ export const useCashflowStore = create<CashflowState & CashflowActions>()(
     }),
     {
       name: "foundone-cashflow",
+      skipHydration: true,
       partialize: (state) => ({
         currentBalance: state.currentBalance,
         currentBalanceUpdatedAt: state.currentBalanceUpdatedAt,
