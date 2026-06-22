@@ -49,10 +49,12 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
     };
     d.setSubscriptionPlans([...plans, newPlan]);
     d.setSubPlanName(""); d.setSubPlanPrice(""); d.setSubPlanFormOpen(false);
+    void d.flushStoreDataImmediate?.(); // 즉시 서버 동기화(기기 간 즉시 반영)
   };
 
   const handleDeletePlan = (id: string) => {
     d.setSubscriptionPlans(plans.filter((p) => p.id !== id));
+    void d.flushStoreDataImmediate?.();
   };
 
   // ── Subscriber CRUD ──
@@ -68,22 +70,26 @@ export function SubscriptionPlanManager({ d, ko, fmt }: { d: DashboardHook; ko: 
     };
     d.setSubscribers([...subs, newSub]);
     d.setSubCustomerName(""); d.setSubCustomerEmail(""); d.setSubCustomerFormOpen(false);
+    void d.flushStoreDataImmediate?.();
   };
 
   const handleChurn = (id: string) => {
     d.setSubscribers(subs.map((s) =>
       s.id === id ? { ...s, status: "churned" as const, churnedAt: getKstDate(new Date()) } : s,
     ));
+    void d.flushStoreDataImmediate?.();
   };
 
   const handleReactivate = (id: string) => {
     d.setSubscribers(subs.map((s) =>
       s.id === id ? { ...s, status: "active" as const, churnedAt: undefined } : s,
     ));
+    void d.flushStoreDataImmediate?.();
   };
 
   const handleDeleteSub = (id: string) => {
     d.setSubscribers(subs.filter((s) => s.id !== id));
+    void d.flushStoreDataImmediate?.();
   };
 
   const getPlan = (planId: string) => plans.find((p) => p.id === planId);

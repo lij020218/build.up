@@ -483,14 +483,18 @@ export function AnalyticsSurface() {
                 ];
 
                 const selectedPlatform = onlineSelectedPlatforms[0] ?? "";
-                const setSelectedPlatform = (id: string) => setOnlineSelectedPlatforms([id]);
+                // 각 변경 후 flushStoreData(1s debounce) → 서버 동기화(기기 간 반영).
+                //   종전: 5초 인터벌만 의존 → 지연 + 5초 내 탭 닫으면 유실. (입력 필드라 debounce 적정)
+                const setSelectedPlatform = (id: string) => { setOnlineSelectedPlatforms([id]); flushStoreData(); };
                 const monthlySales = onlinePlatformSales[selectedPlatform] ?? "";
-                const setMonthlySales = (val: string) =>
+                const setMonthlySales = (val: string) => {
                   setOnlinePlatformSales({ ...onlinePlatformSales, [selectedPlatform]: val });
+                  flushStoreData();
+                };
                 const selectedCourier = onlineSelectedCourier;
-                const setSelectedCourier = setOnlineSelectedCourier;
+                const setSelectedCourier = (id: string) => { setOnlineSelectedCourier(id); flushStoreData(); };
                 const monthlyParcels = onlineMonthlyParcels;
-                const setMonthlyParcels = setOnlineMonthlyParcels;
+                const setMonthlyParcels = (v: string) => { setOnlineMonthlyParcels(v); flushStoreData(); };
 
                 const parcelCount = parseInt(monthlyParcels) || 0;
                 const courier = couriers.find(c => c.id === selectedCourier) ?? couriers[0];

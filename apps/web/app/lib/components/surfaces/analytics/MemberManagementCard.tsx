@@ -25,7 +25,9 @@ export function MemberManagementCard() {
 
   const saveMembers = (list: Member[]) => {
     setMembers(list);
-    try { localStorage.setItem("members", JSON.stringify(list)); } catch { /* ignore */ }
+    // 즉시 서버 동기화 → 다른 기기에 바로 반영. (종전: 5초 인터벌만 의존 → 최대 5초 지연 +
+    //   5초 내 탭 닫으면 유실. localStorage("members")는 applyStoreData 가 안 읽는 dead 경로라 제거.)
+    void d.flushStoreDataImmediate?.();
   };
 
   const todayStr = getKstDate(new Date());

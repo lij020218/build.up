@@ -289,10 +289,12 @@ export function MarketingSurface() {
     mkt.setCampRevenue("");
     mkt.setCampNote("");
     mkt.setCampFormOpen(false);
+    void d.flushStoreDataImmediate?.(); // 즉시 서버 동기화(기기 간 즉시 반영)
   };
 
   const handleDeleteCampaign = (id: string) => {
     mkt.setCampaigns(mkt.campaigns.filter((c) => c.id !== id));
+    void d.flushStoreDataImmediate?.();
   };
 
 
