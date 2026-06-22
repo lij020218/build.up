@@ -32,10 +32,12 @@ export type PersistedRoadmapState = {
  *   아직 모르는 사이 그 단계를 orphan 으로 *오인* 해 삭제 → iOS 진행 유실의 레이스 윈도우가 있다.
  *
  *   가드: 삭제 후보 row 의 updated_at 이 이 윈도우 내(=다른 기기가 방금 썼을 가능성)면 삭제 제외.
- *   - iOS RoadmapDecisionsRepository.upsert 는 매 저장 시 updated_at=now 를 명시 기록한다.
- *   - 웹 saveRoadmapState 의 stage upsert 는 updated_at 을 *건드리지 않는다* (serialize* 에 미포함,
- *     stage_decisions/stage_tasks 에 updated_at 트리거 없음). 즉 "최근 updated_at" = 다른 기기 쓰기 신호.
- *   - 따라서 이 가드는 웹 자신의 활동을 오탐하지 않고, 오직 타 기기의 최신 쓰기만 보호한다.
+ *   - iOS RoadmapDecisionsRepository.upsert · 웹 saveRoadmapState 의 stage upsert **둘 다**
+ *     매 저장 시 updated_at=now 를 명시 기록한다(2026-06-20: 웹도 기록하도록 통일).
+ *     종전엔 웹이 안 찍어 웹↔웹 에서 가드가 무력 → A 가 완료한 단계를 B 의 stale payload 가
+ *     고아삭제하던 race(G2). 이제 모든 기기가 updated_at 을 찍어 대칭적으로 서로의 최신 쓰기를 보호.
+ *   - orphan 후보는 "이번 payload 에 없는 단계" 뿐이라, 방금 stamp 된 in-payload 단계는 후보가 아님
+ *     → 자기 활동 오탐 없음(타 기기 보호만 강화).
  *
  *   트레이드오프: 사용자가 *경로를 바꿔* 더는 유효하지 않은 단계라도, 그게 직전 N분 내 (다른 기기에서)
  *     갱신됐다면 이번 save 에선 안 지워진다. 그러나 그 row 는 더 이상 어떤 기기도 payload 에 포함하지
@@ -495,9 +497,13 @@ export async function saveRoadmapState(
   //     "upsert + delete-orphans" 로 변경. 어느 단계에서 실패해도 기존 데이터가 사라지는 순간이 없다.
   //     (빈 payload 로 전체 비우는 경우는 위 forceReset / 빈-payload 가드가 이미 처리.)
   if (decisionPayload.length > 0) {
+    // updated_at=now 명시 기록 → 다른 *웹* 기기의 orphan-delete 가드가 방금 쓴 단계를 보호.
+    //   (종전엔 웹이 updated_at 을 안 찍어 웹↔웹 에서 가드가 무력 → A 가 완료한 단계를 B 의 stale
+    //    payload 가 고아삭제할 수 있었음. iOS 는 이미 찍음 — 이제 웹·iOS 대칭.)
+    const stampedAt = new Date().toISOString();
     const { error: upsertError } = await client
       .from("stage_decisions")
-      .upsert(decisionPayload, { onConflict: "roadmap_id,stage_code" });
+      .upsert(decisionPayload.map((dec) => ({ ...dec, updated_at: stampedAt })), { onConflict: "roadmap_id,stage_code" });
     if (upsertError) throw upsertError;
 
     // 이번 payload 에 없는 옛 stage_decisions 만 제거 (orphan). 실패해도 데이터 소실 아님(잔존만).
@@ -523,9 +529,10 @@ export async function saveRoadmapState(
   }
 
   if (taskPayload.length > 0) {
+    const stampedAt = new Date().toISOString();
     const { error: upsertError } = await client
       .from("stage_tasks")
-      .upsert(taskPayload, { onConflict: "roadmap_id,task_code" });
+      .upsert(taskPayload.map((t) => ({ ...t, updated_at: stampedAt })), { onConflict: "roadmap_id,task_code" });
     if (upsertError) throw upsertError;
 
     // ⚠️ 레이스 가드 (2026-06-10 P1-2): decisions 와 동일 — 최근 N분 내 갱신된 task row 는 삭제 제외.
