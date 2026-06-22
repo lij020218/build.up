@@ -1222,10 +1222,10 @@ private struct QuickInputButton: View {
                         .foregroundStyle(BUColor.midnight)
                 }
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("오늘 매출 기록")
+                    Text("매출 기록·수정")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(BUColor.ink)
-                    Text("5초면 됩니다 — AI 코칭이 더 정확해져요")
+                    Text("날짜 선택 · 고객수 · 5초면 됩니다")
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(BUColor.inkMuted)
                 }
@@ -1255,36 +1255,84 @@ private struct QuickInputButton: View {
 
 // MARK: - Quick Input Sheet
 
+/// 매출 입력 — 웹 ActivitySnapshotCard 패리티. 과거 날짜 선택 + 매출·고객수 + 수정/삭제.
+///   (종전: 오늘·매출만. 웹은 날짜 선택·고객수·수정 가능 → 동일 수준으로 확장.)
+///   저장은 dashboardStore.upsertEntry(임의 날짜 upsert→Supabase), 삭제는 deleteEntry(date).
 private struct QuickInputSheet: View {
-    /// ⚠️ 2026-06-16 P0 fix: 종전엔 store 미주입 → 입력한 매출이 dismiss 시 버려지는 no-op 였다
-    ///   (웹 handleAddDailyEntry 는 Supabase 저장). dashboardStore.upsertEntry 로 실제 저장하도록 배선.
     let dashboardStore: DashboardStore?
-    @State private var sales: Int = 0
     @Environment(\.dismiss) private var dismiss
 
-    /// 오늘 날짜 (KST — UTC off-by-one 회피, 위젯 LogSalesIntent 와 동일 패턴).
-    private var todayKST: String {
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd"
-        df.timeZone = TimeZone(identifier: "Asia/Seoul")
-        return df.string(from: Date())
+    private enum Field: Hashable { case sales, customers }
+    @State private var selectedDate: Date = Date()
+    @State private var sales: Int = 0
+    @State private var customers: Int = 0
+    @State private var field: Field = .sales
+
+    /// KST "yyyy-MM-dd" (UTC off-by-one 회피, 위젯 LogSalesIntent 와 동일 패턴).
+    private static let iso: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return f
+    }()
+    private var dateStr: String { Self.iso.string(from: selectedDate) }
+    private var existing: DailyEntry? { dashboardStore?.entries.first { $0.date == dateStr } }
+
+    /// 선택 날짜의 기존 entry 를 키패드에 프리필(수정 모드). 없으면 0.
+    private func loadForDate() {
+        let e = existing
+        sales = Int(e?.sales ?? 0)
+        customers = e?.customers ?? 0
     }
 
     private func save() {
-        guard sales > 0, let store = dashboardStore else { dismiss(); return }
-        // 오늘 기존 항목의 고객수 보존(매출만 입력하므로 customers 0 으로 덮지 않음).
-        let existingCustomers = store.entries.first(where: { $0.date == todayKST })?.customers ?? 0
-        let entry = DailyEntry(date: todayKST, sales: Double(sales), customers: existingCustomers)
+        guard let store = dashboardStore, sales > 0 || customers > 0 else { dismiss(); return }
+        let entry = DailyEntry(date: dateStr, sales: Double(sales), customers: customers)
         Task { await store.upsertEntry(entry) }
         dismiss()
     }
 
+    private func delete() {
+        guard let store = dashboardStore else { dismiss(); return }
+        let d = dateStr
+        Task { await store.deleteEntry(date: d) }
+        dismiss()
+    }
+
+    /// 활성 필드(매출/고객수)를 가리키는 키패드 바인딩 — 키패드 1개를 토글로 공유.
+    private var activeBinding: Binding<Int> {
+        Binding(
+            get: { field == .sales ? sales : customers },
+            set: { if field == .sales { sales = $0 } else { customers = $0 } }
+        )
+    }
+
     var body: some View {
         NavigationStack {
-            BUNumberPad(amount: $sales) {
-                save()
+            VStack(spacing: BUSpacing.sm) {
+                // 날짜 선택 (과거 가능, 미래 차단)
+                DatePicker("날짜", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
+                    .datePickerStyle(.compact)
+                    .padding(.horizontal, BUSpacing.lg)
+                    .onChange(of: selectedDate) { _, _ in loadForDate(); field = .sales }
+
+                // 매출/고객수 현재값 요약 + 입력 대상 토글
+                Picker("입력 항목", selection: $field) {
+                    Text(sales > 0 ? "매출 \(sales.formatted())원" : "매출").tag(Field.sales)
+                    Text(customers > 0 ? "고객 \(customers)명" : "고객수").tag(Field.customers)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, BUSpacing.lg)
+
+                // 공유 키패드 — 활성 필드 입력. 기록 버튼 = 전체 저장.
+                BUNumberPad(
+                    amount: activeBinding,
+                    unit: field == .sales ? "원" : "명",
+                    quickAddValues: field == .sales ? [100_000, 10_000, 5_000, 1_000, 100] : [10, 5, 1],
+                    onSubmit: save
+                )
             }
-            .navigationTitle("매출 입력")
+            .navigationTitle(existing != nil ? "매출 수정" : "매출 기록")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1292,10 +1340,16 @@ private struct QuickInputSheet: View {
                     Button("취소") { dismiss() }
                         .foregroundStyle(BUColor.inkSecondary)
                 }
+                if existing != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("삭제", role: .destructive) { delete() }
+                    }
+                }
             }
             #endif
+            .onAppear { loadForDate() }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
 }
