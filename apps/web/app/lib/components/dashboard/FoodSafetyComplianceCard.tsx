@@ -19,7 +19,9 @@
  * 디자인: Found.One 토큰 (lavender-mist + 미드나잇 네이비 + cream amber 경고).
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useDashboardCtx } from "../../contexts/DashboardContext";
+import { useStoreInfoStore } from "../../stores/store-info-store";
 import { AlertCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import {
   filterByCategory,
@@ -107,12 +109,16 @@ export function FoodSafetyComplianceCard({
 }) {
   const items = useMemo(() => filterByCategory(industryCategoryId), [industryCategoryId]);
 
-  const [checks, setChecks] = useState<CheckState[]>([]);
   const [expandedCategory, setExpandedCategory] = useState<FoodSafetyCheckCategory | null>("daily");
 
-  useEffect(() => {
-    setChecks(loadChecks());
-  }, []);
+  // 점검 상태는 storeInfo.industrySpecifics["foodSafetyChecks"] 에 저장 → user_store_data 로 동기화
+  //   (기기 간 공유). 종전엔 localStorage 전용이라 A기기 점검이 B기기서 안 보였음.
+  //   서버에 값이 아직 없으면 기존 로컬 데이터로 폴백하고, 토글 시 서버로 이전된다.
+  const dctx = useDashboardCtx();
+  const setIndustrySpecific = useStoreInfoStore((s) => s.setIndustrySpecific);
+  const storeChecks = useStoreInfoStore((s) => s.industrySpecifics["foodSafetyChecks"] as CheckState[] | undefined);
+  const [localFallback] = useState<CheckState[]>(() => loadChecks());
+  const checks = storeChecks ?? localFallback;
 
   const checksByItem = useMemo(() => {
     const map = new Map<string, CheckState>();
@@ -183,8 +189,10 @@ export function FoodSafetyComplianceCard({
     } else {
       next = [...checks.filter((c) => c.itemId !== itemId), { itemId, checkedAt: new Date().toISOString() }];
     }
-    setChecks(next);
+    // 서버 동기화(industrySpecifics → user_store_data, 기기 간 공유) + 로컬 캐시 백업(오프라인·구버전 호환).
+    setIndustrySpecific("foodSafetyChecks", next);
     saveChecks(next);
+    void dctx.flushStoreDataImmediate?.();
   }
 
   function toggleCategory(cat: FoodSafetyCheckCategory) {
