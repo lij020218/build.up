@@ -138,14 +138,12 @@ export function ReportView({ period }: Props) {
     if (!situation) return null;
     const cases = matchCaseStudies(situation, d.industryCategoryId);
     if (cases.length === 0) return null;
-    // period 기반 안정적 픽 (같은 기간 = 같은 회사, 매 조회마다 바뀌지 않음)
-    const now = new Date();
-    const seed =
-      period === "day" ? now.getDate() :
-      period === "week" ? Math.floor(now.getDate() / 7) :
-      period === "month" ? now.getMonth() :
-      Math.floor(now.getMonth() / 3);
-    return { study: cases[seed % cases.length], situation };
+    // 기간 라벨(동기화된 기간 식별자, 예 "2026년 6월"·"Q2 2026") 해시 기반 안정 픽.
+    //   종전 new Date() 시드는 렌더 *시점* 에 의존해, 날짜·분기 경계에서 같은 데이터인데도
+    //   기기마다 다른 사례를 보였음 → snap.label 해시로 기기·시점 무관하게 동일하게 고정.
+    let h = 0;
+    for (let i = 0; i < snap.label.length; i++) h = (h * 31 + snap.label.charCodeAt(i)) | 0;
+    return { study: cases[Math.abs(h) % cases.length], situation };
   }, [snap, brain, d.industryCategoryId, period]);
 
   // ── Empty / business-open 분기 ──

@@ -593,6 +593,8 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
   const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const realtimeUserRef = useRef<string | null>(null);
   const realtimeThrottleRef = useRef(0);
+  // 트레일링 리로드 타이머 — throttle 윈도우 안에서 온 마지막 변경이 누락되지 않게 보장.
+  const realtimeTrailingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /**
    * In-flight guard — 같은 user_store_data row 에 4채널이 동시 upsert 하면 stale 가 fresh 를
    * 덮어쓸 위험. 모든 saveStoreData 호출은 이 guard 를 거쳐 직전 호출이 끝난 뒤 실행.
@@ -671,13 +673,13 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
           void supabase.removeChannel(realtimeChannelRef.current);
           realtimeChannelRef.current = null;
         }
+        if (realtimeTrailingRef.current) {
+          clearTimeout(realtimeTrailingRef.current);
+          realtimeTrailingRef.current = null;
+        }
         const uid = result.user.id;
-        const onRemote = () => {
-          // Zustand 외 독립 hydrate 카드도 재조회하도록 항상 알림 (throttle 무관 — 비용 저렴).
-          notifyRemoteDataChanged();
-          const now = Date.now();
-          if (now - realtimeThrottleRef.current < 5000) return;
-          realtimeThrottleRef.current = now;
+        // 원격 변경 → 재조회(전체 재수화). 빈 로컬 push 금지(로드 전) + 최신 스냅샷 fetch.
+        const doReload = () => {
           void (async () => {
             try {
               // 🛑 서버 로드 완료 전엔 빈 로컬 push 금지 — 다른 기기 저장이 echo 됐을 때
@@ -688,6 +690,28 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
             }
             void connectAndLoad();
           })();
+        };
+        // throttle: leading-edge 즉시 + trailing(윈도우 내 추가 변경의 마지막을 반드시 반영).
+        //   종전 5초 leading-only 는 (1) 지연이 길고 (2) 윈도우 내 마지막 변경을 *드롭* 해
+        //   B가 최대 5초 stale + 누락 가능했음 → 1.5초 + trailing 으로 "바로바로·누락 0" 보장.
+        const REALTIME_THROTTLE_MS = 1500;
+        const onRemote = () => {
+          // Zustand 외 독립 hydrate 카드도 재조회하도록 항상 즉시 알림 (throttle 무관 — 비용 저렴).
+          notifyRemoteDataChanged();
+          const now = Date.now();
+          const since = now - realtimeThrottleRef.current;
+          if (since >= REALTIME_THROTTLE_MS) {
+            // leading-edge: 즉시 재조회.
+            realtimeThrottleRef.current = now;
+            doReload();
+          } else if (!realtimeTrailingRef.current) {
+            // 윈도우 내 변경 — 마지막 변경이 누락되지 않게 남은 시간 뒤 1회 재조회 예약.
+            realtimeTrailingRef.current = setTimeout(() => {
+              realtimeTrailingRef.current = null;
+              realtimeThrottleRef.current = Date.now();
+              doReload();
+            }, REALTIME_THROTTLE_MS - since);
+          }
         };
         const ch = supabase
           .channel(`buildup-sync-${uid}`)
