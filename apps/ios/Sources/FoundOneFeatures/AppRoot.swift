@@ -182,18 +182,28 @@ public struct AppRoot: View {
                         #endif
                     }
                     .task {
-                        // 인증 상태를 *지속* 관측 (이전: 첫 세션에서 break 해 만료·refresh 실패를
-                        //   놓쳐 stale UI 가 남던 블로커). 세션 생기면 1회 로드, 사라지면 로그인 화면으로.
-                        var loaded = false
+                        // 인증 상태를 *지속* 관측 + 계정 전환 격리.
+                        //   세션 uid 가 직전 영구저장된 계정과 다르면(다른 계정 로그인·앱 재실행 후 전환)
+                        //   이전 계정의 로컬 데이터(@AppStorage 로드맵·스테이지·PII)를 *먼저 wipe* 하고
+                        //   dashboardStore(메모리 매출·비용)도 리셋해 강제 재로드 → cross-account 누출 차단.
+                        //   (웹 hydrateStoresForUser/__foundone_uid 대응. 2026-06-22 P0: 동명이인 누출 신고.)
+                        var loadedUid: String? = nil
                         for await change in BUSupabase.shared.authStateChanges {
-                            if change.session != nil {
-                                if !loaded {
-                                    loaded = true
+                            if let uid = change.session?.user.id.uuidString {
+                                if loadedUid != uid {
+                                    let lastKey = "__foundone_last_uid"  // wipe prefix 에 안 걸리는 키
+                                    if UserDefaults.standard.string(forKey: lastKey) != uid {
+                                        // 다른 계정 — 이전 계정 로컬 데이터 제거(서버 로드로만 다시 채워짐).
+                                        LocalDataWipe.wipeAllLocalUserData()
+                                        UserDefaults.standard.set(uid, forKey: lastKey)
+                                    }
+                                    dashboardStore = nil  // 새 계정 데이터로 강제 재로드(가드 해제)
+                                    loadedUid = uid
                                     await loadDashboardIfNeeded(coordinator: coordinator)
                                 }
                             } else {
                                 // signedOut / tokenRefreshFailed — 비인증 전환 + 로컬 정리(self-gated)
-                                loaded = false
+                                loadedUid = nil
                                 coordinator.handleSessionLost()
                             }
                         }
