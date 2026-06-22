@@ -228,6 +228,7 @@ public struct MenuDesignStageView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(RoadmapStore.self) private var roadmapStore
+    @EnvironmentObject private var storeInfoStore: StoreInfoStore
     @AppStorage("roadmap.selectedIndustryId") private var industryId = ""
     @State private var page = 0
     private let stageId = "menu-design"
@@ -256,6 +257,11 @@ public struct MenuDesignStageView: View {
 
     private var canCompleteStage: Bool { items.count >= 1 }
 
+    /// 로드맵 decisions 에 저장할 입력 (웹 menuItemsJson 패리티 + menuCount).
+    private var stageInputs: [String: String] {
+        ["menuCount": "\(items.count)", "menuItemsJson": itemsJson]
+    }
+
     private var advanceHint: String {
         let noun = cluster.noun
         if items.isEmpty { return "\(noun) 항목을 최소 1개 추가하세요" }
@@ -278,10 +284,14 @@ public struct MenuDesignStageView: View {
             advanceHint: advanceHint,
             isCompleted: roadmapStore.isStageCompleted(stageId),
             onAdvance: {
-                roadmapStore.advanceToNext(currentStageId: stageId, inputs: ["menuCount": "\(items.count)"])
+                syncMenuToInventory()
+                roadmapStore.advanceToNext(currentStageId: stageId, inputs: stageInputs)
             },
             onUncomplete: { roadmapStore.uncompleteStage(stageId) },
-            onEditSave: { roadmapStore.saveStageEdit(currentStageId: stageId, inputs: ["menuCount": "\(items.count)"]) },
+            onEditSave: {
+                syncMenuToInventory()
+                roadmapStore.saveStageEdit(currentStageId: stageId, inputs: stageInputs)
+            },
             wrapup: BUStageWrapupData(
                 doneItems: [
                     .init(label: "1. 메뉴 라인업 확정", detail: "시그니처 3-5개 + 사이드 2-3개 입력 완료"),
@@ -473,11 +483,73 @@ private extension MenuDesignStageView {
         var current = items
         current.append(newItem)
         itemsJson = encodeItems(current)
+        syncMenuToInventory()
         fName = ""; fCategory = ""; fPriceText = ""; fCostText = ""; fNotes = ""
     }
 
     func deleteItem(id: String) {
         itemsJson = encodeItems(items.filter { $0.id != id })
+        syncMenuToInventory()
+    }
+}
+
+// MARK: - 메뉴 → 재고 자동 반영 (웹 SSOT: MenuDesignStage.syncMenuToInventory 미러)
+
+private extension MenuDesignStageView {
+
+    /// 입력한 메뉴 라인업을 재고(StoreInfoStore.inventory)에 product 로 즉시 반영.
+    /// 보존 규칙: material 전부 + 메뉴에 없는 product(사장님 직접 추가)는 유지.
+    /// 재진입 시 name 매칭으로 가격·원가만 갱신하고 quantity·minThreshold·wasteLog 등은 보존.
+    /// (VendorSetupStageView.syncMaterialsToInventory 와 동일한 commit/보존 패턴)
+    func syncMenuToInventory() {
+        let menu = items
+        storeInfoStore.commit { s in
+            let menuKeys = Set(menu.map { Self.nameKey($0.name) })
+            // 1) 보존 — material 전부 + 메뉴에 없는 product
+            let preserved = s.inventory.filter { inv in
+                inv.itemType != "product" || !menuKeys.contains(Self.nameKey(inv.name))
+            }
+            // 2) 기존 product 를 name 으로 매핑 (quantity·threshold·wasteLog 보존용)
+            let existingProduct = Dictionary(
+                s.inventory.filter { $0.itemType == "product" }.map { (Self.nameKey($0.name), $0) },
+                uniquingKeysWith: { a, _ in a }
+            )
+            // 3) 메뉴 → product 재고 item (기존 있으면 가격·원가·카테고리만 갱신)
+            let generated: [BUInventoryItem] = menu.map { m in
+                let ex = existingProduct[Self.nameKey(m.name)]
+                return BUInventoryItem(
+                    id: ex?.id ?? "menu-\(m.id)",
+                    name: m.name,
+                    quantity: ex?.quantity ?? 0,
+                    unit: ex?.unit ?? "개",
+                    minThreshold: ex?.minThreshold ?? 5,
+                    unitCost: Double(m.cost),
+                    category: Self.mapMenuCategoryToInventory(m.category),
+                    itemType: "product",
+                    sellingPrice: Double(m.price),
+                    leadTimeDays: ex?.leadTimeDays ?? 1,
+                    dailyUsage: ex?.dailyUsage ?? 0,
+                    monthlySold: ex?.monthlySold ?? 0,
+                    lastOrderedAt: ex?.lastOrderedAt,
+                    wasteLog: ex?.wasteLog ?? []
+                )
+            }
+            s.inventory = preserved + generated
+        }
+    }
+
+    private static func nameKey(_ s: String) -> String {
+        s.lowercased().trimmingCharacters(in: .whitespaces)
+    }
+
+    /// 메뉴 카테고리(한글) → 재고 enum. 웹 mapCategoryToInventory 1:1 미러.
+    static func mapMenuCategoryToInventory(_ cat: String) -> String {
+        let c = cat.lowercased()
+        if c.contains("음료") || c.contains("커피") || c.contains("논커피") || c.contains("라떼")
+            || c.contains("drink") || c.contains("beverage") || c.contains("coffee") { return "beverage" }
+        if c.contains("디저트") || c.contains("dessert") { return "dry" }
+        if c.contains("사이드") || c.contains("side") || c.contains("세트") || c.contains("set") { return "fresh" }
+        return "fresh"
     }
 }
 
@@ -707,6 +779,8 @@ private extension View {
 #Preview("MenuDesignStageView") {
     let store = RoadmapStore()
     store.pathProvider = { _ in ["menu-design"] }
-    return MenuDesignStageView().environment(store)
+    return MenuDesignStageView()
+        .environment(store)
+        .environmentObject(StoreInfoStore(repository: MockStoreInfoRepository()))
 }
 #endif
