@@ -42,6 +42,7 @@ import { useEffect, useRef } from "react";
 import {
   bootstrapAccountWorkspace,
   buildRoadmapState,
+  healCompletedAtChain,
   getIndustryCategoryIdByOptionId,
   getFranchiseBrandById,
   getUiCopy,
@@ -881,54 +882,15 @@ export function usePersistence(deps: DashboardDeps, surface: DashboardSurface) {
       //      (path 의 monotonic chain 보장 — 중간 단계가 비어 있을 수 없음).
       //
       // 결과: 사용자가 task 만 토글했어도, "다음 단계로" 한 번이라도 눌렀어도, 둘 다 done 으로 인정.
-      const stageOrder = new Map<string, number>();
-      result.state.roadmap.stages.forEach((s: { stageId: string }, idx: number) => stageOrder.set(s.stageId, idx));
-      const decisionsToHeal: WorkflowDecisionMap = { ...result.state.decisions };
-      const healedStageIds = new Set<string>();
-
-      // ① "신호 있음" stage 모두 직접 backfill.
-      let maxSignalIdx = -1;
-      const signalStages: Array<{ sid: string; idx: number; hasCompleted: boolean }> = [];
-      // decisions 에 등록된 stage 와 tasks 에 등록된 stage 둘 다 스캔 (decisions 만 보면 누락).
-      const allStageIds = new Set<string>([
-        ...Object.keys(decisionsToHeal),
-        ...Object.keys(loadedTasks),
-      ]);
-      for (const sid of allStageIds) {
-        const idx = stageOrder.get(sid) ?? -1;
-        if (idx < 0) continue;
-        const dec = decisionsToHeal[sid];
-        const hasCompleted = !!dec?.completedAt;
-        const hasAnyCompletedTask = (loadedTasks[sid] ?? []).some((t: { status: string }) => t.status === "completed");
-        if (hasCompleted || hasAnyCompletedTask) {
-          signalStages.push({ sid, idx, hasCompleted });
-          if (idx > maxSignalIdx) maxSignalIdx = idx;
-        }
-      }
-
-      const baseTime = Date.now();
-      // ① 신호 있는 stage 자체에 completedAt 없으면 채움 (사용자의 진행 흔적 = done 인정).
-      for (const { sid, idx, hasCompleted } of signalStages) {
-        if (!hasCompleted) {
-          const existing = decisionsToHeal[sid];
-          const ts = new Date(baseTime - (maxSignalIdx - idx) * 1000).toISOString();
-          decisionsToHeal[sid] = { ...(existing ?? { stageId: sid }), stageId: sid, completedAt: ts };
-          healedStageIds.add(sid);
-        }
-      }
-      // ② maxSignalIdx 까지의 모든 path stage 에 chain backfill (사용자가 거기까지 도달한 사실).
-      if (maxSignalIdx > 0) {
-        for (let i = 0; i < maxSignalIdx; i++) {
-          const sid = result.state.roadmap.stages[i].stageId;
-          const existing = decisionsToHeal[sid];
-          if (!existing?.completedAt) {
-            const ts = new Date(baseTime - (maxSignalIdx - i) * 1000).toISOString();
-            decisionsToHeal[sid] = { ...(existing ?? { stageId: sid }), stageId: sid, completedAt: ts };
-            healedStageIds.add(sid);
-          }
-        }
-      }
-      const healed = healedStageIds.size > 0;
+      // ⚠️ path-aware: 종전엔 배열 인덱스 순으로 backfill 해 배열상 늦은 stage(loan-guide=idx44,
+      //   franchise-application=idx26)에 신호가 생기면 그 앞 *배열* 전체를 완료 처리 → "21·22단계
+      //   완료로 건너뜀" 버그. healCompletedAtChain 이 resolveNextStageIds 로 사용자 path 를 따라가며
+      //   path 상 furthest 신호 이전 path stage 만 backfill 한다.
+      const { decisions: decisionsToHeal, healed } = healCompletedAtChain(
+        result.state.decisions,
+        loadedTasks,
+        result.state.roadmap.stages,
+      );
       // healed 여부는 Sentry breadcrumb 로 추적 (프로덕션 콘솔 노출 방지)
       setDecisions(decisionsToHeal);
 

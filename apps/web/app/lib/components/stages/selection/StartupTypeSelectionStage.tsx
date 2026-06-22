@@ -209,10 +209,22 @@ export function StartupTypeSelectionStage() {
                       { key: "support", label: ko ? "지원" : "Support", value: fb.scores.support },
                     ];
                     return (
-                      <button
+                      // ⚠️ 무효 HTML 방지: 카드 안에 "가맹 문의" 외부 링크(<a href>)가 있어
+                      //   <button> 으로 감싸면 interactive content 중첩(React validateDOMNesting 경고
+                      //   + 브라우저별 클릭/포커스 동작 불안정). div[role=button] 로 변환해 합법화.
+                      <div
                         key={fb.id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setSelectedFranchiseBrandId(sel ? null : fb.id)}
+                        onKeyDown={(e) => {
+                          // 카드 자체에 포커스가 있을 때만 토글 (내부 링크·요소 상호작용은 제외).
+                          if (e.target !== e.currentTarget) return;
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedFranchiseBrandId(sel ? null : fb.id);
+                          }
+                        }}
                         style={{
                           display: "grid",
                           gap: "14px",
@@ -329,7 +341,7 @@ export function StartupTypeSelectionStage() {
                             )}
                           </div>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

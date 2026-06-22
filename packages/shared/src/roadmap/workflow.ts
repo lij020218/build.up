@@ -387,6 +387,92 @@ export function buildRoadmapState(
   };
 }
 
+/**
+ * completedAt 백필(self-heal) — 사용자의 진행 흔적(completedAt 또는 완료된 task)이 있는 stage 와,
+ * 그 *path 상 앞선* stage 들에 completedAt 을 채운다. 룰 강화·task-only 토글로 completedAt 이
+ * 비어 stage 가 회귀하는 것을 막는 보정.
+ *
+ * ⚠️ path-aware 필수: stages 배열은 starter-data 정의 순서(offline → tech → cluster → franchise →
+ *    online → tail)라 **path 순서와 다르다**. 종전엔 *배열 인덱스* 순으로 backfill 해서, 배열상
+ *    늦은 인덱스의 stage(예: loan-guide=idx44, franchise-application=idx26)에 신호가 생기면
+ *    그 앞 *배열* 전체를 완료 처리 → 사장님 화면이 "21·22단계 완료로 건너뜀". 여기서는
+ *    resolveNextStageIds 로 사용자의 실제 path 를 따라가며 **path 상 furthest 신호 stage 이전의
+ *    path stage 만** backfill 한다. off-path 신호는 chain backfill 을 유발하지 않는다.
+ */
+export function healCompletedAtChain(
+  decisions: WorkflowDecisionMap,
+  tasks: WorkflowTaskMap,
+  stages: RoadmapStageState[],
+): { decisions: WorkflowDecisionMap; healed: boolean } {
+  const result: WorkflowDecisionMap = { ...decisions };
+  if (stages.length === 0) return { decisions: result, healed: false };
+
+  const stageById = new Map(stages.map((s) => [s.stageId, s]));
+  const healedStageIds = new Set<string>();
+
+  // 신호 있는 stage = completedAt 보유 OR 어떤 task 라도 status=completed.
+  const signalStageIds = new Set<string>();
+  const allStageIds = new Set<string>([...Object.keys(result), ...Object.keys(tasks)]);
+  for (const sid of allStageIds) {
+    if (!stageById.has(sid)) continue;
+    const hasCompleted = !!result[sid]?.completedAt;
+    const hasAnyCompletedTask = (tasks[sid] ?? []).some((t) => t.status === "completed");
+    if (hasCompleted || hasAnyCompletedTask) signalStageIds.add(sid);
+  }
+  if (signalStageIds.size === 0) return { decisions: result, healed: false };
+
+  // 사용자의 실제 path 순서 (resolveNextStageIds 따라 stages[0] 부터). buildRoadmapState 와 동일 walk.
+  const pathOrder: string[] = [];
+  {
+    const seen = new Set<string>();
+    let cursor: RoadmapStageState | undefined = stages[0];
+    while (cursor && !seen.has(cursor.stageId)) {
+      seen.add(cursor.stageId);
+      pathOrder.push(cursor.stageId);
+      const nextIds = resolveNextStageIds(cursor, result);
+      let next: RoadmapStageState | undefined;
+      for (const id of nextIds) {
+        const candidate = stageById.get(id);
+        if (candidate) { next = candidate; break; }
+      }
+      cursor = next;
+    }
+  }
+  const pathIndexOf = new Map(pathOrder.map((sid, i) => [sid, i] as const));
+
+  // path 상 가장 뒤 신호 stage 위치 (off-path 신호는 제외 — chain backfill 유발 안 함).
+  let maxSignalPathIdx = -1;
+  for (const sid of signalStageIds) {
+    const pidx = pathIndexOf.get(sid);
+    if (pidx !== undefined && pidx > maxSignalPathIdx) maxSignalPathIdx = pidx;
+  }
+
+  const baseTime = Date.now();
+  // ① 신호 stage 자체에 completedAt 없으면 채움 (진행 흔적 = done 인정). off-path 도 자기 자신은 인정.
+  for (const sid of signalStageIds) {
+    if (!result[sid]?.completedAt) {
+      const pidx = pathIndexOf.get(sid) ?? 0;
+      const ref = maxSignalPathIdx >= 0 ? maxSignalPathIdx : pidx;
+      const ts = new Date(baseTime - (ref - pidx) * 1000).toISOString();
+      result[sid] = { ...(result[sid] ?? { stageId: sid }), stageId: sid, completedAt: ts };
+      healedStageIds.add(sid);
+    }
+  }
+  // ② path 상 furthest 신호 이전의 path stage 만 chain backfill (배열 순서 아님).
+  if (maxSignalPathIdx > 0) {
+    for (let i = 0; i < maxSignalPathIdx; i++) {
+      const sid = pathOrder[i];
+      if (!result[sid]?.completedAt) {
+        const ts = new Date(baseTime - (maxSignalPathIdx - i) * 1000).toISOString();
+        result[sid] = { ...(result[sid] ?? { stageId: sid }), stageId: sid, completedAt: ts };
+        healedStageIds.add(sid);
+      }
+    }
+  }
+
+  return { decisions: result, healed: healedStageIds.size > 0 };
+}
+
 export function completeCurrentStage(
   roadmap: RoadmapState,
   decisions: WorkflowDecisionMap,
