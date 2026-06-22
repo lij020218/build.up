@@ -55,11 +55,46 @@ public struct FunnelWeekRow: Sendable, Codable, Hashable {
     }
 }
 
+/// 수동 입력(`saas_funnel_manual_weekly`) 단일 주차 행 — 웹↔iOS 라운드트립용.
+/// 통합 뷰(`FunnelWeekRow`)와 달리 `source` 컬럼이 없어 별도 타입으로 디코드한다.
+public struct ManualFunnelWeek: Sendable, Decodable, Hashable {
+    public let weekStart: String          // ISO date "yyyy-MM-dd"
+    public let mode: FunnelMode
+    public let steps: [Int]               // [step1, step2, step3, step4]
+    public let updatedAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case weekStart = "week_start"
+        case mode
+        case step1 = "step_1"
+        case step2 = "step_2"
+        case step3 = "step_3"
+        case step4 = "step_4"
+        case updatedAt = "updated_at"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        weekStart = try c.decode(String.self, forKey: .weekStart)
+        mode = try c.decode(FunnelMode.self, forKey: .mode)
+        steps = [
+            try c.decode(Int.self, forKey: .step1),
+            try c.decode(Int.self, forKey: .step2),
+            try c.decode(Int.self, forKey: .step3),
+            try c.decode(Int.self, forKey: .step4),
+        ]
+        updatedAt = try c.decodeIfPresent(String.self, forKey: .updatedAt)
+    }
+}
+
 // MARK: - Repository protocol
 
 public protocol FunnelMetricsRepositoryProtocol: Sendable {
     /// 최근 N 주의 통합 funnel 데이터 (manual > ga4 > webhook 우선).
     func fetchRecentWeeks(mode: FunnelMode, limit: Int) async throws -> [FunnelWeekRow]
+
+    /// 특정 주차의 사장님 수동 입력 행 1건 (없으면 nil) — 웹·다른 기기에서 입력한 값을 read-back.
+    func fetchManualWeek(mode: FunnelMode, weekStart: String) async throws -> ManualFunnelWeek?
 
     /// 사장님 수동 입력 upsert. weekStart 는 ISO date (yyyy-MM-dd), 월요일 권장.
     func upsertManualEntry(mode: FunnelMode, weekStart: String, steps: [Int]) async throws
@@ -90,6 +125,20 @@ public actor FunnelMetricsRepository: FunnelMetricsRepositoryProtocol {
             .execute()
             .value
         return rows
+    }
+
+    public func fetchManualWeek(mode: FunnelMode, weekStart: String) async throws -> ManualFunnelWeek? {
+        // saas_funnel_manual_weekly 를 직접 읽어 manual SSOT 를 정확히 라운드트립(통합 뷰의 auto 채널 혼입 방지).
+        // RLS 로 본인 행만, week_start+mode 로 단일 행.
+        let rows: [ManualFunnelWeek] = try await supabase
+            .from("saas_funnel_manual_weekly")
+            .select("week_start,mode,step_1,step_2,step_3,step_4,updated_at")
+            .eq("week_start", value: weekStart)
+            .eq("mode", value: mode.rawValue)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first
     }
 
     public func upsertManualEntry(mode: FunnelMode, weekStart: String, steps: [Int]) async throws {

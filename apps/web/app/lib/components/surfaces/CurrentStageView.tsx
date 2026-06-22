@@ -70,7 +70,6 @@ import { Star, Store } from "lucide-react";
 // import { SecurityChecklist } from "../knowledge/SecurityChecklist";
 import { InvestmentGlossary } from "../knowledge/InvestmentGlossary";
 import { getKstDate } from "../../utils/business-day";
-import { ConfirmModal } from "../ConfirmModal";
 
 export function CurrentStageView() {
   /* ------------------------------------------------------------------ *
@@ -210,9 +209,8 @@ export function CurrentStageView() {
     openFinanceFromSummary,
     // Save
     saveStatus, setSaveStatus,
-    // Reset
+    // Reset (확인 모달은 starter-stage-demo 최상단에서 전역 렌더)
     resetDemo,
-    resetConfirmOpen, onResetConfirm, onResetCancel,
     // Local stage state (from context)
     filterCat, setFilterCat, expandedId, setExpandedId,
     competitorResults, setCompetitorResults, competitorLoading, setCompetitorLoading,
@@ -243,20 +241,8 @@ export function CurrentStageView() {
 
   return (
     <>
-      <ConfirmModal
-        open={resetConfirmOpen}
-        title={language === "ko" ? "진행 상태 초기화" : "Reset Progress"}
-        message={
-          language === "ko"
-            ? "데모 진행 상태를 정말 초기화할까요?\n현재 저장된 홈 화면과 서버 데이터에도 바로 반영됩니다."
-            : "Reset the demo progress?\nThis will immediately update both your home screen and saved server state."
-        }
-        confirmLabel={language === "ko" ? "초기화" : "Reset"}
-        cancelLabel={language === "ko" ? "취소" : "Cancel"}
-        danger
-        onConfirm={onResetConfirm}
-        onCancel={onResetCancel}
-      />
+      {/* 초기화 확인 모달은 starter-stage-demo 최상단으로 이관(모든 surface 에서 동작).
+          여기서 중복 렌더하면 모달이 2개 마운트돼 confirm 이 executeResetDemo 를 두 번 호출. */}
       {businessLaunched && !viewingStageId ? (() => {
           const ko = language === "ko";
           const currentMonth = getKstDate(new Date()).slice(0, 7);

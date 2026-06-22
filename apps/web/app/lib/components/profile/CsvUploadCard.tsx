@@ -50,7 +50,14 @@ export function CsvUploadCard({ ko }: { ko: boolean }) {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    // csv_revenue_uploads 는 Zustand 밖 독립 hydrate — 다른 기기에서 업로드 시 realtime 이
+    //   buildup:remote-data-changed 를 발행하면 목록을 재조회해 즉시 반영한다.
+    const onRemote = () => { void load(); };
+    window.addEventListener("buildup:remote-data-changed", onRemote);
+    return () => { window.removeEventListener("buildup:remote-data-changed", onRemote); };
+  }, [load]);
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

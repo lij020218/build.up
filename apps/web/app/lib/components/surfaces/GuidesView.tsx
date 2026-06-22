@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDashboardCtx } from "../../contexts/DashboardContext";
 import { useProfileStore } from "../../stores/profile-store";
 import { OwnerProfileChips, ageFromBirthYear } from "../dashboard/OwnerProfileChips";
@@ -241,24 +241,28 @@ export function GuidesView() {
   const [applyModalProgram, setApplyModalProgram] = useState<StartupProgram | null>(null);
   const [grantApplied, setGrantApplied] = useState<boolean | null>(null);
 
-  // 본인 신청 여부 — 마운트 시 1회 조회(버튼 "신청 완료" 표시용).
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const session = await supabase.auth.getSession();
-        const token = session.data.session?.access_token;
-        if (!token) return;
-        const res = await fetch(`/api/funding/apply?programId=${GRANT_PROGRAM_ID}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const j = await res.json();
-        if (alive) setGrantApplied(!!j.applied);
-      } catch { /* graceful — 미로그인/네트워크 시 미적용으로 둠 */ }
-    })();
-    return () => { alive = false; };
+  // 본인 신청 여부 — 마운트 시 1회 조회 + 원격(다른 기기 신청) 변경 시 재조회(버튼 "신청 완료" 표시용).
+  const loadGrantApplied = useCallback(async () => {
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/funding/apply?programId=${GRANT_PROGRAM_ID}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const j = await res.json();
+      setGrantApplied(!!j.applied);
+    } catch { /* graceful — 미로그인/네트워크 시 미적용으로 둠 */ }
   }, []);
+  useEffect(() => {
+    void loadGrantApplied();
+    // program_applications 는 Zustand 밖 독립 hydrate — usePersistence realtime 이
+    //   buildup:remote-data-changed 를 발행하면 신청 상태를 재조회해 다른 기기 신청을 반영.
+    const onRemote = () => { void loadGrantApplied(); };
+    window.addEventListener("buildup:remote-data-changed", onRemote);
+    return () => { window.removeEventListener("buildup:remote-data-changed", onRemote); };
+  }, [loadGrantApplied]);
 
   // 신청 시 함께 보낼 현 사업체 스냅샷 (이름·아이디어 보강용 지표).
   const applySnapshot = useMemo(() => {

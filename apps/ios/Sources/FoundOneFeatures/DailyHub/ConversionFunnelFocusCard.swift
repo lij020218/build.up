@@ -142,6 +142,46 @@ public struct ConversionFunnelFocusCard: View {
         .sheet(isPresented: $showEditSheet) {
             FunnelManualInputSheet(mode: mode)
         }
+        // 웹·다른 기기에서 입력한 funnel 을 read-back — 진입 시 1회 + realtime 수신 시 즉시.
+        //   (iOS→웹은 saveAndDismiss 의 upsert 로 이미 동작. 이 경로가 웹→iOS 를 채워 양방향 즉시 동기화 완성.)
+        .task { await syncFunnelFromRemote() }
+        .onReceive(NotificationCenter.default.publisher(for: .buildupRemoteDataChanged)) { _ in
+            Task { await syncFunnelFromRemote() }
+        }
+    }
+
+    // MARK: - Remote read-back (웹→iOS 즉시 동기화)
+
+    /// 현재 주차의 수동 입력 행을 Supabase 에서 가져와 @AppStorage 에 반영.
+    ///  - 편집 시트가 열려 있으면 사용자의 입력을 덮어쓰지 않도록 skip.
+    ///  - 원격 행이 없으면(이번 주 미입력) 로컬값 보존(0 으로 덮지 않음).
+    @MainActor
+    private func syncFunnelFromRemote() async {
+        if showEditSheet { return }
+        guard let uid = BUSupabase.shared.currentUser?.id else { return }
+        let repoMode: FunnelMode = (mode == .commerce) ? .commerce : .saas
+        let weekStart = FunnelMetricsHelpers.mondayISODate()
+        let repo = FunnelMetricsRepository(
+            supabase: BUSupabase.shared.client,
+            getUserId: { uid }
+        )
+        guard let remote = try? await repo.fetchManualWeek(mode: repoMode, weekStart: weekStart),
+              remote.steps.count == 4 else { return }
+        applyRemoteSteps(remote.steps)
+    }
+
+    /// 원격 4단계 값을 @AppStorage 에 반영 (값이 같으면 no-op — 불필요한 갱신·자기 echo 흡수).
+    private func applyRemoteSteps(_ s: [Int]) {
+        switch mode {
+        case .commerce:
+            if [commerceVisitors, commerceCarts, commerceCheckouts, commercePurchases] == s { return }
+            commerceVisitors = s[0]; commerceCarts = s[1]
+            commerceCheckouts = s[2]; commercePurchases = s[3]
+        case .saas:
+            if [saasVisitors, saasSignups, saasActivations, saasPaid] == s { return }
+            saasVisitors = s[0]; saasSignups = s[1]
+            saasActivations = s[2]; saasPaid = s[3]
+        }
     }
 
     // MARK: - Manual entry CTA (when no data)

@@ -56,7 +56,10 @@ public final class RealtimeSyncManager {
         //   양쪽(웹 saveRoadmapState / iOS RoadmapDecisionsRepository.upsert)에서 bump 하여
         //   roadmaps(user_id 필터) 구독 하나로 로드맵 변경을 안전하게 수신.
         // coaching_history 포함 — 웹에서 저장한 코칭 일지가 iOS 에 즉시 반영되게.
-        for table in ["user_store_data", "business_profiles", "roadmaps", "coaching_history"] {
+        // saas_funnel_manual_weekly 포함(2026-06-22) — 웹에서 입력한 전환율 funnel 을 iOS 가 read-back.
+        //   user_id ∈ PK 라 INSERT/UPDATE/DELETE 모두 필터 적중. ConversionFunnelFocusCard 가
+        //   .buildupRemoteDataChanged 수신 시 fetchManualWeek 로 현재 주차 값을 @AppStorage 에 반영.
+        for table in ["user_store_data", "business_profiles", "roadmaps", "coaching_history", "saas_funnel_manual_weekly"] {
             let sub = ch.onPostgresChange(
                 AnyAction.self,
                 schema: "public",

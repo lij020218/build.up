@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
 import { starterIndustryOptions, localizeRecommendationItem } from "@foundone/shared";
 import { BP } from "../../breakpoints";
@@ -211,21 +211,26 @@ export function MarketingSurface() {
   // ── 플레이 "했어요" 체크 (실행→측정 피드백 루프) ──
   const currentWeekKey = getIsoWeekKey();
   const [doneTitles, setDoneTitles] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const session = await supabase.auth.getSession();
-        const token = session.data.session?.access_token;
-        if (!token) return;
-        const res = await fetch(`/api/ai/marketing/play-progress?weekKey=${currentWeekKey}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) return;
-        const j = await res.json();
-        if (alive && Array.isArray(j.done)) setDoneTitles(new Set(j.done as string[]));
-      } catch { /* graceful */ }
-    })();
-    return () => { alive = false; };
+  // 주간 플레이 체크 hydrate — 마운트/주차 변경 시 1회 + 원격 변경(다른 기기) 수신 시 재조회.
+  const loadProgress = useCallback(async () => {
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/ai/marketing/play-progress?weekKey=${currentWeekKey}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const j = await res.json();
+      if (Array.isArray(j.done)) setDoneTitles(new Set(j.done as string[]));
+    } catch { /* graceful */ }
   }, [currentWeekKey]);
+  useEffect(() => {
+    void loadProgress();
+    // marketing_play_progress 는 Zustand 밖 독립 hydrate — usePersistence 의 realtime 구독이
+    //   buildup:remote-data-changed 를 발행하면 재조회해 다른 기기 체크가 즉시 반영되게 한다.
+    const onRemote = () => { void loadProgress(); };
+    window.addEventListener("buildup:remote-data-changed", onRemote);
+    return () => { window.removeEventListener("buildup:remote-data-changed", onRemote); };
+  }, [loadProgress]);
 
   const toggleDone = async (title: string) => {
     const next = new Set(doneTitles);

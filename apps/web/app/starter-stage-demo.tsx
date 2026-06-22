@@ -96,6 +96,7 @@ import { DashboardProvider, type DashboardContextValue } from "./lib/contexts/Da
 import { AuroraBackground } from "../components/ui/aurora-background";
 import { RoadmapSurface } from "./lib/components/surfaces/RoadmapSurface";
 import { ResetAnimationOverlay } from "./lib/components/reset/ResetAnimationOverlay";
+import { ConfirmModal } from "./lib/components/ConfirmModal";
 import { OnboardingChoiceScreen } from "./lib/components/onboarding/OnboardingChoiceScreen";
 import { AnalyticsSurface } from "./lib/components/surfaces/AnalyticsSurface";
 import { MyStoreView } from "./lib/components/surfaces/MyStoreView";
@@ -444,6 +445,7 @@ export default function StarterStageDemo({
     handleAIRoadmapComplete,
     handleSignOut,
     resetDemo, isResetting, resetProgress,
+    resetConfirmOpen, onResetConfirm, onResetCancel,
     contractTasks, activeContractTask, activeContractTaskDetail,
     navigateToSurface, openFinanceFromSummary,
     handleIndustryContinue, handleBusinessModelContinue,
@@ -739,6 +741,23 @@ export default function StarterStageDemo({
 
   return (
     <DashboardProvider value={_ctxValue}>
+    {/* 진행/가게 초기화 확인 모달 — surface 무관 항상 마운트.
+        (종전: CurrentStageView 안에만 있어 "내 정보" 페이지의 초기화 버튼을 눌러도 모달이
+         안 떠 executeResetDemo 가 실행되지 않았음 — 초기화가 동작하지 않던 근본 원인.) */}
+    <ConfirmModal
+      open={resetConfirmOpen}
+      title={language === "ko" ? "진행 상태 초기화" : "Reset Progress"}
+      message={
+        language === "ko"
+          ? "가게 정보와 진행 상태를 정말 초기화할까요?\n로컬과 서버에 저장된 데이터가 모두 삭제되고 온보딩 첫 단계로 돌아갑니다. (회원 정보는 유지)"
+          : "Reset your store info and progress?\nAll local and server data will be deleted and you'll return to onboarding. (Account info is kept.)"
+      }
+      confirmLabel={language === "ko" ? "초기화" : "Reset"}
+      cancelLabel={language === "ko" ? "취소" : "Cancel"}
+      danger
+      onConfirm={onResetConfirm}
+      onCancel={onResetCancel}
+    />
     {/* surface 전환 애니메이션 제거됨 (사장님 요청 2026-05-13) — 페이지 전환 시 즉시 표시 */}
     <style>{`
       /* ━━━ 홈 사이드바 ━━━ */

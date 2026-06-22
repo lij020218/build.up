@@ -19,7 +19,7 @@
  *       지금은 1차 셸 — 직원 라우팅과 환영 화면, 사인아웃이 핵심.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LogOut, Store, Calendar, Boxes } from "lucide-react";
 import { signOutUser } from "@foundone/shared";
 import { supabase } from "../../../../lib/supabase";
@@ -40,43 +40,49 @@ export function StaffDashboard({ language }: { language: "ko" | "en" }) {
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-        const { data: memberRow } = (await supabase
-          .from("store_members" as never)
-          .select("owner_user_id, role")
-          .eq("member_user_id", user.id)
-          .order("joined_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()) as { data: { owner_user_id: string; role: "staff" | "manager" } | null };
-
-        if (!memberRow) {
-          setLoading(false);
-          return;
-        }
-
-        const { data: storeRow } = (await supabase
-          .from("user_store_data")
-          .select("store_name")
-          .eq("user_id", memberRow.owner_user_id)
-          .maybeSingle()) as { data: { store_name: string | null } | null };
-
-        setMembership({
-          ownerUserId: memberRow.owner_user_id,
-          storeName: storeRow?.store_name?.trim() || (ko ? "가게" : "Store"),
-          role: memberRow.role,
-        });
-      } finally {
+  const loadMembership = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         setLoading(false);
+        return;
       }
-    })();
+      const { data: memberRow } = (await supabase
+        .from("store_members" as never)
+        .select("owner_user_id, role")
+        .eq("member_user_id", user.id)
+        .order("joined_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()) as { data: { owner_user_id: string; role: "staff" | "manager" } | null };
+
+      if (!memberRow) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: storeRow } = (await supabase
+        .from("user_store_data")
+        .select("store_name")
+        .eq("user_id", memberRow.owner_user_id)
+        .maybeSingle()) as { data: { store_name: string | null } | null };
+
+      setMembership({
+        ownerUserId: memberRow.owner_user_id,
+        storeName: storeRow?.store_name?.trim() || (ko ? "가게" : "Store"),
+        role: memberRow.role,
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [ko]);
+  useEffect(() => {
+    void loadMembership();
+    // store_members 는 Zustand 밖 독립 hydrate — owner 가 역할 변경/제거 시 realtime 이
+    //   buildup:remote-data-changed 를 발행하면 멤버십을 재조회해 직원 화면에 즉시 반영.
+    const onRemote = () => { void loadMembership(); };
+    window.addEventListener("buildup:remote-data-changed", onRemote);
+    return () => { window.removeEventListener("buildup:remote-data-changed", onRemote); };
+  }, [loadMembership]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
