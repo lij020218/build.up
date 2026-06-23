@@ -1,5 +1,6 @@
 import { createAiClient } from "@foundone/ai/utils/client";
 import { NextResponse } from "next/server";
+import ExcelJS from "exceljs";
 import { requireApiUser } from "../../../_lib/auth";
 import { getAnthropicApiKey } from "../../../_lib/env";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
@@ -15,6 +16,43 @@ type ParsedProduct = {
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel function timeout
+
+/** Excel 셀 값을 안전하게 문자열로. (formula/richText/hyperlink/date/error 모두 처리) */
+function cellToString(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") return String(v);
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    if ("text" in o && typeof o.text === "string") return o.text;            // hyperlink
+    if ("result" in o && o.result != null) return String(o.result);          // formula → 계산값
+    if (Array.isArray(o.richText)) return o.richText.map((r) => (r as { text?: string }).text ?? "").join(""); // richText
+    if ("error" in o) return "";                                             // #DIV/0! 등
+  }
+  return "";
+}
+
+/** xlsx/xls 바이너리 → CSV 텍스트(첫 시트). exceljs 사용 (npm xlsx 는 prototype-pollution 취약 → 미사용).
+ *  헤더-키 객체를 만들지 않고 셀 값을 직접 CSV 로 직렬화 → prototype pollution 위험 없음. */
+async function xlsxToCsv(data: ArrayBuffer): Promise<string> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(data);
+  const sheet = workbook.worksheets[0];
+  if (!sheet) return "";
+  const lines: string[] = [];
+  sheet.eachRow({ includeEmpty: false }, (row) => {
+    // row.values 는 1-based 배열(인덱스 0 = null). 빈 칸 보존 위해 길이만큼 순회.
+    const raw = row.values as unknown[];
+    const cells: string[] = [];
+    for (let i = 1; i < raw.length; i++) {
+      const s = cellToString(raw[i]).replace(/\r?\n/g, " ").trim();
+      // CSV escaping — 쉼표/따옴표 포함 시 큰따옴표로 감싸기.
+      cells.push(/[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+    }
+    if (cells.some((c) => c.length > 0)) lines.push(cells.join(","));
+  });
+  return lines.join("\n");
+}
 
 export async function POST(request: Request) {
   const auth = await requireApiUser(request).catch(() => null);
@@ -45,23 +83,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "AI 서비스를 일시적으로 사용할 수 없습니다. 서버를 재시작하거나 관리자에게 문의하세요." }, { status: 503 });
   }
 
-  let body: { text: string; language?: string };
+  let body: { text?: string; fileBase64?: string; fileName?: string; language?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const text = body.text?.trim();
-  if (!text || text.length < 5) {
-    return NextResponse.json({ error: "No data provided" }, { status: 400 });
+  const ko = body.language === "ko";
+
+  // xlsx/xls 파일은 서버에서 CSV 로 변환(클라이언트는 파일 base64 만 보냄 — iOS 는 네이티브 파싱 불가).
+  let text = body.text?.trim() ?? "";
+  const fileNameLower = (body.fileName ?? "").toLowerCase();
+  const isXlsx = fileNameLower.endsWith(".xlsx") || fileNameLower.endsWith(".xls");
+  if (body.fileBase64 && isXlsx) {
+    if (body.fileBase64.length > 8_000_000) { // base64 ≈ 6MB raw 상한
+      return NextResponse.json({ error: ko ? "파일이 너무 큽니다 (최대 6MB)." : "File too large (max 6MB)." }, { status: 413 });
+    }
+    try {
+      const nodeBuf = Buffer.from(body.fileBase64, "base64");
+      const ab = nodeBuf.buffer.slice(nodeBuf.byteOffset, nodeBuf.byteOffset + nodeBuf.byteLength) as ArrayBuffer;
+      text = (await xlsxToCsv(ab)).trim();
+    } catch (e) {
+      console.error("[products/parse] xlsx parse error:", e instanceof Error ? e.message : e);
+      return NextResponse.json({ error: ko ? "엑셀 파일을 읽을 수 없습니다. 파일이 손상되지 않았는지 확인해 주세요." : "Could not read the Excel file." }, { status: 400 });
+    }
   }
 
-  if (text.length > 50_000) {
+  if (!text || text.length < 5) {
+    return NextResponse.json({ error: ko ? "데이터를 찾을 수 없습니다." : "No data provided" }, { status: 400 });
+  }
+  // 텍스트 직접 입력은 50KB 초과 거부, xlsx 변환분은 안전하게 컷.
+  if (!body.fileBase64 && text.length > 50_000) {
     return NextResponse.json({ error: "Data too large (max 50KB)" }, { status: 400 });
   }
-
-  const ko = body.language === "ko";
+  text = text.slice(0, 50_000);
 
   // 사용자 입력을 로그에 노출하지 않음 (보안)
 
@@ -81,12 +137,19 @@ export async function POST(request: Request) {
 규칙:
 - 제공된 데이터에 있는 제품만 추출하세요. 절대로 데이터에 없는 제품을 만들어내지 마세요.
 - 데이터를 파싱할 수 없거나 제품 정보가 없으면 빈 배열 []을 반환하세요.
-- price, cost는 원 단위 정수. "5,000원" → 5000. 없으면 0.
-- stock은 정수. 없으면 0.
-- unit은 "개", "잔", "인분", "팩", "켤레", "장" 등. 데이터에서 추론. 없으면 "개".
+- 컬럼 매핑(헤더가 있으면 헤더로, 없으면 위치·내용으로 추론):
+  · name  ← 품목명 / 상품명 / 제품명 / 품명 / 메뉴 / 메뉴명 / 이름 / name / item
+  · stock ← 수량 / 재고 / 재고수량 / 현재고 / 보유수량 / qty / stock
+  · price ← 판매가 / 단가 / 가격 / 소비자가 / 정가 / price
+  · cost  ← 원가 / 매입가 / 매입단가 / 공급가 / 사입가 / cost
+  · unit  ← 단위 / 규격
+  · category ← 분류 / 카테고리 / 구분 / 종류
+- name(품목명)이 비어 있으면 그 행은 제외. 같은 품목이 여러 행이면 각각 별도 항목으로 유지(임의 합치기 금지).
+- price, cost는 원 단위 정수. "5,000원"·"5,000" → 5000. 없으면 0. (단가/판매가 헷갈리면 더 큰 값을 price 로.)
+- stock은 정수. "12개"·"12" → 12. 소수면 반올림. 없으면 0.
+- unit은 "개", "잔", "인분", "팩", "켤레", "장", "박스" 등. 데이터에서 추론. 없으면 "개".
 - category는 데이터에서 추론. 없으면 "기타".
-- 헤더 행은 무시하고 데이터만 추출.
-- 빈 행이나 합계 행은 무시.
+- 헤더 행·소계/합계/총계 행·빈 행은 제외.
 - 데이터가 카페/음식 제품이 아니어도 그대로 추출하세요 (양말, 의류, 전자제품 등 모든 종류).`
         : `Parse product data from Excel/CSV/text into a JSON array. Respond ONLY with JSON.
 

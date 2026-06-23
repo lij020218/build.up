@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useDashboardCtx } from "../../../contexts/DashboardContext";
 import { styles } from "../../../styles";
 import { VENDOR_URL_MAP } from "../../../constants";
-import { supabase } from "../../../../../lib/supabase";
+import { importInventoryFromFile, INVENTORY_IMPORT_ACCEPT } from "../../../inventory-file-import";
 import type { InventoryItem, InvForm } from "../../../stores/operations-store";
 import {
   getFranchiseBrandById,
@@ -139,36 +139,14 @@ export function InventoryManagementCard() {
           </button>
           <label style={{ fontSize: "12px", fontWeight: 600, color: "#1d3557", cursor: "pointer", padding: "6px 13px", background: "rgba(29,53,87,0.08)", borderRadius: "9px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2v12M2 8h12" /></svg>
-            {ko ? "CSV" : "CSV"}
-            <input type="file" accept=".csv,.tsv,.txt" aria-label={ko ? "재고 CSV 파일 업로드" : "Upload inventory CSV file"} style={{ display: "none" }} onChange={async (e) => {
+            {ko ? "CSV·Excel" : "CSV·Excel"}
+            <input type="file" accept={INVENTORY_IMPORT_ACCEPT} aria-label={ko ? "재고 파일 업로드 (CSV·엑셀)" : "Upload inventory file (CSV/Excel)"} style={{ display: "none" }} onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
               e.target.value = "";
               try {
-                let text = "";
-                const ext = file.name.split(".").pop()?.toLowerCase();
-                if (ext === "csv" || ext === "tsv" || ext === "txt") {
-                  text = await file.text();
-                } else {
-                  const buf = await file.arrayBuffer();
-                  const bytes = new Uint8Array(buf);
-                  try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
-                  catch { text = new TextDecoder("euc-kr", { fatal: false }).decode(bytes); }
-                  if (text.includes("\0") || text.length < 10) {
-                    alert(ko ? "지원하지 않는 파일 형식입니다." : "Unsupported file format.");
-                    return;
-                  }
-                }
-                if (!text.trim()) return;
-                const { data: { session } } = await supabase.auth.getSession();
-                const res = await fetch("/api/ai/products/parse", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` },
-                  body: JSON.stringify({ text: text.slice(0, 50000), language }),
-                });
-                const payload = await res.json();
-                if (!res.ok || payload.error) { alert(payload.error ?? "Parse failed"); return; }
-                const parsed = payload.products as { name: string; category: string; price: number; cost: number; stock: number; unit: string }[];
+                // CSV/TSV/TXT 는 텍스트로, XLSX/XLS 는 base64 로 보내 서버(exceljs)가 변환 — 공용 헬퍼.
+                const parsed = await importInventoryFromFile(file, language);
                 if (!parsed?.length) { alert(ko ? "데이터를 찾을 수 없습니다." : "No data found."); return; }
                 const newItems: InventoryItem[] = parsed.map((p) => ({
                   id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,

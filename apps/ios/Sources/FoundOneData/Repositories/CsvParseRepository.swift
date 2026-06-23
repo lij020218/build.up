@@ -84,12 +84,26 @@ public actor CsvParseRepository {
 
     // MARK: Inventory
 
+    /// CSV/TSV/TXT 텍스트 → 재고 항목.
     public func parseInventory(text: String, language: String = "ko") async throws -> [BUInventoryItem] {
         let resp: ParseProductsResponse = try await postParse(
             path: "/api/ai/products/parse",
-            text: text,
-            language: language
+            payload: ["text": text, "language": language]
         )
+        return try mapInventory(resp)
+    }
+
+    /// XLSX/XLS 파일(base64) → 재고 항목. iOS 는 네이티브 xlsx 파싱이 불가하므로 파일을
+    /// base64 로 보내 서버(exceljs)가 CSV 변환 후 추출한다 (웹과 동일 경로).
+    public func parseInventory(fileBase64: String, fileName: String, language: String = "ko") async throws -> [BUInventoryItem] {
+        let resp: ParseProductsResponse = try await postParse(
+            path: "/api/ai/products/parse",
+            payload: ["fileBase64": fileBase64, "fileName": fileName, "language": language]
+        )
+        return try mapInventory(resp)
+    }
+
+    private func mapInventory(_ resp: ParseProductsResponse) throws -> [BUInventoryItem] {
         if let err = resp.error { throw CsvParseError.server(err) }
         let products = resp.products ?? []
         if products.isEmpty { throw CsvParseError.emptyResult }
@@ -117,8 +131,7 @@ public actor CsvParseRepository {
     public func parseMembers(text: String, language: String = "ko") async throws -> [BUMember] {
         let resp: ParseMembersResponse = try await postParse(
             path: "/api/ai/members/parse",
-            text: text,
-            language: language
+            payload: ["text": text, "language": language]
         )
         if let err = resp.error { throw CsvParseError.server(err) }
         let members = resp.members ?? []
@@ -137,7 +150,7 @@ public actor CsvParseRepository {
 
     // MARK: - Private
 
-    private func postParse<T: Decodable>(path: String, text: String, language: String) async throws -> T {
+    private func postParse<T: Decodable>(path: String, payload: [String: String]) async throws -> T {
         let session: Session
         do {
             session = try await supabase.auth.session
@@ -145,7 +158,6 @@ public actor CsvParseRepository {
             throw CsvParseError.unauthenticated
         }
 
-        let payload = ["text": text, "language": language]
         let body: Data
         do {
             body = try JSONEncoder().encode(payload)

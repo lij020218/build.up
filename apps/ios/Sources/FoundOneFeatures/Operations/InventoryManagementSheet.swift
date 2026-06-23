@@ -90,7 +90,8 @@ public struct InventoryManagementSheet: View {
             }
             .fileImporter(
                 isPresented: $showFilePicker,
-                allowedContentTypes: [.commaSeparatedText, .plainText, .tabSeparatedText],
+                allowedContentTypes: ([.commaSeparatedText, .plainText, .tabSeparatedText] as [UTType])
+                    + [UTType(filenameExtension: "xlsx"), UTType(filenameExtension: "xls")].compactMap { $0 },
                 allowsMultipleSelection: false
             ) { result in
                 handleFileImport(result)
@@ -163,7 +164,7 @@ public struct InventoryManagementSheet: View {
                 Text("재고 항목이 없습니다")
                     .font(.system(size: 15, weight: .heavy))
                     .foregroundStyle(BUColor.ink)
-                Text("오른쪽 위 + 버튼으로 추가하거나\n파일 버튼으로 CSV를 한 번에 가져오세요.")
+                Text("오른쪽 위 + 버튼으로 추가하거나\n파일 버튼으로 CSV·엑셀(.xlsx)을 한 번에 가져오세요.")
                     .font(.system(size: 13))
                     .foregroundStyle(BUColor.inkSecondary)
                     .multilineTextAlignment(.center)
@@ -299,15 +300,21 @@ public struct InventoryManagementSheet: View {
             importError = "파일이 너무 큽니다 (최대 5MB)."
             return
         }
-        guard let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else {
-            isImporting = false
-            importError = "텍스트 파일만 가져올 수 있습니다. Excel에서 CSV로 저장 후 가져오세요."
-            return
-        }
-
+        let ext = url.pathExtension.lowercased()
         let repo = CsvParseRepository(supabase: BUSupabase.shared.client)
         do {
-            let items = try await repo.parseInventory(text: text)
+            let items: [BUInventoryItem]
+            if ext == "xlsx" || ext == "xls" {
+                // 엑셀: iOS 네이티브 파싱 불가 → 파일 base64 전송, 서버(exceljs)가 CSV 변환.
+                items = try await repo.parseInventory(fileBase64: data.base64EncodedString(), fileName: url.lastPathComponent)
+            } else {
+                guard let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else {
+                    isImporting = false
+                    importError = "텍스트 파일을 읽을 수 없습니다. CSV 또는 엑셀(.xlsx) 파일을 선택해 주세요."
+                    return
+                }
+                items = try await repo.parseInventory(text: text)
+            }
             isImporting = false
             importPreviewItems = items
             showImportPreview = true

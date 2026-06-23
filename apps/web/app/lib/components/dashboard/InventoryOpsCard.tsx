@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { DashboardHook } from "../../useDashboard";
-import { supabase } from "../../../../lib/supabase";
+import { importInventoryFromFile, INVENTORY_IMPORT_ACCEPT } from "../../inventory-file-import";
 import { detectOverstockItems, type OverstockAlert } from "@foundone/shared";
 
 type InventoryEntry = {
@@ -474,65 +474,10 @@ export function InventoryOpsCard({
 
   const handleExcelImport = async (file: File) => {
     try {
-      setExcelImportState({ status: "reading", total: 0, current: 0, message: ko ? "파일 읽는 중..." : "Reading file..." });
-      let text = "";
-      const ext = file.name.split(".").pop()?.toLowerCase();
-
-      if (ext === "csv" || ext === "tsv" || ext === "txt") {
-        // 텍스트 파일: 직접 읽기
-        text = await file.text();
-      } else {
-        // 기타 텍스트 시도
-        const buffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        try {
-          text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-        } catch {
-          text = new TextDecoder("euc-kr", { fatal: false }).decode(bytes);
-        }
-        if (text.includes("\0") || text.length < 10) {
-          alert(ko
-            ? "이 파일 형식은 지원하지 않습니다. CSV, TSV, TXT 파일을 업로드해 주세요."
-            : "Unsupported file format. Please upload CSV, TSV, or TXT.");
-          return;
-        }
-      }
-
-      if (!text.trim()) {
-        setExcelImportState({ status: "idle", total: 0, current: 0, message: "" });
-        return;
-      }
-
       setExcelImportState({ status: "parsing", total: 0, current: 0, message: ko ? "AI가 데이터 분석 중..." : "AI parsing data..." });
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (session?.access_token) {
-        headers["Authorization"] = `Bearer ${session.access_token}`;
-      }
-      const response = await fetch("/api/ai/products/parse", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ text: text.slice(0, 50000), language: d.language }),
-      });
-      const payload = await response.json();
-      if (!response.ok || payload.error) {
-        const errMsg = payload.error ?? "Parse failed";
-        setExcelImportState({ status: "error", total: 0, current: 0, message: errMsg });
-        setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 5000);
-        return;
-      }
-
-      const parsed = payload.products as Array<{
-        name: string;
-        category: string;
-        price: number;
-        cost: number;
-        stock: number;
-        unit: string;
-      }>;
+      // CSV/TSV/TXT 는 텍스트로, XLSX/XLS 는 base64 로 보내 서버(exceljs)가 변환 — 공용 헬퍼.
+      const parsed = await importInventoryFromFile(file, d.language);
       if (!parsed?.length) {
         setExcelImportState({ status: "error", total: 0, current: 0, message: ko ? "데이터를 찾을 수 없습니다." : "No data found." });
         setTimeout(() => setExcelImportState({ status: "idle", total: 0, current: 0, message: "" }), 3000);
@@ -607,12 +552,12 @@ export function InventoryOpsCard({
             {ko ? (d.businessCtx.inventoryLabel?.ko === "내 제품" ? "제품 추가" : d.businessCtx.inventoryLabel?.ko === "소모품 관리" ? "소모품 추가" : d.businessCtx.inventoryLabel?.ko === "운영 자산" ? "자산 추가" : "재고 추가") : "Add item"}
           </button>
           <button type="button" onClick={() => fileInputRef.current?.click()} style={opsActionSecondary}>
-            CSV
+            CSV·Excel
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.tsv,.txt"
+            accept={INVENTORY_IMPORT_ACCEPT}
             style={{ display: "none" }}
             onChange={async (event) => {
               const file = event.target.files?.[0];
