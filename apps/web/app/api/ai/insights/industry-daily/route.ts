@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getOpenAIApiKey } from "../../../_lib/env";
 import { requireApiUser } from "../../../_lib/auth";
+import { fetchRecentNegativeFeedbackLines, buildNegativeFeedbackBlock } from "../../../_lib/coaching-feedback";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 import {
   getIndustryBenchmark,
@@ -473,6 +474,11 @@ export async function POST(request: Request) {
     ?? INDUSTRY_KPI_GUIDANCE[categoryId]
     ?? "이 업종에서 사장님이 실제로 중시하는 지표 중심으로 코칭. 업종과 무관한 일반 지표를 약점으로 지적하지 말 것.";
 
+  // 자가개선: 사장님이 최근 "안 맞아요"로 표시한 코칭을 prompt 에 주입 → 비슷한 코칭 회피.
+  const negFeedbackBlock = buildNegativeFeedbackBlock(
+    await fetchRecentNegativeFeedbackLines(auth.userId, { source: "industry-daily" }),
+  );
+
   const userPrompt = `오늘 ${today}.
 [업종] ${label}
 
@@ -483,7 +489,7 @@ ${benchmarkLines.join("\n")}
 ${kpiGuidance}
 ⚠️ 컨텍스트에 *수치로 주어지지 않은* 업종 평균/벤치마크(특히 "업종 평균 객단가")를 지어내 비교하지 마라. 객단가 업종 평균은 제공된 적이 없으니 "객단가가 업종 평균보다 낮다" 류 비교 인사이트는 절대 금지 — 사장님 객단가는 절대값·추세로만 언급하고, 이 업종에서 객단가가 핵심이 아니면 아예 다루지 마라.
 
-${userContext}${caseStudyBlock}${ragBlock}
+${userContext}${caseStudyBlock}${ragBlock}${negFeedbackBlock}
 
 🎯 위 데이터를 *전체* 검토 후 **사장님 고유 패턴에서만 발견 가능한 1가지** 를 찾아 JSON 으로 반환.
 
