@@ -153,7 +153,8 @@ export function InventoryManagementCard() {
                   name: p.name, quantity: p.stock, unit: p.unit || "개",
                   minThreshold: 0, unitCost: p.cost,
                   category: "other" as const,
-                  itemType: "product" as const, sellingPrice: p.price ?? 0,
+                  // 재고 CSV/엑셀 = 재고(stock) → material (메뉴 product 는 로드맵 menu-design 전용, iOS 통일).
+                  itemType: "material" as const, sellingPrice: p.price ?? 0,
                   expiryDate: "", supplierName: "", supplierUrl: "",
                   leadTimeDays: 1, dailyUsage: 0, lastOrderedAt: "",
                   wasteLog: [],

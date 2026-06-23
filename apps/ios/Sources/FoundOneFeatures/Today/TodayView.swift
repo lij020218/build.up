@@ -26,6 +26,7 @@
 //
 
 import SwiftUI
+import Combine
 import FoundOneDesignSystem
 import FoundOneCore
 import FoundOneComponents
@@ -56,6 +57,9 @@ public struct TodayView: View {
     @State private var showTeamSheet = false
     @State private var showCustomerSheet = false
     @State private var showBasisSheet = false
+    /// storeInfo 변경 감지용 — storeInfo 는 plain let 이라 자체 관찰이 안 되므로
+    /// objectWillChange 를 구독해 이 값을 bump → 홈 카드(재고·직원·고객) 즉시 재렌더.
+    @State private var storeRevision = 0
 
     /// 2026-05-27 P0-A: AI dashboard/actions 응답 (Hero 코칭 카드에 주입).
     /// nil = 미 fetch 또는 미인증 (mock fallback). 빈 배열 = AI 가 빈 응답 반환.
@@ -226,6 +230,12 @@ public struct TodayView: View {
         //   FoundOneMobileShell 이 이미 풀스크린 Aurora 를 깔고 있음. 콘텐츠 영역에 또 깔면
         //   독립적인 TimelineView 가 다른 위상으로 애니메이션 → BrandBar 영역과 콘텐츠 영역의
         //   배경이 미묘하게 달라 보이는 분리감 발생. 사장님 신고 — "배경 나눠진게 보기 안 좋아".
+        // 재고/직원/고객 store 변경 시 홈 카드 즉시 갱신 — storeInfo 는 plain let 이라 자체 관찰이
+        //   안 됨(추가/CSV 가 카드에 즉시 안 뜨던 원인). objectWillChange 구독으로 재렌더 유발.
+        //   nil(데모·프리뷰)이면 더미 publisher → 크래시 없음.
+        .onReceive(storeInfo?.objectWillChange ?? ObservableObjectPublisher()) { _ in
+            storeRevision &+= 1
+        }
         .sheet(isPresented: $showInputSheet) {
             QuickInputSheet(dashboardStore: dashboardStore)
         }

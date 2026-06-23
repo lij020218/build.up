@@ -495,7 +495,9 @@ export function InventoryOpsCard({
         minThreshold: 0,
         unitCost: product.cost,
         category: "other" as const,
-        itemType: "product" as const,
+        // 재고 CSV/엑셀 가져오기 = 재고(stock) → material. 메뉴(product)는 로드맵 menu-design 에서만.
+        //   product 로 넣으면 음식·카페·서비스 업종에서 메뉴 카드로 걸러져 재고 카드에 안 보임(iOS 와 통일).
+        itemType: "material" as const,
         sellingPrice: product.price ?? 0,
         expiryDate: "",
         supplierName: "",
