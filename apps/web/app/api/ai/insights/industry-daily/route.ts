@@ -185,6 +185,22 @@ const CATEGORY_LABELS: Record<string, string> = {
   "living-service": "생활서비스",
 };
 
+// 업종별 핵심 지표 가이드 — "편의점에 객단가 코칭" 같은 기계적·업종 무관 코칭 방지(사장님 신고 2026-06-23).
+//   각 업종이 *실제로 중요하게 보는 지표* 와, 본래 낮거나 의미가 약해 약점으로 지적하면 안 되는 지표를 명시.
+const INDUSTRY_KPI_GUIDANCE: Record<string, string> = {
+  food: "핵심 지표 = 객단가×회전율×좌석, 프라임코스트(식자재+인건비 ≤65%), 재방문. 객단가 언급은 사장님 입력 절대값·추세로만.",
+  "cafe-dessert": "핵심 지표 = 회전율·테이크아웃 비중·원가율(식자재 30~35%)·시간대 매출. 객단가는 본래 낮음(5~7천원) — 약점으로 지적 금지.",
+  retail: "핵심 지표 = 일매출·객수·재방문·재고회전·카테고리(담배/주류/즉석식 등) 믹스·로스율. ⚠️ 소매는 세부업종별 객단가 편차 매우 큼(편의점 5~7천원 ↔ 의류 3~5만원) — 객단가 업종평균을 지어내 비교하거나 '객단가가 낮다'를 약점으로 지적하지 말 것. 편의점은 박리다매 모델이라 객단가가 아니라 객수·방문빈도가 핵심.",
+  beauty: "핵심 지표 = 재방문(rebook)·디자이너 가동률·시술 단가·패키지/멤버십. 객단가는 시술 구성으로 설명.",
+  pet: "핵심 지표 = 재방문·예약율·서비스 믹스. 객단가보다 단골 유지가 핵심.",
+  fitness: "핵심 지표 = 회원 잔존율(90일)·등록 전환·이용률·만료 D-7. 객단가보다 LTV·리텐션.",
+  education: "핵심 지표 = 재등록률·출석률·미수금·반별 충원. 객단가보다 재등록.",
+  space: "핵심 지표 = 점유율(가동률)·시간대 예약·청소 회전. 객단가 개념 약함.",
+  "online-digital": "핵심 지표 = 전환율(CVR)·CAC·재구매·반품률·ROAS. 객단가는 카테고리별 상이.",
+  "startup-tech": "핵심 지표 = 런웨이·MRR·성장률·burn multiple·NRR. 오프라인 객단가 개념 부적합.",
+  "living-service": "핵심 지표 = 재방문·건당 단가·기사 가동률·FTFR. 객단가보다 재이용.",
+};
+
 type RequestBody = {
   categoryId?: string;
   hasUserSales?: boolean;
@@ -408,11 +424,18 @@ export async function POST(request: Request) {
     benchmarkLines.push(`- 상위 10% 차별화 (참고만 — 직접 인용 X, 사장님 고유 데이터에 우선): ${benchmark.keyDifferentiators.slice(0, 3).join(" / ")}`);
   }
 
+  const kpiGuidance = INDUSTRY_KPI_GUIDANCE[categoryId]
+    ?? "이 업종에서 사장님이 실제로 중시하는 지표 중심으로 코칭. 업종과 무관한 일반 지표를 약점으로 지적하지 말 것.";
+
   const userPrompt = `오늘 ${today}.
 [업종] ${label}
 
 [업종 벤치마크 — 소상공인실태조사 기준]
 ${benchmarkLines.join("\n")}
+
+[이 업종의 핵심 지표 — 업종 맞춤 코칭, 반드시 반영]
+${kpiGuidance}
+⚠️ 컨텍스트에 *수치로 주어지지 않은* 업종 평균/벤치마크(특히 "업종 평균 객단가")를 지어내 비교하지 마라. 객단가 업종 평균은 제공된 적이 없으니 "객단가가 업종 평균보다 낮다" 류 비교 인사이트는 절대 금지 — 사장님 객단가는 절대값·추세로만 언급하고, 이 업종에서 객단가가 핵심이 아니면 아예 다루지 마라.
 
 ${userContext}${caseStudyBlock}${ragBlock}
 
