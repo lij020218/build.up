@@ -55,4 +55,34 @@ describe("heal completedAt — path-aware (단계 점프 회귀 가드)", () => 
     const { healed } = healCompletedAtChain(decisions, {} as AnyDec, starterRoadmap.stages as AnyDec);
     expect(healed).toBe(false);
   });
+
+  // ── 2026-06-23 근본 버그: "외부링크 갔다가 돌아오면 모두 완료 + 21단계 점프" ──
+  //   path 말단(pre-launch-final)에 *약신호(완료 task 1개)* 가 stray 로 생기면, 종전엔 그게
+  //   furthest *신호* 라 그 앞 0..19 전부 backfill → 모두 완료 + 마지막 단계 점프 + Supabase 저장
+  //   영구 손상. 수정: chain backfill 은 강신호(completedAt)까지만, 약신호는 현재 stage 자기 완료만.
+  it("말단 약신호(완료 task)는 chain 을 끌지 않음 — '모두 완료 + 21단계 점프' 가드", () => {
+    const decisions: AnyDec = {
+      "industry-selection": { stageId: "industry-selection", inputs: { categoryId: "food" }, completedAt: ISO },
+      "loan-guide": { stageId: "loan-guide", completedAt: ISO },
+    };
+    // pre-launch-final(path 말단)에 stray 완료 task — 외부링크 복귀 등으로 생긴 단발 신호 가정.
+    const tasks: AnyDec = { "pre-launch-final": [{ taskId: "t1", status: "completed" }] };
+    const { decisions: healed } = healCompletedAtChain(decisions, tasks, starterRoadmap.stages as AnyDec);
+    expect(healed["pre-launch-final"]?.completedAt, "stray 말단 약신호로 pre-launch-final 오완료").toBeFalsy();
+    const count = Object.values(healed).filter((d: AnyDec) => d?.completedAt).length;
+    expect(count, `완료 ${count} — 약신호 chain backfill 폭발(모두 완료 버그 재발)`).toBeLessThan(20);
+  });
+
+  it("현재 진행 stage 의 약신호는 정상 heal (룰 강화 회귀 보정 보존)", () => {
+    // loan-guide(idx12)까지 강신호 → 현재 stage = menu-design(idx13). 거기 완료 task 토글만 한 상태.
+    const decisions: AnyDec = {
+      "industry-selection": { stageId: "industry-selection", inputs: { categoryId: "food" }, completedAt: ISO },
+      "loan-guide": { stageId: "loan-guide", completedAt: ISO },
+    };
+    const tasks: AnyDec = { "menu-design": [{ taskId: "t1", status: "completed" }] };
+    const { decisions: healed } = healCompletedAtChain(decisions, tasks, starterRoadmap.stages as AnyDec);
+    expect(healed["menu-design"]?.completedAt, "현재 stage 약신호 heal 누락(룰강화 회귀 미보정)").toBeTruthy();
+    // 단, 그 다음 단계(vendor-setup)까지 번지면 안 됨.
+    expect(healed["vendor-setup"]?.completedAt, "현재 stage 너머로 번짐").toBeFalsy();
+  });
 });

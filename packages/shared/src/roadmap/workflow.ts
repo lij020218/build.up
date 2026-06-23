@@ -393,11 +393,14 @@ export function buildRoadmapState(
  * 비어 stage 가 회귀하는 것을 막는 보정.
  *
  * ⚠️ path-aware 필수: stages 배열은 starter-data 정의 순서(offline → tech → cluster → franchise →
- *    online → tail)라 **path 순서와 다르다**. 종전엔 *배열 인덱스* 순으로 backfill 해서, 배열상
- *    늦은 인덱스의 stage(예: loan-guide=idx44, franchise-application=idx26)에 신호가 생기면
- *    그 앞 *배열* 전체를 완료 처리 → 사장님 화면이 "21·22단계 완료로 건너뜀". 여기서는
- *    resolveNextStageIds 로 사용자의 실제 path 를 따라가며 **path 상 furthest 신호 stage 이전의
- *    path stage 만** backfill 한다. off-path 신호는 chain backfill 을 유발하지 않는다.
+ *    online → tail)라 **path 순서와 다르다**. resolveNextStageIds 로 사용자의 실제 path 를 따라가며
+ *    backfill 한다. off-path 신호는 chain backfill 을 유발하지 않는다.
+ *
+ * ⚠️ 강/약 신호 구분 (2026-06-23 근본 수정): chain backfill 은 **강신호(completedAt — 명시적 advance)
+ *    가장 뒤까지만** 채운다. **약신호(완료 task 만)** 는 단발/유실로 path 말단에 stray 생길 수 있어
+ *    (예: pre-launch-final 의 완료 task 1개) chain 을 끌면 "모두 완료 + 마지막 단계(21) 점프" 손상이
+ *    난다(usePersistence 가 결과를 Supabase 저장 → 영구화·iOS 전파). 약신호는 *현재 진행 stage*
+ *    (강신호 체인 바로 다음) 자기 완료만 인정. 종전(furthest *신호*)은 약신호도 chain 을 끌어 버그.
  */
 export function healCompletedAtChain(
   decisions: WorkflowDecisionMap,
@@ -410,16 +413,26 @@ export function healCompletedAtChain(
   const stageById = new Map(stages.map((s) => [s.stageId, s]));
   const healedStageIds = new Set<string>();
 
-  // 신호 있는 stage = completedAt 보유 OR 어떤 task 라도 status=completed.
-  const signalStageIds = new Set<string>();
+  // 신호 분류 (2026-06-23 근본 수정 — "외부링크 복귀 시 모두 완료 + 21단계 점프" 데이터 손상):
+  //   • 강신호(completedAt 보유) — 명시적 "다음 단계로"(advance)에서만 생기는 신뢰 신호.
+  //     "사용자가 여기까지 실제로 통과함"을 의미하므로 그 앞 path 단계 전부 done 으로 인정해도 안전.
+  //   • 약신호(completedAt 없고 완료 task 보유) — 단발/유실로 path 말단에 stray 로 생길 수 있다
+  //     (예: 꼬리 stage 의 완료 task 1개). 종전엔 강·약 신호를 똑같이 취급해 약신호 하나가
+  //     path 말단(pre-launch-final=idx20)에 생기면 그 앞 0..19 전부 완료 처리 → "모두 완료 + 마지막
+  //     단계 점프" 손상(usePersistence 가 그 결과를 Supabase 에 저장해 영구화·iOS 전파). → chain
+  //     backfill 은 *강신호* 가장 뒤까지만, 약신호는 *현재 진행 stage*(강신호 체인 바로 다음) 자기
+  //     완료만 인정한다.
+  const completedAtStageIds = new Set<string>();
+  const taskOnlyStageIds = new Set<string>();
   const allStageIds = new Set<string>([...Object.keys(result), ...Object.keys(tasks)]);
   for (const sid of allStageIds) {
     if (!stageById.has(sid)) continue;
-    const hasCompleted = !!result[sid]?.completedAt;
-    const hasAnyCompletedTask = (tasks[sid] ?? []).some((t) => t.status === "completed");
-    if (hasCompleted || hasAnyCompletedTask) signalStageIds.add(sid);
+    if (result[sid]?.completedAt) { completedAtStageIds.add(sid); continue; }
+    if ((tasks[sid] ?? []).some((t) => t.status === "completed")) taskOnlyStageIds.add(sid);
   }
-  if (signalStageIds.size === 0) return { decisions: result, healed: false };
+  if (completedAtStageIds.size === 0 && taskOnlyStageIds.size === 0) {
+    return { decisions: result, healed: false };
+  }
 
   // 사용자의 실제 path 순서 (resolveNextStageIds 따라 stages[0] 부터). buildRoadmapState 와 동일 walk.
   const pathOrder: string[] = [];
@@ -440,33 +453,34 @@ export function healCompletedAtChain(
   }
   const pathIndexOf = new Map(pathOrder.map((sid, i) => [sid, i] as const));
 
-  // path 상 가장 뒤 신호 stage 위치 (off-path 신호는 제외 — chain backfill 유발 안 함).
-  let maxSignalPathIdx = -1;
-  for (const sid of signalStageIds) {
+  // path 상 가장 뒤 *강신호(completedAt)* 위치 — chain backfill 상한. off-path completedAt 은 제외
+  //   (pathIndexOf 없음 → maxCompletedPathIdx 에 반영 안 됨 → chain 유발 안 함).
+  let maxCompletedPathIdx = -1;
+  for (const sid of completedAtStageIds) {
     const pidx = pathIndexOf.get(sid);
-    if (pidx !== undefined && pidx > maxSignalPathIdx) maxSignalPathIdx = pidx;
+    if (pidx !== undefined && pidx > maxCompletedPathIdx) maxCompletedPathIdx = pidx;
   }
 
   const baseTime = Date.now();
-  // ① 신호 stage 자체에 completedAt 없으면 채움 (진행 흔적 = done 인정). off-path 도 자기 자신은 인정.
-  for (const sid of signalStageIds) {
+  // ② path 상 furthest 강신호 이전의 모든 path stage backfill — completedAt 은 명시적 진행이라
+  //    "그 지점까지 실제로 통과함" → 사이 단계가 비어 있으면 채운다(룰 강화로 유실된 completedAt 보정).
+  for (let i = 0; i < maxCompletedPathIdx; i++) {
+    const sid = pathOrder[i];
     if (!result[sid]?.completedAt) {
-      const pidx = pathIndexOf.get(sid) ?? 0;
-      const ref = maxSignalPathIdx >= 0 ? maxSignalPathIdx : pidx;
-      const ts = new Date(baseTime - (ref - pidx) * 1000).toISOString();
+      const ts = new Date(baseTime - (maxCompletedPathIdx - i) * 1000).toISOString();
       result[sid] = { ...(result[sid] ?? { stageId: sid }), stageId: sid, completedAt: ts };
       healedStageIds.add(sid);
     }
   }
-  // ② path 상 furthest 신호 이전의 path stage 만 chain backfill (배열 순서 아님).
-  if (maxSignalPathIdx > 0) {
-    for (let i = 0; i < maxSignalPathIdx; i++) {
-      const sid = pathOrder[i];
-      if (!result[sid]?.completedAt) {
-        const ts = new Date(baseTime - (maxSignalPathIdx - i) * 1000).toISOString();
-        result[sid] = { ...(result[sid] ?? { stageId: sid }), stageId: sid, completedAt: ts };
-        healedStageIds.add(sid);
-      }
+  // ① 약신호(완료 task)는 *현재 진행 stage*(강신호 체인 바로 다음 path stage) 의 자기 완료만 인정.
+  //    룰 강화 후 현재 stage 의 옛 task 만 토글하고 "다음 단계로" 안 누른 회귀를 보정한다.
+  //    stray 말단 약신호(예: pre-launch-final 의 완료 task 1개)는 무시 → over-completion 원천 차단.
+  const currentIdx = maxCompletedPathIdx + 1;
+  if (currentIdx >= 0 && currentIdx < pathOrder.length) {
+    const sid = pathOrder[currentIdx];
+    if (!result[sid]?.completedAt && taskOnlyStageIds.has(sid)) {
+      result[sid] = { ...(result[sid] ?? { stageId: sid }), stageId: sid, completedAt: new Date(baseTime).toISOString() };
+      healedStageIds.add(sid);
     }
   }
 
