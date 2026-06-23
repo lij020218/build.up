@@ -671,6 +671,8 @@ private struct HeroOuterCard: View {
     /// AI fetch 완료 시 onAppear / .task 에서 채워짐.
     let aiActions: [AiAction]?
 
+    @AppStorage("roadmap.selectedIndustryId") private var specialtyId = ""
+
     init(mock: MockData, healthResult: UnifiedHealthResult, hero: Hero, aiActions: [AiAction]? = nil) {
         self.mock = mock
         self.healthResult = healthResult
@@ -689,6 +691,14 @@ private struct HeroOuterCard: View {
                     hero: hero,
                     actions: aiActions ?? mock.resolverInput.aiTopActions
                 )
+                // 실제 AI 코칭일 때만 피드백 — "안 맞아요"는 다음 코칭 prompt 에 주입돼 자가개선.
+                if let acts = aiActions, !acts.isEmpty {
+                    CoachingFeedbackRow(
+                        headline: hero.analysisKo,
+                        industryCategoryId: mock.category.benchmarkCategoryId,
+                        specialtyId: specialtyId.isEmpty ? nil : specialtyId
+                    )
+                }
             }
         }
     }
