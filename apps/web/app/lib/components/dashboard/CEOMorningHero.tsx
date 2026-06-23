@@ -9,6 +9,7 @@ import { CountUp } from "./animations";
 import { PALETTE, MOTION, CHART_COLORS } from "./operationalStyles";
 import { useMorningBriefingBrain } from "../../hooks/useMorningBriefingBrain";
 import { resolveHero, InsightStack, PRIORITY_META, resolveInsightCtaTarget, type Hero } from "./heroInsight";
+import { CoachingFeedback } from "./CoachingFeedback";
 import { recordSignal } from "../../coaching-history";
 import { getBusinessDay, isBusinessDayClosed, dailyReportActiveTimeLabel } from "../../utils/business-day";
 import { useProfileStore } from "../../stores/profile-store";
@@ -509,9 +510,16 @@ export function CEOMorningHero({ d }: Props) {
         ctaTarget: target,
         sourceLabel: it.sourceLabel,
         priority: it.priority,
+        fb: {
+          headline: it.headline ?? it.body,
+          category: it.category ?? null,
+          targetCard: it.targetCard ?? null,
+          industryCategoryId: d.industryCategoryId ?? null,
+          specialtyId: d.selectedIndustryId ?? null,
+        },
       };
     });
-  }, [brain.industryInsight, d.industryCategoryId]);
+  }, [brain.industryInsight, d.industryCategoryId, d.selectedIndustryId]);
 
   // 스택 표시 리스트 — briefing 이 industry source 면 첫 인사이트는 hero 라 1번부터, 그 외는 모두
   const stackList = briefing.source === "industry" ? allInsightSpecs.slice(1) : allInsightSpecs;
@@ -1300,6 +1308,18 @@ export function CEOMorningHero({ d }: Props) {
               <ChevronRight size={12} strokeWidth={2.4} />
             </button>
           </div>
+        )}
+
+        {briefing.fb && (
+          <CoachingFeedback
+            source="industry-daily"
+            headline={briefing.fb.headline}
+            category={briefing.fb.category}
+            targetCard={briefing.fb.targetCard}
+            industryCategoryId={briefing.fb.industryCategoryId}
+            specialtyId={briefing.fb.specialtyId}
+            ko={ko}
+          />
         )}
 
         {/* ═══════════════ AI 추천 카드 스택 (industry insights) ═══════════════

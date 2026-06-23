@@ -22,6 +22,7 @@ import type { CrisisDetection } from "../../services/cashflow-projection";
 import type { ProactiveInsight } from "../../services/profit-anomaly-detector";
 import type { AgentProposal } from "../../stores/agents-store";
 import type { IndustryInsight } from "../../hooks/useIndustryInsight";
+import { CoachingFeedback } from "./CoachingFeedback";
 
 // ─── 타입 ────────────────────────────────────────────────────────────────
 
@@ -81,6 +82,14 @@ export type Hero = {
   referencedCase?: { id: string; name: string };
   /** 인사이트 출처 — Perplexity·Glean 패턴 */
   sourceLabel?: string;
+  /** 코칭 피드백용 — industry-daily LLM 인사이트일 때만 채워짐(원본 headline·category 등). */
+  fb?: {
+    headline: string;
+    category?: string | null;
+    targetCard?: string | null;
+    industryCategoryId?: string | null;
+    specialtyId?: string | null;
+  };
   /** 우선순위 (industry 인사이트만) — 1순위 / 2순위 / 3순위 */
   priority?: "high" | "medium" | "low";
   /** 카드 스택 — primary 아래에 펼쳐 보여줄 추가 인사이트 */
@@ -619,6 +628,18 @@ export function InsightStack({ related, ko }: { related: Omit<Hero, "relatedSpec
                   {ctaLabel}
                   <ArrowRight size={11} strokeWidth={1.5} />
                 </button>
+
+                {spec.fb && (
+                  <CoachingFeedback
+                    source="industry-daily"
+                    headline={spec.fb.headline}
+                    category={spec.fb.category}
+                    targetCard={spec.fb.targetCard}
+                    industryCategoryId={spec.fb.industryCategoryId}
+                    specialtyId={spec.fb.specialtyId}
+                    ko={ko}
+                  />
+                )}
               </article>
             );
           })}
