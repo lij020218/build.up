@@ -56,6 +56,8 @@ export type IndustryInsight = {
 
 type Input = {
   categoryId: string;
+  /** 세부 업종 id (예: convenience-small) — AI 코칭이 세부 업종 핵심지표 우선 사용. */
+  selectedIndustryId?: string;
   hasUserSales: boolean;
   avgDailySales?: number;
   daysSinceLaunch?: number;
@@ -87,14 +89,15 @@ const CACHE_KEY_PREFIX = "foundone-industry-insight-v16:";
 // 같은 키로 동시에 여러 mount (Strict Mode / 다중 caller) 가 fetch 하지 않도록 in-flight 공유.
 const INSIGHT_INFLIGHT = new Map<string, Promise<IndustryInsight | null>>();
 
-function cacheKey(input: { categoryId: string }): string {
-  // ⚠️ 키에 *오늘 자정 KST* 까지 안정 — categoryId + 날짜만.
+function cacheKey(input: { categoryId: string; selectedIndustryId?: string }): string {
+  // ⚠️ 키에 *오늘 자정 KST* 까지 안정 — categoryId(+세부업종) + 날짜만.
   //    초기 hasUserSales 가 false→true 로 전환되며 키가 바뀌어 매 refresh 마다 fresh fetch 가
   //    발생하던 버그 (사용자 보고 2026-05-08) 방지.
   //
   //    KST 기준 자정 — 사용자가 새벽 1시에 봐도 "어제" 의 인사이트가 나오면 안 됨.
+  //    세부 업종이 코칭에 반영되므로 키에 포함(편의점↔의류 캐시 분리).
   const date = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
-  return `${CACHE_KEY_PREFIX}${input.categoryId}:${date}`;
+  return `${CACHE_KEY_PREFIX}${input.categoryId}:${input.selectedIndustryId ?? ""}:${date}`;
 }
 
 // localStorage 사용 — 다중 탭 / 브라우저 재시작에서도 유지 (하루 1회 비용 절감 보장).
@@ -160,7 +163,7 @@ export function useIndustryInsight(input: Input): {
   useEffect(() => {
     if (!input.enabled || !input.categoryId) return;
 
-    const key = cacheKey({ categoryId: input.categoryId });
+    const key = cacheKey({ categoryId: input.categoryId, selectedIndustryId: input.selectedIndustryId });
     // 하루 1회만 생성 — localStorage 캐시. 키에 오늘 날짜 포함이라 자정 지나면 자동 무효.
     const cached = loadCached(key);
     if (cached) {
@@ -197,6 +200,7 @@ export function useIndustryInsight(input: Input): {
           },
           body: JSON.stringify({
             categoryId: input.categoryId,
+            specialtyId: input.selectedIndustryId,
             hasUserSales: input.hasUserSales,
             avgDailySales: input.avgDailySales,
             daysSinceLaunch: input.daysSinceLaunch,
@@ -260,6 +264,7 @@ export function useIndustryInsight(input: Input): {
   }, [
     input.enabled,
     input.categoryId,
+    input.selectedIndustryId,
     input.hasUserSales,
     input.avgDailySales,
     input.daysSinceLaunch,

@@ -160,6 +160,7 @@ export function useMorningBriefingBrain(d: DashboardHook): MorningBriefingBrain 
   // ── Industry insight ──
   const { insight: industryInsight } = useIndustryInsight({
     categoryId: d.industryCategoryId,
+    selectedIndustryId: d.selectedIndustryId ?? undefined,
     hasUserSales: entries.length > 0,
     avgDailySales: avgDailySales7 > 0 ? avgDailySales7 : undefined,
     daysSinceLaunch,

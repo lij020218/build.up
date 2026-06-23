@@ -201,8 +201,50 @@ const INDUSTRY_KPI_GUIDANCE: Record<string, string> = {
   "living-service": "핵심 지표 = 재방문·건당 단가·기사 가동률·FTFR. 객단가보다 재이용.",
 };
 
+// ── 세부 업종(specialty) KPI 프로파일 ────────────────────────────────────────
+//
+//  규칙(사장님 신고 2026-06-23 "큰 분류 vs 세부 업종 명확히"): AI 코칭은 **세부 업종 1순위**.
+//  세부 업종이 카테고리 기본과 *핵심 KPI·비즈니스 모델이 다를 때만* 여기에 override 를 둔다(깊이 들어감).
+//  override 없으면 INDUSTRY_KPI_GUIDANCE(카테고리)로 폴백. 즉 "언제 깊이 들어가나" = 세부 업종이
+//  카테고리 평균과 다른 지표를 가질 때. (편의점≠의류 — 객단가 의미가 정반대라 둘 다 override 필요)
+const SPECIALTY_KPI_PROFILE: Record<string, { label: string; guidance: string }> = {
+  // RETAIL — 세부업종 편차 극단적
+  "convenience-small": { label: "편의점", guidance: "비즈니스 모델 = 박리다매·24시간·고빈도. 핵심 지표 = 객수(트래픽)·방문빈도·재고회전·카테고리 믹스(담배/주류/즉석식품/택배 등)·결품률·로스(폐기)율·24시간 인건비 효율·점포 평당매출. ⚠️ 객단가는 본래 5~7천원으로 낮음 = 정상이며 약점 아님 — 객단가를 낮다고 지적하거나 '업종 평균 객단가'를 지어내 비교하는 것은 업종 몰이해. 매출은 객단가가 아니라 *객수×방문빈도*가 좌우. 담배·교통카드 등 저마진 비중과 즉석식·FF(프레시푸드) 고마진 비중의 믹스가 수익 핵심." },
+  "unmanned-retail": { label: "무인 매장", guidance: "비즈니스 모델 = 무인·24시간. 핵심 지표 = 트래픽·기기(키오스크/냉동고) 가동률·결품률·도난(로스)율·운영비. 인건비는 거의 0이라 약점 지적 대상 아님. 객단가보다 방문 트래픽·재고 회전." },
+  "fashion-accessories": { label: "의류·패션 매장", guidance: "핵심 지표 = 객단가(높음·coaching OK)·sell-through(판매소진율)·시즌 재고회전·반품률·코디 연계 객단가 상향. 시즌성 강함 — 시즌 D-day·이월 재고 관리가 수익 좌우. (소매지만 편의점과 정반대로 객단가가 핵심)" },
+  // CAFE
+  "self-serve-cafe": { label: "무인 카페", guidance: "비즈니스 모델 = 무인. 핵심 지표 = 트래픽·머신 가동률·운영비·재방문. 인건비 0, 객단가 낮음 — 둘 다 약점 아님. 위치 트래픽·기기 관리가 핵심." },
+  "bakery-studio": { label: "베이커리·제과", guidance: "핵심 지표 = 원가율(재료·오븐)·폐기(신선도)율·시간대 판매(오전 생산~마감 떨이)·SKU 회전. 폐기율 관리가 수익 핵심." },
+  // FOOD
+  "delivery-meals": { label: "배달 전문점", guidance: "비즈니스 모델 = 배달 중심·무홀. 핵심 지표 = 배달앱 수수료율(매출의 16~30%)·리뷰 평점·재주문율·묶음(세트) 객단가·조리 회전. 홀 좌석·회전율 개념 없음. 수수료·리뷰·재주문이 생존 좌우. 객단가는 세트·사이드 묶음으로만 상향." },
+  // FITNESS
+  "golf-studio": { label: "스크린골프", guidance: "비즈니스 모델 = 고자본 장비·시간제. 핵심 지표 = 타석 가동률·피크 시간대 예약률·회원권·음료 부가매출. 타석 장비 ROI라 가동률·피크 예약이 수익 핵심. 객단가보다 가동률." },
+  "unmanned-fitness": { label: "무인 헬스장", guidance: "비즈니스 모델 = 무인·구독(회원권). 핵심 지표 = 회원 잔존율·이용률·운영비·출입시스템. 인건비 0 — 리텐션·이용률이 핵심." },
+  // EDUCATION / SPACE — 좌석·공간 점유 모델
+  "study-room": { label: "스터디카페", guidance: "비즈니스 모델 = 좌석 점유·무인. 핵심 지표 = 좌석 점유율·시간대 이용·정기권 비중·재방문. 객단가 개념 약함 — 좌석 회전·점유율이 매출 좌우." },
+  "study-cafe-space": { label: "스터디카페(공간)", guidance: "핵심 지표 = 좌석 점유율(POR)·시간대·정기권·청결. 좌석 회전이 핵심." },
+  "shared-office": { label: "공유오피스", guidance: "비즈니스 모델 = 장기 임대·점유. 핵심 지표 = 점유율(가동률)·계약 유지율·1인실 단가·부가서비스(회의실·라운지). 장기 계약 유지가 핵심, 단발 객단가 아님." },
+  "guesthouse": { label: "게스트하우스", guidance: "비즈니스 모델 = 숙박. 핵심 지표 = 객실 점유율(OCC)·ADR(평균 객실단가)·리뷰 평점·시즌·OTA 수수료. 점유율×ADR=RevPAR 이 핵심. 객단가가 아니라 OCC·ADR·리뷰." },
+  "party-room": { label: "파티룸", guidance: "핵심 지표 = 예약률·시간대(주말·야간 피크)·청소 회전·리뷰. 공간 시간제라 예약률·피크 활용이 핵심." },
+  "rental-studio": { label: "대여 스튜디오", guidance: "핵심 지표 = 예약률·시간대·장비 활용·리뷰. 시간제 공간 — 예약률 핵심." },
+  // PET
+  "pet-cafe": { label: "펫 카페", guidance: "비즈니스 모델 = 카페+놀이 복합. 핵심 지표 = 체류시간·F&B 부가매출·재방문·동물 위생/안전. 넓은 평수 — 좌석 회전+F&B 객단가 둘 다." },
+  "pet-walking-visit": { label: "펫 방문돌봄", guidance: "비즈니스 모델 = 무점포 방문. 핵심 지표 = 재이용율·일정(스케줄) 효율·이동 동선·보험/신뢰. 점포·재고 개념 없음 — 재이용·신뢰가 핵심." },
+  // LIVING
+  "self-laundry": { label: "무인 빨래방", guidance: "비즈니스 모델 = 무인·기기. 핵심 지표 = 기기 가동률·시간대 이용·운영비(전기·세제)·고장 대응. 인건비 0 — 가동률이 매출 직결." },
+  "cleaning-service": { label: "청소 대행", guidance: "비즈니스 모델 = 무점포 출장. 핵심 지표 = 재이용율·건당 단가·기사 가동률·일정 효율. 점포·재고 없음 — 재이용·기사 효율 핵심." },
+  // ONLINE — 무자본/디지털은 원가·재고 개념 약함
+  "smart-store": { label: "스마트스토어", guidance: "비즈니스 모델 = 온라인 사입/위탁. 핵심 지표 = 전환율(CVR)·광고 ROAS·CAC·재구매·반품률·상세페이지 품질. 객단가는 카테고리별, 오프라인식 회전율·좌석 개념 없음." },
+  "digital-products": { label: "디지털 상품", guidance: "비즈니스 모델 = 무자본·무재고 지식상품. 핵심 지표 = 트래픽·전환율·재방문·콘텐츠 생산량. 원가·재고·인건비 개념 거의 없음 — 도달·전환이 전부. 비용율 코칭 부적합." },
+  "newsletter-membership": { label: "뉴스레터·멤버십", guidance: "비즈니스 모델 = 구독. 핵심 지표 = 구독자 증가·이탈률·오픈율·전환(무료→유료). 재고·원가 없음 — 구독 유지(리텐션)가 전부." },
+  "consignment-commerce": { label: "위탁판매", guidance: "비즈니스 모델 = 무재고 위탁. 핵심 지표 = 전환율·마진·반품·소싱 상품 회전. 재고·물류 없음 — 상품 선정·전환이 핵심." },
+  "global-buying": { label: "구매대행", guidance: "비즈니스 모델 = 주문후구매 무재고. 핵심 지표 = 마진·환율·배송 리드타임·CS 응대·반품. 재고 없음 — 마진·리드타임·CS 핵심." },
+};
+
 type RequestBody = {
   categoryId?: string;
+  /** 세부 업종 id (예: convenience-small). 있으면 *세부 업종* 핵심지표·라벨 우선 사용. */
+  specialtyId?: string;
   hasUserSales?: boolean;
   avgDailySales?: number;
   daysSinceLaunch?: number;
@@ -262,7 +304,9 @@ export async function POST(request: Request) {
   }
 
   const categoryId = body.categoryId ?? "food";
-  const label = CATEGORY_LABELS[categoryId] ?? categoryId;
+  // 세부 업종 1순위: 프로파일 있으면 그 라벨·핵심지표, 없으면 카테고리 폴백.
+  const specialtyProfile = body.specialtyId ? SPECIALTY_KPI_PROFILE[body.specialtyId] : undefined;
+  const label = specialtyProfile?.label ?? CATEGORY_LABELS[categoryId] ?? categoryId;
   const benchmark = getIndustryBenchmark(categoryId);
   const avgMonthly = benchmark ? Math.round(benchmark.avgAnnualRevenue / 12) : null;
   const top10Monthly = benchmark ? Math.round(benchmark.top10PctRevenue / 12) : null;
@@ -424,13 +468,15 @@ export async function POST(request: Request) {
     benchmarkLines.push(`- 상위 10% 차별화 (참고만 — 직접 인용 X, 사장님 고유 데이터에 우선): ${benchmark.keyDifferentiators.slice(0, 3).join(" / ")}`);
   }
 
-  const kpiGuidance = INDUSTRY_KPI_GUIDANCE[categoryId]
+  // 세부 업종 프로파일 우선 → 카테고리 폴백 (큰 분류 vs 세부 업종 규칙).
+  const kpiGuidance = specialtyProfile?.guidance
+    ?? INDUSTRY_KPI_GUIDANCE[categoryId]
     ?? "이 업종에서 사장님이 실제로 중시하는 지표 중심으로 코칭. 업종과 무관한 일반 지표를 약점으로 지적하지 말 것.";
 
   const userPrompt = `오늘 ${today}.
 [업종] ${label}
 
-[업종 벤치마크 — 소상공인실태조사 기준]
+[매출 벤치마크 — 소상공인실태조사 ${specialtyProfile ? `(${CATEGORY_LABELS[categoryId] ?? categoryId} 카테고리 평균 — 세부 업종 편차 크니 참고만)` : "기준"}]
 ${benchmarkLines.join("\n")}
 
 [이 업종의 핵심 지표 — 업종 맞춤 코칭, 반드시 반영]
