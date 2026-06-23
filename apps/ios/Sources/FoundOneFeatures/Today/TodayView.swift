@@ -164,9 +164,15 @@ public struct TodayView: View {
                     )
                 } else if mock.category != .startupTech {
                     InventoryOpsCard(
-                        items: realInventoryItems,
+                        items: inventoryForCard,
                         onManage: { showInventorySheet = true }
                     )
+                }
+
+                // ⑤.5 메뉴·서비스 수익성 (음식·카페·서비스) — 로드맵 menu-design 입력(판매가·원가)을
+                //   per-item 원가율·마진으로 표시. 재고(식자재)와 분리. 메뉴 입력 전이면 미노출.
+                if isMenuCardIndustry && !menuProducts.isEmpty {
+                    MenuProfitabilityCard(items: menuProducts, category: mock.category)
                 }
 
                 // ⑥ 직원 관리 (전 업종)
@@ -508,6 +514,25 @@ public struct TodayView: View {
     private var realInventoryItems: [BUInventoryItem] {
         guard let si = storeInfo, si.isLoaded else { return [] }
         return si.state.inventory
+    }
+
+    /// 메뉴 수익성 카드 노출 업종 — 음식·카페·서비스(메뉴/서비스 라인업 입력 업종).
+    ///   소매·이커머스는 product 가 곧 재고라 제외(SellThrough 가 담당).
+    private var isMenuCardIndustry: Bool {
+        switch mock.category {
+        case .restaurant, .cafe, .beauty, .fitness, .pet, .education, .livingService, .space: return true
+        default: return false
+        }
+    }
+
+    /// 메뉴 수익성 카드용 — 로드맵 menu-design 이 product 로 기록한 메뉴.
+    private var menuProducts: [BUInventoryItem] {
+        realInventoryItems.filter { $0.itemType == "product" }
+    }
+
+    /// 재고 카드용 — 메뉴 카드 업종이면 식자재(material)만 표시(메뉴 "재고 0개" 중복 방지).
+    private var inventoryForCard: [BUInventoryItem] {
+        isMenuCardIndustry ? realInventoryItems.filter { $0.itemType != "product" } : realInventoryItems
     }
 
     private var realEmployees: [BUEmployee] {

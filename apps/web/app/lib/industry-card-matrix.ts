@@ -61,6 +61,7 @@ export type CardId =
   | "daily-ops-ritual"
   // 업종별 기존 카드 (Tier 1.5)
   | "inventory-ops"
+  | "menu-profitability"         // 메뉴·서비스 라인업 수익성 (음식·카페·서비스) — 판매가/원가/원가율/마진
   | "team-card"
   | "food-safety"
   | "prime-cost"
@@ -113,6 +114,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //   신규 필요: 배달비중·PMIX (Phase 2b)
   food: [
     "prime-cost",
+    "menu-profitability",
     "food-safety",
     "inventory-ops",
     "team-card",
@@ -126,6 +128,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //      (2026-06-10 P1-8 audit). 빈 슬롯·가짜 카드 금지 원칙.
   "cafe-dessert": [
     "prime-cost",
+    "menu-profitability",
     "food-safety",
     "inventory-ops",     // 원두·우유·시럽·컵 등 발주 필수 (2026-05-26 추가)
     "team-card",
@@ -141,6 +144,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //      line 103). 업종 무조건 default 가 아니므로 매트릭스에서 제외.
   beauty: [
     "beauty-booking-noshow", // 신규
+    "menu-profitability",    // 시술·패키지 라인업 수익성
     "team-card",
     "avg-ticket-upsell",
     "daily-improvement",
@@ -175,6 +179,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //      usesSubscriptions=true 일 때 Tier 3 에서 노출 (DASHBOARD_MAP line 103).
   fitness: [
     "fitness-retention",  // 신규
+    "menu-profitability", // 수업·PT·회원권 라인업 수익성
     "team-card",
     "avg-ticket-upsell",
     "daily-improvement",
@@ -187,6 +192,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //      비구독 학원엔 빈 카드. usesSubscriptions=true 시 Tier 3 노출 (DASHBOARD_MAP line 103).
   education: [
     "education-enrollment", // 신규
+    "menu-profitability",   // 수업·과정 라인업 수익성
     "team-card",
     "daily-improvement",
     "policy-fund-match",
@@ -196,6 +202,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //   신규 필요: 예약·서비스 mix·케이지 점유·재방문 (Phase 2i)
   pet: [
     "pet-booking",   // 신규
+    "menu-profitability", // 미용·호텔·케어 서비스 라인업 수익성
     "inventory-ops",
     "team-card",
     "avg-ticket-upsell",
@@ -207,6 +214,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //   신규 필요: 의뢰·FTFR·시간당 매출·기사 가동 (Phase 2j)
   "living-service": [
     "living-service-dispatch", // 신규
+    "menu-profitability",      // 출장·정기·옵션 서비스 라인업 수익성
     "team-card",
     "daily-improvement",
     "policy-fund-match",
@@ -216,6 +224,7 @@ export const INDUSTRY_CARDS: Record<IndustryId, readonly CardId[]> = {
   //   신규 필요: POR·시간대·청소 (Phase 2k)
   space: [
     "space-occupancy", // 신규
+    "menu-profitability", // 공간·시간대·부가 옵션 라인업 수익성
     "inventory-ops",
     "daily-improvement",
     "policy-fund-match",
@@ -335,6 +344,20 @@ export const CARD_META: Record<CardId, CardMeta> = {
       "Shopify retail inventory management",
       "Crunchtime restaurant inventory",
       "외식·소매·이커머스·펫 재고 운영 표준",
+    ],
+  },
+  // 메뉴·서비스 라인업 수익성 — 로드맵 menu-design 에서 입력한 판매가/원가를 per-item
+  //   원가율·마진으로 분석. 재고(식자재)와 분리해 "메뉴는 메뉴 카드에" 표시 (의미 정확성).
+  //   판매량(monthlySold) 쌓이면 메뉴 엔지니어링 매트릭스(스타/간판/퍼즐/도그)로 업그레이드 —
+  //   현재는 데이터 없어 위조 안 함(가짜숫자 금지). 소매·온라인은 sell-through/product 가 이미
+  //   product 를 다루므로 제외.
+  "menu-profitability": {
+    id: "menu-profitability", status: "existing",
+    industries: ["food", "cafe-dessert", "beauty", "fitness", "education", "pet", "living-service", "space"],
+    sources: [
+      "Toast / Restaurant365 menu engineering matrix (popularity × contribution margin)",
+      "한국외식산업연구원 식자재 원가율 황금률 33%",
+      "meez · CrunchTime: contribution margin = 판매가 − 원가",
     ],
   },
   "team-card": {

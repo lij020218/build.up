@@ -46,6 +46,7 @@ import { LivingServiceDispatchCard } from "../LivingServiceDispatchCard";
 // import { IntegrationHubCard } from "../IntegrationHubCard";
 import { CoachingHistoryCard } from "../CoachingHistoryCard";
 import { InventoryOpsCard } from "../InventoryOpsCard";
+import { MenuProfitabilityCard } from "../MenuProfitabilityCard";
 import { TeamCard } from "../TeamCard";
 import { CustomerSummaryCard } from "../CustomerSummaryCard";
 import { PrimeCostCard } from "../PrimeCostCard";
@@ -90,8 +91,14 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
   const showTeam = showByMatrix("team-card");
   const opsCards: React.ReactNode[] = [];
   if (showInventory) {
+    // 메뉴 카드가 활성(음식·카페·서비스)이면 메뉴(product)는 메뉴 수익성 카드가 담당하므로
+    //   재고 카드에선 식자재·소모품(material)만 표시 — "메뉴가 재고 0개" 중복·오해 방지.
+    //   소매·이커머스는 product 가 곧 재고라 menu-profitability 미노출 → 필터 안 함(원본 유지).
+    const menuCardActive = showByMatrix("menu-profitability");
+    const invForCard = menuCardActive ? c.inventory.filter((i) => i.itemType !== "product") : c.inventory;
+    const lowStockForCard = menuCardActive ? c.lowStockItems.filter((i) => i.itemType !== "product") : c.lowStockItems;
     opsCards.push(
-      <InventoryOpsCard key="inv" ko={ko} inventory={c.inventory} lowStockItems={c.lowStockItems} d={d} />,
+      <InventoryOpsCard key="inv" ko={ko} inventory={invForCard} lowStockItems={lowStockForCard} d={d} />,
     );
   }
   if (showCustomer && !showInventory) {
@@ -165,6 +172,15 @@ export function Tier1_5Coaching({ d, c, ko, fmt, nextStaggerStyle }: Props) {
           }}
         >
           {opsCards}
+        </div>
+      )}
+
+      {/* 1.5 (a-1.5) — 메뉴·서비스 라인업 수익성 (음식·카페·서비스).
+          로드맵 menu-design 입력(판매가·원가)을 per-item 원가율·마진으로 표시. 재고(식자재)와
+          분리해 "메뉴는 메뉴 카드에" — itemType==="product" 만 읽음. 메뉴 입력 전이면 null 반환. */}
+      {showByMatrix("menu-profitability") && (
+        <div className="dash-stagger-item" style={nextStaggerStyle()}>
+          <MenuProfitabilityCard ko={ko} industryCategoryId={d.industryCategoryId} />
         </div>
       )}
 

@@ -35,6 +35,8 @@ export type InventoryEntry = {
   quantity: number;
   minThreshold?: number;
   unit?: string;
+  // material(식자재·소모품) | product(메뉴·판매상품). 메뉴 수익성 카드 분리에 사용.
+  itemType?: "material" | "product";
 };
 
 export type EmployeeEntry = {
