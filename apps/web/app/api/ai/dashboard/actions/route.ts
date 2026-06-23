@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "../../../_lib/auth";
 import { checkSimpleRateLimit, checkDailyRateLimit } from "../../../_lib/rate-limit";
 import { getAnthropicApiKey } from "../../../_lib/env";
+import { fetchRecentNegativeFeedbackLines, buildNegativeFeedbackBlock } from "../../../_lib/coaching-feedback";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // Vercel function timeout
@@ -52,7 +53,11 @@ export async function POST(request: Request) {
 
   try {
     const enrichedCtx = enrichDashboardContext(body);
-    const result = await generateDashboardActions(enrichedCtx, { apiKey });
+    // 자가개선: 사장님이 최근 "안 맞아요"로 표시한 코칭을 prompt 에 주입 → 비슷한 코칭 회피.
+    const negativeFeedbackBlock = buildNegativeFeedbackBlock(
+      await fetchRecentNegativeFeedbackLines(auth.userId, { source: "dashboard-actions" }),
+    );
+    const result = await generateDashboardActions(enrichedCtx, { apiKey, negativeFeedbackBlock });
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to generate actions.";

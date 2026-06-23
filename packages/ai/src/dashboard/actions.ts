@@ -254,7 +254,8 @@ export async function generateDashboardActions(
     // ✦ Prompt Caching (5m TTL) — 같은 사용자가 짧은 시간 내 여러 번 요청 (대시보드 진입·refresh)
     system: systemWithCache(DASHBOARD_ACTION_SYSTEM_PROMPT),
     messages: [
-      { role: "user", content: buildDashboardActionPrompt(ctx) },
+      // 자가개선: 최근 "안 맞아요" 블록을 user prompt 끝에 붙여 비슷한 코칭 회피.
+      { role: "user", content: buildDashboardActionPrompt(ctx) + (options.negativeFeedbackBlock ?? "") },
     ],
   });
 
